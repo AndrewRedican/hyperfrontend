@@ -1,0 +1,8 @@
+{
+  "name": "@hyperfrontend/app-angular",
+  "version": "0.0.0",
+  "description": "",
+  "main": "./src/index.js",
+  "private": true,
+  "sideEffects": false
+}

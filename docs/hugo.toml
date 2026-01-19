@@ -1,0 +1,72 @@
+baseURL = 'https://hyperfrontend.dev/'
+languageCode = 'en-us'
+title = 'hyperfrontend'
+theme = 'hextra'
+enableEmoji = true
+enableGitInfo = true
+
+[module]
+  [module.hugoVersion]
+    extended = true
+    min = "0.112.0"
+
+[markup]
+  [markup.goldmark]
+    [markup.goldmark.renderer]
+      unsafe = true
+  [markup.highlight]
+    noClasses = false
+    lineNos = true
+    lineNumbersInTable = true
+    tabWidth = 2
+
+[menu]
+  [[menu.main]]
+    name = "Documentation"
+    pageRef = "/docs"
+    weight = 1
+  [[menu.main]]
+    name = "Demos"
+    pageRef = "/docs/demos"
+    weight = 2
+  [[menu.main]]
+    name = "GitHub"
+    url = "https://github.com/AndrewRedican/hyperfrontend"
+    weight = 3
+
+[params]
+  description = "A hybrid micro-frontend pattern for embedding live web applications"
+
+  # Custom CSS
+  customCSS = ["css/custom.css"]
+
+  # Navbar
+  [params.navbar]
+    displayTitle = false
+    displayLogo = true
+    logo.path = "logo.png"
+    logo.link = "/"
+    logo.width = 160
+    logo.height = 60
+
+  # Footer
+  [params.footer]
+    displayCopyright = true
+    displayPoweredBy = false
+    [params.footer.width]
+      wide = false
+
+  # Edit URL
+  [params.editURL]
+    enable = false
+    base = "https://github.com/AndrewRedican/hyperfrontend/edit/main/docs/content"
+
+  # Search
+  [params.search]
+    enable = true
+    type = "flexsearch"
+
+  # Theme
+  [params.theme]
+    default = "system"
+    displayToggle = true

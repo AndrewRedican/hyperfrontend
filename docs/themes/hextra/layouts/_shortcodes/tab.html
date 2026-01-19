@@ -1,0 +1,24 @@
+{{- /*
+Create a tab.
+
+@param {string} name The name of the tab.
+@param {string} selected Whether the tab is selected.
+
+@example {{< tab name="Foo" selected=true >}}content{{< /tab >}}
+*/ -}}
+
+{{- $name := .Get "name" | default (printf "Tab %d" .Ordinal) -}}
+
+{{- $selected := .Get "selected" -}}
+{{- if .Parent.Get "defaultIndex" -}}
+  {{- $selected = eq .Ordinal (int (.Parent.Get "defaultIndex")) -}}
+{{- end -}}
+
+{{- $tabs := .Parent.Store.Get "tabs" | default slice -}}
+{{ .Parent.Store.Set "tabs" ($tabs | append (dict
+    "id" .Ordinal
+    "name" $name
+    "content" .InnerDeindent
+    "selected" $selected
+  ))
+-}}

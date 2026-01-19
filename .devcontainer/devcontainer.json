@@ -1,0 +1,40 @@
+{
+  "name": "hyperfrontend",
+  "image": "mcr.microsoft.com/devcontainers/base:debian",
+  "features": {
+    "ghcr.io/devcontainers/features/git:1": {},
+    "ghcr.io/devcontainers/features/git-lfs:1": {},
+    "ghcr.io/devcontainers/features/github-cli:1": {},
+    "ghcr.io/devcontainers/features/node:1": {
+      "version": "24.13.0"
+    },
+    "ghcr.io/devcontainers/features/copilot-cli:1": {},
+    "ghcr.io/devcontainers/features/hugo:1": {}
+  },
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "eamodio.gitlens",
+        "DavidAnson.vscode-markdownlint",
+        "firsttris.vscode-jest-runner",
+        "dbaeumer.vscode-eslint",
+        "esbenp.prettier-vscode",
+        "bradlc.vscode-tailwindcss",
+        "formulahendry.code-runner",
+        "shd101wyy.markdown-preview-enhanced",
+        "github.vscode-github-actions",
+        "yzhang.markdown-all-in-one"
+      ],
+      "settings": {
+        "editor.formatOnSave": true,
+        "editor.formatOnPaste": true,
+        "editor.tabSize": 2,
+        "files.trimTrailingWhitespace": true,
+        "git.useEditorAsCommitInput": false
+      }
+    }
+  },
+  "forwardPorts": [3306],
+  "remoteUser": "vscode",
+  "postCreateCommand": "bash .devcontainer/setup-hugo.sh && npm ci && npm i -g commitizen@4.3.1"
+}

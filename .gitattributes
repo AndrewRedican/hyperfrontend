@@ -1,0 +1,41 @@
+# Git Configuration
+# Line endings and Git LFS settings
+
+# ============================================================================
+# Line Endings - Enforce LF across all platforms (Linux, Mac, Windows)
+# ============================================================================
+
+# Auto detect text files and normalize to LF on commit
+* text=auto eol=lf
+
+# Explicitly declare text files
+*.ts text eol=lf
+*.tsx text eol=lf
+*.js text eol=lf
+*.jsx text eol=lf
+*.json text eol=lf
+*.md text eol=lf
+*.yml text eol=lf
+*.yaml text eol=lf
+*.lisp text eol=lf
+*.sh text eol=lf
+*.bash text eol=lf
+
+# Force LF for shell scripts (critical for execution)
+*.sh eol=lf
+*.bash eol=lf
+
+# Denote binary files (never modify)
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.woff binary
+*.woff2 binary
+*.ttf binary
+*.eot binary
+*.pdf binary
+*.gz binary
+*.zip binary
+*.tar binary
