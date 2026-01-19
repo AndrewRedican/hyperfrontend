@@ -1,0 +1,11 @@
+{
+  "name": "@hyperfrontend/window-messages",
+  "version": "0.0.0",
+  "description": "",
+  "main": "./src/index.js",
+  "sideEffects": false,
+  "funding": {
+    "type": "github",
+    "url": "https://github.com/sponsors/AndrewRedican"
+  }
+}

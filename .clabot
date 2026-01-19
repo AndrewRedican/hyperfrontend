@@ -1,0 +1,7 @@
+{
+  "contributors": [],
+  "message": "Thank you for your contribution! Before we can merge this pull request, we need you to sign our Contributor License Agreement (CLA).",
+  "label": "cla-signed",
+  "recheckLabel": "recheck-cla",
+  "allowlist": ["bot*", "dependabot*"]
+}

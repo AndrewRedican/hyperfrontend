@@ -1,0 +1,55 @@
+name: 'Nx Affected Projects'
+description: 'Calculates affected projects using Nx based on git changes'
+inputs:
+  base-ref:
+    description: 'Base git reference for comparison'
+    required: true
+  head-ref:
+    description: 'Head git reference for comparison'
+    required: false
+    default: 'HEAD'
+  targets:
+    description: 'Comma-separated list of targets to check (e.g., build,test,lint)'
+    required: false
+    default: ''
+outputs:
+  affected-projects:
+    description: 'Comma-separated list of affected project names'
+    value: ${{ steps.calculate.outputs.affected-projects }}
+  has-affected:
+    description: 'Boolean indicating if there are any affected projects'
+    value: ${{ steps.calculate.outputs.has-affected }}
+  projects-json:
+    description: 'JSON array of affected project names'
+    value: ${{ steps.calculate.outputs.projects-json }}
+runs:
+  using: 'composite'
+  steps:
+    - name: Calculate affected projects
+      id: calculate
+      shell: bash
+      run: |
+        # Calculate affected projects using Nx 19+ command
+        AFFECTED_OUTPUT=$(npx nx show projects --affected --base=${{ inputs.base-ref }} --head=${{ inputs.head-ref }} 2>/dev/null || echo "")
+
+        # Handle empty output
+        if [ -z "$AFFECTED_OUTPUT" ]; then
+          echo "affected-projects=" >> $GITHUB_OUTPUT
+          echo "has-affected=false" >> $GITHUB_OUTPUT
+          echo "projects-json=[]" >> $GITHUB_OUTPUT
+          echo "No affected projects found"
+          exit 0
+        fi
+
+        # Convert newline-separated list to comma-separated
+        AFFECTED_CSV=$(echo "$AFFECTED_OUTPUT" | tr '\n' ',' | sed 's/,$//')
+
+        # Convert to JSON array
+        PROJECTS_JSON=$(echo "$AFFECTED_OUTPUT" | jq -R -s -c 'split("\n") | map(select(length > 0))')
+
+        # Set outputs
+        echo "affected-projects=$AFFECTED_CSV" >> $GITHUB_OUTPUT
+        echo "has-affected=true" >> $GITHUB_OUTPUT
+        echo "projects-json=$PROJECTS_JSON" >> $GITHUB_OUTPUT
+
+        echo "Affected projects: $AFFECTED_CSV"

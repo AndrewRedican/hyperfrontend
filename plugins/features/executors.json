@@ -1,0 +1,9 @@
+{
+  "executors": {
+    "serve": {
+      "implementation": "./src/executors/serve/executor",
+      "schema": "./src/executors/serve/schema.json",
+      "description": "Serve a feature in a playground host environment for development and debugging"
+    }
+  }
+}

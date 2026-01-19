@@ -1,0 +1,48 @@
+# compiled output
+dist
+tmp
+.tmp
+/out-tsc
+
+# dependencies
+node_modules
+
+# ide
+/.idea
+*.iml
+.project
+.classpath
+.c9/
+*.launch
+.settings/
+*.sublime-workspace
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+
+# misc
+/.sass-cache
+/connect.lock
+/coverage
+/libpeerconnection.log
+npm-debug.log
+yarn-error.log
+testem.log
+/typings
+projectStructure.cache.json
+
+# system files
+.DS_Store
+Thumbs.db
+
+# nx
+.nx/cache
+.nx/workspace-data
+.angular/cache
+.verdaccio/storage
+
+# hugo
+docs/public/
+docs/resources/

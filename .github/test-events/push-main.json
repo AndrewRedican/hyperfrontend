@@ -1,0 +1,37 @@
+{
+  "ref": "refs/heads/main",
+  "before": "abc123def456",
+  "after": "def456abc789",
+  "repository": {
+    "name": "hyperfrontend",
+    "full_name": "AndrewRedican/hyperfrontend",
+    "owner": {
+      "login": "AndrewRedican"
+    },
+    "default_branch": "main"
+  },
+  "pusher": {
+    "name": "test-user",
+    "email": "test@example.com"
+  },
+  "commits": [
+    {
+      "id": "def456abc789",
+      "message": "Test commit",
+      "timestamp": "2026-01-22T00:00:00Z",
+      "author": {
+        "name": "Test User",
+        "email": "test@example.com"
+      }
+    }
+  ],
+  "head_commit": {
+    "id": "def456abc789",
+    "message": "Test commit",
+    "timestamp": "2026-01-22T00:00:00Z",
+    "author": {
+      "name": "Test User",
+      "email": "test@example.com"
+    }
+  }
+}

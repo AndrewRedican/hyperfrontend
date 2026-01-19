@@ -1,0 +1,47 @@
+{
+  "name": "docs",
+  "$schema": "../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "docs",
+  "projectType": "application",
+  "targets": {
+    "extract": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "node scripts/extract-readme.js",
+        "cwd": "docs"
+      },
+      "description": "Extract and transform README.md content into Hugo documentation"
+    },
+    "serve": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "hugo server --bind 0.0.0.0 --port 1313 --baseURL /",
+        "cwd": "docs"
+      },
+      "configurations": {
+        "production": {
+          "command": "hugo server --bind 0.0.0.0 --port 1313 --baseURL https://andrewredican.github.io/hyperfrontend/",
+          "cwd": "docs"
+        }
+      }
+    },
+    "build": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["extract"],
+      "options": {
+        "command": "hugo --minify",
+        "cwd": "docs",
+        "outputs": ["{projectRoot}/public"]
+      },
+      "description": "Build documentation (automatically runs extract first)"
+    },
+    "clean": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "rm -rf public resources",
+        "cwd": "docs"
+      }
+    }
+  },
+  "tags": ["type:documentation"]
+}

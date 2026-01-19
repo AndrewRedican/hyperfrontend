@@ -1,0 +1,27 @@
+{
+  "$schema": "http://json-schema.org/schema",
+  "type": "object",
+  "properties": {
+    "project": {
+      "type": "string",
+      "description": "The feature project to serve"
+    },
+    "port": {
+      "type": "number",
+      "description": "Port to run the playground host on",
+      "default": 4200
+    },
+    "open": {
+      "type": "boolean",
+      "description": "Open browser automatically",
+      "default": true
+    },
+    "mode": {
+      "type": "string",
+      "enum": ["development", "production"],
+      "description": "Build mode for the feature",
+      "default": "development"
+    }
+  },
+  "required": ["project"]
+}

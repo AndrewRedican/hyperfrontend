@@ -1,0 +1,8 @@
+blank_issues_enabled: true
+contact_links:
+  - name: 💬 Ask a Question
+    url: https://github.com/AndrewRedican/hyperfrontend/discussions/new?category=q-a
+    about: Ask questions and discuss with other community members
+  - name: 💡 Ideas & Discussions
+    url: https://github.com/AndrewRedican/hyperfrontend/discussions
+    about: Share ideas and participate in discussions

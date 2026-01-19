@@ -1,0 +1,33 @@
+# See: https://editorconfig.org
+
+root = true
+
+# All files
+[*]
+charset = utf-8
+end_of_line = lf
+insert_final_newline = true
+trim_trailing_whitespace = true
+
+# TypeScript, JavaScript, JSON
+[*.{ts,tsx,js,jsx,json}]
+indent_style = space
+indent_size = 2
+max_line_length = 140
+
+# Markdown (preserve trailing spaces for line breaks)
+[*.md]
+indent_style = space
+indent_size = 2
+max_line_length = 140
+trim_trailing_whitespace = false
+
+# YAML
+[*.{yml,yaml}]
+indent_style = space
+indent_size = 2
+
+# Shell scripts
+[*.sh]
+indent_style = space
+indent_size = 2

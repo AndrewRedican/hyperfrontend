@@ -1,0 +1,13 @@
+{
+  "name": "@hyperfrontend/features",
+  "version": "0.0.0",
+  "description": "",
+  "main": "./src/index.js",
+  "sideEffects": false,
+  "generators": "./generators.json",
+  "executors": "./executors.json",
+  "funding": {
+    "type": "github",
+    "url": "https://github.com/sponsors/AndrewRedican"
+  }
+}
