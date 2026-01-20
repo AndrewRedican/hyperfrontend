@@ -90,10 +90,10 @@ This Agreement constitutes the entire agreement between you and the Project main
 
 By clicking "I agree" on the CLA Assistant interface or by adding your GitHub username to the contributors list, you acknowledge that you have read, understood, and agree to be bound by this Contributor License Agreement.
 
-**Signature Date**: ******\_\_\_\_******
-**GitHub Username**: ******\_\_\_\_******
-**Full Name**: ******\_\_\_\_******
-**Email**: ******\_\_\_\_******
+**Signature Date**: **\*\***\_\_\_\_**\*\***
+**GitHub Username**: **\*\***\_\_\_\_**\*\***
+**Full Name**: **\*\***\_\_\_\_**\*\***
+**Email**: **\*\***\_\_\_\_**\*\***
 
 ---
 

@@ -1,5 +1,5 @@
 import { Tree } from '@nx/devkit'
-import { AddGeneratorSchema } from './schema';
+import { AddGeneratorSchema } from './schema'
 
 export async function addGenerator(tree: Tree, options: AddGeneratorSchema) {
   /*
@@ -163,4 +163,4 @@ export async function addGenerator(tree: Tree, options: AddGeneratorSchema) {
   }
 }
 
-export default addGenerator;
+export default addGenerator

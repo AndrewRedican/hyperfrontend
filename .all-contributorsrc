@@ -14,14 +14,7 @@
       "name": "Andrew Redican",
       "avatar_url": "https://github.com/AndrewRedican.png",
       "profile": "https://github.com/AndrewRedican",
-      "contributions": [
-        "code",
-        "doc",
-        "infra",
-        "maintenance",
-        "projectManagement",
-        "ideas"
-      ]
+      "contributions": ["code", "doc", "infra", "maintenance", "projectManagement", "ideas"]
     }
   ],
   "contributorsPerLine": 7,
