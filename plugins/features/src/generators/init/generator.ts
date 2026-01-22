@@ -1,5 +1,5 @@
 import { Tree } from '@nx/devkit'
-import { InitGeneratorSchema } from './schema';
+import { InitGeneratorSchema } from './schema'
 
 export async function initGenerator(tree: Tree, options: InitGeneratorSchema) {
   /*
@@ -126,4 +126,4 @@ export async function initGenerator(tree: Tree, options: InitGeneratorSchema) {
   }
 }
 
-export default initGenerator;
+export default initGenerator
