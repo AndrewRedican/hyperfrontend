@@ -1,0 +1,65 @@
+name: security
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  schedule:
+    # Run weekly on Mondays at 00:00 UTC
+    - cron: '0 0 * * 1'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  codeql-analysis:
+    name: code analysis
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write
+      actions: read
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@e8893c57a1f3a2b659b6b55564fdfdbbd2982911 # v3.24.0
+        with:
+          languages: typescript
+          queries: security-and-quality
+
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@e8893c57a1f3a2b659b6b55564fdfdbbd2982911 # v3.24.0
+        with:
+          category: '/language:typescript'
+
+  dependency-audit:
+    name: dependency audit
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+
+      - name: Setup Node.js
+        uses: actions/setup-node@60edb5dd545a775178f52524783378180af0d1f8 # v4.0.2
+        with:
+          node-version: '24.13.0'
+
+      - name: Check for security vulnerabilities
+        run: |
+          echo "Checking for high and critical vulnerabilities..."
+          AUDIT_RESULT=$(npm audit --json || true)
+          HIGH=$(echo "$AUDIT_RESULT" | jq '.metadata.vulnerabilities.high // 0')
+          CRITICAL=$(echo "$AUDIT_RESULT" | jq '.metadata.vulnerabilities.critical // 0')
+
+          echo "Found $HIGH high and $CRITICAL critical vulnerabilities"
+
+          if [ "$HIGH" -gt 0 ] || [ "$CRITICAL" -gt 0 ]; then
+            echo "❌ Security check failed"
+            exit 1
+          else
+            echo "✅ No high or critical vulnerabilities found"
+          fi

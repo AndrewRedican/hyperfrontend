@@ -349,6 +349,98 @@ npx nx affected -t build
 - Keep discussions professional and constructive
 - The maintainer's decision is final
 
+## Continuous Integration
+
+### GitHub Actions Workflows
+
+The project uses GitHub Actions for CI/CD automation. All pull requests must pass CI checks before merging.
+
+#### PR Validation Workflow
+
+When you open a pull request:
+
+- **Affected Projects**: Nx calculates which projects are affected by your changes
+- **Fast Checks**: Only affected projects are validated (format, lint, build, test)
+- **Typical Duration**: < 10 minutes
+- **Status Check**: "CI Status Check" must pass to merge
+
+#### Main Branch Workflow
+
+After merging to `main`:
+
+- **All Projects**: Comprehensive validation of the entire monorepo
+- **Coverage Thresholds**: Enforces code coverage requirements
+- **Typical Duration**: < 15 minutes
+- **Artifacts**: Coverage reports retained for 30 days
+
+#### Security Scanning
+
+Runs automatically on:
+
+- All pull requests
+- Pushes to main
+- Weekly schedule (Mondays)
+
+Includes:
+
+- CodeQL static analysis
+- npm dependency vulnerability scanning
+- Fails on high/critical vulnerabilities
+
+### Testing Workflows Locally
+
+You can test workflows locally using [act](https://github.com/nektos/act):
+
+```bash
+# Install act
+brew install act  # macOS
+# or
+curl https://raw.githubusercontent.com/nektos/act/master/install.sh | sudo bash  # Linux
+
+# Test PR workflow
+act pull_request -W .github/workflows/ci-pr.yml
+
+# Test specific job
+act pull_request -j lint -W .github/workflows/ci-pr.yml
+
+# Test with event payload
+act pull_request -W .github/workflows/ci-pr.yml -e .github/test-events/pr-opened.json
+```
+
+For detailed testing instructions, see [`.github/test-events/README.md`](.github/test-events/README.md).
+
+### Understanding CI Failures
+
+If your PR fails CI checks:
+
+1. **Review the logs**: Click "Details" next to the failed check
+2. **Identify the issue**: Look for error messages in the job output
+3. **Test locally**: Run the same commands locally to reproduce
+4. **Fix and push**: Commit your fixes and push (workflow runs automatically)
+
+Common CI failures and fixes:
+
+```bash
+# Format check failed
+npx prettier --write "**/*.{ts,tsx,js,jsx,json,md,yml,yaml}"
+
+# Lint check failed
+npx nx run-many -t lint --fix
+
+# Test check failed
+npx nx run-many -t test
+
+# Build check failed
+npx nx run-many -t build
+```
+
+### Workflow Documentation
+
+For more details about workflows and custom actions:
+
+- Workflow overview: [`.github/workflows/README.md`](.github/workflows/README.md)
+- Custom actions: [`.github/actions/README.md`](.github/actions/README.md)
+
 ## Coding Standards
 
 ### TypeScript/JavaScript
