@@ -1,4 +1,9 @@
 {
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "name": "plugin-features-e2e",
-  "description": ""
+  "description": "End-to-end tests for the hyperfrontend features plugin.",
+  "sourceRoot": "{projectRoot}/src",
+  "projectType": "application",
+  "tags": [],
+  "targets": {}
 }

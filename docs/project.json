@@ -1,6 +1,7 @@
 {
-  "name": "docs",
   "$schema": "../node_modules/nx/schemas/project-schema.json",
+  "name": "docs",
+  "description": "Hugo-based documentation site for hyperfrontend.",
   "sourceRoot": "docs",
   "projectType": "application",
   "targets": {

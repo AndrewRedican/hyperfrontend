@@ -1,4 +1,9 @@
 {
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
   "name": "string-utils",
-  "description": ""
+  "description": "String manipulation utilities for browser and Node.js environments.",
+  "sourceRoot": "{projectRoot}/src",
+  "projectType": "library",
+  "tags": [],
+  "targets": {}
 }
