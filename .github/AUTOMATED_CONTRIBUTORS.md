@@ -2,11 +2,53 @@
 
 This project uses automated workflows to recognize contributors.
 
-## Automatic Addition on PR Merge
+## 🤖 Smart Contribution Type Suggestions
 
-When a pull request from a fork is merged, the contributor is **automatically added** to the contributors list with the `code` contribution type.
+When a maintainer **approves a pull request**, our automated system analyzes the changed files and suggests appropriate contribution types. This makes it easy for maintainers to recognize contributors accurately.
 
-This happens via the GitHub Actions workflow in `.github/workflows/contributors.yml`.
+### How It Works
+
+1. **Maintainer approves** a PR (review approval)
+2. **GitHub Actions analyzes** the changed files using intelligent heuristics
+3. **Bot posts a comment** with suggested contribution types
+4. **Maintainer can accept** the suggestion or modify it as needed
+
+### Detection Heuristics
+
+The system automatically detects contribution types based on file patterns:
+
+| Contribution Type | Detected From             | Example Files                                         |
+| ----------------- | ------------------------- | ----------------------------------------------------- |
+| **doc**           | Documentation files       | `docs/`, `*.md`, `README`, `CONTRIBUTING`             |
+| **code**          | Source code files         | `src/**/*.ts`, `packages/**/*.js`, `apps/**/*.tsx`    |
+| **test**          | Test files                | `*.test.ts`, `*.spec.js`, `__tests__/`, `*.e2e.*`     |
+| **infra**         | CI/CD and infrastructure  | `.github/workflows/`, `.devcontainer/`, `Dockerfile`  |
+| **tool**          | Configuration and tooling | `eslint.config.js`, `tsconfig.json`, `scripts/`       |
+| **design**        | Design and styling        | `*.css`, `*.scss`, `assets/`, `*.svg`, `packages/ui/` |
+| **example**       | Examples and demos        | `examples/`, `demos/`, sample files                   |
+| **plugin**        | Plugin development        | `plugins/`, `packages/nx-plugin/`                     |
+
+The bot provides a **non-intrusive advisory comment** with:
+
+- Suggested contribution types based on file analysis
+- Sample of detected files
+- Easy copy-paste command to add the contributor
+- Option to modify types as needed
+
+### Example Bot Comment
+
+When a PR is approved, maintainers receive a comment like this:
+
+```
+🏆 Contributor Recognition Suggestion
+
+Based on the files changed in this PR, I suggest recognizing @contributor for:
+
+Suggested types: code (Code contributions), test (Test additions or improvements)
+
+Quick Actions:
+@all-contributors please add @contributor for code, test
+```
 
 ## Manual Addition via Comments
 
@@ -60,13 +102,15 @@ You can also add contributors manually by commenting on any issue or PR:
 
 ## How It Works
 
-### On PR Merge (Automatic)
+### Smart Suggestions on PR Approval
 
-1. PR from a fork is merged
-2. GitHub Actions workflow triggers
-3. Contributor is added with `code` type
-4. README is updated automatically
-5. Changes are committed to main branch
+1. Maintainer approves a PR with review
+2. GitHub Actions workflow (`contributor-suggest.yml`) triggers
+3. System analyzes changed files using pattern matching
+4. Bot posts a comment with suggested contribution types
+5. Maintainer uses the suggestion or modifies as needed
+6. Maintainer comments with `@all-contributors` command
+7. All Contributors bot updates the README
 
 ### On Comment (Manual)
 
@@ -128,9 +172,18 @@ git commit -m "docs: add @username as a contributor"
 
 The automation is configured in:
 
-- `.github/workflows/contributors.yml` - GitHub Actions workflow
+- `.github/workflows/contributor-suggest.yml` - Smart contribution type suggestion workflow
 - `.all-contributorsrc` - Contributors database
+
+## Benefits of Smart Suggestions
+
+✅ **Accurate Recognition**: File-based heuristics ensure contributors get credit for what they actually changed
+✅ **Maintainer Control**: Suggestions are advisory only; maintainer makes the final decision
+✅ **Non-Intrusive**: Only triggers on PR approval, not on every PR
+✅ **Time-Saving**: No need to manually analyze PR changes
+✅ **Transparent**: Shows which files influenced the suggestion
+✅ **Flexible**: Easy to override or modify suggested types
 
 ---
 
-**Note**: Contributors from the main repository (non-fork PRs) won't be automatically added since they're likely maintainers. Use manual commands for them if needed.
+**Note**: The suggestion system only triggers when repository owners or designated maintainers approve PRs. Regular contributors can still be added manually using the `@all-contributors` command.
