@@ -80,11 +80,12 @@ Sets up the Node.js environment, caches npm dependencies, and installs packages.
 **Inputs**:
 
 - `install-hugo` (optional): Whether to install Hugo for documentation builds
-- `node-version` (optional): Node.js version to use (default: 20)
 
 **Outputs**:
 
 - `cache-hit`: Whether npm cache was hit
+
+**Note**: Node.js version is hardcoded to 24.13.0 to match package.json engines.
 
 ### nx-affected
 

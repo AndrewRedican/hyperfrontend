@@ -108,18 +108,26 @@ jobs:
           retention-days: 30
 
   e2e:
-    name: E2E Tests (Placeholder)
+    name: E2E Tests
     runs-on: ubuntu-latest
-    needs: [setup, build]
-    if: false # Disabled until E2E tests are implemented
+    needs: [setup, build, test]
     steps:
-      - name: Placeholder for E2E tests
-        run: echo "E2E tests will be implemented in the future"
+      - name: Checkout repository
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+
+      - name: Setup monorepo
+        uses: ./.github/actions/setup-monorepo
+
+      - name: Run E2E tests
+        uses: ./.github/actions/run-checks
+        with:
+          check-type: e2e
+          affected-only: 'false'
 
   ci-status:
     name: CI Status Check
     runs-on: ubuntu-latest
-    needs: [format, lint, build, test]
+    needs: [format, lint, build, test, e2e]
     if: always()
     steps:
       - name: Check CI status
@@ -128,7 +136,8 @@ jobs:
           if [ "${{ needs.format.result }}" = "failure" ] || \
              [ "${{ needs.lint.result }}" = "failure" ] || \
              [ "${{ needs.build.result }}" = "failure" ] || \
-             [ "${{ needs.test.result }}" = "failure" ]; then
+             [ "${{ needs.test.result }}" = "failure" ] || \
+             [ "${{ needs.e2e.result }}" = "failure" ]; then
             echo "❌ One or more CI checks failed on main branch"
             exit 1
           fi

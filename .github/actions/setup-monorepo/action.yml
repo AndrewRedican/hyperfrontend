@@ -5,10 +5,6 @@ inputs:
     description: 'Whether to install Hugo (required for documentation builds)'
     required: false
     default: 'false'
-  node-version:
-    description: 'Node.js version to use'
-    required: false
-    default: '24.13.0'
 outputs:
   cache-hit:
     description: 'Whether npm cache was hit'
@@ -19,7 +15,7 @@ runs:
     - name: Setup Node.js
       uses: actions/setup-node@60edb5dd545a775178f52524783378180af0d1f8 # v4.0.2
       with:
-        node-version: ${{ inputs.node-version }}
+        node-version: '24.13.0'
 
     - name: Cache npm dependencies
       id: cache-npm

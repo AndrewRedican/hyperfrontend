@@ -28,13 +28,13 @@ jobs:
       - name: Initialize CodeQL
         uses: github/codeql-action/init@e8893c57a1f3a2b659b6b55564fdfdbbd2982911 # v3.24.0
         with:
-          languages: javascript
+          languages: typescript
           queries: security-and-quality
 
       - name: Perform CodeQL Analysis
         uses: github/codeql-action/analyze@e8893c57a1f3a2b659b6b55564fdfdbbd2982911 # v3.24.0
         with:
-          category: '/language:javascript'
+          category: '/language:typescript'
 
   dependency-audit:
     name: Dependency Security Audit

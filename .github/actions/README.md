@@ -13,7 +13,6 @@ This directory contains reusable composite actions for the hyperfrontend monorep
 **Inputs**:
 
 - `install-hugo` (optional, default: `'false'`): Whether to install Hugo (required for documentation builds)
-- `node-version` (optional, default: `'20'`): Node.js version to use
 
 **Outputs**:
 
@@ -26,12 +25,11 @@ This directory contains reusable composite actions for the hyperfrontend monorep
   uses: ./.github/actions/setup-monorepo
   with:
     install-hugo: 'true'
-    node-version: '20'
 ```
 
 **What it does**:
 
-1. Sets up Node.js with the specified version
+1. Sets up Node.js version 24.13.0 (matches package.json engines)
 2. Caches npm dependencies using `package-lock.json` hash
 3. Installs dependencies with `npm ci`
 4. Optionally installs Hugo extended version for documentation builds
