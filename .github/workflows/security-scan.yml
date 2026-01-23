@@ -15,7 +15,7 @@ permissions:
 
 jobs:
   codeql-analysis:
-    name: codeql
+    name: code analysis
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -37,7 +37,7 @@ jobs:
           category: '/language:typescript'
 
   dependency-audit:
-    name: Dependency Security Audit
+    name: dependency audit
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
