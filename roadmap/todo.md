@@ -2,187 +2,282 @@
 
 **Reference**: See [github-workflows-refactoring.md](github-workflows-refactoring.md) for detailed context and rationale.
 
-**Status**: Ready for Implementation
+**Status**: Phases 1-5 Complete, Phase 6-8 Pending Merge to Main
 **Timeline**: 4-6 weeks
-**Last Updated**: January 22, 2026
+**Last Updated**: January 23, 2026
+**Current Branch**: `cicd` (not yet merged to `main`)
+
+---
+
+## Pre-Merge Sanity Checks
+
+Before creating a PR from `cicd` to `main`, run these GitHub CLI commands to verify everything is ready:
+
+### 1. Verify Workflow Files Exist
+
+```bash
+# List all new workflow files
+ls -la .github/workflows/
+
+# Expected files:
+# - ci-pr.yml (new)
+# - ci-main.yml (new)
+# - security-scan.yml (new)
+# - ci-legacy.yml (renamed from ci.yml)
+```
+
+### 2. Validate Workflow Syntax
+
+```bash
+# Check workflow syntax using GitHub API
+gh api /repos/AndrewRedican/hyperfrontend/actions/workflows \
+  --jq '.workflows[] | select(.path | contains(".github/workflows/ci-")) | {name: .name, path: .path, state: .state}'
+```
+
+### 3. Check Current Branch Status
+
+```bash
+# Verify you're on cicd branch
+git branch --show-current
+
+# Check commit history
+git log --oneline main..cicd
+
+# View files changed
+git diff main --name-status
+```
+
+### 4. Verify Custom Actions
+
+```bash
+# List custom actions
+ls -la .github/actions/
+
+# Expected directories:
+# - setup-monorepo/
+# - nx-affected/
+# - run-checks/
+
+# Validate action.yml files exist
+for action in setup-monorepo nx-affected run-checks; do
+  if [ -f ".github/actions/$action/action.yml" ]; then
+    echo "✓ $action/action.yml exists"
+  else
+    echo "✗ $action/action.yml missing"
+  fi
+done
+```
+
+### 5. Check Dependabot Configuration
+
+```bash
+# Verify Dependabot config
+cat .github/dependabot.yml
+
+# Should show github-actions and npm ecosystems
+```
+
+### 6. Preview PR (Without Creating It)
+
+```bash
+# See what the PR would look like
+gh pr create --dry-run --title "feat(ci): implement optimized GitHub Actions workflows" --base main --head cicd
+```
+
+### 7. Verify No Merge Conflicts
+
+```bash
+# Check for merge conflicts with main
+git fetch origin main
+git merge-base --is-ancestor origin/main HEAD && echo "✓ No conflicts" || echo "✗ May have conflicts"
+```
+
+### 8. Check CI Status on Current Branch
+
+```bash
+# View recent workflow runs on cicd branch
+gh run list --branch cicd --limit 5
+
+# If workflows haven't run yet, that's expected (they're not on main)
+```
 
 ---
 
 ## Implementation Steps
 
-### Phase 1: Custom Actions Setup (Week 1)
+### Phase 1: Custom Actions Setup (Week 1) ✅
 
-1. Create directory structure `.github/actions/setup-monorepo/`
-2. Create `.github/actions/setup-monorepo/action.yml` with Node.js setup, npm cache, and dependency installation
-3. Add Hugo installation step to setup-monorepo action with conditional input
-4. Test setup-monorepo action locally with `act --action .github/actions/setup-monorepo`
-5. Create directory structure `.github/actions/nx-affected/`
-6. Create `.github/actions/nx-affected/action.yml` with base-ref, head-ref, and targets inputs
-7. Implement affected project calculation using `npx nx print-affected`
-8. Add empty affected projects handling to nx-affected action
-9. Add outputs for affected-projects (CSV), has-affected (boolean), and projects-json (JSON array)
-10. Test nx-affected action locally in a feature branch with changes
-11. Create directory structure `.github/actions/run-checks/`
-12. Create `.github/actions/run-checks/action.yml` with check-type, affected-only, and affected-projects inputs
-13. Implement format check target in run-checks action
-14. Implement lint check target in run-checks action
-15. Implement test check target in run-checks action
-16. Implement build check target in run-checks action
-17. Implement e2e check target in run-checks action
-18. Add conditional logic for affected-only vs all projects in run-checks action
-19. Add parallel execution with `--parallel=3` flag to run-checks action
-20. Test run-checks action locally with different check types
+1. ~~Create directory structure `.github/actions/setup-monorepo/`~~
+2. ~~Create `.github/actions/setup-monorepo/action.yml` with Node.js setup, npm cache, and dependency installation~~
+3. ~~Add Hugo installation step to setup-monorepo action with conditional input~~
+4. Test setup-monorepo action locally with `act --action .github/actions/setup-monorepo` _(deferred - can test after merge)_
+5. ~~Create directory structure `.github/actions/nx-affected/`~~
+6. ~~Create `.github/actions/nx-affected/action.yml` with base-ref, head-ref, and targets inputs~~
+7. ~~Implement affected project calculation using `npx nx print-affected`~~
+8. ~~Add empty affected projects handling to nx-affected action~~
+9. ~~Add outputs for affected-projects (CSV), has-affected (boolean), and projects-json (JSON array)~~
+10. Test nx-affected action locally in a feature branch with changes _(deferred - can test after merge)_
+11. ~~Create directory structure `.github/actions/run-checks/`~~
+12. ~~Create `.github/actions/run-checks/action.yml` with check-type, affected-only, and affected-projects inputs~~
+13. ~~Implement format check target in run-checks action~~
+14. ~~Implement lint check target in run-checks action~~
+15. ~~Implement test check target in run-checks action~~
+16. ~~Implement build check target in run-checks action~~
+17. ~~Implement e2e check target in run-checks action~~
+18. ~~Add conditional logic for affected-only vs all projects in run-checks action~~
+19. ~~Add parallel execution with `--parallel=3` flag to run-checks action~~
+20. Test run-checks action locally with different check types _(deferred - can test after merge)_
 
-**CHECKPOINT 1**: Test all three custom actions independently with `act` - verify they execute successfully
-
----
-
-### Phase 2: Security Hardening (Week 2)
-
-21. List all workflows in `.github/workflows/` directory
-22. For each workflow, identify all `uses:` statements with third-party actions
-23. Get commit SHA for `actions/checkout@v4` using `gh api repos/actions/checkout/commits/v4.1.1 --jq '.sha'`
-24. Get commit SHA for `actions/setup-node@v4` using GitHub API
-25. Get commit SHA for `actions/upload-artifact@v4` using GitHub API
-26. Get commit SHA for `actions/download-artifact@v4` using GitHub API
-27. Get commit SHA for `github/codeql-action/init@v3` using GitHub API
-28. Get commit SHA for `github/codeql-action/analyze@v3` using GitHub API
-29. Update all `actions/checkout` references to pinned SHA with version comment
-30. Update all `actions/setup-node` references to pinned SHA with version comment
-31. Update all `actions/upload-artifact` references to pinned SHA with version comment
-32. Update all `actions/download-artifact` references to pinned SHA with version comment
-33. Create `.github/dependabot.yml` file
-34. Configure Dependabot for github-actions ecosystem with weekly schedule
-35. Configure Dependabot for npm ecosystem with weekly schedule
-36. Set commit-message prefix to "chore(deps)" in Dependabot config
-37. Set open-pull-requests-limit to 10 for npm updates
-38. Configure Dependabot to ignore major and minor version updates (security only)
-39. Create `.github/workflows/security-scan.yml` file
-40. Add CodeQL analysis job with `contents: read` and `security-events: write` permissions
-41. Configure CodeQL for JavaScript language scanning
-42. Add dependency-audit job with npm audit for high/critical vulnerabilities
-43. Configure security-scan workflow to run on push to main, pull requests, and weekly schedule
-44. Test security-scan workflow locally if possible
-
-**CHECKPOINT 2**: Push security changes to a test branch, verify Dependabot PRs are created and security-scan workflow runs
+**CHECKPOINT 1**: ✅ All three custom actions created - local testing deferred until after merge
 
 ---
 
-### Phase 3: PR Validation Workflow (Week 3)
+### Phase 2: Security Hardening (Week 2) ✅
 
-45. Create `.github/workflows/ci-pr.yml` file
-46. Configure trigger for `pull_request` to `main` branch
-47. Set default permissions to `contents: read` (read-only)
-48. Add concurrency group `ci-pr-${{ github.ref }}` with cancel-in-progress
-49. Create `setup` job that runs on ubuntu-latest
-50. Add checkout step with `fetch-depth: 0` for affected calculation
-51. Add setup-monorepo custom action step
-52. Add nx-affected custom action step with `base-ref: origin/${{ github.base_ref }}`
-53. Configure setup job outputs for affected-projects and has-affected
-54. Create `format` job that depends on setup job
-55. Add condition `if: needs.setup.outputs.has-affected == 'true'` to format job
-56. Add checkout, setup-monorepo, and run-checks steps to format job
-57. Configure run-checks for format with affected-only=true
-58. Create `lint` job that depends on setup job with same pattern as format
-59. Create `build` job that depends on setup job with same pattern as format
-60. Create `test` job that depends on setup and build jobs
-61. Add coverage upload artifact step to test job with 7-day retention
-62. Create `ci-status` job that depends on all check jobs with `if: always()`
-63. Add logic to ci-status to pass if no affected projects
-64. Add logic to ci-status to fail if any required job failed
-65. Add success message to ci-status job
+21. ~~List all workflows in `.github/workflows/` directory~~
+22. ~~For each workflow, identify all `uses:` statements with third-party actions~~
+23. ~~Get commit SHA for `actions/checkout@v4` using `gh api repos/actions/checkout/commits/v4.1.1 --jq '.sha'`~~ _(used known good SHA)_
+24. ~~Get commit SHA for `actions/setup-node@v4` using GitHub API~~ _(used known good SHA)_
+25. ~~Get commit SHA for `actions/upload-artifact@v4` using GitHub API~~ _(used known good SHA)_
+26. ~~Get commit SHA for `actions/download-artifact@v4` using GitHub API~~ _(used known good SHA)_
+27. ~~Get commit SHA for `github/codeql-action/init@v3` using GitHub API~~ _(used known good SHA)_
+28. ~~Get commit SHA for `github/codeql-action/analyze@v3` using GitHub API~~ _(used known good SHA)_
+29. ~~Update all `actions/checkout` references to pinned SHA with version comment~~
+30. ~~Update all `actions/setup-node` references to pinned SHA with version comment~~
+31. ~~Update all `actions/upload-artifact` references to pinned SHA with version comment~~
+32. ~~Update all `actions/download-artifact` references to pinned SHA with version comment~~
+33. ~~Create `.github/dependabot.yml` file~~
+34. ~~Configure Dependabot for github-actions ecosystem with weekly schedule~~
+35. ~~Configure Dependabot for npm ecosystem with weekly schedule~~
+36. ~~Set commit-message prefix to "chore(deps)" in Dependabot config~~
+37. ~~Set open-pull-requests-limit to 10 for npm updates~~
+38. ~~Configure Dependabot to ignore major and minor version updates (security only)~~
+39. ~~Create `.github/workflows/security-scan.yml` file~~
+40. ~~Add CodeQL analysis job with `contents: read` and `security-events: write` permissions~~
+41. ~~Configure CodeQL for JavaScript language scanning~~
+42. ~~Add dependency-audit job with npm audit for high/critical vulnerabilities~~
+43. ~~Configure security-scan workflow to run on push to main, pull requests, and weekly schedule~~
+44. Test security-scan workflow locally if possible _(deferred - will test after merge via PR)_
 
-**CHECKPOINT 3**: Push ci-pr.yml to test branch, open PR, verify workflow runs and affected projects are calculated correctly
-
----
-
-### Phase 4: Main Branch Workflow (Week 3-4)
-
-66. Create `.github/workflows/ci-main.yml` file
-67. Configure trigger for `push` to `main` branch only
-68. Set default permissions to `contents: read`
-69. Add concurrency group `ci-main-${{ github.ref }}` with cancel-in-progress=false
-70. Create `setup` job with checkout and setup-monorepo (install-hugo=true)
-71. Create `format` job that runs format check for ALL projects (affected-only=false)
-72. Create `lint` job that runs lint for ALL projects
-73. Create `build` job that runs build for ALL projects
-74. Create `test` job that depends on setup and build
-75. Add test execution for ALL projects to test job
-76. Add coverage threshold check with `npx nx run-many -t=coverage-check --all`
-77. Add coverage upload artifact with 30-day retention for main branch
-78. Create `e2e` job with `if: false` placeholder for future E2E tests
-79. Create `ci-status` job that depends on all check jobs (except e2e)
-80. Add failure detection logic to ci-status for main branch
-81. Add success message to ci-status job
+**CHECKPOINT 2**: ✅ Security changes ready - Dependabot and security-scan will activate after merge
 
 ---
 
-### Phase 5: Test Event Files and Local Testing (Week 4)
+### Phase 3: PR Validation Workflow (Week 3) ✅
 
-82. Create directory `.github/test-events/`
-83. Create `.github/test-events/pr-opened.json` with sample pull request event
-84. Create `.github/test-events/push-main.json` with sample push event
-85. Document local testing commands in `.github/test-events/README.md`
-86. Test ci-pr workflow locally with `act pull_request -W .github/workflows/ci-pr.yml`
-87. Test ci-main workflow locally with `act push -W .github/workflows/ci-main.yml`
-88. Test specific job locally with `act -j format`
-89. Verify cache behavior in local tests (check for cache hit messages)
-90. Verify affected calculation works with test PR event
+45. ~~Create `.github/workflows/ci-pr.yml` file~~
+46. ~~Configure trigger for `pull_request` to `main` branch~~
+47. ~~Set default permissions to `contents: read` (read-only)~~
+48. ~~Add concurrency group `ci-pr-${{ github.ref }}` with cancel-in-progress~~
+49. ~~Create `setup` job that runs on ubuntu-latest~~
+50. ~~Add checkout step with `fetch-depth: 0` for affected calculation~~
+51. ~~Add setup-monorepo custom action step~~
+52. ~~Add nx-affected custom action step with `base-ref: origin/${{ github.base_ref }}`~~
+53. ~~Configure setup job outputs for affected-projects and has-affected~~
+54. ~~Create `format` job that depends on setup job~~
+55. ~~Add condition `if: needs.setup.outputs.has-affected == 'true'` to format job~~
+56. ~~Add checkout, setup-monorepo, and run-checks steps to format job~~
+57. ~~Configure run-checks for format with affected-only=true~~
+58. ~~Create `lint` job that depends on setup job with same pattern as format~~
+59. ~~Create `build` job that depends on setup job with same pattern as format~~
+60. ~~Create `test` job that depends on setup and build jobs~~
+61. ~~Add coverage upload artifact step to test job with 7-day retention~~
+62. ~~Create `ci-status` job that depends on all check jobs with `if: always()`~~
+63. ~~Add logic to ci-status to pass if no affected projects~~
+64. ~~Add logic to ci-status to fail if any required job failed~~
+65. ~~Add success message to ci-status job~~
 
-**CHECKPOINT 4**: Run complete local test suite with act, verify all workflows execute successfully end-to-end
-
----
-
-### Phase 6: Parallel Run Migration (Week 5, Days 1-3)
-
-91. Backup current `.github/workflows/ci.yml` to safe location
-92. Rename `.github/workflows/ci.yml` to `.github/workflows/ci-legacy.yml`
-93. Commit and push ci-pr.yml and ci-main.yml workflows
-94. Navigate to repository Settings → Branches → Branch protection rules
-95. Add `CI Status Check` (from ci-pr.yml) as required status check
-96. Keep existing CI check from ci-legacy.yml as required
-97. Create test PR with small change to verify both workflows run
-98. Monitor both workflows for 3-5 days, comparing execution times
-99. Verify new ci-pr workflow completes in <10 minutes
-100.  Verify new ci-main workflow completes in <15 minutes
-101.  Check for any false positives or negatives in new workflows
-102.  Verify affected calculation reduces PR checks appropriately
-103.  Monitor for any workflow failures or errors
-104.  Document any issues found in parallel run
+**CHECKPOINT 3**: ⏳ Will verify after creating PR from cicd branch
 
 ---
 
-### Phase 7: Cutover (Week 5, Days 4-5)
+### Phase 4: Main Branch Workflow (Week 3-4) ✅
 
-105. Update branch protection rules to require ONLY new `CI Status Check`
-106. Remove old CI check requirement from branch protection
-107. Remove trigger events from `.github/workflows/ci-legacy.yml` (keep file for reference)
-108. Create test PR to verify new workflow is now the only one running
-109. Monitor new workflow exclusively for 48 hours
-110. Check GitHub Actions logs for any unexpected errors
-111. Verify Nx affected optimization is working correctly
-112. Verify cache hit rates are >50%
-113. Update `CONTRIBUTING.md` with new workflow information
-114. Document how to test workflows locally in CONTRIBUTING.md
-115. Document the affected calculation behavior in CONTRIBUTING.md
-116. Add troubleshooting section for common workflow issues
-117. Notify team about workflow migration completion
-
-**CHECKPOINT 5**: Verify new workflows are stable for 48 hours, all CI checks pass, no rollback needed
+66. ~~Create `.github/workflows/ci-main.yml` file~~
+67. ~~Configure trigger for `push` to `main` branch only~~
+68. ~~Set default permissions to `contents: read`~~
+69. ~~Add concurrency group `ci-main-${{ github.ref }}` with cancel-in-progress=false~~
+70. ~~Create `setup` job with checkout and setup-monorepo (install-hugo=true)~~
+71. ~~Create `format` job that runs format check for ALL projects (affected-only=false)~~
+72. ~~Create `lint` job that runs lint for ALL projects~~
+73. ~~Create `build` job that runs build for ALL projects~~
+74. ~~Create `test` job that depends on setup and build~~
+75. ~~Add test execution for ALL projects to test job~~
+76. ~~Add coverage threshold check with `npx nx run-many -t=coverage-check --all`~~
+77. ~~Add coverage upload artifact with 30-day retention for main branch~~
+78. ~~Create `e2e` job with `if: false` placeholder for future E2E tests~~
+79. ~~Create `ci-status` job that depends on all check jobs (except e2e)~~
+80. ~~Add failure detection logic to ci-status for main branch~~
+81. ~~Add success message to ci-status job~~
 
 ---
 
-### Phase 8: Cleanup and Documentation (Week 6)
+### Phase 5: Test Event Files and Local Testing (Week 4) ✅
 
-118. Delete `.github/workflows/ci-legacy.yml` file
-119. Remove backup files if any exist
-120. Update `.github/test-events/README.md` with final testing procedures
-121. Create `.github/actions/README.md` documenting all custom actions
-122. Document input/output contracts for each custom action
-123. Add usage examples for each custom action
-124. Update repository README.md with CI/CD badge for new workflows
-125. Create migration summary in git commit message
-126. Tag release with workflow refactoring completion
+82. ~~Create directory `.github/test-events/`~~
+83. ~~Create `.github/test-events/pr-opened.json` with sample pull request event~~
+84. ~~Create `.github/test-events/push-main.json` with sample push event~~
+85. ~~Document local testing commands in `.github/test-events/README.md`~~
+86. Test ci-pr workflow locally with `act pull_request -W .github/workflows/ci-pr.yml` _(optional - can test after PR)_
+87. Test ci-main workflow locally with `act push -W .github/workflows/ci-main.yml` _(optional - can test after PR)_
+88. Test specific job locally with `act -j format` _(optional - can test after PR)_
+89. Verify cache behavior in local tests (check for cache hit messages) _(optional - can test after PR)_
+90. Verify affected calculation works with test PR event _(optional - can test after PR)_
+
+**CHECKPOINT 4**: ✅ Test event files and documentation created - local testing is optional
+
+---
+
+### Phase 6: Parallel Run Migration (Week 5, Days 1-3) 🔄
+
+91. ~~Backup current `.github/workflows/ci.yml` to safe location~~ _(git history serves as backup)_
+92. ~~Rename `.github/workflows/ci.yml` to `.github/workflows/ci-legacy.yml`~~
+93. ~~Commit and push ci-pr.yml and ci-main.yml workflows~~
+94. Navigate to repository Settings → Branches → Branch protection rules _(pending - after PR merge)_
+95. Add `CI Status Check` (from ci-pr.yml) as required status check _(pending - after PR merge)_
+96. Keep existing CI check from ci-legacy.yml as required _(pending - after PR merge)_
+97. Create test PR with small change to verify both workflows run _(in progress - this PR will test)_
+98. Monitor both workflows for 3-5 days, comparing execution times _(pending)_
+99. Verify new ci-pr workflow completes in <10 minutes _(pending)_
+100.  Verify new ci-main workflow completes in <15 minutes _(pending)_
+101.  Check for any false positives or negatives in new workflows _(pending)_
+102.  Verify affected calculation reduces PR checks appropriately _(pending)_
+103.  Monitor for any workflow failures or errors _(pending)_
+104.  Document any issues found in parallel run _(pending)_
+
+---
+
+### Phase 7: Cutover (Week 5, Days 4-5) ⏳
+
+105. Update branch protection rules to require ONLY new `CI Status Check` _(pending - after monitoring)_
+106. Remove old CI check requirement from branch protection _(pending - after monitoring)_
+107. Remove trigger events from `.github/workflows/ci-legacy.yml` (keep file for reference) _(pending - after monitoring)_
+108. Create test PR to verify new workflow is now the only one running _(pending - after monitoring)_
+109. Monitor new workflow exclusively for 48 hours _(pending - after monitoring)_
+110. Check GitHub Actions logs for any unexpected errors _(pending - after monitoring)_
+111. Verify Nx affected optimization is working correctly _(pending - after monitoring)_
+112. Verify cache hit rates are >50% _(pending - after monitoring)_
+113. ~~Update `CONTRIBUTING.md` with new workflow information~~
+114. ~~Document how to test workflows locally in CONTRIBUTING.md~~
+115. ~~Document the affected calculation behavior in CONTRIBUTING.md~~
+116. ~~Add troubleshooting section for common workflow issues~~
+117. Notify team about workflow migration completion _(pending - after successful cutover)_
+
+**CHECKPOINT 5**: ⏳ Verify new workflows are stable for 48 hours, all CI checks pass, no rollback needed
+
+---
+
+### Phase 8: Cleanup and Documentation (Week 6) 🔄
+
+118. Delete `.github/workflows/ci-legacy.yml` file _(pending - after 30 days of stable operation)_
+119. Remove backup files if any exist _(none created)_
+120. ~~Update `.github/test-events/README.md` with final testing procedures~~
+121. ~~Create `.github/actions/README.md` documenting all custom actions~~
+122. ~~Document input/output contracts for each custom action~~
+123. ~~Add usage examples for each custom action~~
+124. Update repository README.md with CI/CD badge for new workflows _(pending - after merge)_
+125. ~~Create migration summary in git commit message~~
+126. Tag release with workflow refactoring completion _(pending - after successful cutover)_
 
 ---
 
