@@ -28,8 +28,6 @@ jobs:
 
       - name: Setup monorepo
         uses: ./.github/actions/setup-monorepo
-        with:
-          install-hugo: 'true'
 
       - name: Calculate affected projects
         id: nx-affected
