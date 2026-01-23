@@ -31,7 +31,7 @@
 
 ## Phase 8: Cleanup (Pending)
 
-- [ ] Delete old/legacy workflow files (after 30 days stable)
+- [x] Delete old/legacy workflow files (after 30 days stable)
 - [ ] Update repository README.md with CI/CD badge
 - [ ] Tag release with workflow refactoring completion
 
