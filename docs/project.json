@@ -6,6 +6,11 @@
   "targets": {
     "extract": {
       "executor": "nx:run-commands",
+      "inputs": [
+        "{workspaceRoot}/**/*.md",
+        "!{projectRoot}/**/*.md",
+        "{projectRoot}/scripts/extract-readme.js"
+      ],
       "options": {
         "command": "node scripts/extract-readme.js",
         "cwd": "docs"
@@ -28,6 +33,16 @@
     "build": {
       "executor": "nx:run-commands",
       "dependsOn": ["extract"],
+      "inputs": [
+        "{projectRoot}/**/*.md",
+        "{workspaceRoot}/**/*.md",
+        "{projectRoot}/hugo.toml",
+        "{projectRoot}/themes/**/*",
+        "{projectRoot}/layouts/**/*",
+        "{projectRoot}/assets/**/*",
+        "{projectRoot}/static/**/*",
+        "{projectRoot}/scripts/**/*"
+      ],
       "options": {
         "command": "hugo --minify",
         "cwd": "docs",
