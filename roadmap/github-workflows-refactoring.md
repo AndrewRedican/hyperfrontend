@@ -185,7 +185,7 @@ runs:
       shell: bash
       run: |
         # Get affected projects from Nx
-        AFFECTED=$(npx nx print-affected --base=${{ inputs.base-ref }} --head=${{ inputs.head-ref }} --select=projects 2>/dev/null || echo "")
+        AFFECTED=$(npx nx show projects --affected --base=${{ inputs.base-ref }} --head=${{ inputs.head-ref }} 2>/dev/null || echo "")
 
         # Handle empty results
         if [ -z "$AFFECTED" ]; then
@@ -1072,10 +1072,10 @@ These can be tackled incrementally as needs arise, without reworking the foundat
 
 ```bash
 # Test affected locally
-npx nx print-affected --base=origin/main --head=HEAD
+npx nx show projects --affected --base=origin/main --head=HEAD
 
 # Run checks for affected projects
-npx nx run-many -t=test --projects=$(npx nx print-affected --base=origin/main --select=projects)
+npx nx run-many -t=test --projects=$(npx nx show projects --affected --base=origin/main --head=HEAD | tr '\n' ',')
 
 # Check for outdated actions
 gh api repos/actions/checkout/commits/v4 --jq '.sha'

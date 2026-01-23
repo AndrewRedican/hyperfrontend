@@ -29,11 +29,11 @@ runs:
       id: calculate
       shell: bash
       run: |
-        # Calculate affected projects
-        AFFECTED_OUTPUT=$(npx nx print-affected --base=${{ inputs.base-ref }} --head=${{ inputs.head-ref }} --select=projects 2>/dev/null || echo "")
+        # Calculate affected projects using Nx 19+ command
+        AFFECTED_OUTPUT=$(npx nx show projects --affected --base=${{ inputs.base-ref }} --head=${{ inputs.head-ref }} 2>/dev/null || echo "")
 
         # Handle empty output
-        if [ -z "$AFFECTED_OUTPUT" ] || [ "$AFFECTED_OUTPUT" = "[]" ]; then
+        if [ -z "$AFFECTED_OUTPUT" ]; then
           echo "affected-projects=" >> $GITHUB_OUTPUT
           echo "has-affected=false" >> $GITHUB_OUTPUT
           echo "projects-json=[]" >> $GITHUB_OUTPUT
@@ -41,11 +41,11 @@ runs:
           exit 0
         fi
 
-        # Convert space-separated list to comma-separated
-        AFFECTED_CSV=$(echo "$AFFECTED_OUTPUT" | tr ' ' ',')
+        # Convert newline-separated list to comma-separated
+        AFFECTED_CSV=$(echo "$AFFECTED_OUTPUT" | tr '\n' ',' | sed 's/,$//')
 
         # Convert to JSON array
-        PROJECTS_JSON=$(echo "$AFFECTED_OUTPUT" | jq -R -s -c 'split(" ") | map(select(length > 0))')
+        PROJECTS_JSON=$(echo "$AFFECTED_OUTPUT" | jq -R -s -c 'split("\n") | map(select(length > 0))')
 
         # Set outputs
         echo "affected-projects=$AFFECTED_CSV" >> $GITHUB_OUTPUT

@@ -74,7 +74,7 @@ This directory contains reusable composite actions for the hyperfrontend monorep
 
 **What it does**:
 
-1. Runs `npx nx print-affected` to calculate affected projects
+1. Runs `npx nx show projects --affected` to calculate affected projects
 2. Handles cases where no projects are affected
 3. Converts output to multiple formats (CSV, JSON, boolean)
 4. Sets GitHub Actions outputs for downstream jobs
