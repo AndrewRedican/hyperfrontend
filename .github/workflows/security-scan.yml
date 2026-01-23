@@ -51,21 +51,18 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Run npm audit
-        run: |
-          npm audit --audit-level=high
-        continue-on-error: false
-
       - name: Check for security vulnerabilities
         run: |
           echo "Checking for high and critical vulnerabilities..."
-          AUDIT_RESULT=$(npm audit --json)
+          AUDIT_RESULT=$(npm audit --json || true)
           HIGH=$(echo "$AUDIT_RESULT" | jq '.metadata.vulnerabilities.high // 0')
           CRITICAL=$(echo "$AUDIT_RESULT" | jq '.metadata.vulnerabilities.critical // 0')
 
+          echo "Found $HIGH high and $CRITICAL critical vulnerabilities"
+
           if [ "$HIGH" -gt 0 ] || [ "$CRITICAL" -gt 0 ]; then
-            echo "Found $HIGH high and $CRITICAL critical vulnerabilities"
+            echo "❌ Security check failed"
             exit 1
           else
-            echo "No high or critical vulnerabilities found"
+            echo "✅ No high or critical vulnerabilities found"
           fi
