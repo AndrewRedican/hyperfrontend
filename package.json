@@ -58,7 +58,7 @@
     "lefthook": "2.0.15",
     "nx": "22.3.3",
     "patch-package": "8.0.1",
-    "prettier": "3.8.0",
+    "prettier": "3.8.1",
     "rollup": "4.55.2",
     "ts-jest": "29.4.6",
     "ts-node": "10.9.2",
