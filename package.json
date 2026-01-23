@@ -67,9 +67,10 @@
     "verdaccio": "6.2.4"
   },
   "overrides": {
-    "tmp": "0.2.5",
+    "diff": "8.0.3",
+    "lodash": "4.17.23",
     "qs": "6.14.1",
-    "diff": "8.0.3"
+    "tmp": "0.2.5"
   },
   "config": {
     "commitizen": {
