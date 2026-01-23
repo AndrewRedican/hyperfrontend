@@ -1,4 +1,4 @@
-name: Security Scanning
+name: security
 
 on:
   push:
@@ -15,7 +15,7 @@ permissions:
 
 jobs:
   codeql-analysis:
-    name: CodeQL Analysis
+    name: codeql
     runs-on: ubuntu-latest
     permissions:
       contents: read

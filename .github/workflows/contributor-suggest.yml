@@ -1,4 +1,4 @@
-name: Suggest Contributor Type
+name: contributor suggest
 
 on:
   pull_request_review:
@@ -10,7 +10,7 @@ permissions:
 
 jobs:
   suggest-contribution-type:
-    name: Suggest Contribution Type
+    name: suggest
     runs-on: ubuntu-latest
     # Only run when PR is approved by maintainer/owner
     if: |

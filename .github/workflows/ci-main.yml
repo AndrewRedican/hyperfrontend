@@ -1,4 +1,4 @@
-name: CI - Main Branch
+name: ci
 
 on:
   push:
@@ -15,7 +15,7 @@ concurrency:
 
 jobs:
   setup:
-    name: Setup Environment
+    name: setup
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
@@ -27,7 +27,7 @@ jobs:
           install-hugo: 'true'
 
   format:
-    name: Format Check (All Projects)
+    name: format
     runs-on: ubuntu-latest
     needs: setup
     steps:
@@ -44,7 +44,7 @@ jobs:
           affected-only: 'false'
 
   lint:
-    name: Lint (All Projects)
+    name: lint
     runs-on: ubuntu-latest
     needs: setup
     steps:
@@ -61,7 +61,7 @@ jobs:
           affected-only: 'false'
 
   build:
-    name: Build (All Projects)
+    name: build
     runs-on: ubuntu-latest
     needs: setup
     steps:
@@ -78,7 +78,7 @@ jobs:
           affected-only: 'false'
 
   test:
-    name: Test (All Projects)
+    name: test
     runs-on: ubuntu-latest
     needs: [setup, build]
     steps:
@@ -108,7 +108,7 @@ jobs:
           retention-days: 30
 
   e2e:
-    name: E2E Tests
+    name: e2e
     runs-on: ubuntu-latest
     needs: [setup, build, test]
     steps:
@@ -125,7 +125,7 @@ jobs:
           affected-only: 'false'
 
   ci-status:
-    name: CI Status Check
+    name: status
     runs-on: ubuntu-latest
     needs: [format, lint, build, test, e2e]
     if: always()

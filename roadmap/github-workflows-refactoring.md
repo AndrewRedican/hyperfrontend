@@ -1,203 +1,171 @@
 # GitHub Workflows Refactoring Plan
 
-**Status**: Ready for Implementation
+**Status**: Implemented (PR #2)
 **Created**: January 22, 2026
+**Last Updated**: January 23, 2026
 **Owner**: @AndrewRedican
 
 ---
 
 ## Executive Summary
 
-This plan refactors the hyperfrontend monorepo's CI/CD workflows to improve **maintainability**, **security**, and **efficiency** through modular architecture and security best practices. Unlike a full modernization, this focuses on the essential improvements that deliver the highest value with manageable complexity.
+This document outlines the refactoring of hyperfrontend's CI/CD workflows for improved **maintainability**, **security**, and **efficiency**.
 
-**Key Improvements:**
+**Key Improvements Implemented:**
 
 - ✅ Modular, reusable custom actions
 - ✅ Security hardening (minimal permissions, pinned dependencies)
 - ✅ Nx affected optimization for faster CI
 - ✅ Clear separation of trusted vs untrusted workflows
-- ✅ Foundation for future enhancements without technical debt
+- ✅ Contributor type suggestion automation
 
 **Timeline:** 4-6 weeks
 **Risk Level:** Low (incremental changes with rollback capability)
 
 ---
 
-## Current State
+## Architecture Overview
 
-**Existing CI Workflow** (`.github/workflows/ci.yml`):
+### Custom Actions
 
-- ✅ Works reliably
-- ✅ Has required status checks
-- ❌ Monolithic design (hard to reuse)
-- ❌ No Nx affected support (runs all checks always)
-- ❌ Overly permissive default permissions
-- ❌ Third-party actions not pinned to commits
-- ❌ No security scanning
+Three reusable actions form the foundation:
+
+1. **setup-monorepo** - Node.js environment with caching
+2. **nx-affected** - Calculate affected projects
+3. **run-checks** - Execute format, lint, build, test, e2e
+
+### Workflows
+
+| Workflow              | Trigger       | Purpose                    | Affected          |
+| --------------------- | ------------- | -------------------------- | ----------------- |
+| `ci pr`               | Pull requests | Validate changes           | Yes ✅            |
+| `ci`                  | Push to main  | Full validation            | No (all projects) |
+| `security`            | Weekly + PRs  | Security scanning          | N/A               |
+| `deploy docs`         | Push to main  | Documentation deployment   | N/A               |
+| `contributor suggest` | PR approval   | Suggest contribution types | N/A               |
+| `cla`                 | PR events     | CLA signature check        | N/A               |
 
 ---
 
-## Core Improvements
+## Security Hardening
 
-### 1. Modular Action Architecture
+### Implemented Controls
 
-Break down monolithic workflow into reusable custom actions that can be composed.
+1. **Pinned Dependencies** - All actions use commit SHA with version comments
+2. **Minimal Permissions** - Default `contents: read`, explicit grants per job
+3. **Trusted vs Untrusted** - Separate workflows for forked PRs
+4. **Dependency Scanning** - Dependabot + CodeQL + npm audit
 
-**Benefits:**
+### Permission Matrix
 
-- Easier to test individual components
-- Reusable across multiple workflows
-- Clear input/output contracts
-- Simpler to maintain and update
+| Workflow              | Permissions                                             | Trust Level         |
+| --------------------- | ------------------------------------------------------- | ------------------- |
+| `ci pr`               | `contents: read`                                        | LOW (Untrusted)     |
+| `ci`                  | `contents: read`                                        | MEDIUM (Trusted)    |
+| `security`            | `contents: read`<br>`security-events: write`            | MEDIUM (Trusted)    |
+| `deploy docs`         | `contents: read`<br>`pages: write`<br>`id-token: write` | HIGH (Trusted)      |
+| `contributor suggest` | `contents: read`<br>`pull-requests: write`              | MEDIUM (Owner only) |
 
-### 2. Security Hardening
+---
 
-Apply defense-in-depth security practices.
+## Performance Optimization
 
-**Key Changes:**
-
-- Pin all third-party actions to commit SHA (prevents supply chain attacks)
-- Explicit minimal permissions per job (principle of least privilege)
-- Separate workflows for forked PRs (no secret exposure)
-- Add dependency scanning (Dependabot + npm audit)
-
-### 3. Performance Optimization
-
-Use Nx affected analysis to run only necessary checks.
-
-**Benefits:**
+### Nx Affected Analysis
 
 - PRs run 50-80% faster (only test changed code)
-- Main branch still runs everything (catch integration issues)
-- Better developer experience with faster feedback
+- Main branch runs everything (catch integration issues)
+- Empty affected projects handled gracefully
+
+### Caching Strategy
+
+- npm dependencies cached via `actions/setup-node`
+- Nx computation cache (local)
+- Future: Nx Cloud for remote caching
 
 ---
 
-## Sequential Implementation
+## Testing Strategy
 
-Each step builds on the previous, allowing incremental progress with working CI at every stage.
-
-### Step 1: Create Custom Actions (Week 1)
-
-**Goal:** Build modular, reusable components
-
-**Dependencies:** None (can run in parallel with current CI)
-
-#### Action 1.1: `setup-monorepo`
-
-Sets up Node.js environment with caching and dependencies.
-
-**File:** `.github/actions/setup-monorepo/action.yml`
-
-```yaml
-name: Setup Monorepo
-description: Configure Node.js environment and install dependencies with caching
-
-inputs:
-  node-version:
-    description: 'Node.js version to use'
-    required: false
-    default: '24.x'
-  install-hugo:
-    description: 'Whether to install Hugo for documentation'
-    required: false
-    default: 'false'
-
-outputs:
-  node-version:
-    description: 'Installed Node.js version'
-    value: ${{ steps.setup.outputs.node-version }}
-
-runs:
-  using: composite
-  steps:
-    - name: Setup Node.js
-      id: setup
-      uses: actions/setup-node@60edb5dd545a775178f52524783378180af0d1f8 # v4.0.2
-      with:
-        node-version: ${{ inputs.node-version }}
-        cache: 'npm'
-
-    - name: Install dependencies
-      shell: bash
-      run: npm ci --no-audit --prefer-offline
-
-    - name: Install Hugo
-      if: inputs.install-hugo == 'true'
-      shell: bash
-      run: |
-        HUGO_VERSION=0.140.2
-        wget -q "https://github.com/gohugoio/hugo/releases/download/v${HUGO_VERSION}/hugo_extended_${HUGO_VERSION}_Linux-64bit.tar.gz"
-        tar -xzf "hugo_extended_${HUGO_VERSION}_Linux-64bit.tar.gz" -C /tmp/
-        sudo mv /tmp/hugo /usr/local/bin/
-        hugo version
-```
-
-**Testing:**
+### Local Testing with Act
 
 ```bash
-# Test locally with act
-act --action .github/actions/setup-monorepo
+# Test PR workflow
+act pull_request -W .github/workflows/ci-pr.yml
+
+# Test specific job
+act -j format
+
+# Use test event
+act pull_request --eventpath .github/test-events/pr-opened.json
+```
+
+### Validation Checklist
+
+- [ ] All jobs complete successfully
+- [ ] Affected calculation works correctly
+- [ ] Cache hit rate >50%
+- [ ] PR workflow <10 minutes
+- [ ] Main workflow <15 minutes
+- [ ] No secrets in logs
+
+---
+
+## Rollback Procedures
+
+If critical issues arise:
+
+1. Re-enable legacy workflow by restoring trigger events
+2. Update branch protection to require old status check
+3. Disable new workflows temporarily
+4. Investigate issues offline
+5. Fix and retest before re-deploying
+
+---
+
+## Future Enhancements
+
+### Deployment Workflows
+
+- Demo apps deployment (vendor/host TBD)
+- Automated releases with changelogs
+
+### Package Publishing
+
+- npm publishing with provenance
+- CDN uploads for standalone builds
+
+### Advanced Optimization
+
+- Nx Cloud for remote caching
+- Distributed task execution
+- Workflow health monitoring
+
+---
+
+## Reference Commands
+
+```bash
+# Test affected locally
+npx nx show projects --affected --base=origin/main --head=HEAD
+
+# Run checks for affected projects
+npx nx run-many -t=test --projects=$(npx nx show projects --affected --base=origin/main --head=HEAD | tr '\n' ',')
+
+# Check action versions
+gh api repos/actions/checkout/commits/v4 --jq '.sha'
+
+# Local workflow testing
+act pull_request -W .github/workflows/ci-pr.yml -s GITHUB_TOKEN="$(gh auth token)"
 ```
 
 ---
 
-#### Action 1.2: `nx-affected`
+## Resources
 
-Calculates which projects are affected by changes.
-
-**File:** `.github/actions/nx-affected/action.yml`
-
-```yaml
-name: Nx Affected Projects
-description: Determine which projects are affected by changes using Nx
-
-inputs:
-  base-ref:
-    description: 'Base reference for comparison (e.g., origin/main)'
-    required: false
-    default: 'origin/main'
-  head-ref:
-    description: 'Head reference for comparison (e.g., HEAD)'
-    required: false
-    default: 'HEAD'
-  targets:
-    description: 'Nx targets to check (comma-separated: test,build,lint)'
-    required: false
-    default: 'test,build'
-
-outputs:
-  affected-projects:
-    description: 'Comma-separated list of affected project names'
-    value: ${{ steps.calculate.outputs.projects }}
-  has-affected:
-    description: 'Boolean indicating if any projects are affected'
-    value: ${{ steps.calculate.outputs.has-affected }}
-  projects-json:
-    description: 'JSON array of affected project names'
-    value: ${{ steps.calculate.outputs.projects-json }}
-
-runs:
-  using: composite
-  steps:
-    - name: Calculate affected projects
-      id: calculate
-      shell: bash
-      run: |
-        # Get affected projects from Nx
-        AFFECTED=$(npx nx show projects --affected --base=${{ inputs.base-ref }} --head=${{ inputs.head-ref }} 2>/dev/null || echo "")
-
-        # Handle empty results
-        if [ -z "$AFFECTED" ]; then
-          echo "projects=" >> $GITHUB_OUTPUT
-          echo "has-affected=false" >> $GITHUB_OUTPUT
-          echo "projects-json=[]" >> $GITHUB_OUTPUT
-          echo "ℹ️ No affected projects found"
-          exit 0
-        fi
-
-        # Convert space-separated to comma-separated
-        PROJECTS_CSV=$(echo "$AFFECTED" | tr ' ' ',')
+- [GitHub Actions Security](https://docs.github.com/en/actions/security-guides/security-hardening-for-github-actions)
+- [Nx Affected Commands](https://nx.dev/ci/features/affected)
+- [Act - Local Testing](https://github.com/nektos/act)
+- [Dependabot Configuration](https://docs.github.com/en/code-security/dependabot)
 
         # Convert to JSON array
         PROJECTS_JSON=$(echo "$AFFECTED" | jq -R -s -c 'split(" ") | map(select(length > 0))')
@@ -207,7 +175,8 @@ runs:
         echo "projects-json=$PROJECTS_JSON" >> $GITHUB_OUTPUT
 
         echo "✅ Affected projects: $PROJECTS_CSV"
-```
+
+````
 
 **Testing:**
 
@@ -220,7 +189,7 @@ git add . && git commit -m "test: affected calculation"
 
 # Run the action
 act -j test-affected
-```
+````
 
 ---
 

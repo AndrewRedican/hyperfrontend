@@ -1,4 +1,4 @@
-name: CI - Pull Request
+name: ci pr
 
 on:
   pull_request:
@@ -15,7 +15,7 @@ concurrency:
 
 jobs:
   setup:
-    name: Setup and Calculate Affected
+    name: setup
     runs-on: ubuntu-latest
     outputs:
       affected-projects: ${{ steps.nx-affected.outputs.affected-projects }}
@@ -37,7 +37,7 @@ jobs:
           head-ref: HEAD
 
   format:
-    name: Format Check
+    name: format
     runs-on: ubuntu-latest
     needs: setup
     if: needs.setup.outputs.has-affected == 'true'
@@ -56,7 +56,7 @@ jobs:
           affected-projects: ${{ needs.setup.outputs.affected-projects }}
 
   lint:
-    name: Lint
+    name: lint
     runs-on: ubuntu-latest
     needs: setup
     if: needs.setup.outputs.has-affected == 'true'
@@ -75,7 +75,7 @@ jobs:
           affected-projects: ${{ needs.setup.outputs.affected-projects }}
 
   build:
-    name: Build
+    name: build
     runs-on: ubuntu-latest
     needs: setup
     if: needs.setup.outputs.has-affected == 'true'
@@ -94,7 +94,7 @@ jobs:
           affected-projects: ${{ needs.setup.outputs.affected-projects }}
 
   test:
-    name: Test
+    name: test
     runs-on: ubuntu-latest
     needs: [setup, build]
     if: needs.setup.outputs.has-affected == 'true'
@@ -121,7 +121,7 @@ jobs:
           retention-days: 7
 
   e2e:
-    name: E2E Tests
+    name: e2e
     runs-on: ubuntu-latest
     needs: [setup, build, test]
     if: needs.setup.outputs.has-affected == 'true'
@@ -140,7 +140,7 @@ jobs:
           affected-projects: ${{ needs.setup.outputs.affected-projects }}
 
   ci-status:
-    name: CI Status Check
+    name: status
     runs-on: ubuntu-latest
     needs: [setup, format, lint, build, test, e2e]
     if: always()
