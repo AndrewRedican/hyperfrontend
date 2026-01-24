@@ -93,7 +93,8 @@
       "options": {
         "buildTargetName": "build"
       },
-      "include": ["packages/**/*", "plugins/**/*"]
+      "include": ["libs/**/*", "plugins/**/*"],
+      "exclude": ["plugins/*-e2e/**/*"]
     }
   ]
 }
