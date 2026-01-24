@@ -1,6 +1,6 @@
 {
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
-  "name": "web-worker",
+  "name": "lib-web-worker",
   "description": "Web Worker utilities and abstractions.",
   "sourceRoot": "{projectRoot}/src",
   "projectType": "library",

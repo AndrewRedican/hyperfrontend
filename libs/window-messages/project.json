@@ -1,6 +1,6 @@
 {
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
-  "name": "window-messages",
+  "name": "lib-window-messages",
   "description": "Window messaging utilities for cross-frame communication.",
   "sourceRoot": "{projectRoot}/src",
   "projectType": "library",

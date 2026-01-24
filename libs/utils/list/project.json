@@ -1,6 +1,6 @@
 {
   "$schema": "../../../node_modules/nx/schemas/project-schema.json",
-  "name": "list-utils",
+  "name": "lib-list-utils",
   "description": "List and array manipulation utilities.",
   "sourceRoot": "{projectRoot}/src",
   "projectType": "library",

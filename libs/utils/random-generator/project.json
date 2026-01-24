@@ -1,6 +1,6 @@
 {
   "$schema": "../../../node_modules/nx/schemas/project-schema.json",
-  "name": "random-generator-utils",
+  "name": "lib-random-generator-utils",
   "description": "Random number and data generation utilities.",
   "sourceRoot": "{projectRoot}/src",
   "projectType": "library",

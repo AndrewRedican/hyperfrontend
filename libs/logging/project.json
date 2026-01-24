@@ -1,6 +1,6 @@
 {
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
-  "name": "logging",
+  "name": "lib-logging",
   "description": "Structured logging utilities for applications.",
   "sourceRoot": "{projectRoot}/src",
   "projectType": "library",

@@ -1,6 +1,6 @@
 {
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
-  "name": "network-protocol",
+  "name": "lib-network-protocol",
   "description": "Network protocol implementation with channels, routing, and security.",
   "sourceRoot": "{projectRoot}/src",
   "projectType": "library",

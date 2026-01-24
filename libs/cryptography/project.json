@@ -1,6 +1,6 @@
 {
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
-  "name": "cryptography",
+  "name": "lib-cryptography",
   "description": "Cryptography utilities for browser and Node.js environments.",
   "sourceRoot": "{projectRoot}/src",
   "projectType": "library",

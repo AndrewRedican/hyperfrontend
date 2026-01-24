@@ -1,6 +1,6 @@
 {
   "$schema": "../../../node_modules/nx/schemas/project-schema.json",
-  "name": "ui-utils",
+  "name": "lib-ui-utils",
   "description": "UI utilities for elements, events, styling, and mobile interactions.",
   "sourceRoot": "{projectRoot}/src",
   "projectType": "library",
