@@ -1,9 +1,11 @@
 {
   "name": "@hyperfrontend/window-messages",
   "version": "0.0.0",
-  "description": "",
+  "description": "Window messaging utilities for cross-frame communication.",
   "main": "./src/index.js",
   "sideEffects": false,
+  "exports": {},
+  "dependencies": {},
   "funding": {
     "type": "github",
     "url": "https://github.com/sponsors/AndrewRedican"

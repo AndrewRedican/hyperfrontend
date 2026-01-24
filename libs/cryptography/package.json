@@ -1,8 +1,10 @@
 {
   "name": "@hyperfrontend/cryptography",
   "version": "0.0.0",
-  "description": "",
+  "description": "Cryptography utilities for browser and Node.js environments.",
   "main": "./src/index.js",
   "private": true,
-  "sideEffects": false
+  "sideEffects": false,
+  "exports": {},
+  "dependencies": {}
 }

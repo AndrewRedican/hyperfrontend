@@ -1,8 +1,10 @@
 {
   "name": "@hyperfrontend/function-utils",
   "version": "0.0.0",
-  "description": "",
+  "description": "Function composition and manipulation utilities.",
   "main": "./src/index.js",
   "private": true,
-  "sideEffects": false
+  "sideEffects": false,
+  "exports": {},
+  "dependencies": {}
 }

@@ -1,8 +1,10 @@
 {
   "name": "@hyperfrontend/ui-utils",
   "version": "0.0.0",
-  "description": "",
+  "description": "UI utilities for elements, events, styling, and mobile interactions.",
   "main": "./src/index.js",
   "private": true,
-  "sideEffects": false
+  "sideEffects": false,
+  "exports": {},
+  "dependencies": {}
 }
