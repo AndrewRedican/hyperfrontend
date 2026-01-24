@@ -9,7 +9,7 @@ module.exports = [
       '@nx/dependency-checks': [
         'error',
         {
-          ignoreDependencies: ['jest'],
+          ignoredDependencies: ['jest'],
           ignoredFiles: ['{projectRoot}/eslint.config.{js,cjs,mjs}'],
         },
       ],

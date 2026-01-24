@@ -5,5 +5,8 @@
   "private": true,
   "sideEffects": false,
   "main": "./src/index.js",
-  "dependencies": {}
+  "dependencies": {
+    "@hyperfrontend/data-utils": "0.0.0",
+    "@hyperfrontend/function-utils": "0.0.0"
+  }
 }

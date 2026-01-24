@@ -17,5 +17,7 @@
     "./state-change": "./src/state-change/index.js",
     "./store": "./src/store/index.js"
   },
-  "dependencies": {}
+  "dependencies": {
+    "@hyperfrontend/data-utils": "0.0.0"
+  }
 }
