@@ -1,8 +1,8 @@
 {
   "name": "@hyperfrontend/demo-chess",
   "version": "0.0.0",
-  "description": "",
+  "description": "Chess game demonstration.",
   "main": "./src/index.js",
   "private": true,
-  "sideEffects": false
+  "dependencies": {}
 }

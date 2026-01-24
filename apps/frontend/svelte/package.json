@@ -1,8 +1,8 @@
 {
   "name": "@hyperfrontend/app-svelte",
   "version": "0.0.0",
-  "description": "",
+  "description": "Svelte micro-frontend application.",
   "main": "./src/index.js",
   "private": true,
-  "sideEffects": false
+  "dependencies": {}
 }

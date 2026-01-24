@@ -1,8 +1,8 @@
 {
   "name": "@hyperfrontend/app-nest",
   "version": "0.0.0",
-  "description": "",
+  "description": "NestJS backend application.",
   "main": "./src/index.js",
   "private": true,
-  "sideEffects": false
+  "dependencies": {}
 }
