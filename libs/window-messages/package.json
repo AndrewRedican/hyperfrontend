@@ -4,7 +4,9 @@
   "description": "Window messaging utilities for cross-frame communication.",
   "main": "./src/index.js",
   "sideEffects": false,
-  "exports": {},
+  "exports": {
+    ".": "./src/index.js"
+  },
   "dependencies": {},
   "funding": {
     "type": "github",

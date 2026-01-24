@@ -5,6 +5,8 @@
   "main": "./src/index.js",
   "private": true,
   "sideEffects": false,
-  "exports": {},
+  "exports": {
+    ".": "./src/index.js"
+  },
   "dependencies": {}
 }

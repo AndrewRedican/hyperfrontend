@@ -5,6 +5,17 @@
   "main": "./src/index.js",
   "private": true,
   "sideEffects": false,
-  "exports": {},
+  "exports": {
+    "./audio": "./src/audio/index.js",
+    "./color": "./src/color/index.js",
+    "./component": "./src/component/index.js",
+    "./element": "./src/element/index.js",
+    "./event": "./src/event/index.js",
+    "./misc": "./src/misc/index.js",
+    "./mobile": "./src/mobile/index.js",
+    "./selector": "./src/selector/index.js",
+    "./style": "./src/style/index.js",
+    "./time": "./src/time/index.js"
+  },
   "dependencies": {}
 }

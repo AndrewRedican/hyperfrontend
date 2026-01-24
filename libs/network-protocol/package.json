@@ -5,6 +5,17 @@
   "main": "./src/index.js",
   "private": true,
   "sideEffects": false,
-  "exports": {},
+  "exports": {
+    "./channel": "./src/channel/index.js",
+    "./data": "./src/data/index.js",
+    "./packet": "./src/packet/index.js",
+    "./v1": "./src/protocol/v1/index.js",
+    "./queue": "./src/queue/index.js",
+    "./receiver": "./src/receiver/index.js",
+    "./routing": "./src/routing/index.js",
+    "./security": "./src/security/index.js",
+    "./sender": "./src/sender/index.js",
+    "./topic": "./src/topic/index.js"
+  },
   "dependencies": {}
 }

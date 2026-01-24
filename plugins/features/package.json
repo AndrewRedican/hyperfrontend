@@ -4,7 +4,9 @@
   "description": "Nx plugin for hyperfrontend micro-frontend features.",
   "main": "./src/index.js",
   "sideEffects": false,
-  "exports": {},
+  "exports": {
+    ".": "./src/index.js"
+  },
   "dependencies": {},
   "generators": "./generators.json",
   "executors": "./executors.json",
