@@ -29,7 +29,7 @@
     "paths": {
       "@hyperfrontend-cryptography/browser": ["libs/cryptography/src/browser/index.ts"],
       "@hyperfrontend-cryptography/node": ["libs/cryptography/src/node/index.ts"],
-      "@hyperfrontend-data-utils": ["libs/data/src/index.ts"],
+      "@hyperfrontend-data-utils": ["libs/utils/data/src/index.ts"],
       "@hyperfrontend-function-utils": ["libs/utils/function/src/index.ts"],
       "@hyperfrontend-immutable-api-utils": ["libs/utils/immutable-api/src/index.ts"],
       "@hyperfrontend-list-utils": ["libs/utils/list/src/index.ts"],
