@@ -1,0 +1,8 @@
+{
+  "name": "@hyperfrontend/app-vue",
+  "version": "0.0.0",
+  "description": "Vue micro-frontend application.",
+  "main": "./src/index.js",
+  "private": true,
+  "dependencies": {}
+}

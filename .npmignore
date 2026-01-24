@@ -1,0 +1,26 @@
+# Development files
+*.spec.ts
+*.spec.js
+*.test.ts
+*.test.js
+**/__tests__/**
+**/__mocks__/**
+jest.config.*
+tsconfig.spec.json
+.eslintrc*
+eslint.config.*
+
+# Build files
+tsconfig.lib.json
+project.json
+.nx-cache
+
+# Documentation (bundled separately)
+docs/
+
+# Git
+.git
+.gitignore
+
+# CI
+.github/

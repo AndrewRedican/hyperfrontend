@@ -1,0 +1,8 @@
+{
+  "name": "@hyperfrontend/time-utils",
+  "version": "0.0.0",
+  "description": "Time and date manipulation utilities.",
+  "private": true,
+  "sideEffects": false,
+  "main": "./src/index.js"
+}

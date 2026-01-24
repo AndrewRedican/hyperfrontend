@@ -1,0 +1,61 @@
+name: 'Run Checks'
+description: 'Runs specific checks (format, lint, test, build, e2e) for all or affected projects'
+inputs:
+  check-type:
+    description: 'Type of check to run: format, lint, test, build, or e2e'
+    required: true
+  affected-only:
+    description: 'Whether to run checks only on affected projects'
+    required: false
+    default: 'false'
+  affected-projects:
+    description: 'Comma-separated list of affected project names (required if affected-only is true)'
+    required: false
+    default: ''
+runs:
+  using: 'composite'
+  steps:
+    - name: Run ${{ inputs.check-type }} check
+      shell: bash
+      run: |
+        CHECK_TYPE="${{ inputs.check-type }}"
+        AFFECTED_ONLY="${{ inputs.affected-only }}"
+        AFFECTED_PROJECTS="${{ inputs.affected-projects }}"
+
+        # Determine the Nx target based on check type
+        case "$CHECK_TYPE" in
+          format)
+            TARGET="format:check"
+            ;;
+          lint)
+            TARGET="lint"
+            ;;
+          test)
+            TARGET="test"
+            ;;
+          build)
+            TARGET="build"
+            ;;
+          e2e)
+            TARGET="e2e"
+            ;;
+          *)
+            echo "Error: Unknown check type '$CHECK_TYPE'"
+            exit 1
+            ;;
+        esac
+
+        # Build the command
+        if [ "$AFFECTED_ONLY" = "true" ] && [ -n "$AFFECTED_PROJECTS" ]; then
+          # Run only on affected projects
+          echo "Running $TARGET on affected projects: $AFFECTED_PROJECTS"
+          npx nx run-many -t=$TARGET --projects=$AFFECTED_PROJECTS --parallel=3
+        elif [ "$AFFECTED_ONLY" = "true" ] && [ -z "$AFFECTED_PROJECTS" ]; then
+          # No affected projects, skip
+          echo "No affected projects, skipping $TARGET check"
+          exit 0
+        else
+          # Run on all projects
+          echo "Running $TARGET on all projects"
+          npx nx run-many -t=$TARGET --all --parallel=3
+        fi

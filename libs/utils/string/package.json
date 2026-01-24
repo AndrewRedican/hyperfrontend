@@ -1,0 +1,11 @@
+{
+  "name": "@hyperfrontend/string-utils",
+  "version": "0.0.0",
+  "description": "String manipulation utilities for browser and Node.js environments.",
+  "private": true,
+  "sideEffects": false,
+  "exports": {
+    "./browser": "./src/browser/index.js",
+    "./node": "./src/node/index.js"
+  }
+}

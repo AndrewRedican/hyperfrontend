@@ -1,0 +1,12 @@
+{
+  "name": "@hyperfrontend/docs",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Hugo documentation build scripts for hyperfrontend",
+  "scripts": {
+    "extract": "node scripts/extract-readme.js",
+    "dev": "hugo server --bind 0.0.0.0 --port 1313 --baseURL /",
+    "build": "npm run extract && hugo --minify",
+    "prebuild": "npm run extract"
+  }
+}

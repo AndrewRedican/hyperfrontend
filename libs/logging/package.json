@@ -1,0 +1,12 @@
+{
+  "name": "@hyperfrontend/logging",
+  "version": "0.0.0",
+  "description": "Structured logging utilities for applications.",
+  "private": true,
+  "sideEffects": false,
+  "main": "./src/index.js",
+  "dependencies": {
+    "@hyperfrontend/data-utils": "0.0.0",
+    "@hyperfrontend/function-utils": "0.0.0"
+  }
+}

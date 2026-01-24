@@ -1,0 +1,8 @@
+{
+  "name": "@hyperfrontend/immutable-api-utils",
+  "version": "0.0.0",
+  "description": "Immutable API utilities for functional programming.",
+  "private": true,
+  "sideEffects": false,
+  "main": "./src/index.js"
+}

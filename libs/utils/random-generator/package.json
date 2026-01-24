@@ -1,0 +1,11 @@
+{
+  "name": "@hyperfrontend/random-generator-utils",
+  "version": "0.0.0",
+  "description": "Random number and data generation utilities.",
+  "private": true,
+  "sideEffects": false,
+  "main": "./src/index.js",
+  "dependencies": {
+    "@hyperfrontend/data-utils": "0.0.0"
+  }
+}

@@ -1,0 +1,8 @@
+{
+  "name": "@hyperfrontend/demo-file-share",
+  "version": "0.0.0",
+  "description": "File sharing demonstration.",
+  "main": "./src/index.js",
+  "private": true,
+  "dependencies": {}
+}

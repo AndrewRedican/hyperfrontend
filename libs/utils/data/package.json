@@ -1,0 +1,8 @@
+{
+  "name": "@hyperfrontend/data-utils",
+  "version": "0.0.0",
+  "description": "Data manipulation and transformation utilities.",
+  "private": true,
+  "sideEffects": false,
+  "main": "./src/index.js"
+}

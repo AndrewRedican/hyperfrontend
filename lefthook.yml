@@ -1,0 +1,18 @@
+# Lefthook Configuration
+# See: https://github.com/evilmartians/lefthook
+
+pre-commit:
+  parallel: false
+  commands:
+    format:
+      run: npx nx format:write
+      stage_fixed: true
+    docs:
+      run: cd docs && node scripts/extract-readme.js && cd .. && git add docs/content/
+      glob: '{README.md,docs/**/*}'
+
+commit-msg:
+  commands:
+    commitlint:
+      run: npx commitlint --edit $1
+      fail_text: 'Your commit message does not follow the standard conventional commit format. See https://www.conventionalcommits.org/en/v1.0.0/'
