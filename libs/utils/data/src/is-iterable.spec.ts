@@ -1,0 +1,47 @@
+import { isIterable } from './is-iterable'
+import { registerIterableClass } from './register-iterable-class'
+import { deregisterIterableClass } from './deregister-iterable-class'
+
+describe('isIterable', () => {
+  it('returns true for object and array values, regardless of having items or values or being empty', () => {
+    expect(isIterable([])).toBe(true)
+    expect(isIterable([1, 2, 3])).toBe(true)
+    expect(isIterable({})).toBe(true)
+    expect(isIterable({ a: 1, b: 2 })).toBe(true)
+  })
+
+  it('returns false for non-iterable values', () => {
+    expect(isIterable(null)).toBe(false)
+    expect(isIterable(undefined)).toBe(false)
+    expect(isIterable(42)).toBe(false)
+    expect(isIterable('hello')).toBe(false)
+    expect(isIterable(true)).toBe(false)
+    expect(isIterable(() => {})).toBe(false)
+  })
+})
+
+describe('isIterable with registered iterable class', () => {
+  beforeEach(() => {
+    registerIterableClass<Map<unknown, unknown>>(
+      Map,
+      (map) => <string[]>Array.from(map.keys()),
+      (map, key) => map.get(key),
+      (map, value, key) => map.set(key, value),
+      (map, key) => map.delete(key)
+    )
+    registerIterableClass<Set<unknown>>(
+      Set,
+      (set) => <string[]>Array.from(set.keys()),
+      (_, key) => key,
+      (set, value) => set.add(value),
+      (set, key) => set.delete(key)
+    )
+  })
+
+  afterAll(() => deregisterIterableClass())
+
+  it('returns true for instances of registered iterable classes', () => {
+    expect(isIterable(new Map())).toBe(true)
+    expect(isIterable(new Set())).toBe(true)
+  })
+})
