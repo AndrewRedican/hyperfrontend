@@ -7,6 +7,5 @@
   "exports": {
     "./browser": "./src/browser/index.js",
     "./node": "./src/node/index.js"
-  },
-  "dependencies": {}
+  }
 }

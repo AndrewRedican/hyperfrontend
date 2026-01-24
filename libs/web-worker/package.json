@@ -4,6 +4,5 @@
   "description": "Web Worker utilities and abstractions.",
   "private": true,
   "sideEffects": false,
-  "main": "./src/index.js",
-  "dependencies": {}
+  "main": "./src/index.js"
 }

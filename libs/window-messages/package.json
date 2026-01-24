@@ -4,7 +4,6 @@
   "description": "Window messaging utilities for cross-frame communication.",
   "sideEffects": false,
   "main": "./src/index.js",
-  "dependencies": {},
   "funding": {
     "type": "github",
     "url": "https://github.com/sponsors/AndrewRedican"
