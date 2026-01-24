@@ -47,6 +47,7 @@
       "@hyperfrontend-random-generator-utils": ["libs/utils/random-generator/src/index.ts"],
       "@hyperfrontend-state-machine/actions": ["libs/state-machine/src/actions/index.ts"],
       "@hyperfrontend-state-machine/async-operation": ["libs/state-machine/src/async-operation/index.ts"],
+      "@hyperfrontend-state-machine/coordinated-async-operation": ["libs/state-machine/src/coordinated-async-operation/index.ts"],
       "@hyperfrontend-state-machine/events": ["libs/state-machine/src/events/index.ts"],
       "@hyperfrontend-state-machine/lifecyle-aware-component": ["libs/state-machine/src/lifecyle-aware-component/index.ts"],
       "@hyperfrontend-state-machine/models": ["libs/state-machine/src/models/index.ts"],

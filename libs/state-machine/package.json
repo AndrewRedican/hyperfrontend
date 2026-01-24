@@ -7,6 +7,7 @@
   "exports": {
     "./actions": "./src/actions/index.js",
     "./async-operation": "./src/async-operation/index.js",
+    "./coordinated-async-operation": "./src/coordinated-async-operation/index.js",
     "./events": "./src/events/index.js",
     "./lifecyle-aware-component": "./src/lifecyle-aware-component/index.js",
     "./models": "./src/models/index.js",
