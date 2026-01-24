@@ -2,7 +2,6 @@
   "name": "@hyperfrontend/network-protocol",
   "version": "0.0.0",
   "description": "Network protocol implementation with channels, routing, and security.",
-  "main": "./src/index.js",
   "private": true,
   "sideEffects": false,
   "exports": {

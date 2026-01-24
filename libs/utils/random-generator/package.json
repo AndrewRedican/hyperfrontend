@@ -2,11 +2,8 @@
   "name": "@hyperfrontend/random-generator-utils",
   "version": "0.0.0",
   "description": "Random number and data generation utilities.",
-  "main": "./src/index.js",
   "private": true,
   "sideEffects": false,
-  "exports": {
-    ".": "./src/index.js"
-  },
+  "main": "./src/index.js",
   "dependencies": {}
 }

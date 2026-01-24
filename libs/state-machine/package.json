@@ -2,7 +2,6 @@
   "name": "@hyperfrontend/state-machine",
   "version": "0.0.0",
   "description": "State machine implementation with lifecycle management, actions, and reducers.",
-  "main": "./src/index.js",
   "private": true,
   "sideEffects": false,
   "exports": {
