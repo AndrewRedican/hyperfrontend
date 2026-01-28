@@ -1,0 +1,46 @@
+export interface Clock {
+  readonly start: () => void
+  readonly stop: () => void
+  readonly subscribe: (callback: (currentTime: Date) => void) => void
+  readonly unsubscribe: (callback: (currentTime: Date) => void) => void
+  /** Interval in milliseconds */
+  readonly interval: number
+}
+
+/**
+ * Creates an interval loop that invokes one or more subscribed callback functions
+ * at the specified internal (in milliseconds).
+ *
+ * Allows you to start or stop the interval loop, much like a stop watch.
+ * Allows you to unsubscribe callback functions.
+ */
+export function createClock(interval = 1000): Clock {
+  let clockId: NodeJS.Timeout | null = null
+  let subscribers: ((currentTime: Date) => void)[] = []
+
+  const start = (): void => {
+    if (clockId === null) {
+      clockId = setInterval(() => {
+        const currentTime = new Date()
+        subscribers.forEach((subscriber) => subscriber(currentTime))
+      }, interval)
+    }
+  }
+
+  const stop = (): void => {
+    if (clockId !== null) {
+      clearInterval(clockId)
+      clockId = null
+    }
+  }
+
+  const subscribe = (callback: (currentTime: Date) => void): void => {
+    subscribers.push(callback)
+  }
+
+  const unsubscribe = (callback: (currentTime: Date) => void): void => {
+    subscribers = subscribers.filter((subscriber) => subscriber !== callback)
+  }
+
+  return Object.freeze({ start, stop, subscribe, unsubscribe, interval })
+}
