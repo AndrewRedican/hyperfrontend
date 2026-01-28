@@ -28,6 +28,7 @@
     "baseUrl": ".",
     "paths": {
       "@hyperfrontend/cryptography/browser": ["libs/cryptography/src/browser/index.ts"],
+      "@hyperfrontend/cryptography/common": ["libs/cryptography/src/common/index.ts"],
       "@hyperfrontend/cryptography/node": ["libs/cryptography/src/node/index.ts"],
       "@hyperfrontend/data-utils": ["libs/utils/data/src/index.ts"],
       "@hyperfrontend/function-utils": ["libs/utils/function/src/index.ts"],

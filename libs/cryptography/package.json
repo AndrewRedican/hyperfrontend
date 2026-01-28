@@ -6,7 +6,8 @@
   "sideEffects": false,
   "exports": {
     "./browser": "./src/browser/index.js",
-    "./node": "./src/node/index.js"
+    "./node": "./src/node/index.js",
+    "./common": "./src/common/index.js"
   },
   "dependencies": {
     "@hyperfrontend/data-utils": "0.0.0",

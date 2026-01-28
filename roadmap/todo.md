@@ -1,195 +1,252 @@
-# Hyperfrontend Roadmap - Prioritized Tasks
+# Network Protocol Dependency Injection - Implementation Todo
 
-This document contains a flat, prioritized list of atomic tasks organized by dependency order.
+## Phase 20.5: Fix Mock Files and tmp/ Directory ✅ COMPLETE
 
-## Phase 1: Core CI/CD Infrastructure
+**Mock File Strategy**: Tests need simple test doubles, not full implementations
 
-### 1.1 Build & Test Foundation
+- [x] Refactor `src/lib/packet/creators/mocks.ts` - remove imports from non-existent paths
+- [x] Option A (Recommended): Replace with simple test doubles like `mockEncrypt = async () => new Uint8Array([1,2,3])`
+- [x] Option B: Update tests to import from browser/node entry points directly (not in shared mocks)
+- [x] Update `src/lib/data/security/mocks.ts` if needed
+- [x] Update `src/lib/data/creators/mocks.ts` if needed
+- [x] Verify `src/lib/sender/creators/mocks.ts` works
+- [x] Verify `src/lib/receiver/creators/mocks.ts` works
 
-- [ ] Verify all Nx build targets are configured for packages (data, cryptography, logging, state-machine, web-worker, window-messages, utils/\*)
-- [ ] Verify all Nx test targets are configured with Jest for packages
-- [ ] Add test targets to packages currently without them (verify each: data, cryptography, logging, etc.)
-- [ ] Run full build locally: `npx nx run-many -t=build --all`
-- [ ] Run full test suite locally: `npx nx run-many -t=test --all`
-- [ ] Fix any failing builds or tests before proceeding
+**tmp/ Directory Cleanup** (Do last - as final review comparison):
 
-### 1.2 Code Coverage Setup
+- [x] Move `libs/network-protocol/tmp` to `/workspaces/hyperfrontend/tmp/network-protocol-backup`
+- [x] Verify tmp/ tests no longer run with test suite
+- [x] Keep as backup during verification phase
 
-- [ ] Configure Jest coverage collection in `jest.preset.cjs` (collectCoverageFrom, coverageReporters: ['lcov', 'text', 'json-summary'])
-- [ ] Add coverage thresholds to jest.preset.cjs (global: statements 80%, branches 75%, functions 80%, lines 80%)
-- [ ] Update project.json for each package to include coverage options in test targets
-- [ ] Run tests with coverage locally: `npx nx run-many -t=test --all --coverage`
-- [ ] Verify coverage reports are generated in coverage/ directories per project
+**Summary**: All 154 tests passing. Mock files simplified to use test doubles instead of factory implementations.
 
-### 1.3 Monorepo Coverage Aggregation
+## Phase 21: Create Test Infrastructure ✅ COMPLETE
 
-- [ ] Research monorepo coverage solutions (nyc merge, istanbul-merge, or Codecov's monorepo support)
-- [ ] Add script to merge coverage reports: `tools/scripts/merge-coverage.js`
-- [ ] Test coverage merge script locally with multiple projects
-- [ ] Generate aggregate coverage badge data (overall percentage)
-- [ ] Document coverage aggregation approach in CONTRIBUTING.md
+- [x] Create `libs/network-protocol/jest.setup.browser.ts` if it doesn't exist
+- [x] Configure browser test setup with necessary polyfills
+- [x] Open `libs/network-protocol/jest.config.ts`
+- [x] Backup existing jest configuration (copy to comment)
+- [x] Add projects array configuration
+- [x] Configure first project with displayName `network-protocol/node`
+- [x] Set testEnvironment to `node` for first project
+- [x] Set testMatch to `**/*.spec.ts` for first project
+- [x] Set testPathIgnorePatterns to `browser\\.spec\\.ts$` for first project
+- [x] Configure second project with displayName `network-protocol/browser`
+- [x] Set testEnvironment to `jsdom` for second project
+- [x] Set testMatch to `**/*.browser.spec.ts` for second project
+- [x] Set setupFilesAfterEnv to `<rootDir>/jest.setup.browser.ts` for second project
+- [x] **Fix root cause**: Created `@hyperfrontend/cryptography/common` entry point for platform-agnostic utilities
+- [x] **Fix root cause**: Updated `is-valid-schema-hash.ts` to import from `/common` instead of `/browser`
 
-### 1.4 CI Workflow Coverage Integration
+**Summary**: Dual-environment test infrastructure ready. All 154 existing tests passing. Node tests run in Node environment, browser-specific tests will use jsdom.
 
-- [ ] Update `.github/workflows/ci-main.yml` test job to collect coverage for all projects
-- [ ] Add step to merge coverage reports using merge script
-- [ ] Upload merged coverage to Codecov (add CODECOV_TOKEN to repository secrets)
-- [ ] Configure Codecov to understand Nx monorepo structure (codecov.yml)
-- [ ] Verify coverage uploads successfully in CI run
+## Phase 22: Create Test Fixtures ✅ COMPLETE
 
-### 1.5 Status Badges & Visibility
+- [x] Create `src/lib/data/security/test-fixtures.ts`
+- [x] Define `encryptionTestCases` array with multiple test scenarios
+- [x] Add test case for simple object encryption
+- [x] Add test case for nested object encryption
+- [x] Add test case for array data encryption
+- [x] Add test case for empty object encryption
+- [x] Export all test case arrays from test-fixtures.ts
+- [x] Create `src/lib/packet/creators/test-fixtures.ts`
+- [x] Define packet serialization test cases
+- [x] Create `src/lib/packet/security/encryption/test-fixtures.ts`
+- [x] Define packet encryption test cases
+- [x] Create `src/lib/packet/security/obfuscation/test-fixtures.ts`
+- [x] Define packet obfuscation test cases with different refresh rates
 
-- [ ] Add CI status badge to README.md (ci-main workflow)
-- [ ] Add CI PR check badge to README.md (ci-pr workflow)
-- [ ] Add Codecov badge to README.md (overall coverage percentage)
-- [ ] Add security scan badge to README.md
-- [ ] Verify all badges display correctly on GitHub
+**Summary**: All test fixture files created with comprehensive test cases shared between Node.js and browser test suites.
 
-### 1.6 Baseline Release
+## Phase 23: Create Node Tests for Data Security ✅ COMPLETE
 
-- [ ] Tag release v0.1.0 marking workflow refactoring completion
-- [ ] Create release notes documenting CI/CD infrastructure
-- [ ] Document current monorepo status (which projects are ready vs. empty husks)
+- [x] Create `src/lib/data/security/create-encrypter.spec.ts`
+- [x] Import `encrypt` from `@hyperfrontend/cryptography/node`
+- [x] Import `createDataEncrypter` from `./create-encrypter`
+- [x] Import test fixtures from `./test-fixtures`
+- [x] Write describe block for `createDataEncrypter (Node.js)`
+- [x] Wire `encryptData` using node encrypt function
+- [x] Write test using each test fixture from shared test cases
+- [x] Verify output is Uint8Array with length > 0
+- [x] Write test for invalid data input (null, undefined, non-object)
+- [x] Write test for invalid password (empty string, non-string)
+- [x] Write test for unserializable data (circular references)
+- [x] Create `src/lib/data/security/create-decrypter.spec.ts`
+- [x] Import `decrypt` from `@hyperfrontend/cryptography/node`
+- [x] Import `createDataDecrypter` from `./create-decrypter`
+- [x] Write describe block for `createDataDecrypter (Node.js)`
+- [x] Wire `decryptData` using node decrypt function
+- [x] Write round-trip test: encrypt then decrypt and verify original data
+- [x] Write test for invalid encrypted data input
+- [x] Write test for invalid password on decryption
+- [x] Write test for corrupted encrypted data
 
----
+**Summary**: Node.js tests created with comprehensive coverage including round-trip encryption/decryption and error handling.
 
-## Phase 2: Package Development & Quality
+## Phase 24: Create Browser Tests for Data Security ✅ COMPLETE
 
-### 2.1 Documentation Tooling (Future)
+- [x] Create `src/lib/data/security/create-encrypter.browser.spec.ts`
+- [x] Import `encrypt` from `@hyperfrontend/cryptography/browser`
+- [x] Import `createDataEncrypter` from `./create-encrypter`
+- [x] Import shared test fixtures
+- [x] Write describe block for `createDataEncrypter (Browser)`
+- [x] Wire `encryptData` using browser encrypt function
+- [x] Write tests matching Node.js test structure
+- [x] Verify browser and node produce functionally equivalent results
+- [x] Create `src/lib/data/security/create-decrypter.browser.spec.ts`
+- [x] Import `decrypt` from `@hyperfrontend/cryptography/browser`
+- [x] Import `createDataDecrypter` from `./create-decrypter`
+- [x] Write describe block for `createDataDecrypter (Browser)`
+- [x] Wire `decryptData` using browser decrypt function
+- [x] Write round-trip test matching Node.js structure
+- [x] Write all validation error tests
 
-- [ ] Add JSDoc comments standard to CONTRIBUTING.md
-- [ ] Configure ESLint plugin for JSDoc validation (eslint-plugin-jsdoc)
-- [ ] Add JSDoc lint rule to eslint.base.config.cjs (require descriptions, param types)
-- [ ] Add TypeDoc configuration (typedoc.json) for API documentation generation
-- [ ] Add `docs:generate` script to generate TypeDoc for all packages
-- [ ] Integrate TypeDoc generation into CI workflow
-- [ ] Deploy generated API docs to hyperfrontend.dev/api
+**Summary**: Browser tests created matching Node.js test structure. Tests are 99% identical (only imports differ). All 178 tests passing. Fixed array validation in `createDataEncrypter` to accept both 'object' and 'array' types.
 
-### 2.2 Package Completeness (Ongoing)
+## Phase 25: Create Node Tests for Data Creators ✅ COMPLETE
 
-- [ ] Flesh out @hyperfrontend/window-messages implementation (core protocol)
-- [ ] Add comprehensive tests for window-messages (80%+ coverage)
-- [ ] Flesh out @hyperfrontend/features plugin implementation
-- [ ] Add comprehensive tests for features plugin (80%+ coverage)
-- [ ] Add README.md examples for each package
-- [ ] Validate package exports and TypeScript types
+- [x] Create `src/lib/data/creators/test-fixtures.ts`
+- [x] Define data creator test cases with valid UUIDs
+- [x] Create `src/lib/data/creators/create-data-factory.spec.ts`
+- [x] Import `createHash` from `@hyperfrontend/cryptography/node`
+- [x] Import `createDataFactory` from `./create-data-factory`
+- [x] Write describe block for `createDataFactory (Node.js)`
+- [x] Wire `createData` using node createHash function
+- [x] Write test for creating data with valid payload and schemaHash
+- [x] Write test verifying payloadHash is generated correctly
+- [x] Write test verifying returned object is frozen
+- [x] Write test for invalid payload (null, undefined, non-object)
+- [x] Write test for invalid schemaHash (null, undefined, non-string)
+- [x] Write test verifying same payload produces same payloadHash
 
----
+**Summary**: Node.js tests created with comprehensive coverage including schema hash generation, frozen objects, and error handling.
 
-## Phase 3: Package Publishing
+## Phase 26: Create Browser Tests for Data Creators ✅ COMPLETE
 
-### 3.1 NPM Publishing Infrastructure
+- [x] Create `src/lib/data/creators/create-data-factory.browser.spec.ts`
+- [x] Import `createHash` from `@hyperfrontend/cryptography/browser`
+- [x] Import `createDataFactory` from `./create-data-factory`
+- [x] Write describe block for `createDataFactory (Browser)`
+- [x] Wire `createData` using browser createHash function
+- [x] Write all tests matching Node.js test structure
+- [x] Verify browser and node hashes are compatible
 
-- [ ] Create `.github/workflows/publish-window-messages.yml` (manual trigger + version tags)
-- [ ] Add NPM_TOKEN to repository secrets for publishing
-- [ ] Configure npm provenance attestation in publish workflow
-- [ ] Test publish workflow with dry-run: `npm publish --dry-run`
-- [ ] Publish window-messages v1.0.0-alpha.1 to npm (scoped @hyperfrontend)
+**Summary**: Browser tests created matching Node.js test structure. Tests are 99% identical (only imports differ). All 197 tests passing. Fixed message validation to exclude null values from test fixtures.
 
-### 3.2 Features Plugin Publishing
+## Phase 27: Create Node Tests for Packet Creators
 
-- [ ] Create `.github/workflows/publish-features.yml` (manual trigger + version tags)
-- [ ] Test features plugin build: `npx nx build features`
-- [ ] Verify plugin exports and Nx plugin schema
-- [ ] Publish features plugin v1.0.0-alpha.1 to npm
+- [ ] Create `src/lib/packet/creators/create-serialized-encrypted-packet-creator.spec.ts`
+- [ ] Import `uint8ArrayToBase64` from `@hyperfrontend/string-utils/node`
+- [ ] Import `createSerializedEncryptedPacketCreator` from `./create-serialized-encrypted-packet-creator`
+- [ ] Wire creator using node string conversion function
+- [ ] Write test for valid unserialized packet conversion
+- [ ] Write test verifying data field is base64 string after serialization
+- [ ] Write test for invalid packet input
+- [ ] Create `src/lib/packet/creators/create-deserialized-encrypted-packet-creator.spec.ts`
+- [ ] Import `base64ToUint8Array` from `@hyperfrontend/string-utils/node`
+- [ ] Import `createDeserializedEncryptedPacketCreator` from `./create-deserialized-encrypted-packet-creator`
+- [ ] Wire creator using node string conversion function
+- [ ] Write round-trip test: serialize then deserialize
+- [ ] Write test for invalid packet input
+- [ ] Write test for invalid base64 string
 
-### 3.3 Versioning & Changelog
+## Phase 28: Create Browser Tests for Packet Creators
 
-- [ ] Configure @jscutlery/semver for automated versioning
-- [ ] Add conventional commits validation to CI
-- [ ] Set up automatic changelog generation
-- [ ] Create CHANGELOG.md template for packages
+- [ ] Create `src/lib/packet/creators/create-serialized-encrypted-packet-creator.browser.spec.ts`
+- [ ] Import `uint8ArrayToBase64` from `@hyperfrontend/string-utils/browser`
+- [ ] Write tests matching Node.js structure using browser implementations
+- [ ] Create `src/lib/packet/creators/create-deserialized-encrypted-packet-creator.browser.spec.ts`
+- [ ] Import `base64ToUint8Array` from `@hyperfrontend/string-utils/browser`
+- [ ] Write round-trip tests matching Node.js structure
 
-### 3.4 CDN Distribution (Future)
+## Phase 29: Create Node Tests for Packet Encryption
 
-- [ ] Research CDN providers for standalone builds (jsDelivr, unpkg, CloudFlare)
-- [ ] Configure rollup to generate UMD bundles for CDN use
-- [ ] Add CDN upload step to publish workflows
-- [ ] Document CDN usage in README (script tags, versions)
+- [ ] Create `src/lib/packet/security/encryption/create-encrypter.spec.ts`
+- [ ] Import `encrypt` from `@hyperfrontend/cryptography/node`
+- [ ] Import `createPacketEncrypter` from `./create-encrypter`
+- [ ] Wire packet encrypter using node encrypt function
+- [ ] Write test for valid serialized encrypted packet encryption
+- [ ] Write test verifying output is Uint8Array
+- [ ] Write test for invalid packet input
+- [ ] Write test for invalid password
+- [ ] Create `src/lib/packet/security/encryption/create-decrypter.spec.ts`
+- [ ] Import `decrypt` from `@hyperfrontend/cryptography/node`
+- [ ] Import `createPacketDecrypter` from `./create-decrypter`
+- [ ] Wire packet decrypter using node decrypt function
+- [ ] Write round-trip test: encrypt packet then decrypt
+- [ ] Write test for invalid encrypted data
+- [ ] Write test for invalid password
+- [ ] Write test for corrupted encrypted packet
 
----
+## Phase 30: Create Browser Tests for Packet Encryption
 
-## Phase 4: Deployment Workflows
+- [ ] Create `src/lib/packet/security/encryption/create-encrypter.browser.spec.ts`
+- [ ] Import `encrypt` from `@hyperfrontend/cryptography/browser`
+- [ ] Write tests matching Node.js structure using browser encryption
+- [ ] Create `src/lib/packet/security/encryption/create-decrypter.browser.spec.ts`
+- [ ] Import `decrypt` from `@hyperfrontend/cryptography/browser`
+- [ ] Write round-trip tests matching Node.js structure
 
-### 4.1 Documentation Deployment
+## Phase 31: Create Node Tests for Packet Obfuscation
 
-- [ ] Test deploy-docs workflow with manual workflow_dispatch trigger
-- [ ] Verify Hugo site builds successfully in CI
-- [ ] Verify documentation deploys to GitHub Pages (hyperfrontend.dev)
-- [ ] Add deployment status badge to README.md
-- [ ] Set up automatic deployment on docs changes (path filter)
+- [ ] Create `src/lib/packet/security/obfuscation/create-obfuscator.spec.ts`
+- [ ] Import `encrypt`, `getTimeBasedPassword` from `@hyperfrontend/cryptography/node`
+- [ ] Import `createPacketObfuscator` from `./create-obfuscator`
+- [ ] Wire obfuscator with node implementations and test refresh rate
+- [ ] Write test for valid packet obfuscation
+- [ ] Write test verifying output is Uint8Array
+- [ ] Write test for invalid packet input
+- [ ] Write test verifying time-based password is used correctly
+- [ ] Create `src/lib/packet/security/obfuscation/create-deobfuscator.spec.ts`
+- [ ] Import `decrypt`, `getTimeBasedPasswords` from `@hyperfrontend/cryptography/node`
+- [ ] Import `createPacketDeobfuscator` from `./create-deobfuscator`
+- [ ] Wire deobfuscator with node implementations and test refresh rate
+- [ ] Write round-trip test: obfuscate then deobfuscate immediately
+- [ ] Write test for deobfuscation with time interval change
+- [ ] Write test for invalid obfuscated data
+- [ ] Write test for expired obfuscation (outside valid interval range)
 
-### 4.2 Backend Deployment (Future)
+## Phase 32: Create Browser Tests for Packet Obfuscation
 
-- [ ] Choose hosting provider for backend demos (Vercel, Railway, Fly.io)
-- [ ] Create `.github/workflows/deploy-backend-express.yml`
-- [ ] Create `.github/workflows/deploy-backend-nest.yml`
-- [ ] Configure environment variables for deployments
-- [ ] Add backend deployment URLs to README.md
+- [ ] Create `src/lib/packet/security/obfuscation/create-obfuscator.browser.spec.ts`
+- [ ] Import from `@hyperfrontend/cryptography/browser`
+- [ ] Write tests matching Node.js structure using browser implementations
+- [ ] Create `src/lib/packet/security/obfuscation/create-deobfuscator.browser.spec.ts`
+- [ ] Import from `@hyperfrontend/cryptography/browser`
+- [ ] Write round-trip and time interval tests matching Node.js structure
 
-### 4.3 Frontend Deployment (Future)
+## Phase 33: Create Tests for Sender and Receiver
 
-- [ ] Choose hosting for frontend demos (Vercel, Netlify, CloudFlare Pages)
-- [ ] Create `.github/workflows/deploy-frontend-react.yml`
-- [ ] Create `.github/workflows/deploy-frontend-vue.yml`
-- [ ] Create `.github/workflows/deploy-frontend-angular.yml`
-- [ ] Add frontend demo URLs to README.md
+- [ ] Create `src/lib/sender/creators/create-sender-factory.spec.ts` (Node.js)
+- [ ] Import packet creator from node/packet
+- [ ] Write tests for sender with injected packet creator
+- [ ] Verify sender creates properly serialized packets
+- [ ] Create `src/lib/sender/creators/create-sender-factory.browser.spec.ts`
+- [ ] Import packet creator from browser/packet
+- [ ] Write matching tests for browser environment
+- [ ] Create `src/lib/receiver/creators/create-receiver-factory.spec.ts` (Node.js)
+- [ ] Import packet creator from node/packet
+- [ ] Write tests for receiver with injected packet creator
+- [ ] Verify receiver deserializes packets correctly
+- [ ] Create `src/lib/receiver/creators/create-receiver-factory.browser.spec.ts`
+- [ ] Import packet creator from browser/packet
+- [ ] Write matching tests for browser environment
 
-### 4.4 Demo Applications Deployment
+## Phase 34: Create Tests for Protocol V1
 
-- [ ] Create `.github/workflows/deploy-demos.yml` (multi-target deploy)
-- [ ] Deploy chess demo application
-- [ ] Deploy clock demo application
-- [ ] Deploy events demo application
-- [ ] Deploy file-share demo application
-- [ ] Deploy heartbeat demo application
-- [ ] Create demos landing page on hyperfrontend.dev/demos
+- [ ] Create `src/lib/protocol/v1/create-protocol-factory.spec.ts` (Node.js)
+- [ ] Import all packet security functions from node/packet
+- [ ] Wire protocol factory with node implementations
+- [ ] Write test for protocol creation with valid parameters
+- [ ] Write test for protocol encryption/decryption flow
+- [ ] Write test for protocol obfuscation/deobfuscation flow
+- [ ] Write integration test combining all security layers
+- [ ] Create `src/lib/protocol/v1/create-protocol-factory.browser.spec.ts`
+- [ ] Import all packet security functions from browser/packet
+- [ ] Write matching tests for browser environment
+- [ ] Verify browser and node protocols are interoperable
 
----
+## Phase 35: Documentation and Cleanup
 
-## Phase 5: Advanced Optimization
-
-### 5.1 Performance & Caching
-
-- [ ] Evaluate Nx Cloud for remote caching (free tier for open source)
-- [ ] Set up Nx Cloud workspace
-- [ ] Configure Nx Cloud access token in CI
-- [ ] Monitor CI time improvements with remote caching
-- [ ] Document cache hit rates and performance gains
-
-### 5.2 Distributed Task Execution
-
-- [ ] Evaluate Nx distributed task execution (DTE) for large builds
-- [ ] Configure DTE agents for parallel job execution
-- [ ] Benchmark CI time with/without DTE
-- [ ] Optimize agent allocation based on project graph
-
-### 5.3 Monitoring & Notifications
-
-- [ ] Set up workflow failure notifications (GitHub Actions, Discord, Slack)
-- [ ] Create workflow health dashboard (track success rates, durations)
-- [ ] Add workflow timing metrics collection
-- [ ] Set up alerts for consistently failing workflows
-- [ ] Document monitoring setup in docs/MAINTENANCE.md
-
----
-
-## Notes
-
-### Monorepo Code Coverage Strategy
-
-For aggregating code coverage across the monorepo, consider these approaches:
-
-1. **Codecov with Monorepo Flags**: Upload individual project coverage with flags, let Codecov aggregate
-2. **NYC Merge**: Use `nyc merge` to combine Istanbul/lcov reports into a single report
-3. **Custom Script**: Write Node.js script to parse json-summary reports and compute weighted average
-4. **Nx Coverage Plugin**: Explore community plugins for Nx coverage aggregation
-
-Recommended: Use Codecov with per-project flags for visibility, plus a custom script for README badge generation.
-
-### Priority Dependencies
-
-- Phase 1 must complete before Phase 3 (publishing requires working builds/tests)
-- Phase 2.2 should complete before Phase 3 (don't publish empty packages)
-- Phase 4 can begin after Phase 1 (deployments need CI but not publishing)
-- Phase 5 can begin anytime but provides most value as codebase grows
+- [ ] Clean up any remaining TODOs in code
+- [ ] Remove tmp/ backup directory after full verification
