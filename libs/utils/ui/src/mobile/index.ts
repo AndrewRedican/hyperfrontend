@@ -1,1 +1,1 @@
-// UI mobile utilities
+export * from '../lib/is-mobile-device'

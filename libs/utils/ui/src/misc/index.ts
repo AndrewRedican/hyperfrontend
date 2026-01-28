@@ -1,1 +1,1 @@
-// UI miscellaneous utilities
+export * from '../lib/simple-hash'
