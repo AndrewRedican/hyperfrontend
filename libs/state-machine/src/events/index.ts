@@ -1,1 +1,1 @@
-// State machine events
+export { Events } from './events'

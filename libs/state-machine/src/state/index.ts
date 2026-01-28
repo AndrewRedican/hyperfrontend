@@ -1,1 +1,1 @@
-// State machine state
+export { createInitialState } from './state'

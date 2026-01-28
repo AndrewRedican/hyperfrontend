@@ -6,4 +6,6 @@ export default <Config>{
   moduleFileExtensions: ['ts', 'js', 'html'],
   coverageDirectory: '../../coverage/libs/state-machine',
   testEnvironment: 'node',
+  coveragePathIgnorePatterns: ['/node_modules/', '\\.model\\.ts$', '\\.types\\.ts$'],
+  coverageProvider: 'v8',
 }
