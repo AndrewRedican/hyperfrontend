@@ -13,6 +13,7 @@ export function createQueue<T extends Record<string, any> = any>(processMessage:
   const fifoQueue = createFifoList<T>()
   let isProcessing = false
   let currentMsg: T | null = null
+  let shouldStop = false
 
   const addMessage = (message: T): void => {
     if (getType(message) !== 'object' || message === null) {
@@ -28,10 +29,11 @@ export function createQueue<T extends Record<string, any> = any>(processMessage:
   const isRunning = (): boolean => isProcessing
 
   const stop = (): void => {
-    isProcessing = false
+    shouldStop = true
   }
 
   const resume = (): void => {
+    shouldStop = false
     if (!isProcessing && fifoQueue.size() > 0) {
       processQueue()
     }
@@ -45,7 +47,7 @@ export function createQueue<T extends Record<string, any> = any>(processMessage:
     if (isProcessing) return
     isProcessing = true
 
-    while (fifoQueue.size() > 0) {
+    while (!shouldStop && fifoQueue.size() > 0) {
       const message = fifoQueue.pull()
       if (message) {
         currentMsg = message

@@ -59,7 +59,7 @@ export function createDataFactory(createHash: (data: string, algorithm: string) 
       id,
       sequence,
       key,
-      message: <JSONString<T>>serialized, // Runtime: string, Type: JSONString<T>
+      message: <JSONString<T>>serialized,
       schema,
       schemaHash,
     }

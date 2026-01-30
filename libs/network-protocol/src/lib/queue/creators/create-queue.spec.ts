@@ -141,4 +141,21 @@ describe('createQueue', () => {
 
     expect(messageProcessor).toHaveBeenCalledTimes(1)
   })
+
+  it('handles stop and resume with pending messages', async () => {
+    const messageHandler = createQueue(messageProcessor, true)
+    messageHandler.addMessage({ id: 1 })
+
+    await sleep(10)
+
+    messageHandler.stop()
+    messageHandler.addMessage({ id: 2 })
+    messageHandler.addMessage({ id: 3 })
+    messageHandler.resume()
+
+    await sleep(3 * 50 + 50)
+
+    expect(processedMessages.length).toBe(3)
+    expect(messageHandler.size()).toBe(0)
+  })
 })

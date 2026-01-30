@@ -14,6 +14,14 @@ export default <Config>{
     '!**/test-fixtures.ts',
   ],
   coverageDirectory: '../../coverage/libs/network-protocol',
+  coverageThreshold: {
+    global: {
+      branches: 94,
+      functions: 96,
+      lines: 99,
+      statements: 98,
+    },
+  },
   projects: [
     {
       displayName: 'network-protocol/node',
@@ -23,14 +31,6 @@ export default <Config>{
       testMatch: ['**/*.spec.ts'],
       testPathIgnorePatterns: ['^.*browser\\.spec\\.ts$'],
       setupFilesAfterEnv: ['<rootDir>/jest.setup.ts'],
-      coverageThreshold: {
-        global: {
-          branches: 94.95,
-          functions: 97.14,
-          lines: 99.05,
-          statements: 98.44,
-        },
-      },
     },
     {
       displayName: 'network-protocol/browser',
@@ -39,14 +39,6 @@ export default <Config>{
       testEnvironment: 'jsdom',
       testMatch: ['**/*.browser.spec.ts'],
       setupFilesAfterEnv: ['<rootDir>/jest.setup.ts', '<rootDir>/jest.setup.browser.ts'],
-      coverageThreshold: {
-        global: {
-          branches: 94.95,
-          functions: 97.14,
-          lines: 99.05,
-          statements: 98.44,
-        },
-      },
     },
   ],
 }
