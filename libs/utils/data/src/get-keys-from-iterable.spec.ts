@@ -2,7 +2,6 @@ import { setConfig } from './shared/consts'
 import { deregisterIterableClass } from './deregister-iterable-class'
 import { registerIterableClass } from './register-iterable-class'
 import { getKeysFromIterable } from './get-keys-from-iterable'
-import { get } from 'node:http'
 
 describe('getKeysFromIterable', () => {
   beforeEach(() => setConfig({ detectCircularReferences: false }))

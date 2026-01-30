@@ -1,7 +1,6 @@
 import { registerIterableClass } from './register-iterable-class'
 import { deregisterIterableClass } from './deregister-iterable-class'
 import { containsKeys } from './contains-keys'
-import { before } from 'node:test'
 
 describe('containsKeys', () => {
   it('returns true when key is present in object', () => {

@@ -179,7 +179,7 @@ describe('getType', () => {
   })
 
   it('returns "function" for a reference set to a function using "this." syntax', () => {
-    function Func(this: any) {
+    function Func(this: { value: number }) {
       this.value = 42
     }
     expect(getType(Func)).toBe('function')

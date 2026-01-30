@@ -1,7 +1,6 @@
 import type { ReferenceStack } from './models'
 import { isMarker } from './is-marker'
 import { referenceStack } from './reference-stack'
-import { before } from 'node:test'
 
 describe('referenceStack', () => {
   let stack: ReferenceStack

@@ -16,7 +16,11 @@ describe('isIterable', () => {
     expect(isIterable(42)).toBe(false)
     expect(isIterable('hello')).toBe(false)
     expect(isIterable(true)).toBe(false)
-    expect(isIterable(() => {})).toBe(false)
+    expect(
+      isIterable(() => {
+        /* empty function for test */
+      })
+    ).toBe(false)
   })
 })
 
