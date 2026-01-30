@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-require-imports */
 const nx = require('@nx/eslint-plugin')
 const pluginJest = require('eslint-plugin-jest')
 
