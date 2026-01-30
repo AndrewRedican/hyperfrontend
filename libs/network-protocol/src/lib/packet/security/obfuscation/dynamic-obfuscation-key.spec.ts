@@ -2,7 +2,7 @@
  * Tests for dynamic obfuscation key factory
  */
 
-import type { ObfuscatedPacket, SerializedEncryptedPacket } from '../../model'
+import type { SerializedEncryptedPacket } from '../../model'
 import { createDynamicKeyObfuscationFactory } from './dynamic-obfuscation-key'
 
 describe('createDynamicKeyObfuscationFactory', () => {

@@ -127,7 +127,7 @@ describe('createChannelStore', () => {
 
     it('throws error when adding same channel instance again', () => {
       const channel1 = store.create(label, send, receive, protocolProvider)
-      const channel2 = store.create('label2', send, receive, protocolProvider)
+      store.create('label2', send, receive, protocolProvider)
       store.removeByName('label2')
 
       expect(() => store.add(channel1)).toThrow(`Cannot add a channel with name '${label}' as it already exists`)

@@ -21,7 +21,7 @@ describe('createEncryptionQueue', () => {
     const onSuccess = jest.fn()
     const onFail = jest.fn()
     const queue = createEncryptionQueue(label, packetEncryption, logger, onSuccess, onFail)
-    const invalidPacket = { invalid: 'data' } as any
+    const invalidPacket = <unknown>{ invalid: 'data' }
     queue.addMessage(invalidPacket)
     await sleep(100)
     expect(onFail).toHaveBeenCalledWith(invalidPacket)

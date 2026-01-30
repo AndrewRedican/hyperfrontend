@@ -12,7 +12,7 @@ describe('createUnencryptedPacket', () => {
     id: '8b115bcd-d59b-4834-9290-b9a3a46df988',
     sequence: 1,
     key: '19af5c5b-b0ac-45dc-a140-fa310a84b136',
-    message: '{\"content\":\"test message\"}',
+    message: '{"content":"test message"}',
     schema: {
       type: 'object',
       properties: {
@@ -41,7 +41,7 @@ describe('createUnencryptedPacket', () => {
   it('throws error when data is invalid', () => {
     const invalidData = { invalid: 'data' }
 
-    expect(() => createUnencryptedPacket(validOrigin, validTarget, invalidData as any)).toThrow(
+    expect(() => createUnencryptedPacket(validOrigin, validTarget, <unknown>invalidData)).toThrow(
       'Cannot create a packet without a valid data value'
     )
   })

@@ -1,13 +1,12 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-import type { Protocol, ProtocolProvider } from '../../channel/model'
+import type { ProtocolProvider } from '../../channel/model'
 
-export interface ProtocolProviderEntry<T = any> {
+export interface ProtocolProviderEntry<T = unknown> {
   id: string
   name: string
   provider: ProtocolProvider<T>
 }
 
-export interface ProtocolProviderStore<T = any> {
+export interface ProtocolProviderStore<T = unknown> {
   readonly add: (name: string, protocolProvider: ProtocolProvider<T>) => void
   readonly existsByName: (name: string) => boolean
   readonly existsById: (id: string) => boolean

@@ -134,14 +134,14 @@ describe('createPacketDecrypter (Node.js)', () => {
       const decryptData = createDataDecrypter(decrypt)
       const decryptPacket = createPacketDecrypter(decryptData)
 
-      await expect(decryptPacket(<any>null, testPasswords.valid)).rejects.toThrow('Cannot decrypt invalid packet')
+      await expect(decryptPacket(<unknown>null, testPasswords.valid)).rejects.toThrow('Cannot decrypt invalid packet')
     })
 
     it('handles invalid encrypted packet (undefined)', async () => {
       const decryptData = createDataDecrypter(decrypt)
       const decryptPacket = createPacketDecrypter(decryptData)
 
-      await expect(decryptPacket(<any>undefined, testPasswords.valid)).rejects.toThrow('Cannot decrypt invalid packet')
+      await expect(decryptPacket(<unknown>undefined, testPasswords.valid)).rejects.toThrow('Cannot decrypt invalid packet')
     })
 
     it('handles packet missing data field', async () => {
@@ -153,7 +153,7 @@ describe('createPacketDecrypter (Node.js)', () => {
         target: testUUIDs.target1,
       }
 
-      await expect(decryptPacket(<any>invalidPacket, testPasswords.valid)).rejects.toThrow('Cannot decrypt invalid packet')
+      await expect(decryptPacket(<unknown>invalidPacket, testPasswords.valid)).rejects.toThrow('Cannot decrypt invalid packet')
     })
 
     it('handles packet with invalid origin UUID', async () => {
@@ -166,7 +166,7 @@ describe('createPacketDecrypter (Node.js)', () => {
         data: new Uint8Array([1, 2, 3]),
       }
 
-      await expect(decryptPacket(<any>invalidPacket, testPasswords.valid)).rejects.toThrow('Cannot decrypt invalid packet')
+      await expect(decryptPacket(<unknown>invalidPacket, testPasswords.valid)).rejects.toThrow('Cannot decrypt invalid packet')
     })
 
     it('handles packet with invalid target UUID', async () => {
@@ -179,7 +179,7 @@ describe('createPacketDecrypter (Node.js)', () => {
         data: new Uint8Array([1, 2, 3]),
       }
 
-      await expect(decryptPacket(<any>invalidPacket, testPasswords.valid)).rejects.toThrow('Cannot decrypt invalid packet')
+      await expect(decryptPacket(<unknown>invalidPacket, testPasswords.valid)).rejects.toThrow('Cannot decrypt invalid packet')
     })
 
     it('handles wrong password', async () => {

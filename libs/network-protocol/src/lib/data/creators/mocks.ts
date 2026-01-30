@@ -26,7 +26,7 @@ export const data: SerializedData<typeof message> = {
   id,
   sequence,
   key,
-  message: JSON.stringify(message) as any, // Runtime: string, Type: JSONString<typeof message>
+  message: <JSONString<typeof message>>JSON.stringify(message), // Runtime: string, Type: JSONString<typeof message>
   schema,
   schemaHash,
 }

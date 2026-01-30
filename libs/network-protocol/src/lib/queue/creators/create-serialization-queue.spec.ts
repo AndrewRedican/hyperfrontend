@@ -22,7 +22,7 @@ describe('createSerializationQueue', () => {
     const onSuccess = jest.fn()
     const onFail = jest.fn()
     const queue = createSerializationQueue(label, packetSerialization, logger, onSuccess, onFail)
-    const invalidPacket = { invalid: 'data' } as any
+    const invalidPacket = <unknown>{ invalid: 'data' }
     queue.addMessage(invalidPacket)
     await sleep(100)
     expect(onFail).toHaveBeenCalledWith(invalidPacket)

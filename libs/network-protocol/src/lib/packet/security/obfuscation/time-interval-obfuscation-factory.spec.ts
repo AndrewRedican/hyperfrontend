@@ -2,7 +2,7 @@
  * Tests for time-interval obfuscation factory
  */
 
-import type { SerializedEncryptedPacket, ObfuscatedPacket } from '../../model'
+import type { SerializedEncryptedPacket } from '../../model'
 import { createTimeIntervalObfuscationFactory } from './time-interval-obfuscation-factory'
 
 describe('createTimeIntervalObfuscationFactory', () => {
@@ -210,7 +210,7 @@ describe('createTimeIntervalObfuscationFactory', () => {
 
       const mockDeobfuscateFn = jest
         .fn()
-        .mockResolvedValueOnce(invalidPacket as any)
+        .mockResolvedValueOnce(<unknown>invalidPacket)
         .mockResolvedValueOnce(mockPacket)
 
       const factory = createTimeIntervalObfuscationFactory(mockObfuscate, mockDeobfuscateFn, mockGetTimeBasedPassword, mockGetPasswords)
