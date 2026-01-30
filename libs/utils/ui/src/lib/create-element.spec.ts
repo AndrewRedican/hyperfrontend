@@ -121,12 +121,14 @@ describe('createElement', () => {
 
   it('does not add child if child is falsy', () => {
     const initialChildCount = element.ref.children.length
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     element.addChild(null as any)
     expect(element.ref.children.length).toBe(initialChildCount)
   })
 
   it('does not attach to parent if parent is falsy', () => {
     const initialParent = element.ref.parentElement
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     element.attachTo(null as any)
     expect(element.ref.parentElement).toBe(initialParent)
   })
@@ -135,6 +137,7 @@ describe('createElement', () => {
     const child = createElement<HTMLDivElement>('div')
     element.addChild(child)
     const initialChildCount = element.ref.children.length
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     element.removeChild(null as any)
     expect(element.ref.children.length).toBe(initialChildCount)
   })

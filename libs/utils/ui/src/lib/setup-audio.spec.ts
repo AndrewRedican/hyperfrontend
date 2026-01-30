@@ -2,6 +2,7 @@ import { setupAudio } from './setup-audio'
 
 describe('setupAudio', () => {
   let mockElement: HTMLElement
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   let audioContextInstance: any
 
   beforeEach(() => {
@@ -14,6 +15,7 @@ describe('setupAudio', () => {
       destination: {},
     }
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     globalThis.AudioContext = jest.fn().mockImplementation(() => audioContextInstance) as any
   })
 
@@ -53,7 +55,9 @@ describe('setupAudio', () => {
   })
 
   it('handles webkit AudioContext', async () => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     delete (globalThis as any).AudioContext
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     ;(globalThis as any).webkitAudioContext = jest.fn().mockImplementation(() => audioContextInstance)
 
     const audioPromise = setupAudio(mockElement)
@@ -66,7 +70,9 @@ describe('setupAudio', () => {
     const audioContext = await audioPromise
     expect(audioContext).toBeDefined()
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     delete (globalThis as any).webkitAudioContext
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     globalThis.AudioContext = jest.fn().mockImplementation(() => audioContextInstance) as any
   })
 

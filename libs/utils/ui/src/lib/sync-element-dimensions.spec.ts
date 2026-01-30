@@ -24,7 +24,7 @@ describe('syncElementDimensions', () => {
         right: 220,
         x: 20,
         y: 10,
-        toJSON: () => {},
+        toJSON: () => ({}),
       })),
       writable: true,
       configurable: true,
@@ -71,7 +71,7 @@ describe('syncElementDimensions', () => {
         right: 325,
         x: 25,
         y: 15,
-        toJSON: () => {},
+        toJSON: () => ({}),
       })),
       writable: true,
       configurable: true,
@@ -82,8 +82,11 @@ describe('syncElementDimensions', () => {
         {
           target: sourceElement,
           contentRect: {} as DOMRectReadOnly,
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           borderBoxSize: [] as any,
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           contentBoxSize: [] as any,
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           devicePixelContentBoxSize: [] as any,
         },
       ],
@@ -157,7 +160,7 @@ describe('syncElementDimensions', () => {
         right: 550,
         x: 50,
         y: 50,
-        toJSON: () => {},
+        toJSON: () => ({}),
       })),
       writable: true,
       configurable: true,
@@ -171,8 +174,11 @@ describe('syncElementDimensions', () => {
           {
             target: sourceElement,
             contentRect: {} as DOMRectReadOnly,
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             borderBoxSize: [] as any,
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             contentBoxSize: [] as any,
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             devicePixelContentBoxSize: [] as any,
           },
         ],

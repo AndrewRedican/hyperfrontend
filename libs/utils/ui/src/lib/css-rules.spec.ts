@@ -16,9 +16,13 @@ describe('cssRules', () => {
   })
 
   it('returns empty string for non-object input', () => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     expect(cssRules(null as any)).toEqual('')
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     expect(cssRules(undefined as any)).toEqual('')
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     expect(cssRules('string' as any)).toEqual('')
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     expect(cssRules(123 as any)).toEqual('')
   })
 })
