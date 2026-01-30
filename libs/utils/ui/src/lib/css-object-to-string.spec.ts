@@ -25,8 +25,7 @@ describe('cssObjectToString', () => {
       },
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const problematicObject: any = {
+    const problematicObject: Record<string, unknown> = {
       backgroundColor: 'red',
       badProperty: problematicValue,
     }

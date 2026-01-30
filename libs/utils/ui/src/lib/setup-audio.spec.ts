@@ -2,8 +2,11 @@ import { setupAudio } from './setup-audio'
 
 describe('setupAudio', () => {
   let mockElement: HTMLElement
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  let audioContextInstance: any
+  let audioContextInstance: {
+    createBufferSource: jest.Mock
+    createGain: jest.Mock
+    destination: object
+  }
 
   beforeEach(() => {
     mockElement = document.createElement('button')
@@ -15,8 +18,7 @@ describe('setupAudio', () => {
       destination: {},
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    globalThis.AudioContext = jest.fn().mockImplementation(() => audioContextInstance) as any
+    globalThis.AudioContext = <typeof AudioContext>(<unknown>jest.fn().mockImplementation(() => audioContextInstance))
   })
 
   afterEach(() => {
@@ -46,7 +48,7 @@ describe('setupAudio', () => {
     const touchEvent = new TouchEvent('touchstart', {
       bubbles: true,
       cancelable: true,
-      touches: [] as unknown as Touch[],
+      touches: <Touch[]>(<unknown>[]),
     })
     mockElement.dispatchEvent(touchEvent)
 
@@ -55,10 +57,8 @@ describe('setupAudio', () => {
   })
 
   it('handles webkit AudioContext', async () => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    delete (globalThis as any).AudioContext
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    ;(globalThis as any).webkitAudioContext = jest.fn().mockImplementation(() => audioContextInstance)
+    delete (<{ AudioContext?: unknown }>(<unknown>globalThis)).AudioContext
+    ;(<{ webkitAudioContext?: unknown }>(<unknown>globalThis)).webkitAudioContext = jest.fn().mockImplementation(() => audioContextInstance)
 
     const audioPromise = setupAudio(mockElement)
 
@@ -70,10 +70,9 @@ describe('setupAudio', () => {
     const audioContext = await audioPromise
     expect(audioContext).toBeDefined()
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    delete (globalThis as any).webkitAudioContext
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    globalThis.AudioContext = jest.fn().mockImplementation(() => audioContextInstance) as any
+    delete (<{ webkitAudioContext?: unknown }>(<unknown>globalThis)).webkitAudioContext
+
+    globalThis.AudioContext = <typeof AudioContext>(<unknown>jest.fn().mockImplementation(() => audioContextInstance))
   })
 
   it('rejects when element is not found', async () => {

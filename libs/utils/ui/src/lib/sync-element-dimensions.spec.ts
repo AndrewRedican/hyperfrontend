@@ -81,16 +81,13 @@ describe('syncElementDimensions', () => {
       [
         {
           target: sourceElement,
-          contentRect: {} as DOMRectReadOnly,
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          borderBoxSize: [] as any,
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          contentBoxSize: [] as any,
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          devicePixelContentBoxSize: [] as any,
+          contentRect: <DOMRectReadOnly>{},
+          borderBoxSize: <ResizeObserverSize[]>(<unknown>[]),
+          contentBoxSize: <ResizeObserverSize[]>(<unknown>[]),
+          devicePixelContentBoxSize: <ResizeObserverSize[]>(<unknown>[]),
         },
       ],
-      {} as ResizeObserver
+      <ResizeObserver>{}
     )
 
     expect(targetElement.style.width).toBe('300px')
@@ -173,16 +170,13 @@ describe('syncElementDimensions', () => {
         [
           {
             target: sourceElement,
-            contentRect: {} as DOMRectReadOnly,
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            borderBoxSize: [] as any,
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            contentBoxSize: [] as any,
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            devicePixelContentBoxSize: [] as any,
+            contentRect: <DOMRectReadOnly>{},
+            borderBoxSize: <ResizeObserverSize[]>(<unknown>[]),
+            contentBoxSize: <ResizeObserverSize[]>(<unknown>[]),
+            devicePixelContentBoxSize: <ResizeObserverSize[]>(<unknown>[]),
           },
         ],
-        {} as ResizeObserver
+        <ResizeObserver>{}
       )
     }
 

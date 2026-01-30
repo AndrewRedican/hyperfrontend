@@ -25,7 +25,6 @@ describe('cssRule', () => {
   })
 
   it('throws error for non-string non-object css', () => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    expect(() => cssRule('.class', 123 as any)).toThrow('A valid string value must be provided to add in styleesheet.')
+    expect(() => cssRule('.class', <string>(<unknown>123))).toThrow('A valid string value must be provided to add in styleesheet.')
   })
 })

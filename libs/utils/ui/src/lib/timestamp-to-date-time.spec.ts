@@ -36,8 +36,7 @@ describe('Timestamp Converter', () => {
       Object.defineProperty(navigator, 'language', originalLanguage)
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    delete (navigator as any).userLanguage
+    delete (<{ userLanguage?: unknown }>(<unknown>navigator)).userLanguage
   })
 
   afterAll(() => {
