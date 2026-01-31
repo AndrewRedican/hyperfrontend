@@ -2,6 +2,12 @@ const SHORT = 'short'
 const D2 = '2-digit'
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
+/**
+ * Converts a Unix timestamp to a formatted date-time string.
+ *
+ * @param timestamp - The Unix timestamp in milliseconds
+ * @returns A formatted date-time string (YYYY-MM-DD HH:MM:SS)
+ */
 export function timestampToDateTime(timestamp: number): string {
   const date = new Date(timestamp)
   const options: Intl.DateTimeFormatOptions = {

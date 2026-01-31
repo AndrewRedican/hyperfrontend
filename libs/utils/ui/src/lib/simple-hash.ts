@@ -1,3 +1,10 @@
+/**
+ * Generates a simple hash code from a string input.
+ * Uses a basic hash algorithm suitable for non-cryptographic purposes.
+ *
+ * @param input - The string to hash
+ * @returns A numeric hash code
+ */
 export function simpleHash(input: string): string {
   let hash = 0
   for (let i = 0; i < input.length; i++) {

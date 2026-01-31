@@ -2,6 +2,14 @@
 import type { ElementRefOrString } from './get-element-async'
 import { getElementAsync } from './get-element-async'
 
+/**
+ * Sets up an AudioContext by waiting for user interaction on a specified element.
+ * Required for browsers that block audio without user gesture.
+ *
+ * @param selector - Either an HTMLElement reference or a CSS selector string for the target element
+ * @returns A promise that resolves to an AudioContext once the user interacts with the element
+ * @throws {Error} When the target element is not found
+ */
 export async function setupAudio(selector: ElementRefOrString): Promise<AudioContext> {
   return new Promise((resolve, reject) => {
     const initializeAudioContext = (event: Event) => {

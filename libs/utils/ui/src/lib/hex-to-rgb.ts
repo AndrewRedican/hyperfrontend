@@ -7,6 +7,15 @@ export interface Rgb {
   a?: number
 }
 
+/**
+ * Converts a hexadecimal color string to an RGB object.
+ * Supports both 3-digit and 6-digit hex formats with optional alpha channel.
+ *
+ * @param hex - The hexadecimal color string (with or without # prefix)
+ * @param opacity - Optional opacity value (0-1) to override alpha channel
+ * @returns An RGB object with r, g, b, and optional a properties, or null if conversion fails
+ * @throws {Error} When hex is not a string, opacity is not a number, or hex format is invalid
+ */
 export function hexToRgb(hex: string, opacity?: number): Rgb | null {
   if (getType(hex) !== 'string') {
     throw new Error('Input hex must be a string')

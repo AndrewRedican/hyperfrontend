@@ -1,6 +1,13 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import type { Style } from '../style'
 
+/**
+ * Converts a CSS object into a CSS string suitable for inline styles or style sheets.
+ * Automatically converts camelCase properties to kebab-case.
+ *
+ * @param cssObj - The CSS object with property-value pairs
+ * @returns A CSS string representation
+ */
 export function cssObjectToString(cssObj: Style): string {
   const errors: string[] = []
 

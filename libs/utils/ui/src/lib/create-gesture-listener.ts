@@ -1,5 +1,11 @@
 export type Callback = () => void
 
+/**
+ * Creates a gesture listener that detects mouse/touch interactions and keyboard events with a cleanup function.
+ *
+ * @param callback - The function to execute when a gesture is detected (Escape key or pinch gesture)
+ * @returns A cleanup function to remove all event listeners
+ */
 export function createGestureListener(callback: Callback) {
   let initialDistance: number | null = null
 

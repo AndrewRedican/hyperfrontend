@@ -16,6 +16,14 @@ export interface GetElementAsyncOptions {
   onFail?: OnFail
 }
 
+/**
+ * Asynchronously waits for an element to become available in the DOM.
+ * Polls at regular intervals and invokes callbacks on success or timeout.
+ *
+ * @param elementRefOrString - Either an HTMLElement reference or a CSS selector string
+ * @param options - Configuration options including duration, interval, and callbacks
+ * @returns A cleanup function to cancel the polling
+ */
 export function getElementAsync(elementRefOrString: ElementRefOrString, options?: GetElementAsyncOptions): () => void {
   const { duration, interval, onSuccess, onFail } = {
     duration: 10000,
@@ -27,6 +35,12 @@ export function getElementAsync(elementRefOrString: ElementRefOrString, options?
   let timeout: ReturnType<typeof setTimeout> | undefined
   let isCancelled = false
 
+  /**
+   * Safely invokes a callback function with the provided element if not cancelled.
+   *
+   * @param callback - The callback function to invoke
+   * @param element - The element to pass to the callback
+   */
   function invoke(callback: OnSuccess | OnFail | undefined, element: any) {
     /* istanbul ignore next */
     if (isCancelled) return
@@ -35,11 +49,19 @@ export function getElementAsync(elementRefOrString: ElementRefOrString, options?
     ;(<OnSuccess | OnFail>callback)(element)
   }
 
+  /**
+   * Clears all timers and intervals to prevent memory leaks.
+   */
   function cleanup(): void {
     if (timer) clearInterval(timer)
     if (timeout) clearTimeout(timeout)
   }
 
+  /**
+   * Attempts to retrieve the element from DOM using querySelector or direct reference.
+   *
+   * @returns The found element or null if not found or an error occurred
+   */
   function getElement(): HTMLElement | null {
     try {
       return getType(elementRefOrString) === 'string' ? document.querySelector(<string>elementRefOrString) : <HTMLElement>elementRefOrString
@@ -48,6 +70,9 @@ export function getElementAsync(elementRefOrString: ElementRefOrString, options?
     }
   }
 
+  /**
+   * Checks if the element exists in the DOM and invokes success callback if found.
+   */
   function checkElement(): void {
     const element = getElement()
     if (element) {

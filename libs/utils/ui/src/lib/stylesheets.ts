@@ -10,12 +10,10 @@ const stylesheetLabels = new WeakMap<HTMLStyleElement, string>()
 /**
  * Adds a new stylesheet to the document with optional label.
  *
- * @param {string | StyleMap} css - The CSS rules to be added in the new stylesheet.
- * @param {string} [label] - Optional label for the new stylesheet.
- * @throws Will throw an error if css is not a string or StyleMap or is empty.
- * @throws Will throw an error if a stylesheet with the same label already exists.
- * @returns {[HTMLStyleElement, () => void]} Returns a tuple where the first item is the created HTMLStyleElement,
- * and the second item is a function that, when called, will remove the created stylesheet from the document.
+ * @param css - The CSS rules to be added in the new stylesheet
+ * @param label - Optional label for the new stylesheet
+ * @returns A tuple where the first item is the created HTMLStyleElement, and the second item is a cleanup function
+ * @throws {Error} When css is not a string or StyleMap, is empty, or a stylesheet with the same label already exists
  */
 export function addStylesheet(css: string | StyleMap, label?: string): [HTMLStyleElement, () => void] {
   if (getType(css) === 'object') {

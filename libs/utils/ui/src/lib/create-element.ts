@@ -19,6 +19,14 @@ export type ElementMethods<T extends HTMLElement> = {
   visible: boolean
 }
 
+/**
+ * Creates an HTML element with configuration and provides utility methods for manipulation.
+ * Supports inline styles, class names, and common DOM operations.
+ *
+ * @param tagName - The HTML tag name to create
+ * @param config - Optional configuration for the element including styles and class names
+ * @returns An ElementMethods object with helper methods and a reference to the created element
+ */
 export function createElement<T extends HTMLElement>(tagName: HtmlTagName, config?: ElementConfig): ElementMethods<T> {
   const element = document.createElement(tagName) as T
   if (config?.inlineStyle) {

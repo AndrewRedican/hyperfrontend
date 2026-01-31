@@ -1,5 +1,12 @@
 import { rgbToHex } from './rgb-to-hex'
 
+/**
+ * Converts a CSS RGB string to a hexadecimal color string.
+ * Supports both rgb() and rgba() formats.
+ *
+ * @param rgbString - The RGB string (e.g., "rgb(255, 0, 0)" or "rgba(255, 0, 0, 0.5)")
+ * @returns A hexadecimal color string with # prefix
+ */
 export function rgbStringToHex(rgbString: string): string {
   const rgbaRegex = /^rgba?\((\d{1,3}),\s*(\d{1,3}),\s*(\d{1,3})(?:,\s*((?:0\.)?\d+|1(?:\.0*)?))?\)$/i
   const match = rgbString.match(rgbaRegex)

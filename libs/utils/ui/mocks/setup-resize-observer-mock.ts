@@ -4,6 +4,12 @@ export interface ResizeObserverMock {
   callback: ResizeObserverCallback
 }
 
+/**
+ * Sets up a Jest mock for the ResizeObserver API used in testing environments.
+ * Creates mock implementations of observe, unobserve, and disconnect methods.
+ *
+ * @returns An object containing the mocked ResizeObserver and a disconnect function
+ */
 export function setupResizeObserverMock() {
   const mockDisconnect = jest.fn()
   const mock = {} as ResizeObserverMock

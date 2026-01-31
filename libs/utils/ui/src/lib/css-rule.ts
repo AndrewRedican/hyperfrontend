@@ -4,17 +4,17 @@ import { cssObjectToString } from './css-object-to-string'
 import { isValidCssSelector } from './is-valid-css-selector'
 
 /**
- * Generates a CCS rule string from a given selector and style declaration.
+ * Generates a CSS rule string from a given selector and style declaration.
  *
- * This functions takes a CSS selector and either a string or a CCSStyleDeclaraction object
+ * This function takes a CSS selector and either a string or a CSSStyleDeclaration object
  * representing the styles to be applied. It validates the selector and converts the CSS
  * object to a string if needed. The function then constructs and returns a valid
- * CSS rule as string.
+ * CSS rule as a string.
  *
- * @param selector The CCS selector to which the styles will be applied.
- * @param css The styles to apply, either as string or CSSStyleDeclaration object.
- * @returns A string representing a complete CSS rule.
- * @throws Error if the selector is invalid or if the css argument is not a valid string or object.
+ * @param selector - The CSS selector to which the styles will be applied
+ * @param css - The styles to apply, either as a string or CSSStyleDeclaration object
+ * @returns A string representing a complete CSS rule
+ * @throws {Error} When the selector is invalid or the css argument is not a valid string or object
  */
 export function cssRule(selector: string, css: string | Style): string {
   if (!isValidCssSelector(selector)) {
