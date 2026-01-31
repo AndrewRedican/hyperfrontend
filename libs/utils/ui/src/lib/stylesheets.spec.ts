@@ -57,7 +57,7 @@ describe('removeStylesheet function', () => {
 
   it('removes a stylesheet by directly passing HTMLStyleElement', () => {
     const css = '.test { color: red; }'
-    const [styleElement, remove] = addStylesheet(css)
+    const [styleElement] = addStylesheet(css)
     expect(document.head.contains(styleElement)).toBe(true)
     removeStylesheet(styleElement)
     expect(document.head.contains(styleElement)).toBe(false)
