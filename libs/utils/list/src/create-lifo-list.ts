@@ -13,6 +13,7 @@ export interface LifoList<T extends object> {
 
 /**
  * Creates a LIFO (Last-In-First-Out) list.
+ *
  * @template T The type of elements in the list, must be an object.
  * @returns {LifoList<T>} A LIFO list with methods to manipulate and query the list.
  */

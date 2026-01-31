@@ -13,6 +13,7 @@ export interface FifoList<T extends object> {
 
 /**
  * Creates a FIFO (First-In-First-Out) list.
+ *
  * @template T The type of elements in the list, must be an object.
  * @returns {FifoList<T>} A FIFO list with methods to manipulate and query the list.
  */
