@@ -1,6 +1,13 @@
 import type { Logger } from './create-logger'
 import { getType } from '@hyperfrontend/data-utils'
 
+/**
+ * Validates whether an object is a properly structured Logger instance.
+ * Checks for the presence and type of all required logger methods.
+ *
+ * @param logger - The object to validate
+ * @returns True if the object is a valid logger, false otherwise
+ */
 export function isValidLogger(logger: unknown): boolean {
   const l = logger as Logger
   return (
