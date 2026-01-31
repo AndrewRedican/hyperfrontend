@@ -1,9 +1,26 @@
 {
   "name": "@hyperfrontend/network-protocol",
   "version": "0.0.0",
-  "description": "Network protocol implementation with channels, routing, and security.",
-  "private": true,
+  "description": "Production-grade network protocol for secure, real-time cross-window and cross-process communication with built-in encryption, obfuscation, routing, and message queueing.",
   "sideEffects": false,
+  "keywords": [
+    "network-protocol",
+    "secure-messaging",
+    "cross-window-communication",
+    "postmessage",
+    "ipc",
+    "encryption",
+    "obfuscation",
+    "message-queue",
+    "pub-sub",
+    "routing",
+    "isomorphic",
+    "browser",
+    "nodejs",
+    "micro-frontend",
+    "web-worker",
+    "typescript"
+  ],
   "exports": {
     "./channel": "./src/lib/channel/index.js",
     "./browser/channel": "./src/browser/channel/index.js",
