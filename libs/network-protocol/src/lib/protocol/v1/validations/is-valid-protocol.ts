@@ -2,6 +2,13 @@ import type { Protocol } from '../../../channel/model'
 import type { ValidProtocolResult } from './is-valid-protocol.model'
 import { getType } from '@hyperfrontend/data-utils'
 
+/**
+ * Validates whether the provided value is a valid protocol object.
+ * Checks that all required protocol methods (encryption, obfuscation, send, receive) are present.
+ *
+ * @param protocol - The value to validate as a protocol
+ * @returns A ValidProtocolResult object containing validation details for each protocol component
+ */
 export function isValidProtocol(protocol: unknown): ValidProtocolResult {
   const result: ValidProtocolResult = {
     packetEncryption: void 0,

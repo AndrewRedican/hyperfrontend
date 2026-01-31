@@ -4,6 +4,13 @@ import { getType } from '@hyperfrontend/data-utils'
 import { isValidOrigin } from './is-valid-origin'
 import { isValidTarget } from './is-valid-target'
 
+/**
+ * Validates the base structure of an unobfuscated packet.
+ * Checks that the packet is an object with valid origin, target, and data properties.
+ *
+ * @param packet - The value to validate as an unobfuscated packet base
+ * @returns An object containing the validation result and the packet cast to UnobfuscatedPacket
+ */
 export function isValidUnobfuscatedPacketBase(packet: unknown): ValidUnobfuscatedPacketBaseResult {
   const pkt = packet as UnobfuscatedPacket
   const isValid =

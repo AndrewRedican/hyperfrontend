@@ -88,6 +88,9 @@ export type DataDecrypter = <T = unknown>(data: Uint8Array, password: string) =>
 
 /**
  * Type guard to check if a value is a JSONString.
+ *
+ * @param value - The value to check
+ * @returns True if the value is a string type, false otherwise
  */
 export function isJSONString<T = unknown>(value: unknown): value is JSONString<T> {
   return typeof value === 'string'
@@ -96,6 +99,9 @@ export function isJSONString<T = unknown>(value: unknown): value is JSONString<T
 /**
  * Safely cast a string to JSONString after validation.
  * Use this when you know the string is valid JSON.
+ *
+ * @param value - The string value to cast as JSONString
+ * @returns The value cast as a JSONString type
  */
 export function asJSONString<T = unknown>(value: string): JSONString<T> {
   return value as JSONString<T>
@@ -103,6 +109,9 @@ export function asJSONString<T = unknown>(value: string): JSONString<T> {
 
 /**
  * Parse a JSONString back to its original type.
+ *
+ * @param jsonString - The JSON string to parse
+ * @returns The parsed object of type T
  */
 export function parseJSONString<T>(jsonString: JSONString<T>): T {
   return JSON.parse(jsonString) as T
@@ -110,6 +119,9 @@ export function parseJSONString<T>(jsonString: JSONString<T>): T {
 
 /**
  * Convert SerializedData to Data by parsing the message.
+ *
+ * @param serialized - The serialized data to deserialize
+ * @returns The deserialized data with parsed message
  */
 export function deserializeData<T>(serialized: SerializedData<T>): Data<T> {
   return {
@@ -120,6 +132,9 @@ export function deserializeData<T>(serialized: SerializedData<T>): Data<T> {
 
 /**
  * Convert Data to SerializedData by stringifying the message.
+ *
+ * @param data - The data to serialize
+ * @returns The serialized data with stringified message
  */
 export function serializeData<T>(data: Data<T>): SerializedData<T> {
   return {

@@ -3,6 +3,12 @@ import { getType } from '@hyperfrontend/data-utils'
 
 type ValidProtocolResult = Record<keyof Protocol, boolean | undefined>
 
+/**
+ * Validates whether a protocol object contains all required function properties.
+ *
+ * @param protocol - The protocol object to validate
+ * @returns An object mapping each protocol property to its validation status (true if valid, false if invalid, undefined if not yet checked)
+ */
 function isValidProtocol(protocol: unknown): ValidProtocolResult {
   const result: ValidProtocolResult = {
     packetEncryption: void 0,
@@ -25,6 +31,12 @@ function isValidProtocol(protocol: unknown): ValidProtocolResult {
   return result
 }
 
+/**
+ * Identifies the first invalid property in a protocol object.
+ *
+ * @param protocol - The protocol object to validate
+ * @returns The name of the first invalid protocol property, or an empty string if all properties are valid
+ */
 export function getFirstInvalidProtocolProperty(protocol: unknown): keyof ValidProtocolResult | '' {
   const validations = isValidProtocol(protocol)
   const firstInvalidProperty = Object.entries(validations).find(([, isValid]) => isValid === false)

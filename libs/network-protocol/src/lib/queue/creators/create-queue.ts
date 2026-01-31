@@ -3,6 +3,15 @@ import type { MessageHandler, Queue } from '../model'
 import { getType } from '@hyperfrontend/data-utils'
 import { createFifoList } from '@hyperfrontend/list-utils'
 
+/**
+ * Creates a message processing queue with FIFO ordering.
+ * Provides methods to add messages, control processing, and monitor queue state.
+ *
+ * @param processMessage - The handler function to process each message
+ * @param autoStart - Whether to automatically start processing messages (default: true)
+ * @returns A Queue instance with methods to manage message processing
+ * @throws {Error} When processMessage is not a function or autoStart is not a boolean
+ */
 export function createQueue<T extends Record<string, any> = any>(processMessage: MessageHandler<T>, autoStart = true): Queue<T> {
   if (getType(processMessage) !== 'function') {
     throw new Error('processMessage must be a function')
@@ -43,6 +52,10 @@ export function createQueue<T extends Record<string, any> = any>(processMessage:
 
   const currentMessage = (): T | null => currentMsg
 
+  /**
+   * Processes messages from the queue sequentially.
+   * Continues processing until the queue is empty or stopped.
+   */
   async function processQueue() {
     if (isProcessing) return
     isProcessing = true

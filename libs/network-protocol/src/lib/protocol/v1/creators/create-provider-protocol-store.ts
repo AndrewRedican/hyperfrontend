@@ -3,6 +3,12 @@ import type { ProtocolProviderStore, ProtocolProviderEntry } from '../model'
 import { uuidV4 } from '@hyperfrontend/random-generator-utils'
 import { isValidName } from '../validations'
 
+/**
+ * Creates a store for managing protocol provider registrations.
+ * Provides methods to register, retrieve, and list protocol providers.
+ *
+ * @returns A ProtocolProviderStore with methods for managing protocol providers
+ */
 export function createProtocolProviderStore(): ProtocolProviderStore {
   const entries: ProtocolProviderEntry[] = []
   const addEntry = (name: string, provider: ProtocolProvider) =>

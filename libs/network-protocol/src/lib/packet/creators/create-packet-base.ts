@@ -2,6 +2,15 @@ import type { PacketBase } from '../model'
 import { isValidOrigin, isValidTarget } from '../validations'
 import { withoutValidErrorMessage } from '../utils'
 
+/**
+ * Creates the base structure for a network packet with origin and target.
+ * Validates origin and target URLs before creating the frozen packet base.
+ *
+ * @param origin - The origin URL of the packet sender
+ * @param target - The target URL of the packet recipient
+ * @returns A frozen PacketBase object with validated origin and target
+ * @throws {Error} When origin or target validation fails
+ */
 export function createPacketBase(origin: string, target: string): PacketBase {
   if (!isValidOrigin(origin)) {
     throw new Error(withoutValidErrorMessage('origin'))

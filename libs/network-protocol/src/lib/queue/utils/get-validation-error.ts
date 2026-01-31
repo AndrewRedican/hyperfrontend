@@ -1,5 +1,13 @@
 import type { QueueCreatorValidity } from '../model'
 
+/**
+ * Generates a descriptive error message for queue validation failures.
+ * Maps validation field names to human-readable error descriptions.
+ *
+ * @param operationType - The type of operation being validated (e.g., 'send', 'receive')
+ * @param validity - The validation results indicating which fields are invalid
+ * @returns A formatted error message describing the validation failure
+ */
 export function getValidationError(operationType: string, validity: QueueCreatorValidity): string {
   const errorMap: Record<string, string> = {
     label: 'a label',

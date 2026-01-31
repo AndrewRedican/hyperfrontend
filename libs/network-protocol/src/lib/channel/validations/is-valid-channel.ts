@@ -1,6 +1,12 @@
 import type { Channel } from '../model'
 import { getType } from '@hyperfrontend/data-utils'
 
+/**
+ * Validates whether a channel meets the required structure with send/receive methods and inbound/outbound queues.
+ *
+ * @param channel - The channel object to validate
+ * @returns True if the channel is valid, false otherwise
+ */
 export function isValidChannel(channel: unknown): boolean {
   const ch = <Channel>channel
   return (

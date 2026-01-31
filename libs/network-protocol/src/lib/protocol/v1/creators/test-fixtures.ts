@@ -36,6 +36,8 @@ export const testPasswords = {
 
 /**
  * Mock logger for testing.
+ *
+ * @returns A mock logger with no-op implementations for all log methods
  */
 export const createMockLogger = (): Logger => ({
   debug: () => void 0,

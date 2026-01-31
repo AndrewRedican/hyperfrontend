@@ -2,6 +2,12 @@ import type { TopicStore, Topic } from '../model'
 import { uuidV4 } from '@hyperfrontend/random-generator-utils'
 import { isValidName } from '../validations'
 
+/**
+ * Creates a store for managing topic registrations and lookups.
+ * Provides methods to create, retrieve, and list topics by name or ID.
+ *
+ * @returns A TopicStore with methods for managing topics
+ */
 export function createTopicStore(): TopicStore {
   const topics = new Set<Topic>()
   const topicsByName = new Map<string, Topic>()
