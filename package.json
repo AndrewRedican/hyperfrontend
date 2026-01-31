@@ -37,7 +37,7 @@
     "@jscutlery/semver": "5.7.1",
     "@nx/eslint": "22.3.3",
     "@nx/eslint-plugin": "22.3.3",
-    "@nx/jest": "22.3.3",
+    "@nx/jest": "22.4.4",
     "@nx/js": "22.3.3",
     "@nx/rollup": "22.3.3",
     "@types/jest": "30.0.0",
