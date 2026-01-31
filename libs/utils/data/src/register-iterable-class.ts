@@ -7,6 +7,7 @@ import { isMarker } from './is-marker'
 /**
  * Registers a custom class as iterable, allowing the data utilities API to treat instances
  * as map-like objects with their own unique data type.
+ *
  * @param classRef - The class constructor to register
  * @param getKeys - Function that returns all keys from an instance
  * @param read - Function to read a value from an instance by key

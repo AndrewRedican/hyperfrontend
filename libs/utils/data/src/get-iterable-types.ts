@@ -4,6 +4,7 @@ import { registeredIterableClasses } from './shared/consts'
 /**
  * Returns a list of iterable data types. By default 'array' and 'object' are included.,
  * but can be extended by using `registerIterableClass`.
+ *
  * @returns Array of iterable data types.
  */
 export const getIterableTypes = <T extends string = DataType>(): T[] =>

@@ -40,6 +40,16 @@ export const selectiveCopyRecursive = <T extends Record<string, unknown>>(
 /**
  * Creates a clone of the target. Options can be provided to selectively copy values.
  * This algorithm is able detect circular references, and optionally clone them.
+ *
+ * @param target - The object to clone
+ * @param path - The current path in the data structure
+ * @param includeKey - Predicate function to determine if a key should be included
+ * @param skipFunctions - Whether to skip function values
+ * @param recordSkip - Callback to record skipped data points
+ * @param stack - Reference stack for tracking circular references
+ * @param circularRefs - Array to store circular reference information
+ * @param root - Whether this is the root call
+ * @returns A partial clone of the target object
  */
 export const selectiveCopyForCircularReferencesRecursive = <T extends Record<string, unknown>>(
   target: T,
@@ -121,6 +131,10 @@ export const selectiveCopyForCircularReferencesRecursive = <T extends Record<str
  * This algorithm instead copies function references by default instead. For the same reason getters and setters are not replicate, only their
  * return values. This algorithm can replicate circular references, when configured to do so.
  * It supports other iterable data types, provided these have been made known using registerIterableClass.
+ *
+ * @param target - The value to clone
+ * @param options - Configuration options for selective copying
+ * @returns An object containing the cloned value and array of skipped data points
  */
 export const selectiveCopy = <T = unknown>(target: T, options?: Options): { clone: Partial<T>; skipped: DataPoint[] } => {
   if (options !== void 0 && getType(options) !== 'object') throw new Error('Invalid options argument.')

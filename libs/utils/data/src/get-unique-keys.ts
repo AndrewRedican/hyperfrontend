@@ -8,7 +8,12 @@ import { getIterableOperators } from './get-iterable-operators'
  * Returns a list of unique key names that match a pattern or an exact value anywhere in the data structure of the target.
  * A depth option is available to narrow down the iteration scope.
  * It supports other iterable data types, provided these have been made known using registerIterableClass.
- **/
+ *
+ * @param target - The target value to search within
+ * @param pattern - The string or regular expression pattern to match against key names (defaults to matching all keys)
+ * @param options - Optional configuration to control traversal depth
+ * @returns An array of unique key names that match the pattern
+ */
 export const getUniqueKeys = (target: unknown, pattern: string | RegExp = /(.|\s)*/, options?: Options): string[] => {
   const patternIsString = typeof pattern === 'string'
   if (!patternIsString && !(pattern instanceof RegExp)) throw new Error('Expected pattern to be either a string of a regular expression.')

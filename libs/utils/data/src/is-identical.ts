@@ -8,6 +8,10 @@ import { getConfig } from './shared/consts'
 /**
  * Returns true when both values are identical.
  * This algorithm does not check for circular references.
+ *
+ * @param targetA - The first value to compare
+ * @param targetB - The second value to compare
+ * @returns True if the values are identical, false otherwise
  */
 const isIdenticalRecursive = (targetA: UnknownIterable, targetB: UnknownIterable): boolean => {
   if (targetA === targetB) return true
@@ -34,6 +38,11 @@ const noop = () => void 0
 /**
  * Returns true when both values are identical.
  * This algorithm is able to compare values with circular references.
+ *
+ * @param targetA - The first value to compare
+ * @param targetB - The second value to compare
+ * @param stacks - Reference stacks for tracking circular references during comparison
+ * @returns True if the values are identical, false otherwise
  */
 const isIdenticalForCircularReferencesRecursive = (
   targetA: UnknownIterable,
@@ -94,6 +103,10 @@ const isIdenticalForCircularReferencesRecursive = (
  * For primitive values, use strict equality comparison.
  * For non-primitive values, it checks equality by reviewing values' properties and values.
  * It supports other iterable data types, provided these have been made known using registerIterableClass.
+ *
+ * @param targetA - The first value to compare
+ * @param targetB - The second value to compare
+ * @returns True if the values are identical, false otherwise
  */
 export const isIdentical = (targetA: unknown, targetB: unknown): boolean => {
   const targets = [targetA, targetB] as [UnknownIterable, UnknownIterable]

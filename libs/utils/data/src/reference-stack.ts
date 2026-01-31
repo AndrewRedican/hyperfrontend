@@ -4,6 +4,7 @@ import { isIterable } from './is-iterable'
 
 /**
  * Creates a new ReferenceStack instance.
+ *
  * @remarks
  * A ReferenceStack is used to keep track of iterables that have already been processed.
  * This is particularly useful for handling circular references in data structures.

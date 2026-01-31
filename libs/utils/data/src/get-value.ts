@@ -6,11 +6,12 @@ import { getType } from './get-type'
 
 /**
  * Gets the value at the specified path from the target.
+ *
  * @param target - The target to get the value from.
  * @param path - The path to the value.
  * @param defaultValue - The default value to return if the path does not exist or an error occurs.
  * @returns The value at the specified path or the default value.
- * @throws Will throw an error if the path is not a non-empty array of strings and no default value for errors is provided.
+ * @throws {Error} Will throw an error if the path is not a non-empty array of strings and no default value for errors is provided.
  * @remarks
  * - If `defaultValue.onMissingKey` is provided, it will be returned when a key in the path is missing.
  * - If `defaultValue.onError` is provided, it will be returned when any error occurs during the retrieval process.

@@ -34,6 +34,10 @@ export const locateCircularReferenceRecursive = (
 /**
  * Returns a list of locations where circular references occur.
  * It supports other iterable data types, provided these have been made known using registerIterableClass.
+ *
+ * @param target - The value to search for circular references
+ * @param maxResults - Maximum number of circular references to find (number or '*' for all)
+ * @returns An array of CircularReference objects indicating locations of circular references
  */
 export const locateCircularReference = (target: unknown, maxResults: '*' | number = 1): CircularReference[] => {
   const resultsType = typeof maxResults

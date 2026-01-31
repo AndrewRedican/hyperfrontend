@@ -5,6 +5,7 @@ import { deregisterClassTypes } from './deregister-class-types'
 /**
  * Removes one or more registered iterable classes.
  * Removes all registered iterable classes except built-ins (Array and Object) when no references are provided.
+ *
  * @param classRefs - The class constructors to deregister
  */
 export const deregisterIterableClass = <T = unknown>(...classRefs: UnknownClass<T>[]): void => {

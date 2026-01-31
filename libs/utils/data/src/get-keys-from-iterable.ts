@@ -3,6 +3,7 @@ import { registeredIterableClasses } from './shared/consts'
 
 /**
  * Gets the keys from an iterable target based on its data type.
+ *
  * @param target - The target to get the keys from.
  * @param dataType - The data type of the target.
  * @returns The keys from the iterable target.

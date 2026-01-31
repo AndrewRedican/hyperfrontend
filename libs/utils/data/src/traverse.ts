@@ -89,6 +89,9 @@ const traversal: Traversal = (target, condition, callback, options, state) => {
 /**
  * A higher-order function that takes a single predicate function to generate an algorithm that traverses data points
  * on a data structure. See traverse.
+ *
+ * @param condition - Predicate function to determine whether to traverse a data point
+ * @returns A traversal function configured with the condition
  */
 export const createTraversal: TraversalCreator<unknown> = (condition) => (target, callback, options, state) =>
   traversal(target, condition, callback, options ?? { depth: [0, '*'] }, state ?? {})
@@ -100,6 +103,12 @@ const traverseBetweenDepthRange = createTraversal(condition)
 /**
  * Invokes a callback function for every data point in the data structure of the target value to let you do read and write operations.
  * A depth option is available to narrow down the iteration scope.
+ *
+ * @param target - The value to traverse
+ * @param callback - Function to invoke for each data point
+ * @param options - Optional configuration to control traversal depth
+ * @param state - Optional state object to maintain across traversal callbacks
+ * @returns The state object after traversal completes
  */
 export const traverse = <T = unknown, S extends Record<string, unknown> = Record<string, unknown>>(
   target: T,

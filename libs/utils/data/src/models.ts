@@ -71,6 +71,7 @@ export interface ReferenceStack {
 
   /**
    * Returns true if reference is already registered.
+   *
    * @param reference
    * @returns
    */
@@ -79,6 +80,7 @@ export interface ReferenceStack {
   /**
    * Returns a negative number corresponding to how many iterations ago the reference
    * was registered in the stack relative to the last entry or null when it is not in the stack.
+   *
    * @param reference
    * @returns
    */

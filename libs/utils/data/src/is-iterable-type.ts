@@ -3,6 +3,7 @@ import { getIterableTypes } from './get-iterable-types'
 
 /**
  * Checks if the provided data type is registered as an iterable type.
+ *
  * @param dataType - The data type to check
  * @returns `true` if the data type is iterable, otherwise `false`
  */

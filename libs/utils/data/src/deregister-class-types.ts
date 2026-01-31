@@ -3,6 +3,7 @@ import { registeredClasses } from './shared/consts'
 
 /**
  * Removes one or more registered classes used to identify values as distinct data types.
+ *
  * @param classRefs - One or more class references to deregister. If none provided, all registered classes will be deregistered.
  */
 export const deregisterClassTypes = (...classRefs: UnknownClass<unknown>[]): void => {

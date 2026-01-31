@@ -9,7 +9,13 @@ import { getIterableOperators } from './get-iterable-operators'
  * and returns the location of the original text that were edited.
  * A depth option is available to narrow down the iteration scope.
  * It supports other iterable data types, provided these have been made known using registerIterableClass.
- **/
+ *
+ * @param target - The target value to modify
+ * @param pattern - The string or regular expression pattern to match against text values
+ * @param text - The replacement text for matching values
+ * @param options - Optional configuration to control traversal depth
+ * @returns An array of paths to locations where text was replaced
+ */
 export const replaceText = (target: unknown, pattern: string | RegExp, text: string, options?: Options): string[][] => {
   const patternIsString = typeof pattern === 'string'
   if (!patternIsString && !(pattern instanceof RegExp)) throw new Error('Expected pattern to be either a string of a regular expression.')

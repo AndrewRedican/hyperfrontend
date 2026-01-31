@@ -6,6 +6,7 @@ import { getConfig } from './shared/consts'
 
 /**
  * Checks whether two targets have the same structure.
+ *
  * @remarks
  * For iterable types (arrays, sets, maps, and objects), it checks whether they have the same keys.
  * For other types, it simply checks whether they are of the same type.

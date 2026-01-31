@@ -20,6 +20,9 @@ const hasCircularReferenceRecursive = (target: unknown, stack: ReferenceStack, r
 /**
  * Returns true for values that have circular references.
  * It supports other iterable data types, provided these have been made known using registerIterableClass.
+ *
+ * @param target - The value to check for circular references
+ * @returns True if the value contains circular references, false otherwise
  */
 export const hasCircularReference = (target: unknown): boolean => {
   const originalSupportStatus = getConfig().detectCircularReferences

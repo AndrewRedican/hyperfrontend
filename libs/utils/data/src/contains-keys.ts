@@ -4,6 +4,7 @@ import { getKeysFromIterable } from './get-keys-from-iterable'
 
 /**
  * Checks if the target contains all specified keys.
+ *
  * @param target - The target to check.
  * @param keys - The keys to check for.
  * @returns True if the target contains all specified keys, false otherwise.
