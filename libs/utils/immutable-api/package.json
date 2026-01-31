@@ -1,8 +1,22 @@
 {
   "name": "@hyperfrontend/immutable-api-utils",
   "version": "0.0.0",
-  "description": "Immutable API utilities for functional programming.",
-  "private": true,
+  "description": "Decorators and utilities for creating immutable, tamper-proof object APIs.",
+  "keywords": [
+    "immutable",
+    "decorator",
+    "property-descriptor",
+    "locked",
+    "frozen",
+    "non-writable",
+    "non-configurable",
+    "this-binding",
+    "typescript",
+    "api-protection",
+    "zero-dependencies",
+    "functional",
+    "tamper-proof"
+  ],
   "sideEffects": false,
   "main": "./src/index.js"
 }
