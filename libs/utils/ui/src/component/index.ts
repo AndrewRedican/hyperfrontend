@@ -1,1 +1,1 @@
-// UI component utilities
+export * from '../lib/component'

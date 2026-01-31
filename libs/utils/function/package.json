@@ -1,8 +1,23 @@
 {
   "name": "@hyperfrontend/function-utils",
   "version": "0.0.0",
-  "description": "Function composition and manipulation utilities.",
-  "private": true,
+  "description": "Higher-order function utilities for behavioral modification and composition.",
+  "keywords": [
+    "higher-order-functions",
+    "function-composition",
+    "run-once",
+    "memoization",
+    "conditional-execution",
+    "error-handling",
+    "noop",
+    "functional-programming",
+    "decorators",
+    "zero-dependencies",
+    "typescript",
+    "type-safe",
+    "lazy-initialization",
+    "singleton"
+  ],
   "sideEffects": false,
   "main": "./src/index.js"
 }

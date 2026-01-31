@@ -1,0 +1,68 @@
+import type { ObfuscationSuite } from '../../../security/model'
+import type { SerializedEncryptedPacket, ObfuscatedPacket, PacketObfuscater, PacketDeobfuscater } from '../../model'
+import { isValidSerializedEncryptedPacket } from '../../validations'
+import { isValidRefreshRate } from './is-valid-refresh-rate'
+
+/**
+ * Creates a factory for time-interval based obfuscation suites.
+ *
+ * This factory accepts packet obfuscation/deobfuscation functions and time-based password generators,
+ * then returns a function that creates obfuscation suites using time-based keys. The suite uses
+ * passwords generated for current, previous, and next time windows to provide secure, time-aligned
+ * obfuscation.
+ *
+ * @param {PacketObfuscater} obfuscatePacket - Function to obfuscate a packet with a password
+ * @param {PacketDeobfuscater} deobfuscatePacket - Function to deobfuscate data with a password
+ * @param {(date: Date, refreshRate: number, offset: number) => Promise<string>} getTimeBasedPassword - Function to get a time-based password
+ * @param {(date: Date, refreshRate: number) => {current: () => Promise<string>, previous: () => Promise<string>, next: () => Promise<string>}} getTimeBasedPasswords - Function to get multiple time-based passwords
+ * @returns {(refreshRate: number) => ObfuscationSuite} A factory function that accepts a refresh rate and returns an obfuscation suite
+ */
+export function createTimeIntervalObfuscationFactory(
+  obfuscatePacket: PacketObfuscater,
+  deobfuscatePacket: PacketDeobfuscater,
+  getTimeBasedPassword: (date: Date, refreshRate: number, offset: number) => Promise<string>,
+  getTimeBasedPasswords: (
+    date: Date,
+    refreshRate: number
+  ) => {
+    current: () => Promise<string>
+    previous: () => Promise<string>
+    next: () => Promise<string>
+  }
+) {
+  return (refreshRate = 1): ObfuscationSuite => {
+    if (!isValidRefreshRate(refreshRate)) {
+      throw new Error('A valid refresh rate must be provided.')
+    }
+    const now = () => new Date()
+    const packetObfuscationFn: ObfuscationSuite['packetObfuscation'] = async (
+      packet: SerializedEncryptedPacket
+    ): Promise<ObfuscatedPacket> => {
+      const password = await getTimeBasedPassword(now(), refreshRate, 0)
+      return await obfuscatePacket(packet, password)
+    }
+    const packetDeobfuscationFn: ObfuscationSuite['packetDeobfuscation'] = async (data: ObfuscatedPacket) => {
+      const { current, previous, next } = getTimeBasedPasswords(now(), refreshRate)
+      const passwordGenerators = [current, previous, next]
+      const tryDeobfuscateWithPassword = async (getPassword: () => Promise<string>) => {
+        try {
+          const password = await getPassword()
+          const deobfuscated = await deobfuscatePacket(data, password)
+          if (isValidSerializedEncryptedPacket(deobfuscated)) {
+            return deobfuscated
+          }
+          // eslint-disable-next-line no-empty
+        } catch {}
+        return null
+      }
+      for (const getPassword of passwordGenerators) {
+        const result = await tryDeobfuscateWithPassword(getPassword)
+        if (result !== null) {
+          return result
+        }
+      }
+      throw new Error('Could not deobfuscate data')
+    }
+    return Object.freeze({ packetObfuscation: packetObfuscationFn, packetDeobfuscation: packetDeobfuscationFn })
+  }
+}

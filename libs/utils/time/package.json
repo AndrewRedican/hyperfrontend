@@ -1,8 +1,25 @@
 {
   "name": "@hyperfrontend/time-utils",
   "version": "0.0.0",
-  "description": "Time and date manipulation utilities.",
-  "private": true,
+  "description": "Functional time utilities for async operations, intervals, and time normalization.",
+  "keywords": [
+    "timer",
+    "clock",
+    "interval",
+    "timeout",
+    "sleep",
+    "delay",
+    "pause",
+    "resume",
+    "time-window",
+    "time-normalization",
+    "async",
+    "promise",
+    "zero-dependencies",
+    "typescript",
+    "functional",
+    "immutable"
+  ],
   "sideEffects": false,
   "main": "./src/index.js"
 }

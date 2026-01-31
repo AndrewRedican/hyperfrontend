@@ -1,1 +1,1 @@
-// State machine state change utilities
+export { StateChange } from './state-change'

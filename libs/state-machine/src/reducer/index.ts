@@ -1,1 +1,1 @@
-// State machine reducers
+export { rootReducer } from './reducer'

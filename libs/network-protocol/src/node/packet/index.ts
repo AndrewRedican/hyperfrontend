@@ -1,0 +1,24 @@
+import { encrypt, decrypt } from '@hyperfrontend/cryptography/node'
+import { uint8ArrayToBase64, base64ToUint8Array } from '@hyperfrontend/string-utils/node'
+import { createSerializedEncryptedPacketCreator } from '../../lib/packet/creators/create-serialized-encrypted-packet-creator'
+import { createDeserializedEncryptedPacketCreator } from '../../lib/packet/creators/create-deserialized-encrypted-packet-creator'
+import { createPacketEncrypter } from '../../lib/packet/security/encryption/create-encrypter'
+import { createPacketDecrypter } from '../../lib/packet/security/encryption/create-decrypter'
+import { createPacketObfuscator } from '../../lib/packet/security/obfuscation/create-obfuscator'
+import { createPacketDeobfuscator } from '../../lib/packet/security/obfuscation/create-deobfuscator'
+import { encryptData, decryptData } from '../data'
+
+export const createSerializedEncryptedPacket = createSerializedEncryptedPacketCreator(uint8ArrayToBase64)
+export const createDeserializedEncryptedPacket = createDeserializedEncryptedPacketCreator(base64ToUint8Array)
+
+export const encryptPacket = createPacketEncrypter(encryptData)
+export const decryptPacket = createPacketDecrypter(decryptData)
+
+export const obfuscatePacket = createPacketObfuscator(encrypt)
+export const deobfuscatePacket = createPacketDeobfuscator(decrypt)
+
+export type * from '../../lib/packet/model'
+export * from '../../lib/packet/validations'
+export * from '../../lib/packet/security/encryption/dynamic-encryption-key'
+export * from '../../lib/packet/security/obfuscation/dynamic-obfuscation-key'
+export * from '../../lib/packet/security/obfuscation/is-valid-refresh-rate'

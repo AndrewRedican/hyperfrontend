@@ -1,8 +1,24 @@
 {
   "name": "@hyperfrontend/random-generator-utils",
   "version": "0.0.0",
-  "description": "Random number and data generation utilities.",
-  "private": true,
+  "description": "Statistical random distributions and UUID generation for simulations, testing, and procedural content.",
+  "keywords": [
+    "random",
+    "random-number",
+    "uuid",
+    "gaussian",
+    "exponential",
+    "power-law",
+    "distribution",
+    "pseudo-random",
+    "seeded",
+    "simulation",
+    "testing",
+    "procedural-generation",
+    "statistics",
+    "typescript",
+    "zero-dependencies"
+  ],
   "sideEffects": false,
   "main": "./src/index.js",
   "dependencies": {

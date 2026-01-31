@@ -1,7 +1,14 @@
-import { ExecutorContext } from '@nx/devkit'
 import { ServeExecutorSchema } from './schema'
 
-export default async function* serveExecutor(options: ServeExecutorSchema, context: ExecutorContext) {
+/**
+ * Nx executor that serves a hyperfrontend feature in a development playground.
+ * Creates a local development environment with debugging tools, event monitoring,
+ * and interactive testing capabilities for microfrontend features.
+ *
+ * @param options - Configuration options for the serve executor
+ * @yields {AsyncGenerator<{success: boolean}, void, void>} Build status updates as the feature is served
+ */
+export default async function* serveExecutor(options: ServeExecutorSchema) {
   /*
    * SERVE EXECUTOR IMPLEMENTATION STEPS:
    *

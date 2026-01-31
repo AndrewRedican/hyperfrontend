@@ -1,1 +1,1 @@
-// State machine coordinated async operations
+export { CoordinatedAsyncProcess } from './coordinated-async-operation'

@@ -1,8 +1,25 @@
 {
   "name": "@hyperfrontend/ui-utils",
   "version": "0.0.0",
-  "description": "UI utilities for elements, events, styling, and mobile interactions.",
-  "private": true,
+  "description": "Modular DOM utilities for dynamic styling, gesture detection, element lifecycle, and color manipulation.",
+  "keywords": [
+    "dom",
+    "element",
+    "css",
+    "styling",
+    "color",
+    "gesture",
+    "mobile",
+    "resize-observer",
+    "css-in-js",
+    "selector-builder",
+    "hex-to-rgb",
+    "touch-events",
+    "typescript",
+    "framework-agnostic",
+    "modular",
+    "tree-shaking"
+  ],
   "sideEffects": false,
   "exports": {
     "./audio": "./src/audio/index.js",

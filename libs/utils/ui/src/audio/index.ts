@@ -1,1 +1,1 @@
-// UI audio utilities
+export * from '../lib/setup-audio'
