@@ -11,9 +11,9 @@ export interface Timer {
  * Invokes callback function after the designated time has passed, much like a timer.
  * Allows you to pause, resume, or reset the progress of time tracked.
  *
- * @param callback
- * @param delay time in milliseconds to wait until callback is invoked
- * @returns
+ * @param callback - The function to invoke after the delay
+ * @param delay - Time in milliseconds to wait until callback is invoked
+ * @returns A Timer instance with pause, resume, and reset methods
  */
 export function createTimer(callback: () => void, delay: number): Timer {
   let timerId: NodeJS.Timeout | null = null

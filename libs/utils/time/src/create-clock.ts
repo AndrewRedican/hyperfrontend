@@ -13,6 +13,9 @@ export interface Clock {
  *
  * Allows you to start or stop the interval loop, much like a stop watch.
  * Allows you to unsubscribe callback functions.
+ *
+ * @param interval - Time in milliseconds between each callback invocation (default: 1000ms)
+ * @returns A Clock instance with start, stop, subscribe, and unsubscribe methods
  */
 export function createClock(interval = 1000): Clock {
   let clockId: NodeJS.Timeout | null = null
