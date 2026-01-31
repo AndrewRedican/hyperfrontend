@@ -12,7 +12,10 @@ export function base64ToUrlSafeBase64(base64: string, { urlSafe, keepPadding }: 
   if (urlSafe) {
     base64 = base64.replace(/\+/g, '-').replace(/\//g, '_')
     if (keepPadding === false) {
-      base64 = base64.replace(/=+$/, '')
+      // Remove trailing = padding characters without regex to avoid ReDoS
+      while (base64.endsWith('=')) {
+        base64 = base64.slice(0, -1)
+      }
     }
   }
   return base64
