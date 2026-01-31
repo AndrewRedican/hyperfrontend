@@ -3,6 +3,9 @@
  * each byte becomes a single charCode (0-255).
  *
  * Use only for binary <-> base64 interop in browsers.
+ *
+ * @param bytes - The Uint8Array to convert
+ * @returns A Latin-1 binary string representation
  */
 export function bytesToBinaryString(bytes: Uint8Array): string {
   let binary = ''
