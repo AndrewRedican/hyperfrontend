@@ -7,8 +7,8 @@
  * only once, and its result reused thereafter. This is useful in scenarios like setting up configurations,
  * initializing singletons, or similar one-time operations.
  *
- * @param {Function} func - The function to be wrapped for single execution.
- * @returns {Function} A wrapped version of the input function that executes once and returns the same result for all subsequent calls.
+ * @param func - The function to be wrapped for single execution.
+ * @returns A wrapped version of the input function that executes once and returns the same result for all subsequent calls.
  */
 export function createRunOnceFunction<T extends (...args: any[]) => any>(func: T): (...args: Parameters<T>) => ReturnType<T> {
   let hasRun = false
