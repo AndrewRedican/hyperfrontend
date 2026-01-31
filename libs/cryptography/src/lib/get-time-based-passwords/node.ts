@@ -2,13 +2,11 @@ import { getTimeBasedPassword } from '../get-time-based-password/node'
 import { createTimeBasedPasswords } from './create-get-time-based-passwords'
 
 /**
- * Generates time-based passwords for the current, previous, and next time windows.
- * This function is useful for handling scenarios where time synchronization might
- * not be perfect, and there's a need to access passwords across adjacent time windows.
+ * Generates time-based one-time passwords (TOTP) for current, previous, and next time windows (Node.js implementation).
+ * Useful for handling time synchronization issues by providing passwords across adjacent time windows.
  *
- * @param currentUtcTime - The current UTC time.
- * @param baseTimeWindow - The base time window in minutes.
- * @returns An object containing methods to generate passwords for the current,
- *          previous, and next time windows.
+ * @param currentUtcTime - The current UTC time for password generation
+ * @param baseTimeWindow - The base time window in minutes that defines password validity periods
+ * @returns An object containing generator functions for current, previous, and next window passwords
  */
 export const getTimeBasedPasswords = createTimeBasedPasswords(getTimeBasedPassword)

@@ -1,5 +1,15 @@
 import { encryptionConfig } from '../encryption-config'
 
+/**
+ * Creates an encryption function that encrypts messages using AES-GCM with password-derived keys.
+ * Generates random salt and initialization vector (IV) for each encryption operation.
+ *
+ * @param utf8StringToUint8Array - Function to convert UTF-8 strings to byte arrays
+ * @param getRandomValues - Function to generate cryptographically secure random values
+ * @param generateKey - Function to derive encryption keys from passwords
+ * @param subtle - The SubtleCrypto interface for cryptographic operations
+ * @returns A function that encrypts messages with passwords
+ */
 export function createEncrypt(
   utf8StringToUint8Array: (text: string) => Uint8Array,
   getRandomValues: (byteLength: number) => Uint8Array,

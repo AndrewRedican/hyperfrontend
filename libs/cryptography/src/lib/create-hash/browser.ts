@@ -2,6 +2,14 @@ import type { HashAlgorithm } from './model'
 import { utf8StringToUint8Array } from '@hyperfrontend/string-utils/browser'
 import { subtle } from '../subtle/browser'
 
+/**
+ * Creates a cryptographic hash of the provided data using Web Crypto API (browser implementation).
+ *
+ * @param data - The string data to hash
+ * @param algorithm - The hash algorithm to use (defaults to SHA-256)
+ * @returns A promise that resolves to the hexadecimal hash string
+ * @throws {Error} When hash creation fails
+ */
 export async function createHash(data: string, algorithm: HashAlgorithm = 'SHA-256'): Promise<string> {
   try {
     return Array.from(new Uint8Array(await subtle.digest(algorithm, <BufferSource>utf8StringToUint8Array(data))))

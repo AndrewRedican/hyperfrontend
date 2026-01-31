@@ -1,5 +1,14 @@
 import { encryptionConfig } from '../encryption-config'
 
+/**
+ * Creates a decryption function that decrypts AES-GCM encrypted messages using password-derived keys.
+ * Extracts salt and IV from the encrypted data to derive the correct decryption key.
+ *
+ * @param arrayBufferToUtf8String - Function to convert byte arrays to UTF-8 strings
+ * @param generateKey - Function to derive decryption keys from passwords
+ * @param subtle - The SubtleCrypto interface for cryptographic operations
+ * @returns A function that decrypts encrypted messages with passwords
+ */
 export function createDecrypt(
   arrayBufferToUtf8String: (bytes: ArrayBuffer) => string,
   generateKey: (password: string, salt: Uint8Array) => Promise<CryptoKey>,

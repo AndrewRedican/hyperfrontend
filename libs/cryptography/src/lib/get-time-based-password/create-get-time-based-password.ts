@@ -3,6 +3,13 @@ import { getType } from '@hyperfrontend/data-utils'
 import { randomPseudoTimeBased } from '@hyperfrontend/random-generator-utils'
 import { normalizeToBaseTimeWindow } from '@hyperfrontend/time-utils'
 
+/**
+ * Creates a time-based one-time password (TOTP) generator function.
+ * Generates passwords that change based on time windows, supporting previous/current/next window offsets.
+ *
+ * @param createHash - Function to create cryptographic hashes
+ * @returns A function that generates time-based passwords
+ */
 export function createGetTimeBasedPassword(
   createHash: (data: string, algorithm?: HashAlgorithm) => Promise<string>
 ): (currentUtcTime: Date, baseTimeWindow: number, windowOffset?: -1 | 0 | 1) => Promise<string> {

@@ -1,6 +1,14 @@
 import { getType } from '@hyperfrontend/data-utils'
 import { encryptionConfig } from '../encryption-config'
 
+/**
+ * Creates a key generator function that derives encryption keys from passwords using PBKDF2.
+ * Uses 100,000 iterations with SHA-256 hashing for secure key derivation.
+ *
+ * @param subtle - The SubtleCrypto interface for cryptographic operations
+ * @param utf8StringToUint8Array - Function to convert UTF-8 strings to byte arrays
+ * @returns A function that generates CryptoKey instances from passwords and salts
+ */
 export function createKeyGenerator(
   subtle: SubtleCrypto,
   utf8StringToUint8Array: (text: string) => Uint8Array
