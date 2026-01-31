@@ -1,8 +1,25 @@
 {
   "name": "@hyperfrontend/string-utils",
   "version": "0.0.0",
-  "description": "String manipulation utilities for browser and Node.js environments.",
-  "private": true,
+  "description": "Isomorphic string encoding utilities with unified APIs for browser and Node.js environments.",
+  "keywords": [
+    "base64",
+    "encoding",
+    "utf8",
+    "string-conversion",
+    "uint8array",
+    "arraybuffer",
+    "url-safe-base64",
+    "isomorphic",
+    "cross-platform",
+    "browser",
+    "nodejs",
+    "zero-dependencies",
+    "typescript",
+    "tree-shaking",
+    "text-encoder",
+    "binary-data"
+  ],
   "sideEffects": false,
   "exports": {
     "./browser": "./src/browser/index.js",
