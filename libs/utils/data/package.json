@@ -2,7 +2,24 @@
   "name": "@hyperfrontend/data-utils",
   "version": "0.0.0",
   "description": "Data manipulation and transformation utilities.",
-  "private": true,
   "sideEffects": false,
-  "main": "./src/index.js"
+  "main": "./src/index.js",
+  "keywords": [
+    "data-utils",
+    "deep-equality",
+    "circular-references",
+    "data-traversal",
+    "deep-clone",
+    "selective-copy",
+    "object-comparison",
+    "type-detection",
+    "custom-classes",
+    "tree-walking",
+    "nested-data",
+    "path-search",
+    "data-transformation",
+    "zero-dependencies",
+    "typescript",
+    "isomorphic"
+  ]
 }
