@@ -1,5 +1,6 @@
 /**
  * Generates a version 4 UUID.
+ *
  * @returns a version 4 UUID.
  */
 export function uuidV4(): string {
@@ -17,6 +18,7 @@ export function uuidV4(): string {
 
 /**
  * Validate if a string is a version 4 UUID.
+ *
  * @param str the string to be validated.
  * @returns true if the string is a version 4 UUID, otherwise false.
  */

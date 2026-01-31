@@ -1,3 +1,10 @@
+/**
+ * Generates a random number following a Gaussian (normal) distribution within a specified range.
+ *
+ * @param min - The minimum value of the range
+ * @param max - The maximum value of the range
+ * @returns A random number from the Gaussian distribution bounded by min and max
+ */
 export function randomGaussian(min: number, max: number): number {
   if (min > max) {
     throw new Error('Min value should be less than or equal to max value.')
