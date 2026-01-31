@@ -22,7 +22,6 @@ describe('selectiveCopy', () => {
   })
 
   it('throw error when second argument is not an object', () => {
-    // @ts-expect-error Testing invalid input
     expect(() => selectiveCopy(5, null)).toThrow('Invalid options argument.')
 
     // @ts-expect-error Testing invalid input
@@ -108,12 +107,85 @@ describe('selectiveCopy', () => {
     })
     deregisterIterableClass(Map)
   })
+
+  it('prevents __proto__ pollution', () => {
+    const malicious: Record<string, unknown> = { safe: 'value' }
+    Object.defineProperty(malicious, '__proto__', {
+      value: { polluted: true },
+      enumerable: true,
+      configurable: true,
+    })
+    const { clone } = selectiveCopy(malicious)
+    expect(clone).toEqual({ safe: 'value' })
+    expect(Object.keys(clone)).toEqual(['safe'])
+    expect(Object.prototype).not.toHaveProperty('polluted')
+  })
+
+  it('safely handles nested objects with __proto__ key', () => {
+    const nested: Record<string, unknown> = { alsoSafe: 42 }
+    Object.defineProperty(nested, '__proto__', {
+      value: { polluted: true },
+      enumerable: true,
+      configurable: true,
+    })
+    const target = { safe: 'value', nested }
+    const { clone } = selectiveCopy(target)
+    expect(clone).toEqual({ safe: 'value', nested: { alsoSafe: 42 } })
+    expect(Object.keys(<object>(<Record<string, unknown>>clone)['nested'])).toEqual(['alsoSafe'])
+    expect(Object.prototype).not.toHaveProperty('polluted')
+  })
+
+  it('safely handles arrays with __proto__ property', () => {
+    const arr = ['a', 'b', 'c']
+    Object.defineProperty(arr, '__proto__', {
+      value: { polluted: true },
+      enumerable: true,
+      configurable: true,
+    })
+    const { clone } = selectiveCopy(arr)
+    expect(clone).toEqual(['a', 'b', 'c'])
+    expect(Object.prototype).not.toHaveProperty('polluted')
+  })
+
+  it('safely handles symbol keys (which are always safe)', () => {
+    class CustomObject {
+      [key: string]: unknown
+      constructor() {
+        const sym = Symbol('testKey')
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        ;(<any>this)[sym] = 'symbolValue'
+        this['regular'] = 'value'
+      }
+    }
+    registerIterableClass<CustomObject>(
+      CustomObject,
+      (obj) => {
+        const stringKeys = Object.keys(obj)
+        const symbolKeys = Object.getOwnPropertySymbols(obj)
+        return [...stringKeys, ...(<string[]>(<unknown>symbolKeys))]
+      },
+      (obj, key) => (<Record<string | symbol, unknown>>obj)[<string | symbol>key],
+      (obj, value, key) => ((<Record<string | symbol, unknown>>obj)[<string | symbol>key] = value),
+      (obj, key) => delete (<Record<string | symbol, unknown>>obj)[<string | symbol>key]
+    )
+    const target = new CustomObject()
+    const { clone } = selectiveCopy(target)
+    expect(clone).toHaveProperty('regular', 'value')
+    deregisterIterableClass(CustomObject)
+  })
 })
 
 describe('selectiveCopy - with config detectCircularReferences:true', () => {
   beforeEach(() => setConfig({ detectCircularReferences: true }))
 
-  afterEach(() => setConfig({ detectCircularReferences: false }))
+  afterEach(() => {
+    setConfig({ detectCircularReferences: false })
+    // Clean up any potential pollution from tests
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    delete (<any>Object.prototype).polluted
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    delete (<any>Object.prototype).value
+  })
 
   it('clones primitive type data', () => {
     const symbol = Symbol()
@@ -130,7 +202,6 @@ describe('selectiveCopy - with config detectCircularReferences:true', () => {
   })
 
   it('throw error when second argument is not an object', () => {
-    // @ts-expect-error Testing invalid input
     expect(() => selectiveCopy(5, null)).toThrow('Invalid options argument.')
 
     // @ts-expect-error Testing invalid input
@@ -223,5 +294,88 @@ describe('selectiveCopy - with config detectCircularReferences:true', () => {
     expected.a.b.c = expected.a.b
     const { clone } = selectiveCopy(target)
     expect(isIdentical(clone, expected)).toEqual(true)
+  })
+
+  it('prevents __proto__ pollution with circular refs enabled', () => {
+    const malicious: Record<string, unknown> = { safe: 'value' }
+    Object.defineProperty(malicious, '__proto__', {
+      value: { polluted: true },
+      enumerable: true,
+      configurable: true,
+    })
+    const { clone } = selectiveCopy(malicious)
+    expect(clone).toEqual({ safe: 'value' })
+    expect(Object.keys(clone)).toEqual(['safe'])
+    expect(Object.prototype).not.toHaveProperty('polluted')
+  })
+
+  it('safely handles nested objects with __proto__ key and circular refs', () => {
+    const nested: Record<string, unknown> = { alsoSafe: 42 }
+    Object.defineProperty(nested, '__proto__', {
+      value: { polluted: true },
+      enumerable: true,
+      configurable: true,
+    })
+    const target = { safe: 'value', nested }
+    const { clone } = selectiveCopy(target)
+    expect(clone).toEqual({ safe: 'value', nested: { alsoSafe: 42 } })
+    expect(Object.keys(<object>(<Record<string, unknown>>clone)['nested'])).toEqual(['alsoSafe'])
+    expect(Object.prototype).not.toHaveProperty('polluted')
+  })
+
+  it('safely handles arrays with __proto__ property and circular refs', () => {
+    const arr = ['a', 'b', 'c']
+    Object.defineProperty(arr, '__proto__', {
+      value: { polluted: true },
+      enumerable: true,
+      configurable: true,
+    })
+    const { clone } = selectiveCopy(arr)
+    expect(clone).toEqual(['a', 'b', 'c'])
+    expect(Object.prototype).not.toHaveProperty('polluted')
+  })
+
+  it('prevents pollution via __proto__ in circular reference paths', () => {
+    const inner: Record<string, unknown> = { value: 'inner' }
+    const outer: Record<string, unknown> = { inner }
+    Object.defineProperty(inner, '__proto__', {
+      value: outer,
+      enumerable: true,
+      configurable: true,
+      writable: true,
+    })
+    const { clone } = selectiveCopy(outer)
+    expect(clone).toHaveProperty('inner')
+    expect(clone['inner']).toEqual({ value: 'inner' })
+    expect(Object.keys(<Record<string, unknown>>clone['inner'])).toEqual(['value'])
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    delete (<any>inner).__proto__
+  })
+
+  it('safely handles symbol keys with circular refs (which are always safe)', () => {
+    class CustomObject {
+      [key: string]: unknown
+      constructor() {
+        const sym = Symbol('testKey')
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        ;(<any>this)[sym] = 'symbolValue'
+        this['regular'] = 'value'
+      }
+    }
+    registerIterableClass<CustomObject>(
+      CustomObject,
+      (obj) => {
+        const stringKeys = Object.keys(obj)
+        const symbolKeys = Object.getOwnPropertySymbols(obj)
+        return [...stringKeys, ...(<string[]>(<unknown>symbolKeys))]
+      },
+      (obj, key) => (<Record<string | symbol, unknown>>obj)[<string | symbol>key],
+      (obj, value, key) => ((<Record<string | symbol, unknown>>obj)[<string | symbol>key] = value),
+      (obj, key) => delete (<Record<string | symbol, unknown>>obj)[<string | symbol>key]
+    )
+    const target = new CustomObject()
+    const { clone } = selectiveCopy(target)
+    expect(clone).toHaveProperty('regular', 'value')
+    deregisterIterableClass(CustomObject)
   })
 })

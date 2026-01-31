@@ -21,6 +21,8 @@ export const selectiveCopyRecursive = <T extends Record<string, unknown>>(
   const keys = getKeys(target)
   for (let i = 0; i < keys.length; i += 1) {
     const nextKey = keys[i]
+    // Filter out __proto__ to prevent prototype pollution attacks
+    if (nextKey === '__proto__') continue
     const nextTarget = read(target, nextKey)
     const nextPath = path.concat(nextKey)
     const nextType = getType(nextTarget)
@@ -71,6 +73,8 @@ export const selectiveCopyForCircularReferencesRecursive = <T extends Record<str
   const keys = getKeys(target)
   for (let i = 0; i < keys.length; i += 1) {
     const nextKey = keys[i]
+    // Filter out __proto__ to prevent prototype pollution attacks
+    if (nextKey === '__proto__') continue
     const nextTarget = read(target, nextKey)
     const nextPath = path.concat(nextKey)
     const nextType = getType(nextTarget)
