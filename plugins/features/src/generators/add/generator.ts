@@ -1,6 +1,15 @@
 import { Tree } from '@nx/devkit'
 import { AddGeneratorSchema } from './schema'
 
+/**
+ * Nx generator that adds a hyperfrontend microfrontend feature to a host application.
+ * Configures the host to load and integrate the feature, including dependency installation,
+ * shell configuration, and framework-specific integration code.
+ *
+ * @param tree - The Nx virtual file system tree
+ * @param options - Configuration options for adding the feature
+ * @returns A promise that resolves when the generator completes
+ */
 export async function addGenerator(tree: Tree, options: AddGeneratorSchema) {
   /*
    * ADD GENERATOR IMPLEMENTATION STEPS:

@@ -1,6 +1,15 @@
 import { Tree } from '@nx/devkit'
 import { InitGeneratorSchema } from './schema'
 
+/**
+ * Nx generator that initializes a project as a hyperfrontend microfrontend feature.
+ * Scaffolds the necessary configuration, contracts, and build setup to transform
+ * a standard frontend project into a distributable microfrontend feature.
+ *
+ * @param tree - The Nx virtual file system tree
+ * @param options - Configuration options for initializing the feature
+ * @returns A promise that resolves when the generator completes
+ */
 export async function initGenerator(tree: Tree, options: InitGeneratorSchema) {
   /*
    * INIT GENERATOR IMPLEMENTATION STEPS:
