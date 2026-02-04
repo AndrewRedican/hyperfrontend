@@ -35,5 +35,9 @@
   },
   "dependencies": {
     "@hyperfrontend/data-utils": "0.0.0"
+  },
+  "funding": {
+    "type": "github",
+    "url": "https://github.com/sponsors/AndrewRedican"
   }
 }
