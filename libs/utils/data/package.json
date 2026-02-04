@@ -21,5 +21,9 @@
     "zero-dependencies",
     "typescript",
     "isomorphic"
-  ]
+  ],
+  "funding": {
+    "type": "github",
+    "url": "https://github.com/sponsors/AndrewRedican"
+  }
 }
