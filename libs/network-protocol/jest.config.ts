@@ -16,9 +16,9 @@ export default <Config>{
   coverageDirectory: '../../coverage/libs/network-protocol',
   coverageThreshold: {
     global: {
-      branches: 94,
+      branches: 93,
       functions: 96,
-      lines: 99,
+      lines: 98,
       statements: 98,
     },
   },

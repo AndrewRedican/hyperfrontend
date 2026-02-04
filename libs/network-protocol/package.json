@@ -22,7 +22,6 @@
     "typescript"
   ],
   "exports": {
-    "./channel": "./src/lib/channel/index.js",
     "./browser/channel": "./src/browser/channel/index.js",
     "./node/channel": "./src/node/channel/index.js",
     "./queue": "./src/lib/queue/index.js",
@@ -35,6 +34,8 @@
     "./node/packet": "./src/node/packet/index.js",
     "./browser/v1": "./src/browser/v1/index.js",
     "./node/v1": "./src/node/v1/index.js",
+    "./browser/v2": "./src/browser/v2/index.js",
+    "./node/v2": "./src/node/v2/index.js",
     "./browser/sender": "./src/browser/sender/index.js",
     "./node/sender": "./src/node/sender/index.js",
     "./browser/receiver": "./src/browser/receiver/index.js",

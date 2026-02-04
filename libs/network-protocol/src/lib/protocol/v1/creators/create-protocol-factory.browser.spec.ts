@@ -15,6 +15,7 @@ import { createDataDecrypter } from '../../../data/security'
 import { createPacketObfuscator } from '../../../packet/security/obfuscation'
 import { createPacketDeobfuscator } from '../../../packet/security/obfuscation'
 import { createDynamicKeyEncryptionFactory } from '../../../packet/security/encryption/dynamic-encryption-key'
+import { createFirstMessageHandler } from '../../../packet/security/encryption/create-first-message-handler'
 import { createTimeIntervalObfuscationFactory } from '../../../packet/security/obfuscation/time-interval-obfuscation-factory'
 import { getTimeBasedPassword, getTimeBasedPasswords } from '@hyperfrontend/cryptography/browser'
 import { createSerializedEncryptedPacketCreator, createDeserializedEncryptedPacketCreator } from '../../../packet/creators'
@@ -36,7 +37,10 @@ describe('createProtocolFactory (Browser)', () => {
       const obfuscatePacket = createPacketObfuscator(encrypt)
       const deobfuscatePacket = createPacketDeobfuscator(decrypt)
 
-      const createDynamicKeyEncryption = createDynamicKeyEncryptionFactory(encryptPacket, decryptPacket)
+      const textEncoder = (text: string): Uint8Array => new TextEncoder().encode(text)
+      const textDecoder = (data: Uint8Array): string => new TextDecoder().decode(data)
+      const firstMessageHandler = createFirstMessageHandler(textEncoder, textDecoder)
+      const createDynamicKeyEncryption = createDynamicKeyEncryptionFactory(encryptPacket, decryptPacket, firstMessageHandler)
       const createTimeIntervalObfuscation = createTimeIntervalObfuscationFactory(
         obfuscatePacket,
         deobfuscatePacket,
@@ -61,7 +65,10 @@ describe('createProtocolFactory (Browser)', () => {
       const obfuscatePacket = createPacketObfuscator(encrypt)
       const deobfuscatePacket = createPacketDeobfuscator(decrypt)
 
-      const createDynamicKeyEncryption = createDynamicKeyEncryptionFactory(encryptPacket, decryptPacket)
+      const textEncoder = (text: string): Uint8Array => new TextEncoder().encode(text)
+      const textDecoder = (data: Uint8Array): string => new TextDecoder().decode(data)
+      const firstMessageHandler = createFirstMessageHandler(textEncoder, textDecoder)
+      const createDynamicKeyEncryption = createDynamicKeyEncryptionFactory(encryptPacket, decryptPacket, firstMessageHandler)
       const createTimeIntervalObfuscation = createTimeIntervalObfuscationFactory(
         obfuscatePacket,
         deobfuscatePacket,
@@ -88,7 +95,10 @@ describe('createProtocolFactory (Browser)', () => {
       const obfuscatePacket = createPacketObfuscator(encrypt)
       const deobfuscatePacket = createPacketDeobfuscator(decrypt)
 
-      const createDynamicKeyEncryption = createDynamicKeyEncryptionFactory(encryptPacket, decryptPacket)
+      const textEncoder = (text: string): Uint8Array => new TextEncoder().encode(text)
+      const textDecoder = (data: Uint8Array): string => new TextDecoder().decode(data)
+      const firstMessageHandler = createFirstMessageHandler(textEncoder, textDecoder)
+      const createDynamicKeyEncryption = createDynamicKeyEncryptionFactory(encryptPacket, decryptPacket, firstMessageHandler)
       const createTimeIntervalObfuscation = createTimeIntervalObfuscationFactory(
         obfuscatePacket,
         deobfuscatePacket,
@@ -124,7 +134,10 @@ describe('createProtocolFactory (Browser)', () => {
       const obfuscatePacket = createPacketObfuscator(encrypt)
       const deobfuscatePacket = createPacketDeobfuscator(decrypt)
 
-      const createDynamicKeyEncryption = createDynamicKeyEncryptionFactory(encryptPacket, decryptPacket)
+      const textEncoder = (text: string): Uint8Array => new TextEncoder().encode(text)
+      const textDecoder = (data: Uint8Array): string => new TextDecoder().decode(data)
+      const firstMessageHandler = createFirstMessageHandler(textEncoder, textDecoder)
+      const createDynamicKeyEncryption = createDynamicKeyEncryptionFactory(encryptPacket, decryptPacket, firstMessageHandler)
       const createTimeIntervalObfuscation = createTimeIntervalObfuscationFactory(
         obfuscatePacket,
         deobfuscatePacket,
@@ -155,7 +168,10 @@ describe('createProtocolFactory (Browser)', () => {
       const obfuscatePacket = createPacketObfuscator(encrypt)
       const deobfuscatePacket = createPacketDeobfuscator(decrypt)
 
-      const createDynamicKeyEncryption = createDynamicKeyEncryptionFactory(encryptPacket, decryptPacket)
+      const textEncoder = (text: string): Uint8Array => new TextEncoder().encode(text)
+      const textDecoder = (data: Uint8Array): string => new TextDecoder().decode(data)
+      const firstMessageHandler = createFirstMessageHandler(textEncoder, textDecoder)
+      const createDynamicKeyEncryption = createDynamicKeyEncryptionFactory(encryptPacket, decryptPacket, firstMessageHandler)
       const createTimeIntervalObfuscation = createTimeIntervalObfuscationFactory(
         obfuscatePacket,
         deobfuscatePacket,
@@ -211,7 +227,10 @@ describe('createProtocolFactory (Browser)', () => {
       const serializePacket = createSerializedEncryptedPacketCreator(uint8ArrayToBase64)
       const deserializePacket = createDeserializedEncryptedPacketCreator(base64ToUint8Array)
 
-      const createDynamicKeyEncryption = createDynamicKeyEncryptionFactory(encryptPacket, decryptPacket)
+      const textEncoder = (text: string): Uint8Array => new TextEncoder().encode(text)
+      const textDecoder = (data: Uint8Array): string => new TextDecoder().decode(data)
+      const firstMessageHandler = createFirstMessageHandler(textEncoder, textDecoder)
+      const createDynamicKeyEncryption = createDynamicKeyEncryptionFactory(encryptPacket, decryptPacket, firstMessageHandler)
       const createTimeIntervalObfuscation = createTimeIntervalObfuscationFactory(
         obfuscatePacket,
         deobfuscatePacket,
@@ -268,7 +287,10 @@ describe('createProtocolFactory (Browser)', () => {
       const obfuscatePacket = createPacketObfuscator(encrypt)
       const deobfuscatePacket = createPacketDeobfuscator(decrypt)
 
-      const createDynamicKeyEncryption = createDynamicKeyEncryptionFactory(encryptPacket, decryptPacket)
+      const textEncoder = (text: string): Uint8Array => new TextEncoder().encode(text)
+      const textDecoder = (data: Uint8Array): string => new TextDecoder().decode(data)
+      const firstMessageHandler = createFirstMessageHandler(textEncoder, textDecoder)
+      const createDynamicKeyEncryption = createDynamicKeyEncryptionFactory(encryptPacket, decryptPacket, firstMessageHandler)
       const createTimeIntervalObfuscation = createTimeIntervalObfuscationFactory(
         obfuscatePacket,
         deobfuscatePacket,
@@ -289,7 +311,10 @@ describe('createProtocolFactory (Browser)', () => {
       const obfuscatePacket = createPacketObfuscator(encrypt)
       const deobfuscatePacket = createPacketDeobfuscator(decrypt)
 
-      const createDynamicKeyEncryption = createDynamicKeyEncryptionFactory(encryptPacket, decryptPacket)
+      const textEncoder = (text: string): Uint8Array => new TextEncoder().encode(text)
+      const textDecoder = (data: Uint8Array): string => new TextDecoder().decode(data)
+      const firstMessageHandler = createFirstMessageHandler(textEncoder, textDecoder)
+      const createDynamicKeyEncryption = createDynamicKeyEncryptionFactory(encryptPacket, decryptPacket, firstMessageHandler)
       const createTimeIntervalObfuscation = createTimeIntervalObfuscationFactory(
         obfuscatePacket,
         deobfuscatePacket,
@@ -311,7 +336,10 @@ describe('createProtocolFactory (Browser)', () => {
       const obfuscatePacket = createPacketObfuscator(encrypt)
       const deobfuscatePacket = createPacketDeobfuscator(decrypt)
 
-      const createDynamicKeyEncryption = createDynamicKeyEncryptionFactory(encryptPacket, decryptPacket)
+      const textEncoder = (text: string): Uint8Array => new TextEncoder().encode(text)
+      const textDecoder = (data: Uint8Array): string => new TextDecoder().decode(data)
+      const firstMessageHandler = createFirstMessageHandler(textEncoder, textDecoder)
+      const createDynamicKeyEncryption = createDynamicKeyEncryptionFactory(encryptPacket, decryptPacket, firstMessageHandler)
       const createTimeIntervalObfuscation = createTimeIntervalObfuscationFactory(
         obfuscatePacket,
         deobfuscatePacket,
@@ -336,7 +364,10 @@ describe('createProtocolFactory (Browser)', () => {
       const obfuscatePacket = createPacketObfuscator(encrypt)
       const deobfuscatePacket = createPacketDeobfuscator(decrypt)
 
-      const createDynamicKeyEncryption = createDynamicKeyEncryptionFactory(encryptPacket, decryptPacket)
+      const textEncoder = (text: string): Uint8Array => new TextEncoder().encode(text)
+      const textDecoder = (data: Uint8Array): string => new TextDecoder().decode(data)
+      const firstMessageHandler = createFirstMessageHandler(textEncoder, textDecoder)
+      const createDynamicKeyEncryption = createDynamicKeyEncryptionFactory(encryptPacket, decryptPacket, firstMessageHandler)
       const createTimeIntervalObfuscation = createTimeIntervalObfuscationFactory(
         obfuscatePacket,
         deobfuscatePacket,

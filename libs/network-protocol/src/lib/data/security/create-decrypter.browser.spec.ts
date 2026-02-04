@@ -16,10 +16,10 @@ describe('createDataDecrypter (Browser)', () => {
         const encryptData = createDataEncrypter(encrypt)
         const decryptData = createDataDecrypter(decrypt)
 
-        const encrypted = await encryptData(data as SerializedData, password)
+        const encrypted = await encryptData(<SerializedData>data, password)
         const decrypted = await decryptData(encrypted, password)
 
-        expect(decrypted).toEqual(data as SerializedData)
+        expect(decrypted).toEqual(<SerializedData>data)
       })
     })
 
@@ -27,12 +27,12 @@ describe('createDataDecrypter (Browser)', () => {
       const encryptData = createDataEncrypter(encrypt)
       const decryptData = createDataDecrypter(decrypt)
 
-      const originalData = {
+      const originalData = <SerializedData>(<unknown>{
         nested: {
           array: [1, 2, 3],
           object: { key: 'value' },
         },
-      } as unknown as SerializedData
+      })
       const password = 'test-password'
 
       let encrypted = await encryptData(originalData, password)
@@ -49,19 +49,19 @@ describe('createDataDecrypter (Browser)', () => {
     it('handles invalid encrypted data (null)', async () => {
       const decryptData = createDataDecrypter(decrypt)
 
-      await expect(decryptData(null as unknown as Uint8Array, 'valid-password')).rejects.toThrow()
+      await expect(decryptData(<Uint8Array>null, 'valid-password')).rejects.toThrow()
     })
 
     it('handles invalid encrypted data (undefined)', async () => {
       const decryptData = createDataDecrypter(decrypt)
 
-      await expect(decryptData(undefined as unknown as Uint8Array, 'valid-password')).rejects.toThrow()
+      await expect(decryptData(<Uint8Array>undefined, 'valid-password')).rejects.toThrow()
     })
 
     it('handles invalid encrypted data (not Uint8Array)', async () => {
       const decryptData = createDataDecrypter(decrypt)
 
-      await expect(decryptData('not-a-uint8array' as unknown as Uint8Array, 'valid-password')).rejects.toThrow()
+      await expect(decryptData(<Uint8Array>(<unknown>'not-a-uint8array'), 'valid-password')).rejects.toThrow()
     })
 
     it('handles wrong password', async () => {

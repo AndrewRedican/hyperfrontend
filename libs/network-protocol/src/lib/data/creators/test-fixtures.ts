@@ -93,7 +93,7 @@ export const invalidDataCreatorTestCases = [
   {
     description: 'invalid sequence (non-number)',
     pid: '550e8400-e29b-41d4-a716-446655440000',
-    sequence: 'not-a-number' as unknown as number,
+    sequence: <number>(<unknown>'not-a-number'),
     message: { test: 'data' },
   },
   {

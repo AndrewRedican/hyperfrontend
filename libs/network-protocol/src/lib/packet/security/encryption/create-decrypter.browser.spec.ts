@@ -3,7 +3,7 @@
  * Node.js version: create-decrypter.spec.ts (identical except for imports)
  */
 
-import type { UnencryptedPacket } from '../../model'
+import type { UnencryptedPacket, UnserializedEncryptedPacket } from '../../model'
 import { encrypt, decrypt, createHash } from '@hyperfrontend/cryptography/browser'
 import { createDataFactory } from '../../../data/creators'
 import { createDataEncrypter, createDataDecrypter } from '../../../data/security'
@@ -134,14 +134,16 @@ describe('createPacketDecrypter (Browser)', () => {
       const decryptData = createDataDecrypter(decrypt)
       const decryptPacket = createPacketDecrypter(decryptData)
 
-      await expect(decryptPacket(<unknown>null, testPasswords.valid)).rejects.toThrow('Cannot decrypt invalid packet')
+      await expect(decryptPacket(<UnserializedEncryptedPacket>null, testPasswords.valid)).rejects.toThrow('Cannot decrypt invalid packet')
     })
 
     it('handles invalid encrypted packet (undefined)', async () => {
       const decryptData = createDataDecrypter(decrypt)
       const decryptPacket = createPacketDecrypter(decryptData)
 
-      await expect(decryptPacket(<unknown>undefined, testPasswords.valid)).rejects.toThrow('Cannot decrypt invalid packet')
+      await expect(decryptPacket(<UnserializedEncryptedPacket>undefined, testPasswords.valid)).rejects.toThrow(
+        'Cannot decrypt invalid packet'
+      )
     })
 
     it('handles packet missing data field', async () => {
@@ -153,7 +155,9 @@ describe('createPacketDecrypter (Browser)', () => {
         target: testUUIDs.target1,
       }
 
-      await expect(decryptPacket(<unknown>invalidPacket, testPasswords.valid)).rejects.toThrow('Cannot decrypt invalid packet')
+      await expect(decryptPacket(<UnserializedEncryptedPacket>invalidPacket, testPasswords.valid)).rejects.toThrow(
+        'Cannot decrypt invalid packet'
+      )
     })
 
     it('handles packet with invalid origin UUID', async () => {
@@ -166,7 +170,9 @@ describe('createPacketDecrypter (Browser)', () => {
         data: new Uint8Array([1, 2, 3]),
       }
 
-      await expect(decryptPacket(<unknown>invalidPacket, testPasswords.valid)).rejects.toThrow('Cannot decrypt invalid packet')
+      await expect(decryptPacket(<UnserializedEncryptedPacket>invalidPacket, testPasswords.valid)).rejects.toThrow(
+        'Cannot decrypt invalid packet'
+      )
     })
 
     it('handles packet with invalid target UUID', async () => {
@@ -179,7 +185,9 @@ describe('createPacketDecrypter (Browser)', () => {
         data: new Uint8Array([1, 2, 3]),
       }
 
-      await expect(decryptPacket(<unknown>invalidPacket, testPasswords.valid)).rejects.toThrow('Cannot decrypt invalid packet')
+      await expect(decryptPacket(<UnserializedEncryptedPacket>invalidPacket, testPasswords.valid)).rejects.toThrow(
+        'Cannot decrypt invalid packet'
+      )
     })
 
     it('handles wrong password', async () => {
@@ -257,7 +265,7 @@ describe('createPacketDecrypter (Browser)', () => {
 
       expect(Object.isFrozen(result)).toBe(true)
       expect(() => {
-        ;(result as { origin: string }).origin = 'modified'
+        ;(<{ origin: string }>result).origin = 'modified'
       }).toThrow()
     })
   })

@@ -1,4 +1,5 @@
-import type { UnencryptedPacket } from '../../packet/model'
+import type { UnencryptedPacket, UnserializedEncryptedPacket } from '../../packet/model'
+import type { PacketDecryption } from '../../security/model'
 import { sleep } from '@hyperfrontend/time-utils'
 import { logger } from '@hyperfrontend/logging'
 import { packetDecryption, unserializedEncryptedPacket } from '../../packet/creators/mocks'
@@ -22,7 +23,7 @@ describe('createDecryptionQueue', () => {
     const onSuccess = jest.fn()
     const onFail = jest.fn()
     const queue = createDecryptionQueue(label, packetDecryption, logger, onSuccess, onFail)
-    const invalidPacket = <unknown>{ invalid: 'data' }
+    const invalidPacket = <UnserializedEncryptedPacket>(<unknown>{ invalid: 'data' })
     queue.addMessage(invalidPacket)
     await sleep(100)
     expect(onFail).toHaveBeenCalledWith(invalidPacket)
@@ -58,7 +59,7 @@ describe('createDecryptionQueue', () => {
     }
     const onSuccess = jest.fn()
     const onFail = jest.fn()
-    const queue = createDecryptionQueue(label, <unknown>throwingDecryption, logger, onSuccess, onFail)
+    const queue = createDecryptionQueue(label, <PacketDecryption>(<unknown>throwingDecryption), logger, onSuccess, onFail)
     queue.addMessage(unserializedEncryptedPacket)
     await sleep(100)
     expect(onFail).toHaveBeenCalledWith(unserializedEncryptedPacket)

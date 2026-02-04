@@ -1,4 +1,4 @@
-import type { SerializedData } from '../model'
+import type { JSONString, SerializedData } from '../model'
 
 export const pid = '5815e1c3-4083-4d3c-8795-96c4c2965f2d'
 

@@ -5,21 +5,34 @@ import type { ProtocolProvider, Protocol } from '../../../channel/model'
 import type { EncryptionSuite, ObfuscationSuite } from '../../../security/model'
 import { isValidLogger } from '@hyperfrontend/logging'
 import { isValidRefreshRate } from '../../../packet/security/obfuscation/is-valid-refresh-rate'
-import { isValidSendFn, isValidReceiveFn } from '../validations'
+import { isValidSendFn, isValidReceiveFn } from '../../validations'
 
 /**
- * Creates a protocol factory function with injected encryption and obfuscation factories.
+ * Creates a protocol factory function with obfuscation-only handshake encryption.
  *
- * The factory accepts:
- * - `createDynamicKeyEncryption`: A factory that creates encryption/decryption methods using a dynamic key provider
- * - `createTimeIntervalObfuscation`: A factory that creates obfuscation/deobfuscation methods using time-based keys
+ * This is the **Obfuscation-Only Handshake** protocol model (V1):
+ * - **First message**: NO encryption (obfuscation only) - key transmitted in payload
+ * - **Key capture**: Dynamic key extracted from `packet.data.key` on receive
+ * - **Subsequent messages**: Encrypted with dynamically captured keys
+ *
+ * **Handshake Flow:**
+ * 1. First outbound message: Obfuscated but NOT encrypted (no key exists yet)
+ * 2. First inbound message: Deobfuscated, key extracted from `packet.data.key`
+ * 3. Subsequent messages: Both obfuscated AND encrypted with dynamic keys
+ *
+ * **Security Note:**
+ * The first message's encryption key is visible after deobfuscation. This is acceptable
+ * when time-based obfuscation provides sufficient protection for the handshake.
+ * For stronger first-message protection, use V2 (PSK Handshake) instead.
+ *
+ * Both protocols use time-based obfuscation as an additional security layer.
  *
  * @template T The type of data to be encrypted/decrypted
- * @param {(provider: () => string) => EncryptionSuite<T>} createDynamicKeyEncryption - Factory for creating dynamic key-based encryption
- * @param {(refreshRate: number) => ObfuscationSuite} createTimeIntervalObfuscation - Factory for creating time-based obfuscation
+ * @param {(provider: () => string) => EncryptionSuite<T>} createDynamicKeyEncryption - Factory for dynamic key-based encryption
+ * @param {(refreshRate: number) => ObfuscationSuite} createTimeIntervalObfuscation - Factory for time-based obfuscation
  * @returns {(logger: Logger, refreshRate?: number) => ProtocolProvider<T>} A function that creates protocol providers
  */
-export function createProtocolFactory<T = any>(
+export function createObfuscatedHandshakeProtocolFactory<T = any>(
   createDynamicKeyEncryption: (provider: () => string) => EncryptionSuite<T>,
   createTimeIntervalObfuscation: (refreshRate: number) => ObfuscationSuite
 ) {
@@ -39,6 +52,7 @@ export function createProtocolFactory<T = any>(
         throw new Error('Cannot create protocol without a valid receive function')
       }
 
+      // Dynamic key capture
       let key: string
       const receive: ReceivePacketFn<T> = (packet) => {
         key = packet.data.key
@@ -65,3 +79,8 @@ export function createProtocolFactory<T = any>(
     return protocolProvider
   }
 }
+
+/**
+ * Use `createObfuscatedHandshakeProtocolFactory` instead. This alias exists for backward compatibility.
+ */
+export const createProtocolFactory = createObfuscatedHandshakeProtocolFactory
