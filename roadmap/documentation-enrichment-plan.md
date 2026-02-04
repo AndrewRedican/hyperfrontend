@@ -88,10 +88,10 @@ After research, identify 15-20 keywords covering:
 **Location:** `/workspaces/hyperfrontend/libs/logging/README.md`
 **Package:** `/workspaces/hyperfrontend/libs/logging/package.json`
 
-#### 5. @hyperfrontend/window-messages (skipped)
+#### 5. @hyperfrontend/nexus ✅
 
-**Location:** `/workspaces/hyperfrontend/libs/window-messages/README.md`
-**Package:** `/workspaces/hyperfrontend/libs/window-messages/package.json`
+**Location:** `/workspaces/hyperfrontend/libs/nexus/README.md`
+**Package:** `/workspaces/hyperfrontend/libs/nexus/package.json`
 
 #### 6. @hyperfrontend/web-worker (skipped)
 
@@ -103,42 +103,42 @@ After research, identify 15-20 keywords covering:
 
 ### Utility Libraries (libs/utils/\*)
 
-#### 7. @hyperfrontend/string-utils ✅
+#### 8. @hyperfrontend/string-utils ✅
 
 **Location:** `/workspaces/hyperfrontend/libs/utils/string/README.md`
 **Package:** `/workspaces/hyperfrontend/libs/utils/string/package.json`
 
-#### 8. @hyperfrontend/function-utils ✅
+#### 9. @hyperfrontend/function-utils ✅
 
 **Location:** `/workspaces/hyperfrontend/libs/utils/function/README.md`
 **Package:** `/workspaces/hyperfrontend/libs/utils/function/package.json`
 
-#### 9. @hyperfrontend/list-utils
+#### 10. @hyperfrontend/list-utils
 
 **Location:** `/workspaces/hyperfrontend/libs/utils/list/README.md`
 **Package:** `/workspaces/hyperfrontend/libs/utils/list/package.json`
 
-#### 10. @hyperfrontend/time-utils ✅
+#### 11. @hyperfrontend/time-utils ✅
 
 **Location:** `/workspaces/hyperfrontend/libs/utils/time/README.md`
 **Package:** `/workspaces/hyperfrontend/libs/utils/time/package.json`
 
-#### 11. @hyperfrontend/data-utils ✅
+#### 12. @hyperfrontend/data-utils ✅
 
 **Location:** `/workspaces/hyperfrontend/libs/utils/data/README.md`
 **Package:** `/workspaces/hyperfrontend/libs/utils/data/package.json`
 
-#### 12. @hyperfrontend/ui-utils ✅
+#### 13. @hyperfrontend/ui-utils ✅
 
 **Location:** `/workspaces/hyperfrontend/libs/utils/ui/README.md`
 **Package:** `/workspaces/hyperfrontend/libs/utils/ui/package.json`
 
-#### 13. @hyperfrontend/immutable-api-utils ✅
+#### 14. @hyperfrontend/immutable-api-utils ✅
 
 **Location:** `/workspaces/hyperfrontend/libs/utils/immutable-api/README.md`
 **Package:** `/workspaces/hyperfrontend/libs/utils/immutable-api/package.json`
 
-#### 14. @hyperfrontend/random-generator-utils ✅
+#### 15. @hyperfrontend/random-generator-utils ✅
 
 **Location:** `/workspaces/hyperfrontend/libs/utils/random-generator/README.md`
 **Package:** `/workspaces/hyperfrontend/libs/utils/random-generator/package.json`
@@ -147,12 +147,12 @@ After research, identify 15-20 keywords covering:
 
 ### Plugins (plugins/\*)
 
-#### 15. @hyperfrontend/features (skipped)
+#### 16. @hyperfrontend/features (skipped)
 
 **Location:** `/workspaces/hyperfrontend/plugins/features/README.md`
 **Package:** `/workspaces/hyperfrontend/plugins/features/package.json`
 
-#### 16. @hyperfrontend/features-e2e (skipped)
+#### 17. @hyperfrontend/features-e2e (skipped)
 
 **Location:** `/workspaces/hyperfrontend/plugins/features-e2e/README.md`
 **Package:** `/workspaces/hyperfrontend/plugins/features-e2e/package.json`
@@ -165,7 +165,7 @@ After research, identify 15-20 keywords covering:
 
 Work in order of architectural importance:
 
-1. **@hyperfrontend/window-messages** - Foundation of micro-frontend communication
+1. **@hyperfrontend/nexus** - Foundation of micro-frontend communication
 2. **@hyperfrontend/network-protocol** - Core communication protocol
 3. **@hyperfrontend/state-machine** - State management foundation
 4. **@hyperfrontend/cryptography** - Security foundation

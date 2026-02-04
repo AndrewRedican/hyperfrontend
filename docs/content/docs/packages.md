@@ -5,10 +5,10 @@ weight: 4
 
 ## Main Packages
 
-| Package                                                                                                             | Description                                                                                                                                                      |
-| ------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| [@hyperfrontend/features](https://github.com/AndrewRedican/hyperfrontend/blob/main/plugins/features)                | Nx plugin for hyperfrontend micro-frontend features [See docs](https://github.com/AndrewRedican/hyperfrontend/blob/main/plugins/features/README.md)              |
-| [@hyperfrontend/window-messages](https://github.com/AndrewRedican/hyperfrontend/blob/main/packages/window-messages) | Window messaging utilities for cross-frame communication [See docs](https://github.com/AndrewRedican/hyperfrontend/blob/main/packages/window-messages/README.md) |
+| Package                                                                                              | Description                                                                                                                                                             |
+| ---------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [@hyperfrontend/features](https://github.com/AndrewRedican/hyperfrontend/blob/main/plugins/features) | Nx plugin for hyperfrontend micro-frontend features [See docs](https://github.com/AndrewRedican/hyperfrontend/blob/main/plugins/features/README.md)                     |
+| [@hyperfrontend/nexus](https://github.com/AndrewRedican/hyperfrontend/blob/main/libs/nexus)          | Cross-window communication with contracts, lifecycle management, and security [See docs](https://github.com/AndrewRedican/hyperfrontend/blob/main/libs/nexus/README.md) |
 
 ## Internal Packages
 
@@ -32,7 +32,7 @@ weight: 4
 
 ### Core Framework
 - **@hyperfrontend/features** - Nx plugin for creating and managing features
-- **@hyperfrontend/window-messages** - Communication protocol foundation
+- **@hyperfrontend/nexus** - Communication protocol foundation
 
 ### Utilities
 - **cryptography** - Browser and Node.js cryptography utilities

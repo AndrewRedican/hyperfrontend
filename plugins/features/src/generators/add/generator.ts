@@ -34,7 +34,7 @@ export async function addGenerator(tree: Tree, options: AddGeneratorSchema) {
    * 3. INSTALL DEPENDENCIES
    *    - If installMethod is 'npm':
    *      - Add @hyperfrontend/shell-{featureName} to host project dependencies
-   *      - Add @hyperfrontend/window-messages if not already present
+   *      - Add @hyperfrontend/nexus if not already present
    *      - Run package manager install
    *    - If installMethod is 'cdn':
    *      - No npm installation needed

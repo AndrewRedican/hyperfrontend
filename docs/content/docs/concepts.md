@@ -18,7 +18,7 @@ A **hyperfrontend feature** is a standalone frontend application that provides d
 
 ### Architecture
 
-Each hyperfrontend feature uses the standard communication protocol provided by the **[@hyperfrontend/window-messages](https://github.com/AndrewRedican/hyperfrontend/blob/main/packages/window-messages)** package. This enables:
+Each hyperfrontend feature uses the standard communication protocol provided by the **[@hyperfrontend/nexus](https://github.com/AndrewRedican/hyperfrontend/blob/main/libs/nexus)** library. This enables:
 
 - **Domain-agnostic contracts** - Features define clear interfaces for communication
 - **Pub/sub event bus** - Features can publish and subscribe to events without direct dependencies

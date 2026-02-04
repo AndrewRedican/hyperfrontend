@@ -15,7 +15,7 @@ Then add the hyperfrontend features plugin:
 npx nx add @hyperfrontend/features
 ```
 
-This will automatically install the `@hyperfrontend/window-messages` package and configure your workspace.
+This will automatically install the `@hyperfrontend/nexus` library and configure your workspace.
 
 ### Creating a Feature
 

@@ -49,19 +49,19 @@ describe('createDataDecrypter (Node.js)', () => {
     it('handles invalid encrypted data (null)', async () => {
       const decryptData = createDataDecrypter(decrypt)
 
-      await expect(decryptData(null as unknown as Uint8Array, 'valid-password')).rejects.toThrow()
+      await expect(decryptData(<Uint8Array>null, 'valid-password')).rejects.toThrow()
     })
 
     it('handles invalid encrypted data (undefined)', async () => {
       const decryptData = createDataDecrypter(decrypt)
 
-      await expect(decryptData(undefined as unknown as Uint8Array, 'valid-password')).rejects.toThrow()
+      await expect(decryptData(<Uint8Array>undefined, 'valid-password')).rejects.toThrow()
     })
 
     it('handles invalid encrypted data (not Uint8Array)', async () => {
       const decryptData = createDataDecrypter(decrypt)
 
-      await expect(decryptData('not-a-uint8array' as unknown as Uint8Array, 'valid-password')).rejects.toThrow()
+      await expect(decryptData(<Uint8Array>(<unknown>'not-a-uint8array'), 'valid-password')).rejects.toThrow()
     })
 
     it('handles wrong password', async () => {

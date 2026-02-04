@@ -44,7 +44,7 @@ A **hyperfrontend feature** is a standalone frontend application that provides d
 
 ### Architecture
 
-Each hyperfrontend feature uses the standard communication protocol provided by the **[@hyperfrontend/window-messages](https://github.com/AndrewRedican/hyperfrontend/blob/main/packages/window-messages)** package. This enables:
+Each hyperfrontend feature uses the standard communication protocol provided by the **[@hyperfrontend/nexus](https://github.com/AndrewRedican/hyperfrontend/blob/main/libs/nexus)** library. This enables:
 
 - **Domain-agnostic contracts** - Features define clear interfaces for communication
 - **Pub/sub event bus** - Features can publish and subscribe to events without direct dependencies
@@ -132,7 +132,7 @@ Then add the hyperfrontend features plugin:
 npx nx add @hyperfrontend/features
 ```
 
-This will automatically install the `@hyperfrontend/window-messages` package and configure your workspace.
+This will automatically install the `@hyperfrontend/nexus` library and configure your workspace.
 
 ## Quick Start
 
@@ -187,10 +187,10 @@ This launches a development environment where you can debug and interact with yo
 
 ## Main Packages
 
-| Package                                                                                                             | Description                                                                                                                                                      |
-| ------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| [@hyperfrontend/features](https://github.com/AndrewRedican/hyperfrontend/blob/main/plugins/features)                | Nx plugin for hyperfrontend micro-frontend features [See docs](https://github.com/AndrewRedican/hyperfrontend/blob/main/plugins/features/README.md)              |
-| [@hyperfrontend/window-messages](https://github.com/AndrewRedican/hyperfrontend/blob/main/packages/window-messages) | Window messaging utilities for cross-frame communication [See docs](https://github.com/AndrewRedican/hyperfrontend/blob/main/packages/window-messages/README.md) |
+| Package                                                                                              | Description                                                                                                                                                             |
+| ---------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [@hyperfrontend/features](https://github.com/AndrewRedican/hyperfrontend/blob/main/plugins/features) | Nx plugin for hyperfrontend micro-frontend features [See docs](https://github.com/AndrewRedican/hyperfrontend/blob/main/plugins/features/README.md)                     |
+| [@hyperfrontend/nexus](https://github.com/AndrewRedican/hyperfrontend/blob/main/libs/nexus)          | Cross-window communication with contracts, lifecycle management, and security [See docs](https://github.com/AndrewRedican/hyperfrontend/blob/main/libs/nexus/README.md) |
 
 ## Internal Packages
 

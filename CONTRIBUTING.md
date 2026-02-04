@@ -515,7 +515,7 @@ Closes #123
 ```
 
 ```bash
-fix(@hyperfrontend/window-messages): resolve memory leak in event listeners
+fix(@hyperfrontend/nexus): resolve memory leak in event listeners
 
 Ensure event listeners are properly cleaned up when features are destroyed.
 

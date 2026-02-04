@@ -124,10 +124,56 @@ const protocol = createMyProtocol(send, receive)
 - `@hyperfrontend/network-protocol/queue` - Message queue creation and management
 - `@hyperfrontend/network-protocol/topic` - Topic creation and stores
 
-**Platform-Specific Protocol** (v1 implementation):
+**Platform-Specific Protocols**:
 
-- `@hyperfrontend/network-protocol/browser/v1` - Browser protocol with Web Crypto API
-- `@hyperfrontend/network-protocol/node/v1` - Node.js protocol with native crypto
+- `@hyperfrontend/network-protocol/browser/v1` - V1 protocol with obfuscation-only handshake
+- `@hyperfrontend/network-protocol/browser/v2` - V2 protocol with PSK-encrypted handshake
+- `@hyperfrontend/network-protocol/node/v1` - Node.js V1 protocol
+- `@hyperfrontend/network-protocol/node/v2` - Node.js V2 protocol
+
+### Protocol Versions
+
+#### V1: Obfuscation-Only Handshake
+
+The V1 protocol (`createObfuscatedHandshakeProtocolFactory`) uses time-based obfuscation only for the initial handshake message. During handshake:
+
+1. **First message**: Sent with obfuscation only (no encryption) - the encryption key is transmitted in the packet payload
+2. **Subsequent messages**: Encrypted with dynamically captured keys plus time-based obfuscation
+
+This approach is suitable when the transport layer already provides some level of security or when PSK distribution is not feasible.
+
+```typescript
+import { createProtocol } from '@hyperfrontend/network-protocol/browser/v1'
+// createProtocol is an alias for createObfuscatedHandshakeProtocolFactory
+```
+
+#### V2: PSK-Encrypted Handshake
+
+The V2 protocol (`createPSKHandshakeProtocolFactory`) adds a Pre-Shared Key (PSK) layer for securing the initial handshake:
+
+1. **First message**: Encrypted with the PSK + time-based obfuscation - protects the encryption key during transmission
+2. **Subsequent messages**: Encrypted with dynamically captured keys plus time-based obfuscation
+
+This provides defense-in-depth during handshake, protecting the dynamic key exchange from eavesdropping.
+
+```typescript
+import { createProtocol } from '@hyperfrontend/network-protocol/browser/v2'
+// createProtocol is an alias for createPSKHandshakeProtocolFactory
+
+// Usage requires a shared key known to both parties
+const createMyProtocol = createProtocol(logger, 'my-shared-secret', 60000)
+```
+
+#### Choosing Between V1 and V2
+
+| Use Case                           | Recommended Protocol  |
+| ---------------------------------- | --------------------- |
+| TLS-protected transport            | V1 (obfuscation-only) |
+| Untrusted transport, can share PSK | V2 (PSK handshake)    |
+| Key exchange protection critical   | V2 (PSK handshake)    |
+| No PSK distribution mechanism      | V1 (obfuscation-only) |
+
+**Note:** Both protocols use dynamic key encryption for all messages after the handshake. The only difference is how the first message (containing the dynamic encryption key) is protected.
 
 **Additional Modules**:
 
@@ -146,6 +192,51 @@ const protocol = createMyProtocol(send, receive)
 - `Topic` - Named message category for routing
 - `Packet<T>` - Union of all packet types (obfuscated, encrypted, unencrypted)
 - `Queue<T>` - Message queue with processing and backpressure control
+
+## Documentation
+
+### Comprehensive Guides
+
+- **[ARCHITECTURE.md](ARCHITECTURE.md)** - In-depth architecture guide with composition diagrams, factory reference table, and "How Do I..." quick reference
+- **[src/lib/README.md](src/lib/README.md)** - Module index with links to all subdomain documentation
+
+### Module Documentation
+
+Each module has its own README with purpose, interfaces, factory functions, and usage examples:
+
+| Module        | Description                              | Documentation                        |
+| ------------- | ---------------------------------------- | ------------------------------------ |
+| **channel/**  | Bidirectional communication channels     | [README](src/lib/channel/README.md)  |
+| **packet/**   | Packet type hierarchy & transformations  | [README](src/lib/packet/README.md)   |
+| **protocol/** | Protocol composition & v1 implementation | [README](src/lib/protocol/README.md) |
+| **security/** | Encryption & obfuscation suites          | [README](src/lib/security/README.md) |
+| **queue/**    | FIFO message processing queues           | [README](src/lib/queue/README.md)    |
+| **sender/**   | Outbound message pipeline                | [README](src/lib/sender/README.md)   |
+| **receiver/** | Inbound message pipeline                 | [README](src/lib/receiver/README.md) |
+| **data/**     | Structured message payloads              | [README](src/lib/data/README.md)     |
+| **routing/**  | Topic-based message routing              | [README](src/lib/routing/README.md)  |
+| **topic/**    | Topic store management                   | [README](src/lib/topic/README.md)    |
+
+### Platform Entry Points
+
+- **[src/browser/README.md](src/browser/README.md)** - Browser platform documentation
+- **[src/node/README.md](src/node/README.md)** - Node.js platform documentation
+
+### Integration Tests
+
+Living documentation through executable examples:
+
+- `channel/channel.integration.spec.ts` - Channel composition and bidirectional communication
+- `packet/packet-transformations.integration.spec.ts` - Full packet type transitions
+- `packet/security/encryption.integration.spec.ts` - Real encryption/decryption cycles
+- `packet/security/obfuscation.integration.spec.ts` - Time-based obfuscation with clock skew handling
+- `sender/sender.integration.spec.ts` - Full outbound queue chain
+- `receiver/receiver.integration.spec.ts` - Full inbound queue chain
+- `sender-receiver.integration.spec.ts` - Round-trip message flow
+- `security/security-suite.integration.spec.ts` - Combined encryption + obfuscation
+- `routing/routing.integration.spec.ts` - Topic-based message routing
+- `queue/queue.integration.spec.ts` - Queue creation, message flow, stop/resume
+- `data/data.integration.spec.ts` - Data creation with real hashing
 
 ## License
 

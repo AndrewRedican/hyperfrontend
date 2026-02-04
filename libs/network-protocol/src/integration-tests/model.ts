@@ -1,0 +1,86 @@
+/* istanbul ignore file */
+import type { Channel } from '../lib/channel/model'
+import type { Data } from '../lib/data/model'
+import type { SendPacketFn } from '../lib/sender/model'
+import type { ReceivePacketFn } from '../lib/receiver/model'
+
+export type { Channel }
+export type { Data }
+export type { SendPacketFn }
+export type { ReceivePacketFn }
+
+/**
+ * Simple text message payload
+ */
+export interface TextMessage {
+  type: 'TEXT'
+  content: string
+}
+
+/**
+ * Ping request for connection health check
+ */
+export interface PingMessage {
+  type: 'PING'
+  timestamp: number
+}
+
+/**
+ * Pong response to ping request
+ */
+export interface PongMessage {
+  type: 'PONG'
+  timestamp: number
+  originalTimestamp: number
+}
+
+/**
+ * Generic data payload
+ */
+export interface DataMessage<T = unknown> {
+  type: 'DATA'
+  payload: T
+}
+
+/**
+ * Union of all message types
+ */
+export type MessagePayload = TextMessage | PingMessage | PongMessage | DataMessage
+
+/**
+ * Client interface representing a network protocol participant.
+ */
+export interface Client<T = MessagePayload> {
+  /** Unique client identifier */
+  readonly id: string
+  /** Client label for logging */
+  readonly label: string
+  /** Check if client is connected to a peer */
+  readonly isConnected: () => boolean
+  /** Connect to another client (establishes bidirectional channel) */
+  readonly connect: (target: Client<T>) => Client<T>
+  /** Send a message to the connected peer */
+  readonly send: (message: T) => Promise<Client<T>>
+  /** Register a callback for incoming messages */
+  readonly onMessage: (callback: MessageCallback<T>) => Client<T>
+  /** Get the underlying channel (for advanced use) */
+  readonly getChannel: () => Channel
+  /** Disconnect from the peer */
+  readonly disconnect: () => void
+  /** Internal method to deliver packets from peer */
+  readonly _deliverPacket: (packet: Uint8Array) => void
+}
+
+/**
+ * Received packet structure - the Data wrapper contains the actual message
+ */
+export interface ReceivedPacket<T> {
+  origin: string
+  target: string
+  data: Data<T>
+}
+
+/**
+ * Callback for receiving messages
+ */
+export type MessageCallback<T = MessagePayload> = (packet: ReceivedPacket<T>) => void

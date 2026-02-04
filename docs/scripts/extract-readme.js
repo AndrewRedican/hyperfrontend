@@ -264,7 +264,7 @@ ${internalPackages}
 
 ### Core Framework
 - **@hyperfrontend/features** - Nx plugin for creating and managing features
-- **@hyperfrontend/window-messages** - Communication protocol foundation
+- **@hyperfrontend/nexus** - Communication protocol foundation
 
 ### Utilities
 - **cryptography** - Browser and Node.js cryptography utilities

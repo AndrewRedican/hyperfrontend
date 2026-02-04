@@ -104,7 +104,7 @@ export function isJSONString<T = unknown>(value: unknown): value is JSONString<T
  * @returns The value cast as a JSONString type
  */
 export function asJSONString<T = unknown>(value: string): JSONString<T> {
-  return value as JSONString<T>
+  return <JSONString<T>>value
 }
 
 /**
@@ -114,7 +114,7 @@ export function asJSONString<T = unknown>(value: string): JSONString<T> {
  * @returns The parsed object of type T
  */
 export function parseJSONString<T>(jsonString: JSONString<T>): T {
-  return JSON.parse(jsonString) as T
+  return <T>JSON.parse(jsonString)
 }
 
 /**

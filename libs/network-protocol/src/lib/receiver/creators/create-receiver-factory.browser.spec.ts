@@ -58,7 +58,7 @@ describe('createReceiverFactory (Browser)', () => {
       const logger = createMockLogger()
       const packetDeobfuscation = async () => ({ origin: testUUIDs.origin1, target: testUUIDs.target1, data: 'encrypted' })
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const packetDecryption = async () => ({ origin: testUUIDs.origin1, target: testUUIDs.target1, data: {} as any })
+      const packetDecryption = async () => ({ origin: testUUIDs.origin1, target: testUUIDs.target1, data: <any>{} })
 
       const receiver = createReceiver(testLabels.receiver1, receivePacket, logger, packetDeobfuscation, packetDecryption)
 
@@ -168,7 +168,7 @@ describe('createReceiverFactory (Browser)', () => {
         return { origin: testUUIDs.origin1, target: testUUIDs.target1, data: 'encrypted' }
       }
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const packetDecryption = async () => ({ origin: testUUIDs.origin1, target: testUUIDs.target1, data: {} as any })
+      const packetDecryption = async () => ({ origin: testUUIDs.origin1, target: testUUIDs.target1, data: <any>{} })
 
       const receiver = createReceiver(testLabels.receiver1, receivePacket, logger, packetDeobfuscation, packetDecryption)
 
@@ -231,14 +231,14 @@ describe('createReceiverFactory (Browser)', () => {
       const logger = createMockLogger()
       const packetDeobfuscation = async () => ({ origin: testUUIDs.origin1, target: testUUIDs.target1, data: 'encrypted' })
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const packetDecryption = async () => ({ origin: testUUIDs.origin1, target: testUUIDs.target1, data: {} as any })
+      const packetDecryption = async () => ({ origin: testUUIDs.origin1, target: testUUIDs.target1, data: <any>{} })
 
       const receiver = createReceiver(testLabels.receiver1, receivePacket, logger, packetDeobfuscation, packetDecryption)
 
       expect(Object.isFrozen(receiver)).toBe(true)
       expect(() => {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        ;(receiver as any).receive = () => void 0
+        ;(<any>receiver).receive = () => void 0
       }).toThrow()
     })
   })

@@ -19,12 +19,12 @@ function isValidProtocol(protocol: unknown): ValidProtocolResult {
     receive: void 0,
     getLogger: void 0,
   }
-  const prt = protocol as Protocol
+  const prt = <Protocol>protocol
   const isValidFunction = (key: keyof ValidProtocolResult) => {
     result[key] = key in prt && getType(prt[key]) === 'function'
     return result[key]
   }
-  const keys = Object.keys(result) as (keyof ValidProtocolResult)[]
+  const keys = <(keyof ValidProtocolResult)[]>Object.keys(result)
   for (let i = 0; i < keys.length; i += 1) {
     if (!isValidFunction(keys[i])) return result
   }

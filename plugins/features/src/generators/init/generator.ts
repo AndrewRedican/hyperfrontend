@@ -59,7 +59,7 @@ export async function initGenerator(tree: Tree, options: InitGeneratorSchema) {
    *      - Svelte: Add a wrapper component
    *      - Vanilla JS: Create an initialization wrapper
    *    - The wrapper should:
-   *      - Initialize @hyperfrontend/window-messages connection
+   *      - Initialize @hyperfrontend/nexus connection
    *      - Register lifecycle handlers (mount, unmount, error)
    *      - Set up event listeners for incoming messages
    *      - Expose feature methods via message protocol
@@ -102,7 +102,7 @@ export async function initGenerator(tree: Tree, options: InitGeneratorSchema) {
    *
    * 9. INSTALL DEPENDENCIES
    *    - Unless skipInstall is true:
-   *      - Add @hyperfrontend/window-messages to project dependencies
+   *      - Add @hyperfrontend/nexus to project dependencies
    *      - Add any framework-specific integration packages
    *      - Run npm/yarn/pnpm install
    *
