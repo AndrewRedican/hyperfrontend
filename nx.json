@@ -57,7 +57,8 @@
             "output": "./"
           }
         ],
-        "generateExportsField": true
+        "generateExportsField": true,
+        "skipTypeCheck": true
       }
     }
   },

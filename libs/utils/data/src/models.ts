@@ -97,7 +97,7 @@ export interface ReferenceStack {
   clear: () => void
 }
 
-export interface Options {
+export interface DepthConfig {
   depth: [number, number | '*'] | [number] | []
 }
 
@@ -145,8 +145,8 @@ export type TraversalCircular = (
   root?: boolean
 ) => any
 
-export type Traversal<T = unknown> = (target: T, condition: Condition, callback: Callback, options: Options, state: any) => any
+export type Traversal<T = unknown> = (target: T, condition: Condition, callback: Callback, options: DepthConfig, state: any) => any
 
-export type TraversalCreator<T = unknown> = (condition: Condition) => Traversal<T>
+export type TraversalCreator<T = unknown> = (condition: Condition) => Traverse<T>
 
-export type Traverse<T = unknown> = (target: T, callback: Callback, options?: Options, state?: any) => any
+export type Traverse<T = unknown> = (target: T, callback: Callback, options?: DepthConfig, state?: any) => any

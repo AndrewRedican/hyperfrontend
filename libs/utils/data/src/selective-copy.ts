@@ -3,14 +3,14 @@ import { ReferenceStack } from './models'
 import { getIterableOperators } from './get-iterable-operators'
 import { getType } from './get-type'
 import { isIterableType } from './is-iterable-type'
-import { Options, Predicate, DataPointOperation, DataPoint, CircularReference } from './selective-copy.model'
+import { SelectiveCopyOptions, SelectiveCopyPredicate, DataPointOperation, DataPoint, ReferenceLoop } from './selective-copy.model'
 import { referenceStack } from './reference-stack'
 import { getConfig } from './shared/consts'
 
 export const selectiveCopyRecursive = <T extends Record<string, unknown>>(
   target: T,
   path: string[],
-  includeKey: Predicate,
+  includeKey: SelectiveCopyPredicate,
   skipFunctions: boolean,
   recordSkip: DataPointOperation
 ): Partial<T> => {
@@ -56,11 +56,11 @@ export const selectiveCopyRecursive = <T extends Record<string, unknown>>(
 export const selectiveCopyForCircularReferencesRecursive = <T extends Record<string, unknown>>(
   target: T,
   path: string[],
-  includeKey: Predicate,
+  includeKey: SelectiveCopyPredicate,
   skipFunctions: boolean,
   recordSkip: DataPointOperation,
   stack: ReferenceStack,
-  circularRefs: CircularReference[],
+  circularRefs: ReferenceLoop[],
   root = false
 ): Partial<T> => {
   if (root) {
@@ -146,7 +146,7 @@ export const selectiveCopyForCircularReferencesRecursive = <T extends Record<str
  * @param options - Configuration options for selective copying
  * @returns An object containing the cloned value and array of skipped data points
  */
-export const selectiveCopy = <T = unknown>(target: T, options?: Options): { clone: Partial<T>; skipped: DataPoint[] } => {
+export const selectiveCopy = <T = unknown>(target: T, options?: SelectiveCopyOptions): { clone: Partial<T>; skipped: DataPoint[] } => {
   if (options !== void 0 && getType(options) !== 'object') throw new Error('Invalid options argument.')
   if (!options) options = {}
   if (!options.skipFunctions) options.skipFunctions = false
@@ -157,8 +157,8 @@ export const selectiveCopy = <T = unknown>(target: T, options?: Options): { clon
     if (found && included) throw new Error(`Options ${found} and ${keys[i]} are mutually exclusive.`)
     if (included) found = keys[i]
   }
-  const { includeKeys, excludeKeys, include, exclude, skipFunctions } = options as Required<Options>
-  let includeKey: Predicate = (target, path, key, dataType) => true
+  const { includeKeys, excludeKeys, include, exclude, skipFunctions } = options as Required<SelectiveCopyOptions>
+  let includeKey: SelectiveCopyPredicate = (target, path, key, dataType) => true
   switch (found) {
     case 'includeKeys':
       includeKey = (target, path, key, dataType) => (path.length === 1 ? includeKeys.includes(key as string) : true)
