@@ -1,5 +1,11 @@
 # @hyperfrontend/immutable-api-utils
 
+<p align="center">
+  <a href="https://codecov.io/gh/AndrewRedican/hyperfrontend">
+    <img src="https://img.shields.io/codecov/c/github/AndrewRedican/hyperfrontend?flag=immutable-api-utils&style=flat-square&logo=codecov" alt="Coverage">
+  </a>
+</p>
+
 Decorators and utilities for creating immutable, tamper-proof object APIs.
 
 ## What is @hyperfrontend/immutable-api-utils?

@@ -1,5 +1,11 @@
 # @hyperfrontend/list-utils
 
+<p align="center">
+  <a href="https://codecov.io/gh/AndrewRedican/hyperfrontend">
+    <img src="https://img.shields.io/codecov/c/github/AndrewRedican/hyperfrontend?flag=list-utils&style=flat-square&logo=codecov" alt="Coverage">
+  </a>
+</p>
+
 Purpose-built collection utilities for queue management, filtering, and iteration patterns.
 
 ## What is @hyperfrontend/list-utils?

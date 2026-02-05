@@ -107,6 +107,16 @@ jobs:
           path: coverage/
           retention-days: 30
 
+      - name: Upload coverage to Codecov
+        if: always()
+        uses: codecov/codecov-action@e28ff129e5465c2c0dcc6f003fc735cb6ae0c673 # v5.0.7
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          directory: ./coverage
+          flags: cryptography,logging,network-protocol,nexus,state-machine,web-worker,data-utils,function-utils,immutable-api-utils,list-utils,random-generator-utils,string-utils,time-utils,ui-utils
+          fail_ci_if_error: false
+          verbose: true
+
   e2e:
     name: e2e
     runs-on: ubuntu-latest

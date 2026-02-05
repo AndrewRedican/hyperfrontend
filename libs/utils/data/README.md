@@ -1,5 +1,11 @@
 # @hyperfrontend/data-utils
 
+<p align="center">
+  <a href="https://codecov.io/gh/AndrewRedican/hyperfrontend">
+    <img src="https://img.shields.io/codecov/c/github/AndrewRedican/hyperfrontend?flag=data-utils&style=flat-square&logo=codecov" alt="Coverage">
+  </a>
+</p>
+
 Comprehensive data structure manipulation with circular reference handling and custom class support.
 
 ## What is @hyperfrontend/data-utils?

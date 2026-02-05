@@ -1,5 +1,11 @@
 # @hyperfrontend/random-generator-utils
 
+<p align="center">
+  <a href="https://codecov.io/gh/AndrewRedican/hyperfrontend">
+    <img src="https://img.shields.io/codecov/c/github/AndrewRedican/hyperfrontend?flag=random-generator-utils&style=flat-square&logo=codecov" alt="Coverage">
+  </a>
+</p>
+
 Statistical random distributions and UUID generation for simulations, testing, and procedural content.
 
 ## What is @hyperfrontend/random-generator-utils?

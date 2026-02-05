@@ -1,5 +1,11 @@
 # @hyperfrontend/network-protocol
 
+<p align="center">
+  <a href="https://codecov.io/gh/AndrewRedican/hyperfrontend">
+    <img src="https://img.shields.io/codecov/c/github/AndrewRedican/hyperfrontend?flag=network-protocol&style=flat-square&logo=codecov" alt="Coverage">
+  </a>
+</p>
+
 Production-grade network protocol for secure, real-time cross-window and cross-process communication with built-in encryption, obfuscation, routing, and message queueing.
 
 ## What is @hyperfrontend/network-protocol?

@@ -1,5 +1,11 @@
 # @hyperfrontend/time-utils
 
+<p align="center">
+  <a href="https://codecov.io/gh/AndrewRedican/hyperfrontend">
+    <img src="https://img.shields.io/codecov/c/github/AndrewRedican/hyperfrontend?flag=time-utils&style=flat-square&logo=codecov" alt="Coverage">
+  </a>
+</p>
+
 Functional time utilities for async operations, intervals, and time normalization.
 
 ## What is @hyperfrontend/time-utils?

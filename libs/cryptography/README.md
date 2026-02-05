@@ -1,5 +1,11 @@
 # @hyperfrontend/cryptography
 
+<p align="center">
+  <a href="https://codecov.io/gh/AndrewRedican/hyperfrontend">
+    <img src="https://img.shields.io/codecov/c/github/AndrewRedican/hyperfrontend?flag=cryptography&style=flat-square&logo=codecov" alt="Coverage">
+  </a>
+</p>
+
 Production-grade cryptographic primitives with isomorphic APIs for browser and Node.js environments.
 
 ## What is @hyperfrontend/cryptography?

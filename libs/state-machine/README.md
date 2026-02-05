@@ -1,5 +1,11 @@
 # @hyperfrontend/state-machine
 
+<p align="center">
+  <a href="https://codecov.io/gh/AndrewRedican/hyperfrontend">
+    <img src="https://img.shields.io/codecov/c/github/AndrewRedican/hyperfrontend?flag=state-machine&style=flat-square&logo=codecov" alt="Coverage">
+  </a>
+</p>
+
 Lightweight, functional state management library with Redux-inspired actions/reducers, async operation orchestration, and lifecycle-aware component abstractions for predictable application state.
 
 ## What is @hyperfrontend/state-machine?

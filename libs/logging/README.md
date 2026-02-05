@@ -1,5 +1,11 @@
 # @hyperfrontend/logging
 
+<p align="center">
+  <a href="https://codecov.io/gh/AndrewRedican/hyperfrontend">
+    <img src="https://img.shields.io/codecov/c/github/AndrewRedican/hyperfrontend?flag=logging&style=flat-square&logo=codecov" alt="Coverage">
+  </a>
+</p>
+
 Structured logging with configurable severity levels and error-resilient execution.
 
 ## What is @hyperfrontend/logging?
