@@ -38,5 +38,9 @@
     "@hyperfrontend/random-generator-utils": "0.0.0",
     "@hyperfrontend/list-utils": "0.0.0",
     "@hyperfrontend/data-utils": "0.0.0"
+  },
+  "funding": {
+    "type": "github",
+    "url": "https://github.com/sponsors/AndrewRedican"
   }
 }

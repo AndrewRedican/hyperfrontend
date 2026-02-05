@@ -1,5 +1,11 @@
 # @hyperfrontend/string-utils
 
+<p align="center">
+  <a href="https://codecov.io/gh/AndrewRedican/hyperfrontend">
+    <img src="https://img.shields.io/codecov/c/github/AndrewRedican/hyperfrontend?flag=string-utils&style=flat-square&logo=codecov" alt="Coverage">
+  </a>
+</p>
+
 Isomorphic string encoding utilities with unified APIs for browser and Node.js environments.
 
 ## What is @hyperfrontend/string-utils?

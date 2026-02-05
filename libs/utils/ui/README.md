@@ -1,5 +1,11 @@
 # @hyperfrontend/ui-utils
 
+<p align="center">
+  <a href="https://codecov.io/gh/AndrewRedican/hyperfrontend">
+    <img src="https://img.shields.io/codecov/c/github/AndrewRedican/hyperfrontend?flag=ui-utils&style=flat-square&logo=codecov" alt="Coverage">
+  </a>
+</p>
+
 Modular DOM utilities for dynamic styling, gesture detection, element lifecycle, and color manipulation.
 
 ## What is @hyperfrontend/ui-utils?

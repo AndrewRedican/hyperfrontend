@@ -1,5 +1,11 @@
 # @hyperfrontend/function-utils
 
+<p align="center">
+  <a href="https://codecov.io/gh/AndrewRedican/hyperfrontend">
+    <img src="https://img.shields.io/codecov/c/github/AndrewRedican/hyperfrontend?flag=function-utils&style=flat-square&logo=codecov" alt="Coverage">
+  </a>
+</p>
+
 Higher-order function utilities for behavioral modification and composition.
 
 ## What is @hyperfrontend/function-utils?

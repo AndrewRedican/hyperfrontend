@@ -1,5 +1,11 @@
 # @hyperfrontend/nexus
 
+<p align="center">
+  <a href="https://codecov.io/gh/AndrewRedican/hyperfrontend">
+    <img src="https://img.shields.io/codecov/c/github/AndrewRedican/hyperfrontend?flag=nexus&style=flat-square&logo=codecov" alt="Coverage">
+  </a>
+</p>
+
 Secure cross-window communication library for micro-frontends with contract-validated messaging, origin-based security policies, and connection lifecycle management.
 
 ## What is Nexus?

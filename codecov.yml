@@ -1,0 +1,107 @@
+# Codecov configuration for hyperfrontend monorepo
+# https://docs.codecov.com/docs/codecovyml-reference
+
+coverage:
+  precision: 2
+  round: down
+  range: '70...100'
+  status:
+    project:
+      default:
+        target: auto
+        threshold: 1%
+    patch:
+      default:
+        target: auto
+        threshold: 1%
+
+# Comment configuration for PRs
+comment:
+  layout: 'reach,diff,flags,files'
+  behavior: default
+  require_changes: true
+
+# Flag management for monorepo per-project coverage
+flag_management:
+  default_rules:
+    carryforward: true
+    statuses:
+      - type: project
+        target: auto
+        threshold: 1%
+      - type: patch
+        target: auto
+        threshold: 1%
+
+  individual_flags:
+    # Core libraries
+    - name: cryptography
+      paths:
+        - libs/cryptography/src/**
+      carryforward: true
+
+    - name: logging
+      paths:
+        - libs/logging/src/**
+      carryforward: true
+
+    - name: network-protocol
+      paths:
+        - libs/network-protocol/src/**
+      carryforward: true
+
+    - name: nexus
+      paths:
+        - libs/nexus/src/**
+      carryforward: true
+
+    - name: state-machine
+      paths:
+        - libs/state-machine/src/**
+      carryforward: true
+
+    - name: web-worker
+      paths:
+        - libs/web-worker/src/**
+      carryforward: true
+
+    # Utility libraries
+    - name: data-utils
+      paths:
+        - libs/utils/data/src/**
+      carryforward: true
+
+    - name: function-utils
+      paths:
+        - libs/utils/function/src/**
+      carryforward: true
+
+    - name: immutable-api-utils
+      paths:
+        - libs/utils/immutable-api/src/**
+      carryforward: true
+
+    - name: list-utils
+      paths:
+        - libs/utils/list/src/**
+      carryforward: true
+
+    - name: random-generator-utils
+      paths:
+        - libs/utils/random-generator/src/**
+      carryforward: true
+
+    - name: string-utils
+      paths:
+        - libs/utils/string/src/**
+      carryforward: true
+
+    - name: time-utils
+      paths:
+        - libs/utils/time/src/**
+      carryforward: true
+
+    - name: ui-utils
+      paths:
+        - libs/utils/ui/src/**
+      carryforward: true

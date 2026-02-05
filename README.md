@@ -1,7 +1,7 @@
 # hyperfrontend
 
 <p align="center">
-  <img  width="300" src="https://github.com/AndrewRedican/hyperfrontend/blob/main/assets/logo/hyperfrontend.png?raw=true">
+  <img  width="300" src="https://github.com/AndrewRedican/hyperfrontend/blob/main/assets/logo/hyperfrontend.png?raw=true" alt="Coverage">
 </p>
 <p align="center">
   A hybrid micro-frontend pattern to embed live web applications with communication protocols, lifecycle, and contract standards
@@ -14,6 +14,9 @@
 </p>
 
 <p align="center">
+  <a href="https://codecov.io/gh/AndrewRedican/hyperfrontend">
+    <img src="https://img.shields.io/codecov/c/github/AndrewRedican/hyperfrontend?style=flat-square&logo=codecov" alt="Coverage">
+  </a>
   <a href="https://github.com/sponsors/AndrewRedican">
     <img src="https://img.shields.io/badge/Sponsor-❤️-ff69b4?style=flat-square" alt="Sponsor">
   </a>
