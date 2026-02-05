@@ -163,6 +163,51 @@ This document outlines the action plan for implementing a robust, maintainable b
 - No distinction between "bundled" vs "external" deps per project
 - Apps and demos not explicitly excluded (but empty, so no issue yet)
 
+### Known Issues & Workarounds
+
+#### Issue: `@types/node` v25 Compatibility with `@rollup/plugin-typescript`
+
+**Symptom**: Build fails with syntax errors in `node_modules/@types/node/web-globals/fetch.d.ts`:
+
+```
+TS1005: ',' expected.
+TS1160: Unterminated template literal.
+```
+
+**Root Cause**: `@types/node` v25 uses TypeScript syntax that `@rollup/plugin-typescript` cannot parse during bundling, even when `skipLibCheck: true` is set in tsconfig.
+
+**Workaround**: Add `skipTypeCheck: true` to each library's `project.json` build options:
+
+```json
+{
+  "targets": {
+    "build": {
+      "options": {
+        "skipTypeCheck": true
+      }
+    }
+  }
+}
+```
+
+**Note**: This skips type checking during the Rollup build phase. Type safety is still enforced via:
+
+- IDE type checking (using tsconfig)
+- The `lint` target (which runs before build in CI)
+- The `test` target (TypeScript compilation for tests)
+
+#### Type Casting Convention
+
+When fixing type errors in source code, use angle bracket syntax for type assertions:
+
+```typescript
+// Preferred
+<UnknownIterable>read(targetA, key)
+
+// Not preferred
+read(targetA, key) as UnknownIterable
+```
+
 ### Legacy Build Reference
 
 From `_/legacy-shell-application-pattern/connector/scripts/browser.build.js`:
