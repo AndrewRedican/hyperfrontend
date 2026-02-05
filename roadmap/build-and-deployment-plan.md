@@ -208,6 +208,64 @@ When fixing type errors in source code, use angle bracket syntax for type assert
 read(targetA, key) as UnknownIterable
 ```
 
+#### Libraries with Secondary Entry Points
+
+Some libraries (e.g., `lib-string-utils`) expose multiple entry points (`./browser`, `./node`) instead of a single main export. These require a custom Rollup configuration.
+
+**Approach**: Use `@rollup/plugin-babel` with `@babel/preset-typescript` instead of `@rollup/plugin-typescript`. Babel strips types without validating them, completely avoiding the `@types/node` compatibility issues.
+
+**Example** (`libs/utils/string/rollup.config.js`):
+
+```javascript
+const { resolve } = require('path')
+const { babel } = require('@rollup/plugin-babel')
+const nodeResolve = require('@rollup/plugin-node-resolve')
+
+const projectRoot = __dirname
+const outputPath = resolve(projectRoot, '../../../dist/libs/utils/string')
+
+const createConfig = (input, outputFile, format) => ({
+  input: resolve(projectRoot, input),
+  output: {
+    file: resolve(outputPath, outputFile),
+    format,
+    sourcemap: true,
+  },
+  plugins: [
+    nodeResolve({ extensions: ['.ts', '.js'] }),
+    babel({
+      babelHelpers: 'bundled',
+      extensions: ['.ts', '.js'],
+      presets: ['@babel/preset-typescript'],
+    }),
+  ],
+})
+
+module.exports = [
+  createConfig('src/browser/index.ts', 'browser/index.esm.js', 'esm'),
+  createConfig('src/browser/index.ts', 'browser/index.cjs.js', 'cjs'),
+  createConfig('src/node/index.ts', 'node/index.esm.js', 'esm'),
+  createConfig('src/node/index.ts', 'node/index.cjs.js', 'cjs'),
+]
+```
+
+**Project.json configuration**:
+
+```json
+{
+  "targets": {
+    "build": {
+      "options": {
+        "skipTypeCheck": true,
+        "rollupConfig": "{projectRoot}/rollup.config.js"
+      }
+    }
+  }
+}
+```
+
+**Note**: When a custom `rollup.config.js` is detected, Nx switches from `@nx/rollup:rollup` executor to direct `rollup -c` invocation. This is expected behavior.
+
 ### Legacy Build Reference
 
 From `_/legacy-shell-application-pattern/connector/scripts/browser.build.js`:
