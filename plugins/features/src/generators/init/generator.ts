@@ -1,5 +1,5 @@
-import { Tree } from '@nx/devkit'
-import { InitGeneratorSchema } from './schema'
+import type { Tree } from '@nx/devkit'
+import type { InitGeneratorSchema } from './schema'
 
 /**
  * Nx generator that initializes a project as a hyperfrontend microfrontend feature.

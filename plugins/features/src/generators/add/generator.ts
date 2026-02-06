@@ -1,5 +1,5 @@
-import { Tree } from '@nx/devkit'
-import { AddGeneratorSchema } from './schema'
+import type { Tree } from '@nx/devkit'
+import type { AddGeneratorSchema } from './schema'
 
 /**
  * Nx generator that adds a hyperfrontend microfrontend feature to a host application.
