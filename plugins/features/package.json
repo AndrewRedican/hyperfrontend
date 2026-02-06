@@ -5,6 +5,9 @@
   "license": "MIT",
   "sideEffects": false,
   "main": "./src/index.js",
+  "dependencies": {
+    "@nx/devkit": "22.3.3"
+  },
   "generators": "./generators.json",
   "executors": "./executors.json",
   "funding": {
