@@ -1,26 +1,26 @@
 import type { LogLevel, SetLogLevel, GetLogLevel } from './create-log-level-config'
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export type Log = (...data: any[]) => void
+export type LogLevelFn = (...data: any[]) => void
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export type Warn = (...data: any[]) => void
+export type WarnLevelFn = (...data: any[]) => void
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export type Error = (...data: any[]) => void
+export type ErrorLevelFn = (...data: any[]) => void
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export type Info = (...data: any[]) => void
+export type InfoLevelFn = (...data: any[]) => void
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export type Debug = (...data: any[]) => void
+export type DebugLevelFn = (...data: any[]) => void
 
 export interface Logger {
-  log: Log
-  warn: Warn
-  error: Error
-  info: Info
-  debug: Debug
+  log: LogLevelFn
+  warn: WarnLevelFn
+  error: ErrorLevelFn
+  info: InfoLevelFn
+  debug: DebugLevelFn
   setLogLevel: SetLogLevel
   getLogLevel: GetLogLevel
 }
@@ -43,9 +43,15 @@ import { createLogLevelConfig } from './create-log-level-config'
  * @param info - Function to handle info-level logs (optional, defaults to noop)
  * @param debug - Function to handle debug-level logs (optional, defaults to noop)
  * @returns A frozen logger object with log methods and level control
- * @throws {Error} When any provided log function is invalid
+ * @throws {ErrorLevelFn} When any provided log function is invalid
  */
-export function createLogger(error: Error, warn: Warn = noop, log: Log = noop, info: Info = noop, debug: Debug = noop): Logger {
+export function createLogger(
+  error: ErrorLevelFn,
+  warn: WarnLevelFn = noop,
+  log: LogLevelFn = noop,
+  info: InfoLevelFn = noop,
+  debug: DebugLevelFn = noop
+): Logger {
   if (notValidLogFn(error)) {
     throw new Error(notFnMsg('error'))
   }

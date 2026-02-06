@@ -1,14 +1,14 @@
-import type { Error, Warn, Log, Info, Debug } from './create-logger'
+import type { ErrorLevelFn, WarnLevelFn, LogLevelFn, InfoLevelFn, DebugLevelFn } from './create-logger'
 import { getType } from '@hyperfrontend/data-utils'
 import { noop } from '@hyperfrontend/function-utils'
 import { createLogger } from './create-logger'
 
 describe('createLogger', () => {
-  let error: jest.Mock<Error>
-  let warn: jest.Mock<Warn>
-  let log: jest.Mock<Log>
-  let info: jest.Mock<Info>
-  let debug: jest.Mock<Debug>
+  let error: jest.Mock<ErrorLevelFn>
+  let warn: jest.Mock<WarnLevelFn>
+  let log: jest.Mock<LogLevelFn>
+  let info: jest.Mock<InfoLevelFn>
+  let debug: jest.Mock<DebugLevelFn>
 
   beforeEach(() => {
     error = jest.fn()
