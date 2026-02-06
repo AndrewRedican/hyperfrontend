@@ -2,6 +2,7 @@
   "name": "@hyperfrontend/list-utils",
   "version": "0.0.0",
   "description": "Purpose-built collection utilities for queue management, filtering, and iteration patterns.",
+  "license": "MIT",
   "keywords": [
     "list",
     "array",
