@@ -18,7 +18,7 @@
     "node": "24.13.0",
     "npm": ">=10.0.0"
   },
-  "license": "SEE LICENSE IN LICENSE",
+  "license": "MIT",
   "funding": {
     "type": "github",
     "url": "https://github.com/sponsors/AndrewRedican"
