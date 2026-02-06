@@ -2,9 +2,9 @@
   "name": "@hyperfrontend/features",
   "version": "0.0.0",
   "description": "Nx plugin for hyperfrontend micro-frontend features.",
+  "license": "MIT",
   "sideEffects": false,
   "main": "./src/index.js",
-  "dependencies": {},
   "generators": "./generators.json",
   "executors": "./executors.json",
   "funding": {
