@@ -2,6 +2,7 @@
   "name": "@hyperfrontend/random-generator-utils",
   "version": "0.0.0",
   "description": "Statistical random distributions and UUID generation for simulations, testing, and procedural content.",
+  "license": "MIT",
   "keywords": [
     "random",
     "random-number",
