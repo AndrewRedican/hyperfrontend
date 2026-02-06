@@ -1,0 +1,9 @@
+{
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "name": "tool-package",
+  "description": "Nx plugin providing build executors for hyperfrontend library packages.",
+  "sourceRoot": "{projectRoot}/src",
+  "projectType": "library",
+  "tags": [],
+  "targets": {}
+}

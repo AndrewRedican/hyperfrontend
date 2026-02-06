@@ -78,7 +78,8 @@
       "@hyperfrontend/ui-utils/selector": ["libs/utils/ui/src/selector/index.ts"],
       "@hyperfrontend/ui-utils/style": ["libs/utils/ui/src/style/index.ts"],
       "@hyperfrontend/ui-utils/time": ["libs/utils/ui/src/time/index.ts"],
-      "@hyperfrontend/web-worker": ["libs/web-worker/src/index.ts"]
+      "@hyperfrontend/web-worker": ["libs/web-worker/src/index.ts"],
+      "@hyperfrontend/package": ["tools/package/src/index.ts"]
     }
   },
   "exclude": ["node_modules", "tmp"]
