@@ -30,7 +30,7 @@ The TS6059 rootDir error blocked libraries with `@hyperfrontend/*` dependencies.
 - [x] lib-cryptography - builds successfully
 - [x] lib-state-machine - builds successfully
 - [x] lib-nexus - builds successfully
-- [ ] lib-network-protocol - **FAILS** (pre-existing TypeScript errors in source code)
+- [x] lib-network-protocol - builds successfully
 
 ### 1.4 Fix JSON Import Support ✅
 
@@ -49,21 +49,65 @@ The TS6059 rootDir error blocked libraries with `@hyperfrontend/*` dependencies.
 
 ---
 
-## Phase 1.7: Fix lib-network-protocol Source Errors 🚨
+## Phase 1.7: Fix lib-network-protocol Source Errors ✅
 
-The build system works but lib-network-protocol has TypeScript errors in the source code:
+The TypeScript errors in lib-network-protocol source code have been fixed.
 
-**Files with errors:**
+**Validation status:**
 
-- `mocks.ts` - Type signature mismatches for Packet encryption/decryption types
-- `create-decrypter.ts` - Generic type issue with DataDecrypter
-- `is-valid-message.ts` - Missing export `Options` from `@hyperfrontend/data-utils`
-- `static-encryption-key.ts` - Wrong number of arguments passed
-- `dynamic-obfuscation-key.ts` - Wrong number of arguments passed
+| Check                                      | Status     |
+| ------------------------------------------ | ---------- |
+| `npx nx format:check lib-network-protocol` | ✅ SUCCESS |
+| `npx nx lint lib-network-protocol`         | ✅ SUCCESS |
+| `npx nx test lib-network-protocol`         | ✅ SUCCESS |
+| `npx nx build lib-network-protocol`        | ✅ SUCCESS |
 
-**Also has circular dependencies:**
+**Files fixed:**
 
-- `queue/creators/index.ts` ↔ various `create-*-queue.ts` files
+- `channel/mocks.ts` - Fixed imports to use proper protocol-compatible functions
+- `packet/creators/mocks.ts` - Restored 2-arg helper functions, keep 1-arg protocol functions separate
+- `create-decrypter.ts` - Made returned function generic to match DataDecrypter type
+- `is-valid-message.ts` - Changed `Options` import to `DepthConfig` (correct type name)
+- `static-encryption-key.ts` - Changed parameter types to `PacketEncrypter`/`PacketDecrypter`
+- `dynamic-obfuscation-key.ts` - Changed parameter types to `PacketObfuscater`/`PacketDeobfuscater`
+
+**Circular dependencies (Rollup warnings - not blocking):**
+
+- `queue/creators/index.ts` ↔ `create-deobfuscation-queue.ts`
+- `queue/creators/index.ts` ↔ `create-deserialization-queue.ts`
+- `queue/creators/index.ts` ↔ `create-encryption-queue.ts`
+- `queue/creators/index.ts` ↔ `create-obfuscation-queue.ts`
+- `queue/creators/index.ts` ↔ `create-serialization-queue.ts`
+- `queue/creators/index.ts` ↔ `create-decryption-queue.ts`
+
+---
+
+## Phase 1.8: Add Typecheck Target ✅
+
+Added `typecheck` target as a fast pre-build validation to catch TypeScript errors early.
+
+### Why?
+
+- Build runs Rollup which is slow → typecheck is faster feedback loop
+- CI can run `typecheck` before `build` to fail fast
+- Catches type errors without producing artifacts
+- Complements lint (ESLint catches style/rules, tsc catches type errors)
+
+### Implementation
+
+```json
+"typecheck": {
+  "executor": "nx:run-commands",
+  "options": {
+    "command": "tsc --noEmit -p {projectRoot}/tsconfig.lib.json",
+    "cwd": "{workspaceRoot}"
+  }
+}
+```
+
+- [x] Add `typecheck` target to all library project.json files
+- [ ] Add to CI pipeline: `format:check` → `lint` → `typecheck` → `test` → `build`
+- [ ] Update `run-checks/action.yml` to support `typecheck` check type
 
 ---
 
@@ -129,7 +173,9 @@ Add self-contained bundle generation for CDN distribution.
 
 Before completing:
 
-- [ ] `nx run-many -t=build --all` succeeds (blocked by lib-network-protocol source errors)
+- [x] Add typecheck target to all libraries
+- [x] `nx run-many -t=typecheck --all` succeeds
+- [x] `nx run-many -t=build --all` succeeds
 - [ ] All expected outputs exist in `dist/`
 - [ ] ESM imports work: `import { x } from '@hyperfrontend/utils'`
 - [ ] CJS requires work: `const { x } = require('@hyperfrontend/utils')`
@@ -139,11 +185,7 @@ Before completing:
 
 ## Quick Reference
 
-**Blocked libraries** (source code TypeScript errors):
-
-- lib-network-protocol
-
-**Building successfully**:
+**All libraries building successfully**:
 
 - lib-logging
 - lib-ui-utils
@@ -156,6 +198,9 @@ Before completing:
 - lib-function-utils
 - lib-time-utils
 - lib-random-generator-utils
+- lib-network-protocol
+- lib-web-worker
+- lib-immutable-api-utils
 
 **Executor location**: `tools/package/src/executors/build/`
 
