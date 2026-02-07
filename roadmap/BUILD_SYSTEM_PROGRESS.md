@@ -1,208 +1,250 @@
 # Build System Progress Report
 
-**Date**: February 6, 2026
+**Date**: February 7, 2026
 **Branch**: `build-and-badges`
-**Status**: In Progress
+**Status**: In Progress - Architecture defined, implementation pending
 
 ---
 
 ## Objective
 
-Implement a robust build configuration that produces **dual output formats** (ESM + CommonJS) for all library packages, with proper TypeScript declarations, as outlined in [build-and-deployment-plan.md](./build-and-deployment-plan.md).
+Implement a robust build configuration that produces **multiple output categories** for all library packages, with proper TypeScript declarations, as outlined in [build-and-deployment-plan.md](./build-and-deployment-plan.md).
 
 ---
 
-## Progress Summary
+## Architecture Decision: Output Categories as Entry Points
 
-### Completed
+Each package will expose **three base secondary entry points** representing distinct output categories:
 
-| Task                                           | Status | Notes                                         |
-| ---------------------------------------------- | ------ | --------------------------------------------- |
-| Standard library builds (lib-data-utils)       | ✅     | Uses default `@nx/rollup:rollup` executor     |
-| Isomorphic library builds (lib-string-utils)   | ✅     | Custom `rollup.config.cjs` with Babel         |
-| ESM + CJS output for browser/node entry points | ✅     | 4 bundles generated per isomorphic lib        |
-| TypeScript declarations for isomorphic libs    | ✅     | Separate tsc step with proper path flattening |
-| Asset copying (README, LICENSE, package.json)  | ✅     | Custom Rollup plugin                          |
-
-### Not Started
-
-| Task                                   | Notes                                  |
-| -------------------------------------- | -------------------------------------- |
-| UMD/IIFE bundles for CDN               | Planned for lib-nexus                  |
-| Build badge integration                | Waiting for CI stability               |
-| Publish workflow                       | Future phase                           |
-| Apply isomorphic pattern to other libs | lib-cryptography, lib-network-protocol |
-
----
-
-## Architecture Decisions
-
-### Standard Libraries (Single Entry Point)
-
-Libraries with a single `src/index.ts` use the default `@nx/rollup:rollup` executor inherited from `nx.json`:
+### Output Structure
 
 ```
-libs/utils/data/
-├── src/index.ts          → Single entry point
-├── project.json          → { "targets": { "build": {} } }
-└── tsconfig.lib.json
+dist/libs/<package>/
+├── esm/                    → ES Modules (external deps)
+│   ├── index.js
+│   ├── index.d.ts
+│   └── <feature>/          → Feature modules (if applicable)
+├── commonjs/               → CommonJS (external deps)
+│   ├── index.js
+│   ├── index.d.ts
+│   └── <feature>/
+├── bundled/                → Self-contained (all deps inlined)
+│   ├── index.js
+│   ├── index.d.ts
+│   └── <feature>/
+└── package.json            → With exports field
 ```
 
-**project.json** (minimal - inherits from nx.json targetDefaults):
-
-```json
-{
-  "targets": {
-    "build": {}
-  }
-}
-```
-
-**Output**:
-
-```
-dist/libs/utils/data/
-├── index.cjs.js          → CommonJS
-├── index.esm.js          → ESM
-├── index.d.ts            → TypeScript declarations
-├── package.json          → With exports field
-├── README.md
-└── LICENSE.md
-```
-
-### Isomorphic Libraries (Multiple Entry Points)
-
-Libraries with browser/node-specific implementations require a custom `rollup.config.cjs`:
-
-```
-libs/utils/string/
-├── src/
-│   ├── browser/index.ts  → Browser entry point
-│   ├── node/index.ts     → Node entry point
-│   └── lib/              → Shared implementation
-├── rollup.config.cjs     → Custom config
-├── project.json          → Uses nx:run-commands executor
-└── tsconfig.lib.json     → Must have noEmit: false
-```
-
-**project.json**:
-
-```json
-{
-  "targets": {
-    "build": {
-      "executor": "nx:run-commands",
-      "options": {
-        "cwd": "{projectRoot}",
-        "command": "rollup -c rollup.config.cjs"
-      },
-      "outputs": ["{workspaceRoot}/dist/{projectRoot}"]
-    }
-  }
-}
-```
-
-**tsconfig.lib.json** (must override base config's noEmit):
-
-```json
-{
-  "extends": "./tsconfig.json",
-  "compilerOptions": {
-    "outDir": "../../../dist/out-tsc",
-    "noEmit": false
-  },
-  "include": ["src/**/*.ts"],
-  "exclude": ["jest.config.ts", "src/**/*.spec.ts", "src/**/*.test.ts"]
-}
-```
-
-**Output**:
-
-```
-dist/libs/utils/string/
-├── browser/
-│   ├── index.cjs.js
-│   ├── index.esm.js
-│   └── index.d.ts
-├── node/
-│   ├── index.cjs.js
-│   ├── index.esm.js
-│   └── index.d.ts
-├── lib/                  → Shared type declarations
-│   └── *.d.ts
-├── package.json          → With conditional exports
-├── README.md
-└── LICENSE.md
-```
-
-**Generated package.json exports**:
+### Package.json Exports
 
 ```json
 {
   "exports": {
     "./package.json": "./package.json",
-    "./browser": {
-      "types": "./browser/index.d.ts",
-      "import": "./browser/index.esm.js",
-      "require": "./browser/index.cjs.js"
+    "./esm": {
+      "types": "./esm/index.d.ts",
+      "import": "./esm/index.js"
     },
-    "./node": {
-      "types": "./node/index.d.ts",
-      "import": "./node/index.esm.js",
-      "require": "./node/index.cjs.js"
+    "./commonjs": {
+      "types": "./commonjs/index.d.ts",
+      "require": "./commonjs/index.js"
+    },
+    "./bundled": {
+      "types": "./bundled/index.d.ts",
+      "import": "./bundled/index.js",
+      "require": "./bundled/index.js"
     }
   }
 }
 ```
 
+### For Libraries with Feature Modules
+
+```json
+{
+  "exports": {
+    "./esm": "./esm/index.js",
+    "./esm/feature": "./esm/feature/index.js",
+    "./commonjs": "./commonjs/index.js",
+    "./commonjs/feature": "./commonjs/feature/index.js",
+    "./bundled": "./bundled/index.js",
+    "./bundled/feature": "./bundled/feature/index.js"
+  }
+}
+```
+
+### Use Cases
+
+| Entry Point  | Dependencies | Use Case                                                   |
+| ------------ | ------------ | ---------------------------------------------------------- |
+| `./esm`      | External     | Modern bundlers (Vite, esbuild, Rollup) - they handle deps |
+| `./commonjs` | External     | Node.js apps, legacy bundlers                              |
+| `./bundled`  | Inlined      | CDN, script tags, no build step environments               |
+
 ---
 
-## Isomorphic Build Strategy
+## Future Roadmap
 
-The custom `rollup.config.cjs` uses:
-
-1. **Babel for transpilation** (`@rollup/plugin-babel` with `@babel/preset-typescript`)
-   - Strips TypeScript types without full type checking
-   - Faster than `@rollup/plugin-typescript`
-   - Avoids issues with corrupted type definition files
-
-2. **Separate tsc for declarations**
-   - Runs `tsc --emitDeclarationOnly` after bundling
-   - Flattens nested output paths (tsc respects rootDir from tsconfig.base.json)
-   - Copies declarations to match bundle structure
-
-3. **Post-build asset handling**
-   - Copies README.md, LICENSE.md
-   - Generates package.json with proper exports field
-
-**Key insight**: The base `tsconfig.base.json` has `noEmit: true` which must be overridden in project-level `tsconfig.lib.json` for declaration generation to work.
+| Enhancement      | Entry Point     | Description                                              |
+| ---------------- | --------------- | -------------------------------------------------------- |
+| **Minification** | `./bundled.min` | Terser/uglify for production                             |
+| **Browserified** | `./browser`     | Browser-specific polyfills, no Node APIs                 |
+| **UMD**          | `./umd`         | Universal Module Definition for `<script>` tags          |
+| **IIFE**         | `./iife`        | Immediately Invoked Function Expression for global scope |
 
 ---
 
-## Files Changed (This Session)
+## Build Complexity Dimensions
 
-### New Files
+### 1. Entry Point Patterns (Source Structure)
 
-- `libs/utils/string/rollup.config.cjs` - Custom Rollup config for isomorphic build
+| Pattern      | Example              | Structure                                    |
+| ------------ | -------------------- | -------------------------------------------- |
+| **Root**     | lib-data-utils       | Single `src/index.ts`                        |
+| **Platform** | lib-string-utils     | `src/browser/index.ts` + `src/node/index.ts` |
+| **Feature**  | lib-state-machine    | Multiple `src/<feature>/index.ts` modules    |
+| **Hybrid**   | lib-ui-utils         | Root + multiple feature modules              |
+| **Complex**  | lib-network-protocol | Platform + feature nesting                   |
 
-### Modified Files
+### 2. Output Categories (Build Outputs)
 
-- `libs/utils/string/project.json` - Changed to use `nx:run-commands` executor
-- `libs/utils/string/tsconfig.lib.json` - Added `noEmit: false` override
+| Category   | Format         | Dependencies | Target          |
+| ---------- | -------------- | ------------ | --------------- |
+| `esm`      | ES2022 modules | External     | Modern bundlers |
+| `commonjs` | CJS            | External     | Node.js         |
+| `bundled`  | ES2022 modules | Inlined      | CDN/direct use  |
+
+---
+
+## Implementation Status
+
+### Committed & Working
+
+| Library                    | Entry Pattern | Dependencies | Status |
+| -------------------------- | ------------- | ------------ | ------ |
+| lib-data-utils             | root          | none         | ✅     |
+| lib-function-utils         | root          | none         | ✅     |
+| lib-immutable-api-utils    | root          | none         | ✅     |
+| lib-random-generator-utils | root          | none         | ✅     |
+| lib-time-utils             | root          | none         | ✅     |
+| lib-web-worker             | root          | none         | ✅     |
+| lib-string-utils           | platform      | none         | ✅     |
+
+_Note: Currently outputs ESM + CJS side-by-side. Needs migration to new entry point structure._
+
+### Pending (Uncommitted)
+
+| Library              | Entry Pattern             | Dependencies                           | Blocker              |
+| -------------------- | ------------------------- | -------------------------------------- | -------------------- |
+| lib-list-utils       | root                      | data-utils                             | TS6059 rootDir error |
+| lib-logging          | root                      | unknown                                | needs testing        |
+| lib-ui-utils         | hybrid (11 entries)       | data, function, list, random-generator | TS6059 rootDir error |
+| lib-cryptography     | hybrid (root + platform)  | unknown                                | needs testing        |
+| lib-state-machine    | feature (10+ modules)     | unknown                                | needs testing        |
+| lib-network-protocol | complex                   | cryptography, others                   | needs testing        |
+| lib-nexus            | complex (root + features) | network-protocol, others               | needs testing        |
+| plugins/features     | unknown                   | unknown                                | needs testing        |
+
+---
+
+## Current Challenge: TypeScript Path Resolution
+
+### The Problem
+
+When building with `bundled` strategy, TypeScript/Rollup follows `tsconfig.base.json` path mappings to **source files** of dependencies:
+
+```
+@hyperfrontend/data-utils → libs/utils/data/src/index.ts
+```
+
+This causes TS6059 error because files outside the project's `rootDir` are included.
+
+### Solution with New Architecture
+
+The three-category approach solves this naturally:
+
+| Category   | Dependency Handling | Path Resolution                            |
+| ---------- | ------------------- | ------------------------------------------ |
+| `esm`      | External            | No resolution needed - consumer provides   |
+| `commonjs` | External            | No resolution needed - consumer provides   |
+| `bundled`  | Resolve to dist     | Use `dist/` outputs from dependency builds |
+
+For `bundled`, the build must resolve `@hyperfrontend/*` to **built outputs** in `dist/`, not source files. This requires:
+
+1. Dependencies built first (`dependsOn: ["^build"]` ✅ configured)
+2. Path alias plugin pointing to `dist/` during bundled build
+
+---
+
+## Nx Configuration
+
+Added to `nx.json` to ensure build order:
+
+```json
+"build": {
+  "dependsOn": ["^build"],      // Build dependencies first
+  "inputs": ["default", "^default"]  // Invalidate cache when deps change
+}
+```
+
+---
+
+## Custom Build Executor
+
+Located at `@hyperfrontend/package:build`:
+
+```
+tools/package/src/executors/build/
+├── executor.ts          → Main executor
+└── lib/
+    ├── detect.ts        → Entry point discovery
+    ├── build-unified.ts → Rollup build logic
+    ├── package-json.ts  → Export generation
+    └── ...
+```
+
+**Current Features:**
+
+- Auto-discovers entry points from `src/` structure
+- Generates `exports` field in package.json
+- ESM + CJS output (legacy approach)
+- TypeScript declarations with path flattening
+
+**Needed Updates:**
+
+- [ ] Generate three output categories (`esm/`, `commonjs/`, `bundled/`)
+- [ ] External deps for `esm` and `commonjs` builds
+- [ ] Resolve to `dist/` for `bundled` builds
+- [ ] Update exports generation for new structure
 
 ---
 
 ## Next Steps
 
-1. **Apply pattern to `lib-cryptography`** (has browser/node entry points)
+### Immediate (Unblock Builds)
 
-2. **Apply pattern to `lib-network-protocol`** (has multiple secondary entry points)
+1. **Update executor** to support three output categories
+2. **Implement external strategy** for `esm`/`commonjs` builds
+3. **Implement bundled strategy** with dist resolution
 
-3. **Consider creating a shared base rollup config** for reuse across isomorphic libs
+### Complete Library Builds (in dependency order)
 
-4. **Build all libraries** and verify outputs
+1. lib-list-utils (deps: data-utils)
+2. lib-logging
+3. lib-ui-utils (deps: data, function, list, random-generator)
+4. lib-cryptography
+5. lib-state-machine
+6. lib-network-protocol (deps: cryptography)
+7. lib-nexus (deps: network-protocol)
 
-5. **Add build badge** to README once CI is stable
+### Future Enhancements
+
+- [ ] Minified outputs (`./bundled.min`)
+- [ ] Browserified builds (`./browser`)
+- [ ] UMD format (`./umd`)
+- [ ] IIFE format (`./iife`)
+- [ ] Build badge integration
+- [ ] Publish workflow
 
 ---
 
@@ -221,6 +263,9 @@ npx nx build lib-string-utils --skip-nx-cache
 
 # Check affected projects
 npx nx affected -t=build
+
+# View project graph (shows dependencies)
+npx nx graph
 ```
 
 ---
