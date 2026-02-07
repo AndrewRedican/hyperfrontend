@@ -1,8 +1,26 @@
 /**
  * Build executor for hyperfrontend library packages.
  *
- * Auto-detects library entry points and applies
- * the appropriate build strategy using Rollup.
+ * WHAT THIS EXECUTOR DOES:
+ * ------------------------
+ * 1. Auto-detects library entry points (./browser, ./node, ./feature, etc.)
+ * 2. Builds each entry point to ESM + CJS formats using Rollup
+ * 3. Generates TypeScript declaration files (.d.ts)
+ * 4. Creates a package.json with proper "exports" field for each entry
+ * 5. Copies assets (README, LICENSE, etc.) to the dist folder
+ *
+ * WHY A CUSTOM EXECUTOR:
+ * ----------------------
+ * Nx's built-in `\@nx/js:tsc` executor doesn't support:
+ * - Multiple entry points with subpath exports
+ * - Dual ESM/CJS output from a single build
+ * - Auto-detection of library structure
+ *
+ * This executor handles all hyperfrontend library patterns:
+ * - Simple: Single entry at src/index.ts
+ * - Platform: browser/ and node/ entries
+ * - Feature: Multiple domain-specific entries
+ * - Complex: Nested combinations of the above
  */
 import { type ExecutorContext, joinPathFragments, logger } from '@nx/devkit'
 import { existsSync, mkdirSync, rmSync, readFileSync } from 'node:fs'
@@ -14,13 +32,35 @@ import { copyAssets, copyDefaultAssets } from './lib/assets'
 import { buildUnifiedLibrary } from './lib/build-unified'
 
 /**
- * Reads dependencies from package.json and returns all \@hyperfrontend/* packages.
- * These must be external to avoid TS6059 rootDir errors.
+ * Reads dependencies from package.json and returns all packages that should be external.
+ *
+ * WHY ALL DEPENDENCIES ARE EXTERNAL:
+ * ----------------------------------
+ * This is a library build, not an application build. The key difference:
+ *
+ * Application build: Bundle everything into a self-contained deployable.
+ * Library build: Produce code that consumers will bundle themselves.
+ *
+ * If we bundled dependencies into library output:
+ * - lodash used by our lib + lodash used by consumer = 2 copies of lodash
+ * - Version mismatches cause subtle bugs (different lodash instances)
+ * - Tree-shaking becomes impossible for the bundled portions
+ * - Bundle sizes explode across the ecosystem
+ *
+ * By marking all deps as external, our output contains:
+ *   import { debounce } from 'lodash'
+ *
+ * The consumer's bundler resolves this from their node_modules,
+ * deduplicating and tree-shaking as appropriate.
+ *
+ * We include both dependencies and peerDependencies:
+ * - dependencies: Required packages we use directly
+ * - peerDependencies: Packages consumer must provide (e.g., React)
  *
  * @param projectRoot - Absolute path to the project root
- * @returns List of internal \@hyperfrontend/* dependencies to mark as external
+ * @returns List of all dependencies to mark as external
  */
-function getInternalDependencies(projectRoot: string): string[] {
+function getExternalDependencies(projectRoot: string): string[] {
   const pkgPath = join(projectRoot, 'package.json')
   if (!existsSync(pkgPath)) {
     return []
@@ -30,7 +70,7 @@ function getInternalDependencies(projectRoot: string): string[] {
     ...pkg.dependencies,
     ...pkg.peerDependencies,
   }
-  return Object.keys(allDeps).filter((dep) => dep.startsWith('@hyperfrontend/'))
+  return Object.keys(allDeps)
 }
 
 /**
@@ -73,17 +113,16 @@ export default async function runExecutor(
   )
   const assets = options.assets ?? []
 
-  // Auto-detect internal @hyperfrontend/* dependencies and mark them as external
-  // This prevents TS6059 rootDir errors when TypeScript follows tsconfig paths
-  const internalDeps = getInternalDependencies(projectRoot)
-  const external = [...(options.external ?? []), ...internalDeps]
+  // All dependencies from package.json should be external for library builds
+  const packageDeps = getExternalDependencies(projectRoot)
+  const external = [...(options.external ?? []), ...packageDeps]
 
   logger.info(`Building ${projectName}...`)
   logger.info(`  Project root: ${projectRoot}`)
   logger.info(`  Output path: ${outputPath}`)
   logger.info(`  TS config: ${tsConfigPath}`)
-  if (internalDeps.length > 0) {
-    logger.info(`  External deps: ${internalDeps.join(', ')}`)
+  if (packageDeps.length > 0) {
+    logger.info(`  External deps: ${packageDeps.join(', ')}`)
   }
 
   // Discover entry points
