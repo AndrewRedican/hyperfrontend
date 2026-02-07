@@ -1,8 +1,8 @@
 name: 'Run Checks'
-description: 'Runs specific checks (format, lint, test, build, e2e) for all or affected projects'
+description: 'Runs specific checks (format, lint, typecheck, test, build, e2e) for all or affected projects'
 inputs:
   check-type:
-    description: 'Type of check to run: format, lint, test, build, or e2e'
+    description: 'Type of check to run: format, lint, typecheck, test, build, or e2e'
     required: true
   affected-only:
     description: 'Whether to run checks only on affected projects'
@@ -29,6 +29,9 @@ runs:
             ;;
           lint)
             TARGET="lint"
+            ;;
+          typecheck)
+            TARGET="typecheck"
             ;;
           test)
             TARGET="test"
