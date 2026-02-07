@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import type { EncryptionSuite, PacketEncryption, PacketDecryption } from '../../../security/model'
+import type { EncryptionSuite } from '../../../security/model'
+import type { PacketEncrypter, PacketDecrypter } from '../../../packet/model'
 
 /**
  * Creates a factory for static key-based encryption suites.
@@ -14,11 +15,11 @@ import type { EncryptionSuite, PacketEncryption, PacketDecryption } from '../../
  * - Testing and integration scenarios
  *
  * @template T The type of the data to be encrypted or decrypted.
- * @param {PacketEncryption<T>} encryptPacket - Function to encrypt a packet with a password
- * @param {PacketDecryption<T>} decryptPacket - Function to decrypt a packet with a password
+ * @param {PacketEncrypter} encryptPacket - Function to encrypt a packet with a password
+ * @param {PacketDecrypter} decryptPacket - Function to decrypt a packet with a password
  * @returns {(key: string) => EncryptionSuite<T>} A factory function that accepts a static key and returns an encryption suite
  */
-export function createStaticKeyEncryptionFactory<T = any>(encryptPacket: PacketEncryption<T>, decryptPacket: PacketDecryption<T>) {
+export function createStaticKeyEncryptionFactory<T = any>(encryptPacket: PacketEncrypter, decryptPacket: PacketDecrypter) {
   return (key: string): EncryptionSuite<T> => {
     if (!key || typeof key !== 'string') {
       throw new Error('Static encryption key must be a non-empty string')

@@ -8,7 +8,7 @@ import { getType } from '@hyperfrontend/data-utils'
  * @returns A DataDecrypter function
  */
 export function createDataDecrypter(decrypt: (encrypted: Uint8Array, password: string) => Promise<string>): DataDecrypter {
-  return async (data, password) => {
+  return async <T = unknown>(data: Uint8Array, password: string): Promise<SerializedData<T>> => {
     if (!(data instanceof Uint8Array)) {
       throw new Error('Cannot decrypt data because it is in the wrong format')
     }
@@ -21,9 +21,9 @@ export function createDataDecrypter(decrypt: (encrypted: Uint8Array, password: s
     } catch {
       throw new Error('Cannot decrypt data')
     }
-    let deserialized: SerializedData
+    let deserialized: SerializedData<T>
     try {
-      deserialized = JSON.parse(decrypted)
+      deserialized = JSON.parse(decrypted) as SerializedData<T>
     } catch {
       throw new Error('Cannot unserialize data')
     }
