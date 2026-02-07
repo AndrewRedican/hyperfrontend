@@ -3,6 +3,7 @@
 **A Comprehensive Strategy for Multi-Format Build Outputs and CI/CD**
 
 _Created: February 5, 2026_
+_Revised: February 7, 2026 - First-principles architecture revision_
 
 ---
 
@@ -10,25 +11,116 @@ _Created: February 5, 2026_
 
 This document outlines the action plan for implementing a robust, maintainable build configuration that:
 
-1. Produces **dual output formats** (ESM + CommonJS) for all library packages
-2. Creates **self-contained bundles** for CDN consumption (nexus + generated shells)
-3. Integrates **build status badges** into the repository
-4. Establishes proper **CI/CD workflows** for affected builds (PRs) and full builds (main)
-5. Maintains **clear separation** between libs, plugins, apps, and demos
+1. Produces **four output formats** (ESM, CJS, UMD, IIFE) for library packages
+2. Uses **conditional exports** for automatic format resolution (industry standard)
+3. Creates **self-contained bundles** for CDN consumption
+4. Supports **tree-shaking** for optimal consumer bundle sizes
+5. Minimizes **consumer friction** — complexity absorbed by build system, not pushed to consumers
+6. Integrates **build status badges** and proper **CI/CD workflows**
+
+### Key Design Decisions
+
+| Decision                                            | Rationale                                                                                            |
+| --------------------------------------------------- | ---------------------------------------------------------------------------------------------------- |
+| **Conditional exports over subpath formats**        | Industry standard (date-fns, zod, rxjs). Consumers write `import from 'pkg'`, bundlers auto-resolve. |
+| **ESM as primary, CJS as fallback**                 | Modern bundlers prefer ESM; CJS needed for legacy Node.js compatibility.                             |
+| **UMD + IIFE for CDN**                              | Self-contained bundles for `<script>` tag usage. Both minified and unminified.                       |
+| **External deps for ESM/CJS, bundled for UMD/IIFE** | Standard approach — let consumer bundlers handle deps for npm; bundle everything for CDN.            |
+| **Global names: `Hyperfrontend*`**                  | Consistent, discoverable pattern: `HyperfrontendNexus`, `HyperfrontendUtils`, etc.                   |
 
 ---
 
 ## Table of Contents
 
-1. [Project Inventory and Classification](#project-inventory-and-classification)
-2. [Build Output Requirements](#build-output-requirements)
-3. [Current State Analysis](#current-state-analysis)
-4. [Implementation Strategy](#implementation-strategy)
-5. [Build Configurations](#build-configurations)
-6. [CI/CD Integration](#cicd-integration)
-7. [Badge Integration](#badge-integration)
-8. [Implementation Phases](#implementation-phases)
-9. [Maintenance Considerations](#maintenance-considerations)
+1. [First Principles: JS Module Systems](#first-principles-js-module-systems)
+2. [Project Inventory and Classification](#project-inventory-and-classification)
+3. [Build Output Requirements](#build-output-requirements)
+4. [Package.json Exports Strategy](#packagejson-exports-strategy)
+5. [Current State Analysis](#current-state-analysis)
+6. [Implementation Strategy](#implementation-strategy)
+7. [Build Configurations](#build-configurations)
+8. [CI/CD Integration](#cicd-integration)
+9. [Badge Integration](#badge-integration)
+10. [Implementation Phases](#implementation-phases)
+11. [Maintenance Considerations](#maintenance-considerations)
+
+---
+
+## First Principles: JS Module Systems
+
+### The Four Module Formats
+
+| Format   | Syntax                            | Environment                            | When to Use                          |
+| -------- | --------------------------------- | -------------------------------------- | ------------------------------------ |
+| **ESM**  | `import/export`                   | Modern Node.js, all modern bundlers    | Primary format for npm distribution  |
+| **CJS**  | `require/module.exports`          | Node.js (all versions), older bundlers | Fallback for legacy environments     |
+| **UMD**  | Auto-detect (CJS, AMD, or global) | Universal                              | CDN distribution with bundler compat |
+| **IIFE** | Self-invoking function + global   | Browser only                           | `<script>` tags, zero build step     |
+
+### Industry Patterns (What Popular Libraries Do)
+
+**date-fns** — Flat structure with conditional exports:
+
+```json
+{
+  "exports": {
+    ".": {
+      "import": { "types": "./index.d.ts", "default": "./index.js" },
+      "require": { "types": "./index.d.cts", "default": "./index.cjs" }
+    }
+  }
+}
+```
+
+**zod** — Same pattern with TypeScript source reference:
+
+```json
+{
+  "exports": {
+    ".": {
+      "types": "./index.d.cts",
+      "import": "./index.js",
+      "require": "./index.cjs"
+    }
+  }
+}
+```
+
+**rxjs** — Multi-format with ES version targets:
+
+```json
+{
+  "exports": {
+    ".": {
+      "types": "./dist/types/index.d.ts",
+      "node": "./dist/cjs/index.js",
+      "require": "./dist/cjs/index.js",
+      "es2015": "./dist/esm/index.js",
+      "default": "./dist/esm5/index.js"
+    }
+  }
+}
+```
+
+**axios** — Platform-specific with CDN support:
+
+```json
+{
+  "exports": { ".": { "browser": {...}, "default": {...} } },
+  "unpkg": "dist/axios.min.js",
+  "jsdelivr": "dist/axios.min.js"
+}
+```
+
+### Key Insight
+
+**NO popular library uses subpath-based format selection** like `/esm` or `/cjs`. Conditional exports handle this transparently. Consumers just write:
+
+```javascript
+import { something } from 'package-name'
+```
+
+The bundler/runtime automatically picks ESM or CJS based on context.
 
 ---
 
@@ -36,17 +128,17 @@ This document outlines the action plan for implementing a robust, maintainable b
 
 ### Project Categories
 
-| Category            | Projects                                                                                                                                                                | Build Strategy                        |
-| ------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------- |
-| **Foundation**      | `lib-data-utils`, `lib-function-utils`, `lib-immutable-api-utils`, `lib-list-utils`, `lib-string-utils`, `lib-time-utils`, `lib-random-generator-utils`, `lib-ui-utils` | Dual (ESM + CJS)                      |
-| **Core**            | `lib-cryptography`, `lib-logging`, `lib-state-machine`, `lib-web-worker`, `lib-network-protocol`                                                                        | Dual (ESM + CJS)                      |
-| **Communication**   | `lib-nexus`                                                                                                                                                             | Dual + Self-contained                 |
-| **Plugins**         | `plugin-features`                                                                                                                                                       | CJS (or Dual) + Self-contained shells |
-| **Plugin E2E**      | `plugin-features-e2e`                                                                                                                                                   | Dev-only (no publish)                 |
-| **Apps (Frontend)** | `app-angular`, `app-react`, `app-vue`, `app-svelte`, `app-javascript`                                                                                                   | Excluded (future)                     |
-| **Apps (Backend)**  | `app-express`, `app-http`, `app-nest`                                                                                                                                   | Excluded (future)                     |
-| **Demos**           | `demo-chess`, `demo-clock`, `demo-events`, `demo-file-share`, `demo-heartbeat`, `demo-views`                                                                            | Excluded (future)                     |
-| **Documentation**   | `docs`                                                                                                                                                                  | Hugo build (separate)                 |
+| Category            | Projects                                                                                                                                                                | Build Strategy                      |
+| ------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------- |
+| **Foundation**      | `lib-data-utils`, `lib-function-utils`, `lib-immutable-api-utils`, `lib-list-utils`, `lib-string-utils`, `lib-time-utils`, `lib-random-generator-utils`, `lib-ui-utils` | ESM + CJS (conditional exports)     |
+| **Core**            | `lib-cryptography`, `lib-logging`, `lib-state-machine`, `lib-web-worker`, `lib-network-protocol`                                                                        | ESM + CJS (conditional exports)     |
+| **Communication**   | `lib-nexus`                                                                                                                                                             | ESM + CJS + UMD + IIFE (full suite) |
+| **Plugins**         | `plugin-features`                                                                                                                                                       | ESM + CJS (for Nx executor compat)  |
+| **Plugin E2E**      | `plugin-features-e2e`                                                                                                                                                   | Dev-only (no publish)               |
+| **Apps (Frontend)** | `app-angular`, `app-react`, `app-vue`, `app-svelte`, `app-javascript`                                                                                                   | Excluded (future)                   |
+| **Apps (Backend)**  | `app-express`, `app-http`, `app-nest`                                                                                                                                   | Excluded (future)                   |
+| **Demos**           | `demo-chess`, `demo-clock`, `demo-events`, `demo-file-share`, `demo-heartbeat`, `demo-views`                                                                            | Excluded (future)                   |
+| **Documentation**   | `docs`                                                                                                                                                                  | Hugo build (separate)               |
 
 ### Consumer Profiles
 
@@ -82,42 +174,174 @@ This document outlines the action plan for implementing a robust, maintainable b
 
 ### Standard Library Build (All `lib-*` except nexus)
 
-| Output         | Format   | Purpose                 | Target Consumers                  |
-| -------------- | -------- | ----------------------- | --------------------------------- |
-| `index.cjs`    | CommonJS | Node.js, older bundlers | Backend, legacy build systems     |
-| `index.esm.js` | ESM      | Modern bundlers         | React, Vue, Angular, Svelte, Vite |
+**Output structure:**
 
-**Config approach**: Continue using current `nx.json` targetDefaults with `format: ["cjs", "esm"]`
+```
+dist/libs/<package>/
+├── index.js          → ESM (primary)
+├── index.cjs         → CJS (fallback)
+├── index.d.ts        → TypeScript declarations
+├── <feature>/        → Secondary entry points (if applicable)
+│   ├── index.js
+│   ├── index.cjs
+│   └── index.d.ts
+└── package.json      → With conditional exports
+```
 
-### Nexus Library Build (Special Case)
+**Dependencies**: External (consumers provide them)
+**Tree-shaking**: ✅ Enabled
 
-| Output             | Format         | Purpose                 | Target Consumers              |
-| ------------------ | -------------- | ----------------------- | ----------------------------- |
-| `index.cjs`        | CommonJS       | Node.js, older bundlers | Backend, legacy build systems |
-| `index.esm.js`     | ESM            | Modern bundlers         | React, Vue, Angular, Svelte   |
-| `nexus.umd.js`     | UMD (bundled)  | CDN, vanilla JS         | Legacy apps, `<script>` tag   |
-| `nexus.umd.min.js` | UMD (minified) | Production CDN          | Legacy apps (production)      |
+### Nexus Library Build (CDN-Ready)
 
-**Special requirements**:
+**Output structure:**
+
+```
+dist/libs/nexus/
+├── index.js              → ESM (external deps)
+├── index.cjs             → CJS (external deps)
+├── index.d.ts            → TypeScript declarations
+├── bundle/               → Self-contained (all deps inlined)
+│   ├── nexus.umd.js      → UMD unminified
+│   ├── nexus.umd.min.js  → UMD minified (production)
+│   ├── nexus.iife.js     → IIFE unminified
+│   └── nexus.iife.min.js → IIFE minified (production)
+└── package.json
+```
+
+**Special requirements:**
 
 - Self-contained: All `@hyperfrontend/*` dependencies bundled
-- Global variable: `window.HyperfrontendNexus` or configurable
-- No external runtime dependencies
+- Global variable: `window.HyperfrontendNexus`
+- No external runtime dependencies for bundle/ outputs
 
 ### Feature Plugin Build
 
-| Output         | Format         | Purpose                 | Target Consumers |
-| -------------- | -------------- | ----------------------- | ---------------- |
-| `index.cjs`    | CommonJS       | Nx executors/generators | Dev tooling      |
-| `index.esm.js` | ESM (optional) | Future compatibility    | Modern tooling   |
+**Output structure:**
 
-**Shell generation output** (per generated shell):
-| Output | Format | Purpose | Target Consumers |
-| ------------------- | ---------------- | ------------------------------------ | ----------------------------------- |
-| `shell.cjs` | CommonJS | Node.js, older bundlers | Backend integration |
-| `shell.esm.js` | ESM | Modern bundlers | React, Vue, Angular hosts |
-| `shell.umd.js` | UMD (bundled) | CDN, vanilla JS | Legacy hosts, `<script>` tag |
-| `shell.umd.min.js` | UMD (minified) | Production CDN | Legacy hosts (production) |
+```
+dist/plugins/features/
+├── index.js          → ESM
+├── index.cjs         → CJS (required for Nx executors)
+├── index.d.ts
+├── generators.json
+├── executors.json
+└── package.json
+```
+
+---
+
+## Package.json Exports Strategy
+
+### Standard Library (Recommended Pattern)
+
+```json
+{
+  "name": "@hyperfrontend/utils",
+  "version": "1.0.0",
+  "type": "module",
+
+  "main": "./index.cjs",
+  "module": "./index.js",
+  "types": "./index.d.ts",
+
+  "exports": {
+    ".": {
+      "types": "./index.d.ts",
+      "import": "./index.js",
+      "require": "./index.cjs"
+    },
+    "./package.json": "./package.json"
+  },
+
+  "sideEffects": false
+}
+```
+
+**Consumer usage:**
+
+```typescript
+// ESM (auto-resolved)
+import { something } from '@hyperfrontend/utils'
+
+// CJS (auto-resolved)
+const { something } = require('@hyperfrontend/utils')
+```
+
+### Library with Secondary Entry Points
+
+```json
+{
+  "exports": {
+    ".": {
+      "types": "./index.d.ts",
+      "import": "./index.js",
+      "require": "./index.cjs"
+    },
+    "./browser": {
+      "types": "./browser/index.d.ts",
+      "import": "./browser/index.js",
+      "require": "./browser/index.cjs"
+    },
+    "./node": {
+      "types": "./node/index.d.ts",
+      "import": "./node/index.js",
+      "require": "./node/index.cjs"
+    },
+    "./package.json": "./package.json"
+  }
+}
+```
+
+**Consumer usage:**
+
+```typescript
+import { browserThing } from '@hyperfrontend/string-utils/browser'
+import { nodeThing } from '@hyperfrontend/string-utils/node'
+```
+
+### CDN-Ready Library (nexus)
+
+```json
+{
+  "name": "@hyperfrontend/nexus",
+  "version": "1.0.0",
+  "type": "module",
+
+  "main": "./index.cjs",
+  "module": "./index.js",
+  "types": "./index.d.ts",
+
+  "exports": {
+    ".": {
+      "types": "./index.d.ts",
+      "import": "./index.js",
+      "require": "./index.cjs"
+    },
+    "./package.json": "./package.json"
+  },
+
+  "unpkg": "./bundle/nexus.umd.min.js",
+  "jsdelivr": "./bundle/nexus.umd.min.js",
+
+  "sideEffects": false
+}
+```
+
+**Consumer usage:**
+
+```html
+<!-- CDN (UMD) -->
+<script src="https://unpkg.com/@hyperfrontend/nexus"></script>
+<script>
+  const broker = HyperfrontendNexus.createBroker()
+</script>
+
+<!-- CDN (IIFE) -->
+<script src="https://cdn.example.com/nexus.iife.min.js"></script>
+<script>
+  const broker = HyperfrontendNexus.createBroker()
+</script>
+```
 
 ---
 
@@ -125,345 +349,134 @@ This document outlines the action plan for implementing a robust, maintainable b
 
 ### What's Already Working
 
-**`nx.json` configuration** (current):
+The current custom executor at `@hyperfrontend/package:build` successfully:
 
-```json
-{
-  "targetDefaults": {
-    "build": {
-      "executor": "@nx/rollup:rollup",
-      "options": {
-        "format": ["cjs", "esm"],
-        "external": "none",
-        "generateExportsField": true
-      }
-    }
-  },
-  "plugins": [
-    {
-      "plugin": "@nx/rollup/plugin",
-      "include": ["libs/**/*", "plugins/**/*"],
-      "exclude": ["plugins/*-e2e/**/*"]
-    }
-  ]
-}
-```
+- Auto-discovers entry points from `src/` structure
+- Generates ESM + CJS dual outputs
+- Produces TypeScript declarations
+- Handles multiple entry point patterns (root, platform, feature, hybrid)
 
-**Strengths**:
+### What Needs to Change
 
-- Dual output (ESM + CJS) already configured
-- Rollup is the correct bundler for this use case
-- Properly excludes e2e projects
-- Caching enabled
+| Current State          | Required Change                                 | Rationale                                                        |
+| ---------------------- | ----------------------------------------------- | ---------------------------------------------------------------- |
+| Output: `index.esm.js` | Change to: `index.js`                           | Industry convention: ESM files use `.js` with `"type": "module"` |
+| Output: `index.cjs.js` | Change to: `index.cjs`                          | Cleaner naming, matches date-fns/zod pattern                     |
+| No bundled outputs     | Add: `bundle/` directory                        | CDN distribution requires self-contained builds                  |
+| No minification        | Add: terser plugin                              | Production bundles should be minified                            |
+| Basic exports          | Add: conditional exports                        | Enable auto-resolution by bundlers                               |
+| Missing fields         | Add: `type`, `sideEffects`, `unpkg`, `jsdelivr` | Required for proper package metadata                             |
 
-**Gaps**:
+### Known Issue: TS6059 rootDir Error
 
-- No UMD/IIFE output configuration
-- No minification step
-- No distinction between "bundled" vs "external" deps per project
-- Apps and demos not explicitly excluded (but empty, so no issue yet)
+**Symptom**: When building libs with `@hyperfrontend/*` dependencies, TypeScript follows tsconfig paths to source files outside the project's rootDir.
 
-### Known Issues & Workarounds
+**Root Cause**: tsconfig paths point to source (e.g., `libs/utils/data/src/index.ts`) not dist.
 
-#### Issue: `@types/node` v25 Compatibility with `@rollup/plugin-typescript`
+**Solution (ESM/CJS builds)**: Mark all `@hyperfrontend/*` as external. Consumers provide them.
 
-**Symptom**: Build fails with syntax errors in `node_modules/@types/node/web-globals/fetch.d.ts`:
+**Solution (Bundled builds)**:
 
-```
-TS1005: ',' expected.
-TS1160: Unterminated template literal.
-```
-
-**Root Cause**: `@types/node` v25 uses TypeScript syntax that `@rollup/plugin-typescript` cannot parse during bundling, even when `skipLibCheck: true` is set in tsconfig.
-
-**Workaround**: Add `skipTypeCheck: true` to each library's `project.json` build options:
-
-```json
-{
-  "targets": {
-    "build": {
-      "options": {
-        "skipTypeCheck": true
-      }
-    }
-  }
-}
-```
-
-**Note**: This skips type checking during the Rollup build phase. Type safety is still enforced via:
-
-- IDE type checking (using tsconfig)
-- The `lint` target (which runs before build in CI)
-- The `test` target (TypeScript compilation for tests)
-
-#### Type Casting Convention
-
-When fixing type errors in source code, use angle bracket syntax for type assertions:
-
-```typescript
-// Preferred
-<UnknownIterable>read(targetA, key)
-
-// Not preferred
-read(targetA, key) as UnknownIterable
-```
-
-#### Libraries with Secondary Entry Points
-
-Some libraries (e.g., `lib-string-utils`) expose multiple entry points (`./browser`, `./node`) instead of a single main export. These require a custom Rollup configuration.
-
-**Approach**: Use `@rollup/plugin-babel` with `@babel/preset-typescript` instead of `@rollup/plugin-typescript`. Babel strips types without validating them, completely avoiding the `@types/node` compatibility issues.
-
-**Example** (`libs/utils/string/rollup.config.js`):
-
-```javascript
-const { resolve } = require('path')
-const { babel } = require('@rollup/plugin-babel')
-const nodeResolve = require('@rollup/plugin-node-resolve')
-
-const projectRoot = __dirname
-const outputPath = resolve(projectRoot, '../../../dist/libs/utils/string')
-
-const createConfig = (input, outputFile, format) => ({
-  input: resolve(projectRoot, input),
-  output: {
-    file: resolve(outputPath, outputFile),
-    format,
-    sourcemap: true,
-  },
-  plugins: [
-    nodeResolve({ extensions: ['.ts', '.js'] }),
-    babel({
-      babelHelpers: 'bundled',
-      extensions: ['.ts', '.js'],
-      presets: ['@babel/preset-typescript'],
-    }),
-  ],
-})
-
-module.exports = [
-  createConfig('src/browser/index.ts', 'browser/index.esm.js', 'esm'),
-  createConfig('src/browser/index.ts', 'browser/index.cjs.js', 'cjs'),
-  createConfig('src/node/index.ts', 'node/index.esm.js', 'esm'),
-  createConfig('src/node/index.ts', 'node/index.cjs.js', 'cjs'),
-]
-```
-
-**Project.json configuration**:
-
-```json
-{
-  "targets": {
-    "build": {
-      "options": {
-        "skipTypeCheck": true,
-        "rollupConfig": "{projectRoot}/rollup.config.js"
-      }
-    }
-  }
-}
-```
-
-**Note**: When a custom `rollup.config.js` is detected, Nx switches from `@nx/rollup:rollup` executor to direct `rollup -c` invocation. This is expected behavior.
-
-### Legacy Build Reference
-
-From `_/legacy-shell-application-pattern/connector/scripts/browser.build.js`:
-
-```javascript
-// Legacy approach used:
-// 1. TypeScript compilation (library output)
-// 2. Browserify (bundle for browser with UMD/standalone)
-// 3. UglifyJS (minification)
-
-browserify({ standalone: globalVarName, insertGlobals: true }).add(distPath).bundle()
-
-uglifyJs.minify(input).code
-```
-
-**Modern equivalent**: Rollup with `output.format: 'umd'` and `@rollup/plugin-terser`
+1. Ensure deps are built first (`dependsOn: ["^build"]`)
+2. Use alias plugin to resolve `@hyperfrontend/*` to `dist/` outputs
 
 ---
 
 ## Implementation Strategy
 
-### Approach Options
+### Custom Nx Executor
 
-#### Option A: Project-Level Rollup Configs (Recommended)
+The `@hyperfrontend/package:build` executor at `tools/package/` is the centralized build system for all library packages. This executor:
 
-Create `rollup.config.js` in projects that need custom builds (nexus, shell templates).
+- Provides consistent build logic across all libraries
+- Auto-discovers entry points from `src/` structure and adapts to different library patterns
+- Serves as the single location for implementing build features (ESM, CJS, UMD, IIFE, minification)
+- Generates proper `package.json` exports for each library
 
-**Pros**:
+All build enhancements (bundled outputs, minification, global variable configuration) are implemented within this executor.
 
-- Full control per project
-- Nx compatible with `@nx/rollup:rollup` executor
-- Standard Rollup configuration
+### Build Layers
 
-**Cons**:
+```
+Layer 1: Standard Build (all libs)
+├── ESM output (index.js)
+├── CJS output (index.cjs)
+├── TypeScript declarations (index.d.ts)
+└── Dependencies: EXTERNAL
 
-- Some configuration duplication
-- Must maintain per-project configs
-
-#### Option B: Custom Nx Executor
-
-Create a custom executor for "bundle + minify" builds.
-
-**Pros**:
-
-- Centralized configuration
-- Consistent behavior
-
-**Cons**:
-
-- Higher maintenance burden
-- More complex to debug
-- Overkill for 2-3 projects
-
-#### Option C: Nx Generator for Build Configs
-
-Use `@hyperfrontend/features` plugin to generate appropriate build configs.
-
-**Pros**:
-
-- Automated configuration
-- Ensures consistency for generated shells
-
-**Cons**:
-
-- Adds complexity to plugin
-- The plugin itself needs to build first
-
-### Recommended Strategy: Hybrid (A + C)
-
-1. **Standard libs**: Use existing `nx.json` targetDefaults (no change)
-2. **Nexus**: Add project-level `rollup.config.js` with multiple outputs
-3. **Feature plugin**: Add project-level config or use targetDefaults
-4. **Generated shells**: Plugin generates appropriate `rollup.config.js` during scaffolding
+Layer 2: Bundled Build (nexus + CDN-targeted libs)
+├── UMD unminified (bundle/lib.umd.js)
+├── UMD minified (bundle/lib.umd.min.js)
+├── IIFE unminified (bundle/lib.iife.js)
+├── IIFE minified (bundle/lib.iife.min.js)
+└── Dependencies: INLINED
+```
 
 ---
 
 ## Build Configurations
 
-### Standard Library (No Changes Needed)
+### Custom Executor Updates Required
 
-Current `nx.json` already handles this via `targetDefaults.build`.
+**File**: `tools/package/src/executors/build/lib/build-unified.ts`
 
-### Nexus Library Configuration
+Update `createOutputConfigs()` to generate:
 
-**File**: `libs/nexus/rollup.config.js`
+- `index.js` (ESM) instead of `index.esm.js`
+- `index.cjs` (CJS) instead of `index.cjs.js`
 
-```javascript
-import { defineConfig } from 'rollup'
-import typescript from '@rollup/plugin-typescript'
-import resolve from '@rollup/plugin-node-resolve'
-import commonjs from '@rollup/plugin-commonjs'
-import terser from '@rollup/plugin-terser'
+Add new function `createBundledConfigs()` for UMD/IIFE:
 
-const basePlugins = [resolve({ browser: true }), commonjs(), typescript({ tsconfig: './tsconfig.lib.json' })]
-
-export default defineConfig([
-  // Standard ESM output (external deps)
-  {
-    input: 'src/index.ts',
-    output: {
-      file: '../../dist/libs/nexus/index.esm.js',
-      format: 'esm',
-      sourcemap: true,
-    },
-    external: [
-      '@hyperfrontend/data-utils',
-      '@hyperfrontend/immutable-api-utils',
-      '@hyperfrontend/logging',
-      '@hyperfrontend/random-generator-utils',
-      '@hyperfrontend/state-machine',
-      'jsonschema',
-    ],
-    plugins: basePlugins,
-  },
-  // Standard CJS output (external deps)
-  {
-    input: 'src/index.ts',
-    output: {
-      file: '../../dist/libs/nexus/index.cjs.js',
-      format: 'cjs',
-      sourcemap: true,
-    },
-    external: [
-      /* same as above */
-    ],
-    plugins: basePlugins,
-  },
-  // Self-contained UMD bundle (all deps bundled)
-  {
-    input: 'src/index.ts',
-    output: {
-      file: '../../dist/libs/nexus/nexus.umd.js',
-      format: 'umd',
-      name: 'HyperfrontendNexus',
-      sourcemap: true,
-    },
-    plugins: basePlugins,
-  },
-  // Minified UMD bundle
-  {
-    input: 'src/index.ts',
-    output: {
-      file: '../../dist/libs/nexus/nexus.umd.min.js',
-      format: 'umd',
-      name: 'HyperfrontendNexus',
-      sourcemap: true,
-    },
-    plugins: [...basePlugins, terser()],
-  },
-])
-```
-
-**File**: `libs/nexus/project.json` (update)
-
-```json
-{
-  "targets": {
-    "build": {
-      "executor": "@nx/rollup:rollup",
-      "options": {
-        "project": "{projectRoot}/package.json",
-        "main": "{projectRoot}/src/index.ts",
-        "outputPath": "dist/{projectRoot}",
-        "tsConfig": "{projectRoot}/tsconfig.lib.json",
-        "rollupConfig": "{projectRoot}/rollup.config.js"
-      }
-    }
-  }
+```typescript
+export function createBundledConfigs(outputPath: string, globalName: string): OutputOptions[] {
+  const bundlePath = join(outputPath, 'bundle')
+  return [
+    { file: join(bundlePath, 'index.umd.js'), format: 'umd', name: globalName },
+    { file: join(bundlePath, 'index.umd.min.js'), format: 'umd', name: globalName, plugins: [terser()] },
+    { file: join(bundlePath, 'index.iife.js'), format: 'iife', name: globalName },
+    { file: join(bundlePath, 'index.iife.min.js'), format: 'iife', name: globalName, plugins: [terser()] },
+  ]
 }
 ```
 
-### Feature Plugin Configuration
+**File**: `tools/package/src/executors/build/lib/package-json.ts`
 
-For the plugin itself, CJS is sufficient, but dual output is acceptable:
+Update `generatePackageJsonFromDiscovery()` to produce:
 
-**File**: `plugins/features/project.json` (update)
-
-```json
-{
-  "targets": {
-    "build": {
-      "executor": "@nx/rollup:rollup",
-      "options": {
-        "project": "{projectRoot}/package.json",
-        "main": "{projectRoot}/src/index.ts",
-        "outputPath": "dist/{projectRoot}",
-        "tsConfig": "{projectRoot}/tsconfig.lib.json",
-        "format": ["cjs"],
-        "assets": ["{projectRoot}/generators.json", "{projectRoot}/executors.json"]
-      }
-    }
-  }
+```typescript
+const distPkg = {
+  ...srcPkg,
+  type: 'module',
+  main: './index.cjs',
+  module: './index.js',
+  types: './index.d.ts',
+  exports: {
+    '.': {
+      types: './index.d.ts',
+      import: './index.js',
+      require: './index.cjs',
+    },
+    './package.json': './package.json',
+    // ... secondary entry points
+  },
+  sideEffects: false,
+  // Add if bundled outputs exist:
+  unpkg: './bundle/index.umd.min.js',
+  jsdelivr: './bundle/index.umd.min.js',
 }
 ```
 
-### Shell Template Configuration
+### Global Variable Naming
 
-The `@hyperfrontend/features:init` generator should scaffold a `rollup.config.js` similar to nexus for each generated shell project.
+| Library              | Global Variable                 |
+| -------------------- | ------------------------------- |
+| lib-nexus            | `HyperfrontendNexus`            |
+| lib-network-protocol | `HyperfrontendNetworkProtocol`  |
+| lib-cryptography     | `HyperfrontendCryptography`     |
+| lib-data-utils       | `HyperfrontendDataUtils`        |
+| ...                  | `Hyperfrontend<PascalCaseName>` |
+
+**Convention**: `Hyperfrontend` + PascalCase library name (without `lib-` prefix)
 
 ---
 
@@ -771,13 +784,13 @@ npx nx affected -t=build
 npx nx build lib-nexus --verbose
 ```
 
-### Output Locations
+### Output Locations (Revised)
 
-| Project          | ESM                               | CJS                                  | UMD                                |
-| ---------------- | --------------------------------- | ------------------------------------ | ---------------------------------- |
-| lib-nexus        | `dist/libs/nexus/index.esm.js`    | `dist/libs/nexus/index.cjs.js`       | `dist/libs/nexus/nexus.umd.min.js` |
-| lib-cryptography | `dist/libs/cryptography/*.esm.js` | `dist/libs/cryptography/*.cjs.js`    | N/A                                |
-| plugin-features  | N/A                               | `dist/plugins/features/index.cjs.js` | N/A                                |
+| Project          | ESM                              | CJS                               | UMD (if applicable)           |
+| ---------------- | -------------------------------- | --------------------------------- | ----------------------------- |
+| lib-nexus        | `dist/libs/nexus/index.js`       | `dist/libs/nexus/index.cjs`       | `dist/libs/nexus/bundle/*.js` |
+| lib-cryptography | `dist/libs/cryptography/*.js`    | `dist/libs/cryptography/*.cjs`    | N/A                           |
+| plugin-features  | `dist/plugins/features/index.js` | `dist/plugins/features/index.cjs` | N/A                           |
 
 ---
 

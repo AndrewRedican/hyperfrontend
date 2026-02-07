@@ -2,249 +2,362 @@
 
 **Date**: February 7, 2026
 **Branch**: `build-and-badges`
-**Status**: In Progress - Architecture defined, implementation pending
+**Status**: Architecture Revision in Progress
 
 ---
 
-## Objective
+## Executive Summary
 
-Implement a robust build configuration that produces **multiple output categories** for all library packages, with proper TypeScript declarations, as outlined in [build-and-deployment-plan.md](./build-and-deployment-plan.md).
+This document establishes the **first-principles rationale** for our build system, grounded in industry standards from popular open-source libraries (date-fns, zod, rxjs, axios, three.js).
+
+**Core Principle**: Minimize consumer friction. Complexity should be absorbed by the build system, not pushed onto consumers.
 
 ---
 
-## Architecture Decision: Output Categories as Entry Points
+## Part 1: JavaScript Module Systems (First Principles)
 
-Each package will expose **three base secondary entry points** representing distinct output categories:
+### The Four Module Formats
 
-### Output Structure
+| Format   | Syntax                      | Environment        | Use Case                          |
+| -------- | --------------------------- | ------------------ | --------------------------------- |
+| **ESM**  | `import/export`             | Modern everywhere  | Modern bundlers, tree-shaking     |
+| **CJS**  | `require/module.exports`    | Node.js            | Node.js apps, legacy bundlers     |
+| **UMD**  | Auto-detects CJS/AMD/global | Universal          | CDN fallback with bundler compat  |
+| **IIFE** | `(function(){})()` + global | Browser (no build) | `<script>` tag, zero-config usage |
 
-```
-dist/libs/<package>/
-├── esm/                    → ES Modules (external deps)
-│   ├── index.js
-│   ├── index.d.ts
-│   └── <feature>/          → Feature modules (if applicable)
-├── commonjs/               → CommonJS (external deps)
-│   ├── index.js
-│   ├── index.d.ts
-│   └── <feature>/
-├── bundled/                → Self-contained (all deps inlined)
-│   ├── index.js
-│   ├── index.d.ts
-│   └── <feature>/
-└── package.json            → With exports field
-```
+### Key Industry Patterns (What Works)
 
-### Package.json Exports
+**Pattern 1: Conditional Exports (date-fns, zod, rxjs)**
+
+Bundlers automatically resolve the correct format based on how code is imported:
 
 ```json
 {
   "exports": {
-    "./package.json": "./package.json",
-    "./esm": {
-      "types": "./esm/index.d.ts",
-      "import": "./esm/index.js"
-    },
-    "./commonjs": {
-      "types": "./commonjs/index.d.ts",
-      "require": "./commonjs/index.js"
-    },
-    "./bundled": {
-      "types": "./bundled/index.d.ts",
-      "import": "./bundled/index.js",
-      "require": "./bundled/index.js"
+    ".": {
+      "types": "./index.d.ts",
+      "import": "./index.js",
+      "require": "./index.cjs"
     }
   }
 }
 ```
 
-### For Libraries with Feature Modules
+Consumer just writes `import { x } from 'package'` — the bundler picks ESM or CJS.
+
+**Pattern 2: CDN-Ready Bundles (axios, three.js)**
+
+Separate files for browser script-tag usage:
+
+```json
+{
+  "unpkg": "dist/package.umd.min.js",
+  "jsdelivr": "dist/package.umd.min.js"
+}
+```
+
+**Pattern 3: Secondary Entry Points (rxjs, date-fns)**
+
+Sub-modules for tree-shaking granularity:
 
 ```json
 {
   "exports": {
-    "./esm": "./esm/index.js",
-    "./esm/feature": "./esm/feature/index.js",
-    "./commonjs": "./commonjs/index.js",
-    "./commonjs/feature": "./commonjs/feature/index.js",
-    "./bundled": "./bundled/index.js",
-    "./bundled/feature": "./bundled/feature/index.js"
+    ".": { "import": "./index.js", "require": "./index.cjs" },
+    "./operators": { "import": "./operators/index.js", "require": "./operators/index.cjs" }
   }
 }
 ```
 
-### Use Cases
-
-| Entry Point  | Dependencies | Use Case                                                   |
-| ------------ | ------------ | ---------------------------------------------------------- |
-| `./esm`      | External     | Modern bundlers (Vite, esbuild, Rollup) - they handle deps |
-| `./commonjs` | External     | Node.js apps, legacy bundlers                              |
-| `./bundled`  | Inlined      | CDN, script tags, no build step environments               |
-
 ---
 
-## Future Roadmap
+## Part 2: Requirements Analysis
 
-| Enhancement      | Entry Point     | Description                                              |
-| ---------------- | --------------- | -------------------------------------------------------- |
-| **Minification** | `./bundled.min` | Terser/uglify for production                             |
-| **Browserified** | `./browser`     | Browser-specific polyfills, no Node APIs                 |
-| **UMD**          | `./umd`         | Universal Module Definition for `<script>` tags          |
-| **IIFE**         | `./iife`        | Immediately Invoked Function Expression for global scope |
+### Confirmed Requirements (from stakeholder input)
 
----
+| Requirement                     | Priority | Notes                                              |
+| ------------------------------- | -------- | -------------------------------------------------- |
+| Support all 4 formats           | Must     | ESM, CJS, UMD, IIFE                                |
+| Support Node 14+, broad browser | Must     | Maximum compatibility                              |
+| Tree-shaking support            | Must     | Critical for consumer bundle sizes                 |
+| Auto-resolve ESM/CJS            | Must     | Use conditional exports (industry standard)        |
+| Self-contained bundles          | Must     | Both external-deps AND bundled versions            |
+| Explicit subpaths available     | Should   | Optional override for consumers with special needs |
+| Both minified + unminified      | Should   | Both `.js` and `.min.js` for UMD/IIFE              |
+| Global var: Hyperfrontend\*     | Should   | e.g., `HyperfrontendNexus`, `HyperfrontendUtils`   |
 
-## Build Complexity Dimensions
-
-### 1. Entry Point Patterns (Source Structure)
-
-| Pattern      | Example              | Structure                                    |
-| ------------ | -------------------- | -------------------------------------------- |
-| **Root**     | lib-data-utils       | Single `src/index.ts`                        |
-| **Platform** | lib-string-utils     | `src/browser/index.ts` + `src/node/index.ts` |
-| **Feature**  | lib-state-machine    | Multiple `src/<feature>/index.ts` modules    |
-| **Hybrid**   | lib-ui-utils         | Root + multiple feature modules              |
-| **Complex**  | lib-network-protocol | Platform + feature nesting                   |
-
-### 2. Output Categories (Build Outputs)
-
-| Category   | Format         | Dependencies | Target          |
-| ---------- | -------------- | ------------ | --------------- |
-| `esm`      | ES2022 modules | External     | Modern bundlers |
-| `commonjs` | CJS            | External     | Node.js         |
-| `bundled`  | ES2022 modules | Inlined      | CDN/direct use  |
-
----
-
-## Implementation Status
-
-### Committed & Working
-
-| Library                    | Entry Pattern | Dependencies | Status |
-| -------------------------- | ------------- | ------------ | ------ |
-| lib-data-utils             | root          | none         | ✅     |
-| lib-function-utils         | root          | none         | ✅     |
-| lib-immutable-api-utils    | root          | none         | ✅     |
-| lib-random-generator-utils | root          | none         | ✅     |
-| lib-time-utils             | root          | none         | ✅     |
-| lib-web-worker             | root          | none         | ✅     |
-| lib-string-utils           | platform      | none         | ✅     |
-
-_Note: Currently outputs ESM + CJS side-by-side. Needs migration to new entry point structure._
-
-### Pending (Uncommitted)
-
-| Library              | Entry Pattern             | Dependencies                           | Blocker              |
-| -------------------- | ------------------------- | -------------------------------------- | -------------------- |
-| lib-list-utils       | root                      | data-utils                             | TS6059 rootDir error |
-| lib-logging          | root                      | unknown                                | needs testing        |
-| lib-ui-utils         | hybrid (11 entries)       | data, function, list, random-generator | TS6059 rootDir error |
-| lib-cryptography     | hybrid (root + platform)  | unknown                                | needs testing        |
-| lib-state-machine    | feature (10+ modules)     | unknown                                | needs testing        |
-| lib-network-protocol | complex                   | cryptography, others                   | needs testing        |
-| lib-nexus            | complex (root + features) | network-protocol, others               | needs testing        |
-| plugins/features     | unknown                   | unknown                                | needs testing        |
-
----
-
-## Current Challenge: TypeScript Path Resolution
-
-### The Problem
-
-When building with `bundled` strategy, TypeScript/Rollup follows `tsconfig.base.json` path mappings to **source files** of dependencies:
+### Consumer Profiles
 
 ```
-@hyperfrontend/data-utils → libs/utils/data/src/index.ts
+┌─────────────────────────────────────────────────────────────────────────────────┐
+│                         CONSUMER PROFILE MATRIX                                  │
+├─────────────────────────────────────────────────────────────────────────────────┤
+│                                                                                  │
+│  1. INTERNAL MONOREPO APPS                                                      │
+│     └── Consumption: TypeScript source (tsconfig paths)                         │
+│     └── Build: Vite, Webpack, or direct TS compilation                         │
+│     └── Format: ESM preferred, resolved by bundler                             │
+│                                                                                  │
+│  2. EXTERNAL NPM CONSUMERS (Modern)                                             │
+│     └── Consumption: npm install @hyperfrontend/utils                          │
+│     └── Build: Vite, esbuild, Webpack 5+, Rollup                               │
+│     └── Format: ESM (auto-resolved), tree-shaking enabled                      │
+│                                                                                  │
+│  3. EXTERNAL NPM CONSUMERS (Legacy)                                             │
+│     └── Consumption: npm install @hyperfrontend/utils                          │
+│     └── Build: Webpack 4, older Node.js apps                                   │
+│     └── Format: CJS (auto-resolved)                                            │
+│                                                                                  │
+│  4. CDN / VANILLA JS                                                            │
+│     └── Consumption: <script src="unpkg.com/@hyperfrontend/nexus">             │
+│     └── Build: None (direct browser execution)                                 │
+│     └── Format: UMD or IIFE (self-contained, all deps bundled)                 │
+│                                                                                  │
+└─────────────────────────────────────────────────────────────────────────────────┘
 ```
-
-This causes TS6059 error because files outside the project's `rootDir` are included.
-
-### Solution with New Architecture
-
-The three-category approach solves this naturally:
-
-| Category   | Dependency Handling | Path Resolution                            |
-| ---------- | ------------------- | ------------------------------------------ |
-| `esm`      | External            | No resolution needed - consumer provides   |
-| `commonjs` | External            | No resolution needed - consumer provides   |
-| `bundled`  | Resolve to dist     | Use `dist/` outputs from dependency builds |
-
-For `bundled`, the build must resolve `@hyperfrontend/*` to **built outputs** in `dist/`, not source files. This requires:
-
-1. Dependencies built first (`dependsOn: ["^build"]` ✅ configured)
-2. Path alias plugin pointing to `dist/` during bundled build
 
 ---
 
-## Nx Configuration
+## Part 3: Revised Architecture
 
-Added to `nx.json` to ensure build order:
+### ❌ REJECTED: Output Categories as Subpaths
+
+The previous plan proposed:
+
+```
+import { x } from '@hyperfrontend/utils/esm'
+import { x } from '@hyperfrontend/utils/commonjs'
+import { x } from '@hyperfrontend/utils/bundled'
+```
+
+**Why this is wrong:**
+
+1. **Antipattern**: No major library does this. It pushes format choice onto consumers.
+2. **Breaks tooling**: Bundlers won't auto-resolve; consumers must know their environment.
+3. **Unnecessary**: Conditional exports solve this automatically.
+
+### ✅ APPROVED: Industry-Standard Conditional Exports
+
+Consumers write:
+
+```typescript
+import { x } from '@hyperfrontend/utils' // ESM or CJS auto-resolved
+```
+
+The package.json handles format selection:
 
 ```json
-"build": {
-  "dependsOn": ["^build"],      // Build dependencies first
-  "inputs": ["default", "^default"]  // Invalidate cache when deps change
+{
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    }
+  }
+}
+```
+
+### Output Structure (Revised)
+
+```
+dist/libs/<package>/
+├── index.js              → ESM (external deps) - primary for modern bundlers
+├── index.cjs             → CJS (external deps) - fallback for Node.js/legacy
+├── index.d.ts            → TypeScript declarations
+├── index.d.cts           → CTS declarations (for strict CJS consumers)
+│
+├── <feature>/            → Secondary entry points (if applicable)
+│   ├── index.js
+│   ├── index.cjs
+│   └── index.d.ts
+│
+├── bundle/               → Self-contained builds (all deps inlined)
+│   ├── index.umd.js      → UMD format (unminified)
+│   ├── index.umd.min.js  → UMD format (minified, production)
+│   ├── index.iife.js     → IIFE format (unminified)
+│   └── index.iife.min.js → IIFE format (minified, production)
+│
+└── package.json
+```
+
+### Package.json Exports (Revised)
+
+```json
+{
+  "name": "@hyperfrontend/utils",
+  "version": "1.0.0",
+  "type": "module",
+
+  "main": "./index.cjs",
+  "module": "./index.js",
+  "types": "./index.d.ts",
+
+  "exports": {
+    ".": {
+      "types": "./index.d.ts",
+      "import": "./index.js",
+      "require": "./index.cjs"
+    },
+    "./package.json": "./package.json"
+  },
+
+  "unpkg": "./bundle/index.umd.min.js",
+  "jsdelivr": "./bundle/index.umd.min.js",
+
+  "sideEffects": false
+}
+```
+
+### For Libraries with Secondary Entry Points
+
+```json
+{
+  "exports": {
+    ".": {
+      "types": "./index.d.ts",
+      "import": "./index.js",
+      "require": "./index.cjs"
+    },
+    "./browser": {
+      "types": "./browser/index.d.ts",
+      "import": "./browser/index.js",
+      "require": "./browser/index.cjs"
+    },
+    "./node": {
+      "types": "./node/index.d.ts",
+      "import": "./node/index.js",
+      "require": "./node/index.cjs"
+    },
+    "./package.json": "./package.json"
+  }
 }
 ```
 
 ---
 
-## Custom Build Executor
+## Part 4: Build Strategy
 
-Located at `@hyperfrontend/package:build`:
+### Layer 1: Standard Library Build (ESM + CJS)
+
+**For**: All libraries
+**Output**: `index.js` (ESM) + `index.cjs` (CJS) + `index.d.ts`
+**Dependencies**: External (consumers provide)
+**Tree-shaking**: ✅ Yes (preserveModules or careful chunking)
+
+### Layer 2: Bundled Browser Build (UMD + IIFE)
+
+**For**: `lib-nexus` and any lib needing CDN deployment
+**Output**: `bundle/index.umd.js`, `bundle/index.umd.min.js`, `bundle/index.iife.js`, `bundle/index.iife.min.js`
+**Dependencies**: Inlined (self-contained)
+**Global variable**: `window.HyperfrontendNexus`, `window.HyperfrontendUtils`, etc.
+
+### Build Matrix
+
+| Library              | ESM+CJS | UMD+IIFE | Global Variable              | Notes               |
+| -------------------- | ------- | -------- | ---------------------------- | ------------------- |
+| lib-data-utils       | ✅      | Optional | HyperfrontendDataUtils       | Foundation lib      |
+| lib-function-utils   | ✅      | Optional | HyperfrontendFunctionUtils   | Foundation lib      |
+| lib-string-utils     | ✅      | Optional | HyperfrontendStringUtils     | Platform split      |
+| lib-cryptography     | ✅      | Optional | HyperfrontendCryptography    | Core lib            |
+| lib-state-machine    | ✅      | Optional | HyperfrontendStateMachine    | Many sub-entries    |
+| lib-network-protocol | ✅      | ✅       | HyperfrontendNetworkProtocol | Communication layer |
+| lib-nexus            | ✅      | ✅       | HyperfrontendNexus           | Primary CDN target  |
+| plugins/features     | ✅      | No       | N/A                          | Dev tooling only    |
+
+---
+
+## Part 5: Implementation Status
+
+### Current State
+
+| Library                    | Entry Pattern | ESM+CJS | UMD+IIFE | Status  |
+| -------------------------- | ------------- | ------- | -------- | ------- |
+| lib-data-utils             | root          | ✅      | ❌       | Working |
+| lib-function-utils         | root          | ✅      | ❌       | Working |
+| lib-immutable-api-utils    | root          | ✅      | ❌       | Working |
+| lib-random-generator-utils | root          | ✅      | ❌       | Working |
+| lib-time-utils             | root          | ✅      | ❌       | Working |
+| lib-web-worker             | root          | ✅      | ❌       | Working |
+| lib-string-utils           | platform      | ✅      | ❌       | Working |
+| lib-list-utils             | root          | ❌      | ❌       | Blocked |
+| lib-logging                | root          | ❌      | ❌       | Pending |
+| lib-ui-utils               | hybrid        | ❌      | ❌       | Blocked |
+| lib-cryptography           | hybrid        | ❌      | ❌       | Pending |
+| lib-state-machine          | feature       | ❌      | ❌       | Pending |
+| lib-network-protocol       | complex       | ❌      | ❌       | Pending |
+| lib-nexus                  | complex       | ❌      | ❌       | Pending |
+
+### Blockers
+
+**TS6059 rootDir Error**: When building libs with internal `@hyperfrontend/*` dependencies, TypeScript follows tsconfig paths to source files outside the project's rootDir.
+
+**Solution**: Mark `@hyperfrontend/*` as external for ESM/CJS builds. For bundled builds, resolve to built `dist/` outputs (requires `dependsOn: ["^build"]`).
+
+---
+
+## Part 6: Custom Build Executor
+
+### Location
 
 ```
 tools/package/src/executors/build/
 ├── executor.ts          → Main executor
 └── lib/
+    ├── types.ts         → Type definitions
     ├── detect.ts        → Entry point discovery
-    ├── build-unified.ts → Rollup build logic
-    ├── package-json.ts  → Export generation
-    └── ...
+    ├── build-unified.ts → Rollup build orchestration
+    ├── package-json.ts  → Exports generation
+    ├── paths.ts         → Path resolution utilities
+    └── assets.ts        → Asset copying
 ```
 
-**Current Features:**
+### Current Capabilities
 
-- Auto-discovers entry points from `src/` structure
-- Generates `exports` field in package.json
-- ESM + CJS output (legacy approach)
-- TypeScript declarations with path flattening
+- ✅ Auto-discovers entry points from `src/` structure
+- ✅ Generates `exports` field in package.json
+- ✅ ESM + CJS dual output
+- ✅ TypeScript declarations
+- ❌ UMD/IIFE bundled outputs (needs implementation)
+- ❌ Minification (needs implementation)
+- ❌ Global variable configuration (needs implementation)
 
-**Needed Updates:**
+### Required Updates
 
-- [ ] Generate three output categories (`esm/`, `commonjs/`, `bundled/`)
-- [ ] External deps for `esm` and `commonjs` builds
-- [ ] Resolve to `dist/` for `bundled` builds
-- [ ] Update exports generation for new structure
+1. **Refactor output structure**: Separate `bundle/` directory for self-contained builds
+2. **Add UMD/IIFE build step**: New Rollup configs with all deps inlined
+3. **Add minification**: `@rollup/plugin-terser` for `.min.js` outputs
+4. **Update package.json generation**: Add `unpkg`, `jsdelivr`, `sideEffects` fields
+5. **Configure global names**: Per-library `window.Hyperfrontend*` variables
 
 ---
 
-## Next Steps
+## Part 7: Next Steps
 
-### Immediate (Unblock Builds)
+### Phase 1: Fix Package.json Generation (Current Sprint)
 
-1. **Update executor** to support three output categories
-2. **Implement external strategy** for `esm`/`commonjs` builds
-3. **Implement bundled strategy** with dist resolution
+1. Update `generatePackageJsonFromDiscovery()` to produce conditional exports
+2. Remove `/esm`, `/commonjs`, `/bundled` subpaths
+3. Add `type: "module"`, `sideEffects: false`
 
-### Complete Library Builds (in dependency order)
+### Phase 2: Add Bundled Builds
 
-1. lib-list-utils (deps: data-utils)
-2. lib-logging
-3. lib-ui-utils (deps: data, function, list, random-generator)
-4. lib-cryptography
-5. lib-state-machine
-6. lib-network-protocol (deps: cryptography)
-7. lib-nexus (deps: network-protocol)
+1. Create `buildBundledOutput()` function
+2. Configure UMD + IIFE outputs
+3. Add minification step
+4. Generate `bundle/` directory
 
-### Future Enhancements
+### Phase 3: Unblock Remaining Libraries
 
-- [ ] Minified outputs (`./bundled.min`)
-- [ ] Browserified builds (`./browser`)
-- [ ] UMD format (`./umd`)
-- [ ] IIFE format (`./iife`)
-- [ ] Build badge integration
-- [ ] Publish workflow
+1. Mark internal deps as external for standard builds
+2. Configure dist-resolution for bundled builds
+3. Build in dependency order
+
+### Phase 4: CI/CD Integration
+
+1. Add bundle target to workflows
+2. Configure artifact uploads
+3. Set up CDN publish workflow
 
 ---
 
@@ -253,18 +366,14 @@ tools/package/src/executors/build/
 ```bash
 # Build single library
 npx nx build lib-data-utils
-npx nx build lib-string-utils
 
 # Build all libraries
 npx nx run-many -t=build --all
 
 # Skip cache for testing
-npx nx build lib-string-utils --skip-nx-cache
+npx nx build lib-data-utils --skip-nx-cache
 
-# Check affected projects
-npx nx affected -t=build
-
-# View project graph (shows dependencies)
+# View project dependency graph
 npx nx graph
 ```
 
@@ -272,6 +381,6 @@ npx nx graph
 
 ## Related Documents
 
-- [build-and-deployment-plan.md](./build-and-deployment-plan.md) - Master plan
+- [build-and-deployment-plan.md](./build-and-deployment-plan.md) - Detailed implementation plan
 - [MASTER_CONTEXT.md](./MASTER_CONTEXT.md) - Project overview
 - [github-workflows-refactoring.md](./github-workflows-refactoring.md) - CI/CD tasks
