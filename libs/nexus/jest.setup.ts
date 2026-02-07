@@ -120,14 +120,3 @@ jest.mock('@hyperfrontend/random-generator-utils', () => ({
   uuidV4: () => '12345678-1234-1234-1234-123456789012',
   isUuidV4: (value: string) => /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value),
 }))
-
-// Mock immutable-api
-jest.mock('@hyperfrontend/immutable-api-utils', () => ({
-  locked: () => (target: any, propertyKey: string, descriptor: PropertyDescriptor) => descriptor,
-  lockedProps: (target: any, properties: [string, any][]) => {
-    properties.forEach(([key, value]) => {
-      target[key] = value
-    })
-  },
-  freeze: (target: object) => target,
-}))
