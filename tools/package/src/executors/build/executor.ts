@@ -5,13 +5,33 @@
  * the appropriate build strategy using Rollup.
  */
 import { type ExecutorContext, joinPathFragments, logger } from '@nx/devkit'
-import { existsSync, mkdirSync, rmSync } from 'node:fs'
+import { existsSync, mkdirSync, rmSync, readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import type { BuildExecutorOptions } from './lib/types'
 import { resolveOutputPath, resolveTsConfigPath } from './lib/paths'
 import { discoverEntryPoints } from './lib/detect'
 import { copyAssets, copyDefaultAssets } from './lib/assets'
 import { buildUnifiedLibrary } from './lib/build-unified'
+
+/**
+ * Reads dependencies from package.json and returns all \@hyperfrontend/* packages.
+ * These must be external to avoid TS6059 rootDir errors.
+ *
+ * @param projectRoot - Absolute path to the project root
+ * @returns List of internal \@hyperfrontend/* dependencies to mark as external
+ */
+function getInternalDependencies(projectRoot: string): string[] {
+  const pkgPath = join(projectRoot, 'package.json')
+  if (!existsSync(pkgPath)) {
+    return []
+  }
+  const pkg = JSON.parse(readFileSync(pkgPath, 'utf-8'))
+  const allDeps = {
+    ...pkg.dependencies,
+    ...pkg.peerDependencies,
+  }
+  return Object.keys(allDeps).filter((dep) => dep.startsWith('@hyperfrontend/'))
+}
 
 /**
  * Main executor function.
@@ -52,12 +72,19 @@ export default async function runExecutor(
     workspaceRoot
   )
   const assets = options.assets ?? []
-  const external = options.external ?? []
+
+  // Auto-detect internal @hyperfrontend/* dependencies and mark them as external
+  // This prevents TS6059 rootDir errors when TypeScript follows tsconfig paths
+  const internalDeps = getInternalDependencies(projectRoot)
+  const external = [...(options.external ?? []), ...internalDeps]
 
   logger.info(`Building ${projectName}...`)
   logger.info(`  Project root: ${projectRoot}`)
   logger.info(`  Output path: ${outputPath}`)
   logger.info(`  TS config: ${tsConfigPath}`)
+  if (internalDeps.length > 0) {
+    logger.info(`  External deps: ${internalDeps.join(', ')}`)
+  }
 
   // Discover entry points
   const discovery = discoverEntryPoints(projectRoot)

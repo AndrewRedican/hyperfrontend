@@ -32,11 +32,23 @@ export function createEntryPointRollupConfig(
   external: string[],
   isRootEntry: boolean
 ): RollupOptions {
+  // Create a function that checks if an import should be external
+  // This catches @hyperfrontend/* imports before path resolution
+  const isExternal = (id: string): boolean => {
+    if (external.includes(id)) return true
+    if (id.startsWith('@hyperfrontend/')) return true
+    return false
+  }
+
   return {
     input: inputFile,
-    external,
+    external: isExternal,
     plugins: [
-      nodeResolve({ extensions: ['.ts', '.js'] }),
+      nodeResolve({
+        extensions: ['.ts', '.js'],
+        // Don't resolve @hyperfrontend/* packages
+        resolveOnly: [/^(?!@hyperfrontend\/)/],
+      }),
       typescript({
         tsconfig: tsConfigPath,
         declaration: isRootEntry, // Only generate declarations for root, we'll do it separately for others
@@ -44,6 +56,12 @@ export function createEntryPointRollupConfig(
         rootDir: join(projectRoot, 'src'),
         outDir: outputPath,
         sourceMap: true,
+        // Clear paths to prevent TypeScript from resolving @hyperfrontend/* to source
+        // External imports will remain as bare specifiers in the output
+        compilerOptions: {
+          paths: {},
+          baseUrl: projectRoot,
+        },
       }),
     ],
   }
