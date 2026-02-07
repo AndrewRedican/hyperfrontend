@@ -8,8 +8,10 @@
 export type {
   AssetConfig,
   BuildExecutorOptions,
-  LibraryType,
   BuildContext,
+  EntryPoint,
+  EntryPointCategory,
+  EntryPointDiscovery,
 } from './types'
 
 // Path utilities
@@ -23,11 +25,11 @@ export {
   getStandardEntryPath,
 } from './paths'
 
-// Library type detection
+// Entry point discovery
 export {
-  detectLibraryType,
-  isIsomorphicProject,
-  getIsomorphicEntryPoints,
+  discoverEntryPoints,
+  getEntryPointsByPlatform,
+  getSharedEntryPoints,
 } from './detect'
 
 // Asset utilities
@@ -41,26 +43,14 @@ export {
 export {
   readProjectPackageJson,
   writeOutputPackageJson,
-  generateStandardPackageJson,
-  generateIsomorphicPackageJson,
-  generateDistPackageJson,
-  getStandardExports,
-  getIsomorphicExports,
+  generateExportsFromDiscovery,
+  generatePackageJsonFromDiscovery,
 } from './package-json'
 
-// Standard library build
+// Library build
 export {
-  buildStandardLibrary,
-  createStandardRollupConfig,
-  createStandardOutputConfigs,
-  getStandardEntryFile,
-} from './build-standard'
-
-// Isomorphic library build
-export {
-  buildIsomorphicLibrary,
-  createIsomorphicRollupConfig,
-  createIsomorphicOutputConfigs,
-  generateDeclarations,
-  getIsomorphicEntryFile,
-} from './build-isomorphic'
+  buildUnifiedLibrary,
+  createEntryPointRollupConfig,
+  createOutputConfigs,
+  generateDeclarationsUnified,
+} from './build-unified'

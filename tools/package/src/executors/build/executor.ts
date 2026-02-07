@@ -1,7 +1,7 @@
 /**
  * Build executor for hyperfrontend library packages.
  *
- * Auto-detects library type (standard vs isomorphic) and applies
+ * Auto-detects library entry points and applies
  * the appropriate build strategy using Rollup.
  */
 import { type ExecutorContext, joinPathFragments, logger } from '@nx/devkit'
@@ -9,10 +9,9 @@ import { existsSync, mkdirSync, rmSync } from 'node:fs'
 import { join } from 'node:path'
 import type { BuildExecutorOptions } from './lib/types'
 import { resolveOutputPath, resolveTsConfigPath } from './lib/paths'
-import { detectLibraryType } from './lib/detect'
+import { discoverEntryPoints } from './lib/detect'
 import { copyAssets, copyDefaultAssets } from './lib/assets'
-import { buildStandardLibrary } from './lib/build-standard'
-import { buildIsomorphicLibrary } from './lib/build-isomorphic'
+import { buildUnifiedLibrary } from './lib/build-unified'
 
 /**
  * Main executor function.
@@ -60,9 +59,10 @@ export default async function runExecutor(
   logger.info(`  Output path: ${outputPath}`)
   logger.info(`  TS config: ${tsConfigPath}`)
 
-  // Detect library type
-  const libraryType = detectLibraryType(projectRoot)
-  logger.info(`  Library type: ${libraryType}`)
+  // Discover entry points
+  const discovery = discoverEntryPoints(projectRoot)
+  logger.info(`  Entry point category: ${discovery.category}`)
+  logger.info(`  Entry points: ${discovery.entryPoints.map((e) => e.exportPath).join(', ')}`)
 
   // Ensure output directory exists and is clean
   if (existsSync(outputPath)) {
@@ -71,12 +71,15 @@ export default async function runExecutor(
   mkdirSync(outputPath, { recursive: true })
 
   try {
-    // Build based on library type
-    if (libraryType === 'isomorphic') {
-      await buildIsomorphicLibrary(projectRoot, outputPath, tsConfigPath, external, workspaceRoot)
-    } else {
-      await buildStandardLibrary(projectRoot, outputPath, tsConfigPath, external)
-    }
+    // Build using unified approach
+    await buildUnifiedLibrary(
+      projectRoot,
+      outputPath,
+      tsConfigPath,
+      external,
+      workspaceRoot,
+      discovery
+    )
 
     // Copy default assets
     copyDefaultAssets(projectRoot, outputPath, workspaceRoot)

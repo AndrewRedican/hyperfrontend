@@ -5,7 +5,7 @@
  */
 import { readJsonFile, writeJsonFile } from '@nx/devkit'
 import { join } from 'node:path'
-import type { LibraryType } from './types'
+import type { EntryPointDiscovery } from './types'
 
 /** Package.json type with standard fields */
 interface PackageJson {
@@ -16,6 +16,13 @@ interface PackageJson {
   types?: string
   exports?: Record<string, unknown>
   [key: string]: unknown
+}
+
+/** Export entry for package.json */
+interface ExportEntry {
+  types: string
+  import: string
+  require: string
 }
 
 /**
@@ -41,115 +48,77 @@ export function writeOutputPackageJson(outputPath: string, packageJson: PackageJ
 }
 
 /**
- * Generates package.json for standard library output.
+ * Creates an export entry for a given output path.
  *
- * @param srcPkg - Source package.json contents
- * @param outputPath - Absolute path to output directory
+ * @param outputDir - Output directory relative to package root (e.g., '', 'browser', 'browser/channel')
+ * @returns Export entry configuration
  */
-export function generateStandardPackageJson(srcPkg: PackageJson, outputPath: string): void {
-  const distPkg: PackageJson = {
-    ...srcPkg,
-    main: './index.cjs.js',
-    module: './index.esm.js',
-    types: './index.d.ts',
-    exports: {
-      './package.json': './package.json',
-      '.': {
-        types: './index.d.ts',
-        import: './index.esm.js',
-        require: './index.cjs.js',
-      },
-    },
+function createExportEntry(outputDir: string): ExportEntry {
+  const prefix = outputDir ? `./${outputDir}` : '.'
+  return {
+    types: `${prefix}/index.d.ts`,
+    import: `${prefix}/index.esm.js`,
+    require: `${prefix}/index.cjs.js`,
   }
-  writeOutputPackageJson(outputPath, distPkg)
 }
 
 /**
- * Generates package.json for isomorphic library output.
+ * Generates exports configuration from discovered entry points.
  *
- * @param srcPkg - Source package.json contents
- * @param outputPath - Absolute path to output directory
+ * @param discovery - Entry point discovery result
+ * @returns Exports configuration for package.json
  */
-export function generateIsomorphicPackageJson(srcPkg: PackageJson, outputPath: string): void {
-  // Remove main/module/types since there's no root export
-  const { main, module, types, ...rest } = srcPkg
-  void main
-  void module
-  void types
-
-  const distPkg: PackageJson = {
-    ...rest,
-    exports: {
-      './package.json': './package.json',
-      './browser': {
-        types: './browser/index.d.ts',
-        import: './browser/index.esm.js',
-        require: './browser/index.cjs.js',
-      },
-      './node': {
-        types: './node/index.d.ts',
-        import: './node/index.esm.js',
-        require: './node/index.cjs.js',
-      },
-    },
+export function generateExportsFromDiscovery(
+  discovery: EntryPointDiscovery
+): Record<string, unknown> {
+  const exports: Record<string, unknown> = {
+    './package.json': './package.json',
   }
-  writeOutputPackageJson(outputPath, distPkg)
+
+  for (const entry of discovery.entryPoints) {
+    const exportKey = entry.isRoot ? '.' : entry.exportPath
+    const outputDir = entry.srcPath
+    exports[exportKey] = createExportEntry(outputDir)
+  }
+
+  return exports
 }
 
 /**
- * Generates the appropriate package.json based on library type.
+ * Generates package.json for a library based on discovered entry points.
  *
- * @param projectRoot - Absolute path to the project root
+ * @param srcPkg - Source package.json contents
  * @param outputPath - Absolute path to output directory
- * @param libraryType - Type of library ('standard' or 'isomorphic')
+ * @param discovery - Entry point discovery result
  */
-export function generateDistPackageJson(
-  projectRoot: string,
+export function generatePackageJsonFromDiscovery(
+  srcPkg: PackageJson,
   outputPath: string,
-  libraryType: LibraryType
+  discovery: EntryPointDiscovery
 ): void {
-  const srcPkg = readProjectPackageJson(projectRoot)
+  const exports = generateExportsFromDiscovery(discovery)
 
-  if (libraryType === 'isomorphic') {
-    generateIsomorphicPackageJson(srcPkg, outputPath)
-  } else {
-    generateStandardPackageJson(srcPkg, outputPath)
-  }
-}
-
-/**
- * Gets the export configuration for standard libraries.
- *
- * @returns Standard library export configuration
- */
-export function getStandardExports(): Record<string, unknown> {
-  return {
-    './package.json': './package.json',
-    '.': {
+  // If there's a root entry, keep main/module/types for backwards compatibility
+  if (discovery.hasRootEntry) {
+    const distPkg: PackageJson = {
+      ...srcPkg,
+      main: './index.cjs.js',
+      module: './index.esm.js',
       types: './index.d.ts',
-      import: './index.esm.js',
-      require: './index.cjs.js',
-    },
-  }
-}
+      exports,
+    }
+    writeOutputPackageJson(outputPath, distPkg)
+  } else {
+    // No root entry - remove main/module/types
+    const { main, module, types, ...rest } = srcPkg
+    void main
+    void module
+    void types
 
-/**
- * Gets the export configuration for isomorphic libraries.
- *
- * @returns Isomorphic library export configuration
- */
-export function getIsomorphicExports(): Record<string, unknown> {
-  return {
-    './package.json': './package.json',
-    './browser': {
-      types: './browser/index.d.ts',
-      import: './browser/index.esm.js',
-      require: './browser/index.cjs.js',
-    },
-    './node': {
-      types: './node/index.d.ts',
-      import: './node/index.esm.js',
-      require: './node/index.cjs.js',
-    },
+    const distPkg: PackageJson = {
+      ...rest,
+      exports,
+    }
+    writeOutputPackageJson(outputPath, distPkg)
   }
 }

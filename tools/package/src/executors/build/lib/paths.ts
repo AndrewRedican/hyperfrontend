@@ -74,7 +74,7 @@ export function getSourcePath(projectRelativePath: string): string {
 }
 
 /**
- * Constructs entry point paths for isomorphic libraries.
+ * Constructs entry point paths for platform-specific libraries.
  *
  * @param projectRelativePath - Project path relative to workspace root
  * @param entry - Entry point name ('browser' or 'node')
@@ -85,10 +85,10 @@ export function getEntryPointPath(projectRelativePath: string, entry: 'browser' 
 }
 
 /**
- * Constructs the standard entry point path (src/index.ts).
+ * Constructs the root entry point path (src/index.ts).
  *
  * @param projectRelativePath - Project path relative to workspace root
- * @returns Path fragment to the standard index file
+ * @returns Path fragment to the root index file
  */
 export function getStandardEntryPath(projectRelativePath: string): string {
   return joinPathFragments(projectRelativePath, 'src', 'index.ts')
