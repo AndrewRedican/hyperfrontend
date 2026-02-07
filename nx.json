@@ -38,6 +38,11 @@
         "outputPath": "dist/{projectRoot}"
       }
     },
+    "typecheck": {
+      "cache": true,
+      "inputs": ["default", "^default"],
+      "executor": "@hyperfrontend/package:typecheck"
+    },
     "@nx/js:tsc": {
       "cache": true,
       "dependsOn": ["^build"],

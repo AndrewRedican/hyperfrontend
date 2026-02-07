@@ -1,0 +1,13 @@
+{
+  "$schema": "http://json-schema.org/schema",
+  "type": "object",
+  "title": "Typecheck executor schema",
+  "description": "Runs TypeScript type checking without emitting files.",
+  "properties": {
+    "tsConfig": {
+      "type": "string",
+      "description": "Path to the TypeScript configuration file. Defaults to {projectRoot}/tsconfig.lib.json."
+    }
+  },
+  "additionalProperties": false
+}
