@@ -95,19 +95,27 @@ Added `typecheck` target as a fast pre-build validation to catch TypeScript erro
 
 ### Implementation
 
+Created a custom `@hyperfrontend/package:typecheck` executor in `tools/package/src/executors/typecheck/`.
+
+**nx.json target default:**
+
 ```json
 "typecheck": {
-  "executor": "nx:run-commands",
-  "options": {
-    "command": "tsc --noEmit -p {projectRoot}/tsconfig.lib.json",
-    "cwd": "{workspaceRoot}"
-  }
+  "cache": true,
+  "inputs": ["default", "^default"],
+  "executor": "@hyperfrontend/package:typecheck"
 }
 ```
 
+**project.json usage (simplified):**
+
+```json
+"typecheck": {}
+```
+
 - [x] Add `typecheck` target to all library project.json files
-- [ ] Add to CI pipeline: `format:check` → `lint` → `typecheck` → `test` → `build`
-- [ ] Update `run-checks/action.yml` to support `typecheck` check type
+- [x] Add to CI pipeline: `format:check` → `lint` → `typecheck` → `test` → `build`
+- [x] Update `run-checks/action.yml` to support `typecheck` check type
 
 ---
 

@@ -58,6 +58,23 @@ jobs:
           check-type: lint
           affected-only: 'false'
 
+  typecheck:
+    name: typecheck
+    runs-on: ubuntu-latest
+    needs: setup
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+
+      - name: Setup monorepo
+        uses: ./.github/actions/setup-monorepo
+
+      - name: Run typecheck
+        uses: ./.github/actions/run-checks
+        with:
+          check-type: typecheck
+          affected-only: 'false'
+
   build:
     name: build
     runs-on: ubuntu-latest
