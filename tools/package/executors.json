@@ -14,6 +14,11 @@
       "implementation": "./src/executors/publish/executor",
       "schema": "./src/executors/publish/schema.json",
       "description": "Publish library packages to npm registry with dry-run support."
+    },
+    "version": {
+      "implementation": "./src/executors/version/executor",
+      "schema": "./src/executors/version/schema.json",
+      "description": "Idempotent wrapper around @jscutlery/semver:version. Checks if version tag already exists before delegating."
     }
   }
 }

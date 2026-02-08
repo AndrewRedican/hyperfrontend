@@ -1,0 +1,87 @@
+{
+  "$schema": "http://json-schema.org/schema",
+  "type": "object",
+  "title": "Version executor schema",
+  "description": "Idempotent wrapper around @jscutlery/semver:version. Checks if version tag already exists before delegating.",
+  "properties": {
+    "dryRun": {
+      "type": "boolean",
+      "description": "See what commands would be run, without committing to git or updating files.",
+      "default": false
+    },
+    "noVerify": {
+      "type": "boolean",
+      "description": "Bypass pre-commit or commit-msg git hooks during the commit phase.",
+      "default": false
+    },
+    "push": {
+      "type": "boolean",
+      "description": "Pushes to the git remote.",
+      "default": false
+    },
+    "remote": {
+      "type": "string",
+      "description": "Pushes against git remote repository.",
+      "default": "origin"
+    },
+    "baseBranch": {
+      "type": "string",
+      "description": "Pushes against git base branch.",
+      "default": "main"
+    },
+    "releaseAs": {
+      "type": "string",
+      "description": "Manually increment the version by that keyword."
+    },
+    "preid": {
+      "type": "string",
+      "description": "Use the next semantic prerelease version with a specific prerelease identifier."
+    },
+    "tagPrefix": {
+      "type": "string",
+      "description": "Version tag prefix. Default is '{projectName}@' in independent mode."
+    },
+    "postTargets": {
+      "type": "array",
+      "description": "Specify the targets to run after a new version was successfully created.",
+      "default": [],
+      "items": {
+        "type": "string"
+      }
+    },
+    "trackDeps": {
+      "type": "boolean",
+      "description": "Includes the project's dependencies in calculating a recommended version bump.",
+      "default": false
+    },
+    "allowEmptyRelease": {
+      "type": "boolean",
+      "description": "Allow bumping versions even if there are no changes in the library.",
+      "default": false
+    },
+    "skipCommit": {
+      "type": "boolean",
+      "description": "Allows to skip making a commit when bumping a version.",
+      "default": false
+    },
+    "skipTag": {
+      "type": "boolean",
+      "description": "Allows to skip tagging the release.",
+      "default": false
+    },
+    "preset": {
+      "type": "string",
+      "description": "Customize Conventional Changelog generation.",
+      "default": "angular"
+    },
+    "changelogHeader": {
+      "type": "string",
+      "description": "Generates changelog with custom header."
+    },
+    "commitMessageFormat": {
+      "type": "string",
+      "description": "A string to be used to format the auto-generated release commit message."
+    }
+  },
+  "required": []
+}
