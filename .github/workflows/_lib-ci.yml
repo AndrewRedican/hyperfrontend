@@ -1,0 +1,49 @@
+name: Library CI Template
+
+on:
+  workflow_call:
+    inputs:
+      project-name:
+        description: 'Nx project name (e.g., lib-nexus, plugin-features)'
+        required: true
+        type: string
+      coverage-path:
+        description: 'Path to lcov.info file'
+        required: true
+        type: string
+      coverage-flag:
+        description: 'Codecov flag name'
+        required: true
+        type: string
+    secrets:
+      CODECOV_TOKEN:
+        required: true
+
+jobs:
+  build:
+    name: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+
+      - name: Setup monorepo
+        uses: ./.github/actions/setup-monorepo
+
+      - name: Typecheck
+        run: npx nx typecheck ${{ inputs.project-name }}
+
+      - name: Build
+        run: npx nx build ${{ inputs.project-name }}
+
+      - name: Test
+        run: npx nx test ${{ inputs.project-name }} --coverage
+
+      - name: Upload coverage to Codecov
+        if: always()
+        uses: codecov/codecov-action@e28ff129e5465c2c0dcc6f003fc735cb6ae0c673 # v5.0.7
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: ${{ inputs.coverage-path }}
+          flags: ${{ inputs.coverage-flag }}
+          fail_ci_if_error: false

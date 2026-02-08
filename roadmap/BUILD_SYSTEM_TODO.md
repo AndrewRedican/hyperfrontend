@@ -1,145 +1,26 @@
 # Build System TODO
 
-**Last Updated**: February 7, 2026
+**Last Updated**: February 8, 2026
 
 ---
 
-## Phase 1: Unblock Dependent Libraries (Critical Path) ✅
+## Current State
 
-The TS6059 rootDir error blocked libraries with `@hyperfrontend/*` dependencies. This has been fixed.
-
-### 1.1 Mark internal deps as external in Rollup config ✅
-
-- [x] Update `build-unified.ts` to add `@hyperfrontend/*` to external
-- [x] Clear TypeScript paths to prevent source resolution
-- [x] Verify lib-list-utils builds successfully
-
-### 1.2 Add build target to remaining libraries ✅
-
-- [x] lib-logging - add `"build": {}` to project.json targets
-- [x] lib-ui-utils - add `"build": {}` to project.json targets
-- [x] lib-cryptography - add `"build": {}` to project.json targets
-- [x] lib-state-machine - add `"build": {}` to project.json targets
-- [x] lib-network-protocol - add `"build": {}` to project.json targets
-- [x] lib-nexus - add `"build": {}` to project.json targets
-
-### 1.3 Build all libraries in dependency order ✅
-
-- [x] lib-logging - builds successfully
-- [x] lib-ui-utils - builds successfully
-- [x] lib-cryptography - builds successfully
-- [x] lib-state-machine - builds successfully
-- [x] lib-nexus - builds successfully
-- [x] lib-network-protocol - builds successfully
-
-### 1.4 Fix JSON Import Support ✅
-
-- [x] Added `@rollup/plugin-json` to Rollup config in `build-unified.ts`
-- [x] Added `@rollup/plugin-commonjs` for CJS interop
-
-### 1.5 Suppress Build Warnings ✅
-
-- [x] Fixed TS5069 declarationMap warning by setting `declarationMap: isRootEntry`
-- [x] Suppressed TS2307 external module warnings via `onwarn` handler
-- [x] Suppressed empty chunk warnings for barrel files via `onwarn` handler
-
-### 1.6 External Dependencies ✅
-
-- [x] All package.json dependencies (not just `@hyperfrontend/*`) are now marked as external for library builds
+All 14 libraries build successfully with ESM + CJS dual output. The build executor auto-discovers entry points, generates proper `exports` in package.json, and handles external dependencies correctly.
 
 ---
 
-## Phase 1.7: Fix lib-network-protocol Source Errors ✅
+## Phase 2: Package.json Enhancements
 
-The TypeScript errors in lib-network-protocol source code have been fixed.
+### 2.1 Add `sideEffects` field
 
-**Validation status:**
-
-| Check                                      | Status     |
-| ------------------------------------------ | ---------- |
-| `npx nx format:check lib-network-protocol` | ✅ SUCCESS |
-| `npx nx lint lib-network-protocol`         | ✅ SUCCESS |
-| `npx nx test lib-network-protocol`         | ✅ SUCCESS |
-| `npx nx build lib-network-protocol`        | ✅ SUCCESS |
-
-**Files fixed:**
-
-- `channel/mocks.ts` - Fixed imports to use proper protocol-compatible functions
-- `packet/creators/mocks.ts` - Restored 2-arg helper functions, keep 1-arg protocol functions separate
-- `create-decrypter.ts` - Made returned function generic to match DataDecrypter type
-- `is-valid-message.ts` - Changed `Options` import to `DepthConfig` (correct type name)
-- `static-encryption-key.ts` - Changed parameter types to `PacketEncrypter`/`PacketDecrypter`
-- `dynamic-obfuscation-key.ts` - Changed parameter types to `PacketObfuscater`/`PacketDeobfuscater`
-
-**Circular dependencies (Rollup warnings - not blocking):**
-
-- `queue/creators/index.ts` ↔ `create-deobfuscation-queue.ts`
-- `queue/creators/index.ts` ↔ `create-deserialization-queue.ts`
-- `queue/creators/index.ts` ↔ `create-encryption-queue.ts`
-- `queue/creators/index.ts` ↔ `create-obfuscation-queue.ts`
-- `queue/creators/index.ts` ↔ `create-serialization-queue.ts`
-- `queue/creators/index.ts` ↔ `create-decryption-queue.ts`
-
----
-
-## Phase 1.8: Add Typecheck Target ✅
-
-Added `typecheck` target as a fast pre-build validation to catch TypeScript errors early.
-
-### Why?
-
-- Build runs Rollup which is slow → typecheck is faster feedback loop
-- CI can run `typecheck` before `build` to fail fast
-- Catches type errors without producing artifacts
-- Complements lint (ESLint catches style/rules, tsc catches type errors)
-
-### Implementation
-
-Created a custom `@hyperfrontend/package:typecheck` executor in `tools/package/src/executors/typecheck/`.
-
-**nx.json target default:**
-
-```json
-"typecheck": {
-  "cache": true,
-  "inputs": ["default", "^default"],
-  "executor": "@hyperfrontend/package:typecheck"
-}
-```
-
-**project.json usage (simplified):**
-
-```json
-"typecheck": {}
-```
-
-- [x] Add `typecheck` target to all library project.json files
-- [x] Add to CI pipeline: `format:check` → `lint` → `typecheck` → `test` → `build`
-- [x] Update `run-checks/action.yml` to support `typecheck` check type
-
----
-
-## Phase 2: Package.json Generation
-
-Update the executor to produce industry-standard package.json exports.
-
-### 2.1 Update output file naming
-
-- [ ] Change `index.esm.js` → `index.js`
-- [ ] Change `index.cjs.js` → `index.cjs`
-- [ ] Update `package-json.ts` to reflect new paths
-
-### 2.2 Add conditional exports structure
-
-- [ ] Add `"type": "module"` field
-- [ ] Add `"sideEffects": false` field
-- [ ] Generate proper `exports` object with types/import/require
+- [ ] Add `"sideEffects": false` to generated package.json for tree-shaking optimization
 
 ---
 
 ## Phase 3: UMD/IIFE Bundled Builds
 
-Add self-contained bundle generation for CDN distribution.
+Add self-contained bundle generation for CDN distribution (lib-nexus, lib-network-protocol).
 
 ### 3.1 Add bundle build capability
 
@@ -166,9 +47,17 @@ Add self-contained bundle generation for CDN distribution.
 
 ## Phase 4: CI/CD Integration
 
-### 4.1 Add build badge to README.md
+### 4.1 Per-library build badges ✅
 
-- [ ] Add shields.io badge for ci-main.yml workflow
+Implemented two-tier badge strategy:
+
+- **Root README**: Badge links to `ci-main.yml` for overall project health
+- **Library READMEs**: Each links to its own `ci-lib-<name>.yml` workflow
+
+Added 15 new workflow files:
+
+- `_lib-ci.yml` — reusable workflow template
+- `ci-lib-*.yml` — per-library workflow callers (14 libraries)
 
 ### 4.2 Update workflows
 
@@ -177,27 +66,60 @@ Add self-contained bundle generation for CDN distribution.
 
 ---
 
+## Known Issues
+
+### Circular Dependencies in lib-network-protocol
+
+The `queue/creators` barrel file has circular imports (visible as Rollup warnings during build):
+
+```
+queue/creators/index.ts ↔ create-*-queue.ts files
+```
+
+**Pattern**: Each `create-*-queue.ts` imports `createQueue` from `../creators` (the barrel), while the barrel re-exports from those files.
+
+**Runtime impact**: None. JavaScript's module registry resolves this correctly because by the time the functions execute, all exports are defined.
+
+**Tree-shaking impact**: Minimal. These are factory functions typically used together.
+
+---
+
+## Phase 5: Code Quality
+
+### 5.1 Fix circular dependencies in lib-network-protocol
+
+- [ ] In each `create-*-queue.ts` file, change `import { createQueue } from '../creators'` to `import { createQueue } from './create-queue'`
+
+**Files to update:**
+
+- `libs/network-protocol/src/lib/queue/creators/create-deobfuscation-queue.ts`
+- `libs/network-protocol/src/lib/queue/creators/create-deserialization-queue.ts`
+- `libs/network-protocol/src/lib/queue/creators/create-encryption-queue.ts`
+- `libs/network-protocol/src/lib/queue/creators/create-obfuscation-queue.ts`
+- `libs/network-protocol/src/lib/queue/creators/create-serialization-queue.ts`
+- `libs/network-protocol/src/lib/queue/creators/create-decryption-queue.ts`
+
+---
+
 ## Validation Checklist
 
-Before completing:
-
-- [x] Add typecheck target to all libraries
 - [x] `nx run-many -t=typecheck --all` succeeds
 - [x] `nx run-many -t=build --all` succeeds
-- [ ] All expected outputs exist in `dist/`
 - [ ] ESM imports work: `import { x } from '@hyperfrontend/utils'`
 - [ ] CJS requires work: `const { x } = require('@hyperfrontend/utils')`
-- [ ] UMD loads in browser and exposes global (for nexus)
+- [ ] UMD loads in browser and exposes global (for nexus, network-protocol)
 
 ---
 
 ## Quick Reference
 
-**All libraries building successfully**:
+**Executor location**: `tools/package/src/executors/build/`
 
-- lib-logging
-- lib-ui-utils
-- lib-cryptography
+**Key files**:
+
+- `lib/build-unified.ts` - Rollup configuration
+- `executor.ts` - External dependency detection
+- `lib/package-json.ts` - Package.json generation
 - lib-state-machine
 - lib-nexus
 - lib-list-utils

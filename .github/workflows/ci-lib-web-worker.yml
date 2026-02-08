@@ -1,0 +1,27 @@
+name: lib-web-worker
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'libs/web-worker/**'
+      - '.github/workflows/ci-lib-web-worker.yml'
+      - '.github/workflows/_lib-ci.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-lib-web-worker-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  ci:
+    uses: ./.github/workflows/_lib-ci.yml
+    with:
+      project-name: lib-web-worker
+      coverage-path: ./coverage/libs/web-worker/lcov.info
+      coverage-flag: web-worker
+    secrets:
+      CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}

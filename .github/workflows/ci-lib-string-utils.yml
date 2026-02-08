@@ -1,0 +1,27 @@
+name: lib-string-utils
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'libs/utils/string/**'
+      - '.github/workflows/ci-lib-string-utils.yml'
+      - '.github/workflows/_lib-ci.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-lib-string-utils-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  ci:
+    uses: ./.github/workflows/_lib-ci.yml
+    with:
+      project-name: lib-string-utils
+      coverage-path: ./coverage/libs/utils/string/lcov.info
+      coverage-flag: string-utils
+    secrets:
+      CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}

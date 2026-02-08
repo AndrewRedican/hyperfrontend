@@ -1,0 +1,27 @@
+name: lib-cryptography
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'libs/cryptography/**'
+      - '.github/workflows/ci-lib-cryptography.yml'
+      - '.github/workflows/_lib-ci.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-lib-cryptography-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  ci:
+    uses: ./.github/workflows/_lib-ci.yml
+    with:
+      project-name: lib-cryptography
+      coverage-path: ./coverage/libs/cryptography/lcov.info
+      coverage-flag: cryptography
+    secrets:
+      CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}

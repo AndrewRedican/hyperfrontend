@@ -1,0 +1,27 @@
+name: lib-state-machine
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'libs/state-machine/**'
+      - '.github/workflows/ci-lib-state-machine.yml'
+      - '.github/workflows/_lib-ci.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-lib-state-machine-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  ci:
+    uses: ./.github/workflows/_lib-ci.yml
+    with:
+      project-name: lib-state-machine
+      coverage-path: ./coverage/libs/state-machine/lcov.info
+      coverage-flag: state-machine
+    secrets:
+      CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}

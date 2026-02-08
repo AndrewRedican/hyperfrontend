@@ -10,6 +10,8 @@ All core workflow refactoring has been completed:
 - ✅ CI workflows with Nx affected optimization
 - ✅ Security hardening (pinned actions, minimal permissions, CodeQL, Dependabot)
 - ✅ Deploy docs, contributor suggest, and CLA workflows
+- ✅ Per-library CI workflows with reusable template (`_lib-ci.yml`)
+- ✅ Build status badges in root and library READMEs
 
 ---
 
@@ -17,7 +19,7 @@ All core workflow refactoring has been completed:
 
 ### Documentation Updates
 
-- [ ] Add CI/CD status badges to repository README.md
+- [x] Add CI/CD status badges to repository README.md
 - [ ] Tag a release marking workflow refactoring completion
 
 ---

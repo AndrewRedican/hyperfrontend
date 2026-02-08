@@ -1,0 +1,27 @@
+name: lib-immutable-api-utils
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'libs/utils/immutable-api/**'
+      - '.github/workflows/ci-lib-immutable-api-utils.yml'
+      - '.github/workflows/_lib-ci.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-lib-immutable-api-utils-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  ci:
+    uses: ./.github/workflows/_lib-ci.yml
+    with:
+      project-name: lib-immutable-api-utils
+      coverage-path: ./coverage/libs/utils/immutable-api/lcov.info
+      coverage-flag: immutable-api-utils
+    secrets:
+      CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
