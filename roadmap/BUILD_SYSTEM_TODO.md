@@ -113,4 +113,3 @@ npx nx affected -t=publish
 
 - [DEPLOYMENT_PUBLISHING.md](./DEPLOYMENT_PUBLISHING.md) — Publishing workflow details
 - [VERDACCIO_TESTING.md](./VERDACCIO_TESTING.md) — Local npm testing
-- [VERSIONING_AUTOMATION_PLAN.md](./VERSIONING_AUTOMATION_PLAN.md) — Versioning automation details

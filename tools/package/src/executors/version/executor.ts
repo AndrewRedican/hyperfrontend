@@ -83,5 +83,11 @@ export default async function versionExecutor(options: VersionExecutorOptions, c
   logger.info(`${projectName}: Delegating to @jscutlery/semver:version`)
 
   // Delegate to @jscutlery/semver:version
-  return semverVersion(options as VersionBuilderSchema, context)
+  const result = await semverVersion(options as VersionBuilderSchema, context)
+
+  if (result.success) {
+    logger.info(`${projectName}: version updated`)
+  }
+
+  return result
 }

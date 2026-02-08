@@ -235,8 +235,10 @@ jobs:
             if echo "$RESULT" | grep -q "version updated"; then
               UPDATED="$UPDATED $lib"
               echo "  ✓ $lib: version updated"
-            else
+            elif echo "$RESULT" | grep -q "already exists (skipping)"; then
               echo "  ○ $lib: already versioned"
+            else
+              echo "  ○ $lib: no version change needed"
             fi
           done
 
