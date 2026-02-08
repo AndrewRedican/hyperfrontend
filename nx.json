@@ -23,13 +23,11 @@
       }
     },
     "version": {
-      "executor": "@jscutlery/semver:version",
+      "executor": "@hyperfrontend/package:version",
       "options": {
         "preset": "conventionalcommits",
         "tagPrefix": "{projectName}@",
-        "commitMessageFormat": "chore({projectName}): release version {version}",
-        "push": true,
-        "postTargets": ["build"]
+        "commitMessageFormat": "chore({projectName}): release version {version}"
       }
     },
     "build": {
