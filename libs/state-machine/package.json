@@ -1,0 +1,44 @@
+{
+  "name": "@hyperfrontend/state-machine",
+  "version": "0.0.0",
+  "description": "Lightweight, functional state management library with Redux-inspired actions/reducers, async operation orchestration, and lifecycle-aware component abstractions for predictable application state.",
+  "license": "MIT",
+  "sideEffects": false,
+  "keywords": [
+    "state-management",
+    "redux",
+    "flux",
+    "store",
+    "actions",
+    "reducers",
+    "async-operations",
+    "lifecycle",
+    "event-driven",
+    "functional",
+    "typescript",
+    "zero-dependencies",
+    "tree-shakeable",
+    "immutable",
+    "process-state"
+  ],
+  "exports": {
+    "./actions": "./src/actions/index.js",
+    "./async-operation": "./src/async-operation/index.js",
+    "./coordinated-async-operation": "./src/coordinated-async-operation/index.js",
+    "./events": "./src/events/index.js",
+    "./lifecyle-aware-component": "./src/lifecyle-aware-component/index.js",
+    "./models": "./src/models/index.js",
+    "./reducer": "./src/reducer/index.js",
+    "./selectors": "./src/selectors/index.js",
+    "./state": "./src/state/index.js",
+    "./state-change": "./src/state-change/index.js",
+    "./store": "./src/store/index.js"
+  },
+  "dependencies": {
+    "@hyperfrontend/data-utils": "0.0.0"
+  },
+  "funding": {
+    "type": "github",
+    "url": "https://github.com/sponsors/AndrewRedican"
+  }
+}

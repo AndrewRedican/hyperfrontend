@@ -1,0 +1,36 @@
+# Dependencies
+node_modules/
+.pnp/
+.pnp.js
+
+# Build outputs
+.next/
+out/
+dist/
+build/
+.turbo/
+/dist
+/coverage
+/.nx/cache
+/.nx/workspace-data
+
+# Package manager
+.npm/
+.yarn/
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
+# Minified files
+*.min.js
+*.min.css
+
+# Logs
+*.log
+
+# Generated files
+coverage/
+.nyc_output/
+
+# files using hugo templates that break html formatting
+/docs/**

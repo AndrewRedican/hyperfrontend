@@ -1,0 +1,188 @@
+name: pr
+
+on:
+  pull_request:
+    branches: [main]
+
+# Read-only permissions by default
+permissions:
+  contents: read
+
+# Cancel in-progress runs for the same PR
+concurrency:
+  group: ci-pr-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  setup:
+    name: setup
+    runs-on: ubuntu-latest
+    outputs:
+      affected-projects: ${{ steps.nx-affected.outputs.affected-projects }}
+      has-affected: ${{ steps.nx-affected.outputs.has-affected }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+        with:
+          fetch-depth: 0 # Required for Nx affected calculations
+
+      - name: Setup monorepo
+        uses: ./.github/actions/setup-monorepo
+
+      - name: Calculate affected projects
+        id: nx-affected
+        uses: ./.github/actions/nx-affected
+        with:
+          base-ref: origin/${{ github.base_ref }}
+          head-ref: HEAD
+
+  format:
+    name: format
+    runs-on: ubuntu-latest
+    needs: setup
+    if: needs.setup.outputs.has-affected == 'true'
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+
+      - name: Setup monorepo
+        uses: ./.github/actions/setup-monorepo
+
+      - name: Run format check
+        uses: ./.github/actions/run-checks
+        with:
+          check-type: format
+          affected-only: 'true'
+          affected-projects: ${{ needs.setup.outputs.affected-projects }}
+
+  lint:
+    name: lint
+    runs-on: ubuntu-latest
+    needs: setup
+    if: needs.setup.outputs.has-affected == 'true'
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+
+      - name: Setup monorepo
+        uses: ./.github/actions/setup-monorepo
+
+      - name: Run lint
+        uses: ./.github/actions/run-checks
+        with:
+          check-type: lint
+          affected-only: 'true'
+          affected-projects: ${{ needs.setup.outputs.affected-projects }}
+
+  typecheck:
+    name: typecheck
+    runs-on: ubuntu-latest
+    needs: setup
+    if: needs.setup.outputs.has-affected == 'true'
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+
+      - name: Setup monorepo
+        uses: ./.github/actions/setup-monorepo
+
+      - name: Run typecheck
+        uses: ./.github/actions/run-checks
+        with:
+          check-type: typecheck
+          affected-only: 'true'
+          affected-projects: ${{ needs.setup.outputs.affected-projects }}
+
+  build:
+    name: build
+    runs-on: ubuntu-latest
+    needs: setup
+    if: needs.setup.outputs.has-affected == 'true'
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+
+      - name: Setup monorepo
+        uses: ./.github/actions/setup-monorepo
+        with:
+          install-hugo: 'true'
+
+      - name: Run build
+        uses: ./.github/actions/run-checks
+        with:
+          check-type: build
+          affected-only: 'true'
+          affected-projects: ${{ needs.setup.outputs.affected-projects }}
+
+  test:
+    name: test
+    runs-on: ubuntu-latest
+    needs: [setup, build]
+    if: needs.setup.outputs.has-affected == 'true'
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+
+      - name: Setup monorepo
+        uses: ./.github/actions/setup-monorepo
+
+      - name: Run tests
+        uses: ./.github/actions/run-checks
+        with:
+          check-type: test
+          affected-only: 'true'
+          affected-projects: ${{ needs.setup.outputs.affected-projects }}
+
+      - name: Upload coverage reports
+        if: always()
+        uses: actions/upload-artifact@5d5d22a31266ced268874388b861e4b58bb5c2f3 # v4.3.1
+        with:
+          name: coverage-reports-pr
+          path: coverage/
+          retention-days: 7
+
+  e2e:
+    name: e2e
+    runs-on: ubuntu-latest
+    needs: [setup, build, test]
+    if: needs.setup.outputs.has-affected == 'true'
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+
+      - name: Setup monorepo
+        uses: ./.github/actions/setup-monorepo
+
+      - name: Run E2E tests
+        uses: ./.github/actions/run-checks
+        with:
+          check-type: e2e
+          affected-only: 'true'
+          affected-projects: ${{ needs.setup.outputs.affected-projects }}
+
+  ci-status:
+    name: status
+    runs-on: ubuntu-latest
+    needs: [setup, format, lint, typecheck, build, test, e2e]
+    if: always()
+    steps:
+      - name: Check CI status
+        run: |
+          # If no affected projects, pass
+          if [ "${{ needs.setup.outputs.has-affected }}" != "true" ]; then
+            echo "✅ No affected projects - PR checks passed"
+            exit 0
+          fi
+
+          # Check if any required job failed
+          if [ "${{ needs.format.result }}" = "failure" ] || \
+             [ "${{ needs.lint.result }}" = "failure" ] || \
+             [ "${{ needs.typecheck.result }}" = "failure" ] || \
+             [ "${{ needs.build.result }}" = "failure" ] || \
+             [ "${{ needs.test.result }}" = "failure" ] || \
+             [ "${{ needs.e2e.result }}" = "failure" ]; then
+            echo "❌ One or more CI checks failed"
+            exit 1
+          fi
+
+          echo "✅ All CI checks passed"

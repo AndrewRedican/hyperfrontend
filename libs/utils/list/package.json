@@ -1,0 +1,28 @@
+{
+  "name": "@hyperfrontend/list-utils",
+  "version": "0.0.0",
+  "description": "Purpose-built collection utilities for queue management, filtering, and iteration patterns.",
+  "license": "MIT",
+  "keywords": [
+    "list",
+    "array",
+    "queue",
+    "fifo",
+    "lifo",
+    "stack",
+    "collections",
+    "iterator",
+    "round-robin",
+    "deduplication",
+    "string-sanitization",
+    "typescript",
+    "immutable",
+    "functional",
+    "zero-dependencies"
+  ],
+  "sideEffects": false,
+  "main": "./src/index.js",
+  "dependencies": {
+    "@hyperfrontend/data-utils": "0.0.0"
+  }
+}

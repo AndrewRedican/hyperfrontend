@@ -1,0 +1,12 @@
+{
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "name": "lib-state-machine",
+  "description": "State machine implementation with lifecycle management, actions, and reducers.",
+  "sourceRoot": "{projectRoot}/src",
+  "projectType": "library",
+  "tags": [],
+  "targets": {
+    "build": {},
+    "typecheck": {}
+  }
+}

@@ -1,0 +1,8 @@
+{
+  "name": "@hyperfrontend/app-javascript",
+  "version": "0.0.0",
+  "description": "Vanilla JavaScript micro-frontend application.",
+  "main": "./src/index.js",
+  "private": true,
+  "dependencies": {}
+}

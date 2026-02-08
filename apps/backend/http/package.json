@@ -1,0 +1,8 @@
+{
+  "name": "@hyperfrontend/app-http",
+  "version": "0.0.0",
+  "description": "HTTP backend application.",
+  "main": "./src/index.js",
+  "private": true,
+  "dependencies": {}
+}

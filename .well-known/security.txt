@@ -1,0 +1,5 @@
+Contact: mailto:andrew.redican.mejia@gmail.com
+Expires: 2027-01-19T00:00:00.000Z
+Preferred-Languages: en
+Canonical: https://github.com/AndrewRedican/hyperfrontend/blob/main/.well-known/security.txt
+Policy: https://github.com/AndrewRedican/hyperfrontend/blob/main/SECURITY.md

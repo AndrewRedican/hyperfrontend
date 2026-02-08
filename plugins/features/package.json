@@ -1,0 +1,17 @@
+{
+  "name": "@hyperfrontend/features",
+  "version": "0.0.0",
+  "description": "Nx plugin for hyperfrontend micro-frontend features.",
+  "license": "MIT",
+  "sideEffects": false,
+  "main": "./src/index.js",
+  "dependencies": {
+    "@nx/devkit": "22.3.3"
+  },
+  "generators": "./generators.json",
+  "executors": "./executors.json",
+  "funding": {
+    "type": "github",
+    "url": "https://github.com/sponsors/AndrewRedican"
+  }
+}

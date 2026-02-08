@@ -1,0 +1,12 @@
+{
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "name": "lib-data-utils",
+  "description": "Data manipulation and transformation utilities.",
+  "sourceRoot": "{projectRoot}/src",
+  "projectType": "library",
+  "tags": [],
+  "targets": {
+    "build": {},
+    "typecheck": {}
+  }
+}

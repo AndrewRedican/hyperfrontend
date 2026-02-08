@@ -1,0 +1,12 @@
+{
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "name": "lib-immutable-api-utils",
+  "description": "Immutable API utilities for functional programming.",
+  "sourceRoot": "{projectRoot}/src",
+  "projectType": "library",
+  "tags": [],
+  "targets": {
+    "build": {},
+    "typecheck": {}
+  }
+}

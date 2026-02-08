@@ -1,0 +1,23 @@
+{
+  "name": "@hyperfrontend/immutable-api-utils",
+  "version": "0.0.0",
+  "description": "Decorators and utilities for creating immutable, tamper-proof object APIs.",
+  "license": "MIT",
+  "keywords": [
+    "immutable",
+    "decorator",
+    "property-descriptor",
+    "locked",
+    "frozen",
+    "non-writable",
+    "non-configurable",
+    "this-binding",
+    "typescript",
+    "api-protection",
+    "zero-dependencies",
+    "functional",
+    "tamper-proof"
+  ],
+  "sideEffects": false,
+  "main": "./src/index.js"
+}

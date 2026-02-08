@@ -1,0 +1,32 @@
+{
+  "name": "@hyperfrontend/random-generator-utils",
+  "version": "0.0.0",
+  "description": "Statistical random distributions and UUID generation for simulations, testing, and procedural content.",
+  "license": "MIT",
+  "keywords": [
+    "random",
+    "random-number",
+    "uuid",
+    "gaussian",
+    "exponential",
+    "power-law",
+    "distribution",
+    "pseudo-random",
+    "seeded",
+    "simulation",
+    "testing",
+    "procedural-generation",
+    "statistics",
+    "typescript",
+    "zero-dependencies"
+  ],
+  "sideEffects": false,
+  "main": "./src/index.js",
+  "dependencies": {
+    "@hyperfrontend/data-utils": "0.0.0"
+  },
+  "funding": {
+    "type": "github",
+    "url": "https://github.com/sponsors/AndrewRedican"
+  }
+}

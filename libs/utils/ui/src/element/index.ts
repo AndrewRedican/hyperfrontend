@@ -1,0 +1,6 @@
+export type * from '../lib/html.model'
+export * from '../lib/create-element'
+export * from '../lib/element-creators'
+export * from '../lib/get-element-async'
+export * from '../lib/sync-element-dimensions'
+export * from '../lib/on-element-resize'

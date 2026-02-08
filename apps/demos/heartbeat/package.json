@@ -1,0 +1,8 @@
+{
+  "name": "@hyperfrontend/demo-heartbeat",
+  "version": "0.0.0",
+  "description": "Heartbeat demonstration.",
+  "main": "./src/index.js",
+  "private": true,
+  "dependencies": {}
+}

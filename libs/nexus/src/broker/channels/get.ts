@@ -1,0 +1,28 @@
+import type { Registry } from '../../core/registry/factory'
+import { getByWindow } from '../../core/registry/get-by-window'
+import { getById } from '../../core/registry/get-by-id'
+import { getByName } from '../../core/registry/get-by-name'
+import { createChannel } from '../../channel/factory'
+
+/**
+ * Gets a channel by reference (id, name, or window)
+ *
+ * @param registry - Channel registry containing all registered channels
+ * @param reference - Channel identifier (id, name, or window object)
+ * @returns The channel if found, null otherwise
+ */
+export function getChannel(registry: Registry, reference: string | Window): ReturnType<typeof createChannel> | null {
+  // Window lookup - check if it's an object (Window-like) and not a string
+  if (typeof reference === 'object' && reference !== null) {
+    const channel = getByWindow(registry, <Window>reference)
+    return (channel as unknown as ReturnType<typeof createChannel>) ?? null
+  }
+
+  // String lookup - try ID first, then name
+  if (typeof reference === 'string') {
+    const channel = getById(registry, reference) ?? getByName(registry, reference)
+    return (channel as unknown as ReturnType<typeof createChannel>) ?? null
+  }
+
+  return null
+}

@@ -1,0 +1,231 @@
+name: contributor suggest
+
+on:
+  pull_request_review:
+    types: [submitted]
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  suggest-contribution-type:
+    name: suggest
+    runs-on: ubuntu-latest
+    # Only run when PR is approved by maintainer/owner
+    if: |
+      github.event.review.state == 'approved' &&
+      (github.event.review.user.login == github.repository_owner ||
+       contains(fromJSON('["AndrewRedican"]'), github.event.review.user.login))
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+        with:
+          fetch-depth: 0
+
+      - name: Get PR files
+        id: pr-files
+        uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
+        with:
+          script: |
+            const { data: files } = await github.rest.pulls.listFiles({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: context.payload.pull_request.number,
+            });
+
+            const filePaths = files.map(f => f.filename);
+            core.setOutput('files', JSON.stringify(filePaths));
+            return filePaths;
+
+      - name: Analyze contribution types
+        id: analyze
+        uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
+        with:
+          script: |
+            const files = JSON.parse('${{ steps.pr-files.outputs.files }}');
+            const contributionTypes = new Set();
+            const details = [];
+
+            // Heuristics for determining contribution types
+            const patterns = {
+              doc: {
+                patterns: [/^docs\//, /\.md$/, /^README/, /^CONTRIBUTING/, /^LICENSE/, /^CHANGELOG/],
+                exclude: [/package\.json$/, /src\/.*\.md$/],
+                description: 'Documentation changes'
+              },
+              code: {
+                patterns: [
+                  /^(src|packages|apps)\/.*\.(ts|js|tsx|jsx|vue|svelte|py|go|rs|java|cs|cpp|c|h)$/,
+                  /^(src|packages|apps)\/.*\.html$/
+                ],
+                description: 'Code contributions'
+              },
+              test: {
+                patterns: [
+                  /\.(test|spec)\.(ts|js|tsx|jsx)$/,
+                  /__tests__\//,
+                  /^.*\.e2e\./,
+                  /cypress\//,
+                  /playwright\//
+                ],
+                description: 'Test additions or improvements'
+              },
+              infra: {
+                patterns: [
+                  /^\.github\/workflows\//,
+                  /^\.github\/actions\//,
+                  /^(Dockerfile|docker-compose)/,
+                  /^\.devcontainer\//,
+                  /^terraform\//,
+                  /^kubernetes\//,
+                  /lefthook\.yml$/,
+                  /^ci\//,
+                  /^scripts\/ci/
+                ],
+                description: 'Infrastructure and CI/CD improvements'
+              },
+              tool: {
+                patterns: [
+                  /^(tools|scripts)\//,
+                  /eslint.*config/,
+                  /prettier.*config/,
+                  /tsconfig.*\.json$/,
+                  /^(webpack|vite|rollup|esbuild)\.config/,
+                  /^nx\.json$/,
+                  /^project\.json$/,
+                  /jest.*config/,
+                  /commitlint\.config/
+                ],
+                exclude: [/^\.github\/workflows\//],
+                description: 'Tooling and configuration'
+              },
+              design: {
+                patterns: [
+                  /\.(svg|png|jpg|jpeg|gif|ico|webp)$/,
+                  /^assets\//,
+                  /\.(css|scss|sass|less|styl)$/,
+                  /^.*\/styles?\//,
+                  /^packages\/ui\//
+                ],
+                description: 'Design and styling'
+              },
+              example: {
+                patterns: [
+                  /^(examples?|demos?)\//,
+                  /sample/i
+                ],
+                description: 'Example implementations or demos'
+              },
+              plugin: {
+                patterns: [
+                  /^(plugins?|packages\/nx-plugin)\//
+                ],
+                description: 'Plugin development'
+              }
+            };
+
+            // Analyze each file
+            for (const file of files) {
+              for (const [type, config] of Object.entries(patterns)) {
+                const matches = config.patterns.some(pattern => pattern.test(file));
+                const excluded = config.exclude?.some(pattern => pattern.test(file)) || false;
+
+                if (matches && !excluded) {
+                  contributionTypes.add(type);
+                  details.push(`- **${type}**: ${file}`);
+                  break; // Only count first matching type per file
+                }
+              }
+            }
+
+            // Default to 'code' if no specific type detected but code files changed
+            if (contributionTypes.size === 0 && files.length > 0) {
+              contributionTypes.add('code');
+              details.push('- **code**: General code contributions');
+            }
+
+            const types = Array.from(contributionTypes).sort();
+            const typeDescriptions = types.map(t => {
+              const desc = patterns[t]?.description || t;
+              return `\`${t}\` (${desc})`;
+            }).join(', ');
+
+            core.setOutput('types', types.join(', '));
+            core.setOutput('type_list', typeDescriptions);
+            core.setOutput('details', details.slice(0, 10).join('\n')); // Limit to 10 examples
+            core.setOutput('has_types', types.length > 0 ? 'true' : 'false');
+
+            return { types, typeDescriptions, detailsSample: details.slice(0, 10) };
+
+      - name: Post suggestion comment
+        if: steps.analyze.outputs.has_types == 'true'
+        uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
+        with:
+          script: |
+            const prAuthor = context.payload.pull_request.user.login;
+            const types = '${{ steps.analyze.outputs.types }}';
+            const typeList = '${{ steps.analyze.outputs.type_list }}';
+            const details = `${{ steps.analyze.outputs.details }}`;
+
+            const commentBody = `## 🏆 Contributor Recognition Suggestion
+
+            Hey @${context.payload.review.user.login}! 👋
+
+            Based on the files changed in this PR, I suggest recognizing **@${prAuthor}** for the following contribution types:
+
+            **Suggested types:** ${typeList}
+
+            <details>
+            <summary>📊 Detection Details (sample)</summary>
+
+            ${details}
+
+            </details>
+
+            ### 🎯 Quick Actions
+
+            To add this contributor with the suggested types, comment:
+
+            \`\`\`
+            @all-contributors please add @${prAuthor} for ${types}
+            \`\`\`
+
+            Or modify the contribution types as needed:
+
+            \`\`\`
+            @all-contributors please add @${prAuthor} for code, doc
+            \`\`\`
+
+            <details>
+            <summary>📚 Available Contribution Types</summary>
+
+            | Type | Description |
+            |------|-------------|
+            | \`code\` | Code contributions |
+            | \`doc\` | Documentation |
+            | \`test\` | Tests |
+            | \`infra\` | Infrastructure (CI/CD) |
+            | \`tool\` | Tools & configuration |
+            | \`design\` | Design & styling |
+            | \`bug\` | Bug reports |
+            | \`ideas\` | Ideas & planning |
+            | \`review\` | Code reviews |
+            | \`example\` | Examples |
+            | \`plugin\` | Plugins |
+
+            [See all types](https://github.com/${context.repo.owner}/${context.repo.repo}/blob/main/.github/AUTOMATED_CONTRIBUTORS.md#available-contribution-types)
+
+            </details>
+
+            ---
+
+            *This is an automated suggestion based on file changes. Feel free to adjust the contribution types as you see fit.*`;
+
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.payload.pull_request.number,
+              body: commentBody
+            });

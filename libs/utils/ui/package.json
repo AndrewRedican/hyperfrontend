@@ -1,0 +1,47 @@
+{
+  "name": "@hyperfrontend/ui-utils",
+  "version": "0.0.0",
+  "description": "Modular DOM utilities for dynamic styling, gesture detection, element lifecycle, and color manipulation.",
+  "license": "MIT",
+  "keywords": [
+    "dom",
+    "element",
+    "css",
+    "styling",
+    "color",
+    "gesture",
+    "mobile",
+    "resize-observer",
+    "css-in-js",
+    "selector-builder",
+    "hex-to-rgb",
+    "touch-events",
+    "typescript",
+    "framework-agnostic",
+    "modular",
+    "tree-shaking"
+  ],
+  "sideEffects": false,
+  "exports": {
+    "./audio": "./src/audio/index.js",
+    "./color": "./src/color/index.js",
+    "./component": "./src/component/index.js",
+    "./element": "./src/element/index.js",
+    "./event": "./src/event/index.js",
+    "./misc": "./src/misc/index.js",
+    "./mobile": "./src/mobile/index.js",
+    "./selector": "./src/selector/index.js",
+    "./style": "./src/style/index.js",
+    "./time": "./src/time/index.js"
+  },
+  "dependencies": {
+    "@hyperfrontend/function-utils": "0.0.0",
+    "@hyperfrontend/random-generator-utils": "0.0.0",
+    "@hyperfrontend/list-utils": "0.0.0",
+    "@hyperfrontend/data-utils": "0.0.0"
+  },
+  "funding": {
+    "type": "github",
+    "url": "https://github.com/sponsors/AndrewRedican"
+  }
+}

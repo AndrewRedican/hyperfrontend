@@ -1,0 +1,8 @@
+{
+  "name": "@hyperfrontend/demo-views",
+  "version": "0.0.0",
+  "description": "Views demonstration.",
+  "main": "./src/index.js",
+  "private": true,
+  "dependencies": {}
+}

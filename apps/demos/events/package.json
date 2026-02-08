@@ -1,0 +1,8 @@
+{
+  "name": "@hyperfrontend/demo-events",
+  "version": "0.0.0",
+  "description": "Events demonstration.",
+  "main": "./src/index.js",
+  "private": true,
+  "dependencies": {}
+}

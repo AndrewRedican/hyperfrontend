@@ -1,0 +1,26 @@
+{
+  "$schema": "http://json-schema.org/schema",
+  "type": "object",
+  "properties": {
+    "featureName": {
+      "type": "string",
+      "description": "The name of the hyperfrontend feature to consume"
+    },
+    "project": {
+      "type": "string",
+      "description": "The name of the host project where the feature will be added"
+    },
+    "installMethod": {
+      "type": "string",
+      "enum": ["npm", "cdn"],
+      "description": "How to install the feature shell (npm package or CDN script tag)",
+      "default": "npm"
+    },
+    "mountPoint": {
+      "type": "string",
+      "description": "Element selector or component name where the feature should be mounted",
+      "default": "auto"
+    }
+  },
+  "required": ["featureName", "project"]
+}

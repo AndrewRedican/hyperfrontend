@@ -1,0 +1,9 @@
+{
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "name": "demo-events",
+  "description": "Events demonstration.",
+  "sourceRoot": "{projectRoot}/src",
+  "projectType": "application",
+  "tags": [],
+  "targets": {}
+}

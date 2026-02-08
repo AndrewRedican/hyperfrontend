@@ -1,0 +1,6 @@
+{
+  "$schema": "node_modules/nx/schemas/project-schema.json",
+  "name": "@hyperfrontend/workspace",
+  "description": "A hybrid micro-frontend pattern to embed live web applications with communication protocols, lifecycle, and contract standards.",
+  "tags": []
+}

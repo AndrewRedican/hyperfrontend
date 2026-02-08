@@ -1,0 +1,37 @@
+{
+  "name": "@hyperfrontend/nexus",
+  "version": "0.0.0",
+  "description": "Cross-window communication library for micro-frontends with secure messaging, state management, and contract validation.",
+  "license": "MIT",
+  "sideEffects": false,
+  "main": "./src/index.js",
+  "types": "./src/index.ts",
+  "keywords": [
+    "postmessage",
+    "cross-window",
+    "cross-origin",
+    "iframe",
+    "micro-frontend",
+    "microfrontend",
+    "window-messaging",
+    "message-broker",
+    "message-channel",
+    "contract-validation",
+    "origin-security",
+    "typescript",
+    "browser",
+    "communication",
+    "hub-spoke",
+    "event-driven"
+  ],
+  "dependencies": {
+    "@hyperfrontend/function-utils": "0.0.0",
+    "@hyperfrontend/logging": "0.0.0",
+    "@hyperfrontend/random-generator-utils": "0.0.0",
+    "jsonschema": "1.5.0"
+  },
+  "funding": {
+    "type": "github",
+    "url": "https://github.com/sponsors/AndrewRedican"
+  }
+}
