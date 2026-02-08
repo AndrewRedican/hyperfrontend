@@ -295,3 +295,22 @@ jobs:
           fi
 
           echo "✅ All CI checks passed on main branch"
+
+  push-tags:
+    name: push-tags
+    runs-on: ubuntu-latest
+    needs: [ci-status]
+    if: needs.ci-status.result == 'success'
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Push version tags
+        run: |
+          # Push any local tags that haven't been pushed yet
+          git push origin --tags 2>/dev/null || echo "No new tags to push"

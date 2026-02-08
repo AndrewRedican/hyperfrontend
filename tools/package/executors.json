@@ -9,6 +9,16 @@
       "implementation": "./src/executors/typecheck/executor",
       "schema": "./src/executors/typecheck/schema.json",
       "description": "Run TypeScript type checking without emitting files."
+    },
+    "publish": {
+      "implementation": "./src/executors/publish/executor",
+      "schema": "./src/executors/publish/schema.json",
+      "description": "Publish library packages to npm registry with dry-run support."
+    },
+    "version": {
+      "implementation": "./src/executors/version/executor",
+      "schema": "./src/executors/version/schema.json",
+      "description": "Idempotent wrapper around @jscutlery/semver:version. Checks if version tag already exists before delegating."
     }
   }
 }

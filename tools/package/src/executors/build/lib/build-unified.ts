@@ -5,7 +5,7 @@
 import { logger } from '@nx/devkit'
 import { existsSync, mkdirSync, cpSync, rmSync } from 'node:fs'
 import { execFileSync } from 'node:child_process'
-import { dirname, join, relative } from 'node:path'
+import { dirname, join, relative, resolve } from 'node:path'
 import { rollup, type RollupOptions, type OutputOptions, type RollupLog } from 'rollup'
 
 import nodeResolve from '@rollup/plugin-node-resolve'
@@ -185,14 +185,7 @@ export async function buildBundledOutput(
   const bundlePath = join(outputPath, 'bundle')
   mkdirSync(bundlePath, { recursive: true })
 
-  const rollupConfig = createBundleRollupConfig(
-    rootEntry.inputFile,
-    tsConfigPath,
-    projectRoot,
-    globalName,
-    workspaceRoot,
-    bundlePath
-  )
+  const rollupConfig = createBundleRollupConfig(rootEntry.inputFile, tsConfigPath, projectRoot, globalName, workspaceRoot, bundlePath)
   const outputConfigs = createBundleOutputConfigs(bundlePath, globalName)
 
   const bundle = await rollup(rollupConfig)
@@ -230,14 +223,7 @@ async function buildSingleEntryPoint(
 
   mkdirSync(entryOutputPath, { recursive: true })
 
-  const rollupConfig = createEntryPointRollupConfig(
-    entry.inputFile,
-    tsConfigPath,
-    entryOutputPath,
-    projectRoot,
-    external,
-    entry.isRoot
-  )
+  const rollupConfig = createEntryPointRollupConfig(entry.inputFile, tsConfigPath, entryOutputPath, projectRoot, external, entry.isRoot)
   const outputConfigs = createOutputConfigs(entryOutputPath)
 
   const bundle = await rollup(rollupConfig)
@@ -274,11 +260,21 @@ export function generateDeclarationsUnified(
 
   logger.info('Generating TypeScript declarations...')
 
-  execFileSync(
-    'npx',
-    ['tsc', '--project', tsConfigPath, '--emitDeclarationOnly', '--declaration', '--declarationMap', '--outDir', outputPath],
-    { stdio: 'inherit', cwd: projectRoot }
-  )
+  // Use local tsc binary directly instead of npx to avoid race conditions in parallel builds
+  const tscPath = resolve(workspaceRoot, 'node_modules', '.bin', 'tsc')
+
+  try {
+    execFileSync(
+      tscPath,
+      ['--project', tsConfigPath, '--emitDeclarationOnly', '--declaration', '--declarationMap', '--outDir', outputPath],
+      { cwd: projectRoot, encoding: 'utf-8', maxBuffer: 10 * 1024 * 1024 }
+    )
+  } catch (error) {
+    const err = error as Error & { stdout?: string; stderr?: string }
+    if (err.stderr) logger.error(err.stderr)
+    if (err.stdout) logger.error(err.stdout)
+    throw error
+  }
 
   flattenDeclarationPaths(projectRoot, outputPath, workspaceRoot, discovery)
 }
@@ -291,12 +287,7 @@ export function generateDeclarationsUnified(
  * @param workspaceRoot - Absolute path to workspace root
  * @param discovery - Entry point discovery result
  */
-function flattenDeclarationPaths(
-  projectRoot: string,
-  outputPath: string,
-  workspaceRoot: string,
-  discovery: EntryPointDiscovery
-): void {
+function flattenDeclarationPaths(projectRoot: string, outputPath: string, workspaceRoot: string, discovery: EntryPointDiscovery): void {
   const nestedDeclarations = join(outputPath, relative(workspaceRoot, join(projectRoot, 'src')))
 
   if (!existsSync(nestedDeclarations)) return
@@ -365,7 +356,7 @@ export async function buildUnifiedLibrary(
   generateDeclarationsUnified(projectRoot, outputPath, tsConfigPath, workspaceRoot, discovery)
 
   const srcPkg = readProjectPackageJson(projectRoot)
-  generatePackageJsonFromDiscovery(srcPkg, outputPath, discovery, includeBundle)
+  generatePackageJsonFromDiscovery(srcPkg, outputPath, discovery, workspaceRoot, includeBundle)
 
   logger.info('Library build complete')
 }

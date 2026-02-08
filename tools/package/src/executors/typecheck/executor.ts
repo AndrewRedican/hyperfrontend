@@ -34,7 +34,6 @@ export default async function typecheckExecutor(
   const projectRoot = projectConfig.root
   const workspaceRoot = context.root
 
-  // Resolve tsconfig path
   const tsConfigPath = options.tsConfig ? join(workspaceRoot, options.tsConfig) : join(workspaceRoot, projectRoot, 'tsconfig.lib.json')
 
   if (!existsSync(tsConfigPath)) {

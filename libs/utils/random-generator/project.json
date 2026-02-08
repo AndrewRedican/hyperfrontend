@@ -6,7 +6,9 @@
   "projectType": "library",
   "tags": [],
   "targets": {
+    "version": {},
     "build": {},
+    "publish": {},
     "typecheck": {}
   }
 }

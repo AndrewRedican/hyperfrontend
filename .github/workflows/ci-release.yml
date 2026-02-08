@@ -1,0 +1,145 @@
+name: release
+
+on:
+  pull_request:
+    types: [closed]
+    branches: [main]
+
+# Only needs read permissions for checkout, and write for npm publish
+permissions:
+  contents: read
+
+# Don't run multiple release jobs simultaneously
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    name: publish
+    runs-on: ubuntu-latest
+    # Only run when PR is merged (not just closed)
+    if: github.event.pull_request.merged == true
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+        with:
+          fetch-depth: 0
+
+      - name: Setup monorepo
+        uses: ./.github/actions/setup-monorepo
+
+      - name: Get affected libraries
+        id: affected
+        run: |
+          # Get libraries affected by the PR
+          AFFECTED=$(npx nx show projects --affected --base=origin/main~1 --head=origin/main --type=lib 2>/dev/null || echo "")
+
+          if [ -z "$AFFECTED" ]; then
+            echo "No affected libraries found"
+            echo "has_affected=false" >> $GITHUB_OUTPUT
+          else
+            echo "Affected libraries:"
+            echo "$AFFECTED"
+            echo "has_affected=true" >> $GITHUB_OUTPUT
+            echo "libraries=$AFFECTED" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Build affected libraries
+        if: steps.affected.outputs.has_affected == 'true'
+        run: npx nx affected -t=build --base=origin/main~1 --head=origin/main
+
+      - name: Create version tags
+        if: steps.affected.outputs.has_affected == 'true'
+        run: |
+          echo "Creating version tags for affected libraries..."
+          # Run version without --skipTag to create tags
+          # The idempotent executor will skip already-tagged versions
+          npx nx affected -t=version --base=origin/main~1 --head=origin/main --skipCommit || true
+
+      - name: Push version tags
+        if: steps.affected.outputs.has_affected == 'true'
+        run: |
+          # Push any unpushed tags that match our pattern
+          git push origin --tags 2>/dev/null || echo "No new tags to push"
+
+      - name: Publish affected libraries (DRY RUN)
+        if: steps.affected.outputs.has_affected == 'true'
+        run: |
+          echo "📦 Publishing affected libraries (DRY RUN)..."
+          npx nx affected -t=publish --base=origin/main~1 --head=origin/main --dryRun=true
+        env:
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      # Uncomment to enable actual publishing after initial setup:
+      # - name: Publish affected libraries
+      #   if: steps.affected.outputs.has_affected == 'true'
+      #   run: npx nx affected -t=publish --base=origin/main~1 --head=origin/main
+      #   env:
+      #     NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+  create-github-release:
+    name: github-release
+    runs-on: ubuntu-latest
+    needs: publish
+    if: github.event.pull_request.merged == true
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+        with:
+          fetch-depth: 0
+
+      - name: Get new version tags
+        id: tags
+        run: |
+          # Get tags created in the last commit (merge commit)
+          TAGS=$(git tag --points-at HEAD 2>/dev/null || echo "")
+
+          if [ -z "$TAGS" ]; then
+            echo "No new version tags found"
+            echo "has_tags=false" >> $GITHUB_OUTPUT
+          else
+            echo "New version tags:"
+            echo "$TAGS"
+            echo "has_tags=true" >> $GITHUB_OUTPUT
+            # Convert newlines to comma-separated list
+            echo "tags=$(echo "$TAGS" | tr '\n' ',' | sed 's/,$//')" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Create GitHub Releases
+        if: steps.tags.outputs.has_tags == 'true'
+        uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
+        with:
+          script: |
+            const tags = '${{ steps.tags.outputs.tags }}'.split(',').filter(Boolean)
+
+            for (const tag of tags) {
+              console.log(`Creating release for ${tag}`)
+
+              try {
+                // Parse project name and version from tag
+                const match = tag.match(/^(.+)@(\d+\.\d+\.\d+.*)$/)
+                if (!match) {
+                  console.log(`Skipping invalid tag format: ${tag}`)
+                  continue
+                }
+
+                const [, projectName, version] = match
+
+                await github.rest.repos.createRelease({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  tag_name: tag,
+                  name: `${projectName} v${version}`,
+                  body: `Release of ${projectName} version ${version}\n\nSee [CHANGELOG](https://github.com/${context.repo.owner}/${context.repo.repo}/blob/main/libs/${projectName.replace('lib-', '')}/CHANGELOG.md) for details.`,
+                  draft: false,
+                  prerelease: version.includes('-'),
+                })
+
+                console.log(`✓ Created release for ${tag}`)
+              } catch (error) {
+                console.log(`⚠ Failed to create release for ${tag}: ${error.message}`)
+              }
+            }

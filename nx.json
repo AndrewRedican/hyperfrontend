@@ -23,9 +23,11 @@
       }
     },
     "version": {
-      "executor": "@jscutlery/semver:version",
+      "executor": "@hyperfrontend/package:version",
       "options": {
-        "preset": "conventional"
+        "preset": "conventionalcommits",
+        "tagPrefix": "{projectName}@",
+        "commitMessageFormat": "chore({projectName}): release version {version}"
       }
     },
     "build": {
@@ -36,6 +38,14 @@
       "outputs": ["{options.outputPath}"],
       "options": {
         "outputPath": "dist/{projectRoot}"
+      }
+    },
+    "publish": {
+      "dependsOn": ["build"],
+      "executor": "@hyperfrontend/package:publish",
+      "options": {
+        "access": "public",
+        "tag": "latest"
       }
     },
     "typecheck": {

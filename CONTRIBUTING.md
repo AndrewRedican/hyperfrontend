@@ -9,6 +9,9 @@ Thank you for your interest in contributing to hyperfrontend! We appreciate your
 - [Development Setup](#development-setup)
 - [Contributor License Agreement (CLA)](#contributor-license-agreement-cla)
 - [Making Changes](#making-changes)
+  - [Building Libraries](#building-libraries)
+  - [Versioning](#versioning-automatic)
+  - [Publishing](#publishing-maintainers)
 - [Submitting a Pull Request](#submitting-a-pull-request)
 - [Coding Standards](#coding-standards)
 - [Commit Message Guidelines](#commit-message-guidelines)
@@ -308,6 +311,53 @@ npx nx affected -t lint
 npx nx affected -t build
 ```
 
+### Building Libraries
+
+Build a single library or all libraries:
+
+```bash
+# Build one library
+npx nx build lib-nexus
+
+# Build all libraries
+npx nx run-many -t build
+
+# Skip cache for clean build
+npx nx build lib-nexus --skip-nx-cache
+```
+
+Output goes to `dist/libs/<library>/` with ESM + CJS formats.
+
+### Versioning (Automatic)
+
+Version bumps happen automatically via a post-commit hook. When you make a commit with a conventional commit message (`feat:`, `fix:`, etc.), the hook:
+
+1. Detects affected libraries
+2. Bumps version and updates CHANGELOG
+3. Amends your commit to include the changes
+
+To manually version (rarely needed):
+
+```bash
+# Preview version changes (dry run)
+npx nx version lib-nexus --dryRun --skipCommit
+
+# Version affected libraries
+npx nx affected -t version --skipCommit
+```
+
+### Publishing (Maintainers)
+
+Publishing happens via CI after PR merge. To test locally:
+
+```bash
+# Dry run (preview)
+npx nx publish lib-nexus --dryRun
+
+# Publish to local Verdaccio for testing
+npx nx publish lib-nexus --registry=http://localhost:4873
+```
+
 ## Submitting a Pull Request
 
 ### Before Submitting
@@ -539,7 +589,7 @@ If you have questions about contributing:
 
 ## License
 
-By contributing to hyperfrontend, you agree that your contributions will be licensed under the project's license as specified in the [LICENSE](LICENSE) file, and you grant the project maintainer the rights specified in the CLA.
+By contributing to hyperfrontend, you agree that your contributions will be licensed under the project's license as specified in the [LICENSE.md](LICENSE.md) file, and you grant the project maintainer the rights specified in the CLA.
 
 ---
 

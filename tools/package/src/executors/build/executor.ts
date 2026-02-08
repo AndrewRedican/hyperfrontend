@@ -1,14 +1,12 @@
-/**
- * Build executor for hyperfrontend library packages.
- */
 import { type ExecutorContext, joinPathFragments, logger } from '@nx/devkit'
 import { existsSync, mkdirSync, rmSync, readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import type { BuildExecutorOptions } from './lib/types'
 import { resolveOutputPath, resolveTsConfigPath } from './lib/paths'
 import { discoverEntryPoints } from './lib/detect'
-import { copyAssets, copyDefaultAssets } from './lib/assets'
+import { copyAssets, copyDefaultAssets, copyFundingAsset } from './lib/assets'
 import { buildUnifiedLibrary, buildBundledOutput } from './lib/build-unified'
+import { hasFunding, readProjectPackageJson } from './lib/package-json'
 
 /**
  * Reads dependencies from package.json and returns all packages that should be external.
@@ -25,16 +23,20 @@ function getExternalDependencies(projectRoot: string): string[] {
 }
 
 /**
- * Main executor function.
+ * Build executor for hyperfrontend library packages.
+ *
+ * Builds TypeScript libraries with automatic entry point discovery and support for:
+ * - Multiple entry points (root, platform-specific, feature-based)
+ * - ESM and CJS output formats
+ * - TypeScript declarations
+ * - Optional UMD/IIFE bundles for CDN distribution
+ * - Asset copying and package.json generation
  *
  * @param options - Build executor options
  * @param context - Nx executor context
  * @returns Success status
  */
-export default async function runExecutor(
-  options: BuildExecutorOptions,
-  context: ExecutorContext
-): Promise<{ success: boolean }> {
+export default async function runExecutor(options: BuildExecutorOptions, context: ExecutorContext): Promise<{ success: boolean }> {
   const { projectName, root: workspaceRoot } = context
 
   if (!projectName) {
@@ -95,28 +97,18 @@ export default async function runExecutor(
   mkdirSync(outputPath, { recursive: true })
 
   try {
-    await buildUnifiedLibrary(
-      projectRoot,
-      outputPath,
-      tsConfigPath,
-      external,
-      workspaceRoot,
-      discovery,
-      shouldBundle
-    )
+    await buildUnifiedLibrary(projectRoot, outputPath, tsConfigPath, external, workspaceRoot, discovery, shouldBundle)
 
     if (shouldBundle && globalName) {
-      await buildBundledOutput(
-        projectRoot,
-        outputPath,
-        tsConfigPath,
-        globalName,
-        workspaceRoot,
-        discovery
-      )
+      await buildBundledOutput(projectRoot, outputPath, tsConfigPath, globalName, workspaceRoot, discovery)
     }
 
     copyDefaultAssets(projectRoot, outputPath, workspaceRoot)
+
+    const srcPkg = readProjectPackageJson(projectRoot)
+    if (hasFunding(srcPkg)) {
+      copyFundingAsset(outputPath, workspaceRoot)
+    }
 
     if (assets.length > 0) {
       await copyAssets(assets, projectRoot, outputPath, workspaceRoot)

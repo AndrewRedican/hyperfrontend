@@ -7,7 +7,7 @@ _Revised: February 8, 2026_
 
 ## Overview
 
-This document outlines the CI/CD integration and deployment strategy for the multi-format build outputs. For technical build architecture details, see [BUILD_SYSTEM_PROGRESS.md](./BUILD_SYSTEM_PROGRESS.md).
+This document outlines the CI/CD integration and deployment strategy for the multi-format build outputs. For technical build architecture details, see [BUILD_SYSTEM.md](./BUILD_SYSTEM.md).
 
 ---
 
@@ -75,6 +75,24 @@ checkout → setup-monorepo → typecheck → build → test → coverage upload
 | Merge to main    | All projects           | `nx run-many -t=build --all`        |
 | Library push     | Single library         | `nx build <lib>` (per-lib workflow) |
 | Release / Manual | All + CDN bundles      | `nx run-many -t=build,bundle --all` |
+
+### Release Workflow (ci-main.yml) ✅
+
+After all CI checks pass on `main`, the `release` job:
+
+1. Versions affected libraries using @jscutlery/semver
+2. Generates/updates CHANGELOG.md for each library
+3. Creates git tags: `{projectName}@{version}`
+4. Pushes commits and tags to `main`
+
+```
+ci-main.yml:
+  setup → format → lint → typecheck → build → test → e2e
+                                                      ↓
+                                                  ci-status (gate)
+                                                      ↓
+                                                   release (if success)
+```
 
 ---
 
@@ -176,8 +194,34 @@ npx nx run lib-nexus:bundle
 
 ---
 
+## Version & Publish Commands
+
+```bash
+# Version a library (bump + changelog)
+npx nx version lib-nexus
+
+# Dry-run version (note: requires extra flags)
+npx nx version lib-nexus --dryRun --skipStage --skipCommit
+
+# Publish to npm
+npx nx publish lib-nexus
+
+# Dry-run publish
+npx nx publish lib-nexus --dryRun
+
+# Publish to local Verdaccio for testing
+npx nx publish lib-nexus --registry=http://localhost:4873
+
+# Affected operations
+npx nx affected -t=version
+npx nx affected -t=publish
+```
+
+---
+
 ## Related Documents
 
-- [BUILD_SYSTEM_PROGRESS.md](./BUILD_SYSTEM_PROGRESS.md) - Technical architecture
-- [BUILD_SYSTEM_TODO.md](./BUILD_SYSTEM_TODO.md) - Implementation tasks
+- [BUILD_SYSTEM.md](./BUILD_SYSTEM.md) - Build system architecture and pending tasks
+- [DEPLOYMENT_PUBLISHING.md](./DEPLOYMENT_PUBLISHING.md) - Publishing workflow
+- [VERDACCIO_TESTING.md](./VERDACCIO_TESTING.md) - Local npm testing
 - [github-workflows-refactoring.md](./github-workflows-refactoring.md) - CI/CD details

@@ -28,8 +28,8 @@
     <img src="https://img.shields.io/github/all-contributors/AndrewRedican/hyperfrontend?color=ee8449&style=flat-square" alt="All Contributors">
   </a>
   <!-- ALL-CONTRIBUTORS-BADGE:END -->
-  <a href="https://github.com/AndrewRedican/hyperfrontend/blob/main/LICENSE">
-    <img src="https://img.shields.io/badge/license-Custom-blue?style=flat-square" alt="License">
+  <a href="https://github.com/AndrewRedican/hyperfrontend/blob/main/LICENSE.md">
+    <img src="https://img.shields.io/badge/license-MIT-blue?style=flat-square" alt="License">
   </a>
 </p>
 
@@ -269,4 +269,4 @@ This project follows the [all-contributors](https://allcontributors.org) specifi
 
 ## License
 
-See [LICENSE](LICENSE) file for details.
+See [LICENSE.md](LICENSE.md) file for details.

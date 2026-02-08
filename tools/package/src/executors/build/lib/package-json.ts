@@ -15,8 +15,16 @@ interface PackageJson {
   module?: string
   types?: string
   exports?: Record<string, unknown>
+  repository?: { type: string; url: string } | string
+  bugs?: { url: string } | string
+  homepage?: string
+  author?: { name: string; email?: string; url?: string } | string
+  funding?: { type: string; url: string } | string
   [key: string]: unknown
 }
+
+/** Fields to inherit from root package.json */
+const INHERITABLE_FIELDS = ['repository', 'bugs', 'homepage', 'author'] as const
 
 /** Export entry for package.json */
 interface ExportEntry {
@@ -34,6 +42,35 @@ interface ExportEntry {
 export function readProjectPackageJson(projectRoot: string): PackageJson {
   const pkgPath = join(projectRoot, 'package.json')
   return readJsonFile<PackageJson>(pkgPath)
+}
+
+/**
+ * Reads and parses the root (workspace) package.json using Nx devkit.
+ *
+ * @param workspaceRoot - Absolute path to the workspace root
+ * @returns Parsed package.json contents
+ */
+export function readRootPackageJson(workspaceRoot: string): PackageJson {
+  const pkgPath = join(workspaceRoot, 'package.json')
+  return readJsonFile<PackageJson>(pkgPath)
+}
+
+/**
+ * Extracts inheritable fields from root package.json.
+ * Fields are only included if they exist in the root package.json.
+ *
+ * @param rootPkg - Root package.json contents
+ * @returns Object with inheritable fields
+ */
+function getInheritableFields(rootPkg: PackageJson): Partial<PackageJson> {
+  const result: Partial<PackageJson> = {}
+  for (const field of INHERITABLE_FIELDS) {
+    if (rootPkg[field] !== undefined) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      ;(result as any)[field] = rootPkg[field]
+    }
+  }
+  return result
 }
 
 /**
@@ -68,9 +105,7 @@ function createExportEntry(outputDir: string): ExportEntry {
  * @param discovery - Entry point discovery result
  * @returns Exports configuration for package.json
  */
-export function generateExportsFromDiscovery(
-  discovery: EntryPointDiscovery
-): Record<string, unknown> {
+export function generateExportsFromDiscovery(discovery: EntryPointDiscovery): Record<string, unknown> {
   const exports: Record<string, unknown> = {
     './package.json': './package.json',
   }
@@ -86,21 +121,28 @@ export function generateExportsFromDiscovery(
 
 /**
  * Generates package.json for a library based on discovered entry points.
+ * Inherits repository, bugs, homepage, and author from root package.json.
+ * For libraries with a root entry point, includes main/module/types fields
+ * for backwards compatibility with older tools.
  *
  * @param srcPkg - Source package.json contents
  * @param outputPath - Absolute path to output directory
  * @param discovery - Entry point discovery result
+ * @param workspaceRoot - Absolute path to workspace root
  * @param includeBundle - Whether to include bundle/CDN fields
  */
 export function generatePackageJsonFromDiscovery(
   srcPkg: PackageJson,
   outputPath: string,
   discovery: EntryPointDiscovery,
+  workspaceRoot: string,
   includeBundle = false
 ): void {
   const exports = generateExportsFromDiscovery(discovery)
 
-  // Add bundle export if bundling is enabled
+  const rootPkg = readRootPackageJson(workspaceRoot)
+  const inheritedFields = getInheritableFields(rootPkg)
+
   if (includeBundle) {
     exports['./bundle'] = {
       import: './bundle/index.umd.min.js',
@@ -108,10 +150,10 @@ export function generatePackageJsonFromDiscovery(
     }
   }
 
-  // If there's a root entry, keep main/module/types for backwards compatibility
   if (discovery.hasRootEntry) {
     const distPkg: PackageJson = {
       ...srcPkg,
+      ...inheritedFields,
       main: './index.cjs.js',
       module: './index.esm.js',
       types: './index.d.ts',
@@ -124,17 +166,25 @@ export function generatePackageJsonFromDiscovery(
     }
     writeOutputPackageJson(outputPath, distPkg)
   } else {
-    // No root entry - remove main/module/types
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { main, module, types, ...rest } = srcPkg
-    void main
-    void module
-    void types
 
     const distPkg: PackageJson = {
       ...rest,
+      ...inheritedFields,
       sideEffects: false,
       exports,
     }
     writeOutputPackageJson(outputPath, distPkg)
   }
+}
+
+/**
+ * Checks if a package has funding configured.
+ *
+ * @param srcPkg - Source package.json contents
+ * @returns True if the package has a funding field
+ */
+export function hasFunding(srcPkg: PackageJson): boolean {
+  return srcPkg.funding !== undefined
 }

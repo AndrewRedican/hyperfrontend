@@ -39,11 +39,7 @@ export async function copyAssets(
  * @param projectRoot - Absolute path to the project root
  * @param outputPath - Absolute path to output directory
  */
-async function copyStringAsset(
-  asset: string,
-  projectRoot: string,
-  outputPath: string
-): Promise<void> {
+async function copyStringAsset(asset: string, projectRoot: string, outputPath: string): Promise<void> {
   const srcPath = join(projectRoot, asset)
   if (existsSync(srcPath)) {
     const destPath = join(outputPath, basename(asset))
@@ -59,14 +55,8 @@ async function copyStringAsset(
  * @param outputPath - Absolute path to output directory
  * @param workspaceRoot - Absolute path to workspace root
  */
-async function copyConfigAsset(
-  asset: AssetConfig,
-  outputPath: string,
-  workspaceRoot: string
-): Promise<void> {
-  const inputDir = asset.input.startsWith('./')
-    ? join(workspaceRoot, asset.input.slice(2))
-    : join(workspaceRoot, asset.input)
+async function copyConfigAsset(asset: AssetConfig, outputPath: string, workspaceRoot: string): Promise<void> {
+  const inputDir = asset.input.startsWith('./') ? join(workspaceRoot, asset.input.slice(2)) : join(workspaceRoot, asset.input)
 
   const pattern = join(inputDir, asset.glob)
   const files = await glob(pattern, { nodir: true })
@@ -80,33 +70,44 @@ async function copyConfigAsset(
 }
 
 /**
- * Copies default assets (README, LICENSE, SECURITY) to output.
+ * Copies default assets (README, LICENSE, SECURITY, CHANGELOG) to output.
  *
  * @param projectRoot - Absolute path to the project root
  * @param outputPath - Absolute path to output directory
  * @param workspaceRoot - Absolute path to workspace root
  */
-export function copyDefaultAssets(
-  projectRoot: string,
-  outputPath: string,
-  workspaceRoot: string
-): void {
-  // Copy README from project
+export function copyDefaultAssets(projectRoot: string, outputPath: string, workspaceRoot: string): void {
   const readmeSrc = join(projectRoot, 'README.md')
   if (existsSync(readmeSrc)) {
     copyFileSync(readmeSrc, join(outputPath, 'README.md'))
   }
 
-  // Copy LICENSE from workspace root
+  const changelogSrc = join(projectRoot, 'CHANGELOG.md')
+  if (existsSync(changelogSrc)) {
+    copyFileSync(changelogSrc, join(outputPath, 'CHANGELOG.md'))
+  }
+
   const licenseSrc = join(workspaceRoot, 'LICENSE.md')
   if (existsSync(licenseSrc)) {
     copyFileSync(licenseSrc, join(outputPath, 'LICENSE.md'))
   }
 
-  // Copy SECURITY from workspace root
   const securitySrc = join(workspaceRoot, 'SECURITY.md')
   if (existsSync(securitySrc)) {
     copyFileSync(securitySrc, join(outputPath, 'SECURITY.md'))
+  }
+}
+
+/**
+ * Copies FUNDING.md from workspace root if the project has funding configured.
+ *
+ * @param outputPath - Absolute path to output directory
+ * @param workspaceRoot - Absolute path to workspace root
+ */
+export function copyFundingAsset(outputPath: string, workspaceRoot: string): void {
+  const fundingSrc = join(workspaceRoot, 'FUNDING.md')
+  if (existsSync(fundingSrc)) {
+    copyFileSync(fundingSrc, join(outputPath, 'FUNDING.md'))
   }
 }
 
@@ -116,5 +117,5 @@ export function copyDefaultAssets(
  * @returns Array of default asset paths relative to their source directories
  */
 export function getDefaultAssetFiles(): readonly string[] {
-  return ['README.md', 'LICENSE.md', 'SECURITY.md'] as const
+  return ['README.md', 'CHANGELOG.md', 'LICENSE.md', 'SECURITY.md'] as const
 }

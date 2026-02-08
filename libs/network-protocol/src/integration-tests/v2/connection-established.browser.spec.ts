@@ -20,9 +20,26 @@ import type { TextMessage, ReceivedPacket } from '../model'
 import { sleep } from '@hyperfrontend/time-utils'
 import { createClient } from './create-client'
 
-describe('Network Protocol V2: Connection Established (Browser)', () => {
-  const PROCESSING_DELAY = 350 // Time to wait for async queue processing (ms)
+/**
+ * Waits for a condition to be true, polling at intervals.
+ * More reliable than fixed delays for async operations.
+ *
+ * @param condition - A function that returns a boolean indicating if the condition is met
+ * @param timeout - Maximum time to wait in milliseconds (default: 2000ms)
+ * @param interval - Time between checks in milliseconds (default: 50ms)
+ * @throws {Error} Error if the condition is not met within the timeout
+ */
+async function waitFor(condition: () => boolean, timeout = 2000, interval = 50): Promise<void> {
+  const start = Date.now()
+  while (!condition()) {
+    if (Date.now() - start > timeout) {
+      throw new Error(`waitFor timed out after ${timeout}ms`)
+    }
+    await sleep(interval)
+  }
+}
 
+describe('Network Protocol V2: Connection Established (Browser)', () => {
   describe('Basic Connection with PSK', () => {
     it('establishes connection between two clients with same PSK', () => {
       const clientA = createClient<TextMessage>('client-a')
@@ -52,8 +69,8 @@ describe('Network Protocol V2: Connection Established (Browser)', () => {
 
       await clientA.send({ type: 'TEXT', content: 'Hello from Client A with PSK!' })
 
-      // Wait for async queue processing
-      await sleep(PROCESSING_DELAY)
+      // Wait for message to be received (condition-based, more reliable than fixed delay)
+      await waitFor(() => receivedMessages.length >= 1)
 
       expect(receivedMessages.length).toBe(1)
       expect(receivedMessages[0].origin).toBe(clientA.id)
@@ -85,7 +102,9 @@ describe('Network Protocol V2: Connection Established (Browser)', () => {
       })
 
       await clientA.send(originalMessage)
-      await sleep(PROCESSING_DELAY)
+
+      // Wait for message to be received (condition-based, more reliable than fixed delay)
+      await waitFor(() => receivedPacket !== null)
 
       expect(receivedPacket).not.toBeNull()
       expect(receivedPacket?.data.message).toEqual(originalMessage)
@@ -108,7 +127,9 @@ describe('Network Protocol V2: Connection Established (Browser)', () => {
       })
 
       await clientA.send({ type: 'TEXT', content: 'Message with custom PSK' })
-      await sleep(PROCESSING_DELAY)
+
+      // Wait for message to be received (condition-based, more reliable than fixed delay)
+      await waitFor(() => receivedMessages.length >= 1)
 
       expect(receivedMessages.length).toBe(1)
       expect(receivedMessages[0].data.message.content).toBe('Message with custom PSK')
