@@ -16,3 +16,8 @@ commit-msg:
     commitlint:
       run: npx commitlint --edit $1
       fail_text: 'Your commit message does not follow the standard conventional commit format. See https://www.conventionalcommits.org/en/v1.0.0/'
+
+# pre-push:
+#   commands:
+#     version:
+#       run: node tools/scripts/post-commit-version.mjs
