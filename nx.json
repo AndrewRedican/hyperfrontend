@@ -25,7 +25,11 @@
     "version": {
       "executor": "@jscutlery/semver:version",
       "options": {
-        "preset": "conventional"
+        "preset": "conventionalcommits",
+        "tagPrefix": "{projectName}@",
+        "commitMessageFormat": "chore({projectName}): release version {version}",
+        "push": true,
+        "postTargets": ["build"]
       }
     },
     "build": {
