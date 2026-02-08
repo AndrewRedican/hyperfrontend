@@ -41,6 +41,7 @@
     "@nx/jest": "22.3.3",
     "@nx/js": "22.3.3",
     "@nx/rollup": "22.3.3",
+    "@rollup/plugin-terser": "0.4.4",
     "@swc-node/register": "1.11.1",
     "@swc/core": "1.15.11",
     "@types/jest": "30.0.0",
