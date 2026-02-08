@@ -14,11 +14,7 @@ import { join, relative } from 'node:path'
  * @param workspaceRoot - Absolute path to workspace root
  * @returns Resolved absolute output path
  */
-export function resolveOutputPath(
-  outputPath: string,
-  projectRelativePath: string,
-  workspaceRoot: string
-): string {
+export function resolveOutputPath(outputPath: string, projectRelativePath: string, workspaceRoot: string): string {
   const resolved = outputPath.replace('{projectRoot}', projectRelativePath)
   return join(workspaceRoot, resolved)
 }
@@ -31,11 +27,7 @@ export function resolveOutputPath(
  * @param workspaceRoot - Absolute path to workspace root
  * @returns Resolved absolute tsconfig path
  */
-export function resolveTsConfigPath(
-  tsConfig: string,
-  projectRelativePath: string,
-  workspaceRoot: string
-): string {
+export function resolveTsConfigPath(tsConfig: string, projectRelativePath: string, workspaceRoot: string): string {
   const resolved = tsConfig.replace('{projectRoot}', projectRelativePath)
   return join(workspaceRoot, resolved)
 }

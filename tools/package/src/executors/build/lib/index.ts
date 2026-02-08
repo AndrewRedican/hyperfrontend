@@ -3,18 +3,8 @@
  *
  * Re-exports all utilities for the build executor.
  */
+export type { AssetConfig, BuildExecutorOptions, BuildContext, EntryPoint, EntryPointCategory, EntryPointDiscovery } from './types'
 
-// Types
-export type {
-  AssetConfig,
-  BuildExecutorOptions,
-  BuildContext,
-  EntryPoint,
-  EntryPointCategory,
-  EntryPointDiscovery,
-} from './types'
-
-// Path utilities
 export {
   resolveOutputPath,
   resolveTsConfigPath,
@@ -25,32 +15,17 @@ export {
   getStandardEntryPath,
 } from './paths'
 
-// Entry point discovery
-export {
-  discoverEntryPoints,
-  getEntryPointsByPlatform,
-  getSharedEntryPoints,
-} from './detect'
+export { discoverEntryPoints, getEntryPointsByPlatform, getSharedEntryPoints } from './detect'
 
-// Asset utilities
-export {
-  copyAssets,
-  copyDefaultAssets,
-  getDefaultAssetFiles,
-} from './assets'
+export { copyAssets, copyDefaultAssets, copyFundingAsset, getDefaultAssetFiles } from './assets'
 
-// Package.json utilities
 export {
   readProjectPackageJson,
+  readRootPackageJson,
   writeOutputPackageJson,
   generateExportsFromDiscovery,
   generatePackageJsonFromDiscovery,
+  hasFunding,
 } from './package-json'
 
-// Library build
-export {
-  buildUnifiedLibrary,
-  createEntryPointRollupConfig,
-  createOutputConfigs,
-  generateDeclarationsUnified,
-} from './build-unified'
+export { buildUnifiedLibrary, createEntryPointRollupConfig, createOutputConfigs, generateDeclarationsUnified } from './build-unified'

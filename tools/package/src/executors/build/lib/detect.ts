@@ -49,17 +49,15 @@ function getSubdirectories(dirPath: string): string[] {
 
 /**
  * Discovers entry points recursively within a directory.
+ * Recursion continues into all subdirectories regardless of whether
+ * they contain an index.ts, to find nested entry points at deeper levels.
  *
  * @param basePath - Absolute path to the base directory (e.g., src/)
  * @param relativePath - Current relative path from src/ (e.g., '', 'browser', 'browser/channel')
  * @param maxDepth - Maximum recursion depth (default: 3)
  * @returns Array of discovered entry points
  */
-function discoverEntryPointsRecursive(
-  basePath: string,
-  relativePath = '',
-  maxDepth = 3
-): EntryPoint[] {
+function discoverEntryPointsRecursive(basePath: string, relativePath = '', maxDepth = 3): EntryPoint[] {
   if (maxDepth <= 0) return []
 
   const currentPath = relativePath ? join(basePath, relativePath) : basePath
@@ -72,15 +70,10 @@ function discoverEntryPointsRecursive(
     const subdirPath = join(currentPath, subdir)
     const subdirRelative = relativePath ? `${relativePath}/${subdir}` : subdir
 
-    // Check if this directory has an index.ts (is an entry point)
     if (hasIndexFile(subdirPath)) {
       const exportPath = `./${subdirRelative}`
       const firstSegment = subdirRelative.split('/')[0] ?? ''
-      const platform = isPlatformDir(subdir)
-        ? subdir
-        : isPlatformDir(firstSegment)
-          ? (firstSegment as PlatformDir)
-          : undefined
+      const platform = isPlatformDir(subdir) ? subdir : isPlatformDir(firstSegment) ? (firstSegment as PlatformDir) : undefined
 
       entries.push({
         exportPath,
@@ -91,8 +84,6 @@ function discoverEntryPointsRecursive(
       })
     }
 
-    // Always recurse into subdirectories to find nested entry points
-    // (e.g., browser/ might not have index.ts but browser/channel/ does)
     const nestedEntries = discoverEntryPointsRecursive(basePath, subdirRelative, maxDepth - 1)
     entries.push(...nestedEntries)
   }
@@ -116,7 +107,6 @@ export function discoverEntryPoints(projectRoot: string): EntryPointDiscovery {
   const srcPath = join(projectRoot, 'src')
   const entryPoints: EntryPoint[] = []
 
-  // Check for root entry point
   const rootIndexPath = join(srcPath, 'index.ts')
   const hasRootEntry = existsSync(rootIndexPath)
 
@@ -129,19 +119,12 @@ export function discoverEntryPoints(projectRoot: string): EntryPointDiscovery {
     })
   }
 
-  // Discover all other entry points
   const discoveredEntries = discoverEntryPointsRecursive(srcPath)
   entryPoints.push(...discoveredEntries)
 
-  // Categorize entries
-  const platformEntries = entryPoints.filter(
-    (e) => !e.isRoot && isPlatformDir(e.srcPath.split('/')[0] ?? '')
-  )
-  const featureEntries = entryPoints.filter(
-    (e) => !e.isRoot && !isPlatformDir(e.srcPath.split('/')[0] ?? '')
-  )
+  const platformEntries = entryPoints.filter((e) => !e.isRoot && isPlatformDir(e.srcPath.split('/')[0] ?? ''))
+  const featureEntries = entryPoints.filter((e) => !e.isRoot && !isPlatformDir(e.srcPath.split('/')[0] ?? ''))
 
-  // Determine category
   const category = categorizeEntryPoints(hasRootEntry, platformEntries, featureEntries)
 
   return {
@@ -161,36 +144,27 @@ export function discoverEntryPoints(projectRoot: string): EntryPointDiscovery {
  * @param featureEntries - Feature module entry points
  * @returns The entry point category
  */
-function categorizeEntryPoints(
-  hasRootEntry: boolean,
-  platformEntries: EntryPoint[],
-  featureEntries: EntryPoint[]
-): EntryPointCategory {
+function categorizeEntryPoints(hasRootEntry: boolean, platformEntries: EntryPoint[], featureEntries: EntryPoint[]): EntryPointCategory {
   const hasPlatformEntries = platformEntries.length > 0
   const hasFeatureEntries = featureEntries.length > 0
   const hasNestedPlatformEntries = platformEntries.some((e) => e.srcPath.includes('/'))
 
-  // Root only
   if (hasRootEntry && !hasPlatformEntries && !hasFeatureEntries) {
     return 'root'
   }
 
-  // Platform only (browser/node at top level)
   if (!hasRootEntry && hasPlatformEntries && !hasFeatureEntries && !hasNestedPlatformEntries) {
     return 'platform'
   }
 
-  // Feature only (multiple features, no platform split)
   if (!hasRootEntry && !hasPlatformEntries && hasFeatureEntries) {
     return 'feature'
   }
 
-  // Complex (nested platform+feature like network-protocol)
   if (hasNestedPlatformEntries) {
     return 'complex'
   }
 
-  // Hybrid (mix of root + platform, root + features, or platform + non-platform features)
   return 'hybrid'
 }
 
@@ -201,10 +175,7 @@ function categorizeEntryPoints(
  * @param platform - Platform to filter by
  * @returns Entry points for the specified platform
  */
-export function getEntryPointsByPlatform(
-  discovery: EntryPointDiscovery,
-  platform: 'browser' | 'node'
-): EntryPoint[] {
+export function getEntryPointsByPlatform(discovery: EntryPointDiscovery, platform: 'browser' | 'node'): EntryPoint[] {
   return discovery.entryPoints.filter((e) => e.platform === platform)
 }
 

@@ -185,14 +185,7 @@ export async function buildBundledOutput(
   const bundlePath = join(outputPath, 'bundle')
   mkdirSync(bundlePath, { recursive: true })
 
-  const rollupConfig = createBundleRollupConfig(
-    rootEntry.inputFile,
-    tsConfigPath,
-    projectRoot,
-    globalName,
-    workspaceRoot,
-    bundlePath
-  )
+  const rollupConfig = createBundleRollupConfig(rootEntry.inputFile, tsConfigPath, projectRoot, globalName, workspaceRoot, bundlePath)
   const outputConfigs = createBundleOutputConfigs(bundlePath, globalName)
 
   const bundle = await rollup(rollupConfig)
@@ -230,14 +223,7 @@ async function buildSingleEntryPoint(
 
   mkdirSync(entryOutputPath, { recursive: true })
 
-  const rollupConfig = createEntryPointRollupConfig(
-    entry.inputFile,
-    tsConfigPath,
-    entryOutputPath,
-    projectRoot,
-    external,
-    entry.isRoot
-  )
+  const rollupConfig = createEntryPointRollupConfig(entry.inputFile, tsConfigPath, entryOutputPath, projectRoot, external, entry.isRoot)
   const outputConfigs = createOutputConfigs(entryOutputPath)
 
   const bundle = await rollup(rollupConfig)
@@ -291,12 +277,7 @@ export function generateDeclarationsUnified(
  * @param workspaceRoot - Absolute path to workspace root
  * @param discovery - Entry point discovery result
  */
-function flattenDeclarationPaths(
-  projectRoot: string,
-  outputPath: string,
-  workspaceRoot: string,
-  discovery: EntryPointDiscovery
-): void {
+function flattenDeclarationPaths(projectRoot: string, outputPath: string, workspaceRoot: string, discovery: EntryPointDiscovery): void {
   const nestedDeclarations = join(outputPath, relative(workspaceRoot, join(projectRoot, 'src')))
 
   if (!existsSync(nestedDeclarations)) return
@@ -365,7 +346,7 @@ export async function buildUnifiedLibrary(
   generateDeclarationsUnified(projectRoot, outputPath, tsConfigPath, workspaceRoot, discovery)
 
   const srcPkg = readProjectPackageJson(projectRoot)
-  generatePackageJsonFromDiscovery(srcPkg, outputPath, discovery, includeBundle)
+  generatePackageJsonFromDiscovery(srcPkg, outputPath, discovery, workspaceRoot, includeBundle)
 
   logger.info('Library build complete')
 }

@@ -1,0 +1,33 @@
+{
+  "$schema": "http://json-schema.org/schema",
+  "type": "object",
+  "title": "Publish executor schema",
+  "description": "Publish library packages to npm registry with dry-run support.",
+  "properties": {
+    "dryRun": {
+      "type": "boolean",
+      "description": "Run in dry-run mode without actually publishing. Shows what would happen.",
+      "default": false
+    },
+    "registry": {
+      "type": "string",
+      "description": "Custom npm registry URL. Defaults to the registry configured in .npmrc or npm config."
+    },
+    "tag": {
+      "type": "string",
+      "description": "NPM dist-tag to publish with (e.g., 'latest', 'next', 'beta').",
+      "default": "latest"
+    },
+    "access": {
+      "type": "string",
+      "description": "Publish access level for scoped packages.",
+      "enum": ["public", "restricted"],
+      "default": "public"
+    },
+    "otp": {
+      "type": "string",
+      "description": "One-time password for npm 2FA."
+    }
+  },
+  "required": []
+}
