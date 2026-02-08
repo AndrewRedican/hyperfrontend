@@ -1,0 +1,27 @@
+name: lib-random-generator-utils
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'libs/utils/random-generator/**'
+      - '.github/workflows/ci-lib-random-generator-utils.yml'
+      - '.github/workflows/_lib-ci.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-lib-random-generator-utils-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  ci:
+    uses: ./.github/workflows/_lib-ci.yml
+    with:
+      project-name: lib-random-generator-utils
+      coverage-path: ./coverage/libs/utils/random-generator/lcov.info
+      coverage-flag: random-generator-utils
+    secrets:
+      CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}

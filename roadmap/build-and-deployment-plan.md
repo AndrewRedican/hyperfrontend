@@ -41,12 +41,39 @@ setup → format → lint → typecheck → test → build → coverage upload
         (all projects)
 ```
 
+### Per-Library Workflows (ci-lib-\*.yml) ✅
+
+Each library has a dedicated workflow that runs on push to `main` when library files change:
+
+```
+checkout → setup-monorepo → typecheck → build → test → coverage upload
+           (single library, path-filtered)
+```
+
+**Architecture**: A reusable workflow template (`_lib-ci.yml`) provides the CI logic, and each library workflow (`ci-lib-<name>.yml`) invokes it with library-specific parameters.
+
+**Libraries with dedicated workflows**:
+
+- lib-cryptography, lib-logging, lib-state-machine, lib-web-worker
+- lib-network-protocol, lib-nexus
+- lib-data-utils, lib-function-utils, lib-immutable-api-utils
+- lib-list-utils, lib-string-utils, lib-time-utils
+- lib-random-generator-utils, lib-ui-utils
+
+**Benefits**:
+
+- Per-library build status badges show granular health
+- Path-filtered triggers reduce unnecessary CI runs
+- Isolated coverage reporting per library via Codecov flags
+- Clear ownership and visibility for library maintainers
+
 ### Build Strategy by Trigger
 
 | Trigger          | Scope                  | Command                             |
 | ---------------- | ---------------------- | ----------------------------------- |
 | Pull Request     | Affected projects only | `nx affected -t=build`              |
 | Merge to main    | All projects           | `nx run-many -t=build --all`        |
+| Library push     | Single library         | `nx build <lib>` (per-lib workflow) |
 | Release / Manual | All + CDN bundles      | `nx run-many -t=build,bundle --all` |
 
 ---
@@ -96,15 +123,28 @@ jobs:
 
 ---
 
-## Badge Integration
+## Badge Integration ✅
 
-Add build status badge to README.md:
+### Two-Tier Badge Strategy
+
+**Repository root** (`README.md`): Uses `ci-main.yml` for overall project health.
 
 ```markdown
 <a href="https://github.com/AndrewRedican/hyperfrontend/actions/workflows/ci-main.yml">
   <img src="https://img.shields.io/github/actions/workflow/status/AndrewRedican/hyperfrontend/ci-main.yml?style=flat-square&logo=github&label=build" alt="Build Status">
 </a>
 ```
+
+**Individual libraries** (`libs/*/README.md`): Each uses its own `ci-lib-<name>.yml` workflow.
+
+```markdown
+<!-- Example: libs/nexus/README.md -->
+<a href="https://github.com/AndrewRedican/hyperfrontend/actions/workflows/ci-lib-nexus.yml">
+  <img src="https://img.shields.io/github/actions/workflow/status/AndrewRedican/hyperfrontend/ci-lib-nexus.yml?style=flat-square&logo=github&label=build" alt="Build">
+</a>
+```
+
+This approach provides accurate per-library health indicators while maintaining a holistic project status at the repository level.
 
 ---
 

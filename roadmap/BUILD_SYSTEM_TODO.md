@@ -47,7 +47,17 @@ Add self-contained bundle generation for CDN distribution (lib-nexus, lib-networ
 
 ## Phase 4: CI/CD Integration
 
-### 4.1 Build badge added to README.md ✅
+### 4.1 Per-library build badges ✅
+
+Implemented two-tier badge strategy:
+
+- **Root README**: Badge links to `ci-main.yml` for overall project health
+- **Library READMEs**: Each links to its own `ci-lib-<name>.yml` workflow
+
+Added 15 new workflow files:
+
+- `_lib-ci.yml` — reusable workflow template
+- `ci-lib-*.yml` — per-library workflow callers (14 libraries)
 
 ### 4.2 Update workflows
 

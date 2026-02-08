@@ -1,0 +1,27 @@
+name: lib-nexus
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'libs/nexus/**'
+      - '.github/workflows/ci-lib-nexus.yml'
+      - '.github/workflows/_lib-ci.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-lib-nexus-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  ci:
+    uses: ./.github/workflows/_lib-ci.yml
+    with:
+      project-name: lib-nexus
+      coverage-path: ./coverage/libs/nexus/lcov.info
+      coverage-flag: nexus
+    secrets:
+      CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}

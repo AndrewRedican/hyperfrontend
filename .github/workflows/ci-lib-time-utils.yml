@@ -1,0 +1,27 @@
+name: lib-time-utils
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'libs/utils/time/**'
+      - '.github/workflows/ci-lib-time-utils.yml'
+      - '.github/workflows/_lib-ci.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-lib-time-utils-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  ci:
+    uses: ./.github/workflows/_lib-ci.yml
+    with:
+      project-name: lib-time-utils
+      coverage-path: ./coverage/libs/utils/time/lcov.info
+      coverage-flag: time-utils
+    secrets:
+      CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
