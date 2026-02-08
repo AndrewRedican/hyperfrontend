@@ -6,7 +6,12 @@
   "projectType": "library",
   "tags": [],
   "targets": {
-    "build": {},
+    "build": {
+      "options": {
+        "bundle": true,
+        "globalName": "HyperfrontendNexus"
+      }
+    },
     "typecheck": {}
   }
 }
