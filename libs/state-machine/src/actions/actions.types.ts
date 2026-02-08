@@ -1,6 +1,6 @@
 export const START = 'process started'
 
-export const SUCCESS = 'process completed succesfully'
+export const SUCCESS = 'process completed successfully'
 
 export const FAIL = 'process failed'
 

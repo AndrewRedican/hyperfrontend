@@ -262,7 +262,7 @@ coordinator.cancelAll()
 - `@hyperfrontend/state-machine/events` - Event system
 - `@hyperfrontend/state-machine/async-operation` - Async operation wrapper
 - `@hyperfrontend/state-machine/coordinated-async-operation` - Multi-process coordination
-- `@hyperfrontend/state-machine/lifecyle-aware-component` - Lifecycle component base class
+- `@hyperfrontend/state-machine/lifecycle-aware-component` - Lifecycle component base class
 - `@hyperfrontend/state-machine/models` - TypeScript types and interfaces
 
 ## License

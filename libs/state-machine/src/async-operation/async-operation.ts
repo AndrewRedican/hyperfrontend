@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { Events } from '../events/events'
 import type { Event, DerivedState } from '../models'
 import { start, cancel, pause, success, fail } from '../actions/actions'
@@ -13,8 +12,8 @@ export class AsyncOperation {
     this.events = new Events()
   }
 
-  public readonly start = async (...args: any[]): Promise<void> => {
-    this.events.dispatch(start(...args))
+  public readonly start = async (): Promise<void> => {
+    this.events.dispatch(start())
     try {
       await this.process()
       this.events.dispatch(success())
@@ -23,12 +22,12 @@ export class AsyncOperation {
     }
   }
 
-  public readonly cancel = (...args: any[]): void => {
-    this.events.dispatch(cancel(...args))
+  public readonly cancel = (): void => {
+    this.events.dispatch(cancel())
   }
 
-  public readonly pause = (...args: any[]): void => {
-    this.events.dispatch(pause(...args))
+  public readonly pause = (): void => {
+    this.events.dispatch(pause())
   }
 
   public readonly on = (event: Event, handler: (event: Event, current: DerivedState, previous: DerivedState) => void): void => {

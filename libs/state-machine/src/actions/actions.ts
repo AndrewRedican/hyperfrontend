@@ -1,12 +1,12 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import * as types from './actions.types'
 
-export const start = (...args: any[]) => ({ ...args, type: types.START })
+export const start = <T = void>(payload?: T) => ({ type: types.START, payload })
 
-export const cancel = (...args: any[]) => ({ ...args, type: types.CANCEL })
+export const cancel = <T = void>(payload?: T) => ({ type: types.CANCEL, payload })
 
-export const pause = (...args: any[]) => ({ ...args, type: types.PAUSE })
+export const pause = <T = void>(payload?: T) => ({ type: types.PAUSE, payload })
 
-export const success = (...args: any[]) => ({ ...args, type: types.SUCCESS })
+export const success = <T = void>(payload?: T) => ({ type: types.SUCCESS, payload })
 
-export const fail = (...args: any[]) => ({ ...args, type: types.FAIL })
+export const fail = (error?: Error | string | any) => ({ type: types.FAIL, error })
