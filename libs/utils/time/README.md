@@ -7,6 +7,14 @@
   <a href="https://codecov.io/gh/AndrewRedican/hyperfrontend/flags?flags%5B0%5D=time-utils">
     <img src="https://codecov.io/gh/AndrewRedican/hyperfrontend/graph/badge.svg?flag=time-utils" alt="Coverage">
   </a>
+  <!-- ALL-CONTRIBUTORS-BADGE:START - Do not remove or modify this section -->
+  <a href="#contributors">
+    <img src="https://img.shields.io/github/all-contributors/AndrewRedican/hyperfrontend?color=ee8449&style=flat-square" alt="All Contributors">
+  </a>
+  <!-- ALL-CONTRIBUTORS-BADGE:END -->
+  <a href="https://github.com/AndrewRedican/hyperfrontend/blob/main/LICENSE.md">
+    <img src="https://img.shields.io/badge/license-MIT-blue?style=flat-square" alt="License">
+  </a>
 </p>
 
 Functional time utilities for async operations, intervals, and time normalization.
