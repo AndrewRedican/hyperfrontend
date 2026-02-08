@@ -5,7 +5,7 @@
 import { logger } from '@nx/devkit'
 import { existsSync, mkdirSync, cpSync, rmSync } from 'node:fs'
 import { execFileSync } from 'node:child_process'
-import { dirname, join, relative } from 'node:path'
+import { dirname, join, relative, resolve } from 'node:path'
 import { rollup, type RollupOptions, type OutputOptions, type RollupLog } from 'rollup'
 
 import nodeResolve from '@rollup/plugin-node-resolve'
@@ -260,11 +260,21 @@ export function generateDeclarationsUnified(
 
   logger.info('Generating TypeScript declarations...')
 
-  execFileSync(
-    'npx',
-    ['tsc', '--project', tsConfigPath, '--emitDeclarationOnly', '--declaration', '--declarationMap', '--outDir', outputPath],
-    { stdio: 'inherit', cwd: projectRoot }
-  )
+  // Use local tsc binary directly instead of npx to avoid race conditions in parallel builds
+  const tscPath = resolve(workspaceRoot, 'node_modules', '.bin', 'tsc')
+
+  try {
+    execFileSync(
+      tscPath,
+      ['--project', tsConfigPath, '--emitDeclarationOnly', '--declaration', '--declarationMap', '--outDir', outputPath],
+      { cwd: projectRoot, encoding: 'utf-8', maxBuffer: 10 * 1024 * 1024 }
+    )
+  } catch (error) {
+    const err = error as Error & { stdout?: string; stderr?: string }
+    if (err.stderr) logger.error(err.stderr)
+    if (err.stdout) logger.error(err.stdout)
+    throw error
+  }
 
   flattenDeclarationPaths(projectRoot, outputPath, workspaceRoot, discovery)
 }
