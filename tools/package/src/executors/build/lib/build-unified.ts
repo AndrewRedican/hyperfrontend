@@ -17,7 +17,7 @@
  */
 import { logger } from '@nx/devkit'
 import { existsSync, mkdirSync, cpSync, rmSync } from 'node:fs'
-import { execSync } from 'node:child_process'
+import { execFileSync } from 'node:child_process'
 import { dirname, join, relative } from 'node:path'
 import { rollup, type RollupOptions, type OutputOptions, type RollupLog } from 'rollup'
 
@@ -327,13 +327,17 @@ export function generateDeclarationsUnified(
 
   logger.info('Generating TypeScript declarations...')
 
-  execSync(
-    `npx tsc --project ${tsConfigPath} --emitDeclarationOnly --declaration --declarationMap --outDir ${outputPath}`,
-    {
-      stdio: 'inherit',
-      cwd: projectRoot,
-    }
-  )
+  execFileSync('npx', [
+    'tsc',
+    '--project', tsConfigPath,
+    '--emitDeclarationOnly',
+    '--declaration',
+    '--declarationMap',
+    '--outDir', outputPath
+  ], {
+    stdio: 'inherit',
+    cwd: projectRoot,
+  })
 
   flattenDeclarationPaths(projectRoot, outputPath, workspaceRoot, discovery)
 }
