@@ -3,7 +3,7 @@ import type { DecryptionQueueCreater } from '../model'
 import { isValidUnserializedEncryptedPacket, isValidUnencryptedPacket } from '../../packet/validations'
 import { isValidQueueCreaterArguments } from '../validations'
 import { getValidationError } from '../utils'
-import { createQueue } from '../creators'
+import { createQueue } from './create-queue'
 
 export const createDecryptionQueue: DecryptionQueueCreater = (label, packetDecryption, logger, onSuccess, onFail) => {
   const validity = isValidQueueCreaterArguments({

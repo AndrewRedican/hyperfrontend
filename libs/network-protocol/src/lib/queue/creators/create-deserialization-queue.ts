@@ -3,7 +3,7 @@ import type { DeserializationQueueCreater } from '../model'
 import { isValidSerializedEncryptedPacket, isValidUnserializedEncryptedPacket } from '../../packet/validations'
 import { isValidQueueCreaterArguments } from '../validations'
 import { getValidationError } from '../utils'
-import { createQueue } from '../creators'
+import { createQueue } from './create-queue'
 
 export const createDeserializationQueue: DeserializationQueueCreater = (label, packetDeserialization, logger, onSuccess, onFail) => {
   const validity = isValidQueueCreaterArguments({
