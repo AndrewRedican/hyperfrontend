@@ -278,7 +278,7 @@ jobs:
   ci-status:
     name: status
     runs-on: ubuntu-latest
-    needs: [format, lint, build, test, e2e]
+    needs: [format, lint, typecheck, build, test, e2e]
     if: always()
     steps:
       - name: Check CI status
@@ -286,6 +286,7 @@ jobs:
           # Check if any required job failed
           if [ "${{ needs.format.result }}" = "failure" ] || \
              [ "${{ needs.lint.result }}" = "failure" ] || \
+             [ "${{ needs.typecheck.result }}" = "failure" ] || \
              [ "${{ needs.build.result }}" = "failure" ] || \
              [ "${{ needs.test.result }}" = "failure" ] || \
              [ "${{ needs.e2e.result }}" = "failure" ]; then
