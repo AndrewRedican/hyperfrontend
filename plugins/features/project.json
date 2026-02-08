@@ -5,5 +5,10 @@
   "sourceRoot": "{projectRoot}/src",
   "projectType": "library",
   "tags": [],
-  "targets": {}
+  "targets": {
+    "version": {},
+    "build": {},
+    "publish": {},
+    "typecheck": {}
+  }
 }
