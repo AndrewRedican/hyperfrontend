@@ -1,8 +1,8 @@
 # @hyperfrontend/network-protocol
 
 <p align="center">
-  <a href="https://codecov.io/gh/AndrewRedican/hyperfrontend">
-    <img src="https://img.shields.io/codecov/c/github/AndrewRedican/hyperfrontend?flag=network-protocol&style=flat-square&logo=codecov" alt="Coverage">
+  <a href="https://codecov.io/gh/AndrewRedican/hyperfrontend/flags?flags%5B0%5D=network-protocol">
+    <img src="https://codecov.io/gh/AndrewRedican/hyperfrontend/graph/badge.svg?flag=network-protocol" alt="Coverage">
   </a>
 </p>
 

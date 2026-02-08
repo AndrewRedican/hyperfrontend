@@ -2,6 +2,7 @@
   "name": "@hyperfrontend/cryptography",
   "version": "0.0.0",
   "description": "Cryptography utilities for browser and Node.js environments.",
+  "license": "MIT",
   "sideEffects": false,
   "exports": {
     "./browser": "./src/browser/index.js",

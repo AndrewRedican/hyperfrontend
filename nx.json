@@ -30,35 +30,23 @@
     },
     "build": {
       "cache": true,
-      "inputs": ["default"],
-      "executor": "@nx/rollup:rollup",
+      "dependsOn": ["^build"],
+      "inputs": ["default", "^default"],
+      "executor": "@hyperfrontend/package:build",
       "outputs": ["{options.outputPath}"],
       "options": {
-        "project": "{projectRoot}/package.json",
-        "main": "{projectRoot}/src/index.ts",
-        "outputPath": "dist/{projectRoot}",
-        "tsConfig": "{projectRoot}/tsconfig.lib.json",
-        "format": ["cjs", "esm"],
-        "external": "none",
-        "assets": [
-          {
-            "input": "./{projectRoot}",
-            "glob": "*.md",
-            "output": "./"
-          },
-          {
-            "input": "./",
-            "glob": "LICENSE.md",
-            "output": "./"
-          },
-          {
-            "input": "./",
-            "glob": "CONTRIBUTORS.md",
-            "output": "./"
-          }
-        ],
-        "generateExportsField": true
+        "outputPath": "dist/{projectRoot}"
       }
+    },
+    "typecheck": {
+      "cache": true,
+      "inputs": ["default", "^default"],
+      "executor": "@hyperfrontend/package:typecheck"
+    },
+    "@nx/js:tsc": {
+      "cache": true,
+      "dependsOn": ["^build"],
+      "inputs": ["production", "^production"]
     }
   },
   "namedInputs": {

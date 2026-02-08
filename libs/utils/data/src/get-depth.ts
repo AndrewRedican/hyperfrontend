@@ -1,5 +1,5 @@
 import { traverse } from './traverse'
-import type { Callback, Options } from './models'
+import type { Callback, DepthConfig } from './models'
 
 /**
  * Returns the total depth of a value's data structure,
@@ -20,7 +20,7 @@ export const getDepth = (target: unknown): [number, string[][]] => {
       state.locations.push(path)
     }
   }
-  const options: Options = { depth: [0, '*'] }
+  const options: DepthConfig = { depth: [0, '*'] }
   const state = { depth: 0, locations: [] }
   const { depth, locations } = traverse(target, trackDepth, options, state)
   return [depth, locations]

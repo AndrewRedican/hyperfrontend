@@ -1,8 +1,8 @@
 # @hyperfrontend/random-generator-utils
 
 <p align="center">
-  <a href="https://codecov.io/gh/AndrewRedican/hyperfrontend">
-    <img src="https://img.shields.io/codecov/c/github/AndrewRedican/hyperfrontend?flag=random-generator-utils&style=flat-square&logo=codecov" alt="Coverage">
+  <a href="https://codecov.io/gh/AndrewRedican/hyperfrontend/flags?flags%5B0%5D=random-generator-utils">
+    <img src="https://codecov.io/gh/AndrewRedican/hyperfrontend/graph/badge.svg?flag=random-generator-utils" alt="Coverage">
   </a>
 </p>
 

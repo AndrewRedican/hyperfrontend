@@ -1,8 +1,8 @@
 # @hyperfrontend/logging
 
 <p align="center">
-  <a href="https://codecov.io/gh/AndrewRedican/hyperfrontend">
-    <img src="https://img.shields.io/codecov/c/github/AndrewRedican/hyperfrontend?flag=logging&style=flat-square&logo=codecov" alt="Coverage">
+  <a href="https://codecov.io/gh/AndrewRedican/hyperfrontend/flags?flags%5B0%5D=logging">
+    <img src="https://codecov.io/gh/AndrewRedican/hyperfrontend/graph/badge.svg?flag=logging" alt="Coverage">
   </a>
 </p>
 

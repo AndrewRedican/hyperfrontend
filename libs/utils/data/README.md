@@ -1,8 +1,8 @@
 # @hyperfrontend/data-utils
 
 <p align="center">
-  <a href="https://codecov.io/gh/AndrewRedican/hyperfrontend">
-    <img src="https://img.shields.io/codecov/c/github/AndrewRedican/hyperfrontend?flag=data-utils&style=flat-square&logo=codecov" alt="Coverage">
+  <a href="https://codecov.io/gh/AndrewRedican/hyperfrontend/flags?flags%5B0%5D=data-utils">
+    <img src="https://codecov.io/gh/AndrewRedican/hyperfrontend/graph/badge.svg?flag=data-utils" alt="Coverage">
   </a>
 </p>
 

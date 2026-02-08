@@ -10,7 +10,7 @@ We take the security of hyperfrontend seriously. If you discover a security vuln
 
 Instead, please report security vulnerabilities directly via email to:
 
-**andrew.redican.mejia@gmail.com**
+**<andrew.redican.mejia@gmail.com>**
 
 ### What to Include
 

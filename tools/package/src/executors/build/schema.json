@@ -1,0 +1,42 @@
+{
+  "$schema": "http://json-schema.org/schema",
+  "type": "object",
+  "title": "Build executor schema",
+  "description": "Unified build executor for hyperfrontend library packages. Auto-detects library type (standard vs isomorphic) and applies the appropriate build strategy.",
+  "properties": {
+    "outputPath": {
+      "type": "string",
+      "description": "Output directory for the built package. Defaults to dist/{projectRoot}."
+    },
+    "tsConfig": {
+      "type": "string",
+      "description": "Path to the TypeScript configuration file. Defaults to {projectRoot}/tsconfig.lib.json."
+    },
+    "assets": {
+      "type": "array",
+      "description": "Additional assets to copy to the output directory.",
+      "items": {
+        "oneOf": [
+          { "type": "string" },
+          {
+            "type": "object",
+            "properties": {
+              "input": { "type": "string", "description": "Input directory (relative to workspace root)" },
+              "glob": { "type": "string", "description": "Glob pattern to match files" },
+              "output": { "type": "string", "description": "Output directory (relative to outputPath)" }
+            },
+            "required": ["input", "glob", "output"]
+          }
+        ]
+      },
+      "default": []
+    },
+    "external": {
+      "type": "array",
+      "description": "External dependencies to exclude from the bundle.",
+      "items": { "type": "string" },
+      "default": []
+    }
+  },
+  "required": []
+}

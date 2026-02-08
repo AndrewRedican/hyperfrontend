@@ -7,7 +7,7 @@ import type {
   TraverseConfig,
   Condition,
   Callback,
-  Options,
+  DepthConfig,
 } from './models'
 import { referenceStack } from './reference-stack'
 import { getConfig } from './shared/consts'
@@ -113,6 +113,6 @@ const traverseBetweenDepthRange = createTraversal(condition)
 export const traverse = <T = unknown, S extends Record<string, unknown> = Record<string, unknown>>(
   target: T,
   callback: Callback,
-  options?: Options,
+  options?: DepthConfig,
   state?: S
 ): S => traverseBetweenDepthRange(target, callback, options, state)

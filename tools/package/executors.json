@@ -1,0 +1,14 @@
+{
+  "executors": {
+    "build": {
+      "implementation": "./src/executors/build/executor",
+      "schema": "./src/executors/build/schema.json",
+      "description": "Build library packages with automatic detection of standard vs isomorphic structure."
+    },
+    "typecheck": {
+      "implementation": "./src/executors/typecheck/executor",
+      "schema": "./src/executors/typecheck/schema.json",
+      "description": "Run TypeScript type checking without emitting files."
+    }
+  }
+}

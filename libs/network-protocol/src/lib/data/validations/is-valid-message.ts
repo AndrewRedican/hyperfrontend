@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import type { Callback, Options } from '@hyperfrontend/data-utils'
+import type { Callback, DepthConfig } from '@hyperfrontend/data-utils'
 import { getType } from '@hyperfrontend/data-utils'
 import { traverse } from '@hyperfrontend/data-utils'
 
@@ -27,7 +27,7 @@ function isValidCondition(data: unknown): boolean {
  */
 export function isValidMessage<T = any>(message: T): boolean {
   /* istanbul ignore next - options always initialized, line reported incorrectly by coverage tool */
-  const options: Options = { depth: [0, '*'] }
+  const options: DepthConfig = { depth: [0, '*'] }
   const state: State = { valid: true }
   const callback: Callback = (key, value, path, state) => {
     if (!state.valid) return

@@ -1,4 +1,4 @@
-import type { Callback, Options } from './models'
+import type { Callback, DepthConfig } from './models'
 import { traverse } from './traverse'
 import { getType } from './get-type'
 import { isIterableType } from './is-iterable-type'
@@ -16,7 +16,7 @@ import { getIterableOperators } from './get-iterable-operators'
  * @param options - Optional configuration to control traversal depth
  * @returns An array of paths to locations where text was replaced
  */
-export const replaceText = (target: unknown, pattern: string | RegExp, text: string, options?: Options): string[][] => {
+export const replaceText = (target: unknown, pattern: string | RegExp, text: string, options?: DepthConfig): string[][] => {
   const patternIsString = typeof pattern === 'string'
   if (!patternIsString && !(pattern instanceof RegExp)) throw new Error('Expected pattern to be either a string of a regular expression.')
   if (typeof text !== 'string') throw new Error('Expected name to be a string.')
@@ -28,10 +28,10 @@ export const replaceText = (target: unknown, pattern: string | RegExp, text: str
     const { getKeys, read, write } = getIterableOperators(type)
     getKeys(value).forEach((nextKey) => {
       const nextValue = read(value, nextKey)
-      if (getType(nextValue) !== 'string' || !match(nextValue)) return
-      write(value, replace(nextValue), nextKey)
+      if (getType(nextValue) !== 'string' || !match(<string>nextValue)) return
+      write(value, replace(<string>nextValue), nextKey)
       state.locations.push([...path, nextKey])
     })
   }
-  return traverse(target, callback, { depth: [0, '*'], ...options } as Options, { locations: [] }).locations
+  return traverse(target, callback, { depth: [0, '*'], ...options } as DepthConfig, { locations: [] }).locations
 }

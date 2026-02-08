@@ -6,10 +6,7 @@ export default <Config>{
   moduleFileExtensions: ['ts', 'js', 'html'],
   coverageDirectory: '../../coverage/libs/nexus',
   testEnvironment: 'jsdom',
-  setupFilesAfterEnv: ['<rootDir>/jest.setup-after-env.ts'],
-  transform: {
-    '^.+\\.ts$': ['<rootDir>/jest.transformer.js', { tsconfig: '<rootDir>/tsconfig.spec.json' }],
-  },
+  setupFilesAfterEnv: ['<rootDir>/jest.setup.ts'],
   coveragePathIgnorePatterns: [
     '/node_modules/',
     'src/types/broker.ts',

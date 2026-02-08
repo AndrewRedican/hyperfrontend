@@ -1,8 +1,8 @@
 # @hyperfrontend/web-worker
 
 <p align="center">
-  <a href="https://codecov.io/gh/AndrewRedican/hyperfrontend">
-    <img src="https://img.shields.io/codecov/c/github/AndrewRedican/hyperfrontend?flag=web-worker&style=flat-square&logo=codecov" alt="Coverage">
+  <a href="https://codecov.io/gh/AndrewRedican/hyperfrontend/flags?flags%5B0%5D=web-worker">
+    <img src="https://codecov.io/gh/AndrewRedican/hyperfrontend/graph/badge.svg?flag=web-worker" alt="Coverage">
   </a>
 </p>
 

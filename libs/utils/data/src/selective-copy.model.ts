@@ -1,13 +1,13 @@
 import type { DataType } from './models'
 
-export type Predicate = <T extends DataType = DataType>(target: unknown, path: string[], key: string, dataType: T) => boolean
+export type SelectiveCopyPredicate = <T extends DataType = DataType>(target: unknown, path: string[], key: string, dataType: T) => boolean
 
 export type DataPointOperation = <T extends DataType = DataType>(target: unknown, path: string[], key: string, dataType: T) => void
 
 /**
  * Settings used to determine what to copy.
  */
-export interface Options {
+export interface SelectiveCopyOptions {
   /** Set flag true to ignore all functions. */
   skipFunctions?: boolean
   /** A list of top-level properties that should be included. */
@@ -15,9 +15,9 @@ export interface Options {
   /** A list of top-level properties that should be excluded. */
   excludeKeys?: string[]
   /** A condition that is evaluated to determine if data point should be included. */
-  include?: Predicate
+  include?: SelectiveCopyPredicate
   /** A condition that is evaluated to determine if data point should be excluded. */
-  exclude?: Predicate
+  exclude?: SelectiveCopyPredicate
 }
 
 export interface DataPoint {
@@ -27,7 +27,7 @@ export interface DataPoint {
   dataType: DataType
 }
 
-export interface CircularReference {
+export interface ReferenceLoop {
   startPath: string[]
   destinationPath: string[]
 }

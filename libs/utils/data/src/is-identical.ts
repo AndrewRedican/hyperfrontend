@@ -24,7 +24,7 @@ const isIdenticalRecursive = (targetA: UnknownIterable, targetB: UnknownIterable
   const keyCount = keys.length
   for (let i = 0; i < keyCount; i += 1) {
     const key = keys[i]
-    if (!isIdenticalRecursive(read(targetA, key), read(targetB, key))) return false
+    if (!isIdenticalRecursive(<UnknownIterable>read(targetA, key), <UnknownIterable>read(targetB, key))) return false
   }
   return true
 }
@@ -72,9 +72,9 @@ const isIdenticalForCircularReferencesRecursive = (
   const keys = getKeys(targetA)
   const keyCount = keys.length
   for (let i = 0; i < keyCount; i += 1) {
-    const key = keys[i] as UnknownIterableKey
-    const nextA = read(targetA, key)
-    const nextB = read(targetB, key)
+    const key = <UnknownIterableKey>keys[i]
+    const nextA = <UnknownIterable>read(targetA, key)
+    const nextB = <UnknownIterable>read(targetB, key)
     const aHasCircularRef = stacks[0].exists(nextA)
     const bHasCircularRef = stacks[1].exists(nextB)
     if (aHasCircularRef !== bHasCircularRef) {

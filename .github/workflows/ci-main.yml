@@ -58,6 +58,23 @@ jobs:
           check-type: lint
           affected-only: 'false'
 
+  typecheck:
+    name: typecheck
+    runs-on: ubuntu-latest
+    needs: setup
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+
+      - name: Setup monorepo
+        uses: ./.github/actions/setup-monorepo
+
+      - name: Run typecheck
+        uses: ./.github/actions/run-checks
+        with:
+          check-type: typecheck
+          affected-only: 'false'
+
   build:
     name: build
     runs-on: ubuntu-latest
@@ -107,15 +124,139 @@ jobs:
           path: coverage/
           retention-days: 30
 
-      - name: Upload coverage to Codecov
+      - name: Upload overall coverage to Codecov
         if: always()
         uses: codecov/codecov-action@e28ff129e5465c2c0dcc6f003fc735cb6ae0c673 # v5.0.7
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           directory: ./coverage
-          flags: cryptography,logging,network-protocol,nexus,state-machine,web-worker,data-utils,function-utils,immutable-api-utils,list-utils,random-generator-utils,string-utils,time-utils,ui-utils
           fail_ci_if_error: false
-          verbose: true
+
+      - name: Upload cryptography coverage to Codecov
+        if: always()
+        uses: codecov/codecov-action@e28ff129e5465c2c0dcc6f003fc735cb6ae0c673 # v5.0.7
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: ./coverage/libs/cryptography/lcov.info
+          flags: cryptography
+          fail_ci_if_error: false
+
+      - name: Upload logging coverage to Codecov
+        if: always()
+        uses: codecov/codecov-action@e28ff129e5465c2c0dcc6f003fc735cb6ae0c673 # v5.0.7
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: ./coverage/libs/logging/lcov.info
+          flags: logging
+          fail_ci_if_error: false
+
+      - name: Upload network-protocol coverage to Codecov
+        if: always()
+        uses: codecov/codecov-action@e28ff129e5465c2c0dcc6f003fc735cb6ae0c673 # v5.0.7
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: ./coverage/libs/network-protocol/lcov.info
+          flags: network-protocol
+          fail_ci_if_error: false
+
+      - name: Upload nexus coverage to Codecov
+        if: always()
+        uses: codecov/codecov-action@e28ff129e5465c2c0dcc6f003fc735cb6ae0c673 # v5.0.7
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: ./coverage/libs/nexus/lcov.info
+          flags: nexus
+          fail_ci_if_error: false
+
+      - name: Upload state-machine coverage to Codecov
+        if: always()
+        uses: codecov/codecov-action@e28ff129e5465c2c0dcc6f003fc735cb6ae0c673 # v5.0.7
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: ./coverage/libs/state-machine/lcov.info
+          flags: state-machine
+          fail_ci_if_error: false
+
+      - name: Upload web-worker coverage to Codecov
+        if: always()
+        uses: codecov/codecov-action@e28ff129e5465c2c0dcc6f003fc735cb6ae0c673 # v5.0.7
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: ./coverage/libs/web-worker/lcov.info
+          flags: web-worker
+          fail_ci_if_error: false
+
+      - name: Upload data-utils coverage to Codecov
+        if: always()
+        uses: codecov/codecov-action@e28ff129e5465c2c0dcc6f003fc735cb6ae0c673 # v5.0.7
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: ./coverage/libs/utils/data/lcov.info
+          flags: data-utils
+          fail_ci_if_error: false
+
+      - name: Upload function-utils coverage to Codecov
+        if: always()
+        uses: codecov/codecov-action@e28ff129e5465c2c0dcc6f003fc735cb6ae0c673 # v5.0.7
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: ./coverage/libs/utils/function/lcov.info
+          flags: function-utils
+          fail_ci_if_error: false
+
+      - name: Upload immutable-api-utils coverage to Codecov
+        if: always()
+        uses: codecov/codecov-action@e28ff129e5465c2c0dcc6f003fc735cb6ae0c673 # v5.0.7
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: ./coverage/libs/utils/immutable-api/lcov.info
+          flags: immutable-api-utils
+          fail_ci_if_error: false
+
+      - name: Upload list-utils coverage to Codecov
+        if: always()
+        uses: codecov/codecov-action@e28ff129e5465c2c0dcc6f003fc735cb6ae0c673 # v5.0.7
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: ./coverage/libs/utils/list/lcov.info
+          flags: list-utils
+          fail_ci_if_error: false
+
+      - name: Upload random-generator-utils coverage to Codecov
+        if: always()
+        uses: codecov/codecov-action@e28ff129e5465c2c0dcc6f003fc735cb6ae0c673 # v5.0.7
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: ./coverage/libs/utils/random-generator/lcov.info
+          flags: random-generator-utils
+          fail_ci_if_error: false
+
+      - name: Upload string-utils coverage to Codecov
+        if: always()
+        uses: codecov/codecov-action@e28ff129e5465c2c0dcc6f003fc735cb6ae0c673 # v5.0.7
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: ./coverage/libs/utils/string/lcov.info
+          flags: string-utils
+          fail_ci_if_error: false
+
+      - name: Upload time-utils coverage to Codecov
+        if: always()
+        uses: codecov/codecov-action@e28ff129e5465c2c0dcc6f003fc735cb6ae0c673 # v5.0.7
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: ./coverage/libs/utils/time/lcov.info
+          flags: time-utils
+          fail_ci_if_error: false
+
+      - name: Upload ui-utils coverage to Codecov
+        if: always()
+        uses: codecov/codecov-action@e28ff129e5465c2c0dcc6f003fc735cb6ae0c673 # v5.0.7
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: ./coverage/libs/utils/ui/lcov.info
+          flags: ui-utils
+          fail_ci_if_error: false
 
   e2e:
     name: e2e
@@ -137,7 +278,7 @@ jobs:
   ci-status:
     name: status
     runs-on: ubuntu-latest
-    needs: [format, lint, build, test, e2e]
+    needs: [format, lint, typecheck, build, test, e2e]
     if: always()
     steps:
       - name: Check CI status
@@ -145,6 +286,7 @@ jobs:
           # Check if any required job failed
           if [ "${{ needs.format.result }}" = "failure" ] || \
              [ "${{ needs.lint.result }}" = "failure" ] || \
+             [ "${{ needs.typecheck.result }}" = "failure" ] || \
              [ "${{ needs.build.result }}" = "failure" ] || \
              [ "${{ needs.test.result }}" = "failure" ] || \
              [ "${{ needs.e2e.result }}" = "failure" ]; then

@@ -2,6 +2,7 @@
   "name": "@hyperfrontend/string-utils",
   "version": "0.0.0",
   "description": "Isomorphic string encoding utilities with unified APIs for browser and Node.js environments.",
+  "license": "MIT",
   "keywords": [
     "base64",
     "encoding",
