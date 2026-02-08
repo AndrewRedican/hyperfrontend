@@ -229,6 +229,6 @@ git commit -m "feat: initial release of hyperfrontend libraries"
 
 ## Related Documents
 
-- [BUILD_SYSTEM_PROGRESS.md](./BUILD_SYSTEM_PROGRESS.md) — Build architecture
+- [BUILD_SYSTEM.md](./BUILD_SYSTEM.md) — Build architecture
 - [build-and-deployment-plan.md](./build-and-deployment-plan.md) — CI/CD workflows
 - [VERDACCIO_TESTING.md](./VERDACCIO_TESTING.md) — Local npm testing

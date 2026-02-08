@@ -54,5 +54,5 @@ The idempotent version executor (`@hyperfrontend/package:version`) wraps `@jscut
 ## Related
 
 - [SEMVER_INTEGRATION_ANALYSIS.md](./SEMVER_INTEGRATION_ANALYSIS.md) — Critical issues to fix
-- [BUILD_SYSTEM_PROGRESS.md](./BUILD_SYSTEM_PROGRESS.md) — Build architecture
+- [BUILD_SYSTEM.md](./BUILD_SYSTEM.md) — Build architecture
 - [DEPLOYMENT_PUBLISHING.md](./DEPLOYMENT_PUBLISHING.md) — Publishing workflow

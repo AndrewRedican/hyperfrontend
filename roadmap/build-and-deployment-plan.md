@@ -7,7 +7,7 @@ _Revised: February 8, 2026_
 
 ## Overview
 
-This document outlines the CI/CD integration and deployment strategy for the multi-format build outputs. For technical build architecture details, see [BUILD_SYSTEM_PROGRESS.md](./BUILD_SYSTEM_PROGRESS.md).
+This document outlines the CI/CD integration and deployment strategy for the multi-format build outputs. For technical build architecture details, see [BUILD_SYSTEM.md](./BUILD_SYSTEM.md).
 
 ---
 
@@ -221,8 +221,7 @@ npx nx affected -t=publish
 
 ## Related Documents
 
-- [BUILD_SYSTEM_PROGRESS.md](./BUILD_SYSTEM_PROGRESS.md) - Technical architecture
-- [BUILD_SYSTEM_TODO.md](./BUILD_SYSTEM_TODO.md) - Implementation tasks
+- [BUILD_SYSTEM.md](./BUILD_SYSTEM.md) - Build system architecture and pending tasks
 - [DEPLOYMENT_PUBLISHING.md](./DEPLOYMENT_PUBLISHING.md) - Publishing workflow
 - [VERDACCIO_TESTING.md](./VERDACCIO_TESTING.md) - Local npm testing
 - [github-workflows-refactoring.md](./github-workflows-refactoring.md) - CI/CD details

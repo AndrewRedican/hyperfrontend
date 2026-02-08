@@ -482,5 +482,5 @@ With these fixes, the versioning automation will be robust and reliable.
 
 - [JSCUTLERY_SEMVER_ANALYSIS.md](./JSCUTLERY_SEMVER_ANALYSIS.md) — Library behavior reference
 - [VERSIONING_AUTOMATION_PLAN.md](./VERSIONING_AUTOMATION_PLAN.md) — Implementation plan
-- [BUILD_SYSTEM_PROGRESS.md](./BUILD_SYSTEM_PROGRESS.md) — Build architecture
+- [BUILD_SYSTEM.md](./BUILD_SYSTEM.md) — Build architecture
 - [DEPLOYMENT_PUBLISHING.md](./DEPLOYMENT_PUBLISHING.md) — Publishing workflow
