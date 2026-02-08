@@ -1,5 +1,5 @@
 /**
- * @hyperfrontend/nexus
+ * \@hyperfrontend/nexus
  *
  * Cross-window communication with contracts, lifecycle management, and security.
  * Provides a TCP-like handshake protocol for establishing reliable communication
