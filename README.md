@@ -269,4 +269,4 @@ This project follows the [all-contributors](https://allcontributors.org) specifi
 
 ## License
 
-See [LICENSE](LICENSE) file for details.
+See [LICENSE.md](LICENSE.md) file for details.

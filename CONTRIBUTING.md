@@ -589,7 +589,7 @@ If you have questions about contributing:
 
 ## License
 
-By contributing to hyperfrontend, you agree that your contributions will be licensed under the project's license as specified in the [LICENSE](LICENSE) file, and you grant the project maintainer the rights specified in the CLA.
+By contributing to hyperfrontend, you agree that your contributions will be licensed under the project's license as specified in the [LICENSE.md](LICENSE.md) file, and you grant the project maintainer the rights specified in the CLA.
 
 ---
 
