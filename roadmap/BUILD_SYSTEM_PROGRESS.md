@@ -166,9 +166,42 @@ All 14 libraries build successfully with ESM + CJS output.
 - ✅ Generates `exports` field in package.json
 - ✅ ESM + CJS dual output
 - ✅ TypeScript declarations
+- ✅ Inherits repository, bugs, homepage, author from root package.json
+- ✅ Copies CHANGELOG.md to dist
+- ✅ Copies FUNDING.md to dist (if package has funding config)
 - ❌ UMD/IIFE bundled outputs
 - ❌ Minification
 - ❌ Global variable configuration
+
+---
+
+## Publish Executor
+
+**Location**: `tools/package/src/executors/publish/`
+
+Publishes built library packages to npm registry.
+
+### Capabilities
+
+- ✅ Validates project is a library
+- ✅ Dry-run mode for preview
+- ✅ Custom registry support (Verdaccio, private registries)
+- ✅ NPM dist-tag support
+- ✅ Scope access control (public/restricted)
+- ✅ 2FA OTP support
+
+### Usage
+
+```bash
+# Publish a library
+npx nx publish lib-nexus
+
+# Dry run (no actual publish)
+npx nx publish lib-nexus --dryRun
+
+# Publish to local Verdaccio for testing
+npx nx publish lib-nexus --registry=http://localhost:4873
+```
 
 ---
 
@@ -193,4 +226,6 @@ npx nx graph
 ## Related Documents
 
 - [BUILD_SYSTEM_TODO.md](./BUILD_SYSTEM_TODO.md) - Implementation tasks
+- [DEPLOYMENT_PUBLISHING.md](./DEPLOYMENT_PUBLISHING.md) - Publishing workflow
+- [VERDACCIO_TESTING.md](./VERDACCIO_TESTING.md) - Local npm testing
 - [MASTER_CONTEXT.md](./MASTER_CONTEXT.md) - Project overview

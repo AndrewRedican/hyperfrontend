@@ -6,15 +6,30 @@
 
 ## Current State
 
-All 14 libraries build successfully with ESM + CJS dual output. The build executor auto-discovers entry points, generates proper `exports` in package.json, and handles external dependencies correctly.
+All 14 libraries build successfully with ESM + CJS dual output. The build executor auto-discovers entry points, generates proper `exports` in package.json, inherits repository metadata from root, and handles external dependencies correctly.
+
+**Recent Updates:**
+
+- ✅ Package.json now inherits `repository`, `bugs`, `homepage`, `author` from root
+- ✅ CHANGELOG.md is copied to dist (when present)
+- ✅ FUNDING.md is copied to dist (if library has funding config)
+- ✅ Publish executor created for npm publishing
+- ✅ Version target configured with @jscutlery/semver
+- ✅ CI release job added for automatic versioning on main
 
 ---
 
-## Phase 2: Package.json Enhancements
+## Phase 2: Package.json Enhancements ✅
 
-### 2.1 Add `sideEffects` field
+### 2.1 Add `sideEffects` field ✅
 
-- [ ] Add `"sideEffects": false` to generated package.json for tree-shaking optimization
+- [x] Add `"sideEffects": false` to generated package.json for tree-shaking optimization
+
+### 2.2 Inherit metadata fields ✅
+
+- [x] Inherit `repository`, `bugs`, `homepage`, `author` from root package.json
+- [x] Copy CHANGELOG.md to dist during build
+- [x] Copy FUNDING.md to dist if package has funding config
 
 ---
 
@@ -59,7 +74,21 @@ Added 15 new workflow files:
 - `_lib-ci.yml` — reusable workflow template
 - `ci-lib-*.yml` — per-library workflow callers (14 libraries)
 
-### 4.2 Update workflows
+### 4.2 Version and release automation ✅
+
+- [x] Configure @jscutlery/semver for all libraries
+- [x] Add `version` target to all library project.json files
+- [x] Add release job to ci-main.yml for affected versioning
+- [x] Configure tag format: `{projectName}@{version}`
+
+### 4.3 Publish automation
+
+- [x] Create publish executor
+- [x] Add `publish` target to all library project.json files
+- [ ] Add NPM_TOKEN secret to GitHub repository
+- [ ] Add publish job to ci-main.yml (after first manual publish)
+
+### 4.4 Remaining CI tasks
 
 - [ ] Add artifact upload step to ci-main.yml
 - [ ] Add bundle build step for CDN-targeted libraries
@@ -108,34 +137,45 @@ queue/creators/index.ts ↔ create-*-queue.ts files
 - [ ] ESM imports work: `import { x } from '@hyperfrontend/utils'`
 - [ ] CJS requires work: `const { x } = require('@hyperfrontend/utils')`
 - [ ] UMD loads in browser and exposes global (for nexus, network-protocol)
+- [ ] Verdaccio local publish test passes
+- [ ] Version command generates CHANGELOG.md correctly
 
 ---
 
 ## Quick Reference
 
-**Executor location**: `tools/package/src/executors/build/`
+**Build Executor**: `tools/package/src/executors/build/`
+**Publish Executor**: `tools/package/src/executors/publish/`
 
 **Key files**:
 
 - `lib/build-unified.ts` - Rollup configuration
-- `executor.ts` - External dependency detection
-- `lib/package-json.ts` - Package.json generation
-- lib-state-machine
-- lib-nexus
-- lib-list-utils
-- lib-data-utils
-- lib-string-utils
-- lib-function-utils
-- lib-time-utils
-- lib-random-generator-utils
-- lib-network-protocol
-- lib-web-worker
-- lib-immutable-api-utils
+- `lib/package-json.ts` - Package.json generation with metadata inheritance
+- `lib/assets.ts` - Asset copying (README, CHANGELOG, LICENSE, FUNDING)
+- `executor.ts` - Main build executor
 
-**Executor location**: `tools/package/src/executors/build/`
+**Commands**:
 
-**Key files modified**:
+```bash
+# Build
+npx nx build lib-nexus
 
-- `lib/build-unified.ts` - Rollup configuration (json, commonjs plugins, onwarn handler)
-- `executor.ts` - External dependency detection (all deps, not just @hyperfrontend/\*)
-- `lib/package-json.ts` - Package.json generation
+# Version (bump + changelog)
+npx nx version lib-nexus
+
+# Publish
+npx nx publish lib-nexus --dryRun
+
+# Affected operations
+npx nx affected -t=build
+npx nx affected -t=version
+npx nx affected -t=publish
+```
+
+---
+
+## Related Documents
+
+- [BUILD_SYSTEM_PROGRESS.md](./BUILD_SYSTEM_PROGRESS.md) — Architecture overview
+- [DEPLOYMENT_PUBLISHING.md](./DEPLOYMENT_PUBLISHING.md) — Publishing workflow
+- [VERDACCIO_TESTING.md](./VERDACCIO_TESTING.md) — Local npm testing
