@@ -1,13 +1,12 @@
 # Build System Architecture
 
-**Date**: February 7, 2026
-**Branch**: `build-and-badges`
+**Date**: February 8, 2026
 
 ---
 
 ## Overview
 
-The build system produces multi-format outputs for all library packages using the custom `@hyperfrontend/package:build` executor. The design follows industry standards from date-fns, zod, rxjs, and axios.
+The build system produces multi-format outputs for all library packages using the custom `@hyperfrontend/package:build` executor.
 
 **Core Principle**: Minimize consumer friction. Complexity is absorbed by the build system, not pushed onto consumers.
 
@@ -15,44 +14,41 @@ The build system produces multi-format outputs for all library packages using th
 
 ## Output Formats
 
-| Format   | File Extension | Use Case                          |
-| -------- | -------------- | --------------------------------- |
-| **ESM**  | `.js`          | Modern bundlers, tree-shaking     |
-| **CJS**  | `.cjs`         | Node.js apps, legacy bundlers     |
-| **UMD**  | `.umd.js`      | CDN with bundler compatibility    |
-| **IIFE** | `.iife.js`     | `<script>` tag, zero-config usage |
+| Format   | File Extension | Use Case                          | Status     |
+| -------- | -------------- | --------------------------------- | ---------- |
+| **ESM**  | `.esm.js`      | Modern bundlers, tree-shaking     | ✅ Working |
+| **CJS**  | `.cjs.js`      | Node.js apps, legacy bundlers     | ✅ Working |
+| **UMD**  | `.umd.js`      | CDN with bundler compatibility    | Planned    |
+| **IIFE** | `.iife.js`     | `<script>` tag, zero-config usage | Planned    |
 
 ---
 
 ## Output Structure
 
-### Standard Library
+### Current (All Libraries)
 
 ```
 dist/libs/<package>/
-├── index.js          → ESM (primary)
-├── index.cjs         → CJS (fallback)
+├── index.esm.js      → ESM (primary)
+├── index.cjs.js      → CJS (fallback)
 ├── index.d.ts        → TypeScript declarations
 ├── <feature>/        → Secondary entry points (if applicable)
-│   ├── index.js
-│   ├── index.cjs
+│   ├── index.esm.js
+│   ├── index.cjs.js
 │   └── index.d.ts
 └── package.json      → With conditional exports
 ```
 
-### CDN-Ready Library (nexus, network-protocol)
+### Planned: CDN-Ready Bundle (nexus, network-protocol)
 
 ```
 dist/libs/<package>/
-├── index.js              → ESM (external deps)
-├── index.cjs             → CJS (external deps)
-├── index.d.ts            → TypeScript declarations
-├── bundle/               → Self-contained (all deps inlined)
-│   ├── index.umd.js      → UMD unminified
-│   ├── index.umd.min.js  → UMD minified
-│   ├── index.iife.js     → IIFE unminified
-│   └── index.iife.min.js → IIFE minified
-└── package.json
+├── ...               → Standard ESM/CJS output
+└── bundle/           → Self-contained (all deps inlined)
+    ├── index.umd.js
+    ├── index.umd.min.js
+    ├── index.iife.js
+    └── index.iife.min.js
 ```
 
 ---
@@ -61,24 +57,49 @@ dist/libs/<package>/
 
 Consumers write `import { x } from '@hyperfrontend/utils'` — bundlers auto-resolve ESM or CJS.
 
+### Current Output
+
 ```json
 {
   "name": "@hyperfrontend/utils",
-  "type": "module",
-  "main": "./index.cjs",
-  "module": "./index.js",
+  "main": "./index.cjs.js",
+  "module": "./index.esm.js",
   "types": "./index.d.ts",
+  "sideEffects": false,
   "exports": {
     ".": {
       "types": "./index.d.ts",
-      "import": "./index.js",
-      "require": "./index.cjs"
+      "import": "./index.esm.js",
+      "require": "./index.cjs.js"
     },
     "./package.json": "./package.json"
-  },
+  }
+}
+```
+
+### CDN-Ready Target (nexus, network-protocol)
+
+```json
+{
+  "name": "@hyperfrontend/nexus",
+  "main": "./index.cjs.js",
+  "module": "./index.esm.js",
+  "types": "./index.d.ts",
+  "sideEffects": false,
   "unpkg": "./bundle/index.umd.min.js",
   "jsdelivr": "./bundle/index.umd.min.js",
-  "sideEffects": false
+  "exports": {
+    ".": {
+      "types": "./index.d.ts",
+      "import": "./index.esm.js",
+      "require": "./index.cjs.js"
+    },
+    "./bundle": {
+      "import": "./bundle/index.umd.min.js",
+      "require": "./bundle/index.umd.min.js"
+    },
+    "./package.json": "./package.json"
+  }
 }
 ```
 
@@ -103,32 +124,24 @@ Consumers write `import { x } from '@hyperfrontend/utils'` — bundlers auto-res
 
 ## Implementation Status
 
-| Library                    | Entry Pattern | ESM+CJS | UMD+IIFE | Status  |
-| -------------------------- | ------------- | ------- | -------- | ------- |
-| lib-data-utils             | root          | ✅      | ❌       | Working |
-| lib-function-utils         | root          | ✅      | ❌       | Working |
-| lib-immutable-api-utils    | root          | ✅      | ❌       | Working |
-| lib-random-generator-utils | root          | ✅      | ❌       | Working |
-| lib-time-utils             | root          | ✅      | ❌       | Working |
-| lib-web-worker             | root          | ✅      | ❌       | Working |
-| lib-string-utils           | platform      | ✅      | ❌       | Working |
-| lib-list-utils             | root          | ✅      | ❌       | Working |
-| lib-logging                | root          | ❌      | ❌       | Pending |
-| lib-ui-utils               | hybrid        | ❌      | ❌       | Pending |
-| lib-cryptography           | hybrid        | ❌      | ❌       | Pending |
-| lib-state-machine          | feature       | ❌      | ❌       | Pending |
-| lib-network-protocol       | complex       | ❌      | ❌       | Pending |
-| lib-nexus                  | complex       | ❌      | ❌       | Pending |
+All 14 libraries build successfully with ESM + CJS output.
 
-### TS6059 rootDir Error (Resolved)
-
-Libraries with internal `@hyperfrontend/*` dependencies previously failed because TypeScript followed tsconfig paths to source files outside the project's rootDir.
-
-**Fix Applied**: The executor now:
-
-1. Auto-detects `@hyperfrontend/*` dependencies from package.json
-2. Marks them as external in Rollup config
-3. Clears TypeScript `paths` to prevent source resolution
+| Library                    | Entry Pattern | ESM+CJS | UMD+IIFE |
+| -------------------------- | ------------- | ------- | -------- |
+| lib-data-utils             | hybrid        | ✅      | —        |
+| lib-function-utils         | root          | ✅      | —        |
+| lib-immutable-api-utils    | root          | ✅      | —        |
+| lib-random-generator-utils | root          | ✅      | —        |
+| lib-time-utils             | root          | ✅      | —        |
+| lib-web-worker             | root          | ✅      | —        |
+| lib-string-utils           | platform      | ✅      | —        |
+| lib-list-utils             | root          | ✅      | —        |
+| lib-logging                | root          | ✅      | —        |
+| lib-ui-utils               | hybrid        | ✅      | —        |
+| lib-cryptography           | hybrid        | ✅      | —        |
+| lib-state-machine          | feature       | ✅      | —        |
+| lib-network-protocol       | complex       | ✅      | Planned  |
+| lib-nexus                  | complex       | ✅      | Planned  |
 
 ---
 

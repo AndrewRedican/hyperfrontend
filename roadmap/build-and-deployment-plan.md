@@ -1,7 +1,7 @@
 # Build and Deployment Plan
 
-_Created: February 5, 2026_  
-_Revised: February 7, 2026_
+_Created: February 5, 2026_
+_Revised: February 8, 2026_
 
 ---
 
@@ -13,15 +13,15 @@ This document outlines the CI/CD integration and deployment strategy for the mul
 
 ## Project Categories
 
-| Category          | Projects                                                                     | Build Output            |
-| ----------------- | ---------------------------------------------------------------------------- | ----------------------- |
-| **Foundation**    | lib-data-utils, lib-function-utils, lib-immutable-api-utils, lib-list-utils, | ESM + CJS               |
-|                   | lib-string-utils, lib-time-utils, lib-random-generator-utils, lib-ui-utils   |                         |
-| **Core**          | lib-cryptography, lib-logging, lib-state-machine, lib-web-worker             | ESM + CJS               |
-| **Communication** | lib-network-protocol, lib-nexus                                              | ESM + CJS + UMD + IIFE  |
-| **Plugins**       | plugin-features                                                              | ESM + CJS               |
-| **Apps/Demos**    | All apps and demos                                                           | Excluded (applications) |
-| **Documentation** | docs                                                                         | Hugo build (separate)   |
+| Category          | Projects                                                                     | Build Output                 |
+| ----------------- | ---------------------------------------------------------------------------- | ---------------------------- |
+| **Foundation**    | lib-data-utils, lib-function-utils, lib-immutable-api-utils, lib-list-utils, | ESM + CJS                    |
+|                   | lib-string-utils, lib-time-utils, lib-random-generator-utils, lib-ui-utils   |                              |
+| **Core**          | lib-cryptography, lib-logging, lib-state-machine, lib-web-worker             | ESM + CJS                    |
+| **Communication** | lib-network-protocol, lib-nexus                                              | ESM + CJS (UMD+IIFE planned) |
+| **Plugins**       | plugin-features                                                              | ESM + CJS                    |
+| **Apps/Demos**    | All apps and demos                                                           | Excluded (applications)      |
+| **Documentation** | docs                                                                         | Hugo build (separate)        |
 
 ---
 
@@ -30,14 +30,14 @@ This document outlines the CI/CD integration and deployment strategy for the mul
 ### PR Workflow (ci-pr.yml)
 
 ```
-setup → format → lint → build → test → e2e → status
+setup → format → lint → typecheck → test → build → e2e → status
         (affected projects only)
 ```
 
 ### Main Workflow (ci-main.yml)
 
 ```
-setup → format → lint → build → test → coverage upload
+setup → format → lint → typecheck → test → build → coverage upload
         (all projects)
 ```
 
@@ -110,11 +110,11 @@ Add build status badge to README.md:
 
 ## Output Locations
 
-| Project          | ESM                              | CJS                               | UMD Bundle                    |
-| ---------------- | -------------------------------- | --------------------------------- | ----------------------------- |
-| lib-nexus        | `dist/libs/nexus/index.js`       | `dist/libs/nexus/index.cjs`       | `dist/libs/nexus/bundle/*.js` |
-| lib-cryptography | `dist/libs/cryptography/*.js`    | `dist/libs/cryptography/*.cjs`    | N/A                           |
-| plugin-features  | `dist/plugins/features/index.js` | `dist/plugins/features/index.cjs` | N/A                           |
+| Project          | ESM                                  | CJS                                  |
+| ---------------- | ------------------------------------ | ------------------------------------ |
+| lib-nexus        | `dist/libs/nexus/index.esm.js`       | `dist/libs/nexus/index.cjs.js`       |
+| lib-cryptography | `dist/libs/cryptography/*.esm.js`    | `dist/libs/cryptography/*.cjs.js`    |
+| plugin-features  | `dist/plugins/features/index.esm.js` | `dist/plugins/features/index.cjs.js` |
 
 ---
 

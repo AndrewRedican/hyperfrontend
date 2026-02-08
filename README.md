@@ -14,6 +14,9 @@
 </p>
 
 <p align="center">
+  <a href="https://github.com/AndrewRedican/hyperfrontend/actions/workflows/ci-main.yml">
+    <img src="https://img.shields.io/github/actions/workflow/status/AndrewRedican/hyperfrontend/ci-main.yml?style=flat-square&logo=github&label=build" alt="Build Status">
+  </a>
   <a href="https://codecov.io/gh/AndrewRedican/hyperfrontend">
     <img src="https://img.shields.io/codecov/c/github/AndrewRedican/hyperfrontend?style=flat-square&logo=codecov" alt="Coverage">
   </a>
