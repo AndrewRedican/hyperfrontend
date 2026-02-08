@@ -14,8 +14,9 @@ All 14 libraries build successfully with ESM + CJS dual output. The build execut
 - ✅ CHANGELOG.md is copied to dist (when present)
 - ✅ FUNDING.md is copied to dist (if library has funding config)
 - ✅ Publish executor created for npm publishing
-- ✅ Version target configured with @jscutlery/semver
-- ✅ CI release job added for automatic versioning on main
+- ✅ **Idempotent version executor** created (wraps @jscutlery/semver with tag check)
+- ✅ Post-commit hook for automatic versioning
+- ✅ CI release workflow for publish-only operations
 
 ---
 
@@ -138,7 +139,7 @@ queue/creators/index.ts ↔ create-*-queue.ts files
 - [ ] CJS requires work: `const { x } = require('@hyperfrontend/utils')`
 - [ ] UMD loads in browser and exposes global (for nexus, network-protocol)
 - [ ] Verdaccio local publish test passes
-- [ ] Version command generates CHANGELOG.md correctly
+- [x] Version command generates CHANGELOG.md correctly
 
 ---
 
@@ -146,6 +147,7 @@ queue/creators/index.ts ↔ create-*-queue.ts files
 
 **Build Executor**: `tools/package/src/executors/build/`
 **Publish Executor**: `tools/package/src/executors/publish/`
+**Version Executor**: `tools/package/src/executors/version/`
 
 **Key files**:
 
@@ -153,6 +155,7 @@ queue/creators/index.ts ↔ create-*-queue.ts files
 - `lib/package-json.ts` - Package.json generation with metadata inheritance
 - `lib/assets.ts` - Asset copying (README, CHANGELOG, LICENSE, FUNDING)
 - `executor.ts` - Main build executor
+- `version/executor.ts` - Idempotent wrapper around @jscutlery/semver:version
 
 **Commands**:
 
@@ -160,8 +163,11 @@ queue/creators/index.ts ↔ create-*-queue.ts files
 # Build
 npx nx build lib-nexus
 
-# Version (bump + changelog)
-npx nx version lib-nexus
+# Version (idempotent - only updates if needed)
+npx nx version lib-nexus --skipCommit
+
+# Version with dry-run
+npx nx version lib-nexus --dryRun
 
 # Publish
 npx nx publish lib-nexus --dryRun
@@ -179,3 +185,4 @@ npx nx affected -t=publish
 - [BUILD_SYSTEM_PROGRESS.md](./BUILD_SYSTEM_PROGRESS.md) — Architecture overview
 - [DEPLOYMENT_PUBLISHING.md](./DEPLOYMENT_PUBLISHING.md) — Publishing workflow
 - [VERDACCIO_TESTING.md](./VERDACCIO_TESTING.md) — Local npm testing
+- [VERSIONING_AUTOMATION_PLAN.md](./VERSIONING_AUTOMATION_PLAN.md) — Versioning automation details
