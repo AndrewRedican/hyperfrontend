@@ -23,6 +23,10 @@ export interface BuildExecutorOptions {
   assets?: (string | AssetConfig)[]
   /** External dependencies to exclude from the bundle */
   external?: string[]
+  /** Generate self-contained UMD and IIFE bundles for CDN distribution */
+  bundle?: boolean
+  /** Global variable name for UMD/IIFE bundles (e.g., 'HyperfrontendNexus') */
+  globalName?: string
 }
 
 /**

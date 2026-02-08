@@ -90,13 +90,23 @@ export function generateExportsFromDiscovery(
  * @param srcPkg - Source package.json contents
  * @param outputPath - Absolute path to output directory
  * @param discovery - Entry point discovery result
+ * @param includeBundle - Whether to include bundle/CDN fields
  */
 export function generatePackageJsonFromDiscovery(
   srcPkg: PackageJson,
   outputPath: string,
-  discovery: EntryPointDiscovery
+  discovery: EntryPointDiscovery,
+  includeBundle = false
 ): void {
   const exports = generateExportsFromDiscovery(discovery)
+
+  // Add bundle export if bundling is enabled
+  if (includeBundle) {
+    exports['./bundle'] = {
+      import: './bundle/index.umd.min.js',
+      require: './bundle/index.umd.min.js',
+    }
+  }
 
   // If there's a root entry, keep main/module/types for backwards compatibility
   if (discovery.hasRootEntry) {
@@ -105,6 +115,11 @@ export function generatePackageJsonFromDiscovery(
       main: './index.cjs.js',
       module: './index.esm.js',
       types: './index.d.ts',
+      sideEffects: false,
+      ...(includeBundle && {
+        unpkg: './bundle/index.umd.min.js',
+        jsdelivr: './bundle/index.umd.min.js',
+      }),
       exports,
     }
     writeOutputPackageJson(outputPath, distPkg)
@@ -117,6 +132,7 @@ export function generatePackageJsonFromDiscovery(
 
     const distPkg: PackageJson = {
       ...rest,
+      sideEffects: false,
       exports,
     }
     writeOutputPackageJson(outputPath, distPkg)
