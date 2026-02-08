@@ -3,7 +3,7 @@ import type { DeobfuscationQueueCreater } from '../model'
 import { isValidObfuscatedPacket, isValidSerializedEncryptedPacket } from '../../packet/validations'
 import { isValidQueueCreaterArguments } from '../validations'
 import { getValidationError } from '../utils'
-import { createQueue } from '../creators'
+import { createQueue } from './create-queue'
 
 export const createDeobfuscationQueue: DeobfuscationQueueCreater = (label, packetDeobfuscation, logger, onSuccess, onFail) => {
   const validity = isValidQueueCreaterArguments({

@@ -36,6 +36,15 @@
       "description": "External dependencies to exclude from the bundle.",
       "items": { "type": "string" },
       "default": []
+    },
+    "bundle": {
+      "type": "boolean",
+      "description": "Generate self-contained UMD and IIFE bundles for CDN distribution. All dependencies are inlined.",
+      "default": false
+    },
+    "globalName": {
+      "type": "string",
+      "description": "Global variable name for UMD/IIFE bundles (e.g., 'HyperfrontendNexus'). Required when bundle is true."
     }
   },
   "required": []
