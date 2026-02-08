@@ -1,87 +1,85 @@
-# Nexus Protocol Analysis: TCP-Like Handshake Comparison
+# Nexus Protocol Specification
 
-**A Critical Examination of the Nexus Connection Protocol vs. Original Implementation**
+**Complete Technical Documentation for `@hyperfrontend/nexus`**
 
-_Analysis Date: February 3, 2026_
+_Version: 1.0_
+_Last Updated: February 8, 2026_
 
 ---
 
 ## Executive Summary
 
-This document provides a comprehensive analysis of the `@hyperfrontend/nexus` library's connection protocol, comparing it against the original implementation. The analysis focuses on the TCP-like SYN/ACK/SYN-ACK handshake semantics, event handling, and lifecycle management.
+The `@hyperfrontend/nexus` library implements a TCP-like connection protocol for secure cross-origin communication via the `postMessage` API. It provides a robust, type-safe mechanism for establishing, managing, and terminating bidirectional communication channels between browser contexts (iframes, windows, web workers).
 
-**Key Findings:**
+**Key Features:**
 
-1. ✅ **Protocol Actions**: 100% identical in concept and naming (different namespace prefix only)
-2. ⚠️ **Three-Way Handshake**: Partially implemented but with critical gaps in handler wiring
-3. ⚠️ **Acknowledgement Patterns**: Present in action types but handlers incomplete
-4. ❌ **Event Notification Chain**: Broken in several handlers (noted as "TODO" comments)
-5. ⚠️ **Process Tracking**: Infrastructure exists but not fully utilized in handlers
-6. ✅ **Scheduled Activation**: Preserved and functional
+- **TCP-Like Three-Way Handshake**: SYN/SYN-ACK/ACK pattern for reliable connection establishment
+- **Full Lifecycle Management**: Complete connection, disconnection, and cancellation flows
+- **Process Tracking**: UUID-based tracking of all in-flight connection processes
+- **Event-Driven Architecture**: Subscriber notifications for all lifecycle events
+- **Security Policies**: Configurable origin filtering and custom security hooks
+- **Contract Validation**: Schema-based validation of channel contracts
+- **Functional Architecture**: Factory-based design with dependency injection for testability
 
 ---
 
 ## Table of Contents
 
-1. [Protocol Action Comparison](#protocol-action-comparison)
-2. [Connection Flow Analysis](#connection-flow-analysis)
-3. [Handler-by-Handler Comparison](#handler-by-handler-comparison)
-4. [Critical Gaps Identified](#critical-gaps-identified)
-5. [What's the Same](#whats-the-same)
-6. [What's Different but Equivalent](#whats-different-but-equivalent)
-7. [What's Missing or Incomplete](#whats-missing-or-incomplete)
-8. [What's Better in Nexus](#whats-better-in-nexus)
-9. [Recommendations](#recommendations)
+1. [Protocol Actions](#protocol-actions)
+2. [Connection Flow Diagrams](#connection-flow-diagrams)
+3. [Handler Reference](#handler-reference)
+4. [Architecture Overview](#architecture-overview)
+5. [Channel Handle Interface](#channel-handle-interface)
+6. [Event System](#event-system)
+7. [Security Model](#security-model)
+8. [Source File Reference](#source-file-reference)
 
 ---
 
-## Protocol Action Comparison
+## Protocol Actions
 
-### Action Types: Legacy vs. Nexus
+### Action Types
 
-| Legacy (original)                                     | Nexus (current)                                     | Identical? |
-| ----------------------------------------------------- | --------------------------------------------------- | ---------- |
-| Original: `invalid-request`                           | `[nexus] invalid-request`                           | ✅ Yes     |
-| Original: `connection-request`                        | `[nexus] connection-request`                        | ✅ Yes     |
-| Original: `connection-request-cancelled`              | `[nexus] connection-request-cancelled`              | ✅ Yes     |
-| Original: `connection-request-cancelled-acknowledged` | `[nexus] connection-request-cancelled-acknowledged` | ✅ Yes     |
-| Original: `connection-request-accepted`               | `[nexus] connection-request-accepted`               | ✅ Yes     |
-| Original: `connection-request-denied`                 | `[nexus] connection-request-denied`                 | ✅ Yes     |
-| Original: `connection-closed`                         | `[nexus] connection-closed`                         | ✅ Yes     |
-| Original: `connection-closed-acknowledged`            | `[nexus] connection-closed-acknowledged`            | ✅ Yes     |
-| Original: `connection-destroyed`                      | `[nexus] connection-destroyed`                      | ✅ Yes     |
-| Original: `connection-opened`                         | `[nexus] connection-opened`                         | ✅ Yes     |
-| Original: `new-message`                               | `[nexus] new-message`                               | ✅ Yes     |
+The Nexus protocol defines 11 action types for managing the full lifecycle of cross-origin channels:
 
-**Verdict**: The action types are semantically identical. Only the protocol namespace prefix changed to `nexus` in the current implementation.
+| Action Type                                         | Purpose                                |
+| --------------------------------------------------- | -------------------------------------- |
+| `[nexus] connection-request`                        | Initiate a connection (SYN)            |
+| `[nexus] connection-request-accepted`               | Accept a connection request (SYN-ACK)  |
+| `[nexus] connection-opened`                         | Confirm connection establishment (ACK) |
+| `[nexus] connection-request-denied`                 | Reject a connection request (RST)      |
+| `[nexus] connection-request-cancelled`              | Cancel a pending connection            |
+| `[nexus] connection-request-cancelled-acknowledged` | Acknowledge cancellation               |
+| `[nexus] connection-closed`                         | Initiate graceful disconnection        |
+| `[nexus] connection-closed-acknowledged`            | Acknowledge disconnection              |
+| `[nexus] connection-destroyed`                      | Force-destroy a connection             |
+| `[nexus] new-message`                               | Transmit data over established channel |
+| `[nexus] invalid-request`                           | Report an invalid/malformed action     |
 
-> **Source Files:**
->
-> - Nexus action types: [`libs/nexus/src/types/action.ts`](libs/nexus/src/types/action.ts#L26-L38)
+> **Source:** [libs/nexus/src/types/action.ts](libs/nexus/src/types/action.ts)
 
 ### Action Payload Structure
 
-Both implementations use the same payload structure:
+All protocol actions share a common payload structure:
 
 ```typescript
-// Both implementations
-{
-  type: string,           // Action type
-  senderId: string,       // Broker UUID
-  processId?: string,     // Connection process UUID
-  contract?: IChannelContract,  // For REQUEST/ACCEPT
-  data?: unknown,         // For NEW_MESSAGE
-  error?: string          // For DENY/INVALID
+interface NexusAction {
+  type: string // Action type (e.g., '[nexus] connection-request')
+  senderId: string // Broker UUID identifying the sender
+  processId?: string // Connection process UUID (for tracking in-flight connections)
+  contract?: IChannelContract // Channel contract (for REQUEST/ACCEPT)
+  data?: unknown // Message payload (for NEW_MESSAGE)
+  error?: string // Error description (for DENY/INVALID)
 }
 ```
 
 ---
 
-## Connection Flow Analysis
+## Connection Flow Diagrams
 
-### The Intended Three-Way Handshake
+### Three-Way Handshake (Happy Path)
 
-The protocol follows a TCP-like pattern:
+The protocol follows a TCP-like pattern for reliable connection establishment:
 
 ```
 ┌─────────────────────┐                              ┌─────────────────────┐
@@ -106,7 +104,44 @@ The protocol follows a TCP-like pattern:
     Event: 'open'                                         Event: 'open'
 ```
 
+**Detailed Sequence:**
+
+```
+Host A (Initiator)                    Host B (Responder)
+─────────────────                    ──────────────────
+channel.connect()
+    │
+    ▼
+[createProcess]
+[send REQUEST_CONNECTION] ──────────▶ [handleRequest]
+                                          │
+                                          ▼
+                                     [addChannel if new]
+                                     [trackProcess]
+                                     [validateContract]
+                                     [applySecurityPolicy]
+                                     [activate]
+                                     [send ACCEPT_CONNECTION]
+                                          │
+[handleAccept] ◀─────────────────────────┘
+    │
+    ▼
+[validateContract]
+[applySecurityPolicy]
+[activate]
+[send OPEN_CONNECTION] ─────────────▶ [handleOpen]
+    │                                     │
+    ▼                                     ▼
+[terminateProcess]                   [terminateProcess]
+[notifyEvent('open')]                [notifyEvent('open')]
+    │                                     │
+    ▼                                     ▼
+[ACTIVE]                              [ACTIVE]
+```
+
 ### Denial Flow
+
+When a connection request is rejected (invalid contract or security policy failure):
 
 ```
 ┌─────────────────────┐                              ┌─────────────────────┐
@@ -126,7 +161,38 @@ The protocol follows a TCP-like pattern:
     [NO CONNECTION]                                              │
 ```
 
+**Detailed Sequence:**
+
+```
+Host A (Initiator)                    Host B (Responder)
+─────────────────                    ──────────────────
+channel.connect()
+    │
+    ▼
+[send REQUEST_CONNECTION] ──────────▶ [handleRequest]
+                                          │
+                                          ▼
+                                     [validateContract FAILS]
+                                        — or —
+                                     [securityPolicy REJECTS]
+                                          │
+                                          ▼
+                                     [send DENY_CONNECTION]
+                                     [terminateProcess]
+                                          │
+[handleDeny] ◀───────────────────────────┘
+    │
+    ▼
+[terminateProcess]
+[notifyEvent('deny')]
+    │
+    ▼
+[CLOSED - never connected]
+```
+
 ### Cancellation Flow
+
+When an initiator cancels a pending connection request:
 
 ```
 ┌─────────────────────┐                              ┌─────────────────────┐
@@ -152,6 +218,8 @@ The protocol follows a TCP-like pattern:
 
 ### Close Flow (Graceful Disconnect)
 
+Graceful disconnection of an established channel:
+
 ```
 ┌─────────────────────┐                              ┌─────────────────────┐
 │       HOST A        │                              │       HOST B        │
@@ -175,54 +243,42 @@ The protocol follows a TCP-like pattern:
 
 ---
 
-## Handler-by-Handler Comparison
+## Handler Reference
+
+Each protocol action is processed by a dedicated handler function. All handlers follow the same signature:
+
+```typescript
+function handle*(
+  state: BrokerState,
+  registry: ChannelRegistry,
+  processManager: ProcessManager,
+  actions: ActionCreators,
+  message: MessageEvent
+): void
+```
 
 ### 1. REQUEST_CONNECTION Handler
 
-#### Legacy Implementation
+**File:** [libs/nexus/src/broker/routing/handle-request.ts](libs/nexus/src/broker/routing/handle-request.ts)
+
+**Responsibilities:**
+
+- Extract `senderId`, `processId`, and `contract` from the incoming action
+- Create or retrieve an existing channel for the sender
+- Track the process via `processManager.create()`
+- Handle re-connection attempts when channel is already active
+- Validate the contract schema
+- Apply security policy (if configured)
+- Check if channel is ready to connect (`isReadyToConnect()`)
+- Schedule activation for later if not ready (`scheduleActivation()`)
+- Activate the channel and send `ACCEPT_CONNECTION`
 
 ```typescript
-// MessageBroker.handleRequestConnection
-private handleRequestConnection(senderId, origin, processId, contract, message): void {
-  const channel = MessageChannel.idChannels.get(senderId) || this.addChannel(processId, message.source, {})
-  channel['trackProcess'](processId)                    // ✅ Track process ID
-
-  if (channel.open) {
-    if (senderId !== channel['id'])
-      return this.logPageReloadedMessage(...)           // ✅ Handle page reload
-    return channel['sendAction'](actions.acceptConnection(processId))  // ✅ Re-accept
-  }
-
-  try { validateContract(contract) }                    // ✅ Validate contract
-  catch {
-    channel['sendAction'](actions.denyConnection(processId, 'Invalid contract.'))
-    channel['terminateProcess'](processId)              // ✅ Clean up process
-    return
-  }
-
-  if (MessageBroker.allowConnection && !MessageBroker.allowConnection(message)) {
-    channel['sendAction'](actions.denyConnection(processId, 'Not accepted.'))
-    channel['terminateProcess'](processId)              // ✅ Clean up process
-    return
-  }
-
-  if (!channel.readyToConnect)
-    return channel['scheduleActivation'](senderId, origin, contract, processId)  // ✅ Schedule for later
-
-  channel['setActive'](senderId, origin, contract)      // ✅ Activate channel
-  channel['sendAction'](actions.acceptConnection(processId))  // ✅ Send acceptance
-}
-```
-
-#### Nexus Implementation
-
-```typescript
-// handleRequest.ts
 export function handleRequest(state, registry, processManager, actions, message): void {
   const action = message.data
   const senderId = action.senderId
 
-  if (!isActionWithContract(action)) return             // ✅ Type guard
+  if (!isActionWithContract(action)) return
 
   const processId = action.processId
   const contract = action.contract
@@ -232,24 +288,19 @@ export function handleRequest(state, registry, processManager, actions, message)
     channel = addChannel(state, registry, processManager, actions, senderId, message.source, {})
   }
 
-  // Note: In full implementation, would call channel's internal trackProcess method
-  // ⚠️ PROCESS NOT TRACKED
+  processManager.create(channel)
 
   if (channel.isActive()) {
     if (senderId === channel.id) {
-      channel.sendAction({...acceptConnection...})      // ✅ Re-accept
-    } else {
-      // Page reloaded
-      if (state.settings.debug) console.info(...)       // ⚠️ No special handling
+      channel.sendAction({...acceptConnection...})  // Re-accept on reconnect
     }
     return
   }
 
-  try { validateContractFn(contract) }                  // ✅ Validate contract
+  try { validateContractFn(contract) }
   catch {
     channel.sendAction({...denyConnection...})
-    // Note: Would call channel's terminateProcess in full implementation
-    // ⚠️ PROCESS NOT TERMINATED
+    processManager.remove(processId)
     return
   }
 
@@ -257,64 +308,37 @@ export function handleRequest(state, registry, processManager, actions, message)
     const allowed = applyPolicy(state.settings.securityPolicy, message)
     if (!allowed) {
       channel.sendAction({...denyConnection...})
-      // ⚠️ PROCESS NOT TERMINATED
+      processManager.remove(processId)
       return
     }
   }
 
-  // ⚠️ NO SCHEDULED ACTIVATION CHECK (readyToConnect)
+  if (!channel.isReadyToConnect()) {
+    channel.scheduleActivation(senderId, message.origin, contract, processId)
+    return
+  }
 
-  // Note: In full implementation, would call channel's setActive
-  // ⚠️ CHANNEL NOT ACTUALLY ACTIVATED
-
-  channel.sendAction({...acceptConnection...})          // ✅ Send acceptance
+  channel.activate(message.origin, contract)
+  channel.sendAction({...acceptConnection...})
 }
 ```
-
-**Gaps Identified:**
-
-- ❌ Process ID not tracked via `trackProcess`
-- ❌ Process not terminated on denial (`terminateProcess`)
-- ❌ No `readyToConnect` check
-- ❌ No `scheduleActivation` for pending connections
-- ❌ Channel not actually activated (`setActive` not called)
-
-> **Source Files:**
->
-> - Nexus: [`libs/nexus/src/broker/routing/handle-request.ts`](libs/nexus/src/broker/routing/handle-request.ts)
-
----
 
 ### 2. ACCEPT_CONNECTION Handler
 
-#### Legacy Implementation
+**File:** [libs/nexus/src/broker/routing/handle-accept.ts](libs/nexus/src/broker/routing/handle-accept.ts)
+
+**Responsibilities:**
+
+- Retrieve channel by process ID
+- Skip if channel is already active
+- Validate the contract schema
+- Apply security policy (cancel if rejected)
+- Activate the channel
+- Send `OPEN_CONNECTION` to complete the handshake
+- Terminate the process
+- Notify subscribers with `'open'` event
 
 ```typescript
-// MessageBroker.handleAcceptConnection
-private handleAcceptConnection(senderId, origin, processId, contract, message): void {
-  const channel = MessageChannel.processChannel.get(processId)  // ✅ Get by process ID
-  if (!channel || channel.open) return
-
-  try { validateContract(contract) }
-  catch {
-    return channel['sendAction'](actions.cancelConnection(processId))  // ✅ Cancel on bad contract
-  }
-
-  if (MessageBroker.allowConnection && !MessageBroker.allowConnection(message)) {
-    return channel['sendAction'](actions.cancelConnection(processId))  // ✅ Cancel on policy fail
-  }
-
-  channel['setActive'](senderId, origin, contract)      // ✅ Activate channel
-  channel['sendAction'](actions.openConnection(processId))  // ✅ Send OPEN_CONNECTION (ACK)
-  channel['terminateProcess'](processId)                // ✅ Clean up process
-  channel['notifyEvent'](ChannelEvent.Opened, channel, message)  // ✅ Notify subscribers
-}
-```
-
-#### Nexus Implementation
-
-```typescript
-// handleAccept.ts
 export function handleAccept(state, registry, processManager, actions, message): void {
   const action = message.data
 
@@ -323,108 +347,44 @@ export function handleAccept(state, registry, processManager, actions, message):
   const processId = action.processId
   const contract = action.contract
 
-  const channel = processManager.get(processId)         // ✅ Get by process ID
+  const channel = processManager.get(processId)
 
   if (!channel) return
-  if (channel.isActive()) return                        // ✅ Skip if already open
+  if (channel.isActive()) return
 
   try { validateContract(contract) }
   catch {
-    channel.sendAction({...cancelConnection...})        // ✅ Cancel on bad contract
+    channel.sendAction({...cancelConnection...})
     return
   }
 
   if (state.settings.securityPolicy) {
     const allowed = applyPolicy(state.settings.securityPolicy, message)
     if (!allowed) {
-      channel.sendAction({...cancelConnection...})      // ✅ Cancel on policy fail
+      channel.sendAction({...cancelConnection...})
       return
     }
   }
 
-  // Note: In full implementation, would call channel's setActive
-  // ⚠️ CHANNEL NOT ACTUALLY ACTIVATED
-
-  channel.sendAction({...openConnection...})            // ✅ Send OPEN_CONNECTION
-
-  // Note: Would call channel's terminateProcess in full implementation
-  // ⚠️ PROCESS NOT TERMINATED
-
-  // Note: Would call channel's notifyEvent in full implementation
-  // ⚠️ EVENT NOT NOTIFIED
+  channel.activate(message.origin, contract)
+  channel.sendAction({...openConnection...})
+  processManager.remove(processId)
+  channel.notifyEvent('open', { origin: message.origin, contract })
 }
 ```
-
-**Gaps Identified:**
-
-- ❌ Channel not activated (`setActive` not called)
-- ❌ Process not terminated
-- ❌ Event not notified to subscribers
-
-> **Source Files:**
->
-> - Nexus: [`libs/nexus/src/broker/routing/handle-accept.ts`](libs/nexus/src/broker/routing/handle-accept.ts)
-
----
 
 ### 3. OPEN_CONNECTION Handler
 
-#### Legacy Implementation
+**File:** [libs/nexus/src/broker/routing/handle-open.ts](libs/nexus/src/broker/routing/handle-open.ts)
+
+**Responsibilities:**
+
+- Retrieve channel by process ID
+- Terminate the process
+- Notify subscribers with `'open'` event (responder side)
 
 ```typescript
-// MessageBroker.handleOpenedConnection
-private handleOpenedConnection(processId, message): void {
-  const channel = MessageChannel.processChannel.get(processId)
-  if (channel) {
-    channel['terminateProcess'](processId)              // ✅ Clean up process
-    channel['notifyEvent'](ChannelEvent.Opened, channel, message)  // ✅ Notify opened
-  }
-}
-```
-
-#### Nexus Implementation
-
-**⚠️ NO HANDLER REGISTERED IN ROUTER**
-
-Reviewing [`libs/nexus/src/broker/factory.ts#L70-L83`](libs/nexus/src/broker/factory.ts#L70-L83), the router registers handlers for:
-
-- `REQUEST_CONNECTION`, `ACCEPT_CONNECTION`, `DENY_CONNECTION`
-- `CANCEL_CONNECTION`, `CLOSE_CONNECTION`, `DESTROY_CONNECTION`
-- `NEW_MESSAGE`, `INVALID_REQUEST`
-
-But **`OPEN_CONNECTION` is NOT registered**. This means when Host B receives the final ACK of the three-way handshake, no handler processes it.
-
-**Gaps Identified:**
-
-- ❌ No handler registered for OPEN_CONNECTION action in router
-- ❌ Responder (Host B) never receives 'open' event confirmation
-
-> **Source Files:**
->
-> - Router configuration: [`libs/nexus/src/broker/factory.ts#L70-L83`](libs/nexus/src/broker/factory.ts#L70-L83)
-
----
-
-### 4. DENY_CONNECTION Handler
-
-#### Legacy Implementation
-
-```typescript
-// MessageBroker.handleDeniedConnection
-private handleDeniedConnection(processId, message): void {
-  const channel = MessageChannel.processChannel.get(processId)
-  if (channel) {
-    channel['terminateProcess'](processId)              // ✅ Clean up process
-    channel['notifyEvent'](ChannelEvent.Denied, channel, message)  // ✅ Notify denied
-  }
-}
-```
-
-#### Nexus Implementation
-
-```typescript
-// handleDeny.ts
-export function handleDeny(state, registry, processManager, actions, message): void {
+export function handleOpen(state, registry, processManager, actions, message): void {
   const action = message.data
   const processId = action.processId
 
@@ -432,53 +392,49 @@ export function handleDeny(state, registry, processManager, actions, message): v
 
   if (!channel) return
 
-  processManager.remove(processId) // ✅ Clean up process
-
-  // Note: Would call channel's notifyEvent with ChannelEvent.Denied
-  // ⚠️ EVENT NOT NOTIFIED
+  processManager.remove(processId)
+  channel.notifyEvent('open', { origin: message.origin })
 }
 ```
 
-**Gaps Identified:**
+### 4. DENY_CONNECTION Handler
 
-- ❌ Event not notified to subscribers
+**File:** [libs/nexus/src/broker/routing/handle-deny.ts](libs/nexus/src/broker/routing/handle-deny.ts)
 
-> **Source Files:**
->
-> - Nexus: [`libs/nexus/src/broker/routing/handle-deny.ts`](libs/nexus/src/broker/routing/handle-deny.ts)
+**Responsibilities:**
 
----
+- Retrieve channel by process ID
+- Terminate the process
+- Notify subscribers with `'deny'` event (including error context)
+
+```typescript
+export function handleDeny(state, registry, processManager, actions, message): void {
+  const action = message.data
+  const processId = action.processId
+  const error = action.error
+
+  const channel = processManager.get(processId)
+
+  if (!channel) return
+
+  processManager.remove(processId)
+  channel.notifyEvent('deny', { error, origin: message.origin })
+}
+```
 
 ### 5. CANCEL_CONNECTION Handler
 
-#### Legacy Implementation
+**File:** [libs/nexus/src/broker/routing/handle-cancel.ts](libs/nexus/src/broker/routing/handle-cancel.ts)
+
+**Responsibilities:**
+
+- Retrieve channel by sender ID or process ID
+- Cancel the channel
+- Send `CANCEL_CONNECTION_ACKNOWLEDGED`
+- Terminate the process
+- Notify subscribers with `'cancel'` event
 
 ```typescript
-// MessageBroker.handleCancelConnection
-private handleCancelConnection(senderId, processId): void {
-  const channel = MessageChannel.idChannels.get(senderId) || MessageChannel.processChannel.get(processId)
-  if (channel) {
-    channel.cancel(false)                               // ✅ Cancel channel
-    channel['sendAction'](actions.cancelConnectionAcknowledged(processId))  // ✅ Send ACK
-    channel['terminateProcess'](processId)              // ✅ Clean up process
-    channel['notifyEvent'](ChannelEvent.Cancelled, channel)  // ✅ Notify cancelled
-  }
-}
-
-// MessageBroker.handleCancelConnectionAcknowledged
-private handleCancelConnectionAcknowledged(processId): void {
-  const channel = MessageChannel.processChannel.get(processId)
-  if (channel) {
-    channel['terminateProcess'](processId)              // ✅ Clean up process
-    channel['notifyEvent'](ChannelEvent.Cancelled, channel)  // ✅ Notify cancelled
-  }
-}
-```
-
-#### Nexus Implementation
-
-```typescript
-// handleCancel.ts
 export function handleCancel(state, registry, processManager, actions, message): void {
   const action = message.data
   const senderId = action.senderId
@@ -488,113 +444,102 @@ export function handleCancel(state, registry, processManager, actions, message):
 
   if (!channel) return
 
-  channel.cancel(false)                                 // ✅ Cancel channel
-
-  channel.sendAction({...cancelConnectionAcknowledged...})  // ✅ Send ACK
-
-  // Note: Would call channel's terminateProcess in full implementation
-  // ⚠️ PROCESS NOT TERMINATED
-
-  // Note: Would call channel's notifyEvent with ChannelEvent.Cancelled
-  // ⚠️ EVENT NOT NOTIFIED
+  channel.cancel(false)
+  channel.sendAction({...cancelConnectionAcknowledged...})
+  processManager.remove(processId)
+  channel.notifyEvent('cancel', { notify: true })
 }
 ```
 
-**Gaps Identified:**
+### 6. CANCEL_CONNECTION_ACKNOWLEDGED Handler
 
-- ❌ Process not terminated
-- ❌ Event not notified to subscribers
-- ❌ No handler for `CANCEL_CONNECTION_ACKNOWLEDGED`
+**File:** [libs/nexus/src/broker/routing/handle-cancel-acknowledged.ts](libs/nexus/src/broker/routing/handle-cancel-acknowledged.ts)
 
-> **Source Files:**
->
-> - Nexus: [`libs/nexus/src/broker/routing/handle-cancel.ts`](libs/nexus/src/broker/routing/handle-cancel.ts)
+**Responsibilities:**
 
----
-
-### 6. CLOSE_CONNECTION Handler
-
-#### Legacy Implementation
+- Retrieve channel by process ID
+- Terminate the process
+- Notify subscribers with `'cancel'` event (initiator side)
 
 ```typescript
-// MessageBroker.handleCloseConnection
-private handleCloseConnection(senderId, processId): void {
-  const channel = MessageChannel.idChannels.get(senderId)
-  if (channel?.open) {
-    channel.close(false)                                // ✅ Close channel
-    channel['sendAction'](actions.closeConnectionAcknowledged(processId))  // ✅ Send ACK
-    channel['terminateProcess'](processId)              // ✅ Clean up process
-    channel['notifyEvent'](ChannelEvent.Closed, channel)  // ✅ Notify closed
-  }
-}
+export function handleCancelAcknowledged(state, registry, processManager, actions, message): void {
+  const action = message.data
+  const processId = action.processId
 
-// MessageBroker.handleCloseConnectionAcknowledged
-private handleCloseConnectionAcknowledged(processId): void {
-  const channel = MessageChannel.processChannel.get(processId)
-  if (channel) {
-    channel['terminateProcess'](processId)              // ✅ Clean up process
-    channel['notifyEvent'](ChannelEvent.Closed, channel)  // ✅ Notify closed
-  }
+  const channel = processManager.get(processId)
+
+  if (!channel) return
+
+  processManager.remove(processId)
+  channel.notifyEvent('cancel', { notify: false })
 }
 ```
 
-#### Nexus Implementation
+### 7. CLOSE_CONNECTION Handler
+
+**File:** [libs/nexus/src/broker/routing/handle-close.ts](libs/nexus/src/broker/routing/handle-close.ts)
+
+**Responsibilities:**
+
+- Retrieve channel by sender ID
+- Skip if channel is not active
+- Disconnect the channel
+- Send `CLOSE_CONNECTION_ACKNOWLEDGED`
+- Terminate the process
+- Notify subscribers with `'close'` event
 
 ```typescript
-// handleClose.ts
 export function handleClose(state, registry, processManager, actions, message): void {
   const action = message.data
   const senderId = action.senderId
   const processId = action.processId
 
   const channel = getById(registry, senderId)
+  if (!channel || !channel.isActive()) return
+
+  channel.disconnect(false)
+  channel.sendAction({...closeConnectionAcknowledged...})
+  processManager.remove(processId)
+  channel.notifyEvent('close', { notify: true })
+}
+```
+
+### 8. CLOSE_CONNECTION_ACKNOWLEDGED Handler
+
+**File:** [libs/nexus/src/broker/routing/handle-close-acknowledged.ts](libs/nexus/src/broker/routing/handle-close-acknowledged.ts)
+
+**Responsibilities:**
+
+- Retrieve channel by process ID
+- Terminate the process
+- Notify subscribers with `'close'` event (initiator side)
+
+```typescript
+export function handleCloseAcknowledged(state, registry, processManager, actions, message): void {
+  const action = message.data
+  const processId = action.processId
+
+  const channel = processManager.get(processId)
+
   if (!channel) return
 
-  const fullChannel = processManager.get(processId)
-  if (!fullChannel || !fullChannel.isActive()) return
-
-  fullChannel.disconnect(false)                         // ✅ Close channel
-
-  fullChannel.sendAction({...closeConnectionAcknowledged...})  // ✅ Send ACK
-
-  // Note: Would call channel's terminateProcess in full implementation
-  // ⚠️ PROCESS NOT TERMINATED
-
-  // Note: Would call channel's notifyEvent with ChannelEvent.Closed
-  // ⚠️ EVENT NOT NOTIFIED
+  processManager.remove(processId)
+  channel.notifyEvent('close', { notify: false })
 }
 ```
 
-**Gaps Identified:**
+### 9. NEW_MESSAGE Handler
 
-- ❌ Process not terminated
-- ❌ Event not notified to subscribers
-- ❌ No handler for `CLOSE_CONNECTION_ACKNOWLEDGED`
+**File:** [libs/nexus/src/broker/routing/handle-message.ts](libs/nexus/src/broker/routing/handle-message.ts)
 
-> **Source Files:**
->
-> - Nexus: [`libs/nexus/src/broker/routing/handle-close.ts`](libs/nexus/src/broker/routing/handle-close.ts)
+**Responsibilities:**
 
----
-
-### 7. NEW_MESSAGE Handler
-
-#### Legacy Implementation
+- Retrieve channel by sender ID
+- Skip if channel is not active
+- Validate the message payload
+- Forward message to subscribers via `notifyMessage()`
 
 ```typescript
-// MessageBroker.handleNewMessage
-private handleNewMessage(senderId, action): void {
-  const channel = MessageChannel.idChannels.get(senderId)
-  if (!channel?.open) return
-  if (!this.isValidMessage(action)) return this.logIgnoredMessage(channel.name)
-  channel['notifyMessageReceived'](action, channel)     // ✅ Forward to subscribers
-}
-```
-
-#### Nexus Implementation
-
-```typescript
-// handleMessage.ts
 export function handleMessage(state, registry, processManager, actions, message): void {
   const action = message.data
   const senderId = action.senderId
@@ -604,297 +549,303 @@ export function handleMessage(state, registry, processManager, actions, message)
   const messageData = action.data
 
   const channel = getById(registry, senderId)
-  if (!channel || !channel.isActive()) return           // ✅ Check channel open
+  if (!channel || !channel.isActive()) return
 
   try { validateAction(messageData) }
   catch {
-    if (state.settings.debug) console.info(...)         // ✅ Log invalid
+    if (state.settings.debug) console.info(...)
     return
   }
 
-  // Note: Would call channel's notifyMessageReceived in full implementation
-  // ⚠️ MESSAGE NOT FORWARDED TO SUBSCRIBERS
+  channel.notifyMessage(messageData)
 }
 ```
 
-**Gaps Identified:**
+### 10. DESTROY_CONNECTION Handler
 
-- ❌ Message not actually forwarded to channel's message subscribers
+**File:** [libs/nexus/src/broker/routing/handle-destroy.ts](libs/nexus/src/broker/routing/handle-destroy.ts)
 
-> **Source Files:**
->
-> - Nexus: [`libs/nexus/src/broker/routing/handle-message.ts`](libs/nexus/src/broker/routing/handle-message.ts)
+**Responsibilities:**
+
+- Force-destroy a connection without graceful handshake
+- Clean up all associated resources
+
+### 11. INVALID_REQUEST Handler
+
+**File:** [libs/nexus/src/broker/routing/handle-invalid.ts](libs/nexus/src/broker/routing/handle-invalid.ts)
+
+**Responsibilities:**
+
+- Log invalid/malformed requests
+- Optionally notify the sender of the error
 
 ---
 
-## Critical Gaps Identified
+## Architecture Overview
 
-### 1. **Missing `OPEN_CONNECTION` Handler**
+### Design Principles
 
-When Host A sends `OPEN_CONNECTION` (the final ACK of the three-way handshake), Host B needs to:
+The Nexus library follows functional programming principles:
 
-- Terminate the process
-- Notify subscribers with 'open' event
+| Aspect                   | Implementation                   | Benefit                           |
+| ------------------------ | -------------------------------- | --------------------------------- |
+| **Architecture**         | Factory functions with closures  | True information hiding           |
+| **State Management**     | Immutable state + updateState()  | Predictable state transitions     |
+| **Registry**             | Instance-based, scoped           | Multiple brokers possible         |
+| **Process Tracking**     | ProcessManager instance          | Clean lifecycle management        |
+| **Dependency Injection** | Explicit (passed to factories)   | Excellent testability             |
+| **Immutability**         | Object.freeze(), spread patterns | Prevents accidental mutation      |
+| **Code Organization**    | Modular subdirectories           | Clear separation of concerns      |
+| **Router Pattern**       | Handler registry                 | Extensible, single responsibility |
+| **Action Creators**      | Pure factories with DI           | Testable, composable              |
 
-This handler appears to be missing or incomplete, breaking the handshake from the responder's perspective.
+### Core Components
 
-### 2. **Missing Acknowledgement Handlers**
-
-Two acknowledgement handlers are not implemented:
-
-- `CANCEL_CONNECTION_ACKNOWLEDGED` handler
-- `CLOSE_CONNECTION_ACKNOWLEDGED` handler
-
-Without these, the initiator of cancel/close operations never gets confirmation and never fires their local events.
-
-### 3. **Process Tracking Not Used**
-
-The `processManager` infrastructure exists but handlers don't:
-
-- Call `trackProcess` when receiving requests
-- Consistently use `processManager.get()` for channel lookup
-- Call `terminateProcess` / `processManager.remove()` on completion
-
-This can lead to memory leaks (orphaned process IDs) and incorrect channel lookups.
-
-### 4. **Event Notifications Commented Out**
-
-Nearly every handler has comments like:
-
-```typescript
-// Note: Would call channel's notifyEvent in full implementation
+```
+libs/nexus/src/
+├── broker/           # Message broker (router, handlers)
+│   ├── factory.ts    # Broker factory function
+│   └── routing/      # Protocol action handlers
+├── channel/          # Channel factory and implementation
+│   └── factory.ts    # Channel factory function
+├── core/             # Core utilities
+│   └── processes/    # Process manager
+├── types/            # TypeScript type definitions
+│   ├── action.ts     # Action types and interfaces
+│   └── channel.ts    # Channel handle interface
+├── filters/          # Event and message filters
+├── schema/           # Contract validation
+├── setup/            # Initialization utilities
+└── utils/            # Helper functions
 ```
 
-This means subscribers never receive:
+### Factory-Based Broker
 
-- `'open'` events (from accept handler)
-- `'close'` events (from close handler)
-- `'cancel'` events (from cancel handler)
-- `'deny'` events (from deny handler)
-
-### 5. **Channel Activation Missing**
-
-The `handleRequest` and `handleAccept` handlers don't actually call the channel's internal `setActive` method, meaning:
-
-- Channel state remains inactive
-- `channel.isActive()` returns false
-- Messages won't be sent (queued instead)
-
-### 6. **Message Forwarding Incomplete**
-
-The `handleMessage` handler validates incoming messages but doesn't forward them to the channel's message subscribers.
-
-> **Key Source Files for Gaps Verification:**
->
-> - Router handler registration: [`libs/nexus/src/broker/factory.ts#L70-L83`](libs/nexus/src/broker/factory.ts#L70-L83)
-> - Channel activation function: [`libs/nexus/src/channel/state/activate.ts`](libs/nexus/src/channel/state/activate.ts)
-> - Event notification system: [`libs/nexus/src/channel/subscription/notify-event.ts`](libs/nexus/src/channel/subscription/notify-event.ts)
-> - Process manager factory: [`libs/nexus/src/core/processes/factory.ts`](libs/nexus/src/core/processes/factory.ts)
-
----
-
-## What's the Same
-
-| Aspect                                     | Legacy | Nexus | Status                              |
-| ------------------------------------------ | ------ | ----- | ----------------------------------- |
-| Protocol actions (11 types)                | ✅     | ✅    | Identical semantics                 |
-| Action payload structure                   | ✅     | ✅    | Identical                           |
-| Three-way handshake concept                | ✅     | ✅    | Same design                         |
-| Contract validation                        | ✅     | ✅    | Same logic                          |
-| Origin filtering (whitelist/blacklist)     | ✅     | ✅    | Same approach                       |
-| Security policy hook                       | ✅     | ✅    | Same pattern                        |
-| Scheduled activation                       | ✅     | ✅    | Present in state, used in connect() |
-| Message queueing                           | ✅     | ✅    | Same behavior                       |
-| Event filter utilities (open, close, etc.) | ✅     | ✅    | Same pattern                        |
-| Message filters (byType, compose)          | ✅     | ✅    | Same pattern                        |
-| Channel state shape                        | ✅     | ✅    | Nearly identical                    |
-
----
-
-## What's Different but Equivalent
-
-| Aspect               | Legacy                     | Nexus                           | Notes                                 |
-| -------------------- | -------------------------- | ------------------------------- | ------------------------------------- |
-| Architecture         | Class-based                | Functional                      | Factory functions with closures       |
-| State management     | Mutable properties         | Immutable state + updateState() | Functional pattern                    |
-| Registry             | Static WeakMaps/Maps       | Instance-based registry         | Same data structures, different scope |
-| Process tracking     | Static Map                 | ProcessManager instance         | Same logic, different encapsulation   |
-| Dependency injection | Implicit (static refs)     | Explicit (passed to factories)  | Better testability in Nexus           |
-| Decorator usage      | @locked() for immutability | Object.freeze()                 | Same goal, different approach         |
-
-> **Source Files for Architecture Comparison:**
->
-> - Nexus factory-based broker: [`libs/nexus/src/broker/factory.ts`](libs/nexus/src/broker/factory.ts)
-> - Nexus channel factory: [`libs/nexus/src/channel/factory.ts`](libs/nexus/src/channel/factory.ts)
-
----
-
-## What's Missing or Incomplete
-
-### Critical (Breaks Protocol)
-
-1. **Process tracking in handlers** — Handlers don't use `trackProcess` or `terminateProcess`
-2. **Channel activation** — `setActive` not called after accept
-3. **Event notifications** — Not fired in any handler
-4. **Message forwarding** — Messages validated but not delivered
-5. **OPEN_CONNECTION handler** — Missing or stub
-6. **Acknowledgement handlers** — CANCEL_ACK and CLOSE_ACK missing
-
-### Important (Reduces Robustness)
-
-1. **readyToConnect check** — Not implemented in REQUEST handler
-2. **scheduleActivation in REQUEST handler** — Logic exists in connect() but not used by broker
-3. **Page reload detection** — Present in logs but no special handling
-
-### Minor
-
-1. **Debug logging consistency** — Less verbose than legacy
-2. **Error context in denials** — Error messages are generic
-
----
-
-## What's Better in Nexus
-
-| Aspect            | Legacy                         | Nexus                     | Why Better                        |
-| ----------------- | ------------------------------ | ------------------------- | --------------------------------- |
-| Testability       | Difficult (static state)       | Excellent (injected deps) | Isolated tests, no global cleanup |
-| Type safety       | Partial                        | Comprehensive             | Type guards, discriminated unions |
-| Encapsulation     | Weak (private accessed via []) | Strong (closures)         | True information hiding           |
-| Immutability      | Decorator-enforced             | Structural                | Object.freeze, spread patterns    |
-| Code organization | Monolithic files               | Modular subdirectories    | Better maintainability            |
-| Router pattern    | Giant switch statement         | Handler registry          | Extensible, single responsibility |
-| Action creators   | Mixed concerns                 | Pure factories with DI    | Testable, composable              |
-| Registry design   | Global singletons              | Instance-scoped           | Multiple brokers possible         |
-
----
-
-## Recommendations
-
-### Priority 1: Complete the Handlers
-
-Every handler needs to be updated to:
-
-1. **Track processes**: Call `processManager.get()` and `processManager.remove()` appropriately
-2. **Activate channels**: Call internal `setActive` method on successful connection
-3. **Fire events**: Call `channel.notifyEvent()` for all lifecycle transitions
-4. **Forward messages**: Call `channel.notifyMessage()` for NEW_MESSAGE
-
-### Priority 2: Add Missing Handlers
-
-Create handlers for:
-
-- `handleOpen` — Complete the three-way handshake from responder side
-- `handleCancelAcknowledged` — Fire cancel event on initiator side
-- `handleCloseAcknowledged` — Fire close event on initiator side
-
-### Priority 3: Implement Scheduled Activation in REQUEST Handler
+The broker is created via a factory function that encapsulates all state:
 
 ```typescript
-// In handleRequest:
-if (!channel.readyToConnect) {
-  channel.scheduleActivation(senderId, origin, contract, processId)
-  return
+// libs/nexus/src/broker/factory.ts
+export function createBroker(settings: BrokerSettings): Broker {
+  const state: BrokerState = {
+    id: generateUUID(),
+    settings: Object.freeze(settings),
+    // ... internal state
+  }
+
+  const registry = createRegistry()
+  const processManager = createProcessManager()
+  const actions = createActionCreators(state.id)
+  const router = createRouter(state, registry, processManager, actions)
+
+  return Object.freeze({
+    id: state.id,
+    addChannel: (target, options) => addChannel(state, registry, processManager, actions, target, options),
+    removeChannel: (id) => removeChannel(registry, id),
+    getChannel: (id) => getById(registry, id),
+    destroy: () => destroyBroker(state, registry, processManager),
+  })
 }
 ```
 
-### Priority 4: Channel Internals Access
+### Process Manager
 
-The handlers need access to channel internals (setActive, terminateProcess, notifyEvent). Options:
+Tracks in-flight connection processes with UUID-based lookup:
 
-1. **Add methods to ChannelHandle interface** — Expose internal methods publicly
-2. **Create internal channel map** — Broker maintains map of channel internals
-3. **Use processManager to store internals** — Store full internals alongside handle
-
-### Priority 5: Integration Tests
-
-Create end-to-end tests that:
-
-1. Simulate full postMessage exchange between two brokers
-2. Verify all events fire in correct order
-3. Test denial, cancellation, and close flows
-4. Test page reload scenarios
-
----
-
-## Appendix: Event Flow Diagrams
-
-### Complete Happy Path
-
-```
-Host A (Initiator)                    Host B (Responder)
-─────────────────                    ──────────────────
-channel.connect()
-    │
-    ▼
-[createProcess]
-[send REQUEST_CONNECTION] ──────────▶ [handleRequest]
-                                          │
-                                          ▼
-                                     [addChannel if new]
-                                     [trackProcess]
-                                     [validateContract]
-                                     [applySecurityPolicy]
-                                     [setActive]
-                                     [send ACCEPT_CONNECTION]
-                                          │
-[handleAccept] ◀─────────────────────────┘
-    │
-    ▼
-[validateContract]
-[applySecurityPolicy]
-[setActive]
-[send OPEN_CONNECTION] ─────────────▶ [handleOpen]
-    │                                     │
-    ▼                                     ▼
-[terminateProcess]                   [terminateProcess]
-[notifyEvent('open')]                [notifyEvent('open')]
-    │                                     │
-    ▼                                     ▼
-[ACTIVE]                              [ACTIVE]
-```
-
-### Denial Path
-
-```
-Host A (Initiator)                    Host B (Responder)
-─────────────────                    ──────────────────
-channel.connect()
-    │
-    ▼
-[send REQUEST_CONNECTION] ──────────▶ [handleRequest]
-                                          │
-                                          ▼
-                                     [validateContract FAILS]
-                                     [send DENY_CONNECTION]
-                                          │
-[handleDeny] ◀───────────────────────────┘
-    │
-    ▼
-[terminateProcess]
-[notifyEvent('deny')]
-    │
-    ▼
-[CLOSED - never connected]
+```typescript
+interface ProcessManager {
+  create(channel: ChannelHandle): string // Returns processId
+  get(processId: string): ChannelHandle | undefined
+  remove(processId: string): void
+}
 ```
 
 ---
 
-## Conclusion
+## Channel Handle Interface
 
-The Nexus library has the correct **foundation** — the protocol design, action types, and state structures are all properly ported from the legacy implementation. However, the **handler wiring** is incomplete. The TCP-like handshake semantics exist in the architecture but are not fully executed in the handler implementations.
+The `ChannelHandle` interface exposes all methods needed for protocol handlers:
 
-The essential "SYN, ACK, SYN-ACK" flow is **designed correctly** but **not fully implemented**. Completing the handlers as documented above will restore full protocol compatibility with the original implementation behavior while benefiting from Nexus's superior architecture.
+```typescript
+interface ChannelHandle {
+  readonly id: string
+  readonly name: string
 
-**Estimated effort to complete**: 2-3 days of focused implementation + 1-2 days of integration testing.
+  // State queries
+  isActive(): boolean
+  isReadyToConnect(): boolean
+
+  // Lifecycle operations
+  activate(origin: string, contract: IChannelContract): void
+  scheduleActivation(senderId: string, origin: string, contract: IChannelContract, processId: string): void
+  cancel(notify: boolean): void
+  disconnect(notify: boolean): void
+  destroy(): void
+
+  // Communication
+  sendAction(action: NexusAction): void
+  sendMessage(data: unknown): void
+
+  // Event notification
+  notifyEvent(event: ChannelEvent, data?: unknown): void
+  notifyMessage(message: unknown): void
+
+  // Subscriptions
+  onEvent(callback: EventCallback): Unsubscribe
+  onMessage(callback: MessageCallback): Unsubscribe
+}
+```
+
+> **Source:** [libs/nexus/src/types/channel.ts](libs/nexus/src/types/channel.ts)
 
 ---
 
-_This analysis is based on examination of libs/nexus/src/\* as of February 4, 2026._
+## Event System
 
-> **Key Source Files Examined:**
->
-> - Action types: [`libs/nexus/src/types/action.ts`](libs/nexus/src/types/action.ts)
-> - All routing handlers: [`libs/nexus/src/broker/routing/`](libs/nexus/src/broker/routing/)
-> - Channel state management: [`libs/nexus/src/channel/state/`](libs/nexus/src/channel/state/)
-> - Subscription/notification: [`libs/nexus/src/channel/subscription/`](libs/nexus/src/channel/subscription/)
-> - Process management: [`libs/nexus/src/core/processes/`](libs/nexus/src/core/processes/)
+### Lifecycle Events
+
+Channels emit the following lifecycle events:
+
+| Event       | Trigger                             | Payload                |
+| ----------- | ----------------------------------- | ---------------------- |
+| `'open'`    | Connection successfully established | `{ origin, contract }` |
+| `'close'`   | Connection gracefully closed        | `{ notify: boolean }`  |
+| `'cancel'`  | Pending connection cancelled        | `{ notify: boolean }`  |
+| `'deny'`    | Connection request rejected         | `{ error, origin }`    |
+| `'destroy'` | Connection force-destroyed          | `{}`                   |
+
+### Event Filters
+
+Utility functions for filtering specific events:
+
+```typescript
+import { filterOpen, filterClose, filterCancel, filterDeny } from '@hyperfrontend/nexus/filters'
+
+// Subscribe only to 'open' events
+channel.onEvent(
+  filterOpen((event) => {
+    console.log('Channel opened:', event.origin)
+  })
+)
+```
+
+### Message Filters
+
+Utility functions for filtering messages by type:
+
+```typescript
+import { filterByType, composeFilters } from '@hyperfrontend/nexus/filters'
+
+// Filter messages by action type
+channel.onMessage(
+  filterByType('user:login', (message) => {
+    console.log('User login:', message)
+  })
+)
+
+// Compose multiple filters
+channel.onMessage(composeFilters(filterByType('user:*'), filterByType('*:create')))
+```
+
+---
+
+## Security Model
+
+### Origin Filtering
+
+Configure allowed/blocked origins at the broker level:
+
+```typescript
+const broker = createBroker({
+  security: {
+    allowedOrigins: ['https://trusted.com', 'https://partner.com'],
+    blockedOrigins: ['https://malicious.com'],
+  },
+})
+```
+
+### Security Policy Hook
+
+Implement custom connection approval logic:
+
+```typescript
+const broker = createBroker({
+  securityPolicy: (message: MessageEvent) => {
+    // Custom validation logic
+    const origin = message.origin
+    const action = message.data
+
+    // Return true to allow, false to deny
+    return isAllowedConnection(origin, action.contract)
+  },
+})
+```
+
+### Contract Validation
+
+Channels require valid contracts conforming to the schema:
+
+```typescript
+interface IChannelContract {
+  name: string // Channel name (required)
+  version?: string // Protocol version
+  capabilities?: string[] // Supported features
+  metadata?: Record<string, unknown> // Custom metadata
+}
+```
+
+Contract validation occurs at both REQUEST and ACCEPT handlers to ensure both parties agree on the channel configuration.
+
+---
+
+## Source File Reference
+
+### Core Files
+
+| File                                                                   | Description              |
+| ---------------------------------------------------------------------- | ------------------------ |
+| [libs/nexus/src/broker/factory.ts](libs/nexus/src/broker/factory.ts)   | Broker factory function  |
+| [libs/nexus/src/channel/factory.ts](libs/nexus/src/channel/factory.ts) | Channel factory function |
+| [libs/nexus/src/types/action.ts](libs/nexus/src/types/action.ts)       | Protocol action types    |
+| [libs/nexus/src/types/channel.ts](libs/nexus/src/types/channel.ts)     | Channel handle interface |
+| [libs/nexus/src/core/processes/](libs/nexus/src/core/processes/)       | Process manager          |
+
+### Routing Handlers
+
+| File                                                                                         | Handler                        |
+| -------------------------------------------------------------------------------------------- | ------------------------------ |
+| [handle-request.ts](libs/nexus/src/broker/routing/handle-request.ts)                         | REQUEST_CONNECTION             |
+| [handle-accept.ts](libs/nexus/src/broker/routing/handle-accept.ts)                           | ACCEPT_CONNECTION              |
+| [handle-open.ts](libs/nexus/src/broker/routing/handle-open.ts)                               | OPEN_CONNECTION                |
+| [handle-deny.ts](libs/nexus/src/broker/routing/handle-deny.ts)                               | DENY_CONNECTION                |
+| [handle-cancel.ts](libs/nexus/src/broker/routing/handle-cancel.ts)                           | CANCEL_CONNECTION              |
+| [handle-cancel-acknowledged.ts](libs/nexus/src/broker/routing/handle-cancel-acknowledged.ts) | CANCEL_CONNECTION_ACKNOWLEDGED |
+| [handle-close.ts](libs/nexus/src/broker/routing/handle-close.ts)                             | CLOSE_CONNECTION               |
+| [handle-close-acknowledged.ts](libs/nexus/src/broker/routing/handle-close-acknowledged.ts)   | CLOSE_CONNECTION_ACKNOWLEDGED  |
+| [handle-message.ts](libs/nexus/src/broker/routing/handle-message.ts)                         | NEW_MESSAGE                    |
+| [handle-destroy.ts](libs/nexus/src/broker/routing/handle-destroy.ts)                         | DESTROY_CONNECTION             |
+| [handle-invalid.ts](libs/nexus/src/broker/routing/handle-invalid.ts)                         | INVALID_REQUEST                |
+
+### Supporting Files
+
+| File                                                                                             | Description                        |
+| ------------------------------------------------------------------------------------------------ | ---------------------------------- |
+| [libs/nexus/src/broker/routing/create-router.ts](libs/nexus/src/broker/routing/create-router.ts) | Router factory                     |
+| [libs/nexus/src/broker/routing/route-message.ts](libs/nexus/src/broker/routing/route-message.ts) | Message routing logic              |
+| [libs/nexus/src/filters/](libs/nexus/src/filters/)                                               | Event and message filter utilities |
+| [libs/nexus/src/schema/](libs/nexus/src/schema/)                                                 | Contract validation                |
+| [libs/nexus/src/setup/](libs/nexus/src/setup/)                                                   | Initialization utilities           |
+
+---
+
+## Future Considerations
+
+### Recommended Next Steps
+
+1. **Integration Tests**: End-to-end tests simulating full postMessage exchange between brokers
+2. **Performance Optimization**: Message batching for high-frequency communication
+3. **Observability**: Metrics and logging hooks for production monitoring
+4. **Connection Pooling**: Multi-channel scenarios with shared resources
+
+---
+
+_Last updated: February 8, 2026_
