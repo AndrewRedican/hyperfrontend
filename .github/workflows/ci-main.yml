@@ -329,5 +329,4 @@ jobs:
       - name: Publish affected libraries (DRY RUN)
         run: npx nx affected -t=publish --base=HEAD~1 --head=HEAD --dryRun=true
         env:
-          # NPM_TOKEN not needed for dry-run, but shown for reference
-          # NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
