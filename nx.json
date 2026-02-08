@@ -38,6 +38,14 @@
         "outputPath": "dist/{projectRoot}"
       }
     },
+    "publish": {
+      "dependsOn": ["build"],
+      "executor": "@hyperfrontend/package:publish",
+      "options": {
+        "access": "public",
+        "tag": "latest"
+      }
+    },
     "typecheck": {
       "cache": true,
       "inputs": ["default", "^default"],
