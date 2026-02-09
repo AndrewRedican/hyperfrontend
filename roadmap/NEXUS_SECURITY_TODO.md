@@ -305,54 +305,54 @@
 
 > [Testing Strategy](NEXUS_SECURITY_INTEGRATION.md#testing-strategy)
 
-- [ ] Create `libs/nexus/src/security/transport/__tests__/` directory
-- [ ] Add tests: `NoneTransport` passes through actions unchanged
-- [ ] Add tests: `NoneTransport` forwards received actions
-- [ ] Add tests: `NoneTransport` always reports ready
-- [ ] Add tests: `SecureTransport` encrypts outgoing actions
-- [ ] Add tests: `SecureTransport` decrypts incoming messages
-- [ ] Add tests: `SecureTransport` reports ready after initialization
-- [ ] Add tests: `SecureTransport` handles stop/resume
+- [x] Create `libs/nexus/src/security/transport/__tests__/` directory
+- [x] Add tests: `NoneTransport` passes through actions unchanged
+- [x] Add tests: `NoneTransport` forwards received actions
+- [x] Add tests: `NoneTransport` always reports ready
+- [x] Add tests: `SecureTransport` encrypts outgoing actions
+- [x] Add tests: `SecureTransport` decrypts incoming messages
+- [x] Add tests: `SecureTransport` reports ready after initialization
+- [x] Add tests: `SecureTransport` handles stop/resume
 
 ### 5.2 Unit Tests - Negotiation
 
-- [ ] Create `libs/nexus/src/security/negotiation/__tests__/` directory
-- [ ] Add tests: selects best matching protocol from preference list
-- [ ] Add tests: falls back to `'none'` when no overlap
-- [ ] Add tests: honors initiator preference order
-- [ ] Add tests: requires v2 support on both sides for v2 selection
+- [x] Create `libs/nexus/src/security/negotiation/__tests__/` directory
+- [x] Add tests: selects best matching protocol from preference list
+- [x] Add tests: falls back to `'none'` when no overlap
+- [x] Add tests: honors initiator preference order
+- [x] Add tests: requires v2 support on both sides for v2 selection
 
 ### 5.3 Unit Tests - Registry
 
-- [ ] Create `libs/nexus/src/security/registry/__tests__/` directory
-- [ ] Add tests: registers and retrieves protocol providers
-- [ ] Add tests: unregisters protocol providers
-- [ ] Add tests: returns supported versions list
+- [x] Create `libs/nexus/src/security/registry/__tests__/` directory
+- [x] Add tests: registers and retrieves protocol providers
+- [x] Add tests: unregisters protocol providers
+- [x] Add tests: returns supported versions list
 
 > **Checkpoint**: `npx nx test lib-nexus`
 
 ### 5.4 Integration Tests
 
-- [ ] Create `libs/nexus/src/__tests__/security-integration.spec.ts`
-- [ ] Add tests: negotiate v1 between compatible parties
-- [ ] Add tests: negotiate v2 with shared key
-- [ ] Add tests: fallback to `'none'` when initiator has no security
-- [ ] Add tests: fallback to `'none'` when responder has no security
-- [ ] Add tests: backward compatibility with no security field
-- [ ] Add tests: encrypt/decrypt messages with v1
-- [ ] Add tests: encrypt/decrypt messages with v2
-- [ ] Add tests: handle clock skew gracefully
-- [ ] Add tests: handle key rotation
+- [x] Create `libs/nexus/src/__tests__/security-integration.spec.ts`
+- [x] Add tests: negotiate v1 between compatible parties
+- [x] Add tests: negotiate v2 with shared key
+- [x] Add tests: fallback to `'none'` when initiator has no security
+- [x] Add tests: fallback to `'none'` when responder has no security
+- [x] Add tests: backward compatibility with no security field
+- [x] Add tests: encrypt/decrypt messages with v1
+- [x] Add tests: encrypt/decrypt messages with v2
+- [x] Add tests: handle clock skew gracefully
+- [x] Add tests: handle key rotation
 
 > **Checkpoint**: `npx nx test lib-nexus`
 
 ### 5.5 Documentation
 
-- [ ] Update `NEXUS_PROTOCOL_ANALYSIS.md` with security layer section
-- [ ] Create `docs/content/docs/nexus/security-integration.md` guide
-- [ ] Add API documentation for new broker methods
-- [ ] Add API documentation for new channel security settings
-- [ ] Create migration guide for existing consumers
+- [x] Update `NEXUS_PROTOCOL_ANALYSIS.md` with security layer section
+- [x] Create `docs/content/docs/nexus/security-integration.md` guide
+- [x] Add API documentation for new broker methods
+- [x] Add API documentation for new channel security settings
+- [x] Create migration guide for existing consumers
 
 > **Checkpoint**: `npx nx build lib-nexus`
 
@@ -360,9 +360,9 @@
 
 ## Final Validation
 
-- [ ] Run `npx nx lint lib-nexus` - all lint rules pass
-- [ ] Run `npx nx typecheck lib-nexus` - no type errors
-- [ ] Run `npx nx test lib-nexus` - all tests pass
-- [ ] Run `npx nx build lib-nexus` - build succeeds
-- [ ] Verify optional peer dependency on `@hyperfrontend/network-protocol`
-- [ ] Verify backward compatibility: existing consumer code unchanged
+- [x] Run `npx nx lint lib-nexus` - all lint rules pass
+- [x] Run `npx nx typecheck lib-nexus` - no type errors
+- [x] Run `npx nx test lib-nexus` - all tests pass
+- [x] Run `npx nx build lib-nexus` - build succeeds
+- [x] Verify optional peer dependency on `@hyperfrontend/network-protocol`
+- [x] Verify backward compatibility: existing consumer code unchanged

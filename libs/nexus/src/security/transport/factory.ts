@@ -65,5 +65,6 @@ export function createSecurityTransport(config: SecurityTransportConfig): Securi
     refreshRate: config.refreshRate,
     target,
     origin,
+    onError: config.onError,
   })
 }

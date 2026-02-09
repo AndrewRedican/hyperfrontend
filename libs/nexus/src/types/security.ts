@@ -78,6 +78,9 @@ export interface SecurityTransportConfig {
 
   /** Allowed origin for incoming messages */
   readonly origin?: string
+
+  /** Optional error handler for security failures */
+  readonly onError?: (error: { message: string; code: string; cause?: Error }) => void
 }
 
 /**

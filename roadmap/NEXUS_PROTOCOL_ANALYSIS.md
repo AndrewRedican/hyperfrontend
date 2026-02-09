@@ -797,6 +797,156 @@ Contract validation occurs at both REQUEST and ACCEPT handlers to ensure both pa
 
 ---
 
+## Security Transport Layer
+
+The Nexus protocol supports optional end-to-end encryption for message payloads through integration with `@hyperfrontend/network-protocol`. This provides protection against message interception and tampering.
+
+### Security Protocol Versions
+
+| Version | Description                                           | Use Case                               |
+| ------- | ----------------------------------------------------- | -------------------------------------- |
+| `none`  | Passthrough, no encryption                            | Trusted environments, debugging        |
+| `v1`    | Obfuscation-first handshake with dynamic key exchange | Basic protection, short-lived sessions |
+| `v2`    | Pre-shared key (PSK) with dynamic key rotation        | High-security, long-running sessions   |
+
+### Security Negotiation Flow
+
+During the connection handshake, parties negotiate the security protocol:
+
+```
+┌─────────────────────┐                              ┌─────────────────────┐
+│       HOST A        │                              │       HOST B        │
+│     (Initiator)     │                              │     (Responder)     │
+└─────────┬───────────┘                              └───────────┬─────────┘
+          │                                                      │
+          │  REQUEST_CONNECTION + security.supported             │
+          │  ──────────────────────────────────────────────────▶ │
+          │      { supported: ['v2', 'v1', 'none'] }             │
+          │                                                      │
+          │  ACCEPT_CONNECTION + security.negotiated             │
+          │  ◀────────────────────────────────────────────────── │
+          │      { negotiated: 'v2', publicParams: {...} }       │
+          │                                                      │
+          │  OPEN_CONNECTION + security.active                   │
+          │  ──────────────────────────────────────────────────▶ │
+          │      { active: true, protocol: 'v2' }                │
+          │                                                      │
+          ▼                                                      ▼
+    [SECURE CHANNEL]                                      [SECURE CHANNEL]
+```
+
+### Security Transport Architecture
+
+```
+┌────────────────────────────────────────────────────────────────┐
+│                          Nexus Channel                          │
+├────────────────────────────────────────────────────────────────┤
+│                    Security Transport Adapter                   │
+│  ┌─────────────────┐  ┌─────────────────┐  ┌─────────────────┐ │
+│  │  NoneTransport  │  │ SecureTransport │  │ SecureTransport │ │
+│  │    (none)       │  │     (v1)        │  │     (v2)        │ │
+│  └─────────────────┘  └─────────────────┘  └─────────────────┘ │
+├────────────────────────────────────────────────────────────────┤
+│               network-protocol Provider                         │
+│              (encryption/decryption pipeline)                   │
+├────────────────────────────────────────────────────────────────┤
+│                      postMessage API                            │
+└────────────────────────────────────────────────────────────────┘
+```
+
+### Broker Security Configuration
+
+Configure security at the broker level:
+
+```typescript
+import { createBroker } from '@hyperfrontend/nexus'
+import { createProtocol } from '@hyperfrontend/network-protocol/browser/v2'
+
+const broker = createBroker({
+  name: 'secure-broker',
+  contract: myContract,
+  settings: {
+    security: {
+      protocols: {
+        v1: createProtocol(logger, 60),
+        v2: createProtocol(logger, 'shared-key', 60),
+      },
+      defaultProtocol: 'v2',
+      defaultRefreshRate: 60,
+    },
+  },
+})
+```
+
+### Channel Security Override
+
+Override security settings per-channel:
+
+```typescript
+const channel = broker.addChannel('secure-channel', iframe.contentWindow, {
+  security: {
+    protocol: 'v2',
+    sharedKey: 'channel-specific-key',
+    refreshRate: 30,
+  },
+})
+```
+
+### Protocol Registry API
+
+Dynamically manage protocol providers:
+
+```typescript
+// Register a provider
+broker.registerProtocol('v2', createProtocol(logger, 'key', 60))
+
+// Check availability
+broker.hasProtocol('v2') // true
+broker.hasProtocol('v1') // false
+
+// Get supported versions
+broker.getSupportedProtocols() // ['v2', 'none']
+
+// Unregister a provider
+broker.unregisterProtocol('v2')
+```
+
+### Security Events
+
+Channels emit security-related events:
+
+| Event                 | Payload                     | Description                    |
+| --------------------- | --------------------------- | ------------------------------ |
+| `security-negotiated` | `{ protocol, isPreferred }` | Protocol negotiation completed |
+| `security-ready`      | `{ protocol }`              | Security transport is active   |
+| `security-error`      | `{ message, code, cause? }` | Security operation failed      |
+
+```typescript
+channel.on((event, data) => {
+  switch (event) {
+    case 'security-negotiated':
+      console.log(`Negotiated: ${data.protocol}`)
+      break
+    case 'security-ready':
+      console.log('Secure channel ready')
+      break
+    case 'security-error':
+      console.error(`Security error: ${data.message}`)
+      break
+  }
+})
+```
+
+### Backward Compatibility
+
+The security layer is fully backward compatible:
+
+- Channels without security configuration default to `'none'` protocol
+- Existing consumer code continues to work without modification
+- Security negotiation gracefully falls back when protocols don't match
+
+---
+
 ## Source File Reference
 
 ### Core Files
