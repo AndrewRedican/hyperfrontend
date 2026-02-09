@@ -1,6 +1,7 @@
 export { createRouter } from './create-router'
 export type { RouteHandler, HandlerMap } from './create-router'
 export { routeMessage } from './route-message'
+export { routeEncryptedMessage } from './route-encrypted-message'
 export { handleRequest } from './handle-request'
 export { handleAccept } from './handle-accept'
 export { handleDeny } from './handle-deny'

@@ -13,6 +13,7 @@
 
 import type { SecurityTransport, SecurityProtocolVersion } from '../../types/security'
 import type { SecureTransportConfig, ReceiveHandler, TransportState } from './types'
+import { createSecurityErrorEventData } from '../errors'
 
 /**
  * Protocol interface from network-protocol.
@@ -73,7 +74,7 @@ type NetworkProtocolProvider = (
  * ```
  */
 export function createSecureTransport(config: SecureTransportConfig): SecurityTransport {
-  const { protocol, provider, target, origin = '*' } = config
+  const { protocol, provider, target, origin = '*', onError } = config
 
   if (!provider) {
     throw new Error(`SecureTransport requires a protocol provider for ${protocol}`)
@@ -86,6 +87,17 @@ export function createSecureTransport(config: SecureTransportConfig): SecurityTr
 
   let receiveHandler: ReceiveHandler | null = null
   let networkProtocol: NetworkProtocol | null = null
+
+  /**
+   * Notify error handler of security failures.
+   *
+   * @param error - The error that occurred
+   */
+  const notifyError = (error: unknown): void => {
+    if (onError) {
+      onError(createSecurityErrorEventData(error))
+    }
+  }
 
   /**
    * Send a packet to the target window.
@@ -143,9 +155,13 @@ export function createSecureTransport(config: SecureTransportConfig): SecurityTr
       initializeProtocol()
     }
 
-    const protocol = networkProtocol
-    if (protocol) {
-      protocol.send('nexus', 'channel', action)
+    const currentProtocol = networkProtocol
+    if (currentProtocol) {
+      try {
+        currentProtocol.send('nexus', 'channel', action)
+      } catch (error) {
+        notifyError(error)
+      }
     }
   }
 
@@ -167,6 +183,7 @@ export function createSecureTransport(config: SecureTransportConfig): SecurityTr
    *
    * This method should be called by the broker's message router
    * when an encrypted message (Uint8Array) is received.
+   * Errors during decryption are caught and forwarded to the error handler.
    *
    * @param packet - The encrypted packet to decrypt
    */
@@ -175,7 +192,11 @@ export function createSecureTransport(config: SecureTransportConfig): SecurityTr
       return
     }
 
-    networkProtocol.receive(packet)
+    try {
+      networkProtocol.receive(packet)
+    } catch (error) {
+      notifyError(error)
+    }
   }
 
   /**

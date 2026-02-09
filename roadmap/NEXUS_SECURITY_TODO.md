@@ -210,31 +210,31 @@
 
 > [Outbound Message Flow](NEXUS_SECURITY_INTEGRATION.md#31-outbound-message-flow)
 
-- [ ] Modify `send` function to check `securityTransport.isReady()`
-- [ ] Route outbound actions through `securityTransport.send()` when ready
-- [ ] Fallback to direct `postMessage` when protocol is `'none'`
-- [ ] Handle queueing when security transport not yet ready
-- [ ] Ensure `postMessage` transfer of `Uint8Array` for encrypted payloads
+- [x] Modify `send` function to check `securityTransport.isReady()`
+- [x] Route outbound actions through `securityTransport.send()` when ready
+- [x] Fallback to direct `postMessage` when protocol is `'none'`
+- [x] Handle queueing when security transport not yet ready
+- [x] Ensure `postMessage` transfer of `Uint8Array` for encrypted payloads
 
 ### 3.2 Inbound Message Flow
 
 > [Inbound Message Flow](NEXUS_SECURITY_INTEGRATION.md#32-inbound-message-flow)
 
-- [ ] Modify broker `onMessage` to detect `Uint8Array` payloads
-- [ ] Create `routeEncryptedMessage` function for encrypted dispatch
-- [ ] Route `Uint8Array` through channel's security transport for decryption
-- [ ] Route decrypted action to existing message handlers
-- [ ] Maintain existing flow for plain object messages
+- [x] Modify broker `onMessage` to detect `Uint8Array` payloads
+- [x] Create `routeEncryptedMessage` function for encrypted dispatch
+- [x] Route `Uint8Array` through channel's security transport for decryption
+- [x] Route decrypted action to existing message handlers
+- [x] Maintain existing flow for plain object messages
 
 ### 3.3 Error Handling
 
 > [Error Handling](NEXUS_SECURITY_INTEGRATION.md#33-error-handling)
 
-- [ ] Handle decryption failures (invalid key, corrupted payload)
-- [ ] Handle deobfuscation failures (clock skew, time-window miss)
-- [ ] Implement retry logic for time-window deobfuscation attempts
-- [ ] Emit `'security-error'` event with descriptive error payload
-- [ ] Log security errors using channel's debug logger
+- [x] Handle decryption failures (invalid key, corrupted payload)
+- [x] Handle deobfuscation failures (clock skew, time-window miss)
+- [x] Implement retry logic for time-window deobfuscation attempts
+- [x] Emit `'security-error'` event with descriptive error payload
+- [x] Log security errors using channel's debug logger
 
 > **Checkpoint**: `npx nx lint lib-nexus && npx nx typecheck lib-nexus && npx nx test lib-nexus`
 

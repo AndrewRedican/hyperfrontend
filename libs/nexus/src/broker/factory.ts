@@ -8,6 +8,7 @@ import { createProcessManager } from '../core/processes/factory'
 import { createActionCreators } from '../core/actions/factory'
 import { createRouter } from './routing/create-router'
 import { routeMessage } from './routing/route-message'
+import { routeEncryptedMessage } from './routing/route-encrypted-message'
 import { filterOrigin } from './security/filter-origin'
 import { validatePolicy } from './security/validate-policy'
 import { addChannel, getChannel, listChannels, removeChannel } from './channels'
@@ -87,7 +88,7 @@ export function createBroker(config: {
   })
 
   // Message handler
-  const onMessage = (event: MessageEvent<IAction>) => {
+  const onMessage = (event: MessageEvent<IAction | Uint8Array>) => {
     const origin = event?.origin
 
     // Apply origin filtering
@@ -98,8 +99,14 @@ export function createBroker(config: {
       return
     }
 
-    // Route to appropriate handler
-    routeMessage(router, state, registry, processManager, actions, event)
+    // Check if message is encrypted (Uint8Array)
+    if (event.data instanceof Uint8Array) {
+      routeEncryptedMessage(state, registry, processManager, actions, router, <MessageEvent<Uint8Array>>event)
+      return
+    }
+
+    // Route plain object messages through existing handlers
+    routeMessage(router, state, registry, processManager, actions, <MessageEvent<IAction>>event)
   }
 
   // Attach message listener
