@@ -1,4 +1,5 @@
 import type { IChannelContract } from './contract'
+import type { SecurityNegotiationRequest, SecurityNegotiationResponse, SecurityConfirmation } from './security'
 
 /**
  * Protocol prefix for all action types.
@@ -37,6 +38,8 @@ export type ActionType = (typeof ACTION_TYPES)[keyof typeof ACTION_TYPES]
 export interface IActionBase {
   readonly type: ActionType
   readonly senderId: string // Broker ID that sent this action
+  /** Optional security negotiation/confirmation data */
+  readonly security?: SecurityNegotiationRequest | SecurityNegotiationResponse | SecurityConfirmation
 }
 
 /**
@@ -51,6 +54,22 @@ export interface IActionWithProcess extends IActionBase {
  */
 export interface IActionWithContract extends IActionWithProcess {
   readonly contract: IChannelContract
+}
+
+/**
+ * Action with contract and security negotiation request.
+ * Used for REQUEST_CONNECTION with security.
+ */
+export interface IActionWithContractAndSecurity extends IActionWithContract {
+  readonly security?: SecurityNegotiationRequest
+}
+
+/**
+ * Action with security data.
+ * Used for handshake actions that carry security negotiation/confirmation.
+ */
+export interface IActionWithSecurity extends IActionBase {
+  readonly security?: SecurityNegotiationRequest | SecurityNegotiationResponse | SecurityConfirmation
 }
 
 /**

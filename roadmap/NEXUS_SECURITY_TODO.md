@@ -28,16 +28,16 @@
 
 ### 1.1 Type System Extensions
 
-- [ ] Create `libs/nexus/src/types/security.ts` with `SecurityProtocolVersion` type
-- [ ] Add `SecurityNegotiationRequest` interface to `security.ts`
-- [ ] Add `SecurityNegotiationResponse` interface to `security.ts`
-- [ ] Add `SecurityConfirmation` interface to `security.ts`
-- [ ] Add `SecurityTransportConfig` interface to `security.ts`
-- [ ] Add `SecurityTransport` interface to `security.ts`
-- [ ] Add `ProtocolLoader` type to `security.ts`
-- [ ] Add `BrokerSecurityConfig` interface to `security.ts`
-- [ ] Add `ChannelSecuritySettings` interface to `security.ts`
-- [ ] Export all security types from `libs/nexus/src/types/index.ts`
+- [x] Create `libs/nexus/src/types/security.ts` with `SecurityProtocolVersion` type
+- [x] Add `SecurityNegotiationRequest` interface to `security.ts`
+- [x] Add `SecurityNegotiationResponse` interface to `security.ts`
+- [x] Add `SecurityConfirmation` interface to `security.ts`
+- [x] Add `SecurityTransportConfig` interface to `security.ts`
+- [x] Add `SecurityTransport` interface to `security.ts`
+- [x] Add `ProtocolLoader` type to `security.ts`
+- [x] Add `BrokerSecurityConfig` interface to `security.ts`
+- [x] Add `ChannelSecuritySettings` interface to `security.ts`
+- [x] Export all security types from `libs/nexus/src/types/index.ts`
 
 > **Checkpoint**: `npx nx typecheck lib-nexus`
 
@@ -45,10 +45,10 @@
 
 > [Action Type Extensions](NEXUS_SECURITY_INTEGRATION.md#action-type-extensions)
 
-- [ ] Extend `IActionBase` with optional `security` property
-- [ ] Create `IActionWithSecurity` extending `IActionBase`
-- [ ] Create `IActionWithContractAndSecurity` extending `IActionWithContract`
-- [ ] Ensure handshake action types accept security fields
+- [x] Extend `IActionBase` with optional `security` property
+- [x] Create `IActionWithSecurity` extending `IActionBase`
+- [x] Create `IActionWithContractAndSecurity` extending `IActionWithContract`
+- [x] Ensure handshake action types accept security fields
 
 > **Checkpoint**: `npx nx typecheck lib-nexus`
 
@@ -56,24 +56,24 @@
 
 > [Appendix: File Structure](NEXUS_SECURITY_INTEGRATION.md#appendix-file-structure)
 
-- [ ] Create `libs/nexus/src/security/` directory
-- [ ] Create `libs/nexus/src/security/index.ts` barrel export
-- [ ] Create `libs/nexus/src/security/transport/` directory
-- [ ] Create `libs/nexus/src/security/transport/index.ts` barrel export
-- [ ] Create `libs/nexus/src/security/transport/types.ts` with internal transport types
+- [x] Create `libs/nexus/src/security/` directory
+- [x] Create `libs/nexus/src/security/index.ts` barrel export
+- [x] Create `libs/nexus/src/security/transport/` directory
+- [x] Create `libs/nexus/src/security/transport/index.ts` barrel export
+- [x] Create `libs/nexus/src/security/transport/types.ts` with internal transport types
 
 ### 1.4 NoneTransport Implementation
 
 > [Security Transport Adapter](NEXUS_SECURITY_INTEGRATION.md#1-security-transport-adapter)
 
-- [ ] Create `libs/nexus/src/security/transport/none-transport.ts`
-- [ ] Implement `createNoneTransport` factory function with full JSDoc
-- [ ] Implement passthrough `send` method
-- [ ] Implement `onReceive` handler registration
-- [ ] Implement no-op `stop` and `resume` methods
-- [ ] Implement `isReady` returning `true` always
-- [ ] Implement `getProtocol` returning `'none'`
-- [ ] Export from `transport/index.ts`
+- [x] Create `libs/nexus/src/security/transport/none-transport.ts`
+- [x] Implement `createNoneTransport` factory function with full JSDoc
+- [x] Implement passthrough `send` method
+- [x] Implement `onReceive` handler registration
+- [x] Implement no-op `stop` and `resume` methods
+- [x] Implement `isReady` returning `true` always
+- [x] Implement `getProtocol` returning `'none'`
+- [x] Export from `transport/index.ts`
 
 > **Checkpoint**: `npx nx lint lib-nexus && npx nx typecheck lib-nexus`
 
@@ -81,26 +81,26 @@
 
 > [Security Transport Adapter](NEXUS_SECURITY_INTEGRATION.md#1-security-transport-adapter)
 
-- [ ] Create `libs/nexus/src/security/transport/secure-transport.ts`
-- [ ] Implement `createSecureTransport` factory function with full JSDoc
-- [ ] Integrate with network-protocol `ProtocolProvider`
-- [ ] Implement `send` routing through encryption pipeline
-- [ ] Implement `onReceive` routing through decryption pipeline
-- [ ] Implement `stop` and `resume` for backpressure control
-- [ ] Implement `isReady` checking protocol initialization state
-- [ ] Implement `getProtocol` returning configured version
-- [ ] Export from `transport/index.ts`
+- [x] Create `libs/nexus/src/security/transport/secure-transport.ts`
+- [x] Implement `createSecureTransport` factory function with full JSDoc
+- [x] Integrate with network-protocol `ProtocolProvider`
+- [x] Implement `send` routing through encryption pipeline
+- [x] Implement `onReceive` routing through decryption pipeline
+- [x] Implement `stop` and `resume` for backpressure control
+- [x] Implement `isReady` checking protocol initialization state
+- [x] Implement `getProtocol` returning configured version
+- [x] Export from `transport/index.ts`
 
 ### 1.6 Security Transport Factory
 
 > [Security Transport Adapter](NEXUS_SECURITY_INTEGRATION.md#1-security-transport-adapter)
 
-- [ ] Create `libs/nexus/src/security/transport/factory.ts`
-- [ ] Implement `createSecurityTransport` with full JSDoc
-- [ ] Route to `createNoneTransport` when `protocol === 'none'`
-- [ ] Route to `createSecureTransport` when `protocol === 'v1' | 'v2'`
-- [ ] Throw descriptive error if provider missing for secure protocols
-- [ ] Export from `transport/index.ts`
+- [x] Create `libs/nexus/src/security/transport/factory.ts`
+- [x] Implement `createSecurityTransport` with full JSDoc
+- [x] Route to `createNoneTransport` when `protocol === 'none'`
+- [x] Route to `createSecureTransport` when `protocol === 'v1' | 'v2'`
+- [x] Throw descriptive error if provider missing for secure protocols
+- [x] Export from `transport/index.ts`
 
 > **Checkpoint**: `npx nx typecheck lib-nexus && npx nx test lib-nexus`
 
@@ -108,24 +108,24 @@
 
 > [Protocol Registry (Broker-Level)](NEXUS_SECURITY_INTEGRATION.md#2-protocol-registry-broker-level)
 
-- [ ] Create `libs/nexus/src/security/registry/` directory
-- [ ] Create `libs/nexus/src/security/registry/index.ts` barrel export
-- [ ] Create `libs/nexus/src/security/registry/types.ts`
-- [ ] Create `libs/nexus/src/security/registry/factory.ts`
-- [ ] Implement `createProtocolRegistry` with full JSDoc
-- [ ] Implement `register(version, provider)` method
-- [ ] Implement `unregister(version)` method
-- [ ] Implement `get(version)` method returning provider or undefined
-- [ ] Implement `has(version)` method
-- [ ] Implement `getSupportedVersions()` method
-- [ ] Export registry from `security/index.ts`
+- [x] Create `libs/nexus/src/security/registry/` directory
+- [x] Create `libs/nexus/src/security/registry/index.ts` barrel export
+- [x] Create `libs/nexus/src/security/registry/types.ts`
+- [x] Create `libs/nexus/src/security/registry/factory.ts`
+- [x] Implement `createProtocolRegistry` with full JSDoc
+- [x] Implement `register(version, provider)` method
+- [x] Implement `unregister(version)` method
+- [x] Implement `get(version)` method returning provider or undefined
+- [x] Implement `has(version)` method
+- [x] Implement `getSupportedVersions()` method
+- [x] Export registry from `security/index.ts`
 
 ### 1.8 Platform Detection Utility
 
-- [ ] Create `libs/nexus/src/security/platform.ts`
-- [ ] Implement `detectPlatform(): 'browser' | 'node'` with full JSDoc
-- [ ] Use `typeof window` check for browser detection
-- [ ] Export from `security/index.ts`
+- [x] Create `libs/nexus/src/security/platform.ts`
+- [x] Implement `detectPlatform(): 'browser' | 'node'` with full JSDoc
+- [x] Use `typeof window` check for browser detection
+- [x] Export from `security/index.ts`
 
 > **Checkpoint**: `npx nx lint lib-nexus && npx nx typecheck lib-nexus && npx nx test lib-nexus`
 

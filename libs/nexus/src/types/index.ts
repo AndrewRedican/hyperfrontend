@@ -12,7 +12,17 @@ export type {
 } from './channel'
 
 // Action types
-export type { IAction, ActionType } from './action'
+export type {
+  IAction,
+  ActionType,
+  IActionBase,
+  IActionWithProcess,
+  IActionWithContract,
+  IActionWithContractAndSecurity,
+  IActionWithSecurity,
+  IActionWithError,
+  IActionWithData,
+} from './action'
 
 // Contract types
 export type { IChannelContract, IActionDescription } from './contract'
@@ -39,3 +49,16 @@ export type {
 
 // Validation types
 export type { ValidationResult, ValidationError, ValidationContext } from './validation'
+
+// Security types
+export type {
+  SecurityProtocolVersion,
+  SecurityNegotiationRequest,
+  SecurityNegotiationResponse,
+  SecurityConfirmation,
+  SecurityTransportConfig,
+  SecurityTransport,
+  ProtocolLoader,
+  BrokerSecurityConfig,
+  ChannelSecuritySettings,
+} from './security'
