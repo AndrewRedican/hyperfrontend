@@ -1,7 +1,7 @@
 import type { IChannelContract } from './contract'
 import type { IMessage } from './message'
 import type { ChannelEvent } from './events'
-import type { SecurityProtocolVersion, SecurityTransport, SecurityNegotiationRequest } from './security'
+import type { SecurityProtocolVersion, SecurityTransport, SecurityNegotiationRequest, ChannelSecuritySettings } from './security'
 
 /**
  * Configuration for creating a new channel
@@ -29,6 +29,8 @@ export interface IChannelSettings {
   debug?: boolean
   /** Whether the channel is managed by a broker (auto-activates on connect) */
   brokerManaged?: boolean
+  /** Security settings for protocol negotiation and encryption */
+  security?: ChannelSecuritySettings
 }
 
 /**

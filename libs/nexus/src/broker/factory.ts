@@ -1,11 +1,13 @@
 import { uuidV4 } from '@hyperfrontend/random-generator-utils'
 import type { IChannelContract } from '../types/contract'
 import type { IChannelSettings } from '../types/channel'
+import type { SecurityProtocolVersion, ProtocolLoader } from '../types/security'
 import type { BrokerConfig, BrokerState, BrokerHandle, SecurityPolicy } from './types'
 import { defaultBrokerSettings } from './defaults'
 import { createRegistry } from '../core/registry/factory'
 import { createProcessManager } from '../core/processes/factory'
 import { createActionCreators } from '../core/actions/factory'
+import { createProtocolRegistry } from '../security/registry'
 import { createRouter } from './routing/create-router'
 import { routeMessage } from './routing/route-message'
 import { routeEncryptedMessage } from './routing/route-encrypted-message'
@@ -65,6 +67,26 @@ export function createBroker(config: {
   // Create infrastructure
   const registry = createRegistry()
   const processManager = createProcessManager()
+  const protocolRegistry = createProtocolRegistry()
+
+  /**
+   * Protocol loader for lazy loading security protocols on demand.
+   * Stored for use during channel creation when a protocol isn't pre-registered.
+   */
+  const _protocolLoader: ProtocolLoader | undefined = config.settings?.security?.protocolLoader
+
+  // Register pre-configured protocol providers from settings
+  if (config.settings?.security?.protocols) {
+    const protocols = config.settings.security.protocols
+
+    if (protocols.v1) {
+      protocolRegistry.register('v1', protocols.v1)
+    }
+
+    if (protocols.v2) {
+      protocolRegistry.register('v2', protocols.v2)
+    }
+  }
 
   // Create action creators
   const actions = createActionCreators({
@@ -173,6 +195,24 @@ export function createBroker(config: {
         debugMode: state.settings.debug ?? false,
         channels: listChannels(registry),
       }
+    },
+
+    registerProtocol(version: 'v1' | 'v2', provider: unknown) {
+      protocolRegistry.register(version, provider)
+      return broker
+    },
+
+    unregisterProtocol(version: 'v1' | 'v2') {
+      protocolRegistry.unregister(version)
+      return broker
+    },
+
+    hasProtocol(version: SecurityProtocolVersion) {
+      return protocolRegistry.has(version)
+    },
+
+    getSupportedProtocols() {
+      return protocolRegistry.getSupportedVersions()
     },
   }
 

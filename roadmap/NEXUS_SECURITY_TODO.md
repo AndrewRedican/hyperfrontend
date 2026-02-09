@@ -248,29 +248,29 @@
 
 > [Extended Broker Factory](NEXUS_SECURITY_INTEGRATION.md#extended-broker-factory)
 
-- [ ] Add `security?: BrokerSecurityConfig` to broker settings interface
-- [ ] Support `protocols` map for pre-registered providers
-- [ ] Support `protocolLoader` for lazy loading
-- [ ] Support `defaultProtocol` for new channels
-- [ ] Support `defaultSharedKey` for v2 defaults
-- [ ] Support `defaultRefreshRate` for key rotation
+- [x] Add `security?: BrokerSecurityConfig` to broker settings interface
+- [x] Support `protocols` map for pre-registered providers
+- [x] Support `protocolLoader` for lazy loading
+- [x] Support `defaultProtocol` for new channels
+- [x] Support `defaultSharedKey` for v2 defaults
+- [x] Support `defaultRefreshRate` for key rotation
 
 ### 4.2 BrokerHandle Extensions
 
 > [Protocol Registry Management](NEXUS_SECURITY_INTEGRATION.md#protocol-registry-management)
 
-- [ ] Add `registerProtocol(version, provider)` method to `BrokerHandle`
-- [ ] Add `unregisterProtocol(version)` method to `BrokerHandle`
-- [ ] Add `hasProtocol(version)` method to `BrokerHandle`
-- [ ] Add `getSupportedProtocols()` method to `BrokerHandle`
-- [ ] Update `BrokerHandle` interface definition
+- [x] Add `registerProtocol(version, provider)` method to `BrokerHandle`
+- [x] Add `unregisterProtocol(version)` method to `BrokerHandle`
+- [x] Add `hasProtocol(version)` method to `BrokerHandle`
+- [x] Add `getSupportedProtocols()` method to `BrokerHandle`
+- [x] Update `BrokerHandle` interface definition
 
 ### 4.3 Broker Factory Integration
 
-- [ ] Initialize protocol registry in `createBroker`
-- [ ] Register pre-configured protocols from settings
-- [ ] Store protocol loader reference for lazy loading
-- [ ] Pass security config to channel creation
+- [x] Initialize protocol registry in `createBroker`
+- [x] Register pre-configured protocols from settings
+- [x] Store protocol loader reference for lazy loading
+- [x] Pass security config to channel creation
 
 > **Checkpoint**: `npx nx lint lib-nexus && npx nx typecheck lib-nexus && npx nx test lib-nexus`
 
@@ -278,20 +278,20 @@
 
 > [Extended Channel Configuration](NEXUS_SECURITY_INTEGRATION.md#extended-channel-configuration)
 
-- [ ] Add `security?: ChannelSecuritySettings` to `IChannelSettings`
-- [ ] Support `protocol` override per channel
-- [ ] Support `sharedKey` per channel for v2
-- [ ] Support `refreshRate` per channel
-- [ ] Support `disabled` flag to opt-out of security
+- [x] Add `security?: ChannelSecuritySettings` to `IChannelSettings`
+- [x] Support `protocol` override per channel
+- [x] Support `sharedKey` per channel for v2
+- [x] Support `refreshRate` per channel
+- [x] Support `disabled` flag to opt-out of security
 
 ### 4.5 Channel Event Extensions
 
 > [Extended Events](NEXUS_SECURITY_INTEGRATION.md#extended-events)
 
-- [ ] Add `'security-negotiated'` event type
-- [ ] Add `'security-ready'` event type
-- [ ] Add `'security-error'` event type
-- [ ] Update `ChannelEvent` union type
+- [x] Add `'security-negotiated'` event type
+- [x] Add `'security-ready'` event type
+- [x] Add `'security-error'` event type
+- [x] Update `ChannelEvent` union type
 
 > **Checkpoint**: `npx nx lint lib-nexus && npx nx typecheck lib-nexus && npx nx test lib-nexus`
 
