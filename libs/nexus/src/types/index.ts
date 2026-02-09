@@ -39,11 +39,17 @@ export type {
   CancelEventData,
   DenyEventData,
   InvalidEventData,
+  SecurityNegotiatedEventData,
+  SecurityReadyEventData,
+  SecurityErrorEventData,
   OpenEventHandler,
   CloseEventHandler,
   CancelEventHandler,
   DenyEventHandler,
   InvalidEventHandler,
+  SecurityNegotiatedEventHandler,
+  SecurityReadyEventHandler,
+  SecurityErrorEventHandler,
   TypedEventHandler,
 } from './events'
 

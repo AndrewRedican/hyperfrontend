@@ -2,6 +2,7 @@ import type { ChannelState } from '../types/channel'
 import type { IMessage } from '../types/message'
 import type { IAction } from '../types/action'
 import type { ChannelEvent } from '../types/events'
+import type { SecurityNegotiationRequest, SecurityNegotiationResponse, SecurityConfirmation } from '../types/security'
 
 /**
  * Internal channel API used by lifecycle, messaging, and subscription functions.
@@ -32,11 +33,11 @@ export interface ChannelInternals {
 
   /** Action creators bound to broker */
   actions: {
-    requestConnection(processId: string): IAction
-    acceptConnection(processId: string): IAction
+    requestConnection(processId: string, security?: SecurityNegotiationRequest): IAction
+    acceptConnection(processId: string, security?: SecurityNegotiationResponse): IAction
     denyConnection(processId: string, reason: string): IAction
     cancelConnection(processId: string): IAction
-    openConnection(processId: string): IAction
+    openConnection(processId: string, security?: SecurityConfirmation): IAction
     closeConnection(processId: string): IAction
     destroyConnection(): IAction
     newMessage(data: unknown): IAction

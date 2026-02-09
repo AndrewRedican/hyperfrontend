@@ -1,13 +1,38 @@
 import { ACTION_TYPES } from '../../types/action'
-import type { IActionWithContract } from '../../types/action'
+import type { IActionWithContract, IActionWithContractAndSecurity } from '../../types/action'
+import type { SecurityNegotiationResponse } from '../../types/security'
 import type { ActionDependencies } from './factory'
 
+/**
+ * Creates ACCEPT_CONNECTION action
+ *
+ * @param deps - Action dependencies (getBrokerId, getContract)
+ * @returns Function that takes processId and optional security response, returns frozen action
+ *
+ * @example
+ * ```typescript
+ * // Without security
+ * const action = acceptConnection(deps)('process-123')
+ *
+ * // With security negotiation response
+ * const secureAction = acceptConnection(deps)('process-123', {
+ *   negotiated: 'v2'
+ * })
+ * ```
+ */
 export const acceptConnection =
   (deps: ActionDependencies) =>
-  (processId: string): IActionWithContract =>
-    Object.freeze({
+  (processId: string, security?: SecurityNegotiationResponse): IActionWithContract | IActionWithContractAndSecurity => {
+    const base = {
       type: ACTION_TYPES.ACCEPT_CONNECTION,
       processId,
       senderId: deps.getBrokerId(),
       contract: deps.getContract(),
-    })
+    } as const
+
+    if (security) {
+      return Object.freeze({ ...base, security })
+    }
+
+    return Object.freeze(base)
+  }

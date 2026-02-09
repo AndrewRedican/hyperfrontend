@@ -15,3 +15,6 @@ export type { ProtocolRegistry } from './registry'
 
 export { detectPlatform } from './platform'
 export type { Platform } from './platform'
+
+export { negotiateProtocol, createSecurityRequest, createSecurityResponse } from './negotiation'
+export type { NegotiationResult } from './negotiation'

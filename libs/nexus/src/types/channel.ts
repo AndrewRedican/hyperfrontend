@@ -1,6 +1,7 @@
 import type { IChannelContract } from './contract'
 import type { IMessage } from './message'
 import type { ChannelEvent } from './events'
+import type { SecurityProtocolVersion, SecurityTransport, SecurityNegotiationRequest } from './security'
 
 /**
  * Configuration for creating a new channel
@@ -85,6 +86,14 @@ export interface ChannelState {
   readonly brokerManaged: boolean
   /** Whether connect() has been called (ready to accept connections) */
   readonly readyToConnect: boolean
+  /** Negotiated security protocol (null before negotiation) */
+  readonly negotiatedProtocol: SecurityProtocolVersion | null
+  /** Whether security transport is ready for secure messages */
+  readonly securityReady: boolean
+  /** Security transport adapter (null if protocol is 'none' or not negotiated) */
+  readonly securityTransport: SecurityTransport | null
+  /** Pending security negotiation request from initiator (for responder to use) */
+  readonly pendingSecurityRequest: SecurityNegotiationRequest | null
 }
 
 /**
@@ -183,4 +192,53 @@ export interface ChannelHandle {
    * Used by broker handlers to forward messages.
    */
   notifyMessage(message: IMessage): void
+
+  // ============================================
+  // Security-related methods (used by handlers)
+  // ============================================
+
+  /**
+   * Stores the pending security request from the initiator.
+   * Used by handleRequest to preserve initiator's security preferences.
+   */
+  setPendingSecurityRequest(request: SecurityNegotiationRequest | null): void
+
+  /**
+   * Gets the pending security request from the initiator.
+   * Used by handleRequest during negotiation.
+   */
+  getPendingSecurityRequest(): SecurityNegotiationRequest | null
+
+  /**
+   * Sets the negotiated security protocol.
+   * Called after protocol negotiation completes.
+   */
+  setNegotiatedProtocol(protocol: SecurityProtocolVersion): void
+
+  /**
+   * Gets the negotiated security protocol.
+   */
+  getNegotiatedProtocol(): SecurityProtocolVersion | null
+
+  /**
+   * Sets the security transport adapter.
+   * Called after protocol initialization.
+   */
+  setSecurityTransport(transport: SecurityTransport | null): void
+
+  /**
+   * Gets the security transport adapter.
+   */
+  getSecurityTransport(): SecurityTransport | null
+
+  /**
+   * Marks security as ready for message exchange.
+   * Called when security transport is fully initialized.
+   */
+  setSecurityReady(ready: boolean): void
+
+  /**
+   * Checks if security transport is ready.
+   */
+  isSecurityReady(): boolean
 }

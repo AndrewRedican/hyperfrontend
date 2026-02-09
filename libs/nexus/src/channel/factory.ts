@@ -4,6 +4,7 @@ import type { IAction } from '../types/action'
 import type { IChannelContract } from '../types/contract'
 import type { ChannelEvent } from '../types/events'
 import type { IMessage } from '../types/message'
+import type { SecurityProtocolVersion, SecurityTransport, SecurityNegotiationRequest } from '../types/security'
 import { DEFAULT_CHANNEL_SETTINGS } from './defaults'
 import { createInitialState } from './state/initial'
 import { activate as activateState } from './state/activate'
@@ -135,6 +136,39 @@ export function createChannel(config: IChannelConfig, deps: ChannelDependencies)
 
     notifyMessage: (message: IMessage) => {
       notifyMessage(internals, message)
+    },
+
+    // Security methods
+    setPendingSecurityRequest: (request: SecurityNegotiationRequest | null) => {
+      internals.updateState({ pendingSecurityRequest: request })
+    },
+
+    getPendingSecurityRequest: () => {
+      return state.pendingSecurityRequest
+    },
+
+    setNegotiatedProtocol: (protocol: SecurityProtocolVersion) => {
+      internals.updateState({ negotiatedProtocol: protocol })
+    },
+
+    getNegotiatedProtocol: () => {
+      return state.negotiatedProtocol
+    },
+
+    setSecurityTransport: (transport: SecurityTransport | null) => {
+      internals.updateState({ securityTransport: transport })
+    },
+
+    getSecurityTransport: () => {
+      return state.securityTransport
+    },
+
+    setSecurityReady: (ready: boolean) => {
+      internals.updateState({ securityReady: ready })
+    },
+
+    isSecurityReady: () => {
+      return state.securityReady
     },
   }
 

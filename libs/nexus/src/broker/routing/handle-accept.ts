@@ -1,5 +1,6 @@
-import type { IAction } from '../../types/action'
+import type { IAction, IActionBase } from '../../types/action'
 import { isActionWithContract } from '../../types/action'
+import type { SecurityNegotiationResponse, SecurityConfirmation } from '../../types/security'
 import type { BrokerState } from '../types'
 import type { Registry } from '../../core/registry/factory'
 import type { ProcessManager } from '../../core/processes/factory'
@@ -21,7 +22,9 @@ import { applyPolicy } from '../security/apply-policy'
  * @remarks
  * Side Effects:
  * - Activates the channel
- * - Sends OPEN_CONNECTION to complete handshake
+ * - Extracts negotiated security protocol (if present)
+ * - Stores negotiated protocol in channel state
+ * - Sends OPEN_CONNECTION to complete handshake (with security confirmation)
  * - Terminates process after activation
  * - Fires 'open' lifecycle event
  *
@@ -46,6 +49,9 @@ export function handleAccept(
 
   const processId = action.processId
   const contract = action.contract
+
+  // Extract security response from action base (may be undefined for backward compatibility)
+  const securityResponse = (<IActionBase>action).security as SecurityNegotiationResponse | undefined
 
   // Get channel by process ID
   const channel = processManager.get(processId) as ChannelHandle | undefined
@@ -84,14 +90,39 @@ export function handleAccept(
     }
   }
 
+  // Handle security protocol negotiation result
+  let securityConfirmation: SecurityConfirmation | undefined = undefined
+  if (securityResponse) {
+    const negotiatedProtocol = securityResponse.negotiated
+
+    // Store negotiated protocol in channel state
+    channel.setNegotiatedProtocol(negotiatedProtocol)
+
+    if (state.settings.debug) {
+      console.info(`[nexus] ${state.name} accepted security protocol: ${negotiatedProtocol}`)
+    }
+
+    // For 'none' protocol, mark security as ready immediately
+    if (negotiatedProtocol === 'none') {
+      channel.setSecurityReady(true)
+    }
+
+    // Create security confirmation for OPEN action
+    securityConfirmation = {
+      active: negotiatedProtocol !== 'none',
+      protocol: negotiatedProtocol,
+    }
+  }
+
   // Activate channel with connection details
   channel.activate(message.origin, contract)
 
-  // Send OPEN_CONNECTION
+  // Send OPEN_CONNECTION with security confirmation if applicable
   channel.sendAction({
     type: '[nexus] connection-opened',
     processId,
     senderId: state.id,
+    ...(securityConfirmation && { security: securityConfirmation }),
   })
 
   // Terminate process (handshake complete)

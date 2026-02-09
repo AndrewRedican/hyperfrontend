@@ -139,16 +139,16 @@
 
 > [Protocol Negotiation Model](NEXUS_SECURITY_INTEGRATION.md#protocol-negotiation-model)
 
-- [ ] Create `libs/nexus/src/security/negotiation/` directory
-- [ ] Create `libs/nexus/src/security/negotiation/index.ts` barrel export
-- [ ] Create `libs/nexus/src/security/negotiation/types.ts`
-- [ ] Create `libs/nexus/src/security/negotiation/negotiate.ts`
-- [ ] Implement `negotiateProtocol(request, responderSupported)` with full JSDoc
-- [ ] Return first matching protocol from initiator's preference list
-- [ ] Fallback to `'none'` when no overlap
-- [ ] Implement `createSecurityRequest(supported, preferred)` helper
-- [ ] Implement `createSecurityResponse(negotiated, publicParams?)` helper
-- [ ] Export negotiation functions from `security/index.ts`
+- [x] Create `libs/nexus/src/security/negotiation/` directory
+- [x] Create `libs/nexus/src/security/negotiation/index.ts` barrel export
+- [x] Create `libs/nexus/src/security/negotiation/types.ts`
+- [x] Create `libs/nexus/src/security/negotiation/negotiate.ts`
+- [x] Implement `negotiateProtocol(request, responderSupported)` with full JSDoc
+- [x] Return first matching protocol from initiator's preference list
+- [x] Fallback to `'none'` when no overlap
+- [x] Implement `createSecurityRequest(supported, preferred)` helper
+- [x] Implement `createSecurityResponse(negotiated, publicParams?)` helper
+- [x] Export negotiation functions from `security/index.ts`
 
 > **Checkpoint**: `npx nx typecheck lib-nexus && npx nx test lib-nexus`
 
@@ -156,11 +156,11 @@
 
 > [Extended Handshake Flow](NEXUS_SECURITY_INTEGRATION.md#extended-handshake-flow)
 
-- [ ] Modify `createActionCreators` to accept optional security config
-- [ ] Update `requestConnection` to include `security` field in action
-- [ ] Update `acceptConnection` to include `security` negotiation response
-- [ ] Update `openConnection` to include `security` confirmation
-- [ ] Ensure backward compatibility when security config is absent
+- [x] Modify `createActionCreators` to accept optional security config
+- [x] Update `requestConnection` to include `security` field in action
+- [x] Update `acceptConnection` to include `security` negotiation response
+- [x] Update `openConnection` to include `security` confirmation
+- [x] Ensure backward compatibility when security config is absent
 
 > **Checkpoint**: `npx nx typecheck lib-nexus && npx nx test lib-nexus`
 
@@ -168,24 +168,24 @@
 
 > [Handshake Integration](NEXUS_SECURITY_INTEGRATION.md#22-handler-modifications)
 
-- [ ] Modify `handleRequest` to extract `security` from incoming action
-- [ ] Call `negotiateProtocol` with initiator request and responder capabilities
-- [ ] Store negotiated protocol in channel pending state
-- [ ] Include security response in accept action
-- [ ] Maintain backward compatibility: treat missing `security` as `'none'`
+- [x] Modify `handleRequest` to extract `security` from incoming action
+- [x] Call `negotiateProtocol` with initiator request and responder capabilities
+- [x] Store negotiated protocol in channel pending state
+- [x] Include security response in accept action
+- [x] Maintain backward compatibility: treat missing `security` as `'none'`
 
 ### 2.4 Handler: handleAccept Modification
 
-- [ ] Modify `handleAccept` to extract negotiated protocol from action
-- [ ] Initialize appropriate security transport based on negotiated protocol
-- [ ] Store security transport reference in channel state
-- [ ] Trigger protocol-specific initialization (key exchange for v2)
+- [x] Modify `handleAccept` to extract negotiated protocol from action
+- [x] Initialize appropriate security transport based on negotiated protocol
+- [x] Store security transport reference in channel state
+- [x] Trigger protocol-specific initialization (key exchange for v2)
 
 ### 2.5 Handler: handleOpen Modification
 
-- [ ] Modify `handleOpen` to extract security confirmation
-- [ ] Mark security transport as ready
-- [ ] Emit `'security-ready'` event on channel
+- [x] Modify `handleOpen` to extract security confirmation
+- [x] Mark security transport as ready
+- [x] Emit `'security-ready'` event on channel
 
 > **Checkpoint**: `npx nx lint lib-nexus && npx nx typecheck lib-nexus && npx nx test lib-nexus`
 
@@ -193,10 +193,10 @@
 
 > [Channel State Extensions](NEXUS_SECURITY_INTEGRATION.md#23-channel-state-extensions)
 
-- [ ] Add `securityTransport?: SecurityTransport` to channel internals
-- [ ] Add `negotiatedProtocol?: SecurityProtocolVersion` to channel state
-- [ ] Add `securityReady: boolean` flag to channel state
-- [ ] Update channel state initialization to handle security fields
+- [x] Add `securityTransport?: SecurityTransport` to channel internals
+- [x] Add `negotiatedProtocol?: SecurityProtocolVersion` to channel state
+- [x] Add `securityReady: boolean` flag to channel state
+- [x] Update channel state initialization to handle security fields
 
 > **Checkpoint**: `npx nx typecheck lib-nexus`
 
