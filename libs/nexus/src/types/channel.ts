@@ -158,12 +158,14 @@ export interface ChannelHandle {
 
   /**
    * Subscribe to all channel lifecycle events.
+   *
    * @example
    * channel.on((event, data) => console.log(event, data))
    */
   on(handler: EventHandler): () => void
   /**
    * Subscribe to a specific channel lifecycle event.
+   *
    * @example
    * channel.on('open', (data) => console.log('Opened:', data.origin))
    */
