@@ -91,6 +91,28 @@ describe('createActionCreators', () => {
       const action = actions.acceptConnection('process-456')
       expect(Object.isFrozen(action)).toBe(true)
     })
+
+    it('creates ACCEPT_CONNECTION action with security negotiation response', () => {
+      const processId = 'process-secure'
+      const security = { negotiated: 'v2' as const }
+      const action = actions.acceptConnection(processId, security)
+
+      expect(action).toEqual({
+        type: ACTION_TYPES.ACCEPT_CONNECTION,
+        processId,
+        senderId: 'test-broker-id',
+        contract: mockContract,
+        security,
+      })
+    })
+
+    it('includes security field only when provided', () => {
+      const actionWithoutSecurity = actions.acceptConnection('process-1')
+      const actionWithSecurity = actions.acceptConnection('process-2', { negotiated: 'v1' })
+
+      expect('security' in actionWithoutSecurity).toBe(false)
+      expect('security' in actionWithSecurity).toBe(true)
+    })
   })
 
   describe('denyConnection', () => {

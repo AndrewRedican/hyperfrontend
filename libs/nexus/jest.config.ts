@@ -13,6 +13,7 @@ export default <Config>{
   coverageDirectory: '../../coverage/libs/nexus',
   coveragePathIgnorePatterns: [
     '/node_modules/',
+    'src/types/action.ts',
     'src/types/broker.ts',
     'src/types/channel.ts',
     'src/types/contract.ts',
@@ -26,10 +27,10 @@ export default <Config>{
   ],
   coverageThreshold: {
     global: {
-      branches: 90,
-      functions: 95,
-      lines: 95,
-      statements: 95,
+      branches: 92,
+      functions: 96,
+      lines: 96,
+      statements: 96,
     },
   },
   projects: [

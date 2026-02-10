@@ -458,4 +458,186 @@ describe('handleRequest', () => {
 
     expect(consoleInfoSpy).toHaveBeenCalledWith(expect.stringContaining('negotiated security protocol'))
   })
+
+  it('returns early when action lacks contract property', () => {
+    const invalidAction = {
+      type: '[nexus] connection-request',
+      senderId: 'remote-broker-1',
+      processId: 'process-1',
+    }
+
+    const message = <MessageEvent<IAction>>{
+      data: <IAction>invalidAction,
+      source: mockWindow,
+    }
+
+    handleRequest(mockBrokerState, registry, processManager, mockActions, message)
+
+    const channel = registry.getByName('remote-broker-1')
+    expect(channel).toBeUndefined()
+  })
+
+  it('sends acceptance with security response when already open and request has security', () => {
+    const action: IAction = {
+      type: '[nexus] connection-request',
+      senderId: 'remote-broker-1',
+      processId: 'process-1',
+      contract: validContract,
+      security: { supported: ['v1', 'none'], preferred: 'v1' },
+    }
+
+    const message = <MessageEvent<IAction>>{
+      data: action,
+      source: mockWindow,
+      origin: 'https://example.com',
+    }
+
+    handleRequest(mockBrokerState, registry, processManager, mockActions, message)
+
+    const channel = registry.getById('remote-broker-1')
+    if (channel) {
+      Object.defineProperty(channel, 'isActive', { value: () => true, writable: true })
+      Object.defineProperty(channel, 'id', { value: 'remote-broker-1', writable: true })
+    }
+
+    handleRequest(mockBrokerState, registry, processManager, mockActions, message)
+
+    expect(mockWindow.postMessage).toHaveBeenCalledWith(
+      expect.objectContaining({
+        type: '[nexus] connection-request-accepted',
+        security: expect.any(Object),
+      }),
+      expect.any(String)
+    )
+  })
+
+  it('sends acceptance without security response when already open and no security in request', () => {
+    const action: IAction = {
+      type: '[nexus] connection-request',
+      senderId: 'remote-broker-1',
+      processId: 'process-1',
+      contract: validContract,
+    }
+
+    const message = <MessageEvent<IAction>>{
+      data: action,
+      source: mockWindow,
+      origin: 'https://example.com',
+    }
+
+    handleRequest(mockBrokerState, registry, processManager, mockActions, message)
+
+    const channel = registry.getById('remote-broker-1')
+    if (channel) {
+      Object.defineProperty(channel, 'isActive', { value: () => true, writable: true })
+      Object.defineProperty(channel, 'id', { value: 'remote-broker-1', writable: true })
+    }
+
+    handleRequest(mockBrokerState, registry, processManager, mockActions, message)
+
+    const lastCall = (<jest.Mock>mockWindow.postMessage).mock.calls[(<jest.Mock>mockWindow.postMessage).mock.calls.length - 1]
+    const sentAction = lastCall[0]
+
+    expect(sentAction.type).toBe('[nexus] connection-request-accepted')
+    expect(sentAction.security).toBeUndefined()
+  })
+
+  it('stores pending security request when channel not ready', () => {
+    const action: IAction = {
+      type: '[nexus] connection-request',
+      senderId: 'new-remote',
+      processId: 'process-1',
+      contract: validContract,
+      security: { supported: ['v1'], preferred: 'v1' },
+    }
+
+    const message = <MessageEvent<IAction>>{
+      data: action,
+      source: mockWindow,
+      origin: 'https://example.com',
+    }
+
+    handleRequest(mockBrokerState, registry, processManager, mockActions, message)
+
+    const channel = registry.getByName('new-remote')
+    expect(channel).toBeDefined()
+  })
+
+  it('removes process when contract validation fails', () => {
+    const action: IAction = {
+      type: '[nexus] connection-request',
+      senderId: 'remote-broker-1',
+      processId: 'process-1',
+      contract: <IChannelContract>(<unknown>{ accepted: null }),
+    }
+
+    const message = <MessageEvent<IAction>>{
+      data: action,
+      source: mockWindow,
+      origin: 'https://example.com',
+    }
+
+    handleRequest(mockBrokerState, registry, processManager, mockActions, message)
+
+    // Process should be removed after denial
+    expect(mockWindow.postMessage).toHaveBeenCalledWith(
+      expect.objectContaining({
+        type: '[nexus] connection-request-denied',
+        error: 'Invalid contract.',
+      }),
+      expect.any(String)
+    )
+  })
+
+  it('removes process when security policy denies request', () => {
+    const stateWithPolicy: BrokerState = {
+      ...mockBrokerState,
+      settings: {
+        ...mockBrokerState.settings,
+        securityPolicy: jest.fn(() => false),
+      },
+    }
+
+    const action: IAction = {
+      type: '[nexus] connection-request',
+      senderId: 'remote-broker-1',
+      processId: 'process-1',
+      contract: validContract,
+    }
+
+    const message = <MessageEvent<IAction>>{
+      data: action,
+      source: mockWindow,
+      origin: 'https://example.com',
+    }
+
+    handleRequest(stateWithPolicy, registry, processManager, mockActions, message)
+
+    expect(mockWindow.postMessage).toHaveBeenCalledWith(
+      expect.objectContaining({
+        type: '[nexus] connection-request-denied',
+        error: 'Not accepted.',
+      }),
+      expect.any(String)
+    )
+  })
+
+  it('returns early when action does not have contract property', () => {
+    const action: IAction = {
+      type: '[nexus] connection-request',
+      senderId: 'remote-broker-1',
+    }
+
+    const message = <MessageEvent<IAction>>{
+      data: action,
+      source: mockWindow,
+    }
+
+    handleRequest(mockBrokerState, registry, processManager, mockActions, message)
+
+    // Should not create a channel since action is invalid
+    const channel = registry.getByName('remote-broker-1')
+    expect(channel).toBeFalsy()
+    expect(mockWindow.postMessage).not.toHaveBeenCalled()
+  })
 })

@@ -43,6 +43,13 @@ describe('Channel State Management', () => {
       expect(state.readyToConnect).toBe(false)
     })
 
+    it('uses default values when settings are empty', () => {
+      const state = createInitialState('test-channel', window, {})
+
+      expect(state.queueMessages).toBe(true)
+      expect(state.debug).toBe(false)
+    })
+
     it('generates unique IDs for different channels', () => {
       const state1 = createInitialState('channel-1', window, defaultSettings)
       const state2 = createInitialState('channel-2', window, defaultSettings)
@@ -77,6 +84,17 @@ describe('Channel State Management', () => {
       const contract: IChannelContract = {
         emitted: [{ type: 'action1' }],
         accepted: [],
+      }
+
+      const newState = activate(initialState, 'https://example.com', contract)
+
+      expect(newState.acceptedActions).toEqual([])
+    })
+
+    it('handles contract with undefined accepted property', () => {
+      const initialState = createInitialState('test', window, defaultSettings)
+      const contract = <IChannelContract>{
+        emitted: [{ type: 'action1' }],
       }
 
       const newState = activate(initialState, 'https://example.com', contract)

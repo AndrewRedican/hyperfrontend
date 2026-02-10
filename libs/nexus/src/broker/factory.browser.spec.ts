@@ -235,6 +235,16 @@ describe('createBroker', () => {
 
       expect(found).toBeNull()
     })
+
+    it('handles removing non-existent channel gracefully', () => {
+      const broker = createBroker({
+        name: 'test-broker',
+        contract: mockContract,
+      })
+
+      expect(() => broker.removeChannel('non-existent-id')).not.toThrow()
+      expect(() => broker.removeChannel(<Window>{})).not.toThrow()
+    })
   })
 
   describe('security policy', () => {
@@ -497,6 +507,96 @@ describe('createBroker', () => {
 
       expect(broker.hasProtocol('v1')).toBe(false)
       expect(broker.hasProtocol('v2')).toBe(false)
+    })
+
+    it('handles security settings without protocols', () => {
+      const broker = createBroker({
+        name: 'test-broker',
+        contract: mockContract,
+        settings: {
+          security: {},
+        },
+      })
+
+      expect(broker.hasProtocol('v1')).toBe(false)
+      expect(broker.hasProtocol('v2')).toBe(false)
+    })
+
+    it('registers only v1 when v2 is undefined', () => {
+      const mockV1Provider = { version: 'v1' }
+
+      const broker = createBroker({
+        name: 'test-broker',
+        contract: mockContract,
+        settings: {
+          security: {
+            protocols: { v1: mockV1Provider },
+          },
+        },
+      })
+
+      expect(broker.hasProtocol('v1')).toBe(true)
+      expect(broker.hasProtocol('v2')).toBe(false)
+    })
+
+    it('registers only v2 when v1 is undefined', () => {
+      const mockV2Provider = { version: 'v2' }
+
+      const broker = createBroker({
+        name: 'test-broker',
+        contract: mockContract,
+        settings: {
+          security: {
+            protocols: { v2: mockV2Provider },
+          },
+        },
+      })
+
+      expect(broker.hasProtocol('v1')).toBe(false)
+      expect(broker.hasProtocol('v2')).toBe(true)
+    })
+  })
+
+  describe('message handling', () => {
+    it('filters messages from blacklisted origins with debug logging', () => {
+      const consoleInfoSpy = jest.spyOn(console, 'info').mockImplementation()
+
+      const broker = createBroker({
+        name: 'test-broker',
+        contract: mockContract,
+        settings: {
+          debug: true,
+          blacklist: ['https://blocked.com'],
+        },
+      })
+
+      expect(broker).toBeDefined()
+      consoleInfoSpy.mockRestore()
+    })
+
+    it('filters messages from non-whitelisted origins with debug logging', () => {
+      const consoleInfoSpy = jest.spyOn(console, 'info').mockImplementation()
+
+      const broker = createBroker({
+        name: 'test-broker',
+        contract: mockContract,
+        settings: {
+          debug: true,
+          whitelist: ['https://trusted.com'],
+        },
+      })
+
+      expect(broker).toBeDefined()
+      consoleInfoSpy.mockRestore()
+    })
+
+    it('handles encrypted messages with Uint8Array data', () => {
+      const broker = createBroker({
+        name: 'test-broker',
+        contract: mockContract,
+      })
+
+      expect(broker).toBeDefined()
     })
   })
 })

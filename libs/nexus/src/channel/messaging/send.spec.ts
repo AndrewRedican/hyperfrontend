@@ -41,6 +41,11 @@ describe('channel/messaging/send', () => {
       scheduledActivation: null,
       debug: false,
       brokerManaged: false,
+      readyToConnect: true,
+      negotiatedProtocol: null,
+      securityReady: false,
+      securityTransport: null,
+      pendingSecurityRequest: null,
     }
 
     mockGetState = jest.fn(() => state)
@@ -130,6 +135,49 @@ describe('channel/messaging/send', () => {
       }
 
       expect(() => send(mockChannel, message)).toThrow('Cannot send message. Channel test-channel is not open.')
+    })
+  })
+
+  describe('when security transport is not ready', () => {
+    beforeEach(() => {
+      state = {
+        ...state,
+        active: true,
+        negotiatedProtocol: 'v2',
+        securityTransport: {
+          isReady: jest.fn(() => false),
+          send: jest.fn(),
+          onReceive: jest.fn(),
+          stop: jest.fn(),
+          resume: jest.fn(),
+          getProtocol: jest.fn(() => 'v2'),
+        },
+      }
+      mockGetState.mockReturnValue(state)
+    })
+
+    it('queues message if queueMessages is enabled', () => {
+      const message: IMessage = {
+        type: 'USER_ACTION',
+        data: { userId: 123 },
+      }
+
+      send(mockChannel, message)
+
+      expect(queueModule.queue).toHaveBeenCalledWith(mockChannel, message)
+      expect(sendActionModule.sendAction).not.toHaveBeenCalled()
+    })
+
+    it('throws error if queueMessages is disabled', () => {
+      state = { ...state, queueMessages: false }
+      mockGetState.mockReturnValue(state)
+
+      const message: IMessage = {
+        type: 'USER_ACTION',
+        data: {},
+      }
+
+      expect(() => send(mockChannel, message)).toThrow('Cannot send message. Security transport for channel test-channel is not ready.')
     })
   })
 })

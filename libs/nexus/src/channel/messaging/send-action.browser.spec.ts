@@ -112,4 +112,73 @@ describe('channel/messaging/send-action', () => {
 
     expect(mockWindow.postMessage).toHaveBeenCalledWith(action, '*')
   })
+
+  describe('with security transport', () => {
+    let mockSecurityTransport: {
+      isReady: jest.Mock
+      send: jest.Mock
+      onReceive: jest.Mock
+      stop: jest.Mock
+      resume: jest.Mock
+      getProtocol: jest.Mock
+    }
+
+    beforeEach(() => {
+      mockSecurityTransport = {
+        isReady: jest.fn(() => true),
+        send: jest.fn(),
+        onReceive: jest.fn(),
+        stop: jest.fn(),
+        resume: jest.fn(),
+        getProtocol: jest.fn(() => 'v2'),
+      }
+      state = {
+        ...state,
+        securityTransport: mockSecurityTransport,
+      }
+      mockGetState.mockReturnValue(state)
+    })
+
+    it('sends non-handshake action through security transport when ready', () => {
+      const action: IAction = {
+        type: '[nexus] new-message',
+        senderId: 'broker-id',
+        data: { test: 'data' },
+      }
+
+      sendAction(mockChannel, action)
+
+      expect(mockSecurityTransport.send).toHaveBeenCalledWith(action)
+      expect(mockWindow.postMessage).not.toHaveBeenCalled()
+    })
+
+    it('sends handshake actions via plaintext postMessage', () => {
+      const action: IAction = {
+        type: '[nexus] connection-request',
+        senderId: 'broker-id',
+        processId: 'process-123',
+        contract: { accepted: [], emitted: [] },
+      }
+
+      sendAction(mockChannel, action)
+
+      expect(mockWindow.postMessage).toHaveBeenCalledWith(action, '*')
+      expect(mockSecurityTransport.send).not.toHaveBeenCalled()
+    })
+
+    it('sends via postMessage when security transport is not ready', () => {
+      mockSecurityTransport.isReady.mockReturnValue(false)
+
+      const action: IAction = {
+        type: '[nexus] new-message',
+        senderId: 'broker-id',
+        data: { test: 'data' },
+      }
+
+      sendAction(mockChannel, action)
+
+      expect(mockWindow.postMessage).toHaveBeenCalledWith(action, '*')
+      expect(mockSecurityTransport.send).not.toHaveBeenCalled()
+    })
+  })
 })
