@@ -23,7 +23,7 @@
     "typescript"
   ],
   "dependencies": {
-    "@hyperfrontend/data-utils": "0.0.0",
-    "@hyperfrontend/function-utils": "0.0.0"
+    "@hyperfrontend/data-utils": "0.0.1",
+    "@hyperfrontend/function-utils": "0.0.1"
   }
 }

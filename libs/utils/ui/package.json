@@ -35,10 +35,10 @@
     "./time": "./src/time/index.js"
   },
   "dependencies": {
-    "@hyperfrontend/function-utils": "0.0.0",
-    "@hyperfrontend/random-generator-utils": "0.0.0",
-    "@hyperfrontend/list-utils": "0.0.0",
-    "@hyperfrontend/data-utils": "0.0.0"
+    "@hyperfrontend/function-utils": "0.0.1",
+    "@hyperfrontend/random-generator-utils": "0.0.1",
+    "@hyperfrontend/list-utils": "0.0.1",
+    "@hyperfrontend/data-utils": "0.0.1"
   },
   "funding": {
     "type": "github",

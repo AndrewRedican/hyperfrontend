@@ -35,7 +35,7 @@
     "./store": "./src/store/index.js"
   },
   "dependencies": {
-    "@hyperfrontend/data-utils": "0.0.0"
+    "@hyperfrontend/data-utils": "0.0.1"
   },
   "funding": {
     "type": "github",

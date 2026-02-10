@@ -1,7 +1,7 @@
 import { type ExecutorContext, logger } from '@nx/devkit'
 import { execSync } from 'node:child_process'
-import { readFileSync } from 'node:fs'
-import { join } from 'node:path'
+import { readFileSync, writeFileSync, readdirSync, statSync } from 'node:fs'
+import { join, relative } from 'node:path'
 import type { VersionExecutorOptions } from './schema'
 import semverVersion from '@jscutlery/semver/src/executors/version'
 import type { VersionBuilderSchema } from '@jscutlery/semver/src/executors/version/schema'
@@ -40,6 +40,114 @@ function getPackageVersion(packageJsonPath: string): string {
   } catch {
     return '0.0.0'
   }
+}
+
+/**
+ * Gets the package name from package.json.
+ *
+ * @param packageJsonPath - Path to package.json
+ * @returns Package name or null if not found
+ */
+function getPackageName(packageJsonPath: string): string | null {
+  try {
+    const content = readFileSync(packageJsonPath, 'utf-8')
+    const pkg = JSON.parse(content)
+    return pkg.name || null
+  } catch {
+    return null
+  }
+}
+
+/**
+ * Recursively finds all package.json files in a directory.
+ *
+ * @param dir - Directory to search
+ * @param results - Accumulator for found paths
+ * @returns Array of package.json paths
+ */
+function findPackageJsonFiles(dir: string, results: string[] = []): string[] {
+  try {
+    const entries = readdirSync(dir)
+    for (const entry of entries) {
+      // Skip node_modules, dist, and hidden directories
+      if (entry === 'node_modules' || entry === 'dist' || entry.startsWith('.')) {
+        continue
+      }
+      const fullPath = join(dir, entry)
+      const stat = statSync(fullPath)
+      if (stat.isDirectory()) {
+        findPackageJsonFiles(fullPath, results)
+      } else if (entry === 'package.json') {
+        results.push(fullPath)
+      }
+    }
+  } catch {
+    // Ignore errors (permission denied, etc.)
+  }
+  return results
+}
+
+/**
+ * Updates dependency version references in all workspace packages.
+ *
+ * @param packageName - The npm package name that was updated (e.g., '@hyperfrontend/data-utils')
+ * @param newVersion - The new version to set
+ * @param workspaceRoot - The workspace root directory
+ * @param currentPackageJsonPath - Path to the current package's package.json (to skip)
+ * @param dryRun - If true, don't actually write changes
+ * @returns Array of updated package.json paths
+ */
+function updateDependentVersions(
+  packageName: string,
+  newVersion: string,
+  workspaceRoot: string,
+  currentPackageJsonPath: string,
+  dryRun: boolean
+): string[] {
+  const updatedFiles: string[] = []
+  const libsDir = join(workspaceRoot, 'libs')
+  const packageJsonFiles = findPackageJsonFiles(libsDir)
+
+  for (const packageJsonPath of packageJsonFiles) {
+    // Skip the package that was just versioned
+    if (packageJsonPath === currentPackageJsonPath) {
+      continue
+    }
+
+    try {
+      const content = readFileSync(packageJsonPath, 'utf-8')
+      const pkg = JSON.parse(content)
+      let modified = false
+
+      // Check and update dependencies
+      if (pkg.dependencies && pkg.dependencies[packageName] !== undefined) {
+        if (pkg.dependencies[packageName] !== newVersion) {
+          pkg.dependencies[packageName] = newVersion
+          modified = true
+        }
+      }
+
+      // Check and update peerDependencies
+      if (pkg.peerDependencies && pkg.peerDependencies[packageName] !== undefined) {
+        if (pkg.peerDependencies[packageName] !== newVersion) {
+          pkg.peerDependencies[packageName] = newVersion
+          modified = true
+        }
+      }
+
+      if (modified) {
+        const relativePath = relative(workspaceRoot, packageJsonPath)
+        if (!dryRun) {
+          writeFileSync(packageJsonPath, JSON.stringify(pkg, null, 2) + '\n', 'utf-8')
+        }
+        updatedFiles.push(relativePath)
+      }
+    } catch {
+      // Ignore errors reading/writing individual files
+    }
+  }
+
+  return updatedFiles
 }
 
 /**
@@ -93,6 +201,46 @@ export default async function versionExecutor(options: VersionExecutorOptions, c
 
   if (result.success) {
     logger.info(`${projectName}: version updated`)
+
+    // Update dependent packages' version references (enabled by default)
+    const shouldUpdateDependents = options.updateDependents !== false
+    if (shouldUpdateDependents) {
+      const packageName = getPackageName(packageJsonPath)
+      const newVersion = getPackageVersion(packageJsonPath)
+
+      if (packageName && newVersion !== '0.0.0') {
+        const updatedFiles = updateDependentVersions(packageName, newVersion, workspaceRoot, packageJsonPath, options.dryRun ?? false)
+
+        if (updatedFiles.length > 0) {
+          logger.info(`${projectName}: Updated dependency version in ${updatedFiles.length} package(s):`)
+          for (const file of updatedFiles) {
+            logger.info(`  - ${file}`)
+          }
+
+          // Stage the updated files for the commit (if not dry run and not skipping commit)
+          if (!options.dryRun && !options.skipCommit) {
+            try {
+              for (const file of updatedFiles) {
+                execSync(`git add "${file}"`, {
+                  cwd: workspaceRoot,
+                  encoding: 'utf-8',
+                  stdio: ['pipe', 'pipe', 'pipe'],
+                })
+              }
+              // Amend the version commit to include the dependency updates
+              execSync('git commit --amend --no-edit', {
+                cwd: workspaceRoot,
+                encoding: 'utf-8',
+                stdio: ['pipe', 'pipe', 'pipe'],
+              })
+              logger.info(`${projectName}: Amended commit to include dependency updates`)
+            } catch (error) {
+              logger.warn(`${projectName}: Could not amend commit with dependency updates: ${error}`)
+            }
+          }
+        }
+      }
+    }
   }
 
   return result

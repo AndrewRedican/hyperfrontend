@@ -89,6 +89,11 @@
       "items": {
         "type": "string"
       }
+    },
+    "updateDependents": {
+      "type": "boolean",
+      "description": "Update version references in dependent packages after version bump.",
+      "default": true
     }
   },
   "required": []

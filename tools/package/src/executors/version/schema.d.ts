@@ -53,4 +53,7 @@ export interface VersionExecutorOptions {
 
   /** Specify array of commit types to be ignored when calculating next version bump. */
   skipCommitTypes?: string[]
+
+  /** Update version references in dependent packages after version bump. */
+  updateDependents?: boolean
 }
