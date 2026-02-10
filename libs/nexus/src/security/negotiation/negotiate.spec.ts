@@ -5,8 +5,8 @@
  * protocol to use between two communicating parties.
  */
 
-import { negotiateProtocol, createSecurityRequest, createSecurityResponse } from '../negotiate'
-import type { SecurityProtocolVersion, SecurityNegotiationRequest } from '../../../types/security'
+import { negotiateProtocol, createSecurityRequest, createSecurityResponse } from './negotiate'
+import type { SecurityProtocolVersion, SecurityNegotiationRequest } from '../../types/security'
 
 describe('Protocol Negotiation', () => {
   describe('negotiateProtocol', () => {

@@ -5,8 +5,8 @@
  * encryption or obfuscation.
  */
 
-import { createNoneTransport } from '../none-transport'
-import type { SecurityTransport } from '../../../types/security'
+import { createNoneTransport } from './none-transport'
+import type { SecurityTransport } from '../../types/security'
 
 describe('NoneTransport', () => {
   let mockTarget: { postMessage: jest.Mock }

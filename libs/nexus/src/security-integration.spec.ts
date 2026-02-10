@@ -5,11 +5,11 @@
  * negotiation, transport encryption/decryption, and handshake flow.
  */
 
-import { createProtocolRegistry } from '../security/registry'
-import { negotiateProtocol, createSecurityRequest, createSecurityResponse } from '../security/negotiation'
-import { createSecurityTransport } from '../security/transport'
-import { createNoneTransport } from '../security/transport/none-transport'
-import type { SecurityProtocolVersion, SecurityNegotiationRequest } from '../types/security'
+import { createProtocolRegistry } from './security/registry'
+import { negotiateProtocol, createSecurityRequest, createSecurityResponse } from './security/negotiation'
+import { createSecurityTransport } from './security/transport'
+import { createNoneTransport } from './security/transport/none-transport'
+import type { SecurityProtocolVersion, SecurityNegotiationRequest } from './types/security'
 
 describe('Integration: Security Protocol', () => {
   describe('Protocol Negotiation Scenarios', () => {

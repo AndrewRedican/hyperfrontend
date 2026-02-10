@@ -5,9 +5,9 @@
  * encryption and obfuscation pipeline.
  */
 
-import { createSecureTransport } from '../secure-transport'
-import type { SecurityTransport } from '../../../types/security'
-import type { SecureTransportConfig } from '../types'
+import { createSecureTransport } from './secure-transport'
+import type { SecurityTransport } from '../../types/security'
+import type { SecureTransportConfig } from './types'
 
 describe('SecureTransport', () => {
   let mockTarget: { postMessage: jest.Mock }

@@ -4,7 +4,7 @@
  * Tests the registry for managing protocol providers at the broker level.
  */
 
-import { createProtocolRegistry } from '../factory'
+import { createProtocolRegistry } from './factory'
 
 describe('Protocol Registry', () => {
   describe('register', () => {
