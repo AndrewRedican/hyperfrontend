@@ -40,6 +40,8 @@ Unlike raw `postMessage` usage, Nexus enforces **communication contracts**—typ
 
 Nexus uses a **functional programming approach** with factory functions (`createBroker`, `createChannel`) that return handle objects. Internal state is encapsulated via closures, making the system highly testable and avoiding the complexity of class-based inheritance. The routing layer uses a handler registry pattern, allowing protocol actions (REQUEST_CONNECTION, ACCEPT_CONNECTION, etc.) to be processed by dedicated handlers.
 
+For a comprehensive deep dive into the library's internals, see the [Architecture Documentation](ARCHITECTURE.md).
+
 ## Why Use Nexus?
 
 ### Type-Safe Contracts Prevent Integration Bugs
