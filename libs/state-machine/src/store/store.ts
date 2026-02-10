@@ -16,7 +16,7 @@ export class Store {
   readonly subscribe = (listener: Listener): (() => void) => {
     this.listeners.add(listener)
     return () => {
-      this.listeners = new Set(Array.from(this.listeners.values()).filter((l) => l !== listener))
+      this.listeners.delete(listener)
     }
   }
 }

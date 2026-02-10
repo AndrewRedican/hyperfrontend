@@ -1,7 +1,3 @@
-/**
- * Tests for logging utilities
- */
-
 import { createLogger, type Logger } from './create-logger'
 import { logAction } from './log-action'
 import { logEvent } from './log-event'
@@ -43,6 +39,8 @@ describe('Logging Utilities', () => {
         info: jest.fn(),
         warn: jest.fn(),
         error: jest.fn(),
+        setLogLevel: jest.fn(),
+        getLogLevel: jest.fn(() => 'debug'),
       }
 
       const logger = createLogger(true, customLogger)
@@ -56,6 +54,8 @@ describe('Logging Utilities', () => {
         info: jest.fn(),
         warn: jest.fn(),
         error: jest.fn(),
+        setLogLevel: jest.fn(),
+        getLogLevel: jest.fn(() => 'debug'),
       }
 
       const logger = createLogger(true, customLogger)
@@ -77,6 +77,8 @@ describe('Logging Utilities', () => {
         info: jest.fn(),
         warn: jest.fn(),
         error: jest.fn(),
+        setLogLevel: jest.fn(),
+        getLogLevel: jest.fn(() => 'debug'),
       }
 
       // Even with debug=false, custom logger's debug should still be called
@@ -107,6 +109,86 @@ describe('Logging Utilities', () => {
 
       expect(debugSpy).not.toHaveBeenCalled()
       debugSpy.mockRestore()
+    })
+
+    describe('internal console wrapper functions', () => {
+      it('calls console.error with prefix when logger.error is called', () => {
+        const errorSpy = jest.spyOn(console, 'error').mockImplementation()
+        const logger = createLogger(true)
+        logger.setLogLevel('debug')
+
+        logger.error('test error message', { data: 123 })
+
+        expect(errorSpy).toHaveBeenCalledWith('[nexus]', 'test error message', { data: 123 })
+        errorSpy.mockRestore()
+      })
+
+      it('calls console.warn with prefix when logger.warn is called', () => {
+        const warnSpy = jest.spyOn(console, 'warn').mockImplementation()
+        const logger = createLogger(true)
+        logger.setLogLevel('debug')
+
+        logger.warn('test warning', 42)
+
+        expect(warnSpy).toHaveBeenCalledWith('[nexus]', 'test warning', 42)
+        warnSpy.mockRestore()
+      })
+
+      it('calls console.info with prefix when logger.info is called', () => {
+        const infoSpy = jest.spyOn(console, 'info').mockImplementation()
+        const logger = createLogger(true)
+        logger.setLogLevel('debug')
+
+        logger.info('test info')
+
+        expect(infoSpy).toHaveBeenCalledWith('[nexus]', 'test info')
+        infoSpy.mockRestore()
+      })
+
+      it('calls console.debug with prefix when logger.debug is called and debug is enabled', () => {
+        const debugSpy = jest.spyOn(console, 'debug').mockImplementation()
+        const logger = createLogger(true)
+        logger.setLogLevel('debug')
+
+        logger.debug('test debug', 'extra', 'args')
+
+        expect(debugSpy).toHaveBeenCalledWith('[nexus]', 'test debug', 'extra', 'args')
+        debugSpy.mockRestore()
+      })
+
+      it('handles multiple arguments in error', () => {
+        const errorSpy = jest.spyOn(console, 'error').mockImplementation()
+        const logger = createLogger(false)
+        logger.setLogLevel('debug')
+
+        logger.error('arg1', 'arg2', 'arg3', { nested: true })
+
+        expect(errorSpy).toHaveBeenCalledWith('[nexus]', 'arg1', 'arg2', 'arg3', { nested: true })
+        errorSpy.mockRestore()
+      })
+
+      it('handles no additional arguments in warn', () => {
+        const warnSpy = jest.spyOn(console, 'warn').mockImplementation()
+        const logger = createLogger(false)
+        logger.setLogLevel('debug')
+
+        logger.warn('only message')
+
+        expect(warnSpy).toHaveBeenCalledWith('[nexus]', 'only message')
+        warnSpy.mockRestore()
+      })
+
+      it('handles complex objects in info', () => {
+        const infoSpy = jest.spyOn(console, 'info').mockImplementation()
+        const logger = createLogger(false)
+        logger.setLogLevel('debug')
+        const complexObj = { a: 1, b: [1, 2, 3], c: { nested: true } }
+
+        logger.info('info with object', complexObj)
+
+        expect(infoSpy).toHaveBeenCalledWith('[nexus]', 'info with object', complexObj)
+        infoSpy.mockRestore()
+      })
     })
   })
 

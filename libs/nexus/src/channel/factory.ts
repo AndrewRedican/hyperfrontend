@@ -1,9 +1,10 @@
-import type { IChannelConfig, ChannelHandle, ChannelJSON } from '../types/channel'
+import type { IChannelConfig, ChannelHandle, ChannelJSON, EventHandler } from '../types/channel'
 import type { ChannelInternals, ChannelDependencies } from './types'
 import type { IAction } from '../types/action'
 import type { IChannelContract } from '../types/contract'
-import type { ChannelEvent } from '../types/events'
+import type { ChannelEvent, EventCallbackMap } from '../types/events'
 import type { IMessage } from '../types/message'
+import type { SecurityProtocolVersion, SecurityTransport, SecurityNegotiationRequest } from '../types/security'
 import { DEFAULT_CHANNEL_SETTINGS } from './defaults'
 import { createInitialState } from './state/initial'
 import { activate as activateState } from './state/activate'
@@ -108,7 +109,12 @@ export function createChannel(config: IChannelConfig, deps: ChannelDependencies)
     send: (type, data) => send(internals, { type, data }),
     sendAction: (action: unknown) => sendActionImpl(internals, <IAction>action),
 
-    on: (handler) => subscribeToEvents(internals, handler),
+    on: <E extends ChannelEvent>(eventOrHandler: E | EventHandler, handler?: EventCallbackMap[E]) => {
+      if (typeof eventOrHandler === 'string' && typeof handler === 'function') {
+        return subscribeToEvents(internals, eventOrHandler, handler)
+      }
+      return subscribeToEvents(internals, eventOrHandler as EventHandler)
+    },
     onMessage: (handler) => subscribeToMessages(internals, handler),
 
     // Broker-internal methods
@@ -135,6 +141,39 @@ export function createChannel(config: IChannelConfig, deps: ChannelDependencies)
 
     notifyMessage: (message: IMessage) => {
       notifyMessage(internals, message)
+    },
+
+    // Security methods
+    setPendingSecurityRequest: (request: SecurityNegotiationRequest | null) => {
+      internals.updateState({ pendingSecurityRequest: request })
+    },
+
+    getPendingSecurityRequest: () => {
+      return state.pendingSecurityRequest
+    },
+
+    setNegotiatedProtocol: (protocol: SecurityProtocolVersion) => {
+      internals.updateState({ negotiatedProtocol: protocol })
+    },
+
+    getNegotiatedProtocol: () => {
+      return state.negotiatedProtocol
+    },
+
+    setSecurityTransport: (transport: SecurityTransport | null) => {
+      internals.updateState({ securityTransport: transport })
+    },
+
+    getSecurityTransport: () => {
+      return state.securityTransport
+    },
+
+    setSecurityReady: (ready: boolean) => {
+      internals.updateState({ securityReady: ready })
+    },
+
+    isSecurityReady: () => {
+      return state.securityReady
     },
   }
 

@@ -15,6 +15,15 @@
   <a href="https://github.com/AndrewRedican/hyperfrontend/blob/main/LICENSE.md">
     <img src="https://img.shields.io/badge/license-MIT-blue?style=flat-square" alt="License">
   </a>
+  <a href="https://www.npmjs.com/package/@hyperfrontend/list-utils">
+    <img src="https://img.shields.io/npm/v/@hyperfrontend/list-utils?style=flat-square" alt="npm version">
+  </a>
+  <a href="https://www.npmjs.com/package/@hyperfrontend/list-utils">
+    <img src="https://img.shields.io/npm/dm/@hyperfrontend/list-utils?style=flat-square" alt="npm downloads">
+  </a>
+  <a href="https://github.com/AndrewRedican/hyperfrontend">
+    <img src="https://img.shields.io/github/stars/AndrewRedican/hyperfrontend?style=flat-square" alt="GitHub stars">
+  </a>
 </p>
 
 Purpose-built collection utilities for queue management, filtering, and iteration patterns.
@@ -105,6 +114,12 @@ const cleaned = uniqueStrings(nonEmptyStrings(userInputs)) // ['hello', 'world']
 ### Map Helpers
 
 - **`getLastKeyInMap(map)`** - Retrieve the last inserted key from a Map
+
+## Part of hyperfrontend
+
+This library is part of the [hyperfrontend](https://github.com/AndrewRedican/hyperfrontend) monorepo.
+
+- Used by [@hyperfrontend/network-protocol](https://github.com/AndrewRedican/hyperfrontend/tree/main/libs/network-protocol) for message queue management
 
 ## License
 

@@ -15,6 +15,15 @@
   <a href="https://github.com/AndrewRedican/hyperfrontend/blob/main/LICENSE.md">
     <img src="https://img.shields.io/badge/license-MIT-blue?style=flat-square" alt="License">
   </a>
+  <a href="https://www.npmjs.com/package/@hyperfrontend/random-generator-utils">
+    <img src="https://img.shields.io/npm/v/@hyperfrontend/random-generator-utils?style=flat-square" alt="npm version">
+  </a>
+  <a href="https://www.npmjs.com/package/@hyperfrontend/random-generator-utils">
+    <img src="https://img.shields.io/npm/dm/@hyperfrontend/random-generator-utils?style=flat-square" alt="npm downloads">
+  </a>
+  <a href="https://github.com/AndrewRedican/hyperfrontend">
+    <img src="https://img.shields.io/github/stars/AndrewRedican/hyperfrontend?style=flat-square" alt="GitHub stars">
+  </a>
 </p>
 
 Statistical random distributions and UUID generation for simulations, testing, and procedural content.
@@ -156,6 +165,12 @@ const terrain = {
   populationDensity: randomPowerLaw(2, 1, 1000), // Power law distribution
 }
 ```
+
+## Part of hyperfrontend
+
+This library is part of the [hyperfrontend](https://github.com/AndrewRedican/hyperfrontend) monorepo.
+
+- Used by [@hyperfrontend/cryptography](https://github.com/AndrewRedican/hyperfrontend/tree/main/libs/cryptography) for secure random generation
 
 ## License
 

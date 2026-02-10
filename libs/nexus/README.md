@@ -15,6 +15,15 @@
   <a href="https://github.com/AndrewRedican/hyperfrontend/blob/main/LICENSE.md">
     <img src="https://img.shields.io/badge/license-MIT-blue?style=flat-square" alt="License">
   </a>
+  <a href="https://www.npmjs.com/package/@hyperfrontend/nexus">
+    <img src="https://img.shields.io/npm/v/@hyperfrontend/nexus?style=flat-square" alt="npm version">
+  </a>
+  <a href="https://www.npmjs.com/package/@hyperfrontend/nexus">
+    <img src="https://img.shields.io/npm/dm/@hyperfrontend/nexus?style=flat-square" alt="npm downloads">
+  </a>
+  <a href="https://github.com/AndrewRedican/hyperfrontend">
+    <img src="https://img.shields.io/github/stars/AndrewRedican/hyperfrontend?style=flat-square" alt="GitHub stars">
+  </a>
 </p>
 
 Secure cross-window communication library for micro-frontends with contract-validated messaging, origin-based security policies, and connection lifecycle management.
@@ -39,6 +48,8 @@ Unlike raw `postMessage` usage, Nexus enforces **communication contracts**—typ
 ### Architecture Highlights
 
 Nexus uses a **functional programming approach** with factory functions (`createBroker`, `createChannel`) that return handle objects. Internal state is encapsulated via closures, making the system highly testable and avoiding the complexity of class-based inheritance. The routing layer uses a handler registry pattern, allowing protocol actions (REQUEST_CONNECTION, ACCEPT_CONNECTION, etc.) to be processed by dedicated handlers.
+
+For a comprehensive deep dive into the library's internals, see the [Architecture Documentation](ARCHITECTURE.md).
 
 ## Why Use Nexus?
 
@@ -364,6 +375,12 @@ channel.send('MESSAGE', { hello: 'world' })
 | `ChannelHandle`      | Channel instance interface                                |
 | `ChannelEvent`       | Lifecycle event types: open, close, cancel, deny, invalid |
 | `IMessage`           | User message with type and optional data                  |
+
+## Part of hyperfrontend
+
+This library is part of the [hyperfrontend](https://github.com/AndrewRedican/hyperfrontend) monorepo.
+
+- Optionally uses [@hyperfrontend/network-protocol](https://github.com/AndrewRedican/hyperfrontend/tree/main/libs/network-protocol) for encrypted messaging
 
 ## License
 

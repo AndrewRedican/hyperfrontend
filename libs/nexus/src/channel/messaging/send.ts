@@ -6,9 +6,14 @@ import { sendAction } from './send-action'
 /**
  * Sends a typed message through an active channel.
  *
+ * Message routing behavior:
  * - If channel is closed and queueMessages is enabled, queues the message
  * - If channel is closed and queueMessages is disabled, throws error
- * - If channel is open, validates message type against contract and sends
+ * - If security transport exists but is not ready, queues the message
+ * - If channel is open and security is ready (or protocol is 'none'), sends message
+ *
+ * For secure protocols (v1/v2), the message is routed through the security
+ * transport which encrypts and sends as Uint8Array via postMessage.
  *
  * @param channel - Channel internals with state and dependencies
  * @param message - Message to send with type and data
@@ -24,7 +29,6 @@ import { sendAction } from './send-action'
 export function send(channel: ChannelInternals, message: IMessage): void {
   const state = channel.getState()
 
-  // Queue message if channel is closed
   if (!state.active) {
     if (state.queueMessages) {
       queue(channel, message)
@@ -33,7 +37,17 @@ export function send(channel: ChannelInternals, message: IMessage): void {
     throw new Error(`Cannot send message. Channel ${state.name} is not open.`)
   }
 
-  // Validate message type against contract (check what we can emit)
+  const securityTransport = state.securityTransport
+  const negotiatedProtocol = state.negotiatedProtocol
+
+  if (securityTransport && negotiatedProtocol !== 'none' && !securityTransport.isReady()) {
+    if (state.queueMessages) {
+      queue(channel, message)
+      return
+    }
+    throw new Error(`Cannot send message. Security transport for channel ${state.name} is not ready.`)
+  }
+
   const emittedTypes = state.contract?.emitted.map((a) => a.type) ?? []
   if (!emittedTypes.includes(message.type)) {
     throw new Error(
@@ -41,10 +55,8 @@ export function send(channel: ChannelInternals, message: IMessage): void {
     )
   }
 
-  // Send as NEW_MESSAGE action
   const action = channel.actions.newMessage(message.data)
   sendAction(channel, action)
 
-  // Notify message subscribers on sender side too
   channel.notifyMessage(message)
 }

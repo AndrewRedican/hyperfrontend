@@ -1,6 +1,6 @@
 {
   "name": "@hyperfrontend/network-protocol",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "description": "Production-grade network protocol for secure, real-time cross-window and cross-process communication with built-in encryption, obfuscation, routing, and message queueing.",
   "license": "MIT",
   "sideEffects": false,
@@ -43,13 +43,13 @@
     "./node/receiver": "./src/node/receiver/index.js"
   },
   "dependencies": {
-    "@hyperfrontend/data-utils": "0.0.0",
-    "@hyperfrontend/cryptography": "0.0.0",
-    "@hyperfrontend/list-utils": "0.0.0",
-    "@hyperfrontend/logging": "0.0.0",
-    "@hyperfrontend/random-generator-utils": "0.0.0",
-    "@hyperfrontend/string-utils": "0.0.0",
-    "@hyperfrontend/time-utils": "0.0.0",
+    "@hyperfrontend/data-utils": "0.0.1",
+    "@hyperfrontend/cryptography": "0.0.1",
+    "@hyperfrontend/list-utils": "0.0.1",
+    "@hyperfrontend/logging": "0.0.1",
+    "@hyperfrontend/random-generator-utils": "0.0.1",
+    "@hyperfrontend/string-utils": "0.0.1",
+    "@hyperfrontend/time-utils": "0.0.1",
     "jsonschema": "1.5.0",
     "to-json-schema": "0.2.5"
   },

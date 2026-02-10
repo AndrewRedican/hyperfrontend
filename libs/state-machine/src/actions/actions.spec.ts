@@ -11,77 +11,82 @@ describe('actions', () => {
   })
 
   it('start', () => {
-    const result = actions.start('arg1', 'arg2')
-    expect(result).toEqual({ type: types.START, 0: 'arg1', 1: 'arg2' })
+    const result = actions.start('arg1')
+    expect(result).toEqual({ type: types.START, payload: 'arg1' })
   })
 
   it('start without arguments', () => {
     const result = actions.start()
-    expect(result).toEqual({ type: types.START })
+    expect(result).toEqual({ type: types.START, payload: undefined })
   })
 
-  it('start with single argument', () => {
-    const result = actions.start('arg1')
-    expect(result).toEqual({ type: types.START, 0: 'arg1' })
+  it('start with object payload', () => {
+    const payload = { id: 1, name: 'test' }
+    const result = actions.start(payload)
+    expect(result).toEqual({ type: types.START, payload })
   })
 
   it('cancel', () => {
-    const result = actions.cancel('arg1', 'arg2')
-    expect(result).toEqual({ type: types.CANCEL, 0: 'arg1', 1: 'arg2' })
+    const result = actions.cancel('arg1')
+    expect(result).toEqual({ type: types.CANCEL, payload: 'arg1' })
   })
 
   it('cancel without arguments', () => {
     const result = actions.cancel()
-    expect(result).toEqual({ type: types.CANCEL })
+    expect(result).toEqual({ type: types.CANCEL, payload: undefined })
   })
 
-  it('cancel with single argument', () => {
-    const result = actions.cancel('arg1')
-    expect(result).toEqual({ type: types.CANCEL, 0: 'arg1' })
+  it('cancel with object payload', () => {
+    const payload = { reason: 'user requested' }
+    const result = actions.cancel(payload)
+    expect(result).toEqual({ type: types.CANCEL, payload })
   })
 
   it('pause', () => {
-    const result = actions.pause('arg1', 'arg2')
-    expect(result).toEqual({ type: types.PAUSE, 0: 'arg1', 1: 'arg2' })
+    const result = actions.pause('arg1')
+    expect(result).toEqual({ type: types.PAUSE, payload: 'arg1' })
   })
 
   it('pause without arguments', () => {
     const result = actions.pause()
-    expect(result).toEqual({ type: types.PAUSE })
+    expect(result).toEqual({ type: types.PAUSE, payload: undefined })
   })
 
-  it('pause with single argument', () => {
-    const result = actions.pause('arg1')
-    expect(result).toEqual({ type: types.PAUSE, 0: 'arg1' })
+  it('pause with object payload', () => {
+    const payload = { resumeAt: Date.now() }
+    const result = actions.pause(payload)
+    expect(result).toEqual({ type: types.PAUSE, payload })
   })
 
   it('success', () => {
-    const result = actions.success('arg1', 'arg2')
-    expect(result).toEqual({ type: types.SUCCESS, 0: 'arg1', 1: 'arg2' })
+    const result = actions.success('arg1')
+    expect(result).toEqual({ type: types.SUCCESS, payload: 'arg1' })
   })
 
   it('success without arguments', () => {
     const result = actions.success()
-    expect(result).toEqual({ type: types.SUCCESS })
+    expect(result).toEqual({ type: types.SUCCESS, payload: undefined })
   })
 
-  it('success with single argument', () => {
-    const result = actions.success('arg1')
-    expect(result).toEqual({ type: types.SUCCESS, 0: 'arg1' })
+  it('success with object payload', () => {
+    const payload = { data: { id: 1 }, timestamp: Date.now() }
+    const result = actions.success(payload)
+    expect(result).toEqual({ type: types.SUCCESS, payload })
   })
 
-  it('fail', () => {
-    const result = actions.fail('arg1', 'arg2')
-    expect(result).toEqual({ type: types.FAIL, 0: 'arg1', 1: 'arg2' })
+  it('fail with string error', () => {
+    const result = actions.fail('error message')
+    expect(result).toEqual({ type: types.FAIL, error: 'error message' })
+  })
+
+  it('fail with Error object', () => {
+    const error = new Error('Something went wrong')
+    const result = actions.fail(error)
+    expect(result).toEqual({ type: types.FAIL, error })
   })
 
   it('fail without arguments', () => {
     const result = actions.fail()
-    expect(result).toEqual({ type: types.FAIL })
-  })
-
-  it('fail with single argument', () => {
-    const result = actions.fail('arg1')
-    expect(result).toEqual({ type: types.FAIL, 0: 'arg1' })
+    expect(result).toEqual({ type: types.FAIL, error: undefined })
   })
 })

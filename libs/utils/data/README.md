@@ -15,6 +15,15 @@
   <a href="https://github.com/AndrewRedican/hyperfrontend/blob/main/LICENSE.md">
     <img src="https://img.shields.io/badge/license-MIT-blue?style=flat-square" alt="License">
   </a>
+  <a href="https://www.npmjs.com/package/@hyperfrontend/data-utils">
+    <img src="https://img.shields.io/npm/v/@hyperfrontend/data-utils?style=flat-square" alt="npm version">
+  </a>
+  <a href="https://www.npmjs.com/package/@hyperfrontend/data-utils">
+    <img src="https://img.shields.io/npm/dm/@hyperfrontend/data-utils?style=flat-square" alt="npm downloads">
+  </a>
+  <a href="https://github.com/AndrewRedican/hyperfrontend">
+    <img src="https://img.shields.io/github/stars/AndrewRedican/hyperfrontend?style=flat-square" alt="GitHub stars">
+  </a>
 </p>
 
 Comprehensive data structure manipulation with circular reference handling and custom class support.
@@ -287,6 +296,10 @@ isIdentical(g1, g2) // true
 
 - **`containsKeys(target, keys): boolean`** - Check if target contains all specified keys
 - **`isMarker(key): boolean`** - Check if key is internal marker (for circular reference tracking)
+
+## Part of hyperfrontend
+
+This library is part of the [hyperfrontend](https://github.com/AndrewRedican/hyperfrontend) monorepo.
 
 ## License
 

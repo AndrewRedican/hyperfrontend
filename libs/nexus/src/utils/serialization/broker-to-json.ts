@@ -1,4 +1,4 @@
-import type { BrokerHandle } from '../../types/broker'
+import type { BrokerHandle } from '../../broker/types'
 import type { ChannelJSON } from '../../types/channel'
 
 /**
@@ -21,6 +21,6 @@ export function brokerToJSON(broker: BrokerHandle): BrokerJSON {
   return {
     id: broker.id,
     name: broker.name,
-    channels: <ChannelJSON[]>(<unknown>broker.channels),
+    channels: [...broker.channels],
   }
 }

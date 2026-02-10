@@ -15,6 +15,15 @@
   <a href="https://github.com/AndrewRedican/hyperfrontend/blob/main/LICENSE.md">
     <img src="https://img.shields.io/badge/license-MIT-blue?style=flat-square" alt="License">
   </a>
+  <a href="https://www.npmjs.com/package/@hyperfrontend/string-utils">
+    <img src="https://img.shields.io/npm/v/@hyperfrontend/string-utils?style=flat-square" alt="npm version">
+  </a>
+  <a href="https://www.npmjs.com/package/@hyperfrontend/string-utils">
+    <img src="https://img.shields.io/npm/dm/@hyperfrontend/string-utils?style=flat-square" alt="npm downloads">
+  </a>
+  <a href="https://github.com/AndrewRedican/hyperfrontend">
+    <img src="https://img.shields.io/github/stars/AndrewRedican/hyperfrontend?style=flat-square" alt="GitHub stars">
+  </a>
 </p>
 
 Isomorphic string encoding utilities with unified APIs for browser and Node.js environments.
@@ -121,6 +130,12 @@ Internal utilities (exported but typically not needed):
 - **`binaryStringToBytes(binaryStr)`** - Latin-1 binary string to Uint8Array (for browser atob interop)
 - **`base64ToUrlSafeBase64(base64, options)`** - Transform standard base64 to URL-safe format
 - **`urlSafeBase64ToBase64(urlSafeBase64)`** - Transform URL-safe base64 to standard format
+
+## Part of hyperfrontend
+
+This library is part of the [hyperfrontend](https://github.com/AndrewRedican/hyperfrontend) monorepo.
+
+- Used by [@hyperfrontend/cryptography](https://github.com/AndrewRedican/hyperfrontend/tree/main/libs/cryptography) for UTF-8/binary conversions
 
 ## License
 

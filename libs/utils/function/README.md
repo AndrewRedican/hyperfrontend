@@ -15,6 +15,15 @@
   <a href="https://github.com/AndrewRedican/hyperfrontend/blob/main/LICENSE.md">
     <img src="https://img.shields.io/badge/license-MIT-blue?style=flat-square" alt="License">
   </a>
+  <a href="https://www.npmjs.com/package/@hyperfrontend/function-utils">
+    <img src="https://img.shields.io/npm/v/@hyperfrontend/function-utils?style=flat-square" alt="npm version">
+  </a>
+  <a href="https://www.npmjs.com/package/@hyperfrontend/function-utils">
+    <img src="https://img.shields.io/npm/dm/@hyperfrontend/function-utils?style=flat-square" alt="npm downloads">
+  </a>
+  <a href="https://github.com/AndrewRedican/hyperfrontend">
+    <img src="https://img.shields.io/github/stars/AndrewRedican/hyperfrontend?style=flat-square" alt="GitHub stars">
+  </a>
 </p>
 
 Higher-order function utilities for behavioral modification and composition.
@@ -213,6 +222,12 @@ const addOnce = createRunOnceFunction(add)
 
 const result: number = addOnce(2, 3) // Type safe ✓
 ```
+
+## Part of hyperfrontend
+
+This library is part of the [hyperfrontend](https://github.com/AndrewRedican/hyperfrontend) monorepo.
+
+- Used by [@hyperfrontend/logging](https://github.com/AndrewRedican/hyperfrontend/tree/main/libs/logging) for error suppression and conditional execution
 
 ## License
 

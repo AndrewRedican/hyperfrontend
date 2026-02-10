@@ -15,6 +15,15 @@
   <a href="https://github.com/AndrewRedican/hyperfrontend/blob/main/LICENSE.md">
     <img src="https://img.shields.io/badge/license-MIT-blue?style=flat-square" alt="License">
   </a>
+  <a href="https://www.npmjs.com/package/@hyperfrontend/immutable-api-utils">
+    <img src="https://img.shields.io/npm/v/@hyperfrontend/immutable-api-utils?style=flat-square" alt="npm version">
+  </a>
+  <a href="https://www.npmjs.com/package/@hyperfrontend/immutable-api-utils">
+    <img src="https://img.shields.io/npm/dm/@hyperfrontend/immutable-api-utils?style=flat-square" alt="npm downloads">
+  </a>
+  <a href="https://github.com/AndrewRedican/hyperfrontend">
+    <img src="https://img.shields.io/github/stars/AndrewRedican/hyperfrontend?style=flat-square" alt="GitHub stars">
+  </a>
 </p>
 
 Decorators and utilities for creating immutable, tamper-proof object APIs.
@@ -126,6 +135,10 @@ Object.defineProperty(obj, 'version', lockedPropertyDescriptors('1.0.0', true))
 - **Public library interfaces**: Protect exported classes from mutation
 - **Event emitters**: Prevent handler list manipulation
 - **Prototype pollution defense**: Make critical prototypes tamper-proof
+
+## Part of hyperfrontend
+
+This library is part of the [hyperfrontend](https://github.com/AndrewRedican/hyperfrontend) monorepo.
 
 ## License
 

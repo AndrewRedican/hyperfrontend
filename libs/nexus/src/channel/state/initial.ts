@@ -28,5 +28,9 @@ export function createInitialState(name: string, target: Window, settings: Parti
     debug: settings.debug ?? false,
     brokerManaged: <boolean>(<Record<string, unknown>>settings)['brokerManaged'] ?? false,
     readyToConnect: false,
+    negotiatedProtocol: null,
+    securityReady: false,
+    securityTransport: null,
+    pendingSecurityRequest: null,
   }
 }

@@ -43,7 +43,7 @@ The generator will prompt you for:
 - The feature name
 - Which host project to add it to
 
-The plugin automatically sets up the consumption pattern that works naturally with your chosen framework.
+The plugin generates typed bindings from the feature's contracts and vanilla JavaScript integration code.
 
 ### Testing Your Feature
 

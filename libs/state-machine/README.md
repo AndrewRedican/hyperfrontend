@@ -15,6 +15,15 @@
   <a href="https://github.com/AndrewRedican/hyperfrontend/blob/main/LICENSE.md">
     <img src="https://img.shields.io/badge/license-MIT-blue?style=flat-square" alt="License">
   </a>
+  <a href="https://www.npmjs.com/package/@hyperfrontend/state-machine">
+    <img src="https://img.shields.io/npm/v/@hyperfrontend/state-machine?style=flat-square" alt="npm version">
+  </a>
+  <a href="https://www.npmjs.com/package/@hyperfrontend/state-machine">
+    <img src="https://img.shields.io/npm/dm/@hyperfrontend/state-machine?style=flat-square" alt="npm downloads">
+  </a>
+  <a href="https://github.com/AndrewRedican/hyperfrontend">
+    <img src="https://img.shields.io/github/stars/AndrewRedican/hyperfrontend?style=flat-square" alt="GitHub stars">
+  </a>
 </p>
 
 Lightweight, functional state management library with Redux-inspired actions/reducers, async operation orchestration, and lifecycle-aware component abstractions for predictable application state.
@@ -40,6 +49,8 @@ The library emphasizes explicit state modeling through a core `State` interface 
 ### Architecture Highlights
 
 The library uses a functional core with imperative shell pattern. The `rootReducer` is a pure function mapping (state, action) → new state using a handler lookup table. The `Store` class wraps the reducer with subscription management using a `Set<Listener>` for efficient add/remove operations. Derived state computation happens through selector functions that transform core state into boolean flags, with the `Events` class comparing previous/current derived states to trigger event handlers only when specific flags activate. The `LifecycleAwareComponent` uses protected setter methods (setInitializing, setReady, etc.) that invoke callback stacks only when state actually changes, preventing duplicate notifications. All state updates are immutable using object spread (`{ ...state, inProgress: true }`).
+
+For a detailed technical deep dive, see [ARCHITECTURE.md](./ARCHITECTURE.md).
 
 ## Why Use @hyperfrontend/state-machine?
 
@@ -262,8 +273,12 @@ coordinator.cancelAll()
 - `@hyperfrontend/state-machine/events` - Event system
 - `@hyperfrontend/state-machine/async-operation` - Async operation wrapper
 - `@hyperfrontend/state-machine/coordinated-async-operation` - Multi-process coordination
-- `@hyperfrontend/state-machine/lifecyle-aware-component` - Lifecycle component base class
+- `@hyperfrontend/state-machine/lifecycle-aware-component` - Lifecycle component base class
 - `@hyperfrontend/state-machine/models` - TypeScript types and interfaces
+
+## Part of hyperfrontend
+
+This library is part of the [hyperfrontend](https://github.com/AndrewRedican/hyperfrontend) monorepo.
 
 ## License
 

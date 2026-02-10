@@ -8,8 +8,10 @@
 </p>
 
 <p align="center">
+  <a href="https://github.com/AndrewRedican/hyperfrontend/blob/main/MANIFESTO.md">Manifesto</a> |
   <a href="https://github.com/AndrewRedican/hyperfrontend/blob/main/README.md#installation">Installation</a> |
   <a href="https://github.com/AndrewRedican/hyperfrontend/blob/main/README.md#quick-start">Quick Start</a> |
+  <a href="https://github.com/AndrewRedican/hyperfrontend/blob/main/ARCHITECTURE.md">Architecture</a> |
   <a href="https://github.com/AndrewRedican/hyperfrontend/blob/main/README.md#live-demos">Live Demos</a>
 </p>
 
@@ -33,34 +35,67 @@
   </a>
 </p>
 
+> **New here?** Start with the [Manifesto](MANIFESTO.md) to understand why this project exists and what problems it solves.
+
 ## What are hyperfrontend features?
 
 A **hyperfrontend feature** is a standalone frontend application that provides distinct business value or functionality. Features can be built with any framework (React, Angular, Vue, Svelte, etc.) or vanilla JavaScript, and may manage their own state, have their own user authentication, connect to backend APIs, and maintain their own domain models.
 
 ### What is a Feature?
 
-| **What a Feature IS**                                              | **What a Feature ISN'T**                          |
-| ------------------------------------------------------------------ | ------------------------------------------------- |
-| A standalone web application with distinct business value          | A component or widget within a single framework   |
-| Framework-agnostic (can use React, Vue, Angular, vanilla JS, etc.) | Tightly coupled to a specific parent application  |
-| Self-contained with its own state management                       | A shared library or utility package               |
-| Can run standalone or embedded in other applications               | A monolithic application that can't be decomposed |
-| Has a clear domain model and API boundaries                        | A micro-library or helper function                |
-| Independently deployable and versionable                           | A page or route within a single-page application  |
+A hyperfrontend feature combines traits from [micro-frontends](https://en.wikipedia.org/wiki/Micro_frontend) and embeddable components, with unique characteristics for secure runtime integration:
+
+```mermaid
+flowchart LR
+    subgraph MF["🧩 Micro-Frontend Traits"]
+        direction TB
+        M1["Independent deployment"]
+        M2["Own tech stack"]
+        M3["Team autonomy"]
+        M4["Separate releases"]
+    end
+
+    subgraph HF["⚡ Hyperfrontend Feature"]
+        direction TB
+        H1["Iframe isolation"]
+        H2["Contract messaging"]
+        H3["Runtime loading"]
+        H4["Optional encryption"]
+    end
+
+    subgraph CP["📦 Component Traits"]
+        direction TB
+        C1["Embeddable"]
+        C2["Defined API"]
+        C3["Lifecycle hooks"]
+        C4["Host integration"]
+    end
+
+    MF --> HF
+    CP --> HF
+
+    style MF fill:#e1f5fe,stroke:#01579b
+    style HF fill:#fff3e0,stroke:#e65100
+    style CP fill:#f3e5f5,stroke:#7b1fa2
+```
+
+**Not a feature:** UI components, shared libraries, SPA routes, or [monolithic](https://en.wikipedia.org/wiki/Monolithic_application) frontends.
 
 ### Architecture
 
 Each hyperfrontend feature uses the standard communication protocol provided by the **[@hyperfrontend/nexus](https://github.com/AndrewRedican/hyperfrontend/blob/main/libs/nexus)** library. This enables:
 
-- **Domain-agnostic contracts** - Features define clear interfaces for communication
-- **Pub/sub event bus** - Features can publish and subscribe to events without direct dependencies
-- **Runtime isolation** - Each feature operates independently with its own lifecycle
+- **Contract-validated messaging** - Features define clear interfaces specifying emitted and accepted message types
+- **Broker-channel architecture** - A TCP-like protocol over the browser's postMessage API routes messages between contexts
+- **Iframe-based isolation** - Each feature operates in its own browser context with true security boundaries
+
+For a deep dive into how the libraries compose together, see the **[Architecture Guide](ARCHITECTURE.md)**.
 
 The **[@hyperfrontend/features](https://github.com/AndrewRedican/hyperfrontend/blob/main/plugins/features)** Nx plugin helps you:
 
-1. **Prime existing web apps** into hyperfrontend features by adding the necessary configuration
+1. **Transform existing web apps** into hyperfrontend features by adding the necessary configuration
 2. **Generate shell applications** that know how to load your frontend app at runtime
-3. **Consume features** in host applications with ease
+3. **Consume features** in host applications with typed bindings
 
 Each feature gets an accompanying **shell application** that is:
 
@@ -120,12 +155,12 @@ Despite its flexibility, hyperfrontend caters to modern frontend setups:
 ## Key Capabilities
 
 - Framework-agnostic micro-frontend architecture
-- Standardized communication protocols via window messaging
+- Standardized communication via the browser's postMessage API (iframes, windows, tabs, web workers)
 - Lifecycle management for embedded applications
-- Contract-based integration with clear boundaries
-- Lightweight pub/sub message broker
+- Contract-based integration with JSON Schema validation
+- Broker-channel message routing with optional encryption
 - Cross-stack compatibility (React, Vue, Angular, Svelte, vanilla JS)
-- Shell applications with zero external dependencies
+- Shell applications with all dependencies bundled in
 - Multiple deployment options (npm package or CDN script tag)
 
 ## Installation
@@ -168,7 +203,7 @@ The generator will prompt you for:
 - The feature name
 - Which host project to add it to
 
-The plugin automatically sets up the consumption pattern that works naturally with your chosen framework.
+The plugin generates typed bindings from the feature's contracts and vanilla JavaScript integration code.
 
 ### Testing Your Feature
 
@@ -239,9 +274,9 @@ If you discover a security vulnerability, please follow our responsible disclosu
 
 If you find hyperfrontend useful, please consider supporting the project:
 
-- ⭐ Star the repository
+- ⭐ [Star the repository](https://github.com/AndrewRedican/hyperfrontend)
 - 💖 [Sponsor on GitHub](https://github.com/sponsors/AndrewRedican)
-- 📣 Share with others
+- 📣 [Share on X](https://twitter.com/intent/tweet?text=Check%20out%20hyperfrontend%20-%20a%20hybrid%20micro-frontend%20pattern%20for%20embedding%20live%20web%20apps%20with%20communication%20protocols%20and%20lifecycle%20management&url=https://github.com/AndrewRedican/hyperfrontend)
 
 See [FUNDING.md](FUNDING.md) for more ways to support the project.
 

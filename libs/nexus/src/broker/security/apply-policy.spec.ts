@@ -101,4 +101,23 @@ describe('applyPolicy', () => {
     expect(applyPolicy(policy, createMockEvent('http://safe.com'))).toBe(false)
     expect(applyPolicy(policy, createMockEvent('https://malicious.com'))).toBe(false)
   })
+
+  it('does not log error in production mode when policy throws', () => {
+    const originalEnv = process.env['NODE_ENV']
+    process.env['NODE_ENV'] = 'production'
+
+    const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation()
+    const policy: SecurityPolicy = () => {
+      throw new Error('Production error')
+    }
+    const event = createMockEvent()
+
+    const result = applyPolicy(policy, event)
+
+    expect(result).toBe(false)
+    expect(consoleErrorSpy).not.toHaveBeenCalled()
+
+    consoleErrorSpy.mockRestore()
+    process.env['NODE_ENV'] = originalEnv
+  })
 })

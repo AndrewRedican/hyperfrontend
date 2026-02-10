@@ -1,3 +1,4 @@
+import type { LogLevel } from '@hyperfrontend/logging'
 import { createLogger as createLoggerFromLib } from '@hyperfrontend/logging'
 import { noop } from '@hyperfrontend/function-utils'
 
@@ -9,6 +10,8 @@ export interface Logger {
   info(message: string, ...args: unknown[]): void
   warn(message: string, ...args: unknown[]): void
   error(message: string, ...args: unknown[]): void
+  setLogLevel(level: LogLevel): void
+  getLogLevel(): LogLevel
 }
 
 /**
@@ -42,5 +45,7 @@ export function createLogger(debug: boolean, customLogger?: Logger): Logger {
     warn: logger.warn,
     info: logger.info,
     debug: logger.debug,
+    setLogLevel: logger.setLogLevel,
+    getLogLevel: logger.getLogLevel,
   }
 }

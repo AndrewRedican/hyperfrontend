@@ -15,6 +15,15 @@
   <a href="https://github.com/AndrewRedican/hyperfrontend/blob/main/LICENSE.md">
     <img src="https://img.shields.io/badge/license-MIT-blue?style=flat-square" alt="License">
   </a>
+  <a href="https://www.npmjs.com/package/@hyperfrontend/cryptography">
+    <img src="https://img.shields.io/npm/v/@hyperfrontend/cryptography?style=flat-square" alt="npm version">
+  </a>
+  <a href="https://www.npmjs.com/package/@hyperfrontend/cryptography">
+    <img src="https://img.shields.io/npm/dm/@hyperfrontend/cryptography?style=flat-square" alt="npm downloads">
+  </a>
+  <a href="https://github.com/AndrewRedican/hyperfrontend">
+    <img src="https://img.shields.io/github/stars/AndrewRedican/hyperfrontend?style=flat-square" alt="GitHub stars">
+  </a>
 </p>
 
 Production-grade cryptographic primitives with isomorphic APIs for browser and Node.js environments.
@@ -145,6 +154,13 @@ isSHA256Hash('e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855')
 
 - **`generateKey(password: string, salt: Uint8Array): Promise<CryptoKey>`** - Derive encryption key using PBKDF2
 - **`getRandomValues(byteLength: number): Uint8Array`** - Generate cryptographically-secure random bytes
+
+## Part of hyperfrontend
+
+This library is part of the [hyperfrontend](https://github.com/AndrewRedican/hyperfrontend) monorepo.
+
+- Used by [@hyperfrontend/network-protocol](https://github.com/AndrewRedican/hyperfrontend/tree/main/libs/network-protocol) for secure message encryption
+- Looking for cross-window messaging with built-in encryption? See [@hyperfrontend/nexus](https://github.com/AndrewRedican/hyperfrontend/tree/main/libs/nexus)
 
 ## License
 

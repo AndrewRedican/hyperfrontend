@@ -20,6 +20,8 @@ jobs:
     runs-on: ubuntu-latest
     # Only run when PR is merged (not just closed)
     if: github.event.pull_request.merged == true
+    permissions:
+      contents: write
     steps:
       - name: Checkout repository
         uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
@@ -45,17 +47,12 @@ jobs:
             echo "libraries=$AFFECTED" >> $GITHUB_OUTPUT
           fi
 
+      # Version bumping is handled by the PR version-validation job
+      # This workflow only builds, tags, and publishes
+
       - name: Build affected libraries
         if: steps.affected.outputs.has_affected == 'true'
         run: npx nx affected -t=build --base=origin/main~1 --head=origin/main
-
-      - name: Create version tags
-        if: steps.affected.outputs.has_affected == 'true'
-        run: |
-          echo "Creating version tags for affected libraries..."
-          # Run version without --skipTag to create tags
-          # The idempotent executor will skip already-tagged versions
-          npx nx affected -t=version --base=origin/main~1 --head=origin/main --skipCommit || true
 
       - name: Push version tags
         if: steps.affected.outputs.has_affected == 'true'
@@ -63,20 +60,11 @@ jobs:
           # Push any unpushed tags that match our pattern
           git push origin --tags 2>/dev/null || echo "No new tags to push"
 
-      - name: Publish affected libraries (DRY RUN)
+      - name: Publish affected libraries
         if: steps.affected.outputs.has_affected == 'true'
-        run: |
-          echo "📦 Publishing affected libraries (DRY RUN)..."
-          npx nx affected -t=publish --base=origin/main~1 --head=origin/main --dryRun=true
+        run: npx nx affected -t=publish --base=origin/main~1 --head=origin/main
         env:
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
-
-      # Uncomment to enable actual publishing after initial setup:
-      # - name: Publish affected libraries
-      #   if: steps.affected.outputs.has_affected == 'true'
-      #   run: npx nx affected -t=publish --base=origin/main~1 --head=origin/main
-      #   env:
-      #     NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
 
   create-github-release:
     name: github-release

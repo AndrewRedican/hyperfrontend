@@ -1,5 +1,6 @@
 import type { IChannelContract } from '../types/contract'
 import type { ChannelHandle, ChannelJSON } from '../types/channel'
+import type { BrokerSecurityConfig, SecurityProtocolVersion } from '../types/security'
 
 /**
  * Security policy function type
@@ -23,6 +24,8 @@ export interface BrokerSettings {
   readonly debug?: boolean
   /** Allow contract extension */
   readonly contractExtension?: boolean
+  /** Security configuration for protocol negotiation and encryption */
+  readonly security?: BrokerSecurityConfig
 }
 
 /**
@@ -66,4 +69,38 @@ export interface BrokerHandle {
   setSecurityPolicy(policy: SecurityPolicy): BrokerHandle
   extendContract(contract: IChannelContract): BrokerHandle
   toJSON(): Record<string, unknown>
+
+  /**
+   * Register a security protocol provider.
+   *
+   * @param version - The protocol version ('v1' or 'v2')
+   * @param provider - The protocol provider instance from network-protocol
+   * @returns The broker handle for chaining
+   */
+  registerProtocol(version: 'v1' | 'v2', provider: unknown): BrokerHandle
+
+  /**
+   * Unregister a security protocol provider.
+   *
+   * @param version - The protocol version to unregister
+   * @returns The broker handle for chaining
+   */
+  unregisterProtocol(version: 'v1' | 'v2'): BrokerHandle
+
+  /**
+   * Check if a security protocol provider is registered.
+   *
+   * @param version - The protocol version to check
+   * @returns True if the provider is registered (or 'none')
+   */
+  hasProtocol(version: SecurityProtocolVersion): boolean
+
+  /**
+   * Get all supported security protocol versions.
+   *
+   * Returns versions that have registered providers plus 'none'.
+   *
+   * @returns Array of supported protocol versions
+   */
+  getSupportedProtocols(): SecurityProtocolVersion[]
 }

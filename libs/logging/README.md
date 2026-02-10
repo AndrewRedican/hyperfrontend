@@ -15,6 +15,15 @@
   <a href="https://github.com/AndrewRedican/hyperfrontend/blob/main/LICENSE.md">
     <img src="https://img.shields.io/badge/license-MIT-blue?style=flat-square" alt="License">
   </a>
+  <a href="https://www.npmjs.com/package/@hyperfrontend/logging">
+    <img src="https://img.shields.io/npm/v/@hyperfrontend/logging?style=flat-square" alt="npm version">
+  </a>
+  <a href="https://www.npmjs.com/package/@hyperfrontend/logging">
+    <img src="https://img.shields.io/npm/dm/@hyperfrontend/logging?style=flat-square" alt="npm downloads">
+  </a>
+  <a href="https://github.com/AndrewRedican/hyperfrontend">
+    <img src="https://img.shields.io/github/stars/AndrewRedican/hyperfrontend?style=flat-square" alt="GitHub stars">
+  </a>
 </p>
 
 Structured logging with configurable severity levels and error-resilient execution.
@@ -192,6 +201,12 @@ test('logs only errors at error level', () => {
 ### Pre-Configured Instance
 
 - **`logger`** - Ready-to-use logger wrapping console methods (default level: 'error')
+
+## Part of hyperfrontend
+
+This library is part of the [hyperfrontend](https://github.com/AndrewRedican/hyperfrontend) monorepo.
+
+- Built on [@hyperfrontend/function-utils](https://github.com/AndrewRedican/hyperfrontend/tree/main/libs/utils/function) for error-resilient execution
 
 ## License
 

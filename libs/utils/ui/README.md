@@ -15,6 +15,15 @@
   <a href="https://github.com/AndrewRedican/hyperfrontend/blob/main/LICENSE.md">
     <img src="https://img.shields.io/badge/license-MIT-blue?style=flat-square" alt="License">
   </a>
+  <a href="https://www.npmjs.com/package/@hyperfrontend/ui-utils">
+    <img src="https://img.shields.io/npm/v/@hyperfrontend/ui-utils?style=flat-square" alt="npm version">
+  </a>
+  <a href="https://www.npmjs.com/package/@hyperfrontend/ui-utils">
+    <img src="https://img.shields.io/npm/dm/@hyperfrontend/ui-utils?style=flat-square" alt="npm downloads">
+  </a>
+  <a href="https://github.com/AndrewRedican/hyperfrontend">
+    <img src="https://img.shields.io/github/stars/AndrewRedican/hyperfrontend?style=flat-square" alt="GitHub stars">
+  </a>
 </p>
 
 Modular DOM utilities for dynamic styling, gesture detection, element lifecycle, and color manipulation.
@@ -152,6 +161,10 @@ const cleanup = createGestureListener(() => console.log('Escape or pinch detecte
 
 - **`pause(ms)`** - Promise-based delay
 - **`simpleHash(str)`** - Generate simple string hashes
+
+## Part of hyperfrontend
+
+This library is part of the [hyperfrontend](https://github.com/AndrewRedican/hyperfrontend) monorepo.
 
 ## License
 
