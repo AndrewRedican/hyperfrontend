@@ -41,6 +41,8 @@ The library emphasizes explicit state modeling through a core `State` interface 
 
 The library uses a functional core with imperative shell pattern. The `rootReducer` is a pure function mapping (state, action) → new state using a handler lookup table. The `Store` class wraps the reducer with subscription management using a `Set<Listener>` for efficient add/remove operations. Derived state computation happens through selector functions that transform core state into boolean flags, with the `Events` class comparing previous/current derived states to trigger event handlers only when specific flags activate. The `LifecycleAwareComponent` uses protected setter methods (setInitializing, setReady, etc.) that invoke callback stacks only when state actually changes, preventing duplicate notifications. All state updates are immutable using object spread (`{ ...state, inProgress: true }`).
 
+For a detailed technical deep dive, see [ARCHITECTURE.md](./ARCHITECTURE.md).
+
 ## Why Use @hyperfrontend/state-machine?
 
 ### Predictable Async Operation State Without Boilerplate

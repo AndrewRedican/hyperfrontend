@@ -36,47 +36,44 @@
 ## Architecture Overview
 
 ```
-┌─────────────────────────────────────────────────────────────────┐
-│                      NEXUS ARCHITECTURE                         │
-├─────────────────────────────────────────────────────────────────┤
-│                                                                 │
-│  ┌─────────────────────────────────────────────────────────┐   │
-│  │                    BROKER LAYER                          │   │
-│  │  - Creates and manages channels                          │   │
-│  │  - Routes incoming postMessage events                    │   │
-│  │  - Validates contracts and origins                       │   │
-│  │  - Applies security policies                             │   │
-│  │  - Protocol registry for security providers              │   │
-│  └─────────────────────────────────────────────────────────┘   │
-│                            │                                    │
-│                            ▼                                    │
-│  ┌─────────────────────────────────────────────────────────┐   │
-│  │                   CHANNEL LAYER                          │   │
-│  │  - Manages connection lifecycle                          │   │
-│  │  - State machine for connection states                   │   │
-│  │  - Message queueing and delivery                         │   │
-│  │  - Event/message subscriptions                           │   │
-│  │  - Security transport integration                        │   │
-│  └─────────────────────────────────────────────────────────┘   │
-│                            │                                    │
-│                            ▼                                    │
-│  ┌─────────────────────────────────────────────────────────┐   │
-│  │                   CORE LAYER                             │   │
-│  │  - Action creators (protocol messages)                   │   │
-│  │  - Channel registry (O(1) lookups)                       │   │
-│  │  - Process manager (connection tracking)                 │   │
-│  │  - Validation utilities                                  │   │
-│  └─────────────────────────────────────────────────────────┘   │
-│                            │                                    │
-│                            ▼                                    │
-│  ┌─────────────────────────────────────────────────────────┐   │
-│  │                 SECURITY LAYER (Optional)                │   │
-│  │  - Protocol negotiation (v1/v2/none)                     │   │
-│  │  - Security transport adapters                           │   │
-│  │  - Encryption/obfuscation pipeline                       │   │
-│  └─────────────────────────────────────────────────────────┘   │
-│                                                                 │
-└─────────────────────────────────────────────────────────────────┘
+┌───────────────────────────────────────────────────────────────────────────────────────────────────┐
+│                                        NEXUS ARCHITECTURE                                         │
+├───────────────────────────────────────────────────────────────────────────────────────────────────┤
+│                                                                                                   │
+│  ┌─────────────────────────────────────────────────────────────────────────────────────────────┐  │
+│  │                                        BROKER LAYER                                         │  │
+│  │                                                                                             │  │
+│  │  - Creates and manages channels              - Validates contracts and origins              │  │
+│  │  - Routes incoming postMessage events        - Applies security policies                    │  │
+│  │  - Protocol registry for security providers                                                 │  │
+│  └─────────────────────────────────────────────────────────────────────────────────────────────┘  │
+│                                                 │                                                 │
+│                                                 ▼                                                 │
+│  ┌─────────────────────────────────────────────────────────────────────────────────────────────┐  │
+│  │                                       CHANNEL LAYER                                         │  │
+│  │                                                                                             │  │
+│  │  - Manages connection lifecycle              - Event/message subscriptions                  │  │
+│  │  - State machine for connection states       - Security transport integration               │  │
+│  │  - Message queueing and delivery                                                            │  │
+│  └─────────────────────────────────────────────────────────────────────────────────────────────┘  │
+│                                                 │                                                 │
+│                                                 ▼                                                 │
+│  ┌─────────────────────────────────────────────────────────────────────────────────────────────┐  │
+│  │                                         CORE LAYER                                          │  │
+│  │                                                                                             │  │
+│  │  - Action creators (protocol messages)       - Process manager (connection tracking)        │  │
+│  │  - Channel registry (O(1) lookups)           - Validation utilities                         │  │
+│  └─────────────────────────────────────────────────────────────────────────────────────────────┘  │
+│                                                 │                                                 │
+│                                                 ▼                                                 │
+│  ┌─────────────────────────────────────────────────────────────────────────────────────────────┐  │
+│  │                                    SECURITY LAYER (Optional)                                │  │
+│  │                                                                                             │  │
+│  │  - Protocol negotiation (v1/v2/none)         - Encryption/obfuscation pipeline              │  │
+│  │  - Security transport adapters                                                              │  │
+│  └─────────────────────────────────────────────────────────────────────────────────────────────┘  │
+│                                                                                                   │
+└───────────────────────────────────────────────────────────────────────────────────────────────────┘
 ```
 
 ---
