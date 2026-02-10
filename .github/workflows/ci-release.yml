@@ -63,20 +63,11 @@ jobs:
           # Push any unpushed tags that match our pattern
           git push origin --tags 2>/dev/null || echo "No new tags to push"
 
-      - name: Publish affected libraries (DRY RUN)
+      - name: Publish affected libraries
         if: steps.affected.outputs.has_affected == 'true'
-        run: |
-          echo "📦 Publishing affected libraries (DRY RUN)..."
-          npx nx affected -t=publish --base=origin/main~1 --head=origin/main --dryRun=true
+        run: npx nx affected -t=publish --base=origin/main~1 --head=origin/main
         env:
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
-
-      # Uncomment to enable actual publishing after initial setup:
-      # - name: Publish affected libraries
-      #   if: steps.affected.outputs.has_affected == 'true'
-      #   run: npx nx affected -t=publish --base=origin/main~1 --head=origin/main
-      #   env:
-      #     NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
 
   create-github-release:
     name: github-release

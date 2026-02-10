@@ -4,11 +4,8 @@
   "description": "Nx plugin for hyperfrontend micro-frontend features.",
   "sourceRoot": "{projectRoot}/src",
   "projectType": "library",
-  "tags": [],
+  "tags": ["stub"],
   "targets": {
-    "version": {},
-    "build": {},
-    "publish": {},
     "typecheck": {}
   }
 }

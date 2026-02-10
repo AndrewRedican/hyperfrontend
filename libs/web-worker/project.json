@@ -4,11 +4,8 @@
   "description": "Web Worker utilities and abstractions.",
   "sourceRoot": "{projectRoot}/src",
   "projectType": "library",
-  "tags": [],
+  "tags": ["stub"],
   "targets": {
-    "version": {},
-    "build": {},
-    "publish": {},
     "typecheck": {}
   }
 }
