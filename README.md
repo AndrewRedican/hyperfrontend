@@ -239,9 +239,9 @@ If you discover a security vulnerability, please follow our responsible disclosu
 
 If you find hyperfrontend useful, please consider supporting the project:
 
-- ⭐ Star the repository
+- ⭐ [Star the repository](https://github.com/AndrewRedican/hyperfrontend)
 - 💖 [Sponsor on GitHub](https://github.com/sponsors/AndrewRedican)
-- 📣 Share with others
+- 📣 [Share on X](https://twitter.com/intent/tweet?text=Check%20out%20hyperfrontend%20-%20a%20hybrid%20micro-frontend%20pattern%20for%20embedding%20live%20web%20apps%20with%20communication%20protocols%20and%20lifecycle%20management&url=https://github.com/AndrewRedican/hyperfrontend)
 
 See [FUNDING.md](FUNDING.md) for more ways to support the project.
 
