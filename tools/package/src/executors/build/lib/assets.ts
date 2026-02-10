@@ -87,6 +87,11 @@ export function copyDefaultAssets(projectRoot: string, outputPath: string, works
     copyFileSync(changelogSrc, join(outputPath, 'CHANGELOG.md'))
   }
 
+  const architectureSrc = join(projectRoot, 'ARCHITECTURE.md')
+  if (existsSync(architectureSrc)) {
+    copyFileSync(architectureSrc, join(outputPath, 'ARCHITECTURE.md'))
+  }
+
   const licenseSrc = join(workspaceRoot, 'LICENSE.md')
   if (existsSync(licenseSrc)) {
     copyFileSync(licenseSrc, join(outputPath, 'LICENSE.md'))
@@ -117,5 +122,5 @@ export function copyFundingAsset(outputPath: string, workspaceRoot: string): voi
  * @returns Array of default asset paths relative to their source directories
  */
 export function getDefaultAssetFiles(): readonly string[] {
-  return ['README.md', 'CHANGELOG.md', 'LICENSE.md', 'SECURITY.md'] as const
+  return ['README.md', 'CHANGELOG.md', 'ARCHITECTURE.md', 'LICENSE.md', 'SECURITY.md'] as const
 }
