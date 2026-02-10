@@ -97,6 +97,86 @@ describe('Validation Functions', () => {
       }
       expect(() => validateContract(contract)).not.toThrow()
     })
+
+    it('rejects contracts with empty string action types in emitted', () => {
+      const contract = {
+        emitted: [{ type: '' }],
+        accepted: [],
+      }
+      expect(() => validateContract(contract)).toThrow('Contract action types must be non-empty strings')
+    })
+
+    it('rejects contracts with whitespace-only action types in emitted', () => {
+      const contract = {
+        emitted: [{ type: '   ' }],
+        accepted: [],
+      }
+      expect(() => validateContract(contract)).toThrow('Contract action types must be non-empty strings')
+    })
+
+    it('rejects contracts with empty string action types in accepted', () => {
+      const contract = {
+        emitted: [],
+        accepted: [{ type: '' }],
+      }
+      expect(() => validateContract(contract)).toThrow('Contract action types must be non-empty strings')
+    })
+
+    it('rejects contracts with whitespace-only action types in accepted', () => {
+      const contract = {
+        emitted: [],
+        accepted: [{ type: '   ' }],
+      }
+      expect(() => validateContract(contract)).toThrow('Contract action types must be non-empty strings')
+    })
+
+    it('rejects contracts with null action in emitted', () => {
+      const contract = {
+        emitted: [<{ type: string }>(<unknown>null)],
+        accepted: [{ type: 'valid' }],
+      }
+      expect(() => validateContract(contract)).toThrow('Contract action types must be non-empty strings')
+    })
+
+    it('rejects contracts with null action in accepted', () => {
+      const contract = {
+        emitted: [{ type: 'valid' }],
+        accepted: [<{ type: string }>(<unknown>null)],
+      }
+      expect(() => validateContract(contract)).toThrow('Contract action types must be non-empty strings')
+    })
+
+    it('rejects contracts with action missing type property in emitted', () => {
+      const contract = {
+        emitted: [<{ type: string }>(<unknown>{ description: 'no type' })],
+        accepted: [{ type: 'valid' }],
+      }
+      expect(() => validateContract(contract)).toThrow('Contract action types must be non-empty strings')
+    })
+
+    it('rejects contracts with action missing type property in accepted', () => {
+      const contract = {
+        emitted: [{ type: 'valid' }],
+        accepted: [<{ type: string }>(<unknown>{ description: 'no type' })],
+      }
+      expect(() => validateContract(contract)).toThrow('Contract action types must be non-empty strings')
+    })
+
+    it('rejects contracts with non-string type in emitted', () => {
+      const contract = {
+        emitted: [<{ type: string }>(<unknown>{ type: 123 })],
+        accepted: [{ type: 'valid' }],
+      }
+      expect(() => validateContract(contract)).toThrow('Contract action types must be non-empty strings')
+    })
+
+    it('rejects contracts with non-string type in accepted', () => {
+      const contract = {
+        emitted: [{ type: 'valid' }],
+        accepted: [<{ type: string }>(<unknown>{ type: 123 })],
+      }
+      expect(() => validateContract(contract)).toThrow('Contract action types must be non-empty strings')
+    })
   })
 
   describe('validateAction', () => {

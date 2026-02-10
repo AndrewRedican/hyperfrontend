@@ -3,6 +3,7 @@ import type { ValidationResult } from '../../types/validation'
 import { createValidator } from './create-validator'
 import messageSchema from '../definitions/message.json'
 
+/* istanbul ignore next -- validator initialization happens at module load */
 const validateMessageData = createValidator(messageSchema)
 
 /**

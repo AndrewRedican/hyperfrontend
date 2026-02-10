@@ -122,5 +122,29 @@ describe('getChannel', () => {
 
       expect(found).toBeTruthy()
     })
+
+    it('returns null for undefined reference', () => {
+      const found = getChannel(registry, <string | Window>(<unknown>undefined))
+
+      expect(found).toBeNull()
+    })
+
+    it('returns null for null reference', () => {
+      const found = getChannel(registry, <string | Window>(<unknown>null))
+
+      expect(found).toBeNull()
+    })
+
+    it('returns null for number reference', () => {
+      const found = getChannel(registry, <string | Window>(<unknown>123))
+
+      expect(found).toBeNull()
+    })
+
+    it('returns null for boolean reference', () => {
+      const found = getChannel(registry, <string | Window>(<unknown>true))
+
+      expect(found).toBeNull()
+    })
   })
 })

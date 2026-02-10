@@ -298,4 +298,43 @@ describe('handleAccept', () => {
       expect.any(String)
     )
   })
+
+  it('returns early when action does not have contract', () => {
+    const action = {
+      type: '[nexus] connection-request-accepted',
+      processId: 'some-process-id',
+      senderId: 'remote-broker-1',
+    }
+
+    const message = <MessageEvent<IAction>>{
+      data: <IAction>action,
+      source: mockWindow,
+    }
+
+    expect(() => {
+      handleAccept(mockBrokerState, registry, processManager, actions, message)
+    }).not.toThrow()
+
+    expect(mockWindow.postMessage).not.toHaveBeenCalled()
+  })
+
+  it('returns early when channel not found via processId', () => {
+    const action: IAction = {
+      type: '[nexus] connection-request-accepted',
+      processId: 'non-existent-process',
+      senderId: 'remote-broker-1',
+      contract: validContract,
+    }
+
+    const message = <MessageEvent<IAction>>{
+      data: action,
+      source: mockWindow,
+    }
+
+    expect(() => {
+      handleAccept(mockBrokerState, registry, processManager, actions, message)
+    }).not.toThrow()
+
+    expect(mockWindow.postMessage).not.toHaveBeenCalled()
+  })
 })

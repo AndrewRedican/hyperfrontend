@@ -1,5 +1,6 @@
 import type { IChannelConfig } from '../types/channel'
 import type { ChannelDependencies } from './types'
+import type { SecurityNegotiationRequest, SecurityTransport } from '../types/security'
 import { createChannel } from './factory'
 
 describe('channel/factory', () => {
@@ -296,6 +297,96 @@ describe('channel/factory', () => {
       const channel = createChannel(config, depsWithoutCleanup)
 
       expect(() => channel.destroy()).not.toThrow()
+    })
+  })
+
+  describe('security methods', () => {
+    it('sets and gets pending security request', () => {
+      const channel = createChannel(config, deps)
+      const securityRequest: SecurityNegotiationRequest = { supported: ['v1', 'v2'], preferred: 'v2' }
+
+      expect(channel.getPendingSecurityRequest()).toBeNull()
+
+      channel.setPendingSecurityRequest(securityRequest)
+
+      expect(channel.getPendingSecurityRequest()).toEqual(securityRequest)
+
+      channel.setPendingSecurityRequest(null)
+
+      expect(channel.getPendingSecurityRequest()).toBeNull()
+    })
+
+    it('sets and gets negotiated protocol', () => {
+      const channel = createChannel(config, deps)
+
+      expect(channel.getNegotiatedProtocol()).toBeNull()
+
+      channel.setNegotiatedProtocol('v2')
+
+      expect(channel.getNegotiatedProtocol()).toBe('v2')
+    })
+
+    it('sets and gets security transport', () => {
+      const channel = createChannel(config, deps)
+      const mockTransport: SecurityTransport = {
+        send: jest.fn(),
+        onReceive: jest.fn(),
+        stop: jest.fn(),
+        resume: jest.fn(),
+        isReady: jest.fn(() => true),
+        getProtocol: jest.fn(() => 'v1'),
+      }
+
+      expect(channel.getSecurityTransport()).toBeNull()
+
+      channel.setSecurityTransport(mockTransport)
+
+      expect(channel.getSecurityTransport()).toBe(mockTransport)
+
+      channel.setSecurityTransport(null)
+
+      expect(channel.getSecurityTransport()).toBeNull()
+    })
+
+    it('sets and checks security ready state', () => {
+      const channel = createChannel(config, deps)
+
+      expect(channel.isSecurityReady()).toBe(false)
+
+      channel.setSecurityReady(true)
+
+      expect(channel.isSecurityReady()).toBe(true)
+
+      channel.setSecurityReady(false)
+
+      expect(channel.isSecurityReady()).toBe(false)
+    })
+  })
+
+  describe('scheduleActivation', () => {
+    it('schedules activation with provided details', () => {
+      const channel = createChannel(config, deps)
+      const contract = { accepted: [{ type: 'msg1' }], emitted: [] }
+
+      channel.scheduleActivation('sender-id', 'https://example.com', contract, 'process-123')
+
+      expect(channel.toJSON()).toBeDefined()
+    })
+  })
+
+  describe('isReadyToConnect', () => {
+    it('returns false by default for non-broker-managed channels', () => {
+      const channel = createChannel(config, deps)
+
+      expect(channel.isReadyToConnect()).toBe(false)
+    })
+
+    it('returns true after connect is called', () => {
+      const channel = createChannel(config, deps)
+
+      channel.connect()
+
+      expect(channel.isReadyToConnect()).toBe(true)
     })
   })
 })

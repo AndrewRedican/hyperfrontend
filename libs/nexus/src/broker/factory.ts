@@ -126,6 +126,7 @@ export function createBroker(config: {
   }
 
   // Attach message listener
+  /* istanbul ignore next -- environment detection for non-browser contexts */
   if (typeof window !== 'undefined') {
     window.addEventListener('message', <EventListener>onMessage)
   }

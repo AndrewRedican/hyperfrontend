@@ -205,4 +205,23 @@ describe('handleInvalid', () => {
     // Should not send any messages (only notifies event handlers)
     expect((<jest.Mock>mockWindow.postMessage).mock.calls.length).toBe(postMessageCallsBefore)
   })
+
+  it('returns early when action does not have processId', () => {
+    const action = {
+      type: '[nexus] invalid-request',
+      senderId: 'remote-broker-1',
+      error: 'Test error',
+    }
+
+    const message = <MessageEvent<IAction>>{
+      data: <IAction>action,
+      source: mockWindow,
+    }
+
+    expect(() => {
+      handleInvalid(mockBrokerState, registry, processManager, actions, message)
+    }).not.toThrow()
+
+    expect(mockWindow.postMessage).not.toHaveBeenCalled()
+  })
 })

@@ -223,4 +223,22 @@ describe('handleClose', () => {
       expect.any(String)
     )
   })
+
+  it('returns early when action does not have processId', () => {
+    const action = {
+      type: '[nexus] connection-closed',
+      senderId: 'remote-broker-1',
+    }
+
+    const message = <MessageEvent<IAction>>{
+      data: <IAction>action,
+      source: mockWindow,
+    }
+
+    expect(() => {
+      handleClose(mockBrokerState, registry, processManager, actions, message)
+    }).not.toThrow()
+
+    expect(mockWindow.postMessage).not.toHaveBeenCalled()
+  })
 })

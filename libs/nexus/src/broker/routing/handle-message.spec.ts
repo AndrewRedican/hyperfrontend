@@ -265,4 +265,22 @@ describe('handleMessage', () => {
     // Both messages should be processed without errors
     expect(consoleInfoSpy).not.toHaveBeenCalled()
   })
+
+  it('returns early when action does not have data property', () => {
+    const action = {
+      type: '[nexus] new-message',
+      senderId: 'remote-broker-1',
+    }
+
+    const message = <MessageEvent<IAction>>{
+      data: <IAction>action,
+      source: mockWindow,
+    }
+
+    expect(() => {
+      handleMessage(mockBrokerState, registry, processManager, actions, message)
+    }).not.toThrow()
+
+    expect(consoleInfoSpy).not.toHaveBeenCalled()
+  })
 })
