@@ -45,17 +45,17 @@ jobs:
             echo "libraries=$AFFECTED" >> $GITHUB_OUTPUT
           fi
 
+      - name: Create versions and changelogs
+        if: steps.affected.outputs.has_affected == 'true'
+        run: |
+          echo "Creating versions and changelogs for affected libraries..."
+          # Run version first to bump package.json and generate CHANGELOG.md
+          # The idempotent executor will skip already-tagged versions
+          npx nx affected -t=version --base=origin/main~1 --head=origin/main --skipCommit || true
+
       - name: Build affected libraries
         if: steps.affected.outputs.has_affected == 'true'
         run: npx nx affected -t=build --base=origin/main~1 --head=origin/main
-
-      - name: Create version tags
-        if: steps.affected.outputs.has_affected == 'true'
-        run: |
-          echo "Creating version tags for affected libraries..."
-          # Run version without --skipTag to create tags
-          # The idempotent executor will skip already-tagged versions
-          npx nx affected -t=version --base=origin/main~1 --head=origin/main --skipCommit || true
 
       - name: Push version tags
         if: steps.affected.outputs.has_affected == 'true'
