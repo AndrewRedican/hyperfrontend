@@ -157,3 +157,58 @@ export type TypedEventHandler =
   | SecurityNegotiatedEventHandler
   | SecurityReadyEventHandler
   | SecurityErrorEventHandler
+
+/**
+ * Simplified callback for OPEN events (event name omitted)
+ */
+export type OpenCallback = (data: OpenEventData, channel: ChannelJSON) => void
+
+/**
+ * Simplified callback for CLOSE events (event name omitted)
+ */
+export type CloseCallback = (data: CloseEventData, channel: ChannelJSON) => void
+
+/**
+ * Simplified callback for CANCEL events (event name omitted)
+ */
+export type CancelCallback = (data: CancelEventData, channel: ChannelJSON) => void
+
+/**
+ * Simplified callback for DENY events (event name omitted)
+ */
+export type DenyCallback = (data: DenyEventData, channel: ChannelJSON) => void
+
+/**
+ * Simplified callback for INVALID events (event name omitted)
+ */
+export type InvalidCallback = (data: InvalidEventData, channel: ChannelJSON) => void
+
+/**
+ * Simplified callback for SECURITY_NEGOTIATED events (event name omitted)
+ */
+export type SecurityNegotiatedCallback = (data: SecurityNegotiatedEventData, channel: ChannelJSON) => void
+
+/**
+ * Simplified callback for SECURITY_READY events (event name omitted)
+ */
+export type SecurityReadyCallback = (data: SecurityReadyEventData, channel: ChannelJSON) => void
+
+/**
+ * Simplified callback for SECURITY_ERROR events (event name omitted)
+ */
+export type SecurityErrorCallback = (data: SecurityErrorEventData, channel: ChannelJSON) => void
+
+/**
+ * Maps event names to their simplified callback types.
+ * Used for type-safe on(event, handler) overloads.
+ */
+export interface EventCallbackMap {
+  open: OpenCallback
+  close: CloseCallback
+  cancel: CancelCallback
+  deny: DenyCallback
+  invalid: InvalidCallback
+  'security-negotiated': SecurityNegotiatedCallback
+  'security-ready': SecurityReadyCallback
+  'security-error': SecurityErrorCallback
+}

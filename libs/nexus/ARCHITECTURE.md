@@ -239,6 +239,7 @@ interface ChannelHandle {
 
   // Subscriptions
   on(handler: EventHandler): () => void
+  on<E extends ChannelEvent>(event: E, handler: EventCallbackMap[E]): () => void
   onMessage(handler: MessageHandler): () => void
 }
 ```
@@ -455,7 +456,12 @@ Channels emit lifecycle events to subscribers. Each event has a specific trigger
 ### Event Subscription
 
 ```typescript
-// Subscribe to all events
+// Subscribe to a specific event (recommended)
+channel.on('open', (data) => console.log('Opened:', data.origin))
+channel.on('close', (data) => console.log('Closed'))
+channel.on('security-ready', (data) => console.log(`Secure channel using ${data.protocol}`))
+
+// Subscribe to all events (for generic handling)
 channel.on((event, data) => {
   switch (event) {
     case 'open':
@@ -464,13 +470,10 @@ channel.on((event, data) => {
     case 'close':
       console.log('Connection closed')
       break
-    case 'security-ready':
-      console.log(`Secure channel using ${data.protocol}`)
-      break
   }
 })
 
-// Use filter utilities for specific events
+// Use filter utilities for advanced composition
 import { openFilter, closeFilter } from '@hyperfrontend/nexus/filters'
 
 channel.on(openFilter((data) => console.log('Opened:', data.origin)))

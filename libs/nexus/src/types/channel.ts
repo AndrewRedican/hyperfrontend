@@ -1,6 +1,6 @@
 import type { IChannelContract } from './contract'
 import type { IMessage } from './message'
-import type { ChannelEvent } from './events'
+import type { ChannelEvent, EventCallbackMap } from './events'
 import type { SecurityProtocolVersion, SecurityTransport, SecurityNegotiationRequest, ChannelSecuritySettings } from './security'
 
 /**
@@ -156,8 +156,18 @@ export interface ChannelHandle {
   /** Send a raw action */
   sendAction(action: unknown): void
 
-  /** Subscribe to channel lifecycle events */
+  /**
+   * Subscribe to all channel lifecycle events.
+   * @example
+   * channel.on((event, data) => console.log(event, data))
+   */
   on(handler: EventHandler): () => void
+  /**
+   * Subscribe to a specific channel lifecycle event.
+   * @example
+   * channel.on('open', (data) => console.log('Opened:', data.origin))
+   */
+  on<E extends ChannelEvent>(event: E, handler: EventCallbackMap[E]): () => void
   /** Subscribe to user messages */
   onMessage(handler: MessageHandler): () => void
 

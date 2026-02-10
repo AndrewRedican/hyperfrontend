@@ -245,6 +245,34 @@ describe('channel/factory', () => {
       expect(typeof unsubscribe).toBe('function')
     })
 
+    it('subscribe to events with event-specific handler', () => {
+      const channel = createChannel(config, deps)
+      const handler = jest.fn()
+
+      const unsubscribe = channel.on('open', handler)
+
+      expect(typeof unsubscribe).toBe('function')
+    })
+
+    it('event-specific handler receives correct arguments', () => {
+      const channel = createChannel(config, deps)
+      const openHandler = jest.fn()
+      const closeHandler = jest.fn()
+
+      channel.on('open', openHandler)
+      channel.on('close', closeHandler)
+
+      // Trigger an 'open' event
+      channel.notifyEvent('open', { origin: 'http://test.com', contract: { emitted: [], accepted: [] } })
+
+      expect(openHandler).toHaveBeenCalledTimes(1)
+      expect(openHandler).toHaveBeenCalledWith(
+        { origin: 'http://test.com', contract: { emitted: [], accepted: [] } },
+        expect.objectContaining({ name: 'test-channel' })
+      )
+      expect(closeHandler).not.toHaveBeenCalled()
+    })
+
     it('subscribe to messages', () => {
       const channel = createChannel(config, deps)
       const handler = jest.fn()
