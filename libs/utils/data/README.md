@@ -297,6 +297,10 @@ isIdentical(g1, g2) // true
 - **`containsKeys(target, keys): boolean`** - Check if target contains all specified keys
 - **`isMarker(key): boolean`** - Check if key is internal marker (for circular reference tracking)
 
+## Part of hyperfrontend
+
+This library is part of the [hyperfrontend](https://github.com/AndrewRedican/hyperfrontend) monorepo.
+
 ## License
 
 MIT

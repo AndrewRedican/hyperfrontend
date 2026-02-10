@@ -202,6 +202,12 @@ test('logs only errors at error level', () => {
 
 - **`logger`** - Ready-to-use logger wrapping console methods (default level: 'error')
 
+## Part of hyperfrontend
+
+This library is part of the [hyperfrontend](https://github.com/AndrewRedican/hyperfrontend) monorepo.
+
+- Built on [@hyperfrontend/function-utils](https://github.com/AndrewRedican/hyperfrontend/tree/main/libs/utils/function) for error-resilient execution
+
 ## License
 
 MIT

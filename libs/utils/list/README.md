@@ -115,6 +115,12 @@ const cleaned = uniqueStrings(nonEmptyStrings(userInputs)) // ['hello', 'world']
 
 - **`getLastKeyInMap(map)`** - Retrieve the last inserted key from a Map
 
+## Part of hyperfrontend
+
+This library is part of the [hyperfrontend](https://github.com/AndrewRedican/hyperfrontend) monorepo.
+
+- Used by [@hyperfrontend/network-protocol](https://github.com/AndrewRedican/hyperfrontend/tree/main/libs/network-protocol) for message queue management
+
 ## License
 
 MIT

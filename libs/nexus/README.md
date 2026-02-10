@@ -376,6 +376,12 @@ channel.send('MESSAGE', { hello: 'world' })
 | `ChannelEvent`       | Lifecycle event types: open, close, cancel, deny, invalid |
 | `IMessage`           | User message with type and optional data                  |
 
+## Part of hyperfrontend
+
+This library is part of the [hyperfrontend](https://github.com/AndrewRedican/hyperfrontend) monorepo.
+
+- Optionally uses [@hyperfrontend/network-protocol](https://github.com/AndrewRedican/hyperfrontend/tree/main/libs/network-protocol) for encrypted messaging
+
 ## License
 
 MIT

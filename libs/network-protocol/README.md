@@ -264,6 +264,13 @@ Living documentation through executable examples:
 - `queue/queue.integration.spec.ts` - Queue creation, message flow, stop/resume
 - `data/data.integration.spec.ts` - Data creation with real hashing
 
+## Part of hyperfrontend
+
+This library is part of the [hyperfrontend](https://github.com/AndrewRedican/hyperfrontend) monorepo.
+
+- Uses [@hyperfrontend/cryptography](https://github.com/AndrewRedican/hyperfrontend/tree/main/libs/cryptography) for encryption and time-based password generation
+- For simpler cross-window messaging with contracts, see [@hyperfrontend/nexus](https://github.com/AndrewRedican/hyperfrontend/tree/main/libs/nexus)
+
 ## License
 
 MIT

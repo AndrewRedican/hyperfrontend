@@ -276,6 +276,10 @@ coordinator.cancelAll()
 - `@hyperfrontend/state-machine/lifecycle-aware-component` - Lifecycle component base class
 - `@hyperfrontend/state-machine/models` - TypeScript types and interfaces
 
+## Part of hyperfrontend
+
+This library is part of the [hyperfrontend](https://github.com/AndrewRedican/hyperfrontend) monorepo.
+
 ## License
 
 MIT

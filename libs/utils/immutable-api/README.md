@@ -136,6 +136,10 @@ Object.defineProperty(obj, 'version', lockedPropertyDescriptors('1.0.0', true))
 - **Event emitters**: Prevent handler list manipulation
 - **Prototype pollution defense**: Make critical prototypes tamper-proof
 
+## Part of hyperfrontend
+
+This library is part of the [hyperfrontend](https://github.com/AndrewRedican/hyperfrontend) monorepo.
+
 ## License
 
 MIT

@@ -27,3 +27,11 @@
 </p>
 
 Web Worker utilities and abstractions.
+
+## Part of hyperfrontend
+
+This library is part of the [hyperfrontend](https://github.com/AndrewRedican/hyperfrontend) monorepo.
+
+## License
+
+MIT

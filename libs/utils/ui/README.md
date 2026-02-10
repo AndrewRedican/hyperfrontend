@@ -162,6 +162,10 @@ const cleanup = createGestureListener(() => console.log('Escape or pinch detecte
 - **`pause(ms)`** - Promise-based delay
 - **`simpleHash(str)`** - Generate simple string hashes
 
+## Part of hyperfrontend
+
+This library is part of the [hyperfrontend](https://github.com/AndrewRedican/hyperfrontend) monorepo.
+
 ## License
 
 MIT

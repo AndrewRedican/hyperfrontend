@@ -202,6 +202,12 @@ cleanup()
 - **`setIntervalCallback(callback, interval)`** - Simple setInterval wrapper returning cleanup function
 - **`normalizeToBaseTimeWindow(time, baseTimeWindow)`** - Rounds timestamp down to nearest time window boundary (window in minutes)
 
+## Part of hyperfrontend
+
+This library is part of the [hyperfrontend](https://github.com/AndrewRedican/hyperfrontend) monorepo.
+
+- Used by [@hyperfrontend/cryptography](https://github.com/AndrewRedican/hyperfrontend/tree/main/libs/cryptography) for time-window password generation
+
 ## License
 
 MIT

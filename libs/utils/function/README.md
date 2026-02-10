@@ -223,6 +223,12 @@ const addOnce = createRunOnceFunction(add)
 const result: number = addOnce(2, 3) // Type safe ✓
 ```
 
+## Part of hyperfrontend
+
+This library is part of the [hyperfrontend](https://github.com/AndrewRedican/hyperfrontend) monorepo.
+
+- Used by [@hyperfrontend/logging](https://github.com/AndrewRedican/hyperfrontend/tree/main/libs/logging) for error suppression and conditional execution
+
 ## License
 
 MIT

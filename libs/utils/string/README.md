@@ -131,6 +131,12 @@ Internal utilities (exported but typically not needed):
 - **`base64ToUrlSafeBase64(base64, options)`** - Transform standard base64 to URL-safe format
 - **`urlSafeBase64ToBase64(urlSafeBase64)`** - Transform URL-safe base64 to standard format
 
+## Part of hyperfrontend
+
+This library is part of the [hyperfrontend](https://github.com/AndrewRedican/hyperfrontend) monorepo.
+
+- Used by [@hyperfrontend/cryptography](https://github.com/AndrewRedican/hyperfrontend/tree/main/libs/cryptography) for UTF-8/binary conversions
+
 ## License
 
 MIT
