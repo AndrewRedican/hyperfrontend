@@ -1,6 +1,6 @@
 {
   "name": "@hyperfrontend/ui-utils",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "description": "Modular DOM utilities for dynamic styling, gesture detection, element lifecycle, and color manipulation.",
   "license": "MIT",
   "keywords": [

@@ -1,6 +1,6 @@
 {
   "name": "@hyperfrontend/list-utils",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "description": "Purpose-built collection utilities for queue management, filtering, and iteration patterns.",
   "license": "MIT",
   "keywords": [

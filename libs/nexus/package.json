@@ -1,6 +1,6 @@
 {
   "name": "@hyperfrontend/nexus",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "description": "Cross-window communication library for micro-frontends with secure messaging, state management, and contract validation.",
   "license": "MIT",
   "sideEffects": false,

@@ -1,6 +1,6 @@
 {
   "name": "@hyperfrontend/cryptography",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "description": "Cryptography utilities for browser and Node.js environments.",
   "license": "MIT",
   "sideEffects": false,
