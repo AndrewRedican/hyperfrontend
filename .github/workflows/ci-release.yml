@@ -20,6 +20,8 @@ jobs:
     runs-on: ubuntu-latest
     # Only run when PR is merged (not just closed)
     if: github.event.pull_request.merged == true
+    permissions:
+      contents: write
     steps:
       - name: Checkout repository
         uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
@@ -45,13 +47,8 @@ jobs:
             echo "libraries=$AFFECTED" >> $GITHUB_OUTPUT
           fi
 
-      - name: Create versions and changelogs
-        if: steps.affected.outputs.has_affected == 'true'
-        run: |
-          echo "Creating versions and changelogs for affected libraries..."
-          # Run version first to bump package.json and generate CHANGELOG.md
-          # The idempotent executor will skip already-tagged versions
-          npx nx affected -t=version --base=origin/main~1 --head=origin/main --skipCommit || true
+      # Version bumping is handled by the PR version-validation job
+      # This workflow only builds, tags, and publishes
 
       - name: Build affected libraries
         if: steps.affected.outputs.has_affected == 'true'
