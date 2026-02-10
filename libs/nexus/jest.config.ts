@@ -1,12 +1,16 @@
 import type { Config } from 'jest'
 
 export default <Config>{
-  displayName: 'nexus',
   preset: '../../jest.preset.cjs',
-  moduleFileExtensions: ['ts', 'js', 'html'],
+  collectCoverageFrom: [
+    '**/*.{ts,tsx}',
+    '!jest.config.{ts,tsx}',
+    '!**/index.{ts,tsx}',
+    '!**/*.d.{ts,tsx}',
+    '!**/*.spec.ts',
+    '!**/jest.setup*.ts',
+  ],
   coverageDirectory: '../../coverage/libs/nexus',
-  testEnvironment: 'jsdom',
-  setupFilesAfterEnv: ['<rootDir>/jest.setup.ts'],
   coveragePathIgnorePatterns: [
     '/node_modules/',
     'src/types/broker.ts',
@@ -28,4 +32,23 @@ export default <Config>{
       statements: 95,
     },
   },
+  projects: [
+    {
+      displayName: 'nexus/node',
+      preset: '../../jest.preset.cjs',
+      moduleFileExtensions: ['ts', 'js', 'html'],
+      testEnvironment: 'node',
+      testMatch: ['**/*.spec.ts'],
+      testPathIgnorePatterns: ['^.*browser\\.spec\\.ts$'],
+      setupFilesAfterEnv: ['<rootDir>/jest.setup.ts'],
+    },
+    {
+      displayName: 'nexus/browser',
+      preset: '../../jest.preset.cjs',
+      moduleFileExtensions: ['ts', 'js', 'html'],
+      testEnvironment: 'jsdom',
+      testMatch: ['**/*.browser.spec.ts'],
+      setupFilesAfterEnv: ['<rootDir>/jest.setup.ts', '<rootDir>/jest.setup.browser.ts'],
+    },
+  ],
 }

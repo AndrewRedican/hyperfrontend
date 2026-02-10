@@ -1,13 +1,6 @@
-/**
- * Unit Tests: SecureTransport
- *
- * Tests the secure transport implementation that wraps network-protocol's
- * encryption and obfuscation pipeline.
- */
-
-import { createSecureTransport } from './secure-transport'
 import type { SecurityTransport } from '../../types/security'
-import type { SecureTransportConfig } from './types'
+import type { SecureTransportConfig } from '../../security/transport/types'
+import { createSecureTransport } from './secure-transport'
 
 describe('SecureTransport', () => {
   let mockTarget: { postMessage: jest.Mock }
@@ -208,6 +201,22 @@ describe('SecureTransport', () => {
       }
 
       expect(handler).not.toHaveBeenCalled()
+    })
+
+    it('does not deliver when handler not yet registered', () => {
+      const transport = createTransport()
+
+      // Initialize protocol via send() without registering a handler
+      transport.send({ type: 'TEST' })
+
+      // Now receivePacket exists but receiveHandler is undefined
+      expect(capturedReceivePacket).toBeDefined()
+      // This should not throw and should be silently ignored
+      expect(() => {
+        if (capturedReceivePacket) {
+          capturedReceivePacket({ origin: 'nexus', target: 'channel', data: { type: 'TEST' } })
+        }
+      }).not.toThrow()
     })
 
     it('resumes delivery after resume', () => {

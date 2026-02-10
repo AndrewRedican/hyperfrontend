@@ -1,7 +1,7 @@
 import { uuidV4 } from '@hyperfrontend/random-generator-utils'
 import type { IChannelContract } from '../types/contract'
 import type { IChannelSettings } from '../types/channel'
-import type { SecurityProtocolVersion, ProtocolLoader } from '../types/security'
+import type { SecurityProtocolVersion } from '../types/security'
 import type { BrokerConfig, BrokerState, BrokerHandle, SecurityPolicy } from './types'
 import { defaultBrokerSettings } from './defaults'
 import { createRegistry } from '../core/registry/factory'
@@ -68,12 +68,6 @@ export function createBroker(config: {
   const registry = createRegistry()
   const processManager = createProcessManager()
   const protocolRegistry = createProtocolRegistry()
-
-  /**
-   * Protocol loader for lazy loading security protocols on demand.
-   * Stored for use during channel creation when a protocol isn't pre-registered.
-   */
-  const _protocolLoader: ProtocolLoader | undefined = config.settings?.security?.protocolLoader
 
   // Register pre-configured protocol providers from settings
   if (config.settings?.security?.protocols) {

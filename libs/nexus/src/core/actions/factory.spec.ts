@@ -1,10 +1,6 @@
-/**
- * Unit tests for action creators factory
- */
-
+import type { IChannelContract } from '../../types/contract'
 import { createActionCreators } from './factory'
 import { ACTION_TYPES } from '../../types/action'
-import type { IChannelContract } from '../../types/contract'
 
 describe('createActionCreators', () => {
   const mockContract: IChannelContract = {
@@ -38,6 +34,42 @@ describe('createActionCreators', () => {
 
     it('creates frozen action object', () => {
       const action = actions.requestConnection('process-123')
+      expect(Object.isFrozen(action)).toBe(true)
+    })
+
+    it('creates REQUEST_CONNECTION action with security negotiation request', () => {
+      const processId = 'process-secure'
+      const security = {
+        supported: ['v2', 'v1', 'none'] as const,
+        preferred: 'v2' as const,
+      }
+      const action = actions.requestConnection(processId, security)
+
+      expect(action).toEqual({
+        type: ACTION_TYPES.REQUEST_CONNECTION,
+        processId,
+        senderId: 'test-broker-id',
+        contract: mockContract,
+        security,
+      })
+    })
+
+    it('includes security field only when provided', () => {
+      const actionWithoutSecurity = actions.requestConnection('process-1')
+      const actionWithSecurity = actions.requestConnection('process-2', {
+        supported: ['v1', 'none'],
+        preferred: 'v1',
+      })
+
+      expect('security' in actionWithoutSecurity).toBe(false)
+      expect('security' in actionWithSecurity).toBe(true)
+    })
+
+    it('creates frozen action with security', () => {
+      const action = actions.requestConnection('process-secure', {
+        supported: ['none'],
+        preferred: 'none',
+      })
       expect(Object.isFrozen(action)).toBe(true)
     })
   })
@@ -113,6 +145,35 @@ describe('createActionCreators', () => {
 
     it('creates frozen action object', () => {
       const action = actions.openConnection('process-def')
+      expect(Object.isFrozen(action)).toBe(true)
+    })
+
+    it('creates OPEN_CONNECTION action with security confirmation', () => {
+      const processId = 'process-secure'
+      const security = {
+        active: true,
+        protocol: 'v2' as const,
+      }
+      const action = actions.openConnection(processId, security)
+
+      expect(action).toEqual({
+        type: ACTION_TYPES.OPEN_CONNECTION,
+        processId,
+        senderId: 'test-broker-id',
+        security,
+      })
+    })
+
+    it('includes security field only when provided', () => {
+      const actionWithoutSecurity = actions.openConnection('process-1')
+      const actionWithSecurity = actions.openConnection('process-2', { active: true, protocol: 'v1' })
+
+      expect('security' in actionWithoutSecurity).toBe(false)
+      expect('security' in actionWithSecurity).toBe(true)
+    })
+
+    it('creates frozen action with security', () => {
+      const action = actions.openConnection('process-secure', { active: true, protocol: 'none' })
       expect(Object.isFrozen(action)).toBe(true)
     })
   })
