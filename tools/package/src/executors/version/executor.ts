@@ -83,7 +83,13 @@ export default async function versionExecutor(options: VersionExecutorOptions, c
   logger.info(`${projectName}: Delegating to @jscutlery/semver:version`)
 
   // Delegate to @jscutlery/semver:version
-  const result = await semverVersion(options as VersionBuilderSchema, context)
+  // Ensure skipCommitTypes defaults to empty array (required by @jscutlery/semver)
+  const semverOptions: VersionBuilderSchema = {
+    ...options,
+    skipCommitTypes: options.skipCommitTypes ?? [],
+  } as VersionBuilderSchema
+
+  const result = await semverVersion(semverOptions, context)
 
   if (result.success) {
     logger.info(`${projectName}: version updated`)

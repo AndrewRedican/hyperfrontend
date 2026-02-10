@@ -50,4 +50,7 @@ export interface VersionExecutorOptions {
 
   /** A string to be used to format the auto-generated release commit message. */
   commitMessageFormat?: string
+
+  /** Specify array of commit types to be ignored when calculating next version bump. */
+  skipCommitTypes?: string[]
 }

@@ -81,6 +81,14 @@
     "commitMessageFormat": {
       "type": "string",
       "description": "A string to be used to format the auto-generated release commit message."
+    },
+    "skipCommitTypes": {
+      "type": "array",
+      "description": "Specify array of commit types to be ignored when calculating next version bump.",
+      "default": [],
+      "items": {
+        "type": "string"
+      }
     }
   },
   "required": []
