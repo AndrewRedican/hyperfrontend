@@ -32,5 +32,8 @@ pnpm-lock.yaml
 coverage/
 .nyc_output/
 
+# Changelogs
+**/CHANGELOG.md
+
 # files using hugo templates that break html formatting
 /docs/**

@@ -9,6 +9,7 @@ jest.config.*
 tsconfig.spec.json
 .eslintrc*
 eslint.config.*
+*.tgz
 
 # Build files
 tsconfig.lib.json
