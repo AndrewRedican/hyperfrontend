@@ -1,42 +1,62 @@
-import { type ExecutorContext, joinPathFragments, logger } from '@nx/devkit'
-import { existsSync, mkdirSync, rmSync, readFileSync } from 'node:fs'
+import type { ExecutorContext } from '@nx/devkit'
+import { joinPathFragments, logger } from '@nx/devkit'
+import { existsSync, mkdirSync, rmSync } from 'node:fs'
 import { join } from 'node:path'
-import type { BuildExecutorOptions } from './lib/types'
+import { rollup } from 'rollup'
+import type { RollupOptions } from 'rollup'
+import type { BuildV2ExecutorOptions, BuildContext, FormatOutputs } from './lib'
 import { resolveOutputPath, resolveTsConfigPath } from './lib/paths'
-import { discoverEntryPoints } from './lib/detect'
+import { discoverEntryPoints, resolveEntries } from './lib/entry-resolver'
+import { createESMConfig } from './lib/config-esm'
+import { createCJSConfig } from './lib/config-cjs'
+import { createIIFEConfig } from './lib/config-iife'
+import { createUMDConfig } from './lib/config-umd'
+import { generateDeclarations } from './lib/declarations'
+import { generatePackageJson, readProjectPackageJson, hasFunding } from './lib/package-json'
 import { copyAssets, copyDefaultAssets, copyFundingAsset } from './lib/assets'
-import { buildUnifiedLibrary, buildBundledOutput } from './lib/build-unified'
-import { hasFunding, readProjectPackageJson } from './lib/package-json'
 
 /**
- * Reads dependencies from package.json and returns all packages that should be external.
+ * Normalizes a format configuration to always be an array.
  *
- * @param projectRoot - Absolute path to the project root
- * @returns List of all dependencies to mark as external
+ * @param config - Single config or array of configs
+ * @returns Array of configs
  */
-function getExternalDependencies(projectRoot: string): string[] {
-  const pkgPath = join(projectRoot, 'package.json')
-  if (!existsSync(pkgPath)) return []
-
-  const pkg = JSON.parse(readFileSync(pkgPath, 'utf-8'))
-  return Object.keys({ ...pkg.dependencies, ...pkg.peerDependencies })
+function normalizeToArray<T>(config: T | T[] | undefined): T[] {
+  if (config === undefined) return []
+  return Array.isArray(config) ? config : [config]
 }
 
 /**
- * Build executor for hyperfrontend library packages.
+ * Executes all Rollup configurations and writes outputs.
  *
- * Builds TypeScript libraries with automatic entry point discovery and support for:
- * - Multiple entry points (root, platform-specific, feature-based)
- * - ESM and CJS output formats
- * - TypeScript declarations
- * - Optional UMD/IIFE bundles for CDN distribution
- * - Asset copying and package.json generation
+ * @param configs - Array of Rollup configurations
+ */
+async function executeRollupConfigs(configs: RollupOptions[]): Promise<void> {
+  for (const config of configs) {
+    const bundle = await rollup(config)
+
+    try {
+      const outputs = Array.isArray(config.output) ? config.output : config.output ? [config.output] : []
+      for (const output of outputs) {
+        await bundle.write(output)
+      }
+    } finally {
+      await bundle.close()
+    }
+  }
+}
+
+/**
+ * Build executor V2 for hyperfrontend library packages.
+ *
+ * Format-centric build executor with explicit output configuration.
+ * All output formats (ESM, CJS, IIFE, UMD) are opt-in.
  *
  * @param options - Build executor options
  * @param context - Nx executor context
  * @returns Success status
  */
-export default async function runExecutor(options: BuildExecutorOptions, context: ExecutorContext): Promise<{ success: boolean }> {
+export default async function runExecutor(options: BuildV2ExecutorOptions, context: ExecutorContext): Promise<{ success: boolean }> {
   const { projectName, root: workspaceRoot } = context
 
   if (!projectName) {
@@ -65,14 +85,15 @@ export default async function runExecutor(options: BuildExecutorOptions, context
   )
   const assets = options.assets ?? []
 
-  const packageDeps = getExternalDependencies(projectRoot)
-  const external = [...(options.external ?? []), ...packageDeps]
+  const esmConfigs = normalizeToArray(options.esm)
+  const cjsConfigs = normalizeToArray(options.cjs)
+  const iifeConfigs = normalizeToArray(options.iife)
+  const umdConfigs = normalizeToArray(options.umd)
 
-  const shouldBundle = options.bundle ?? false
-  const globalName = options.globalName
+  const hasAnyFormat = esmConfigs.length > 0 || cjsConfigs.length > 0 || iifeConfigs.length > 0 || umdConfigs.length > 0
 
-  if (shouldBundle && !globalName) {
-    logger.error('globalName is required when bundle is true')
+  if (!hasAnyFormat) {
+    logger.error('At least one output format (esm, cjs, iife, umd) must be configured')
     return { success: false }
   }
 
@@ -80,12 +101,13 @@ export default async function runExecutor(options: BuildExecutorOptions, context
   logger.info(`  Project root: ${projectRoot}`)
   logger.info(`  Output path: ${outputPath}`)
   logger.info(`  TS config: ${tsConfigPath}`)
-  if (packageDeps.length > 0) {
-    logger.info(`  External deps: ${packageDeps.join(', ')}`)
-  }
-  if (shouldBundle) {
-    logger.info(`  Bundle: enabled (global: ${globalName})`)
-  }
+
+  const formats: string[] = []
+  if (esmConfigs.length > 0) formats.push('ESM')
+  if (cjsConfigs.length > 0) formats.push('CJS')
+  if (iifeConfigs.length > 0) formats.push('IIFE')
+  if (umdConfigs.length > 0) formats.push('UMD')
+  logger.info(`  Formats: ${formats.join(', ')}`)
 
   const discovery = discoverEntryPoints(projectRoot)
   logger.info(`  Entry point category: ${discovery.category}`)
@@ -96,16 +118,89 @@ export default async function runExecutor(options: BuildExecutorOptions, context
   }
   mkdirSync(outputPath, { recursive: true })
 
-  try {
-    await buildUnifiedLibrary(projectRoot, outputPath, tsConfigPath, external, workspaceRoot, discovery, shouldBundle)
+  const buildContext: BuildContext = {
+    projectRoot,
+    projectRelativePath,
+    outputPath,
+    tsConfigPath,
+    external: options.external ?? [],
+    assets,
+    entryPointDiscovery: discovery,
+    workspaceRoot,
+    context,
+  }
 
-    if (shouldBundle && globalName) {
-      await buildBundledOutput(projectRoot, outputPath, tsConfigPath, globalName, workspaceRoot, discovery)
+  const formatOutputs: FormatOutputs = {
+    esm: [],
+    cjs: [],
+    iife: [],
+    umd: [],
+  }
+
+  try {
+    for (const esmConfig of esmConfigs) {
+      const entries = resolveEntries(esmConfig, discovery.entryPoints)
+      if (entries.length > 0) {
+        logger.info(`Building ESM (${entries.length} entries)...`)
+        const rollupConfigs = createESMConfig(entries, esmConfig, buildContext)
+        await executeRollupConfigs(rollupConfigs)
+        formatOutputs.esm.push(...entries)
+        for (const entry of entries) {
+          logger.info(`  Built ESM: ${entry.exportPath}`)
+        }
+      }
     }
+
+    for (const cjsConfig of cjsConfigs) {
+      const entries = resolveEntries(cjsConfig, discovery.entryPoints)
+      if (entries.length > 0) {
+        logger.info(`Building CJS (${entries.length} entries)...`)
+        const rollupConfigs = createCJSConfig(entries, cjsConfig, buildContext)
+        await executeRollupConfigs(rollupConfigs)
+        formatOutputs.cjs.push(...entries)
+        for (const entry of entries) {
+          logger.info(`  Built CJS: ${entry.exportPath}`)
+        }
+      }
+    }
+
+    for (const iifeConfig of iifeConfigs) {
+      const entries = resolveEntries(iifeConfig, discovery.entryPoints)
+      if (entries.length > 0) {
+        const bundleDir = iifeConfig.output ?? 'bundle'
+        const bundlePath = join(outputPath, bundleDir)
+        mkdirSync(bundlePath, { recursive: true })
+
+        logger.info(`Building IIFE bundle (${entries.length} entries)...`)
+        const rollupConfigs = createIIFEConfig(entries, iifeConfig, buildContext)
+        await executeRollupConfigs(rollupConfigs)
+        formatOutputs.iife.push({ config: iifeConfig, entries })
+        logger.info(`  Built IIFE: ${bundleDir}/ (global: ${iifeConfig.globalName})`)
+      }
+    }
+
+    for (const umdConfig of umdConfigs) {
+      const entries = resolveEntries(umdConfig, discovery.entryPoints)
+      if (entries.length > 0) {
+        const bundleDir = umdConfig.output ?? 'bundle'
+        const bundlePath = join(outputPath, bundleDir)
+        mkdirSync(bundlePath, { recursive: true })
+
+        logger.info(`Building UMD bundle (${entries.length} entries)...`)
+        const rollupConfigs = createUMDConfig(entries, umdConfig, buildContext)
+        await executeRollupConfigs(rollupConfigs)
+        formatOutputs.umd.push({ config: umdConfig, entries })
+        logger.info(`  Built UMD: ${bundleDir}/ (global: ${umdConfig.globalName})`)
+      }
+    }
+
+    generateDeclarations(projectRoot, outputPath, tsConfigPath, workspaceRoot, discovery)
+
+    const srcPkg = readProjectPackageJson(projectRoot)
+    generatePackageJson(srcPkg, outputPath, discovery, workspaceRoot, formatOutputs)
 
     copyDefaultAssets(projectRoot, outputPath, workspaceRoot)
 
-    const srcPkg = readProjectPackageJson(projectRoot)
     if (hasFunding(srcPkg)) {
       copyFundingAsset(outputPath, workspaceRoot)
     }

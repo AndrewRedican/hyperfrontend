@@ -1,12 +1,7 @@
-/**
- * Library entry point detection for the build executor.
- *
- * Dynamically discovers entry points by scanning the project's src/ directory.
- * Supports various patterns: root, platform-specific, feature-based, and complex nested structures.
- */
 import { existsSync, readdirSync, statSync } from 'node:fs'
 import { join } from 'node:path'
-import type { EntryPoint, EntryPointCategory, EntryPointDiscovery } from './types'
+import { minimatch } from 'minimatch'
+import type { EntryPoint, EntryPointCategory, EntryPointDiscovery, FormatEntryConfig } from './types'
 
 /** Known platform directory names */
 const PLATFORM_DIRS = ['browser', 'node'] as const
@@ -19,7 +14,7 @@ type PlatformDir = (typeof PLATFORM_DIRS)[number]
  * @returns True if the name is a known platform directory
  */
 function isPlatformDir(name: string): name is PlatformDir {
-  return PLATFORM_DIRS.includes(name as PlatformDir)
+  return PLATFORM_DIRS.includes(<PlatformDir>name)
 }
 
 /**
@@ -73,7 +68,7 @@ function discoverEntryPointsRecursive(basePath: string, relativePath = '', maxDe
     if (hasIndexFile(subdirPath)) {
       const exportPath = `./${subdirRelative}`
       const firstSegment = subdirRelative.split('/')[0] ?? ''
-      const platform = isPlatformDir(subdir) ? subdir : isPlatformDir(firstSegment) ? (firstSegment as PlatformDir) : undefined
+      const platform = isPlatformDir(subdir) ? subdir : isPlatformDir(firstSegment) ? <PlatformDir>firstSegment : undefined
 
       entries.push({
         exportPath,
@@ -89,6 +84,38 @@ function discoverEntryPointsRecursive(basePath: string, relativePath = '', maxDe
   }
 
   return entries
+}
+
+/**
+ * Categorizes the entry point structure.
+ *
+ * @param hasRootEntry - Whether there is a root entry point
+ * @param platformEntries - Platform-specific entry points
+ * @param featureEntries - Feature module entry points
+ * @returns The entry point category
+ */
+function categorizeEntryPoints(hasRootEntry: boolean, platformEntries: EntryPoint[], featureEntries: EntryPoint[]): EntryPointCategory {
+  const hasPlatformEntries = platformEntries.length > 0
+  const hasFeatureEntries = featureEntries.length > 0
+  const hasNestedPlatformEntries = platformEntries.some((e) => e.srcPath.includes('/'))
+
+  if (hasRootEntry && !hasPlatformEntries && !hasFeatureEntries) {
+    return 'root'
+  }
+
+  if (!hasRootEntry && hasPlatformEntries && !hasFeatureEntries && !hasNestedPlatformEntries) {
+    return 'platform'
+  }
+
+  if (!hasRootEntry && !hasPlatformEntries && hasFeatureEntries) {
+    return 'feature'
+  }
+
+  if (hasNestedPlatformEntries) {
+    return 'complex'
+  }
+
+  return 'hybrid'
 }
 
 /**
@@ -137,35 +164,63 @@ export function discoverEntryPoints(projectRoot: string): EntryPointDiscovery {
 }
 
 /**
- * Categorizes the entry point structure.
+ * Normalizes an entry pattern to always start with './' or be '.'.
  *
- * @param hasRootEntry - Whether there is a root entry point
- * @param platformEntries - Platform-specific entry points
- * @param featureEntries - Feature module entry points
- * @returns The entry point category
+ * @param pattern - Entry pattern to normalize
+ * @returns Normalized pattern
  */
-function categorizeEntryPoints(hasRootEntry: boolean, platformEntries: EntryPoint[], featureEntries: EntryPoint[]): EntryPointCategory {
-  const hasPlatformEntries = platformEntries.length > 0
-  const hasFeatureEntries = featureEntries.length > 0
-  const hasNestedPlatformEntries = platformEntries.some((e) => e.srcPath.includes('/'))
+function normalizeEntryPattern(pattern: string): string {
+  if (pattern === '.') return pattern
+  if (pattern.startsWith('./')) return pattern
+  return `./${pattern}`
+}
 
-  if (hasRootEntry && !hasPlatformEntries && !hasFeatureEntries) {
-    return 'root'
+/**
+ * Checks if an entry point matches a pattern.
+ * Supports exact paths and glob patterns.
+ *
+ * @param entry - Entry point to check
+ * @param pattern - Pattern to match against
+ * @returns True if the entry point matches the pattern
+ */
+function matchesPattern(entry: EntryPoint, pattern: string): boolean {
+  const normalizedPattern = normalizeEntryPattern(pattern)
+
+  if (normalizedPattern === entry.exportPath) {
+    return true
   }
 
-  if (!hasRootEntry && hasPlatformEntries && !hasFeatureEntries && !hasNestedPlatformEntries) {
-    return 'platform'
+  if (normalizedPattern.includes('*')) {
+    return minimatch(entry.exportPath, normalizedPattern)
   }
 
-  if (!hasRootEntry && !hasPlatformEntries && hasFeatureEntries) {
-    return 'feature'
+  return false
+}
+
+/**
+ * Resolves entry points based on format configuration.
+ *
+ * @param config - Format entry configuration
+ * @param discoveredEntries - All discovered entry points
+ * @returns Filtered entry points matching the configuration
+ */
+export function resolveEntries(config: FormatEntryConfig, discoveredEntries: EntryPoint[]): EntryPoint[] {
+  const entryPatterns = config.entry
+  const excludePatterns = config.exclude
+
+  let entries = discoveredEntries
+
+  if (entryPatterns !== undefined) {
+    const patterns = Array.isArray(entryPatterns) ? entryPatterns : [entryPatterns]
+    entries = entries.filter((entry) => patterns.some((pattern) => matchesPattern(entry, pattern)))
   }
 
-  if (hasNestedPlatformEntries) {
-    return 'complex'
+  if (excludePatterns !== undefined) {
+    const patterns = Array.isArray(excludePatterns) ? excludePatterns : [excludePatterns]
+    entries = entries.filter((entry) => !patterns.some((pattern) => matchesPattern(entry, pattern)))
   }
 
-  return 'hybrid'
+  return entries
 }
 
 /**

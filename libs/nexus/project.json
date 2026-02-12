@@ -8,9 +8,18 @@
   "targets": {
     "version": {},
     "build": {
+      "executor": "@hyperfrontend/package:build",
       "options": {
-        "bundle": true,
-        "globalName": "HyperfrontendNexus"
+        "esm": {},
+        "cjs": {},
+        "iife": {
+          "entry": ".",
+          "globalName": "HyperfrontendNexus"
+        },
+        "umd": {
+          "entry": ".",
+          "globalName": "HyperfrontendNexus"
+        }
       }
     },
     "publish": {},

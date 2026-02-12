@@ -1,51 +1,129 @@
 {
   "$schema": "http://json-schema.org/schema",
   "type": "object",
-  "title": "Build executor schema",
-  "description": "Unified build executor for hyperfrontend library packages. Auto-detects library type (standard vs isomorphic) and applies the appropriate build strategy.",
+  "title": "Build V2 executor schema",
+  "description": "Format-centric build executor for hyperfrontend library packages. All output formats are opt-in.",
   "properties": {
     "outputPath": {
       "type": "string",
-      "description": "Output directory for the built package. Defaults to dist/{projectRoot}."
+      "description": "Output directory. Defaults to dist/{projectRoot}."
     },
     "tsConfig": {
       "type": "string",
-      "description": "Path to the TypeScript configuration file. Defaults to {projectRoot}/tsconfig.lib.json."
+      "description": "Path to tsconfig. Defaults to {projectRoot}/tsconfig.lib.json."
     },
     "assets": {
       "type": "array",
-      "description": "Additional assets to copy to the output directory.",
+      "description": "Additional assets to copy.",
       "items": {
         "oneOf": [
           { "type": "string" },
           {
             "type": "object",
             "properties": {
-              "input": { "type": "string", "description": "Input directory (relative to workspace root)" },
-              "glob": { "type": "string", "description": "Glob pattern to match files" },
-              "output": { "type": "string", "description": "Output directory (relative to outputPath)" }
+              "input": { "type": "string" },
+              "glob": { "type": "string" },
+              "output": { "type": "string" }
             },
             "required": ["input", "glob", "output"]
           }
         ]
-      },
-      "default": []
+      }
     },
     "external": {
       "type": "array",
-      "description": "External dependencies to exclude from the bundle.",
-      "items": { "type": "string" },
-      "default": []
+      "description": "Global external dependencies for all formats.",
+      "items": { "type": "string" }
     },
-    "bundle": {
-      "type": "boolean",
-      "description": "Generate self-contained UMD and IIFE bundles for CDN distribution. All dependencies are inlined.",
-      "default": false
+    "esm": {
+      "oneOf": [{ "$ref": "#/definitions/esmConfig" }, { "type": "array", "items": { "$ref": "#/definitions/esmConfig" } }],
+      "description": "ESM output configuration. Omit to skip."
     },
-    "globalName": {
-      "type": "string",
-      "description": "Global variable name for UMD/IIFE bundles (e.g., 'HyperfrontendNexus'). Required when bundle is true."
+    "cjs": {
+      "oneOf": [{ "$ref": "#/definitions/cjsConfig" }, { "type": "array", "items": { "$ref": "#/definitions/cjsConfig" } }],
+      "description": "CJS output configuration. Omit to skip."
+    },
+    "iife": {
+      "oneOf": [{ "$ref": "#/definitions/iifeConfig" }, { "type": "array", "items": { "$ref": "#/definitions/iifeConfig" } }],
+      "description": "IIFE bundle configuration. Browser-only. Omit to skip."
+    },
+    "umd": {
+      "oneOf": [{ "$ref": "#/definitions/umdConfig" }, { "type": "array", "items": { "$ref": "#/definitions/umdConfig" } }],
+      "description": "UMD bundle configuration. Universal format. Omit to skip."
     }
   },
-  "required": []
+  "definitions": {
+    "entryConfig": {
+      "type": "object",
+      "properties": {
+        "entry": {
+          "oneOf": [{ "type": "string" }, { "type": "array", "items": { "type": "string" } }],
+          "description": "Entry point(s). Exact paths or globs. Omit to use all detected entries."
+        },
+        "exclude": {
+          "oneOf": [{ "type": "string" }, { "type": "array", "items": { "type": "string" } }],
+          "description": "Entry points to exclude."
+        }
+      }
+    },
+    "esmConfig": {
+      "allOf": [
+        { "$ref": "#/definitions/entryConfig" },
+        {
+          "type": "object",
+          "properties": {
+            "sourcemap": { "type": "boolean", "default": true },
+            "external": { "type": "array", "items": { "type": "string" } }
+          }
+        }
+      ]
+    },
+    "cjsConfig": {
+      "allOf": [
+        { "$ref": "#/definitions/entryConfig" },
+        {
+          "type": "object",
+          "properties": {
+            "sourcemap": { "type": "boolean", "default": true },
+            "external": { "type": "array", "items": { "type": "string" } }
+          }
+        }
+      ]
+    },
+    "iifeConfig": {
+      "allOf": [
+        { "$ref": "#/definitions/entryConfig" },
+        {
+          "type": "object",
+          "properties": {
+            "globalName": { "type": "string" },
+            "minify": { "type": "boolean", "default": true },
+            "output": { "type": "string" },
+            "sourcemap": { "type": "boolean", "default": true },
+            "external": { "type": "array", "items": { "type": "string" } },
+            "globals": { "type": "object", "additionalProperties": { "type": "string" } }
+          },
+          "required": ["globalName"]
+        }
+      ]
+    },
+    "umdConfig": {
+      "allOf": [
+        { "$ref": "#/definitions/entryConfig" },
+        {
+          "type": "object",
+          "properties": {
+            "globalName": { "type": "string" },
+            "minify": { "type": "boolean", "default": true },
+            "amdId": { "type": "string" },
+            "output": { "type": "string" },
+            "sourcemap": { "type": "boolean", "default": true },
+            "external": { "type": "array", "items": { "type": "string" } },
+            "globals": { "type": "object", "additionalProperties": { "type": "string" } }
+          },
+          "required": ["globalName"]
+        }
+      ]
+    }
+  }
 }

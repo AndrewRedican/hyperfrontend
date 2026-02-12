@@ -1,8 +1,3 @@
-/**
- * Asset copying utilities for the build executor.
- *
- * Handles copying project assets and default files to the output directory.
- */
 import { logger } from '@nx/devkit'
 import { existsSync, mkdirSync, copyFileSync } from 'node:fs'
 import { join, dirname, basename, relative } from 'node:path'

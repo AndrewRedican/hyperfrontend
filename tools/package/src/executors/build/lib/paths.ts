@@ -1,8 +1,3 @@
-/**
- * Path resolution utilities for the build executor.
- *
- * Uses joinPathFragments for config paths and join() for absolute file paths.
- */
 import { joinPathFragments } from '@nx/devkit'
 import { join, relative } from 'node:path'
 
