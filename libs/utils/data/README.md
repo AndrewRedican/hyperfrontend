@@ -297,6 +297,46 @@ isIdentical(g1, g2) // true
 - **`containsKeys(target, keys): boolean`** - Check if target contains all specified keys
 - **`isMarker(key): boolean`** - Check if key is internal marker (for circular reference tracking)
 
+## Compatibility
+
+| Platform                      | Support |
+| ----------------------------- | :-----: |
+| Browser                       |   ✅    |
+| Node.js                       |   ✅    |
+| Web Workers                   |   ✅    |
+| Deno, Bun, Cloudflare Workers |   ✅    |
+
+### Output Formats
+
+| Format | File                       | Tree-Shakeable |
+| ------ | -------------------------- | :------------: |
+| ESM    | `index.esm.js`             |       ✅       |
+| CJS    | `index.cjs.js`             |       ❌       |
+| IIFE   | `bundle/index.iife.min.js` |       ❌       |
+| UMD    | `bundle/index.umd.min.js`  |       ❌       |
+
+**Bundle size:** 12 KB (minified, self-contained)
+
+### CDN Usage
+
+```html
+<!-- unpkg -->
+<script src="https://unpkg.com/@hyperfrontend/data-utils"></script>
+
+<!-- jsDelivr -->
+<script src="https://cdn.jsdelivr.net/npm/@hyperfrontend/data-utils"></script>
+
+<script>
+  const { isEqual, deepClone, getType } = HyperfrontendDataUtils
+</script>
+```
+
+**Global variable:** `HyperfrontendDataUtils`
+
+### Dependencies
+
+None — zero external dependencies.
+
 ## Part of hyperfrontend
 
 This library is part of the [hyperfrontend](https://github.com/AndrewRedican/hyperfrontend) monorepo.
