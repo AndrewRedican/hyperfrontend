@@ -276,6 +276,48 @@ coordinator.cancelAll()
 - `@hyperfrontend/state-machine/lifecycle-aware-component` - Lifecycle component base class
 - `@hyperfrontend/state-machine/models` - TypeScript types and interfaces
 
+## Compatibility
+
+| Platform                      | Support |
+| ----------------------------- | :-----: |
+| Browser                       |   ✅    |
+| Node.js                       |   ✅    |
+| Web Workers                   |   ✅    |
+| Deno, Bun, Cloudflare Workers |   ✅    |
+
+### Output Formats
+
+| Format | File                       | Tree-Shakeable |
+| ------ | -------------------------- | :------------: |
+| ESM    | `index.esm.js`             |       ✅       |
+| CJS    | `index.cjs.js`             |       ❌       |
+| IIFE   | `bundle/index.iife.min.js` |       ❌       |
+| UMD    | `bundle/index.umd.min.js`  |       ❌       |
+
+**Bundle size:** < 1 KB (minified, self-contained)
+
+### CDN Usage
+
+```html
+<!-- unpkg -->
+<script src="https://unpkg.com/@hyperfrontend/state-machine"></script>
+
+<!-- jsDelivr -->
+<script src="https://cdn.jsdelivr.net/npm/@hyperfrontend/state-machine"></script>
+
+<script>
+  const { createStore, createReducer } = HyperfrontendStateMachine
+</script>
+```
+
+**Global variable:** `HyperfrontendStateMachine`
+
+### Dependencies
+
+| Package                   | Type     |
+| ------------------------- | -------- |
+| @hyperfrontend/data-utils | Internal |
+
 ## Part of hyperfrontend
 
 This library is part of the [hyperfrontend](https://github.com/AndrewRedican/hyperfrontend) monorepo.
