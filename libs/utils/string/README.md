@@ -131,6 +131,46 @@ Internal utilities (exported but typically not needed):
 - **`base64ToUrlSafeBase64(base64, options)`** - Transform standard base64 to URL-safe format
 - **`urlSafeBase64ToBase64(urlSafeBase64)`** - Transform URL-safe base64 to standard format
 
+## Compatibility
+
+| Platform                      | Support |
+| ----------------------------- | :-----: |
+| Browser                       |   ✅    |
+| Node.js                       |   ✅    |
+| Web Workers                   |   ✅    |
+| Deno, Bun, Cloudflare Workers |   ✅    |
+
+### Output Formats
+
+| Format | File                       | Tree-Shakeable |
+| ------ | -------------------------- | :------------: |
+| ESM    | `index.esm.js`             |       ✅       |
+| CJS    | `index.cjs.js`             |       ❌       |
+| IIFE   | `bundle/index.iife.min.js` |       ❌       |
+| UMD    | `bundle/index.umd.min.js`  |       ❌       |
+
+**Bundle size:** 1 KB (minified, self-contained)
+
+### CDN Usage
+
+```html
+<!-- unpkg -->
+<script src="https://unpkg.com/@hyperfrontend/string-utils"></script>
+
+<!-- jsDelivr -->
+<script src="https://cdn.jsdelivr.net/npm/@hyperfrontend/string-utils"></script>
+
+<script>
+  const { utf8StringToUint8Array, uint8ArrayToBase64 } = HyperfrontendStringUtils
+</script>
+```
+
+**Global variable:** `HyperfrontendStringUtils`
+
+### Dependencies
+
+None — zero external dependencies.
+
 ## Part of hyperfrontend
 
 This library is part of the [hyperfrontend](https://github.com/AndrewRedican/hyperfrontend) monorepo.
