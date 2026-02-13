@@ -155,6 +155,51 @@ isSHA256Hash('e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855')
 - **`generateKey(password: string, salt: Uint8Array): Promise<CryptoKey>`** - Derive encryption key using PBKDF2
 - **`getRandomValues(byteLength: number): Uint8Array`** - Generate cryptographically-secure random bytes
 
+## Compatibility
+
+| Platform                      | Support |
+| ----------------------------- | :-----: |
+| Browser                       |   ✅    |
+| Node.js                       |   ✅    |
+| Web Workers                   |   ✅    |
+| Deno, Bun, Cloudflare Workers |   ✅    |
+
+### Output Formats
+
+| Format | File                       | Tree-Shakeable |
+| ------ | -------------------------- | :------------: |
+| ESM    | `index.esm.js`             |       ✅       |
+| CJS    | `index.cjs.js`             |       ❌       |
+| IIFE   | `bundle/index.iife.min.js` |       ❌       |
+| UMD    | `bundle/index.umd.min.js`  |       ❌       |
+
+**Bundle size:** 3 KB (minified, self-contained)
+
+### CDN Usage
+
+```html
+<!-- unpkg -->
+<script src="https://unpkg.com/@hyperfrontend/cryptography"></script>
+
+<!-- jsDelivr -->
+<script src="https://cdn.jsdelivr.net/npm/@hyperfrontend/cryptography"></script>
+
+<script>
+  const { createHash, encrypt, decrypt } = HyperfrontendCryptography
+</script>
+```
+
+**Global variable:** `HyperfrontendCryptography`
+
+### Dependencies
+
+| Package                               | Type     |
+| ------------------------------------- | -------- |
+| @hyperfrontend/data-utils             | Internal |
+| @hyperfrontend/random-generator-utils | Internal |
+| @hyperfrontend/string-utils           | Internal |
+| @hyperfrontend/time-utils             | Internal |
+
 ## Part of hyperfrontend
 
 This library is part of the [hyperfrontend](https://github.com/AndrewRedican/hyperfrontend) monorepo.
