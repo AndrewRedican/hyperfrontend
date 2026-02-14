@@ -166,26 +166,45 @@ function findLicenseFile(packageDir: string): string | null {
 }
 
 /**
- * Parses a Git URL to extract repository owner and name.
+ * Parses a Git URL to extract repository owner, name, and hosting platform.
  *
  * @param gitUrl - Git repository URL (git+https, git://, or https format)
- * @returns Object with owner and repo, or null if parsing fails
+ * @returns Object with platform, owner and repo, or null if parsing fails
  */
-function parseGitUrl(gitUrl: string): { owner: string; repo: string } | null {
-  const patterns = [
-    /github\.com[/:]([\w.-]+)\/([\w.-]+?)(?:\.git)?$/i,
-    /gitlab\.com[/:]([\w.-]+)\/([\w.-]+?)(?:\.git)?$/i,
-    /bitbucket\.org[/:]([\w.-]+)\/([\w.-]+?)(?:\.git)?$/i,
-  ]
+function parseGitUrl(gitUrl: string): { platform: 'github' | 'gitlab' | 'bitbucket'; owner: string; repo: string } | null {
+  // Normalize git+https:// and git:// to https://
+  let normalizedUrl = gitUrl.replace(/^git\+/, '').replace(/^git:\/\//, 'https://')
 
-  for (const pattern of patterns) {
-    const match = gitUrl.match(pattern)
-    if (match) {
-      return { owner: match[1], repo: match[2] }
-    }
+  // Handle SSH-style URLs: git@github.com:owner/repo.git
+  if (normalizedUrl.startsWith('git@')) {
+    normalizedUrl = normalizedUrl.replace(/^git@([^:]+):/, 'https://$1/')
   }
 
-  return null
+  let parsed: URL
+  try {
+    parsed = new URL(normalizedUrl)
+  } catch {
+    return null
+  }
+
+  const platformMap: Record<string, 'github' | 'gitlab' | 'bitbucket'> = {
+    'github.com': 'github',
+    'gitlab.com': 'gitlab',
+    'bitbucket.org': 'bitbucket',
+  }
+
+  const platform = platformMap[parsed.hostname]
+  if (!platform) {
+    return null
+  }
+
+  // Extract owner/repo from pathname, removing leading slash and .git suffix
+  const pathParts = parsed.pathname.replace(/^\//, '').replace(/\.git$/, '').split('/')
+  if (pathParts.length < 2 || !pathParts[0] || !pathParts[1]) {
+    return null
+  }
+
+  return { platform, owner: pathParts[0], repo: pathParts[1] }
 }
 
 /**
@@ -207,19 +226,16 @@ function constructLicenseUrl(repositoryUrl: string | { type: string; url: string
     return null
   }
 
-  if (url.includes('github.com')) {
-    return `https://github.com/${parsed.owner}/${parsed.repo}/blob/master/${licenseFileName}`
+  switch (parsed.platform) {
+    case 'github':
+      return `https://github.com/${parsed.owner}/${parsed.repo}/blob/master/${licenseFileName}`
+    case 'gitlab':
+      return `https://gitlab.com/${parsed.owner}/${parsed.repo}/-/blob/main/${licenseFileName}`
+    case 'bitbucket':
+      return `https://bitbucket.org/${parsed.owner}/${parsed.repo}/src/master/${licenseFileName}`
+    default:
+      return null
   }
-
-  if (url.includes('gitlab.com')) {
-    return `https://gitlab.com/${parsed.owner}/${parsed.repo}/-/blob/main/${licenseFileName}`
-  }
-
-  if (url.includes('bitbucket.org')) {
-    return `https://bitbucket.org/${parsed.owner}/${parsed.repo}/src/master/${licenseFileName}`
-  }
-
-  return null
 }
 
 /**

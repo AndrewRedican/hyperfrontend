@@ -98,6 +98,38 @@ function getPackageVersion(packageJsonPath: string): string {
 }
 
 /**
+ * Checks if a version already exists in a CHANGELOG.md file.
+ * This provides idempotency when tags don't exist (e.g., CI with --skipTag).
+ *
+ * @param changelogPath - Path to CHANGELOG.md
+ * @param version - Version to check for (e.g., '1.0.0')
+ * @returns True if version header already exists
+ */
+function changelogVersionExists(changelogPath: string, version: string): boolean {
+  try {
+    if (!existsSync(changelogPath)) {
+      return false
+    }
+    const content = readFileSync(changelogPath, 'utf-8')
+    // Match version headers like "## 1.0.0" or "## [1.0.0]" with optional date
+    const versionPattern = new RegExp(`^##\\s*\\[?${escapeRegex(version)}\\]?`, 'm')
+    return versionPattern.test(content)
+  } catch {
+    return false
+  }
+}
+
+/**
+ * Escapes special regex characters in a string.
+ *
+ * @param str - Input string
+ * @returns Escaped string safe for regex patterns
+ */
+function escapeRegex(str: string): string {
+  return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+}
+
+/**
  * Gets the package name from package.json.
  *
  * @param packageJsonPath - Path to package.json
@@ -247,6 +279,7 @@ export default async function versionExecutor(options: VersionExecutorOptions, c
 
   const projectRoot = projectConfig.root
   const packageJsonPath = join(workspaceRoot, projectRoot, 'package.json')
+  const changelogPath = join(workspaceRoot, projectRoot, 'CHANGELOG.md')
   const tagPrefix = options.tagPrefix || `${projectName}@`
   const currentVersion = getPackageVersion(packageJsonPath)
   const expectedTag = `${tagPrefix}${currentVersion}`
@@ -254,6 +287,12 @@ export default async function versionExecutor(options: VersionExecutorOptions, c
   // Idempotency check: if the tag for current version exists, skip
   if (tagExists(expectedTag, workspaceRoot) && !options.releaseAs && !options.allowEmptyRelease) {
     logger.info(`${projectName}: Tag ${expectedTag} already exists (skipping)`)
+    return { success: true }
+  }
+
+  // Idempotency check: if the version already exists in CHANGELOG (for skipTag scenarios)
+  if (changelogVersionExists(changelogPath, currentVersion) && !options.releaseAs && !options.allowEmptyRelease) {
+    logger.info(`${projectName}: Version ${currentVersion} already in CHANGELOG (skipping)`)
     return { success: true }
   }
 
