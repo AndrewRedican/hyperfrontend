@@ -1,8 +1,18 @@
-import { logger } from '@nx/devkit'
-import { existsSync, mkdirSync, copyFileSync } from 'node:fs'
+import { logger, readJsonFile } from '@nx/devkit'
+import { existsSync, mkdirSync, copyFileSync, readdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { join, dirname, basename, relative } from 'node:path'
 import { glob } from 'glob'
-import type { AssetConfig } from './types'
+import type { AssetConfig, PackageJson } from './types'
+
+/** License information for a third-party dependency */
+export interface ThirdPartyLicenseEntry {
+  /** Package name */
+  name: string
+  /** License type (e.g., 'MIT', 'Apache-2.0') */
+  licenseType: string
+  /** URL to the license file */
+  licenseUrl: string | null
+}
 
 /**
  * Copies assets to the output directory.
@@ -118,4 +128,233 @@ export function copyFundingAsset(outputPath: string, workspaceRoot: string): voi
  */
 export function getDefaultAssetFiles(): readonly string[] {
   return ['README.md', 'CHANGELOG.md', 'ARCHITECTURE.md', 'LICENSE.md', 'SECURITY.md'] as const
+}
+
+/**
+ * Extracts external (non-@hyperfrontend/) dependencies from package.json.
+ *
+ * @param projectRoot - Absolute path to the project root
+ * @returns Array of external dependency names
+ */
+export function getExternalDependencies(projectRoot: string): string[] {
+  const pkgPath = join(projectRoot, 'package.json')
+  if (!existsSync(pkgPath)) {
+    return []
+  }
+
+  const pkg = readJsonFile<PackageJson>(pkgPath)
+  const deps = pkg.dependencies ?? {}
+
+  return Object.keys(deps).filter((name) => !name.startsWith('@hyperfrontend/'))
+}
+
+/**
+ * Finds LICENSE file in a package directory with case-insensitive matching.
+ *
+ * @param packageDir - Absolute path to the package directory in node_modules
+ * @returns Name of the LICENSE file or null if not found
+ */
+function findLicenseFile(packageDir: string): string | null {
+  if (!existsSync(packageDir)) {
+    return null
+  }
+
+  const files = readdirSync(packageDir)
+  const licenseFile = files.find((file) => /^license(\.md|\.txt)?$/i.test(file))
+
+  return licenseFile ?? null
+}
+
+/**
+ * Parses a Git URL to extract repository owner and name.
+ *
+ * @param gitUrl - Git repository URL (git+https, git://, or https format)
+ * @returns Object with owner and repo, or null if parsing fails
+ */
+function parseGitUrl(gitUrl: string): { owner: string; repo: string } | null {
+  const patterns = [
+    /github\.com[/:]([\w.-]+)\/([\w.-]+?)(?:\.git)?$/i,
+    /gitlab\.com[/:]([\w.-]+)\/([\w.-]+?)(?:\.git)?$/i,
+    /bitbucket\.org[/:]([\w.-]+)\/([\w.-]+?)(?:\.git)?$/i,
+  ]
+
+  for (const pattern of patterns) {
+    const match = gitUrl.match(pattern)
+    if (match) {
+      return { owner: match[1], repo: match[2] }
+    }
+  }
+
+  return null
+}
+
+/**
+ * Constructs a URL to the license file on GitHub.
+ *
+ * @param repositoryUrl - Repository URL from package.json
+ * @param licenseFileName - Name of the license file (e.g., 'LICENSE', 'LICENSE.md')
+ * @returns URL to the license file or null if URL cannot be constructed
+ */
+function constructLicenseUrl(repositoryUrl: string | { type: string; url: string } | undefined, licenseFileName: string): string | null {
+  if (!repositoryUrl) {
+    return null
+  }
+
+  const url = typeof repositoryUrl === 'string' ? repositoryUrl : repositoryUrl.url
+  const parsed = parseGitUrl(url)
+
+  if (!parsed) {
+    return null
+  }
+
+  if (url.includes('github.com')) {
+    return `https://github.com/${parsed.owner}/${parsed.repo}/blob/master/${licenseFileName}`
+  }
+
+  if (url.includes('gitlab.com')) {
+    return `https://gitlab.com/${parsed.owner}/${parsed.repo}/-/blob/main/${licenseFileName}`
+  }
+
+  if (url.includes('bitbucket.org')) {
+    return `https://bitbucket.org/${parsed.owner}/${parsed.repo}/src/master/${licenseFileName}`
+  }
+
+  return null
+}
+
+/**
+ * Reads license type from package LICENSE file content.
+ * Falls back to package.json license field if file cannot be parsed.
+ *
+ * @param licenseContent - Content of the LICENSE file
+ * @returns Detected license type or 'Unknown'
+ */
+function detectLicenseFromContent(licenseContent: string): string | null {
+  const patterns: Array<{ pattern: RegExp; type: string }> = [
+    { pattern: /MIT License/i, type: 'MIT' },
+    { pattern: /The MIT License/i, type: 'MIT' },
+    { pattern: /Apache License.*Version 2\.0/i, type: 'Apache-2.0' },
+    { pattern: /BSD 3-Clause License/i, type: 'BSD-3-Clause' },
+    { pattern: /BSD 2-Clause License/i, type: 'BSD-2-Clause' },
+    { pattern: /ISC License/i, type: 'ISC' },
+    { pattern: /GNU General Public License.*version 3/i, type: 'GPL-3.0' },
+    { pattern: /GNU Lesser General Public License.*version 3/i, type: 'LGPL-3.0' },
+    { pattern: /Mozilla Public License.*2\.0/i, type: 'MPL-2.0' },
+  ]
+
+  for (const { pattern, type } of patterns) {
+    if (pattern.test(licenseContent)) {
+      return type
+    }
+  }
+
+  return null
+}
+
+/**
+ * Collects license information for a single dependency.
+ *
+ * @param depName - Dependency package name
+ * @param workspaceRoot - Absolute path to workspace root
+ * @returns License entry or null if information cannot be collected
+ */
+function collectDependencyLicense(depName: string, workspaceRoot: string): ThirdPartyLicenseEntry | null {
+  const packageDir = depName.startsWith('@')
+    ? join(workspaceRoot, 'node_modules', ...depName.split('/'))
+    : join(workspaceRoot, 'node_modules', depName)
+
+  const pkgPath = join(packageDir, 'package.json')
+
+  if (!existsSync(pkgPath)) {
+    logger.warn(`Could not find package.json for ${depName}`)
+    return null
+  }
+
+  const pkg = readJsonFile<PackageJson>(pkgPath)
+  const licenseFileName = findLicenseFile(packageDir)
+
+  let licenseType = typeof pkg.license === 'string' ? pkg.license : 'Unknown'
+
+  if (licenseFileName) {
+    const licensePath = join(packageDir, licenseFileName)
+    const content = readFileSync(licensePath, 'utf-8')
+    const detectedType = detectLicenseFromContent(content)
+    if (detectedType) {
+      licenseType = detectedType
+    }
+  }
+
+  const licenseUrl = licenseFileName ? constructLicenseUrl(pkg.repository, licenseFileName) : null
+
+  return {
+    name: depName,
+    licenseType,
+    licenseUrl,
+  }
+}
+
+/**
+ * Collects license information for all external dependencies.
+ *
+ * @param projectRoot - Absolute path to the project root
+ * @param workspaceRoot - Absolute path to workspace root
+ * @returns Array of third-party license entries
+ */
+export function collectThirdPartyLicenses(projectRoot: string, workspaceRoot: string): ThirdPartyLicenseEntry[] {
+  const externalDeps = getExternalDependencies(projectRoot)
+
+  if (externalDeps.length === 0) {
+    return []
+  }
+
+  const entries: ThirdPartyLicenseEntry[] = []
+
+  for (const dep of externalDeps) {
+    const entry = collectDependencyLicense(dep, workspaceRoot)
+    if (entry) {
+      entries.push(entry)
+    }
+  }
+
+  return entries.sort((a, b) => a.name.localeCompare(b.name))
+}
+
+/**
+ * Generates THIRD_PARTY_LICENSES.md content from license entries.
+ *
+ * @param entries - Array of third-party license entries
+ * @returns Markdown content for THIRD_PARTY_LICENSES.md
+ */
+export function generateThirdPartyLicensesContent(entries: ThirdPartyLicenseEntry[]): string {
+  const lines: string[] = ['# Third-Party Licenses', '', '| Dependency       | Link                                                                 |', '| :--------------- | :------------------------------------------------------------------- |']
+
+  for (const entry of entries) {
+    const linkCell = entry.licenseUrl ? `[${entry.licenseType}](${entry.licenseUrl})` : entry.licenseType
+    lines.push(`| \`${entry.name}\`     | ${linkCell} |`)
+  }
+
+  return lines.join('\n') + '\n'
+}
+
+/**
+ * Generates and copies THIRD_PARTY_LICENSES.md to output if external dependencies exist.
+ *
+ * @param projectRoot - Absolute path to the project root
+ * @param outputPath - Absolute path to output directory
+ * @param workspaceRoot - Absolute path to workspace root
+ * @returns True if file was created, false otherwise
+ */
+export function copyThirdPartyLicensesAsset(projectRoot: string, outputPath: string, workspaceRoot: string): boolean {
+  const entries = collectThirdPartyLicenses(projectRoot, workspaceRoot)
+
+  if (entries.length === 0) {
+    return false
+  }
+
+  const content = generateThirdPartyLicensesContent(entries)
+  const destPath = join(outputPath, 'THIRD_PARTY_LICENSES.md')
+  writeFileSync(destPath, content, 'utf-8')
+  logger.info(`Generated THIRD_PARTY_LICENSES.md with ${entries.length} dependencies`)
+
+  return true
 }

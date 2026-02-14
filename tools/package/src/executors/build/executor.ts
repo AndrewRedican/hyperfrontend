@@ -13,7 +13,7 @@ import { createIIFEConfig } from './lib/config-iife'
 import { createUMDConfig } from './lib/config-umd'
 import { generateDeclarations } from './lib/declarations'
 import { generatePackageJson, readProjectPackageJson, hasFunding } from './lib/package-json'
-import { copyAssets, copyDefaultAssets, copyFundingAsset } from './lib/assets'
+import { copyAssets, copyDefaultAssets, copyFundingAsset, copyThirdPartyLicensesAsset } from './lib/assets'
 
 /**
  * Normalizes a format configuration to always be an array.
@@ -200,6 +200,8 @@ export default async function runExecutor(options: BuildV2ExecutorOptions, conte
     generatePackageJson(srcPkg, outputPath, discovery, workspaceRoot, formatOutputs)
 
     copyDefaultAssets(projectRoot, outputPath, workspaceRoot)
+
+    copyThirdPartyLicensesAsset(projectRoot, outputPath, workspaceRoot)
 
     if (hasFunding(srcPkg)) {
       copyFundingAsset(outputPath, workspaceRoot)

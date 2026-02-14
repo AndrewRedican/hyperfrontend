@@ -187,6 +187,7 @@ export type OutputFormat = 'esm' | 'cjs' | 'iife' | 'umd'
 export interface PackageJson {
   name?: string
   version?: string
+  license?: string
   main?: string
   module?: string
   types?: string

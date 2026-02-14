@@ -53,7 +53,7 @@ export function createExternalFn(external: string[]): (id: string) => boolean {
  *
  * @param external - List of external package names
  * @param globals - Mapping of package names to global variable names
- * @throws Error if any external dependency is missing a globals mapping
+ * @throws {Error} Error if any external dependency is missing a globals mapping
  */
 export function validateExternalsConfig(external: string[] | undefined, globals: Record<string, string> | undefined): void {
   if (!external || external.length === 0) return
