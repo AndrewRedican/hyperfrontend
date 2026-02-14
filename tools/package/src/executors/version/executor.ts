@@ -98,35 +98,101 @@ function getPackageVersion(packageJsonPath: string): string {
 }
 
 /**
- * Checks if a version already exists in a CHANGELOG.md file.
- * This provides idempotency when tags don't exist (e.g., CI with --skipTag).
+ * Checks if a line is a version header and extracts the version.
+ * Handles formats: "## 1.0.0", "## [1.0.0]", "## 1.0.0 (2026-02-14)"
+ *
+ * @param line - Line to check
+ * @returns Version string if this is a version header, null otherwise
+ */
+function extractVersionFromHeader(line: string): string | null {
+  if (!line.startsWith('## ')) {
+    return null
+  }
+
+  // Get content after "## "
+  let content = line.slice(3).trim()
+
+  // Remove brackets if present: "[1.0.0]" -> "1.0.0"
+  if (content.startsWith('[')) {
+    const closeBracket = content.indexOf(']')
+    if (closeBracket > 0) {
+      content = content.slice(1, closeBracket)
+    }
+  }
+
+  // Extract version (everything before space or parenthesis)
+  const spaceIndex = content.indexOf(' ')
+  const parenIndex = content.indexOf('(')
+  let endIndex = content.length
+
+  if (spaceIndex > 0 && spaceIndex < endIndex) endIndex = spaceIndex
+  if (parenIndex > 0 && parenIndex < endIndex) endIndex = parenIndex
+
+  const version = content.slice(0, endIndex).trim()
+
+  // Basic validation: should start with a digit (semver-like)
+  if (version.length > 0 && version[0] >= '0' && version[0] <= '9') {
+    return version
+  }
+
+  return null
+}
+
+/**
+ * Clears an unreleased version's entry from CHANGELOG.md.
+ *
+ * For unreleased versions (no git tag), the changelog entry should be
+ * regenerated on each version run to include all commits since the last
+ * tagged release. This function removes the existing entry so semver
+ * can regenerate it fresh.
  *
  * @param changelogPath - Path to CHANGELOG.md
- * @param version - Version to check for (e.g., '1.0.0')
- * @returns True if version header already exists
+ * @param version - Version to clear (e.g., '1.0.0')
+ * @param dryRun - If true, don't actually write changes
+ * @returns True if entry was cleared
  */
-function changelogVersionExists(changelogPath: string, version: string): boolean {
+function clearUnreleasedChangelogEntry(changelogPath: string, version: string, dryRun: boolean): boolean {
   try {
     if (!existsSync(changelogPath)) {
       return false
     }
+
     const content = readFileSync(changelogPath, 'utf-8')
-    // Match version headers like "## 1.0.0" or "## [1.0.0]" with optional date
-    const versionPattern = new RegExp(`^##\\s*\\[?${escapeRegex(version)}\\]?`, 'm')
-    return versionPattern.test(content)
+    const lines = content.split('\n')
+
+    let targetStartIndex = -1
+    let targetEndIndex = lines.length
+
+    // Find the version section boundaries
+    for (let i = 0; i < lines.length; i++) {
+      const lineVersion = extractVersionFromHeader(lines[i])
+
+      if (lineVersion === version && targetStartIndex === -1) {
+        // Found the start of target version section
+        targetStartIndex = i
+      } else if (lineVersion !== null && targetStartIndex !== -1) {
+        // Found the next version section - this is where target section ends
+        targetEndIndex = i
+        break
+      }
+    }
+
+    if (targetStartIndex === -1) {
+      return false // Version entry doesn't exist
+    }
+
+    // Remove the version section
+    const newLines = [...lines.slice(0, targetStartIndex), ...lines.slice(targetEndIndex)]
+    const newContent = newLines.join('\n')
+
+    if (!dryRun) {
+      writeFileSync(changelogPath, newContent, 'utf-8')
+    }
+
+    return true
   } catch {
     return false
   }
-}
-
-/**
- * Escapes special regex characters in a string.
- *
- * @param str - Input string
- * @returns Escaped string safe for regex patterns
- */
-function escapeRegex(str: string): string {
-  return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
 }
 
 /**
@@ -284,16 +350,19 @@ export default async function versionExecutor(options: VersionExecutorOptions, c
   const currentVersion = getPackageVersion(packageJsonPath)
   const expectedTag = `${tagPrefix}${currentVersion}`
 
-  // Idempotency check: if the tag for current version exists, skip
+  // Idempotency check: if the tag for current version exists, it's been released - skip
   if (tagExists(expectedTag, workspaceRoot) && !options.releaseAs && !options.allowEmptyRelease) {
     logger.info(`${projectName}: Tag ${expectedTag} already exists (skipping)`)
     return { success: true }
   }
 
-  // Idempotency check: if the version already exists in CHANGELOG (for skipTag scenarios)
-  if (changelogVersionExists(changelogPath, currentVersion) && !options.releaseAs && !options.allowEmptyRelease) {
-    logger.info(`${projectName}: Version ${currentVersion} already in CHANGELOG (skipping)`)
-    return { success: true }
+  // For unreleased versions (no tag), clear existing changelog entry so semver
+  // regenerates it with ALL commits since last tagged release
+  if (!tagExists(expectedTag, workspaceRoot)) {
+    const cleared = clearUnreleasedChangelogEntry(changelogPath, currentVersion, options.dryRun ?? false)
+    if (cleared) {
+      logger.info(`${projectName}: Cleared existing changelog entry for unreleased ${currentVersion}`)
+    }
   }
 
   logger.info(`${projectName}: Delegating to @jscutlery/semver:version`)
