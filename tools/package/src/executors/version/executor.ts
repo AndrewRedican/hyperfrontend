@@ -1,6 +1,18 @@
 import { type ExecutorContext, logger } from '@nx/devkit'
 import { execSync } from 'node:child_process'
-import { readFileSync, writeFileSync, readdirSync, statSync, existsSync } from 'node:fs'
+import {
+  readFileSync,
+  writeFileSync,
+  readdirSync,
+  statSync,
+  existsSync,
+  openSync,
+  fstatSync,
+  closeSync,
+  ftruncateSync,
+  writeSync,
+  readSync,
+} from 'node:fs'
 import { join, relative } from 'node:path'
 import type { VersionExecutorOptions } from './schema'
 import semverVersion from '@jscutlery/semver/src/executors/version'
@@ -146,18 +158,34 @@ function extractVersionFromHeader(line: string): string | null {
  * tagged release. This function removes the existing entry so semver
  * can regenerate it fresh.
  *
+ * Uses file descriptors to prevent TOCTOU race conditions.
+ *
  * @param changelogPath - Path to CHANGELOG.md
  * @param version - Version to clear (e.g., '1.0.0')
  * @param dryRun - If true, don't actually write changes
  * @returns True if entry was cleared
  */
 function clearUnreleasedChangelogEntry(changelogPath: string, version: string, dryRun: boolean): boolean {
+  let fd: number | null = null
+
   try {
-    if (!existsSync(changelogPath)) {
+    // Open file with read/write access - fails if file doesn't exist
+    // Using 'r+' prevents creating new files and requires existing file
+    fd = openSync(changelogPath, 'r+')
+
+    // Get stats using fd (not path) to prevent TOCTOU race
+    const stats = fstatSync(fd)
+
+    // Ensure it's a regular file (not symlink, directory, etc.)
+    if (!stats.isFile()) {
       return false
     }
 
-    const content = readFileSync(changelogPath, 'utf-8')
+    // Read file content using the fd
+    const buffer = Buffer.alloc(stats.size)
+    readSync(fd, buffer, 0, stats.size, 0)
+    const content = buffer.toString('utf-8')
+
     const lines = content.split('\n')
 
     let targetStartIndex = -1
@@ -186,12 +214,23 @@ function clearUnreleasedChangelogEntry(changelogPath: string, version: string, d
     const newContent = newLines.join('\n')
 
     if (!dryRun) {
-      writeFileSync(changelogPath, newContent, 'utf-8')
+      // Truncate file and write new content using the same fd
+      const newBuffer = Buffer.from(newContent, 'utf-8')
+      ftruncateSync(fd, 0)
+      writeSync(fd, newBuffer, 0, newBuffer.length, 0)
     }
 
     return true
   } catch {
     return false
+  } finally {
+    if (fd !== null) {
+      try {
+        closeSync(fd)
+      } catch {
+        // Ignore close errors
+      }
+    }
   }
 }
 
