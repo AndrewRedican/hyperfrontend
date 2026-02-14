@@ -1,5 +1,6 @@
 import type { MockWindow } from './test-utils'
 import type { IChannelContract } from '../types/contract'
+import type { SecurityPolicy } from '../broker/types'
 import { createBroker } from '../broker/factory'
 import { createMockWindow } from './test-utils'
 
@@ -247,21 +248,17 @@ describe('Integration: Security', () => {
         settings: { debug: false },
       })
 
-      // TODO: Implement broker.setSecurityPolicy method
-      // expect(() => {
-      //   broker.setSecurityPolicy(<unknown>'not a function')
-      // }).toThrow()
+      expect(() => {
+        broker.setSecurityPolicy((<unknown>'not a function') as SecurityPolicy)
+      }).toThrow()
 
-      // expect(() => {
-      //   broker.setSecurityPolicy(<unknown>null)
-      // }).toThrow()
+      expect(() => {
+        broker.setSecurityPolicy((<unknown>null) as SecurityPolicy)
+      }).toThrow()
 
-      // expect(() => {
-      //   broker.setSecurityPolicy(<unknown>undefined)
-      // }).toThrow()
-
-      // For now, just verify broker was created
-      expect(broker).toBeDefined()
+      expect(() => {
+        broker.setSecurityPolicy((<unknown>undefined) as SecurityPolicy)
+      }).toThrow()
     })
   })
 
@@ -276,16 +273,18 @@ describe('Integration: Security', () => {
 
       const tenantIds = ['tenant-1', 'tenant-2', 'tenant-3']
 
-      // TODO: Implement broker.setSecurityPolicy method to support multi-tenant security
-      // For now, skip detailed tenant policy tests
-      expect(broker).toBeDefined()
-      /*
+      const tenantPolicy = (event: MessageEvent) => {
+        const processId = event.data?.processId || ''
+        return tenantIds.some((id) => processId.startsWith(id))
+      }
+
+      broker.setSecurityPolicy(tenantPolicy)
+
       // Test policy with mock events
       const event1 = <MessageEvent>{ data: { processId: 'tenant-1-abc' } }
       const event2 = <MessageEvent>{ data: { processId: 'tenant-5-abc' } }
       expect(tenantPolicy(event1)).toBe(true)
       expect(tenantPolicy(event2)).toBe(false)
-      */
     })
 
     it('handles rate limiting in security policy', () => {
