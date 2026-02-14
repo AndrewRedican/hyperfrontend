@@ -264,6 +264,62 @@ Living documentation through executable examples:
 - `queue/queue.integration.spec.ts` - Queue creation, message flow, stop/resume
 - `data/data.integration.spec.ts` - Data creation with real hashing
 
+## Compatibility
+
+| Platform                      | Support |
+| ----------------------------- | :-----: |
+| Browser                       |   ✅    |
+| Node.js                       |   ✅    |
+| Web Workers                   |   ✅    |
+| Deno, Bun, Cloudflare Workers |   ✅    |
+
+### Output Formats
+
+| Format | File                                                         | Tree-Shakeable |
+| ------ | ------------------------------------------------------------ | :------------: |
+| ESM    | `*.esm.js`                                                   |       ✅       |
+| CJS    | `*.cjs.js`                                                   |       ❌       |
+| IIFE   | `bundle/v1/index.iife.min.js`, `bundle/v2/index.iife.min.js` |       ❌       |
+| UMD    | `bundle/v1/index.umd.min.js`, `bundle/v2/index.umd.min.js`   |       ❌       |
+
+**Bundle size:** ~66 KB per version (minified, self-contained)
+
+### CDN Usage
+
+This library provides **separate bundles for each protocol version**:
+
+```html
+<!-- Protocol V2 (recommended) -->
+<script src="https://unpkg.com/@hyperfrontend/network-protocol/bundle/v2/index.umd.min.js"></script>
+
+<!-- Protocol V1 -->
+<script src="https://unpkg.com/@hyperfrontend/network-protocol/bundle/v1/index.umd.min.js"></script>
+
+<script>
+  // V2
+  const { createProtocol } = HyperfrontendNetworkProtocolV2
+
+  // V1
+  const { createProtocol } = HyperfrontendNetworkProtocolV1
+</script>
+```
+
+**Global variables:** `HyperfrontendNetworkProtocolV1`, `HyperfrontendNetworkProtocolV2`
+
+### Dependencies
+
+| Package                               | Type        |
+| ------------------------------------- | ----------- |
+| @hyperfrontend/cryptography           | Internal    |
+| @hyperfrontend/data-utils             | Internal    |
+| @hyperfrontend/list-utils             | Internal    |
+| @hyperfrontend/logging                | Internal    |
+| @hyperfrontend/random-generator-utils | Internal    |
+| @hyperfrontend/string-utils           | Internal    |
+| @hyperfrontend/time-utils             | Internal    |
+| jsonschema                            | Third-party |
+| to-json-schema                        | Third-party |
+
 ## Part of hyperfrontend
 
 This library is part of the [hyperfrontend](https://github.com/AndrewRedican/hyperfrontend) monorepo.

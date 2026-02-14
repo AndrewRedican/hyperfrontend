@@ -1,6 +1,5 @@
 import { getElementAsync } from './get-element-async'
 
-// TODO: add missing assertions
 describe('getElementAsync', () => {
   const originalQuerySelector = document.querySelector
   const mockQuerySelector = jest.fn()

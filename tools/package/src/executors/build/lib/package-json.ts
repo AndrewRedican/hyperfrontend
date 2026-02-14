@@ -1,36 +1,15 @@
-/**
- * Package.json generation utilities for the build executor.
- *
- * Uses Nx devkit's readJsonFile and writeJsonFile for JSON operations.
- */
 import { readJsonFile, writeJsonFile } from '@nx/devkit'
 import { join } from 'node:path'
-import type { EntryPointDiscovery } from './types'
-
-/** Package.json type with standard fields */
-interface PackageJson {
-  name?: string
-  version?: string
-  main?: string
-  module?: string
-  types?: string
-  exports?: Record<string, unknown>
-  repository?: { type: string; url: string } | string
-  bugs?: { url: string } | string
-  homepage?: string
-  author?: { name: string; email?: string; url?: string } | string
-  funding?: { type: string; url: string } | string
-  [key: string]: unknown
-}
+import type { EntryPointDiscovery, FormatOutputs, PackageJson, IIFEConfig, UMDConfig } from './types'
 
 /** Fields to inherit from root package.json */
 const INHERITABLE_FIELDS = ['repository', 'bugs', 'homepage', 'author'] as const
 
 /** Export entry for package.json */
 interface ExportEntry {
-  types: string
-  import: string
-  require: string
+  types?: string
+  import?: string
+  require?: string
 }
 
 /**
@@ -66,8 +45,7 @@ function getInheritableFields(rootPkg: PackageJson): Partial<PackageJson> {
   const result: Partial<PackageJson> = {}
   for (const field of INHERITABLE_FIELDS) {
     if (rootPkg[field] !== undefined) {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      ;(result as any)[field] = rootPkg[field]
+      ;(<Record<string, unknown>>result)[field] = rootPkg[field]
     }
   }
   return result
@@ -85,96 +63,163 @@ export function writeOutputPackageJson(outputPath: string, packageJson: PackageJ
 }
 
 /**
- * Creates an export entry for a given output path.
+ * Creates an export entry for a given output path based on available formats.
  *
- * @param outputDir - Output directory relative to package root (e.g., '', 'browser', 'browser/channel')
+ * @param outputDir - Output directory relative to package root
+ * @param hasEsm - Whether ESM format is available
+ * @param hasCjs - Whether CJS format is available
  * @returns Export entry configuration
  */
-function createExportEntry(outputDir: string): ExportEntry {
+function createExportEntry(outputDir: string, hasEsm: boolean, hasCjs: boolean): ExportEntry {
   const prefix = outputDir ? `./${outputDir}` : '.'
-  return {
+  const entry: ExportEntry = {
     types: `${prefix}/index.d.ts`,
-    import: `${prefix}/index.esm.js`,
-    require: `${prefix}/index.cjs.js`,
   }
+
+  if (hasEsm) {
+    entry.import = `${prefix}/index.esm.js`
+  }
+
+  if (hasCjs) {
+    entry.require = `${prefix}/index.cjs.js`
+  }
+
+  return entry
 }
 
 /**
- * Generates exports configuration from discovered entry points.
+ * Generates exports configuration from format outputs.
  *
  * @param discovery - Entry point discovery result
+ * @param formatOutputs - Collected format outputs during build
  * @returns Exports configuration for package.json
  */
-export function generateExportsFromDiscovery(discovery: EntryPointDiscovery): Record<string, unknown> {
+export function generateExportsFromFormats(discovery: EntryPointDiscovery, formatOutputs: FormatOutputs): Record<string, unknown> {
   const exports: Record<string, unknown> = {
     './package.json': './package.json',
   }
 
+  const esmPaths = new Set(formatOutputs.esm.map((e) => e.exportPath))
+  const cjsPaths = new Set(formatOutputs.cjs.map((e) => e.exportPath))
+
   for (const entry of discovery.entryPoints) {
     const exportKey = entry.isRoot ? '.' : entry.exportPath
     const outputDir = entry.srcPath
-    exports[exportKey] = createExportEntry(outputDir)
+    const hasEsm = esmPaths.has(entry.exportPath)
+    const hasCjs = cjsPaths.has(entry.exportPath)
+
+    if (hasEsm || hasCjs) {
+      exports[exportKey] = createExportEntry(outputDir, hasEsm, hasCjs)
+    }
+  }
+
+  for (const iife of formatOutputs.iife) {
+    const bundleDir = iife.config.output ?? 'bundle'
+    exports[`./${bundleDir}`] = {
+      import: `./${bundleDir}/index.iife.min.js`,
+      require: `./${bundleDir}/index.iife.min.js`,
+    }
+  }
+
+  for (const umd of formatOutputs.umd) {
+    const bundleDir = umd.config.output ?? 'bundle'
+    if (!exports[`./${bundleDir}`]) {
+      exports[`./${bundleDir}`] = {
+        import: `./${bundleDir}/index.umd.min.js`,
+        require: `./${bundleDir}/index.umd.min.js`,
+      }
+    }
   }
 
   return exports
 }
 
 /**
- * Generates package.json for a library based on discovered entry points.
+ * Gets the bundle output directory, handling multiple configurations.
+ *
+ * @param iifeConfigs - IIFE configuration(s)
+ * @param umdConfigs - UMD configuration(s)
+ * @returns Bundle output directory or undefined
+ */
+function getBundleOutputDir(
+  iifeConfigs: { config: IIFEConfig; entries: unknown[] }[],
+  umdConfigs: { config: UMDConfig; entries: unknown[] }[]
+): string | undefined {
+  if (iifeConfigs.length > 0) {
+    return iifeConfigs[0]?.config.output ?? 'bundle'
+  }
+  if (umdConfigs.length > 0) {
+    return umdConfigs[0]?.config.output ?? 'bundle'
+  }
+  return undefined
+}
+
+/**
+ * Generates package.json for a library based on format outputs.
  * Inherits repository, bugs, homepage, and author from root package.json.
- * For libraries with a root entry point, includes main/module/types fields
- * for backwards compatibility with older tools.
  *
  * @param srcPkg - Source package.json contents
  * @param outputPath - Absolute path to output directory
  * @param discovery - Entry point discovery result
  * @param workspaceRoot - Absolute path to workspace root
- * @param includeBundle - Whether to include bundle/CDN fields
+ * @param formatOutputs - Collected format outputs during build
  */
-export function generatePackageJsonFromDiscovery(
+export function generatePackageJson(
   srcPkg: PackageJson,
   outputPath: string,
   discovery: EntryPointDiscovery,
   workspaceRoot: string,
-  includeBundle = false
+  formatOutputs: FormatOutputs
 ): void {
-  const exports = generateExportsFromDiscovery(discovery)
+  const exports = generateExportsFromFormats(discovery, formatOutputs)
 
   const rootPkg = readRootPackageJson(workspaceRoot)
   const inheritedFields = getInheritableFields(rootPkg)
 
-  if (includeBundle) {
-    exports['./bundle'] = {
-      import: './bundle/index.umd.min.js',
-      require: './bundle/index.umd.min.js',
-    }
-  }
+  const hasBundles = formatOutputs.iife.length > 0 || formatOutputs.umd.length > 0
+  const bundleDir = getBundleOutputDir(formatOutputs.iife, formatOutputs.umd)
 
-  if (discovery.hasRootEntry) {
+  const hasEsm = formatOutputs.esm.some((e) => e.isRoot)
+  const hasCjs = formatOutputs.cjs.some((e) => e.isRoot)
+
+  if (discovery.hasRootEntry && (hasEsm || hasCjs)) {
     const distPkg: PackageJson = {
       ...srcPkg,
       ...inheritedFields,
-      main: './index.cjs.js',
-      module: './index.esm.js',
-      types: './index.d.ts',
       sideEffects: false,
-      ...(includeBundle && {
-        unpkg: './bundle/index.umd.min.js',
-        jsdelivr: './bundle/index.umd.min.js',
-      }),
       exports,
     }
+
+    if (hasCjs) {
+      distPkg.main = './index.cjs.js'
+    }
+
+    if (hasEsm) {
+      distPkg.module = './index.esm.js'
+    }
+
+    if (hasEsm || hasCjs) {
+      distPkg.types = './index.d.ts'
+    }
+
+    if (hasBundles && bundleDir) {
+      distPkg.unpkg = `./${bundleDir}/index.umd.min.js`
+      distPkg.jsdelivr = `./${bundleDir}/index.umd.min.js`
+    }
+
     writeOutputPackageJson(outputPath, distPkg)
   } else {
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const { main, module, types, ...rest } = srcPkg
-
     const distPkg: PackageJson = {
-      ...rest,
+      ...srcPkg,
       ...inheritedFields,
       sideEffects: false,
       exports,
     }
+
+    delete distPkg.main
+    delete distPkg.module
+    delete distPkg.types
+
     writeOutputPackageJson(outputPath, distPkg)
   }
 }

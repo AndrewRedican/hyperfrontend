@@ -95,33 +95,36 @@ const broker = createWorkerBroker({
 })
 ```
 
-```
-┌─────────────────────────────────────────────────────────────────────────────────┐
-│                              MAIN THREAD                                         │
-├─────────────────────────────────────────────────────────────────────────────────┤
-│                                                                                  │
-│    Application Code                                                              │
-│         │                                                                        │
-│         ▼                                                                        │
-│    ┌─────────────────────────────────────────────────────────────────────────┐  │
-│    │                       Worker Broker (Coordinator)                        │  │
-│    │                                                                          │  │
-│    │   • Routes messages to/from workers                                      │  │
-│    │   • Manages worker pool lifecycle                                        │  │
-│    │   • Handles worker failures gracefully                                   │  │
-│    └─────────────────────────────────────────────────────────────────────────┘  │
-│              │                    │                    │                         │
-│              ▼                    ▼                    ▼                         │
-├──────────────┼────────────────────┼────────────────────┼─────────────────────────┤
-│              │     WORKER POOL    │                    │                         │
-│    ┌─────────────────┐  ┌─────────────────┐  ┌─────────────────┐                │
-│    │    Worker 1     │  │    Worker 2     │  │    Worker 3     │                │
-│    │  ───────────    │  │  ───────────    │  │  ───────────    │                │
-│    │  Encryption     │  │  Decryption     │  │  Validation     │                │
-│    │  Obfuscation    │  │  Deobfuscation  │  │  Schema Check   │                │
-│    └─────────────────┘  └─────────────────┘  └─────────────────┘                │
-│                                                                                  │
-└─────────────────────────────────────────────────────────────────────────────────┘
+```mermaid
+---
+config:
+  theme: base
+  themeVariables:
+    fontSize: 12px
+---
+flowchart TB
+    subgraph MainThread["MAIN THREAD"]
+        AppCode["Application Code"]
+
+        subgraph WorkerBroker["Worker Broker (Coordinator)"]
+            BrokerDesc["Routes messages to/from workers<br/>Manages worker pool lifecycle<br/>Handles worker failures gracefully"]:::cleanWide
+        end
+
+        AppCode --> WorkerBroker
+    end
+
+    subgraph WorkerPool["WORKER POOL"]
+        direction LR
+        Worker1["Worker 1<br/>───────────<br/>Encryption<br/>Obfuscation"]
+        Worker2["Worker 2<br/>───────────<br/>Decryption<br/>Deobfuscation"]
+        Worker3["Worker 3<br/>───────────<br/>Validation<br/>Schema Check"]
+    end
+
+    WorkerBroker --> Worker1
+    WorkerBroker --> Worker2
+    WorkerBroker --> Worker3
+
+    classDef cleanWide text-align:left,padding:0px 0px 0px
 ```
 
 The API stays compatible with `@hyperfrontend/nexus`—it's just faster for heavy workloads.

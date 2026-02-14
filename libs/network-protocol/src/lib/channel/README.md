@@ -185,52 +185,84 @@ When a channel is created, it internally constructs two pipelines:
 
 When you call `channel.send(origin, target, data)`:
 
-```
-┌─────────────────────────────────────────────────────────────────────────────┐
-│                           OUTBOUND PIPELINE                                  │
-├─────────────────────────────────────────────────────────────────────────────┤
-│                                                                              │
-│  channel.send(origin, target, data)                                         │
-│          │                                                                   │
-│          ▼                                                                   │
-│  ┌─────────────────┐     ┌───────────────────┐     ┌─────────────────────┐  │
-│  │ Encryption      │ ──▶ │ Serialization     │ ──▶ │ Obfuscation         │  │
-│  │ Queue           │     │ Queue             │     │ Queue               │  │
-│  │                 │     │                   │     │                     │  │
-│  │ UnencryptedPkt  │     │ UnserializedEncr  │     │ SerializedEncrypted │  │
-│  │      ↓          │     │      ↓            │     │      ↓              │  │
-│  │ UnserializedEnc │     │ SerializedEncr    │     │ ObfuscatedPacket    │  │
-│  └─────────────────┘     └───────────────────┘     └──────────┬──────────┘  │
-│                                                               │              │
-│                                                               ▼              │
-│                                                        transport.send()      │
-└─────────────────────────────────────────────────────────────────────────────┘
+```mermaid
+---
+config:
+  theme: base
+  themeVariables:
+    fontSize: 12px
+---
+flowchart LR
+    subgraph OutboundPipeline["OUTBOUND PIPELINE"]
+        Send["channel.send(origin, target, data)"]
+
+        subgraph EncQueue["Encryption Queue"]
+            Enc1["UnencryptedPkt"]
+            Enc2["UnserializedEnc"]
+            Enc1 --> Enc2
+        end
+
+        subgraph SerQueue["Serialization Queue"]
+            Ser1["UnserializedEncr"]
+            Ser2["SerializedEncr"]
+            Ser1 --> Ser2
+        end
+
+        subgraph ObfQueue["Obfuscation Queue"]
+            Obf1["SerializedEncrypted"]
+            Obf2["ObfuscatedPacket"]
+            Obf1 --> Obf2
+        end
+
+        Transport["transport.send()"]
+
+        Send --> EncQueue
+        EncQueue --> SerQueue
+        SerQueue --> ObfQueue
+        ObfQueue --> Transport
+    end
 ```
 
 ### Inbound Pipeline (Receiver)
 
 When a packet arrives via `channel.receive(packet)`:
 
-```
-┌─────────────────────────────────────────────────────────────────────────────┐
-│                           INBOUND PIPELINE                                   │
-├─────────────────────────────────────────────────────────────────────────────┤
-│                                                                              │
-│  channel.receive(packet)                                                     │
-│          │                                                                   │
-│          ▼                                                                   │
-│  ┌─────────────────┐     ┌─────────────────────┐     ┌───────────────────┐  │
-│  │ Deobfuscation   │ ──▶ │ Deserialization     │ ──▶ │ Decryption        │  │
-│  │ Queue           │     │ Queue               │     │ Queue             │  │
-│  │                 │     │                     │     │                   │  │
-│  │ ObfuscatedPkt   │     │ SerializedEncrypted │     │ UnserializedEncr  │  │
-│  │      ↓          │     │      ↓              │     │      ↓            │  │
-│  │ SerializedEncr  │     │ UnserializedEncr    │     │ UnencryptedPacket │  │
-│  └─────────────────┘     └─────────────────────┘     └─────────┬─────────┘  │
-│                                                                │             │
-│                                                                ▼             │
-│                                                         receiveCallback()    │
-└─────────────────────────────────────────────────────────────────────────────┘
+```mermaid
+---
+config:
+  theme: base
+  themeVariables:
+    fontSize: 12px
+---
+flowchart LR
+    subgraph InboundPipeline["INBOUND PIPELINE"]
+        Receive["channel.receive(packet)"]
+
+        subgraph DeobfQueue["Deobfuscation Queue"]
+            Deobf1["ObfuscatedPkt"]
+            Deobf2["SerializedEncr"]
+            Deobf1 --> Deobf2
+        end
+
+        subgraph DeserQueue["Deserialization Queue"]
+            Deser1["SerializedEncrypted"]
+            Deser2["UnserializedEncr"]
+            Deser1 --> Deser2
+        end
+
+        subgraph DecQueue["Decryption Queue"]
+            Dec1["UnserializedEncr"]
+            Dec2["UnencryptedPacket"]
+            Dec1 --> Dec2
+        end
+
+        Callback["receiveCallback()"]
+
+        Receive --> DeobfQueue
+        DeobfQueue --> DeserQueue
+        DeserQueue --> DecQueue
+        DecQueue --> Callback
+    end
 ```
 
 ---
@@ -440,7 +472,6 @@ channel/
 - **[Architecture Guide](../../../ARCHITECTURE.md#channel)** - Channel architecture
 - **[Browser Entry](../../browser/README.md)** - Browser-specific channel
 - **[Node Entry](../../node/README.md)** - Node.js-specific channel
-- **Legacy**: `_/commercial-develop/packages/network-protocol/src/channel/`
 - **Integration Tests**: [channel.integration.spec.ts](channel.integration.spec.ts)
 
 ### Related Modules

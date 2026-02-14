@@ -136,6 +136,46 @@ Object.defineProperty(obj, 'version', lockedPropertyDescriptors('1.0.0', true))
 - **Event emitters**: Prevent handler list manipulation
 - **Prototype pollution defense**: Make critical prototypes tamper-proof
 
+## Compatibility
+
+| Platform                      | Support |
+| ----------------------------- | :-----: |
+| Browser                       |   ✅    |
+| Node.js                       |   ✅    |
+| Web Workers                   |   ✅    |
+| Deno, Bun, Cloudflare Workers |   ✅    |
+
+### Output Formats
+
+| Format | File                       | Tree-Shakeable |
+| ------ | -------------------------- | :------------: |
+| ESM    | `index.esm.js`             |       ✅       |
+| CJS    | `index.cjs.js`             |       ❌       |
+| IIFE   | `bundle/index.iife.min.js` |       ❌       |
+| UMD    | `bundle/index.umd.min.js`  |       ❌       |
+
+**Bundle size:** < 1 KB (minified, self-contained)
+
+### CDN Usage
+
+```html
+<!-- unpkg -->
+<script src="https://unpkg.com/@hyperfrontend/immutable-api-utils"></script>
+
+<!-- jsDelivr -->
+<script src="https://cdn.jsdelivr.net/npm/@hyperfrontend/immutable-api-utils"></script>
+
+<script>
+  const { immutableApi, freezeClass, sealClass } = HyperfrontendImmutableApiUtils
+</script>
+```
+
+**Global variable:** `HyperfrontendImmutableApiUtils`
+
+### Dependencies
+
+None — zero external dependencies.
+
 ## Part of hyperfrontend
 
 This library is part of the [hyperfrontend](https://github.com/AndrewRedican/hyperfrontend) monorepo.

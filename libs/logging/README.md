@@ -202,6 +202,49 @@ test('logs only errors at error level', () => {
 
 - **`logger`** - Ready-to-use logger wrapping console methods (default level: 'error')
 
+## Compatibility
+
+| Platform                      | Support |
+| ----------------------------- | :-----: |
+| Browser                       |   ✅    |
+| Node.js                       |   ✅    |
+| Web Workers                   |   ✅    |
+| Deno, Bun, Cloudflare Workers |   ✅    |
+
+### Output Formats
+
+| Format | File                       | Tree-Shakeable |
+| ------ | -------------------------- | :------------: |
+| ESM    | `index.esm.js`             |       ✅       |
+| CJS    | `index.cjs.js`             |       ❌       |
+| IIFE   | `bundle/index.iife.min.js` |       ❌       |
+| UMD    | `bundle/index.umd.min.js`  |       ❌       |
+
+**Bundle size:** 1 KB (minified, self-contained)
+
+### CDN Usage
+
+```html
+<!-- unpkg -->
+<script src="https://unpkg.com/@hyperfrontend/logging"></script>
+
+<!-- jsDelivr -->
+<script src="https://cdn.jsdelivr.net/npm/@hyperfrontend/logging"></script>
+
+<script>
+  const { createLogger } = HyperfrontendLogging
+</script>
+```
+
+**Global variable:** `HyperfrontendLogging`
+
+### Dependencies
+
+| Package                       | Type     |
+| ----------------------------- | -------- |
+| @hyperfrontend/data-utils     | Internal |
+| @hyperfrontend/function-utils | Internal |
+
 ## Part of hyperfrontend
 
 This library is part of the [hyperfrontend](https://github.com/AndrewRedican/hyperfrontend) monorepo.

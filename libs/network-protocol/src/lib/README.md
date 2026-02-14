@@ -57,12 +57,6 @@ Additional integration test placeholders in this directory (`*.integration.spec.
 - Testing shared factory logic with mocked platform dependencies
 - Documenting expected API composition patterns
 
-## Legacy Reference
-
-For the canonical reference implementation, see:
-
-- `_/commercial-develop/packages/network-protocol/src/` - Original implementation
-
 ## Quick Links
 
 - [Root README](../../README.md) - Package overview and installation

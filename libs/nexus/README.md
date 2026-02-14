@@ -376,6 +376,52 @@ channel.send('MESSAGE', { hello: 'world' })
 | `ChannelEvent`       | Lifecycle event types: open, close, cancel, deny, invalid |
 | `IMessage`           | User message with type and optional data                  |
 
+## Compatibility
+
+| Platform                      | Support |
+| ----------------------------- | :-----: |
+| Browser                       |   ✅    |
+| Node.js                       |   ✅    |
+| Web Workers                   |   ✅    |
+| Deno, Bun, Cloudflare Workers |   ✅    |
+
+### Output Formats
+
+| Format | File                       | Tree-Shakeable |
+| ------ | -------------------------- | :------------: |
+| ESM    | `index.esm.js`             |       ✅       |
+| CJS    | `index.cjs.js`             |       ❌       |
+| IIFE   | `bundle/index.iife.min.js` |       ❌       |
+| UMD    | `bundle/index.umd.min.js`  |       ❌       |
+
+**Bundle size:** 21 KB (minified, self-contained)
+
+### CDN Usage
+
+```html
+<!-- unpkg -->
+<script src="https://unpkg.com/@hyperfrontend/nexus"></script>
+
+<!-- jsDelivr -->
+<script src="https://cdn.jsdelivr.net/npm/@hyperfrontend/nexus"></script>
+
+<script>
+  const { createBroker, createChannel } = HyperfrontendNexus
+</script>
+```
+
+**Global variable:** `HyperfrontendNexus`
+
+### Dependencies
+
+| Package                               | Type            |
+| ------------------------------------- | --------------- |
+| @hyperfrontend/function-utils         | Internal        |
+| @hyperfrontend/logging                | Internal        |
+| @hyperfrontend/random-generator-utils | Internal        |
+| jsonschema                            | Third-party     |
+| @hyperfrontend/network-protocol       | Peer (optional) |
+
 ## Part of hyperfrontend
 
 This library is part of the [hyperfrontend](https://github.com/AndrewRedican/hyperfrontend) monorepo.

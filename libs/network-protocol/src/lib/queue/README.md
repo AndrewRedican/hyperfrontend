@@ -65,26 +65,66 @@ Queues are chained together to form processing pipelines where the `onSuccess` c
 
 ### Outbound Pipeline (Sender)
 
-```
-┌─────────────────────┐     ┌───────────────────────┐     ┌─────────────────────┐
-│  Encryption Queue   │ ──▶ │  Serialization Queue  │ ──▶ │  Obfuscation Queue  │ ──▶ Transport
-│                     │     │                       │     │                     │
-│ UnencryptedPacket   │     │ UnserializedEncrypted │     │ SerializedEncrypted │
-│        ↓            │     │         ↓             │     │         ↓           │
-│ UnserializedEncrypt │     │ SerializedEncrypted   │     │ ObfuscatedPacket    │
-└─────────────────────┘     └───────────────────────┘     └─────────────────────┘
+```mermaid
+---
+config:
+  theme: base
+  themeVariables:
+    fontSize: 12px
+---
+flowchart LR
+    subgraph EncQueue["Encryption Queue"]
+        E1["UnencryptedPacket"]
+        E2["UnserializedEncrypt"]
+        E1 --> E2
+    end
+
+    subgraph SerQueue["Serialization Queue"]
+        S1["UnserializedEncrypted"]
+        S2["SerializedEncrypted"]
+        S1 --> S2
+    end
+
+    subgraph ObfQueue["Obfuscation Queue"]
+        O1["SerializedEncrypted"]
+        O2["ObfuscatedPacket"]
+        O1 --> O2
+    end
+
+    EncQueue --> SerQueue --> ObfQueue --> Transport["Transport"]
 ```
 
 ### Inbound Pipeline (Receiver)
 
-```
-            ┌───────────────────────┐     ┌─────────────────────────┐     ┌───────────────────┐
-Transport ──▶ │  Deobfuscation Queue  │ ──▶ │  Deserialization Queue  │ ──▶ │  Decryption Queue │
-            │                       │     │                         │     │                   │
-            │ ObfuscatedPacket      │     │ SerializedEncrypted     │     │ UnserializedEncr. │
-            │        ↓              │     │         ↓               │     │        ↓          │
-            │ SerializedEncrypted   │     │ UnserializedEncrypted   │     │ UnencryptedPacket │
-            └───────────────────────┘     └─────────────────────────┘     └───────────────────┘
+```mermaid
+---
+config:
+  theme: base
+  themeVariables:
+    fontSize: 12px
+---
+flowchart LR
+    Transport["Transport"] --> DeobfQueue
+
+    subgraph DeobfQueue["Deobfuscation Queue"]
+        D1["ObfuscatedPacket"]
+        D2["SerializedEncrypted"]
+        D1 --> D2
+    end
+
+    subgraph DeserQueue["Deserialization Queue"]
+        DS1["SerializedEncrypted"]
+        DS2["UnserializedEncrypted"]
+        DS1 --> DS2
+    end
+
+    subgraph DecQueue["Decryption Queue"]
+        DC1["UnserializedEncr."]
+        DC2["UnencryptedPacket"]
+        DC1 --> DC2
+    end
+
+    DeobfQueue --> DeserQueue --> DecQueue
 ```
 
 ---
@@ -435,7 +475,6 @@ queue/
 
 - **[Library Index](../README.md)** - All modules
 - **[Architecture Guide](../../../ARCHITECTURE.md#queue)** - Queue architecture
-- **Legacy**: `_/commercial-develop/packages/network-protocol/src/queue/`
 - **Integration Tests**: [queue.integration.spec.ts](queue.integration.spec.ts)
 
 ### Related Modules

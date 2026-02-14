@@ -162,6 +162,53 @@ const cleanup = createGestureListener(() => console.log('Escape or pinch detecte
 - **`pause(ms)`** - Promise-based delay
 - **`simpleHash(str)`** - Generate simple string hashes
 
+## Compatibility
+
+| Platform                      | Support |
+| ----------------------------- | :-----: |
+| Browser                       |   ✅    |
+| Node.js                       |   ⚠️¹   |
+| Web Workers                   |   ✅    |
+| Deno, Bun, Cloudflare Workers |   ✅    |
+
+**Note:** ¹ Some DOM utilities require browser APIs; check individual exports.
+
+### Output Formats
+
+| Format | File                       | Tree-Shakeable |
+| ------ | -------------------------- | :------------: |
+| ESM    | `index.esm.js`             |       ✅       |
+| CJS    | `index.cjs.js`             |       ❌       |
+| IIFE   | `bundle/index.iife.min.js` |       ❌       |
+| UMD    | `bundle/index.umd.min.js`  |       ❌       |
+
+**Bundle size:** < 1 KB (minified, self-contained)
+
+### CDN Usage
+
+```html
+<!-- unpkg -->
+<script src="https://unpkg.com/@hyperfrontend/ui-utils"></script>
+
+<!-- jsDelivr -->
+<script src="https://cdn.jsdelivr.net/npm/@hyperfrontend/ui-utils"></script>
+
+<script>
+  const { hexToRgb, rgbToHex, isElementVisible } = HyperfrontendUIUtils
+</script>
+```
+
+**Global variable:** `HyperfrontendUIUtils`
+
+### Dependencies
+
+| Package                               | Type     |
+| ------------------------------------- | -------- |
+| @hyperfrontend/data-utils             | Internal |
+| @hyperfrontend/function-utils         | Internal |
+| @hyperfrontend/list-utils             | Internal |
+| @hyperfrontend/random-generator-utils | Internal |
+
 ## Part of hyperfrontend
 
 This library is part of the [hyperfrontend](https://github.com/AndrewRedican/hyperfrontend) monorepo.

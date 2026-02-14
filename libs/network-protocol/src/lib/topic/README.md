@@ -205,7 +205,6 @@ topic/
 
 - **[Library Index](../README.md)** - All modules
 - **[Architecture Guide](../../../ARCHITECTURE.md#topic)** - Topic architecture
-- **Legacy**: `_/commercial-develop/packages/network-protocol/src/topic/`
 
 ### Related Modules
 

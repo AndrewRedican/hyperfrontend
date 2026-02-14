@@ -5,5 +5,8 @@
   "sourceRoot": "{projectRoot}/src",
   "projectType": "library",
   "tags": [],
-  "targets": {}
+  "targets": {
+    "lint": {},
+    "typecheck": {}
+  }
 }

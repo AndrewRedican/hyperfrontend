@@ -1,1 +1,1 @@
-export const subtle = <SubtleCrypto>window.crypto.subtle
+export const subtle = <SubtleCrypto>globalThis.crypto.subtle

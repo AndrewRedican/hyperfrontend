@@ -14,42 +14,41 @@ The Packet module defines the core data structures and transformations for messa
 
 Packets transform through four distinct stages as they flow through the security pipeline:
 
-```
-┌─────────────────────────────────────────────────────────────────────────────┐
-│                         PACKET TRANSFORMATION FLOW                           │
-├─────────────────────────────────────────────────────────────────────────────┤
-│                                                                              │
-│  OUTBOUND (Sender)                        INBOUND (Receiver)                 │
-│  ─────────────────                        ──────────────────                 │
-│                                                                              │
-│  UnencryptedPacket<T>                     UnencryptedPacket<T>               │
-│  ├─ origin: string                        ↑                                  │
-│  ├─ target: string                        │ decrypt                          │
-│  └─ data: Data<T>                         │                                  │
-│          │                                │                                  │
-│          │ encrypt                        │                                  │
-│          ▼                                │                                  │
-│  UnserializedEncryptedPacket       UnserializedEncryptedPacket               │
-│  ├─ origin: string                        ↑                                  │
-│  ├─ target: string                        │ deserialize                      │
-│  └─ data: Uint8Array                      │                                  │
-│          │                                │                                  │
-│          │ serialize                      │                                  │
-│          ▼                                │                                  │
-│  SerializedEncryptedPacket         SerializedEncryptedPacket                 │
-│  ├─ origin: string                        ↑                                  │
-│  ├─ target: string                        │ deobfuscate                      │
-│  └─ data: string (base64)                 │                                  │
-│          │                                │                                  │
-│          │ obfuscate                      │                                  │
-│          ▼                                │                                  │
-│  ObfuscatedPacket                  ObfuscatedPacket                          │
-│  └─ Uint8Array (raw bytes)                                                   │
-│                                                                              │
-│          │                                ↑                                  │
-│          └──────── Transport Layer ───────┘                                  │
-│                                                                              │
-└─────────────────────────────────────────────────────────────────────────────┘
+```mermaid
+---
+config:
+  theme: base
+  themeVariables:
+    fontSize: 12px
+---
+flowchart TB
+    subgraph PacketFlow["PACKET TRANSFORMATION FLOW"]
+        subgraph Outbound["OUTBOUND (Sender)"]
+            direction TB
+            UE1["UnencryptedPacket&lt;T&gt;<br/>├─ origin: string<br/>├─ target: string<br/>└─ data: Data&lt;T&gt;"]
+            USE1["UnserializedEncryptedPacket<br/>├─ origin: string<br/>├─ target: string<br/>└─ data: Uint8Array"]
+            SE1["SerializedEncryptedPacket<br/>├─ origin: string<br/>├─ target: string<br/>└─ data: string (base64)"]
+            OP1["ObfuscatedPacket<br/>└─ Uint8Array (raw bytes)"]
+
+            UE1 -->|"encrypt"| USE1
+            USE1 -->|"serialize"| SE1
+            SE1 -->|"obfuscate"| OP1
+        end
+
+        subgraph Inbound["INBOUND (Receiver)"]
+            direction BT
+            OP2["ObfuscatedPacket"]
+            SE2["SerializedEncryptedPacket"]
+            USE2["UnserializedEncryptedPacket"]
+            UE2["UnencryptedPacket&lt;T&gt;"]
+
+            OP2 -->|"deobfuscate"| SE2
+            SE2 -->|"deserialize"| USE2
+            USE2 -->|"decrypt"| UE2
+        end
+
+        OP1 <-->|"Transport Layer"| OP2
+    end
 ```
 
 ---
@@ -423,7 +422,6 @@ packet/
 
 - **[Library Index](../README.md)** - All modules
 - **[Architecture Guide](../../../ARCHITECTURE.md#packet-types)** - Packet architecture
-- **Legacy**: `_/commercial-develop/packages/network-protocol/src/packet/`
 - **Integration Tests**: [packet-transformations.integration.spec.ts](packet-transformations.integration.spec.ts)
 
 ### Related Modules

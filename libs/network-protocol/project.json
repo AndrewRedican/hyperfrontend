@@ -7,7 +7,37 @@
   "tags": [],
   "targets": {
     "version": {},
-    "build": {},
+    "build": {
+      "executor": "@hyperfrontend/package:build",
+      "options": {
+        "esm": {},
+        "cjs": {},
+        "iife": [
+          {
+            "entry": "./browser/v1",
+            "globalName": "HyperfrontendNetworkProtocolV1",
+            "output": "bundle/v1"
+          },
+          {
+            "entry": "./browser/v2",
+            "globalName": "HyperfrontendNetworkProtocolV2",
+            "output": "bundle/v2"
+          }
+        ],
+        "umd": [
+          {
+            "entry": "./browser/v1",
+            "globalName": "HyperfrontendNetworkProtocolV1",
+            "output": "bundle/v1"
+          },
+          {
+            "entry": "./browser/v2",
+            "globalName": "HyperfrontendNetworkProtocolV2",
+            "output": "bundle/v2"
+          }
+        ]
+      }
+    },
     "publish": {},
     "typecheck": {}
   }

@@ -201,7 +201,7 @@ jobs:
         with:
           fetch-depth: 0
           ref: ${{ github.head_ref }}
-          token: ${{ secrets.GITHUB_TOKEN }}
+          token: ${{ secrets.PR_PAT }}
 
       - name: Setup monorepo
         uses: ./.github/actions/setup-monorepo
@@ -276,9 +276,11 @@ jobs:
         uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
         with:
           script: |
+            const COMMENT_MARKER = '<!-- hyperfrontend-version-bot -->'
             const libs = '${{ steps.version-check.outputs.updated_libs }}'.trim().split(' ').filter(Boolean)
 
-            const body = `## 📦 Version Updates
+            const body = `${COMMENT_MARKER}
+            ## 📦 Version Updates
 
             The following libraries had their versions and CHANGELOGs updated:
 
@@ -289,9 +291,29 @@ jobs:
             ---
             *This update was performed automatically by the CI version validation.*`
 
-            github.rest.issues.createComment({
+            // Find existing bot comment
+            const { data: comments } = await github.rest.issues.listComments({
               issue_number: context.issue.number,
               owner: context.repo.owner,
               repo: context.repo.repo,
-              body
             })
+
+            const existingComment = comments.find(c => c.body && c.body.includes(COMMENT_MARKER))
+
+            if (existingComment) {
+              await github.rest.issues.updateComment({
+                comment_id: existingComment.id,
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                body,
+              })
+              console.log('Updated existing version comment')
+            } else {
+              await github.rest.issues.createComment({
+                issue_number: context.issue.number,
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                body,
+              })
+              console.log('Created new version comment')
+            }

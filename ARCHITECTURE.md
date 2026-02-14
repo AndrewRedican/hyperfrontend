@@ -8,37 +8,36 @@
 
 Hyperfrontend is a layered architecture designed for runtime micro-frontend integration. At its core, it enables independently deployed frontend applications ("features") to communicate through secure, contract-validated messaging—regardless of what framework they use.
 
-```
-┌─────────────────────────────────────────────────────────────────────────────────┐
-│                            HYPERFRONTEND ECOSYSTEM                               │
-├─────────────────────────────────────────────────────────────────────────────────┤
-│                                                                                  │
-│    HOST APPLICATION              FEATURE #1              FEATURE #2              │
-│    (React, Vue, etc.)            (Any Framework)         (Any Framework)         │
-│                                                                                  │
-│           │                           │                        │                 │
-│           │                           │                        │                 │
-│           └───────────┬───────────────┼────────────────────────┘                 │
-│                       │               │                                          │
-│                       ▼               ▼                                          │
-│           ┌───────────────────────────────────────────┐                          │
-│           │              @hyperfrontend/nexus          │ ◄── Communication       │
-│           │         Broker-Channel Architecture        │     Protocol            │
-│           └───────────────────────────────────────────┘                          │
-│                               │                                                  │
-│                               ▼                                                  │
-│           ┌───────────────────────────────────────────┐                          │
-│           │       @hyperfrontend/network-protocol      │ ◄── Security Layer      │
-│           │         Encryption + Obfuscation           │     (Optional)          │
-│           └───────────────────────────────────────────┘                          │
-│                               │                                                  │
-│                               ▼                                                  │
-│           ┌───────────────────────────────────────────┐                          │
-│           │        @hyperfrontend/cryptography         │ ◄── Crypto Primitives   │
-│           │            AES-GCM + PBKDF2               │                          │
-│           └───────────────────────────────────────────┘                          │
-│                                                                                  │
-└─────────────────────────────────────────────────────────────────────────────────┘
+```mermaid
+---
+config:
+  theme: base
+  themeVariables:
+    fontSize: 12px
+---
+flowchart TB
+    subgraph Ecosystem["HYPERFRONTEND ECOSYSTEM"]
+        direction TB
+
+        subgraph Apps["Applications"]
+            direction LR
+            Host["<b>HOST APPLICATION</b><br/>(React, Vue, etc.)"]
+            Feature1["<b>FEATURE #1</b><br/>(Any Framework)"]
+            Feature2["<b>FEATURE #2</b><br/>(Any Framework)"]
+        end
+
+        Nexus["<b>@hyperfrontend/nexus</b><br/>Communication Protocol<br/>(Broker-Channel Architecture)"]
+        Protocol["<b>@hyperfrontend/network-protocol</b><br/>Security Layer<br/>(Encryption + Obfuscation)"]
+        Crypto["<b>@hyperfrontend/cryptography</b><br/>AES-GCM + PBKDF2"]
+
+        Host --> Nexus
+        Feature1 --> Nexus
+        Feature2 --> Nexus
+        Nexus --> Protocol
+        Protocol --> Crypto
+    end
+
+    Crypto -.- CryptoLabel["Crypto Primitives"]
 ```
 
 ---
@@ -66,33 +65,39 @@ The architecture is composed of specialized libraries that layer on top of each 
 
 ### Broker-Channel Model
 
-```
-┌──────────────────────────────────────────────────────────────────────────────────┐
-│                                 HOST WINDOW                                       │
-│                                                                                   │
-│    ┌──────────────────────────────────────────────────┐                          │
-│    │                    BROKER                         │                          │
-│    │                                                   │                          │
-│    │   • Routes incoming postMessage events           │                          │
-│    │   • Manages channel registry                      │                          │
-│    │   • Validates contracts and origins              │                          │
-│    │   • Applies security policies                     │                          │
-│    │                                                   │                          │
-│    │   ┌──────────┐  ┌──────────┐  ┌──────────┐       │                          │
-│    │   │ Channel  │  │ Channel  │  │ Channel  │       │                          │
-│    │   │    A     │  │    B     │  │    C     │       │                          │
-│    │   └────┬─────┘  └────┬─────┘  └────┬─────┘       │                          │
-│    │        │             │             │              │                          │
-│    └────────┼─────────────┼─────────────┼──────────────┘                          │
-│             │             │             │                                         │
-│             ▼             ▼             ▼                                         │
-│        ┌────────┐    ┌────────┐    ┌────────┐                                    │
-│        │ iframe │    │ window │    │ worker │                                    │
-│        │Feature │    │Feature │    │Feature │                                    │
-│        │   A    │    │   B    │    │   C    │                                    │
-│        └────────┘    └────────┘    └────────┘                                    │
-│                                                                                   │
-└──────────────────────────────────────────────────────────────────────────────────┘
+```mermaid
+---
+config:
+  theme: base
+  themeVariables:
+    fontSize: 12px
+---
+flowchart TB
+    subgraph Host["HOST WINDOW"]
+        subgraph Broker["BROKER"]
+            BrokerDesc["• Routes incoming postMessage events<br/>• Manages channel registry<br/>• Validates contracts and origins<br/>• Applies security policies"]:::cleanWide
+
+            subgraph Channels["Channels"]
+                direction LR
+                ChannelA["Channel A"]
+                ChannelB["Channel B"]
+                ChannelC["Channel C"]
+            end
+        end
+
+        subgraph Features["Features"]
+            direction LR
+            IframeA["iframe<br/>Feature A"]
+            WindowB["window<br/>Feature B"]
+            WorkerC["worker<br/>Feature C"]
+        end
+
+        ChannelA --> IframeA
+        ChannelB --> WindowB
+        ChannelC --> WorkerC
+    end
+
+    classDef cleanWide fill:none,stroke:none,text-align:left,padding:0px 0px 0px
 ```
 
 **Broker**: A singleton within each window context that routes messages to the appropriate channel. The broker holds the channel registry, validates incoming messages against contracts, and applies security policies.
@@ -108,17 +113,22 @@ The architecture is composed of specialized libraries that layer on top of each 
 
 Channels establish connections using a three-way handshake inspired by TCP:
 
-```
-    HOST                                          FEATURE
-      │                                              │
-      │  ──────────  SYN (pid, contract)  ────────▶  │
-      │                                              │
-      │  ◀─────────  SYN-ACK (pid, ack)  ──────────  │
-      │                                              │
-      │  ──────────  ACK (pid)  ──────────────────▶  │
-      │                                              │
-      │          ═══ CONNECTION ACTIVE ═══           │
-      │                                              │
+```mermaid
+---
+config:
+  theme: base
+  themeVariables:
+    fontSize: 12px
+---
+sequenceDiagram
+    participant Host as HOST
+    participant Feature as FEATURE
+
+    Host->>Feature: SYN (pid, contract)
+    Feature->>Host: SYN-ACK (pid, ack)
+    Host->>Feature: ACK (pid)
+
+    Note over Host,Feature: CONNECTION ACTIVE
 ```
 
 Each connection attempt is tracked by a Process ID (UUID), enabling multiple concurrent connection attempts and clean lifecycle management.

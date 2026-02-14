@@ -56,4 +56,10 @@ export interface VersionExecutorOptions {
 
   /** Update version references in dependent packages after version bump. */
   updateDependents?: boolean
+
+  /** Skip versioning if the current commit is a version/release commit (recursion prevention). */
+  skipIfVersionCommit?: boolean
+
+  /** Skip versioning if git is in rebase/merge state. */
+  skipIfUnstableGit?: boolean
 }

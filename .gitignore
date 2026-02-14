@@ -3,6 +3,7 @@ dist
 tmp
 .tmp
 /out-tsc
+*.tgz
 
 # dependencies
 node_modules

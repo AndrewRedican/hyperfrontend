@@ -65,67 +65,73 @@ The library uses factory functions to inject platform-specific dependencies whil
 
 This diagram shows how factory functions compose to create the full protocol stack:
 
+```mermaid
+---
+config:
+  theme: base
+  themeVariables:
+    fontSize: 12px
+---
+flowchart BT
+    subgraph ProtocolTree["PROTOCOL COMPOSITION TREE"]
+        CreateProtocol["createProtocol<br/>(logger, refreshRate)<br/><i>Platform entry point<br/>(browser/v1 or node/v1)</i>"]
+
+        CreateProtocol --> EncFactory["createDynamicKeyEncryptionFactory<br/>(encryptPacket, decryptPacket)"]
+        CreateProtocol --> ObfFactory["createTimeIntervalObfuscationFactory<br/>(obfuscate, deobfuscate, ...)"]
+
+        EncFactory --> EncDecrypt["encryptPacket<br/>decryptPacket"]
+        EncDecrypt --> PlatformCrypto1["Platform crypto:<br/>WebCrypto or Node crypto"]
+
+        ObfFactory --> ObfDeobf["obfuscatePacket<br/>deobfuscatePacket"]
+        ObfFactory --> TimePwd["getTimeBasedPassword<br/>getTimeBasedPasswords"]
+        ObfDeobf --> PlatformCrypto2["Platform crypto:<br/>WebCrypto or Node crypto"]
+        TimePwd --> CryptoLib["From<br/>@hyperfrontend/cryptography"]
+    end
 ```
-┌─────────────────────────────────────────────────────────────────────────────────────┐
-│                              PROTOCOL COMPOSITION TREE                               │
-├─────────────────────────────────────────────────────────────────────────────────────┤
-│                                                                                      │
-│  createProtocol(logger, refreshRate)           ← Platform entry point               │
-│       │                                           (browser/v1 or node/v1)           │
-│       │                                                                              │
-│       ├── createDynamicKeyEncryptionFactory(encryptPacket, decryptPacket)           │
-│       │        │                                                                     │
-│       │        └── encryptPacket / decryptPacket                                    │
-│       │             └── Platform crypto: WebCrypto or Node crypto                   │
-│       │                                                                              │
-│       └── createTimeIntervalObfuscationFactory(obfuscate, deobfuscate, ...)        │
-│                │                                                                     │
-│                ├── obfuscatePacket / deobfuscatePacket                              │
-│                │    └── Platform crypto: WebCrypto or Node crypto                   │
-│                │                                                                     │
-│                └── getTimeBasedPassword / getTimeBasedPasswords                     │
-│                     └── From @hyperfrontend/cryptography                            │
-│                                                                                      │
-└─────────────────────────────────────────────────────────────────────────────────────┘
 
+```mermaid
+---
+config:
+  theme: base
+  themeVariables:
+    fontSize: 12px
+---
+flowchart BT
+    subgraph ChannelTree["CHANNEL COMPOSITION TREE"]
+        CreateChannel["createChannelFactory<br/>(createSender, createReceiver)"]
 
-┌─────────────────────────────────────────────────────────────────────────────────────┐
-│                              CHANNEL COMPOSITION TREE                                │
-├─────────────────────────────────────────────────────────────────────────────────────┤
-│                                                                                      │
-│  createChannelFactory(createSender, createReceiver)                                 │
-│       │                                                                              │
-│       ├── createSenderFactory(outboundQueues)                                       │
-│       │        │                                                                     │
-│       │        ├── createQueue(packetEncryption, ...)     → Encryption Queue        │
-│       │        ├── createQueue(serializePacket, ...)      → Serialization Queue     │
-│       │        └── createQueue(packetObfuscation, ...)    → Obfuscation Queue       │
-│       │                                                                              │
-│       └── createReceiverFactory(inboundQueues)                                      │
-│                │                                                                     │
-│                ├── createQueue(packetDeobfuscation, ...)  → Deobfuscation Queue     │
-│                ├── createQueue(deserializePacket, ...)    → Deserialization Queue   │
-│                └── createQueue(packetDecryption, ...)     → Decryption Queue        │
-│                                                                                      │
-└─────────────────────────────────────────────────────────────────────────────────────┘
+        CreateChannel --> SenderFactory["createSenderFactory<br/>(outboundQueues)"]
+        CreateChannel --> ReceiverFactory["createReceiverFactory<br/>(inboundQueues)"]
 
+        SenderFactory --> EncQueue["createQueue<br/>(packetEncryption, ...)<br/>→ Encryption Queue"]
+        SenderFactory --> SerQueue["createQueue<br/>(serializePacket, ...)<br/>→ Serialization Queue"]
+        SenderFactory --> ObfQueue["createQueue<br/>(packetObfuscation, ...)<br/>→ Obfuscation Queue"]
 
-┌─────────────────────────────────────────────────────────────────────────────────────┐
-│                               DATA COMPOSITION TREE                                  │
-├─────────────────────────────────────────────────────────────────────────────────────┤
-│                                                                                      │
-│  createDataFactory(createHash, createUUID, generateSchemaFromMessage)               │
-│       │                                                                              │
-│       ├── createHash                                                                │
-│       │    └── Platform crypto: WebCrypto or Node crypto                            │
-│       │                                                                              │
-│       ├── createUUID                                                                │
-│       │    └── Platform crypto: WebCrypto or Node crypto                            │
-│       │                                                                              │
-│       └── generateSchemaFromMessage                                                 │
-│            └── Uses jsonschema library                                              │
-│                                                                                      │
-└─────────────────────────────────────────────────────────────────────────────────────┘
+        ReceiverFactory --> DeobfQueue["createQueue<br/>(packetDeobfuscation, ...)<br/>→ Deobfuscation Queue"]
+        ReceiverFactory --> DeserQueue["createQueue<br/>(deserializePacket, ...)<br/>→ Deserialization Queue"]
+        ReceiverFactory --> DecQueue["createQueue<br/>(packetDecryption, ...)<br/>→ Decryption Queue"]
+    end
+```
+
+```mermaid
+---
+config:
+  theme: base
+  themeVariables:
+    fontSize: 12px
+---
+flowchart BT
+    subgraph DataTree["DATA COMPOSITION TREE"]
+        CreateData["createDataFactory<br/>(createHash, createUUID,<br/>generateSchemaFromMessage)"]
+
+        CreateData --> CreateHash["createHash"]
+        CreateData --> CreateUUID["createUUID"]
+        CreateData --> GenSchema["generateSchemaFromMessage"]
+
+        CreateHash --> PlatformCrypto["Platform crypto:<br/>WebCrypto or Node crypto"]
+        CreateUUID --> PlatformCrypto
+        GenSchema --> JsonSchema["Uses jsonschema library"]
+    end
 ```
 
 ---
@@ -284,27 +290,27 @@ Packets are the fundamental data units that flow through the protocol. The libra
 
 ### Packet Hierarchy
 
-```
-┌─────────────────────────┐
-│    UnencryptedPacket    │  ← Plaintext (origin, target, Data<T>)
-└───────────┬─────────────┘
-            │ encrypt
-            ▼
-┌─────────────────────────┐
-│ UnserializedEncrypted   │  ← Binary encrypted (origin, target, Uint8Array)
-│        Packet           │
-└───────────┬─────────────┘
-            │ serialize
-            ▼
-┌─────────────────────────┐
-│ SerializedEncrypted     │  ← Base64 string (origin, target, string)
-│        Packet           │
-└───────────┬─────────────┘
-            │ obfuscate
-            ▼
-┌─────────────────────────┐
-│    ObfuscatedPacket     │  ← Raw bytes (Uint8Array) - unrecognizable
-└─────────────────────────┘
+```mermaid
+---
+config:
+  theme: base
+  themeVariables:
+    fontSize: 14px
+---
+flowchart TB
+    A["UnencryptedPacket<br/>Plaintext<br/>(origin, target, Data&lt;T&gt;)"]
+    B["UnserializedEncryptedPacket<br/>Binary encrypted<br/>(origin, target, Uint8Array)"]
+    C["SerializedEncryptedPacket<br/>Base64 string<br/>(origin, target, string)"]
+    D["ObfuscatedPacket<br/>Raw bytes (Uint8Array)<br/>unrecognizable"]
+
+    A -->|encrypt| B
+    B -->|serialize| C
+    C -->|obfuscate| D
+
+    style A fill:#e8f5e9,stroke:#4caf50,stroke-width:2px
+    style B fill:#fff3e0,stroke:#ff9800,stroke-width:2px
+    style C fill:#e3f2fd,stroke:#2196f3,stroke-width:2px
+    style D fill:#fce4ec,stroke:#e91e63,stroke-width:2px
 ```
 
 ### Interface Definitions
@@ -466,40 +472,61 @@ type ReceiveFn = (packet: Uint8Array) => void
 
 **Sender Pipeline:**
 
-```
-send(origin, target, data)
-    │
-    ▼ creates UnencryptedPacket
-┌───────────────────┐
-│ Encryption Queue  │ → packetEncryption()
-└─────────┬─────────┘
-          ▼
-┌────────────────────────┐
-│ Serialization Queue    │ → uint8ArrayToBase64()
-└─────────┬──────────────┘
-          ▼
-┌───────────────────┐
-│ Obfuscation Queue │ → packetObfuscation() → sendPacket()
-└───────────────────┘
+```mermaid
+---
+config:
+  theme: base
+  themeVariables:
+    fontSize: 14px
+---
+flowchart TB
+    A["send(origin, target, data)"]
+    B["Creates UnencryptedPacket"]
+    C["Encryption Queue<br/>packetEncryption()"]
+    D["Serialization Queue<br/>uint8ArrayToBase64()"]
+    E["Obfuscation Queue<br/>packetObfuscation()"]
+    F["sendPacket()"]
+
+    A --> B
+    B --> C
+    C --> D
+    D --> E
+    E --> F
+
+    style A fill:#e8f5e9,stroke:#4caf50,stroke-width:2px
+    style B fill:#fff9c4,stroke:#fbc02d,stroke-width:2px
+    style C fill:#fff3e0,stroke:#ff9800,stroke-width:2px
+    style D fill:#e3f2fd,stroke:#2196f3,stroke-width:2px
+    style E fill:#f3e5f5,stroke:#9c27b0,stroke-width:2px
+    style F fill:#ffebee,stroke:#f44336,stroke-width:2px
 ```
 
 **Receiver Pipeline:**
 
-```
-receive(obfuscatedPacket)
-    │
-    ▼
-┌─────────────────────┐
-│ Deobfuscation Queue │ → packetDeobfuscation()
-└──────────┬──────────┘
-           ▼
-┌──────────────────────────┐
-│ Deserialization Queue    │ → base64ToUint8Array()
-└──────────┬───────────────┘
-           ▼
-┌──────────────────┐
-│ Decryption Queue │ → packetDecryption() → receivePacket()
-└──────────────────┘
+```mermaid
+---
+config:
+  theme: base
+  themeVariables:
+    fontSize: 14px
+---
+flowchart TB
+    A["receive(obfuscatedPacket)"]
+    B["Deobfuscation Queue<br/>packetDeobfuscation()"]
+    C["Deserialization Queue<br/>base64ToUint8Array()"]
+    D["Decryption Queue<br/>packetDecryption()"]
+    E["receivePacket()"]
+
+    A --> B
+    B --> C
+    C --> D
+    D --> E
+
+    style A fill:#ffebee,stroke:#f44336,stroke-width:2px
+    style B fill:#f3e5f5,stroke:#9c27b0,stroke-width:2px
+    style C fill:#e3f2fd,stroke:#2196f3,stroke-width:2px
+    style D fill:#fff3e0,stroke:#ff9800,stroke-width:2px
+    style E fill:#e8f5e9,stroke:#4caf50,stroke-width:2px
 ```
 
 ### Example
@@ -818,51 +845,64 @@ const data = await createData('process-123', 1, {
 
 Here's how a message flows from sender to receiver:
 
-```
-┌─────────────────────────────────────────────────────────────────────────────┐
-│                              SENDER (Client A)                               │
-├─────────────────────────────────────────────────────────────────────────────┤
-│                                                                              │
-│  1. Application calls: channel.send(origin, target, data)                   │
-│                                                                              │
-│  2. createUnencryptedPacket(origin, target, data)                           │
-│     → UnencryptedPacket { origin, target, data: Data<T> }                   │
-│                                                                              │
-│  3. Encryption Queue: packetEncryption(packet)                              │
-│     → UnserializedEncryptedPacket { origin, target, data: Uint8Array }      │
-│                                                                              │
-│  4. Serialization Queue: uint8ArrayToBase64(packet.data)                    │
-│     → SerializedEncryptedPacket { origin, target, data: string }            │
-│                                                                              │
-│  5. Obfuscation Queue: packetObfuscation(packet)                            │
-│     → ObfuscatedPacket: Uint8Array (opaque bytes)                           │
-│                                                                              │
-│  6. sendPacket(obfuscatedPacket) → Transport (postMessage/IPC)              │
-│                                                                              │
-└─────────────────────────────────────────────────────────────────────────────┘
-                                     │
-                                     │  Wire (Uint8Array)
-                                     ▼
-┌─────────────────────────────────────────────────────────────────────────────┐
-│                             RECEIVER (Client B)                              │
-├─────────────────────────────────────────────────────────────────────────────┤
-│                                                                              │
-│  7. Transport delivers: receiver.receive(obfuscatedPacket)                  │
-│                                                                              │
-│  8. Deobfuscation Queue: packetDeobfuscation(packet)                        │
-│     → SerializedEncryptedPacket { origin, target, data: string }            │
-│                                                                              │
-│  9. Deserialization Queue: base64ToUint8Array(packet.data)                  │
-│     → UnserializedEncryptedPacket { origin, target, data: Uint8Array }      │
-│                                                                              │
-│ 10. Decryption Queue: packetDecryption(packet)                              │
-│     → UnencryptedPacket { origin, target, data: Data<T> }                   │
-│                                                                              │
-│ 11. receivePacket(unencryptedPacket) → Application callback                 │
-│                                                                              │
-│ 12. Extract data.key for encrypting reply to Client A                       │
-│                                                                              │
-└─────────────────────────────────────────────────────────────────────────────┘
+```mermaid
+---
+config:
+  theme: base
+  themeVariables:
+    fontSize: 13px
+---
+flowchart TB
+    subgraph Sender["SENDER (Client A)"]
+        A1["1. channel.send<br/>(origin, target, data)"]
+        A2["2. createUnencryptedPacket<br/>UnencryptedPacket<br/>{origin, target, data: Data&lt;T&gt;}"]
+        A3["3. Encryption Queue<br/>packetEncryption()<br/>UnserializedEncryptedPacket<br/>{origin, target, data: Uint8Array}"]
+        A4["4. Serialization Queue<br/>uint8ArrayToBase64()<br/>SerializedEncryptedPacket<br/>{origin, target, data: string}"]
+        A5["5. Obfuscation Queue<br/>packetObfuscation()<br/>ObfuscatedPacket<br/>Uint8Array (opaque bytes)"]
+        A6["6. sendPacket()<br/>Transport<br/>(postMessage/IPC)"]
+
+        A1 --> A2
+        A2 --> A3
+        A3 --> A4
+        A4 --> A5
+        A5 --> A6
+    end
+
+    Wire["Wire<br/>Uint8Array"]
+
+    subgraph Receiver["RECEIVER (Client B)"]
+        B7["7. receiver.receive<br/>(obfuscatedPacket)"]
+        B8["8. Deobfuscation Queue<br/>packetDeobfuscation()<br/>SerializedEncryptedPacket<br/>{origin, target, data: string}"]
+        B9["9. Deserialization Queue<br/>base64ToUint8Array()<br/>UnserializedEncryptedPacket<br/>{origin, target, data: Uint8Array}"]
+        B10["10. Decryption Queue<br/>packetDecryption()<br/>UnencryptedPacket<br/>{origin, target, data: Data&lt;T&gt;}"]
+        B11["11. receivePacket()<br/>Application callback"]
+        B12["12. Extract data.key<br/>for encrypting reply"]
+
+        B7 --> B8
+        B8 --> B9
+        B9 --> B10
+        B10 --> B11
+        B11 --> B12
+    end
+
+    A6 --> Wire
+    Wire --> B7
+
+    style Sender fill:#e8f5e9,stroke:#4caf50,stroke-width:3px
+    style Receiver fill:#e3f2fd,stroke:#2196f3,stroke-width:3px
+    style Wire fill:#fff3e0,stroke:#ff9800,stroke-width:2px
+    style A1 fill:#c8e6c9,stroke:#4caf50
+    style A2 fill:#c8e6c9,stroke:#4caf50
+    style A3 fill:#c8e6c9,stroke:#4caf50
+    style A4 fill:#c8e6c9,stroke:#4caf50
+    style A5 fill:#c8e6c9,stroke:#4caf50
+    style A6 fill:#c8e6c9,stroke:#4caf50
+    style B7 fill:#bbdefb,stroke:#2196f3
+    style B8 fill:#bbdefb,stroke:#2196f3
+    style B9 fill:#bbdefb,stroke:#2196f3
+    style B10 fill:#bbdefb,stroke:#2196f3
+    style B11 fill:#bbdefb,stroke:#2196f3
+    style B12 fill:#bbdefb,stroke:#2196f3
 ```
 
 ### Practical Example

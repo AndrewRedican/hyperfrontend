@@ -7,7 +7,21 @@
   "tags": [],
   "targets": {
     "version": {},
-    "build": {},
+    "build": {
+      "executor": "@hyperfrontend/package:build",
+      "options": {
+        "esm": {},
+        "cjs": {},
+        "iife": {
+          "entry": ".",
+          "globalName": "HyperfrontendFunctionUtils"
+        },
+        "umd": {
+          "entry": ".",
+          "globalName": "HyperfrontendFunctionUtils"
+        }
+      }
+    },
     "publish": {},
     "typecheck": {}
   }
