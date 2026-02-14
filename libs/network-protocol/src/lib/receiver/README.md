@@ -146,44 +146,45 @@ type CreateReceiver<T = any> = (
 
 When you call `receiver.receive(packet)`:
 
-```
-┌─────────────────────────────────────────────────────────────────────────────┐
-│                           INBOUND PIPELINE                                   │
-├─────────────────────────────────────────────────────────────────────────────┤
-│                                                                              │
-│  Transport Layer → receiver.receive(obfuscatedPacket)                       │
-│          │                                                                   │
-│          ▼                                                                   │
-│  ┌─────────────────────┐                                                    │
-│  │ Deobfuscation Queue │  ← deobfuscationQueue.size for monitoring          │
-│  │                     │                                                    │
-│  │  ObfuscatedPacket   │                                                    │
-│  │        ↓            │  packetDeobfuscation (tries 3 time windows)        │
-│  │  SerializedEncr.    │                                                    │
-│  └──────────┬──────────┘                                                    │
-│             │                                                                │
-│             ▼                                                                │
-│  ┌───────────────────────┐                                                  │
-│  │ Deserialization Queue │  ← deserializationQueue.size for monitoring      │
-│  │                       │                                                  │
-│  │   SerializedEncr.     │                                                  │
-│  │         ↓             │  createDeserializedEncryptedPacket               │
-│  │   UnserializedEncr.   │                                                  │
-│  └───────────┬───────────┘                                                  │
-│              │                                                               │
-│              ▼                                                               │
-│  ┌─────────────────────┐                                                    │
-│  │   Decryption Queue  │  ← decryptionQueue.size for monitoring             │
-│  │                     │                                                    │
-│  │  UnserializedEncr.  │                                                    │
-│  │        ↓            │  packetDecryption                                  │
-│  │  UnencryptedPacket  │                                                    │
-│  └──────────┬──────────┘                                                    │
-│             │                                                                │
-│             ▼                                                                │
-│  receivePacket(unencryptedPacket)  → Your callback                          │
-│                                                                              │
-└─────────────────────────────────────────────────────────────────────────────┘
+```mermaid
+---
+config:
+  theme: base
+  themeVariables:
+    fontSize: 12px
+---
+flowchart TB
+    subgraph InboundPipeline["INBOUND PIPELINE"]
+        Transport["Transport Layer → receiver.receive(obfuscatedPacket)"]
+
+        subgraph DeobfQueue["Deobfuscation Queue"]
+            Deobf1["ObfuscatedPacket"]
+            DeobfAction["packetDeobfuscation (tries 3 time windows)"]
+            Deobf2["SerializedEncr."]
+            Deobf1 --> DeobfAction --> Deobf2
+        end
+
+        subgraph DeserQueue["Deserialization Queue"]
+            Deser1["SerializedEncr."]
+            DeserAction["createDeserializedEncryptedPacket"]
+            Deser2["UnserializedEncr."]
+            Deser1 --> DeserAction --> Deser2
+        end
+
+        subgraph DecQueue["Decryption Queue"]
+            Dec1["UnserializedEncr."]
+            DecAction["packetDecryption"]
+            Dec2["UnencryptedPacket"]
+            Dec1 --> DecAction --> Dec2
+        end
+
+        Callback["receivePacket(unencryptedPacket) → Your callback"]
+
+        Transport --> DeobfQueue
+        DeobfQueue --> DeserQueue
+        DeserQueue --> DecQueue
+        DecQueue --> Callback
+    end
 ```
 
 ---
@@ -328,7 +329,6 @@ receiver/
 - **[Architecture Guide](../../../ARCHITECTURE.md#sender--receiver)** - Receiver architecture
 - **[Browser Entry](../../browser/receiver/)** - Browser-specific receiver
 - **[Node Entry](../../node/receiver/)** - Node.js-specific receiver
-- **Legacy**: `_/commercial-develop/packages/network-protocol/src/receiver/`
 
 ### Related Modules
 
