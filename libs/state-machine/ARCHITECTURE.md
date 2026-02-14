@@ -5,6 +5,12 @@ This document provides a technical deep dive into the `@hyperfrontend/state-mach
 ## System Overview
 
 ```mermaid
+---
+config:
+  theme: base
+  themeVariables:
+    fontSize: 12px
+---
 graph TB
     subgraph "Core Layer"
         Store["Store<br/>(Central State Container)"]
@@ -37,51 +43,48 @@ graph TB
 
 ## Data Flow
 
-```
-┌──────────────────────────────────────────────────────────────────┐
-│                         USER ACTION                               │
-└────────────────────────────┬─────────────────────────────────────┘
-                             │
-                             ▼
-┌──────────────────────────────────────────────────────────────────┐
-│  Action Creator: start() / pause() / cancel() / success() / fail()│
-└────────────────────────────┬─────────────────────────────────────┘
-                             │
-                             ▼
-┌──────────────────────────────────────────────────────────────────┐
-│                    Store.dispatch(action)                         │
-└────────────────────────────┬─────────────────────────────────────┘
-                             │
-                             ▼
-┌──────────────────────────────────────────────────────────────────┐
-│        rootReducer(currentState, action) => newState              │
-│        - Handler lookup by action.type                            │
-│        - Immutable state update                                   │
-│        - Returns new State object                                 │
-└────────────────────────────┬─────────────────────────────────────┘
-                             │
-                             ▼
-┌──────────────────────────────────────────────────────────────────┐
-│                  Store notifies all listeners                     │
-│                  listener(newState, action)                       │
-└────────────────────────────┬─────────────────────────────────────┘
-                             │
-                             ▼
-┌──────────────────────────────────────────────────────────────────┐
-│              Selectors compute DerivedState                       │
-│              derivedState(state) => DerivedState                  │
-└────────────────────────────┬─────────────────────────────────────┘
-                             │
-                             ▼
-┌──────────────────────────────────────────────────────────────────┐
-│         StateChange tracks previous/current snapshots             │
-└────────────────────────────┬─────────────────────────────────────┘
-                             │
-                             ▼
-┌──────────────────────────────────────────────────────────────────┐
-│      Events detects edge transitions (false → true)               │
-│      Invokes registered event handlers                            │
-└──────────────────────────────────────────────────────────────────┘
+```mermaid
+---
+config:
+  theme: base
+  themeVariables:
+    fontSize: 12px
+---
+flowchart TB
+    UserAction["USER ACTION"]
+
+    ActionCreator["Action Creator: <br/>start()  pause()  cancel() <br/>success() fail()"]
+
+    StoreDispatch["Store.dispatch(action)"]
+
+    subgraph Reducer["rootReducer(currentState, action) => newState"]
+        R1["Handler lookup by action.type"]
+        R2["Immutable state update"]
+        R3["Returns new State object"]
+    end
+
+    subgraph StoreNotify["Store notifies all listeners"]
+        N1["listener(newState, action)"]
+    end
+
+    subgraph Selectors["Selectors compute DerivedState"]
+        S1["derivedState(state) => DerivedState"]
+    end
+
+    StateChange["StateChange tracks previous/current snapshots"]
+
+    subgraph Events["Events detects edge transitions"]
+        E1["(false → true)"]
+        E2["Invokes registered event handlers"]
+    end
+
+    UserAction --> ActionCreator
+    ActionCreator --> StoreDispatch
+    StoreDispatch --> Reducer
+    Reducer --> StoreNotify
+    StoreNotify --> Selectors
+    Selectors --> StateChange
+    StateChange --> Events
 ```
 
 ## Module Dependencies
@@ -292,6 +295,12 @@ class Events {
 ### State Machine Diagram
 
 ```mermaid
+---
+config:
+  theme: base
+  themeVariables:
+    fontSize: 12px
+---
 stateDiagram-v2
     [*] --> NotStarted: createInitialState()
 
