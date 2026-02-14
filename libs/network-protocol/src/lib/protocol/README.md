@@ -246,61 +246,44 @@ When using dynamic key encryption, the protocol performs an in-band key exchange
 The first message uses **only time-based obfuscation** (no encryption) since no shared
 key exists yet. This pattern is similar to TLS/DTLS handshakes.
 
-```
-┌──────────────┐                              ┌──────────────┐
-│   Client A   │                              │   Client B   │
-│  (Initiator) │                              │  (Responder) │
-└──────┬───────┘                              └──────┬───────┘
-       │                                             │
-       │  1. CONNECT                                 │
-       │  ┌─────────────────────────────────────┐    │
-       │  │ ░░░ Time-Based Obfuscation ░░░░░░░░ │    │
-       │  │ ┌─────────────────────────────────┐ │    │
-       │  │ │ Payload (readable after deobf)  │ │    │
-       │  │ │ • keyA (for B to encrypt reply) │ │    │
-       │  │ └─────────────────────────────────┘ │    │
-       │  └─────────────────────────────────────┘    │
-       │────────────────────────────────────────────>│
-       │                                             │
-       │                                             │ Deobfuscates (time-based)
-       │                                             │ Extracts & stores keyA
-       │                                             │
-       │  2. CONNECT_ACK                             │
-       │  ┌─────────────────────────────────────┐    │
-       │  │ ░░░ Time-Based Obfuscation ░░░░░░░░ │    │
-       │  │ ┌─────────────────────────────────┐ │    │
-       │  │ │ 🔐 Encrypted with keyA          │ │    │
-       │  │ │ ┌─────────────────────────────┐ │ │    │
-       │  │ │ │ • keyB (for A to encrypt)   │ │ │    │
-       │  │ │ │ • ack data                  │ │ │    │
-       │  │ │ └─────────────────────────────┘ │ │    │
-       │  │ └─────────────────────────────────┘ │    │
-       │  └─────────────────────────────────────┘    │
-       │<────────────────────────────────────────────│
-       │                                             │
-       │ Deobfuscates (time-based)                   │
-       │ Decrypts with keyA                          │
-       │ Extracts & stores keyB                      │
-       │                                             │
-       │  3. Subsequent Messages                     │
-       │  ┌─────────────────────────────────────┐    │
-       │  │ ░░░ Time-Based Obfuscation ░░░░░░░░ │    │
-       │  │ ┌─────────────────────────────────┐ │    │
-       │  │ │ 🔐 Encrypted with keyB          │ │    │
-       │  │ │ ┌─────────────────────────────┐ │ │    │
-       │  │ │ │ • actual message payload    │ │ │    │
-       │  │ │ └─────────────────────────────┘ │ │    │
-       │  │ └─────────────────────────────────┘ │    │
-       │  └─────────────────────────────────────┘    │
-       │<───────────────────────────────────────────>│
+```mermaid
+---
+config:
+  theme: base
+  themeVariables:
+    fontSize: 12px
+---
+sequenceDiagram
+    participant A as Client A<br/>(Initiator)
+    participant B as Client B<br/>(Responder)
+
+    rect rgb(240, 248, 255)
+        Note over A,B: 1. CONNECT
+        A->>B: ░░░ Time-Based Obfuscation ░░░
+        Note right of A: Payload (readable after deobf)<br/>• keyA (for B to encrypt reply)
+        Note right of B: Deobfuscates (time-based)<br/>Extracts & stores keyA
+    end
+
+    rect rgb(255, 250, 240)
+        Note over A,B: 2. CONNECT_ACK
+        B->>A: ░░░ Time-Based Obfuscation ░░░<br/>🔐 Encrypted with keyA
+        Note left of B: • keyB (for A to encrypt)<br/>• ack data
+        Note left of A: Deobfuscates (time-based)<br/>Decrypts with keyA<br/>Extracts & stores keyB
+    end
+
+    rect rgb(240, 255, 240)
+        Note over A,B: 3. Subsequent Messages
+        A<<->>B: ░░░ Time-Based Obfuscation ░░░<br/>🔐 Encrypted with keyB
+        Note over A,B: • actual message payload
+    end
 ```
 
 #### Protection Layers by Message
 
-| Message        | Time-Based Obfuscation |   Key-Based Encryption    |
-| -------------- | :--------------------: | :-----------------------: |
-| 1. CONNECT     |           ✅           |  ❌ (no shared key yet)   |
-| 2. CONNECT_ACK |           ✅           |      ✅ (using keyA)      |
+| Message        | Time-Based Obfuscation | Key-Based Encryption      |
+| -------------- | :--------------------: | :------------------------ |
+| 1. CONNECT     |           ✅           | ❌ (no shared key yet)    |
+| 2. CONNECT_ACK |           ✅           | ✅ (using keyA)           |
 | 3+ Messages    |           ✅           | ✅ (using exchanged keys) |
 
 ---
@@ -321,23 +304,22 @@ secret key beforehand (out-of-band key exchange).
 
 In PSK mode, **all messages** are both obfuscated and encrypted from the start:
 
-```
-┌──────────────┐                              ┌──────────────┐
-│   Client A   │                              │   Client B   │
-│  (has PSK)   │                              │  (has PSK)   │
-└──────┬───────┘                              └──────┬───────┘
-       │                                             │
-       │  All Messages (from the start)              │
-       │  ┌─────────────────────────────────────┐    │
-       │  │ ░░░ Time-Based Obfuscation ░░░░░░░░ │    │
-       │  │ ┌─────────────────────────────────┐ │    │
-       │  │ │ 🔐 Encrypted with PSK           │ │    │
-       │  │ │ ┌─────────────────────────────┐ │ │    │
-       │  │ │ │ • message payload           │ │ │    │
-       │  │ │ └─────────────────────────────┘ │ │    │
-       │  │ └─────────────────────────────────┘ │    │
-       │  └─────────────────────────────────────┘    │
-       │<───────────────────────────────────────────>│
+```mermaid
+---
+config:
+  theme: base
+  themeVariables:
+    fontSize: 12px
+---
+sequenceDiagram
+    participant A as Client A<br/>(has PSK)
+    participant B as Client B<br/>(has PSK)
+
+    rect rgb(255, 250, 250)
+        Note over A,B: All Messages (from the start)
+        A<<->>B: ░░░ Time-Based Obfuscation ░░░<br/>🔐 Encrypted with PSK
+        Note over A,B: • message payload
+    end
 ```
 
 ### V2 Example
@@ -359,43 +341,72 @@ const protocol = protocolProvider(sendFn, receiveFn)
 
 ### Composition Tree
 
-```
-┌─────────────────────────────────────────────────────────────────────────────┐
-│                         PROTOCOL V1 COMPOSITION                              │
-├─────────────────────────────────────────────────────────────────────────────┤
-│                                                                              │
-│  createProtocol(logger, refreshRate)           ← Dynamic Key Mode           │
-│       │                                                                      │
-│       ├── createDynamicKeyEncryption(getKey)                                │
-│       │        │                                                             │
-│       │        ├── encryptPacket(packet, key)  ← platform-specific          │
-│       │        └── decryptPacket(packet, key)  ← platform-specific          │
-│       │                                                                      │
-│       └── createTimeIntervalObfuscation(refreshRate)                        │
-│                │                                                             │
-│                ├── obfuscatePacket(packet, password)                        │
-│                ├── deobfuscatePacket(data, password)                        │
-│                ├── getTimeBasedPassword(date, rate, offset)                 │
-│                └── getTimeBasedPasswords(date, rate)                        │
-│                    → { current, previous, next }                            │
-│                                                                              │
-└─────────────────────────────────────────────────────────────────────────────┘
+#### Protocol V1 Composition (Dynamic Key Mode)
 
-┌─────────────────────────────────────────────────────────────────────────────┐
-│                         PROTOCOL V2 COMPOSITION                              │
-├─────────────────────────────────────────────────────────────────────────────┤
-│                                                                              │
-│  createProtocol(logger, sharedKey, refreshRate)  ← PSK Mode                 │
-│       │                                                                      │
-│       ├── createStaticKeyEncryption(sharedKey)                              │
-│       │        │                                                             │
-│       │        ├── encryptPacket(packet, key)  ← platform-specific          │
-│       │        └── decryptPacket(packet, key)  ← platform-specific          │
-│       │                                                                      │
-│       └── createTimeIntervalObfuscation(refreshRate)                        │
-│                └── (same as V1)                                             │
-│                                                                              │
-└─────────────────────────────────────────────────────────────────────────────┘
+```mermaid
+---
+config:
+  theme: base
+  themeVariables:
+    fontSize: 12px
+---
+flowchart TB
+    V1_Create["createProtocol(logger, refreshRate)"]
+
+    subgraph V1_Enc["Encryption Suite"]
+        direction TB
+        V1_EncCreate["createDynamicKeyEncryption(getKey)"]
+        V1_Encrypt["encryptPacket(packet, key)<br/><em>platform-specific</em>"]
+        V1_Decrypt["decryptPacket(packet, key)<br/><em>platform-specific</em>"]
+        V1_EncCreate --> V1_Encrypt
+        V1_EncCreate --> V1_Decrypt
+    end
+
+    subgraph V1_Obf["Obfuscation Suite"]
+        direction TB
+        V1_ObfCreate["createTimeIntervalObfuscation(refreshRate)"]
+        V1_Obfuscate["obfuscatePacket(packet, password)"]
+        V1_Deobfuscate["deobfuscatePacket(data, password)"]
+        V1_Pass1["getTimeBasedPassword(date, rate, offset)"]
+        V1_Pass2["getTimeBasedPasswords(date, rate)<br/>→ {current, previous, next}"]
+        V1_ObfCreate --> V1_Obfuscate
+        V1_ObfCreate --> V1_Deobfuscate
+        V1_ObfCreate --> V1_Pass1
+        V1_ObfCreate --> V1_Pass2
+    end
+
+    V1_Create --> V1_Enc
+    V1_Create --> V1_Obf
+```
+
+#### Protocol V2 Composition (PSK Mode)
+
+```mermaid
+---
+config:
+  theme: base
+  themeVariables:
+    fontSize: 12px
+---
+flowchart TB
+    V2_Create["createProtocol(logger, sharedKey, refreshRate)"]
+
+    subgraph V2_Enc["Encryption Suite"]
+        direction TB
+        V2_EncCreate["createStaticKeyEncryption(sharedKey)"]
+        V2_Encrypt["encryptPacket(packet, key)<br/><em>platform-specific</em>"]
+        V2_Decrypt["decryptPacket(packet, key)<br/><em>platform-specific</em>"]
+        V2_EncCreate --> V2_Encrypt
+        V2_EncCreate --> V2_Decrypt
+    end
+
+    subgraph V2_Obf["Obfuscation Suite"]
+        direction TB
+        V2_ObfCreate["createTimeIntervalObfuscation(refreshRate)<br/><em>(same as V1)</em>"]
+    end
+
+    V2_Create --> V2_Enc
+    V2_Create --> V2_Obf
 ```
 
 ---
@@ -623,7 +634,6 @@ protocol/
 - **[Browser v2](../../browser/v2/)** - Browser-specific v2 protocol (PSK)
 - **[Node v1](../../node/v1/)** - Node.js-specific v1 protocol (dynamic key)
 - **[Node v2](../../node/v2/)** - Node.js-specific v2 protocol (PSK)
-- **Legacy**: `_/commercial-develop/packages/network-protocol/src/protocol/`
 
 ### Integration Tests
 
