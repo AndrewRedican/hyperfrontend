@@ -35,45 +35,35 @@
 
 ## Architecture Overview
 
-```
-┌───────────────────────────────────────────────────────────────────────────────────────────────────┐
-│                                        NEXUS ARCHITECTURE                                         │
-├───────────────────────────────────────────────────────────────────────────────────────────────────┤
-│                                                                                                   │
-│  ┌─────────────────────────────────────────────────────────────────────────────────────────────┐  │
-│  │                                        BROKER LAYER                                         │  │
-│  │                                                                                             │  │
-│  │  - Creates and manages channels              - Validates contracts and origins              │  │
-│  │  - Routes incoming postMessage events        - Applies security policies                    │  │
-│  │  - Protocol registry for security providers                                                 │  │
-│  └─────────────────────────────────────────────────────────────────────────────────────────────┘  │
-│                                                 │                                                 │
-│                                                 ▼                                                 │
-│  ┌─────────────────────────────────────────────────────────────────────────────────────────────┐  │
-│  │                                       CHANNEL LAYER                                         │  │
-│  │                                                                                             │  │
-│  │  - Manages connection lifecycle              - Event/message subscriptions                  │  │
-│  │  - State machine for connection states       - Security transport integration               │  │
-│  │  - Message queueing and delivery                                                            │  │
-│  └─────────────────────────────────────────────────────────────────────────────────────────────┘  │
-│                                                 │                                                 │
-│                                                 ▼                                                 │
-│  ┌─────────────────────────────────────────────────────────────────────────────────────────────┐  │
-│  │                                         CORE LAYER                                          │  │
-│  │                                                                                             │  │
-│  │  - Action creators (protocol messages)       - Process manager (connection tracking)        │  │
-│  │  - Channel registry (O(1) lookups)           - Validation utilities                         │  │
-│  └─────────────────────────────────────────────────────────────────────────────────────────────┘  │
-│                                                 │                                                 │
-│                                                 ▼                                                 │
-│  ┌─────────────────────────────────────────────────────────────────────────────────────────────┐  │
-│  │                                    SECURITY LAYER (Optional)                                │  │
-│  │                                                                                             │  │
-│  │  - Protocol negotiation (v1/v2/none)         - Encryption/obfuscation pipeline              │  │
-│  │  - Security transport adapters                                                              │  │
-│  └─────────────────────────────────────────────────────────────────────────────────────────────┘  │
-│                                                                                                   │
-└───────────────────────────────────────────────────────────────────────────────────────────────────┘
+```mermaid
+---
+config:
+  theme: base
+  themeVariables:
+    fontSize: 12px
+---
+flowchart TB
+    subgraph NexusArch["NEXUS ARCHITECTURE"]
+        subgraph BrokerLayer["BROKER LAYER"]
+            BrokerDesc["• Creates and manages channels<br/>• Routes incoming postMessage events<br/>• Validates contracts and origins<br/>• Applies security policies<br/>• Protocol registry for security providers"]
+        end
+
+        subgraph ChannelLayer["CHANNEL LAYER"]
+            ChannelDesc["• Manages connection lifecycle<br/>• State machine for connection states<br/>• Message queueing and delivery<br/>• Event/message subscriptions<br/>• Security transport integration"]
+        end
+
+        subgraph CoreLayer["CORE LAYER"]
+            CoreDesc["• Action creators (protocol messages)<br/>• Channel registry (O(1) lookups)<br/>• Process manager (connection tracking)<br/>• Validation utilities"]
+        end
+
+        subgraph SecurityLayer["SECURITY LAYER (Optional)"]
+            SecurityDesc["• Protocol negotiation (v1/v2/none)<br/>• Security transport adapters<br/>• Encryption/obfuscation pipeline"]
+        end
+
+        BrokerLayer --> ChannelLayer
+        ChannelLayer --> CoreLayer
+        CoreLayer --> SecurityLayer
+    end
 ```
 
 ---
@@ -284,126 +274,112 @@ The protocol defines 11 action types for connection lifecycle:
 
 Nexus implements a TCP-like handshake for reliable connection establishment:
 
-```
-HOST A (Initiator)                    HOST B (Responder)
-       │                                     │
-       │  1. REQUEST_CONNECTION (SYN)        │
-       │  ─────────────────────────────────▶ │
-       │     { processId, senderId, contract }
-       │                                     │
-       │  2. ACCEPT_CONNECTION (SYN-ACK)     │
-       │  ◀───────────────────────────────── │
-       │     { processId, senderId, contract }
-       │                                     │
-       │  3. OPEN_CONNECTION (ACK)           │
-       │  ─────────────────────────────────▶ │
-       │     { processId, senderId }         │
-       │                                     │
-       ▼                                     ▼
-  [CHANNEL OPEN]                       [CHANNEL OPEN]
-    Event: 'open'                        Event: 'open'
+```mermaid
+---
+config:
+  theme: base
+  themeVariables:
+    fontSize: 12px
+---
+sequenceDiagram
+    participant HostA as HOST A (Initiator)
+    participant HostB as HOST B (Responder)
+
+    HostA->>HostB: 1. REQUEST_CONNECTION (SYN)
+    Note over HostA,HostB: { processId, senderId, contract }
+    HostB->>HostA: 2. ACCEPT_CONNECTION (SYN-ACK)
+    Note over HostA,HostB: { processId, senderId, contract }
+    HostA->>HostB: 3. OPEN_CONNECTION (ACK)
+    Note over HostA,HostB: { processId, senderId }
+    Note over HostA: [CHANNEL OPEN]<br/>Event: 'open'
+    Note over HostB: [CHANNEL OPEN]<br/>Event: 'open'
 ```
 
 **Internal Sequence:**
 
-```
-Host A (Initiator)                    Host B (Responder)
-─────────────────                    ──────────────────
-channel.connect()
-    │
-    ▼
-[createProcess]
-[send REQUEST_CONNECTION] ──────────▶ [handleRequest]
-                                          │
-                                          ▼
-                                     [addChannel if new]
-                                     [trackProcess]
-                                     [validateContract]
-                                     [applySecurityPolicy]
-                                     [activate]
-                                     [send ACCEPT_CONNECTION]
-                                          │
-[handleAccept] ◀─────────────────────────┘
-    │
-    ▼
-[validateContract]
-[applySecurityPolicy]
-[activate]
-[send OPEN_CONNECTION] ─────────────▶ [handleOpen]
-    │                                     │
-    ▼                                     ▼
-[terminateProcess]                   [terminateProcess]
-[notifyEvent('open')]                [notifyEvent('open')]
-    │                                     │
-    ▼                                     ▼
-[ACTIVE]                              [ACTIVE]
+```mermaid
+---
+config:
+  theme: base
+  themeVariables:
+    fontSize: 12px
+---
+sequenceDiagram
+    participant HostA as Host A (Initiator)
+    participant HostB as Host B (Responder)
+
+    Note over HostA: channel.connect()
+    Note over HostA: [createProcess]
+    HostA->>HostB: [send REQUEST_CONNECTION]
+    Note over HostB: [handleRequest]<br/>[addChannel if new]<br/>[trackProcess]<br/>[validateContract]<br/>[applySecurityPolicy]<br/>[activate]
+    HostB->>HostA: [send ACCEPT_CONNECTION]
+    Note over HostA: [handleAccept]<br/>[validateContract]<br/>[applySecurityPolicy]<br/>[activate]
+    HostA->>HostB: [send OPEN_CONNECTION]
+    Note over HostA: [terminateProcess]<br/>[notifyEvent('open')]<br/>[ACTIVE]
+    Note over HostB: [handleOpen]<br/>[terminateProcess]<br/>[notifyEvent('open')]<br/>[ACTIVE]
 ```
 
 ### Denial Flow
 
 When a connection is rejected (invalid contract or security policy failure):
 
-```
-Host A (Initiator)                    Host B (Responder)
-─────────────────                    ──────────────────
-channel.connect()
-    │
-    ▼
-[send REQUEST_CONNECTION] ──────────▶ [handleRequest]
-                                          │
-                                          ▼
-                                     [validateContract FAILS]
-                                        — or —
-                                     [securityPolicy REJECTS]
-                                          │
-                                          ▼
-                                     [send DENY_CONNECTION]
-                                     [terminateProcess]
-                                          │
-[handleDeny] ◀───────────────────────────┘
-    │
-    ▼
-[terminateProcess]
-[notifyEvent('deny')]
-    │
-    ▼
-[CLOSED - never connected]
+```mermaid
+---
+config:
+  theme: base
+  themeVariables:
+    fontSize: 12px
+---
+sequenceDiagram
+    participant HostA as Host A (Initiator)
+    participant HostB as Host B (Responder)
+
+    Note over HostA: channel.connect()
+    HostA->>HostB: [send REQUEST_CONNECTION]
+    Note over HostB: [handleRequest]<br/>[validateContract FAILS]<br/>— or —<br/>[securityPolicy REJECTS]
+    HostB->>HostA: [send DENY_CONNECTION]
+    Note over HostB: [terminateProcess]
+    Note over HostA: [handleDeny]<br/>[terminateProcess]<br/>[notifyEvent('deny')]<br/>[CLOSED - never connected]
 ```
 
 ### Graceful Disconnection
 
-```
-HOST A (Disconnector)                 HOST B (Partner)
-       │                                     │
-  [CHANNEL OPEN]                       [CHANNEL OPEN]
-       │                                     │
-       │  1. CLOSE_CONNECTION                │
-       │  ─────────────────────────────────▶ │
-       │                                     │
-       │  2. CLOSE_CONNECTION_ACKNOWLEDGED   │
-       │  ◀───────────────────────────────── │
-       │                                     │
-       ▼                                     ▼
-    Event: 'close'                       Event: 'close'
-  [CHANNEL CLOSED]                     [CHANNEL CLOSED]
+```mermaid
+---
+config:
+  theme: base
+  themeVariables:
+    fontSize: 12px
+---
+sequenceDiagram
+    participant HostA as HOST A (Disconnector)
+    participant HostB as HOST B (Partner)
+
+    Note over HostA: [CHANNEL OPEN]
+    Note over HostB: [CHANNEL OPEN]
+    HostA->>HostB: 1. CLOSE_CONNECTION
+    HostB->>HostA: 2. CLOSE_CONNECTION_ACKNOWLEDGED
+    Note over HostA: Event: 'close'<br/>[CHANNEL CLOSED]
+    Note over HostB: Event: 'close'<br/>[CHANNEL CLOSED]
 ```
 
 ### State Transitions
 
-```
-    ┌─────────┐
-    │ INITIAL │
-    └────┬────┘
-         │ connect()
-         ▼
-    ┌─────────────┐     DENY      ┌────────┐
-    │ CONNECTING  │ ────────────▶ │ DENIED │
-    └──────┬──────┘               └────────┘
-           │ ACCEPT + OPEN
-           ▼
-    ┌─────────┐     disconnect()  ┌────────┐
-    │ ACTIVE  │ ────────────────▶ │ CLOSED │
-    └─────────┘                   └────────┘
+```mermaid
+---
+config:
+  theme: base
+  themeVariables:
+    fontSize: 12px
+---
+stateDiagram-v2
+    [*] --> INITIAL
+    INITIAL --> CONNECTING: connect()
+    CONNECTING --> DENIED: DENY
+    CONNECTING --> ACTIVE: ACCEPT + OPEN
+    ACTIVE --> CLOSED: disconnect()
+    DENIED --> [*]
+    CLOSED --> [*]
 ```
 
 ---
@@ -543,42 +519,56 @@ End-to-end encryption via `@hyperfrontend/network-protocol`:
 
 During connection handshake, parties negotiate the security protocol:
 
-```
-HOST A (Initiator)                    HOST B (Responder)
-       │                                     │
-       │  REQUEST_CONNECTION + security      │
-       │  ─────────────────────────────────▶ │
-       │     { supported: ['v2', 'v1'] }     │
-       │                                     │
-       │  ACCEPT_CONNECTION + security       │
-       │  ◀───────────────────────────────── │
-       │     { negotiated: 'v2', params }    │
-       │                                     │
-       │  OPEN_CONNECTION + security         │
-       │  ─────────────────────────────────▶ │
-       │     { active: true, protocol: 'v2' }│
-       │                                     │
-       ▼                                     ▼
-  [SECURE CHANNEL]                     [SECURE CHANNEL]
+```mermaid
+---
+config:
+  theme: base
+  themeVariables:
+    fontSize: 12px
+---
+sequenceDiagram
+    participant HostA as HOST A (Initiator)
+    participant HostB as HOST B (Responder)
+
+    HostA->>HostB: REQUEST_CONNECTION + security
+    Note over HostA,HostB: { supported: ['v2', 'v1'] }
+    HostB->>HostA: ACCEPT_CONNECTION + security
+    Note over HostA,HostB: { negotiated: 'v2', params }
+    HostA->>HostB: OPEN_CONNECTION + security
+    Note over HostA,HostB: { active: true, protocol: 'v2' }
+    Note over HostA: [SECURE CHANNEL]
+    Note over HostB: [SECURE CHANNEL]
 ```
 
 #### Security Transport Architecture
 
-```
-┌────────────────────────────────────────────────────────────────┐
-│                          Nexus Channel                          │
-├────────────────────────────────────────────────────────────────┤
-│                    Security Transport Adapter                   │
-│  ┌─────────────────┐  ┌─────────────────┐  ┌─────────────────┐ │
-│  │  NoneTransport  │  │ SecureTransport │  │ SecureTransport │ │
-│  │    (none)       │  │     (v1)        │  │     (v2)        │ │
-│  └─────────────────┘  └─────────────────┘  └─────────────────┘ │
-├────────────────────────────────────────────────────────────────┤
-│               network-protocol Provider                         │
-│              (encryption/decryption pipeline)                   │
-├────────────────────────────────────────────────────────────────┤
-│                      postMessage API                            │
-└────────────────────────────────────────────────────────────────┘
+```mermaid
+---
+config:
+  theme: base
+  themeVariables:
+    fontSize: 12px
+---
+flowchart TB
+    Channel["<b>Nexus Channel</b><br/><b>Security Transport Adapter</b>"]:::header
+
+    None["NoneTransport<br/>(none)"]:::leftAlign
+    V1["SecureTransport<br/>(v1)"]:::leftAlign
+    V2["SecureTransport<br/>(v2)"]:::leftAlign
+
+    Provider["<b>network-protocol Provider</b><br/>encryption/decryption pipeline"]:::leftAlign
+    API["<b>postMessage API</b>"]:::header
+
+    Channel --> None
+    Channel --> V1
+    Channel --> V2
+    None --> Provider
+    V1 --> Provider
+    V2 --> Provider
+    Provider --> API
+
+    classDef leftAlign text-align:left,padding:8px
+    classDef header text-align:center,padding:8px
 ```
 
 #### Configuration Examples
