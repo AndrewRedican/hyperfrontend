@@ -276,18 +276,7 @@ describe('Integration: Security', () => {
 
       const tenantIds = ['tenant-1', 'tenant-2', 'tenant-3']
 
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      const tenantPolicy = (event: MessageEvent) => {
-        // Extract tenant ID from action data
-        const action = <Record<string, unknown>>event.data
-        const processId = <string>(action['processId'] || '')
-        const tenantId = processId.split('-')[0]
-        return tenantIds.includes(tenantId)
-      }
-
-      // TODO: Implement broker.setSecurityPolicy method
-      // broker.setSecurityPolicy(tenantPolicy)
-
+      // TODO: Implement broker.setSecurityPolicy method to support multi-tenant security
       // For now, skip detailed tenant policy tests
       expect(broker).toBeDefined()
       /*
