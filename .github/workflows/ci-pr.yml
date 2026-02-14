@@ -201,7 +201,7 @@ jobs:
         with:
           fetch-depth: 0
           ref: ${{ github.head_ref }}
-          token: ${{ secrets.GITHUB_TOKEN }}
+          token: ${{ secrets.PR_PAT }}
 
       - name: Setup monorepo
         uses: ./.github/actions/setup-monorepo
