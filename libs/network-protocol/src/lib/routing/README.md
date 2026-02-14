@@ -79,38 +79,38 @@ type Router = (channels: Channel[], topics: Topic[]) => RoutingOptions
 
 ## Routing Flow
 
-```
-┌─────────────────────────────────────────────────────────────────────────────┐
-│                           MESSAGE ROUTING                                    │
-├─────────────────────────────────────────────────────────────────────────────┤
-│                                                                              │
-│  Incoming Message with topicId                                              │
-│          │                                                                   │
-│          ▼                                                                   │
-│  ┌─────────────────────────────────────┐                                    │
-│  │         Router Function             │                                    │
-│  │                                     │                                    │
-│  │  router(channels, topics) →         │                                    │
-│  │    { isDynamic, subscriptions }     │                                    │
-│  └──────────────────┬──────────────────┘                                    │
-│                     │                                                        │
-│                     ▼                                                        │
-│  ┌─────────────────────────────────────┐                                    │
-│  │      Subscription Lookup            │                                    │
-│  │                                     │                                    │
-│  │  For each channel:                  │                                    │
-│  │    topics = subscriptions.get(ch)   │                                    │
-│  │    if topicId in topics → route     │                                    │
-│  └──────────────────┬──────────────────┘                                    │
-│                     │                                                        │
-│                     ▼                                                        │
-│  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐                          │
-│  │  Channel A  │  │  Channel B  │  │  Channel C  │                          │
-│  │ (subscribed)│  │ (subscribed)│  │ (not sub'd) │                          │
-│  │   ✓ receives│  │   ✓ receives│  │   ✗ skip   │                          │
-│  └─────────────┘  └─────────────┘  └─────────────┘                          │
-│                                                                              │
-└─────────────────────────────────────────────────────────────────────────────┘
+```mermaid
+---
+config:
+  theme: base
+  themeVariables:
+    fontSize: 12px
+---
+flowchart TB
+    subgraph MessageRouting["MESSAGE ROUTING"]
+        Incoming["Incoming Message with topicId"]
+
+        subgraph RouterFunc["Router Function"]
+            RouterCall["router(channels, topics) →<br/>{ isDynamic, subscriptions }"]
+        end
+
+        subgraph SubLookup["Subscription Lookup"]
+            Lookup["For each channel:<br/>topics = subscriptions.get(ch)<br/>if topicId in topics → route"]
+        end
+
+        subgraph Channels["Channels"]
+            direction LR
+            ChannelA["Channel A<br/>(subscribed)<br/>✓ receives"]
+            ChannelB["Channel B<br/>(subscribed)<br/>✓ receives"]
+            ChannelC["Channel C<br/>(not sub'd)<br/>✗ skip"]
+        end
+
+        Incoming --> RouterFunc
+        RouterFunc --> SubLookup
+        SubLookup --> ChannelA
+        SubLookup --> ChannelB
+        SubLookup --> ChannelC
+    end
 ```
 
 ---
@@ -231,7 +231,6 @@ routing/
 
 - **[Library Index](../README.md)** - All modules
 - **[Architecture Guide](../../../ARCHITECTURE.md#routing)** - Routing architecture
-- **Legacy**: `_/commercial-develop/packages/network-protocol/src/routing/`
 - **Integration Tests**: [routing.integration.spec.ts](routing.integration.spec.ts)
 
 ### Related Modules
