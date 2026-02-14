@@ -10,6 +10,12 @@ A **hyperfrontend feature** is a standalone frontend application that provides d
 A hyperfrontend feature combines traits from [micro-frontends](https://en.wikipedia.org/wiki/Micro_frontend) and embeddable components, with unique characteristics for secure runtime integration:
 
 ```mermaid
+---
+config:
+  theme: base
+  themeVariables:
+    fontSize: 12px
+---
 flowchart LR
     subgraph MF["🧩 Micro-Frontend Traits"]
         direction TB
@@ -17,14 +23,6 @@ flowchart LR
         M2["Own tech stack"]
         M3["Team autonomy"]
         M4["Separate releases"]
-    end
-
-    subgraph HF["⚡ Hyperfrontend Feature"]
-        direction TB
-        H1["Iframe isolation"]
-        H2["Contract messaging"]
-        H3["Runtime loading"]
-        H4["Optional encryption"]
     end
 
     subgraph CP["📦 Component Traits"]
@@ -35,12 +33,20 @@ flowchart LR
         C4["Host integration"]
     end
 
-    MF --> HF
-    CP --> HF
+    subgraph HF["⚡ Hyperfrontend Feature"]
+        direction TB
+        H1["🔒 Iframe isolation"]
+        H2["📨 Contract messaging"]
+        H3["⚡ Runtime loading"]
+        H4["🔐 Optional encryption"]
+    end
 
-    style MF fill:#e1f5fe,stroke:#01579b
-    style HF fill:#fff3e0,stroke:#e65100
-    style CP fill:#f3e5f5,stroke:#7b1fa2
+    MF -.->|combines| HF
+    CP -.->|combines| HF
+
+    style MF fill:#e1f5fe,stroke:#01579b,stroke-width:2px
+    style CP fill:#f3e5f5,stroke:#7b1fa2,stroke-width:2px
+    style HF fill:#fff3e0,stroke:#e65100,stroke-width:3px
 ```
 
 **Not a feature:** UI components, shared libraries, SPA routes, or [monolithic](https://en.wikipedia.org/wiki/Monolithic_application) frontends.

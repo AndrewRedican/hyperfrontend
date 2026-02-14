@@ -118,7 +118,7 @@ Channels establish connections using a three-way handshake inspired by TCP:
 config:
   theme: base
   themeVariables:
-    fontSize: 14px
+    fontSize: 12px
 ---
 sequenceDiagram
     participant Host as HOST
