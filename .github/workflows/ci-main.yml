@@ -310,6 +310,39 @@ jobs:
           fetch-depth: 0
           token: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Ensure version tags exist
+        run: |
+          # For each library with a version, ensure a tag exists
+          for pkg in libs/*/package.json plugins/*/package.json; do
+            [ -f "$pkg" ] || continue
+
+            dir=$(dirname "$pkg")
+            name=$(basename "$dir")
+            parent=$(basename "$(dirname "$dir")")
+
+            # Determine project name: libs/cryptography → lib-cryptography
+            if [ "$parent" = "libs" ]; then
+              project="lib-${name}"
+            elif [ "$parent" = "plugins" ]; then
+              project="plugin-${name}"
+            else
+              # Nested utils: libs/utils/data → lib-data-utils
+              project="lib-${name}-utils"
+            fi
+
+            version=$(jq -r '.version // empty' "$pkg" 2>/dev/null)
+
+            if [ -n "$version" ]; then
+              tag="${project}@${version}"
+
+              # Check if tag exists
+              if ! git rev-parse "$tag" >/dev/null 2>&1; then
+                git tag "$tag"
+                echo "Created missing tag: $tag"
+              fi
+            fi
+          done
+
       - name: Push version tags
         run: |
           # Push any local tags that haven't been pushed yet

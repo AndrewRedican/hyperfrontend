@@ -94,6 +94,16 @@
       "type": "boolean",
       "description": "Update version references in dependent packages after version bump.",
       "default": true
+    },
+    "skipIfVersionCommit": {
+      "type": "boolean",
+      "description": "Skip versioning if the current commit is a version/release commit (recursion prevention).",
+      "default": true
+    },
+    "skipIfUnstableGit": {
+      "type": "boolean",
+      "description": "Skip versioning if git is in rebase/merge state.",
+      "default": true
     }
   },
   "required": []

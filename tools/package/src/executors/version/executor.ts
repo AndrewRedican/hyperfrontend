@@ -1,10 +1,65 @@
 import { type ExecutorContext, logger } from '@nx/devkit'
 import { execSync } from 'node:child_process'
-import { readFileSync, writeFileSync, readdirSync, statSync } from 'node:fs'
+import { readFileSync, writeFileSync, readdirSync, statSync, existsSync } from 'node:fs'
 import { join, relative } from 'node:path'
 import type { VersionExecutorOptions } from './schema'
 import semverVersion from '@jscutlery/semver/src/executors/version'
 import type { VersionBuilderSchema } from '@jscutlery/semver/src/executors/version/schema'
+
+/**
+ * Patterns that identify version/release commits.
+ * Used for recursion prevention - if HEAD matches, skip versioning.
+ */
+const VERSION_COMMIT_PATTERNS = [
+  /^chore\([^)]+\): release version/, // Manual: chore(lib-x): release version 1.0.0
+  /^chore: update versions for/, // PR CI: chore: update versions for lib-x
+  /^chore\(release\):/, // Alternative format
+]
+
+/**
+ * Checks if the last commit is a version/release commit.
+ * Prevents infinite recursion when versioning triggers another version.
+ *
+ * @param cwd - Working directory
+ * @returns True if current HEAD is a version commit
+ */
+function isVersionCommit(cwd: string): boolean {
+  try {
+    const msg = execSync('git log -1 --pretty=%B', {
+      cwd,
+      encoding: 'utf-8',
+      stdio: ['pipe', 'pipe', 'pipe'],
+    }).trim()
+    return VERSION_COMMIT_PATTERNS.some((pattern) => pattern.test(msg))
+  } catch {
+    return false
+  }
+}
+
+/**
+ * Checks if git is in a rebase or merge state.
+ * Versioning during these operations can cause problems.
+ *
+ * @param cwd - Working directory
+ * @returns True if git is in rebase/merge state
+ */
+function isInUnstableGitState(cwd: string): boolean {
+  try {
+    const gitDir = execSync('git rev-parse --git-dir', {
+      cwd,
+      encoding: 'utf-8',
+      stdio: ['pipe', 'pipe', 'pipe'],
+    }).trim()
+
+    return (
+      existsSync(join(cwd, gitDir, 'rebase-merge')) ||
+      existsSync(join(cwd, gitDir, 'rebase-apply')) ||
+      existsSync(join(cwd, gitDir, 'MERGE_HEAD'))
+    )
+  } catch {
+    return false
+  }
+}
 
 /**
  * Checks if a git tag exists.
@@ -174,6 +229,20 @@ export default async function versionExecutor(options: VersionExecutorOptions, c
   if (!projectConfig) {
     logger.error(`Project ${projectName} not found in project graph`)
     return { success: false }
+  }
+
+  // === FACT-FINDING: Early exit conditions ===
+
+  // 1. Recursion prevention (enabled by default)
+  if (options.skipIfVersionCommit !== false && isVersionCommit(workspaceRoot)) {
+    logger.info(`${projectName}: Skipping - current commit is a version/release commit`)
+    return { success: true }
+  }
+
+  // 2. Git state check (enabled by default)
+  if (options.skipIfUnstableGit !== false && isInUnstableGitState(workspaceRoot)) {
+    logger.info(`${projectName}: Skipping - git is in rebase/merge state`)
+    return { success: true }
   }
 
   const projectRoot = projectConfig.root

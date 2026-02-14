@@ -134,6 +134,24 @@ export default async function publishExecutor(options: PublishExecutorOptions, c
   const packageName = getPackageName(distPath)
   const packageVersion = getPackageVersion(distPath)
 
+  // Check if version already exists on npm (idempotent publish)
+  if (!options.dryRun) {
+    try {
+      const npmViewResult = execSync(`npm view ${packageName}@${packageVersion} version 2>/dev/null || echo ""`, {
+        encoding: 'utf-8',
+        cwd: distPath,
+        stdio: ['pipe', 'pipe', 'pipe'],
+      }).trim()
+
+      if (npmViewResult === packageVersion) {
+        logger.info(`${packageName}@${packageVersion} already published to npm, skipping`)
+        return { success: true }
+      }
+    } catch {
+      // npm view failed, assume package doesn't exist (first publish)
+    }
+  }
+
   logger.info(`Publishing ${packageName}@${packageVersion}...`)
   logger.info(`  Dist path: ${distPath}`)
   logger.info(`  Tag: ${options.tag ?? 'latest'}`)
