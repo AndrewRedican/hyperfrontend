@@ -59,31 +59,17 @@ type JSONString<T = unknown> = string & {
 
 ## Data Flow
 
-```
-┌─────────────────────────────────────────────────────────────────────────────┐
-│                           DATA TRANSFORMATION                                │
-├─────────────────────────────────────────────────────────────────────────────┤
-│                                                                              │
-│  Your Message Object (T)                                                    │
-│          │                                                                   │
-│          ▼ createData()                                                     │
-│                                                                              │
-│  SerializedData<T>  ← Wire format (message as JSON string)                  │
-│  ├─ pid: string                                                             │
-│  ├─ id: string (generated UUID)                                             │
-│  ├─ sequence: number                                                        │
-│  ├─ key: string (generated encryption key)                                  │
-│  ├─ message: JSONString<T> (JSON.stringify of your message)                 │
-│  ├─ schema: Schema (auto-generated JSON Schema)                             │
-│  └─ schemaHash: string (SHA-256 of schema)                                  │
-│          │                                                                   │
-│          ▼ deserializeData()                                                │
-│                                                                              │
-│  Data<T>  ← Logical format (message as object)                              │
-│  ├─ ... same fields                                                         │
-│  └─ message: T (JSON.parse of message)                                      │
-│                                                                              │
-└─────────────────────────────────────────────────────────────────────────────┘
+```mermaid
+%%{init: {'theme':'base', 'themeVariables': {'fontSize':'12px'}, 'flowchart':{'htmlLabels':true}}}%%
+flowchart TB
+    MessageObj["Your Message Object (T)"]
+
+    SerializedData["<div style='text-align: left; padding: 8px;'><b>SerializedData&lt;T&gt; - Wire format</b><br/>pid: string<br/>id: string (generated UUID)<br/>sequence: number<br/>key: string (encryption key)<br/>message: JSONString<br/>schema: Schema (auto-generated)<br/>schemaHash: string (SHA-256)</div>"]
+
+    DataT["<div style='text-align: left; padding: 8px;'><b>Data&lt;T&gt; - Logical format</b><br/>pid: string<br/>id: string<br/>sequence: number<br/>key: string<br/>message: T (parsed object)<br/>schema: Schema<br/>schemaHash: string</div>"]
+
+    MessageObj -->|"createData()"| SerializedData
+    SerializedData -->|"deserializeData()"| DataT
 ```
 
 ---
@@ -334,7 +320,6 @@ data/
 - **[Architecture Guide](../../../ARCHITECTURE.md#data)** - Data architecture
 - **[Browser Entry](../../browser/data/)** - Browser-specific data
 - **[Node Entry](../../node/data/)** - Node.js-specific data
-- **Legacy**: `_/commercial-develop/packages/network-protocol/src/data/`
 - **Integration Tests**: [data.integration.spec.ts](data.integration.spec.ts)
 
 ### Related Modules
