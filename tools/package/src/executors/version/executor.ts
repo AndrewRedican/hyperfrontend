@@ -155,8 +155,8 @@ function extractVersionFromHeader(line: string): string | null {
  *
  * For unreleased versions (no git tag), the changelog entry should be
  * regenerated on each version run to include all commits since the last
- * tagged release. This function removes the existing entry so semver
- * can regenerate it fresh.
+ * tagged release. This function removes the existing entry AND the header
+ * so semver can regenerate the file fresh (semver always generates a header).
  *
  * Uses file descriptors to prevent TOCTOU race conditions.
  *
@@ -209,9 +209,10 @@ function clearUnreleasedChangelogEntry(changelogPath: string, version: string, d
       return false // Version entry doesn't exist
     }
 
-    // Remove the version section
-    const newLines = [...lines.slice(0, targetStartIndex), ...lines.slice(targetEndIndex)]
-    const newContent = newLines.join('\n')
+    // Get content after the target version section (previous releases)
+    const remainingLines = lines.slice(targetEndIndex)
+    // semver will regenerate the header, so we only keep previous version entries
+    const newContent = remainingLines.length > 0 ? remainingLines.join('\n') : ''
 
     if (!dryRun) {
       // Truncate file and write new content using the same fd
