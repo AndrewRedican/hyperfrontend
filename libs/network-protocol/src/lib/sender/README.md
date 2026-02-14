@@ -146,47 +146,47 @@ type CreateSender<T = any> = (
 
 When you call `sender.send(origin, target, data)`:
 
-```
-┌─────────────────────────────────────────────────────────────────────────────┐
-│                          OUTBOUND PIPELINE                                   │
-├─────────────────────────────────────────────────────────────────────────────┤
-│                                                                              │
-│  sender.send(origin, target, data)                                          │
-│          │                                                                   │
-│          ▼                                                                   │
-│  createUnencryptedPacket(origin, target, data)                              │
-│          │                                                                   │
-│          ▼                                                                   │
-│  ┌─────────────────────┐                                                    │
-│  │   Encryption Queue  │  ← encryptionQueue.size for monitoring             │
-│  │                     │                                                    │
-│  │  UnencryptedPacket  │                                                    │
-│  │        ↓            │  packetEncryption                                  │
-│  │  UnserializedEncr.  │                                                    │
-│  └──────────┬──────────┘                                                    │
-│             │                                                                │
-│             ▼                                                                │
-│  ┌─────────────────────┐                                                    │
-│  │ Serialization Queue │  ← serializationQueue.size for monitoring          │
-│  │                     │                                                    │
-│  │  UnserializedEncr.  │                                                    │
-│  │        ↓            │  createSerializedEncryptedPacket                   │
-│  │  SerializedEncr.    │                                                    │
-│  └──────────┬──────────┘                                                    │
-│             │                                                                │
-│             ▼                                                                │
-│  ┌─────────────────────┐                                                    │
-│  │  Obfuscation Queue  │  ← obfuscationQueue.size for monitoring            │
-│  │                     │                                                    │
-│  │  SerializedEncr.    │                                                    │
-│  │        ↓            │  packetObfuscation                                 │
-│  │  ObfuscatedPacket   │                                                    │
-│  └──────────┬──────────┘                                                    │
-│             │                                                                │
-│             ▼                                                                │
-│  sendPacket(obfuscatedPacket)  → Transport Layer                            │
-│                                                                              │
-└─────────────────────────────────────────────────────────────────────────────┘
+```mermaid
+---
+config:
+  theme: base
+  themeVariables:
+    fontSize: 12px
+---
+flowchart TB
+    subgraph OutboundPipeline["OUTBOUND PIPELINE"]
+        Send["sender.send(origin, target, data)"]
+        CreatePkt["createUnencryptedPacket(origin, target, data)"]
+
+        subgraph EncQueue["Encryption Queue"]
+            Enc1["UnencryptedPacket"]
+            EncAction["packetEncryption"]
+            Enc2["UnserializedEncr."]
+            Enc1 --> EncAction --> Enc2
+        end
+
+        subgraph SerQueue["Serialization Queue"]
+            Ser1["UnserializedEncr."]
+            SerAction["createSerializedEncryptedPacket"]
+            Ser2["SerializedEncr."]
+            Ser1 --> SerAction --> Ser2
+        end
+
+        subgraph ObfQueue["Obfuscation Queue"]
+            Obf1["SerializedEncr."]
+            ObfAction["packetObfuscation"]
+            Obf2["ObfuscatedPacket"]
+            Obf1 --> ObfAction --> Obf2
+        end
+
+        Transport["sendPacket(obfuscatedPacket) → Transport Layer"]
+
+        Send --> CreatePkt
+        CreatePkt --> EncQueue
+        EncQueue --> SerQueue
+        SerQueue --> ObfQueue
+        ObfQueue --> Transport
+    end
 ```
 
 ---
@@ -298,7 +298,6 @@ sender/
 - **[Architecture Guide](../../../ARCHITECTURE.md#sender--receiver)** - Sender architecture
 - **[Browser Entry](../../browser/sender/)** - Browser-specific sender
 - **[Node Entry](../../node/sender/)** - Node.js-specific sender
-- **Legacy**: `_/commercial-develop/packages/network-protocol/src/sender/`
 
 ### Related Modules
 
