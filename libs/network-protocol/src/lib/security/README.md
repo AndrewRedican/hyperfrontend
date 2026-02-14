@@ -51,33 +51,47 @@ interface SecuritySuite<T = any> extends EncryptionSuite<T>, ObfuscationSuite {
 
 The security suite is composed from separate encryption and obfuscation components:
 
-```
-┌─────────────────────────────────────────────────────────────────────────────┐
-│                            SECURITY SUITE                                    │
-├─────────────────────────────────────────────────────────────────────────────┤
-│                                                                              │
-│  ┌─────────────────────────────────┐  ┌─────────────────────────────────┐   │
-│  │       EncryptionSuite           │  │       ObfuscationSuite          │   │
-│  │                                 │  │                                 │   │
-│  │  ┌───────────────────────────┐  │  │  ┌───────────────────────────┐  │   │
-│  │  │     packetEncryption      │  │  │  │    packetObfuscation      │  │   │
-│  │  │                           │  │  │  │                           │  │   │
-│  │  │  UnencryptedPacket<T>     │  │  │  │  SerializedEncryptedPkt   │  │   │
-│  │  │         ↓                 │  │  │  │         ↓                 │  │   │
-│  │  │  UnserializedEncryptedPkt │  │  │  │  ObfuscatedPacket         │  │   │
-│  │  └───────────────────────────┘  │  │  └───────────────────────────┘  │   │
-│  │                                 │  │                                 │   │
-│  │  ┌───────────────────────────┐  │  │  ┌───────────────────────────┐  │   │
-│  │  │     packetDecryption      │  │  │  │   packetDeobfuscation     │  │   │
-│  │  │                           │  │  │  │                           │  │   │
-│  │  │  UnserializedEncryptedPkt │  │  │  │  ObfuscatedPacket         │  │   │
-│  │  │         ↓                 │  │  │  │         ↓                 │  │   │
-│  │  │  UnencryptedPacket<T>     │  │  │  │  SerializedEncryptedPkt   │  │   │
-│  │  └───────────────────────────┘  │  │  └───────────────────────────┘  │   │
-│  │                                 │  │                                 │   │
-│  └─────────────────────────────────┘  └─────────────────────────────────┘   │
-│                                                                              │
-└─────────────────────────────────────────────────────────────────────────────┘
+```mermaid
+---
+config:
+  theme: base
+  themeVariables:
+    fontSize: 12px
+---
+flowchart TB
+    subgraph SecuritySuite["SECURITY SUITE"]
+        subgraph EncSuite["EncryptionSuite"]
+            subgraph PacketEnc["packetEncryption"]
+                direction TB
+                PE1["UnencryptedPacket&lt;T&gt;"]
+                PE2["UnserializedEncryptedPacket"]
+                PE1 --> PE2
+            end
+
+            subgraph PacketDec["packetDecryption"]
+                direction TB
+                PD1["UnserializedEncryptedPacket"]
+                PD2["UnencryptedPacket&lt;T&gt;"]
+                PD1 --> PD2
+            end
+        end
+
+        subgraph ObfSuite["ObfuscationSuite"]
+            subgraph PacketObf["packetObfuscation"]
+                direction TB
+                PO1["SerializedEncryptedPacket"]
+                PO2["ObfuscatedPacket"]
+                PO1 --> PO2
+            end
+
+            subgraph PacketDeobf["packetDeobfuscation"]
+                direction TB
+                PDO1["ObfuscatedPacket"]
+                PDO2["SerializedEncryptedPacket"]
+                PDO1 --> PDO2
+            end
+        end
+    end
 ```
 
 ---
@@ -197,22 +211,16 @@ const suite = createDynamicKeyEncryption(getKey)
 
 ### Key Exchange Flow
 
-```
-┌───────────────┐                          ┌───────────────┐
-│   Client A    │                          │   Client B    │
-├───────────────┤                          ├───────────────┤
-│               │                          │               │
-│ Generate key  │                          │               │
-│ ────────────► │ packet.data.key = keyA   │               │
-│               │ ─────────────────────────►│ Capture keyA │
-│               │                          │ Use keyA to   │
-│               │                          │ encrypt reply │
-│ Capture keyB  │ packet.data.key = keyB   │               │
-│               │◄───────────────────────── │               │
-│ Use keyB to   │                          │               │
-│ encrypt next  │                          │               │
-│               │                          │               │
-└───────────────┘                          └───────────────┘
+```mermaid
+sequenceDiagram
+    participant A as Client A
+    participant B as Client B
+
+    Note over A: Generate key
+    A->>B: packet.data.key = keyA
+    Note over B: Capture keyA<br/>Use keyA to<br/>encrypt reply
+    B->>A: packet.data.key = keyB
+    Note over A: Capture keyB<br/>Use keyB to<br/>encrypt next
 ```
 
 ---
@@ -245,16 +253,24 @@ const { current, previous, next } = getTimeBasedPasswords(new Date(), refreshRat
 
 With `refreshRate = 60` (60-minute windows):
 
-```
-       ←─ 60 min ─→   ←─ 60 min ─→   ←─ 60 min ─→
-      ─────────────────────────────────────────────
-      │  previous   │   current   │    next     │
-      ─────────────────────────────────────────────
-                          ↑
-                   Receiver's time
+```mermaid
+%%{init: {'theme':'base', 'themeVariables': {'fontSize':'14px'}}}%%
+flowchart LR
+    subgraph Tolerance["Tolerance: ±60 minutes"]
+        direction LR
+        PREV["<div style='text-align: center; padding: 12px;'><b>Previous Window</b><br/>60 minutes<br/>(sender clock behind)</div>"]
+        CURR["<div style='text-align: center; padding: 12px;'><b>Current Window</b><br/>60 minutes<br/>⬇️ Receiver's time<br/>(now)</div>"]
+        NEXT["<div style='text-align: center; padding: 12px;'><b>Next Window</b><br/>60 minutes<br/>(sender clock ahead)</div>"]
 
-      ←──────────────── Tolerance ────────────────→
-                    (±60 minutes)
+        PREV -.-> CURR
+        CURR -.-> NEXT
+    end
+
+    classDef currentStyle fill:#c8e6c9,stroke:#2e7d32,stroke-width:3px
+    classDef otherStyle fill:#e3f2fd,stroke:#1976d2,stroke-width:2px
+
+    class CURR currentStyle
+    class PREV,NEXT otherStyle
 ```
 
 ---
@@ -263,62 +279,52 @@ With `refreshRate = 60` (60-minute windows):
 
 ### Outbound (Sending)
 
-```
-UnencryptedPacket<T>
-      │ origin: string
-      │ target: string
-      │ data: Data<T>
-      │
-      ▼ packetEncryption (dynamic key)
+```mermaid
+%%{init: {'theme':'base', 'themeVariables': {'fontSize':'12px'}, 'flowchart':{'htmlLabels':true}}}%%
+flowchart TB
+    UP["<div style='text-align: left; padding: 8px;'><b>UnencryptedPacket&lt;T&gt;</b><br/>origin: string<br/>target: string<br/>data: Data&lt;T&gt;</div>"]
 
-UnserializedEncryptedPacket
-      │ origin: string
-      │ target: string
-      │ data: Uint8Array (encrypted)
-      │
-      ▼ serialize (base64 encode)
+    UEP["<div style='text-align: left; padding: 8px;'><b>UnserializedEncryptedPacket</b><br/>origin: string<br/>target: string<br/>data: Uint8Array (encrypted)</div>"]
 
-SerializedEncryptedPacket
-      │ origin: string
-      │ target: string
-      │ data: string (base64)
-      │
-      ▼ packetObfuscation (time-based password)
+    SEP["<div style='text-align: left; padding: 8px;'><b>SerializedEncryptedPacket</b><br/>origin: string<br/>target: string<br/>data: string (base64)</div>"]
 
-ObfuscatedPacket
-      └─ Uint8Array (opaque binary)
+    OP["<div style='text-align: left; padding: 8px;'><b>ObfuscatedPacket</b><br/>Uint8Array (opaque binary)</div>"]
 
-            → Transport Layer (wire) →
+    WIRE["Transport Layer (wire)"]
+
+    UP -->|"packetEncryption (dynamic key)"| UEP
+    UEP -->|"serialize (base64 encode)"| SEP
+    SEP -->|"packetObfuscation (time-based password)"| OP
+    OP --> WIRE
+
+    classDef packetStyle fill:#e3f2fd,stroke:#1976d2,stroke-width:2px
+
+    class UP,UEP,SEP,OP,WIRE packetStyle
 ```
 
 ### Inbound (Receiving)
 
-```
-            ← Transport Layer (wire) ←
+```mermaid
+%%{init: {'theme':'base', 'themeVariables': {'fontSize':'12px'}, 'flowchart':{'htmlLabels':true}}}%%
+flowchart TB
+    WIRE["Transport Layer (wire)"]
 
-ObfuscatedPacket
-      └─ Uint8Array (opaque binary)
-      │
-      ▼ packetDeobfuscation (tries 3 time windows)
+    OP["<div style='text-align: left; padding: 8px;'><b>ObfuscatedPacket</b><br/>Uint8Array (opaque binary)</div>"]
 
-SerializedEncryptedPacket
-      │ origin: string
-      │ target: string
-      │ data: string (base64)
-      │
-      ▼ deserialize (base64 decode)
+    SEP["<div style='text-align: left; padding: 8px;'><b>SerializedEncryptedPacket</b><br/>origin: string<br/>target: string<br/>data: string (base64)</div>"]
 
-UnserializedEncryptedPacket
-      │ origin: string
-      │ target: string
-      │ data: Uint8Array (encrypted)
-      │
-      ▼ packetDecryption (captured key)
+    UEP["<div style='text-align: left; padding: 8px;'><b>UnserializedEncryptedPacket</b><br/>origin: string<br/>target: string<br/>data: Uint8Array (encrypted)</div>"]
 
-UnencryptedPacket<T>
-      │ origin: string
-      │ target: string
-      │ data: Data<T>
+    UP["<div style='text-align: left; padding: 8px;'><b>UnencryptedPacket&lt;T&gt;</b><br/>origin: string<br/>target: string<br/>data: Data&lt;T&gt;</div>"]
+
+    WIRE --> OP
+    OP -->|"packetDeobfuscation (tries 3 time windows)"| SEP
+    SEP -->|"deserialize (base64 decode)"| UEP
+    UEP -->|"packetDecryption (captured key)"| UP
+
+    classDef packetStyle fill:#e3f2fd,stroke:#1976d2,stroke-width:2px
+
+    class WIRE,OP,SEP,UEP,UP packetStyle
 ```
 
 ---
@@ -387,7 +393,6 @@ packet/security/
 
 - **[Library Index](../README.md)** - All modules
 - **[Architecture Guide](../../../ARCHITECTURE.md#security-suite)** - Security architecture
-- **Legacy**: `_/commercial-develop/packages/network-protocol/src/security/`
 
 ### Related Modules
 
