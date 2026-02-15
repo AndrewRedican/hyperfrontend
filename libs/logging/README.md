@@ -247,7 +247,7 @@ test('logs only errors at error level', () => {
 
 ## Part of hyperfrontend
 
-This library is part of the [hyperfrontend](https://github.com/AndrewRedican/hyperfrontend) monorepo.
+This library is part of the [hyperfrontend](https://github.com/AndrewRedican/hyperfrontend) monorepo. [Full documentation](https://hyperfrontend.dev).
 
 - Built on [@hyperfrontend/function-utils](https://github.com/AndrewRedican/hyperfrontend/tree/main/libs/utils/function) for error-resilient execution
 
