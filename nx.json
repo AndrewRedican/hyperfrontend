@@ -16,11 +16,7 @@
     "test": {
       "executor": "@nx/jest:jest",
       "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
-      "options": {
-        "jestConfig": "{projectRoot}/jest.config.ts",
-        "passWithNoTests": false,
-        "codeCoverage": true
-      }
+      "options": { "jestConfig": "{projectRoot}/jest.config.ts", "passWithNoTests": false, "codeCoverage": true }
     },
     "version": {
       "executor": "@hyperfrontend/package:version",
@@ -36,28 +32,11 @@
       "inputs": ["default", "^default"],
       "executor": "@hyperfrontend/package:build",
       "outputs": ["{options.outputPath}"],
-      "options": {
-        "outputPath": "dist/{projectRoot}"
-      }
+      "options": { "outputPath": "dist/{projectRoot}" }
     },
-    "publish": {
-      "dependsOn": ["build"],
-      "executor": "@hyperfrontend/package:publish",
-      "options": {
-        "access": "public",
-        "tag": "latest"
-      }
-    },
-    "typecheck": {
-      "cache": true,
-      "inputs": ["default", "^default"],
-      "executor": "@hyperfrontend/package:typecheck"
-    },
-    "@nx/js:tsc": {
-      "cache": true,
-      "dependsOn": ["^build"],
-      "inputs": ["production", "^production"]
-    }
+    "publish": { "dependsOn": ["build"], "executor": "@hyperfrontend/package:publish", "options": { "access": "public", "tag": "latest" } },
+    "typecheck": { "cache": true, "inputs": ["default", "^default"], "executor": "@hyperfrontend/package:typecheck" },
+    "@nx/js:tsc": { "cache": true, "dependsOn": ["^build"], "inputs": ["production", "^production"] }
   },
   "namedInputs": {
     "default": ["{projectRoot}/**/*", "sharedGlobals"],
@@ -73,26 +52,14 @@
     "sharedGlobals": ["{workspaceRoot}/patches/**"]
   },
   "plugins": [
-    {
-      "plugin": "@nx/eslint/plugin",
-      "options": {
-        "targetName": "lint"
-      }
-    },
-    {
-      "plugin": "@nx/jest/plugin",
-      "options": {
-        "targetName": "test"
-      },
-      "exclude": ["**/*-e2e/**/*"]
-    },
+    { "plugin": "@nx/eslint/plugin", "options": { "targetName": "lint" } },
+    { "plugin": "@nx/jest/plugin", "options": { "targetName": "test" }, "exclude": ["**/*-e2e/**/*"] },
     {
       "plugin": "@nx/rollup/plugin",
-      "options": {
-        "buildTargetName": "build"
-      },
+      "options": { "buildTargetName": "build" },
       "include": ["libs/**/*", "plugins/**/*"],
       "exclude": ["plugins/*-e2e/**/*"]
     }
-  ]
+  ],
+  "nxCloudId": "6991685ccc04119366337805"
 }
