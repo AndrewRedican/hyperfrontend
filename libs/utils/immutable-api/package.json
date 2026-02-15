@@ -3,6 +3,11 @@
   "version": "0.0.1",
   "description": "Decorators and utilities for creating immutable, tamper-proof object APIs.",
   "license": "MIT",
+  "sideEffects": false,
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=8.0.0"
+  },
   "keywords": [
     "immutable",
     "decorator",
@@ -18,6 +23,5 @@
     "functional",
     "tamper-proof"
   ],
-  "sideEffects": false,
   "main": "./src/index.js"
 }
