@@ -4,7 +4,7 @@
   "description": "Network protocol implementation with channels, routing, and security.",
   "sourceRoot": "{projectRoot}/src",
   "projectType": "library",
-  "tags": [],
+  "tags": ["type:protocol", "scope:public"],
   "targets": {
     "version": {},
     "build": {
