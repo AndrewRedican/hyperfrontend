@@ -3,6 +3,11 @@
   "version": "0.0.1",
   "description": "Purpose-built collection utilities for queue management, filtering, and iteration patterns.",
   "license": "MIT",
+  "sideEffects": false,
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=8.0.0"
+  },
   "keywords": [
     "list",
     "array",
@@ -20,7 +25,6 @@
     "functional",
     "zero-dependencies"
   ],
-  "sideEffects": false,
   "main": "./src/index.js",
   "dependencies": {
     "@hyperfrontend/data-utils": "0.0.1"
