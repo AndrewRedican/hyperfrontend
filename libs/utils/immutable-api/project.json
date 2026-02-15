@@ -4,7 +4,7 @@
   "description": "Immutable API utilities for functional programming.",
   "sourceRoot": "{projectRoot}/src",
   "projectType": "library",
-  "tags": [],
+  "tags": ["type:util", "scope:public"],
   "targets": {
     "version": {},
     "build": {
