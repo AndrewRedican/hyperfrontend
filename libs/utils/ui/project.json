@@ -4,7 +4,7 @@
   "description": "UI utilities for elements, events, styling, and mobile interactions.",
   "sourceRoot": "{projectRoot}/src",
   "projectType": "library",
-  "tags": [],
+  "tags": ["type:util", "scope:public"],
   "targets": {
     "version": {},
     "build": {
