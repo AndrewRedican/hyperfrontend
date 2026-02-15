@@ -303,7 +303,7 @@ jobs:
 
       - name: Ensure version tags exist
         run: |
-          # For each library with a publishable version, ensure a tag exists
+          # For each library with a publishable version, ensure tag points to HEAD
           for pkg in libs/*/package.json libs/*/*/package.json plugins/*/package.json; do
             [ -f "$pkg" ] || continue
 
@@ -318,6 +318,7 @@ jobs:
             fi
 
             version=$(jq -r '.version // empty' "$pkg" 2>/dev/null)
+            package_name=$(jq -r '.name // empty' "$pkg" 2>/dev/null)
 
             # Skip stub/unreleased packages (version 0.0.0)
             if [ -z "$version" ] || [ "$version" = "0.0.0" ]; then
@@ -336,17 +337,36 @@ jobs:
 
             tag="${project}@${version}"
 
-            # Check if tag exists
-            if ! git rev-parse "$tag" >/dev/null 2>&1; then
+            # Check if tag exists and points to HEAD
+            if git rev-parse "$tag" >/dev/null 2>&1; then
+              TAG_COMMIT=$(git rev-parse "$tag")
+              HEAD_COMMIT=$(git rev-parse HEAD)
+
+              if [ "$TAG_COMMIT" = "$HEAD_COMMIT" ]; then
+                echo "Tag $tag already points to HEAD"
+                continue
+              fi
+
+              # Tag exists but points to old commit - check if published to npm
+              NPM_VERSION=$(npm view "${package_name}@${version}" version 2>/dev/null || echo "")
+              if [ "$NPM_VERSION" = "$version" ]; then
+                echo "Warning: $tag points to old commit but version is published to npm - preserving tag"
+                continue
+              fi
+
+              # Not published, safe to update tag to point to HEAD
+              git tag -f "$tag"
+              echo "Updated tag $tag to point to HEAD (was $TAG_COMMIT)"
+            else
               git tag "$tag"
-              echo "Created missing tag: $tag"
+              echo "Created tag: $tag"
             fi
           done
 
       - name: Push version tags
         run: |
-          # Push any local tags that haven't been pushed yet
-          git push origin --tags 2>/dev/null || echo "No new tags to push"
+          # Force-push tags to ensure remote matches local (safe: only unpublished versions are updated)
+          git push origin --tags --force 2>/dev/null || echo "No tags to push"
 
   publish:
     name: publish
