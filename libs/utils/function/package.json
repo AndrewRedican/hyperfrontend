@@ -3,6 +3,11 @@
   "version": "0.0.1",
   "description": "Higher-order function utilities for behavioral modification and composition.",
   "license": "MIT",
+  "sideEffects": false,
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=8.0.0"
+  },
   "keywords": [
     "higher-order-functions",
     "function-composition",
@@ -19,6 +24,5 @@
     "lazy-initialization",
     "singleton"
   ],
-  "sideEffects": false,
   "main": "./src/index.js"
 }
