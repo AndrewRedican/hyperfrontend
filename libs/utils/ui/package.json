@@ -3,6 +3,11 @@
   "version": "0.0.1",
   "description": "Modular DOM utilities for dynamic styling, gesture detection, element lifecycle, and color manipulation.",
   "license": "MIT",
+  "sideEffects": false,
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=8.0.0"
+  },
   "keywords": [
     "dom",
     "element",
@@ -21,7 +26,6 @@
     "modular",
     "tree-shaking"
   ],
-  "sideEffects": false,
   "exports": {
     "./audio": "./src/audio/index.js",
     "./color": "./src/color/index.js",
