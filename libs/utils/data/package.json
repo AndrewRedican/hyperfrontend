@@ -4,6 +4,10 @@
   "description": "Data manipulation and transformation utilities.",
   "license": "MIT",
   "sideEffects": false,
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=8.0.0"
+  },
   "main": "./src/index.js",
   "keywords": [
     "data-utils",
