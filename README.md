@@ -259,7 +259,25 @@ This launches a development environment where you can debug and interact with yo
 
 ## Documentation
 
-Full documentation is coming soon.
+A comprehensive documentation site is under active development at [hyperfrontend.dev](https://www.hyperfrontend.dev).
+
+**What to expect:**
+
+- **Complete API Reference** — Auto-generated documentation for all libraries with TypeScript types, parameters, and examples
+- **Versioned Documentation** — Match documentation to your installed package version
+- **Fuzzy Search** — Find what you need instantly with Algolia-powered search
+- **Interactive Code Examples** — Syntax-highlighted, copyable code snippets
+- **Architecture Guides** — Deep dives into how the libraries work together
+- **Getting Started Tutorials** — Step-by-step guides for common use cases
+
+**Current documentation:**
+
+- Each library has a detailed README with installation, usage, and architecture information
+- See the [Main Packages](#main-packages) and [Internal Packages](#internal-packages) tables above for links
+- [Architecture Guide](ARCHITECTURE.md) explains how the libraries compose together
+- [Manifesto](MANIFESTO.md) explains the project's philosophy and scope
+
+For the documentation roadmap, see [roadmap/documentation-roadmap.md](roadmap/documentation-roadmap.md).
 
 ## Contributing
 

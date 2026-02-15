@@ -34,11 +34,15 @@ A comprehensive plan for first-class documentation of the HyperFrontend microfro
     - [Developer-Facing (Maintainer)](#developer-facing-maintainer)
     - [Business/Project](#businessproject)
   - [Out of Scope](#out-of-scope)
-  - [Open Questions](#open-questions)
+  - [Resolved Decisions](#resolved-decisions)
     - [Technical Decisions](#technical-decisions)
     - [Process Decisions](#process-decisions)
     - [Design Decisions](#design-decisions)
+  - [Implementation Roadmap](#implementation-roadmap)
   - [Related Documentation](#related-documentation)
+    - [Internal](#internal)
+    - [Project Documentation](#project-documentation)
+    - [External References](#external-references)
 
 ---
 
@@ -83,16 +87,16 @@ This document defines what exists today, what the end-state should look like, an
 
 ### Infrastructure & Assets
 
-| Asset              | Status       | Details                                                      |
-| ------------------ | ------------ | ------------------------------------------------------------ |
-| Domain             | ✓ Secured    | `https://www.hyperfrontend.dev` — 10-year registration       |
-| Hosting            | ✓ Active     | GitHub Pages (current placeholder)                           |
-| Hugo site          | ✓ Functional | Hextra theme, basic navigation, rudimentary content          |
-| Logo               | ✓ Available  | `assets/logo/hyperfrontend.png` — symbol + wordmark          |
-| Tailwind templates | ✓ Licensed   | 11 commercial templates in `_/commercial-develop/templates/` |
-| CI/CD pipeline     | 95% complete | Automated build, test, and release workflows                 |
-| GitHub releases    | ✓ Active     | Tagged releases with conventional commit messages            |
-| TypeDoc            | Familiar     | Experience with configuration; limitations understood        |
+| Asset              | Status       | Details                                                                                                                   |
+| ------------------ | ------------ | ------------------------------------------------------------------------------------------------------------------------- |
+| Domain             | ✓ Secured    | [hyperfrontend.dev](https://www.hyperfrontend.dev) — 10-year registration                                                 |
+| Hosting            | ✓ Active     | [GitHub Pages](https://pages.github.com/) (current placeholder)                                                           |
+| Hugo site          | ✓ Functional | [Hextra theme](https://imfing.github.io/hextra/), basic navigation, rudimentary content                                   |
+| Logo               | ✓ Available  | [`assets/logo/hyperfrontend.png`](../assets/logo/hyperfrontend.png) — symbol + wordmark                                   |
+| Tailwind templates | ✓ Licensed   | 11 commercial templates in [`_/commercial-develop/templates/`](../_/commercial-develop/templates/)                        |
+| CI/CD pipeline     | 95% complete | Automated build, test, and release workflows via [GitHub Actions](https://github.com/AndrewRedican/hyperfrontend/actions) |
+| GitHub releases    | ✓ Active     | [Tagged releases](https://github.com/AndrewRedican/hyperfrontend/releases) with conventional commit messages              |
+| TypeDoc            | Familiar     | Experience with configuration; limitations understood                                                                     |
 
 **Available Tailwind Templates:**
 
@@ -157,11 +161,11 @@ This document defines what exists today, what the end-state should look like, an
 
 **Inspirations:**
 
-- MDN Web Docs (depth, search, structure)
-- Wikipedia (linking density, navigation)
-- Can I Use (quick answers, visual clarity)
-- TypeDoc/Docusaurus (API documentation patterns)
-- Algolia-powered sites (search experience)
+- [MDN Web Docs](https://developer.mozilla.org/) (depth, search, structure)
+- [Wikipedia](https://en.wikipedia.org/) (linking density, navigation)
+- [Can I Use](https://caniuse.com/) (quick answers, visual clarity)
+- [TypeDoc](https://typedoc.org/)/[Docusaurus](https://docusaurus.io/) (API documentation patterns)
+- [Algolia-powered sites](https://docsearch.algolia.com/) (search experience)
 
 **End-user journey:**
 
@@ -178,26 +182,29 @@ This document defines what exists today, what the end-state should look like, an
 ### Architecture & Technology
 
 **Frontend Stack:**
-| Choice | Rationale |
-|--------|-----------|
-| React | Primary frontend preference; ecosystem familiarity |
-| Next.js | SEO optimization (SSR/SSG), React meta-framework |
-| Tailwind CSS | Design system from licensed templates |
-| Vercel | Hosting with excellent Next.js integration |
+
+| Choice                                   | Rationale                                          |
+| ---------------------------------------- | -------------------------------------------------- |
+| [React](https://react.dev/)              | Primary frontend preference; ecosystem familiarity |
+| [Next.js](https://nextjs.org/)           | SEO optimization (SSR/SSG), React meta-framework   |
+| [Tailwind CSS](https://tailwindcss.com/) | Design system from licensed templates              |
+| [Vercel](https://vercel.com/)            | Hosting with excellent Next.js integration         |
 
 **Documentation Generation:**
-| Tool | Purpose |
-|------|---------|
-| TypeDoc | API extraction from TypeScript/JSDoc |
-| Custom scripts | README/ARCHITECTURE extraction and transformation |
-| Markdown processing | Link transformation, content enrichment |
+
+| Tool                            | Purpose                                           |
+| ------------------------------- | ------------------------------------------------- |
+| [TypeDoc](https://typedoc.org/) | API extraction from TypeScript/JSDoc              |
+| Custom scripts                  | README/ARCHITECTURE extraction and transformation |
+| Markdown processing             | Link transformation, content enrichment           |
 
 **Search & Indexing:**
-| Capability | Approach |
-|------------|----------|
-| Fuzzy search | Algolia (preferred) or alternatives (Meilisearch, Typesense) |
-| Keyword search | Built-in or search provider |
-| Tree navigation | Custom or library-based hierarchical index |
+
+| Capability      | Approach                                            |
+| --------------- | --------------------------------------------------- |
+| Fuzzy search    | [Algolia DocSearch](https://docsearch.algolia.com/) |
+| Keyword search  | Built-in via Algolia                                |
+| Tree navigation | Custom hierarchical index component                 |
 
 ### Search & Discovery
 
@@ -245,7 +252,7 @@ This document defines what exists today, what the end-state should look like, an
 
 ### Content Organization
 
-**Information architecture (Diataxis-inspired, not rigid):**
+**Information architecture ([Diataxis](https://diataxis.fr/)-inspired, not rigid):**
 
 | Category            | Content Type                            | Generation                     |
 | ------------------- | --------------------------------------- | ------------------------------ |
@@ -302,17 +309,17 @@ Documentation
 
 **Code presentation:**
 
-| Feature              | Description                                            | Priority |
-| -------------------- | ------------------------------------------------------ | -------- |
-| Monaco editor        | Read-only embedded code views with syntax highlighting | High     |
-| Copy to clipboard    | One-click code copying                                 | High     |
-| Syntax highlighting  | Framework-appropriate highlighting                     | High     |
-| Collapsible sections | Dense but navigable code examples                      | Medium   |
+| Feature                                                     | Description                                            | Priority |
+| ----------------------------------------------------------- | ------------------------------------------------------ | -------- |
+| [Monaco editor](https://microsoft.github.io/monaco-editor/) | Read-only embedded code views with syntax highlighting | High     |
+| Copy to clipboard                                           | One-click code copying                                 | High     |
+| Syntax highlighting                                         | Framework-appropriate highlighting                     | High     |
+| Collapsible sections                                        | Dense but navigable code examples                      | Medium   |
 
 **Interactive elements:**
 
-- Read-only Monaco views for TypeScript/JavaScript code
-- Mermaid diagram rendering (already in markdown)
+- Read-only [Monaco](https://microsoft.github.io/monaco-editor/) views for TypeScript/JavaScript code
+- [Mermaid](https://mermaid.js.org/) diagram rendering (already in markdown)
 - ASCII art preservation in code blocks
 - Expandable/collapsible API details
 
@@ -528,47 +535,84 @@ The following are explicitly **not** part of this documentation vision:
 
 ---
 
-## Open Questions
+## Resolved Decisions
+
+The following decisions have been made to guide implementation:
 
 ### Technical Decisions
 
-| Question                         | Options                                     | Notes                                        |
-| -------------------------------- | ------------------------------------------- | -------------------------------------------- |
-| Search provider                  | Algolia, Meilisearch, Typesense, custom     | Algolia preferred for fuzzy search quality   |
-| Version storage                  | AWS S3, GitHub Releases, Vercel Blob        | Cost, durability, and access speed tradeoffs |
-| Analytics platform               | Plausible, Fathom, Vercel Analytics, custom | Privacy-respecting preference                |
-| Which template to base design on | syntax, protocol, primer, tslib             | API docs likely need `syntax` or `tslib`     |
-| Monaco integration scope         | Full editor vs. code highlighting only      | Performance vs. features tradeoff            |
+| Decision                 | Choice                            | Rationale                                                                                                                 |
+| ------------------------ | --------------------------------- | ------------------------------------------------------------------------------------------------------------------------- |
+| Search provider          | **Algolia DocSearch**             | Free for open-source, excellent fuzzy search, maintained infrastructure, widely adopted (MDN, React, Vue docs)            |
+| Version storage          | **Vercel + GitHub Releases**      | Vercel handles current version; GitHub Releases provides source-of-truth for reconstruction; no additional cost           |
+| Analytics platform       | **Vercel Analytics**              | Built-in with Vercel hosting, privacy-respecting, no additional setup; supplement with Plausible if deeper metrics needed |
+| Primary design template  | **`syntax` + `primer`**           | `syntax` for API documentation pages; `primer` for landing/marketing pages; both reimagined as original work              |
+| Monaco integration scope | **Code highlighting + copy only** | Defer full editor to later phase; prioritize performance and core documentation value first                               |
 
 ### Process Decisions
 
-| Question                | Considerations                                      |
-| ----------------------- | --------------------------------------------------- |
-| Demo hosting            | Where and how to deploy live demos?                 |
-| Build performance       | Fast generation across 14+ projects?                |
-| Storage growth          | How to manage version asset storage over time?      |
-| Search index management | Per-version indices or unified with version filter? |
+| Decision                | Choice                               | Rationale                                                                                 |
+| ----------------------- | ------------------------------------ | ----------------------------------------------------------------------------------------- |
+| Demo hosting            | **Vercel preview deployments**       | Each demo as separate Vercel project; linked from docs; consistent with main site hosting |
+| Build performance       | **Incremental + cached builds**      | Leverage Nx caching; TypeDoc per-project; aggregate at build time; parallel generation    |
+| Storage growth          | **Keep last 10 major versions**      | Archive older versions to GitHub Releases only; reconstruct on-demand if needed           |
+| Search index management | **Unified index with version facet** | Single Algolia index with version metadata; filter by version in UI; simpler maintenance  |
 
 ### Design Decisions
 
-| Question              | Considerations                                     |
-| --------------------- | -------------------------------------------------- |
-| Information density   | How dense before readability suffers?              |
-| Mobile navigation     | Complex hierarchy on small screens                 |
-| Color palette system  | Enough variation for differentiation without chaos |
-| Brand animation style | Professional but memorable                         |
+| Decision              | Choice                                    | Rationale                                                                             |
+| --------------------- | ----------------------------------------- | ------------------------------------------------------------------------------------- |
+| Information density   | **High density, collapsible sections**    | Start dense; use progressive disclosure for details; test with real users             |
+| Mobile navigation     | **Hamburger + breadcrumb + search**       | Collapse tree to hamburger; maintain breadcrumbs for context; prominent search bar    |
+| Color palette system  | **4-tier system**                         | Core (blue), Foundation (green), Security (purple), Utilities (gray); consistent hues |
+| Brand animation style | **Subtle, CSS-only, < 300ms transitions** | Professional restraint; CSS for performance; logo pulse on load only                  |
+
+---
+
+## Implementation Roadmap
+
+Implementation is divided into four phases, each building on the previous. See the [Documentation Roadmap](./documentation-roadmap.md) for the master plan and links to detailed phase action plans.
+
+| Phase                                                        | Focus                                      | Key Deliverables                                                  |
+| ------------------------------------------------------------ | ------------------------------------------ | ----------------------------------------------------------------- |
+| [Phase 1: Foundation](./documentation-phase-1-foundation.md) | Site infrastructure and basic content      | Next.js site, Vercel deployment, basic navigation, Hugo migration |
+| [Phase 2: Content](./documentation-phase-2-content.md)       | API documentation and content extraction   | TypeDoc integration, README extraction, link transformation       |
+| [Phase 3: Discovery](./documentation-phase-3-discovery.md)   | Search, versioning, and SEO                | Algolia integration, version system, SEO optimization             |
+| [Phase 4: Polish](./documentation-phase-4-polish.md)         | Interactive features, branding, engagement | Monaco views, branding assets, voting, social sharing             |
 
 ---
 
 ## Related Documentation
 
+### Internal
+
 - [ARCHITECTURE.md](../ARCHITECTURE.md) — Monorepo architecture overview
 - [CONTRIBUTING.md](../CONTRIBUTING.md) — Contribution guidelines
 - [MANIFESTO.md](../MANIFESTO.md) — Project philosophy and scope boundaries
+- [README.md](../README.md) — Project overview and quick start
 - [documentation-enrichment-plan.md](../_/documentation-enrichment-plan.md) — README enrichment strategy
-- Project README.md files — Per-project documentation
-- `_/commercial-develop/templates/` — Available Tailwind templates
+- [Documentation Roadmap](./documentation-roadmap.md) — Master implementation plan
+
+### Project Documentation
+
+- [@hyperfrontend/nexus](../libs/nexus/README.md) — Communication library
+- [@hyperfrontend/cryptography](../libs/cryptography/README.md) — Cryptographic primitives
+- [@hyperfrontend/network-protocol](../libs/network-protocol/README.md) — Security layer
+- [@hyperfrontend/state-machine](../libs/state-machine/README.md) — State management
+- [@hyperfrontend/logging](../libs/logging/README.md) — Structured logging
+- [@hyperfrontend/web-worker](../libs/web-worker/README.md) — Web Worker utilities
+- [@hyperfrontend/features](../plugins/features/README.md) — Nx plugin
+
+### External References
+
+- [Algolia DocSearch](https://docsearch.algolia.com/) — Search provider
+- [Next.js Documentation](https://nextjs.org/docs) — Framework reference
+- [Vercel Platform](https://vercel.com/docs) — Hosting platform
+- [TypeDoc](https://typedoc.org/) — API documentation generator
+- [Tailwind CSS](https://tailwindcss.com/docs) — Design system
+- [Diataxis Framework](https://diataxis.fr/) — Documentation structure inspiration
+- [Monaco Editor](https://microsoft.github.io/monaco-editor/) — Code editor component
 
 ---
 
-_This document defines the target state for HyperFrontend documentation. Implementation will proceed iteratively, with automation foundations established first, followed by progressive enhancement of features and polish._
+_This document defines the target state for HyperFrontend documentation. Implementation proceeds through four phases as outlined in the [Documentation Roadmap](./documentation-roadmap.md)._
