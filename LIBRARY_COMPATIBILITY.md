@@ -2,7 +2,7 @@
 
 > **Can I Use** style reference for @hyperfrontend libraries
 
-Last updated: February 13, 2026
+Last updated: February 15, 2026
 
 ---
 
@@ -194,13 +194,35 @@ These libraries have no external dependencies:
 
 ---
 
-## Node.js Version Requirements
+## Engine Requirements
 
-| Library                        | Minimum Node.js | Notes                                                    |
-| ------------------------------ | :-------------: | -------------------------------------------------------- |
-| All libraries                  |     18.0.0      | ESM support                                              |
-| `cryptography` (node entry)    |     18.0.0      | Uses `node:crypto`                                       |
-| `cryptography` (browser entry) |     19.0.0      | Uses `globalThis.crypto` (polyfill needed for Node < 19) |
+All libraries specify minimum Node.js and npm versions in their `package.json` `engines` field.
+
+### Version Requirements
+
+| Library                                 |  Node.js   |    npm    | Notes                                        |
+| --------------------------------------- | :--------: | :-------: | -------------------------------------------- |
+| `@hyperfrontend/data-utils`             | `>=18.0.0` | `>=8.0.0` | Platform-agnostic                            |
+| `@hyperfrontend/function-utils`         | `>=18.0.0` | `>=8.0.0` | Platform-agnostic                            |
+| `@hyperfrontend/time-utils`             | `>=18.0.0` | `>=8.0.0` | Platform-agnostic                            |
+| `@hyperfrontend/immutable-api-utils`    | `>=18.0.0` | `>=8.0.0` | Platform-agnostic                            |
+| `@hyperfrontend/list-utils`             | `>=18.0.0` | `>=8.0.0` | Platform-agnostic                            |
+| `@hyperfrontend/random-generator-utils` | `>=18.0.0` | `>=8.0.0` | Platform-agnostic                            |
+| `@hyperfrontend/logging`                | `>=18.0.0` | `>=8.0.0` | Platform-agnostic                            |
+| `@hyperfrontend/state-machine`          | `>=18.0.0` | `>=8.0.0` | Platform-agnostic                            |
+| `@hyperfrontend/string-utils`           | `>=18.0.0` | `>=8.0.0` | Isomorphic (browser/node entries)            |
+| `@hyperfrontend/ui-utils`               | `>=18.0.0` | `>=8.0.0` | Browser runtime, Node for dev/test           |
+| `@hyperfrontend/cryptography`           | `>=18.0.0` | `>=8.0.0` | Node 19+ recommended for `/node` entry ¹     |
+| `@hyperfrontend/network-protocol`       | `>=18.0.0` | `>=8.0.0` | Node 19+ recommended for `/node/*` entries ¹ |
+| `@hyperfrontend/nexus`                  | `>=18.0.0` | `>=8.0.0` | Browser runtime, Node for dev/test           |
+
+¹ The `/node` entry points use `webcrypto.subtle` which was experimental in Node 18.x and became stable in Node 19.0.0. For production use with Node.js, version 19+ is recommended.
+
+### Why Node 18+?
+
+- **ES2022 target** — All libraries compile to ES2022, which requires Node 18+ for full feature support
+- **ESM support** — Native ES modules with `exports` field conditions
+- **npm 8+** — Required for workspace dependencies and modern `package.json` features
 
 ---
 

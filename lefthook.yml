@@ -17,39 +17,54 @@ commit-msg:
       run: npx commitlint --edit $1
       fail_text: 'Your commit message does not follow the standard conventional commit format. See https://www.conventionalcommits.org/en/v1.0.0/'
 
-# =============================================================================
-# VERSIONING HOOK (disabled pending PR/publish CI validation)
-# =============================================================================
-# When enabled, this hook automatically versions affected libraries before push.
-# The version executor handles all fact-finding and idempotency checks:
-#   - Skips if version tag already exists (idempotent)
-#   - Skips if commit is a version/release commit (prevents recursion)
-#   - Skips during rebase/merge operations
-#   - Detects affected libraries automatically if not specified
-#
-# Prerequisites before enabling:
-#   1. Test PR CI version-validation behavior
-#   2. Test main branch publish pipeline
-#   3. Verify idempotency with --skipTag removal
-#   4. Confirm no double-versioning occurs
-#
-# See: roadmap/VERSIONING_ACTION_PLAN.md for full implementation plan
-# =============================================================================
-# pre-push:
-#   commands:
-#     version:
-#       run: |
-#         # Version affected libraries using the canonical version executor
-#         # The executor handles:
-#         #   - Idempotency (checks if tag exists)
-#         #   - Recursion prevention (checks commit message)
-#         #   - Dependent package updates
-#         #   - Changelog generation
-#         AFFECTED=$(npx nx show projects --affected --base=origin/main --head=HEAD --type=lib 2>/dev/null | tr '\n' ' ')
-#         if [ -n "$AFFECTED" ]; then
-#           echo "📦 Versioning affected libraries: $AFFECTED"
-#           for lib in $AFFECTED; do
-#             npx nx version "$lib" --noVerify || true
-#           done
-#         fi
-#       fail_text: 'Version check failed. You may need to resolve conflicts or run versioning manually.'
+pre-push:
+  parallel: false
+  commands:
+    version:
+      run: |
+        # Skip versioning when pushing to main - CI handles main branch
+        BRANCH=$(git branch --show-current)
+        if [ "$BRANCH" = "main" ]; then
+          echo "⏭️ Skipping versioning on main branch (CI will handle)"
+          exit 0
+        fi
+
+        # Get affected library projects
+        AFFECTED=$(npx nx show projects --affected --base=origin/main --head=HEAD --type=lib 2>/dev/null | tr '\n' ' ')
+
+        if [ -z "$AFFECTED" ]; then
+          echo "✅ No affected libraries to version"
+          exit 0
+        fi
+
+        echo "📦 Versioning affected libraries: $AFFECTED"
+
+        # Run versioning for each library without commit/tag
+        # --skipCommit: We make one combined commit below
+        # --skipTag: Tags are created by main CI after merge
+        for lib in $AFFECTED; do
+          echo "  → Checking $lib..."
+          RESULT=$(npx nx version "$lib" --skipCommit --skipTag 2>&1 || true)
+          if echo "$RESULT" | grep -q "version updated"; then
+            echo "    ✓ version updated"
+          elif echo "$RESULT" | grep -q "already exists (skipping)"; then
+            echo "    ○ already versioned"
+          elif echo "$RESULT" | grep -q "Skipping"; then
+            echo "    ○ skipped (version commit or git state)"
+          else
+            echo "    ○ no version change needed"
+          fi
+        done
+
+        # Stage version-related changes
+        git add libs/*/package.json libs/*/CHANGELOG.md plugins/*/package.json plugins/*/CHANGELOG.md 2>/dev/null || true
+
+        # Commit if there are staged changes
+        if ! git diff --staged --quiet; then
+          # Commit message matches recursion prevention pattern: /^chore: update versions for/
+          git commit -m "chore(@hyperfrontend/workspace): update versions for affected libs" --no-verify
+          echo "✅ Version updates committed"
+        else
+          echo "✅ No version changes needed"
+        fi
+      fail_text: 'Version check failed. You may need to resolve conflicts or run versioning manually.'

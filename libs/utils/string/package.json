@@ -3,6 +3,11 @@
   "version": "0.0.1",
   "description": "Isomorphic string encoding utilities with unified APIs for browser and Node.js environments.",
   "license": "MIT",
+  "sideEffects": false,
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=8.0.0"
+  },
   "keywords": [
     "base64",
     "encoding",
@@ -21,7 +26,6 @@
     "text-encoder",
     "binary-data"
   ],
-  "sideEffects": false,
   "exports": {
     "./browser": "./src/browser/index.js",
     "./node": "./src/node/index.js"

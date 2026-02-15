@@ -77,6 +77,14 @@ Communication failures in distributed systems are notoriously difficult to debug
 npm install @hyperfrontend/network-protocol
 ```
 
+## Requirements
+
+- **Node.js:** 18.0.0 or higher (19+ recommended for stable Web Crypto API support)
+- **npm:** 8.0.0 or higher
+- **Browser:** Modern browsers with Web Crypto API support
+
+> **Note:** The `/node/*` entry points depend on `@hyperfrontend/cryptography` which uses `webcrypto.subtle`. This API was experimental in Node.js 18.x. For production use with Node.js entry points, Node.js 19+ is recommended.
+
 **Note:** This package has several internal dependencies from the @hyperfrontend ecosystem:
 
 - `@hyperfrontend/cryptography` - Encryption and time-based password generation

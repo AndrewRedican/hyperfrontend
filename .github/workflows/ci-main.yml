@@ -177,15 +177,6 @@ jobs:
           flags: state-machine
           fail_ci_if_error: false
 
-      - name: Upload web-worker coverage to Codecov
-        if: always()
-        uses: codecov/codecov-action@e28ff129e5465c2c0dcc6f003fc735cb6ae0c673 # v5.0.7
-        with:
-          token: ${{ secrets.CODECOV_TOKEN }}
-          files: ./coverage/libs/web-worker/lcov.info
-          flags: web-worker
-          fail_ci_if_error: false
-
       - name: Upload data-utils coverage to Codecov
         if: always()
         uses: codecov/codecov-action@e28ff129e5465c2c0dcc6f003fc735cb6ae0c673 # v5.0.7
@@ -301,6 +292,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: [ci-status]
     if: needs.ci-status.result == 'success'
+    continue-on-error: true
     permissions:
       contents: write
     steps:
@@ -312,13 +304,27 @@ jobs:
 
       - name: Ensure version tags exist
         run: |
-          # For each library with a version, ensure a tag exists
-          for pkg in libs/*/package.json plugins/*/package.json; do
+          # For each library with a publishable version, ensure tag points to HEAD
+          for pkg in libs/*/package.json libs/*/*/package.json plugins/*/package.json; do
             [ -f "$pkg" ] || continue
 
             dir=$(dirname "$pkg")
             name=$(basename "$dir")
             parent=$(basename "$(dirname "$dir")")
+
+            # Skip private packages (not intended for publishing)
+            is_private=$(jq -r '.private // false' "$pkg" 2>/dev/null)
+            if [ "$is_private" = "true" ]; then
+              continue
+            fi
+
+            version=$(jq -r '.version // empty' "$pkg" 2>/dev/null)
+            package_name=$(jq -r '.name // empty' "$pkg" 2>/dev/null)
+
+            # Skip stub/unreleased packages (version 0.0.0)
+            if [ -z "$version" ] || [ "$version" = "0.0.0" ]; then
+              continue
+            fi
 
             # Determine project name: libs/cryptography → lib-cryptography
             if [ "$parent" = "libs" ]; then
@@ -330,28 +336,44 @@ jobs:
               project="lib-${name}-utils"
             fi
 
-            version=$(jq -r '.version // empty' "$pkg" 2>/dev/null)
+            tag="${project}@${version}"
 
-            if [ -n "$version" ]; then
-              tag="${project}@${version}"
+            # Check if tag exists and points to HEAD
+            if git rev-parse "$tag" >/dev/null 2>&1; then
+              TAG_COMMIT=$(git rev-parse "$tag")
+              HEAD_COMMIT=$(git rev-parse HEAD)
 
-              # Check if tag exists
-              if ! git rev-parse "$tag" >/dev/null 2>&1; then
-                git tag "$tag"
-                echo "Created missing tag: $tag"
+              if [ "$TAG_COMMIT" = "$HEAD_COMMIT" ]; then
+                echo "Tag $tag already points to HEAD"
+                continue
               fi
+
+              # Tag exists but points to old commit - check if published to npm
+              NPM_VERSION=$(npm view "${package_name}@${version}" version 2>/dev/null || echo "")
+              if [ "$NPM_VERSION" = "$version" ]; then
+                echo "Warning: $tag points to old commit but version is published to npm - preserving tag"
+                continue
+              fi
+
+              # Not published, safe to update tag to point to HEAD
+              git tag -f "$tag"
+              echo "Updated tag $tag to point to HEAD (was $TAG_COMMIT)"
+            else
+              git tag "$tag"
+              echo "Created tag: $tag"
             fi
           done
 
       - name: Push version tags
         run: |
-          # Push any local tags that haven't been pushed yet
-          git push origin --tags 2>/dev/null || echo "No new tags to push"
+          # Force-push tags to ensure remote matches local (safe: only unpublished versions are updated)
+          git push origin --tags --force 2>/dev/null || echo "No tags to push"
 
   publish:
     name: publish
     runs-on: ubuntu-latest
-    needs: [push-tags]
+    needs: [ci-status]
+    if: needs.ci-status.result == 'success'
     steps:
       - name: Checkout repository
         uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
@@ -393,7 +415,9 @@ jobs:
   create-github-release:
     name: github-release
     runs-on: ubuntu-latest
-    needs: publish
+    needs: [publish, push-tags]
+    if: always() && needs.publish.result == 'success'
+    continue-on-error: true
     permissions:
       contents: write
     steps:
@@ -402,29 +426,94 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Get new version tags
+      - name: Get version tags needing releases
         id: tags
         run: |
-          # Get tags pointing at HEAD
-          TAGS=$(git tag --points-at HEAD 2>/dev/null || echo "")
+          # Get all version tags (format: project@version)
+          ALL_TAGS=$(git tag | grep -E '^(lib-|plugin-).+@[0-9]+\.[0-9]+\.[0-9]+' || echo "")
 
-          if [ -z "$TAGS" ]; then
-            echo "No new version tags found"
+          if [ -z "$ALL_TAGS" ]; then
+            echo "No version tags found"
             echo "has_tags=false" >> $GITHUB_OUTPUT
-          else
-            echo "New version tags:"
-            echo "$TAGS"
-            echo "has_tags=true" >> $GITHUB_OUTPUT
-            # Convert newlines to comma-separated list
-            echo "tags=$(echo "$TAGS" | tr '\n' ',' | sed 's/,$//')" >> $GITHUB_OUTPUT
+            exit 0
           fi
+
+          echo "Found version tags:"
+          echo "$ALL_TAGS"
+          echo "has_tags=true" >> $GITHUB_OUTPUT
+          # Convert newlines to comma-separated list
+          echo "tags=$(echo "$ALL_TAGS" | tr '\n' ',' | sed 's/,$//')" >> $GITHUB_OUTPUT
 
       - name: Create GitHub Releases
         if: steps.tags.outputs.has_tags == 'true'
         uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
         with:
           script: |
+            const fs = require('fs')
+            const path = require('path')
             const tags = '${{ steps.tags.outputs.tags }}'.split(',').filter(Boolean)
+
+            /**
+             * Extracts changelog entry for a specific version.
+             * Looks for "## X.Y.Z" or "## [X.Y.Z]" header and captures until next version header.
+             */
+            function extractChangelogEntry(changelogPath, version) {
+              if (!fs.existsSync(changelogPath)) {
+                return null
+              }
+
+              const content = fs.readFileSync(changelogPath, 'utf-8')
+              const lines = content.split('\n')
+
+              let capturing = false
+              let entry = []
+
+              for (const line of lines) {
+                // Check for version header: "## 1.0.0" or "## [1.0.0]" or "## 1.0.0 (date)"
+                if (line.startsWith('## ')) {
+                  if (capturing) {
+                    // Hit next version, stop capturing
+                    break
+                  }
+                  // Check if this is our version
+                  const headerVersion = line.slice(3).trim()
+                    .replace(/^\[/, '').replace(/\].*$/, '')  // Remove brackets
+                    .split(/[\s(]/)[0]  // Take version before space or paren
+
+                  if (headerVersion === version) {
+                    capturing = true
+                    entry.push(line)  // Include the header
+                  }
+                } else if (capturing) {
+                  entry.push(line)
+                }
+              }
+
+              // Trim trailing empty lines
+              while (entry.length > 0 && entry[entry.length - 1].trim() === '') {
+                entry.pop()
+              }
+
+              return entry.length > 0 ? entry.join('\n') : null
+            }
+
+            /**
+             * Resolves project name to changelog path.
+             * lib-cryptography -> libs/cryptography/CHANGELOG.md
+             * lib-data-utils -> libs/utils/data/CHANGELOG.md
+             */
+            function getChangelogPath(projectName) {
+              if (projectName.endsWith('-utils')) {
+                // Nested utils: lib-data-utils -> libs/utils/data
+                const utilName = projectName.replace('lib-', '').replace('-utils', '')
+                return `libs/utils/${utilName}/CHANGELOG.md`
+              } else if (projectName.startsWith('lib-')) {
+                return `libs/${projectName.replace('lib-', '')}/CHANGELOG.md`
+              } else if (projectName.startsWith('plugin-')) {
+                return `plugins/${projectName.replace('plugin-', '')}/CHANGELOG.md`
+              }
+              return null
+            }
 
             for (const tag of tags) {
               console.log(`Creating release for ${tag}`)
@@ -439,12 +528,42 @@ jobs:
 
                 const [, projectName, version] = match
 
+                // Extract changelog entry
+                const changelogPath = getChangelogPath(projectName)
+                let releaseBody = ''
+
+                if (changelogPath) {
+                  const changelogEntry = extractChangelogEntry(changelogPath, version)
+                  if (changelogEntry) {
+                    releaseBody = changelogEntry
+                  } else {
+                    releaseBody = `Release of ${projectName} version ${version}`
+                  }
+                  releaseBody += `\n\n---\n📦 [View on npm](https://www.npmjs.com/package/@hyperfrontend/${projectName.replace('lib-', '').replace('plugin-', '')})`
+                  releaseBody += `\n📄 [Full Changelog](https://github.com/${context.repo.owner}/${context.repo.repo}/blob/main/${changelogPath})`
+                } else {
+                  releaseBody = `Release of ${projectName} version ${version}`
+                }
+
+                // Check if release already exists
+                try {
+                  await github.rest.repos.getReleaseByTag({
+                    owner: context.repo.owner,
+                    repo: context.repo.repo,
+                    tag: tag,
+                  })
+                  console.log(`Release for ${tag} already exists, skipping`)
+                  continue
+                } catch (e) {
+                  // Release doesn't exist, create it
+                }
+
                 await github.rest.repos.createRelease({
                   owner: context.repo.owner,
                   repo: context.repo.repo,
                   tag_name: tag,
                   name: `${projectName} v${version}`,
-                  body: `Release of ${projectName} version ${version}\n\nSee [CHANGELOG](https://github.com/${context.repo.owner}/${context.repo.repo}/blob/main/libs/${projectName.replace('lib-', '')}/CHANGELOG.md) for details.`,
+                  body: releaseBody,
                   draft: false,
                   prerelease: version.includes('-'),
                 })

@@ -4,6 +4,10 @@
   "description": "Cryptography utilities for browser and Node.js environments.",
   "license": "MIT",
   "sideEffects": false,
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=8.0.0"
+  },
   "exports": {
     "./browser": "./src/browser/index.js",
     "./node": "./src/node/index.js",
