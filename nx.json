@@ -94,5 +94,6 @@
       "include": ["libs/**/*", "plugins/**/*"],
       "exclude": ["plugins/*-e2e/**/*"]
     }
-  ]
+  ],
+  "nxCloudId": "6991685ccc04119366337805"
 }
