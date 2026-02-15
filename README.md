@@ -4,7 +4,7 @@
   <img  width="300" src="https://github.com/AndrewRedican/hyperfrontend/blob/main/assets/logo/hyperfrontend.png?raw=true" alt="Coverage">
 </p>
 <p align="center">
-  A hybrid micro-frontend pattern to embed live web applications with communication protocols, lifecycle, and contract standards
+  A hybrid <a href="https://en.wikipedia.org/wiki/Micro_frontend">micro-frontend</a> pattern to embed live web applications with communication protocols, lifecycle, and contract standards
 </p>
 
 <p align="center">
@@ -35,15 +35,27 @@
   </a>
 </p>
 
-> **New here?** Start with the [Manifesto](MANIFESTO.md) to understand why this project exists and what problems it solves.
+---
 
-## What are hyperfrontend features?
+Look, nobody cares what framework you're using. [React](https://react.dev/), [Angular](https://angular.dev/), [Vue](https://vuejs.org/), that [jQuery](https://jquery.com/) thing from 2014 — whatever. You just want to ship the damn thing and go home.
 
-A **hyperfrontend feature** is a standalone frontend application that provides distinct business value or functionality. Features can be built with any framework (React, Angular, Vue, Svelte, etc.) or vanilla JavaScript, and may manage their own state, have their own user authentication, connect to backend APIs, and maintain their own domain models.
+Hyperfrontend lets you **compose your existing apps together securely** — like Lego bricks. No rewrites. No "let's align on a shared component library" meetings. Just plug it in and _it works_.
 
-### What is a Feature?
+Display another app inside yours with a native look and feel — embed it seamlessly inline, throw it in a modal, pop it out in a new window, open a new tab. Your call. And you don't have to roll your own glue code to make them talk to each other.
 
-A hyperfrontend feature combines traits from [micro-frontends](https://en.wikipedia.org/wiki/Micro_frontend) and embeddable components, with unique characteristics for secure runtime integration:
+Need to pass sensitive stuff between apps? Transactions, [PII](https://en.wikipedia.org/wiki/Personal_data), [auth tokens](https://en.wikipedia.org/wiki/Access_token)? Opt into the **encrypted messaging protocol**. It's built to stop [man-in-the-middle](https://en.wikipedia.org/wiki/Man-in-the-middle_attack) snooping and limit [XSS](https://en.wikipedia.org/wiki/Cross-site_scripting) blast radius — not just "button clicked" events, but the stuff that actually matters.
+
+> Want the full picture? The [Manifesto](MANIFESTO.md) digs into the _why_ behind all of this.
+
+---
+
+## What is a Hyperfrontend Feature?
+
+A **hyperfrontend feature** is your standalone frontend app — whether it was written ten years ago or last month. It could be React, Angular, Vue, Svelte, vanilla JS... doesn't matter. It manages its own state, handles its own auth, talks to its own backend. It's _yours_.
+
+The difference? Now it can be plugged into other apps (or have other apps plugged into it) without anyone having to rewrite anything.
+
+Think of it as combining the best of [micro-frontends](https://en.wikipedia.org/wiki/Micro_frontend) and embeddable components:
 
 ```mermaid
 ---
@@ -87,7 +99,7 @@ flowchart LR
 
 **Not a feature:** UI components, shared libraries, SPA routes, or [monolithic](https://en.wikipedia.org/wiki/Monolithic_application) frontends.
 
-### Architecture
+## How It Works
 
 Each hyperfrontend feature uses the standard communication protocol provided by the **[@hyperfrontend/nexus](https://github.com/AndrewRedican/hyperfrontend/blob/main/libs/nexus)** library. This enables:
 
