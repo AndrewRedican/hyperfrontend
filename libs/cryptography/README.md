@@ -77,6 +77,14 @@ Third-party cryptography libraries introduce supply chain risks and dependency b
 npm install @hyperfrontend/cryptography
 ```
 
+## Requirements
+
+- **Node.js:** 18.0.0 or higher (19+ recommended for stable Web Crypto API support)
+- **npm:** 8.0.0 or higher
+- **Browser:** Modern browsers with Web Crypto API support
+
+> **Note:** The `/node` entry point uses `webcrypto.subtle` which was experimental in Node.js 18.x. For production use with the Node.js entry point, Node.js 19+ is recommended for stable crypto APIs.
+
 ## Quick Start
 
 ### Browser Environment
