@@ -62,7 +62,7 @@ pre-push:
         # Commit if there are staged changes
         if ! git diff --staged --quiet; then
           # Commit message matches recursion prevention pattern: /^chore: update versions for/
-          git commit -m "chore: update versions for affected libs" --no-verify
+          git commit -m "chore(@hyperfrontend/workspace): update versions for affected libs" --no-verify
           echo "✅ Version updates committed"
         else
           echo "✅ No version changes needed"
