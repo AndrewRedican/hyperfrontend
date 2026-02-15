@@ -223,30 +223,30 @@ const createMyProtocol = createProtocol(logger, 'my-shared-secret', 60000)
 
 ### Comprehensive Guides
 
-- **[ARCHITECTURE.md](ARCHITECTURE.md)** - In-depth architecture guide with composition diagrams, factory reference table, and "How Do I..." quick reference
-- **[src/lib/README.md](src/lib/README.md)** - Module index with links to all subdomain documentation
+- **[ARCHITECTURE.md](https://github.com/AndrewRedican/hyperfrontend/blob/main/libs/network-protocol/ARCHITECTURE.md)** - In-depth architecture guide with composition diagrams, factory reference table, and "How Do I..." quick reference
+- **[src/lib/README.md](https://github.com/AndrewRedican/hyperfrontend/blob/main/libs/network-protocol/src/lib/README.md)** - Module index with links to all subdomain documentation
 
 ### Module Documentation
 
 Each module has its own README with purpose, interfaces, factory functions, and usage examples:
 
-| Module        | Description                              | Documentation                        |
-| ------------- | ---------------------------------------- | ------------------------------------ |
-| **channel/**  | Bidirectional communication channels     | [README](src/lib/channel/README.md)  |
-| **packet/**   | Packet type hierarchy & transformations  | [README](src/lib/packet/README.md)   |
-| **protocol/** | Protocol composition & v1 implementation | [README](src/lib/protocol/README.md) |
-| **security/** | Encryption & obfuscation suites          | [README](src/lib/security/README.md) |
-| **queue/**    | FIFO message processing queues           | [README](src/lib/queue/README.md)    |
-| **sender/**   | Outbound message pipeline                | [README](src/lib/sender/README.md)   |
-| **receiver/** | Inbound message pipeline                 | [README](src/lib/receiver/README.md) |
-| **data/**     | Structured message payloads              | [README](src/lib/data/README.md)     |
-| **routing/**  | Topic-based message routing              | [README](src/lib/routing/README.md)  |
-| **topic/**    | Topic store management                   | [README](src/lib/topic/README.md)    |
+| Module        | Description                              | Documentation                                                                                                       |
+| ------------- | ---------------------------------------- | ------------------------------------------------------------------------------------------------------------------- |
+| **channel/**  | Bidirectional communication channels     | [README](https://github.com/AndrewRedican/hyperfrontend/blob/main/libs/network-protocol/src/lib/channel/README.md)  |
+| **packet/**   | Packet type hierarchy & transformations  | [README](https://github.com/AndrewRedican/hyperfrontend/blob/main/libs/network-protocol/src/lib/packet/README.md)   |
+| **protocol/** | Protocol composition & v1 implementation | [README](https://github.com/AndrewRedican/hyperfrontend/blob/main/libs/network-protocol/src/lib/protocol/README.md) |
+| **security/** | Encryption & obfuscation suites          | [README](https://github.com/AndrewRedican/hyperfrontend/blob/main/libs/network-protocol/src/lib/security/README.md) |
+| **queue/**    | FIFO message processing queues           | [README](https://github.com/AndrewRedican/hyperfrontend/blob/main/libs/network-protocol/src/lib/queue/README.md)    |
+| **sender/**   | Outbound message pipeline                | [README](https://github.com/AndrewRedican/hyperfrontend/blob/main/libs/network-protocol/src/lib/sender/README.md)   |
+| **receiver/** | Inbound message pipeline                 | [README](https://github.com/AndrewRedican/hyperfrontend/blob/main/libs/network-protocol/src/lib/receiver/README.md) |
+| **data/**     | Structured message payloads              | [README](https://github.com/AndrewRedican/hyperfrontend/blob/main/libs/network-protocol/src/lib/data/README.md)     |
+| **routing/**  | Topic-based message routing              | [README](https://github.com/AndrewRedican/hyperfrontend/blob/main/libs/network-protocol/src/lib/routing/README.md)  |
+| **topic/**    | Topic store management                   | [README](https://github.com/AndrewRedican/hyperfrontend/blob/main/libs/network-protocol/src/lib/topic/README.md)    |
 
 ### Platform Entry Points
 
-- **[src/browser/README.md](src/browser/README.md)** - Browser platform documentation
-- **[src/node/README.md](src/node/README.md)** - Node.js platform documentation
+- **[src/browser/README.md](https://github.com/AndrewRedican/hyperfrontend/blob/main/libs/network-protocol/src/browser/README.md)** - Browser platform documentation
+- **[src/node/README.md](https://github.com/AndrewRedican/hyperfrontend/blob/main/libs/network-protocol/src/node/README.md)** - Node.js platform documentation
 
 ### Integration Tests
 
