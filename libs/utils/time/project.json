@@ -4,7 +4,7 @@
   "description": "Time and date manipulation utilities.",
   "sourceRoot": "{projectRoot}/src",
   "projectType": "library",
-  "tags": [],
+  "tags": ["type:util", "scope:public"],
   "targets": {
     "version": {},
     "build": {
