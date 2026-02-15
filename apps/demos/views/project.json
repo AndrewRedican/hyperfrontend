@@ -4,6 +4,6 @@
   "description": "Views demonstration.",
   "sourceRoot": "{projectRoot}/src",
   "projectType": "application",
-  "tags": [],
+  "tags": ["type:demo", "scope:standalone"],
   "targets": {}
 }
