@@ -70,6 +70,10 @@ export function createQueue<T extends Record<string, any> = any>(processMessage:
 
     isProcessing = false
     currentMsg = null
+
+    if (!shouldStop && fifoQueue.size() > 0) {
+      processQueue()
+    }
   }
 
   const result: Queue<T> = {
