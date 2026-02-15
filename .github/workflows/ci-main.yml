@@ -380,11 +380,15 @@ jobs:
         if: steps.affected.outputs.has_affected == 'true'
         run: npx nx affected -t=build --base=HEAD~1 --head=HEAD
 
+      - name: Configure npm authentication
+        if: steps.affected.outputs.has_affected == 'true'
+        run: npm config set "//registry.npmjs.org/:_authToken" "${NPM_TOKEN}" --location=user
+        env:
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+
       - name: Publish affected libraries
         if: steps.affected.outputs.has_affected == 'true'
         run: npx nx affected -t=publish --base=HEAD~1 --head=HEAD
-        env:
-          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
 
   create-github-release:
     name: github-release
