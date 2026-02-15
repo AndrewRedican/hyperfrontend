@@ -177,15 +177,6 @@ jobs:
           flags: state-machine
           fail_ci_if_error: false
 
-      - name: Upload web-worker coverage to Codecov
-        if: always()
-        uses: codecov/codecov-action@e28ff129e5465c2c0dcc6f003fc735cb6ae0c673 # v5.0.7
-        with:
-          token: ${{ secrets.CODECOV_TOKEN }}
-          files: ./coverage/libs/web-worker/lcov.info
-          flags: web-worker
-          fail_ci_if_error: false
-
       - name: Upload data-utils coverage to Codecov
         if: always()
         uses: codecov/codecov-action@e28ff129e5465c2c0dcc6f003fc735cb6ae0c673 # v5.0.7
@@ -312,13 +303,26 @@ jobs:
 
       - name: Ensure version tags exist
         run: |
-          # For each library with a version, ensure a tag exists
-          for pkg in libs/*/package.json plugins/*/package.json; do
+          # For each library with a publishable version, ensure a tag exists
+          for pkg in libs/*/package.json libs/*/*/package.json plugins/*/package.json; do
             [ -f "$pkg" ] || continue
 
             dir=$(dirname "$pkg")
             name=$(basename "$dir")
             parent=$(basename "$(dirname "$dir")")
+
+            # Skip private packages (not intended for publishing)
+            is_private=$(jq -r '.private // false' "$pkg" 2>/dev/null)
+            if [ "$is_private" = "true" ]; then
+              continue
+            fi
+
+            version=$(jq -r '.version // empty' "$pkg" 2>/dev/null)
+
+            # Skip stub/unreleased packages (version 0.0.0)
+            if [ -z "$version" ] || [ "$version" = "0.0.0" ]; then
+              continue
+            fi
 
             # Determine project name: libs/cryptography → lib-cryptography
             if [ "$parent" = "libs" ]; then
@@ -330,16 +334,12 @@ jobs:
               project="lib-${name}-utils"
             fi
 
-            version=$(jq -r '.version // empty' "$pkg" 2>/dev/null)
+            tag="${project}@${version}"
 
-            if [ -n "$version" ]; then
-              tag="${project}@${version}"
-
-              # Check if tag exists
-              if ! git rev-parse "$tag" >/dev/null 2>&1; then
-                git tag "$tag"
-                echo "Created missing tag: $tag"
-              fi
+            # Check if tag exists
+            if ! git rev-parse "$tag" >/dev/null 2>&1; then
+              git tag "$tag"
+              echo "Created missing tag: $tag"
             fi
           done
 
