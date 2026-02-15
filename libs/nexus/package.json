@@ -4,6 +4,10 @@
   "description": "Cross-window communication library for micro-frontends with secure messaging, state management, and contract validation.",
   "license": "MIT",
   "sideEffects": false,
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=8.0.0"
+  },
   "main": "./src/index.js",
   "types": "./src/index.ts",
   "keywords": [
