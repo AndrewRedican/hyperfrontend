@@ -4,6 +4,10 @@
   "description": "Lightweight, functional state management library with Redux-inspired actions/reducers, async operation orchestration, and lifecycle-aware component abstractions for predictable application state.",
   "license": "MIT",
   "sideEffects": false,
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=8.0.0"
+  },
   "keywords": [
     "state-management",
     "redux",
