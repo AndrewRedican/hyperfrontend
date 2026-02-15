@@ -15,6 +15,13 @@
       "avatar_url": "https://github.com/AndrewRedican.png",
       "profile": "https://github.com/AndrewRedican",
       "contributions": ["code", "doc", "infra", "maintenance", "projectManagement", "ideas"]
+    },
+    {
+      "login": "bbsmithy",
+      "name": "Brian Smith",
+      "avatar_url": "https://github.com/bbsmithy.png",
+      "profile": "https://github.com/bbsmithy",
+      "contributions": ["ideas"]
     }
   ],
   "contributorsPerLine": 7,
