@@ -41,7 +41,7 @@ Format-centric build executor. All output formats are opt-in — nothing is buil
 - **ESM/CJS**: Auto-discovers entry points from package.json exports
 - **IIFE/UMD**: Requires explicit `entry` and `globalName`; inlines all dependencies by default
 
-See [src/executors/build/README.md](src/executors/build/README.md) for full configuration reference.
+See [src/executors/build/README.md](https://github.com/AndrewRedican/hyperfrontend/blob/main/tools/package/src/executors/build/README.md) for full configuration reference.
 
 ### typecheck
 
