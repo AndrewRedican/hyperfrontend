@@ -24,6 +24,11 @@
   <a href="https://github.com/AndrewRedican/hyperfrontend">
     <img src="https://img.shields.io/github/stars/AndrewRedican/hyperfrontend?style=flat-square" alt="GitHub stars">
   </a>
+  <a href="https://bundlephobia.com/package/@hyperfrontend/cryptography">
+    <img src="https://img.shields.io/bundlephobia/minzip/@hyperfrontend/cryptography?style=flat-square" alt="Bundle Size">
+  </a>
+  <img src="https://img.shields.io/badge/node-%3E%3D18.0.0-brightgreen?style=flat-square&logo=node.js" alt="Node Version">
+  <img src="https://img.shields.io/badge/tree%20shakeable-%E2%9C%93-success?style=flat-square" alt="Tree Shakeable">
 </p>
 
 Production-grade cryptographic primitives with isomorphic APIs for browser and Node.js environments.
