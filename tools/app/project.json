@@ -1,0 +1,12 @@
+{
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "name": "tool-app",
+  "description": "Nx plugin providing executors for hyperfrontend application projects with self-contained dependencies.",
+  "sourceRoot": "{projectRoot}/src",
+  "projectType": "library",
+  "tags": ["type:util", "scope:internal"],
+  "targets": {
+    "lint": {},
+    "typecheck": {}
+  }
+}

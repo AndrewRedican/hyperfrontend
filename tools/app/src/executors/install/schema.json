@@ -1,0 +1,19 @@
+{
+  "$schema": "http://json-schema.org/schema",
+  "type": "object",
+  "title": "Install executor schema",
+  "description": "Install dependencies in a self-contained application project.",
+  "properties": {
+    "ci": {
+      "type": "boolean",
+      "description": "Use npm ci instead of npm install for clean installs.",
+      "default": false
+    },
+    "frozen": {
+      "type": "boolean",
+      "description": "Use --frozen-lockfile to fail if lockfile needs update.",
+      "default": false
+    }
+  },
+  "additionalProperties": false
+}
