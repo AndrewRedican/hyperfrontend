@@ -4,6 +4,6 @@
   "description": "Heartbeat demonstration.",
   "sourceRoot": "{projectRoot}/src",
   "projectType": "application",
-  "tags": [],
+  "tags": ["type:demo", "scope:standalone"],
   "targets": {}
 }
