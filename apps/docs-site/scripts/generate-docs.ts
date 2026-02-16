@@ -10,7 +10,7 @@
  * Output is written to apps/docs-site/.generated/
  */
 
-import { execSync } from 'child_process'
+import { execFileSync } from 'child_process'
 import fs from 'fs'
 import path from 'path'
 
@@ -222,18 +222,19 @@ function generateTypeDoc(lib: LibraryConfig): boolean {
   ensureDir(path.dirname(outputPath))
 
   try {
-    const cmd = [
-      'npx typedoc',
+    const args = [
+      'typedoc',
       '--json',
       outputPath,
       '--excludePrivate',
       '--excludeInternal',
-      '--excludeNotDocumented false',
+      '--excludeNotDocumented',
+      'false',
       ...entryPoints,
-    ].join(' ')
+    ]
 
     console.log(`  → Running TypeDoc for ${lib.name}`)
-    execSync(cmd, { cwd: WORKSPACE_ROOT, stdio: 'pipe' })
+    execFileSync('npx', args, { cwd: WORKSPACE_ROOT, stdio: 'pipe' })
     return true
   } catch {
     console.log(`  ⚠ TypeDoc failed for ${lib.name}`)
