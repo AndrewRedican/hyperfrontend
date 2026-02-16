@@ -39,7 +39,7 @@
     "@nx/eslint": "22.3.3",
     "@nx/eslint-plugin": "22.3.3",
     "@nx/jest": "22.3.3",
-    "@nx/js": "22.3.3",
+    "@nx/js": "22.5.1",
     "@nx/rollup": "22.3.3",
     "@rollup/plugin-terser": "0.4.4",
     "@swc-node/register": "1.11.1",
