@@ -55,6 +55,7 @@ module.exports = [
           ignoredFiles: ['{projectRoot}/eslint.config.{js,cjs,mjs}'],
           ignoredDependencies: [
             'clsx',
+            'mermaid',
             'next',
             'next-themes',
             'react',

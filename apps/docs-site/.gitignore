@@ -8,6 +8,9 @@ out/
 # Production build
 dist/
 
+# Generated documentation
+.generated/
+
 # Local env files
 .env.local
 .env.development.local
