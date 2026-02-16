@@ -12,12 +12,18 @@ interface ThemeContextValue {
 
 const ThemeContext = createContext<ThemeContextValue | undefined>(undefined)
 
-export function useTheme() {
+// eslint-disable-next-line @typescript-eslint/no-empty-function
+const noop = () => {}
+
+const defaultContext: ThemeContextValue = {
+  theme: 'system',
+  setTheme: noop,
+  resolvedTheme: 'light',
+}
+
+export function useTheme(): ThemeContextValue {
   const context = useContext(ThemeContext)
-  if (!context) {
-    throw new Error('useTheme must be used within a ThemeProvider')
-  }
-  return context
+  return context ?? defaultContext
 }
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {

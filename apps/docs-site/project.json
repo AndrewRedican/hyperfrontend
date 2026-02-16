@@ -1,0 +1,36 @@
+{
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "name": "docs-site",
+  "description": "Next.js documentation site for hyperfrontend.",
+  "sourceRoot": "apps/docs-site/src",
+  "projectType": "application",
+  "tags": ["type:app", "scope:standalone"],
+  "targets": {
+    "lint": {},
+    "typecheck": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["install"],
+      "options": {
+        "command": "npx tsc --noEmit",
+        "cwd": "apps/docs-site"
+      }
+    },
+    "install": {
+      "executor": "@hyperfrontend/app:install",
+      "options": {}
+    },
+    "build": {
+      "executor": "@hyperfrontend/app:build",
+      "dependsOn": ["install"],
+      "outputs": ["{projectRoot}/.next", "{projectRoot}/out"],
+      "options": {
+        "command": "npm run build"
+      }
+    },
+    "serve": {
+      "executor": "@hyperfrontend/app:serve",
+      "dependsOn": ["install"],
+      "options": {}
+    }
+  }
+}

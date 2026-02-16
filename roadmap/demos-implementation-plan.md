@@ -230,59 +230,6 @@ This repository uses a **hybrid monorepo** model with two distinct dependency pa
 └─────────────────────────────────────────────────────────────────┘
 ```
 
-### NX Module Boundaries
-
-To enforce the hybrid architecture, we need ESLint module boundary rules with proper project tags.
-
-#### Library Tags (Categorization)
-
-Libraries should be tagged based on their purpose and allowed dependencies:
-
-| Tag              | Description                         | May Depend On            |
-| ---------------- | ----------------------------------- | ------------------------ |
-| `type:core`      | Core functionality, no dependencies | Nothing                  |
-| `type:util`      | Utility libraries                   | `type:core`              |
-| `type:feature`   | Feature libraries                   | `type:core`, `type:util` |
-| `type:protocol`  | Communication/protocol libraries    | `type:core`, `type:util` |
-| `scope:public`   | Published to npm                    | Any library              |
-| `scope:internal` | Internal use only                   | Any library              |
-
-#### Application Tags (Strict Isolation)
-
-| Tag                | Description                          | May Depend On         |
-| ------------------ | ------------------------------------ | --------------------- |
-| `type:app`         | Application projects                 | **npm packages only** |
-| `type:demo`        | Demo application projects            | **npm packages only** |
-| `scope:standalone` | Self-contained with own node_modules | **npm packages only** |
-
-#### ESLint Rule Configuration
-
-```javascript
-// eslint.config.cjs (proposed addition)
-module.exports = {
-  // ... existing config
-  rules: {
-    '@nx/enforce-module-boundaries': [
-      'error',
-      {
-        allow: [],
-        depConstraints: [
-          // Libraries can depend on other libraries based on type
-          { sourceTag: 'type:util', onlyDependOnLibsWithTags: ['type:core'] },
-          { sourceTag: 'type:feature', onlyDependOnLibsWithTags: ['type:core', 'type:util'] },
-          { sourceTag: 'type:protocol', onlyDependOnLibsWithTags: ['type:core', 'type:util'] },
-
-          // Applications CANNOT depend on any workspace libraries
-          { sourceTag: 'type:app', onlyDependOnLibsWithTags: [] },
-          { sourceTag: 'type:demo', onlyDependOnLibsWithTags: [] },
-          { sourceTag: 'scope:standalone', onlyDependOnLibsWithTags: [] },
-        ],
-      },
-    ],
-  },
-}
-```
-
 ### Custom Executors Required
 
 Since NX doesn't explicitly cater for projects with self-contained dependencies (this goes against the standard NX grain), we need bespoke executors.
