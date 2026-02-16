@@ -24,14 +24,59 @@
   body {
     @apply bg-white text-slate-900 antialiased dark:bg-slate-900 dark:text-slate-100;
   }
+
+  /* Global focus-visible styles for accessibility */
+  a:focus-visible,
+  button:focus-visible {
+    @apply outline-none ring-2 ring-primary-500 ring-offset-2;
+  }
+
+  .dark a:focus-visible,
+  .dark button:focus-visible {
+    @apply ring-primary-400 ring-offset-slate-900;
+  }
+
+  /* Skip to content link for keyboard users */
+  .skip-link {
+    @apply absolute -top-12 left-4 z-[100] rounded-lg bg-primary-600 px-4 py-2 text-white transition-all focus:top-4;
+  }
 }
 
 @layer components {
   .btn-primary {
-    @apply inline-flex items-center justify-center rounded-lg bg-primary-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 dark:bg-primary-500 dark:hover:bg-primary-400;
+    @apply inline-flex items-center justify-center rounded-lg bg-primary-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition-all hover:bg-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 active:scale-[0.98] dark:bg-primary-500 dark:hover:bg-primary-400;
   }
 
   .btn-secondary {
-    @apply inline-flex items-center justify-center rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 shadow-sm hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700;
+    @apply inline-flex items-center justify-center rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 shadow-sm transition-all hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 active:scale-[0.98] dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700;
+  }
+
+  .btn-ghost {
+    @apply inline-flex items-center justify-center rounded-lg px-4 py-2 text-sm font-medium text-slate-600 transition-all hover:bg-slate-100 hover:text-slate-900 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 active:scale-[0.98] dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-200;
+  }
+}
+
+@layer utilities {
+  /* Smooth animation for demo showcase */
+  .animate-progress-border {
+    animation: progress-border linear infinite;
+  }
+
+  @keyframes progress-border {
+    from {
+      stroke-dashoffset: 100%;
+    }
+    to {
+      stroke-dashoffset: 0%;
+    }
+  }
+
+  /* Subtle glow effect */
+  .glow-primary {
+    box-shadow: 0 0 40px -10px theme('colors.primary.500 / 30%');
+  }
+
+  .dark .glow-primary {
+    box-shadow: 0 0 40px -10px theme('colors.primary.400 / 20%');
   }
 }
