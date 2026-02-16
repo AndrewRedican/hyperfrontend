@@ -8,8 +8,7 @@
     "ghcr.io/devcontainers/features/node:1": {
       "version": "24.13.0"
     },
-    "ghcr.io/devcontainers/features/copilot-cli:1": {},
-    "ghcr.io/devcontainers/features/hugo:1": {}
+    "ghcr.io/devcontainers/features/copilot-cli:1": {}
   },
   "customizations": {
     "vscode": {
@@ -33,7 +32,7 @@
       }
     }
   },
-  "forwardPorts": [3306],
+  "forwardPorts": [3000, 4200],
   "remoteUser": "vscode",
-  "postCreateCommand": "bash .devcontainer/setup-hugo.sh && npm ci && npm i -g commitizen@4.3.1"
+  "postCreateCommand": "npm ci && npm i -g commitizen@4.3.1"
 }

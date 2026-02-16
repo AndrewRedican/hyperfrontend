@@ -85,8 +85,6 @@ jobs:
 
       - name: Setup monorepo
         uses: ./.github/actions/setup-monorepo
-        with:
-          install-hugo: 'true'
 
       - name: Run build
         uses: ./.github/actions/run-checks
@@ -385,8 +383,6 @@ jobs:
 
       - name: Setup monorepo
         uses: ./.github/actions/setup-monorepo
-        with:
-          install-hugo: 'true'
 
       - name: Check for affected libraries
         id: affected

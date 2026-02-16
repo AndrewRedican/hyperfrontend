@@ -422,7 +422,7 @@ hyperfrontend/
 │   ├── backend/               # Demo backends (Express, Nest, HTTP)
 │   └── demos/                 # Feature demonstrations
 │
-└── docs/                      # Documentation site (Hugo)
+└── docs/                      # (Deprecated) Legacy Hugo site - see apps/docs-site/
 ```
 
 ---
