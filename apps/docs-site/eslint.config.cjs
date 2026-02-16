@@ -4,6 +4,9 @@ const pluginReactHooks = require('eslint-plugin-react-hooks')
 const pluginJsxA11y = require('eslint-plugin-jsx-a11y')
 
 module.exports = [
+  {
+    ignores: ['.next/', 'out/', 'node_modules/', 'next-env.d.ts'],
+  },
   ...baseConfig,
   {
     files: ['**/*.tsx', '**/*.jsx'],

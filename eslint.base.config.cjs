@@ -8,7 +8,7 @@ module.exports = [
   ...nx.configs['flat/javascript'],
   pluginJsdoc.configs['flat/recommended-typescript'],
   {
-    ignores: ['docs/', '.nx/', 'dist/', 'coverage/', 'tmp/'],
+    ignores: ['docs/', '.nx/', 'dist/', 'coverage/', 'tmp/', '**/node_modules/', '**/.next/', '**/out/'],
   },
   {
     files: ['**/*.ts', '**/*.tsx', '**/*.js', '**/*.jsx'],
