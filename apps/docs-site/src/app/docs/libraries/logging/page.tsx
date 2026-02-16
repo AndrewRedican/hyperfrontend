@@ -1,17 +1,19 @@
-import { LibraryStubPage } from '@/components/library-stub-page'
+import { LibraryDocPage } from '@/components/library-doc-page'
 
 export default function LoggingPage() {
   return (
-    <LibraryStubPage
+    <LibraryDocPage
       title="Logging"
       packageName="@hyperfrontend/logging"
-      description="Production-grade logging abstraction with runtime log level control and error-resilient execution."
-      features={[
-        'Runtime log level control via setLogLevel() without restarts',
-        'Priority-based filtering (error > warn > log > info > debug)',
-        'Error-resilient execution prevents logging failures from propagating',
-        'Console abstraction accepts any console-like interface',
-        'Frozen, immutable logger instances',
+      slug="logging"
+      category="core"
+      fallbackDescription="Extensible logging framework with pluggable transports for capturing and routing log messages across different output channels."
+      fallbackFeatures={[
+        'Stream-based architecture with transformer and transmitter chains',
+        'Configurable log levels (debug, info, warn, error)',
+        'Built-in transports: Console, IndexedDB (async batching), HTTP',
+        'Custom transformer and transmitter support',
+        'LogRecord interface with timestamp, context, and metadata',
       ]}
     />
   )

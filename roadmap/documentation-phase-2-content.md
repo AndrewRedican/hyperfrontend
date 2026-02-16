@@ -24,11 +24,11 @@ Implement automated content extraction from the codebase, providing complete API
 
 ### 2.1 TypeDoc Integration
 
-- [ ] Install and configure [TypeDoc](https://typedoc.org/)
-- [ ] Create TypeDoc configuration per library project
-- [ ] Generate JSON output for programmatic consumption
-- [ ] Build TypeDoc → Next.js page generation pipeline
-- [ ] Style API reference pages with Tailwind
+- [x] Install and configure [TypeDoc](https://typedoc.org/)
+- [x] Create TypeDoc configuration per library project
+- [x] Generate JSON output for programmatic consumption
+- [x] Build TypeDoc → Next.js page generation pipeline
+- [x] Style API reference pages with Tailwind
 
 **Libraries to document:**
 
@@ -60,11 +60,11 @@ Implement automated content extraction from the codebase, providing complete API
 
 ### 2.2 README Extraction
 
-- [ ] Create markdown extraction script
-- [ ] Process each project's `README.md`
-- [ ] Extract relevant sections (skip badges, contributors)
-- [ ] Render as project overview pages
-- [ ] Maintain section anchors for deep linking
+- [x] Create markdown extraction script
+- [x] Process each project's `README.md`
+- [x] Extract relevant sections (skip badges, contributors)
+- [x] Render as project overview pages
+- [x] Maintain section anchors for deep linking
 
 **Source files:**
 
@@ -86,10 +86,10 @@ Implement automated content extraction from the codebase, providing complete API
 
 ### 2.3 Architecture Documentation
 
-- [ ] Extract content from `ARCHITECTURE.md` files
-- [ ] Render Mermaid diagrams as SVG
-- [ ] Create architecture overview page
-- [ ] Link architecture pages to relevant library pages
+- [x] Extract content from `ARCHITECTURE.md` files
+- [x] Render Mermaid diagrams as SVG
+- [x] Create architecture overview page
+- [x] Link architecture pages to relevant library pages
 
 **Source files:**
 
@@ -105,10 +105,10 @@ Implement automated content extraction from the codebase, providing complete API
 
 ### 2.4 Mermaid Rendering
 
-- [ ] Integrate Mermaid.js or server-side rendering
-- [ ] Configure theme to match site design
-- [ ] Handle diagrams in both markdown and JSDoc
-- [ ] Ensure diagrams scale on mobile
+- [x] Integrate Mermaid.js or server-side rendering
+- [x] Configure theme to match site design
+- [x] Handle diagrams in both markdown and JSDoc
+- [x] Ensure diagrams scale on mobile
 
 **Acceptance Criteria:**
 
@@ -118,9 +118,9 @@ Implement automated content extraction from the codebase, providing complete API
 
 ### 2.5 Link Transformation
 
-- [ ] Build link transformation script
-- [ ] Convert GitHub blob URLs to docs site URLs
-- [ ] Convert workspace-relative links to docs URLs
+- [x] Build link transformation script
+- [x] Convert GitHub blob URLs to docs site URLs
+- [x] Convert workspace-relative links to docs URLs
 - [ ] Validate all links during build
 - [ ] Report broken links as build warnings
 
@@ -142,10 +142,10 @@ Implement automated content extraction from the codebase, providing complete API
 
 ### 2.6 Contributing Section
 
-- [ ] Extract content from [CONTRIBUTING.md](../CONTRIBUTING.md)
-- [ ] Create dedicated Contributing section
-- [ ] Include setup instructions
-- [ ] Link to GitHub for PRs and issues
+- [x] Extract content from [CONTRIBUTING.md](../CONTRIBUTING.md)
+- [x] Create dedicated Contributing section
+- [x] Include setup instructions
+- [x] Link to GitHub for PRs and issues
 
 **Content sections:**
 
@@ -163,10 +163,10 @@ Implement automated content extraction from the codebase, providing complete API
 
 ### 2.7 Build Automation
 
-- [ ] Add TypeDoc generation to CI pipeline
-- [ ] Create `docs:build` Nx target
-- [ ] Configure incremental builds
-- [ ] Add build step to release workflow
+- [x] Add TypeDoc generation to CI pipeline
+- [x] Create `docs:build` Nx target
+- [x] Configure incremental builds
+- [x] Add build step to release workflow
 
 **Acceptance Criteria:**
 
@@ -210,14 +210,15 @@ flowchart LR
 
 ### Dependencies
 
-| Package                   | Purpose                      |
-| ------------------------- | ---------------------------- |
-| `typedoc`                 | API documentation generation |
-| `typedoc-plugin-markdown` | Markdown output (optional)   |
-| `mermaid`                 | Diagram rendering            |
-| `@mdx-js/react`           | MDX content handling         |
-| `rehype-*`                | Markdown processing          |
-| `gray-matter`             | Frontmatter parsing          |
+| Package                                 | Purpose                      | Status       |
+| --------------------------------------- | ---------------------------- | ------------ |
+| `typedoc`                               | API documentation generation | ✅ Installed |
+| `typedoc-plugin-markdown`               | Markdown output (optional)   | Not needed   |
+| `mermaid`                               | Diagram rendering            | ✅ Installed |
+| `@mdx-js/react`                         | MDX content handling         | Not needed   |
+| `remark` / `remark-gfm` / `remark-html` | Markdown processing          | ✅ Installed |
+| `gray-matter`                           | Frontmatter parsing          | ✅ Installed |
+| `tsx`                                   | TypeScript script execution  | ✅ Installed |
 
 ---
 

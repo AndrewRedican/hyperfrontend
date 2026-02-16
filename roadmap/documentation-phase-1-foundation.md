@@ -8,215 +8,157 @@ Establish the technical infrastructure for the HyperFrontend documentation site.
 
 ## Objective
 
-Replace the placeholder Hugo site with a production-ready [Next.js](https://nextjs.org/) application deployed to [Vercel](https://vercel.com/), providing the foundation for all subsequent documentation work.
+Production-ready [Next.js](https://nextjs.org/) documentation site deployed to [Vercel](https://vercel.com/), with a 50/50 split landing page showcasing live micro-frontend demos.
 
 ---
 
-## Deliverables
+## Current Status
 
-### 1.1 Project Setup ✅
+**Completed:**
 
-- [x] Initialize Next.js project with TypeScript
-- [x] Configure [Tailwind CSS](https://tailwindcss.com/) with custom design tokens
-- [x] Set up project structure for documentation pages
-- [x] Configure ESLint and Prettier for consistency
-- [x] Add to Nx workspace as `docs-site` project
+- Next.js 15 + TypeScript + Tailwind CSS setup
+- Dark/light theme toggle with persistence
+- 50/50 split landing page layout (value proposition + demo showcase)
+- Animated progress border for demo rotation (20s cycle)
+- Rotating value proposition cards (pain → feature → benefit format)
+- Getting Started page with installation/usage guide
+- Responsive design for mobile/desktop
+- Collapsible sidebar navigation component
+- Navigation tree matching monorepo structure
+- Breadcrumb component
+- Mobile hamburger menu
+- Library stub pages (all 7 libraries + 1 plugin)
+- Contributing page
+- API Reference structure
+- GitHub stars/sponsor badges on landing
+- Accessibility improvements (skip links, ARIA attributes, focus states)
+- Quick Start guide
+- Core Concepts guide
 
-**Acceptance Criteria:**
+**In Progress:**
 
-- ✅ `npx nx serve docs-site` runs locally
-- ✅ Hot reload works for content changes
-- ✅ TypeScript strict mode enabled
+- Embed actual micro-frontend demos in showcase component - DEFERRED
 
-### 1.2 Vercel Deployment
+---
 
-- [ ] Connect repository to Vercel — See [VERCEL_DEPLOYMENT.md](../apps/docs-site/VERCEL_DEPLOYMENT.md)
-- [ ] Configure custom domain ([hyperfrontend.dev](https://www.hyperfrontend.dev))
-- [ ] Set up preview deployments for PRs
-- [ ] Configure build caching for performance
-- [ ] Verify HTTPS and SSL certificates
+## Remaining Deliverables
 
-> **Status:** Configuration files ready (`vercel.json`), awaiting manual Vercel setup.
+### 1.1 Demo Integration
 
-**Acceptance Criteria:**
+- [ ] Embed Chess demo in showcase - DEFERRED
+- [ ] Embed Clock demo in showcase - DEFERRED
+- [ ] Embed Events demo in showcase - DEFERRED
+- [ ] Wire demo showcase to actual iframe/feature loading - DEFERRED
 
-- Push to `main` triggers production deployment
-- Custom domain resolves correctly
-- Preview URLs work for pull requests
+### 1.2 Navigation Structure
 
-### 1.3 Navigation Structure
-
-- [ ] Implement sidebar navigation component
-- [ ] Create navigation tree matching monorepo structure
-- [ ] Add breadcrumb component
-- [ ] Implement mobile hamburger menu
-- [ ] Add "Edit on GitHub" links
+- [x] Implement collapsible sidebar navigation component
+- [x] Create navigation tree matching monorepo structure
+- [x] Add breadcrumb component
+- [x] Implement mobile hamburger menu
+- [ ] Add "Edit on GitHub" links - SKIPPED (not essential for Phase 1)
 
 **Navigation Structure:**
 
 ```
 Getting Started
-├── Introduction
 ├── Installation
-└── Quick Start
-Core Libraries
+├── Quick Start
+└── Core Concepts
+Libraries
 ├── @hyperfrontend/nexus
 ├── @hyperfrontend/network-protocol
 ├── @hyperfrontend/cryptography
-├── @hyperfrontend/state-machine
-├── @hyperfrontend/logging
-└── @hyperfrontend/web-worker
-Utility Libraries
-├── @hyperfrontend/utils/data
-├── @hyperfrontend/utils/function
-├── @hyperfrontend/utils/immutable-api
-├── @hyperfrontend/utils/list
-├── @hyperfrontend/utils/random-generator
-├── @hyperfrontend/utils/string
-├── @hyperfrontend/utils/time
-└── @hyperfrontend/utils/ui
+└── ...
 Plugins
 └── @hyperfrontend/features
 Demos
 Architecture
-Contributing
 ```
 
-**Acceptance Criteria:**
+### 1.3 Content Pages
 
-- All sections clickable and navigable
-- Breadcrumbs show current location
-- Mobile menu expands/collapses correctly
+- [x] Getting Started guide
+- [x] Quick Start guide
+- [x] Core Concepts guide
+- [x] Library stub pages (title + "Documentation coming soon")
+- [x] Contributing page
+- [x] API Reference structure
 
-### 1.4 Landing Page ✅
+### 1.4 Polish
 
-- [x] Hero section with project tagline
-- [x] Feature highlights (framework-agnostic, independent deployment, etc.)
-- [x] Quick links to Getting Started, API Reference, Demos
-- [ ] GitHub stars/sponsor badges
-- [x] Package installation snippet
-
-**Content Source:**
-
-- Adapted from [README.md](../README.md) "Why Hyperfrontend?" section
-- [MANIFESTO.md](../MANIFESTO.md) key points
-
-**Acceptance Criteria:**
-
-- ✅ Page renders within 2 seconds
-- ✅ Clear call-to-action to Getting Started
-- ✅ Responsive on mobile devices
-
-### 1.5 Basic Content Pages
-
-- [ ] Getting Started guide (from README Quick Start)
-- [ ] Stub pages for each library (title + "Documentation coming soon")
-- [ ] Contributing page (from CONTRIBUTING.md summary)
-- [x] 404 page with navigation back to home
-
-> **Status:** Placeholder pages exist for `/docs`, `/demos`, `/architecture`. Need to add nested routes and library stubs.
-
-**Acceptance Criteria:**
-
-- Getting Started is navigable and accurate
-- All sidebar links lead to valid pages
-- ✅ 404 page is styled consistently
-
-### 1.6 Theme Support ✅
-
-- [x] Implement dark/light mode toggle
-- [x] Persist preference in localStorage
-- [x] Respect system preference as default
-- [ ] Ensure sufficient contrast in both modes
-
-**Acceptance Criteria:**
-
-- ✅ Toggle switches themes instantly
-- ✅ Preference persists across sessions
-- Both modes pass accessibility contrast checks
+- [x] GitHub stars/sponsor badges on landing
+- [x] Accessibility audit (contrast, focus states, ARIA, skip links)
+- [ ] Performance optimization (Lighthouse > 90)
 
 ---
 
-## Technical Specifications
+## Technical Architecture
 
-### Project Structure (Current)
+### Landing Page Design
 
 ```
-apps/
-  docs-site/
-    src/
-      app/                    # Next.js App Router
-        page.tsx              # Landing page
-        docs/page.tsx         # Docs stub
-        demos/page.tsx        # Demos stub
-        architecture/page.tsx # Architecture stub
-      components/
-        features.tsx          # Feature highlights
-        footer.tsx            # Site footer
-        header.tsx            # Site header with nav
-        hero.tsx              # Landing hero section
-        quick-links.tsx       # Quick links grid
-        theme-provider.tsx    # Dark/light mode context
-        theme-toggle.tsx      # Theme toggle button
-      styles/
-        globals.css           # Tailwind base + custom
-      lib/                    # (empty, for Phase 2)
-    public/                   # Static assets
-    tailwind.config.js
-    next.config.js
-    project.json              # Nx project config
-    vercel.json               # Vercel deployment config
+┌─────────────────────────────────────────────────────────────┐
+│  Header: Logo | Docs | Demos | Architecture | [Theme] [GH] │
+├────────────────────────────┬────────────────────────────────┤
+│                            │                                │
+│   Value Proposition        │    Demo Showcase               │
+│   - Headline               │    ┌────────────────────────┐  │
+│   - Rotating benefits      │    │                        │  │
+│     (every 10s)            │    │   [Live Demo iframe]   │  │
+│     Pain → Feature →       │    │                        │  │
+│     Benefit format         │    │   Progress border      │  │
+│                            │    │   traces (20s cycle)   │  │
+│   $ npx nx add ...         │    │                        │  │
+│                            │    └────────────────────────┘  │
+│   [Get Started] [GitHub]   │         [Skip →]               │
+│                            │                                │
+├────────────────────────────┴────────────────────────────────┤
+│   How it works: Host App | Feature Shell | Message Broker   │
+├─────────────────────────────────────────────────────────────┤
+│   Footer                                                    │
+└─────────────────────────────────────────────────────────────┘
 ```
 
-### Dependencies (Installed)
+### Key Components
 
-| Package                   | Version | Purpose                 |
-| ------------------------- | ------- | ----------------------- |
-| `next`                    | 15.5.12 | React framework         |
-| `react`, `react-dom`      | 19.0.0  | UI library              |
-| `tailwindcss`             | 3.4.17  | Styling                 |
-| `@tailwindcss/typography` | 0.5.16  | Prose styling for docs  |
-| `next-themes`             | 0.4.6   | _(unused, custom impl)_ |
-| `clsx`                    | 2.1.1   | Conditional classnames  |
+| Component          | Purpose                                             |
+| ------------------ | --------------------------------------------------- |
+| `ValueProposition` | Rotating benefit sets (6 sets, 10s each)            |
+| `DemoShowcase`     | Demo container with animated progress border        |
+| `ProgressBorder`   | SVG stroke-dasharray animation tracing rounded rect |
 
-### Design Tokens
+### Project Structure
 
-Based on reimagined `primer` template:
-
-```css
-/* Color palette */
---color-primary: /* blue tones */
-  --color-foundation: /* green tones */ --color-security: /* purple tones */ --color-utilities: /* gray tones */ /* Typography */
-    --font-sans: Inter,
-  system-ui, sans-serif --font-mono: JetBrains Mono, monospace;
+```
+apps/docs-site/src/
+├── app/
+│   ├── page.tsx              # Landing (50/50 layout)
+│   ├── docs/page.tsx         # Getting Started
+│   ├── demos/page.tsx        # Demo hub
+│   └── architecture/page.tsx # Architecture deep-dive
+├── components/
+│   ├── demo-showcase.tsx     # Demo rotation container
+│   ├── value-proposition.tsx # Rotating benefits
+│   ├── header.tsx            # Site navigation
+│   └── footer.tsx            # Site footer
+└── styles/globals.css        # Tailwind + custom utilities
 ```
 
 ---
 
 ## Success Metrics
 
-| Metric                 | Target               |
-| ---------------------- | -------------------- |
-| Lighthouse Performance | > 90                 |
-| First Contentful Paint | < 1.5s               |
-| Build time             | < 2 minutes          |
-| Mobile responsive      | Works on 320px width |
-| Accessibility          | WCAG AA compliant    |
-
----
-
-## Risks & Mitigations
-
-| Risk                           | Mitigation                                |
-| ------------------------------ | ----------------------------------------- |
-| Design diverges from templates | Create design system document early       |
-| Build times grow               | Configure proper caching from start       |
-| Navigation becomes unwieldy    | Test with full nav tree before finalizing |
+| Metric                 | Target           |
+| ---------------------- | ---------------- |
+| Lighthouse Performance | > 90             |
+| First Contentful Paint | < 1.5s           |
+| Mobile usability       | 100% responsive  |
+| Demo load time         | < 2s per feature |
 
 ---
 
 ## Related Documents
 
 - [Documentation Roadmap](./documentation-roadmap.md) — Master plan
-- [Documentation Strategy](./documentation-strategy.md) — Vision and requirements
-- [Phase 2: Content](./documentation-phase-2-content.md) — Next phase
+- [Phase 2: Content](./documentation-phase-2-content.md) — API documentation

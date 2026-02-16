@@ -1,16 +1,19 @@
-import { LibraryStubPage } from '@/components/library-stub-page'
+import { LibraryDocPage } from '@/components/library-doc-page'
 
 export default function WebWorkerPage() {
   return (
-    <LibraryStubPage
+    <LibraryDocPage
       title="Web Worker"
       packageName="@hyperfrontend/web-worker"
-      description="Web Worker utilities and abstractions for offloading work to background threads."
-      features={[
-        'Worker creation and management utilities',
-        'Message passing abstractions',
-        'Lifecycle management',
-        'Integration with HyperFrontend ecosystem',
+      slug="web-worker"
+      category="supporting"
+      fallbackDescription="Web Worker abstraction that provides shared interfaces for running code in background threads with consistent messaging patterns."
+      fallbackFeatures={[
+        'Unified worker creation and management',
+        'Standardized message passing interface',
+        'Error handling and worker lifecycle management',
+        'Support for inline workers via Blob URLs',
+        'Type-safe message contracts',
       ]}
     />
   )

@@ -1,17 +1,19 @@
-import { LibraryStubPage } from '@/components/library-stub-page'
+import { LibraryDocPage } from '@/components/library-doc-page'
 
 export default function CryptographyPage() {
   return (
-    <LibraryStubPage
+    <LibraryDocPage
       title="Cryptography"
       packageName="@hyperfrontend/cryptography"
-      description="Production-grade cryptographic primitives with isomorphic APIs for browser and Node.js environments, using Web Crypto API."
-      features={[
-        'AES-GCM authenticated encryption with password-derived keys',
-        'PBKDF2 key derivation (100,000 iterations)',
-        'Secure vault storage with optional single-use mode',
-        'Time-based password generation for rotating credentials',
-        'SHA-256 hashing with validation utilities',
+      slug="cryptography"
+      category="core"
+      fallbackDescription="Lightweight cryptographic primitives for secure client-side communication using RSA-OAEP encryption and RSASSA-PKCS1-v1_5 signatures powered by the Web Crypto API."
+      fallbackFeatures={[
+        'RSA-OAEP encryption with SHA-256 for secure message exchange',
+        'RSASSA-PKCS1-v1_5 digital signatures for message verification',
+        'Key pair generation with configurable modulus length (2048-4096 bits)',
+        'JSON Web Key (JWK) export/import for interoperability',
+        'Web Crypto API backend for native browser performance',
       ]}
     />
   )

@@ -43,7 +43,7 @@ export function Breadcrumb() {
             Home
           </Link>
         </li>
-        {breadcrumbs.map((crumb, index) => (
+        {breadcrumbs.map((crumb) => (
           <li key={crumb.href} className="flex items-center gap-2">
             <ChevronIcon className="h-4 w-4 text-slate-400 dark:text-slate-500" />
             {crumb.isLast ? (

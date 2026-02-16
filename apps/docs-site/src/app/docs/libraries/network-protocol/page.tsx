@@ -1,17 +1,19 @@
-import { LibraryStubPage } from '@/components/library-stub-page'
+import { LibraryDocPage } from '@/components/library-doc-page'
 
 export default function NetworkProtocolPage() {
   return (
-    <LibraryStubPage
+    <LibraryDocPage
       title="Network Protocol"
       packageName="@hyperfrontend/network-protocol"
-      description="Production-grade network protocol for secure, real-time cross-window and cross-process communication with built-in encryption, obfuscation, routing, and message queueing."
-      features={[
-        'Multi-layered security: dynamic key encryption, time-based password rotation, packet obfuscation',
-        'Isomorphic design with identical APIs for browser and Node.js',
-        'Staged message queues (encrypt → serialize → obfuscate)',
-        'Topic-based pub/sub routing with dynamic subscription resolution',
-        'Protocol versioning with extensible provider system',
+      slug="network-protocol"
+      category="core"
+      fallbackDescription="Binary-efficient message protocol supporting both JSON and direct ArrayBuffer transmission with built-in heartbeat monitoring for reliable real-time communication."
+      fallbackFeatures={[
+        'Binary message encoding with DataView-based serialization',
+        'Support for JSON payloads and direct ArrayBuffer transmission',
+        'Sequence numbering and acknowledgment system',
+        'Built-in heartbeat monitoring for connection health',
+        'Message types: CONNECT, DATA, ACK, HEARTBEAT, ERROR, DISCONNECT',
       ]}
     />
   )
