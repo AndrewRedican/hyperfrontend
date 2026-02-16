@@ -22,7 +22,7 @@ jobs:
       has-affected: ${{ steps.nx-affected.outputs.has-affected }}
     steps:
       - name: Checkout repository
-        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+        uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
         with:
           fetch-depth: 0 # Required for Nx affected calculations
 
@@ -43,7 +43,7 @@ jobs:
     if: needs.setup.outputs.has-affected == 'true'
     steps:
       - name: Checkout repository
-        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+        uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
 
       - name: Setup monorepo
         uses: ./.github/actions/setup-monorepo
@@ -62,7 +62,7 @@ jobs:
     if: needs.setup.outputs.has-affected == 'true'
     steps:
       - name: Checkout repository
-        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+        uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
 
       - name: Setup monorepo
         uses: ./.github/actions/setup-monorepo
@@ -81,7 +81,7 @@ jobs:
     if: needs.setup.outputs.has-affected == 'true'
     steps:
       - name: Checkout repository
-        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+        uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
 
       - name: Setup monorepo
         uses: ./.github/actions/setup-monorepo
@@ -100,7 +100,7 @@ jobs:
     if: needs.setup.outputs.has-affected == 'true'
     steps:
       - name: Checkout repository
-        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+        uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
 
       - name: Setup monorepo
         uses: ./.github/actions/setup-monorepo
@@ -119,7 +119,7 @@ jobs:
     if: needs.setup.outputs.has-affected == 'true'
     steps:
       - name: Checkout repository
-        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+        uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
 
       - name: Setup monorepo
         uses: ./.github/actions/setup-monorepo
@@ -146,7 +146,7 @@ jobs:
     if: needs.setup.outputs.has-affected == 'true'
     steps:
       - name: Checkout repository
-        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+        uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
 
       - name: Setup monorepo
         uses: ./.github/actions/setup-monorepo
@@ -195,7 +195,7 @@ jobs:
       pull-requests: write
     steps:
       - name: Checkout repository
-        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+        uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
         with:
           fetch-depth: 0
           ref: ${{ github.head_ref }}
