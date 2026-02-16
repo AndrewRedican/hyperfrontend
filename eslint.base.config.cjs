@@ -8,7 +8,7 @@ module.exports = [
   ...nx.configs['flat/javascript'],
   pluginJsdoc.configs['flat/recommended-typescript'],
   {
-    ignores: ['docs/', '.nx/', 'dist/', 'coverage/', 'tmp/'],
+    ignores: ['docs/', '.nx/', 'dist/', 'coverage/', 'tmp/', '**/node_modules/', '**/.next/', '**/out/'],
   },
   {
     files: ['**/*.ts', '**/*.tsx', '**/*.js', '**/*.jsx'],
@@ -19,9 +19,40 @@ module.exports = [
           enforceBuildableLibDependency: true,
           allow: ['^.*/eslint(\\.base)?\\.config\\.[cm]?js$'],
           depConstraints: [
+            // Core libraries: no dependencies on other libraries
             {
-              sourceTag: '*',
-              onlyDependOnLibsWithTags: ['*'],
+              sourceTag: 'type:core',
+              onlyDependOnLibsWithTags: [],
+            },
+            // Utility libraries: can depend on core
+            {
+              sourceTag: 'type:util',
+              onlyDependOnLibsWithTags: ['type:core', 'type:util'],
+            },
+            // Feature libraries: can depend on core and utils
+            {
+              sourceTag: 'type:feature',
+              onlyDependOnLibsWithTags: ['type:core', 'type:util', 'type:feature'],
+            },
+            // Protocol libraries: can depend on core and utils
+            {
+              sourceTag: 'type:protocol',
+              onlyDependOnLibsWithTags: ['type:core', 'type:util', 'type:protocol'],
+            },
+            // Applications: cannot import from local libraries (npm packages only)
+            {
+              sourceTag: 'type:app',
+              onlyDependOnLibsWithTags: [],
+            },
+            // Demos: cannot import from local libraries (npm packages only)
+            {
+              sourceTag: 'type:demo',
+              onlyDependOnLibsWithTags: [],
+            },
+            // Standalone apps: cannot import from local libraries
+            {
+              sourceTag: 'scope:standalone',
+              onlyDependOnLibsWithTags: [],
             },
           ],
         },

@@ -4,7 +4,7 @@
   "description": "Random number and data generation utilities.",
   "sourceRoot": "{projectRoot}/src",
   "projectType": "library",
-  "tags": [],
+  "tags": ["type:util", "scope:public"],
   "targets": {
     "version": {},
     "build": {

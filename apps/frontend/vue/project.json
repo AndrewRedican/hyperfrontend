@@ -4,6 +4,6 @@
   "description": "Vue micro-frontend application.",
   "sourceRoot": "{projectRoot}/src",
   "projectType": "application",
-  "tags": [],
+  "tags": ["type:app", "scope:standalone"],
   "targets": {}
 }

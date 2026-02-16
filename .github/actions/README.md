@@ -10,10 +10,6 @@ This directory contains reusable composite actions for the hyperfrontend monorep
 
 **Location**: `.github/actions/setup-monorepo/action.yml`
 
-**Inputs**:
-
-- `install-hugo` (optional, default: `'false'`): Whether to install Hugo (required for documentation builds)
-
 **Outputs**:
 
 - `cache-hit`: Boolean indicating whether npm cache was hit
@@ -23,8 +19,6 @@ This directory contains reusable composite actions for the hyperfrontend monorep
 ```yaml
 - name: Setup monorepo
   uses: ./.github/actions/setup-monorepo
-  with:
-    install-hugo: 'true'
 ```
 
 **What it does**:
@@ -32,7 +26,6 @@ This directory contains reusable composite actions for the hyperfrontend monorep
 1. Sets up Node.js version 24.13.0 (matches package.json engines)
 2. Caches npm dependencies using `package-lock.json` hash
 3. Installs dependencies with `npm ci`
-4. Optionally installs Hugo extended version for documentation builds
 
 ---
 
@@ -265,8 +258,6 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: ./.github/actions/setup-monorepo
-        with:
-          install-hugo: 'true'
 
   test:
     needs: setup

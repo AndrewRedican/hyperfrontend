@@ -119,100 +119,31 @@ npx nx run-many -t lint
 
 ### Working with Documentation
 
-The project uses [Hugo](https://gohugo.io/) with the [Hextra](https://imfing.github.io/hextra/) theme for documentation.
-
-#### Prerequisites
-
-Hugo Extended v0.154.5+ is required. If using the devcontainer, Hugo is automatically installed via the setup script.
+The documentation site is a Next.js application located in `apps/docs-site/`.
 
 #### Running Documentation Locally
 
-1. **Navigate to the docs directory**:
+```bash
+# Install dependencies (required once)
+npx nx install docs-site
 
-   ```bash
-   cd docs
-   ```
+# Start development server
+npx nx serve docs-site
+```
 
-2. **Start the Hugo development server**:
-
-   For **local development** or **GitHub Codespaces**:
-
-   ```bash
-   hugo server --bind 0.0.0.0 --port 1313 --baseURL /
-   ```
-
-   Or use the full path if needed:
-
-   ```bash
-   /usr/local/bin/hugo server --bind 0.0.0.0 --port 1313 --baseURL /
-   ```
-
-   > **Note**: The `--baseURL /` flag overrides the production baseURL for local development. Without it, you'll get 404 errors in Codespaces.
-
-3. **View the documentation**:
-   - Open your browser to `http://localhost:1313/` (note: no `/hyperfrontend/` path)
-   - In Codespaces, VS Code will auto-forward port 1313
-   - The server supports live reload - changes are reflected immediately
+The site will be available at `http://localhost:3000`.
 
 #### Building Documentation
 
-To build the static site for production:
-
 ```bash
-cd docs
-hugo --minify
+npx nx build docs-site
 ```
 
-The output will be in `docs/public/` (this directory is gitignored).
+The output will be in `apps/docs-site/out/` (this directory is gitignored).
 
 #### Documentation Structure
 
-```
-docs/
-├── content/           # Markdown content files
-│   ├── _index.md     # Homepage
-│   └── docs/         # Documentation pages
-├── static/           # Static assets (images, logos, etc.)
-├── themes/           # Hugo themes (Hextra)
-└── hugo.toml        # Hugo configuration
-```
-
-#### Adding or Editing Documentation
-
-1. Create or edit markdown files in `docs/content/`
-2. Follow the existing front matter format:
-
-   ```yaml
-   ---
-   title: Page Title
-   weight: 1
-   ---
-   ```
-
-3. Use Hugo shortcodes for enhanced features (see [Hextra docs](https://imfing.github.io/hextra/docs/guide/shortcodes/))
-4. Test locally before committing
-5. The site auto-deploys to GitHub Pages on push to `main`
-
-#### Troubleshooting
-
-**Hugo not found:**
-
-```bash
-# Check Hugo version
-/usr/local/bin/hugo version
-
-# Should show v0.154.5+extended
-```
-
-**Build errors:**
-
-```bash
-# Verbose build output
-hugo --verbose
-
-# Clear Hugo cache
-rm -rf docs/resources/ docs/public/
-```
+See the [Documentation Roadmap](./roadmap/documentation-roadmap.md) for the full documentation plan and structure.
 
 ## Contributor License Agreement (CLA)
 

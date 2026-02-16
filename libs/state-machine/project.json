@@ -4,7 +4,7 @@
   "description": "State machine implementation with lifecycle management, actions, and reducers.",
   "sourceRoot": "{projectRoot}/src",
   "projectType": "library",
-  "tags": [],
+  "tags": ["type:feature", "scope:public"],
   "targets": {
     "version": {},
     "build": {

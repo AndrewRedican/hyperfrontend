@@ -4,7 +4,7 @@
   "description": "String manipulation utilities for browser and Node.js environments.",
   "sourceRoot": "{projectRoot}/src",
   "projectType": "library",
-  "tags": [],
+  "tags": ["type:util", "scope:public"],
   "targets": {
     "version": {},
     "build": {

@@ -37,11 +37,10 @@ This directory contains the CI/CD workflows for the hyperfrontend monorepo.
 - Includes coverage threshold checking
 - Does not cancel in-progress runs (safer for main branch)
 - Longer retention for coverage reports (30 days)
-- Installs Hugo for documentation builds
 
 **Jobs**:
 
-- `setup`: Environment setup with Hugo
+- `setup`: Installs dependencies and prepares the workspace
 - `format`: Format checking (all projects)
 - `lint`: Linting (all projects)
 - `build`: Build (all projects)
@@ -76,10 +75,6 @@ All custom actions are located in [`.github/actions/`](../actions/):
 ### setup-monorepo
 
 Sets up the Node.js environment, caches npm dependencies, and installs packages.
-
-**Inputs**:
-
-- `install-hugo` (optional): Whether to install Hugo for documentation builds
 
 **Outputs**:
 

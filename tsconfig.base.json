@@ -79,6 +79,7 @@
       "@hyperfrontend/ui-utils/style": ["libs/utils/ui/src/style/index.ts"],
       "@hyperfrontend/ui-utils/time": ["libs/utils/ui/src/time/index.ts"],
       "@hyperfrontend/web-worker": ["libs/web-worker/src/index.ts"],
+      "@hyperfrontend/app": ["tools/app/src/index.ts"],
       "@hyperfrontend/package": ["tools/package/src/index.ts"]
     }
   },

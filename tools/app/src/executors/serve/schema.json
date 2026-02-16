@@ -1,0 +1,18 @@
+{
+  "$schema": "http://json-schema.org/schema",
+  "type": "object",
+  "title": "Serve executor schema",
+  "description": "Serve an application project in development mode.",
+  "properties": {
+    "command": {
+      "type": "string",
+      "description": "Custom serve command to run. Defaults to npm run dev.",
+      "default": "npm run dev"
+    },
+    "port": {
+      "type": "number",
+      "description": "Port to run the development server on."
+    }
+  },
+  "additionalProperties": false
+}

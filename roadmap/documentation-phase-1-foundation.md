@@ -14,27 +14,29 @@ Replace the placeholder Hugo site with a production-ready [Next.js](https://next
 
 ## Deliverables
 
-### 1.1 Project Setup
+### 1.1 Project Setup ✅
 
-- [ ] Initialize Next.js project with TypeScript
-- [ ] Configure [Tailwind CSS](https://tailwindcss.com/) with custom design tokens
-- [ ] Set up project structure for documentation pages
-- [ ] Configure ESLint and Prettier for consistency
-- [ ] Add to Nx workspace as `docs-site` project
+- [x] Initialize Next.js project with TypeScript
+- [x] Configure [Tailwind CSS](https://tailwindcss.com/) with custom design tokens
+- [x] Set up project structure for documentation pages
+- [x] Configure ESLint and Prettier for consistency
+- [x] Add to Nx workspace as `docs-site` project
 
 **Acceptance Criteria:**
 
-- `npx nx serve docs-site` runs locally
-- Hot reload works for content changes
-- TypeScript strict mode enabled
+- ✅ `npx nx serve docs-site` runs locally
+- ✅ Hot reload works for content changes
+- ✅ TypeScript strict mode enabled
 
 ### 1.2 Vercel Deployment
 
-- [ ] Connect repository to Vercel
+- [ ] Connect repository to Vercel — See [VERCEL_DEPLOYMENT.md](../apps/docs-site/VERCEL_DEPLOYMENT.md)
 - [ ] Configure custom domain ([hyperfrontend.dev](https://www.hyperfrontend.dev))
 - [ ] Set up preview deployments for PRs
 - [ ] Configure build caching for performance
 - [ ] Verify HTTPS and SSL certificates
+
+> **Status:** Configuration files ready (`vercel.json`), awaiting manual Vercel setup.
 
 **Acceptance Criteria:**
 
@@ -86,13 +88,13 @@ Contributing
 - Breadcrumbs show current location
 - Mobile menu expands/collapses correctly
 
-### 1.4 Landing Page
+### 1.4 Landing Page ✅
 
-- [ ] Hero section with project tagline
-- [ ] Feature highlights (framework-agnostic, independent deployment, etc.)
-- [ ] Quick links to Getting Started, API Reference, Demos
+- [x] Hero section with project tagline
+- [x] Feature highlights (framework-agnostic, independent deployment, etc.)
+- [x] Quick links to Getting Started, API Reference, Demos
 - [ ] GitHub stars/sponsor badges
-- [ ] Package installation snippet
+- [x] Package installation snippet
 
 **Content Source:**
 
@@ -101,41 +103,43 @@ Contributing
 
 **Acceptance Criteria:**
 
-- Page renders within 2 seconds
-- Clear call-to-action to Getting Started
-- Responsive on mobile devices
+- ✅ Page renders within 2 seconds
+- ✅ Clear call-to-action to Getting Started
+- ✅ Responsive on mobile devices
 
 ### 1.5 Basic Content Pages
 
 - [ ] Getting Started guide (from README Quick Start)
 - [ ] Stub pages for each library (title + "Documentation coming soon")
 - [ ] Contributing page (from CONTRIBUTING.md summary)
-- [ ] 404 page with navigation back to home
+- [x] 404 page with navigation back to home
+
+> **Status:** Placeholder pages exist for `/docs`, `/demos`, `/architecture`. Need to add nested routes and library stubs.
 
 **Acceptance Criteria:**
 
 - Getting Started is navigable and accurate
 - All sidebar links lead to valid pages
-- 404 page is styled consistently
+- ✅ 404 page is styled consistently
 
-### 1.6 Theme Support
+### 1.6 Theme Support ✅
 
-- [ ] Implement dark/light mode toggle
-- [ ] Persist preference in localStorage
-- [ ] Respect system preference as default
+- [x] Implement dark/light mode toggle
+- [x] Persist preference in localStorage
+- [x] Respect system preference as default
 - [ ] Ensure sufficient contrast in both modes
 
 **Acceptance Criteria:**
 
-- Toggle switches themes instantly
-- Preference persists across sessions
+- ✅ Toggle switches themes instantly
+- ✅ Preference persists across sessions
 - Both modes pass accessibility contrast checks
 
 ---
 
 ## Technical Specifications
 
-### Project Structure
+### Project Structure (Current)
 
 ```
 apps/
@@ -143,35 +147,37 @@ apps/
     src/
       app/                    # Next.js App Router
         page.tsx              # Landing page
-        docs/                 # Documentation pages
-          [slug]/page.tsx     # Dynamic doc pages
-        api/                  # API routes (if needed)
+        docs/page.tsx         # Docs stub
+        demos/page.tsx        # Demos stub
+        architecture/page.tsx # Architecture stub
       components/
-        navigation/           # Sidebar, breadcrumbs, mobile menu
-        layout/               # Header, footer, page layout
-        ui/                   # Buttons, cards, etc.
-      content/                # Markdown/MDX content (Phase 2)
+        features.tsx          # Feature highlights
+        footer.tsx            # Site footer
+        header.tsx            # Site header with nav
+        hero.tsx              # Landing hero section
+        quick-links.tsx       # Quick links grid
+        theme-provider.tsx    # Dark/light mode context
+        theme-toggle.tsx      # Theme toggle button
       styles/
         globals.css           # Tailwind base + custom
-      lib/
-        navigation.ts         # Navigation tree definition
-    public/
-      logo/                   # Logo assets
-    tailwind.config.ts
-    next.config.mjs
+      lib/                    # (empty, for Phase 2)
+    public/                   # Static assets
+    tailwind.config.js
+    next.config.js
     project.json              # Nx project config
+    vercel.json               # Vercel deployment config
 ```
 
-### Dependencies
+### Dependencies (Installed)
 
-| Package                   | Purpose                |
-| ------------------------- | ---------------------- |
-| `next`                    | React framework        |
-| `react`, `react-dom`      | UI library             |
-| `tailwindcss`             | Styling                |
-| `@tailwindcss/typography` | Prose styling for docs |
-| `next-themes`             | Dark/light mode        |
-| `clsx`                    | Conditional classnames |
+| Package                   | Version | Purpose                 |
+| ------------------------- | ------- | ----------------------- |
+| `next`                    | 15.5.12 | React framework         |
+| `react`, `react-dom`      | 19.0.0  | UI library              |
+| `tailwindcss`             | 3.4.17  | Styling                 |
+| `@tailwindcss/typography` | 0.5.16  | Prose styling for docs  |
+| `next-themes`             | 0.4.6   | _(unused, custom impl)_ |
+| `clsx`                    | 2.1.1   | Conditional classnames  |
 
 ### Design Tokens
 

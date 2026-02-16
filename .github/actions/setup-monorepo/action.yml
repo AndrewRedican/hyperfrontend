@@ -1,10 +1,5 @@
 name: 'Setup Monorepo'
 description: 'Sets up Node.js environment, caches dependencies, and installs packages for the monorepo'
-inputs:
-  install-hugo:
-    description: 'Whether to install Hugo (required for documentation builds)'
-    required: false
-    default: 'false'
 outputs:
   cache-hit:
     description: 'Whether npm cache was hit'
@@ -29,13 +24,3 @@ runs:
     - name: Install dependencies
       shell: bash
       run: npm ci
-
-    - name: Install Hugo
-      if: inputs.install-hugo == 'true'
-      shell: bash
-      run: |
-        HUGO_VERSION="0.147.7"
-        wget -q https://github.com/gohugoio/hugo/releases/download/v${HUGO_VERSION}/hugo_extended_${HUGO_VERSION}_Linux-64bit.tar.gz
-        tar -xzf hugo_extended_${HUGO_VERSION}_Linux-64bit.tar.gz
-        sudo mv hugo /usr/local/bin/
-        hugo version

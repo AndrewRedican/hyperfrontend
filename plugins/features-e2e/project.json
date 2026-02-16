@@ -4,6 +4,6 @@
   "description": "End-to-end tests for the hyperfrontend features plugin.",
   "sourceRoot": "{projectRoot}/src",
   "projectType": "application",
-  "tags": [],
+  "tags": ["type:util", "scope:internal"],
   "targets": {}
 }

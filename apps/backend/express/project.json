@@ -4,6 +4,6 @@
   "description": "Express.js backend application.",
   "sourceRoot": "{projectRoot}/src",
   "projectType": "application",
-  "tags": [],
+  "tags": ["type:app", "scope:standalone"],
   "targets": {}
 }

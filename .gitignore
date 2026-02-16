@@ -44,8 +44,4 @@ Thumbs.db
 .angular/cache
 .verdaccio/storage
 
-# hugo
-docs/public/
-docs/resources/
-
 _

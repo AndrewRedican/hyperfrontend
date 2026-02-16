@@ -1,0 +1,18 @@
+{
+  "$schema": "http://json-schema.org/schema",
+  "type": "object",
+  "title": "Build executor schema",
+  "description": "Build an application project using its local package.json scripts.",
+  "properties": {
+    "command": {
+      "type": "string",
+      "description": "Custom build command to run. Defaults to npm run build.",
+      "default": "npm run build"
+    },
+    "outputPath": {
+      "type": "string",
+      "description": "Output directory for build artifacts. Used for cache outputs."
+    }
+  },
+  "additionalProperties": false
+}

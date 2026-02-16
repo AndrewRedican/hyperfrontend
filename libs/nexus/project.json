@@ -4,7 +4,7 @@
   "description": "Window messaging utilities for cross-frame communication.",
   "sourceRoot": "{projectRoot}/src",
   "projectType": "library",
-  "tags": [],
+  "tags": ["type:protocol", "scope:public"],
   "targets": {
     "version": {},
     "build": {
