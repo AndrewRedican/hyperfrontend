@@ -1,0 +1,140 @@
+name: libraries
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'libs/**'
+      - '.github/workflows/ci-libraries.yml'
+      - '.github/workflows/_lib-ci.yml'
+      - '.github/actions/**'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-libraries-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  detect-changes:
+    name: detect-changes
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.set-matrix.outputs.matrix }}
+      has-changes: ${{ steps.set-matrix.outputs.has-changes }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Detect changed libraries
+        id: filter
+        uses: dorny/paths-filter@de90cc6fb38fc0963ad72b210f1f284cd68cea36 # v3.0.2
+        with:
+          filters: |
+            # ============================================================
+            # LIBRARY PATH FILTERS
+            # Add new libraries here as they are created
+            # ============================================================
+
+            # EXCLUDED LIBRARIES (not ready for CI):
+            # - web-worker: Excluded - experimental/unstable
+
+            # ACTIVE LIBRARIES:
+            cryptography:
+              - 'libs/cryptography/**'
+            logging:
+              - 'libs/logging/**'
+            network-protocol:
+              - 'libs/network-protocol/**'
+            nexus:
+              - 'libs/nexus/**'
+            state-machine:
+              - 'libs/state-machine/**'
+            data-utils:
+              - 'libs/utils/data/**'
+            function-utils:
+              - 'libs/utils/function/**'
+            immutable-api-utils:
+              - 'libs/utils/immutable-api/**'
+            list-utils:
+              - 'libs/utils/list/**'
+            random-generator-utils:
+              - 'libs/utils/random-generator/**'
+            string-utils:
+              - 'libs/utils/string/**'
+            time-utils:
+              - 'libs/utils/time/**'
+            ui-utils:
+              - 'libs/utils/ui/**'
+            workflow-changed:
+              - '.github/workflows/ci-libraries.yml'
+              - '.github/workflows/_lib-ci.yml'
+              - '.github/actions/**'
+
+      - name: Build matrix from filter outputs
+        id: set-matrix
+        shell: bash
+        run: |
+          # Build matrix based on paths-filter outputs
+          MATRIX_ITEMS='[]'
+          WORKFLOW_CHANGED="${{ steps.filter.outputs.workflow-changed }}"
+
+          add_if_changed() {
+            local changed="$1"
+            local project="$2"
+            local path="$3"
+            local flag="$4"
+
+            if [ "$WORKFLOW_CHANGED" = "true" ] || [ "$changed" = "true" ]; then
+              MATRIX_ITEMS=$(echo "$MATRIX_ITEMS" | jq --arg p "$project" --arg c "./coverage/${path}/lcov.info" --arg f "$flag" '. + [{"project-name": $p, "coverage-path": $c, "coverage-flag": $f}]')
+            fi
+          }
+
+          # ============================================================
+          # LIBRARY MATRIX ENTRIES
+          # ============================================================
+
+          # EXCLUDED LIBRARIES (not ready for CI):
+          # add_if_changed "${{ steps.filter.outputs.web-worker }}" "lib-web-worker" "libs/web-worker" "web-worker"
+
+          # ACTIVE LIBRARIES:
+          add_if_changed "${{ steps.filter.outputs.cryptography }}" "lib-cryptography" "libs/cryptography" "cryptography"
+          add_if_changed "${{ steps.filter.outputs.logging }}" "lib-logging" "libs/logging" "logging"
+          add_if_changed "${{ steps.filter.outputs.network-protocol }}" "lib-network-protocol" "libs/network-protocol" "network-protocol"
+          add_if_changed "${{ steps.filter.outputs.nexus }}" "lib-nexus" "libs/nexus" "nexus"
+          add_if_changed "${{ steps.filter.outputs.state-machine }}" "lib-state-machine" "libs/state-machine" "state-machine"
+          add_if_changed "${{ steps.filter.outputs.data-utils }}" "lib-data-utils" "libs/utils/data" "data-utils"
+          add_if_changed "${{ steps.filter.outputs.function-utils }}" "lib-function-utils" "libs/utils/function" "function-utils"
+          add_if_changed "${{ steps.filter.outputs.immutable-api-utils }}" "lib-immutable-api-utils" "libs/utils/immutable-api" "immutable-api-utils"
+          add_if_changed "${{ steps.filter.outputs.list-utils }}" "lib-list-utils" "libs/utils/list" "list-utils"
+          add_if_changed "${{ steps.filter.outputs.random-generator-utils }}" "lib-random-generator-utils" "libs/utils/random-generator" "random-generator-utils"
+          add_if_changed "${{ steps.filter.outputs.string-utils }}" "lib-string-utils" "libs/utils/string" "string-utils"
+          add_if_changed "${{ steps.filter.outputs.time-utils }}" "lib-time-utils" "libs/utils/time" "time-utils"
+          add_if_changed "${{ steps.filter.outputs.ui-utils }}" "lib-ui-utils" "libs/utils/ui" "ui-utils"
+
+          # Check if matrix is empty
+          COUNT=$(echo "$MATRIX_ITEMS" | jq 'length')
+          if [ "$COUNT" -eq 0 ]; then
+            echo "has-changes=false" >> $GITHUB_OUTPUT
+            echo "matrix={\"include\":[]}" >> $GITHUB_OUTPUT
+          else
+            MATRIX_JSON=$(echo "$MATRIX_ITEMS" | jq -c '{include: .}')
+            echo "has-changes=true" >> $GITHUB_OUTPUT
+            echo "matrix=${MATRIX_JSON}" >> $GITHUB_OUTPUT
+          fi
+
+  ci:
+    needs: detect-changes
+    if: needs.detect-changes.outputs.has-changes == 'true'
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJson(needs.detect-changes.outputs.matrix) }}
+    uses: ./.github/workflows/_lib-ci.yml
+    with:
+      project-name: ${{ matrix.project-name }}
+      coverage-path: ${{ matrix.coverage-path }}
+      coverage-flag: ${{ matrix.coverage-flag }}
+    secrets:
+      CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
