@@ -45,8 +45,6 @@
     "@rollup/plugin-node-resolve": "16.0.3",
     "@rollup/plugin-terser": "0.4.4",
     "@rollup/plugin-typescript": "12.3.0",
-    "@swc-node/register": "1.11.1",
-    "@swc/core": "1.15.11",
     "@types/jest": "30.0.0",
     "@types/node": "25.0.9",
     "@types/to-json-schema": "0.2.4",
