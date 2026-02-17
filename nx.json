@@ -85,14 +85,6 @@
         "targetName": "test"
       },
       "exclude": ["**/*-e2e/**/*"]
-    },
-    {
-      "plugin": "@nx/rollup/plugin",
-      "options": {
-        "buildTargetName": "build"
-      },
-      "include": ["libs/**/*", "plugins/**/*"],
-      "exclude": ["plugins/*-e2e/**/*"]
     }
   ],
   "nxCloudId": "6991685ccc04119366337805"
