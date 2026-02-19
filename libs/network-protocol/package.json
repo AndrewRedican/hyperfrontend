@@ -49,7 +49,7 @@
   "dependencies": {
     "@hyperfrontend/cryptography": "0.0.1",
     "@hyperfrontend/data-utils": "0.0.1",
-    "@hyperfrontend/json-utils": "0.0.1",
+    "@hyperfrontend/json-utils": "0.0.0",
     "@hyperfrontend/list-utils": "0.0.1",
     "@hyperfrontend/logging": "0.0.1",
     "@hyperfrontend/random-generator-utils": "0.0.1",
