@@ -30,9 +30,9 @@
   ],
   "dependencies": {
     "@hyperfrontend/function-utils": "0.0.1",
+    "@hyperfrontend/json-utils": "0.0.1",
     "@hyperfrontend/logging": "0.0.1",
-    "@hyperfrontend/random-generator-utils": "0.0.1",
-    "jsonschema": "1.5.0"
+    "@hyperfrontend/random-generator-utils": "0.0.1"
   },
   "peerDependencies": {
     "@hyperfrontend/network-protocol": "0.0.1"

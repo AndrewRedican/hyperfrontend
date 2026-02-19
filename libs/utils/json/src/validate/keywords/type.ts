@@ -1,0 +1,72 @@
+import type { Schema } from '../../types'
+import type { ValidationContext } from '../context'
+import { addError } from '../context'
+
+/**
+ * Type checking functions for JSON Schema types.
+ */
+const typeCheckers: Record<string, (value: unknown) => boolean> = {
+  string: (v) => typeof v === 'string',
+  number: (v) => typeof v === 'number' && isFinite(v),
+  integer: (v) => typeof v === 'number' && isFinite(v) && Number.isInteger(v),
+  boolean: (v) => typeof v === 'boolean',
+  array: (v) => Array.isArray(v),
+  object: (v) => v !== null && typeof v === 'object' && !Array.isArray(v),
+  null: (v) => v === null,
+}
+
+/**
+ * Gets the actual JSON type of a value for error messages.
+ *
+ * @param value - The value to get the type of
+ * @returns The JSON type as a string
+ */
+function getActualType(value: unknown): string {
+  if (value === null) return 'null'
+  if (Array.isArray(value)) return 'array'
+  const t = typeof value
+  if (t === 'number') {
+    const num = <number>value
+    if (!isFinite(num)) return 'number' // NaN/Infinity
+    return Number.isInteger(num) ? 'integer' : 'number'
+  }
+  return t
+}
+
+/**
+ * Validates the 'type' keyword.
+ *
+ * @param instance - Value being validated
+ * @param schema - Schema containing the type constraint
+ * @param ctx - Validation context
+ * @returns true if validation passes, false otherwise
+ */
+export function validateType(instance: unknown, schema: Schema, ctx: ValidationContext): boolean {
+  const schemaType = schema.type
+  if (schemaType === undefined) {
+    return true
+  }
+
+  const types = Array.isArray(schemaType) ? schemaType : [schemaType]
+
+  for (const type of types) {
+    const checker = typeCheckers[type]
+    if (checker && checker(instance)) {
+      // Special case: 'integer' should also pass 'number' check
+      return true
+    }
+    // If type is 'number' and value is an integer, it's still valid
+    if (type === 'number' && typeCheckers['integer']?.(instance)) {
+      return true
+    }
+  }
+
+  const actualType = getActualType(instance)
+  const expectedTypes = types.join(' or ')
+  addError(ctx, `Expected type ${expectedTypes} but got ${actualType}`, instance, 'type', {
+    expected: types,
+    actual: actualType,
+  })
+
+  return false
+}

@@ -47,18 +47,14 @@
     "./node/receiver": "./src/node/receiver/index.js"
   },
   "dependencies": {
-    "@hyperfrontend/data-utils": "0.0.1",
     "@hyperfrontend/cryptography": "0.0.1",
+    "@hyperfrontend/data-utils": "0.0.1",
+    "@hyperfrontend/json-utils": "0.0.1",
     "@hyperfrontend/list-utils": "0.0.1",
     "@hyperfrontend/logging": "0.0.1",
     "@hyperfrontend/random-generator-utils": "0.0.1",
     "@hyperfrontend/string-utils": "0.0.1",
-    "@hyperfrontend/time-utils": "0.0.1",
-    "jsonschema": "1.5.0",
-    "to-json-schema": "0.2.5"
-  },
-  "devDependencies": {
-    "@types/to-json-schema": "0.2.4"
+    "@hyperfrontend/time-utils": "0.0.1"
   },
   "funding": {
     "type": "github",

@@ -179,13 +179,6 @@ These libraries have no external dependencies:
 | `ui-utils`               | data-utils, function-utils, list-utils, random-generator-utils |
 | `cryptography`           | data-utils, random-generator-utils, string-utils, time-utils   |
 
-### Third-Party Dependencies
-
-| Library            | Third-Party Deps               |
-| ------------------ | ------------------------------ |
-| `network-protocol` | `jsonschema`, `to-json-schema` |
-| `nexus`            | `jsonschema`                   |
-
 ### Peer Dependencies
 
 | Library | Peer Deps                         | Required? |

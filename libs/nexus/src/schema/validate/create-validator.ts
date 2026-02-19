@@ -1,4 +1,4 @@
-import { Validator, type Schema } from 'jsonschema'
+import { createValidator as createJsonValidator, type Schema } from '@hyperfrontend/json-utils'
 import type { ValidationResult } from '../../types/validation'
 
 /**
@@ -9,16 +9,16 @@ import type { ValidationResult } from '../../types/validation'
  * @returns Validator function that returns validation results
  */
 export function createValidator(schema: Schema): (data: unknown) => ValidationResult {
-  const validator = new Validator()
+  const validator = createJsonValidator(schema)
 
   return (data: unknown): ValidationResult => {
-    const result = validator.validate(data, schema)
+    const result = validator(data)
 
     return {
       valid: result.valid,
       errors: result.errors.map((error) => ({
         message: error.message,
-        path: error.property,
+        path: error.path,
         value: error.instance,
       })),
     }

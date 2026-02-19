@@ -1,4 +1,4 @@
-import type { Schema } from 'jsonschema'
+import type { Schema } from '@hyperfrontend/json-utils'
 
 /**
  * Branded type representing a JSON-serialized string of type T.

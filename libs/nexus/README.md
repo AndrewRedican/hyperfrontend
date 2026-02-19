@@ -426,7 +426,6 @@ channel.send('MESSAGE', { hello: 'world' })
 | @hyperfrontend/function-utils         | Internal        |
 | @hyperfrontend/logging                | Internal        |
 | @hyperfrontend/random-generator-utils | Internal        |
-| jsonschema                            | Third-party     |
 | @hyperfrontend/network-protocol       | Peer (optional) |
 
 ## Part of hyperfrontend

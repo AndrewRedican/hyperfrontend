@@ -1,4 +1,4 @@
-import type { Schema } from 'jsonschema'
+import type { Schema } from '@hyperfrontend/json-utils'
 import type { DataCreater, JSONString, SerializedData } from '../model'
 import { hasCircularReference } from '@hyperfrontend/data-utils'
 import { uuidV4 } from '@hyperfrontend/random-generator-utils'

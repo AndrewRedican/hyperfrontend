@@ -1,3 +1,4 @@
+import type { Schema } from '@hyperfrontend/json-utils'
 import type { JSONString, SerializedData } from '../model'
 
 export const pid = '5815e1c3-4083-4d3c-8795-96c4c2965f2d'
@@ -12,7 +13,7 @@ export const message = {
   content: 'test message',
 }
 
-export const schema = {
+export const schema: Schema = {
   type: 'object',
   properties: {
     content: { type: 'string' },

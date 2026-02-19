@@ -323,17 +323,15 @@ This library provides **separate bundles for each protocol version**:
 
 ### Dependencies
 
-| Package                               | Type        |
-| ------------------------------------- | ----------- |
-| @hyperfrontend/cryptography           | Internal    |
-| @hyperfrontend/data-utils             | Internal    |
-| @hyperfrontend/list-utils             | Internal    |
-| @hyperfrontend/logging                | Internal    |
-| @hyperfrontend/random-generator-utils | Internal    |
-| @hyperfrontend/string-utils           | Internal    |
-| @hyperfrontend/time-utils             | Internal    |
-| jsonschema                            | Third-party |
-| to-json-schema                        | Third-party |
+| Package                               | Type     |
+| ------------------------------------- | -------- |
+| @hyperfrontend/cryptography           | Internal |
+| @hyperfrontend/data-utils             | Internal |
+| @hyperfrontend/list-utils             | Internal |
+| @hyperfrontend/logging                | Internal |
+| @hyperfrontend/random-generator-utils | Internal |
+| @hyperfrontend/string-utils           | Internal |
+| @hyperfrontend/time-utils             | Internal |
 
 ## Part of hyperfrontend
 
