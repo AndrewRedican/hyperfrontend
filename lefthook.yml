@@ -58,7 +58,8 @@ pre-push:
         done
 
         # Stage version-related changes
-        git add libs/*/package.json libs/*/CHANGELOG.md plugins/*/package.json plugins/*/CHANGELOG.md 2>/dev/null || true
+          # Stage version-related changes (including nested libs/utils/*/package.json and CHANGELOG.md)
+          git add libs/*/package.json libs/*/CHANGELOG.md libs/utils/*/package.json libs/utils/*/CHANGELOG.md plugins/*/package.json plugins/*/CHANGELOG.md 2>/dev/null || true
 
         # Commit if there are staged changes
         if ! git diff --staged --quiet; then
