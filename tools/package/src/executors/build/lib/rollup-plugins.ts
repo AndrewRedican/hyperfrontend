@@ -7,7 +7,7 @@ import terser from '@rollup/plugin-terser'
 
 /**
  * Creates a node-resolve plugin for entry point builds.
- * Resolves only non-@hyperfrontend/* packages.
+ * Resolves only non-\@hyperfrontend/* packages.
  *
  * @returns Configured node-resolve plugin
  */
@@ -43,6 +43,8 @@ export function createCommonJsPlugin(): Plugin {
 
 /**
  * Creates a typescript plugin for entry point builds.
+ * Uses paths: {} to prevent TypeScript from following workspace imports -
+ * \@hyperfrontend/* packages are external and should not be compiled.
  *
  * @param tsConfigPath - Absolute path to tsconfig file
  * @param projectRoot - Absolute path to project root
@@ -68,7 +70,6 @@ export function createTypescriptPlugin(
     sourceMap: sourcemap,
     compilerOptions: {
       paths: {},
-      baseUrl: projectRoot,
     },
   })
 }

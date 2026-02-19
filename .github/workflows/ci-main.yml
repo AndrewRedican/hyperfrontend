@@ -120,7 +120,7 @@ jobs:
       - name: Check coverage thresholds
         run: |
           echo "Checking coverage thresholds for all projects..."
-          npx nx run-many -t=test --all --coverage --codeCoverage || true
+          CI=1 npx nx run-many -t=test --all --coverage --codeCoverage --parallel=1 || true
 
       - name: Upload coverage reports
         if: always()
@@ -344,7 +344,7 @@ jobs:
 
       - name: Publish affected libraries
         if: steps.affected.outputs.has_affected == 'true'
-        run: npx nx affected -t=publish --base=HEAD~1 --head=HEAD
+        run: CI=1 npx nx affected -t=publish --base=HEAD~1 --head=HEAD --parallel=1
 
   create-github-release:
     name: github-release

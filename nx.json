@@ -1,5 +1,6 @@
 {
   "$schema": "./node_modules/nx/schemas/nx-schema.json",
+  "parallel": 1,
   "targetDefaults": {
     "lint": {
       "cache": true,

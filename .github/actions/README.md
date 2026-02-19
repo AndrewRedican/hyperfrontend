@@ -125,12 +125,13 @@ This directory contains reusable composite actions for the hyperfrontend monorep
 2. If `affected-only` is true and projects are specified, runs on those projects
 3. If `affected-only` is true but no projects, skips execution
 4. If `affected-only` is false, runs on all projects
-5. Uses `--parallel=3` flag for concurrent execution
+5. Uses `CI=1` for deterministic behavior and `--parallel=1` for sequential execution
 
 **Important Notes**:
 
 - Automatically skips when `affected-only=true` but no affected projects
-- Parallel execution improves performance (up to 3 concurrent tasks)
+- Sequential execution (`--parallel=1`) prevents resource exhaustion issues
+- `CI=1` ensures deterministic build behavior
 - Exit code is preserved (fails workflow if check fails)
 
 ---

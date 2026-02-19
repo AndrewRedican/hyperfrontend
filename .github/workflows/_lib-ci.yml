@@ -31,13 +31,13 @@ jobs:
         uses: ./.github/actions/setup-monorepo
 
       - name: Typecheck
-        run: npx nx typecheck ${{ inputs.project-name }}
+        run: CI=1 npx nx typecheck ${{ inputs.project-name }} --parallel=1
 
       - name: Build
-        run: npx nx build ${{ inputs.project-name }}
+        run: CI=1 npx nx build ${{ inputs.project-name }} --parallel=1
 
       - name: Test
-        run: npx nx test ${{ inputs.project-name }} --coverage
+        run: CI=1 npx nx test ${{ inputs.project-name }} --coverage --parallel=1
 
       - name: Upload coverage to Codecov
         if: always()
