@@ -7,8 +7,8 @@ import { addError } from '../context'
  */
 const formatValidators: Record<string, (value: string) => boolean> = {
   'date-time': (v) => {
-    // ISO 8601 date-time format
-    if (!/\d{4}-\d{2}-\d{2}T\d{2}:\d{2}/.test(v)) return false
+    // ISO 8601 date-time format - anchored to prevent matching at unexpected locations
+    if (!/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}/.test(v)) return false
     const date = Date.parse(v)
     return !isNaN(date)
   },
@@ -26,8 +26,8 @@ const formatValidators: Record<string, (value: string) => boolean> = {
   },
 
   email: (v) => {
-    // Basic email validation
-    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v)
+    // Basic email validation - fixed to prevent ReDoS by excluding dots from domain part
+    return /^[^\s@]+@[^\s@.]+\.[^\s@.]+$/.test(v)
   },
 
   hostname: (v) => {
