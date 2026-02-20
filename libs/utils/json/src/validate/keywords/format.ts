@@ -16,13 +16,21 @@ const formatValidators: Record<string, (value: string) => boolean> = {
   date: (v) => {
     // ISO 8601 date format (YYYY-MM-DD)
     if (!/^\d{4}-\d{2}-\d{2}$/.test(v)) return false
-    const date = Date.parse(v)
-    return !isNaN(date)
+    const [year, month, day] = v.split('-').map(Number)
+    const date = new Date(Date.UTC(year, month - 1, day))
+    // Check that the date components match exactly
+    return date.getUTCFullYear() === year && date.getUTCMonth() === month - 1 && date.getUTCDate() === day
   },
 
   time: (v) => {
     // ISO 8601 time format (HH:MM:SS or HH:MM:SS.sss)
-    return /^\d{2}:\d{2}:\d{2}(\.\d+)?(Z|[+-]\d{2}:\d{2})?$/.test(v)
+    const match = v.match(/^(\d{2}):(\d{2}):(\d{2})(\.\d+)?(Z|[+-]\d{2}:\d{2})?$/)
+    if (!match) return false
+    const hour = Number(match[1])
+    const minute = Number(match[2])
+    const second = Number(match[3])
+    if (hour > 23 || minute > 59 || second > 59) return false
+    return true
   },
 
   email: (v) => {

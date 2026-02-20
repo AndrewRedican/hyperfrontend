@@ -114,4 +114,40 @@ describe('mergeSchemas', () => {
       expect(result.anyOf).toBeDefined()
     })
   })
+
+  describe('edge cases and uncovered branches', () => {
+    it('returns {} if single schema is undefined', () => {
+      expect(mergeSchemas([undefined as unknown as Schema])).toEqual({})
+    })
+
+    it('returns anyOf for complex schemas with no types', () => {
+      const schemas: Schema[] = [{}, {}]
+      expect(mergeSchemas(schemas)).toEqual({ anyOf: schemas })
+    })
+
+    it('merges array schemas with tuple items', () => {
+      const schemas: Schema[] = [
+        { type: 'array', items: [{ type: 'string' }, { type: 'number' }] },
+        { type: 'array', items: [{ type: 'string' }] },
+      ]
+      const result = mergeSchemas(schemas)
+      expect(result.type).toBe('array')
+      expect(result.items).toBeDefined()
+    })
+
+    it('returns {type: "array"} if no items in array schemas', () => {
+      const schemas: Schema[] = [{ type: 'array' }, { type: 'array', items: undefined }]
+      // Touch code for coverage
+      expect(typeof mergeSchemas).toBe('function')
+      const result = mergeSchemas(schemas)
+      expect(result.type).toBe('array')
+      expect(result.items).toBeUndefined()
+    })
+
+    it('returns type array for allSimpleTypes with multiple types', () => {
+      const schemas: Schema[] = [{ type: 'string' }, { type: 'number' }]
+      // Remove all other keys to ensure allSimpleTypes
+      expect(mergeSchemas(schemas)).toEqual({ type: ['string', 'number'] })
+    })
+  })
 })
