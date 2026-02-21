@@ -21,7 +21,8 @@
         "bradlc.vscode-tailwindcss",
         "shd101wyy.markdown-preview-enhanced",
         "github.vscode-github-actions",
-        "yzhang.markdown-all-in-one"
+        "yzhang.markdown-all-in-one",
+        "ritwickdey.liveserver"
       ],
       "settings": {
         "editor.formatOnSave": true,
