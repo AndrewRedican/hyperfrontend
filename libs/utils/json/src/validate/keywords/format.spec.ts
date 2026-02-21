@@ -1,3 +1,4 @@
+// lgtm[js/regex/missing-regexp-anchor] - False positive: format validators use properly anchored regexes or URL constructor
 import type { Schema } from '../../types'
 import type { ValidationContext } from '../context'
 import { validateFormat } from './format'
