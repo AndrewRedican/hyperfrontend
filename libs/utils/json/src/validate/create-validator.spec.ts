@@ -1,5 +1,5 @@
-import { createValidator } from './create-validator'
 import type { Schema } from '../types'
+import { createValidator } from './create-validator'
 
 describe('createValidator', () => {
   it('creates a reusable validator function', () => {

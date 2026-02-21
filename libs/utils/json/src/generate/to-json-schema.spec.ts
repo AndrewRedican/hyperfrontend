@@ -72,6 +72,20 @@ describe('toJsonSchema', () => {
         },
       })
     })
+
+    it('respects additionalProperties: false option', () => {
+      const data = { name: 'Alice' }
+      const schema = toJsonSchema(data, { additionalProperties: false })
+
+      expect(schema).toEqual({
+        type: 'object',
+        properties: {
+          name: { type: 'string' },
+        },
+        required: ['name'],
+        additionalProperties: false,
+      })
+    })
   })
 
   describe('array type', () => {
@@ -112,6 +126,41 @@ describe('toJsonSchema', () => {
         type: 'array',
         items: { type: 'string' },
       })
+    })
+
+    it('handles arrays with mode: uniform when types are uniform', () => {
+      const data = ['a', 'b', 'c']
+      const schema = toJsonSchema(data, { arrays: { mode: 'uniform' } })
+
+      expect(schema).toEqual({
+        type: 'array',
+        items: { type: 'string' },
+      })
+    })
+
+    it('falls back to merged schema when uniform mode encounters mixed types', () => {
+      const data = ['string', 123, true]
+      const schema = toJsonSchema(data, { arrays: { mode: 'uniform' } })
+
+      // Should fall back to 'all' mode behavior when types are not uniform
+      expect(schema.type).toBe('array')
+      expect(schema.items).toBeDefined()
+    })
+
+    it('differs between first and uniform modes with mixed array', () => {
+      const data = ['string', 123, true]
+
+      const firstSchema = toJsonSchema(data, { arrays: { mode: 'first' } })
+      const uniformSchema = toJsonSchema(data, { arrays: { mode: 'uniform' } })
+
+      // 'first' mode should just use string
+      expect(firstSchema).toEqual({
+        type: 'array',
+        items: { type: 'string' },
+      })
+
+      // 'uniform' mode should detect mixed types and merge
+      expect(uniformSchema.items).toBeDefined()
     })
 
     it('handles mixed type arrays', () => {

@@ -1,5 +1,5 @@
-import { validate } from './validate'
 import type { Schema } from '../types'
+import { validate } from './validate'
 
 describe('validate', () => {
   describe('type keyword', () => {
@@ -336,6 +336,200 @@ describe('validate', () => {
       const result = validate({ a: 1, b: 2 }, schema, { collectAllErrors: false })
       expect(result.valid).toBe(false)
       expect(result.errors.length).toBe(1)
+    })
+
+    describe('early exit paths with collectAllErrors: false', () => {
+      it('exits early on type validation failure', () => {
+        const schema: Schema = { type: 'string', minLength: 1 }
+        const result = validate(123, schema, { collectAllErrors: false })
+        expect(result.valid).toBe(false)
+        expect(result.errors.length).toBe(1)
+        expect(result.errors[0].code).toBe('type')
+      })
+
+      it('exits early on enum validation failure', () => {
+        const schema: Schema = { enum: ['a', 'b'], minLength: 1 }
+        const result = validate('c', schema, { collectAllErrors: false })
+        expect(result.valid).toBe(false)
+        expect(result.errors.length).toBe(1)
+        expect(result.errors[0].code).toBe('enum')
+      })
+
+      it('exits early on string bounds validation failure', () => {
+        const schema: Schema = { type: 'string', minLength: 5, format: 'email' }
+        const result = validate('ab', schema, { collectAllErrors: false })
+        expect(result.valid).toBe(false)
+        expect(result.errors.length).toBe(1)
+        expect(result.errors[0].code).toBe('minLength')
+      })
+
+      it('exits early on format validation failure', () => {
+        const schema: Schema = { type: 'string', format: 'email' }
+        const result = validate('not-an-email', schema, { collectAllErrors: false })
+        expect(result.valid).toBe(false)
+        expect(result.errors.length).toBe(1)
+        expect(result.errors[0].code).toBe('format')
+      })
+
+      it('exits early on number bounds validation failure', () => {
+        const schema: Schema = { type: 'number', minimum: 10 }
+        const result = validate(5, schema, { collectAllErrors: false })
+        expect(result.valid).toBe(false)
+        expect(result.errors.length).toBe(1)
+        expect(result.errors[0].code).toBe('minimum')
+      })
+
+      it('exits early on items validation failure', () => {
+        const schema: Schema = { type: 'array', items: { type: 'string' }, minItems: 5 }
+        const result = validate([1, 2], schema, { collectAllErrors: false })
+        expect(result.valid).toBe(false)
+        expect(result.errors.length).toBe(1)
+        expect(result.errors[0].code).toBe('type')
+      })
+
+      it('exits early on array bounds validation failure', () => {
+        const schema: Schema = { type: 'array', minItems: 5 }
+        const result = validate([1], schema, { collectAllErrors: false })
+        expect(result.valid).toBe(false)
+        expect(result.errors.length).toBe(1)
+        expect(result.errors[0].code).toBe('minItems')
+      })
+
+      it('exits early on properties validation failure', () => {
+        const schema: Schema = {
+          type: 'object',
+          properties: { name: { type: 'string' } },
+          required: ['name', 'age'],
+        }
+        const result = validate({ name: 123 }, schema, { collectAllErrors: false })
+        expect(result.valid).toBe(false)
+        expect(result.errors.length).toBe(1)
+      })
+
+      it('exits early on required validation failure', () => {
+        const schema: Schema = {
+          type: 'object',
+          required: ['name', 'age'],
+          minProperties: 5,
+        }
+        const result = validate({}, schema, { collectAllErrors: false })
+        expect(result.valid).toBe(false)
+        expect(result.errors.length).toBe(1)
+        expect(result.errors[0].code).toBe('required')
+      })
+
+      it('exits early on patternProperties validation failure', () => {
+        const schema: Schema = {
+          type: 'object',
+          patternProperties: { '^x-': { type: 'string' } },
+          additionalProperties: false,
+        }
+        const result = validate({ 'x-value': 123, 'x-other': 456 }, schema, { collectAllErrors: false })
+        expect(result.valid).toBe(false)
+        expect(result.errors.length).toBe(1)
+      })
+
+      it('exits early on additionalProperties validation failure', () => {
+        const schema: Schema = {
+          type: 'object',
+          properties: { name: { type: 'string' } },
+          additionalProperties: false,
+          minProperties: 10,
+        }
+        const result = validate({ name: 'test', extra: true }, schema, { collectAllErrors: false })
+        expect(result.valid).toBe(false)
+        expect(result.errors.length).toBe(1)
+        expect(result.errors[0].code).toBe('additionalProperties')
+      })
+
+      it('exits early on object bounds validation failure', () => {
+        const schema: Schema = {
+          type: 'object',
+          minProperties: 3,
+        }
+        const result = validate({ a: 1 }, schema, { collectAllErrors: false })
+        expect(result.valid).toBe(false)
+        expect(result.errors.length).toBe(1)
+        expect(result.errors[0].code).toBe('minProperties')
+      })
+
+      it('exits early on dependencies validation failure', () => {
+        const schema: Schema = {
+          type: 'object',
+          dependencies: {
+            bar: ['baz'],
+          },
+        }
+        const result = validate({ bar: 1 }, schema, { collectAllErrors: false })
+        expect(result.valid).toBe(false)
+        expect(result.errors.length).toBe(1)
+        expect(result.errors[0].code).toBe('dependencies')
+      })
+
+      it('exits early on allOf validation failure', () => {
+        const schema: Schema = {
+          allOf: [{ type: 'string' }, { minLength: 5 }],
+        }
+        const result = validate(123, schema, { collectAllErrors: false })
+        expect(result.valid).toBe(false)
+        expect(result.errors.length).toBe(1)
+      })
+
+      it('exits early on anyOf validation failure', () => {
+        const schema: Schema = {
+          anyOf: [{ type: 'string' }, { type: 'number' }],
+        }
+        const result = validate(true, schema, { collectAllErrors: false })
+        expect(result.valid).toBe(false)
+        expect(result.errors.length).toBe(1)
+        expect(result.errors[0].code).toBe('anyOf')
+      })
+
+      it('exits early on oneOf validation failure', () => {
+        const schema: Schema = {
+          oneOf: [{ type: 'string' }, { type: 'number' }],
+        }
+        const result = validate(true, schema, { collectAllErrors: false })
+        expect(result.valid).toBe(false)
+        expect(result.errors.length).toBe(1)
+        expect(result.errors[0].code).toBe('oneOf')
+      })
+
+      it('exits early on not validation failure', () => {
+        const schema: Schema = {
+          not: { type: 'string' },
+        }
+        const result = validate('hello', schema, { collectAllErrors: false })
+        expect(result.valid).toBe(false)
+        expect(result.errors.length).toBe(1)
+        expect(result.errors[0].code).toBe('not')
+      })
+    })
+  })
+
+  describe('strictPatterns option', () => {
+    it('reports error for invalid regex pattern when strictPatterns is true', () => {
+      const schema: Schema = { type: 'string', pattern: '[invalid' }
+      const result = validate('test', schema, { strictPatterns: true })
+      expect(result.valid).toBe(false)
+      expect(result.errors.length).toBe(1)
+      expect(result.errors[0].message).toContain('Invalid regex')
+    })
+
+    it('skips validation for invalid regex when strictPatterns is false', () => {
+      const schema: Schema = { type: 'string', pattern: '[invalid' }
+      const result = validate('test', schema, { strictPatterns: false })
+      expect(result.valid).toBe(true)
+    })
+
+    it('reports error for invalid patternProperties regex when strictPatterns is true', () => {
+      const schema: Schema = {
+        type: 'object',
+        patternProperties: { '[invalid': { type: 'string' } },
+      }
+      const result = validate({ foo: 'bar' }, schema, { strictPatterns: true })
+      expect(result.valid).toBe(false)
+      expect(result.errors[0].message).toContain('Invalid regex')
     })
   })
 })

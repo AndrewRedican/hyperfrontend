@@ -20,6 +20,8 @@ export interface ValidationContext {
   readonly definitions: Map<string, Schema>
   /** Whether to collect all errors or stop at first */
   readonly collectAllErrors: boolean
+  /** Whether to report errors for invalid regex patterns */
+  readonly strictPatterns: boolean
   /** Schema validator function (injected to avoid circular deps) */
   readonly validate: SchemaValidator
 }
@@ -30,9 +32,15 @@ export interface ValidationContext {
  * @param rootSchema - The root schema being validated against
  * @param validator - The schema validator function
  * @param collectAllErrors - Whether to collect all errors (default: true)
+ * @param strictPatterns - Whether to report errors for invalid regex patterns (default: false)
  * @returns A new validation context
  */
-export function createValidationContext(rootSchema: Schema, validator: SchemaValidator, collectAllErrors = true): ValidationContext {
+export function createValidationContext(
+  rootSchema: Schema,
+  validator?: SchemaValidator,
+  collectAllErrors = true,
+  strictPatterns = false
+): ValidationContext {
   const definitions = new Map<string, Schema>()
 
   // Pre-populate definitions from root schema
@@ -48,6 +56,7 @@ export function createValidationContext(rootSchema: Schema, validator: SchemaVal
     rootSchema,
     definitions,
     collectAllErrors,
+    strictPatterns,
     validate: validator,
   }
 }

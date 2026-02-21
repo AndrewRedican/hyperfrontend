@@ -1,5 +1,5 @@
-import { mergeSchemas } from './merge-schemas'
 import type { Schema } from '../types'
+import { mergeSchemas } from './merge-schemas'
 
 describe('mergeSchemas', () => {
   describe('empty and single schemas', () => {
@@ -46,8 +46,8 @@ describe('mergeSchemas', () => {
 
       expect(result.type).toBe('object')
       expect(result.properties).toBeDefined()
-      expect(result.properties?.name).toEqual({ type: 'string' })
-      expect(result.properties?.age).toEqual({ type: 'number' })
+      expect(result.properties['name']).toEqual({ type: 'string' })
+      expect(result.properties['age']).toEqual({ type: 'number' })
     })
 
     it('merges conflicting property types recursively', () => {
@@ -58,7 +58,7 @@ describe('mergeSchemas', () => {
       const result = mergeSchemas(schemas)
 
       expect(result.type).toBe('object')
-      expect(result.properties?.value).toBeDefined()
+      expect(result.properties['value']).toBeDefined()
     })
 
     it('includes required only for properties required in all schemas', () => {

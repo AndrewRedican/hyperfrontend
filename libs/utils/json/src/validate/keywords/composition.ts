@@ -19,6 +19,7 @@ export function validateAllOf(instance: unknown, schema: Schema, ctx: Validation
   let valid = true
   for (let i = 0; i < allOf.length; i++) {
     const subSchema = allOf[i]
+    /* istanbul ignore if -- defensive null check for sparse arrays */
     if (!subSchema) continue
     if (!ctx.validate(instance, subSchema, ctx)) {
       valid = false

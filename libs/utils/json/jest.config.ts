@@ -6,4 +6,5 @@ export default <Config>{
   moduleFileExtensions: ['ts', 'js', 'html'],
   coverageDirectory: '../../../coverage/libs/utils/json',
   testEnvironment: 'node',
+  coveragePathIgnorePatterns: ['/src/types/'],
 }

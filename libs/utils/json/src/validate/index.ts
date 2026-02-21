@@ -1,5 +1,5 @@
+export type { ValidationContext } from './context'
 export { validate, validateSchema } from './validate'
 export { createValidator } from './create-validator'
 export { createValidationContext, pushPath, addError, shouldContinue } from './context'
-export type { ValidationContext } from './context'
 export { resolveRef } from './resolve-ref'

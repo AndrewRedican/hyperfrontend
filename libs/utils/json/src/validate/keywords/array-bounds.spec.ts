@@ -1,6 +1,6 @@
-import { validateArrayBounds } from './array-bounds'
 import type { Schema } from '../../types'
 import type { ValidationContext } from '../context'
+import { validateArrayBounds } from './array-bounds'
 
 describe('validateArrayBounds', () => {
   const ctx = <ValidationContext>{ errors: [] }

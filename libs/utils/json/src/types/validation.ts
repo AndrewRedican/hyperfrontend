@@ -30,4 +30,6 @@ export interface ValidationResult {
 export interface ValidateOptions {
   /** Whether to collect all errors or stop at first (default: true) */
   collectAllErrors?: boolean
+  /** Whether to report errors for invalid regex patterns (default: false) */
+  strictPatterns?: boolean
 }

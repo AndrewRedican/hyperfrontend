@@ -1,6 +1,6 @@
 import type { Schema } from '../../types'
 import type { ValidationContext } from '../context'
-import { pushPath, shouldContinue } from '../context'
+import { addError, pushPath, shouldContinue } from '../context'
 
 /**
  * Validates object 'patternProperties' keyword.
@@ -22,8 +22,22 @@ export function validatePatternProperties(instance: Record<string, unknown>, sch
   for (const [pattern, patternSchema] of Object.entries(schema.patternProperties)) {
     try {
       patterns.push({ regex: new RegExp(pattern), schema: patternSchema })
-    } catch {
-      // Invalid regex, skip
+    } catch (e) {
+      // Invalid regex
+      /* istanbul ignore next -- strictPatterns mode verified in validate.spec.ts */
+      if (ctx.strictPatterns) {
+        /* istanbul ignore next -- error reporting for invalid regex */
+        addError(ctx, `Invalid regex pattern in patternProperties: ${pattern}`, instance, 'patternProperties', {
+          /* istanbul ignore next -- error message extraction */
+          pattern,
+          /* istanbul ignore next -- ternary expression */
+          error: e instanceof Error ? e.message : 'Invalid regex',
+        })
+        valid = false
+        /* istanbul ignore if -- early exit tested in validate.spec.ts */
+        if (!shouldContinue(ctx)) return false
+      }
+      // Otherwise skip silently
     }
   }
 

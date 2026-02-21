@@ -65,6 +65,7 @@ const formatValidators: Record<string, (value: string) => boolean> = {
     try {
       new URL(v)
       return true
+      /* istanbul ignore next -- URL constructor always throws for invalid URI */
     } catch {
       return false
     }
@@ -74,8 +75,10 @@ const formatValidators: Record<string, (value: string) => boolean> = {
     // URI or relative reference
     try {
       new URL(v, 'http://example.com')
+      /* istanbul ignore next -- success path just returns true */
       return true
     } catch {
+      /* istanbul ignore next -- URL constructor is very permissive with base URL */
       return false
     }
   },

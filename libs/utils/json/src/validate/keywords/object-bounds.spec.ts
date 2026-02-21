@@ -1,6 +1,6 @@
-import { validateObjectBounds } from './object-bounds'
 import type { Schema } from '../../types'
 import type { ValidationContext } from '../context'
+import { validateObjectBounds } from './object-bounds'
 
 describe('validateObjectBounds', () => {
   const ctx = <ValidationContext>{ errors: [] }

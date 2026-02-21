@@ -55,4 +55,21 @@ describe('validateAdditionalProperties', () => {
     expect(validateAdditionalProperties({ foo: 1, bar: 'x' }, schema, ctx)).toBe(true)
     expect(validateAdditionalProperties({ foo: 1, bar: 2 }, schema, ctx)).toBe(false)
   })
+
+  it('allows any additional property when additionalProperties is true', () => {
+    const schema: Schema = { properties: { foo: { type: 'number' } }, additionalProperties: true }
+    expect(validateAdditionalProperties({ foo: 1, bar: 'anything', baz: 123 }, schema, ctx)).toBe(true)
+  })
+
+  it('skips properties matching patternProperties patterns', () => {
+    const schema: Schema = {
+      properties: { foo: { type: 'number' } },
+      patternProperties: { '^x_': { type: 'string' } },
+      additionalProperties: false,
+    }
+    // x_bar matches the pattern, so should not trigger additionalProperties: false error
+    // bar does not match any pattern and should fail
+    expect(validateAdditionalProperties({ foo: 1, x_bar: 'test' }, schema, ctx)).toBe(true)
+    expect(validateAdditionalProperties({ foo: 1, bar: 2 }, schema, ctx)).toBe(false)
+  })
 })

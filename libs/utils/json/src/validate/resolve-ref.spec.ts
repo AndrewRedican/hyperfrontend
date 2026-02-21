@@ -1,6 +1,6 @@
+import type { Schema } from '../types'
 import { resolveRef } from './resolve-ref'
 import { createValidationContext } from './context'
-import type { Schema } from '../types'
 
 describe('resolveRef', () => {
   describe('definition references', () => {
@@ -117,6 +117,30 @@ describe('resolveRef', () => {
       }
       const ctx = createValidationContext(schema)
       const resolved = resolveRef('#/type/invalid', ctx)
+
+      expect(resolved).toBeUndefined()
+    })
+
+    it('returns undefined when path leads to null', () => {
+      const schema: Schema = {
+        definitions: {
+          nullDef: null as unknown as Schema,
+        },
+      }
+      const ctx = createValidationContext(schema)
+      const resolved = resolveRef('#/definitions/nullDef/property', ctx)
+
+      expect(resolved).toBeUndefined()
+    })
+
+    it('returns undefined when path leads to primitive', () => {
+      const schema: Schema = {
+        definitions: {
+          test: { type: 'string', minLength: 1 },
+        },
+      }
+      const ctx = createValidationContext(schema)
+      const resolved = resolveRef('#/definitions/test/minLength', ctx)
 
       expect(resolved).toBeUndefined()
     })

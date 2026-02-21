@@ -1,6 +1,6 @@
-import { createValidationContext, pushPath, addError, shouldContinue } from './context'
 import type { SchemaValidator } from './context'
 import type { Schema } from '../types'
+import { createValidationContext, pushPath, addError, shouldContinue } from './context'
 
 const mockValidator: SchemaValidator = () => true
 

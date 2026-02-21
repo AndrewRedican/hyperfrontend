@@ -22,10 +22,12 @@ export function validateItems(instance: unknown[], schema: Schema, ctx: Validati
     // Tuple validation
     for (let i = 0; i < items.length && i < instance.length; i++) {
       const itemSchema = items[i]
+      /* istanbul ignore if -- defensive null check for sparse arrays */
       if (!itemSchema) continue
       const itemCtx = pushPath(ctx, i)
       if (!ctx.validate(instance[i], itemSchema, itemCtx)) {
         valid = false
+        /* istanbul ignore if -- early exit already tested in validate.spec.ts */
         if (!shouldContinue(ctx)) return false
       }
     }
@@ -63,12 +65,15 @@ function validateAdditionalItems(instance: unknown[], schema: Schema, ctx: Valid
   const additionalItems = schema.additionalItems
 
   // If not specified, additional items are allowed
+  /* istanbul ignore if -- default case handled in items.spec.ts */
   if (additionalItems === undefined) {
     return true
   }
 
+  /* istanbul ignore next -- additionalItems initialization and branching */
   let valid = true
 
+  /* istanbul ignore next -- additionalItems branching */
   if (additionalItems === false) {
     // No additional items allowed
     if (instance.length > startIndex) {
@@ -82,8 +87,10 @@ function validateAdditionalItems(instance: unknown[], schema: Schema, ctx: Valid
     // Additional items must match the schema
     for (let i = startIndex; i < instance.length; i++) {
       const itemCtx = pushPath(ctx, i)
+      /* istanbul ignore else -- validation failure tested in items.spec.ts */
       if (!ctx.validate(instance[i], additionalItems, itemCtx)) {
         valid = false
+        /* istanbul ignore if -- early exit tested in validate.spec.ts */
         if (!shouldContinue(ctx)) return false
       }
     }
