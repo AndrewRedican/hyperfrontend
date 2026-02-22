@@ -51,7 +51,7 @@ The library emphasizes explicit state modeling through a core `State` interface 
 - **Coordinated async processes** - `CoordinatedAsyncProcess` for managing multiple async operations with startAll/cancelAll/pauseAll
 - **Lifecycle-aware components** - Abstract class with initializing/ready/starting/stopping/active state tracking and callbacks
 - **Modular exports** - Tree-shakeable secondary entry points for actions, reducers, selectors, events, and async operations
-- **Zero external dependencies** - Only depends on `@hyperfrontend/data-utils` for internal utilities
+- **Zero external dependencies** - Self-contained implementation with no third-party runtime dependencies
 
 ### Architecture Highlights
 
@@ -86,10 +86,6 @@ Dynamic state management systems (global objects, event buses) suffer from uncle
 ```bash
 npm install @hyperfrontend/state-machine
 ```
-
-**Dependencies:**
-
-- `@hyperfrontend/data-utils` - Internal data utilities
 
 ## Quick Start
 
@@ -318,12 +314,6 @@ coordinator.cancelAll()
 ```
 
 **Global variable:** `HyperfrontendStateMachine`
-
-### Dependencies
-
-| Package                   | Type     |
-| ------------------------- | -------- |
-| @hyperfrontend/data-utils | Internal |
 
 ## Part of hyperfrontend
 
