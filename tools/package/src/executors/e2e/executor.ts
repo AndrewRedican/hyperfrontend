@@ -1,6 +1,6 @@
 import type { ExecutorContext } from '@nx/devkit'
 import type { E2eExecutorOptions } from './schema'
-import { existsSync, readFileSync, unlinkSync } from 'node:fs'
+import { existsSync, readFileSync, unlinkSync, mkdirSync, renameSync } from 'node:fs'
 import { execSync } from 'node:child_process'
 import { join } from 'node:path'
 import { logger } from '@nx/devkit'
@@ -21,12 +21,13 @@ function getPackageInfo(distPath: string): { name: string; version: string } {
 }
 
 /**
- * Runs npm pack in the dist directory and returns the tarball filename.
+ * Runs npm pack in the dist directory and moves the tarball to tmp directory.
  *
  * @param distPath - The path to the dist directory to pack
- * @returns The filename of the created tarball
+ * @param workspaceRoot - The root directory of the workspace
+ * @returns The full path to the created tarball in tmp directory
  */
-function packPackage(distPath: string): string {
+function packPackage(distPath: string, workspaceRoot: string): string {
   logger.info(`Running npm pack in ${distPath}`)
 
   const result = execSync('npm pack --json', {
@@ -42,8 +43,16 @@ function packPackage(distPath: string): string {
     throw new Error('npm pack did not return a tarball filename')
   }
 
-  logger.info(`Created tarball: ${tarballFilename}`)
-  return tarballFilename
+  // Move tarball from dist to tmp/e2e-packs to avoid accidental publishing
+  const tmpDir = join(workspaceRoot, 'tmp', 'e2e-packs')
+  mkdirSync(tmpDir, { recursive: true })
+
+  const srcPath = join(distPath, tarballFilename)
+  const destPath = join(tmpDir, tarballFilename)
+  renameSync(srcPath, destPath)
+
+  logger.info(`Created tarball: ${destPath}`)
+  return destPath
 }
 
 /**
@@ -144,8 +153,7 @@ export default async function e2eExecutor(options: E2eExecutorOptions, context: 
   // Step 1: Pack and install if not skipped
   if (!options.skipInstall) {
     try {
-      const tarballFilename = packPackage(distPath)
-      tarballPath = join(distPath, tarballFilename)
+      tarballPath = packPackage(distPath, workspaceRoot)
       installTarball(tarballPath, testDir)
     } catch (error) {
       logger.error(`Failed to pack/install: ${error}`)
