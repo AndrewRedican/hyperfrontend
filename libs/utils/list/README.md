@@ -160,7 +160,9 @@ const cleaned = uniqueStrings(nonEmptyStrings(userInputs)) // ['hello', 'world']
 
 ## Part of hyperfrontend
 
-This library is part of the [hyperfrontend](https://github.com/AndrewRedican/hyperfrontend) monorepo. [Full documentation](https://hyperfrontend.dev).
+This library is part of the [hyperfrontend](https://github.com/AndrewRedican/hyperfrontend) monorepo.
+
+**📖 [Full documentation](https://www.hyperfrontend.dev/docs/libraries/utils/list)**
 
 - Used by [@hyperfrontend/network-protocol](https://github.com/AndrewRedican/hyperfrontend/tree/main/libs/network-protocol) for message queue management
 
