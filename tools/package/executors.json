@@ -19,6 +19,11 @@
       "implementation": "./src/executors/version/executor",
       "schema": "./src/executors/version/schema.json",
       "description": "Idempotent wrapper around @jscutlery/semver:version. Checks if version tag already exists before delegating."
+    },
+    "e2e": {
+      "implementation": "./src/executors/e2e/executor",
+      "schema": "./src/executors/e2e/schema.json",
+      "description": "Test package build outputs via npm pack + tarball install."
     }
   }
 }

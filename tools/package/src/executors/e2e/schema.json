@@ -1,0 +1,36 @@
+{
+  "$schema": "http://json-schema.org/schema",
+  "type": "object",
+  "title": "E2E executor schema",
+  "description": "Test package build outputs via npm pack + tarball install.",
+  "properties": {
+    "packageDir": {
+      "type": "string",
+      "description": "Path to built package directory relative to workspace root (e.g., dist/libs/logging). Defaults to dist/{projectRoot}."
+    },
+    "testDir": {
+      "type": "string",
+      "description": "Path to E2E test project directory relative to workspace root. Defaults to the current project root."
+    },
+    "formats": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": ["cjs", "esm", "iife", "umd"]
+      },
+      "description": "Output formats to test. Defaults to all formats with existing jest configs.",
+      "default": ["cjs", "esm", "browser"]
+    },
+    "skipInstall": {
+      "type": "boolean",
+      "description": "Skip npm pack and install step (useful if already installed).",
+      "default": false
+    },
+    "cleanupTarball": {
+      "type": "boolean",
+      "description": "Remove tarball after installation.",
+      "default": true
+    }
+  },
+  "required": []
+}

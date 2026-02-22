@@ -10,6 +10,7 @@ Nx plugin providing executors for building, type-checking, versioning, and publi
 | `typecheck` | TypeScript type checking without emitting files                   |
 | `version`   | Idempotent semver wrapper — skips if tag exists                   |
 | `publish`   | Publish to npm with dry-run support                               |
+| `e2e`       | Test package outputs via npm pack + tarball install               |
 
 ## Quick Start
 
@@ -59,6 +60,23 @@ Publishes built packages to npm. Supports:
 - Automatic access control based on package scope
 - Reads credentials from NPM_TOKEN environment variable
 
+### e2e
+
+End-to-end testing for package build outputs. Validates that built packages install and work correctly:
+
+1. Runs `npm pack` in the dist directory to create a tarball
+2. Installs the tarball in the E2E test project
+3. Runs Jest tests for each configured format (cjs, esm, browser)
+4. Cleans up tarball after testing
+
+Options:
+
+- `packageDir`: Path to built package directory (defaults to `dist/libs/{projectName}`)
+- `testDir`: Path to E2E test project directory
+- `formats`: Output formats to test (`cjs`, `esm`, `iife`, `umd`)
+- `skipInstall`: Skip npm pack and install step
+- `cleanupTarball`: Remove tarball after installation (default: true)
+
 ## Directory Structure
 
 ```
@@ -68,6 +86,7 @@ src/executors/
 │   ├── schema.json
 │   ├── README.md
 │   └── lib/         # Build utilities
+├── e2e/             # E2E package testing executor
 ├── typecheck/       # Type checking executor
 ├── publish/         # npm publish executor
 └── version/         # Semver version executor
