@@ -92,13 +92,6 @@ npm install @hyperfrontend/network-protocol
 
 > **Note:** The `/node/*` entry points depend on `@hyperfrontend/cryptography` which uses `webcrypto.subtle`. This API was experimental in Node.js 18.x. For production use with Node.js entry points, Node.js 19+ is recommended.
 
-**Note:** This package has several internal dependencies from the @hyperfrontend ecosystem:
-
-- `@hyperfrontend/cryptography` - Encryption and time-based password generation
-- `@hyperfrontend/logging` - Structured logging
-- `@hyperfrontend/data-utils` - Data transformation utilities
-- Plus additional utility libraries for string, list, time, and random operations
-
 ## Quick Start
 
 ### Browser: Secure Cross-Window Communication
@@ -320,18 +313,6 @@ This library provides **separate bundles for each protocol version**:
 ```
 
 **Global variables:** `HyperfrontendNetworkProtocolV1`, `HyperfrontendNetworkProtocolV2`
-
-### Dependencies
-
-| Package                               | Type     |
-| ------------------------------------- | -------- |
-| @hyperfrontend/cryptography           | Internal |
-| @hyperfrontend/data-utils             | Internal |
-| @hyperfrontend/list-utils             | Internal |
-| @hyperfrontend/logging                | Internal |
-| @hyperfrontend/random-generator-utils | Internal |
-| @hyperfrontend/string-utils           | Internal |
-| @hyperfrontend/time-utils             | Internal |
 
 ## Part of hyperfrontend
 
