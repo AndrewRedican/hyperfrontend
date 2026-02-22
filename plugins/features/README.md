@@ -24,3 +24,13 @@
 </p>
 
 Nx plugin for hyperfrontend micro-frontend features.
+
+## Part of hyperfrontend
+
+This plugin is part of the [hyperfrontend](https://github.com/AndrewRedican/hyperfrontend) monorepo.
+
+**📖 [Full documentation](https://www.hyperfrontend.dev/docs/plugins/features)**
+
+## License
+
+MIT
