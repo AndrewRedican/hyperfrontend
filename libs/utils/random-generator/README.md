@@ -47,7 +47,7 @@ Unlike cryptographic random generators (like Web Crypto API), these utilities pr
 - **UUID v4 generation** with validation (`uuidV4()`, `isUuidV4()`)
 - **Seeded pseudo-random** for reproducible sequences in tests
 - **Time-based seeding** for pseudo-random variations
-- **Zero dependencies** (except sibling @hyperfrontend/data-utils)
+- **Zero dependencies** - Self-contained implementation with no third-party runtime dependencies
 - **Pure functions** for functional composition
 
 ### Architecture Highlights
@@ -208,12 +208,6 @@ const terrain = {
 ```
 
 **Global variable:** `HyperfrontendRandomGenerator`
-
-### Dependencies
-
-| Package                   | Type     |
-| ------------------------- | -------- |
-| @hyperfrontend/data-utils | Internal |
 
 ## Part of hyperfrontend
 
