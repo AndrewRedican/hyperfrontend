@@ -207,15 +207,6 @@ const cleanup = createGestureListener(() => console.log('Escape or pinch detecte
 
 **Global variable:** `HyperfrontendUIUtils`
 
-### Dependencies
-
-| Package                               | Type     |
-| ------------------------------------- | -------- |
-| @hyperfrontend/data-utils             | Internal |
-| @hyperfrontend/function-utils         | Internal |
-| @hyperfrontend/list-utils             | Internal |
-| @hyperfrontend/random-generator-utils | Internal |
-
 ## Part of hyperfrontend
 
 This library is part of the [hyperfrontend](https://github.com/AndrewRedican/hyperfrontend) monorepo. [Full documentation](https://hyperfrontend.dev).
