@@ -26,9 +26,6 @@
   <a href="https://github.com/AndrewRedican/hyperfrontend">
     <img src="https://img.shields.io/github/stars/AndrewRedican/hyperfrontend?style=flat-square" alt="GitHub stars">
   </a>
-  <a href="https://bundlephobia.com/package/@hyperfrontend/cryptography">
-    <img src="https://img.shields.io/bundlephobia/minzip/@hyperfrontend/cryptography?style=flat-square" alt="Bundle Size">
-  </a>
   <img src="https://img.shields.io/badge/node-%3E%3D18.0.0-brightgreen?style=flat-square&logo=node.js" alt="Node Version">
   <img src="https://img.shields.io/badge/tree%20shakeable-%E2%9C%93-success?style=flat-square" alt="Tree Shakeable">
 </p>
@@ -48,7 +45,7 @@ The library features three modular entry points: platform-specific implementatio
 - **Secure Vault Storage** - Password-protected in-memory storage with optional single-use mode for sensitive data
 - **Time-Based Passwords** - Generate rotating credentials synchronized to UTC time windows for short-lived authentication
 - **Cryptographic Hashing** - SHA-256 hash generation with hexadecimal output and validation utilities
-- **Zero External Dependencies** - Self-contained implementation using only platform crypto APIs and internal hyperfrontend utilities
+- **Zero External Dependencies** - Self-contained implementation using only platform crypto APIs
 - **Functional Architecture** - Pure functions with dependency injection for testability and composability
 - **Secondary Entry Points** - Tree-shakeable imports optimize bundle size (`/browser`, `/node`, `/common`)
 
@@ -206,18 +203,11 @@ isSHA256Hash('e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855')
 
 **Global variable:** `HyperfrontendCryptography`
 
-### Dependencies
-
-| Package                               | Type     |
-| ------------------------------------- | -------- |
-| @hyperfrontend/data-utils             | Internal |
-| @hyperfrontend/random-generator-utils | Internal |
-| @hyperfrontend/string-utils           | Internal |
-| @hyperfrontend/time-utils             | Internal |
-
 ## Part of hyperfrontend
 
-This library is part of the [hyperfrontend](https://github.com/AndrewRedican/hyperfrontend) monorepo. [Full documentation](https://hyperfrontend.dev).
+This library is part of the [hyperfrontend](https://github.com/AndrewRedican/hyperfrontend) monorepo.
+
+**📖 [Full documentation](https://www.hyperfrontend.dev/docs/libraries/cryptography)**
 
 - Used by [@hyperfrontend/network-protocol](https://github.com/AndrewRedican/hyperfrontend/tree/main/libs/network-protocol) for secure message encryption
 - Looking for cross-window messaging with built-in encryption? See [@hyperfrontend/nexus](https://github.com/AndrewRedican/hyperfrontend/tree/main/libs/nexus)

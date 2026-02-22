@@ -1,7 +1,7 @@
 import { logger, readJsonFile } from '@nx/devkit'
 import { existsSync, mkdirSync, copyFileSync, readdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { join, dirname, basename, relative } from 'node:path'
-import { glob } from 'glob'
+import { globSync } from 'glob'
 import type { AssetConfig, PackageJson } from './types'
 
 /** License information for a third-party dependency */
@@ -22,17 +22,17 @@ export interface ThirdPartyLicenseEntry {
  * @param outputPath - Absolute path to output directory
  * @param workspaceRoot - Absolute path to workspace root
  */
-export async function copyAssets(
+export function copyAssets(
   assets: (string | AssetConfig)[],
   projectRoot: string,
   outputPath: string,
   workspaceRoot: string
-): Promise<void> {
+): void {
   for (const asset of assets) {
     if (typeof asset === 'string') {
-      await copyStringAsset(asset, projectRoot, outputPath)
+      copyStringAsset(asset, projectRoot, outputPath)
     } else {
-      await copyConfigAsset(asset, outputPath, workspaceRoot)
+      copyConfigAsset(asset, outputPath, workspaceRoot)
     }
   }
 }
@@ -44,7 +44,7 @@ export async function copyAssets(
  * @param projectRoot - Absolute path to the project root
  * @param outputPath - Absolute path to output directory
  */
-async function copyStringAsset(asset: string, projectRoot: string, outputPath: string): Promise<void> {
+function copyStringAsset(asset: string, projectRoot: string, outputPath: string): void {
   const srcPath = join(projectRoot, asset)
   if (existsSync(srcPath)) {
     const destPath = join(outputPath, basename(asset))
@@ -60,11 +60,11 @@ async function copyStringAsset(asset: string, projectRoot: string, outputPath: s
  * @param outputPath - Absolute path to output directory
  * @param workspaceRoot - Absolute path to workspace root
  */
-async function copyConfigAsset(asset: AssetConfig, outputPath: string, workspaceRoot: string): Promise<void> {
+function copyConfigAsset(asset: AssetConfig, outputPath: string, workspaceRoot: string): void {
   const inputDir = asset.input.startsWith('./') ? join(workspaceRoot, asset.input.slice(2)) : join(workspaceRoot, asset.input)
 
   const pattern = join(inputDir, asset.glob)
-  const files = await glob(pattern, { nodir: true })
+  const files = globSync(pattern, { nodir: true })
 
   for (const file of files) {
     const relPath = relative(inputDir, file)

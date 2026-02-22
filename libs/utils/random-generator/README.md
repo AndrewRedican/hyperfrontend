@@ -26,9 +26,6 @@
   <a href="https://github.com/AndrewRedican/hyperfrontend">
     <img src="https://img.shields.io/github/stars/AndrewRedican/hyperfrontend?style=flat-square" alt="GitHub stars">
   </a>
-  <a href="https://bundlephobia.com/package/@hyperfrontend/random-generator-utils">
-    <img src="https://img.shields.io/bundlephobia/minzip/@hyperfrontend/random-generator-utils?style=flat-square" alt="Bundle Size">
-  </a>
   <img src="https://img.shields.io/badge/node-%3E%3D18.0.0-brightgreen?style=flat-square&logo=node.js" alt="Node Version">
   <img src="https://img.shields.io/badge/tree%20shakeable-%E2%9C%93-success?style=flat-square" alt="Tree Shakeable">
 </p>
@@ -47,7 +44,7 @@ Unlike cryptographic random generators (like Web Crypto API), these utilities pr
 - **UUID v4 generation** with validation (`uuidV4()`, `isUuidV4()`)
 - **Seeded pseudo-random** for reproducible sequences in tests
 - **Time-based seeding** for pseudo-random variations
-- **Zero dependencies** (except sibling @hyperfrontend/data-utils)
+- **Zero dependencies** - Self-contained implementation with no third-party runtime dependencies
 - **Pure functions** for functional composition
 
 ### Architecture Highlights
@@ -209,15 +206,11 @@ const terrain = {
 
 **Global variable:** `HyperfrontendRandomGenerator`
 
-### Dependencies
-
-| Package                   | Type     |
-| ------------------------- | -------- |
-| @hyperfrontend/data-utils | Internal |
-
 ## Part of hyperfrontend
 
-This library is part of the [hyperfrontend](https://github.com/AndrewRedican/hyperfrontend) monorepo. [Full documentation](https://hyperfrontend.dev).
+This library is part of the [hyperfrontend](https://github.com/AndrewRedican/hyperfrontend) monorepo.
+
+**📖 [Full documentation](https://www.hyperfrontend.dev/docs/libraries/utils/random-generator)**
 
 - Used by [@hyperfrontend/cryptography](https://github.com/AndrewRedican/hyperfrontend/tree/main/libs/cryptography) for secure random generation
 

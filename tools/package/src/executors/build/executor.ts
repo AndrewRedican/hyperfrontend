@@ -208,7 +208,7 @@ export default async function runExecutor(options: BuildV2ExecutorOptions, conte
     }
 
     if (assets.length > 0) {
-      await copyAssets(assets, projectRoot, outputPath, workspaceRoot)
+      copyAssets(assets, projectRoot, outputPath, workspaceRoot)
     }
 
     logger.info(`Successfully built ${projectName}`)

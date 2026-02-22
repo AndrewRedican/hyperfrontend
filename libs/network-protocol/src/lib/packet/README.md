@@ -422,7 +422,6 @@ packet/
 
 - **[Library Index](../README.md)** - All modules
 - **[Architecture Guide](../../../ARCHITECTURE.md#packet-types)** - Packet architecture
-- **Integration Tests**: [packet-transformations.integration.spec.ts](packet-transformations.integration.spec.ts)
 
 ### Related Modules
 

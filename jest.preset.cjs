@@ -8,7 +8,7 @@ module.exports = {
   passWithNoTests: false,
   testTimeout: 30000,
   rootDir: '.',
-  testPathIgnorePatterns: ['.d.ts', '.js'],
+  testPathIgnorePatterns: ['\\.d\\.ts$', '\\.js$'],
   coverageThreshold: {
     global: {
       branches: 100,

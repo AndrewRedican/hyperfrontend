@@ -33,6 +33,7 @@
       "@hyperfrontend/data-utils": ["libs/utils/data/src/index.ts"],
       "@hyperfrontend/function-utils": ["libs/utils/function/src/index.ts"],
       "@hyperfrontend/immutable-api-utils": ["libs/utils/immutable-api/src/index.ts"],
+      "@hyperfrontend/json-utils": ["libs/utils/json/src/index.ts"],
       "@hyperfrontend/list-utils": ["libs/utils/list/src/index.ts"],
       "@hyperfrontend/logging": ["libs/logging/src/index.ts"],
       "@hyperfrontend/network-protocol/browser/channel": ["libs/network-protocol/src/browser/channel/index.ts"],

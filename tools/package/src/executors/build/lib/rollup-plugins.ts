@@ -7,15 +7,22 @@ import terser from '@rollup/plugin-terser'
 
 /**
  * Creates a node-resolve plugin for entry point builds.
- * Resolves only non-@hyperfrontend/* packages.
  *
+ * @param bundleWorkspaceDeps - When true, resolves \@hyperfrontend/* packages for bundling.
+ *                              When false, excludes them so they remain external.
  * @returns Configured node-resolve plugin
  */
-export function createNodeResolvePlugin(): Plugin {
-  return <Plugin>nodeResolve({
+export function createNodeResolvePlugin(bundleWorkspaceDeps: boolean): Plugin {
+  const config: Parameters<typeof nodeResolve>[0] = {
     extensions: ['.ts', '.js'],
-    resolveOnly: [/^(?!@hyperfrontend\/)/],
-  })
+  }
+
+  // When not bundling workspace deps, exclude @hyperfrontend/* from resolution
+  if (!bundleWorkspaceDeps) {
+    config.resolveOnly = [/^(?!@hyperfrontend\/)/]
+  }
+
+  return <Plugin>nodeResolve(config)
 }
 
 /**
@@ -49,6 +56,9 @@ export function createCommonJsPlugin(): Plugin {
  * @param outputPath - Absolute path to output directory
  * @param emitDeclarations - Whether to emit declaration files
  * @param sourcemap - Whether to emit sourcemaps
+ * @param bundleWorkspaceDeps - When true, enables workspace path resolution for bundling.
+ *                              When false, uses paths: {} to prevent following workspace imports.
+ * @param workspaceRoot - Absolute path to workspace root (required when bundleWorkspaceDeps is true)
  * @returns Configured typescript plugin
  */
 export function createTypescriptPlugin(
@@ -56,8 +66,32 @@ export function createTypescriptPlugin(
   projectRoot: string,
   outputPath: string,
   emitDeclarations: boolean,
-  sourcemap: boolean
+  sourcemap: boolean,
+  bundleWorkspaceDeps: boolean,
+  workspaceRoot?: string
 ): Plugin {
+  // When bundling workspace deps, use workspace-level configuration
+  // similar to bundle builds (IIFE/UMD) to allow compiling files from
+  // multiple workspace packages
+  if (bundleWorkspaceDeps) {
+    if (!workspaceRoot) {
+      throw new Error('workspaceRoot is required when bundleWorkspaceDeps is true')
+    }
+    return <Plugin>typescript({
+      tsconfig: tsConfigPath,
+      declaration: emitDeclarations,
+      declarationMap: emitDeclarations,
+      sourceMap: sourcemap,
+      compilerOptions: {
+        baseUrl: workspaceRoot,
+        outDir: outputPath,
+        declarationDir: emitDeclarations ? outputPath : undefined,
+      },
+    })
+  }
+
+  // When not bundling workspace deps, use project-level configuration
+  // with empty paths to prevent TypeScript from following workspace imports
   return <Plugin>typescript({
     tsconfig: tsConfigPath,
     declaration: emitDeclarations,
@@ -68,7 +102,6 @@ export function createTypescriptPlugin(
     sourceMap: sourcemap,
     compilerOptions: {
       paths: {},
-      baseUrl: projectRoot,
     },
   })
 }

@@ -475,7 +475,6 @@ queue/
 
 - **[Library Index](../README.md)** - All modules
 - **[Architecture Guide](../../../ARCHITECTURE.md#queue)** - Queue architecture
-- **Integration Tests**: [queue.integration.spec.ts](queue.integration.spec.ts)
 
 ### Related Modules
 

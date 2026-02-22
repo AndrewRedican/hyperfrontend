@@ -49,10 +49,11 @@ runs:
         esac
 
         # Build the command
+        # CI=1 ensures deterministic behavior, --parallel=1 prevents resource exhaustion
         if [ "$AFFECTED_ONLY" = "true" ] && [ -n "$AFFECTED_PROJECTS" ]; then
           # Run only on affected projects
           echo "Running $TARGET on affected projects: $AFFECTED_PROJECTS"
-          npx nx run-many -t=$TARGET --projects=$AFFECTED_PROJECTS --parallel=3
+          CI=1 npx nx run-many -t=$TARGET --projects=$AFFECTED_PROJECTS --parallel=1
         elif [ "$AFFECTED_ONLY" = "true" ] && [ -z "$AFFECTED_PROJECTS" ]; then
           # No affected projects, skip
           echo "No affected projects, skipping $TARGET check"
@@ -60,5 +61,5 @@ runs:
         else
           # Run on all projects
           echo "Running $TARGET on all projects"
-          npx nx run-many -t=$TARGET --all --parallel=3
+          CI=1 npx nx run-many -t=$TARGET --all --parallel=1
         fi

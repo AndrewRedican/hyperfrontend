@@ -1,0 +1,28 @@
+{
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "name": "lib-json-utils",
+  "description": "Zero-dependency JSON Schema validation and generation utilities.",
+  "sourceRoot": "{projectRoot}/src",
+  "projectType": "library",
+  "tags": ["type:util", "scope:public"],
+  "targets": {
+    "version": {},
+    "build": {
+      "executor": "@hyperfrontend/package:build",
+      "options": {
+        "esm": { "bundleWorkspaceDeps": true },
+        "cjs": { "bundleWorkspaceDeps": true },
+        "iife": {
+          "entry": ".",
+          "globalName": "HyperfrontendJsonUtils"
+        },
+        "umd": {
+          "entry": ".",
+          "globalName": "HyperfrontendJsonUtils"
+        }
+      }
+    },
+    "publish": {},
+    "typecheck": {}
+  }
+}

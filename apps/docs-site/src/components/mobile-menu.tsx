@@ -28,8 +28,21 @@ const navigation: NavItem[] = [
       { title: '@hyperfrontend/cryptography', href: '/docs/libraries/cryptography' },
       { title: '@hyperfrontend/state-machine', href: '/docs/libraries/state-machine' },
       { title: '@hyperfrontend/web-worker', href: '/docs/libraries/web-worker' },
-      { title: '@hyperfrontend/utils', href: '/docs/libraries/utils' },
       { title: '@hyperfrontend/logging', href: '/docs/libraries/logging' },
+      {
+        title: 'Utils',
+        children: [
+          { title: '@hyperfrontend/data-utils', href: '/docs/libraries/utils/data' },
+          { title: '@hyperfrontend/function-utils', href: '/docs/libraries/utils/function' },
+          { title: '@hyperfrontend/immutable-api-utils', href: '/docs/libraries/utils/immutable-api' },
+          { title: '@hyperfrontend/json-utils', href: '/docs/libraries/utils/json' },
+          { title: '@hyperfrontend/list-utils', href: '/docs/libraries/utils/list' },
+          { title: '@hyperfrontend/random-generator-utils', href: '/docs/libraries/utils/random-generator' },
+          { title: '@hyperfrontend/string-utils', href: '/docs/libraries/utils/string' },
+          { title: '@hyperfrontend/time-utils', href: '/docs/libraries/utils/time' },
+          { title: '@hyperfrontend/ui-utils', href: '/docs/libraries/utils/ui' },
+        ],
+      },
     ],
   },
   {

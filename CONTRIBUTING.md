@@ -488,7 +488,7 @@ This will launch an interactive prompt to guide you through creating a properly 
 ### Examples
 
 ```bash
-feat(@hyperfrontend/features): add Vue.js support
+feat(plugin-features): add Vue.js support
 
 Add generator and executor support for Vue.js framework in the features plugin.
 
@@ -496,7 +496,7 @@ Closes #123
 ```
 
 ```bash
-fix(@hyperfrontend/nexus): resolve memory leak in event listeners
+fix(lib-nexus): resolve memory leak in event listeners
 
 Ensure event listeners are properly cleaned up when features are destroyed.
 

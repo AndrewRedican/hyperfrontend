@@ -26,9 +26,6 @@
   <a href="https://github.com/AndrewRedican/hyperfrontend">
     <img src="https://img.shields.io/github/stars/AndrewRedican/hyperfrontend?style=flat-square" alt="GitHub stars">
   </a>
-  <a href="https://bundlephobia.com/package/@hyperfrontend/list-utils">
-    <img src="https://img.shields.io/bundlephobia/minzip/@hyperfrontend/list-utils?style=flat-square" alt="Bundle Size">
-  </a>
   <img src="https://img.shields.io/badge/node-%3E%3D18.0.0-brightgreen?style=flat-square&logo=node.js" alt="Node Version">
   <img src="https://img.shields.io/badge/tree%20shakeable-%E2%9C%93-success?style=flat-square" alt="Tree Shakeable">
 </p>
@@ -48,7 +45,7 @@ The library enforces immutability through frozen interfaces while maintaining hi
 - **String sanitization** utilities (dedupe, trim, filter empty)
 - **Range generation** for loop-free number sequences
 - **Map utilities** for common Map operations
-- **Zero dependencies** (except sibling @hyperfrontend/data-utils)
+- **Zero dependencies** - Self-contained implementation with no third-party runtime dependencies
 
 ### Architecture Highlights
 
@@ -158,15 +155,11 @@ const cleaned = uniqueStrings(nonEmptyStrings(userInputs)) // ['hello', 'world']
 
 **Global variable:** `HyperfrontendListUtils`
 
-### Dependencies
-
-| Package                   | Type     |
-| ------------------------- | -------- |
-| @hyperfrontend/data-utils | Internal |
-
 ## Part of hyperfrontend
 
-This library is part of the [hyperfrontend](https://github.com/AndrewRedican/hyperfrontend) monorepo. [Full documentation](https://hyperfrontend.dev).
+This library is part of the [hyperfrontend](https://github.com/AndrewRedican/hyperfrontend) monorepo.
+
+**📖 [Full documentation](https://www.hyperfrontend.dev/docs/libraries/utils/list)**
 
 - Used by [@hyperfrontend/network-protocol](https://github.com/AndrewRedican/hyperfrontend/tree/main/libs/network-protocol) for message queue management
 

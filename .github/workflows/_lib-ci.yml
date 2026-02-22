@@ -25,23 +25,23 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
-        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 
       - name: Setup monorepo
         uses: ./.github/actions/setup-monorepo
 
       - name: Typecheck
-        run: npx nx typecheck ${{ inputs.project-name }}
+        run: CI=1 npx nx typecheck ${{ inputs.project-name }} --parallel=1
 
       - name: Build
-        run: npx nx build ${{ inputs.project-name }}
+        run: CI=1 npx nx build ${{ inputs.project-name }} --parallel=1
 
       - name: Test
-        run: npx nx test ${{ inputs.project-name }} --coverage
+        run: CI=1 npx nx test ${{ inputs.project-name }} --coverage --parallel=1
 
       - name: Upload coverage to Codecov
         if: always()
-        uses: codecov/codecov-action@e28ff129e5465c2c0dcc6f003fc735cb6ae0c673 # v5.0.7
+        uses: codecov/codecov-action@0561704f0f02c16a585d4c7555e57fa2e44cf909 # v5.5.2
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           files: ${{ inputs.coverage-path }}

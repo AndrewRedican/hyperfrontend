@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import type { Schema } from 'jsonschema'
+import type { Schema } from '@hyperfrontend/json-utils'
 import { uuidV4 } from '@hyperfrontend/random-generator-utils'
 import { createHash } from '@hyperfrontend/cryptography/node'
 import { getSchema } from '../creators/get-schema'

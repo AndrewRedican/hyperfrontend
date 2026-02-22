@@ -1,10 +1,36 @@
-import fs from 'fs'
-import path from 'path'
+import fs from 'node:fs'
+import path from 'node:path'
 
 const GENERATED_DIR = path.resolve(process.cwd(), '.generated')
 const DOCS_DIR = path.join(GENERATED_DIR, 'docs')
 const API_DIR = path.join(GENERATED_DIR, 'api')
 const WORKSPACE_ROOT = path.resolve(process.cwd(), '../..')
+
+/**
+ * Map of URL slugs to generated content slugs for utils packages
+ * URL path: /docs/libraries/utils/{shortSlug} -> Generated slug: {shortSlug}-utils
+ */
+const UTILS_SLUG_MAP: Record<string, string> = {
+  data: 'data-utils',
+  function: 'function-utils',
+  'immutable-api': 'immutable-api-utils',
+  json: 'json-utils',
+  list: 'list-utils',
+  'random-generator': 'random-generator-utils',
+  string: 'string-utils',
+  time: 'time-utils',
+  ui: 'ui-utils',
+}
+
+/**
+ * Convert a URL slug to the corresponding generated content slug
+ *
+ * @param slug - The URL slug (e.g., 'data' or 'nexus')
+ * @returns The generated content slug (e.g., 'data-utils' or 'nexus')
+ */
+function resolveGeneratedSlug(slug: string): string {
+  return UTILS_SLUG_MAP[slug] || slug
+}
 
 interface Manifest {
   generatedAt: string
@@ -45,8 +71,10 @@ export function getManifest(): Manifest | null {
  * @returns The README content as a string or null if not found
  */
 export function getLibraryReadme(slug: string): string | null {
+  const generatedSlug = resolveGeneratedSlug(slug)
+
   // First check generated content
-  const generatedPath = path.join(DOCS_DIR, slug, 'readme.md')
+  const generatedPath = path.join(DOCS_DIR, generatedSlug, 'readme.md')
   if (fs.existsSync(generatedPath)) {
     return fs.readFileSync(generatedPath, 'utf-8')
   }
@@ -74,8 +102,10 @@ export function getLibraryReadme(slug: string): string | null {
  * @returns The architecture document content or null if not found
  */
 export function getLibraryArchitecture(slug: string): string | null {
+  const generatedSlug = resolveGeneratedSlug(slug)
+
   // First check generated content
-  const generatedPath = path.join(DOCS_DIR, slug, 'architecture.md')
+  const generatedPath = path.join(DOCS_DIR, generatedSlug, 'architecture.md')
   if (fs.existsSync(generatedPath)) {
     return fs.readFileSync(generatedPath, 'utf-8')
   }
@@ -102,7 +132,8 @@ export function getLibraryArchitecture(slug: string): string | null {
  * @returns The parsed API documentation object or null if not found
  */
 export function getLibraryApi(slug: string): unknown | null {
-  const apiPath = path.join(API_DIR, slug, 'api.json')
+  const generatedSlug = resolveGeneratedSlug(slug)
+  const apiPath = path.join(API_DIR, generatedSlug, 'api.json')
 
   if (!fs.existsSync(apiPath)) {
     return null

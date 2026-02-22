@@ -62,7 +62,7 @@ Not everyone can contribute financially, and that's okay! There are many other w
 - Improve documentation
 - Write tests
 
-See our [Contributing Guide](../CONTRIBUTING.md) for details.
+See our [Contributing Guide](CONTRIBUTING.md) for details.
 
 ### 📣 Spread the Word
 

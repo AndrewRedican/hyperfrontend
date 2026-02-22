@@ -26,9 +26,6 @@
   <a href="https://github.com/AndrewRedican/hyperfrontend">
     <img src="https://img.shields.io/github/stars/AndrewRedican/hyperfrontend?style=flat-square" alt="GitHub stars">
   </a>
-  <a href="https://bundlephobia.com/package/@hyperfrontend/network-protocol">
-    <img src="https://img.shields.io/bundlephobia/minzip/@hyperfrontend/network-protocol?style=flat-square" alt="Bundle Size">
-  </a>
   <img src="https://img.shields.io/badge/node-%3E%3D18.0.0-brightgreen?style=flat-square&logo=node.js" alt="Node Version">
   <img src="https://img.shields.io/badge/tree%20shakeable-%E2%9C%93-success?style=flat-square" alt="Tree Shakeable">
 </p>
@@ -91,13 +88,6 @@ npm install @hyperfrontend/network-protocol
 - **Browser:** Modern browsers with Web Crypto API support
 
 > **Note:** The `/node/*` entry points depend on `@hyperfrontend/cryptography` which uses `webcrypto.subtle`. This API was experimental in Node.js 18.x. For production use with Node.js entry points, Node.js 19+ is recommended.
-
-**Note:** This package has several internal dependencies from the @hyperfrontend ecosystem:
-
-- `@hyperfrontend/cryptography` - Encryption and time-based password generation
-- `@hyperfrontend/logging` - Structured logging
-- `@hyperfrontend/data-utils` - Data transformation utilities
-- Plus additional utility libraries for string, list, time, and random operations
 
 ## Quick Start
 
@@ -321,23 +311,11 @@ This library provides **separate bundles for each protocol version**:
 
 **Global variables:** `HyperfrontendNetworkProtocolV1`, `HyperfrontendNetworkProtocolV2`
 
-### Dependencies
-
-| Package                               | Type        |
-| ------------------------------------- | ----------- |
-| @hyperfrontend/cryptography           | Internal    |
-| @hyperfrontend/data-utils             | Internal    |
-| @hyperfrontend/list-utils             | Internal    |
-| @hyperfrontend/logging                | Internal    |
-| @hyperfrontend/random-generator-utils | Internal    |
-| @hyperfrontend/string-utils           | Internal    |
-| @hyperfrontend/time-utils             | Internal    |
-| jsonschema                            | Third-party |
-| to-json-schema                        | Third-party |
-
 ## Part of hyperfrontend
 
-This library is part of the [hyperfrontend](https://github.com/AndrewRedican/hyperfrontend) monorepo. [Full documentation](https://hyperfrontend.dev).
+This library is part of the [hyperfrontend](https://github.com/AndrewRedican/hyperfrontend) monorepo.
+
+**📖 [Full documentation](https://www.hyperfrontend.dev/docs/libraries/network-protocol)**
 
 - Uses [@hyperfrontend/cryptography](https://github.com/AndrewRedican/hyperfrontend/tree/main/libs/cryptography) for encryption and time-based password generation
 - For simpler cross-window messaging with contracts, see [@hyperfrontend/nexus](https://github.com/AndrewRedican/hyperfrontend/tree/main/libs/nexus)

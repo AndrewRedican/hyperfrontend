@@ -635,14 +635,6 @@ protocol/
 - **[Node v1](../../node/v1/)** - Node.js-specific v1 protocol (dynamic key)
 - **[Node v2](../../node/v2/)** - Node.js-specific v2 protocol (PSK)
 
-### Integration Tests
-
-| Version | Platform | Test File                                                              |
-| ------- | -------- | ---------------------------------------------------------------------- |
-| V1      | Node.js  | [node/v1/v1.integration.spec.ts](../../node/v1/v1.integration.spec.ts) |
-| V1      | Browser  | [integration-tests/v1/](../../integration-tests/v1/)                   |
-| V2      | Browser  | [integration-tests/v2/](../../integration-tests/v2/)                   |
-
 ### Related Modules
 
 | Module                             | Relationship                      |

@@ -8,6 +8,7 @@
 </p>
 
 <p align="center">
+  <a href="https://www.hyperfrontend.dev">Docs</a> |
   <a href="https://github.com/AndrewRedican/hyperfrontend/blob/main/MANIFESTO.md">Manifesto</a> |
   <a href="https://github.com/AndrewRedican/hyperfrontend/blob/main/README.md#installation">Installation</a> |
   <a href="https://github.com/AndrewRedican/hyperfrontend/blob/main/README.md#quick-start">Quick Start</a> |

@@ -22,7 +22,7 @@ jobs:
       has-affected: ${{ steps.nx-affected.outputs.has-affected }}
     steps:
       - name: Checkout repository
-        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           fetch-depth: 0 # Required for Nx affected calculations
 
@@ -43,7 +43,7 @@ jobs:
     if: needs.setup.outputs.has-affected == 'true'
     steps:
       - name: Checkout repository
-        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 
       - name: Setup monorepo
         uses: ./.github/actions/setup-monorepo
@@ -62,7 +62,7 @@ jobs:
     if: needs.setup.outputs.has-affected == 'true'
     steps:
       - name: Checkout repository
-        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 
       - name: Setup monorepo
         uses: ./.github/actions/setup-monorepo
@@ -81,7 +81,7 @@ jobs:
     if: needs.setup.outputs.has-affected == 'true'
     steps:
       - name: Checkout repository
-        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 
       - name: Setup monorepo
         uses: ./.github/actions/setup-monorepo
@@ -100,7 +100,7 @@ jobs:
     if: needs.setup.outputs.has-affected == 'true'
     steps:
       - name: Checkout repository
-        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 
       - name: Setup monorepo
         uses: ./.github/actions/setup-monorepo
@@ -112,6 +112,14 @@ jobs:
           affected-only: 'true'
           affected-projects: ${{ needs.setup.outputs.affected-projects }}
 
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: dist-pr
+          path: dist/
+          retention-days: 3
+          if-no-files-found: warn
+
   test:
     name: test
     runs-on: ubuntu-latest
@@ -119,7 +127,7 @@ jobs:
     if: needs.setup.outputs.has-affected == 'true'
     steps:
       - name: Checkout repository
-        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 
       - name: Setup monorepo
         uses: ./.github/actions/setup-monorepo
@@ -133,7 +141,7 @@ jobs:
 
       - name: Upload coverage reports
         if: always()
-        uses: actions/upload-artifact@5d5d22a31266ced268874388b861e4b58bb5c2f3 # v4.3.1
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: coverage-reports-pr
           path: coverage/
@@ -146,7 +154,7 @@ jobs:
     if: needs.setup.outputs.has-affected == 'true'
     steps:
       - name: Checkout repository
-        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 
       - name: Setup monorepo
         uses: ./.github/actions/setup-monorepo
@@ -195,7 +203,7 @@ jobs:
       pull-requests: write
     steps:
       - name: Checkout repository
-        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           fetch-depth: 0
           ref: ${{ github.head_ref }}

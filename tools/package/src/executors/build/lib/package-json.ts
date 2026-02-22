@@ -1,6 +1,7 @@
 import { readJsonFile, writeJsonFile } from '@nx/devkit'
 import { join } from 'node:path'
 import type { EntryPointDiscovery, FormatOutputs, PackageJson, IIFEConfig, UMDConfig } from './types'
+import { isWorkspacePackage } from './externals'
 
 /** Fields to inherit from root package.json */
 const INHERITABLE_FIELDS = ['repository', 'bugs', 'homepage', 'author'] as const
@@ -135,6 +136,32 @@ export function generateExportsFromFormats(discovery: EntryPointDiscovery, forma
 }
 
 /**
+ * Filters out workspace dependencies from package.json.
+ * Workspace packages (\@hyperfrontend/*) are bundled into the output,
+ * so they should not be listed as dependencies in the published package.
+ *
+ * @param srcPkg - Source package.json contents
+ * @returns Package.json with workspace dependencies removed
+ */
+function filterWorkspaceDependencies(srcPkg: PackageJson): PackageJson {
+  const filtered = { ...srcPkg }
+
+  if (filtered.dependencies) {
+    const externalDeps = Object.entries(filtered.dependencies).filter(([name]) => !isWorkspacePackage(name))
+    if (externalDeps.length > 0) {
+      filtered.dependencies = Object.fromEntries(externalDeps)
+    } else {
+      delete filtered.dependencies
+    }
+  }
+
+  // Note: peerDependencies are kept as-is since they represent optional integrations
+  // that consumers may choose to use (e.g., @hyperfrontend/network-protocol in nexus)
+
+  return filtered
+}
+
+/**
  * Gets the bundle output directory, handling multiple configurations.
  *
  * @param iifeConfigs - IIFE configuration(s)
@@ -182,9 +209,12 @@ export function generatePackageJson(
   const hasEsm = formatOutputs.esm.some((e) => e.isRoot)
   const hasCjs = formatOutputs.cjs.some((e) => e.isRoot)
 
+  // Filter out workspace dependencies - they are bundled into the output
+  const filteredSrcPkg = filterWorkspaceDependencies(srcPkg)
+
   if (discovery.hasRootEntry && (hasEsm || hasCjs)) {
     const distPkg: PackageJson = {
-      ...srcPkg,
+      ...filteredSrcPkg,
       ...inheritedFields,
       sideEffects: false,
       exports,
@@ -210,7 +240,7 @@ export function generatePackageJson(
     writeOutputPackageJson(outputPath, distPkg)
   } else {
     const distPkg: PackageJson = {
-      ...srcPkg,
+      ...filteredSrcPkg,
       ...inheritedFields,
       sideEffects: false,
       exports,

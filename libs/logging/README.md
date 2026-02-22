@@ -26,9 +26,6 @@
   <a href="https://github.com/AndrewRedican/hyperfrontend">
     <img src="https://img.shields.io/github/stars/AndrewRedican/hyperfrontend?style=flat-square" alt="GitHub stars">
   </a>
-  <a href="https://bundlephobia.com/package/@hyperfrontend/logging">
-    <img src="https://img.shields.io/bundlephobia/minzip/@hyperfrontend/logging?style=flat-square" alt="Bundle Size">
-  </a>
   <img src="https://img.shields.io/badge/node-%3E%3D18.0.0-brightgreen?style=flat-square&logo=node.js" alt="Node Version">
   <img src="https://img.shields.io/badge/tree%20shakeable-%E2%9C%93-success?style=flat-square" alt="Tree Shakeable">
 </p>
@@ -49,7 +46,7 @@ The core `createLogger()` factory accepts custom log functions for each severity
 - **Console Abstraction** - Accepts any console-like interface (console, Winston, Bunyan, custom implementations)
 - **Conditional Execution** - Log functions only execute when current severity meets or exceeds configured threshold
 - **Frozen Interfaces** - Logger instances are immutable to prevent runtime modification
-- **Zero External Dependencies** - Self-contained implementation using only internal hyperfrontend utilities
+- **Zero External Dependencies** - Self-contained implementation with no third-party runtime dependencies
 - **Type-Safe API** - Full TypeScript support with strongly-typed log functions and levels
 
 ### Architecture Highlights
@@ -245,16 +242,11 @@ test('logs only errors at error level', () => {
 
 **Global variable:** `HyperfrontendLogging`
 
-### Dependencies
-
-| Package                       | Type     |
-| ----------------------------- | -------- |
-| @hyperfrontend/data-utils     | Internal |
-| @hyperfrontend/function-utils | Internal |
-
 ## Part of hyperfrontend
 
-This library is part of the [hyperfrontend](https://github.com/AndrewRedican/hyperfrontend) monorepo. [Full documentation](https://hyperfrontend.dev).
+This library is part of the [hyperfrontend](https://github.com/AndrewRedican/hyperfrontend) monorepo.
+
+**📖 [Full documentation](https://www.hyperfrontend.dev/docs/libraries/logging)**
 
 - Built on [@hyperfrontend/function-utils](https://github.com/AndrewRedican/hyperfrontend/tree/main/libs/utils/function) for error-resilient execution
 

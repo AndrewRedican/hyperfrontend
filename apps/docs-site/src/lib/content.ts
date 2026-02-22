@@ -1,5 +1,5 @@
-import fs from 'fs'
-import path from 'path'
+import fs from 'node:fs'
+import path from 'node:path'
 import matter from 'gray-matter'
 
 const WORKSPACE_ROOT = path.resolve(process.cwd(), '../..')
@@ -85,11 +85,19 @@ export const LIBRARIES: LibraryInfo[] = [
     category: 'utils',
   },
   {
-    name: 'Immutable API',
-    packageName: '@hyperfrontend/immutable-api',
+    name: 'Immutable API Utils',
+    packageName: '@hyperfrontend/immutable-api-utils',
     slug: 'utils/immutable-api',
     readmePath: 'libs/utils/immutable-api/README.md',
     entryPoints: ['libs/utils/immutable-api/src/index.ts'],
+    category: 'utils',
+  },
+  {
+    name: 'JSON Utils',
+    packageName: '@hyperfrontend/json-utils',
+    slug: 'utils/json',
+    readmePath: 'libs/utils/json/README.md',
+    entryPoints: ['libs/utils/json/src/index.ts'],
     category: 'utils',
   },
   {
@@ -101,8 +109,8 @@ export const LIBRARIES: LibraryInfo[] = [
     category: 'utils',
   },
   {
-    name: 'Random Generator',
-    packageName: '@hyperfrontend/random-generator',
+    name: 'Random Generator Utils',
+    packageName: '@hyperfrontend/random-generator-utils',
     slug: 'utils/random-generator',
     readmePath: 'libs/utils/random-generator/README.md',
     entryPoints: ['libs/utils/random-generator/src/index.ts'],

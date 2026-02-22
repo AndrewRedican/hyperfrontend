@@ -1,10 +1,11 @@
 import type { IAction } from '../../types/action'
 import type { ValidationResult } from '../../types/validation'
+import type { Schema } from '@hyperfrontend/json-utils'
 import { createValidator } from './create-validator'
 import actionSchema from '../definitions/action.json'
 
 /* istanbul ignore next -- validator initialization happens at module load */
-const validateActionData = createValidator(actionSchema)
+const validateActionData = createValidator(actionSchema as Schema)
 
 /**
  * Validates an action object against the action schema.

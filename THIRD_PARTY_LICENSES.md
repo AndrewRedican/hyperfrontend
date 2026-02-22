@@ -1,6 +1,0 @@
-# Third-Party Licenses
-
-| Dependency       | Link                                                                 |
-| :--------------- | :------------------------------------------------------------------- |
-| `jsonschema`     | [MIT](https://github.com/tdegrunt/jsonschema/blob/master/LICENSE)    |
-| `to-json-schema` | [MIT](https://github.com/ruzicka/to-json-schema/blob/master/LICENSE) |

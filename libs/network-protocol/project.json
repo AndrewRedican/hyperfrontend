@@ -10,8 +10,8 @@
     "build": {
       "executor": "@hyperfrontend/package:build",
       "options": {
-        "esm": {},
-        "cjs": {},
+        "esm": { "bundleWorkspaceDeps": true },
+        "cjs": { "bundleWorkspaceDeps": true },
         "iife": [
           {
             "entry": "./browser/v1",

@@ -16,14 +16,17 @@ This directory contains the CI/CD workflows for the hyperfrontend monorepo.
 - Optimized for speed (<10 minutes typical)
 - Cancels in-progress runs when new commits are pushed
 - Read-only permissions by default
+- Uploads build artifacts for reuse
 
 **Jobs**:
 
 - `setup`: Calculates affected projects using Nx
 - `format`: Format checking (affected only)
 - `lint`: Linting (affected only)
-- `build`: Build (affected only)
+- `typecheck`: Type checking (affected only)
+- `build`: Build with artifact upload (affected only)
 - `test`: Testing with coverage upload (affected only)
+- `e2e`: E2E tests (affected only)
 - `ci-status`: Aggregates results and provides final status
 
 ### CI - Main Branch ([ci-main.yml](./ci-main.yml))
@@ -37,16 +40,80 @@ This directory contains the CI/CD workflows for the hyperfrontend monorepo.
 - Includes coverage threshold checking
 - Does not cancel in-progress runs (safer for main branch)
 - Longer retention for coverage reports (30 days)
+- Uploads build artifacts for publishing
+- Automated npm publishing and GitHub releases
 
 **Jobs**:
 
 - `setup`: Installs dependencies and prepares the workspace
 - `format`: Format checking (all projects)
 - `lint`: Linting (all projects)
-- `build`: Build (all projects)
+- `typecheck`: Type checking (all projects)
+- `build`: Build with artifact upload (all projects)
 - `test`: Testing with coverage thresholds (all projects)
-- `e2e`: E2E tests (placeholder, currently disabled)
+- `e2e`: E2E tests (all projects)
 - `ci-status`: Aggregates results and provides final status
+- `push-tags`: Creates and pushes version tags
+- `publish`: Publishes affected libraries to npm
+- `create-github-release`: Creates GitHub releases with changelog
+
+### CI - Libraries ([ci-libraries.yml](./ci-libraries.yml))
+
+**Trigger**: Pushes to `main` branch affecting `libs/**`
+**Purpose**: Targeted CI for individual library changes
+
+**Features**:
+
+- Uses `dorny/paths-filter` to detect which libraries changed
+- Runs CI only for affected libraries using a dynamic matrix
+- Efficient: only builds/tests what changed
+- Same permissions and security model as other workflows
+
+**Excluded Libraries** (explicitly excluded from CI):
+
+- `lib-web-worker`: Experimental/unstable
+
+**Jobs**:
+
+- `detect-changes`: Determines which libraries were modified
+- `ci`: Matrix job that runs `_lib-ci.yml` template for each changed library
+
+### CI - Plugins ([ci-plugins.yml](./ci-plugins.yml))
+
+**Trigger**: Pushes to `main` branch affecting `plugins/**`
+**Purpose**: Targeted CI for individual plugin changes
+
+**Features**:
+
+- Uses `dorny/paths-filter` to detect which plugins changed
+- Runs CI only for affected plugins using a dynamic matrix
+- Efficient: only builds/tests what changed
+- Same mechanism as library CI for consistency
+
+**Excluded Plugins** (explicitly excluded from CI):
+
+- `plugin-features`: Experimental/unstable (v0.0.0)
+- `plugin-features-e2e`: E2E test project for features plugin
+
+**Jobs**:
+
+- `detect-changes`: Determines which plugins were modified
+- `ci`: Matrix job that runs `_lib-ci.yml` template for each changed plugin
+
+### Library CI Template ([\_lib-ci.yml](./_lib-ci.yml))
+
+**Trigger**: Called by other workflows via `workflow_call`
+**Purpose**: Reusable template for library CI
+
+**Inputs**:
+
+- `project-name`: Nx project name (e.g., lib-nexus)
+- `coverage-path`: Path to lcov.info file
+- `coverage-flag`: Codecov flag name
+
+**Jobs**:
+
+- `build`: Typecheck, build, test with coverage upload to Codecov
 
 ### Security Scanning ([security-scan.yml](./security-scan.yml))
 
@@ -74,11 +141,19 @@ All custom actions are located in [`.github/actions/`](../actions/):
 
 ### setup-monorepo
 
-Sets up the Node.js environment, caches npm dependencies, and installs packages.
+Sets up the Node.js environment, caches npm dependencies and Nx cache, and installs packages.
 
 **Outputs**:
 
 - `cache-hit`: Whether npm cache was hit
+- `nx-cache-hit`: Whether Nx cache was hit
+
+**Features**:
+
+- npm dependency caching (`~/.npm`)
+- Nx build cache (`.nx/cache`, `node_modules/.cache/nx`)
+- Cache key includes `package-lock.json` hash and commit SHA
+- Fallback to previous caches for faster cold starts
 
 **Note**: Node.js version is hardcoded to 24.13.0 to match package.json engines.
 
@@ -114,10 +189,13 @@ Runs specific checks (format, lint, test, build, e2e) for all or affected projec
 
 All third-party actions are pinned to specific commit SHAs for security:
 
-- `actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11` (v4.1.1)
-- `actions/setup-node@60edb5dd545a775178f52524783378180af0d1f8` (v4.0.2)
-- `actions/upload-artifact@5d5d22a31266ced268874388b861e4b58bb5c2f3` (v4.3.1)
-- `actions/cache@0c45773b623bea8c8e75f6c82b208c3cf94ea4f9` (v4.0.2)
+- `actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd` (v6.0.2)
+- `actions/setup-node@6044e13b5dc448c55e2357c09f80417699197238` (v6.2.0)
+- `actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02` (v4.6.2)
+- `actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093` (v4.3.0)
+- `actions/cache@cdf6c1fa76f9f475f3d7449005a359c84ca0f306` (v5.0.3)
+- `codecov/codecov-action@0561704f0f02c16a585d4c7555e57fa2e44cf909` (v5.5.2)
+- `dorny/paths-filter@de90cc6fb38fc0963ad72b210f1f284cd68cea36` (v3.0.2)
 
 ### Dependabot
 
@@ -235,8 +313,5 @@ The original `ci.yml` workflow has been split into two workflows:
 
 Planned but not yet implemented:
 
-- E2E testing workflow (currently placeholder)
 - Demo app deployments
-- Package publishing automation
-- Release automation
-- Nx Cloud integration for remote caching
+- Nx Cloud integration for remote caching (cross-workflow/cross-branch)
