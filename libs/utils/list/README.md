@@ -48,7 +48,7 @@ The library enforces immutability through frozen interfaces while maintaining hi
 - **String sanitization** utilities (dedupe, trim, filter empty)
 - **Range generation** for loop-free number sequences
 - **Map utilities** for common Map operations
-- **Zero dependencies** (except sibling @hyperfrontend/data-utils)
+- **Zero dependencies** - Self-contained implementation with no third-party runtime dependencies
 
 ### Architecture Highlights
 
@@ -157,12 +157,6 @@ const cleaned = uniqueStrings(nonEmptyStrings(userInputs)) // ['hello', 'world']
 ```
 
 **Global variable:** `HyperfrontendListUtils`
-
-### Dependencies
-
-| Package                   | Type     |
-| ------------------------- | -------- |
-| @hyperfrontend/data-utils | Internal |
 
 ## Part of hyperfrontend
 
