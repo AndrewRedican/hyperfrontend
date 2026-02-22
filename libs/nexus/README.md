@@ -419,14 +419,11 @@ channel.send('MESSAGE', { hello: 'world' })
 
 **Global variable:** `HyperfrontendNexus`
 
-### Dependencies
+### Peer Dependencies
 
-| Package                               | Type            |
-| ------------------------------------- | --------------- |
-| @hyperfrontend/function-utils         | Internal        |
-| @hyperfrontend/logging                | Internal        |
-| @hyperfrontend/random-generator-utils | Internal        |
-| @hyperfrontend/network-protocol       | Peer (optional) |
+| Package                         | Type     |
+| ------------------------------- | -------- |
+| @hyperfrontend/network-protocol | Optional |
 
 ## Part of hyperfrontend
 
