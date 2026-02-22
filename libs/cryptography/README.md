@@ -48,7 +48,7 @@ The library features three modular entry points: platform-specific implementatio
 - **Secure Vault Storage** - Password-protected in-memory storage with optional single-use mode for sensitive data
 - **Time-Based Passwords** - Generate rotating credentials synchronized to UTC time windows for short-lived authentication
 - **Cryptographic Hashing** - SHA-256 hash generation with hexadecimal output and validation utilities
-- **Zero External Dependencies** - Self-contained implementation using only platform crypto APIs and internal hyperfrontend utilities
+- **Zero External Dependencies** - Self-contained implementation using only platform crypto APIs
 - **Functional Architecture** - Pure functions with dependency injection for testability and composability
 - **Secondary Entry Points** - Tree-shakeable imports optimize bundle size (`/browser`, `/node`, `/common`)
 
@@ -205,15 +205,6 @@ isSHA256Hash('e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855')
 ```
 
 **Global variable:** `HyperfrontendCryptography`
-
-### Dependencies
-
-| Package                               | Type     |
-| ------------------------------------- | -------- |
-| @hyperfrontend/data-utils             | Internal |
-| @hyperfrontend/random-generator-utils | Internal |
-| @hyperfrontend/string-utils           | Internal |
-| @hyperfrontend/time-utils             | Internal |
 
 ## Part of hyperfrontend
 
