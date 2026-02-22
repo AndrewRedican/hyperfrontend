@@ -14,36 +14,56 @@ function readPackageJson(packageJsonPath: string): PackageJson {
 }
 
 /**
+ * Checks if a package name is a workspace internal package.
+ *
+ * @param packageName - Package name to check
+ * @returns True if this is a \@hyperfrontend/* workspace package
+ */
+export function isWorkspacePackage(packageName: string): boolean {
+  return packageName.startsWith('@hyperfrontend/')
+}
+
+/**
  * Gets external dependencies from a project's package.json.
- * Includes both dependencies and peerDependencies.
+ *
+ * Behavior depends on `bundleWorkspaceDeps`:
+ * - false: All dependencies remain external (npm-style), including \@hyperfrontend/*
+ * - true: \@hyperfrontend/* workspace packages are bundled/inlined, others remain external
+ *
+ * Peer dependencies are ALWAYS external regardless of bundleWorkspaceDeps.
  *
  * @param packageJsonPath - Absolute path to package.json
  * @param additionalExternal - Additional packages to mark as external
+ * @param bundleWorkspaceDeps - When true, bundle \@hyperfrontend/* packages instead of keeping external
  * @returns Array of external package names
  */
-export function getExternalDependencies(packageJsonPath: string, additionalExternal: string[] = []): string[] {
+export function getExternalDependencies(packageJsonPath: string, additionalExternal: string[] = [], bundleWorkspaceDeps: boolean): string[] {
   const pkg = readPackageJson(packageJsonPath)
 
   const deps = Object.keys(pkg.dependencies ?? {})
   const peerDeps = Object.keys(pkg.peerDependencies ?? {})
 
-  const external = new Set<string>([...deps, ...peerDeps, ...additionalExternal])
+  // When bundleWorkspaceDeps is true, filter out workspace packages (they'll be bundled)
+  // When bundleWorkspaceDeps is false, keep ALL dependencies as external (npm-style)
+  const externalRegularDeps = bundleWorkspaceDeps ? deps.filter((dep) => !isWorkspacePackage(dep)) : deps
 
-  return Array.from(external)
+  const externalAdditional = bundleWorkspaceDeps ? additionalExternal.filter((dep) => !isWorkspacePackage(dep)) : additionalExternal
+
+  // Peer dependencies are ALWAYS external (even workspace packages) since they are optional
+  return Array.from(new Set([...externalRegularDeps, ...peerDeps, ...externalAdditional]))
 }
 
 /**
  * Creates an external function for Rollup configuration.
- * Marks dependencies, peerDependencies, and \@hyperfrontend/* packages as external.
+ * Marks dependencies in the provided list as external (not bundled).
  *
  * @param external - List of external package names
  * @returns Function that determines if a module ID is external
  */
 export function createExternalFn(external: string[]): (id: string) => boolean {
+  const externalSet = new Set(external)
   return (id: string): boolean => {
-    if (external.includes(id)) return true
-    if (id.startsWith('@hyperfrontend/')) return true
-    return false
+    return externalSet.has(id)
   }
 }
 

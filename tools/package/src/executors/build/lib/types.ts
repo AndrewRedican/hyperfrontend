@@ -32,6 +32,13 @@ export interface ESMConfig extends FormatEntryConfig {
 
   /** External dependencies (in addition to auto-detected) */
   external?: string[]
+
+  /**
+   * Bundle \@hyperfrontend/* workspace dependencies.
+   * - true: Workspace packages are inlined/bundled (self-contained output)
+   * - false: Workspace packages remain as external imports (npm-style dependencies)
+   */
+  bundleWorkspaceDeps: boolean
 }
 
 /** CJS configuration */
@@ -41,6 +48,13 @@ export interface CJSConfig extends FormatEntryConfig {
 
   /** External dependencies (in addition to auto-detected) */
   external?: string[]
+
+  /**
+   * Bundle \@hyperfrontend/* workspace dependencies.
+   * - true: Workspace packages are inlined/bundled (self-contained output)
+   * - false: Workspace packages remain as external imports (npm-style dependencies)
+   */
+  bundleWorkspaceDeps: boolean
 }
 
 /** IIFE configuration */

@@ -29,12 +29,13 @@ function createCJSOutputConfig(outputPath: string, entryName = 'index', sourcema
  * @returns Rollup configuration
  */
 export function createCJSEntryConfig(entry: EntryPoint, config: CJSConfig, context: BuildContext): RollupOptions {
-  const { projectRoot, outputPath, tsConfigPath } = context
+  const { projectRoot, outputPath, tsConfigPath, workspaceRoot } = context
   const entryOutputPath = entry.srcPath ? join(outputPath, entry.srcPath) : outputPath
   const sourcemap = config.sourcemap ?? true
+  const { bundleWorkspaceDeps } = config
 
   const packageJsonPath = getPackageJsonPath(projectRoot)
-  const external = getExternalDependencies(packageJsonPath, config.external)
+  const external = getExternalDependencies(packageJsonPath, config.external, bundleWorkspaceDeps)
   const isExternal = createExternalFn(external)
 
   return {
@@ -49,9 +50,9 @@ export function createCJSEntryConfig(entry: EntryPoint, config: CJSConfig, conte
 
     plugins: [
       createJsonPlugin(),
-      createNodeResolvePlugin(),
+      createNodeResolvePlugin(bundleWorkspaceDeps),
       createCommonJsPlugin(),
-      createTypescriptPlugin(tsConfigPath, projectRoot, entryOutputPath, false, sourcemap),
+      createTypescriptPlugin(tsConfigPath, projectRoot, entryOutputPath, false, sourcemap, bundleWorkspaceDeps, workspaceRoot),
     ],
 
     output: createCJSOutputConfig(entryOutputPath, 'index', sourcemap),
