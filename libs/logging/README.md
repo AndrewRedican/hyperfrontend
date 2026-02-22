@@ -49,7 +49,7 @@ The core `createLogger()` factory accepts custom log functions for each severity
 - **Console Abstraction** - Accepts any console-like interface (console, Winston, Bunyan, custom implementations)
 - **Conditional Execution** - Log functions only execute when current severity meets or exceeds configured threshold
 - **Frozen Interfaces** - Logger instances are immutable to prevent runtime modification
-- **Zero External Dependencies** - Self-contained implementation using only internal hyperfrontend utilities
+- **Zero External Dependencies** - Self-contained implementation with no third-party runtime dependencies
 - **Type-Safe API** - Full TypeScript support with strongly-typed log functions and levels
 
 ### Architecture Highlights
@@ -244,13 +244,6 @@ test('logs only errors at error level', () => {
 ```
 
 **Global variable:** `HyperfrontendLogging`
-
-### Dependencies
-
-| Package                       | Type     |
-| ----------------------------- | -------- |
-| @hyperfrontend/data-utils     | Internal |
-| @hyperfrontend/function-utils | Internal |
 
 ## Part of hyperfrontend
 
