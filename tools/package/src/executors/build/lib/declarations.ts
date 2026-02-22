@@ -1,12 +1,17 @@
 import { logger } from '@nx/devkit'
-import { existsSync, mkdirSync, cpSync, rmSync } from 'node:fs'
+import { existsSync, mkdirSync, cpSync, rmSync, readdirSync, statSync } from 'node:fs'
 import { execFileSync } from 'node:child_process'
-import { dirname, join, relative, resolve } from 'node:path'
+import { dirname, join, relative, resolve, basename } from 'node:path'
 import type { EntryPointDiscovery } from './types'
 
 /**
  * Generates TypeScript declarations for all entry points.
  * Uses a separate tsc call to ensure consistent declaration paths across all entries.
+ *
+ * For all category types (root, hybrid, platform, feature, complex), this function:
+ * 1. Runs tsc to generate declarations
+ * 2. Flattens the output structure to match the expected package layout
+ * 3. Cleans up intermediate nested folders
  *
  * @param projectRoot - Absolute path to the project root
  * @param outputPath - Absolute path to output directory
@@ -21,16 +26,25 @@ export function generateDeclarations(
   workspaceRoot: string,
   discovery: EntryPointDiscovery
 ): void {
-  if (discovery.category === 'root') return
-
   logger.info('Generating TypeScript declarations...')
 
   const tscPath = resolve(workspaceRoot, 'node_modules', '.bin', 'tsc')
 
   try {
+    // Note: --noEmit false is required to override noEmit: true in tsconfig.base.json
     execFileSync(
       tscPath,
-      ['--project', tsConfigPath, '--emitDeclarationOnly', '--declaration', '--declarationMap', '--outDir', outputPath],
+      [
+        '--project',
+        tsConfigPath,
+        '--noEmit',
+        'false',
+        '--emitDeclarationOnly',
+        '--declaration',
+        '--declarationMap',
+        '--outDir',
+        outputPath,
+      ],
       { cwd: projectRoot, encoding: 'utf-8', maxBuffer: 10 * 1024 * 1024 }
     )
   } catch (error) {
@@ -46,6 +60,18 @@ export function generateDeclarations(
 /**
  * Flattens declaration paths from nested tsc output structure to flat output.
  *
+ * When tsc compiles with baseUrl set to workspace root, it outputs declarations
+ * preserving the full workspace-relative path structure:
+ *   dist/libs/logging/libs/logging/src/index.d.ts
+ *
+ * This function flattens that to the expected package structure:
+ *   dist/libs/logging/index.d.ts
+ *
+ * For isomorphic packages with platform-specific entries (browser, node), the
+ * subdirectory structure is preserved:
+ *   dist/libs/network-protocol/browser/channel/index.d.ts
+ *   dist/libs/network-protocol/node/channel/index.d.ts
+ *
  * @param projectRoot - Absolute path to the project root
  * @param outputPath - Absolute path to output directory
  * @param workspaceRoot - Absolute path to workspace root
@@ -57,41 +83,79 @@ export function flattenDeclarationPaths(
   workspaceRoot: string,
   discovery: EntryPointDiscovery
 ): void {
+  // Path to the nested declarations for THIS project (not bundled dependencies)
+  // e.g., dist/libs/logging/libs/logging/src
   const nestedDeclarations = join(outputPath, relative(workspaceRoot, join(projectRoot, 'src')))
 
   if (!existsSync(nestedDeclarations)) return
 
+  // Copy declarations for each entry point to its proper location
   for (const entry of discovery.entryPoints) {
-    if (entry.isRoot) continue
+    if (entry.isRoot) {
+      // Root entry: copy root-level .d.ts files from nested src to package root
+      copyRootDeclarations(nestedDeclarations, outputPath)
+    } else {
+      // Non-root entry: copy from nested path to proper subpath
+      const srcDir = entry.srcPath
+      const declSrc = join(nestedDeclarations, srcDir)
+      const declDest = join(outputPath, srcDir)
 
-    const srcDir = entry.srcPath
-    const declSrc = join(nestedDeclarations, srcDir)
-    const declDest = join(outputPath, srcDir)
-
-    if (existsSync(declSrc)) {
-      mkdirSync(dirname(declDest), { recursive: true })
-      cpSync(declSrc, declDest, { recursive: true, force: true })
+      if (existsSync(declSrc)) {
+        mkdirSync(dirname(declDest), { recursive: true })
+        cpSync(declSrc, declDest, { recursive: true, force: true })
+      }
     }
   }
 
-  cleanupNestedDeclarations(projectRoot, outputPath, workspaceRoot)
+  // Clean up the nested workspace structure (libs/, plugins/, etc.)
+  cleanupNestedDeclarations(outputPath, workspaceRoot)
 }
 
 /**
- * Removes the top-level nested folder created by tsc.
+ * Copies root-level declaration files from nested src to package root.
+ * Only copies .d.ts and .d.ts.map files directly in the src directory,
+ * not subdirectories (which are handled as separate entry points).
  *
- * @param projectRoot - Absolute path to the project root
+ * @param nestedSrc - Path to nested src declarations (e.g., dist/libs/logging/libs/logging/src)
+ * @param outputPath - Package output root (e.g., dist/libs/logging)
+ */
+function copyRootDeclarations(nestedSrc: string, outputPath: string): void {
+  if (!existsSync(nestedSrc)) return
+
+  const entries = readdirSync(nestedSrc)
+
+  for (const entry of entries) {
+    const srcPath = join(nestedSrc, entry)
+    const stat = statSync(srcPath)
+
+    // Only copy files, not directories (subdirectories are separate entry points)
+    if (stat.isFile() && (entry.endsWith('.d.ts') || entry.endsWith('.d.ts.map'))) {
+      const destPath = join(outputPath, entry)
+      cpSync(srcPath, destPath, { force: true })
+    }
+  }
+}
+
+/**
+ * Removes nested workspace folders created by tsc output.
+ * These are the top-level workspace directories (libs/, plugins/) that tsc creates
+ * when compiling from baseUrl=workspaceRoot.
+ *
+ * This also removes declarations from bundled workspace dependencies, which is
+ * intentional - bundled dependencies' types should come from their own packages,
+ * not be duplicated in the consuming package.
+ *
  * @param outputPath - Absolute path to output directory
  * @param workspaceRoot - Absolute path to workspace root
  */
-function cleanupNestedDeclarations(projectRoot: string, outputPath: string, workspaceRoot: string): void {
-  const parts = relative(workspaceRoot, projectRoot).split('/')
-  const topLevel = parts[0]
+function cleanupNestedDeclarations(outputPath: string, workspaceRoot: string): void {
+  // Remove common workspace top-level directories that tsc might output
+  const workspaceDirs = ['libs', 'plugins', 'apps']
 
-  if (topLevel) {
-    const topLevelNested = join(outputPath, topLevel)
-    if (existsSync(topLevelNested)) {
-      rmSync(topLevelNested, { recursive: true, force: true })
+  for (const dir of workspaceDirs) {
+    const nestedPath = join(outputPath, dir)
+    if (existsSync(nestedPath)) {
+      rmSync(nestedPath, { recursive: true, force: true })
     }
   }
 }

@@ -52,7 +52,7 @@ export function createESMEntryConfig(entry: EntryPoint, config: ESMConfig, conte
       createJsonPlugin(),
       createNodeResolvePlugin(bundleWorkspaceDeps),
       createCommonJsPlugin(),
-      createTypescriptPlugin(tsConfigPath, projectRoot, entryOutputPath, entry.isRoot, sourcemap, bundleWorkspaceDeps, workspaceRoot),
+      createTypescriptPlugin(tsConfigPath, projectRoot, entryOutputPath, sourcemap, bundleWorkspaceDeps, workspaceRoot),
     ],
 
     output: createESMOutputConfig(entryOutputPath, 'index', sourcemap),
