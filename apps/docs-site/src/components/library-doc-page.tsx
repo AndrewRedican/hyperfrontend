@@ -1,10 +1,11 @@
 import { Breadcrumb } from '@/components/breadcrumb'
-import { getLibraryReadme, getLibraryArchitecture } from '@/lib/docs-loader'
+import { getLibraryReadme, getLibraryArchitecture, getLibraryApi } from '@/lib/docs-loader'
 import { markdownToHtml } from '@/lib/markdown'
 import { extractMermaidBlocks } from '@/lib/mermaid-utils'
 import { removeBadges, transformLinks } from '@/lib/content'
 import Link from 'next/link'
 import { ReadmeContent } from './readme-content'
+import { ApiReference, type TypeDocOutput } from '@/components/api-reference'
 
 interface LibraryPageProps {
   title: string
@@ -19,6 +20,7 @@ export async function LibraryDocPage({ title, packageName, slug, fallbackDescrip
   // Try to load README content
   const readme = getLibraryReadme(slug)
   const hasArchitecture = !!getLibraryArchitecture(slug)
+  const apiData = getLibraryApi(slug) as TypeDocOutput | null
 
   if (readme) {
     // Process the README
@@ -55,6 +57,14 @@ export async function LibraryDocPage({ title, packageName, slug, fallbackDescrip
         </div>
 
         <ReadmeContent html={html} mermaidDiagrams={diagrams} />
+
+        {/* API Reference */}
+        {apiData && (
+          <section className="mt-12 border-t border-slate-200 pt-8 dark:border-slate-700">
+            <h2 className="text-2xl font-bold text-slate-900 dark:text-white mb-6">API Reference</h2>
+            <ApiReference data={apiData} />
+          </section>
+        )}
 
         {/* Related Links */}
         <section className="mt-12 border-t border-slate-200 pt-8 dark:border-slate-700">

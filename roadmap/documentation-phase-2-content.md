@@ -4,6 +4,8 @@
 
 Populate the documentation site with comprehensive API documentation and project content.
 
+> ✅ **Status Update:** TypeDoc integration complete with dynamic entry point discovery. See [Phase 2 Continuation](./documentation-phase-2-continuation.md) for advanced features and remaining polish work.
+
 ---
 
 ## Objective
@@ -29,26 +31,30 @@ Implement automated content extraction from the codebase, providing complete API
 - [x] Generate JSON output for programmatic consumption
 - [x] Build TypeDoc → Next.js page generation pipeline
 - [x] Style API reference pages with Tailwind
+- [x] Dynamic entry point discovery from package.json
 
-**Libraries to document:**
+**Libraries documented:**
 
-| Package                                 | Entry Points                       |
-| --------------------------------------- | ---------------------------------- |
-| `@hyperfrontend/nexus`                  | 1                                  |
-| `@hyperfrontend/network-protocol`       | 1                                  |
-| `@hyperfrontend/cryptography`           | 3 (`/browser`, `/node`, `/common`) |
-| `@hyperfrontend/state-machine`          | 1                                  |
-| `@hyperfrontend/logging`                | 1                                  |
-| `@hyperfrontend/web-worker`             | 1                                  |
-| `@hyperfrontend/utils/data`             | 1                                  |
-| `@hyperfrontend/utils/function`         | 1                                  |
-| `@hyperfrontend/utils/immutable-api`    | 1                                  |
-| `@hyperfrontend/utils/list`             | 1                                  |
-| `@hyperfrontend/utils/random-generator` | 1                                  |
-| `@hyperfrontend/utils/string`           | 1                                  |
-| `@hyperfrontend/utils/time`             | 1                                  |
-| `@hyperfrontend/utils/ui`               | 1                                  |
-| `@hyperfrontend/features`               | 1                                  |
+Entry points are automatically discovered from each library's `package.json` exports field.
+
+| Package                                 | Entry Points | Status |
+| --------------------------------------- | ------------ | ------ |
+| `@hyperfrontend/nexus`                  | 1            | ✅     |
+| `@hyperfrontend/network-protocol`       | 18           | ✅     |
+| `@hyperfrontend/cryptography`           | 3            | ✅     |
+| `@hyperfrontend/state-machine`          | 11           | ✅     |
+| `@hyperfrontend/logging`                | 1            | ✅     |
+| `@hyperfrontend/web-worker`             | 1            | ✅     |
+| `@hyperfrontend/data-utils`             | 1            | ✅     |
+| `@hyperfrontend/function-utils`         | 1            | ✅     |
+| `@hyperfrontend/immutable-api-utils`    | 1            | ✅     |
+| `@hyperfrontend/json-utils`             | 1            | ✅     |
+| `@hyperfrontend/list-utils`             | 1            | ✅     |
+| `@hyperfrontend/random-generator-utils` | 1            | ✅     |
+| `@hyperfrontend/string-utils`           | 2            | ✅     |
+| `@hyperfrontend/time-utils`             | 1            | ✅     |
+| `@hyperfrontend/ui-utils`               | 10           | ✅     |
+| `@hyperfrontend/features`               | 1            | ✅     |
 
 **Acceptance Criteria:**
 
@@ -224,13 +230,13 @@ flowchart LR
 
 ## Success Metrics
 
-| Metric           | Target                   |
-| ---------------- | ------------------------ |
-| API coverage     | 100% of public exports   |
-| README coverage  | All 15 project READMEs   |
-| Broken links     | 0                        |
-| Build time       | < 5 minutes              |
-| Mermaid diagrams | 100% rendering correctly |
+| Metric           | Target                   | Status |
+| ---------------- | ------------------------ | ------ |
+| API coverage     | 100% of public exports   | ✅     |
+| README coverage  | All 16 project READMEs   | ✅     |
+| Broken links     | 0                        | 🔴     |
+| Build time       | < 5 minutes              | ✅     |
+| Mermaid diagrams | 100% rendering correctly | ✅     |
 
 ---
 
@@ -248,6 +254,7 @@ flowchart LR
 ## Related Documents
 
 - [Documentation Roadmap](./documentation-roadmap.md) — Master plan
+- [Phase 2 Continuation](./documentation-phase-2-continuation.md) — Advanced features (link validation, module grouping)
 - [Phase 1: Foundation](./documentation-phase-1-foundation.md) — Previous phase
 - [Phase 3: Discovery](./documentation-phase-3-discovery.md) — Next phase
 - [documentation-enrichment-plan.md](../_/documentation-enrichment-plan.md) — README enrichment

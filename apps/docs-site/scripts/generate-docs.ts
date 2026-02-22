@@ -8,11 +8,14 @@
  * 3. ARCHITECTURE.md files
  *
  * Output is written to apps/docs-site/.generated/
+ *
+ * Entry points are automatically discovered from each library's package.json
+ * exports field, eliminating the need for hardcoded entry point configuration.
  */
 
 import { execFileSync } from 'child_process'
-import fs from 'fs'
-import path from 'path'
+import fs from 'node:fs'
+import path from 'node:path'
 
 const WORKSPACE_ROOT = path.resolve(__dirname, '../../..')
 const OUTPUT_DIR = path.resolve(__dirname, '../.generated')
@@ -24,26 +27,102 @@ interface LibraryConfig {
   packageName: string
   slug: string
   srcPath: string
-  entryPoints: string[]
   category: 'core' | 'supporting' | 'utils' | 'plugin'
+}
+
+interface PackageJson {
+  name?: string
+  main?: string
+  exports?: Record<string, string | Record<string, string>>
+}
+
+/**
+ * Discovers TypeScript entry points from a library's package.json.
+ *
+ * Reads the `exports` field (preferred) or falls back to `main` field.
+ * Converts JavaScript paths (./src/X/index.js) to TypeScript (src/X/index.ts).
+ *
+ * @param libPath - Absolute path to the library directory
+ * @returns Array of relative entry point paths (e.g., ['src/index.ts', 'src/browser/index.ts'])
+ */
+function discoverEntryPointsFromPackageJson(libPath: string): string[] {
+  const packageJsonPath = path.join(libPath, 'package.json')
+
+  if (!fs.existsSync(packageJsonPath)) {
+    console.log(`  ⚠ No package.json found at ${libPath}`)
+    return []
+  }
+
+  const packageJson: PackageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf-8'))
+  const entryPoints: string[] = []
+
+  // First try exports field (modern packages)
+  if (packageJson.exports && typeof packageJson.exports === 'object') {
+    for (const [, exportValue] of Object.entries(packageJson.exports)) {
+      // Handle direct string exports: "./browser": "./src/browser/index.js"
+      if (typeof exportValue === 'string') {
+        const tsPath = convertJsPathToTs(exportValue)
+        if (tsPath) entryPoints.push(tsPath)
+      }
+      // Handle conditional exports: "./browser": { "import": "./src/browser/index.js" }
+      else if (typeof exportValue === 'object') {
+        const importPath = exportValue.import || exportValue.default || exportValue.require
+        if (typeof importPath === 'string') {
+          const tsPath = convertJsPathToTs(importPath)
+          if (tsPath) entryPoints.push(tsPath)
+        }
+      }
+    }
+  }
+
+  // Fall back to main field if no exports
+  if (entryPoints.length === 0 && packageJson.main) {
+    const tsPath = convertJsPathToTs(packageJson.main)
+    if (tsPath) entryPoints.push(tsPath)
+  }
+
+  // Final fallback: check for standard src/index.ts
+  if (entryPoints.length === 0) {
+    const defaultEntry = 'src/index.ts'
+    if (fs.existsSync(path.join(libPath, defaultEntry))) {
+      entryPoints.push(defaultEntry)
+    }
+  }
+
+  return [...new Set(entryPoints)] // Deduplicate
+}
+
+/**
+ * Converts a JavaScript path from package.json to a TypeScript source path.
+ *
+ * @param jsPath - JavaScript path (e.g., "./src/browser/index.js")
+ * @returns TypeScript path (e.g., "src/browser/index.ts") or null if invalid
+ */
+function convertJsPathToTs(jsPath: string): string | null {
+  if (!jsPath) return null
+
+  // Remove leading ./
+  let normalized = jsPath.replace(/^\.\//, '')
+
+  // Convert .js to .ts
+  if (normalized.endsWith('.js')) {
+    normalized = normalized.slice(0, -3) + '.ts'
+  } else if (!normalized.endsWith('.ts')) {
+    // If no extension, assume it's a directory with index.ts
+    normalized = path.join(normalized, 'index.ts')
+  }
+
+  return normalized
 }
 
 const LIBRARIES: LibraryConfig[] = [
   // Core libraries
-  {
-    name: 'Nexus',
-    packageName: '@hyperfrontend/nexus',
-    slug: 'nexus',
-    srcPath: 'libs/nexus',
-    entryPoints: ['src/index.ts'],
-    category: 'core',
-  },
+  { name: 'Nexus', packageName: '@hyperfrontend/nexus', slug: 'nexus', srcPath: 'libs/nexus', category: 'core' },
   {
     name: 'Network Protocol',
     packageName: '@hyperfrontend/network-protocol',
     slug: 'network-protocol',
     srcPath: 'libs/network-protocol',
-    entryPoints: ['src/index.ts'],
     category: 'core',
   },
   {
@@ -51,73 +130,43 @@ const LIBRARIES: LibraryConfig[] = [
     packageName: '@hyperfrontend/cryptography',
     slug: 'cryptography',
     srcPath: 'libs/cryptography',
-    entryPoints: ['src/browser/index.ts', 'src/node/index.ts', 'src/common/index.ts'],
     category: 'core',
   },
+
   // Supporting libraries
   {
     name: 'State Machine',
     packageName: '@hyperfrontend/state-machine',
     slug: 'state-machine',
     srcPath: 'libs/state-machine',
-    entryPoints: ['src/index.ts'],
     category: 'supporting',
   },
-  {
-    name: 'Logging',
-    packageName: '@hyperfrontend/logging',
-    slug: 'logging',
-    srcPath: 'libs/logging',
-    entryPoints: ['src/index.ts'],
-    category: 'supporting',
-  },
-  {
-    name: 'Web Worker',
-    packageName: '@hyperfrontend/web-worker',
-    slug: 'web-worker',
-    srcPath: 'libs/web-worker',
-    entryPoints: ['src/index.ts'],
-    category: 'supporting',
-  },
+  { name: 'Logging', packageName: '@hyperfrontend/logging', slug: 'logging', srcPath: 'libs/logging', category: 'supporting' },
+  { name: 'Web Worker', packageName: '@hyperfrontend/web-worker', slug: 'web-worker', srcPath: 'libs/web-worker', category: 'supporting' },
+
   // Utils sub-packages
-  {
-    name: 'Data Utils',
-    packageName: '@hyperfrontend/data-utils',
-    slug: 'data-utils',
-    srcPath: 'libs/utils/data',
-    entryPoints: ['src/index.ts'],
-    category: 'utils',
-  },
+  { name: 'Data Utils', packageName: '@hyperfrontend/data-utils', slug: 'data-utils', srcPath: 'libs/utils/data', category: 'utils' },
   {
     name: 'Function Utils',
     packageName: '@hyperfrontend/function-utils',
     slug: 'function-utils',
     srcPath: 'libs/utils/function',
-    entryPoints: ['src/index.ts'],
     category: 'utils',
   },
   {
-    name: 'Immutable API',
-    packageName: '@hyperfrontend/immutable-api',
-    slug: 'immutable-api',
+    name: 'Immutable API Utils',
+    packageName: '@hyperfrontend/immutable-api-utils',
+    slug: 'immutable-api-utils',
     srcPath: 'libs/utils/immutable-api',
-    entryPoints: ['src/index.ts'],
     category: 'utils',
   },
+  { name: 'JSON Utils', packageName: '@hyperfrontend/json-utils', slug: 'json-utils', srcPath: 'libs/utils/json', category: 'utils' },
+  { name: 'List Utils', packageName: '@hyperfrontend/list-utils', slug: 'list-utils', srcPath: 'libs/utils/list', category: 'utils' },
   {
-    name: 'List Utils',
-    packageName: '@hyperfrontend/list-utils',
-    slug: 'list-utils',
-    srcPath: 'libs/utils/list',
-    entryPoints: ['src/index.ts'],
-    category: 'utils',
-  },
-  {
-    name: 'Random Generator',
-    packageName: '@hyperfrontend/random-generator',
-    slug: 'random-generator',
+    name: 'Random Generator Utils',
+    packageName: '@hyperfrontend/random-generator-utils',
+    slug: 'random-generator-utils',
     srcPath: 'libs/utils/random-generator',
-    entryPoints: ['src/index.ts'],
     category: 'utils',
   },
   {
@@ -125,34 +174,13 @@ const LIBRARIES: LibraryConfig[] = [
     packageName: '@hyperfrontend/string-utils',
     slug: 'string-utils',
     srcPath: 'libs/utils/string',
-    entryPoints: ['src/index.ts'],
     category: 'utils',
   },
-  {
-    name: 'Time Utils',
-    packageName: '@hyperfrontend/time-utils',
-    slug: 'time-utils',
-    srcPath: 'libs/utils/time',
-    entryPoints: ['src/index.ts'],
-    category: 'utils',
-  },
-  {
-    name: 'UI Utils',
-    packageName: '@hyperfrontend/ui-utils',
-    slug: 'ui-utils',
-    srcPath: 'libs/utils/ui',
-    entryPoints: ['src/index.ts'],
-    category: 'utils',
-  },
+  { name: 'Time Utils', packageName: '@hyperfrontend/time-utils', slug: 'time-utils', srcPath: 'libs/utils/time', category: 'utils' },
+  { name: 'UI Utils', packageName: '@hyperfrontend/ui-utils', slug: 'ui-utils', srcPath: 'libs/utils/ui', category: 'utils' },
+
   // Plugin
-  {
-    name: 'Features Plugin',
-    packageName: '@hyperfrontend/features',
-    slug: 'features',
-    srcPath: 'plugins/features',
-    entryPoints: ['src/index.ts'],
-    category: 'plugin',
-  },
+  { name: 'Features Plugin', packageName: '@hyperfrontend/features', slug: 'features', srcPath: 'plugins/features', category: 'plugin' },
 ]
 
 /**
@@ -164,6 +192,80 @@ function ensureDir(dir: string) {
   if (!fs.existsSync(dir)) {
     fs.mkdirSync(dir, { recursive: true })
   }
+}
+
+/**
+ * Library slug mappings for link transformation
+ */
+const LIBRARY_SLUGS: Record<string, string> = {
+  nexus: 'nexus',
+  'network-protocol': 'network-protocol',
+  cryptography: 'cryptography',
+  'state-machine': 'state-machine',
+  logging: 'logging',
+  'web-worker': 'web-worker',
+}
+
+/**
+ * Transform links in markdown content for the docs site context.
+ *
+ * Handles:
+ * - Root document links (README.md, LICENSE.md, etc.) → docs site pages
+ * - Library architecture links (libs/X/ARCHITECTURE.md) → library pages
+ * - Internal src/ links → removes or transforms
+ * - GitHub URLs → preserves as external links
+ *
+ * @param content - Markdown content to transform
+ * @param sourceContext - Where this content came from ('root' | 'library')
+ * @param librarySlug - Optional library slug if from a library
+ * @returns Transformed markdown content
+ */
+function transformLinks(content: string, sourceContext: 'root' | 'library', librarySlug?: string): string {
+  let transformed = content
+
+  // Transform root document links to docs site pages
+  const rootDocMappings: Record<string, string> = {
+    'README.md': '/',
+    'ARCHITECTURE.md': '/docs/architecture',
+    'CONTRIBUTING.md': '/docs/contributing',
+    'MANIFESTO.md': 'https://github.com/AndrewRedican/hyperfrontend/blob/main/MANIFESTO.md',
+    'LICENSE.md': 'https://github.com/AndrewRedican/hyperfrontend/blob/main/LICENSE.md',
+    'SECURITY.md': 'https://github.com/AndrewRedican/hyperfrontend/blob/main/SECURITY.md',
+    'FUNDING.md': 'https://github.com/AndrewRedican/hyperfrontend/blob/main/FUNDING.md',
+  }
+
+  for (const [file, url] of Object.entries(rootDocMappings)) {
+    // Match [text](README.md) or [text](./README.md)
+    const pattern = new RegExp(`\\]\\(\\.?\\/?${file.replace('.', '\\.')}\\)`, 'g')
+    transformed = transformed.replace(pattern, `](${url})`)
+  }
+
+  // Transform roadmap links
+  transformed = transformed.replace(/\]\(\.?\/?(roadmap\/[^)]+\.md)\)/g, '](https://github.com/AndrewRedican/hyperfrontend/blob/main/$1)')
+
+  // Transform .github links
+  transformed = transformed.replace(
+    /\]\(\.?\/?\.github\/([^)]+)\)/g,
+    '](https://github.com/AndrewRedican/hyperfrontend/tree/main/.github/$1)'
+  )
+
+  // Transform libs/X/ARCHITECTURE.md links to library pages
+  for (const [libName, slug] of Object.entries(LIBRARY_SLUGS)) {
+    const archPattern = new RegExp(`\\]\\(libs/${libName}/ARCHITECTURE\\.md(#[^)]*)?\\)`, 'g')
+    transformed = transformed.replace(archPattern, `](/docs/libraries/${slug}$1)`)
+  }
+
+  // For library context, transform internal src/ links
+  if (sourceContext === 'library' && librarySlug) {
+    // Remove or comment out links to internal src/ files that don't get copied
+    // These are internal documentation links that only make sense in the repo
+    transformed = transformed.replace(
+      /\[([^\]]+)\]\(src\/[^)]+\)/g,
+      '$1' // Just keep the link text, remove the link
+    )
+  }
+
+  return transformed
 }
 
 /**
@@ -181,7 +283,9 @@ function extractReadme(lib: LibraryConfig): { content: string; exists: boolean }
   }
 
   const content = fs.readFileSync(readmePath, 'utf-8')
-  return { content, exists: true }
+  // Transform links for docs site context
+  const transformedContent = transformLinks(content, 'library', lib.slug)
+  return { content: transformedContent, exists: true }
 }
 
 /**
@@ -198,46 +302,64 @@ function extractArchitecture(lib: LibraryConfig): { content: string; exists: boo
   }
 
   const content = fs.readFileSync(archPath, 'utf-8')
-  return { content, exists: true }
+  // Transform links for docs site context
+  const transformedContent = transformLinks(content, 'library', lib.slug)
+  return { content: transformedContent, exists: true }
 }
 
 /**
- * Run TypeDoc to generate API documentation JSON for a library
+ * Run TypeDoc to generate API documentation JSON for a library.
+ *
+ * Entry points are automatically discovered from the library's package.json
+ * exports field, ensuring documentation always matches the published API.
  *
  * @param lib - The library configuration
  * @returns True if TypeDoc succeeded, false otherwise
  */
 function generateTypeDoc(lib: LibraryConfig): boolean {
   const libPath = path.join(WORKSPACE_ROOT, lib.srcPath)
-  const entryPoints = lib.entryPoints.map((ep) => path.join(libPath, ep))
 
-  // Check if all entry points exist
+  // Dynamically discover entry points from package.json
+  const discoveredEntryPoints = discoverEntryPointsFromPackageJson(libPath)
+
+  if (discoveredEntryPoints.length === 0) {
+    console.log(`  ⚠ No entry points found for ${lib.name}`)
+    return false
+  }
+
+  const entryPoints = discoveredEntryPoints.map((ep) => path.join(libPath, ep))
+
+  // Verify all entry points exist
   const missingEntryPoints = entryPoints.filter((ep) => !fs.existsSync(ep))
   if (missingEntryPoints.length > 0) {
-    console.log(`  ⚠ Missing entry points for ${lib.name}: ${missingEntryPoints.join(', ')}`)
+    console.log(`  ⚠ Missing entry points for ${lib.name}:`)
+    missingEntryPoints.forEach((ep) => console.log(`      - ${ep}`))
     return false
   }
 
   const outputPath = path.join(API_OUTPUT, lib.slug, 'api.json')
   ensureDir(path.dirname(outputPath))
 
-  try {
-    const args = [
-      'typedoc',
-      '--json',
-      outputPath,
-      '--excludePrivate',
-      '--excludeInternal',
-      '--excludeNotDocumented',
-      'false',
-      ...entryPoints,
-    ]
+  // Find tsconfig.json for the library
+  const tsconfigPath = path.join(libPath, 'tsconfig.json')
+  const hasTsconfig = fs.existsSync(tsconfigPath)
 
-    console.log(`  → Running TypeDoc for ${lib.name}`)
+  try {
+    const args = ['typedoc', '--json', outputPath, '--excludePrivate', '--excludeInternal', '--excludeNotDocumented', 'false']
+
+    // Add tsconfig if it exists
+    if (hasTsconfig) {
+      args.push('--tsconfig', tsconfigPath)
+    }
+
+    args.push(...entryPoints)
+
+    console.log(`  → Running TypeDoc for ${lib.name} (${discoveredEntryPoints.length} entry points)`)
     execFileSync('npx', args, { cwd: WORKSPACE_ROOT, stdio: 'pipe' })
     return true
-  } catch {
-    console.log(`  ⚠ TypeDoc failed for ${lib.name}`)
+  } catch (error) {
+    const errorMsg = error instanceof Error ? error.message : String(error)
+    console.log(`  ⚠ TypeDoc failed for ${lib.name}: ${errorMsg.slice(0, 200)}`)
     return false
   }
 }
@@ -309,7 +431,8 @@ function generateDocs() {
   const rootArchPath = path.join(WORKSPACE_ROOT, 'ARCHITECTURE.md')
   if (fs.existsSync(rootArchPath)) {
     const archContent = fs.readFileSync(rootArchPath, 'utf-8')
-    fs.writeFileSync(path.join(DOCS_OUTPUT, 'architecture.md'), archContent)
+    const transformedArchContent = transformLinks(archContent, 'root')
+    fs.writeFileSync(path.join(DOCS_OUTPUT, 'architecture.md'), transformedArchContent)
     console.log('  ✓ Root architecture document extracted\n')
   }
 
@@ -318,7 +441,8 @@ function generateDocs() {
   const contributingPath = path.join(WORKSPACE_ROOT, 'CONTRIBUTING.md')
   if (fs.existsSync(contributingPath)) {
     const contributingContent = fs.readFileSync(contributingPath, 'utf-8')
-    fs.writeFileSync(path.join(DOCS_OUTPUT, 'contributing.md'), contributingContent)
+    const transformedContributingContent = transformLinks(contributingContent, 'root')
+    fs.writeFileSync(path.join(DOCS_OUTPUT, 'contributing.md'), transformedContributingContent)
     console.log('  ✓ Contributing guide extracted\n')
   }
 
