@@ -472,7 +472,6 @@ channel/
 - **[Architecture Guide](../../../ARCHITECTURE.md#channel)** - Channel architecture
 - **[Browser Entry](../../browser/README.md)** - Browser-specific channel
 - **[Node Entry](../../node/README.md)** - Node.js-specific channel
-- **Integration Tests**: [channel.integration.spec.ts](channel.integration.spec.ts)
 
 ### Related Modules
 

@@ -218,7 +218,6 @@ routing/
 ├── README.md           ← You are here
 ├── index.ts            ← Public exports
 ├── model.ts            ← Routing interface definitions
-├── routing.integration.spec.ts
 ├── creators/
 │   └── ...
 └── validations/
@@ -231,7 +230,6 @@ routing/
 
 - **[Library Index](../README.md)** - All modules
 - **[Architecture Guide](../../../ARCHITECTURE.md#routing)** - Routing architecture
-- **Integration Tests**: [routing.integration.spec.ts](routing.integration.spec.ts)
 
 ### Related Modules
 

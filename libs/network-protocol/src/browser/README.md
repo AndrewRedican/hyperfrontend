@@ -43,11 +43,7 @@ const channel = createChannel(
 
 ## Integration Tests
 
-Browser integration tests use Jest with JSDOM and Web Crypto polyfills:
-
-| File                                                                     | Description                          |
-| ------------------------------------------------------------------------ | ------------------------------------ |
-| [`v1/v1.integration.browser.spec.ts`](v1/v1.integration.browser.spec.ts) | Primary v1 protocol integration test |
+Browser integration tests use Jest with JSDOM and Web Crypto polyfills.
 
 ## Documentation
 

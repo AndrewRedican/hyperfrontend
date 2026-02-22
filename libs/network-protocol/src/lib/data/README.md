@@ -320,7 +320,6 @@ data/
 - **[Architecture Guide](../../../ARCHITECTURE.md#data)** - Data architecture
 - **[Browser Entry](../../browser/data/)** - Browser-specific data
 - **[Node Entry](../../node/data/)** - Node.js-specific data
-- **Integration Tests**: [data.integration.spec.ts](data.integration.spec.ts)
 
 ### Related Modules
 

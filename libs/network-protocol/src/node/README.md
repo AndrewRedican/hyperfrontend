@@ -43,11 +43,7 @@ const channel = createChannel(
 
 ## Integration Tests
 
-Node.js integration tests use Jest with native Node.js crypto:
-
-| File                                                     | Description                          |
-| -------------------------------------------------------- | ------------------------------------ |
-| [`v1/v1.integration.spec.ts`](v1/v1.integration.spec.ts) | Primary v1 protocol integration test |
+Node.js integration tests use Jest with native Node.js crypto.
 
 ## Documentation
 

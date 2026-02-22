@@ -43,20 +43,6 @@ This shared library is consumed by platform-specific entry points:
 | Browser  | [`src/browser/`](../browser/) | [browser/README.md](../browser/README.md) |
 | Node.js  | [`src/node/`](../node/)       | [node/README.md](../node/README.md)       |
 
-## Integration Tests
-
-Integration tests live alongside platform implementations since they use real crypto:
-
-| Platform | Test File                                                                                   | Description                  |
-| -------- | ------------------------------------------------------------------------------------------- | ---------------------------- |
-| Node.js  | [`node/v1/v1.integration.spec.ts`](../node/v1/v1.integration.spec.ts)                       | v1 protocol with Node crypto |
-| Browser  | [`browser/v1/v1.integration.browser.spec.ts`](../browser/v1/v1.integration.browser.spec.ts) | v1 protocol with Web Crypto  |
-
-Additional integration test placeholders in this directory (`*.integration.spec.ts`) are for:
-
-- Testing shared factory logic with mocked platform dependencies
-- Documenting expected API composition patterns
-
 ## Quick Links
 
 - [Root README](../../README.md) - Package overview and installation
