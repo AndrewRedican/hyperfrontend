@@ -1,0 +1,81 @@
+# Library Status Reporter Template
+#
+# This reusable workflow reports build status for individual libraries WITHOUT rebuilding.
+# It checks if the library was built successfully in ci-libraries.yml matrix build.
+#
+# Used by individual ci-lib-*.yml workflows to provide per-project build badges
+# while avoiding redundant builds.
+
+name: Library Status Reporter
+
+on:
+  workflow_call:
+    inputs:
+      project-name:
+        description: 'Nx project name (e.g., lib-nexus, lib-logging)'
+        required: true
+        type: string
+      library-path:
+        description: 'Path to library (e.g., libs/nexus, libs/utils/json)'
+        required: true
+        type: string
+
+# Permissions needed to query workflow runs via GitHub API
+permissions:
+  actions: read
+
+jobs:
+  check-status:
+    name: status
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check library build status
+        uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
+        with:
+          script: |
+            const projectName = '${{ inputs.project-name }}';
+            const libraryPath = '${{ inputs.library-path }}';
+
+            // Get the latest ci-libraries workflow run on main
+            const { data: runs } = await github.rest.actions.listWorkflowRuns({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              workflow_id: 'ci-libraries.yml',
+              branch: 'main',
+              status: 'completed',
+              per_page: 5
+            });
+
+            if (runs.workflow_runs.length === 0) {
+              core.info(`No ci-libraries.yml runs found. Assuming first run.`);
+              return; // Pass - no previous runs to check
+            }
+
+            // Find the most recent run that included this library
+            for (const run of runs.workflow_runs) {
+              // Get jobs for this run
+              const { data: jobs } = await github.rest.actions.listJobsForWorkflowRun({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                run_id: run.id
+              });
+
+              // Look for a job with our project name
+              const libraryJob = jobs.jobs.find(job =>
+                job.name.includes(projectName) || job.name.includes(libraryPath)
+              );
+
+              if (libraryJob) {
+                if (libraryJob.conclusion === 'success') {
+                  core.info(`✅ ${projectName} build passed in run #${run.run_number}`);
+                  return; // Success
+                } else if (libraryJob.conclusion === 'failure') {
+                  core.setFailed(`❌ ${projectName} build failed in run #${run.run_number}`);
+                  return;
+                }
+                // If skipped or other status, continue checking older runs
+              }
+            }
+
+            // No matching job found in recent runs - library wasn't modified
+            core.info(`ℹ️ ${projectName} not modified in recent runs. Status: passing.`);

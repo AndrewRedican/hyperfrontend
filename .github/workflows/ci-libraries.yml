@@ -58,6 +58,8 @@ jobs:
               - 'libs/utils/function/**'
             immutable-api-utils:
               - 'libs/utils/immutable-api/**'
+            json-utils:
+              - 'libs/utils/json/**'
             list-utils:
               - 'libs/utils/list/**'
             random-generator-utils:

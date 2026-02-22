@@ -158,6 +158,7 @@ jobs:
             "data-utils:libs/utils/data"
             "function-utils:libs/utils/function"
             "immutable-api-utils:libs/utils/immutable-api"
+            "json-utils:libs/utils/json"
             "list-utils:libs/utils/list"
             "random-generator-utils:libs/utils/random-generator"
             "string-utils:libs/utils/string"
