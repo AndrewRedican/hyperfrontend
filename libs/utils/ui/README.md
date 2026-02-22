@@ -209,7 +209,9 @@ const cleanup = createGestureListener(() => console.log('Escape or pinch detecte
 
 ## Part of hyperfrontend
 
-This library is part of the [hyperfrontend](https://github.com/AndrewRedican/hyperfrontend) monorepo. [Full documentation](https://hyperfrontend.dev).
+This library is part of the [hyperfrontend](https://github.com/AndrewRedican/hyperfrontend) monorepo.
+
+**📖 [Full documentation](https://www.hyperfrontend.dev/docs/libraries/utils/ui)**
 
 ## License
 
