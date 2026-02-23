@@ -1,7 +1,7 @@
-import { base64ToUrlSafeBase64 } from '../utils'
+import { base64ToUrlSafeBase64, bytesToBinaryString } from '../../utils'
 
 /**
- * Encodes a UTF-8 string to base64 format (Node.js implementation).
+ * Encodes a UTF-8 string to base64 format (browser implementation).
  * Supports optional URL-safe encoding and padding control.
  *
  * @param text - The UTF-8 string to encode
@@ -10,8 +10,5 @@ import { base64ToUrlSafeBase64 } from '../utils'
  * @returns The base64 encoded string
  */
 export function toBase64(text: string, urlSafe = false, keepPadding = false): string {
-  return base64ToUrlSafeBase64(Buffer.from(text, 'utf8').toString('base64'), {
-    urlSafe,
-    keepPadding,
-  })
+  return base64ToUrlSafeBase64(btoa(bytesToBinaryString(new TextEncoder().encode(text))), { urlSafe, keepPadding })
 }

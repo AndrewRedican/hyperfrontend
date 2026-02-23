@@ -1,4 +1,4 @@
-import { binaryStringToBytes, urlSafeBase64ToBase64 } from '../utils'
+import { binaryStringToBytes, urlSafeBase64ToBase64 } from '../../utils'
 
 /**
  * Converts a base64 encoded string to a Uint8Array (browser implementation).
