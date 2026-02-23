@@ -1,6 +1,14 @@
 import { readJsonFile, writeJsonFile } from '@nx/devkit'
 import { join } from 'node:path'
-import type { EntryPointDiscovery, FormatOutputs, PackageJson, IIFEConfig, UMDConfig } from './types'
+import type {
+  EntryPointDiscovery,
+  FormatOutputs,
+  PackageJson,
+  IIFEConfig,
+  UMDConfig,
+  ConditionalExport,
+  ExportValue,
+} from './types'
 import { isWorkspacePackage } from './externals'
 
 /** Fields to inherit from root package.json */
@@ -99,13 +107,13 @@ function createExportEntry(outputDir: string, hasEsm: boolean, hasCjs: boolean):
  * @param srcPath - Source export path (string or conditional exports object)
  * @returns Output directory relative to dist root, or empty string for root
  */
-function extractOutputDirFromSourcePath(srcPath: string | object): string {
+function extractOutputDirFromSourcePath(srcPath: ExportValue): string {
   const path =
     typeof srcPath === 'string'
       ? srcPath
-      : ((srcPath as Record<string, string>).import ??
-        (srcPath as Record<string, string>).require ??
-        (srcPath as Record<string, string>).default ??
+      : ((srcPath as ConditionalExport).import ??
+        (srcPath as ConditionalExport).require ??
+        (srcPath as ConditionalExport).default ??
         '')
 
   // Match "./src/<path>/index.[jt]s" pattern
@@ -153,7 +161,7 @@ export function generateExportsFromFormats(
       // Skip package.json export (already added)
       if (exportKey === './package.json') continue
 
-      const outputDir = extractOutputDirFromSourcePath(srcPath as string | object)
+      const outputDir = extractOutputDirFromSourcePath(srcPath)
       const discoveryPath = outputDir ? `./${outputDir}` : '.'
       const hasEsm = esmPaths.has(discoveryPath)
       const hasCjs = cjsPaths.has(discoveryPath)
