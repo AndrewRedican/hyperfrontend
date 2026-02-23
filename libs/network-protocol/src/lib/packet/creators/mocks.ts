@@ -11,7 +11,7 @@ import type {
   PacketSerialization,
   PacketDeserialization,
 } from '../model'
-import type { Data } from '../../data'
+import type { Data } from '../../data/data'
 import { unencryptedData, encryptedData, password as passw0rd } from '../../data/security/mocks'
 
 /* eslint-disable @typescript-eslint/no-unused-vars */

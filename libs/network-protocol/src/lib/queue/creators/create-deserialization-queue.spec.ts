@@ -2,7 +2,7 @@ import type { UnserializedEncryptedPacket } from '../../packet/model'
 import { sleep } from '@hyperfrontend/time-utils'
 import { logger } from '@hyperfrontend/logging'
 import { packetDeserialization, serializedEncryptedPacket } from '../../packet/creators/mocks'
-import { isValidUnserializedEncryptedPacket } from '../../packet/validations'
+import { isValidUnserializedEncryptedPacket } from '../../packet/validations/validations'
 import { createDeserializationQueue } from './create-deserialization-queue'
 
 describe('createDeserializationQueue', () => {

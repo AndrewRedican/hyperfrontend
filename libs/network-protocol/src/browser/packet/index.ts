@@ -18,7 +18,7 @@ export const obfuscatePacket = createPacketObfuscator(encrypt)
 export const deobfuscatePacket = createPacketDeobfuscator(decrypt)
 
 export type * from '../../lib/packet/model'
-export * from '../../lib/packet/validations'
+export * from '../../lib/packet/validations/validations'
 export * from '../../lib/packet/security/encryption/dynamic-encryption-key'
 export * from '../../lib/packet/security/obfuscation/dynamic-obfuscation-key'
 export * from '../../lib/packet/security/obfuscation/is-valid-refresh-rate'

@@ -2,7 +2,7 @@ import type { SerializedEncryptedPacket } from '../../packet/model'
 import { sleep } from '@hyperfrontend/time-utils'
 import { logger } from '@hyperfrontend/logging'
 import { packetDeobfuscation, obfuscatedPacket } from '../../packet/creators/mocks'
-import { isValidSerializedEncryptedPacket } from '../../packet/validations'
+import { isValidSerializedEncryptedPacket } from '../../packet/validations/validations'
 import { createDeobfuscationQueue } from './create-deobfuscation-queue'
 
 describe('createDeobfuscationQueue', () => {

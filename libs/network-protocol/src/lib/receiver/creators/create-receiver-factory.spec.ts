@@ -3,14 +3,14 @@
  * Browser version: create-receiver-factory.browser.spec.ts (identical except for imports)
  */
 
-import type { UnencryptedPacket } from '../../packet'
+import type { UnencryptedPacket } from '../../packet/packet'
 import { createHash, encrypt, decrypt } from '@hyperfrontend/cryptography/node'
 import { uint8ArrayToBase64, base64ToUint8Array } from '@hyperfrontend/string-utils/node'
-import { createDataFactory } from '../../data/creators'
-import { createDataEncrypter, createDataDecrypter } from '../../data/security'
-import { createPacketEncrypter, createPacketDecrypter } from '../../packet/security/encryption'
-import { createPacketObfuscator, createPacketDeobfuscator } from '../../packet/security/obfuscation'
-import { createSerializedEncryptedPacketCreator, createDeserializedEncryptedPacketCreator } from '../../packet/creators'
+import { createDataFactory } from '../../data/creators/creators'
+import { createDataEncrypter, createDataDecrypter } from '../../data/security/security'
+import { createPacketEncrypter, createPacketDecrypter } from '../../packet/security/encryption/encryption'
+import { createPacketObfuscator, createPacketDeobfuscator } from '../../packet/security/obfuscation/obfuscation'
+import { createSerializedEncryptedPacketCreator, createDeserializedEncryptedPacketCreator } from '../../packet/creators/creators'
 import { createReceiverFactory } from './create-receiver-factory'
 import { testUUIDs, testLabels, testMessages, createMockLogger } from './test-fixtures'
 

@@ -5,11 +5,11 @@
 
 import { createHash, encrypt } from '@hyperfrontend/cryptography/node'
 import { uint8ArrayToBase64 } from '@hyperfrontend/string-utils/node'
-import { createDataFactory } from '../../data/creators'
-import { createDataEncrypter } from '../../data/security'
-import { createPacketEncrypter } from '../../packet/security/encryption'
-import { createPacketObfuscator } from '../../packet/security/obfuscation'
-import { createSerializedEncryptedPacketCreator } from '../../packet/creators'
+import { createDataFactory } from '../../data/creators/creators'
+import { createDataEncrypter } from '../../data/security/security'
+import { createPacketEncrypter } from '../../packet/security/encryption/encryption'
+import { createPacketObfuscator } from '../../packet/security/obfuscation/obfuscation'
+import { createSerializedEncryptedPacketCreator } from '../../packet/creators/creators'
 import { createSenderFactory } from './create-sender-factory'
 import { testUUIDs, testLabels, testMessages, createMockLogger } from './test-fixtures'
 

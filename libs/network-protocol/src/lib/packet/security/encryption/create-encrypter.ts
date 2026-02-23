@@ -1,6 +1,6 @@
 import type { PacketEncrypter, UnserializedEncryptedPacket, UnencryptedPacket } from '../../model'
-import type { Data } from '../../../data'
-import { isValidUnencryptedPacket } from '../../validations'
+import type { Data } from '../../../data/data'
+import { isValidUnencryptedPacket } from '../../validations/validations'
 
 /**
  * Creates a packet encrypter with the provided data encryption implementation.
@@ -10,7 +10,7 @@ import { isValidUnencryptedPacket } from '../../validations'
  *
  * @example
  * ```typescript
- * import { createDataEncrypter } from '@hyperfrontend/network-protocol/lib/data/security'
+ * import { createDataEncrypter } from '@hyperfrontend/network-protocol/lib/data/security/security'
  * import { encrypt } from '@hyperfrontend/cryptography/browser'
  * import { createPacketEncrypter } from '@hyperfrontend/network-protocol/lib/packet/security/encryption'
  *

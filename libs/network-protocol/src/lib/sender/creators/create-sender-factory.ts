@@ -1,6 +1,6 @@
 import type { CreateSender, Sender, SendFn, OutboundQueue } from '../model'
 import type { PacketSerialization } from '../../packet/model'
-import { createUnencryptedPacket } from '../../packet'
+import { createUnencryptedPacket } from '../../packet/packet'
 import { createObfuscationQueue, createSerializationQueue, createEncryptionQueue } from '../../queue'
 
 /**
@@ -11,9 +11,9 @@ import { createObfuscationQueue, createSerializationQueue, createEncryptionQueue
  *
  * @example
  * ```typescript
- * import { createSerializedEncryptedPacketCreator } from '@hyperfrontend/network-protocol/lib/packet/creators'
+ * import { createSerializedEncryptedPacketCreator } from '@hyperfrontend/network-protocol/lib/packet/creators/creators'
  * import { uint8ArrayToBase64 } from '@hyperfrontend/string-utils/browser'
- * import { createSenderFactory } from '@hyperfrontend/network-protocol/lib/sender/creators'
+ * import { createSenderFactory } from '@hyperfrontend/network-protocol/lib/sender/creators/creators'
  *
  * const serializePacket = createSerializedEncryptedPacketCreator(uint8ArrayToBase64)
  * const createSender = createSenderFactory(serializePacket)

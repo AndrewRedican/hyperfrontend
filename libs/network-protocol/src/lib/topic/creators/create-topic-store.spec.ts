@@ -1,5 +1,5 @@
 import type { Topic, TopicStore } from '../model'
-import { isValidTopic } from '../validations'
+import { isValidTopic } from '../validations/validations'
 import { createTopicStore } from './create-topic-store'
 
 describe('TopicStore', () => {

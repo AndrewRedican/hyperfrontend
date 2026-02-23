@@ -1,5 +1,5 @@
 import type { PacketDeobfuscater, SerializedEncryptedPacket, ObfuscatedPacket } from '../../model'
-import { isValidObfuscatedPacket } from '../../validations'
+import { isValidObfuscatedPacket } from '../../validations/validations'
 
 /**
  * Creates a packet deobfuscator with the provided decryption implementation.

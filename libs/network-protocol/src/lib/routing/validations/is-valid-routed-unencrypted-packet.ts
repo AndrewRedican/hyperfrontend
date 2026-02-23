@@ -1,7 +1,7 @@
 import type { RoutedUnencryptedPacket } from '../model'
 import { getType } from '@hyperfrontend/data-utils'
-import { isValidTopicId } from '../../topic/validations'
-import { isValidUnencryptedPacket } from '../../packet/validations'
+import { isValidTopicId } from '../../topic/validations/validations'
+import { isValidUnencryptedPacket } from '../../packet/validations/validations'
 
 /**
  * Validates whether the provided value is a valid routed unencrypted packet.

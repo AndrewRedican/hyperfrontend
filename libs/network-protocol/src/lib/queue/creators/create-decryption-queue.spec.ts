@@ -3,7 +3,7 @@ import type { PacketDecryption } from '../../security/model'
 import { sleep } from '@hyperfrontend/time-utils'
 import { logger } from '@hyperfrontend/logging'
 import { packetDecryption, unserializedEncryptedPacket } from '../../packet/creators/mocks'
-import { isValidUnencryptedPacket } from '../../packet/validations'
+import { isValidUnencryptedPacket } from '../../packet/validations/validations'
 import { createDecryptionQueue } from './create-decryption-queue'
 
 describe('createDecryptionQueue', () => {

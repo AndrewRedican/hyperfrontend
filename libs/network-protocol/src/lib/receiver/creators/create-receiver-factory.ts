@@ -10,9 +10,9 @@ import { createDecryptionQueue, createDeobfuscationQueue, createDeserializationQ
  *
  * @example
  * ```typescript
- * import { createDeserializedEncryptedPacketCreator } from '@hyperfrontend/network-protocol/lib/packet/creators'
+ * import { createDeserializedEncryptedPacketCreator } from '@hyperfrontend/network-protocol/lib/packet/creators/creators'
  * import { base64ToUint8Array } from '@hyperfrontend/string-utils/browser'
- * import { createReceiverFactory } from '@hyperfrontend/network-protocol/lib/receiver/creators'
+ * import { createReceiverFactory } from '@hyperfrontend/network-protocol/lib/receiver/creators/creators'
  *
  * const deserializePacket = createDeserializedEncryptedPacketCreator(base64ToUint8Array)
  * const createReceiver = createReceiverFactory(deserializePacket)

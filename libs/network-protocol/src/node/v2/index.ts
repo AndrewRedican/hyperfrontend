@@ -33,6 +33,6 @@ const createTimeIntervalObfuscation = createTimeIntervalObfuscationFactory(
 export const createProtocol = createPSKHandshakeProtocolFactory(encryptPacket, decryptPacket, createTimeIntervalObfuscation)
 
 export type * from '../../lib/protocol/model'
-export * from '../../lib/protocol/validations'
-export * from '../../lib/protocol/v2/creators'
-export * from '../../lib/protocol/creators'
+export * from '../../lib/protocol/validations/validations'
+export * from '../../lib/protocol/v2/creators/creators'
+export * from '../../lib/protocol/creators/creators'

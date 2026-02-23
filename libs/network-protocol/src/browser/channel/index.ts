@@ -7,4 +7,4 @@ export const createChannel = createChannelFactory(createSender, createReceiver)
 export const createChannelStore = createChannelStoreFactory(createChannel)
 
 export type * from '../../lib/channel/model'
-export * from '../../lib/channel/validations'
+export * from '../../lib/channel/validations/validations'

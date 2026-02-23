@@ -6,12 +6,12 @@
  */
 
 import { encrypt, decrypt } from '@hyperfrontend/cryptography/browser'
-import { createPacketEncrypter } from '../../../packet/security/encryption'
-import { createPacketDecrypter } from '../../../packet/security/encryption'
-import { createDataEncrypter } from '../../../data/security'
-import { createDataDecrypter } from '../../../data/security'
-import { createPacketObfuscator } from '../../../packet/security/obfuscation'
-import { createPacketDeobfuscator } from '../../../packet/security/obfuscation'
+import { createPacketEncrypter } from '../../../packet/security/encryption/encryption'
+import { createPacketDecrypter } from '../../../packet/security/encryption/encryption'
+import { createDataEncrypter } from '../../../data/security/security'
+import { createDataDecrypter } from '../../../data/security/security'
+import { createPacketObfuscator } from '../../../packet/security/obfuscation/obfuscation'
+import { createPacketDeobfuscator } from '../../../packet/security/obfuscation/obfuscation'
 import { createTimeIntervalObfuscationFactory } from '../../../packet/security/obfuscation/time-interval-obfuscation-factory'
 import { getTimeBasedPassword, getTimeBasedPasswords } from '@hyperfrontend/cryptography/browser'
 import { createPSKHandshakeProtocolFactory } from './create-static-key-protocol-factory'

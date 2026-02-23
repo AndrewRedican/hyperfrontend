@@ -8,5 +8,5 @@ export const decryptData = createDataDecrypter(decrypt)
 export const createData = createDataFactory(createHash)
 
 export type * from '../../lib/data/model'
-export * from '../../lib/data/validations'
+export * from '../../lib/data/validations/validations'
 export * from '../../lib/data/creators/get-schema'

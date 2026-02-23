@@ -3,7 +3,7 @@ import type { Data } from '../../data/model'
 import type { UnencryptedPacket } from '../model'
 import { isValidUnencryptedData } from '../../data/validations/is-valid-unencrypted-data'
 import { createPacketBase } from './create-packet-base'
-import { withoutValidErrorMessage } from '../utils'
+import { withoutValidErrorMessage } from '../utils/utils'
 
 /**
  * Creates an unencrypted network packet with validated origin, target, and data.

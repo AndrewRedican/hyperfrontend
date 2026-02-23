@@ -1,6 +1,6 @@
 import type { PacketBase } from '../model'
-import { isValidOrigin, isValidTarget } from '../validations'
-import { withoutValidErrorMessage } from '../utils'
+import { isValidOrigin, isValidTarget } from '../validations/validations'
+import { withoutValidErrorMessage } from '../utils/utils'
 
 /**
  * Creates the base structure for a network packet with origin and target.

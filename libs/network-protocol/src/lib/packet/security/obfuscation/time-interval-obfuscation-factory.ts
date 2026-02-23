@@ -1,6 +1,6 @@
 import type { ObfuscationSuite } from '../../../security/model'
 import type { SerializedEncryptedPacket, ObfuscatedPacket, PacketObfuscater, PacketDeobfuscater } from '../../model'
-import { isValidSerializedEncryptedPacket } from '../../validations'
+import { isValidSerializedEncryptedPacket } from '../../validations/validations'
 import { isValidRefreshRate } from './is-valid-refresh-rate'
 
 /**

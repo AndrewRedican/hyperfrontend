@@ -1,8 +1,8 @@
 import type { SerializedEncryptedPacket, ObfuscatedPacket } from '../../packet/model'
 import type { ObfuscationQueueCreater } from '../model'
-import { isValidSerializedEncryptedPacket, isValidObfuscatedPacket } from '../../packet/validations'
-import { isValidQueueCreaterArguments } from '../validations'
-import { getValidationError } from '../utils'
+import { isValidSerializedEncryptedPacket, isValidObfuscatedPacket } from '../../packet/validations/validations'
+import { isValidQueueCreaterArguments } from '../validations/validations'
+import { getValidationError } from '../utils/utils'
 import { createQueue } from './create-queue'
 
 export const createObfuscationQueue: ObfuscationQueueCreater = (label, packetObfuscation, logger, onSuccess, onFail) => {

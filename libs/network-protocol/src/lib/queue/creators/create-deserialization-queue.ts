@@ -1,8 +1,8 @@
 import type { SerializedEncryptedPacket, UnserializedEncryptedPacket } from '../../packet/model'
 import type { DeserializationQueueCreater } from '../model'
-import { isValidSerializedEncryptedPacket, isValidUnserializedEncryptedPacket } from '../../packet/validations'
-import { isValidQueueCreaterArguments } from '../validations'
-import { getValidationError } from '../utils'
+import { isValidSerializedEncryptedPacket, isValidUnserializedEncryptedPacket } from '../../packet/validations/validations'
+import { isValidQueueCreaterArguments } from '../validations/validations'
+import { getValidationError } from '../utils/utils'
 import { createQueue } from './create-queue'
 
 export const createDeserializationQueue: DeserializationQueueCreater = (label, packetDeserialization, logger, onSuccess, onFail) => {
