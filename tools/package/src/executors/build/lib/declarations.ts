@@ -1,7 +1,7 @@
 import { logger } from '@nx/devkit'
 import { existsSync, mkdirSync, cpSync, rmSync, readdirSync, statSync } from 'node:fs'
 import { execFileSync } from 'node:child_process'
-import { dirname, join, relative, resolve, basename } from 'node:path'
+import { dirname, join, relative, resolve } from 'node:path'
 import type { EntryPointDiscovery } from './types'
 
 /**
@@ -108,7 +108,7 @@ export function flattenDeclarationPaths(
   }
 
   // Clean up the nested workspace structure (libs/, plugins/, etc.)
-  cleanupNestedDeclarations(outputPath, workspaceRoot)
+  cleanupNestedDeclarations(outputPath)
 }
 
 /**
@@ -146,9 +146,8 @@ function copyRootDeclarations(nestedSrc: string, outputPath: string): void {
  * not be duplicated in the consuming package.
  *
  * @param outputPath - Absolute path to output directory
- * @param workspaceRoot - Absolute path to workspace root
  */
-function cleanupNestedDeclarations(outputPath: string, workspaceRoot: string): void {
+function cleanupNestedDeclarations(outputPath: string): void {
   // Remove common workspace top-level directories that tsc might output
   const workspaceDirs = ['libs', 'plugins', 'apps']
 

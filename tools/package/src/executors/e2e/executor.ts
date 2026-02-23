@@ -135,10 +135,16 @@ export default async function e2eExecutor(options: E2eExecutorOptions, context: 
   const projectRoot = projectConfig.root
   const testDir = options.testDir ? join(workspaceRoot, options.testDir) : join(workspaceRoot, projectRoot)
 
-  // Derive the library dist path from the E2E project name
-  // package-e2e-logging -> dist/libs/logging
-  const libName = projectName.replace(/^package-e2e-/, '')
-  const distPath = options.packageDir ? join(workspaceRoot, options.packageDir) : join(workspaceRoot, 'dist', 'libs', libName)
+  const libName = projectName.replace(/^e2e-lib-/, '')
+  const utilsMatch = libName.match(/^(.+)-utils$/)
+  let distPath: string
+  if (options.packageDir) {
+    distPath = join(workspaceRoot, options.packageDir)
+  } else if (utilsMatch) {
+    distPath = join(workspaceRoot, 'dist', 'libs', 'utils', utilsMatch[1])
+  } else {
+    distPath = join(workspaceRoot, 'dist', 'libs', libName)
+  }
 
   if (!existsSync(distPath)) {
     logger.error(`Dist path not found: ${distPath}. Has the library been built?`)
