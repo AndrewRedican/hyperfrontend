@@ -1,0 +1,20 @@
+{
+  "name": "@hyperfrontend/e2e-immutable-api-utils",
+  "version": "0.0.0",
+  "private": true,
+  "description": "E2E tests for @hyperfrontend/immutable-api-utils package outputs",
+  "scripts": {
+    "pack-install": "cd ../../../dist/libs/utils/immutable-api && npm pack && cd - && npm install ../../../dist/libs/utils/immutable-api/*.tgz"
+  },
+  "dependencies": {
+    "@hyperfrontend/immutable-api-utils": "file:../../../tmp/e2e-packs/hyperfrontend-immutable-api-utils-0.0.1.tgz"
+  },
+  "devDependencies": {
+    "@types/jest": "29.5.14",
+    "@types/node": "22.15.32",
+    "jest": "29.7.0",
+    "jest-environment-jsdom": "29.7.0",
+    "ts-jest": "29.2.6",
+    "typescript": "5.7.3"
+  }
+}
