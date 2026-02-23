@@ -1,6 +1,6 @@
 import { logger } from '@nx/devkit'
 import { existsSync, mkdirSync, cpSync, rmSync, readdirSync, statSync } from 'node:fs'
-import { execFileSync } from 'node:child_process'
+import { spawnSync } from 'node:child_process'
 import { dirname, join, relative, resolve } from 'node:path'
 import type { EntryPointDiscovery } from './types'
 
@@ -30,28 +30,32 @@ export function generateDeclarations(
 
   const tscPath = resolve(workspaceRoot, 'node_modules', '.bin', 'tsc')
 
-  try {
-    // Note: --noEmit false is required to override noEmit: true in tsconfig.base.json
-    execFileSync(
-      tscPath,
-      [
-        '--project',
-        tsConfigPath,
-        '--noEmit',
-        'false',
-        '--emitDeclarationOnly',
-        '--declaration',
-        '--declarationMap',
-        '--outDir',
-        outputPath,
-      ],
-      { cwd: projectRoot, encoding: 'utf-8', maxBuffer: 10 * 1024 * 1024 }
-    )
-  } catch (error) {
-    const err = <Error & { stdout?: string; stderr?: string }>error
-    if (err.stderr) logger.error(err.stderr)
-    if (err.stdout) logger.error(err.stdout)
-    throw error
+  const args = [
+    '--project',
+    tsConfigPath,
+    '--noEmit',
+    'false',
+    '--emitDeclarationOnly',
+    '--declaration',
+    '--declarationMap',
+    '--outDir',
+    outputPath,
+  ]
+
+  // Use spawnSync to avoid buffer issues - stdio: 'pipe' captures output
+  const result = spawnSync(tscPath, args, {
+    cwd: projectRoot,
+    encoding: 'utf-8',
+    stdio: ['pipe', 'pipe', 'pipe'],
+  })
+
+  if (result.error) {
+    logger.error(`  [DEBUG] tsc spawn error: ${result.error.message}`)
+    throw result.error
+  }
+
+  if (result.status !== 0) {
+    throw new Error(`tsc failed with exit code ${result.status}`)
   }
 
   flattenDeclarationPaths(projectRoot, outputPath, workspaceRoot, discovery)
@@ -87,10 +91,13 @@ export function flattenDeclarationPaths(
   // e.g., dist/libs/logging/libs/logging/src
   const nestedDeclarations = join(outputPath, relative(workspaceRoot, join(projectRoot, 'src')))
 
-  if (!existsSync(nestedDeclarations)) return
+  if (!existsSync(nestedDeclarations)) {
+    return
+  }
 
   // Copy declarations for each entry point to its proper location
-  for (const entry of discovery.entryPoints) {
+  for (let i = 0; i < discovery.entryPoints.length; i++) {
+    const entry = discovery.entryPoints[i]
     if (entry.isRoot) {
       // Root entry: copy root-level .d.ts files from nested src to package root
       copyRootDeclarations(nestedDeclarations, outputPath)
@@ -99,7 +106,6 @@ export function flattenDeclarationPaths(
       const srcDir = entry.srcPath
       const declSrc = join(nestedDeclarations, srcDir)
       const declDest = join(outputPath, srcDir)
-
       if (existsSync(declSrc)) {
         mkdirSync(dirname(declDest), { recursive: true })
         cpSync(declSrc, declDest, { recursive: true, force: true })
@@ -120,7 +126,9 @@ export function flattenDeclarationPaths(
  * @param outputPath - Package output root (e.g., dist/libs/logging)
  */
 function copyRootDeclarations(nestedSrc: string, outputPath: string): void {
-  if (!existsSync(nestedSrc)) return
+  if (!existsSync(nestedSrc)) {
+    return
+  }
 
   const entries = readdirSync(nestedSrc)
 
@@ -153,7 +161,8 @@ function cleanupNestedDeclarations(outputPath: string): void {
 
   for (const dir of workspaceDirs) {
     const nestedPath = join(outputPath, dir)
-    if (existsSync(nestedPath)) {
+    const exists = existsSync(nestedPath)
+    if (exists) {
       rmSync(nestedPath, { recursive: true, force: true })
     }
   }
