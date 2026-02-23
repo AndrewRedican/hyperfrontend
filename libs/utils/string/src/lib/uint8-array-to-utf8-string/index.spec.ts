@@ -1,4 +1,4 @@
-import { uint8ArrayToUtf8String } from './index'
+import { uint8ArrayToUtf8String } from './uint8-array-to-utf8-string'
 import { UINT8_CONVERTION_SAMPLES } from '../shared-consts'
 
 describe('uint8ArrayToUtf8String', () => {

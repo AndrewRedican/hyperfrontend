@@ -1,6 +1,6 @@
 /** @jest-environment node */
 import { utf8StringToUint8Array, base64ToUint8Array, uint8ArrayToUtf8String } from '../../node'
-import { uint8ArrayToBase64 } from './node'
+import { uint8ArrayToBase64 } from './node/uint8-array-to-base64'
 
 describe(`uint8ArrayToBase64 (node)`, () => {
   const message = 'supercalifragilisticexpialidoceous'

@@ -1,5 +1,5 @@
 /** @jest-environment jsdom */
-import { utf8StringToUint8Array } from './browser'
+import { utf8StringToUint8Array } from './browser/utf8-string-to-uint8-array'
 import { UINT8_CONVERTION_SAMPLES } from '../shared-consts'
 
 describe('utf8StringToUint8Array (browser)', () => {
