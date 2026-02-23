@@ -1,4 +1,6 @@
-import { type ExecutorContext, logger } from '@nx/devkit'
+import type { ExecutorContext } from '@nx/devkit'
+import type { VersionBuilderSchema } from '@jscutlery/semver/src/executors/version/schema'
+import type { VersionExecutorOptions } from './schema'
 import { execSync } from 'node:child_process'
 import {
   readFileSync,
@@ -14,9 +16,8 @@ import {
   readSync,
 } from 'node:fs'
 import { join, relative } from 'node:path'
-import type { VersionExecutorOptions } from './schema'
 import semverVersion from '@jscutlery/semver/src/executors/version'
-import type { VersionBuilderSchema } from '@jscutlery/semver/src/executors/version/schema'
+import { logger } from '@nx/devkit'
 
 /**
  * Patterns that identify version/release commits.
@@ -390,14 +391,9 @@ export default async function versionExecutor(options: VersionExecutorOptions, c
   const currentVersion = getPackageVersion(packageJsonPath)
   const expectedTag = `${tagPrefix}${currentVersion}`
 
-  // Idempotency check: if the tag for current version exists, it's been released - skip
-  if (tagExists(expectedTag, workspaceRoot) && !options.releaseAs && !options.allowEmptyRelease) {
-    logger.info(`${projectName}: Tag ${expectedTag} already exists (skipping)`)
-    return { success: true }
-  }
-
-  // For unreleased versions (no tag), clear existing changelog entry so semver
-  // regenerates it with ALL commits since last tagged release
+  // For unreleased versions (no tag for current version), clear existing changelog
+  // entry so semver regenerates it with ALL commits since last tagged release.
+  // This handles the case where version command was run but not pushed.
   if (!tagExists(expectedTag, workspaceRoot)) {
     const cleared = clearUnreleasedChangelogEntry(changelogPath, currentVersion, options.dryRun ?? false)
     if (cleared) {
