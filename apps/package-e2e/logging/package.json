@@ -1,5 +1,5 @@
 {
-  "name": "@hyperfrontend/package-e2e-logging",
+  "name": "@hyperfrontend/e2e-logging",
   "version": "0.0.0",
   "private": true,
   "description": "E2E tests for @hyperfrontend/logging package outputs",
@@ -7,7 +7,7 @@
     "pack-install": "cd ../../../dist/libs/logging && npm pack && cd - && npm install ../../../dist/libs/logging/*.tgz"
   },
   "dependencies": {
-    "@hyperfrontend/logging": "file:../../../dist/libs/logging/hyperfrontend-logging-0.0.1.tgz"
+    "@hyperfrontend/logging": "file:../../../tmp/e2e-packs/hyperfrontend-logging-0.0.1.tgz"
   },
   "devDependencies": {
     "@types/jest": "29.5.14",

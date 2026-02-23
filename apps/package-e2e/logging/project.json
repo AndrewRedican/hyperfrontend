@@ -6,30 +6,11 @@
   "projectType": "application",
   "tags": ["type:e2e", "scope:internal"],
   "targets": {
-    "e2e:cjs": {
-      "executor": "@nx/jest:jest",
-      "options": {
-        "jestConfig": "{projectRoot}/jest.config.cjs.ts"
-      }
-    },
-    "e2e:esm": {
-      "executor": "@nx/jest:jest",
-      "options": {
-        "jestConfig": "{projectRoot}/jest.config.esm.ts"
-      }
-    },
-    "e2e:browser": {
-      "executor": "@nx/jest:jest",
-      "options": {
-        "jestConfig": "{projectRoot}/jest.config.browser.ts"
-      }
-    },
     "e2e": {
-      "executor": "nx:run-commands",
+      "executor": "@hyperfrontend/package:e2e",
       "dependsOn": ["^build"],
       "options": {
-        "commands": ["nx run e2e-lib-logging:e2e:cjs", "nx run e2e-lib-logging:e2e:esm", "nx run e2e-lib-logging:e2e:browser"],
-        "parallel": false
+        "formats": ["cjs", "esm", "browser"]
       }
     }
   },
