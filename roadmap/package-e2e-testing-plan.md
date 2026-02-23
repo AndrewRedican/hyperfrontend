@@ -110,7 +110,7 @@ Each E2E project uses its own `tsconfig.json` that does **not** extend the base 
 import type { Config } from 'jest'
 
 const config: Config = {
-  displayName: 'package-e2e-nexus-cjs',
+  displayName: 'e2e-lib-nexus-cjs',
   testEnvironment: 'node',
   transform: {
     '^.+\\.tsx?$': ['ts-jest', { tsconfig: '<rootDir>/tsconfig.json' }],
@@ -131,7 +131,7 @@ For ESM tests, use Node.js with `--experimental-vm-modules`:
 import type { Config } from 'jest'
 
 const config: Config = {
-  displayName: 'package-e2e-nexus-esm',
+  displayName: 'e2e-lib-nexus-esm',
   testEnvironment: 'node',
   extensionsToTreatAsEsm: ['.ts'],
   transform: {
@@ -156,7 +156,7 @@ export default config
 import type { Config } from 'jest'
 
 const config: Config = {
-  displayName: 'package-e2e-nexus-browser',
+  displayName: 'e2e-lib-nexus-browser',
   testEnvironment: 'jsdom',
   transform: {
     '^.+\\.tsx?$': ['ts-jest', { tsconfig: '<rootDir>/tsconfig.json' }],
@@ -334,7 +334,7 @@ describe('@hyperfrontend/nexus UMD bundle', () => {
 ```json
 {
   "$schema": "../../../node_modules/nx/schemas/project-schema.json",
-  "name": "package-e2e-nexus",
+  "name": "e2e-lib-nexus",
   "description": "E2E tests for @hyperfrontend/nexus package outputs",
   "sourceRoot": "{projectRoot}/src",
   "projectType": "application",
@@ -362,7 +362,7 @@ describe('@hyperfrontend/nexus UMD bundle', () => {
       "executor": "nx:run-commands",
       "dependsOn": ["^build"],
       "options": {
-        "commands": ["nx run package-e2e-nexus:e2e:cjs", "nx run package-e2e-nexus:e2e:esm", "nx run package-e2e-nexus:e2e:browser"],
+        "commands": ["nx run e2e-lib-nexus:e2e:cjs", "nx run e2e-lib-nexus:e2e:esm", "nx run e2e-lib-nexus:e2e:browser"],
         "parallel": false
       }
     }
@@ -376,7 +376,7 @@ describe('@hyperfrontend/nexus UMD bundle', () => {
 The `implicitDependencies` ensures the library is built before E2E tests run:
 
 ```
-lib-nexus:build → package-e2e-nexus:e2e
+lib-nexus:build → e2e-lib-nexus:e2e
 ```
 
 ---
