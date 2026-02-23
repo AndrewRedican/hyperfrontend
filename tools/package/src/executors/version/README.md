@@ -2,6 +2,12 @@
 
 Idempotent version management for hyperfrontend monorepo packages.
 
+> **Related Documentation:**
+>
+> - [ARCHITECTURE.md](./ARCHITECTURE.md) - System design overview
+> - [Publish Executor](../publish/README.md) - npm publish executor
+> - [Plugin README](../../../README.md) - Plugin overview
+
 ## Overview
 
 The `@hyperfrontend/package:version` executor wraps `@jscutlery/semver:version` with additional safety checks and automation. It analyzes conventional commits to determine semantic version bumps and generates changelogs.
@@ -9,7 +15,8 @@ The `@hyperfrontend/package:version` executor wraps `@jscutlery/semver:version` 
 **Key features:**
 
 - Idempotent - safe to run multiple times
-- Recursion-proof - won't re-version on version commits
+- Recursion-proof - won't re-version on version commits (project-specific)
+- Documentation commits (`docs`) trigger MINOR bumps
 - Auto-updates dependent package references
 - Works in CI and locally
 
@@ -112,12 +119,14 @@ All options can be passed via CLI flags or configured in `project.json`:
 
 ### Changelog Options
 
-| Option                | Type     | Default   | Description                                   |
-| --------------------- | -------- | --------- | --------------------------------------------- |
-| `preset`              | string   | `angular` | Conventional commits preset                   |
-| `changelogHeader`     | string   | -         | Custom changelog header                       |
-| `commitMessageFormat` | string   | -         | Custom commit message format                  |
-| `skipCommitTypes`     | string[] | `[]`      | Commit types to ignore in version calculation |
+| Option                | Type             | Default | Description                                   |
+| --------------------- | ---------------- | ------- | --------------------------------------------- |
+| `preset`              | string \| object | custom  | Conventional commits preset (see below)       |
+| `changelogHeader`     | string           | -       | Custom changelog header                       |
+| `commitMessageFormat` | string           | -       | Custom commit message format                  |
+| `skipCommitTypes`     | string[]         | `[]`    | Commit types to ignore in version calculation |
+
+> **Note:** The default preset is a custom `conventionalcommits` configuration that includes `docs` commits for version bumps. See [Commit Types](#commit-types-and-version-impact) below.
 
 ### Advanced Options
 
@@ -136,7 +145,7 @@ Before versioning, the executor checks:
 
 ```mermaid
 flowchart TD
-    check1{Is HEAD a version commit?} -->|YES| skip1([Skip - prevents recursion])
+    check1{Is HEAD a version commit<br/>for THIS project?} -->|YES| skip1([Skip - prevents recursion])
     check1 -->|NO| check2{Is git in rebase/merge?}
     check2 -->|YES| skip2([Skip - prevents conflicts])
     check2 -->|NO| check3{Does version tag exist?}
@@ -144,15 +153,27 @@ flowchart TD
     check3 -->|NO| proceed([Proceed with versioning])
 ```
 
-### 2. Version Calculation
+> **Note:** The version commit check is project-specific. Versioning `lib-a` won't block `lib-b` from being versioned.
 
-Uses conventional commits to determine bump:
+### 2. Version Calculation (Commit Types and Version Impact)
 
-| Commit Type               | Version Bump  |
-| ------------------------- | ------------- |
-| `fix:`                    | Patch (0.0.X) |
-| `feat:`                   | Minor (0.X.0) |
-| `BREAKING CHANGE:` or `!` | Major (X.0.0) |
+This executor uses a custom preset that includes documentation commits for version bumps:
+
+| Commit Type               | Version Bump  | Changelog Section        |
+| ------------------------- | ------------- | ------------------------ |
+| `feat:`                   | Minor (0.X.0) | Features                 |
+| `docs:`                   | Minor (0.X.0) | Documentation            |
+| `fix:`                    | Patch (0.0.X) | Bug Fixes                |
+| `perf:`                   | Patch (0.0.X) | Performance Improvements |
+| `build:`                  | Patch (0.0.X) | Build System             |
+| `BREAKING CHANGE:` or `!` | Major (X.0.0) | -                        |
+| `refactor:`               | None          | (hidden)                 |
+| `style:`                  | None          | (hidden)                 |
+| `test:`                   | None          | (hidden)                 |
+| `ci:`                     | None          | (hidden)                 |
+| `chore:`                  | None          | (hidden)                 |
+
+> **Philosophy:** Documentation updates are considered meaningful user-facing changes and trigger MINOR version bumps.
 
 ### 3. Artifacts Created
 
@@ -192,8 +213,11 @@ The executor recognizes these patterns as version commits (for recursion prevent
 ```
 chore(lib-cryptography): release version 1.2.0   # Manual versioning
 chore: update versions for lib-cryptography      # PR CI versioning
-chore(release): ...                              # Alternative format
+chore: update versions for lib-a, lib-b          # Multi-package CI versioning
+chore(release): lib-cryptography 1.0.0           # Alternative format
 ```
+
+**Important:** This check is **project-specific**. If `lib-a` was just versioned, `lib-b` can still be versioned even though the last commit was a version commit for `lib-a`. This prevents one library's version commit from blocking other libraries.
 
 ---
 
@@ -209,15 +233,17 @@ chore(release): ...                              # Alternative format
 - Use `--releaseAs` to force a new version
 - Use `--allowEmptyRelease` to force bump
 
-### "Skipping - current commit is a version/release commit"
+### "Skipping - current commit is a version/release commit for this project"
 
-**Cause:** HEAD matches a version commit pattern.
+**Cause:** HEAD is a version commit for the same project you're trying to version.
 
 **Solutions:**
 
 - This prevents infinite recursion - usually correct behavior
 - Make a new commit before versioning
 - Use `--skipIfVersionCommit=false` to override (use carefully)
+
+> **Note:** This check is project-specific. If `lib-a` was versioned, you can still version `lib-b`.
 
 ### "Skipping - git is in rebase/merge state"
 
@@ -299,8 +325,18 @@ npx nx version lib-cryptography  # Should say "Skipping - version commit"
 
 ---
 
+## Related Executors
+
+| Executor                            | Description              |
+| ----------------------------------- | ------------------------ |
+| [publish](../publish/README.md)     | Publish to npm           |
+| [build](../build/README.md)         | Build library packages   |
+| [typecheck](../typecheck/README.md) | TypeScript type checking |
+
+---
+
 ## See Also
 
 - [@jscutlery/semver](https://github.com/jscutlery/semver) - Underlying versioning library
 - [Conventional Commits](https://www.conventionalcommits.org/) - Commit message format
-- [Semantic Versioning](https://semver.org/) - Version numbering spec
+- [Semantic Versioning](https://semver.org/) - Version numbering specification

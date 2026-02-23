@@ -2,6 +2,13 @@
 
 High-level design overview of the `@hyperfrontend/package:version` executor.
 
+> **Related Documentation:**
+>
+> - [README.md](./README.md) - Usage guide, options, and examples
+> - [Publish Executor](../publish/README.md) - npm publish executor
+> - [Plugin README](../../../README.md) - Plugin overview
+> - [CI Workflows](../../../../../../.github/workflows/README.md) - CI integration
+
 ## Design Philosophy
 
 The version executor is designed as the **single source of truth** for all versioning behavior in the monorepo. It encapsulates all versioning logic, safety checks, and integrations so that every trigger point (manual, CI, hooks) can use the same codebase with consistent behavior.
@@ -9,7 +16,7 @@ The version executor is designed as the **single source of truth** for all versi
 ### Core Principles
 
 1. **Idempotent** - Running the executor multiple times produces the same result
-2. **Recursion-proof** - Automatically detects and skips version commits
+2. **Recursion-proof** - Automatically detects and skips version commits (project-specific)
 3. **Context-aware** - Adapts to git state (rebase, merge, CI environment)
 4. **Self-sufficient** - Performs all fact-finding internally
 
@@ -123,7 +130,7 @@ The executor performs checks in a specific order for optimal performance:
 
 ```mermaid
 flowchart TD
-    start([START]) --> check1{Is HEAD a<br/>version commit?}
+    start([START]) --> check1{Is HEAD a version<br/>commit for THIS project?}
     check1 -->|YES| skip1([SKIP - return success])
     check1 -->|NO| check2{Is git in<br/>rebase/merge state?}
     check2 -->|YES| skip2([SKIP - return success])
@@ -131,6 +138,8 @@ flowchart TD
     check3 -->|YES| skip3([SKIP - return success])
     check3 -->|NO| proceed([PROCEED WITH VERSIONING])
 ```
+
+**Note:** The version commit check is project-specific. If package A was just versioned, this won't prevent package B from being versioned.
 
 ---
 
@@ -155,14 +164,17 @@ When a PR is **squash merged**, all commits on the branch (including version com
 
 ### Why Commit Message Detection?
 
-Tag existence checks fail when `--skipTag` is used. Commit message detection provides a secondary idempotency mechanism:
+Tag existence checks fail when `--skipTag` is used. Commit message detection provides a secondary idempotency mechanism.
 
-```typescript
-const VERSION_COMMIT_PATTERNS = [
-  /^chore\([^)]+\): release version/, // Manual versioning
-  /^chore: update versions for/, // PR CI versioning
-  /^chore\(release\):/, // Alternative format
-]
+**Important**: The check is **project-specific**. If package A was just versioned, package B can still be versioned even though the last commit was a version commit. This prevents one library's version commit from blocking other libraries.
+
+**Recognized patterns:**
+
+```
+chore(lib-cryptography): release version 1.0.0    # Manual versioning
+chore: update versions for lib-cryptography       # PR CI versioning
+chore: update versions for lib-a, lib-b           # Multi-package CI versioning
+chore(release): lib-cryptography 1.0.0            # Alternative format
 ```
 
 ### Why Update Dependent Package References?
@@ -174,6 +186,49 @@ The executor:
 1. Finds all `package.json` files in `libs/`
 2. Updates references to the versioned package
 3. Includes changes in the version commit (via amend)
+
+---
+
+## Conventional Commits Configuration
+
+This executor uses a custom preset that includes **documentation commits** (`docs`) for version bumps, reflecting the philosophy that documentation updates are valuable user-facing changes.
+
+### Commit Types and Version Impact
+
+```mermaid
+flowchart LR
+    subgraph bump["Triggers Version Bump"]
+        feat["feat → MINOR"]
+        fix["fix → PATCH"]
+        perf["perf → PATCH"]
+        docs["docs → MINOR"]
+        build["build → PATCH"]
+    end
+
+    subgraph hidden["No Version Bump"]
+        refactor["refactor"]
+        codeStyle["style"]
+        test["test"]
+        ci["ci"]
+        chore["chore"]
+    end
+
+    breaking["BREAKING CHANGE!"] --> major["→ MAJOR"]
+```
+
+| Commit Type       | Version Impact | Changelog Section        |
+| ----------------- | -------------- | ------------------------ |
+| `feat`            | MINOR (0.X.0)  | Features                 |
+| `fix`             | PATCH (0.0.X)  | Bug Fixes                |
+| `perf`            | PATCH          | Performance Improvements |
+| `docs`            | MINOR          | Documentation            |
+| `build`           | PATCH          | Build System             |
+| `refactor`        | None (hidden)  | -                        |
+| `style`           | None (hidden)  | -                        |
+| `test`            | None (hidden)  | -                        |
+| `ci`              | None (hidden)  | -                        |
+| `chore`           | None (hidden)  | -                        |
+| `BREAKING CHANGE` | MAJOR (X.0.0)  | -                        |
 
 ---
 
@@ -190,8 +245,8 @@ tools/package/src/executors/version/
 
 ---
 
-## Related Documentation
+## See Also
 
-- [README.md](./README.md) - Usage guide with examples
-- [VERSIONING_ACTION_PLAN.md](../../../../../roadmap/VERSIONING_ACTION_PLAN.md) - Implementation plan
-- [VERSIONING_STRATEGY.md](../../../../../roadmap/VERSIONING_STRATEGY.md) - Strategy overview
+- [@jscutlery/semver](https://github.com/jscutlery/semver) - Underlying versioning library
+- [Conventional Commits](https://www.conventionalcommits.org/) - Commit message format
+- [Semantic Versioning](https://semver.org/) - Version numbering specification
