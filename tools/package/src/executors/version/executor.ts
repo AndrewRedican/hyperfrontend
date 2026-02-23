@@ -20,33 +20,69 @@ import semverVersion from '@jscutlery/semver/src/executors/version'
 import { logger } from '@nx/devkit'
 
 /**
- * Patterns that identify version/release commits.
- * Used for recursion prevention - if HEAD matches, skip versioning.
- */
-const VERSION_COMMIT_PATTERNS = [
-  /^chore\([^)]+\): release version/, // Manual: chore(lib-x): release version 1.0.0
-  /^chore: update versions for/, // PR CI: chore: update versions for lib-x
-  /^chore\(release\):/, // Alternative format
-]
-
-/**
- * Checks if the last commit is a version/release commit.
+ * Checks if the last commit is a version/release commit for a specific project.
  * Prevents infinite recursion when versioning triggers another version.
  *
+ * This check is PROJECT-SPECIFIC: if package A was just versioned, this will
+ * only return true when checking package A. Package B can still be versioned
+ * even if the last commit was a version commit for package A.
+ *
+ * Recognized commit formats:
+ * - Manual: `chore(lib-x): release version 1.0.0`
+ * - PR CI: `chore: update versions for lib-x`
+ * - Alternative: `chore(release): lib-x 1.0.0`
+ *
  * @param cwd - Working directory
- * @returns True if current HEAD is a version commit
+ * @param projectName - The Nx project name to check for
+ * @returns True if current HEAD is a version commit for this specific project
  */
-function isVersionCommit(cwd: string): boolean {
+function isVersionCommit(cwd: string, projectName: string): boolean {
   try {
     const msg = execSync('git log -1 --pretty=%B', {
       cwd,
       encoding: 'utf-8',
       stdio: ['pipe', 'pipe', 'pipe'],
     }).trim()
-    return VERSION_COMMIT_PATTERNS.some((pattern) => pattern.test(msg))
+
+    // Pattern 1: Manual versioning - chore(lib-x): release version X.Y.Z
+    const manualPattern = new RegExp(`^chore\\(${escapeRegExp(projectName)}\\): release version`)
+    if (manualPattern.test(msg)) {
+      return true
+    }
+
+    // Pattern 2: PR CI versioning - chore: update versions for lib-x
+    // Also handles multiple packages: chore: update versions for lib-a, lib-b
+    const prCiPattern = /^chore: update versions for (.+)$/m
+    const prCiMatch = msg.match(prCiPattern)
+    if (prCiMatch) {
+      const packageList = prCiMatch[1]
+      // Split by comma and check if projectName is in the list
+      const packages = packageList.split(',').map((p) => p.trim())
+      if (packages.includes(projectName)) {
+        return true
+      }
+    }
+
+    // Pattern 3: Alternative release format - chore(release): lib-x X.Y.Z
+    const altPattern = new RegExp(`^chore\\(release\\):\\s*${escapeRegExp(projectName)}\\b`)
+    if (altPattern.test(msg)) {
+      return true
+    }
+
+    return false
   } catch {
     return false
   }
+}
+
+/**
+ * Escapes special regex characters in a string.
+ *
+ * @param str - String to escape
+ * @returns Escaped string safe for use in RegExp
+ */
+function escapeRegExp(str: string): string {
+  return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
 }
 
 /**
@@ -373,8 +409,9 @@ export default async function versionExecutor(options: VersionExecutorOptions, c
   // === FACT-FINDING: Early exit conditions ===
 
   // 1. Recursion prevention (enabled by default)
-  if (options.skipIfVersionCommit !== false && isVersionCommit(workspaceRoot)) {
-    logger.info(`${projectName}: Skipping - current commit is a version/release commit`)
+  // Note: This is PROJECT-SPECIFIC - only skips if THIS project was just versioned
+  if (options.skipIfVersionCommit !== false && isVersionCommit(workspaceRoot, projectName)) {
+    logger.info(`${projectName}: Skipping - current commit is a version/release commit for this project`)
     return { success: true }
   }
 
@@ -403,10 +440,30 @@ export default async function versionExecutor(options: VersionExecutorOptions, c
 
   logger.info(`${projectName}: Delegating to @jscutlery/semver:version`)
 
+  // Default preset configuration that includes docs commits for version bumps.
+  // docs commits trigger MINOR bumps (considered meaningful changes in this project).
+  // This aligns with the philosophy that documentation updates are valuable user-facing changes.
+  const defaultPreset = {
+    name: 'conventionalcommits',
+    types: [
+      { type: 'feat', section: 'Features' },
+      { type: 'fix', section: 'Bug Fixes' },
+      { type: 'perf', section: 'Performance Improvements' },
+      { type: 'docs', section: 'Documentation' }, // Triggers MINOR bump
+      { type: 'build', section: 'Build System' },
+      { type: 'refactor', section: 'Code Refactoring', hidden: true },
+      { type: 'style', hidden: true },
+      { type: 'test', hidden: true },
+      { type: 'ci', hidden: true },
+      { type: 'chore', hidden: true },
+    ],
+  }
+
   // Delegate to @jscutlery/semver:version
-  // Ensure skipCommitTypes defaults to empty array (required by @jscutlery/semver)
+  // Use custom preset if provided, otherwise use our default that includes docs
   const semverOptions: VersionBuilderSchema = {
     ...options,
+    preset: options.preset ?? defaultPreset,
     skipCommitTypes: options.skipCommitTypes ?? [],
   } as VersionBuilderSchema
 

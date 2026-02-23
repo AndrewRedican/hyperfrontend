@@ -70,9 +70,46 @@
       "default": false
     },
     "preset": {
-      "type": "string",
-      "description": "Customize Conventional Changelog generation.",
-      "default": "angular"
+      "oneOf": [
+        {
+          "type": "string",
+          "description": "Name of a preset (e.g., 'angular', 'conventionalcommits')."
+        },
+        {
+          "type": "object",
+          "description": "Custom preset configuration following conventional-changelog-config-spec.",
+          "properties": {
+            "name": {
+              "type": "string",
+              "description": "Base preset name to extend."
+            },
+            "types": {
+              "type": "array",
+              "description": "Commit types configuration.",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "description": "Commit type (e.g., 'feat', 'fix', 'docs')."
+                  },
+                  "section": {
+                    "type": "string",
+                    "description": "Changelog section header for this type."
+                  },
+                  "hidden": {
+                    "type": "boolean",
+                    "description": "If true, commits of this type are hidden from changelog and don't trigger version bumps."
+                  }
+                },
+                "required": ["type"]
+              }
+            }
+          }
+        }
+      ],
+      "default": "angular",
+      "description": "Customize Conventional Changelog preset. Can be a preset name or custom configuration object."
     },
     "changelogHeader": {
       "type": "string",
