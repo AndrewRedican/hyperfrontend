@@ -1,4 +1,4 @@
-import { base64ToUrlSafeBase64 } from '../../utils/utils'
+import { base64ToUrlSafeBase64 } from '../../utils/base64-to-url-safe-base64'
 
 /**
  * Encodes a UTF-8 string to base64 format (Node.js implementation).

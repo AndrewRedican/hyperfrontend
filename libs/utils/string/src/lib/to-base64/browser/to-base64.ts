@@ -1,4 +1,5 @@
-import { base64ToUrlSafeBase64, bytesToBinaryString } from '../../utils/utils'
+import { base64ToUrlSafeBase64 } from '../../utils/base64-to-url-safe-base64'
+import { bytesToBinaryString } from '../../utils/bytes-to-binary-string'
 
 /**
  * Encodes a UTF-8 string to base64 format (browser implementation).

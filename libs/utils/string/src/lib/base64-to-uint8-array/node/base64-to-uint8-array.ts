@@ -1,4 +1,4 @@
-import { urlSafeBase64ToBase64 } from '../../utils/utils'
+import { urlSafeBase64ToBase64 } from '../../utils/url-safe-base64-to-base64'
 
 /**
  * Converts a base64 encoded string to a Uint8Array (Node.js implementation).
