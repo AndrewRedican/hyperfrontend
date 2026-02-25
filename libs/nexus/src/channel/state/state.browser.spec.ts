@@ -1,6 +1,11 @@
 import type { IMessage } from '../../types/message'
 import type { IChannelContract } from '../../types/contract'
-import { createInitialState, activate, deactivate, setOrigin, queueMessage, clearQueue } from './index'
+import { createInitialState } from './initial'
+import { activate } from './activate'
+import { deactivate } from './deactivate'
+import { setOrigin } from './set-origin'
+import { queueMessage } from './queue-message'
+import { clearQueue } from './clear-queue'
 
 // Mock uuidV4 to return controllable values
 let mockIdCounter = 0

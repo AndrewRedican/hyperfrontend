@@ -7,9 +7,9 @@
  */
 
 // Core factory functions
-export { createBroker } from './broker'
-export { createChannel } from './channel'
-export { mergeContracts } from './setup'
+export { createBroker } from './broker/factory'
+export { createChannel } from './channel/factory'
+export { mergeContracts } from './setup/merge-contracts'
 export { broker as defaultBroker, DEFAULT_CONTRACT } from './singleton'
 
 // Broker types
@@ -44,15 +44,14 @@ export type {
 export type { IAction, ActionType } from './types/action'
 
 // Filter utilities - event filters
-export {
-  open as openFilter,
-  close as closeFilter,
-  cancel as cancelFilter,
-  deny as denyFilter,
-  invalid as invalidFilter,
-  createEventFilter,
-} from './filters'
+export { create as createEventFilter, type EventHandler } from './filters/events/create'
+export { open as openFilter } from './filters/events/open'
+export { close as closeFilter } from './filters/events/close'
+export { cancel as cancelFilter } from './filters/events/cancel'
+export { deny as denyFilter } from './filters/events/deny'
+export { invalid as invalidFilter } from './filters/events/invalid'
 
 // Filter utilities - message filters
-export { byType, compose, createMessageFilter } from './filters'
-export type { MessageFilter, MessagePredicate, MessageHandler, EventHandler } from './filters'
+export { create as createMessageFilter, type MessageHandler, type MessagePredicate } from './filters/messages/create'
+export { byType } from './filters/messages/by-type'
+export { compose, type MessageFilter } from './filters/messages/compose'

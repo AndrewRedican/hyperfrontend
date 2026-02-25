@@ -7,26 +7,27 @@ import { defaultBrokerSettings } from './defaults'
 import { createRegistry } from '../core/registry/factory'
 import { createProcessManager } from '../core/processes/factory'
 import { createActionCreators } from '../core/actions/factory'
-import { createProtocolRegistry } from '../security/registry'
+import { createProtocolRegistry } from '../security/registry/factory'
 import { createRouter } from './routing/create-router'
 import { routeMessage } from './routing/route-message'
 import { routeEncryptedMessage } from './routing/route-encrypted-message'
 import { filterOrigin } from './security/filter-origin'
 import { validatePolicy } from './security/validate-policy'
-import { addChannel, getChannel, listChannels, removeChannel } from './channels'
-import {
-  handleRequest,
-  handleAccept,
-  handleDeny,
-  handleCancel,
-  handleCancelAcknowledged,
-  handleClose,
-  handleCloseAcknowledged,
-  handleOpen,
-  handleDestroy,
-  handleMessage,
-  handleInvalid,
-} from './routing'
+import { addChannel } from './channels/add'
+import { getChannel } from './channels/get'
+import { listChannels } from './channels/list'
+import { removeChannel } from './channels/remove'
+import { handleRequest } from './routing/handle-request'
+import { handleAccept } from './routing/handle-accept'
+import { handleDeny } from './routing/handle-deny'
+import { handleCancel } from './routing/handle-cancel'
+import { handleCancelAcknowledged } from './routing/handle-cancel-acknowledged'
+import { handleClose } from './routing/handle-close'
+import { handleCloseAcknowledged } from './routing/handle-close-acknowledged'
+import { handleOpen } from './routing/handle-open'
+import { handleDestroy } from './routing/handle-destroy'
+import { handleMessage } from './routing/handle-message'
+import { handleInvalid } from './routing/handle-invalid'
 import { ACTION_TYPES } from '../constants/action-types'
 import { validateName } from '../core/validation/name'
 import { validateContract } from '../core/validation/contract'

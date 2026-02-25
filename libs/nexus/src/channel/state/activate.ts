@@ -1,4 +1,5 @@
-import type { ChannelState, IChannelContract } from '../../types'
+import type { ChannelState } from '../../types/channel'
+import type { IChannelContract } from '../../types/contract'
 
 /**
  * Activates a channel by setting it as active and recording connection details.

@@ -10,7 +10,7 @@ import { getById } from '../../core/registry/get-by-id'
 import { addChannel } from '../channels/add'
 import { validateContract as validateContractFn } from '../../core/validation/contract'
 import { applyPolicy } from '../security/apply-policy'
-import { negotiateProtocol, createSecurityResponse } from '../../security/negotiation'
+import { negotiateProtocol, createSecurityResponse } from '../../security/negotiation/negotiate'
 
 /**
  * Default supported security protocols for the responder.

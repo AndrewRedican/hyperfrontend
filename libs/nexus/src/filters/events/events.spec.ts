@@ -1,4 +1,9 @@
-import { create, open, close, cancel, deny, invalid } from './index'
+import { create } from './create'
+import { open } from './open'
+import { close } from './close'
+import { cancel } from './cancel'
+import { deny } from './deny'
+import { invalid } from './invalid'
 import type { ChannelEvent, OpenEventData, CloseEventData, CancelEventData, DenyEventData, InvalidEventData } from '../../types/events'
 import type { ChannelJSON } from '../../types/channel'
 

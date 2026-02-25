@@ -2,7 +2,11 @@
  * Tests for validation functions
  */
 
-import { validateName, validateContract, validateAction, validateOrigin, validateSettings } from './index'
+import { validateName } from './name'
+import { validateContract } from './contract'
+import { validateAction } from './action'
+import { validateOrigin } from './origin'
+import { validateSettings } from './settings'
 
 describe('Validation Functions', () => {
   describe('validateName', () => {

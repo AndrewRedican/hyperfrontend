@@ -1,4 +1,6 @@
-import { create, byType, compose, type MessageHandler, type MessagePredicate } from './index'
+import { create, type MessageHandler, type MessagePredicate } from './create'
+import { byType } from './by-type'
+import { compose } from './compose'
 import type { IMessage } from '../../types/message'
 import type { ChannelJSON } from '../../types/channel'
 
