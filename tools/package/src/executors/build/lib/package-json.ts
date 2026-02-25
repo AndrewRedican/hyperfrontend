@@ -1,5 +1,3 @@
-import { readJsonFile, writeJsonFile } from '@nx/devkit'
-import { join } from 'node:path'
 import type {
   EntryPointDiscovery,
   FormatOutputs,
@@ -9,6 +7,8 @@ import type {
   ConditionalExport,
   ExportValue,
 } from './types'
+import { join } from 'node:path'
+import { readJsonFile, writeJsonFile } from '@nx/devkit'
 import { isWorkspacePackage } from './externals'
 
 /** Fields to inherit from root package.json */
