@@ -6,7 +6,8 @@ import type { ObfuscationSuite } from '../../../security/model'
 import type { PacketEncrypter, PacketDecrypter } from '../../../packet/model'
 import { isValidLogger } from '@hyperfrontend/logging'
 import { isValidRefreshRate } from '../../../packet/security/obfuscation/is-valid-refresh-rate'
-import { isValidSendFn, isValidReceiveFn } from '../../validations/validations'
+import { isValidSendFn } from '../../validations/is-valid-send-fn'
+import { isValidReceiveFn } from '../../validations/is-valid-receive-fn'
 import { createPSKHandshakeEncryptionFactory } from '../../../packet/security/encryption/psk-handshake-encryption-key'
 
 /**

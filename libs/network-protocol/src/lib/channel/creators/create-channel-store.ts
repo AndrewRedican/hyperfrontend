@@ -1,6 +1,6 @@
 import type { ChannelStore, Channel, ChannelEntry, ChannelCreater } from '../model'
 import { uuidV4 } from '@hyperfrontend/random-generator-utils'
-import { isValidLabel } from '../validations/validations'
+import { isValidLabel } from '../validations/is-valid-label'
 
 /**
  * Creates a channel store factory with an injected channel creator.

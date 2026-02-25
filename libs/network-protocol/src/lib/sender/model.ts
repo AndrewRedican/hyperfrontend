@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import type { Logger } from '@hyperfrontend/logging'
-import type { Data } from '../data/data'
+import type { Data } from '../data/model'
 import type { PacketEncryption, PacketObfuscation } from '../packet/model'
 
 export type SendPacketFn = (packet: Uint8Array) => void

@@ -1,5 +1,5 @@
 import type { PacketDeobfuscater, SerializedEncryptedPacket, ObfuscatedPacket } from '../../model'
-import { isValidObfuscatedPacket } from '../../validations/validations'
+import { isValidObfuscatedPacket } from '../../validations/is-valid-obfuscated-packet'
 
 /**
  * Creates a packet deobfuscator with the provided decryption implementation.
@@ -10,7 +10,7 @@ import { isValidObfuscatedPacket } from '../../validations/validations'
  * @example
  * ```typescript
  * import { decrypt } from '@hyperfrontend/cryptography/browser'
- * import { createPacketDeobfuscator } from '@hyperfrontend/network-protocol/lib/packet/security/obfuscation'
+ * import { createPacketDeobfuscator } from '@hyperfrontend/network-protocol/lib/packet/security/obfuscation/create-packet-deobfuscator'
  *
  * const deobfuscatePacket = createPacketDeobfuscator(decrypt)
  * const deobfuscated = await deobfuscatePacket(obfuscatedPacket, 'password')

@@ -1,7 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import type { Logger } from '@hyperfrontend/logging'
-import type { UnencryptedPacket } from '../packet/packet'
-import type { PacketDeobfuscation, PacketDecryption } from '../packet/model'
+import type { UnencryptedPacket, PacketDeobfuscation, PacketDecryption } from '../packet/model'
 
 export type ReceivePacketFn<T = any> = (packet: UnencryptedPacket<T>) => void
 

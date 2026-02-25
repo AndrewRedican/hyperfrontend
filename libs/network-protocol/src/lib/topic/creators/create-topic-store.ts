@@ -1,6 +1,6 @@
 import type { TopicStore, Topic } from '../model'
 import { uuidV4 } from '@hyperfrontend/random-generator-utils'
-import { isValidName } from '../validations/validations'
+import { isValidName } from '../validations/is-valid-name'
 
 /**
  * Creates a store for managing topic registrations and lookups.

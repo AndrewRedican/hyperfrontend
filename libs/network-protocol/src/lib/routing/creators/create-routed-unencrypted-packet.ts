@@ -1,8 +1,8 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import type { Data } from '../../data/model'
 import type { RoutedUnencryptedPacket } from '../model'
-import { isValidTopicId } from '../../topic/validations/validations'
-import { createUnencryptedPacket } from '../../packet/creators/creators'
+import { isValidTopicId } from '../../topic/validations/is-valid-topic-id'
+import { createUnencryptedPacket } from '../../packet/creators/create-unencrypted-packet'
 
 /**
  * Creates a routed unencrypted packet with the specified topic, origin, target, and data.

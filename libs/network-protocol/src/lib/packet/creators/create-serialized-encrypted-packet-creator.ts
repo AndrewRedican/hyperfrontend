@@ -1,5 +1,5 @@
 import type { UnserializedEncryptedPacket, SerializedEncryptedPacket, PacketSerialization } from '../model'
-import { isValidUnserializedEncryptedPacket } from '../validations/validations'
+import { isValidUnserializedEncryptedPacket } from '../validations/is-valid-unserialized-encrypted-packet'
 
 /**
  * Creates a serialized encrypted packet creator with the provided encoding implementation.
@@ -10,7 +10,7 @@ import { isValidUnserializedEncryptedPacket } from '../validations/validations'
  * @example
  * ```typescript
  * import { uint8ArrayToBase64 } from '@hyperfrontend/string-utils/browser'
- * import { createSerializedEncryptedPacketCreator } from '@hyperfrontend/network-protocol/lib/packet/creators/creators'
+ * import { createSerializedEncryptedPacketCreator } from '@hyperfrontend/network-protocol/lib/packet/creators/create-serialized-encrypted-packet-creator'
  *
  * const createSerializedEncryptedPacket = createSerializedEncryptedPacketCreator(uint8ArrayToBase64)
  * const serialized = createSerializedEncryptedPacket(unserializedPacket)

@@ -1,7 +1,7 @@
 import type { ObfuscatedPacket } from '../../packet/model'
 import type { RoutedObfuscatedPacket } from '../model'
-import { isValidTopicId } from '../../topic/validations/validations'
-import { isValidObfuscatedPacket } from '../../packet/validations/validations'
+import { isValidTopicId } from '../../topic/validations/is-valid-topic-id'
+import { isValidObfuscatedPacket } from '../../packet/validations/is-valid-obfuscated-packet'
 
 /**
  * Creates a routed obfuscated packet with the specified topic and packet data.

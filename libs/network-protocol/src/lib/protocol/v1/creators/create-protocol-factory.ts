@@ -5,7 +5,8 @@ import type { ProtocolProvider, Protocol } from '../../../channel/model'
 import type { EncryptionSuite, ObfuscationSuite } from '../../../security/model'
 import { isValidLogger } from '@hyperfrontend/logging'
 import { isValidRefreshRate } from '../../../packet/security/obfuscation/is-valid-refresh-rate'
-import { isValidSendFn, isValidReceiveFn } from '../../validations/validations'
+import { isValidSendFn } from '../../validations/is-valid-send-fn'
+import { isValidReceiveFn } from '../../validations/is-valid-receive-fn'
 
 /**
  * Creates a protocol factory function with obfuscation-only handshake encryption.

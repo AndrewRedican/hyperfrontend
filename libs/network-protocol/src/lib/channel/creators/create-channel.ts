@@ -1,8 +1,11 @@
 import type { ChannelCreater, Channel } from '../model'
 import type { SenderFactory } from '../../sender/model'
 import type { ReceiverFactory } from '../../receiver/model'
-import { isValidLabel, isValidSender, isValidReceiver, getFirstInvalidProtocolProperty } from '../validations/validations'
-import { withoutValidErrorMessage } from '../utils/utils'
+import { isValidLabel } from '../validations/is-valid-label'
+import { isValidSender } from '../validations/is-valid-sender'
+import { isValidReceiver } from '../validations/is-valid-receiver'
+import { getFirstInvalidProtocolProperty } from '../validations/get-first-invalid-protocol-property'
+import { withoutValidErrorMessage } from '../utils/without-valid-err-msg'
 import { getType } from '@hyperfrontend/data-utils'
 
 /**

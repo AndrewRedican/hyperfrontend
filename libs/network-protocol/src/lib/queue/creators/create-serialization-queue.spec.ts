@@ -2,7 +2,7 @@ import type { SerializedEncryptedPacket, UnserializedEncryptedPacket } from '../
 import { sleep } from '@hyperfrontend/time-utils'
 import { logger } from '@hyperfrontend/logging'
 import { packetSerialization, unserializedEncryptedPacket } from '../../packet/creators/mocks'
-import { isValidSerializedEncryptedPacket } from '../../packet/validations/validations'
+import { isValidSerializedEncryptedPacket } from '../../packet/validations/is-valid-serialized-encrypted-packet'
 import { createSerializationQueue } from './create-serialization-queue'
 
 describe('createSerializationQueue', () => {

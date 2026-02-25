@@ -5,8 +5,8 @@
 import { encrypt, decrypt } from '@hyperfrontend/cryptography/node'
 import { createPacketEncrypter } from './create-encrypter'
 import { createPacketDecrypter } from './create-decrypter'
-import { createDataEncrypter } from '../../../data/security/security'
-import { createDataDecrypter } from '../../../data/security/security'
+import { createDataEncrypter } from '../../../data/security/create-encrypter'
+import { createDataDecrypter } from '../../../data/security/create-decrypter'
 import { createPSKHandshakeEncryptionFactory } from './psk-handshake-encryption-key'
 
 describe('createPSKHandshakeEncryptionFactory (Node.js)', () => {

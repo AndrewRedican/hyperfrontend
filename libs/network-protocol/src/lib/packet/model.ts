@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import type { Data } from '../data/data'
+import type { Data } from '../data/model'
 
 export type ObfuscatedPacket = Uint8Array
 

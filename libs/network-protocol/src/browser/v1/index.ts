@@ -36,5 +36,11 @@ const createTimeIntervalObfuscation = createTimeIntervalObfuscationFactory(
 export const createProtocol = createProtocolFactory(createDynamicKeyEncryption, createTimeIntervalObfuscation)
 
 export type * from '../../lib/protocol/model'
-export * from '../../lib/protocol/validations/validations'
-export * from '../../lib/protocol/creators/creators'
+export type * from '../../lib/protocol/validations/is-valid-protocol.model'
+export * from '../../lib/protocol/validations/is-valid-name'
+export * from '../../lib/protocol/validations/is-valid-protocol-provider'
+export * from '../../lib/protocol/validations/is-valid-protocol'
+export * from '../../lib/protocol/validations/is-valid-receive-fn'
+export * from '../../lib/protocol/validations/is-valid-send-fn'
+export * from '../../lib/protocol/creators/create-provider-protocol-store'
+export * from '../../lib/protocol/v1/creators/create-protocol-factory'
