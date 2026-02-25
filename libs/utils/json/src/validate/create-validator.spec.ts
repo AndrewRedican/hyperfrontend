@@ -1,4 +1,4 @@
-import type { Schema } from '../types'
+import type { Schema } from '../types/schema'
 import { createValidator } from './create-validator'
 
 describe('createValidator', () => {

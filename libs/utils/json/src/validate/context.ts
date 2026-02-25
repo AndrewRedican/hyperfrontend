@@ -1,4 +1,5 @@
-import type { Schema, ValidationError } from '../types'
+import type { Schema } from '../types/schema'
+import type { ValidationError } from '../types/validation'
 
 /**
  * Schema validator function type.

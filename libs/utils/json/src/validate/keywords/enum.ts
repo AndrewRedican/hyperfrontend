@@ -1,7 +1,7 @@
-import type { Schema } from '../../types'
+import type { Schema } from '../../types/schema'
 import type { ValidationContext } from '../context'
 import { addError } from '../context'
-import { isEqual } from '../utils'
+import { isEqual } from '../utils/deep-equal'
 
 /**
  * Validates enum constraint.

@@ -1,11 +1,15 @@
 // Types
-export type { Schema, JsonType } from './types'
-export type { ValidationError, ValidationResult, ValidateOptions } from './types'
+export type { Schema, JsonType } from './types/schema'
+export type { ValidationError, ValidationResult, ValidateOptions } from './types/validation'
 
 // Validation
-export { validate } from './validate'
-export { createValidator } from './validate'
+export { validate } from './validate/validate'
+export { createValidator } from './validate/create-validator'
 
 // Generation
-export { toJsonSchema } from './generate'
-export type { GenerateOptions } from './generate'
+export { toJsonSchema } from './generate/to-json-schema'
+export type { GenerateOptions } from './generate/to-json-schema'
+
+// Utilities
+export { getJsonType } from './generate/type-detection'
+export { isEqual } from './validate/utils/deep-equal'

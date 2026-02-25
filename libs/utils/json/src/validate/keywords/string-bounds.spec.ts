@@ -1,4 +1,4 @@
-import type { Schema } from '../../types'
+import type { Schema } from '../../types/schema'
 import type { ValidationContext } from '../context'
 import { validateStringBounds } from './string-bounds'
 

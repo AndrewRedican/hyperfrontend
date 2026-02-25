@@ -1,4 +1,4 @@
-import type { JsonType } from '../types'
+import type { JsonType } from '../types/schema'
 
 /**
  * Gets the JSON Schema type of a JavaScript value.

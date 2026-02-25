@@ -1,4 +1,4 @@
-import type { Schema } from '../types'
+import type { Schema } from '../types/schema'
 import { getJsonType } from './type-detection'
 import { mergeSchemas } from './merge-schemas'
 

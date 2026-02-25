@@ -1,4 +1,5 @@
-import type { Schema, ValidationResult, ValidateOptions } from '../types'
+import type { Schema } from '../types/schema'
+import type { ValidationResult, ValidateOptions } from '../types/validation'
 import { validate } from './validate'
 
 /**

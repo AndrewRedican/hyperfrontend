@@ -207,6 +207,11 @@ validate(
 
 - **`toJsonSchema(value, options?): Schema`** - Generate a JSON Schema from a JavaScript value
 
+### Utilities
+
+- **`getJsonType(value): JsonType`** - Get the JSON Schema type of a JavaScript value
+- **`isEqual(a, b): boolean`** - Deep equality comparison for JSON values
+
 ### Types
 
 - **`Schema`** - TypeScript interface representing JSON Schema Draft v4

@@ -1,4 +1,4 @@
-import type { Schema } from '../../types'
+import type { Schema } from '../../types/schema'
 import { validateItems } from './items'
 import { ValidationContext } from '../context'
 
