@@ -30,7 +30,7 @@
   ],
   "dependencies": {
     "@hyperfrontend/function-utils": "0.0.2",
-    "@hyperfrontend/json-utils": "0.0.3",
+    "@hyperfrontend/json-utils": "0.0.2",
     "@hyperfrontend/logging": "0.0.2",
     "@hyperfrontend/random-generator-utils": "0.0.2"
   },
