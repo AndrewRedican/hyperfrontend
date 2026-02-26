@@ -1,8 +1,8 @@
-import { logger } from '@nx/devkit'
+import type { EntryPointDiscovery } from './types'
 import { existsSync, mkdirSync, cpSync, rmSync, readdirSync, statSync } from 'node:fs'
 import { spawnSync } from 'node:child_process'
 import { dirname, join, relative, resolve } from 'node:path'
-import type { EntryPointDiscovery } from './types'
+import { logger } from '@nx/devkit'
 
 /**
  * Generates TypeScript declarations for all entry points.
