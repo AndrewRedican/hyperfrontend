@@ -8,14 +8,13 @@
  */
 
 import { loadBundleCode, executeBundleInWindow } from '../../shared/helpers'
-import * as path from 'path'
-import * as fs from 'fs'
+import { resolve, join } from 'node:path'
 
 // Bundle paths for network-protocol are different - it has v1 and v2 subdirectories
 const getBundlePath = (version: 'v1' | 'v2', format: 'iife' | 'umd', minified = false) => {
-  const distRoot = path.resolve(__dirname, '../../../../dist/libs/network-protocol')
+  const distRoot = resolve(__dirname, '../../../../dist/libs/network-protocol')
   const ext = minified ? '.min.js' : '.js'
-  return path.join(distRoot, 'bundle', version, `index.${format}${ext}`)
+  return join(distRoot, 'bundle', version, `index.${format}${ext}`)
 }
 
 describe('@hyperfrontend/network-protocol IIFE bundle', () => {
