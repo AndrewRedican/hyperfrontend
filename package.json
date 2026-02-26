@@ -42,7 +42,7 @@
     "@rollup/plugin-terser": "0.4.4",
     "@rollup/plugin-typescript": "12.3.0",
     "@swc-node/register": "1.11.1",
-    "@swc/core": "1.15.11",
+    "@swc/core": "1.15.13",
     "@types/jest": "30.0.0",
     "@types/node": "25.0.9",
     "@typescript-eslint/rule-tester": "8.53.1",
