@@ -1,6 +1,6 @@
 {
   "name": "@hyperfrontend/ui-utils",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "Modular DOM utilities for dynamic styling, gesture detection, element lifecycle, and color manipulation.",
   "license": "MIT",
   "sideEffects": false,
@@ -39,10 +39,10 @@
     "./time": "./src/time/index.js"
   },
   "dependencies": {
-    "@hyperfrontend/function-utils": "0.0.1",
-    "@hyperfrontend/random-generator-utils": "0.0.1",
-    "@hyperfrontend/list-utils": "0.0.1",
-    "@hyperfrontend/data-utils": "0.0.1"
+    "@hyperfrontend/function-utils": "0.0.2",
+    "@hyperfrontend/random-generator-utils": "0.0.2",
+    "@hyperfrontend/list-utils": "0.0.2",
+    "@hyperfrontend/data-utils": "0.0.2"
   },
   "funding": {
     "type": "github",

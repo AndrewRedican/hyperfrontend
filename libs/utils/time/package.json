@@ -1,6 +1,6 @@
 {
   "name": "@hyperfrontend/time-utils",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "Functional time utilities for async operations, intervals, and time normalization.",
   "license": "MIT",
   "sideEffects": false,
