@@ -48,13 +48,13 @@ describe('@hyperfrontend/function-utils IIFE bundle', () => {
     expect(callCount).toBe(1)
   })
 
-  it('should export noopFunction on the global', () => {
+  it('should export noop on the global', () => {
     const bundleCode = loadBundleCode(bundlePath)
     const global = executeBundleInWindow(bundleCode, 'HyperfrontendFunctionUtils') as {
-      noopFunction: () => void
+      noop: () => void
     }
 
-    expect(typeof global.noopFunction).toBe('function')
-    expect(global.noopFunction()).toBeUndefined()
+    expect(typeof global.noop).toBe('function')
+    expect(global.noop()).toBeUndefined()
   })
 })

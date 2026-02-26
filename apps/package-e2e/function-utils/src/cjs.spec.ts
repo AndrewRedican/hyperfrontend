@@ -31,11 +31,11 @@ describe('@hyperfrontend/function-utils CJS', () => {
     expect(callCount).toBe(1)
   })
 
-  it('should export noopFunction', () => {
+  it('should export noop', () => {
     // eslint-disable-next-line @typescript-eslint/no-require-imports
-    const { noopFunction } = require('@hyperfrontend/function-utils')
-    expect(typeof noopFunction).toBe('function')
-    expect(noopFunction()).toBeUndefined()
+    const { noop } = require('@hyperfrontend/function-utils')
+    expect(typeof noop).toBe('function')
+    expect(noop()).toBeUndefined()
   })
 
   it('should export createErrorIgnoringFunction', () => {
@@ -56,10 +56,10 @@ describe('@hyperfrontend/function-utils CJS', () => {
 
     let executed = false
     const conditionalFn = createConditionalExecutionFunction(
-      () => true,
       () => {
         executed = true
-      }
+      },
+      () => true
     )
     conditionalFn()
     expect(executed).toBe(true)

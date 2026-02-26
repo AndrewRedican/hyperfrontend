@@ -30,10 +30,10 @@ describe('@hyperfrontend/function-utils ESM', () => {
     expect(callCount).toBe(1)
   })
 
-  it('should export noopFunction', async () => {
-    const { noopFunction } = await import('@hyperfrontend/function-utils')
-    expect(typeof noopFunction).toBe('function')
-    expect(noopFunction()).toBeUndefined()
+  it('should export noop', async () => {
+    const { noop } = await import('@hyperfrontend/function-utils')
+    expect(typeof noop).toBe('function')
+    expect(noop()).toBeUndefined()
   })
 
   it('should export createErrorIgnoringFunction', async () => {
@@ -52,10 +52,10 @@ describe('@hyperfrontend/function-utils ESM', () => {
 
     let executed = false
     const conditionalFn = createConditionalExecutionFunction(
-      () => true,
       () => {
         executed = true
-      }
+      },
+      () => true
     )
     conditionalFn()
     expect(executed).toBe(true)

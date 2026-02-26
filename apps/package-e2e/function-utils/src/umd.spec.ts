@@ -54,6 +54,6 @@ describe('@hyperfrontend/function-utils UMD bundle', () => {
 
     expect(exports).toBeDefined()
     expect(typeof exports.createRunOnceFunction).toBe('function')
-    expect(typeof exports.noopFunction).toBe('function')
+    expect(typeof exports.noop).toBe('function')
   })
 })
