@@ -3,8 +3,6 @@
  * Tests that the package is importable and exports work correctly.
  */
 
-import { jest } from '@jest/globals'
-
 describe('@hyperfrontend/function-utils ESM', () => {
   it('should be importable', async () => {
     const functionUtils = await import('@hyperfrontend/function-utils')
