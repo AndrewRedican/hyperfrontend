@@ -44,29 +44,55 @@ function isVersionCommit(cwd: string, projectName: string): boolean {
       stdio: ['pipe', 'pipe', 'pipe'],
     }).trim()
 
+    // Security: Reject excessively long commit messages
+    // Normal commit messages are well under 1KB; 10KB is a generous limit
+    if (msg.length > 10000) {
+      return false
+    }
+
+    // Get first line only (commit subject)
+    const firstLine = msg.split('\n')[0].trim()
+
     // Pattern 1: Manual versioning - chore(lib-x): release version X.Y.Z
-    const manualPattern = new RegExp(`^chore\\(${escapeRegExp(projectName)}\\): release version`)
-    if (manualPattern.test(msg)) {
+    const manualPrefix = `chore(${projectName}): release version`
+    if (firstLine.startsWith(manualPrefix)) {
       return true
     }
 
     // Pattern 2: PR CI versioning - chore: update versions for lib-x
-    // Also handles multiple packages: chore: update versions for lib-a, lib-b
-    const prCiPattern = /^chore: update versions for (.+)$/m
-    const prCiMatch = msg.match(prCiPattern)
-    if (prCiMatch) {
-      const packageList = prCiMatch[1]
-      // Split by comma and check if projectName is in the list
-      const packages = packageList.split(',').map((p) => p.trim())
+    // Also handles multiple packages: chore: update versions for lib-a lib-b
+    // May include [skip ci] suffix: chore: update versions for lib-a lib-b [skip ci]
+    const ciPrefix = 'chore: update versions for '
+    if (firstLine.startsWith(ciPrefix)) {
+      let packagePart = firstLine.slice(ciPrefix.length)
+
+      // Strip [skip ci] suffix if present
+      const skipCiSuffix = ' [skip ci]'
+      if (packagePart.endsWith(skipCiSuffix)) {
+        packagePart = packagePart.slice(0, -skipCiSuffix.length)
+      }
+
+      // Split by whitespace/comma without regex - replace commas with spaces then split
+      const packages = packagePart
+        .split(',')
+        .join(' ')
+        .split(' ')
+        .map((p) => p.trim())
+        .filter((p) => p.length > 0 && p.length < 100 && isValidPackageName(p))
+
       if (packages.includes(projectName)) {
         return true
       }
     }
 
     // Pattern 3: Alternative release format - chore(release): lib-x X.Y.Z
-    const altPattern = new RegExp(`^chore\\(release\\):\\s*${escapeRegExp(projectName)}\\b`)
-    if (altPattern.test(msg)) {
-      return true
+    const altPrefix = 'chore(release): '
+    if (firstLine.startsWith(altPrefix)) {
+      const rest = firstLine.slice(altPrefix.length).trimStart()
+      // Check if projectName is at the start followed by space or end of string
+      if (rest === projectName || rest.startsWith(projectName + ' ')) {
+        return true
+      }
     }
 
     return false
@@ -76,13 +102,29 @@ function isVersionCommit(cwd: string, projectName: string): boolean {
 }
 
 /**
- * Escapes special regex characters in a string.
+ * Validates that a string looks like a valid npm package name.
+ * Only allows: alphanumeric, @, /, -, _
  *
- * @param str - String to escape
- * @returns Escaped string safe for use in RegExp
+ * @param name - Package name to validate
+ * @returns True if valid
  */
-function escapeRegExp(str: string): string {
-  return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+function isValidPackageName(name: string): boolean {
+  for (const char of name) {
+    const code = char.charCodeAt(0)
+    // a-z, A-Z, 0-9, @, /, -, _
+    const isValid =
+      (code >= 97 && code <= 122) || // a-z
+      (code >= 65 && code <= 90) || // A-Z
+      (code >= 48 && code <= 57) || // 0-9
+      code === 64 || // @
+      code === 47 || // /
+      code === 45 || // -
+      code === 95 // _
+    if (!isValid) {
+      return false
+    }
+  }
+  return true
 }
 
 /**
