@@ -1,0 +1,8 @@
+{
+  "name": "@hyperfrontend/eslint-rules",
+  "version": "0.0.1",
+  "private": true,
+  "description": "Custom ESLint rules for the hyperfrontend monorepo.",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts"
+}
