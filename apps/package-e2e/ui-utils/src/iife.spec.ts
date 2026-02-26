@@ -4,13 +4,13 @@
  */
 
 import { loadBundleCode, executeBundleInWindow } from '../../shared/helpers'
-import * as path from 'path'
+import { resolve, join } from 'node:path'
 
 // ui-utils is under utils/ui in dist
 const getBundlePath = (format: 'iife' | 'umd', minified = false) => {
-  const distRoot = path.resolve(__dirname, '../../../../dist/libs/utils/ui')
+  const distRoot = resolve(__dirname, '../../../../dist/libs/utils/ui')
   const ext = minified ? '.min.js' : '.js'
-  return path.join(distRoot, 'bundle', `index.${format}${ext}`)
+  return join(distRoot, 'bundle', `index.${format}${ext}`)
 }
 
 describe('@hyperfrontend/ui-utils IIFE bundle', () => {
