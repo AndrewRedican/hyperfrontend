@@ -437,6 +437,15 @@ function updateDependentVersions(
 export default async function versionExecutor(options: VersionExecutorOptions, context: ExecutorContext): Promise<{ success: boolean }> {
   const { projectName, root: workspaceRoot, projectGraph } = context
 
+  // Normalize collectFiles mode: implies skipCommit and skipTag
+  if (options.collectFiles) {
+    options.skipCommit = true
+    options.skipTag = true
+  }
+
+  // Track all modified files for --collectFiles output
+  const modifiedFiles: string[] = []
+
   if (!projectName) {
     logger.error('Project name is required')
     return { success: false }
@@ -514,6 +523,12 @@ export default async function versionExecutor(options: VersionExecutorOptions, c
   if (result.success) {
     logger.info(`${projectName}: version updated`)
 
+    // Track project's own modified files (relative to workspace root)
+    modifiedFiles.push(join(projectRoot, 'package.json'))
+    if (existsSync(changelogPath)) {
+      modifiedFiles.push(join(projectRoot, 'CHANGELOG.md'))
+    }
+
     // Update dependent packages' version references (enabled by default)
     const shouldUpdateDependents = options.updateDependents !== false
     if (shouldUpdateDependents) {
@@ -528,6 +543,9 @@ export default async function versionExecutor(options: VersionExecutorOptions, c
           for (const file of updatedFiles) {
             logger.info(`  - ${file}`)
           }
+
+          // Track dependent files for --collectFiles output
+          modifiedFiles.push(...updatedFiles)
 
           // Stage the updated files for the commit (if not dry run and not skipping commit)
           if (!options.dryRun && !options.skipCommit) {
@@ -551,6 +569,13 @@ export default async function versionExecutor(options: VersionExecutorOptions, c
             }
           }
         }
+      }
+    }
+
+    // Output modified files to stdout for --collectFiles mode
+    if (options.collectFiles) {
+      for (const file of modifiedFiles) {
+        process.stdout.write(`MODIFIED:${file}\n`)
       }
     }
   }

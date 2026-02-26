@@ -233,18 +233,31 @@ jobs:
 
           echo "Affected libraries: $AFFECTED"
 
-          # Run idempotent version check for each library
+          # Run idempotent version check for each library with --collectFiles
           # Track different statuses separately for accurate reporting
           # Use comma-separated format to match version executor's isVersionCommit() parsing
           UPDATED=""
           SKIPPED=""
           UNCHANGED=""
+          FAILED=""
+          ALL_FILES=""
 
           for lib in $AFFECTED; do
             echo "Checking $lib..."
-            RESULT=$(npx nx version $lib --skipCommit --skipTag 2>&1 || true)
+            RESULT=$(npx nx version $lib --collectFiles 2>&1)
+            EXIT_CODE=$?
+
+            if [ $EXIT_CODE -ne 0 ]; then
+              if [ -z "$FAILED" ]; then FAILED="$lib"; else FAILED="$FAILED, $lib"; fi
+              echo "  ✗ $lib: failed"
+              continue
+            fi
+
             if echo "$RESULT" | grep -q "version updated"; then
               if [ -z "$UPDATED" ]; then UPDATED="$lib"; else UPDATED="$UPDATED, $lib"; fi
+              # Collect modified files from MODIFIED: lines
+              FILES=$(echo "$RESULT" | grep "^MODIFIED:" | cut -d: -f2 | tr '\n' ' ')
+              ALL_FILES="$ALL_FILES $FILES"
               echo "  ✓ $lib: version updated"
             elif echo "$RESULT" | grep -qE "already exists|Skipping"; then
               if [ -z "$SKIPPED" ]; then SKIPPED="$lib"; else SKIPPED="$SKIPPED, $lib"; fi
@@ -255,9 +268,20 @@ jobs:
             fi
           done
 
+          # Handle failures - abort cleanly by discarding all changes
+          if [ -n "$FAILED" ]; then
+            echo "❌ Version failed for: $FAILED"
+            echo "Discarding all changes..."
+            git checkout .
+            echo "needs_update=false" >> $GITHUB_OUTPUT
+            echo "failed_libs=${FAILED}" >> $GITHUB_OUTPUT
+            exit 1
+          fi
+
           # Output all tracking variables for PR comment
           echo "skipped_libs=${SKIPPED}" >> $GITHUB_OUTPUT
           echo "unchanged_libs=${UNCHANGED}" >> $GITHUB_OUTPUT
+          echo "all_files=${ALL_FILES}" >> $GITHUB_OUTPUT
 
           if [ -n "$UPDATED" ]; then
             echo "needs_update=true" >> $GITHUB_OUTPUT
@@ -270,10 +294,15 @@ jobs:
       - name: Commit version updates
         if: steps.version-check.outputs.needs_update == 'true'
         run: |
-          # Stage version changes (including nested libs/utils/*)
-          git add libs/*/package.json libs/*/CHANGELOG.md 2>/dev/null || true
-          git add libs/utils/*/package.json libs/utils/*/CHANGELOG.md 2>/dev/null || true
-          git add plugins/*/package.json plugins/*/CHANGELOG.md 2>/dev/null || true
+          # Stage all collected files (deferred staging from --collectFiles)
+          ALL_FILES="${{ steps.version-check.outputs.all_files }}"
+
+          if [ -z "$ALL_FILES" ]; then
+            echo "No files to stage"
+            exit 0
+          fi
+
+          git add $ALL_FILES
 
           # Check if there are changes to commit
           if git diff --staged --quiet; then
