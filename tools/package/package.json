@@ -12,7 +12,8 @@
     "@rollup/plugin-typescript": "12.3.0",
     "@types/node": "25.0.9",
     "jest": "30.2.0",
-    "rollup": "4.59.0"
+    "rollup": "4.59.0",
+    "typescript": "5.9.3"
   },
   "generators": "./generators.json",
   "executors": "./executors.json"

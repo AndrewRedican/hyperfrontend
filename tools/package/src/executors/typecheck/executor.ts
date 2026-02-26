@@ -41,11 +41,19 @@ export default async function typecheckExecutor(
     return { success: false }
   }
 
+  // Use workspace's local tsc to prevent auto-download security risk
+  const tscPath = join(workspaceRoot, 'node_modules', '.bin', 'tsc')
+  if (!existsSync(tscPath)) {
+    logger.error(`TypeScript compiler not found at: ${tscPath}`)
+    logger.error('Please run npm install to ensure TypeScript is installed.')
+    return { success: false }
+  }
+
   logger.info(`Type checking ${projectName}...`)
   logger.info(`  Using config: ${tsConfigPath}`)
 
   try {
-    execSync(`npx tsc --noEmit -p "${tsConfigPath}"`, {
+    execSync(`"${tscPath}" --noEmit -p "${tsConfigPath}"`, {
       cwd: workspaceRoot,
       stdio: 'inherit',
       encoding: 'utf-8',
