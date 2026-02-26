@@ -60,7 +60,7 @@ This directory contains the CI/CD workflows for the hyperfrontend monorepo.
 ### CI - Libraries ([ci-libraries.yml](./ci-libraries.yml))
 
 **Trigger**: Pushes to `main` branch affecting `libs/**`
-**Purpose**: Targeted CI for individual library changes
+**Purpose**: Matrix CI for detecting and running multiple library changes together
 
 **Features**:
 
@@ -69,14 +69,47 @@ This directory contains the CI/CD workflows for the hyperfrontend monorepo.
 - Efficient: only builds/tests what changed
 - Same permissions and security model as other workflows
 
-**Excluded Libraries** (explicitly excluded from CI):
-
-- `lib-web-worker`: Experimental/unstable
-
 **Jobs**:
 
 - `detect-changes`: Determines which libraries were modified
 - `ci`: Matrix job that runs `_lib-ci.yml` template for each changed library
+
+### Individual Library CI (ci-lib-\*.yml)
+
+**Trigger**: `workflow_run` - fires after `ci-libraries.yml` completes
+**Purpose**: Per-project build badges WITHOUT redundant builds
+
+**Files** (15 total):
+
+- Core: `ci-lib-cryptography.yml`, `ci-lib-logging.yml`, `ci-lib-network-protocol.yml`, `ci-lib-nexus.yml`, `ci-lib-state-machine.yml`, `ci-lib-web-worker.yml`
+- Utils: `ci-lib-data-utils.yml`, `ci-lib-function-utils.yml`, `ci-lib-immutable-api-utils.yml`, `ci-lib-json-utils.yml`, `ci-lib-list-utils.yml`, `ci-lib-random-generator-utils.yml`, `ci-lib-string-utils.yml`, `ci-lib-time-utils.yml`, `ci-lib-ui-utils.yml`
+
+**How it works**:
+
+1. `ci-libraries.yml` does the actual matrix build (typecheck, build, test)
+2. When it completes, individual `ci-lib-*.yml` workflows trigger via `workflow_run`
+3. Each individual workflow uses `_lib-status.yml` template to check if its library passed
+4. No building happens - just status reporting for badges
+
+**Benefits**:
+
+- Project-specific build badges in README files
+- No redundant builds (all work done in matrix build)
+- Lightweight status checks via GitHub API
+
+### Library Status Reporter ([\_lib-status.yml](./_lib-status.yml))
+
+**Trigger**: Called by `ci-lib-*.yml` workflows via `workflow_call`
+**Purpose**: Reusable template to check build status from matrix build
+
+**Inputs**:
+
+- `project-name`: Nx project name (e.g., lib-nexus)
+- `library-path`: Path to library (e.g., libs/nexus)
+
+**Jobs**:
+
+- `check-status`: Queries GitHub API to find library build result from `ci-libraries.yml`
 
 ### CI - Plugins ([ci-plugins.yml](./ci-plugins.yml))
 
@@ -287,6 +320,41 @@ The original `ci.yml` workflow has been split into two workflows:
 - Better cache management and parallel execution
 
 **Rollback**: If needed, the legacy workflow is preserved in `ci-legacy.yml`
+
+## Repository Configuration
+
+### Required Branch Protection Rules
+
+The following branch protection rules should be configured for the `main` branch:
+
+**Settings → Branches → Branch protection rules → Add rule**
+
+| Setting                                      | Value          |
+| -------------------------------------------- | -------------- |
+| Branch name pattern                          | `main`         |
+| Require a pull request before merging        | ✅ Enabled     |
+| Require status checks to pass before merging | ✅ Enabled     |
+| Required status checks                       | See list below |
+| Require branches to be up to date            | ✅ Enabled     |
+
+**Required Status Checks**:
+
+1. **From `ci-pr.yml`**:
+   - `status` (ci-status job)
+
+2. **From `security-scan.yml`**:
+   - `code analysis` (CodeQL analysis)
+   - `dependency audit` (npm vulnerability scan)
+
+**Why CodeQL as a required check?**
+
+The `security-scan.yml` workflow runs CodeQL analysis in parallel with the PR workflow. GitHub Actions does not support cross-workflow dependencies, so we enforce CodeQL completion via branch protection rules instead of workflow conditions.
+
+**Important Notes**:
+
+- The version-validation job runs after all CI checks pass
+- Version commits use `[skip ci]` to prevent workflow retrigger
+- Pushes by `github-actions[bot]` using `GITHUB_TOKEN` do not trigger workflows by design
 
 ## Maintenance
 

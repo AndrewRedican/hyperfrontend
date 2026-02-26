@@ -2,6 +2,13 @@
 
 This file was generated using [@jscutlery/semver](https://github.com/jscutlery/semver).
 
+## [0.0.2](https://github.com/AndrewRedican/hyperfrontend/compare/lib-network-protocol@0.0.1...lib-network-protocol@0.0.2) (2026-02-26)
+
+
+### Bug Fixes
+
+* **lib-network-protocol:** correct secondary entrypoints ([7092e3a](https://github.com/AndrewRedican/hyperfrontend/commit/7092e3af8a57829138e1c4dc38ed0f39e2e869d2))
+
 ## 0.0.1 (2026-02-15)
 
 

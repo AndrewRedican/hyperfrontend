@@ -1,8 +1,8 @@
-import type { UnserializedEncryptedPacket } from '../../packet/model'
+import type { UnencryptedPacket, UnserializedEncryptedPacket } from '../../packet/model'
 import { sleep } from '@hyperfrontend/time-utils'
 import { logger } from '@hyperfrontend/logging'
 import { packetEncryption, unencryptedPacket } from '../../packet/creators/mocks'
-import { isValidUnserializedEncryptedPacket } from '../../packet/validations'
+import { isValidUnserializedEncryptedPacket } from '../../packet/validations/is-valid-unserialized-encrypted-packet'
 import { createEncryptionQueue } from './create-encryption-queue'
 
 describe('createEncryptionQueue', () => {
@@ -21,7 +21,7 @@ describe('createEncryptionQueue', () => {
     const onSuccess = jest.fn()
     const onFail = jest.fn()
     const queue = createEncryptionQueue(label, packetEncryption, logger, onSuccess, onFail)
-    const invalidPacket = <unknown>{ invalid: 'data' }
+    const invalidPacket = <UnencryptedPacket>(<unknown>{ invalid: 'data' })
     queue.addMessage(invalidPacket)
     await sleep(100)
     expect(onFail).toHaveBeenCalledWith(invalidPacket)

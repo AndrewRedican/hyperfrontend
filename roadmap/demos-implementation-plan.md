@@ -269,8 +269,8 @@ Invokes `npm install` or `npm ci` in the target application's project directory:
 ```typescript
 // tools/app/src/executors/install/executor.ts
 import { ExecutorContext } from '@nx/devkit'
-import { execSync } from 'child_process'
-import { join } from 'path'
+import { execSync } from 'node:child_process'
+import { join } from 'node:path'
 
 export interface InstallExecutorOptions {
   ci?: boolean // Use npm ci instead of npm install
@@ -300,8 +300,8 @@ Wraps framework-specific build commands, executed within the application's direc
 ```typescript
 // tools/app/src/executors/build/executor.ts
 import { ExecutorContext } from '@nx/devkit'
-import { execSync } from 'child_process'
-import { join } from 'path'
+import { execSync } from 'node:child_process'
+import { join } from 'node:path'
 
 export interface BuildExecutorOptions {
   command?: string // Custom build command (default: npm run build)

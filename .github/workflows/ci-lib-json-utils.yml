@@ -1,0 +1,19 @@
+# Build status reporter for lib-json-utils
+# This workflow does NOT build - it reports status from ci-libraries.yml matrix build
+name: lib-json-utils
+
+on:
+  workflow_run:
+    workflows: [libraries]
+    types: [completed]
+    branches: [main]
+
+permissions:
+  actions: read
+
+jobs:
+  status:
+    uses: ./.github/workflows/_lib-status.yml
+    with:
+      project-name: lib-json-utils
+      library-path: libs/utils/json

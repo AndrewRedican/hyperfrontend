@@ -1,6 +1,7 @@
 const nx = require('@nx/eslint-plugin')
 const pluginJest = require('eslint-plugin-jest')
 const pluginJsdoc = require('eslint-plugin-jsdoc')
+const eslintRules = require('./tools/eslint-rules/src/index.ts')
 
 module.exports = [
   ...nx.configs['flat/base'],
@@ -116,6 +117,15 @@ module.exports = [
         },
       ],
       'jsdoc/require-jsdoc': 'off',
+    },
+  },
+  {
+    files: ['**/index.ts'],
+    plugins: {
+      '@hyperfrontend/eslint-rules': eslintRules,
+    },
+    rules: {
+      '@hyperfrontend/eslint-rules/no-unwanted-barrel-files': 'error',
     },
   },
 ]

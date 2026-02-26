@@ -1,8 +1,8 @@
-import fs from 'node:fs'
-import path from 'node:path'
+import { existsSync, readFileSync } from 'node:fs'
+import { resolve, join } from 'node:path'
 import matter from 'gray-matter'
 
-const WORKSPACE_ROOT = path.resolve(process.cwd(), '../..')
+const WORKSPACE_ROOT = resolve(process.cwd(), '../..')
 
 export interface LibraryInfo {
   name: string
@@ -164,13 +164,13 @@ export interface ParsedMarkdown {
  * @returns The parsed markdown file with content, data, and raw content, or null if not found
  */
 export function parseMarkdownFile(relativePath: string): ParsedMarkdown | null {
-  const fullPath = path.join(WORKSPACE_ROOT, relativePath)
+  const fullPath = join(WORKSPACE_ROOT, relativePath)
 
-  if (!fs.existsSync(fullPath)) {
+  if (!existsSync(fullPath)) {
     return null
   }
 
-  const fileContents = fs.readFileSync(fullPath, 'utf8')
+  const fileContents = readFileSync(fullPath, 'utf8')
   const { content, data } = matter(fileContents)
 
   return {
@@ -331,5 +331,5 @@ export function getLibrariesByCategory(category: LibraryInfo['category']): Libra
  * @returns True if the file exists, false otherwise
  */
 export function fileExists(relativePath: string): boolean {
-  return fs.existsSync(path.join(WORKSPACE_ROOT, relativePath))
+  return existsSync(join(WORKSPACE_ROOT, relativePath))
 }

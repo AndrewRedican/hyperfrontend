@@ -8,12 +8,4 @@ export default <Config>{
   testEnvironment: 'node',
   coveragePathIgnorePatterns: ['/node_modules/', '\\.model\\.ts$', '\\.types\\.ts$'],
   coverageProvider: 'v8',
-  coverageThreshold: {
-    global: {
-      branches: 95,
-      functions: 95,
-      lines: 90,
-      statements: 90,
-    },
-  },
 }

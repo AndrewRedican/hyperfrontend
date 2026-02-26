@@ -1,8 +1,8 @@
-import type { UnserializedEncryptedPacket } from '../../packet/model'
+import type { SerializedEncryptedPacket, UnserializedEncryptedPacket } from '../../packet/model'
 import { sleep } from '@hyperfrontend/time-utils'
 import { logger } from '@hyperfrontend/logging'
 import { packetDeserialization, serializedEncryptedPacket } from '../../packet/creators/mocks'
-import { isValidUnserializedEncryptedPacket } from '../../packet/validations'
+import { isValidUnserializedEncryptedPacket } from '../../packet/validations/is-valid-unserialized-encrypted-packet'
 import { createDeserializationQueue } from './create-deserialization-queue'
 
 describe('createDeserializationQueue', () => {
@@ -22,7 +22,7 @@ describe('createDeserializationQueue', () => {
     const onSuccess = jest.fn()
     const onFail = jest.fn()
     const queue = createDeserializationQueue(label, packetDeserialization, logger, onSuccess, onFail)
-    const invalidPacket = <unknown>{ invalid: 'data' }
+    const invalidPacket = <SerializedEncryptedPacket>(<unknown>{ invalid: 'data' })
     queue.addMessage(invalidPacket)
     await sleep(100)
     expect(onFail).toHaveBeenCalledWith(invalidPacket)

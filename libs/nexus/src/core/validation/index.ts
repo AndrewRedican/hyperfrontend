@@ -1,5 +1,0 @@
-export { validateName } from './name'
-export { validateContract } from './contract'
-export { validateAction } from './action'
-export { validateOrigin } from './origin'
-export { validateSettings } from './settings'

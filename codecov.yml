@@ -81,6 +81,11 @@ flag_management:
         - libs/utils/immutable-api/src/**
       carryforward: true
 
+    - name: json-utils
+      paths:
+        - libs/utils/json/src/**
+      carryforward: true
+
     - name: list-utils
       paths:
         - libs/utils/list/src/**

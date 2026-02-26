@@ -1,6 +1,14 @@
-import { readJsonFile, writeJsonFile } from '@nx/devkit'
+import type {
+  EntryPointDiscovery,
+  FormatOutputs,
+  PackageJson,
+  IIFEConfig,
+  UMDConfig,
+  ConditionalExport,
+  ExportValue,
+} from './types'
 import { join } from 'node:path'
-import type { EntryPointDiscovery, FormatOutputs, PackageJson, IIFEConfig, UMDConfig } from './types'
+import { readJsonFile, writeJsonFile } from '@nx/devkit'
 import { isWorkspacePackage } from './externals'
 
 /** Fields to inherit from root package.json */
@@ -89,13 +97,55 @@ function createExportEntry(outputDir: string, hasEsm: boolean, hasCjs: boolean):
 }
 
 /**
+ * Extracts output directory from source export path.
+ *
+ * @example
+ * "./src/lib/queue/index.js" → "lib/queue"
+ * "./src/browser/index.ts" → "browser"
+ * "./src/index.ts" → "" (root entry)
+ *
+ * @param srcPath - Source export path (string or conditional exports object)
+ * @returns Output directory relative to dist root, or empty string for root
+ */
+function extractOutputDirFromSourcePath(srcPath: ExportValue): string {
+  const path =
+    typeof srcPath === 'string'
+      ? srcPath
+      : ((srcPath as ConditionalExport).import ??
+        (srcPath as ConditionalExport).require ??
+        (srcPath as ConditionalExport).default ??
+        '')
+
+  // Match "./src/<path>/index.[jt]s" pattern
+  const subDirMatch = path.match(/^\.\/src\/(.+?)\/index\.[jt]s$/)
+  if (subDirMatch && subDirMatch[1]) {
+    return subDirMatch[1]
+  }
+
+  // Match "./src/index.[jt]s" pattern (root entry)
+  const rootMatch = path.match(/^\.\/src\/index\.[jt]s$/)
+  if (rootMatch) {
+    return ''
+  }
+
+  return ''
+}
+
+/**
  * Generates exports configuration from format outputs.
+ * Uses source-exports-first strategy: only exports declared in source package.json
+ * are included in the dist package.json. Internal modules are still built but not advertised.
  *
  * @param discovery - Entry point discovery result
  * @param formatOutputs - Collected format outputs during build
+ * @param srcPkg - Source package.json to honor export aliases (authoritative)
  * @returns Exports configuration for package.json
  */
-export function generateExportsFromFormats(discovery: EntryPointDiscovery, formatOutputs: FormatOutputs): Record<string, unknown> {
+export function generateExportsFromFormats(
+  discovery: EntryPointDiscovery,
+  formatOutputs: FormatOutputs,
+  srcPkg?: PackageJson
+): Record<string, unknown> {
   const exports: Record<string, unknown> = {
     './package.json': './package.json',
   }
@@ -103,17 +153,35 @@ export function generateExportsFromFormats(discovery: EntryPointDiscovery, forma
   const esmPaths = new Set(formatOutputs.esm.map((e) => e.exportPath))
   const cjsPaths = new Set(formatOutputs.cjs.map((e) => e.exportPath))
 
-  for (const entry of discovery.entryPoints) {
-    const exportKey = entry.isRoot ? '.' : entry.exportPath
-    const outputDir = entry.srcPath
-    const hasEsm = esmPaths.has(entry.exportPath)
-    const hasCjs = cjsPaths.has(entry.exportPath)
+  // Source exports are authoritative
+  const srcExports = srcPkg?.exports
+  if (srcExports && typeof srcExports === 'object') {
+    // Parse source exports and generate ONLY those
+    for (const [exportKey, srcPath] of Object.entries(srcExports)) {
+      // Skip package.json export (already added)
+      if (exportKey === './package.json') continue
 
-    if (hasEsm || hasCjs) {
-      exports[exportKey] = createExportEntry(outputDir, hasEsm, hasCjs)
+      const outputDir = extractOutputDirFromSourcePath(srcPath)
+      const discoveryPath = outputDir ? `./${outputDir}` : '.'
+      const hasEsm = esmPaths.has(discoveryPath)
+      const hasCjs = cjsPaths.has(discoveryPath)
+
+      if (hasEsm || hasCjs) {
+        exports[exportKey] = createExportEntry(outputDir, hasEsm, hasCjs)
+      }
+    }
+  } else {
+    // No source exports: root entry only (if exists)
+    if (discovery.hasRootEntry) {
+      const hasEsm = esmPaths.has('.')
+      const hasCjs = cjsPaths.has('.')
+      if (hasEsm || hasCjs) {
+        exports['.'] = createExportEntry('', hasEsm, hasCjs)
+      }
     }
   }
 
+  // Always add bundle exports from build config
   for (const iife of formatOutputs.iife) {
     const bundleDir = iife.config.output ?? 'bundle'
     exports[`./${bundleDir}`] = {
@@ -198,7 +266,7 @@ export function generatePackageJson(
   workspaceRoot: string,
   formatOutputs: FormatOutputs
 ): void {
-  const exports = generateExportsFromFormats(discovery, formatOutputs)
+  const exports = generateExportsFromFormats(discovery, formatOutputs, srcPkg)
 
   const rootPkg = readRootPackageJson(workspaceRoot)
   const inheritedFields = getInheritableFields(rootPkg)

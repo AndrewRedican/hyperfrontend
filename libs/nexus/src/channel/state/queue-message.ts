@@ -1,4 +1,5 @@
-import type { ChannelState, IMessage } from '../../types'
+import type { ChannelState } from '../../types/channel'
+import type { IMessage } from '../../types/message'
 
 /**
  * Adds a message to the channel's queue.

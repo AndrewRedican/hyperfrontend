@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { callStack } from '../call-stack'
+import { callStack } from '../call-stack/call-stack'
 import type {
   InitializingChangeCallback,
   ReadyChangeCallback,

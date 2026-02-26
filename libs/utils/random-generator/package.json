@@ -1,6 +1,6 @@
 {
   "name": "@hyperfrontend/random-generator-utils",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "Statistical random distributions and UUID generation for simulations, testing, and procedural content.",
   "license": "MIT",
   "sideEffects": false,
@@ -27,7 +27,7 @@
   ],
   "main": "./src/index.js",
   "dependencies": {
-    "@hyperfrontend/data-utils": "0.0.1"
+    "@hyperfrontend/data-utils": "0.0.2"
   },
   "funding": {
     "type": "github",

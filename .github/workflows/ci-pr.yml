@@ -222,8 +222,8 @@ jobs:
         run: |
           echo "Checking versions for affected libraries..."
 
-          # Get affected library projects
-          AFFECTED=$(npx nx show projects --affected --base=origin/${{ github.base_ref }} --head=HEAD --type=lib 2>/dev/null || echo "")
+          # Get affected library projects that have a version target
+          AFFECTED=$(npx nx show projects --affected --base=origin/${{ github.base_ref }} --head=HEAD --type=lib --with-target=version 2>/dev/null || echo "")
 
           if [ -z "$AFFECTED" ]; then
             echo "No affected libraries"
@@ -233,33 +233,76 @@ jobs:
 
           echo "Affected libraries: $AFFECTED"
 
-          # Run idempotent version check for each library
+          # Run idempotent version check for each library with --collectFiles
+          # Track different statuses separately for accurate reporting
+          # Use comma-separated format to match version executor's isVersionCommit() parsing
           UPDATED=""
+          SKIPPED=""
+          UNCHANGED=""
+          FAILED=""
+          ALL_FILES=""
+
           for lib in $AFFECTED; do
             echo "Checking $lib..."
-            RESULT=$(npx nx version $lib --skipCommit --skipTag 2>&1 || true)
+            RESULT=$(npx nx version $lib --collectFiles 2>&1)
+            EXIT_CODE=$?
+
+            if [ $EXIT_CODE -ne 0 ]; then
+              if [ -z "$FAILED" ]; then FAILED="$lib"; else FAILED="$FAILED, $lib"; fi
+              echo "  ✗ $lib: failed"
+              continue
+            fi
+
             if echo "$RESULT" | grep -q "version updated"; then
-              UPDATED="$UPDATED $lib"
+              if [ -z "$UPDATED" ]; then UPDATED="$lib"; else UPDATED="$UPDATED, $lib"; fi
+              # Collect modified files from MODIFIED: lines
+              FILES=$(echo "$RESULT" | grep "^MODIFIED:" | cut -d: -f2 | tr '\n' ' ')
+              ALL_FILES="$ALL_FILES $FILES"
               echo "  ✓ $lib: version updated"
-            elif echo "$RESULT" | grep -q "already exists (skipping)"; then
+            elif echo "$RESULT" | grep -qE "already exists|Skipping"; then
+              if [ -z "$SKIPPED" ]; then SKIPPED="$lib"; else SKIPPED="$SKIPPED, $lib"; fi
               echo "  ○ $lib: already versioned"
             else
+              if [ -z "$UNCHANGED" ]; then UNCHANGED="$lib"; else UNCHANGED="$UNCHANGED, $lib"; fi
               echo "  ○ $lib: no version change needed"
             fi
           done
 
+          # Handle failures - abort cleanly by discarding all changes
+          if [ -n "$FAILED" ]; then
+            echo "❌ Version failed for: $FAILED"
+            echo "Discarding all changes..."
+            git checkout .
+            echo "needs_update=false" >> $GITHUB_OUTPUT
+            echo "failed_libs=${FAILED}" >> $GITHUB_OUTPUT
+            exit 1
+          fi
+
+          # Output all tracking variables for PR comment
+          echo "skipped_libs=${SKIPPED}" >> $GITHUB_OUTPUT
+          echo "unchanged_libs=${UNCHANGED}" >> $GITHUB_OUTPUT
+          echo "all_files=${ALL_FILES}" >> $GITHUB_OUTPUT
+
           if [ -n "$UPDATED" ]; then
             echo "needs_update=true" >> $GITHUB_OUTPUT
-            echo "updated_libs=$UPDATED" >> $GITHUB_OUTPUT
+            echo "updated_libs=${UPDATED}" >> $GITHUB_OUTPUT
           else
             echo "needs_update=false" >> $GITHUB_OUTPUT
+            echo "updated_libs=" >> $GITHUB_OUTPUT
           fi
 
       - name: Commit version updates
         if: steps.version-check.outputs.needs_update == 'true'
         run: |
-          # Stage version changes
-          git add libs/*/package.json libs/*/CHANGELOG.md plugins/*/package.json plugins/*/CHANGELOG.md 2>/dev/null || true
+          # Stage all collected files (deferred staging from --collectFiles)
+          ALL_FILES="${{ steps.version-check.outputs.all_files }}"
+
+          if [ -z "$ALL_FILES" ]; then
+            echo "No files to stage"
+            exit 0
+          fi
+
+          git add $ALL_FILES
 
           # Check if there are changes to commit
           if git diff --staged --quiet; then
@@ -267,10 +310,9 @@ jobs:
             exit 0
           fi
 
-          # Commit the changes
-          git commit -m "chore: update versions for${{ steps.version-check.outputs.updated_libs }}"
-
-
+          # Commit the changes with [skip ci] to prevent retrigger
+          # Format: chore: update versions for lib-a, lib-b [skip ci]
+          git commit -m "chore: update versions for ${{ steps.version-check.outputs.updated_libs }} [skip ci]"
 
           # Push to the PR branch
           git push
@@ -282,29 +324,56 @@ jobs:
         uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
         with:
           script: |
-            const COMMENT_MARKER = '<!-- hyperfrontend-version-bot -->'
-            const libs = '${{ steps.version-check.outputs.updated_libs }}'.trim().split(' ').filter(Boolean)
+            const COMMENT_MARKER = '<!-- hyperfrontend-version-bot -->';
 
-            const body = `${COMMENT_MARKER}
-            ## 📦 Version Updates
+            // Parse outputs - handle empty strings gracefully
+            // Format is comma-separated: "lib-a, lib-b, lib-c"
+            const parseLibs = (str) => (str || '').split(',').map(s => s.trim()).filter(Boolean);
+            const updatedLibs = parseLibs('${{ steps.version-check.outputs.updated_libs }}');
+            const skippedLibs = parseLibs('${{ steps.version-check.outputs.skipped_libs }}');
+            const unchangedLibs = parseLibs('${{ steps.version-check.outputs.unchanged_libs }}');
 
-            The following libraries had their versions and CHANGELOGs updated:
+            // Build table rows
+            const tableRows = [];
+            for (const lib of updatedLibs) {
+              tableRows.push('| `' + lib + '` | ✅ Version bumped |');
+            }
+            for (const lib of skippedLibs) {
+              tableRows.push('| `' + lib + '` | ⏭️ Already versioned |');
+            }
+            for (const lib of unchangedLibs) {
+              tableRows.push('| `' + lib + '` | ○ No changes needed |');
+            }
 
-            ${libs.map(lib => `- \`${lib}\``).join('\n')}
-
-            These changes have been committed to this PR. Please review the CHANGELOG entries.
-
-            ---
-            *This update was performed automatically by the CI version validation.*`
+            // Build comment body using array join to avoid YAML parsing issues
+            const bodyParts = [
+              COMMENT_MARKER,
+              '## 📦 Version Check Results',
+              '',
+              '| Library | Status |',
+              '|---------|--------|',
+              tableRows.join('\n'),
+              '',
+              '### Summary',
+              '- **' + updatedLibs.length + '** libraries updated',
+              '- **' + skippedLibs.length + '** already versioned',
+              '- **' + unchangedLibs.length + '** unchanged',
+              '',
+              updatedLibs.length > 0 ? 'These changes have been committed to this PR. Please review the CHANGELOG entries.' : '',
+              '',
+              '---',
+              '*This check was performed automatically by the CI version validation.*'
+            ];
+            const body = bodyParts.join('\n');
 
             // Find existing bot comment
             const { data: comments } = await github.rest.issues.listComments({
               issue_number: context.issue.number,
               owner: context.repo.owner,
               repo: context.repo.repo,
-            })
+            });
 
-            const existingComment = comments.find(c => c.body && c.body.includes(COMMENT_MARKER))
+            const existingComment = comments.find(c => c.body && c.body.includes(COMMENT_MARKER));
 
             if (existingComment) {
               await github.rest.issues.updateComment({
@@ -312,14 +381,14 @@ jobs:
                 owner: context.repo.owner,
                 repo: context.repo.repo,
                 body,
-              })
-              console.log('Updated existing version comment')
+              });
+              console.log('Updated existing version comment');
             } else {
               await github.rest.issues.createComment({
                 issue_number: context.issue.number,
                 owner: context.repo.owner,
                 repo: context.repo.repo,
                 body,
-              })
-              console.log('Created new version comment')
+              });
+              console.log('Created new version comment');
             }

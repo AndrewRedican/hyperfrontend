@@ -1,4 +1,4 @@
-import type { ChannelState } from '../../types'
+import type { ChannelState } from '../../types/channel'
 
 /**
  * Clears all queued messages from the channel.

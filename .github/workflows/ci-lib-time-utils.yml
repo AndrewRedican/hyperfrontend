@@ -1,0 +1,19 @@
+# Build status reporter for lib-time-utils
+# This workflow does NOT build - it reports status from ci-libraries.yml matrix build
+name: lib-time-utils
+
+on:
+  workflow_run:
+    workflows: [libraries]
+    types: [completed]
+    branches: [main]
+
+permissions:
+  actions: read
+
+jobs:
+  status:
+    uses: ./.github/workflows/_lib-status.yml
+    with:
+      project-name: lib-time-utils
+      library-path: libs/utils/time

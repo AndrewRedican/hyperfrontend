@@ -5,9 +5,9 @@
  * negotiation, transport encryption/decryption, and handshake flow.
  */
 
-import { createProtocolRegistry } from './security/registry'
-import { negotiateProtocol, createSecurityRequest, createSecurityResponse } from './security/negotiation'
-import { createSecurityTransport } from './security/transport'
+import { createProtocolRegistry } from './security/registry/factory'
+import { negotiateProtocol, createSecurityRequest, createSecurityResponse } from './security/negotiation/negotiate'
+import { createSecurityTransport } from './security/transport/factory'
 import { createNoneTransport } from './security/transport/none-transport'
 import type { SecurityProtocolVersion, SecurityNegotiationRequest } from './types/security'
 

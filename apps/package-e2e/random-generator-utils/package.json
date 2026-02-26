@@ -1,0 +1,20 @@
+{
+  "name": "@hyperfrontend/e2e-random-generator-utils",
+  "version": "0.0.0",
+  "private": true,
+  "description": "E2E tests for @hyperfrontend/random-generator-utils package outputs",
+  "scripts": {
+    "pack-install": "cd ../../../dist/libs/utils/random-generator && npm pack && cd - && npm install ../../../dist/libs/utils/random-generator/*.tgz"
+  },
+  "dependencies": {
+    "@hyperfrontend/random-generator-utils": "file:../../../tmp/e2e-packs/hyperfrontend-random-generator-utils-0.0.1.tgz"
+  },
+  "devDependencies": {
+    "@types/jest": "29.5.14",
+    "@types/node": "22.15.32",
+    "jest": "29.7.0",
+    "jest-environment-jsdom": "29.7.0",
+    "ts-jest": "29.2.6",
+    "typescript": "5.7.3"
+  }
+}

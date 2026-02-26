@@ -1,5 +1,5 @@
 import { uuidV4 } from '@hyperfrontend/random-generator-utils'
-import type { ChannelState, IChannelSettings } from '../../types'
+import type { ChannelState, IChannelSettings } from '../../types/channel'
 
 /**
  * Creates the initial state for a new channel.

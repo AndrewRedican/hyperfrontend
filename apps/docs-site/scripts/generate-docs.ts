@@ -1,26 +1,12 @@
 #!/usr/bin/env node
-/**
- * Documentation Generation Script
- *
- * This script generates documentation content from:
- * 1. TypeDoc API documentation (JSON format)
- * 2. README.md files from each library
- * 3. ARCHITECTURE.md files
- *
- * Output is written to apps/docs-site/.generated/
- *
- * Entry points are automatically discovered from each library's package.json
- * exports field, eliminating the need for hardcoded entry point configuration.
- */
+import { execFileSync } from 'node:child_process'
+import { existsSync, readFileSync, mkdirSync, writeFileSync } from 'node:fs'
+import { resolve, join, dirname } from 'node:path'
 
-import { execFileSync } from 'child_process'
-import fs from 'node:fs'
-import path from 'node:path'
-
-const WORKSPACE_ROOT = path.resolve(__dirname, '../../..')
-const OUTPUT_DIR = path.resolve(__dirname, '../.generated')
-const DOCS_OUTPUT = path.join(OUTPUT_DIR, 'docs')
-const API_OUTPUT = path.join(OUTPUT_DIR, 'api')
+const WORKSPACE_ROOT = resolve(__dirname, '../../..')
+const OUTPUT_DIR = resolve(__dirname, '../.generated')
+const DOCS_OUTPUT = join(OUTPUT_DIR, 'docs')
+const API_OUTPUT = join(OUTPUT_DIR, 'api')
 
 interface LibraryConfig {
   name: string
@@ -46,14 +32,14 @@ interface PackageJson {
  * @returns Array of relative entry point paths (e.g., ['src/index.ts', 'src/browser/index.ts'])
  */
 function discoverEntryPointsFromPackageJson(libPath: string): string[] {
-  const packageJsonPath = path.join(libPath, 'package.json')
+  const packageJsonPath = join(libPath, 'package.json')
 
-  if (!fs.existsSync(packageJsonPath)) {
+  if (!existsSync(packageJsonPath)) {
     console.log(`  ⚠ No package.json found at ${libPath}`)
     return []
   }
 
-  const packageJson: PackageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf-8'))
+  const packageJson: PackageJson = JSON.parse(readFileSync(packageJsonPath, 'utf-8'))
   const entryPoints: string[] = []
 
   // First try exports field (modern packages)
@@ -84,7 +70,7 @@ function discoverEntryPointsFromPackageJson(libPath: string): string[] {
   // Final fallback: check for standard src/index.ts
   if (entryPoints.length === 0) {
     const defaultEntry = 'src/index.ts'
-    if (fs.existsSync(path.join(libPath, defaultEntry))) {
+    if (existsSync(join(libPath, defaultEntry))) {
       entryPoints.push(defaultEntry)
     }
   }
@@ -93,7 +79,7 @@ function discoverEntryPointsFromPackageJson(libPath: string): string[] {
 }
 
 /**
- * Converts a JavaScript path from package.json to a TypeScript source path.
+ * Converts a JavaScript path from package.json to a TypeScript source
  *
  * @param jsPath - JavaScript path (e.g., "./src/browser/index.js")
  * @returns TypeScript path (e.g., "src/browser/index.ts") or null if invalid
@@ -109,7 +95,7 @@ function convertJsPathToTs(jsPath: string): string | null {
     normalized = normalized.slice(0, -3) + '.ts'
   } else if (!normalized.endsWith('.ts')) {
     // If no extension, assume it's a directory with index.ts
-    normalized = path.join(normalized, 'index.ts')
+    normalized = join(normalized, 'index.ts')
   }
 
   return normalized
@@ -189,8 +175,8 @@ const LIBRARIES: LibraryConfig[] = [
  * @param dir - The directory path to create
  */
 function ensureDir(dir: string) {
-  if (!fs.existsSync(dir)) {
-    fs.mkdirSync(dir, { recursive: true })
+  if (!existsSync(dir)) {
+    mkdirSync(dir, { recursive: true })
   }
 }
 
@@ -275,14 +261,14 @@ function transformLinks(content: string, sourceContext: 'root' | 'library', libr
  * @returns An object with the content and whether it exists
  */
 function extractReadme(lib: LibraryConfig): { content: string; exists: boolean } {
-  const readmePath = path.join(WORKSPACE_ROOT, lib.srcPath, 'README.md')
+  const readmePath = join(WORKSPACE_ROOT, lib.srcPath, 'README.md')
 
-  if (!fs.existsSync(readmePath)) {
+  if (!existsSync(readmePath)) {
     console.log(`  ⚠ No README.md found for ${lib.name}`)
     return { content: '', exists: false }
   }
 
-  const content = fs.readFileSync(readmePath, 'utf-8')
+  const content = readFileSync(readmePath, 'utf-8')
   // Transform links for docs site context
   const transformedContent = transformLinks(content, 'library', lib.slug)
   return { content: transformedContent, exists: true }
@@ -295,13 +281,13 @@ function extractReadme(lib: LibraryConfig): { content: string; exists: boolean }
  * @returns An object with the content and whether it exists
  */
 function extractArchitecture(lib: LibraryConfig): { content: string; exists: boolean } {
-  const archPath = path.join(WORKSPACE_ROOT, lib.srcPath, 'ARCHITECTURE.md')
+  const archPath = join(WORKSPACE_ROOT, lib.srcPath, 'ARCHITECTURE.md')
 
-  if (!fs.existsSync(archPath)) {
+  if (!existsSync(archPath)) {
     return { content: '', exists: false }
   }
 
-  const content = fs.readFileSync(archPath, 'utf-8')
+  const content = readFileSync(archPath, 'utf-8')
   // Transform links for docs site context
   const transformedContent = transformLinks(content, 'library', lib.slug)
   return { content: transformedContent, exists: true }
@@ -317,7 +303,7 @@ function extractArchitecture(lib: LibraryConfig): { content: string; exists: boo
  * @returns True if TypeDoc succeeded, false otherwise
  */
 function generateTypeDoc(lib: LibraryConfig): boolean {
-  const libPath = path.join(WORKSPACE_ROOT, lib.srcPath)
+  const libPath = join(WORKSPACE_ROOT, lib.srcPath)
 
   // Dynamically discover entry points from package.json
   const discoveredEntryPoints = discoverEntryPointsFromPackageJson(libPath)
@@ -327,22 +313,22 @@ function generateTypeDoc(lib: LibraryConfig): boolean {
     return false
   }
 
-  const entryPoints = discoveredEntryPoints.map((ep) => path.join(libPath, ep))
+  const entryPoints = discoveredEntryPoints.map((ep) => join(libPath, ep))
 
   // Verify all entry points exist
-  const missingEntryPoints = entryPoints.filter((ep) => !fs.existsSync(ep))
+  const missingEntryPoints = entryPoints.filter((ep) => !existsSync(ep))
   if (missingEntryPoints.length > 0) {
     console.log(`  ⚠ Missing entry points for ${lib.name}:`)
     missingEntryPoints.forEach((ep) => console.log(`      - ${ep}`))
     return false
   }
 
-  const outputPath = path.join(API_OUTPUT, lib.slug, 'api.json')
-  ensureDir(path.dirname(outputPath))
+  const outputPath = join(API_OUTPUT, lib.slug, 'api.json')
+  ensureDir(dirname(outputPath))
 
   // Find tsconfig.json for the library
-  const tsconfigPath = path.join(libPath, 'tsconfig.json')
-  const hasTsconfig = fs.existsSync(tsconfigPath)
+  const tsconfigPath = join(libPath, 'tsconfig.json')
+  const hasTsconfig = existsSync(tsconfigPath)
 
   try {
     const args = ['typedoc', '--json', outputPath, '--excludePrivate', '--excludeInternal', '--excludeNotDocumented', 'false']
@@ -401,16 +387,16 @@ function generateDocs() {
 
     // Save README content
     if (readme.exists) {
-      const readmeOutput = path.join(DOCS_OUTPUT, lib.slug, 'readme.md')
-      ensureDir(path.dirname(readmeOutput))
-      fs.writeFileSync(readmeOutput, readme.content)
+      const readmeOutput = join(DOCS_OUTPUT, lib.slug, 'readme.md')
+      ensureDir(dirname(readmeOutput))
+      writeFileSync(readmeOutput, readme.content)
     }
 
     // Save Architecture content
     if (architecture.exists) {
-      const archOutput = path.join(DOCS_OUTPUT, lib.slug, 'architecture.md')
-      ensureDir(path.dirname(archOutput))
-      fs.writeFileSync(archOutput, architecture.content)
+      const archOutput = join(DOCS_OUTPUT, lib.slug, 'architecture.md')
+      ensureDir(dirname(archOutput))
+      writeFileSync(archOutput, architecture.content)
     }
 
     libraryDocs.push({
@@ -428,21 +414,21 @@ function generateDocs() {
 
   // Extract root architecture document
   console.log('📐 Processing root ARCHITECTURE.md...')
-  const rootArchPath = path.join(WORKSPACE_ROOT, 'ARCHITECTURE.md')
-  if (fs.existsSync(rootArchPath)) {
-    const archContent = fs.readFileSync(rootArchPath, 'utf-8')
+  const rootArchPath = join(WORKSPACE_ROOT, 'ARCHITECTURE.md')
+  if (existsSync(rootArchPath)) {
+    const archContent = readFileSync(rootArchPath, 'utf-8')
     const transformedArchContent = transformLinks(archContent, 'root')
-    fs.writeFileSync(path.join(DOCS_OUTPUT, 'architecture.md'), transformedArchContent)
+    writeFileSync(join(DOCS_OUTPUT, 'architecture.md'), transformedArchContent)
     console.log('  ✓ Root architecture document extracted\n')
   }
 
   // Extract CONTRIBUTING.md
   console.log('📝 Processing CONTRIBUTING.md...')
-  const contributingPath = path.join(WORKSPACE_ROOT, 'CONTRIBUTING.md')
-  if (fs.existsSync(contributingPath)) {
-    const contributingContent = fs.readFileSync(contributingPath, 'utf-8')
+  const contributingPath = join(WORKSPACE_ROOT, 'CONTRIBUTING.md')
+  if (existsSync(contributingPath)) {
+    const contributingContent = readFileSync(contributingPath, 'utf-8')
     const transformedContributingContent = transformLinks(contributingContent, 'root')
-    fs.writeFileSync(path.join(DOCS_OUTPUT, 'contributing.md'), transformedContributingContent)
+    writeFileSync(join(DOCS_OUTPUT, 'contributing.md'), transformedContributingContent)
     console.log('  ✓ Contributing guide extracted\n')
   }
 
@@ -451,12 +437,12 @@ function generateDocs() {
     generatedAt: new Date().toISOString(),
     libraries: libraryDocs,
     rootDocs: {
-      architecture: fs.existsSync(path.join(DOCS_OUTPUT, 'architecture.md')),
-      contributing: fs.existsSync(path.join(DOCS_OUTPUT, 'contributing.md')),
+      architecture: existsSync(join(DOCS_OUTPUT, 'architecture.md')),
+      contributing: existsSync(join(DOCS_OUTPUT, 'contributing.md')),
     },
   }
 
-  fs.writeFileSync(path.join(OUTPUT_DIR, 'manifest.json'), JSON.stringify(manifest, null, 2))
+  writeFileSync(join(OUTPUT_DIR, 'manifest.json'), JSON.stringify(manifest, null, 2))
 
   console.log('✅ Documentation generation complete!')
   console.log(`   Output: ${OUTPUT_DIR}`)

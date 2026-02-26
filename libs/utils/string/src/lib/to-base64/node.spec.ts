@@ -1,5 +1,5 @@
 /** @jest-environment node */
-import { toBase64 } from './node'
+import { toBase64 } from './node/to-base64'
 import { BASE_64_ENCODING_SAMPLES } from '../shared-consts'
 
 describe('toBase64 (node)', () => {

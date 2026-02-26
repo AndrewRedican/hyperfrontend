@@ -197,6 +197,29 @@ export interface BuildContext {
 /** Rollup output format */
 export type OutputFormat = 'esm' | 'cjs' | 'iife' | 'umd'
 
+/** Conditional export specification for package.json exports field */
+export interface ConditionalExport {
+  /** ESM import path */
+  import?: string
+  /** CommonJS require path */
+  require?: string
+  /** Default export path (fallback) */
+  default?: string
+  /** TypeScript types path */
+  types?: string
+  /** Node.js specific export */
+  node?: string | ConditionalExport
+  /** Browser specific export */
+  browser?: string | ConditionalExport
+  /** Development mode export */
+  development?: string | ConditionalExport
+  /** Production mode export */
+  production?: string | ConditionalExport
+}
+
+/** Export value in package.json - can be a string path or conditional exports object */
+export type ExportValue = string | ConditionalExport | Record<string, unknown>
+
 /** Package.json type with standard fields */
 export interface PackageJson {
   name?: string
@@ -205,7 +228,7 @@ export interface PackageJson {
   main?: string
   module?: string
   types?: string
-  exports?: Record<string, unknown>
+  exports?: Record<string, ExportValue>
   dependencies?: Record<string, string>
   peerDependencies?: Record<string, string>
   repository?: { type: string; url: string } | string

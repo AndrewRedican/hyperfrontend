@@ -1,8 +1,8 @@
-import type { SerializedEncryptedPacket } from '../../packet/model'
+import type { ObfuscatedPacket, SerializedEncryptedPacket } from '../../packet/model'
 import { sleep } from '@hyperfrontend/time-utils'
 import { logger } from '@hyperfrontend/logging'
 import { packetDeobfuscation, obfuscatedPacket } from '../../packet/creators/mocks'
-import { isValidSerializedEncryptedPacket } from '../../packet/validations'
+import { isValidSerializedEncryptedPacket } from '../../packet/validations/is-valid-serialized-encrypted-packet'
 import { createDeobfuscationQueue } from './create-deobfuscation-queue'
 
 describe('createDeobfuscationQueue', () => {
@@ -22,7 +22,7 @@ describe('createDeobfuscationQueue', () => {
     const onSuccess = jest.fn()
     const onFail = jest.fn()
     const queue = createDeobfuscationQueue(label, packetDeobfuscation, logger, onSuccess, onFail)
-    const invalidPacket = <unknown>{ invalid: 'data' }
+    const invalidPacket = <ObfuscatedPacket>(<unknown>{ invalid: 'data' })
     queue.addMessage(invalidPacket)
     await sleep(100)
     expect(onFail).toHaveBeenCalledWith(invalidPacket)

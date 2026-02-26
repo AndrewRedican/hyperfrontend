@@ -52,7 +52,7 @@ export function createCJSEntryConfig(entry: EntryPoint, config: CJSConfig, conte
       createJsonPlugin(),
       createNodeResolvePlugin(bundleWorkspaceDeps),
       createCommonJsPlugin(),
-      createTypescriptPlugin(tsConfigPath, projectRoot, entryOutputPath, false, sourcemap, bundleWorkspaceDeps, workspaceRoot),
+      createTypescriptPlugin(tsConfigPath, projectRoot, entryOutputPath, sourcemap, bundleWorkspaceDeps, workspaceRoot),
     ],
 
     output: createCJSOutputConfig(entryOutputPath, 'index', sourcemap),

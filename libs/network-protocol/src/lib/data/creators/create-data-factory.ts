@@ -2,7 +2,9 @@ import type { Schema } from '@hyperfrontend/json-utils'
 import type { DataCreater, JSONString, SerializedData } from '../model'
 import { hasCircularReference } from '@hyperfrontend/data-utils'
 import { uuidV4 } from '@hyperfrontend/random-generator-utils'
-import { isValidPid, isValidSequence, isValidMessage } from '../validations'
+import { isValidPid } from '../validations/is-valid-pid'
+import { isValidSequence } from '../validations/is-valid-schema-sequence'
+import { isValidMessage } from '../validations/is-valid-message'
 import { getSchema } from './get-schema'
 
 /**
@@ -14,7 +16,7 @@ import { getSchema } from './get-schema'
  * @example
  * ```typescript
  * import { createHash } from '@hyperfrontend/cryptography/browser'
- * import { createDataFactory } from '@hyperfrontend/network-protocol/lib/data/creators'
+ * import { createDataFactory } from '@hyperfrontend/network-protocol/lib/data/creators/create-data-factory'
  *
  * const createData = createDataFactory(createHash)
  * const data = await createData('process-123', 1, { hello: 'world' })

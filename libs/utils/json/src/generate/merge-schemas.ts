@@ -1,4 +1,4 @@
-import type { Schema, JsonType } from '../types'
+import type { Schema, JsonType } from '../types/schema'
 
 /**
  * Merges multiple schemas into a single unified schema.

@@ -27,7 +27,6 @@
     "commit": "npx cz",
     "postinstall": "patch-package"
   },
-  "dependencies": {},
   "devDependencies": {
     "@commitlint/cli": "20.3.1",
     "@commitlint/config-conventional": "20.3.1",
@@ -46,6 +45,8 @@
     "@swc/core": "1.15.11",
     "@types/jest": "30.0.0",
     "@types/node": "25.0.9",
+    "@typescript-eslint/rule-tester": "8.53.1",
+    "@typescript-eslint/utils": "8.53.1",
     "commitizen": "4.3.1",
     "cz-conventional-changelog": "3.3.0",
     "eslint": "9.39.2",
@@ -62,7 +63,7 @@
     "nx": "22.3.3",
     "patch-package": "8.0.1",
     "prettier": "3.8.0",
-    "rollup": "4.57.1",
+    "rollup": "4.59.0",
     "ts-jest": "29.4.6",
     "ts-node": "10.9.2",
     "typescript": "5.9.3",
@@ -71,6 +72,15 @@
   "overrides": {
     "@jscutlery/semver": {
       "@nx/devkit": "22.3.3"
+    },
+    "eslint": {
+      "ajv": "6.14.0"
+    },
+    "@eslint/eslintrc": {
+      "ajv": "6.14.0"
+    },
+    "@typescript-eslint/rule-tester": {
+      "ajv": "6.14.0"
     },
     "diff": "8.0.3",
     "lodash": "4.17.23",

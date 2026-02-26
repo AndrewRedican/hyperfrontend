@@ -5,8 +5,8 @@
 
 import type { UnencryptedPacket } from '../../model'
 import { encrypt, createHash } from '@hyperfrontend/cryptography/node'
-import { createDataFactory } from '../../../data/creators'
-import { createDataEncrypter } from '../../../data/security'
+import { createDataFactory } from '../../../data/creators/create-data-factory'
+import { createDataEncrypter } from '../../../data/security/create-encrypter'
 import { createPacketEncrypter } from './create-encrypter'
 import { invalidPacketEncryptionTestCases, testPasswords, testUUIDs, testPIDs, testMessages } from './test-fixtures'
 

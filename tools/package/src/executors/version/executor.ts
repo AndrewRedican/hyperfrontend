@@ -1,4 +1,6 @@
-import { type ExecutorContext, logger } from '@nx/devkit'
+import type { ExecutorContext } from '@nx/devkit'
+import type { VersionBuilderSchema } from '@jscutlery/semver/src/executors/version/schema'
+import type { VersionExecutorOptions } from './schema'
 import { execSync } from 'node:child_process'
 import {
   readFileSync,
@@ -14,38 +16,115 @@ import {
   readSync,
 } from 'node:fs'
 import { join, relative } from 'node:path'
-import type { VersionExecutorOptions } from './schema'
 import semverVersion from '@jscutlery/semver/src/executors/version'
-import type { VersionBuilderSchema } from '@jscutlery/semver/src/executors/version/schema'
+import { logger } from '@nx/devkit'
 
 /**
- * Patterns that identify version/release commits.
- * Used for recursion prevention - if HEAD matches, skip versioning.
- */
-const VERSION_COMMIT_PATTERNS = [
-  /^chore\([^)]+\): release version/, // Manual: chore(lib-x): release version 1.0.0
-  /^chore: update versions for/, // PR CI: chore: update versions for lib-x
-  /^chore\(release\):/, // Alternative format
-]
-
-/**
- * Checks if the last commit is a version/release commit.
+ * Checks if the last commit is a version/release commit for a specific project.
  * Prevents infinite recursion when versioning triggers another version.
  *
+ * This check is PROJECT-SPECIFIC: if package A was just versioned, this will
+ * only return true when checking package A. Package B can still be versioned
+ * even if the last commit was a version commit for package A.
+ *
+ * Recognized commit formats:
+ * - Manual: `chore(lib-x): release version 1.0.0`
+ * - PR CI: `chore: update versions for lib-x`
+ * - Alternative: `chore(release): lib-x 1.0.0`
+ *
  * @param cwd - Working directory
- * @returns True if current HEAD is a version commit
+ * @param projectName - The Nx project name to check for
+ * @returns True if current HEAD is a version commit for this specific project
  */
-function isVersionCommit(cwd: string): boolean {
+function isVersionCommit(cwd: string, projectName: string): boolean {
   try {
     const msg = execSync('git log -1 --pretty=%B', {
       cwd,
       encoding: 'utf-8',
       stdio: ['pipe', 'pipe', 'pipe'],
     }).trim()
-    return VERSION_COMMIT_PATTERNS.some((pattern) => pattern.test(msg))
+
+    // Security: Reject excessively long commit messages
+    // Normal commit messages are well under 1KB; 10KB is a generous limit
+    if (msg.length > 10000) {
+      return false
+    }
+
+    // Get first line only (commit subject)
+    const firstLine = msg.split('\n')[0].trim()
+
+    // Pattern 1: Manual versioning - chore(lib-x): release version X.Y.Z
+    const manualPrefix = `chore(${projectName}): release version`
+    if (firstLine.startsWith(manualPrefix)) {
+      return true
+    }
+
+    // Pattern 2: PR CI versioning - chore: update versions for lib-x
+    // Also handles multiple packages: chore: update versions for lib-a lib-b
+    // May include [skip ci] suffix: chore: update versions for lib-a lib-b [skip ci]
+    const ciPrefix = 'chore: update versions for '
+    if (firstLine.startsWith(ciPrefix)) {
+      let packagePart = firstLine.slice(ciPrefix.length)
+
+      // Strip [skip ci] suffix if present
+      const skipCiSuffix = ' [skip ci]'
+      if (packagePart.endsWith(skipCiSuffix)) {
+        packagePart = packagePart.slice(0, -skipCiSuffix.length)
+      }
+
+      // Split by whitespace/comma without regex - replace commas with spaces then split
+      const packages = packagePart
+        .split(',')
+        .join(' ')
+        .split(' ')
+        .map((p) => p.trim())
+        .filter((p) => p.length > 0 && p.length < 100 && isValidPackageName(p))
+
+      if (packages.includes(projectName)) {
+        return true
+      }
+    }
+
+    // Pattern 3: Alternative release format - chore(release): lib-x X.Y.Z
+    const altPrefix = 'chore(release): '
+    if (firstLine.startsWith(altPrefix)) {
+      const rest = firstLine.slice(altPrefix.length).trimStart()
+      // Check if projectName is at the start followed by space or end of string
+      if (rest === projectName || rest.startsWith(projectName + ' ')) {
+        return true
+      }
+    }
+
+    return false
   } catch {
     return false
   }
+}
+
+/**
+ * Validates that a string looks like a valid npm package name.
+ * Only allows: alphanumeric, @, /, -, _
+ *
+ * @param name - Package name to validate
+ * @returns True if valid
+ */
+function isValidPackageName(name: string): boolean {
+  for (const char of name) {
+    const code = char.charCodeAt(0)
+    // a-z, A-Z, 0-9, @, /, -, _
+    const isValid =
+      (code >= 97 && code <= 122) || // a-z
+      (code >= 65 && code <= 90) || // A-Z
+      (code >= 48 && code <= 57) || // 0-9
+      code === 64 || // @
+      code === 47 || // /
+      code === 45 || // -
+      code === 95 // _
+    if (!isValid) {
+      return false
+    }
+  }
+  return true
 }
 
 /**
@@ -358,6 +437,15 @@ function updateDependentVersions(
 export default async function versionExecutor(options: VersionExecutorOptions, context: ExecutorContext): Promise<{ success: boolean }> {
   const { projectName, root: workspaceRoot, projectGraph } = context
 
+  // Normalize collectFiles mode: implies skipCommit and skipTag
+  if (options.collectFiles) {
+    options.skipCommit = true
+    options.skipTag = true
+  }
+
+  // Track all modified files for --collectFiles output
+  const modifiedFiles: string[] = []
+
   if (!projectName) {
     logger.error('Project name is required')
     return { success: false }
@@ -372,8 +460,9 @@ export default async function versionExecutor(options: VersionExecutorOptions, c
   // === FACT-FINDING: Early exit conditions ===
 
   // 1. Recursion prevention (enabled by default)
-  if (options.skipIfVersionCommit !== false && isVersionCommit(workspaceRoot)) {
-    logger.info(`${projectName}: Skipping - current commit is a version/release commit`)
+  // Note: This is PROJECT-SPECIFIC - only skips if THIS project was just versioned
+  if (options.skipIfVersionCommit !== false && isVersionCommit(workspaceRoot, projectName)) {
+    logger.info(`${projectName}: Skipping - current commit is a version/release commit for this project`)
     return { success: true }
   }
 
@@ -390,14 +479,9 @@ export default async function versionExecutor(options: VersionExecutorOptions, c
   const currentVersion = getPackageVersion(packageJsonPath)
   const expectedTag = `${tagPrefix}${currentVersion}`
 
-  // Idempotency check: if the tag for current version exists, it's been released - skip
-  if (tagExists(expectedTag, workspaceRoot) && !options.releaseAs && !options.allowEmptyRelease) {
-    logger.info(`${projectName}: Tag ${expectedTag} already exists (skipping)`)
-    return { success: true }
-  }
-
-  // For unreleased versions (no tag), clear existing changelog entry so semver
-  // regenerates it with ALL commits since last tagged release
+  // For unreleased versions (no tag for current version), clear existing changelog
+  // entry so semver regenerates it with ALL commits since last tagged release.
+  // This handles the case where version command was run but not pushed.
   if (!tagExists(expectedTag, workspaceRoot)) {
     const cleared = clearUnreleasedChangelogEntry(changelogPath, currentVersion, options.dryRun ?? false)
     if (cleared) {
@@ -407,10 +491,30 @@ export default async function versionExecutor(options: VersionExecutorOptions, c
 
   logger.info(`${projectName}: Delegating to @jscutlery/semver:version`)
 
+  // Default preset configuration that includes docs commits for version bumps.
+  // docs commits trigger MINOR bumps (considered meaningful changes in this project).
+  // This aligns with the philosophy that documentation updates are valuable user-facing changes.
+  const defaultPreset = {
+    name: 'conventionalcommits',
+    types: [
+      { type: 'feat', section: 'Features' },
+      { type: 'fix', section: 'Bug Fixes' },
+      { type: 'perf', section: 'Performance Improvements' },
+      { type: 'docs', section: 'Documentation' }, // Triggers MINOR bump
+      { type: 'build', section: 'Build System' },
+      { type: 'refactor', section: 'Code Refactoring', hidden: true },
+      { type: 'style', hidden: true },
+      { type: 'test', hidden: true },
+      { type: 'ci', hidden: true },
+      { type: 'chore', hidden: true },
+    ],
+  }
+
   // Delegate to @jscutlery/semver:version
-  // Ensure skipCommitTypes defaults to empty array (required by @jscutlery/semver)
+  // Use custom preset if provided, otherwise use our default that includes docs
   const semverOptions: VersionBuilderSchema = {
     ...options,
+    preset: options.preset ?? defaultPreset,
     skipCommitTypes: options.skipCommitTypes ?? [],
   } as VersionBuilderSchema
 
@@ -418,6 +522,12 @@ export default async function versionExecutor(options: VersionExecutorOptions, c
 
   if (result.success) {
     logger.info(`${projectName}: version updated`)
+
+    // Track project's own modified files (relative to workspace root)
+    modifiedFiles.push(join(projectRoot, 'package.json'))
+    if (existsSync(changelogPath)) {
+      modifiedFiles.push(join(projectRoot, 'CHANGELOG.md'))
+    }
 
     // Update dependent packages' version references (enabled by default)
     const shouldUpdateDependents = options.updateDependents !== false
@@ -433,6 +543,9 @@ export default async function versionExecutor(options: VersionExecutorOptions, c
           for (const file of updatedFiles) {
             logger.info(`  - ${file}`)
           }
+
+          // Track dependent files for --collectFiles output
+          modifiedFiles.push(...updatedFiles)
 
           // Stage the updated files for the commit (if not dry run and not skipping commit)
           if (!options.dryRun && !options.skipCommit) {
@@ -456,6 +569,13 @@ export default async function versionExecutor(options: VersionExecutorOptions, c
             }
           }
         }
+      }
+    }
+
+    // Output modified files to stdout for --collectFiles mode
+    if (options.collectFiles) {
+      for (const file of modifiedFiles) {
+        process.stdout.write(`MODIFIED:${file}\n`)
       }
     }
   }

@@ -6,12 +6,12 @@
  */
 
 import { encrypt, decrypt } from '@hyperfrontend/cryptography/browser'
-import { createPacketEncrypter } from '../../../packet/security/encryption'
-import { createPacketDecrypter } from '../../../packet/security/encryption'
-import { createDataEncrypter } from '../../../data/security'
-import { createDataDecrypter } from '../../../data/security'
-import { createPacketObfuscator } from '../../../packet/security/obfuscation'
-import { createPacketDeobfuscator } from '../../../packet/security/obfuscation'
+import { createPacketEncrypter } from '../../../packet/security/encryption/create-encrypter'
+import { createPacketDecrypter } from '../../../packet/security/encryption/create-decrypter'
+import { createDataEncrypter } from '../../../data/security/create-encrypter'
+import { createDataDecrypter } from '../../../data/security/create-decrypter'
+import { createPacketObfuscator } from '../../../packet/security/obfuscation/create-obfuscator'
+import { createPacketDeobfuscator } from '../../../packet/security/obfuscation/create-deobfuscator'
 import { createTimeIntervalObfuscationFactory } from '../../../packet/security/obfuscation/time-interval-obfuscation-factory'
 import { getTimeBasedPassword, getTimeBasedPasswords } from '@hyperfrontend/cryptography/browser'
 import { createPSKHandshakeProtocolFactory } from './create-static-key-protocol-factory'

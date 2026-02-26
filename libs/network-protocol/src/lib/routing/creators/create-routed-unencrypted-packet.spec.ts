@@ -1,7 +1,7 @@
 import { data } from '../../data/creators/mocks'
 import { origin, target } from '../../packet/creators/mocks'
 import { topicId } from '../../topic/creators/mocks'
-import { isValidRoutedUnencryptedPacket } from '../validations'
+import { isValidRoutedUnencryptedPacket } from '../validations/is-valid-routed-unencrypted-packet'
 import { createRoutedUnencryptedPacket } from './create-routed-unencrypted-packet'
 
 describe('createRoutedUnencryptedPacket', () => {

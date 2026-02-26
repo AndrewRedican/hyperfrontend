@@ -51,10 +51,13 @@ export function createCommonJsPlugin(): Plugin {
 /**
  * Creates a typescript plugin for entry point builds.
  *
+ * Declaration files are NOT emitted by rollup - they are generated separately
+ * via tsc in the generateDeclarations function. This ensures consistent
+ * declaration output structure regardless of bundleWorkspaceDeps setting.
+ *
  * @param tsConfigPath - Absolute path to tsconfig file
  * @param projectRoot - Absolute path to project root
  * @param outputPath - Absolute path to output directory
- * @param emitDeclarations - Whether to emit declaration files
  * @param sourcemap - Whether to emit sourcemaps
  * @param bundleWorkspaceDeps - When true, enables workspace path resolution for bundling.
  *                              When false, uses paths: {} to prevent following workspace imports.
@@ -65,38 +68,36 @@ export function createTypescriptPlugin(
   tsConfigPath: string,
   projectRoot: string,
   outputPath: string,
-  emitDeclarations: boolean,
   sourcemap: boolean,
   bundleWorkspaceDeps: boolean,
   workspaceRoot?: string
 ): Plugin {
   // When bundling workspace deps, use workspace-level configuration
   // similar to bundle builds (IIFE/UMD) to allow compiling files from
-  // multiple workspace packages
+  // multiple workspace packages. Declarations are generated separately via tsc.
   if (bundleWorkspaceDeps) {
     if (!workspaceRoot) {
       throw new Error('workspaceRoot is required when bundleWorkspaceDeps is true')
     }
     return <Plugin>typescript({
       tsconfig: tsConfigPath,
-      declaration: emitDeclarations,
-      declarationMap: emitDeclarations,
+      declaration: false,
+      declarationMap: false,
       sourceMap: sourcemap,
       compilerOptions: {
         baseUrl: workspaceRoot,
         outDir: outputPath,
-        declarationDir: emitDeclarations ? outputPath : undefined,
       },
     })
   }
 
   // When not bundling workspace deps, use project-level configuration
-  // with empty paths to prevent TypeScript from following workspace imports
+  // with empty paths to prevent TypeScript from following workspace imports.
+  // Declarations are generated separately via tsc.
   return <Plugin>typescript({
     tsconfig: tsConfigPath,
-    declaration: emitDeclarations,
-    declarationMap: emitDeclarations,
-    declarationDir: emitDeclarations ? outputPath : undefined,
+    declaration: false,
+    declarationMap: false,
     rootDir: `${projectRoot}/src`,
     outDir: outputPath,
     sourceMap: sourcemap,

@@ -3,15 +3,19 @@
  * Node version: create-receiver-factory.spec.ts (identical except for imports)
  */
 
-import type { UnencryptedPacket } from '../../packet'
+import type { UnencryptedPacket } from '../../packet/model'
 import { createHash, encrypt, decrypt } from '@hyperfrontend/cryptography/browser'
 import { uint8ArrayToBase64, base64ToUint8Array } from '@hyperfrontend/string-utils/browser'
 import { sleep } from '@hyperfrontend/time-utils'
-import { createDataFactory } from '../../data/creators'
-import { createDataEncrypter, createDataDecrypter } from '../../data/security'
-import { createPacketEncrypter, createPacketDecrypter } from '../../packet/security/encryption'
-import { createPacketObfuscator, createPacketDeobfuscator } from '../../packet/security/obfuscation'
-import { createSerializedEncryptedPacketCreator, createDeserializedEncryptedPacketCreator } from '../../packet/creators'
+import { createDataFactory } from '../../data/creators/create-data-factory'
+import { createDataEncrypter } from '../../data/security/create-encrypter'
+import { createDataDecrypter } from '../../data/security/create-decrypter'
+import { createPacketEncrypter } from '../../packet/security/encryption/create-encrypter'
+import { createPacketDecrypter } from '../../packet/security/encryption/create-decrypter'
+import { createPacketObfuscator } from '../../packet/security/obfuscation/create-obfuscator'
+import { createPacketDeobfuscator } from '../../packet/security/obfuscation/create-deobfuscator'
+import { createSerializedEncryptedPacketCreator } from '../../packet/creators/create-serialized-encrypted-packet-creator'
+import { createDeserializedEncryptedPacketCreator } from '../../packet/creators/create-deserialized-encrypted-packet-creator'
 import { createReceiverFactory } from './create-receiver-factory'
 import { testUUIDs, testLabels, testMessages, createMockLogger } from './test-fixtures'
 

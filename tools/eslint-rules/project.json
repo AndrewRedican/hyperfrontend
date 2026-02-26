@@ -1,0 +1,12 @@
+{
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "name": "eslint-rules",
+  "description": "Custom ESLint rules for the hyperfrontend monorepo.",
+  "sourceRoot": "{projectRoot}/src",
+  "projectType": "library",
+  "tags": ["type:util", "scope:internal"],
+  "targets": {
+    "lint": {},
+    "typecheck": {}
+  }
+}

@@ -196,7 +196,7 @@ describe('toJsonSchema', () => {
       const schema = toJsonSchema(data)
 
       // Import validate to check round-trip
-      const { validate } = require('../validate')
+      const { validate } = require('../validate/validate')
       const result = validate(data, schema)
       expect(result.valid).toBe(true)
     })

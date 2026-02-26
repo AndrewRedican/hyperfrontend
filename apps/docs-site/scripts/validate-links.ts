@@ -1,27 +1,12 @@
 #!/usr/bin/env node
-/**
- * Link Validation Script
- *
- * Validates internal markdown links during build:
- * 1. Validates all internal markdown links resolve to existing pages
- * 2. Reports broken links as build warnings
- * 3. Transforms GitHub blob URLs to docs site URLs
- *
- * Usage:
- *   npx ts-node scripts/validate-links.ts
- *   npm run validate-links
- */
-
-import fs from 'node:fs'
-import path from 'node:path'
+import { existsSync, readFileSync } from 'node:fs'
+import { resolve, join, dirname, relative } from 'node:path'
 import { glob } from 'glob'
 
-const WORKSPACE_ROOT = path.resolve(__dirname, '../../..')
-const DOCS_SITE_ROOT = path.resolve(__dirname, '..')
-const GENERATED_DIR = path.join(DOCS_SITE_ROOT, '.generated')
-const SRC_DIR = path.join(DOCS_SITE_ROOT, 'src')
-
-// GitHub URL patterns
+const WORKSPACE_ROOT = resolve(__dirname, '../../..')
+const DOCS_SITE_ROOT = resolve(__dirname, '..')
+const GENERATED_DIR = join(DOCS_SITE_ROOT, '.generated')
+const SRC_DIR = join(DOCS_SITE_ROOT, 'src')
 const GITHUB_BLOB_PATTERN = /https:\/\/github\.com\/AndrewRedican\/hyperfrontend\/blob\/[^/]+\/(.+)/
 const GITHUB_TREE_PATTERN = /https:\/\/github\.com\/AndrewRedican\/hyperfrontend\/tree\/[^/]+\/(.+)/
 
@@ -156,12 +141,12 @@ function resolveRelativePath(link: string, basePath: string): string {
 
   if (linkWithoutAnchor.startsWith('/')) {
     // Absolute path from docs site root
-    return path.join(SRC_DIR, 'app', linkWithoutAnchor)
+    return join(SRC_DIR, 'app', linkWithoutAnchor)
   }
 
   // Relative path from current file
-  const dir = path.dirname(basePath)
-  return path.resolve(dir, linkWithoutAnchor)
+  const dir = dirname(basePath)
+  return resolve(dir, linkWithoutAnchor)
 }
 
 /**
@@ -172,21 +157,21 @@ function resolveRelativePath(link: string, basePath: string): string {
  */
 function pathExists(targetPath: string): boolean {
   // Try exact path
-  if (fs.existsSync(targetPath)) {
+  if (existsSync(targetPath)) {
     return true
   }
 
   // Try with common extensions
   const extensions = ['.md', '.mdx', '.tsx', '/page.tsx', '/index.tsx']
   for (const ext of extensions) {
-    if (fs.existsSync(targetPath + ext)) {
+    if (existsSync(targetPath + ext)) {
       return true
     }
   }
 
   // For docs site routes, check if page.tsx exists
-  const pageFile = path.join(targetPath, 'page.tsx')
-  if (fs.existsSync(pageFile)) {
+  const pageFile = join(targetPath, 'page.tsx')
+  if (existsSync(pageFile)) {
     return true
   }
 
@@ -265,7 +250,7 @@ function validateLink(link: string, filePath: string, line: number): LinkValidat
  * @returns Array of validation results for each link in the file
  */
 function validateFile(filePath: string): LinkValidationResult[] {
-  const content = fs.readFileSync(filePath, 'utf-8')
+  const content = readFileSync(filePath, 'utf-8')
   const links = extractLinks(content)
 
   return links.map(({ link, line }) => validateLink(link, filePath, line))
@@ -303,7 +288,7 @@ async function validateLinks(): Promise<ValidationSummary> {
 
   for (const file of allFiles) {
     const results = validateFile(file)
-    const relativePath = path.relative(WORKSPACE_ROOT, file)
+    const relativePath = relative(WORKSPACE_ROOT, file)
 
     for (const result of results) {
       summary.totalLinks++

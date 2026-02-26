@@ -1,6 +1,6 @@
 import type { PacketDecrypter, UnencryptedPacket, UnserializedEncryptedPacket } from '../../model'
-import type { Data } from '../../../data'
-import { isValidUnserializedEncryptedPacket } from '../../validations'
+import type { Data } from '../../../data/model'
+import { isValidUnserializedEncryptedPacket } from '../../validations/is-valid-unserialized-encrypted-packet'
 
 /**
  * Creates a packet decrypter with the provided data decryption implementation.
@@ -10,9 +10,9 @@ import { isValidUnserializedEncryptedPacket } from '../../validations'
  *
  * @example
  * ```typescript
- * import { createDataDecrypter } from '@hyperfrontend/network-protocol/lib/data/security'
+ * import { createDataDecrypter } from '@hyperfrontend/network-protocol/lib/data/security/create-data-decrypter'
  * import { decrypt } from '@hyperfrontend/cryptography/browser'
- * import { createPacketDecrypter } from '@hyperfrontend/network-protocol/lib/packet/security/encryption'
+ * import { createPacketDecrypter } from '@hyperfrontend/network-protocol/lib/packet/security/encryption/create-packet-decrypter'
  *
  * const decryptData = createDataDecrypter(decrypt)
  * const decryptPacket = createPacketDecrypter(decryptData)

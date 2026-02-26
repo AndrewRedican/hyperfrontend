@@ -1,26 +1,20 @@
-import type { Schema, ValidationResult, ValidateOptions } from '../types'
+import type { Schema } from '../types/schema'
+import type { ValidationResult, ValidateOptions } from '../types/validation'
 import type { ValidationContext } from './context'
 import { createValidationContext, shouldContinue } from './context'
 import { resolveRef } from './resolve-ref'
-import {
-  validateType,
-  validateProperties,
-  validateRequired,
-  validateAdditionalProperties,
-  validatePatternProperties,
-  validateItems,
-  validateArrayBounds,
-  validateStringBounds,
-  validateNumberBounds,
-  validateEnum,
-  validateObjectBounds,
-  validateDependencies,
-  validateFormat,
-  validateAllOf,
-  validateAnyOf,
-  validateOneOf,
-  validateNot,
-} from './keywords'
+import { validateType } from './keywords/type'
+import { validateProperties, validateRequired, validateAdditionalProperties } from './keywords/properties'
+import { validatePatternProperties } from './keywords/pattern-properties'
+import { validateItems } from './keywords/items'
+import { validateArrayBounds } from './keywords/array-bounds'
+import { validateStringBounds } from './keywords/string-bounds'
+import { validateNumberBounds } from './keywords/number-bounds'
+import { validateEnum } from './keywords/enum'
+import { validateObjectBounds } from './keywords/object-bounds'
+import { validateDependencies } from './keywords/dependencies'
+import { validateFormat } from './keywords/format'
+import { validateAllOf, validateAnyOf, validateOneOf, validateNot } from './keywords/composition'
 
 /**
  * Validates a value against a JSON Schema.

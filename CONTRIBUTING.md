@@ -240,7 +240,12 @@ npx nx affected -t lint
 
 # Build affected projects
 npx nx affected -t build
+
+# Run E2E tests for affected libraries (verifies CJS, ESM, browser outputs)
+CI=1 npx nx affected -t e2e
 ```
+
+E2E tests validate that built packages work correctly when consumed via `npm install`. Test projects in `apps/package-e2e/` manage their own dependencies separately from the root workspace.
 
 ### Building Libraries
 

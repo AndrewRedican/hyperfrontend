@@ -1,7 +1,7 @@
 import type { ProtocolProvider } from '../../channel/model'
 import type { ProtocolProviderStore, ProtocolProviderEntry } from '../model'
 import { uuidV4 } from '@hyperfrontend/random-generator-utils'
-import { isValidName } from '../validations'
+import { isValidName } from '../validations/is-valid-name'
 
 /**
  * Creates a store for managing protocol provider registrations.

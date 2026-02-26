@@ -1,4 +1,4 @@
-import type { ChannelState } from '../../types'
+import type { ChannelState } from '../../types/channel'
 
 /**
  * Deactivates a channel by marking it as inactive.

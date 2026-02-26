@@ -5,7 +5,7 @@
  * and simple use cases. For production, create your own broker with createBroker().
  */
 
-import { createBroker } from './broker'
+import { createBroker } from './broker/factory'
 import type { BrokerHandle } from './broker/types'
 import type { IChannelContract } from './types/contract'
 

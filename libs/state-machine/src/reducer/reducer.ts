@@ -1,24 +1,23 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import type { Action, State, Handlers } from '../models'
-import * as ActionTypes from '../actions/actions.types'
+import { START, PAUSE, CANCEL, SUCCESS, FAIL } from '../actions/actions.types'
 import { createInitialState } from '../state/state'
 
 const handlers: Handlers = {
-  [ActionTypes.START]: (state) => ({ ...state, inProgress: true }),
-  [ActionTypes.PAUSE]: (state) => ({ ...state, inProgress: true, halt: true }),
-  [ActionTypes.CANCEL]: (state) => ({
+  [START]: (state) => ({ ...state, inProgress: true }),
+  [PAUSE]: (state) => ({ ...state, inProgress: true, halt: true }),
+  [CANCEL]: (state) => ({
     ...state,
     inProgress: false,
     halt: true,
   }),
-  [ActionTypes.SUCCESS]: (state) => ({
+  [SUCCESS]: (state) => ({
     ...state,
     inProgress: false,
     success: true,
     fail: false,
     halt: false,
   }),
-  [ActionTypes.FAIL]: (state) => ({
+  [FAIL]: (state) => ({
     ...state,
     inProgress: false,
     success: false,
@@ -28,6 +27,6 @@ const handlers: Handlers = {
 }
 
 export const rootReducer = (state = createInitialState(), action: Action): State => {
-  const handler = (handlers as any)[action.type] as Handlers[keyof Handlers]
-  return handler ? handler(state, action as any) : state
+  const handler = <((state: State, action: Action) => State) | undefined>handlers[<keyof Handlers>action.type]
+  return handler ? handler(state, action) : state
 }

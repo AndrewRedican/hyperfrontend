@@ -1,5 +1,5 @@
 /** @jest-environment jsdom */
-import { fromBase64 } from './browser'
+import { fromBase64 } from './browser/from-base64'
 import { BASE_64_ENCODING_SAMPLES } from '../shared-consts'
 
 describe('fromBase64 (browser)', () => {
