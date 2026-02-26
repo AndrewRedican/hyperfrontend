@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import type { Action, State, Handlers } from '../models'
 import { START, PAUSE, CANCEL, SUCCESS, FAIL } from '../actions/actions.types'
 import { createInitialState } from '../state/state'
