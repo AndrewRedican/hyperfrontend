@@ -113,6 +113,10 @@ export function flattenDeclarationPaths(
     }
   }
 
+  // Copy lib/ folder if it exists (required for packages with nested re-exports)
+  // Entry point declaration files often re-export from ../lib/* paths
+  copyLibDeclarations(nestedDeclarations, outputPath)
+
   // Clean up the nested workspace structure (libs/, plugins/, etc.)
   cleanupNestedDeclarations(outputPath)
 }
@@ -142,6 +146,38 @@ function copyRootDeclarations(nestedSrc: string, outputPath: string): void {
       cpSync(srcPath, destPath, { force: true })
     }
   }
+}
+
+/**
+ * Copies the lib/ folder declarations if it exists.
+ * This is required for packages where entry points (browser/, node/, common/)
+ * re-export from ../lib/* paths. Without these declarations, TypeScript
+ * consumers cannot resolve types from the re-exported paths.
+ *
+ * Only copies .d.ts and .d.ts.map files to ensure no source files leak into dist.
+ *
+ * @param nestedSrc - Path to nested src declarations (e.g., dist/libs/cryptography/libs/cryptography/src)
+ * @param outputPath - Package output root (e.g., dist/libs/cryptography)
+ */
+function copyLibDeclarations(nestedSrc: string, outputPath: string): void {
+  const libSrc = join(nestedSrc, 'lib')
+  const libDest = join(outputPath, 'lib')
+
+  if (!existsSync(libSrc)) {
+    return
+  }
+
+  cpSync(libSrc, libDest, {
+    recursive: true,
+    force: true,
+    filter: (src) => {
+      const stat = statSync(src)
+      // Allow directories (needed for recursive traversal)
+      if (stat.isDirectory()) return true
+      // Only copy declaration files
+      return src.endsWith('.d.ts') || src.endsWith('.d.ts.map')
+    },
+  })
 }
 
 /**
