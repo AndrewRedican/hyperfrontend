@@ -26,8 +26,8 @@ pre-push:
           exit 0
         fi
 
-        # Get affected library projects
-        AFFECTED=$(npx nx show projects --affected --base=origin/main --head=HEAD --type=lib 2>/dev/null | tr '\n' ' ')
+        # Get affected library projects that have a version target
+        AFFECTED=$(npx nx show projects --affected --base=origin/main --head=HEAD --type=lib --with-target=version 2>/dev/null | tr '\n' ' ')
 
         if [ -z "$AFFECTED" ]; then
           echo "✅ No affected libraries to version"
@@ -36,13 +36,29 @@ pre-push:
 
         echo "📦 Versioning affected libraries: $AFFECTED"
 
-        # Run versioning for each library without commit/tag
-        # --skipCommit: We make one combined commit below
-        # --skipTag: Tags are created by main CI after merge
+        # Run versioning for each library with --collectFiles
+        # --collectFiles: Outputs modified files without staging, implies skipCommit/skipTag
+        # Track which libs were actually bumped and collect all modified files
+        BUMPED=""
+        ALL_FILES=""
+        FAILED=""
+
         for lib in $AFFECTED; do
           echo "  → Checking $lib..."
-          RESULT=$(npx nx version "$lib" --skipCommit --skipTag 2>&1 || true)
+          RESULT=$(npx nx version "$lib" --collectFiles 2>&1)
+          EXIT_CODE=$?
+
+          if [ $EXIT_CODE -ne 0 ]; then
+            FAILED="$FAILED $lib"
+            echo "    ✗ failed"
+            continue
+          fi
+
           if echo "$RESULT" | grep -q "version updated"; then
+            if [ -z "$BUMPED" ]; then BUMPED="$lib"; else BUMPED="$BUMPED, $lib"; fi
+            # Collect modified files from MODIFIED: lines
+            FILES=$(echo "$RESULT" | grep "^MODIFIED:" | cut -d: -f2 | tr '\n' ' ')
+            ALL_FILES="$ALL_FILES $FILES"
             echo "    ✓ version updated"
           elif echo "$RESULT" | grep -q "already exists (skipping)"; then
             echo "    ○ already versioned"
@@ -53,14 +69,25 @@ pre-push:
           fi
         done
 
-        # Stage version-related changes
-          # Stage version-related changes (including nested libs/utils/*/package.json and CHANGELOG.md)
-          git add libs/*/package.json libs/*/CHANGELOG.md libs/utils/*/package.json libs/utils/*/CHANGELOG.md plugins/*/package.json plugins/*/CHANGELOG.md 2>/dev/null || true
+        # Handle failures - abort cleanly by discarding all changes
+        if [ -n "$FAILED" ]; then
+          echo "❌ Version failed for:$FAILED"
+          echo "Discarding all changes..."
+          git checkout .
+          exit 1
+        fi
 
-        # Commit if there are staged changes
-        if ! git diff --staged --quiet; then
-          # Commit message matches recursion prevention pattern: /^chore: update versions for/
-          git commit -m "chore(@hyperfrontend/workspace): update versions for affected libs" --no-verify
+        # Stage all collected files at once (only if all succeeded)
+        if [ -n "$ALL_FILES" ]; then
+          git add $ALL_FILES
+
+          # Commit message matches executor's isVersionCommit() Pattern 2: chore: update versions for lib-a, lib-b
+          # Use [skip ci] to prevent PR workflow retrigger when pushed
+          if [ -n "$BUMPED" ]; then
+            git commit -m "chore: update versions for $BUMPED [skip ci]" --no-verify
+          else
+            git commit -m "chore: update versions for affected libs [skip ci]" --no-verify
+          fi
           echo "✅ Version updates committed"
         else
           echo "✅ No version changes needed"

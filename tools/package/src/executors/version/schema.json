@@ -141,6 +141,11 @@
       "type": "boolean",
       "description": "Skip versioning if git is in rebase/merge state.",
       "default": true
+    },
+    "collectFiles": {
+      "type": "boolean",
+      "description": "Output list of modified files without staging. Implies skipCommit and skipTag. When combined with --dryRun, reports files that would be modified.",
+      "default": false
     }
   },
   "required": []

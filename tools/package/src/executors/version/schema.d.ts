@@ -62,4 +62,11 @@ export interface VersionExecutorOptions {
 
   /** Skip versioning if git is in rebase/merge state. */
   skipIfUnstableGit?: boolean
+
+  /**
+   * Output list of modified files without staging.
+   * Implies skipCommit=true and skipTag=true.
+   * When combined with --dryRun, reports files that would be modified.
+   */
+  collectFiles?: boolean
 }

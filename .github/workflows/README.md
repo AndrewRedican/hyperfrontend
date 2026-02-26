@@ -321,6 +321,41 @@ The original `ci.yml` workflow has been split into two workflows:
 
 **Rollback**: If needed, the legacy workflow is preserved in `ci-legacy.yml`
 
+## Repository Configuration
+
+### Required Branch Protection Rules
+
+The following branch protection rules should be configured for the `main` branch:
+
+**Settings → Branches → Branch protection rules → Add rule**
+
+| Setting                                      | Value          |
+| -------------------------------------------- | -------------- |
+| Branch name pattern                          | `main`         |
+| Require a pull request before merging        | ✅ Enabled     |
+| Require status checks to pass before merging | ✅ Enabled     |
+| Required status checks                       | See list below |
+| Require branches to be up to date            | ✅ Enabled     |
+
+**Required Status Checks**:
+
+1. **From `ci-pr.yml`**:
+   - `status` (ci-status job)
+
+2. **From `security-scan.yml`**:
+   - `code analysis` (CodeQL analysis)
+   - `dependency audit` (npm vulnerability scan)
+
+**Why CodeQL as a required check?**
+
+The `security-scan.yml` workflow runs CodeQL analysis in parallel with the PR workflow. GitHub Actions does not support cross-workflow dependencies, so we enforce CodeQL completion via branch protection rules instead of workflow conditions.
+
+**Important Notes**:
+
+- The version-validation job runs after all CI checks pass
+- Version commits use `[skip ci]` to prevent workflow retrigger
+- Pushes by `github-actions[bot]` using `GITHUB_TOKEN` do not trigger workflows by design
+
 ## Maintenance
 
 ### Weekly Tasks
