@@ -7,10 +7,6 @@ pre-commit:
     format:
       run: npx nx format:write
       stage_fixed: true
-    # DEPRECATED: We are no longer using Hugo for docs, and replaced with our own custom docgen.
-    # docs:
-    #   run: cd docs && node scripts/extract-readme.js && cd .. && git add docs/content/
-    #   glob: '{README.md,docs/**/*}'
 
 commit-msg:
   commands:
