@@ -4,13 +4,13 @@
  */
 
 import { loadBundleCode, executeBundleInWindow, requireUmdBundle } from '../../shared/helpers'
-import * as path from 'path'
+import { resolve, join } from 'node:path'
 
 // String-utils is under utils/string in dist
 const getBundlePath = (format: 'iife' | 'umd', minified = false) => {
-  const distRoot = path.resolve(__dirname, '../../../../dist/libs/utils/string')
+  const distRoot = resolve(__dirname, '../../../../dist/libs/utils/string')
   const ext = minified ? '.min.js' : '.js'
-  return path.join(distRoot, 'bundle', `index.${format}${ext}`)
+  return join(distRoot, 'bundle', `index.${format}${ext}`)
 }
 
 describe('@hyperfrontend/string-utils UMD bundle', () => {
