@@ -1,5 +1,5 @@
 import type { InvalidTestCase, ValidTestCase } from '@typescript-eslint/rule-tester'
-import { mkdirSync, rmSync, writeFileSync } from 'node:fs'
+import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { dirname, join } from 'node:path'
 import { RuleTester } from '@typescript-eslint/rule-tester'
@@ -18,22 +18,22 @@ type MessageIds = 'unwantedBarrelFile'
  * @returns The path to the temporary project directory.
  */
 function createTempProject(config: { projectJson?: object; packageJson?: object; indexFiles?: string[] }): string {
-  const testDir = join(tmpdir(), `eslint-test-${Date.now()}-${Math.random().toString(36).slice(2)}`)
-  mkdirSync(testDir, { recursive: true })
+  // mkdtempSync creates a unique directory atomically, avoiding TOCTOU race conditions
+  const testDir = mkdtempSync(join(tmpdir(), 'eslint-test-'))
 
   if (config.projectJson) {
-    writeFileSync(join(testDir, 'project.json'), JSON.stringify(config.projectJson, null, 2))
+    writeFileSync(join(testDir, 'project.json'), JSON.stringify(config.projectJson, null, 2), { mode: 0o600 })
   }
 
   if (config.packageJson) {
-    writeFileSync(join(testDir, 'package.json'), JSON.stringify(config.packageJson, null, 2))
+    writeFileSync(join(testDir, 'package.json'), JSON.stringify(config.packageJson, null, 2), { mode: 0o600 })
   }
 
   if (config.indexFiles) {
     for (const indexFile of config.indexFiles) {
       const fullPath = join(testDir, indexFile)
       mkdirSync(dirname(fullPath), { recursive: true })
-      writeFileSync(fullPath, 'export {};\n')
+      writeFileSync(fullPath, 'export {};\n', { mode: 0o600 })
     }
   }
 
@@ -260,7 +260,7 @@ function createInvalidPackageJsonCase(): ValidTestCase<TestOptions> {
     },
   })
   tempDirs.push(projectDir)
-  writeFileSync(join(projectDir, 'package.json'), 'invalid json {{{')
+  writeFileSync(join(projectDir, 'package.json'), 'invalid json {{{', { mode: 0o600 })
   mkdirSync(join(projectDir, 'src'), { recursive: true })
   return {
     code: 'export {}',
@@ -274,10 +274,10 @@ function createInvalidPackageJsonCase(): ValidTestCase<TestOptions> {
  * @returns A valid test case configuration.
  */
 function createInvalidProjectJsonCase(): ValidTestCase<TestOptions> {
-  const testDir = join(tmpdir(), `eslint-test-${Date.now()}-${Math.random().toString(36).slice(2)}`)
-  mkdirSync(testDir, { recursive: true })
+  // mkdtempSync creates a unique directory atomically, avoiding TOCTOU race conditions
+  const testDir = mkdtempSync(join(tmpdir(), 'eslint-test-'))
   tempDirs.push(testDir)
-  writeFileSync(join(testDir, 'project.json'), 'invalid json {{{')
+  writeFileSync(join(testDir, 'project.json'), 'invalid json {{{', { mode: 0o600 })
   mkdirSync(join(testDir, 'src'), { recursive: true })
   return {
     code: 'export {}',
@@ -319,15 +319,16 @@ function createUnresolvableExportCase(): ValidTestCase<TestOptions> {
  * @returns A valid test case configuration.
  */
 function createNullExportValueCase(): ValidTestCase<TestOptions> {
-  const testDir = join(tmpdir(), `eslint-test-${Date.now()}-${Math.random().toString(36).slice(2)}`)
-  mkdirSync(testDir, { recursive: true })
+  // mkdtempSync creates a unique directory atomically, avoiding TOCTOU race conditions
+  const testDir = mkdtempSync(join(tmpdir(), 'eslint-test-'))
   tempDirs.push(testDir)
   writeFileSync(
     join(testDir, 'project.json'),
     JSON.stringify({
       projectType: 'library',
       targets: { build: {}, publish: {} },
-    })
+    }),
+    { mode: 0o600 }
   )
   writeFileSync(
     join(testDir, 'package.json'),
@@ -336,7 +337,8 @@ function createNullExportValueCase(): ValidTestCase<TestOptions> {
       exports: {
         './special': null,
       },
-    })
+    }),
+    { mode: 0o600 }
   )
   mkdirSync(join(testDir, 'src'), { recursive: true })
   return {
