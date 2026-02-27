@@ -1,6 +1,6 @@
 {
   "name": "@hyperfrontend/network-protocol",
-  "version": "0.0.2",
+  "version": "0.0.4",
   "description": "Production-grade network protocol for secure, real-time cross-window and cross-process communication with built-in encryption, obfuscation, routing, and message queueing.",
   "license": "MIT",
   "sideEffects": false,

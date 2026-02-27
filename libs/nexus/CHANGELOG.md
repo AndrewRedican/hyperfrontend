@@ -2,6 +2,8 @@
 
 This file was generated using [@jscutlery/semver](https://github.com/jscutlery/semver).
 
+## [0.1.3](https://github.com/AndrewRedican/hyperfrontend/compare/lib-nexus@0.1.2...lib-nexus@0.1.3) (2026-02-27)
+
 ## [0.1.1](https://github.com/AndrewRedican/hyperfrontend/compare/lib-nexus@0.1.0...lib-nexus@0.1.1) (2026-02-26)
 
 ## 0.1.0 (2026-02-15)
