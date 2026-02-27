@@ -423,6 +423,71 @@ function updateDependentVersions(
 }
 
 /**
+ * Updates e2e app dependencies when a library version is bumped.
+ *
+ * E2e apps use file references to tarballs with version in the filename:
+ * "@hyperfrontend/cryptography": "file:../../../tmp/e2e-packs/hyperfrontend-cryptography-0.0.2.tgz"
+ *
+ * When the library version changes, this updates the tarball version in the path.
+ *
+ * @param packageName - The npm package name that was updated (e.g., '@hyperfrontend/cryptography')
+ * @param newVersion - The new version to set
+ * @param workspaceRoot - The workspace root directory
+ * @param dryRun - If true, don't actually write changes
+ * @returns Array of updated package.json paths (relative to workspace root)
+ */
+function updateE2eDependencies(packageName: string, newVersion: string, workspaceRoot: string, dryRun: boolean): string[] {
+  const updatedFiles: string[] = []
+  const e2eDir = join(workspaceRoot, 'apps', 'package-e2e')
+
+  if (!existsSync(e2eDir)) {
+    return updatedFiles
+  }
+
+  const packageJsonFiles = findPackageJsonFiles(e2eDir)
+
+  // Extract library slug from package name: @hyperfrontend/cryptography -> cryptography
+  // Handle scoped packages and convert to tarball naming convention
+  const packageSlug = packageName.replace(/^@hyperfrontend\//, '').replace(/-utils$/, '-utils')
+  // Tarball pattern: hyperfrontend-{slug}-{version}.tgz
+  const tgzPattern = new RegExp(`hyperfrontend-${packageSlug}-\\d+\\.\\d+\\.\\d+\\.tgz`)
+  const newTgzName = `hyperfrontend-${packageSlug}-${newVersion}.tgz`
+
+  for (const packageJsonPath of packageJsonFiles) {
+    try {
+      const content = readFileSync(packageJsonPath, 'utf-8')
+      const pkg = JSON.parse(content)
+      let modified = false
+
+      // Check dependencies for matching package
+      if (pkg.dependencies && pkg.dependencies[packageName] !== undefined) {
+        const currentValue = pkg.dependencies[packageName]
+        // Only update file: references that match the tarball pattern
+        if (typeof currentValue === 'string' && currentValue.startsWith('file:') && tgzPattern.test(currentValue)) {
+          const newValue = currentValue.replace(tgzPattern, newTgzName)
+          if (newValue !== currentValue) {
+            pkg.dependencies[packageName] = newValue
+            modified = true
+          }
+        }
+      }
+
+      if (modified) {
+        const relativePath = relative(workspaceRoot, packageJsonPath)
+        if (!dryRun) {
+          writeFileSync(packageJsonPath, JSON.stringify(pkg, null, 2) + '\n', 'utf-8')
+        }
+        updatedFiles.push(relativePath)
+      }
+    } catch {
+      // Ignore errors reading/writing individual files
+    }
+  }
+
+  return updatedFiles
+}
+
+/**
  * Idempotent wrapper around \@jscutlery/semver:version.
  *
  * This executor:
@@ -538,19 +603,35 @@ export default async function versionExecutor(options: VersionExecutorOptions, c
       if (packageName && newVersion !== '0.0.0') {
         const updatedFiles = updateDependentVersions(packageName, newVersion, workspaceRoot, packageJsonPath, options.dryRun ?? false)
 
+        // Collect all files to stage/amend (library dependents + e2e deps)
+        const allUpdatedFiles: string[] = [...updatedFiles]
+
+        // Update e2e app dependencies
+        const e2eUpdatedFiles = updateE2eDependencies(packageName, newVersion, workspaceRoot, options.dryRun ?? false)
+        allUpdatedFiles.push(...e2eUpdatedFiles)
+
         if (updatedFiles.length > 0) {
-          logger.info(`${projectName}: Updated dependency version in ${updatedFiles.length} package(s):`)
+          logger.info(`${projectName}: Updated dependency version in ${updatedFiles.length} library package(s):`)
           for (const file of updatedFiles) {
             logger.info(`  - ${file}`)
           }
+        }
 
-          // Track dependent files for --collectFiles output
-          modifiedFiles.push(...updatedFiles)
+        if (e2eUpdatedFiles.length > 0) {
+          logger.info(`${projectName}: Updated e2e app dependency in ${e2eUpdatedFiles.length} package(s):`)
+          for (const file of e2eUpdatedFiles) {
+            logger.info(`  - ${file}`)
+          }
+        }
+
+        if (allUpdatedFiles.length > 0) {
+          // Track all files for --collectFiles output
+          modifiedFiles.push(...allUpdatedFiles)
 
           // Stage the updated files for the commit (if not dry run and not skipping commit)
           if (!options.dryRun && !options.skipCommit) {
             try {
-              for (const file of updatedFiles) {
+              for (const file of allUpdatedFiles) {
                 execSync(`git add "${file}"`, {
                   cwd: workspaceRoot,
                   encoding: 'utf-8',
