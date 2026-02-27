@@ -7,7 +7,7 @@
     "pack-install": "cd ../../../dist/libs/utils/time && npm pack && cd - && npm install ../../../dist/libs/utils/time/*.tgz"
   },
   "dependencies": {
-    "@hyperfrontend/time-utils": "file:../../../tmp/e2e-packs/hyperfrontend-time-utils-0.0.1.tgz"
+    "@hyperfrontend/time-utils": "file:../../../tmp/e2e-packs/hyperfrontend-time-utils-0.0.2.tgz"
   },
   "devDependencies": {
     "@types/jest": "29.5.14",

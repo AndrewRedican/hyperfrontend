@@ -7,7 +7,7 @@
     "pack-install": "cd ../../../dist/libs/cryptography && npm pack && cd - && npm install ../../../dist/libs/cryptography/*.tgz"
   },
   "dependencies": {
-    "@hyperfrontend/cryptography": "file:../../../tmp/e2e-packs/hyperfrontend-cryptography-0.0.1.tgz"
+    "@hyperfrontend/cryptography": "file:../../../tmp/e2e-packs/hyperfrontend-cryptography-0.0.2.tgz"
   },
   "devDependencies": {
     "@types/jest": "29.5.14",
