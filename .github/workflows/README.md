@@ -227,7 +227,7 @@ All third-party actions are pinned to specific commit SHAs for security:
 - `actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02` (v4.6.2)
 - `actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093` (v4.3.0)
 - `actions/cache@cdf6c1fa76f9f475f3d7449005a359c84ca0f306` (v5.0.3)
-- `codecov/codecov-action@0561704f0f02c16a585d4c7555e57fa2e44cf909` (v5.5.2)
+- `codecov/codecov-action@671740ac38dd9b0130fbe1cec585b89eea48d3de` (v5.5.2)
 - `dorny/paths-filter@de90cc6fb38fc0963ad72b210f1f284cd68cea36` (v3.0.2)
 
 ### Dependabot
