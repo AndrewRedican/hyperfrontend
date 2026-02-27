@@ -133,6 +133,7 @@ export function createValueCreator(
       },
     })
 
-    return vault
+    // Freeze to prevent addition of new properties
+    return Object.freeze(vault)
   }
 }
