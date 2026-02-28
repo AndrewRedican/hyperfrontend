@@ -23,5 +23,24 @@
     "functional",
     "tamper-proof"
   ],
-  "main": "./src/index.js"
+  "main": "./src/index.js",
+  "exports": {
+    "./built-in-copy/object": "./src/built-in-copy/object/index.ts",
+    "./built-in-copy/array": "./src/built-in-copy/array/index.ts",
+    "./built-in-copy/json": "./src/built-in-copy/json/index.ts",
+    "./built-in-copy/promise": "./src/built-in-copy/promise/index.ts",
+    "./built-in-copy/reflect": "./src/built-in-copy/reflect/index.ts",
+    "./built-in-copy/function": "./src/built-in-copy/function/index.ts",
+    "./built-in-copy/symbol": "./src/built-in-copy/symbol/index.ts",
+    "./built-in-copy/map": "./src/built-in-copy/map/index.ts",
+    "./built-in-copy/set": "./src/built-in-copy/set/index.ts",
+    "./built-in-copy/weak-map": "./src/built-in-copy/weak-map/index.ts",
+    "./built-in-copy/weak-set": "./src/built-in-copy/weak-set/index.ts",
+    "./built-in-copy/regexp": "./src/built-in-copy/regexp/index.ts",
+    "./built-in-copy/date": "./src/built-in-copy/date/index.ts",
+    "./built-in-copy/error": "./src/built-in-copy/error/index.ts",
+    "./locked": "./src/locked/index.ts",
+    "./locked-props": "./src/locked-props/index.ts",
+    "./locked-prop-descriptors": "./src/locked-prop-descriptors/index.ts"
+  }
 }

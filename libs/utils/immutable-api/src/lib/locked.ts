@@ -1,3 +1,5 @@
+import { hasOwn, defineProperty } from '../built-in-copy/object'
+
 export type LockedMethod = (
   target: object,
   propertyKey: string | symbol,
@@ -30,8 +32,8 @@ export const locked = (): LockedMethod => {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       get(this: any) {
         // cache a bound function per instance
-        if (!Object.prototype.hasOwnProperty.call(this, BOUND)) {
-          Object.defineProperty(this, BOUND, {
+        if (!hasOwn(this, BOUND)) {
+          defineProperty(this, BOUND, {
             value: original.bind(this),
             writable: false,
             configurable: false,

@@ -30,7 +30,7 @@
   <img src="https://img.shields.io/badge/tree%20shakeable-%E2%9C%93-success?style=flat-square" alt="Tree Shakeable">
 </p>
 
-Decorators and utilities for creating immutable, tamper-proof object APIs.
+Decorators and utilities for creating immutable, tamper-proof object APIs with built-in prototype pollution defense.
 
 ## What is @hyperfrontend/immutable-api-utils?
 
@@ -38,17 +38,22 @@ Decorators and utilities for creating immutable, tamper-proof object APIs.
 
 The library offers three approaches: a TypeScript decorator (`@locked()`) for class methods, a functional API (`lockedProps()`) for bulk property locking, and descriptor builders (`lockedPropertyDescriptors()`) for granular control. All utilities enforce non-writable, non-configurable descriptors while maintaining correct `this` binding through per-instance caching.
 
+Additionally, the library provides **safe built-in copies**—pre-captured references to JavaScript built-in methods that mitigate prototype pollution attacks when loaded early.
+
 ### Key Features
 
 - **`@locked()` decorator** for TypeScript classes—prevents method overwriting and ensures correct `this` binding
 - **Bulk property locking** via `lockedProps()` for multiple properties in one call
 - **Property descriptor creation** with `lockedPropertyDescriptors()` for custom locking patterns
+- **Safe built-in copies** via secondary entrypoints—captured at module load time before any pollution can occur
 - **Per-instance binding cache** to avoid repeated `.bind()` calls
 - **Zero runtime dependencies** - pure JavaScript property descriptor manipulation
 
 ### Architecture Highlights
 
 The `@locked()` decorator uses Symbol-based caching to store bound methods per instance, avoiding the performance cost of repeated `.bind()` calls. Properties are marked `configurable: false` to prevent deletion or descriptor modification, and `writable: false` to block reassignment.
+
+The safe built-in copies are captured at module initialization time. **Important:** This only works if the module loads before any malicious code runs—it mitigates pollution, not prevents it retroactively.
 
 ## Why Use @hyperfrontend/immutable-api-utils?
 
@@ -131,6 +136,25 @@ Object.defineProperty(obj, 'version', lockedPropertyDescriptors('1.0.0', true))
 - **`lockedProps(object, pairs)`** - Lock multiple properties on an object with key-value pairs
 - **`lockedPropertyDescriptors(value, enumerable?)`** - Create a locked property descriptor for manual use with `Object.defineProperty`
 
+### Safe Built-in Copies
+
+Pre-captured references to JavaScript built-ins via secondary entrypoints (`built-in-copy/object`, `built-in-copy/array`, `built-in-copy/json`, etc.).
+
+**Limitations:**
+
+- Only effective if imported before any untrusted code executes
+- Does not protect against pollution that occurred before module load
+- Best used as an early import in application entry points
+
+```typescript
+// Import early in your entry point
+import { freeze, keys } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
+import { parse } from '@hyperfrontend/immutable-api-utils/built-in-copy/json'
+
+const config = freeze({ api: 'https://example.com' })
+const data = parse('{"key": "value"}')
+```
+
 ## Use Cases
 
 - **Plugin APIs**: Prevent plugins from modifying core library methods
@@ -138,7 +162,7 @@ Object.defineProperty(obj, 'version', lockedPropertyDescriptors('1.0.0', true))
 - **Configuration objects**: Lock critical config values after initialization
 - **Public library interfaces**: Protect exported classes from mutation
 - **Event emitters**: Prevent handler list manipulation
-- **Prototype pollution defense**: Make critical prototypes tamper-proof
+- **Prototype pollution mitigation**: Safe built-in copies reduce attack surface when loaded early
 
 ## Compatibility
 
@@ -158,7 +182,9 @@ Object.defineProperty(obj, 'version', lockedPropertyDescriptors('1.0.0', true))
 | IIFE   | `bundle/index.iife.min.js` |       ❌       |
 | UMD    | `bundle/index.umd.min.js`  |       ❌       |
 
-**Bundle size:** < 1 KB (minified, self-contained)
+**Bundle size:** < 1 KB (minified, core utilities only)
+
+Secondary entrypoints (`built-in-copy/*`) are individually tree-shakeable—import only the built-ins you need.
 
 ### CDN Usage
 
@@ -170,7 +196,7 @@ Object.defineProperty(obj, 'version', lockedPropertyDescriptors('1.0.0', true))
 <script src="https://cdn.jsdelivr.net/npm/@hyperfrontend/immutable-api-utils"></script>
 
 <script>
-  const { immutableApi, freezeClass, sealClass } = HyperfrontendImmutableApiUtils
+  const { locked, lockedProps, lockedPropertyDescriptors } = HyperfrontendImmutableApiUtils
 </script>
 ```
 

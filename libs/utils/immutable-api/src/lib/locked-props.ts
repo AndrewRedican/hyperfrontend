@@ -1,4 +1,5 @@
 import { lockedPropertyDescriptors } from './locked-prop-descriptors'
+import { defineProperties } from '../built-in-copy/object'
 
 export type PropertyLock = (
   object: object,
@@ -9,5 +10,5 @@ export type PropertyLock = (
 export const lockedProps: PropertyLock = (object, propertyValuePairs) => {
   const propertyMap: PropertyDescriptorMap = {}
   propertyValuePairs.forEach(([key, value]) => (propertyMap[key] = lockedPropertyDescriptors(value)))
-  Object.defineProperties(object, propertyMap)
+  defineProperties(object, propertyMap)
 }
