@@ -1,4 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
+import { freeze } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
 import type { Logger } from '@hyperfrontend/logging'
 import type { ReceivePacketFn } from '../../../receiver/model'
 import type { ProtocolProvider, Protocol } from '../../../channel/model'
@@ -64,7 +65,7 @@ export function createObfuscatedHandshakeProtocolFactory<T = any>(
       const { packetEncryption, packetDecryption } = createDynamicKeyEncryption(getKey)
       const { packetObfuscation, packetDeobfuscation } = createTimeIntervalObfuscation(refreshRate)
 
-      const protocol: Protocol<T> = Object.freeze({
+      const protocol: Protocol<T> = freeze({
         packetEncryption,
         packetDecryption,
         packetObfuscation,

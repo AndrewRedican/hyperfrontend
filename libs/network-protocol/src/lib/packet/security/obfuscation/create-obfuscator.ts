@@ -1,5 +1,6 @@
 import type { PacketObfuscater, SerializedEncryptedPacket, ObfuscatedPacket } from '../../model'
 import { isValidSerializedEncryptedPacket } from '../../validations/is-valid-serialized-encrypted-packet'
+import { stringify } from '@hyperfrontend/immutable-api-utils/built-in-copy/json'
 
 /**
  * Creates a packet obfuscator with the provided encryption implementation.
@@ -23,7 +24,7 @@ export function createPacketObfuscator(encrypt: (message: string, password: stri
     }
     let text: string
     try {
-      text = JSON.stringify(packet)
+      text = stringify(packet)
     } catch {
       throw new Error('Cannot obfuscate packet because it is not serializable')
     }

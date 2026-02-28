@@ -1,5 +1,6 @@
 import type { DataDecrypter, SerializedData } from '../model'
 import { getType } from '@hyperfrontend/data-utils'
+import { parse } from '@hyperfrontend/immutable-api-utils/built-in-copy/json'
 
 /**
  * Creates a data decrypter function with the provided decryption implementation.
@@ -23,7 +24,7 @@ export function createDataDecrypter(decrypt: (encrypted: Uint8Array, password: s
     }
     let deserialized: SerializedData<T>
     try {
-      deserialized = JSON.parse(decrypted) as SerializedData<T>
+      deserialized = parse(decrypted) as SerializedData<T>
     } catch {
       throw new Error('Cannot unserialize data')
     }

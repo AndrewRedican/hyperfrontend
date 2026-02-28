@@ -1,4 +1,6 @@
 import type { TopicStore, Topic } from '../model'
+import { freeze } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
+import { from } from '@hyperfrontend/immutable-api-utils/built-in-copy/array'
 import { uuidV4 } from '@hyperfrontend/random-generator-utils'
 import { isValidName } from '../validations/is-valid-name'
 
@@ -82,7 +84,7 @@ export function createTopicStore(): TopicStore {
 
   const getById = (id: string) => topicsById.get(id) || null
 
-  return Object.freeze({
+  return freeze({
     create,
     add,
     existsByName,
@@ -93,7 +95,7 @@ export function createTopicStore(): TopicStore {
     getByName,
     getById,
     get list() {
-      return Array.from(topics)
+      return from(topics)
     },
   })
 }

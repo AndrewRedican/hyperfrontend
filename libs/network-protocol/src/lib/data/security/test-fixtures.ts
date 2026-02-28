@@ -4,6 +4,7 @@
  */
 
 import type { SerializedData, JSONString } from '../model'
+import { stringify } from '@hyperfrontend/immutable-api-utils/built-in-copy/json'
 
 export interface EncryptionTestCase {
   description: string
@@ -16,7 +17,7 @@ const createMockSerializedData = <T>(message: T, suffix = ''): SerializedData<T>
   id: `test-id-${suffix}`,
   sequence: 1,
   key: `test-key-${suffix}`,
-  message: <JSONString<T>>JSON.stringify(message),
+  message: <JSONString<T>>stringify(message),
   schema: { type: 'object' },
   schemaHash: `test-hash-${suffix}`,
 })

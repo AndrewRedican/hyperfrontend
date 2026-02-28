@@ -1,3 +1,5 @@
+import { freeze } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
+import { parse } from '@hyperfrontend/immutable-api-utils/built-in-copy/json'
 import type { PacketDeobfuscater, SerializedEncryptedPacket, ObfuscatedPacket } from '../../model'
 import { isValidObfuscatedPacket } from '../../validations/is-valid-obfuscated-packet'
 
@@ -30,10 +32,10 @@ export function createPacketDeobfuscator(decrypt: (encrypted: Uint8Array, passwo
 
     let deserialized: SerializedEncryptedPacket
     try {
-      deserialized = JSON.parse(deobfuscated)
+      deserialized = parse(deobfuscated)
     } catch {
       throw new Error('Cannot deobfuscate packet because cannot deserialize decrypted data')
     }
-    return Object.freeze(deserialized)
+    return freeze(deserialized)
   }
 }

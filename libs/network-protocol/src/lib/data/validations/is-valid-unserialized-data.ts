@@ -1,3 +1,5 @@
+import { typeTag } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
+
 /**
  * Validates whether the provided value is valid unserialized data.
  * Unserialized data must be a Uint8Array instance.
@@ -16,6 +18,6 @@ export function isValidUnserializedData(data: unknown): boolean {
 
   // Cross-realm fallback - check if it looks like a Uint8Array
   // This handles cases like jsdom tests where different realms have different Uint8Array constructors
-  const proto = Object.prototype.toString.call(data)
+  const proto = typeTag(data)
   return proto === '[object Uint8Array]'
 }

@@ -5,6 +5,7 @@ import { uuidV4 } from '@hyperfrontend/random-generator-utils'
 import { createData } from '../../browser/data'
 import { deserializeData } from '../../lib/data/model'
 import { initChannel, INTEGRATION_TEST_PSK } from './init-channel'
+import { freeze } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
 
 /**
  * Creates a test client for network protocol V2 integration testing.
@@ -108,5 +109,5 @@ export function createClient<T = MessagePayload>(label: string, sharedKey: strin
     },
   }
 
-  return Object.freeze(client)
+  return freeze(client)
 }

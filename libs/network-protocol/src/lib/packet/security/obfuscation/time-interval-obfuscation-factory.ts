@@ -1,3 +1,4 @@
+import { freeze } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
 import type { ObfuscationSuite } from '../../../security/model'
 import type { SerializedEncryptedPacket, ObfuscatedPacket, PacketObfuscater, PacketDeobfuscater } from '../../model'
 import { isValidSerializedEncryptedPacket } from '../../validations/is-valid-serialized-encrypted-packet'
@@ -63,6 +64,6 @@ export function createTimeIntervalObfuscationFactory(
       }
       throw new Error('Could not deobfuscate data')
     }
-    return Object.freeze({ packetObfuscation: packetObfuscationFn, packetDeobfuscation: packetDeobfuscationFn })
+    return freeze({ packetObfuscation: packetObfuscationFn, packetDeobfuscation: packetDeobfuscationFn })
   }
 }

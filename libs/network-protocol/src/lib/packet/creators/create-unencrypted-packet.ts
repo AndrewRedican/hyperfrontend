@@ -1,4 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
+import { freeze } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
 import type { Data } from '../../data/model'
 import type { UnencryptedPacket } from '../model'
 import { isValidUnencryptedData } from '../../data/validations/is-valid-unencrypted-data'
@@ -21,5 +22,5 @@ export function createUnencryptedPacket<T = any>(origin: string, target: string,
     throw new Error(withoutValidErrorMessage('data'))
   }
   const packet: UnencryptedPacket = { ...base, data }
-  return Object.freeze(packet)
+  return freeze(packet)
 }

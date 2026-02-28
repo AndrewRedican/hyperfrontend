@@ -1,6 +1,7 @@
 import type { ChannelStore, Channel, ChannelEntry, ChannelCreater } from '../model'
 import { uuidV4 } from '@hyperfrontend/random-generator-utils'
 import { isValidLabel } from '../validations/is-valid-label'
+import { freeze } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
 
 /**
  * Creates a channel store factory with an injected channel creator.
@@ -13,7 +14,7 @@ export function createChannelStoreFactory(createChannel: ChannelCreater) {
     const entries: ChannelEntry[] = []
     const addEntry = (channel: Channel) =>
       entries.push(
-        Object.freeze({
+        freeze({
           id: uuidV4(),
           name: channel.label,
           channel,
@@ -82,7 +83,7 @@ export function createChannelStoreFactory(createChannel: ChannelCreater) {
       } while (entries.length > 0)
     }
 
-    return Object.freeze({
+    return freeze({
       create,
       add,
       existsByName,
@@ -93,7 +94,7 @@ export function createChannelStoreFactory(createChannel: ChannelCreater) {
       getByName,
       getById,
       get list() {
-        return Object.freeze([...entries])
+        return freeze([...entries])
       },
     })
   }

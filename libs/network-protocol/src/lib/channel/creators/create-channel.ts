@@ -7,6 +7,7 @@ import { isValidReceiver } from '../validations/is-valid-receiver'
 import { getFirstInvalidProtocolProperty } from '../validations/get-first-invalid-protocol-property'
 import { withoutValidErrorMessage } from '../utils/without-valid-err-msg'
 import { getType } from '@hyperfrontend/data-utils'
+import { freeze } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
 
 /**
  * Creates a channel creator factory with injected sender and receiver factories.
@@ -38,14 +39,14 @@ export function createChannelFactory(createSender: SenderFactory, createReceiver
     const logger = getLogger()
     const sender = createSender(`${label} sender`, send, logger, packetEncryption, packetObfuscation)
     const receiver = createReceiver(`${label} receiver`, receive, logger, packetDeobfuscation, packetDecryption)
-    const outbound: Channel['outbound'] = Object.freeze({
+    const outbound: Channel['outbound'] = freeze({
       encryptionQueue: sender.encryptionQueue,
       serializationQueue: sender.serializationQueue,
       obfuscationQueue: sender.obfuscationQueue,
       stop: sender.stop,
       resume: sender.resume,
     })
-    const inbound: Channel['inbound'] = Object.freeze({
+    const inbound: Channel['inbound'] = freeze({
       deobfuscationQueue: receiver.deobfuscationQueue,
       deserializationQueue: receiver.deserializationQueue,
       decryptionQueue: receiver.decryptionQueue,
@@ -60,7 +61,7 @@ export function createChannelFactory(createSender: SenderFactory, createReceiver
       inbound.resume()
       outbound.resume()
     }
-    const channel: Channel = Object.freeze({
+    const channel: Channel = freeze({
       label,
       send: sender.send,
       receive: receiver.receive,

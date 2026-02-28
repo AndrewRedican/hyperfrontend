@@ -1,3 +1,4 @@
+import { freeze } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
 import type { CreateReceiver, Receiver, ReceiveFn, InboundQueue } from '../model'
 import type { PacketDeserialization } from '../../packet/model'
 import { createDecryptionQueue, createDeobfuscationQueue, createDeserializationQueue } from '../../queue'
@@ -51,7 +52,7 @@ export function createReceiverFactory(createDeserializedEncryptedPacket: PacketD
         return decryption.size()
       },
     }
-    const receiver: Receiver = Object.freeze({
+    const receiver: Receiver = freeze({
       receive,
       stop,
       resume,

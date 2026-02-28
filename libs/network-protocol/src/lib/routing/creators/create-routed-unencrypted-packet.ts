@@ -1,4 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
+import { freeze } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
 import type { Data } from '../../data/model'
 import type { RoutedUnencryptedPacket } from '../model'
 import { isValidTopicId } from '../../topic/validations/is-valid-topic-id'
@@ -28,5 +29,5 @@ export function createRoutedUnencryptedPacket<T = any>(
     topicId,
     packet: createUnencryptedPacket<T>(origin, target, data),
   }
-  return Object.freeze(routedPacket)
+  return freeze(routedPacket)
 }

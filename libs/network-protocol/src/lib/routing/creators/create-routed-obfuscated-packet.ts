@@ -1,3 +1,4 @@
+import { freeze } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
 import type { ObfuscatedPacket } from '../../packet/model'
 import type { RoutedObfuscatedPacket } from '../model'
 import { isValidTopicId } from '../../topic/validations/is-valid-topic-id'
@@ -19,7 +20,7 @@ export function createRoutedObfuscatedPacket(topicId: string, packet: Obfuscated
   if (!isValidObfuscatedPacket(packet)) {
     throw new Error('Cannot create a routed obfuscated packet without a valid obfuscated packet')
   }
-  return Object.freeze({
+  return freeze({
     topicId,
     packet,
   })

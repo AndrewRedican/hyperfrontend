@@ -1,5 +1,6 @@
 import type { DataEncrypter } from '../model'
 import { getType } from '@hyperfrontend/data-utils'
+import { stringify } from '@hyperfrontend/immutable-api-utils/built-in-copy/json'
 
 /**
  * Creates a data encrypter function with the provided encryption implementation.
@@ -18,7 +19,7 @@ export function createDataEncrypter(encrypt: (message: string, password: string)
     }
     let serialized: string
     try {
-      serialized = JSON.stringify(data)
+      serialized = stringify(data)
     } catch {
       throw new Error('Cannot encrypt data because it is unserializable')
     }

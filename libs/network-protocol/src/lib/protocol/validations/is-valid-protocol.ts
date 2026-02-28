@@ -1,6 +1,7 @@
 import type { Protocol } from '../../channel/model'
 import type { ValidProtocolResult } from './is-valid-protocol.model'
 import { getType } from '@hyperfrontend/data-utils'
+import { keys } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
 
 /**
  * Validates whether the provided value is a valid protocol object.
@@ -24,9 +25,9 @@ export function isValidProtocol(protocol: unknown): ValidProtocolResult {
     result[key] = key in prt && getType(prt[key]) === 'function'
     return result[key]
   }
-  const keys = Object.keys(result) as (keyof ValidProtocolResult)[]
-  for (let i = 0; i < keys.length; i += 1) {
-    if (!isValidFunction(keys[i])) return result
+  const keysList = keys(result) as (keyof ValidProtocolResult)[]
+  for (let i = 0; i < keysList.length; i += 1) {
+    if (!isValidFunction(keysList[i])) return result
   }
   return result
 }

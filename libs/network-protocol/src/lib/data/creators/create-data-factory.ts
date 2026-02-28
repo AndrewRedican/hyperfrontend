@@ -1,3 +1,5 @@
+import { freeze } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
+import { stringify } from '@hyperfrontend/immutable-api-utils/built-in-copy/json'
 import type { Schema } from '@hyperfrontend/json-utils'
 import type { DataCreater, JSONString, SerializedData } from '../model'
 import { hasCircularReference } from '@hyperfrontend/data-utils'
@@ -38,7 +40,7 @@ export function createDataFactory(createHash: (data: string, algorithm: string) 
     }
     let serialized: JSONString<T>
     try {
-      serialized = <JSONString<T>>JSON.stringify(message)
+      serialized = <JSONString<T>>stringify(message)
     } /* istanbul ignore next - covered by hasCircularReference check above */ catch {
       throw new Error('Cannot create data with unserializable message')
     }
@@ -50,7 +52,7 @@ export function createDataFactory(createHash: (data: string, algorithm: string) 
     }
     let schemaHash: string
     try {
-      schemaHash = await createHash(JSON.stringify(schema), 'SHA-256')
+      schemaHash = await createHash(stringify(schema), 'SHA-256')
     } /* istanbul ignore next - hash failure would indicate system-level crypto issues */ catch {
       throw new Error('Cannot create data because failed to hash schema')
     }
@@ -65,6 +67,6 @@ export function createDataFactory(createHash: (data: string, algorithm: string) 
       schema,
       schemaHash,
     }
-    return Object.freeze(data)
+    return freeze(data)
   }
 }

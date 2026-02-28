@@ -1,3 +1,4 @@
+import { freeze } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
 import type { PacketBase } from '../model'
 import { isValidOrigin } from '../validations/is-valid-origin'
 import { isValidTarget } from '../validations/is-valid-target'
@@ -20,5 +21,5 @@ export function createPacketBase(origin: string, target: string): PacketBase {
     throw new Error(withoutValidErrorMessage('target'))
   }
   const packetBase: PacketBase = { origin, target }
-  return Object.freeze(packetBase)
+  return freeze(packetBase)
 }

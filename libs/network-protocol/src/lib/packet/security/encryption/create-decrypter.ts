@@ -1,3 +1,4 @@
+import { freeze } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
 import type { PacketDecrypter, UnencryptedPacket, UnserializedEncryptedPacket } from '../../model'
 import type { Data } from '../../../data/model'
 import { isValidUnserializedEncryptedPacket } from '../../validations/is-valid-unserialized-encrypted-packet'
@@ -33,6 +34,6 @@ export function createPacketDecrypter<T = unknown>(decryptData: (data: Uint8Arra
     } catch (e) {
       throw new Error(`Cannot decrypt packet. ${(e as Error)?.message}`)
     }
-    return Object.freeze(unencryptedPacket)
+    return freeze(unencryptedPacket)
   }
 }

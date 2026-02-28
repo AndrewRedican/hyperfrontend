@@ -1,3 +1,4 @@
+import { freeze } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
 import type { CreateSender, Sender, SendFn, OutboundQueue } from '../model'
 import type { PacketSerialization } from '../../packet/model'
 import { createUnencryptedPacket } from '../../packet/creators/create-unencrypted-packet'
@@ -52,7 +53,7 @@ export function createSenderFactory(createSerializedEncryptedPacket: PacketSeria
         return obfuscation.size()
       },
     }
-    const sender: Sender = Object.freeze({
+    const sender: Sender = freeze({
       send,
       stop,
       resume,

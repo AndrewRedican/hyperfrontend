@@ -1,4 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
+import { freeze } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
 import type { EncryptionSuite, FirstMessageHandler } from '../../../security/model'
 import type { PacketEncrypter, PacketDecrypter } from '../../model'
 
@@ -44,6 +45,6 @@ export function createDynamicKeyEncryptionFactory<T = any>(
       return decryptPacket(packet, key)
     }
 
-    return Object.freeze({ packetEncryption, packetDecryption })
+    return freeze({ packetEncryption, packetDecryption })
   }
 }

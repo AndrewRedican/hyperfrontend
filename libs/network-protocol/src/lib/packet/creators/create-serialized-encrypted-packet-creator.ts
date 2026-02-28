@@ -1,3 +1,4 @@
+import { freeze } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
 import type { UnserializedEncryptedPacket, SerializedEncryptedPacket, PacketSerialization } from '../model'
 import { isValidUnserializedEncryptedPacket } from '../validations/is-valid-unserialized-encrypted-packet'
 
@@ -29,6 +30,6 @@ export function createSerializedEncryptedPacketCreator(
     } catch (e) {
       throw new Error(`Cannot serialize packet encrypted data. ${(e as Error)?.message}`)
     }
-    return Object.freeze({ ...packet, data })
+    return freeze({ ...packet, data })
   }
 }

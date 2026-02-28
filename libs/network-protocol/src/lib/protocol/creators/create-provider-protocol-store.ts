@@ -1,3 +1,4 @@
+import { freeze } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
 import type { ProtocolProvider } from '../../channel/model'
 import type { ProtocolProviderStore, ProtocolProviderEntry } from '../model'
 import { uuidV4 } from '@hyperfrontend/random-generator-utils'
@@ -13,7 +14,7 @@ export function createProtocolProviderStore(): ProtocolProviderStore {
   const entries: ProtocolProviderEntry[] = []
   const addEntry = (name: string, provider: ProtocolProvider) =>
     entries.push(
-      Object.freeze({
+      freeze({
         id: uuidV4(),
         name,
         provider,
@@ -72,7 +73,7 @@ export function createProtocolProviderStore(): ProtocolProviderStore {
     } while (entries.length > 0)
   }
 
-  return Object.freeze({
+  return freeze({
     add,
     existsByName,
     existsById,
@@ -82,7 +83,7 @@ export function createProtocolProviderStore(): ProtocolProviderStore {
     getByName,
     getById,
     get list() {
-      return Object.freeze([...entries])
+      return freeze([...entries])
     },
   })
 }
