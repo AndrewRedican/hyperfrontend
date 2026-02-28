@@ -2,6 +2,8 @@
  * Minimal channel structure required for registry operations.
  * Extended with optional methods for use with full ChannelHandle objects.
  */
+import { from } from '@hyperfrontend/immutable-api-utils/built-in-copy/array'
+
 export interface MinimalChannel {
   id: string
   name: string
@@ -78,7 +80,7 @@ export function createRegistry(): ChannelRegistry {
     },
 
     getAll: () => {
-      return Array.from(channels)
+      return from(channels)
     },
 
     clear: () => {

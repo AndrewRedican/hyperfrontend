@@ -8,6 +8,7 @@
  */
 
 import type { SecurityErrorEventData } from '../types/events'
+import { setPrototypeOf } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
 
 /**
  * Error codes for security-related failures.
@@ -26,7 +27,7 @@ export class SecurityError extends Error {
     this.name = 'SecurityError'
     this.code = code
     this.originalCause = cause
-    Object.setPrototypeOf(this, SecurityError.prototype)
+    setPrototypeOf(this, SecurityError.prototype)
   }
 }
 

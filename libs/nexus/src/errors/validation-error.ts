@@ -54,6 +54,7 @@
  */
 
 import type { ValidationError as IValidationError } from '../types/validation'
+import { setPrototypeOf } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
 
 /**
  * Custom error class for validation failures
@@ -66,7 +67,7 @@ export class ValidationError extends Error {
     public readonly errors: IValidationError[] = []
   ) {
     super(message)
-    Object.setPrototypeOf(this, ValidationError.prototype)
+    setPrototypeOf(this, ValidationError.prototype)
   }
 
   /**

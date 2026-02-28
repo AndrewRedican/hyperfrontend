@@ -2,6 +2,7 @@ import { ACTION_TYPES } from '../../types/action'
 import type { IActionWithProcess, IActionWithSecurity } from '../../types/action'
 import type { SecurityConfirmation } from '../../types/security'
 import type { ActionDependencies } from './factory'
+import { freeze } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
 
 /**
  * Creates OPEN_CONNECTION action
@@ -31,8 +32,8 @@ export const openConnection =
     } as const
 
     if (security) {
-      return Object.freeze({ ...base, security })
+      return freeze({ ...base, security })
     }
 
-    return Object.freeze(base)
+    return freeze(base)
   }

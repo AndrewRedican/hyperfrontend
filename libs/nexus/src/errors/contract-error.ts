@@ -1,4 +1,5 @@
 import type { IChannelContract } from '../types/contract'
+import { setPrototypeOf } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
 
 /**
  * Custom error class for contract-related failures
@@ -11,7 +12,7 @@ export class ContractError extends Error {
     public readonly contract?: IChannelContract
   ) {
     super(message)
-    Object.setPrototypeOf(this, ContractError.prototype)
+    setPrototypeOf(this, ContractError.prototype)
   }
 
   /**

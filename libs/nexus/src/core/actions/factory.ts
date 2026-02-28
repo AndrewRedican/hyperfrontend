@@ -19,6 +19,7 @@ import { closeConnection } from './close'
 import { destroyConnection } from './destroy'
 import { newMessage } from './message'
 import { invalidRequest } from './invalid'
+import { freeze } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
 
 /**
  * Dependencies required by action creators
@@ -46,7 +47,7 @@ export interface ActionDependencies {
  * ```
  */
 export const createActionCreators = (deps: ActionDependencies) =>
-  Object.freeze({
+  freeze({
     requestConnection: requestConnection(deps),
     acceptConnection: acceptConnection(deps),
     denyConnection: denyConnection(deps),

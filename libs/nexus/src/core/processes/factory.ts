@@ -2,6 +2,7 @@ import { createProcess } from './create'
 import { getChannel } from './get'
 import { removeProcess } from './remove'
 import { clearProcesses } from './clear'
+import { freeze } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
 
 /**
  * Type representing a channel handle for process tracking
@@ -26,7 +27,7 @@ export const createProcessManager = () => {
   // Private state - Map from process ID to channel
   const processes = new Map<string, ChannelHandle>()
 
-  return Object.freeze({
+  return freeze({
     create: createProcess(processes),
     get: getChannel(processes),
     remove: removeProcess(processes),

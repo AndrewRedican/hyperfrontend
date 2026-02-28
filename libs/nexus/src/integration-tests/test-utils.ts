@@ -1,6 +1,7 @@
 /* istanbul ignore file */
 
 import type { IAction } from '../types/action'
+import { createPromise } from '@hyperfrontend/immutable-api-utils/built-in-copy/promise'
 
 /**
  * Type representing a message listener function
@@ -149,7 +150,7 @@ export function createMessageEvent<T = IAction>(data: T, origin: string, source?
  * @returns A promise that resolves after the specified time
  */
 export function wait(ms: number): Promise<void> {
-  return new Promise((resolve) => setTimeout(resolve, ms))
+  return createPromise((resolve) => setTimeout(resolve, ms))
 }
 
 /**

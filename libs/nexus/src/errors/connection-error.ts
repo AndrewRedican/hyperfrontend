@@ -1,6 +1,8 @@
 /**
  * Custom error class for connection-related failures
  */
+import { setPrototypeOf } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
+
 export class ConnectionError extends Error {
   override readonly name = 'ConnectionError'
 
@@ -10,7 +12,7 @@ export class ConnectionError extends Error {
     public readonly origin?: string
   ) {
     super(message)
-    Object.setPrototypeOf(this, ConnectionError.prototype)
+    setPrototypeOf(this, ConnectionError.prototype)
   }
 
   /**
