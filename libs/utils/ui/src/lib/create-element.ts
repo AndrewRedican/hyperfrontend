@@ -1,6 +1,8 @@
 import type { HtmlTagName } from './html.model'
 import type { Style } from '../style'
 import { nonEmptyStrings, uniqueStrings } from '@hyperfrontend/list-utils'
+import { assign } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
+import { isArray } from '@hyperfrontend/immutable-api-utils/built-in-copy/array'
 
 export type ElementConfig = {
   inlineStyle?: Style
@@ -30,10 +32,10 @@ export type ElementMethods<T extends HTMLElement> = {
 export function createElement<T extends HTMLElement>(tagName: HtmlTagName, config?: ElementConfig): ElementMethods<T> {
   const element = document.createElement(tagName) as T
   if (config?.inlineStyle) {
-    Object.assign(element.style, config.inlineStyle)
+    assign(element.style, config.inlineStyle)
   }
   const classList: string[] = []
-  if (config?.classNames && Array.isArray(config.classNames)) {
+  if (config?.classNames && isArray(config.classNames)) {
     classList.push(...config.classNames)
   }
   if (config?.className) {

@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import type { ElementRefOrString } from './get-element-async'
 import { getElementAsync } from './get-element-async'
+import { createPromise } from '@hyperfrontend/immutable-api-utils/built-in-copy/promise'
 
 /**
  * Sets up an AudioContext by waiting for user interaction on a specified element.
@@ -11,7 +12,7 @@ import { getElementAsync } from './get-element-async'
  * @throws {Error} When the target element is not found
  */
 export async function setupAudio(selector: ElementRefOrString): Promise<AudioContext> {
-  return new Promise((resolve, reject) => {
+  return createPromise((resolve, reject) => {
     const initializeAudioContext = (event: Event) => {
       const audioContext = new (globalThis.AudioContext || (globalThis as any).webkitAudioContext)()
 

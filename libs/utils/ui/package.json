@@ -42,7 +42,8 @@
     "@hyperfrontend/function-utils": "0.0.2",
     "@hyperfrontend/random-generator-utils": "0.0.2",
     "@hyperfrontend/list-utils": "0.0.2",
-    "@hyperfrontend/data-utils": "0.0.2"
+    "@hyperfrontend/data-utils": "0.0.2",
+    "@hyperfrontend/immutable-api-utils": "0.0.2"
   },
   "funding": {
     "type": "github",

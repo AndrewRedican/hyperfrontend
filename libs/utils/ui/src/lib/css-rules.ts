@@ -1,6 +1,7 @@
 import type { StyleMap } from '../style'
 import { getType } from '@hyperfrontend/data-utils'
 import { cssRule } from './css-rule'
+import { entries } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
 
 /**
  * Creates CSS rules from a styles object, converting each selector-style pair into CSS rule strings.
@@ -10,7 +11,7 @@ import { cssRule } from './css-rule'
  */
 export function cssRules(styles: StyleMap): string {
   if (getType(styles) !== 'object') return ''
-  return Object.entries(styles)
+  return entries(styles)
     .map(([selector, style]) => cssRule(selector, style))
     .join('\n')
 }
