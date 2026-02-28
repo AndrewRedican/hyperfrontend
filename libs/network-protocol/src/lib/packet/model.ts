@@ -5,29 +5,29 @@ export type ObfuscatedPacket = Uint8Array
 
 export interface PacketBase {
   /** Identifies the origin of the packet */
-  origin: string
+  readonly origin: string
   /** Identifies the intended recipient of the packet */
-  target: string
+  readonly target: string
 }
 
 export interface UnencryptedPacket<T = any> extends PacketBase {
   /** Unencrypted data */
-  data: Data<T>
+  readonly data: Data<T>
 }
 
 export interface UnserializedEncryptedPacket extends PacketBase {
   /** Unserialized (binary form) encrypted data */
-  data: Uint8Array
+  readonly data: Uint8Array
 }
 
 export interface SerializedEncryptedPacket extends PacketBase {
   /** Serialized and encrypted data message */
-  data: string
+  readonly data: string
 }
 
 export interface UnobfuscatedPacket<T = any> extends PacketBase {
   /** Nondescrypt formatted data */
-  data: UnencryptedPacket<T>['data'] | UnserializedEncryptedPacket['data'] | SerializedEncryptedPacket['data']
+  readonly data: UnencryptedPacket<T>['data'] | UnserializedEncryptedPacket['data'] | SerializedEncryptedPacket['data']
 }
 
 export type Packet<T = any> = ObfuscatedPacket | UnobfuscatedPacket<T>

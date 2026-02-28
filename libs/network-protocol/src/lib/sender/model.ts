@@ -8,19 +8,19 @@ export type SendPacketFn = (packet: Uint8Array) => void
 export type SendFn<T = any> = (origin: string, target: string, data: Data<T>) => void
 
 export interface OutboundQueue {
-  size: number
+  readonly size: number
 }
 
 export interface OutboundQueues {
-  encryptionQueue: OutboundQueue
-  serializationQueue: OutboundQueue
-  obfuscationQueue: OutboundQueue
+  readonly encryptionQueue: OutboundQueue
+  readonly serializationQueue: OutboundQueue
+  readonly obfuscationQueue: OutboundQueue
 }
 
 export interface Sender<T = any> extends OutboundQueues {
-  send: SendFn<T>
-  stop: () => void
-  resume: () => void
+  readonly send: SendFn<T>
+  readonly stop: () => void
+  readonly resume: () => void
 }
 
 export type CreateSender<T = any> = (

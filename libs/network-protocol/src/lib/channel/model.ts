@@ -22,11 +22,11 @@ export interface StopResumeControl {
 }
 
 export interface Channel<T = any> extends StopResumeControl {
-  label: string
-  send: SendFn<T>
-  receive: ReceiveFn
-  outbound: OutboundQueues & StopResumeControl
-  inbound: InboundQueues & StopResumeControl
+  readonly label: string
+  readonly send: SendFn<T>
+  readonly receive: ReceiveFn
+  readonly outbound: OutboundQueues & StopResumeControl
+  readonly inbound: InboundQueues & StopResumeControl
 }
 
 export type ChannelCreater<T = any> = (
@@ -37,9 +37,9 @@ export type ChannelCreater<T = any> = (
 ) => Channel<T>
 
 export interface ChannelEntry<T = any> {
-  id: string
-  name: string
-  channel: Channel<T>
+  readonly id: string
+  readonly name: string
+  readonly channel: Channel<T>
 }
 
 export interface ChannelStore<T = any> {

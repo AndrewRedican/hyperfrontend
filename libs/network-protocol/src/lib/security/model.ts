@@ -11,13 +11,13 @@ import type {
 export type { PacketObfuscation, PacketDeobfuscation, PacketEncryption, PacketDecryption }
 
 export interface EncryptionSuite<T = any> {
-  packetEncryption: PacketEncryption<T>
-  packetDecryption: PacketDecryption<T>
+  readonly packetEncryption: PacketEncryption<T>
+  readonly packetDecryption: PacketDecryption<T>
 }
 
 export interface ObfuscationSuite {
-  packetObfuscation: PacketObfuscation
-  packetDeobfuscation: PacketDeobfuscation
+  readonly packetObfuscation: PacketObfuscation
+  readonly packetDeobfuscation: PacketDeobfuscation
 }
 
 export interface SecuritySuite<T = any> extends EncryptionSuite<T>, ObfuscationSuite {}
@@ -34,11 +34,11 @@ export interface FirstMessageHandler<T = any> {
    * Serializes an unencrypted packet for transmission without encryption.
    * Used when sending the first message before key exchange.
    */
-  serializeWithoutEncryption: (packet: UnencryptedPacket<T>) => Promise<UnserializedEncryptedPacket>
+  readonly serializeWithoutEncryption: (packet: UnencryptedPacket<T>) => Promise<UnserializedEncryptedPacket>
 
   /**
    * Deserializes a packet that was sent without encryption.
    * Used when receiving the first message before key exchange.
    */
-  deserializeWithoutDecryption: (packet: UnserializedEncryptedPacket) => Promise<UnencryptedPacket<T>>
+  readonly deserializeWithoutDecryption: (packet: UnserializedEncryptedPacket) => Promise<UnencryptedPacket<T>>
 }

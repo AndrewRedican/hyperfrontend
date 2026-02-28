@@ -29,19 +29,19 @@ export type JSONString<T = unknown> = string & {
  */
 export interface SerializedData<T = unknown> {
   /** Identifies a process */
-  pid: string
+  readonly pid: string
   /** Identifies this message */
-  id: string
+  readonly id: string
   /** A counter that increments by 1, representing steps of a process */
-  sequence: number
+  readonly sequence: number
   /** A key used to encrypt a reply with */
-  key: string
+  readonly key: string
   /** Contents of a message as JSON string */
-  message: JSONString<T>
+  readonly message: JSONString<T>
   /** Schema of a message */
-  schema: Schema
+  readonly schema: Schema
   /** Hash derived from the schema */
-  schemaHash: string
+  readonly schemaHash: string
 }
 
 /**
@@ -53,19 +53,19 @@ export interface SerializedData<T = unknown> {
  */
 export interface Data<T = unknown> {
   /** Identifies a process */
-  pid: string
+  readonly pid: string
   /** Identifies this message */
-  id: string
+  readonly id: string
   /** A counter that increments by 1, representing steps of a process */
-  sequence: number
+  readonly sequence: number
   /** A key used to encrypt a reply with */
-  key: string
+  readonly key: string
   /** Contents of a message (deserialized) */
-  message: T
+  readonly message: T
   /** Schema of a message */
-  schema: Schema
+  readonly schema: Schema
   /** Hash derived from the schema */
-  schemaHash: string
+  readonly schemaHash: string
 }
 
 /**

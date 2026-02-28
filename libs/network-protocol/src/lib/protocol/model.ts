@@ -1,9 +1,9 @@
 import type { ProtocolProvider } from '../channel/model'
 
 export interface ProtocolProviderEntry<T = unknown> {
-  id: string
-  name: string
-  provider: ProtocolProvider<T>
+  readonly id: string
+  readonly name: string
+  readonly provider: ProtocolProvider<T>
 }
 
 export interface ProtocolProviderStore<T = unknown> {

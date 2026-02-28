@@ -14,12 +14,12 @@ import type {
 } from '../packet/model'
 
 export interface Queue<T extends object> {
-  addMessage: (message: T) => void
-  isRunning: () => boolean
-  stop: () => void
-  resume: () => void
-  size: () => number
-  currentMessage: () => T | null
+  readonly addMessage: (message: T) => void
+  readonly isRunning: () => boolean
+  readonly stop: () => void
+  readonly resume: () => void
+  readonly size: () => number
+  readonly currentMessage: () => T | null
 }
 
 export type MessageHandler<T extends object> = (message: T) => Promise<void> | void
