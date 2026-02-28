@@ -1,5 +1,6 @@
 import type { DataType } from './models'
 import { registeredClasses } from './shared/consts'
+import { isArray } from '@hyperfrontend/immutable-api-utils/built-in-copy/array'
 
 /**
  * Returns the data type of the target.
@@ -13,7 +14,7 @@ export const getType = <T extends string = DataType>(target: unknown): T => {
   if (target === null) return <T>'null'
   const nativeDataType = typeof target
   if (nativeDataType === 'object') {
-    if (Array.isArray(target)) return <T>'array'
+    if (isArray(target)) return <T>'array'
     for (const registeredClass of registeredClasses) {
       if (target instanceof registeredClass) return <T>registeredClass.name
     }

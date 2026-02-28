@@ -3,6 +3,7 @@ import { traverse } from './traverse'
 import { getType } from './get-type'
 import { isIterableType } from './is-iterable-type'
 import { getIterableOperators } from './get-iterable-operators'
+import { from } from '@hyperfrontend/immutable-api-utils/built-in-copy/array'
 
 /**
  * Returns a list of unique key names that match a pattern or an exact value anywhere in the data structure of the target.
@@ -24,7 +25,7 @@ export const getUniqueKeys = (target: unknown, pattern: string | RegExp = /.+/, 
     const { getKeys } = getIterableOperators(type)
     getKeys(value).forEach((nextKey) => match(nextKey) && state.names.add(nextKey))
   }
-  return Array.from(
+  return from(
     traverse(target, callback, { depth: [0, '*'], ...options } as DepthConfig, {
       names: new Set<string>(),
     }).names.values()

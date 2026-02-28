@@ -30,5 +30,9 @@
   "funding": {
     "type": "github",
     "url": "https://github.com/sponsors/AndrewRedican"
+  },
+  "dependencies": {
+    "@hyperfrontend/immutable-api-utils": "0.0.2",
+    "jest": "30.2.0"
   }
 }

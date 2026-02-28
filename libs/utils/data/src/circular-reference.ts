@@ -1,3 +1,5 @@
+import { isArray } from '@hyperfrontend/immutable-api-utils/built-in-copy/array'
+
 export interface Location {
   path: [string, ...string[]]
 }
@@ -19,10 +21,10 @@ export class CircularReference implements ICircularReference {
   private readonly delimiter = ' \u2192 ' // Right arrow
 
   constructor(location: Location['path'], target: Target['path']) {
-    if (!Array.isArray(location) || location.length === 0) {
+    if (!isArray(location) || location.length === 0) {
       throw new Error(`Expected location to be a list with at list one string value.`)
     }
-    if (!Array.isArray(target)) {
+    if (!isArray(target)) {
       throw new Error(`Expected target to be a list.`)
     }
     this.location = { path: location }

@@ -3,6 +3,7 @@ import { getIterableOperators } from './get-iterable-operators'
 import { isIterableType } from './is-iterable-type'
 import { DefaultValueOptions } from './get-value.model'
 import { getType } from './get-type'
+import { isArray } from '@hyperfrontend/immutable-api-utils/built-in-copy/array'
 
 /**
  * Gets the value at the specified path from the target.
@@ -17,7 +18,7 @@ import { getType } from './get-type'
  * - If `defaultValue.onError` is provided, it will be returned when any error occurs during the retrieval process.
  */
 export const getValue = <T = unknown>(target: unknown, path: [string, ...string[]], defaultValue?: DefaultValueOptions<T>): T => {
-  if (Array.isArray(path) === false) {
+  if (isArray(path) === false) {
     throw new Error('Expected path to be a non-empty array of strings.')
   }
   if (path.length === 0) return <T>target
