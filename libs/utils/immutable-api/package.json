@@ -25,6 +25,7 @@
   ],
   "main": "./src/index.js",
   "exports": {
+    ".": "./src/index.ts",
     "./built-in-copy/object": "./src/built-in-copy/object/index.ts",
     "./built-in-copy/array": "./src/built-in-copy/array/index.ts",
     "./built-in-copy/json": "./src/built-in-copy/json/index.ts",
