@@ -1,5 +1,6 @@
 import type { Schema } from '@hyperfrontend/json-utils'
 import { parse, stringify } from '@hyperfrontend/immutable-api-utils/built-in-copy/json'
+import { freeze } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
 
 /**
  * Branded type representing a JSON-serialized string of type T.
@@ -125,10 +126,10 @@ export function parseJSONString<T>(jsonString: JSONString<T>): T {
  * @returns The deserialized data with parsed message
  */
 export function deserializeData<T>(serialized: SerializedData<T>): Data<T> {
-  return {
+  return freeze({
     ...serialized,
     message: parseJSONString(serialized.message),
-  }
+  })
 }
 
 /**
@@ -138,8 +139,8 @@ export function deserializeData<T>(serialized: SerializedData<T>): Data<T> {
  * @returns The serialized data with stringified message
  */
 export function serializeData<T>(data: Data<T>): SerializedData<T> {
-  return {
+  return freeze({
     ...data,
     message: asJSONString<T>(stringify(data.message)),
-  }
+  })
 }

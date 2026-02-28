@@ -23,7 +23,7 @@ export function createTopicStore(): TopicStore {
       throw new Error(`Invalid topic name '${name}'`)
     }
     const id = uuidV4()
-    const topic: Topic = { name, id }
+    const topic: Topic = freeze({ name, id })
     topics.add(topic)
     topicsByName.set(name, topic)
     topicsById.set(id, topic)
@@ -95,7 +95,7 @@ export function createTopicStore(): TopicStore {
     getByName,
     getById,
     get list() {
-      return from(topics)
+      return freeze(from(topics))
     },
   })
 }

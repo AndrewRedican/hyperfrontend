@@ -31,11 +31,11 @@ export function createFirstMessageHandler<T = any>(
     const jsonString = stringify(serializedData)
     const binaryData = textEncoder(jsonString)
 
-    return {
+    return freeze({
       origin: packet.origin,
       target: packet.target,
       data: binaryData,
-    }
+    })
   }
 
   const deserializeWithoutDecryption = async (packet: UnserializedEncryptedPacket): Promise<UnencryptedPacket<T>> => {
@@ -46,11 +46,11 @@ export function createFirstMessageHandler<T = any>(
     // Deserialize the data (parse the message from JSON string to object)
     const data = deserializeData(serializedData)
 
-    return {
+    return freeze({
       origin: packet.origin,
       target: packet.target,
       data,
-    }
+    })
   }
 
   return freeze({

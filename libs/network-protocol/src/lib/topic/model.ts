@@ -13,5 +13,5 @@ export interface TopicStore {
   readonly clear: () => void
   readonly getByName: (name: string) => Topic | null
   readonly getById: (id: string) => Topic | null
-  readonly list: Topic[]
+  readonly list: readonly Topic[]
 }
