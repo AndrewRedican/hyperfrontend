@@ -16,8 +16,8 @@ export function createValueCreator(
   getRandomValues: (byteLength: number) => Uint8Array,
   encrypt: (message: string, password: string) => Promise<Uint8Array>,
   decrypt: (encrypted: Uint8Array, password: string) => Promise<string>
-): (singleUse?: boolean) => Vault {
-  return function createVault(singleUse = false): Vault {
+): (singleUse?: boolean) => Readonly<Vault> {
+  return function createVault(singleUse = false): Readonly<Vault> {
     let password = from(getRandomValues(16))
       .map((b) => b.toString(16).padStart(2, '0'))
       .join('')
