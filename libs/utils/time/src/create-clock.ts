@@ -1,3 +1,5 @@
+import { freeze } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
+
 export interface Clock {
   readonly start: () => void
   readonly stop: () => void
@@ -45,5 +47,5 @@ export function createClock(interval = 1000): Clock {
     subscribers = subscribers.filter((subscriber) => subscriber !== callback)
   }
 
-  return Object.freeze({ start, stop, subscribe, unsubscribe, interval })
+  return freeze({ start, stop, subscribe, unsubscribe, interval })
 }

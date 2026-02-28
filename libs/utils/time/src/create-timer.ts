@@ -1,3 +1,5 @@
+import { freeze } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
+
 export interface Timer {
   /** Stops the progression of tracked time until further notice. */
   readonly pause: () => void
@@ -48,5 +50,5 @@ export function createTimer(callback: () => void, delay: number): Timer {
     resume()
   }
 
-  return Object.freeze({ pause, resume, reset })
+  return freeze({ pause, resume, reset })
 }
