@@ -26,5 +26,9 @@
     "zero-dependencies",
     "typescript",
     "functional"
-  ]
+  ],
+  "dependencies": {
+    "@hyperfrontend/immutable-api-utils": "0.0.2",
+    "jest": "30.2.0"
+  }
 }

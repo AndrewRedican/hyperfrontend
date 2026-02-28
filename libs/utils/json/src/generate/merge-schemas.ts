@@ -1,4 +1,6 @@
 import type { Schema, JsonType } from '../types/schema'
+import { keys, entries } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
+import { isArray } from '@hyperfrontend/immutable-api-utils/built-in-copy/array'
 
 /**
  * Merges multiple schemas into a single unified schema.
@@ -45,7 +47,7 @@ export function mergeSchemas(schemas: Schema[]): Schema {
     /* istanbul ignore else -- schema.type always exists in common case */
     if (schema.type) {
       /* istanbul ignore next -- array types are rare */
-      if (Array.isArray(schema.type)) {
+      if (isArray(schema.type)) {
         schema.type.forEach((t) => uniqueTypes.add(t))
       } else {
         uniqueTypes.add(schema.type)
@@ -56,7 +58,7 @@ export function mergeSchemas(schemas: Schema[]): Schema {
   /* istanbul ignore next -- simple types optimization */
   if (uniqueTypes.size > 0 && uniqueTypes.size <= schemas.length) {
     // Check if all schemas are just type definitions
-    const allSimpleTypes = schemas.every((s) => Object.keys(s).length === 1 && s.type)
+    const allSimpleTypes = schemas.every((s) => keys(s).length === 1 && s.type)
     if (allSimpleTypes) {
       const types = [...uniqueTypes]
       return types.length === 1 ? { type: types[0] } : { type: types }
@@ -110,7 +112,7 @@ function mergeObjectSchemas(schemas: Schema[]): Schema {
   for (const schema of schemas) {
     /* istanbul ignore next */
     if (schema.properties) {
-      for (const [key, propSchema] of Object.entries(schema.properties)) {
+      for (const [key, propSchema] of entries(schema.properties)) {
         const existing = mergedProperties[key] ?? []
         existing.push(propSchema)
         mergedProperties[key] = existing
@@ -124,12 +126,12 @@ function mergeObjectSchemas(schemas: Schema[]): Schema {
   }
 
   const properties: Record<string, Schema> = {}
-  for (const [key, propSchemas] of Object.entries(mergedProperties)) {
+  for (const [key, propSchemas] of entries(mergedProperties)) {
     properties[key] = mergeSchemas(propSchemas)
   }
 
   // A property is required only if it's required in all schemas
-  const required = Object.keys(requiredCounts).filter((key) => requiredCounts[key] === schemas.length)
+  const required = keys(requiredCounts).filter((key) => requiredCounts[key] === schemas.length)
 
   const result: Schema = { type: 'object', properties }
   if (required.length > 0) {
@@ -150,7 +152,7 @@ function mergeArraySchemas(schemas: Schema[]): Schema {
 
   for (const schema of schemas) {
     if (schema.items) {
-      if (Array.isArray(schema.items)) {
+      if (isArray(schema.items)) {
         itemSchemas.push(...schema.items)
       } else {
         itemSchemas.push(schema.items)

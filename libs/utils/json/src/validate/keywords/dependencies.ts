@@ -1,6 +1,8 @@
 import type { Schema } from '../../types/schema'
 import type { ValidationContext } from '../context'
 import { addError, shouldContinue } from '../context'
+import { entries, hasOwn } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
+import { isArray } from '@hyperfrontend/immutable-api-utils/built-in-copy/array'
 
 /**
  * Validates object 'dependencies' keyword.
@@ -17,19 +19,19 @@ export function validateDependencies(instance: Record<string, unknown>, schema: 
 
   let valid = true
 
-  for (const [key, dependency] of Object.entries(schema.dependencies)) {
+  for (const [key, dependency] of entries(schema.dependencies)) {
     // Only check dependency if the key is present
     /* istanbul ignore next -- key presence check */
-    if (!Object.prototype.hasOwnProperty.call(instance, key)) {
+    if (!hasOwn(instance, key)) {
       continue
     }
 
     /* istanbul ignore next -- dependency type check */
-    if (Array.isArray(dependency)) {
+    if (isArray(dependency)) {
       // Property dependency: if key is present, these properties must also be present
       for (const requiredKey of dependency) {
         /* istanbul ignore next -- required key check */
-        if (!Object.prototype.hasOwnProperty.call(instance, requiredKey)) {
+        if (!hasOwn(instance, requiredKey)) {
           addError(ctx, `Property '${key}' requires property '${requiredKey}' to also be present`, instance, 'dependencies', {
             property: key,
             /* istanbul ignore next -- required key assignment */

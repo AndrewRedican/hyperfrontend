@@ -1,5 +1,6 @@
 import type { Schema } from '../types/schema'
 import type { ValidationError } from '../types/validation'
+import { entries } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
 
 /**
  * Schema validator function type.
@@ -46,7 +47,7 @@ export function createValidationContext(
 
   // Pre-populate definitions from root schema
   if (rootSchema.definitions) {
-    for (const [name, schema] of Object.entries(rootSchema.definitions)) {
+    for (const [name, schema] of entries(rootSchema.definitions)) {
       definitions.set(`#/definitions/${name}`, schema)
     }
   }

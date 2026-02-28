@@ -1,6 +1,7 @@
 import type { Schema } from '../../types/schema'
 import type { ValidationContext } from '../context'
 import { addError, pushPath, shouldContinue } from '../context'
+import { entries, keys } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
 
 /**
  * Validates object 'patternProperties' keyword.
@@ -19,7 +20,7 @@ export function validatePatternProperties(instance: Record<string, unknown>, sch
   const patterns: Array<{ regex: RegExp; schema: Schema }> = []
 
   // Pre-compile all patterns
-  for (const [pattern, patternSchema] of Object.entries(schema.patternProperties)) {
+  for (const [pattern, patternSchema] of entries(schema.patternProperties)) {
     try {
       patterns.push({ regex: new RegExp(pattern), schema: patternSchema })
     } catch (e) {
@@ -42,7 +43,7 @@ export function validatePatternProperties(instance: Record<string, unknown>, sch
   }
 
   // Check each property against matching patterns
-  for (const key of Object.keys(instance)) {
+  for (const key of keys(instance)) {
     for (const { regex, schema: patternSchema } of patterns) {
       if (regex.test(key)) {
         const propCtx = pushPath(ctx, key)

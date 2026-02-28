@@ -13,6 +13,7 @@ import { validateNumberBounds } from './keywords/number-bounds'
 import { validateEnum } from './keywords/enum'
 import { validateObjectBounds } from './keywords/object-bounds'
 import { validateDependencies } from './keywords/dependencies'
+import { isArray } from '@hyperfrontend/immutable-api-utils/built-in-copy/array'
 import { validateFormat } from './keywords/format'
 import { validateAllOf, validateAnyOf, validateOneOf, validateNot } from './keywords/composition'
 
@@ -95,7 +96,7 @@ export function validateSchema(instance: unknown, schema: Schema, ctx: Validatio
   }
 
   // Array-specific validations
-  if (Array.isArray(instance)) {
+  if (isArray(instance)) {
     if (!validateItems(instance, schema, ctx)) {
       valid = false
       if (!shouldContinue(ctx)) return false
@@ -107,7 +108,7 @@ export function validateSchema(instance: unknown, schema: Schema, ctx: Validatio
   }
 
   // Object-specific validations
-  if (instance !== null && typeof instance === 'object' && !Array.isArray(instance)) {
+  if (instance !== null && typeof instance === 'object' && !isArray(instance)) {
     const obj = <Record<string, unknown>>instance
 
     if (!validateProperties(obj, schema, ctx)) {

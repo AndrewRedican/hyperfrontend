@@ -1,6 +1,7 @@
 import type { Schema } from '../../types/schema'
 import type { ValidationContext } from '../context'
 import { addError, shouldContinue } from '../context'
+import { keys } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
 
 /**
  * Validates object bounds constraints (minProperties, maxProperties).
@@ -12,7 +13,7 @@ import { addError, shouldContinue } from '../context'
  */
 export function validateObjectBounds(instance: Record<string, unknown>, schema: Schema, ctx: ValidationContext): boolean {
   let valid = true
-  const propertyCount = Object.keys(instance).length
+  const propertyCount = keys(instance).length
 
   if (schema.minProperties !== undefined && propertyCount < schema.minProperties) {
     addError(ctx, `Object must have at least ${schema.minProperties} properties, got ${propertyCount}`, instance, 'minProperties', {

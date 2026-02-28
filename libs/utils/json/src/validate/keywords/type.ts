@@ -1,6 +1,7 @@
 import type { Schema } from '../../types/schema'
 import type { ValidationContext } from '../context'
 import { addError } from '../context'
+import { isArray } from '@hyperfrontend/immutable-api-utils/built-in-copy/array'
 
 /**
  * Type checking functions for JSON Schema types.
@@ -10,8 +11,8 @@ const typeCheckers: Record<string, (value: unknown) => boolean> = {
   number: (v) => typeof v === 'number' && isFinite(v),
   integer: (v) => typeof v === 'number' && isFinite(v) && Number.isInteger(v),
   boolean: (v) => typeof v === 'boolean',
-  array: (v) => Array.isArray(v),
-  object: (v) => v !== null && typeof v === 'object' && !Array.isArray(v),
+  array: (v) => isArray(v),
+  object: (v) => v !== null && typeof v === 'object' && !isArray(v),
   null: (v) => v === null,
 }
 
@@ -23,7 +24,7 @@ const typeCheckers: Record<string, (value: unknown) => boolean> = {
  */
 function getActualType(value: unknown): string {
   if (value === null) return 'null'
-  if (Array.isArray(value)) return 'array'
+  if (isArray(value)) return 'array'
   const t = typeof value
   if (t === 'number') {
     const num = <number>value
@@ -48,7 +49,7 @@ export function validateType(instance: unknown, schema: Schema, ctx: ValidationC
     return true
   }
 
-  const types = Array.isArray(schemaType) ? schemaType : [schemaType]
+  const types = isArray(schemaType) ? schemaType : [schemaType]
 
   for (const type of types) {
     const checker = typeCheckers[type]
