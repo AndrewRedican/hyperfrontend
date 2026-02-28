@@ -1,4 +1,6 @@
 import { getType } from '@hyperfrontend/data-utils'
+import { freeze } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
+import { from } from '@hyperfrontend/immutable-api-utils/built-in-copy/array'
 
 export interface FifoList<T extends object> {
   push(item: T): void
@@ -37,7 +39,7 @@ export function createFifoList<T extends object>(): FifoList<T> {
   }
 
   const map = <U>(callback: (item: T) => U): U[] => {
-    return Array.from(list.values()).map(callback)
+    return from(list.values()).map(callback)
   }
 
   const forEach = (callback: (item: T) => void): void => {
@@ -63,5 +65,5 @@ export function createFifoList<T extends object>(): FifoList<T> {
     clear,
   }
 
-  return Object.freeze(result)
+  return freeze(result)
 }

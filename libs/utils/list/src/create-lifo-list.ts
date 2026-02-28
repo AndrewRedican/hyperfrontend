@@ -1,4 +1,6 @@
 import { getType } from '@hyperfrontend/data-utils'
+import { freeze } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
+import { from } from '@hyperfrontend/immutable-api-utils/built-in-copy/array'
 
 export interface LifoList<T extends object> {
   push(item: T): void
@@ -28,7 +30,7 @@ export function createLifoList<T extends object>(): LifoList<T> {
   }
 
   const pull = (): T | undefined => {
-    const lastItem = Array.from(list).pop()
+    const lastItem = from(list).pop()
     if (lastItem) {
       list.delete(lastItem)
     }
@@ -36,7 +38,7 @@ export function createLifoList<T extends object>(): LifoList<T> {
   }
 
   const map = <U>(callback: (item: T) => U): U[] => {
-    return Array.from(list).map(callback)
+    return from(list).map(callback)
   }
 
   const forEach = (callback: (item: T) => void): void => {
@@ -64,5 +66,5 @@ export function createLifoList<T extends object>(): LifoList<T> {
     clear,
   }
 
-  return Object.freeze(result)
+  return freeze(result)
 }
