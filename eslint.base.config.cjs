@@ -122,10 +122,20 @@ module.exports = [
   {
     files: ['**/index.ts'],
     plugins: {
-      '@hyperfrontend/eslint-rules': eslintRules,
+      workspace: eslintRules,
     },
     rules: {
-      '@hyperfrontend/eslint-rules/no-unwanted-barrel-files': 'error',
+      'workspace/no-unwanted-barrel-files': 'error',
+    },
+  },
+  {
+    files: ['**/*.ts'],
+    ignores: ['**/jest.config.ts', '**/jest.setup.ts', '**/jest.setup.browser.ts'],
+    plugins: {
+      workspace: eslintRules,
+    },
+    rules: {
+      'workspace/no-unsafe-builtin-methods': 'error',
     },
   },
 ]

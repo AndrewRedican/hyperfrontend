@@ -1,63 +1,12 @@
 import type { TSESTree } from '@typescript-eslint/utils'
-import { existsSync, readFileSync } from 'node:fs'
 import { dirname, join, relative, resolve } from 'node:path'
 import { ESLintUtils } from '@typescript-eslint/utils'
+import { findProjectRoot, isPublishableLibrary, parseJsonFile, type PackageJson } from '../utils/nx-project'
 
 /**
  * Rule identifier for the no-unwanted-barrel-files rule.
  */
 export const RULE_NAME = 'no-unwanted-barrel-files'
-
-/**
- * Represents the structure of a project.json file.
- */
-interface ProjectJson {
-  projectType?: string
-  targets?: {
-    build?: unknown
-    publish?: unknown
-  }
-}
-
-/**
- * Represents the structure of a package.json file.
- */
-interface PackageJson {
-  exports?: Record<string, string | Record<string, string>>
-  main?: string
-}
-
-/**
- * Finds the project root by locating project.json.
- *
- * @param startDir - The directory to start searching from.
- * @returns The project root path, or null if not found.
- */
-function findProjectRoot(startDir: string): string | null {
-  let dir = startDir
-  while (dir !== '/') {
-    if (existsSync(join(dir, 'project.json'))) {
-      return dir
-    }
-    dir = dirname(dir)
-  }
-  return null
-}
-
-/**
- * Parses a JSON file safely.
- *
- * @param filePath - The path to the JSON file.
- * @returns The parsed JSON object, or null if parsing fails.
- */
-function parseJsonFile<T>(filePath: string): T | null {
-  try {
-    const content = readFileSync(filePath, 'utf-8')
-    return <T>JSON.parse(content)
-  } catch {
-    return null
-  }
-}
 
 /**
  * Resolves an export value to a source path.
@@ -155,27 +104,12 @@ const rule = ESLintUtils.RuleCreator(
     const fileDir = dirname(filename)
     const projectRoot = findProjectRoot(fileDir)
 
-    if (!projectRoot) {
+    if (!projectRoot || !isPublishableLibrary(projectRoot)) {
       return {}
     }
 
-    const projectJsonPath = join(projectRoot, 'project.json')
     const packageJsonPath = join(projectRoot, 'package.json')
-
-    const projectJson = parseJsonFile<ProjectJson>(projectJsonPath)
     const packageJson = parseJsonFile<PackageJson>(packageJsonPath)
-
-    if (!projectJson) {
-      return {}
-    }
-
-    if (projectJson.projectType !== 'library') {
-      return {}
-    }
-
-    if (!projectJson.targets?.build || !projectJson.targets?.publish) {
-      return {}
-    }
 
     if (!packageJson) {
       return {}
