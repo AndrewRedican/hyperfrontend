@@ -1,5 +1,7 @@
 export type LogLevel = 'none' | 'error' | 'warn' | 'log' | 'info' | 'debug'
 
+import { freeze } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
+
 export interface LogLevelState {
   level: LogLevel
 }
@@ -62,7 +64,7 @@ export function createLogLevelConfig(level: LogLevel = 'error'): LogLevelConfig 
     }
     return priority[level] >= priority[state.level]
   }
-  return Object.freeze({
+  return freeze({
     getLogLevel,
     setLogLevel,
     shouldLog,

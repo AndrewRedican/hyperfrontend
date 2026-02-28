@@ -1,4 +1,5 @@
 import type { LogLevel, SetLogLevel, GetLogLevel } from './create-log-level-config'
+import { freeze } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type LogLevelFn = (...data: any[]) => void
@@ -73,7 +74,7 @@ export function createLogger(
     const condition = () => shouldLog(level)
     return createConditionalExecutionFunction(createErrorIgnoringFunction(fn), condition)
   }
-  return Object.freeze({
+  return freeze({
     error: wrapLogFn(error, 'error'),
     warn: wrapLogFn(warn, 'warn'),
     log: wrapLogFn(log, 'log'),
