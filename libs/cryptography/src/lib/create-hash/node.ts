@@ -1,5 +1,6 @@
 import type { HashAlgorithm } from './model'
 import { createHash as _createHash } from 'node:crypto'
+import { createPromise } from '@hyperfrontend/immutable-api-utils/built-in-copy/promise'
 
 /**
  * Creates a cryptographic hash of the provided data using Node.js crypto module.
@@ -10,7 +11,7 @@ import { createHash as _createHash } from 'node:crypto'
  * @throws {Error} When hash creation fails
  */
 export async function createHash(data: string, algorithm: HashAlgorithm = 'SHA-256'): Promise<string> {
-  return new Promise((resolve, reject) => {
+  return createPromise((resolve, reject) => {
     try {
       const hash = _createHash(algorithm).update(data).digest('hex')
       resolve(hash)

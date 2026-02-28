@@ -1,5 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import type { Vault } from './model'
+import { create, freeze } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
+import { from } from '@hyperfrontend/immutable-api-utils/built-in-copy/array'
 
 /**
  * Creates a vault factory function that produces encrypted storage instances.
@@ -16,7 +18,7 @@ export function createValueCreator(
   decrypt: (encrypted: Uint8Array, password: string) => Promise<string>
 ): (singleUse?: boolean) => Vault {
   return function createVault(singleUse = false): Vault {
-    let password = Array.from(getRandomValues(16))
+    let password = from(getRandomValues(16))
       .map((b) => b.toString(16).padStart(2, '0'))
       .join('')
 
@@ -106,7 +108,7 @@ export function createValueCreator(
       isVaultClosed = true
     }
 
-    const vault = Object.create(null, {
+    const vault = create(null, {
       write: {
         value: write,
         enumerable: false,
@@ -134,6 +136,6 @@ export function createValueCreator(
     })
 
     // Freeze to prevent addition of new properties
-    return Object.freeze(vault)
+    return freeze(vault)
   }
 }

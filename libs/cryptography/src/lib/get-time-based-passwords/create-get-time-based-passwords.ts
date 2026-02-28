@@ -1,4 +1,5 @@
 import type { TimeBasedPasswordGenerators } from './model'
+import { freeze } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
 
 /**
  * Creates a factory function that generates time-based password generators for multiple time windows.
@@ -15,6 +16,6 @@ export function createTimeBasedPasswords(
     const previous = () => getTimeBasedPassword(currentUtcTime, baseTimeWindow, -1)
     const next = () => getTimeBasedPassword(currentUtcTime, baseTimeWindow, 1)
     // Freeze to prevent runtime modification of password generator methods
-    return Object.freeze({ current, previous, next })
+    return freeze({ current, previous, next })
   }
 }
