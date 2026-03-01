@@ -2,6 +2,7 @@ import type { ESLint, Rule } from 'eslint'
 import assertiveTestNames, { RULE_NAME as ASSERTIVE_TEST_NAMES } from './rules/assertive-test-names'
 import importOrder, { RULE_NAME as IMPORT_ORDER } from './rules/import-order'
 import libPkgBundleEntry, { RULE_NAME as LIB_PKG_BUNDLE_ENTRY } from './rules/lib-pkg-bundle-entry'
+import libPkgExportsExist, { RULE_NAME as LIB_PKG_EXPORTS_EXIST } from './rules/lib-pkg-exports-exist'
 import libPkgFields, { RULE_NAME as LIB_PKG_FIELDS } from './rules/lib-pkg-fields'
 import libPkgPackageJsonExport, { RULE_NAME as LIB_PKG_PACKAGE_JSON_EXPORT } from './rules/lib-pkg-package-json-export'
 import libProjectBundleConfig, { RULE_NAME as LIB_PROJECT_BUNDLE_CONFIG } from './rules/lib-project-bundle-config'
@@ -22,6 +23,7 @@ export const rules: ESLint.Plugin['rules'] = {
   [ASSERTIVE_TEST_NAMES]: <Rule.RuleModule>(<unknown>assertiveTestNames),
   [IMPORT_ORDER]: <Rule.RuleModule>(<unknown>importOrder),
   [LIB_PKG_BUNDLE_ENTRY]: <Rule.RuleModule>(<unknown>libPkgBundleEntry),
+  [LIB_PKG_EXPORTS_EXIST]: <Rule.RuleModule>(<unknown>libPkgExportsExist),
   [LIB_PKG_FIELDS]: <Rule.RuleModule>(<unknown>libPkgFields),
   [LIB_PKG_PACKAGE_JSON_EXPORT]: <Rule.RuleModule>(<unknown>libPkgPackageJsonExport),
   [LIB_PROJECT_BUNDLE_CONFIG]: <Rule.RuleModule>(<unknown>libProjectBundleConfig),

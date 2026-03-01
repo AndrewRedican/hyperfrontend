@@ -183,6 +183,7 @@ module.exports = [
       'workspace/lib-pkg-fields': 'error',
       'workspace/lib-pkg-package-json-export': 'error',
       'workspace/lib-pkg-bundle-entry': 'error',
+      'workspace/lib-pkg-exports-exist': 'error',
     },
   },
   {
