@@ -1,27 +1,16 @@
 import type { IAction } from '../../types/action'
-import type { BrokerState } from '../types'
-import type { Registry } from '../../core/registry/factory'
-import type { ProcessManager } from '../../core/processes/factory'
-import type { ActionCreators } from '../../core/actions/factory'
+import type { RoutingContext } from './types'
 import type { ChannelHandle } from '../../types/channel'
 
 /**
- * Handles CLOSE_CONNECTION_ACKNOWLEDGED action
- * Completes close on initiator's side and notifies close event
+ * Handles CLOSE_CONNECTION_ACKNOWLEDGED action.
+ * Completes close on initiator's side and notifies close event.
  *
- * @param state - Current broker state
- * @param registry - Channel registry for accessing channels
- * @param processManager - Process manager for tracking communication processes
- * @param actions - Action creators for generating responses
+ * @param context - Routing context with state, registry, actions, and logger
  * @param message - Message event containing the CLOSE_CONNECTION_ACKNOWLEDGED action
  */
-export function handleCloseAcknowledged(
-  state: BrokerState,
-  registry: Registry,
-  processManager: ProcessManager,
-  actions: ActionCreators,
-  message: MessageEvent<IAction>
-): void {
+export function handleCloseAcknowledged(context: RoutingContext, message: MessageEvent<IAction>): void {
+  const { processManager } = context
   const action = message.data
   const processId = (action as unknown as Record<string, unknown>)['processId'] as string
 

@@ -114,7 +114,7 @@ describe('channel/factory', () => {
         settings: {
           origin: 'https://example.com',
           queueMessages: false,
-          debug: true,
+          logLevel: 'debug',
         },
       }
 

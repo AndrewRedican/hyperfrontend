@@ -24,7 +24,7 @@ describe('channel/subscription/events', () => {
       eventSubscriptions: [],
       messageSubscriptions: [],
       scheduledActivation: null,
-      debug: false,
+
       brokerManaged: false,
       readyToConnect: false,
       negotiatedProtocol: null,

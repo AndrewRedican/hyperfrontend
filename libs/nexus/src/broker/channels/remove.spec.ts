@@ -24,7 +24,6 @@ describe('removeChannel', () => {
         accepted: [{ type: 'test', description: 'Test action' }],
         emitted: [],
       },
-      debug: false,
     },
   }
 

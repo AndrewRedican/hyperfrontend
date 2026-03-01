@@ -1,6 +1,8 @@
 import type { BrokerState } from '../types'
 import type { IAction } from '../../types/action'
 import type { IChannelContract } from '../../types/contract'
+import type { RoutingContext } from './types'
+import type { Logger } from '@hyperfrontend/logging'
 import { handleAccept } from './handle-accept'
 import { createRegistry } from '../../core/registry/factory'
 import { createProcessManager } from '../../core/processes/factory'
@@ -13,23 +15,37 @@ describe('handleAccept', () => {
     emitted: [{ type: 'response-message', description: 'Response message' }],
   }
 
-  const mockBrokerState: BrokerState = {
-    id: 'broker-1',
-    name: 'test-broker',
-    window: <Window>global.window,
-    contract: validContract,
-    settings: {
-      contract: validContract,
-      debug: false,
-    },
-  }
+  let mockLogger: Logger
+  let mockBrokerState: BrokerState
 
   let registry: ReturnType<typeof createRegistry>
   let processManager: ReturnType<typeof createProcessManager>
   let actions: ReturnType<typeof createActionCreators>
   let mockWindow: Window
+  let routingContext: RoutingContext
 
   beforeEach(() => {
+    mockLogger = {
+      error: jest.fn(),
+      warn: jest.fn(),
+      log: jest.fn(),
+      info: jest.fn(),
+      debug: jest.fn(),
+      setLogLevel: jest.fn(),
+      getLogLevel: jest.fn(() => 'debug'),
+    }
+
+    mockBrokerState = {
+      id: 'broker-1',
+      name: 'test-broker',
+      window: <Window>global.window,
+      contract: validContract,
+      settings: {
+        contract: validContract,
+      },
+      logger: mockLogger,
+    }
+
     registry = createRegistry()
     processManager = createProcessManager()
     actions = createActionCreators({
@@ -39,6 +55,14 @@ describe('handleAccept', () => {
     mockWindow = <Window>(<unknown>{
       postMessage: jest.fn(),
     })
+
+    routingContext = {
+      state: mockBrokerState,
+      registry,
+      processManager,
+      actions,
+      logger: mockLogger,
+    }
   })
 
   it('handles acceptance and send open connection', () => {
@@ -57,7 +81,7 @@ describe('handleAccept', () => {
       source: mockWindow,
     }
 
-    handleAccept(mockBrokerState, registry, processManager, actions, message)
+    handleAccept(routingContext, message)
 
     // Should send OPEN_CONNECTION
     expect(mockWindow.postMessage).toHaveBeenCalledWith(
@@ -92,7 +116,7 @@ describe('handleAccept', () => {
       source: mockWindow,
     }
 
-    handleAccept(mockBrokerState, registry, processManager, actions, message)
+    handleAccept(routingContext, message)
 
     expect(setNegotiatedProtocolMock).toHaveBeenCalledWith('none')
     expect(setSecurityReadyMock).toHaveBeenCalledWith(true)
@@ -108,7 +132,12 @@ describe('handleAccept', () => {
   it('handles security response with v1 protocol', () => {
     const debugState: BrokerState = {
       ...mockBrokerState,
-      settings: { ...mockBrokerState.settings, debug: true },
+      settings: { ...mockBrokerState.settings, logLevel: 'debug' },
+    }
+
+    const debugContext: RoutingContext = {
+      ...routingContext,
+      state: debugState,
     }
 
     const channel = addChannel(debugState, registry, processManager, actions, 'test-channel', mockWindow)
@@ -125,26 +154,22 @@ describe('handleAccept', () => {
       security: { negotiated: 'v1' },
     }
 
-    const consoleSpy = jest.spyOn(console, 'info').mockImplementation()
-
     const message = <MessageEvent<IAction>>{
       data: action,
       origin: 'http://example.com',
       source: mockWindow,
     }
 
-    handleAccept(debugState, registry, processManager, actions, message)
+    handleAccept(debugContext, message)
 
     expect(setNegotiatedProtocolMock).toHaveBeenCalledWith('v1')
-    expect(consoleSpy).toHaveBeenCalledWith(expect.stringContaining('accepted security protocol: v1'))
+    expect(mockLogger.info).toHaveBeenCalledWith(expect.stringContaining('accepted security protocol: v1'))
     expect(mockWindow.postMessage).toHaveBeenCalledWith(
       expect.objectContaining({
         security: { active: true, protocol: 'v1' },
       }),
       expect.any(String)
     )
-
-    consoleSpy.mockRestore()
   })
 
   it('ignore if channel not found', () => {
@@ -161,7 +186,7 @@ describe('handleAccept', () => {
     }
 
     expect(() => {
-      handleAccept(mockBrokerState, registry, processManager, actions, message)
+      handleAccept(routingContext, message)
     }).not.toThrow()
   })
 
@@ -186,7 +211,7 @@ describe('handleAccept', () => {
 
     const postMessageCallsBefore = (<jest.Mock>mockWindow.postMessage).mock.calls.length
 
-    handleAccept(mockBrokerState, registry, processManager, actions, message)
+    handleAccept(routingContext, message)
 
     // Should not send any new messages
     expect((<jest.Mock>mockWindow.postMessage).mock.calls.length).toBe(postMessageCallsBefore)
@@ -212,7 +237,7 @@ describe('handleAccept', () => {
       source: mockWindow,
     }
 
-    handleAccept(mockBrokerState, registry, processManager, actions, message)
+    handleAccept(routingContext, message)
 
     // Should send cancellation
     expect(mockWindow.postMessage).toHaveBeenCalledWith(
@@ -233,6 +258,11 @@ describe('handleAccept', () => {
       },
     }
 
+    const contextWithPolicy: RoutingContext = {
+      ...routingContext,
+      state: stateWithPolicy,
+    }
+
     const channel = addChannel(stateWithPolicy, registry, processManager, actions, 'test-channel', mockWindow)
     const processId = processManager.create(channel)
 
@@ -248,7 +278,7 @@ describe('handleAccept', () => {
       source: mockWindow,
     }
 
-    handleAccept(stateWithPolicy, registry, processManager, actions, message)
+    handleAccept(contextWithPolicy, message)
 
     // Should send cancellation
     expect(mockWindow.postMessage).toHaveBeenCalledWith(
@@ -272,6 +302,11 @@ describe('handleAccept', () => {
       },
     }
 
+    const contextWithPolicy: RoutingContext = {
+      ...routingContext,
+      state: stateWithPolicy,
+    }
+
     const channel = addChannel(stateWithPolicy, registry, processManager, actions, 'test-channel', mockWindow)
     const processId = processManager.create(channel)
 
@@ -287,7 +322,7 @@ describe('handleAccept', () => {
       source: mockWindow,
     }
 
-    handleAccept(stateWithPolicy, registry, processManager, actions, message)
+    handleAccept(contextWithPolicy, message)
 
     // Should send OPEN_CONNECTION
     expect(mockWindow.postMessage).toHaveBeenCalledWith(
@@ -312,7 +347,7 @@ describe('handleAccept', () => {
     }
 
     expect(() => {
-      handleAccept(mockBrokerState, registry, processManager, actions, message)
+      handleAccept(routingContext, message)
     }).not.toThrow()
 
     expect(mockWindow.postMessage).not.toHaveBeenCalled()
@@ -332,7 +367,7 @@ describe('handleAccept', () => {
     }
 
     expect(() => {
-      handleAccept(mockBrokerState, registry, processManager, actions, message)
+      handleAccept(routingContext, message)
     }).not.toThrow()
 
     expect(mockWindow.postMessage).not.toHaveBeenCalled()

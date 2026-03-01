@@ -24,7 +24,7 @@ describe('Integration: Multi-Channel', () => {
       const broker = createBroker({
         name: 'multi-broker',
         contract: testContract,
-        settings: { debug: false },
+        settings: { logLevel: 'error' },
       })
 
       const channel1 = broker.addChannel('channel-1', mockWindow1 as unknown as Window)
@@ -42,7 +42,7 @@ describe('Integration: Multi-Channel', () => {
       const broker = createBroker({
         name: 'multi-broker',
         contract: testContract,
-        settings: { debug: false },
+        settings: { logLevel: 'error' },
       })
 
       const channel1 = broker.addChannel('channel-1', mockWindow1 as unknown as Window)
@@ -71,7 +71,7 @@ describe('Integration: Multi-Channel', () => {
       const broker = createBroker({
         name: 'multi-broker',
         contract: testContract,
-        settings: { debug: false },
+        settings: { logLevel: 'error' },
       })
 
       const channel1 = broker.addChannel('channel-1', mockWindow1 as unknown as Window)
@@ -103,7 +103,7 @@ describe('Integration: Multi-Channel', () => {
       const broker = createBroker({
         name: 'multi-broker',
         contract: testContract,
-        settings: { debug: false },
+        settings: { logLevel: 'error' },
       })
 
       const channel1 = broker.addChannel('channel-1', mockWindow1 as unknown as Window)
@@ -134,7 +134,7 @@ describe('Integration: Multi-Channel', () => {
       const broker = createBroker({
         name: 'multi-broker',
         contract: testContract,
-        settings: { debug: false },
+        settings: { logLevel: 'error' },
       })
 
       const channel1 = broker.addChannel('channel-1', mockWindow1 as unknown as Window)
@@ -167,7 +167,7 @@ describe('Integration: Multi-Channel', () => {
       const broker = createBroker({
         name: 'multi-broker',
         contract: testContract,
-        settings: { debug: false },
+        settings: { logLevel: 'error' },
       })
 
       const channel1 = broker.addChannel('channel-1', mockWindow1 as unknown as Window)
@@ -197,7 +197,7 @@ describe('Integration: Multi-Channel', () => {
       const broker = createBroker({
         name: 'multi-broker',
         contract: testContract,
-        settings: { debug: false },
+        settings: { logLevel: 'error' },
       })
 
       const channel1 = broker.addChannel('channel-1', mockWindow1 as unknown as Window)
@@ -218,7 +218,7 @@ describe('Integration: Multi-Channel', () => {
       const broker = createBroker({
         name: 'multi-broker',
         contract: testContract,
-        settings: { debug: false },
+        settings: { logLevel: 'error' },
       })
 
       const channel1 = broker.addChannel('channel-1', mockWindow1 as unknown as Window)
@@ -248,7 +248,7 @@ describe('Integration: Multi-Channel', () => {
       const broker = createBroker({
         name: 'multi-broker',
         contract: testContract,
-        settings: { debug: false },
+        settings: { logLevel: 'error' },
       })
 
       const channel1 = broker.addChannel('channel-1', mockWindow1 as unknown as Window)
@@ -275,7 +275,7 @@ describe('Integration: Multi-Channel', () => {
       const broker = createBroker({
         name: 'multi-broker',
         contract: testContract,
-        settings: { debug: false },
+        settings: { logLevel: 'error' },
       })
 
       const channel1 = broker.addChannel('channel-1', mockWindow1 as unknown as Window)
@@ -317,7 +317,7 @@ describe('Integration: Multi-Channel', () => {
       const broker = createBroker({
         name: 'multi-broker',
         contract: testContract,
-        settings: { debug: false },
+        settings: { logLevel: 'error' },
       })
 
       const channelCount = 100

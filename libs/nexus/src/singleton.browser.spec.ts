@@ -9,7 +9,7 @@ describe('singleton', () => {
     })
 
     it('has sensible default settings', () => {
-      expect(broker.debugMode).toBe(false)
+      expect(broker.logger.getLogLevel()).toBe('error')
     })
 
     it('exposes channels list', () => {

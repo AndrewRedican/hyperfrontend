@@ -8,7 +8,7 @@ import { add as addToRegistry } from '../../core/registry/add'
 import { remove as removeFromRegistry } from '../../core/registry/remove'
 
 /**
- * Adds a channel to the broker
+ * Adds a channel to the broker.
  *
  * @param state - Current broker state
  * @param registry - Channel registry for storing and retrieving channels
@@ -38,7 +38,7 @@ export function addChannel(
     return existing as unknown as ReturnType<typeof createChannel>
   }
 
-  // Create new channel with broker's contract and debug settings
+  // Create new channel with broker's contract and logger
   const channel = createChannel(
     {
       name,
@@ -46,7 +46,7 @@ export function addChannel(
       settings: {
         ...settings,
         contract: state.contract,
-        debug: state.settings.debug,
+        logger: state.logger,
         brokerManaged: true,
       },
     },

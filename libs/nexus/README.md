@@ -271,6 +271,42 @@ broker.setSecurityPolicy((origin, contract) => {
 
 Security policies are applied during `REQUEST_CONNECTION` handling. Rejected connections receive a `DENY_CONNECTION` response.
 
+### Logging
+
+Control logging verbosity with the `logLevel` setting:
+
+```typescript
+const broker = createBroker({
+  name: 'my-broker',
+  contract,
+  settings: {
+    logLevel: 'debug', // 'error' | 'warn' | 'log' | 'info' | 'debug' | 'none'
+  },
+})
+```
+
+Inject a custom logger (Winston, Pino, etc.) for production:
+
+```typescript
+const broker = createBroker({
+  name: 'production-broker',
+  contract,
+  settings: {
+    logger: {
+      error: (...args) => myLogger.error(args.join(' ')),
+      warn: (...args) => myLogger.warn(args.join(' ')),
+      log: (...args) => myLogger.info(args.join(' ')),
+      info: (...args) => myLogger.info(args.join(' ')),
+      debug: (...args) => myLogger.debug(args.join(' ')),
+      setLogLevel: () => {},
+      getLogLevel: () => 'info',
+    },
+  },
+})
+```
+
+Channels inherit the broker's logger. Access it via `broker.logger`.
+
 ## Installation
 
 ```bash
@@ -292,7 +328,7 @@ const contract = {
 const broker = createBroker({
   name: 'main-app',
   contract,
-  settings: { debug: true },
+  settings: { logLevel: 'debug' },
 })
 
 // Add channel to iframe

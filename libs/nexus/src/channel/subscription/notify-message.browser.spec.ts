@@ -1,3 +1,4 @@
+import type { Logger } from '@hyperfrontend/logging'
 import type { ChannelInternals } from '../../channel/types'
 import type { ActionCreators } from '../../core/actions/factory'
 import type { MessageHandler, ChannelState } from '../../types/channel'
@@ -8,10 +9,18 @@ describe('channel/subscription/notify-message', () => {
   let mockChannel: ChannelInternals
   let state: ChannelState
   let mockGetState: jest.Mock<ChannelState, []>
-  let consoleErrorSpy: jest.SpyInstance
+  let mockLogger: Logger
 
   beforeEach(() => {
-    consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation()
+    mockLogger = {
+      error: jest.fn(),
+      warn: jest.fn(),
+      log: jest.fn(),
+      info: jest.fn(),
+      debug: jest.fn(),
+      setLogLevel: jest.fn(),
+      getLogLevel: jest.fn(() => 'debug'),
+    }
 
     state = {
       id: 'channel-123',
@@ -27,13 +36,14 @@ describe('channel/subscription/notify-message', () => {
       eventSubscriptions: [],
       messageSubscriptions: [],
       scheduledActivation: null,
-      debug: false,
+
       brokerManaged: false,
       readyToConnect: false,
       negotiatedProtocol: null,
       securityReady: false,
       securityTransport: null,
       pendingSecurityRequest: null,
+      logger: mockLogger,
     }
 
     mockGetState = jest.fn(() => state)
@@ -47,10 +57,6 @@ describe('channel/subscription/notify-message', () => {
       notifyMessage: jest.fn(),
       actions: <ActionCreators>{},
     }
-  })
-
-  afterEach(() => {
-    consoleErrorSpy.mockRestore()
   })
 
   it('calls all message handlers with message', () => {
@@ -106,7 +112,7 @@ describe('channel/subscription/notify-message', () => {
     expect(handler1).toHaveBeenCalled()
     expect(handler2).toHaveBeenCalled()
     expect(handler3).toHaveBeenCalled()
-    expect(consoleErrorSpy).toHaveBeenCalledWith("Error in message handler for 'USER_ACTION' message:", expect.any(Error))
+    expect(mockLogger.error).toHaveBeenCalledWith("Error in message handler for 'USER_ACTION' message:", expect.any(Error))
   })
 
   it('handles messages with different data types', () => {

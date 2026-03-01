@@ -8,5 +8,5 @@ export const defaultBrokerSettings: Partial<BrokerSettings> = {
   whitelist: [],
   blacklist: [],
   contractExtension: false,
-  debug: false,
+  logLevel: 'error',
 }

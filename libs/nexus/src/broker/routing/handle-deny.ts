@@ -1,18 +1,12 @@
 import type { IAction } from '../../types/action'
-import type { BrokerState } from '../types'
-import type { Registry } from '../../core/registry/factory'
-import type { ProcessManager } from '../../core/processes/factory'
-import type { ActionCreators } from '../../core/actions/factory'
+import type { RoutingContext } from './types'
 import type { ChannelHandle } from '../../types/channel'
 
 /**
- * Handles DENY_CONNECTION action
- * Processes connection denial from remote broker
+ * Handles DENY_CONNECTION action.
+ * Processes connection denial from remote broker.
  *
- * @param state - Current broker state
- * @param registry - Channel registry for accessing channels
- * @param processManager - Process manager for tracking communication processes
- * @param actions - Action creators for generating responses
+ * @param context - Routing context with state, registry, actions, and logger
  * @param message - Message event containing the DENY_CONNECTION action
  *
  * @remarks
@@ -27,13 +21,8 @@ import type { ChannelHandle } from '../../types/channel'
  * Initiator <- DENY_CONNECTION (this handler)
  * Initiator fires 'deny' event
  */
-export function handleDeny(
-  state: BrokerState,
-  registry: Registry,
-  processManager: ProcessManager,
-  actions: ActionCreators,
-  message: MessageEvent<IAction>
-): void {
+export function handleDeny(context: RoutingContext, message: MessageEvent<IAction>): void {
+  const { processManager } = context
   const action = message.data
   const processId = (action as unknown as Record<string, unknown>)['processId'] as string
   const error = (action as unknown as Record<string, unknown>)['error'] as string | undefined

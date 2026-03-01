@@ -28,7 +28,7 @@ describe('channel/lifecycle/connect', () => {
       messageSubscriptions: [],
       scheduledActivation: null,
       queueMessages: true,
-      debug: false,
+
       brokerManaged: false,
       readyToConnect: false,
       negotiatedProtocol: null,

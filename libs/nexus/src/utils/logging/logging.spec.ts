@@ -5,8 +5,8 @@ import { type IAction, ACTION_TYPES } from '../../types/action'
 
 describe('Logging Utilities', () => {
   describe('createLogger', () => {
-    it('creates logger with debug enabled', () => {
-      const logger = createLogger(true)
+    it('creates logger with debug level', () => {
+      const logger = createLogger({ level: 'debug' })
 
       expect(logger).toBeDefined()
       expect(typeof logger.debug).toBe('function')
@@ -15,8 +15,8 @@ describe('Logging Utilities', () => {
       expect(typeof logger.error).toBe('function')
     })
 
-    it('creates logger with debug disabled', () => {
-      const logger = createLogger(false)
+    it('creates logger with error level (default)', () => {
+      const logger = createLogger({ level: 'error' })
 
       expect(logger).toBeDefined()
       expect(typeof logger.debug).toBe('function')
@@ -26,8 +26,8 @@ describe('Logging Utilities', () => {
     })
 
     it('creates different logger instances', () => {
-      const logger1 = createLogger(true)
-      const logger2 = createLogger(false)
+      const logger1 = createLogger({ level: 'debug' })
+      const logger2 = createLogger({ level: 'error' })
 
       // They should be different instances
       expect(logger1).not.toBe(logger2)
@@ -37,13 +37,14 @@ describe('Logging Utilities', () => {
       const customLogger: Logger = {
         debug: jest.fn(),
         info: jest.fn(),
+        log: jest.fn(),
         warn: jest.fn(),
         error: jest.fn(),
         setLogLevel: jest.fn(),
         getLogLevel: jest.fn(() => 'debug'),
       }
 
-      const logger = createLogger(true, customLogger)
+      const logger = createLogger({ customLogger })
 
       expect(logger).toBe(customLogger)
     })
@@ -52,13 +53,14 @@ describe('Logging Utilities', () => {
       const customLogger: Logger = {
         debug: jest.fn(),
         info: jest.fn(),
+        log: jest.fn(),
         warn: jest.fn(),
         error: jest.fn(),
         setLogLevel: jest.fn(),
         getLogLevel: jest.fn(() => 'debug'),
       }
 
-      const logger = createLogger(true, customLogger)
+      const logger = createLogger({ customLogger })
 
       logger.error('error message', { data: 1 })
       logger.warn('warning message', 42)
@@ -71,18 +73,19 @@ describe('Logging Utilities', () => {
       expect(customLogger.debug).toHaveBeenCalledWith('debug message', 'extra')
     })
 
-    it('ignores debug flag when custom logger is provided', () => {
+    it('custom logger is used regardless of level setting', () => {
       const customLogger: Logger = {
         debug: jest.fn(),
         info: jest.fn(),
+        log: jest.fn(),
         warn: jest.fn(),
         error: jest.fn(),
         setLogLevel: jest.fn(),
         getLogLevel: jest.fn(() => 'debug'),
       }
 
-      // Even with debug=false, custom logger's debug should still be called
-      const logger = createLogger(false, customLogger)
+      // Custom logger should be used directly
+      const logger = createLogger({ level: 'error', customLogger })
 
       logger.debug('should still be logged')
 
@@ -90,7 +93,7 @@ describe('Logging Utilities', () => {
     })
 
     it('falls back to library logger when no custom logger provided', () => {
-      const logger = createLogger(true)
+      const logger = createLogger({ level: 'debug' })
 
       // Should have created a new logger, not be undefined
       expect(logger).toBeDefined()
@@ -100,8 +103,8 @@ describe('Logging Utilities', () => {
       expect(logger.error).toBeDefined()
     })
 
-    it('debug is noop when debug disabled and no custom logger', () => {
-      const logger = createLogger(false)
+    it('debug is noop when level is error and no custom logger', () => {
+      const logger = createLogger({ level: 'error' })
       const debugSpy = jest.spyOn(console, 'debug').mockImplementation()
 
       // Call debug - should not invoke console.debug
@@ -114,8 +117,7 @@ describe('Logging Utilities', () => {
     describe('internal console wrapper functions', () => {
       it('calls console.error with prefix when logger.error is called', () => {
         const errorSpy = jest.spyOn(console, 'error').mockImplementation()
-        const logger = createLogger(true)
-        logger.setLogLevel('debug')
+        const logger = createLogger({ level: 'debug' })
 
         logger.error('test error message', { data: 123 })
 
@@ -125,8 +127,7 @@ describe('Logging Utilities', () => {
 
       it('calls console.warn with prefix when logger.warn is called', () => {
         const warnSpy = jest.spyOn(console, 'warn').mockImplementation()
-        const logger = createLogger(true)
-        logger.setLogLevel('debug')
+        const logger = createLogger({ level: 'debug' })
 
         logger.warn('test warning', 42)
 
@@ -136,8 +137,7 @@ describe('Logging Utilities', () => {
 
       it('calls console.info with prefix when logger.info is called', () => {
         const infoSpy = jest.spyOn(console, 'info').mockImplementation()
-        const logger = createLogger(true)
-        logger.setLogLevel('debug')
+        const logger = createLogger({ level: 'debug' })
 
         logger.info('test info')
 
@@ -145,10 +145,9 @@ describe('Logging Utilities', () => {
         infoSpy.mockRestore()
       })
 
-      it('calls console.debug with prefix when logger.debug is called and debug is enabled', () => {
+      it('calls console.debug with prefix when logger.debug is called and level is debug', () => {
         const debugSpy = jest.spyOn(console, 'debug').mockImplementation()
-        const logger = createLogger(true)
-        logger.setLogLevel('debug')
+        const logger = createLogger({ level: 'debug' })
 
         logger.debug('test debug', 'extra', 'args')
 
@@ -158,8 +157,7 @@ describe('Logging Utilities', () => {
 
       it('handles multiple arguments in error', () => {
         const errorSpy = jest.spyOn(console, 'error').mockImplementation()
-        const logger = createLogger(false)
-        logger.setLogLevel('debug')
+        const logger = createLogger({ level: 'debug' })
 
         logger.error('arg1', 'arg2', 'arg3', { nested: true })
 
@@ -169,8 +167,7 @@ describe('Logging Utilities', () => {
 
       it('handles no additional arguments in warn', () => {
         const warnSpy = jest.spyOn(console, 'warn').mockImplementation()
-        const logger = createLogger(false)
-        logger.setLogLevel('debug')
+        const logger = createLogger({ level: 'debug' })
 
         logger.warn('only message')
 
@@ -180,8 +177,7 @@ describe('Logging Utilities', () => {
 
       it('handles complex objects in info', () => {
         const infoSpy = jest.spyOn(console, 'info').mockImplementation()
-        const logger = createLogger(false)
-        logger.setLogLevel('debug')
+        const logger = createLogger({ level: 'debug' })
         const complexObj = { a: 1, b: [1, 2, 3], c: { nested: true } }
 
         logger.info('info with object', complexObj)
@@ -189,20 +185,68 @@ describe('Logging Utilities', () => {
         expect(infoSpy).toHaveBeenCalledWith('[nexus]', 'info with object', complexObj)
         infoSpy.mockRestore()
       })
+
+      it('creates logger with options object', () => {
+        const logger = createLogger({ level: 'warn' })
+
+        expect(logger).toBeDefined()
+        expect(logger.getLogLevel()).toBe('warn')
+      })
+
+      it('creates logger with custom prefix', () => {
+        const warnSpy = jest.spyOn(console, 'warn').mockImplementation()
+        const logger = createLogger({ level: 'warn', prefix: '[custom]' })
+        logger.warn('test')
+
+        expect(warnSpy).toHaveBeenCalledWith('[custom]', 'test')
+        warnSpy.mockRestore()
+      })
+
+      it('uses customLogger from options object', () => {
+        const customLogger: Logger = {
+          error: jest.fn(),
+          warn: jest.fn(),
+          log: jest.fn(),
+          info: jest.fn(),
+          debug: jest.fn(),
+          setLogLevel: jest.fn(),
+          getLogLevel: jest.fn(() => 'debug'),
+        }
+
+        const logger = createLogger({ customLogger })
+
+        expect(logger).toBe(customLogger)
+      })
+
+      it('creates logger with default options when empty object passed', () => {
+        const logger = createLogger({})
+
+        expect(logger).toBeDefined()
+        expect(logger.getLogLevel()).toBe('error')
+      })
+
+      it('creates logger with default options when no arguments passed', () => {
+        const logger = createLogger()
+
+        expect(logger).toBeDefined()
+        expect(logger.getLogLevel()).toBe('error')
+      })
     })
   })
 
   describe('logAction', () => {
-    let logger: Logger
-    let debugSpy: jest.SpyInstance
+    let mockLogger: Logger
 
     beforeEach(() => {
-      logger = createLogger(true)
-      debugSpy = jest.spyOn(logger, 'debug')
-    })
-
-    afterEach(() => {
-      debugSpy.mockRestore()
+      mockLogger = {
+        error: jest.fn(),
+        warn: jest.fn(),
+        log: jest.fn(),
+        info: jest.fn(),
+        debug: jest.fn(),
+        setLogLevel: jest.fn(),
+        getLogLevel: jest.fn(() => 'debug'),
+      }
     })
 
     it('logs sent action', () => {
@@ -213,9 +257,9 @@ describe('Logging Utilities', () => {
         contract: { accepted: [], emitted: [] },
       }
 
-      logAction(logger, action, 'sent')
+      logAction(mockLogger, action, 'sent')
 
-      expect(debugSpy).toHaveBeenCalledWith('Action sent:', ACTION_TYPES.REQUEST_CONNECTION, action)
+      expect(mockLogger.debug).toHaveBeenCalledWith('Action sent:', ACTION_TYPES.REQUEST_CONNECTION, action)
     })
 
     it('logs received action', () => {
@@ -226,9 +270,9 @@ describe('Logging Utilities', () => {
         contract: { accepted: [], emitted: [] },
       }
 
-      logAction(logger, action, 'received')
+      logAction(mockLogger, action, 'received')
 
-      expect(debugSpy).toHaveBeenCalledWith('Action received:', ACTION_TYPES.ACCEPT_CONNECTION, action)
+      expect(mockLogger.debug).toHaveBeenCalledWith('Action received:', ACTION_TYPES.ACCEPT_CONNECTION, action)
     })
 
     it('logs different action types', () => {
@@ -281,71 +325,73 @@ describe('Logging Utilities', () => {
           }
         }
 
-        debugSpy.mockClear()
-        logAction(logger, action, 'sent')
+        ;(<jest.Mock>mockLogger.debug).mockClear()
+        logAction(mockLogger, action, 'sent')
 
-        expect(debugSpy).toHaveBeenCalledWith('Action sent:', type, action)
+        expect(mockLogger.debug).toHaveBeenCalledWith('Action sent:', type, action)
       })
     })
   })
 
   describe('logEvent', () => {
-    let logger: Logger
-    let debugSpy: jest.SpyInstance
+    let mockLogger: Logger
 
     beforeEach(() => {
-      logger = createLogger(true)
-      debugSpy = jest.spyOn(logger, 'debug')
-    })
-
-    afterEach(() => {
-      debugSpy.mockRestore()
+      mockLogger = {
+        error: jest.fn(),
+        warn: jest.fn(),
+        log: jest.fn(),
+        info: jest.fn(),
+        debug: jest.fn(),
+        setLogLevel: jest.fn(),
+        getLogLevel: jest.fn(() => 'debug'),
+      }
     })
 
     it('logs OPEN event', () => {
       const eventData = { channelId: 'channel-123' }
 
-      logEvent(logger, 'open', eventData)
+      logEvent(mockLogger, 'open', eventData)
 
-      expect(debugSpy).toHaveBeenCalledWith('Channel event:', 'open', eventData)
+      expect(mockLogger.debug).toHaveBeenCalledWith('Channel event:', 'open', eventData)
     })
 
     it('logs CLOSE event', () => {
       const eventData = { reason: 'User requested' }
 
-      logEvent(logger, 'close', eventData)
+      logEvent(mockLogger, 'close', eventData)
 
-      expect(debugSpy).toHaveBeenCalledWith('Channel event:', 'close', eventData)
+      expect(mockLogger.debug).toHaveBeenCalledWith('Channel event:', 'close', eventData)
     })
 
     it('logs CANCEL event', () => {
       const eventData = { cancelReason: 'Timeout' }
 
-      logEvent(logger, 'cancel', eventData)
+      logEvent(mockLogger, 'cancel', eventData)
 
-      expect(debugSpy).toHaveBeenCalledWith('Channel event:', 'cancel', eventData)
+      expect(mockLogger.debug).toHaveBeenCalledWith('Channel event:', 'cancel', eventData)
     })
 
     it('logs DENY event', () => {
       const eventData = { denyReason: 'Security policy' }
 
-      logEvent(logger, 'deny', eventData)
+      logEvent(mockLogger, 'deny', eventData)
 
-      expect(debugSpy).toHaveBeenCalledWith('Channel event:', 'deny', eventData)
+      expect(mockLogger.debug).toHaveBeenCalledWith('Channel event:', 'deny', eventData)
     })
 
     it('logs INVALID event', () => {
       const eventData = { error: 'Invalid action' }
 
-      logEvent(logger, 'invalid', eventData)
+      logEvent(mockLogger, 'invalid', eventData)
 
-      expect(debugSpy).toHaveBeenCalledWith('Channel event:', 'invalid', eventData)
+      expect(mockLogger.debug).toHaveBeenCalledWith('Channel event:', 'invalid', eventData)
     })
 
     it('logs event with undefined data', () => {
-      logEvent(logger, 'open', undefined)
+      logEvent(mockLogger, 'open', undefined)
 
-      expect(debugSpy).toHaveBeenCalledWith('Channel event:', 'open', undefined)
+      expect(mockLogger.debug).toHaveBeenCalledWith('Channel event:', 'open', undefined)
     })
 
     it('logs event with complex data', () => {
@@ -357,16 +403,23 @@ describe('Logging Utilities', () => {
         message: 'Complex event data',
       }
 
-      logEvent(logger, 'close', complexData)
+      logEvent(mockLogger, 'close', complexData)
 
-      expect(debugSpy).toHaveBeenCalledWith('Channel event:', 'close', complexData)
+      expect(mockLogger.debug).toHaveBeenCalledWith('Channel event:', 'close', complexData)
     })
   })
 
   describe('Integration', () => {
     it('works together for action logging flow', () => {
-      const logger = createLogger(true)
-      const debugSpy = jest.spyOn(logger, 'debug')
+      const mockLogger: Logger = {
+        error: jest.fn(),
+        warn: jest.fn(),
+        log: jest.fn(),
+        info: jest.fn(),
+        debug: jest.fn(),
+        setLogLevel: jest.fn(),
+        getLogLevel: jest.fn(() => 'debug'),
+      }
 
       const action: IAction = {
         type: ACTION_TYPES.NEW_MESSAGE,
@@ -375,32 +428,34 @@ describe('Logging Utilities', () => {
       }
 
       // Log sending
-      logAction(logger, action, 'sent')
-      expect(debugSpy).toHaveBeenCalledWith('Action sent:', ACTION_TYPES.NEW_MESSAGE, action)
-
-      debugSpy.mockClear()
+      logAction(mockLogger, action, 'sent')
+      expect(mockLogger.debug).toHaveBeenCalledWith('Action sent:', ACTION_TYPES.NEW_MESSAGE, action)
+      ;(<jest.Mock>mockLogger.debug).mockClear()
 
       // Log receiving
-      logAction(logger, action, 'received')
-      expect(debugSpy).toHaveBeenCalledWith('Action received:', ACTION_TYPES.NEW_MESSAGE, action)
-
-      debugSpy.mockRestore()
+      logAction(mockLogger, action, 'received')
+      expect(mockLogger.debug).toHaveBeenCalledWith('Action received:', ACTION_TYPES.NEW_MESSAGE, action)
     })
 
     it('works together for event logging flow', () => {
-      const logger = createLogger(true)
-      const debugSpy = jest.spyOn(logger, 'debug')
+      const mockLogger: Logger = {
+        error: jest.fn(),
+        warn: jest.fn(),
+        log: jest.fn(),
+        info: jest.fn(),
+        debug: jest.fn(),
+        setLogLevel: jest.fn(),
+        getLogLevel: jest.fn(() => 'debug'),
+      }
 
       // Log connection lifecycle
-      logEvent(logger, 'open', { channelId: '1' })
-      expect(debugSpy).toHaveBeenNthCalledWith(1, 'Channel event:', 'open', { channelId: '1' })
+      logEvent(mockLogger, 'open', { channelId: '1' })
+      expect(mockLogger.debug).toHaveBeenNthCalledWith(1, 'Channel event:', 'open', { channelId: '1' })
 
-      logEvent(logger, 'close', { reason: 'done' })
-      expect(debugSpy).toHaveBeenNthCalledWith(2, 'Channel event:', 'close', { reason: 'done' })
+      logEvent(mockLogger, 'close', { reason: 'done' })
+      expect(mockLogger.debug).toHaveBeenNthCalledWith(2, 'Channel event:', 'close', { reason: 'done' })
 
-      expect(debugSpy).toHaveBeenCalledTimes(2)
-
-      debugSpy.mockRestore()
+      expect(mockLogger.debug).toHaveBeenCalledTimes(2)
     })
   })
 })

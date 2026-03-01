@@ -1,3 +1,4 @@
+import type { Logger } from '@hyperfrontend/logging'
 import type { ChannelInternals } from '../../channel/types'
 import type { ActionCreators } from '../../core/actions/factory'
 import type { EventHandler, ChannelState } from '../../types/channel'
@@ -7,10 +8,18 @@ describe('channel/subscription/notify-event', () => {
   let mockChannel: ChannelInternals
   let state: ChannelState
   let mockGetState: jest.Mock<ChannelState, []>
-  let consoleErrorSpy: jest.SpyInstance
+  let mockLogger: Logger
 
   beforeEach(() => {
-    consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation()
+    mockLogger = {
+      error: jest.fn(),
+      warn: jest.fn(),
+      log: jest.fn(),
+      info: jest.fn(),
+      debug: jest.fn(),
+      setLogLevel: jest.fn(),
+      getLogLevel: jest.fn(() => 'debug'),
+    }
 
     state = {
       id: 'channel-123',
@@ -26,13 +35,14 @@ describe('channel/subscription/notify-event', () => {
       eventSubscriptions: [],
       messageSubscriptions: [],
       scheduledActivation: null,
-      debug: false,
+
       brokerManaged: false,
       readyToConnect: false,
       negotiatedProtocol: null,
       securityReady: false,
       securityTransport: null,
       pendingSecurityRequest: null,
+      logger: mockLogger,
     }
 
     mockGetState = jest.fn(() => state)
@@ -46,10 +56,6 @@ describe('channel/subscription/notify-event', () => {
       notifyMessage: jest.fn(),
       actions: <ActionCreators>{},
     }
-  })
-
-  afterEach(() => {
-    consoleErrorSpy.mockRestore()
   })
 
   it('calls all event handlers with event and data', () => {
@@ -100,7 +106,7 @@ describe('channel/subscription/notify-event', () => {
     expect(handler1).toHaveBeenCalled()
     expect(handler2).toHaveBeenCalled()
     expect(handler3).toHaveBeenCalled()
-    expect(consoleErrorSpy).toHaveBeenCalledWith("Error in event handler for 'open' event:", expect.any(Error))
+    expect(mockLogger.error).toHaveBeenCalledWith("Error in event handler for 'open' event:", expect.any(Error))
   })
 
   it('handles all event types', () => {

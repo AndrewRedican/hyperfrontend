@@ -3,7 +3,9 @@ import type { IChannelContract } from '../types/contract'
 import type { IChannelSettings } from '../types/channel'
 import type { SecurityProtocolVersion } from '../types/security'
 import type { BrokerConfig, BrokerState, BrokerHandle, SecurityPolicy } from './types'
+import type { RoutingContext } from './routing/types'
 import { defaultBrokerSettings } from './defaults'
+import { createLogger } from '../utils/logging/create-logger'
 import { createRegistry } from '../core/registry/factory'
 import { createProcessManager } from '../core/processes/factory'
 import { createActionCreators } from '../core/actions/factory'
@@ -52,17 +54,28 @@ export function createBroker(config: {
   validateName(config.name)
   validateContract(config.contract)
 
+  // Merge settings with defaults
+  const mergedSettings = {
+    ...defaultBrokerSettings,
+    ...config.settings,
+    contract: config.contract,
+  }
+
+  // Create logger - use provided logger, or create one based on logLevel setting
+  const logLevel = mergedSettings.logLevel ?? 'error'
+  const logger = createLogger({
+    level: logLevel,
+    customLogger: mergedSettings.logger,
+  })
+
   // Create broker state
   const state: BrokerState = {
     id: uuidV4(),
     name: config.name,
     window: window,
     contract: config.contract,
-    settings: {
-      ...defaultBrokerSettings,
-      ...config.settings,
-      contract: config.contract,
-    },
+    settings: mergedSettings,
+    logger,
   }
 
   // Create infrastructure
@@ -104,26 +117,33 @@ export function createBroker(config: {
     [ACTION_TYPES.INVALID_REQUEST]: handleInvalid,
   })
 
+  // Create routing context for message handlers
+  const routingContext: RoutingContext = {
+    state,
+    registry,
+    processManager,
+    actions,
+    logger,
+  }
+
   // Message handler
   const onMessage = (event: MessageEvent<IAction | Uint8Array>) => {
     const origin = event?.origin
 
     // Apply origin filtering
     if (!filterOrigin(origin, state.settings.whitelist, state.settings.blacklist)) {
-      if (state.settings.debug) {
-        console.info(`[nexus] ${state.name} ignored message from ${origin}`)
-      }
+      logger.info(`${state.name} ignored message from ${origin}`)
       return
     }
 
     // Check if message is encrypted (Uint8Array)
     if (event.data instanceof Uint8Array) {
-      routeEncryptedMessage(state, registry, processManager, actions, router, <MessageEvent<Uint8Array>>event)
+      routeEncryptedMessage(routingContext, router, <MessageEvent<Uint8Array>>event)
       return
     }
 
     // Route plain object messages through existing handlers
-    routeMessage(router, state, registry, processManager, actions, <MessageEvent<IAction>>event)
+    routeMessage(router, routingContext, <MessageEvent<IAction>>event)
   }
 
   // Attach message listener
@@ -137,7 +157,6 @@ export function createBroker(config: {
     id: state.id,
     name: state.name,
     settings: state.settings,
-    debugMode: state.settings.debug ?? false,
 
     get contract() {
       return state.contract
@@ -188,7 +207,6 @@ export function createBroker(config: {
         name: state.name,
         settings: state.settings,
         acceptedActionTypes: state.contract.accepted.map((a) => a.type),
-        debugMode: state.settings.debug ?? false,
         channels: listChannels(registry),
       }
     },
@@ -209,6 +227,10 @@ export function createBroker(config: {
 
     getSupportedProtocols() {
       return protocolRegistry.getSupportedVersions()
+    },
+
+    get logger() {
+      return state.logger
     },
   }
 

@@ -7,6 +7,7 @@
  * @module security/errors
  */
 
+import type { Logger } from '@hyperfrontend/logging'
 import type { SecurityErrorEventData } from '../types/events'
 import { setPrototypeOf } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
 
@@ -177,28 +178,24 @@ export function createDeobfuscationRetry<T>(
 /**
  * Logs a security error with appropriate formatting.
  *
- * Uses console.error for actual errors and console.warn for
+ * Uses logger.error for actual errors and logger.warn for
  * retryable/expected failures.
  *
+ * @param logger - Logger instance to use for output
  * @param channelName - Name of the channel where error occurred
  * @param error - The security error event data containing message, code, and optional cause
- * @param debug - Whether debug mode is enabled
  *
  * @example
  * ```typescript
- * logSecurityError('my-channel', error, state.debug)
+ * logSecurityError(logger, 'my-channel', errorData)
  * ```
  */
-export function logSecurityError(channelName: string, error: SecurityErrorEventData, debug: boolean): void {
-  if (!debug) {
-    return
-  }
-
-  const prefix = `[nexus] ${channelName} security error:`
+export function logSecurityError(logger: Logger, channelName: string, error: SecurityErrorEventData): void {
+  const prefix = `${channelName} security error:`
 
   if (error.code === 'unknown') {
-    console.error(prefix, error.message, error.cause)
+    logger.error(prefix, error.message, error.cause)
   } else {
-    console.warn(prefix, `[${error.code}]`, error.message)
+    logger.warn(prefix, `[${error.code}]`, error.message)
   }
 }

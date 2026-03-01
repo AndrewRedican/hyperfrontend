@@ -1,19 +1,13 @@
 import type { IAction } from '../../types/action'
 import type { SecurityConfirmation } from '../../types/security'
-import type { BrokerState } from '../types'
-import type { Registry } from '../../core/registry/factory'
-import type { ProcessManager } from '../../core/processes/factory'
-import type { ActionCreators } from '../../core/actions/factory'
+import type { RoutingContext } from './types'
 import type { ChannelHandle } from '../../types/channel'
 
 /**
- * Handles OPEN_CONNECTION action
- * Completes handshake on responder's side and notifies open event
+ * Handles OPEN_CONNECTION action.
+ * Completes handshake on responder's side and notifies open event.
  *
- * @param state - Current broker state
- * @param registry - Channel registry for accessing channels
- * @param processManager - Process manager for tracking communication processes
- * @param actions - Action creators for generating responses
+ * @param context - Routing context with state, registry, actions, and logger
  * @param message - Message event containing the OPEN_CONNECTION action
  *
  * @remarks
@@ -29,13 +23,8 @@ import type { ChannelHandle } from '../../types/channel'
  * Responder receives OPEN (this handler) from Initiator
  * Both sides now have active connection
  */
-export function handleOpen(
-  state: BrokerState,
-  registry: Registry,
-  processManager: ProcessManager,
-  actions: ActionCreators,
-  message: MessageEvent<IAction>
-): void {
+export function handleOpen(context: RoutingContext, message: MessageEvent<IAction>): void {
+  const { state, processManager, logger } = context
   const action = message.data
   const processId = (action as unknown as Record<string, unknown>)['processId'] as string
 
@@ -62,9 +51,7 @@ export function handleOpen(
     // Mark security as ready
     channel.setSecurityReady(true)
 
-    if (state.settings.debug) {
-      console.info(`[nexus] ${state.name} security ready: protocol=${securityConfirmation.protocol}, active=${securityConfirmation.active}`)
-    }
+    logger.info(`${state.name} security ready: protocol=${securityConfirmation.protocol}, active=${securityConfirmation.active}`)
 
     // Emit security-ready event
     channel.notifyEvent('security-ready', {

@@ -336,32 +336,29 @@ describe('security/errors', () => {
   })
 
   describe('logSecurityError', () => {
-    let consoleErrorSpy: jest.SpyInstance
-    let consoleWarnSpy: jest.SpyInstance
+    let mockLogger: {
+      error: jest.Mock
+      warn: jest.Mock
+      log: jest.Mock
+      info: jest.Mock
+      debug: jest.Mock
+      setLogLevel: jest.Mock
+      getLogLevel: jest.Mock
+    }
 
     beforeEach(() => {
-      consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation()
-      consoleWarnSpy = jest.spyOn(console, 'warn').mockImplementation()
-    })
-
-    afterEach(() => {
-      consoleErrorSpy.mockRestore()
-      consoleWarnSpy.mockRestore()
-    })
-
-    it('does not log when debug is false', () => {
-      const errorData: SecurityErrorEventData = {
-        message: 'Test error',
-        code: 'unknown',
+      mockLogger = {
+        error: jest.fn(),
+        warn: jest.fn(),
+        log: jest.fn(),
+        info: jest.fn(),
+        debug: jest.fn(),
+        setLogLevel: jest.fn(),
+        getLogLevel: jest.fn(() => 'debug'),
       }
-
-      logSecurityError('test-channel', errorData, false)
-
-      expect(consoleErrorSpy).not.toHaveBeenCalled()
-      expect(consoleWarnSpy).not.toHaveBeenCalled()
     })
 
-    it('logs unknown errors with console.error', () => {
+    it('logs unknown errors with logger.error', () => {
       const cause = new Error('Original')
       const errorData: SecurityErrorEventData = {
         message: 'Unknown error occurred',
@@ -369,44 +366,44 @@ describe('security/errors', () => {
         cause,
       }
 
-      logSecurityError('my-channel', errorData, true)
+      logSecurityError(mockLogger, 'my-channel', errorData)
 
-      expect(consoleErrorSpy).toHaveBeenCalledWith('[nexus] my-channel security error:', 'Unknown error occurred', cause)
-      expect(consoleWarnSpy).not.toHaveBeenCalled()
+      expect(mockLogger.error).toHaveBeenCalledWith('my-channel security error:', 'Unknown error occurred', cause)
+      expect(mockLogger.warn).not.toHaveBeenCalled()
     })
 
-    it('logs known errors with console.warn', () => {
+    it('logs known errors with logger.warn', () => {
       const errorData: SecurityErrorEventData = {
         message: 'Decryption issue',
         code: 'decryption_failed',
       }
 
-      logSecurityError('secure-channel', errorData, true)
+      logSecurityError(mockLogger, 'secure-channel', errorData)
 
-      expect(consoleWarnSpy).toHaveBeenCalledWith('[nexus] secure-channel security error:', '[decryption_failed]', 'Decryption issue')
-      expect(consoleErrorSpy).not.toHaveBeenCalled()
+      expect(mockLogger.warn).toHaveBeenCalledWith('secure-channel security error:', '[decryption_failed]', 'Decryption issue')
+      expect(mockLogger.error).not.toHaveBeenCalled()
     })
 
-    it('logs deobfuscation_failed with console.warn', () => {
+    it('logs deobfuscation_failed with logger.warn', () => {
       const errorData: SecurityErrorEventData = {
         message: 'Time window issue',
         code: 'deobfuscation_failed',
       }
 
-      logSecurityError('channel', errorData, true)
+      logSecurityError(mockLogger, 'channel', errorData)
 
-      expect(consoleWarnSpy).toHaveBeenCalledWith('[nexus] channel security error:', '[deobfuscation_failed]', 'Time window issue')
+      expect(mockLogger.warn).toHaveBeenCalledWith('channel security error:', '[deobfuscation_failed]', 'Time window issue')
     })
 
-    it('logs transport_error with console.warn', () => {
+    it('logs transport_error with logger.warn', () => {
       const errorData: SecurityErrorEventData = {
         message: 'Connection lost',
         code: 'transport_error',
       }
 
-      logSecurityError('channel', errorData, true)
+      logSecurityError(mockLogger, 'channel', errorData)
 
-      expect(consoleWarnSpy).toHaveBeenCalledWith('[nexus] channel security error:', '[transport_error]', 'Connection lost')
+      expect(mockLogger.warn).toHaveBeenCalledWith('channel security error:', '[transport_error]', 'Connection lost')
     })
   })
 })

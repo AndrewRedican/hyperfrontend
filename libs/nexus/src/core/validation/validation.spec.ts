@@ -332,8 +332,8 @@ describe('Validation Functions', () => {
     })
 
     it('acceptss valid settings with debug', () => {
-      expect(() => validateSettings({ debug: true })).not.toThrow()
-      expect(() => validateSettings({ debug: false })).not.toThrow()
+      expect(() => validateSettings({ logLevel: 'debug' })).not.toThrow()
+      expect(() => validateSettings({ logLevel: 'error' })).not.toThrow()
     })
 
     it('acceptss valid settings with origin', () => {
@@ -349,7 +349,7 @@ describe('Validation Functions', () => {
     it('acceptss all valid settings combined', () => {
       const settings = {
         queueMessages: true,
-        debug: false,
+
         origin: 'http://example.com',
         contract: { emitted: ['action1'], accepted: [] },
       }

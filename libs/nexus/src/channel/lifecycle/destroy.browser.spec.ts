@@ -30,7 +30,7 @@ describe('channel/lifecycle/destroy', () => {
       messageSubscriptions: [],
       scheduledActivation: null,
       queueMessages: true,
-      debug: false,
+
       brokerManaged: false,
       readyToConnect: true,
       negotiatedProtocol: null,

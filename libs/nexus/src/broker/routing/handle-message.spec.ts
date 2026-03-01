@@ -2,6 +2,8 @@
  * Tests for handleMessage function
  */
 
+import type { RoutingContext } from './types'
+import type { Logger } from '@hyperfrontend/logging'
 import { handleMessage } from './handle-message'
 import { createRegistry } from '../../core/registry/factory'
 import { createProcessManager } from '../../core/processes/factory'
@@ -17,24 +19,37 @@ describe('handleMessage', () => {
     emitted: [{ type: 'response-message', description: 'Response message' }],
   }
 
-  const mockBrokerState: BrokerState = {
-    id: 'broker-1',
-    name: 'test-broker',
-    window: <Window>global.window,
-    contract: validContract,
-    settings: {
-      contract: validContract,
-      debug: false,
-    },
-  }
+  let mockLogger: Logger
+  let mockBrokerState: BrokerState
 
   let registry: ReturnType<typeof createRegistry>
   let processManager: ReturnType<typeof createProcessManager>
   let actions: ReturnType<typeof createActionCreators>
   let mockWindow: Window
-  let consoleInfoSpy: jest.SpyInstance
+  let routingContext: RoutingContext
 
   beforeEach(() => {
+    mockLogger = {
+      error: jest.fn(),
+      warn: jest.fn(),
+      log: jest.fn(),
+      info: jest.fn(),
+      debug: jest.fn(),
+      setLogLevel: jest.fn(),
+      getLogLevel: jest.fn(() => 'debug'),
+    }
+
+    mockBrokerState = {
+      id: 'broker-1',
+      name: 'test-broker',
+      window: <Window>global.window,
+      contract: validContract,
+      settings: {
+        contract: validContract,
+      },
+      logger: mockLogger,
+    }
+
     registry = createRegistry()
     processManager = createProcessManager()
     actions = createActionCreators({
@@ -44,11 +59,14 @@ describe('handleMessage', () => {
     mockWindow = <Window>(<unknown>{
       postMessage: jest.fn(),
     })
-    consoleInfoSpy = jest.spyOn(console, 'info').mockImplementation()
-  })
 
-  afterEach(() => {
-    consoleInfoSpy.mockRestore()
+    routingContext = {
+      state: mockBrokerState,
+      registry,
+      processManager,
+      actions,
+      logger: mockLogger,
+    }
   })
 
   it('routes message to open channel', () => {
@@ -75,7 +93,7 @@ describe('handleMessage', () => {
     }
 
     expect(() => {
-      handleMessage(mockBrokerState, registry, processManager, actions, message)
+      handleMessage(routingContext, message)
     }).not.toThrow()
   })
 
@@ -95,7 +113,7 @@ describe('handleMessage', () => {
     }
 
     expect(() => {
-      handleMessage(mockBrokerState, registry, processManager, actions, message)
+      handleMessage(routingContext, message)
     }).not.toThrow()
   })
 
@@ -122,16 +140,21 @@ describe('handleMessage', () => {
       source: mockWindow,
     }
 
-    handleMessage(mockBrokerState, registry, processManager, actions, message)
+    handleMessage(routingContext, message)
 
     // Should not process the message
-    expect(consoleInfoSpy).not.toHaveBeenCalled()
+    expect(mockLogger.info).not.toHaveBeenCalled()
   })
 
   it('logs and ignore invalid messages in debug mode', () => {
     const debugState: BrokerState = {
       ...mockBrokerState,
-      settings: { ...mockBrokerState.settings, debug: true },
+      settings: { ...mockBrokerState.settings, logLevel: 'debug' },
+    }
+
+    const debugContext: RoutingContext = {
+      ...routingContext,
+      state: debugState,
     }
 
     const channel = addChannel(debugState, registry, processManager, actions, 'test-channel', mockWindow)
@@ -154,12 +177,24 @@ describe('handleMessage', () => {
       source: mockWindow,
     }
 
-    handleMessage(debugState, registry, processManager, actions, message)
+    handleMessage(debugContext, message)
 
-    expect(consoleInfoSpy).toHaveBeenCalledWith(expect.stringContaining('ignored message from'))
+    expect(mockLogger.info).toHaveBeenCalledWith(expect.stringContaining('ignored message from'))
   })
 
-  it('does not log when debug is disabled', () => {
+  it('does not output to console when log level is error', () => {
+    // Create a real logger with error level (info filtered out)
+    const infoSpy = jest.spyOn(console, 'info').mockImplementation()
+
+    // Use a real logger with error level
+    const { createLogger } = require('./../../utils/logging/create-logger') as typeof import('./../../utils/logging/create-logger')
+    const realLogger = createLogger({ level: 'error' })
+
+    const errorLevelContext: RoutingContext = {
+      ...routingContext,
+      logger: realLogger,
+    }
+
     const channel = addChannel(mockBrokerState, registry, processManager, actions, 'test-channel', mockWindow)
 
     Object.defineProperty(channel, 'id', { value: 'remote-broker-1', writable: true })
@@ -179,9 +214,11 @@ describe('handleMessage', () => {
       source: mockWindow,
     }
 
-    handleMessage(mockBrokerState, registry, processManager, actions, message)
+    handleMessage(errorLevelContext, message)
 
-    expect(consoleInfoSpy).not.toHaveBeenCalled()
+    // Console.info should not be called because log level is 'error'
+    expect(infoSpy).not.toHaveBeenCalled()
+    infoSpy.mockRestore()
   })
 
   it('handles messages with different data types', () => {
@@ -213,7 +250,7 @@ describe('handleMessage', () => {
       }
 
       expect(() => {
-        handleMessage(mockBrokerState, registry, processManager, actions, message)
+        handleMessage(routingContext, message)
       }).not.toThrow()
     })
   })
@@ -237,33 +274,33 @@ describe('handleMessage', () => {
     const action1: IAction = {
       type: '[nexus] new-message',
       senderId: 'remote-1',
-      data: { type: 'test', payload: 'for channel 1' },
+      data: { type: 'test-message', payload: 'for channel 1' },
     }
 
     const action2: IAction = {
       type: '[nexus] new-message',
       senderId: 'remote-2',
-      data: { type: 'test', payload: 'for channel 2' },
+      data: { type: 'test-message', payload: 'for channel 2' },
     }
 
     // handleMessage routes messages through channel notification system
     // This test verifies no errors occur during routing
 
-    handleMessage(mockBrokerState, registry, processManager, actions, <MessageEvent<IAction>>{
+    handleMessage(routingContext, <MessageEvent<IAction>>{
       data: action1,
       source: mockWindow,
     })
 
     // Should not throw for channel 1
     expect(() => {
-      handleMessage(mockBrokerState, registry, processManager, actions, <MessageEvent<IAction>>{
+      handleMessage(routingContext, <MessageEvent<IAction>>{
         data: action2,
         source: window2,
       })
     }).not.toThrow()
 
-    // Both messages should be processed without errors
-    expect(consoleInfoSpy).not.toHaveBeenCalled()
+    // Both messages should be processed without validation errors (valid message type)
+    expect(mockLogger.info).not.toHaveBeenCalled()
   })
 
   it('returns early when action does not have data property', () => {
@@ -278,9 +315,9 @@ describe('handleMessage', () => {
     }
 
     expect(() => {
-      handleMessage(mockBrokerState, registry, processManager, actions, message)
+      handleMessage(routingContext, message)
     }).not.toThrow()
 
-    expect(consoleInfoSpy).not.toHaveBeenCalled()
+    expect(mockLogger.info).not.toHaveBeenCalled()
   })
 })

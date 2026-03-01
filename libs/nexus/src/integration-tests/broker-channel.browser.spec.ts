@@ -20,7 +20,6 @@ describe('Integration: Broker + Channel', () => {
       const broker = createBroker({
         name: 'test-broker',
         contract: testContract,
-        settings: { debug: false },
       })
 
       // Add channel
@@ -42,7 +41,6 @@ describe('Integration: Broker + Channel', () => {
       const broker = createBroker({
         name: 'test-broker',
         contract: testContract,
-        settings: { debug: false },
       })
 
       const channel = broker.addChannel('test-channel', mockWindow as unknown as Window)
@@ -59,7 +57,6 @@ describe('Integration: Broker + Channel', () => {
       const broker = createBroker({
         name: 'test-broker',
         contract: testContract,
-        settings: { debug: false },
       })
 
       const channel = broker.addChannel('test-channel', mockWindow as unknown as Window)
@@ -83,7 +80,6 @@ describe('Integration: Broker + Channel', () => {
       const broker = createBroker({
         name: 'test-broker',
         contract: testContract,
-        settings: { debug: false },
       })
 
       const channel = broker.addChannel('test-channel', mockWindow as unknown as Window)
@@ -113,7 +109,6 @@ describe('Integration: Broker + Channel', () => {
       const broker = createBroker({
         name: 'test-broker',
         contract: testContract,
-        settings: { debug: false },
       })
 
       const channel = broker.addChannel('test-channel', mockWindow as unknown as Window)
@@ -133,7 +128,6 @@ describe('Integration: Broker + Channel', () => {
       const broker = createBroker({
         name: 'test-broker',
         contract: testContract,
-        settings: { debug: false },
       })
 
       const channel = broker.addChannel('test-channel', mockWindow as unknown as Window)
@@ -157,7 +151,6 @@ describe('Integration: Broker + Channel', () => {
       const broker = createBroker({
         name: 'test-broker',
         contract: testContract,
-        settings: { debug: false },
       })
 
       const channel = broker.addChannel('test-channel', mockWindow as unknown as Window)
@@ -178,7 +171,6 @@ describe('Integration: Broker + Channel', () => {
       const broker = createBroker({
         name: 'test-broker',
         contract: testContract,
-        settings: { debug: false },
       })
 
       const channel = broker.addChannel('test-channel', mockWindow as unknown as Window)
@@ -199,7 +191,6 @@ describe('Integration: Broker + Channel', () => {
       const broker = createBroker({
         name: 'test-broker',
         contract: testContract,
-        settings: { debug: false },
       })
 
       const channel = broker.addChannel('test-channel', mockWindow as unknown as Window)
@@ -221,7 +212,6 @@ describe('Integration: Broker + Channel', () => {
       const broker = createBroker({
         name: 'test-broker',
         contract: testContract,
-        settings: { debug: false },
       })
 
       const mockWindow2 = createMockWindow()
@@ -237,13 +227,11 @@ describe('Integration: Broker + Channel', () => {
       const broker = createBroker({
         name: 'test-broker',
         contract: testContract,
-        settings: { debug: false },
       })
 
       const channel1 = broker.addChannel('first', mockWindow as unknown as Window)
       const channel2 = broker.addChannel('second', mockWindow as unknown as Window)
 
-      // Should be the same channel instance
       expect(channel1).toBe(channel2)
     })
   })
@@ -253,13 +241,11 @@ describe('Integration: Broker + Channel', () => {
       const broker = createBroker({
         name: 'test-broker',
         contract: testContract,
-        settings: { debug: false },
       })
 
       const channel = broker.addChannel('test-channel', mockWindow as unknown as Window)
       channel.connect()
 
-      // Try to send a message type not in contract - should throw
       expect(() => {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         channel.send('INVALID_TYPE' as any, {})
@@ -270,7 +256,6 @@ describe('Integration: Broker + Channel', () => {
       const broker = createBroker({
         name: 'test-broker',
         contract: testContract,
-        settings: { debug: false },
       })
 
       const channel = broker.addChannel('test-channel', mockWindow as unknown as Window)
@@ -281,13 +266,11 @@ describe('Integration: Broker + Channel', () => {
       }).not.toThrow()
     })
   })
-
   describe('Cleanup', () => {
     it('cleans up resources on destroy', () => {
       const broker = createBroker({
         name: 'test-broker',
         contract: testContract,
-        settings: { debug: false },
       })
 
       const channel = broker.addChannel('test-channel', mockWindow as unknown as Window)

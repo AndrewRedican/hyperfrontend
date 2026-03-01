@@ -46,7 +46,6 @@ describe('Connection Flow Integration', () => {
       const brokerA = createBroker({
         name: 'broker-a',
         contract: contractA,
-        settings: { debug: false },
       })
 
       // Create broker B (will respond to connection)
@@ -54,7 +53,6 @@ describe('Connection Flow Integration', () => {
       const brokerB = createBroker({
         name: 'broker-b',
         contract: contractB,
-        settings: { debug: false },
       })
 
       // Add channel on broker A pointing to window B
@@ -475,7 +473,7 @@ describe('Connection Flow Integration', () => {
       const brokerA = createBroker({
         name: 'broker-a',
         contract: contractA,
-        settings: { debug: true }, // Enable debug logging
+        settings: { logLevel: 'debug' }, // Enable debug logging
       })
 
       global.window = windowB as unknown as Window & typeof globalThis

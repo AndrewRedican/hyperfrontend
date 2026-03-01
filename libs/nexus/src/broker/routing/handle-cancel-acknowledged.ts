@@ -1,18 +1,12 @@
 import type { IAction } from '../../types/action'
-import type { BrokerState } from '../types'
-import type { Registry } from '../../core/registry/factory'
-import type { ProcessManager } from '../../core/processes/factory'
-import type { ActionCreators } from '../../core/actions/factory'
+import type { RoutingContext } from './types'
 import type { ChannelHandle } from '../../types/channel'
 
 /**
- * Handles CANCEL_CONNECTION_ACKNOWLEDGED action
- * Completes cancellation on initiator's side and notifies cancel event
+ * Handles CANCEL_CONNECTION_ACKNOWLEDGED action.
+ * Completes cancellation on initiator's side and notifies cancel event.
  *
- * @param state - Current broker state
- * @param registry - Channel registry for accessing channels
- * @param processManager - Process manager for tracking communication processes
- * @param actions - Action creators for generating responses
+ * @param context - Routing context with state, registry, actions, and logger
  * @param message - Message event containing the CANCEL_CONNECTION_ACKNOWLEDGED action
  *
  * @remarks
@@ -26,13 +20,8 @@ import type { ChannelHandle } from '../../types/channel'
  * Initiator <- CANCEL_ACKNOWLEDGED (this handler)
  * Initiator fires 'cancel' event
  */
-export function handleCancelAcknowledged(
-  state: BrokerState,
-  registry: Registry,
-  processManager: ProcessManager,
-  actions: ActionCreators,
-  message: MessageEvent<IAction>
-): void {
+export function handleCancelAcknowledged(context: RoutingContext, message: MessageEvent<IAction>): void {
+  const { processManager } = context
   const action = message.data
   const processId = (action as unknown as Record<string, unknown>)['processId'] as string
 

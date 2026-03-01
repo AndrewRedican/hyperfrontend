@@ -2,6 +2,8 @@
  * Tests for handleDeny function
  */
 
+import type { RoutingContext } from './types'
+import type { Logger } from '@hyperfrontend/logging'
 import { handleDeny } from './handle-deny'
 import { createRegistry } from '../../core/registry/factory'
 import { createProcessManager } from '../../core/processes/factory'
@@ -17,23 +19,37 @@ describe('handleDeny', () => {
     emitted: [{ type: 'response-message', description: 'Response message' }],
   }
 
-  const mockBrokerState: BrokerState = {
-    id: 'broker-1',
-    name: 'test-broker',
-    window: <Window>global.window,
-    contract: validContract,
-    settings: {
-      contract: validContract,
-      debug: false,
-    },
-  }
+  let mockLogger: Logger
+  let mockBrokerState: BrokerState
 
   let registry: ReturnType<typeof createRegistry>
   let processManager: ReturnType<typeof createProcessManager>
   let actions: ReturnType<typeof createActionCreators>
   let mockWindow: Window
+  let routingContext: RoutingContext
 
   beforeEach(() => {
+    mockLogger = {
+      error: jest.fn(),
+      warn: jest.fn(),
+      log: jest.fn(),
+      info: jest.fn(),
+      debug: jest.fn(),
+      setLogLevel: jest.fn(),
+      getLogLevel: jest.fn(() => 'debug'),
+    }
+
+    mockBrokerState = {
+      id: 'broker-1',
+      name: 'test-broker',
+      window: <Window>global.window,
+      contract: validContract,
+      settings: {
+        contract: validContract,
+      },
+      logger: mockLogger,
+    }
+
     registry = createRegistry()
     processManager = createProcessManager()
     actions = createActionCreators({
@@ -43,6 +59,14 @@ describe('handleDeny', () => {
     mockWindow = <Window>(<unknown>{
       postMessage: jest.fn(),
     })
+
+    routingContext = {
+      state: mockBrokerState,
+      registry,
+      processManager,
+      actions,
+      logger: mockLogger,
+    }
   })
 
   it('process denial for existing channel', () => {
@@ -62,7 +86,7 @@ describe('handleDeny', () => {
     }
 
     expect(() => {
-      handleDeny(mockBrokerState, registry, processManager, actions, message)
+      handleDeny(routingContext, message)
     }).not.toThrow()
   })
 
@@ -80,7 +104,7 @@ describe('handleDeny', () => {
     }
 
     expect(() => {
-      handleDeny(mockBrokerState, registry, processManager, actions, message)
+      handleDeny(routingContext, message)
     }).not.toThrow()
   })
 
@@ -101,7 +125,7 @@ describe('handleDeny', () => {
     }
 
     expect(() => {
-      handleDeny(mockBrokerState, registry, processManager, actions, message)
+      handleDeny(routingContext, message)
     }).not.toThrow()
   })
 
@@ -121,7 +145,7 @@ describe('handleDeny', () => {
     }
 
     expect(() => {
-      handleDeny(mockBrokerState, registry, processManager, actions, message)
+      handleDeny(routingContext, message)
     }).not.toThrow()
   })
 
@@ -152,12 +176,12 @@ describe('handleDeny', () => {
       error: 'Denied 2',
     }
 
-    handleDeny(mockBrokerState, registry, processManager, actions, <MessageEvent<IAction>>{
+    handleDeny(routingContext, <MessageEvent<IAction>>{
       data: action1,
       source: mockWindow,
     })
 
-    handleDeny(mockBrokerState, registry, processManager, actions, <MessageEvent<IAction>>{
+    handleDeny(routingContext, <MessageEvent<IAction>>{
       data: action2,
       source: window2,
     })

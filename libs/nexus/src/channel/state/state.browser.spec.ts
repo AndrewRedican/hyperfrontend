@@ -22,7 +22,7 @@ describe('Channel State Management', () => {
     mockIdCounter = 0
   })
 
-  const defaultSettings = { queueMessages: true, debug: false }
+  const defaultSettings = { queueMessages: true }
 
   describe('createInitialState', () => {
     it('creates initial state with all fields', () => {
@@ -44,7 +44,6 @@ describe('Channel State Management', () => {
       expect(state.messageSubscriptions).toEqual([])
       expect(state.scheduledActivation).toBeNull()
       expect(state.queueMessages).toBe(true)
-      expect(state.debug).toBe(false)
       expect(state.readyToConnect).toBe(false)
     })
 
@@ -52,7 +51,6 @@ describe('Channel State Management', () => {
       const state = createInitialState('test-channel', window, {})
 
       expect(state.queueMessages).toBe(true)
-      expect(state.debug).toBe(false)
     })
 
     it('generates unique IDs for different channels', () => {

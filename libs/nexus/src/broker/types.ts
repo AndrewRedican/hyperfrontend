@@ -1,3 +1,4 @@
+import type { Logger, LogLevel } from '@hyperfrontend/logging'
 import type { IChannelContract } from '../types/contract'
 import type { ChannelHandle, ChannelJSON } from '../types/channel'
 import type { BrokerSecurityConfig, SecurityProtocolVersion } from '../types/security'
@@ -20,8 +21,10 @@ export interface BrokerSettings {
   readonly whitelist?: readonly string[]
   /** List of blocked origins */
   readonly blacklist?: readonly string[]
-  /** Enable debug logging */
-  readonly debug?: boolean
+  /** Minimum log level to emit (default: 'error') */
+  readonly logLevel?: LogLevel
+  /** Custom logger instance to use */
+  readonly logger?: Logger
   /** Allow contract extension */
   readonly contractExtension?: boolean
   /** Security configuration for protocol negotiation and encryption */
@@ -49,6 +52,7 @@ export interface BrokerState {
   readonly window: Window
   readonly settings: BrokerSettings
   readonly contract: IChannelContract
+  readonly logger: Logger
 }
 
 /**
@@ -61,7 +65,6 @@ export interface BrokerHandle {
   readonly settings: BrokerSettings
   readonly channels: ReadonlyArray<ChannelJSON>
   readonly acceptedActionTypes: readonly string[]
-  readonly debugMode: boolean
 
   addChannel(name: string, target: Window, settings?: Record<string, unknown>): ChannelHandle
   getChannel(reference: string | Window): ChannelHandle | null
@@ -103,4 +106,11 @@ export interface BrokerHandle {
    * @returns Array of supported protocol versions
    */
   getSupportedProtocols(): SecurityProtocolVersion[]
+
+  /**
+   * Get the broker's logger instance.
+   *
+   * @returns The logger used by this broker
+   */
+  readonly logger: Logger
 }

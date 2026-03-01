@@ -7,11 +7,8 @@
  * @module broker/routing/route-encrypted-message
  */
 
-import type { BrokerState } from '../types'
 import type { Registry } from '../../core/registry/factory'
-import type { ProcessManager } from '../../core/processes/factory'
-import type { ActionCreators } from '../../core/actions/factory'
-import type { RouteHandler } from './create-router'
+import type { RoutingContext, RouteHandler } from './types'
 import type { ChannelHandle } from '../../types/channel'
 import { getAll } from '../../core/registry/get-all'
 import { createSecurityErrorEventData, logSecurityError } from '../../security/errors'
@@ -38,10 +35,7 @@ interface SecurityTransportWithReceive {
  * If no matching channel is found or the channel has no security transport,
  * the message is silently dropped (with optional debug logging).
  *
- * @param state - Current broker state
- * @param registry - Channel registry for accessing channels
- * @param processManager - Process manager (unused, for signature compatibility)
- * @param actions - Action creators (unused, for signature compatibility)
+ * @param context - Routing context with state, registry, actions, and logger
  * @param router - Message router for handling decrypted actions
  * @param event - Message event containing the encrypted Uint8Array payload
  *
@@ -49,59 +43,43 @@ interface SecurityTransportWithReceive {
  * ```typescript
  * // In broker's onMessage handler:
  * if (event.data instanceof Uint8Array) {
- *   routeEncryptedMessage(state, registry, processManager, actions, router, event)
+ *   routeEncryptedMessage(routingContext, router, event)
  * }
  * ```
  */
-export function routeEncryptedMessage(
-  state: BrokerState,
-  registry: Registry,
-  processManager: ProcessManager,
-  actions: ActionCreators,
-  router: Map<string, RouteHandler>,
-  event: MessageEvent<Uint8Array>
-): void {
+export function routeEncryptedMessage(context: RoutingContext, router: Map<string, RouteHandler>, event: MessageEvent<Uint8Array>): void {
+  const { state, registry, logger } = context
   const origin = event?.origin
   const payload = event?.data
 
   if (!(payload instanceof Uint8Array)) {
-    if (state.settings.debug) {
-      console.warn('[nexus] routeEncryptedMessage called with non-Uint8Array payload')
-    }
+    logger.warn('routeEncryptedMessage called with non-Uint8Array payload')
     return
   }
 
   const channel = findChannelByOrigin(registry, origin)
 
   if (!channel) {
-    if (state.settings.debug) {
-      console.info(`[nexus] ${state.name} ignored encrypted message - no channel for origin ${origin}`)
-    }
+    logger.info(`${state.name} ignored encrypted message - no channel for origin ${origin}`)
     return
   }
 
   const securityTransport = channel.getSecurityTransport()
 
   if (!securityTransport) {
-    if (state.settings.debug) {
-      console.warn(`[nexus] ${state.name} received encrypted message but channel has no security transport`)
-    }
+    logger.warn(`${state.name} received encrypted message but channel has no security transport`)
     return
   }
 
   if (!securityTransport.isReady()) {
-    if (state.settings.debug) {
-      console.warn(`[nexus] ${state.name} received encrypted message but security transport not ready`)
-    }
+    logger.warn(`${state.name} received encrypted message but security transport not ready`)
     return
   }
 
   const transportWithReceive = <SecurityTransportWithReceive>(<unknown>securityTransport)
 
   if (typeof transportWithReceive.handleReceive !== 'function') {
-    if (state.settings.debug) {
-      console.error(`[nexus] Security transport missing handleReceive method`)
-    }
+    logger.error('Security transport missing handleReceive method')
     return
   }
 
@@ -109,7 +87,7 @@ export function routeEncryptedMessage(
     transportWithReceive.handleReceive(payload)
   } catch (error) {
     const errorData = createSecurityErrorEventData(error)
-    logSecurityError(channel.getName(), errorData, state.settings.debug ?? false)
+    logSecurityError(logger, channel.getName(), errorData)
     channel.notifyEvent('security-error', errorData)
   }
 }

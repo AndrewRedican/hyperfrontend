@@ -22,7 +22,7 @@ describe('Integration: Contract Validation', () => {
         createBroker({
           name: 'test-broker',
           contract: baseContract,
-          settings: { debug: false },
+          settings: { logLevel: 'error' },
         })
       }).not.toThrow()
     })
@@ -36,7 +36,7 @@ describe('Integration: Contract Validation', () => {
       const broker = createBroker({
         name: 'test-broker',
         contract: complexContract,
-        settings: { debug: false },
+        settings: { logLevel: 'error' },
       })
 
       expect(broker.acceptedActionTypes).toHaveLength(2)
@@ -53,7 +53,7 @@ describe('Integration: Contract Validation', () => {
       const broker = createBroker({
         name: 'test-broker',
         contract: contractWithDescription,
-        settings: { debug: false },
+        settings: { logLevel: 'error' },
       })
 
       expect(broker.contract).toEqual(contractWithDescription)
@@ -67,7 +67,6 @@ describe('Integration: Contract Validation', () => {
         contract: baseContract,
         settings: {
           contractExtension: true,
-          debug: false,
         },
       })
 
@@ -91,7 +90,6 @@ describe('Integration: Contract Validation', () => {
         contract: baseContract,
         settings: {
           contractExtension: false,
-          debug: false,
         },
       })
 
@@ -111,7 +109,6 @@ describe('Integration: Contract Validation', () => {
         contract: baseContract,
         settings: {
           contractExtension: true,
-          debug: false,
         },
       })
 
@@ -225,7 +222,7 @@ describe('Integration: Contract Validation', () => {
       const broker = createBroker({
         name: 'strict-broker',
         contract: strictContract,
-        settings: { debug: false },
+        settings: { logLevel: 'error' },
       })
 
       const channel = broker.addChannel('test-channel', mockWindow as unknown as Window)
@@ -252,7 +249,7 @@ describe('Integration: Contract Validation', () => {
       const broker = createBroker({
         name: 'shared-broker',
         contract: sharedContract,
-        settings: { debug: false },
+        settings: { logLevel: 'error' },
       })
 
       const mockWindow2 = createMockWindow()
@@ -288,7 +285,7 @@ describe('Integration: Contract Validation', () => {
       const broker = createBroker({
         name: 'api-broker',
         contract: apiContract,
-        settings: { debug: false },
+        settings: { logLevel: 'error' },
       })
 
       expect(broker.acceptedActionTypes).toHaveLength(3)
@@ -306,7 +303,7 @@ describe('Integration: Contract Validation', () => {
       const broker = createBroker({
         name: 'bidirectional-broker',
         contract: bidirectionalContract,
-        settings: { debug: false },
+        settings: { logLevel: 'error' },
       })
 
       const channel = broker.addChannel('bidirectional-channel', mockWindow as unknown as Window)
@@ -328,7 +325,7 @@ describe('Integration: Contract Validation', () => {
       const broker = createBroker({
         name: 'microservice-broker',
         contract: serviceContract,
-        settings: { contractExtension: true, debug: false },
+        settings: { contractExtension: true },
       })
 
       // Extend with additional service capabilities
@@ -351,7 +348,7 @@ describe('Integration: Contract Validation', () => {
           name: 'test-broker',
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
           contract: {} as any, // Missing emitted/accepted
-          settings: { debug: false },
+          settings: { logLevel: 'error' },
         })
       }).toThrow()
     })
@@ -364,7 +361,7 @@ describe('Integration: Contract Validation', () => {
             emitted: [{ type: '' }], // Empty type
             accepted: [{ type: 'VALID' }],
           },
-          settings: { debug: false },
+          settings: { logLevel: 'error' },
         })
       }).toThrow()
     })
@@ -375,7 +372,7 @@ describe('Integration: Contract Validation', () => {
           name: 'test-broker',
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
           contract: null as any,
-          settings: { debug: false },
+          settings: { logLevel: 'error' },
         })
       }).toThrow()
     })

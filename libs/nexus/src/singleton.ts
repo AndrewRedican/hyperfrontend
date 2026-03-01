@@ -48,9 +48,6 @@ const DEFAULT_CONTRACT: IChannelContract = {
 export const broker: BrokerHandle = createBroker({
   name: 'default-broker',
   contract: DEFAULT_CONTRACT,
-  settings: {
-    debug: false,
-  },
 })
 
 /**

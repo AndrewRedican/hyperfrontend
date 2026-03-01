@@ -7,7 +7,7 @@ import type { ChannelState, IChannelSettings } from '../../types/channel'
  *
  * @param name - Channel name/identifier
  * @param target - Target window for communication
- * @param settings - Channel settings (queueMessages, debug, etc.)
+ * @param settings - Channel settings (queueMessages, debug, logger, etc.)
  * @returns Fresh channel state object
  */
 export function createInitialState(name: string, target: Window, settings: Partial<IChannelSettings>): ChannelState {
@@ -25,7 +25,7 @@ export function createInitialState(name: string, target: Window, settings: Parti
     messageSubscriptions: [],
     scheduledActivation: null,
     queueMessages: settings.queueMessages ?? true,
-    debug: settings.debug ?? false,
+    logger: settings.logger ?? null,
     brokerManaged: <boolean>(<Record<string, unknown>>settings)['brokerManaged'] ?? false,
     readyToConnect: false,
     negotiatedProtocol: null,

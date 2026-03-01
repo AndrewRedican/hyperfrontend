@@ -20,7 +20,7 @@ describe('Integration: Heartbeat', () => {
       const broker = createBroker({
         name: 'heartbeat-broker',
         contract: heartbeatContract,
-        settings: { debug: false },
+        settings: { logLevel: 'error' },
       })
 
       const channel = broker.addChannel('heartbeat-channel', mockWindow as unknown as Window)
@@ -46,7 +46,7 @@ describe('Integration: Heartbeat', () => {
       const broker = createBroker({
         name: 'heartbeat-broker',
         contract: heartbeatContract,
-        settings: { debug: false },
+        settings: { logLevel: 'error' },
       })
 
       const channel = broker.addChannel('heartbeat-channel', mockWindow as unknown as Window)
@@ -77,7 +77,7 @@ describe('Integration: Heartbeat', () => {
       const broker = createBroker({
         name: 'health-broker',
         contract: heartbeatContract,
-        settings: { debug: false },
+        settings: { logLevel: 'error' },
       })
 
       const channel = broker.addChannel('health-channel', mockWindow as unknown as Window)
@@ -91,7 +91,7 @@ describe('Integration: Heartbeat', () => {
       const broker = createBroker({
         name: 'health-broker',
         contract: heartbeatContract,
-        settings: { debug: false },
+        settings: { logLevel: 'error' },
       })
 
       const channel = broker.addChannel('health-channel', mockWindow as unknown as Window)
@@ -109,7 +109,7 @@ describe('Integration: Heartbeat', () => {
       const broker = createBroker({
         name: 'timeout-broker',
         contract: heartbeatContract,
-        settings: { debug: false },
+        settings: { logLevel: 'error' },
       })
 
       const channel = broker.addChannel('timeout-channel', mockWindow as unknown as Window)
@@ -134,7 +134,7 @@ describe('Integration: Heartbeat', () => {
       const broker = createBroker({
         name: 'reconnect-broker',
         contract: heartbeatContract,
-        settings: { debug: false },
+        settings: { logLevel: 'error' },
       })
 
       const channel = broker.addChannel('reconnect-channel', mockWindow as unknown as Window)
@@ -156,7 +156,7 @@ describe('Integration: Heartbeat', () => {
       const broker = createBroker({
         name: 'multi-reconnect-broker',
         contract: heartbeatContract,
-        settings: { debug: false },
+        settings: { logLevel: 'error' },
       })
 
       const channel = broker.addChannel('multi-reconnect-channel', mockWindow as unknown as Window)
@@ -174,7 +174,7 @@ describe('Integration: Heartbeat', () => {
       const broker = createBroker({
         name: 'identity-broker',
         contract: heartbeatContract,
-        settings: { debug: false },
+        settings: { logLevel: 'error' },
       })
 
       const channel = broker.addChannel('identity-channel', mockWindow as unknown as Window)
@@ -195,7 +195,7 @@ describe('Integration: Heartbeat', () => {
       const broker = createBroker({
         name: 'queue-broker',
         contract: heartbeatContract,
-        settings: { debug: false },
+        settings: { logLevel: 'error' },
       })
 
       const channel = broker.addChannel('queue-channel', mockWindow as unknown as Window)
@@ -214,7 +214,7 @@ describe('Integration: Heartbeat', () => {
       const broker = createBroker({
         name: 'flush-broker',
         contract: heartbeatContract,
-        settings: { debug: false },
+        settings: { logLevel: 'error' },
       })
 
       const channel = broker.addChannel('flush-channel', mockWindow as unknown as Window)
@@ -238,7 +238,7 @@ describe('Integration: Heartbeat', () => {
       const broker = createBroker({
         name: 'event-broker',
         contract: heartbeatContract,
-        settings: { debug: false },
+        settings: { logLevel: 'error' },
       })
 
       const channel = broker.addChannel('event-channel', mockWindow as unknown as Window)
@@ -266,7 +266,7 @@ describe('Integration: Heartbeat', () => {
       const broker = createBroker({
         name: 'close-broker',
         contract: heartbeatContract,
-        settings: { debug: false },
+        settings: { logLevel: 'error' },
       })
 
       const channel = broker.addChannel('close-channel', mockWindow as unknown as Window)

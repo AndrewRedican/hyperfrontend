@@ -1,6 +1,8 @@
 import type { BrokerState } from '../types'
 import type { IAction } from '../../types/action'
 import type { IChannelContract } from '../../types/contract'
+import type { RoutingContext } from './types'
+import type { Logger } from '@hyperfrontend/logging'
 import { handleRequest } from './handle-request'
 import { createRegistry } from '../../core/registry/factory'
 import { createProcessManager } from '../../core/processes/factory'
@@ -12,24 +14,37 @@ describe('handleRequest', () => {
     emitted: [{ type: 'response-message', description: 'Response message' }],
   }
 
-  const mockBrokerState: BrokerState = {
-    id: 'broker-1',
-    name: 'test-broker',
-    window: <Window>global.window,
-    contract: validContract,
-    settings: {
-      contract: validContract,
-      debug: false,
-    },
-  }
+  let mockLogger: Logger
+  let mockBrokerState: BrokerState
 
   let registry: ReturnType<typeof createRegistry>
   let processManager: ReturnType<typeof createProcessManager>
   let mockActions: ActionCreators
   let mockWindow: Window
-  let consoleInfoSpy: jest.SpyInstance
+  let routingContext: RoutingContext
 
   beforeEach(() => {
+    mockLogger = {
+      error: jest.fn(),
+      warn: jest.fn(),
+      log: jest.fn(),
+      info: jest.fn(),
+      debug: jest.fn(),
+      setLogLevel: jest.fn(),
+      getLogLevel: jest.fn(() => 'debug'),
+    }
+
+    mockBrokerState = {
+      id: 'broker-1',
+      name: 'test-broker',
+      window: <Window>global.window,
+      contract: validContract,
+      settings: {
+        contract: validContract,
+      },
+      logger: mockLogger,
+    }
+
     registry = createRegistry()
     processManager = createProcessManager()
     mockActions = createActionCreators({
@@ -39,11 +54,14 @@ describe('handleRequest', () => {
     mockWindow = <Window>(<unknown>{
       postMessage: jest.fn(),
     })
-    consoleInfoSpy = jest.spyOn(console, 'info').mockImplementation()
-  })
 
-  afterEach(() => {
-    consoleInfoSpy.mockRestore()
+    routingContext = {
+      state: mockBrokerState,
+      registry,
+      processManager,
+      actions: mockActions,
+      logger: mockLogger,
+    }
   })
 
   it('creates new channel for new connection request', () => {
@@ -59,7 +77,7 @@ describe('handleRequest', () => {
       source: mockWindow,
     }
 
-    handleRequest(mockBrokerState, registry, processManager, mockActions, message)
+    handleRequest(routingContext, message)
 
     // Channel should be created and added to registry
     const channel = registry.getByName('remote-broker-1')
@@ -80,11 +98,11 @@ describe('handleRequest', () => {
     }
 
     // First request
-    handleRequest(mockBrokerState, registry, processManager, mockActions, message)
+    handleRequest(routingContext, message)
     const firstChannel = registry.getById('remote-broker-1')
 
     // Second request with same sender
-    handleRequest(mockBrokerState, registry, processManager, mockActions, message)
+    handleRequest(routingContext, message)
     const secondChannel = registry.getById('remote-broker-1')
 
     expect(secondChannel).toBe(firstChannel)
@@ -104,7 +122,7 @@ describe('handleRequest', () => {
     }
 
     // First request to establish channel
-    handleRequest(mockBrokerState, registry, processManager, mockActions, message)
+    handleRequest(routingContext, message)
 
     // Simulate channel being open (in real scenario, would be opened via handshake)
     const channel = registry.getById('remote-broker-1')
@@ -118,7 +136,7 @@ describe('handleRequest', () => {
     }
 
     // Second request when channel already open
-    handleRequest(mockBrokerState, registry, processManager, mockActions, message)
+    handleRequest(routingContext, message)
 
     // Should have sent acceptance
     expect(mockWindow.postMessage).toHaveBeenCalled()
@@ -127,7 +145,12 @@ describe('handleRequest', () => {
   it('logs info when detecting channel reload in debug mode', () => {
     const debugState: BrokerState = {
       ...mockBrokerState,
-      settings: { ...mockBrokerState.settings, debug: true },
+      settings: { ...mockBrokerState.settings, logLevel: 'debug' },
+    }
+
+    const debugContext: RoutingContext = {
+      ...routingContext,
+      state: debugState,
     }
 
     const action: IAction = {
@@ -143,7 +166,7 @@ describe('handleRequest', () => {
     }
 
     // First request
-    handleRequest(debugState, registry, processManager, mockActions, message)
+    handleRequest(debugContext, message)
 
     // Get channel and mock it as open with different name
     const channel = registry.getByName('different-sender-id')
@@ -156,9 +179,9 @@ describe('handleRequest', () => {
     }
 
     // Second request with different sender ID (simulating reload)
-    handleRequest(debugState, registry, processManager, mockActions, message)
+    handleRequest(debugContext, message)
 
-    expect(consoleInfoSpy).toHaveBeenCalledWith(expect.stringContaining('detected channel'))
+    expect(mockLogger.info).toHaveBeenCalledWith(expect.stringContaining('detected channel'))
   })
 
   it('denies connection for invalid contract', () => {
@@ -179,7 +202,7 @@ describe('handleRequest', () => {
       source: mockWindow,
     }
 
-    handleRequest(mockBrokerState, registry, processManager, mockActions, message)
+    handleRequest(routingContext, message)
 
     // Should have sent denial
     expect(mockWindow.postMessage).toHaveBeenCalledWith(
@@ -200,6 +223,11 @@ describe('handleRequest', () => {
       },
     }
 
+    const contextWithPolicy: RoutingContext = {
+      ...routingContext,
+      state: stateWithPolicy,
+    }
+
     const action: IAction = {
       type: '[nexus] connection-request',
       senderId: 'remote-broker-1',
@@ -212,7 +240,7 @@ describe('handleRequest', () => {
       source: mockWindow,
     }
 
-    handleRequest(stateWithPolicy, registry, processManager, mockActions, message)
+    handleRequest(contextWithPolicy, message)
 
     // Should have sent denial
     expect(mockWindow.postMessage).toHaveBeenCalledWith(
@@ -233,6 +261,11 @@ describe('handleRequest', () => {
       },
     }
 
+    const contextWithPolicy: RoutingContext = {
+      ...routingContext,
+      state: stateWithPolicy,
+    }
+
     const action: IAction = {
       type: '[nexus] connection-request',
       senderId: 'remote-broker-1',
@@ -245,7 +278,7 @@ describe('handleRequest', () => {
       source: mockWindow,
     }
 
-    handleRequest(stateWithPolicy, registry, processManager, mockActions, message)
+    handleRequest(contextWithPolicy, message)
 
     // Should have sent acceptance
     expect(mockWindow.postMessage).toHaveBeenCalledWith(
@@ -270,7 +303,7 @@ describe('handleRequest', () => {
       source: mockWindow,
     }
 
-    handleRequest(mockBrokerState, registry, processManager, mockActions, message)
+    handleRequest(routingContext, message)
 
     // Should have sent acceptance with broker's contract
     expect(mockWindow.postMessage).toHaveBeenCalledWith(
@@ -298,7 +331,7 @@ describe('handleRequest', () => {
       origin: 'https://example.com',
     }
 
-    handleRequest(mockBrokerState, registry, processManager, mockActions, message)
+    handleRequest(routingContext, message)
 
     // Broker-managed channels have isReadyToConnect() = true
     // So acceptance should be sent immediately
@@ -324,7 +357,7 @@ describe('handleRequest', () => {
       origin: 'https://example.com',
     }
 
-    handleRequest(mockBrokerState, registry, processManager, mockActions, message)
+    handleRequest(routingContext, message)
 
     const channel = registry.getByName('remote-broker-1')
     expect(channel).toBeDefined()
@@ -349,13 +382,18 @@ describe('handleRequest', () => {
       origin: 'https://other.com',
     }
 
-    handleRequest(mockBrokerState, registry, processManager, mockActions, nextMessage)
+    handleRequest(routingContext, nextMessage)
   })
 
   it('logs debug info when scheduling activation', () => {
     const debugState: BrokerState = {
       ...mockBrokerState,
-      settings: { ...mockBrokerState.settings, debug: true },
+      settings: { ...mockBrokerState.settings, logLevel: 'debug' },
+    }
+
+    const debugContext: RoutingContext = {
+      ...routingContext,
+      state: debugState,
     }
 
     const action: IAction = {
@@ -371,18 +409,15 @@ describe('handleRequest', () => {
       origin: 'https://example.com',
     }
 
-    handleRequest(debugState, registry, processManager, mockActions, message)
+    handleRequest(debugContext, message)
 
     const channel = registry.getByName('remote-broker-1')
     Object.defineProperty(channel, 'isReadyToConnect', { value: () => false, writable: true, configurable: true })
     Object.defineProperty(channel, 'scheduleActivation', { value: jest.fn(), writable: true, configurable: true })
 
-    const consoleInfoSpy2 = jest.spyOn(console, 'info').mockImplementation()
+    handleRequest(debugContext, message)
 
-    handleRequest(debugState, registry, processManager, mockActions, message)
-
-    expect(consoleInfoSpy2).toHaveBeenCalled()
-    consoleInfoSpy2.mockRestore()
+    expect(mockLogger.info).toHaveBeenCalled()
   })
 
   it('negotiates security protocol when request includes security', () => {
@@ -400,7 +435,7 @@ describe('handleRequest', () => {
       origin: 'https://example.com',
     }
 
-    handleRequest(mockBrokerState, registry, processManager, mockActions, message)
+    handleRequest(routingContext, message)
 
     expect(mockWindow.postMessage).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -428,7 +463,7 @@ describe('handleRequest', () => {
       origin: 'https://example.com',
     }
 
-    handleRequest(mockBrokerState, registry, processManager, mockActions, message)
+    handleRequest(routingContext, message)
 
     const channel = registry.getByName('remote-broker-1')
     expect(channel).toBeDefined()
@@ -437,7 +472,12 @@ describe('handleRequest', () => {
   it('logs security negotiation in debug mode', () => {
     const debugState: BrokerState = {
       ...mockBrokerState,
-      settings: { ...mockBrokerState.settings, debug: true },
+      settings: { ...mockBrokerState.settings, logLevel: 'debug' },
+    }
+
+    const debugContext: RoutingContext = {
+      ...routingContext,
+      state: debugState,
     }
 
     const action: IAction = {
@@ -454,9 +494,9 @@ describe('handleRequest', () => {
       origin: 'https://example.com',
     }
 
-    handleRequest(debugState, registry, processManager, mockActions, message)
+    handleRequest(debugContext, message)
 
-    expect(consoleInfoSpy).toHaveBeenCalledWith(expect.stringContaining('negotiated security protocol'))
+    expect(mockLogger.info).toHaveBeenCalledWith(expect.stringContaining('negotiated security protocol'))
   })
 
   it('returns early when action lacks contract property', () => {
@@ -471,7 +511,7 @@ describe('handleRequest', () => {
       source: mockWindow,
     }
 
-    handleRequest(mockBrokerState, registry, processManager, mockActions, message)
+    handleRequest(routingContext, message)
 
     const channel = registry.getByName('remote-broker-1')
     expect(channel).toBeUndefined()
@@ -492,7 +532,7 @@ describe('handleRequest', () => {
       origin: 'https://example.com',
     }
 
-    handleRequest(mockBrokerState, registry, processManager, mockActions, message)
+    handleRequest(routingContext, message)
 
     const channel = registry.getById('remote-broker-1')
     if (channel) {
@@ -500,7 +540,7 @@ describe('handleRequest', () => {
       Object.defineProperty(channel, 'id', { value: 'remote-broker-1', writable: true })
     }
 
-    handleRequest(mockBrokerState, registry, processManager, mockActions, message)
+    handleRequest(routingContext, message)
 
     expect(mockWindow.postMessage).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -525,7 +565,7 @@ describe('handleRequest', () => {
       origin: 'https://example.com',
     }
 
-    handleRequest(mockBrokerState, registry, processManager, mockActions, message)
+    handleRequest(routingContext, message)
 
     const channel = registry.getById('remote-broker-1')
     if (channel) {
@@ -533,7 +573,7 @@ describe('handleRequest', () => {
       Object.defineProperty(channel, 'id', { value: 'remote-broker-1', writable: true })
     }
 
-    handleRequest(mockBrokerState, registry, processManager, mockActions, message)
+    handleRequest(routingContext, message)
 
     const lastCall = (<jest.Mock>mockWindow.postMessage).mock.calls[(<jest.Mock>mockWindow.postMessage).mock.calls.length - 1]
     const sentAction = lastCall[0]
@@ -557,7 +597,7 @@ describe('handleRequest', () => {
       origin: 'https://example.com',
     }
 
-    handleRequest(mockBrokerState, registry, processManager, mockActions, message)
+    handleRequest(routingContext, message)
 
     const channel = registry.getByName('new-remote')
     expect(channel).toBeDefined()
@@ -577,7 +617,7 @@ describe('handleRequest', () => {
       origin: 'https://example.com',
     }
 
-    handleRequest(mockBrokerState, registry, processManager, mockActions, message)
+    handleRequest(routingContext, message)
 
     // Process should be removed after denial
     expect(mockWindow.postMessage).toHaveBeenCalledWith(
@@ -598,6 +638,11 @@ describe('handleRequest', () => {
       },
     }
 
+    const contextWithPolicy: RoutingContext = {
+      ...routingContext,
+      state: stateWithPolicy,
+    }
+
     const action: IAction = {
       type: '[nexus] connection-request',
       senderId: 'remote-broker-1',
@@ -611,7 +656,7 @@ describe('handleRequest', () => {
       origin: 'https://example.com',
     }
 
-    handleRequest(stateWithPolicy, registry, processManager, mockActions, message)
+    handleRequest(contextWithPolicy, message)
 
     expect(mockWindow.postMessage).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -633,7 +678,7 @@ describe('handleRequest', () => {
       source: mockWindow,
     }
 
-    handleRequest(mockBrokerState, registry, processManager, mockActions, message)
+    handleRequest(routingContext, message)
 
     // Should not create a channel since action is invalid
     const channel = registry.getByName('remote-broker-1')

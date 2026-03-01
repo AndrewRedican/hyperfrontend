@@ -1,3 +1,4 @@
+import type { Logger } from '@hyperfrontend/logging'
 import type { ChannelInternals } from '../types'
 import type { ActionCreators } from '../../core/actions/factory'
 import type { ChannelState } from '../../types'
@@ -13,11 +14,20 @@ describe('channel/messaging/flush', () => {
   let mockChannel: ChannelInternals
   let state: ChannelState
   let mockGetState: jest.Mock<ChannelState, []>
-  let consoleErrorSpy: jest.SpyInstance
+  let mockLogger: Logger
 
   beforeEach(() => {
     jest.clearAllMocks()
-    consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation()
+
+    mockLogger = {
+      error: jest.fn(),
+      warn: jest.fn(),
+      log: jest.fn(),
+      info: jest.fn(),
+      debug: jest.fn(),
+      setLogLevel: jest.fn(),
+      getLogLevel: jest.fn(() => 'debug'),
+    }
 
     state = {
       id: 'channel-123',
@@ -33,13 +43,14 @@ describe('channel/messaging/flush', () => {
       eventSubscriptions: [],
       messageSubscriptions: [],
       scheduledActivation: null,
-      debug: false,
+
       brokerManaged: false,
       readyToConnect: true,
       negotiatedProtocol: null,
       securityReady: false,
       securityTransport: null,
       pendingSecurityRequest: null,
+      logger: mockLogger,
     }
 
     mockGetState = jest.fn(() => state)
@@ -57,10 +68,6 @@ describe('channel/messaging/flush', () => {
       ...state,
       queuedMessages: [],
     })
-  })
-
-  afterEach(() => {
-    consoleErrorSpy.mockRestore()
   })
 
   it('sends all queued messages', () => {
@@ -121,7 +128,7 @@ describe('channel/messaging/flush', () => {
     flush(mockChannel)
 
     expect(sendModule.send).toHaveBeenCalledTimes(3)
-    expect(consoleErrorSpy).toHaveBeenCalledWith('Failed to send queued message:', expect.any(Error))
+    expect(mockLogger.error).toHaveBeenCalledWith('Failed to send queued message:', expect.any(Error))
     expect(clearQueueModule.clearQueue).toHaveBeenCalled()
   })
 })

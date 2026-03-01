@@ -22,7 +22,6 @@ describe('addChannel', () => {
         accepted: [{ type: 'test', description: 'Test action' }],
         emitted: [],
       },
-      debug: false,
     },
   }
 
@@ -68,7 +67,7 @@ describe('addChannel', () => {
       ...mockBrokerState,
       settings: {
         ...mockBrokerState.settings,
-        debug: true,
+        logLevel: 'debug',
       },
     }
 

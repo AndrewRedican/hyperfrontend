@@ -1,6 +1,7 @@
 import { createBroker } from '../broker/factory'
 import type { BrokerHandle } from '../broker/types'
 import type { IChannelContract } from '../types/contract'
+import type { LogLevel } from '@hyperfrontend/logging'
 
 /**
  * Configuration for setting up a broker
@@ -10,8 +11,8 @@ export interface SetupBrokerConfig {
   name: string
   /** Default channel contract */
   contract: IChannelContract
-  /** Enable debug logging */
-  debug?: boolean
+  /** Log level (default: 'error') */
+  logLevel?: LogLevel
   /** Allowed origins */
   originWhitelist?: string[]
   /** Blocked origins */
@@ -30,7 +31,7 @@ export function setupBroker(config: SetupBrokerConfig): BrokerHandle {
     name: config.name,
     contract: config.contract,
     settings: {
-      debug: config.debug,
+      logLevel: config.logLevel,
       whitelist: config.originWhitelist,
       blacklist: config.originBlacklist,
     },

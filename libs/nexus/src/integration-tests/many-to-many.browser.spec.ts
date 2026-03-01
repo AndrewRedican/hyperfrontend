@@ -28,19 +28,19 @@ describe('Integration: Many-to-Many', () => {
       const broker1 = createBroker({
         name: 'broker-1',
         contract: networkContract,
-        settings: { debug: false },
+        settings: { logLevel: 'error' },
       })
 
       const broker2 = createBroker({
         name: 'broker-2',
         contract: networkContract,
-        settings: { debug: false },
+        settings: { logLevel: 'error' },
       })
 
       const broker3 = createBroker({
         name: 'broker-3',
         contract: networkContract,
-        settings: { debug: false },
+        settings: { logLevel: 'error' },
       })
 
       expect(broker1.id).not.toBe(broker2.id)
@@ -54,13 +54,13 @@ describe('Integration: Many-to-Many', () => {
       const broker1 = createBroker({
         name: 'broker-1',
         contract: networkContract,
-        settings: { debug: false },
+        settings: { logLevel: 'error' },
       })
 
       const broker2 = createBroker({
         name: 'broker-2',
         contract: networkContract,
-        settings: { debug: false },
+        settings: { logLevel: 'error' },
       })
 
       const channel1 = broker1.addChannel('channel-1', windows[0] as unknown as Window)
@@ -79,7 +79,7 @@ describe('Integration: Many-to-Many', () => {
       const hub = createBroker({
         name: 'hub-broker',
         contract: networkContract,
-        settings: { debug: false },
+        settings: { logLevel: 'error' },
       })
 
       // Create spoke channels
@@ -95,7 +95,7 @@ describe('Integration: Many-to-Many', () => {
       const hub = createBroker({
         name: 'hub-broker',
         contract: networkContract,
-        settings: { debug: false },
+        settings: { logLevel: 'error' },
       })
 
       const spokes = windows.map((win, i) => hub.addChannel(`spoke-${i}`, win as unknown as Window))
@@ -119,7 +119,7 @@ describe('Integration: Many-to-Many', () => {
       const hub = createBroker({
         name: 'hub-broker',
         contract: networkContract,
-        settings: { debug: false },
+        settings: { logLevel: 'error' },
       })
 
       const spoke1 = hub.addChannel('spoke-1', windows[0] as unknown as Window)
@@ -146,7 +146,7 @@ describe('Integration: Many-to-Many', () => {
         createBroker({
           name: `node-${i}`,
           contract: networkContract,
-          settings: { debug: false },
+          settings: { logLevel: 'error' },
         })
       )
 
@@ -170,19 +170,19 @@ describe('Integration: Many-to-Many', () => {
       const broker1 = createBroker({
         name: 'node-1',
         contract: networkContract,
-        settings: { debug: false },
+        settings: { logLevel: 'error' },
       })
 
       const broker2 = createBroker({
         name: 'node-2',
         contract: networkContract,
-        settings: { debug: false },
+        settings: { logLevel: 'error' },
       })
 
       const broker3 = createBroker({
         name: 'node-3',
         contract: networkContract,
-        settings: { debug: false },
+        settings: { logLevel: 'error' },
       })
 
       // Create bidirectional connections
@@ -206,13 +206,13 @@ describe('Integration: Many-to-Many', () => {
       const broker1 = createBroker({
         name: 'load-broker-1',
         contract: networkContract,
-        settings: { debug: false },
+        settings: { logLevel: 'error' },
       })
 
       const broker2 = createBroker({
         name: 'load-broker-2',
         contract: networkContract,
-        settings: { debug: false },
+        settings: { logLevel: 'error' },
       })
 
       // Distribute channels using round-robin
@@ -229,13 +229,13 @@ describe('Integration: Many-to-Many', () => {
       const primary = createBroker({
         name: 'primary-broker',
         contract: networkContract,
-        settings: { debug: false },
+        settings: { logLevel: 'error' },
       })
 
       const backup = createBroker({
         name: 'backup-broker',
         contract: networkContract,
-        settings: { debug: false },
+        settings: { logLevel: 'error' },
       })
 
       // Initially use primary
@@ -260,13 +260,13 @@ describe('Integration: Many-to-Many', () => {
       const peer1Broker = createBroker({
         name: 'peer-1',
         contract: networkContract,
-        settings: { debug: false },
+        settings: { logLevel: 'error' },
       })
 
       const peer2Broker = createBroker({
         name: 'peer-2',
         contract: networkContract,
-        settings: { debug: false },
+        settings: { logLevel: 'error' },
       })
 
       // Peer 1 creates channel to Peer 2
@@ -298,13 +298,13 @@ describe('Integration: Many-to-Many', () => {
       const domain1 = createBroker({
         name: 'domain-1',
         contract: networkContract,
-        settings: { debug: false },
+        settings: { logLevel: 'error' },
       })
 
       const domain2 = createBroker({
         name: 'domain-2',
         contract: networkContract,
-        settings: { debug: false },
+        settings: { logLevel: 'error' },
       })
 
       // Domain 1 has channels 0,1,2
