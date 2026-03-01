@@ -1,4 +1,5 @@
 import { freeze } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
+import { setTimeout, clearTimeout } from '@hyperfrontend/immutable-api-utils/built-in-copy/timers'
 
 export interface Timer {
   /** Stops the progression of tracked time until further notice. */

@@ -1,4 +1,5 @@
 import { freeze } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
+import { setInterval, clearInterval } from '@hyperfrontend/immutable-api-utils/built-in-copy/timers'
 
 export interface Clock {
   readonly start: () => void
