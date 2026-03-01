@@ -172,7 +172,7 @@ module.exports = [
     },
   },
   {
-    files: ['libs/**/package.json'],
+    files: ['**/package.json'],
     plugins: {
       workspace: eslintRules,
     },
@@ -181,6 +181,21 @@ module.exports = [
     },
     rules: {
       'workspace/lib-pkg-fields': 'error',
+      'workspace/lib-pkg-package-json-export': 'error',
+      'workspace/lib-pkg-bundle-entry': 'error',
+    },
+  },
+  {
+    files: ['**/project.json'],
+    plugins: {
+      workspace: eslintRules,
+    },
+    languageOptions: {
+      parser: require('jsonc-eslint-parser'),
+    },
+    rules: {
+      'workspace/lib-project-metadata': 'error',
+      'workspace/lib-project-bundle-config': 'error',
     },
   },
 ]
