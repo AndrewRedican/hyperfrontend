@@ -1,7 +1,7 @@
 import type { Schema } from '../../types/schema'
 import type { ValidationContext } from '../context'
-import { addError, pushPath, shouldContinue } from '../context'
 import { isArray } from '@hyperfrontend/immutable-api-utils/built-in-copy/array'
+import { addError, pushPath, shouldContinue } from '../context'
 
 /**
  * Validates array 'items' keyword.

@@ -1,6 +1,6 @@
 import type { Schema } from '../../types/schema'
-import { validateItems } from './items'
 import { ValidationContext } from '../context'
+import { validateItems } from './items'
 
 describe('validateItems', () => {
   const ctx = <ValidationContext>(<unknown>{ errors: [], validate: () => true })

@@ -1,8 +1,8 @@
 import type { Schema } from '../types/schema'
-import { getJsonType } from './type-detection'
-import { mergeSchemas } from './merge-schemas'
-import { keys } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
 import { stringify } from '@hyperfrontend/immutable-api-utils/built-in-copy/json'
+import { keys } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
+import { mergeSchemas } from './merge-schemas'
+import { getJsonType } from './type-detection'
 
 /**
  * Options for schema generation.

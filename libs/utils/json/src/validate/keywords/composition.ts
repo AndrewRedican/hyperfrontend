@@ -1,7 +1,7 @@
 import type { Schema } from '../../types/schema'
 import type { ValidationContext } from '../context'
-import { addError, createValidationContext, shouldContinue } from '../context'
 import { defineProperty } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
+import { addError, createValidationContext, shouldContinue } from '../context'
 
 /**
  * Validates 'allOf' keyword - all schemas must match.

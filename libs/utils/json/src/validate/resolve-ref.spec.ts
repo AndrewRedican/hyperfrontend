@@ -1,6 +1,6 @@
 import type { Schema } from '../types/schema'
-import { resolveRef } from './resolve-ref'
 import { createValidationContext } from './context'
+import { resolveRef } from './resolve-ref'
 
 describe('resolveRef', () => {
   describe('definition references', () => {

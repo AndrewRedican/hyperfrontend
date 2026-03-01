@@ -1,8 +1,8 @@
 import type { Schema } from '../../types/schema'
 import type { ValidationContext } from '../context'
+import { stringify } from '@hyperfrontend/immutable-api-utils/built-in-copy/json'
 import { addError } from '../context'
 import { isEqual } from '../utils/deep-equal'
-import { stringify } from '@hyperfrontend/immutable-api-utils/built-in-copy/json'
 
 /**
  * Validates enum constraint.

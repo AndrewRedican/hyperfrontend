@@ -1,5 +1,5 @@
-import { keys, hasOwn } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
 import { isArray } from '@hyperfrontend/immutable-api-utils/built-in-copy/array'
+import { keys, hasOwn } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
 
 /**
  * Performs deep equality check for JSON values.

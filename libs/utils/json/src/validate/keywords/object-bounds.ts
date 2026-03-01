@@ -1,7 +1,7 @@
 import type { Schema } from '../../types/schema'
 import type { ValidationContext } from '../context'
-import { addError, shouldContinue } from '../context'
 import { keys } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
+import { addError, shouldContinue } from '../context'
 
 /**
  * Validates object bounds constraints (minProperties, maxProperties).

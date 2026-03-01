@@ -1,7 +1,7 @@
 import type { Schema } from '../../types/schema'
 import type { ValidationContext } from '../context'
-import { addError, pushPath, shouldContinue } from '../context'
 import { entries, keys, hasOwn } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
+import { addError, pushPath, shouldContinue } from '../context'
 
 /**
  * Validates object 'properties' keyword.

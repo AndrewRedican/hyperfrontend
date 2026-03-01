@@ -1,8 +1,8 @@
 import type { Schema } from '../../types/schema'
 import type { ValidationContext } from '../context'
-import { addError, shouldContinue } from '../context'
-import { entries, hasOwn } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
 import { isArray } from '@hyperfrontend/immutable-api-utils/built-in-copy/array'
+import { entries, hasOwn } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
+import { addError, shouldContinue } from '../context'
 
 /**
  * Validates object 'dependencies' keyword.

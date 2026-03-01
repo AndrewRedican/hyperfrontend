@@ -1,7 +1,7 @@
 import type { Schema } from '../../types/schema'
 import type { ValidationContext } from '../context'
-import { addError } from '../context'
 import { isArray } from '@hyperfrontend/immutable-api-utils/built-in-copy/array'
+import { addError } from '../context'
 
 /**
  * Type checking functions for JSON Schema types.

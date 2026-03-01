@@ -1,6 +1,6 @@
 import type { Schema, JsonType } from '../types/schema'
-import { keys, entries } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
 import { isArray } from '@hyperfrontend/immutable-api-utils/built-in-copy/array'
+import { keys, entries } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
 
 /**
  * Merges multiple schemas into a single unified schema.
