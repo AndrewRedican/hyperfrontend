@@ -13,6 +13,7 @@
 // Capture references at module initialization time
 const _Set = globalThis.Set
 const _Reflect = globalThis.Reflect
+const _freeze = globalThis.Object.freeze
 
 /**
  * (Safe copy) Creates a new Set using the captured Set constructor.
@@ -27,6 +28,6 @@ export const createSet = <T>(iterable?: Iterable<T> | null): Set<T> => <Set<T>>_
  * (Safe copy) Namespace object containing Set factory.
  * Note: Importing this imports all methods in this namespace (no tree-shaking).
  */
-export const Set = <const>{
+export const Set = _freeze(<const>{
   create: createSet,
-}
+})

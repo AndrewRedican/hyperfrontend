@@ -13,6 +13,7 @@
 // Capture references at module initialization time
 const _WeakSet = globalThis.WeakSet
 const _Reflect = globalThis.Reflect
+const _freeze = globalThis.Object.freeze
 
 /**
  * (Safe copy) Creates a new WeakSet using the captured WeakSet constructor.
@@ -28,6 +29,6 @@ export const createWeakSet = <T extends WeakKey>(iterable?: Iterable<T> | null):
  * (Safe copy) Namespace object containing WeakSet factory.
  * Note: Importing this imports all methods in this namespace (no tree-shaking).
  */
-export const WeakSet = <const>{
+export const WeakSet = _freeze(<const>{
   create: createWeakSet,
-}
+})

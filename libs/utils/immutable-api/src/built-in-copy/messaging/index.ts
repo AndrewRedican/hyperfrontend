@@ -13,6 +13,7 @@
 
 // Capture references at module initialization time
 const _Reflect = globalThis.Reflect
+const _freeze = globalThis.Object.freeze
 const _structuredClone = typeof globalThis.structuredClone === 'function' ? globalThis.structuredClone : undefined
 const _MessageChannel = typeof globalThis.MessageChannel === 'function' ? globalThis.MessageChannel : undefined
 const _BroadcastChannel = typeof globalThis.BroadcastChannel === 'function' ? globalThis.BroadcastChannel : undefined
@@ -121,7 +122,7 @@ export const postMessageToBroadcast = (channel: BroadcastChannel, message: unkno
  * (Safe copy) Namespace object containing all Messaging functions.
  * Note: Importing this imports all methods in this namespace (no tree-shaking).
  */
-export const Messaging = <const>{
+export const Messaging = _freeze(<const>{
   structuredClone,
   createMessageChannel,
   createBroadcastChannel,
@@ -129,4 +130,4 @@ export const Messaging = <const>{
   postMessageToWorker,
   postMessageToPort,
   postMessageToBroadcast,
-}
+})

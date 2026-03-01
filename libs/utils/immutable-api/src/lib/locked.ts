@@ -11,13 +11,24 @@ export type LockedMethod = (
 /**
  * Creates a decorator that locks a method to prevent overwriting and ensure correct `this` binding.
  *
- * @locked
  * Ensures a classic prototype method cannot be overwritten and is
  * always called with the correct `this` instance without needing arrow functions.
  *
  * - The method of the prototype is non-configurable and non-enumerable.
  * - Any attempt to assign to the method throws an error.
  * - It does not support class fields / arrow functions.
+ *
+ * @example
+ * ```ts
+ * class Counter {
+ *   private count = 0
+ *
+ *   \@locked()
+ *   increment() {
+ *     return ++this.count
+ *   }
+ * }
+ * ```
  *
  * @returns A method decorator that locks the method
  */

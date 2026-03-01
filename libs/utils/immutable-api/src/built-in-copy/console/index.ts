@@ -9,6 +9,7 @@
 
 // Capture references at module initialization time
 const _console = globalThis.console
+const _freeze = globalThis.Object.freeze
 
 /**
  * (Safe copy) Outputs a message to the console.
@@ -104,7 +105,7 @@ export const timeLog = _console.timeLog.bind(_console)
  * (Safe copy) Namespace object containing all Console methods.
  * Note: Importing this imports all methods in this namespace (no tree-shaking).
  */
-export const Console = <const>{
+export const Console = _freeze(<const>{
   log,
   warn,
   error,
@@ -123,4 +124,4 @@ export const Console = <const>{
   time,
   timeEnd,
   timeLog,
-}
+})

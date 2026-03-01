@@ -15,6 +15,7 @@ const _clearInterval = globalThis.clearInterval
 const _queueMicrotask = globalThis.queueMicrotask
 const _requestAnimationFrame = typeof globalThis.requestAnimationFrame === 'function' ? globalThis.requestAnimationFrame : undefined
 const _cancelAnimationFrame = typeof globalThis.cancelAnimationFrame === 'function' ? globalThis.cancelAnimationFrame : undefined
+const _freeze = globalThis.Object.freeze
 
 /**
  * (Safe copy) Sets a timer which executes a function once the timer expires.
@@ -98,7 +99,7 @@ export const cancelAnimationFrame = _cancelAnimationFrame
  * (Safe copy) Namespace object containing all Timer/Scheduling functions.
  * Note: Importing this imports all methods in this namespace (no tree-shaking).
  */
-export const Timers = <const>{
+export const Timers = _freeze(<const>{
   setTimeout,
   setInterval,
   clearTimeout,
@@ -106,4 +107,4 @@ export const Timers = <const>{
   queueMicrotask,
   requestAnimationFrame,
   cancelAnimationFrame,
-}
+})

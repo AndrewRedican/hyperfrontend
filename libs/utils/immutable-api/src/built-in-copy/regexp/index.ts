@@ -13,6 +13,7 @@
 // Capture references at module initialization time
 const _RegExp = globalThis.RegExp
 const _Reflect = globalThis.Reflect
+const _freeze = globalThis.Object.freeze
 
 /**
  * (Safe copy) Creates a new RegExp using the captured RegExp constructor.
@@ -28,6 +29,6 @@ export const createRegExp = (pattern: string | RegExp, flags?: string): RegExp =
  * (Safe copy) Namespace object containing RegExp factory.
  * Note: Importing this imports all methods in this namespace (no tree-shaking).
  */
-export const RegExp = <const>{
+export const RegExp = _freeze(<const>{
   create: createRegExp,
-}
+})

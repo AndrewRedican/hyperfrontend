@@ -9,6 +9,7 @@
 
 // Capture references at module initialization time
 const _Symbol = globalThis.Symbol
+const _freeze = globalThis.Object.freeze
 
 /**
  * (Safe copy) Creates a new Symbol with optional description.
@@ -99,7 +100,7 @@ export const symbolUnscopables = _Symbol.unscopables
  * (Safe copy) Namespace object containing Symbol utilities and well-known symbols.
  * Note: Importing this imports all symbols in this namespace (no tree-shaking).
  */
-export const Symbol = <const>{
+export const Symbol = _freeze(<const>{
   create: createSymbol,
   for: symbolFor,
   keyFor: symbolKeyFor,
@@ -116,4 +117,4 @@ export const Symbol = <const>{
   species: symbolSpecies,
   toPrimitive: symbolToPrimitive,
   unscopables: symbolUnscopables,
-}
+})

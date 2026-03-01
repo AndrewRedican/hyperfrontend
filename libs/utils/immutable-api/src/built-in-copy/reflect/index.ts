@@ -9,6 +9,7 @@
 
 // Capture references at module initialization time
 const _Reflect = globalThis.Reflect
+const _freeze = globalThis.Object.freeze
 
 /**
  * (Safe copy) Calls the function with the specified object as the this value
@@ -80,7 +81,7 @@ export const preventExtensions = _Reflect.preventExtensions
  * (Safe copy) Namespace object containing all Reflect methods.
  * Note: Importing this imports all methods in this namespace (no tree-shaking).
  */
-export const Reflect = <const>{
+export const Reflect = _freeze(<const>{
   apply,
   construct,
   get,
@@ -94,4 +95,4 @@ export const Reflect = <const>{
   setPrototypeOf,
   isExtensible,
   preventExtensions,
-}
+})

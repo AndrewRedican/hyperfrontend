@@ -20,6 +20,7 @@ const _URIError = globalThis.URIError
 const _EvalError = globalThis.EvalError
 const _AggregateError = globalThis.AggregateError
 const _Reflect = globalThis.Reflect
+const _freeze = globalThis.Object.freeze
 
 /**
  * (Safe copy) Creates a new Error using the captured Error constructor.
@@ -113,7 +114,7 @@ export const createAggregateError = (errors: Iterable<unknown>, message?: string
  * (Safe copy) Namespace object containing Error factory functions.
  * Note: Importing this imports all methods in this namespace (no tree-shaking).
  */
-export const Error = <const>{
+export const Error = _freeze(<const>{
   create: createError,
   TypeError: createTypeError,
   RangeError: createRangeError,
@@ -122,4 +123,4 @@ export const Error = <const>{
   URIError: createURIError,
   EvalError: createEvalError,
   AggregateError: createAggregateError,
-}
+})

@@ -11,6 +11,7 @@
 const _Function = globalThis.Function
 const _FunctionPrototype = _Function.prototype
 const _Reflect = globalThis.Reflect
+const _freeze = globalThis.Object.freeze
 
 /**
  * (Safe copy) Creates a new Function using the captured Function constructor.
@@ -49,10 +50,10 @@ export const functionBind = _FunctionPrototype.bind
  * (Safe copy) Namespace object containing Function utilities.
  * Note: Importing this imports all methods in this namespace (no tree-shaking).
  */
-export const Function = <const>{
+export const Function = _freeze(<const>{
   create: createFunction,
   prototype: functionPrototype,
   call: functionCall,
   apply: functionApply,
   bind: functionBind,
-}
+})

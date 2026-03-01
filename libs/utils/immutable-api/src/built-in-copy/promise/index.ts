@@ -13,6 +13,7 @@
 // Capture references at module initialization time
 const _Promise = globalThis.Promise
 const _Reflect = globalThis.Reflect
+const _freeze = globalThis.Object.freeze
 
 /**
  * (Safe copy) Creates a new Promise using the captured Promise constructor.
@@ -66,7 +67,7 @@ export const promiseWithResolvers = (<any>_Promise).withResolvers?.bind(_Promise
  * (Safe copy) Namespace object containing all Promise factory functions.
  * Note: Importing this imports all methods in this namespace (no tree-shaking).
  */
-export const Promise = <const>{
+export const Promise = _freeze(<const>{
   create: createPromise,
   resolve: promiseResolve,
   reject: promiseReject,
@@ -75,4 +76,4 @@ export const Promise = <const>{
   allSettled: promiseAllSettled,
   any: promiseAny,
   withResolvers: promiseWithResolvers,
-}
+})

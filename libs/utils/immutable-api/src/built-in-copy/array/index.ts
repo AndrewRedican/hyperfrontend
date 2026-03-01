@@ -9,6 +9,7 @@
 
 // Capture references at module initialization time
 const _Array = globalThis.Array
+const _freeze = globalThis.Object.freeze
 
 /**
  * (Safe copy) Determines whether the passed value is an Array.
@@ -29,8 +30,8 @@ export const of = _Array.of
  * (Safe copy) Namespace object containing all Array static methods.
  * Note: Importing this imports all methods in this namespace (no tree-shaking).
  */
-export const Array = <const>{
+export const Array = _freeze(<const>{
   isArray,
   from,
   of,
-}
+})

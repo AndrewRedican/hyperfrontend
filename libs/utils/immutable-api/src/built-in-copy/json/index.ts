@@ -9,6 +9,7 @@
 
 // Capture references at module initialization time
 const _JSON = globalThis.JSON
+const _freeze = globalThis.Object.freeze
 
 /**
  * (Safe copy) Converts a JavaScript Object Notation (JSON) string into an object.
@@ -24,7 +25,7 @@ export const stringify = _JSON.stringify
  * (Safe copy) Namespace object containing all JSON methods.
  * Note: Importing this imports all methods in this namespace (no tree-shaking).
  */
-export const JSON = <const>{
+export const JSON = _freeze(<const>{
   parse,
   stringify,
-}
+})

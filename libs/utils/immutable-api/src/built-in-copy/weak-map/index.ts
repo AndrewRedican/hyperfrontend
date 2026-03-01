@@ -13,6 +13,7 @@
 // Capture references at module initialization time
 const _WeakMap = globalThis.WeakMap
 const _Reflect = globalThis.Reflect
+const _freeze = globalThis.Object.freeze
 
 /**
  * (Safe copy) Creates a new WeakMap using the captured WeakMap constructor.
@@ -28,6 +29,6 @@ export const createWeakMap = <K extends WeakKey, V>(iterable?: Iterable<readonly
  * (Safe copy) Namespace object containing WeakMap factory.
  * Note: Importing this imports all methods in this namespace (no tree-shaking).
  */
-export const WeakMap = <const>{
+export const WeakMap = _freeze(<const>{
   create: createWeakMap,
-}
+})

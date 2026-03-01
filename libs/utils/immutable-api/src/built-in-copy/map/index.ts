@@ -13,6 +13,7 @@
 // Capture references at module initialization time
 const _Map = globalThis.Map
 const _Reflect = globalThis.Reflect
+const _freeze = globalThis.Object.freeze
 
 /**
  * (Safe copy) Creates a new Map using the captured Map constructor.
@@ -35,7 +36,7 @@ export const mapGroupBy = (<any>_Map).groupBy
  * (Safe copy) Namespace object containing Map factory.
  * Note: Importing this imports all methods in this namespace (no tree-shaking).
  */
-export const Map = <const>{
+export const Map = _freeze(<const>{
   create: createMap,
   groupBy: mapGroupBy,
-}
+})

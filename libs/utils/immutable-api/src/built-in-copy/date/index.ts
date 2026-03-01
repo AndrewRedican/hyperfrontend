@@ -13,6 +13,7 @@
 // Capture references at module initialization time
 const _Date = globalThis.Date
 const _Reflect = globalThis.Reflect
+const _freeze = globalThis.Object.freeze
 
 /**
  * (Safe copy) Creates a new Date using the captured Date constructor.
@@ -54,9 +55,9 @@ export const dateUTC = _Date.UTC
  * (Safe copy) Namespace object containing Date factory and static methods.
  * Note: Importing this imports all methods in this namespace (no tree-shaking).
  */
-export const Date = <const>{
+export const Date = _freeze(<const>{
   create: createDate,
   now: dateNow,
   parse: dateParse,
   UTC: dateUTC,
-}
+})

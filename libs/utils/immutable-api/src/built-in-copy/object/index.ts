@@ -146,7 +146,7 @@ export const typeTag = (value: unknown): string => <string>_Reflect.apply(_toStr
  * (Safe copy) Namespace object containing all Object static methods.
  * Note: Importing this imports all methods in this namespace (no tree-shaking).
  */
-export const Object = <const>{
+export const Object = _Object.freeze(<const>{
   freeze,
   create,
   keys,
@@ -168,4 +168,4 @@ export const Object = <const>{
   getOwnPropertyNames,
   getOwnPropertySymbols,
   getOwnPropertyDescriptors,
-}
+})
