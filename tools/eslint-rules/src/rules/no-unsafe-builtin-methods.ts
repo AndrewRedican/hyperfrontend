@@ -16,6 +16,9 @@ const OBJECT = `${PKG}/built-in-copy/object`
 const ARRAY = `${PKG}/built-in-copy/array`
 const JSON_COPY = `${PKG}/built-in-copy/json`
 const PROMISE = `${PKG}/built-in-copy/promise`
+const CONSOLE = `${PKG}/built-in-copy/console`
+const TIMERS = `${PKG}/built-in-copy/timers`
+const MESSAGING = `${PKG}/built-in-copy/messaging`
 
 type SafeImport = { import: string; from: string }
 
@@ -49,10 +52,55 @@ const UNSAFE_METHODS: Record<string, Record<string, SafeImport>> = {
   ),
   Array: Object.fromEntries(['isArray', 'from', 'of'].map((m) => [m, { import: m, from: ARRAY }])),
   JSON: Object.fromEntries(['parse', 'stringify'].map((m) => [m, { import: m, from: JSON_COPY }])),
+  console: Object.fromEntries(
+    [
+      'log',
+      'warn',
+      'error',
+      'info',
+      'debug',
+      'trace',
+      'dir',
+      'table',
+      'assert',
+      'clear',
+      'count',
+      'countReset',
+      'group',
+      'groupCollapsed',
+      'groupEnd',
+      'time',
+      'timeEnd',
+      'timeLog',
+    ].map((m) => [m, { import: m, from: CONSOLE }])
+  ),
 }
 
 // Add special cases with different import names
 UNSAFE_METHODS['Object']['hasOwn'] = { import: 'hasOwn', from: OBJECT }
+
+/**
+ * Maps unsafe global function calls to safe imports
+ */
+const UNSAFE_GLOBALS: Record<string, SafeImport> = {
+  setTimeout: { import: 'setTimeout', from: TIMERS },
+  setInterval: { import: 'setInterval', from: TIMERS },
+  clearTimeout: { import: 'clearTimeout', from: TIMERS },
+  clearInterval: { import: 'clearInterval', from: TIMERS },
+  queueMicrotask: { import: 'queueMicrotask', from: TIMERS },
+  requestAnimationFrame: { import: 'requestAnimationFrame', from: TIMERS },
+  cancelAnimationFrame: { import: 'cancelAnimationFrame', from: TIMERS },
+  structuredClone: { import: 'structuredClone', from: MESSAGING },
+}
+
+/**
+ * Maps unsafe constructors (new Xxx()) to safe factory imports
+ */
+const UNSAFE_CONSTRUCTORS: Record<string, SafeImport> = {
+  Promise: { import: 'createPromise', from: PROMISE },
+  MessageChannel: { import: 'createMessageChannel', from: MESSAGING },
+  BroadcastChannel: { import: 'createBroadcastChannel', from: MESSAGING },
+}
 
 /**
  * Maps unsafe prototype method call patterns
@@ -64,7 +112,7 @@ const UNSAFE_PROTOTYPE_CALLS: Record<string, SafeImport> = {
 
 const createRule = ESLintUtils.RuleCreator((name) => `https://github.com/AndrewRedican/hyperfrontend/blob/main/docs/rules/${name}.md`)
 
-type MessageIds = 'unsafeBuiltinMethod' | 'unsafePrototypeCall' | 'unsafeNewPromise'
+type MessageIds = 'unsafeBuiltinMethod' | 'unsafePrototypeCall' | 'unsafeConstructor' | 'unsafeGlobalFunction'
 
 export default createRule<[], MessageIds>({
   name: RULE_NAME,
@@ -79,7 +127,10 @@ export default createRule<[], MessageIds>({
         "Use '{{ safeImport }}' from '{{ safeFrom }}' instead of direct '{{ unsafeAccess }}' access to protect against prototype pollution.",
       unsafePrototypeCall:
         "Use '{{ safeImport }}' from '{{ safeFrom }}' instead of '{{ unsafeAccess }}' to protect against prototype pollution.",
-      unsafeNewPromise: `Use 'createPromise' from '${PROMISE}' instead of 'new Promise()' to protect against prototype pollution.`,
+      unsafeConstructor:
+        "Use '{{ safeImport }}' from '{{ safeFrom }}' instead of 'new {{ constructorName }}()' to protect against prototype pollution.",
+      unsafeGlobalFunction:
+        "Use '{{ safeImport }}' from '{{ safeFrom }}' instead of '{{ unsafeName }}' to protect against prototype pollution.",
     },
   },
   defaultOptions: [],
@@ -131,7 +182,25 @@ export default createRule<[], MessageIds>({
       },
 
       // Check for Object.prototype.hasOwnProperty.call, Object.prototype.toString.call
+      // and unsafe global function calls like setTimeout(), setInterval(), etc.
       CallExpression(node: TSESTree.CallExpression) {
+        // Check for direct global function calls: setTimeout(), setInterval(), etc.
+        if (node.callee.type === AST_NODE_TYPES.Identifier) {
+          const funcName = node.callee.name
+          const safeMethod = UNSAFE_GLOBALS[funcName]
+          if (safeMethod) {
+            context.report({
+              node,
+              messageId: 'unsafeGlobalFunction',
+              data: {
+                safeImport: safeMethod.import,
+                safeFrom: safeMethod.from,
+                unsafeName: funcName,
+              },
+            })
+          }
+        }
+
         // Check for pattern: Object.prototype.hasOwnProperty.call(obj, key)
         if (
           node.callee.type === AST_NODE_TYPES.MemberExpression &&
@@ -167,13 +236,22 @@ export default createRule<[], MessageIds>({
         }
       },
 
-      // Check for new Promise()
+      // Check for new Promise(), new MessageChannel(), new BroadcastChannel()
       NewExpression(node: TSESTree.NewExpression) {
-        if (node.callee.type === AST_NODE_TYPES.Identifier && node.callee.name === 'Promise') {
-          context.report({
-            node,
-            messageId: 'unsafeNewPromise',
-          })
+        if (node.callee.type === AST_NODE_TYPES.Identifier) {
+          const constructorName = node.callee.name
+          const safeMethod = UNSAFE_CONSTRUCTORS[constructorName]
+          if (safeMethod) {
+            context.report({
+              node,
+              messageId: 'unsafeConstructor',
+              data: {
+                safeImport: safeMethod.import,
+                safeFrom: safeMethod.from,
+                constructorName,
+              },
+            })
+          }
         }
       },
     }

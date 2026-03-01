@@ -6,7 +6,7 @@ import { RuleTester } from '@typescript-eslint/rule-tester'
 import rule from './no-unsafe-builtin-methods'
 
 type TestOptions = readonly []
-type MessageIds = 'unsafeBuiltinMethod' | 'unsafePrototypeCall' | 'unsafeNewPromise'
+type MessageIds = 'unsafeBuiltinMethod' | 'unsafePrototypeCall' | 'unsafeConstructor' | 'unsafeGlobalFunction'
 
 /**
  * Creates a temporary project structure for testing.
@@ -263,7 +263,7 @@ function createNewPromiseCase(): InvalidTestCase<MessageIds, TestOptions> {
   return {
     code: 'const p = new Promise((resolve) => resolve(1));',
     filename: join(projectDir, 'src', 'index.ts'),
-    errors: [{ messageId: 'unsafeNewPromise' }],
+    errors: [{ messageId: 'unsafeConstructor' }],
   }
 }
 
@@ -332,6 +332,61 @@ const keys = Object.keys(obj);
 const arr = Array.from(keys);`,
     filename: join(projectDir, 'src', 'index.ts'),
     errors: [{ messageId: 'unsafeBuiltinMethod' }, { messageId: 'unsafeBuiltinMethod' }, { messageId: 'unsafeBuiltinMethod' }],
+  }
+}
+
+function createConsoleLogCase(): InvalidTestCase<MessageIds, TestOptions> {
+  const projectDir = createTempProject({ isPublishable: true })
+  tempDirs.push(projectDir)
+  mkdirSync(join(projectDir, 'src'), { recursive: true })
+  return {
+    code: 'console.log("unsafe");',
+    filename: join(projectDir, 'src', 'index.ts'),
+    errors: [{ messageId: 'unsafeBuiltinMethod' }],
+  }
+}
+
+function createSetTimeoutCase(): InvalidTestCase<MessageIds, TestOptions> {
+  const projectDir = createTempProject({ isPublishable: true })
+  tempDirs.push(projectDir)
+  mkdirSync(join(projectDir, 'src'), { recursive: true })
+  return {
+    code: 'setTimeout(() => {}, 100);',
+    filename: join(projectDir, 'src', 'index.ts'),
+    errors: [{ messageId: 'unsafeGlobalFunction' }],
+  }
+}
+
+function createStructuredCloneCase(): InvalidTestCase<MessageIds, TestOptions> {
+  const projectDir = createTempProject({ isPublishable: true })
+  tempDirs.push(projectDir)
+  mkdirSync(join(projectDir, 'src'), { recursive: true })
+  return {
+    code: 'const copy = structuredClone({ a: 1 });',
+    filename: join(projectDir, 'src', 'index.ts'),
+    errors: [{ messageId: 'unsafeGlobalFunction' }],
+  }
+}
+
+function createNewMessageChannelCase(): InvalidTestCase<MessageIds, TestOptions> {
+  const projectDir = createTempProject({ isPublishable: true })
+  tempDirs.push(projectDir)
+  mkdirSync(join(projectDir, 'src'), { recursive: true })
+  return {
+    code: 'const channel = new MessageChannel();',
+    filename: join(projectDir, 'src', 'index.ts'),
+    errors: [{ messageId: 'unsafeConstructor' }],
+  }
+}
+
+function createNewBroadcastChannelCase(): InvalidTestCase<MessageIds, TestOptions> {
+  const projectDir = createTempProject({ isPublishable: true })
+  tempDirs.push(projectDir)
+  mkdirSync(join(projectDir, 'src'), { recursive: true })
+  return {
+    code: 'const broadcast = new BroadcastChannel("test");',
+    filename: join(projectDir, 'src', 'index.ts'),
+    errors: [{ messageId: 'unsafeConstructor' }],
   }
 }
 
@@ -456,6 +511,26 @@ describe('no-unsafe-builtin-methods', () => {
           {
             name: 'triggers for multiple violations',
             ...createMultipleViolationsCase(),
+          },
+          {
+            name: 'triggers for console.log',
+            ...createConsoleLogCase(),
+          },
+          {
+            name: 'triggers for setTimeout',
+            ...createSetTimeoutCase(),
+          },
+          {
+            name: 'triggers for structuredClone',
+            ...createStructuredCloneCase(),
+          },
+          {
+            name: 'triggers for new MessageChannel()',
+            ...createNewMessageChannelCase(),
+          },
+          {
+            name: 'triggers for new BroadcastChannel()',
+            ...createNewBroadcastChannelCase(),
           },
         ],
       })
