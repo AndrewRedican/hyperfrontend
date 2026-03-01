@@ -7,7 +7,7 @@ describe('createValuePicker', () => {
   })
   // how is this not working properly?
   it('throws an error for null input', () => {
-    expect(() => createValuePicker(null as never)).toThrow('Expected values not to be an empty list.')
+    expect(() => createValuePicker(<never>null)).toThrow('Expected values not to be an empty list.')
   })
 
   describe('when initialized with a non-empty array', () => {
