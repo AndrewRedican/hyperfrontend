@@ -1,7 +1,7 @@
 import type { DataType } from './models'
-import { sameType } from './same-type'
-import { isIterableType } from './is-iterable-type'
 import { getKeysFromIterable } from './get-keys-from-iterable'
+import { isIterableType } from './is-iterable-type'
+import { sameType } from './same-type'
 import { getConfig } from './shared/consts'
 
 /**

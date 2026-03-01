@@ -1,6 +1,6 @@
 import type { Callback, DepthConfig } from './models'
-import { traverse } from './traverse'
 import { getType } from './get-type'
+import { traverse } from './traverse'
 
 /**
  * Returns a list of locations where a text value matches a pattern or an exact value anywhere in the data structure of the target.

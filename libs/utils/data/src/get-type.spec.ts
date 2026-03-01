@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-empty-function */
-import { registerClassTypes } from './register-class-types'
 import { deregisterClassTypes } from './deregister-class-types'
 import { getType } from './get-type'
+import { registerClassTypes } from './register-class-types'
 
 describe('getType', () => {
   it('returns "undefined" for a reference explicitely set to undefined', () => {

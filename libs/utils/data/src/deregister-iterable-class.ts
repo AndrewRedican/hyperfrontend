@@ -1,6 +1,6 @@
 import type { UnknownClass } from './models'
-import { registeredIterableClasses } from './shared/consts'
 import { deregisterClassTypes } from './deregister-class-types'
+import { registeredIterableClasses } from './shared/consts'
 
 /**
  * Removes one or more registered iterable classes.

@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-empty-function */
-import { registerClassTypes } from './register-class-types'
 import { deregisterClassTypes } from './deregister-class-types'
+import { registerClassTypes } from './register-class-types'
 import { sameType } from './same-type'
 
 describe('sameType', () => {

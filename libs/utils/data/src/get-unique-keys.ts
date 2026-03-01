@@ -1,9 +1,9 @@
 import type { Callback, DepthConfig } from './models'
-import { traverse } from './traverse'
+import { from } from '@hyperfrontend/immutable-api-utils/built-in-copy/array'
+import { getIterableOperators } from './get-iterable-operators'
 import { getType } from './get-type'
 import { isIterableType } from './is-iterable-type'
-import { getIterableOperators } from './get-iterable-operators'
-import { from } from '@hyperfrontend/immutable-api-utils/built-in-copy/array'
+import { traverse } from './traverse'
 
 /**
  * Returns a list of unique key names that match a pattern or an exact value anywhere in the data structure of the target.

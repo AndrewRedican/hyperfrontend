@@ -1,6 +1,6 @@
+import { deregisterIterableClass } from './deregister-iterable-class'
 import { locateCircularReference } from './locate-circular-reference'
 import { registerIterableClass } from './register-iterable-class'
-import { deregisterIterableClass } from './deregister-iterable-class'
 import { setConfig, getConfig } from './shared/consts'
 
 describe('locateCircularReference', () => {

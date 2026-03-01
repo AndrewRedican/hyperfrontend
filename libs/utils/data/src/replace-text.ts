@@ -1,8 +1,8 @@
 import type { Callback, DepthConfig } from './models'
-import { traverse } from './traverse'
+import { getIterableOperators } from './get-iterable-operators'
 import { getType } from './get-type'
 import { isIterableType } from './is-iterable-type'
-import { getIterableOperators } from './get-iterable-operators'
+import { traverse } from './traverse'
 
 /**
  * Edits any text by replacing any string or substring that matches a pattern or an exact value anywhere in the data structure of the target

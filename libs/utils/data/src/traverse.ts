@@ -9,13 +9,13 @@ import type {
   Callback,
   DepthConfig,
 } from './models'
-import { referenceStack } from './reference-stack'
-import { getConfig } from './shared/consts'
+import { isArray } from '@hyperfrontend/immutable-api-utils/built-in-copy/array'
+import { freeze } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
+import { getKeysFromIterable } from './get-keys-from-iterable'
 import { getType } from './get-type'
 import { isIterableType } from './is-iterable-type'
-import { getKeysFromIterable } from './get-keys-from-iterable'
-import { freeze } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
-import { isArray } from '@hyperfrontend/immutable-api-utils/built-in-copy/array'
+import { referenceStack } from './reference-stack'
+import { getConfig } from './shared/consts'
 
 const errorMessage = (thing: string, type: string) => `Expected ${thing} to be ${type}.`
 

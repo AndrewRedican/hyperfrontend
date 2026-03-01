@@ -1,6 +1,6 @@
 import type { DataType } from './models'
-import { registeredClasses } from './shared/consts'
 import { isArray } from '@hyperfrontend/immutable-api-utils/built-in-copy/array'
+import { registeredClasses } from './shared/consts'
 
 /**
  * Returns the data type of the target.

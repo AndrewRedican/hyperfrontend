@@ -1,10 +1,10 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/no-empty-function */
 import type { Config } from './models'
-import { setConfig } from './shared/consts'
+import { deregisterIterableClass } from './deregister-iterable-class'
 import { isIdentical } from './is-identical'
 import { registerIterableClass } from './register-iterable-class'
-import { deregisterIterableClass } from './deregister-iterable-class'
+import { setConfig } from './shared/consts'
 
 const configReset: Config = Object.freeze({
   samePositionOfOwnProperties: false,

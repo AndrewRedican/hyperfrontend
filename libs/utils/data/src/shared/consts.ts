@@ -1,6 +1,6 @@
 import type { UnknownClass, RegisteredIterableClassEntry, Config } from '../models'
-import { isMarker } from '../is-marker'
 import { keys } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
+import { isMarker } from '../is-marker'
 
 export const registeredClasses: UnknownClass[] = []
 

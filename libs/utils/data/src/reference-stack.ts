@@ -1,6 +1,6 @@
 import type { UnknownIterable, UnknownIterableKey, ReferenceStack } from './models'
-import { marker } from './marker'
 import { isIterable } from './is-iterable'
+import { marker } from './marker'
 
 /**
  * Creates a new ReferenceStack instance.

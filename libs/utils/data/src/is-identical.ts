@@ -1,8 +1,8 @@
 import type { UnknownIterable, UnknownIterableKey, ReferenceStack } from './models'
+import { getIterableOperators } from './get-iterable-operators'
+import { isIterableType } from './is-iterable-type'
 import { referenceStack } from './reference-stack'
 import { sameStructure } from './same-structure'
-import { isIterableType } from './is-iterable-type'
-import { getIterableOperators } from './get-iterable-operators'
 import { getConfig } from './shared/consts'
 
 /**

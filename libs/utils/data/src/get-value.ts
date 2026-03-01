@@ -1,9 +1,9 @@
 import type { DataType, IterableOperators } from './models'
-import { getIterableOperators } from './get-iterable-operators'
-import { isIterableType } from './is-iterable-type'
-import { DefaultValueOptions } from './get-value.model'
-import { getType } from './get-type'
 import { isArray } from '@hyperfrontend/immutable-api-utils/built-in-copy/array'
+import { getIterableOperators } from './get-iterable-operators'
+import { getType } from './get-type'
+import { DefaultValueOptions } from './get-value.model'
+import { isIterableType } from './is-iterable-type'
 
 /**
  * Gets the value at the specified path from the target.

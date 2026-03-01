@@ -1,10 +1,10 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/no-empty-function */
 import { deregisterIterableClass } from './deregister-iterable-class'
+import { isIdentical } from './is-identical'
 import { registerIterableClass } from './register-iterable-class'
 import { selectiveCopy } from './selective-copy'
 import { setConfig } from './shared/consts'
-import { isIdentical } from './is-identical'
 
 describe('selectiveCopy', () => {
   it('clones primitive type data', () => {

@@ -1,7 +1,7 @@
-import { setConfig } from './shared/consts'
-import { registerIterableClass } from './register-iterable-class'
 import { deregisterIterableClass } from './deregister-iterable-class'
+import { registerIterableClass } from './register-iterable-class'
 import { sameStructure } from './same-structure'
+import { setConfig } from './shared/consts'
 
 describe('sameStructure', () => {
   beforeEach(() => {

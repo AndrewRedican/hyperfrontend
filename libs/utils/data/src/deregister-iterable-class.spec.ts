@@ -1,5 +1,5 @@
-import { registerIterableClass } from './register-iterable-class'
 import { deregisterIterableClass } from './deregister-iterable-class'
+import { registerIterableClass } from './register-iterable-class'
 import { registeredClasses, registeredIterableClasses } from './shared/consts'
 
 describe('deregisterIterableClass', () => {

@@ -1,6 +1,6 @@
+import { deregisterIterableClass } from './deregister-iterable-class'
 import { isIterable } from './is-iterable'
 import { registerIterableClass } from './register-iterable-class'
-import { deregisterIterableClass } from './deregister-iterable-class'
 
 describe('isIterable', () => {
   it('returns true for object and array values, regardless of having items or values or being empty', () => {
