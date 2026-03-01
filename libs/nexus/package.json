@@ -32,6 +32,7 @@
     "event-driven"
   ],
   "dependencies": {
+    "@hyperfrontend/data-utils": "0.0.2",
     "@hyperfrontend/immutable-api-utils": "0.0.2",
     "@hyperfrontend/json-utils": "0.0.2",
     "@hyperfrontend/logging": "0.0.2",
