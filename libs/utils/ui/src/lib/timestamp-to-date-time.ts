@@ -24,6 +24,6 @@ export function timestampToDateTime(timestamp: number): string {
     hourCycle: 'h23',
   }
 
-  const userLanguage = navigator.language || (navigator as any).userLanguage
+  const userLanguage = navigator.language || (<any>navigator).userLanguage
   return date.toLocaleString(userLanguage, options)
 }

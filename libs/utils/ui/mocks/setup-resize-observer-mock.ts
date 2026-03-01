@@ -12,12 +12,12 @@ export interface ResizeObserverMock {
  */
 export function setupResizeObserverMock() {
   const mockDisconnect = jest.fn()
-  const mock = {} as ResizeObserverMock
+  const mock = <ResizeObserverMock>{}
   mock.observe = jest.fn()
   mock.unobserve = jest.fn()
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  ;(globalThis as any).ResizeObserver = jest.fn((callback: ResizeObserverCallback) => {
+  ;(<any>globalThis).ResizeObserver = jest.fn((callback: ResizeObserverCallback) => {
     mock.callback = callback
     return {
       observe: mock.observe,

@@ -8,7 +8,7 @@ export type TMouseEvent = MouseEvent & { pageX: number; pageY: number }
  * @param y - The y-coordinate for the click position
  */
 export function clickAtPosition(x: number, y: number): void {
-  const clickEvent = new Event('mousedown') as TMouseEvent
+  const clickEvent = <TMouseEvent>new Event('mousedown')
   clickEvent.pageX = x
   clickEvent.pageY = y
   document.dispatchEvent(clickEvent)

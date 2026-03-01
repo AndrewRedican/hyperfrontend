@@ -44,7 +44,7 @@ describe('createGestureListener', () => {
     const touch2 = { clientX: 200, clientY: 200 }
 
     const touchStartEvent = new TouchEvent('touchstart', {
-      touches: [touch1, touch2] as unknown as Touch[],
+      touches: <Touch[]>(<unknown>[touch1, touch2]),
     })
     document.dispatchEvent(touchStartEvent)
 
@@ -52,7 +52,7 @@ describe('createGestureListener', () => {
     const touch2Move = { clientX: 250, clientY: 250 }
 
     const touchMoveEvent = new TouchEvent('touchmove', {
-      touches: [touch1Move, touch2Move] as unknown as Touch[],
+      touches: <Touch[]>(<unknown>[touch1Move, touch2Move]),
     })
     document.dispatchEvent(touchMoveEvent)
 
@@ -67,7 +67,7 @@ describe('createGestureListener', () => {
     const touch2 = { clientX: 250, clientY: 250 }
 
     const touchStartEvent = new TouchEvent('touchstart', {
-      touches: [touch1, touch2] as unknown as Touch[],
+      touches: <Touch[]>(<unknown>[touch1, touch2]),
     })
     document.dispatchEvent(touchStartEvent)
 
@@ -75,7 +75,7 @@ describe('createGestureListener', () => {
     const touch2Move = { clientX: 200, clientY: 200 }
 
     const touchMoveEvent = new TouchEvent('touchmove', {
-      touches: [touch1Move, touch2Move] as unknown as Touch[],
+      touches: <Touch[]>(<unknown>[touch1Move, touch2Move]),
     })
     document.dispatchEvent(touchMoveEvent)
 
@@ -90,12 +90,12 @@ describe('createGestureListener', () => {
     const touch2 = { clientX: 200, clientY: 200 }
 
     const touchStartEvent = new TouchEvent('touchstart', {
-      touches: [touch1, touch2] as unknown as Touch[],
+      touches: <Touch[]>(<unknown>[touch1, touch2]),
     })
     document.dispatchEvent(touchStartEvent)
 
     const touchEndEvent = new TouchEvent('touchend', {
-      touches: [] as unknown as Touch[],
+      touches: <Touch[]>(<unknown>[]),
     })
     document.dispatchEvent(touchEndEvent)
 
@@ -103,7 +103,7 @@ describe('createGestureListener', () => {
     const touch2Move = { clientX: 250, clientY: 250 }
 
     const touchMoveEvent = new TouchEvent('touchmove', {
-      touches: [touch1Move, touch2Move] as unknown as Touch[],
+      touches: <Touch[]>(<unknown>[touch1Move, touch2Move]),
     })
     document.dispatchEvent(touchMoveEvent)
 
@@ -117,7 +117,7 @@ describe('createGestureListener', () => {
     const touch1 = { clientX: 100, clientY: 100 }
 
     const touchMoveEvent = new TouchEvent('touchmove', {
-      touches: [touch1] as unknown as Touch[],
+      touches: <Touch[]>(<unknown>[touch1]),
     })
     document.dispatchEvent(touchMoveEvent)
 
@@ -142,7 +142,7 @@ describe('createGestureListener', () => {
     const touch2 = { clientX: 200, clientY: 200 }
 
     const touchStartEvent = new TouchEvent('touchstart', {
-      touches: [touch1, touch2] as unknown as Touch[],
+      touches: <Touch[]>(<unknown>[touch1, touch2]),
     })
     document.dispatchEvent(touchStartEvent)
 
@@ -150,12 +150,12 @@ describe('createGestureListener', () => {
     const touch2Move = { clientX: 250, clientY: 250 }
 
     const touchMoveEvent = new TouchEvent('touchmove', {
-      touches: [touch1Move, touch2Move] as unknown as Touch[],
+      touches: <Touch[]>(<unknown>[touch1Move, touch2Move]),
     })
     document.dispatchEvent(touchMoveEvent)
 
     const touchMoveEvent2 = new TouchEvent('touchmove', {
-      touches: [touch1Move, touch2Move] as unknown as Touch[],
+      touches: <Touch[]>(<unknown>[touch1Move, touch2Move]),
     })
     document.dispatchEvent(touchMoveEvent2)
 

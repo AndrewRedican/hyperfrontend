@@ -21,7 +21,7 @@ export function cssRule(selector: string, css: string | Style): string {
     throw new Error('A valid css select must be provided')
   }
   if (getType(css) === 'object') {
-    css = cssObjectToString(css as Style).trim()
+    css = cssObjectToString(<Style>css).trim()
   }
 
   if (getType(css) !== 'string' || css.length === 0) {

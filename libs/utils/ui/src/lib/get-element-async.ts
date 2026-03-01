@@ -25,11 +25,11 @@ export interface GetElementAsyncOptions {
  * @returns A cleanup function to cancel the polling
  */
 export function getElementAsync(elementRefOrString: ElementRefOrString, options?: GetElementAsyncOptions): () => void {
-  const { duration, interval, onSuccess, onFail } = {
+  const { duration, interval, onSuccess, onFail } = <GetElementAsyncOptions>{
     duration: 10000,
     interval: 100,
     ...options,
-  } as GetElementAsyncOptions
+  }
 
   let timer: ReturnType<typeof setInterval> | undefined
   let timeout: ReturnType<typeof setTimeout> | undefined

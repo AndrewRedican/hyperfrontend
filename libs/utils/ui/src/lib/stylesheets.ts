@@ -56,10 +56,10 @@ export function removeStylesheet(ref: string | HTMLStyleElement): void {
   let label: string
   if (isLabel) {
     label = <string>ref
-    style = labeledStylesheets.get(label) as HTMLStyleElement
+    style = <HTMLStyleElement>labeledStylesheets.get(label)
   } else {
     style = <HTMLStyleElement>ref
-    label = stylesheetLabels.get(style) as string
+    label = <string>stylesheetLabels.get(style)
   }
   try {
     document.head.removeChild(style)

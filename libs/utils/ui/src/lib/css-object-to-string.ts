@@ -22,7 +22,7 @@ export function cssObjectToString(cssObj: Style): string {
 
       return `${prev}${kebabCaseProperty}: ${cssValue}; `
     } catch (error) {
-      errors.push(`Failed to convert property "${property}". Error: ${(error as any).message}`)
+      errors.push(`Failed to convert property "${property}". Error: ${(<any>error).message}`)
       return prev
     }
   }, '')

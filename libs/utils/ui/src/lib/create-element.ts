@@ -30,7 +30,7 @@ export type ElementMethods<T extends HTMLElement> = {
  * @returns An ElementMethods object with helper methods and a reference to the created element
  */
 export function createElement<T extends HTMLElement>(tagName: HtmlTagName, config?: ElementConfig): ElementMethods<T> {
-  const element = document.createElement(tagName) as T
+  const element = <T>document.createElement(tagName)
   if (config?.inlineStyle) {
     assign(element.style, config.inlineStyle)
   }
