@@ -162,4 +162,13 @@ module.exports = [
       'workspace/prefer-angle-bracket-assertion': 'error',
     },
   },
+  {
+    files: ['**/*.spec.ts'],
+    plugins: {
+      workspace: eslintRules,
+    },
+    rules: {
+      'workspace/assertive-test-names': 'error',
+    },
+  },
 ]

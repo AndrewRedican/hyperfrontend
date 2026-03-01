@@ -1,4 +1,5 @@
 import type { ESLint, Rule } from 'eslint'
+import assertiveTestNames, { RULE_NAME as ASSERTIVE_TEST_NAMES } from './rules/assertive-test-names'
 import importOrder, { RULE_NAME as IMPORT_ORDER } from './rules/import-order'
 import noEnum, { RULE_NAME as NO_ENUM } from './rules/no-enum'
 import noMixedTypeImport, { RULE_NAME as NO_MIXED_TYPE_IMPORT } from './rules/no-mixed-type-import'
@@ -13,6 +14,7 @@ import requireNodeProtocol, { RULE_NAME as REQUIRE_NODE_PROTOCOL } from './rules
  * Exported as a named export for \@nx/eslint-plugin workspace rules resolution.
  */
 export const rules: ESLint.Plugin['rules'] = {
+  [ASSERTIVE_TEST_NAMES]: <Rule.RuleModule>(<unknown>assertiveTestNames),
   [IMPORT_ORDER]: <Rule.RuleModule>(<unknown>importOrder),
   [NO_ENUM]: <Rule.RuleModule>(<unknown>noEnum),
   [NO_MIXED_TYPE_IMPORT]: <Rule.RuleModule>(<unknown>noMixedTypeImport),
