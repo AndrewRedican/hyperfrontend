@@ -1,6 +1,6 @@
 import { getType } from '@hyperfrontend/data-utils'
-import { freeze } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
 import { from } from '@hyperfrontend/immutable-api-utils/built-in-copy/array'
+import { freeze } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
 
 export interface LifoList<T extends object> {
   push(item: T): void
