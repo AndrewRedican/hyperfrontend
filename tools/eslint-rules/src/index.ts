@@ -3,7 +3,9 @@ import assertiveTestNames, { RULE_NAME as ASSERTIVE_TEST_NAMES } from './rules/a
 import importOrder, { RULE_NAME as IMPORT_ORDER } from './rules/import-order'
 import libPkgBundleEntry, { RULE_NAME as LIB_PKG_BUNDLE_ENTRY } from './rules/lib-pkg-bundle-entry'
 import libPkgExportsExist, { RULE_NAME as LIB_PKG_EXPORTS_EXIST } from './rules/lib-pkg-exports-exist'
+import libPkgExportsJsOnly, { RULE_NAME as LIB_PKG_EXPORTS_JS_ONLY } from './rules/lib-pkg-exports-js-only'
 import libPkgFields, { RULE_NAME as LIB_PKG_FIELDS } from './rules/lib-pkg-fields'
+import libPkgNoMain, { RULE_NAME as LIB_PKG_NO_MAIN } from './rules/lib-pkg-no-main'
 import libPkgPackageJsonExport, { RULE_NAME as LIB_PKG_PACKAGE_JSON_EXPORT } from './rules/lib-pkg-package-json-export'
 import libProjectBundleConfig, { RULE_NAME as LIB_PROJECT_BUNDLE_CONFIG } from './rules/lib-project-bundle-config'
 import libProjectMetadata, { RULE_NAME as LIB_PROJECT_METADATA } from './rules/lib-project-metadata'
@@ -24,7 +26,9 @@ export const rules: ESLint.Plugin['rules'] = {
   [IMPORT_ORDER]: <Rule.RuleModule>(<unknown>importOrder),
   [LIB_PKG_BUNDLE_ENTRY]: <Rule.RuleModule>(<unknown>libPkgBundleEntry),
   [LIB_PKG_EXPORTS_EXIST]: <Rule.RuleModule>(<unknown>libPkgExportsExist),
+  [LIB_PKG_EXPORTS_JS_ONLY]: <Rule.RuleModule>(<unknown>libPkgExportsJsOnly),
   [LIB_PKG_FIELDS]: <Rule.RuleModule>(<unknown>libPkgFields),
+  [LIB_PKG_NO_MAIN]: <Rule.RuleModule>(<unknown>libPkgNoMain),
   [LIB_PKG_PACKAGE_JSON_EXPORT]: <Rule.RuleModule>(<unknown>libPkgPackageJsonExport),
   [LIB_PROJECT_BUNDLE_CONFIG]: <Rule.RuleModule>(<unknown>libProjectBundleConfig),
   [LIB_PROJECT_METADATA]: <Rule.RuleModule>(<unknown>libProjectMetadata),
