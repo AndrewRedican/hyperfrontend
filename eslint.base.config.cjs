@@ -171,4 +171,16 @@ module.exports = [
       'workspace/assertive-test-names': 'error',
     },
   },
+  {
+    files: ['libs/**/package.json'],
+    plugins: {
+      workspace: eslintRules,
+    },
+    languageOptions: {
+      parser: require('jsonc-eslint-parser'),
+    },
+    rules: {
+      'workspace/lib-pkg-fields': 'error',
+    },
+  },
 ]
