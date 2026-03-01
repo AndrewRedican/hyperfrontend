@@ -1,5 +1,5 @@
-import { uint8ArrayToUtf8String } from './uint8-array-to-utf8-string'
 import { UINT8_CONVERTION_SAMPLES } from '../shared-consts'
+import { uint8ArrayToUtf8String } from './uint8-array-to-utf8-string'
 
 describe('uint8ArrayToUtf8String', () => {
   const { SIMPLE, NON_ASCII, EMPTY } = UINT8_CONVERTION_SAMPLES
