@@ -26,9 +26,11 @@
     "functional",
     "immutable"
   ],
-  "main": "./src/index.js",
+  "exports": {
+    ".": "./src/index.js",
+    "./package.json": "./package.json"
+  },
   "dependencies": {
-    "@hyperfrontend/immutable-api-utils": "0.0.2",
-    "jest": "30.2.0"
+    "@hyperfrontend/immutable-api-utils": "0.0.2"
   }
 }
