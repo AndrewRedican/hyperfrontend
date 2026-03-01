@@ -1,7 +1,7 @@
 import type { HashAlgorithm } from './model'
+import { from } from '@hyperfrontend/immutable-api-utils/built-in-copy/array'
 import { utf8StringToUint8Array } from '@hyperfrontend/string-utils/browser'
 import { subtle } from '../subtle/browser'
-import { from } from '@hyperfrontend/immutable-api-utils/built-in-copy/array'
 
 /**
  * Creates a cryptographic hash of the provided data using Web Crypto API (browser implementation).

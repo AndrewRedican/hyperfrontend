@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import type { Vault } from './model'
-import { create, freeze } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
 import { from } from '@hyperfrontend/immutable-api-utils/built-in-copy/array'
+import { create, freeze } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
 
 /**
  * Creates a vault factory function that produces encrypted storage instances.

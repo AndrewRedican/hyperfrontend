@@ -1,7 +1,7 @@
 /** @jest-environment node */
+import { encryptionConfig } from '../encryption-config'
 import { getRandomValues } from '../get-random-values/node'
 import { generateKey } from './node'
-import { encryptionConfig } from '../encryption-config'
 
 describe('generateKey (node)', () => {
   it('creates a key', async () => {

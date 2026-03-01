@@ -1,7 +1,7 @@
 /** @jest-environment jsdom */
+import { encryptionConfig } from '../encryption-config'
 import { getRandomValues } from '../get-random-values/browser'
 import { generateKey } from './browser'
-import { encryptionConfig } from '../encryption-config'
 
 describe('generateKey (browser)', () => {
   it('creates a key', async () => {
