@@ -1,7 +1,7 @@
 import { noop } from './index'
 
 describe('web-worker', () => {
-  it('should export noop', () => {
+  it('exports noop', () => {
     expect(noop).toBeDefined()
   })
 })
