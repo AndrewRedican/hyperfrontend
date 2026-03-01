@@ -1,5 +1,5 @@
-import { lockedPropertyDescriptors } from './locked-prop-descriptors'
 import { defineProperties } from '../built-in-copy/object'
+import { lockedPropertyDescriptors } from './locked-prop-descriptors'
 
 export type PropertyLock = (
   object: object,
