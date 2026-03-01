@@ -1,5 +1,8 @@
 import type { LogLevel, SetLogLevel, GetLogLevel } from './create-log-level-config'
+import { getType } from '@hyperfrontend/data-utils'
+import { noop, createConditionalExecutionFunction, createErrorIgnoringFunction } from '@hyperfrontend/function-utils'
 import { freeze } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
+import { createLogLevelConfig } from './create-log-level-config'
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type LogLevelFn = (...data: any[]) => void
@@ -29,10 +32,6 @@ export interface Logger {
 export type LogFnName = Exclude<keyof Logger, 'setLevel' | 'getLevel'>
 
 export type LogFunction = Logger[LogFnName]
-
-import { getType } from '@hyperfrontend/data-utils'
-import { noop, createConditionalExecutionFunction, createErrorIgnoringFunction } from '@hyperfrontend/function-utils'
-import { createLogLevelConfig } from './create-log-level-config'
 
 /**
  * Creates a logger instance with configurable log level filtering.
