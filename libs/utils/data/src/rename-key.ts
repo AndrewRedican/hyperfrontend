@@ -34,5 +34,5 @@ export const renameKey = (target: unknown, pattern: string | RegExp, name: strin
       state.locations.push([...path, newKey])
     })
   }
-  return traverse(target, callback, { depth: [0, '*'], ...options } as DepthConfig, { locations: [] }).locations
+  return traverse(target, callback, <DepthConfig>{ depth: [0, '*'], ...options }, { locations: [] }).locations
 }

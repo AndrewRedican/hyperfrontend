@@ -51,7 +51,7 @@ describe('locateCircularReference - with extended iterable class types', () => {
   beforeEach(() => {
     registerIterableClass<Map<unknown, unknown>>(
       Map,
-      (map) => Array.from(map.keys()) as string[],
+      (map) => <string[]>Array.from(map.keys()),
       (map, key) => map.get(key),
       (map, value, key) => map.set(key, value),
       (map, key) => map.delete(key)

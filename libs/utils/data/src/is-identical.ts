@@ -109,7 +109,7 @@ const isIdenticalForCircularReferencesRecursive = (
  * @returns True if the values are identical, false otherwise
  */
 export const isIdentical = (targetA: unknown, targetB: unknown): boolean => {
-  const targets = [targetA, targetB] as [UnknownIterable, UnknownIterable]
+  const targets = <[UnknownIterable, UnknownIterable]>[targetA, targetB]
   if (getConfig().detectCircularReferences) {
     return isIdenticalForCircularReferencesRecursive(...targets, referenceStack(), referenceStack())
   }

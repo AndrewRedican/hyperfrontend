@@ -21,7 +21,7 @@ const errorMessage = (thing: string, type: string) => `Expected ${thing} to be $
 
 const nextIterationDetails = (path: string[], key: string, value: unknown) => ({
   nextPath: [...path, key],
-  nextValue: (value as Record<string, unknown>)[key],
+  nextValue: (<Record<string, unknown>>value)[key],
 })
 
 const circularDependencyTraversal: TraversalCircular = (
@@ -79,11 +79,11 @@ const traversal: Traversal = (target, condition, callback, options, state) => {
     if (!['number', 'string'].includes(maxDepthType)) throw new Error(errorMessage('options.depth.1', 'a number or a string'))
     if (maxDepthType === 'string' && maxDepth !== '*') throw new Error("Only valid string value in options.depth.1 is '*'.")
   }
-  const config = {
+  const config = <TraverseConfig>{
     depth: freeze([options.depth[0] ?? 0, options.depth[1] ?? '*']),
     exitEarly: false,
-  } as TraverseConfig
-  const initialArgs = [condition, callback, config, '', [], target, void 0, state] as TraversalArgs
+  }
+  const initialArgs = <TraversalArgs>[condition, callback, config, '', [], target, void 0, state]
   if (getConfig().detectCircularReferences) return circularDependencyTraversal(...initialArgs, referenceStack(), true)
   return nonCircularDependencyTraversal(...initialArgs)
 }

@@ -96,7 +96,7 @@ describe('selectiveCopy', () => {
   it('supports custom classes', () => {
     registerIterableClass<Map<unknown, unknown>>(
       Map,
-      (map) => Array.from(map.keys()) as string[],
+      (map) => <string[]>Array.from(map.keys()),
       (map, key) => map.get(key),
       (map, value, key) => map.set(key, value),
       (map, key) => map.delete(key)
@@ -237,7 +237,7 @@ describe('selectiveCopy - with config detectCircularReferences:true', () => {
   it('supports custom classes', () => {
     registerIterableClass<Map<unknown, unknown>>(
       Map,
-      (map) => Array.from(map.keys()) as string[],
+      (map) => <string[]>Array.from(map.keys()),
       (map, key) => map.get(key),
       (map, value, key) => map.set(key, value),
       (map, key) => map.delete(key)
