@@ -26,6 +26,7 @@
     "process-state"
   ],
   "exports": {
+    ".": "./src/index.js",
     "./actions": "./src/actions/index.js",
     "./async-operation": "./src/async-operation/index.js",
     "./coordinated-async-operation": "./src/coordinated-async-operation/index.js",
@@ -36,7 +37,8 @@
     "./selectors": "./src/selectors/index.js",
     "./state": "./src/state/index.js",
     "./state-change": "./src/state-change/index.js",
-    "./store": "./src/store/index.js"
+    "./store": "./src/store/index.js",
+    "./package.json": "./package.json"
   },
   "dependencies": {
     "@hyperfrontend/data-utils": "0.0.2"
