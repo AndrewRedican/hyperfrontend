@@ -11,7 +11,8 @@
   "exports": {
     "./browser": "./src/browser/index.js",
     "./node": "./src/node/index.js",
-    "./common": "./src/common/index.js"
+    "./common": "./src/common/index.js",
+    "./package.json": "./package.json"
   },
   "keywords": [
     "cryptography",
