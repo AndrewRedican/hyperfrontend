@@ -37,7 +37,7 @@ describe('Connection Flow Integration', () => {
   })
 
   describe('Three-Way Handshake', () => {
-    it('should complete full handshake: REQUEST → ACCEPT → OPEN', async () => {
+    it('completes full handshake: REQUEST → ACCEPT → OPEN', async () => {
       const { contractA, contractB } = createContractPair(['PING'], ['PONG'])
 
       // Create broker A (will initiate connection)
@@ -83,7 +83,7 @@ describe('Connection Flow Integration', () => {
       expect(eventsB).toContain('open')
     })
 
-    it('should fire open event on both sides', async () => {
+    it('fires open event on both sides', async () => {
       const { contractA, contractB } = createContractPair(['DATA'], ['ACK'])
 
       global.window = <Window & typeof globalThis>(<unknown>windowA)
@@ -119,7 +119,7 @@ describe('Connection Flow Integration', () => {
       expect(openHandlerB).toHaveBeenCalled()
     })
 
-    it('should allow message exchange after handshake', async () => {
+    it('allows message exchange after handshake', async () => {
       const { contractA, contractB } = createContractPair(['PING'], ['PONG'])
 
       global.window = <Window & typeof globalThis>(<unknown>windowA)
@@ -158,7 +158,7 @@ describe('Connection Flow Integration', () => {
   })
 
   describe('Denial Flow', () => {
-    it('should deny on invalid contract', () => {
+    it('denies on invalid contract', () => {
       // Contract A emits types that B does not accept
       const contractA: IChannelContract = {
         emitted: [{ type: 'UNKNOWN_TYPE' }],
@@ -199,7 +199,7 @@ describe('Connection Flow Integration', () => {
       expect(channelA.isActive()).toBe(true) // Local activation happens
     })
 
-    it('should deny on security policy rejection', () => {
+    it('denies on security policy rejection', () => {
       const { contractA, contractB } = createContractPair(['MSG'], ['ACK'])
 
       global.window = <Window & typeof globalThis>(<unknown>windowA)
@@ -233,7 +233,7 @@ describe('Connection Flow Integration', () => {
       expect(brokerB).toBeDefined()
     })
 
-    it('should clean up process on denial', () => {
+    it('cleans up process on denial', () => {
       const { contractA, contractB } = createContractPair(['MSG'], ['ACK'])
 
       global.window = <Window & typeof globalThis>(<unknown>windowA)
@@ -262,7 +262,7 @@ describe('Connection Flow Integration', () => {
   })
 
   describe('Cancellation Flow', () => {
-    it('should cancel pending connection: CANCEL → CANCEL_ACK', () => {
+    it('cancels pending connection: CANCEL → CANCEL_ACK', () => {
       const { contractA, contractB } = createContractPair(['MSG'], ['ACK'])
 
       global.window = <Window & typeof globalThis>(<unknown>windowA)
@@ -299,7 +299,7 @@ describe('Connection Flow Integration', () => {
       expect(cancelHandler.mock.calls.length + closeHandler.mock.calls.length).toBeGreaterThan(0)
     })
 
-    it('should clean up processes on cancellation', () => {
+    it('cleans up processes on cancellation', () => {
       const { contractA, contractB } = createContractPair(['MSG'], ['ACK'])
 
       global.window = <Window & typeof globalThis>(<unknown>windowA)
@@ -330,7 +330,7 @@ describe('Connection Flow Integration', () => {
   })
 
   describe('Close Flow', () => {
-    it('should close gracefully: CLOSE → CLOSE_ACK', () => {
+    it('closes gracefully: CLOSE → CLOSE_ACK', () => {
       const { contractA, contractB } = createContractPair(['MSG'], ['ACK'])
 
       global.window = <Window & typeof globalThis>(<unknown>windowA)
@@ -373,7 +373,7 @@ describe('Connection Flow Integration', () => {
       expect(closeHandlerA).toHaveBeenCalled()
     })
 
-    it('should allow reconnection after close', () => {
+    it('allows reconnection after close', () => {
       const { contractA, contractB } = createContractPair(['MSG'], ['ACK'])
 
       global.window = <Window & typeof globalThis>(<unknown>windowA)
@@ -407,7 +407,7 @@ describe('Connection Flow Integration', () => {
   })
 
   describe('Scheduled Activation', () => {
-    it('should schedule activation when channel not ready', () => {
+    it('schedules activation when channel not ready', () => {
       const { contractA, contractB } = createContractPair(['MSG'], ['ACK'])
 
       global.window = <Window & typeof globalThis>(<unknown>windowA)
@@ -436,7 +436,7 @@ describe('Connection Flow Integration', () => {
       expect(channelB.isActive()).toBe(true)
     })
 
-    it('should immediately activate when channel ready', () => {
+    it('immediately activates when channel ready', () => {
       const { contractA, contractB } = createContractPair(['MSG'], ['ACK'])
 
       global.window = <Window & typeof globalThis>(<unknown>windowA)
@@ -466,7 +466,7 @@ describe('Connection Flow Integration', () => {
   })
 
   describe('Page Reload Detection', () => {
-    it('should handle page reload gracefully', () => {
+    it('handles page reload gracefully', () => {
       const { contractA, contractB } = createContractPair(['MSG'], ['ACK'])
 
       global.window = <Window & typeof globalThis>(<unknown>windowA)
