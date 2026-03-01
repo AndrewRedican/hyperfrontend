@@ -188,7 +188,7 @@ export function createBroker(config: {
     setSecurityPolicy(policy: SecurityPolicy) {
       validatePolicy(policy)
       // Use bracket notation to set the property
-      ;(state.settings as unknown as Record<string, unknown>)['securityPolicy'] = policy
+      ;(<Record<string, unknown>>(<unknown>state.settings))['securityPolicy'] = policy
       return broker // Enable chaining
     },
 

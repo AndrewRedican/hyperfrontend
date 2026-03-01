@@ -22,11 +22,11 @@ describe('applyPolicy', () => {
   })
 
   const createMockEvent = (origin = 'https://example.com'): MessageEvent => {
-    return {
+    return <MessageEvent>{
       origin,
       data: {},
       source: null,
-    } as MessageEvent
+    }
   }
 
   it('return true when policy returns true', () => {

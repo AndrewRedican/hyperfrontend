@@ -113,7 +113,7 @@ export function createChannel(config: IChannelConfig, deps: ChannelDependencies)
       if (typeof eventOrHandler === 'string' && typeof handler === 'function') {
         return subscribeToEvents(internals, eventOrHandler, handler)
       }
-      return subscribeToEvents(internals, eventOrHandler as EventHandler)
+      return subscribeToEvents(internals, <EventHandler>eventOrHandler)
     },
     onMessage: (handler) => subscribeToMessages(internals, handler),
 
@@ -131,7 +131,7 @@ export function createChannel(config: IChannelConfig, deps: ChannelDependencies)
 
     scheduleActivation: (senderId: string, origin: string, contract: IChannelContract, processId: string) => {
       internals.updateState({
-        scheduledActivation: [senderId, origin, contract, processId] as const,
+        scheduledActivation: <const>[senderId, origin, contract, processId],
       })
     },
 

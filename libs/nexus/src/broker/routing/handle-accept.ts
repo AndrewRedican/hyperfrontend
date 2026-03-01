@@ -40,10 +40,10 @@ export function handleAccept(context: RoutingContext, message: MessageEvent<IAct
   const contract = action.contract
 
   // Extract security response from action base (may be undefined for backward compatibility)
-  const securityResponse = (<IActionBase>action).security as SecurityNegotiationResponse | undefined
+  const securityResponse = <SecurityNegotiationResponse | undefined>(<IActionBase>action).security
 
   // Get channel by process ID
-  const channel = processManager.get(processId) as ChannelHandle | undefined
+  const channel = <ChannelHandle | undefined>processManager.get(processId)
 
   if (!channel) {
     return // Channel not found

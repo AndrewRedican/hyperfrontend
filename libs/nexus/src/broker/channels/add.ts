@@ -35,7 +35,7 @@ export function addChannel(
     // If names differ, we'd need to update (for now, cast and return existing)
     // In full implementation, might call renameChannel here
     // Cast to ChannelHandle since the registry stores full channel objects
-    return existing as unknown as ReturnType<typeof createChannel>
+    return <ReturnType<typeof createChannel>>(<unknown>existing)
   }
 
   // Create new channel with broker's contract and logger

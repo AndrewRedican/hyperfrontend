@@ -35,12 +35,12 @@ describe('SecureTransport', () => {
   const createTransport = (
     overrides: Partial<SecureTransportConfig> = {}
   ): SecurityTransport & { handleReceive: (packet: Uint8Array) => void } => {
-    return createSecureTransport({
+    return <SecurityTransport & { handleReceive: (packet: Uint8Array) => void }>createSecureTransport({
       protocol: 'v2',
       provider: mockProvider,
-      target: mockTarget as unknown as Window,
+      target: <Window>(<unknown>mockTarget),
       ...overrides,
-    }) as SecurityTransport & { handleReceive: (packet: Uint8Array) => void }
+    })
   }
 
   describe('initialization', () => {
@@ -49,7 +49,7 @@ describe('SecureTransport', () => {
         createSecureTransport({
           protocol: 'v2',
           provider: undefined,
-          target: mockTarget as unknown as Window,
+          target: <Window>(<unknown>mockTarget),
         })
       }).toThrow('SecureTransport requires a protocol provider for v2')
     })
@@ -301,7 +301,7 @@ describe('SecureTransport', () => {
       const transport = createSecureTransport({
         protocol: 'v2',
         provider: mockProvider,
-        target: mockTarget as unknown as Window,
+        target: <Window>(<unknown>mockTarget),
         onError,
       })
 
@@ -320,12 +320,12 @@ describe('SecureTransport', () => {
 
     it('notifies error handler on receive failure', () => {
       const onError = jest.fn()
-      const transport = createSecureTransport({
+      const transport = <SecurityTransport & { handleReceive: (packet: Uint8Array) => void }>createSecureTransport({
         protocol: 'v2',
         provider: mockProvider,
-        target: mockTarget as unknown as Window,
+        target: <Window>(<unknown>mockTarget),
         onError,
-      }) as SecurityTransport & { handleReceive: (packet: Uint8Array) => void }
+      })
 
       mockNetworkProtocol.receive.mockImplementation(() => {
         throw new Error('Decryption failed')

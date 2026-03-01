@@ -41,14 +41,14 @@ export function subscribeToEvents<E extends ChannelEvent>(
   let wrappedHandler: EventHandler
 
   if (isEventSpecific) {
-    const eventType = eventOrHandler as E
-    const callback = handler as EventCallbackMap[E]
+    const eventType = <E>eventOrHandler
+    const callback = <EventCallbackMap[E]>handler
 
     // Wrap the event-specific callback as a generic EventHandler
     wrappedHandler = (event, data, channelJSON) => {
       if (event === eventType) {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        ;(callback as any)(data, channelJSON)
+        ;(<any>callback)(data, channelJSON)
       }
     }
   } else if (typeof eventOrHandler === 'function') {

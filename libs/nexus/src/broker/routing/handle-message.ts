@@ -36,10 +36,10 @@ export function handleMessage(context: RoutingContext, message: MessageEvent<IAc
     return // Invalid action structure for message
   }
 
-  const messageData = action.data as IMessage
+  const messageData = <IMessage>action.data
 
   // Get channel by sender ID
-  const channel = getById(registry, senderId) as ChannelHandle | undefined
+  const channel = <ChannelHandle | undefined>getById(registry, senderId)
 
   if (!channel || !channel.isActive()) {
     return // Channel not found or not open

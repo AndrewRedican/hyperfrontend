@@ -31,6 +31,6 @@ export function validateOrigin(origin: string): void {
       throw new Error('Origin must use http or https protocol')
     }
   } catch (error) {
-    throw new Error(`Invalid origin URL: ${(error as Error).message}`)
+    throw new Error(`Invalid origin URL: ${(<Error>error).message}`)
   }
 }

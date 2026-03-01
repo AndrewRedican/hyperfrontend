@@ -24,11 +24,11 @@ import type { RoutingContext } from './types'
 export function handleDeny(context: RoutingContext, message: MessageEvent<IAction>): void {
   const { processManager } = context
   const action = message.data
-  const processId = (action as unknown as Record<string, unknown>)['processId'] as string
-  const error = (action as unknown as Record<string, unknown>)['error'] as string | undefined
+  const processId = <string>(<Record<string, unknown>>(<unknown>action))['processId']
+  const error = <string | undefined>(<Record<string, unknown>>(<unknown>action))['error']
 
   // Get channel by process ID
-  const channel = processManager.get(processId) as ChannelHandle | undefined
+  const channel = <ChannelHandle | undefined>processManager.get(processId)
 
   if (!channel) {
     return // Channel not found

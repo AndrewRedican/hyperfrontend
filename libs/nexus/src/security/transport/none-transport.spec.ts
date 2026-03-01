@@ -16,9 +16,11 @@ describe('NoneTransport', () => {
     mockTarget = {
       postMessage: jest.fn(),
     }
-    transport = createNoneTransport({ target: mockTarget as unknown as Window }) as SecurityTransport & {
-      handleReceive: (action: unknown) => void
-    }
+    transport = <
+      SecurityTransport & {
+        handleReceive: (action: unknown) => void
+      }
+    >createNoneTransport({ target: <Window>(<unknown>mockTarget) })
   })
 
   describe('send', () => {
@@ -33,7 +35,7 @@ describe('NoneTransport', () => {
 
     it('uses custom origin when provided', () => {
       const customTransport = createNoneTransport({
-        target: mockTarget as unknown as Window,
+        target: <Window>(<unknown>mockTarget),
         origin: 'https://example.com',
       })
       const action = { type: 'TEST_ACTION' }

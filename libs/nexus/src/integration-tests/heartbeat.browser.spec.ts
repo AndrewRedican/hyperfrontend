@@ -23,7 +23,7 @@ describe('Integration: Heartbeat', () => {
         settings: { logLevel: 'error' },
       })
 
-      const channel = broker.addChannel('heartbeat-channel', mockWindow as unknown as Window)
+      const channel = broker.addChannel('heartbeat-channel', <Window>(<unknown>mockWindow))
       channel.connect()
 
       // Send ping every 100ms
@@ -49,7 +49,7 @@ describe('Integration: Heartbeat', () => {
         settings: { logLevel: 'error' },
       })
 
-      const channel = broker.addChannel('heartbeat-channel', mockWindow as unknown as Window)
+      const channel = broker.addChannel('heartbeat-channel', <Window>(<unknown>mockWindow))
       channel.connect()
 
       const pongReceived = await new Promise<boolean>((resolve) => {
@@ -80,7 +80,7 @@ describe('Integration: Heartbeat', () => {
         settings: { logLevel: 'error' },
       })
 
-      const channel = broker.addChannel('health-channel', mockWindow as unknown as Window)
+      const channel = broker.addChannel('health-channel', <Window>(<unknown>mockWindow))
       expect(channel.isActive()).toBe(false)
 
       channel.connect()
@@ -94,7 +94,7 @@ describe('Integration: Heartbeat', () => {
         settings: { logLevel: 'error' },
       })
 
-      const channel = broker.addChannel('health-channel', mockWindow as unknown as Window)
+      const channel = broker.addChannel('health-channel', <Window>(<unknown>mockWindow))
       const channelData = channel.toJSON()
 
       expect(channelData.connectTimestamp).toBeNull()
@@ -112,7 +112,7 @@ describe('Integration: Heartbeat', () => {
         settings: { logLevel: 'error' },
       })
 
-      const channel = broker.addChannel('timeout-channel', mockWindow as unknown as Window)
+      const channel = broker.addChannel('timeout-channel', <Window>(<unknown>mockWindow))
       channel.connect()
 
       const timeout = 500 // ms
@@ -137,7 +137,7 @@ describe('Integration: Heartbeat', () => {
         settings: { logLevel: 'error' },
       })
 
-      const channel = broker.addChannel('reconnect-channel', mockWindow as unknown as Window)
+      const channel = broker.addChannel('reconnect-channel', <Window>(<unknown>mockWindow))
 
       // First connection
       channel.connect()
@@ -159,7 +159,7 @@ describe('Integration: Heartbeat', () => {
         settings: { logLevel: 'error' },
       })
 
-      const channel = broker.addChannel('multi-reconnect-channel', mockWindow as unknown as Window)
+      const channel = broker.addChannel('multi-reconnect-channel', <Window>(<unknown>mockWindow))
 
       for (let i = 0; i < 5; i++) {
         channel.connect()
@@ -177,7 +177,7 @@ describe('Integration: Heartbeat', () => {
         settings: { logLevel: 'error' },
       })
 
-      const channel = broker.addChannel('identity-channel', mockWindow as unknown as Window)
+      const channel = broker.addChannel('identity-channel', <Window>(<unknown>mockWindow))
       const originalId = channel.getId()
       const originalName = channel.getName()
 
@@ -198,7 +198,7 @@ describe('Integration: Heartbeat', () => {
         settings: { logLevel: 'error' },
       })
 
-      const channel = broker.addChannel('queue-channel', mockWindow as unknown as Window)
+      const channel = broker.addChannel('queue-channel', <Window>(<unknown>mockWindow))
       channel.connect()
       channel.disconnect()
 
@@ -217,7 +217,7 @@ describe('Integration: Heartbeat', () => {
         settings: { logLevel: 'error' },
       })
 
-      const channel = broker.addChannel('flush-channel', mockWindow as unknown as Window)
+      const channel = broker.addChannel('flush-channel', <Window>(<unknown>mockWindow))
       channel.connect()
       channel.disconnect()
 
@@ -241,7 +241,7 @@ describe('Integration: Heartbeat', () => {
         settings: { logLevel: 'error' },
       })
 
-      const channel = broker.addChannel('event-channel', mockWindow as unknown as Window)
+      const channel = broker.addChannel('event-channel', <Window>(<unknown>mockWindow))
 
       const openEventReceived = await new Promise<boolean>((resolve) => {
         channel.on((event, data) => {
@@ -269,7 +269,7 @@ describe('Integration: Heartbeat', () => {
         settings: { logLevel: 'error' },
       })
 
-      const channel = broker.addChannel('close-channel', mockWindow as unknown as Window)
+      const channel = broker.addChannel('close-channel', <Window>(<unknown>mockWindow))
       channel.connect()
 
       const closeEventReceived = await new Promise<boolean>((resolve) => {

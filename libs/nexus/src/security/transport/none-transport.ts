@@ -127,7 +127,7 @@ export function createNoneTransport(config: NoneTransportConfig): SecurityTransp
     return 'none'
   }
 
-  return {
+  return <SecurityTransport & { handleReceive: (action: unknown) => void }>{
     send,
     onReceive,
     stop,
@@ -136,5 +136,5 @@ export function createNoneTransport(config: NoneTransportConfig): SecurityTransp
     getProtocol,
     /** @internal */
     handleReceive,
-  } as SecurityTransport & { handleReceive: (action: unknown) => void }
+  }
 }

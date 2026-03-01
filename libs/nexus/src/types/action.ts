@@ -13,7 +13,7 @@ const PROTOCOL = 'nexus'
  * These define the wire format for all connection lifecycle actions.
  * The connection flow behavior is 1:1 with the proven legacy implementation.
  */
-export const ACTION_TYPES = {
+export const ACTION_TYPES = <const>{
   INVALID_REQUEST: `[${PROTOCOL}] invalid-request`,
   REQUEST_CONNECTION: `[${PROTOCOL}] connection-request`,
   CANCEL_CONNECTION: `[${PROTOCOL}] connection-request-cancelled`,
@@ -25,7 +25,7 @@ export const ACTION_TYPES = {
   DESTROY_CONNECTION: `[${PROTOCOL}] connection-destroyed`,
   OPEN_CONNECTION: `[${PROTOCOL}] connection-opened`,
   NEW_MESSAGE: `[${PROTOCOL}] new-message`,
-} as const
+}
 
 /**
  * Extract action type union from ACTION_TYPES

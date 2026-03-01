@@ -5,7 +5,7 @@ import actionSchema from '../definitions/action.json'
 import { createValidator } from './create-validator'
 
 /* istanbul ignore next -- validator initialization happens at module load */
-const validateActionData = createValidator(actionSchema as Schema)
+const validateActionData = createValidator(<Schema>actionSchema)
 
 /**
  * Validates an action object against the action schema.

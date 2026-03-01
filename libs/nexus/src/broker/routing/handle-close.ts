@@ -36,7 +36,7 @@ export function handleClose(context: RoutingContext, message: MessageEvent<IActi
   const processId = <string>action.processId
 
   // Get channel by sender ID
-  const channel = getById(registry, senderId) as ChannelHandle | undefined
+  const channel = <ChannelHandle | undefined>getById(registry, senderId)
 
   if (!channel || !channel.isActive()) {
     return // Channel not found or not open

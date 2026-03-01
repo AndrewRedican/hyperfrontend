@@ -26,13 +26,13 @@ import type { RoutingContext } from './types'
 export function handleOpen(context: RoutingContext, message: MessageEvent<IAction>): void {
   const { state, processManager, logger } = context
   const action = message.data
-  const processId = (action as unknown as Record<string, unknown>)['processId'] as string
+  const processId = <string>(<Record<string, unknown>>(<unknown>action))['processId']
 
   // Extract security confirmation (may be undefined for backward compatibility)
-  const securityConfirmation = (action as unknown as Record<string, unknown>)['security'] as SecurityConfirmation | undefined
+  const securityConfirmation = <SecurityConfirmation | undefined>(<Record<string, unknown>>(<unknown>action))['security']
 
   // Get channel by process ID
-  const channel = processManager.get(processId) as ChannelHandle | undefined
+  const channel = <ChannelHandle | undefined>processManager.get(processId)
 
   if (!channel) {
     return // Channel not found

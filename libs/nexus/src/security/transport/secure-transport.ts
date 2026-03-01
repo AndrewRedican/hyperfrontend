@@ -231,7 +231,7 @@ export function createSecureTransport(config: SecureTransportConfig): SecurityTr
     return protocol
   }
 
-  return {
+  return <SecurityTransport & { handleReceive: (packet: Uint8Array) => void }>{
     send,
     onReceive,
     stop,
@@ -240,5 +240,5 @@ export function createSecureTransport(config: SecureTransportConfig): SecurityTr
     getProtocol,
     /** @internal */
     handleReceive,
-  } as SecurityTransport & { handleReceive: (packet: Uint8Array) => void }
+  }
 }

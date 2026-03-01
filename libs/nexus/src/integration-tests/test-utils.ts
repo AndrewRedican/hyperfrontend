@@ -86,7 +86,7 @@ export function linkMockWindows(windowA: MockWindow, windowB: MockWindow, origin
     const event = new MessageEvent('message', {
       data,
       origin: originA,
-      source: windowA as unknown as Window,
+      source: <Window>(<unknown>windowA),
     })
     // Use setTimeout to simulate async message delivery
     setTimeout(() => windowB._dispatchMessage(event), 0)
@@ -97,7 +97,7 @@ export function linkMockWindows(windowA: MockWindow, windowB: MockWindow, origin
     const event = new MessageEvent('message', {
       data,
       origin: originB,
-      source: windowB as unknown as Window,
+      source: <Window>(<unknown>windowB),
     })
     setTimeout(() => windowA._dispatchMessage(event), 0)
   })
@@ -118,7 +118,7 @@ export function simulateMessage(targetWindow: MockWindow, message: IAction, orig
   const event = new MessageEvent('message', {
     data: message,
     origin,
-    source: (source as unknown as Window) || null,
+    source: <Window>(<unknown>source) || null,
   })
   targetWindow._dispatchMessage(event)
 }
@@ -137,7 +137,7 @@ export function createMessageEvent<T = IAction>(data: T, origin: string, source?
   return new MessageEvent<T>('message', {
     data,
     origin,
-    source: (source as unknown as Window) || null,
+    source: <Window>(<unknown>source) || null,
   })
 }
 

@@ -25,12 +25,12 @@ import { ACTION_TYPES } from '../../types/action'
 export const requestConnection =
   (deps: ActionDependencies) =>
   (processId: string, security?: SecurityNegotiationRequest): IActionWithContract | IActionWithContractAndSecurity => {
-    const base = {
+    const base = <const>{
       type: ACTION_TYPES.REQUEST_CONNECTION,
       processId,
       senderId: deps.getBrokerId(),
       contract: deps.getContract(),
-    } as const
+    }
 
     if (security) {
       return freeze({ ...base, security })

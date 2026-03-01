@@ -27,11 +27,11 @@ import { getById } from '../../core/registry/get-by-id'
 export function handleCancel(context: RoutingContext, message: MessageEvent<IAction>): void {
   const { state, registry, processManager } = context
   const action = message.data
-  const senderId = (action as unknown as Record<string, unknown>)['senderId'] as string
-  const processId = (action as unknown as Record<string, unknown>)['processId'] as string
+  const senderId = <string>(<Record<string, unknown>>(<unknown>action))['senderId']
+  const processId = <string>(<Record<string, unknown>>(<unknown>action))['processId']
 
   // Try to find channel by sender ID or process ID
-  const channel = (getById(registry, senderId) || processManager.get(processId)) as ChannelHandle | undefined
+  const channel = <ChannelHandle | undefined>(getById(registry, senderId) || processManager.get(processId))
 
   if (!channel) {
     return // Channel not found

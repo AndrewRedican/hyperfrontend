@@ -201,7 +201,7 @@ describe('Integration: Security', () => {
         },
       })
 
-      const channel = broker.addChannel('test-channel', mockWindow as unknown as Window)
+      const channel = broker.addChannel('test-channel', <Window>(<unknown>mockWindow))
 
       // Channel created, but security is enforced at broker level
       expect(channel).toBeDefined()
@@ -218,8 +218,8 @@ describe('Integration: Security', () => {
 
       const mockWindow2 = createMockWindow()
 
-      const channel1 = broker.addChannel('channel-1', mockWindow as unknown as Window)
-      const channel2 = broker.addChannel('channel-2', mockWindow2 as unknown as Window)
+      const channel1 = broker.addChannel('channel-1', <Window>(<unknown>mockWindow))
+      const channel2 = broker.addChannel('channel-2', <Window>(<unknown>mockWindow2))
 
       // Both channels inherit broker's security policy
       expect(channel1).toBeDefined()
@@ -235,15 +235,15 @@ describe('Integration: Security', () => {
       })
 
       expect(() => {
-        broker.setSecurityPolicy((<unknown>'not a function') as SecurityPolicy)
+        broker.setSecurityPolicy(<SecurityPolicy>(<unknown>'not a function'))
       }).toThrow()
 
       expect(() => {
-        broker.setSecurityPolicy((<unknown>null) as SecurityPolicy)
+        broker.setSecurityPolicy(<SecurityPolicy>(<unknown>null))
       }).toThrow()
 
       expect(() => {
-        broker.setSecurityPolicy((<unknown>undefined) as SecurityPolicy)
+        broker.setSecurityPolicy(<SecurityPolicy>(<unknown>undefined))
       }).toThrow()
     })
   })

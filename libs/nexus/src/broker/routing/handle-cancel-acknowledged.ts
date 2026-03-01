@@ -23,10 +23,10 @@ import type { RoutingContext } from './types'
 export function handleCancelAcknowledged(context: RoutingContext, message: MessageEvent<IAction>): void {
   const { processManager } = context
   const action = message.data
-  const processId = (action as unknown as Record<string, unknown>)['processId'] as string
+  const processId = <string>(<Record<string, unknown>>(<unknown>action))['processId']
 
   // Get channel by process ID
-  const channel = processManager.get(processId) as ChannelHandle | undefined
+  const channel = <ChannelHandle | undefined>processManager.get(processId)
 
   if (!channel) {
     return // Channel not found

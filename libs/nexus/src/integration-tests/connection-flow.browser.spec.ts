@@ -31,7 +31,7 @@ describe('Connection Flow Integration', () => {
 
   afterEach(() => {
     // Restore original window
-    global.window = originalWindow as unknown as Window & typeof globalThis
+    global.window = <Window & typeof globalThis>(<unknown>originalWindow)
     jest.clearAllMocks()
     jest.clearAllTimers()
   })
@@ -42,26 +42,26 @@ describe('Connection Flow Integration', () => {
 
       // Create broker A (will initiate connection)
       // Override window for broker A
-      global.window = windowA as unknown as Window & typeof globalThis
+      global.window = <Window & typeof globalThis>(<unknown>windowA)
       const brokerA = createBroker({
         name: 'broker-a',
         contract: contractA,
       })
 
       // Create broker B (will respond to connection)
-      global.window = windowB as unknown as Window & typeof globalThis
+      global.window = <Window & typeof globalThis>(<unknown>windowB)
       const brokerB = createBroker({
         name: 'broker-b',
         contract: contractB,
       })
 
       // Add channel on broker A pointing to window B
-      global.window = windowA as unknown as Window & typeof globalThis
-      const channelA = brokerA.addChannel('to-b', windowB as unknown as Window)
+      global.window = <Window & typeof globalThis>(<unknown>windowA)
+      const channelA = brokerA.addChannel('to-b', <Window>(<unknown>windowB))
 
       // Add channel on broker B pointing to window A
-      global.window = windowB as unknown as Window & typeof globalThis
-      const channelB = brokerB.addChannel('to-a', windowA as unknown as Window)
+      global.window = <Window & typeof globalThis>(<unknown>windowB)
+      const channelB = brokerB.addChannel('to-a', <Window>(<unknown>windowA))
 
       // Track events
       const eventsA: string[] = []
@@ -86,20 +86,20 @@ describe('Connection Flow Integration', () => {
     it('should fire open event on both sides', async () => {
       const { contractA, contractB } = createContractPair(['DATA'], ['ACK'])
 
-      global.window = windowA as unknown as Window & typeof globalThis
+      global.window = <Window & typeof globalThis>(<unknown>windowA)
       const brokerA = createBroker({
         name: 'broker-a',
         contract: contractA,
       })
 
-      global.window = windowB as unknown as Window & typeof globalThis
+      global.window = <Window & typeof globalThis>(<unknown>windowB)
       const brokerB = createBroker({
         name: 'broker-b',
         contract: contractB,
       })
 
-      const channelA = brokerA.addChannel('to-b', windowB as unknown as Window)
-      const channelB = brokerB.addChannel('to-a', windowA as unknown as Window)
+      const channelA = brokerA.addChannel('to-b', <Window>(<unknown>windowB))
+      const channelB = brokerB.addChannel('to-a', <Window>(<unknown>windowA))
 
       const openHandlerA = jest.fn()
       const openHandlerB = jest.fn()
@@ -122,20 +122,20 @@ describe('Connection Flow Integration', () => {
     it('should allow message exchange after handshake', async () => {
       const { contractA, contractB } = createContractPair(['PING'], ['PONG'])
 
-      global.window = windowA as unknown as Window & typeof globalThis
+      global.window = <Window & typeof globalThis>(<unknown>windowA)
       const brokerA = createBroker({
         name: 'broker-a',
         contract: contractA,
       })
 
-      global.window = windowB as unknown as Window & typeof globalThis
+      global.window = <Window & typeof globalThis>(<unknown>windowB)
       const brokerB = createBroker({
         name: 'broker-b',
         contract: contractB,
       })
 
-      const channelA = brokerA.addChannel('to-b', windowB as unknown as Window)
-      const channelB = brokerB.addChannel('to-a', windowA as unknown as Window)
+      const channelA = brokerA.addChannel('to-b', <Window>(<unknown>windowB))
+      const channelB = brokerB.addChannel('to-a', <Window>(<unknown>windowA))
 
       // Establish connection
       channelA.connect()
@@ -170,20 +170,20 @@ describe('Connection Flow Integration', () => {
         accepted: [{ type: 'EXPECTED_TYPE' }], // Does NOT accept UNKNOWN_TYPE
       }
 
-      global.window = windowA as unknown as Window & typeof globalThis
+      global.window = <Window & typeof globalThis>(<unknown>windowA)
       const brokerA = createBroker({
         name: 'broker-a',
         contract: contractA,
       })
 
-      global.window = windowB as unknown as Window & typeof globalThis
+      global.window = <Window & typeof globalThis>(<unknown>windowB)
       const brokerB = createBroker({
         name: 'broker-b',
         contract: contractB,
       })
 
-      const channelA = brokerA.addChannel('to-b', windowB as unknown as Window)
-      const channelB = brokerB.addChannel('to-a', windowA as unknown as Window)
+      const channelA = brokerA.addChannel('to-b', <Window>(<unknown>windowB))
+      const channelB = brokerB.addChannel('to-a', <Window>(<unknown>windowA))
 
       const denyHandler = jest.fn()
       channelA.on((event, data) => {
@@ -202,13 +202,13 @@ describe('Connection Flow Integration', () => {
     it('should deny on security policy rejection', () => {
       const { contractA, contractB } = createContractPair(['MSG'], ['ACK'])
 
-      global.window = windowA as unknown as Window & typeof globalThis
+      global.window = <Window & typeof globalThis>(<unknown>windowA)
       const brokerA = createBroker({
         name: 'broker-a',
         contract: contractA,
       })
 
-      global.window = windowB as unknown as Window & typeof globalThis
+      global.window = <Window & typeof globalThis>(<unknown>windowB)
       const brokerB = createBroker({
         name: 'broker-b',
         contract: contractB,
@@ -217,8 +217,8 @@ describe('Connection Flow Integration', () => {
       // Set security policy that rejects all connections
       brokerB.setSecurityPolicy(() => false)
 
-      const channelA = brokerA.addChannel('to-b', windowB as unknown as Window)
-      const channelB = brokerB.addChannel('to-a', windowA as unknown as Window)
+      const channelA = brokerA.addChannel('to-b', <Window>(<unknown>windowB))
+      const channelB = brokerB.addChannel('to-a', <Window>(<unknown>windowA))
 
       const denyHandler = jest.fn()
       channelA.on((event) => {
@@ -236,20 +236,20 @@ describe('Connection Flow Integration', () => {
     it('should clean up process on denial', () => {
       const { contractA, contractB } = createContractPair(['MSG'], ['ACK'])
 
-      global.window = windowA as unknown as Window & typeof globalThis
+      global.window = <Window & typeof globalThis>(<unknown>windowA)
       const brokerA = createBroker({
         name: 'broker-a',
         contract: contractA,
       })
 
-      global.window = windowB as unknown as Window & typeof globalThis
+      global.window = <Window & typeof globalThis>(<unknown>windowB)
       const brokerB = createBroker({
         name: 'broker-b',
         contract: contractB,
       })
 
-      const channelA = brokerA.addChannel('to-b', windowB as unknown as Window)
-      const channelB = brokerB.addChannel('to-a', windowA as unknown as Window)
+      const channelA = brokerA.addChannel('to-b', <Window>(<unknown>windowB))
+      const channelB = brokerB.addChannel('to-a', <Window>(<unknown>windowA))
 
       channelA.connect()
       channelB.connect()
@@ -265,20 +265,20 @@ describe('Connection Flow Integration', () => {
     it('should cancel pending connection: CANCEL → CANCEL_ACK', () => {
       const { contractA, contractB } = createContractPair(['MSG'], ['ACK'])
 
-      global.window = windowA as unknown as Window & typeof globalThis
+      global.window = <Window & typeof globalThis>(<unknown>windowA)
       const brokerA = createBroker({
         name: 'broker-a',
         contract: contractA,
       })
 
-      global.window = windowB as unknown as Window & typeof globalThis
+      global.window = <Window & typeof globalThis>(<unknown>windowB)
       const brokerB = createBroker({
         name: 'broker-b',
         contract: contractB,
       })
 
-      const channelA = brokerA.addChannel('to-b', windowB as unknown as Window)
-      brokerB.addChannel('to-a', windowA as unknown as Window)
+      const channelA = brokerA.addChannel('to-b', <Window>(<unknown>windowB))
+      brokerB.addChannel('to-a', <Window>(<unknown>windowA))
 
       // Track events - cancel fires if not active, close fires if active
       const cancelHandler = jest.fn()
@@ -302,20 +302,20 @@ describe('Connection Flow Integration', () => {
     it('should clean up processes on cancellation', () => {
       const { contractA, contractB } = createContractPair(['MSG'], ['ACK'])
 
-      global.window = windowA as unknown as Window & typeof globalThis
+      global.window = <Window & typeof globalThis>(<unknown>windowA)
       const brokerA = createBroker({
         name: 'broker-a',
         contract: contractA,
       })
 
-      global.window = windowB as unknown as Window & typeof globalThis
+      global.window = <Window & typeof globalThis>(<unknown>windowB)
       const brokerB = createBroker({
         name: 'broker-b',
         contract: contractB,
       })
 
-      const channelA = brokerA.addChannel('to-b', windowB as unknown as Window)
-      brokerB.addChannel('to-a', windowA as unknown as Window)
+      const channelA = brokerA.addChannel('to-b', <Window>(<unknown>windowB))
+      brokerB.addChannel('to-a', <Window>(<unknown>windowA))
 
       channelA.connect()
       channelA.cancel()
@@ -333,20 +333,20 @@ describe('Connection Flow Integration', () => {
     it('should close gracefully: CLOSE → CLOSE_ACK', () => {
       const { contractA, contractB } = createContractPair(['MSG'], ['ACK'])
 
-      global.window = windowA as unknown as Window & typeof globalThis
+      global.window = <Window & typeof globalThis>(<unknown>windowA)
       const brokerA = createBroker({
         name: 'broker-a',
         contract: contractA,
       })
 
-      global.window = windowB as unknown as Window & typeof globalThis
+      global.window = <Window & typeof globalThis>(<unknown>windowB)
       const brokerB = createBroker({
         name: 'broker-b',
         contract: contractB,
       })
 
-      const channelA = brokerA.addChannel('to-b', windowB as unknown as Window)
-      const channelB = brokerB.addChannel('to-a', windowA as unknown as Window)
+      const channelA = brokerA.addChannel('to-b', <Window>(<unknown>windowB))
+      const channelB = brokerB.addChannel('to-a', <Window>(<unknown>windowA))
 
       const closeHandlerA = jest.fn()
       const closeHandlerB = jest.fn()
@@ -376,20 +376,20 @@ describe('Connection Flow Integration', () => {
     it('should allow reconnection after close', () => {
       const { contractA, contractB } = createContractPair(['MSG'], ['ACK'])
 
-      global.window = windowA as unknown as Window & typeof globalThis
+      global.window = <Window & typeof globalThis>(<unknown>windowA)
       const brokerA = createBroker({
         name: 'broker-a',
         contract: contractA,
       })
 
-      global.window = windowB as unknown as Window & typeof globalThis
+      global.window = <Window & typeof globalThis>(<unknown>windowB)
       const brokerB = createBroker({
         name: 'broker-b',
         contract: contractB,
       })
 
-      const channelA = brokerA.addChannel('to-b', windowB as unknown as Window)
-      const channelB = brokerB.addChannel('to-a', windowA as unknown as Window)
+      const channelA = brokerA.addChannel('to-b', <Window>(<unknown>windowB))
+      const channelB = brokerB.addChannel('to-a', <Window>(<unknown>windowA))
 
       // First connection
       channelA.connect()
@@ -410,25 +410,25 @@ describe('Connection Flow Integration', () => {
     it('should schedule activation when channel not ready', () => {
       const { contractA, contractB } = createContractPair(['MSG'], ['ACK'])
 
-      global.window = windowA as unknown as Window & typeof globalThis
+      global.window = <Window & typeof globalThis>(<unknown>windowA)
       const brokerA = createBroker({
         name: 'broker-a',
         contract: contractA,
       })
 
-      global.window = windowB as unknown as Window & typeof globalThis
+      global.window = <Window & typeof globalThis>(<unknown>windowB)
       const brokerB = createBroker({
         name: 'broker-b',
         contract: contractB,
       })
 
-      const channelA = brokerA.addChannel('to-b', windowB as unknown as Window)
+      const channelA = brokerA.addChannel('to-b', <Window>(<unknown>windowB))
 
       // A connects BEFORE B has a channel ready
       channelA.connect()
 
       // Now B creates channel and connects
-      const channelB = brokerB.addChannel('to-a', windowA as unknown as Window)
+      const channelB = brokerB.addChannel('to-a', <Window>(<unknown>windowA))
       channelB.connect()
 
       // Both should eventually be active
@@ -439,24 +439,24 @@ describe('Connection Flow Integration', () => {
     it('should immediately activate when channel ready', () => {
       const { contractA, contractB } = createContractPair(['MSG'], ['ACK'])
 
-      global.window = windowA as unknown as Window & typeof globalThis
+      global.window = <Window & typeof globalThis>(<unknown>windowA)
       const brokerA = createBroker({
         name: 'broker-a',
         contract: contractA,
       })
 
-      global.window = windowB as unknown as Window & typeof globalThis
+      global.window = <Window & typeof globalThis>(<unknown>windowB)
       const brokerB = createBroker({
         name: 'broker-b',
         contract: contractB,
       })
 
       // B sets up channel first
-      const channelB = brokerB.addChannel('to-a', windowA as unknown as Window)
+      const channelB = brokerB.addChannel('to-a', <Window>(<unknown>windowA))
       channelB.connect()
 
       // Then A connects
-      const channelA = brokerA.addChannel('to-b', windowB as unknown as Window)
+      const channelA = brokerA.addChannel('to-b', <Window>(<unknown>windowB))
       channelA.connect()
 
       // Both should be active immediately
@@ -469,21 +469,21 @@ describe('Connection Flow Integration', () => {
     it('should handle page reload gracefully', () => {
       const { contractA, contractB } = createContractPair(['MSG'], ['ACK'])
 
-      global.window = windowA as unknown as Window & typeof globalThis
+      global.window = <Window & typeof globalThis>(<unknown>windowA)
       const brokerA = createBroker({
         name: 'broker-a',
         contract: contractA,
         settings: { logLevel: 'debug' }, // Enable debug logging
       })
 
-      global.window = windowB as unknown as Window & typeof globalThis
+      global.window = <Window & typeof globalThis>(<unknown>windowB)
       const brokerB = createBroker({
         name: 'broker-b',
         contract: contractB,
       })
 
-      const channelA = brokerA.addChannel('to-b', windowB as unknown as Window)
-      const channelB = brokerB.addChannel('to-a', windowA as unknown as Window)
+      const channelA = brokerA.addChannel('to-b', <Window>(<unknown>windowB))
+      const channelB = brokerB.addChannel('to-a', <Window>(<unknown>windowA))
 
       // Initial connection
       channelA.connect()

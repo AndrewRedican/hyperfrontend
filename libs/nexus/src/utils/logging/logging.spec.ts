@@ -278,7 +278,7 @@ describe('Logging Utilities', () => {
     })
 
     it('logs different action types', () => {
-      const actionTypes = [
+      const actionTypes = <const>[
         ACTION_TYPES.REQUEST_CONNECTION,
         ACTION_TYPES.ACCEPT_CONNECTION,
         ACTION_TYPES.DENY_CONNECTION,
@@ -288,7 +288,7 @@ describe('Logging Utilities', () => {
         ACTION_TYPES.DESTROY_CONNECTION,
         ACTION_TYPES.NEW_MESSAGE,
         ACTION_TYPES.INVALID_REQUEST,
-      ] as const
+      ]
 
       actionTypes.forEach((type) => {
         let action: IAction

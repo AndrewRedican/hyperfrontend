@@ -15,13 +15,13 @@ export function getChannel(registry: Registry, reference: string | Window): Retu
   // Window lookup - check if it's an object (Window-like) and not a string
   if (typeof reference === 'object' && reference !== null) {
     const channel = getByWindow(registry, <Window>reference)
-    return (channel as unknown as ReturnType<typeof createChannel>) ?? null
+    return <ReturnType<typeof createChannel>>(<unknown>channel) ?? null
   }
 
   // String lookup - try ID first, then name
   if (typeof reference === 'string') {
     const channel = getById(registry, reference) ?? getByName(registry, reference)
-    return (channel as unknown as ReturnType<typeof createChannel>) ?? null
+    return <ReturnType<typeof createChannel>>(<unknown>channel) ?? null
   }
 
   return null

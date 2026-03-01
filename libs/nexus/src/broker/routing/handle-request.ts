@@ -52,10 +52,10 @@ export function handleRequest(context: RoutingContext, message: MessageEvent<IAc
   const contract = action.contract
 
   // Extract security request (may be undefined for backward compatibility)
-  const securityRequest = (<IActionWithContractAndSecurity>action).security as SecurityNegotiationRequest | undefined
+  const securityRequest = <SecurityNegotiationRequest | undefined>(<IActionWithContractAndSecurity>action).security
 
   // Get existing channel by ID or create new one
-  let channel = getById(registry, senderId) as ChannelHandle | undefined
+  let channel = <ChannelHandle | undefined>getById(registry, senderId)
   if (!channel) {
     channel = addChannel(state, registry, processManager, actions, senderId, <Window>message.source, {})
   }

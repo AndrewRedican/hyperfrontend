@@ -27,9 +27,9 @@ describe('Integration: Multi-Channel', () => {
         settings: { logLevel: 'error' },
       })
 
-      const channel1 = broker.addChannel('channel-1', mockWindow1 as unknown as Window)
-      const channel2 = broker.addChannel('channel-2', mockWindow2 as unknown as Window)
-      const channel3 = broker.addChannel('channel-3', mockWindow3 as unknown as Window)
+      const channel1 = broker.addChannel('channel-1', <Window>(<unknown>mockWindow1))
+      const channel2 = broker.addChannel('channel-2', <Window>(<unknown>mockWindow2))
+      const channel3 = broker.addChannel('channel-3', <Window>(<unknown>mockWindow3))
 
       expect(channel1.name).toBe('channel-1')
       expect(channel2.name).toBe('channel-2')
@@ -45,9 +45,9 @@ describe('Integration: Multi-Channel', () => {
         settings: { logLevel: 'error' },
       })
 
-      const channel1 = broker.addChannel('channel-1', mockWindow1 as unknown as Window)
-      const channel2 = broker.addChannel('channel-2', mockWindow2 as unknown as Window)
-      const channel3 = broker.addChannel('channel-3', mockWindow3 as unknown as Window)
+      const channel1 = broker.addChannel('channel-1', <Window>(<unknown>mockWindow1))
+      const channel2 = broker.addChannel('channel-2', <Window>(<unknown>mockWindow2))
+      const channel3 = broker.addChannel('channel-3', <Window>(<unknown>mockWindow3))
 
       // Connect only channel1 and channel3
       channel1.connect()
@@ -74,8 +74,8 @@ describe('Integration: Multi-Channel', () => {
         settings: { logLevel: 'error' },
       })
 
-      const channel1 = broker.addChannel('channel-1', mockWindow1 as unknown as Window)
-      const channel2 = broker.addChannel('channel-2', mockWindow2 as unknown as Window)
+      const channel1 = broker.addChannel('channel-1', <Window>(<unknown>mockWindow1))
+      const channel2 = broker.addChannel('channel-2', <Window>(<unknown>mockWindow2))
 
       channel1.connect()
       channel2.connect()
@@ -106,8 +106,8 @@ describe('Integration: Multi-Channel', () => {
         settings: { logLevel: 'error' },
       })
 
-      const channel1 = broker.addChannel('channel-1', mockWindow1 as unknown as Window)
-      const channel2 = broker.addChannel('channel-2', mockWindow2 as unknown as Window)
+      const channel1 = broker.addChannel('channel-1', <Window>(<unknown>mockWindow1))
+      const channel2 = broker.addChannel('channel-2', <Window>(<unknown>mockWindow2))
 
       // Send messages before connecting
       channel1.send('BROADCAST', { id: 1 })
@@ -137,8 +137,8 @@ describe('Integration: Multi-Channel', () => {
         settings: { logLevel: 'error' },
       })
 
-      const channel1 = broker.addChannel('channel-1', mockWindow1 as unknown as Window)
-      const channel2 = broker.addChannel('channel-2', mockWindow2 as unknown as Window)
+      const channel1 = broker.addChannel('channel-1', <Window>(<unknown>mockWindow1))
+      const channel2 = broker.addChannel('channel-2', <Window>(<unknown>mockWindow2))
 
       const handler1 = jest.fn()
       const handler2 = jest.fn()
@@ -170,8 +170,8 @@ describe('Integration: Multi-Channel', () => {
         settings: { logLevel: 'error' },
       })
 
-      const channel1 = broker.addChannel('channel-1', mockWindow1 as unknown as Window)
-      const channel2 = broker.addChannel('channel-2', mockWindow2 as unknown as Window)
+      const channel1 = broker.addChannel('channel-1', <Window>(<unknown>mockWindow1))
+      const channel2 = broker.addChannel('channel-2', <Window>(<unknown>mockWindow2))
 
       const handler1 = jest.fn()
       const handler2 = jest.fn()
@@ -200,9 +200,9 @@ describe('Integration: Multi-Channel', () => {
         settings: { logLevel: 'error' },
       })
 
-      const channel1 = broker.addChannel('channel-1', mockWindow1 as unknown as Window)
-      const channel2 = broker.addChannel('channel-2', mockWindow2 as unknown as Window)
-      const channel3 = broker.addChannel('channel-3', mockWindow3 as unknown as Window)
+      const channel1 = broker.addChannel('channel-1', <Window>(<unknown>mockWindow1))
+      const channel2 = broker.addChannel('channel-2', <Window>(<unknown>mockWindow2))
+      const channel3 = broker.addChannel('channel-3', <Window>(<unknown>mockWindow3))
 
       // Connect all at once
       channel1.connect()
@@ -221,9 +221,9 @@ describe('Integration: Multi-Channel', () => {
         settings: { logLevel: 'error' },
       })
 
-      const channel1 = broker.addChannel('channel-1', mockWindow1 as unknown as Window)
-      const channel2 = broker.addChannel('channel-2', mockWindow2 as unknown as Window)
-      const channel3 = broker.addChannel('channel-3', mockWindow3 as unknown as Window)
+      const channel1 = broker.addChannel('channel-1', <Window>(<unknown>mockWindow1))
+      const channel2 = broker.addChannel('channel-2', <Window>(<unknown>mockWindow2))
+      const channel3 = broker.addChannel('channel-3', <Window>(<unknown>mockWindow3))
 
       channel1.connect()
       channel2.connect()
@@ -251,9 +251,9 @@ describe('Integration: Multi-Channel', () => {
         settings: { logLevel: 'error' },
       })
 
-      const channel1 = broker.addChannel('channel-1', mockWindow1 as unknown as Window)
-      const channel2 = broker.addChannel('channel-2', mockWindow2 as unknown as Window)
-      const channel3 = broker.addChannel('channel-3', mockWindow3 as unknown as Window)
+      const channel1 = broker.addChannel('channel-1', <Window>(<unknown>mockWindow1))
+      const channel2 = broker.addChannel('channel-2', <Window>(<unknown>mockWindow2))
+      const channel3 = broker.addChannel('channel-3', <Window>(<unknown>mockWindow3))
 
       channel1.connect()
       channel2.connect()
@@ -278,9 +278,9 @@ describe('Integration: Multi-Channel', () => {
         settings: { logLevel: 'error' },
       })
 
-      const channel1 = broker.addChannel('channel-1', mockWindow1 as unknown as Window)
-      const channel2 = broker.addChannel('channel-2', mockWindow2 as unknown as Window)
-      const channel3 = broker.addChannel('channel-3', mockWindow3 as unknown as Window)
+      const channel1 = broker.addChannel('channel-1', <Window>(<unknown>mockWindow1))
+      const channel2 = broker.addChannel('channel-2', <Window>(<unknown>mockWindow2))
+      const channel3 = broker.addChannel('channel-3', <Window>(<unknown>mockWindow3))
 
       // Channel1: connected
       channel1.connect()
@@ -326,7 +326,7 @@ describe('Integration: Multi-Channel', () => {
       // Create many channels
       for (let i = 0; i < channelCount; i++) {
         const mockWin = createMockWindow()
-        const channel = broker.addChannel(`channel-${i}`, mockWin as unknown as Window)
+        const channel = broker.addChannel(`channel-${i}`, <Window>(<unknown>mockWin))
         channels.push(channel)
       }
 

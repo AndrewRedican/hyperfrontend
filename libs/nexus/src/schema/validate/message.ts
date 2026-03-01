@@ -5,7 +5,7 @@ import messageSchema from '../definitions/message.json'
 import { createValidator } from './create-validator'
 
 /* istanbul ignore next -- validator initialization happens at module load */
-const validateMessageData = createValidator(messageSchema as Schema)
+const validateMessageData = createValidator(<Schema>messageSchema)
 
 /**
  * Validates a user message against the message schema.

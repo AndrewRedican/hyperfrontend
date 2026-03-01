@@ -187,7 +187,7 @@ describe('handleMessage', () => {
     const infoSpy = jest.spyOn(console, 'info').mockImplementation()
 
     // Use a real logger with error level
-    const { createLogger } = require('./../../utils/logging/create-logger') as typeof import('./../../utils/logging/create-logger')
+    const { createLogger } = <typeof import('./../../utils/logging/create-logger')>require('./../../utils/logging/create-logger')
     const realLogger = createLogger({ level: 'error' })
 
     const errorLevelContext: RoutingContext = {
