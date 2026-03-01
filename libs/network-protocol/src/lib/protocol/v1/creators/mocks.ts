@@ -1,8 +1,8 @@
 import type { Protocol, ProtocolProvider } from '../../../channel/model'
 import { logger } from '@hyperfrontend/logging'
 import { packetEncryption, packetDecryption, packetObfuscation, packetDeobfuscation } from '../../../packet/creators/mocks'
-import { sender } from '../../../sender/creators/mocks'
 import { receiver } from '../../../receiver/creators/mocks'
+import { sender } from '../../../sender/creators/mocks'
 
 export const send = sender
 

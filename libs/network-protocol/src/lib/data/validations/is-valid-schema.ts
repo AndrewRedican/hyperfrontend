@@ -1,4 +1,5 @@
-import { validate, type Schema } from '@hyperfrontend/json-utils'
+import type { Schema } from '@hyperfrontend/json-utils'
+import { validate } from '@hyperfrontend/json-utils'
 /* istanbul ignore next - JSON import causes coverage artifact */
 import * as v4Schema from './v4.json'
 

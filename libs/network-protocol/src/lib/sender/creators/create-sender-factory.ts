@@ -1,5 +1,5 @@
-import type { CreateSender, Sender, SendFn, OutboundQueue } from '../model'
 import type { PacketSerialization } from '../../packet/model'
+import type { CreateSender, Sender, SendFn, OutboundQueue } from '../model'
 import { freeze } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
 import { createUnencryptedPacket } from '../../packet/creators/create-unencrypted-packet'
 import { createObfuscationQueue, createSerializationQueue, createEncryptionQueue } from '../../queue'

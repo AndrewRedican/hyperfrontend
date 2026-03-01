@@ -1,5 +1,5 @@
-import { isValidRoutedUnencryptedPacket } from './is-valid-routed-unencrypted-packet'
 import { routedUnencryptedPacket } from '../creators/mocks'
+import { isValidRoutedUnencryptedPacket } from './is-valid-routed-unencrypted-packet'
 
 describe('isValidRoutedUnencryptedPacket', () => {
   it('returns true for a valid routed unencrypted packet', () => {

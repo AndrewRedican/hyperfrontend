@@ -5,8 +5,8 @@
 
 import { createHash } from '@hyperfrontend/cryptography/node'
 import { createDataFactory } from './create-data-factory'
-import { dataCreatorTestCases, invalidDataCreatorTestCases } from './test-fixtures'
 import * as getSchemaModule from './get-schema'
+import { dataCreatorTestCases, invalidDataCreatorTestCases } from './test-fixtures'
 
 describe('createDataFactory (Node.js)', () => {
   describe('valid data creation', () => {

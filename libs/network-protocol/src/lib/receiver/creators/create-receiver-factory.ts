@@ -1,5 +1,5 @@
-import type { CreateReceiver, Receiver, ReceiveFn, InboundQueue } from '../model'
 import type { PacketDeserialization } from '../../packet/model'
+import type { CreateReceiver, Receiver, ReceiveFn, InboundQueue } from '../model'
 import { freeze } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
 import { createDecryptionQueue, createDeobfuscationQueue, createDeserializationQueue } from '../../queue'
 

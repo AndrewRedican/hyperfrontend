@@ -2,8 +2,8 @@ import type { UnencryptedPacket, UnserializedEncryptedPacket } from '../../packe
 import type { EncryptionQueueCreater } from '../model'
 import { isValidUnencryptedPacket } from '../../packet/validations/is-valid-unencrypted-packet'
 import { isValidUnserializedEncryptedPacket } from '../../packet/validations/is-valid-unserialized-encrypted-packet'
-import { isValidQueueCreaterArguments } from '../validations/is-valid-queue-creater-arguments'
 import { getValidationError } from '../utils/get-validation-error'
+import { isValidQueueCreaterArguments } from '../validations/is-valid-queue-creater-arguments'
 import { createQueue } from './create-queue'
 
 export const createEncryptionQueue: EncryptionQueueCreater = (label, packetEncryption, logger, onSuccess, onFail) => {

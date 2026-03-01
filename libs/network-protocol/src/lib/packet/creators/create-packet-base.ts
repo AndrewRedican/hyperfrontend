@@ -1,8 +1,8 @@
-import { freeze } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
 import type { PacketBase } from '../model'
+import { freeze } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
+import { withoutValidErrorMessage } from '../utils/without-valid-err-msg'
 import { isValidOrigin } from '../validations/is-valid-origin'
 import { isValidTarget } from '../validations/is-valid-target'
-import { withoutValidErrorMessage } from '../utils/without-valid-err-msg'
 
 /**
  * Creates the base structure for a network packet with origin and target.

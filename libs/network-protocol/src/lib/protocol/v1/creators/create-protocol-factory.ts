@@ -1,13 +1,13 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { freeze } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
 import type { Logger } from '@hyperfrontend/logging'
-import type { ReceivePacketFn } from '../../../receiver/model'
 import type { ProtocolProvider, Protocol } from '../../../channel/model'
+import type { ReceivePacketFn } from '../../../receiver/model'
 import type { EncryptionSuite, ObfuscationSuite } from '../../../security/model'
+import { freeze } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
 import { isValidLogger } from '@hyperfrontend/logging'
 import { isValidRefreshRate } from '../../../packet/security/obfuscation/is-valid-refresh-rate'
-import { isValidSendFn } from '../../validations/is-valid-send-fn'
 import { isValidReceiveFn } from '../../validations/is-valid-receive-fn'
+import { isValidSendFn } from '../../validations/is-valid-send-fn'
 
 /**
  * Creates a protocol factory function with obfuscation-only handshake encryption.

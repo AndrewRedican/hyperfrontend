@@ -1,5 +1,5 @@
-import { createStaticKeyEncryptionFactory } from './static-encryption-key'
 import type { UnencryptedPacket, UnserializedEncryptedPacket } from '../../../packet/model'
+import { createStaticKeyEncryptionFactory } from './static-encryption-key'
 
 describe('createStaticKeyEncryptionFactory', () => {
   let mockEncryptPacket: jest.Mock

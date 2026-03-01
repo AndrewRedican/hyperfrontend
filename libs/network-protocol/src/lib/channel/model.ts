@@ -1,8 +1,8 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import type { Logger } from '@hyperfrontend/logging'
 import type { PacketEncryption, PacketDecryption, PacketObfuscation, PacketDeobfuscation } from '../packet/model'
-import type { SendFn, SendPacketFn, OutboundQueues } from '../sender/model'
 import type { ReceiveFn, ReceivePacketFn, InboundQueues } from '../receiver/model'
+import type { SendFn, SendPacketFn, OutboundQueues } from '../sender/model'
 
 export interface Protocol<T = any> {
   packetEncryption: PacketEncryption<T>

@@ -1,7 +1,7 @@
 import type { ChannelStore, Channel, ChannelEntry, ChannelCreater } from '../model'
+import { freeze } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
 import { uuidV4 } from '@hyperfrontend/random-generator-utils'
 import { isValidLabel } from '../validations/is-valid-label'
-import { freeze } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
 
 /**
  * Creates a channel store factory with an injected channel creator.

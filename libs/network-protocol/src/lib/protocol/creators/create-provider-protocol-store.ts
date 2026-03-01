@@ -1,6 +1,6 @@
-import { freeze } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
 import type { ProtocolProvider } from '../../channel/model'
 import type { ProtocolProviderStore, ProtocolProviderEntry } from '../model'
+import { freeze } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
 import { uuidV4 } from '@hyperfrontend/random-generator-utils'
 import { isValidName } from '../validations/is-valid-name'
 

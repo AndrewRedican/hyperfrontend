@@ -1,5 +1,5 @@
-import { freeze } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
 import type { UnserializedEncryptedPacket, SerializedEncryptedPacket, PacketDeserialization } from '../model'
+import { freeze } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
 import { isValidSerializedEncryptedPacket } from '../validations/is-valid-serialized-encrypted-packet'
 
 /**

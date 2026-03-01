@@ -1,6 +1,6 @@
 import type { PacketObfuscater, SerializedEncryptedPacket, ObfuscatedPacket } from '../../model'
-import { isValidSerializedEncryptedPacket } from '../../validations/is-valid-serialized-encrypted-packet'
 import { stringify } from '@hyperfrontend/immutable-api-utils/built-in-copy/json'
+import { isValidSerializedEncryptedPacket } from '../../validations/is-valid-serialized-encrypted-packet'
 
 /**
  * Creates a packet obfuscator with the provided encryption implementation.

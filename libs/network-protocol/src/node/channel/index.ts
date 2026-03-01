@@ -1,7 +1,7 @@
 import { createChannelFactory } from '../../lib/channel/creators/create-channel'
 import { createChannelStoreFactory } from '../../lib/channel/creators/create-channel-store'
-import { createSender } from '../sender'
 import { createReceiver } from '../receiver'
+import { createSender } from '../sender'
 
 export const createChannel = createChannelFactory(createSender, createReceiver)
 export const createChannelStore = createChannelStoreFactory(createChannel)

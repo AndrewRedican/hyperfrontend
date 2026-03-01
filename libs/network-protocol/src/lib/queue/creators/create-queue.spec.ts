@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import type { MessageHandler } from '../model'
-import { createQueue } from './create-queue'
 import { sleep } from '@hyperfrontend/time-utils'
+import { createQueue } from './create-queue'
 
 describe('createQueue', () => {
   let processedMessages: any[] = []

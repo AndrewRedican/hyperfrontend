@@ -1,6 +1,6 @@
-import { freeze } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
-import type { ObfuscationSuite } from '../../../security/model'
 import type { PacketObfuscater, PacketDeobfuscater } from '../../../packet/model'
+import type { ObfuscationSuite } from '../../../security/model'
+import { freeze } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
 
 /**
  * Creates a factory for dynamic key-based obfuscation suites.

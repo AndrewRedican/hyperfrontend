@@ -5,8 +5,8 @@
 
 import type { ObfuscatedPacket } from '../../model'
 import { encrypt, decrypt } from '@hyperfrontend/cryptography/node'
-import { createPacketObfuscator } from './create-obfuscator'
 import { createPacketDeobfuscator } from './create-deobfuscator'
+import { createPacketObfuscator } from './create-obfuscator'
 import { testPasswords, testUUIDs, sampleSerializedEncryptedPacket, alternativeSerializedEncryptedPacket } from './test-fixtures'
 
 describe('createPacketDeobfuscator (Node.js)', () => {

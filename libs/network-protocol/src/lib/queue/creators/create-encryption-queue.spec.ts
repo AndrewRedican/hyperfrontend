@@ -1,6 +1,6 @@
 import type { UnencryptedPacket, UnserializedEncryptedPacket } from '../../packet/model'
-import { sleep } from '@hyperfrontend/time-utils'
 import { logger } from '@hyperfrontend/logging'
+import { sleep } from '@hyperfrontend/time-utils'
 import { packetEncryption, unencryptedPacket } from '../../packet/creators/mocks'
 import { isValidUnserializedEncryptedPacket } from '../../packet/validations/is-valid-unserialized-encrypted-packet'
 import { createEncryptionQueue } from './create-encryption-queue'

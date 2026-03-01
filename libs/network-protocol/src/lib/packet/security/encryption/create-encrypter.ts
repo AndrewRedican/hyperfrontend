@@ -1,6 +1,6 @@
-import { freeze } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
-import type { PacketEncrypter, UnserializedEncryptedPacket, UnencryptedPacket } from '../../model'
 import type { Data } from '../../../data/model'
+import type { PacketEncrypter, UnserializedEncryptedPacket, UnencryptedPacket } from '../../model'
+import { freeze } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
 import { isValidUnencryptedPacket } from '../../validations/is-valid-unencrypted-packet'
 
 /**

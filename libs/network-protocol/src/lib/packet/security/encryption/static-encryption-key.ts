@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { freeze } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
-import type { EncryptionSuite } from '../../../security/model'
 import type { PacketEncrypter, PacketDecrypter } from '../../../packet/model'
+import type { EncryptionSuite } from '../../../security/model'
+import { freeze } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
 
 /**
  * Creates a factory for static key-based encryption suites.

@@ -1,6 +1,6 @@
-import { freeze } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
 import type { ObfuscationSuite } from '../../../security/model'
 import type { SerializedEncryptedPacket, ObfuscatedPacket, PacketObfuscater, PacketDeobfuscater } from '../../model'
+import { freeze } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
 import { isValidSerializedEncryptedPacket } from '../../validations/is-valid-serialized-encrypted-packet'
 import { isValidRefreshRate } from './is-valid-refresh-rate'
 

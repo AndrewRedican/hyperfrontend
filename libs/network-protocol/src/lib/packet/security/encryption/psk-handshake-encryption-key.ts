@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { freeze } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
 import type { EncryptionSuite } from '../../../security/model'
 import type { PacketEncrypter, PacketDecrypter } from '../../model'
+import { freeze } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
 
 /**
  * Creates a factory for PSK-handshake encryption suites.

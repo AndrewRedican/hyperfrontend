@@ -1,13 +1,13 @@
-import type { ChannelCreater, Channel } from '../model'
-import type { SenderFactory } from '../../sender/model'
 import type { ReceiverFactory } from '../../receiver/model'
-import { isValidLabel } from '../validations/is-valid-label'
-import { isValidSender } from '../validations/is-valid-sender'
-import { isValidReceiver } from '../validations/is-valid-receiver'
-import { getFirstInvalidProtocolProperty } from '../validations/get-first-invalid-protocol-property'
-import { withoutValidErrorMessage } from '../utils/without-valid-err-msg'
+import type { SenderFactory } from '../../sender/model'
+import type { ChannelCreater, Channel } from '../model'
 import { getType } from '@hyperfrontend/data-utils'
 import { freeze } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
+import { withoutValidErrorMessage } from '../utils/without-valid-err-msg'
+import { getFirstInvalidProtocolProperty } from '../validations/get-first-invalid-protocol-property'
+import { isValidLabel } from '../validations/is-valid-label'
+import { isValidReceiver } from '../validations/is-valid-receiver'
+import { isValidSender } from '../validations/is-valid-sender'
 
 /**
  * Creates a channel creator factory with injected sender and receiver factories.

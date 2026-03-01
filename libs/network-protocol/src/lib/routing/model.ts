@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import type { UnencryptedPacket } from '../packet/model'
 import type { Channel } from '../channel/model'
+import type { UnencryptedPacket } from '../packet/model'
 import type { Topic } from '../topic/model'
 
 export interface RoutedPacket {

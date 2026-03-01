@@ -1,11 +1,11 @@
 /* istanbul ignore file */
 
 import type { Channel, MessagePayload, MessageCallback, Client, SendPacketFn, ReceivePacketFn, ReceivedPacket } from '../model'
+import { freeze } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
 import { uuidV4 } from '@hyperfrontend/random-generator-utils'
 import { createData } from '../../browser/data'
 import { deserializeData } from '../../lib/data/model'
 import { initChannel } from './init-channel'
-import { freeze } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
 
 /**
  * Creates a test client for network protocol V1 integration testing.

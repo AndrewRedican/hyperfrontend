@@ -1,12 +1,12 @@
-import { freeze } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
-import { stringify } from '@hyperfrontend/immutable-api-utils/built-in-copy/json'
 import type { Schema } from '@hyperfrontend/json-utils'
 import type { DataCreater, JSONString, SerializedData } from '../model'
 import { hasCircularReference } from '@hyperfrontend/data-utils'
+import { stringify } from '@hyperfrontend/immutable-api-utils/built-in-copy/json'
+import { freeze } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
 import { uuidV4 } from '@hyperfrontend/random-generator-utils'
+import { isValidMessage } from '../validations/is-valid-message'
 import { isValidPid } from '../validations/is-valid-pid'
 import { isValidSequence } from '../validations/is-valid-schema-sequence'
-import { isValidMessage } from '../validations/is-valid-message'
 import { getSchema } from './get-schema'
 
 /**

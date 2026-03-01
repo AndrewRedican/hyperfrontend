@@ -1,9 +1,9 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { freeze } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
-import { stringify, parse } from '@hyperfrontend/immutable-api-utils/built-in-copy/json'
+import type { SerializedData } from '../../../data/model'
 import type { FirstMessageHandler } from '../../../security/model'
 import type { UnencryptedPacket, UnserializedEncryptedPacket } from '../../model'
-import type { SerializedData } from '../../../data/model'
+import { stringify, parse } from '@hyperfrontend/immutable-api-utils/built-in-copy/json'
+import { freeze } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
 import { deserializeData } from '../../../data/model'
 
 /**

@@ -6,10 +6,10 @@
 import type { UnencryptedPacket, UnserializedEncryptedPacket } from '../../model'
 import { encrypt, decrypt, createHash } from '@hyperfrontend/cryptography/browser'
 import { createDataFactory } from '../../../data/creators/create-data-factory'
-import { createDataEncrypter } from '../../../data/security/create-encrypter'
 import { createDataDecrypter } from '../../../data/security/create-decrypter'
-import { createPacketEncrypter } from './create-encrypter'
+import { createDataEncrypter } from '../../../data/security/create-encrypter'
 import { createPacketDecrypter } from './create-decrypter'
+import { createPacketEncrypter } from './create-encrypter'
 import { testPasswords, testUUIDs, testPIDs, testMessages, sampleUnserializedEncryptedPacket } from './test-fixtures'
 
 describe('createPacketDecrypter (Browser)', () => {

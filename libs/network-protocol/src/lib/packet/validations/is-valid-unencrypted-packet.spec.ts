@@ -1,6 +1,6 @@
+import { isValidUnencryptedData } from '../../data/validations/is-valid-unencrypted-data'
 import { isValidUnencryptedPacket } from './is-valid-unencrypted-packet'
 import { isValidUnobfuscatedPacketBase } from './is-valid-unobfuscated-packet-base'
-import { isValidUnencryptedData } from '../../data/validations/is-valid-unencrypted-data'
 
 jest.mock('./is-valid-unobfuscated-packet-base', () => ({
   isValidUnobfuscatedPacketBase: jest.fn(),

@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { freeze } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
 import type { MessageHandler, Queue } from '../model'
 import { getType } from '@hyperfrontend/data-utils'
+import { freeze } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
 import { createFifoList } from '@hyperfrontend/list-utils'
 
 /**

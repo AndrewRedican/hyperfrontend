@@ -1,6 +1,6 @@
-import { freeze } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
-import { parse } from '@hyperfrontend/immutable-api-utils/built-in-copy/json'
 import type { PacketDeobfuscater, SerializedEncryptedPacket, ObfuscatedPacket } from '../../model'
+import { parse } from '@hyperfrontend/immutable-api-utils/built-in-copy/json'
+import { freeze } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
 import { isValidObfuscatedPacket } from '../../validations/is-valid-obfuscated-packet'
 
 /**

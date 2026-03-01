@@ -1,8 +1,8 @@
-import type { Topic } from '../../topic/model'
 import type { Channel } from '../../channel/model'
+import type { Topic } from '../../topic/model'
 import type { RoutedUnencryptedPacket, RoutedObfuscatedPacket, Subscriptions, Router, RoutingOptions } from '../model'
-import { topicId } from '../../topic/creators/mocks'
 import { unencryptedPacket, obfuscatedPacket } from '../../packet/creators/mocks'
+import { topicId } from '../../topic/creators/mocks'
 
 export const routedUnencryptedPacket: RoutedUnencryptedPacket = {
   topicId,

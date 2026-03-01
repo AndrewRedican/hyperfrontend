@@ -1,10 +1,10 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { freeze } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
 import type { Data } from '../../data/model'
 import type { UnencryptedPacket } from '../model'
+import { freeze } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
 import { isValidUnencryptedData } from '../../data/validations/is-valid-unencrypted-data'
-import { createPacketBase } from './create-packet-base'
 import { withoutValidErrorMessage } from '../utils/without-valid-err-msg'
+import { createPacketBase } from './create-packet-base'
 
 /**
  * Creates an unencrypted network packet with validated origin, target, and data.

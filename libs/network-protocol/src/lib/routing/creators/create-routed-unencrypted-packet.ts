@@ -1,9 +1,9 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { freeze } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
 import type { Data } from '../../data/model'
 import type { RoutedUnencryptedPacket } from '../model'
-import { isValidTopicId } from '../../topic/validations/is-valid-topic-id'
+import { freeze } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
 import { createUnencryptedPacket } from '../../packet/creators/create-unencrypted-packet'
+import { isValidTopicId } from '../../topic/validations/is-valid-topic-id'
 
 /**
  * Creates a routed unencrypted packet with the specified topic, origin, target, and data.
