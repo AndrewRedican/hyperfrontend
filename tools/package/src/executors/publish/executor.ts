@@ -191,7 +191,7 @@ export default async function publishExecutor(options: PublishExecutorOptions, c
     if (error instanceof Error) {
       logger.error(error.message)
       if ('stderr' in error) {
-        logger.error(String((error as { stderr: unknown }).stderr))
+        logger.error(String((<{ stderr: unknown }>error).stderr))
       }
     }
     return { success: false }

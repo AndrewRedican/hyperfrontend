@@ -12,7 +12,7 @@ import { readJsonFile, writeJsonFile } from '@nx/devkit'
 import { isWorkspacePackage } from './externals'
 
 /** Fields to inherit from root package.json */
-const INHERITABLE_FIELDS = ['repository', 'bugs', 'homepage', 'author'] as const
+const INHERITABLE_FIELDS = <const>['repository', 'bugs', 'homepage', 'author']
 
 /** Export entry for package.json */
 interface ExportEntry {
@@ -111,9 +111,9 @@ function extractOutputDirFromSourcePath(srcPath: ExportValue): string {
   const path =
     typeof srcPath === 'string'
       ? srcPath
-      : ((srcPath as ConditionalExport).import ??
-        (srcPath as ConditionalExport).require ??
-        (srcPath as ConditionalExport).default ??
+      : ((<ConditionalExport>srcPath).import ??
+        (<ConditionalExport>srcPath).require ??
+        (<ConditionalExport>srcPath).default ??
         '')
 
   // Match "./src/<path>/index.[jt]s" pattern

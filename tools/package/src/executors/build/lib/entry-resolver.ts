@@ -4,7 +4,7 @@ import { join } from 'node:path'
 import { minimatch } from 'minimatch'
 
 /** Known platform directory names */
-const PLATFORM_DIRS = ['browser', 'node'] as const
+const PLATFORM_DIRS = <const>['browser', 'node']
 type PlatformDir = (typeof PLATFORM_DIRS)[number]
 
 /**

@@ -127,7 +127,7 @@ export function copyFundingAsset(outputPath: string, workspaceRoot: string): voi
  * @returns Array of default asset paths relative to their source directories
  */
 export function getDefaultAssetFiles(): readonly string[] {
-  return ['README.md', 'CHANGELOG.md', 'ARCHITECTURE.md', 'LICENSE.md', 'SECURITY.md'] as const
+  return <const>['README.md', 'CHANGELOG.md', 'ARCHITECTURE.md', 'LICENSE.md', 'SECURITY.md']
 }
 
 /**

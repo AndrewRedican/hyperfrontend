@@ -577,11 +577,11 @@ export default async function versionExecutor(options: VersionExecutorOptions, c
 
   // Delegate to @jscutlery/semver:version
   // Use custom preset if provided, otherwise use our default that includes docs
-  const semverOptions: VersionBuilderSchema = {
+  const semverOptions: VersionBuilderSchema = <VersionBuilderSchema>{
     ...options,
     preset: options.preset ?? defaultPreset,
     skipCommitTypes: options.skipCommitTypes ?? [],
-  } as VersionBuilderSchema
+  }
 
   const result = await semverVersion(semverOptions, context)
 
