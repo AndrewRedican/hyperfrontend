@@ -7,15 +7,17 @@
 ## Table of Contents
 
 1. [Overview](#overview)
-2. [Rule Categories](#rule-categories)
-3. [TypeScript Code Rules](#typescript-code-rules)
-4. [Test File Rules](#test-file-rules)
-5. [JSON File Rules](#json-file-rules)
-6. [File Structure](#file-structure)
-7. [Configuration in eslint.base.config.cjs](#configuration-in-eslintbaseconfigcjs)
-8. [Error Message Guidelines](#error-message-guidelines)
-9. [Testing Strategy](#testing-strategy)
-10. [Dependencies](#dependencies)
+2. [Implementation Workflow](#implementation-workflow)
+3. [Implementation Progress](#implementation-progress)
+4. [Rule Categories](#rule-categories)
+5. [TypeScript Code Rules](#typescript-code-rules)
+6. [Test File Rules](#test-file-rules)
+7. [JSON File Rules](#json-file-rules)
+8. [File Structure](#file-structure)
+9. [Configuration in eslint.base.config.cjs](#configuration-in-eslintbaseconfigcjs)
+10. [Error Message Guidelines](#error-message-guidelines)
+11. [Testing Strategy](#testing-strategy)
+12. [Dependencies](#dependencies)
 
 ---
 
@@ -37,6 +39,54 @@ The workspace has an established pattern for custom ESLint rules:
 - **Rule Creator**: `ESLintUtils.RuleCreator` from `@typescript-eslint/utils`
 - **Testing**: `@typescript-eslint/rule-tester` with temporary project fixtures
 - **Utilities**: `tools/eslint-rules/src/utils/` for shared helpers
+
+---
+
+## Implementation Workflow
+
+Each rule must be implemented systematically using this workflow:
+
+1. **Implementation**: Create the rule file in `tools/eslint-rules/src/rules/`
+2. **Export**: Add the rule export to `tools/eslint-rules/src/index.ts`
+3. **Configuration**: Add the rule to `eslint.base.config.cjs`
+4. **Test**: Create test file with comprehensive test cases
+5. **Validation**: Run `npx CI=1 nx run-many -t=lint --skip-nx-cache=true` to verify
+
+Rules must be implemented one at a time, completing all steps before moving to the next rule.
+
+---
+
+## Implementation Progress
+
+| #   | Rule Name                        | Status      | Notes                                           |
+| --- | -------------------------------- | ----------- | ----------------------------------------------- |
+| 1   | `require-node-protocol`          | ✅ Complete | Implemented with auto-fix                       |
+| 2   | `no-namespace-import`            | ✅ Complete | Exceptions: test files, JSON imports, type-only |
+| 3   | `no-mixed-type-import`           | ✅ Complete | Implemented with auto-fix                       |
+| 4   | `import-order`                   | ✅ Complete | Implemented with auto-fix                       |
+| 5   | `prefer-angle-bracket-assertion` | ⏳ Pending  |                                                 |
+| 6   | `no-enum`                        | ⏳ Pending  |                                                 |
+| 7   | `assertive-test-names`           | ⏳ Pending  |                                                 |
+| 8   | `lib-pkg-fields`                 | ⏳ Pending  |                                                 |
+| 9   | `lib-pkg-secondary-export`       | ⏳ Pending  |                                                 |
+| 10  | `lib-pkg-bundle-entry`           | ⏳ Pending  |                                                 |
+| 11  | `lib-project-metadata`           | ⏳ Pending  |                                                 |
+| 12  | `lib-project-bundle-config`      | ⏳ Pending  |                                                 |
+
+### Code Coverage Requirements
+
+All new rules must have full test coverage before proceeding to the next rule. Run:
+
+```bash
+npx nx run eslint-rules:test
+```
+
+Ensure coverage thresholds are met:
+
+- **Statements**: 100%
+- **Branches**: 97%
+- **Functions**: 100%
+- **Lines**: 100%
 
 ---
 
