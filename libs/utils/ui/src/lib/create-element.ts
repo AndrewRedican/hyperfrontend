@@ -1,8 +1,8 @@
-import type { HtmlTagName } from './html.model'
 import type { Style } from '../style'
-import { nonEmptyStrings, uniqueStrings } from '@hyperfrontend/list-utils'
-import { assign } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
+import type { HtmlTagName } from './html.model'
 import { isArray } from '@hyperfrontend/immutable-api-utils/built-in-copy/array'
+import { assign } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
+import { nonEmptyStrings, uniqueStrings } from '@hyperfrontend/list-utils'
 
 export type ElementConfig = {
   inlineStyle?: Style

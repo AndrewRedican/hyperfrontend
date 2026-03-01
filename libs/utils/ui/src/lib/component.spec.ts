@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import type { StyleFn } from './component'
-import { span } from './element-creators'
 import { component } from './component'
+import { span } from './element-creators'
 
 describe('component', () => {
   let style: StyleFn

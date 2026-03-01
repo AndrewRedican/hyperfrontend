@@ -1,7 +1,7 @@
 import type { StyleMap } from '../style'
 import { getType } from '@hyperfrontend/data-utils'
-import { cssRule } from './css-rule'
 import { entries } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
+import { cssRule } from './css-rule'
 
 /**
  * Creates CSS rules from a styles object, converting each selector-style pair into CSS rule strings.

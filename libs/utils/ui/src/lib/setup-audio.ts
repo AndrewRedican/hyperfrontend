@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import type { ElementRefOrString } from './get-element-async'
-import { getElementAsync } from './get-element-async'
 import { createPromise } from '@hyperfrontend/immutable-api-utils/built-in-copy/promise'
+import { getElementAsync } from './get-element-async'
 
 /**
  * Sets up an AudioContext by waiting for user interaction on a specified element.
