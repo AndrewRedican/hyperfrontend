@@ -11,5 +11,5 @@ import * as v4Schema from './v4.json'
  * @returns True if the value is a valid JSON Schema v4 schema, false otherwise
  */
 export function isValidSchema(schema: unknown): boolean {
-  return validate(schema, v4Schema as Schema).valid
+  return validate(schema, <Schema>v4Schema).valid
 }

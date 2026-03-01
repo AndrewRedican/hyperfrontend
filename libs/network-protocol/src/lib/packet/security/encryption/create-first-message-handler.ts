@@ -26,7 +26,7 @@ export function createFirstMessageHandler<T = any>(
     // This maintains the same packet shape (data: Uint8Array) but without encryption
     const serializedData: SerializedData<T> = {
       ...packet.data,
-      message: stringify(packet.data.message) as SerializedData<T>['message'],
+      message: <SerializedData<T>['message']>stringify(packet.data.message),
     }
     const jsonString = stringify(serializedData)
     const binaryData = textEncoder(jsonString)

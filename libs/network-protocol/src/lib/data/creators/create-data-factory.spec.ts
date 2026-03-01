@@ -76,7 +76,7 @@ describe('createDataFactory (Node.js)', () => {
       it(`handles ${description}`, async () => {
         const createData = createDataFactory(createHash)
 
-        await expect(createData(pid as string, sequence, message)).rejects.toThrow()
+        await expect(createData(<string>pid, sequence, message)).rejects.toThrow()
       })
     })
 

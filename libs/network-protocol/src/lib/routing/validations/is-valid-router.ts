@@ -10,6 +10,6 @@ import { isValidRoutingOptions } from './is-valid-routing-options'
  * @returns True if the value is a valid router function, false otherwise
  */
 export function isValidRouter(router: unknown) {
-  const rt = router as Router
+  const rt = <Router>router
   return getType(rt) === 'function' && isValidRoutingOptions(rt([], []))
 }

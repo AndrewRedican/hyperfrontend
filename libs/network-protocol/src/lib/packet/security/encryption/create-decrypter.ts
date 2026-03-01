@@ -32,7 +32,7 @@ export function createPacketDecrypter<T = unknown>(decryptData: (data: Uint8Arra
         data: await decryptData(packet.data, password),
       }
     } catch (e) {
-      throw new Error(`Cannot decrypt packet. ${(e as Error)?.message}`)
+      throw new Error(`Cannot decrypt packet. ${(<Error>e)?.message}`)
     }
     return freeze(unencryptedPacket)
   }

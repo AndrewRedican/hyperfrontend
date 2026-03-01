@@ -27,7 +27,7 @@ export function createPacketDeobfuscator(decrypt: (encrypted: Uint8Array, passwo
     try {
       deobfuscated = await decrypt(packet, password)
     } catch (e) {
-      throw new Error(`Cannot deobfuscate packet. ${(e as Error)?.message}`)
+      throw new Error(`Cannot deobfuscate packet. ${(<Error>e)?.message}`)
     }
 
     let deserialized: SerializedEncryptedPacket

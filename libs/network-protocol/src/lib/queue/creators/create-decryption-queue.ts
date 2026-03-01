@@ -32,7 +32,7 @@ export const createDecryptionQueue: DecryptionQueueCreater = (label, packetDecry
       try {
         processed = await packetDecryption(raw)
       } catch (e) {
-        log(`${label}: ${(e as Error)?.message}`)
+        log(`${label}: ${(<Error>e)?.message}`)
         onFail(raw)
         return
       }

@@ -199,7 +199,7 @@ describe('createSenderFactory (Browser)', () => {
       expect(Object.isFrozen(sender)).toBe(true)
       expect(() => {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        ;(sender as any).send = () => void 0
+        ;(<any>sender).send = () => void 0
       }).toThrow()
     })
   })

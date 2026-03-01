@@ -174,7 +174,7 @@ describe('createPacketDeobfuscator (Browser)', () => {
 
       expect(Object.isFrozen(result)).toBe(true)
       expect(() => {
-        ;(result as { origin: string }).origin = 'modified'
+        ;(<{ origin: string }>result).origin = 'modified'
       }).toThrow()
     })
   })

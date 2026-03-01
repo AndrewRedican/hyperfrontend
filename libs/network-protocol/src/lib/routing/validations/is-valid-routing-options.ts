@@ -10,7 +10,7 @@ import { isValidSubscriptions } from './is-valid-subscriptions'
  * @returns True if the value is a valid routing options object, false otherwise
  */
 export function isValidRoutingOptions(options: unknown): boolean {
-  const op = options as RoutingOptions
+  const op = <RoutingOptions>options
   return (
     !!op &&
     getType(op) === 'object' &&

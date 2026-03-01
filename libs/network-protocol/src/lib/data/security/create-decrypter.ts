@@ -25,7 +25,7 @@ export function createDataDecrypter(decrypt: (encrypted: Uint8Array, password: s
     }
     let deserialized: SerializedData<T>
     try {
-      deserialized = parse(decrypted) as SerializedData<T>
+      deserialized = <SerializedData<T>>parse(decrypted)
     } catch {
       throw new Error('Cannot unserialize data')
     }

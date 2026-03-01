@@ -166,11 +166,11 @@ describe('createPacketEncrypter (Node.js)', () => {
       const encryptPacket = createPacketEncrypter(encryptData)
 
       const data = await createData(testPIDs.pid1, 1, testMessages.simple)
-      const packet = {
+      const packet = <UnencryptedPacket>{
         origin: 'invalid-uuid',
         target: testUUIDs.target1,
         data,
-      } as UnencryptedPacket
+      }
 
       await expect(encryptPacket(packet, testPasswords.valid)).rejects.toThrow('Cannot encrypt invalid packet')
     })
@@ -180,11 +180,11 @@ describe('createPacketEncrypter (Node.js)', () => {
       const encryptPacket = createPacketEncrypter(encryptData)
 
       const data = await createData(testPIDs.pid1, 1, testMessages.simple)
-      const packet = {
+      const packet = <UnencryptedPacket>{
         origin: testUUIDs.origin1,
         target: 'invalid-uuid',
         data,
-      } as UnencryptedPacket
+      }
 
       await expect(encryptPacket(packet, testPasswords.valid)).rejects.toThrow('Cannot encrypt invalid packet')
     })
@@ -206,7 +206,7 @@ describe('createPacketEncrypter (Node.js)', () => {
 
       expect(Object.isFrozen(result)).toBe(true)
       expect(() => {
-        ;(result as { origin: string }).origin = 'modified'
+        ;(<{ origin: string }>result).origin = 'modified'
       }).toThrow()
     })
   })

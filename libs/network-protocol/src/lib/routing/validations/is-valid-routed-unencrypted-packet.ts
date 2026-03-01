@@ -11,7 +11,7 @@ import { isValidTopicId } from '../../topic/validations/is-valid-topic-id'
  * @returns True if the value is a valid routed unencrypted packet, false otherwise
  */
 export function isValidRoutedUnencryptedPacket(routedPacket: unknown) {
-  const rtp = routedPacket as RoutedUnencryptedPacket
+  const rtp = <RoutedUnencryptedPacket>routedPacket
   return (
     getType(rtp) === 'object' && 'topicId' in rtp && 'packet' in rtp && isValidTopicId(rtp.topicId) && isValidUnencryptedPacket(rtp.packet)
   )

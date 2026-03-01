@@ -32,7 +32,7 @@ export const createSerializationQueue: SerializationQueueCreater = (label, packe
       try {
         processed = await packetSerialization(raw)
       } catch (e) {
-        error(`${label}: ${(e as Error)?.message}`)
+        error(`${label}: ${(<Error>e)?.message}`)
         onFail(raw)
         return
       }

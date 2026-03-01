@@ -32,7 +32,7 @@ export const createEncryptionQueue: EncryptionQueueCreater = (label, packetEncry
       try {
         processed = await packetEncryption(raw)
       } catch (e) {
-        error(`${label}: ${(e as Error)?.message}`)
+        error(`${label}: ${(<Error>e)?.message}`)
         onFail(raw)
         return
       }
