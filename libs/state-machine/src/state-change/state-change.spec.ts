@@ -1,5 +1,5 @@
-import { StateChange } from './state-change'
 import type { DerivedState } from '../models'
+import { StateChange } from './state-change'
 
 describe('StateChange', () => {
   let stateChange: StateChange

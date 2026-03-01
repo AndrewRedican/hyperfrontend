@@ -1,9 +1,9 @@
 import type { DerivedState } from '../models'
+import { start } from '../actions'
 import { Events } from '../events/events'
 import { event } from '../models'
-import { start } from '../actions'
-import { createInitialState } from '../state'
 import { derivedState } from '../selectors'
+import { createInitialState } from '../state'
 
 describe('Events', () => {
   let events: Events

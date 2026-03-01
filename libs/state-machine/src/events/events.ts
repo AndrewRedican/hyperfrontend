@@ -1,10 +1,10 @@
+import type { Event, DerivedState } from '../models'
 import type { StateChangeHandler } from '../state-change/state-change.model'
 import type { DataPointSelector, EventHandler } from './events.model'
-import type { Event, DerivedState } from '../models'
 import { event } from '../models'
-import { Store } from '../store/store'
-import { StateChange } from '../state-change'
 import { derivedState } from '../selectors'
+import { StateChange } from '../state-change'
+import { Store } from '../store/store'
 
 export class Events {
   private readonly store = new Store()

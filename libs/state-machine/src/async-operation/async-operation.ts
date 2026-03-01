@@ -1,6 +1,6 @@
-import { Events } from '../events/events'
 import type { Event, DerivedState } from '../models'
 import { start, cancel, pause, success, fail } from '../actions/actions'
+import { Events } from '../events/events'
 import { AsyncProcess } from './async-operation.model'
 
 export class AsyncOperation {
