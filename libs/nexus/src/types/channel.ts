@@ -1,7 +1,7 @@
 import type { Logger, LogLevel } from '@hyperfrontend/logging'
 import type { IChannelContract } from './contract'
-import type { IMessage } from './message'
 import type { ChannelEvent, EventCallbackMap } from './events'
+import type { IMessage } from './message'
 import type { SecurityProtocolVersion, SecurityTransport, SecurityNegotiationRequest, ChannelSecuritySettings } from './security'
 
 /**

@@ -1,8 +1,8 @@
+import type { Schema } from '@hyperfrontend/json-utils'
 import type { IMessage } from '../../types/message'
 import type { ValidationResult } from '../../types/validation'
-import type { Schema } from '@hyperfrontend/json-utils'
-import { createValidator } from './create-validator'
 import messageSchema from '../definitions/message.json'
+import { createValidator } from './create-validator'
 
 /* istanbul ignore next -- validator initialization happens at module load */
 const validateMessageData = createValidator(messageSchema as Schema)

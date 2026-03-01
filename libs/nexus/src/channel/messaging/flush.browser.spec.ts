@@ -1,11 +1,11 @@
 import type { Logger } from '@hyperfrontend/logging'
-import type { ChannelInternals } from '../types'
 import type { ActionCreators } from '../../core/actions/factory'
 import type { ChannelState } from '../../types'
 import type { IMessage } from '../../types/message'
+import type { ChannelInternals } from '../types'
+import * as clearQueueModule from '../state/clear-queue'
 import { flush } from './flush'
 import * as sendModule from './send'
-import * as clearQueueModule from '../state/clear-queue'
 
 jest.mock('./send')
 jest.mock('../state/clear-queue')

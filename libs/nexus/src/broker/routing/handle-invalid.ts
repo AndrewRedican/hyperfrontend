@@ -1,7 +1,7 @@
 import type { IAction } from '../../types/action'
-import { isActionWithProcess } from '../../types/action'
-import type { RoutingContext } from './types'
 import type { ChannelHandle } from '../../types/channel'
+import type { RoutingContext } from './types'
+import { isActionWithProcess } from '../../types/action'
 
 /**
  * Handles INVALID_REQUEST action.

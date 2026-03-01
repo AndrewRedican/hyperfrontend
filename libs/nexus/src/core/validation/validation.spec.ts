@@ -2,9 +2,9 @@
  * Tests for validation functions
  */
 
-import { validateName } from './name'
-import { validateContract } from './contract'
 import { validateAction } from './action'
+import { validateContract } from './contract'
+import { validateName } from './name'
 import { validateOrigin } from './origin'
 import { validateSettings } from './settings'
 

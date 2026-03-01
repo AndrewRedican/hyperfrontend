@@ -1,6 +1,6 @@
 import type { IChannelContract } from '../../types/contract'
-import { createActionCreators } from './factory'
 import { ACTION_TYPES } from '../../types/action'
+import { createActionCreators } from './factory'
 
 describe('createActionCreators', () => {
   const mockContract: IChannelContract = {

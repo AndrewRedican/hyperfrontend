@@ -2,15 +2,17 @@
  * Tests for routeMessage function
  */
 
-import { routeMessage } from './route-message'
-import { createRouter, type RouteHandler } from './create-router'
-import type { BrokerState } from '../types'
-import type { RoutingContext } from './types'
-import { createRegistry } from '../../core/registry/factory'
-import { createProcessManager } from '../../core/processes/factory'
-import { createActionCreators, type ActionCreators } from '../../core/actions/factory'
-import type { IAction } from '../../types/action'
 import type { Logger } from '@hyperfrontend/logging'
+import type { ActionCreators } from '../../core/actions/factory'
+import type { IAction } from '../../types/action'
+import type { BrokerState } from '../types'
+import type { RouteHandler } from './create-router'
+import type { RoutingContext } from './types'
+import { createActionCreators } from '../../core/actions/factory'
+import { createProcessManager } from '../../core/processes/factory'
+import { createRegistry } from '../../core/registry/factory'
+import { createRouter } from './create-router'
+import { routeMessage } from './route-message'
 
 describe('routeMessage', () => {
   const mockBrokerState: BrokerState = {

@@ -1,6 +1,6 @@
-import type { ChannelInternals } from '../types'
 import type { EventHandler } from '../../types/channel'
 import type { ChannelEvent, EventCallbackMap } from '../../types/events'
+import type { ChannelInternals } from '../types'
 
 /**
  * Subscribes to channel lifecycle events.

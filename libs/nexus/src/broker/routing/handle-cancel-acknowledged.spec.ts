@@ -2,16 +2,16 @@
  * Tests for handleCancelAcknowledged function
  */
 
-import type { RoutingContext } from './types'
 import type { Logger } from '@hyperfrontend/logging'
-import { handleCancelAcknowledged } from './handle-cancel-acknowledged'
-import { createRegistry } from '../../core/registry/factory'
-import { createProcessManager } from '../../core/processes/factory'
-import { createActionCreators } from '../../core/actions/factory'
-import { addChannel } from '../channels/add'
-import type { BrokerState } from '../types'
 import type { IAction } from '../../types/action'
 import type { IChannelContract } from '../../types/contract'
+import type { BrokerState } from '../types'
+import type { RoutingContext } from './types'
+import { createActionCreators } from '../../core/actions/factory'
+import { createProcessManager } from '../../core/processes/factory'
+import { createRegistry } from '../../core/registry/factory'
+import { addChannel } from '../channels/add'
+import { handleCancelAcknowledged } from './handle-cancel-acknowledged'
 
 describe('handleCancelAcknowledged', () => {
   const validContract: IChannelContract = {

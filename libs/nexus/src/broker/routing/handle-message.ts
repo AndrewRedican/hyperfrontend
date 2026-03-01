@@ -1,10 +1,10 @@
 import type { IAction } from '../../types/action'
-import { isActionWithData } from '../../types/action'
+import type { ChannelHandle } from '../../types/channel'
 import type { IMessage } from '../../types/message'
 import type { RoutingContext } from './types'
-import type { ChannelHandle } from '../../types/channel'
 import { getById } from '../../core/registry/get-by-id'
 import { validateMessage } from '../../schema/validate/message'
+import { isActionWithData } from '../../types/action'
 
 /**
  * Handles NEW_MESSAGE action.

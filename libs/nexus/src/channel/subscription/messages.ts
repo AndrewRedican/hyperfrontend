@@ -1,5 +1,5 @@
-import type { ChannelInternals } from '../types'
 import type { MessageHandler } from '../../types/channel'
+import type { ChannelInternals } from '../types'
 
 /**
  * Subscribes to incoming messages on the channel.

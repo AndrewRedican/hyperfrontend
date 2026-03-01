@@ -1,6 +1,6 @@
 import type { IAction } from '../../types/action'
-import type { RoutingContext } from './types'
 import type { ChannelHandle } from '../../types/channel'
+import type { RoutingContext } from './types'
 import { getById } from '../../core/registry/get-by-id'
 
 /**

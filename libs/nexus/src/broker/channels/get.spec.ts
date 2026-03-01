@@ -2,12 +2,12 @@
  * Tests for getChannel function
  */
 
-import { getChannel } from './get'
-import { addChannel } from './add'
-import { createRegistry } from '../../core/registry/factory'
-import { createProcessManager } from '../../core/processes/factory'
-import { createActionCreators } from '../../core/actions/factory'
 import type { BrokerState } from '../types'
+import { createActionCreators } from '../../core/actions/factory'
+import { createProcessManager } from '../../core/processes/factory'
+import { createRegistry } from '../../core/registry/factory'
+import { addChannel } from './add'
+import { getChannel } from './get'
 
 describe('getChannel', () => {
   const mockBrokerState: BrokerState = {

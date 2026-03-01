@@ -1,9 +1,9 @@
 import type { IAction, IActionBase } from '../../types/action'
-import { isActionWithContract } from '../../types/action'
+import type { ChannelHandle } from '../../types/channel'
 import type { SecurityNegotiationResponse, SecurityConfirmation } from '../../types/security'
 import type { RoutingContext } from './types'
-import type { ChannelHandle } from '../../types/channel'
 import { validateContract } from '../../core/validation/contract'
+import { isActionWithContract } from '../../types/action'
 import { applyPolicy } from '../security/apply-policy'
 
 /**

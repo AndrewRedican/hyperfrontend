@@ -1,5 +1,6 @@
-import { createValidator as createJsonValidator, type Schema } from '@hyperfrontend/json-utils'
+import type { Schema } from '@hyperfrontend/json-utils'
 import type { ValidationResult } from '../../types/validation'
+import { createValidator as createJsonValidator } from '@hyperfrontend/json-utils'
 
 /**
  * Creates a validator function from a JSON schema.

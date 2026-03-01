@@ -1,8 +1,9 @@
-import { create, type MessageHandler, type MessagePredicate } from './create'
+import type { ChannelJSON } from '../../types/channel'
+import type { IMessage } from '../../types/message'
+import type { MessageHandler, MessagePredicate } from './create'
 import { byType } from './by-type'
 import { compose } from './compose'
-import type { IMessage } from '../../types/message'
-import type { ChannelJSON } from '../../types/channel'
+import { create } from './create'
 
 describe('Message Filters', () => {
   let mockChannel: ChannelJSON

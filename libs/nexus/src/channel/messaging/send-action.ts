@@ -1,5 +1,5 @@
-import type { ChannelInternals } from '../types'
 import type { IAction } from '../../types/action'
+import type { ChannelInternals } from '../types'
 import { ACTION_TYPES } from '../../constants/action-types'
 
 /**

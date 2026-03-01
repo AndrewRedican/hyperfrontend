@@ -1,8 +1,8 @@
+import { freeze } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
+import { clearProcesses } from './clear'
 import { createProcess } from './create'
 import { getChannel } from './get'
 import { removeProcess } from './remove'
-import { clearProcesses } from './clear'
-import { freeze } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
 
 /**
  * Type representing a channel handle for process tracking

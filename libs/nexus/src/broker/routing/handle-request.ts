@@ -1,13 +1,13 @@
 import type { IAction, IActionWithContractAndSecurity } from '../../types/action'
-import { isActionWithContract } from '../../types/action'
+import type { ChannelHandle } from '../../types/channel'
 import type { SecurityNegotiationRequest, SecurityProtocolVersion } from '../../types/security'
 import type { RoutingContext } from './types'
-import type { ChannelHandle } from '../../types/channel'
 import { getById } from '../../core/registry/get-by-id'
-import { addChannel } from '../channels/add'
 import { validateContract as validateContractFn } from '../../core/validation/contract'
-import { applyPolicy } from '../security/apply-policy'
 import { negotiateProtocol, createSecurityResponse } from '../../security/negotiation/negotiate'
+import { isActionWithContract } from '../../types/action'
+import { addChannel } from '../channels/add'
+import { applyPolicy } from '../security/apply-policy'
 
 /**
  * Default supported security protocols for the responder.

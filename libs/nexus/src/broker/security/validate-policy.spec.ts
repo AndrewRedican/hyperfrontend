@@ -2,8 +2,8 @@
  * Tests for validatePolicy function
  */
 
-import { validatePolicy } from './validate-policy'
 import type { SecurityPolicy } from '../types'
+import { validatePolicy } from './validate-policy'
 
 describe('validatePolicy', () => {
   it('does not throw for valid function', () => {

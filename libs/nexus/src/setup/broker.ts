@@ -1,7 +1,7 @@
-import { createBroker } from '../broker/factory'
+import type { LogLevel } from '@hyperfrontend/logging'
 import type { BrokerHandle } from '../broker/types'
 import type { IChannelContract } from '../types/contract'
-import type { LogLevel } from '@hyperfrontend/logging'
+import { createBroker } from '../broker/factory'
 
 /**
  * Configuration for setting up a broker

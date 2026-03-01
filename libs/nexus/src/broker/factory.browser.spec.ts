@@ -1,6 +1,6 @@
-import { createBroker } from './factory'
 import type { IChannelContract } from '../types/contract'
 import type { SecurityPolicy } from './types'
+import { createBroker } from './factory'
 
 // Mock uuidV4 to return unique IDs
 let uuidCounter = 0

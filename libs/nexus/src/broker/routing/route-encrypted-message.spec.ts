@@ -1,14 +1,15 @@
+import type { Logger } from '@hyperfrontend/logging'
 import type { BrokerState } from '../../broker/types'
-import type { IChannelContract } from '../../types/contract'
+import type { ActionCreators } from '../../core/actions/factory'
 import type { ChannelHandle } from '../../types/channel'
+import type { IChannelContract } from '../../types/contract'
 import type { SecurityProtocolVersion } from '../../types/security'
 import type { RouteHandler, RoutingContext } from './types'
-import type { Logger } from '@hyperfrontend/logging'
-import { routeEncryptedMessage } from './route-encrypted-message'
-import { createRegistry } from '../../core/registry/factory'
+import { createActionCreators } from '../../core/actions/factory'
 import { createProcessManager } from '../../core/processes/factory'
-import { createActionCreators, type ActionCreators } from '../../core/actions/factory'
+import { createRegistry } from '../../core/registry/factory'
 import { createRouter } from './create-router'
+import { routeEncryptedMessage } from './route-encrypted-message'
 
 describe('routeEncryptedMessage', () => {
   const validContract: IChannelContract = {

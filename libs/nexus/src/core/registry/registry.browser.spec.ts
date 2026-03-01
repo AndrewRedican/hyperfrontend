@@ -1,12 +1,12 @@
 import type { MinimalChannel } from './factory'
-import { createRegistry } from './factory'
 import { add } from './add'
-import { remove } from './remove'
-import { getByWindow } from './get-by-window'
+import { clear } from './clear'
+import { createRegistry } from './factory'
+import { getAll } from './get-all'
 import { getById } from './get-by-id'
 import { getByName } from './get-by-name'
-import { getAll } from './get-all'
-import { clear } from './clear'
+import { getByWindow } from './get-by-window'
+import { remove } from './remove'
 
 describe('Channel Registry', () => {
   describe('createRegistry', () => {

@@ -1,6 +1,6 @@
-import type { MockWindow } from './test-utils'
-import type { IChannelContract } from '../types/contract'
 import type { SecurityPolicy } from '../broker/types'
+import type { IChannelContract } from '../types/contract'
+import type { MockWindow } from './test-utils'
 import { createBroker } from '../broker/factory'
 import { createMockWindow } from './test-utils'
 

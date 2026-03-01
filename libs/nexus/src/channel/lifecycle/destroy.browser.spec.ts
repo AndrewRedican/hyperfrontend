@@ -1,6 +1,6 @@
-import type { ChannelInternals } from '../types'
 import type { ChannelState } from '../../types'
 import type { IAction } from '../../types/action'
+import type { ChannelInternals } from '../types'
 import { destroy } from './destroy'
 
 // Mutable version of ChannelState for testing

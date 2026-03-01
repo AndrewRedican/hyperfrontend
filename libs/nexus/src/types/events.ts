@@ -1,6 +1,6 @@
-import type { IChannelContract } from './contract'
 import type { IAction } from './action'
 import type { ChannelJSON } from './channel'
+import type { IChannelContract } from './contract'
 import type { SecurityProtocolVersion } from './security'
 
 /**

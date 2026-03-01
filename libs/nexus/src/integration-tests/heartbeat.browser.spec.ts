@@ -1,7 +1,7 @@
-import type { MockWindow } from './test-utils'
 import type { IChannelContract } from '../types/contract'
-import { createMockWindow } from './test-utils'
+import type { MockWindow } from './test-utils'
 import { createBroker } from '../broker/factory'
+import { createMockWindow } from './test-utils'
 
 describe('Integration: Heartbeat', () => {
   let mockWindow: MockWindow

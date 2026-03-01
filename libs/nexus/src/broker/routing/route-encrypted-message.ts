@@ -8,8 +8,8 @@
  */
 
 import type { Registry } from '../../core/registry/factory'
-import type { RoutingContext, RouteHandler } from './types'
 import type { ChannelHandle } from '../../types/channel'
+import type { RoutingContext, RouteHandler } from './types'
 import { getAll } from '../../core/registry/get-all'
 import { createSecurityErrorEventData, logSecurityError } from '../../security/errors'
 

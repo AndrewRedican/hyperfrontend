@@ -1,6 +1,6 @@
 import type { IChannelConfig } from '../types/channel'
-import type { ChannelDependencies } from './types'
 import type { SecurityNegotiationRequest, SecurityTransport } from '../types/security'
+import type { ChannelDependencies } from './types'
 import { createChannel } from './factory'
 
 describe('channel/factory', () => {

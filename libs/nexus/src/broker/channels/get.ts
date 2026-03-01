@@ -1,8 +1,8 @@
 import type { Registry } from '../../core/registry/factory'
-import { getByWindow } from '../../core/registry/get-by-window'
+import { createChannel } from '../../channel/factory'
 import { getById } from '../../core/registry/get-by-id'
 import { getByName } from '../../core/registry/get-by-name'
-import { createChannel } from '../../channel/factory'
+import { getByWindow } from '../../core/registry/get-by-window'
 
 /**
  * Gets a channel by reference (id, name, or window)

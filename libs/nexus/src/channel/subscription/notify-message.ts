@@ -1,5 +1,5 @@
-import type { ChannelInternals } from '../types'
 import type { IMessage } from '../../types/message'
+import type { ChannelInternals } from '../types'
 
 /**
  * Notifies all message subscribers of an incoming message.

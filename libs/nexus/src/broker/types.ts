@@ -1,6 +1,6 @@
 import type { Logger, LogLevel } from '@hyperfrontend/logging'
-import type { IChannelContract } from '../types/contract'
 import type { ChannelHandle, ChannelJSON } from '../types/channel'
+import type { IChannelContract } from '../types/contract'
 import type { BrokerSecurityConfig, SecurityProtocolVersion } from '../types/security'
 
 /**

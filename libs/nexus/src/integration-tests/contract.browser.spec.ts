@@ -1,8 +1,8 @@
-import type { MockWindow } from './test-utils'
 import type { IChannelContract } from '../types/contract'
-import { createMockWindow } from './test-utils'
+import type { MockWindow } from './test-utils'
 import { createBroker } from '../broker/factory'
 import { mergeContracts } from '../setup/merge-contracts'
+import { createMockWindow } from './test-utils'
 
 describe('Integration: Contract Validation', () => {
   let mockWindow: MockWindow

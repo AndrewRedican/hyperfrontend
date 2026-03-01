@@ -1,5 +1,5 @@
-import { isObject } from './_utils'
 import { isArray } from '@hyperfrontend/immutable-api-utils/built-in-copy/array'
+import { isObject } from './_utils'
 
 /**
  * Validates a channel contract structure.

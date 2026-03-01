@@ -2,12 +2,12 @@
  * Tests for listChannels function
  */
 
-import { listChannels } from './list'
-import { addChannel } from './add'
-import { createRegistry } from '../../core/registry/factory'
-import { createProcessManager } from '../../core/processes/factory'
-import { createActionCreators } from '../../core/actions/factory'
 import type { BrokerState } from '../types'
+import { createActionCreators } from '../../core/actions/factory'
+import { createProcessManager } from '../../core/processes/factory'
+import { createRegistry } from '../../core/registry/factory'
+import { addChannel } from './add'
+import { listChannels } from './list'
 
 describe('listChannels', () => {
   const mockBrokerState: BrokerState = {

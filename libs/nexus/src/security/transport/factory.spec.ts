@@ -5,8 +5,8 @@
  * the negotiated protocol version.
  */
 
-import { createSecurityTransport } from './factory'
 import type { SecurityTransportConfig } from '../../types/security'
+import { createSecurityTransport } from './factory'
 
 describe('Security Transport Factory', () => {
   let mockTarget: { postMessage: jest.Mock }

@@ -1,11 +1,11 @@
-import { create } from './create'
-import { open } from './open'
-import { close } from './close'
+import type { ChannelJSON } from '../../types/channel'
+import type { ChannelEvent, OpenEventData, CloseEventData, CancelEventData, DenyEventData, InvalidEventData } from '../../types/events'
 import { cancel } from './cancel'
+import { close } from './close'
+import { create } from './create'
 import { deny } from './deny'
 import { invalid } from './invalid'
-import type { ChannelEvent, OpenEventData, CloseEventData, CancelEventData, DenyEventData, InvalidEventData } from '../../types/events'
-import type { ChannelJSON } from '../../types/channel'
+import { open } from './open'
 
 describe('Event Filters', () => {
   let mockChannel: ChannelJSON

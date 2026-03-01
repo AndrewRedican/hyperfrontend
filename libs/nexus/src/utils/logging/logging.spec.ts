@@ -1,7 +1,9 @@
-import { createLogger, type Logger } from './create-logger'
+import type { IAction } from '../../types/action'
+import type { Logger } from './create-logger'
+import { ACTION_TYPES } from '../../types/action'
+import { createLogger } from './create-logger'
 import { logAction } from './log-action'
 import { logEvent } from './log-event'
-import { type IAction, ACTION_TYPES } from '../../types/action'
 
 describe('Logging Utilities', () => {
   describe('createLogger', () => {

@@ -1,7 +1,7 @@
-import type { ChannelState } from '../types/channel'
-import type { IMessage } from '../types/message'
 import type { IAction } from '../types/action'
+import type { ChannelState } from '../types/channel'
 import type { ChannelEvent } from '../types/events'
+import type { IMessage } from '../types/message'
 import type { SecurityNegotiationRequest, SecurityNegotiationResponse, SecurityConfirmation } from '../types/security'
 
 /**

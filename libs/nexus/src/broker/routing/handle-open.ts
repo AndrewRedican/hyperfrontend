@@ -1,7 +1,7 @@
 import type { IAction } from '../../types/action'
+import type { ChannelHandle } from '../../types/channel'
 import type { SecurityConfirmation } from '../../types/security'
 import type { RoutingContext } from './types'
-import type { ChannelHandle } from '../../types/channel'
 
 /**
  * Handles OPEN_CONNECTION action.

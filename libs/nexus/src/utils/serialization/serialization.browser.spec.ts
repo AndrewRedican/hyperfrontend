@@ -1,7 +1,7 @@
-import { channelToJSON } from './channel-to-json'
-import { brokerToJSON } from './broker-to-json'
 import { createBroker } from '../../broker/factory'
 import { type IChannelContract } from '../../types/contract'
+import { brokerToJSON } from './broker-to-json'
+import { channelToJSON } from './channel-to-json'
 
 describe('Serialization Utilities', () => {
   describe('channelToJSON', () => {

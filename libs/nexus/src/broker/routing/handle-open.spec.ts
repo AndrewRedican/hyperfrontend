@@ -1,13 +1,13 @@
-import type { RoutingContext } from './types'
 import type { Logger } from '@hyperfrontend/logging'
-import { handleOpen } from './handle-open'
-import { createRegistry } from '../../core/registry/factory'
-import { createProcessManager } from '../../core/processes/factory'
-import { createActionCreators } from '../../core/actions/factory'
-import { addChannel } from '../channels/add'
-import type { BrokerState } from '../types'
 import type { IAction } from '../../types/action'
 import type { IChannelContract } from '../../types/contract'
+import type { BrokerState } from '../types'
+import type { RoutingContext } from './types'
+import { createActionCreators } from '../../core/actions/factory'
+import { createProcessManager } from '../../core/processes/factory'
+import { createRegistry } from '../../core/registry/factory'
+import { addChannel } from '../channels/add'
+import { handleOpen } from './handle-open'
 
 describe('handleOpen', () => {
   const validContract: IChannelContract = {

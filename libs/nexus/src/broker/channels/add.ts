@@ -1,10 +1,10 @@
-import type { BrokerState } from '../types'
-import type { Registry } from '../../core/registry/factory'
-import type { ProcessManager } from '../../core/processes/factory'
 import type { ActionCreators } from '../../core/actions/factory'
+import type { ProcessManager } from '../../core/processes/factory'
+import type { Registry } from '../../core/registry/factory'
+import type { BrokerState } from '../types'
 import { createChannel } from '../../channel/factory'
-import { getByWindow } from '../../core/registry/get-by-window'
 import { add as addToRegistry } from '../../core/registry/add'
+import { getByWindow } from '../../core/registry/get-by-window'
 import { remove as removeFromRegistry } from '../../core/registry/remove'
 
 /**

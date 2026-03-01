@@ -1,5 +1,5 @@
-import type { ChannelInternals } from '../types'
 import type { IMessage } from '../../types/message'
+import type { ChannelInternals } from '../types'
 
 /**
  * Handles an incoming message from the target window.

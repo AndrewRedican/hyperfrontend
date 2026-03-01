@@ -1,6 +1,6 @@
-import type { ChannelInternals } from '../types'
-import type { ChannelEvent } from '../../types/events'
 import type { ChannelJSON } from '../../types/channel'
+import type { ChannelEvent } from '../../types/events'
+import type { ChannelInternals } from '../types'
 import { logEvent } from '../../utils/logging/log-event'
 
 /**

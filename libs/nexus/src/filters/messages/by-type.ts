@@ -1,5 +1,6 @@
 import type { IMessage } from '../../types/message'
-import { create, type MessageHandler } from './create'
+import type { MessageHandler } from './create'
+import { create } from './create'
 
 /**
  * Creates a filter that only passes messages of a specific type

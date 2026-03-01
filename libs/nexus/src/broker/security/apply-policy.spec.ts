@@ -3,8 +3,8 @@
  */
 
 import type { Logger } from '@hyperfrontend/logging'
-import { applyPolicy } from './apply-policy'
 import type { SecurityPolicy } from '../types'
+import { applyPolicy } from './apply-policy'
 
 describe('applyPolicy', () => {
   let mockLogger: Logger

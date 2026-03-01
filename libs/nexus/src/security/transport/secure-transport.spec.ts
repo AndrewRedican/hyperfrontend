@@ -1,5 +1,5 @@
-import type { SecurityTransport } from '../../types/security'
 import type { SecureTransportConfig } from '../../security/transport/types'
+import type { SecurityTransport } from '../../types/security'
 import { createSecureTransport } from './secure-transport'
 
 describe('SecureTransport', () => {

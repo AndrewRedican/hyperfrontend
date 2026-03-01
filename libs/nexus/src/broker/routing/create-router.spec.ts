@@ -2,7 +2,8 @@
  * Tests for createRouter function
  */
 
-import { createRouter, type HandlerMap, type RouteHandler } from './create-router'
+import type { HandlerMap, RouteHandler } from './create-router'
+import { createRouter } from './create-router'
 
 describe('createRouter', () => {
   const mockHandler: RouteHandler = jest.fn()
