@@ -73,6 +73,9 @@
     "@jscutlery/semver": {
       "@nx/devkit": "22.3.3"
     },
+    "@rollup/plugin-terser": {
+      "serialize-javascript": "7.0.3"
+    },
     "eslint": {
       "ajv": "6.14.0"
     },
