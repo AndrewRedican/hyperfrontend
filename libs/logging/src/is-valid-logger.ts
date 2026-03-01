@@ -10,7 +10,7 @@ import { isArray } from '@hyperfrontend/immutable-api-utils/built-in-copy/array'
  * @returns True if the object is a valid logger, false otherwise
  */
 export function isValidLogger(logger: unknown): boolean {
-  const l = logger as Logger
+  const l = <Logger>logger
   return (
     getType(l) === 'object' &&
     !isArray(l) &&
