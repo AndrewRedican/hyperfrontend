@@ -154,7 +154,23 @@ export default createRule<[], MessageIds>({
       return {}
     }
 
+    // Track identifiers imported from safe modules
+    const safeImports = new Set<string>()
+
     return {
+      // Track imports from @hyperfrontend/immutable-api-utils
+      ImportDeclaration(node: TSESTree.ImportDeclaration) {
+        const source = node.source.value
+        if (typeof source === 'string' && source.startsWith(PKG)) {
+          for (const specifier of node.specifiers) {
+            if (specifier.type === AST_NODE_TYPES.ImportSpecifier) {
+              // Track the local name (what it's imported as)
+              safeImports.add(specifier.local.name)
+            }
+          }
+        }
+      },
+
       // Check for Object.freeze, Array.isArray, JSON.parse, etc.
       MemberExpression(node: TSESTree.MemberExpression) {
         if (node.object.type !== AST_NODE_TYPES.Identifier) return
@@ -188,7 +204,8 @@ export default createRule<[], MessageIds>({
         if (node.callee.type === AST_NODE_TYPES.Identifier) {
           const funcName = node.callee.name
           const safeMethod = UNSAFE_GLOBALS[funcName]
-          if (safeMethod) {
+          // Only report if the function is in UNSAFE_GLOBALS AND was NOT imported from safe module
+          if (safeMethod && !safeImports.has(funcName)) {
             context.report({
               node,
               messageId: 'unsafeGlobalFunction',
