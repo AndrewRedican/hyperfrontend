@@ -138,7 +138,27 @@ Object.defineProperty(obj, 'version', lockedPropertyDescriptors('1.0.0', true))
 
 ### Safe Built-in Copies
 
-Pre-captured references to JavaScript built-ins via secondary entrypoints (`built-in-copy/object`, `built-in-copy/array`, `built-in-copy/json`, etc.).
+Pre-captured references to JavaScript built-ins via secondary entrypoints. Available modules:
+
+| Entrypoint                | Description                                                                                                  |
+| ------------------------- | ------------------------------------------------------------------------------------------------------------ |
+| `built-in-copy/object`    | Object static methods (`freeze`, `keys`, `entries`, etc.)                                                    |
+| `built-in-copy/array`     | Array static methods (`isArray`, `from`, `of`)                                                               |
+| `built-in-copy/json`      | JSON methods (`parse`, `stringify`)                                                                          |
+| `built-in-copy/promise`   | Promise static methods and factory (`createPromise`, `all`, `race`, etc.)                                    |
+| `built-in-copy/console`   | Console methods (`log`, `warn`, `error`, `info`, `debug`, etc.)                                              |
+| `built-in-copy/timers`    | Timer functions (`setTimeout`, `setInterval`, `queueMicrotask`, `requestAnimationFrame`, etc.)               |
+| `built-in-copy/messaging` | Messaging APIs (`structuredClone`, `createMessageChannel`, `createBroadcastChannel`, `postMessage*` helpers) |
+| `built-in-copy/reflect`   | Reflect methods                                                                                              |
+| `built-in-copy/function`  | Function utilities                                                                                           |
+| `built-in-copy/symbol`    | Symbol static methods                                                                                        |
+| `built-in-copy/map`       | Map constructor factory                                                                                      |
+| `built-in-copy/set`       | Set constructor factory                                                                                      |
+| `built-in-copy/weak-map`  | WeakMap constructor factory                                                                                  |
+| `built-in-copy/weak-set`  | WeakSet constructor factory                                                                                  |
+| `built-in-copy/regexp`    | RegExp constructor factory                                                                                   |
+| `built-in-copy/date`      | Date constructor factory                                                                                     |
+| `built-in-copy/error`     | Error constructor factories                                                                                  |
 
 **Limitations:**
 
@@ -150,9 +170,14 @@ Pre-captured references to JavaScript built-ins via secondary entrypoints (`buil
 // Import early in your entry point
 import { freeze, keys } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
 import { parse } from '@hyperfrontend/immutable-api-utils/built-in-copy/json'
+import { log, warn } from '@hyperfrontend/immutable-api-utils/built-in-copy/console'
+import { setTimeout } from '@hyperfrontend/immutable-api-utils/built-in-copy/timers'
+import { structuredClone, createMessageChannel } from '@hyperfrontend/immutable-api-utils/built-in-copy/messaging'
 
 const config = freeze({ api: 'https://example.com' })
 const data = parse('{"key": "value"}')
+log('Config loaded:', config)
+setTimeout(() => log('Delayed message'), 1000)
 ```
 
 ## Use Cases
@@ -163,6 +188,9 @@ const data = parse('{"key": "value"}')
 - **Public library interfaces**: Protect exported classes from mutation
 - **Event emitters**: Prevent handler list manipulation
 - **Prototype pollution mitigation**: Safe built-in copies reduce attack surface when loaded early
+- **Secure logging**: Use safe `console` copies to prevent tampered log output
+- **Safe timers**: Prevent timer functions from being hijacked
+- **Cross-origin messaging**: Secure `postMessage` wrappers with captured references
 
 ## Compatibility
 

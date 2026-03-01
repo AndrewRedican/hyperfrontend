@@ -40,6 +40,9 @@
     "./built-in-copy/regexp": "./src/built-in-copy/regexp/index.js",
     "./built-in-copy/date": "./src/built-in-copy/date/index.js",
     "./built-in-copy/error": "./src/built-in-copy/error/index.js",
+    "./built-in-copy/console": "./src/built-in-copy/console/index.js",
+    "./built-in-copy/timers": "./src/built-in-copy/timers/index.js",
+    "./built-in-copy/messaging": "./src/built-in-copy/messaging/index.js",
     "./locked": "./src/locked/index.js",
     "./locked-props": "./src/locked-props/index.js",
     "./locked-prop-descriptors": "./src/locked-prop-descriptors/index.js"
