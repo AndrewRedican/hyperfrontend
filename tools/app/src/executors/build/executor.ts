@@ -1,9 +1,9 @@
 import type { ExecutorContext } from '@nx/devkit'
-import { logger } from '@nx/devkit'
+import type { BuildExecutorOptions } from './schema'
 import { execSync } from 'node:child_process'
 import { existsSync } from 'node:fs'
 import { join } from 'node:path'
-import type { BuildExecutorOptions } from './schema'
+import { logger } from '@nx/devkit'
 
 /**
  * Build executor for hyperfrontend application projects.
