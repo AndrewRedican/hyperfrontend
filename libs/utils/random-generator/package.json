@@ -25,7 +25,10 @@
     "typescript",
     "zero-dependencies"
   ],
-  "main": "./src/index.js",
+  "exports": {
+    ".": "./src/index.js",
+    "./package.json": "./package.json"
+  },
   "dependencies": {
     "@hyperfrontend/data-utils": "0.0.2"
   },
