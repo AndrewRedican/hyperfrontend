@@ -1,5 +1,5 @@
-import { joinPathFragments } from '@nx/devkit'
 import { join, relative } from 'node:path'
+import { joinPathFragments } from '@nx/devkit'
 
 /**
  * Resolves the output path, substituting {projectRoot} placeholder.

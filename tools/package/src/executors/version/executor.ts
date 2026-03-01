@@ -1,5 +1,5 @@
-import type { ExecutorContext } from '@nx/devkit'
 import type { VersionBuilderSchema } from '@jscutlery/semver/src/executors/version/schema'
+import type { ExecutorContext } from '@nx/devkit'
 import type { VersionExecutorOptions } from './schema'
 import { execSync } from 'node:child_process'
 import {

@@ -1,7 +1,7 @@
 import type { ExecutorContext } from '@nx/devkit'
 import type { E2eExecutorOptions } from './schema'
-import { existsSync, readFileSync, unlinkSync, mkdirSync, renameSync } from 'node:fs'
 import { execSync } from 'node:child_process'
+import { existsSync, readFileSync, unlinkSync, mkdirSync, renameSync } from 'node:fs'
 import { join } from 'node:path'
 import { logger } from '@nx/devkit'
 

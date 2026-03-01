@@ -1,8 +1,8 @@
-import { logger, readJsonFile } from '@nx/devkit'
+import type { AssetConfig, PackageJson } from './types'
 import { existsSync, mkdirSync, copyFileSync, readdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { join, dirname, basename, relative } from 'node:path'
+import { logger, readJsonFile } from '@nx/devkit'
 import { globSync } from 'glob'
-import type { AssetConfig, PackageJson } from './types'
 
 /** License information for a third-party dependency */
 export interface ThirdPartyLicenseEntry {

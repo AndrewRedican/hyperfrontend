@@ -1,6 +1,6 @@
+import type { PackageJson } from './types'
 import { existsSync, readFileSync } from 'node:fs'
 import { join } from 'node:path'
-import type { PackageJson } from './types'
 
 /**
  * Reads and parses a package.json file.
