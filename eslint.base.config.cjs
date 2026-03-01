@@ -139,6 +139,7 @@ module.exports = [
       'workspace/require-node-protocol': 'error',
       'workspace/no-mixed-type-import': 'error',
       'workspace/import-order': 'error',
+      'workspace/no-enum': 'error',
     },
   },
   {
