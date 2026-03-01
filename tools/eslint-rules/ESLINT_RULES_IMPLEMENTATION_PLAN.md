@@ -64,7 +64,7 @@ Rules must be implemented one at a time, completing all steps before moving to t
 | 2   | `no-namespace-import`            | ✅ Complete | Exceptions: test files, JSON imports, type-only |
 | 3   | `no-mixed-type-import`           | ✅ Complete | Implemented with auto-fix                       |
 | 4   | `import-order`                   | ✅ Complete | Implemented with auto-fix                       |
-| 5   | `prefer-angle-bracket-assertion` | ⏳ Pending  |                                                 |
+| 5   | `prefer-angle-bracket-assertion` | ✅ Complete | Excludes .tsx files                             |
 | 6   | `no-enum`                        | ⏳ Pending  |                                                 |
 | 7   | `assertive-test-names`           | ⏳ Pending  |                                                 |
 | 8   | `lib-pkg-fields`                 | ⏳ Pending  |                                                 |

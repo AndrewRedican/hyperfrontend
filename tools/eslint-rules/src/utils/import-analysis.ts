@@ -3,13 +3,13 @@ import { NODE_BUILTIN_MODULES } from './node-builtins'
 /**
  * Import source categories for ordering.
  */
-export const ImportCategory = {
+export const ImportCategory = <const>{
   NodeBuiltin: 0,
   External: 1,
   Hyperfrontend: 2,
   Relative: 3,
   CurrentDir: 4,
-} as const
+}
 
 export type ImportCategoryType = (typeof ImportCategory)[keyof typeof ImportCategory]
 

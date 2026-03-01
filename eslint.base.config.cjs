@@ -151,4 +151,14 @@ module.exports = [
       'workspace/no-namespace-import': 'error',
     },
   },
+  {
+    files: ['**/*.ts'],
+    ignores: ['**/jest.config.ts', '**/jest.setup.ts', '**/jest.setup.browser.ts', '**/*.tsx'],
+    plugins: {
+      workspace: eslintRules,
+    },
+    rules: {
+      'workspace/prefer-angle-bracket-assertion': 'error',
+    },
+  },
 ]
