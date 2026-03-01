@@ -28,6 +28,7 @@
   ],
   "exports": {
     "./browser": "./src/browser/index.js",
-    "./node": "./src/node/index.js"
+    "./node": "./src/node/index.js",
+    "./package.json": "./package.json"
   }
 }
