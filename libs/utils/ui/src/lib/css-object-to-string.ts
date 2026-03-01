@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import type { Style } from '../style'
+import { warn } from '@hyperfrontend/immutable-api-utils/built-in-copy/console'
 import { entries } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
 
 /**
@@ -28,7 +29,7 @@ export function cssObjectToString(cssObj: Style): string {
   }, '')
 
   if (errors.length > 0) {
-    console.warn('Some properties failed to convert:\n' + errors.join('\n'))
+    warn('Some properties failed to convert:\n' + errors.join('\n'))
   }
 
   return cssString

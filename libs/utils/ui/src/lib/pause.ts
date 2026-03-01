@@ -1,4 +1,5 @@
 import { createPromise } from '@hyperfrontend/immutable-api-utils/built-in-copy/promise'
+import { setTimeout } from '@hyperfrontend/immutable-api-utils/built-in-copy/timers'
 
 /**
  * Creates a promise that resolves after the specified delay, useful for pausing execution.

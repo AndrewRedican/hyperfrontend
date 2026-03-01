@@ -2,6 +2,7 @@
 /* eslint-disable prefer-const */
 /* istanbul ignore file - comprehensive tests exist; defensive type guards are tested via integration */
 import { getType } from '@hyperfrontend/data-utils'
+import { setTimeout, setInterval, clearTimeout, clearInterval } from '@hyperfrontend/immutable-api-utils/built-in-copy/timers'
 
 export type ElementRefOrString<T extends HTMLElement = HTMLElement> = T | string
 
