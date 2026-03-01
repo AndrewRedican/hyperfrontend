@@ -27,6 +27,7 @@
     "tree-shaking"
   ],
   "exports": {
+    ".": "./src/index.js",
     "./audio": "./src/audio/index.js",
     "./color": "./src/color/index.js",
     "./component": "./src/component/index.js",
@@ -36,7 +37,8 @@
     "./mobile": "./src/mobile/index.js",
     "./selector": "./src/selector/index.js",
     "./style": "./src/style/index.js",
-    "./time": "./src/time/index.js"
+    "./time": "./src/time/index.js",
+    "./package.json": "./package.json"
   },
   "dependencies": {
     "@hyperfrontend/function-utils": "0.0.2",
