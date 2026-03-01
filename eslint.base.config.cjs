@@ -136,6 +136,19 @@ module.exports = [
     },
     rules: {
       'workspace/no-unsafe-builtin-methods': 'error',
+      'workspace/require-node-protocol': 'error',
+      'workspace/no-mixed-type-import': 'error',
+      'workspace/import-order': 'error',
+    },
+  },
+  {
+    files: ['**/*.ts'],
+    ignores: ['**/jest.config.ts', '**/jest.setup.ts', '**/jest.setup.browser.ts', '**/*.spec.ts'],
+    plugins: {
+      workspace: eslintRules,
+    },
+    rules: {
+      'workspace/no-namespace-import': 'error',
     },
   },
 ]

@@ -1,7 +1,8 @@
 import type { TSESTree } from '@typescript-eslint/utils'
+import type { PackageJson } from '../utils/nx-project'
 import { dirname, join, relative, resolve } from 'node:path'
 import { ESLintUtils } from '@typescript-eslint/utils'
-import { findProjectRoot, isPublishableLibrary, parseJsonFile, type PackageJson } from '../utils/nx-project'
+import { findProjectRoot, isPublishableLibrary, parseJsonFile } from '../utils/nx-project'
 
 /**
  * Rule identifier for the no-unwanted-barrel-files rule.
