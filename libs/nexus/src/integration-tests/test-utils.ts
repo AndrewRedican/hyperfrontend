@@ -2,6 +2,7 @@
 
 import type { IAction } from '../types/action'
 import { createPromise } from '@hyperfrontend/immutable-api-utils/built-in-copy/promise'
+import { setTimeout } from '@hyperfrontend/immutable-api-utils/built-in-copy/timers'
 
 /**
  * Type representing a message listener function

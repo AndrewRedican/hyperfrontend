@@ -1,4 +1,11 @@
 import type { Logger, LogLevel } from '@hyperfrontend/logging'
+import {
+  error as consoleError,
+  warn as consoleWarn,
+  log as consoleLog,
+  info as consoleInfo,
+  debug as consoleDebug,
+} from '@hyperfrontend/immutable-api-utils/built-in-copy/console'
 import { createLogger as createLoggerFromLib } from '@hyperfrontend/logging'
 
 // Re-export for consumers
@@ -48,11 +55,11 @@ function createLoggerInternal(options: NexusLoggerOptions): Logger {
 
   const prefixArgs = (...args: unknown[]) => [prefix, ...args]
 
-  const error = (...args: unknown[]) => console.error(...prefixArgs(...args))
-  const warn = (...args: unknown[]) => console.warn(...prefixArgs(...args))
-  const log = (...args: unknown[]) => console.log(...prefixArgs(...args))
-  const info = (...args: unknown[]) => console.info(...prefixArgs(...args))
-  const debug = (...args: unknown[]) => console.debug(...prefixArgs(...args))
+  const error = (...args: unknown[]) => consoleError(...prefixArgs(...args))
+  const warn = (...args: unknown[]) => consoleWarn(...prefixArgs(...args))
+  const log = (...args: unknown[]) => consoleLog(...prefixArgs(...args))
+  const info = (...args: unknown[]) => consoleInfo(...prefixArgs(...args))
+  const debug = (...args: unknown[]) => consoleDebug(...prefixArgs(...args))
 
   const logger = createLoggerFromLib(error, warn, log, info, debug)
 
