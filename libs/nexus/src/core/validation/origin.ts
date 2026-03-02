@@ -1,4 +1,5 @@
 import { createError } from '@hyperfrontend/immutable-api-utils/built-in-copy/error'
+import { createURL } from '@hyperfrontend/immutable-api-utils/built-in-copy/url'
 import { isEmpty } from './_utils'
 
 /**
@@ -27,7 +28,7 @@ export function validateOrigin(origin: string): void {
 
   // Validate as URL
   try {
-    const url = new URL(origin)
+    const url = createURL(origin)
     if (!['http:', 'https:'].includes(url.protocol)) {
       throw createError('Origin must use http or https protocol')
     }
