@@ -1,5 +1,8 @@
 import type { Schema } from '../../types/schema'
 import type { ValidationContext } from '../context'
+import { entries, keys, hasOwn } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
+import { createRegExp } from '@hyperfrontend/immutable-api-utils/built-in-copy/regexp'
+import { createSet } from '@hyperfrontend/immutable-api-utils/built-in-copy/set'
 import { addError, pushPath, shouldContinue } from '../context'
 
 /**
@@ -16,8 +19,8 @@ export function validateProperties(instance: Record<string, unknown>, schema: Sc
   }
 
   let valid = true
-  for (const [key, propSchema] of Object.entries(schema.properties)) {
-    if (Object.prototype.hasOwnProperty.call(instance, key)) {
+  for (const [key, propSchema] of entries(schema.properties)) {
+    if (hasOwn(instance, key)) {
       const propCtx = pushPath(ctx, key)
       if (!ctx.validate(instance[key], propSchema, propCtx)) {
         valid = false
@@ -44,7 +47,7 @@ export function validateRequired(instance: Record<string, unknown>, schema: Sche
 
   let valid = true
   for (const key of schema.required) {
-    if (!Object.prototype.hasOwnProperty.call(instance, key)) {
+    if (!hasOwn(instance, key)) {
       addError(ctx, `Missing required property: ${key}`, undefined, 'required', { missing: key })
       valid = false
       if (!shouldContinue(ctx)) return false
@@ -70,11 +73,11 @@ export function validateAdditionalProperties(instance: Record<string, unknown>, 
 
   /* istanbul ignore next -- definedKeys initialization */
   // Collect defined property names
-  const definedKeys = new Set<string>()
+  const definedKeys = createSet<string>()
 
   /* istanbul ignore next -- schema.properties may not exist */
   if (schema.properties) {
-    for (const key of Object.keys(schema.properties)) {
+    for (const key of keys(schema.properties)) {
       definedKeys.add(key)
     }
   }
@@ -83,9 +86,9 @@ export function validateAdditionalProperties(instance: Record<string, unknown>, 
   const patterns: RegExp[] = []
   /* istanbul ignore next -- patternProperties may not always be present */
   if (schema.patternProperties) {
-    for (const pattern of Object.keys(schema.patternProperties)) {
+    for (const pattern of keys(schema.patternProperties)) {
       try {
-        patterns.push(new RegExp(pattern))
+        patterns.push(createRegExp(pattern))
         /* istanbul ignore next -- invalid regex patterns handled in patternProperties validator */
       } catch {
         // Invalid regex, skip
@@ -95,7 +98,7 @@ export function validateAdditionalProperties(instance: Record<string, unknown>, 
 
   let valid = true
 
-  for (const key of Object.keys(instance)) {
+  for (const key of keys(instance)) {
     // Skip if property is defined in 'properties'
     if (definedKeys.has(key)) {
       continue

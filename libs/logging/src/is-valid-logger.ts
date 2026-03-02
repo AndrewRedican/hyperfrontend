@@ -1,5 +1,6 @@
 import type { Logger } from './create-logger'
 import { getType } from '@hyperfrontend/data-utils'
+import { isArray } from '@hyperfrontend/immutable-api-utils/built-in-copy/array'
 
 /**
  * Validates whether an object is a properly structured Logger instance.
@@ -9,10 +10,10 @@ import { getType } from '@hyperfrontend/data-utils'
  * @returns True if the object is a valid logger, false otherwise
  */
 export function isValidLogger(logger: unknown): boolean {
-  const l = logger as Logger
+  const l = <Logger>logger
   return (
     getType(l) === 'object' &&
-    !Array.isArray(l) &&
+    !isArray(l) &&
     getType(l.error) === 'function' &&
     getType(l.warn) === 'function' &&
     getType(l.log) === 'function' &&

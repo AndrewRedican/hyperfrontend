@@ -1,12 +1,14 @@
 import type { Callstack, Callback } from './call-stack.model'
 import { getType } from '@hyperfrontend/data-utils'
+import { createError } from '@hyperfrontend/immutable-api-utils/built-in-copy/error'
+import { createSet } from '@hyperfrontend/immutable-api-utils/built-in-copy/set'
 
 export const callStack = <T extends Callback = Callback>(): Callstack<T> => {
-  const stack = new Set<T>()
+  const stack = createSet<T>()
   const add = (callbacks: T[]) => {
     callbacks.forEach((cb) => {
       if (getType(cb) !== 'function') {
-        throw new Error('Cannot add items that are not functions.')
+        throw createError('Cannot add items that are not functions.')
       }
     })
     const notRegistered = callbacks.filter((cb) => !stack.has(cb))

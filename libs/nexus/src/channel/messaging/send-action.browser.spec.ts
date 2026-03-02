@@ -1,6 +1,6 @@
-import type { ChannelInternals } from '../types'
 import type { ChannelState } from '../../types'
 import type { IAction } from '../../types/action'
+import type { ChannelInternals } from '../types'
 import { sendAction } from './send-action'
 
 describe('channel/messaging/send-action', () => {
@@ -28,7 +28,7 @@ describe('channel/messaging/send-action', () => {
       eventSubscriptions: [],
       messageSubscriptions: [],
       scheduledActivation: null,
-      debug: false,
+
       brokerManaged: false,
       readyToConnect: true,
       negotiatedProtocol: null,

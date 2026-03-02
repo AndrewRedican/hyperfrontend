@@ -1,5 +1,5 @@
-import type { ChannelEvent, OpenEventData, CloseEventData, CancelEventData, DenyEventData, InvalidEventData } from '../../types/events'
 import type { ChannelJSON } from '../../types/channel'
+import type { ChannelEvent, OpenEventData, CloseEventData, CancelEventData, DenyEventData, InvalidEventData } from '../../types/events'
 
 /**
  * Generic event handler that receives all events

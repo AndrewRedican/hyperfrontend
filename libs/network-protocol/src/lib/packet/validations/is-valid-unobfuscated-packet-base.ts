@@ -12,7 +12,7 @@ import { isValidTarget } from './is-valid-target'
  * @returns An object containing the validation result and the packet cast to UnobfuscatedPacket
  */
 export function isValidUnobfuscatedPacketBase(packet: unknown): ValidUnobfuscatedPacketBaseResult {
-  const pkt = packet as UnobfuscatedPacket
+  const pkt = <UnobfuscatedPacket>packet
   const isValid =
     getType(pkt) === 'object' &&
     'origin' in pkt &&

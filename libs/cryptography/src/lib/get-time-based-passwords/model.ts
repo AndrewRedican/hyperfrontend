@@ -1,5 +1,5 @@
 export interface TimeBasedPasswordGenerators {
-  current: () => Promise<string>
-  previous: () => Promise<string>
-  next: () => Promise<string>
+  readonly current: () => Promise<string>
+  readonly previous: () => Promise<string>
+  readonly next: () => Promise<string>
 }

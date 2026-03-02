@@ -1,6 +1,6 @@
 {
   "name": "@hyperfrontend/json-utils",
-  "version": "0.0.2",
+  "version": "0.0.4",
   "description": "Zero-dependency JSON Schema validation and generation utilities for JSON Schema Draft v4.",
   "license": "MIT",
   "sideEffects": false,
@@ -8,7 +8,10 @@
     "node": ">=18.0.0",
     "npm": ">=8.0.0"
   },
-  "main": "./src/index.js",
+  "exports": {
+    ".": "./src/index.js",
+    "./package.json": "./package.json"
+  },
   "keywords": [
     "json-schema",
     "json-schema-validation",
@@ -26,5 +29,8 @@
     "zero-dependencies",
     "typescript",
     "functional"
-  ]
+  ],
+  "dependencies": {
+    "@hyperfrontend/immutable-api-utils": "0.1.0"
+  }
 }

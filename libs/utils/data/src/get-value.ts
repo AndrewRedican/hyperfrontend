@@ -1,8 +1,10 @@
 import type { DataType, IterableOperators } from './models'
+import { isArray } from '@hyperfrontend/immutable-api-utils/built-in-copy/array'
+import { createError } from '@hyperfrontend/immutable-api-utils/built-in-copy/error'
 import { getIterableOperators } from './get-iterable-operators'
-import { isIterableType } from './is-iterable-type'
-import { DefaultValueOptions } from './get-value.model'
 import { getType } from './get-type'
+import { DefaultValueOptions } from './get-value.model'
+import { isIterableType } from './is-iterable-type'
 
 /**
  * Gets the value at the specified path from the target.
@@ -17,8 +19,8 @@ import { getType } from './get-type'
  * - If `defaultValue.onError` is provided, it will be returned when any error occurs during the retrieval process.
  */
 export const getValue = <T = unknown>(target: unknown, path: [string, ...string[]], defaultValue?: DefaultValueOptions<T>): T => {
-  if (Array.isArray(path) === false) {
-    throw new Error('Expected path to be a non-empty array of strings.')
+  if (isArray(path) === false) {
+    throw createError('Expected path to be a non-empty array of strings.')
   }
   if (path.length === 0) return <T>target
   const hasOnMissingKeyDefault = !!(defaultValue && 'onMissingKey' in defaultValue)
@@ -33,7 +35,7 @@ export const getValue = <T = unknown>(target: unknown, path: [string, ...string[
     for (let index = 0; index < path.length; index += 1) {
       const key = path[index]
       if (typeof key !== 'string') {
-        throw new Error(`Expected path[${index}] to be a string, got ${typeof key}.`)
+        throw createError(`Expected path[${index}] to be a string, got ${typeof key}.`)
       }
       scopeType = getType(scope)
       scopeIterable = isIterableType(scopeType)

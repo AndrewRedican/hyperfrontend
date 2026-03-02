@@ -1,6 +1,6 @@
 import type { SerializedEncryptedPacket, UnserializedEncryptedPacket } from '../../packet/model'
-import { sleep } from '@hyperfrontend/time-utils'
 import { logger } from '@hyperfrontend/logging'
+import { sleep } from '@hyperfrontend/time-utils'
 import { packetSerialization, unserializedEncryptedPacket } from '../../packet/creators/mocks'
 import { isValidSerializedEncryptedPacket } from '../../packet/validations/is-valid-serialized-encrypted-packet'
 import { createSerializationQueue } from './create-serialization-queue'

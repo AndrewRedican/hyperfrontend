@@ -2,11 +2,11 @@
  * Tests for addChannel function
  */
 
-import { addChannel } from './add'
-import { createRegistry } from '../../core/registry/factory'
-import { createProcessManager } from '../../core/processes/factory'
-import { createActionCreators } from '../../core/actions/factory'
 import type { BrokerState } from '../types'
+import { createActionCreators } from '../../core/actions/factory'
+import { createProcessManager } from '../../core/processes/factory'
+import { createRegistry } from '../../core/registry/factory'
+import { addChannel } from './add'
 
 describe('addChannel', () => {
   const mockBrokerState: BrokerState = {
@@ -22,7 +22,6 @@ describe('addChannel', () => {
         accepted: [{ type: 'test', description: 'Test action' }],
         emitted: [],
       },
-      debug: false,
     },
   }
 
@@ -68,7 +67,7 @@ describe('addChannel', () => {
       ...mockBrokerState,
       settings: {
         ...mockBrokerState.settings,
-        debug: true,
+        logLevel: 'debug',
       },
     }
 

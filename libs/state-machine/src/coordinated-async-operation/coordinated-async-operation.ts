@@ -1,4 +1,5 @@
 import type { AsyncProcess } from '../async-operation/async-operation.model'
+import { promiseAll } from '@hyperfrontend/immutable-api-utils/built-in-copy/promise'
 import { AsyncOperation } from '../async-operation/async-operation'
 
 export class CoordinatedAsyncProcess {
@@ -11,7 +12,7 @@ export class CoordinatedAsyncProcess {
   }
 
   public readonly startAll = async (): Promise<void[]> => {
-    return Promise.all(this.asyncOperations.map((operation) => operation.start()))
+    return promiseAll(this.asyncOperations.map((operation) => operation.start()))
   }
 
   public readonly cancelAll = (): void => {

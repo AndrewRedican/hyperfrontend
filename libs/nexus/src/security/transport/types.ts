@@ -7,8 +7,8 @@
  * @module security/transport/types
  */
 
-import type { SecurityProtocolVersion, SecurityTransport } from '../../types/security'
 import type { SecurityErrorEventData } from '../../types/events'
+import type { SecurityProtocolVersion, SecurityTransport } from '../../types/security'
 
 /**
  * Internal state for tracking transport initialization.

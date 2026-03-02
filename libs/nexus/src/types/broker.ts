@@ -1,5 +1,5 @@
-import type { IChannelContract } from './contract'
 import type { ChannelHandle } from './channel'
+import type { IChannelContract } from './contract'
 
 /**
  * Security policy function type for custom connection validation

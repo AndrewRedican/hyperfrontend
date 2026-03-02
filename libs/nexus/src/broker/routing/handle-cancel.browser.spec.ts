@@ -1,11 +1,13 @@
-import type { BrokerState } from '../types'
+import type { Logger } from '@hyperfrontend/logging'
 import type { IAction } from '../../types/action'
 import type { IChannelContract } from '../../types/contract'
-import { handleCancel } from './handle-cancel'
-import { createRegistry } from '../../core/registry/factory'
-import { createProcessManager } from '../../core/processes/factory'
+import type { BrokerState } from '../types'
+import type { RoutingContext } from './types'
 import { createActionCreators } from '../../core/actions/factory'
+import { createProcessManager } from '../../core/processes/factory'
+import { createRegistry } from '../../core/registry/factory'
 import { addChannel } from '../channels/add'
+import { handleCancel } from './handle-cancel'
 
 describe('handleCancel', () => {
   const validContract: IChannelContract = {
@@ -13,23 +15,37 @@ describe('handleCancel', () => {
     emitted: [{ type: 'response-message', description: 'Response message' }],
   }
 
-  const mockBrokerState: BrokerState = {
-    id: 'broker-1',
-    name: 'test-broker',
-    window: <Window>global.window,
-    contract: validContract,
-    settings: {
-      contract: validContract,
-      debug: false,
-    },
-  }
+  let mockLogger: Logger
+  let mockBrokerState: BrokerState
 
   let registry: ReturnType<typeof createRegistry>
   let processManager: ReturnType<typeof createProcessManager>
   let actions: ReturnType<typeof createActionCreators>
   let mockWindow: Window
+  let routingContext: RoutingContext
 
   beforeEach(() => {
+    mockLogger = {
+      error: jest.fn(),
+      warn: jest.fn(),
+      log: jest.fn(),
+      info: jest.fn(),
+      debug: jest.fn(),
+      setLogLevel: jest.fn(),
+      getLogLevel: jest.fn(() => 'debug'),
+    }
+
+    mockBrokerState = {
+      id: 'broker-1',
+      name: 'test-broker',
+      window: <Window>global.window,
+      contract: validContract,
+      settings: {
+        contract: validContract,
+      },
+      logger: mockLogger,
+    }
+
     registry = createRegistry()
     processManager = createProcessManager()
     actions = createActionCreators({
@@ -39,6 +55,14 @@ describe('handleCancel', () => {
     mockWindow = <Window>(<unknown>{
       postMessage: jest.fn(),
     })
+
+    routingContext = {
+      state: mockBrokerState,
+      registry,
+      processManager,
+      actions,
+      logger: mockLogger,
+    }
   })
 
   it('cancel connection and send acknowledgement', () => {
@@ -56,7 +80,7 @@ describe('handleCancel', () => {
       source: mockWindow,
     }
 
-    handleCancel(mockBrokerState, registry, processManager, actions, message)
+    handleCancel(routingContext, message)
 
     // Should send acknowledgement
     expect(mockWindow.postMessage).toHaveBeenCalledWith(
@@ -89,7 +113,7 @@ describe('handleCancel', () => {
       source: mockWindow,
     }
 
-    handleCancel(mockBrokerState, registry, processManager, actions, message)
+    handleCancel(routingContext, message)
 
     expect(mockWindow.postMessage).toHaveBeenCalled()
   })
@@ -109,7 +133,7 @@ describe('handleCancel', () => {
       source: mockWindow,
     }
 
-    handleCancel(mockBrokerState, registry, processManager, actions, message)
+    handleCancel(routingContext, message)
 
     expect(mockWindow.postMessage).toHaveBeenCalled()
   })
@@ -127,7 +151,7 @@ describe('handleCancel', () => {
     }
 
     expect(() => {
-      handleCancel(mockBrokerState, registry, processManager, actions, message)
+      handleCancel(routingContext, message)
     }).not.toThrow()
   })
 
@@ -148,7 +172,7 @@ describe('handleCancel', () => {
       source: mockWindow,
     }
 
-    handleCancel(mockBrokerState, registry, processManager, actions, message)
+    handleCancel(routingContext, message)
 
     // Should call cancel with notify=false
     expect(cancelSpy).toHaveBeenCalledWith(false)
@@ -162,7 +186,7 @@ describe('handleCancel', () => {
     const channel2 = addChannel(mockBrokerState, registry, processManager, actions, 'channel-2', window2)
     const processId2 = processManager.create(channel2)
 
-    handleCancel(mockBrokerState, registry, processManager, actions, <MessageEvent<IAction>>{
+    handleCancel(routingContext, <MessageEvent<IAction>>{
       data: <IAction>{
         type: '[nexus] connection-request-cancelled',
         processId: processId1,
@@ -171,7 +195,7 @@ describe('handleCancel', () => {
       source: mockWindow,
     })
 
-    handleCancel(mockBrokerState, registry, processManager, actions, <MessageEvent<IAction>>{
+    handleCancel(routingContext, <MessageEvent<IAction>>{
       data: <IAction>{
         type: '[nexus] connection-request-cancelled',
         processId: processId2,

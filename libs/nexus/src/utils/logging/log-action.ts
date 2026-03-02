@@ -1,8 +1,8 @@
-import type { Logger } from './create-logger'
+import type { Logger } from '@hyperfrontend/logging'
 import type { IAction } from '../../types/action'
 
 /**
- * Logs an action in a structured format
+ * Logs an action in a structured format.
  *
  * @param logger - Logger instance
  * @param action - Action to log

@@ -3,6 +3,8 @@
  * These are simple implementations to avoid external dependencies
  */
 
+import { isArray } from '@hyperfrontend/immutable-api-utils/built-in-copy/array'
+
 /**
  * Check if value is an object (not null, not array)
  *
@@ -10,7 +12,7 @@
  * @returns True if value is a plain object
  */
 export function isObject(value: unknown): value is object {
-  return value !== null && typeof value === 'object' && !Array.isArray(value)
+  return value !== null && typeof value === 'object' && !isArray(value)
 }
 
 /**

@@ -1,5 +1,5 @@
-import { isValidRoutedObfuscatedPacket } from './is-valid-routed-obfuscated-packet'
 import { routedObfuscatedPacket } from '../creators/mocks'
+import { isValidRoutedObfuscatedPacket } from './is-valid-routed-obfuscated-packet'
 
 describe('isValidRoutedObfuscatedPacket', () => {
   it('returns true for a valid routed obfuscated packet', () => {

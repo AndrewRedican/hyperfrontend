@@ -1,5 +1,6 @@
-import type { CreateSender, Sender, SendFn, OutboundQueue } from '../model'
 import type { PacketSerialization } from '../../packet/model'
+import type { CreateSender, Sender, SendFn, OutboundQueue } from '../model'
+import { freeze } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
 import { createUnencryptedPacket } from '../../packet/creators/create-unencrypted-packet'
 import { createObfuscationQueue, createSerializationQueue, createEncryptionQueue } from '../../queue'
 
@@ -37,22 +38,22 @@ export function createSenderFactory(createSerializedEncryptedPacket: PacketSeria
       serialization.resume()
       encryption.resume()
     }
-    const encryptionQueue: OutboundQueue = {
+    const encryptionQueue: OutboundQueue = freeze({
       get size() {
         return encryption.size()
       },
-    }
-    const serializationQueue: OutboundQueue = {
+    })
+    const serializationQueue: OutboundQueue = freeze({
       get size() {
         return serialization.size()
       },
-    }
-    const obfuscationQueue: OutboundQueue = {
+    })
+    const obfuscationQueue: OutboundQueue = freeze({
       get size() {
         return obfuscation.size()
       },
-    }
-    const sender: Sender = Object.freeze({
+    })
+    const sender: Sender = freeze({
       send,
       stop,
       resume,

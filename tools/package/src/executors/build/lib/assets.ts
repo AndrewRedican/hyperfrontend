@@ -1,8 +1,8 @@
-import { logger, readJsonFile } from '@nx/devkit'
+import type { AssetConfig, PackageJson } from './types'
 import { existsSync, mkdirSync, copyFileSync, readdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { join, dirname, basename, relative } from 'node:path'
+import { logger, readJsonFile } from '@nx/devkit'
 import { globSync } from 'glob'
-import type { AssetConfig, PackageJson } from './types'
 
 /** License information for a third-party dependency */
 export interface ThirdPartyLicenseEntry {
@@ -127,7 +127,7 @@ export function copyFundingAsset(outputPath: string, workspaceRoot: string): voi
  * @returns Array of default asset paths relative to their source directories
  */
 export function getDefaultAssetFiles(): readonly string[] {
-  return ['README.md', 'CHANGELOG.md', 'ARCHITECTURE.md', 'LICENSE.md', 'SECURITY.md'] as const
+  return <const>['README.md', 'CHANGELOG.md', 'ARCHITECTURE.md', 'LICENSE.md', 'SECURITY.md']
 }
 
 /**

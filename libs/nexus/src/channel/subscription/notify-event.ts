@@ -1,6 +1,7 @@
-import type { ChannelInternals } from '../types'
-import type { ChannelEvent } from '../../types/events'
 import type { ChannelJSON } from '../../types/channel'
+import type { ChannelEvent } from '../../types/events'
+import type { ChannelInternals } from '../types'
+import { logEvent } from '../../utils/logging/log-event'
 
 /**
  * Notifies all event subscribers of a channel event.
@@ -20,6 +21,11 @@ import type { ChannelJSON } from '../../types/channel'
 export function notifyEvent(channel: ChannelInternals, event: ChannelEvent, data?: unknown): void {
   const state = channel.getState()
 
+  // Log event if logger is available
+  if (state.logger) {
+    logEvent(state.logger, event, data)
+  }
+
   // Create channel JSON manually
   const channelJSON: ChannelJSON = {
     id: state.id,
@@ -36,7 +42,9 @@ export function notifyEvent(channel: ChannelInternals, event: ChannelEvent, data
     try {
       handler(event, data, channelJSON)
     } catch (error) {
-      console.error(`Error in event handler for '${event}' event:`, error)
+      if (state.logger) {
+        state.logger.error(`Error in event handler for '${event}' event:`, <Error>error)
+      }
     }
   }
 }

@@ -1,5 +1,6 @@
-import type { ChannelInternals } from '../types'
 import type { IMessage } from '../../types/message'
+import type { ChannelInternals } from '../types'
+import { createError } from '@hyperfrontend/immutable-api-utils/built-in-copy/error'
 import { queue } from './queue'
 import { sendAction } from './send-action'
 
@@ -34,7 +35,7 @@ export function send(channel: ChannelInternals, message: IMessage): void {
       queue(channel, message)
       return
     }
-    throw new Error(`Cannot send message. Channel ${state.name} is not open.`)
+    throw createError(`Cannot send message. Channel ${state.name} is not open.`)
   }
 
   const securityTransport = state.securityTransport
@@ -45,12 +46,12 @@ export function send(channel: ChannelInternals, message: IMessage): void {
       queue(channel, message)
       return
     }
-    throw new Error(`Cannot send message. Security transport for channel ${state.name} is not ready.`)
+    throw createError(`Cannot send message. Security transport for channel ${state.name} is not ready.`)
   }
 
   const emittedTypes = state.contract?.emitted.map((a) => a.type) ?? []
   if (!emittedTypes.includes(message.type)) {
-    throw new Error(
+    throw createError(
       `Cannot send message to ${state.name} channel. Message type '${message.type}' is not in the emitted actions of channel contract.`
     )
   }

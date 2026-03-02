@@ -5,11 +5,11 @@
  * negotiation, transport encryption/decryption, and handshake flow.
  */
 
-import { createProtocolRegistry } from './security/registry/factory'
+import type { SecurityProtocolVersion, SecurityNegotiationRequest } from './types/security'
 import { negotiateProtocol, createSecurityRequest, createSecurityResponse } from './security/negotiation/negotiate'
+import { createProtocolRegistry } from './security/registry/factory'
 import { createSecurityTransport } from './security/transport/factory'
 import { createNoneTransport } from './security/transport/none-transport'
-import type { SecurityProtocolVersion, SecurityNegotiationRequest } from './types/security'
 
 describe('Integration: Security Protocol', () => {
   describe('Protocol Negotiation Scenarios', () => {
@@ -113,7 +113,7 @@ describe('Integration: Security Protocol', () => {
 
       it('none transport works without security configuration', () => {
         const mockTarget = { postMessage: jest.fn() }
-        const transport = createNoneTransport({ target: mockTarget as unknown as Window })
+        const transport = createNoneTransport({ target: <Window>(<unknown>mockTarget) })
 
         expect(transport.isReady()).toBe(true)
         expect(transport.getProtocol()).toBe('none')
@@ -174,7 +174,7 @@ describe('Integration: Security Protocol', () => {
         const mockTarget = { postMessage: jest.fn() }
         const transport = createSecurityTransport({
           protocol: 'none',
-          target: mockTarget as unknown as Window,
+          target: <Window>(<unknown>mockTarget),
         })
 
         const testAction = { type: 'TEST_MESSAGE', payload: { data: 123 } }
@@ -185,9 +185,11 @@ describe('Integration: Security Protocol', () => {
 
       it('forwards received messages to handler', async () => {
         const mockTarget = { postMessage: jest.fn() }
-        const transport = createNoneTransport({ target: mockTarget as unknown as Window }) as ReturnType<typeof createNoneTransport> & {
-          handleReceive: (action: unknown) => void
-        }
+        const transport = <
+          ReturnType<typeof createNoneTransport> & {
+            handleReceive: (action: unknown) => void
+          }
+        >createNoneTransport({ target: <Window>(<unknown>mockTarget) })
 
         const receivedMessages: unknown[] = []
         transport.onReceive((action) => {
@@ -229,7 +231,7 @@ describe('Integration: Security Protocol', () => {
         const transport = createSecurityTransport({
           protocol: 'v2',
           provider: mockProvider,
-          target: mockTarget as unknown as Window,
+          target: <Window>(<unknown>mockTarget),
         })
 
         const testAction = { type: 'SECURE_MESSAGE', secret: 'data' }
@@ -243,7 +245,7 @@ describe('Integration: Security Protocol', () => {
         createSecurityTransport({
           protocol: 'v2',
           provider: mockProvider,
-          target: mockTarget as unknown as Window,
+          target: <Window>(<unknown>mockTarget),
         }).send({ type: 'TEST' })
 
         const encryptedPacket = new Uint8Array([1, 2, 3, 4, 5])
@@ -256,11 +258,13 @@ describe('Integration: Security Protocol', () => {
 
       it('receives and decrypts incoming packets', () => {
         const mockTarget = { postMessage: jest.fn() }
-        const transport = createSecurityTransport({
-          protocol: 'v2',
-          provider: mockProvider,
-          target: mockTarget as unknown as Window,
-        }) as ReturnType<typeof createSecurityTransport> & { handleReceive: (packet: Uint8Array) => void }
+        const transport = <ReturnType<typeof createSecurityTransport> & { handleReceive: (packet: Uint8Array) => void }>(
+          createSecurityTransport({
+            protocol: 'v2',
+            provider: mockProvider,
+            target: <Window>(<unknown>mockTarget),
+          })
+        )
 
         const receivedMessages: unknown[] = []
         transport.onReceive((action) => {
@@ -288,14 +292,16 @@ describe('Integration: Security Protocol', () => {
       }))
 
       const mockTarget = { postMessage: jest.fn() }
-      const transport = createSecurityTransport({
-        protocol: 'v2',
-        provider: mockProvider,
-        target: mockTarget as unknown as Window,
-        onError: (err) => {
-          errorMessages.push(err.message)
-        },
-      }) as ReturnType<typeof createSecurityTransport> & { handleReceive: (packet: Uint8Array) => void }
+      const transport = <ReturnType<typeof createSecurityTransport> & { handleReceive: (packet: Uint8Array) => void }>(
+        createSecurityTransport({
+          protocol: 'v2',
+          provider: mockProvider,
+          target: <Window>(<unknown>mockTarget),
+          onError: (err) => {
+            errorMessages.push(err.message)
+          },
+        })
+      )
 
       transport.onReceive(() => void 0)
       transport.handleReceive(new Uint8Array([1, 2, 3]))
@@ -316,7 +322,7 @@ describe('Integration: Security Protocol', () => {
       const transport = createSecurityTransport({
         protocol: 'v2',
         provider: mockProvider,
-        target: mockTarget as unknown as Window,
+        target: <Window>(<unknown>mockTarget),
         onError: (err) => {
           errorMessages.push(err.message)
         },
@@ -343,7 +349,7 @@ describe('Integration: Security Protocol', () => {
       const transport = createSecurityTransport({
         protocol: 'v2',
         provider: mockProvider,
-        target: mockTarget as unknown as Window,
+        target: <Window>(<unknown>mockTarget),
         onError: () => void 0,
       })
 
@@ -368,12 +374,14 @@ describe('Integration: Security Protocol', () => {
       }))
 
       const mockTarget = { postMessage: jest.fn() }
-      const transport = createSecurityTransport({
-        protocol: 'v2',
-        provider: mockProvider,
-        target: mockTarget as unknown as Window,
-        onError: () => void 0,
-      }) as ReturnType<typeof createSecurityTransport> & { handleReceive: (packet: Uint8Array) => void }
+      const transport = <ReturnType<typeof createSecurityTransport> & { handleReceive: (packet: Uint8Array) => void }>(
+        createSecurityTransport({
+          protocol: 'v2',
+          provider: mockProvider,
+          target: <Window>(<unknown>mockTarget),
+          onError: () => void 0,
+        })
+      )
 
       transport.onReceive(() => void 0)
 
@@ -396,7 +404,7 @@ describe('Integration: Security Protocol', () => {
       const transport = createSecurityTransport({
         protocol: 'v2',
         provider: mockProvider,
-        target: mockTarget as unknown as Window,
+        target: <Window>(<unknown>mockTarget),
         refreshRate: 60,
       })
 

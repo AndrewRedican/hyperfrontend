@@ -1,12 +1,14 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import type { Logger } from '@hyperfrontend/logging'
-import type { ReceivePacketFn } from '../../../receiver/model'
 import type { ProtocolProvider, Protocol } from '../../../channel/model'
+import type { ReceivePacketFn } from '../../../receiver/model'
 import type { EncryptionSuite, ObfuscationSuite } from '../../../security/model'
+import { createError } from '@hyperfrontend/immutable-api-utils/built-in-copy/error'
+import { freeze } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
 import { isValidLogger } from '@hyperfrontend/logging'
 import { isValidRefreshRate } from '../../../packet/security/obfuscation/is-valid-refresh-rate'
-import { isValidSendFn } from '../../validations/is-valid-send-fn'
 import { isValidReceiveFn } from '../../validations/is-valid-receive-fn'
+import { isValidSendFn } from '../../validations/is-valid-send-fn'
 
 /**
  * Creates a protocol factory function with obfuscation-only handshake encryption.
@@ -39,18 +41,18 @@ export function createObfuscatedHandshakeProtocolFactory<T = any>(
 ) {
   return (logger: Logger, refreshRate = 1): ProtocolProvider<T> => {
     if (!isValidLogger(logger)) {
-      throw new Error('Cannot create protocol provider without a valid logger')
+      throw createError('Cannot create protocol provider without a valid logger')
     }
     if (!isValidRefreshRate(refreshRate)) {
-      throw new Error('Cannot create protocol provider without a valid refresh rate')
+      throw createError('Cannot create protocol provider without a valid refresh rate')
     }
 
     const protocolProvider: ProtocolProvider<T> = (...args) => {
       if (!isValidSendFn(args[0])) {
-        throw new Error('Cannot create protocol without a valid send function')
+        throw createError('Cannot create protocol without a valid send function')
       }
       if (!isValidReceiveFn(args[1])) {
-        throw new Error('Cannot create protocol without a valid receive function')
+        throw createError('Cannot create protocol without a valid receive function')
       }
 
       // Dynamic key capture
@@ -64,7 +66,7 @@ export function createObfuscatedHandshakeProtocolFactory<T = any>(
       const { packetEncryption, packetDecryption } = createDynamicKeyEncryption(getKey)
       const { packetObfuscation, packetDeobfuscation } = createTimeIntervalObfuscation(refreshRate)
 
-      const protocol: Protocol<T> = Object.freeze({
+      const protocol: Protocol<T> = freeze({
         packetEncryption,
         packetDecryption,
         packetObfuscation,

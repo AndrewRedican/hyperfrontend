@@ -1,6 +1,6 @@
 {
   "name": "@hyperfrontend/ui-utils",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "Modular DOM utilities for dynamic styling, gesture detection, element lifecycle, and color manipulation.",
   "license": "MIT",
   "sideEffects": false,
@@ -27,6 +27,7 @@
     "tree-shaking"
   ],
   "exports": {
+    ".": "./src/index.js",
     "./audio": "./src/audio/index.js",
     "./color": "./src/color/index.js",
     "./component": "./src/component/index.js",
@@ -36,13 +37,15 @@
     "./mobile": "./src/mobile/index.js",
     "./selector": "./src/selector/index.js",
     "./style": "./src/style/index.js",
-    "./time": "./src/time/index.js"
+    "./time": "./src/time/index.js",
+    "./package.json": "./package.json"
   },
   "dependencies": {
-    "@hyperfrontend/function-utils": "0.0.2",
-    "@hyperfrontend/random-generator-utils": "0.0.2",
-    "@hyperfrontend/list-utils": "0.0.2",
-    "@hyperfrontend/data-utils": "0.0.2"
+    "@hyperfrontend/function-utils": "0.0.3",
+    "@hyperfrontend/random-generator-utils": "0.0.4",
+    "@hyperfrontend/list-utils": "0.0.3",
+    "@hyperfrontend/data-utils": "0.0.4",
+    "@hyperfrontend/immutable-api-utils": "0.1.0"
   },
   "funding": {
     "type": "github",

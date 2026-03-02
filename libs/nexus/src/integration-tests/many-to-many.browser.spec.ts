@@ -1,7 +1,7 @@
-import type { MockWindow } from './test-utils'
 import type { IChannelContract } from '../types/contract'
-import { createMockWindow } from './test-utils'
+import type { MockWindow } from './test-utils'
 import { createBroker } from '../broker/factory'
+import { createMockWindow } from './test-utils'
 
 describe('Integration: Many-to-Many', () => {
   let windows: MockWindow[]
@@ -28,19 +28,19 @@ describe('Integration: Many-to-Many', () => {
       const broker1 = createBroker({
         name: 'broker-1',
         contract: networkContract,
-        settings: { debug: false },
+        settings: { logLevel: 'error' },
       })
 
       const broker2 = createBroker({
         name: 'broker-2',
         contract: networkContract,
-        settings: { debug: false },
+        settings: { logLevel: 'error' },
       })
 
       const broker3 = createBroker({
         name: 'broker-3',
         contract: networkContract,
-        settings: { debug: false },
+        settings: { logLevel: 'error' },
       })
 
       expect(broker1.id).not.toBe(broker2.id)
@@ -54,17 +54,17 @@ describe('Integration: Many-to-Many', () => {
       const broker1 = createBroker({
         name: 'broker-1',
         contract: networkContract,
-        settings: { debug: false },
+        settings: { logLevel: 'error' },
       })
 
       const broker2 = createBroker({
         name: 'broker-2',
         contract: networkContract,
-        settings: { debug: false },
+        settings: { logLevel: 'error' },
       })
 
-      const channel1 = broker1.addChannel('channel-1', windows[0] as unknown as Window)
-      const channel2 = broker2.addChannel('channel-2', windows[1] as unknown as Window)
+      const channel1 = broker1.addChannel('channel-1', <Window>(<unknown>windows[0]))
+      const channel2 = broker2.addChannel('channel-2', <Window>(<unknown>windows[1]))
 
       expect(broker1.channels).toHaveLength(1)
       expect(broker2.channels).toHaveLength(1)
@@ -79,11 +79,11 @@ describe('Integration: Many-to-Many', () => {
       const hub = createBroker({
         name: 'hub-broker',
         contract: networkContract,
-        settings: { debug: false },
+        settings: { logLevel: 'error' },
       })
 
       // Create spoke channels
-      const spokes = windows.map((win, i) => hub.addChannel(`spoke-${i}`, win as unknown as Window))
+      const spokes = windows.map((win, i) => hub.addChannel(`spoke-${i}`, <Window>(<unknown>win)))
 
       spokes.forEach((spoke) => spoke.connect())
 
@@ -95,10 +95,10 @@ describe('Integration: Many-to-Many', () => {
       const hub = createBroker({
         name: 'hub-broker',
         contract: networkContract,
-        settings: { debug: false },
+        settings: { logLevel: 'error' },
       })
 
-      const spokes = windows.map((win, i) => hub.addChannel(`spoke-${i}`, win as unknown as Window))
+      const spokes = windows.map((win, i) => hub.addChannel(`spoke-${i}`, <Window>(<unknown>win)))
       spokes.forEach((spoke) => spoke.connect())
 
       // Clear initial connection messages
@@ -119,11 +119,11 @@ describe('Integration: Many-to-Many', () => {
       const hub = createBroker({
         name: 'hub-broker',
         contract: networkContract,
-        settings: { debug: false },
+        settings: { logLevel: 'error' },
       })
 
-      const spoke1 = hub.addChannel('spoke-1', windows[0] as unknown as Window)
-      const spoke2 = hub.addChannel('spoke-2', windows[1] as unknown as Window)
+      const spoke1 = hub.addChannel('spoke-1', <Window>(<unknown>windows[0]))
+      const spoke2 = hub.addChannel('spoke-2', <Window>(<unknown>windows[1]))
 
       spoke1.connect()
       spoke2.connect()
@@ -146,7 +146,7 @@ describe('Integration: Many-to-Many', () => {
         createBroker({
           name: `node-${i}`,
           contract: networkContract,
-          settings: { debug: false },
+          settings: { logLevel: 'error' },
         })
       )
 
@@ -154,7 +154,7 @@ describe('Integration: Many-to-Many', () => {
       brokers.forEach((broker, i) => {
         windows.forEach((win, j) => {
           if (i !== j) {
-            const channel = broker.addChannel(`peer-${j}`, win as unknown as Window)
+            const channel = broker.addChannel(`peer-${j}`, <Window>(<unknown>win))
             channel.connect()
           }
         })
@@ -170,28 +170,28 @@ describe('Integration: Many-to-Many', () => {
       const broker1 = createBroker({
         name: 'node-1',
         contract: networkContract,
-        settings: { debug: false },
+        settings: { logLevel: 'error' },
       })
 
       const broker2 = createBroker({
         name: 'node-2',
         contract: networkContract,
-        settings: { debug: false },
+        settings: { logLevel: 'error' },
       })
 
       const broker3 = createBroker({
         name: 'node-3',
         contract: networkContract,
-        settings: { debug: false },
+        settings: { logLevel: 'error' },
       })
 
       // Create bidirectional connections
-      const ch12 = broker1.addChannel('to-node-2', windows[1] as unknown as Window)
-      const ch13 = broker1.addChannel('to-node-3', windows[2] as unknown as Window)
-      const ch21 = broker2.addChannel('to-node-1', windows[0] as unknown as Window)
-      const ch23 = broker2.addChannel('to-node-3', windows[2] as unknown as Window)
-      const ch31 = broker3.addChannel('to-node-1', windows[0] as unknown as Window)
-      const ch32 = broker3.addChannel('to-node-2', windows[1] as unknown as Window)
+      const ch12 = broker1.addChannel('to-node-2', <Window>(<unknown>windows[1]))
+      const ch13 = broker1.addChannel('to-node-3', <Window>(<unknown>windows[2]))
+      const ch21 = broker2.addChannel('to-node-1', <Window>(<unknown>windows[0]))
+      const ch23 = broker2.addChannel('to-node-3', <Window>(<unknown>windows[2]))
+      const ch31 = broker3.addChannel('to-node-1', <Window>(<unknown>windows[0]))
+      const ch32 = broker3.addChannel('to-node-2', <Window>(<unknown>windows[1]))
 
       ;[ch12, ch13, ch21, ch23, ch31, ch32].forEach((ch) => ch.connect())
 
@@ -206,19 +206,19 @@ describe('Integration: Many-to-Many', () => {
       const broker1 = createBroker({
         name: 'load-broker-1',
         contract: networkContract,
-        settings: { debug: false },
+        settings: { logLevel: 'error' },
       })
 
       const broker2 = createBroker({
         name: 'load-broker-2',
         contract: networkContract,
-        settings: { debug: false },
+        settings: { logLevel: 'error' },
       })
 
       // Distribute channels using round-robin
       windows.forEach((win, i) => {
         const broker = i % 2 === 0 ? broker1 : broker2
-        broker.addChannel(`channel-${i}`, win as unknown as Window).connect()
+        broker.addChannel(`channel-${i}`, <Window>(<unknown>win)).connect()
       })
 
       expect(broker1.channels).toHaveLength(3) // 0, 2, 4
@@ -229,17 +229,17 @@ describe('Integration: Many-to-Many', () => {
       const primary = createBroker({
         name: 'primary-broker',
         contract: networkContract,
-        settings: { debug: false },
+        settings: { logLevel: 'error' },
       })
 
       const backup = createBroker({
         name: 'backup-broker',
         contract: networkContract,
-        settings: { debug: false },
+        settings: { logLevel: 'error' },
       })
 
       // Initially use primary
-      const channel = primary.addChannel('failover-channel', windows[0] as unknown as Window)
+      const channel = primary.addChannel('failover-channel', <Window>(<unknown>windows[0]))
       channel.connect()
 
       expect(channel.isActive()).toBe(true)
@@ -248,7 +248,7 @@ describe('Integration: Many-to-Many', () => {
       channel.disconnect()
 
       // Create new channel on backup broker
-      const backupChannel = backup.addChannel('failover-channel', windows[0] as unknown as Window)
+      const backupChannel = backup.addChannel('failover-channel', <Window>(<unknown>windows[0]))
       backupChannel.connect()
 
       expect(backupChannel.isActive()).toBe(true)
@@ -260,20 +260,20 @@ describe('Integration: Many-to-Many', () => {
       const peer1Broker = createBroker({
         name: 'peer-1',
         contract: networkContract,
-        settings: { debug: false },
+        settings: { logLevel: 'error' },
       })
 
       const peer2Broker = createBroker({
         name: 'peer-2',
         contract: networkContract,
-        settings: { debug: false },
+        settings: { logLevel: 'error' },
       })
 
       // Peer 1 creates channel to Peer 2
-      const peer1ToPeer2 = peer1Broker.addChannel('to-peer-2', windows[1] as unknown as Window)
+      const peer1ToPeer2 = peer1Broker.addChannel('to-peer-2', <Window>(<unknown>windows[1]))
 
       // Peer 2 creates channel to Peer 1
-      const peer2ToPeer1 = peer2Broker.addChannel('to-peer-1', windows[0] as unknown as Window)
+      const peer2ToPeer1 = peer2Broker.addChannel('to-peer-1', <Window>(<unknown>windows[0]))
 
       peer1ToPeer2.connect()
       peer2ToPeer1.connect()
@@ -298,20 +298,20 @@ describe('Integration: Many-to-Many', () => {
       const domain1 = createBroker({
         name: 'domain-1',
         contract: networkContract,
-        settings: { debug: false },
+        settings: { logLevel: 'error' },
       })
 
       const domain2 = createBroker({
         name: 'domain-2',
         contract: networkContract,
-        settings: { debug: false },
+        settings: { logLevel: 'error' },
       })
 
       // Domain 1 has channels 0,1,2
-      const domain1Channels = [0, 1, 2].map((i) => domain1.addChannel(`d1-ch${i}`, windows[i] as unknown as Window))
+      const domain1Channels = [0, 1, 2].map((i) => domain1.addChannel(`d1-ch${i}`, <Window>(<unknown>windows[i])))
 
       // Domain 2 has channels 3,4
-      const domain2Channels = [3, 4].map((i) => domain2.addChannel(`d2-ch${i - 3}`, windows[i] as unknown as Window))
+      const domain2Channels = [3, 4].map((i) => domain2.addChannel(`d2-ch${i - 3}`, <Window>(<unknown>windows[i])))
 
       domain1Channels.forEach((ch) => ch.connect())
       domain2Channels.forEach((ch) => ch.connect())

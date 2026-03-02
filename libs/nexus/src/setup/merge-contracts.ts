@@ -1,4 +1,5 @@
 import type { IChannelContract } from '../types/contract'
+import { freeze } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
 
 /**
  * Merges multiple channel contracts into a single contract
@@ -21,12 +22,10 @@ export function mergeContracts(...contracts: IChannelContract[]): IChannelContra
   }
 
   contracts.forEach((contract) => {
-    // Only process if contract has the expected properties
     if (!contract || !contract.accepted || !contract.emitted) {
       return
     }
 
-    // Merge accepted actions
     contract.accepted.forEach((action) => {
       const exists = mergedContract.accepted.some((existing) => existing.type === action.type)
       if (!exists) {
@@ -34,7 +33,6 @@ export function mergeContracts(...contracts: IChannelContract[]): IChannelContra
       }
     })
 
-    // Merge emitted actions
     contract.emitted.forEach((action) => {
       const exists = mergedContract.emitted.some((existing) => existing.type === action.type)
       if (!exists) {
@@ -43,5 +41,8 @@ export function mergeContracts(...contracts: IChannelContract[]): IChannelContra
     })
   })
 
-  return mergedContract
+  return freeze(<IChannelContract>{
+    accepted: freeze(mergedContract.accepted),
+    emitted: freeze(mergedContract.emitted),
+  })
 }

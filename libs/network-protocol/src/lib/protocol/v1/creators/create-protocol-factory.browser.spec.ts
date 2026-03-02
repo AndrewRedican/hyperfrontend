@@ -5,21 +5,21 @@
 
 import { encrypt, decrypt } from '@hyperfrontend/cryptography/browser'
 import { createHash } from '@hyperfrontend/cryptography/browser'
+import { getTimeBasedPassword, getTimeBasedPasswords } from '@hyperfrontend/cryptography/browser'
 import { uint8ArrayToBase64, base64ToUint8Array } from '@hyperfrontend/string-utils/browser'
 import { createDataFactory } from '../../../data/creators/create-data-factory'
-import { createProtocolFactory } from './create-protocol-factory'
-import { createPacketEncrypter } from '../../../packet/security/encryption/create-encrypter'
-import { createPacketDecrypter } from '../../../packet/security/encryption/create-decrypter'
-import { createDataEncrypter } from '../../../data/security/create-encrypter'
 import { createDataDecrypter } from '../../../data/security/create-decrypter'
-import { createPacketObfuscator } from '../../../packet/security/obfuscation/create-obfuscator'
-import { createPacketDeobfuscator } from '../../../packet/security/obfuscation/create-deobfuscator'
-import { createDynamicKeyEncryptionFactory } from '../../../packet/security/encryption/dynamic-encryption-key'
-import { createFirstMessageHandler } from '../../../packet/security/encryption/create-first-message-handler'
-import { createTimeIntervalObfuscationFactory } from '../../../packet/security/obfuscation/time-interval-obfuscation-factory'
-import { getTimeBasedPassword, getTimeBasedPasswords } from '@hyperfrontend/cryptography/browser'
-import { createSerializedEncryptedPacketCreator } from '../../../packet/creators/create-serialized-encrypted-packet-creator'
+import { createDataEncrypter } from '../../../data/security/create-encrypter'
 import { createDeserializedEncryptedPacketCreator } from '../../../packet/creators/create-deserialized-encrypted-packet-creator'
+import { createSerializedEncryptedPacketCreator } from '../../../packet/creators/create-serialized-encrypted-packet-creator'
+import { createPacketDecrypter } from '../../../packet/security/encryption/create-decrypter'
+import { createPacketEncrypter } from '../../../packet/security/encryption/create-encrypter'
+import { createFirstMessageHandler } from '../../../packet/security/encryption/create-first-message-handler'
+import { createDynamicKeyEncryptionFactory } from '../../../packet/security/encryption/dynamic-encryption-key'
+import { createPacketDeobfuscator } from '../../../packet/security/obfuscation/create-deobfuscator'
+import { createPacketObfuscator } from '../../../packet/security/obfuscation/create-obfuscator'
+import { createTimeIntervalObfuscationFactory } from '../../../packet/security/obfuscation/time-interval-obfuscation-factory'
+import { createProtocolFactory } from './create-protocol-factory'
 import { testUUIDs, testMessages, createMockLogger } from './test-fixtures'
 
 describe('createProtocolFactory (Browser)', () => {
@@ -301,7 +301,7 @@ describe('createProtocolFactory (Browser)', () => {
 
       const createProtocol = createProtocolFactory(createDynamicKeyEncryption, createTimeIntervalObfuscation)
 
-      expect(() => createProtocol(null as never)).toThrow('Cannot create protocol provider without a valid logger')
+      expect(() => createProtocol(<never>null)).toThrow('Cannot create protocol provider without a valid logger')
     })
 
     it('triggers error when creating protocol provider without valid refresh rate', () => {
@@ -354,7 +354,7 @@ describe('createProtocolFactory (Browser)', () => {
 
       const receivePacket = () => void 0
 
-      expect(() => protocolProvider(null as never, receivePacket)).toThrow('Cannot create protocol without a valid send function')
+      expect(() => protocolProvider(<never>null, receivePacket)).toThrow('Cannot create protocol without a valid send function')
     })
 
     it('triggers error when creating protocol without valid receive function', () => {
@@ -382,7 +382,7 @@ describe('createProtocolFactory (Browser)', () => {
 
       const sendPacket = () => void 0
 
-      expect(() => protocolProvider(sendPacket, null as never)).toThrow('Cannot create protocol without a valid receive function')
+      expect(() => protocolProvider(sendPacket, <never>null)).toThrow('Cannot create protocol without a valid receive function')
     })
   })
 })

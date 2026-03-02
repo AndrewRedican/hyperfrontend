@@ -2,14 +2,16 @@
  * Tests for handleCancelAcknowledged function
  */
 
-import { handleCancelAcknowledged } from './handle-cancel-acknowledged'
-import { createRegistry } from '../../core/registry/factory'
-import { createProcessManager } from '../../core/processes/factory'
-import { createActionCreators } from '../../core/actions/factory'
-import { addChannel } from '../channels/add'
-import type { BrokerState } from '../types'
+import type { Logger } from '@hyperfrontend/logging'
 import type { IAction } from '../../types/action'
 import type { IChannelContract } from '../../types/contract'
+import type { BrokerState } from '../types'
+import type { RoutingContext } from './types'
+import { createActionCreators } from '../../core/actions/factory'
+import { createProcessManager } from '../../core/processes/factory'
+import { createRegistry } from '../../core/registry/factory'
+import { addChannel } from '../channels/add'
+import { handleCancelAcknowledged } from './handle-cancel-acknowledged'
 
 describe('handleCancelAcknowledged', () => {
   const validContract: IChannelContract = {
@@ -17,23 +19,37 @@ describe('handleCancelAcknowledged', () => {
     emitted: [{ type: 'response-message', description: 'Response message' }],
   }
 
-  const mockBrokerState: BrokerState = {
-    id: 'broker-1',
-    name: 'test-broker',
-    window: <Window>global.window,
-    contract: validContract,
-    settings: {
-      contract: validContract,
-      debug: false,
-    },
-  }
+  let mockLogger: Logger
+  let mockBrokerState: BrokerState
 
   let registry: ReturnType<typeof createRegistry>
   let processManager: ReturnType<typeof createProcessManager>
   let actions: ReturnType<typeof createActionCreators>
   let mockWindow: Window
+  let routingContext: RoutingContext
 
   beforeEach(() => {
+    mockLogger = {
+      error: jest.fn(),
+      warn: jest.fn(),
+      log: jest.fn(),
+      info: jest.fn(),
+      debug: jest.fn(),
+      setLogLevel: jest.fn(),
+      getLogLevel: jest.fn(() => 'debug'),
+    }
+
+    mockBrokerState = {
+      id: 'broker-1',
+      name: 'test-broker',
+      window: <Window>global.window,
+      contract: validContract,
+      settings: {
+        contract: validContract,
+      },
+      logger: mockLogger,
+    }
+
     registry = createRegistry()
     processManager = createProcessManager()
     actions = createActionCreators({
@@ -43,6 +59,14 @@ describe('handleCancelAcknowledged', () => {
     mockWindow = <Window>(<unknown>{
       postMessage: jest.fn(),
     })
+
+    routingContext = {
+      state: mockBrokerState,
+      registry,
+      processManager,
+      actions,
+      logger: mockLogger,
+    }
   })
 
   it('process cancel acknowledgement for existing channel', () => {
@@ -61,7 +85,7 @@ describe('handleCancelAcknowledged', () => {
     }
 
     expect(() => {
-      handleCancelAcknowledged(mockBrokerState, registry, processManager, actions, message)
+      handleCancelAcknowledged(routingContext, message)
     }).not.toThrow()
 
     // Process should be terminated (removed)
@@ -81,7 +105,7 @@ describe('handleCancelAcknowledged', () => {
     }
 
     expect(() => {
-      handleCancelAcknowledged(mockBrokerState, registry, processManager, actions, message)
+      handleCancelAcknowledged(routingContext, message)
     }).not.toThrow()
   })
 
@@ -107,7 +131,7 @@ describe('handleCancelAcknowledged', () => {
       source: mockWindow,
     }
 
-    handleCancelAcknowledged(mockBrokerState, registry, processManager, actions, message)
+    handleCancelAcknowledged(routingContext, message)
 
     expect(notifyEventMock).toHaveBeenCalledWith('cancel', { notify: false })
   })
@@ -135,12 +159,12 @@ describe('handleCancelAcknowledged', () => {
       senderId: 'remote-2',
     }
 
-    handleCancelAcknowledged(mockBrokerState, registry, processManager, actions, <MessageEvent<IAction>>{
+    handleCancelAcknowledged(routingContext, <MessageEvent<IAction>>{
       data: action1,
       source: mockWindow,
     })
 
-    handleCancelAcknowledged(mockBrokerState, registry, processManager, actions, <MessageEvent<IAction>>{
+    handleCancelAcknowledged(routingContext, <MessageEvent<IAction>>{
       data: action2,
       source: window2,
     })

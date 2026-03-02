@@ -1,8 +1,9 @@
-import { type ExecutorContext, logger } from '@nx/devkit'
+import type { ExecutorContext } from '@nx/devkit'
+import type { TypecheckExecutorOptions } from './schema'
 import { execSync } from 'node:child_process'
 import { existsSync } from 'node:fs'
 import { join } from 'node:path'
-import type { TypecheckExecutorOptions } from './schema'
+import { logger } from '@nx/devkit'
 
 /**
  * Typecheck executor for hyperfrontend library packages.

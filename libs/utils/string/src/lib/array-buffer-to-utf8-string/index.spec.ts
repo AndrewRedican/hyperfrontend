@@ -1,5 +1,5 @@
-import { arrayBufferToUtf8String } from './array-buffer-to-utf8-string'
 import { UINT8_CONVERTION_SAMPLES } from '../shared-consts'
+import { arrayBufferToUtf8String } from './array-buffer-to-utf8-string'
 
 describe('arrayBufferToUtf8String', () => {
   const { SIMPLE, NON_ASCII, EMPTY } = UINT8_CONVERTION_SAMPLES

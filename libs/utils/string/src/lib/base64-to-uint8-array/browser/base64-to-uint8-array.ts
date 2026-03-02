@@ -1,3 +1,4 @@
+import { atob } from '@hyperfrontend/immutable-api-utils/built-in-copy/encoding'
 import { binaryStringToBytes } from '../../utils/binary-string-to-bytes'
 import { urlSafeBase64ToBase64 } from '../../utils/url-safe-base64-to-base64'
 

@@ -1,3 +1,5 @@
+import { createError } from '@hyperfrontend/immutable-api-utils/built-in-copy/error'
+import { createURL } from '@hyperfrontend/immutable-api-utils/built-in-copy/url'
 import { isEmpty } from './_utils'
 
 /**
@@ -8,15 +10,15 @@ import { isEmpty } from './_utils'
  */
 export function validateOrigin(origin: string): void {
   if (origin === null || origin === undefined) {
-    throw new Error('Origin cannot be null or undefined')
+    throw createError('Origin cannot be null or undefined')
   }
 
   if (typeof origin !== 'string') {
-    throw new Error('Origin must be a string')
+    throw createError('Origin must be a string')
   }
 
   if (isEmpty(origin)) {
-    throw new Error('Origin cannot be empty')
+    throw createError('Origin cannot be empty')
   }
 
   // Allow wildcard
@@ -26,11 +28,11 @@ export function validateOrigin(origin: string): void {
 
   // Validate as URL
   try {
-    const url = new URL(origin)
+    const url = createURL(origin)
     if (!['http:', 'https:'].includes(url.protocol)) {
-      throw new Error('Origin must use http or https protocol')
+      throw createError('Origin must use http or https protocol')
     }
   } catch (error) {
-    throw new Error(`Invalid origin URL: ${(error as Error).message}`)
+    throw createError(`Invalid origin URL: ${(<Error>error).message}`)
   }
 }

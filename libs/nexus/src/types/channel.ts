@@ -1,6 +1,7 @@
+import type { Logger, LogLevel } from '@hyperfrontend/logging'
 import type { IChannelContract } from './contract'
-import type { IMessage } from './message'
 import type { ChannelEvent, EventCallbackMap } from './events'
+import type { IMessage } from './message'
 import type { SecurityProtocolVersion, SecurityTransport, SecurityNegotiationRequest, ChannelSecuritySettings } from './security'
 
 /**
@@ -25,8 +26,10 @@ export interface IChannelSettings {
   origin?: string
   /** Queue messages when channel is not yet active */
   queueMessages?: boolean
-  /** Enable debug logging */
-  debug?: boolean
+  /** Minimum log level to emit (default: 'error') */
+  logLevel?: LogLevel
+  /** Custom logger instance to use */
+  logger?: Logger
   /** Whether the channel is managed by a broker (auto-activates on connect) */
   brokerManaged?: boolean
   /** Security settings for protocol negotiation and encryption */
@@ -82,8 +85,8 @@ export interface ChannelState {
   readonly scheduledActivation: ScheduledActivation | null
   /** Whether to queue messages when channel is closed */
   readonly queueMessages: boolean
-  /** Debug mode enabled */
-  readonly debug: boolean
+  /** Logger instance for this channel (null if not configured) */
+  readonly logger: Logger | null
   /** Whether channel was created by broker (enables auto-activation) */
   readonly brokerManaged: boolean
   /** Whether connect() has been called (ready to accept connections) */

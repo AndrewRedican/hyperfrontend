@@ -1,3 +1,5 @@
+import { random } from '@hyperfrontend/immutable-api-utils/built-in-copy/math'
+
 /**
  * Generates a random number uniformly distributed within a specified range.
  *
@@ -6,5 +8,5 @@
  * @returns A random number between min (inclusive) and max (exclusive)
  */
 export function randomUniform(min: number, max: number): number {
-  return Math.random() * (max - min) + min
+  return random() * (max - min) + min
 }

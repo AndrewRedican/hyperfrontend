@@ -1,5 +1,5 @@
-import { createInitialState } from './state'
 import type { State } from '../models'
+import { createInitialState } from './state'
 
 describe('store', () => {
   it('createInitialState', () => {

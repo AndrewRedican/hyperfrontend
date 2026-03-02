@@ -1,8 +1,8 @@
-import type { ChannelInternals } from '../types'
 import type { ActionCreators } from '../../core/actions/factory'
 import type { ChannelState } from '../../types'
 import type { EventHandler } from '../../types/channel'
 import type { OpenCallback, CloseCallback, CancelCallback } from '../../types/events'
+import type { ChannelInternals } from '../types'
 import { subscribeToEvents } from './events'
 
 describe('channel/subscription/events', () => {
@@ -24,7 +24,7 @@ describe('channel/subscription/events', () => {
       eventSubscriptions: [],
       messageSubscriptions: [],
       scheduledActivation: null,
-      debug: false,
+
       brokerManaged: false,
       readyToConnect: false,
       negotiatedProtocol: null,

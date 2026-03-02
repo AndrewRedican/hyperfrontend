@@ -2,6 +2,7 @@
 /* eslint-disable prefer-const */
 /* istanbul ignore file - comprehensive tests exist; defensive type guards are tested via integration */
 import { getType } from '@hyperfrontend/data-utils'
+import { setTimeout, setInterval, clearTimeout, clearInterval } from '@hyperfrontend/immutable-api-utils/built-in-copy/timers'
 
 export type ElementRefOrString<T extends HTMLElement = HTMLElement> = T | string
 
@@ -25,11 +26,11 @@ export interface GetElementAsyncOptions {
  * @returns A cleanup function to cancel the polling
  */
 export function getElementAsync(elementRefOrString: ElementRefOrString, options?: GetElementAsyncOptions): () => void {
-  const { duration, interval, onSuccess, onFail } = {
+  const { duration, interval, onSuccess, onFail } = <GetElementAsyncOptions>{
     duration: 10000,
     interval: 100,
     ...options,
-  } as GetElementAsyncOptions
+  }
 
   let timer: ReturnType<typeof setInterval> | undefined
   let timeout: ReturnType<typeof setTimeout> | undefined

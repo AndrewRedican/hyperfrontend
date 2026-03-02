@@ -1,6 +1,6 @@
-import type { ChannelInternals } from '../types'
 import type { ChannelState } from '../../types'
 import type { IMessage } from '../../types/message'
+import type { ChannelInternals } from '../types'
 import { receive } from './receive'
 
 describe('channel/messaging/receive', () => {
@@ -26,7 +26,7 @@ describe('channel/messaging/receive', () => {
       eventSubscriptions: [],
       messageSubscriptions: [],
       scheduledActivation: null,
-      debug: false,
+
       brokerManaged: false,
       readyToConnect: true,
       negotiatedProtocol: null,

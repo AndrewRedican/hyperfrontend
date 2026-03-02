@@ -1,6 +1,6 @@
+import { getKeysFromIterable } from './get-keys-from-iterable'
 import { getType } from './get-type'
 import { isIterableType } from './is-iterable-type'
-import { getKeysFromIterable } from './get-keys-from-iterable'
 
 /**
  * Checks if the target contains all specified keys.

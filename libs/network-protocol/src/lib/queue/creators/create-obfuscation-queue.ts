@@ -1,9 +1,10 @@
 import type { SerializedEncryptedPacket, ObfuscatedPacket } from '../../packet/model'
 import type { ObfuscationQueueCreater } from '../model'
-import { isValidSerializedEncryptedPacket } from '../../packet/validations/is-valid-serialized-encrypted-packet'
+import { createError } from '@hyperfrontend/immutable-api-utils/built-in-copy/error'
 import { isValidObfuscatedPacket } from '../../packet/validations/is-valid-obfuscated-packet'
-import { isValidQueueCreaterArguments } from '../validations/is-valid-queue-creater-arguments'
+import { isValidSerializedEncryptedPacket } from '../../packet/validations/is-valid-serialized-encrypted-packet'
 import { getValidationError } from '../utils/get-validation-error'
+import { isValidQueueCreaterArguments } from '../validations/is-valid-queue-creater-arguments'
 import { createQueue } from './create-queue'
 
 export const createObfuscationQueue: ObfuscationQueueCreater = (label, packetObfuscation, logger, onSuccess, onFail) => {
@@ -16,7 +17,7 @@ export const createObfuscationQueue: ObfuscationQueueCreater = (label, packetObf
   })
   const errorMessage = getValidationError('obfuscation', validity)
   if (errorMessage) {
-    throw new Error(errorMessage)
+    throw createError(errorMessage)
   }
   const { debug, error } = logger
   const process = async (raw: SerializedEncryptedPacket): Promise<void> => {
@@ -32,7 +33,7 @@ export const createObfuscationQueue: ObfuscationQueueCreater = (label, packetObf
       try {
         processed = await packetObfuscation(raw)
       } catch (e) {
-        error(`${label}: ${(e as Error)?.message}`)
+        error(`${label}: ${(<Error>e)?.message}`)
         onFail(raw)
         return
       }

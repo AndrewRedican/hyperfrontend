@@ -1,5 +1,7 @@
 import type { Schema } from '../../types/schema'
 import type { ValidationContext } from '../context'
+import { entries, keys } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
+import { createRegExp } from '@hyperfrontend/immutable-api-utils/built-in-copy/regexp'
 import { addError, pushPath, shouldContinue } from '../context'
 
 /**
@@ -19,9 +21,9 @@ export function validatePatternProperties(instance: Record<string, unknown>, sch
   const patterns: Array<{ regex: RegExp; schema: Schema }> = []
 
   // Pre-compile all patterns
-  for (const [pattern, patternSchema] of Object.entries(schema.patternProperties)) {
+  for (const [pattern, patternSchema] of entries(schema.patternProperties)) {
     try {
-      patterns.push({ regex: new RegExp(pattern), schema: patternSchema })
+      patterns.push({ regex: createRegExp(pattern), schema: patternSchema })
     } catch (e) {
       // Invalid regex
       /* istanbul ignore next -- strictPatterns mode verified in validate.spec.ts */
@@ -42,7 +44,7 @@ export function validatePatternProperties(instance: Record<string, unknown>, sch
   }
 
   // Check each property against matching patterns
-  for (const key of Object.keys(instance)) {
+  for (const key of keys(instance)) {
     for (const { regex, schema: patternSchema } of patterns) {
       if (regex.test(key)) {
         const propCtx = pushPath(ctx, key)

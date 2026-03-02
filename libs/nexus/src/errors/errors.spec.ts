@@ -2,10 +2,10 @@
  * Tests for custom error classes
  */
 
-import { ValidationError } from './validation-error'
+import { type IChannelContract } from '../types/contract'
 import { ConnectionError } from './connection-error'
 import { ContractError } from './contract-error'
-import { type IChannelContract } from '../types/contract'
+import { ValidationError } from './validation-error'
 
 describe('Custom Error Classes', () => {
   describe('ValidationError', () => {

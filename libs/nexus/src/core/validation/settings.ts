@@ -1,3 +1,4 @@
+import { createError } from '@hyperfrontend/immutable-api-utils/built-in-copy/error'
 import { isObject } from './_utils'
 
 /**
@@ -13,26 +14,26 @@ export function validateSettings(settings: unknown): void {
   }
 
   if (!isObject(settings)) {
-    throw new Error('Settings must be an object')
+    throw createError('Settings must be an object')
   }
 
   // Validate queueMessages if present
   if ('queueMessages' in settings && typeof settings.queueMessages !== 'boolean') {
-    throw new Error('Setting queueMessages must be a boolean')
+    throw createError('Setting queueMessages must be a boolean')
   }
 
   // Validate debug if present
   if ('debug' in settings && typeof settings.debug !== 'boolean') {
-    throw new Error('Setting debug must be a boolean')
+    throw createError('Setting debug must be a boolean')
   }
 
   // Validate origin if present
   if ('origin' in settings && typeof settings.origin !== 'string') {
-    throw new Error('Setting origin must be a string')
+    throw createError('Setting origin must be a string')
   }
 
   // Validate contract if present
   if ('contract' in settings && settings.contract !== null && !isObject(settings.contract)) {
-    throw new Error('Setting contract must be an object')
+    throw createError('Setting contract must be an object')
   }
 }

@@ -1,7 +1,7 @@
 import type { RoutedUnencryptedPacket } from '../model'
 import { getType } from '@hyperfrontend/data-utils'
-import { isValidTopicId } from '../../topic/validations/is-valid-topic-id'
 import { isValidObfuscatedPacket } from '../../packet/validations/is-valid-obfuscated-packet'
+import { isValidTopicId } from '../../topic/validations/is-valid-topic-id'
 
 /**
  * Validates whether the provided value is a valid routed obfuscated packet.
@@ -11,7 +11,7 @@ import { isValidObfuscatedPacket } from '../../packet/validations/is-valid-obfus
  * @returns True if the value is a valid routed obfuscated packet, false otherwise
  */
 export function isValidRoutedObfuscatedPacket(routedPacket: unknown) {
-  const rtp = routedPacket as RoutedUnencryptedPacket
+  const rtp = <RoutedUnencryptedPacket>routedPacket
   return (
     getType(rtp) === 'object' && 'topicId' in rtp && 'packet' in rtp && isValidTopicId(rtp.topicId) && isValidObfuscatedPacket(rtp.packet)
   )

@@ -1,5 +1,6 @@
-import type { ObfuscationSuite } from '../../../security/model'
 import type { PacketObfuscater, PacketDeobfuscater } from '../../../packet/model'
+import type { ObfuscationSuite } from '../../../security/model'
+import { freeze } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
 
 /**
  * Creates a factory for dynamic key-based obfuscation suites.
@@ -16,6 +17,6 @@ export function createDynamicKeyObfuscationFactory(obfuscatePacket: PacketObfusc
   return (provider: () => string): ObfuscationSuite => {
     const packetObfuscationFn: ObfuscationSuite['packetObfuscation'] = (packet) => obfuscatePacket(packet, provider())
     const packetDeobfuscationFn: ObfuscationSuite['packetDeobfuscation'] = (packet) => deobfuscatePacket(packet, provider())
-    return Object.freeze({ packetObfuscation: packetObfuscationFn, packetDeobfuscation: packetDeobfuscationFn })
+    return freeze({ packetObfuscation: packetObfuscationFn, packetDeobfuscation: packetDeobfuscationFn })
   }
 }

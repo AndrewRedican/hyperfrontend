@@ -1,4 +1,6 @@
 import type { UnserializedEncryptedPacket, SerializedEncryptedPacket, PacketDeserialization } from '../model'
+import { createError } from '@hyperfrontend/immutable-api-utils/built-in-copy/error'
+import { freeze } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
 import { isValidSerializedEncryptedPacket } from '../validations/is-valid-serialized-encrypted-packet'
 
 /**
@@ -21,14 +23,14 @@ export function createDeserializedEncryptedPacketCreator(
 ): PacketDeserialization {
   return (packet: SerializedEncryptedPacket): UnserializedEncryptedPacket => {
     if (!isValidSerializedEncryptedPacket(packet)) {
-      throw new Error('Cannot deserialize data of an invalid packet')
+      throw createError('Cannot deserialize data of an invalid packet')
     }
     let data: Uint8Array
     try {
       data = base64ToUint8Array(packet.data)
     } catch (e) {
-      throw new Error(`Cannot deserialize packet encrypted data. ${(e as Error)?.message}`)
+      throw createError(`Cannot deserialize packet encrypted data. ${(<Error>e)?.message}`)
     }
-    return Object.freeze({ ...packet, data })
+    return freeze({ ...packet, data })
   }
 }

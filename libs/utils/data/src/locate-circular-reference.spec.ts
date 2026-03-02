@@ -1,6 +1,6 @@
+import { deregisterIterableClass } from './deregister-iterable-class'
 import { locateCircularReference } from './locate-circular-reference'
 import { registerIterableClass } from './register-iterable-class'
-import { deregisterIterableClass } from './deregister-iterable-class'
 import { setConfig, getConfig } from './shared/consts'
 
 describe('locateCircularReference', () => {
@@ -51,7 +51,7 @@ describe('locateCircularReference - with extended iterable class types', () => {
   beforeEach(() => {
     registerIterableClass<Map<unknown, unknown>>(
       Map,
-      (map) => Array.from(map.keys()) as string[],
+      (map) => <string[]>Array.from(map.keys()),
       (map, key) => map.get(key),
       (map, value, key) => map.set(key, value),
       (map, key) => map.delete(key)

@@ -1,8 +1,9 @@
-import { type ExecutorContext, logger } from '@nx/devkit'
-import { existsSync, readFileSync } from 'node:fs'
-import { execSync } from 'node:child_process'
-import { join } from 'node:path'
+import type { ExecutorContext } from '@nx/devkit'
 import type { PublishExecutorOptions } from './schema'
+import { execSync } from 'node:child_process'
+import { existsSync, readFileSync } from 'node:fs'
+import { join } from 'node:path'
+import { logger } from '@nx/devkit'
 
 /**
  * Verifies the project is a publishable library.
@@ -190,7 +191,7 @@ export default async function publishExecutor(options: PublishExecutorOptions, c
     if (error instanceof Error) {
       logger.error(error.message)
       if ('stderr' in error) {
-        logger.error(String((error as { stderr: unknown }).stderr))
+        logger.error(String((<{ stderr: unknown }>error).stderr))
       }
     }
     return { success: false }

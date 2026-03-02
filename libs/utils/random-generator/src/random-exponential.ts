@@ -1,3 +1,5 @@
+import { log, random } from '@hyperfrontend/immutable-api-utils/built-in-copy/math'
+
 /**
  * Generates a random number following an exponential distribution.
  *
@@ -5,6 +7,6 @@
  * @returns A random number from the exponential distribution
  */
 export function randomExponential(lambda: number): number {
-  const u = Math.random()
-  return -Math.log(1 - u) / lambda
+  const u = random()
+  return -log(1 - u) / lambda
 }

@@ -1,7 +1,7 @@
 import type { RegisteredIterableClassEntry } from './models'
 import { deregisterIterableClass } from './deregister-iterable-class'
-import { registerIterableClass } from './register-iterable-class'
 import { getIterableOperators } from './get-iterable-operators'
+import { registerIterableClass } from './register-iterable-class'
 
 describe('getIterableOperators', () => {
   beforeEach(() => deregisterIterableClass())

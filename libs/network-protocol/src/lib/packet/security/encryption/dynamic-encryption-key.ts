@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import type { EncryptionSuite, FirstMessageHandler } from '../../../security/model'
 import type { PacketEncrypter, PacketDecrypter } from '../../model'
+import { freeze } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
 
 /**
  * Creates a factory for dynamic key-based encryption suites.
@@ -44,6 +45,6 @@ export function createDynamicKeyEncryptionFactory<T = any>(
       return decryptPacket(packet, key)
     }
 
-    return Object.freeze({ packetEncryption, packetDecryption })
+    return freeze({ packetEncryption, packetDecryption })
   }
 }

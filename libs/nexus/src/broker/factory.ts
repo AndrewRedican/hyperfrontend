@@ -1,38 +1,43 @@
-import { uuidV4 } from '@hyperfrontend/random-generator-utils'
-import type { IChannelContract } from '../types/contract'
+import type { IAction } from '../types/action'
 import type { IChannelSettings } from '../types/channel'
+import type { IChannelContract } from '../types/contract'
 import type { SecurityProtocolVersion } from '../types/security'
+import type { RoutingContext } from './routing/types'
 import type { BrokerConfig, BrokerState, BrokerHandle, SecurityPolicy } from './types'
-import { defaultBrokerSettings } from './defaults'
-import { createRegistry } from '../core/registry/factory'
-import { createProcessManager } from '../core/processes/factory'
+import { createError } from '@hyperfrontend/immutable-api-utils/built-in-copy/error'
+import { freeze } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
+import { uuidV4 } from '@hyperfrontend/random-generator-utils'
+import { ACTION_TYPES } from '../constants/action-types'
 import { createActionCreators } from '../core/actions/factory'
+import { createProcessManager } from '../core/processes/factory'
+import { createRegistry } from '../core/registry/factory'
+import { validateContract } from '../core/validation/contract'
+import { validateName } from '../core/validation/name'
 import { createProtocolRegistry } from '../security/registry/factory'
-import { createRouter } from './routing/create-router'
-import { routeMessage } from './routing/route-message'
-import { routeEncryptedMessage } from './routing/route-encrypted-message'
-import { filterOrigin } from './security/filter-origin'
-import { validatePolicy } from './security/validate-policy'
+import { mergeContracts } from '../setup/merge-contracts'
+import { createLogger } from '../utils/logging/create-logger'
+import { assertNoCircularRef } from '../utils/validation/assert-no-circular-ref'
 import { addChannel } from './channels/add'
 import { getChannel } from './channels/get'
 import { listChannels } from './channels/list'
 import { removeChannel } from './channels/remove'
-import { handleRequest } from './routing/handle-request'
+import { defaultBrokerSettings } from './defaults'
+import { createRouter } from './routing/create-router'
 import { handleAccept } from './routing/handle-accept'
-import { handleDeny } from './routing/handle-deny'
 import { handleCancel } from './routing/handle-cancel'
 import { handleCancelAcknowledged } from './routing/handle-cancel-acknowledged'
 import { handleClose } from './routing/handle-close'
 import { handleCloseAcknowledged } from './routing/handle-close-acknowledged'
-import { handleOpen } from './routing/handle-open'
+import { handleDeny } from './routing/handle-deny'
 import { handleDestroy } from './routing/handle-destroy'
-import { handleMessage } from './routing/handle-message'
 import { handleInvalid } from './routing/handle-invalid'
-import { ACTION_TYPES } from '../constants/action-types'
-import { validateName } from '../core/validation/name'
-import { validateContract } from '../core/validation/contract'
-import type { IAction } from '../types/action'
-import { mergeContracts } from '../setup/merge-contracts'
+import { handleMessage } from './routing/handle-message'
+import { handleOpen } from './routing/handle-open'
+import { handleRequest } from './routing/handle-request'
+import { routeEncryptedMessage } from './routing/route-encrypted-message'
+import { routeMessage } from './routing/route-message'
+import { filterOrigin } from './security/filter-origin'
+import { validatePolicy } from './security/validate-policy'
 
 /**
  * Creates a message broker instance
@@ -48,9 +53,22 @@ export function createBroker(config: {
   contract: IChannelContract
   settings?: Partial<BrokerConfig['settings']>
 }): BrokerHandle {
-  // Validate inputs
+  assertNoCircularRef(config.contract, 'config.contract')
+  assertNoCircularRef(config.settings, 'config.settings')
   validateName(config.name)
   validateContract(config.contract)
+
+  const mergedSettings = {
+    ...defaultBrokerSettings,
+    ...config.settings,
+    contract: config.contract,
+  }
+
+  const logLevel = mergedSettings.logLevel ?? 'error'
+  const logger = createLogger({
+    level: logLevel,
+    customLogger: mergedSettings.logger,
+  })
 
   // Create broker state
   const state: BrokerState = {
@@ -58,11 +76,8 @@ export function createBroker(config: {
     name: config.name,
     window: window,
     contract: config.contract,
-    settings: {
-      ...defaultBrokerSettings,
-      ...config.settings,
-      contract: config.contract,
-    },
+    settings: mergedSettings,
+    logger,
   }
 
   // Create infrastructure
@@ -104,26 +119,33 @@ export function createBroker(config: {
     [ACTION_TYPES.INVALID_REQUEST]: handleInvalid,
   })
 
+  // Create routing context for message handlers
+  const routingContext: RoutingContext = {
+    state,
+    registry,
+    processManager,
+    actions,
+    logger,
+  }
+
   // Message handler
   const onMessage = (event: MessageEvent<IAction | Uint8Array>) => {
     const origin = event?.origin
 
     // Apply origin filtering
     if (!filterOrigin(origin, state.settings.whitelist, state.settings.blacklist)) {
-      if (state.settings.debug) {
-        console.info(`[nexus] ${state.name} ignored message from ${origin}`)
-      }
+      logger.info(`${state.name} ignored message from ${origin}`)
       return
     }
 
     // Check if message is encrypted (Uint8Array)
     if (event.data instanceof Uint8Array) {
-      routeEncryptedMessage(state, registry, processManager, actions, router, <MessageEvent<Uint8Array>>event)
+      routeEncryptedMessage(routingContext, router, <MessageEvent<Uint8Array>>event)
       return
     }
 
     // Route plain object messages through existing handlers
-    routeMessage(router, state, registry, processManager, actions, <MessageEvent<IAction>>event)
+    routeMessage(router, routingContext, <MessageEvent<IAction>>event)
   }
 
   // Attach message listener
@@ -137,7 +159,6 @@ export function createBroker(config: {
     id: state.id,
     name: state.name,
     settings: state.settings,
-    debugMode: state.settings.debug ?? false,
 
     get contract() {
       return state.contract
@@ -169,13 +190,13 @@ export function createBroker(config: {
     setSecurityPolicy(policy: SecurityPolicy) {
       validatePolicy(policy)
       // Use bracket notation to set the property
-      ;(state.settings as unknown as Record<string, unknown>)['securityPolicy'] = policy
+      ;(<Record<string, unknown>>(<unknown>state.settings))['securityPolicy'] = policy
       return broker // Enable chaining
     },
 
     extendContract(contract: IChannelContract) {
       if (!state.settings.contractExtension) {
-        throw new Error('Original contract cannot be extended.')
+        throw createError('Original contract cannot be extended.')
       }
       validateContract(contract)
       ;(<{ contract: unknown }>state).contract = mergeContracts(state.contract, contract)
@@ -188,7 +209,6 @@ export function createBroker(config: {
         name: state.name,
         settings: state.settings,
         acceptedActionTypes: state.contract.accepted.map((a) => a.type),
-        debugMode: state.settings.debug ?? false,
         channels: listChannels(registry),
       }
     },
@@ -210,7 +230,11 @@ export function createBroker(config: {
     getSupportedProtocols() {
       return protocolRegistry.getSupportedVersions()
     },
+
+    get logger() {
+      return state.logger
+    },
   }
 
-  return broker
+  return freeze(broker)
 }

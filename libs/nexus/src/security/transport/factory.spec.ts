@@ -5,8 +5,8 @@
  * the negotiated protocol version.
  */
 
-import { createSecurityTransport } from './factory'
 import type { SecurityTransportConfig } from '../../types/security'
+import { createSecurityTransport } from './factory'
 
 describe('Security Transport Factory', () => {
   let mockTarget: { postMessage: jest.Mock }
@@ -27,7 +27,7 @@ describe('Security Transport Factory', () => {
     it('creates NoneTransport for "none" protocol', () => {
       const config: SecurityTransportConfig = {
         protocol: 'none',
-        target: mockTarget as unknown as Window,
+        target: <Window>(<unknown>mockTarget),
       }
 
       const transport = createSecurityTransport(config)
@@ -39,7 +39,7 @@ describe('Security Transport Factory', () => {
     it('does not require provider for "none" protocol', () => {
       const config: SecurityTransportConfig = {
         protocol: 'none',
-        target: mockTarget as unknown as Window,
+        target: <Window>(<unknown>mockTarget),
         provider: undefined,
       }
 
@@ -49,7 +49,7 @@ describe('Security Transport Factory', () => {
     it('ignores provider for "none" protocol', () => {
       const config: SecurityTransportConfig = {
         protocol: 'none',
-        target: mockTarget as unknown as Window,
+        target: <Window>(<unknown>mockTarget),
         provider: mockProvider,
       }
 
@@ -62,7 +62,7 @@ describe('Security Transport Factory', () => {
     it('passes origin to NoneTransport', () => {
       const config: SecurityTransportConfig = {
         protocol: 'none',
-        target: mockTarget as unknown as Window,
+        target: <Window>(<unknown>mockTarget),
         origin: 'https://custom.com',
       }
 
@@ -78,7 +78,7 @@ describe('Security Transport Factory', () => {
       const config: SecurityTransportConfig = {
         protocol: 'v1',
         provider: mockProvider,
-        target: mockTarget as unknown as Window,
+        target: <Window>(<unknown>mockTarget),
       }
 
       const transport = createSecurityTransport(config)
@@ -90,7 +90,7 @@ describe('Security Transport Factory', () => {
       const config: SecurityTransportConfig = {
         protocol: 'v1',
         provider: undefined,
-        target: mockTarget as unknown as Window,
+        target: <Window>(<unknown>mockTarget),
       }
 
       expect(() => createSecurityTransport(config)).toThrow("Security protocol 'v1' requires a protocol provider")
@@ -102,7 +102,7 @@ describe('Security Transport Factory', () => {
       const config: SecurityTransportConfig = {
         protocol: 'v2',
         provider: mockProvider,
-        target: mockTarget as unknown as Window,
+        target: <Window>(<unknown>mockTarget),
       }
 
       const transport = createSecurityTransport(config)
@@ -114,7 +114,7 @@ describe('Security Transport Factory', () => {
       const config: SecurityTransportConfig = {
         protocol: 'v2',
         provider: undefined,
-        target: mockTarget as unknown as Window,
+        target: <Window>(<unknown>mockTarget),
       }
 
       expect(() => createSecurityTransport(config)).toThrow("Security protocol 'v2' requires a protocol provider")
@@ -124,7 +124,7 @@ describe('Security Transport Factory', () => {
       const config: SecurityTransportConfig = {
         protocol: 'v2',
         provider: mockProvider,
-        target: mockTarget as unknown as Window,
+        target: <Window>(<unknown>mockTarget),
         sharedKey: 'test-shared-key',
       }
 
@@ -137,7 +137,7 @@ describe('Security Transport Factory', () => {
       const config: SecurityTransportConfig = {
         protocol: 'v2',
         provider: mockProvider,
-        target: mockTarget as unknown as Window,
+        target: <Window>(<unknown>mockTarget),
         refreshRate: 30,
       }
 
@@ -150,7 +150,7 @@ describe('Security Transport Factory', () => {
       const config: SecurityTransportConfig = {
         protocol: 'v2',
         provider: mockProvider,
-        target: mockTarget as unknown as Window,
+        target: <Window>(<unknown>mockTarget),
         origin: 'https://secure.com',
       }
 

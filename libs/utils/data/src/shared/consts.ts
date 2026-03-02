@@ -1,4 +1,5 @@
 import type { UnknownClass, RegisteredIterableClassEntry, Config } from '../models'
+import { keys } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
 import { isMarker } from '../is-marker'
 
 export const registeredClasses: UnknownClass[] = []
@@ -8,11 +9,11 @@ export const registeredIterableClasses: RegisteredIterableClassEntry[] = [
     classRef: Array,
     instantiate: () => [],
     getKeys: (target: unknown) => {
-      const keys = Object.keys(<Iterable<string>>target)
+      const keysArray = keys(<Iterable<string>>target)
       if (getConfig().detectCircularReferences) {
-        return keys.filter((key) => !isMarker(key))
+        return keysArray.filter((key) => !isMarker(key))
       }
-      return keys
+      return keysArray
     },
     read: (target, key) => (<Array<unknown>>target)[<number>key],
     write: (target, value, key) => ((<Array<unknown>>target)[<number>key] = value),
@@ -22,11 +23,11 @@ export const registeredIterableClasses: RegisteredIterableClassEntry[] = [
     classRef: Object,
     instantiate: () => ({}),
     getKeys: (target: unknown) => {
-      const keys = Object.keys(<Iterable<string>>target)
+      const keysArray = keys(<Iterable<string>>target)
       if (getConfig().detectCircularReferences) {
-        return keys.filter((key) => !isMarker(key))
+        return keysArray.filter((key) => !isMarker(key))
       }
-      return keys
+      return keysArray
     },
     read: (target, key) => (<Record<string, unknown>>target)[<string>key],
     write: (target, value, key) => ((<Record<string, unknown>>target)[<string>key] = value),

@@ -122,10 +122,83 @@ module.exports = [
   {
     files: ['**/index.ts'],
     plugins: {
-      '@hyperfrontend/eslint-rules': eslintRules,
+      workspace: eslintRules,
     },
     rules: {
-      '@hyperfrontend/eslint-rules/no-unwanted-barrel-files': 'error',
+      'workspace/no-unwanted-barrel-files': 'error',
+    },
+  },
+  {
+    files: ['**/*.ts'],
+    ignores: ['**/jest.config.ts', '**/jest.setup.ts', '**/jest.setup.browser.ts'],
+    plugins: {
+      workspace: eslintRules,
+    },
+    rules: {
+      'workspace/no-unsafe-builtin-methods': 'error',
+      'workspace/require-node-protocol': 'error',
+      'workspace/no-mixed-type-import': 'error',
+      'workspace/import-order': 'error',
+      'workspace/no-enum': 'error',
+    },
+  },
+  {
+    files: ['**/*.ts'],
+    ignores: ['**/jest.config.ts', '**/jest.setup.ts', '**/jest.setup.browser.ts', '**/*.spec.ts'],
+    plugins: {
+      workspace: eslintRules,
+    },
+    rules: {
+      'workspace/no-namespace-import': 'error',
+    },
+  },
+  {
+    files: ['**/*.ts'],
+    ignores: ['**/jest.config.ts', '**/jest.setup.ts', '**/jest.setup.browser.ts', '**/*.tsx'],
+    plugins: {
+      workspace: eslintRules,
+    },
+    rules: {
+      'workspace/prefer-angle-bracket-assertion': 'error',
+    },
+  },
+  {
+    files: ['**/*.spec.ts'],
+    plugins: {
+      workspace: eslintRules,
+    },
+    rules: {
+      'workspace/assertive-test-names': 'error',
+    },
+  },
+  {
+    files: ['**/package.json'],
+    plugins: {
+      workspace: eslintRules,
+    },
+    languageOptions: {
+      parser: require('jsonc-eslint-parser'),
+    },
+    rules: {
+      'workspace/lib-pkg-fields': 'error',
+      'workspace/lib-pkg-package-json-export': 'error',
+      'workspace/lib-pkg-bundle-entry': 'error',
+      'workspace/lib-pkg-exports-exist': 'error',
+      'workspace/lib-pkg-exports-js-only': 'error',
+      'workspace/lib-pkg-no-main': 'error',
+    },
+  },
+  {
+    files: ['**/project.json'],
+    plugins: {
+      workspace: eslintRules,
+    },
+    languageOptions: {
+      parser: require('jsonc-eslint-parser'),
+    },
+    rules: {
+      'workspace/lib-project-metadata': 'error',
+      'workspace/lib-project-bundle-config': 'error',
     },
   },
 ]

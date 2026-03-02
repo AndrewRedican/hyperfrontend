@@ -46,5 +46,5 @@ export const createMockLogger = (): Logger => ({
   error: () => void 0,
   log: () => void 0,
   setLogLevel: () => void 0,
-  getLogLevel: () => 'info' as const,
+  getLogLevel: () => <const>'info',
 })

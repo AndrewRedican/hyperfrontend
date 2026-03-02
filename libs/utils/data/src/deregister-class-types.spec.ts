@@ -1,5 +1,5 @@
-import { registerClassTypes } from './register-class-types'
 import { deregisterClassTypes } from './deregister-class-types'
+import { registerClassTypes } from './register-class-types'
 import { registeredClasses } from './shared/consts'
 
 describe('deregisterClassTypes', () => {

@@ -10,15 +10,16 @@
  */
 
 import type { IChannelContract } from '../../types/contract'
-import { requestConnection } from './request'
+import { freeze } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
 import { acceptConnection } from './accept'
-import { denyConnection } from './deny'
 import { cancelConnection } from './cancel'
-import { openConnection } from './open'
 import { closeConnection } from './close'
+import { denyConnection } from './deny'
 import { destroyConnection } from './destroy'
-import { newMessage } from './message'
 import { invalidRequest } from './invalid'
+import { newMessage } from './message'
+import { openConnection } from './open'
+import { requestConnection } from './request'
 
 /**
  * Dependencies required by action creators
@@ -46,7 +47,7 @@ export interface ActionDependencies {
  * ```
  */
 export const createActionCreators = (deps: ActionDependencies) =>
-  Object.freeze({
+  freeze({
     requestConnection: requestConnection(deps),
     acceptConnection: acceptConnection(deps),
     denyConnection: denyConnection(deps),

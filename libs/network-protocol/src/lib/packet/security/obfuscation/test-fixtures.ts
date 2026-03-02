@@ -4,6 +4,7 @@
  */
 
 import type { SerializedEncryptedPacket } from '../../model'
+import { createUint8Array } from '@hyperfrontend/immutable-api-utils/built-in-copy/typed-arrays'
 
 /**
  * Valid UUID v4 values for packet origin and target fields.
@@ -104,7 +105,7 @@ export const invalidPacketObfuscationTestCases = [
     packet: {
       origin: testUUIDs.origin1,
       target: testUUIDs.target1,
-      data: new Uint8Array([1, 2, 3]),
+      data: createUint8Array([1, 2, 3]),
     },
     password: testPasswords.valid,
   },

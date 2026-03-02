@@ -1,5 +1,8 @@
-export const ENCODER = new TextEncoder()
-export const UTF8_DECODER = new TextDecoder('utf8')
+import { createTextDecoder, createTextEncoder } from '@hyperfrontend/immutable-api-utils/built-in-copy/encoding'
+import { createUint8Array } from '@hyperfrontend/immutable-api-utils/built-in-copy/typed-arrays'
+
+export const ENCODER = createTextEncoder()
+export const UTF8_DECODER = createTextDecoder('utf8')
 
 export const BASE_64_ENCODING_SAMPLES = <const>{
   SIMPLE: {
@@ -20,11 +23,11 @@ export const BASE_64_ENCODING_SAMPLES = <const>{
 export const UINT8_CONVERTION_SAMPLES = <const>{
   SIMPLE: {
     STRING: 'hello',
-    ARRAY: new Uint8Array([104, 101, 108, 108, 111]),
+    ARRAY: createUint8Array([104, 101, 108, 108, 111]),
   },
   NON_ASCII: {
     STRING: 'こんにちは',
-    ARRAY: new Uint8Array([
+    ARRAY: createUint8Array([
       227,
       129,
       147, // こ
@@ -44,6 +47,6 @@ export const UINT8_CONVERTION_SAMPLES = <const>{
   },
   EMPTY: {
     STRING: '',
-    ARRAY: new Uint8Array([]),
+    ARRAY: createUint8Array([]),
   },
 }

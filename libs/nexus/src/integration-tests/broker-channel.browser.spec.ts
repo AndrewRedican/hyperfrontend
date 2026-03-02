@@ -1,7 +1,7 @@
-import type { MockWindow } from './test-utils'
 import type { IChannelContract } from '../types/contract'
-import { createMockWindow } from './test-utils'
+import type { MockWindow } from './test-utils'
 import { createBroker } from '../broker/factory'
+import { createMockWindow } from './test-utils'
 
 describe('Integration: Broker + Channel', () => {
   let mockWindow: MockWindow
@@ -20,11 +20,10 @@ describe('Integration: Broker + Channel', () => {
       const broker = createBroker({
         name: 'test-broker',
         contract: testContract,
-        settings: { debug: false },
       })
 
       // Add channel
-      const channel = broker.addChannel('test-channel', mockWindow as unknown as Window)
+      const channel = broker.addChannel('test-channel', <Window>(<unknown>mockWindow))
       expect(channel).toBeDefined()
       expect(channel.name).toBe('test-channel')
       expect(channel.isActive()).toBe(false)
@@ -42,10 +41,9 @@ describe('Integration: Broker + Channel', () => {
       const broker = createBroker({
         name: 'test-broker',
         contract: testContract,
-        settings: { debug: false },
       })
 
-      const channel = broker.addChannel('test-channel', mockWindow as unknown as Window)
+      const channel = broker.addChannel('test-channel', <Window>(<unknown>mockWindow))
       channel.connect()
 
       // Send message
@@ -59,10 +57,9 @@ describe('Integration: Broker + Channel', () => {
       const broker = createBroker({
         name: 'test-broker',
         contract: testContract,
-        settings: { debug: false },
       })
 
-      const channel = broker.addChannel('test-channel', mockWindow as unknown as Window)
+      const channel = broker.addChannel('test-channel', <Window>(<unknown>mockWindow))
       const messageHandler = jest.fn()
 
       // Subscribe to messages
@@ -83,10 +80,9 @@ describe('Integration: Broker + Channel', () => {
       const broker = createBroker({
         name: 'test-broker',
         contract: testContract,
-        settings: { debug: false },
       })
 
-      const channel = broker.addChannel('test-channel', mockWindow as unknown as Window)
+      const channel = broker.addChannel('test-channel', <Window>(<unknown>mockWindow))
       const eventHandler = jest.fn()
 
       // Subscribe to open events
@@ -113,10 +109,9 @@ describe('Integration: Broker + Channel', () => {
       const broker = createBroker({
         name: 'test-broker',
         contract: testContract,
-        settings: { debug: false },
       })
 
-      const channel = broker.addChannel('test-channel', mockWindow as unknown as Window)
+      const channel = broker.addChannel('test-channel', <Window>(<unknown>mockWindow))
       channel.connect()
 
       // Clear previous calls
@@ -133,10 +128,9 @@ describe('Integration: Broker + Channel', () => {
       const broker = createBroker({
         name: 'test-broker',
         contract: testContract,
-        settings: { debug: false },
       })
 
-      const channel = broker.addChannel('test-channel', mockWindow as unknown as Window)
+      const channel = broker.addChannel('test-channel', <Window>(<unknown>mockWindow))
 
       // Send message before connecting
       channel.send('PING', { id: 1 })
@@ -157,10 +151,9 @@ describe('Integration: Broker + Channel', () => {
       const broker = createBroker({
         name: 'test-broker',
         contract: testContract,
-        settings: { debug: false },
       })
 
-      const channel = broker.addChannel('test-channel', mockWindow as unknown as Window)
+      const channel = broker.addChannel('test-channel', <Window>(<unknown>mockWindow))
 
       // Initial state
       expect(channel.isActive()).toBe(false)
@@ -178,10 +171,9 @@ describe('Integration: Broker + Channel', () => {
       const broker = createBroker({
         name: 'test-broker',
         contract: testContract,
-        settings: { debug: false },
       })
 
-      const channel = broker.addChannel('test-channel', mockWindow as unknown as Window)
+      const channel = broker.addChannel('test-channel', <Window>(<unknown>mockWindow))
 
       // Multiple cycles
       for (let i = 0; i < 3; i++) {
@@ -199,13 +191,12 @@ describe('Integration: Broker + Channel', () => {
       const broker = createBroker({
         name: 'test-broker',
         contract: testContract,
-        settings: { debug: false },
       })
 
-      const channel = broker.addChannel('test-channel', mockWindow as unknown as Window)
+      const channel = broker.addChannel('test-channel', <Window>(<unknown>mockWindow))
 
       // Get by window
-      const byWindow = broker.getChannel(mockWindow as unknown as Window)
+      const byWindow = broker.getChannel(<Window>(<unknown>mockWindow))
       expect(byWindow).toBe(channel)
 
       // Get by name
@@ -221,13 +212,12 @@ describe('Integration: Broker + Channel', () => {
       const broker = createBroker({
         name: 'test-broker',
         contract: testContract,
-        settings: { debug: false },
       })
 
       const mockWindow2 = createMockWindow()
 
-      broker.addChannel('channel-1', mockWindow as unknown as Window)
-      broker.addChannel('channel-2', mockWindow2 as unknown as Window)
+      broker.addChannel('channel-1', <Window>(<unknown>mockWindow))
+      broker.addChannel('channel-2', <Window>(<unknown>mockWindow2))
 
       const channels = broker.channels
       expect(channels).toHaveLength(2)
@@ -237,13 +227,11 @@ describe('Integration: Broker + Channel', () => {
       const broker = createBroker({
         name: 'test-broker',
         contract: testContract,
-        settings: { debug: false },
       })
 
-      const channel1 = broker.addChannel('first', mockWindow as unknown as Window)
-      const channel2 = broker.addChannel('second', mockWindow as unknown as Window)
+      const channel1 = broker.addChannel('first', <Window>(<unknown>mockWindow))
+      const channel2 = broker.addChannel('second', <Window>(<unknown>mockWindow))
 
-      // Should be the same channel instance
       expect(channel1).toBe(channel2)
     })
   })
@@ -253,16 +241,14 @@ describe('Integration: Broker + Channel', () => {
       const broker = createBroker({
         name: 'test-broker',
         contract: testContract,
-        settings: { debug: false },
       })
 
-      const channel = broker.addChannel('test-channel', mockWindow as unknown as Window)
+      const channel = broker.addChannel('test-channel', <Window>(<unknown>mockWindow))
       channel.connect()
 
-      // Try to send a message type not in contract - should throw
       expect(() => {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        channel.send('INVALID_TYPE' as any, {})
+        channel.send(<any>'INVALID_TYPE', {})
       }).toThrow('not in the emitted actions')
     })
 
@@ -270,10 +256,9 @@ describe('Integration: Broker + Channel', () => {
       const broker = createBroker({
         name: 'test-broker',
         contract: testContract,
-        settings: { debug: false },
       })
 
-      const channel = broker.addChannel('test-channel', mockWindow as unknown as Window)
+      const channel = broker.addChannel('test-channel', <Window>(<unknown>mockWindow))
 
       // Disconnect without connecting
       expect(() => {
@@ -281,16 +266,14 @@ describe('Integration: Broker + Channel', () => {
       }).not.toThrow()
     })
   })
-
   describe('Cleanup', () => {
     it('cleans up resources on destroy', () => {
       const broker = createBroker({
         name: 'test-broker',
         contract: testContract,
-        settings: { debug: false },
       })
 
-      const channel = broker.addChannel('test-channel', mockWindow as unknown as Window)
+      const channel = broker.addChannel('test-channel', <Window>(<unknown>mockWindow))
       channel.connect()
 
       const eventHandler = jest.fn()

@@ -1,10 +1,10 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/no-empty-function */
 import type { Config } from './models'
-import { setConfig } from './shared/consts'
+import { deregisterIterableClass } from './deregister-iterable-class'
 import { isIdentical } from './is-identical'
 import { registerIterableClass } from './register-iterable-class'
-import { deregisterIterableClass } from './deregister-iterable-class'
+import { setConfig } from './shared/consts'
 
 const configReset: Config = Object.freeze({
   samePositionOfOwnProperties: false,
@@ -292,14 +292,14 @@ describe('isIdentical - with extended iterable class types', () => {
   beforeEach(() => {
     registerIterableClass<Map<unknown, unknown>>(
       Map,
-      (map) => Array.from(map.keys()) as string[],
+      (map) => <string[]>Array.from(map.keys()),
       (map, key) => map.get(key),
       (map, value, key) => map.set(key, value),
       (map, key) => map.delete(key)
     )
     registerIterableClass<Set<unknown>>(
       Set,
-      (set) => Array.from(set.keys()) as string[],
+      (set) => <string[]>Array.from(set.keys()),
       (_, key) => key,
       (set, value) => set.add(value),
       (set, key) => set.delete(key)

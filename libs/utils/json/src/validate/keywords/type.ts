@@ -1,5 +1,7 @@
 import type { Schema } from '../../types/schema'
 import type { ValidationContext } from '../context'
+import { isArray } from '@hyperfrontend/immutable-api-utils/built-in-copy/array'
+import { globalIsFinite, isInteger } from '@hyperfrontend/immutable-api-utils/built-in-copy/number'
 import { addError } from '../context'
 
 /**
@@ -7,11 +9,11 @@ import { addError } from '../context'
  */
 const typeCheckers: Record<string, (value: unknown) => boolean> = {
   string: (v) => typeof v === 'string',
-  number: (v) => typeof v === 'number' && isFinite(v),
-  integer: (v) => typeof v === 'number' && isFinite(v) && Number.isInteger(v),
+  number: (v) => typeof v === 'number' && globalIsFinite(v),
+  integer: (v) => typeof v === 'number' && globalIsFinite(v) && isInteger(v),
   boolean: (v) => typeof v === 'boolean',
-  array: (v) => Array.isArray(v),
-  object: (v) => v !== null && typeof v === 'object' && !Array.isArray(v),
+  array: (v) => isArray(v),
+  object: (v) => v !== null && typeof v === 'object' && !isArray(v),
   null: (v) => v === null,
 }
 
@@ -23,13 +25,13 @@ const typeCheckers: Record<string, (value: unknown) => boolean> = {
  */
 function getActualType(value: unknown): string {
   if (value === null) return 'null'
-  if (Array.isArray(value)) return 'array'
+  if (isArray(value)) return 'array'
   const t = typeof value
   if (t === 'number') {
     const num = <number>value
     /* istanbul ignore next -- NaN/Infinity edge case */
-    if (!isFinite(num)) return 'number' // NaN/Infinity
-    return Number.isInteger(num) ? 'integer' : 'number'
+    if (!globalIsFinite(num)) return 'number' // NaN/Infinity
+    return isInteger(num) ? 'integer' : 'number'
   }
   return t
 }
@@ -48,7 +50,7 @@ export function validateType(instance: unknown, schema: Schema, ctx: ValidationC
     return true
   }
 
-  const types = Array.isArray(schemaType) ? schemaType : [schemaType]
+  const types = isArray(schemaType) ? schemaType : [schemaType]
 
   for (const type of types) {
     const checker = typeCheckers[type]

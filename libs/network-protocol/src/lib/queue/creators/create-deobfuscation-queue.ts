@@ -1,9 +1,10 @@
 import type { ObfuscatedPacket, SerializedEncryptedPacket } from '../../packet/model'
 import type { DeobfuscationQueueCreater } from '../model'
+import { createError } from '@hyperfrontend/immutable-api-utils/built-in-copy/error'
 import { isValidObfuscatedPacket } from '../../packet/validations/is-valid-obfuscated-packet'
 import { isValidSerializedEncryptedPacket } from '../../packet/validations/is-valid-serialized-encrypted-packet'
-import { isValidQueueCreaterArguments } from '../validations/is-valid-queue-creater-arguments'
 import { getValidationError } from '../utils/get-validation-error'
+import { isValidQueueCreaterArguments } from '../validations/is-valid-queue-creater-arguments'
 import { createQueue } from './create-queue'
 
 export const createDeobfuscationQueue: DeobfuscationQueueCreater = (label, packetDeobfuscation, logger, onSuccess, onFail) => {
@@ -16,7 +17,7 @@ export const createDeobfuscationQueue: DeobfuscationQueueCreater = (label, packe
   })
   const errorMessage = getValidationError('deobfuscation', validity)
   if (errorMessage) {
-    throw new Error(errorMessage)
+    throw createError(errorMessage)
   }
   const { debug, log, warn, error } = logger
   const process = async (raw: ObfuscatedPacket): Promise<void> => {
@@ -32,7 +33,7 @@ export const createDeobfuscationQueue: DeobfuscationQueueCreater = (label, packe
       try {
         processed = await packetDeobfuscation(raw)
       } catch (e) {
-        log(`${label}: ${(e as Error)?.message}`)
+        log(`${label}: ${(<Error>e)?.message}`)
         onFail(raw)
         return
       }

@@ -8,6 +8,9 @@
 
 import type { SecurityProtocolVersion } from '../../types/security'
 import type { ProtocolRegistry } from './types'
+import { createError } from '@hyperfrontend/immutable-api-utils/built-in-copy/error'
+import { createMap } from '@hyperfrontend/immutable-api-utils/built-in-copy/map'
+import { freeze } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
 
 /**
  * Creates a protocol registry for managing security protocol providers.
@@ -38,7 +41,7 @@ import type { ProtocolRegistry } from './types'
  * ```
  */
 export function createProtocolRegistry(): ProtocolRegistry {
-  const providers = new Map<'v1' | 'v2', unknown>()
+  const providers = createMap<'v1' | 'v2', unknown>()
 
   /**
    * Register a protocol provider.
@@ -48,7 +51,7 @@ export function createProtocolRegistry(): ProtocolRegistry {
    */
   const register = (version: 'v1' | 'v2', provider: unknown): void => {
     if (!provider) {
-      throw new Error(`Cannot register null/undefined provider for ${version}`)
+      throw createError(`Cannot register null/undefined provider for ${version}`)
     }
 
     providers.set(version, provider)
@@ -116,11 +119,11 @@ export function createProtocolRegistry(): ProtocolRegistry {
     return versions
   }
 
-  return {
+  return freeze({
     register,
     unregister,
     get,
     has,
     getSupportedVersions,
-  }
+  })
 }

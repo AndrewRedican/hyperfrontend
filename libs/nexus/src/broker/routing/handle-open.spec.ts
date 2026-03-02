@@ -1,11 +1,13 @@
-import { handleOpen } from './handle-open'
-import { createRegistry } from '../../core/registry/factory'
-import { createProcessManager } from '../../core/processes/factory'
-import { createActionCreators } from '../../core/actions/factory'
-import { addChannel } from '../channels/add'
-import type { BrokerState } from '../types'
+import type { Logger } from '@hyperfrontend/logging'
 import type { IAction } from '../../types/action'
 import type { IChannelContract } from '../../types/contract'
+import type { BrokerState } from '../types'
+import type { RoutingContext } from './types'
+import { createActionCreators } from '../../core/actions/factory'
+import { createProcessManager } from '../../core/processes/factory'
+import { createRegistry } from '../../core/registry/factory'
+import { addChannel } from '../channels/add'
+import { handleOpen } from './handle-open'
 
 describe('handleOpen', () => {
   const validContract: IChannelContract = {
@@ -13,23 +15,37 @@ describe('handleOpen', () => {
     emitted: [{ type: 'response-message', description: 'Response message' }],
   }
 
-  const mockBrokerState: BrokerState = {
-    id: 'broker-1',
-    name: 'test-broker',
-    window: <Window>global.window,
-    contract: validContract,
-    settings: {
-      contract: validContract,
-      debug: false,
-    },
-  }
+  let mockLogger: Logger
+  let mockBrokerState: BrokerState
 
   let registry: ReturnType<typeof createRegistry>
   let processManager: ReturnType<typeof createProcessManager>
   let actions: ReturnType<typeof createActionCreators>
   let mockWindow: Window
+  let routingContext: RoutingContext
 
   beforeEach(() => {
+    mockLogger = {
+      error: jest.fn(),
+      warn: jest.fn(),
+      log: jest.fn(),
+      info: jest.fn(),
+      debug: jest.fn(),
+      setLogLevel: jest.fn(),
+      getLogLevel: jest.fn(() => 'debug'),
+    }
+
+    mockBrokerState = {
+      id: 'broker-1',
+      name: 'test-broker',
+      window: <Window>global.window,
+      contract: validContract,
+      settings: {
+        contract: validContract,
+      },
+      logger: mockLogger,
+    }
+
     registry = createRegistry()
     processManager = createProcessManager()
     actions = createActionCreators({
@@ -39,6 +55,14 @@ describe('handleOpen', () => {
     mockWindow = <Window>(<unknown>{
       postMessage: jest.fn(),
     })
+
+    routingContext = {
+      state: mockBrokerState,
+      registry,
+      processManager,
+      actions,
+      logger: mockLogger,
+    }
   })
 
   it('process open for existing channel', () => {
@@ -58,7 +82,7 @@ describe('handleOpen', () => {
     }
 
     expect(() => {
-      handleOpen(mockBrokerState, registry, processManager, actions, message)
+      handleOpen(routingContext, message)
     }).not.toThrow()
 
     // Process should be terminated (removed)
@@ -79,7 +103,7 @@ describe('handleOpen', () => {
     }
 
     expect(() => {
-      handleOpen(mockBrokerState, registry, processManager, actions, message)
+      handleOpen(routingContext, message)
     }).not.toThrow()
   })
 
@@ -106,7 +130,7 @@ describe('handleOpen', () => {
       source: mockWindow,
     }
 
-    handleOpen(mockBrokerState, registry, processManager, actions, message)
+    handleOpen(routingContext, message)
 
     expect(notifyEventMock).toHaveBeenCalledWith('open', { origin: 'http://example.com' })
   })
@@ -137,7 +161,7 @@ describe('handleOpen', () => {
       source: mockWindow,
     }
 
-    handleOpen(mockBrokerState, registry, processManager, actions, message)
+    handleOpen(routingContext, message)
 
     expect(setNegotiatedProtocolMock).toHaveBeenCalledWith('v1')
     expect(setSecurityReadyMock).toHaveBeenCalledWith(true)
@@ -170,7 +194,7 @@ describe('handleOpen', () => {
       source: mockWindow,
     }
 
-    handleOpen(mockBrokerState, registry, processManager, actions, message)
+    handleOpen(routingContext, message)
 
     expect(setNegotiatedProtocolMock).not.toHaveBeenCalled()
   })
@@ -178,7 +202,12 @@ describe('handleOpen', () => {
   it('logs debug info when security is ready', () => {
     const debugState: BrokerState = {
       ...mockBrokerState,
-      settings: { ...mockBrokerState.settings, debug: true },
+      settings: { ...mockBrokerState.settings, logLevel: 'debug' },
+    }
+
+    const debugContext: RoutingContext = {
+      ...routingContext,
+      state: debugState,
     }
 
     const channel = addChannel(debugState, registry, processManager, actions, 'test-channel', mockWindow)
@@ -188,8 +217,6 @@ describe('handleOpen', () => {
     Object.defineProperty(channel, 'setNegotiatedProtocol', { value: jest.fn(), writable: true })
     Object.defineProperty(channel, 'setSecurityReady', { value: jest.fn(), writable: true })
     Object.defineProperty(channel, 'notifyEvent', { value: jest.fn(), writable: true })
-
-    const consoleSpy = jest.spyOn(console, 'info').mockImplementation()
 
     const action: IAction = {
       type: '[nexus] connection-opened',
@@ -204,10 +231,9 @@ describe('handleOpen', () => {
       source: mockWindow,
     }
 
-    handleOpen(debugState, registry, processManager, actions, message)
+    handleOpen(debugContext, message)
 
-    expect(consoleSpy).toHaveBeenCalledWith(expect.stringContaining('security ready'))
-    consoleSpy.mockRestore()
+    expect(mockLogger.info).toHaveBeenCalledWith(expect.stringContaining('security ready'))
   })
 
   it('marks security ready for no security confirmation', () => {
@@ -231,7 +257,7 @@ describe('handleOpen', () => {
       source: mockWindow,
     }
 
-    handleOpen(mockBrokerState, registry, processManager, actions, message)
+    handleOpen(routingContext, message)
 
     expect(setSecurityReadyMock).toHaveBeenCalledWith(true)
   })
@@ -259,13 +285,13 @@ describe('handleOpen', () => {
       senderId: 'remote-2',
     }
 
-    handleOpen(mockBrokerState, registry, processManager, actions, <MessageEvent<IAction>>{
+    handleOpen(routingContext, <MessageEvent<IAction>>{
       data: action1,
       origin: 'http://example1.com',
       source: mockWindow,
     })
 
-    handleOpen(mockBrokerState, registry, processManager, actions, <MessageEvent<IAction>>{
+    handleOpen(routingContext, <MessageEvent<IAction>>{
       data: action2,
       origin: 'http://example2.com',
       source: window2,

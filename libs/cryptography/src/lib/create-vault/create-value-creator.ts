@@ -1,5 +1,9 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import type { Vault } from './model'
+import { from } from '@hyperfrontend/immutable-api-utils/built-in-copy/array'
+import { createError } from '@hyperfrontend/immutable-api-utils/built-in-copy/error'
+import { createMap } from '@hyperfrontend/immutable-api-utils/built-in-copy/map'
+import { create, freeze } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
 
 /**
  * Creates a vault factory function that produces encrypted storage instances.
@@ -14,16 +18,16 @@ export function createValueCreator(
   getRandomValues: (byteLength: number) => Uint8Array,
   encrypt: (message: string, password: string) => Promise<Uint8Array>,
   decrypt: (encrypted: Uint8Array, password: string) => Promise<string>
-): (singleUse?: boolean) => Vault {
-  return function createVault(singleUse = false): Vault {
-    let password = Array.from(getRandomValues(16))
+): (singleUse?: boolean) => Readonly<Vault> {
+  return function createVault(singleUse = false): Readonly<Vault> {
+    let password = from(getRandomValues(16))
       .map((b) => b.toString(16).padStart(2, '0'))
       .join('')
 
     let isPasswordAccessed = false
     let isVaultClosed = false
 
-    let storage = new Map<string, Uint8Array>()
+    let storage = createMap<string, Uint8Array>()
 
     /**
      * Writes an encrypted value to the vault with the specified label.
@@ -35,13 +39,13 @@ export function createValueCreator(
      */
     async function write(label: string, value: string): Promise<void> {
       if (isVaultClosed) {
-        throw new Error('Vault is closed.')
+        throw createError('Vault is closed.')
       }
       if (!label) {
-        throw new Error('Label is required.')
+        throw createError('Label is required.')
       }
       if (!value) {
-        throw new Error('Value is required.')
+        throw createError('Value is required.')
       }
       const encryptedValue = await encrypt(value, password)
       storage.set(label, encryptedValue)
@@ -58,13 +62,13 @@ export function createValueCreator(
      */
     async function read(label: string, password: string): Promise<string | null> {
       if (isVaultClosed) {
-        throw new Error('Vault is closed.')
+        throw createError('Vault is closed.')
       }
       if (!label) {
-        throw new Error('Label is required.')
+        throw createError('Label is required.')
       }
       if (!password) {
-        throw new Error('Password is required.')
+        throw createError('Password is required.')
       }
       const encryptedValue = storage.get(label)
       if (!encryptedValue) {
@@ -86,7 +90,7 @@ export function createValueCreator(
      */
     function getPassword(): string | null {
       if (isVaultClosed) {
-        throw new Error('Vault is closed.')
+        throw createError('Vault is closed.')
       }
       if (isPasswordAccessed) {
         return null
@@ -101,12 +105,12 @@ export function createValueCreator(
      */
     function close(): void {
       storage.clear()
-      ;(storage as any) = null
-      ;(password as any) = null
+      ;(<any>storage) = null
+      ;(<any>password) = null
       isVaultClosed = true
     }
 
-    const vault = Object.create(null, {
+    const vault = create(null, {
       write: {
         value: write,
         enumerable: false,
@@ -133,6 +137,7 @@ export function createValueCreator(
       },
     })
 
-    return vault
+    // Freeze to prevent addition of new properties
+    return freeze(vault)
   }
 }

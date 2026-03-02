@@ -1,10 +1,11 @@
 import type { ReferenceStack } from './models'
-import { referenceStack } from './reference-stack'
+import { createError } from '@hyperfrontend/immutable-api-utils/built-in-copy/error'
 import { CircularReference } from './circular-reference'
-import { getConfig, setConfig } from './shared/consts'
+import { getIterableOperators } from './get-iterable-operators'
 import { getType } from './get-type'
 import { isIterableType } from './is-iterable-type'
-import { getIterableOperators } from './get-iterable-operators'
+import { referenceStack } from './reference-stack'
+import { getConfig, setConfig } from './shared/consts'
 
 const invalidmaxResults = 'Invalid maxResults argument.'
 
@@ -18,7 +19,7 @@ export const locateCircularReferenceRecursive = (
 ): CircularReference[] => {
   if (result.length === maxResults) return result
   if (stack.exists(target)) {
-    result.push(new CircularReference(path as [string, ...string[]], path.slice(0, stack.lastSeen(target) as number)))
+    result.push(new CircularReference(<[string, ...string[]]>path, path.slice(0, <number>stack.lastSeen(target))))
     return result
   }
   const type = getType(target)
@@ -41,10 +42,10 @@ export const locateCircularReferenceRecursive = (
  */
 export const locateCircularReference = (target: unknown, maxResults: '*' | number = 1): CircularReference[] => {
   const resultsType = typeof maxResults
-  if (!['string', 'number'].includes(resultsType)) throw new Error(invalidmaxResults)
-  if (resultsType === 'string' && maxResults !== '*') throw new Error(invalidmaxResults)
-  if (resultsType === 'number' && (<number>maxResults < 1 || [NaN, Infinity].includes(maxResults as number)))
-    throw new Error(invalidmaxResults)
+  if (!['string', 'number'].includes(resultsType)) throw createError(invalidmaxResults)
+  if (resultsType === 'string' && maxResults !== '*') throw createError(invalidmaxResults)
+  if (resultsType === 'number' && (<number>maxResults < 1 || [NaN, Infinity].includes(<number>maxResults)))
+    throw createError(invalidmaxResults)
   const originalSupportStatus = getConfig().detectCircularReferences
   if (!originalSupportStatus) {
     setConfig({ detectCircularReferences: true })

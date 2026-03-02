@@ -1,19 +1,20 @@
 import { getTimeBasedPassword, getTimeBasedPasswords } from '@hyperfrontend/cryptography/browser'
-import { encryptPacket, decryptPacket } from '../packet'
-import { createPacketObfuscator } from '../../lib/packet/security/obfuscation/create-obfuscator'
-import { createPacketDeobfuscator } from '../../lib/packet/security/obfuscation/create-deobfuscator'
-import { createDynamicKeyEncryptionFactory } from '../../lib/packet/security/encryption/dynamic-encryption-key'
+import { encrypt, decrypt } from '@hyperfrontend/cryptography/browser'
+import { createTextDecoder, createTextEncoder } from '@hyperfrontend/immutable-api-utils/built-in-copy/encoding'
 import { createFirstMessageHandler } from '../../lib/packet/security/encryption/create-first-message-handler'
+import { createDynamicKeyEncryptionFactory } from '../../lib/packet/security/encryption/dynamic-encryption-key'
+import { createPacketDeobfuscator } from '../../lib/packet/security/obfuscation/create-deobfuscator'
+import { createPacketObfuscator } from '../../lib/packet/security/obfuscation/create-obfuscator'
 import { createTimeIntervalObfuscationFactory } from '../../lib/packet/security/obfuscation/time-interval-obfuscation-factory'
 import { createProtocolFactory } from '../../lib/protocol/v1/creators/create-protocol-factory'
-import { encrypt, decrypt } from '@hyperfrontend/cryptography/browser'
+import { encryptPacket, decryptPacket } from '../packet'
 
 const obfuscatePacket = createPacketObfuscator(encrypt)
 const deobfuscatePacket = createPacketDeobfuscator(decrypt)
 
 // Text encoding/decoding for first message handler (browser)
-const textEncoder = (text: string): Uint8Array => new TextEncoder().encode(text)
-const textDecoder = (data: Uint8Array): string => new TextDecoder().decode(data)
+const textEncoder = (text: string): Uint8Array => createTextEncoder().encode(text)
+const textDecoder = (data: Uint8Array): string => createTextDecoder().decode(data)
 const firstMessageHandler = createFirstMessageHandler(textEncoder, textDecoder)
 
 const createDynamicKeyEncryption = createDynamicKeyEncryptionFactory(encryptPacket, decryptPacket, firstMessageHandler)

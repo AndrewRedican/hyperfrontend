@@ -1,5 +1,5 @@
-import { getIterableTypes } from './get-iterable-types'
 import { deregisterIterableClass } from './deregister-iterable-class'
+import { getIterableTypes } from './get-iterable-types'
 import { registerIterableClass } from './register-iterable-class'
 
 describe('getIterableTypes', () => {

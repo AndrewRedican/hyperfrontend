@@ -121,7 +121,7 @@ export interface ReflectionFlags {
 }
 
 // TypeDoc reflection kind constants
-export const ReflectionKind = {
+export const ReflectionKind = <const>{
   Project: 1,
   Module: 2,
   Namespace: 4,
@@ -145,4 +145,4 @@ export const ReflectionKind = {
   SetSignature: 1048576,
   TypeAlias: 2097152,
   Reference: 4194304,
-} as const
+}

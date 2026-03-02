@@ -1,6 +1,6 @@
 {
   "name": "@hyperfrontend/string-utils",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "Isomorphic string encoding utilities with unified APIs for browser and Node.js environments.",
   "license": "MIT",
   "sideEffects": false,
@@ -26,8 +26,12 @@
     "text-encoder",
     "binary-data"
   ],
+  "dependencies": {
+    "@hyperfrontend/immutable-api-utils": "0.1.0"
+  },
   "exports": {
     "./browser": "./src/browser/index.js",
-    "./node": "./src/node/index.js"
+    "./node": "./src/node/index.js",
+    "./package.json": "./package.json"
   }
 }

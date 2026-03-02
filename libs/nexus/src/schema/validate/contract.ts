@@ -1,11 +1,11 @@
+import type { Schema } from '@hyperfrontend/json-utils'
 import type { IChannelContract } from '../../types/contract'
 import type { ValidationResult } from '../../types/validation'
-import type { Schema } from '@hyperfrontend/json-utils'
-import { createValidator } from './create-validator'
 import contractSchema from '../definitions/contract.json'
+import { createValidator } from './create-validator'
 
 /* istanbul ignore next -- validator initialization happens at module load */
-const validateContractData = createValidator(contractSchema as Schema)
+const validateContractData = createValidator(<Schema>contractSchema)
 
 /**
  * Validates a channel contract against the contract schema.

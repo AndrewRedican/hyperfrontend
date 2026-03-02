@@ -1,11 +1,11 @@
-import type { Channel } from '../model'
-import type { SenderFactory } from '../../sender/model'
 import type { ReceiverFactory } from '../../receiver/model'
-import { createSenderFactory } from '../../sender/creators/create-sender-factory'
+import type { SenderFactory } from '../../sender/model'
+import type { Channel } from '../model'
+import { createSerializedEncryptedPacket, createDeserializedEncryptedPacket } from '../../packet/creators/mocks'
 import { createReceiverFactory } from '../../receiver/creators/create-receiver-factory'
+import { createSenderFactory } from '../../sender/creators/create-sender-factory'
 import { createChannelFactory } from './create-channel'
 import { createChannelStoreFactory } from './create-channel-store'
-import { createSerializedEncryptedPacket, createDeserializedEncryptedPacket } from '../../packet/creators/mocks'
 
 export const mockCreateSender: SenderFactory = createSenderFactory(createSerializedEncryptedPacket)
 export const mockCreateReceiver: ReceiverFactory = createReceiverFactory(createDeserializedEncryptedPacket)

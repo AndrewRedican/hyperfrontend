@@ -2,14 +2,16 @@
  * Tests for handleCloseAcknowledged function
  */
 
-import { handleCloseAcknowledged } from './handle-close-acknowledged'
-import { createRegistry } from '../../core/registry/factory'
-import { createProcessManager } from '../../core/processes/factory'
-import { createActionCreators } from '../../core/actions/factory'
-import { addChannel } from '../channels/add'
-import type { BrokerState } from '../types'
+import type { Logger } from '@hyperfrontend/logging'
 import type { IAction } from '../../types/action'
 import type { IChannelContract } from '../../types/contract'
+import type { BrokerState } from '../types'
+import type { RoutingContext } from './types'
+import { createActionCreators } from '../../core/actions/factory'
+import { createProcessManager } from '../../core/processes/factory'
+import { createRegistry } from '../../core/registry/factory'
+import { addChannel } from '../channels/add'
+import { handleCloseAcknowledged } from './handle-close-acknowledged'
 
 describe('handleCloseAcknowledged', () => {
   const validContract: IChannelContract = {
@@ -17,23 +19,37 @@ describe('handleCloseAcknowledged', () => {
     emitted: [{ type: 'response-message', description: 'Response message' }],
   }
 
-  const mockBrokerState: BrokerState = {
-    id: 'broker-1',
-    name: 'test-broker',
-    window: <Window>global.window,
-    contract: validContract,
-    settings: {
-      contract: validContract,
-      debug: false,
-    },
-  }
+  let mockLogger: Logger
+  let mockBrokerState: BrokerState
 
   let registry: ReturnType<typeof createRegistry>
   let processManager: ReturnType<typeof createProcessManager>
   let actions: ReturnType<typeof createActionCreators>
   let mockWindow: Window
+  let routingContext: RoutingContext
 
   beforeEach(() => {
+    mockLogger = {
+      error: jest.fn(),
+      warn: jest.fn(),
+      log: jest.fn(),
+      info: jest.fn(),
+      debug: jest.fn(),
+      setLogLevel: jest.fn(),
+      getLogLevel: jest.fn(() => 'debug'),
+    }
+
+    mockBrokerState = {
+      id: 'broker-1',
+      name: 'test-broker',
+      window: <Window>global.window,
+      contract: validContract,
+      settings: {
+        contract: validContract,
+      },
+      logger: mockLogger,
+    }
+
     registry = createRegistry()
     processManager = createProcessManager()
     actions = createActionCreators({
@@ -43,6 +59,14 @@ describe('handleCloseAcknowledged', () => {
     mockWindow = <Window>(<unknown>{
       postMessage: jest.fn(),
     })
+
+    routingContext = {
+      state: mockBrokerState,
+      registry,
+      processManager,
+      actions,
+      logger: mockLogger,
+    }
   })
 
   it('process close acknowledgement for existing channel', () => {
@@ -61,7 +85,7 @@ describe('handleCloseAcknowledged', () => {
     }
 
     expect(() => {
-      handleCloseAcknowledged(mockBrokerState, registry, processManager, actions, message)
+      handleCloseAcknowledged(routingContext, message)
     }).not.toThrow()
 
     // Process should be terminated (removed)
@@ -81,7 +105,7 @@ describe('handleCloseAcknowledged', () => {
     }
 
     expect(() => {
-      handleCloseAcknowledged(mockBrokerState, registry, processManager, actions, message)
+      handleCloseAcknowledged(routingContext, message)
     }).not.toThrow()
   })
 
@@ -107,7 +131,7 @@ describe('handleCloseAcknowledged', () => {
       source: mockWindow,
     }
 
-    handleCloseAcknowledged(mockBrokerState, registry, processManager, actions, message)
+    handleCloseAcknowledged(routingContext, message)
 
     expect(notifyEventMock).toHaveBeenCalledWith('close', { notify: false })
   })
@@ -135,12 +159,12 @@ describe('handleCloseAcknowledged', () => {
       senderId: 'remote-2',
     }
 
-    handleCloseAcknowledged(mockBrokerState, registry, processManager, actions, <MessageEvent<IAction>>{
+    handleCloseAcknowledged(routingContext, <MessageEvent<IAction>>{
       data: action1,
       source: mockWindow,
     })
 
-    handleCloseAcknowledged(mockBrokerState, registry, processManager, actions, <MessageEvent<IAction>>{
+    handleCloseAcknowledged(routingContext, <MessageEvent<IAction>>{
       data: action2,
       source: window2,
     })

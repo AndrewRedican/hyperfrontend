@@ -1,8 +1,8 @@
 import type { RollupOptions, OutputOptions, RollupLog } from 'rollup'
-import { join } from 'node:path'
 import type { EntryPoint, CJSConfig, BuildContext } from './types'
-import { createNodeResolvePlugin, createCommonJsPlugin, createTypescriptPlugin, createJsonPlugin } from './rollup-plugins'
+import { join } from 'node:path'
 import { createExternalFn, getExternalDependencies, getPackageJsonPath } from './externals'
+import { createNodeResolvePlugin, createCommonJsPlugin, createTypescriptPlugin, createJsonPlugin } from './rollup-plugins'
 
 /**
  * Creates CJS output configuration for a single entry point.

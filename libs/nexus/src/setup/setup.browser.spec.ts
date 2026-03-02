@@ -18,7 +18,7 @@ describe('Setup Utilities', () => {
     })
 
     it('creates broker with debug enabled', () => {
-      const broker = setupBroker({ name: 'debug-broker', debug: true, contract: defaultContract })
+      const broker = setupBroker({ name: 'debug-broker', logLevel: 'debug', contract: defaultContract })
 
       expect(broker).toBeDefined()
       expect(broker.name).toBe('debug-broker')
@@ -27,7 +27,7 @@ describe('Setup Utilities', () => {
     it('creates broker with custom settings', () => {
       const broker = setupBroker({
         name: 'custom-broker',
-        debug: false,
+
         contract: defaultContract,
         originWhitelist: ['https://example.com'],
       })
@@ -362,7 +362,7 @@ describe('Setup Utilities', () => {
       // Create broker
       const broker = setupBroker({
         name: 'integrated-broker',
-        debug: true,
+        logLevel: 'debug',
         contract: fullContract,
       })
 

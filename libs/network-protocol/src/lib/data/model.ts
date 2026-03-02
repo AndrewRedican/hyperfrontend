@@ -1,4 +1,6 @@
 import type { Schema } from '@hyperfrontend/json-utils'
+import { parse, stringify } from '@hyperfrontend/immutable-api-utils/built-in-copy/json'
+import { freeze } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
 
 /**
  * Branded type representing a JSON-serialized string of type T.
@@ -27,19 +29,19 @@ export type JSONString<T = unknown> = string & {
  */
 export interface SerializedData<T = unknown> {
   /** Identifies a process */
-  pid: string
+  readonly pid: string
   /** Identifies this message */
-  id: string
+  readonly id: string
   /** A counter that increments by 1, representing steps of a process */
-  sequence: number
+  readonly sequence: number
   /** A key used to encrypt a reply with */
-  key: string
+  readonly key: string
   /** Contents of a message as JSON string */
-  message: JSONString<T>
+  readonly message: JSONString<T>
   /** Schema of a message */
-  schema: Schema
+  readonly schema: Schema
   /** Hash derived from the schema */
-  schemaHash: string
+  readonly schemaHash: string
 }
 
 /**
@@ -51,19 +53,19 @@ export interface SerializedData<T = unknown> {
  */
 export interface Data<T = unknown> {
   /** Identifies a process */
-  pid: string
+  readonly pid: string
   /** Identifies this message */
-  id: string
+  readonly id: string
   /** A counter that increments by 1, representing steps of a process */
-  sequence: number
+  readonly sequence: number
   /** A key used to encrypt a reply with */
-  key: string
+  readonly key: string
   /** Contents of a message (deserialized) */
-  message: T
+  readonly message: T
   /** Schema of a message */
-  schema: Schema
+  readonly schema: Schema
   /** Hash derived from the schema */
-  schemaHash: string
+  readonly schemaHash: string
 }
 
 /**
@@ -114,7 +116,7 @@ export function asJSONString<T = unknown>(value: string): JSONString<T> {
  * @returns The parsed object of type T
  */
 export function parseJSONString<T>(jsonString: JSONString<T>): T {
-  return <T>JSON.parse(jsonString)
+  return <T>parse(jsonString)
 }
 
 /**
@@ -124,10 +126,10 @@ export function parseJSONString<T>(jsonString: JSONString<T>): T {
  * @returns The deserialized data with parsed message
  */
 export function deserializeData<T>(serialized: SerializedData<T>): Data<T> {
-  return {
+  return freeze({
     ...serialized,
     message: parseJSONString(serialized.message),
-  }
+  })
 }
 
 /**
@@ -137,8 +139,8 @@ export function deserializeData<T>(serialized: SerializedData<T>): Data<T> {
  * @returns The serialized data with stringified message
  */
 export function serializeData<T>(data: Data<T>): SerializedData<T> {
-  return {
+  return freeze({
     ...data,
-    message: asJSONString<T>(JSON.stringify(data.message)),
-  }
+    message: asJSONString<T>(stringify(data.message)),
+  })
 }

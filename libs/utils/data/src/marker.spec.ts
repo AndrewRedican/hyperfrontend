@@ -1,5 +1,5 @@
-import { marker } from './marker'
 import { isMarker } from './is-marker'
+import { marker } from './marker'
 
 describe('marker', () => {
   it('creates unique names that cannot be repeated', () => {

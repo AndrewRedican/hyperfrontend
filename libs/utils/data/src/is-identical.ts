@@ -1,8 +1,8 @@
 import type { UnknownIterable, UnknownIterableKey, ReferenceStack } from './models'
+import { getIterableOperators } from './get-iterable-operators'
+import { isIterableType } from './is-iterable-type'
 import { referenceStack } from './reference-stack'
 import { sameStructure } from './same-structure'
-import { isIterableType } from './is-iterable-type'
-import { getIterableOperators } from './get-iterable-operators'
 import { getConfig } from './shared/consts'
 
 /**
@@ -109,7 +109,7 @@ const isIdenticalForCircularReferencesRecursive = (
  * @returns True if the values are identical, false otherwise
  */
 export const isIdentical = (targetA: unknown, targetB: unknown): boolean => {
-  const targets = [targetA, targetB] as [UnknownIterable, UnknownIterable]
+  const targets = <[UnknownIterable, UnknownIterable]>[targetA, targetB]
   if (getConfig().detectCircularReferences) {
     return isIdenticalForCircularReferencesRecursive(...targets, referenceStack(), referenceStack())
   }

@@ -1,11 +1,13 @@
-import type { BrokerState } from '../types'
+import type { Logger } from '@hyperfrontend/logging'
 import type { IAction } from '../../types/action'
 import type { IChannelContract } from '../../types/contract'
-import { handleClose } from './handle-close'
-import { createRegistry } from '../../core/registry/factory'
-import { createProcessManager } from '../../core/processes/factory'
+import type { BrokerState } from '../types'
+import type { RoutingContext } from './types'
 import { createActionCreators } from '../../core/actions/factory'
+import { createProcessManager } from '../../core/processes/factory'
+import { createRegistry } from '../../core/registry/factory'
 import { addChannel } from '../channels/add'
+import { handleClose } from './handle-close'
 
 describe('handleClose', () => {
   const validContract: IChannelContract = {
@@ -13,23 +15,37 @@ describe('handleClose', () => {
     emitted: [{ type: 'response-message', description: 'Response message' }],
   }
 
-  const mockBrokerState: BrokerState = {
-    id: 'broker-1',
-    name: 'test-broker',
-    window: <Window>global.window,
-    contract: validContract,
-    settings: {
-      contract: validContract,
-      debug: false,
-    },
-  }
+  let mockLogger: Logger
+  let mockBrokerState: BrokerState
 
   let registry: ReturnType<typeof createRegistry>
   let processManager: ReturnType<typeof createProcessManager>
   let actions: ReturnType<typeof createActionCreators>
   let mockWindow: Window
+  let routingContext: RoutingContext
 
   beforeEach(() => {
+    mockLogger = {
+      error: jest.fn(),
+      warn: jest.fn(),
+      log: jest.fn(),
+      info: jest.fn(),
+      debug: jest.fn(),
+      setLogLevel: jest.fn(),
+      getLogLevel: jest.fn(() => 'debug'),
+    }
+
+    mockBrokerState = {
+      id: 'broker-1',
+      name: 'test-broker',
+      window: <Window>global.window,
+      contract: validContract,
+      settings: {
+        contract: validContract,
+      },
+      logger: mockLogger,
+    }
+
     registry = createRegistry()
     processManager = createProcessManager()
     actions = createActionCreators({
@@ -39,6 +55,14 @@ describe('handleClose', () => {
     mockWindow = <Window>(<unknown>{
       postMessage: jest.fn(),
     })
+
+    routingContext = {
+      state: mockBrokerState,
+      registry,
+      processManager,
+      actions,
+      logger: mockLogger,
+    }
   })
 
   it('close open channel and send acknowledgement', () => {
@@ -66,7 +90,7 @@ describe('handleClose', () => {
       source: mockWindow,
     }
 
-    handleClose(mockBrokerState, registry, processManager, actions, message)
+    handleClose(routingContext, message)
 
     // Should send acknowledgement
     expect(mockWindow.postMessage).toHaveBeenCalledWith(
@@ -91,7 +115,7 @@ describe('handleClose', () => {
     }
 
     expect(() => {
-      handleClose(mockBrokerState, registry, processManager, actions, message)
+      handleClose(routingContext, message)
     }).not.toThrow()
   })
 
@@ -118,7 +142,7 @@ describe('handleClose', () => {
 
     const postMessageCallsBefore = (<jest.Mock>mockWindow.postMessage).mock.calls.length
 
-    handleClose(mockBrokerState, registry, processManager, actions, message)
+    handleClose(routingContext, message)
 
     // Should not send any messages
     expect((<jest.Mock>mockWindow.postMessage).mock.calls.length).toBe(postMessageCallsBefore)
@@ -147,7 +171,7 @@ describe('handleClose', () => {
       source: mockWindow,
     }
 
-    handleClose(mockBrokerState, registry, processManager, actions, message)
+    handleClose(routingContext, message)
 
     // Should call close with notify=false
     expect(closeSpy).toHaveBeenCalledWith(false)
@@ -171,7 +195,7 @@ describe('handleClose', () => {
     registry.add(channel2)
     const processId2 = processManager.create(channel2)
 
-    handleClose(mockBrokerState, registry, processManager, actions, <MessageEvent<IAction>>{
+    handleClose(routingContext, <MessageEvent<IAction>>{
       data: <IAction>{
         type: '[nexus] connection-closed',
         processId: processId1,
@@ -180,7 +204,7 @@ describe('handleClose', () => {
       source: mockWindow,
     })
 
-    handleClose(mockBrokerState, registry, processManager, actions, <MessageEvent<IAction>>{
+    handleClose(routingContext, <MessageEvent<IAction>>{
       data: <IAction>{
         type: '[nexus] connection-closed',
         processId: processId2,
@@ -214,7 +238,7 @@ describe('handleClose', () => {
       source: mockWindow,
     }
 
-    handleClose(mockBrokerState, registry, processManager, actions, message)
+    handleClose(routingContext, message)
 
     expect(mockWindow.postMessage).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -236,7 +260,7 @@ describe('handleClose', () => {
     }
 
     expect(() => {
-      handleClose(mockBrokerState, registry, processManager, actions, message)
+      handleClose(routingContext, message)
     }).not.toThrow()
 
     expect(mockWindow.postMessage).not.toHaveBeenCalled()

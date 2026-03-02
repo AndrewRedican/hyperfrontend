@@ -1,3 +1,5 @@
+import { setInterval, clearInterval } from '@hyperfrontend/immutable-api-utils/built-in-copy/timers'
+
 /**
  * Creates a repeating interval that invokes a callback function at regular intervals.
  *
@@ -6,6 +8,6 @@
  * @returns A cleanup function that stops the interval when called
  */
 export function setIntervalCallback(callback: () => void, interval: number): () => void {
-  const timerId: NodeJS.Timeout = setInterval(callback, interval)
+  const timerId = setInterval(callback, interval)
   return (): void => clearInterval(timerId)
 }

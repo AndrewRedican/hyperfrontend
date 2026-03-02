@@ -1,6 +1,9 @@
 import type { Schema } from '../types/schema'
-import { getJsonType } from './type-detection'
+import { stringify } from '@hyperfrontend/immutable-api-utils/built-in-copy/json'
+import { keys } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
+import { createSet } from '@hyperfrontend/immutable-api-utils/built-in-copy/set'
 import { mergeSchemas } from './merge-schemas'
+import { getJsonType } from './type-detection'
 
 /**
  * Options for schema generation.
@@ -103,16 +106,16 @@ function generateSchema(value: unknown, options: Required<GenerateOptions>): Sch
  * @returns An object JSON Schema
  */
 function generateObjectSchema(obj: Record<string, unknown>, options: Required<GenerateOptions>): Schema {
-  const keys = Object.keys(obj)
+  const keysList = keys(obj)
 
   /* istanbul ignore if -- empty object edge case */
-  if (keys.length === 0) {
+  if (keysList.length === 0) {
     return { type: 'object' }
   }
 
   const properties: Record<string, Schema> = {}
 
-  for (const key of keys) {
+  for (const key of keysList) {
     properties[key] = generateSchema(obj[key], options)
   }
 
@@ -122,8 +125,8 @@ function generateObjectSchema(obj: Record<string, unknown>, options: Required<Ge
   }
 
   /* istanbul ignore else -- includeRequired defaults to true */
-  if (options.includeRequired && keys.length > 0) {
-    schema.required = keys
+  if (options.includeRequired && keysList.length > 0) {
+    schema.required = keysList
   }
 
   /* istanbul ignore if -- additionalProperties defaults to true */
@@ -207,11 +210,11 @@ function generateArraySchema(arr: unknown[], options: Required<GenerateOptions>)
  * @returns Array of unique schemas
  */
 function deduplicateSchemas(schemas: Schema[]): Schema[] {
-  const seen = new Set<string>()
+  const seen = createSet<string>()
   const unique: Schema[] = []
 
   for (const schema of schemas) {
-    const key = JSON.stringify(schema)
+    const key = stringify(schema)
     if (!seen.has(key)) {
       seen.add(key)
       unique.push(schema)

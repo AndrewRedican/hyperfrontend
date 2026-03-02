@@ -88,7 +88,7 @@ export function paragraph(config?: ElementConfig | undefined): ElementMethods<HT
  * @returns An ElementMethods object containing the created heading element and helper methods
  */
 export function header(level: number, config?: ElementConfig | undefined): ElementMethods<HTMLHeadingElement> {
-  return createElement<HTMLHeadingElement>(`h${level}` as HtmlTagName, config)
+  return createElement<HTMLHeadingElement>(<HtmlTagName>`h${level}`, config)
 }
 
 /* istanbul ignore next */

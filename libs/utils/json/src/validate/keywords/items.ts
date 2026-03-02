@@ -1,5 +1,6 @@
 import type { Schema } from '../../types/schema'
 import type { ValidationContext } from '../context'
+import { isArray } from '@hyperfrontend/immutable-api-utils/built-in-copy/array'
 import { addError, pushPath, shouldContinue } from '../context'
 
 /**
@@ -18,7 +19,7 @@ export function validateItems(instance: unknown[], schema: Schema, ctx: Validati
 
   let valid = true
 
-  if (Array.isArray(items)) {
+  if (isArray(items)) {
     // Tuple validation
     for (let i = 0; i < items.length && i < instance.length; i++) {
       const itemSchema = items[i]

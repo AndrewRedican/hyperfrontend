@@ -1,5 +1,4 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { callStack } from '../call-stack/call-stack'
 import type {
   InitializingChangeCallback,
   ReadyChangeCallback,
@@ -8,6 +7,7 @@ import type {
   ActiveChangeCallback,
   Process,
 } from './lifecycle-aware-component.model'
+import { callStack } from '../call-stack/call-stack'
 
 export abstract class LifecycleAwareComponent {
   private _initializing = false

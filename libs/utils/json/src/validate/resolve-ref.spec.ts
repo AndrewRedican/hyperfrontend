@@ -1,6 +1,6 @@
 import type { Schema } from '../types/schema'
-import { resolveRef } from './resolve-ref'
 import { createValidationContext } from './context'
+import { resolveRef } from './resolve-ref'
 
 describe('resolveRef', () => {
   describe('definition references', () => {
@@ -124,7 +124,7 @@ describe('resolveRef', () => {
     it('returns undefined when path leads to null', () => {
       const schema: Schema = {
         definitions: {
-          nullDef: null as unknown as Schema,
+          nullDef: <Schema>(<unknown>null),
         },
       }
       const ctx = createValidationContext(schema)

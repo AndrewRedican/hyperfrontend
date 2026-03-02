@@ -1,6 +1,6 @@
+import { isValidSerializedData } from '../../data/validations/is-valid-serialized-data'
 import { isValidSerializedEncryptedPacket } from './is-valid-serialized-encrypted-packet'
 import { isValidUnobfuscatedPacketBase } from './is-valid-unobfuscated-packet-base'
-import { isValidSerializedData } from '../../data/validations/is-valid-serialized-data'
 
 jest.mock('./is-valid-unobfuscated-packet-base', () => ({
   isValidUnobfuscatedPacketBase: jest.fn(),
@@ -13,11 +13,11 @@ describe('isValidSerializedEncryptedPacket', () => {
   beforeEach(() => jest.clearAllMocks())
 
   it('returns true when packet is valid and data is serialized correctly', () => {
-    ;(isValidUnobfuscatedPacketBase as jest.Mock).mockImplementation(() => ({
+    ;(<jest.Mock>isValidUnobfuscatedPacketBase).mockImplementation(() => ({
       isValid: true,
       pkt: { data: 'some serialized data' },
     }))
-    ;(isValidSerializedData as jest.Mock).mockImplementation(() => true)
+    ;(<jest.Mock>isValidSerializedData).mockImplementation(() => true)
     const packet = 'mocked packet'
     const result = isValidSerializedEncryptedPacket(packet)
     expect(result).toBe(true)
@@ -26,7 +26,7 @@ describe('isValidSerializedEncryptedPacket', () => {
   })
 
   it('returns false when packet is invalid', () => {
-    ;(isValidUnobfuscatedPacketBase as jest.Mock).mockImplementation(() => ({
+    ;(<jest.Mock>isValidUnobfuscatedPacketBase).mockImplementation(() => ({
       isValid: false,
       pkt: { data: '' },
     }))
@@ -37,11 +37,11 @@ describe('isValidSerializedEncryptedPacket', () => {
   })
 
   it('returns false when data is not serialized correctly', () => {
-    ;(isValidUnobfuscatedPacketBase as jest.Mock).mockImplementation(() => ({
+    ;(<jest.Mock>isValidUnobfuscatedPacketBase).mockImplementation(() => ({
       isValid: true,
       pkt: { data: 'invalid serialized data' },
     }))
-    ;(isValidSerializedData as jest.Mock).mockImplementation(() => false)
+    ;(<jest.Mock>isValidSerializedData).mockImplementation(() => false)
     const packet = 'mocked packet with invalid data'
     const result = isValidSerializedEncryptedPacket(packet)
     expect(result).toBe(false)

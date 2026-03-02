@@ -1,19 +1,13 @@
 import type { IAction } from '../../types/action'
-import type { BrokerState } from '../types'
-import type { Registry } from '../../core/registry/factory'
-import type { ProcessManager } from '../../core/processes/factory'
-import type { ActionCreators } from '../../core/actions/factory'
 import type { ChannelHandle } from '../../types/channel'
+import type { RoutingContext } from './types'
 import { getById } from '../../core/registry/get-by-id'
 
 /**
- * Handles DESTROY_CONNECTION action
- * Immediately destroys a connection without handshake
+ * Handles DESTROY_CONNECTION action.
+ * Immediately destroys a connection without handshake.
  *
- * @param state - Current broker state
- * @param registry - Channel registry for accessing channels
- * @param processManager - Process manager for tracking communication processes
- * @param actions - Action creators for generating responses
+ * @param context - Routing context with state, registry, actions, and logger
  * @param message - Message event containing the DESTROY_CONNECTION action
  *
  * @remarks
@@ -29,13 +23,8 @@ import { getById } from '../../core/registry/get-by-id'
  * -> Remote receives (this handler)
  * -> Channel immediately removed
  */
-export function handleDestroy(
-  state: BrokerState,
-  registry: Registry,
-  processManager: ProcessManager,
-  actions: ActionCreators,
-  message: MessageEvent<IAction>
-): void {
+export function handleDestroy(context: RoutingContext, message: MessageEvent<IAction>): void {
+  const { registry } = context
   const action = message.data
   const senderId = <string>action.senderId
 

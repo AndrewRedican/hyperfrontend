@@ -1,5 +1,5 @@
-import type { IMessage } from '../../types/message'
 import type { ChannelJSON } from '../../types/channel'
+import type { IMessage } from '../../types/message'
 
 /**
  * Generic message handler that receives all messages

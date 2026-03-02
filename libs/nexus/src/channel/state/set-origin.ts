@@ -1,4 +1,5 @@
 import type { ChannelState } from '../../types/channel'
+import { freeze } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
 
 /**
  * Sets the origin for a channel.
@@ -9,8 +10,8 @@ import type { ChannelState } from '../../types/channel'
  * @returns New state with origin updated
  */
 export function setOrigin(state: ChannelState, origin: string): ChannelState {
-  return {
+  return freeze(<ChannelState>{
     ...state,
     origin,
-  }
+  })
 }

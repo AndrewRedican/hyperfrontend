@@ -1,6 +1,6 @@
 import type { EntryPointDiscovery } from './types'
-import { existsSync, mkdirSync, cpSync, rmSync, readdirSync, statSync } from 'node:fs'
 import { spawnSync } from 'node:child_process'
+import { existsSync, mkdirSync, cpSync, rmSync, readdirSync, statSync } from 'node:fs'
 import { dirname, join, relative, resolve } from 'node:path'
 import { logger } from '@nx/devkit'
 

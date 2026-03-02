@@ -1,5 +1,6 @@
 import type { Protocol } from '../model'
 import { getType } from '@hyperfrontend/data-utils'
+import { keys, entries } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
 
 type ValidProtocolResult = Record<keyof Protocol, boolean | undefined>
 
@@ -24,9 +25,9 @@ function isValidProtocol(protocol: unknown): ValidProtocolResult {
     result[key] = key in prt && getType(prt[key]) === 'function'
     return result[key]
   }
-  const keys = <(keyof ValidProtocolResult)[]>Object.keys(result)
-  for (let i = 0; i < keys.length; i += 1) {
-    if (!isValidFunction(keys[i])) return result
+  const keysList = <(keyof ValidProtocolResult)[]>keys(result)
+  for (let i = 0; i < keysList.length; i += 1) {
+    if (!isValidFunction(keysList[i])) return result
   }
   return result
 }
@@ -39,6 +40,6 @@ function isValidProtocol(protocol: unknown): ValidProtocolResult {
  */
 export function getFirstInvalidProtocolProperty(protocol: unknown): keyof ValidProtocolResult | '' {
   const validations = isValidProtocol(protocol)
-  const firstInvalidProperty = Object.entries(validations).find(([, isValid]) => isValid === false)
+  const firstInvalidProperty = entries(validations).find(([, isValid]) => isValid === false)
   return firstInvalidProperty ? <keyof ValidProtocolResult>firstInvalidProperty[0] : ''
 }

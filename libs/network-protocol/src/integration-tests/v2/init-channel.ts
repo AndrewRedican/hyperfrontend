@@ -1,15 +1,15 @@
 /* istanbul ignore file */
 import type { Channel } from '../../lib/channel/model'
-import type { SendPacketFn } from '../../lib/sender/model'
 import type { ReceivePacketFn } from '../../lib/receiver/model'
-import { uint8ArrayToBase64, base64ToUint8Array } from '@hyperfrontend/string-utils/browser'
+import type { SendPacketFn } from '../../lib/sender/model'
 import { logger } from '@hyperfrontend/logging'
-import { createSenderFactory } from '../../lib/sender/creators/create-sender-factory'
-import { createReceiverFactory } from '../../lib/receiver/creators/create-receiver-factory'
-import { createSerializedEncryptedPacketCreator } from '../../lib/packet/creators/create-serialized-encrypted-packet-creator'
-import { createDeserializedEncryptedPacketCreator } from '../../lib/packet/creators/create-deserialized-encrypted-packet-creator'
-import { createChannelFactory } from '../../lib/channel/creators/create-channel'
+import { uint8ArrayToBase64, base64ToUint8Array } from '@hyperfrontend/string-utils/browser'
 import { createProtocol } from '../../browser/v2'
+import { createChannelFactory } from '../../lib/channel/creators/create-channel'
+import { createDeserializedEncryptedPacketCreator } from '../../lib/packet/creators/create-deserialized-encrypted-packet-creator'
+import { createSerializedEncryptedPacketCreator } from '../../lib/packet/creators/create-serialized-encrypted-packet-creator'
+import { createReceiverFactory } from '../../lib/receiver/creators/create-receiver-factory'
+import { createSenderFactory } from '../../lib/sender/creators/create-sender-factory'
 
 /** Pre-shared key for V2 integration tests */
 export const INTEGRATION_TEST_PSK = 'integration-test-shared-secret-key-2024'

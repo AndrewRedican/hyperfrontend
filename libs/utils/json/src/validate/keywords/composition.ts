@@ -1,5 +1,6 @@
 import type { Schema } from '../../types/schema'
 import type { ValidationContext } from '../context'
+import { defineProperty } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
 import { addError, createValidationContext, shouldContinue } from '../context'
 
 /**
@@ -48,7 +49,7 @@ export function validateAnyOf(instance: unknown, schema: Schema, ctx: Validation
   for (const subSchema of anyOf) {
     const subCtx = createValidationContext(ctx.rootSchema, ctx.validate, false)
     // Copy path from parent context
-    Object.defineProperty(subCtx, 'path', { value: ctx.path, writable: false })
+    defineProperty(subCtx, 'path', { value: ctx.path, writable: false })
     if (ctx.validate(instance, subSchema, subCtx)) {
       return true
     }
@@ -76,7 +77,7 @@ export function validateOneOf(instance: unknown, schema: Schema, ctx: Validation
 
   for (const subSchema of oneOf) {
     const subCtx = createValidationContext(ctx.rootSchema, ctx.validate, false)
-    Object.defineProperty(subCtx, 'path', { value: ctx.path, writable: false })
+    defineProperty(subCtx, 'path', { value: ctx.path, writable: false })
     if (ctx.validate(instance, subSchema, subCtx)) {
       matchCount++
       if (matchCount > 1) break // Early exit if more than one match
@@ -113,7 +114,7 @@ export function validateNot(instance: unknown, schema: Schema, ctx: ValidationCo
   }
 
   const subCtx = createValidationContext(ctx.rootSchema, ctx.validate, false)
-  Object.defineProperty(subCtx, 'path', { value: ctx.path, writable: false })
+  defineProperty(subCtx, 'path', { value: ctx.path, writable: false })
 
   if (ctx.validate(instance, not, subCtx)) {
     // Schema matched when it shouldn't have

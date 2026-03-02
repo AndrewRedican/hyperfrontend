@@ -78,7 +78,7 @@ jobs:
   build:
     name: build
     runs-on: ubuntu-latest
-    needs: setup
+    needs: typecheck
     steps:
       - name: Checkout repository
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
@@ -132,7 +132,7 @@ jobs:
 
       - name: Upload overall coverage to Codecov
         if: always()
-        uses: codecov/codecov-action@0561704f0f02c16a585d4c7555e57fa2e44cf909 # v5.5.2
+        uses: codecov/codecov-action@671740ac38dd9b0130fbe1cec585b89eea48d3de # v5.5.2
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           directory: ./coverage
@@ -182,7 +182,7 @@ jobs:
   e2e:
     name: e2e
     runs-on: ubuntu-latest
-    needs: setup
+    needs: build
     steps:
       - name: Checkout repository
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2

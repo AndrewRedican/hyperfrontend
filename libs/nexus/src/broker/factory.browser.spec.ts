@@ -1,6 +1,6 @@
-import { createBroker } from './factory'
 import type { IChannelContract } from '../types/contract'
 import type { SecurityPolicy } from './types'
+import { createBroker } from './factory'
 
 // Mock uuidV4 to return unique IDs
 let uuidCounter = 0
@@ -59,7 +59,7 @@ describe('createBroker', () => {
       })
 
       expect(broker.settings).toBeDefined()
-      expect(broker.settings.debug).toBe(false)
+      expect(broker.logger.getLogLevel()).toBe('error')
     })
 
     it('merges custom settings with defaults', () => {
@@ -67,12 +67,12 @@ describe('createBroker', () => {
         name: 'test-broker',
         contract: mockContract,
         settings: {
-          debug: true,
+          logLevel: 'debug',
           whitelist: ['https://trusted.com'],
         },
       })
 
-      expect(broker.settings.debug).toBe(true)
+      expect(broker.logger.getLogLevel()).toBe('debug')
       expect(broker.settings.whitelist).toEqual(['https://trusted.com'])
     })
 
@@ -119,21 +119,11 @@ describe('createBroker', () => {
       const broker = createBroker({
         name: 'test-broker',
         contract: mockContract,
-        settings: { debug: true },
+        settings: { logLevel: 'debug' },
       })
 
       expect(broker.settings).toBeDefined()
-      expect(broker.settings.debug).toBe(true)
-    })
-
-    it('exposes debugMode flag', () => {
-      const broker = createBroker({
-        name: 'test-broker',
-        contract: mockContract,
-        settings: { debug: true },
-      })
-
-      expect(broker.debugMode).toBe(true)
+      expect(broker.settings.logLevel).toBe('debug')
     })
 
     it('exposes acceptedActionTypes', () => {
@@ -346,7 +336,6 @@ describe('createBroker', () => {
       expect(json).toHaveProperty('name')
       expect(json).toHaveProperty('settings')
       expect(json).toHaveProperty('acceptedActionTypes')
-      expect(json).toHaveProperty('debugMode')
       expect(json).toHaveProperty('channels')
     })
 
@@ -354,13 +343,12 @@ describe('createBroker', () => {
       const broker = createBroker({
         name: 'test-broker',
         contract: mockContract,
-        settings: { debug: true },
+        settings: { logLevel: 'debug' },
       })
 
       const json = broker.toJSON()
 
       expect(json['name']).toBe('test-broker')
-      expect(json['debugMode']).toBe(true)
       expect(json['acceptedActionTypes']).toEqual(['test-action'])
     })
 
@@ -565,7 +553,7 @@ describe('createBroker', () => {
         name: 'test-broker',
         contract: mockContract,
         settings: {
-          debug: true,
+          logLevel: 'debug',
           blacklist: ['https://blocked.com'],
         },
       })
@@ -581,7 +569,7 @@ describe('createBroker', () => {
         name: 'test-broker',
         contract: mockContract,
         settings: {
-          debug: true,
+          logLevel: 'debug',
           whitelist: ['https://trusted.com'],
         },
       })

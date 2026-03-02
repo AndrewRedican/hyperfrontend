@@ -1,5 +1,5 @@
-import { isValidTopic } from './is-valid-topic'
 import { topic } from '../creators/mocks'
+import { isValidTopic } from './is-valid-topic'
 
 describe('isValidTopic', () => {
   it('returns true for a valid topic', () => {

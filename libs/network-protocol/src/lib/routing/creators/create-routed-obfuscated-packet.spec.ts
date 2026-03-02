@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { topicId } from '../../topic/creators/mocks'
 import { obfuscatedPacket } from '../../packet/creators/mocks'
+import { topicId } from '../../topic/creators/mocks'
 import { isValidRoutedObfuscatedPacket } from '../validations/is-valid-routed-obfuscated-packet'
 import { createRoutedObfuscatedPacket } from './create-routed-obfuscated-packet'
 

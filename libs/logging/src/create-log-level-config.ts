@@ -1,5 +1,8 @@
 export type LogLevel = 'none' | 'error' | 'warn' | 'log' | 'info' | 'debug'
 
+import { createError } from '@hyperfrontend/immutable-api-utils/built-in-copy/error'
+import { freeze } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
+
 export interface LogLevelState {
   level: LogLevel
 }
@@ -46,13 +49,13 @@ export function isValidLogLevel(level: LogLevel) {
  */
 export function createLogLevelConfig(level: LogLevel = 'error'): LogLevelConfig {
   if (!isValidLogLevel(level)) {
-    throw new Error('Cannot create log level configuration with a valid default log level')
+    throw createError('Cannot create log level configuration with a valid default log level')
   }
   const state: LogLevelState = { level }
   const getLogLevel: GetLogLevel = () => state.level
   const setLogLevel: SetLogLevel = (level) => {
     if (!isValidLogLevel(level)) {
-      throw new Error(`Cannot set value '${level}' level. Expected levels are ${logLevels}.`)
+      throw createError(`Cannot set value '${level}' level. Expected levels are ${logLevels}.`)
     }
     state.level = level
   }
@@ -62,7 +65,7 @@ export function createLogLevelConfig(level: LogLevel = 'error'): LogLevelConfig 
     }
     return priority[level] >= priority[state.level]
   }
-  return Object.freeze({
+  return freeze({
     getLogLevel,
     setLogLevel,
     shouldLog,

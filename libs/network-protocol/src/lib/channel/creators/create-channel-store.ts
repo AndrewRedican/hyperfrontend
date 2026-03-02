@@ -1,4 +1,6 @@
 import type { ChannelStore, Channel, ChannelEntry, ChannelCreater } from '../model'
+import { createError } from '@hyperfrontend/immutable-api-utils/built-in-copy/error'
+import { freeze } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
 import { uuidV4 } from '@hyperfrontend/random-generator-utils'
 import { isValidLabel } from '../validations/is-valid-label'
 
@@ -13,7 +15,7 @@ export function createChannelStoreFactory(createChannel: ChannelCreater) {
     const entries: ChannelEntry[] = []
     const addEntry = (channel: Channel) =>
       entries.push(
-        Object.freeze({
+        freeze({
           id: uuidV4(),
           name: channel.label,
           channel,
@@ -31,10 +33,10 @@ export function createChannelStoreFactory(createChannel: ChannelCreater) {
 
     const create: ChannelStore['create'] = (label, send, receive, protocol) => {
       if (!isValidLabel(label)) {
-        throw new Error(`Cannot add a channel with invalid name`)
+        throw createError(`Cannot add a channel with invalid name`)
       }
       if (existsByName(label)) {
-        throw new Error(`Cannot create a channel with name '${label}' as a channel with that name already exists`)
+        throw createError(`Cannot create a channel with name '${label}' as a channel with that name already exists`)
       }
       const channel = createChannel(label, send, receive, protocol)
       addEntry(channel)
@@ -43,11 +45,11 @@ export function createChannelStoreFactory(createChannel: ChannelCreater) {
 
     const addChannel = (channel: Channel) => {
       if (existsByName(channel.label)) {
-        throw new Error(`Cannot add a channel with name '${channel.label}' as it already exists`)
+        throw createError(`Cannot add a channel with name '${channel.label}' as it already exists`)
       }
       /* istanbul ignore next - defensive check: if instance exists, name will exist (checked above) */
       if (channelExists(channel)) {
-        throw new Error(`Cannot add a channel named '${channel.label}'. It is already registered`)
+        throw createError(`Cannot add a channel named '${channel.label}'. It is already registered`)
       }
       addEntry(channel)
     }
@@ -57,7 +59,7 @@ export function createChannelStoreFactory(createChannel: ChannelCreater) {
     const removeByNameSingle = (name: string) => {
       const index = getIndexByName(name)
       if (index === -1) {
-        throw new Error(`No channel found with name '${name}' to remove`)
+        throw createError(`No channel found with name '${name}' to remove`)
       }
       removeByIndex(index)
     }
@@ -65,7 +67,7 @@ export function createChannelStoreFactory(createChannel: ChannelCreater) {
     const removeByIdSingle = (id: string) => {
       const index = getIndexById(id)
       if (index === -1) {
-        throw new Error(`No channel found with id '${id}' to remove`)
+        throw createError(`No channel found with id '${id}' to remove`)
       }
       removeByIndex(index)
     }
@@ -82,7 +84,7 @@ export function createChannelStoreFactory(createChannel: ChannelCreater) {
       } while (entries.length > 0)
     }
 
-    return Object.freeze({
+    return freeze({
       create,
       add,
       existsByName,
@@ -93,7 +95,7 @@ export function createChannelStoreFactory(createChannel: ChannelCreater) {
       getByName,
       getById,
       get list() {
-        return Object.freeze([...entries])
+        return freeze([...entries])
       },
     })
   }

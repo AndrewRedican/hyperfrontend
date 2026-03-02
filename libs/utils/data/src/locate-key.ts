@@ -1,8 +1,9 @@
 import type { Callback, DepthConfig } from './models'
-import { traverse } from './traverse'
+import { createError } from '@hyperfrontend/immutable-api-utils/built-in-copy/error'
+import { getIterableOperators } from './get-iterable-operators'
 import { getType } from './get-type'
 import { isIterableType } from './is-iterable-type'
-import { getIterableOperators } from './get-iterable-operators'
+import { traverse } from './traverse'
 
 /**
  * Returns a list of locations where the key name matches a pattern or an exact value anywhere in the data structure of the target.
@@ -16,7 +17,7 @@ import { getIterableOperators } from './get-iterable-operators'
  */
 export const locateKey = (target: unknown, pattern: string | RegExp, options?: DepthConfig): string[][] => {
   const patternIsString = typeof pattern === 'string'
-  if (!patternIsString && !(pattern instanceof RegExp)) throw new Error('Expected pattern to be either a string of a regular expression.')
+  if (!patternIsString && !(pattern instanceof RegExp)) throw createError('Expected pattern to be either a string of a regular expression.')
   const match = patternIsString ? (key: string) => key === pattern : (key: string) => pattern.test(key)
   const callback: Callback = (key, value, path, state) => {
     const type = getType(value)
@@ -24,5 +25,5 @@ export const locateKey = (target: unknown, pattern: string | RegExp, options?: D
     const { getKeys } = getIterableOperators(type)
     getKeys(value).forEach((nextKey) => match(nextKey) && state.locations.push([...path, nextKey]))
   }
-  return traverse(target, callback, { depth: [0, '*'], ...options } as DepthConfig, { locations: [] }).locations
+  return traverse(target, callback, <DepthConfig>{ depth: [0, '*'], ...options }, { locations: [] }).locations
 }

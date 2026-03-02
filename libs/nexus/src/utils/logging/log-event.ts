@@ -1,8 +1,8 @@
-import type { Logger } from './create-logger'
+import type { Logger } from '@hyperfrontend/logging'
 import type { ChannelEvent } from '../../types/events'
 
 /**
- * Logs a channel event in a structured format
+ * Logs a channel event in a structured format.
  *
  * @param logger - Logger instance to use
  * @param event - Type of channel event that occurred

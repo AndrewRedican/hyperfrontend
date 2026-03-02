@@ -23,7 +23,7 @@ describe('normalizeToBaseTimeWindow', () => {
   })
 
   it('handles null or invalid time input', () => {
-    expect(() => normalizeToBaseTimeWindow(null as any, 30)).toThrow()
+    expect(() => normalizeToBaseTimeWindow(<any>null, 30)).toThrow()
     expect(() => normalizeToBaseTimeWindow(new Date('invalid-date'), 30)).toThrow()
   })
 

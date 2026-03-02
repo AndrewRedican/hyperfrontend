@@ -2,12 +2,12 @@
  * Tests for send messaging operation
  */
 
-import { send } from './send'
-import * as queueModule from './queue'
-import * as sendActionModule from './send-action'
-import type { ChannelInternals } from '../types'
 import type { ChannelState } from '../../types'
 import type { IMessage } from '../../types/message'
+import type { ChannelInternals } from '../types'
+import * as queueModule from './queue'
+import { send } from './send'
+import * as sendActionModule from './send-action'
 
 jest.mock('./queue')
 jest.mock('./send-action')
@@ -39,7 +39,7 @@ describe('channel/messaging/send', () => {
       eventSubscriptions: [],
       messageSubscriptions: [],
       scheduledActivation: null,
-      debug: false,
+
       brokerManaged: false,
       readyToConnect: true,
       negotiatedProtocol: null,

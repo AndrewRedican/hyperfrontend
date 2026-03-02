@@ -1,6 +1,6 @@
 {
   "name": "@hyperfrontend/logging",
-  "version": "0.0.2",
+  "version": "0.0.4",
   "description": "Structured logging utilities for applications.",
   "license": "MIT",
   "sideEffects": false,
@@ -8,7 +8,10 @@
     "node": ">=18.0.0",
     "npm": ">=8.0.0"
   },
-  "main": "./src/index.js",
+  "exports": {
+    ".": "./src/index.js",
+    "./package.json": "./package.json"
+  },
   "keywords": [
     "logging",
     "logger",
@@ -27,7 +30,8 @@
     "typescript"
   ],
   "dependencies": {
-    "@hyperfrontend/data-utils": "0.0.2",
-    "@hyperfrontend/function-utils": "0.0.2"
+    "@hyperfrontend/data-utils": "0.0.4",
+    "@hyperfrontend/function-utils": "0.0.3",
+    "@hyperfrontend/immutable-api-utils": "0.1.0"
   }
 }

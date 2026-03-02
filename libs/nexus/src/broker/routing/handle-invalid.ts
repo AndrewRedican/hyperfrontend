@@ -1,19 +1,13 @@
 import type { IAction } from '../../types/action'
-import { isActionWithProcess } from '../../types/action'
-import type { BrokerState } from '../types'
-import type { Registry } from '../../core/registry/factory'
-import type { ProcessManager } from '../../core/processes/factory'
-import type { ActionCreators } from '../../core/actions/factory'
 import type { ChannelHandle } from '../../types/channel'
+import type { RoutingContext } from './types'
+import { isActionWithProcess } from '../../types/action'
 
 /**
- * Handles INVALID_REQUEST action
- * Processes error responses from remote broker
+ * Handles INVALID_REQUEST action.
+ * Processes error responses from remote broker.
  *
- * @param state - Current broker state
- * @param registry - Channel registry for accessing channels
- * @param processManager - Process manager for tracking communication processes
- * @param actions - Action creators for generating responses
+ * @param context - Routing context with state, registry, actions, and logger
  * @param message - Message event containing the INVALID_REQUEST action
  *
  * @remarks
@@ -27,13 +21,8 @@ import type { ChannelHandle } from '../../types/channel'
  * Initiator <- INVALID_REQUEST (this handler)
  * Initiator fires 'invalid' event with reason
  */
-export function handleInvalid(
-  state: BrokerState,
-  registry: Registry,
-  processManager: ProcessManager,
-  actions: ActionCreators,
-  message: MessageEvent<IAction>
-): void {
+export function handleInvalid(context: RoutingContext, message: MessageEvent<IAction>): void {
+  const { processManager } = context
   const action = message.data
 
   // Use type guard to safely access processId
@@ -44,14 +33,14 @@ export function handleInvalid(
   const processId = action.processId
 
   // Get channel by process ID
-  const channel = processManager.get(processId) as ChannelHandle | undefined
+  const channel = <ChannelHandle | undefined>processManager.get(processId)
 
   if (!channel) {
     return // Channel not found
   }
 
   // Extract error details
-  const reason = (<unknown>action)['error'] as string | undefined
+  const reason = <string | undefined>(<unknown>action)['error']
 
   // Notify INVALID event with error details
   channel.notifyEvent('invalid', { reason, origin: message.origin })

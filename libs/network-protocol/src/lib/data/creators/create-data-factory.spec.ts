@@ -5,8 +5,8 @@
 
 import { createHash } from '@hyperfrontend/cryptography/node'
 import { createDataFactory } from './create-data-factory'
-import { dataCreatorTestCases, invalidDataCreatorTestCases } from './test-fixtures'
 import * as getSchemaModule from './get-schema'
+import { dataCreatorTestCases, invalidDataCreatorTestCases } from './test-fixtures'
 
 describe('createDataFactory (Node.js)', () => {
   describe('valid data creation', () => {
@@ -76,7 +76,7 @@ describe('createDataFactory (Node.js)', () => {
       it(`handles ${description}`, async () => {
         const createData = createDataFactory(createHash)
 
-        await expect(createData(pid as string, sequence, message)).rejects.toThrow()
+        await expect(createData(<string>pid, sequence, message)).rejects.toThrow()
       })
     })
 

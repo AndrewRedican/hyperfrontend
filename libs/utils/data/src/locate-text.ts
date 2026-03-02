@@ -1,6 +1,7 @@
 import type { Callback, DepthConfig } from './models'
-import { traverse } from './traverse'
+import { createError } from '@hyperfrontend/immutable-api-utils/built-in-copy/error'
 import { getType } from './get-type'
+import { traverse } from './traverse'
 
 /**
  * Returns a list of locations where a text value matches a pattern or an exact value anywhere in the data structure of the target.
@@ -14,9 +15,8 @@ import { getType } from './get-type'
  */
 export const locateText = (target: unknown, pattern: string | RegExp, options?: DepthConfig): string[][] => {
   const patternIsString = typeof pattern === 'string'
-  if (!patternIsString && !(pattern instanceof RegExp)) throw new Error('Expected pattern to be either a string of a regular expression.')
+  if (!patternIsString && !(pattern instanceof RegExp)) throw createError('Expected pattern to be either a string of a regular expression.')
   const match = patternIsString ? (text: string) => text === pattern : (key: string) => pattern.test(key)
-  const callback: Callback = (key, value, path, state) =>
-    getType(value) === 'string' && match(value as string) && state.locations.push(path)
-  return traverse(target, callback, { depth: [0, '*'], ...options } as DepthConfig, { locations: [] }).locations
+  const callback: Callback = (key, value, path, state) => getType(value) === 'string' && match(<string>value) && state.locations.push(path)
+  return traverse(target, callback, <DepthConfig>{ depth: [0, '*'], ...options }, { locations: [] }).locations
 }

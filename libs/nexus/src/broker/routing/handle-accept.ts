@@ -1,22 +1,16 @@
 import type { IAction, IActionBase } from '../../types/action'
-import { isActionWithContract } from '../../types/action'
-import type { SecurityNegotiationResponse, SecurityConfirmation } from '../../types/security'
-import type { BrokerState } from '../types'
-import type { Registry } from '../../core/registry/factory'
-import type { ProcessManager } from '../../core/processes/factory'
-import type { ActionCreators } from '../../core/actions/factory'
 import type { ChannelHandle } from '../../types/channel'
+import type { SecurityNegotiationResponse, SecurityConfirmation } from '../../types/security'
+import type { RoutingContext } from './types'
 import { validateContract } from '../../core/validation/contract'
+import { isActionWithContract } from '../../types/action'
 import { applyPolicy } from '../security/apply-policy'
 
 /**
- * Handles ACCEPT_CONNECTION action
- * Completes connection handshake from the initiator's side
+ * Handles ACCEPT_CONNECTION action.
+ * Completes connection handshake from the initiator's side.
  *
- * @param state - Current broker state
- * @param registry - Channel registry for accessing channels
- * @param processManager - Process manager for tracking communication processes
- * @param actions - Action creators for generating responses
+ * @param context - Routing context with state, registry, actions, and logger
  * @param message - Message event containing the ACCEPT_CONNECTION action
  *
  * @remarks
@@ -33,13 +27,8 @@ import { applyPolicy } from '../security/apply-policy'
  * Initiator <- ACCEPT (this handler) <- Responder
  * Initiator -> OPEN -> Responder
  */
-export function handleAccept(
-  state: BrokerState,
-  registry: Registry,
-  processManager: ProcessManager,
-  actions: ActionCreators,
-  message: MessageEvent<IAction>
-): void {
+export function handleAccept(context: RoutingContext, message: MessageEvent<IAction>): void {
+  const { state, processManager, logger } = context
   const action = message.data
 
   // Type guard to ensure action has contract and processId
@@ -51,10 +40,10 @@ export function handleAccept(
   const contract = action.contract
 
   // Extract security response from action base (may be undefined for backward compatibility)
-  const securityResponse = (<IActionBase>action).security as SecurityNegotiationResponse | undefined
+  const securityResponse = <SecurityNegotiationResponse | undefined>(<IActionBase>action).security
 
   // Get channel by process ID
-  const channel = processManager.get(processId) as ChannelHandle | undefined
+  const channel = <ChannelHandle | undefined>processManager.get(processId)
 
   if (!channel) {
     return // Channel not found
@@ -79,7 +68,7 @@ export function handleAccept(
 
   // Apply security policy if configured
   if (state.settings.securityPolicy) {
-    const allowed = applyPolicy(state.settings.securityPolicy, message)
+    const allowed = applyPolicy(state.settings.securityPolicy, message, logger)
     if (!allowed) {
       channel.sendAction({
         type: '[nexus] connection-request-cancelled',
@@ -98,9 +87,7 @@ export function handleAccept(
     // Store negotiated protocol in channel state
     channel.setNegotiatedProtocol(negotiatedProtocol)
 
-    if (state.settings.debug) {
-      console.info(`[nexus] ${state.name} accepted security protocol: ${negotiatedProtocol}`)
-    }
+    logger.info(`${state.name} accepted security protocol: ${negotiatedProtocol}`)
 
     // For 'none' protocol, mark security as ready immediately
     if (negotiatedProtocol === 'none') {

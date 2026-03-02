@@ -1,16 +1,13 @@
 import type { IAction, IActionWithContractAndSecurity } from '../../types/action'
-import { isActionWithContract } from '../../types/action'
-import type { SecurityNegotiationRequest, SecurityProtocolVersion } from '../../types/security'
-import type { BrokerState } from '../types'
-import type { Registry } from '../../core/registry/factory'
-import type { ProcessManager } from '../../core/processes/factory'
-import type { ActionCreators } from '../../core/actions/factory'
 import type { ChannelHandle } from '../../types/channel'
+import type { SecurityNegotiationRequest, SecurityProtocolVersion } from '../../types/security'
+import type { RoutingContext } from './types'
 import { getById } from '../../core/registry/get-by-id'
-import { addChannel } from '../channels/add'
 import { validateContract as validateContractFn } from '../../core/validation/contract'
-import { applyPolicy } from '../security/apply-policy'
 import { negotiateProtocol, createSecurityResponse } from '../../security/negotiation/negotiate'
+import { isActionWithContract } from '../../types/action'
+import { addChannel } from '../channels/add'
+import { applyPolicy } from '../security/apply-policy'
 
 /**
  * Default supported security protocols for the responder.
@@ -19,13 +16,10 @@ import { negotiateProtocol, createSecurityResponse } from '../../security/negoti
 const DEFAULT_RESPONDER_SUPPORTED: readonly SecurityProtocolVersion[] = ['none']
 
 /**
- * Handles REQUEST_CONNECTION action
- * Creates or retrieves channel and initiates connection handshake
+ * Handles REQUEST_CONNECTION action.
+ * Creates or retrieves channel and initiates connection handshake.
  *
- * @param state - Current broker state
- * @param registry - Channel registry for accessing channels
- * @param processManager - Process manager for tracking communication processes
- * @param actions - Action creators for generating responses
+ * @param context - Routing context with state, registry, actions, and logger
  * @param message - Message event containing the REQUEST_CONNECTION action
  *
  * @remarks
@@ -44,13 +38,8 @@ const DEFAULT_RESPONDER_SUPPORTED: readonly SecurityProtocolVersion[] = ['none']
  * 4. Security protocol negotiation (if applicable)
  * 5. ACCEPT_CONNECTION response (or DENY if validation fails)
  */
-export function handleRequest(
-  state: BrokerState,
-  registry: Registry,
-  processManager: ProcessManager,
-  actions: ActionCreators,
-  message: MessageEvent<IAction>
-): void {
+export function handleRequest(context: RoutingContext, message: MessageEvent<IAction>): void {
+  const { state, registry, processManager, actions, logger } = context
   const action = message.data
   const senderId = <string>action.senderId
 
@@ -63,10 +52,10 @@ export function handleRequest(
   const contract = action.contract
 
   // Extract security request (may be undefined for backward compatibility)
-  const securityRequest = (<IActionWithContractAndSecurity>action).security as SecurityNegotiationRequest | undefined
+  const securityRequest = <SecurityNegotiationRequest | undefined>(<IActionWithContractAndSecurity>action).security
 
   // Get existing channel by ID or create new one
-  let channel = getById(registry, senderId) as ChannelHandle | undefined
+  let channel = <ChannelHandle | undefined>getById(registry, senderId)
   if (!channel) {
     channel = addChannel(state, registry, processManager, actions, senderId, <Window>message.source, {})
   }
@@ -90,10 +79,8 @@ export function handleRequest(
         ...(securityResponse && { security: securityResponse }),
       })
     } else {
-      // Page reloaded - log if debug
-      if (state.settings.debug) {
-        console.info(`[nexus] ${state.name} detected channel [${channel.getName()}] reloaded.`)
-      }
+      // Page reloaded - log
+      logger.info(`${state.name} detected channel [${channel.getName()}] reloaded.`)
     }
     return
   }
@@ -115,7 +102,7 @@ export function handleRequest(
 
   // Apply security policy if configured
   if (state.settings.securityPolicy) {
-    const allowed = applyPolicy(state.settings.securityPolicy, message)
+    const allowed = applyPolicy(state.settings.securityPolicy, message, logger)
     if (!allowed) {
       channel.sendAction({
         type: '[nexus] connection-request-denied',
@@ -138,9 +125,7 @@ export function handleRequest(
     // Schedule activation for when connect() is called
     channel.scheduleActivation(senderId, message.origin, contract, processId)
 
-    if (state.settings.debug) {
-      console.info(`[nexus] ${state.name} scheduled activation for channel ${channel.getName()}`)
-    }
+    logger.info(`${state.name} scheduled activation for channel ${channel.getName()}`)
     return
   }
 
@@ -151,9 +136,7 @@ export function handleRequest(
     channel.setNegotiatedProtocol(result.negotiated)
     securityResponse = createSecurityResponse(result.negotiated)
 
-    if (state.settings.debug) {
-      console.info(`[nexus] ${state.name} negotiated security protocol: ${result.negotiated}`)
-    }
+    logger.info(`${state.name} negotiated security protocol: ${result.negotiated}`)
   }
 
   // Activate channel with connection details

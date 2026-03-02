@@ -8,6 +8,7 @@
  */
 
 import type { SecurityTransport, SecurityTransportConfig } from '../../types/security'
+import { createError } from '@hyperfrontend/immutable-api-utils/built-in-copy/error'
 import { createNoneTransport } from './none-transport'
 import { createSecureTransport } from './secure-transport'
 
@@ -52,7 +53,7 @@ export function createSecurityTransport(config: SecurityTransportConfig): Securi
   }
 
   if (!provider) {
-    throw new Error(
+    throw createError(
       `Security protocol '${protocol}' requires a protocol provider. ` +
         `Either register the provider with the broker or provide it in channel settings.`
     )

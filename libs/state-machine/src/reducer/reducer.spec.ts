@@ -1,7 +1,7 @@
 import type { Action } from '../models'
-import { rootReducer } from './reducer'
 import * as ActionTypes from '../actions/actions.types'
 import { createInitialState } from '../state/state'
+import { rootReducer } from './reducer'
 
 describe('reducer', () => {
   it('default state', () => {

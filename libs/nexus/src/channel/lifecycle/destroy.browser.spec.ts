@@ -1,6 +1,6 @@
-import type { ChannelInternals } from '../types'
 import type { ChannelState } from '../../types'
 import type { IAction } from '../../types/action'
+import type { ChannelInternals } from '../types'
 import { destroy } from './destroy'
 
 // Mutable version of ChannelState for testing
@@ -30,7 +30,7 @@ describe('channel/lifecycle/destroy', () => {
       messageSubscriptions: [],
       scheduledActivation: null,
       queueMessages: true,
-      debug: false,
+
       brokerManaged: false,
       readyToConnect: true,
       negotiatedProtocol: null,

@@ -1,5 +1,6 @@
 import type { Schema } from '@hyperfrontend/json-utils'
 import type { JSONString, SerializedData } from '../model'
+import { stringify } from '@hyperfrontend/immutable-api-utils/built-in-copy/json'
 
 export const pid = '5815e1c3-4083-4d3c-8795-96c4c2965f2d'
 
@@ -27,7 +28,7 @@ export const data: SerializedData<typeof message> = {
   id,
   sequence,
   key,
-  message: <JSONString<typeof message>>JSON.stringify(message), // Runtime: string, Type: JSONString<typeof message>
+  message: <JSONString<typeof message>>stringify(message), // Runtime: string, Type: JSONString<typeof message>
   schema,
   schemaHash,
 }

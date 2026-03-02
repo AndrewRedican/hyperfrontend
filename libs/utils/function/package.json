@@ -1,6 +1,6 @@
 {
   "name": "@hyperfrontend/function-utils",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "Higher-order function utilities for behavioral modification and composition.",
   "license": "MIT",
   "sideEffects": false,
@@ -24,5 +24,8 @@
     "lazy-initialization",
     "singleton"
   ],
-  "main": "./src/index.js"
+  "exports": {
+    ".": "./src/index.js",
+    "./package.json": "./package.json"
+  }
 }

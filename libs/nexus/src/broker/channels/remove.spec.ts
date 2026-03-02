@@ -2,13 +2,13 @@
  * Tests for removeChannel function
  */
 
-import { removeChannel } from './remove'
+import type { BrokerState } from '../types'
+import { createActionCreators } from '../../core/actions/factory'
+import { createProcessManager } from '../../core/processes/factory'
+import { createRegistry } from '../../core/registry/factory'
 import { addChannel } from './add'
 import { getChannel } from './get'
-import { createRegistry } from '../../core/registry/factory'
-import { createProcessManager } from '../../core/processes/factory'
-import { createActionCreators } from '../../core/actions/factory'
-import type { BrokerState } from '../types'
+import { removeChannel } from './remove'
 
 describe('removeChannel', () => {
   const mockBrokerState: BrokerState = {
@@ -24,7 +24,6 @@ describe('removeChannel', () => {
         accepted: [{ type: 'test', description: 'Test action' }],
         emitted: [],
       },
-      debug: false,
     },
   }
 

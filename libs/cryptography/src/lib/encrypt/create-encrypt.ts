@@ -1,3 +1,5 @@
+import { createError } from '@hyperfrontend/immutable-api-utils/built-in-copy/error'
+import { createUint8Array } from '@hyperfrontend/immutable-api-utils/built-in-copy/typed-arrays'
 import { encryptionConfig } from '../encryption-config'
 
 /**
@@ -18,10 +20,10 @@ export function createEncrypt(
 ): (message: string, password: string) => Promise<Uint8Array> {
   return async function encrypt(message, password) {
     if (!message) {
-      throw new Error('Cannot encrypt an empty message.')
+      throw createError('Cannot encrypt an empty message.')
     }
     if (!password) {
-      throw new Error('Cannot encrypt without a password.')
+      throw createError('Cannot encrypt without a password.')
     }
     const salt = getRandomValues(16)
     const iv = getRandomValues(12)
@@ -31,8 +33,8 @@ export function createEncrypt(
       key,
       <BufferSource>utf8StringToUint8Array(message)
     )
-    const buffer = new Uint8Array(encryptedContent)
-    const result = new Uint8Array(salt.byteLength + iv.byteLength + buffer.byteLength)
+    const buffer = createUint8Array(encryptedContent)
+    const result = createUint8Array(salt.byteLength + iv.byteLength + buffer.byteLength)
     result.set(salt, 0)
     result.set(iv, salt.byteLength)
     result.set(buffer, salt.byteLength + iv.byteLength)

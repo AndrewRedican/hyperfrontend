@@ -1,4 +1,9 @@
 import type { LogLevel, SetLogLevel, GetLogLevel } from './create-log-level-config'
+import { getType } from '@hyperfrontend/data-utils'
+import { noop, createConditionalExecutionFunction, createErrorIgnoringFunction } from '@hyperfrontend/function-utils'
+import { createError } from '@hyperfrontend/immutable-api-utils/built-in-copy/error'
+import { freeze } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
+import { createLogLevelConfig } from './create-log-level-config'
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type LogLevelFn = (...data: any[]) => void
@@ -29,10 +34,6 @@ export type LogFnName = Exclude<keyof Logger, 'setLevel' | 'getLevel'>
 
 export type LogFunction = Logger[LogFnName]
 
-import { getType } from '@hyperfrontend/data-utils'
-import { noop, createConditionalExecutionFunction, createErrorIgnoringFunction } from '@hyperfrontend/function-utils'
-import { createLogLevelConfig } from './create-log-level-config'
-
 /**
  * Creates a logger instance with configurable log level filtering.
  * Each log function is wrapped to respect the current log level setting.
@@ -53,19 +54,19 @@ export function createLogger(
   debug: DebugLevelFn = noop
 ): Logger {
   if (notValidLogFn(error)) {
-    throw new Error(notFnMsg('error'))
+    throw createError(notFnMsg('error'))
   }
   if (notValidLogFn(warn)) {
-    throw new Error(notFnMsg('warn'))
+    throw createError(notFnMsg('warn'))
   }
   if (notValidLogFn(log)) {
-    throw new Error(notFnMsg('log'))
+    throw createError(notFnMsg('log'))
   }
   if (notValidLogFn(info)) {
-    throw new Error(notFnMsg('info'))
+    throw createError(notFnMsg('info'))
   }
   if (notValidLogFn(debug)) {
-    throw new Error(notFnMsg('debug'))
+    throw createError(notFnMsg('debug'))
   }
   const { setLogLevel, getLogLevel, shouldLog } = createLogLevelConfig()
   const wrapLogFn = (fn: LogFunction, level: LogLevel): LogFunction => {
@@ -73,7 +74,7 @@ export function createLogger(
     const condition = () => shouldLog(level)
     return createConditionalExecutionFunction(createErrorIgnoringFunction(fn), condition)
   }
-  return Object.freeze({
+  return freeze({
     error: wrapLogFn(error, 'error'),
     warn: wrapLogFn(warn, 'warn'),
     log: wrapLogFn(log, 'log'),

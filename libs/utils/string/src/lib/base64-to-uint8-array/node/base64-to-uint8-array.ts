@@ -1,3 +1,4 @@
+import { createUint8Array } from '@hyperfrontend/immutable-api-utils/built-in-copy/typed-arrays'
 import { urlSafeBase64ToBase64 } from '../../utils/url-safe-base64-to-base64'
 
 /**
@@ -9,5 +10,5 @@ import { urlSafeBase64ToBase64 } from '../../utils/url-safe-base64-to-base64'
  */
 export function base64ToUint8Array(base64: string): Uint8Array {
   const buffer = Buffer.from(urlSafeBase64ToBase64(base64), 'base64')
-  return new Uint8Array(buffer.buffer, buffer.byteOffset, buffer.byteLength)
+  return createUint8Array(buffer.buffer, buffer.byteOffset, buffer.byteLength)
 }

@@ -1,4 +1,6 @@
 import type { PacketObfuscater, SerializedEncryptedPacket, ObfuscatedPacket } from '../../model'
+import { createError } from '@hyperfrontend/immutable-api-utils/built-in-copy/error'
+import { stringify } from '@hyperfrontend/immutable-api-utils/built-in-copy/json'
 import { isValidSerializedEncryptedPacket } from '../../validations/is-valid-serialized-encrypted-packet'
 
 /**
@@ -19,19 +21,19 @@ import { isValidSerializedEncryptedPacket } from '../../validations/is-valid-ser
 export function createPacketObfuscator(encrypt: (message: string, password: string) => Promise<Uint8Array>): PacketObfuscater {
   return async (packet: SerializedEncryptedPacket, password: string): Promise<ObfuscatedPacket> => {
     if (!isValidSerializedEncryptedPacket(packet)) {
-      throw new Error('Cannot obfuscate an invalid packet')
+      throw createError('Cannot obfuscate an invalid packet')
     }
     let text: string
     try {
-      text = JSON.stringify(packet)
+      text = stringify(packet)
     } catch {
-      throw new Error('Cannot obfuscate packet because it is not serializable')
+      throw createError('Cannot obfuscate packet because it is not serializable')
     }
     let encrypted: Uint8Array
     try {
       encrypted = await encrypt(text, password)
     } catch (e) {
-      throw new Error(`Cannot obfuscate packet. ${(e as Error)?.message}`)
+      throw createError(`Cannot obfuscate packet. ${(<Error>e)?.message}`)
     }
     return encrypted
   }

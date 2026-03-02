@@ -3,6 +3,7 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useEffect, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { ThemeToggle } from './theme-toggle'
 
 interface NavItem {
@@ -67,7 +68,13 @@ const mainNavLinks = [
 
 export function MobileMenu() {
   const [isOpen, setIsOpen] = useState(false)
+  const [mounted, setMounted] = useState(false)
   const pathname = usePathname()
+
+  // Set mounted to true after hydration (needed for portal)
+  useEffect(() => {
+    setMounted(true)
+  }, [])
 
   // Close menu when route changes
   useEffect(() => {
@@ -98,62 +105,81 @@ export function MobileMenu() {
         {isOpen ? <CloseIcon className="h-6 w-6" /> : <MenuIcon className="h-6 w-6" />}
       </button>
 
-      {/* Mobile Menu Overlay */}
-      {isOpen && (
-        <div className="fixed inset-0 top-16 z-50 bg-white dark:bg-slate-900 md:hidden">
-          <div className="h-full overflow-y-auto px-4 pb-6 pt-4">
-            {/* Main Navigation */}
-            <div className="mb-6 border-b border-slate-200 pb-6 dark:border-slate-700">
-              <ul className="space-y-1">
-                {mainNavLinks.map((link) => (
-                  <li key={link.href}>
-                    <Link
-                      href={link.href}
-                      className={`block rounded-lg px-3 py-2 text-base font-medium ${
-                        pathname === link.href || pathname.startsWith(link.href + '/')
-                          ? 'bg-primary-50 text-primary-600 dark:bg-primary-950/50 dark:text-primary-400'
-                          : 'text-slate-600 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800'
-                      }`}
-                    >
-                      {link.title}
-                    </Link>
-                  </li>
+      {/* Mobile Menu Overlay - rendered via portal to escape header's stacking context */}
+      {mounted &&
+        isOpen &&
+        createPortal(
+          <div className="fixed inset-0 top-16 z-[60] bg-white dark:bg-slate-900 md:hidden">
+            <div className="h-full overflow-y-auto px-4 pb-6 pt-4">
+              {/* Main Navigation */}
+              <div className="mb-6 border-b border-slate-200 pb-6 dark:border-slate-700">
+                <ul className="space-y-1">
+                  {mainNavLinks.map((link) => (
+                    <li key={link.href}>
+                      <Link
+                        href={link.href}
+                        onClick={() => setIsOpen(false)}
+                        className={`block rounded-lg px-3 py-2 text-base font-medium ${
+                          pathname === link.href || pathname.startsWith(link.href + '/')
+                            ? 'bg-primary-50 text-primary-600 dark:bg-primary-950/50 dark:text-primary-400'
+                            : 'text-slate-600 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800'
+                        }`}
+                      >
+                        {link.title}
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+
+              {/* Documentation Navigation */}
+              <div className="space-y-4">
+                {navigation.map((section) => (
+                  <MobileNavSection key={section.title} section={section} pathname={pathname} onClose={() => setIsOpen(false)} />
                 ))}
-              </ul>
-            </div>
+              </div>
 
-            {/* Documentation Navigation */}
-            <div className="space-y-4">
-              {navigation.map((section) => (
-                <MobileNavSection key={section.title} section={section} pathname={pathname} />
-              ))}
+              {/* Footer Actions */}
+              <div className="mt-8 flex items-center justify-between border-t border-slate-200 pt-6 dark:border-slate-700">
+                <span className="text-sm text-slate-500 dark:text-slate-400">Toggle theme</span>
+                <ThemeToggle />
+              </div>
             </div>
-
-            {/* Footer Actions */}
-            <div className="mt-8 flex items-center justify-between border-t border-slate-200 pt-6 dark:border-slate-700">
-              <span className="text-sm text-slate-500 dark:text-slate-400">Toggle theme</span>
-              <ThemeToggle />
-            </div>
-          </div>
-        </div>
-      )}
+          </div>,
+          document.body
+        )}
     </>
   )
 }
 
-function MobileNavSection({ section, pathname }: { section: NavItem; pathname: string }) {
+function MobileNavSection({
+  section,
+  pathname,
+  onClose,
+  depth = 0,
+}: {
+  section: NavItem
+  pathname: string
+  onClose: () => void
+  depth?: number
+}) {
   const [isOpen, setIsOpen] = useState(false)
   const hasChildren = section.children && section.children.length > 0
-  const isChildActive = hasChildren && section.children?.some((child) => child.href === pathname)
+
+  // Check if any child (or nested child) is active
+  const isChildActive = hasChildren && checkIfChildActive(section.children || [], pathname)
 
   if (!hasChildren) {
     return (
       <Link
         href={section.href || '#'}
-        className={`block rounded-lg px-3 py-2 text-sm font-semibold ${
+        onClick={onClose}
+        className={`block rounded-lg px-3 py-2 text-sm ${depth === 0 ? 'font-semibold' : ''} ${
           pathname === section.href
             ? 'bg-primary-50 text-primary-600 dark:bg-primary-950/50 dark:text-primary-400'
-            : 'text-slate-900 hover:bg-slate-100 dark:text-white dark:hover:bg-slate-800'
+            : depth === 0
+              ? 'text-slate-900 hover:bg-slate-100 dark:text-white dark:hover:bg-slate-800'
+              : 'text-slate-600 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800'
         }`}
       >
         {section.title}
@@ -165,8 +191,12 @@ function MobileNavSection({ section, pathname }: { section: NavItem; pathname: s
     <div>
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className={`flex w-full items-center justify-between rounded-lg px-3 py-2 text-sm font-semibold ${
-          isChildActive ? 'text-primary-600 dark:text-primary-400' : 'text-slate-900 dark:text-white'
+        className={`flex w-full items-center justify-between rounded-lg px-3 py-2 text-sm ${depth === 0 ? 'font-semibold' : ''} ${
+          isChildActive
+            ? 'text-primary-600 dark:text-primary-400'
+            : depth === 0
+              ? 'text-slate-900 dark:text-white'
+              : 'text-slate-600 dark:text-slate-400'
         }`}
       >
         {section.title}
@@ -176,22 +206,35 @@ function MobileNavSection({ section, pathname }: { section: NavItem; pathname: s
         <ul className="mt-1 space-y-1 pl-4">
           {section.children?.map((child) => (
             <li key={child.title}>
-              <Link
-                href={child.href || '#'}
-                className={`block rounded-lg px-3 py-2 text-sm ${
-                  pathname === child.href
-                    ? 'bg-primary-50 font-medium text-primary-600 dark:bg-primary-950/50 dark:text-primary-400'
-                    : 'text-slate-600 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800'
-                }`}
-              >
-                {child.title}
-              </Link>
+              {child.children && child.children.length > 0 ? (
+                <MobileNavSection section={child} pathname={pathname} onClose={onClose} depth={depth + 1} />
+              ) : (
+                <Link
+                  href={child.href || '#'}
+                  onClick={onClose}
+                  className={`block rounded-lg px-3 py-2 text-sm ${
+                    pathname === child.href
+                      ? 'bg-primary-50 font-medium text-primary-600 dark:bg-primary-950/50 dark:text-primary-400'
+                      : 'text-slate-600 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800'
+                  }`}
+                >
+                  {child.title}
+                </Link>
+              )}
             </li>
           ))}
         </ul>
       )}
     </div>
   )
+}
+
+function checkIfChildActive(children: NavItem[], pathname: string): boolean {
+  return children.some((child) => {
+    if (child.href === pathname) return true
+    if (child.children) return checkIfChildActive(child.children, pathname)
+    return false
+  })
 }
 
 function MenuIcon({ className }: { className?: string }) {

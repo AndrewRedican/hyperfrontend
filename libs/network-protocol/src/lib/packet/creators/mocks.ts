@@ -1,3 +1,4 @@
+import type { Data } from '../../data/model'
 import type {
   ObfuscatedPacket,
   PacketBase,
@@ -11,7 +12,8 @@ import type {
   PacketSerialization,
   PacketDeserialization,
 } from '../model'
-import type { Data } from '../../data/model'
+import { createTextEncoder } from '@hyperfrontend/immutable-api-utils/built-in-copy/encoding'
+import { createUint8Array } from '@hyperfrontend/immutable-api-utils/built-in-copy/typed-arrays'
 import { unencryptedData, encryptedData, password as passw0rd } from '../../data/security/mocks'
 
 /* eslint-disable @typescript-eslint/no-unused-vars */
@@ -19,7 +21,7 @@ export const encryptPacket = async (_packet: UnencryptedPacket, _password: strin
 
 export const decryptPacket = async (_encrypted: Uint8Array, _password: string): Promise<Data> => unencryptedData
 
-export const obfuscatePacket = async (_packet: Uint8Array, _password: string): Promise<Uint8Array> => new Uint8Array([1, 2, 3, 4, 5])
+export const obfuscatePacket = async (_packet: Uint8Array, _password: string): Promise<Uint8Array> => createUint8Array([1, 2, 3, 4, 5])
 
 export const deobfuscatePacket = async (_obfuscated: Uint8Array, _password: string): Promise<Uint8Array> => encryptedData
 /* eslint-enable @typescript-eslint/no-unused-vars */
@@ -40,7 +42,7 @@ export const password = passw0rd
 
 export const keyProvider = () => password
 
-export const obfuscatedPacket: ObfuscatedPacket = new Uint8Array([
+export const obfuscatedPacket: ObfuscatedPacket = createUint8Array([
   107, 101, 185, 146, 227, 117, 228, 196, 155, 49, 39, 113, 170, 252, 169, 100, 176, 154, 204, 119, 226, 193, 162, 164, 169, 247, 146, 248,
   208, 106, 220, 192, 2, 27, 45, 232, 139, 46, 97, 217, 209, 189, 93, 73, 139, 152, 182, 32, 199, 66, 1, 67, 176, 200, 125, 172, 203, 235,
   97, 68, 188, 244, 168, 107, 167, 78, 251, 253, 44, 22, 251, 14, 183, 177, 62, 221, 91, 54, 33, 121, 18, 144, 103, 109, 93, 63, 10, 182,
@@ -144,7 +146,7 @@ export const packetEncryption: PacketEncryption = async (packet) => ({
 export const packetSerialization: PacketSerialization = createSerializedEncryptedPacket
 
 export const packetObfuscation: PacketObfuscation = async (packet) => {
-  const serialized = new TextEncoder().encode(packet.data)
+  const serialized = createTextEncoder().encode(packet.data)
   return obfuscatePacket(serialized, password)
 }
 

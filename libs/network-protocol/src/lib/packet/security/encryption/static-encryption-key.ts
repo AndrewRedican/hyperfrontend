@@ -1,6 +1,8 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import type { EncryptionSuite } from '../../../security/model'
 import type { PacketEncrypter, PacketDecrypter } from '../../../packet/model'
+import type { EncryptionSuite } from '../../../security/model'
+import { createError } from '@hyperfrontend/immutable-api-utils/built-in-copy/error'
+import { freeze } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
 
 /**
  * Creates a factory for static key-based encryption suites.
@@ -22,12 +24,12 @@ import type { PacketEncrypter, PacketDecrypter } from '../../../packet/model'
 export function createStaticKeyEncryptionFactory<T = any>(encryptPacket: PacketEncrypter, decryptPacket: PacketDecrypter) {
   return (key: string): EncryptionSuite<T> => {
     if (!key || typeof key !== 'string') {
-      throw new Error('Static encryption key must be a non-empty string')
+      throw createError('Static encryption key must be a non-empty string')
     }
 
     const packetEncryption: EncryptionSuite<T>['packetEncryption'] = (packet) => encryptPacket(packet, key)
     const packetDecryption: EncryptionSuite<T>['packetDecryption'] = (packet) => decryptPacket(packet, key)
 
-    return Object.freeze({ packetEncryption, packetDecryption })
+    return freeze({ packetEncryption, packetDecryption })
   }
 }

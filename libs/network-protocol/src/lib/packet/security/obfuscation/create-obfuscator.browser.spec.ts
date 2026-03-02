@@ -125,11 +125,11 @@ describe('createPacketObfuscator (Browser)', () => {
     it('handles packet with invalid origin UUID', async () => {
       const obfuscatePacket = createPacketObfuscator(encrypt)
 
-      const packet = {
+      const packet = <SerializedEncryptedPacket>{
         origin: 'invalid-uuid',
         target: testUUIDs.target1,
         data: 'encrypted-data',
-      } as SerializedEncryptedPacket
+      }
 
       await expect(obfuscatePacket(packet, testPasswords.valid)).rejects.toThrow('Cannot obfuscate an invalid packet')
     })
@@ -137,11 +137,11 @@ describe('createPacketObfuscator (Browser)', () => {
     it('handles packet with invalid target UUID', async () => {
       const obfuscatePacket = createPacketObfuscator(encrypt)
 
-      const packet = {
+      const packet = <SerializedEncryptedPacket>{
         origin: testUUIDs.origin1,
         target: 'invalid-uuid',
         data: 'encrypted-data',
-      } as SerializedEncryptedPacket
+      }
 
       await expect(obfuscatePacket(packet, testPasswords.valid)).rejects.toThrow('Cannot obfuscate an invalid packet')
     })

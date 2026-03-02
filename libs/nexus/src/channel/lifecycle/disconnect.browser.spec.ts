@@ -1,6 +1,6 @@
-import type { ChannelInternals } from '../types'
 import type { ChannelState } from '../../types'
 import type { IAction } from '../../types/action'
+import type { ChannelInternals } from '../types'
 import { disconnect } from './disconnect'
 
 // Mutable version of ChannelState for testing
@@ -28,7 +28,7 @@ describe('channel/lifecycle/disconnect', () => {
       messageSubscriptions: [],
       scheduledActivation: null,
       queueMessages: true,
-      debug: false,
+
       brokerManaged: false,
       readyToConnect: true,
       negotiatedProtocol: null,

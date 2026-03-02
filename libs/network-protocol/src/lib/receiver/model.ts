@@ -7,19 +7,19 @@ export type ReceivePacketFn<T = any> = (packet: UnencryptedPacket<T>) => void
 export type ReceiveFn = (packet: Uint8Array) => void
 
 export interface InboundQueue {
-  size: number
+  readonly size: number
 }
 
 export interface InboundQueues {
-  deobfuscationQueue: InboundQueue
-  deserializationQueue: InboundQueue
-  decryptionQueue: InboundQueue
+  readonly deobfuscationQueue: InboundQueue
+  readonly deserializationQueue: InboundQueue
+  readonly decryptionQueue: InboundQueue
 }
 
 export interface Receiver extends InboundQueues {
-  receive: ReceiveFn
-  stop: () => void
-  resume: () => void
+  readonly receive: ReceiveFn
+  readonly stop: () => void
+  readonly resume: () => void
 }
 
 export type CreateReceiver<T = any> = (

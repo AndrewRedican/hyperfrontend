@@ -26,10 +26,11 @@
 5. [Protocol Design](#protocol-design)
 6. [Handler Reference](#handler-reference)
 7. [Event System](#event-system)
-8. [Security Model](#security-model)
-9. [Internal Dependencies](#internal-dependencies)
-10. [Integration Points](#integration-points)
-11. [Public API Surface](#public-api-surface)
+8. [Logging System](#logging-system)
+9. [Security Model](#security-model)
+10. [Internal Dependencies](#internal-dependencies)
+11. [Integration Points](#integration-points)
+12. [Public API Surface](#public-api-surface)
 
 ---
 
@@ -455,6 +456,75 @@ channel.on(closeFilter((data) => console.log('Closed')))
 
 ---
 
+## Logging System
+
+Nexus provides a configurable logging system that routes all internal output through a `Logger` interface from `@hyperfrontend/logging`.
+
+### Logger Interface
+
+```typescript
+interface Logger {
+  error(...args: unknown[]): void
+  warn(...args: unknown[]): void
+  log(...args: unknown[]): void
+  info(...args: unknown[]): void
+  debug(...args: unknown[]): void
+  setLogLevel(level: LogLevel): void
+  getLogLevel(): LogLevel
+}
+
+type LogLevel = 'error' | 'warn' | 'log' | 'info' | 'debug' | 'none'
+```
+
+### Logger Flow
+
+1. **Broker initialization** — `createBroker()` creates or adopts a logger based on `settings.logLevel` and `settings.logger`
+2. **Channel inheritance** — Channels created via `broker.addChannel()` inherit the broker's logger
+3. **RoutingContext** — All routing handlers receive the logger via `RoutingContext`
+
+### RoutingContext
+
+All routing handlers receive a `RoutingContext` object containing shared dependencies:
+
+```typescript
+interface RoutingContext {
+  readonly state: BrokerState // Immutable broker state snapshot
+  readonly registry: Registry // Channel registry for lookups
+  readonly processManager: ProcessManager // Tracks handshake processes
+  readonly actions: ActionCreators // Factory functions for protocol actions
+  readonly logger: Logger // Logger instance for this broker
+}
+```
+
+This pattern:
+
+- Eliminates parameter proliferation across handlers
+- Makes testing straightforward (mock the context)
+- Provides clean access to logger without prop drilling
+
+### Structured Logging Utilities
+
+| Utility     | Purpose                         | Output Format                                 |
+| ----------- | ------------------------------- | --------------------------------------------- |
+| `logAction` | Protocol action tracing         | `[nexus] Action <direction>: <type> <action>` |
+| `logEvent`  | Channel lifecycle event logging | `[nexus] Channel event: <event> <data>`       |
+
+### createLogger Factory
+
+```typescript
+import { createLogger, type NexusLoggerOptions } from '@hyperfrontend/nexus'
+
+interface NexusLoggerOptions {
+  level?: LogLevel // Default: 'error'
+  prefix?: string // Default: '[nexus]'
+  customLogger?: Logger // Use this logger directly if provided
+}
+
+const logger = createLogger({ level: 'debug', prefix: '[app]' })
+```
+
+---
+
 ## Security Model
 
 Nexus provides a multi-layered security approach:
@@ -674,4 +744,8 @@ export type { IAction, ActionType }
 export { openFilter, closeFilter, cancelFilter, denyFilter, invalidFilter, createEventFilter }
 export { byType, compose, createMessageFilter }
 export type { MessageFilter, MessagePredicate, MessageHandler, EventHandler }
+
+// Logging
+export { createLogger, logAction, logEvent } from './utils/logging'
+export type { Logger, LogLevel, NexusLoggerOptions }
 ```

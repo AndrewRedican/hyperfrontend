@@ -1,8 +1,11 @@
 import type { Callback, DepthConfig } from './models'
-import { traverse } from './traverse'
+import { from } from '@hyperfrontend/immutable-api-utils/built-in-copy/array'
+import { createError } from '@hyperfrontend/immutable-api-utils/built-in-copy/error'
+import { createSet } from '@hyperfrontend/immutable-api-utils/built-in-copy/set'
+import { getIterableOperators } from './get-iterable-operators'
 import { getType } from './get-type'
 import { isIterableType } from './is-iterable-type'
-import { getIterableOperators } from './get-iterable-operators'
+import { traverse } from './traverse'
 
 /**
  * Returns a list of unique key names that match a pattern or an exact value anywhere in the data structure of the target.
@@ -16,7 +19,7 @@ import { getIterableOperators } from './get-iterable-operators'
  */
 export const getUniqueKeys = (target: unknown, pattern: string | RegExp = /.+/, options?: DepthConfig): string[] => {
   const patternIsString = typeof pattern === 'string'
-  if (!patternIsString && !(pattern instanceof RegExp)) throw new Error('Expected pattern to be either a string of a regular expression.')
+  if (!patternIsString && !(pattern instanceof RegExp)) throw createError('Expected pattern to be either a string of a regular expression.')
   const match = patternIsString ? (key: string) => key === pattern : (key: string) => pattern.test(key)
   const callback: Callback = (key, value, path, state) => {
     const type = getType(value)
@@ -24,9 +27,9 @@ export const getUniqueKeys = (target: unknown, pattern: string | RegExp = /.+/, 
     const { getKeys } = getIterableOperators(type)
     getKeys(value).forEach((nextKey) => match(nextKey) && state.names.add(nextKey))
   }
-  return Array.from(
-    traverse(target, callback, { depth: [0, '*'], ...options } as DepthConfig, {
-      names: new Set<string>(),
+  return from(
+    traverse(target, callback, <DepthConfig>{ depth: [0, '*'], ...options }, {
+      names: createSet<string>(),
     }).names.values()
   )
 }

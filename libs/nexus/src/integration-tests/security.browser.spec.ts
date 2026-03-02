@@ -1,6 +1,6 @@
-import type { MockWindow } from './test-utils'
-import type { IChannelContract } from '../types/contract'
 import type { SecurityPolicy } from '../broker/types'
+import type { IChannelContract } from '../types/contract'
+import type { MockWindow } from './test-utils'
 import { createBroker } from '../broker/factory'
 import { createMockWindow } from './test-utils'
 
@@ -23,7 +23,6 @@ describe('Integration: Security', () => {
         contract: testContract,
         settings: {
           whitelist: ['https://example.com', 'https://trusted.com'],
-          debug: false,
         },
       })
 
@@ -51,7 +50,6 @@ describe('Integration: Security', () => {
         contract: testContract,
         settings: {
           whitelist: ['https://example.com'],
-          debug: false,
         },
       })
 
@@ -64,7 +62,6 @@ describe('Integration: Security', () => {
         contract: testContract,
         settings: {
           whitelist: ['https://app1.com', 'https://app2.com', 'https://app3.com'],
-          debug: false,
         },
       })
 
@@ -82,7 +79,6 @@ describe('Integration: Security', () => {
         contract: testContract,
         settings: {
           blacklist: ['https://malicious.com', 'https://spam.com'],
-          debug: false,
         },
       })
 
@@ -96,7 +92,6 @@ describe('Integration: Security', () => {
         contract: testContract,
         settings: {
           blacklist: ['https://evil.com'],
-          debug: false,
         },
       })
 
@@ -109,7 +104,6 @@ describe('Integration: Security', () => {
       const broker = createBroker({
         name: 'secure-broker',
         contract: testContract,
-        settings: { debug: false },
       })
 
       const customPolicy = jest.fn(() => true)
@@ -124,7 +118,6 @@ describe('Integration: Security', () => {
       const broker = createBroker({
         name: 'secure-broker',
         contract: testContract,
-        settings: { debug: false },
       })
 
       const rejectAllPolicy = () => false
@@ -139,7 +132,6 @@ describe('Integration: Security', () => {
       const broker = createBroker({
         name: 'secure-broker',
         contract: testContract,
-        settings: { debug: false },
       })
 
       const conditionalPolicy = (event: MessageEvent) => {
@@ -160,7 +152,6 @@ describe('Integration: Security', () => {
       const broker = createBroker({
         name: 'secure-broker',
         contract: testContract,
-        settings: { debug: false },
       })
 
       const policy1 = () => true
@@ -180,7 +171,6 @@ describe('Integration: Security', () => {
         settings: {
           whitelist: ['https://trusted.com'],
           blacklist: ['https://evil.com'],
-          debug: false,
         },
       })
 
@@ -193,10 +183,9 @@ describe('Integration: Security', () => {
       const broker = createBroker({
         name: 'secure-broker',
         contract: testContract,
-        settings: { debug: false },
+        settings: { logLevel: 'error' },
       })
 
-      // No security restrictions - defaults to empty arrays
       expect(broker.settings.whitelist).toEqual([])
       expect(broker.settings.blacklist).toEqual([])
     })
@@ -209,11 +198,10 @@ describe('Integration: Security', () => {
         contract: testContract,
         settings: {
           whitelist: ['https://trusted.com'],
-          debug: false,
         },
       })
 
-      const channel = broker.addChannel('test-channel', mockWindow as unknown as Window)
+      const channel = broker.addChannel('test-channel', <Window>(<unknown>mockWindow))
 
       // Channel created, but security is enforced at broker level
       expect(channel).toBeDefined()
@@ -225,14 +213,13 @@ describe('Integration: Security', () => {
         contract: testContract,
         settings: {
           whitelist: ['https://trusted.com'],
-          debug: false,
         },
       })
 
       const mockWindow2 = createMockWindow()
 
-      const channel1 = broker.addChannel('channel-1', mockWindow as unknown as Window)
-      const channel2 = broker.addChannel('channel-2', mockWindow2 as unknown as Window)
+      const channel1 = broker.addChannel('channel-1', <Window>(<unknown>mockWindow))
+      const channel2 = broker.addChannel('channel-2', <Window>(<unknown>mockWindow2))
 
       // Both channels inherit broker's security policy
       expect(channel1).toBeDefined()
@@ -245,19 +232,18 @@ describe('Integration: Security', () => {
       const broker = createBroker({
         name: 'secure-broker',
         contract: testContract,
-        settings: { debug: false },
       })
 
       expect(() => {
-        broker.setSecurityPolicy((<unknown>'not a function') as SecurityPolicy)
+        broker.setSecurityPolicy(<SecurityPolicy>(<unknown>'not a function'))
       }).toThrow()
 
       expect(() => {
-        broker.setSecurityPolicy((<unknown>null) as SecurityPolicy)
+        broker.setSecurityPolicy(<SecurityPolicy>(<unknown>null))
       }).toThrow()
 
       expect(() => {
-        broker.setSecurityPolicy((<unknown>undefined) as SecurityPolicy)
+        broker.setSecurityPolicy(<SecurityPolicy>(<unknown>undefined))
       }).toThrow()
     })
   })
@@ -268,7 +254,6 @@ describe('Integration: Security', () => {
       const broker = createBroker({
         name: 'multi-tenant-broker',
         contract: testContract,
-        settings: { debug: false },
       })
 
       const tenantIds = ['tenant-1', 'tenant-2', 'tenant-3']
@@ -291,7 +276,6 @@ describe('Integration: Security', () => {
       const broker = createBroker({
         name: 'rate-limited-broker',
         contract: testContract,
-        settings: { debug: false },
       })
 
       const connectionAttempts = new Map<string, number>()
@@ -320,7 +304,6 @@ describe('Integration: Security', () => {
       const broker = createBroker({
         name: 'time-restricted-broker',
         contract: testContract,
-        settings: { debug: false },
       })
 
       const allowedHours = { start: 9, end: 17 } // 9 AM to 5 PM

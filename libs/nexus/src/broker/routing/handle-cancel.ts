@@ -1,19 +1,13 @@
 import type { IAction } from '../../types/action'
-import type { BrokerState } from '../types'
-import type { Registry } from '../../core/registry/factory'
-import type { ProcessManager } from '../../core/processes/factory'
-import type { ActionCreators } from '../../core/actions/factory'
 import type { ChannelHandle } from '../../types/channel'
+import type { RoutingContext } from './types'
 import { getById } from '../../core/registry/get-by-id'
 
 /**
- * Handles CANCEL_CONNECTION action
- * Processes connection cancellation request
+ * Handles CANCEL_CONNECTION action.
+ * Processes connection cancellation request.
  *
- * @param state - Current broker state
- * @param registry - Channel registry for accessing channels
- * @param processManager - Process manager for tracking communication processes
- * @param actions - Action creators for generating responses
+ * @param context - Routing context with state, registry, actions, and logger
  * @param message - Message event containing the CANCEL_CONNECTION action
  *
  * @remarks
@@ -30,19 +24,14 @@ import { getById } from '../../core/registry/get-by-id'
  * Side B -> CANCEL_ACKNOWLEDGED
  * Both sides fire 'cancel' event
  */
-export function handleCancel(
-  state: BrokerState,
-  registry: Registry,
-  processManager: ProcessManager,
-  actions: ActionCreators,
-  message: MessageEvent<IAction>
-): void {
+export function handleCancel(context: RoutingContext, message: MessageEvent<IAction>): void {
+  const { state, registry, processManager } = context
   const action = message.data
-  const senderId = (action as unknown as Record<string, unknown>)['senderId'] as string
-  const processId = (action as unknown as Record<string, unknown>)['processId'] as string
+  const senderId = <string>(<Record<string, unknown>>(<unknown>action))['senderId']
+  const processId = <string>(<Record<string, unknown>>(<unknown>action))['processId']
 
   // Try to find channel by sender ID or process ID
-  const channel = (getById(registry, senderId) || processManager.get(processId)) as ChannelHandle | undefined
+  const channel = <ChannelHandle | undefined>(getById(registry, senderId) || processManager.get(processId))
 
   if (!channel) {
     return // Channel not found

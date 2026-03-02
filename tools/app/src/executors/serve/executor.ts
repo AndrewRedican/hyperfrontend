@@ -1,9 +1,9 @@
 import type { ExecutorContext } from '@nx/devkit'
-import { logger } from '@nx/devkit'
+import type { ServeExecutorOptions } from './schema'
 import { spawn } from 'node:child_process'
 import { existsSync } from 'node:fs'
 import { join } from 'node:path'
-import type { ServeExecutorOptions } from './schema'
+import { logger } from '@nx/devkit'
 
 /**
  * Serve executor for hyperfrontend application projects.

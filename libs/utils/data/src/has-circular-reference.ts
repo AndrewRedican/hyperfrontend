@@ -1,9 +1,9 @@
 import type { ReferenceStack } from './models'
-import { referenceStack } from './reference-stack'
-import { getConfig, setConfig } from './shared/consts'
+import { getIterableOperators } from './get-iterable-operators'
 import { getType } from './get-type'
 import { isIterableType } from './is-iterable-type'
-import { getIterableOperators } from './get-iterable-operators'
+import { referenceStack } from './reference-stack'
+import { getConfig, setConfig } from './shared/consts'
 
 const hasCircularReferenceRecursive = (target: unknown, stack: ReferenceStack, root = false): boolean => {
   if (stack.exists(target)) return true

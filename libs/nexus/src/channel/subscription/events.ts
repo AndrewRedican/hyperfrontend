@@ -1,6 +1,7 @@
-import type { ChannelInternals } from '../types'
 import type { EventHandler } from '../../types/channel'
 import type { ChannelEvent, EventCallbackMap } from '../../types/events'
+import type { ChannelInternals } from '../types'
+import { createError } from '@hyperfrontend/immutable-api-utils/built-in-copy/error'
 
 /**
  * Subscribes to channel lifecycle events.
@@ -41,24 +42,24 @@ export function subscribeToEvents<E extends ChannelEvent>(
   let wrappedHandler: EventHandler
 
   if (isEventSpecific) {
-    const eventType = eventOrHandler as E
-    const callback = handler as EventCallbackMap[E]
+    const eventType = <E>eventOrHandler
+    const callback = <EventCallbackMap[E]>handler
 
     // Wrap the event-specific callback as a generic EventHandler
     wrappedHandler = (event, data, channelJSON) => {
       if (event === eventType) {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        ;(callback as any)(data, channelJSON)
+        ;(<any>callback)(data, channelJSON)
       }
     }
   } else if (typeof eventOrHandler === 'function') {
     wrappedHandler = eventOrHandler
   } else {
-    throw new Error('Expected callback function.')
+    throw createError('Expected callback function.')
   }
 
   if (typeof wrappedHandler !== 'function') {
-    throw new Error('Expected callback function.')
+    throw createError('Expected callback function.')
   }
 
   const state = channel.getState()

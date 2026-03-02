@@ -1,9 +1,10 @@
 import type { SerializedEncryptedPacket, UnserializedEncryptedPacket } from '../../packet/model'
 import type { DeserializationQueueCreater } from '../model'
+import { createError } from '@hyperfrontend/immutable-api-utils/built-in-copy/error'
 import { isValidSerializedEncryptedPacket } from '../../packet/validations/is-valid-serialized-encrypted-packet'
 import { isValidUnserializedEncryptedPacket } from '../../packet/validations/is-valid-unserialized-encrypted-packet'
-import { isValidQueueCreaterArguments } from '../validations/is-valid-queue-creater-arguments'
 import { getValidationError } from '../utils/get-validation-error'
+import { isValidQueueCreaterArguments } from '../validations/is-valid-queue-creater-arguments'
 import { createQueue } from './create-queue'
 
 export const createDeserializationQueue: DeserializationQueueCreater = (label, packetDeserialization, logger, onSuccess, onFail) => {
@@ -16,7 +17,7 @@ export const createDeserializationQueue: DeserializationQueueCreater = (label, p
   })
   const errorMessage = getValidationError('deserialization', validity)
   if (errorMessage) {
-    throw new Error(errorMessage)
+    throw createError(errorMessage)
   }
   const { debug, log, warn, error } = logger
   const process = async (raw: SerializedEncryptedPacket): Promise<void> => {
@@ -32,7 +33,7 @@ export const createDeserializationQueue: DeserializationQueueCreater = (label, p
       try {
         processed = await packetDeserialization(raw)
       } catch (e) {
-        log(`${label}: ${(e as Error)?.message}`)
+        log(`${label}: ${(<Error>e)?.message}`)
         onFail(raw)
         return
       }

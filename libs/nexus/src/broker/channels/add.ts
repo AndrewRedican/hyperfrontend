@@ -1,14 +1,15 @@
-import type { BrokerState } from '../types'
-import type { Registry } from '../../core/registry/factory'
-import type { ProcessManager } from '../../core/processes/factory'
 import type { ActionCreators } from '../../core/actions/factory'
+import type { ProcessManager } from '../../core/processes/factory'
+import type { Registry } from '../../core/registry/factory'
+import type { BrokerState } from '../types'
 import { createChannel } from '../../channel/factory'
-import { getByWindow } from '../../core/registry/get-by-window'
 import { add as addToRegistry } from '../../core/registry/add'
+import { getByWindow } from '../../core/registry/get-by-window'
 import { remove as removeFromRegistry } from '../../core/registry/remove'
+import { assertNoCircularRef } from '../../utils/validation/assert-no-circular-ref'
 
 /**
- * Adds a channel to the broker
+ * Adds a channel to the broker.
  *
  * @param state - Current broker state
  * @param registry - Channel registry for storing and retrieving channels
@@ -28,6 +29,8 @@ export function addChannel(
   target: Window,
   settings: Record<string, unknown> = {}
 ): ReturnType<typeof createChannel> {
+  assertNoCircularRef(settings, 'settings')
+
   // Check if channel already exists for this window
   const existing = getByWindow(registry, target)
 
@@ -35,10 +38,10 @@ export function addChannel(
     // If names differ, we'd need to update (for now, cast and return existing)
     // In full implementation, might call renameChannel here
     // Cast to ChannelHandle since the registry stores full channel objects
-    return existing as unknown as ReturnType<typeof createChannel>
+    return <ReturnType<typeof createChannel>>(<unknown>existing)
   }
 
-  // Create new channel with broker's contract and debug settings
+  // Create new channel with broker's contract and logger
   const channel = createChannel(
     {
       name,
@@ -46,7 +49,7 @@ export function addChannel(
       settings: {
         ...settings,
         contract: state.contract,
-        debug: state.settings.debug,
+        logger: state.logger,
         brokerManaged: true,
       },
     },

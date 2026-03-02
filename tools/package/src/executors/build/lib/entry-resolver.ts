@@ -1,10 +1,10 @@
+import type { EntryPoint, EntryPointCategory, EntryPointDiscovery, FormatEntryConfig } from './types'
 import { existsSync, readdirSync, statSync } from 'node:fs'
 import { join } from 'node:path'
 import { minimatch } from 'minimatch'
-import type { EntryPoint, EntryPointCategory, EntryPointDiscovery, FormatEntryConfig } from './types'
 
 /** Known platform directory names */
-const PLATFORM_DIRS = ['browser', 'node'] as const
+const PLATFORM_DIRS = <const>['browser', 'node']
 type PlatformDir = (typeof PLATFORM_DIRS)[number]
 
 /**

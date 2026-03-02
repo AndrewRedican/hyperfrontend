@@ -1,3 +1,6 @@
+import { createError } from '@hyperfrontend/immutable-api-utils/built-in-copy/error'
+import { createUint8Array } from '@hyperfrontend/immutable-api-utils/built-in-copy/typed-arrays'
+
 /**
  * Generates cryptographically secure random values using Web Crypto API (browser implementation).
  *
@@ -7,7 +10,7 @@
  */
 export function getRandomValues(byteLength: number): Uint8Array {
   if (!byteLength) {
-    throw new Error('Cannot generate random values without a byte length.')
+    throw createError('Cannot generate random values without a byte length.')
   }
-  return globalThis.crypto.getRandomValues(new Uint8Array(byteLength))
+  return globalThis.crypto.getRandomValues(createUint8Array(byteLength))
 }

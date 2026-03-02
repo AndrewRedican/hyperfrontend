@@ -1,5 +1,5 @@
-import { uuidV4 } from '@hyperfrontend/random-generator-utils'
 import type { ChannelHandle } from './factory'
+import { uuidV4 } from '@hyperfrontend/random-generator-utils'
 
 /**
  * Creates a process ID and registers the channel

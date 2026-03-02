@@ -1,6 +1,8 @@
+jest.unmock('@hyperfrontend/immutable-api-utils/built-in-copy/object')
+
 import type { IChannelContract } from '../../types/contract'
-import { createActionCreators } from './factory'
 import { ACTION_TYPES } from '../../types/action'
+import { createActionCreators } from './factory'
 
 describe('createActionCreators', () => {
   const mockContract: IChannelContract = {
@@ -40,8 +42,8 @@ describe('createActionCreators', () => {
     it('creates REQUEST_CONNECTION action with security negotiation request', () => {
       const processId = 'process-secure'
       const security = {
-        supported: ['v2', 'v1', 'none'] as const,
-        preferred: 'v2' as const,
+        supported: <const>['v2', 'v1', 'none'],
+        preferred: <const>'v2',
       }
       const action = actions.requestConnection(processId, security)
 
@@ -94,7 +96,7 @@ describe('createActionCreators', () => {
 
     it('creates ACCEPT_CONNECTION action with security negotiation response', () => {
       const processId = 'process-secure'
-      const security = { negotiated: 'v2' as const }
+      const security = { negotiated: <const>'v2' }
       const action = actions.acceptConnection(processId, security)
 
       expect(action).toEqual({
@@ -174,7 +176,7 @@ describe('createActionCreators', () => {
       const processId = 'process-secure'
       const security = {
         active: true,
-        protocol: 'v2' as const,
+        protocol: <const>'v2',
       }
       const action = actions.openConnection(processId, security)
 

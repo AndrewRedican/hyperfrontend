@@ -1,6 +1,8 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import type { EncryptionSuite } from '../../../security/model'
 import type { PacketEncrypter, PacketDecrypter } from '../../model'
+import { createError } from '@hyperfrontend/immutable-api-utils/built-in-copy/error'
+import { freeze } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
 
 /**
  * Creates a factory for PSK-handshake encryption suites.
@@ -29,7 +31,7 @@ import type { PacketEncrypter, PacketDecrypter } from '../../model'
 export function createPSKHandshakeEncryptionFactory<T = any>(encryptPacket: PacketEncrypter, decryptPacket: PacketDecrypter) {
   return (psk: string, keyProvider: () => string | undefined): EncryptionSuite<T> => {
     if (!psk || typeof psk !== 'string') {
-      throw new Error('PSK must be a non-empty string')
+      throw createError('PSK must be a non-empty string')
     }
 
     const packetEncryption: EncryptionSuite<T>['packetEncryption'] = (packet) => {
@@ -46,6 +48,6 @@ export function createPSKHandshakeEncryptionFactory<T = any>(encryptPacket: Pack
       return decryptPacket(packet, key)
     }
 
-    return Object.freeze({ packetEncryption, packetDecryption })
+    return freeze({ packetEncryption, packetDecryption })
   }
 }

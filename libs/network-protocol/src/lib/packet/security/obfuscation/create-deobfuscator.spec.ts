@@ -5,8 +5,8 @@
 
 import type { ObfuscatedPacket } from '../../model'
 import { encrypt, decrypt } from '@hyperfrontend/cryptography/node'
-import { createPacketObfuscator } from './create-obfuscator'
 import { createPacketDeobfuscator } from './create-deobfuscator'
+import { createPacketObfuscator } from './create-obfuscator'
 import { testPasswords, testUUIDs, sampleSerializedEncryptedPacket, alternativeSerializedEncryptedPacket } from './test-fixtures'
 
 describe('createPacketDeobfuscator (Node.js)', () => {
@@ -174,7 +174,7 @@ describe('createPacketDeobfuscator (Node.js)', () => {
 
       expect(Object.isFrozen(result)).toBe(true)
       expect(() => {
-        ;(result as { origin: string }).origin = 'modified'
+        ;(<{ origin: string }>result).origin = 'modified'
       }).toThrow()
     })
   })

@@ -1,3 +1,4 @@
+import { btoa, createTextEncoder } from '@hyperfrontend/immutable-api-utils/built-in-copy/encoding'
 import { base64ToUrlSafeBase64 } from '../../utils/base64-to-url-safe-base64'
 import { bytesToBinaryString } from '../../utils/bytes-to-binary-string'
 
@@ -11,5 +12,5 @@ import { bytesToBinaryString } from '../../utils/bytes-to-binary-string'
  * @returns The base64 encoded string
  */
 export function toBase64(text: string, urlSafe = false, keepPadding = false): string {
-  return base64ToUrlSafeBase64(btoa(bytesToBinaryString(new TextEncoder().encode(text))), { urlSafe, keepPadding })
+  return base64ToUrlSafeBase64(btoa(bytesToBinaryString(createTextEncoder().encode(text))), { urlSafe, keepPadding })
 }

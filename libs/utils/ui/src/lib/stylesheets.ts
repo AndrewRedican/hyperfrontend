@@ -1,11 +1,15 @@
 import type { StyleMap } from './style.model'
 import { getType } from '@hyperfrontend/data-utils'
+import { createError } from '@hyperfrontend/immutable-api-utils/built-in-copy/error'
+import { createMap } from '@hyperfrontend/immutable-api-utils/built-in-copy/map'
+import { createSet } from '@hyperfrontend/immutable-api-utils/built-in-copy/set'
+import { createWeakMap } from '@hyperfrontend/immutable-api-utils/built-in-copy/weak-map'
 import { cssRules } from './css-rules'
 
-const stylesheets = new Set<HTMLStyleElement>()
-const labels = new Set<string>()
-const labeledStylesheets = new Map<string, HTMLStyleElement>()
-const stylesheetLabels = new WeakMap<HTMLStyleElement, string>()
+const stylesheets = createSet<HTMLStyleElement>()
+const labels = createSet<string>()
+const labeledStylesheets = createMap<string, HTMLStyleElement>()
+const stylesheetLabels = createWeakMap<HTMLStyleElement, string>()
 
 /**
  * Adds a new stylesheet to the document with optional label.
@@ -21,11 +25,11 @@ export function addStylesheet(css: string | StyleMap, label?: string): [HTMLStyl
   }
 
   if (getType(css) !== 'string' || css.length === 0) {
-    throw new Error(`A valid string or StyleMap must be provided to add in styleesheet.`)
+    throw createError(`A valid string or StyleMap must be provided to add in styleesheet.`)
   }
 
   if (label && labels.has(label)) {
-    throw new Error(`Stylesheet with label "${label}" already exists`)
+    throw createError(`Stylesheet with label "${label}" already exists`)
   }
 
   const style: HTMLStyleElement = document.createElement('style')
@@ -56,10 +60,10 @@ export function removeStylesheet(ref: string | HTMLStyleElement): void {
   let label: string
   if (isLabel) {
     label = <string>ref
-    style = labeledStylesheets.get(label) as HTMLStyleElement
+    style = <HTMLStyleElement>labeledStylesheets.get(label)
   } else {
     style = <HTMLStyleElement>ref
-    label = stylesheetLabels.get(style) as string
+    label = <string>stylesheetLabels.get(style)
   }
   try {
     document.head.removeChild(style)

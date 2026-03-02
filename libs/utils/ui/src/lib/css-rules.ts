@@ -1,5 +1,6 @@
 import type { StyleMap } from '../style'
 import { getType } from '@hyperfrontend/data-utils'
+import { entries } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
 import { cssRule } from './css-rule'
 
 /**
@@ -10,7 +11,7 @@ import { cssRule } from './css-rule'
  */
 export function cssRules(styles: StyleMap): string {
   if (getType(styles) !== 'object') return ''
-  return Object.entries(styles)
+  return entries(styles)
     .map(([selector, style]) => cssRule(selector, style))
     .join('\n')
 }

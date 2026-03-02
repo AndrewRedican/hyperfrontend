@@ -2,13 +2,17 @@
  * Tests for routeMessage function
  */
 
-import { routeMessage } from './route-message'
-import { createRouter, type RouteHandler } from './create-router'
-import type { BrokerState } from '../types'
-import { createRegistry } from '../../core/registry/factory'
-import { createProcessManager } from '../../core/processes/factory'
-import { createActionCreators, type ActionCreators } from '../../core/actions/factory'
+import type { Logger } from '@hyperfrontend/logging'
+import type { ActionCreators } from '../../core/actions/factory'
 import type { IAction } from '../../types/action'
+import type { BrokerState } from '../types'
+import type { RouteHandler } from './create-router'
+import type { RoutingContext } from './types'
+import { createActionCreators } from '../../core/actions/factory'
+import { createProcessManager } from '../../core/processes/factory'
+import { createRegistry } from '../../core/registry/factory'
+import { createRouter } from './create-router'
+import { routeMessage } from './route-message'
 
 describe('routeMessage', () => {
   const mockBrokerState: BrokerState = {
@@ -24,7 +28,6 @@ describe('routeMessage', () => {
         accepted: [{ type: 'test', description: 'Test action' }],
         emitted: [],
       },
-      debug: false,
     },
   }
 
@@ -32,8 +35,8 @@ describe('routeMessage', () => {
   let processManager: ReturnType<typeof createProcessManager>
   let mockActions: ActionCreators
   let mockHandler: RouteHandler
-  let consoleWarnSpy: jest.SpyInstance
-  let consoleErrorSpy: jest.SpyInstance
+  let mockLogger: Logger
+  let routingContext: RoutingContext
 
   beforeEach(() => {
     registry = createRegistry()
@@ -43,13 +46,22 @@ describe('routeMessage', () => {
       getContract: () => mockBrokerState.contract,
     })
     mockHandler = jest.fn()
-    consoleWarnSpy = jest.spyOn(console, 'warn').mockImplementation()
-    consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation()
-  })
-
-  afterEach(() => {
-    consoleWarnSpy.mockRestore()
-    consoleErrorSpy.mockRestore()
+    mockLogger = {
+      error: jest.fn(),
+      warn: jest.fn(),
+      log: jest.fn(),
+      info: jest.fn(),
+      debug: jest.fn(),
+      setLogLevel: jest.fn(),
+      getLogLevel: jest.fn(() => 'debug'),
+    }
+    routingContext = {
+      state: mockBrokerState,
+      registry,
+      processManager,
+      actions: mockActions,
+      logger: mockLogger,
+    }
   })
 
   it('routes message to correct handler', () => {
@@ -66,10 +78,10 @@ describe('routeMessage', () => {
       source: <Window>{},
     }
 
-    routeMessage(router, mockBrokerState, registry, processManager, mockActions, message)
+    routeMessage(router, routingContext, message)
 
     expect(mockHandler).toHaveBeenCalledTimes(1)
-    expect(mockHandler).toHaveBeenCalledWith(mockBrokerState, registry, processManager, mockActions, message)
+    expect(mockHandler).toHaveBeenCalledWith(routingContext, message)
   })
 
   it('handles message without action type gracefully', () => {
@@ -82,13 +94,12 @@ describe('routeMessage', () => {
       source: <Window>{},
     }
 
-    routeMessage(router, mockBrokerState, registry, processManager, mockActions, message)
+    routeMessage(router, routingContext, message)
 
     expect(mockHandler).not.toHaveBeenCalled()
   })
 
-  it('logs warning when action type is missing and debug is enabled', () => {
-    const debugState = { ...mockBrokerState, settings: { ...mockBrokerState.settings, debug: true } }
+  it('logs warning when action type is missing', () => {
     const router = createRouter({})
 
     const message = <MessageEvent<IAction>>{
@@ -96,9 +107,9 @@ describe('routeMessage', () => {
       source: <Window>{},
     }
 
-    routeMessage(router, debugState, registry, processManager, mockActions, message)
+    routeMessage(router, routingContext, message)
 
-    expect(consoleWarnSpy).toHaveBeenCalledWith('[nexus] Received message without action type')
+    expect(mockLogger.warn).toHaveBeenCalledWith('Received message without action type')
   })
 
   it('handles unregistered action type gracefully', () => {
@@ -115,13 +126,12 @@ describe('routeMessage', () => {
       source: <Window>{},
     }
 
-    routeMessage(router, mockBrokerState, registry, processManager, mockActions, message)
+    routeMessage(router, routingContext, message)
 
     expect(mockHandler).not.toHaveBeenCalled()
   })
 
-  it('logs warning for unregistered action type when debug is enabled', () => {
-    const debugState = { ...mockBrokerState, settings: { ...mockBrokerState.settings, debug: true } }
+  it('logs warning for unregistered action type', () => {
     const router = createRouter({})
 
     const message = <MessageEvent<IAction>>{
@@ -133,9 +143,9 @@ describe('routeMessage', () => {
       source: <Window>{},
     }
 
-    routeMessage(router, debugState, registry, processManager, mockActions, message)
+    routeMessage(router, routingContext, message)
 
-    expect(consoleWarnSpy).toHaveBeenCalledWith('[nexus] No handler for action type: unknown-action')
+    expect(mockLogger.warn).toHaveBeenCalledWith('No handler for action type: unknown-action')
   })
 
   it('catchs and handle errors from handlers', () => {
@@ -157,14 +167,13 @@ describe('routeMessage', () => {
     }
 
     expect(() => {
-      routeMessage(router, mockBrokerState, registry, processManager, mockActions, message)
+      routeMessage(router, routingContext, message)
     }).not.toThrow()
 
     expect(errorHandler).toHaveBeenCalled()
   })
 
-  it('logs error when handler throws and debug is enabled', () => {
-    const debugState = { ...mockBrokerState, settings: { ...mockBrokerState.settings, debug: true } }
+  it('logs error when handler throws', () => {
     const errorHandler: RouteHandler = jest.fn(() => {
       throw new Error('Handler error')
     })
@@ -182,9 +191,9 @@ describe('routeMessage', () => {
       source: <Window>{},
     }
 
-    routeMessage(router, debugState, registry, processManager, mockActions, message)
+    routeMessage(router, routingContext, message)
 
-    expect(consoleErrorSpy).toHaveBeenCalledWith('[nexus] Error routing message:', expect.any(Error))
+    expect(mockLogger.error).toHaveBeenCalledWith('Error routing message:', expect.any(Error))
   })
 
   it('handles null/undefined message data', () => {
@@ -198,7 +207,7 @@ describe('routeMessage', () => {
     })
 
     expect(() => {
-      routeMessage(router, mockBrokerState, registry, processManager, mockActions, message)
+      routeMessage(router, routingContext, message)
     }).not.toThrow()
 
     expect(mockHandler).not.toHaveBeenCalled()
@@ -223,28 +232,29 @@ describe('routeMessage', () => {
       source: <Window>{},
     }
 
-    routeMessage(router, mockBrokerState, registry, processManager, mockActions, message1)
-    routeMessage(router, mockBrokerState, registry, processManager, mockActions, message2)
+    routeMessage(router, routingContext, message1)
+    routeMessage(router, routingContext, message2)
 
     expect(handler1).toHaveBeenCalledTimes(1)
     expect(handler2).toHaveBeenCalledTimes(1)
   })
 
-  it('does not log when debug is disabled', () => {
-    const router = createRouter({})
+  it('logs debug message for received actions via logAction', () => {
+    const router = createRouter({
+      'test-action': mockHandler,
+    })
 
     const message = <MessageEvent<IAction>>{
       data: <IAction>(<unknown>{
-        type: 'unknown-action',
+        type: 'test-action',
         senderId: 'sender-1',
         data: {},
       }),
       source: <Window>{},
     }
 
-    routeMessage(router, mockBrokerState, registry, processManager, mockActions, message)
+    routeMessage(router, routingContext, message)
 
-    expect(consoleWarnSpy).not.toHaveBeenCalled()
-    expect(consoleErrorSpy).not.toHaveBeenCalled()
+    expect(mockLogger.debug).toHaveBeenCalledWith('Action received:', 'test-action', expect.any(Object))
   })
 })

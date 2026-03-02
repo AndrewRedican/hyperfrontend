@@ -1,4 +1,5 @@
 import type { QueueCreatorValidity } from '../model'
+import { entries } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
 
 /**
  * Generates a descriptive error message for queue validation failures.
@@ -16,7 +17,7 @@ export function getValidationError(operationType: string, validity: QueueCreator
     onSuccess: 'a success callback function',
     onFail: 'a failed callback function',
   }
-  const invalidEntry = Object.entries(validity).find(([, value]) => value === false)
+  const invalidEntry = entries(validity).find(([, value]) => value === false)
   if (!invalidEntry) return ''
   const [key] = invalidEntry
   return `Cannot create ${operationType} queue without ${errorMap[key]}`

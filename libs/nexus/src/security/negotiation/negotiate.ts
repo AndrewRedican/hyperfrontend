@@ -9,6 +9,7 @@
 
 import type { SecurityProtocolVersion, SecurityNegotiationRequest, SecurityNegotiationResponse } from '../../types/security'
 import type { NegotiationResult } from './types'
+import { freeze } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
 
 /**
  * Negotiates the best security protocol between initiator and responder.
@@ -71,7 +72,7 @@ export function createSecurityRequest(
   const effectiveSupported = supported.length > 0 ? supported : <readonly SecurityProtocolVersion[]>['none']
   const effectivePreferred = preferred ?? effectiveSupported[0]
 
-  return Object.freeze({
+  return freeze({
     supported: effectiveSupported,
     preferred: effectivePreferred,
   })
@@ -99,5 +100,5 @@ export function createSecurityResponse(
 ): SecurityNegotiationResponse {
   const response: SecurityNegotiationResponse = publicParams ? { negotiated, publicParams } : { negotiated }
 
-  return Object.freeze(response)
+  return freeze(response)
 }

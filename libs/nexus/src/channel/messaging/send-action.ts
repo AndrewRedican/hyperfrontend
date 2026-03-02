@@ -1,5 +1,7 @@
-import type { ChannelInternals } from '../types'
 import type { IAction } from '../../types/action'
+import type { ChannelInternals } from '../types'
+import { createError } from '@hyperfrontend/immutable-api-utils/built-in-copy/error'
+import { createSet } from '@hyperfrontend/immutable-api-utils/built-in-copy/set'
 import { ACTION_TYPES } from '../../constants/action-types'
 
 /**
@@ -9,7 +11,7 @@ import { ACTION_TYPES } from '../../constants/action-types'
  * - Security negotiation happens during handshake
  * - Both parties need to read handshake messages before security is established
  */
-const PLAINTEXT_ACTION_TYPES: Set<string> = new Set([
+const PLAINTEXT_ACTION_TYPES: Set<string> = createSet([
   ACTION_TYPES.REQUEST_CONNECTION,
   ACTION_TYPES.ACCEPT_CONNECTION,
   ACTION_TYPES.DENY_CONNECTION,
@@ -42,7 +44,7 @@ export function sendAction(channel: ChannelInternals, action: IAction): void {
   const state = channel.getState()
 
   if (!action || typeof action.type !== 'string') {
-    throw new Error("Action must contain a 'type' property that is a non-empty string.")
+    throw createError("Action must contain a 'type' property that is a non-empty string.")
   }
 
   const securityTransport = state.securityTransport

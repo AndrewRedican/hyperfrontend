@@ -8,9 +8,9 @@ import { uint8ArrayToBase64 } from '@hyperfrontend/string-utils/browser'
 import { sleep } from '@hyperfrontend/time-utils'
 import { createDataFactory } from '../../data/creators/create-data-factory'
 import { createDataEncrypter } from '../../data/security/create-encrypter'
+import { createSerializedEncryptedPacketCreator } from '../../packet/creators/create-serialized-encrypted-packet-creator'
 import { createPacketEncrypter } from '../../packet/security/encryption/create-encrypter'
 import { createPacketObfuscator } from '../../packet/security/obfuscation/create-obfuscator'
-import { createSerializedEncryptedPacketCreator } from '../../packet/creators/create-serialized-encrypted-packet-creator'
 import { createSenderFactory } from './create-sender-factory'
 import { testUUIDs, testLabels, testMessages, createMockLogger } from './test-fixtures'
 
@@ -199,7 +199,7 @@ describe('createSenderFactory (Browser)', () => {
       expect(Object.isFrozen(sender)).toBe(true)
       expect(() => {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        ;(sender as any).send = () => void 0
+        ;(<any>sender).send = () => void 0
       }).toThrow()
     })
   })

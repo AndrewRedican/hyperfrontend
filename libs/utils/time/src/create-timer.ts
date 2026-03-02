@@ -1,3 +1,7 @@
+import { dateNow } from '@hyperfrontend/immutable-api-utils/built-in-copy/date'
+import { freeze } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
+import { setTimeout, clearTimeout } from '@hyperfrontend/immutable-api-utils/built-in-copy/timers'
+
 export interface Timer {
   /** Stops the progression of tracked time until further notice. */
   readonly pause: () => void
@@ -23,7 +27,7 @@ export function createTimer(callback: () => void, delay: number): Timer {
   const pause = (): void => {
     if (timerId !== null) {
       clearTimeout(timerId)
-      const now = Date.now()
+      const now = dateNow()
       /* istanbul ignore else - start is always set when timerId is not null */
       if (start !== null) {
         remaining -= now - start
@@ -34,7 +38,7 @@ export function createTimer(callback: () => void, delay: number): Timer {
 
   const resume = (): void => {
     if (timerId === null) {
-      start = Date.now()
+      start = dateNow()
       timerId = setTimeout(() => {
         callback()
         timerId = null
@@ -48,5 +52,5 @@ export function createTimer(callback: () => void, delay: number): Timer {
     resume()
   }
 
-  return Object.freeze({ pause, resume, reset })
+  return freeze({ pause, resume, reset })
 }

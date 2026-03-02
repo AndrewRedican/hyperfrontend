@@ -1,5 +1,6 @@
-import { bytesToBinaryString } from '../../utils/bytes-to-binary-string'
+import { btoa } from '@hyperfrontend/immutable-api-utils/built-in-copy/encoding'
 import { base64ToUrlSafeBase64 } from '../../utils/base64-to-url-safe-base64'
+import { bytesToBinaryString } from '../../utils/bytes-to-binary-string'
 
 /**
  * Converts a Uint8Array to a base64 encoded string (browser implementation).

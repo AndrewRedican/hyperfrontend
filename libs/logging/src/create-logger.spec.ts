@@ -24,7 +24,7 @@ describe('createLogger', () => {
     expect(getType(logger.error)).toBe('function')
   })
 
-  it('should throw an error if error function is invalid', () => {
+  it('throws an error if error function is invalid', () => {
     const empty = <() => undefined>(<unknown>null)
     expect(() => createLogger(empty)).toThrow()
     expect(() => createLogger(console.error, empty)).toThrow()

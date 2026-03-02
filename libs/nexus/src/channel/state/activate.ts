@@ -1,5 +1,7 @@
 import type { ChannelState } from '../../types/channel'
 import type { IChannelContract } from '../../types/contract'
+import { dateNow } from '@hyperfrontend/immutable-api-utils/built-in-copy/date'
+import { freeze } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
 
 /**
  * Activates a channel by setting it as active and recording connection details.
@@ -11,16 +13,15 @@ import type { IChannelContract } from '../../types/contract'
  * @returns New state with channel activated
  */
 export function activate(state: ChannelState, origin: string, contract: IChannelContract): ChannelState {
-  // Extract accepted action types from contract for quick lookup
   const acceptedActions = (contract.accepted || []).map((action) => action.type)
 
-  return {
+  return freeze(<ChannelState>{
     ...state,
     origin,
     active: true,
-    connectTimestamp: Date.now(),
+    connectTimestamp: dateNow(),
     contract,
-    acceptedActions,
+    acceptedActions: freeze(acceptedActions),
     scheduledActivation: null, // Clear any pending activation
-  }
+  })
 }

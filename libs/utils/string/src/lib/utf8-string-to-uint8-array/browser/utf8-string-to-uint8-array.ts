@@ -1,3 +1,5 @@
+import { createTextEncoder } from '@hyperfrontend/immutable-api-utils/built-in-copy/encoding'
+
 /**
  * Converts a UTF-8 string to a Uint8Array (browser implementation).
  *
@@ -5,5 +7,5 @@
  * @returns The encoded Uint8Array
  */
 export function utf8StringToUint8Array(text: string): Uint8Array {
-  return new TextEncoder().encode(text)
+  return createTextEncoder().encode(text)
 }

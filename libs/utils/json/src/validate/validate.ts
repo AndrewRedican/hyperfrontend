@@ -1,20 +1,21 @@
 import type { Schema } from '../types/schema'
 import type { ValidationResult, ValidateOptions } from '../types/validation'
 import type { ValidationContext } from './context'
+import { isArray } from '@hyperfrontend/immutable-api-utils/built-in-copy/array'
 import { createValidationContext, shouldContinue } from './context'
-import { resolveRef } from './resolve-ref'
-import { validateType } from './keywords/type'
-import { validateProperties, validateRequired, validateAdditionalProperties } from './keywords/properties'
-import { validatePatternProperties } from './keywords/pattern-properties'
-import { validateItems } from './keywords/items'
 import { validateArrayBounds } from './keywords/array-bounds'
-import { validateStringBounds } from './keywords/string-bounds'
-import { validateNumberBounds } from './keywords/number-bounds'
-import { validateEnum } from './keywords/enum'
-import { validateObjectBounds } from './keywords/object-bounds'
-import { validateDependencies } from './keywords/dependencies'
-import { validateFormat } from './keywords/format'
 import { validateAllOf, validateAnyOf, validateOneOf, validateNot } from './keywords/composition'
+import { validateDependencies } from './keywords/dependencies'
+import { validateEnum } from './keywords/enum'
+import { validateFormat } from './keywords/format'
+import { validateItems } from './keywords/items'
+import { validateNumberBounds } from './keywords/number-bounds'
+import { validateObjectBounds } from './keywords/object-bounds'
+import { validatePatternProperties } from './keywords/pattern-properties'
+import { validateProperties, validateRequired, validateAdditionalProperties } from './keywords/properties'
+import { validateStringBounds } from './keywords/string-bounds'
+import { validateType } from './keywords/type'
+import { resolveRef } from './resolve-ref'
 
 /**
  * Validates a value against a JSON Schema.
@@ -95,7 +96,7 @@ export function validateSchema(instance: unknown, schema: Schema, ctx: Validatio
   }
 
   // Array-specific validations
-  if (Array.isArray(instance)) {
+  if (isArray(instance)) {
     if (!validateItems(instance, schema, ctx)) {
       valid = false
       if (!shouldContinue(ctx)) return false
@@ -107,7 +108,7 @@ export function validateSchema(instance: unknown, schema: Schema, ctx: Validatio
   }
 
   // Object-specific validations
-  if (instance !== null && typeof instance === 'object' && !Array.isArray(instance)) {
+  if (instance !== null && typeof instance === 'object' && !isArray(instance)) {
     const obj = <Record<string, unknown>>instance
 
     if (!validateProperties(obj, schema, ctx)) {

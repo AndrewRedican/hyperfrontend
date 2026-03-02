@@ -1,6 +1,6 @@
 {
   "name": "@hyperfrontend/data-utils",
-  "version": "0.0.2",
+  "version": "0.0.4",
   "description": "Data manipulation and transformation utilities.",
   "license": "MIT",
   "sideEffects": false,
@@ -8,7 +8,10 @@
     "node": ">=18.0.0",
     "npm": ">=8.0.0"
   },
-  "main": "./src/index.js",
+  "exports": {
+    ".": "./src/index.js",
+    "./package.json": "./package.json"
+  },
   "keywords": [
     "data-utils",
     "deep-equality",
@@ -30,5 +33,8 @@
   "funding": {
     "type": "github",
     "url": "https://github.com/sponsors/AndrewRedican"
+  },
+  "dependencies": {
+    "@hyperfrontend/immutable-api-utils": "0.1.0"
   }
 }

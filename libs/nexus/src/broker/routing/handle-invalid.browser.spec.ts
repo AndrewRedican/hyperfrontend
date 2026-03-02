@@ -1,11 +1,13 @@
-import type { BrokerState } from '../types'
+import type { Logger } from '@hyperfrontend/logging'
 import type { IAction } from '../../types/action'
 import type { IChannelContract } from '../../types/contract'
-import { handleInvalid } from './handle-invalid'
-import { createRegistry } from '../../core/registry/factory'
-import { createProcessManager } from '../../core/processes/factory'
+import type { BrokerState } from '../types'
+import type { RoutingContext } from './types'
 import { createActionCreators } from '../../core/actions/factory'
+import { createProcessManager } from '../../core/processes/factory'
+import { createRegistry } from '../../core/registry/factory'
 import { addChannel } from '../channels/add'
+import { handleInvalid } from './handle-invalid'
 
 describe('handleInvalid', () => {
   const validContract: IChannelContract = {
@@ -20,7 +22,6 @@ describe('handleInvalid', () => {
     contract: validContract,
     settings: {
       contract: validContract,
-      debug: false,
     },
   }
 
@@ -28,6 +29,8 @@ describe('handleInvalid', () => {
   let processManager: ReturnType<typeof createProcessManager>
   let actions: ReturnType<typeof createActionCreators>
   let mockWindow: Window
+  let mockLogger: Logger
+  let routingContext: RoutingContext
 
   beforeEach(() => {
     registry = createRegistry()
@@ -39,6 +42,22 @@ describe('handleInvalid', () => {
     mockWindow = <Window>(<unknown>{
       postMessage: jest.fn(),
     })
+    mockLogger = {
+      error: jest.fn(),
+      warn: jest.fn(),
+      log: jest.fn(),
+      info: jest.fn(),
+      debug: jest.fn(),
+      setLogLevel: jest.fn(),
+      getLogLevel: jest.fn(() => 'debug'),
+    }
+    routingContext = {
+      state: mockBrokerState,
+      registry,
+      processManager,
+      actions,
+      logger: mockLogger,
+    }
   })
 
   it('process invalid request for existing channel', () => {
@@ -58,7 +77,7 @@ describe('handleInvalid', () => {
     }
 
     expect(() => {
-      handleInvalid(mockBrokerState, registry, processManager, actions, message)
+      handleInvalid(routingContext, message)
     }).not.toThrow()
   })
 
@@ -76,7 +95,7 @@ describe('handleInvalid', () => {
     }
 
     expect(() => {
-      handleInvalid(mockBrokerState, registry, processManager, actions, message)
+      handleInvalid(routingContext, message)
     }).not.toThrow()
   })
 
@@ -97,7 +116,7 @@ describe('handleInvalid', () => {
     }
 
     expect(() => {
-      handleInvalid(mockBrokerState, registry, processManager, actions, message)
+      handleInvalid(routingContext, message)
     }).not.toThrow()
   })
 
@@ -117,7 +136,7 @@ describe('handleInvalid', () => {
     }
 
     expect(() => {
-      handleInvalid(mockBrokerState, registry, processManager, actions, message)
+      handleInvalid(routingContext, message)
     }).not.toThrow()
   })
 
@@ -143,12 +162,12 @@ describe('handleInvalid', () => {
       error: 'Error 2',
     }
 
-    handleInvalid(mockBrokerState, registry, processManager, actions, <MessageEvent<IAction>>{
+    handleInvalid(routingContext, <MessageEvent<IAction>>{
       data: action1,
       source: mockWindow,
     })
 
-    handleInvalid(mockBrokerState, registry, processManager, actions, <MessageEvent<IAction>>{
+    handleInvalid(routingContext, <MessageEvent<IAction>>{
       data: action2,
       source: window2,
     })
@@ -177,7 +196,7 @@ describe('handleInvalid', () => {
       }
 
       expect(() => {
-        handleInvalid(mockBrokerState, registry, processManager, actions, message)
+        handleInvalid(routingContext, message)
       }).not.toThrow()
     })
   })
@@ -200,7 +219,7 @@ describe('handleInvalid', () => {
 
     const postMessageCallsBefore = (<jest.Mock>mockWindow.postMessage).mock.calls.length
 
-    handleInvalid(mockBrokerState, registry, processManager, actions, message)
+    handleInvalid(routingContext, message)
 
     // Should not send any messages (only notifies event handlers)
     expect((<jest.Mock>mockWindow.postMessage).mock.calls.length).toBe(postMessageCallsBefore)
@@ -219,7 +238,7 @@ describe('handleInvalid', () => {
     }
 
     expect(() => {
-      handleInvalid(mockBrokerState, registry, processManager, actions, message)
+      handleInvalid(routingContext, message)
     }).not.toThrow()
 
     expect(mockWindow.postMessage).not.toHaveBeenCalled()

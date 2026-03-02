@@ -1,5 +1,6 @@
-import type { ChannelInternals } from '../types'
 import type { MessageHandler } from '../../types/channel'
+import type { ChannelInternals } from '../types'
+import { createError } from '@hyperfrontend/immutable-api-utils/built-in-copy/error'
 
 /**
  * Subscribes to incoming messages on the channel.
@@ -23,7 +24,7 @@ import type { MessageHandler } from '../../types/channel'
  */
 export function subscribeToMessages(channel: ChannelInternals, handler: MessageHandler): () => void {
   if (typeof handler !== 'function') {
-    throw new Error('Expected callback function.')
+    throw createError('Expected callback function.')
   }
 
   const state = channel.getState()

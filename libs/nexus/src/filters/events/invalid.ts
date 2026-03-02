@@ -1,5 +1,6 @@
 import type { InvalidEventHandler } from '../../types/events'
-import { create, type EventHandler } from './create'
+import type { EventHandler } from './create'
+import { create } from './create'
 
 /**
  * Creates a filter that only passes INVALID events to the handler

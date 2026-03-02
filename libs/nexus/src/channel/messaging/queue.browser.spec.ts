@@ -1,9 +1,9 @@
-import type { ChannelInternals } from '../types'
 import type { ActionCreators } from '../../core/actions/factory'
 import type { ChannelState } from '../../types'
 import type { IMessage } from '../../types/message'
-import { queue } from './queue'
+import type { ChannelInternals } from '../types'
 import * as queueMessageModule from '../state/queue-message'
+import { queue } from './queue'
 
 jest.mock('../state/queue-message')
 
@@ -28,7 +28,7 @@ describe('channel/messaging/queue', () => {
       eventSubscriptions: [],
       messageSubscriptions: [],
       scheduledActivation: null,
-      debug: false,
+
       brokerManaged: false,
       readyToConnect: false,
       negotiatedProtocol: null,

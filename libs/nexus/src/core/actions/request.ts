@@ -1,7 +1,8 @@
-import { ACTION_TYPES } from '../../types/action'
 import type { IActionWithContract, IActionWithContractAndSecurity } from '../../types/action'
 import type { SecurityNegotiationRequest } from '../../types/security'
 import type { ActionDependencies } from './factory'
+import { freeze } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
+import { ACTION_TYPES } from '../../types/action'
 
 /**
  * Creates REQUEST_CONNECTION action
@@ -24,16 +25,16 @@ import type { ActionDependencies } from './factory'
 export const requestConnection =
   (deps: ActionDependencies) =>
   (processId: string, security?: SecurityNegotiationRequest): IActionWithContract | IActionWithContractAndSecurity => {
-    const base = {
+    const base = <const>{
       type: ACTION_TYPES.REQUEST_CONNECTION,
       processId,
       senderId: deps.getBrokerId(),
       contract: deps.getContract(),
-    } as const
-
-    if (security) {
-      return Object.freeze({ ...base, security })
     }
 
-    return Object.freeze(base)
+    if (security) {
+      return freeze({ ...base, security })
+    }
+
+    return freeze(base)
   }

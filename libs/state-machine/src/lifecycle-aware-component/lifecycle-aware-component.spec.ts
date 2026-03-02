@@ -1,5 +1,5 @@
-import { LifecycleAwareComponent } from './lifecycle-aware-component'
 import type { Process } from './lifecycle-aware-component.model'
+import { LifecycleAwareComponent } from './lifecycle-aware-component'
 
 describe('LifecycleAwareComponent', () => {
   interface Config {

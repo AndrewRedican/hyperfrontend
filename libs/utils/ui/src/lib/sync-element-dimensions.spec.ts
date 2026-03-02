@@ -1,5 +1,5 @@
-import { syncElementDimensions } from './sync-element-dimensions'
 import { setupResizeObserverMock } from '../../mocks/setup-resize-observer-mock'
+import { syncElementDimensions } from './sync-element-dimensions'
 
 describe('syncElementDimensions', () => {
   let sourceElement: HTMLElement

@@ -1,5 +1,5 @@
-import { traverse } from './traverse'
 import type { Callback, DepthConfig } from './models'
+import { traverse } from './traverse'
 
 /**
  * Returns the total depth of a value's data structure,

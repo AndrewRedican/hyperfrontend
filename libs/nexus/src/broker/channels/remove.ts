@@ -1,6 +1,6 @@
 import type { Registry } from '../../core/registry/factory'
-import { remove as removeFromRegistry } from '../../core/registry/remove'
 import { createChannel } from '../../channel/factory'
+import { remove as removeFromRegistry } from '../../core/registry/remove'
 
 /**
  * Removes a channel from the broker

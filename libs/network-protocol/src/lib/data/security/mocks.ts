@@ -1,3 +1,4 @@
+import { createUint8Array } from '@hyperfrontend/immutable-api-utils/built-in-copy/typed-arrays'
 import { data } from '../creators/mocks'
 
 export const password = 'password'
@@ -6,7 +7,7 @@ export const unencryptedData = data
 
 export const decryptedData = unencryptedData
 
-export const encryptedData = new Uint8Array([
+export const encryptedData = createUint8Array([
   160, 233, 139, 248, 18, 190, 240, 104, 232, 145, 25, 204, 118, 7, 11, 185, 107, 210, 213, 207, 224, 8, 67, 26, 7, 113, 21, 92, 45, 210,
   70, 131, 46, 25, 133, 99, 48, 116, 84, 16, 223, 82, 46, 61, 205, 229, 251, 48, 198, 240, 148, 39, 115, 153, 52, 90, 146, 13, 255, 225,
   213, 207, 1, 178, 51, 246, 167, 239, 101, 120, 154, 97, 178, 18, 91, 208, 89, 31, 224, 93, 67, 128, 217, 176, 22, 13, 112, 176, 1, 34,

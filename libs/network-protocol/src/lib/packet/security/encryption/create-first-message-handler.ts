@@ -1,7 +1,9 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
+import type { SerializedData } from '../../../data/model'
 import type { FirstMessageHandler } from '../../../security/model'
 import type { UnencryptedPacket, UnserializedEncryptedPacket } from '../../model'
-import type { SerializedData } from '../../../data/model'
+import { stringify, parse } from '@hyperfrontend/immutable-api-utils/built-in-copy/json'
+import { freeze } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
 import { deserializeData } from '../../../data/model'
 
 /**
@@ -24,34 +26,34 @@ export function createFirstMessageHandler<T = any>(
     // This maintains the same packet shape (data: Uint8Array) but without encryption
     const serializedData: SerializedData<T> = {
       ...packet.data,
-      message: JSON.stringify(packet.data.message) as SerializedData<T>['message'],
+      message: <SerializedData<T>['message']>stringify(packet.data.message),
     }
-    const jsonString = JSON.stringify(serializedData)
+    const jsonString = stringify(serializedData)
     const binaryData = textEncoder(jsonString)
 
-    return {
+    return freeze({
       origin: packet.origin,
       target: packet.target,
       data: binaryData,
-    }
+    })
   }
 
   const deserializeWithoutDecryption = async (packet: UnserializedEncryptedPacket): Promise<UnencryptedPacket<T>> => {
     // Decode binary to JSON string, then parse
     const jsonString = textDecoder(packet.data)
-    const serializedData: SerializedData<T> = JSON.parse(jsonString)
+    const serializedData: SerializedData<T> = parse(jsonString)
 
     // Deserialize the data (parse the message from JSON string to object)
     const data = deserializeData(serializedData)
 
-    return {
+    return freeze({
       origin: packet.origin,
       target: packet.target,
       data,
-    }
+    })
   }
 
-  return Object.freeze({
+  return freeze({
     serializeWithoutEncryption,
     deserializeWithoutDecryption,
   })

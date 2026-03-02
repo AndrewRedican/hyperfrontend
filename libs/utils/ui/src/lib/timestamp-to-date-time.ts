@@ -1,3 +1,5 @@
+import { createDate } from '@hyperfrontend/immutable-api-utils/built-in-copy/date'
+
 const SHORT = 'short'
 const D2 = '2-digit'
 
@@ -9,7 +11,7 @@ const D2 = '2-digit'
  * @returns A formatted date-time string (YYYY-MM-DD HH:MM:SS)
  */
 export function timestampToDateTime(timestamp: number): string {
-  const date = new Date(timestamp)
+  const date = createDate(timestamp)
   const options: Intl.DateTimeFormatOptions = {
     year: 'numeric',
     month: D2,
@@ -24,6 +26,6 @@ export function timestampToDateTime(timestamp: number): string {
     hourCycle: 'h23',
   }
 
-  const userLanguage = navigator.language || (navigator as any).userLanguage
+  const userLanguage = navigator.language || (<any>navigator).userLanguage
   return date.toLocaleString(userLanguage, options)
 }

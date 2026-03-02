@@ -1,19 +1,21 @@
-import type { IChannelConfig, ChannelHandle, ChannelJSON, EventHandler } from '../types/channel'
-import type { ChannelInternals, ChannelDependencies } from './types'
 import type { IAction } from '../types/action'
+import type { IChannelConfig, ChannelHandle, ChannelJSON, EventHandler } from '../types/channel'
 import type { IChannelContract } from '../types/contract'
 import type { ChannelEvent, EventCallbackMap } from '../types/events'
 import type { IMessage } from '../types/message'
 import type { SecurityProtocolVersion, SecurityTransport, SecurityNegotiationRequest } from '../types/security'
+import type { ChannelInternals, ChannelDependencies } from './types'
+import { freeze } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
+import { assertNoCircularRef } from '../utils/validation/assert-no-circular-ref'
 import { DEFAULT_CHANNEL_SETTINGS } from './defaults'
-import { createInitialState } from './state/initial'
-import { activate as activateState } from './state/activate'
-import { connect } from './lifecycle/connect'
-import { disconnect } from './lifecycle/disconnect'
 import { cancel } from './lifecycle/cancel'
+import { connect } from './lifecycle/connect'
 import { destroy } from './lifecycle/destroy'
+import { disconnect } from './lifecycle/disconnect'
 import { send } from './messaging/send'
 import { sendAction as sendActionImpl } from './messaging/send-action'
+import { activate as activateState } from './state/activate'
+import { createInitialState } from './state/initial'
 import { subscribeToEvents } from './subscription/events'
 import { subscribeToMessages } from './subscription/messages'
 import { notifyEvent } from './subscription/notify-event'
@@ -40,6 +42,8 @@ import { notifyMessage } from './subscription/notify-message'
  * ```
  */
 export function createChannel(config: IChannelConfig, deps: ChannelDependencies): ChannelHandle {
+  assertNoCircularRef(config.settings, 'config.settings')
+
   // Merge settings with defaults
   const settings = { ...DEFAULT_CHANNEL_SETTINGS, ...config.settings }
 
@@ -113,7 +117,7 @@ export function createChannel(config: IChannelConfig, deps: ChannelDependencies)
       if (typeof eventOrHandler === 'string' && typeof handler === 'function') {
         return subscribeToEvents(internals, eventOrHandler, handler)
       }
-      return subscribeToEvents(internals, eventOrHandler as EventHandler)
+      return subscribeToEvents(internals, <EventHandler>eventOrHandler)
     },
     onMessage: (handler) => subscribeToMessages(internals, handler),
 
@@ -131,7 +135,7 @@ export function createChannel(config: IChannelConfig, deps: ChannelDependencies)
 
     scheduleActivation: (senderId: string, origin: string, contract: IChannelContract, processId: string) => {
       internals.updateState({
-        scheduledActivation: [senderId, origin, contract, processId] as const,
+        scheduledActivation: <const>[senderId, origin, contract, processId],
       })
     },
 
@@ -177,5 +181,5 @@ export function createChannel(config: IChannelConfig, deps: ChannelDependencies)
     },
   }
 
-  return handle
+  return freeze(handle)
 }

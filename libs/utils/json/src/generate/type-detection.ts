@@ -1,4 +1,6 @@
 import type { JsonType } from '../types/schema'
+import { isArray } from '@hyperfrontend/immutable-api-utils/built-in-copy/array'
+import { isInteger } from '@hyperfrontend/immutable-api-utils/built-in-copy/number'
 
 /**
  * Gets the JSON Schema type of a JavaScript value.
@@ -8,13 +10,13 @@ import type { JsonType } from '../types/schema'
  */
 export function getJsonType(value: unknown): JsonType {
   if (value === null) return 'null'
-  if (Array.isArray(value)) return 'array'
+  if (isArray(value)) return 'array'
   const t = typeof value
   switch (t) {
     case 'string':
       return 'string'
     case 'number':
-      return Number.isInteger(value) ? 'integer' : 'number'
+      return isInteger(value) ? 'integer' : 'number'
     case 'boolean':
       return 'boolean'
     case 'object':

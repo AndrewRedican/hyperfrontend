@@ -1,3 +1,5 @@
+jest.unmock('@hyperfrontend/immutable-api-utils/built-in-copy/object')
+
 /**
  * Unit Tests: Protocol Negotiation
  *
@@ -5,8 +7,8 @@
  * protocol to use between two communicating parties.
  */
 
-import { negotiateProtocol, createSecurityRequest, createSecurityResponse } from './negotiate'
 import type { SecurityProtocolVersion, SecurityNegotiationRequest } from '../../types/security'
+import { negotiateProtocol, createSecurityRequest, createSecurityResponse } from './negotiate'
 
 describe('Protocol Negotiation', () => {
   describe('negotiateProtocol', () => {

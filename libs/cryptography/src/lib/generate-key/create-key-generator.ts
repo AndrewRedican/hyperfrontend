@@ -1,4 +1,5 @@
 import { getType } from '@hyperfrontend/data-utils'
+import { createError } from '@hyperfrontend/immutable-api-utils/built-in-copy/error'
 import { encryptionConfig } from '../encryption-config'
 
 /**
@@ -15,13 +16,13 @@ export function createKeyGenerator(
 ): (password: string, salt: Uint8Array) => Promise<CryptoKey> {
   return async function generateKey(password: string, salt: Uint8Array): Promise<CryptoKey> {
     if (getType(password) !== 'string') {
-      throw new Error('Cannot generate key without a password type string')
+      throw createError('Cannot generate key without a password type string')
     }
     if (password.length === 0) {
-      throw new Error('Cannot generate key with an empty string as password')
+      throw createError('Cannot generate key with an empty string as password')
     }
     if (!salt) {
-      throw new Error('Cannot generate key without a salt')
+      throw createError('Cannot generate key without a salt')
     }
     const keyMaterial = await subtle.importKey('raw', <BufferSource>utf8StringToUint8Array(password), { name: 'PBKDF2' }, false, [
       'deriveKey',

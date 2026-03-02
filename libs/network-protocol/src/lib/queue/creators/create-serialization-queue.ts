@@ -1,9 +1,10 @@
 import type { UnserializedEncryptedPacket, SerializedEncryptedPacket } from '../../packet/model'
 import type { SerializationQueueCreater } from '../model'
-import { isValidUnserializedEncryptedPacket } from '../../packet/validations/is-valid-unserialized-encrypted-packet'
+import { createError } from '@hyperfrontend/immutable-api-utils/built-in-copy/error'
 import { isValidSerializedEncryptedPacket } from '../../packet/validations/is-valid-serialized-encrypted-packet'
-import { isValidQueueCreaterArguments } from '../validations/is-valid-queue-creater-arguments'
+import { isValidUnserializedEncryptedPacket } from '../../packet/validations/is-valid-unserialized-encrypted-packet'
 import { getValidationError } from '../utils/get-validation-error'
+import { isValidQueueCreaterArguments } from '../validations/is-valid-queue-creater-arguments'
 import { createQueue } from './create-queue'
 
 export const createSerializationQueue: SerializationQueueCreater = (label, packetSerialization, logger, onSuccess, onFail) => {
@@ -16,7 +17,7 @@ export const createSerializationQueue: SerializationQueueCreater = (label, packe
   })
   const errorMessage = getValidationError('serialization', validity)
   if (errorMessage) {
-    throw new Error(errorMessage)
+    throw createError(errorMessage)
   }
   const { debug, error } = logger
   const process = async (raw: UnserializedEncryptedPacket): Promise<void> => {
@@ -32,7 +33,7 @@ export const createSerializationQueue: SerializationQueueCreater = (label, packe
       try {
         processed = await packetSerialization(raw)
       } catch (e) {
-        error(`${label}: ${(e as Error)?.message}`)
+        error(`${label}: ${(<Error>e)?.message}`)
         onFail(raw)
         return
       }

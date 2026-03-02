@@ -1,12 +1,14 @@
-import type { BrokerState } from '../types'
+import type { Logger } from '@hyperfrontend/logging'
 import type { IAction } from '../../types/action'
 import type { IChannelContract } from '../../types/contract'
-import { handleDestroy } from './handle-destroy'
-import { createRegistry } from '../../core/registry/factory'
-import { createProcessManager } from '../../core/processes/factory'
+import type { BrokerState } from '../types'
+import type { RoutingContext } from './types'
 import { createActionCreators } from '../../core/actions/factory'
-import { addChannel } from '../channels/add'
+import { createProcessManager } from '../../core/processes/factory'
+import { createRegistry } from '../../core/registry/factory'
 import { ACTION_TYPES } from '../../types/action'
+import { addChannel } from '../channels/add'
+import { handleDestroy } from './handle-destroy'
 
 describe('handleDestroy', () => {
   const validContract: IChannelContract = {
@@ -14,23 +16,36 @@ describe('handleDestroy', () => {
     emitted: [{ type: 'response-message', description: 'Response message' }],
   }
 
-  const mockBrokerState: BrokerState = {
-    id: 'broker-1',
-    name: 'test-broker',
-    window: <Window>global.window,
-    contract: validContract,
-    settings: {
-      contract: validContract,
-      debug: false,
-    },
-  }
-
+  let mockLogger: Logger
+  let mockBrokerState: BrokerState
   let registry: ReturnType<typeof createRegistry>
   let processManager: ReturnType<typeof createProcessManager>
   let actions: ReturnType<typeof createActionCreators>
   let mockWindow: Window
+  let routingContext: RoutingContext
 
   beforeEach(() => {
+    mockLogger = {
+      error: jest.fn(),
+      warn: jest.fn(),
+      log: jest.fn(),
+      info: jest.fn(),
+      debug: jest.fn(),
+      setLogLevel: jest.fn(),
+      getLogLevel: jest.fn(() => 'debug'),
+    }
+
+    mockBrokerState = {
+      id: 'broker-1',
+      name: 'test-broker',
+      window: <Window>global.window,
+      contract: validContract,
+      settings: {
+        contract: validContract,
+      },
+      logger: mockLogger,
+    }
+
     registry = createRegistry()
     processManager = createProcessManager()
     actions = createActionCreators({
@@ -40,6 +55,14 @@ describe('handleDestroy', () => {
     mockWindow = <Window>(<unknown>{
       postMessage: jest.fn(),
     })
+
+    routingContext = {
+      state: mockBrokerState,
+      registry,
+      processManager,
+      actions,
+      logger: mockLogger,
+    }
   })
 
   it('destroy channel immediately', () => {
@@ -62,7 +85,7 @@ describe('handleDestroy', () => {
       source: mockWindow,
     }
 
-    handleDestroy(mockBrokerState, registry, processManager, actions, message)
+    handleDestroy(routingContext, message)
 
     // Should call destroy with notify=false
     expect(destroySpy).toHaveBeenCalledWith(false)
@@ -80,7 +103,7 @@ describe('handleDestroy', () => {
     }
 
     expect(() => {
-      handleDestroy(mockBrokerState, registry, processManager, actions, message)
+      handleDestroy(routingContext, message)
     }).not.toThrow()
   })
 
@@ -104,7 +127,7 @@ describe('handleDestroy', () => {
 
     const postMessageCallsBefore = (<jest.Mock>mockWindow.postMessage).mock.calls.length
 
-    handleDestroy(mockBrokerState, registry, processManager, actions, message)
+    handleDestroy(routingContext, message)
 
     // Should not send any messages (immediate destruction)
     expect((<jest.Mock>mockWindow.postMessage).mock.calls.length).toBe(postMessageCallsBefore)
@@ -131,7 +154,7 @@ describe('handleDestroy', () => {
       source: mockWindow,
     }
 
-    handleDestroy(mockBrokerState, registry, processManager, actions, message)
+    handleDestroy(routingContext, message)
 
     expect(destroySpy).toHaveBeenCalledWith(false)
   })
@@ -157,7 +180,7 @@ describe('handleDestroy', () => {
       source: mockWindow,
     }
 
-    handleDestroy(mockBrokerState, registry, processManager, actions, message)
+    handleDestroy(routingContext, message)
 
     expect(destroySpy).toHaveBeenCalledWith(false)
   })
@@ -179,7 +202,7 @@ describe('handleDestroy', () => {
     const destroy1Spy = jest.spyOn(channel1, 'destroy')
     const destroy2Spy = jest.spyOn(channel2, 'destroy')
 
-    handleDestroy(mockBrokerState, registry, processManager, actions, <MessageEvent<IAction>>{
+    handleDestroy(routingContext, <MessageEvent<IAction>>{
       data: <IAction>{
         type: ACTION_TYPES.DESTROY_CONNECTION,
         senderId: 'remote-1',
@@ -187,7 +210,7 @@ describe('handleDestroy', () => {
       source: mockWindow,
     })
 
-    handleDestroy(mockBrokerState, registry, processManager, actions, <MessageEvent<IAction>>{
+    handleDestroy(routingContext, <MessageEvent<IAction>>{
       data: <IAction>{
         type: ACTION_TYPES.DESTROY_CONNECTION,
         senderId: 'remote-2',
@@ -219,7 +242,7 @@ describe('handleDestroy', () => {
       source: mockWindow,
     }
 
-    handleDestroy(mockBrokerState, registry, processManager, actions, message)
+    handleDestroy(routingContext, message)
 
     // Verify notify parameter is false (immediate, no handshake)
     expect(destroySpy).toHaveBeenCalledWith(false)

@@ -4,6 +4,7 @@
  */
 
 import type { UnserializedEncryptedPacket } from '../../model'
+import { createUint8Array } from '@hyperfrontend/immutable-api-utils/built-in-copy/typed-arrays'
 
 /**
  * Valid UUID v4 values for packet origin and target fields.
@@ -30,7 +31,7 @@ export const testPIDs = {
 export const sampleUnserializedEncryptedPacket: UnserializedEncryptedPacket = {
   origin: testUUIDs.origin1,
   target: testUUIDs.target1,
-  data: new Uint8Array([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]),
+  data: createUint8Array([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]),
 }
 
 /**

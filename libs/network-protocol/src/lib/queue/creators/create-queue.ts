@@ -1,6 +1,8 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import type { MessageHandler, Queue } from '../model'
 import { getType } from '@hyperfrontend/data-utils'
+import { createError, createTypeError } from '@hyperfrontend/immutable-api-utils/built-in-copy/error'
+import { freeze } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
 import { createFifoList } from '@hyperfrontend/list-utils'
 
 /**
@@ -14,10 +16,10 @@ import { createFifoList } from '@hyperfrontend/list-utils'
  */
 export function createQueue<T extends Record<string, any> = any>(processMessage: MessageHandler<T>, autoStart = true): Queue<T> {
   if (getType(processMessage) !== 'function') {
-    throw new Error('processMessage must be a function')
+    throw createError('processMessage must be a function')
   }
   if (getType(autoStart) !== 'boolean') {
-    throw new Error('autoStart must be a boolean')
+    throw createError('autoStart must be a boolean')
   }
   const fifoQueue = createFifoList<T>()
   let isProcessing = false
@@ -26,7 +28,7 @@ export function createQueue<T extends Record<string, any> = any>(processMessage:
 
   const addMessage = (message: T): void => {
     if (getType(message) !== 'object' || message === null) {
-      throw new TypeError('Message must be a non-null object')
+      throw createTypeError('Message must be a non-null object')
     }
 
     fifoQueue.push(message)
@@ -85,5 +87,5 @@ export function createQueue<T extends Record<string, any> = any>(processMessage:
     currentMessage,
   }
 
-  return Object.freeze(result)
+  return freeze(result)
 }

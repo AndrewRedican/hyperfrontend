@@ -1,4 +1,7 @@
 import type { HashAlgorithm } from './model'
+import { from } from '@hyperfrontend/immutable-api-utils/built-in-copy/array'
+import { createError } from '@hyperfrontend/immutable-api-utils/built-in-copy/error'
+import { createUint8Array } from '@hyperfrontend/immutable-api-utils/built-in-copy/typed-arrays'
 import { utf8StringToUint8Array } from '@hyperfrontend/string-utils/browser'
 import { subtle } from '../subtle/browser'
 
@@ -12,10 +15,10 @@ import { subtle } from '../subtle/browser'
  */
 export async function createHash(data: string, algorithm: HashAlgorithm = 'SHA-256'): Promise<string> {
   try {
-    return Array.from(new Uint8Array(await subtle.digest(algorithm, <BufferSource>utf8StringToUint8Array(data))))
+    return from(createUint8Array(await subtle.digest(algorithm, <BufferSource>utf8StringToUint8Array(data))))
       .map((b) => b.toString(16).padStart(2, '0'))
       .join('')
   } catch {
-    throw new Error('Error creating hash')
+    throw createError('Error creating hash')
   }
 }

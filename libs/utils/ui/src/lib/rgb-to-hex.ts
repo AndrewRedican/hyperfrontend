@@ -1,3 +1,5 @@
+import { round } from '@hyperfrontend/immutable-api-utils/built-in-copy/math'
+
 /**
  * Converts RGB(A) color values to a hexadecimal color string.
  *
@@ -12,7 +14,7 @@ export function rgbToHex(r: number, g: number, b: number, a?: number): string {
   let hex = `#${rgbToHexComponent(r)}${rgbToHexComponent(g)}${rgbToHexComponent(b)}`
 
   if (a !== undefined) {
-    hex += rgbToHexComponent(Math.round(a * 255))
+    hex += rgbToHexComponent(round(a * 255))
   }
 
   return hex

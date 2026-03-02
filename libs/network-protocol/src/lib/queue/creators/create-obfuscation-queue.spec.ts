@@ -1,6 +1,6 @@
 import type { ObfuscatedPacket, SerializedEncryptedPacket } from '../../packet/model'
-import { sleep } from '@hyperfrontend/time-utils'
 import { logger } from '@hyperfrontend/logging'
+import { sleep } from '@hyperfrontend/time-utils'
 import { packetObfuscation, serializedEncryptedPacket } from '../../packet/creators/mocks'
 import { isValidObfuscatedPacket } from '../../packet/validations/is-valid-obfuscated-packet'
 import { createObfuscationQueue } from './create-obfuscation-queue'

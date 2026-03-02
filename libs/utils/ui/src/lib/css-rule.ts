@@ -1,5 +1,6 @@
 import type { Style } from '../style'
 import { getType } from '@hyperfrontend/data-utils'
+import { createError } from '@hyperfrontend/immutable-api-utils/built-in-copy/error'
 import { cssObjectToString } from './css-object-to-string'
 import { isValidCssSelector } from './is-valid-css-selector'
 
@@ -18,14 +19,14 @@ import { isValidCssSelector } from './is-valid-css-selector'
  */
 export function cssRule(selector: string, css: string | Style): string {
   if (!isValidCssSelector(selector)) {
-    throw new Error('A valid css select must be provided')
+    throw createError('A valid css select must be provided')
   }
   if (getType(css) === 'object') {
-    css = cssObjectToString(css as Style).trim()
+    css = cssObjectToString(<Style>css).trim()
   }
 
   if (getType(css) !== 'string' || css.length === 0) {
-    throw new Error('A valid string value must be provided to add in styleesheet.')
+    throw createError('A valid string value must be provided to add in styleesheet.')
   }
   return `${selector}{${css}}`
 }

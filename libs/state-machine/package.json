@@ -1,6 +1,6 @@
 {
   "name": "@hyperfrontend/state-machine",
-  "version": "0.0.2",
+  "version": "0.0.4",
   "description": "Lightweight, functional state management library with Redux-inspired actions/reducers, async operation orchestration, and lifecycle-aware component abstractions for predictable application state.",
   "license": "MIT",
   "sideEffects": false,
@@ -26,6 +26,7 @@
     "process-state"
   ],
   "exports": {
+    ".": "./src/index.js",
     "./actions": "./src/actions/index.js",
     "./async-operation": "./src/async-operation/index.js",
     "./coordinated-async-operation": "./src/coordinated-async-operation/index.js",
@@ -36,10 +37,12 @@
     "./selectors": "./src/selectors/index.js",
     "./state": "./src/state/index.js",
     "./state-change": "./src/state-change/index.js",
-    "./store": "./src/store/index.js"
+    "./store": "./src/store/index.js",
+    "./package.json": "./package.json"
   },
   "dependencies": {
-    "@hyperfrontend/data-utils": "0.0.2"
+    "@hyperfrontend/data-utils": "0.0.4",
+    "@hyperfrontend/immutable-api-utils": "0.1.0"
   },
   "funding": {
     "type": "github",

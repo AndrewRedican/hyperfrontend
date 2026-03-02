@@ -1,5 +1,6 @@
 import type { Schema } from '../../types/schema'
 import type { ValidationContext } from '../context'
+import { stringify } from '@hyperfrontend/immutable-api-utils/built-in-copy/json'
 import { addError } from '../context'
 import { isEqual } from '../utils/deep-equal'
 
@@ -22,7 +23,7 @@ export function validateEnum(instance: unknown, schema: Schema, ctx: ValidationC
     }
   }
 
-  const allowedValues = schema.enum.map((v) => JSON.stringify(v)).join(', ')
+  const allowedValues = schema.enum.map((v) => stringify(v)).join(', ')
   addError(ctx, `Value must be one of: ${allowedValues}`, instance, 'enum', {
     allowedValues: schema.enum,
   })

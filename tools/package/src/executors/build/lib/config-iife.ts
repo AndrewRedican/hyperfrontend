@@ -1,6 +1,7 @@
 import type { RollupOptions, OutputOptions, RollupLog } from 'rollup'
-import { join } from 'node:path'
 import type { EntryPoint, IIFEConfig, BuildContext } from './types'
+import { join } from 'node:path'
+import { createBundleExternalFn, validateExternalsConfig } from './externals'
 import {
   createBrowserNodeResolvePlugin,
   createCommonJsPlugin,
@@ -8,7 +9,6 @@ import {
   createJsonPlugin,
   createTerserPlugin,
 } from './rollup-plugins'
-import { createBundleExternalFn, validateExternalsConfig } from './externals'
 
 /**
  * Creates IIFE output configurations for a bundle.

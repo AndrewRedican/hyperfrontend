@@ -9,17 +9,20 @@ import type {
   Callback,
   DepthConfig,
 } from './models'
-import { referenceStack } from './reference-stack'
-import { getConfig } from './shared/consts'
+import { isArray } from '@hyperfrontend/immutable-api-utils/built-in-copy/array'
+import { createError } from '@hyperfrontend/immutable-api-utils/built-in-copy/error'
+import { freeze } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
+import { getKeysFromIterable } from './get-keys-from-iterable'
 import { getType } from './get-type'
 import { isIterableType } from './is-iterable-type'
-import { getKeysFromIterable } from './get-keys-from-iterable'
+import { referenceStack } from './reference-stack'
+import { getConfig } from './shared/consts'
 
 const errorMessage = (thing: string, type: string) => `Expected ${thing} to be ${type}.`
 
 const nextIterationDetails = (path: string[], key: string, value: unknown) => ({
   nextPath: [...path, key],
-  nextValue: (value as Record<string, unknown>)[key],
+  nextValue: (<Record<string, unknown>>value)[key],
 })
 
 const circularDependencyTraversal: TraversalCircular = (
@@ -67,21 +70,21 @@ const nonCircularDependencyTraversal: TraversalNonCircular = (condition, callbac
 }
 
 const traversal: Traversal = (target, condition, callback, options, state) => {
-  if (typeof callback !== 'function') throw new Error(errorMessage('callback', 'a function'))
-  if (!(typeof options === 'object' && !Array.isArray(options))) throw new Error(errorMessage('options', 'an object'))
-  if (!Array.isArray(options.depth)) throw new Error(errorMessage('options.depth', 'an array'))
+  if (typeof callback !== 'function') throw createError(errorMessage('callback', 'a function'))
+  if (!(typeof options === 'object' && !isArray(options))) throw createError(errorMessage('options', 'an object'))
+  if (!isArray(options.depth)) throw createError(errorMessage('options.depth', 'an array'))
   const [startDepth, maxDepth] = options.depth
-  if (startDepth !== void 0 && typeof startDepth !== 'number') throw new Error(errorMessage('options.depth.0', 'a number'))
+  if (startDepth !== void 0 && typeof startDepth !== 'number') throw createError(errorMessage('options.depth.0', 'a number'))
   if (maxDepth !== void 0) {
     const maxDepthType = typeof maxDepth
-    if (!['number', 'string'].includes(maxDepthType)) throw new Error(errorMessage('options.depth.1', 'a number or a string'))
-    if (maxDepthType === 'string' && maxDepth !== '*') throw new Error("Only valid string value in options.depth.1 is '*'.")
+    if (!['number', 'string'].includes(maxDepthType)) throw createError(errorMessage('options.depth.1', 'a number or a string'))
+    if (maxDepthType === 'string' && maxDepth !== '*') throw createError("Only valid string value in options.depth.1 is '*'.")
   }
-  const config = {
-    depth: Object.freeze([options.depth[0] ?? 0, options.depth[1] ?? '*']),
+  const config = <TraverseConfig>{
+    depth: freeze([options.depth[0] ?? 0, options.depth[1] ?? '*']),
     exitEarly: false,
-  } as TraverseConfig
-  const initialArgs = [condition, callback, config, '', [], target, void 0, state] as TraversalArgs
+  }
+  const initialArgs = <TraversalArgs>[condition, callback, config, '', [], target, void 0, state]
   if (getConfig().detectCircularReferences) return circularDependencyTraversal(...initialArgs, referenceStack(), true)
   return nonCircularDependencyTraversal(...initialArgs)
 }

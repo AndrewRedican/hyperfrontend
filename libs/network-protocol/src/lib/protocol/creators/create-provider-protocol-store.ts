@@ -1,5 +1,7 @@
 import type { ProtocolProvider } from '../../channel/model'
 import type { ProtocolProviderStore, ProtocolProviderEntry } from '../model'
+import { createError } from '@hyperfrontend/immutable-api-utils/built-in-copy/error'
+import { freeze } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
 import { uuidV4 } from '@hyperfrontend/random-generator-utils'
 import { isValidName } from '../validations/is-valid-name'
 
@@ -13,7 +15,7 @@ export function createProtocolProviderStore(): ProtocolProviderStore {
   const entries: ProtocolProviderEntry[] = []
   const addEntry = (name: string, provider: ProtocolProvider) =>
     entries.push(
-      Object.freeze({
+      freeze({
         id: uuidV4(),
         name,
         provider,
@@ -31,13 +33,13 @@ export function createProtocolProviderStore(): ProtocolProviderStore {
 
   const add = (name: string, provider: ProtocolProvider) => {
     if (!isValidName(name)) {
-      throw new Error(`Cannot add a provider with invalid name`)
+      throw createError(`Cannot add a provider with invalid name`)
     }
     if (nameExists(name)) {
-      throw new Error(`Cannot add a provider with name '${name}' as it already exists`)
+      throw createError(`Cannot add a provider with name '${name}' as it already exists`)
     }
     if (providerExists(provider)) {
-      throw new Error(`Cannot add a provider named '${name}'. It is already registered`)
+      throw createError(`Cannot add a provider named '${name}'. It is already registered`)
     }
     addEntry(name, provider)
   }
@@ -45,7 +47,7 @@ export function createProtocolProviderStore(): ProtocolProviderStore {
   const removeByNameSingle = (name: string) => {
     const index = getIndexByName(name)
     if (index === -1) {
-      throw new Error(`No provider found with name '${name}' to remove`)
+      throw createError(`No provider found with name '${name}' to remove`)
     }
     removeByIndex(index)
   }
@@ -53,7 +55,7 @@ export function createProtocolProviderStore(): ProtocolProviderStore {
   const removeByIdSingle = (id: string) => {
     const index = getIndexById(id)
     if (index === -1) {
-      throw new Error(`No provider found with id '${id}' to remove`)
+      throw createError(`No provider found with id '${id}' to remove`)
     }
     removeByIndex(index)
   }
@@ -72,7 +74,7 @@ export function createProtocolProviderStore(): ProtocolProviderStore {
     } while (entries.length > 0)
   }
 
-  return Object.freeze({
+  return freeze({
     add,
     existsByName,
     existsById,
@@ -82,7 +84,7 @@ export function createProtocolProviderStore(): ProtocolProviderStore {
     getByName,
     getById,
     get list() {
-      return Object.freeze([...entries])
+      return freeze([...entries])
     },
   })
 }
