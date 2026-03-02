@@ -1,4 +1,5 @@
 import type { ChannelState } from '../../types/channel'
+import { freeze } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
 
 /**
  * Clears all queued messages from the channel.
@@ -8,8 +9,8 @@ import type { ChannelState } from '../../types/channel'
  * @returns New state with cleared message queue
  */
 export function clearQueue(state: ChannelState): ChannelState {
-  return {
+  return freeze(<ChannelState>{
     ...state,
-    queuedMessages: [],
-  }
+    queuedMessages: freeze([]),
+  })
 }

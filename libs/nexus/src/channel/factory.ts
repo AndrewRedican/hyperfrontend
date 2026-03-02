@@ -5,6 +5,7 @@ import type { ChannelEvent, EventCallbackMap } from '../types/events'
 import type { IMessage } from '../types/message'
 import type { SecurityProtocolVersion, SecurityTransport, SecurityNegotiationRequest } from '../types/security'
 import type { ChannelInternals, ChannelDependencies } from './types'
+import { freeze } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
 import { assertNoCircularRef } from '../utils/validation/assert-no-circular-ref'
 import { DEFAULT_CHANNEL_SETTINGS } from './defaults'
 import { cancel } from './lifecycle/cancel'
@@ -180,5 +181,5 @@ export function createChannel(config: IChannelConfig, deps: ChannelDependencies)
     },
   }
 
-  return handle
+  return freeze(handle)
 }

@@ -1,3 +1,5 @@
+jest.unmock('@hyperfrontend/immutable-api-utils/built-in-copy/object')
+
 import type { IChannelContract } from '../../types/contract'
 import { ACTION_TYPES } from '../../types/action'
 import { createActionCreators } from './factory'

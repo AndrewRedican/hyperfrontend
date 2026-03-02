@@ -1,5 +1,6 @@
 import type { ChannelState } from '../../types/channel'
 import type { IMessage } from '../../types/message'
+import { freeze } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
 
 /**
  * Adds a message to the channel's queue.
@@ -10,8 +11,8 @@ import type { IMessage } from '../../types/message'
  * @returns New state with message added to queue
  */
 export function queueMessage(state: ChannelState, message: IMessage): ChannelState {
-  return {
+  return freeze(<ChannelState>{
     ...state,
-    queuedMessages: [...state.queuedMessages, message],
-  }
+    queuedMessages: freeze([...state.queuedMessages, message]),
+  })
 }

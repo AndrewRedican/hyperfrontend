@@ -1,3 +1,5 @@
+jest.unmock('@hyperfrontend/immutable-api-utils/built-in-copy/object')
+
 /**
  * Unit Tests: Protocol Negotiation
  *

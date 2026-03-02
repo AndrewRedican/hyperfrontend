@@ -4,6 +4,7 @@ import type { IChannelContract } from '../types/contract'
 import type { SecurityProtocolVersion } from '../types/security'
 import type { RoutingContext } from './routing/types'
 import type { BrokerConfig, BrokerState, BrokerHandle, SecurityPolicy } from './types'
+import { freeze } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
 import { uuidV4 } from '@hyperfrontend/random-generator-utils'
 import { ACTION_TYPES } from '../constants/action-types'
 import { createActionCreators } from '../core/actions/factory'
@@ -56,14 +57,12 @@ export function createBroker(config: {
   validateName(config.name)
   validateContract(config.contract)
 
-  // Merge settings with defaults
   const mergedSettings = {
     ...defaultBrokerSettings,
     ...config.settings,
     contract: config.contract,
   }
 
-  // Create logger - use provided logger, or create one based on logLevel setting
   const logLevel = mergedSettings.logLevel ?? 'error'
   const logger = createLogger({
     level: logLevel,
@@ -236,5 +235,5 @@ export function createBroker(config: {
     },
   }
 
-  return broker
+  return freeze(broker)
 }

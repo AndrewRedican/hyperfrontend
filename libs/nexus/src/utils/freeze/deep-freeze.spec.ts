@@ -1,3 +1,5 @@
+jest.unmock('@hyperfrontend/immutable-api-utils/built-in-copy/object')
+
 import type { Logger } from '@hyperfrontend/logging'
 import { deepFreeze } from './deep-freeze'
 

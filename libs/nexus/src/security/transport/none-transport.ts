@@ -14,6 +14,7 @@
 
 import type { SecurityTransport, SecurityProtocolVersion } from '../../types/security'
 import type { NoneTransportConfig, ReceiveHandler, TransportState } from './types'
+import { freeze } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
 
 /**
  * Creates a passthrough (no security) transport adapter.
@@ -127,7 +128,7 @@ export function createNoneTransport(config: NoneTransportConfig): SecurityTransp
     return 'none'
   }
 
-  return <SecurityTransport & { handleReceive: (action: unknown) => void }>{
+  return freeze(<SecurityTransport & { handleReceive: (action: unknown) => void }>{
     send,
     onReceive,
     stop,
@@ -136,5 +137,5 @@ export function createNoneTransport(config: NoneTransportConfig): SecurityTransp
     getProtocol,
     /** @internal */
     handleReceive,
-  }
+  })
 }

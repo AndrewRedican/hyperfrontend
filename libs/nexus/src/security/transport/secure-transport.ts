@@ -13,6 +13,7 @@
 
 import type { SecurityTransport, SecurityProtocolVersion } from '../../types/security'
 import type { SecureTransportConfig, ReceiveHandler, TransportState } from './types'
+import { freeze } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
 import { createSecurityErrorEventData } from '../errors'
 
 /**
@@ -231,7 +232,7 @@ export function createSecureTransport(config: SecureTransportConfig): SecurityTr
     return protocol
   }
 
-  return <SecurityTransport & { handleReceive: (packet: Uint8Array) => void }>{
+  return freeze(<SecurityTransport & { handleReceive: (packet: Uint8Array) => void }>{
     send,
     onReceive,
     stop,
@@ -240,5 +241,5 @@ export function createSecureTransport(config: SecureTransportConfig): SecurityTr
     getProtocol,
     /** @internal */
     handleReceive,
-  }
+  })
 }

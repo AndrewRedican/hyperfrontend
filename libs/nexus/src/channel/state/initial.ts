@@ -1,4 +1,5 @@
 import type { ChannelState, IChannelSettings } from '../../types/channel'
+import { freeze } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
 import { uuidV4 } from '@hyperfrontend/random-generator-utils'
 
 /**
@@ -11,7 +12,7 @@ import { uuidV4 } from '@hyperfrontend/random-generator-utils'
  * @returns Fresh channel state object
  */
 export function createInitialState(name: string, target: Window, settings: Partial<IChannelSettings>): ChannelState {
-  return {
+  return freeze(<ChannelState>{
     id: uuidV4(),
     name,
     target,
@@ -19,10 +20,10 @@ export function createInitialState(name: string, target: Window, settings: Parti
     active: false,
     connectTimestamp: null,
     contract: settings.contract ?? null,
-    acceptedActions: [],
-    queuedMessages: [],
-    eventSubscriptions: [],
-    messageSubscriptions: [],
+    acceptedActions: freeze([]),
+    queuedMessages: freeze([]),
+    eventSubscriptions: freeze([]),
+    messageSubscriptions: freeze([]),
     scheduledActivation: null,
     queueMessages: settings.queueMessages ?? true,
     logger: settings.logger ?? null,
@@ -32,5 +33,5 @@ export function createInitialState(name: string, target: Window, settings: Parti
     securityReady: false,
     securityTransport: null,
     pendingSecurityRequest: null,
-  }
+  })
 }

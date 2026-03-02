@@ -3,6 +3,7 @@
  * Extended with optional methods for use with full ChannelHandle objects.
  */
 import { from } from '@hyperfrontend/immutable-api-utils/built-in-copy/array'
+import { freeze } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
 
 export interface MinimalChannel {
   id: string
@@ -38,19 +39,17 @@ export type Registry = ChannelRegistry
  * @returns Registry functions for managing channels
  */
 export function createRegistry(): ChannelRegistry {
-  // Private state using closures
   const windowMap = new WeakMap<Window, MinimalChannel>()
   const idMap = new Map<string, MinimalChannel>()
   const nameMap = new Map<string, MinimalChannel>()
   const channels = new Set<MinimalChannel>()
 
-  return {
+  return freeze({
     add: (channel: MinimalChannel) => {
       if (!channel || !channel.id || !channel.name || !channel.target) {
         throw new Error('Invalid channel: must have id, name, and target properties')
       }
 
-      // Add to all lookup structures
       channels.add(channel)
       windowMap.set(channel.target, channel)
       idMap.set(channel.id, channel)
@@ -60,7 +59,6 @@ export function createRegistry(): ChannelRegistry {
     remove: (channel: MinimalChannel) => {
       if (!channel) return
 
-      // Remove from all lookup structures
       channels.delete(channel)
       if (channel.target) windowMap.delete(channel.target)
       if (channel.id) idMap.delete(channel.id)
@@ -87,7 +85,6 @@ export function createRegistry(): ChannelRegistry {
       channels.clear()
       idMap.clear()
       nameMap.clear()
-      // WeakMap doesn't have clear, but clearing references is enough
     },
-  }
+  })
 }

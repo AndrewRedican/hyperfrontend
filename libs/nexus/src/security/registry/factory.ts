@@ -8,6 +8,7 @@
 
 import type { SecurityProtocolVersion } from '../../types/security'
 import type { ProtocolRegistry } from './types'
+import { freeze } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
 
 /**
  * Creates a protocol registry for managing security protocol providers.
@@ -116,11 +117,11 @@ export function createProtocolRegistry(): ProtocolRegistry {
     return versions
   }
 
-  return {
+  return freeze({
     register,
     unregister,
     get,
     has,
     getSupportedVersions,
-  }
+  })
 }
