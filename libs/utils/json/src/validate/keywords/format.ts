@@ -1,7 +1,9 @@
 import type { Schema } from '../../types/schema'
 import type { ValidationContext } from '../context'
 import { createDate, dateParse, dateUTC } from '@hyperfrontend/immutable-api-utils/built-in-copy/date'
+import { globalIsNaN, parseInt } from '@hyperfrontend/immutable-api-utils/built-in-copy/number'
 import { createRegExp } from '@hyperfrontend/immutable-api-utils/built-in-copy/regexp'
+import { createURL } from '@hyperfrontend/immutable-api-utils/built-in-copy/url'
 import { addError } from '../context'
 
 /**
@@ -12,7 +14,7 @@ const formatValidators: Record<string, (value: string) => boolean> = {
     // ISO 8601 date-time format - anchored to prevent matching at unexpected locations
     if (!/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}/.test(v)) return false
     const date = dateParse(v)
-    return !isNaN(date)
+    return !globalIsNaN(date)
   },
 
   date: (v) => {
@@ -51,7 +53,7 @@ const formatValidators: Record<string, (value: string) => boolean> = {
     if (parts.length !== 4) return false
     return parts.every((part) => {
       const num = parseInt(part, 10)
-      return !isNaN(num) && num >= 0 && num <= 255 && part === String(num)
+      return !globalIsNaN(num) && num >= 0 && num <= 255 && part === String(num)
     })
   },
 
@@ -65,7 +67,7 @@ const formatValidators: Record<string, (value: string) => boolean> = {
   uri: (v) => {
     // Basic URI validation
     try {
-      new URL(v)
+      createURL(v)
       return true
       /* istanbul ignore next -- URL constructor always throws for invalid URI */
     } catch {
@@ -76,7 +78,7 @@ const formatValidators: Record<string, (value: string) => boolean> = {
   'uri-reference': (v) => {
     // URI or relative reference
     try {
-      new URL(v, 'http://example.com')
+      createURL(v, 'http://example.com')
       /* istanbul ignore next -- success path just returns true */
       return true
     } catch {

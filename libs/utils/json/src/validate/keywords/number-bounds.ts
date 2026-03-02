@@ -1,5 +1,6 @@
 import type { Schema } from '../../types/schema'
 import type { ValidationContext } from '../context'
+import { abs } from '@hyperfrontend/immutable-api-utils/built-in-copy/math'
 import { addError, shouldContinue } from '../context'
 
 /**
@@ -43,7 +44,7 @@ export function validateNumberBounds(instance: number, schema: Schema, ctx: Vali
 
   if (schema.multipleOf !== undefined && schema.multipleOf > 0) {
     // Use epsilon comparison for floating point precision
-    const remainder = Math.abs(instance % schema.multipleOf)
+    const remainder = abs(instance % schema.multipleOf)
     const epsilon = 1e-10
     if (remainder > epsilon && schema.multipleOf - remainder > epsilon) {
       addError(ctx, `Number must be a multiple of ${schema.multipleOf}, got ${instance}`, instance, 'multipleOf', {

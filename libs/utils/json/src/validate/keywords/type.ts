@@ -1,6 +1,7 @@
 import type { Schema } from '../../types/schema'
 import type { ValidationContext } from '../context'
 import { isArray } from '@hyperfrontend/immutable-api-utils/built-in-copy/array'
+import { globalIsFinite, isInteger } from '@hyperfrontend/immutable-api-utils/built-in-copy/number'
 import { addError } from '../context'
 
 /**
@@ -8,8 +9,8 @@ import { addError } from '../context'
  */
 const typeCheckers: Record<string, (value: unknown) => boolean> = {
   string: (v) => typeof v === 'string',
-  number: (v) => typeof v === 'number' && isFinite(v),
-  integer: (v) => typeof v === 'number' && isFinite(v) && Number.isInteger(v),
+  number: (v) => typeof v === 'number' && globalIsFinite(v),
+  integer: (v) => typeof v === 'number' && globalIsFinite(v) && isInteger(v),
   boolean: (v) => typeof v === 'boolean',
   array: (v) => isArray(v),
   object: (v) => v !== null && typeof v === 'object' && !isArray(v),
@@ -29,8 +30,8 @@ function getActualType(value: unknown): string {
   if (t === 'number') {
     const num = <number>value
     /* istanbul ignore next -- NaN/Infinity edge case */
-    if (!isFinite(num)) return 'number' // NaN/Infinity
-    return Number.isInteger(num) ? 'integer' : 'number'
+    if (!globalIsFinite(num)) return 'number' // NaN/Infinity
+    return isInteger(num) ? 'integer' : 'number'
   }
   return t
 }
