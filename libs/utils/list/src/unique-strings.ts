@@ -1,4 +1,5 @@
 import { from } from '@hyperfrontend/immutable-api-utils/built-in-copy/array'
+import { createSet } from '@hyperfrontend/immutable-api-utils/built-in-copy/set'
 
 /**
  * Removes duplicate strings from an array, preserving insertion order.
@@ -7,5 +8,5 @@ import { from } from '@hyperfrontend/immutable-api-utils/built-in-copy/array'
  * @returns A new array containing only unique strings
  */
 export function uniqueStrings(values: string[]): string[] {
-  return from(new Set(values))
+  return from(createSet(values))
 }

@@ -1,6 +1,8 @@
 import { getType } from '@hyperfrontend/data-utils'
 import { from } from '@hyperfrontend/immutable-api-utils/built-in-copy/array'
+import { createError } from '@hyperfrontend/immutable-api-utils/built-in-copy/error'
 import { freeze } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
+import { createSet } from '@hyperfrontend/immutable-api-utils/built-in-copy/set'
 
 export interface FifoList<T extends object> {
   push(item: T): void
@@ -20,14 +22,14 @@ export interface FifoList<T extends object> {
  * @returns {FifoList<T>} A FIFO list with methods to manipulate and query the list.
  */
 export function createFifoList<T extends object>(): FifoList<T> {
-  const list: Set<T> = new Set()
+  const list: Set<T> = createSet()
 
   const push = (item: T): void => {
     if (getType(item) !== 'object') {
-      throw new Error('A fifo list only non-primitive values')
+      throw createError('A fifo list only non-primitive values')
     }
     if (list.has(item)) {
-      throw new Error('Cannot a item that already exists')
+      throw createError('Cannot a item that already exists')
     }
     list.add(item)
   }

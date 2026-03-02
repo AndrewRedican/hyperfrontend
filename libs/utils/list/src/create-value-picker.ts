@@ -1,3 +1,5 @@
+import { createError } from '@hyperfrontend/immutable-api-utils/built-in-copy/error'
+
 export interface ValuePicker {
   current: () => string
   next: () => string
@@ -11,7 +13,7 @@ export interface ValuePicker {
  */
 export function createValuePicker(values: string[]): ValuePicker {
   if (!values || !values.length) {
-    throw new Error('Expected values not to be an empty list.')
+    throw createError('Expected values not to be an empty list.')
   }
   let index = -1
   /**

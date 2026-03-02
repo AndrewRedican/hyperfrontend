@@ -1,6 +1,8 @@
 import { getType } from '@hyperfrontend/data-utils'
 import { from } from '@hyperfrontend/immutable-api-utils/built-in-copy/array'
+import { createError } from '@hyperfrontend/immutable-api-utils/built-in-copy/error'
 import { freeze } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
+import { createSet } from '@hyperfrontend/immutable-api-utils/built-in-copy/set'
 
 export interface LifoList<T extends object> {
   push(item: T): void
@@ -20,11 +22,11 @@ export interface LifoList<T extends object> {
  * @returns {LifoList<T>} A LIFO list with methods to manipulate and query the list.
  */
 export function createLifoList<T extends object>(): LifoList<T> {
-  const list: Set<T> = new Set()
+  const list: Set<T> = createSet()
 
   const push = (item: T): void => {
     if (getType(item) !== 'object') {
-      throw new Error('A lifo list only supports non-primitive values')
+      throw createError('A lifo list only supports non-primitive values')
     }
     list.add(item)
   }
