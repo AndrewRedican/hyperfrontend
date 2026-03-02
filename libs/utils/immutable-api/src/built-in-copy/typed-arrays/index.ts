@@ -82,10 +82,29 @@ export const createDataView = (buffer: ArrayBuffer | SharedArrayBuffer, byteOffs
  * (Safe copy) Creates a new Uint8Array using the captured Uint8Array constructor.
  * Use this instead of `new Uint8Array()`.
  *
- * @param length - The length of the array, or an array-like/iterable to copy from.
+ * Supports all standard Uint8Array constructor overloads:
+ * - `createUint8Array(length)` - Creates array of given length
+ * - `createUint8Array(arrayLike)` - Creates from array-like or iterable
+ * - `createUint8Array(buffer, byteOffset?, length?)` - Creates view over buffer
+ *
  * @returns A new Uint8Array instance.
  */
-export const createUint8Array = (length: number): Uint8Array => <Uint8Array>_Reflect.construct(_Uint8Array, [length])
+export function createUint8Array(length: number): Uint8Array
+export function createUint8Array(array: ArrayLike<number> | Iterable<number>): Uint8Array
+export function createUint8Array(buffer: ArrayBufferLike, byteOffset?: number, length?: number): Uint8Array
+export function createUint8Array(
+  arg: number | ArrayLike<number> | Iterable<number> | ArrayBufferLike,
+  byteOffset?: number,
+  length?: number
+): Uint8Array {
+  if (typeof arg === 'number') {
+    return <Uint8Array>_Reflect.construct(_Uint8Array, [arg])
+  }
+  if (arg instanceof _ArrayBuffer || arg instanceof _SharedArrayBuffer) {
+    return <Uint8Array>_Reflect.construct(_Uint8Array, [arg, byteOffset, length])
+  }
+  return <Uint8Array>_Reflect.construct(_Uint8Array, [arg])
+}
 
 /**
  * (Safe copy) Creates a new Uint8Array from an array-like or iterable object.
