@@ -1,6 +1,7 @@
 import type { EventHandler } from '../../types/channel'
 import type { ChannelEvent, EventCallbackMap } from '../../types/events'
 import type { ChannelInternals } from '../types'
+import { createError } from '@hyperfrontend/immutable-api-utils/built-in-copy/error'
 
 /**
  * Subscribes to channel lifecycle events.
@@ -54,11 +55,11 @@ export function subscribeToEvents<E extends ChannelEvent>(
   } else if (typeof eventOrHandler === 'function') {
     wrappedHandler = eventOrHandler
   } else {
-    throw new Error('Expected callback function.')
+    throw createError('Expected callback function.')
   }
 
   if (typeof wrappedHandler !== 'function') {
-    throw new Error('Expected callback function.')
+    throw createError('Expected callback function.')
   }
 
   const state = channel.getState()

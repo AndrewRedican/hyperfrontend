@@ -3,7 +3,11 @@
  * Extended with optional methods for use with full ChannelHandle objects.
  */
 import { from } from '@hyperfrontend/immutable-api-utils/built-in-copy/array'
+import { createError } from '@hyperfrontend/immutable-api-utils/built-in-copy/error'
+import { createMap } from '@hyperfrontend/immutable-api-utils/built-in-copy/map'
 import { freeze } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
+import { createSet } from '@hyperfrontend/immutable-api-utils/built-in-copy/set'
+import { createWeakMap } from '@hyperfrontend/immutable-api-utils/built-in-copy/weak-map'
 
 export interface MinimalChannel {
   id: string
@@ -39,15 +43,15 @@ export type Registry = ChannelRegistry
  * @returns Registry functions for managing channels
  */
 export function createRegistry(): ChannelRegistry {
-  const windowMap = new WeakMap<Window, MinimalChannel>()
-  const idMap = new Map<string, MinimalChannel>()
-  const nameMap = new Map<string, MinimalChannel>()
-  const channels = new Set<MinimalChannel>()
+  const windowMap = createWeakMap<Window, MinimalChannel>()
+  const idMap = createMap<string, MinimalChannel>()
+  const nameMap = createMap<string, MinimalChannel>()
+  const channels = createSet<MinimalChannel>()
 
   return freeze({
     add: (channel: MinimalChannel) => {
       if (!channel || !channel.id || !channel.name || !channel.target) {
-        throw new Error('Invalid channel: must have id, name, and target properties')
+        throw createError('Invalid channel: must have id, name, and target properties')
       }
 
       channels.add(channel)

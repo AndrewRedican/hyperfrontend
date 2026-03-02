@@ -1,4 +1,5 @@
 import type { RouteHandler } from './types'
+import { createMap } from '@hyperfrontend/immutable-api-utils/built-in-copy/map'
 import { entries } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
 
 /**
@@ -15,7 +16,7 @@ export interface HandlerMap {
  * @returns Router map
  */
 export function createRouter(handlers: HandlerMap): Map<string, RouteHandler> {
-  const router = new Map<string, RouteHandler>()
+  const router = createMap<string, RouteHandler>()
 
   // Register each handler
   entries(handlers).forEach(([type, handler]) => {

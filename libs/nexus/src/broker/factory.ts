@@ -4,6 +4,7 @@ import type { IChannelContract } from '../types/contract'
 import type { SecurityProtocolVersion } from '../types/security'
 import type { RoutingContext } from './routing/types'
 import type { BrokerConfig, BrokerState, BrokerHandle, SecurityPolicy } from './types'
+import { createError } from '@hyperfrontend/immutable-api-utils/built-in-copy/error'
 import { freeze } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
 import { uuidV4 } from '@hyperfrontend/random-generator-utils'
 import { ACTION_TYPES } from '../constants/action-types'
@@ -195,7 +196,7 @@ export function createBroker(config: {
 
     extendContract(contract: IChannelContract) {
       if (!state.settings.contractExtension) {
-        throw new Error('Original contract cannot be extended.')
+        throw createError('Original contract cannot be extended.')
       }
       validateContract(contract)
       ;(<{ contract: unknown }>state).contract = mergeContracts(state.contract, contract)

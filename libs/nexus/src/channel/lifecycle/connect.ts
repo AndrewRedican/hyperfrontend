@@ -1,4 +1,5 @@
 import type { ChannelInternals } from '../types'
+import { dateNow } from '@hyperfrontend/immutable-api-utils/built-in-copy/date'
 import { flush } from '../messaging/flush'
 
 /**
@@ -30,7 +31,7 @@ export function connect(channel: ChannelInternals): void {
 
   // Set connect timestamp if not already set
   if (!state.connectTimestamp) {
-    channel.updateState({ connectTimestamp: Date.now() })
+    channel.updateState({ connectTimestamp: dateNow() })
   }
 
   // If we have a scheduled activation, accept it

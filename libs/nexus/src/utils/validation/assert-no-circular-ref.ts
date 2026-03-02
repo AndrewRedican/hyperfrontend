@@ -1,4 +1,6 @@
 import { isIterable, getType, getKeysFromIterable } from '@hyperfrontend/data-utils'
+import { createError } from '@hyperfrontend/immutable-api-utils/built-in-copy/error'
+import { createWeakSet } from '@hyperfrontend/immutable-api-utils/built-in-copy/weak-set'
 
 /**
  * Checks whether an object has circular references using WeakSet.
@@ -53,7 +55,7 @@ function hasCircular(value: unknown, seen: WeakSet<object>): boolean {
  * ```
  */
 export function assertNoCircularRef(value: unknown, paramName: string): void {
-  if (hasCircular(value, new WeakSet())) {
-    throw new Error(`Circular reference detected in parameter "${paramName}"`)
+  if (hasCircular(value, createWeakSet())) {
+    throw createError(`Circular reference detected in parameter "${paramName}"`)
   }
 }

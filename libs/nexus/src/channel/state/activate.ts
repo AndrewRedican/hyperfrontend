@@ -1,5 +1,6 @@
 import type { ChannelState } from '../../types/channel'
 import type { IChannelContract } from '../../types/contract'
+import { dateNow } from '@hyperfrontend/immutable-api-utils/built-in-copy/date'
 import { freeze } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
 
 /**
@@ -18,7 +19,7 @@ export function activate(state: ChannelState, origin: string, contract: IChannel
     ...state,
     origin,
     active: true,
-    connectTimestamp: Date.now(),
+    connectTimestamp: dateNow(),
     contract,
     acceptedActions: freeze(acceptedActions),
     scheduledActivation: null, // Clear any pending activation

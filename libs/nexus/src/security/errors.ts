@@ -9,6 +9,7 @@
 
 import type { Logger } from '@hyperfrontend/logging'
 import type { SecurityErrorEventData } from '../types/events'
+import { createError } from '@hyperfrontend/immutable-api-utils/built-in-copy/error'
 import { setPrototypeOf } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
 
 /**
@@ -163,7 +164,7 @@ export function createDeobfuscationRetry<T>(
       try {
         return deobfuscateFn(data, timeOffset)
       } catch (error) {
-        lastError = error instanceof Error ? error : new Error(String(error))
+        lastError = error instanceof Error ? error : createError(String(error))
       }
     }
 

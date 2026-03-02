@@ -1,4 +1,5 @@
 import { isArray } from '@hyperfrontend/immutable-api-utils/built-in-copy/array'
+import { createError } from '@hyperfrontend/immutable-api-utils/built-in-copy/error'
 import { isObject } from './_utils'
 
 /**
@@ -9,11 +10,11 @@ import { isObject } from './_utils'
  */
 export function validateContract(contract: unknown): void {
   if (!contract) {
-    throw new Error('Contract cannot be null or undefined')
+    throw createError('Contract cannot be null or undefined')
   }
 
   if (!isObject(contract)) {
-    throw new Error('Contract must be an object')
+    throw createError('Contract must be an object')
   }
 
   const c = <Record<string, unknown>>contract
@@ -21,7 +22,7 @@ export function validateContract(contract: unknown): void {
   const acceptedCount = isArray(c['accepted']) ? c['accepted'].length : 0
 
   if (emittedCount + acceptedCount === 0) {
-    throw new Error('Contract must contain at least one accepted or emitted action')
+    throw createError('Contract must contain at least one accepted or emitted action')
   }
 
   // Validate that all action types are non-empty strings
@@ -32,7 +33,7 @@ export function validateContract(contract: unknown): void {
         typeof (<Record<string, unknown>>action)['type'] !== 'string' ||
         (<Record<string, unknown>>action)['type'].toString().trim() === ''
       ) {
-        throw new Error('Contract action types must be non-empty strings')
+        throw createError('Contract action types must be non-empty strings')
       }
     }
   }
@@ -44,7 +45,7 @@ export function validateContract(contract: unknown): void {
         typeof (<Record<string, unknown>>action)['type'] !== 'string' ||
         (<Record<string, unknown>>action)['type'].toString().trim() === ''
       ) {
-        throw new Error('Contract action types must be non-empty strings')
+        throw createError('Contract action types must be non-empty strings')
       }
     }
   }

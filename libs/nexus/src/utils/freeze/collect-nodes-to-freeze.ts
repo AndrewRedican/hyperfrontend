@@ -1,6 +1,7 @@
 import type { FreezeNode, DeepFreezeConfig } from './model'
 import { isIterable, getType, getKeysFromIterable } from '@hyperfrontend/data-utils'
 import { isFrozen } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
+import { createWeakSet } from '@hyperfrontend/immutable-api-utils/built-in-copy/weak-set'
 
 /** Default maximum traversal depth to prevent stack overflow */
 const DEFAULT_MAX_DEPTH = 100
@@ -25,7 +26,7 @@ const DEFAULT_MAX_DEPTH = 100
 export function collectNodesToFreeze(value: unknown, config: DeepFreezeConfig = {}): FreezeNode[] {
   const { maxDepth = DEFAULT_MAX_DEPTH } = config
   const nodesToFreeze: FreezeNode[] = []
-  const visited = new WeakSet<object>()
+  const visited = createWeakSet<object>()
 
   /**
    * Recursively visits nodes in the data tree.

@@ -13,6 +13,7 @@
 
 import type { SecurityTransport, SecurityProtocolVersion } from '../../types/security'
 import type { SecureTransportConfig, ReceiveHandler, TransportState } from './types'
+import { createError } from '@hyperfrontend/immutable-api-utils/built-in-copy/error'
 import { freeze } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
 import { createSecurityErrorEventData } from '../errors'
 
@@ -78,7 +79,7 @@ export function createSecureTransport(config: SecureTransportConfig): SecurityTr
   const { protocol, provider, target, origin = '*', onError } = config
 
   if (!provider) {
-    throw new Error(`SecureTransport requires a protocol provider for ${protocol}`)
+    throw createError(`SecureTransport requires a protocol provider for ${protocol}`)
   }
 
   const state: TransportState = {

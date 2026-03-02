@@ -1,5 +1,6 @@
 import type { IMessage } from '../../types/message'
 import type { ChannelInternals } from '../types'
+import { createError } from '@hyperfrontend/immutable-api-utils/built-in-copy/error'
 
 /**
  * Handles an incoming message from the target window.
@@ -22,7 +23,7 @@ export function receive(channel: ChannelInternals, message: IMessage): void {
 
   // Validate message type against contract (emitted actions)
   if (state.contract && !state.contract.emitted.some((a) => a.type === message.type)) {
-    throw new Error(`Received message type '${message.type}' not emitted in ${state.name} channel contract.`)
+    throw createError(`Received message type '${message.type}' not emitted in ${state.name} channel contract.`)
   }
 
   // Notify all message subscribers
