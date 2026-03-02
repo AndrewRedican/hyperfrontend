@@ -1,3 +1,4 @@
+import { createTypeError } from '../built-in-copy/error'
 import { hasOwn, defineProperty } from '../built-in-copy/object'
 
 export type LockedMethod = (
@@ -54,7 +55,7 @@ export const locked = (): LockedMethod => {
         return this[BOUND]
       },
       set() {
-        throw new TypeError(`Cannot overwrite locked method ${String(key)}`)
+        throw createTypeError(`Cannot overwrite locked method ${String(key)}`)
       },
     }
   }
