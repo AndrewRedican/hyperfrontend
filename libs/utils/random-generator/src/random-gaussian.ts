@@ -1,3 +1,5 @@
+import { createError } from '@hyperfrontend/immutable-api-utils/built-in-copy/error'
+
 /**
  * Generates a random number following a Gaussian (normal) distribution within a specified range.
  *
@@ -7,7 +9,7 @@
  */
 export function randomGaussian(min: number, max: number): number {
   if (min > max) {
-    throw new Error('Min value should be less than or equal to max value.')
+    throw createError('Min value should be less than or equal to max value.')
   }
 
   let u, v, s
