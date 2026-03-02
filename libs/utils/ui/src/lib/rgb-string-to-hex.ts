@@ -1,3 +1,4 @@
+import { createError } from '@hyperfrontend/immutable-api-utils/built-in-copy/error'
 import { rgbToHex } from './rgb-to-hex'
 
 /**
@@ -12,7 +13,7 @@ export function rgbStringToHex(rgbString: string): string {
   const match = rgbString.match(rgbaRegex)
 
   if (!match) {
-    throw new Error('Invalid RGB or RGBA string')
+    throw createError('Invalid RGB or RGBA string')
   }
 
   const r = parseInt(match[1], 10)
@@ -22,14 +23,14 @@ export function rgbStringToHex(rgbString: string): string {
 
   // Check if RGB components are within the valid range (0-255)
   if (r < 0 || r > 255 || g < 0 || g > 255 || b < 0 || b > 255) {
-    throw new Error('Invalid RGB or RGBA string')
+    throw createError('Invalid RGB or RGBA string')
   }
 
   // Check if the alpha component is within the valid range (0-1)
   if (a !== undefined) {
     /* istanbul ignore next */
     if (a < 0 || a > 1) {
-      throw new Error('Invalid RGB or RGBA string')
+      throw createError('Invalid RGB or RGBA string')
     }
   }
 

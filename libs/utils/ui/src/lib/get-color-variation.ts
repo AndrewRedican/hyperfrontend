@@ -1,4 +1,5 @@
 import { getType } from '@hyperfrontend/data-utils'
+import { createError } from '@hyperfrontend/immutable-api-utils/built-in-copy/error'
 import { hexToRgb } from './hex-to-rgb'
 import { rgbToString } from './rgb-to-string'
 
@@ -12,11 +13,11 @@ import { rgbToString } from './rgb-to-string'
  */
 export function getColorVariation(baseColor: string, intensity: number) {
   if (getType(baseColor) !== 'string' || getType(intensity) !== 'number') {
-    throw new Error('Invalid input types. Base color must be a string and intensity must be a number.')
+    throw createError('Invalid input types. Base color must be a string and intensity must be a number.')
   }
 
   if (intensity < 0 || intensity > 255) {
-    throw new Error('Invalid intensity value. Must be a number between 0 and 255.')
+    throw createError('Invalid intensity value. Must be a number between 0 and 255.')
   }
 
   const baseColorRGB = hexToRgb(baseColor)

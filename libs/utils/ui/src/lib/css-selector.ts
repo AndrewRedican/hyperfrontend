@@ -1,4 +1,5 @@
 import type { HtmlTagName } from './html.model'
+import { createError } from '@hyperfrontend/immutable-api-utils/built-in-copy/error'
 
 /**
  * Validates that a CSS name follows proper naming conventions.
@@ -11,7 +12,7 @@ import type { HtmlTagName } from './html.model'
 export function validateCssName(arg: string, argName: string): void {
   const isValid = /^[a-zA-Z][\w-]*$/.test(arg)
   if (!isValid) {
-    throw new Error(`Invalid ${argName} name format.`)
+    throw createError(`Invalid ${argName} name format.`)
   }
 }
 
@@ -24,7 +25,7 @@ export function validateCssName(arg: string, argName: string): void {
  */
 export function validateStringArgument(arg: string, argName: string): void {
   if ([undefined, null, ''].includes(arg) || !arg.trim()) {
-    throw new Error(`${argName} cannot be undefined, null, or empty.`)
+    throw createError(`${argName} cannot be undefined, null, or empty.`)
   }
 }
 
@@ -64,7 +65,7 @@ export function validateAttributeSelector(attribute: string): void {
   validateStringArgument(attribute, label)
   const isValid = /^[^\s"'>/=]+$/.test(attribute)
   if (!isValid) {
-    throw new Error(`Invalid ${label} name format.`)
+    throw createError(`Invalid ${label} name format.`)
   }
 }
 
@@ -84,7 +85,7 @@ export class CssSelector {
    */
   public readonly toString = (): string => {
     if (!this.selector) {
-      throw new Error('CssSelector is empty.')
+      throw createError('CssSelector is empty.')
     }
     return this.selector
   }

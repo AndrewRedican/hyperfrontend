@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import type { ElementRefOrString } from './get-element-async'
+import { createError } from '@hyperfrontend/immutable-api-utils/built-in-copy/error'
 import { createPromise } from '@hyperfrontend/immutable-api-utils/built-in-copy/promise'
 import { getElementAsync } from './get-element-async'
 
@@ -32,7 +33,7 @@ export async function setupAudio(selector: ElementRefOrString): Promise<AudioCon
         targetElement.addEventListener('touchstart', initializeAudioContext)
       },
       onFail: () => {
-        reject(new Error(`Element with selector "${selector}" not found.`))
+        reject(createError(`Element with selector "${selector}" not found.`))
       },
     })
   })
