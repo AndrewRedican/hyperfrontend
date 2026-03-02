@@ -87,6 +87,7 @@ export const createDataView = (buffer: ArrayBuffer | SharedArrayBuffer, byteOffs
  * - `createUint8Array(arrayLike)` - Creates from array-like or iterable
  * - `createUint8Array(buffer, byteOffset?, length?)` - Creates view over buffer
  *
+ * @param length - The length of the array to create.
  * @returns A new Uint8Array instance.
  */
 export function createUint8Array(length: number): Uint8Array
