@@ -1,5 +1,6 @@
 import { getTimeBasedPassword, getTimeBasedPasswords } from '@hyperfrontend/cryptography/browser'
 import { encrypt, decrypt } from '@hyperfrontend/cryptography/browser'
+import { createTextDecoder, createTextEncoder } from '@hyperfrontend/immutable-api-utils/built-in-copy/encoding'
 import { createFirstMessageHandler } from '../../lib/packet/security/encryption/create-first-message-handler'
 import { createDynamicKeyEncryptionFactory } from '../../lib/packet/security/encryption/dynamic-encryption-key'
 import { createPacketDeobfuscator } from '../../lib/packet/security/obfuscation/create-deobfuscator'
@@ -12,8 +13,8 @@ const obfuscatePacket = createPacketObfuscator(encrypt)
 const deobfuscatePacket = createPacketDeobfuscator(decrypt)
 
 // Text encoding/decoding for first message handler (browser)
-const textEncoder = (text: string): Uint8Array => new TextEncoder().encode(text)
-const textDecoder = (data: Uint8Array): string => new TextDecoder().decode(data)
+const textEncoder = (text: string): Uint8Array => createTextEncoder().encode(text)
+const textDecoder = (data: Uint8Array): string => createTextDecoder().decode(data)
 const firstMessageHandler = createFirstMessageHandler(textEncoder, textDecoder)
 
 const createDynamicKeyEncryption = createDynamicKeyEncryptionFactory(encryptPacket, decryptPacket, firstMessageHandler)
