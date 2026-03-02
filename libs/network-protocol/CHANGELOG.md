@@ -2,7 +2,7 @@
 
 This file was generated using [@jscutlery/semver](https://github.com/jscutlery/semver).
 
-## [0.0.5](https://github.com/AndrewRedican/hyperfrontend/compare/lib-network-protocol@0.0.4...lib-network-protocol@0.0.5) (2026-03-02)
+## [0.0.3](https://github.com/AndrewRedican/hyperfrontend/compare/lib-network-protocol@0.0.2...lib-network-protocol@0.0.3) (2026-03-02)
 
 
 ### Bug Fixes

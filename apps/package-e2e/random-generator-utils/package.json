@@ -7,7 +7,7 @@
     "pack-install": "cd ../../../dist/libs/utils/random-generator && npm pack && cd - && npm install ../../../dist/libs/utils/random-generator/*.tgz"
   },
   "dependencies": {
-    "@hyperfrontend/random-generator-utils": "file:../../../tmp/e2e-packs/hyperfrontend-random-generator-utils-0.0.4.tgz"
+    "@hyperfrontend/random-generator-utils": "file:../../../tmp/e2e-packs/hyperfrontend-random-generator-utils-0.0.3.tgz"
   },
   "devDependencies": {
     "@types/jest": "29.5.14",

@@ -2,7 +2,7 @@
 
 This file was generated using [@jscutlery/semver](https://github.com/jscutlery/semver).
 
-## [0.0.4](https://github.com/AndrewRedican/hyperfrontend/compare/lib-logging@0.0.3...lib-logging@0.0.4) (2026-03-02)
+## [0.0.3](https://github.com/AndrewRedican/hyperfrontend/compare/lib-logging@0.0.2...lib-logging@0.0.3) (2026-03-02)
 
 
 ### Bug Fixes

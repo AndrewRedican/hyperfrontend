@@ -16,7 +16,9 @@ This file was generated using [@jscutlery/semver](https://github.com/jscutlery/s
 ### Bug Fixes
 
 * **lib-immutable-api-utils:** correct package exports ([f63960e](https://github.com/AndrewRedican/hyperfrontend/commit/f63960eb0302512ac420520db1610469377c0f58))
+* **lib-immutable-api-utils:** handle built-in binding and jsdocs for fn overloads correctly ([da9ff90](https://github.com/AndrewRedican/hyperfrontend/commit/da9ff90ab29bfbdbdc03bb39585b09ca04772a57))
 * **lib-immutable-api-utils:** restore index.ts file required entrypoint for iife and umd build ([de75fb5](https://github.com/AndrewRedican/hyperfrontend/commit/de75fb5f4f45eed3544a3039b45aedf51a4489bb))
+* **lib-immutable-api-utils:** use correct overload constructor for unit 8 array ([06bb617](https://github.com/AndrewRedican/hyperfrontend/commit/06bb6172a5af486b5500af1207365753fe221680))
 
 ## [0.0.2](https://github.com/AndrewRedican/hyperfrontend/compare/lib-immutable-api-utils@0.0.1...lib-immutable-api-utils@0.0.2) (2026-02-26)
 

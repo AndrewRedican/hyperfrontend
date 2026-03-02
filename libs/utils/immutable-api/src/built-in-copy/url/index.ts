@@ -42,18 +42,27 @@ export const canParse = _URL.canParse
  * (Safe copy) Creates an object URL for the given object.
  * Use this instead of `URL.createObjectURL()`.
  *
- * @param obj - The object to create a URL for (Blob, File, MediaSource).
- * @returns The object URL string.
+ * Note: This is a browser-only API. In Node.js environments, this will throw.
  */
-export const createObjectURL = <typeof URL.createObjectURL>_URL.createObjectURL.bind(_URL)
+export const createObjectURL: (typeof globalThis.URL)['createObjectURL'] =
+  typeof _URL.createObjectURL === 'function'
+    ? _URL.createObjectURL.bind(_URL)
+    : () => {
+        throw new Error('URL.createObjectURL is not available in this environment')
+      }
 
 /**
  * (Safe copy) Revokes an object URL previously created with createObjectURL.
  * Use this instead of `URL.revokeObjectURL()`.
  *
- * @param url - The object URL to revoke.
+ * Note: This is a browser-only API. In Node.js environments, this will throw.
  */
-export const revokeObjectURL = <typeof URL.revokeObjectURL>_URL.revokeObjectURL.bind(_URL)
+export const revokeObjectURL: (typeof globalThis.URL)['revokeObjectURL'] =
+  typeof _URL.revokeObjectURL === 'function'
+    ? _URL.revokeObjectURL.bind(_URL)
+    : () => {
+        throw new Error('URL.revokeObjectURL is not available in this environment')
+      }
 
 /**
  * (Safe copy) Parses a URL string and returns a URL object, or null if invalid.

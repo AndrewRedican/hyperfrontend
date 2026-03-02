@@ -1,6 +1,6 @@
 {
   "name": "@hyperfrontend/random-generator-utils",
-  "version": "0.0.4",
+  "version": "0.0.3",
   "description": "Statistical random distributions and UUID generation for simulations, testing, and procedural content.",
   "license": "MIT",
   "sideEffects": false,
@@ -30,7 +30,7 @@
     "./package.json": "./package.json"
   },
   "dependencies": {
-    "@hyperfrontend/data-utils": "0.0.4",
+    "@hyperfrontend/data-utils": "0.0.3",
     "@hyperfrontend/immutable-api-utils": "0.1.0"
   },
   "funding": {

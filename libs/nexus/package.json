@@ -32,14 +32,14 @@
     "event-driven"
   ],
   "dependencies": {
-    "@hyperfrontend/data-utils": "0.0.4",
+    "@hyperfrontend/data-utils": "0.0.3",
     "@hyperfrontend/immutable-api-utils": "0.1.0",
-    "@hyperfrontend/json-utils": "0.0.4",
-    "@hyperfrontend/logging": "0.0.4",
-    "@hyperfrontend/random-generator-utils": "0.0.4"
+    "@hyperfrontend/json-utils": "0.0.3",
+    "@hyperfrontend/logging": "0.0.3",
+    "@hyperfrontend/random-generator-utils": "0.0.3"
   },
   "peerDependencies": {
-    "@hyperfrontend/network-protocol": "0.0.5"
+    "@hyperfrontend/network-protocol": "0.0.3"
   },
   "peerDependenciesMeta": {
     "@hyperfrontend/network-protocol": {

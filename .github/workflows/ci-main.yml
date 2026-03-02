@@ -322,30 +322,35 @@ jobs:
           name: dist
           path: dist/
 
-      - name: Check for affected libraries
-        id: affected
+      - name: Get publishable libraries
+        id: publishable
         run: |
-          # Get libraries affected since the previous commit
-          AFFECTED=$(npx nx show projects --affected --base=HEAD~1 --head=HEAD --type=lib 2>/dev/null || echo "")
+          # Get all library projects (not using affected - we want ALL libraries)
+          # The publish executor is idempotent and will skip versions already on npm
+          LIBS=$(npx nx show projects --type=lib 2>/dev/null | tr '\n' ',' | sed 's/,$//')
 
-          if [ -z "$AFFECTED" ]; then
-            echo "No affected libraries found"
-            echo "has_affected=false" >> $GITHUB_OUTPUT
+          if [ -z "$LIBS" ]; then
+            echo "No library projects found"
+            echo "has_libs=false" >> $GITHUB_OUTPUT
           else
-            echo "Affected libraries:"
-            echo "$AFFECTED"
-            echo "has_affected=true" >> $GITHUB_OUTPUT
+            echo "Library projects to check for publishing:"
+            echo "$LIBS"
+            echo "has_libs=true" >> $GITHUB_OUTPUT
+            echo "libs=$LIBS" >> $GITHUB_OUTPUT
           fi
 
       - name: Configure npm authentication
-        if: steps.affected.outputs.has_affected == 'true'
+        if: steps.publishable.outputs.has_libs == 'true'
         run: npm config set "//registry.npmjs.org/:_authToken" "${NPM_TOKEN}" --location=user
         env:
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
 
-      - name: Publish affected libraries
-        if: steps.affected.outputs.has_affected == 'true'
-        run: CI=1 npx nx affected -t=publish --base=HEAD~1 --head=HEAD --parallel=1
+      - name: Publish all libraries (skips already published)
+        if: steps.publishable.outputs.has_libs == 'true'
+        run: |
+          # Run publish for all libraries - executor is idempotent and skips
+          # versions already on npm, so this is safe to run on every push
+          CI=1 npx nx run-many -t=publish --projects=${{ steps.publishable.outputs.libs }} --parallel=1
 
   create-github-release:
     name: github-release

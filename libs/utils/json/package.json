@@ -1,6 +1,6 @@
 {
   "name": "@hyperfrontend/json-utils",
-  "version": "0.0.4",
+  "version": "0.0.3",
   "description": "Zero-dependency JSON Schema validation and generation utilities for JSON Schema Draft v4.",
   "license": "MIT",
   "sideEffects": false,
