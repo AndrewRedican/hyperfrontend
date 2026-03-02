@@ -14,6 +14,7 @@ import { validateName } from '../core/validation/name'
 import { createProtocolRegistry } from '../security/registry/factory'
 import { mergeContracts } from '../setup/merge-contracts'
 import { createLogger } from '../utils/logging/create-logger'
+import { assertNoCircularRef } from '../utils/validation/assert-no-circular-ref'
 import { addChannel } from './channels/add'
 import { getChannel } from './channels/get'
 import { listChannels } from './channels/list'
@@ -50,7 +51,8 @@ export function createBroker(config: {
   contract: IChannelContract
   settings?: Partial<BrokerConfig['settings']>
 }): BrokerHandle {
-  // Validate inputs
+  assertNoCircularRef(config.contract, 'config.contract')
+  assertNoCircularRef(config.settings, 'config.settings')
   validateName(config.name)
   validateContract(config.contract)
 

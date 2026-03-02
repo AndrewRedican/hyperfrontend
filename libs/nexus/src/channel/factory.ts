@@ -5,6 +5,7 @@ import type { ChannelEvent, EventCallbackMap } from '../types/events'
 import type { IMessage } from '../types/message'
 import type { SecurityProtocolVersion, SecurityTransport, SecurityNegotiationRequest } from '../types/security'
 import type { ChannelInternals, ChannelDependencies } from './types'
+import { assertNoCircularRef } from '../utils/validation/assert-no-circular-ref'
 import { DEFAULT_CHANNEL_SETTINGS } from './defaults'
 import { cancel } from './lifecycle/cancel'
 import { connect } from './lifecycle/connect'
@@ -40,6 +41,8 @@ import { notifyMessage } from './subscription/notify-message'
  * ```
  */
 export function createChannel(config: IChannelConfig, deps: ChannelDependencies): ChannelHandle {
+  assertNoCircularRef(config.settings, 'config.settings')
+
   // Merge settings with defaults
   const settings = { ...DEFAULT_CHANNEL_SETTINGS, ...config.settings }
 

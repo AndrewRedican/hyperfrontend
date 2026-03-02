@@ -2,6 +2,7 @@ import type { LogLevel } from '@hyperfrontend/logging'
 import type { BrokerHandle } from '../broker/types'
 import type { IChannelContract } from '../types/contract'
 import { createBroker } from '../broker/factory'
+import { assertNoCircularRef } from '../utils/validation/assert-no-circular-ref'
 
 /**
  * Configuration for setting up a broker
@@ -27,6 +28,8 @@ export interface SetupBrokerConfig {
  * @returns Broker handle
  */
 export function setupBroker(config: SetupBrokerConfig): BrokerHandle {
+  assertNoCircularRef(config, 'config')
+
   return createBroker({
     name: config.name,
     contract: config.contract,

@@ -6,6 +6,7 @@ import { createChannel } from '../../channel/factory'
 import { add as addToRegistry } from '../../core/registry/add'
 import { getByWindow } from '../../core/registry/get-by-window'
 import { remove as removeFromRegistry } from '../../core/registry/remove'
+import { assertNoCircularRef } from '../../utils/validation/assert-no-circular-ref'
 
 /**
  * Adds a channel to the broker.
@@ -28,6 +29,8 @@ export function addChannel(
   target: Window,
   settings: Record<string, unknown> = {}
 ): ReturnType<typeof createChannel> {
+  assertNoCircularRef(settings, 'settings')
+
   // Check if channel already exists for this window
   const existing = getByWindow(registry, target)
 
