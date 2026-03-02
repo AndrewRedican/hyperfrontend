@@ -19,6 +19,16 @@ const PROMISE = `${PKG}/built-in-copy/promise`
 const CONSOLE = `${PKG}/built-in-copy/console`
 const TIMERS = `${PKG}/built-in-copy/timers`
 const MESSAGING = `${PKG}/built-in-copy/messaging`
+const MAP = `${PKG}/built-in-copy/map`
+const SET = `${PKG}/built-in-copy/set`
+const WEAK_MAP = `${PKG}/built-in-copy/weak-map`
+const WEAK_SET = `${PKG}/built-in-copy/weak-set`
+const REGEXP = `${PKG}/built-in-copy/regexp`
+const DATE = `${PKG}/built-in-copy/date`
+const ERROR = `${PKG}/built-in-copy/error`
+const FUNCTION = `${PKG}/built-in-copy/function`
+const REFLECT = `${PKG}/built-in-copy/reflect`
+const SYMBOL = `${PKG}/built-in-copy/symbol`
 
 type SafeImport = { import: string; from: string }
 
@@ -52,6 +62,43 @@ const UNSAFE_METHODS: Record<string, Record<string, SafeImport>> = {
   ),
   Array: Object.fromEntries(['isArray', 'from', 'of'].map((m) => [m, { import: m, from: ARRAY }])),
   JSON: Object.fromEntries(['parse', 'stringify'].map((m) => [m, { import: m, from: JSON_COPY }])),
+  Promise: Object.fromEntries(
+    ['resolve', 'reject', 'all', 'race', 'allSettled', 'any', 'withResolvers'].map((m) => [
+      m,
+      { import: m === 'withResolvers' ? 'promiseWithResolvers' : `promise${m.charAt(0).toUpperCase()}${m.slice(1)}`, from: PROMISE },
+    ])
+  ),
+  Date: Object.fromEntries(
+    [
+      ['now', 'dateNow'],
+      ['parse', 'dateParse'],
+      ['UTC', 'dateUTC'],
+    ].map(([m, i]) => [m, { import: i, from: DATE }])
+  ),
+  Map: Object.fromEntries([['groupBy', { import: 'mapGroupBy', from: MAP }]]),
+  Symbol: Object.fromEntries(
+    [
+      ['for', 'symbolFor'],
+      ['keyFor', 'symbolKeyFor'],
+    ].map(([m, i]) => [m, { import: i, from: SYMBOL }])
+  ),
+  Reflect: Object.fromEntries(
+    [
+      'apply',
+      'construct',
+      'get',
+      'set',
+      'has',
+      'ownKeys',
+      'defineProperty',
+      'deleteProperty',
+      'getOwnPropertyDescriptor',
+      'getPrototypeOf',
+      'setPrototypeOf',
+      'isExtensible',
+      'preventExtensions',
+    ].map((m) => [m, { import: m, from: REFLECT }])
+  ),
   console: Object.fromEntries(
     [
       'log',
@@ -100,6 +147,21 @@ const UNSAFE_CONSTRUCTORS: Record<string, SafeImport> = {
   Promise: { import: 'createPromise', from: PROMISE },
   MessageChannel: { import: 'createMessageChannel', from: MESSAGING },
   BroadcastChannel: { import: 'createBroadcastChannel', from: MESSAGING },
+  Map: { import: 'createMap', from: MAP },
+  Set: { import: 'createSet', from: SET },
+  WeakMap: { import: 'createWeakMap', from: WEAK_MAP },
+  WeakSet: { import: 'createWeakSet', from: WEAK_SET },
+  RegExp: { import: 'createRegExp', from: REGEXP },
+  Date: { import: 'createDate', from: DATE },
+  Error: { import: 'createError', from: ERROR },
+  TypeError: { import: 'createTypeError', from: ERROR },
+  RangeError: { import: 'createRangeError', from: ERROR },
+  ReferenceError: { import: 'createReferenceError', from: ERROR },
+  SyntaxError: { import: 'createSyntaxError', from: ERROR },
+  URIError: { import: 'createURIError', from: ERROR },
+  EvalError: { import: 'createEvalError', from: ERROR },
+  AggregateError: { import: 'createAggregateError', from: ERROR },
+  Function: { import: 'createFunction', from: FUNCTION },
 }
 
 /**

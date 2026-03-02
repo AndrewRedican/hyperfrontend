@@ -77,6 +77,16 @@ function createTestFileCase(): ValidTestCase<TestOptions> {
   }
 }
 
+function createTestFileDotTestCase(): ValidTestCase<TestOptions> {
+  const projectDir = createTempProject({ isPublishable: true })
+  tempDirs.push(projectDir)
+  mkdirSync(join(projectDir, 'src'), { recursive: true })
+  return {
+    code: 'const obj = Object.freeze({ a: 1 });',
+    filename: join(projectDir, 'src', 'index.test.ts'),
+  }
+}
+
 function createNoProjectRootCase(): ValidTestCase<TestOptions> {
   return {
     code: 'const obj = Object.freeze({ a: 1 });',
@@ -91,6 +101,17 @@ function createSafeImportCase(): ValidTestCase<TestOptions> {
   return {
     code: `import { freeze } from '@hyperfrontend/immutable-api-utils/built-in-copy/object';
 const obj = freeze({ a: 1 });`,
+    filename: join(projectDir, 'src', 'index.ts'),
+  }
+}
+
+function createSafeGlobalFunctionImportCase(): ValidTestCase<TestOptions> {
+  const projectDir = createTempProject({ isPublishable: true })
+  tempDirs.push(projectDir)
+  mkdirSync(join(projectDir, 'src'), { recursive: true })
+  return {
+    code: `import { setTimeout } from '@hyperfrontend/immutable-api-utils/built-in-copy/timers';
+setTimeout(() => {}, 100);`,
     filename: join(projectDir, 'src', 'index.ts'),
   }
 }
@@ -390,6 +411,171 @@ function createNewBroadcastChannelCase(): InvalidTestCase<MessageIds, TestOption
   }
 }
 
+function createNewMapCase(): InvalidTestCase<MessageIds, TestOptions> {
+  const projectDir = createTempProject({ isPublishable: true })
+  tempDirs.push(projectDir)
+  mkdirSync(join(projectDir, 'src'), { recursive: true })
+  return {
+    code: 'const map = new Map();',
+    filename: join(projectDir, 'src', 'index.ts'),
+    errors: [{ messageId: 'unsafeConstructor' }],
+  }
+}
+
+function createNewSetCase(): InvalidTestCase<MessageIds, TestOptions> {
+  const projectDir = createTempProject({ isPublishable: true })
+  tempDirs.push(projectDir)
+  mkdirSync(join(projectDir, 'src'), { recursive: true })
+  return {
+    code: 'const set = new Set();',
+    filename: join(projectDir, 'src', 'index.ts'),
+    errors: [{ messageId: 'unsafeConstructor' }],
+  }
+}
+
+function createNewWeakMapCase(): InvalidTestCase<MessageIds, TestOptions> {
+  const projectDir = createTempProject({ isPublishable: true })
+  tempDirs.push(projectDir)
+  mkdirSync(join(projectDir, 'src'), { recursive: true })
+  return {
+    code: 'const weakMap = new WeakMap();',
+    filename: join(projectDir, 'src', 'index.ts'),
+    errors: [{ messageId: 'unsafeConstructor' }],
+  }
+}
+
+function createNewWeakSetCase(): InvalidTestCase<MessageIds, TestOptions> {
+  const projectDir = createTempProject({ isPublishable: true })
+  tempDirs.push(projectDir)
+  mkdirSync(join(projectDir, 'src'), { recursive: true })
+  return {
+    code: 'const weakSet = new WeakSet();',
+    filename: join(projectDir, 'src', 'index.ts'),
+    errors: [{ messageId: 'unsafeConstructor' }],
+  }
+}
+
+function createNewRegExpCase(): InvalidTestCase<MessageIds, TestOptions> {
+  const projectDir = createTempProject({ isPublishable: true })
+  tempDirs.push(projectDir)
+  mkdirSync(join(projectDir, 'src'), { recursive: true })
+  return {
+    code: 'const regex = new RegExp("test");',
+    filename: join(projectDir, 'src', 'index.ts'),
+    errors: [{ messageId: 'unsafeConstructor' }],
+  }
+}
+
+function createNewDateCase(): InvalidTestCase<MessageIds, TestOptions> {
+  const projectDir = createTempProject({ isPublishable: true })
+  tempDirs.push(projectDir)
+  mkdirSync(join(projectDir, 'src'), { recursive: true })
+  return {
+    code: 'const date = new Date();',
+    filename: join(projectDir, 'src', 'index.ts'),
+    errors: [{ messageId: 'unsafeConstructor' }],
+  }
+}
+
+function createNewErrorCase(): InvalidTestCase<MessageIds, TestOptions> {
+  const projectDir = createTempProject({ isPublishable: true })
+  tempDirs.push(projectDir)
+  mkdirSync(join(projectDir, 'src'), { recursive: true })
+  return {
+    code: 'const err = new Error("message");',
+    filename: join(projectDir, 'src', 'index.ts'),
+    errors: [{ messageId: 'unsafeConstructor' }],
+  }
+}
+
+function createNewTypeErrorCase(): InvalidTestCase<MessageIds, TestOptions> {
+  const projectDir = createTempProject({ isPublishable: true })
+  tempDirs.push(projectDir)
+  mkdirSync(join(projectDir, 'src'), { recursive: true })
+  return {
+    code: 'const err = new TypeError("message");',
+    filename: join(projectDir, 'src', 'index.ts'),
+    errors: [{ messageId: 'unsafeConstructor' }],
+  }
+}
+
+function createNewFunctionCase(): InvalidTestCase<MessageIds, TestOptions> {
+  const projectDir = createTempProject({ isPublishable: true })
+  tempDirs.push(projectDir)
+  mkdirSync(join(projectDir, 'src'), { recursive: true })
+  return {
+    code: 'const fn = new Function("return 1");',
+    filename: join(projectDir, 'src', 'index.ts'),
+    errors: [{ messageId: 'unsafeConstructor' }],
+  }
+}
+
+function createPromiseAllCase(): InvalidTestCase<MessageIds, TestOptions> {
+  const projectDir = createTempProject({ isPublishable: true })
+  tempDirs.push(projectDir)
+  mkdirSync(join(projectDir, 'src'), { recursive: true })
+  return {
+    code: 'const result = Promise.all([]);',
+    filename: join(projectDir, 'src', 'index.ts'),
+    errors: [{ messageId: 'unsafeBuiltinMethod' }],
+  }
+}
+
+function createPromiseResolveCase(): InvalidTestCase<MessageIds, TestOptions> {
+  const projectDir = createTempProject({ isPublishable: true })
+  tempDirs.push(projectDir)
+  mkdirSync(join(projectDir, 'src'), { recursive: true })
+  return {
+    code: 'const result = Promise.resolve(1);',
+    filename: join(projectDir, 'src', 'index.ts'),
+    errors: [{ messageId: 'unsafeBuiltinMethod' }],
+  }
+}
+
+function createDateNowCase(): InvalidTestCase<MessageIds, TestOptions> {
+  const projectDir = createTempProject({ isPublishable: true })
+  tempDirs.push(projectDir)
+  mkdirSync(join(projectDir, 'src'), { recursive: true })
+  return {
+    code: 'const now = Date.now();',
+    filename: join(projectDir, 'src', 'index.ts'),
+    errors: [{ messageId: 'unsafeBuiltinMethod' }],
+  }
+}
+
+function createReflectGetCase(): InvalidTestCase<MessageIds, TestOptions> {
+  const projectDir = createTempProject({ isPublishable: true })
+  tempDirs.push(projectDir)
+  mkdirSync(join(projectDir, 'src'), { recursive: true })
+  return {
+    code: 'const val = Reflect.get(obj, "key");',
+    filename: join(projectDir, 'src', 'index.ts'),
+    errors: [{ messageId: 'unsafeBuiltinMethod' }],
+  }
+}
+
+function createSymbolForCase(): InvalidTestCase<MessageIds, TestOptions> {
+  const projectDir = createTempProject({ isPublishable: true })
+  tempDirs.push(projectDir)
+  mkdirSync(join(projectDir, 'src'), { recursive: true })
+  return {
+    code: 'const sym = Symbol.for("key");',
+    filename: join(projectDir, 'src', 'index.ts'),
+    errors: [{ messageId: 'unsafeBuiltinMethod' }],
+  }
+}
+
+function createMapGroupByCase(): InvalidTestCase<MessageIds, TestOptions> {
+  const projectDir = createTempProject({ isPublishable: true })
+  tempDirs.push(projectDir)
+  mkdirSync(join(projectDir, 'src'), { recursive: true })
+  return {
+    code: 'const grouped = Map.groupBy([], (x) => x);',
+    filename: join(projectDir, 'src', 'index.ts'),
+    errors: [{ messageId: 'unsafeBuiltinMethod' }],
+  }
+}
+
 describe('no-unsafe-builtin-methods', () => {
   describe('no-unsafe-builtin-methods', () => {
     describe('valid', () => {
@@ -404,8 +590,12 @@ describe('no-unsafe-builtin-methods', () => {
             ...createBuiltInCopyCase(),
           },
           {
-            name: 'does not trigger for test files',
+            name: 'does not trigger for test files (.spec.ts)',
             ...createTestFileCase(),
+          },
+          {
+            name: 'does not trigger for test files (.test.ts)',
+            ...createTestFileDotTestCase(),
           },
           {
             name: 'does not trigger for files without project root',
@@ -414,6 +604,10 @@ describe('no-unsafe-builtin-methods', () => {
           {
             name: 'does not trigger for safe imports',
             ...createSafeImportCase(),
+          },
+          {
+            name: 'does not trigger for safe global function imports',
+            ...createSafeGlobalFunctionImportCase(),
           },
           {
             name: 'does not trigger for non-Identifier object',
@@ -531,6 +725,66 @@ describe('no-unsafe-builtin-methods', () => {
           {
             name: 'triggers for new BroadcastChannel()',
             ...createNewBroadcastChannelCase(),
+          },
+          {
+            name: 'triggers for new Map()',
+            ...createNewMapCase(),
+          },
+          {
+            name: 'triggers for new Set()',
+            ...createNewSetCase(),
+          },
+          {
+            name: 'triggers for new WeakMap()',
+            ...createNewWeakMapCase(),
+          },
+          {
+            name: 'triggers for new WeakSet()',
+            ...createNewWeakSetCase(),
+          },
+          {
+            name: 'triggers for new RegExp()',
+            ...createNewRegExpCase(),
+          },
+          {
+            name: 'triggers for new Date()',
+            ...createNewDateCase(),
+          },
+          {
+            name: 'triggers for new Error()',
+            ...createNewErrorCase(),
+          },
+          {
+            name: 'triggers for new TypeError()',
+            ...createNewTypeErrorCase(),
+          },
+          {
+            name: 'triggers for new Function()',
+            ...createNewFunctionCase(),
+          },
+          {
+            name: 'triggers for Promise.all()',
+            ...createPromiseAllCase(),
+          },
+          {
+            name: 'triggers for Promise.resolve()',
+            ...createPromiseResolveCase(),
+          },
+          {
+            name: 'triggers for Date.now()',
+            ...createDateNowCase(),
+          },
+          {
+            name: 'triggers for Reflect.get()',
+            ...createReflectGetCase(),
+          },
+          {
+            name: 'triggers for Symbol.for()',
+            ...createSymbolForCase(),
+          },
+          {
+            name: 'triggers for Map.groupBy()',
+            ...createMapGroupByCase(),
           },
         ],
       })
