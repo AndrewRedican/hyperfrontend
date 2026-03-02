@@ -29,6 +29,13 @@ const ERROR = `${PKG}/built-in-copy/error`
 const FUNCTION = `${PKG}/built-in-copy/function`
 const REFLECT = `${PKG}/built-in-copy/reflect`
 const SYMBOL = `${PKG}/built-in-copy/symbol`
+const ENCODING = `${PKG}/built-in-copy/encoding`
+const TYPED_ARRAYS = `${PKG}/built-in-copy/typed-arrays`
+const URL_COPY = `${PKG}/built-in-copy/url`
+const WEBSOCKET = `${PKG}/built-in-copy/websocket`
+const MATH = `${PKG}/built-in-copy/math`
+const NUMBER_COPY = `${PKG}/built-in-copy/number`
+const STRING_COPY = `${PKG}/built-in-copy/string`
 
 type SafeImport = { import: string; from: string }
 
@@ -121,6 +128,77 @@ const UNSAFE_METHODS: Record<string, Record<string, SafeImport>> = {
       'timeLog',
     ].map((m) => [m, { import: m, from: CONSOLE }])
   ),
+  Math: Object.fromEntries(
+    [
+      'abs',
+      'sign',
+      'ceil',
+      'floor',
+      'round',
+      'trunc',
+      'max',
+      'min',
+      'pow',
+      'sqrt',
+      'cbrt',
+      'hypot',
+      'exp',
+      'expm1',
+      'log',
+      'log2',
+      'log10',
+      'log1p',
+      'sin',
+      'cos',
+      'tan',
+      'asin',
+      'acos',
+      'atan',
+      'atan2',
+      'sinh',
+      'cosh',
+      'tanh',
+      'asinh',
+      'acosh',
+      'atanh',
+      'random',
+      'fround',
+      'clz32',
+      'imul',
+    ].map((m) => [m, { import: m, from: MATH }])
+  ),
+  Number: Object.fromEntries(
+    [
+      ['isNaN', 'isNaN'],
+      ['isFinite', 'isFinite'],
+      ['isInteger', 'isInteger'],
+      ['isSafeInteger', 'isSafeInteger'],
+      ['parseFloat', 'parseFloat'],
+      ['parseInt', 'parseInt'],
+    ].map(([m, i]) => [m, { import: i, from: NUMBER_COPY }])
+  ),
+  String: Object.fromEntries(
+    [
+      ['fromCharCode', 'fromCharCode'],
+      ['fromCodePoint', 'fromCodePoint'],
+      ['raw', 'raw'],
+    ].map(([m, i]) => [m, { import: i, from: STRING_COPY }])
+  ),
+  URL: Object.fromEntries(
+    [
+      ['canParse', 'canParse'],
+      ['createObjectURL', 'createObjectURL'],
+      ['revokeObjectURL', 'revokeObjectURL'],
+      ['parse', 'parseURL'],
+    ].map(([m, i]) => [m, { import: i, from: URL_COPY }])
+  ),
+  ArrayBuffer: Object.fromEntries([['isView', { import: 'isView', from: TYPED_ARRAYS }]]),
+  Uint8Array: Object.fromEntries(
+    [
+      ['from', 'uint8ArrayFrom'],
+      ['of', 'uint8ArrayOf'],
+    ].map(([m, i]) => [m, { import: i, from: TYPED_ARRAYS }])
+  ),
 }
 
 // Add special cases with different import names
@@ -138,6 +216,12 @@ const UNSAFE_GLOBALS: Record<string, SafeImport> = {
   requestAnimationFrame: { import: 'requestAnimationFrame', from: TIMERS },
   cancelAnimationFrame: { import: 'cancelAnimationFrame', from: TIMERS },
   structuredClone: { import: 'structuredClone', from: MESSAGING },
+  atob: { import: 'atob', from: ENCODING },
+  btoa: { import: 'btoa', from: ENCODING },
+  parseInt: { import: 'parseInt', from: NUMBER_COPY },
+  parseFloat: { import: 'parseFloat', from: NUMBER_COPY },
+  isNaN: { import: 'globalIsNaN', from: NUMBER_COPY },
+  isFinite: { import: 'globalIsFinite', from: NUMBER_COPY },
 }
 
 /**
@@ -148,6 +232,25 @@ const UNSAFE_CONSTRUCTORS: Record<string, SafeImport> = {
   MessageChannel: { import: 'createMessageChannel', from: MESSAGING },
   BroadcastChannel: { import: 'createBroadcastChannel', from: MESSAGING },
   Map: { import: 'createMap', from: MAP },
+  TextEncoder: { import: 'createTextEncoder', from: ENCODING },
+  TextDecoder: { import: 'createTextDecoder', from: ENCODING },
+  URL: { import: 'createURL', from: URL_COPY },
+  URLSearchParams: { import: 'createURLSearchParams', from: URL_COPY },
+  WebSocket: { import: 'createWebSocket', from: WEBSOCKET },
+  ArrayBuffer: { import: 'createArrayBuffer', from: TYPED_ARRAYS },
+  SharedArrayBuffer: { import: 'createSharedArrayBuffer', from: TYPED_ARRAYS },
+  DataView: { import: 'createDataView', from: TYPED_ARRAYS },
+  Uint8Array: { import: 'createUint8Array', from: TYPED_ARRAYS },
+  Uint8ClampedArray: { import: 'createUint8ClampedArray', from: TYPED_ARRAYS },
+  Uint16Array: { import: 'createUint16Array', from: TYPED_ARRAYS },
+  Uint32Array: { import: 'createUint32Array', from: TYPED_ARRAYS },
+  Int8Array: { import: 'createInt8Array', from: TYPED_ARRAYS },
+  Int16Array: { import: 'createInt16Array', from: TYPED_ARRAYS },
+  Int32Array: { import: 'createInt32Array', from: TYPED_ARRAYS },
+  Float32Array: { import: 'createFloat32Array', from: TYPED_ARRAYS },
+  Float64Array: { import: 'createFloat64Array', from: TYPED_ARRAYS },
+  BigInt64Array: { import: 'createBigInt64Array', from: TYPED_ARRAYS },
+  BigUint64Array: { import: 'createBigUint64Array', from: TYPED_ARRAYS },
   Set: { import: 'createSet', from: SET },
   WeakMap: { import: 'createWeakMap', from: WEAK_MAP },
   WeakSet: { import: 'createWeakSet', from: WEAK_SET },
