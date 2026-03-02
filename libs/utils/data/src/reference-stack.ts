@@ -1,4 +1,5 @@
 import type { UnknownIterable, UnknownIterableKey, ReferenceStack } from './models'
+import { createMap } from '@hyperfrontend/immutable-api-utils/built-in-copy/map'
 import { isIterable } from './is-iterable'
 import { marker } from './marker'
 
@@ -11,7 +12,7 @@ import { marker } from './marker'
  * @returns A new ReferenceStack instance.
  */
 export const referenceStack = (): ReferenceStack => {
-  const records = new Map<symbol, [UnknownIterableKey, UnknownIterable, number]>()
+  const records = createMap<symbol, [UnknownIterableKey, UnknownIterable, number]>()
   const flag = <UnknownIterableKey>marker()
 
   const exists = (ref: UnknownIterable): boolean => (isIterable(ref) ? flag in ref && records.has(ref[flag]) : false)

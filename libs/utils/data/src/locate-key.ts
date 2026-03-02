@@ -1,4 +1,5 @@
 import type { Callback, DepthConfig } from './models'
+import { createError } from '@hyperfrontend/immutable-api-utils/built-in-copy/error'
 import { getIterableOperators } from './get-iterable-operators'
 import { getType } from './get-type'
 import { isIterableType } from './is-iterable-type'
@@ -16,7 +17,7 @@ import { traverse } from './traverse'
  */
 export const locateKey = (target: unknown, pattern: string | RegExp, options?: DepthConfig): string[][] => {
   const patternIsString = typeof pattern === 'string'
-  if (!patternIsString && !(pattern instanceof RegExp)) throw new Error('Expected pattern to be either a string of a regular expression.')
+  if (!patternIsString && !(pattern instanceof RegExp)) throw createError('Expected pattern to be either a string of a regular expression.')
   const match = patternIsString ? (key: string) => key === pattern : (key: string) => pattern.test(key)
   const callback: Callback = (key, value, path, state) => {
     const type = getType(value)

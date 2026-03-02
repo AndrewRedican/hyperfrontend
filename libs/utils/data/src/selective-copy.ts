@@ -1,4 +1,5 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
+import { createError } from '@hyperfrontend/immutable-api-utils/built-in-copy/error'
 import { getIterableOperators } from './get-iterable-operators'
 import { getType } from './get-type'
 import { isIterableType } from './is-iterable-type'
@@ -147,14 +148,14 @@ export const selectiveCopyForCircularReferencesRecursive = <T extends Record<str
  * @returns An object containing the cloned value and array of skipped data points
  */
 export const selectiveCopy = <T = unknown>(target: T, options?: SelectiveCopyOptions): { clone: Partial<T>; skipped: DataPoint[] } => {
-  if (options !== void 0 && getType(options) !== 'object') throw new Error('Invalid options argument.')
+  if (options !== void 0 && getType(options) !== 'object') throw createError('Invalid options argument.')
   if (!options) options = {}
   if (!options.skipFunctions) options.skipFunctions = false
   const keys = ['includeKeys', 'excludeKeys', 'include', 'exclude']
   let found = ''
   for (let i = 0; i < keys.length; i += 1) {
     const included = keys[i] in options
-    if (found && included) throw new Error(`Options ${found} and ${keys[i]} are mutually exclusive.`)
+    if (found && included) throw createError(`Options ${found} and ${keys[i]} are mutually exclusive.`)
     if (included) found = keys[i]
   }
   const { includeKeys, excludeKeys, include, exclude, skipFunctions } = <Required<SelectiveCopyOptions>>options

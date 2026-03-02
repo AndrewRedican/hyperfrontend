@@ -1,4 +1,5 @@
 import type { Callback, DepthConfig } from './models'
+import { createError } from '@hyperfrontend/immutable-api-utils/built-in-copy/error'
 import { getIterableOperators } from './get-iterable-operators'
 import { getType } from './get-type'
 import { isIterableType } from './is-iterable-type'
@@ -18,8 +19,8 @@ import { traverse } from './traverse'
  */
 export const replaceText = (target: unknown, pattern: string | RegExp, text: string, options?: DepthConfig): string[][] => {
   const patternIsString = typeof pattern === 'string'
-  if (!patternIsString && !(pattern instanceof RegExp)) throw new Error('Expected pattern to be either a string of a regular expression.')
-  if (typeof text !== 'string') throw new Error('Expected name to be a string.')
+  if (!patternIsString && !(pattern instanceof RegExp)) throw createError('Expected pattern to be either a string of a regular expression.')
+  if (typeof text !== 'string') throw createError('Expected name to be a string.')
   const match = patternIsString ? (text: string) => text.includes(pattern) : (text: string) => pattern.test(text)
   const replace = (original: string) => original.replace(pattern, text)
   const callback: Callback = (key, value, path, state) => {

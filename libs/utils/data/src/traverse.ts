@@ -10,6 +10,7 @@ import type {
   DepthConfig,
 } from './models'
 import { isArray } from '@hyperfrontend/immutable-api-utils/built-in-copy/array'
+import { createError } from '@hyperfrontend/immutable-api-utils/built-in-copy/error'
 import { freeze } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
 import { getKeysFromIterable } from './get-keys-from-iterable'
 import { getType } from './get-type'
@@ -69,15 +70,15 @@ const nonCircularDependencyTraversal: TraversalNonCircular = (condition, callbac
 }
 
 const traversal: Traversal = (target, condition, callback, options, state) => {
-  if (typeof callback !== 'function') throw new Error(errorMessage('callback', 'a function'))
-  if (!(typeof options === 'object' && !isArray(options))) throw new Error(errorMessage('options', 'an object'))
-  if (!isArray(options.depth)) throw new Error(errorMessage('options.depth', 'an array'))
+  if (typeof callback !== 'function') throw createError(errorMessage('callback', 'a function'))
+  if (!(typeof options === 'object' && !isArray(options))) throw createError(errorMessage('options', 'an object'))
+  if (!isArray(options.depth)) throw createError(errorMessage('options.depth', 'an array'))
   const [startDepth, maxDepth] = options.depth
-  if (startDepth !== void 0 && typeof startDepth !== 'number') throw new Error(errorMessage('options.depth.0', 'a number'))
+  if (startDepth !== void 0 && typeof startDepth !== 'number') throw createError(errorMessage('options.depth.0', 'a number'))
   if (maxDepth !== void 0) {
     const maxDepthType = typeof maxDepth
-    if (!['number', 'string'].includes(maxDepthType)) throw new Error(errorMessage('options.depth.1', 'a number or a string'))
-    if (maxDepthType === 'string' && maxDepth !== '*') throw new Error("Only valid string value in options.depth.1 is '*'.")
+    if (!['number', 'string'].includes(maxDepthType)) throw createError(errorMessage('options.depth.1', 'a number or a string'))
+    if (maxDepthType === 'string' && maxDepth !== '*') throw createError("Only valid string value in options.depth.1 is '*'.")
   }
   const config = <TraverseConfig>{
     depth: freeze([options.depth[0] ?? 0, options.depth[1] ?? '*']),

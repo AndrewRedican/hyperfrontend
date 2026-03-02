@@ -1,4 +1,5 @@
 import type { ReferenceStack } from './models'
+import { createError } from '@hyperfrontend/immutable-api-utils/built-in-copy/error'
 import { CircularReference } from './circular-reference'
 import { getIterableOperators } from './get-iterable-operators'
 import { getType } from './get-type'
@@ -41,10 +42,10 @@ export const locateCircularReferenceRecursive = (
  */
 export const locateCircularReference = (target: unknown, maxResults: '*' | number = 1): CircularReference[] => {
   const resultsType = typeof maxResults
-  if (!['string', 'number'].includes(resultsType)) throw new Error(invalidmaxResults)
-  if (resultsType === 'string' && maxResults !== '*') throw new Error(invalidmaxResults)
+  if (!['string', 'number'].includes(resultsType)) throw createError(invalidmaxResults)
+  if (resultsType === 'string' && maxResults !== '*') throw createError(invalidmaxResults)
   if (resultsType === 'number' && (<number>maxResults < 1 || [NaN, Infinity].includes(<number>maxResults)))
-    throw new Error(invalidmaxResults)
+    throw createError(invalidmaxResults)
   const originalSupportStatus = getConfig().detectCircularReferences
   if (!originalSupportStatus) {
     setConfig({ detectCircularReferences: true })
