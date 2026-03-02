@@ -43,6 +43,13 @@
     "./built-in-copy/console": "./src/built-in-copy/console/index.js",
     "./built-in-copy/timers": "./src/built-in-copy/timers/index.js",
     "./built-in-copy/messaging": "./src/built-in-copy/messaging/index.js",
+    "./built-in-copy/encoding": "./src/built-in-copy/encoding/index.js",
+    "./built-in-copy/typed-arrays": "./src/built-in-copy/typed-arrays/index.js",
+    "./built-in-copy/url": "./src/built-in-copy/url/index.js",
+    "./built-in-copy/websocket": "./src/built-in-copy/websocket/index.js",
+    "./built-in-copy/math": "./src/built-in-copy/math/index.js",
+    "./built-in-copy/number": "./src/built-in-copy/number/index.js",
+    "./built-in-copy/string": "./src/built-in-copy/string/index.js",
     "./locked": "./src/locked/index.js",
     "./locked-props": "./src/locked-props/index.js",
     "./locked-prop-descriptors": "./src/locked-prop-descriptors/index.js"

@@ -140,25 +140,32 @@ Object.defineProperty(obj, 'version', lockedPropertyDescriptors('1.0.0', true))
 
 Pre-captured references to JavaScript built-ins via secondary entrypoints. Available modules:
 
-| Entrypoint                | Description                                                                                                  |
-| ------------------------- | ------------------------------------------------------------------------------------------------------------ |
-| `built-in-copy/object`    | Object static methods (`freeze`, `keys`, `entries`, etc.)                                                    |
-| `built-in-copy/array`     | Array static methods (`isArray`, `from`, `of`)                                                               |
-| `built-in-copy/json`      | JSON methods (`parse`, `stringify`)                                                                          |
-| `built-in-copy/promise`   | Promise static methods and factory (`createPromise`, `all`, `race`, etc.)                                    |
-| `built-in-copy/console`   | Console methods (`log`, `warn`, `error`, `info`, `debug`, etc.)                                              |
-| `built-in-copy/timers`    | Timer functions (`setTimeout`, `setInterval`, `queueMicrotask`, `requestAnimationFrame`, etc.)               |
-| `built-in-copy/messaging` | Messaging APIs (`structuredClone`, `createMessageChannel`, `createBroadcastChannel`, `postMessage*` helpers) |
-| `built-in-copy/reflect`   | Reflect methods                                                                                              |
-| `built-in-copy/function`  | Function utilities                                                                                           |
-| `built-in-copy/symbol`    | Symbol static methods                                                                                        |
-| `built-in-copy/map`       | Map constructor factory                                                                                      |
-| `built-in-copy/set`       | Set constructor factory                                                                                      |
-| `built-in-copy/weak-map`  | WeakMap constructor factory                                                                                  |
-| `built-in-copy/weak-set`  | WeakSet constructor factory                                                                                  |
-| `built-in-copy/regexp`    | RegExp constructor factory                                                                                   |
-| `built-in-copy/date`      | Date constructor factory                                                                                     |
-| `built-in-copy/error`     | Error constructor factories                                                                                  |
+| Entrypoint                   | Description                                                                                                  |
+| ---------------------------- | ------------------------------------------------------------------------------------------------------------ |
+| `built-in-copy/object`       | Object static methods (`freeze`, `keys`, `entries`, etc.)                                                    |
+| `built-in-copy/array`        | Array static methods (`isArray`, `from`, `of`)                                                               |
+| `built-in-copy/json`         | JSON methods (`parse`, `stringify`)                                                                          |
+| `built-in-copy/promise`      | Promise static methods and factory (`createPromise`, `all`, `race`, etc.)                                    |
+| `built-in-copy/console`      | Console methods (`log`, `warn`, `error`, `info`, `debug`, etc.)                                              |
+| `built-in-copy/timers`       | Timer functions (`setTimeout`, `setInterval`, `queueMicrotask`, `requestAnimationFrame`, etc.)               |
+| `built-in-copy/messaging`    | Messaging APIs (`structuredClone`, `createMessageChannel`, `createBroadcastChannel`, `postMessage*` helpers) |
+| `built-in-copy/encoding`     | Encoding APIs (`createTextEncoder`, `createTextDecoder`, `atob`, `btoa`)                                     |
+| `built-in-copy/typed-arrays` | Typed arrays and buffers (`createUint8Array`, `createArrayBuffer`, `createDataView`, etc.)                   |
+| `built-in-copy/url`          | URL APIs (`createURL`, `createURLSearchParams`, `canParse`, `createObjectURL`, etc.)                         |
+| `built-in-copy/websocket`    | WebSocket factory (`createWebSocket`, ready state constants)                                                 |
+| `built-in-copy/math`         | Math methods and constants (`random`, `floor`, `ceil`, `PI`, etc.)                                           |
+| `built-in-copy/number`       | Number methods and constants (`isNaN`, `parseInt`, `parseFloat`, `MAX_SAFE_INTEGER`, etc.)                   |
+| `built-in-copy/string`       | String static methods (`fromCharCode`, `fromCodePoint`, `raw`)                                               |
+| `built-in-copy/reflect`      | Reflect methods                                                                                              |
+| `built-in-copy/function`     | Function utilities                                                                                           |
+| `built-in-copy/symbol`       | Symbol static methods                                                                                        |
+| `built-in-copy/map`          | Map constructor factory                                                                                      |
+| `built-in-copy/set`          | Set constructor factory                                                                                      |
+| `built-in-copy/weak-map`     | WeakMap constructor factory                                                                                  |
+| `built-in-copy/weak-set`     | WeakSet constructor factory                                                                                  |
+| `built-in-copy/regexp`       | RegExp constructor factory                                                                                   |
+| `built-in-copy/date`         | Date constructor factory                                                                                     |
+| `built-in-copy/error`        | Error constructor factories                                                                                  |
 
 **Limitations:**
 
