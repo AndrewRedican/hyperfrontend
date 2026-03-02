@@ -1,3 +1,6 @@
+import { createDate } from '@hyperfrontend/immutable-api-utils/built-in-copy/date'
+import { createError } from '@hyperfrontend/immutable-api-utils/built-in-copy/error'
+
 /**
  * Normalizes a given time to the nearest base time window.
  *
@@ -7,15 +10,15 @@
  */
 export function normalizeToBaseTimeWindow(time: Date, baseTimeWindow: number): Date {
   if (!time || !(time instanceof Date) || isNaN(time.getTime())) {
-    throw new Error('Invalid time input')
+    throw createError('Invalid time input')
   }
 
   if (baseTimeWindow <= 0) {
-    throw new Error('Base time window must be positive')
+    throw createError('Base time window must be positive')
   }
 
   const timeInMs = time.getTime()
   const windowInMs = baseTimeWindow * 60 * 1000
   const normalizedTimeInMs = Math.floor(timeInMs / windowInMs) * windowInMs
-  return new Date(normalizedTimeInMs)
+  return createDate(normalizedTimeInMs)
 }

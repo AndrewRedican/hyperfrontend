@@ -1,3 +1,4 @@
+import { createDate } from '@hyperfrontend/immutable-api-utils/built-in-copy/date'
 import { freeze } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
 import { setInterval, clearInterval } from '@hyperfrontend/immutable-api-utils/built-in-copy/timers'
 
@@ -27,7 +28,7 @@ export function createClock(interval = 1000): Clock {
   const start = (): void => {
     if (clockId === null) {
       clockId = setInterval(() => {
-        const currentTime = new Date()
+        const currentTime = createDate()
         subscribers.forEach((subscriber) => subscriber(currentTime))
       }, interval)
     }
