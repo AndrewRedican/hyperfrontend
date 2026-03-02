@@ -1,3 +1,5 @@
+import { exp, random } from '@hyperfrontend/immutable-api-utils/built-in-copy/math'
+
 /**
  * Generates a random number following a logarithmic distribution.
  *
@@ -5,6 +7,6 @@
  * @returns A random number from the logarithmic distribution
  */
 export function randomLogarithmic(scale: number): number {
-  const u = Math.random()
-  return Math.exp(scale * u)
+  const u = random()
+  return exp(scale * u)
 }

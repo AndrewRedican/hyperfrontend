@@ -1,4 +1,5 @@
 import { createError } from '@hyperfrontend/immutable-api-utils/built-in-copy/error'
+import { log, random, sqrt } from '@hyperfrontend/immutable-api-utils/built-in-copy/math'
 
 /**
  * Generates a random number following a Gaussian (normal) distribution within a specified range.
@@ -14,12 +15,12 @@ export function randomGaussian(min: number, max: number): number {
 
   let u, v, s
   do {
-    u = Math.random() * 2 - 1
-    v = Math.random() * 2 - 1
+    u = random() * 2 - 1
+    v = random() * 2 - 1
     s = u * u + v * v
   } while (s >= 1 || s === 0)
 
-  const std_dev = Math.sqrt((-2 * Math.log(s)) / s)
+  const std_dev = sqrt((-2 * log(s)) / s)
   const z0 = u * std_dev
 
   const mu = (min + max) / 2
