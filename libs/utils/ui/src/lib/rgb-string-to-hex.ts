@@ -1,4 +1,5 @@
 import { createError } from '@hyperfrontend/immutable-api-utils/built-in-copy/error'
+import { parseFloat, parseInt } from '@hyperfrontend/immutable-api-utils/built-in-copy/number'
 import { rgbToHex } from './rgb-to-hex'
 
 /**

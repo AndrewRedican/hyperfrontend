@@ -1,5 +1,6 @@
 import { getType } from '@hyperfrontend/data-utils'
 import { createError } from '@hyperfrontend/immutable-api-utils/built-in-copy/error'
+import { round } from '@hyperfrontend/immutable-api-utils/built-in-copy/math'
 import { hexToRgb } from './hex-to-rgb'
 import { rgbToString } from './rgb-to-string'
 
@@ -24,9 +25,9 @@ export function getColorVariation(baseColor: string, intensity: number) {
   /* istanbul ignore next */
   if (!baseColorRGB) return ''
   const factor = intensity / 255
-  const r = Math.round(baseColorRGB.r * factor)
-  const g = Math.round(baseColorRGB.g * factor)
-  const b = Math.round(baseColorRGB.b * factor)
+  const r = round(baseColorRGB.r * factor)
+  const g = round(baseColorRGB.g * factor)
+  const b = round(baseColorRGB.b * factor)
   const a = factor
 
   return rgbToString({ r, g, b, a })

@@ -1,5 +1,7 @@
 import { getType } from '@hyperfrontend/data-utils'
 import { createError } from '@hyperfrontend/immutable-api-utils/built-in-copy/error'
+import { round } from '@hyperfrontend/immutable-api-utils/built-in-copy/math'
+import { parseInt } from '@hyperfrontend/immutable-api-utils/built-in-copy/number'
 
 export interface Rgb {
   r: number
@@ -43,7 +45,7 @@ export function hexToRgb(hex: string, opacity?: number): Rgb | null {
     if (opacity !== void 0) {
       throw createError('Opacity must not be provided when using 8-digit hex code')
     }
-    result.a = Math.round((parseInt(match[5], 16) / 255) * 100) / 100
+    result.a = round((parseInt(match[5], 16) / 255) * 100) / 100
   } else if (opacity !== void 0) {
     result.a = opacity
   }
