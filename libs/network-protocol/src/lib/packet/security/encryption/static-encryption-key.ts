@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import type { PacketEncrypter, PacketDecrypter } from '../../../packet/model'
 import type { EncryptionSuite } from '../../../security/model'
+import { createError } from '@hyperfrontend/immutable-api-utils/built-in-copy/error'
 import { freeze } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
 
 /**
@@ -23,7 +24,7 @@ import { freeze } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
 export function createStaticKeyEncryptionFactory<T = any>(encryptPacket: PacketEncrypter, decryptPacket: PacketDecrypter) {
   return (key: string): EncryptionSuite<T> => {
     if (!key || typeof key !== 'string') {
-      throw new Error('Static encryption key must be a non-empty string')
+      throw createError('Static encryption key must be a non-empty string')
     }
 
     const packetEncryption: EncryptionSuite<T>['packetEncryption'] = (packet) => encryptPacket(packet, key)

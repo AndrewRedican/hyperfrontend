@@ -1,6 +1,7 @@
 /* istanbul ignore file */
 
 import type { Channel, MessagePayload, MessageCallback, Client, SendPacketFn, ReceivePacketFn, ReceivedPacket } from '../model'
+import { createError } from '@hyperfrontend/immutable-api-utils/built-in-copy/error'
 import { freeze } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
 import { uuidV4 } from '@hyperfrontend/random-generator-utils'
 import { createData } from '../../browser/data'
@@ -64,10 +65,10 @@ export function createClient<T = MessagePayload>(label: string): Client<T> {
 
     async send(message: T): Promise<Client<T>> {
       if (!connectedPeer) {
-        throw new Error(`Client "${label}" is not connected to any peer`)
+        throw createError(`Client "${label}" is not connected to any peer`)
       }
       if (!channel) {
-        throw new Error(`Client "${label}" channel is not initialized`)
+        throw createError(`Client "${label}" channel is not initialized`)
       }
 
       sequenceCounter++
@@ -91,7 +92,7 @@ export function createClient<T = MessagePayload>(label: string): Client<T> {
 
     getChannel(): Channel {
       if (!channel) {
-        throw new Error(`Client "${label}" channel is not initialized`)
+        throw createError(`Client "${label}" channel is not initialized`)
       }
       return channel
     },

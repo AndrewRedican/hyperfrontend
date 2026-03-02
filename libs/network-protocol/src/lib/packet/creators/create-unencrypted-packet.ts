@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import type { Data } from '../../data/model'
 import type { UnencryptedPacket } from '../model'
+import { createError } from '@hyperfrontend/immutable-api-utils/built-in-copy/error'
 import { freeze } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
 import { isValidUnencryptedData } from '../../data/validations/is-valid-unencrypted-data'
 import { withoutValidErrorMessage } from '../utils/without-valid-err-msg'
@@ -19,7 +20,7 @@ import { createPacketBase } from './create-packet-base'
 export function createUnencryptedPacket<T = any>(origin: string, target: string, data: Data<T>): UnencryptedPacket<T> {
   const base = createPacketBase(origin, target)
   if (!isValidUnencryptedData(data)) {
-    throw new Error(withoutValidErrorMessage('data'))
+    throw createError(withoutValidErrorMessage('data'))
   }
   const packet: UnencryptedPacket = { ...base, data }
   return freeze(packet)

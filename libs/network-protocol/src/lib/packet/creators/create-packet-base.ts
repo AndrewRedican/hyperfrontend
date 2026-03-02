@@ -1,4 +1,5 @@
 import type { PacketBase } from '../model'
+import { createError } from '@hyperfrontend/immutable-api-utils/built-in-copy/error'
 import { freeze } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
 import { withoutValidErrorMessage } from '../utils/without-valid-err-msg'
 import { isValidOrigin } from '../validations/is-valid-origin'
@@ -15,10 +16,10 @@ import { isValidTarget } from '../validations/is-valid-target'
  */
 export function createPacketBase(origin: string, target: string): PacketBase {
   if (!isValidOrigin(origin)) {
-    throw new Error(withoutValidErrorMessage('origin'))
+    throw createError(withoutValidErrorMessage('origin'))
   }
   if (!isValidTarget(target)) {
-    throw new Error(withoutValidErrorMessage('target'))
+    throw createError(withoutValidErrorMessage('target'))
   }
   const packetBase: PacketBase = { origin, target }
   return freeze(packetBase)

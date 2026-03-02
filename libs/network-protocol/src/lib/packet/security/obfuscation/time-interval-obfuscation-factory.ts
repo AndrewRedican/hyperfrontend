@@ -1,5 +1,7 @@
 import type { ObfuscationSuite } from '../../../security/model'
 import type { SerializedEncryptedPacket, ObfuscatedPacket, PacketObfuscater, PacketDeobfuscater } from '../../model'
+import { createDate } from '@hyperfrontend/immutable-api-utils/built-in-copy/date'
+import { createError } from '@hyperfrontend/immutable-api-utils/built-in-copy/error'
 import { freeze } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
 import { isValidSerializedEncryptedPacket } from '../../validations/is-valid-serialized-encrypted-packet'
 import { isValidRefreshRate } from './is-valid-refresh-rate'
@@ -33,9 +35,9 @@ export function createTimeIntervalObfuscationFactory(
 ) {
   return (refreshRate = 1): ObfuscationSuite => {
     if (!isValidRefreshRate(refreshRate)) {
-      throw new Error('A valid refresh rate must be provided.')
+      throw createError('A valid refresh rate must be provided.')
     }
-    const now = () => new Date()
+    const now = () => createDate()
     const packetObfuscationFn: ObfuscationSuite['packetObfuscation'] = async (
       packet: SerializedEncryptedPacket
     ): Promise<ObfuscatedPacket> => {
@@ -62,7 +64,7 @@ export function createTimeIntervalObfuscationFactory(
           return result
         }
       }
-      throw new Error('Could not deobfuscate data')
+      throw createError('Could not deobfuscate data')
     }
     return freeze({ packetObfuscation: packetObfuscationFn, packetDeobfuscation: packetDeobfuscationFn })
   }

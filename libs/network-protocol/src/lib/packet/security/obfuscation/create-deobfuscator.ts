@@ -1,4 +1,5 @@
 import type { PacketDeobfuscater, SerializedEncryptedPacket, ObfuscatedPacket } from '../../model'
+import { createError } from '@hyperfrontend/immutable-api-utils/built-in-copy/error'
 import { parse } from '@hyperfrontend/immutable-api-utils/built-in-copy/json'
 import { freeze } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
 import { isValidObfuscatedPacket } from '../../validations/is-valid-obfuscated-packet'
@@ -21,20 +22,20 @@ import { isValidObfuscatedPacket } from '../../validations/is-valid-obfuscated-p
 export function createPacketDeobfuscator(decrypt: (encrypted: Uint8Array, password: string) => Promise<string>): PacketDeobfuscater {
   return async (packet: ObfuscatedPacket, password: string): Promise<SerializedEncryptedPacket> => {
     if (!isValidObfuscatedPacket(packet)) {
-      throw new Error('Cannot deobfuscate an invalid packet')
+      throw createError('Cannot deobfuscate an invalid packet')
     }
     let deobfuscated: string
     try {
       deobfuscated = await decrypt(packet, password)
     } catch (e) {
-      throw new Error(`Cannot deobfuscate packet. ${(<Error>e)?.message}`)
+      throw createError(`Cannot deobfuscate packet. ${(<Error>e)?.message}`)
     }
 
     let deserialized: SerializedEncryptedPacket
     try {
       deserialized = parse(deobfuscated)
     } catch {
-      throw new Error('Cannot deobfuscate packet because cannot deserialize decrypted data')
+      throw createError('Cannot deobfuscate packet because cannot deserialize decrypted data')
     }
     return freeze(deserialized)
   }

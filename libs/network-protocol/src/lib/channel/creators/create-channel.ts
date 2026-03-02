@@ -2,6 +2,7 @@ import type { ReceiverFactory } from '../../receiver/model'
 import type { SenderFactory } from '../../sender/model'
 import type { ChannelCreater, Channel } from '../model'
 import { getType } from '@hyperfrontend/data-utils'
+import { createError } from '@hyperfrontend/immutable-api-utils/built-in-copy/error'
 import { freeze } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
 import { withoutValidErrorMessage } from '../utils/without-valid-err-msg'
 import { getFirstInvalidProtocolProperty } from '../validations/get-first-invalid-protocol-property'
@@ -19,21 +20,21 @@ import { isValidSender } from '../validations/is-valid-sender'
 export function createChannelFactory(createSender: SenderFactory, createReceiver: ReceiverFactory): ChannelCreater {
   return (label, sendPacket, receivePacket, protocolProvider) => {
     if (!isValidLabel(label)) {
-      throw new Error(withoutValidErrorMessage('label'))
+      throw createError(withoutValidErrorMessage('label'))
     }
     if (!isValidSender(sendPacket)) {
-      throw new Error(withoutValidErrorMessage('send function'))
+      throw createError(withoutValidErrorMessage('send function'))
     }
     if (!isValidReceiver(receivePacket)) {
-      throw new Error(withoutValidErrorMessage('receive function'))
+      throw createError(withoutValidErrorMessage('receive function'))
     }
     if (getType(protocolProvider) !== 'function') {
-      throw new Error(withoutValidErrorMessage('protocol provider function'))
+      throw createError(withoutValidErrorMessage('protocol provider function'))
     }
     const protocol = protocolProvider(sendPacket, receivePacket)
     const propName = getFirstInvalidProtocolProperty(protocol)
     if (propName) {
-      throw new Error(withoutValidErrorMessage(`${propName} function`))
+      throw createError(withoutValidErrorMessage(`${propName} function`))
     }
     const { send, receive, getLogger, packetEncryption, packetDecryption, packetObfuscation, packetDeobfuscation } = protocol
     const logger = getLogger()

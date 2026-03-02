@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import type { Data } from '../../data/model'
 import type { RoutedUnencryptedPacket } from '../model'
+import { createError } from '@hyperfrontend/immutable-api-utils/built-in-copy/error'
 import { freeze } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
 import { createUnencryptedPacket } from '../../packet/creators/create-unencrypted-packet'
 import { isValidTopicId } from '../../topic/validations/is-valid-topic-id'
@@ -23,7 +24,7 @@ export function createRoutedUnencryptedPacket<T = any>(
   data: Data<T>
 ): RoutedUnencryptedPacket {
   if (!isValidTopicId(topicId)) {
-    throw new Error('Cannot create a routed unencrypted packet without a valid topic')
+    throw createError('Cannot create a routed unencrypted packet without a valid topic')
   }
   const routedPacket: RoutedUnencryptedPacket<T> = {
     topicId,

@@ -1,5 +1,6 @@
 import type { Data } from '../../../data/model'
 import type { PacketEncrypter, UnserializedEncryptedPacket, UnencryptedPacket } from '../../model'
+import { createError } from '@hyperfrontend/immutable-api-utils/built-in-copy/error'
 import { freeze } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
 import { isValidUnencryptedPacket } from '../../validations/is-valid-unencrypted-packet'
 
@@ -23,7 +24,7 @@ import { isValidUnencryptedPacket } from '../../validations/is-valid-unencrypted
 export function createPacketEncrypter<T = unknown>(encryptData: (data: Data<T>, password: string) => Promise<Uint8Array>): PacketEncrypter {
   return async (packet: UnencryptedPacket, password: string): Promise<UnserializedEncryptedPacket> => {
     if (!isValidUnencryptedPacket(packet)) {
-      throw new Error('Cannot encrypt invalid packet')
+      throw createError('Cannot encrypt invalid packet')
     }
     let unserializedEncryptedPacket: UnserializedEncryptedPacket
     try {
@@ -32,7 +33,7 @@ export function createPacketEncrypter<T = unknown>(encryptData: (data: Data<T>, 
         data: await encryptData(packet.data, password),
       }
     } catch (e) {
-      throw new Error(`Cannot encrypt packet. ${(<Error>e)?.message}`)
+      throw createError(`Cannot encrypt packet. ${(<Error>e)?.message}`)
     }
     return freeze(unserializedEncryptedPacket)
   }

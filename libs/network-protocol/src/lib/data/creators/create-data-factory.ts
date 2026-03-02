@@ -1,6 +1,7 @@
 import type { Schema } from '@hyperfrontend/json-utils'
 import type { DataCreater, JSONString, SerializedData } from '../model'
 import { hasCircularReference } from '@hyperfrontend/data-utils'
+import { createError } from '@hyperfrontend/immutable-api-utils/built-in-copy/error'
 import { stringify } from '@hyperfrontend/immutable-api-utils/built-in-copy/json'
 import { freeze } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
 import { uuidV4 } from '@hyperfrontend/random-generator-utils'
@@ -27,34 +28,34 @@ import { getSchema } from './get-schema'
 export function createDataFactory(createHash: (data: string, algorithm: string) => Promise<string>): DataCreater {
   return async <T = unknown>(pid: string, sequence: number, message: T): Promise<SerializedData<T>> => {
     if (!isValidPid(pid)) {
-      throw new Error('Cannot create data without a valid pid')
+      throw createError('Cannot create data without a valid pid')
     }
     if (!isValidSequence(sequence)) {
-      throw new Error('Cannot create data without a valid sequence')
+      throw createError('Cannot create data without a valid sequence')
     }
     if (hasCircularReference(message)) {
-      throw new Error('Cannot create data with a message with circular references')
+      throw createError('Cannot create data with a message with circular references')
     }
     if (!isValidMessage(message)) {
-      throw new Error('Cannot create data without a valid message')
+      throw createError('Cannot create data without a valid message')
     }
     let serialized: JSONString<T>
     try {
       serialized = <JSONString<T>>stringify(message)
     } /* istanbul ignore next - covered by hasCircularReference check above */ catch {
-      throw new Error('Cannot create data with unserializable message')
+      throw createError('Cannot create data with unserializable message')
     }
     let schema: Schema
     try {
       schema = getSchema(message)
     } catch {
-      throw new Error('Cannot create data because failed to create a schema')
+      throw createError('Cannot create data because failed to create a schema')
     }
     let schemaHash: string
     try {
       schemaHash = await createHash(stringify(schema), 'SHA-256')
     } /* istanbul ignore next - hash failure would indicate system-level crypto issues */ catch {
-      throw new Error('Cannot create data because failed to hash schema')
+      throw createError('Cannot create data because failed to hash schema')
     }
     const id = uuidV4()
     const key = uuidV4()

@@ -4,6 +4,7 @@ import type { ProtocolProvider, Protocol } from '../../../channel/model'
 import type { PacketEncrypter, PacketDecrypter } from '../../../packet/model'
 import type { ReceivePacketFn } from '../../../receiver/model'
 import type { ObfuscationSuite } from '../../../security/model'
+import { createError } from '@hyperfrontend/immutable-api-utils/built-in-copy/error'
 import { freeze } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
 import { isValidLogger } from '@hyperfrontend/logging'
 import { createPSKHandshakeEncryptionFactory } from '../../../packet/security/encryption/psk-handshake-encryption-key'
@@ -44,21 +45,21 @@ export function createPSKHandshakeProtocolFactory<T = any>(
 
   return (logger: Logger, sharedKey: string, refreshRate = 1): ProtocolProvider<T> => {
     if (!isValidLogger(logger)) {
-      throw new Error('Cannot create protocol provider without a valid logger')
+      throw createError('Cannot create protocol provider without a valid logger')
     }
     if (!sharedKey || typeof sharedKey !== 'string') {
-      throw new Error('Cannot create protocol provider without a valid shared key')
+      throw createError('Cannot create protocol provider without a valid shared key')
     }
     if (!isValidRefreshRate(refreshRate)) {
-      throw new Error('Cannot create protocol provider without a valid refresh rate')
+      throw createError('Cannot create protocol provider without a valid refresh rate')
     }
 
     const protocolProvider: ProtocolProvider<T> = (...args) => {
       if (!isValidSendFn(args[0])) {
-        throw new Error('Cannot create protocol without a valid send function')
+        throw createError('Cannot create protocol without a valid send function')
       }
       if (!isValidReceiveFn(args[1])) {
-        throw new Error('Cannot create protocol without a valid receive function')
+        throw createError('Cannot create protocol without a valid receive function')
       }
 
       // Dynamic key capture - same as V1

@@ -1,5 +1,6 @@
 import type { UnencryptedPacket, UnserializedEncryptedPacket } from '../../packet/model'
 import type { EncryptionQueueCreater } from '../model'
+import { createError } from '@hyperfrontend/immutable-api-utils/built-in-copy/error'
 import { isValidUnencryptedPacket } from '../../packet/validations/is-valid-unencrypted-packet'
 import { isValidUnserializedEncryptedPacket } from '../../packet/validations/is-valid-unserialized-encrypted-packet'
 import { getValidationError } from '../utils/get-validation-error'
@@ -16,7 +17,7 @@ export const createEncryptionQueue: EncryptionQueueCreater = (label, packetEncry
   })
   const errorMessage = getValidationError('encryption', validity)
   if (errorMessage) {
-    throw new Error(errorMessage)
+    throw createError(errorMessage)
   }
   const { debug, error } = logger
   const process = async (raw: UnencryptedPacket): Promise<void> => {

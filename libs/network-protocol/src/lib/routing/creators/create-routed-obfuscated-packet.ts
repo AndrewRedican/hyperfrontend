@@ -1,5 +1,6 @@
 import type { ObfuscatedPacket } from '../../packet/model'
 import type { RoutedObfuscatedPacket } from '../model'
+import { createError } from '@hyperfrontend/immutable-api-utils/built-in-copy/error'
 import { freeze } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
 import { isValidObfuscatedPacket } from '../../packet/validations/is-valid-obfuscated-packet'
 import { isValidTopicId } from '../../topic/validations/is-valid-topic-id'
@@ -15,10 +16,10 @@ import { isValidTopicId } from '../../topic/validations/is-valid-topic-id'
  */
 export function createRoutedObfuscatedPacket(topicId: string, packet: ObfuscatedPacket): RoutedObfuscatedPacket {
   if (!isValidTopicId(topicId)) {
-    throw new Error('Cannot create a routed obfuscated packet without a valid topic')
+    throw createError('Cannot create a routed obfuscated packet without a valid topic')
   }
   if (!isValidObfuscatedPacket(packet)) {
-    throw new Error('Cannot create a routed obfuscated packet without a valid obfuscated packet')
+    throw createError('Cannot create a routed obfuscated packet without a valid obfuscated packet')
   }
   return freeze({
     topicId,

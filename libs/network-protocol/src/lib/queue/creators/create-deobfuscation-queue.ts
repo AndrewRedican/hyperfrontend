@@ -1,5 +1,6 @@
 import type { ObfuscatedPacket, SerializedEncryptedPacket } from '../../packet/model'
 import type { DeobfuscationQueueCreater } from '../model'
+import { createError } from '@hyperfrontend/immutable-api-utils/built-in-copy/error'
 import { isValidObfuscatedPacket } from '../../packet/validations/is-valid-obfuscated-packet'
 import { isValidSerializedEncryptedPacket } from '../../packet/validations/is-valid-serialized-encrypted-packet'
 import { getValidationError } from '../utils/get-validation-error'
@@ -16,7 +17,7 @@ export const createDeobfuscationQueue: DeobfuscationQueueCreater = (label, packe
   })
   const errorMessage = getValidationError('deobfuscation', validity)
   if (errorMessage) {
-    throw new Error(errorMessage)
+    throw createError(errorMessage)
   }
   const { debug, log, warn, error } = logger
   const process = async (raw: ObfuscatedPacket): Promise<void> => {
