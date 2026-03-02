@@ -1,6 +1,6 @@
 {
   "name": "@hyperfrontend/time-utils",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "Functional time utilities for async operations, intervals, and time normalization.",
   "license": "MIT",
   "sideEffects": false,
@@ -31,6 +31,6 @@
     "./package.json": "./package.json"
   },
   "dependencies": {
-    "@hyperfrontend/immutable-api-utils": "0.0.2"
+    "@hyperfrontend/immutable-api-utils": "0.1.0"
   }
 }

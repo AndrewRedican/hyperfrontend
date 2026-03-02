@@ -2,6 +2,13 @@
 
 This file was generated using [@jscutlery/semver](https://github.com/jscutlery/semver).
 
+## [0.0.5](https://github.com/AndrewRedican/hyperfrontend/compare/lib-cryptography@0.0.4...lib-cryptography@0.0.5) (2026-03-02)
+
+
+### Bug Fixes
+
+* **lib-cryptography:** correct package exports ([651fae9](https://github.com/AndrewRedican/hyperfrontend/commit/651fae94622e6300f6351216f3be342aaa9e4962))
+
 ## [0.0.2](https://github.com/AndrewRedican/hyperfrontend/compare/lib-cryptography@0.0.1...lib-cryptography@0.0.2) (2026-02-26)
 
 ## 0.0.1 (2026-02-15)

@@ -1,6 +1,6 @@
 {
   "name": "@hyperfrontend/cryptography",
-  "version": "0.0.2",
+  "version": "0.0.5",
   "description": "Cryptography utilities for browser and Node.js environments.",
   "license": "MIT",
   "sideEffects": false,
@@ -35,11 +35,11 @@
     "security"
   ],
   "dependencies": {
-    "@hyperfrontend/data-utils": "0.0.2",
-    "@hyperfrontend/random-generator-utils": "0.0.2",
-    "@hyperfrontend/string-utils": "0.0.2",
-    "@hyperfrontend/time-utils": "0.0.2",
-    "@hyperfrontend/immutable-api-utils": "0.0.2"
+    "@hyperfrontend/data-utils": "0.0.4",
+    "@hyperfrontend/random-generator-utils": "0.0.4",
+    "@hyperfrontend/string-utils": "0.0.3",
+    "@hyperfrontend/time-utils": "0.0.3",
+    "@hyperfrontend/immutable-api-utils": "0.1.0"
   },
   "funding": {
     "type": "github",

@@ -1,6 +1,6 @@
 {
   "name": "@hyperfrontend/nexus",
-  "version": "0.1.3",
+  "version": "1.0.0",
   "description": "Cross-window communication library for micro-frontends with secure messaging, state management, and contract validation.",
   "license": "MIT",
   "sideEffects": false,
@@ -32,14 +32,14 @@
     "event-driven"
   ],
   "dependencies": {
-    "@hyperfrontend/data-utils": "0.0.2",
-    "@hyperfrontend/immutable-api-utils": "0.0.2",
-    "@hyperfrontend/json-utils": "0.0.2",
-    "@hyperfrontend/logging": "0.0.2",
-    "@hyperfrontend/random-generator-utils": "0.0.2"
+    "@hyperfrontend/data-utils": "0.0.4",
+    "@hyperfrontend/immutable-api-utils": "0.1.0",
+    "@hyperfrontend/json-utils": "0.0.4",
+    "@hyperfrontend/logging": "0.0.4",
+    "@hyperfrontend/random-generator-utils": "0.0.4"
   },
   "peerDependencies": {
-    "@hyperfrontend/network-protocol": "0.0.4"
+    "@hyperfrontend/network-protocol": "0.0.5"
   },
   "peerDependenciesMeta": {
     "@hyperfrontend/network-protocol": {
