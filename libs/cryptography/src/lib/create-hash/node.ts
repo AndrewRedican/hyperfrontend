@@ -1,5 +1,6 @@
 import type { HashAlgorithm } from './model'
 import { createHash as _createHash } from 'node:crypto'
+import { createError } from '@hyperfrontend/immutable-api-utils/built-in-copy/error'
 import { createPromise } from '@hyperfrontend/immutable-api-utils/built-in-copy/promise'
 
 /**
@@ -16,7 +17,7 @@ export async function createHash(data: string, algorithm: HashAlgorithm = 'SHA-2
       const hash = _createHash(algorithm).update(data).digest('hex')
       resolve(hash)
     } catch {
-      reject(new Error('Error creating hash'))
+      reject(createError('Error creating hash'))
     }
   })
 }

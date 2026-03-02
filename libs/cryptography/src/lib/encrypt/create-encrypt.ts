@@ -1,3 +1,4 @@
+import { createError } from '@hyperfrontend/immutable-api-utils/built-in-copy/error'
 import { encryptionConfig } from '../encryption-config'
 
 /**
@@ -18,10 +19,10 @@ export function createEncrypt(
 ): (message: string, password: string) => Promise<Uint8Array> {
   return async function encrypt(message, password) {
     if (!message) {
-      throw new Error('Cannot encrypt an empty message.')
+      throw createError('Cannot encrypt an empty message.')
     }
     if (!password) {
-      throw new Error('Cannot encrypt without a password.')
+      throw createError('Cannot encrypt without a password.')
     }
     const salt = getRandomValues(16)
     const iv = getRandomValues(12)

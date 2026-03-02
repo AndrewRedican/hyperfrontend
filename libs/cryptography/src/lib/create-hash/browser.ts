@@ -1,5 +1,6 @@
 import type { HashAlgorithm } from './model'
 import { from } from '@hyperfrontend/immutable-api-utils/built-in-copy/array'
+import { createError } from '@hyperfrontend/immutable-api-utils/built-in-copy/error'
 import { utf8StringToUint8Array } from '@hyperfrontend/string-utils/browser'
 import { subtle } from '../subtle/browser'
 
@@ -17,6 +18,6 @@ export async function createHash(data: string, algorithm: HashAlgorithm = 'SHA-2
       .map((b) => b.toString(16).padStart(2, '0'))
       .join('')
   } catch {
-    throw new Error('Error creating hash')
+    throw createError('Error creating hash')
   }
 }
