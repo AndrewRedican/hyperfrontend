@@ -1,10 +1,11 @@
 import type { Action, State } from '../models'
 import type { Listener } from './store.model'
+import { createSet } from '@hyperfrontend/immutable-api-utils/built-in-copy/set'
 import { rootReducer } from '../reducer/reducer'
 
 export class Store {
   private state = rootReducer(void 0, { type: '' })
-  private listeners = new Set<Listener>()
+  private listeners = createSet<Listener>()
 
   readonly dispatch = (action: Action): void => {
     this.state = rootReducer(this.state, action)

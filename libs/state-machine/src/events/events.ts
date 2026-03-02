@@ -1,6 +1,7 @@
 import type { Event, DerivedState } from '../models'
 import type { StateChangeHandler } from '../state-change/state-change.model'
 import type { DataPointSelector, EventHandler } from './events.model'
+import { createSet } from '@hyperfrontend/immutable-api-utils/built-in-copy/set'
 import { event } from '../models'
 import { derivedState } from '../selectors'
 import { StateChange } from '../state-change'
@@ -9,7 +10,7 @@ import { Store } from '../store/store'
 export class Events {
   private readonly store = new Store()
   private readonly change = new StateChange()
-  private readonly eventHandlers = new Set<[Event, EventHandler]>()
+  private readonly eventHandlers = createSet<[Event, EventHandler]>()
 
   constructor() {
     this.change.registerCallback(this.onStateChange)
