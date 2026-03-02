@@ -1,4 +1,5 @@
 import { createError } from '@hyperfrontend/immutable-api-utils/built-in-copy/error'
+import { createUint8Array } from '@hyperfrontend/immutable-api-utils/built-in-copy/typed-arrays'
 import { encryptionConfig } from '../encryption-config'
 
 /**
@@ -32,8 +33,8 @@ export function createEncrypt(
       key,
       <BufferSource>utf8StringToUint8Array(message)
     )
-    const buffer = new Uint8Array(encryptedContent)
-    const result = new Uint8Array(salt.byteLength + iv.byteLength + buffer.byteLength)
+    const buffer = createUint8Array(encryptedContent)
+    const result = createUint8Array(salt.byteLength + iv.byteLength + buffer.byteLength)
     result.set(salt, 0)
     result.set(iv, salt.byteLength)
     result.set(buffer, salt.byteLength + iv.byteLength)

@@ -1,5 +1,6 @@
 import { randomBytes } from 'node:crypto'
 import { createError } from '@hyperfrontend/immutable-api-utils/built-in-copy/error'
+import { createUint8Array } from '@hyperfrontend/immutable-api-utils/built-in-copy/typed-arrays'
 
 /**
  * Generates cryptographically secure random values using Node.js crypto module.
@@ -12,5 +13,5 @@ export function getRandomValues(byteLength: number): Uint8Array {
   if (!byteLength) {
     throw createError('Cannot generate random values without a byte length.')
   }
-  return new Uint8Array(randomBytes(byteLength))
+  return createUint8Array(randomBytes(byteLength))
 }
