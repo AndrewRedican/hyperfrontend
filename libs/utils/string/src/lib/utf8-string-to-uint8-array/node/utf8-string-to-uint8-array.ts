@@ -1,3 +1,5 @@
+import { createUint8Array } from '@hyperfrontend/immutable-api-utils/built-in-copy/typed-arrays'
+
 /**
  * Converts a UTF-8 string to a Uint8Array (Node.js implementation).
  *
@@ -5,5 +7,5 @@
  * @returns The encoded Uint8Array
  */
 export function utf8StringToUint8Array(text: string): Uint8Array {
-  return new Uint8Array(Buffer.from(text, 'utf8'))
+  return createUint8Array(Buffer.from(text, 'utf8'))
 }

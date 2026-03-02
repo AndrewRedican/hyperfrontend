@@ -1,3 +1,5 @@
+import { createUint8Array } from '@hyperfrontend/immutable-api-utils/built-in-copy/typed-arrays'
+
 /**
  * Converts a Latin-1 "binary string" to Uint8Array.
  *
@@ -7,7 +9,7 @@
  * @returns A Uint8Array containing the byte values from the string
  */
 export function binaryStringToBytes(binaryStr: string) {
-  const bytes = new Uint8Array(binaryStr.length)
+  const bytes = createUint8Array(binaryStr.length)
   for (let i = 0; i < binaryStr.length; i += 1) {
     bytes[i] = binaryStr.charCodeAt(i)
   }

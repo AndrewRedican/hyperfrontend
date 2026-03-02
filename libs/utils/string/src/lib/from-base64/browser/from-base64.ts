@@ -1,3 +1,4 @@
+import { atob, createTextDecoder } from '@hyperfrontend/immutable-api-utils/built-in-copy/encoding'
 import { binaryStringToBytes } from '../../utils/binary-string-to-bytes'
 import { urlSafeBase64ToBase64 } from '../../utils/url-safe-base64-to-base64'
 
@@ -9,5 +10,5 @@ import { urlSafeBase64ToBase64 } from '../../utils/url-safe-base64-to-base64'
  * @returns The decoded UTF-8 string
  */
 export function fromBase64(base64: string): string {
-  return new TextDecoder().decode(binaryStringToBytes(atob(urlSafeBase64ToBase64(base64))))
+  return createTextDecoder().decode(binaryStringToBytes(atob(urlSafeBase64ToBase64(base64))))
 }

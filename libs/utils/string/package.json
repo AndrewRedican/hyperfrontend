@@ -26,6 +26,9 @@
     "text-encoder",
     "binary-data"
   ],
+  "dependencies": {
+    "@hyperfrontend/immutable-api-utils": "0.0.2"
+  },
   "exports": {
     "./browser": "./src/browser/index.js",
     "./node": "./src/node/index.js",
