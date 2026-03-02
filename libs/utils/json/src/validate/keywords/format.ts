@@ -1,5 +1,7 @@
 import type { Schema } from '../../types/schema'
 import type { ValidationContext } from '../context'
+import { createDate, dateParse, dateUTC } from '@hyperfrontend/immutable-api-utils/built-in-copy/date'
+import { createRegExp } from '@hyperfrontend/immutable-api-utils/built-in-copy/regexp'
 import { addError } from '../context'
 
 /**
@@ -9,7 +11,7 @@ const formatValidators: Record<string, (value: string) => boolean> = {
   'date-time': (v) => {
     // ISO 8601 date-time format - anchored to prevent matching at unexpected locations
     if (!/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}/.test(v)) return false
-    const date = Date.parse(v)
+    const date = dateParse(v)
     return !isNaN(date)
   },
 
@@ -17,7 +19,7 @@ const formatValidators: Record<string, (value: string) => boolean> = {
     // ISO 8601 date format (YYYY-MM-DD)
     if (!/^\d{4}-\d{2}-\d{2}$/.test(v)) return false
     const [year, month, day] = v.split('-').map(Number)
-    const date = new Date(Date.UTC(year, month - 1, day))
+    const date = createDate(dateUTC(year, month - 1, day))
     // Check that the date components match exactly
     return date.getUTCFullYear() === year && date.getUTCMonth() === month - 1 && date.getUTCDate() === day
   },
@@ -91,7 +93,7 @@ const formatValidators: Record<string, (value: string) => boolean> = {
   regex: (v) => {
     // Valid regex pattern
     try {
-      new RegExp(v)
+      createRegExp(v)
       return true
     } catch {
       return false

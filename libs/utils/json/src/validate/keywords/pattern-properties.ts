@@ -1,6 +1,7 @@
 import type { Schema } from '../../types/schema'
 import type { ValidationContext } from '../context'
 import { entries, keys } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
+import { createRegExp } from '@hyperfrontend/immutable-api-utils/built-in-copy/regexp'
 import { addError, pushPath, shouldContinue } from '../context'
 
 /**
@@ -22,7 +23,7 @@ export function validatePatternProperties(instance: Record<string, unknown>, sch
   // Pre-compile all patterns
   for (const [pattern, patternSchema] of entries(schema.patternProperties)) {
     try {
-      patterns.push({ regex: new RegExp(pattern), schema: patternSchema })
+      patterns.push({ regex: createRegExp(pattern), schema: patternSchema })
     } catch (e) {
       // Invalid regex
       /* istanbul ignore next -- strictPatterns mode verified in validate.spec.ts */

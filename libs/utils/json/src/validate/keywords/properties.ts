@@ -1,6 +1,8 @@
 import type { Schema } from '../../types/schema'
 import type { ValidationContext } from '../context'
 import { entries, keys, hasOwn } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
+import { createRegExp } from '@hyperfrontend/immutable-api-utils/built-in-copy/regexp'
+import { createSet } from '@hyperfrontend/immutable-api-utils/built-in-copy/set'
 import { addError, pushPath, shouldContinue } from '../context'
 
 /**
@@ -71,7 +73,7 @@ export function validateAdditionalProperties(instance: Record<string, unknown>, 
 
   /* istanbul ignore next -- definedKeys initialization */
   // Collect defined property names
-  const definedKeys = new Set<string>()
+  const definedKeys = createSet<string>()
 
   /* istanbul ignore next -- schema.properties may not exist */
   if (schema.properties) {
@@ -86,7 +88,7 @@ export function validateAdditionalProperties(instance: Record<string, unknown>, 
   if (schema.patternProperties) {
     for (const pattern of keys(schema.patternProperties)) {
       try {
-        patterns.push(new RegExp(pattern))
+        patterns.push(createRegExp(pattern))
         /* istanbul ignore next -- invalid regex patterns handled in patternProperties validator */
       } catch {
         // Invalid regex, skip

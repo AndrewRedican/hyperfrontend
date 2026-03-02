@@ -1,6 +1,8 @@
 import type { Schema, JsonType } from '../types/schema'
 import { isArray } from '@hyperfrontend/immutable-api-utils/built-in-copy/array'
+import { createMap } from '@hyperfrontend/immutable-api-utils/built-in-copy/map'
 import { keys, entries } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
+import { createSet } from '@hyperfrontend/immutable-api-utils/built-in-copy/set'
 
 /**
  * Merges multiple schemas into a single unified schema.
@@ -20,7 +22,7 @@ export function mergeSchemas(schemas: Schema[]): Schema {
   }
 
   // Group schemas by type
-  const typeGroups = new Map<JsonType | 'mixed', Schema[]>()
+  const typeGroups = createMap<JsonType | 'mixed', Schema[]>()
 
   for (const schema of schemas) {
     const type = <JsonType | undefined>schema.type
@@ -42,7 +44,7 @@ export function mergeSchemas(schemas: Schema[]): Schema {
 
   /* istanbul ignore next -- multiple type groups is an edge case */
   // Multiple types - use anyOf or a type array
-  const uniqueTypes = new Set<JsonType>()
+  const uniqueTypes = createSet<JsonType>()
   for (const schema of schemas) {
     /* istanbul ignore else -- schema.type always exists in common case */
     if (schema.type) {

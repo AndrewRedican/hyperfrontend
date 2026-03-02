@@ -1,5 +1,6 @@
 import type { Schema } from '../../types/schema'
 import type { ValidationContext } from '../context'
+import { createRegExp } from '@hyperfrontend/immutable-api-utils/built-in-copy/regexp'
 import { addError, shouldContinue } from '../context'
 
 /**
@@ -33,7 +34,7 @@ export function validateStringBounds(instance: string, schema: Schema, ctx: Vali
 
   if (schema.pattern !== undefined) {
     try {
-      const regex = new RegExp(schema.pattern)
+      const regex = createRegExp(schema.pattern)
       if (!regex.test(instance)) {
         addError(ctx, `String does not match pattern: ${schema.pattern}`, instance, 'pattern', {
           pattern: schema.pattern,

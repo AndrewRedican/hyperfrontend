@@ -1,6 +1,7 @@
 import type { Schema } from '../types/schema'
 import { stringify } from '@hyperfrontend/immutable-api-utils/built-in-copy/json'
 import { keys } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
+import { createSet } from '@hyperfrontend/immutable-api-utils/built-in-copy/set'
 import { mergeSchemas } from './merge-schemas'
 import { getJsonType } from './type-detection'
 
@@ -209,7 +210,7 @@ function generateArraySchema(arr: unknown[], options: Required<GenerateOptions>)
  * @returns Array of unique schemas
  */
 function deduplicateSchemas(schemas: Schema[]): Schema[] {
-  const seen = new Set<string>()
+  const seen = createSet<string>()
   const unique: Schema[] = []
 
   for (const schema of schemas) {
