@@ -1,6 +1,6 @@
 {
   "name": "@hyperfrontend/data-utils",
-  "version": "0.0.4",
+  "version": "0.0.3",
   "description": "Data manipulation and transformation utilities.",
   "license": "MIT",
   "sideEffects": false,

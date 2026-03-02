@@ -42,9 +42,9 @@
   },
   "dependencies": {
     "@hyperfrontend/function-utils": "0.0.3",
-    "@hyperfrontend/random-generator-utils": "0.0.4",
+    "@hyperfrontend/random-generator-utils": "0.0.3",
     "@hyperfrontend/list-utils": "0.0.3",
-    "@hyperfrontend/data-utils": "0.0.4",
+    "@hyperfrontend/data-utils": "0.0.3",
     "@hyperfrontend/immutable-api-utils": "0.1.0"
   },
   "funding": {

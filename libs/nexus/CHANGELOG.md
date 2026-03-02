@@ -2,7 +2,7 @@
 
 This file was generated using [@jscutlery/semver](https://github.com/jscutlery/semver).
 
-## [1.0.0](https://github.com/AndrewRedican/hyperfrontend/compare/lib-nexus@0.1.3...lib-nexus@1.0.0) (2026-03-02)
+## [1.0.0](https://github.com/AndrewRedican/hyperfrontend/compare/lib-nexus@0.1.1...lib-nexus@1.0.0) (2026-03-02)
 
 
 ### ⚠ BREAKING CHANGES
