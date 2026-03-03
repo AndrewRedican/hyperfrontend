@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react'
 import mermaid from 'mermaid'
+import { logger } from '@hyperfrontend/logging'
 
 // Initialize mermaid with theme configuration
 mermaid.initialize({
@@ -55,7 +56,7 @@ export function MermaidDiagram({ chart, className = '' }: MermaidDiagramProps) {
         setSvg(svg)
         setError(null)
       } catch (err) {
-        console.error('Mermaid rendering error:', err)
+        logger.error('Mermaid rendering error:', err)
         setError('Failed to render diagram')
       }
     }

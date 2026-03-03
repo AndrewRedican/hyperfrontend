@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { logger } from '@hyperfrontend/logging'
 
 interface ExampleBlockProps {
   code: string
@@ -30,7 +31,7 @@ export function ExampleBlock({ code }: ExampleBlockProps) {
       setCopied(true)
     } catch {
       // Fallback for browsers that don't support clipboard API
-      console.warn('Copy to clipboard failed')
+      logger.warn('Copy to clipboard failed')
     }
   }
 

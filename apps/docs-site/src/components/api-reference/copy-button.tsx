@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
+import { logger } from '@hyperfrontend/logging'
 
 interface CopyButtonProps {
   text: string
@@ -41,7 +42,7 @@ export function CopyButton({ text, className = '', size = 'sm' }: CopyButtonProp
         document.execCommand('copy')
         setCopied(true)
       } catch {
-        console.warn('Copy to clipboard failed')
+        logger.warn('Copy to clipboard failed')
       }
       document.body.removeChild(textArea)
     }
