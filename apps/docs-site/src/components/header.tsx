@@ -1,6 +1,6 @@
 import Link from 'next/link'
-import { ThemeToggle } from './theme-toggle'
 import { MobileMenu } from './mobile-menu'
+import { ThemeToggle } from './theme-toggle'
 
 export function Header() {
   return (

@@ -1,11 +1,11 @@
 'use client'
 
 import type { TypeDocNode } from './types'
-import { renderType, getDescription, getReturnsDescription, getExamples, getParamDescriptions } from './type-utils'
-import { ParameterList } from './parameter-list'
-import { ExampleBlock } from './example-block'
-import { TypeLink } from './type-link'
 import { CopyButton } from './copy-button'
+import { ExampleBlock } from './example-block'
+import { ParameterList } from './parameter-list'
+import { TypeLink } from './type-link'
+import { renderType, getDescription, getReturnsDescription, getExamples, getParamDescriptions } from './type-utils'
 
 interface FunctionSignatureProps {
   node: TypeDocNode

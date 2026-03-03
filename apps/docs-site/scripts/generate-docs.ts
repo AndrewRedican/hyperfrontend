@@ -2,6 +2,12 @@
 import { execFileSync } from 'node:child_process'
 import { existsSync, readFileSync, mkdirSync, writeFileSync } from 'node:fs'
 import { resolve, join, dirname } from 'node:path'
+import { log } from '@hyperfrontend/immutable-api-utils/built-in-copy/console'
+import { createDate } from '@hyperfrontend/immutable-api-utils/built-in-copy/date'
+import { parse, stringify } from '@hyperfrontend/immutable-api-utils/built-in-copy/json'
+import { entries } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
+import { createRegExp } from '@hyperfrontend/immutable-api-utils/built-in-copy/regexp'
+import { createSet } from '@hyperfrontend/immutable-api-utils/built-in-copy/set'
 
 const WORKSPACE_ROOT = resolve(__dirname, '../../..')
 const OUTPUT_DIR = resolve(__dirname, '../.generated')
@@ -35,16 +41,16 @@ function discoverEntryPointsFromPackageJson(libPath: string): string[] {
   const packageJsonPath = join(libPath, 'package.json')
 
   if (!existsSync(packageJsonPath)) {
-    console.log(`  ⚠ No package.json found at ${libPath}`)
+    log(`  ⚠ No package.json found at ${libPath}`)
     return []
   }
 
-  const packageJson: PackageJson = JSON.parse(readFileSync(packageJsonPath, 'utf-8'))
+  const packageJson: PackageJson = parse(readFileSync(packageJsonPath, 'utf-8'))
   const entryPoints: string[] = []
 
   // First try exports field (modern packages)
   if (packageJson.exports && typeof packageJson.exports === 'object') {
-    for (const [, exportValue] of Object.entries(packageJson.exports)) {
+    for (const [, exportValue] of entries(packageJson.exports)) {
       // Handle direct string exports: "./browser": "./src/browser/index.js"
       if (typeof exportValue === 'string') {
         const tsPath = convertJsPathToTs(exportValue)
@@ -75,7 +81,7 @@ function discoverEntryPointsFromPackageJson(libPath: string): string[] {
     }
   }
 
-  return [...new Set(entryPoints)] // Deduplicate
+  return [...createSet(entryPoints)] // Deduplicate
 }
 
 /**
@@ -89,6 +95,11 @@ function convertJsPathToTs(jsPath: string): string | null {
 
   // Remove leading ./
   let normalized = jsPath.replace(/^\.\//, '')
+
+  // Skip non-source files (e.g., package.json exports)
+  if (normalized.endsWith('.json')) {
+    return null
+  }
 
   // Convert .js to .ts
   if (normalized.endsWith('.js')) {
@@ -220,9 +231,9 @@ function transformLinks(content: string, sourceContext: 'root' | 'library', libr
     'FUNDING.md': 'https://github.com/AndrewRedican/hyperfrontend/blob/main/FUNDING.md',
   }
 
-  for (const [file, url] of Object.entries(rootDocMappings)) {
+  for (const [file, url] of entries(rootDocMappings)) {
     // Match [text](README.md) or [text](./README.md)
-    const pattern = new RegExp(`\\]\\(\\.?\\/?${file.replace('.', '\\.')}\\)`, 'g')
+    const pattern = createRegExp(`\\]\\(\\.?\\/?${file.replace('.', '\\.')}\\)`, 'g')
     transformed = transformed.replace(pattern, `](${url})`)
   }
 
@@ -236,8 +247,8 @@ function transformLinks(content: string, sourceContext: 'root' | 'library', libr
   )
 
   // Transform libs/X/ARCHITECTURE.md links to library pages
-  for (const [libName, slug] of Object.entries(LIBRARY_SLUGS)) {
-    const archPattern = new RegExp(`\\]\\(libs/${libName}/ARCHITECTURE\\.md(#[^)]*)?\\)`, 'g')
+  for (const [libName, slug] of entries(LIBRARY_SLUGS)) {
+    const archPattern = createRegExp(`\\]\\(libs/${libName}/ARCHITECTURE\\.md(#[^)]*)?\\)`, 'g')
     transformed = transformed.replace(archPattern, `](/docs/libraries/${slug}$1)`)
   }
 
@@ -264,7 +275,7 @@ function extractReadme(lib: LibraryConfig): { content: string; exists: boolean }
   const readmePath = join(WORKSPACE_ROOT, lib.srcPath, 'README.md')
 
   if (!existsSync(readmePath)) {
-    console.log(`  ⚠ No README.md found for ${lib.name}`)
+    log(`  ⚠ No README.md found for ${lib.name}`)
     return { content: '', exists: false }
   }
 
@@ -309,7 +320,7 @@ function generateTypeDoc(lib: LibraryConfig): boolean {
   const discoveredEntryPoints = discoverEntryPointsFromPackageJson(libPath)
 
   if (discoveredEntryPoints.length === 0) {
-    console.log(`  ⚠ No entry points found for ${lib.name}`)
+    log(`  ⚠ No entry points found for ${lib.name}`)
     return false
   }
 
@@ -318,8 +329,8 @@ function generateTypeDoc(lib: LibraryConfig): boolean {
   // Verify all entry points exist
   const missingEntryPoints = entryPoints.filter((ep) => !existsSync(ep))
   if (missingEntryPoints.length > 0) {
-    console.log(`  ⚠ Missing entry points for ${lib.name}:`)
-    missingEntryPoints.forEach((ep) => console.log(`      - ${ep}`))
+    log(`  ⚠ Missing entry points for ${lib.name}:`)
+    missingEntryPoints.forEach((ep) => log(`      - ${ep}`))
     return false
   }
 
@@ -340,12 +351,12 @@ function generateTypeDoc(lib: LibraryConfig): boolean {
 
     args.push(...entryPoints)
 
-    console.log(`  → Running TypeDoc for ${lib.name} (${discoveredEntryPoints.length} entry points)`)
+    log(`  → Running TypeDoc for ${lib.name} (${discoveredEntryPoints.length} entry points)`)
     execFileSync('npx', args, { cwd: WORKSPACE_ROOT, stdio: 'pipe' })
     return true
   } catch (error) {
     const errorMsg = error instanceof Error ? error.message : String(error)
-    console.log(`  ⚠ TypeDoc failed for ${lib.name}: ${errorMsg.slice(0, 200)}`)
+    log(`  ⚠ TypeDoc failed for ${lib.name}: ${errorMsg.slice(0, 200)}`)
     return false
   }
 }
@@ -364,7 +375,7 @@ interface LibraryDoc {
  * Main documentation generation function that processes all libraries
  */
 function generateDocs() {
-  console.log('📚 Generating documentation...\n')
+  log('📚 Generating documentation...\n')
 
   // Ensure output directories exist
   ensureDir(OUTPUT_DIR)
@@ -374,7 +385,7 @@ function generateDocs() {
   const libraryDocs: LibraryDoc[] = []
 
   for (const lib of LIBRARIES) {
-    console.log(`📦 Processing ${lib.name}...`)
+    log(`📦 Processing ${lib.name}...`)
 
     // Extract README
     const readme = extractReadme(lib)
@@ -409,32 +420,32 @@ function generateDocs() {
       hasApi,
     })
 
-    console.log('')
+    log('')
   }
 
   // Extract root architecture document
-  console.log('📐 Processing root ARCHITECTURE.md...')
+  log('📐 Processing root ARCHITECTURE.md...')
   const rootArchPath = join(WORKSPACE_ROOT, 'ARCHITECTURE.md')
   if (existsSync(rootArchPath)) {
     const archContent = readFileSync(rootArchPath, 'utf-8')
     const transformedArchContent = transformLinks(archContent, 'root')
     writeFileSync(join(DOCS_OUTPUT, 'architecture.md'), transformedArchContent)
-    console.log('  ✓ Root architecture document extracted\n')
+    log('  ✓ Root architecture document extracted\n')
   }
 
   // Extract CONTRIBUTING.md
-  console.log('📝 Processing CONTRIBUTING.md...')
+  log('📝 Processing CONTRIBUTING.md...')
   const contributingPath = join(WORKSPACE_ROOT, 'CONTRIBUTING.md')
   if (existsSync(contributingPath)) {
     const contributingContent = readFileSync(contributingPath, 'utf-8')
     const transformedContributingContent = transformLinks(contributingContent, 'root')
     writeFileSync(join(DOCS_OUTPUT, 'contributing.md'), transformedContributingContent)
-    console.log('  ✓ Contributing guide extracted\n')
+    log('  ✓ Contributing guide extracted\n')
   }
 
   // Write manifest
   const manifest = {
-    generatedAt: new Date().toISOString(),
+    generatedAt: createDate().toISOString(),
     libraries: libraryDocs,
     rootDocs: {
       architecture: existsSync(join(DOCS_OUTPUT, 'architecture.md')),
@@ -442,10 +453,10 @@ function generateDocs() {
     },
   }
 
-  writeFileSync(join(OUTPUT_DIR, 'manifest.json'), JSON.stringify(manifest, null, 2))
+  writeFileSync(join(OUTPUT_DIR, 'manifest.json'), stringify(manifest, null, 2))
 
-  console.log('✅ Documentation generation complete!')
-  console.log(`   Output: ${OUTPUT_DIR}`)
+  log('✅ Documentation generation complete!')
+  log(`   Output: ${OUTPUT_DIR}`)
 }
 
 // Run if executed directly

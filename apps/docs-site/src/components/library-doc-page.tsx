@@ -1,11 +1,12 @@
+import type { TypeDocOutput } from '@/components/api-reference'
+import { ApiReference } from '@/components/api-reference'
 import { Breadcrumb } from '@/components/breadcrumb'
+import { removeBadges, transformLinks } from '@/lib/content'
 import { getLibraryReadme, getLibraryArchitecture, getLibraryApi } from '@/lib/docs-loader'
 import { markdownToHtml } from '@/lib/markdown'
 import { extractMermaidBlocks } from '@/lib/mermaid-utils'
-import { removeBadges, transformLinks } from '@/lib/content'
 import Link from 'next/link'
 import { ReadmeContent } from './readme-content'
-import { ApiReference, type TypeDocOutput } from '@/components/api-reference'
 
 interface LibraryPageProps {
   title: string

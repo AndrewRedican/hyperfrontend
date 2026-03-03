@@ -40,10 +40,10 @@ module.exports = [
               sourceTag: 'type:protocol',
               onlyDependOnLibsWithTags: ['type:core', 'type:util', 'type:protocol'],
             },
-            // Applications: cannot import from local libraries (npm packages only)
+            // Applications: can depend on util libraries
             {
               sourceTag: 'type:app',
-              onlyDependOnLibsWithTags: [],
+              onlyDependOnLibsWithTags: ['type:util'],
             },
             // Demos: cannot import from local libraries (npm packages only)
             {
@@ -129,21 +129,31 @@ module.exports = [
     },
   },
   {
-    files: ['**/*.ts'],
+    files: ['**/*.ts', '**/*.tsx'],
     ignores: ['**/jest.config.ts', '**/jest.setup.ts', '**/jest.setup.browser.ts'],
     plugins: {
       workspace: eslintRules,
     },
     rules: {
       'workspace/no-unsafe-builtin-methods': 'error',
+    },
+  },
+  {
+    files: ['**/*.ts', '**/*.tsx'],
+    ignores: ['**/jest.config.ts', '**/jest.setup.ts', '**/jest.setup.browser.ts'],
+    plugins: {
+      workspace: eslintRules,
+    },
+    rules: {
       'workspace/require-node-protocol': 'error',
       'workspace/no-mixed-type-import': 'error',
       'workspace/import-order': 'error',
       'workspace/no-enum': 'error',
+      'workspace/no-async-fs-api': 'error',
     },
   },
   {
-    files: ['**/*.ts'],
+    files: ['**/*.ts', '**/*.tsx'],
     ignores: ['**/jest.config.ts', '**/jest.setup.ts', '**/jest.setup.browser.ts', '**/*.spec.ts'],
     plugins: {
       workspace: eslintRules,
@@ -154,7 +164,7 @@ module.exports = [
   },
   {
     files: ['**/*.ts'],
-    ignores: ['**/jest.config.ts', '**/jest.setup.ts', '**/jest.setup.browser.ts', '**/*.tsx'],
+    ignores: ['**/jest.config.ts', '**/jest.setup.ts', '**/jest.setup.browser.ts', '**/*.spec.ts'],
     plugins: {
       workspace: eslintRules,
     },

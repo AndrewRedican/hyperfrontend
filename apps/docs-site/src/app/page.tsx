@@ -1,7 +1,7 @@
-import { Header } from '@/components/header'
-import { Footer } from '@/components/footer'
-import { ValueProposition } from '@/components/value-proposition'
 import { DemoShowcase } from '@/components/demo-showcase'
+import { Footer } from '@/components/footer'
+import { Header } from '@/components/header'
+import { ValueProposition } from '@/components/value-proposition'
 
 export default function HomePage() {
   return (

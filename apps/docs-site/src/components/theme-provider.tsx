@@ -1,6 +1,7 @@
 'use client'
 
 import { createContext, useContext, useEffect, useState } from 'react'
+import { noop } from '@hyperfrontend/function-utils'
 
 type Theme = 'light' | 'dark' | 'system'
 
@@ -11,9 +12,6 @@ interface ThemeContextValue {
 }
 
 const ThemeContext = createContext<ThemeContextValue | undefined>(undefined)
-
-// eslint-disable-next-line @typescript-eslint/no-empty-function
-const noop = () => {}
 
 const defaultContext: ThemeContextValue = {
   theme: 'system',

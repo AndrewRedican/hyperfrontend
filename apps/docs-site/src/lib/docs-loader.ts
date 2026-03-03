@@ -1,5 +1,6 @@
 import { existsSync, readFileSync, readdirSync, statSync } from 'node:fs'
 import { resolve, join } from 'node:path'
+import { parse } from '@hyperfrontend/immutable-api-utils/built-in-copy/json'
 
 const GENERATED_DIR = resolve(process.cwd(), '.generated')
 const DOCS_DIR = join(GENERATED_DIR, 'docs')
@@ -61,7 +62,7 @@ export function getManifest(): Manifest | null {
     return null
   }
 
-  return JSON.parse(readFileSync(manifestPath, 'utf-8'))
+  return parse(readFileSync(manifestPath, 'utf-8'))
 }
 
 /**
@@ -136,7 +137,7 @@ export function getLibraryApi(slug: string): unknown | null {
     return null
   }
 
-  return JSON.parse(readFileSync(apiPath, 'utf-8'))
+  return parse(readFileSync(apiPath, 'utf-8'))
 }
 
 /**

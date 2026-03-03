@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useCallback } from 'react'
+import { values } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
 
 interface ApiSearchFilterProps {
   onSearch: (query: string) => void
@@ -72,8 +73,8 @@ export function ApiSearchFilter({ onSearch, onFilterChange, counts }: ApiSearchF
     onFilterChange(defaultFilters)
   }, [onFilterChange])
 
-  const allFiltersActive = Object.values(filters).every((v) => v)
-  const noFiltersActive = Object.values(filters).every((v) => !v)
+  const allFiltersActive = values(filters).every((v) => v)
+  const noFiltersActive = values(filters).every((v) => !v)
 
   return (
     <div className="mb-6 space-y-3">

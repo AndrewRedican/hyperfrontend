@@ -9,6 +9,18 @@ module.exports = [
   },
   ...baseConfig,
   {
+    // Allow @hyperfrontend/ imports from npm packages installed in this app's node_modules
+    files: ['**/*.ts', '**/*.tsx', '**/*.js', '**/*.jsx'],
+    rules: {
+      '@nx/enforce-module-boundaries': [
+        'error',
+        {
+          allow: ['^@hyperfrontend/'],
+        },
+      ],
+    },
+  },
+  {
     files: ['**/*.tsx', '**/*.jsx'],
     plugins: {
       react: pluginReact,
