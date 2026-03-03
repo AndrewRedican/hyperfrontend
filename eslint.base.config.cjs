@@ -129,7 +129,7 @@ module.exports = [
     },
   },
   {
-    files: ['**/*.ts'],
+    files: ['**/*.ts', '**/*.tsx'],
     ignores: ['**/jest.config.ts', '**/jest.setup.ts', '**/jest.setup.browser.ts'],
     plugins: {
       workspace: eslintRules,
@@ -139,7 +139,7 @@ module.exports = [
     },
   },
   {
-    files: ['**/*.ts'],
+    files: ['**/*.ts', '**/*.tsx'],
     ignores: ['**/jest.config.ts', '**/jest.setup.ts', '**/jest.setup.browser.ts'],
     plugins: {
       workspace: eslintRules,
@@ -152,7 +152,7 @@ module.exports = [
     },
   },
   {
-    files: ['**/*.ts'],
+    files: ['**/*.ts', '**/*.tsx'],
     ignores: ['**/jest.config.ts', '**/jest.setup.ts', '**/jest.setup.browser.ts', '**/*.spec.ts'],
     plugins: {
       workspace: eslintRules,
@@ -163,7 +163,7 @@ module.exports = [
   },
   {
     files: ['**/*.ts'],
-    ignores: ['**/jest.config.ts', '**/jest.setup.ts', '**/jest.setup.browser.ts', '**/*.tsx'],
+    ignores: ['**/jest.config.ts', '**/jest.setup.ts', '**/jest.setup.browser.ts', '**/*.spec.ts'],
     plugins: {
       workspace: eslintRules,
     },
