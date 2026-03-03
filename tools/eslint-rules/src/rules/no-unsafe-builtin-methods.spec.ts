@@ -1,5 +1,5 @@
 import type { InvalidTestCase, ValidTestCase } from '@typescript-eslint/rule-tester'
-import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs'
+import { mkdirSync, mkdtempSync, rmSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { RuleTester } from '@typescript-eslint/rule-tester'
@@ -11,25 +11,10 @@ type MessageIds = 'unsafeBuiltinMethod' | 'unsafePrototypeCall' | 'unsafeConstru
 /**
  * Creates a temporary project structure for testing.
  *
- * @param config - Configuration for the temporary project.
- * @param config.projectJson - Optional project.json content.
- * @param config.packageJson - Optional package.json content.
- * @param config.isPublishable - Whether the library is publishable (default: true).
  * @returns The path to the temporary project directory.
  */
-function createTempProject(config: { projectJson?: object; packageJson?: object; isPublishable?: boolean }): string {
+function createTempProject(): string {
   const testDir = mkdtempSync(join(tmpdir(), 'eslint-builtin-test-'))
-
-  const projectJson = config.projectJson ?? {
-    projectType: 'library',
-    targets: config.isPublishable !== false ? { build: {}, publish: {} } : { build: {} },
-  }
-
-  const packageJson = config.packageJson ?? { name: 'test-lib' }
-
-  writeFileSync(join(testDir, 'project.json'), JSON.stringify(projectJson, null, 2), { mode: 0o600 })
-  writeFileSync(join(testDir, 'package.json'), JSON.stringify(packageJson, null, 2), { mode: 0o600 })
-
   return testDir
 }
 
@@ -47,18 +32,8 @@ const tempDirs: string[] = []
  * Valid test cases
  */
 
-function createNonPublishableLibraryCase(): ValidTestCase<TestOptions> {
-  const projectDir = createTempProject({ isPublishable: false })
-  tempDirs.push(projectDir)
-  mkdirSync(join(projectDir, 'src'), { recursive: true })
-  return {
-    code: 'const obj = Object.freeze({ a: 1 });',
-    filename: join(projectDir, 'src', 'index.ts'),
-  }
-}
-
 function createBuiltInCopyCase(): ValidTestCase<TestOptions> {
-  const projectDir = createTempProject({ isPublishable: true })
+  const projectDir = createTempProject()
   tempDirs.push(projectDir)
   mkdirSync(join(projectDir, 'src', 'built-in-copy'), { recursive: true })
   return {
@@ -68,7 +43,7 @@ function createBuiltInCopyCase(): ValidTestCase<TestOptions> {
 }
 
 function createTestFileCase(): ValidTestCase<TestOptions> {
-  const projectDir = createTempProject({ isPublishable: true })
+  const projectDir = createTempProject()
   tempDirs.push(projectDir)
   mkdirSync(join(projectDir, 'src'), { recursive: true })
   return {
@@ -78,7 +53,7 @@ function createTestFileCase(): ValidTestCase<TestOptions> {
 }
 
 function createTestFileDotTestCase(): ValidTestCase<TestOptions> {
-  const projectDir = createTempProject({ isPublishable: true })
+  const projectDir = createTempProject()
   tempDirs.push(projectDir)
   mkdirSync(join(projectDir, 'src'), { recursive: true })
   return {
@@ -87,15 +62,8 @@ function createTestFileDotTestCase(): ValidTestCase<TestOptions> {
   }
 }
 
-function createNoProjectRootCase(): ValidTestCase<TestOptions> {
-  return {
-    code: 'const obj = Object.freeze({ a: 1 });',
-    filename: '/random/path/index.ts',
-  }
-}
-
 function createSafeImportCase(): ValidTestCase<TestOptions> {
-  const projectDir = createTempProject({ isPublishable: true })
+  const projectDir = createTempProject()
   tempDirs.push(projectDir)
   mkdirSync(join(projectDir, 'src'), { recursive: true })
   return {
@@ -106,7 +74,7 @@ const obj = freeze({ a: 1 });`,
 }
 
 function createSafeGlobalFunctionImportCase(): ValidTestCase<TestOptions> {
-  const projectDir = createTempProject({ isPublishable: true })
+  const projectDir = createTempProject()
   tempDirs.push(projectDir)
   mkdirSync(join(projectDir, 'src'), { recursive: true })
   return {
@@ -117,7 +85,7 @@ setTimeout(() => {}, 100);`,
 }
 
 function createNonIdentifierObjectCase(): ValidTestCase<TestOptions> {
-  const projectDir = createTempProject({ isPublishable: true })
+  const projectDir = createTempProject()
   tempDirs.push(projectDir)
   mkdirSync(join(projectDir, 'src'), { recursive: true })
   return {
@@ -127,7 +95,7 @@ function createNonIdentifierObjectCase(): ValidTestCase<TestOptions> {
 }
 
 function createComputedPropertyCase(): ValidTestCase<TestOptions> {
-  const projectDir = createTempProject({ isPublishable: true })
+  const projectDir = createTempProject()
   tempDirs.push(projectDir)
   mkdirSync(join(projectDir, 'src'), { recursive: true })
   return {
@@ -137,7 +105,7 @@ function createComputedPropertyCase(): ValidTestCase<TestOptions> {
 }
 
 function createNonCallExpressionCase(): ValidTestCase<TestOptions> {
-  const projectDir = createTempProject({ isPublishable: true })
+  const projectDir = createTempProject()
   tempDirs.push(projectDir)
   mkdirSync(join(projectDir, 'src'), { recursive: true })
   return {
@@ -147,7 +115,7 @@ function createNonCallExpressionCase(): ValidTestCase<TestOptions> {
 }
 
 function createCallWithoutCallPropertyCase(): ValidTestCase<TestOptions> {
-  const projectDir = createTempProject({ isPublishable: true })
+  const projectDir = createTempProject()
   tempDirs.push(projectDir)
   mkdirSync(join(projectDir, 'src'), { recursive: true })
   return {
@@ -157,7 +125,7 @@ function createCallWithoutCallPropertyCase(): ValidTestCase<TestOptions> {
 }
 
 function createNonPrototypeCallCase(): ValidTestCase<TestOptions> {
-  const projectDir = createTempProject({ isPublishable: true })
+  const projectDir = createTempProject()
   tempDirs.push(projectDir)
   mkdirSync(join(projectDir, 'src'), { recursive: true })
   return {
@@ -167,7 +135,7 @@ function createNonPrototypeCallCase(): ValidTestCase<TestOptions> {
 }
 
 function createUntrackedPrototypeCallCase(): ValidTestCase<TestOptions> {
-  const projectDir = createTempProject({ isPublishable: true })
+  const projectDir = createTempProject()
   tempDirs.push(projectDir)
   mkdirSync(join(projectDir, 'src'), { recursive: true })
   return {
@@ -177,7 +145,7 @@ function createUntrackedPrototypeCallCase(): ValidTestCase<TestOptions> {
 }
 
 function createNewNonPromiseCase(): ValidTestCase<TestOptions> {
-  const projectDir = createTempProject({ isPublishable: true })
+  const projectDir = createTempProject()
   tempDirs.push(projectDir)
   mkdirSync(join(projectDir, 'src'), { recursive: true })
   return {
@@ -187,7 +155,7 @@ function createNewNonPromiseCase(): ValidTestCase<TestOptions> {
 }
 
 function createUnsafeMethodNotInListCase(): ValidTestCase<TestOptions> {
-  const projectDir = createTempProject({ isPublishable: true })
+  const projectDir = createTempProject()
   tempDirs.push(projectDir)
   mkdirSync(join(projectDir, 'src'), { recursive: true })
   return {
@@ -201,7 +169,7 @@ function createUnsafeMethodNotInListCase(): ValidTestCase<TestOptions> {
  */
 
 function createObjectFreezeCase(): InvalidTestCase<MessageIds, TestOptions> {
-  const projectDir = createTempProject({ isPublishable: true })
+  const projectDir = createTempProject()
   tempDirs.push(projectDir)
   mkdirSync(join(projectDir, 'src'), { recursive: true })
   return {
@@ -212,7 +180,7 @@ function createObjectFreezeCase(): InvalidTestCase<MessageIds, TestOptions> {
 }
 
 function createObjectEntriesCase(): InvalidTestCase<MessageIds, TestOptions> {
-  const projectDir = createTempProject({ isPublishable: true })
+  const projectDir = createTempProject()
   tempDirs.push(projectDir)
   mkdirSync(join(projectDir, 'src'), { recursive: true })
   return {
@@ -223,7 +191,7 @@ function createObjectEntriesCase(): InvalidTestCase<MessageIds, TestOptions> {
 }
 
 function createObjectKeysCase(): InvalidTestCase<MessageIds, TestOptions> {
-  const projectDir = createTempProject({ isPublishable: true })
+  const projectDir = createTempProject()
   tempDirs.push(projectDir)
   mkdirSync(join(projectDir, 'src'), { recursive: true })
   return {
@@ -234,7 +202,7 @@ function createObjectKeysCase(): InvalidTestCase<MessageIds, TestOptions> {
 }
 
 function createObjectSetPrototypeOfCase(): InvalidTestCase<MessageIds, TestOptions> {
-  const projectDir = createTempProject({ isPublishable: true })
+  const projectDir = createTempProject()
   tempDirs.push(projectDir)
   mkdirSync(join(projectDir, 'src'), { recursive: true })
   return {
@@ -245,7 +213,7 @@ function createObjectSetPrototypeOfCase(): InvalidTestCase<MessageIds, TestOptio
 }
 
 function createArrayIsArrayCase(): InvalidTestCase<MessageIds, TestOptions> {
-  const projectDir = createTempProject({ isPublishable: true })
+  const projectDir = createTempProject()
   tempDirs.push(projectDir)
   mkdirSync(join(projectDir, 'src'), { recursive: true })
   return {
@@ -256,7 +224,7 @@ function createArrayIsArrayCase(): InvalidTestCase<MessageIds, TestOptions> {
 }
 
 function createArrayFromCase(): InvalidTestCase<MessageIds, TestOptions> {
-  const projectDir = createTempProject({ isPublishable: true })
+  const projectDir = createTempProject()
   tempDirs.push(projectDir)
   mkdirSync(join(projectDir, 'src'), { recursive: true })
   return {
@@ -267,7 +235,7 @@ function createArrayFromCase(): InvalidTestCase<MessageIds, TestOptions> {
 }
 
 function createJSONParseCase(): InvalidTestCase<MessageIds, TestOptions> {
-  const projectDir = createTempProject({ isPublishable: true })
+  const projectDir = createTempProject()
   tempDirs.push(projectDir)
   mkdirSync(join(projectDir, 'src'), { recursive: true })
   return {
@@ -278,7 +246,7 @@ function createJSONParseCase(): InvalidTestCase<MessageIds, TestOptions> {
 }
 
 function createNewPromiseCase(): InvalidTestCase<MessageIds, TestOptions> {
-  const projectDir = createTempProject({ isPublishable: true })
+  const projectDir = createTempProject()
   tempDirs.push(projectDir)
   mkdirSync(join(projectDir, 'src'), { recursive: true })
   return {
@@ -289,7 +257,7 @@ function createNewPromiseCase(): InvalidTestCase<MessageIds, TestOptions> {
 }
 
 function createPrototypeHasOwnPropertyCase(): InvalidTestCase<MessageIds, TestOptions> {
-  const projectDir = createTempProject({ isPublishable: true })
+  const projectDir = createTempProject()
   tempDirs.push(projectDir)
   mkdirSync(join(projectDir, 'src'), { recursive: true })
   return {
@@ -300,7 +268,7 @@ function createPrototypeHasOwnPropertyCase(): InvalidTestCase<MessageIds, TestOp
 }
 
 function createPrototypeToStringCase(): InvalidTestCase<MessageIds, TestOptions> {
-  const projectDir = createTempProject({ isPublishable: true })
+  const projectDir = createTempProject()
   tempDirs.push(projectDir)
   mkdirSync(join(projectDir, 'src'), { recursive: true })
   return {
@@ -311,7 +279,7 @@ function createPrototypeToStringCase(): InvalidTestCase<MessageIds, TestOptions>
 }
 
 function createObjectValuesCase(): InvalidTestCase<MessageIds, TestOptions> {
-  const projectDir = createTempProject({ isPublishable: true })
+  const projectDir = createTempProject()
   tempDirs.push(projectDir)
   mkdirSync(join(projectDir, 'src'), { recursive: true })
   return {
@@ -322,7 +290,7 @@ function createObjectValuesCase(): InvalidTestCase<MessageIds, TestOptions> {
 }
 
 function createJSONStringifyCase(): InvalidTestCase<MessageIds, TestOptions> {
-  const projectDir = createTempProject({ isPublishable: true })
+  const projectDir = createTempProject()
   tempDirs.push(projectDir)
   mkdirSync(join(projectDir, 'src'), { recursive: true })
   return {
@@ -333,7 +301,7 @@ function createJSONStringifyCase(): InvalidTestCase<MessageIds, TestOptions> {
 }
 
 function createArrayOfCase(): InvalidTestCase<MessageIds, TestOptions> {
-  const projectDir = createTempProject({ isPublishable: true })
+  const projectDir = createTempProject()
   tempDirs.push(projectDir)
   mkdirSync(join(projectDir, 'src'), { recursive: true })
   return {
@@ -344,7 +312,7 @@ function createArrayOfCase(): InvalidTestCase<MessageIds, TestOptions> {
 }
 
 function createMultipleViolationsCase(): InvalidTestCase<MessageIds, TestOptions> {
-  const projectDir = createTempProject({ isPublishable: true })
+  const projectDir = createTempProject()
   tempDirs.push(projectDir)
   mkdirSync(join(projectDir, 'src'), { recursive: true })
   return {
@@ -357,7 +325,7 @@ const arr = Array.from(keys);`,
 }
 
 function createConsoleLogCase(): InvalidTestCase<MessageIds, TestOptions> {
-  const projectDir = createTempProject({ isPublishable: true })
+  const projectDir = createTempProject()
   tempDirs.push(projectDir)
   mkdirSync(join(projectDir, 'src'), { recursive: true })
   return {
@@ -368,7 +336,7 @@ function createConsoleLogCase(): InvalidTestCase<MessageIds, TestOptions> {
 }
 
 function createSetTimeoutCase(): InvalidTestCase<MessageIds, TestOptions> {
-  const projectDir = createTempProject({ isPublishable: true })
+  const projectDir = createTempProject()
   tempDirs.push(projectDir)
   mkdirSync(join(projectDir, 'src'), { recursive: true })
   return {
@@ -379,7 +347,7 @@ function createSetTimeoutCase(): InvalidTestCase<MessageIds, TestOptions> {
 }
 
 function createStructuredCloneCase(): InvalidTestCase<MessageIds, TestOptions> {
-  const projectDir = createTempProject({ isPublishable: true })
+  const projectDir = createTempProject()
   tempDirs.push(projectDir)
   mkdirSync(join(projectDir, 'src'), { recursive: true })
   return {
@@ -390,7 +358,7 @@ function createStructuredCloneCase(): InvalidTestCase<MessageIds, TestOptions> {
 }
 
 function createNewMessageChannelCase(): InvalidTestCase<MessageIds, TestOptions> {
-  const projectDir = createTempProject({ isPublishable: true })
+  const projectDir = createTempProject()
   tempDirs.push(projectDir)
   mkdirSync(join(projectDir, 'src'), { recursive: true })
   return {
@@ -401,7 +369,7 @@ function createNewMessageChannelCase(): InvalidTestCase<MessageIds, TestOptions>
 }
 
 function createNewBroadcastChannelCase(): InvalidTestCase<MessageIds, TestOptions> {
-  const projectDir = createTempProject({ isPublishable: true })
+  const projectDir = createTempProject()
   tempDirs.push(projectDir)
   mkdirSync(join(projectDir, 'src'), { recursive: true })
   return {
@@ -412,7 +380,7 @@ function createNewBroadcastChannelCase(): InvalidTestCase<MessageIds, TestOption
 }
 
 function createNewMapCase(): InvalidTestCase<MessageIds, TestOptions> {
-  const projectDir = createTempProject({ isPublishable: true })
+  const projectDir = createTempProject()
   tempDirs.push(projectDir)
   mkdirSync(join(projectDir, 'src'), { recursive: true })
   return {
@@ -423,7 +391,7 @@ function createNewMapCase(): InvalidTestCase<MessageIds, TestOptions> {
 }
 
 function createNewSetCase(): InvalidTestCase<MessageIds, TestOptions> {
-  const projectDir = createTempProject({ isPublishable: true })
+  const projectDir = createTempProject()
   tempDirs.push(projectDir)
   mkdirSync(join(projectDir, 'src'), { recursive: true })
   return {
@@ -434,7 +402,7 @@ function createNewSetCase(): InvalidTestCase<MessageIds, TestOptions> {
 }
 
 function createNewWeakMapCase(): InvalidTestCase<MessageIds, TestOptions> {
-  const projectDir = createTempProject({ isPublishable: true })
+  const projectDir = createTempProject()
   tempDirs.push(projectDir)
   mkdirSync(join(projectDir, 'src'), { recursive: true })
   return {
@@ -445,7 +413,7 @@ function createNewWeakMapCase(): InvalidTestCase<MessageIds, TestOptions> {
 }
 
 function createNewWeakSetCase(): InvalidTestCase<MessageIds, TestOptions> {
-  const projectDir = createTempProject({ isPublishable: true })
+  const projectDir = createTempProject()
   tempDirs.push(projectDir)
   mkdirSync(join(projectDir, 'src'), { recursive: true })
   return {
@@ -456,7 +424,7 @@ function createNewWeakSetCase(): InvalidTestCase<MessageIds, TestOptions> {
 }
 
 function createNewRegExpCase(): InvalidTestCase<MessageIds, TestOptions> {
-  const projectDir = createTempProject({ isPublishable: true })
+  const projectDir = createTempProject()
   tempDirs.push(projectDir)
   mkdirSync(join(projectDir, 'src'), { recursive: true })
   return {
@@ -467,7 +435,7 @@ function createNewRegExpCase(): InvalidTestCase<MessageIds, TestOptions> {
 }
 
 function createNewDateCase(): InvalidTestCase<MessageIds, TestOptions> {
-  const projectDir = createTempProject({ isPublishable: true })
+  const projectDir = createTempProject()
   tempDirs.push(projectDir)
   mkdirSync(join(projectDir, 'src'), { recursive: true })
   return {
@@ -478,7 +446,7 @@ function createNewDateCase(): InvalidTestCase<MessageIds, TestOptions> {
 }
 
 function createNewErrorCase(): InvalidTestCase<MessageIds, TestOptions> {
-  const projectDir = createTempProject({ isPublishable: true })
+  const projectDir = createTempProject()
   tempDirs.push(projectDir)
   mkdirSync(join(projectDir, 'src'), { recursive: true })
   return {
@@ -489,7 +457,7 @@ function createNewErrorCase(): InvalidTestCase<MessageIds, TestOptions> {
 }
 
 function createNewTypeErrorCase(): InvalidTestCase<MessageIds, TestOptions> {
-  const projectDir = createTempProject({ isPublishable: true })
+  const projectDir = createTempProject()
   tempDirs.push(projectDir)
   mkdirSync(join(projectDir, 'src'), { recursive: true })
   return {
@@ -500,7 +468,7 @@ function createNewTypeErrorCase(): InvalidTestCase<MessageIds, TestOptions> {
 }
 
 function createNewFunctionCase(): InvalidTestCase<MessageIds, TestOptions> {
-  const projectDir = createTempProject({ isPublishable: true })
+  const projectDir = createTempProject()
   tempDirs.push(projectDir)
   mkdirSync(join(projectDir, 'src'), { recursive: true })
   return {
@@ -511,7 +479,7 @@ function createNewFunctionCase(): InvalidTestCase<MessageIds, TestOptions> {
 }
 
 function createPromiseAllCase(): InvalidTestCase<MessageIds, TestOptions> {
-  const projectDir = createTempProject({ isPublishable: true })
+  const projectDir = createTempProject()
   tempDirs.push(projectDir)
   mkdirSync(join(projectDir, 'src'), { recursive: true })
   return {
@@ -522,7 +490,7 @@ function createPromiseAllCase(): InvalidTestCase<MessageIds, TestOptions> {
 }
 
 function createPromiseResolveCase(): InvalidTestCase<MessageIds, TestOptions> {
-  const projectDir = createTempProject({ isPublishable: true })
+  const projectDir = createTempProject()
   tempDirs.push(projectDir)
   mkdirSync(join(projectDir, 'src'), { recursive: true })
   return {
@@ -533,7 +501,7 @@ function createPromiseResolveCase(): InvalidTestCase<MessageIds, TestOptions> {
 }
 
 function createDateNowCase(): InvalidTestCase<MessageIds, TestOptions> {
-  const projectDir = createTempProject({ isPublishable: true })
+  const projectDir = createTempProject()
   tempDirs.push(projectDir)
   mkdirSync(join(projectDir, 'src'), { recursive: true })
   return {
@@ -544,7 +512,7 @@ function createDateNowCase(): InvalidTestCase<MessageIds, TestOptions> {
 }
 
 function createReflectGetCase(): InvalidTestCase<MessageIds, TestOptions> {
-  const projectDir = createTempProject({ isPublishable: true })
+  const projectDir = createTempProject()
   tempDirs.push(projectDir)
   mkdirSync(join(projectDir, 'src'), { recursive: true })
   return {
@@ -555,7 +523,7 @@ function createReflectGetCase(): InvalidTestCase<MessageIds, TestOptions> {
 }
 
 function createSymbolForCase(): InvalidTestCase<MessageIds, TestOptions> {
-  const projectDir = createTempProject({ isPublishable: true })
+  const projectDir = createTempProject()
   tempDirs.push(projectDir)
   mkdirSync(join(projectDir, 'src'), { recursive: true })
   return {
@@ -566,7 +534,7 @@ function createSymbolForCase(): InvalidTestCase<MessageIds, TestOptions> {
 }
 
 function createMapGroupByCase(): InvalidTestCase<MessageIds, TestOptions> {
-  const projectDir = createTempProject({ isPublishable: true })
+  const projectDir = createTempProject()
   tempDirs.push(projectDir)
   mkdirSync(join(projectDir, 'src'), { recursive: true })
   return {
@@ -582,10 +550,6 @@ describe('no-unsafe-builtin-methods', () => {
       ruleTester.run('no-unsafe-builtin-methods', rule, {
         valid: [
           {
-            name: 'does not trigger for non-publishable library',
-            ...createNonPublishableLibraryCase(),
-          },
-          {
             name: 'does not trigger for built-in-copy directory',
             ...createBuiltInCopyCase(),
           },
@@ -596,10 +560,6 @@ describe('no-unsafe-builtin-methods', () => {
           {
             name: 'does not trigger for test files (.test.ts)',
             ...createTestFileDotTestCase(),
-          },
-          {
-            name: 'does not trigger for files without project root',
-            ...createNoProjectRootCase(),
           },
           {
             name: 'does not trigger for safe imports',

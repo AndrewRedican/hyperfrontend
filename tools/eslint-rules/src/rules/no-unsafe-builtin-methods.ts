@@ -1,7 +1,5 @@
 import type { TSESTree } from '@typescript-eslint/utils'
-import { dirname } from 'node:path'
 import { ESLintUtils, AST_NODE_TYPES } from '@typescript-eslint/utils'
-import { findProjectRoot, isPublishableLibrary } from '../utils/nx-project'
 
 /**
  * Rule identifier for the no-unsafe-builtin-methods rule.
@@ -301,13 +299,6 @@ export default createRule<[], MessageIds>({
   defaultOptions: [],
   create(context) {
     const filename = context.filename
-    const fileDir = dirname(filename)
-    const projectRoot = findProjectRoot(fileDir)
-
-    // Only apply to publishable library projects
-    if (!projectRoot || !isPublishableLibrary(projectRoot)) {
-      return {}
-    }
 
     // Exempt built-in-copy directory (these ARE the safe copies)
     if (filename.includes('built-in-copy')) {
