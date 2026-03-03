@@ -149,6 +149,7 @@ module.exports = [
       'workspace/no-mixed-type-import': 'error',
       'workspace/import-order': 'error',
       'workspace/no-enum': 'error',
+      'workspace/no-async-fs-api': 'error',
     },
   },
   {
