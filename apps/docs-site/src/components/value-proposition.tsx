@@ -1,7 +1,9 @@
 'use client'
 
+import type { ReactNode } from 'react'
 import Link from 'next/link'
-import { Fragment, type ReactNode, useEffect, useState } from 'react'
+import { Fragment, useEffect, useState } from 'react'
+import { setTimeout, setInterval, clearInterval } from '@hyperfrontend/immutable-api-utils/built-in-copy/timers'
 
 type TextSegment = string | { bold: string } | { italic: string }
 

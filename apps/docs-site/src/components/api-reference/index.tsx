@@ -1,12 +1,14 @@
 'use client'
 
-import { useState, useMemo, useCallback } from 'react'
+import type { ApiFilterState } from './api-search-filter'
 import type { TypeDocOutput, TypeDocNode } from './types'
-import { ReflectionKind } from './types'
+import { useState, useMemo, useCallback } from 'react'
+import { values } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
+import { ApiSearchFilter, defaultFilters } from './api-search-filter'
 import { FunctionSignature } from './function-signature'
-import { TypeDefinition } from './type-definition'
-import { ApiSearchFilter, type ApiFilterState, defaultFilters } from './api-search-filter'
 import { ModuleGroupedView, hasModules } from './module-grouped-view'
+import { TypeDefinition } from './type-definition'
+import { ReflectionKind } from './types'
 
 type ViewMode = 'flat' | 'grouped'
 
@@ -121,7 +123,7 @@ export function ApiReference({ data }: ApiReferenceProps) {
       filteredExports.enums.length >
     0
 
-  const isFiltered = searchQuery.trim() !== '' || Object.values(filters).some((v) => !v)
+  const isFiltered = searchQuery.trim() !== '' || values(filters).some((v) => !v)
 
   // For grouped view, render the module-grouped component
   if (isMultiModule && viewMode === 'grouped') {

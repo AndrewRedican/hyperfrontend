@@ -1,6 +1,8 @@
 'use client'
 
 import { useCallback, useEffect, useRef, useState } from 'react'
+import { min, pow } from '@hyperfrontend/immutable-api-utils/built-in-copy/math'
+import { requestAnimationFrame, cancelAnimationFrame } from '@hyperfrontend/immutable-api-utils/built-in-copy/timers'
 
 interface DemoShowcaseProps {
   /** Duration in milliseconds for full cycle (default: 60000ms = 1 minute) */
@@ -59,8 +61,8 @@ export function DemoShowcase({
         const remainingProgress = 100 - startProgress
 
         // Ease-out cubic: 1 - (1-t)^3
-        const t = Math.min(elapsed / fastForwardDuration, 1)
-        const easeOut = 1 - Math.pow(1 - t, 3)
+        const t = min(elapsed / fastForwardDuration, 1)
+        const easeOut = 1 - pow(1 - t, 3)
         const newProgress = startProgress + remainingProgress * easeOut
 
         if (newProgress >= 100) {

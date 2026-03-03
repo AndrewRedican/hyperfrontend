@@ -1,10 +1,10 @@
 'use client'
 
 import type { TypeDocNode } from './types'
-import { ReflectionKind } from './types'
-import { renderType, getDescription } from './type-utils'
-import { TypeLink } from './type-link'
 import { CopyButton } from './copy-button'
+import { TypeLink } from './type-link'
+import { renderType, getDescription } from './type-utils'
+import { ReflectionKind } from './types'
 
 interface TypeDefinitionProps {
   node: TypeDocNode

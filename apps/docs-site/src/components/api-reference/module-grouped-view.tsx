@@ -1,10 +1,11 @@
 'use client'
 
-import { useState, useMemo } from 'react'
 import type { TypeDocOutput, TypeDocNode } from './types'
-import { ReflectionKind } from './types'
+import { useState, useMemo } from 'react'
+import { createSet } from '@hyperfrontend/immutable-api-utils/built-in-copy/set'
 import { FunctionSignature } from './function-signature'
 import { TypeDefinition } from './type-definition'
+import { ReflectionKind } from './types'
 
 interface ModuleGroupedViewProps {
   data: TypeDocOutput
@@ -25,7 +26,7 @@ interface ModuleGroup {
  * @param props.searchQuery - Optional search query to filter exports
  */
 export function ModuleGroupedView({ data, searchQuery = '' }: ModuleGroupedViewProps) {
-  const [expandedModules, setExpandedModules] = useState<Set<string>>(new Set())
+  const [expandedModules, setExpandedModules] = useState<Set<string>>(createSet())
 
   // Group exports by module
   const modules = useMemo(() => {
@@ -60,7 +61,7 @@ export function ModuleGroupedView({ data, searchQuery = '' }: ModuleGroupedViewP
 
   const toggleModule = (moduleName: string) => {
     setExpandedModules((prev) => {
-      const next = new Set(prev)
+      const next = createSet(prev)
       if (next.has(moduleName)) {
         next.delete(moduleName)
       } else {
@@ -71,11 +72,11 @@ export function ModuleGroupedView({ data, searchQuery = '' }: ModuleGroupedViewP
   }
 
   const expandAll = () => {
-    setExpandedModules(new Set(modules.map((m) => m.name)))
+    setExpandedModules(createSet(modules.map((m) => m.name)))
   }
 
   const collapseAll = () => {
-    setExpandedModules(new Set())
+    setExpandedModules(createSet())
   }
 
   if (modules.length === 0) {
