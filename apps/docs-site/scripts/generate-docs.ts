@@ -96,6 +96,11 @@ function convertJsPathToTs(jsPath: string): string | null {
   // Remove leading ./
   let normalized = jsPath.replace(/^\.\//, '')
 
+  // Skip non-source files (e.g., package.json exports)
+  if (normalized.endsWith('.json')) {
+    return null
+  }
+
   // Convert .js to .ts
   if (normalized.endsWith('.js')) {
     normalized = normalized.slice(0, -3) + '.ts'
