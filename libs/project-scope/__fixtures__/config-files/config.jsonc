@@ -1,0 +1,14 @@
+{
+  // Single-line comment
+  "name": "jsonc-config",
+  /* Block comment */
+  "version": "1.0.0",
+  "settings": {
+    // Nested comment
+    "enabled": true,
+    /* Another
+       multi-line
+       comment */
+    "value": "test",
+  },
+}

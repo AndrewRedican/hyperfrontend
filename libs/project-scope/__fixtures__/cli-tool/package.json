@@ -1,0 +1,8 @@
+{
+  "name": "@scope/my-cli-tool",
+  "version": "1.0.0",
+  "bin": {
+    "my-cli": "./bin/cli.js"
+  },
+  "description": "A CLI tool test fixture"
+}

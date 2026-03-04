@@ -1,0 +1,7 @@
+{
+  "name": "nx-integrated-workspace",
+  "version": "1.0.0",
+  "devDependencies": {
+    "nx": "^19.5.0"
+  }
+}

@@ -1,0 +1,12 @@
+# YAML config with edge cases
+name: test-project
+version: 1.0.0
+enabled: true
+disabled: false
+nullValue: null
+integer: 42
+negativeInt: -10
+float: 3.14
+negativeFloat: -2.5
+quotedString: 'hello world'
+singleQuoted: 'single'

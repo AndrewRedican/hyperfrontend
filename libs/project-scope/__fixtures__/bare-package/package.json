@@ -1,0 +1,5 @@
+{
+  "name": "bare-package",
+  "version": "1.0.0",
+  "description": "Package without source files or entry points"
+}

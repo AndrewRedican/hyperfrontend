@@ -1,0 +1,364 @@
+import type { WalkEntry } from '../../project/traversal'
+import type { Command, CommandResult, GlobalOptions, OutputFormat } from '../types'
+import { basename, resolve } from 'node:path'
+import { parseArgs } from 'node:util'
+import { stringify } from '@hyperfrontend/immutable-api-utils/built-in-copy/json'
+import { createMap } from '@hyperfrontend/immutable-api-utils/built-in-copy/map'
+import { parseInt as safeParseInt } from '@hyperfrontend/immutable-api-utils/built-in-copy/number'
+import { getFileStat } from '../../core/fs'
+import { walkDirectory } from '../../project/traversal'
+
+export interface TreeCommandOptions {
+  path?: string
+  depth?: number
+  pattern?: string
+  ignore?: string[]
+  dirsOnly?: boolean
+  filesOnly?: boolean
+  showSize?: boolean
+  showModified?: boolean
+  format?: OutputFormat
+}
+
+/**
+ * Tree node for building the tree structure.
+ */
+interface TreeNode {
+  name: string
+  path: string
+  isDirectory: boolean
+  size?: number
+  modified?: Date
+  children: TreeNode[]
+}
+
+/**
+ * Format file size in human-readable format.
+ *
+ * @param bytes - File size to format
+ * @returns Human-readable size string
+ */
+function formatSize(bytes: number): string {
+  if (bytes < 1024) return `${bytes}B`
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)}K`
+  if (bytes < 1024 * 1024 * 1024) return `${(bytes / (1024 * 1024)).toFixed(1)}M`
+  return `${(bytes / (1024 * 1024 * 1024)).toFixed(1)}G`
+}
+
+/**
+ * Format date in short format.
+ *
+ * @param date - Date to format
+ * @returns Formatted date string (MM-DD HH:mm)
+ */
+function formatDate(date: Date): string {
+  const month = String(date.getMonth() + 1).padStart(2, '0')
+  const day = String(date.getDate()).padStart(2, '0')
+  const hours = String(date.getHours()).padStart(2, '0')
+  const mins = String(date.getMinutes()).padStart(2, '0')
+  return `${month}-${day} ${hours}:${mins}`
+}
+
+/**
+ * Build tree structure from walk entries.
+ *
+ * @param rootPath - Root directory path
+ * @param walkEntries - Array of walk entries collected from walkDirectory
+ * @param options - Tree command options for filtering
+ * @returns Tree node representing the directory structure
+ */
+function buildTree(rootPath: string, walkEntries: WalkEntry[], options: TreeCommandOptions): TreeNode {
+  const root: TreeNode = {
+    name: basename(rootPath),
+    path: rootPath,
+    isDirectory: true,
+    children: [],
+  }
+
+  // Create a map for quick lookup
+  const nodeMap = createMap<string, TreeNode>()
+  nodeMap.set('.', root)
+
+  // Sort entries by path for proper parent-child relationships
+  const sortedEntries = [...walkEntries].sort((a, b) => a.relativePath.localeCompare(b.relativePath))
+
+  for (const entry of sortedEntries) {
+    // Skip based on filters
+    if (options.dirsOnly && !entry.isDirectory) continue
+    if (options.filesOnly && entry.isDirectory) continue
+
+    const node: TreeNode = {
+      name: entry.name,
+      path: entry.path,
+      isDirectory: entry.isDirectory,
+      children: [],
+    }
+
+    // Add size/modified if requested
+    if ((options.showSize || options.showModified) && entry.isFile) {
+      const stats = getFileStat(entry.path)
+      if (stats) {
+        if (options.showSize) node.size = stats.size
+        if (options.showModified) node.modified = stats.modified
+      }
+    }
+
+    // Find parent
+    const parts = entry.relativePath.split('/')
+    parts.pop() // Remove current entry name
+    const parentPath = parts.join('/') || '.'
+    const parent = nodeMap.get(parentPath)
+
+    if (parent) {
+      parent.children.push(node)
+    }
+
+    nodeMap.set(entry.relativePath, node)
+  }
+
+  return root
+}
+
+/**
+ * Render tree node as ASCII art recursively.
+ *
+ * @param node - Tree node to render
+ * @param options - Tree command options
+ * @param prefix - Current line prefix for indentation
+ * @param isLast - Whether this is the last child in parent
+ * @returns Array of lines representing the tree
+ */
+function renderTreeText(node: TreeNode, options: TreeCommandOptions, prefix = '', isLast = true): string[] {
+  const lines: string[] = []
+
+  // Current line
+  const connector = isLast ? '└── ' : '├── '
+  const dirMark = node.isDirectory ? '/' : ''
+  let line = `${prefix}${connector}${node.name}${dirMark}`
+
+  // Add size/modified
+  const meta: string[] = []
+  if (options.showSize && node.size !== undefined) {
+    meta.push(formatSize(node.size))
+  }
+  if (options.showModified && node.modified) {
+    meta.push(formatDate(node.modified))
+  }
+  if (meta.length > 0) {
+    line += `  [${meta.join(' ')}]`
+  }
+
+  lines.push(line)
+
+  // Process children
+  const childPrefix = prefix + (isLast ? '    ' : '│   ')
+  const sortedChildren = [...node.children].sort((a, b) => {
+    // Directories first, then alphabetically
+    if (a.isDirectory && !b.isDirectory) return -1
+    if (!a.isDirectory && b.isDirectory) return 1
+    return a.name.localeCompare(b.name)
+  })
+
+  for (let i = 0; i < sortedChildren.length; i++) {
+    const child = sortedChildren[i]
+    const childIsLast = i === sortedChildren.length - 1
+    lines.push(...renderTreeText(child, options, childPrefix, childIsLast))
+  }
+
+  return lines
+}
+
+/**
+ * Format tree as human-readable text output.
+ *
+ * @param rootPath - Root directory path
+ * @param tree - Tree node structure
+ * @param options - Tree command options
+ * @returns Formatted text output with tree visualization
+ */
+function formatTreeText(rootPath: string, tree: TreeNode, options: TreeCommandOptions): string {
+  const lines: string[] = []
+
+  // Root line
+  lines.push(basename(rootPath))
+
+  // Count stats
+  let dirCount = 0
+  let fileCount = 0
+
+  /**
+   * Count directories and files in tree.
+   *
+   * @param node - Current tree node
+   */
+  function countNodes(node: TreeNode): void {
+    if (node.isDirectory) {
+      dirCount++
+    } else {
+      fileCount++
+    }
+    for (const child of node.children) {
+      countNodes(child)
+    }
+  }
+
+  // Render children of root
+  const sortedChildren = [...tree.children].sort((a, b) => {
+    if (a.isDirectory && !b.isDirectory) return -1
+    if (!a.isDirectory && b.isDirectory) return 1
+    return a.name.localeCompare(b.name)
+  })
+
+  for (let i = 0; i < sortedChildren.length; i++) {
+    const child = sortedChildren[i]
+    const isLast = i === sortedChildren.length - 1
+    lines.push(...renderTreeText(child, options, '', isLast))
+    countNodes(child)
+  }
+
+  // Summary
+  lines.push('')
+  const dirText = dirCount === 1 ? '1 directory' : `${dirCount} directories`
+  const fileText = fileCount === 1 ? '1 file' : `${fileCount} files`
+  lines.push(`${dirText}, ${fileText}`)
+
+  return lines.join('\n')
+}
+
+/**
+ * Format tree as JSON string.
+ *
+ * @param tree - Tree node structure
+ * @returns JSON formatted string
+ */
+function formatTreeJson(tree: TreeNode): string {
+  return stringify(tree, null, 2)
+}
+
+/**
+ * Parse tree command arguments.
+ *
+ * @param args - Raw command line arguments
+ * @returns Parsed tree command options
+ */
+function parseTreeArgs(args: string[]): TreeCommandOptions {
+  const { values, positionals } = parseArgs({
+    args,
+    options: {
+      depth: { type: 'string', short: 'd', default: '3' },
+      pattern: { type: 'string', short: 'p' },
+      ignore: { type: 'string' },
+      'dirs-only': { type: 'boolean', default: false },
+      'files-only': { type: 'boolean', default: false },
+      size: { type: 'boolean', default: false },
+      modified: { type: 'boolean', default: false },
+      format: { type: 'string', short: 'f', default: 'text' },
+    },
+    allowPositionals: true,
+    strict: false,
+  })
+
+  const depthStr = <string>values.depth
+  const ignoreStr = <string | undefined>values.ignore
+
+  return {
+    path: positionals[0],
+    depth: safeParseInt(depthStr, 10),
+    pattern: <string | undefined>values.pattern,
+    ignore: ignoreStr ? ignoreStr.split(',').map((s) => s.trim()) : undefined,
+    dirsOnly: <boolean>values['dirs-only'],
+    filesOnly: <boolean>values['files-only'],
+    showSize: <boolean>values.size,
+    showModified: <boolean>values.modified,
+    format: <OutputFormat>values.format,
+  }
+}
+
+/**
+ * Execute tree command with given options.
+ *
+ * @param options - Configuration for the tree operation
+ * @returns Command execution result with exit code and output
+ */
+export function treeCommand(options: TreeCommandOptions): CommandResult {
+  const rootPath = options.path ? resolve(options.path) : process.cwd()
+
+  try {
+    // Collect entries via walk
+    const walkEntries: WalkEntry[] = []
+    walkDirectory(
+      rootPath,
+      (entry: WalkEntry) => {
+        walkEntries.push(entry)
+        return undefined
+      },
+      {
+        maxDepth: options.depth ?? 3,
+        ignorePatterns: options.ignore,
+        includeHidden: false,
+      }
+    )
+
+    // Build tree structure
+    const tree = buildTree(rootPath, walkEntries, options)
+
+    // Format output
+    let output: string
+    if (options.format === 'json') {
+      output = formatTreeJson(tree)
+    } else {
+      output = formatTreeText(rootPath, tree, options)
+    }
+
+    return { exitCode: 0, output }
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err)
+    return { exitCode: 1, error: `Tree failed: ${message}` }
+  }
+}
+
+/**
+ * Tree command definition implementing Command interface.
+ */
+export const treeCommandDef: Command = {
+  name: 'tree',
+  description: 'Show file tree',
+
+  execute(args: string[], globalOptions: GlobalOptions): CommandResult {
+    const options = parseTreeArgs(args)
+
+    if (globalOptions.json) {
+      options.format = 'json'
+    }
+
+    return treeCommand(options)
+  },
+
+  getHelp(): string {
+    return `
+project-scope tree [path] [options]
+
+Show file tree visualization.
+
+Arguments:
+  path              Directory path (default: current directory)
+
+Options:
+  --depth, -d       Maximum depth (default: 3)
+  --pattern, -p     Glob pattern to match
+  --ignore          Patterns to ignore (comma-separated)
+  --dirs-only       Show directories only
+  --files-only      Show files only
+  --size            Show file sizes
+  --modified        Show modification times
+  --format, -f      Output format: text, json (default: text)
+
+Examples:
+  project-scope tree
+  project-scope tree src --depth 5
+  project-scope tree --pattern "*.ts" --ignore "*.spec.ts"
+  project-scope tree --dirs-only
+  project-scope tree --size --modified
+`.trim()
+  },
+}

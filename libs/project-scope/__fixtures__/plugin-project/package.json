@@ -1,0 +1,6 @@
+{
+  "name": "@scope/plugin-webpack",
+  "version": "1.0.0",
+  "main": "src/index.js",
+  "description": "A plugin test fixture"
+}

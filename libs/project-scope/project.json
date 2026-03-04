@@ -1,0 +1,21 @@
+{
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "name": "lib-project-scope",
+  "description": "Codebase analysis, project topology detection, and virtual file system utilities for Node.js projects.",
+  "sourceRoot": "{projectRoot}/src",
+  "projectType": "library",
+  "tags": ["type:util", "scope:public"],
+  "targets": {
+    "version": {},
+    "build": {
+      "executor": "@hyperfrontend/package:build",
+      "options": {
+        "esm": { "bundleWorkspaceDeps": true },
+        "cjs": { "bundleWorkspaceDeps": true },
+        "exclude": ["**/__fixtures__/**"]
+      }
+    },
+    "publish": {},
+    "typecheck": {}
+  }
+}

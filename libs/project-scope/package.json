@@ -1,0 +1,87 @@
+{
+  "name": "@hyperfrontend/project-scope",
+  "version": "0.0.0",
+  "description": "Codebase analysis, project topology detection, and virtual file system utilities for Node.js projects.",
+  "license": "MIT",
+  "sideEffects": false,
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=8.0.0"
+  },
+  "exports": {
+    ".": "./src/index.js",
+    "./cli": "./src/cli/index.js",
+    "./core": "./src/core/index.js",
+    "./core/encoding": "./src/core/encoding/index.js",
+    "./core/fs": "./src/core/fs/index.js",
+    "./core/logger": "./src/core/logger.js",
+    "./core/path": "./src/core/path/index.js",
+    "./core/platform": "./src/core/platform/index.js",
+    "./heuristics": "./src/heuristics/index.js",
+    "./heuristics/dependencies": "./src/heuristics/dependencies/index.js",
+    "./heuristics/entry-points": "./src/heuristics/entry-points/index.js",
+    "./heuristics/framework": "./src/heuristics/framework/index.js",
+    "./heuristics/project-type": "./src/heuristics/project-type/index.js",
+    "./models": "./src/models/index.js",
+    "./nx": "./src/nx/index.js",
+    "./project": "./src/project/index.js",
+    "./project/config": "./src/project/config/index.js",
+    "./project/package": "./src/project/package/index.js",
+    "./project/root": "./src/project/root/index.js",
+    "./project/traversal": "./src/project/traversal/index.js",
+    "./tech": "./src/tech/index.js",
+    "./tech/backend": "./src/tech/backend/index.js",
+    "./tech/build": "./src/tech/build/index.js",
+    "./tech/frontend": "./src/tech/frontend/index.js",
+    "./tech/legacy": "./src/tech/legacy/index.js",
+    "./tech/linting": "./src/tech/linting/index.js",
+    "./tech/monorepo": "./src/tech/monorepo/index.js",
+    "./tech/testing": "./src/tech/testing/index.js",
+    "./tech/types": "./src/tech/types/index.js",
+    "./vfs": "./src/vfs/index.js",
+    "./package.json": "./package.json"
+  },
+  "keywords": [
+    "project-analysis",
+    "codebase-analysis",
+    "virtual-filesystem",
+    "vfs",
+    "nx",
+    "monorepo",
+    "framework-detection",
+    "build-tool-detection",
+    "project-topology",
+    "file-traversal",
+    "config-detection",
+    "dependency-graph",
+    "typescript",
+    "zero-dependencies",
+    "node",
+    "code-generation",
+    "scaffolding",
+    "devkit",
+    "workspace-analysis",
+    "tech-stack",
+    "entry-point-discovery",
+    "transactional-fs",
+    "cli",
+    "static-analysis",
+    "ast"
+  ],
+  "dependencies": {
+    "@hyperfrontend/immutable-api-utils": "0.1.0",
+    "@hyperfrontend/logging": "0.0.3"
+  },
+  "peerDependencies": {
+    "@nx/devkit": ">=18.0.0"
+  },
+  "peerDependenciesMeta": {
+    "@nx/devkit": {
+      "optional": true
+    }
+  },
+  "funding": {
+    "type": "github",
+    "url": "https://github.com/sponsors/AndrewRedican"
+  }
+}

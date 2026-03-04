@@ -1,0 +1,20 @@
+# Build status reporter for lib-project-scope
+# This workflow does NOT build - it reports status from ci-libraries.yml matrix build
+#
+name: lib-project-scope
+
+on:
+  workflow_run:
+    workflows: [libraries]
+    types: [completed]
+    branches: [main]
+
+permissions:
+  actions: read
+
+jobs:
+  status:
+    uses: ./.github/workflows/_lib-status.yml
+    with:
+      project-name: lib-project-scope
+      library-path: libs/project-scope
