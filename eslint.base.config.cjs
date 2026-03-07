@@ -151,6 +151,7 @@ module.exports = [
       'workspace/no-enum': 'error',
       'workspace/no-async-fs-api': 'error',
       'workspace/no-deprecated-tag': 'error',
+      'workspace/no-unsafe-regex': 'error',
     },
   },
   {

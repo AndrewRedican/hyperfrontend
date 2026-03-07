@@ -7,6 +7,7 @@
   "types": "./src/index.ts",
   "devDependencies": {
     "@types/node": "25.0.9",
-    "@typescript-eslint/utils": "8.53.1"
+    "@typescript-eslint/utils": "8.53.1",
+    "safe-regex2": "5.0.0"
   }
 }
