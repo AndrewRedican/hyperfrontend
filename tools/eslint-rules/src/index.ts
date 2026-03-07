@@ -10,6 +10,7 @@ import libPkgPackageJsonExport, { RULE_NAME as LIB_PKG_PACKAGE_JSON_EXPORT } fro
 import libProjectBundleConfig, { RULE_NAME as LIB_PROJECT_BUNDLE_CONFIG } from './rules/lib-project-bundle-config'
 import libProjectMetadata, { RULE_NAME as LIB_PROJECT_METADATA } from './rules/lib-project-metadata'
 import noAsyncFsApi, { RULE_NAME as NO_ASYNC_FS_API } from './rules/no-async-fs-api'
+import noDeprecatedTag, { RULE_NAME as NO_DEPRECATED_TAG } from './rules/no-deprecated-tag'
 import noEnum, { RULE_NAME as NO_ENUM } from './rules/no-enum'
 import noMixedTypeImport, { RULE_NAME as NO_MIXED_TYPE_IMPORT } from './rules/no-mixed-type-import'
 import noNamespaceImport, { RULE_NAME as NO_NAMESPACE_IMPORT } from './rules/no-namespace-import'
@@ -34,6 +35,7 @@ export const rules: ESLint.Plugin['rules'] = {
   [LIB_PROJECT_BUNDLE_CONFIG]: <Rule.RuleModule>(<unknown>libProjectBundleConfig),
   [LIB_PROJECT_METADATA]: <Rule.RuleModule>(<unknown>libProjectMetadata),
   [NO_ASYNC_FS_API]: <Rule.RuleModule>(<unknown>noAsyncFsApi),
+  [NO_DEPRECATED_TAG]: <Rule.RuleModule>(<unknown>noDeprecatedTag),
   [NO_ENUM]: <Rule.RuleModule>(<unknown>noEnum),
   [NO_MIXED_TYPE_IMPORT]: <Rule.RuleModule>(<unknown>noMixedTypeImport),
   [NO_NAMESPACE_IMPORT]: <Rule.RuleModule>(<unknown>noNamespaceImport),
