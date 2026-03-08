@@ -10,6 +10,9 @@
   <a href="https://www.npmjs.com/package/@hyperfrontend/time-utils">
     <img src="https://img.shields.io/npm/v/@hyperfrontend/time-utils?style=flat-square" alt="npm version">
   </a>
+  <a href="https://bundlephobia.com/package/@hyperfrontend/time-utils">
+    <img src="https://img.shields.io/bundlephobia/min/%40hyperfrontend%2Ftime-utils?style=flat-square" alt="npm bundle size">
+  </a>
 </p>
 <p align="center">
   <!-- ALL-CONTRIBUTORS-BADGE:START - Do not remove or modify this section -->
@@ -223,8 +226,6 @@ cleanup()
 | CJS    | `index.cjs.js`             |       ❌       |
 | IIFE   | `bundle/index.iife.min.js` |       ❌       |
 | UMD    | `bundle/index.umd.min.js`  |       ❌       |
-
-**Bundle size:** 1 KB (minified, self-contained)
 
 ### CDN Usage
 
