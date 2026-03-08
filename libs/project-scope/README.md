@@ -211,6 +211,31 @@ import { createTree, Mode } from '@hyperfrontend/project-scope/vfs'
 import { isNxWorkspace, findNxProjects } from '@hyperfrontend/project-scope/nx'
 ```
 
+## Compatibility
+
+| Platform | Support |
+| -------- | :-----: |
+| Node.js  |   ✅    |
+| Browser  |   ❌    |
+
+### Output Formats
+
+| Format | File           | Tree-Shakeable |
+| ------ | -------------- | :------------: |
+| ESM    | `index.esm.js` |       ✅       |
+| CJS    | `index.cjs.js` |       ❌       |
+
+**Bundle size:** ~15 KB (minified, self-contained)
+
+## Part of hyperfrontend
+
+This library is part of the [hyperfrontend](https://github.com/AndrewRedican/hyperfrontend) monorepo.
+
+**📖 [Full documentation](https://www.hyperfrontend.dev/docs/libraries/project-scope)**
+
+- Works seamlessly with [@hyperfrontend/nexus](https://github.com/AndrewRedican/hyperfrontend/tree/main/libs/nexus) for cross-window communication tooling
+- Looking for cryptographic utilities? See [@hyperfrontend/cryptography](https://github.com/AndrewRedican/hyperfrontend/tree/main/libs/cryptography)
+
 ## License
 
 MIT
