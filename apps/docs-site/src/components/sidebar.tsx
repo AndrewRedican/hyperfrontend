@@ -25,6 +25,7 @@ const navigation: NavItem[] = [
       { title: 'nexus', href: '/docs/libraries/nexus' },
       { title: 'network-protocol', href: '/docs/libraries/network-protocol' },
       { title: 'cryptography', href: '/docs/libraries/cryptography' },
+      { title: 'project-scope', href: '/docs/libraries/project-scope' },
       { title: 'state-machine', href: '/docs/libraries/state-machine' },
       { title: 'web-worker', href: '/docs/libraries/web-worker' },
       { title: 'logging', href: '/docs/libraries/logging' },
