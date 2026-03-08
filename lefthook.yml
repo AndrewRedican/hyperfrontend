@@ -17,6 +17,15 @@ commit-msg:
 pre-push:
   parallel: false
   commands:
+    typecheck:
+      run: CI=1 npx nx run-many -t=typecheck --skip-nx-cache
+      fail_text: 'Typecheck failed. Fix type errors before pushing.'
+    lint:
+      run: CI=1 npx nx run-many -t=lint --skip-nx-cache
+      fail_text: 'Lint failed. Fix lint errors before pushing.'
+    test:
+      run: CI=1 npx nx run-many -t=test --skip-nx-cache
+      fail_text: 'Tests failed. Fix failing tests before pushing.'
     version:
       run: |
         # Skip versioning when pushing to main - CI handles main branch
@@ -35,6 +44,25 @@ pre-push:
         fi
 
         echo "📦 Versioning affected libraries: $AFFECTED"
+
+        # Capture tags before versioning to enable cleanup on interrupt
+        TAGS_BEFORE_FILE=$(mktemp)
+        git tag | grep -E "^lib-" | sort > "$TAGS_BEFORE_FILE"
+        cleanup_tags() {
+          echo ""
+          echo "⚠️  Interrupted! Cleaning up tags created during this session..."
+          TAGS_AFTER_FILE=$(mktemp)
+          git tag | grep -E "^lib-" | sort > "$TAGS_AFTER_FILE"
+          NEW_TAGS=$(comm -23 "$TAGS_AFTER_FILE" "$TAGS_BEFORE_FILE")
+          rm -f "$TAGS_AFTER_FILE"
+          if [ -n "$NEW_TAGS" ]; then
+            echo "$NEW_TAGS" | xargs -I {} git tag -d {}
+            echo "✓ Cleaned up tags. Run 'git checkout .' to discard file changes if needed."
+          fi
+          rm -f "$TAGS_BEFORE_FILE"
+          exit 1
+        }
+        trap cleanup_tags INT TERM
 
         # Run versioning for each library with --collectFiles
         # --collectFiles: Outputs modified files without staging, implies skipCommit/skipTag
@@ -74,6 +102,7 @@ pre-push:
           echo "❌ Version failed for:$FAILED"
           echo "Discarding all changes..."
           git checkout .
+          rm -f "$TAGS_BEFORE_FILE"
           exit 1
         fi
 
@@ -92,4 +121,5 @@ pre-push:
         else
           echo "✅ No version changes needed"
         fi
+        rm -f "$TAGS_BEFORE_FILE"
       fail_text: 'Version check failed. You may need to resolve conflicts or run versioning manually.'

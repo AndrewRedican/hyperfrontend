@@ -1,0 +1,5 @@
+{
+  "name": "nx-e2e-project",
+  "projectType": "application",
+  "tags": ["type:e2e", "scope:testing"]
+}

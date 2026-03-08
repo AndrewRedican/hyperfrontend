@@ -7,11 +7,11 @@
     "pack-install": "cd ../../../dist/libs/utils/function && npm pack && cd - && npm install ../../../dist/libs/utils/function/*.tgz"
   },
   "dependencies": {
-    "@hyperfrontend/function-utils": "file:../../../tmp/e2e-packs/hyperfrontend-function-utils-0.0.3.tgz"
+    "@hyperfrontend/function-utils": "file:../../../tmp/e2e-packs/hyperfrontend-function-utils-0.0.4.tgz"
   },
   "devDependencies": {
     "@types/jest": "29.5.14",
-    "@types/node": "22.15.32",
+    "@types/node": "25.3.3",
     "jest": "29.7.0",
     "jest-environment-jsdom": "29.7.0",
     "ts-jest": "29.2.6",

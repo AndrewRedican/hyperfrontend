@@ -37,4 +37,9 @@ describe('hexToRgb', () => {
     expect(hexToRgb('#112233cc')).toEqual({ r: 17, g: 34, b: 51, a: 0.8 })
     expect(hexToRgb('ff00ffff')).toEqual({ r: 255, g: 0, b: 255, a: 1 })
   })
+
+  it('handles 4-digit hex codes with opacity', () => {
+    expect(hexToRgb('#1234')).toEqual({ r: 17, g: 34, b: 51, a: 0.27 })
+    expect(hexToRgb('f0fc')).toEqual({ r: 255, g: 0, b: 255, a: 0.8 })
+  })
 })

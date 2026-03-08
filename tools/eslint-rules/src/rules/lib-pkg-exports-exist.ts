@@ -57,6 +57,7 @@ const rule: Rule.RuleModule = {
     type: 'problem',
     docs: {
       description: 'Require that paths in package.json exports field point to existing files',
+      url: 'https://github.com/AndrewRedican/hyperfrontend/blob/main/tools/eslint-rules/docs/lib-pkg-exports-exist.md',
     },
     schema: [],
     messages: {
@@ -73,7 +74,7 @@ const rule: Rule.RuleModule = {
       return {}
     }
 
-    return <Rule.RuleListener>(<unknown>{
+    return {
       JSONProperty(node: JSONNode) {
         /* istanbul ignore if -- type guard for jsonc-eslint-parser */
         if (node.type !== 'JSONProperty') {
@@ -117,7 +118,7 @@ const rule: Rule.RuleModule = {
 
             if (!exportPathExists(exportPath, projectRoot)) {
               context.report({
-                node: <Rule.Node>(<unknown>propValue),
+                node: propValue as unknown as Rule.Node,
                 messageId: 'exportPathNotFound',
                 data: { path: exportPath },
               })
@@ -143,7 +144,7 @@ const rule: Rule.RuleModule = {
 
                 if (!exportPathExists(exportPath, projectRoot)) {
                   context.report({
-                    node: <Rule.Node>(<unknown>conditionalValue),
+                    node: conditionalValue as unknown as Rule.Node,
                     messageId: 'exportPathNotFound',
                     data: { path: exportPath },
                   })
@@ -153,7 +154,7 @@ const rule: Rule.RuleModule = {
           }
         }
       },
-    })
+    } as unknown as Rule.RuleListener
   },
 }
 

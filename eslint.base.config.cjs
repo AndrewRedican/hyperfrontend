@@ -150,6 +150,8 @@ module.exports = [
       'workspace/import-order': 'error',
       'workspace/no-enum': 'error',
       'workspace/no-async-fs-api': 'error',
+      'workspace/no-deprecated-tag': 'error',
+      'workspace/no-unsafe-regex': 'error',
     },
   },
   {

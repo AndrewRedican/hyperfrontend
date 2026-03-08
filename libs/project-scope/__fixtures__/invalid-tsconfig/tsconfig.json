@@ -1,0 +1,7 @@
+{
+  "compilerOptions": {
+    "strict": true,
+    // This is an invalid JSON comment that will cause parsing to fail
+    "target": "ES2020"
+  }
+  // Missing closing brace

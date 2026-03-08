@@ -18,6 +18,9 @@
   <a href="https://www.npmjs.com/package/@hyperfrontend/web-worker">
     <img src="https://img.shields.io/npm/v/@hyperfrontend/web-worker?style=flat-square" alt="npm version">
   </a>
+  <a href="https://bundlephobia.com/package/@hyperfrontend/web-worker">
+    <img src="https://img.shields.io/bundlephobia/min/%40hyperfrontend%2Fweb-worker?style=flat-square" alt="npm bundle size">
+  </a>
   <a href="https://www.npmjs.com/package/@hyperfrontend/web-worker">
     <img src="https://img.shields.io/npm/dm/@hyperfrontend/web-worker?style=flat-square" alt="npm downloads">
   </a>

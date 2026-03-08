@@ -24,7 +24,7 @@
   "devDependencies": {
     "@tailwindcss/typography": "0.5.16",
     "@types/mdx": "2.0.13",
-    "@types/node": "22.15.32",
+    "@types/node": "25.3.3",
     "@types/react": "19.0.10",
     "@types/react-dom": "19.0.4",
     "autoprefixer": "10.4.21",
@@ -40,6 +40,7 @@
   },
   "overrides": {
     "minimatch": "10.2.3",
-    "lodash": "4.17.23"
+    "lodash": "4.17.23",
+    "dompurify": "3.3.2"
   }
 }

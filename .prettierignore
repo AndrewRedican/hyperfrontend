@@ -32,5 +32,8 @@ pnpm-lock.yaml
 coverage/
 .nyc_output/
 
+# Test fixtures
+**/__fixtures__/
+
 # Changelogs
 **/CHANGELOG.md

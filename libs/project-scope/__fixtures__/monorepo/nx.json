@@ -1,0 +1,7 @@
+{
+  "$schema": "https://nx.dev/schema/nx-schema",
+  "npmScope": "test-monorepo",
+  "affected": {
+    "defaultBase": "main"
+  }
+}

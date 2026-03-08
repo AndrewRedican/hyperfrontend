@@ -13,6 +13,7 @@ const rule: Rule.RuleModule = {
     type: 'problem',
     docs: {
       description: 'Require essential metadata in publishable library project.json files',
+      url: 'https://github.com/AndrewRedican/hyperfrontend/blob/main/tools/eslint-rules/docs/lib-project-metadata.md',
     },
     schema: [],
     messages: {
@@ -41,7 +42,7 @@ const rule: Rule.RuleModule = {
       description?: { value: string | null; node: JSONProperty }
     } = {}
 
-    return <Rule.RuleListener>(<unknown>{
+    return {
       JSONProperty(node: JSONNode) {
         // istanbul ignore next -- type guard for jsonc-eslint-parser
         if (node.type !== 'JSONProperty') {
@@ -89,12 +90,12 @@ const rule: Rule.RuleModule = {
         // Check tags
         if (!fields.tags) {
           context.report({
-            node: <Rule.Node>(<unknown>node),
+            node: node as unknown as Rule.Node,
             messageId: 'missingTags',
           })
         } else if (!fields.tags.value || fields.tags.value.length === 0) {
           context.report({
-            node: <Rule.Node>(<unknown>fields.tags.node),
+            node: fields.tags.node as unknown as Rule.Node,
             messageId: 'emptyTags',
           })
         }
@@ -102,12 +103,12 @@ const rule: Rule.RuleModule = {
         // Check name
         if (!fields.name) {
           context.report({
-            node: <Rule.Node>(<unknown>node),
+            node: node as unknown as Rule.Node,
             messageId: 'missingName',
           })
         } else if (!fields.name.value || !fields.name.value.startsWith('lib-')) {
           context.report({
-            node: <Rule.Node>(<unknown>fields.name.node),
+            node: fields.name.node as unknown as Rule.Node,
             messageId: 'invalidNamePrefix',
           })
         }
@@ -115,12 +116,12 @@ const rule: Rule.RuleModule = {
         // Check description
         if (!fields.description || !fields.description.value) {
           context.report({
-            node: <Rule.Node>(<unknown>node),
+            node: node as unknown as Rule.Node,
             messageId: 'missingDescription',
           })
         }
       },
-    })
+    } as unknown as Rule.RuleListener
   },
 }
 

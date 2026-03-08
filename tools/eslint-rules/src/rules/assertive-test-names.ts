@@ -6,7 +6,7 @@ import { ESLintUtils, TSESTree } from '@typescript-eslint/utils'
 export const RULE_NAME = 'assertive-test-names'
 
 const createRule = ESLintUtils.RuleCreator(
-  (name) => `https://github.com/AnndrewRedican/hyperfrontend/blob/main/tools/eslint-rules/docs/${name}.md`
+  (name) => `https://github.com/AndrewRedican/hyperfrontend/blob/main/tools/eslint-rules/docs/${name}.md`
 )
 
 type MessageIds = 'noShouldInTestName'

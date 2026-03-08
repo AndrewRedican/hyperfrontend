@@ -450,6 +450,7 @@ function updateE2eDependencies(packageName: string, newVersion: string, workspac
   // Handle scoped packages and convert to tarball naming convention
   const packageSlug = packageName.replace(/^@hyperfrontend\//, '').replace(/-utils$/, '-utils')
   // Tarball pattern: hyperfrontend-{slug}-{version}.tgz
+  // eslint-disable-next-line workspace/no-unsafe-regex -- packageSlug is derived from controlled package names
   const tgzPattern = new RegExp(`hyperfrontend-${packageSlug}-\\d+\\.\\d+\\.\\d+\\.tgz`)
   const newTgzName = `hyperfrontend-${packageSlug}-${newVersion}.tgz`
 
@@ -547,7 +548,11 @@ export default async function versionExecutor(options: VersionExecutorOptions, c
   // For unreleased versions (no tag for current version), clear existing changelog
   // entry so semver regenerates it with ALL commits since last tagged release.
   // This handles the case where version command was run but not pushed.
-  if (!tagExists(expectedTag, workspaceRoot)) {
+  // IMPORTANT: Skip clearing in collectFiles mode - PR CI may not have all tags fetched,
+  // causing false positives that corrupt changelogs. Main CI will handle this correctly.
+  if (options.collectFiles) {
+    logger.info(`${projectName}: Skipping changelog clearing in collectFiles mode`)
+  } else if (!tagExists(expectedTag, workspaceRoot)) {
     const cleared = clearUnreleasedChangelogEntry(changelogPath, currentVersion, options.dryRun ?? false)
     if (cleared) {
       logger.info(`${projectName}: Cleared existing changelog entry for unreleased ${currentVersion}`)
@@ -587,6 +592,25 @@ export default async function versionExecutor(options: VersionExecutorOptions, c
 
   if (result.success) {
     logger.info(`${projectName}: version updated`)
+
+    // jscutlery/semver doesn't support skipTag - it always creates tags.
+    // When skipTag is true (e.g., collectFiles mode), delete the tag it created.
+    if (options.skipTag) {
+      const newVersion = getPackageVersion(packageJsonPath)
+      const newTag = `${tagPrefix}${newVersion}`
+      if (tagExists(newTag, workspaceRoot)) {
+        try {
+          execSync(`git tag -d "${newTag}"`, {
+            cwd: workspaceRoot,
+            encoding: 'utf-8',
+            stdio: ['pipe', 'pipe', 'pipe'],
+          })
+          logger.info(`${projectName}: Removed tag ${newTag} (skipTag mode)`)
+        } catch {
+          logger.warn(`${projectName}: Failed to remove tag ${newTag}`)
+        }
+      }
+    }
 
     // Track project's own modified files (relative to workspace root)
     modifiedFiles.push(join(projectRoot, 'package.json'))

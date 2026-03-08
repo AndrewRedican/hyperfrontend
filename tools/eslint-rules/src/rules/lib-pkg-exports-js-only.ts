@@ -54,6 +54,7 @@ const rule: Rule.RuleModule = {
     type: 'problem',
     docs: {
       description: 'Require only .js or .json extensions for relative paths in package.json exports field',
+      url: 'https://github.com/AndrewRedican/hyperfrontend/blob/main/tools/eslint-rules/docs/lib-pkg-exports-js-only.md',
     },
     fixable: 'code',
     schema: [],
@@ -94,7 +95,7 @@ const rule: Rule.RuleModule = {
         const suggested = getSuggestedJsPath(exportPath)
 
         context.report({
-          node: <Rule.Node>(<unknown>valueNode),
+          node: valueNode as unknown as Rule.Node,
           messageId: 'invalidExtension',
           data: {
             path: exportPath,
@@ -104,10 +105,10 @@ const rule: Rule.RuleModule = {
           fix(fixer) {
             // Only auto-fix TypeScript extensions to their JS equivalents
             if (/\.(ts|tsx|mts|cts)$/.test(exportPath)) {
-              const raw = (<{ raw?: string }>(<unknown>valueNode)).raw
+              const raw = (valueNode as unknown as { raw?: string }).raw
               if (raw) {
                 const quote = raw[0]
-                return fixer.replaceText(<Rule.Node>(<unknown>valueNode), `${quote}${suggested}${quote}`)
+                return fixer.replaceText(valueNode as unknown as Rule.Node, `${quote}${suggested}${quote}`)
               }
             }
             return null
@@ -116,7 +117,7 @@ const rule: Rule.RuleModule = {
       }
     }
 
-    return <Rule.RuleListener>(<unknown>{
+    return {
       JSONProperty(node: JSONNode) {
         /* istanbul ignore if -- type guard for jsonc-eslint-parser */
         if (node.type !== 'JSONProperty') {
@@ -170,7 +171,7 @@ const rule: Rule.RuleModule = {
           }
         }
       },
-    })
+    } as unknown as Rule.RuleListener
   },
 }
 

@@ -1,0 +1,27 @@
+{
+  "name": "library-with-exports",
+  "version": "1.0.0",
+  "main": "dist/index.js",
+  "module": "dist/index.mjs",
+  "browser": "dist/browser.js",
+  "bin": {
+    "lib-cli": "bin/cli.js",
+    "lib-tool": "bin/tool.js"
+  },
+  "exports": {
+    ".": {
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.cjs",
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./utils": "./dist/utils.js",
+    "./helpers": {
+      "import": "./dist/helpers.mjs",
+      "require": "./dist/helpers.cjs"
+    }
+  },
+  "devDependencies": {
+    "typescript": "^5.0.0"
+  }
+}

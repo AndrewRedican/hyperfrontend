@@ -76,7 +76,7 @@ function buildErrorDetails(packageJson: PackageJson): string {
  * Creates the no-unwanted-barrel-files ESLint rule.
  */
 const rule = ESLintUtils.RuleCreator(
-  () => 'https://github.com/AndrewRedican/hyperfrontend/blob/main/roadmap/eslint-no-unwanted-barrel-files.md'
+  (name) => `https://github.com/AndrewRedican/hyperfrontend/blob/main/tools/eslint-rules/docs/${name}.md`
 )({
   name: RULE_NAME,
   meta: {

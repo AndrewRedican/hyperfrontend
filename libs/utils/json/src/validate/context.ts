@@ -1,5 +1,5 @@
 import type { Schema } from '../types/schema'
-import type { ValidationError } from '../types/validation'
+import type { ValidationError, PatternSafetyChecker } from '../types/validation'
 import { createMap } from '@hyperfrontend/immutable-api-utils/built-in-copy/map'
 import { entries } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
 
@@ -25,6 +25,8 @@ export interface ValidationContext {
   readonly collectAllErrors: boolean
   /** Whether to report errors for invalid regex patterns */
   readonly strictPatterns: boolean
+  /** Optional pattern safety checker for ReDoS detection */
+  readonly patternSafetyChecker?: PatternSafetyChecker
   /** Schema validator function (injected to avoid circular deps) */
   readonly validate: SchemaValidator
 }
@@ -36,13 +38,15 @@ export interface ValidationContext {
  * @param validator - The schema validator function
  * @param collectAllErrors - Whether to collect all errors (default: true)
  * @param strictPatterns - Whether to report errors for invalid regex patterns (default: false)
+ * @param patternSafetyChecker - Optional pattern safety checker for ReDoS detection
  * @returns A new validation context
  */
 export function createValidationContext(
   rootSchema: Schema,
   validator?: SchemaValidator,
   collectAllErrors = true,
-  strictPatterns = false
+  strictPatterns = false,
+  patternSafetyChecker?: PatternSafetyChecker
 ): ValidationContext {
   const definitions = createMap<string, Schema>()
 
@@ -60,6 +64,7 @@ export function createValidationContext(
     definitions,
     collectAllErrors,
     strictPatterns,
+    patternSafetyChecker,
     validate: validator,
   }
 }

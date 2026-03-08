@@ -1,0 +1,11 @@
+{
+  "version": 2,
+  "projects": {
+    "app-one": "apps/app-one",
+    "lib-inline": {
+      "root": "libs/lib-inline",
+      "projectType": "library",
+      "sourceRoot": "libs/lib-inline/src"
+    }
+  }
+}

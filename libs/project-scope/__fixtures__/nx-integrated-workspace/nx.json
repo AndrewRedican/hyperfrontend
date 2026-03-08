@@ -1,0 +1,16 @@
+{
+  "$schema": "https://nx.dev/schema/nx-schema",
+  "defaultProject": "main-app",
+  "workspaceLayout": {
+    "appsDir": "applications",
+    "libsDir": "libraries"
+  },
+  "namedInputs": {
+    "production": ["!{projectRoot}/**/*.spec.ts"]
+  },
+  "targetDefaults": {
+    "build": {
+      "dependsOn": ["^build"]
+    }
+  }
+}

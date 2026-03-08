@@ -1,0 +1,5 @@
+{
+  "name": "nx-tagged-lib",
+  "projectType": "library",
+  "tags": ["type:util", "scope:shared", "lib"]
+}

@@ -1,0 +1,7 @@
+{
+  "name": "sveltekit-app",
+  "version": "1.0.0",
+  "dependencies": {
+    "@sveltejs/kit": "^2.0.0"
+  }
+}

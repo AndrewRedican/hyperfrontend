@@ -2,6 +2,14 @@
 
 This file was generated using [@jscutlery/semver](https://github.com/jscutlery/semver).
 
+## [0.1.1](https://github.com/AndrewRedican/hyperfrontend/compare/lib-immutable-api-utils@0.1.0...lib-immutable-api-utils@0.1.1) (2026-03-08)
+
+
+### Bug Fixes
+
+* **lib-immutable-api-utils:** handle built-in binding and jsdocs for fn overloads correctly ([da9ff90](https://github.com/AndrewRedican/hyperfrontend/commit/da9ff90ab29bfbdbdc03bb39585b09ca04772a57))
+* **lib-immutable-api-utils:** use correct overload constructor for unit 8 array ([06bb617](https://github.com/AndrewRedican/hyperfrontend/commit/06bb6172a5af486b5500af1207365753fe221680))
+
 ## [0.1.0](https://github.com/AndrewRedican/hyperfrontend/compare/lib-immutable-api-utils@0.0.2...lib-immutable-api-utils@0.1.0) (2026-03-02)
 
 

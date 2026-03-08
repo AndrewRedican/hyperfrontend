@@ -2,10 +2,9 @@ import type {
   EntryPointDiscovery,
   FormatOutputs,
   PackageJson,
-  IIFEConfig,
-  UMDConfig,
   ConditionalExport,
   ExportValue,
+  BuildExecutorOptions,
 } from './types'
 import { join } from 'node:path'
 import { readJsonFile, writeJsonFile } from '@nx/devkit'
@@ -230,23 +229,43 @@ function filterWorkspaceDependencies(srcPkg: PackageJson): PackageJson {
 }
 
 /**
- * Gets the bundle output directory, handling multiple configurations.
+ * Determines the CDN (unpkg/jsdelivr) paths for the package.
+ * Priority: explicit config > UMD bundle path > IIFE bundle path
  *
- * @param iifeConfigs - IIFE configuration(s)
- * @param umdConfigs - UMD configuration(s)
- * @returns Bundle output directory or undefined
+ * @param formatOutputs - Collected format outputs during build
+ * @param options - Build executor options
+ * @returns Object with unpkg and jsdelivr paths, or undefined if no bundles
  */
-function getBundleOutputDir(
-  iifeConfigs: { config: IIFEConfig; entries: unknown[] }[],
-  umdConfigs: { config: UMDConfig; entries: unknown[] }[]
-): string | undefined {
-  if (iifeConfigs.length > 0) {
-    return iifeConfigs[0]?.config.output ?? 'bundle'
+function getCdnPaths(
+  formatOutputs: FormatOutputs,
+  options?: Pick<BuildExecutorOptions, 'unpkg' | 'jsdelivr'>
+): { unpkg: string; jsdelivr: string } | undefined {
+  const hasUmd = formatOutputs.umd.length > 0
+  const hasIife = formatOutputs.iife.length > 0
+
+  if (!hasUmd && !hasIife) {
+    return undefined
   }
-  if (umdConfigs.length > 0) {
-    return umdConfigs[0]?.config.output ?? 'bundle'
+
+  // Priority: explicit config > UMD > IIFE
+  let defaultPath: string | undefined
+
+  if (hasUmd) {
+    const umdDir = formatOutputs.umd[0]?.config.output ?? 'bundle'
+    defaultPath = `./${umdDir}/index.umd.min.js`
+  } else if (hasIife) {
+    const iifeDir = formatOutputs.iife[0]?.config.output ?? 'bundle'
+    defaultPath = `./${iifeDir}/index.iife.min.js`
   }
-  return undefined
+
+  if (!defaultPath) {
+    return undefined
+  }
+
+  return {
+    unpkg: options?.unpkg ?? defaultPath,
+    jsdelivr: options?.jsdelivr ?? defaultPath,
+  }
 }
 
 /**
@@ -258,21 +277,22 @@ function getBundleOutputDir(
  * @param discovery - Entry point discovery result
  * @param workspaceRoot - Absolute path to workspace root
  * @param formatOutputs - Collected format outputs during build
+ * @param options - Build executor options (for custom unpkg/jsdelivr paths)
  */
 export function generatePackageJson(
   srcPkg: PackageJson,
   outputPath: string,
   discovery: EntryPointDiscovery,
   workspaceRoot: string,
-  formatOutputs: FormatOutputs
+  formatOutputs: FormatOutputs,
+  options?: Partial<BuildExecutorOptions>
 ): void {
   const exports = generateExportsFromFormats(discovery, formatOutputs, srcPkg)
 
   const rootPkg = readRootPackageJson(workspaceRoot)
   const inheritedFields = getInheritableFields(rootPkg)
 
-  const hasBundles = formatOutputs.iife.length > 0 || formatOutputs.umd.length > 0
-  const bundleDir = getBundleOutputDir(formatOutputs.iife, formatOutputs.umd)
+  const cdnPaths = getCdnPaths(formatOutputs, options)
 
   const hasEsm = formatOutputs.esm.some((e) => e.isRoot)
   const hasCjs = formatOutputs.cjs.some((e) => e.isRoot)
@@ -280,14 +300,15 @@ export function generatePackageJson(
   // Filter out workspace dependencies - they are bundled into the output
   const filteredSrcPkg = filterWorkspaceDependencies(srcPkg)
 
-  if (discovery.hasRootEntry && (hasEsm || hasCjs)) {
-    const distPkg: PackageJson = {
-      ...filteredSrcPkg,
-      ...inheritedFields,
-      sideEffects: false,
-      exports,
-    }
+  const distPkg: PackageJson = {
+    ...filteredSrcPkg,
+    ...inheritedFields,
+    sideEffects: false,
+    exports,
+  }
 
+  // Add main/module/types only if there's a root entry
+  if (discovery.hasRootEntry && (hasEsm || hasCjs)) {
     if (hasCjs) {
       distPkg.main = './index.cjs.js'
     }
@@ -299,27 +320,20 @@ export function generatePackageJson(
     if (hasEsm || hasCjs) {
       distPkg.types = './index.d.ts'
     }
-
-    if (hasBundles && bundleDir) {
-      distPkg.unpkg = `./${bundleDir}/index.umd.min.js`
-      distPkg.jsdelivr = `./${bundleDir}/index.umd.min.js`
-    }
-
-    writeOutputPackageJson(outputPath, distPkg)
   } else {
-    const distPkg: PackageJson = {
-      ...filteredSrcPkg,
-      ...inheritedFields,
-      sideEffects: false,
-      exports,
-    }
-
+    // Ensure these aren't carried over from source package.json
     delete distPkg.main
     delete distPkg.module
     delete distPkg.types
-
-    writeOutputPackageJson(outputPath, distPkg)
   }
+
+  // Always add CDN paths when bundles exist (regardless of root entry)
+  if (cdnPaths) {
+    distPkg.unpkg = cdnPaths.unpkg
+    distPkg.jsdelivr = cdnPaths.jsdelivr
+  }
+
+  writeOutputPackageJson(outputPath, distPkg)
 }
 
 /**

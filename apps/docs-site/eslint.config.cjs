@@ -66,6 +66,25 @@ module.exports = [
         {
           ignoredFiles: ['{projectRoot}/eslint.config.{js,cjs,mjs}'],
           ignoredDependencies: [
+            // Apps are standalone and install @hyperfrontend packages from npm
+            // They should not be subject to monorepo version synchronization rules
+            '@hyperfrontend/cryptography',
+            '@hyperfrontend/data-utils',
+            '@hyperfrontend/function-utils',
+            '@hyperfrontend/immutable-api-utils',
+            '@hyperfrontend/json-utils',
+            '@hyperfrontend/list-utils',
+            '@hyperfrontend/logging',
+            '@hyperfrontend/network-protocol',
+            '@hyperfrontend/nexus',
+            '@hyperfrontend/project-scope',
+            '@hyperfrontend/random-generator-utils',
+            '@hyperfrontend/state-machine',
+            '@hyperfrontend/string-utils',
+            '@hyperfrontend/time-utils',
+            '@hyperfrontend/ui-utils',
+            '@hyperfrontend/web-worker',
+            // Third-party dependencies used by docs-site
             'clsx',
             'mermaid',
             'next',

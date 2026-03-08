@@ -1,6 +1,6 @@
 import type { ExecutorContext } from '@nx/devkit'
 import type { RollupOptions } from 'rollup'
-import type { BuildV2ExecutorOptions, BuildContext, FormatOutputs } from './lib'
+import type { BuildExecutorOptions, BuildContext, FormatOutputs } from './lib'
 import { existsSync, mkdirSync, rmSync } from 'node:fs'
 import { join } from 'node:path'
 import { joinPathFragments, logger } from '@nx/devkit'
@@ -56,7 +56,7 @@ async function executeRollupConfigs(configs: RollupOptions[]): Promise<void> {
  * @param context - Nx executor context
  * @returns Success status
  */
-export default async function runExecutor(options: BuildV2ExecutorOptions, context: ExecutorContext): Promise<{ success: boolean }> {
+export default async function runExecutor(options: BuildExecutorOptions, context: ExecutorContext): Promise<{ success: boolean }> {
   const { projectName, root: workspaceRoot } = context
 
   if (!projectName) {
@@ -197,7 +197,7 @@ export default async function runExecutor(options: BuildV2ExecutorOptions, conte
     generateDeclarations(projectRoot, outputPath, tsConfigPath, workspaceRoot, discovery)
 
     const srcPkg = readProjectPackageJson(projectRoot)
-    generatePackageJson(srcPkg, outputPath, discovery, workspaceRoot, formatOutputs)
+    generatePackageJson(srcPkg, outputPath, discovery, workspaceRoot, formatOutputs, options)
 
     copyDefaultAssets(projectRoot, outputPath, workspaceRoot)
 

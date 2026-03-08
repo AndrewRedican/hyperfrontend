@@ -10,7 +10,7 @@
     "@rollup/plugin-node-resolve": "16.0.3",
     "@rollup/plugin-terser": "0.4.4",
     "@rollup/plugin-typescript": "12.3.0",
-    "@types/node": "25.0.9",
+    "@types/node": "25.3.3",
     "jest": "30.2.0",
     "rollup": "4.59.0",
     "typescript": "5.9.3"

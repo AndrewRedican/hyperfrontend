@@ -90,8 +90,3 @@ export function createPSKHandshakeProtocolFactory<T = any>(
     return protocolProvider
   }
 }
-
-/**
- * @deprecated Use `createPSKHandshakeProtocolFactory` instead. This alias exists for backward compatibility.
- */
-export const createStaticKeyProtocolFactory = createPSKHandshakeProtocolFactory

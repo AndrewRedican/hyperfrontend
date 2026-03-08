@@ -1,0 +1,7 @@
+{
+  "name": "biome-project",
+  "version": "1.0.0",
+  "devDependencies": {
+    "@biomejs/biome": "^1.5.0"
+  }
+}

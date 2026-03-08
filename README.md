@@ -13,7 +13,8 @@
   <a href="https://github.com/AndrewRedican/hyperfrontend/blob/main/README.md#installation">Installation</a> |
   <a href="https://github.com/AndrewRedican/hyperfrontend/blob/main/README.md#quick-start">Quick Start</a> |
   <a href="https://github.com/AndrewRedican/hyperfrontend/blob/main/ARCHITECTURE.md">Architecture</a> |
-  <a href="https://github.com/AndrewRedican/hyperfrontend/blob/main/README.md#live-demos">Live Demos</a>
+  <a href="https://github.com/AndrewRedican/hyperfrontend/blob/main/README.md#live-demos">Live Demos</a> |
+  <a href="https://github.com/AndrewRedican/hyperfrontend/blob/main/ACKNOWLEDGMENTS.md">Acknowledgments</a>
 </p>
 
 <p align="center">
@@ -254,21 +255,22 @@ This launches a development environment where you can debug and interact with yo
 
 ## Internal Packages
 
-| Package                                                                                                        | Description                                                                                                                                                                     |
-| -------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| [cryptography](https://github.com/AndrewRedican/hyperfrontend/blob/main/libs/cryptography)                     | Cryptography utilities for browser and Node.js environments [See docs](https://github.com/AndrewRedican/hyperfrontend/blob/main/libs/cryptography/README.md)                    |
-| [data-utils](https://github.com/AndrewRedican/hyperfrontend/blob/main/libs/utils/data)                         | Data manipulation and transformation utilities [See docs](https://github.com/AndrewRedican/hyperfrontend/blob/main/libs/utils/data/README.md)                                   |
-| [function-utils](https://github.com/AndrewRedican/hyperfrontend/blob/main/libs/utils/function)                 | Function composition and manipulation utilities [See docs](https://github.com/AndrewRedican/hyperfrontend/blob/main/libs/utils/function/README.md)                              |
-| [immutable-api-utils](https://github.com/AndrewRedican/hyperfrontend/blob/main/libs/utils/immutable-api)       | Immutable API utilities for functional programming [See docs](https://github.com/AndrewRedican/hyperfrontend/blob/main/libs/utils/immutable-api/README.md)                      |
-| [list-utils](https://github.com/AndrewRedican/hyperfrontend/blob/main/libs/utils/list)                         | List and array manipulation utilities [See docs](https://github.com/AndrewRedican/hyperfrontend/blob/main/libs/utils/list/README.md)                                            |
-| [logging](https://github.com/AndrewRedican/hyperfrontend/blob/main/libs/logging)                               | Structured logging utilities for applications [See docs](https://github.com/AndrewRedican/hyperfrontend/blob/main/libs/logging/README.md)                                       |
-| [network-protocol](https://github.com/AndrewRedican/hyperfrontend/blob/main/libs/network-protocol)             | Network protocol implementation with channels, routing, and security [See docs](https://github.com/AndrewRedican/hyperfrontend/blob/main/libs/network-protocol/README.md)       |
-| [random-generator-utils](https://github.com/AndrewRedican/hyperfrontend/blob/main/libs/utils/random-generator) | Random number and data generation utilities [See docs](https://github.com/AndrewRedican/hyperfrontend/blob/main/libs/utils/random-generator/README.md)                          |
-| [state-machine](https://github.com/AndrewRedican/hyperfrontend/blob/main/libs/state-machine)                   | State machine implementation with lifecycle management, actions, and reducers [See docs](https://github.com/AndrewRedican/hyperfrontend/blob/main/libs/state-machine/README.md) |
-| [string-utils](https://github.com/AndrewRedican/hyperfrontend/blob/main/libs/utils/string)                     | String manipulation utilities for browser and Node.js environments [See docs](https://github.com/AndrewRedican/hyperfrontend/blob/main/libs/utils/string/README.md)             |
-| [time-utils](https://github.com/AndrewRedican/hyperfrontend/blob/main/libs/utils/time)                         | Time and date manipulation utilities [See docs](https://github.com/AndrewRedican/hyperfrontend/blob/main/libs/utils/time/README.md)                                             |
-| [ui-utils](https://github.com/AndrewRedican/hyperfrontend/blob/main/libs/ui)                                   | UI utilities for elements, events, styling, and mobile interactions [See docs](https://github.com/AndrewRedican/hyperfrontend/blob/main/libs/ui/README.md)                      |
-| [web-worker](https://github.com/AndrewRedican/hyperfrontend/blob/main/libs/web-worker)                         | Web Worker utilities and abstractions [See docs](https://github.com/AndrewRedican/hyperfrontend/blob/main/libs/web-worker/README.md)                                            |
+| Package                                                                                                        | Description                                                                                                                                                                           |
+| -------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [cryptography](https://github.com/AndrewRedican/hyperfrontend/blob/main/libs/cryptography)                     | Cryptography utilities for browser and Node.js environments [See docs](https://github.com/AndrewRedican/hyperfrontend/blob/main/libs/cryptography/README.md)                          |
+| [data-utils](https://github.com/AndrewRedican/hyperfrontend/blob/main/libs/utils/data)                         | Data manipulation and transformation utilities [See docs](https://github.com/AndrewRedican/hyperfrontend/blob/main/libs/utils/data/README.md)                                         |
+| [function-utils](https://github.com/AndrewRedican/hyperfrontend/blob/main/libs/utils/function)                 | Function composition and manipulation utilities [See docs](https://github.com/AndrewRedican/hyperfrontend/blob/main/libs/utils/function/README.md)                                    |
+| [immutable-api-utils](https://github.com/AndrewRedican/hyperfrontend/blob/main/libs/utils/immutable-api)       | Immutable API utilities for functional programming [See docs](https://github.com/AndrewRedican/hyperfrontend/blob/main/libs/utils/immutable-api/README.md)                            |
+| [list-utils](https://github.com/AndrewRedican/hyperfrontend/blob/main/libs/utils/list)                         | List and array manipulation utilities [See docs](https://github.com/AndrewRedican/hyperfrontend/blob/main/libs/utils/list/README.md)                                                  |
+| [logging](https://github.com/AndrewRedican/hyperfrontend/blob/main/libs/logging)                               | Structured logging utilities for applications [See docs](https://github.com/AndrewRedican/hyperfrontend/blob/main/libs/logging/README.md)                                             |
+| [network-protocol](https://github.com/AndrewRedican/hyperfrontend/blob/main/libs/network-protocol)             | Network protocol implementation with channels, routing, and security [See docs](https://github.com/AndrewRedican/hyperfrontend/blob/main/libs/network-protocol/README.md)             |
+| [project-scope](https://github.com/AndrewRedican/hyperfrontend/blob/main/libs/project-scope)                   | Project analysis, technology stack detection, and transactional virtual file system [See docs](https://github.com/AndrewRedican/hyperfrontend/blob/main/libs/project-scope/README.md) |
+| [random-generator-utils](https://github.com/AndrewRedican/hyperfrontend/blob/main/libs/utils/random-generator) | Random number and data generation utilities [See docs](https://github.com/AndrewRedican/hyperfrontend/blob/main/libs/utils/random-generator/README.md)                                |
+| [state-machine](https://github.com/AndrewRedican/hyperfrontend/blob/main/libs/state-machine)                   | State machine implementation with lifecycle management, actions, and reducers [See docs](https://github.com/AndrewRedican/hyperfrontend/blob/main/libs/state-machine/README.md)       |
+| [string-utils](https://github.com/AndrewRedican/hyperfrontend/blob/main/libs/utils/string)                     | String manipulation utilities for browser and Node.js environments [See docs](https://github.com/AndrewRedican/hyperfrontend/blob/main/libs/utils/string/README.md)                   |
+| [time-utils](https://github.com/AndrewRedican/hyperfrontend/blob/main/libs/utils/time)                         | Time and date manipulation utilities [See docs](https://github.com/AndrewRedican/hyperfrontend/blob/main/libs/utils/time/README.md)                                                   |
+| [ui-utils](https://github.com/AndrewRedican/hyperfrontend/blob/main/libs/ui)                                   | UI utilities for elements, events, styling, and mobile interactions [See docs](https://github.com/AndrewRedican/hyperfrontend/blob/main/libs/ui/README.md)                            |
+| [web-worker](https://github.com/AndrewRedican/hyperfrontend/blob/main/libs/web-worker)                         | Web Worker utilities and abstractions [See docs](https://github.com/AndrewRedican/hyperfrontend/blob/main/libs/web-worker/README.md)                                                  |
 
 ## Documentation
 
@@ -348,6 +350,10 @@ Thanks to these wonderful people who have contributed to hyperfrontend:
 <!-- ALL-CONTRIBUTORS-LIST:END -->
 
 This project follows the [all-contributors](https://allcontributors.org) specification. Contributions of any kind are welcome!
+
+## Acknowledgments
+
+This project wouldn't exist without the support of many people — family, friends, mentors, and the broader open source community. Read the full [Acknowledgments](ACKNOWLEDGMENTS.md) to learn about the humans behind the code.
 
 ## License
 

@@ -13,6 +13,7 @@ const rule: Rule.RuleModule = {
     type: 'problem',
     docs: {
       description: 'Disallow "main" field in publishable library package.json, require "exports" field instead',
+      url: 'https://github.com/AndrewRedican/hyperfrontend/blob/main/tools/eslint-rules/docs/lib-pkg-no-main.md',
     },
     fixable: 'code',
     schema: [],
@@ -35,7 +36,7 @@ const rule: Rule.RuleModule = {
     let mainValue: string | null = null
     let hasExports = false
 
-    return <Rule.RuleListener>(<unknown>{
+    return {
       JSONProperty(node: JSONNode) {
         /* istanbul ignore if -- type guard for jsonc-eslint-parser */
         if (node.type !== 'JSONProperty') {
@@ -69,7 +70,7 @@ const rule: Rule.RuleModule = {
         }
 
         const sourceCode = context.sourceCode
-        const mainNodeCast = <Rule.Node>(<unknown>mainNode)
+        const mainNodeCast = mainNode as unknown as Rule.Node
 
         if (hasExports) {
           // Has both main and exports - just remove main
@@ -123,7 +124,7 @@ const rule: Rule.RuleModule = {
           })
         }
       },
-    })
+    } as unknown as Rule.RuleListener
   },
 }
 

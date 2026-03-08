@@ -50,6 +50,14 @@
     "umd": {
       "oneOf": [{ "$ref": "#/definitions/umdConfig" }, { "type": "array", "items": { "$ref": "#/definitions/umdConfig" } }],
       "description": "UMD bundle configuration. Universal format. Omit to skip."
+    },
+    "unpkg": {
+      "type": "string",
+      "description": "Custom path for the unpkg field in package.json. Defaults to first UMD bundle's index.umd.min.js path."
+    },
+    "jsdelivr": {
+      "type": "string",
+      "description": "Custom path for the jsdelivr field in package.json. Defaults to first UMD bundle's index.umd.min.js path."
     }
   },
   "definitions": {

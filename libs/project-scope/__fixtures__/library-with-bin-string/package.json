@@ -1,0 +1,6 @@
+{
+  "name": "lib-with-bin-string",
+  "version": "1.0.0",
+  "bin": "./bin/cli.js",
+  "devDependencies": {}
+}

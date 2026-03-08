@@ -1,0 +1,6 @@
+{
+  "name": "project-with-deps",
+  "projectType": "library",
+  "sourceRoot": "packages/project-with-deps/src",
+  "implicitDependencies": ["core", "!excluded-dep", "utils"]
+}
