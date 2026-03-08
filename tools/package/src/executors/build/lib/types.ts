@@ -102,8 +102,8 @@ export interface UMDConfig extends FormatEntryConfig {
   globals?: Record<string, string>
 }
 
-/** Build executor V2 options */
-export interface BuildV2ExecutorOptions {
+/** Configuration options for the package build executor */
+export interface BuildExecutorOptions {
   /** Output directory. Defaults to dist/{projectRoot} */
   outputPath?: string
 
@@ -127,6 +127,12 @@ export interface BuildV2ExecutorOptions {
 
   /** UMD bundle. Omit to skip. */
   umd?: UMDConfig | UMDConfig[]
+
+  /** Custom path for the unpkg field in package.json. Defaults to first UMD bundle path. */
+  unpkg?: string
+
+  /** Custom path for the jsdelivr field in package.json. Defaults to first UMD bundle path. */
+  jsdelivr?: string
 }
 
 /**
