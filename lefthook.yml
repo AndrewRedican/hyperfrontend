@@ -17,6 +17,15 @@ commit-msg:
 pre-push:
   parallel: false
   commands:
+    typecheck:
+      run: CI=1 npx nx run-many -t=typecheck --skip-nx-cache
+      fail_text: 'Typecheck failed. Fix type errors before pushing.'
+    lint:
+      run: CI=1 npx nx run-many -t=lint --skip-nx-cache
+      fail_text: 'Lint failed. Fix lint errors before pushing.'
+    test:
+      run: CI=1 npx nx run-many -t=test --skip-nx-cache
+      fail_text: 'Tests failed. Fix failing tests before pushing.'
     version:
       run: |
         # Skip versioning when pushing to main - CI handles main branch
