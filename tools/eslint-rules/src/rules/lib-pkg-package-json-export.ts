@@ -41,7 +41,7 @@ const rule: Rule.RuleModule = {
     let exportsNode: JSONProperty | null = null
     let hasPackageJsonExport = false
 
-    return <Rule.RuleListener>(<unknown>{
+    return {
       JSONProperty(node: JSONNode) {
         // istanbul ignore next -- type guard for jsonc-eslint-parser
         if (node.type !== 'JSONProperty') {
@@ -90,12 +90,12 @@ const rule: Rule.RuleModule = {
 
         if (!hasPackageJsonExport) {
           context.report({
-            node: <Rule.Node>(<unknown>exportsNode),
+            node: exportsNode as unknown as Rule.Node,
             messageId: 'missingPackageJsonExport',
           })
         }
       },
-    })
+    } as unknown as Rule.RuleListener
   },
 }
 
