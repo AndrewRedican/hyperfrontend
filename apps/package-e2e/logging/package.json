@@ -7,7 +7,7 @@
     "pack-install": "cd ../../../dist/libs/logging && npm pack && cd - && npm install ../../../dist/libs/logging/*.tgz"
   },
   "dependencies": {
-    "@hyperfrontend/logging": "file:../../../tmp/e2e-packs/hyperfrontend-logging-0.0.3.tgz"
+    "@hyperfrontend/logging": "file:../../../tmp/e2e-packs/hyperfrontend-logging-0.0.5.tgz"
   },
   "devDependencies": {
     "@types/jest": "29.5.14",

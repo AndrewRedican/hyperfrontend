@@ -7,7 +7,7 @@
     "pack-install": "cd ../../../dist/libs/network-protocol && npm pack && cd - && npm install ../../../dist/libs/network-protocol/*.tgz"
   },
   "dependencies": {
-    "@hyperfrontend/network-protocol": "file:../../../tmp/e2e-packs/hyperfrontend-network-protocol-0.0.3.tgz"
+    "@hyperfrontend/network-protocol": "file:../../../tmp/e2e-packs/hyperfrontend-network-protocol-0.0.7.tgz"
   },
   "devDependencies": {
     "@types/jest": "29.5.14",

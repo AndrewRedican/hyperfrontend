@@ -1,6 +1,6 @@
 {
   "name": "@hyperfrontend/function-utils",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "description": "Higher-order function utilities for behavioral modification and composition.",
   "license": "MIT",
   "sideEffects": false,

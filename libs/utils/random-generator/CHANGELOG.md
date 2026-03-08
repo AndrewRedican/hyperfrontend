@@ -2,6 +2,8 @@
 
 This file was generated using [@jscutlery/semver](https://github.com/jscutlery/semver).
 
+## [0.0.6](https://github.com/AndrewRedican/hyperfrontend/compare/lib-random-generator-utils@0.0.5...lib-random-generator-utils@0.0.6) (2026-03-08)
+
 ## [0.0.3](https://github.com/AndrewRedican/hyperfrontend/compare/lib-random-generator-utils@0.0.2...lib-random-generator-utils@0.0.3) (2026-03-02)
 
 

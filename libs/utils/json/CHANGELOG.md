@@ -2,6 +2,13 @@
 
 This file was generated using [@jscutlery/semver](https://github.com/jscutlery/semver).
 
+## [0.1.0](https://github.com/AndrewRedican/hyperfrontend/compare/lib-json-utils@0.0.4...lib-json-utils@0.1.0) (2026-03-08)
+
+
+### Features
+
+* **lib-json-utils:** regex pattern safety ([b899865](https://github.com/AndrewRedican/hyperfrontend/commit/b8998657f2fa516eee43cea9272dabb92f91955b))
+
 ## [0.0.3](https://github.com/AndrewRedican/hyperfrontend/compare/lib-json-utils@0.0.2...lib-json-utils@0.0.3) (2026-03-02)
 
 

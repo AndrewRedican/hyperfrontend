@@ -1,6 +1,6 @@
 {
   "name": "@hyperfrontend/project-scope",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "description": "Codebase analysis, project topology detection, and virtual file system utilities for Node.js projects.",
   "license": "MIT",
   "sideEffects": false,
@@ -69,8 +69,8 @@
     "ast"
   ],
   "dependencies": {
-    "@hyperfrontend/immutable-api-utils": "0.1.0",
-    "@hyperfrontend/logging": "0.0.3"
+    "@hyperfrontend/immutable-api-utils": "0.1.2",
+    "@hyperfrontend/logging": "0.0.5"
   },
   "peerDependencies": {
     "@nx/devkit": ">=18.0.0"

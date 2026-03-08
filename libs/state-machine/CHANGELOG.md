@@ -2,6 +2,8 @@
 
 This file was generated using [@jscutlery/semver](https://github.com/jscutlery/semver).
 
+## [0.0.5](https://github.com/AndrewRedican/hyperfrontend/compare/lib-state-machine@0.0.4...lib-state-machine@0.0.5) (2026-03-08)
+
 ## [0.0.3](https://github.com/AndrewRedican/hyperfrontend/compare/lib-state-machine@0.0.2...lib-state-machine@0.0.3) (2026-03-02)
 
 
