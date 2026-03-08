@@ -83,7 +83,7 @@ const rule: Rule.RuleModule = {
 
     const bundleIssues: BundleIssue[] = []
 
-    return <Rule.RuleListener>(<unknown>{
+    return {
       JSONProperty(node: JSONNode) {
         // istanbul ignore next -- type guard for jsonc-eslint-parser
         if (node.type !== 'JSONProperty') {
@@ -125,21 +125,21 @@ const rule: Rule.RuleModule = {
         for (const issue of bundleIssues) {
           if (issue.missingEntry) {
             context.report({
-              node: <Rule.Node>(<unknown>issue.node),
+              node: issue.node as unknown as Rule.Node,
               messageId: 'missingEntry',
               data: { format: issue.format },
             })
           }
           if (issue.missingGlobalName) {
             context.report({
-              node: <Rule.Node>(<unknown>issue.node),
+              node: issue.node as unknown as Rule.Node,
               messageId: 'missingGlobalName',
               data: { format: issue.format },
             })
           }
         }
       },
-    })
+    } as unknown as Rule.RuleListener
   },
 }
 

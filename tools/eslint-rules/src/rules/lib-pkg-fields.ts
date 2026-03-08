@@ -57,7 +57,7 @@ const rule: Rule.RuleModule = {
 
     const foundFields = new Set<string>()
 
-    return <Rule.RuleListener>(<unknown>{
+    return {
       /* istanbul ignore next - jsonc-eslint-parser always provides JSONProperty for object keys */
       JSONProperty(node: JSONNode) {
         if (node.type !== 'JSONProperty') {
@@ -76,13 +76,13 @@ const rule: Rule.RuleModule = {
         for (const field of REQUIRED_FIELDS) {
           if (!foundFields.has(field)) {
             context.report({
-              node: <Rule.Node>(<unknown>node),
+              node: node as unknown as Rule.Node,
               messageId: messageIdMap[field],
             })
           }
         }
       },
-    })
+    } as unknown as Rule.RuleListener
   },
 }
 

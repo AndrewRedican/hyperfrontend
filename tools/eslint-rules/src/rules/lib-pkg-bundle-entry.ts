@@ -82,7 +82,7 @@ const rule: Rule.RuleModule = {
     const exportKeys = new Set<string>()
     let exportsNode: JSONProperty | null = null
 
-    return <Rule.RuleListener>(<unknown>{
+    return {
       JSONProperty(node: JSONNode) {
         /* istanbul ignore if -- type guard for jsonc-eslint-parser */
         if (node.type !== 'JSONProperty') {
@@ -121,7 +121,7 @@ const rule: Rule.RuleModule = {
       'Program:exit'() {
         for (const entry of bundleEntries) {
           if (!exportKeys.has(entry)) {
-            const reportNode = exportsNode ? <Rule.Node>(<unknown>exportsNode) : null
+            const reportNode = exportsNode ? (exportsNode as unknown as Rule.Node) : null
             context.report({
               node: reportNode,
               loc: reportNode ? undefined : { line: 1, column: 0 },
@@ -131,7 +131,7 @@ const rule: Rule.RuleModule = {
           }
         }
       },
-    })
+    } as unknown as Rule.RuleListener
   },
 }
 
