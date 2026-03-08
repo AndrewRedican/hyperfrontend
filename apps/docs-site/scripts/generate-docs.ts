@@ -233,6 +233,7 @@ function transformLinks(content: string, sourceContext: 'root' | 'library', libr
 
   for (const [file, url] of entries(rootDocMappings)) {
     // Match [text](README.md) or [text](./README.md)
+    // eslint-disable-next-line workspace/no-unsafe-regex -- file names are from hardcoded mapping
     const pattern = createRegExp(`\\]\\(\\.?\\/?${file.replace('.', '\\.')}\\)`, 'g')
     transformed = transformed.replace(pattern, `](${url})`)
   }
@@ -248,6 +249,7 @@ function transformLinks(content: string, sourceContext: 'root' | 'library', libr
 
   // Transform libs/X/ARCHITECTURE.md links to library pages
   for (const [libName, slug] of entries(LIBRARY_SLUGS)) {
+    // eslint-disable-next-line workspace/no-unsafe-regex -- library names are from hardcoded mapping
     const archPattern = createRegExp(`\\]\\(libs/${libName}/ARCHITECTURE\\.md(#[^)]*)?\\)`, 'g')
     transformed = transformed.replace(archPattern, `](/docs/libraries/${slug}$1)`)
   }

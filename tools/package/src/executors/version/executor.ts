@@ -450,6 +450,7 @@ function updateE2eDependencies(packageName: string, newVersion: string, workspac
   // Handle scoped packages and convert to tarball naming convention
   const packageSlug = packageName.replace(/^@hyperfrontend\//, '').replace(/-utils$/, '-utils')
   // Tarball pattern: hyperfrontend-{slug}-{version}.tgz
+  // eslint-disable-next-line workspace/no-unsafe-regex -- packageSlug is derived from controlled package names
   const tgzPattern = new RegExp(`hyperfrontend-${packageSlug}-\\d+\\.\\d+\\.\\d+\\.tgz`)
   const newTgzName = `hyperfrontend-${packageSlug}-${newVersion}.tgz`
 
