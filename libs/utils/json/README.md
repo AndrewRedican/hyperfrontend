@@ -10,6 +10,9 @@
   <a href="https://www.npmjs.com/package/@hyperfrontend/json-utils">
     <img src="https://img.shields.io/npm/v/@hyperfrontend/json-utils?style=flat-square" alt="npm version">
   </a>
+  <a href="https://bundlephobia.com/package/@hyperfrontend/json-utils">
+    <img src="https://img.shields.io/bundlephobia/min/%40hyperfrontend%2Fjson-utils?style=flat-square" alt="npm bundle size">
+  </a>
 </p>
 <p align="center">
   <!-- ALL-CONTRIBUTORS-BADGE:START - Do not remove or modify this section -->
