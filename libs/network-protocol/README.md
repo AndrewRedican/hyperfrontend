@@ -10,6 +10,9 @@
   <a href="https://www.npmjs.com/package/@hyperfrontend/network-protocol">
     <img src="https://img.shields.io/npm/v/@hyperfrontend/network-protocol?style=flat-square" alt="npm version">
   </a>
+  <a href="https://bundlephobia.com/package/@hyperfrontend/network-protocol">
+    <img src="https://img.shields.io/bundlephobia/min/%40hyperfrontend%2Fnetwork-protocol?style=flat-square" alt="npm bundle size">
+  </a>
 </p>
 <p align="center">
   <!-- ALL-CONTRIBUTORS-BADGE:START - Do not remove or modify this section -->
@@ -286,8 +289,6 @@ Living documentation through executable examples:
 | CJS    | `*.cjs.js`                                                   |       ❌       |
 | IIFE   | `bundle/v1/index.iife.min.js`, `bundle/v2/index.iife.min.js` |       ❌       |
 | UMD    | `bundle/v1/index.umd.min.js`, `bundle/v2/index.umd.min.js`   |       ❌       |
-
-**Bundle size:** ~66 KB per version (minified, self-contained)
 
 ### CDN Usage
 
