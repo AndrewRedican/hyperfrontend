@@ -1,4 +1,5 @@
-import { mkdirSync, writeFileSync, rmSync } from 'node:fs'
+import { mkdirSync, writeFileSync, rmSync, mkdtempSync } from 'node:fs'
+import { tmpdir } from 'node:os'
 import { resolve, join } from 'node:path'
 import { findNearestPackageJson } from '../package'
 import { findProjectRoot, findWorkspaceRoot, findRootDirectory, findGitRoot, ROOT_MARKERS, WORKSPACE_MARKERS } from './detect'
@@ -143,11 +144,11 @@ describe('findWorkspaceRoot', () => {
 })
 
 describe('findWorkspaceRoot with isolated temp directories', () => {
-  const TEMP_WORKSPACE = '/tmp/test-workspace-detection'
+  let TEMP_WORKSPACE: string
 
   beforeAll(() => {
-    // Clean up any previous test runs
-    rmSync(TEMP_WORKSPACE, { recursive: true, force: true })
+    // Create a secure temporary directory
+    TEMP_WORKSPACE = mkdtempSync(join(tmpdir(), 'test-workspace-detection-'))
 
     // Create a workspace with workspaces field but no workspace markers
     mkdirSync(join(TEMP_WORKSPACE, 'packages', 'app', 'src'), { recursive: true })
@@ -166,9 +167,8 @@ describe('findWorkspaceRoot with isolated temp directories', () => {
   })
 
   it('falls back to nearest package.json for deeply nested project without workspaces', () => {
-    // Create a deeply nested structure without workspace markers or workspaces field
-    const DEEP_PROJECT = '/tmp/test-deep-project'
-    rmSync(DEEP_PROJECT, { recursive: true, force: true })
+    // Create a secure temporary directory for deeply nested structure
+    const DEEP_PROJECT = mkdtempSync(join(tmpdir(), 'test-deep-project-'))
     mkdirSync(join(DEEP_PROJECT, 'level1', 'level2', 'level3', 'src'), { recursive: true })
     writeFileSync(join(DEEP_PROJECT, 'package.json'), JSON.stringify({ name: 'deep-project' }))
 

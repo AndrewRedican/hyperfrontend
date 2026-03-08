@@ -1,8 +1,6 @@
-import { writeFileSync, unlinkSync, existsSync } from 'node:fs'
+import { writeFileSync, unlinkSync, existsSync, mkdtempSync, rmdirSync } from 'node:fs'
 import { platform, arch, tmpdir } from 'node:os'
 import { join } from 'node:path'
-import { dateNow } from '@hyperfrontend/immutable-api-utils/built-in-copy/date'
-import { random } from '@hyperfrontend/immutable-api-utils/built-in-copy/math'
 
 /**
  * Platform information.
@@ -62,13 +60,13 @@ export function detectCaseSensitivity(): boolean {
   }
 
   // Test actual file system behavior for Linux and others
-  const testDir = tmpdir()
-  const timestamp = dateNow()
-  const randomStr = random().toString(36).substring(2, 8)
-  const testFile = join(testDir, `case_test_${timestamp}_${randomStr}_A`)
-  const testFileLower = join(testDir, `case_test_${timestamp}_${randomStr}_a`)
-
+  // Use mkdtempSync to create a secure temporary directory
+  let secureTestDir: string | null = null
   try {
+    secureTestDir = mkdtempSync(join(tmpdir(), 'case-sensitivity-test-'))
+    const testFile = join(secureTestDir, 'A')
+    const testFileLower = join(secureTestDir, 'a')
+
     writeFileSync(testFile, '')
     cachedCaseSensitive = !existsSync(testFileLower)
     unlinkSync(testFile)
@@ -76,6 +74,15 @@ export function detectCaseSensitivity(): boolean {
     // Default to case-sensitive on Linux/Unix if test fails
     // (win32 and darwin already returned early, so we're on a case-sensitive platform)
     cachedCaseSensitive = true
+  } finally {
+    // Clean up the secure temporary directory
+    if (secureTestDir) {
+      try {
+        rmdirSync(secureTestDir)
+      } catch {
+        // Ignore cleanup errors
+      }
+    }
   }
 
   return cachedCaseSensitive
