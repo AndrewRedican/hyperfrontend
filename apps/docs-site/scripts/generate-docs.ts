@@ -129,6 +129,13 @@ const LIBRARIES: LibraryConfig[] = [
     srcPath: 'libs/cryptography',
     category: 'core',
   },
+  {
+    name: 'Project Scope',
+    packageName: '@hyperfrontend/project-scope',
+    slug: 'project-scope',
+    srcPath: 'libs/project-scope',
+    category: 'core',
+  },
 
   // Supporting libraries
   {
@@ -198,6 +205,7 @@ const LIBRARY_SLUGS: Record<string, string> = {
   nexus: 'nexus',
   'network-protocol': 'network-protocol',
   cryptography: 'cryptography',
+  'project-scope': 'project-scope',
   'state-machine': 'state-machine',
   logging: 'logging',
   'web-worker': 'web-worker',
