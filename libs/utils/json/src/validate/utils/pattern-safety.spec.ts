@@ -122,4 +122,18 @@ describe('checkPatternSafety', () => {
       expect(result.reason).toContain('unbounded wildcards')
     })
   })
+
+  describe('pattern length limits', () => {
+    it('rejects patterns exceeding maximum length', () => {
+      const longPattern = 'a'.repeat(1001)
+      const result = checkPatternSafety(longPattern)
+      expect(result.safe).toBe(false)
+      expect(result.reason).toContain('exceeds maximum allowed')
+    })
+
+    it('allows patterns at the maximum length boundary', () => {
+      const maxLengthPattern = 'a'.repeat(1000)
+      expect(checkPatternSafety(maxLengthPattern)).toEqual({ safe: true })
+    })
+  })
 })

@@ -69,6 +69,15 @@ function extractQuantifierUpperBound(pattern: string): number | null {
  * @returns Result indicating if the pattern is safe
  */
 export function checkPatternSafety(pattern: string): PatternSafetyResult {
+  // Guard against extremely long patterns to prevent ReDoS on the safety checks themselves
+  const MAX_PATTERN_LENGTH = 1000
+  if (pattern.length > MAX_PATTERN_LENGTH) {
+    return {
+      safe: false,
+      reason: `Pattern length ${pattern.length} exceeds maximum allowed (${MAX_PATTERN_LENGTH})`,
+    }
+  }
+
   // Detect nested quantifiers: (...)+ followed by outer quantifier
   // Matches patterns like (a+)+, (a*)+, (a+)*, ([a-z]+)+, etc.
   if (/\([^)]*[+*]\)[+*]/.test(pattern)) {
