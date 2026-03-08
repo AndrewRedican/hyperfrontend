@@ -10,6 +10,9 @@
   <a href="https://www.npmjs.com/package/@hyperfrontend/project-scope">
     <img src="https://img.shields.io/npm/v/@hyperfrontend/project-scope?style=flat-square" alt="npm version">
   </a>
+  <a href="https://bundlephobia.com/package/@hyperfrontend/project-scope">
+    <img src="https://img.shields.io/bundlephobia/min/%40hyperfrontend%2Fproject-scope?style=flat-square" alt="npm bundle size">
+  </a>
 </p>
 <p align="center">
   <!-- ALL-CONTRIBUTORS-BADGE:START - Do not remove or modify this section -->
@@ -224,8 +227,6 @@ import { isNxWorkspace, findNxProjects } from '@hyperfrontend/project-scope/nx'
 | ------ | -------------- | :------------: |
 | ESM    | `index.esm.js` |       ✅       |
 | CJS    | `index.cjs.js` |       ❌       |
-
-**Bundle size:** ~15 KB (minified, self-contained)
 
 ## Part of hyperfrontend
 
