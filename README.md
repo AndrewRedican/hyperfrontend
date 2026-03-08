@@ -13,7 +13,8 @@
   <a href="https://github.com/AndrewRedican/hyperfrontend/blob/main/README.md#installation">Installation</a> |
   <a href="https://github.com/AndrewRedican/hyperfrontend/blob/main/README.md#quick-start">Quick Start</a> |
   <a href="https://github.com/AndrewRedican/hyperfrontend/blob/main/ARCHITECTURE.md">Architecture</a> |
-  <a href="https://github.com/AndrewRedican/hyperfrontend/blob/main/README.md#live-demos">Live Demos</a>
+  <a href="https://github.com/AndrewRedican/hyperfrontend/blob/main/README.md#live-demos">Live Demos</a> |
+  <a href="https://github.com/AndrewRedican/hyperfrontend/blob/main/ACKNOWLEDGMENTS.md">Acknowledgments</a>
 </p>
 
 <p align="center">
@@ -349,6 +350,10 @@ Thanks to these wonderful people who have contributed to hyperfrontend:
 <!-- ALL-CONTRIBUTORS-LIST:END -->
 
 This project follows the [all-contributors](https://allcontributors.org) specification. Contributions of any kind are welcome!
+
+## Acknowledgments
+
+This project wouldn't exist without the support of many people — family, friends, mentors, and the broader open source community. Read the full [Acknowledgments](ACKNOWLEDGMENTS.md) to learn about the humans behind the code.
 
 ## License
 
