@@ -7,7 +7,7 @@
     "pack-install": "cd ../../../dist/libs/state-machine && npm pack && cd - && npm install ../../../dist/libs/state-machine/*.tgz"
   },
   "dependencies": {
-    "@hyperfrontend/state-machine": "file:../../../tmp/e2e-packs/hyperfrontend-state-machine-0.0.3.tgz"
+    "@hyperfrontend/state-machine": "file:../../../tmp/e2e-packs/hyperfrontend-state-machine-0.0.4.tgz"
   },
   "devDependencies": {
     "@types/jest": "29.5.14",

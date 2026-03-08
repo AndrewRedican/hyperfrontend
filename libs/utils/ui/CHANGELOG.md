@@ -2,6 +2,8 @@
 
 This file was generated using [@jscutlery/semver](https://github.com/jscutlery/semver).
 
+## [0.0.4](https://github.com/AndrewRedican/hyperfrontend/compare/lib-ui-utils@0.0.3...lib-ui-utils@0.0.4) (2026-03-08)
+
 ## [0.0.3](https://github.com/AndrewRedican/hyperfrontend/compare/lib-ui-utils@0.0.2...lib-ui-utils@0.0.3) (2026-03-02)
 
 

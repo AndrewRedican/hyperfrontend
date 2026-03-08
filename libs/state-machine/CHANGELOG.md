@@ -2,6 +2,13 @@
 
 This file was generated using [@jscutlery/semver](https://github.com/jscutlery/semver).
 
+## [0.0.4](https://github.com/AndrewRedican/hyperfrontend/compare/lib-state-machine@0.0.3...lib-state-machine@0.0.4) (2026-03-08)
+
+
+### Bug Fixes
+
+* **lib-state-machine:** correct package exports and main entrypoint ([81c47c8](https://github.com/AndrewRedican/hyperfrontend/commit/81c47c8a7d5e5ef36b5ec5c64f2c7cc1f0bea18d))
+
 ## [0.0.3](https://github.com/AndrewRedican/hyperfrontend/compare/lib-state-machine@0.0.2...lib-state-machine@0.0.3) (2026-03-02)
 
 

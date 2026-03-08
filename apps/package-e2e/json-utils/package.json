@@ -7,7 +7,7 @@
     "pack-install": "cd ../../../dist/libs/utils/json && npm pack && cd - && npm install ../../../dist/libs/utils/json/*.tgz"
   },
   "dependencies": {
-    "@hyperfrontend/json-utils": "file:../../../tmp/e2e-packs/hyperfrontend-json-utils-0.0.3.tgz"
+    "@hyperfrontend/json-utils": "file:../../../tmp/e2e-packs/hyperfrontend-json-utils-0.1.0.tgz"
   },
   "devDependencies": {
     "@types/jest": "29.5.14",
