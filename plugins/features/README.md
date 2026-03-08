@@ -15,6 +15,9 @@
   <a href="https://www.npmjs.com/package/@hyperfrontend/features">
     <img src="https://img.shields.io/npm/v/@hyperfrontend/features?style=flat-square" alt="npm version">
   </a>
+  <a href="https://bundlephobia.com/package/@hyperfrontend/features">
+    <img src="https://img.shields.io/bundlephobia/min/%40hyperfrontend%2Ffeatures?style=flat-square" alt="npm bundle size">
+  </a>
   <a href="https://www.npmjs.com/package/@hyperfrontend/features">
     <img src="https://img.shields.io/npm/dm/@hyperfrontend/features?style=flat-square" alt="npm downloads">
   </a>
