@@ -27,14 +27,24 @@ const formatValidators: Record<string, (value: string) => boolean> = {
   },
 
   time: (v) => {
-    // ISO 8601 time format (HH:MM:SS or HH:MM:SS.sss)
-    const match = v.match(/^(\d{2}):(\d{2}):(\d{2})(\.\d+)?(Z|[+-]\d{2}:\d{2})?$/)
-    if (!match) return false
-    const hour = Number(match[1])
-    const minute = Number(match[2])
-    const second = Number(match[3])
+    // ISO 8601 time format (HH:MM:SS or HH:MM:SS.sss with optional timezone)
+    // Parse segments to avoid nested quantifiers
+    const mainMatch = v.match(/^(\d{2}):(\d{2}):(\d{2})/)
+    if (!mainMatch) return false
+    const hour = Number(mainMatch[1])
+    const minute = Number(mainMatch[2])
+    const second = Number(mainMatch[3])
     if (hour > 23 || minute > 59 || second > 59) return false
-    return true
+    // Validate remaining part (fractional seconds and/or timezone)
+    const rest = v.slice(8)
+    if (rest === '') return true
+    // Fractional seconds: .ddd where d is digits (1-6 typically)
+    if (rest.match(/^\.\d{1,9}$/)) return true
+    // Timezone only: Z or +HH:MM or -HH:MM
+    if (rest.match(/^(Z|[+-]\d{2}:\d{2})$/)) return true
+    // Fractional + timezone
+    if (rest.match(/^\.\d{1,9}(Z|[+-]\d{2}:\d{2})$/)) return true
+    return false
   },
 
   email: (v) => {
@@ -43,8 +53,20 @@ const formatValidators: Record<string, (value: string) => boolean> = {
   },
 
   hostname: (v) => {
-    // RFC 1123 hostname
-    return /^[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(\.[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/.test(v)
+    // RFC 1123 hostname - validated per label to prevent ReDoS
+    if (v.length > 253 || v.length === 0) return false // Max hostname length per RFC
+    const labels = v.split('.')
+    for (const label of labels) {
+      if (label.length === 0 || label.length > 63) return false
+      // Start and end with alphanumeric
+      if (!/^[a-zA-Z0-9]$/.test(label[0])) return false
+      if (label.length > 1 && !/^[a-zA-Z0-9]$/.test(label[label.length - 1])) return false
+      // Middle can include hyphens
+      for (let i = 1; i < label.length - 1; i++) {
+        if (!/^[a-zA-Z0-9-]$/.test(label[i])) return false
+      }
+    }
+    return true
   },
 
   ipv4: (v) => {
@@ -58,10 +80,27 @@ const formatValidators: Record<string, (value: string) => boolean> = {
   },
 
   ipv6: (v) => {
-    // Simplified IPv6 validation
-    return /^([0-9a-fA-F]{1,4}:){7}[0-9a-fA-F]{1,4}$|^::$|^(([0-9a-fA-F]{1,4}:)*[0-9a-fA-F]{1,4})?::(([0-9a-fA-F]{1,4}:)*[0-9a-fA-F]{1,4})?$/.test(
-      v
-    )
+    // Simplified IPv6 validation - procedural approach to avoid ReDoS
+    if (v === '::') return true
+    // Check for double colon (compressed form)
+    const hasDoubleColon = v.includes('::')
+
+    if (!hasDoubleColon) {
+      // Full form: exactly 8 groups separated by single colons
+      const groups = v.split(':')
+      if (groups.length !== 8) return false
+      const hexGroup = /^[0-9a-fA-F]{1,4}$/
+      return groups.every((g) => hexGroup.test(g))
+    }
+
+    // Compressed form: validate :: appears exactly once and total groups <= 8
+    const parts = v.split('::')
+    if (parts.length !== 2) return false
+    const left = parts[0] ? parts[0].split(':').filter(Boolean) : []
+    const right = parts[1] ? parts[1].split(':').filter(Boolean) : []
+    if (left.length + right.length > 7) return false
+    const hexGroup = /^[0-9a-fA-F]{1,4}$/
+    return left.every((g) => hexGroup.test(g)) && right.every((g) => hexGroup.test(g))
   },
 
   uri: (v) => {
@@ -95,6 +134,7 @@ const formatValidators: Record<string, (value: string) => boolean> = {
   regex: (v) => {
     // Valid regex pattern
     try {
+      // eslint-disable-next-line workspace/no-unsafe-regex -- intentionally validating user-provided regex patterns
       createRegExp(v)
       return true
     } catch {
@@ -103,8 +143,12 @@ const formatValidators: Record<string, (value: string) => boolean> = {
   },
 
   'json-pointer': (v) => {
-    // JSON Pointer format
-    return v === '' || /^(\/([^/~]|~[01])*)*$/.test(v)
+    // JSON Pointer format - validate segment by segment to avoid nested quantifiers
+    if (v === '') return true
+    if (!v.startsWith('/')) return false
+    const segments = v.slice(1).split('/')
+    const validSegment = /^([^/~]|~[01])*$/
+    return segments.every((seg) => validSegment.test(seg))
   },
 }
 

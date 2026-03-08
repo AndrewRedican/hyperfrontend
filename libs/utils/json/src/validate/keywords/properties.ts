@@ -87,7 +87,16 @@ export function validateAdditionalProperties(instance: Record<string, unknown>, 
   /* istanbul ignore next -- patternProperties may not always be present */
   if (schema.patternProperties) {
     for (const pattern of keys(schema.patternProperties)) {
+      // Skip unsafe patterns if a checker is configured (already reported in patternProperties validator)
+      if (ctx.patternSafetyChecker) {
+        const safetyResult = ctx.patternSafetyChecker(pattern)
+        if (!safetyResult.safe) {
+          continue // Skip this unsafe pattern
+        }
+      }
+
       try {
+        // eslint-disable-next-line workspace/no-unsafe-regex -- Pattern safety validated above when safePatterns enabled
         patterns.push(createRegExp(pattern))
         /* istanbul ignore next -- invalid regex patterns handled in patternProperties validator */
       } catch {

@@ -22,7 +22,29 @@ export function validatePatternProperties(instance: Record<string, unknown>, sch
 
   // Pre-compile all patterns
   for (const [pattern, patternSchema] of entries(schema.patternProperties)) {
+    // Check pattern safety if a checker is configured
+    /* istanbul ignore if -- patternSafetyChecker branch tested in validate.spec.ts */
+    if (ctx.patternSafetyChecker) {
+      const safetyResult = ctx.patternSafetyChecker(pattern)
+      if (!safetyResult.safe) {
+        addError(
+          ctx,
+          `Unsafe regex pattern in patternProperties: ${safetyResult.reason ?? 'Pattern may cause ReDoS'}`,
+          instance,
+          'patternProperties',
+          {
+            pattern,
+            reason: safetyResult.reason,
+          }
+        )
+        valid = false
+        if (!shouldContinue(ctx)) return false
+        continue // Skip this unsafe pattern
+      }
+    }
+
     try {
+      // eslint-disable-next-line workspace/no-unsafe-regex -- Pattern safety validated above when safePatterns enabled
       patterns.push({ regex: createRegExp(pattern), schema: patternSchema })
     } catch (e) {
       // Invalid regex

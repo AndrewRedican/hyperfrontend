@@ -63,6 +63,24 @@ describe('validateFormat', () => {
       expect(validateFormat('23:59:59.999Z', schema, ctx)).toBe(true)
       expect(validateFormat('01:02:03+02:00', schema, ctx)).toBe(true)
     })
+
+    it('returns true for time with fractional seconds only', () => {
+      const schema: Schema = { format: 'time' }
+      expect(validateFormat('12:34:56.123', schema, ctx)).toBe(true)
+      expect(validateFormat('00:00:00.000000001', schema, ctx)).toBe(true)
+    })
+
+    it('returns true for time with timezone only', () => {
+      const schema: Schema = { format: 'time' }
+      expect(validateFormat('12:34:56Z', schema, ctx)).toBe(true)
+      expect(validateFormat('12:34:56-05:00', schema, ctx)).toBe(true)
+    })
+
+    it('returns false for time with invalid suffix', () => {
+      const schema: Schema = { format: 'time' }
+      expect(validateFormat('12:34:56.abc', schema, ctx)).toBe(false)
+      expect(validateFormat('12:34:56X', schema, ctx)).toBe(false)
+    })
   })
 
   describe('date-time format', () => {
@@ -90,6 +108,40 @@ describe('validateFormat', () => {
       const schema: Schema = { format: 'hostname' }
       expect(validateFormat('-invalid-.com', schema, ctx)).toBe(false)
       expect(validateFormat('invalid_host_name', schema, ctx)).toBe(false)
+    })
+
+    it('returns true for single-character labels', () => {
+      const schema: Schema = { format: 'hostname' }
+      expect(validateFormat('a', schema, ctx)).toBe(true)
+      expect(validateFormat('a.b.c', schema, ctx)).toBe(true)
+    })
+
+    it('returns false for empty hostname', () => {
+      const schema: Schema = { format: 'hostname' }
+      expect(validateFormat('', schema, ctx)).toBe(false)
+    })
+
+    it('returns false for hostname with empty label', () => {
+      const schema: Schema = { format: 'hostname' }
+      expect(validateFormat('example..com', schema, ctx)).toBe(false)
+      expect(validateFormat('.example.com', schema, ctx)).toBe(false)
+    })
+
+    it('returns false for label ending with hyphen', () => {
+      const schema: Schema = { format: 'hostname' }
+      expect(validateFormat('test-.com', schema, ctx)).toBe(false)
+    })
+
+    it('returns false for too long hostname', () => {
+      const schema: Schema = { format: 'hostname' }
+      const longHostname = 'a'.repeat(254)
+      expect(validateFormat(longHostname, schema, ctx)).toBe(false)
+    })
+
+    it('returns false for too long label', () => {
+      const schema: Schema = { format: 'hostname' }
+      const longLabel = 'a'.repeat(64) + '.com'
+      expect(validateFormat(longLabel, schema, ctx)).toBe(false)
     })
   })
 
@@ -129,6 +181,24 @@ describe('validateFormat', () => {
       expect(validateFormat('not-an-ipv6', schema, ctx)).toBe(false)
       expect(validateFormat('192.168.1.1', schema, ctx)).toBe(false)
       expect(validateFormat('2001:db8:85a3::8a2e:370g:7334', schema, ctx)).toBe(false)
+    })
+
+    it('returns false for ipv6 with too many groups in compressed form', () => {
+      const schema: Schema = { format: 'ipv6' }
+      // 8 groups total with :: should be invalid (would need more than 8 when expanded)
+      expect(validateFormat('1:2:3:4:5:6:7::8', schema, ctx)).toBe(false)
+      expect(validateFormat('1:2:3:4::5:6:7:8', schema, ctx)).toBe(false)
+    })
+
+    it('returns false for ipv6 with multiple :: sequences', () => {
+      const schema: Schema = { format: 'ipv6' }
+      expect(validateFormat('2001::db8::1', schema, ctx)).toBe(false)
+    })
+
+    it('returns true for ipv6 compressed with valid group count', () => {
+      const schema: Schema = { format: 'ipv6' }
+      expect(validateFormat('2001:db8::1', schema, ctx)).toBe(true)
+      expect(validateFormat('::ffff:192.0.2.1', schema, ctx)).toBe(false) // IPv4-mapped format not supported
     })
   })
 

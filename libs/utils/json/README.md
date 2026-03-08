@@ -211,6 +211,7 @@ validate(
 
 - **`getJsonType(value): JsonType`** - Get the JSON Schema type of a JavaScript value
 - **`isEqual(a, b): boolean`** - Deep equality comparison for JSON values
+- **`checkPatternSafety(pattern): PatternSafetyResult`** - Check if a regex pattern may cause ReDoS
 
 ### Types
 
@@ -218,8 +219,69 @@ validate(
 - **`JsonType`** - `'string' | 'number' | 'integer' | 'boolean' | 'array' | 'object' | 'null'`
 - **`ValidationResult`** - `{ valid: boolean, errors: ValidationError[] }`
 - **`ValidationError`** - `{ message: string, path: string, code?: string, instance?: unknown, params?: object }`
-- **`ValidateOptions`** - `{ collectAllErrors?: boolean }` - When false, stops at first error
+- **`ValidateOptions`** - Validation configuration (see below)
 - **`GenerateOptions`** - `{ arrays?: { mode: 'all' | 'first' | 'uniform' }, includeRequired?: boolean }`
+- **`PatternSafetyChecker`** - Custom function for ReDoS pattern detection
+- **`PatternSafetyResult`** - `{ safe: boolean, reason?: string }`
+
+### ValidateOptions
+
+| Option             | Type                              | Default | Description                                              |
+| ------------------ | --------------------------------- | ------- | -------------------------------------------------------- |
+| `collectAllErrors` | `boolean`                         | `true`  | When `false`, stops at first error                       |
+| `strictPatterns`   | `boolean`                         | `false` | Report errors for invalid regex patterns (syntax errors) |
+| `safePatterns`     | `boolean \| PatternSafetyChecker` | `false` | Enable ReDoS protection (see Security section)           |
+
+## Security: ReDoS Protection
+
+JSON Schema's `pattern` and `patternProperties` keywords accept arbitrary regex patterns. Malicious or poorly-crafted patterns can cause [ReDoS (Regular Expression Denial of Service)](https://owasp.org/www-community/attacks/Regular_expression_Denial_of_Service_-_ReDoS) attacks with exponential backtracking.
+
+### Built-in Heuristics
+
+Enable built-in ReDoS detection with `safePatterns: true`:
+
+```typescript
+import { validate } from '@hyperfrontend/json-utils'
+
+const schema = { type: 'string', pattern: '(a+)+' } // Known ReDoS pattern
+
+const result = validate('aaa', schema, { safePatterns: true })
+// result.valid = false
+// result.errors[0].message = 'Unsafe regex pattern: Nested quantifiers detected...'
+```
+
+The built-in checker detects common dangerous patterns:
+
+- Nested quantifiers: `(a+)+`, `(a*)*`, `([a-z]+)+`
+- Overlapping alternations: `(a|a)+`
+- Multiple unbounded wildcards: `.*.*`
+- Extremely large quantifier bounds: `a{1,100000}`
+
+### Custom Checker (Recommended for Production)
+
+For comprehensive protection, provide a custom checker using [safe-regex2](https://www.npmjs.com/package/safe-regex2):
+
+```typescript
+import { validate, type PatternSafetyChecker } from '@hyperfrontend/json-utils'
+import safeRegex from 'safe-regex2'
+
+const checker: PatternSafetyChecker = (pattern) => ({
+  safe: safeRegex(pattern),
+  reason: 'Pattern may cause catastrophic backtracking',
+})
+
+validate(data, schema, { safePatterns: checker })
+```
+
+### Exported Utilities
+
+```typescript
+import { checkPatternSafety } from '@hyperfrontend/json-utils'
+
+// Use built-in heuristics directly
+const result = checkPatternSafety('(a+)+')
+// { safe: false, reason: 'Nested quantifiers detected...' }
+```
 
 ### Supported Keywords
 

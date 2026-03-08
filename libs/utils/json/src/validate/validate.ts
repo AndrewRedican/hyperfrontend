@@ -1,5 +1,5 @@
 import type { Schema } from '../types/schema'
-import type { ValidationResult, ValidateOptions } from '../types/validation'
+import type { ValidationResult, ValidateOptions, PatternSafetyChecker } from '../types/validation'
 import type { ValidationContext } from './context'
 import { isArray } from '@hyperfrontend/immutable-api-utils/built-in-copy/array'
 import { createValidationContext, shouldContinue } from './context'
@@ -16,6 +16,7 @@ import { validateProperties, validateRequired, validateAdditionalProperties } fr
 import { validateStringBounds } from './keywords/string-bounds'
 import { validateType } from './keywords/type'
 import { resolveRef } from './resolve-ref'
+import { checkPatternSafety } from './utils/pattern-safety'
 
 /**
  * Validates a value against a JSON Schema.
@@ -33,7 +34,21 @@ import { resolveRef } from './resolve-ref'
  * ```
  */
 export function validate(instance: unknown, schema: Schema, options?: ValidateOptions): ValidationResult {
-  const ctx = createValidationContext(schema, validateSchema, options?.collectAllErrors ?? true, options?.strictPatterns ?? false)
+  // Resolve safePatterns option to a checker function
+  let patternSafetyChecker: PatternSafetyChecker | undefined
+  if (options?.safePatterns === true) {
+    patternSafetyChecker = checkPatternSafety
+  } else if (typeof options?.safePatterns === 'function') {
+    patternSafetyChecker = options.safePatterns
+  }
+
+  const ctx = createValidationContext(
+    schema,
+    validateSchema,
+    options?.collectAllErrors ?? true,
+    options?.strictPatterns ?? false,
+    patternSafetyChecker
+  )
   const valid = validateSchema(instance, schema, ctx)
   return {
     valid,

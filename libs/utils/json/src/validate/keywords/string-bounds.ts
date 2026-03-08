@@ -33,7 +33,23 @@ export function validateStringBounds(instance: string, schema: Schema, ctx: Vali
   }
 
   if (schema.pattern !== undefined) {
+    // Check pattern safety if a checker is configured
+    if (ctx.patternSafetyChecker) {
+      const safetyResult = ctx.patternSafetyChecker(schema.pattern)
+      if (!safetyResult.safe) {
+        addError(ctx, `Unsafe regex pattern: ${safetyResult.reason ?? 'Pattern may cause ReDoS'}`, instance, 'pattern', {
+          pattern: schema.pattern,
+          reason: safetyResult.reason,
+        })
+        valid = false
+        if (!shouldContinue(ctx)) return false
+        // Skip executing the unsafe pattern
+        return valid
+      }
+    }
+
     try {
+      // eslint-disable-next-line workspace/no-unsafe-regex -- Pattern safety validated above when safePatterns enabled
       const regex = createRegExp(schema.pattern)
       if (!regex.test(instance)) {
         addError(ctx, `String does not match pattern: ${schema.pattern}`, instance, 'pattern', {

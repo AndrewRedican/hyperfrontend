@@ -533,4 +533,128 @@ describe('validate', () => {
       expect(result.errors[0].message).toContain('Invalid regex')
     })
   })
+
+  describe('safePatterns option', () => {
+    describe('with built-in heuristics (true)', () => {
+      it('rejects nested quantifier patterns', () => {
+        const schema: Schema = { type: 'string', pattern: '(a+)+' }
+        const result = validate('aaa', schema, { safePatterns: true })
+        expect(result.valid).toBe(false)
+        expect(result.errors[0].message).toContain('Unsafe regex')
+        expect(result.errors[0].message).toContain('Nested quantifiers')
+      })
+
+      it('rejects overlapping alternation patterns', () => {
+        const schema: Schema = { type: 'string', pattern: '(a|a)+' }
+        const result = validate('aaa', schema, { safePatterns: true })
+        expect(result.valid).toBe(false)
+        expect(result.errors[0].message).toContain('Unsafe regex')
+      })
+
+      it('rejects multiple unbounded wildcards', () => {
+        const schema: Schema = { type: 'string', pattern: '.*foo.*' }
+        const result = validate('foobar', schema, { safePatterns: true })
+        expect(result.valid).toBe(false)
+        expect(result.errors[0].message).toContain('unbounded wildcards')
+      })
+
+      it('allows safe patterns', () => {
+        const schema: Schema = { type: 'string', pattern: '^[a-z]+$' }
+        const result = validate('hello', schema, { safePatterns: true })
+        expect(result.valid).toBe(true)
+      })
+
+      it('rejects unsafe patternProperties', () => {
+        const schema: Schema = {
+          type: 'object',
+          patternProperties: { '(a+)+': { type: 'string' } },
+        }
+        const result = validate({ aaa: 'test' }, schema, { safePatterns: true })
+        expect(result.valid).toBe(false)
+        expect(result.errors[0].message).toContain('Unsafe regex')
+      })
+    })
+
+    describe('with custom checker function', () => {
+      it('uses custom checker for pattern validation', () => {
+        const customChecker = jest.fn().mockReturnValue({ safe: false, reason: 'Custom rejection' })
+        const schema: Schema = { type: 'string', pattern: 'any-pattern' }
+        const result = validate('test', schema, { safePatterns: customChecker })
+        expect(result.valid).toBe(false)
+        expect(customChecker).toHaveBeenCalledWith('any-pattern')
+        expect(result.errors[0].message).toContain('Custom rejection')
+      })
+
+      it('uses default reason when custom checker provides no reason', () => {
+        const customChecker = jest.fn().mockReturnValue({ safe: false })
+        const schema: Schema = { type: 'string', pattern: 'any-pattern' }
+        const result = validate('test', schema, { safePatterns: customChecker })
+        expect(result.valid).toBe(false)
+        expect(result.errors[0].message).toContain('Pattern may cause ReDoS')
+      })
+
+      it('allows pattern when custom checker returns safe', () => {
+        const customChecker = jest.fn().mockReturnValue({ safe: true })
+        const schema: Schema = { type: 'string', pattern: '^test$' }
+        const result = validate('test', schema, { safePatterns: customChecker })
+        expect(result.valid).toBe(true)
+        expect(customChecker).toHaveBeenCalledWith('^test$')
+      })
+
+      it('uses custom checker for patternProperties', () => {
+        const customChecker = jest.fn().mockReturnValue({ safe: false, reason: 'Blocked' })
+        const schema: Schema = {
+          type: 'object',
+          patternProperties: { '^test_': { type: 'string' } },
+        }
+        const result = validate({ test_foo: 'bar' }, schema, { safePatterns: customChecker })
+        expect(result.valid).toBe(false)
+        expect(customChecker).toHaveBeenCalledWith('^test_')
+      })
+
+      it('uses default reason for patternProperties when checker provides no reason', () => {
+        const customChecker = jest.fn().mockReturnValue({ safe: false })
+        const schema: Schema = {
+          type: 'object',
+          patternProperties: { '^test_': { type: 'string' } },
+        }
+        const result = validate({ test_foo: 'bar' }, schema, { safePatterns: customChecker })
+        expect(result.valid).toBe(false)
+        expect(result.errors[0].message).toContain('Pattern may cause ReDoS')
+      })
+    })
+
+    describe('disabled (default)', () => {
+      it('does not check pattern safety when safePatterns is not set', () => {
+        const schema: Schema = { type: 'string', pattern: '(a+)+' }
+        const result = validate('aaa', schema)
+        expect(result.valid).toBe(true)
+      })
+
+      it('does not check pattern safety when safePatterns is false', () => {
+        const schema: Schema = { type: 'string', pattern: '(a+)+' }
+        const result = validate('aaa', schema, { safePatterns: false })
+        expect(result.valid).toBe(true)
+      })
+    })
+
+    describe('with collectAllErrors: false', () => {
+      it('stops at first unsafe pattern error', () => {
+        const schema: Schema = { type: 'string', pattern: '(a+)+' }
+        const result = validate('aaa', schema, { safePatterns: true, collectAllErrors: false })
+        expect(result.valid).toBe(false)
+        expect(result.errors.length).toBe(1)
+      })
+
+      it('stops at first unsafe patternProperties error', () => {
+        const schema: Schema = {
+          type: 'object',
+          patternProperties: { '(a+)+': { type: 'string' }, '(b+)+': { type: 'number' } },
+        }
+        const result = validate({ aaa: 'test' }, schema, { safePatterns: true, collectAllErrors: false })
+        expect(result.valid).toBe(false)
+        expect(result.errors.length).toBe(1)
+      })
+    })
+  })
 })
