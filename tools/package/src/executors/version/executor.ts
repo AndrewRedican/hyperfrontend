@@ -548,7 +548,11 @@ export default async function versionExecutor(options: VersionExecutorOptions, c
   // For unreleased versions (no tag for current version), clear existing changelog
   // entry so semver regenerates it with ALL commits since last tagged release.
   // This handles the case where version command was run but not pushed.
-  if (!tagExists(expectedTag, workspaceRoot)) {
+  // IMPORTANT: Skip clearing in collectFiles mode - PR CI may not have all tags fetched,
+  // causing false positives that corrupt changelogs. Main CI will handle this correctly.
+  if (options.collectFiles) {
+    logger.info(`${projectName}: Skipping changelog clearing in collectFiles mode`)
+  } else if (!tagExists(expectedTag, workspaceRoot)) {
     const cleared = clearUnreleasedChangelogEntry(changelogPath, currentVersion, options.dryRun ?? false)
     if (cleared) {
       logger.info(`${projectName}: Cleared existing changelog entry for unreleased ${currentVersion}`)

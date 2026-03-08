@@ -209,6 +209,9 @@ jobs:
           ref: ${{ github.head_ref }}
           token: ${{ secrets.PR_PAT }}
 
+      - name: Fetch tags from origin
+        run: git fetch origin --tags --force
+
       - name: Setup monorepo
         uses: ./.github/actions/setup-monorepo
 
