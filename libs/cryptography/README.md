@@ -10,6 +10,9 @@
   <a href="https://www.npmjs.com/package/@hyperfrontend/cryptography">
     <img src="https://img.shields.io/npm/v/@hyperfrontend/cryptography?style=flat-square" alt="npm version">
   </a>
+  <a href="https://bundlephobia.com/package/@hyperfrontend/cryptography">
+    <img src="https://img.shields.io/bundlephobia/min/%40hyperfrontend%2Fcryptography?style=flat-square" alt="npm bundle size">
+  </a>
 </p>
 <p align="center">
   <!-- ALL-CONTRIBUTORS-BADGE:START - Do not remove or modify this section -->
@@ -184,8 +187,6 @@ isSHA256Hash('e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855')
 | CJS    | `index.cjs.js`             |       ❌       |
 | IIFE   | `bundle/index.iife.min.js` |       ❌       |
 | UMD    | `bundle/index.umd.min.js`  |       ❌       |
-
-**Bundle size:** 3 KB (minified, self-contained)
 
 ### CDN Usage
 
