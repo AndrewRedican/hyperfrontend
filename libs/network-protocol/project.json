@@ -35,7 +35,9 @@
             "globalName": "HyperfrontendNetworkProtocolV2",
             "output": "bundle/v2"
           }
-        ]
+        ],
+        "unpkg": "./bundle/v1/index.umd.min.js",
+        "jsdelivr": "./bundle/v1/index.umd.min.js"
       }
     },
     "publish": {},
