@@ -7,7 +7,9 @@ import { compareImportSources } from '../utils/import-analysis'
  */
 export const RULE_NAME = 'import-order'
 
-const createRule = ESLintUtils.RuleCreator((name) => `https://github.com/AndrewRedican/hyperfrontend/blob/main/docs/rules/${name}.md`)
+const createRule = ESLintUtils.RuleCreator(
+  (name) => `https://github.com/AndrewRedican/hyperfrontend/blob/main/tools/eslint-rules/docs/${name}.md`
+)
 
 type MessageIds = 'incorrectOrder'
 

@@ -88,7 +88,9 @@ const FS_PROMISES_MODULE_PATTERNS = ['fs/promises', 'node:fs/promises']
  */
 const FS_MODULE_PATTERNS = ['fs', 'node:fs']
 
-const createRule = ESLintUtils.RuleCreator((name) => `https://github.com/AndrewRedican/hyperfrontend/blob/main/docs/rules/${name}.md`)
+const createRule = ESLintUtils.RuleCreator(
+  (name) => `https://github.com/AndrewRedican/hyperfrontend/blob/main/tools/eslint-rules/docs/${name}.md`
+)
 
 type MessageIds = 'noAsyncFsMethod' | 'noFsPromisesImport' | 'noAsyncFsNamespace'
 

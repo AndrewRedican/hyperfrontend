@@ -13,6 +13,7 @@ const rule: Rule.RuleModule = {
     type: 'problem',
     docs: {
       description: 'Require essential metadata in publishable library project.json files',
+      url: 'https://github.com/AndrewRedican/hyperfrontend/blob/main/tools/eslint-rules/docs/lib-project-metadata.md',
     },
     schema: [],
     messages: {

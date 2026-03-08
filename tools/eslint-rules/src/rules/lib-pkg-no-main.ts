@@ -13,6 +13,7 @@ const rule: Rule.RuleModule = {
     type: 'problem',
     docs: {
       description: 'Disallow "main" field in publishable library package.json, require "exports" field instead',
+      url: 'https://github.com/AndrewRedican/hyperfrontend/blob/main/tools/eslint-rules/docs/lib-pkg-no-main.md',
     },
     fixable: 'code',
     schema: [],

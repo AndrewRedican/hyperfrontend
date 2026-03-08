@@ -6,7 +6,9 @@ import { addNodePrefix, isNodeBuiltinWithoutPrefix } from '../utils/node-builtin
  */
 export const RULE_NAME = 'require-node-protocol'
 
-const createRule = ESLintUtils.RuleCreator((name) => `https://github.com/AndrewRedican/hyperfrontend/blob/main/docs/rules/${name}.md`)
+const createRule = ESLintUtils.RuleCreator(
+  (name) => `https://github.com/AndrewRedican/hyperfrontend/blob/main/tools/eslint-rules/docs/${name}.md`
+)
 
 type MessageIds = 'requireNodeProtocol'
 

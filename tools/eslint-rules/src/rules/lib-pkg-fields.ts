@@ -31,6 +31,7 @@ const rule: Rule.RuleModule = {
     type: 'problem',
     docs: {
       description: 'Require essential fields in publishable library package.json files',
+      url: 'https://github.com/AndrewRedican/hyperfrontend/blob/main/tools/eslint-rules/docs/lib-pkg-fields.md',
     },
     schema: [],
     messages: {

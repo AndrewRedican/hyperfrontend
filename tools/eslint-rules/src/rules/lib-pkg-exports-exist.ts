@@ -57,6 +57,7 @@ const rule: Rule.RuleModule = {
     type: 'problem',
     docs: {
       description: 'Require that paths in package.json exports field point to existing files',
+      url: 'https://github.com/AndrewRedican/hyperfrontend/blob/main/tools/eslint-rules/docs/lib-pkg-exports-exist.md',
     },
     schema: [],
     messages: {

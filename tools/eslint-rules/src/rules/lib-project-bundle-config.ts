@@ -62,6 +62,7 @@ const rule: Rule.RuleModule = {
     type: 'problem',
     docs: {
       description: 'Require entry and globalName fields for bundled outputs (IIFE/UMD) in project.json',
+      url: 'https://github.com/AndrewRedican/hyperfrontend/blob/main/tools/eslint-rules/docs/lib-project-bundle-config.md',
     },
     schema: [],
     messages: {

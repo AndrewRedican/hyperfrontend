@@ -5,7 +5,9 @@ import { ESLintUtils } from '@typescript-eslint/utils'
  */
 export const RULE_NAME = 'no-deprecated-tag'
 
-const createRule = ESLintUtils.RuleCreator((name) => `https://github.com/AndrewRedican/hyperfrontend/blob/main/docs/rules/${name}.md`)
+const createRule = ESLintUtils.RuleCreator(
+  (name) => `https://github.com/AndrewRedican/hyperfrontend/blob/main/tools/eslint-rules/docs/${name}.md`
+)
 
 type MessageIds = 'noDeprecatedTag'
 

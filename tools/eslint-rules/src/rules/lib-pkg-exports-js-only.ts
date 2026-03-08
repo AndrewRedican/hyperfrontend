@@ -54,6 +54,7 @@ const rule: Rule.RuleModule = {
     type: 'problem',
     docs: {
       description: 'Require only .js or .json extensions for relative paths in package.json exports field',
+      url: 'https://github.com/AndrewRedican/hyperfrontend/blob/main/tools/eslint-rules/docs/lib-pkg-exports-js-only.md',
     },
     fixable: 'code',
     schema: [],

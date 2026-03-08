@@ -54,6 +54,7 @@ const rule: Rule.RuleModule = {
     type: 'problem',
     docs: {
       description: 'Require bundled output entries to exist in package.json exports',
+      url: 'https://github.com/AndrewRedican/hyperfrontend/blob/main/tools/eslint-rules/docs/lib-pkg-bundle-entry.md',
     },
     schema: [],
     messages: {

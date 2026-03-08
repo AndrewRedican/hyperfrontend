@@ -7,7 +7,9 @@ import safeRegex from 'safe-regex2'
  */
 export const RULE_NAME = 'no-unsafe-regex'
 
-const createRule = ESLintUtils.RuleCreator((name) => `https://github.com/AndrewRedican/hyperfrontend/blob/main/docs/rules/${name}.md`)
+const createRule = ESLintUtils.RuleCreator(
+  (name) => `https://github.com/AndrewRedican/hyperfrontend/blob/main/tools/eslint-rules/docs/${name}.md`
+)
 
 /**
  * Message IDs for the no-unsafe-regex rule.

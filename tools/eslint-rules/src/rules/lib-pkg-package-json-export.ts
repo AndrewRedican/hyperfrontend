@@ -20,6 +20,7 @@ const rule: Rule.RuleModule = {
     type: 'problem',
     docs: {
       description: 'Require "./package.json" export in publishable library package.json files for tool compatibility',
+      url: 'https://github.com/AndrewRedican/hyperfrontend/blob/main/tools/eslint-rules/docs/lib-pkg-package-json-export.md',
     },
     schema: [],
     messages: {
