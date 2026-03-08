@@ -40,6 +40,7 @@
   },
   "overrides": {
     "minimatch": "10.2.3",
-    "lodash": "4.17.23"
+    "lodash": "4.17.23",
+    "dompurify": "3.3.2"
   }
 }
