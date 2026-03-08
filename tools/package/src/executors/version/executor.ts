@@ -593,6 +593,25 @@ export default async function versionExecutor(options: VersionExecutorOptions, c
   if (result.success) {
     logger.info(`${projectName}: version updated`)
 
+    // jscutlery/semver doesn't support skipTag - it always creates tags.
+    // When skipTag is true (e.g., collectFiles mode), delete the tag it created.
+    if (options.skipTag) {
+      const newVersion = getPackageVersion(packageJsonPath)
+      const newTag = `${tagPrefix}${newVersion}`
+      if (tagExists(newTag, workspaceRoot)) {
+        try {
+          execSync(`git tag -d "${newTag}"`, {
+            cwd: workspaceRoot,
+            encoding: 'utf-8',
+            stdio: ['pipe', 'pipe', 'pipe'],
+          })
+          logger.info(`${projectName}: Removed tag ${newTag} (skipTag mode)`)
+        } catch {
+          logger.warn(`${projectName}: Failed to remove tag ${newTag}`)
+        }
+      }
+    }
+
     // Track project's own modified files (relative to workspace root)
     modifiedFiles.push(join(projectRoot, 'package.json'))
     if (existsSync(changelogPath)) {
