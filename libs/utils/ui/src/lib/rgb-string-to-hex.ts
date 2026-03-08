@@ -10,8 +10,10 @@ import { rgbToHex } from './rgb-to-hex'
  * @returns A hexadecimal color string with # prefix
  */
 export function rgbStringToHex(rgbString: string): string {
-  const rgbaRegex = /^rgba?\((\d{1,3}),\s*(\d{1,3}),\s*(\d{1,3})(?:,\s*((?:0\.)?\d+|1(?:\.0*)?))?\)$/i
-  const match = rgbString.match(rgbaRegex)
+  // Match rgb/rgba with explicit bounds to avoid ReDoS
+  const rgbOnlyRegex = /^rgba?\((\d{1,3}),\s*(\d{1,3}),\s*(\d{1,3})\)$/i
+  const rgbaRegex = /^rgba?\((\d{1,3}),\s*(\d{1,3}),\s*(\d{1,3}),\s*(\d\.?\d*)\)$/i
+  const match = rgbString.match(rgbaRegex) || rgbString.match(rgbOnlyRegex)
 
   if (!match) {
     throw createError('Invalid RGB or RGBA string')
