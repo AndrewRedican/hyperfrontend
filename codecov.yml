@@ -55,6 +55,11 @@ flag_management:
         - libs/nexus/src/**
       carryforward: true
 
+    - name: project-scope
+      paths:
+        - libs/project-scope/src/**
+      carryforward: true
+
     - name: state-machine
       paths:
         - libs/state-machine/src/**
