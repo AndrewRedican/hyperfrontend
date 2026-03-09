@@ -35,6 +35,8 @@
 
 Statistical random distributions and UUID generation for simulations, testing, and procedural content.
 
+• 👉 See [**documentation**](https://www.hyperfrontend.dev/docs/libraries/utils/random-generator/)
+
 ## What is @hyperfrontend/random-generator-utils?
 
 @hyperfrontend/random-generator-utils provides random number generators beyond JavaScript's basic `Math.random()`, focusing on statistical distributions used in simulations, load testing, and procedural generation. It includes Gaussian (normal), exponential, power law, and logarithmic distributions, plus UUID v4 generation and seeded pseudo-random functions.
