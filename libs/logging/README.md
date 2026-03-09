@@ -35,6 +35,8 @@
 
 Structured logging with configurable severity levels and error-resilient execution.
 
+• 👉 See [**documentation**](https://www.hyperfrontend.dev/docs/libraries/logging/)
+
 ## What is @hyperfrontend/logging?
 
 @hyperfrontend/logging provides a production-grade logging abstraction that wraps any console-like interface (console, Winston, Bunyan) with runtime log level control and automatic error handling. Unlike basic console wrappers, this library enables dynamic severity filtering without code changes or environment restarts - adjust verbosity in running production systems via the `setLogLevel()` API.
