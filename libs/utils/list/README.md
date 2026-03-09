@@ -35,6 +35,8 @@
 
 Purpose-built collection utilities for queue management, filtering, and iteration patterns.
 
+• 👉 See [**documentation**](https://www.hyperfrontend.dev/docs/libraries/utils/list/)
+
 ## What is @hyperfrontend/list-utils?
 
 @hyperfrontend/list-utils provides specialized collection utilities focused on common programming patterns that native JavaScript arrays don't handle elegantly. Rather than replicating lodash, this library targets specific use cases: FIFO/LIFO queue management with object reference tracking, cyclical value iteration, and string array sanitization.
