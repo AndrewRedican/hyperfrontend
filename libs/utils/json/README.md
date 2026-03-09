@@ -35,6 +35,8 @@
 
 Zero-dependency JSON Schema Draft v4 validation and schema generation utilities.
 
+• 👉 See [**documentation**](https://www.hyperfrontend.dev/docs/libraries/utils/json/)
+
 ## What is @hyperfrontend/json-utils?
 
 @hyperfrontend/json-utils provides lightweight utilities for validating JSON data against JSON Schema Draft v4 specifications and generating schemas from JavaScript values via a functional-programming-first implementation.
