@@ -35,6 +35,8 @@
 
 Production-grade network protocol for secure, real-time cross-window and cross-process communication with built-in encryption, obfuscation, routing, and message queueing.
 
+• 👉 See [**documentation**](https://www.hyperfrontend.dev/docs/libraries/network-protocol/)
+
 ## What is @hyperfrontend/network-protocol?
 
 @hyperfrontend/network-protocol is a comprehensive isomorphic communication framework that provides secure, reliable message passing between browser windows, iframes, Web Workers, and Node.js processes. It implements a multi-layered security protocol combining dynamic key encryption with time-based password rotation, packet obfuscation, and message queueing to ensure confidential, ordered, and resilient communication.
