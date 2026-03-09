@@ -35,6 +35,8 @@
 
 Production-grade cryptographic primitives with isomorphic APIs for browser and Node.js environments.
 
+• 👉 See [**documentation**](https://www.hyperfrontend.dev/docs/libraries/cryptography/)
+
 ## What is @hyperfrontend/cryptography?
 
 @hyperfrontend/cryptography provides a comprehensive suite of cryptographic utilities designed for secure data handling in full-stack JavaScript applications. The library implements industry-standard encryption (AES-GCM), key derivation (PBKDF2), and hashing (SHA-256) with identical APIs across browser and Node.js environments, eliminating platform-specific code branching.
