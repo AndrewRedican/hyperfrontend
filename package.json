@@ -32,7 +32,7 @@
     "@commitlint/config-conventional": "20.3.1",
     "@jscutlery/semver": "5.7.1",
     "@nx/devkit": "22.3.3",
-    "@nx/eslint": "22.3.3",
+    "@nx/eslint": "22.5.4",
     "@nx/eslint-plugin": "22.3.3",
     "@nx/jest": "22.3.3",
     "@nx/js": "22.3.3",
