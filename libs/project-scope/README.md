@@ -35,6 +35,8 @@
 
 Comprehensive project analysis, technology stack detection, and transactional virtual file system for Node.js tooling.
 
+• 👉 See [**documentation**](https://www.hyperfrontend.dev/docs/libraries/project-scope/)
+
 ## What is @hyperfrontend/project-scope?
 
 @hyperfrontend/project-scope provides intelligent codebase analysis for JavaScript/TypeScript projects. It uses multi-signal heuristics to classify project types, detect frameworks and build tools, discover entry points, and map dependency graphs - all with confidence scoring and explainable evidence. The library also includes a virtual file system (VFS) for safe, atomic file modifications.
