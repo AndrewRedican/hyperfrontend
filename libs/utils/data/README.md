@@ -35,6 +35,8 @@
 
 Comprehensive data structure manipulation with circular reference handling and custom class support.
 
+• 👉 See [**documentation**](https://www.hyperfrontend.dev/docs/libraries/utils/data/)
+
 ## What is @hyperfrontend/data-utils?
 
 @hyperfrontend/data-utils provides industrial-strength utilities for inspecting, transforming, and comparing complex JavaScript data structures. Unlike basic utility libraries that fail on circular references or treat custom classes as generic objects, this library handles self-referential structures safely and allows registration of custom classes (Maps, Sets, domain models) with specialized traversal logic.
