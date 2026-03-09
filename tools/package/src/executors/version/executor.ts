@@ -447,8 +447,7 @@ function updateE2eDependencies(packageName: string, newVersion: string, workspac
   const packageJsonFiles = findPackageJsonFiles(e2eDir)
 
   // Extract library slug from package name: @hyperfrontend/cryptography -> cryptography
-  // Handle scoped packages and convert to tarball naming convention
-  const packageSlug = packageName.replace(/^@hyperfrontend\//, '').replace(/-utils$/, '-utils')
+  const packageSlug = packageName.replace(/^@hyperfrontend\//, '')
   // Tarball pattern: hyperfrontend-{slug}-{version}.tgz
   // eslint-disable-next-line workspace/no-unsafe-regex -- packageSlug is derived from controlled package names
   const tgzPattern = new RegExp(`hyperfrontend-${packageSlug}-\\d+\\.\\d+\\.\\d+\\.tgz`)
