@@ -35,6 +35,8 @@
 
 Lightweight, functional state management library with Redux-inspired actions/reducers, async operation orchestration, and lifecycle-aware component abstractions for predictable application state.
 
+• 👉 See [**documentation**](https://www.hyperfrontend.dev/docs/libraries/state-machine/)
+
 ## What is @hyperfrontend/state-machine?
 
 @hyperfrontend/state-machine is a composable state management framework that combines Redux-style action/reducer patterns with specialized abstractions for asynchronous operations and component lifecycles. It provides a minimal `Store` implementation with subscribe/dispatch APIs, a pre-built reducer for process state (start, pause, cancel, success, fail), and higher-level abstractions like `AsyncOperation` for automatic state transitions and `LifecycleAwareComponent` for initialization/activation workflows.
