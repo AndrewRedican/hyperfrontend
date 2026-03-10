@@ -24,6 +24,18 @@ module.exports = [
     },
   },
   {
+    files: ['.github/workflows/ci-libraries.yml'],
+    plugins: {
+      workspace: eslintRules,
+    },
+    languageOptions: {
+      parser: require('yaml-eslint-parser'),
+    },
+    rules: {
+      'workspace/lib-ci-workflows': 'error',
+    },
+  },
+  {
     ignores: ['docs/', '.nx/', 'dist/', 'coverage/', 'tmp/', '**/*.spec.{ts,tsx,js,jsx}'],
   },
 ]
