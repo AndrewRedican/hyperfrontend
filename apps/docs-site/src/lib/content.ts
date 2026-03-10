@@ -67,6 +67,15 @@ export const LIBRARIES: LibraryInfo[] = [
     entryPoints: ['libs/web-worker/src/index.ts'],
     category: 'supporting',
   },
+  {
+    name: 'Project Scope',
+    packageName: '@hyperfrontend/project-scope',
+    slug: 'project-scope',
+    readmePath: 'libs/project-scope/README.md',
+    architecturePath: 'libs/project-scope/ARCHITECTURE.md',
+    entryPoints: ['libs/project-scope/src/index.ts'],
+    category: 'supporting',
+  },
   // Utils sub-packages
   {
     name: 'Data Utils',
