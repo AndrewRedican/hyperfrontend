@@ -154,6 +154,7 @@ jobs:
             "logging:libs/logging"
             "network-protocol:libs/network-protocol"
             "nexus:libs/nexus"
+            "project-scope:libs/project-scope"
             "state-machine:libs/state-machine"
             "data-utils:libs/utils/data"
             "function-utils:libs/utils/function"
