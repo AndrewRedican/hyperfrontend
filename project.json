@@ -2,5 +2,23 @@
   "$schema": "node_modules/nx/schemas/project-schema.json",
   "name": "@hyperfrontend/workspace",
   "description": "A hybrid micro-frontend pattern to embed live web applications with communication protocols, lifecycle, and contract standards.",
-  "tags": []
+  "tags": [],
+  "targets": {
+    "lint": {
+      "executor": "@nx/eslint:lint",
+      "inputs": [
+        "{workspaceRoot}/.github/workflows/**/*",
+        "{workspaceRoot}/package.json",
+        "{workspaceRoot}/README.md",
+        "{workspaceRoot}/eslint.config.cjs",
+        "{workspaceRoot}/eslint.base.config.cjs",
+        "{workspaceRoot}/tools/eslint-rules/**/*"
+      ],
+      "options": {
+        "lintFilePatterns": [".github/workflows", "package.json", "README.md"],
+        "maxWarnings": 0,
+        "errorOnUnmatchedPattern": false
+      }
+    }
+  }
 }
