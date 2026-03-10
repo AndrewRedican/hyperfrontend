@@ -1,5 +1,6 @@
 import type { ESLint, Rule } from 'eslint'
 import assertiveTestNames, { RULE_NAME as ASSERTIVE_TEST_NAMES } from './rules/assertive-test-names'
+import docsSiteLibraries, { RULE_NAME as DOCS_SITE_LIBRARIES } from './rules/docs-site-libraries'
 import importOrder, { RULE_NAME as IMPORT_ORDER } from './rules/import-order'
 import libCiWorkflows, { RULE_NAME as LIB_CI_WORKFLOWS } from './rules/lib-ci-workflows'
 import libPkgBundleEntry, { RULE_NAME as LIB_PKG_BUNDLE_ENTRY } from './rules/lib-pkg-bundle-entry'
@@ -29,6 +30,7 @@ import rootReadmePackages, { RULE_NAME as ROOT_README_PACKAGES } from './rules/r
  */
 export const rules: ESLint.Plugin['rules'] = {
   [ASSERTIVE_TEST_NAMES]: assertiveTestNames as unknown as Rule.RuleModule,
+  [DOCS_SITE_LIBRARIES]: docsSiteLibraries as unknown as Rule.RuleModule,
   [IMPORT_ORDER]: importOrder as unknown as Rule.RuleModule,
   [LIB_CI_WORKFLOWS]: libCiWorkflows as unknown as Rule.RuleModule,
   [LIB_PKG_BUNDLE_ENTRY]: libPkgBundleEntry as unknown as Rule.RuleModule,

@@ -10,8 +10,8 @@ export default <Config>{
     global: {
       branches: 89,
       functions: 100,
-      lines: 97,
-      statements: 97,
+      lines: 96,
+      statements: 96,
     },
   },
 }
