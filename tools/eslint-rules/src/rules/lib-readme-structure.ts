@@ -1,0 +1,434 @@
+import type { Rule } from 'eslint'
+import { dirname } from 'node:path'
+import { isPublishableLibrary } from '../utils/nx-project'
+
+/**
+ * Rule identifier for the lib-readme-structure rule.
+ */
+export const RULE_NAME = 'lib-readme-structure'
+
+/**
+ * Required sections in order for a library README.
+ */
+export const REQUIRED_SECTIONS = [
+  { level: 2, pattern: /^what is @hyperfrontend\//i, name: 'What is @hyperfrontend/<name>?' },
+  { level: 2, pattern: /^why use @hyperfrontend\//i, name: 'Why Use @hyperfrontend/<name>?' },
+  { level: 2, pattern: /^installation$/i, name: 'Installation' },
+  { level: 2, pattern: /^quick start$/i, name: 'Quick Start' },
+  { level: 2, pattern: /^api overview$/i, name: 'API Overview' },
+  { level: 2, pattern: /^compatibility$/i, name: 'Compatibility' },
+] as const
+
+/**
+ * Required subsections that should appear under specific parent sections.
+ */
+export const REQUIRED_SUBSECTIONS = [
+  { level: 3, pattern: /^key features$/i, name: 'Key Features', parent: /^what is/i },
+  { level: 3, pattern: /^architecture highlights$/i, name: 'Architecture Highlights', parent: /^what is/i },
+] as const
+
+/**
+ * Required badges in the badges block.
+ */
+export const REQUIRED_BADGES = [
+  { pattern: /github\/actions\/workflow\/status/i, name: 'Build badge' },
+  { pattern: /codecov\.io/i, name: 'Coverage badge' },
+  { pattern: /npm\/v\//i, name: 'npm version badge' },
+  { pattern: /bundlephobia\.com/i, name: 'Bundle size badge' },
+  { pattern: /all-contributors/i, name: 'Contributors badge' },
+  { pattern: /license-MIT/i, name: 'License badge' },
+  { pattern: /npm\/dm\//i, name: 'npm downloads badge' },
+  { pattern: /github\/stars/i, name: 'GitHub stars badge' },
+  { pattern: /node-%3E%3D/i, name: 'Node version badge' },
+  { pattern: /tree%20shakeable/i, name: 'Tree-shakeable badge' },
+] as const
+
+/**
+ * Represents a parsed section from the README.
+ */
+export interface ParsedSection {
+  level: number
+  title: string
+  startLine: number
+  endLine: number
+  content: string
+}
+
+/**
+ * Parses markdown content into sections.
+ *
+ * @param content - The markdown content to parse.
+ * @returns An array of parsed sections.
+ */
+export function parseMarkdownSections(content: string): ParsedSection[] {
+  const lines = content.split('\n')
+  const sections: ParsedSection[] = []
+
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i]
+    // Parse markdown headers (# to ######) using string methods
+    if (line.startsWith('#')) {
+      let level = 0
+      while (level < line.length && level < 6 && line[level] === '#') {
+        level++
+      }
+      // Valid header must have space after hashes
+      if (level > 0 && level < line.length && line[level] === ' ') {
+        const title = line.slice(level + 1).trim()
+        sections.push({
+          level,
+          title,
+          startLine: i + 1, // 1-indexed
+          endLine: -1, // Will be set later
+          content: '',
+        })
+      }
+    }
+  }
+
+  // Set end lines and extract content
+  // End line is determined by the next section at the same or higher level (smaller or equal heading number)
+  for (let i = 0; i < sections.length; i++) {
+    const currentLevel = sections[i].level
+    const startLine = sections[i].startLine
+
+    // Find the next section at the same or higher level
+    let endLine = lines.length
+    for (let j = i + 1; j < sections.length; j++) {
+      if (sections[j].level <= currentLevel) {
+        endLine = sections[j].startLine - 1
+        break
+      }
+    }
+
+    sections[i].endLine = endLine
+    sections[i].content = lines.slice(startLine, endLine).join('\n').trim()
+  }
+
+  return sections
+}
+
+/**
+ * Extracts the badges block from the README content.
+ *
+ * @param content - The markdown content.
+ * @returns The badges block content, or null if not found.
+ */
+export function extractBadgesBlock(content: string): { block: string; startLine: number; endLine: number } | null {
+  const lines = content.split('\n')
+  let inBadgesBlock = false
+  let startLine = -1
+  let endLine = -1
+  const blockLines: string[] = []
+
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i]
+
+    // Badges block starts with centered paragraph
+    const trimmedLine = line.trim().toLowerCase()
+    if (!inBadgesBlock && trimmedLine.startsWith('<p') && trimmedLine.includes('align="center"')) {
+      inBadgesBlock = true
+      startLine = i + 1
+    }
+
+    if (inBadgesBlock) {
+      blockLines.push(line)
+      if (trimmedLine.includes('</p>')) {
+        // Check if next line is also a centered paragraph (continued badges)
+        if (i + 1 < lines.length) {
+          const nextLine = lines[i + 1].trim().toLowerCase()
+          if (nextLine.startsWith('<p') && nextLine.includes('align="center"')) {
+            continue
+          }
+        }
+        endLine = i + 1
+        break
+      }
+    }
+  }
+
+  if (startLine === -1) {
+    return null
+  }
+
+  return { block: blockLines.join('\n'), startLine, endLine }
+}
+
+/**
+ * Extracts the title from the README content.
+ *
+ * @param content - The markdown content.
+ * @returns The title and its line number, or null if not found.
+ */
+export function extractTitle(content: string): { title: string; line: number } | null {
+  const lines = content.split('\n')
+
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i]
+    // Check for level 1 heading: starts with single # followed by space
+    if (line.startsWith('# ') && !line.startsWith('## ')) {
+      return { title: line.slice(2).trim(), line: i + 1 }
+    }
+  }
+
+  return null
+}
+
+/**
+ * Extracts the short description paragraph after badges block.
+ *
+ * @param content - The markdown content.
+ * @param badgesEndLine - The ending line of the badges block.
+ * @returns The description and its line number, or null if not found.
+ */
+export function extractShortDescription(content: string, badgesEndLine: number): { text: string; line: number } | null {
+  const lines = content.split('\n')
+
+  for (let i = badgesEndLine; i < lines.length; i++) {
+    const line = lines[i].trim()
+
+    // Skip empty lines
+    if (!line) {
+      continue
+    }
+
+    // Skip HTML tags
+    if (line.startsWith('<') && !line.startsWith('<a')) {
+      continue
+    }
+
+    // Skip headers
+    if (line.startsWith('#')) {
+      return null
+    }
+
+    // Found description paragraph
+    return { text: line, line: i + 1 }
+  }
+
+  return null
+}
+
+/**
+ * Extracts the documentation link from the content.
+ *
+ * @param content - The markdown content.
+ * @returns The documentation link info, or null if not found.
+ */
+export function extractDocumentationLink(content: string): { line: number } | null {
+  const lines = content.split('\n')
+
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i]
+    // Check for documentation link pattern using string methods
+    if (
+      line.includes('•') &&
+      line.includes('👉') &&
+      line.includes('**documentation**') &&
+      line.includes('https://www.hyperfrontend.dev/docs/')
+    ) {
+      return { line: i + 1 }
+    }
+  }
+
+  return null
+}
+
+const rule: Rule.RuleModule = {
+  meta: {
+    type: 'problem',
+    docs: {
+      description: 'Ensure publishable library README.md files have required structure and sections',
+      url: 'https://github.com/AndrewRedican/hyperfrontend/blob/main/tools/eslint-rules/docs/lib-readme-structure.md',
+    },
+    schema: [],
+    messages: {
+      missingTitle: 'README must start with a title in format: # @hyperfrontend/<package-name>',
+      invalidTitleFormat: "README title must be in format '# @hyperfrontend/<package-name>'. Found: '{{ title }}'",
+      missingBadgesBlock: 'README must have a badges block with centered paragraphs (<p align="center">)',
+      missingBadge: 'Missing required badge: {{ badge }}',
+      missingShortDescription: 'README must have a short description paragraph after the badges block',
+      emptyShortDescription: 'README short description must not be empty',
+      missingDocumentationLink:
+        'README must have a documentation link in format: • 👉 See [**documentation**](https://www.hyperfrontend.dev/docs/libraries/<name>/)',
+      missingSection: "README must have section: '{{ section }}'",
+      emptySectionContent: "README section '{{ section }}' must have content",
+      sectionOutOfOrder:
+        "README section '{{ section }}' should appear before '{{ before }}' (expected order: What is, Why Use, Installation, Quick Start, API Overview, Compatibility)",
+      missingSubsection: "README must have subsection '{{ subsection }}' under '{{ parent }}'",
+      missingKeyFeaturesList: "Key Features section must have a bullet list (lines starting with '- **')",
+    },
+  },
+
+  create(context) {
+    const filePath = context.filename
+    const fileName = filePath.split('/').pop()
+
+    // Only process README.md files
+    if (fileName !== 'README.md') {
+      return {}
+    }
+
+    const projectRoot = dirname(filePath)
+
+    // Only lint publishable library READMEs
+    if (!isPublishableLibrary(projectRoot)) {
+      return {}
+    }
+
+    return {
+      root(node: Rule.Node) {
+        const sourceCode = context.sourceCode
+        const content = sourceCode.getText()
+
+        // Check title
+        const titleInfo = extractTitle(content)
+        if (!titleInfo) {
+          context.report({
+            node,
+            messageId: 'missingTitle',
+          })
+        } else if (!titleInfo.title.startsWith('@hyperfrontend/') || titleInfo.title.length <= '@hyperfrontend/'.length) {
+          context.report({
+            node,
+            messageId: 'invalidTitleFormat',
+            data: { title: titleInfo.title },
+          })
+        }
+
+        // Check badges block
+        const badgesBlock = extractBadgesBlock(content)
+        if (!badgesBlock) {
+          context.report({
+            node,
+            messageId: 'missingBadgesBlock',
+          })
+        } else {
+          // Check for required badges
+          for (const badge of REQUIRED_BADGES) {
+            if (!badge.pattern.test(badgesBlock.block)) {
+              context.report({
+                node,
+                messageId: 'missingBadge',
+                data: { badge: badge.name },
+              })
+            }
+          }
+        }
+
+        // Check short description
+        const badgesEndLine = badgesBlock?.endLine ?? 0
+        const shortDescription = extractShortDescription(content, badgesEndLine)
+        if (!shortDescription) {
+          context.report({
+            node,
+            messageId: 'missingShortDescription',
+          })
+        } else if (!shortDescription.text.trim()) {
+          context.report({
+            node,
+            messageId: 'emptyShortDescription',
+          })
+        }
+
+        // Check documentation link
+        const docLink = extractDocumentationLink(content)
+        if (!docLink) {
+          context.report({
+            node,
+            messageId: 'missingDocumentationLink',
+          })
+        }
+
+        // Parse sections
+        const sections = parseMarkdownSections(content)
+        const level2Sections = sections.filter((s) => s.level === 2)
+
+        // Check required sections exist and have content
+        const foundSections: Array<{ name: string; index: number }> = []
+
+        for (const required of REQUIRED_SECTIONS) {
+          const found = level2Sections.find((s) => required.pattern.test(s.title))
+
+          if (!found) {
+            context.report({
+              node,
+              messageId: 'missingSection',
+              data: { section: required.name },
+            })
+          } else {
+            const index = level2Sections.indexOf(found)
+            foundSections.push({ name: required.name, index })
+
+            // Check section has content
+            if (!found.content.trim()) {
+              context.report({
+                node,
+                messageId: 'emptySectionContent',
+                data: { section: required.name },
+              })
+            }
+          }
+        }
+
+        // Check section order
+        for (let i = 0; i < foundSections.length - 1; i++) {
+          const current = foundSections[i]
+          const next = foundSections[i + 1]
+
+          if (current.index > next.index) {
+            context.report({
+              node,
+              messageId: 'sectionOutOfOrder',
+              data: { section: current.name, before: next.name },
+            })
+          }
+        }
+
+        // Check required subsections
+        for (const requiredSub of REQUIRED_SUBSECTIONS) {
+          // Find parent section
+          const parentSection = level2Sections.find((s) => requiredSub.parent.test(s.title))
+
+          if (parentSection) {
+            // Get subsections within parent section range
+            const subsectionsInParent = sections.filter(
+              (s) => s.level === requiredSub.level && s.startLine > parentSection.startLine && s.startLine < parentSection.endLine
+            )
+
+            const found = subsectionsInParent.some((s) => requiredSub.pattern.test(s.title))
+
+            if (!found) {
+              context.report({
+                node,
+                messageId: 'missingSubsection',
+                data: {
+                  subsection: requiredSub.name,
+                  parent: parentSection.title,
+                },
+              })
+            }
+
+            // Special check for Key Features - must have bullet list
+            if (requiredSub.name === 'Key Features') {
+              const keyFeaturesSection = subsectionsInParent.find((s) => requiredSub.pattern.test(s.title))
+
+              if (keyFeaturesSection) {
+                // Check if any line starts with "- **" (bold bullet item)
+                const hasKeyFeaturesBullets = keyFeaturesSection.content.split('\n').some((line) => line.trimStart().startsWith('- **'))
+                if (!hasKeyFeaturesBullets) {
+                  context.report({
+                    node,
+                    messageId: 'missingKeyFeaturesList',
+                  })
+                }
+              }
+            }
+          }
+        }
+      },
+    }
+  },
+}
+
+export default rule

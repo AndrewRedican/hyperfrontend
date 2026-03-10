@@ -30,6 +30,7 @@
   "devDependencies": {
     "@commitlint/cli": "20.3.1",
     "@commitlint/config-conventional": "20.3.1",
+    "@eslint/markdown": "7.5.1",
     "@jscutlery/semver": "5.7.1",
     "@nx/devkit": "22.3.3",
     "@nx/eslint": "22.3.3",

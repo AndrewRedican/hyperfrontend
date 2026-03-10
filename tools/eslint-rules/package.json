@@ -6,6 +6,7 @@
   "main": "./src/index.ts",
   "types": "./src/index.ts",
   "devDependencies": {
+    "@eslint/markdown": "7.5.1",
     "@types/node": "25.3.3",
     "@typescript-eslint/utils": "8.53.1",
     "safe-regex2": "5.0.0"

@@ -9,6 +9,7 @@ import libPkgNoMain, { RULE_NAME as LIB_PKG_NO_MAIN } from './rules/lib-pkg-no-m
 import libPkgPackageJsonExport, { RULE_NAME as LIB_PKG_PACKAGE_JSON_EXPORT } from './rules/lib-pkg-package-json-export'
 import libProjectBundleConfig, { RULE_NAME as LIB_PROJECT_BUNDLE_CONFIG } from './rules/lib-project-bundle-config'
 import libProjectMetadata, { RULE_NAME as LIB_PROJECT_METADATA } from './rules/lib-project-metadata'
+import libReadmeStructure, { RULE_NAME as LIB_README_STRUCTURE } from './rules/lib-readme-structure'
 import noAsyncFsApi, { RULE_NAME as NO_ASYNC_FS_API } from './rules/no-async-fs-api'
 import noDeprecatedTag, { RULE_NAME as NO_DEPRECATED_TAG } from './rules/no-deprecated-tag'
 import noEnum, { RULE_NAME as NO_ENUM } from './rules/no-enum'
@@ -35,6 +36,7 @@ export const rules: ESLint.Plugin['rules'] = {
   [LIB_PKG_PACKAGE_JSON_EXPORT]: libPkgPackageJsonExport as unknown as Rule.RuleModule,
   [LIB_PROJECT_BUNDLE_CONFIG]: libProjectBundleConfig as unknown as Rule.RuleModule,
   [LIB_PROJECT_METADATA]: libProjectMetadata as unknown as Rule.RuleModule,
+  [LIB_README_STRUCTURE]: libReadmeStructure as unknown as Rule.RuleModule,
   [NO_ASYNC_FS_API]: noAsyncFsApi as unknown as Rule.RuleModule,
   [NO_DEPRECATED_TAG]: noDeprecatedTag as unknown as Rule.RuleModule,
   [NO_ENUM]: noEnum as unknown as Rule.RuleModule,
