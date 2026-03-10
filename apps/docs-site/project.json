@@ -6,7 +6,6 @@
   "projectType": "application",
   "tags": ["type:app", "scope:standalone"],
   "targets": {
-    "lint": {},
     "typecheck": {
       "executor": "nx:run-commands",
       "dependsOn": ["install"],
