@@ -12,7 +12,9 @@
         "{workspaceRoot}/README.md",
         "{workspaceRoot}/eslint.config.cjs",
         "{workspaceRoot}/eslint.base.config.cjs",
-        "{workspaceRoot}/tools/eslint-rules/**/*"
+        "{workspaceRoot}/tools/eslint-rules/**/*",
+        "{workspaceRoot}/libs/**/project.json",
+        "{workspaceRoot}/plugins/**/project.json"
       ],
       "options": {
         "lintFilePatterns": [".github/workflows", "package.json", "README.md"],

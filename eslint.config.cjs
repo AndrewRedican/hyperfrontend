@@ -1,4 +1,6 @@
 const baseConfig = require('./eslint.base.config.cjs')
+const eslintRules = require('./tools/eslint-rules/src/index.ts')
+
 module.exports = [
   {
     files: ['**/*.json'],
@@ -10,6 +12,17 @@ module.exports = [
   },
 
   ...baseConfig,
+  {
+    files: ['README.md'],
+    plugins: {
+      workspace: eslintRules,
+      markdown: require('@eslint/markdown').default,
+    },
+    language: 'markdown/gfm',
+    rules: {
+      'workspace/root-readme-packages': 'error',
+    },
+  },
   {
     ignores: ['docs/', '.nx/', 'dist/', 'coverage/', 'tmp/', '**/*.spec.{ts,tsx,js,jsx}'],
   },

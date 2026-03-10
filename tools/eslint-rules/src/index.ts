@@ -20,6 +20,7 @@ import noUnsafeRegex, { RULE_NAME as NO_UNSAFE_REGEX } from './rules/no-unsafe-r
 import noUnwantedBarrelFiles, { RULE_NAME as NO_UNWARRANTED_BARREL_FILES } from './rules/no-unwanted-barrel-files'
 import preferAngleBracketAssertion, { RULE_NAME as PREFER_ANGLE_BRACKET_ASSERTION } from './rules/prefer-angle-bracket-assertion'
 import requireNodeProtocol, { RULE_NAME as REQUIRE_NODE_PROTOCOL } from './rules/require-node-protocol'
+import rootReadmePackages, { RULE_NAME as ROOT_README_PACKAGES } from './rules/root-readme-packages'
 
 /**
  * Custom ESLint rules for the hyperfrontend monorepo.
@@ -47,4 +48,5 @@ export const rules: ESLint.Plugin['rules'] = {
   [NO_UNSAFE_BUILTIN_METHODS]: noUnsafeBuiltinMethods as unknown as Rule.RuleModule,
   [PREFER_ANGLE_BRACKET_ASSERTION]: preferAngleBracketAssertion as unknown as Rule.RuleModule,
   [REQUIRE_NODE_PROTOCOL]: requireNodeProtocol as unknown as Rule.RuleModule,
+  [ROOT_README_PACKAGES]: rootReadmePackages as unknown as Rule.RuleModule,
 }
