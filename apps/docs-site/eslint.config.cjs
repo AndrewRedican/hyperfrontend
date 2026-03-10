@@ -2,12 +2,23 @@ const baseConfig = require('../../eslint.base.config.cjs')
 const pluginReact = require('eslint-plugin-react')
 const pluginReactHooks = require('eslint-plugin-react-hooks')
 const pluginJsxA11y = require('eslint-plugin-jsx-a11y')
+const eslintRules = require('../../tools/eslint-rules/src/index.ts')
 
 module.exports = [
   {
     ignores: ['.next/', 'out/', 'node_modules/', 'next-env.d.ts'],
   },
   ...baseConfig,
+  {
+    // Ensure all publishable libraries are documented in content.ts
+    files: ['src/lib/content.ts'],
+    plugins: {
+      workspace: eslintRules,
+    },
+    rules: {
+      'workspace/docs-site-libraries': 'error',
+    },
+  },
   {
     // Allow @hyperfrontend/ imports from npm packages installed in this app's node_modules
     files: ['**/*.ts', '**/*.tsx', '**/*.js', '**/*.jsx'],
