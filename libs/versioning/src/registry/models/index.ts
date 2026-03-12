@@ -1,0 +1,5 @@
+export type { Registry, RegistryConfig } from './registry'
+export type { PackageInfo } from './package-info'
+export type { VersionInfo, Maintainer } from './version-info'
+export { createPackageInfo } from './package-info'
+export { createVersionInfo } from './version-info'

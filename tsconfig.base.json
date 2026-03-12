@@ -134,6 +134,13 @@
       "@hyperfrontend/ui-utils/selector": ["libs/utils/ui/src/selector/index.ts"],
       "@hyperfrontend/ui-utils/style": ["libs/utils/ui/src/style/index.ts"],
       "@hyperfrontend/ui-utils/time": ["libs/utils/ui/src/time/index.ts"],
+      "@hyperfrontend/versioning": ["libs/versioning/src/index.ts"],
+      "@hyperfrontend/versioning/changelog": ["libs/versioning/src/changelog/index.ts"],
+      "@hyperfrontend/versioning/changelog/models": ["libs/versioning/src/changelog/models/index.ts"],
+      "@hyperfrontend/versioning/changelog/parse": ["libs/versioning/src/changelog/parse/index.ts"],
+      "@hyperfrontend/versioning/commits": ["libs/versioning/src/commits/index.ts"],
+      "@hyperfrontend/versioning/commits/models": ["libs/versioning/src/commits/models/index.ts"],
+      "@hyperfrontend/versioning/commits/parse": ["libs/versioning/src/commits/parse/index.ts"],
       "@hyperfrontend/web-worker": ["libs/web-worker/src/index.ts"],
       "@hyperfrontend/app": ["tools/app/src/index.ts"],
       "@hyperfrontend/package": ["tools/package/src/index.ts"]

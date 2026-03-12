@@ -1,0 +1,431 @@
+/**
+ * Changelog Parser
+ *
+ * Parses a changelog markdown string into a structured Changelog object.
+ * Uses a state machine tokenizer for ReDoS-safe parsing.
+ */
+
+import type { Changelog, ChangelogFormat, ChangelogHeader, ChangelogLink, ChangelogMetadata } from '../models/changelog'
+import type { ChangelogEntry, ChangelogItem, ChangelogSection } from '../models/entry'
+import type { Token } from './tokenizer'
+import { createChangelogItem } from '../models/entry'
+import { getSectionType } from '../models/section'
+import { parseVersionFromHeading, parseScopeFromItem, parseCommitRefs, parseIssueRefs } from './line'
+import { tokenize } from './tokenizer'
+
+/**
+ * Internal state used during changelog parsing to track position and collect metadata.
+ */
+interface ParserState {
+  tokens: Token[]
+  pos: number
+  warnings: string[]
+  repositoryUrl?: string
+}
+
+/**
+ * Parses a changelog markdown string into a Changelog object.
+ *
+ * @param content - The markdown content to parse
+ * @param source - Optional source file path
+ * @returns Parsed Changelog object
+ */
+export function parseChangelog(content: string, source?: string): Changelog {
+  const tokens = tokenize(content)
+  const state: ParserState = {
+    tokens,
+    pos: 0,
+    warnings: [],
+  }
+
+  // Parse header
+  const header = parseHeader(state)
+
+  // Parse entries
+  const entries = parseEntries(state)
+
+  // Detect format
+  const format = detectFormat(header, entries)
+
+  // Build metadata
+  const metadata: ChangelogMetadata = {
+    format,
+    isConventional: format === 'conventional',
+    repositoryUrl: state.repositoryUrl,
+    warnings: state.warnings,
+  }
+
+  return {
+    source,
+    header,
+    entries,
+    metadata,
+  }
+}
+
+/**
+ * Parses the changelog header section.
+ *
+ * @param state - The parser state containing tokens and position
+ * @returns The parsed ChangelogHeader with title, description, and links
+ */
+function parseHeader(state: ParserState): ChangelogHeader {
+  let title = '# Changelog'
+  const description: string[] = []
+  const links: ChangelogLink[] = []
+
+  // Look for h1 title
+  const headingToken = currentToken(state)
+  if (headingToken?.type === 'heading-1') {
+    title = `# ${headingToken.value}`
+    advance(state)
+  }
+
+  // Skip newlines
+  skipNewlines(state)
+
+  // Collect description lines until we hit h2 (version entry)
+  while (!isEOF(state) && currentToken(state)?.type !== 'heading-2') {
+    const token = currentToken(state)
+    if (!token) break
+
+    if (token.type === 'text') {
+      description.push(token.value)
+    } else if (token.type === 'link-text') {
+      // Check for link definition
+      const nextToken = peek(state, 1)
+      if (nextToken?.type === 'link-url') {
+        description.push(`[${token.value}](${nextToken.value})`)
+        links.push({ label: token.value, url: nextToken.value })
+
+        // Try to detect repository URL
+        if (!state.repositoryUrl && nextToken.value.includes('github.com')) {
+          state.repositoryUrl = extractRepoUrl(nextToken.value)
+        }
+
+        advance(state) // skip link-text
+        advance(state) // skip link-url
+        continue
+      }
+    } else if (token.type === 'newline' || token.type === 'blank-line') {
+      if (description.length > 0 && description[description.length - 1] !== '') {
+        description.push('')
+      }
+    }
+
+    advance(state)
+  }
+
+  // Trim trailing empty lines
+  while (description.length > 0 && description[description.length - 1] === '') {
+    description.pop()
+  }
+
+  return { title, description, links }
+}
+
+/**
+ * Parses all changelog entries.
+ *
+ * @param state - The parser state containing tokens and position
+ * @returns An array of parsed ChangelogEntry objects
+ */
+function parseEntries(state: ParserState): ChangelogEntry[] {
+  const entries: ChangelogEntry[] = []
+
+  while (!isEOF(state)) {
+    // Look for h2 heading (version entry)
+    if (currentToken(state)?.type === 'heading-2') {
+      const entry = parseEntry(state)
+      if (entry) {
+        entries.push(entry)
+      }
+    } else {
+      advance(state)
+    }
+  }
+
+  return entries
+}
+
+/**
+ * Parses a single changelog entry.
+ *
+ * @param state - The parser state containing tokens and position
+ * @returns The parsed ChangelogEntry or null if parsing fails
+ */
+function parseEntry(state: ParserState): ChangelogEntry | null {
+  const headingToken = currentToken(state)
+  if (headingToken?.type !== 'heading-2') {
+    return null
+  }
+
+  const { version, date, compareUrl } = parseVersionFromHeading(headingToken.value)
+  const unreleased = version.toLowerCase() === 'unreleased'
+
+  advance(state) // skip h2
+  skipNewlines(state)
+
+  // Parse sections
+  const sections = parseSections(state)
+
+  return {
+    version,
+    date,
+    unreleased,
+    compareUrl,
+    sections,
+  }
+}
+
+/**
+ * Parses sections within an entry.
+ *
+ * @param state - The parser state containing tokens and position
+ * @returns An array of parsed ChangelogSection objects
+ */
+function parseSections(state: ParserState): ChangelogSection[] {
+  const sections: ChangelogSection[] = []
+
+  while (!isEOF(state)) {
+    const token = currentToken(state)
+
+    // Stop at next version entry (h2)
+    if (token?.type === 'heading-2') {
+      break
+    }
+
+    // Parse section (h3)
+    if (token?.type === 'heading-3') {
+      const section = parseSection(state)
+      if (section) {
+        sections.push(section)
+      }
+    } else if (token?.type === 'list-item') {
+      // Items without section heading - create "other" section
+      const items = parseItems(state)
+      if (items.length > 0) {
+        sections.push({
+          type: 'other',
+          heading: 'Changes',
+          items,
+        })
+      }
+    } else {
+      advance(state)
+    }
+  }
+
+  return sections
+}
+
+/**
+ * Parses a single section.
+ *
+ * @param state - The parser state containing tokens and position
+ * @returns The parsed ChangelogSection or null if parsing fails
+ */
+function parseSection(state: ParserState): ChangelogSection | null {
+  const headingToken = currentToken(state)
+  if (headingToken?.type !== 'heading-3') {
+    return null
+  }
+
+  const heading = headingToken.value
+  const type = getSectionType(heading)
+
+  advance(state) // skip h3
+  skipNewlines(state)
+
+  // Parse items
+  const items = parseItems(state)
+
+  return {
+    type,
+    heading,
+    items,
+  }
+}
+
+/**
+ * Parses list items.
+ *
+ * @param state - The parser state containing tokens and position
+ * @returns An array of parsed ChangelogItem objects
+ */
+function parseItems(state: ParserState): ChangelogItem[] {
+  const items: ChangelogItem[] = []
+
+  while (!isEOF(state)) {
+    const token = currentToken(state)
+
+    // Stop at headings
+    if (token?.type === 'heading-2' || token?.type === 'heading-3') {
+      break
+    }
+
+    // Parse list item
+    if (token?.type === 'list-item') {
+      const item = parseItem(state)
+      if (item) {
+        items.push(item)
+      }
+    } else {
+      advance(state)
+    }
+  }
+
+  return items
+}
+
+/**
+ * Parses a single list item.
+ *
+ * @param state - The parser state containing tokens and position
+ * @returns The parsed ChangelogItem or null if parsing fails
+ */
+function parseItem(state: ParserState): ChangelogItem | null {
+  const token = currentToken(state)
+  if (token?.type !== 'list-item') {
+    return null
+  }
+
+  const text = token.value
+  const { scope, description } = parseScopeFromItem(text)
+  const commits = parseCommitRefs(text, state.repositoryUrl)
+  const references = parseIssueRefs(text, state.repositoryUrl)
+
+  // Check for breaking change indicators
+  const breaking = isBreakingItem(text)
+
+  advance(state)
+
+  return createChangelogItem(description, {
+    scope,
+    commits,
+    references,
+    breaking,
+  })
+}
+
+/**
+ * Checks if an item indicates a breaking change.
+ *
+ * @param text - The text content of the item
+ * @returns True if the item indicates a breaking change
+ */
+function isBreakingItem(text: string): boolean {
+  const lower = text.toLowerCase()
+  return lower.includes('breaking change') || lower.includes('breaking:') || lower.startsWith('!') || lower.includes('[breaking]')
+}
+
+/**
+ * Detects the changelog format.
+ *
+ * @param header - The parsed header of the changelog
+ * @param entries - The parsed changelog entries
+ * @returns The detected ChangelogFormat
+ */
+function detectFormat(header: ChangelogHeader, entries: ChangelogEntry[]): ChangelogFormat {
+  const descriptionText = header.description.join(' ').toLowerCase()
+
+  // Check for Keep a Changelog
+  if (descriptionText.includes('keep a changelog') || descriptionText.includes('keepachangelog')) {
+    return 'keep-a-changelog'
+  }
+
+  // Check for conventional changelog patterns
+  const hasConventionalSections = entries.some((entry) =>
+    entry.sections.some((section) => ['features', 'fixes', 'performance'].includes(section.type))
+  )
+
+  if (hasConventionalSections) {
+    return 'conventional'
+  }
+
+  // Check if we have entries with structured sections
+  if (entries.some((entry) => entry.sections.length > 0)) {
+    return 'custom'
+  }
+
+  return 'unknown'
+}
+
+/**
+ * Extracts repository URL from a GitHub URL.
+ *
+ * @param url - The URL to extract the repository from
+ * @returns The repository URL or undefined if not found
+ */
+function extractRepoUrl(url: string): string | undefined {
+  // Try to extract base repo URL from various GitHub URL patterns
+  const githubIndex = url.indexOf('github.com/')
+  if (githubIndex !== -1) {
+    const afterGithub = url.slice(githubIndex + 11)
+    const parts = afterGithub.split('/')
+    if (parts.length >= 2) {
+      return `https://github.com/${parts[0]}/${parts[1]}`
+    }
+  }
+  return undefined
+}
+
+// ============================================================================
+// Parser utilities
+// ============================================================================
+
+/**
+ * Gets the current token at the parser position.
+ *
+ * @param state - The parser state
+ * @returns The current token or undefined if at end
+ */
+function currentToken(state: ParserState): Token | undefined {
+  return state.tokens[state.pos]
+}
+
+/**
+ * Peeks at a token at an offset from the current position.
+ *
+ * @param state - The parser state
+ * @param offset - The offset from current position
+ * @returns The token at the offset or undefined if out of bounds
+ */
+function peek(state: ParserState, offset: number): Token | undefined {
+  return state.tokens[state.pos + offset]
+}
+
+/**
+ * Advances the parser position by one token.
+ *
+ * @param state - The parser state to advance
+ */
+function advance(state: ParserState): void {
+  state.pos++
+}
+
+/**
+ * Checks if the parser has reached the end of the token stream.
+ *
+ * @param state - The parser state
+ * @returns True if at end of file
+ */
+function isEOF(state: ParserState): boolean {
+  const token = currentToken(state)
+  return !token || token.type === 'eof'
+}
+
+/**
+ * Skips newline tokens until a non-newline token is found.
+ *
+ * @param state - The parser state
+ */
+function skipNewlines(state: ParserState): void {
+  while (!isEOF(state)) {
+    const token = currentToken(state)
+    if (token?.type !== 'newline' && token?.type !== 'blank-line') {
+      break
+    }
+    advance(state)
+  }
+}

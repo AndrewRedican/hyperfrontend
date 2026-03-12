@@ -62,6 +62,8 @@ jobs:
               - 'libs/utils/json/**'
             project-scope:
               - 'libs/project-scope/**'
+            versioning:
+              - 'libs/versioning/**'
             list-utils:
               - 'libs/utils/list/**'
             random-generator-utils:
@@ -115,6 +117,7 @@ jobs:
           add_if_changed "${{ steps.filter.outputs.json-utils }}" "lib-json-utils" "libs/utils/json" "json-utils"
           add_if_changed "${{ steps.filter.outputs.list-utils }}" "lib-list-utils" "libs/utils/list" "list-utils"
           add_if_changed "${{ steps.filter.outputs.project-scope }}" "lib-project-scope" "libs/project-scope" "project-scope"
+          add_if_changed "${{ steps.filter.outputs.versioning }}" "lib-versioning" "libs/versioning" "versioning"
           add_if_changed "${{ steps.filter.outputs.random-generator-utils }}" "lib-random-generator-utils" "libs/utils/random-generator" "random-generator-utils"
           add_if_changed "${{ steps.filter.outputs.string-utils }}" "lib-string-utils" "libs/utils/string" "string-utils"
           add_if_changed "${{ steps.filter.outputs.time-utils }}" "lib-time-utils" "libs/utils/time" "time-utils"

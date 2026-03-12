@@ -76,6 +76,14 @@ export const LIBRARIES: LibraryInfo[] = [
     entryPoints: ['libs/project-scope/src/index.ts'],
     category: 'supporting',
   },
+  {
+    name: 'Versioning',
+    packageName: '@hyperfrontend/versioning',
+    slug: 'versioning',
+    readmePath: 'libs/versioning/README.md',
+    entryPoints: ['libs/versioning/src/index.ts'],
+    category: 'supporting',
+  },
   // Utils sub-packages
   {
     name: 'Data Utils',

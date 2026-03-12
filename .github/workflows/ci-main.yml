@@ -156,6 +156,7 @@ jobs:
             "nexus:libs/nexus"
             "project-scope:libs/project-scope"
             "state-machine:libs/state-machine"
+            "versioning:libs/versioning"
             "data-utils:libs/utils/data"
             "function-utils:libs/utils/function"
             "immutable-api-utils:libs/utils/immutable-api"

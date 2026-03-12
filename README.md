@@ -271,6 +271,7 @@ This launches a development environment where you can debug and interact with yo
 | [string-utils](https://github.com/AndrewRedican/hyperfrontend/blob/main/libs/utils/string)                     | String manipulation utilities for browser and Node.js environments · [📖 docs](https://www.hyperfrontend.dev/docs/libraries/utils/string/)                   |
 | [time-utils](https://github.com/AndrewRedican/hyperfrontend/blob/main/libs/utils/time)                         | Time and date manipulation utilities · [📖 docs](https://www.hyperfrontend.dev/docs/libraries/utils/time/)                                                   |
 | [ui-utils](https://github.com/AndrewRedican/hyperfrontend/blob/main/libs/utils/ui)                             | UI utilities for elements, events, styling, and mobile interactions · [📖 docs](https://www.hyperfrontend.dev/docs/libraries/utils/ui/)                      |
+| [versioning](https://github.com/AndrewRedican/hyperfrontend/blob/main/libs/versioning)                         | Changelog parsing and conventional commit utilities · [📖 docs](https://www.hyperfrontend.dev/docs/libraries/versioning/)                                    |
 | [web-worker](https://github.com/AndrewRedican/hyperfrontend/blob/main/libs/web-worker)                         | Web Worker utilities and abstractions · [📖 docs](https://www.hyperfrontend.dev/docs/libraries/web-worker/)                                                  |
 
 ## Documentation

@@ -1,0 +1,427 @@
+/**
+ * Line Parser
+ *
+ * Utilities for parsing individual changelog lines without regex.
+ */
+
+import type { CommitRef, IssueRef } from '../models/commit-ref'
+import { max } from '@hyperfrontend/immutable-api-utils/built-in-copy/math'
+import { parseInt } from '@hyperfrontend/immutable-api-utils/built-in-copy/number'
+
+/**
+ * Parses a version string from a heading.
+ * Examples: "1.2.3", "v1.2.3", "[1.2.3]", "1.2.3 - 2024-01-01"
+ *
+ * @param heading - The heading string to parse
+ * @returns An object containing the parsed version, date, and optional compareUrl
+ */
+export function parseVersionFromHeading(heading: string): {
+  version: string
+  date: string | null
+  compareUrl?: string
+} {
+  const trimmed = heading.trim()
+
+  // Check for unreleased
+  const lowerHeading = trimmed.toLowerCase()
+  if (lowerHeading === 'unreleased' || lowerHeading === '[unreleased]') {
+    return { version: 'Unreleased', date: null }
+  }
+
+  let pos = 0
+  let version = ''
+  let date: string | null = null
+  let compareUrl: string | undefined
+
+  // Skip leading [ if present
+  if (trimmed[pos] === '[') {
+    pos++
+  }
+
+  // Skip leading 'v' if present
+  if (trimmed[pos] === 'v' || trimmed[pos] === 'V') {
+    pos++
+  }
+
+  // Parse version number (digits and dots)
+  const versionStart = pos
+  while (pos < trimmed.length) {
+    const char = trimmed[pos]
+    const code = char.charCodeAt(0)
+
+    // Allow digits, dots, hyphens (for prerelease), plus signs
+    if (
+      (code >= 48 && code <= 57) || // 0-9
+      char === '.' ||
+      char === '-' ||
+      char === '+' ||
+      (code >= 97 && code <= 122) || // a-z (for prerelease tags like alpha, beta, rc)
+      (code >= 65 && code <= 90) // A-Z
+    ) {
+      pos++
+    } else {
+      break
+    }
+  }
+
+  version = trimmed.slice(versionStart, pos)
+
+  // Skip trailing ] if present
+  if (trimmed[pos] === ']') {
+    pos++
+  }
+
+  // Skip whitespace and separator
+  while (pos < trimmed.length && (trimmed[pos] === ' ' || trimmed[pos] === '-' || trimmed[pos] === '–')) {
+    pos++
+  }
+
+  // Try to parse date (YYYY-MM-DD format)
+  if (pos < trimmed.length) {
+    const dateMatch = extractDate(trimmed.slice(pos))
+    if (dateMatch) {
+      date = dateMatch.date
+      pos += dateMatch.length
+    }
+  }
+
+  // Skip to check for compare URL (in parentheses or link)
+  while (pos < trimmed.length && trimmed[pos] === ' ') {
+    pos++
+  }
+
+  // Check for link at end: [compare](url)
+  if (pos < trimmed.length) {
+    const linkMatch = extractLink(trimmed.slice(pos))
+    if (linkMatch?.url) {
+      compareUrl = linkMatch.url
+    }
+  }
+
+  return { version, date, compareUrl }
+}
+
+/**
+ * Extracts a date in YYYY-MM-DD format from a string.
+ *
+ * @param str - The string to extract a date from
+ * @returns The extracted date and its length, or null if no date found
+ */
+function extractDate(str: string): { date: string; length: number } | null {
+  let pos = 0
+
+  // Skip optional parentheses
+  if (str[pos] === '(') pos++
+
+  // Parse year (4 digits)
+  const yearStart = pos
+  while (pos < str.length && pos - yearStart < 4) {
+    const code = str.charCodeAt(pos)
+    if (code >= 48 && code <= 57) {
+      pos++
+    } else {
+      break
+    }
+  }
+
+  if (pos - yearStart !== 4) return null
+
+  // Expect - or /
+  if (str[pos] !== '-' && str[pos] !== '/') return null
+  const separator = str[pos]
+  pos++
+
+  // Parse month (2 digits)
+  const monthStart = pos
+  while (pos < str.length && pos - monthStart < 2) {
+    const code = str.charCodeAt(pos)
+    if (code >= 48 && code <= 57) {
+      pos++
+    } else {
+      break
+    }
+  }
+
+  if (pos - monthStart !== 2) return null
+
+  // Expect same separator
+  if (str[pos] !== separator) return null
+  pos++
+
+  // Parse day (2 digits)
+  const dayStart = pos
+  while (pos < str.length && pos - dayStart < 2) {
+    const code = str.charCodeAt(pos)
+    if (code >= 48 && code <= 57) {
+      pos++
+    } else {
+      break
+    }
+  }
+
+  if (pos - dayStart !== 2) return null
+
+  // Skip optional closing parenthesis
+  if (str[pos] === ')') pos++
+
+  const dateStr = str.slice(yearStart, dayStart + 2)
+  const date = slashToHyphen(dateStr)
+  return { date, length: pos }
+}
+
+/**
+ * Replaces forward slashes with hyphens (ReDoS-safe).
+ *
+ * @param input - The input string
+ * @returns String with forward slashes replaced by hyphens
+ */
+function slashToHyphen(input: string): string {
+  const result: string[] = []
+  for (let i = 0; i < input.length; i++) {
+    result.push(input[i] === '/' ? '-' : input[i])
+  }
+  return result.join('')
+}
+
+/**
+ * Extracts a markdown link from a string.
+ *
+ * @param str - The string to extract a link from
+ * @returns The extracted link text, url, and length, or null if no link found
+ */
+function extractLink(str: string): { text: string; url: string; length: number } | null {
+  if (str[0] !== '[') return null
+
+  let pos = 1
+  let depth = 1
+
+  // Find closing ]
+  while (pos < str.length && depth > 0) {
+    if (str[pos] === '[') depth++
+    else if (str[pos] === ']') depth--
+    pos++
+  }
+
+  if (depth !== 0) return null
+
+  const text = str.slice(1, pos - 1)
+
+  // Expect (
+  if (str[pos] !== '(') return null
+  pos++
+
+  const urlStart = pos
+  depth = 1
+  while (pos < str.length && depth > 0) {
+    if (str[pos] === '(') depth++
+    else if (str[pos] === ')') depth--
+    pos++
+  }
+
+  if (depth !== 0) return null
+
+  const url = str.slice(urlStart, pos - 1)
+
+  return { text, url, length: pos }
+}
+
+/**
+ * Parses commit references from a line.
+ * Examples: (abc1234), [abc1234], commit abc1234
+ *
+ * @param text - The text to parse for commit references
+ * @param baseUrl - Optional base URL for constructing commit links
+ * @returns An array of parsed CommitRef objects
+ */
+export function parseCommitRefs(text: string, baseUrl?: string): CommitRef[] {
+  const refs: CommitRef[] = []
+  let pos = 0
+
+  while (pos < text.length) {
+    // Look for potential hash patterns
+    // Common formats: (abc1234), [abc1234], abc1234fabcdef
+
+    // Check for parenthetical hash
+    if (text[pos] === '(' || text[pos] === '[') {
+      const closeChar = text[pos] === '(' ? ')' : ']'
+      const start = pos + 1
+      pos++
+
+      // Read potential hash
+      while (pos < text.length && isHexDigit(text[pos])) {
+        pos++
+      }
+
+      // Check if valid hash (7-40 hex chars)
+      const hash = text.slice(start, pos)
+      if (hash.length >= 7 && hash.length <= 40 && text[pos] === closeChar) {
+        refs.push({
+          hash,
+          shortHash: hash.slice(0, 7),
+          url: baseUrl ? `${baseUrl}/commit/${hash}` : undefined,
+        })
+        pos++ // skip closing bracket
+        continue
+      }
+    }
+
+    pos++
+  }
+
+  return refs
+}
+
+/**
+ * Parses issue/PR references from a line.
+ * Examples: #123, GH-123, closes #123
+ *
+ * @param text - The text to parse for issue references
+ * @param baseUrl - Optional base URL for constructing issue links
+ * @returns An array of parsed IssueRef objects
+ */
+export function parseIssueRefs(text: string, baseUrl?: string): IssueRef[] {
+  const refs: IssueRef[] = []
+  let pos = 0
+
+  while (pos < text.length) {
+    // Look for # followed by digits
+    if (text[pos] === '#') {
+      pos++
+      const numStart = pos
+
+      while (pos < text.length && isDigitChar(text[pos])) {
+        pos++
+      }
+
+      if (pos > numStart) {
+        const number = parseInt(text.slice(numStart, pos), 10)
+
+        // Check context for PR vs issue
+        const beforeHash = text.slice(max(0, numStart - 10), numStart - 1).toLowerCase()
+        const type: 'pull-request' | 'issue' = beforeHash.includes('pr') || beforeHash.includes('pull') ? 'pull-request' : 'issue'
+
+        refs.push({
+          number,
+          type,
+          url: baseUrl ? `${baseUrl}/issues/${number}` : undefined,
+        })
+        continue
+      }
+    }
+
+    pos++
+  }
+
+  return refs
+}
+
+/**
+ * Parses the scope from a changelog item.
+ * Example: "**scope:** description" -> { scope: "scope", description: "description" }
+ *
+ * @param text - The text to parse for scope
+ * @returns An object with optional scope and the description
+ */
+export function parseScopeFromItem(text: string): { scope?: string; description: string } {
+  const trimmed = text.trim()
+
+  // Check for **scope:** pattern (colon inside or outside bold)
+  if (trimmed.startsWith('**')) {
+    let pos = 2
+    const scopeStart = pos
+
+    // Read until ** or :
+    while (pos < trimmed.length && trimmed[pos] !== '*' && trimmed[pos] !== ':') {
+      pos++
+    }
+
+    // Handle **scope:** pattern (colon before closing **)
+    if (trimmed[pos] === ':' && trimmed[pos + 1] === '*' && trimmed[pos + 2] === '*') {
+      const scope = trimmed.slice(scopeStart, pos)
+      pos += 3 // skip :**
+
+      // Skip whitespace
+      while (trimmed[pos] === ' ') pos++
+
+      return { scope, description: trimmed.slice(pos) }
+    }
+
+    // Handle **scope**: pattern (colon after closing **)
+    if (trimmed[pos] === '*' && trimmed[pos + 1] === '*') {
+      const scope = trimmed.slice(scopeStart, pos)
+      pos += 2 // skip **
+
+      // Skip : if present
+      if (trimmed[pos] === ':') pos++
+
+      // Skip whitespace
+      while (trimmed[pos] === ' ') pos++
+
+      return { scope, description: trimmed.slice(pos) }
+    }
+  }
+
+  // Check for scope: pattern (without bold)
+  const colonPos = trimmed.indexOf(':')
+  if (colonPos > 0 && colonPos < 30) {
+    // scope shouldn't be too long
+    const potentialScope = trimmed.slice(0, colonPos)
+    // Scope should be a simple identifier (letters, numbers, hyphens)
+    if (isValidScope(potentialScope)) {
+      const description = trimmed.slice(colonPos + 1).trim()
+      return { scope: potentialScope, description }
+    }
+  }
+
+  return { description: trimmed }
+}
+
+/**
+ * Checks if a string is a valid scope (alphanumeric with hyphens).
+ *
+ * @param str - The string to check
+ * @returns True if the string is a valid scope identifier
+ */
+function isValidScope(str: string): boolean {
+  if (!str || str.length === 0) return false
+
+  for (let i = 0; i < str.length; i++) {
+    const code = str.charCodeAt(i)
+    if (
+      !(code >= 48 && code <= 57) && // 0-9
+      !(code >= 65 && code <= 90) && // A-Z
+      !(code >= 97 && code <= 122) && // a-z
+      code !== 45 // -
+    ) {
+      return false
+    }
+  }
+
+  return true
+}
+
+/**
+ * Checks if a character is a hex digit.
+ *
+ * @param char - The character to check
+ * @returns True if the character is a hex digit (0-9, A-F, a-f)
+ */
+function isHexDigit(char: string): boolean {
+  const code = char.charCodeAt(0)
+  return (
+    (code >= 48 && code <= 57) || // 0-9
+    (code >= 65 && code <= 70) || // A-F
+    (code >= 97 && code <= 102) // a-f
+  )
+}
+
+/**
+ * Checks if a character is a digit.
+ *
+ * @param char - The character to check
+ * @returns True if the character is a digit (0-9)
+ */
+function isDigitChar(char: string): boolean {
+  const code = char.charCodeAt(0)
+  return code >= 48 && code <= 57
+}
