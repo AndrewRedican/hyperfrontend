@@ -10,6 +10,7 @@
         "{workspaceRoot}/.github/workflows/**/*",
         "{workspaceRoot}/package.json",
         "{workspaceRoot}/README.md",
+        "{workspaceRoot}/tsconfig.base.json",
         "{workspaceRoot}/eslint.config.cjs",
         "{workspaceRoot}/eslint.base.config.cjs",
         "{workspaceRoot}/tools/eslint-rules/**/*",
@@ -17,7 +18,7 @@
         "{workspaceRoot}/plugins/**/project.json"
       ],
       "options": {
-        "lintFilePatterns": [".github/workflows", "package.json", "README.md"],
+        "lintFilePatterns": [".github/workflows", "package.json", "README.md", "tsconfig.base.json"],
         "maxWarnings": 0,
         "errorOnUnmatchedPattern": false
       }

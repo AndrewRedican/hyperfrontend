@@ -36,6 +36,24 @@ module.exports = [
     },
   },
   {
+    files: ['tsconfig.base.json'],
+    plugins: {
+      workspace: eslintRules,
+    },
+    languageOptions: {
+      parser: require('jsonc-eslint-parser'),
+    },
+    rules: {
+      'workspace/lib-tsconfig-paths': [
+        'error',
+        {
+          libraryDirectories: ['libs', 'plugins', 'tools'],
+          excludePatterns: ['__fixtures__', 'node_modules', 'dist'],
+        },
+      ],
+    },
+  },
+  {
     ignores: ['docs/', '.nx/', 'dist/', 'coverage/', 'tmp/', '**/*.spec.{ts,tsx,js,jsx}'],
   },
 ]
