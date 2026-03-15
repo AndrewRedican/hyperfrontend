@@ -213,6 +213,7 @@ module.exports = [
     rules: {
       'workspace/lib-project-metadata': 'error',
       'workspace/lib-project-bundle-config': 'error',
+      'workspace/lib-e2e-project-required': 'error',
     },
   },
   {

@@ -3,6 +3,7 @@ import assertiveTestNames, { RULE_NAME as ASSERTIVE_TEST_NAMES } from './rules/a
 import docsSiteLibraries, { RULE_NAME as DOCS_SITE_LIBRARIES } from './rules/docs-site-libraries'
 import importOrder, { RULE_NAME as IMPORT_ORDER } from './rules/import-order'
 import libCiWorkflows, { RULE_NAME as LIB_CI_WORKFLOWS } from './rules/lib-ci-workflows'
+import libE2eProjectRequired, { RULE_NAME as LIB_E2E_PROJECT_REQUIRED } from './rules/lib-e2e-project-required'
 import libPkgBundleEntry, { RULE_NAME as LIB_PKG_BUNDLE_ENTRY } from './rules/lib-pkg-bundle-entry'
 import libPkgExportsExist, { RULE_NAME as LIB_PKG_EXPORTS_EXIST } from './rules/lib-pkg-exports-exist'
 import libPkgExportsJsOnly, { RULE_NAME as LIB_PKG_EXPORTS_JS_ONLY } from './rules/lib-pkg-exports-js-only'
@@ -33,6 +34,7 @@ export const rules: ESLint.Plugin['rules'] = {
   [DOCS_SITE_LIBRARIES]: docsSiteLibraries as unknown as Rule.RuleModule,
   [IMPORT_ORDER]: importOrder as unknown as Rule.RuleModule,
   [LIB_CI_WORKFLOWS]: libCiWorkflows as unknown as Rule.RuleModule,
+  [LIB_E2E_PROJECT_REQUIRED]: libE2eProjectRequired as unknown as Rule.RuleModule,
   [LIB_PKG_BUNDLE_ENTRY]: libPkgBundleEntry as unknown as Rule.RuleModule,
   [LIB_PKG_EXPORTS_EXIST]: libPkgExportsExist as unknown as Rule.RuleModule,
   [LIB_PKG_EXPORTS_JS_ONLY]: libPkgExportsJsOnly as unknown as Rule.RuleModule,
