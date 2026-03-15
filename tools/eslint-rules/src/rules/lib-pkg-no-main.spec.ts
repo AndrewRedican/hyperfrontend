@@ -144,6 +144,51 @@ function createMainWithExportsCase(): ESLintRuleTester.InvalidTestCase {
   }
 }
 
+function createMainLastPropertyWithExportsCase(): ESLintRuleTester.InvalidTestCase {
+  // main is THE LAST PROPERTY - this tests the leading comma removal branch
+  const pkg = {
+    name: '@hyperfrontend/test-lib',
+    exports: {
+      '.': './src/index.js',
+    },
+    main: './src/index.js',
+  }
+  const projectDir = createTempProject({
+    projectJson: publishableProjectJson,
+    packageJson: pkg,
+  })
+  return {
+    code: JSON.stringify(pkg, null, 2),
+    filename: join(projectDir, 'package.json'),
+    errors: [{ messageId: 'mainWithExports' }],
+    output: `{
+  "name": "@hyperfrontend/test-lib",
+  "exports": {
+    ".": "./src/index.js"
+  }
+}`,
+  }
+}
+
+function createMainWithNonStringValueCase(): ESLintRuleTester.InvalidTestCase {
+  // main has a non-string value (object) - fix returns null
+  const pkg = {
+    name: '@hyperfrontend/test-lib',
+    main: { default: './src/index.js' },
+  }
+  const projectDir = createTempProject({
+    projectJson: publishableProjectJson,
+    packageJson: pkg,
+  })
+  return {
+    code: JSON.stringify(pkg, null, 2),
+    filename: join(projectDir, 'package.json'),
+    errors: [{ messageId: 'noMainField' }],
+    // No output - fix returns null when main is not a string
+    output: null,
+  }
+}
+
 describe('lib-pkg-no-main', () => {
   afterAll(() => {
     for (const dir of tempDirs) {
@@ -153,6 +198,11 @@ describe('lib-pkg-no-main', () => {
 
   ruleTester.run('lib-pkg-no-main', rule, {
     valid: [createValidWithExportsCase(), createNonPublishableCase(), createApplicationCase()],
-    invalid: [createMainOnlyCase(), createMainWithExportsCase()],
+    invalid: [
+      createMainOnlyCase(),
+      createMainWithExportsCase(),
+      createMainLastPropertyWithExportsCase(),
+      createMainWithNonStringValueCase(),
+    ],
   })
 })
