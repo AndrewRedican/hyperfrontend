@@ -108,6 +108,9 @@ export interface FlowConfig {
 
   /** Prerelease identifier (e.g., 'alpha', 'beta') */
   readonly prereleaseId?: string
+
+  /** Force a specific bump type, bypassing commit analysis */
+  readonly releaseAs?: 'major' | 'minor' | 'patch'
 }
 
 /**
@@ -129,6 +132,7 @@ export const DEFAULT_FLOW_CONFIG: Required<FlowConfig> = {
   firstReleaseVersion: '0.1.0',
   allowPrerelease: false,
   prereleaseId: 'alpha',
+  releaseAs: undefined,
 }
 
 // ============================================================================

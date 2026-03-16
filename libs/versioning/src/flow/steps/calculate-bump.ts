@@ -93,6 +93,32 @@ export function createCalculateBumpStep(): FlowStep {
         }
       }
 
+      // Check for forced bump type (releaseAs)
+      if (config.releaseAs) {
+        const forcedBumpType = <BumpType>config.releaseAs
+        const current = parseVersion(currentVersion ?? '0.0.0')
+        if (!current.success || !current.version) {
+          return {
+            status: 'failed',
+            error: createError(`Invalid current version: ${currentVersion}`),
+            message: `Could not parse current version: ${currentVersion}`,
+          }
+        }
+
+        const next = increment(current.version, forcedBumpType)
+        const nextVersion = format(next)
+        logger.info(`Forced ${forcedBumpType} bump via releaseAs: ${currentVersion} → ${nextVersion}`)
+
+        return {
+          status: 'success',
+          stateUpdates: {
+            bumpType: forcedBumpType,
+            nextVersion,
+          },
+          message: `${forcedBumpType} bump (forced): ${currentVersion} → ${nextVersion}`,
+        }
+      }
+
       // No commits = no bump needed
       if (!commits || commits.length === 0) {
         return createSkippedResult('No releasable commits found')

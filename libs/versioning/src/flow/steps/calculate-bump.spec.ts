@@ -385,6 +385,93 @@ describe('Calculate Bump Step', () => {
     })
   })
 
+  describe('execute - releaseAs (forced bump)', () => {
+    it('forces major bump via releaseAs, ignoring commits', async () => {
+      const step = createCalculateBumpStep()
+      const ctx = createMockContext(
+        {
+          currentVersion: '1.2.3',
+          commits: [createMockCommit({ type: 'fix', subject: 'minor fix', breaking: false })],
+        },
+        { releaseAs: 'major' }
+      )
+
+      const result = await step.execute(ctx)
+
+      expect(result.status).toBe('success')
+      expect(result.stateUpdates?.bumpType).toBe('major')
+      expect(result.stateUpdates?.nextVersion).toBe('2.0.0')
+      expect(result.message).toContain('forced')
+    })
+
+    it('forces minor bump via releaseAs', async () => {
+      const step = createCalculateBumpStep()
+      const ctx = createMockContext(
+        {
+          currentVersion: '1.2.3',
+          commits: [createMockCommit({ type: 'chore', subject: 'cleanup', breaking: false })],
+        },
+        { releaseAs: 'minor' }
+      )
+
+      const result = await step.execute(ctx)
+
+      expect(result.status).toBe('success')
+      expect(result.stateUpdates?.bumpType).toBe('minor')
+      expect(result.stateUpdates?.nextVersion).toBe('1.3.0')
+    })
+
+    it('forces patch bump via releaseAs', async () => {
+      const step = createCalculateBumpStep()
+      const ctx = createMockContext(
+        {
+          currentVersion: '1.2.3',
+          commits: [createMockCommit({ type: 'feat', subject: 'new feature', breaking: true })],
+        },
+        { releaseAs: 'patch' }
+      )
+
+      const result = await step.execute(ctx)
+
+      expect(result.status).toBe('success')
+      expect(result.stateUpdates?.bumpType).toBe('patch')
+      expect(result.stateUpdates?.nextVersion).toBe('1.2.4')
+    })
+
+    it('releaseAs works even with no commits', async () => {
+      const step = createCalculateBumpStep()
+      const ctx = createMockContext({ currentVersion: '2.0.0', commits: [] }, { releaseAs: 'minor' })
+
+      const result = await step.execute(ctx)
+
+      expect(result.status).toBe('success')
+      expect(result.stateUpdates?.bumpType).toBe('minor')
+      expect(result.stateUpdates?.nextVersion).toBe('2.1.0')
+    })
+
+    it('releaseAs fails with invalid current version', async () => {
+      const step = createCalculateBumpStep()
+      const ctx = createMockContext({ currentVersion: 'invalid', commits: [] }, { releaseAs: 'patch' })
+
+      const result = await step.execute(ctx)
+
+      expect(result.status).toBe('failed')
+      expect(result.error).toBeDefined()
+      expect(result.message).toContain('Could not parse')
+    })
+
+    it('first release takes priority over releaseAs', async () => {
+      const step = createCalculateBumpStep()
+      const ctx = createMockContext({ isFirstRelease: true, currentVersion: '0.0.0' }, { releaseAs: 'major', firstReleaseVersion: '0.1.0' })
+
+      const result = await step.execute(ctx)
+
+      expect(result.status).toBe('success')
+      expect(result.stateUpdates?.nextVersion).toBe('0.1.0')
+      expect(result.message).toContain('First release')
+    })
+  })
+
   describe('execute - message formatting', () => {
     it('includes version transition in message', async () => {
       const step = createCalculateBumpStep()
