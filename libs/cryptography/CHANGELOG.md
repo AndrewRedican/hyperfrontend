@@ -1,28 +1,47 @@
 # Changelog
 
-This file was generated using [@jscutlery/semver](https://github.com/jscutlery/semver).
+All notable changes to this project will be documented in this file.
 
-## [0.0.4](https://github.com/AndrewRedican/hyperfrontend/compare/lib-cryptography@0.0.3...lib-cryptography@0.0.4) (2026-03-08)
+## 0.1.0 - 2026-03-16
 
+### Features
 
-### Bug Fixes
-
-* **lib-cryptography:** correct package exports ([651fae9](https://github.com/AndrewRedican/hyperfrontend/commit/651fae94622e6300f6351216f3be342aaa9e4962))
-* **lib-cryptography:** prevent runtime modification of security-sensitive objects ([4af1411](https://github.com/AndrewRedican/hyperfrontend/commit/4af14115c6128fc5939539282f49abf26723f9ac))
-
-## [0.0.3](https://github.com/AndrewRedican/hyperfrontend/compare/lib-cryptography@0.0.2...lib-cryptography@0.0.3) (2026-03-02)
-
-
-### Bug Fixes
-
-* **lib-cryptography:** correct package exports ([651fae9](https://github.com/AndrewRedican/hyperfrontend/commit/651fae94622e6300f6351216f3be342aaa9e4962))
-* **lib-cryptography:** prevent runtime modification of security-sensitive objects ([4af1411](https://github.com/AndrewRedican/hyperfrontend/commit/4af14115c6128fc5939539282f49abf26723f9ac))
-
-## [0.0.2](https://github.com/AndrewRedican/hyperfrontend/compare/lib-cryptography@0.0.1...lib-cryptography@0.0.2) (2026-02-26)
-
-## 0.0.1 (2026-02-15)
-
+- **lib-versioning:** support commit amend no edit
+- **lib-versioning:** support force bump with release as config
+- **tool-package:** improve memory management and visibility on builder executor
+- **eslint-rules:** lib-ts-config-paths
+- **e2e-lib-versioning:** test cjs and esm builds
+- **eslint-rules:** lib-e2e-project-required
+- **lib-versioning:** implement project versioning
+- **eslint-rules:** ensure publishable libraries accounted for in docs
+- **eslint-rules:** add rule to ensure pipeline is ready for publishable libraries
+- **eslint-rules:** root readme.md rule to ensure packages are listed
+- **eslint-rules:** rules to align readme.md content format
 
 ### Bug Fixes
 
-* **tool-package:** fix changelog duplication by clearing header before semver regeneration ([98fbce1](https://github.com/AndrewRedican/hyperfrontend/commit/98fbce19098298414bd243fc3442c159c2ed5b82))
+- **lib-versioning:** remove unused %h format causing git log field misalignment
+- **lib-immutable-api-utils:** rename safe object to prevent variable shadowing on cjs module init
+
+## 0.0.4
+
+### Bug Fixes
+
+- **lib-cryptography:** correct package exports ([651fae9](https://github.com/AndrewRedican/hyperfrontend/commit/651fae94622e6300f6351216f3be342aaa9e4962))
+- **lib-cryptography:** prevent runtime modification of security-sensitive objects ([4af1411](https://github.com/AndrewRedican/hyperfrontend/commit/4af14115c6128fc5939539282f49abf26723f9ac))
+
+## 0.0.3
+
+### Bug Fixes
+
+- **lib-cryptography:** correct package exports ([651fae9](https://github.com/AndrewRedican/hyperfrontend/commit/651fae94622e6300f6351216f3be342aaa9e4962))
+- **lib-cryptography:** prevent runtime modification of security-sensitive objects ([4af1411](https://github.com/AndrewRedican/hyperfrontend/commit/4af14115c6128fc5939539282f49abf26723f9ac))
+
+## 0.0.2
+
+
+## 0.0.1 - 2026-02-15
+
+### Bug Fixes
+
+- **tool-package:** fix changelog duplication by clearing header before semver regeneration ([98fbce1](https://github.com/AndrewRedican/hyperfrontend/commit/98fbce19098298414bd243fc3442c159c2ed5b82))

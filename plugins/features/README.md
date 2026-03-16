@@ -28,6 +28,8 @@
 
 Nx plugin for hyperfrontend micro-frontend features.
 
+• 👉 See [**documentation**](https://www.hyperfrontend.dev/docs/plugins/features/)
+
 ## Part of hyperfrontend
 
 This plugin is part of the [hyperfrontend](https://github.com/AndrewRedican/hyperfrontend) monorepo.

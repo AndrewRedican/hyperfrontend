@@ -154,7 +154,9 @@ jobs:
             "logging:libs/logging"
             "network-protocol:libs/network-protocol"
             "nexus:libs/nexus"
+            "project-scope:libs/project-scope"
             "state-machine:libs/state-machine"
+            "versioning:libs/versioning"
             "data-utils:libs/utils/data"
             "function-utils:libs/utils/function"
             "immutable-api-utils:libs/utils/immutable-api"
@@ -220,8 +222,8 @@ jobs:
   push-tags:
     name: push-tags
     runs-on: ubuntu-latest
-    needs: [ci-status]
-    if: needs.ci-status.result == 'success'
+    needs: [publish]
+    if: needs.publish.result == 'success'
     continue-on-error: true
     permissions:
       contents: write

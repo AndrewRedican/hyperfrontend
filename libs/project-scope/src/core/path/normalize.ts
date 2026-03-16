@@ -43,7 +43,11 @@ export function normalizeToNative(filePath: string): string {
  * @returns Path with trailing slashes removed
  */
 export function removeTrailingSlash(filePath: string): string {
-  return filePath.replace(/[/\\]+$/, '')
+  let i = filePath.length
+  while (i > 0 && (filePath[i - 1] === '/' || filePath[i - 1] === '\\')) {
+    i--
+  }
+  return filePath.slice(0, i)
 }
 
 /**

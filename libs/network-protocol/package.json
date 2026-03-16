@@ -1,31 +1,18 @@
 {
   "name": "@hyperfrontend/network-protocol",
-  "version": "0.0.4",
+  "version": "0.1.0",
   "description": "Production-grade network protocol for secure, real-time cross-window and cross-process communication with built-in encryption, obfuscation, routing, and message queueing.",
-  "license": "MIT",
-  "sideEffects": false,
-  "engines": {
-    "node": ">=18.0.0",
-    "npm": ">=8.0.0"
+  "dependencies": {
+    "@hyperfrontend/cryptography": "0.1.0",
+    "@hyperfrontend/data-utils": "0.0.4",
+    "@hyperfrontend/json-utils": "0.1.0",
+    "@hyperfrontend/list-utils": "0.0.4",
+    "@hyperfrontend/logging": "0.1.0",
+    "@hyperfrontend/random-generator-utils": "0.0.4",
+    "@hyperfrontend/string-utils": "0.0.4",
+    "@hyperfrontend/time-utils": "0.0.4",
+    "@hyperfrontend/immutable-api-utils": "0.1.1"
   },
-  "keywords": [
-    "network-protocol",
-    "secure-messaging",
-    "cross-window-communication",
-    "postmessage",
-    "ipc",
-    "encryption",
-    "obfuscation",
-    "message-queue",
-    "pub-sub",
-    "routing",
-    "isomorphic",
-    "browser",
-    "nodejs",
-    "micro-frontend",
-    "web-worker",
-    "typescript"
-  ],
   "exports": {
     "./browser/channel": "./src/browser/channel/index.js",
     "./node/channel": "./src/node/channel/index.js",
@@ -47,17 +34,30 @@
     "./node/receiver": "./src/node/receiver/index.js",
     "./package.json": "./package.json"
   },
-  "dependencies": {
-    "@hyperfrontend/cryptography": "0.0.4",
-    "@hyperfrontend/data-utils": "0.0.4",
-    "@hyperfrontend/json-utils": "0.1.0",
-    "@hyperfrontend/list-utils": "0.0.4",
-    "@hyperfrontend/logging": "0.0.4",
-    "@hyperfrontend/random-generator-utils": "0.0.4",
-    "@hyperfrontend/string-utils": "0.0.4",
-    "@hyperfrontend/time-utils": "0.0.4",
-    "@hyperfrontend/immutable-api-utils": "0.1.1"
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=8.0.0"
   },
+  "license": "MIT",
+  "sideEffects": false,
+  "keywords": [
+    "network-protocol",
+    "secure-messaging",
+    "cross-window-communication",
+    "postmessage",
+    "ipc",
+    "encryption",
+    "obfuscation",
+    "message-queue",
+    "pub-sub",
+    "routing",
+    "isomorphic",
+    "browser",
+    "nodejs",
+    "micro-frontend",
+    "web-worker",
+    "typescript"
+  ],
   "funding": {
     "type": "github",
     "url": "https://github.com/sponsors/AndrewRedican"

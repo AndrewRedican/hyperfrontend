@@ -82,13 +82,13 @@ pre-push:
             continue
           fi
 
-          if echo "$RESULT" | grep -q "version updated"; then
+          if echo "$RESULT" | grep -qE "Flow success"; then
             if [ -z "$BUMPED" ]; then BUMPED="$lib"; else BUMPED="$BUMPED, $lib"; fi
             # Collect modified files from MODIFIED: lines
             FILES=$(echo "$RESULT" | grep "^MODIFIED:" | cut -d: -f2 | tr '\n' ' ')
             ALL_FILES="$ALL_FILES $FILES"
             echo "    ✓ version updated"
-          elif echo "$RESULT" | grep -q "already exists (skipping)"; then
+          elif echo "$RESULT" | grep -qE "No release needed|already published"; then
             echo "    ○ already versioned"
           elif echo "$RESULT" | grep -q "Skipping"; then
             echo "    ○ skipped (version commit or git state)"

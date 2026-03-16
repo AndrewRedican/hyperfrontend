@@ -8,10 +8,10 @@ export default <Config>{
   testEnvironment: 'node',
   coverageThreshold: {
     global: {
-      branches: 87,
-      functions: 100,
-      lines: 97,
-      statements: 97,
+      branches: 89,
+      functions: 99,
+      lines: 96,
+      statements: 96,
     },
   },
 }

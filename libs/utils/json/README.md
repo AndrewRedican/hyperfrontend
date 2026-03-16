@@ -35,6 +35,8 @@
 
 Zero-dependency JSON Schema Draft v4 validation and schema generation utilities.
 
+• 👉 See [**documentation**](https://www.hyperfrontend.dev/docs/libraries/utils/json/)
+
 ## What is @hyperfrontend/json-utils?
 
 @hyperfrontend/json-utils provides lightweight utilities for validating JSON data against JSON Schema Draft v4 specifications and generating schemas from JavaScript values via a functional-programming-first implementation.
@@ -58,6 +60,10 @@ The library provides two core capabilities: **validation** (checking if data con
 - **Custom Format Validators** - Built-in formats only (`email`, `uri`, `date-time`, etc.)
 
 If you need full JSON Schema support across multiple draft versions, consider [Ajv](https://ajv.js.org/). This library is intentionally scoped for Draft v4 use cases where a lightweight, zero-dependency solution is preferred.
+
+### Architecture Highlights
+
+The library uses a **functional composition approach** with pure validation functions. The core `validate` function recursively traverses schemas and data, delegating to specialized validators for each JSON Schema keyword. Schema references (`$ref`) are resolved through a context object that tracks definitions, enabling circular reference handling. Error collection uses accumulation rather than early termination, providing complete validation feedback in a single pass.
 
 ## Why Use @hyperfrontend/json-utils?
 

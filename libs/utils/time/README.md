@@ -35,6 +35,8 @@
 
 Functional time utilities for async operations, intervals, and time normalization.
 
+• 👉 See [**documentation**](https://www.hyperfrontend.dev/docs/libraries/utils/time/)
+
 ## What is @hyperfrontend/time-utils?
 
 `@hyperfrontend/time-utils` provides composable, testable utilities for working with time-based operations in JavaScript. The library focuses on enhancing the control and flexibility of standard timing APIs (`setTimeout`, `setInterval`) while adding specialized utilities for async workflows and time window calculations.

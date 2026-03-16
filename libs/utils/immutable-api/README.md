@@ -35,6 +35,8 @@
 
 Decorators and utilities for creating immutable, tamper-proof object APIs with built-in prototype pollution defense.
 
+• 👉 See [**documentation**](https://www.hyperfrontend.dev/docs/libraries/utils/immutable-api/)
+
 ## What is @hyperfrontend/immutable-api-utils?
 
 @hyperfrontend/immutable-api-utils provides low-level utilities for locking object properties and methods to prevent modification. Using JavaScript's property descriptors (`Object.defineProperty`), it creates truly immutable APIs where neither values nor method bindings can be altered after definition.

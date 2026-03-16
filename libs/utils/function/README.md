@@ -35,6 +35,8 @@
 
 Higher-order function utilities for behavioral modification and composition.
 
+• 👉 See [**documentation**](https://www.hyperfrontend.dev/docs/libraries/utils/function/)
+
 ## What is @hyperfrontend/function-utils?
 
 `@hyperfrontend/function-utils` provides lightweight functional wrappers that modify the execution behavior of functions without changing their signatures. The library focuses on common patterns like single-execution guarantees, conditional execution, error suppression, and no-op placeholders—all implemented as composable higher-order functions.

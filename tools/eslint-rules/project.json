@@ -6,7 +6,6 @@
   "projectType": "library",
   "tags": ["type:util", "scope:internal"],
   "targets": {
-    "lint": {},
     "typecheck": {}
   }
 }

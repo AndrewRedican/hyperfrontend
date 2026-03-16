@@ -35,6 +35,8 @@
 
 Isomorphic string encoding utilities with unified APIs for browser and Node.js environments.
 
+• 👉 See [**documentation**](https://www.hyperfrontend.dev/docs/libraries/utils/string/)
+
 ## What is @hyperfrontend/string-utils?
 
 `@hyperfrontend/string-utils` provides a consistent, cross-platform API for encoding operations that typically differ between browser and Node.js environments. The library specializes in UTF-8 and base64 conversions, offering identical function signatures across platforms while optimizing each implementation for its native environment.

@@ -1,0 +1,20 @@
+{
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "name": "lib-versioning",
+  "description": "Versioning library with changelog parsing, conventional commits, and semver flow orchestration.",
+  "sourceRoot": "{projectRoot}/src",
+  "projectType": "library",
+  "tags": ["type:util", "scope:public"],
+  "targets": {
+    "version": {},
+    "build": {
+      "executor": "@hyperfrontend/package:build",
+      "options": {
+        "esm": { "bundleWorkspaceDeps": true },
+        "cjs": { "bundleWorkspaceDeps": true }
+      }
+    },
+    "publish": {},
+    "typecheck": {}
+  }
+}

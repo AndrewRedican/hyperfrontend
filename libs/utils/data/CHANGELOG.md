@@ -1,6 +1,6 @@
 # Changelog
 
-This file was generated using [@jscutlery/semver](https://github.com/jscutlery/semver).
+All notable changes to this project will be documented in this file.
 
 ## [0.0.4](https://github.com/AndrewRedican/hyperfrontend/compare/lib-data-utils@0.0.3...lib-data-utils@0.0.4) (2026-03-08)
 

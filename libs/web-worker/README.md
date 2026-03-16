@@ -31,6 +31,8 @@
 
 Web Worker utilities and abstractions.
 
+• 👉 See [**documentation**](https://www.hyperfrontend.dev/docs/libraries/web-worker/)
+
 ## Part of hyperfrontend
 
 This library is part of the [hyperfrontend](https://github.com/AndrewRedican/hyperfrontend) monorepo.

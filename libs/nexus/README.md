@@ -35,7 +35,9 @@
 
 Secure cross-window communication library for micro-frontends with contract-validated messaging, origin-based security policies, and connection lifecycle management.
 
-## What is Nexus?
+• 👉 See [**documentation**](https://www.hyperfrontend.dev/docs/libraries/nexus/)
+
+## What is @hyperfrontend/nexus?
 
 Nexus provides a complete infrastructure for building secure, reliable communication between browser windows, iframes, and micro-frontend applications. At its core, Nexus implements a **broker-channel architecture** where a central broker manages multiple channels, each representing a connection to another window or frame.
 
@@ -58,7 +60,7 @@ Nexus uses a **functional programming approach** with factory functions (`create
 
 For a comprehensive deep dive into the library's internals, see the [Architecture Documentation](https://github.com/AndrewRedican/hyperfrontend/blob/main/libs/nexus/ARCHITECTURE.md).
 
-## Why Use Nexus?
+## Why Use @hyperfrontend/nexus?
 
 ### Type-Safe Contracts Prevent Integration Bugs
 

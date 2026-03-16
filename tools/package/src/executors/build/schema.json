@@ -58,6 +58,11 @@
     "jsdelivr": {
       "type": "string",
       "description": "Custom path for the jsdelivr field in package.json. Defaults to first UMD bundle's index.umd.min.js path."
+    },
+    "verbose": {
+      "type": "boolean",
+      "default": false,
+      "description": "Enable verbose/debug logging for build diagnostics."
     }
   },
   "definitions": {

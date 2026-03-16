@@ -1,0 +1,67 @@
+{
+  "name": "@hyperfrontend/versioning",
+  "version": "0.1.0",
+  "description": "Versioning library with changelog parsing, conventional commits, and semver flow orchestration.",
+  "dependencies": {
+    "@hyperfrontend/immutable-api-utils": "0.1.1",
+    "@hyperfrontend/json-utils": "0.1.0",
+    "@hyperfrontend/logging": "0.1.0",
+    "@hyperfrontend/project-scope": "0.2.0"
+  },
+  "exports": {
+    ".": "./src/index.js",
+    "./changelog": "./src/changelog/index.js",
+    "./changelog/compare": "./src/changelog/compare/index.js",
+    "./changelog/models": "./src/changelog/models/index.js",
+    "./changelog/operations": "./src/changelog/operations/index.js",
+    "./changelog/parse": "./src/changelog/parse/index.js",
+    "./changelog/serialize": "./src/changelog/serialize/index.js",
+    "./commits": "./src/commits/index.js",
+    "./commits/models": "./src/commits/models/index.js",
+    "./commits/parse": "./src/commits/parse/index.js",
+    "./flow": "./src/flow/index.js",
+    "./flow/executor": "./src/flow/executor/index.js",
+    "./flow/models": "./src/flow/models/index.js",
+    "./flow/presets": "./src/flow/presets/index.js",
+    "./flow/steps": "./src/flow/steps/index.js",
+    "./git": "./src/git/index.js",
+    "./git/models": "./src/git/models/index.js",
+    "./git/operations": "./src/git/operations/index.js",
+    "./registry": "./src/registry/index.js",
+    "./registry/models": "./src/registry/models/index.js",
+    "./registry/npm": "./src/registry/npm/index.js",
+    "./semver": "./src/semver/index.js",
+    "./semver/compare": "./src/semver/compare/index.js",
+    "./semver/format": "./src/semver/format/index.js",
+    "./semver/increment": "./src/semver/increment/index.js",
+    "./semver/models": "./src/semver/models/index.js",
+    "./semver/parse": "./src/semver/parse/index.js",
+    "./workspace": "./src/workspace/index.js",
+    "./workspace/discovery": "./src/workspace/discovery/index.js",
+    "./workspace/models": "./src/workspace/models/index.js",
+    "./workspace/operations": "./src/workspace/operations/index.js",
+    "./package.json": "./package.json"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=8.0.0"
+  },
+  "license": "MIT",
+  "sideEffects": false,
+  "keywords": [
+    "versioning",
+    "changelog",
+    "conventional-commits",
+    "semver",
+    "release",
+    "monorepo",
+    "state-machine",
+    "no-regex",
+    "typescript",
+    "zero-dependencies"
+  ],
+  "funding": {
+    "type": "github",
+    "url": "https://github.com/sponsors/AndrewRedican"
+  }
+}

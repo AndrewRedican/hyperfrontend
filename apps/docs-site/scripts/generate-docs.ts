@@ -228,6 +228,13 @@ const LIBRARY_SLUGS: Record<string, string> = {
 function transformLinks(content: string, sourceContext: 'root' | 'library', librarySlug?: string): string {
   let transformed = content
 
+  // Remove self-referential "See docs" lines added to library READMEs for GitHub/npm visibility.
+  // Filter out any line that contains the 👉 See [**docs**] pattern pointing to the docs site.
+  transformed = transformed
+    .split('\n')
+    .filter((line) => !(line.includes('👉 See') && line.includes('https://www.hyperfrontend.dev/')))
+    .join('\n')
+
   // Transform root document links to docs site pages
   const rootDocMappings: Record<string, string> = {
     'README.md': '/',

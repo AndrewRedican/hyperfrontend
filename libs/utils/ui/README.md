@@ -35,6 +35,8 @@
 
 Modular DOM utilities for dynamic styling, gesture detection, element lifecycle, and color manipulation.
 
+• 👉 See [**documentation**](https://www.hyperfrontend.dev/docs/libraries/utils/ui/)
+
 ## What is @hyperfrontend/ui-utils?
 
 @hyperfrontend/ui-utils provides framework-agnostic browser utilities organized into modular secondary entry points. Rather than importing the entire library, you import only the specific capabilities you need: `@hyperfrontend/ui-utils/element` for DOM creation, `@hyperfrontend/ui-utils/color` for color transformations, `@hyperfrontend/ui-utils/mobile` for device detection, etc.

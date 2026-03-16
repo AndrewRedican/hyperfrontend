@@ -1,13 +1,15 @@
 const nx = require('@nx/eslint-plugin')
 const pluginJest = require('eslint-plugin-jest')
-const pluginJsdoc = require('eslint-plugin-jsdoc')
 const eslintRules = require('./tools/eslint-rules/src/index.ts')
 
 module.exports = [
   ...nx.configs['flat/base'],
   ...nx.configs['flat/typescript'],
   ...nx.configs['flat/javascript'],
-  pluginJsdoc.configs['flat/recommended-typescript'],
+  {
+    ...require('eslint-plugin-jsdoc').configs['flat/recommended-typescript'],
+    files: ['**/*.ts', '**/*.tsx', '**/*.js', '**/*.jsx'],
+  },
   {
     ignores: ['docs/', '.nx/', 'dist/', 'coverage/', 'tmp/', '**/node_modules/', '**/.next/', '**/out/'],
   },
@@ -211,6 +213,18 @@ module.exports = [
     rules: {
       'workspace/lib-project-metadata': 'error',
       'workspace/lib-project-bundle-config': 'error',
+      'workspace/lib-e2e-project-required': 'error',
+    },
+  },
+  {
+    files: ['**/README.md'],
+    plugins: {
+      workspace: eslintRules,
+      markdown: require('@eslint/markdown').default,
+    },
+    language: 'markdown/gfm',
+    rules: {
+      'workspace/lib-readme-structure': 'error',
     },
   },
 ]

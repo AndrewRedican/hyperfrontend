@@ -209,9 +209,6 @@ jobs:
           ref: ${{ github.head_ref }}
           token: ${{ secrets.PR_PAT }}
 
-      - name: Fetch tags from origin
-        run: git fetch origin --tags --force
-
       - name: Setup monorepo
         uses: ./.github/actions/setup-monorepo
 
@@ -256,13 +253,13 @@ jobs:
               continue
             fi
 
-            if echo "$RESULT" | grep -q "version updated"; then
+            if echo "$RESULT" | grep -qE "Flow success"; then
               if [ -z "$UPDATED" ]; then UPDATED="$lib"; else UPDATED="$UPDATED, $lib"; fi
               # Collect modified files from MODIFIED: lines
               FILES=$(echo "$RESULT" | grep "^MODIFIED:" | cut -d: -f2 | tr '\n' ' ')
               ALL_FILES="$ALL_FILES $FILES"
               echo "  ✓ $lib: version updated"
-            elif echo "$RESULT" | grep -qE "already exists|Skipping"; then
+            elif echo "$RESULT" | grep -qE "No release needed|already published|Skipping"; then
               if [ -z "$SKIPPED" ]; then SKIPPED="$lib"; else SKIPPED="$SKIPPED, $lib"; fi
               echo "  ○ $lib: already versioned"
             else
