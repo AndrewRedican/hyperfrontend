@@ -47,7 +47,6 @@ export const DEFAULT_LOG_OPTIONS: Required<Omit<GitLogOptions, 'from' | 'to' | '
  */
 const LOG_FORMAT = [
   '%H', // full hash
-  '%h', // short hash
   '%an', // author name
   '%ae', // author email
   '%aI', // author date (ISO 8601)
