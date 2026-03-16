@@ -133,6 +133,9 @@ export interface BuildExecutorOptions {
 
   /** Custom path for the jsdelivr field in package.json. Defaults to first UMD bundle path. */
   jsdelivr?: string
+
+  /** Enable verbose/debug logging */
+  verbose?: boolean
 }
 
 /**
