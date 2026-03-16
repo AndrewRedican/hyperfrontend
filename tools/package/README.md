@@ -8,7 +8,7 @@ Nx plugin providing executors for building, type-checking, versioning, and publi
 | ----------- | ----------------------------------------------------------------- | ------------------------------------------- |
 | `build`     | Format-centric build with explicit ESM/CJS/IIFE/UMD configuration | [README](./src/executors/build/README.md)   |
 | `typecheck` | TypeScript type checking without emitting files                   | -                                           |
-| `version`   | Idempotent semver wrapper with docs-aware version bumps           | [README](./src/executors/version/README.md) |
+| `version`   | Zero-dependency conventional commits versioning (npm as source)   | [README](./src/executors/version/README.md) |
 | `publish`   | Publish to npm with dry-run support                               | [README](./src/executors/publish/README.md) |
 | `e2e`       | Test package outputs via npm pack + tarball install               | -                                           |
 
@@ -52,10 +52,11 @@ Runs `tsc --noEmit` against the library's tsconfig. Zero configuration needed.
 
 ### version
 
-Idempotent version executor that wraps `@jscutlery/semver:version` with:
+Idempotent version executor using `@hyperfrontend/versioning` - a zero-dependency conventional commits versioning library:
 
-- **Idempotency** — checks if version tag already exists before running
-- **Recursion prevention** — skips if HEAD is a version commit for this project (project-specific)
+- **npm as source of truth** — uses npm registry to determine current version, not git tags
+- **Idempotency** — skips if version is already published to npm
+- **Recursion prevention** — skips if HEAD is a version commit for this project
 - **Documentation support** — `docs` commits trigger MINOR version bumps
 - **Dependent updates** — automatically updates version references in dependent packages
 

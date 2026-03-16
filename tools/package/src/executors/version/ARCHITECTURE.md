@@ -1,252 +1,170 @@
 # Version Executor Architecture
 
-High-level design overview of the `@hyperfrontend/package:version` executor.
+This document describes the design and architecture of the version executor.
 
-> **Related Documentation:**
->
-> - [README.md](./README.md) - Usage guide, options, and examples
-> - [Publish Executor](../publish/README.md) - npm publish executor
-> - [Plugin README](../../../README.md) - Plugin overview
-> - [CI Workflows](../../../../../../.github/workflows/README.md) - CI integration
+## Overview
 
-## Design Philosophy
-
-The version executor is designed as the **single source of truth** for all versioning behavior in the monorepo. It encapsulates all versioning logic, safety checks, and integrations so that every trigger point (manual, CI, hooks) can use the same codebase with consistent behavior.
-
-### Core Principles
-
-1. **Idempotent** - Running the executor multiple times produces the same result
-2. **Recursion-proof** - Automatically detects and skips version commits (project-specific)
-3. **Context-aware** - Adapts to git state (rebase, merge, CI environment)
-4. **Self-sufficient** - Performs all fact-finding internally
-
----
-
-## System Architecture
-
-```mermaid
-flowchart TB
-    subgraph executor["VERSION EXECUTOR (Single Source of Truth)"]
-        subgraph inputs["INPUTS"]
-            i1["projectName (required, from Nx context)"]
-            i2["dryRun, skipCommit, skipTag, push, etc. (optional)"]
-        end
-
-        subgraph factfinding["INTERNAL FACT-FINDING (in order)"]
-            f1["1. Is current commit a version commit? → Skip"]
-            f2["2. Is git in rebase/merge state? → Skip"]
-            f3["3. Does version tag already exist? → Skip"]
-        end
-
-        subgraph versioning["VERSIONING (delegates to @jscutlery/semver)"]
-            v1["Analyze conventional commits since last tag"]
-            v2["Calculate next semantic version"]
-            v3["Update package.json version"]
-            v4["Generate CHANGELOG.md entry"]
-            v5["Create git commit (unless skipCommit)"]
-            v6["Create git tag (unless skipTag)"]
-        end
-
-        subgraph post["POST-VERSIONING"]
-            p1["Update dependent packages' version refs"]
-            p2["Amend commit to include dependency updates"]
-            p3["Push to remote (if push=true)"]
-        end
-
-        inputs --> factfinding --> versioning --> post
-    end
-```
-
----
-
-## Component Interactions
-
-### Trigger Points
-
-All versioning triggers use the same executor, ensuring consistent behavior:
-
-```mermaid
-flowchart TB
-    manual["Manual<br/>nx cmd"]
-    prci["PR CI<br/>GitHub"]
-    mainci["Main CI<br/>GitHub"]
-    lefthook["Lefthook<br/>pre-push"]
-
-    executor["nx version &lt;project&gt;<br/>@hyperfrontend/package"]
-    semver["@jscutlery/semver<br/>(conventional commits)"]
-
-    manual --> executor
-    prci --> executor
-    mainci --> executor
-    lefthook --> executor
-    executor --> semver
-```
-
-### CI Pipeline Integration
-
-```mermaid
-flowchart TB
-    subgraph pr["PR WORKFLOW"]
-        pr1["1. Developer pushes to feature branch"]
-        pr2["2. PR CI runs version-validation job"]
-        pr3["3. Executor: nx version --skipTag"]
-        pr4["4. PR CI comments on PR"]
-        pr5["5. Developer reviews CHANGELOG entries"]
-        pr1 --> pr2 --> pr3 --> pr4 --> pr5
-    end
-
-    merge(["squash merge"])
-
-    subgraph main["MAIN WORKFLOW"]
-        m1["1. push-tags job: Create missing tags"]
-        m2["2. publish job: Build and publish"]
-        m3["3. github-release job: Create releases"]
-        m1 --> m2 --> m3
-    end
-
-    pr --> merge --> main
-```
-
----
-
-## Data Flow
-
-### Version Bump Flow
-
-```mermaid
-flowchart LR
-    commits["Conventional<br/>Commits"] --> calc["Calculate<br/>Next Ver"]
-    calc --> pkg["Update<br/>package.json"]
-    pkg --> changelog["Update<br/>CHANGELOG.md"]
-    changelog --> deps["Update Deps<br/>References"]
-    deps --> amend["Amend<br/>Commit"]
-    amend --> tag["Create Tag<br/>(optional)"]
-    tag --> push["Push<br/>(optional)"]
-```
-
-### Idempotency Check Order
-
-The executor performs checks in a specific order for optimal performance:
+The version executor uses `@hyperfrontend/versioning` to implement conventional commits-based versioning with npm registry as the source of truth.
 
 ```mermaid
 flowchart TD
-    start([START]) --> check1{Is HEAD a version<br/>commit for THIS project?}
-    check1 -->|YES| skip1([SKIP - return success])
-    check1 -->|NO| check2{Is git in<br/>rebase/merge state?}
-    check2 -->|YES| skip2([SKIP - return success])
-    check2 -->|NO| check3{Does version<br/>tag exist?}
-    check3 -->|YES| skip3([SKIP - return success])
-    check3 -->|NO| proceed([PROCEED WITH VERSIONING])
+    subgraph executor["executor.ts"]
+        A[Safety Checks] -->|isVersionCommit, isInUnstableGitState| B
+        B[Flow Execution] -->|createVersionFlow, executeFlow| C
+        C[Post-processing] -->|updateDependentVersions, amendCommit| D[Done]
+    end
 ```
 
-**Note:** The version commit check is project-specific. If package A was just versioned, this won't prevent package B from being versioned.
+## Design Principles
 
----
+### 1. npm as Source of Truth
 
-## Design Decisions
+The executor uses the npm registry (not git tags) to determine the current published version. This enables:
 
-### Why Wrap @jscutlery/semver?
+- **No tag fetch required** — CI workflows don't need `git fetch --tags`
+- **Idempotent versioning** — Safe to re-run; skips if version already on npm
+- **Tag as output** — Tags are created after publish, not during version
 
-The `@jscutlery/semver` package provides excellent conventional commit analysis and changelog generation but lacks:
+### 2. Zero External Dependencies
 
-1. **Idempotency** - Re-running always attempts version bump
-2. **Recursion prevention** - Can trigger infinite loops in hooks
-3. **Git state awareness** - Doesn't handle rebase/merge edge cases
-4. **Dependent updates** - Doesn't update cross-package references
+The `@hyperfrontend/versioning` library has no transitive dependencies. It uses:
 
-Our wrapper adds these capabilities while delegating core versioning logic.
+- Node.js built-ins (`child_process`, `fs`, `path`)
+- Internal hyperfrontend libraries (`@hyperfrontend/project-scope`)
 
-### Why Skip Tags in PR CI?
+### 3. Conventional Commits
 
-When a PR is **squash merged**, all commits on the branch (including version commits) are combined into a single merge commit. Tags created on the original version commit would point to a commit that no longer exists in the main branch history (an "orphaned tag").
-
-**Solution**: PR CI creates version bumps without tags (`--skipTag`). Main CI creates tags after merge, pointing at the actual merge commit.
-
-### Why Commit Message Detection?
-
-Tag existence checks fail when `--skipTag` is used. Commit message detection provides a secondary idempotency mechanism.
-
-**Important**: The check is **project-specific**. If package A was just versioned, package B can still be versioned even though the last commit was a version commit. This prevents one library's version commit from blocking other libraries.
-
-**Recognized patterns:**
+Version bumps are determined by analyzing commit messages:
 
 ```
-chore(lib-cryptography): release version 1.0.0    # Manual versioning
-chore: update versions for lib-cryptography       # PR CI versioning
-chore: update versions for lib-a, lib-b           # Multi-package CI versioning
-chore(release): lib-cryptography 1.0.0            # Alternative format
+feat(lib): add new feature    → MINOR bump
+fix(lib): fix a bug           → PATCH bump
+docs(lib): update readme      → MINOR bump (project-specific)
+BREAKING CHANGE: remove API   → MAJOR bump
 ```
 
-### Why Update Dependent Package References?
+## Component Details
 
-In a monorepo, packages often depend on each other. When `lib-cryptography` bumps to `1.2.0`, any package with `"@hyperfrontend/cryptography": "1.1.0"` in its dependencies should update to `"1.2.0"`.
+### Safety Checks
 
-The executor:
+Before running the version flow, the executor performs safety checks:
 
-1. Finds all `package.json` files in `libs/`
-2. Updates references to the versioned package
-3. Includes changes in the version commit (via amend)
+```typescript
+// Skip if current commit is a version commit for this project
+if (isVersionCommit(workspaceRoot, projectName)) {
+  return { success: true }
+}
 
----
+// Skip if git is in rebase/merge state
+if (isInUnstableGitState(workspaceRoot)) {
+  return { success: true }
+}
+```
 
-## Conventional Commits Configuration
+**Why project-specific version commit detection?**
 
-This executor uses a custom preset that includes **documentation commits** (`docs`) for version bumps, reflecting the philosophy that documentation updates are valuable user-facing changes.
+In a monorepo, multiple libraries may be versioned in sequence. If Library A creates a version commit, we still want Library B to version (since A's commit isn't B's version commit). The check parses the commit message to extract the project name.
 
-### Commit Types and Version Impact
+### Flow Execution
+
+The executor delegates to `@hyperfrontend/versioning`'s conventional flow:
+
+```typescript
+const flow = createVersionFlow('conventional', {
+  dryRun: options.dryRun,
+  skipGit: options.skipCommit,
+  skipTag: options.skipTag ?? true,
+  tagFormat: `${tagPrefix}\${version}`,
+})
+
+const result = await executeFlow(flow, projectName, workspaceRoot, {
+  dryRun: options.dryRun,
+  verbose: options.verbose,
+})
+```
+
+The flow executes these steps:
+
+| Step               | Action                           | State Updates                        |
+| ------------------ | -------------------------------- | ------------------------------------ |
+| fetch-registry     | `npm view` for published version | `publishedVersion`, `currentVersion` |
+| analyze-commits    | Parse commits since last release | `commits`, `lastReleaseTag`          |
+| calculate-bump     | Determine major/minor/patch      | `bumpType`, `nextVersion`            |
+| check-idempotency  | Skip if `nextVersion` on npm     | Sets `bumpType: 'none'` if published |
+| generate-changelog | Build entry from commits         | `changelogEntry`                     |
+| update-packages    | Update package.json version      | `modifiedFiles`                      |
+| write-changelog    | Update CHANGELOG.md              | `modifiedFiles`                      |
+| create-commit      | Stage + commit                   | `commitHash`                         |
+| create-tag         | Create tag (if not skipped)      | `tagName`                            |
+
+### Post-processing
+
+After the flow completes, the executor handles dependent updates:
+
+```typescript
+// Update packages that depend on this one
+const updatedFiles = updateDependentVersions(packageName, newVersion, ...)
+
+// Update E2E test packages
+const e2eUpdatedFiles = updateE2eDependencies(packageName, newVersion, ...)
+
+// Amend the version commit to include these changes
+if (updatedFiles.length > 0 && !options.skipCommit) {
+  execSync('git add ...')
+  execSync('git commit --amend --no-edit')
+}
+```
+
+## CI Integration
+
+### PR Workflow
 
 ```mermaid
-flowchart LR
-    subgraph bump["Triggers Version Bump"]
-        feat["feat → MINOR"]
-        fix["fix → PATCH"]
-        perf["perf → PATCH"]
-        docs["docs → MINOR"]
-        build["build → PATCH"]
-    end
-
-    subgraph hidden["No Version Bump"]
-        refactor["refactor"]
-        codeStyle["style"]
-        test["test"]
-        ci["ci"]
-        chore["chore"]
-    end
-
-    breaking["BREAKING CHANGE!"] --> major["→ MAJOR"]
+flowchart TD
+    A[PR pushed] --> B[ci-status passes]
+    B --> C[version-validation job]
+    C --> D[nx version --collectFiles]
+    D --> E["Outputs: MODIFIED:path"]
+    E --> F[git add + commit to PR]
 ```
 
-| Commit Type       | Version Impact | Changelog Section        |
-| ----------------- | -------------- | ------------------------ |
-| `feat`            | MINOR (0.X.0)  | Features                 |
-| `fix`             | PATCH (0.0.X)  | Bug Fixes                |
-| `perf`            | PATCH          | Performance Improvements |
-| `docs`            | MINOR          | Documentation            |
-| `build`           | PATCH          | Build System             |
-| `refactor`        | None (hidden)  | -                        |
-| `style`           | None (hidden)  | -                        |
-| `test`            | None (hidden)  | -                        |
-| `ci`              | None (hidden)  | -                        |
-| `chore`           | None (hidden)  | -                        |
-| `BREAKING CHANGE` | MAJOR (X.0.0)  | -                        |
+The `--collectFiles` flag:
 
----
+- Implies `skipCommit` and `skipTag`
+- Outputs modified file paths (MODIFIED:path format)
+- CI scripts parse this output to stage files
 
-## File Structure
+### Main Workflow
 
-```
-tools/package/src/executors/version/
-├── ARCHITECTURE.md      # This file - system design overview
-├── README.md            # Usage guide, options, examples
-├── executor.ts          # Main executor implementation
-├── schema.json          # JSON Schema for options validation
-└── schema.d.ts          # TypeScript type definitions
+```mermaid
+flowchart TD
+    A[Merge to main] --> B[ci-status passes]
+    B --> C[publish]
+    C -->|npm publish| D[push-tags]
+    D -->|create git tags| E[create-github-release]
+    E -->|extract changelog| F[GitHub Release created]
 ```
 
----
+Tags are created **after** publish because:
+
+1. Version calculation uses npm registry (no tags needed)
+2. Tags serve as a record of what's published, not a source of truth
+3. Avoids tag manipulation if publish fails
+
+## Error Handling
+
+The executor returns `{ success: false }` when:
+
+- Project not found in project graph
+- Flow execution fails (status != 'success' or 'skipped')
+
+The executor returns `{ success: true }` (skip scenarios):
+
+- Current commit is a version commit for this project
+- Git is in rebase/merge state
+- Flow reports no release needed or already published
 
 ## See Also
 
-- [@jscutlery/semver](https://github.com/jscutlery/semver) - Underlying versioning library
-- [Conventional Commits](https://www.conventionalcommits.org/) - Commit message format
-- [Semantic Versioning](https://semver.org/) - Version numbering specification
+- [README.md](./README.md) — Usage and options
+- [@hyperfrontend/versioning](../../../../libs/versioning) — Underlying versioning library

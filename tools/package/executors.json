@@ -18,7 +18,7 @@
     "version": {
       "implementation": "./src/executors/version/executor",
       "schema": "./src/executors/version/schema.json",
-      "description": "Idempotent wrapper around @jscutlery/semver:version. Checks if version tag already exists before delegating."
+      "description": "Versioning executor using @hyperfrontend/versioning. Uses npm registry as source of truth."
     },
     "e2e": {
       "implementation": "./src/executors/e2e/executor",

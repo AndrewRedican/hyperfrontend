@@ -26,9 +26,7 @@
     "version": {
       "executor": "@hyperfrontend/package:version",
       "options": {
-        "preset": "conventionalcommits",
-        "tagPrefix": "{projectName}@",
-        "commitMessageFormat": "chore({projectName}): release version {version}"
+        "tagPrefix": "{projectName}@"
       }
     },
     "build": {

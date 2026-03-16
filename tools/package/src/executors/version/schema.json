@@ -2,61 +2,25 @@
   "$schema": "http://json-schema.org/schema",
   "type": "object",
   "title": "Version executor schema",
-  "description": "Idempotent wrapper around @jscutlery/semver:version. Checks if version tag already exists before delegating.",
+  "description": "Nx executor that versions a project using @hyperfrontend/versioning. Uses npm registry as source of truth instead of git tags.",
   "properties": {
     "dryRun": {
       "type": "boolean",
       "description": "See what commands would be run, without committing to git or updating files.",
       "default": false
     },
-    "noVerify": {
-      "type": "boolean",
-      "description": "Bypass pre-commit or commit-msg git hooks during the commit phase.",
-      "default": false
-    },
-    "push": {
-      "type": "boolean",
-      "description": "Pushes to the git remote.",
-      "default": false
-    },
-    "remote": {
-      "type": "string",
-      "description": "Pushes against git remote repository.",
-      "default": "origin"
-    },
-    "baseBranch": {
-      "type": "string",
-      "description": "Pushes against git base branch.",
-      "default": "main"
-    },
     "releaseAs": {
       "type": "string",
-      "description": "Manually increment the version by that keyword."
-    },
-    "preid": {
-      "type": "string",
-      "description": "Use the next semantic prerelease version with a specific prerelease identifier."
+      "description": "Manually increment the version by that keyword.",
+      "enum": ["major", "minor", "patch"]
     },
     "tagPrefix": {
       "type": "string",
       "description": "Version tag prefix. Default is '{projectName}@' in independent mode."
     },
-    "postTargets": {
-      "type": "array",
-      "description": "Specify the targets to run after a new version was successfully created.",
-      "default": [],
-      "items": {
-        "type": "string"
-      }
-    },
     "trackDeps": {
       "type": "boolean",
       "description": "Includes the project's dependencies in calculating a recommended version bump.",
-      "default": false
-    },
-    "allowEmptyRelease": {
-      "type": "boolean",
-      "description": "Allow bumping versions even if there are no changes in the library.",
       "default": false
     },
     "skipCommit": {
@@ -66,66 +30,8 @@
     },
     "skipTag": {
       "type": "boolean",
-      "description": "Allows to skip tagging the release.",
-      "default": false
-    },
-    "preset": {
-      "oneOf": [
-        {
-          "type": "string",
-          "description": "Name of a preset (e.g., 'angular', 'conventionalcommits')."
-        },
-        {
-          "type": "object",
-          "description": "Custom preset configuration following conventional-changelog-config-spec.",
-          "properties": {
-            "name": {
-              "type": "string",
-              "description": "Base preset name to extend."
-            },
-            "types": {
-              "type": "array",
-              "description": "Commit types configuration.",
-              "items": {
-                "type": "object",
-                "properties": {
-                  "type": {
-                    "type": "string",
-                    "description": "Commit type (e.g., 'feat', 'fix', 'docs')."
-                  },
-                  "section": {
-                    "type": "string",
-                    "description": "Changelog section header for this type."
-                  },
-                  "hidden": {
-                    "type": "boolean",
-                    "description": "If true, commits of this type are hidden from changelog and don't trigger version bumps."
-                  }
-                },
-                "required": ["type"]
-              }
-            }
-          }
-        }
-      ],
-      "default": "angular",
-      "description": "Customize Conventional Changelog preset. Can be a preset name or custom configuration object."
-    },
-    "changelogHeader": {
-      "type": "string",
-      "description": "Generates changelog with custom header."
-    },
-    "commitMessageFormat": {
-      "type": "string",
-      "description": "A string to be used to format the auto-generated release commit message."
-    },
-    "skipCommitTypes": {
-      "type": "array",
-      "description": "Specify array of commit types to be ignored when calculating next version bump.",
-      "default": [],
-      "items": {
-        "type": "string"
-      }
+      "description": "Allows to skip tagging the release. Default: true (tags created after publish).",
+      "default": true
     },
     "updateDependents": {
       "type": "boolean",
@@ -144,7 +50,17 @@
     },
     "collectFiles": {
       "type": "boolean",
-      "description": "Output list of modified files without staging. Implies skipCommit and skipTag. When combined with --dryRun, reports files that would be modified.",
+      "description": "Output list of modified files without staging. Implies skipCommit=true and skipTag=true. When combined with --dryRun, reports files that would be modified.",
+      "default": false
+    },
+    "verbose": {
+      "type": "boolean",
+      "description": "Enable verbose output for debugging. Shows additional details about each step.",
+      "default": false
+    },
+    "quiet": {
+      "type": "boolean",
+      "description": "Suppress all non-error output.",
       "default": false
     }
   },
