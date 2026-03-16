@@ -17,7 +17,7 @@ export {
 } from './log'
 export { DEFAULT_TAG_OPTIONS, getTags, getTag, tagExists, getLatestTag, getTagsForPackage, escapeGitTagPattern } from './query-tags'
 export { createTag, deleteTag, pushTag, escapeGitMessage } from './manage-tags'
-export { DEFAULT_COMMIT_OPTIONS, commit, amendCommit, createEmptyCommit, escapeFilePath, escapeAuthor } from './commit'
+export { DEFAULT_COMMIT_OPTIONS, commit, amendCommit, amendCommitNoEdit, createEmptyCommit, escapeFilePath, escapeAuthor } from './commit'
 export { stage, unstage, stageAll, hasStagedChanges, hasUnstagedChanges } from './stage'
 export { getHead, getCurrentBranch, hasUntrackedFiles } from './head-info'
 export {

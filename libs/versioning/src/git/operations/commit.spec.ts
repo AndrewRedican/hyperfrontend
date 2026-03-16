@@ -1,5 +1,5 @@
 import { execSync } from 'node:child_process'
-import { commit, amendCommit, createEmptyCommit, DEFAULT_COMMIT_OPTIONS } from './commit'
+import { commit, amendCommit, amendCommitNoEdit, createEmptyCommit, DEFAULT_COMMIT_OPTIONS } from './commit'
 
 // Mock getCommit from log module
 jest.mock('./log', () => ({
@@ -299,6 +299,98 @@ describe('amendCommit', () => {
 
     expect(result.subject).toBe('feat: improved message')
     expect(mockExecSync).toHaveBeenCalledWith(expect.stringContaining('--amend'), expect.any(Object))
+  })
+})
+
+describe('amendCommitNoEdit', () => {
+  beforeEach(() => {
+    jest.clearAllMocks()
+  })
+
+  it('amends the last commit without changing the message', () => {
+    mockExecSync.mockReturnValue('')
+    mockGetCommit.mockReturnValue({
+      hash: 'def456',
+      shortHash: 'def456a',
+      authorName: 'John Doe',
+      authorEmail: 'john@example.com',
+      authorDate: '2026-03-12T10:00:00Z',
+      committerName: 'John Doe',
+      committerEmail: 'john@example.com',
+      commitDate: '2026-03-12T10:00:00Z',
+      subject: 'feat: original message',
+      body: '',
+      message: 'feat: original message',
+      parents: [],
+      refs: [],
+    })
+
+    const result = amendCommitNoEdit()
+
+    expect(result.hash).toBe('def456')
+    expect(mockExecSync).toHaveBeenCalledWith(expect.stringContaining('--amend'), expect.any(Object))
+    expect(mockExecSync).toHaveBeenCalledWith(expect.stringContaining('--no-edit'), expect.any(Object))
+    // Should NOT contain -m flag when using --no-edit
+    expect(mockExecSync).not.toHaveBeenCalledWith(expect.stringContaining('-m'), expect.any(Object))
+  })
+
+  it('uses custom cwd option', () => {
+    mockExecSync.mockReturnValue('')
+    mockGetCommit.mockReturnValue({
+      hash: 'abc123',
+      shortHash: 'abc123d',
+      authorName: 'John Doe',
+      authorEmail: 'john@example.com',
+      authorDate: '2026-03-12T10:00:00Z',
+      committerName: 'John Doe',
+      committerEmail: 'john@example.com',
+      commitDate: '2026-03-12T10:00:00Z',
+      subject: 'feat: test',
+      body: '',
+      message: 'feat: test',
+      parents: [],
+      refs: [],
+    })
+
+    amendCommitNoEdit({ cwd: '/custom/path' })
+
+    expect(mockExecSync).toHaveBeenCalledWith(expect.any(String), expect.objectContaining({ cwd: '/custom/path' }))
+  })
+})
+
+describe('commit with noEdit option', () => {
+  beforeEach(() => {
+    jest.clearAllMocks()
+  })
+
+  it('allows empty message when noEdit and amend are both true', () => {
+    mockExecSync.mockReturnValue('')
+    mockGetCommit.mockReturnValue({
+      hash: 'ghi789',
+      shortHash: 'ghi789b',
+      authorName: 'John Doe',
+      authorEmail: 'john@example.com',
+      authorDate: '2026-03-12T10:00:00Z',
+      committerName: 'John Doe',
+      committerEmail: 'john@example.com',
+      commitDate: '2026-03-12T10:00:00Z',
+      subject: 'feat: existing message',
+      body: '',
+      message: 'feat: existing message',
+      parents: [],
+      refs: [],
+    })
+
+    const result = commit('', { amend: true, noEdit: true })
+
+    expect(result.hash).toBe('ghi789')
+    expect(mockExecSync).toHaveBeenCalledWith(expect.stringContaining('--amend'), expect.any(Object))
+    expect(mockExecSync).toHaveBeenCalledWith(expect.stringContaining('--no-edit'), expect.any(Object))
+  })
+
+  it('throws when noEdit is true but amend is false', () => {
+    // noEdit only makes sense with amend
+    expect(() => commit('', { noEdit: true })).toThrow('Commit message is required')
   })
 })
 

@@ -28,6 +28,9 @@ export interface CreateCommitOptions extends GitCommitOptions {
   /** Amend the last commit */
   readonly amend?: boolean
 
+  /** Keep the existing commit message when amending (requires amend: true) */
+  readonly noEdit?: boolean
+
   /** Sign the commit with GPG */
   readonly sign?: boolean
 
@@ -62,28 +65,37 @@ export const DEFAULT_COMMIT_OPTIONS: Required<Omit<GitCommitOptions, 'cwd'>> = {
 export function commit(message: string, options: CreateCommitOptions = {}): GitCommit {
   const opts = { ...DEFAULT_COMMIT_OPTIONS, ...options }
 
-  if (!message || typeof message !== 'string') {
+  // noEdit is only valid when amending - reuse existing commit message
+  const isNoEditAmend = opts.amend && opts.noEdit
+
+  if (!isNoEditAmend && (!message || typeof message !== 'string')) {
     throw createError('Commit message is required')
   }
 
-  const safeMessage = escapeGitMessage(message)
   const args: string[] = ['commit']
 
-  // Build message with optional body
-  let fullMessage = safeMessage
-  if (opts.body) {
-    const safeBody = escapeGitMessage(opts.body)
-    fullMessage = `${safeMessage}\n\n${safeBody}`
-  }
+  if (isNoEditAmend) {
+    // Amend without changing the message
+    args.push('--amend', '--no-edit')
+  } else {
+    const safeMessage = escapeGitMessage(message)
 
-  args.push('-m', `"${fullMessage}"`)
+    // Build message with optional body
+    let fullMessage = safeMessage
+    if (opts.body) {
+      const safeBody = escapeGitMessage(opts.body)
+      fullMessage = `${safeMessage}\n\n${safeBody}`
+    }
+
+    args.push('-m', `"${fullMessage}"`)
+
+    if (opts.amend) {
+      args.push('--amend')
+    }
+  }
 
   if (opts.allowEmpty) {
     args.push('--allow-empty')
-  }
-
-  if (opts.amend) {
-    args.push('--amend')
   }
 
   if (opts.sign) {
@@ -142,6 +154,21 @@ export function commit(message: string, options: CreateCommitOptions = {}): GitC
  */
 export function amendCommit(message: string, options: Omit<CreateCommitOptions, 'amend'> = {}): GitCommit {
   return commit(message, { ...options, amend: true })
+}
+
+/**
+ * Amends the last commit without changing the message.
+ * Useful for adding staged changes to the previous commit.
+ *
+ * @param options - Configuration for the commit operation
+ * @returns GitCommit object representing the amended commit
+ *
+ * @example
+ * stage(['extra-file.ts'])
+ * amendCommitNoEdit() // adds staged files to last commit
+ */
+export function amendCommitNoEdit(options: Omit<CreateCommitOptions, 'amend' | 'noEdit'> = {}): GitCommit {
+  return commit('', { ...options, amend: true, noEdit: true })
 }
 
 /**
