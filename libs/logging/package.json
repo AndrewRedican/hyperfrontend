@@ -1,6 +1,6 @@
 {
   "name": "@hyperfrontend/logging",
-  "version": "0.0.4",
+  "version": "0.1.0",
   "description": "Structured logging utilities for applications.",
   "license": "MIT",
   "sideEffects": false,

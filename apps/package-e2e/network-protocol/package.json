@@ -1,13 +1,12 @@
 {
   "name": "@hyperfrontend/e2e-network-protocol",
   "version": "0.0.0",
-  "private": true,
   "description": "E2E tests for @hyperfrontend/network-protocol package outputs",
   "scripts": {
     "pack-install": "cd ../../../dist/libs/network-protocol && npm pack && cd - && npm install ../../../dist/libs/network-protocol/*.tgz"
   },
   "dependencies": {
-    "@hyperfrontend/network-protocol": "file:../../../tmp/e2e-packs/hyperfrontend-network-protocol-0.0.4.tgz"
+    "@hyperfrontend/network-protocol": "file:../../../tmp/e2e-packs/hyperfrontend-network-protocol-0.1.0.tgz"
   },
   "devDependencies": {
     "@types/jest": "29.5.14",
@@ -16,5 +15,6 @@
     "jest-environment-jsdom": "29.7.0",
     "ts-jest": "29.2.6",
     "typescript": "5.7.3"
-  }
+  },
+  "private": true
 }

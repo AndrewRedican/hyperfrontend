@@ -1,12 +1,12 @@
 {
   "name": "@hyperfrontend/versioning",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "description": "Versioning library with changelog parsing, conventional commits, and semver flow orchestration.",
-  "license": "MIT",
-  "sideEffects": false,
-  "engines": {
-    "node": ">=18.0.0",
-    "npm": ">=8.0.0"
+  "dependencies": {
+    "@hyperfrontend/immutable-api-utils": "0.1.1",
+    "@hyperfrontend/json-utils": "0.1.0",
+    "@hyperfrontend/logging": "0.1.0",
+    "@hyperfrontend/project-scope": "0.2.0"
   },
   "exports": {
     ".": "./src/index.js",
@@ -42,6 +42,12 @@
     "./workspace/operations": "./src/workspace/operations/index.js",
     "./package.json": "./package.json"
   },
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=8.0.0"
+  },
+  "license": "MIT",
+  "sideEffects": false,
   "keywords": [
     "versioning",
     "changelog",
@@ -57,11 +63,5 @@
   "funding": {
     "type": "github",
     "url": "https://github.com/sponsors/AndrewRedican"
-  },
-  "dependencies": {
-    "@hyperfrontend/immutable-api-utils": "0.1.1",
-    "@hyperfrontend/json-utils": "0.1.0",
-    "@hyperfrontend/logging": "0.0.4",
-    "@hyperfrontend/project-scope": "0.1.0"
   }
 }

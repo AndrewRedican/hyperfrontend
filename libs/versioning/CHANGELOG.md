@@ -2,7 +2,7 @@
 
 All notable changes to this project will be documented in this file.
 
-## 0.2.0 - 2026-03-16
+## 0.1.0 - 2026-03-16
 
 ### Features
 
@@ -17,14 +17,19 @@ All notable changes to this project will be documented in this file.
 - **eslint-rules:** add rule to ensure pipeline is ready for publishable libraries
 - **eslint-rules:** root readme.md rule to ensure packages are listed
 - **eslint-rules:** rules to align readme.md content format
+- **docs-site:** add project-scope
+- **tool-package:** build executor now takes unpkg and jsdelivr configuration
+- **lib-json-utils:** regex pattern safety
+- **eslint-rules:** no-unsafe-regex
+- **eslint-rules:** no-deprecated-tag
+- **lib-project-scope:** complete implementation
 
 ### Bug Fixes
 
 - **lib-versioning:** remove unused %h format causing git log field misalignment
 - **lib-immutable-api-utils:** rename safe object to prevent variable shadowing on cjs module init
+- **@hyperfrontend/workspace:** prevent changelog corruption in pr ci
 
-## 0.1.0 - 2026-03-08
+### Other
 
-### Features
-
-- **lib-project-scope:** complete implementation ([6075fbd](https://github.com/AndrewRedican/hyperfrontend/commit/6075fbd8a8b3b790715d0985612d07a1fb398020))
+- **eslint-rules:** disable angle bracket typecasting on eslint-rules project

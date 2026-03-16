@@ -1,12 +1,13 @@
 {
   "name": "@hyperfrontend/project-scope",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Codebase analysis, project topology detection, and virtual file system utilities for Node.js projects.",
-  "license": "MIT",
-  "sideEffects": false,
-  "engines": {
-    "node": ">=18.0.0",
-    "npm": ">=8.0.0"
+  "dependencies": {
+    "@hyperfrontend/immutable-api-utils": "0.1.1",
+    "@hyperfrontend/logging": "0.1.0"
+  },
+  "peerDependencies": {
+    "@nx/devkit": ">=18.0.0"
   },
   "exports": {
     ".": "./src/index.js",
@@ -41,6 +42,12 @@
     "./vfs": "./src/vfs/index.js",
     "./package.json": "./package.json"
   },
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=8.0.0"
+  },
+  "license": "MIT",
+  "sideEffects": false,
   "keywords": [
     "project-analysis",
     "codebase-analysis",
@@ -68,13 +75,6 @@
     "static-analysis",
     "ast"
   ],
-  "dependencies": {
-    "@hyperfrontend/immutable-api-utils": "0.1.1",
-    "@hyperfrontend/logging": "0.0.4"
-  },
-  "peerDependencies": {
-    "@nx/devkit": ">=18.0.0"
-  },
   "peerDependenciesMeta": {
     "@nx/devkit": {
       "optional": true
