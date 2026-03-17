@@ -288,6 +288,14 @@ export interface GitClient {
    * Pushes to remote.
    */
   push(remote?: string, branch?: string, options?: { force?: boolean; setUpstream?: boolean }): boolean
+
+  /**
+   * Gets the URL of a remote.
+   *
+   * @param remoteName - Name of the remote (defaults to 'origin')
+   * @returns The remote URL, or null if not found
+   */
+  getRemoteUrl(remoteName?: string): string | null
 }
 
 /**
@@ -373,6 +381,7 @@ export function createGitClient(config: GitClientConfig = {}): GitClient {
     fetch: (remote, options) => fetch(opts, remote, options),
     pull: (remote, branch) => pull(opts, remote, branch),
     push: (remote, branch, options) => push(opts, remote, branch, options),
+    getRemoteUrl: (remoteName) => getRemoteUrl(opts, remoteName),
   }
 }
 
@@ -556,5 +565,28 @@ function push(
     return true
   } catch {
     return false
+  }
+}
+
+/**
+ * Gets the URL of a remote.
+ *
+ * @param options - Configuration object containing cwd and timeout
+ * @param options.cwd - Working directory for the git command
+ * @param options.timeout - Command timeout in milliseconds
+ * @param remoteName - Name of the remote (defaults to 'origin')
+ * @returns The remote URL, or null if not found
+ */
+function getRemoteUrl(options: { cwd: string; timeout: number }, remoteName = 'origin'): string | null {
+  try {
+    const output = execSync(`git remote get-url ${remoteName}`, {
+      encoding: 'utf-8',
+      cwd: options.cwd,
+      timeout: options.timeout,
+      stdio: ['pipe', 'pipe', 'pipe'],
+    })
+    return output.trim() || null
+  } catch {
+    return null
   }
 }

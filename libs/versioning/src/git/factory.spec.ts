@@ -614,6 +614,57 @@ describe('createGitClient', () => {
       expect(result).toBe(false)
     })
   })
+
+  describe('getRemoteUrl operation', () => {
+    it('returns remote URL on success', () => {
+      mockExecSync.mockReturnValue('https://github.com/owner/repo.git\n')
+
+      const client = createGitClient()
+      const result = client.getRemoteUrl()
+
+      expect(result).toBe('https://github.com/owner/repo.git')
+      expect(mockExecSync).toHaveBeenCalledWith('git remote get-url origin', expect.any(Object))
+    })
+
+    it('uses custom remote name', () => {
+      mockExecSync.mockReturnValue('https://github.com/other/repo.git\n')
+
+      const client = createGitClient()
+      const result = client.getRemoteUrl('upstream')
+
+      expect(result).toBe('https://github.com/other/repo.git')
+      expect(mockExecSync).toHaveBeenCalledWith('git remote get-url upstream', expect.any(Object))
+    })
+
+    it('returns null when remote does not exist', () => {
+      mockExecSync.mockImplementation(() => {
+        throw new Error("fatal: No such remote 'nonexistent'")
+      })
+
+      const client = createGitClient()
+      const result = client.getRemoteUrl('nonexistent')
+
+      expect(result).toBeNull()
+    })
+
+    it('returns null for empty output', () => {
+      mockExecSync.mockReturnValue('')
+
+      const client = createGitClient()
+      const result = client.getRemoteUrl()
+
+      expect(result).toBeNull()
+    })
+
+    it('trims whitespace from URL', () => {
+      mockExecSync.mockReturnValue('  git@github.com:owner/repo.git  \n')
+
+      const client = createGitClient()
+      const result = client.getRemoteUrl()
+
+      expect(result).toBe('git@github.com:owner/repo.git')
+    })
+  })
 })
 
 describe('DEFAULT_GIT_CLIENT_CONFIG', () => {
