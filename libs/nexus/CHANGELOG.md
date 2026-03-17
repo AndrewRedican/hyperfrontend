@@ -23,10 +23,10 @@ All notable changes to this project will be documented in this file.
 - **lib-versioning:** remove unused %h format causing git log field misalignment
 - **lib-immutable-api-utils:** rename safe object to prevent variable shadowing on cjs module init
 
-## 1.0.1 - 2026-03-08
+## [1.0.1](https://github.com/AndrewRedican/hyperfrontend/compare/lib-nexus@1.0.0...lib-nexus@1.0.1) - 2026-03-08
 
 
-## 1.0.0 - 2026-03-02
+## [1.0.0](https://github.com/AndrewRedican/hyperfrontend/compare/lib-nexus@0.1.1...lib-nexus@1.0.0) - 2026-03-02
 
 ### Bug Fixes
 
@@ -40,10 +40,10 @@ All notable changes to this project will be documented in this file.
 
 - **lib-nexus:** debug mode property is no longer available, instead there is a method to specify
 
-## 0.1.3 - 2026-02-27
+## [0.1.3](https://github.com/AndrewRedican/hyperfrontend/compare/lib-nexus@0.1.2...lib-nexus@0.1.3) - 2026-02-27
 
 
-## 0.1.1 - 2026-02-26
+## [0.1.1](https://github.com/AndrewRedican/hyperfrontend/compare/lib-nexus@0.1.0...lib-nexus@0.1.1) - 2026-02-26
 
 
 ## 0.1.0 - 2026-02-15
