@@ -434,6 +434,414 @@ describe('analyze-commits step', () => {
           expect(result.stateUpdates?.commits?.[0].type).toBe('custom')
         })
       })
+
+      describe('scope filtering strategies', () => {
+        it('uses hybrid strategy by default', async () => {
+          const git = createMockGitClient({
+            commits: [{ message: 'feat: new feature', hash: 'commit1' }],
+          })
+          const context = createMockContext({
+            git,
+            state: { isFirstRelease: true },
+          })
+          const step = createAnalyzeCommitsStep()
+
+          const result = await step.execute(context)
+
+          expect(result.status).toBe('success')
+          expect(result.message).toContain('strategy: hybrid')
+        })
+
+        it('respects scope-only strategy from config', async () => {
+          const git = createMockGitClient({
+            commits: [
+              { message: 'feat(lib-test): scoped feature', hash: 'commit1' },
+              { message: 'feat: unscoped feature', hash: 'commit2' },
+            ],
+          })
+          const context = createMockContext({
+            git,
+            state: { isFirstRelease: true },
+            config: {
+              scopeFiltering: { strategy: 'scope-only' },
+            },
+          })
+          const step = createAnalyzeCommitsStep()
+
+          const result = await step.execute(context)
+
+          expect(result.status).toBe('success')
+          expect(result.message).toContain('strategy: scope-only')
+          // Only scoped commits matching project should be included
+          // In scope-only mode, unscoped commits are filtered out
+          expect(result.stateUpdates?.commits).toHaveLength(1)
+        })
+
+        it('respects file-only strategy from config', async () => {
+          const git = createMockGitClient({
+            commits: [
+              { message: 'feat(lib-test): scoped feature', hash: 'commit1' },
+              { message: 'feat: unscoped feature', hash: 'commit2' },
+            ],
+          })
+          const context = createMockContext({
+            git,
+            state: { isFirstRelease: true },
+            config: {
+              scopeFiltering: { strategy: 'file-only' },
+            },
+          })
+          const step = createAnalyzeCommitsStep()
+
+          const result = await step.execute(context)
+
+          expect(result.status).toBe('success')
+          expect(result.message).toContain('strategy: file-only')
+        })
+
+        it('infers scope-only strategy when >70% commits have scopes', async () => {
+          // 8 out of 10 commits have scopes (80%)
+          const commits = [
+            { message: 'feat(scope1): feature 1', hash: 'c1' },
+            { message: 'feat(scope2): feature 2', hash: 'c2' },
+            { message: 'fix(scope3): fix 1', hash: 'c3' },
+            { message: 'feat(scope4): feature 3', hash: 'c4' },
+            { message: 'fix(scope5): fix 2', hash: 'c5' },
+            { message: 'feat(scope6): feature 4', hash: 'c6' },
+            { message: 'fix(scope7): fix 3', hash: 'c7' },
+            { message: 'feat(scope8): feature 5', hash: 'c8' },
+            { message: 'feat: unscoped 1', hash: 'c9' },
+            { message: 'fix: unscoped 2', hash: 'c10' },
+          ]
+          const git = createMockGitClient({ commits })
+          const context = createMockContext({
+            git,
+            state: { isFirstRelease: true },
+            config: {
+              scopeFiltering: { strategy: 'inferred' },
+            },
+          })
+          const step = createAnalyzeCommitsStep()
+
+          const result = await step.execute(context)
+
+          expect(result.status).toBe('success')
+          expect(result.message).toContain('strategy: scope-only')
+        })
+
+        it('infers file-only strategy when <30% commits have scopes', async () => {
+          // 2 out of 10 commits have scopes (20%)
+          const commits = [
+            { message: 'feat(scope1): feature 1', hash: 'c1' },
+            { message: 'feat(scope2): feature 2', hash: 'c2' },
+            { message: 'fix: fix 1', hash: 'c3' },
+            { message: 'feat: feature 3', hash: 'c4' },
+            { message: 'fix: fix 2', hash: 'c5' },
+            { message: 'feat: feature 4', hash: 'c6' },
+            { message: 'fix: fix 3', hash: 'c7' },
+            { message: 'feat: feature 5', hash: 'c8' },
+            { message: 'feat: unscoped 1', hash: 'c9' },
+            { message: 'fix: unscoped 2', hash: 'c10' },
+          ]
+          const git = createMockGitClient({ commits })
+          const context = createMockContext({
+            git,
+            state: { isFirstRelease: true },
+            config: {
+              scopeFiltering: { strategy: 'inferred' },
+            },
+          })
+          const step = createAnalyzeCommitsStep()
+
+          const result = await step.execute(context)
+
+          expect(result.status).toBe('success')
+          expect(result.message).toContain('strategy: file-only')
+        })
+
+        it('infers hybrid strategy when scope ratio is between 30-70%', async () => {
+          // 5 out of 10 commits have scopes (50%)
+          const commits = [
+            { message: 'feat(scope1): feature 1', hash: 'c1' },
+            { message: 'feat(scope2): feature 2', hash: 'c2' },
+            { message: 'fix(scope3): fix 1', hash: 'c3' },
+            { message: 'feat(scope4): feature 3', hash: 'c4' },
+            { message: 'fix(scope5): fix 2', hash: 'c5' },
+            { message: 'feat: feature 4', hash: 'c6' },
+            { message: 'fix: fix 3', hash: 'c7' },
+            { message: 'feat: feature 5', hash: 'c8' },
+            { message: 'feat: unscoped 1', hash: 'c9' },
+            { message: 'fix: unscoped 2', hash: 'c10' },
+          ]
+          const git = createMockGitClient({ commits })
+          const context = createMockContext({
+            git,
+            state: { isFirstRelease: true },
+            config: {
+              scopeFiltering: { strategy: 'inferred' },
+            },
+          })
+          const step = createAnalyzeCommitsStep()
+
+          const result = await step.execute(context)
+
+          expect(result.status).toBe('success')
+          expect(result.message).toContain('strategy: hybrid')
+        })
+
+        it('infers file-only strategy when no commits exist (ratio is 0)', async () => {
+          const git = createMockGitClient({ commits: [] })
+          const context = createMockContext({
+            git,
+            state: { isFirstRelease: true },
+            config: {
+              scopeFiltering: { strategy: 'inferred' },
+            },
+          })
+          const step = createAnalyzeCommitsStep()
+
+          const result = await step.execute(context)
+
+          expect(result.status).toBe('success')
+          // With 0 commits, scope ratio is 0 which is < 0.3, so file-only is selected
+          expect(result.message).toContain('strategy: file-only')
+        })
+      })
+
+      describe('classification result', () => {
+        it('includes classificationResult in state updates', async () => {
+          const git = createMockGitClient({
+            commits: [
+              { message: 'feat(lib-test): scoped feature', hash: 'commit1' },
+              { message: 'feat: unscoped feature', hash: 'commit2' },
+            ],
+          })
+          const context = createMockContext({
+            git,
+            state: { isFirstRelease: true },
+          })
+          const step = createAnalyzeCommitsStep()
+
+          const result = await step.execute(context)
+
+          expect(result.status).toBe('success')
+          expect(result.stateUpdates?.classificationResult).toBeDefined()
+          expect(result.stateUpdates?.classificationResult?.summary).toBeDefined()
+          expect(result.stateUpdates?.classificationResult?.summary.bySource).toBeDefined()
+        })
+
+        it('provides classification summary breakdown', async () => {
+          const git = createMockGitClient({
+            commits: [{ message: 'feat(lib-test): scoped feature', hash: 'commit1' }],
+          })
+          const logger = createMockLogger()
+          const context = createMockContext({
+            git,
+            logger,
+            state: { isFirstRelease: true },
+          })
+          const step = createAnalyzeCommitsStep()
+
+          await step.execute(context)
+
+          // Should log classification breakdown
+          expect(logger.debug).toHaveBeenCalledWith(expect.stringContaining('Classification breakdown:'))
+        })
+      })
+
+      describe('scope filtering config', () => {
+        it('applies excludeScopes from config', async () => {
+          const git = createMockGitClient({
+            commits: [
+              { message: 'feat(lib-test): included', hash: 'commit1' },
+              { message: 'feat(deps): excluded dep update', hash: 'commit2' },
+            ],
+          })
+          const context = createMockContext({
+            git,
+            state: { isFirstRelease: true },
+            config: {
+              scopeFiltering: {
+                strategy: 'hybrid',
+                excludeScopes: ['deps'],
+              },
+            },
+          })
+          const step = createAnalyzeCommitsStep()
+
+          const result = await step.execute(context)
+
+          expect(result.status).toBe('success')
+          // deps scope should be excluded
+          const commits = result.stateUpdates?.commits ?? []
+          expect(commits.every((c) => c.scope !== 'deps')).toBe(true)
+        })
+
+        it('applies includeScopes from config', async () => {
+          const git = createMockGitClient({
+            commits: [
+              { message: 'feat(custom-scope): custom scoped', hash: 'commit1' },
+              { message: 'feat(other): other scope', hash: 'commit2' },
+            ],
+          })
+          const context = createMockContext({
+            git,
+            state: { isFirstRelease: true },
+            config: {
+              scopeFiltering: {
+                strategy: 'scope-only',
+                includeScopes: ['custom-scope'],
+              },
+            },
+          })
+          const step = createAnalyzeCommitsStep()
+
+          const result = await step.execute(context)
+
+          expect(result.status).toBe('success')
+          // custom-scope should be treated as project scope and included
+          // The commit with custom-scope should be included in results
+          expect(result.stateUpdates?.commits).toHaveLength(1)
+        })
+
+        it('logs project scopes derivation', async () => {
+          const git = createMockGitClient({
+            commits: [{ message: 'feat: feature', hash: 'commit1' }],
+          })
+          const logger = createMockLogger()
+          const context = createMockContext({
+            git,
+            logger,
+            state: { isFirstRelease: true },
+          })
+          const step = createAnalyzeCommitsStep()
+
+          await step.execute(context)
+
+          expect(logger.debug).toHaveBeenCalledWith(expect.stringContaining('Project scopes:'))
+        })
+      })
+
+      describe('file-based commit detection', () => {
+        it('detects commits touching project files in hybrid mode', async () => {
+          const git = createMockGitClient({
+            commits: [
+              { message: 'feat: unscoped feature', hash: 'commit1' },
+              { message: 'fix: unscoped fix', hash: 'commit2' },
+            ],
+          })
+          const logger = createMockLogger()
+          const context = createMockContext({
+            git,
+            logger,
+            state: { isFirstRelease: true },
+            config: {
+              scopeFiltering: { strategy: 'hybrid' },
+            },
+          })
+          const step = createAnalyzeCommitsStep()
+
+          await step.execute(context)
+
+          // Should log about file commits
+          expect(logger.debug).toHaveBeenCalledWith(expect.stringContaining('commits touching'))
+        })
+
+        it('detects commits touching project files in file-only mode', async () => {
+          const git = createMockGitClient({
+            commits: [{ message: 'feat: unscoped feature', hash: 'commit1' }],
+          })
+          const logger = createMockLogger()
+          const context = createMockContext({
+            git,
+            logger,
+            state: { isFirstRelease: true },
+            config: {
+              scopeFiltering: { strategy: 'file-only' },
+            },
+          })
+          const step = createAnalyzeCommitsStep()
+
+          await step.execute(context)
+
+          expect(logger.debug).toHaveBeenCalledWith(expect.stringContaining('commits touching'))
+        })
+
+        it('skips file detection in scope-only mode', async () => {
+          const git = createMockGitClient({
+            commits: [{ message: 'feat(lib-test): scoped feature', hash: 'commit1' }],
+          })
+          const logger = createMockLogger()
+          const context = createMockContext({
+            git,
+            logger,
+            state: { isFirstRelease: true },
+            config: {
+              scopeFiltering: { strategy: 'scope-only' },
+            },
+          })
+          const step = createAnalyzeCommitsStep()
+
+          await step.execute(context)
+
+          // Should NOT log about file commits in scope-only mode
+          const debugCalls = (logger.debug as jest.Mock).mock.calls.map((call) => call[0])
+          const fileCommitLogs = debugCalls.filter((msg: string) => msg.includes('commits touching'))
+          expect(fileCommitLogs).toHaveLength(0)
+        })
+      })
+
+      describe('summary message', () => {
+        it('includes strategy in success message', async () => {
+          const git = createMockGitClient({
+            commits: [{ message: 'feat: feature', hash: 'commit1' }],
+          })
+          const context = createMockContext({
+            git,
+            state: { isFirstRelease: true },
+          })
+          const step = createAnalyzeCommitsStep()
+
+          const result = await step.execute(context)
+
+          expect(result.message).toContain('strategy:')
+        })
+
+        it('includes strategy in no-commits message', async () => {
+          const git = createMockGitClient({
+            commits: [{ message: 'docs: documentation', hash: 'commit1' }],
+          })
+          const context = createMockContext({
+            git,
+            state: { isFirstRelease: true },
+          })
+          const step = createAnalyzeCommitsStep()
+
+          const result = await step.execute(context)
+
+          expect(result.message).toContain('No releasable commits')
+          expect(result.message).toContain('strategy:')
+        })
+
+        it('shows total commit count in message', async () => {
+          const git = createMockGitClient({
+            commits: [
+              { message: 'feat: feature 1', hash: 'c1' },
+              { message: 'docs: docs update', hash: 'c2' },
+              { message: 'chore: cleanup', hash: 'c3' },
+            ],
+          })
+          const context = createMockContext({
+            git,
+            state: { isFirstRelease: true },
+          })
+          const step = createAnalyzeCommitsStep()
+
+          const result = await step.execute(context)
+
+          expect(result.message).toContain('3 total')
+        })
+      })
     })
   })
 })
