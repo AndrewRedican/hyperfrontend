@@ -149,6 +149,7 @@
       "@hyperfrontend/versioning/changelog/parse": ["libs/versioning/src/changelog/parse/index.ts"],
       "@hyperfrontend/versioning/changelog/serialize": ["libs/versioning/src/changelog/serialize/index.ts"],
       "@hyperfrontend/versioning/commits": ["libs/versioning/src/commits/index.ts"],
+      "@hyperfrontend/versioning/commits/classify": ["libs/versioning/src/commits/classify/index.ts"],
       "@hyperfrontend/versioning/commits/models": ["libs/versioning/src/commits/models/index.ts"],
       "@hyperfrontend/versioning/commits/parse": ["libs/versioning/src/commits/parse/index.ts"],
       "@hyperfrontend/versioning/flow": ["libs/versioning/src/flow/index.ts"],

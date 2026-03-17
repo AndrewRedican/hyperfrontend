@@ -17,6 +17,7 @@
     "./changelog/parse": "./src/changelog/parse/index.js",
     "./changelog/serialize": "./src/changelog/serialize/index.js",
     "./commits": "./src/commits/index.js",
+    "./commits/classify": "./src/commits/classify/index.js",
     "./commits/models": "./src/commits/models/index.js",
     "./commits/parse": "./src/commits/parse/index.js",
     "./flow": "./src/flow/index.js",
