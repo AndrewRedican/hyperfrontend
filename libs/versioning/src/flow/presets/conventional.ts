@@ -8,6 +8,7 @@ import {
   createFetchRegistryStep,
   createGenerateChangelogStep,
   createGitCommitStep,
+  createResolveRepositoryStep,
   createTagStep,
   createUpdatePackageStep,
   createWriteChangelogStep,
@@ -36,14 +37,15 @@ export const CONVENTIONAL_FLOW_CONFIG: FlowConfig = {
  *
  * This flow follows the standard conventional commits workflow:
  * 1. Fetch published version from registry
- * 2. Analyze commits since last release
- * 3. Calculate version bump based on commit types
- * 4. Check if version already published (idempotency)
- * 5. Generate changelog entry
- * 6. Update package.json version
- * 7. Write changelog to file
- * 8. Create git commit (optional)
- * 9. Create git tag (optional, typically after publish)
+ * 2. Resolve repository configuration (for compare URLs)
+ * 3. Analyze commits since last release
+ * 4. Calculate version bump based on commit types
+ * 5. Check if version already published (idempotency)
+ * 6. Generate changelog entry (with compare URL if repository resolved)
+ * 7. Update package.json version
+ * 8. Write changelog to file
+ * 9. Create git commit (optional)
+ * 10. Create git tag (optional, typically after publish)
  *
  * @param config - Optional configuration overrides
  * @returns A VersionFlow configured for conventional commits
@@ -72,6 +74,7 @@ export function createConventionalFlow(config?: Partial<FlowConfig>): VersionFlo
     'Conventional Commits Flow',
     [
       createFetchRegistryStep(),
+      createResolveRepositoryStep(),
       createAnalyzeCommitsStep(),
       createCalculateBumpStep(),
       createCheckIdempotencyStep(),
