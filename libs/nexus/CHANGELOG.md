@@ -2,7 +2,7 @@
 
 All notable changes to this project will be documented in this file.
 
-## 1.1.0 - 2026-03-16
+## [1.1.0](https://github.com/AndrewRedican/hyperfrontend/compare/lib-nexus@1.0.1...lib-nexus@1.1.0) - 2026-03-16
 
 ### Features
 

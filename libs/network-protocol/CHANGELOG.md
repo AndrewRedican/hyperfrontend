@@ -2,7 +2,7 @@
 
 All notable changes to this project will be documented in this file.
 
-## 0.1.0 - 2026-03-16
+## [0.1.0](https://github.com/AndrewRedican/hyperfrontend/compare/lib-network-protocol@0.0.4...lib-network-protocol@0.1.0) - 2026-03-16
 
 ### Features
 

@@ -2,7 +2,7 @@
 
 All notable changes to this project will be documented in this file.
 
-## 0.2.0 - 2026-03-16
+## [0.2.0](https://github.com/AndrewRedican/hyperfrontend/compare/lib-project-scope@0.1.0...lib-project-scope@0.2.0) - 2026-03-16
 
 ### Features
 
