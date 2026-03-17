@@ -32,6 +32,7 @@
     "./registry/npm": "./src/registry/npm/index.js",
     "./repository": "./src/repository/index.js",
     "./repository/models": "./src/repository/models/index.js",
+    "./repository/parse": "./src/repository/parse/index.js",
     "./semver": "./src/semver/index.js",
     "./semver/compare": "./src/semver/compare/index.js",
     "./semver/format": "./src/semver/format/index.js",

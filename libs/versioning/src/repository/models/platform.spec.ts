@@ -95,6 +95,12 @@ describe('detectPlatformFromHostname', () => {
     })
   })
 
+  describe('Azure DevOps SSH domain', () => {
+    it('detects ssh.dev.azure.com', () => {
+      expect(detectPlatformFromHostname('ssh.dev.azure.com')).toBe('azure-devops')
+    })
+  })
+
   describe('self-hosted instances', () => {
     it('detects GitHub Enterprise (github.company.com)', () => {
       expect(detectPlatformFromHostname('github.company.com')).toBe('github')

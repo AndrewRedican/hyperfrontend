@@ -89,6 +89,11 @@ export function detectPlatformFromHostname(hostname: string): RepositoryPlatform
     return 'azure-devops'
   }
 
+  // Check for Azure DevOps modern domain pattern (includes ssh.dev.azure.com)
+  if (normalized.endsWith('.azure.com')) {
+    return 'azure-devops'
+  }
+
   // Heuristics for self-hosted instances
   // GitHub Enterprise typically uses "github" in the hostname
   if (normalized.includes('github')) {
