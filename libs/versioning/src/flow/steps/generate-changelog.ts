@@ -1,10 +1,12 @@
 import type { ChangelogItem, ChangelogSection } from '../../changelog/models/entry'
 import type { ChangelogSectionType } from '../../changelog/models/section'
+import type { ClassifiedCommit } from '../../commits/classify'
 import type { ConventionalCommit } from '../../commits/models/conventional'
 import type { FlowStep } from '../models/step'
 import { createDate } from '@hyperfrontend/immutable-api-utils/built-in-copy/date'
 import { serializeChangelog, parseChangelog, addEntry } from '../../changelog'
 import { createChangelogEntry, createChangelogItem, createChangelogSection } from '../../changelog/models/entry'
+import { toChangelogCommit } from '../../commits/classify'
 import { createCompareUrl } from '../../repository/url'
 import { createStep, createSkippedResult } from '../models/step'
 
@@ -28,6 +30,36 @@ const COMMIT_TYPE_TO_SECTION: Record<string, ChangelogSectionType> = {
 }
 
 /**
+ * Checks if a commit source represents an indirect change.
+ *
+ * @param source - The commit source type
+ * @returns True if the commit is indirect (dependency or infrastructure)
+ */
+function isIndirectSource(source: ClassifiedCommit['source']): boolean {
+  return source === 'indirect-dependency' || source === 'indirect-infra'
+}
+
+/**
+ * Groups classified commits by their section type.
+ *
+ * @param commits - Array of classified commits
+ * @returns Record of section type to classified commits
+ */
+function groupClassifiedCommitsBySection(commits: readonly ClassifiedCommit[]): Record<ChangelogSectionType, ClassifiedCommit[]> {
+  const groups: Record<string, ClassifiedCommit[]> = {}
+
+  for (const classified of commits) {
+    const sectionType = COMMIT_TYPE_TO_SECTION[classified.commit.type ?? 'chore'] ?? 'chores'
+    if (!groups[sectionType]) {
+      groups[sectionType] = []
+    }
+    groups[sectionType].push(classified)
+  }
+
+  return <Record<ChangelogSectionType, ClassifiedCommit[]>>groups
+}
+
+/**
  * Groups commits by their section type.
  *
  * @param commits - Array of conventional commits
@@ -45,6 +77,40 @@ function groupCommitsBySection(commits: readonly ConventionalCommit[]): Record<C
   }
 
   return <Record<ChangelogSectionType, ConventionalCommit[]>>groups
+}
+
+/**
+ * Creates a changelog item from a classified commit.
+ *
+ * Applies scope display rules:
+ * - Direct commits: scope omitted (redundant in project changelog)
+ * - Indirect commits: scope preserved (provides context)
+ *
+ * @param classified - The classified commit with source metadata
+ * @returns A changelog item with proper scope handling
+ */
+function classifiedCommitToItem(classified: ClassifiedCommit): ChangelogItem {
+  // Apply scope transformation based on classification
+  const commit = toChangelogCommit(classified)
+  const indirect = isIndirectSource(classified.source)
+
+  let text = commit.subject
+
+  // Add scope prefix if preserved (indirect commits)
+  if (commit.scope) {
+    text = `**${commit.scope}:** ${text}`
+  }
+
+  // Add breaking change indicator
+  if (commit.breaking) {
+    text = `⚠️ BREAKING: ${text}`
+  }
+
+  return createChangelogItem(text, {
+    source: classified.source,
+    indirect,
+    breaking: commit.breaking,
+  })
 }
 
 /**
@@ -129,45 +195,111 @@ export function createGenerateChangelogStep(): FlowStep {
         }
       }
 
-      // Group commits by section
-      const grouped = groupCommitsBySection(commits)
-
-      // Create sections
+      // Use classification result when available for proper scope handling
+      const { classificationResult } = state
       const sections: ChangelogSection[] = []
 
-      // Add breaking changes section first if any
-      const breakingCommits = commits.filter((c) => c.breaking)
-      if (breakingCommits.length > 0) {
-        sections.push(
-          createChangelogSection(
-            'breaking',
-            'Breaking Changes',
-            breakingCommits.map((c) => {
-              const text = c.breakingDescription ?? c.subject
-              return createChangelogItem(c.scope ? `**${c.scope}:** ${text}` : text)
-            })
+      if (classificationResult && classificationResult.included.length > 0) {
+        // Use classified commits for proper scope display rules
+        const classifiedCommits = classificationResult.included
+
+        // Separate direct and indirect commits
+        const directCommits = classifiedCommits.filter((c) => !isIndirectSource(c.source))
+        const indirectCommits = classifiedCommits.filter((c) => isIndirectSource(c.source))
+
+        // Add breaking changes section first if any
+        const breakingCommits = classifiedCommits.filter((c) => c.commit.breaking)
+        if (breakingCommits.length > 0) {
+          sections.push(
+            createChangelogSection(
+              'breaking',
+              'Breaking Changes',
+              breakingCommits.map((c) => {
+                const commit = toChangelogCommit(c)
+                const text = commit.breakingDescription ?? commit.subject
+                const indirect = isIndirectSource(c.source)
+                return createChangelogItem(commit.scope ? `**${commit.scope}:** ${text}` : text, {
+                  source: c.source,
+                  indirect,
+                  breaking: true,
+                })
+              })
+            )
           )
-        )
-      }
+        }
 
-      // Add other sections in conventional order
-      const sectionOrder: readonly { type: ChangelogSectionType; heading: string }[] = [
-        { type: 'features', heading: 'Features' },
-        { type: 'fixes', heading: 'Bug Fixes' },
-        { type: 'performance', heading: 'Performance' },
-        { type: 'documentation', heading: 'Documentation' },
-        { type: 'refactoring', heading: 'Code Refactoring' },
-        { type: 'build', heading: 'Build' },
-        { type: 'ci', heading: 'Continuous Integration' },
-        { type: 'tests', heading: 'Tests' },
-        { type: 'chores', heading: 'Chores' },
-        { type: 'other', heading: 'Other' },
-      ]
+        // Group direct commits by section
+        const groupedDirect = groupClassifiedCommitsBySection(directCommits)
 
-      for (const { type: sectionType, heading } of sectionOrder) {
-        const sectionCommits = grouped[sectionType]
-        if (sectionCommits && sectionCommits.length > 0) {
-          sections.push(createChangelogSection(sectionType, heading, sectionCommits.map(commitToItem)))
+        // Add other sections in conventional order (direct commits only)
+        const sectionOrder: readonly { type: ChangelogSectionType; heading: string }[] = [
+          { type: 'features', heading: 'Features' },
+          { type: 'fixes', heading: 'Bug Fixes' },
+          { type: 'performance', heading: 'Performance' },
+          { type: 'documentation', heading: 'Documentation' },
+          { type: 'refactoring', heading: 'Code Refactoring' },
+          { type: 'build', heading: 'Build' },
+          { type: 'ci', heading: 'Continuous Integration' },
+          { type: 'tests', heading: 'Tests' },
+          { type: 'chores', heading: 'Chores' },
+          { type: 'other', heading: 'Other' },
+        ]
+
+        for (const { type: sectionType, heading } of sectionOrder) {
+          const sectionCommits = groupedDirect[sectionType]
+          if (sectionCommits && sectionCommits.length > 0) {
+            sections.push(createChangelogSection(sectionType, heading, sectionCommits.map(classifiedCommitToItem)))
+          }
+        }
+
+        // Add Dependency Updates section for indirect commits if any
+        if (indirectCommits.length > 0) {
+          sections.push(
+            createChangelogSection(
+              'other', // Use 'other' as section type for dependency updates
+              'Dependency Updates',
+              indirectCommits.map((c) => classifiedCommitToItem(c))
+            )
+          )
+        }
+      } else {
+        // Fallback: use commits without classification (backward compatibility)
+        const grouped = groupCommitsBySection(commits)
+
+        // Add breaking changes section first if any
+        const breakingCommits = commits.filter((c) => c.breaking)
+        if (breakingCommits.length > 0) {
+          sections.push(
+            createChangelogSection(
+              'breaking',
+              'Breaking Changes',
+              breakingCommits.map((c) => {
+                const text = c.breakingDescription ?? c.subject
+                return createChangelogItem(c.scope ? `**${c.scope}:** ${text}` : text)
+              })
+            )
+          )
+        }
+
+        // Add other sections in conventional order
+        const sectionOrder: readonly { type: ChangelogSectionType; heading: string }[] = [
+          { type: 'features', heading: 'Features' },
+          { type: 'fixes', heading: 'Bug Fixes' },
+          { type: 'performance', heading: 'Performance' },
+          { type: 'documentation', heading: 'Documentation' },
+          { type: 'refactoring', heading: 'Code Refactoring' },
+          { type: 'build', heading: 'Build' },
+          { type: 'ci', heading: 'Continuous Integration' },
+          { type: 'tests', heading: 'Tests' },
+          { type: 'chores', heading: 'Chores' },
+          { type: 'other', heading: 'Other' },
+        ]
+
+        for (const { type: sectionType, heading } of sectionOrder) {
+          const sectionCommits = grouped[sectionType]
+          if (sectionCommits && sectionCommits.length > 0) {
+            sections.push(createChangelogSection(sectionType, heading, sectionCommits.map(commitToItem)))
+          }
         }
       }
 
