@@ -162,6 +162,8 @@
       "@hyperfrontend/versioning/registry": ["libs/versioning/src/registry/index.ts"],
       "@hyperfrontend/versioning/registry/models": ["libs/versioning/src/registry/models/index.ts"],
       "@hyperfrontend/versioning/registry/npm": ["libs/versioning/src/registry/npm/index.ts"],
+      "@hyperfrontend/versioning/repository": ["libs/versioning/src/repository/index.ts"],
+      "@hyperfrontend/versioning/repository/models": ["libs/versioning/src/repository/models/index.ts"],
       "@hyperfrontend/versioning/semver": ["libs/versioning/src/semver/index.ts"],
       "@hyperfrontend/versioning/semver/compare": ["libs/versioning/src/semver/compare/index.ts"],
       "@hyperfrontend/versioning/semver/format": ["libs/versioning/src/semver/format/index.ts"],
