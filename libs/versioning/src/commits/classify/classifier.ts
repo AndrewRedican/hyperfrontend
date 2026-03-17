@@ -28,7 +28,7 @@ export function classifyCommit(input: CommitWithRaw, context: ClassificationCont
     projectScopes,
     fileCommitHashes,
     dependencyCommitMap,
-    infrastructurePaths = [],
+    infrastructureCommitHashes,
     excludeScopes = DEFAULT_EXCLUDE_SCOPES,
     includeScopes = [],
   } = context
@@ -66,13 +66,9 @@ export function classifyCommit(input: CommitWithRaw, context: ClassificationCont
     }
   }
 
-  // Priority 4: Infrastructure path match
-  if (hasScope && infrastructurePaths.length > 0) {
-    // Note: Infrastructure detection would need file tracking similar to dependencies
-    // For now, we rely on explicit scope matching against infra projects
-    if (isInfrastructureScope(scope, infrastructurePaths)) {
-      return createClassifiedCommit(commit, raw, 'indirect-infra')
-    }
+  // File-based infrastructure match
+  if (infrastructureCommitHashes?.has(raw.hash)) {
+    return createClassifiedCommit(commit, raw, 'indirect-infra')
   }
 
   // Fallback: No match found
@@ -173,38 +169,13 @@ function getDependencyVariations(depName: string): readonly string[] {
 }
 
 /**
- * Checks if a scope matches an infrastructure path pattern.
- *
- * @param scope - The commit scope
- * @param infrastructurePaths - Configured infrastructure paths
- * @returns True if scope is infrastructure-related
- */
-function isInfrastructureScope(scope: string, infrastructurePaths: readonly string[]): boolean {
-  const normalizedScope = scope.toLowerCase()
-
-  // Infrastructure paths might be: 'tools/package/', '.github/workflows/', etc.
-  // We check if the scope matches the project name in the path
-  for (const infraPath of infrastructurePaths) {
-    // Extract the potential scope from path like 'tools/package/' -> 'package'
-    const parts = infraPath.split('/').filter(Boolean)
-    for (const part of parts) {
-      if (part.toLowerCase() === normalizedScope || `tool-${part.toLowerCase()}` === normalizedScope) {
-        return true
-      }
-    }
-  }
-
-  return false
-}
-
-/**
  * Creates a classification context from common inputs.
  *
  * @param projectScopes - Scopes that match the project
  * @param fileCommitHashes - Set of commit hashes that touched project files
  * @param options - Additional context options
  * @param options.dependencyCommitMap - Map of dependency names to commit hashes touching them
- * @param options.infrastructurePaths - Paths to infrastructure/tooling directories
+ * @param options.infrastructureCommitHashes - Set of commit hashes touching infrastructure paths
  * @param options.excludeScopes - Scopes to explicitly exclude from classification
  * @param options.includeScopes - Additional scopes to include as direct matches
  * @returns A ClassificationContext object
@@ -214,7 +185,7 @@ export function createClassificationContext(
   fileCommitHashes: ReadonlySet<string>,
   options?: {
     readonly dependencyCommitMap?: ReadonlyMap<string, ReadonlySet<string>>
-    readonly infrastructurePaths?: readonly string[]
+    readonly infrastructureCommitHashes?: ReadonlySet<string>
     readonly excludeScopes?: readonly string[]
     readonly includeScopes?: readonly string[]
   }
@@ -223,7 +194,7 @@ export function createClassificationContext(
     projectScopes,
     fileCommitHashes,
     dependencyCommitMap: options?.dependencyCommitMap,
-    infrastructurePaths: options?.infrastructurePaths,
+    infrastructureCommitHashes: options?.infrastructureCommitHashes,
     excludeScopes: options?.excludeScopes ?? DEFAULT_EXCLUDE_SCOPES,
     includeScopes: options?.includeScopes,
   }

@@ -266,15 +266,16 @@ describe('createClassificationContext', () => {
 
   it('accepts optional parameters', () => {
     const depMap = new Map([['lib-utils', new Set(['def456'])]])
+    const infraHashes = new Set(['ghi789'])
     const context = createClassificationContext(['versioning'], new Set(['abc123']), {
       dependencyCommitMap: depMap,
-      infrastructurePaths: ['tools/'],
+      infrastructureCommitHashes: infraHashes,
       excludeScopes: ['custom-exclude'],
       includeScopes: ['shared'],
     })
 
     expect(context.dependencyCommitMap).toBe(depMap)
-    expect(context.infrastructurePaths).toEqual(['tools/'])
+    expect(context.infrastructureCommitHashes).toBe(infraHashes)
     expect(context.excludeScopes).toEqual(['custom-exclude'])
     expect(context.includeScopes).toEqual(['shared'])
   })
@@ -507,12 +508,12 @@ describe('extractConventionalCommits', () => {
 })
 
 describe('infrastructure classification', () => {
-  it('classifies commits matching infrastructure paths as indirect-infra', () => {
+  it('classifies commits with matching infrastructure hash as indirect-infra', () => {
     const input = createCommitInput('package', 'abc123')
     const context: ClassificationContext = {
       projectScopes: ['versioning'],
       fileCommitHashes: new Set(),
-      infrastructurePaths: ['tools/package/'],
+      infrastructureCommitHashes: new Set(['abc123']),
     }
 
     const result = classifyCommit(input, context)
@@ -521,26 +522,27 @@ describe('infrastructure classification', () => {
     expect(result.include).toBe(true)
   })
 
-  it('matches tool- prefix for infrastructure scopes', () => {
+  it('preserves scope for infrastructure commits', () => {
     const input = createCommitInput('tool-scripts', 'abc123')
     const context: ClassificationContext = {
       projectScopes: ['versioning'],
       fileCommitHashes: new Set(),
-      infrastructurePaths: ['tools/scripts/'],
+      infrastructureCommitHashes: new Set(['abc123']),
     }
 
     const result = classifyCommit(input, context)
 
     expect(result.source).toBe('indirect-infra')
     expect(result.include).toBe(true)
+    expect(result.preserveScope).toBe(true)
   })
 
-  it('does not match unrelated infrastructure paths', () => {
+  it('does not match commits without infrastructure hash', () => {
     const input = createCommitInput('unrelated', 'abc123')
     const context: ClassificationContext = {
       projectScopes: ['versioning'],
       fileCommitHashes: new Set(),
-      infrastructurePaths: ['tools/package/'],
+      infrastructureCommitHashes: new Set(['other-hash']),
     }
 
     const result = classifyCommit(input, context)

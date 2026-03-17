@@ -1,9 +1,19 @@
-import type { ClassifiedCommit, CommitWithRaw } from '../../commits/classify'
+import type { ClassifiedCommit, CommitWithRaw, InfrastructureMatcher } from '../../commits/classify'
 import type { ConventionalCommit } from '../../commits/models/conventional'
+import type { GitClient } from '../../git/factory'
+import type { GitCommit } from '../../git/models/commit'
 import type { FlowStep } from '../models/step'
-import type { ScopeFilteringStrategy } from '../models/types'
+import type { ScopeFilteringConfig, ScopeFilteringStrategy } from '../models/types'
+import { createMap } from '@hyperfrontend/immutable-api-utils/built-in-copy/map'
 import { createSet } from '@hyperfrontend/immutable-api-utils/built-in-copy/set'
-import { classifyCommits, createClassificationContext, deriveProjectScopes, toChangelogCommit } from '../../commits/classify'
+import {
+  buildInfrastructureMatcher,
+  classifyCommits,
+  createClassificationContext,
+  createMatchContext,
+  deriveProjectScopes,
+  toChangelogCommit,
+} from '../../commits/classify'
 import { parseConventionalCommit } from '../../commits/parse/message'
 import { createStep } from '../models/step'
 import { DEFAULT_SCOPE_FILTERING_CONFIG } from '../models/types'
@@ -119,11 +129,21 @@ export function createAnalyzeCommitsStep(): FlowStep {
       })
       logger.debug(`Project scopes: ${projectScopes.join(', ')}`)
 
+      // Build infrastructure commit hashes for file-based infrastructure detection
+      const infrastructureCommitHashes = buildInfrastructureCommitHashes(
+        git,
+        lastReleaseTag,
+        rawCommits,
+        parsedCommits,
+        scopeFilteringConfig,
+        logger
+      )
+
       // Create classification context
       const classificationContext = createClassificationContext(projectScopes, fileCommitHashes, {
         excludeScopes: scopeFilteringConfig.excludeScopes,
         includeScopes: scopeFilteringConfig.includeScopes,
-        infrastructurePaths: scopeFilteringConfig.infrastructurePaths,
+        infrastructureCommitHashes,
       })
 
       // Classify commits
@@ -264,4 +284,100 @@ function buildSummaryMessage(
   const parts = [`Found ${includedCount} releasable commits`, `(${totalCount} total`, `strategy: ${strategy})`]
 
   return parts.join(' ')
+}
+
+/**
+ * Builds a set of commit hashes that touched infrastructure paths or match infrastructure criteria.
+ *
+ * Supports multiple detection methods combined with OR logic:
+ * 1. Path-based: Commits touching configured infrastructure paths (via git)
+ * 2. Scope-based: Commits with scopes matching infrastructure.scopes
+ * 3. Custom matcher: User-provided matching logic
+ *
+ * @param git - Git client for querying commits by path
+ * @param lastReleaseTag - Last release tag (null for first release)
+ * @param rawCommits - All raw commits being analyzed
+ * @param parsedCommits - Parsed commits with conventional commit data
+ * @param config - Scope filtering configuration
+ * @param logger - Logger with debug method for output
+ * @param logger.debug - Debug logging function
+ * @returns Set of commit hashes classified as infrastructure
+ */
+function buildInfrastructureCommitHashes(
+  git: GitClient,
+  lastReleaseTag: string | null,
+  rawCommits: readonly GitCommit[],
+  parsedCommits: readonly CommitWithRaw[],
+  config: ScopeFilteringConfig,
+  logger: { debug: (msg: string) => void }
+): ReadonlySet<string> | undefined {
+  // Collect all infrastructure commit hashes
+  let infraHashes = createSet<string>()
+
+  // Method 1: Path-based detection (query git for commits touching infra paths)
+  const infraPaths = config.infrastructure?.paths ?? []
+  if (infraPaths.length > 0) {
+    for (const infraPath of infraPaths) {
+      const pathCommits = lastReleaseTag
+        ? git.getCommitsSince(lastReleaseTag, { path: infraPath })
+        : git.getCommitLog({ maxCount: 100, path: infraPath })
+
+      for (const commit of pathCommits) {
+        infraHashes = infraHashes.add(commit.hash)
+      }
+    }
+    logger.debug(`Found ${infraHashes.size} commits touching infrastructure paths: ${infraPaths.join(', ')}`)
+  }
+
+  // Method 2 & 3: Scope-based and custom matcher detection
+  // Build a combined matcher from infrastructure config and/or custom matcher
+  const configMatcher = config.infrastructure ? buildInfrastructureMatcher(config.infrastructure) : null
+  const customMatcher = config.infrastructureMatcher
+  const combinedMatcher = combineMatcher(configMatcher, customMatcher)
+
+  if (combinedMatcher) {
+    // Build a lookup for parsed commits by hash
+    let parsedByHash = createMap<string, CommitWithRaw>()
+    for (const parsed of parsedCommits) {
+      parsedByHash = parsedByHash.set(parsed.raw.hash, parsed)
+    }
+
+    // Evaluate each raw commit against the matcher
+    for (const rawCommit of rawCommits) {
+      // Skip if already matched by path
+      if (infraHashes.has(rawCommit.hash)) continue
+
+      // Get parsed scope if available
+      const parsed = parsedByHash.get(rawCommit.hash)
+      const scope = parsed?.commit.scope
+
+      // Create match context and evaluate
+      const context = createMatchContext(rawCommit, scope)
+      if (combinedMatcher(context)) {
+        infraHashes = infraHashes.add(rawCommit.hash)
+      }
+    }
+    logger.debug(`Infrastructure matcher found ${infraHashes.size} total commits`)
+  }
+
+  // Return undefined if no infrastructure detection configured
+  if (infraHashes.size === 0 && infraPaths.length === 0 && !combinedMatcher) {
+    return undefined
+  }
+
+  return infraHashes
+}
+
+/**
+ * Combines two optional matchers into one using OR logic.
+ *
+ * @param a - First matcher (may be null)
+ * @param b - Second matcher (may be undefined)
+ * @returns Combined matcher or null if neither provided
+ */
+function combineMatcher(a: InfrastructureMatcher | null, b: InfrastructureMatcher | undefined): InfrastructureMatcher | null {
+  if (a && b) {
+    return (ctx) => a(ctx) || b(ctx)
+  }
+  return a ?? b ?? null
 }

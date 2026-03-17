@@ -842,6 +842,371 @@ describe('analyze-commits step', () => {
           expect(result.message).toContain('3 total')
         })
       })
+
+      describe('infrastructure path-based detection', () => {
+        it('detects commits touching infrastructure paths', async () => {
+          // Create a git client that returns specific commits for infrastructure paths
+          const baseCommits = [
+            { message: 'feat(ci): update pipeline', hash: 'infra-commit1' },
+            { message: 'feat(lib-test): regular feature', hash: 'commit2' },
+          ]
+          const git = {
+            ...createMockGitClient({ commits: baseCommits }),
+            getCommitLog: (opts?: { maxCount?: number; path?: string }) => {
+              if (opts?.path === 'tools/') {
+                return [{ message: 'feat(ci): update pipeline', hash: 'infra-commit1' }]
+              }
+              if (opts?.maxCount) {
+                return baseCommits.slice(0, opts.maxCount)
+              }
+              return baseCommits
+            },
+            getCommitsSince: (tag: string, opts?: { path?: string }) => {
+              if (opts?.path === 'tools/') {
+                return [{ message: 'feat(ci): update pipeline', hash: 'infra-commit1' }]
+              }
+              return baseCommits
+            },
+          } as unknown as GitClient
+          const logger = createMockLogger()
+          const context = createMockContext({
+            git,
+            logger,
+            state: { isFirstRelease: true },
+            config: {
+              scopeFiltering: {
+                infrastructure: {
+                  paths: ['tools/'],
+                },
+              },
+            },
+          })
+          const step = createAnalyzeCommitsStep()
+
+          await step.execute(context)
+
+          // Should log about infrastructure paths
+          expect(logger.debug).toHaveBeenCalledWith(expect.stringContaining('infrastructure paths'))
+        })
+
+        it('detects commits from multiple infrastructure paths', async () => {
+          const baseCommits = [
+            { message: 'feat(ci): update ci', hash: 'ci-commit' },
+            { message: 'feat(scripts): add script', hash: 'scripts-commit' },
+            { message: 'feat(lib-test): feature', hash: 'feature-commit' },
+          ]
+          const git = {
+            ...createMockGitClient({ commits: baseCommits }),
+            getCommitLog: (opts?: { maxCount?: number; path?: string }) => {
+              if (opts?.path === '.github/') {
+                return [{ message: 'feat(ci): update ci', hash: 'ci-commit' }]
+              }
+              if (opts?.path === 'scripts/') {
+                return [{ message: 'feat(scripts): add script', hash: 'scripts-commit' }]
+              }
+              if (opts?.maxCount) {
+                return baseCommits.slice(0, opts.maxCount)
+              }
+              return baseCommits
+            },
+          } as unknown as GitClient
+          const logger = createMockLogger()
+          const context = createMockContext({
+            git,
+            logger,
+            state: { isFirstRelease: true },
+            config: {
+              scopeFiltering: {
+                infrastructure: {
+                  paths: ['.github/', 'scripts/'],
+                },
+              },
+            },
+          })
+          const step = createAnalyzeCommitsStep()
+
+          await step.execute(context)
+
+          // Logs should show detected commits from infrastructure paths
+          expect(logger.debug).toHaveBeenCalledWith(expect.stringContaining('infrastructure paths'))
+        })
+      })
+
+      describe('infrastructure scope-based detection', () => {
+        it('detects commits matching infrastructure scopes', async () => {
+          const commits = [
+            { message: 'feat(ci): update pipeline', hash: 'ci-commit' },
+            { message: 'feat(deps): update deps', hash: 'deps-commit' },
+            { message: 'feat(lib-test): feature', hash: 'feature-commit' },
+          ]
+          const git = createMockGitClient({ commits })
+          const logger = createMockLogger()
+          const context = createMockContext({
+            git,
+            logger,
+            state: { isFirstRelease: true },
+            config: {
+              scopeFiltering: {
+                infrastructure: {
+                  scopes: ['ci', 'deps'],
+                },
+              },
+            },
+          })
+          const step = createAnalyzeCommitsStep()
+
+          await step.execute(context)
+
+          // Should log about infrastructure matcher
+          expect(logger.debug).toHaveBeenCalledWith(expect.stringContaining('Infrastructure matcher'))
+        })
+      })
+
+      describe('infrastructure custom matcher', () => {
+        it('applies custom infrastructureMatcher function', async () => {
+          const commits = [
+            { message: 'feat(tooling): add tool', hash: 'tooling-commit' },
+            { message: 'feat(lib-test): feature', hash: 'feature-commit' },
+          ]
+          const git = createMockGitClient({ commits })
+          const logger = createMockLogger()
+          const customMatcher = jest.fn((ctx: { scope?: string }) => ctx.scope === 'tooling')
+          const context = createMockContext({
+            git,
+            logger,
+            state: { isFirstRelease: true },
+            config: {
+              scopeFiltering: {
+                infrastructureMatcher: customMatcher,
+              },
+            },
+          })
+          const step = createAnalyzeCommitsStep()
+
+          await step.execute(context)
+
+          // Custom matcher should have been called
+          expect(customMatcher).toHaveBeenCalled()
+          expect(logger.debug).toHaveBeenCalledWith(expect.stringContaining('Infrastructure matcher'))
+        })
+
+        it('combines infrastructure config matcher with custom matcher using OR logic', async () => {
+          const commits = [
+            { message: 'feat(ci): update ci', hash: 'ci-commit' },
+            { message: 'feat(custom): custom match', hash: 'custom-commit' },
+            { message: 'feat(lib-test): feature', hash: 'feature-commit' },
+          ]
+          const git = createMockGitClient({ commits })
+          const logger = createMockLogger()
+          // Custom matcher matches 'custom' scope
+          const customMatcher = jest.fn((ctx: { scope?: string }) => ctx.scope === 'custom')
+          const context = createMockContext({
+            git,
+            logger,
+            state: { isFirstRelease: true },
+            config: {
+              scopeFiltering: {
+                // Config matcher matches 'ci' scope
+                infrastructure: {
+                  scopes: ['ci'],
+                },
+                // Custom matcher matches 'custom' scope
+                infrastructureMatcher: customMatcher,
+              },
+            },
+          })
+          const step = createAnalyzeCommitsStep()
+
+          await step.execute(context)
+
+          // Both matchers should contribute to infrastructure detection
+          expect(logger.debug).toHaveBeenCalledWith(expect.stringContaining('Infrastructure matcher'))
+        })
+      })
+
+      describe('toChangelogCommit transformation', () => {
+        it('removes scope from direct-scope classified commits', async () => {
+          const git = createMockGitClient({
+            commits: [{ message: 'feat(lib-test): scoped feature', hash: 'commit1' }],
+          })
+          const context = createMockContext({
+            git,
+            state: { isFirstRelease: true },
+            config: {
+              scopeFiltering: { strategy: 'hybrid' },
+            },
+          })
+          const step = createAnalyzeCommitsStep()
+
+          const result = await step.execute(context)
+
+          expect(result.status).toBe('success')
+          // Scope should be removed from direct-scope commits
+          const commits = result.stateUpdates?.commits ?? []
+          expect(commits).toHaveLength(1)
+          expect(commits[0].scope).toBeUndefined()
+        })
+
+        it('preserves scope for file-based commits with different scope', async () => {
+          // Create git client that marks commit1 as touching project files
+          const commits = [{ message: 'feat(other-project): cross-cutting change', hash: 'commit1' }]
+          const git = {
+            ...createMockGitClient({ commits }),
+            getCommitLog: (opts?: { maxCount?: number; path?: string }) => {
+              // When querying by path (project files), return the commit
+              if (opts?.path) {
+                return commits
+              }
+              if (opts?.maxCount) {
+                return commits.slice(0, opts.maxCount)
+              }
+              return commits
+            },
+          } as unknown as GitClient
+          const context = createMockContext({
+            git,
+            state: { isFirstRelease: true },
+            config: {
+              scopeFiltering: { strategy: 'hybrid' },
+            },
+          })
+          const step = createAnalyzeCommitsStep()
+
+          const result = await step.execute(context)
+
+          expect(result.status).toBe('success')
+          // Scope should be preserved for file-based commits
+          const resultCommits = result.stateUpdates?.commits ?? []
+          expect(resultCommits).toHaveLength(1)
+          expect(resultCommits[0].scope).toBe('other-project')
+        })
+      })
+
+      describe('relative path calculation', () => {
+        it('handles project path within workspace root', async () => {
+          const git = createMockGitClient({
+            commits: [{ message: 'feat: feature', hash: 'commit1' }],
+          })
+          const logger = createMockLogger()
+          const context: FlowContext = {
+            ...createMockContext({ git, logger, state: { isFirstRelease: true } }),
+            workspaceRoot: '/workspace',
+            projectRoot: '/workspace/libs/test',
+          }
+          const step = createAnalyzeCommitsStep()
+
+          await step.execute(context)
+
+          // Should log the relative path correctly
+          expect(logger.debug).toHaveBeenCalledWith(expect.stringContaining('libs/test'))
+        })
+
+        it('handles project path not starting with workspace root', async () => {
+          const git = createMockGitClient({
+            commits: [{ message: 'feat: feature', hash: 'commit1' }],
+          })
+          const logger = createMockLogger()
+          // Edge case: projectRoot doesn't start with workspaceRoot
+          const context: FlowContext = {
+            ...createMockContext({ git, logger, state: { isFirstRelease: true } }),
+            workspaceRoot: '/workspace',
+            projectRoot: '/other/path/libs/test',
+          }
+          const step = createAnalyzeCommitsStep()
+
+          await step.execute(context)
+
+          // Should fall back to using projectRoot as-is
+          expect(logger.debug).toHaveBeenCalledWith(expect.stringContaining('/other/path/libs/test'))
+        })
+      })
+
+      describe('first release path filtering', () => {
+        it('uses getCommitLog with path filter for first release', async () => {
+          const commits = [{ message: 'feat: feature', hash: 'commit1' }]
+          const getCommitLogMock = jest.fn((opts?: { maxCount?: number; path?: string }) => {
+            if (opts?.path) {
+              return commits
+            }
+            if (opts?.maxCount) {
+              return commits.slice(0, opts.maxCount)
+            }
+            return commits
+          })
+          const git = {
+            ...createMockGitClient({ commits }),
+            getCommitLog: getCommitLogMock,
+          } as unknown as GitClient
+          const context = createMockContext({
+            git,
+            state: { isFirstRelease: true },
+            config: {
+              scopeFiltering: { strategy: 'hybrid' },
+            },
+          })
+          const step = createAnalyzeCommitsStep()
+
+          await step.execute(context)
+
+          // Should call getCommitLog with path filter
+          const pathFilteredCalls = getCommitLogMock.mock.calls.filter((call) => call[0]?.path)
+          expect(pathFilteredCalls.length).toBeGreaterThan(0)
+        })
+      })
+
+      describe('commits since tag with path filtering', () => {
+        it('uses getCommitsSince with path filter for existing releases', async () => {
+          const commits = [{ message: 'feat: feature', hash: 'commit1' }]
+          const getCommitsSinceMock = jest.fn(() => commits)
+          const git = {
+            ...createMockGitClient({
+              commits,
+              packageTags: [{ name: '@test/pkg@1.0.0', hash: 'tag-hash' }],
+            }),
+            getCommitsSince: getCommitsSinceMock,
+          } as unknown as GitClient
+          const context = createMockContext({
+            git,
+            state: { isFirstRelease: false },
+            config: {
+              scopeFiltering: { strategy: 'hybrid' },
+            },
+          })
+          const step = createAnalyzeCommitsStep()
+
+          await step.execute(context)
+
+          // Should call getCommitsSince with path filter
+          type CommitsSinceCall = [tag: string, opts?: { path?: string }]
+          const calls = getCommitsSinceMock.mock.calls as unknown as CommitsSinceCall[]
+          const pathFilteredCalls = calls.filter((call) => call[1]?.path)
+          expect(pathFilteredCalls.length).toBeGreaterThan(0)
+        })
+      })
+
+      describe('infrastructure returns undefined when not configured', () => {
+        it('returns undefined for infrastructureCommitHashes when no infrastructure config', async () => {
+          const git = createMockGitClient({
+            commits: [{ message: 'feat: feature', hash: 'commit1' }],
+          })
+          const context = createMockContext({
+            git,
+            state: { isFirstRelease: true },
+            // No infrastructure config at all
+          })
+          const step = createAnalyzeCommitsStep()
+
+          const result = await step.execute(context)
+
+          expect(result.status).toBe('success')
+          // Classification context should not have infrastructureCommitHashes set
+          // This is indirectly tested by verifying no infrastructure-related logs
+          const logger = context.logger as jest.Mocked<Logger>
+          const debugCalls = logger.debug.mock.calls.map((call) => call[0])
+          const infraLogs = debugCalls.filter((msg: string) => msg.includes('infrastructure') || msg.includes('Infrastructure'))
+          expect(infraLogs).toHaveLength(0)
+        })
+      })
     })
   })
 })

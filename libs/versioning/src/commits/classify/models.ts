@@ -69,8 +69,11 @@ export interface ClassificationContext {
   /** Map of dependency name to set of commit hashes touching that dependency */
   readonly dependencyCommitMap?: ReadonlyMap<string, ReadonlySet<string>>
 
-  /** Infrastructure paths to consider as indirect-infra */
-  readonly infrastructurePaths?: readonly string[]
+  /**
+   * Set of commit hashes that touched infrastructure paths.
+   * These commits will be classified as 'indirect-infra'.
+   */
+  readonly infrastructureCommitHashes?: ReadonlySet<string>
 
   /** Scopes to always exclude */
   readonly excludeScopes?: readonly string[]

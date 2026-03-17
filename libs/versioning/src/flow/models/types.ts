@@ -1,7 +1,7 @@
 import type { Logger } from '@hyperfrontend/logging'
 import type { Tree } from '@hyperfrontend/project-scope'
 import type { ChangelogEntry } from '../../changelog/models/entry'
-import type { ClassificationResult } from '../../commits/classify'
+import type { ClassificationResult, InfrastructureConfig, InfrastructureMatcher } from '../../commits/classify'
 import type { ConventionalCommit } from '../../commits/models/conventional'
 import type { GitClient } from '../../git/factory'
 import type { Registry } from '../../registry/models/registry'
@@ -106,23 +106,70 @@ export interface ScopeFilteringConfig {
   readonly trackDependencyChanges?: boolean
 
   /**
-   * Infrastructure paths that affect all packages.
-   * Commits touching these paths may be included as indirect-infra.
+   * Infrastructure tracking configuration.
    *
-   * @example ['tools/package/', '.github/workflows/']
+   * Defines how to detect commits that affect build/tooling infrastructure.
+   * Supports multiple detection methods:
+   * - `paths`: File paths to track via git queries
+   * - `scopes`: Conventional commit scopes to match
+   * - `matcher`: Custom matching logic
+   *
+   * All methods are combined with OR logic.
+   *
+   * @example
+   * // Simple path-based
+   * infrastructure: { paths: ['tools/', '.github/workflows/'] }
+   *
+   * @example
+   * // Scope-based
+   * infrastructure: { scopes: ['ci', 'build', 'tooling'] }
+   *
+   * @example
+   * // Composable matcher
+   * import { anyOf, scopeMatcher, scopePrefixMatcher } from '@hyperfrontend/versioning'
+   * infrastructure: {
+   *   paths: ['tools/'],
+   *   matcher: anyOf(
+   *     scopeMatcher(['ci', 'build']),
+   *     scopePrefixMatcher(['tool-'])
+   *   )
+   * }
    */
-  readonly infrastructurePaths?: readonly string[]
+  readonly infrastructure?: InfrastructureConfig
+
+  /**
+   * Custom infrastructure matcher function.
+   *
+   * Provides full programmatic control over infrastructure detection.
+   * Takes precedence over `infrastructure` config if both provided.
+   *
+   * @example
+   * infrastructureMatcher: (ctx) => {
+   *   // Match CI scopes
+   *   if (ctx.scope === 'ci' || ctx.scope === 'build') return true
+   *   // Match tool-prefixed scopes
+   *   if (ctx.scope?.startsWith('tool-')) return true
+   *   // Match workspace commits during major refactors
+   *   if (ctx.message.includes('[infra]')) return true
+   *   return false
+   * }
+   */
+  readonly infrastructureMatcher?: InfrastructureMatcher
 }
 
 /**
  * Default scope filtering configuration.
  */
-export const DEFAULT_SCOPE_FILTERING_CONFIG: Required<ScopeFilteringConfig> = {
+export const DEFAULT_SCOPE_FILTERING_CONFIG: Required<Omit<ScopeFilteringConfig, 'infrastructure' | 'infrastructureMatcher'>> & {
+  infrastructure: undefined
+  infrastructureMatcher: undefined
+} = {
   strategy: 'hybrid',
   includeScopes: [],
   excludeScopes: ['release', 'deps'],
   trackDependencyChanges: false,
-  infrastructurePaths: [],
+  infrastructure: undefined,
+  infrastructureMatcher: undefined,
 }
 
 /**
@@ -261,10 +308,6 @@ export interface FlowContext {
   /** Accumulated state from previous steps (mutable reference) */
   state: FlowState
 }
-
-// ============================================================================
-// Step Results
-// ============================================================================
 
 /**
  * Result of a single step execution.

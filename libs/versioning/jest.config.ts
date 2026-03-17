@@ -9,10 +9,10 @@ export default <Config>{
   coveragePathIgnorePatterns: ['registry/models/registry.ts', 'registry/npm/client.ts', 'registry/factory.ts'],
   coverageThreshold: {
     global: {
-      branches: 92,
-      functions: 96,
-      lines: 97,
-      statements: 97,
+      branches: 94,
+      functions: 99,
+      lines: 98,
+      statements: 98,
     },
   },
 }
