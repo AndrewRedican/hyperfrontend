@@ -90,6 +90,7 @@ export default async function versionExecutor(options: VersionExecutorSchema, co
     trackDeps: options.trackDeps,
     tagFormat: `${tagPrefix}\${version}`,
     releaseAs: options.releaseAs,
+    repository: options.repository ?? 'inferred', // Default to auto-detect for compare URLs
   }
 
   logger.debug(

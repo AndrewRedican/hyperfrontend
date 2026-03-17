@@ -1,3 +1,5 @@
+import type { FlowConfig } from '@hyperfrontend/versioning'
+
 export interface VersionExecutorSchema {
   /** See what commands would be run, without committing to git or updating files. */
   dryRun?: boolean
@@ -26,4 +28,12 @@ export interface VersionExecutorSchema {
   verbose?: boolean
   /** Suppress all non-error output. */
   quiet?: boolean
+  /**
+   * Repository resolution for changelog compare URLs.
+   *
+   * - `'disabled'`: No compare URLs generated
+   * - `'inferred'`: Auto-detect from package.json or git remote (default)
+   * - Object: Fine-grained control with mode and options
+   */
+  repository?: FlowConfig['repository']
 }
