@@ -23,19 +23,19 @@ All notable changes to this project will be documented in this file.
 - **lib-versioning:** remove unused %h format causing git log field misalignment
 - **lib-immutable-api-utils:** rename safe object to prevent variable shadowing on cjs module init
 
-## 0.0.4
+## 0.0.4 - 2026-03-08
 
 ### Bug Fixes
 
 - **lib-state-machine:** correct package exports and main entrypoint ([81c47c8](https://github.com/AndrewRedican/hyperfrontend/commit/81c47c8a7d5e5ef36b5ec5c64f2c7cc1f0bea18d))
 
-## 0.0.3
+## 0.0.3 - 2026-03-02
 
 ### Bug Fixes
 
 - **lib-state-machine:** correct package exports and main entrypoint ([81c47c8](https://github.com/AndrewRedican/hyperfrontend/commit/81c47c8a7d5e5ef36b5ec5c64f2c7cc1f0bea18d))
 
-## 0.0.2
+## 0.0.2 - 2026-02-26
 
 
 ## 0.0.1 - 2026-02-15
