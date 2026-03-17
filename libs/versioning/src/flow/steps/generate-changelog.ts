@@ -5,6 +5,7 @@ import type { FlowStep } from '../models/step'
 import { createDate } from '@hyperfrontend/immutable-api-utils/built-in-copy/date'
 import { serializeChangelog, parseChangelog, addEntry } from '../../changelog'
 import { createChangelogEntry, createChangelogItem, createChangelogSection } from '../../changelog/models/entry'
+import { createCompareUrl } from '../../repository/url'
 import { createStep, createSkippedResult } from '../models/step'
 
 export const GENERATE_CHANGELOG_STEP_ID = 'generate-changelog'
@@ -101,9 +102,24 @@ export function createGenerateChangelogStep(): FlowStep {
 
       // Handle case with no commits (e.g., first release)
       if (!commits || commits.length === 0) {
+        // Generate compare URL if repository config and last release tag exist
+        // (typically won't exist for true first release, but may for version reset)
+        let compareUrl: string | undefined
+        if (state.repositoryConfig && state.lastReleaseTag) {
+          const tagFormat = config.tagFormat ?? '${projectName}@${version}'
+          const toTag = tagFormat.replace('${projectName}', ctx.projectName).replace('${version}', nextVersion)
+          compareUrl =
+            createCompareUrl({
+              repository: state.repositoryConfig,
+              fromTag: state.lastReleaseTag,
+              toTag,
+            }) ?? undefined
+        }
+
         const entry = createChangelogEntry(nextVersion, {
           date: createDate().toISOString().split('T')[0],
           sections: [createChangelogSection('features', 'Features', [createChangelogItem('Initial release')])],
+          compareUrl,
         })
 
         return {
@@ -155,10 +171,24 @@ export function createGenerateChangelogStep(): FlowStep {
         }
       }
 
+      // Generate compare URL if repository config and last release tag exist
+      let compareUrl: string | undefined
+      if (state.repositoryConfig && state.lastReleaseTag) {
+        const tagFormat = config.tagFormat ?? '${projectName}@${version}'
+        const toTag = tagFormat.replace('${projectName}', ctx.projectName).replace('${version}', nextVersion)
+        compareUrl =
+          createCompareUrl({
+            repository: state.repositoryConfig,
+            fromTag: state.lastReleaseTag,
+            toTag,
+          }) ?? undefined
+      }
+
       // Create the entry
       const entry = createChangelogEntry(nextVersion, {
         date: createDate().toISOString().split('T')[0],
         sections,
+        compareUrl,
       })
 
       return {

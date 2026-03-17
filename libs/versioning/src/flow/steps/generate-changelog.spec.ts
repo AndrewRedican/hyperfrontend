@@ -1,10 +1,10 @@
 import type { Logger } from '@hyperfrontend/logging'
 import type { Tree } from '@hyperfrontend/project-scope'
-
 import type { ChangelogEntry, ChangelogItem } from '../../changelog/models/entry'
 import type { ConventionalCommit } from '../../commits/models/conventional'
 import type { GitClient } from '../../git/factory'
 import type { Registry } from '../../registry/models/registry'
+import type { RepositoryConfig } from '../../repository/models'
 import type { FlowConfig, FlowContext, FlowState } from '../models/types'
 
 import { createGenerateChangelogStep, createWriteChangelogStep, GENERATE_CHANGELOG_STEP_ID } from './generate-changelog'
@@ -162,10 +162,6 @@ function createMockContext(state: Partial<FlowState> = {}, config: Partial<FlowC
     state: { ...state },
   }
 }
-
-// ============================================================================
-// Tests: createGenerateChangelogStep
-// ============================================================================
 
 describe('Generate Changelog Step', () => {
   describe('createGenerateChangelogStep', () => {
@@ -587,11 +583,212 @@ describe('Generate Changelog Step', () => {
       expect(result.message).toMatch(/\d+ commit\(s\)/)
     })
   })
-})
 
-// ============================================================================
-// Tests: createWriteChangelogStep
-// ============================================================================
+  describe('execute - compare URL generation', () => {
+    const createGitHubConfig = (): RepositoryConfig => ({
+      platform: 'github',
+      baseUrl: 'https://github.com/owner/repo',
+    })
+
+    const createGitLabConfig = (): RepositoryConfig => ({
+      platform: 'gitlab',
+      baseUrl: 'https://gitlab.com/group/project',
+    })
+
+    const createBitbucketConfig = (): RepositoryConfig => ({
+      platform: 'bitbucket',
+      baseUrl: 'https://bitbucket.org/owner/repo',
+    })
+
+    it('does not include compareUrl when repositoryConfig is not present', async () => {
+      const step = createGenerateChangelogStep()
+      const ctx = createMockContext({
+        nextVersion: '1.0.0',
+        bumpType: 'minor',
+        lastReleaseTag: 'lib-test@0.9.0',
+        commits: [createMockCommit({ type: 'feat', subject: 'new feature' })],
+      })
+
+      const result = await step.execute(ctx)
+
+      expect(result.status).toBe('success')
+      expect(result.stateUpdates?.changelogEntry.compareUrl).toBeUndefined()
+    })
+
+    it('does not include compareUrl when lastReleaseTag is not present', async () => {
+      const step = createGenerateChangelogStep()
+      const ctx = createMockContext({
+        nextVersion: '1.0.0',
+        bumpType: 'minor',
+        repositoryConfig: createGitHubConfig(),
+        commits: [createMockCommit({ type: 'feat', subject: 'new feature' })],
+      })
+
+      const result = await step.execute(ctx)
+
+      expect(result.status).toBe('success')
+      expect(result.stateUpdates?.changelogEntry.compareUrl).toBeUndefined()
+    })
+
+    it('does not include compareUrl when lastReleaseTag is null', async () => {
+      const step = createGenerateChangelogStep()
+      const ctx = createMockContext({
+        nextVersion: '1.0.0',
+        bumpType: 'minor',
+        repositoryConfig: createGitHubConfig(),
+        lastReleaseTag: null,
+        commits: [createMockCommit({ type: 'feat', subject: 'new feature' })],
+      })
+
+      const result = await step.execute(ctx)
+
+      expect(result.status).toBe('success')
+      expect(result.stateUpdates?.changelogEntry.compareUrl).toBeUndefined()
+    })
+
+    it('generates GitHub compareUrl when repositoryConfig and lastReleaseTag exist', async () => {
+      const step = createGenerateChangelogStep()
+      const ctx = createMockContext({
+        nextVersion: '1.1.0',
+        bumpType: 'minor',
+        repositoryConfig: createGitHubConfig(),
+        lastReleaseTag: 'lib-test@1.0.0',
+        commits: [createMockCommit({ type: 'feat', subject: 'new feature' })],
+      })
+
+      const result = await step.execute(ctx)
+
+      expect(result.status).toBe('success')
+      expect(result.stateUpdates?.changelogEntry.compareUrl).toBe('https://github.com/owner/repo/compare/lib-test@1.0.0...lib-test@1.1.0')
+    })
+
+    it('generates GitLab compareUrl with /-/ prefix', async () => {
+      const step = createGenerateChangelogStep()
+      const ctx = createMockContext({
+        nextVersion: '2.0.0',
+        bumpType: 'major',
+        repositoryConfig: createGitLabConfig(),
+        lastReleaseTag: 'lib-test@1.0.0',
+        commits: [createMockCommit({ type: 'feat', subject: 'breaking change', breaking: true })],
+      })
+
+      const result = await step.execute(ctx)
+
+      expect(result.status).toBe('success')
+      expect(result.stateUpdates?.changelogEntry.compareUrl).toBe(
+        'https://gitlab.com/group/project/-/compare/lib-test@1.0.0...lib-test@2.0.0'
+      )
+    })
+
+    it('generates Bitbucket compareUrl with reversed order and two dots', async () => {
+      const step = createGenerateChangelogStep()
+      const ctx = createMockContext({
+        nextVersion: '1.0.1',
+        bumpType: 'patch',
+        repositoryConfig: createBitbucketConfig(),
+        lastReleaseTag: 'lib-test@1.0.0',
+        commits: [createMockCommit({ type: 'fix', subject: 'bug fix' })],
+      })
+
+      const result = await step.execute(ctx)
+
+      expect(result.status).toBe('success')
+      // Bitbucket uses reversed order (toTag..fromTag) with two dots
+      expect(result.stateUpdates?.changelogEntry.compareUrl).toBe('https://bitbucket.org/owner/repo/compare/lib-test@1.0.1..lib-test@1.0.0')
+    })
+
+    it('uses default tagFormat when not specified', async () => {
+      const step = createGenerateChangelogStep()
+      const ctx = createMockContext(
+        {
+          nextVersion: '1.0.0',
+          bumpType: 'minor',
+          repositoryConfig: createGitHubConfig(),
+          lastReleaseTag: 'lib-test@0.9.0',
+          commits: [createMockCommit({ type: 'feat', subject: 'feature' })],
+        },
+        {} // No tagFormat in config
+      )
+
+      const result = await step.execute(ctx)
+
+      // Should use default format: ${projectName}@${version}
+      expect(result.stateUpdates?.changelogEntry.compareUrl).toBe('https://github.com/owner/repo/compare/lib-test@0.9.0...lib-test@1.0.0')
+    })
+
+    it('uses custom tagFormat when specified', async () => {
+      const step = createGenerateChangelogStep()
+      const ctx = createMockContext(
+        {
+          nextVersion: '1.0.0',
+          bumpType: 'minor',
+          repositoryConfig: createGitHubConfig(),
+          lastReleaseTag: 'v0.9.0',
+          commits: [createMockCommit({ type: 'feat', subject: 'feature' })],
+        },
+        { tagFormat: 'v${version}' }
+      )
+
+      const result = await step.execute(ctx)
+
+      expect(result.stateUpdates?.changelogEntry.compareUrl).toBe('https://github.com/owner/repo/compare/v0.9.0...v1.0.0')
+    })
+
+    it('handles initial release path with repositoryConfig but no commits', async () => {
+      const step = createGenerateChangelogStep()
+      const ctx = createMockContext({
+        nextVersion: '0.1.0',
+        bumpType: 'minor',
+        repositoryConfig: createGitHubConfig(),
+        // No lastReleaseTag for initial release
+        commits: [],
+      })
+
+      const result = await step.execute(ctx)
+
+      expect(result.status).toBe('success')
+      expect(result.message).toContain('initial release')
+      // No compareUrl for true initial release (no lastReleaseTag)
+      expect(result.stateUpdates?.changelogEntry.compareUrl).toBeUndefined()
+    })
+
+    it('generates compareUrl for version reset scenario (empty commits but has lastReleaseTag)', async () => {
+      const step = createGenerateChangelogStep()
+      const ctx = createMockContext({
+        nextVersion: '1.0.0',
+        bumpType: 'major',
+        repositoryConfig: createGitHubConfig(),
+        lastReleaseTag: 'lib-test@0.9.0',
+        commits: [], // Empty commits but has lastReleaseTag (version reset scenario)
+      })
+
+      const result = await step.execute(ctx)
+
+      expect(result.status).toBe('success')
+      expect(result.stateUpdates?.changelogEntry.compareUrl).toBe('https://github.com/owner/repo/compare/lib-test@0.9.0...lib-test@1.0.0')
+    })
+
+    it('uses custom formatter when platform is custom', async () => {
+      const step = createGenerateChangelogStep()
+      const customConfig: RepositoryConfig = {
+        platform: 'custom',
+        baseUrl: 'https://my-git.internal/repo',
+        formatCompareUrl: (from, to) => `https://my-git.internal/diff/${from}/${to}`,
+      }
+      const ctx = createMockContext({
+        nextVersion: '1.0.0',
+        bumpType: 'minor',
+        repositoryConfig: customConfig,
+        lastReleaseTag: 'lib-test@0.9.0',
+        commits: [createMockCommit({ type: 'feat', subject: 'feature' })],
+      })
+
+      const result = await step.execute(ctx)
+
+      expect(result.stateUpdates?.changelogEntry.compareUrl).toBe('https://my-git.internal/diff/lib-test@0.9.0/lib-test@1.0.0')
+    })
+  })
+})
 
 describe('Write Changelog Step', () => {
   describe('createWriteChangelogStep', () => {
