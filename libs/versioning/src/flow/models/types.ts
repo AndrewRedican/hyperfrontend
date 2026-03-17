@@ -5,6 +5,7 @@ import type { ChangelogEntry } from '../../changelog/models/entry'
 import type { ConventionalCommit } from '../../commits/models/conventional'
 import type { GitClient } from '../../git/factory'
 import type { Registry } from '../../registry/models/registry'
+import type { RepositoryConfig, RepositoryResolution } from '../../repository/models'
 import type { BumpType } from '../../semver/models/version'
 
 // Re-export Logger from @hyperfrontend/logging for consumers
@@ -51,6 +52,9 @@ export interface FlowState {
 
   /** Whether this is a first release (no prior versions) */
   readonly isFirstRelease?: boolean
+
+  /** Repository configuration for compare URL generation */
+  readonly repositoryConfig?: RepositoryConfig
 
   /** Additional custom state for extensibility */
   readonly [key: string]: unknown
@@ -111,12 +115,23 @@ export interface FlowConfig {
 
   /** Force a specific bump type, bypassing commit analysis */
   readonly releaseAs?: 'major' | 'minor' | 'patch'
+
+  /**
+   * Repository resolution configuration for compare URL generation.
+   *
+   * Controls how repository information is resolved:
+   * - `'disabled'`: No compare URLs generated (default, backward compatible)
+   * - `'inferred'`: Auto-detect from package.json or git remote
+   * - `RepositoryResolution`: Fine-grained control with explicit mode and options
+   * - `RepositoryConfig`: Direct repository configuration
+   */
+  readonly repository?: 'disabled' | 'inferred' | RepositoryResolution | RepositoryConfig
 }
 
 /**
  * Default flow configuration values.
  */
-export const DEFAULT_FLOW_CONFIG: Required<FlowConfig> = {
+export const DEFAULT_FLOW_CONFIG: Required<Omit<FlowConfig, 'repository'>> & Pick<FlowConfig, 'repository'> = {
   preset: 'conventional',
   releaseTypes: ['feat', 'fix', 'perf', 'revert'],
   minorTypes: ['feat'],
@@ -133,6 +148,7 @@ export const DEFAULT_FLOW_CONFIG: Required<FlowConfig> = {
   allowPrerelease: false,
   prereleaseId: 'alpha',
   releaseAs: undefined,
+  repository: undefined,
 }
 
 // ============================================================================
