@@ -146,6 +146,52 @@ describe('parseVersionFromHeading', () => {
       expect(result.version).toBe('Unreleased')
     })
   })
+
+  describe('jscutlery/semver format compatibility', () => {
+    it('parses version with inline URL and trailing date', () => {
+      const heading = '[0.0.4](https://github.com/owner/repo/compare/lib@0.0.3...lib@0.0.4) (2026-03-08)'
+      const result = parseVersionFromHeading(heading)
+
+      expect(result.version).toBe('0.0.4')
+      expect(result.date).toBe('2026-03-08')
+      expect(result.compareUrl).toBe('https://github.com/owner/repo/compare/lib@0.0.3...lib@0.0.4')
+    })
+
+    it('parses version with inline URL but no date', () => {
+      const heading = '[0.0.4](https://github.com/owner/repo/compare/v0.0.3...v0.0.4)'
+      const result = parseVersionFromHeading(heading)
+
+      expect(result.version).toBe('0.0.4')
+      expect(result.compareUrl).toBe('https://github.com/owner/repo/compare/v0.0.3...v0.0.4')
+      expect(result.date).toBeNull()
+    })
+
+    it('parses version with parenthetical date only (no URL)', () => {
+      const heading = '0.0.1 (2026-02-15)'
+      const result = parseVersionFromHeading(heading)
+
+      expect(result.version).toBe('0.0.1')
+      expect(result.date).toBe('2026-02-15')
+      expect(result.compareUrl).toBeUndefined()
+    })
+
+    it('handles nested parentheses in URL', () => {
+      const heading = '[1.0.0](https://github.com/owner/repo/compare/v0.9.0...v1.0.0) (2026-01-15)'
+      const result = parseVersionFromHeading(heading)
+
+      expect(result.compareUrl).toBe('https://github.com/owner/repo/compare/v0.9.0...v1.0.0')
+      expect(result.date).toBe('2026-01-15')
+    })
+
+    it('handles version prefix in URL with @ scope', () => {
+      const heading = '[0.0.2](https://github.com/AndrewRedican/hyperfrontend/compare/lib-logging@0.0.1...lib-logging@0.0.2) (2026-02-26)'
+      const result = parseVersionFromHeading(heading)
+
+      expect(result.version).toBe('0.0.2')
+      expect(result.date).toBe('2026-02-26')
+      expect(result.compareUrl).toBe('https://github.com/AndrewRedican/hyperfrontend/compare/lib-logging@0.0.1...lib-logging@0.0.2')
+    })
+  })
 })
 
 describe('parseScopeFromItem', () => {
