@@ -165,6 +165,7 @@
       "@hyperfrontend/versioning/repository": ["libs/versioning/src/repository/index.ts"],
       "@hyperfrontend/versioning/repository/models": ["libs/versioning/src/repository/models/index.ts"],
       "@hyperfrontend/versioning/repository/parse": ["libs/versioning/src/repository/parse/index.ts"],
+      "@hyperfrontend/versioning/repository/url": ["libs/versioning/src/repository/url/index.ts"],
       "@hyperfrontend/versioning/semver": ["libs/versioning/src/semver/index.ts"],
       "@hyperfrontend/versioning/semver/compare": ["libs/versioning/src/semver/compare/index.ts"],
       "@hyperfrontend/versioning/semver/format": ["libs/versioning/src/semver/format/index.ts"],
