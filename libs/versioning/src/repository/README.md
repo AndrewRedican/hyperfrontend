@@ -86,12 +86,12 @@ flowchart TB
 
 ## Supported Platforms
 
-| Platform     | Compare URL Format                                    |
-| ------------ | ----------------------------------------------------- |
-| GitHub       | `{baseUrl}/compare/{fromTag}...{toTag}`               |
-| GitLab       | `{baseUrl}/-/compare/{fromTag}...{toTag}`             |
-| Bitbucket    | `{baseUrl}/compare/{toTag}..{fromTag}` (reversed)     |
-| Azure DevOps | `{baseUrl}?version=GT{toTag}&compareVersion=GT{from}` |
+| Platform     | Compare URL Format                                       |
+| ------------ | -------------------------------------------------------- |
+| GitHub       | `{baseUrl}/compare/{fromCommit}...{toCommit}`            |
+| GitLab       | `{baseUrl}/-/compare/{fromCommit}...{toCommit}`          |
+| Bitbucket    | `{baseUrl}/compare/{toCommit}..{fromCommit}` (reversed)  |
+| Azure DevOps | `{baseUrl}?version=GT{toCommit}&compareVersion=GT{from}` |
 
 ## Usage Examples
 

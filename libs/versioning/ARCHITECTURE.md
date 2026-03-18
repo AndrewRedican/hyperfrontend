@@ -137,7 +137,7 @@ sequenceDiagram
     Flow->>Workspace: discoverProjects()
     Workspace-->>Flow: projects[]
 
-    Flow->>Git: getCommitsSince(lastTag)
+    Flow->>Git: getCommitsSince(publishedCommit)
     Git-->>Flow: commits[]
 
     Flow->>Commits: parseConventionalCommits(commits)

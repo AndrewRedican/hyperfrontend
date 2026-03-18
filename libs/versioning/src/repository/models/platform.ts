@@ -4,10 +4,10 @@ import { createMap } from '@hyperfrontend/immutable-api-utils/built-in-copy/map'
  * Known git hosting platforms with built-in compare URL support.
  *
  * Each platform has a specific URL format for compare links:
- * - `github`: `{baseUrl}/compare/{fromTag}...{toTag}`
- * - `gitlab`: `{baseUrl}/-/compare/{fromTag}...{toTag}`
- * - `bitbucket`: `{baseUrl}/compare/{toTag}..{fromTag}` (reversed order)
- * - `azure-devops`: `{baseUrl}/compare?version=GT{toTag}&compareVersion=GT{fromTag}`
+ * - `github`: `{baseUrl}/compare/{fromCommit}...{toCommit}`
+ * - `gitlab`: `{baseUrl}/-/compare/{fromCommit}...{toCommit}`
+ * - `bitbucket`: `{baseUrl}/compare/{toCommit}..{fromCommit}` (reversed order)
+ * - `azure-devops`: `{baseUrl}/compare?version=GT{toCommit}&compareVersion=GT{fromCommit}`
  */
 export type KnownPlatform = 'github' | 'gitlab' | 'bitbucket' | 'azure-devops'
 

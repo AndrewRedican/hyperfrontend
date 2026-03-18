@@ -4,8 +4,8 @@ import { createError } from '@hyperfrontend/immutable-api-utils/built-in-copy/er
 /**
  * Custom compare URL formatter function.
  *
- * @param fromTag - The source tag for comparison (older version)
- * @param toTag - The target tag for comparison (newer version)
+ * @param fromCommit - The source commit hash for comparison (older version)
+ * @param toCommit - The target commit hash for comparison (newer version)
  * @returns Full compare URL string
  *
  * @example
@@ -14,7 +14,7 @@ import { createError } from '@hyperfrontend/immutable-api-utils/built-in-copy/er
  *   `https://my-git.internal/diff/${from}/${to}`
  * ```
  */
-export type CompareUrlFormatter = (fromTag: string, toTag: string) => string
+export type CompareUrlFormatter = (fromCommit: string, toCommit: string) => string
 
 /**
  * Repository configuration for compare URL generation.
