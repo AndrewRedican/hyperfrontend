@@ -88,7 +88,7 @@ The flow executes these steps:
 | Step               | Action                           | State Updates                        |
 | ------------------ | -------------------------------- | ------------------------------------ |
 | fetch-registry     | `npm view` for published version | `publishedVersion`, `currentVersion` |
-| analyze-commits    | Parse commits since last release | `commits`, `lastReleaseTag`          |
+| analyze-commits    | Parse commits since last release | `commits`, `effectiveBaseCommit`     |
 | calculate-bump     | Determine major/minor/patch      | `bumpType`, `nextVersion`            |
 | check-idempotency  | Skip if `nextVersion` on npm     | Sets `bumpType: 'none'` if published |
 | generate-changelog | Build entry from commits         | `changelogEntry`                     |
