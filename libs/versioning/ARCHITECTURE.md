@@ -214,6 +214,55 @@ flowchart TD
     breaking2 --> result
 ```
 
+### Commit Classification Pipeline
+
+When generating changelogs for monorepo projects, commits must be classified to determine which project(s) they belong to:
+
+```mermaid
+flowchart TB
+    input["Raw Commits\n(git log)"]
+
+    subgraph engine["Commit Classification Engine"]
+        direction TB
+        subgraph filters["Filtering Strategies"]
+            scope["Scope-Based\nFiltering"]
+            file["File-Based\nFiltering"]
+        end
+        scope --> matrix
+        file --> matrix
+        matrix["Classification\nDecision Matrix"]
+    end
+
+    input --> engine
+
+    matrix --> direct
+    matrix --> indirect
+    matrix --> excluded
+
+    subgraph direct["DIRECT"]
+        d1["Matching scope OR\ntouches project files"]
+        d2["Scope: OMITTED\n(redundant)"]
+    end
+
+    subgraph indirect["INDIRECT"]
+        i1["Dependency changes OR\ninfrastructure changes"]
+        i2["Scope: PRESERVED\n(context)"]
+    end
+
+    subgraph excluded["EXCLUDED"]
+        e1["Unrelated to project"]
+        e2["Not in CHANGELOG"]
+    end
+
+    direct --> changelog["Project CHANGELOG"]
+    indirect --> changelog
+
+    style direct fill:#c8e6c9
+    style indirect fill:#fff3e0
+    style excluded fill:#ffcdd2
+    style engine fill:#e3f2fd
+```
+
 ---
 
 ## Core Types
