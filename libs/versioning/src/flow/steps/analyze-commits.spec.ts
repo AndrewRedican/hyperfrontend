@@ -1207,6 +1207,144 @@ describe('analyze-commits step', () => {
           expect(infraLogs).toHaveLength(0)
         })
       })
+
+      describe('infrastructure path detection with existing release', () => {
+        it('uses getCommitsSince for infrastructure paths when tag exists', async () => {
+          const baseCommits = [
+            { message: 'feat(ci): update ci', hash: 'ci-commit' },
+            { message: 'feat(lib-test): feature', hash: 'feature-commit' },
+          ]
+          const getCommitsSinceMock = jest.fn((tag: string, opts?: { path?: string }) => {
+            if (opts?.path === 'tools/') {
+              return [{ message: 'feat(ci): update ci', hash: 'ci-commit' }]
+            }
+            return baseCommits
+          })
+          const git = {
+            ...createMockGitClient({
+              commits: baseCommits,
+              packageTags: [{ name: '@test/pkg@1.0.0', hash: 'tag-hash' }],
+            }),
+            getCommitsSince: getCommitsSinceMock,
+          } as unknown as GitClient
+          const logger = createMockLogger()
+          const context = createMockContext({
+            git,
+            logger,
+            state: { isFirstRelease: false },
+            config: {
+              scopeFiltering: {
+                infrastructure: {
+                  paths: ['tools/'],
+                },
+              },
+            },
+          })
+          const step = createAnalyzeCommitsStep()
+
+          await step.execute(context)
+
+          // Should call getCommitsSince with infrastructure path
+          type CommitsSinceCall = [tag: string, opts?: { path?: string }]
+          const calls = getCommitsSinceMock.mock.calls as unknown as CommitsSinceCall[]
+          const infraPathCalls = calls.filter((call) => call[1]?.path === 'tools/')
+          expect(infraPathCalls.length).toBeGreaterThan(0)
+          expect(logger.debug).toHaveBeenCalledWith(expect.stringContaining('infrastructure paths'))
+        })
+      })
+
+      describe('infrastructure path with no matching commits', () => {
+        it('logs zero commits when infrastructure paths configured but no matches', async () => {
+          const baseCommits = [{ message: 'feat(lib-test): feature', hash: 'feature-commit' }]
+          const git = {
+            ...createMockGitClient({ commits: baseCommits }),
+            getCommitLog: (opts?: { maxCount?: number; path?: string }) => {
+              // Infrastructure path returns no commits
+              if (opts?.path === 'tools/') {
+                return []
+              }
+              if (opts?.maxCount) {
+                return baseCommits.slice(0, opts.maxCount)
+              }
+              return baseCommits
+            },
+          } as unknown as GitClient
+          const logger = createMockLogger()
+          const context = createMockContext({
+            git,
+            logger,
+            state: { isFirstRelease: true },
+            config: {
+              scopeFiltering: {
+                infrastructure: {
+                  paths: ['tools/'],
+                },
+              },
+            },
+          })
+          const step = createAnalyzeCommitsStep()
+
+          await step.execute(context)
+
+          // Should log 0 commits for infrastructure paths
+          expect(logger.debug).toHaveBeenCalledWith(expect.stringContaining('Found 0 commits touching infrastructure paths'))
+        })
+      })
+
+      describe('dependency tracking (Phase 4)', () => {
+        it('skips dependency map when trackDependencyChanges is false', async () => {
+          const git = createMockGitClient({
+            commits: [{ message: 'feat: feature', hash: 'commit1' }],
+          })
+          const logger = createMockLogger()
+          const context = createMockContext({
+            git,
+            logger,
+            state: { isFirstRelease: true },
+            config: {
+              scopeFiltering: {
+                trackDependencyChanges: false,
+              },
+            },
+          })
+          const step = createAnalyzeCommitsStep()
+
+          await step.execute(context)
+
+          // Should NOT log about dependencies
+          const debugCalls = (logger.debug as jest.Mock).mock.calls.map((call) => call[0])
+          const depLogs = debugCalls.filter((msg: string) => msg.includes('dependencies') || msg.includes('Dependency'))
+          expect(depLogs).toHaveLength(0)
+        })
+
+        it('attempts dependency map build when trackDependencyChanges is true', async () => {
+          const git = createMockGitClient({
+            commits: [{ message: 'feat: feature', hash: 'commit1' }],
+          })
+          const logger = createMockLogger()
+          const context = createMockContext({
+            git,
+            logger,
+            state: { isFirstRelease: true },
+            config: {
+              scopeFiltering: {
+                trackDependencyChanges: true,
+              },
+            },
+          })
+          const step = createAnalyzeCommitsStep()
+
+          await step.execute(context)
+
+          // Should log about dependency discovery (may fail gracefully but will log)
+          const debugCalls = (logger.debug as jest.Mock).mock.calls.map((call) => call[0])
+          const depLogs = debugCalls.filter(
+            (msg: string) => msg.includes('dependencies') || msg.includes('Dependency') || msg.includes('dependency')
+          )
+          // Either logs "No dependencies found" or "Failed to build dependency map" or found deps
+          expect(depLogs.length).toBeGreaterThan(0)
+        })
+      })
     })
   })
 })

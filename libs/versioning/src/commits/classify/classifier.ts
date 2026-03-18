@@ -60,7 +60,7 @@ export function classifyCommit(input: CommitWithRaw, context: ClassificationCont
 
   // Priority 3: Indirect dependency match
   if (hasScope && dependencyCommitMap) {
-    const dependencyPath = findDependencyPath(scope, dependencyCommitMap)
+    const dependencyPath = findDependencyPath(scope, raw.hash, dependencyCommitMap)
     if (dependencyPath) {
       return createClassifiedCommit(commit, raw, 'indirect-dependency', { dependencyPath })
     }
@@ -123,20 +123,35 @@ export function classifyCommits(commits: readonly CommitWithRaw[], context: Clas
 }
 
 /**
- * Finds a dependency path for a given scope.
+ * Finds a dependency path for a given scope and commit hash.
+ *
+ * Verifies both:
+ * 1. The scope matches a dependency name (or variation)
+ * 2. The commit hash is in that dependency's commit set
+ *
+ * This prevents false positives from mislabeled commits.
  *
  * @param scope - The commit scope
+ * @param hash - The commit hash to verify
  * @param dependencyCommitMap - Map of dependencies to their commit hashes
- * @returns Dependency path if found, undefined otherwise
+ * @returns Dependency path if found and hash verified, undefined otherwise
  */
-function findDependencyPath(scope: string, dependencyCommitMap: ReadonlyMap<string, ReadonlySet<string>>): readonly string[] | undefined {
+function findDependencyPath(
+  scope: string,
+  hash: string,
+  dependencyCommitMap: ReadonlyMap<string, ReadonlySet<string>>
+): readonly string[] | undefined {
   const normalizedScope = scope.toLowerCase()
 
-  for (const [depName] of dependencyCommitMap) {
+  for (const [depName, depHashes] of dependencyCommitMap) {
     // Check if scope matches dependency name or variations
     const depVariations = getDependencyVariations(depName)
     if (depVariations.some((v) => v.toLowerCase() === normalizedScope)) {
-      return [depName]
+      // CRITICAL: Verify the commit actually touched this dependency's files
+      // This prevents false positives from mislabeled commits
+      if (depHashes.has(hash)) {
+        return [depName]
+      }
     }
   }
 

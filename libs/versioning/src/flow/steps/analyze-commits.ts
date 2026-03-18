@@ -6,6 +6,8 @@ import type { FlowStep } from '../models/step'
 import type { ScopeFilteringConfig, ScopeFilteringStrategy } from '../models/types'
 import { createMap } from '@hyperfrontend/immutable-api-utils/built-in-copy/map'
 import { createSet } from '@hyperfrontend/immutable-api-utils/built-in-copy/set'
+// eslint-disable-next-line @nx/enforce-module-boundaries
+import { buildSimpleProjectGraph, discoverNxProjects } from '@hyperfrontend/project-scope/nx'
 import {
   buildInfrastructureMatcher,
   classifyCommits,
@@ -139,11 +141,18 @@ export function createAnalyzeCommitsStep(): FlowStep {
         logger
       )
 
+      // Build dependency commit map if tracking is enabled (Phase 4)
+      let dependencyCommitMap: ReadonlyMap<string, ReadonlySet<string>> | undefined
+      if (scopeFilteringConfig.trackDependencyChanges) {
+        dependencyCommitMap = buildDependencyCommitMap(git, workspaceRoot, projectName, lastReleaseTag, logger)
+      }
+
       // Create classification context
       const classificationContext = createClassificationContext(projectScopes, fileCommitHashes, {
         excludeScopes: scopeFilteringConfig.excludeScopes,
         includeScopes: scopeFilteringConfig.includeScopes,
         infrastructureCommitHashes,
+        dependencyCommitMap,
       })
 
       // Classify commits
@@ -380,4 +389,77 @@ function combineMatcher(a: InfrastructureMatcher | null, b: InfrastructureMatche
     return (ctx) => a(ctx) || b(ctx)
   }
   return a ?? b ?? null
+}
+
+/**
+ * Builds a map of dependency project names to the commit hashes that touched them.
+ *
+ * This enables accurate indirect-dependency classification by verifying that:
+ * 1. A commit's scope matches a dependency name
+ * 2. The commit actually touched that dependency's files (hash in set)
+ *
+ * Uses lib-project-scope for dependency discovery, avoiding hard NX dependency.
+ *
+ * @param git - Git client for querying commits by path
+ * @param workspaceRoot - Absolute path to workspace root
+ * @param projectName - Name of the project being versioned
+ * @param lastReleaseTag - Last release tag (null for first release)
+ * @param logger - Logger with debug method for output
+ * @param logger.debug - Debug logging function
+ * @returns Map of dependency names to commit hashes touching that dependency
+ */
+function buildDependencyCommitMap(
+  git: GitClient,
+  workspaceRoot: string,
+  projectName: string,
+  lastReleaseTag: string | null,
+  logger: { debug: (msg: string) => void }
+): ReadonlyMap<string, ReadonlySet<string>> {
+  let dependencyMap = createMap<string, ReadonlySet<string>>()
+
+  try {
+    // Discover all projects in workspace using lib-project-scope
+    // This gracefully handles NX and non-NX workspaces
+    const projects = discoverNxProjects(workspaceRoot)
+    const projectGraph = buildSimpleProjectGraph(workspaceRoot, projects)
+
+    // Get dependencies for the current project
+    const projectDeps = projectGraph.dependencies[projectName] ?? []
+
+    if (projectDeps.length === 0) {
+      logger.debug(`No dependencies found for project: ${projectName}`)
+      return dependencyMap
+    }
+
+    logger.debug(`Found ${projectDeps.length} dependencies for ${projectName}: ${projectDeps.map((d) => d.target).join(', ')}`)
+
+    // For each dependency, find commits that touched its files
+    for (const dep of projectDeps) {
+      const depNode = projectGraph.nodes[dep.target]
+      if (!depNode?.data?.root) {
+        logger.debug(`Skipping dependency ${dep.target}: no root path found`)
+        continue
+      }
+
+      const depRoot = depNode.data.root
+
+      // Query git for commits touching this dependency's path
+      const depCommits = lastReleaseTag
+        ? git.getCommitsSince(lastReleaseTag, { path: depRoot })
+        : git.getCommitLog({ maxCount: 100, path: depRoot })
+
+      if (depCommits.length > 0) {
+        const hashSet = createSet(depCommits.map((c) => c.hash))
+        dependencyMap = dependencyMap.set(dep.target, hashSet)
+        logger.debug(`Dependency ${dep.target}: ${depCommits.length} commits at ${depRoot}`)
+      }
+    }
+  } catch (error) {
+    // Graceful degradation: if project discovery fails, return empty map
+    // This allows versioning to proceed without dependency tracking
+    const message = error instanceof Error ? error.message : String(error)
+    logger.debug(`Failed to build dependency map: ${message}`)
+  }
+
+  return dependencyMap
 }

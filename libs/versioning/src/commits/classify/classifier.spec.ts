@@ -550,6 +550,53 @@ describe('infrastructure classification', () => {
     expect(result.source).toBe('excluded')
     expect(result.include).toBe(false)
   })
+
+  it('classifies unscoped commits as indirect-infra when hash matches', () => {
+    const input = createCommitInput(undefined, 'abc123')
+    const context: ClassificationContext = {
+      projectScopes: ['versioning'],
+      fileCommitHashes: new Set(),
+      infrastructureCommitHashes: new Set(['abc123']),
+    }
+
+    const result = classifyCommit(input, context)
+
+    expect(result.source).toBe('indirect-infra')
+    expect(result.include).toBe(true)
+  })
+
+  it('file-based detection takes priority over infrastructure', () => {
+    // If a commit touches both project files AND infrastructure,
+    // file-based (direct-file) should win
+    const input = createCommitInput('other-project', 'abc123')
+    const context: ClassificationContext = {
+      projectScopes: ['versioning'],
+      fileCommitHashes: new Set(['abc123']), // Also touched project files
+      infrastructureCommitHashes: new Set(['abc123']),
+    }
+
+    const result = classifyCommit(input, context)
+
+    expect(result.source).toBe('direct-file')
+    expect(result.include).toBe(true)
+  })
+
+  it('dependency detection takes priority over infrastructure', () => {
+    // If a commit matches both dependency and infrastructure,
+    // dependency should win (checked first)
+    const input = createCommitInput('lib-utils', 'abc123')
+    const context: ClassificationContext = {
+      projectScopes: ['versioning'],
+      fileCommitHashes: new Set(),
+      dependencyCommitMap: new Map([['lib-utils', new Set(['abc123'])]]),
+      infrastructureCommitHashes: new Set(['abc123']),
+    }
+
+    const result = classifyCommit(input, context)
+
+    expect(result.source).toBe('indirect-dependency')
+    expect(result.include).toBe(true)
+  })
 })
 
 describe('dependency scope variations', () => {
@@ -580,5 +627,70 @@ describe('dependency scope variations', () => {
 
     expect(result.source).toBe('excluded')
     expect(result.include).toBe(false)
+  })
+
+  it('excludes commits when scope matches dependency but hash is not in commit set (mislabeled commit)', () => {
+    // This is the critical test for hash verification
+    // A commit labeled with 'lib-utils' scope but didn't actually touch lib-utils files
+    const input = createCommitInput('lib-utils', 'abc123')
+    const context: ClassificationContext = {
+      projectScopes: ['versioning'],
+      fileCommitHashes: new Set(),
+      dependencyCommitMap: new Map([['lib-utils', new Set(['different-hash'])]]), // Scope matches, hash doesn't
+    }
+
+    const result = classifyCommit(input, context)
+
+    // Should be excluded because hash verification failed - commit didn't actually touch the dependency
+    expect(result.source).toBe('excluded')
+    expect(result.include).toBe(false)
+  })
+
+  it('excludes commits when scope variation matches but hash is not verified', () => {
+    // Scope 'utils' matches 'lib-utils' via variation, but hash doesn't match
+    const input = createCommitInput('utils', 'abc123')
+    const context: ClassificationContext = {
+      projectScopes: ['versioning'],
+      fileCommitHashes: new Set(),
+      dependencyCommitMap: new Map([['lib-utils', new Set(['other-hash'])]]),
+    }
+
+    const result = classifyCommit(input, context)
+
+    expect(result.source).toBe('excluded')
+    expect(result.include).toBe(false)
+  })
+
+  it('performs case-insensitive scope matching for dependencies', () => {
+    const input = createCommitInput('LIB-UTILS', 'abc123')
+    const context: ClassificationContext = {
+      projectScopes: ['versioning'],
+      fileCommitHashes: new Set(),
+      dependencyCommitMap: new Map([['lib-utils', new Set(['abc123'])]]),
+    }
+
+    const result = classifyCommit(input, context)
+
+    expect(result.source).toBe('indirect-dependency')
+    expect(result.include).toBe(true)
+  })
+
+  it('matches first dependency when multiple dependencies exist', () => {
+    const input = createCommitInput('utils', 'abc123')
+    const context: ClassificationContext = {
+      projectScopes: ['versioning'],
+      fileCommitHashes: new Set(),
+      dependencyCommitMap: new Map([
+        ['lib-utils', new Set(['abc123'])],
+        ['@hyperfrontend/utils', new Set(['abc123'])],
+      ]),
+    }
+
+    const result = classifyCommit(input, context)
+
+    expect(result.source).toBe('indirect-dependency')
+    expect(result.include).toBe(true)
+    // Should match lib-utils first (iteration order)
+    expect(result.dependencyPath).toEqual(['lib-utils'])
   })
 })
