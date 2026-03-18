@@ -222,6 +222,11 @@ commits/
 │   ├── conventional.ts   # ConventionalCommit type & factories
 │   ├── commit-type.ts    # CommitType, bump mappings
 │   └── breaking.ts       # BreakingChange type & factories
+├── classify/             # Commit classification for changelogs
+│   ├── classifier.ts     # Main classification engine
+│   ├── project-scopes.ts # Project scope derivation
+│   ├── infrastructure.ts # Infrastructure matcher system
+│   └── models.ts         # Classification types
 └── utils/                # Utilities
     └── replace-char.ts   # Character replacement helpers
 ```
@@ -234,6 +239,7 @@ commits/
 
 ## See Also
 
+- [classify/](./classify/README.md) — Commit classification for changelog attribution
 - [changelog/](../changelog/README.md) — Generates entries from commits
 - [flow/](../flow/README.md) — Analyzes commits to determine version bumps
 - [semver/](../semver/README.md) — Version bumping based on commit types

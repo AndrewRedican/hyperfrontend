@@ -46,6 +46,7 @@ Versioning library with changelog parsing, conventional commits, and semver flow
 - **Semver Utilities** - Parse, compare, increment, and validate semantic versions
 - **Registry Client** - Query npm registry for published versions and package metadata
 - **Compare URLs** - Generate platform-specific compare URLs for changelog entries (GitHub, GitLab, Bitbucket, Azure DevOps)
+- **Monorepo Scope Filtering** - Intelligent commit classification ensures changelogs only include relevant commits
 - **Composable Operations** - Build complex versioning workflows from simple, pure functions
 - **Zero External Dependencies** - Self-contained implementation with no third-party runtime dependencies
 
