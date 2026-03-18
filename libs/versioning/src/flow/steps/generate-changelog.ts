@@ -168,18 +168,21 @@ export function createGenerateChangelogStep(): FlowStep {
 
       // Handle case with no commits (e.g., first release)
       if (!commits || commits.length === 0) {
-        // Generate compare URL if repository config and last release tag exist
-        // (typically won't exist for true first release, but may for version reset)
+        // Generate compare URL using commit hashes ONLY
+        // Only generate if we have a valid base commit (effectiveBaseCommit will be null if fallback was used)
         let compareUrl: string | undefined
-        if (state.repositoryConfig && state.lastReleaseTag) {
-          const tagFormat = config.tagFormat ?? '${projectName}@${version}'
-          const toTag = tagFormat.replace('${projectName}', ctx.projectName).replace('${version}', nextVersion)
+        if (state.repositoryConfig && state.effectiveBaseCommit) {
+          const currentCommit = ctx.git.getHeadHash()
           compareUrl =
             createCompareUrl({
               repository: state.repositoryConfig,
-              fromTag: state.lastReleaseTag,
-              toTag,
+              // TODO: Phase 6 will rename these to fromCommit/toCommit
+              fromTag: state.effectiveBaseCommit,
+              toTag: currentCommit,
             }) ?? undefined
+        } else if (state.publishedCommit && !state.effectiveBaseCommit) {
+          // Log why we're not generating a compare URL
+          ctx.logger.info('Compare URL omitted: published commit not in current history')
         }
 
         const entry = createChangelogEntry(nextVersion, {
@@ -303,17 +306,22 @@ export function createGenerateChangelogStep(): FlowStep {
         }
       }
 
-      // Generate compare URL if repository config and last release tag exist
+      // Generate compare URL using commit hashes ONLY
+      // Only generate if we have a valid base commit (effectiveBaseCommit will be null if fallback was used)
       let compareUrl: string | undefined
-      if (state.repositoryConfig && state.lastReleaseTag) {
-        const tagFormat = config.tagFormat ?? '${projectName}@${version}'
-        const toTag = tagFormat.replace('${projectName}', ctx.projectName).replace('${version}', nextVersion)
+      if (state.repositoryConfig && state.effectiveBaseCommit) {
+        const currentCommit = ctx.git.getHeadHash()
         compareUrl =
           createCompareUrl({
             repository: state.repositoryConfig,
-            fromTag: state.lastReleaseTag,
-            toTag,
+            // TODO: Phase 6 will rename these to fromCommit/toCommit
+            fromTag: state.effectiveBaseCommit,
+            toTag: currentCommit,
           }) ?? undefined
+        ctx.logger.debug(`Compare URL: ${state.effectiveBaseCommit.slice(0, 7)}...${currentCommit.slice(0, 7)}`)
+      } else if (state.publishedCommit && !state.effectiveBaseCommit) {
+        // Log why we're not generating a compare URL
+        ctx.logger.info('Compare URL omitted: published commit not in current history')
       }
 
       // Create the entry
