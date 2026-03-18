@@ -57,10 +57,11 @@ interface MockGitClientOptions {
   commits?: readonly { message: string; hash: string }[]
   packageTags?: readonly { name: string; hash: string }[]
   projectTags?: readonly { name: string; hash: string }[]
+  commitReachable?: boolean
 }
 
 function createMockGitClient(options: MockGitClientOptions = {}): GitClient {
-  const { commits = [], packageTags = [], projectTags = [] } = options
+  const { commits = [], packageTags = [], projectTags = [], commitReachable = true } = options
 
   return {
     cwd: '/workspace',
@@ -75,6 +76,7 @@ function createMockGitClient(options: MockGitClientOptions = {}): GitClient {
     getCommitsSince: () => commits,
     getCommit: () => (commits.length > 0 ? commits[0] : null),
     commitExists: () => true,
+    commitReachableFromHead: () => commitReachable,
     getTags: () => [],
     getTag: () => null,
     createTag: jest.fn(),
@@ -143,10 +145,6 @@ function createMockContext(overrides?: {
   }
 }
 
-// ============================================================================
-// Tests
-// ============================================================================
-
 describe('analyze-commits step', () => {
   describe('ANALYZE_COMMITS_STEP_ID', () => {
     it('has the correct ID', () => {
@@ -170,75 +168,88 @@ describe('analyze-commits step', () => {
     })
 
     describe('execute', () => {
-      describe('tag discovery', () => {
-        it('finds last release tag for package name', async () => {
+      describe('publishedCommit scoping', () => {
+        it('uses publishedCommit from state when commit is reachable', async () => {
           const git = createMockGitClient({
-            packageTags: [
-              { name: '@test/pkg@1.0.0', hash: 'abc123' },
-              { name: '@test/pkg@0.9.0', hash: 'def456' },
+            commits: [
+              { message: 'feat: new feature', hash: 'ghi789' },
+              { message: 'fix: bug fix', hash: 'jkl012' },
             ],
-            commits: [{ message: 'feat: new feature', hash: 'ghi789' }],
+            commitReachable: true,
           })
           const logger = createMockLogger()
           const context = createMockContext({
             git,
             logger,
-            state: { isFirstRelease: false },
+            state: {
+              isFirstRelease: false,
+              publishedCommit: 'abc1234',
+              publishedVersion: '1.0.0',
+            },
           })
           const step = createAnalyzeCommitsStep()
 
           const result = await step.execute(context)
 
           expect(result.status).toBe('success')
-          expect(result.stateUpdates?.lastReleaseTag).toBe('@test/pkg@1.0.0')
-          expect(logger.debug).toHaveBeenCalledWith(expect.stringContaining('Found last release tag: @test/pkg@1.0.0'))
-        })
-
-        it('falls back to project name format when no package tags exist', async () => {
-          const git = createMockGitClient({
-            packageTags: [], // No package name tags
-            projectTags: [
-              { name: 'lib-test@1.0.0', hash: 'abc123' },
-              { name: 'lib-test@0.5.0', hash: 'def456' },
-            ],
-            commits: [{ message: 'fix: bug fix', hash: 'ghi789' }],
-          })
-          const logger = createMockLogger()
-          const context = createMockContext({
-            git,
-            logger,
-            state: { isFirstRelease: false },
-          })
-          const step = createAnalyzeCommitsStep()
-
-          const result = await step.execute(context)
-
-          expect(result.status).toBe('success')
-          expect(result.stateUpdates?.lastReleaseTag).toBe('lib-test@1.0.0')
-          expect(logger.debug).toHaveBeenCalledWith(expect.stringContaining('Found last release tag (project format): lib-test@1.0.0'))
-        })
-
-        it('handles no tags found for non-first release', async () => {
-          const git = createMockGitClient({
-            packageTags: [],
-            projectTags: [],
-            commits: [{ message: 'feat: new feature', hash: 'abc123' }],
-          })
-          const context = createMockContext({
-            git,
-            state: { isFirstRelease: false },
-          })
-          const step = createAnalyzeCommitsStep()
-
-          const result = await step.execute(context)
-
-          expect(result.status).toBe('success')
+          expect(result.stateUpdates?.effectiveBaseCommit).toBe('abc1234')
+          // lastReleaseTag should be null (deprecated)
           expect(result.stateUpdates?.lastReleaseTag).toBe(null)
+          expect(logger.debug).toHaveBeenCalledWith(expect.stringContaining('Found 2 commits since abc1234'))
         })
 
-        it('skips tag lookup for first release', async () => {
+        it('falls back gracefully when publishedCommit is not reachable from HEAD', async () => {
           const git = createMockGitClient({
-            packageTags: [{ name: '@test/pkg@1.0.0', hash: 'abc123' }],
+            commits: [{ message: 'feat: new feature', hash: 'xyz789' }],
+            commitReachable: false, // Commit not in history (rebase/force push)
+          })
+          const logger = createMockLogger()
+          const context = createMockContext({
+            git,
+            logger,
+            state: {
+              isFirstRelease: false,
+              publishedCommit: 'orphaned123',
+              publishedVersion: '1.0.0',
+            },
+          })
+          const step = createAnalyzeCommitsStep()
+
+          const result = await step.execute(context)
+
+          expect(result.status).toBe('success')
+          // effectiveBaseCommit should be null (fallback was used)
+          expect(result.stateUpdates?.effectiveBaseCommit).toBe(null)
+          // Warning should be logged
+          expect(logger.warn).toHaveBeenCalledWith(expect.stringContaining('Published commit orphane not found in history'))
+          expect(logger.warn).toHaveBeenCalledWith(expect.stringContaining('rebase or force push'))
+        })
+
+        it('handles no publishedCommit (first release from registry perspective)', async () => {
+          const git = createMockGitClient({
+            commits: [{ message: 'feat: initial', hash: 'def456' }],
+          })
+          const logger = createMockLogger()
+          const context = createMockContext({
+            git,
+            logger,
+            state: {
+              isFirstRelease: false,
+              publishedCommit: null, // No gitHead in npm
+              publishedVersion: '1.0.0',
+            },
+          })
+          const step = createAnalyzeCommitsStep()
+
+          const result = await step.execute(context)
+
+          expect(result.status).toBe('success')
+          expect(result.stateUpdates?.effectiveBaseCommit).toBe(null)
+          expect(logger.debug).toHaveBeenCalledWith(expect.stringContaining('First release'))
+        })
+
+        it('skips commit verification for first release', async () => {
+          const git = createMockGitClient({
             commits: [{ message: 'feat: initial', hash: 'def456' }],
           })
           const logger = createMockLogger()
@@ -252,26 +263,29 @@ describe('analyze-commits step', () => {
           const result = await step.execute(context)
 
           expect(result.status).toBe('success')
+          expect(result.stateUpdates?.effectiveBaseCommit).toBe(null)
           expect(result.stateUpdates?.lastReleaseTag).toBe(null)
-          // Should log about first release commits, not tags
           expect(logger.debug).toHaveBeenCalledWith(expect.stringContaining('First release'))
         })
       })
 
       describe('commit analysis', () => {
-        it('gets commits since last release tag', async () => {
+        it('gets commits since publishedCommit', async () => {
           const git = createMockGitClient({
-            packageTags: [{ name: '@test/pkg@1.0.0', hash: 'abc123' }],
             commits: [
               { message: 'feat: feature 1', hash: 'commit1' },
               { message: 'fix: bug fix', hash: 'commit2' },
             ],
+            commitReachable: true,
           })
           const logger = createMockLogger()
           const context = createMockContext({
             git,
             logger,
-            state: { isFirstRelease: false },
+            state: {
+              isFirstRelease: false,
+              publishedCommit: 'abc123',
+            },
           })
           const step = createAnalyzeCommitsStep()
 
@@ -1154,20 +1168,23 @@ describe('analyze-commits step', () => {
         })
       })
 
-      describe('commits since tag with path filtering', () => {
+      describe('commits since publishedCommit with path filtering', () => {
         it('uses getCommitsSince with path filter for existing releases', async () => {
           const commits = [{ message: 'feat: feature', hash: 'commit1' }]
           const getCommitsSinceMock = jest.fn(() => commits)
           const git = {
             ...createMockGitClient({
               commits,
-              packageTags: [{ name: '@test/pkg@1.0.0', hash: 'tag-hash' }],
+              commitReachable: true,
             }),
             getCommitsSince: getCommitsSinceMock,
           } as unknown as GitClient
           const context = createMockContext({
             git,
-            state: { isFirstRelease: false },
+            state: {
+              isFirstRelease: false,
+              publishedCommit: 'abc1234',
+            },
             config: {
               scopeFiltering: { strategy: 'hybrid' },
             },
@@ -1177,7 +1194,7 @@ describe('analyze-commits step', () => {
           await step.execute(context)
 
           // Should call getCommitsSince with path filter
-          type CommitsSinceCall = [tag: string, opts?: { path?: string }]
+          type CommitsSinceCall = [commit: string, opts?: { path?: string }]
           const calls = getCommitsSinceMock.mock.calls as unknown as CommitsSinceCall[]
           const pathFilteredCalls = calls.filter((call) => call[1]?.path)
           expect(pathFilteredCalls.length).toBeGreaterThan(0)
@@ -1209,12 +1226,12 @@ describe('analyze-commits step', () => {
       })
 
       describe('infrastructure path detection with existing release', () => {
-        it('uses getCommitsSince for infrastructure paths when tag exists', async () => {
+        it('uses getCommitsSince for infrastructure paths when publishedCommit exists', async () => {
           const baseCommits = [
             { message: 'feat(ci): update ci', hash: 'ci-commit' },
             { message: 'feat(lib-test): feature', hash: 'feature-commit' },
           ]
-          const getCommitsSinceMock = jest.fn((tag: string, opts?: { path?: string }) => {
+          const getCommitsSinceMock = jest.fn((commit: string, opts?: { path?: string }) => {
             if (opts?.path === 'tools/') {
               return [{ message: 'feat(ci): update ci', hash: 'ci-commit' }]
             }
@@ -1223,7 +1240,7 @@ describe('analyze-commits step', () => {
           const git = {
             ...createMockGitClient({
               commits: baseCommits,
-              packageTags: [{ name: '@test/pkg@1.0.0', hash: 'tag-hash' }],
+              commitReachable: true,
             }),
             getCommitsSince: getCommitsSinceMock,
           } as unknown as GitClient
@@ -1231,7 +1248,10 @@ describe('analyze-commits step', () => {
           const context = createMockContext({
             git,
             logger,
-            state: { isFirstRelease: false },
+            state: {
+              isFirstRelease: false,
+              publishedCommit: 'abc1234',
+            },
             config: {
               scopeFiltering: {
                 infrastructure: {
@@ -1245,7 +1265,7 @@ describe('analyze-commits step', () => {
           await step.execute(context)
 
           // Should call getCommitsSince with infrastructure path
-          type CommitsSinceCall = [tag: string, opts?: { path?: string }]
+          type CommitsSinceCall = [commit: string, opts?: { path?: string }]
           const calls = getCommitsSinceMock.mock.calls as unknown as CommitsSinceCall[]
           const infraPathCalls = calls.filter((call) => call[1]?.path === 'tools/')
           expect(infraPathCalls.length).toBeGreaterThan(0)

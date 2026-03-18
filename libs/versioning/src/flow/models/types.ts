@@ -38,6 +38,15 @@ export interface FlowState {
   /** Tag name that marks the last release */
   readonly lastReleaseTag?: string | null
 
+  /**
+   * The verified base commit used for commit scoping and changelog generation.
+   * This will be `publishedCommit` if that commit is reachable from HEAD,
+   * or `null` if a fallback was used (e.g., history was rewritten).
+   *
+   * When null, compare URLs are omitted from the changelog.
+   */
+  readonly effectiveBaseCommit?: string | null
+
   /** Generated changelog entry */
   readonly changelogEntry?: ChangelogEntry
 

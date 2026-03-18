@@ -46,34 +46,33 @@ export function createAnalyzeCommitsStep(): FlowStep {
     async (ctx) => {
       const { git, projectName, projectRoot, packageName, workspaceRoot, config, logger, state } = ctx
 
-      // Find the last release tag for this package
-      let lastReleaseTag: string | null = null
+      // Use publishedCommit from registry (set by fetch-registry step)
+      const { publishedCommit, isFirstRelease } = state
 
-      if (!state.isFirstRelease) {
-        // Try to find a tag matching the package name pattern
-        const tags = git.getTagsForPackage(packageName)
-        if (tags.length > 0) {
-          // Tags are returned in reverse chronological order
-          lastReleaseTag = tags[0].name
-          logger.debug(`Found last release tag: ${lastReleaseTag}`)
+      let rawCommits: readonly GitCommit[]
+      let effectiveBaseCommit: string | null = null
+
+      if (publishedCommit && !isFirstRelease) {
+        // CRITICAL: Verify the commit exists and is reachable from HEAD
+        if (git.commitReachableFromHead(publishedCommit)) {
+          rawCommits = git.getCommitsSince(publishedCommit)
+          effectiveBaseCommit = publishedCommit
+          logger.debug(`Found ${rawCommits.length} commits since ${publishedCommit.slice(0, 7)}`)
         } else {
-          // Try with project name format
-          const projectTags = git.getTagsForPackage(projectName)
-          if (projectTags.length > 0) {
-            lastReleaseTag = projectTags[0].name
-            logger.debug(`Found last release tag (project format): ${lastReleaseTag}`)
-          }
+          // GRACEFUL DEGRADATION: Commit not in history (rebase/force push occurred)
+          logger.warn(
+            `Published commit ${publishedCommit.slice(0, 7)} not found in history. ` +
+              `This may indicate a rebase or force push occurred after publishing v${state.publishedVersion}. ` +
+              `Falling back to recent commit analysis.`
+          )
+          rawCommits = git.getCommitLog({ maxCount: 100 })
+          // effectiveBaseCommit stays null - no compare URL will be generated
         }
+      } else {
+        // First release or no published version
+        rawCommits = git.getCommitLog({ maxCount: 100 })
+        logger.debug(`First release - analyzing up to ${rawCommits.length} commits`)
       }
-
-      // Get all commits
-      const rawCommits = lastReleaseTag ? git.getCommitsSince(lastReleaseTag) : git.getCommitLog({ maxCount: 100 })
-
-      logger.debug(
-        lastReleaseTag
-          ? `Found ${rawCommits.length} commits since ${lastReleaseTag}`
-          : `First release - analyzing up to ${rawCommits.length} commits`
-      )
 
       // Get scope filtering configuration
       const scopeFilteringConfig = {
@@ -115,8 +114,8 @@ export function createAnalyzeCommitsStep(): FlowStep {
       if (strategy === 'hybrid' || strategy === 'file-only') {
         // Get commits that touched project files using path filter
         const relativePath = getRelativePath(workspaceRoot, projectRoot)
-        const pathFilteredCommits = lastReleaseTag
-          ? git.getCommitsSince(lastReleaseTag, { path: relativePath })
+        const pathFilteredCommits = effectiveBaseCommit
+          ? git.getCommitsSince(effectiveBaseCommit, { path: relativePath })
           : git.getCommitLog({ maxCount: 100, path: relativePath })
 
         fileCommitHashes = createSet(pathFilteredCommits.map((c) => c.hash))
@@ -134,7 +133,7 @@ export function createAnalyzeCommitsStep(): FlowStep {
       // Build infrastructure commit hashes for file-based infrastructure detection
       const infrastructureCommitHashes = buildInfrastructureCommitHashes(
         git,
-        lastReleaseTag,
+        effectiveBaseCommit,
         rawCommits,
         parsedCommits,
         scopeFilteringConfig,
@@ -144,7 +143,7 @@ export function createAnalyzeCommitsStep(): FlowStep {
       // Build dependency commit map if tracking is enabled (Phase 4)
       let dependencyCommitMap: ReadonlyMap<string, ReadonlySet<string>> | undefined
       if (scopeFilteringConfig.trackDependencyChanges) {
-        dependencyCommitMap = buildDependencyCommitMap(git, workspaceRoot, projectName, lastReleaseTag, logger)
+        dependencyCommitMap = buildDependencyCommitMap(git, workspaceRoot, projectName, effectiveBaseCommit, logger)
       }
 
       // Create classification context
@@ -178,7 +177,8 @@ export function createAnalyzeCommitsStep(): FlowStep {
       return {
         status: 'success',
         stateUpdates: {
-          lastReleaseTag,
+          lastReleaseTag: null, // Deprecated: use effectiveBaseCommit instead
+          effectiveBaseCommit,
           commits,
           classificationResult,
         },
@@ -304,7 +304,7 @@ function buildSummaryMessage(
  * 3. Custom matcher: User-provided matching logic
  *
  * @param git - Git client for querying commits by path
- * @param lastReleaseTag - Last release tag (null for first release)
+ * @param baseCommit - Base commit hash for commit range (null for first release/fallback)
  * @param rawCommits - All raw commits being analyzed
  * @param parsedCommits - Parsed commits with conventional commit data
  * @param config - Scope filtering configuration
@@ -314,7 +314,7 @@ function buildSummaryMessage(
  */
 function buildInfrastructureCommitHashes(
   git: GitClient,
-  lastReleaseTag: string | null,
+  baseCommit: string | null,
   rawCommits: readonly GitCommit[],
   parsedCommits: readonly CommitWithRaw[],
   config: ScopeFilteringConfig,
@@ -327,8 +327,8 @@ function buildInfrastructureCommitHashes(
   const infraPaths = config.infrastructure?.paths ?? []
   if (infraPaths.length > 0) {
     for (const infraPath of infraPaths) {
-      const pathCommits = lastReleaseTag
-        ? git.getCommitsSince(lastReleaseTag, { path: infraPath })
+      const pathCommits = baseCommit
+        ? git.getCommitsSince(baseCommit, { path: infraPath })
         : git.getCommitLog({ maxCount: 100, path: infraPath })
 
       for (const commit of pathCommits) {
@@ -403,7 +403,7 @@ function combineMatcher(a: InfrastructureMatcher | null, b: InfrastructureMatche
  * @param git - Git client for querying commits by path
  * @param workspaceRoot - Absolute path to workspace root
  * @param projectName - Name of the project being versioned
- * @param lastReleaseTag - Last release tag (null for first release)
+ * @param baseCommit - Base commit hash for commit range (null for first release/fallback)
  * @param logger - Logger with debug method for output
  * @param logger.debug - Debug logging function
  * @returns Map of dependency names to commit hashes touching that dependency
@@ -412,7 +412,7 @@ function buildDependencyCommitMap(
   git: GitClient,
   workspaceRoot: string,
   projectName: string,
-  lastReleaseTag: string | null,
+  baseCommit: string | null,
   logger: { debug: (msg: string) => void }
 ): ReadonlyMap<string, ReadonlySet<string>> {
   let dependencyMap = createMap<string, ReadonlySet<string>>()
@@ -444,8 +444,8 @@ function buildDependencyCommitMap(
       const depRoot = depNode.data.root
 
       // Query git for commits touching this dependency's path
-      const depCommits = lastReleaseTag
-        ? git.getCommitsSince(lastReleaseTag, { path: depRoot })
+      const depCommits = baseCommit
+        ? git.getCommitsSince(baseCommit, { path: depRoot })
         : git.getCommitLog({ maxCount: 100, path: depRoot })
 
       if (depCommits.length > 0) {
