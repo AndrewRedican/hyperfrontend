@@ -99,6 +99,47 @@
         }
       ],
       "default": "inferred"
+    },
+    "scopeFiltering": {
+      "type": "object",
+      "description": "Scope filtering configuration for commit classification and changelog generation.",
+      "properties": {
+        "strategy": {
+          "type": "string",
+          "enum": ["hybrid", "scope-only", "file-only", "inferred"],
+          "description": "Filtering strategy. Default: 'hybrid'"
+        },
+        "includeScopes": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Additional scopes to include as direct commits"
+        },
+        "excludeScopes": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Scopes to exclude even if files match"
+        },
+        "trackDependencyChanges": {
+          "type": "boolean",
+          "description": "Include commits that touch dependency packages as indirect commits"
+        },
+        "infrastructure": {
+          "type": "object",
+          "description": "Infrastructure tracking configuration",
+          "properties": {
+            "paths": {
+              "type": "array",
+              "items": { "type": "string" },
+              "description": "Git paths to track as infrastructure (e.g., 'tools/', '.github/')"
+            },
+            "scopes": {
+              "type": "array",
+              "items": { "type": "string" },
+              "description": "Scopes indicating infrastructure changes (e.g., 'ci', 'build')"
+            }
+          }
+        }
+      }
     }
   },
   "required": []

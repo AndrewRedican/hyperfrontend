@@ -3,6 +3,17 @@ import type { FlowConfig } from '@hyperfrontend/versioning'
 export interface VersionExecutorSchema {
   /** See what commands would be run, without committing to git or updating files. */
   dryRun?: boolean
+  /**
+   * Scope filtering configuration for commit classification and changelog generation.
+   *
+   * Controls how commits are filtered and classified for this project:
+   * - `strategy`: Filtering strategy ('hybrid', 'scope-only', 'file-only', 'inferred')
+   * - `includeScopes`: Additional scopes to always include
+   * - `excludeScopes`: Scopes to exclude even if files match
+   * - `trackDependencyChanges`: Include dependency commits as indirect
+   * - `infrastructure`: Infrastructure path and scope tracking
+   */
+  scopeFiltering?: FlowConfig['scopeFiltering']
   /** Manually increment the version by that keyword (major, minor, patch). */
   releaseAs?: 'major' | 'minor' | 'patch'
   /** Version tag prefix. Default is '{projectName}@' in independent mode. */
