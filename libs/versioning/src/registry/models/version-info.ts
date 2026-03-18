@@ -45,6 +45,15 @@ export interface VersionInfo {
 
   /** npm version used to publish */
   readonly npmVersion?: string
+
+  /**
+   * Git commit hash at publish time.
+   * Used to determine commit range for changelog generation.
+   *
+   * NOTE: This value comes from npm registry, making it immutable
+   * and independent of local git state.
+   */
+  readonly gitHead?: string
 }
 
 /**
@@ -62,6 +71,7 @@ export interface VersionInfo {
  * @param options.engines - Node/npm engine requirements
  * @param options.nodeVersion - Node.js version used during publish
  * @param options.npmVersion - npm version used during publish
+ * @param options.gitHead - Git commit hash at publish time
  * @returns A new VersionInfo object
  */
 export function createVersionInfo(options: {
@@ -76,6 +86,7 @@ export function createVersionInfo(options: {
   engines?: Record<string, string>
   nodeVersion?: string
   npmVersion?: string
+  gitHead?: string
 }): VersionInfo {
   return {
     version: options.version,
@@ -89,5 +100,6 @@ export function createVersionInfo(options: {
     engines: options.engines,
     nodeVersion: options.nodeVersion,
     npmVersion: options.npmVersion,
+    gitHead: options.gitHead,
   }
 }

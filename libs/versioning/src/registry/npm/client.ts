@@ -196,6 +196,7 @@ async function getVersionInfo(state: NpmRegistryState, packageName: string, vers
       engines: data.engines,
       nodeVersion: data._nodeVersion,
       npmVersion: data._npmVersion,
+      gitHead: data.gitHead,
     }
 
     state.cache.set(cacheKey, info)
@@ -235,10 +236,6 @@ async function listVersions(state: NpmRegistryState, packageName: string): Promi
     return []
   }
 }
-
-// ============================================================================
-// Security helpers - character-by-character validation (no regex)
-// ============================================================================
 
 /**
  * Maximum allowed package name length (npm limit).
