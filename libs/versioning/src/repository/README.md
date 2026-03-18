@@ -80,9 +80,9 @@ flowchart TB
 
 ### URL Functions
 
-| Function             | Description                       | Implementation                 |
-| -------------------- | --------------------------------- | ------------------------------ |
-| `createCompareUrl()` | Generate compare URL for two tags | [compare.ts](./url/compare.ts) |
+| Function             | Description                          | Implementation                 |
+| -------------------- | ------------------------------------ | ------------------------------ |
+| `createCompareUrl()` | Generate compare URL for two commits | [compare.ts](./url/compare.ts) |
 
 ## Supported Platforms
 
@@ -124,8 +124,8 @@ const repo = createRepositoryConfig({
   baseUrl: 'https://github.com/owner/repo',
 })
 
-createCompareUrl({ repository: repo, fromTag: 'v1.0.0', toTag: 'v1.1.0' })
-// → 'https://github.com/owner/repo/compare/v1.0.0...v1.1.0'
+createCompareUrl({ repository: repo, fromCommit: 'abc1234', toCommit: 'def5678' })
+// → 'https://github.com/owner/repo/compare/abc1234...def5678'
 ```
 
 ### Custom Platform Formatter

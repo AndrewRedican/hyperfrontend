@@ -12,29 +12,31 @@ export interface CreateCompareUrlOptions {
   readonly repository: RepositoryConfig
 
   /**
-   * Source tag for comparison (older version).
+   * Source commit hash for comparison (older version).
+   * Must be a full or abbreviated commit hash.
    */
-  readonly fromTag: string
+  readonly fromCommit: string
 
   /**
-   * Target tag for comparison (newer version).
+   * Target commit hash for comparison (newer version).
+   * Must be a full or abbreviated commit hash.
    */
-  readonly toTag: string
+  readonly toCommit: string
 }
 
 /**
- * Creates a platform-specific compare URL for viewing changes between two tags.
+ * Creates a platform-specific compare URL for viewing changes between two commits.
  *
  * Each platform has a different URL format:
- * - **GitHub**: `{baseUrl}/compare/{fromTag}...{toTag}` (three dots)
- * - **GitLab**: `{baseUrl}/-/compare/{fromTag}...{toTag}` (three dots, `/-/` prefix)
- * - **Bitbucket**: `{baseUrl}/compare/{toTag}..{fromTag}` (two dots, reversed order)
- * - **Azure DevOps**: `{baseUrl}/compare?version=GT{toTag}&compareVersion=GT{fromTag}` (query params)
+ * - **GitHub**: `{baseUrl}/compare/{fromCommit}...{toCommit}` (three dots)
+ * - **GitLab**: `{baseUrl}/-/compare/{fromCommit}...{toCommit}` (three dots, `/-/` prefix)
+ * - **Bitbucket**: `{baseUrl}/compare/{toCommit}..{fromCommit}` (two dots, reversed order)
+ * - **Azure DevOps**: `{baseUrl}/compare?version=GT{toCommit}&compareVersion=GT{fromCommit}` (query params)
  *
  * For `custom` platforms, a `formatCompareUrl` function must be provided in the repository config.
  * For `unknown` platforms, returns `null`.
  *
- * @param options - Compare URL options including repository, fromTag, and toTag
+ * @param options - Compare URL options including repository, fromCommit, and toCommit
  * @returns The compare URL string, or null if URL cannot be generated
  *
  * @example
@@ -42,34 +44,34 @@ export interface CreateCompareUrlOptions {
  * // GitHub
  * createCompareUrl({
  *   repository: { platform: 'github', baseUrl: 'https://github.com/owner/repo' },
- *   fromTag: 'v1.0.0',
- *   toTag: 'v1.1.0'
+ *   fromCommit: 'abc1234',
+ *   toCommit: 'def5678'
  * })
- * // → 'https://github.com/owner/repo/compare/v1.0.0...v1.1.0'
+ * // → 'https://github.com/owner/repo/compare/abc1234...def5678'
  *
  * // GitLab
  * createCompareUrl({
  *   repository: { platform: 'gitlab', baseUrl: 'https://gitlab.com/group/project' },
- *   fromTag: 'v1.0.0',
- *   toTag: 'v1.1.0'
+ *   fromCommit: 'abc1234',
+ *   toCommit: 'def5678'
  * })
- * // → 'https://gitlab.com/group/project/-/compare/v1.0.0...v1.1.0'
+ * // → 'https://gitlab.com/group/project/-/compare/abc1234...def5678'
  *
  * // Bitbucket (reversed order)
  * createCompareUrl({
  *   repository: { platform: 'bitbucket', baseUrl: 'https://bitbucket.org/owner/repo' },
- *   fromTag: 'v1.0.0',
- *   toTag: 'v1.1.0'
+ *   fromCommit: 'abc1234',
+ *   toCommit: 'def5678'
  * })
- * // → 'https://bitbucket.org/owner/repo/compare/v1.1.0..v1.0.0'
+ * // → 'https://bitbucket.org/owner/repo/compare/def5678..abc1234'
  *
  * // Azure DevOps
  * createCompareUrl({
  *   repository: { platform: 'azure-devops', baseUrl: 'https://dev.azure.com/org/proj/_git/repo' },
- *   fromTag: 'v1.0.0',
- *   toTag: 'v1.1.0'
+ *   fromCommit: 'abc1234',
+ *   toCommit: 'def5678'
  * })
- * // → 'https://dev.azure.com/org/proj/_git/repo/compare?version=GTv1.1.0&compareVersion=GTv1.0.0'
+ * // → 'https://dev.azure.com/org/proj/_git/repo/compare?version=GTdef5678&compareVersion=GTabc1234'
  *
  * // Custom formatter
  * createCompareUrl({
@@ -78,23 +80,23 @@ export interface CreateCompareUrlOptions {
  *     baseUrl: 'https://my-git.internal/repo',
  *     formatCompareUrl: (from, to) => `https://my-git.internal/diff/${from}/${to}`
  *   },
- *   fromTag: 'v1.0.0',
- *   toTag: 'v1.1.0'
+ *   fromCommit: 'abc1234',
+ *   toCommit: 'def5678'
  * })
- * // → 'https://my-git.internal/diff/v1.0.0/v1.1.0'
+ * // → 'https://my-git.internal/diff/abc1234/def5678'
  * ```
  */
 export function createCompareUrl(options: CreateCompareUrlOptions): string | null {
-  const { repository, fromTag, toTag } = options
+  const { repository, fromCommit, toCommit } = options
 
   // Validate inputs
-  if (!repository || !fromTag || !toTag) {
+  if (!repository || !fromCommit || !toCommit) {
     return null
   }
 
   // If custom formatter is provided, use it (works for any platform including overrides)
   if (repository.formatCompareUrl) {
-    return repository.formatCompareUrl(fromTag, toTag)
+    return repository.formatCompareUrl(fromCommit, toCommit)
   }
 
   const { platform, baseUrl } = repository
@@ -111,7 +113,7 @@ export function createCompareUrl(options: CreateCompareUrlOptions): string | nul
 
   // Generate URL for known platforms
   if (isKnownPlatform(platform)) {
-    return formatKnownPlatformCompareUrl(platform, baseUrl, fromTag, toTag)
+    return formatKnownPlatformCompareUrl(platform, baseUrl, fromCommit, toCommit)
   }
 
   return null
@@ -122,29 +124,29 @@ export function createCompareUrl(options: CreateCompareUrlOptions): string | nul
  *
  * @param platform - Known platform type
  * @param baseUrl - Repository base URL
- * @param fromTag - Source tag (older version)
- * @param toTag - Target tag (newer version)
+ * @param fromCommit - Source commit hash (older version)
+ * @param toCommit - Target commit hash (newer version)
  * @returns Formatted compare URL
  *
  * @internal
  */
-function formatKnownPlatformCompareUrl(platform: KnownPlatform, baseUrl: string, fromTag: string, toTag: string): string {
+function formatKnownPlatformCompareUrl(platform: KnownPlatform, baseUrl: string, fromCommit: string, toCommit: string): string {
   switch (platform) {
     case 'github':
-      // GitHub: {baseUrl}/compare/{fromTag}...{toTag}
-      return `${baseUrl}/compare/${fromTag}...${toTag}`
+      // GitHub: {baseUrl}/compare/{fromCommit}...{toCommit}
+      return `${baseUrl}/compare/${fromCommit}...${toCommit}`
 
     case 'gitlab':
-      // GitLab: {baseUrl}/-/compare/{fromTag}...{toTag}
-      return `${baseUrl}/-/compare/${fromTag}...${toTag}`
+      // GitLab: {baseUrl}/-/compare/{fromCommit}...{toCommit}
+      return `${baseUrl}/-/compare/${fromCommit}...${toCommit}`
 
     case 'bitbucket':
-      // Bitbucket: {baseUrl}/compare/{toTag}..{fromTag} (reversed order, two dots)
-      return `${baseUrl}/compare/${toTag}..${fromTag}`
+      // Bitbucket: {baseUrl}/compare/{toCommit}..{fromCommit} (reversed order, two dots)
+      return `${baseUrl}/compare/${toCommit}..${fromCommit}`
 
     case 'azure-devops':
-      // Azure DevOps: {baseUrl}/compare?version=GT{toTag}&compareVersion=GT{fromTag}
+      // Azure DevOps: {baseUrl}/compare?version=GT{toCommit}&compareVersion=GT{fromCommit}
       // Use encodeURIComponent for query parameter values
-      return `${baseUrl}/compare?version=GT${encodeURIComponent(toTag)}&compareVersion=GT${encodeURIComponent(fromTag)}`
+      return `${baseUrl}/compare?version=GT${encodeURIComponent(toCommit)}&compareVersion=GT${encodeURIComponent(fromCommit)}`
   }
 }

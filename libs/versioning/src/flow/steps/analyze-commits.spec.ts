@@ -193,8 +193,6 @@ describe('analyze-commits step', () => {
 
           expect(result.status).toBe('success')
           expect(result.stateUpdates?.effectiveBaseCommit).toBe('abc1234')
-          // lastReleaseTag should be null (deprecated)
-          expect(result.stateUpdates?.lastReleaseTag).toBe(null)
           expect(logger.debug).toHaveBeenCalledWith(expect.stringContaining('Found 2 commits since abc1234'))
         })
 
@@ -264,7 +262,6 @@ describe('analyze-commits step', () => {
 
           expect(result.status).toBe('success')
           expect(result.stateUpdates?.effectiveBaseCommit).toBe(null)
-          expect(result.stateUpdates?.lastReleaseTag).toBe(null)
           expect(logger.debug).toHaveBeenCalledWith(expect.stringContaining('First release'))
         })
       })

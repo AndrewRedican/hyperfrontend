@@ -26,14 +26,15 @@ export const ANALYZE_COMMITS_STEP_ID = 'analyze-commits'
  * Creates the analyze-commits step.
  *
  * This step:
- * 1. Finds the last release tag for this package
- * 2. Gets all commits since that tag (or all commits if first release)
- * 3. Parses each commit using conventional commit format
- * 4. Classifies commits based on scope filtering strategy
- * 5. Filters to only release-worthy commits that belong to this project
+ * 1. Uses publishedCommit from npm registry (set by fetch-registry step)
+ * 2. Verifies the commit is reachable from current HEAD
+ * 3. Gets all commits since that commit (or recent commits if first release/fallback)
+ * 4. Parses each commit using conventional commit format
+ * 5. Classifies commits based on scope filtering strategy
+ * 6. Filters to only release-worthy commits that belong to this project
  *
  * State updates:
- * - lastReleaseTag: Tag name of last release (null if first release)
+ * - effectiveBaseCommit: The verified base commit (null if fallback was used)
  * - commits: Array of parsed conventional commits (for backward compatibility)
  * - classificationResult: Full classification result with source attribution
  *
@@ -177,7 +178,6 @@ export function createAnalyzeCommitsStep(): FlowStep {
       return {
         status: 'success',
         stateUpdates: {
-          lastReleaseTag: null, // Deprecated: use effectiveBaseCommit instead
           effectiveBaseCommit,
           commits,
           classificationResult,

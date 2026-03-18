@@ -35,9 +35,6 @@ export interface FlowState {
   /** Classification result with source attribution (when scope filtering enabled) */
   readonly classificationResult?: ClassificationResult
 
-  /** Tag name that marks the last release */
-  readonly lastReleaseTag?: string | null
-
   /**
    * The verified base commit used for commit scoping and changelog generation.
    * This will be `publishedCommit` if that commit is reachable from HEAD,

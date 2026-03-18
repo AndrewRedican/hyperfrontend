@@ -176,9 +176,8 @@ export function createGenerateChangelogStep(): FlowStep {
           compareUrl =
             createCompareUrl({
               repository: state.repositoryConfig,
-              // TODO: Phase 6 will rename these to fromCommit/toCommit
-              fromTag: state.effectiveBaseCommit,
-              toTag: currentCommit,
+              fromCommit: state.effectiveBaseCommit,
+              toCommit: currentCommit,
             }) ?? undefined
         } else if (state.publishedCommit && !state.effectiveBaseCommit) {
           // Log why we're not generating a compare URL
@@ -314,9 +313,8 @@ export function createGenerateChangelogStep(): FlowStep {
         compareUrl =
           createCompareUrl({
             repository: state.repositoryConfig,
-            // TODO: Phase 6 will rename these to fromCommit/toCommit
-            fromTag: state.effectiveBaseCommit,
-            toTag: currentCommit,
+            fromCommit: state.effectiveBaseCommit,
+            toCommit: currentCommit,
           }) ?? undefined
         ctx.logger.debug(`Compare URL: ${state.effectiveBaseCommit.slice(0, 7)}...${currentCommit.slice(0, 7)}`)
       } else if (state.publishedCommit && !state.effectiveBaseCommit) {
