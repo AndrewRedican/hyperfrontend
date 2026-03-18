@@ -11,7 +11,7 @@ import { execSync } from 'node:child_process'
 import { createGitRef } from './models/ref'
 import { commit, amendCommit, createEmptyCommit } from './operations/commit'
 import { getHead, getCurrentBranch, hasUntrackedFiles } from './operations/head-info'
-import { getCommitLog, getCommitsBetween, getCommitsSince, getCommit, commitExists } from './operations/log'
+import { getCommitLog, getCommitsBetween, getCommitsSince, getCommit, commitExists, commitReachableFromHead } from './operations/log'
 import { createTag, deleteTag, pushTag } from './operations/manage-tags'
 import { getTags, getTag, tagExists, getLatestTag, getTagsForPackage } from './operations/query-tags'
 import { stage, unstage, stageAll, hasStagedChanges, hasUnstagedChanges } from './operations/stage'
@@ -85,6 +85,14 @@ export interface GitClient {
    * Checks if a commit exists.
    */
   commitExists(hash: string): boolean
+
+  /**
+   * Checks if a commit is reachable from HEAD (i.e., is an ancestor of HEAD).
+   *
+   * Use this to verify an external commit reference before using it for
+   * range queries. Detects if history was rewritten after the reference was recorded.
+   */
+  commitReachableFromHead(hash: string): boolean
 
   // ========== Tag Operations ==========
 
@@ -334,6 +342,7 @@ export function createGitClient(config: GitClientConfig = {}): GitClient {
     getCommitsSince: (since, options) => getCommitsSince(since, { ...opts, ...options }),
     getCommit: (hash) => getCommit(hash, opts),
     commitExists: (hash) => commitExists(hash, opts),
+    commitReachableFromHead: (hash) => commitReachableFromHead(hash, opts),
 
     // Tag operations
     getTags: (options) => getTags({ ...opts, ...options }),

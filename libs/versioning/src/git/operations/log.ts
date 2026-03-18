@@ -209,6 +209,45 @@ export function commitExists(hash: string, options: Pick<GitLogOptions, 'cwd' | 
 }
 
 /**
+ * Checks if a commit is reachable from HEAD (i.e., is an ancestor of HEAD).
+ *
+ * A commit may exist in the repository but be orphaned (not in current branch history).
+ * This function verifies that the commit is actually in the history of the current HEAD.
+ *
+ * Common use cases:
+ * - Verify an external commit reference before using it for range queries
+ * - Detect if history was rewritten (rebase/force push) after a reference was recorded
+ *
+ * @param hash - Commit hash to check
+ * @param options - Additional options
+ * @returns True if the commit is an ancestor of HEAD
+ *
+ * @example
+ * if (commitReachableFromHead(baseCommit)) {
+ *   // Safe to use for commit range queries
+ *   const commits = getCommitsSince(baseCommit)
+ * } else {
+ *   // Commit not in current history, need fallback strategy
+ * }
+ */
+export function commitReachableFromHead(hash: string, options: Pick<GitLogOptions, 'cwd' | 'timeout'> = {}): boolean {
+  const safeHash = escapeGitRef(hash)
+  try {
+    // git merge-base --is-ancestor exits with 0 if commit is ancestor of HEAD
+    execSync(`git merge-base --is-ancestor ${safeHash} HEAD`, {
+      encoding: 'utf-8',
+      cwd: options.cwd,
+      timeout: options.timeout ?? 5000,
+      stdio: ['pipe', 'pipe', 'pipe'],
+    })
+    return true
+  } catch {
+    // Exit code 1 means not an ancestor, other errors also return false
+    return false
+  }
+}
+
+/**
  * Parses raw git log output into GitCommit objects.
  *
  * @param output - Raw git log output

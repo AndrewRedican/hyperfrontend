@@ -29,6 +29,7 @@ jest.mock('./operations/log', () => ({
   getCommitsSince: jest.fn().mockReturnValue([]),
   getCommit: jest.fn().mockReturnValue(null),
   commitExists: jest.fn().mockReturnValue(false),
+  commitReachableFromHead: jest.fn().mockReturnValue(false),
 }))
 jest.mock('./operations/status', () => ({
   getStatus: jest.fn().mockReturnValue({
@@ -141,6 +142,14 @@ describe('createGitClient', () => {
       const client = createGitClient()
 
       const result = client.commitExists('abc123')
+
+      expect(result).toBe(false)
+    })
+
+    it('provides commitReachableFromHead method', () => {
+      const client = createGitClient()
+
+      const result = client.commitReachableFromHead('abc123')
 
       expect(result).toBe(false)
     })

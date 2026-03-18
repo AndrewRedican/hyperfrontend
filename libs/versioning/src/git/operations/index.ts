@@ -11,6 +11,7 @@ export {
   getCommitsSince,
   getCommit,
   commitExists,
+  commitReachableFromHead,
   escapeGitRef,
   escapeGitPath,
   escapeGitArg,

@@ -5,6 +5,7 @@ import {
   getCommitsSince,
   getCommit,
   commitExists,
+  commitReachableFromHead,
   escapeGitRef,
   escapeGitPath,
   escapeGitArg,
@@ -447,6 +448,74 @@ describe('commitExists', () => {
     commitExists('abc123', { timeout: 1000 })
 
     expect(mockExecSync).toHaveBeenCalledWith(expect.any(String), expect.objectContaining({ timeout: 1000 }))
+  })
+})
+
+// ============================================================================
+// commitReachableFromHead Tests
+// ============================================================================
+
+describe('commitReachableFromHead', () => {
+  beforeEach(() => {
+    jest.clearAllMocks()
+  })
+
+  it('returns true when commit is ancestor of HEAD', () => {
+    // git merge-base --is-ancestor exits with 0 (no output) when commit is ancestor
+    mockExecSync.mockReturnValue('')
+
+    const result = commitReachableFromHead('abc123')
+
+    expect(result).toBe(true)
+    expect(mockExecSync).toHaveBeenCalledWith(expect.stringContaining('git merge-base --is-ancestor'), expect.any(Object))
+  })
+
+  it('returns false when commit is not ancestor of HEAD', () => {
+    // git merge-base --is-ancestor exits with 1 when not an ancestor
+    mockExecSync.mockImplementation(() => {
+      const error = new Error('exit code 1')
+      ;(error as NodeJS.ErrnoException).code = '1'
+      throw error
+    })
+
+    const result = commitReachableFromHead('orphaned123')
+
+    expect(result).toBe(false)
+  })
+
+  it('returns false when commit does not exist', () => {
+    mockExecSync.mockImplementation(() => {
+      throw new Error('fatal: Not a valid object name')
+    })
+
+    const result = commitReachableFromHead('nonexistent')
+
+    expect(result).toBe(false)
+  })
+
+  it('uses custom cwd', () => {
+    mockExecSync.mockReturnValue('')
+
+    commitReachableFromHead('abc123', { cwd: '/tmp/repo' })
+
+    expect(mockExecSync).toHaveBeenCalledWith(expect.any(String), expect.objectContaining({ cwd: '/tmp/repo' }))
+  })
+
+  it('uses custom timeout', () => {
+    mockExecSync.mockReturnValue('')
+
+    commitReachableFromHead('abc123', { timeout: 1000 })
+
+    expect(mockExecSync).toHaveBeenCalledWith(expect.any(String), expect.objectContaining({ timeout: 1000 }))
+  })
+
+  it('escapes potentially dangerous commit hashes', () => {
+    mockExecSync.mockReturnValue('')
+
+    // The function should escape the hash before using it
+    commitReachableFromHead('abc123')
+
+    expect(mockExecSync).toHaveBeenCalledWith('git merge-base --is-ancestor abc123 HEAD', expect.any(Object))
   })
 })
 
