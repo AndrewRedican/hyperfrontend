@@ -42,8 +42,15 @@ function createMockTree(files: Record<string, string> = {}, throwOnRead = false)
   } as unknown as Tree
 }
 
-function createMockRegistry(options: { version?: string | null; throwOnQuery?: boolean } = {}): Registry {
-  const { version = null, throwOnQuery = false } = options
+function createMockRegistry(
+  options: {
+    version?: string | null
+    gitHead?: string | null
+    throwOnQuery?: boolean
+    throwOnVersionInfo?: boolean
+  } = {}
+): Registry {
+  const { version = null, gitHead = null, throwOnQuery = false, throwOnVersionInfo = false } = options
 
   return {
     name: 'mock',
@@ -60,7 +67,18 @@ function createMockRegistry(options: { version?: string | null; throwOnQuery?: b
     async getPackageInfo() {
       return null
     },
-    async getVersionInfo() {
+    async getVersionInfo(_pkg: string, v: string) {
+      if (throwOnVersionInfo) {
+        throw new Error('Version info query failed')
+      }
+      if (v === version && version !== null) {
+        return {
+          version: v,
+          publishedAt: '2026-03-18T00:00:00.000Z',
+          tarball: `https://mock.registry.com/${v}.tgz`,
+          gitHead: gitHead ?? undefined,
+        }
+      }
       return null
     },
     async listVersions() {
@@ -285,6 +303,114 @@ describe('fetch-registry step', () => {
         expect(result.status).toBe('success')
         expect(result.message).toContain('Published: 1.5.0')
         expect(result.message).toContain('Local: 2.0.0')
+      })
+
+      describe('publishedCommit extraction', () => {
+        it('extracts gitHead as publishedCommit when available', async () => {
+          const tree = createMockTree({
+            '/workspace/libs/test/package.json': JSON.stringify({
+              name: '@test/pkg',
+              version: '1.0.0',
+            }),
+          })
+          const registry = createMockRegistry({
+            version: '1.0.0',
+            gitHead: 'abc1234567890def',
+          })
+          const logger = createMockLogger()
+          const context = createMockContext({ tree, registry, logger })
+          const step = createFetchRegistryStep()
+
+          const result = await step.execute(context)
+
+          expect(result.status).toBe('success')
+          expect(result.stateUpdates?.publishedCommit).toBe('abc1234567890def')
+          expect(logger.debug).toHaveBeenCalledWith(expect.stringContaining('Published 1.0.0 at commit abc1234'))
+        })
+
+        it('sets publishedCommit to null when gitHead is missing', async () => {
+          const tree = createMockTree({
+            '/workspace/libs/test/package.json': JSON.stringify({
+              name: '@test/pkg',
+              version: '1.0.0',
+            }),
+          })
+          const registry = createMockRegistry({
+            version: '1.0.0',
+            gitHead: null,
+          })
+          const logger = createMockLogger()
+          const context = createMockContext({ tree, registry, logger })
+          const step = createFetchRegistryStep()
+
+          const result = await step.execute(context)
+
+          expect(result.status).toBe('success')
+          expect(result.stateUpdates?.publishedCommit).toBe(null)
+          expect(logger.debug).toHaveBeenCalledWith(expect.stringContaining('has no gitHead'))
+        })
+
+        it('sets publishedCommit to null when getVersionInfo fails', async () => {
+          const tree = createMockTree({
+            '/workspace/libs/test/package.json': JSON.stringify({
+              name: '@test/pkg',
+              version: '1.0.0',
+            }),
+          })
+          const registry = createMockRegistry({
+            version: '1.0.0',
+            throwOnVersionInfo: true,
+          })
+          const logger = createMockLogger()
+          const context = createMockContext({ tree, registry, logger })
+          const step = createFetchRegistryStep()
+
+          const result = await step.execute(context)
+
+          expect(result.status).toBe('success')
+          expect(result.stateUpdates?.publishedVersion).toBe('1.0.0')
+          expect(result.stateUpdates?.publishedCommit).toBe(null)
+          expect(logger.debug).toHaveBeenCalledWith(expect.stringContaining('Could not fetch version info'))
+        })
+
+        it('includes commit hash in message when available', async () => {
+          const tree = createMockTree({
+            '/workspace/libs/test/package.json': JSON.stringify({
+              name: '@test/pkg',
+              version: '2.0.0',
+            }),
+          })
+          const registry = createMockRegistry({
+            version: '1.5.0',
+            gitHead: 'def4567890abcdef',
+          })
+          const context = createMockContext({ tree, registry })
+          const step = createFetchRegistryStep()
+
+          const result = await step.execute(context)
+
+          expect(result.status).toBe('success')
+          expect(result.message).toContain('Published: 1.5.0 @ def4567')
+          expect(result.message).toContain('Local: 2.0.0')
+        })
+
+        it('sets publishedCommit to null for first release', async () => {
+          const tree = createMockTree({
+            '/workspace/libs/test/package.json': JSON.stringify({
+              name: '@test/pkg',
+              version: '0.0.0',
+            }),
+          })
+          const registry = createMockRegistry({ version: null })
+          const context = createMockContext({ tree, registry })
+          const step = createFetchRegistryStep()
+
+          const result = await step.execute(context)
+
+          expect(result.status).toBe('success')
+          expect(result.stateUpdates?.publishedCommit).toBe(null)
+          expect(result.stateUpdates?.isFirstRelease).toBe(true)
+        })
       })
     })
   })

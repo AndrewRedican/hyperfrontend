@@ -39,23 +39,43 @@ export function createFetchRegistryStep(): FlowStep {
 
     // Query registry for published version
     let publishedVersion: string | null = null
+    let publishedCommit: string | null = null
     let isFirstRelease = true
 
     try {
       publishedVersion = await registry.getLatestVersion(packageName)
       isFirstRelease = publishedVersion === null
+
+      // When published version exists, get its commit hash from gitHead
+      if (publishedVersion) {
+        try {
+          const versionInfo = await registry.getVersionInfo(packageName, publishedVersion)
+          publishedCommit = versionInfo?.gitHead ?? null
+          if (publishedCommit) {
+            logger.debug(`Published ${publishedVersion} at commit ${publishedCommit.slice(0, 7)}`)
+          } else {
+            logger.debug(`Published ${publishedVersion} has no gitHead (older package or published without git)`)
+          }
+        } catch (error) {
+          // Version info fetch failed, but we still have the version
+          logger.debug(`Could not fetch version info for ${publishedVersion}: ${error}`)
+        }
+      }
     } catch (error) {
       // Package might not exist yet, which is fine
       logger.debug(`Registry query failed (package may not exist): ${error}`)
       isFirstRelease = true
     }
 
-    const message = isFirstRelease ? `First release (local: ${currentVersion})` : `Published: ${publishedVersion}, Local: ${currentVersion}`
+    const message = isFirstRelease
+      ? `First release (local: ${currentVersion})`
+      : `Published: ${publishedVersion}${publishedCommit ? ` @ ${publishedCommit.slice(0, 7)}` : ''}, Local: ${currentVersion}`
 
     return {
       status: 'success',
       stateUpdates: {
         publishedVersion,
+        publishedCommit,
         currentVersion,
         isFirstRelease,
       },

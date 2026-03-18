@@ -20,6 +20,9 @@ export interface FlowState {
   /** Published version on registry (null if never published) */
   readonly publishedVersion?: string | null
 
+  /** Git commit hash of the last published version */
+  readonly publishedCommit?: string | null
+
   /** Calculated next version */
   readonly nextVersion?: string
 
