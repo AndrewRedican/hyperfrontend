@@ -31,23 +31,26 @@ export function createUpdatePackageStep(): FlowStep {
       }
 
       const packageJsonPath = `${projectRoot}/package.json`
+      logger.debug(`Reading package.json from: ${packageJsonPath}`)
 
       // Read package.json
       let content: string
       try {
         content = tree.read(packageJsonPath, 'utf-8') ?? ''
         if (!content) {
+          logger.error(`package.json not found at ${packageJsonPath}`)
           return {
             status: 'failed',
-            error: createError('package.json not found'),
-            message: 'Could not read package.json',
+            error: createError(`package.json not found at ${packageJsonPath}`),
+            message: `Could not read package.json at ${packageJsonPath}`,
           }
         }
       } catch (error) {
+        logger.error(`Failed to read package.json at ${packageJsonPath}: ${error}`)
         return {
           status: 'failed',
           error: error instanceof Error ? error : createError(String(error)),
-          message: 'Failed to read package.json',
+          message: `Failed to read package.json at ${packageJsonPath}`,
         }
       }
 

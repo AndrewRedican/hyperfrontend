@@ -1,3 +1,4 @@
+/* eslint-disable @nx/enforce-module-boundaries */
 import type { Logger } from '@hyperfrontend/logging'
 import type { Tree } from '@hyperfrontend/project-scope'
 import type { GitClient } from '../../git/factory'
@@ -9,10 +10,11 @@ import { createError } from '@hyperfrontend/immutable-api-utils/built-in-copy/er
 import { parse } from '@hyperfrontend/immutable-api-utils/built-in-copy/json'
 import { createSet } from '@hyperfrontend/immutable-api-utils/built-in-copy/set'
 import { logger as defaultLogger } from '@hyperfrontend/logging'
-// eslint-disable-next-line @nx/enforce-module-boundaries
 import { createTree, commitChanges } from '@hyperfrontend/project-scope'
+import { isNxWorkspace, discoverNxProjects } from '@hyperfrontend/project-scope/nx'
 import { createGitClient, DEFAULT_GIT_CLIENT_CONFIG } from '../../git/factory'
 import { createRegistry } from '../../registry/factory'
+import { discoverProjectByName } from '../../workspace/discovery'
 import { DEFAULT_FLOW_CONFIG } from '../models/types'
 
 /**
@@ -36,32 +38,93 @@ export interface ExecuteOptions {
 
   /** Custom GitClient instance (for testing) */
   git?: GitClient
+
+  /**
+   * Project root path (relative to workspace root, e.g., 'libs/utils/immutable-api').
+   * If provided, this is used directly instead of deriving from project name.
+   * This is the recommended approach when calling from the Nx executor.
+   */
+  projectRoot?: string
 }
 
 /**
- * Resolves the project root path from workspace root and project name.
+ * Resolution source for project root discovery.
+ */
+type ProjectRootSource = 'provided' | 'nx-discovery' | 'workspace-discovery'
+
+/**
+ * Result of project root discovery.
+ */
+interface ProjectRootResolution {
+  /** Absolute path to project root */
+  projectRoot: string
+  /** How the path was resolved */
+  source: ProjectRootSource
+}
+
+/**
+ * Discovers project root using multiple strategies.
  *
- * For now, uses a simple convention: libs/{projectName} or apps/{projectName}
- * In a real implementation, this would query the workspace configuration.
+ * Resolution order:
+ * 1. Explicit `projectRoot` option (from Nx executor)
+ * 2. Nx project discovery via `discoverNxProjects` (if in Nx workspace)
+ * 3. Workspace discovery via `discoverProjectByName`
  *
  * @param workspaceRoot - Workspace root path
  * @param projectName - Project name (e.g., 'lib-versioning')
- * @returns Absolute path to project root
+ * @param providedRoot - Explicitly provided project root (optional)
+ * @param logger - Logger instance
+ * @returns Resolution result with path and source, or null if not found
  */
-function resolveProjectRoot(workspaceRoot: string, projectName: string): string {
-  // Remove 'lib-' or 'app-' prefix to get the folder name
-  let folderName = projectName
-  let prefix = 'libs'
-
-  if (projectName.startsWith('lib-')) {
-    folderName = projectName.slice(4)
-    prefix = 'libs'
-  } else if (projectName.startsWith('app-')) {
-    folderName = projectName.slice(4)
-    prefix = 'apps'
+function discoverProjectRoot(
+  workspaceRoot: string,
+  projectName: string,
+  providedRoot: string | undefined,
+  logger: Logger
+): ProjectRootResolution | null {
+  // 1. Explicit projectRoot provided (preferred - from Nx executor)
+  if (providedRoot) {
+    const projectRoot = providedRoot.startsWith(workspaceRoot) ? providedRoot : `${workspaceRoot}/${providedRoot}`
+    logger.debug(`Using provided project root: ${providedRoot}`)
+    return { projectRoot, source: 'provided' }
   }
 
-  return `${workspaceRoot}/${prefix}/${folderName}`
+  // 2. Try Nx project discovery (fast, if we're in an Nx workspace)
+  if (isNxWorkspace(workspaceRoot)) {
+    logger.debug('Nx workspace detected, attempting Nx project discovery')
+    try {
+      const nxProjects = discoverNxProjects(workspaceRoot)
+      const nxConfig = nxProjects.get(projectName)
+      if (nxConfig?.root) {
+        const projectRoot = `${workspaceRoot}/${nxConfig.root}`
+        logger.debug(`Discovered project root via Nx: ${nxConfig.root}`)
+        return { projectRoot, source: 'nx-discovery' }
+      }
+      logger.debug(`Project "${projectName}" not found in Nx project graph`)
+    } catch (error) {
+      logger.debug(`Nx project discovery failed: ${error}`)
+    }
+  }
+
+  // 3. Try workspace discovery (handles any monorepo structure)
+  logger.debug('Attempting workspace discovery via discoverProjectByName')
+  try {
+    const project = discoverProjectByName(projectName, { workspaceRoot })
+    if (project) {
+      logger.debug(`Discovered project root via workspace discovery: ${project.path}`)
+      return { projectRoot: project.path, source: 'workspace-discovery' }
+    }
+    logger.debug(`Project "${projectName}" not found via workspace discovery`)
+  } catch (error) {
+    logger.debug(`Workspace discovery failed: ${error}`)
+  }
+
+  // All discovery methods failed
+  logger.error(
+    `Could not discover project "${projectName}" in workspace "${workspaceRoot}". ` +
+      `Ensure the project exists and has a valid package.json, or pass projectRoot explicitly.`
+  )
+  return null
 }
 
 /**
@@ -69,19 +132,25 @@ function resolveProjectRoot(workspaceRoot: string, projectName: string): string 
  *
  * @param tree - Virtual file system tree
  * @param projectRoot - Project root path
+ * @param logger - Logger instance for diagnostics
  * @returns Package name from package.json
  */
-function resolvePackageName(tree: Tree, projectRoot: string): string {
+function resolvePackageName(tree: Tree, projectRoot: string, logger: Logger): string {
   const packageJsonPath = `${projectRoot}/package.json`
 
   try {
     const content = tree.read(packageJsonPath, 'utf-8')
     if (!content) {
+      logger.debug(`package.json is empty or not found at ${packageJsonPath}`)
       return 'unknown'
     }
     const pkg = <{ name?: string }>parse(content)
+    if (!pkg.name) {
+      logger.debug(`package.json at ${packageJsonPath} has no name field`)
+    }
     return pkg.name ?? 'unknown'
-  } catch {
+  } catch (error) {
+    logger.debug(`Failed to read package.json at ${packageJsonPath}: ${error}`)
     return 'unknown'
   }
 }
@@ -172,9 +241,42 @@ export async function executeFlow(
   const registry = options.registry ?? createRegistry('npm')
   const git = options.git ?? createGitClient({ ...DEFAULT_GIT_CLIENT_CONFIG, cwd: workspaceRoot })
 
-  // Resolve paths
-  const projectRoot = resolveProjectRoot(workspaceRoot, projectName)
-  const packageName = resolvePackageName(tree, projectRoot)
+  // Resolve project root with smart discovery
+  const resolution = discoverProjectRoot(workspaceRoot, projectName, options.projectRoot, flowLogger)
+
+  // Fail early if project cannot be discovered
+  if (!resolution) {
+    return {
+      status: 'failed',
+      steps: [],
+      state: {},
+      duration: dateNow() - startTime,
+      summary: `Project "${projectName}" not found in workspace`,
+    }
+  }
+
+  const { projectRoot, source: projectRootSource } = resolution
+
+  // Early validation: ensure project root is valid
+  const packageJsonPath = `${projectRoot}/package.json`
+  if (!tree.exists(packageJsonPath)) {
+    const errorMsg =
+      `Project root validation failed: ${packageJsonPath} does not exist. ` +
+      `Resolved projectRoot="${projectRoot}" (source: ${projectRootSource}) from projectName="${projectName}".`
+    flowLogger.error(errorMsg)
+    return {
+      status: 'failed',
+      steps: [],
+      state: {},
+      duration: dateNow() - startTime,
+      summary: `Invalid project root: ${projectRoot}`,
+    }
+  }
+
+  const packageName = resolvePackageName(tree, projectRoot, flowLogger)
+  if (packageName === 'unknown') {
+    flowLogger.warn(`Could not read package name from ${packageJsonPath}`)
+  }
 
   // Initialize context
   const context: FlowContext = {
