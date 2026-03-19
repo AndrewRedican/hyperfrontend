@@ -35,7 +35,6 @@
     "version-check": {
       "executor": "@hyperfrontend/package:version-check",
       "options": {
-        "tagPrefix": "{projectName}@",
         "scopeFiltering": {
           "excludeScopes": ["release", "deps", "workspace", "@hyperfrontend/workspace", "root", "repo", "ci", "build"]
         }
