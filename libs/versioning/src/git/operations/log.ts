@@ -1,5 +1,5 @@
 import type { GitCommit } from '../models/commit'
-import { execSync } from 'node:child_process'
+import { execFileSync, execSync } from 'node:child_process'
 import { createError } from '@hyperfrontend/immutable-api-utils/built-in-copy/error'
 import { createGitCommit } from '../models/commit'
 
@@ -234,7 +234,7 @@ export function commitReachableFromHead(hash: string, options: Pick<GitLogOption
   const safeHash = escapeGitRef(hash)
   try {
     // git merge-base --is-ancestor exits with 0 if commit is ancestor of HEAD
-    execSync(`git merge-base --is-ancestor ${safeHash} HEAD`, {
+    execFileSync('git', ['merge-base', '--is-ancestor', safeHash, 'HEAD'], {
       encoding: 'utf-8',
       cwd: options.cwd,
       timeout: options.timeout ?? 5000,

@@ -7,7 +7,7 @@ import type { CreateTagOptions } from './operations/manage-tags'
 import type { ListTagsOptions } from './operations/query-tags'
 import type { StageOptions } from './operations/stage'
 import type { RepositoryStatus } from './operations/status'
-import { execSync } from 'node:child_process'
+import { execFileSync, execSync } from 'node:child_process'
 import { createGitRef } from './models/ref'
 import { commit, amendCommit, createEmptyCommit } from './operations/commit'
 import { getHead, getCurrentBranch, hasUntrackedFiles } from './operations/head-info'
@@ -588,7 +588,7 @@ function push(
  */
 function getRemoteUrl(options: { cwd: string; timeout: number }, remoteName = 'origin'): string | null {
   try {
-    const output = execSync(`git remote get-url ${remoteName}`, {
+    const output = execFileSync('git', ['remote', 'get-url', remoteName], {
       encoding: 'utf-8',
       cwd: options.cwd,
       timeout: options.timeout,

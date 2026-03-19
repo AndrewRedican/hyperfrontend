@@ -1,4 +1,4 @@
-import { execSync } from 'node:child_process'
+import { execFileSync, execSync } from 'node:child_process'
 import {
   getCommitLog,
   getCommitsBetween,
@@ -15,6 +15,7 @@ import {
 jest.mock('node:child_process')
 
 const mockExecSync = execSync as jest.MockedFunction<typeof execSync>
+const mockExecFileSync = <jest.MockedFunction<typeof execFileSync>>execFileSync
 
 // Record separator used in git log format
 const RECORD_SEPARATOR = '\x1e'
@@ -77,10 +78,6 @@ describe('DEFAULT_LOG_OPTIONS', () => {
     expect(DEFAULT_LOG_OPTIONS.timeout).toBe(30000)
   })
 })
-
-// ============================================================================
-// getCommitLog Tests
-// ============================================================================
 
 describe('getCommitLog', () => {
   beforeEach(() => {
@@ -305,10 +302,6 @@ describe('getCommitLog', () => {
   })
 })
 
-// ============================================================================
-// getCommitsBetween Tests
-// ============================================================================
-
 describe('getCommitsBetween', () => {
   beforeEach(() => {
     jest.clearAllMocks()
@@ -339,10 +332,6 @@ describe('getCommitsBetween', () => {
   })
 })
 
-// ============================================================================
-// getCommitsSince Tests
-// ============================================================================
-
 describe('getCommitsSince', () => {
   beforeEach(() => {
     jest.clearAllMocks()
@@ -364,10 +353,6 @@ describe('getCommitsSince', () => {
     expect(mockExecSync).toHaveBeenCalledWith(expect.stringContaining('--no-merges'), expect.any(Object))
   })
 })
-
-// ============================================================================
-// getCommit Tests
-// ============================================================================
 
 describe('getCommit', () => {
   beforeEach(() => {
@@ -405,10 +390,6 @@ describe('getCommit', () => {
     expect(result).toBeNull()
   })
 })
-
-// ============================================================================
-// commitExists Tests
-// ============================================================================
 
 describe('commitExists', () => {
   beforeEach(() => {
@@ -451,10 +432,6 @@ describe('commitExists', () => {
   })
 })
 
-// ============================================================================
-// commitReachableFromHead Tests
-// ============================================================================
-
 describe('commitReachableFromHead', () => {
   beforeEach(() => {
     jest.clearAllMocks()
@@ -462,17 +439,17 @@ describe('commitReachableFromHead', () => {
 
   it('returns true when commit is ancestor of HEAD', () => {
     // git merge-base --is-ancestor exits with 0 (no output) when commit is ancestor
-    mockExecSync.mockReturnValue('')
+    mockExecFileSync.mockReturnValue('')
 
     const result = commitReachableFromHead('abc123')
 
     expect(result).toBe(true)
-    expect(mockExecSync).toHaveBeenCalledWith(expect.stringContaining('git merge-base --is-ancestor'), expect.any(Object))
+    expect(mockExecFileSync).toHaveBeenCalledWith('git', ['merge-base', '--is-ancestor', 'abc123', 'HEAD'], expect.any(Object))
   })
 
   it('returns false when commit is not ancestor of HEAD', () => {
     // git merge-base --is-ancestor exits with 1 when not an ancestor
-    mockExecSync.mockImplementation(() => {
+    mockExecFileSync.mockImplementation(() => {
       const error = new Error('exit code 1')
       ;(error as NodeJS.ErrnoException).code = '1'
       throw error
@@ -484,7 +461,7 @@ describe('commitReachableFromHead', () => {
   })
 
   it('returns false when commit does not exist', () => {
-    mockExecSync.mockImplementation(() => {
+    mockExecFileSync.mockImplementation(() => {
       throw new Error('fatal: Not a valid object name')
     })
 
@@ -494,34 +471,30 @@ describe('commitReachableFromHead', () => {
   })
 
   it('uses custom cwd', () => {
-    mockExecSync.mockReturnValue('')
+    mockExecFileSync.mockReturnValue('')
 
     commitReachableFromHead('abc123', { cwd: '/tmp/repo' })
 
-    expect(mockExecSync).toHaveBeenCalledWith(expect.any(String), expect.objectContaining({ cwd: '/tmp/repo' }))
+    expect(mockExecFileSync).toHaveBeenCalledWith('git', expect.any(Array), expect.objectContaining({ cwd: '/tmp/repo' }))
   })
 
   it('uses custom timeout', () => {
-    mockExecSync.mockReturnValue('')
+    mockExecFileSync.mockReturnValue('')
 
     commitReachableFromHead('abc123', { timeout: 1000 })
 
-    expect(mockExecSync).toHaveBeenCalledWith(expect.any(String), expect.objectContaining({ timeout: 1000 }))
+    expect(mockExecFileSync).toHaveBeenCalledWith('git', expect.any(Array), expect.objectContaining({ timeout: 1000 }))
   })
 
   it('escapes potentially dangerous commit hashes', () => {
-    mockExecSync.mockReturnValue('')
+    mockExecFileSync.mockReturnValue('')
 
     // The function should escape the hash before using it
     commitReachableFromHead('abc123')
 
-    expect(mockExecSync).toHaveBeenCalledWith('git merge-base --is-ancestor abc123 HEAD', expect.any(Object))
+    expect(mockExecFileSync).toHaveBeenCalledWith('git', ['merge-base', '--is-ancestor', 'abc123', 'HEAD'], expect.any(Object))
   })
 })
-
-// ============================================================================
-// escapeGitRef Tests
-// ============================================================================
 
 describe('escapeGitRef', () => {
   it('allows valid git references', () => {
@@ -566,10 +539,6 @@ describe('escapeGitRef', () => {
   })
 })
 
-// ============================================================================
-// escapeGitPath Tests
-// ============================================================================
-
 describe('escapeGitPath', () => {
   it('allows valid file paths', () => {
     expect(escapeGitPath('src/index.ts')).toBe('src/index.ts')
@@ -607,10 +576,6 @@ describe('escapeGitPath', () => {
     expect(() => escapeGitPath('path\nnewline')).toThrow('Invalid character')
   })
 })
-
-// ============================================================================
-// escapeGitArg Tests
-// ============================================================================
 
 describe('escapeGitArg', () => {
   it('allows valid arguments', () => {
