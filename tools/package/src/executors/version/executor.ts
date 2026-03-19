@@ -104,6 +104,7 @@ export default async function versionExecutor(options: VersionExecutorSchema, co
   const flowResult = await executeFlow(flow, projectName, workspaceRoot, {
     dryRun: options.dryRun,
     verbose: options.verbose ?? false,
+    projectRoot,
   })
 
   // === PROCESS RESULT ===
