@@ -29,6 +29,12 @@
         "tagPrefix": "{projectName}@"
       }
     },
+    "version-check": {
+      "executor": "@hyperfrontend/package:version-check",
+      "options": {
+        "tagPrefix": "{projectName}@"
+      }
+    },
     "build": {
       "cache": true,
       "dependsOn": ["^build"],
