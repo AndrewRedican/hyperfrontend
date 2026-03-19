@@ -271,7 +271,7 @@ Version bumps happen automatically via **lefthook pre-push hooks**. When you `gi
 1. lefthook runs typecheck, lint, and tests
 2. For each affected library, it runs `nx version <lib> --collectFiles`
 3. Package.json and CHANGELOG.md are updated
-4. A version commit is created: `chore: update versions for lib-xxx [skip ci]`
+4. A version commit is created: `chore: update versions for lib-xxx`
 5. Push proceeds with both your changes and the version commit
 
 **What this means for you:**
