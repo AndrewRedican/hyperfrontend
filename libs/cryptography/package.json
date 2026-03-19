@@ -39,7 +39,7 @@
     "@hyperfrontend/random-generator-utils": "0.0.4",
     "@hyperfrontend/string-utils": "0.0.4",
     "@hyperfrontend/time-utils": "0.0.4",
-    "@hyperfrontend/immutable-api-utils": "0.1.2"
+    "@hyperfrontend/immutable-api-utils": "0.1.3"
   },
   "funding": {
     "type": "github",

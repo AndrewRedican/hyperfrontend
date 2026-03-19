@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.1.3](https://github.com/AndrewRedican/hyperfrontend/compare/c8db08be8b183addd26caf81fdd17fb3693f296f...6950fe2dd7f9da00e1677fd876e5c4a272ea3a9b) - 2026-03-19
+
+### Bug Fixes
+
+- rename safe object to prevent variable shadowing on cjs module init
+
 ## [0.1.2](https://github.com/AndrewRedican/hyperfrontend/compare/c8db08be8b183addd26caf81fdd17fb3693f296f...d55045f98cd504c3cd39ddb8e38cff4fb9f273fb) - 2026-03-19
 
 ### Bug Fixes
