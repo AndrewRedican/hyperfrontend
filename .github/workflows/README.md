@@ -28,6 +28,7 @@ This directory contains the CI/CD workflows for the hyperfrontend monorepo.
 - `test`: Testing with coverage upload (affected only)
 - `e2e`: E2E tests (affected only)
 - `ci-status`: Aggregates results and provides final status
+- `version-check`: Validates version bumps were applied locally (runs after ci-status)
 
 ### CI - Main Branch ([ci-main.yml](./ci-main.yml))
 
@@ -352,9 +353,10 @@ The `security-scan.yml` workflow runs CodeQL analysis in parallel with the PR wo
 
 **Important Notes**:
 
-- The version-validation job runs after all CI checks pass
-- Version commits use `[skip ci]` to prevent workflow retrigger
-- Pushes by `github-actions[bot]` using `GITHUB_TOKEN` do not trigger workflows by design
+- The `version-check` job runs after all CI checks pass (validation only, no commits)
+- Version bumps are applied locally via lefthook pre-push hooks
+- CI validates that expected versions match committed versions
+- Uses GITHUB_TOKEN with read-only contents permission
 
 ## Maintenance
 

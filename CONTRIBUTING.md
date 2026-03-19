@@ -266,21 +266,43 @@ Output goes to `dist/libs/<library>/` with ESM + CJS formats.
 
 ### Versioning (Automatic)
 
-Version bumps happen automatically via a post-commit hook. When you make a commit with a conventional commit message (`feat:`, `fix:`, etc.), the hook:
+Version bumps happen automatically via **lefthook pre-push hooks**. When you `git push`:
 
-1. Detects affected libraries
-2. Bumps version and updates CHANGELOG
-3. Amends your commit to include the changes
+1. lefthook runs typecheck, lint, and tests
+2. For each affected library, it runs `nx version <lib> --collectFiles`
+3. Package.json and CHANGELOG.md are updated
+4. A version commit is created: `chore: update versions for lib-xxx [skip ci]`
+5. Push proceeds with both your changes and the version commit
 
-To manually version (rarely needed):
+**What this means for you:**
+
+- Just write conventional commit messages (`feat:`, `fix:`, `docs:`, etc.)
+- Push normally — versioning happens automatically
+- Your PR will include the version bump already applied
+
+**If you need to bypass versioning (not recommended):**
+
+```bash
+# This will cause CI to fail with remediation instructions
+git push --no-verify
+```
+
+**To manually version (rarely needed):**
 
 ```bash
 # Preview version changes (dry run)
-npx nx version lib-nexus --dryRun --skipCommit
+npx nx version lib-nexus --dryRun
 
-# Version affected libraries
-npx nx affected -t version --skipCommit
+# Manually run versioning
+npx nx version lib-nexus
+
+# Validate version state (what CI runs)
+npx nx version-check lib-nexus
 ```
+
+**CI Validation:**
+
+CI runs `version-check` to validate that versions were correctly applied. If you pushed with `--no-verify` (bypassing lefthook), CI will fail and comment on your PR with instructions to fix.
 
 ### Publishing (Maintainers)
 
@@ -347,8 +369,11 @@ When you open a pull request:
 
 - **Affected Projects**: Nx calculates which projects are affected by your changes
 - **Fast Checks**: Only affected projects are validated (format, lint, build, test)
+- **Version Check**: Validates that version bumps were applied by lefthook
 - **Typical Duration**: < 10 minutes
 - **Status Check**: "CI Status Check" must pass to merge
+
+If the version-check fails, CI will comment on your PR with instructions to fix.
 
 #### Main Branch Workflow
 
