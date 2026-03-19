@@ -9,7 +9,7 @@
 #
 #   1. Developer commits changes
 #   2. On `git push`, lefthook runs versioning for affected libraries
-#   3. Version commit is created automatically: "chore: update versions for lib-x [skip ci]"
+#   3. Version commit is created automatically: "chore: update versions for lib-x"
 #   4. Push proceeds with both commits
 #   5. CI runs `version-check` to validate versions are correct
 #
@@ -51,7 +51,7 @@ pre-push:
     #   - Detects affected libraries via `nx show projects --affected`
     #   - Runs `nx version $lib --collectFiles` for each
     #   - Updates package.json, CHANGELOG.md, and dependent package refs
-    #   - Creates a version commit: "chore: update versions for lib-x [skip ci]"
+    #   - Creates a version commit: "chore: update versions for lib-x"
     #
     # CI validates this with `version-check` - it does NOT create version commits.
     # If you skip this hook (--no-verify), CI will fail and guide you to fix it.
@@ -141,11 +141,10 @@ pre-push:
           git add $ALL_FILES
 
           # Commit message matches executor's isVersionCommit() Pattern 2: chore: update versions for lib-a, lib-b
-          # Use [skip ci] to prevent PR workflow retrigger when pushed
           if [ -n "$BUMPED" ]; then
-            git commit -m "chore: update versions for $BUMPED [skip ci]" --no-verify
+            git commit -m "chore: update versions for $BUMPED" --no-verify
           else
-            git commit -m "chore: update versions for affected libs [skip ci]" --no-verify
+            git commit -m "chore: update versions for affected libs" --no-verify
           fi
           echo "✅ Version updates committed"
         else
