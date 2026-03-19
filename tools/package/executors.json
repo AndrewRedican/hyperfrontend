@@ -20,6 +20,11 @@
       "schema": "./src/executors/version/schema.json",
       "description": "Versioning executor using @hyperfrontend/versioning. Uses npm registry as source of truth."
     },
+    "version-check": {
+      "implementation": "./src/executors/version-check/executor",
+      "schema": "./src/executors/version-check/schema.json",
+      "description": "Validates version state without changes. Used by CI to verify lefthook versioning."
+    },
     "e2e": {
       "implementation": "./src/executors/e2e/executor",
       "schema": "./src/executors/e2e/schema.json",

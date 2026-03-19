@@ -84,23 +84,44 @@ This is controlled by the `updateDependents` option (default: true).
 
 ### CI Integration
 
-The executor integrates with CI workflows in two modes:
+#### Local Versioning (Primary)
 
-**PR Workflow (version-validation):**
+Version bumps are applied **locally** via lefthook pre-push hooks. When you `git push`:
+
+1. lefthook runs `nx version <lib> --collectFiles` for affected libraries
+2. Package.json and CHANGELOG.md are updated
+3. A version commit is created: `chore: update versions for lib-xxx [skip ci]`
+4. Push proceeds with the version commit included
+
+See [lefthook.yml](../../../../lefthook.yml) for the hook configuration.
+
+#### CI Validation (version-check)
+
+CI validates that version bumps were correctly applied using the **version-check** executor:
 
 ```bash
-npx nx version lib-xxx --collectFiles
-# Outputs: MODIFIED:libs/xxx/package.json
-#          MODIFIED:libs/xxx/CHANGELOG.md
+npx nx version-check lib-xxx
+# Outputs: ✅ lib-xxx: version 2.1.0 matches expected
+# Or:      ❌ lib-xxx: version mismatch (with remediation steps)
 ```
 
-**Main Workflow:**
+This is read-only validation — CI does NOT create commits. If you bypass lefthook with `--no-verify`, CI will fail with instructions to fix.
+
+See [version-check executor](../version-check/README.md) for details.
+
+#### Main Workflow (publish)
+
+After PR merge to main:
 
 1. `publish` job publishes to npm
 2. `push-tags` job creates git tags for published versions
 3. `create-github-release` job creates GitHub releases
 
 Tags are created **after** publish, not during versioning. This is why `skipTag` defaults to `true`.
+
+## Related Executors
+
+- **[version-check](../version-check/README.md)** — Validates version state without making changes (used by CI)
 
 ## Troubleshooting
 
