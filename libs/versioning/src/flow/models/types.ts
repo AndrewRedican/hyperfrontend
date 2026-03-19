@@ -7,6 +7,7 @@ import type { GitClient } from '../../git/factory'
 import type { Registry } from '../../registry/models/registry'
 import type { RepositoryConfig, RepositoryResolution } from '../../repository/models'
 import type { BumpType } from '../../semver/models/version'
+import { DEFAULT_EXCLUDE_SCOPES } from '../../commits/classify'
 export type { Logger } from '@hyperfrontend/logging'
 
 /**
@@ -168,6 +169,9 @@ export interface ScopeFilteringConfig {
 
 /**
  * Default scope filtering configuration.
+ *
+ * Uses DEFAULT_EXCLUDE_SCOPES from commits/classify to ensure consistency
+ * between flow-level filtering and commit classification.
  */
 export const DEFAULT_SCOPE_FILTERING_CONFIG: Required<Omit<ScopeFilteringConfig, 'infrastructure' | 'infrastructureMatcher'>> & {
   infrastructure: undefined
@@ -175,7 +179,7 @@ export const DEFAULT_SCOPE_FILTERING_CONFIG: Required<Omit<ScopeFilteringConfig,
 } = {
   strategy: 'hybrid',
   includeScopes: [],
-  excludeScopes: ['release', 'deps'],
+  excludeScopes: DEFAULT_EXCLUDE_SCOPES,
   trackDependencyChanges: false,
   infrastructure: undefined,
   infrastructureMatcher: undefined,
