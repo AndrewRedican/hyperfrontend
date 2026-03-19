@@ -1,9 +1,9 @@
 import { relative } from 'node:path'
 import { join } from 'node:path'
-import { writeJsonFile } from '@hyperfrontend/project-scope/core/fs'
 import { getProductionDependencies, getPeerDependencies, readPackageJsonIfExists } from '@hyperfrontend/project-scope/project/package'
 import { findFiles } from '@hyperfrontend/project-scope/project/traversal'
 import { getLogger } from './logger'
+import { replaceDependencyVersion } from './replace-dependency-version'
 
 /**
  * Helper to convert absolute path to relative path for cleaner logging
@@ -62,27 +62,24 @@ export function updateDependentVersions(
       }
 
       logger.item(`"${rel(packageJsonPath)}"`)
-      let modified = false
       const currentDepVersion = getProductionDependencies(pkg)[packageName]
       const currentPeerVersion = getPeerDependencies(pkg)[packageName]
+      const relativePath = relative(workspaceRoot, packageJsonPath)
 
-      if (currentDepVersion !== undefined && currentDepVersion !== newVersion) {
+      const needsDepUpdate = currentDepVersion !== undefined && currentDepVersion !== newVersion
+      const needsPeerUpdate = currentPeerVersion !== undefined && currentPeerVersion !== newVersion
+
+      if (needsDepUpdate) {
         logger.item(`  updating dependency "${packageName}" from "${currentDepVersion}" to "${newVersion}"`)
-        pkg.dependencies = { ...pkg.dependencies, [packageName]: newVersion }
-        modified = true
       }
-
-      if (currentPeerVersion !== undefined && currentPeerVersion !== newVersion) {
+      if (needsPeerUpdate) {
         logger.item(`  updating peerDependency "${packageName}" from "${currentPeerVersion}" to "${newVersion}"`)
-        pkg.peerDependencies = { ...pkg.peerDependencies, [packageName]: newVersion }
-        modified = true
       }
 
-      if (modified) {
-        const relativePath = relative(workspaceRoot, packageJsonPath)
+      if (needsDepUpdate || needsPeerUpdate) {
         if (!dryRun) {
-          logger.item(`  writing updated package.json to "${rel(packageJsonPath)}"`)
-          writeJsonFile(packageJsonPath, pkg)
+          replaceDependencyVersion(packageJsonPath, packageName, newVersion)
+          logger.item(`  updated "${relativePath}"`)
         } else {
           logger.item(`  dry run - would update "${relativePath}"`)
         }
