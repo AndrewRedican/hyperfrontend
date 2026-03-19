@@ -4,10 +4,12 @@ import type { ClassifiedCommit } from '../../commits/classify'
 import type { ConventionalCommit } from '../../commits/models/conventional'
 import type { FlowStep } from '../models/step'
 import { createDate } from '@hyperfrontend/immutable-api-utils/built-in-copy/date'
-import { serializeChangelog, parseChangelog, addEntry } from '../../changelog'
+import { serializeChangelog, parseChangelog, addEntry, removeEntries } from '../../changelog'
 import { createChangelogEntry, createChangelogItem, createChangelogSection } from '../../changelog/models/entry'
 import { toChangelogCommit } from '../../commits/classify'
 import { createCompareUrl } from '../../repository/url'
+import { gt } from '../../semver/compare'
+import { parseVersion } from '../../semver/parse/version'
 import { createStep, createSkippedResult } from '../models/step'
 
 export const GENERATE_CHANGELOG_STEP_ID = 'generate-changelog'
@@ -401,7 +403,32 @@ export function createWriteChangelogStep(): FlowStep {
 
       // Parse existing and add entry
       const existing = parseChangelog(existingContent)
-      const updated = addEntry(existing, changelogEntry)
+
+      const isPendingPublication = state.isPendingPublication === true
+      let changelog = existing
+
+      // Clean up stacked entries when in pending publication state
+      if (isPendingPublication && state.publishedVersion) {
+        const publishedVer = parseVersion(state.publishedVersion)
+        if (publishedVer.success && publishedVer.version) {
+          const pubVer = publishedVer.version
+          const toRemove = changelog.entries
+            .filter((e) => !e.unreleased)
+            .filter((e) => {
+              const ver = parseVersion(e.version)
+              return ver.success && ver.version && gt(ver.version, pubVer)
+            })
+            .map((e) => e.version)
+
+          if (toRemove.length > 0) {
+            logger.info(`Removing stacked entries: ${toRemove.join(', ')}`)
+            changelog = removeEntries(changelog, toRemove, { throwIfNotFound: false })
+          }
+        }
+      }
+
+      // Add entry (replaceExisting handles case where nextVersion entry already exists)
+      const updated = addEntry(changelog, changelogEntry, { replaceExisting: isPendingPublication })
       const serialized = serializeChangelog(updated)
 
       tree.write(changelogPath, serialized)
