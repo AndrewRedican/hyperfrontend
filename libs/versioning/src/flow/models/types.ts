@@ -63,6 +63,17 @@ export interface FlowState {
   /** Repository configuration for compare URL generation */
   readonly repositoryConfig?: RepositoryConfig
 
+  /**
+   * Whether this is a pending publication scenario.
+   * True when currentVersion > publishedVersion, meaning the version
+   * was already bumped but not yet published to the registry.
+   * When true:
+   * - nextVersion is calculated from publishedVersion (not currentVersion)
+   * - Changelog entries > publishedVersion should be cleaned up
+   * - The correct changelog entry replaces any stacked ones
+   */
+  readonly isPendingPublication?: boolean
+
   /** Additional custom state for extensibility */
   readonly [key: string]: unknown
 }
