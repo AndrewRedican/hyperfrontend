@@ -1,0 +1,244 @@
+name: 'Version Check'
+description: 'Validates version bumps for affected libraries and manages PR comments with idempotency'
+inputs:
+  base-ref:
+    description: 'Base git reference for comparison'
+    required: true
+  head-ref:
+    description: 'Head git reference for comparison'
+    required: false
+    default: 'HEAD'
+  github-token:
+    description: 'GitHub token for PR comments'
+    required: true
+  pr-number:
+    description: 'Pull request number for commenting'
+    required: true
+  comment-on-success:
+    description: 'Whether to post a success comment with version bump details'
+    required: false
+    default: 'false'
+outputs:
+  status:
+    description: 'Validation status: valid, invalid, or skipped'
+    value: ${{ steps.validate.outputs.status }}
+  valid-libs:
+    description: 'Comma-separated list of libraries that passed validation'
+    value: ${{ steps.validate.outputs.valid_libs }}
+  invalid-libs:
+    description: 'Comma-separated list of libraries that failed validation'
+    value: ${{ steps.validate.outputs.invalid_libs }}
+  skipped-libs:
+    description: 'Comma-separated list of libraries that were skipped'
+    value: ${{ steps.validate.outputs.skipped_libs }}
+runs:
+  using: 'composite'
+  steps:
+    - name: Remove stale version-check comment
+      shell: bash
+      env:
+        GH_TOKEN: ${{ inputs.github-token }}
+      run: |
+        COMMENT_MARKER='<!-- hyperfrontend-version-check -->'
+        PR_NUMBER="${{ inputs.pr-number }}"
+
+        echo "Looking for stale version-check comments on PR #$PR_NUMBER..."
+
+        # Find and delete any existing version-check comments
+        # This ensures idempotency - we start fresh each run
+        COMMENT_IDS=$(gh api \
+          -H "Accept: application/vnd.github+json" \
+          "/repos/${{ github.repository }}/issues/${PR_NUMBER}/comments" \
+          --jq ".[] | select(.body | contains(\"$COMMENT_MARKER\")) | .id")
+
+        if [ -n "$COMMENT_IDS" ]; then
+          for COMMENT_ID in $COMMENT_IDS; do
+            echo "Removing stale comment ID: $COMMENT_ID"
+            gh api \
+              -X DELETE \
+              -H "Accept: application/vnd.github+json" \
+              "/repos/${{ github.repository }}/issues/comments/${COMMENT_ID}" || true
+          done
+          echo "Removed stale version-check comment(s)"
+        else
+          echo "No stale comments found"
+        fi
+
+    - name: Validate versions
+      id: validate
+      shell: bash
+      run: |
+        echo "Validating versions for affected libraries..."
+
+        # Get affected library projects that have a version target
+        AFFECTED=$(npx nx show projects --affected --base=${{ inputs.base-ref }} --head=${{ inputs.head-ref }} --type=lib --with-target=version 2>/dev/null || echo "")
+
+        if [ -z "$AFFECTED" ]; then
+          echo "No affected libraries with version target"
+          echo "status=skipped" >> $GITHUB_OUTPUT
+          echo "valid_libs=" >> $GITHUB_OUTPUT
+          echo "invalid_libs=" >> $GITHUB_OUTPUT
+          echo "skipped_libs=" >> $GITHUB_OUTPUT
+          exit 0
+        fi
+
+        echo "Affected libraries: $AFFECTED"
+
+        # Run version-check for each library (validation only, no changes)
+        VALID=""
+        INVALID=""
+        SKIPPED=""
+        MESSAGES=""
+        BUMP_DETAILS=""
+
+        for lib in $AFFECTED; do
+          echo "Checking $lib..."
+          # Capture both stdout and stderr, check exit code
+          if RESULT=$(npx nx version-check "$lib" 2>&1); then
+            # Exit code 0 - validation passed or skipped
+            if echo "$RESULT" | grep -q "version.*matches expected"; then
+              if [ -z "$VALID" ]; then VALID="$lib"; else VALID="$VALID, $lib"; fi
+              echo "  ✓ $lib: version valid"
+              # Extract version info for success comment
+              VERSION_INFO=$(echo "$RESULT" | grep -oP 'version.*matches expected.*' || echo "validated")
+              BUMP_DETAILS="${BUMP_DETAILS}\n- **$lib**: ${VERSION_INFO}"
+            else
+              # Skipped (no bump needed, already published, etc.)
+              if [ -z "$SKIPPED" ]; then SKIPPED="$lib"; else SKIPPED="$SKIPPED, $lib"; fi
+              echo "  ○ $lib: skipped (no changes needed)"
+            fi
+          else
+            # Exit code non-zero - validation failed
+            if [ -z "$INVALID" ]; then INVALID="$lib"; else INVALID="$INVALID, $lib"; fi
+            echo "  ✗ $lib: version mismatch"
+            # Capture the error output for the PR comment
+            MESSAGES="${MESSAGES}\n\n### $lib\n\`\`\`\n${RESULT}\n\`\`\`"
+          fi
+        done
+
+        # Output results
+        echo "valid_libs=${VALID}" >> $GITHUB_OUTPUT
+        echo "invalid_libs=${INVALID}" >> $GITHUB_OUTPUT
+        echo "skipped_libs=${SKIPPED}" >> $GITHUB_OUTPUT
+
+        if [ -n "$INVALID" ]; then
+          echo "status=invalid" >> $GITHUB_OUTPUT
+          # Store messages in a file to avoid GitHub Actions output escaping issues
+          echo -e "$MESSAGES" > /tmp/version-check-messages.txt
+          echo "❌ Version validation failed for: $INVALID"
+          exit 1
+        fi
+
+        # Store bump details for success comment
+        if [ -n "$BUMP_DETAILS" ]; then
+          echo -e "$BUMP_DETAILS" > /tmp/version-check-details.txt
+        fi
+
+        echo "status=valid" >> $GITHUB_OUTPUT
+        echo "✅ All version checks passed"
+
+    - name: Post failure comment
+      if: failure() && steps.validate.outputs.status == 'invalid'
+      shell: bash
+      env:
+        GH_TOKEN: ${{ inputs.github-token }}
+        INVALID_LIBS: ${{ steps.validate.outputs.invalid_libs }}
+        HEAD_REF: ${{ github.head_ref }}
+      run: |
+        PR_NUMBER="${{ inputs.pr-number }}"
+
+        # Read detailed messages
+        DETAILED_MESSAGES=""
+        if [ -f /tmp/version-check-messages.txt ]; then
+          DETAILED_MESSAGES=$(cat /tmp/version-check-messages.txt)
+        fi
+
+        # Parse library list
+        IFS=', ' read -ra LIBS <<< "$INVALID_LIBS"
+
+        # Build comment body in a file
+        {
+          echo '<!-- hyperfrontend-version-check -->'
+          echo '## ❌ Version Check Failed'
+          echo ''
+          echo "**Libraries with version issues:** ${INVALID_LIBS}"
+          echo ''
+          echo '### How to Fix'
+          echo ''
+          echo "1. Pull latest: \`git pull origin ${HEAD_REF}\`"
+          echo '2. Run versioning for affected libraries:'
+          for lib in "${LIBS[@]}"; do
+            echo '   ```bash'
+            echo "   npx nx version ${lib}"
+            echo '   ```'
+          done
+          echo '3. Amend your commit: `git commit --amend --no-edit`'
+          echo '4. Force push: `git push --force-with-lease`'
+          echo ''
+          echo '**Or** push without `--no-verify` to let lefthook handle versioning automatically.'
+          echo ''
+          echo '---'
+          echo ''
+          echo '<details>'
+          echo '<summary>Validation Details</summary>'
+          echo ''
+          if [ -n "$DETAILED_MESSAGES" ]; then
+            echo "$DETAILED_MESSAGES"
+          else
+            echo '_No detailed messages available_'
+          fi
+          echo ''
+          echo '</details>'
+          echo ''
+          echo '---'
+          echo '*This validation ensures version bumps are applied locally before merge.*'
+        } > /tmp/version-check-comment.md
+
+        echo "Posting failure comment to PR #$PR_NUMBER..."
+        gh pr comment "$PR_NUMBER" --body-file /tmp/version-check-comment.md
+        echo "Posted failure comment"
+
+    - name: Post success comment
+      if: success() && inputs.comment-on-success == 'true' && steps.validate.outputs.status == 'valid'
+      shell: bash
+      env:
+        GH_TOKEN: ${{ inputs.github-token }}
+        VALID_LIBS: ${{ steps.validate.outputs.valid_libs }}
+        SKIPPED_LIBS: ${{ steps.validate.outputs.skipped_libs }}
+      run: |
+        PR_NUMBER="${{ inputs.pr-number }}"
+
+        # Read version details
+        BUMP_DETAILS=""
+        if [ -f /tmp/version-check-details.txt ]; then
+          BUMP_DETAILS=$(cat /tmp/version-check-details.txt)
+        fi
+
+        # Build comment body in a file
+        {
+          echo '<!-- hyperfrontend-version-check -->'
+          echo '## ✅ Version Check Passed'
+          echo ''
+          echo 'All affected libraries have correct version bumps.'
+          echo ''
+          echo "**Validated libraries:** ${VALID_LIBS:-_None_}"
+          echo "**Skipped libraries:** ${SKIPPED_LIBS:-_None_}"
+          echo ''
+          echo '<details>'
+          echo '<summary>Version Details</summary>'
+          echo ''
+          if [ -n "$BUMP_DETAILS" ]; then
+            echo "$BUMP_DETAILS"
+          else
+            echo '_No version bump details available_'
+          fi
+          echo ''
+          echo '</details>'
+          echo ''
+          echo '---'
+          echo '*Version validation completed successfully.*'
+        } > /tmp/version-check-comment.md
+
+        echo "Posting success comment to PR #$PR_NUMBER..."
+        gh pr comment "$PR_NUMBER" --body-file /tmp/version-check-comment.md
+        echo "Posted success comment"
