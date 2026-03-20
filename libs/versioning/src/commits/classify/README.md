@@ -85,9 +85,10 @@ flowchart TB
 | `scopeMatchesProject()` | Check if scope matches project         | [project-scopes.ts](./project-scopes.ts) |
 | `scopeIsExcluded()`     | Check if scope is excluded             | [project-scopes.ts](./project-scopes.ts) |
 
-| Constant                 | Description                                   | Implementation                           |
-| ------------------------ | --------------------------------------------- | ---------------------------------------- |
-| `DEFAULT_EXCLUDE_SCOPES` | Default scopes to exclude (`release`, `deps`) | [project-scopes.ts](./project-scopes.ts) |
+| Constant                   | Description                                     | Implementation                           |
+| -------------------------- | ----------------------------------------------- | ---------------------------------------- |
+| `DEFAULT_EXCLUDE_SCOPES`   | Default scopes to exclude (`release`, `deps`)   | [project-scopes.ts](./project-scopes.ts) |
+| `DEFAULT_PROJECT_PREFIXES` | Default project prefixes (`lib-`, `app-`, etc.) | [project-scopes.ts](./project-scopes.ts) |
 
 ### Infrastructure Matchers
 

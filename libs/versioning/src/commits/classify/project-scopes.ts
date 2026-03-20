@@ -12,6 +12,13 @@ export interface DeriveProjectScopesOptions {
 
   /** Additional scopes to include */
   readonly additionalScopes?: readonly string[]
+
+  /**
+   * Project name prefixes to strip for scope matching.
+   *
+   * @default DEFAULT_PROJECT_PREFIXES
+   */
+  readonly prefixes?: readonly string[]
 }
 
 /**
@@ -34,14 +41,14 @@ export interface DeriveProjectScopesOptions {
  * // Returns: ['app-demo', 'demo']
  */
 export function deriveProjectScopes(options: DeriveProjectScopesOptions): readonly string[] {
-  const { projectName, packageName, additionalScopes = [] } = options
+  const { projectName, packageName, additionalScopes = [], prefixes = DEFAULT_PROJECT_PREFIXES } = options
   const scopes = createSet<string>()
 
   // Always include the full project name
   scopes.add(projectName)
 
   // Add variations based on common prefixes
-  const prefixVariations = extractPrefixVariations(projectName)
+  const prefixVariations = extractPrefixVariations(projectName, prefixes)
   for (const variation of prefixVariations) {
     scopes.add(variation)
   }
@@ -65,20 +72,21 @@ export function deriveProjectScopes(options: DeriveProjectScopesOptions): readon
 }
 
 /**
- * Recognized project name prefixes that can be stripped for scope matching.
+ * Default project name prefixes that can be stripped for scope matching.
  */
-const PROJECT_PREFIXES = <const>['lib-', 'app-', 'e2e-', 'tool-', 'plugin-', 'feature-', 'package-']
+export const DEFAULT_PROJECT_PREFIXES = <const>['lib-', 'app-', 'e2e-', 'tool-', 'plugin-', 'feature-', 'package-']
 
 /**
  * Generates scope variations by stripping recognized project prefixes.
  *
  * @param projectName - The project name to extract variations from
+ * @param prefixes - Prefixes to check and strip
  * @returns Array of scope name variations
  */
-function extractPrefixVariations(projectName: string): readonly string[] {
+function extractPrefixVariations(projectName: string, prefixes: readonly string[]): readonly string[] {
   const variations: string[] = []
 
-  for (const prefix of PROJECT_PREFIXES) {
+  for (const prefix of prefixes) {
     if (projectName.startsWith(prefix)) {
       const withoutPrefix = projectName.slice(prefix.length)
       if (withoutPrefix) {

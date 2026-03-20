@@ -7,7 +7,7 @@ import type { GitClient } from '../../git/factory'
 import type { Registry } from '../../registry/models/registry'
 import type { RepositoryConfig, RepositoryResolution } from '../../repository/models'
 import type { BumpType } from '../../semver/models/version'
-import { DEFAULT_EXCLUDE_SCOPES } from '../../commits/classify'
+import { DEFAULT_EXCLUDE_SCOPES, DEFAULT_PROJECT_PREFIXES } from '../../commits/classify'
 export type { Logger } from '@hyperfrontend/logging'
 
 /**
@@ -127,6 +127,14 @@ export interface ScopeFilteringConfig {
   readonly trackDependencyChanges?: boolean
 
   /**
+   * Project name prefixes stripped for scope matching.
+   * Example: ['lib-', 'pkg-'] means 'lib-auth' matches scope 'auth'.
+   *
+   * @default ['lib-', 'app-', 'e2e-', 'tool-', 'plugin-', 'feature-', 'package-']
+   */
+  readonly projectPrefixes?: readonly string[]
+
+  /**
    * Infrastructure tracking configuration.
    *
    * Defines how to detect commits that affect build/tooling infrastructure.
@@ -192,6 +200,7 @@ export const DEFAULT_SCOPE_FILTERING_CONFIG: Required<Omit<ScopeFilteringConfig,
   includeScopes: [],
   excludeScopes: DEFAULT_EXCLUDE_SCOPES,
   trackDependencyChanges: false,
+  projectPrefixes: DEFAULT_PROJECT_PREFIXES,
   infrastructure: undefined,
   infrastructureMatcher: undefined,
 }

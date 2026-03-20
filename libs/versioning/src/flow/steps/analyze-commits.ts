@@ -129,6 +129,7 @@ export function createAnalyzeCommitsStep(): FlowStep {
         projectName,
         packageName,
         additionalScopes: scopeFilteringConfig.includeScopes,
+        prefixes: scopeFilteringConfig.projectPrefixes,
       })
       logger.debug(`Project scopes: ${projectScopes.join(', ')}`)
 
