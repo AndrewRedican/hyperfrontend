@@ -31,6 +31,6 @@
   },
   "dependencies": {
     "@hyperfrontend/data-utils": "0.0.4",
-    "@hyperfrontend/immutable-api-utils": "0.1.1"
+    "@hyperfrontend/immutable-api-utils": "0.1.2"
   }
 }
