@@ -250,6 +250,7 @@ sequenceDiagram
 | `trackDeps`           | `boolean`  | `false`                               | Track dependency bumps                         |
 | `releaseBranch`       | `string`   | `'main'`                              | Allowed release branch                         |
 | `firstReleaseVersion` | `string`   | `'0.1.0'`                             | Initial version for new packages               |
+| `releaseAs`           | `string`   | `undefined`                           | Force bump type: 'major', 'minor', or 'patch'  |
 | `maxCommitFallback`   | `number`   | `500`                                 | Max commits to analyze when no base available  |
 | `repository`          | `*`        | `undefined`                           | Repository config for compare URLs (see below) |
 
