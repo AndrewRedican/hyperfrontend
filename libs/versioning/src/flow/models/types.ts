@@ -249,6 +249,16 @@ export interface FlowConfig {
   readonly releaseAs?: 'major' | 'minor' | 'patch'
 
   /**
+   * Maximum commits to analyze when no base commit is available.
+   * Used for first releases, history rewrites, and path-filtered queries.
+   *
+   * Set higher if you expect >500 commits between releases.
+   *
+   * @default 500
+   */
+  readonly maxCommitFallback?: number
+
+  /**
    * Repository resolution configuration for compare URL generation.
    *
    * Controls how repository information is resolved:
@@ -290,6 +300,7 @@ export const DEFAULT_FLOW_CONFIG: Required<Omit<FlowConfig, 'repository' | 'scop
   allowPrerelease: false,
   prereleaseId: 'alpha',
   releaseAs: undefined,
+  maxCommitFallback: 500,
   repository: undefined,
   scopeFiltering: DEFAULT_SCOPE_FILTERING_CONFIG,
 }
