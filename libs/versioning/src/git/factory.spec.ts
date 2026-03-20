@@ -1,7 +1,9 @@
-import { execSync } from 'node:child_process'
+import { execFileSync, execSync } from 'node:child_process'
 import { createGitClient, DEFAULT_GIT_CLIENT_CONFIG } from './factory'
 
 jest.mock('node:child_process')
+
+const mockExecFileSync = <jest.MockedFunction<typeof execFileSync>>execFileSync
 jest.mock('./operations/commit', () => ({
   ...jest.requireActual('./operations/commit'),
   commit: jest.fn().mockReturnValue({ hash: 'mock-hash', shortHash: 'mock', message: 'test' }),
@@ -29,6 +31,7 @@ jest.mock('./operations/log', () => ({
   getCommitsSince: jest.fn().mockReturnValue([]),
   getCommit: jest.fn().mockReturnValue(null),
   commitExists: jest.fn().mockReturnValue(false),
+  commitReachableFromHead: jest.fn().mockReturnValue(false),
 }))
 jest.mock('./operations/status', () => ({
   getStatus: jest.fn().mockReturnValue({
@@ -141,6 +144,14 @@ describe('createGitClient', () => {
       const client = createGitClient()
 
       const result = client.commitExists('abc123')
+
+      expect(result).toBe(false)
+    })
+
+    it('provides commitReachableFromHead method', () => {
+      const client = createGitClient()
+
+      const result = client.commitReachableFromHead('abc123')
 
       expect(result).toBe(false)
     })
@@ -612,6 +623,57 @@ describe('createGitClient', () => {
       const result = client.push()
 
       expect(result).toBe(false)
+    })
+  })
+
+  describe('getRemoteUrl operation', () => {
+    it('returns remote URL on success', () => {
+      mockExecFileSync.mockReturnValue('https://github.com/owner/repo.git\n')
+
+      const client = createGitClient()
+      const result = client.getRemoteUrl()
+
+      expect(result).toBe('https://github.com/owner/repo.git')
+      expect(mockExecFileSync).toHaveBeenCalledWith('git', ['remote', 'get-url', 'origin'], expect.any(Object))
+    })
+
+    it('uses custom remote name', () => {
+      mockExecFileSync.mockReturnValue('https://github.com/other/repo.git\n')
+
+      const client = createGitClient()
+      const result = client.getRemoteUrl('upstream')
+
+      expect(result).toBe('https://github.com/other/repo.git')
+      expect(mockExecFileSync).toHaveBeenCalledWith('git', ['remote', 'get-url', 'upstream'], expect.any(Object))
+    })
+
+    it('returns null when remote does not exist', () => {
+      mockExecFileSync.mockImplementation(() => {
+        throw new Error("fatal: No such remote 'nonexistent'")
+      })
+
+      const client = createGitClient()
+      const result = client.getRemoteUrl('nonexistent')
+
+      expect(result).toBeNull()
+    })
+
+    it('returns null for empty output', () => {
+      mockExecFileSync.mockReturnValue('')
+
+      const client = createGitClient()
+      const result = client.getRemoteUrl()
+
+      expect(result).toBeNull()
+    })
+
+    it('trims whitespace from URL', () => {
+      mockExecFileSync.mockReturnValue('  git@github.com:owner/repo.git  \n')
+
+      const client = createGitClient()
+      const result = client.getRemoteUrl()
+
+      expect(result).toBe('git@github.com:owner/repo.git')
     })
   })
 })

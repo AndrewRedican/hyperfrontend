@@ -1,18 +1,14 @@
 import type { Logger } from '@hyperfrontend/logging'
 import type { Tree } from '@hyperfrontend/project-scope'
-
 import type { ChangelogEntry } from '../../changelog/models/entry'
+import type { ClassificationResult, InfrastructureConfig, InfrastructureMatcher } from '../../commits/classify'
 import type { ConventionalCommit } from '../../commits/models/conventional'
 import type { GitClient } from '../../git/factory'
 import type { Registry } from '../../registry/models/registry'
+import type { RepositoryConfig, RepositoryResolution } from '../../repository/models'
 import type { BumpType } from '../../semver/models/version'
-
-// Re-export Logger from @hyperfrontend/logging for consumers
+import { DEFAULT_EXCLUDE_SCOPES } from '../../commits/classify'
 export type { Logger } from '@hyperfrontend/logging'
-
-// ============================================================================
-// Flow State
-// ============================================================================
 
 /**
  * Accumulated state during flow execution.
@@ -25,6 +21,9 @@ export interface FlowState {
   /** Published version on registry (null if never published) */
   readonly publishedVersion?: string | null
 
+  /** Git commit hash of the last published version */
+  readonly publishedCommit?: string | null
+
   /** Calculated next version */
   readonly nextVersion?: string
 
@@ -34,8 +33,17 @@ export interface FlowState {
   /** Analyzed commits since last release */
   readonly commits?: readonly ConventionalCommit[]
 
-  /** Tag name that marks the last release */
-  readonly lastReleaseTag?: string | null
+  /** Classification result with source attribution (when scope filtering enabled) */
+  readonly classificationResult?: ClassificationResult
+
+  /**
+   * The verified base commit used for commit scoping and changelog generation.
+   * This will be `publishedCommit` if that commit is reachable from HEAD,
+   * or `null` if a fallback was used (e.g., history was rewritten).
+   *
+   * When null, compare URLs are omitted from the changelog.
+   */
+  readonly effectiveBaseCommit?: string | null
 
   /** Generated changelog entry */
   readonly changelogEntry?: ChangelogEntry
@@ -52,13 +60,141 @@ export interface FlowState {
   /** Whether this is a first release (no prior versions) */
   readonly isFirstRelease?: boolean
 
+  /** Repository configuration for compare URL generation */
+  readonly repositoryConfig?: RepositoryConfig
+
+  /**
+   * Whether this is a pending publication scenario.
+   * True when currentVersion > publishedVersion, meaning the version
+   * was already bumped but not yet published to the registry.
+   * When true:
+   * - nextVersion is calculated from publishedVersion (not currentVersion)
+   * - Changelog entries > publishedVersion should be cleaned up
+   * - The correct changelog entry replaces any stacked ones
+   */
+  readonly isPendingPublication?: boolean
+
   /** Additional custom state for extensibility */
   readonly [key: string]: unknown
 }
 
-// ============================================================================
-// Flow Configuration
-// ============================================================================
+/**
+ * Strategy for filtering commits to a project's changelog.
+ *
+ * - `'hybrid'`: Use scope + file validation (default, recommended)
+ * - `'scope-only'`: Only use scope matching (fast, for disciplined teams)
+ * - `'file-only'`: Only use file-based filtering (for non-scoped repos)
+ * - `'inferred'`: Auto-detect from commit history
+ */
+export type ScopeFilteringStrategy = 'hybrid' | 'scope-only' | 'file-only' | 'inferred'
+
+/**
+ * Scope filtering configuration.
+ *
+ * By default, hybrid filtering is enabled universally.
+ * Configuration exists for edge cases and external codebases.
+ */
+export interface ScopeFilteringConfig {
+  /**
+   * Filtering strategy.
+   *
+   * @default 'hybrid'
+   */
+  readonly strategy?: ScopeFilteringStrategy
+
+  /**
+   * Additional scopes to include as direct commits.
+   * Use for shared library scopes that should appear in multiple projects.
+   *
+   * @example ['shared-utils', 'common']
+   */
+  readonly includeScopes?: readonly string[]
+
+  /**
+   * Scopes to explicitly exclude even if files match.
+   * Use for infrastructure scopes that affect build but aren't "changes".
+   *
+   * @example ['deps', 'release']
+   */
+  readonly excludeScopes?: readonly string[]
+
+  /**
+   * Include commits that touch dependency packages.
+   * When true, changes to dependencies appear as indirect commits.
+   *
+   * @default false
+   */
+  readonly trackDependencyChanges?: boolean
+
+  /**
+   * Infrastructure tracking configuration.
+   *
+   * Defines how to detect commits that affect build/tooling infrastructure.
+   * Supports multiple detection methods:
+   * - `paths`: File paths to track via git queries
+   * - `scopes`: Conventional commit scopes to match
+   * - `matcher`: Custom matching logic
+   *
+   * All methods are combined with OR logic.
+   *
+   * @example
+   * // Simple path-based
+   * infrastructure: { paths: ['tools/', '.github/workflows/'] }
+   *
+   * @example
+   * // Scope-based
+   * infrastructure: { scopes: ['ci', 'build', 'tooling'] }
+   *
+   * @example
+   * // Composable matcher
+   * import { anyOf, scopeMatcher, scopePrefixMatcher } from '@hyperfrontend/versioning'
+   * infrastructure: {
+   *   paths: ['tools/'],
+   *   matcher: anyOf(
+   *     scopeMatcher(['ci', 'build']),
+   *     scopePrefixMatcher(['tool-'])
+   *   )
+   * }
+   */
+  readonly infrastructure?: InfrastructureConfig
+
+  /**
+   * Custom infrastructure matcher function.
+   *
+   * Provides full programmatic control over infrastructure detection.
+   * Takes precedence over `infrastructure` config if both provided.
+   *
+   * @example
+   * infrastructureMatcher: (ctx) => {
+   *   // Match CI scopes
+   *   if (ctx.scope === 'ci' || ctx.scope === 'build') return true
+   *   // Match tool-prefixed scopes
+   *   if (ctx.scope?.startsWith('tool-')) return true
+   *   // Match workspace commits during major refactors
+   *   if (ctx.message.includes('[infra]')) return true
+   *   return false
+   * }
+   */
+  readonly infrastructureMatcher?: InfrastructureMatcher
+}
+
+/**
+ * Default scope filtering configuration.
+ *
+ * Uses DEFAULT_EXCLUDE_SCOPES from commits/classify to ensure consistency
+ * between flow-level filtering and commit classification.
+ */
+export const DEFAULT_SCOPE_FILTERING_CONFIG: Required<Omit<ScopeFilteringConfig, 'infrastructure' | 'infrastructureMatcher'>> & {
+  infrastructure: undefined
+  infrastructureMatcher: undefined
+} = {
+  strategy: 'hybrid',
+  includeScopes: [],
+  excludeScopes: DEFAULT_EXCLUDE_SCOPES,
+  trackDependencyChanges: false,
+  infrastructure: undefined,
+  infrastructureMatcher: undefined,
+}
 
 /**
  * Flow configuration options.
@@ -111,12 +247,33 @@ export interface FlowConfig {
 
   /** Force a specific bump type, bypassing commit analysis */
   readonly releaseAs?: 'major' | 'minor' | 'patch'
+
+  /**
+   * Repository resolution configuration for compare URL generation.
+   *
+   * Controls how repository information is resolved:
+   * - `'disabled'`: No compare URLs generated (default, backward compatible)
+   * - `'inferred'`: Auto-detect from package.json or git remote
+   * - `RepositoryResolution`: Fine-grained control with explicit mode and options
+   * - `RepositoryConfig`: Direct repository configuration
+   */
+  readonly repository?: 'disabled' | 'inferred' | RepositoryResolution | RepositoryConfig
+
+  /**
+   * Commit scope filtering configuration.
+   * Controls how commits are attributed to projects in changelogs.
+   *
+   * By default, hybrid filtering ensures commits are included based on
+   * conventional commit scope OR file changes within the project.
+   */
+  readonly scopeFiltering?: ScopeFilteringConfig
 }
 
 /**
  * Default flow configuration values.
  */
-export const DEFAULT_FLOW_CONFIG: Required<FlowConfig> = {
+export const DEFAULT_FLOW_CONFIG: Required<Omit<FlowConfig, 'repository' | 'scopeFiltering'>> &
+  Pick<FlowConfig, 'repository' | 'scopeFiltering'> = {
   preset: 'conventional',
   releaseTypes: ['feat', 'fix', 'perf', 'revert'],
   minorTypes: ['feat'],
@@ -133,11 +290,9 @@ export const DEFAULT_FLOW_CONFIG: Required<FlowConfig> = {
   allowPrerelease: false,
   prereleaseId: 'alpha',
   releaseAs: undefined,
+  repository: undefined,
+  scopeFiltering: DEFAULT_SCOPE_FILTERING_CONFIG,
 }
-
-// ============================================================================
-// Flow Context
-// ============================================================================
 
 /**
  * Execution context passed to each step.
@@ -178,10 +333,6 @@ export interface FlowContext {
   state: FlowState
 }
 
-// ============================================================================
-// Step Results
-// ============================================================================
-
 /**
  * Result of a single step execution.
  */
@@ -209,10 +360,6 @@ export interface FlowStepResultWithId extends FlowStepResult {
   /** Step display name */
   readonly stepName: string
 }
-
-// ============================================================================
-// Flow Results
-// ============================================================================
 
 /**
  * Overall flow execution status.

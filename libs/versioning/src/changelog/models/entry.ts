@@ -1,3 +1,4 @@
+import type { CommitSource } from '../../commits/classify'
 import type { CommitRef, IssueRef } from './commit-ref'
 import type { ChangelogSectionType } from './section'
 
@@ -21,6 +22,12 @@ export interface ChangelogItem {
 
   /** Whether this is a breaking change */
   readonly breaking: boolean
+
+  /** Classification source (for auditing/debugging) */
+  readonly source?: CommitSource
+
+  /** Whether this is an indirect change (dependency or infrastructure) */
+  readonly indirect?: boolean
 }
 
 /**
@@ -78,6 +85,8 @@ export function createChangelogItem(description: string, options?: Partial<Omit<
     commits: options?.commits ?? [],
     references: options?.references ?? [],
     breaking: options?.breaking ?? false,
+    source: options?.source,
+    indirect: options?.indirect,
   }
 }
 

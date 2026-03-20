@@ -62,6 +62,84 @@
       "type": "boolean",
       "description": "Suppress all non-error output.",
       "default": false
+    },
+    "repository": {
+      "description": "Repository resolution for changelog compare URLs. Options: 'disabled' (no URLs), 'inferred' (auto-detect from package.json or git remote), or an object with mode and options.",
+      "oneOf": [
+        {
+          "type": "string",
+          "enum": ["disabled", "inferred"]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "mode": {
+              "type": "string",
+              "enum": ["disabled", "inferred", "explicit"],
+              "description": "Resolution mode: 'disabled', 'inferred', or 'explicit'"
+            },
+            "inferenceOrder": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "enum": ["package-json", "git-remote"]
+              },
+              "description": "Order of inference sources when mode is 'inferred'. Default: ['package-json', 'git-remote']"
+            },
+            "platform": {
+              "type": "string",
+              "enum": ["github", "gitlab", "bitbucket", "azure-devops", "custom", "unknown"],
+              "description": "Git platform (for explicit mode)"
+            },
+            "baseUrl": {
+              "type": "string",
+              "description": "Repository base URL (for explicit mode), e.g., 'https://github.com/owner/repo'"
+            }
+          }
+        }
+      ],
+      "default": "inferred"
+    },
+    "scopeFiltering": {
+      "type": "object",
+      "description": "Scope filtering configuration for commit classification and changelog generation.",
+      "properties": {
+        "strategy": {
+          "type": "string",
+          "enum": ["hybrid", "scope-only", "file-only", "inferred"],
+          "description": "Filtering strategy. Default: 'hybrid'"
+        },
+        "includeScopes": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Additional scopes to include as direct commits"
+        },
+        "excludeScopes": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Scopes to exclude even if files match"
+        },
+        "trackDependencyChanges": {
+          "type": "boolean",
+          "description": "Include commits that touch dependency packages as indirect commits"
+        },
+        "infrastructure": {
+          "type": "object",
+          "description": "Infrastructure tracking configuration",
+          "properties": {
+            "paths": {
+              "type": "array",
+              "items": { "type": "string" },
+              "description": "Git paths to track as infrastructure (e.g., 'tools/', '.github/')"
+            },
+            "scopes": {
+              "type": "array",
+              "items": { "type": "string" },
+              "description": "Scopes indicating infrastructure changes (e.g., 'ci', 'build')"
+            }
+          }
+        }
+      }
     }
   },
   "required": []

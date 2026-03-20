@@ -42,4 +42,25 @@ describe('createVersionInfo', () => {
     expect(info.nodeVersion).toBe('18.0.0')
     expect(info.npmVersion).toBe('9.0.0')
   })
+
+  it('includes gitHead for commit tracking', () => {
+    const info = createVersionInfo({
+      version: '1.0.0',
+      publishedAt: '2024-01-01T00:00:00Z',
+      tarball: 'https://example.com/test.tgz',
+      gitHead: 'a9185d9b783d7d8d51cc4ad91eb3178eba3e3930',
+    })
+
+    expect(info.gitHead).toBe('a9185d9b783d7d8d51cc4ad91eb3178eba3e3930')
+  })
+
+  it('allows undefined gitHead for legacy packages', () => {
+    const info = createVersionInfo({
+      version: '0.1.0',
+      publishedAt: '2020-01-01T00:00:00Z',
+      tarball: 'https://example.com/legacy.tgz',
+    })
+
+    expect(info.gitHead).toBeUndefined()
+  })
 })

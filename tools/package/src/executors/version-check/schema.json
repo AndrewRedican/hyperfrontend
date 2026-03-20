@@ -1,0 +1,103 @@
+{
+  "$schema": "http://json-schema.org/schema",
+  "type": "object",
+  "title": "Version Check executor schema",
+  "description": "Validates that version bumps have been correctly applied without making changes. Used by CI to verify that lefthook versioning ran successfully.",
+  "properties": {
+    "verbose": {
+      "type": "boolean",
+      "description": "Enable verbose output for debugging. Shows additional details about validation.",
+      "default": false
+    },
+    "quiet": {
+      "type": "boolean",
+      "description": "Suppress all non-error output.",
+      "default": false
+    },
+    "skipIfVersionCommit": {
+      "type": "boolean",
+      "description": "Skip validation if the current commit is a version/release commit.",
+      "default": true
+    },
+    "repository": {
+      "description": "Repository resolution for changelog compare URLs. Options: 'disabled' (no URLs), 'inferred' (auto-detect from package.json or git remote), or an object with mode and options.",
+      "oneOf": [
+        {
+          "type": "string",
+          "enum": ["disabled", "inferred"]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "mode": {
+              "type": "string",
+              "enum": ["disabled", "inferred", "explicit"],
+              "description": "Resolution mode: 'disabled', 'inferred', or 'explicit'"
+            },
+            "inferenceOrder": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "enum": ["package-json", "git-remote"]
+              },
+              "description": "Order of inference sources when mode is 'inferred'. Default: ['package-json', 'git-remote']"
+            },
+            "platform": {
+              "type": "string",
+              "enum": ["github", "gitlab", "bitbucket", "azure-devops", "custom", "unknown"],
+              "description": "Git platform (for explicit mode)"
+            },
+            "baseUrl": {
+              "type": "string",
+              "description": "Repository base URL (for explicit mode), e.g., 'https://github.com/owner/repo'"
+            }
+          }
+        }
+      ],
+      "default": "inferred"
+    },
+    "scopeFiltering": {
+      "type": "object",
+      "description": "Scope filtering configuration for commit classification.",
+      "properties": {
+        "strategy": {
+          "type": "string",
+          "enum": ["hybrid", "scope-only", "file-only", "inferred"],
+          "description": "Filtering strategy for commit classification."
+        },
+        "includeScopes": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Additional scopes to always include."
+        },
+        "excludeScopes": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Scopes to exclude even if files match."
+        },
+        "trackDependencyChanges": {
+          "type": "boolean",
+          "description": "Include dependency commits as indirect."
+        },
+        "infrastructure": {
+          "type": "object",
+          "description": "Infrastructure path and scope tracking configuration.",
+          "properties": {
+            "paths": {
+              "type": "array",
+              "items": { "type": "string" },
+              "description": "File paths to track as infrastructure."
+            },
+            "scopes": {
+              "type": "array",
+              "items": { "type": "string" },
+              "description": "Scopes to recognize as infrastructure."
+            }
+          }
+        }
+      }
+    }
+  },
+  "required": [],
+  "additionalProperties": false
+}

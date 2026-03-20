@@ -6,13 +6,14 @@ import { createStep, createSkippedResult } from '../models/step'
 import {
   createAnalyzeCommitsStep,
   createCalculateBumpStep,
+  createCascadeDependenciesStep,
   createCheckIdempotencyStep,
   createFetchRegistryStep,
   createGenerateChangelogStep,
   createGitCommitStep,
+  createResolveRepositoryStep,
   createTagStep,
   createUpdatePackageStep,
-  createCascadeDependenciesStep,
   createWriteChangelogStep,
 } from '../steps'
 import { CONVENTIONAL_FLOW_CONFIG } from './conventional'
@@ -110,6 +111,7 @@ export function createIndependentFlow(config?: Partial<FlowConfig>): VersionFlow
     'Independent Versioning Flow',
     [
       createFetchRegistryStep(),
+      createResolveRepositoryStep(),
       createAnalyzeCommitsStep(),
       createCalculateBumpStep(),
       createCheckDependentBumpsStep(),
@@ -144,6 +146,7 @@ export function createBatchReleaseFlow(config?: Partial<FlowConfig>): VersionFlo
     'Batch Release Flow',
     [
       createFetchRegistryStep(),
+      createResolveRepositoryStep(),
       createAnalyzeCommitsStep(),
       createCalculateBumpStep(),
       createCheckIdempotencyStep(),

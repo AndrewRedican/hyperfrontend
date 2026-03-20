@@ -90,6 +90,8 @@ export default async function versionExecutor(options: VersionExecutorSchema, co
     trackDeps: options.trackDeps,
     tagFormat: `${tagPrefix}\${version}`,
     releaseAs: options.releaseAs,
+    repository: options.repository ?? 'inferred', // Default to auto-detect for compare URLs
+    scopeFiltering: options.scopeFiltering,
   }
 
   logger.debug(
@@ -102,6 +104,7 @@ export default async function versionExecutor(options: VersionExecutorSchema, co
   const flowResult = await executeFlow(flow, projectName, workspaceRoot, {
     dryRun: options.dryRun,
     verbose: options.verbose ?? false,
+    projectRoot,
   })
 
   // === PROCESS RESULT ===

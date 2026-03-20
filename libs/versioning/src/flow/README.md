@@ -122,6 +122,7 @@ flowchart LR
 | Function                          | Description                           | Implementation                                         |
 | --------------------------------- | ------------------------------------- | ------------------------------------------------------ |
 | `createFetchRegistryStep()`       | Fetch published version from registry | [fetch-registry.ts](./steps/fetch-registry.ts)         |
+| `createResolveRepositoryStep()`   | Resolve repository for compare URLs   | [resolve-repository.ts](./steps/resolve-repository.ts) |
 | `createAnalyzeCommitsStep()`      | Parse commits since last release      | [analyze-commits.ts](./steps/analyze-commits.ts)       |
 | `createCalculateBumpStep()`       | Calculate version bump type           | [calculate-bump.ts](./steps/calculate-bump.ts)         |
 | `createCheckIdempotencyStep()`    | Skip if version already published     | [fetch-registry.ts](./steps/fetch-registry.ts)         |
@@ -234,21 +235,59 @@ sequenceDiagram
 
 ## Configuration
 
-| Option                | Type       | Default                               | Description                      |
-| --------------------- | ---------- | ------------------------------------- | -------------------------------- |
-| `preset`              | `string`   | `'conventional'`                      | Flow preset name                 |
-| `releaseTypes`        | `string[]` | `['feat', 'fix', 'perf', 'revert']`   | Types that trigger releases      |
-| `minorTypes`          | `string[]` | `['feat']`                            | Types that trigger minor bumps   |
-| `patchTypes`          | `string[]` | `['fix', 'perf', 'revert']`           | Types that trigger patch bumps   |
-| `skipGit`             | `boolean`  | `false`                               | Skip git operations              |
-| `skipTag`             | `boolean`  | `true`                                | Skip tag creation                |
-| `skipChangelog`       | `boolean`  | `false`                               | Skip changelog update            |
-| `dryRun`              | `boolean`  | `false`                               | Preview without changes          |
-| `commitMessage`       | `string`   | `'chore(${projectName}): release...'` | Commit message template          |
-| `tagFormat`           | `string`   | `'${projectName}@${version}'`         | Tag name template                |
-| `trackDeps`           | `boolean`  | `false`                               | Track dependency bumps           |
-| `releaseBranch`       | `string`   | `'main'`                              | Allowed release branch           |
-| `firstReleaseVersion` | `string`   | `'0.1.0'`                             | Initial version for new packages |
+| Option                | Type       | Default                               | Description                                    |
+| --------------------- | ---------- | ------------------------------------- | ---------------------------------------------- |
+| `preset`              | `string`   | `'conventional'`                      | Flow preset name                               |
+| `releaseTypes`        | `string[]` | `['feat', 'fix', 'perf', 'revert']`   | Types that trigger releases                    |
+| `minorTypes`          | `string[]` | `['feat']`                            | Types that trigger minor bumps                 |
+| `patchTypes`          | `string[]` | `['fix', 'perf', 'revert']`           | Types that trigger patch bumps                 |
+| `skipGit`             | `boolean`  | `false`                               | Skip git operations                            |
+| `skipTag`             | `boolean`  | `true`                                | Skip tag creation                              |
+| `skipChangelog`       | `boolean`  | `false`                               | Skip changelog update                          |
+| `dryRun`              | `boolean`  | `false`                               | Preview without changes                        |
+| `commitMessage`       | `string`   | `'chore(${projectName}): release...'` | Commit message template                        |
+| `tagFormat`           | `string`   | `'${projectName}@${version}'`         | Tag name template                              |
+| `trackDeps`           | `boolean`  | `false`                               | Track dependency bumps                         |
+| `releaseBranch`       | `string`   | `'main'`                              | Allowed release branch                         |
+| `firstReleaseVersion` | `string`   | `'0.1.0'`                             | Initial version for new packages               |
+| `repository`          | `*`        | `undefined`                           | Repository config for compare URLs (see below) |
+
+### Repository Configuration
+
+The `repository` option controls compare URL generation in changelog entries:
+
+```typescript
+// Auto-detect from package.json or git remote
+createVersionFlow('conventional', { repository: 'inferred' })
+
+// Disable compare URLs
+createVersionFlow('conventional', { repository: 'disabled' })
+
+// Explicit configuration
+createVersionFlow('conventional', {
+  repository: {
+    mode: 'explicit',
+    repository: {
+      platform: 'github',
+      baseUrl: 'https://github.com/owner/repo',
+    },
+  },
+})
+
+// Inferred with custom order
+createVersionFlow('conventional', {
+  repository: {
+    mode: 'inferred',
+    inferenceOrder: ['git-remote', 'package-json'], // Try git first
+  },
+})
+```
+
+When repository is resolved, changelog entries include compare URLs:
+
+```markdown
+## [1.2.0](https://github.com/owner/repo/compare/v1.1.0...v1.2.0) - 2026-03-17
+```
 
 ## Step Dependencies
 

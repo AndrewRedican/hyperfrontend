@@ -3,6 +3,7 @@ import { existsSync, mkdirSync, copyFileSync, readdirSync, readFileSync, writeFi
 import { join, dirname, basename, relative } from 'node:path'
 import { logger, readJsonFile } from '@nx/devkit'
 import { globSync } from 'glob'
+import { parseRepositoryUrl } from '@hyperfrontend/versioning/repository/parse'
 
 /** License information for a third-party dependency */
 export interface ThirdPartyLicenseEntry {
@@ -166,49 +167,7 @@ function findLicenseFile(packageDir: string): string | null {
 }
 
 /**
- * Parses a Git URL to extract repository owner, name, and hosting platform.
- *
- * @param gitUrl - Git repository URL (git+https, git://, or https format)
- * @returns Object with platform, owner and repo, or null if parsing fails
- */
-function parseGitUrl(gitUrl: string): { platform: 'github' | 'gitlab' | 'bitbucket'; owner: string; repo: string } | null {
-  // Normalize git+https:// and git:// to https://
-  let normalizedUrl = gitUrl.replace(/^git\+/, '').replace(/^git:\/\//, 'https://')
-
-  // Handle SSH-style URLs: git@github.com:owner/repo.git
-  if (normalizedUrl.startsWith('git@')) {
-    normalizedUrl = normalizedUrl.replace(/^git@([^:]+):/, 'https://$1/')
-  }
-
-  let parsed: URL
-  try {
-    parsed = new URL(normalizedUrl)
-  } catch {
-    return null
-  }
-
-  const platformMap: Record<string, 'github' | 'gitlab' | 'bitbucket'> = {
-    'github.com': 'github',
-    'gitlab.com': 'gitlab',
-    'bitbucket.org': 'bitbucket',
-  }
-
-  const platform = platformMap[parsed.hostname]
-  if (!platform) {
-    return null
-  }
-
-  // Extract owner/repo from pathname, removing leading slash and .git suffix
-  const pathParts = parsed.pathname.replace(/^\//, '').replace(/\.git$/, '').split('/')
-  if (pathParts.length < 2 || !pathParts[0] || !pathParts[1]) {
-    return null
-  }
-
-  return { platform, owner: pathParts[0], repo: pathParts[1] }
-}
-
-/**
- * Constructs a URL to the license file on GitHub.
+ * Constructs a URL to the license file based on repository URL and platform.
  *
  * @param repositoryUrl - Repository URL from package.json
  * @param licenseFileName - Name of the license file (e.g., 'LICENSE', 'LICENSE.md')
@@ -220,19 +179,20 @@ function constructLicenseUrl(repositoryUrl: string | { type: string; url: string
   }
 
   const url = typeof repositoryUrl === 'string' ? repositoryUrl : repositoryUrl.url
-  const parsed = parseGitUrl(url)
+  const parsed = parseRepositoryUrl(url)
 
   if (!parsed) {
     return null
   }
 
+  // Use the baseUrl from the parsed result and construct platform-specific paths
   switch (parsed.platform) {
     case 'github':
-      return `https://github.com/${parsed.owner}/${parsed.repo}/blob/master/${licenseFileName}`
+      return `${parsed.baseUrl}/blob/master/${licenseFileName}`
     case 'gitlab':
-      return `https://gitlab.com/${parsed.owner}/${parsed.repo}/-/blob/main/${licenseFileName}`
+      return `${parsed.baseUrl}/-/blob/main/${licenseFileName}`
     case 'bitbucket':
-      return `https://bitbucket.org/${parsed.owner}/${parsed.repo}/src/master/${licenseFileName}`
+      return `${parsed.baseUrl}/src/master/${licenseFileName}`
     default:
       return null
   }

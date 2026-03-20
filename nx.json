@@ -26,7 +26,18 @@
     "version": {
       "executor": "@hyperfrontend/package:version",
       "options": {
-        "tagPrefix": "{projectName}@"
+        "tagPrefix": "{projectName}@",
+        "scopeFiltering": {
+          "excludeScopes": ["release", "deps", "workspace", "@hyperfrontend/workspace", "root", "repo", "ci", "build"]
+        }
+      }
+    },
+    "version-check": {
+      "executor": "@hyperfrontend/package:version-check",
+      "options": {
+        "scopeFiltering": {
+          "excludeScopes": ["release", "deps", "workspace", "@hyperfrontend/workspace", "root", "repo", "ci", "build"]
+        }
       }
     },
     "build": {

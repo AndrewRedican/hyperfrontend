@@ -11,6 +11,7 @@ import {
   createFetchRegistryStep,
   createGenerateChangelogStep,
   createGitCommitStep,
+  createResolveRepositoryStep,
   createTagStep,
   createWriteChangelogStep,
 } from '../steps'
@@ -157,6 +158,7 @@ export function createSyncedFlow(config?: Partial<FlowConfig>): VersionFlow {
     'Synced Versioning Flow',
     [
       createFetchRegistryStep(),
+      createResolveRepositoryStep(),
       createAnalyzeCommitsStep(),
       createCalculateBumpStep(),
       createCheckIdempotencyStep(),
@@ -208,6 +210,7 @@ export function createFixedVersionFlow(version: string, config?: Partial<FlowCon
     'Fixed Version Flow',
     [
       createFetchRegistryStep(),
+      createResolveRepositoryStep(),
       createAnalyzeCommitsStep(),
       fixedBumpStep,
       createCheckIdempotencyStep(),

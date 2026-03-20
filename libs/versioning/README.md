@@ -45,6 +45,8 @@ Versioning library with changelog parsing, conventional commits, and semver flow
 - **Conventional Commits** - Parse commit messages following the conventional commits specification
 - **Semver Utilities** - Parse, compare, increment, and validate semantic versions
 - **Registry Client** - Query npm registry for published versions and package metadata
+- **Compare URLs** - Generate platform-specific compare URLs for changelog entries (GitHub, GitLab, Bitbucket, Azure DevOps)
+- **Monorepo Scope Filtering** - Intelligent commit classification ensures changelogs only include relevant commits
 - **Composable Operations** - Build complex versioning workflows from simple, pure functions
 - **Zero External Dependencies** - Self-contained implementation with no third-party runtime dependencies
 
@@ -151,15 +153,16 @@ console.log(commit2.breakingDescription) // 'Response structure has changed'
 
 ## Module Documentation
 
-| Module       | Description                             | Documentation                       |
-| ------------ | --------------------------------------- | ----------------------------------- |
-| `changelog/` | Parse and manipulate CHANGELOG.md files | [README](./src/changelog/README.md) |
-| `commits/`   | Parse conventional commit messages      | [README](./src/commits/README.md)   |
-| `semver/`    | Semantic version parsing and comparison | [README](./src/semver/README.md)    |
-| `registry/`  | npm registry client                     | [README](./src/registry/README.md)  |
-| `git/`       | Git operations abstraction              | [README](./src/git/README.md)       |
-| `workspace/` | Project discovery and package.json      | [README](./src/workspace/README.md) |
-| `flow/`      | Version release workflow orchestration  | [README](./src/flow/README.md)      |
+| Module        | Description                             | Documentation                        |
+| ------------- | --------------------------------------- | ------------------------------------ |
+| `changelog/`  | Parse and manipulate CHANGELOG.md files | [README](./src/changelog/README.md)  |
+| `commits/`    | Parse conventional commit messages      | [README](./src/commits/README.md)    |
+| `semver/`     | Semantic version parsing and comparison | [README](./src/semver/README.md)     |
+| `registry/`   | npm registry client                     | [README](./src/registry/README.md)   |
+| `git/`        | Git operations abstraction              | [README](./src/git/README.md)        |
+| `workspace/`  | Project discovery and package.json      | [README](./src/workspace/README.md)  |
+| `flow/`       | Version release workflow orchestration  | [README](./src/flow/README.md)       |
+| `repository/` | Repository detection and compare URLs   | [README](./src/repository/README.md) |
 
 👉 See [ARCHITECTURE.md](./ARCHITECTURE.md) for module composition diagrams and data flow.
 

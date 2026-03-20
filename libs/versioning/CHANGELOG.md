@@ -2,34 +2,34 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.2.0](https://github.com/AndrewRedican/hyperfrontend/compare/a9185d9b783d7d8d51cc4ad91eb3178eba3e3930...bdcdfe00e5c9680e7a1eb925ef69997601d0f393) - 2026-03-20
+
+### Features
+
+- support commit existence verification
+- track commits to project dependencies
+- support of indirect infra changes tht may be consider for semantic versioning
+- add core commit classification engine
+- git client now supports get remote url
+- support remote repository url comparison
+- support remote repository url parsing
+- support repository models
+- support jscutlery/semver style changelog entries
+
+### Bug Fixes
+
+- idempotently update pre-existing unpublished change log entry
+- update calculate bump process to account for unpublished versions
+
 ## 0.1.0 - 2026-03-16
 
 ### Features
 
-- **lib-versioning:** support commit amend no edit
-- **lib-versioning:** support force bump with release as config
-- **tool-package:** improve memory management and visibility on builder executor
-- **eslint-rules:** lib-ts-config-paths
-- **e2e-lib-versioning:** test cjs and esm builds
-- **eslint-rules:** lib-e2e-project-required
-- **lib-versioning:** implement project versioning
-- **eslint-rules:** ensure publishable libraries accounted for in docs
-- **eslint-rules:** add rule to ensure pipeline is ready for publishable libraries
-- **eslint-rules:** root readme.md rule to ensure packages are listed
-- **eslint-rules:** rules to align readme.md content format
-- **docs-site:** add project-scope
-- **tool-package:** build executor now takes unpkg and jsdelivr configuration
-- **lib-json-utils:** regex pattern safety
-- **eslint-rules:** no-unsafe-regex
-- **eslint-rules:** no-deprecated-tag
-- **lib-project-scope:** complete implementation
+- support commit amend no edit
+- support force bump with release as config
+- implement project versioning
 
 ### Bug Fixes
 
-- **lib-versioning:** remove unused %h format causing git log field misalignment
-- **lib-immutable-api-utils:** rename safe object to prevent variable shadowing on cjs module init
+- remove unused %h format causing git log field misalignment
 - **@hyperfrontend/workspace:** prevent changelog corruption in pr ci
-
-### Other
-
-- **eslint-rules:** disable angle bracket typecasting on eslint-rules project

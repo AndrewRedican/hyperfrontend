@@ -1,10 +1,4 @@
-/**
- * Package Discovery
- *
- * Discovers packages within a workspace by finding package.json files
- * and extracting relevant metadata. Uses project-scope for file operations.
- */
-
+/* eslint-disable @nx/enforce-module-boundaries */
 import type { PackageJson } from '@hyperfrontend/project-scope'
 import type { Project, CreateProjectOptions } from '../models/project'
 import type { WorkspaceConfig } from '../models/workspace'
@@ -12,8 +6,9 @@ import { dirname, join } from 'node:path'
 import { createError } from '@hyperfrontend/immutable-api-utils/built-in-copy/error'
 import { createMap } from '@hyperfrontend/immutable-api-utils/built-in-copy/map'
 import { createSet } from '@hyperfrontend/immutable-api-utils/built-in-copy/set'
-// eslint-disable-next-line @nx/enforce-module-boundaries
-import { findFiles, readPackageJson, findWorkspaceRoot } from '@hyperfrontend/project-scope'
+import { readPackageJson } from '@hyperfrontend/project-scope/project/package'
+import { findWorkspaceRoot } from '@hyperfrontend/project-scope/project/root'
+import { findFiles } from '@hyperfrontend/project-scope/project/traversal'
 import { createProject } from '../models/project'
 import { DEFAULT_WORKSPACE_CONFIG } from '../models/workspace'
 import { findInternalDependencies } from './dependencies'

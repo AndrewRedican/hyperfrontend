@@ -88,7 +88,7 @@ The flow executes these steps:
 | Step               | Action                           | State Updates                        |
 | ------------------ | -------------------------------- | ------------------------------------ |
 | fetch-registry     | `npm view` for published version | `publishedVersion`, `currentVersion` |
-| analyze-commits    | Parse commits since last release | `commits`, `lastReleaseTag`          |
+| analyze-commits    | Parse commits since last release | `commits`, `effectiveBaseCommit`     |
 | calculate-bump     | Determine major/minor/patch      | `bumpType`, `nextVersion`            |
 | check-idempotency  | Skip if `nextVersion` on npm     | Sets `bumpType: 'none'` if published |
 | generate-changelog | Build entry from commits         | `changelogEntry`                     |
@@ -117,22 +117,50 @@ if (updatedFiles.length > 0 && !options.skipCommit) {
 
 ## CI Integration
 
-### PR Workflow
+### Local Versioning (lefthook)
+
+Version bumps happen **locally** via lefthook pre-push hooks, not in CI:
 
 ```mermaid
 flowchart TD
-    A[PR pushed] --> B[ci-status passes]
-    B --> C[version-validation job]
+    A[Developer commits] --> B[git push]
+    B --> C[lefthook pre-push]
     C --> D[nx version --collectFiles]
-    D --> E["Outputs: MODIFIED:path"]
-    E --> F[git add + commit to PR]
+    D --> E[Stage modified files]
+    E --> F["Commit: chore: update versions for lib-xxx [skip ci]"]
+    F --> G[Push proceeds with version commit]
 ```
 
 The `--collectFiles` flag:
 
 - Implies `skipCommit` and `skipTag`
 - Outputs modified file paths (MODIFIED:path format)
-- CI scripts parse this output to stage files
+- lefthook parses this output to stage files before creating the version commit
+
+### PR Workflow (validation-only)
+
+CI validates that version bumps were correctly applied using the **version-check** executor:
+
+```mermaid
+flowchart TD
+    A[PR pushed<br/>includes version commit] --> B[ci-status passes]
+    B --> C[version-check job]
+    C --> D[nx version-check lib-xxx]
+    D --> E{Versions match?}
+    E -->|Yes| F[✅ Pass]
+    E -->|No| G[❌ Fail + PR comment<br/>with remediation steps]
+```
+
+The version-check executor:
+
+- Runs version flow in **dry-run mode** to calculate expected state
+- Compares expected version/changelog against actual files on disk
+- Returns pass/fail with detailed discrepancy information
+- Does NOT make any changes (read-only)
+
+If a developer bypasses lefthook (`--no-verify`), CI will fail with clear instructions to fix.
+
+See [version-check executor](../version-check/) for implementation details.
 
 ### Main Workflow
 
@@ -151,6 +179,47 @@ Tags are created **after** publish because:
 2. Tags serve as a record of what's published, not a source of truth
 3. Avoids tag manipulation if publish fails
 
+## Version-Check Executor
+
+The `version-check` executor shares validation logic with the version executor:
+
+```
+tools/package/src/executors/
+├── version/
+│   ├── executor.ts
+│   └── lib/
+│       └── validate-version-state.ts  ← Shared validation logic
+└── version-check/
+    ├── executor.ts                    ← Imports shared logic
+    └── schema.json
+```
+
+### Validation Flow
+
+```typescript
+async function validateVersionState(options) {
+  // 1. Run version flow in dry-run mode
+  const flow = createVersionFlow('conventional', { dryRun: true })
+  const result = await executeFlow(flow, projectName, workspaceRoot, { dryRun: true })
+
+  // 2. Read actual state from disk
+  const actualVersion = readPackageJson().version
+  const actualChangelog = parseChangelog(readFile('CHANGELOG.md'))
+
+  // 3. Compare expected vs actual
+  if (actualVersion !== result.state.nextVersion) {
+    return { status: 'invalid', discrepancies: [...] }
+  }
+
+  // 4. Validate changelog entry exists and matches
+  if (!hasVersion(actualChangelog, result.state.nextVersion)) {
+    return { status: 'invalid', discrepancies: [...] }
+  }
+
+  return { status: 'valid' }
+}
+```
+
 ## Error Handling
 
 The executor returns `{ success: false }` when:
@@ -167,4 +236,6 @@ The executor returns `{ success: true }` (skip scenarios):
 ## See Also
 
 - [README.md](./README.md) — Usage and options
+- [version-check executor](../version-check/) — Validation-only executor for CI
 - [@hyperfrontend/versioning](../../../../libs/versioning) — Underlying versioning library
+- [lefthook.yml](../../../../../lefthook.yml) — Git hooks configuration

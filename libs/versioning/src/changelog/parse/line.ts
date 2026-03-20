@@ -71,6 +71,26 @@ export function parseVersionFromHeading(heading: string): {
     pos++
   }
 
+  // Handle markdown link format [version](url) - jscutlery/semver style
+  // This extracts the compare URL from patterns like [0.0.4](https://github.com/.../compare/...)
+  if (trimmed[pos] === '(') {
+    const urlStart = pos + 1
+    let depth = 1
+    pos++
+
+    // Find matching closing parenthesis (handles nested parens in URLs)
+    while (pos < trimmed.length && depth > 0) {
+      if (trimmed[pos] === '(') depth++
+      else if (trimmed[pos] === ')') depth--
+      pos++
+    }
+
+    // Extract URL if we found the closing paren
+    if (depth === 0) {
+      compareUrl = trimmed.slice(urlStart, pos - 1)
+    }
+  }
+
   // Skip whitespace and separator
   while (pos < trimmed.length && (trimmed[pos] === ' ' || trimmed[pos] === '-' || trimmed[pos] === '–')) {
     pos++
@@ -90,8 +110,8 @@ export function parseVersionFromHeading(heading: string): {
     pos++
   }
 
-  // Check for link at end: [compare](url)
-  if (pos < trimmed.length) {
+  // Check for link at end: [compare](url) - only if no URL was already extracted
+  if (pos < trimmed.length && !compareUrl) {
     const linkMatch = extractLink(trimmed.slice(pos))
     if (linkMatch?.url) {
       compareUrl = linkMatch.url

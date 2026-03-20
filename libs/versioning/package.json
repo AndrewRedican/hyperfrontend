@@ -1,9 +1,9 @@
 {
   "name": "@hyperfrontend/versioning",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Versioning library with changelog parsing, conventional commits, and semver flow orchestration.",
   "dependencies": {
-    "@hyperfrontend/immutable-api-utils": "0.1.1",
+    "@hyperfrontend/immutable-api-utils": "0.1.2",
     "@hyperfrontend/json-utils": "0.1.0",
     "@hyperfrontend/logging": "0.1.0",
     "@hyperfrontend/project-scope": "0.2.0"
@@ -17,6 +17,7 @@
     "./changelog/parse": "./src/changelog/parse/index.js",
     "./changelog/serialize": "./src/changelog/serialize/index.js",
     "./commits": "./src/commits/index.js",
+    "./commits/classify": "./src/commits/classify/index.js",
     "./commits/models": "./src/commits/models/index.js",
     "./commits/parse": "./src/commits/parse/index.js",
     "./flow": "./src/flow/index.js",
@@ -30,6 +31,10 @@
     "./registry": "./src/registry/index.js",
     "./registry/models": "./src/registry/models/index.js",
     "./registry/npm": "./src/registry/npm/index.js",
+    "./repository": "./src/repository/index.js",
+    "./repository/models": "./src/repository/models/index.js",
+    "./repository/parse": "./src/repository/parse/index.js",
+    "./repository/url": "./src/repository/url/index.js",
     "./semver": "./src/semver/index.js",
     "./semver/compare": "./src/semver/compare/index.js",
     "./semver/format": "./src/semver/format/index.js",

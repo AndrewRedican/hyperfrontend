@@ -1,9 +1,8 @@
 import { join, relative } from 'node:path'
-import { createRegExp } from '@hyperfrontend/immutable-api-utils/built-in-copy/regexp'
-import { writeJsonFile } from '@hyperfrontend/project-scope/core/fs'
 import { getProductionDependencies, readPackageJsonIfExists } from '@hyperfrontend/project-scope/project/package'
 import { findFiles } from '@hyperfrontend/project-scope/project/traversal'
 import { getLogger } from './logger'
+import { replaceTgzReference } from './replace-dependency-version'
 
 /**
  * Helper to convert absolute path to relative path for cleaner logging
@@ -13,6 +12,31 @@ import { getLogger } from './logger'
  * @returns The relative path, or '.' if the path equals the workspace root
  */
 const toRelative = (absolutePath: string, workspaceRoot: string): string => relative(workspaceRoot, absolutePath) || '.'
+
+/**
+ * Checks if a dependency value is a file: reference to a tgz with the expected prefix.
+ *
+ * @param value - The dependency value to check
+ * @param tgzPrefix - The expected tgz filename prefix
+ * @returns true if the value matches the expected tgz pattern
+ */
+function isTgzDependency(value: string, tgzPrefix: string): boolean {
+  return value.startsWith('file:') && value.includes(tgzPrefix) && value.endsWith('.tgz')
+}
+
+/**
+ * Replaces a tgz filename in a file: dependency value string.
+ *
+ * @param value - The full dependency value (e.g., "file:../../packs/hyperfrontend-my-package-1.0.0.tgz")
+ * @param tgzPrefix - The tgz filename prefix
+ * @param newTgzName - The new tgz filename
+ * @returns The updated value with the new tgz filename
+ */
+function updateTgzInValue(value: string, tgzPrefix: string, newTgzName: string): string {
+  const lastSlashIndex = value.lastIndexOf('/')
+  const tgzStartIndex = lastSlashIndex >= 0 ? lastSlashIndex + 1 : value.indexOf(':') + 1
+  return value.substring(0, tgzStartIndex) + newTgzName
+}
 
 /**
  * Updates e2e app dependencies when library version bumps.
@@ -41,11 +65,10 @@ export function updateE2eDependencies(packageName: string, newVersion: string, w
       return updatedFiles
     }
     logger.step(`found ${packageJsonFiles.length} package.json files to check`)
-    const packageSlug = packageName.replace(/^@hyperfrontend\//, '')
-    // eslint-disable-next-line workspace/no-unsafe-regex -- packageSlug is derived from controlled package names
-    const tgzPattern = createRegExp(`hyperfrontend-${packageSlug}-\\d+\\.\\d+\\.\\d+\\.tgz`)
+    const packageSlug = packageName.startsWith('@hyperfrontend/') ? packageName.slice('@hyperfrontend/'.length) : packageName
+    const tgzPrefix = `hyperfrontend-${packageSlug}-`
     const newTgzName = `hyperfrontend-${packageSlug}-${newVersion}.tgz`
-    logger.step(`looking for tgz references matching pattern "${tgzPattern.source}" to replace with "${newTgzName}"`)
+    logger.step(`looking for tgz references with prefix "${tgzPrefix}" to replace with "${newTgzName}"`)
     logger.step('checking files')
 
     for (const packageJsonPath of packageJsonFiles) {
@@ -56,27 +79,21 @@ export function updateE2eDependencies(packageName: string, newVersion: string, w
       }
 
       logger.item(`"${rel(packageJsonPath)}"`)
-      let modified = false
       const currentValue = getProductionDependencies(pkg)[packageName]
 
-      if (typeof currentValue === 'string' && currentValue.startsWith('file:') && tgzPattern.test(currentValue)) {
-        const newValue = currentValue.replace(tgzPattern, newTgzName)
+      if (typeof currentValue === 'string' && isTgzDependency(currentValue, tgzPrefix)) {
+        const newValue = updateTgzInValue(currentValue, tgzPrefix, newTgzName)
         if (newValue !== currentValue) {
+          const relativePath = relative(workspaceRoot, packageJsonPath)
           logger.item(`  updating tgz reference from "${currentValue}" to "${newValue}"`)
-          pkg.dependencies = { ...pkg.dependencies, [packageName]: newValue }
-          modified = true
+          if (!dryRun) {
+            replaceTgzReference(packageJsonPath, packageName, tgzPrefix, newTgzName)
+            logger.item(`  updated "${relativePath}"`)
+          } else {
+            logger.item(`  dry run - would update "${relativePath}"`)
+          }
+          updatedFiles.push(relativePath)
         }
-      }
-
-      if (modified) {
-        const relativePath = relative(workspaceRoot, packageJsonPath)
-        if (!dryRun) {
-          logger.item(`  writing updated package.json to "${rel(packageJsonPath)}"`)
-          writeJsonFile(packageJsonPath, pkg)
-        } else {
-          logger.item(`  dry run - would update "${relativePath}"`)
-        }
-        updatedFiles.push(relativePath)
       }
     }
 

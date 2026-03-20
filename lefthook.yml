@@ -1,5 +1,19 @@
 # Lefthook Configuration
 # See: https://github.com/evilmartians/lefthook
+#
+# Versioning Strategy:
+# ====================
+# Version bumps are applied locally via the pre-push `version` command below.
+# This is the SOURCE OF TRUTH for version bumps - CI only validates, it does NOT
+# create version commits. The workflow is:
+#
+#   1. Developer commits changes
+#   2. On `git push`, lefthook runs versioning for affected libraries
+#   3. Version commit is created automatically: "chore: update versions for lib-x"
+#   4. Push proceeds with both commits
+#   5. CI runs `version-check` to validate versions are correct
+#
+# If you bypass lefthook with --no-verify, CI will fail with remediation instructions.
 
 pre-commit:
   parallel: false
@@ -26,6 +40,22 @@ pre-push:
     test:
       run: CI=1 npx nx run-many -t=test --skip-nx-cache
       fail_text: 'Tests failed. Fix failing tests before pushing.'
+
+    # =========================================================================
+    # Version Command - SOURCE OF TRUTH for version bumps
+    # =========================================================================
+    # This command calculates and applies version bumps based on conventional
+    # commits. It runs AFTER all other pre-push checks (typecheck, lint, test).
+    #
+    # What it does:
+    #   - Detects affected libraries via `nx show projects --affected`
+    #   - Runs `nx version $lib --collectFiles` for each
+    #   - Updates package.json, CHANGELOG.md, and dependent package refs
+    #   - Creates a version commit: "chore: update versions for lib-x"
+    #
+    # CI validates this with `version-check` - it does NOT create version commits.
+    # If you skip this hook (--no-verify), CI will fail and guide you to fix it.
+    # =========================================================================
     version:
       run: |
         # Skip versioning when pushing to main - CI handles main branch
@@ -111,15 +141,25 @@ pre-push:
           git add $ALL_FILES
 
           # Commit message matches executor's isVersionCommit() Pattern 2: chore: update versions for lib-a, lib-b
-          # Use [skip ci] to prevent PR workflow retrigger when pushed
           if [ -n "$BUMPED" ]; then
-            git commit -m "chore: update versions for $BUMPED [skip ci]" --no-verify
+            git commit -m "chore: update versions for $BUMPED" --no-verify
           else
-            git commit -m "chore: update versions for affected libs [skip ci]" --no-verify
+            git commit -m "chore: update versions for affected libs" --no-verify
           fi
           echo "✅ Version updates committed"
         else
           echo "✅ No version changes needed"
         fi
         rm -f "$TAGS_BEFORE_FILE"
-      fail_text: 'Version check failed. You may need to resolve conflicts or run versioning manually.'
+      fail_text: |
+        ❌ Version bump failed during pre-push.
+
+        How to fix:
+        1. Check the error output above for details
+        2. If there are conflicts, resolve them first
+        3. Run versioning manually: npx nx version <lib-name> --verbose
+        4. Stage and commit the changes
+        5. Push again
+
+        If you need to bypass (not recommended): git push --no-verify
+        Note: CI will fail if versions are not properly applied.

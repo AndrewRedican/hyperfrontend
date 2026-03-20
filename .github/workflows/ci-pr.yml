@@ -36,11 +36,169 @@ jobs:
           base-ref: origin/${{ github.base_ref }}
           head-ref: HEAD
 
+  version-check:
+    name: version-check
+    runs-on: ubuntu-latest
+    needs: [setup]
+    if: needs.setup.outputs.has-affected == 'true'
+    permissions:
+      contents: read # Read-only - no commits
+      pull-requests: write # For failure comments
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          fetch-depth: 0
+          # Uses default GITHUB_TOKEN - no PAT needed for read-only validation
+
+      - name: Setup monorepo
+        uses: ./.github/actions/setup-monorepo
+
+      - name: Validate versions
+        id: version-check
+        run: |
+          echo "Validating versions for affected libraries..."
+
+          # Get affected library projects that have a version target
+          AFFECTED=$(npx nx show projects --affected --base=origin/${{ github.base_ref }} --head=HEAD --type=lib --with-target=version 2>/dev/null || echo "")
+
+          if [ -z "$AFFECTED" ]; then
+            echo "No affected libraries with version target"
+            echo "status=valid" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+
+          echo "Affected libraries: $AFFECTED"
+
+          # Run version-check for each library (validation only, no changes)
+          VALID=""
+          INVALID=""
+          SKIPPED=""
+          MESSAGES=""
+
+          for lib in $AFFECTED; do
+            echo "Checking $lib..."
+            # Capture both stdout and stderr, check exit code
+            if RESULT=$(npx nx version-check "$lib" 2>&1); then
+              # Exit code 0 - validation passed or skipped
+              if echo "$RESULT" | grep -q "version.*matches expected"; then
+                if [ -z "$VALID" ]; then VALID="$lib"; else VALID="$VALID, $lib"; fi
+                echo "  ✓ $lib: version valid"
+              else
+                # Skipped (no bump needed, already published, etc.)
+                if [ -z "$SKIPPED" ]; then SKIPPED="$lib"; else SKIPPED="$SKIPPED, $lib"; fi
+                echo "  ○ $lib: skipped (no changes needed)"
+              fi
+            else
+              # Exit code non-zero - validation failed
+              if [ -z "$INVALID" ]; then INVALID="$lib"; else INVALID="$INVALID, $lib"; fi
+              echo "  ✗ $lib: version mismatch"
+              # Capture the error output for the PR comment
+              MESSAGES="${MESSAGES}\n\n### $lib\n\`\`\`\n${RESULT}\n\`\`\`"
+            fi
+          done
+
+          # Output results
+          echo "valid_libs=${VALID}" >> $GITHUB_OUTPUT
+          echo "invalid_libs=${INVALID}" >> $GITHUB_OUTPUT
+          echo "skipped_libs=${SKIPPED}" >> $GITHUB_OUTPUT
+
+          if [ -n "$INVALID" ]; then
+            echo "status=invalid" >> $GITHUB_OUTPUT
+            # Store messages in a file to avoid GitHub Actions output escaping issues
+            echo -e "$MESSAGES" > /tmp/version-check-messages.txt
+            echo "❌ Version validation failed for: $INVALID"
+            exit 1
+          fi
+
+          echo "status=valid" >> $GITHUB_OUTPUT
+          echo "✅ All version checks passed"
+
+      - name: Comment on PR (failure only)
+        if: failure() && steps.version-check.outputs.status == 'invalid'
+        uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
+        with:
+          script: |
+            const fs = require('fs');
+            const COMMENT_MARKER = '<!-- hyperfrontend-version-check -->';
+
+            // Parse outputs
+            const parseLibs = (str) => (str || '').split(',').map(s => s.trim()).filter(Boolean);
+            const invalidLibs = parseLibs('${{ steps.version-check.outputs.invalid_libs }}');
+            const validLibs = parseLibs('${{ steps.version-check.outputs.valid_libs }}');
+            const skippedLibs = parseLibs('${{ steps.version-check.outputs.skipped_libs }}');
+
+            // Read detailed messages if available
+            let detailedMessages = '';
+            try {
+              detailedMessages = fs.readFileSync('/tmp/version-check-messages.txt', 'utf8');
+            } catch (e) {
+              // File may not exist
+            }
+
+            // Build comment body
+            const bodyParts = [
+              COMMENT_MARKER,
+              '## ❌ Version Check Failed',
+              '',
+              '**Libraries with version issues:** ' + invalidLibs.join(', '),
+              '',
+              '### How to Fix',
+              '',
+              '1. Pull latest: `git pull origin ${{ github.head_ref }}`',
+              '2. Run versioning for affected libraries:',
+              invalidLibs.map(lib => '   ```bash\n   npx nx version ' + lib + '\n   ```').join('\n'),
+              '3. Amend your commit: `git commit --amend --no-edit`',
+              '4. Force push: `git push --force-with-lease`',
+              '',
+              '**Or** push without `--no-verify` to let lefthook handle versioning automatically.',
+              '',
+              '---',
+              '',
+              '<details>',
+              '<summary>Validation Details</summary>',
+              '',
+              detailedMessages || '_No detailed messages available_',
+              '',
+              '</details>',
+              '',
+              '---',
+              '*This validation ensures version bumps are applied locally before merge.*'
+            ];
+            const body = bodyParts.join('\n');
+
+            // Find existing bot comment
+            const { data: comments } = await github.rest.issues.listComments({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+            });
+
+            const existingComment = comments.find(c => c.body && c.body.includes(COMMENT_MARKER));
+
+            if (existingComment) {
+              await github.rest.issues.updateComment({
+                comment_id: existingComment.id,
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                body,
+              });
+              console.log('Updated existing version-check comment');
+            } else {
+              await github.rest.issues.createComment({
+                issue_number: context.issue.number,
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                body,
+              });
+              console.log('Created new version-check comment');
+            }
+
   format:
     name: format
     runs-on: ubuntu-latest
-    needs: setup
-    if: needs.setup.outputs.has-affected == 'true'
+    needs: [setup, version-check]
+    if: always() && needs.setup.outputs.has-affected == 'true' && needs.version-check.result == 'success'
     steps:
       - name: Checkout repository
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
@@ -58,8 +216,8 @@ jobs:
   lint:
     name: lint
     runs-on: ubuntu-latest
-    needs: setup
-    if: needs.setup.outputs.has-affected == 'true'
+    needs: [setup, version-check]
+    if: always() && needs.setup.outputs.has-affected == 'true' && needs.version-check.result == 'success'
     steps:
       - name: Checkout repository
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
@@ -77,8 +235,8 @@ jobs:
   typecheck:
     name: typecheck
     runs-on: ubuntu-latest
-    needs: setup
-    if: needs.setup.outputs.has-affected == 'true'
+    needs: [setup, version-check]
+    if: always() && needs.setup.outputs.has-affected == 'true' && needs.version-check.result == 'success'
     steps:
       - name: Checkout repository
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
@@ -96,8 +254,8 @@ jobs:
   build:
     name: build
     runs-on: ubuntu-latest
-    needs: setup
-    if: needs.setup.outputs.has-affected == 'true'
+    needs: [setup, version-check, typecheck]
+    if: always() && needs.setup.outputs.has-affected == 'true' && needs.version-check.result == 'success' && needs.typecheck.result == 'success'
     steps:
       - name: Checkout repository
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
@@ -123,8 +281,8 @@ jobs:
   test:
     name: test
     runs-on: ubuntu-latest
-    needs: setup
-    if: needs.setup.outputs.has-affected == 'true'
+    needs: [setup, version-check]
+    if: always() && needs.setup.outputs.has-affected == 'true' && needs.version-check.result == 'success'
     steps:
       - name: Checkout repository
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
@@ -150,8 +308,8 @@ jobs:
   e2e:
     name: e2e
     runs-on: ubuntu-latest
-    needs: setup
-    if: needs.setup.outputs.has-affected == 'true'
+    needs: [setup, version-check, build]
+    if: always() && needs.setup.outputs.has-affected == 'true' && needs.version-check.result == 'success' && needs.build.result == 'success'
     steps:
       - name: Checkout repository
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
@@ -169,7 +327,7 @@ jobs:
   ci-status:
     name: status
     runs-on: ubuntu-latest
-    needs: [setup, format, lint, typecheck, build, test, e2e]
+    needs: [setup, version-check, format, lint, typecheck, build, test, e2e]
     if: always()
     steps:
       - name: Check CI status
@@ -181,7 +339,8 @@ jobs:
           fi
 
           # Check if any required job failed
-          if [ "${{ needs.format.result }}" = "failure" ] || \
+          if [ "${{ needs.version-check.result }}" = "failure" ] || \
+             [ "${{ needs.format.result }}" = "failure" ] || \
              [ "${{ needs.lint.result }}" = "failure" ] || \
              [ "${{ needs.typecheck.result }}" = "failure" ] || \
              [ "${{ needs.build.result }}" = "failure" ] || \
@@ -192,203 +351,3 @@ jobs:
           fi
 
           echo "✅ All CI checks passed"
-
-  version-validation:
-    name: version-check
-    runs-on: ubuntu-latest
-    needs: [ci-status]
-    if: needs.ci-status.result == 'success'
-    permissions:
-      contents: write
-      pull-requests: write
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
-        with:
-          fetch-depth: 0
-          ref: ${{ github.head_ref }}
-          token: ${{ secrets.PR_PAT }}
-
-      - name: Setup monorepo
-        uses: ./.github/actions/setup-monorepo
-
-      - name: Configure Git
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-
-      - name: Check and update versions
-        id: version-check
-        run: |
-          echo "Checking versions for affected libraries..."
-
-          # Get affected library projects that have a version target
-          AFFECTED=$(npx nx show projects --affected --base=origin/${{ github.base_ref }} --head=HEAD --type=lib --with-target=version 2>/dev/null || echo "")
-
-          if [ -z "$AFFECTED" ]; then
-            echo "No affected libraries"
-            echo "needs_update=false" >> $GITHUB_OUTPUT
-            exit 0
-          fi
-
-          echo "Affected libraries: $AFFECTED"
-
-          # Run idempotent version check for each library with --collectFiles
-          # Track different statuses separately for accurate reporting
-          # Use comma-separated format to match version executor's isVersionCommit() parsing
-          UPDATED=""
-          SKIPPED=""
-          UNCHANGED=""
-          FAILED=""
-          ALL_FILES=""
-
-          for lib in $AFFECTED; do
-            echo "Checking $lib..."
-            RESULT=$(npx nx version $lib --collectFiles 2>&1)
-            EXIT_CODE=$?
-
-            if [ $EXIT_CODE -ne 0 ]; then
-              if [ -z "$FAILED" ]; then FAILED="$lib"; else FAILED="$FAILED, $lib"; fi
-              echo "  ✗ $lib: failed"
-              continue
-            fi
-
-            if echo "$RESULT" | grep -qE "Flow success"; then
-              if [ -z "$UPDATED" ]; then UPDATED="$lib"; else UPDATED="$UPDATED, $lib"; fi
-              # Collect modified files from MODIFIED: lines
-              FILES=$(echo "$RESULT" | grep "^MODIFIED:" | cut -d: -f2 | tr '\n' ' ')
-              ALL_FILES="$ALL_FILES $FILES"
-              echo "  ✓ $lib: version updated"
-            elif echo "$RESULT" | grep -qE "No release needed|already published|Skipping"; then
-              if [ -z "$SKIPPED" ]; then SKIPPED="$lib"; else SKIPPED="$SKIPPED, $lib"; fi
-              echo "  ○ $lib: already versioned"
-            else
-              if [ -z "$UNCHANGED" ]; then UNCHANGED="$lib"; else UNCHANGED="$UNCHANGED, $lib"; fi
-              echo "  ○ $lib: no version change needed"
-            fi
-          done
-
-          # Handle failures - abort cleanly by discarding all changes
-          if [ -n "$FAILED" ]; then
-            echo "❌ Version failed for: $FAILED"
-            echo "Discarding all changes..."
-            git checkout .
-            echo "needs_update=false" >> $GITHUB_OUTPUT
-            echo "failed_libs=${FAILED}" >> $GITHUB_OUTPUT
-            exit 1
-          fi
-
-          # Output all tracking variables for PR comment
-          echo "skipped_libs=${SKIPPED}" >> $GITHUB_OUTPUT
-          echo "unchanged_libs=${UNCHANGED}" >> $GITHUB_OUTPUT
-          echo "all_files=${ALL_FILES}" >> $GITHUB_OUTPUT
-
-          if [ -n "$UPDATED" ]; then
-            echo "needs_update=true" >> $GITHUB_OUTPUT
-            echo "updated_libs=${UPDATED}" >> $GITHUB_OUTPUT
-          else
-            echo "needs_update=false" >> $GITHUB_OUTPUT
-            echo "updated_libs=" >> $GITHUB_OUTPUT
-          fi
-
-      - name: Commit version updates
-        if: steps.version-check.outputs.needs_update == 'true'
-        run: |
-          # Stage all collected files (deferred staging from --collectFiles)
-          ALL_FILES="${{ steps.version-check.outputs.all_files }}"
-
-          if [ -z "$ALL_FILES" ]; then
-            echo "No files to stage"
-            exit 0
-          fi
-
-          git add $ALL_FILES
-
-          # Check if there are changes to commit
-          if git diff --staged --quiet; then
-            echo "No staged changes to commit"
-            exit 0
-          fi
-
-          # Commit the changes with [skip ci] to prevent retrigger
-          # Format: chore: update versions for lib-a, lib-b [skip ci]
-          git commit -m "chore: update versions for ${{ steps.version-check.outputs.updated_libs }} [skip ci]"
-
-          # Push to the PR branch
-          git push
-
-          echo "✓ Pushed version updates to PR"
-
-      - name: Comment on PR
-        if: steps.version-check.outputs.needs_update == 'true'
-        uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
-        with:
-          script: |
-            const COMMENT_MARKER = '<!-- hyperfrontend-version-bot -->';
-
-            // Parse outputs - handle empty strings gracefully
-            // Format is comma-separated: "lib-a, lib-b, lib-c"
-            const parseLibs = (str) => (str || '').split(',').map(s => s.trim()).filter(Boolean);
-            const updatedLibs = parseLibs('${{ steps.version-check.outputs.updated_libs }}');
-            const skippedLibs = parseLibs('${{ steps.version-check.outputs.skipped_libs }}');
-            const unchangedLibs = parseLibs('${{ steps.version-check.outputs.unchanged_libs }}');
-
-            // Build table rows
-            const tableRows = [];
-            for (const lib of updatedLibs) {
-              tableRows.push('| `' + lib + '` | ✅ Version bumped |');
-            }
-            for (const lib of skippedLibs) {
-              tableRows.push('| `' + lib + '` | ⏭️ Already versioned |');
-            }
-            for (const lib of unchangedLibs) {
-              tableRows.push('| `' + lib + '` | ○ No changes needed |');
-            }
-
-            // Build comment body using array join to avoid YAML parsing issues
-            const bodyParts = [
-              COMMENT_MARKER,
-              '## 📦 Version Check Results',
-              '',
-              '| Library | Status |',
-              '|---------|--------|',
-              tableRows.join('\n'),
-              '',
-              '### Summary',
-              '- **' + updatedLibs.length + '** libraries updated',
-              '- **' + skippedLibs.length + '** already versioned',
-              '- **' + unchangedLibs.length + '** unchanged',
-              '',
-              updatedLibs.length > 0 ? 'These changes have been committed to this PR. Please review the CHANGELOG entries.' : '',
-              '',
-              '---',
-              '*This check was performed automatically by the CI version validation.*'
-            ];
-            const body = bodyParts.join('\n');
-
-            // Find existing bot comment
-            const { data: comments } = await github.rest.issues.listComments({
-              issue_number: context.issue.number,
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-            });
-
-            const existingComment = comments.find(c => c.body && c.body.includes(COMMENT_MARKER));
-
-            if (existingComment) {
-              await github.rest.issues.updateComment({
-                comment_id: existingComment.id,
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                body,
-              });
-              console.log('Updated existing version comment');
-            } else {
-              await github.rest.issues.createComment({
-                issue_number: context.issue.number,
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                body,
-              });
-              console.log('Created new version comment');
-            }

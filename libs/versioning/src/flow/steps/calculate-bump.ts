@@ -1,6 +1,7 @@
 import type { BumpType } from '../../semver/models/version'
 import type { FlowStep } from '../models/step'
 import { createError } from '@hyperfrontend/immutable-api-utils/built-in-copy/error'
+import { gt } from '../../semver/compare'
 import { format } from '../../semver/format/to-string'
 import { increment } from '../../semver/increment/bump'
 import { parseVersion } from '../../semver/parse/version'
@@ -140,7 +141,7 @@ export function createCalculateBumpStep(): FlowStep {
         }
       }
 
-      // Calculate next version
+      // Parse versions for comparison
       const current = parseVersion(currentVersion ?? '0.0.0')
       if (!current.success || !current.version) {
         return {
@@ -150,6 +151,33 @@ export function createCalculateBumpStep(): FlowStep {
         }
       }
 
+      const { publishedVersion } = state
+      const published = parseVersion(publishedVersion ?? '0.0.0')
+
+      // Detect pending publication state: currentVersion > publishedVersion
+      // This means a previous bump happened but was never published
+      const isPendingPublication =
+        published.success && published.version && publishedVersion != null && gt(current.version, published.version)
+
+      if (isPendingPublication && published.version) {
+        // ALWAYS calculate from publishedVersion - commits may have changed
+        const next = increment(published.version, bumpType)
+        const nextVersion = format(next)
+
+        logger.info(`Pending publication detected: recalculating from ${publishedVersion} → ${nextVersion}`)
+
+        return {
+          status: 'success',
+          stateUpdates: {
+            bumpType,
+            nextVersion,
+            isPendingPublication: true,
+          },
+          message: `${bumpType} bump (pending): ${publishedVersion} → ${nextVersion}`,
+        }
+      }
+
+      // Normal path: increment from currentVersion
       const next = increment(current.version, bumpType)
       const nextVersion = format(next)
 

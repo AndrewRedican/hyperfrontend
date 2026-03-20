@@ -7,6 +7,25 @@ import { createSkippedResult, createStep, createSuccessResult } from '../models/
 import { createMinimalFlow } from '../presets/conventional'
 import { dryRun, executeFlow, validateFlow } from './execute'
 
+// Mock external discovery modules
+jest.mock('@hyperfrontend/project-scope/nx', () => ({
+  isNxWorkspace: jest.fn(),
+  discoverNxProjects: jest.fn(),
+}))
+
+jest.mock('../../workspace/discovery', () => ({
+  discoverProjectByName: jest.fn(),
+}))
+
+jest.mock('@hyperfrontend/project-scope', () => ({
+  createTree: jest.fn(),
+  commitChanges: jest.fn(),
+}))
+
+const projectScopeNx = require('@hyperfrontend/project-scope/nx')
+const workspaceDiscovery = require('../../workspace/discovery')
+const projectScope = require('@hyperfrontend/project-scope')
+
 function createMockTree(files: Record<string, string> = {}): Tree {
   const fileSystem = new Map(Object.entries(files))
 
@@ -162,12 +181,18 @@ function createMockLogger() {
   }
 }
 
-// ============================================================================
-// resolveProjectRoot Tests (internal function tested via executeFlow)
-// ============================================================================
+// Reset mocks before each test
+beforeEach(() => {
+  jest.clearAllMocks()
+  // Default mock implementations - most tests use explicit projectRoot
+  projectScopeNx.isNxWorkspace.mockReturnValue(false)
+  projectScopeNx.discoverNxProjects.mockReturnValue(new Map())
+  workspaceDiscovery.discoverProjectByName.mockReturnValue(null)
+  projectScope.commitChanges.mockImplementation(() => void 0)
+})
 
-describe('executeFlow - resolveProjectRoot behavior', () => {
-  it('resolves lib- prefix projects to libs/ folder', async () => {
+describe('executeFlow - project discovery with explicit projectRoot', () => {
+  it('executes flow with explicit projectRoot for libs/ project', async () => {
     const flow = createMinimalFlow({ dryRun: true, skipGit: true })
     const tree = createMockTree({
       '/workspace/libs/utils/package.json': JSON.stringify({
@@ -180,13 +205,14 @@ describe('executeFlow - resolveProjectRoot behavior', () => {
       tree,
       registry: createMockRegistry(),
       git: createMockGitClient(),
+      projectRoot: 'libs/utils',
     })
 
     // Flow should execute and find the package
     expect(result.status).not.toBe('failed')
   })
 
-  it('resolves app- prefix projects to apps/ folder', async () => {
+  it('executes flow with explicit projectRoot for apps/ project', async () => {
     const flow = createMinimalFlow({ dryRun: true, skipGit: true })
     const tree = createMockTree({
       '/workspace/apps/frontend/package.json': JSON.stringify({
@@ -199,13 +225,32 @@ describe('executeFlow - resolveProjectRoot behavior', () => {
       tree,
       registry: createMockRegistry(),
       git: createMockGitClient(),
+      projectRoot: 'apps/frontend',
     })
 
-    // Flow should execute (may not find file but should not crash)
-    expect(result).toBeDefined()
+    expect(result.status).not.toBe('failed')
   })
 
-  it('resolves projects without prefix to libs/ folder', async () => {
+  it('executes flow with nested project path', async () => {
+    const flow = createMinimalFlow({ dryRun: true, skipGit: true })
+    const tree = createMockTree({
+      '/workspace/libs/utils/myproject/package.json': JSON.stringify({
+        name: '@test/myproject',
+        version: '1.0.0',
+      }),
+    })
+
+    const result = await executeFlow(flow, 'lib-myproject', '/workspace', {
+      tree,
+      registry: createMockRegistry(),
+      git: createMockGitClient(),
+      projectRoot: 'libs/utils/myproject',
+    })
+
+    expect(result.status).not.toBe('failed')
+  })
+
+  it('fails gracefully when project cannot be discovered without projectRoot', async () => {
     const flow = createMinimalFlow({ dryRun: true, skipGit: true })
     const tree = createMockTree({
       '/workspace/libs/myproject/package.json': JSON.stringify({
@@ -214,19 +259,17 @@ describe('executeFlow - resolveProjectRoot behavior', () => {
       }),
     })
 
-    const result = await executeFlow(flow, 'myproject', '/workspace', {
+    // Without projectRoot, discovery must find the project (which won't work with mock tree)
+    const result = await executeFlow(flow, 'nonexistent-project', '/workspace', {
       tree,
       registry: createMockRegistry(),
       git: createMockGitClient(),
     })
 
-    expect(result).toBeDefined()
+    expect(result.status).toBe('failed')
+    expect(result.summary).toContain('not found')
   })
 })
-
-// ============================================================================
-// resolvePackageName Tests (internal function tested via executeFlow)
-// ============================================================================
 
 describe('executeFlow - resolvePackageName behavior', () => {
   it('returns package name from package.json', async () => {
@@ -255,6 +298,7 @@ describe('executeFlow - resolvePackageName behavior', () => {
       tree,
       registry: createMockRegistry(),
       git: createMockGitClient(),
+      projectRoot: 'libs/test',
     })
 
     expect(capturedContext.packageName).toBe('@myorg/test-package')
@@ -281,9 +325,11 @@ describe('executeFlow - resolvePackageName behavior', () => {
       tree,
       registry: createMockRegistry(),
       git: createMockGitClient(),
+      projectRoot: 'libs/test',
     })
 
-    expect(capturedContext.packageName).toBe('unknown')
+    // Project discovery fails when package.json is missing
+    expect(capturedContext.packageName).toBeUndefined()
   })
 
   it('returns "unknown" when package.json has no name field', async () => {
@@ -312,6 +358,7 @@ describe('executeFlow - resolvePackageName behavior', () => {
       tree,
       registry: createMockRegistry(),
       git: createMockGitClient(),
+      projectRoot: 'libs/test',
     })
 
     expect(capturedContext.packageName).toBe('unknown')
@@ -341,15 +388,12 @@ describe('executeFlow - resolvePackageName behavior', () => {
       tree,
       registry: createMockRegistry(),
       git: createMockGitClient(),
+      projectRoot: 'libs/test',
     })
 
     expect(capturedContext.packageName).toBe('unknown')
   })
 })
-
-// ============================================================================
-// buildSummary Tests (tested via executeFlow result)
-// ============================================================================
 
 describe('executeFlow - buildSummary behavior', () => {
   it('includes version transition in summary when nextVersion is set', async () => {
@@ -365,6 +409,7 @@ describe('executeFlow - buildSummary behavior', () => {
       tree,
       registry: createMockRegistry('1.0.0'),
       git: createMockGitClient([{ type: 'feat', subject: 'feature' }]),
+      projectRoot: 'libs/test',
     })
 
     expect(result.summary).toContain('→')
@@ -396,6 +441,7 @@ describe('executeFlow - buildSummary behavior', () => {
       tree,
       registry: createMockRegistry(),
       git: createMockGitClient(),
+      projectRoot: 'libs/test',
     })
 
     expect(result.status).toBe('success')
@@ -425,6 +471,7 @@ describe('executeFlow - buildSummary behavior', () => {
       tree,
       registry: createMockRegistry(),
       git: createMockGitClient(),
+      projectRoot: 'libs/test',
     })
 
     expect(result.summary).toContain('1 completed')
@@ -432,10 +479,6 @@ describe('executeFlow - buildSummary behavior', () => {
     expect(result.summary).toContain('0 failed')
   })
 })
-
-// ============================================================================
-// executeFlow - Status Determination
-// ============================================================================
 
 describe('executeFlow - flow status determination', () => {
   it('returns "skipped" status when all steps are skipped', async () => {
@@ -464,6 +507,7 @@ describe('executeFlow - flow status determination', () => {
       tree,
       registry: createMockRegistry(),
       git: createMockGitClient(),
+      projectRoot: 'libs/test',
     })
 
     expect(result.status).toBe('skipped')
@@ -499,6 +543,7 @@ describe('executeFlow - flow status determination', () => {
       tree,
       registry: createMockRegistry(),
       git: createMockGitClient(),
+      projectRoot: 'libs/test',
     })
 
     expect(result.status).toBe('partial')
@@ -526,6 +571,7 @@ describe('executeFlow - flow status determination', () => {
       tree,
       registry: createMockRegistry(),
       git: createMockGitClient(),
+      projectRoot: 'libs/test',
     })
 
     expect(result.status).toBe('success')
@@ -554,15 +600,12 @@ describe('executeFlow - flow status determination', () => {
       tree,
       registry: createMockRegistry(),
       git: createMockGitClient(),
+      projectRoot: 'libs/test',
     })
 
     expect(result.status).toBe('failed')
   })
 })
-
-// ============================================================================
-// executeFlow - Verbose Logging
-// ============================================================================
 
 describe('executeFlow - verbose logging', () => {
   it('sets log level to debug when verbose is true', async () => {
@@ -588,6 +631,7 @@ describe('executeFlow - verbose logging', () => {
       git: createMockGitClient(),
       logger,
       verbose: true,
+      projectRoot: 'libs/test',
     })
 
     expect(logger.setLogLevel).toHaveBeenCalledWith('debug')
@@ -616,15 +660,12 @@ describe('executeFlow - verbose logging', () => {
       git: createMockGitClient(),
       logger,
       verbose: false,
+      projectRoot: 'libs/test',
     })
 
     expect(logger.setLogLevel).toHaveBeenCalledWith('error')
   })
 })
-
-// ============================================================================
-// executeFlow - Step Dependency Checking
-// ============================================================================
 
 describe('executeFlow - step dependencies', () => {
   it('skips step when dependency step did not succeed', async () => {
@@ -658,6 +699,7 @@ describe('executeFlow - step dependencies', () => {
       tree,
       registry: createMockRegistry(),
       git: createMockGitClient(),
+      projectRoot: 'libs/test',
     })
 
     const depResult = result.steps.find((s) => s.stepId === 'dependent')
@@ -687,16 +729,13 @@ describe('executeFlow - step dependencies', () => {
       tree,
       registry: createMockRegistry(),
       git: createMockGitClient(),
+      projectRoot: 'libs/test',
     })
 
     const depResult = result.steps.find((s) => s.stepId === 'dependent')
     expect(depResult?.status).toBe('success')
   })
 })
-
-// ============================================================================
-// validateFlow Tests
-// ============================================================================
 
 describe('validateFlow', () => {
   it('returns empty array for valid flow', () => {
@@ -804,10 +843,6 @@ describe('validateFlow', () => {
   })
 })
 
-// ============================================================================
-// dryRun Wrapper Tests
-// ============================================================================
-
 describe('dryRun', () => {
   it('forces dryRun to true', async () => {
     let capturedDryRun: boolean | undefined
@@ -835,15 +870,12 @@ describe('dryRun', () => {
       tree,
       registry: createMockRegistry(),
       git: createMockGitClient(),
+      projectRoot: 'libs/test',
     })
 
     expect(capturedDryRun).toBe(true)
   })
 })
-
-// ============================================================================
-// Step State Updates Tests
-// ============================================================================
 
 describe('executeFlow - state accumulation', () => {
   it('accumulates state updates from multiple steps', async () => {
@@ -869,6 +901,7 @@ describe('executeFlow - state accumulation', () => {
       tree,
       registry: createMockRegistry(),
       git: createMockGitClient(),
+      projectRoot: 'libs/test',
     })
 
     expect(result.state.currentVersion).toBe('1.0.0')
@@ -903,15 +936,12 @@ describe('executeFlow - state accumulation', () => {
       tree,
       registry: createMockRegistry(),
       git: createMockGitClient(),
+      projectRoot: 'libs/test',
     })
 
     expect(capturedState?.['myValue']).toBe('hello')
   })
 })
-
-// ============================================================================
-// Error Handling Tests
-// ============================================================================
 
 describe('executeFlow - error handling', () => {
   it('converts non-Error throws to Error objects', async () => {
@@ -937,6 +967,7 @@ describe('executeFlow - error handling', () => {
       tree,
       registry: createMockRegistry(),
       git: createMockGitClient(),
+      projectRoot: 'libs/test',
     })
 
     expect(result.status).toBe('failed')
@@ -945,10 +976,6 @@ describe('executeFlow - error handling', () => {
     expect(failedStep?.message).toBe('string error')
   })
 })
-
-// ============================================================================
-// Flow Duration Tests
-// ============================================================================
 
 describe('executeFlow - timing', () => {
   it('returns duration in milliseconds', async () => {
@@ -970,6 +997,7 @@ describe('executeFlow - timing', () => {
       tree,
       registry: createMockRegistry(),
       git: createMockGitClient(),
+      projectRoot: 'libs/test',
     })
 
     expect(typeof result.duration).toBe('number')
@@ -998,5 +1026,799 @@ describe('validateFlow - complex circular dependencies', () => {
 
     const errors = validateFlow(flow)
     expect(errors.some((e) => e.includes('Circular dependency'))).toBe(true)
+  })
+})
+
+describe('executeFlow - discoverProjectRoot behavior', () => {
+  it('uses provided projectRoot option (relative path)', async () => {
+    let capturedProjectRoot: string | undefined
+
+    const captureStep = createStep('capture', 'Capture', async (ctx: FlowContext) => {
+      capturedProjectRoot = ctx.projectRoot
+      return createSuccessResult('OK')
+    })
+
+    const flow = {
+      id: 'test',
+      name: 'Test Flow',
+      config: { dryRun: true },
+      steps: [captureStep],
+    }
+
+    const tree = createMockTree({
+      '/workspace/libs/utils/immutable-api/package.json': JSON.stringify({
+        name: '@test/immutable-api',
+        version: '1.0.0',
+      }),
+    })
+
+    await executeFlow(flow, 'lib-immutable-api-utils', '/workspace', {
+      tree,
+      registry: createMockRegistry(),
+      git: createMockGitClient(),
+      projectRoot: 'libs/utils/immutable-api',
+    })
+
+    expect(capturedProjectRoot).toBe('/workspace/libs/utils/immutable-api')
+  })
+
+  it('uses provided projectRoot option (absolute path)', async () => {
+    let capturedProjectRoot: string | undefined
+
+    const captureStep = createStep('capture', 'Capture', async (ctx: FlowContext) => {
+      capturedProjectRoot = ctx.projectRoot
+      return createSuccessResult('OK')
+    })
+
+    const flow = {
+      id: 'test',
+      name: 'Test Flow',
+      config: { dryRun: true },
+      steps: [captureStep],
+    }
+
+    const tree = createMockTree({
+      '/workspace/libs/utils/immutable-api/package.json': JSON.stringify({
+        name: '@test/immutable-api',
+        version: '1.0.0',
+      }),
+    })
+
+    await executeFlow(flow, 'lib-immutable-api-utils', '/workspace', {
+      tree,
+      registry: createMockRegistry(),
+      git: createMockGitClient(),
+      projectRoot: '/workspace/libs/utils/immutable-api',
+    })
+
+    expect(capturedProjectRoot).toBe('/workspace/libs/utils/immutable-api')
+  })
+
+  it('returns failed status when project cannot be discovered', async () => {
+    const flow = {
+      id: 'test',
+      name: 'Test Flow',
+      config: { dryRun: true },
+      steps: [createStep('step1', 'Step 1', async () => createSuccessResult('OK'))],
+    }
+
+    // Empty tree - no package.json anywhere
+    const tree = createMockTree({})
+
+    const result = await executeFlow(flow, 'nonexistent-project', '/workspace', {
+      tree,
+      registry: createMockRegistry(),
+      git: createMockGitClient(),
+    })
+
+    expect(result.status).toBe('failed')
+    expect(result.summary).toContain('not found')
+  })
+
+  it('returns failed status when package.json does not exist at resolved path', async () => {
+    const flow = {
+      id: 'test',
+      name: 'Test Flow',
+      config: { dryRun: true },
+      steps: [createStep('step1', 'Step 1', async () => createSuccessResult('OK'))],
+    }
+
+    // Tree has no package.json at the given path
+    const tree = createMockTree({
+      '/workspace/libs/other/package.json': JSON.stringify({ name: '@test/other', version: '1.0.0' }),
+    })
+
+    const result = await executeFlow(flow, 'missing-project', '/workspace', {
+      tree,
+      registry: createMockRegistry(),
+      git: createMockGitClient(),
+      projectRoot: 'libs/missing',
+    })
+
+    expect(result.status).toBe('failed')
+    expect(result.summary).toContain('Invalid project root')
+  })
+})
+
+describe('executeFlow - buildSummary edge cases', () => {
+  it('shows "?.?.?" when currentVersion is undefined but nextVersion is set', async () => {
+    const setNextVersionStep = createStep('set-next', 'Set Next', async () =>
+      createSuccessResult('OK', {
+        nextVersion: '2.0.0',
+        // currentVersion is NOT set
+      })
+    )
+
+    const flow = {
+      id: 'test',
+      name: 'Test Flow',
+      config: { dryRun: true },
+      steps: [setNextVersionStep],
+    }
+
+    const tree = createMockTree({
+      '/workspace/libs/test/package.json': JSON.stringify({
+        name: '@test/pkg',
+        version: '1.0.0',
+      }),
+    })
+
+    const result = await executeFlow(flow, 'lib-test', '/workspace', {
+      tree,
+      registry: createMockRegistry(),
+      git: createMockGitClient(),
+      projectRoot: 'libs/test',
+    })
+
+    expect(result.summary).toContain('?.?.?')
+    expect(result.summary).toContain('2.0.0')
+  })
+
+  it('shows failed count in summary when steps fail with continueOnError', async () => {
+    const failStep = createStep(
+      'fail',
+      'Fail',
+      async () => ({
+        status: 'failed' as const,
+        message: 'Failed',
+      }),
+      { continueOnError: true }
+    )
+    const successStep = createStep('success', 'Success', async () => createSuccessResult('OK'))
+
+    const flow = {
+      id: 'test',
+      name: 'Test Flow',
+      config: { dryRun: true },
+      steps: [failStep, successStep],
+    }
+
+    const tree = createMockTree({
+      '/workspace/libs/test/package.json': JSON.stringify({
+        name: '@test/pkg',
+        version: '1.0.0',
+      }),
+    })
+
+    const result = await executeFlow(flow, 'lib-test', '/workspace', {
+      tree,
+      registry: createMockRegistry(),
+      git: createMockGitClient(),
+      projectRoot: 'libs/test',
+    })
+
+    expect(result.summary).toContain('1 completed')
+    expect(result.summary).toContain('1 failed')
+  })
+})
+
+describe('executeFlow - context properties', () => {
+  it('provides all expected context properties to steps', async () => {
+    // Use mutable object to capture values (FlowContext has readonly props)
+    const capturedContext: {
+      workspaceRoot?: string
+      projectName?: string
+      projectRoot?: string
+      packageName?: string
+      tree?: Tree
+      registry?: Registry
+      git?: GitClient
+      logger?: ReturnType<typeof createMockLogger>
+      config?: FlowContext['config']
+      state?: FlowContext['state']
+    } = {}
+
+    const captureStep = createStep('capture', 'Capture', async (ctx: FlowContext) => {
+      capturedContext.workspaceRoot = ctx.workspaceRoot
+      capturedContext.projectName = ctx.projectName
+      capturedContext.projectRoot = ctx.projectRoot
+      capturedContext.packageName = ctx.packageName
+      capturedContext.tree = ctx.tree
+      capturedContext.registry = ctx.registry
+      capturedContext.git = ctx.git
+      capturedContext.logger = ctx.logger as ReturnType<typeof createMockLogger>
+      capturedContext.config = ctx.config
+      capturedContext.state = ctx.state
+      return createSuccessResult('OK')
+    })
+
+    const flow = {
+      id: 'test',
+      name: 'Test Flow',
+      config: { dryRun: true },
+      steps: [captureStep],
+    }
+
+    const tree = createMockTree({
+      '/workspace/libs/test/package.json': JSON.stringify({
+        name: '@test/pkg',
+        version: '1.0.0',
+      }),
+    })
+
+    const registry = createMockRegistry()
+    const git = createMockGitClient()
+    const logger = createMockLogger()
+
+    await executeFlow(flow, 'lib-test', '/workspace', {
+      tree,
+      registry,
+      git,
+      logger,
+      projectRoot: 'libs/test',
+    })
+
+    expect(capturedContext.workspaceRoot).toBe('/workspace')
+    expect(capturedContext.projectName).toBe('lib-test')
+    expect(capturedContext.projectRoot).toBeDefined()
+    expect(capturedContext.packageName).toBe('@test/pkg')
+    expect(capturedContext.tree).toBe(tree)
+    expect(capturedContext.registry).toBe(registry)
+    expect(capturedContext.git).toBe(git)
+    expect(capturedContext.logger).toBe(logger)
+    expect(capturedContext.config).toBeDefined()
+    expect(capturedContext.config?.dryRun).toBe(true)
+    expect(capturedContext.state).toEqual({})
+  })
+})
+
+describe('executeFlow - continueOnError with throws', () => {
+  it('continues to next step when step throws and continueOnError is true', async () => {
+    let secondStepRan = false
+
+    const throwStep = createStep(
+      'throw',
+      'Throw',
+      async () => {
+        throw new Error('Intentional error')
+      },
+      { continueOnError: true }
+    )
+
+    const secondStep = createStep('second', 'Second', async () => {
+      secondStepRan = true
+      return createSuccessResult('OK')
+    })
+
+    const flow = {
+      id: 'test',
+      name: 'Test Flow',
+      config: { dryRun: true },
+      steps: [throwStep, secondStep],
+    }
+
+    const tree = createMockTree({
+      '/workspace/libs/test/package.json': JSON.stringify({
+        name: '@test/pkg',
+        version: '1.0.0',
+      }),
+    })
+
+    const result = await executeFlow(flow, 'lib-test', '/workspace', {
+      tree,
+      registry: createMockRegistry(),
+      git: createMockGitClient(),
+      projectRoot: 'libs/test',
+    })
+
+    expect(secondStepRan).toBe(true)
+    expect(result.status).toBe('partial')
+    expect(result.steps[0].status).toBe('failed')
+    expect(result.steps[1].status).toBe('success')
+  })
+
+  it('stops execution when step throws and continueOnError is false', async () => {
+    let secondStepRan = false
+
+    const throwStep = createStep('throw', 'Throw', async () => {
+      throw new Error('Intentional error')
+    })
+
+    const secondStep = createStep('second', 'Second', async () => {
+      secondStepRan = true
+      return createSuccessResult('OK')
+    })
+
+    const flow = {
+      id: 'test',
+      name: 'Test Flow',
+      config: { dryRun: true },
+      steps: [throwStep, secondStep],
+    }
+
+    const tree = createMockTree({
+      '/workspace/libs/test/package.json': JSON.stringify({
+        name: '@test/pkg',
+        version: '1.0.0',
+      }),
+    })
+
+    const result = await executeFlow(flow, 'lib-test', '/workspace', {
+      tree,
+      registry: createMockRegistry(),
+      git: createMockGitClient(),
+      projectRoot: 'libs/test',
+    })
+
+    expect(secondStepRan).toBe(false)
+    expect(result.status).toBe('failed')
+    expect(result.steps).toHaveLength(1)
+  })
+})
+
+describe('executeFlow - config merging', () => {
+  it('options.dryRun overrides flow.config.dryRun', async () => {
+    let capturedDryRun: boolean | undefined
+
+    const captureStep = createStep('capture', 'Capture', async (ctx: FlowContext) => {
+      capturedDryRun = ctx.config.dryRun
+      return createSuccessResult('OK')
+    })
+
+    const flow = {
+      id: 'test',
+      name: 'Test Flow',
+      config: { dryRun: false },
+      steps: [captureStep],
+    }
+
+    const tree = createMockTree({
+      '/workspace/libs/test/package.json': JSON.stringify({
+        name: '@test/pkg',
+        version: '1.0.0',
+      }),
+    })
+
+    await executeFlow(flow, 'lib-test', '/workspace', {
+      tree,
+      registry: createMockRegistry(),
+      git: createMockGitClient(),
+      dryRun: true,
+      projectRoot: 'libs/test',
+    })
+
+    expect(capturedDryRun).toBe(true)
+  })
+
+  it('uses flow.config.dryRun when options.dryRun is undefined', async () => {
+    let capturedDryRun: boolean | undefined
+
+    const captureStep = createStep('capture', 'Capture', async (ctx: FlowContext) => {
+      capturedDryRun = ctx.config.dryRun
+      return createSuccessResult('OK')
+    })
+
+    const flow = {
+      id: 'test',
+      name: 'Test Flow',
+      config: { dryRun: true },
+      steps: [captureStep],
+    }
+
+    const tree = createMockTree({
+      '/workspace/libs/test/package.json': JSON.stringify({
+        name: '@test/pkg',
+        version: '1.0.0',
+      }),
+    })
+
+    await executeFlow(flow, 'lib-test', '/workspace', {
+      tree,
+      registry: createMockRegistry(),
+      git: createMockGitClient(),
+      // dryRun not specified
+      projectRoot: 'libs/test',
+    })
+
+    expect(capturedDryRun).toBe(true)
+  })
+})
+
+describe('executeFlow - logging behavior', () => {
+  it('warns when package name is unknown', async () => {
+    const logger = createMockLogger()
+
+    const flow = {
+      id: 'test',
+      name: 'Test Flow',
+      config: { dryRun: true },
+      steps: [createStep('step1', 'Step 1', async () => createSuccessResult('OK'))],
+    }
+
+    const tree = createMockTree({
+      '/workspace/libs/test/package.json': JSON.stringify({
+        // No name field
+        version: '1.0.0',
+      }),
+    })
+
+    await executeFlow(flow, 'lib-test', '/workspace', {
+      tree,
+      registry: createMockRegistry(),
+      git: createMockGitClient(),
+      logger,
+      projectRoot: 'libs/test',
+    })
+
+    expect(logger.warn).toHaveBeenCalledWith(expect.stringContaining('Could not read package name'))
+  })
+
+  it('logs flow info at start', async () => {
+    const logger = createMockLogger()
+
+    const flow = {
+      id: 'test',
+      name: 'My Test Flow',
+      config: { dryRun: true },
+      steps: [],
+    }
+
+    const tree = createMockTree({
+      '/workspace/libs/test/package.json': JSON.stringify({
+        name: '@test/pkg',
+        version: '1.0.0',
+      }),
+    })
+
+    await executeFlow(flow, 'lib-test', '/workspace', {
+      tree,
+      registry: createMockRegistry(),
+      git: createMockGitClient(),
+      logger,
+      projectRoot: 'libs/test',
+    })
+
+    expect(logger.info).toHaveBeenCalledWith(expect.stringContaining('My Test Flow'))
+    expect(logger.info).toHaveBeenCalledWith(expect.stringContaining('lib-test'))
+  })
+})
+
+describe('executeFlow - Nx workspace project discovery', () => {
+  it('discovers project via Nx when workspace is Nx-based and project exists', async () => {
+    // Mock Nx workspace detection and project discovery
+    projectScopeNx.isNxWorkspace.mockReturnValue(true)
+    projectScopeNx.discoverNxProjects.mockReturnValue(new Map([['lib-my-package', { root: 'libs/my-package', name: 'lib-my-package' }]]))
+
+    const logger = createMockLogger()
+    const flow = {
+      id: 'test',
+      name: 'Test Flow',
+      config: { dryRun: true },
+      steps: [createStep('step1', 'Step 1', async () => createSuccessResult('OK'))],
+    }
+
+    const tree = createMockTree({
+      '/workspace/libs/my-package/package.json': JSON.stringify({
+        name: '@test/my-package',
+        version: '1.0.0',
+      }),
+    })
+
+    const result = await executeFlow(flow, 'lib-my-package', '/workspace', {
+      tree,
+      registry: createMockRegistry(),
+      git: createMockGitClient(),
+      logger,
+    })
+
+    expect(projectScopeNx.isNxWorkspace).toHaveBeenCalledWith('/workspace')
+    expect(projectScopeNx.discoverNxProjects).toHaveBeenCalledWith('/workspace')
+    expect(result.status).toBe('success')
+    expect(logger.debug).toHaveBeenCalledWith(expect.stringContaining('Nx workspace detected'))
+  })
+
+  it('falls back to workspace discovery when Nx discovery throws an error', async () => {
+    projectScopeNx.isNxWorkspace.mockReturnValue(true)
+    projectScopeNx.discoverNxProjects.mockImplementation(() => {
+      throw new Error('Nx project graph read failed')
+    })
+    workspaceDiscovery.discoverProjectByName.mockReturnValue({
+      name: 'fallback-pkg',
+      path: '/workspace/libs/fallback',
+      version: '1.0.0',
+    })
+
+    const logger = createMockLogger()
+    const flow = {
+      id: 'test',
+      name: 'Test Flow',
+      config: { dryRun: true },
+      steps: [createStep('step1', 'Step 1', async () => createSuccessResult('OK'))],
+    }
+
+    const tree = createMockTree({
+      '/workspace/libs/fallback/package.json': JSON.stringify({
+        name: '@test/fallback-pkg',
+        version: '1.0.0',
+      }),
+    })
+
+    const result = await executeFlow(flow, 'lib-fallback', '/workspace', {
+      tree,
+      registry: createMockRegistry(),
+      git: createMockGitClient(),
+      logger,
+    })
+
+    expect(logger.debug).toHaveBeenCalledWith(expect.stringContaining('Nx project discovery failed'))
+    expect(workspaceDiscovery.discoverProjectByName).toHaveBeenCalled()
+    expect(result.status).toBe('success')
+  })
+
+  it('falls back to workspace discovery when project not found in Nx graph', async () => {
+    projectScopeNx.isNxWorkspace.mockReturnValue(true)
+    projectScopeNx.discoverNxProjects.mockReturnValue(new Map()) // Empty - project not found
+    workspaceDiscovery.discoverProjectByName.mockReturnValue({
+      name: 'discovered-pkg',
+      path: '/workspace/packages/discovered',
+      version: '2.0.0',
+    })
+
+    const logger = createMockLogger()
+    const flow = {
+      id: 'test',
+      name: 'Test Flow',
+      config: { dryRun: true },
+      steps: [createStep('step1', 'Step 1', async () => createSuccessResult('OK'))],
+    }
+
+    const tree = createMockTree({
+      '/workspace/packages/discovered/package.json': JSON.stringify({
+        name: '@test/discovered-pkg',
+        version: '2.0.0',
+      }),
+    })
+
+    const result = await executeFlow(flow, 'lib-discovered', '/workspace', {
+      tree,
+      registry: createMockRegistry(),
+      git: createMockGitClient(),
+      logger,
+    })
+
+    expect(logger.debug).toHaveBeenCalledWith(expect.stringContaining('not found in Nx project graph'))
+    expect(workspaceDiscovery.discoverProjectByName).toHaveBeenCalledWith('lib-discovered', { workspaceRoot: '/workspace' })
+    expect(result.status).toBe('success')
+  })
+})
+
+describe('executeFlow - workspace discovery fallback', () => {
+  it('discovers project via discoverProjectByName when not in Nx workspace', async () => {
+    projectScopeNx.isNxWorkspace.mockReturnValue(false)
+    workspaceDiscovery.discoverProjectByName.mockReturnValue({
+      name: 'my-lib',
+      path: '/workspace/packages/my-lib',
+      version: '1.0.0',
+    })
+
+    const logger = createMockLogger()
+    const flow = {
+      id: 'test',
+      name: 'Test Flow',
+      config: { dryRun: true },
+      steps: [createStep('step1', 'Step 1', async () => createSuccessResult('OK'))],
+    }
+
+    const tree = createMockTree({
+      '/workspace/packages/my-lib/package.json': JSON.stringify({
+        name: '@test/my-lib',
+        version: '1.0.0',
+      }),
+    })
+
+    const result = await executeFlow(flow, 'my-lib', '/workspace', {
+      tree,
+      registry: createMockRegistry(),
+      git: createMockGitClient(),
+      logger,
+    })
+
+    expect(projectScopeNx.discoverNxProjects).not.toHaveBeenCalled()
+    expect(workspaceDiscovery.discoverProjectByName).toHaveBeenCalledWith('my-lib', { workspaceRoot: '/workspace' })
+    expect(result.status).toBe('success')
+    expect(logger.debug).toHaveBeenCalledWith(expect.stringContaining('workspace discovery'))
+  })
+
+  it('logs error and returns failed when workspace discovery throws', async () => {
+    projectScopeNx.isNxWorkspace.mockReturnValue(false)
+    workspaceDiscovery.discoverProjectByName.mockImplementation(() => {
+      throw new Error('Workspace traversal failed')
+    })
+
+    const logger = createMockLogger()
+    const flow = {
+      id: 'test',
+      name: 'Test Flow',
+      config: { dryRun: true },
+      steps: [createStep('step1', 'Step 1', async () => createSuccessResult('OK'))],
+    }
+
+    const tree = createMockTree({})
+
+    const result = await executeFlow(flow, 'broken-project', '/workspace', {
+      tree,
+      registry: createMockRegistry(),
+      git: createMockGitClient(),
+      logger,
+    })
+
+    expect(logger.debug).toHaveBeenCalledWith(expect.stringContaining('Workspace discovery failed'))
+    expect(result.status).toBe('failed')
+    expect(result.summary).toContain('not found')
+  })
+})
+
+describe('executeFlow - VFS commit behavior', () => {
+  it('commits VFS changes to disk when dryRun is false and flow succeeds', async () => {
+    const logger = createMockLogger()
+    const flow = {
+      id: 'test',
+      name: 'Test Flow',
+      config: { dryRun: false },
+      steps: [createStep('step1', 'Step 1', async () => createSuccessResult('OK'))],
+    }
+
+    const tree = createMockTree({
+      '/workspace/libs/test/package.json': JSON.stringify({
+        name: '@test/pkg',
+        version: '1.0.0',
+      }),
+    })
+
+    await executeFlow(flow, 'lib-test', '/workspace', {
+      tree,
+      registry: createMockRegistry(),
+      git: createMockGitClient(),
+      logger,
+      projectRoot: 'libs/test',
+      dryRun: false,
+    })
+
+    expect(projectScope.commitChanges).toHaveBeenCalledWith(tree, { verbose: undefined })
+    expect(logger.info).toHaveBeenCalledWith('File changes committed to disk')
+  })
+
+  it('commits VFS changes with verbose option when verbose is true', async () => {
+    const logger = createMockLogger()
+    const flow = {
+      id: 'test',
+      name: 'Test Flow',
+      config: { dryRun: false },
+      steps: [createStep('step1', 'Step 1', async () => createSuccessResult('OK'))],
+    }
+
+    const tree = createMockTree({
+      '/workspace/libs/test/package.json': JSON.stringify({
+        name: '@test/pkg',
+        version: '1.0.0',
+      }),
+    })
+
+    await executeFlow(flow, 'lib-test', '/workspace', {
+      tree,
+      registry: createMockRegistry(),
+      git: createMockGitClient(),
+      logger,
+      projectRoot: 'libs/test',
+      dryRun: false,
+      verbose: true,
+    })
+
+    expect(projectScope.commitChanges).toHaveBeenCalledWith(tree, { verbose: true })
+  })
+
+  it('logs error when commitChanges throws but does not fail the flow', async () => {
+    projectScope.commitChanges.mockImplementation(() => {
+      throw new Error('Filesystem permission denied')
+    })
+
+    const logger = createMockLogger()
+    const flow = {
+      id: 'test',
+      name: 'Test Flow',
+      config: { dryRun: false },
+      steps: [createStep('step1', 'Step 1', async () => createSuccessResult('OK'))],
+    }
+
+    const tree = createMockTree({
+      '/workspace/libs/test/package.json': JSON.stringify({
+        name: '@test/pkg',
+        version: '1.0.0',
+      }),
+    })
+
+    const result = await executeFlow(flow, 'lib-test', '/workspace', {
+      tree,
+      registry: createMockRegistry(),
+      git: createMockGitClient(),
+      logger,
+      projectRoot: 'libs/test',
+      dryRun: false,
+    })
+
+    expect(logger.error).toHaveBeenCalledWith(expect.stringContaining('Failed to commit file changes'))
+    // Flow status should still reflect step execution success
+    expect(result.status).toBe('success')
+  })
+
+  it('does not commit changes when dryRun is true', async () => {
+    const logger = createMockLogger()
+    const flow = {
+      id: 'test',
+      name: 'Test Flow',
+      config: { dryRun: true },
+      steps: [createStep('step1', 'Step 1', async () => createSuccessResult('OK'))],
+    }
+
+    const tree = createMockTree({
+      '/workspace/libs/test/package.json': JSON.stringify({
+        name: '@test/pkg',
+        version: '1.0.0',
+      }),
+    })
+
+    await executeFlow(flow, 'lib-test', '/workspace', {
+      tree,
+      registry: createMockRegistry(),
+      git: createMockGitClient(),
+      logger,
+      projectRoot: 'libs/test',
+    })
+
+    expect(projectScope.commitChanges).not.toHaveBeenCalled()
+    expect(logger.info).toHaveBeenCalledWith('Dry run mode - no changes written to disk')
+  })
+
+  it('does not commit changes when flow fails', async () => {
+    const logger = createMockLogger()
+    const flow = {
+      id: 'test',
+      name: 'Test Flow',
+      config: { dryRun: false },
+      steps: [
+        createStep('fail', 'Fail', async () => {
+          throw new Error('Step failed')
+        }),
+      ],
+    }
+
+    const tree = createMockTree({
+      '/workspace/libs/test/package.json': JSON.stringify({
+        name: '@test/pkg',
+        version: '1.0.0',
+      }),
+    })
+
+    const result = await executeFlow(flow, 'lib-test', '/workspace', {
+      tree,
+      registry: createMockRegistry(),
+      git: createMockGitClient(),
+      logger,
+      projectRoot: 'libs/test',
+      dryRun: false,
+    })
+
+    expect(projectScope.commitChanges).not.toHaveBeenCalled()
+    expect(result.status).toBe('failed')
   })
 })

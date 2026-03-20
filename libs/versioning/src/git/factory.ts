@@ -7,11 +7,11 @@ import type { CreateTagOptions } from './operations/manage-tags'
 import type { ListTagsOptions } from './operations/query-tags'
 import type { StageOptions } from './operations/stage'
 import type { RepositoryStatus } from './operations/status'
-import { execSync } from 'node:child_process'
+import { execFileSync, execSync } from 'node:child_process'
 import { createGitRef } from './models/ref'
 import { commit, amendCommit, createEmptyCommit } from './operations/commit'
 import { getHead, getCurrentBranch, hasUntrackedFiles } from './operations/head-info'
-import { getCommitLog, getCommitsBetween, getCommitsSince, getCommit, commitExists } from './operations/log'
+import { getCommitLog, getCommitsBetween, getCommitsSince, getCommit, commitExists, commitReachableFromHead } from './operations/log'
 import { createTag, deleteTag, pushTag } from './operations/manage-tags'
 import { getTags, getTag, tagExists, getLatestTag, getTagsForPackage } from './operations/query-tags'
 import { stage, unstage, stageAll, hasStagedChanges, hasUnstagedChanges } from './operations/stage'
@@ -85,6 +85,14 @@ export interface GitClient {
    * Checks if a commit exists.
    */
   commitExists(hash: string): boolean
+
+  /**
+   * Checks if a commit is reachable from HEAD (i.e., is an ancestor of HEAD).
+   *
+   * Use this to verify an external commit reference before using it for
+   * range queries. Detects if history was rewritten after the reference was recorded.
+   */
+  commitReachableFromHead(hash: string): boolean
 
   // ========== Tag Operations ==========
 
@@ -288,6 +296,14 @@ export interface GitClient {
    * Pushes to remote.
    */
   push(remote?: string, branch?: string, options?: { force?: boolean; setUpstream?: boolean }): boolean
+
+  /**
+   * Gets the URL of a remote.
+   *
+   * @param remoteName - Name of the remote (defaults to 'origin')
+   * @returns The remote URL, or null if not found
+   */
+  getRemoteUrl(remoteName?: string): string | null
 }
 
 /**
@@ -326,6 +342,7 @@ export function createGitClient(config: GitClientConfig = {}): GitClient {
     getCommitsSince: (since, options) => getCommitsSince(since, { ...opts, ...options }),
     getCommit: (hash) => getCommit(hash, opts),
     commitExists: (hash) => commitExists(hash, opts),
+    commitReachableFromHead: (hash) => commitReachableFromHead(hash, opts),
 
     // Tag operations
     getTags: (options) => getTags({ ...opts, ...options }),
@@ -373,6 +390,7 @@ export function createGitClient(config: GitClientConfig = {}): GitClient {
     fetch: (remote, options) => fetch(opts, remote, options),
     pull: (remote, branch) => pull(opts, remote, branch),
     push: (remote, branch, options) => push(opts, remote, branch, options),
+    getRemoteUrl: (remoteName) => getRemoteUrl(opts, remoteName),
   }
 }
 
@@ -556,5 +574,28 @@ function push(
     return true
   } catch {
     return false
+  }
+}
+
+/**
+ * Gets the URL of a remote.
+ *
+ * @param options - Configuration object containing cwd and timeout
+ * @param options.cwd - Working directory for the git command
+ * @param options.timeout - Command timeout in milliseconds
+ * @param remoteName - Name of the remote (defaults to 'origin')
+ * @returns The remote URL, or null if not found
+ */
+function getRemoteUrl(options: { cwd: string; timeout: number }, remoteName = 'origin'): string | null {
+  try {
+    const output = execFileSync('git', ['remote', 'get-url', remoteName], {
+      encoding: 'utf-8',
+      cwd: options.cwd,
+      timeout: options.timeout,
+      stdio: ['pipe', 'pipe', 'pipe'],
+    })
+    return output.trim() || null
+  } catch {
+    return null
   }
 }

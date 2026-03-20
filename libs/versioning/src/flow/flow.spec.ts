@@ -162,10 +162,6 @@ function createMockGitClient(commits: readonly Partial<ConventionalCommit>[] = [
   } as unknown as GitClient
 }
 
-// ============================================================================
-// Tests
-// ============================================================================
-
 describe('Flow System', () => {
   describe('createVersionFlow', () => {
     it('creates a conventional flow by default', () => {
@@ -239,6 +235,7 @@ describe('Flow System', () => {
         tree,
         registry,
         git,
+        projectRoot: 'libs/test',
       })
 
       expect(result.status).toBe('success')
@@ -263,6 +260,7 @@ describe('Flow System', () => {
         tree,
         registry,
         git,
+        projectRoot: 'libs/test',
       })
 
       expect(result.state.bumpType).toBe('minor')
@@ -284,6 +282,7 @@ describe('Flow System', () => {
         tree,
         registry,
         git,
+        projectRoot: 'libs/test',
       })
 
       expect(result.state.isFirstRelease).toBe(true)
@@ -309,6 +308,7 @@ describe('Flow System', () => {
         tree,
         registry: createMockRegistry(),
         git: createMockGitClient(),
+        projectRoot: 'libs/test',
       })
 
       const skipResult = result.steps.find((s) => s.stepId === 'always-skip')
@@ -344,6 +344,7 @@ describe('Flow System', () => {
         tree,
         registry: createMockRegistry(),
         git: createMockGitClient(),
+        projectRoot: 'libs/test',
       })
 
       // Should be partial since one step failed
@@ -494,10 +495,6 @@ describe('Flow Presets', () => {
   })
 })
 
-// ============================================================================
-// Factory Tests
-// ============================================================================
-
 describe('Factory Functions', () => {
   describe('createVersionFlow', () => {
     it('throws error for unknown preset', () => {
@@ -544,10 +541,6 @@ describe('Factory Functions', () => {
   })
 })
 
-// ============================================================================
-// Validation Tests
-// ============================================================================
-
 describe('Flow Validation', () => {
   it('detects invalid dependency references', () => {
     const stepWithBadDep = createStep('bad-dep', 'Bad Dependency', async () => createSuccessResult('OK'), {
@@ -578,10 +571,6 @@ describe('Flow Validation', () => {
   })
 })
 
-// ============================================================================
-// Step Execution Tests
-// ============================================================================
-
 describe('Step Execution Edge Cases', () => {
   it('stops execution on step failure without continueOnError', async () => {
     const failStep = createStep('fail', 'Failing Step', async () => {
@@ -605,6 +594,7 @@ describe('Step Execution Edge Cases', () => {
       tree,
       registry: createMockRegistry(),
       git: createMockGitClient(),
+      projectRoot: 'libs/test',
     })
 
     expect(result.status).toBe('failed')
@@ -642,6 +632,7 @@ describe('Step Execution Edge Cases', () => {
       tree,
       registry: createMockRegistry(),
       git: createMockGitClient(),
+      projectRoot: 'libs/test',
     })
 
     const dependentResult = result.steps.find((s) => s.stepId === 'dependent')
@@ -649,10 +640,6 @@ describe('Step Execution Edge Cases', () => {
     expect(dependentResult?.message).toBe('Dependencies not met')
   })
 })
-
-// ============================================================================
-// Independent Flow Step Tests
-// ============================================================================
 
 describe('Independent Flow Steps', () => {
   describe('createCheckDependentBumpsStep', () => {
@@ -743,10 +730,6 @@ describe('Independent Flow Steps', () => {
     })
   })
 })
-
-// ============================================================================
-// Synced Flow Step Tests
-// ============================================================================
 
 describe('Synced Flow Steps', () => {
   describe('createSyncAllPackagesStep', () => {
