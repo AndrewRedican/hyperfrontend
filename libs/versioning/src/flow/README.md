@@ -253,6 +253,7 @@ sequenceDiagram
 | `releaseAs`           | `string`   | `undefined`                           | Force bump type: 'major', 'minor', or 'patch'  |
 | `maxCommitFallback`   | `number`   | `500`                                 | Max commits to analyze when no base available  |
 | `repository`          | `*`        | `undefined`                           | Repository config for compare URLs (see below) |
+| `changelogFileName`   | `string`   | `'CHANGELOG.md'`                      | Custom changelog filename                      |
 
 ### Repository Configuration
 

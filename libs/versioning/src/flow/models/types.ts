@@ -11,6 +11,11 @@ import { DEFAULT_EXCLUDE_SCOPES, DEFAULT_PROJECT_PREFIXES } from '../../commits/
 export type { Logger } from '@hyperfrontend/logging'
 
 /**
+ * Default changelog filename.
+ */
+export const DEFAULT_CHANGELOG_FILENAME = 'CHANGELOG.md'
+
+/**
  * Accumulated state during flow execution.
  * Each step can read previous state and contribute updates.
  */
@@ -286,6 +291,13 @@ export interface FlowConfig {
    * conventional commit scope OR file changes within the project.
    */
   readonly scopeFiltering?: ScopeFilteringConfig
+
+  /**
+   * Changelog file name relative to project root.
+   *
+   * @default 'CHANGELOG.md'
+   */
+  readonly changelogFileName?: string
 }
 
 /**
@@ -312,6 +324,7 @@ export const DEFAULT_FLOW_CONFIG: Required<Omit<FlowConfig, 'repository' | 'scop
   maxCommitFallback: 500,
   repository: undefined,
   scopeFiltering: DEFAULT_SCOPE_FILTERING_CONFIG,
+  changelogFileName: DEFAULT_CHANGELOG_FILENAME,
 }
 
 /**

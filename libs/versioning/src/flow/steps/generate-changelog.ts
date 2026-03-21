@@ -11,6 +11,7 @@ import { createCompareUrl } from '../../repository/url'
 import { gt } from '../../semver/compare'
 import { parseVersion } from '../../semver/parse/version'
 import { createStep, createSkippedResult } from '../models/step'
+import { DEFAULT_CHANGELOG_FILENAME } from '../models/types'
 
 export const GENERATE_CHANGELOG_STEP_ID = 'generate-changelog'
 
@@ -363,14 +364,15 @@ export function createWriteChangelogStep(): FlowStep {
         return createSkippedResult('No changelog to write')
       }
 
-      const changelogPath = `${projectRoot}/CHANGELOG.md`
+      const changelogFileName = config.changelogFileName ?? DEFAULT_CHANGELOG_FILENAME
+      const changelogPath = `${projectRoot}/${changelogFileName}`
       let existingContent = ''
 
       // Read existing changelog
       try {
         existingContent = tree.read(changelogPath, 'utf-8') ?? ''
       } catch {
-        logger.debug('No existing CHANGELOG.md found')
+        logger.debug(`No existing ${changelogFileName} found`)
       }
 
       // If no existing content, create new changelog
@@ -397,7 +399,7 @@ export function createWriteChangelogStep(): FlowStep {
           stateUpdates: {
             modifiedFiles: [...(state.modifiedFiles ?? []), changelogPath],
           },
-          message: `Created CHANGELOG.md with version ${nextVersion}`,
+          message: `Created ${changelogFileName} with version ${nextVersion}`,
         }
       }
 
@@ -438,7 +440,7 @@ export function createWriteChangelogStep(): FlowStep {
         stateUpdates: {
           modifiedFiles: [...(state.modifiedFiles ?? []), changelogPath],
         },
-        message: `Updated CHANGELOG.md with version ${nextVersion}`,
+        message: `Updated ${changelogFileName} with version ${nextVersion}`,
       }
     },
     {

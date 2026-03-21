@@ -1731,4 +1731,82 @@ describe('Write Changelog Step', () => {
       expect(matches).toHaveLength(1)
     })
   })
+
+  describe('execute - custom changelog filename', () => {
+    it('uses changelogFileName from config when creating new changelog', async () => {
+      const step = createWriteChangelogStep()
+      const tree = createMockTree({ files: {} })
+      const ctx: FlowContext = {
+        ...createMockContext(
+          {
+            nextVersion: '1.0.0',
+            bumpType: 'minor',
+            changelogEntry: createMockChangelogEntry({ version: '1.0.0' }),
+          },
+          { changelogFileName: 'HISTORY.md' }
+        ),
+        tree,
+      }
+
+      const result = await step.execute(ctx)
+
+      expect(result.status).toBe('success')
+      expect(tree.write).toHaveBeenCalledWith('/workspace/libs/test/HISTORY.md', expect.any(String))
+      expect(result.stateUpdates?.modifiedFiles).toContain('/workspace/libs/test/HISTORY.md')
+      expect(result.message).toContain('Created HISTORY.md')
+    })
+
+    it('uses changelogFileName from config when updating existing changelog', async () => {
+      const existingChangelog = `# Changelog
+
+## [0.1.0] - 2024-01-01
+
+### Features
+
+- Initial release
+`
+      const step = createWriteChangelogStep()
+      const tree = createMockTree({
+        files: { '/workspace/libs/test/RELEASES.md': existingChangelog },
+      })
+      const ctx: FlowContext = {
+        ...createMockContext(
+          {
+            nextVersion: '0.2.0',
+            bumpType: 'minor',
+            changelogEntry: createMockChangelogEntry({
+              version: '0.2.0',
+              sections: [{ type: 'features' as const, heading: 'Features', items: [createMockChangelogItem('New feature')] }],
+            }),
+          },
+          { changelogFileName: 'RELEASES.md' }
+        ),
+        tree,
+      }
+
+      const result = await step.execute(ctx)
+
+      expect(result.status).toBe('success')
+      expect(tree.write).toHaveBeenCalledWith('/workspace/libs/test/RELEASES.md', expect.any(String))
+      expect(result.message).toContain('Updated RELEASES.md')
+    })
+
+    it('defaults to CHANGELOG.md when changelogFileName not specified', async () => {
+      const step = createWriteChangelogStep()
+      const tree = createMockTree({ files: {} })
+      const ctx: FlowContext = {
+        ...createMockContext({
+          nextVersion: '1.0.0',
+          bumpType: 'minor',
+          changelogEntry: createMockChangelogEntry({ version: '1.0.0' }),
+        }),
+        tree,
+      }
+
+      const result = await step.execute(ctx)
+
+      expect(result.status).toBe('success')
+      expect(tree.write).toHaveBeenCalledWith('/workspace/libs/test/CHANGELOG.md', expect.any(String))
+    })
+  })
 })

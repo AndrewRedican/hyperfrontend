@@ -418,7 +418,7 @@ export type {
 } from './flow/models'
 
 // Flow Models - Factory functions and constants
-export { DEFAULT_FLOW_CONFIG } from './flow/models'
+export { DEFAULT_FLOW_CONFIG, DEFAULT_CHANGELOG_FILENAME } from './flow/models'
 export { createStep, createNoopStep, createSkippedResult, createSuccessResult, createFailedResult } from './flow/models'
 export {
   createFlow,
