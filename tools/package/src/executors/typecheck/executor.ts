@@ -1,6 +1,6 @@
 import type { ExecutorContext } from '@nx/devkit'
 import type { TypecheckExecutorOptions } from './schema'
-import { execSync } from 'node:child_process'
+import { execFileSync } from 'node:child_process'
 import { existsSync } from 'node:fs'
 import { join } from 'node:path'
 import { logger } from '@nx/devkit'
@@ -54,7 +54,7 @@ export default async function typecheckExecutor(
   logger.info(`  Using config: ${tsConfigPath}`)
 
   try {
-    execSync(`"${tscPath}" --noEmit -p "${tsConfigPath}"`, {
+    execFileSync(tscPath, ['--noEmit', '-p', tsConfigPath], {
       cwd: workspaceRoot,
       stdio: 'inherit',
       encoding: 'utf-8',

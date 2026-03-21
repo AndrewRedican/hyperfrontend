@@ -1,6 +1,6 @@
 import type { ExecutorContext } from '@nx/devkit'
 import type { PublishExecutorOptions } from './schema'
-import { execSync } from 'node:child_process'
+import { execFileSync } from 'node:child_process'
 import { existsSync, readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { logger } from '@nx/devkit'
@@ -52,13 +52,13 @@ function getPackageVersion(distPath: string): string {
 }
 
 /**
- * Builds the npm publish command with options.
+ * Builds the npm publish arguments array.
  *
  * @param options - Options for the publish executor
- * @returns npm publish command string
+ * @returns Array of npm publish command arguments
  */
-function buildPublishCommand(options: PublishExecutorOptions): string {
-  const args: string[] = ['npm', 'publish']
+function buildPublishArgs(options: PublishExecutorOptions): string[] {
+  const args: string[] = ['publish']
 
   if (options.dryRun) {
     args.push('--dry-run')
@@ -80,7 +80,7 @@ function buildPublishCommand(options: PublishExecutorOptions): string {
     args.push('--otp', options.otp)
   }
 
-  return args.join(' ')
+  return args
 }
 
 /**
@@ -138,7 +138,7 @@ export default async function publishExecutor(options: PublishExecutorOptions, c
   // Check if version already exists on npm (idempotent publish)
   if (!options.dryRun) {
     try {
-      const npmViewResult = execSync(`npm view ${packageName}@${packageVersion} version 2>/dev/null || echo ""`, {
+      const npmViewResult = execFileSync('npm', ['view', `${packageName}@${packageVersion}`, 'version'], {
         encoding: 'utf-8',
         cwd: distPath,
         stdio: ['pipe', 'pipe', 'pipe'],
@@ -164,11 +164,11 @@ export default async function publishExecutor(options: PublishExecutorOptions, c
     logger.info(`  Mode: DRY RUN (no actual publish)`)
   }
 
-  const command = buildPublishCommand(options)
-  logger.info(`  Command: ${command}`)
+  const args = buildPublishArgs(options)
+  logger.info(`  Command: npm ${args.join(' ')}`)
 
   try {
-    const output = execSync(command, {
+    const output = execFileSync('npm', args, {
       cwd: distPath,
       encoding: 'utf-8',
       stdio: 'pipe',

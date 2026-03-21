@@ -1,4 +1,4 @@
-import { execSync } from 'node:child_process'
+import { execFileSync } from 'node:child_process'
 import { existsSync } from 'node:fs'
 import { join } from 'node:path'
 import { getLogger } from './logger'
@@ -13,7 +13,7 @@ export function isInUnstableGitState(cwd: string): boolean {
   const logger = getLogger().channel('isInUnstableGitState')
   try {
     logger.debug(`checking git state in "${cwd}"`)
-    const gitDir = execSync('git rev-parse --git-dir', {
+    const gitDir = execFileSync('git', ['rev-parse', '--git-dir'], {
       cwd,
       encoding: 'utf-8',
       stdio: ['pipe', 'pipe', 'pipe'],
