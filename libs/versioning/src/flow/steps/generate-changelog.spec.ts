@@ -536,6 +536,103 @@ describe('Generate Changelog Step', () => {
       const choresSection = entry.sections.find((s: { type: string }) => s.type === 'chores')
       expect(choresSection).toBeDefined()
     })
+
+    it('uses default mapping when commitTypeToSection is undefined', async () => {
+      const step = createGenerateChangelogStep()
+      const ctx = createMockContext(
+        {
+          nextVersion: '1.0.0',
+          bumpType: 'minor',
+          commits: [createMockCommit({ type: 'chore', subject: 'update deps' })],
+        },
+        { commitTypeToSection: undefined }
+      )
+
+      const result = await step.execute(ctx)
+
+      const entry = result.stateUpdates?.changelogEntry
+      const choresSection = entry.sections.find((s: { type: string }) => s.type === 'chores')
+      expect(choresSection).toBeDefined()
+    })
+
+    it('overrides existing mapping via config', async () => {
+      const step = createGenerateChangelogStep()
+      const ctx = createMockContext(
+        {
+          nextVersion: '1.0.0',
+          bumpType: 'minor',
+          commits: [createMockCommit({ type: 'chore', subject: 'update deps' })],
+        },
+        { commitTypeToSection: { chore: 'other' } }
+      )
+
+      const result = await step.execute(ctx)
+
+      const entry = result.stateUpdates?.changelogEntry
+      const otherSection = entry.sections.find((s: { type: string }) => s.type === 'other')
+      expect(otherSection).toBeDefined()
+      const choresSection = entry.sections.find((s: { type: string }) => s.type === 'chores')
+      expect(choresSection).toBeUndefined()
+    })
+
+    it('adds custom commit type via config', async () => {
+      const step = createGenerateChangelogStep()
+      const ctx = createMockContext(
+        {
+          nextVersion: '1.0.0',
+          bumpType: 'minor',
+          commits: [createMockCommit({ type: 'wip', subject: 'work in progress' })],
+        },
+        { commitTypeToSection: { wip: 'other' } }
+      )
+
+      const result = await step.execute(ctx)
+
+      const entry = result.stateUpdates?.changelogEntry
+      const otherSection = entry.sections.find((s: { type: string }) => s.type === 'other')
+      expect(otherSection).toBeDefined()
+    })
+
+    it('excludes commit type when mapped to null', async () => {
+      const step = createGenerateChangelogStep()
+      const ctx = createMockContext(
+        {
+          nextVersion: '1.0.0',
+          bumpType: 'minor',
+          commits: [
+            createMockCommit({ type: 'feat', subject: 'new feature' }),
+            createMockCommit({ type: 'docs', subject: 'update readme' }),
+          ],
+        },
+        { commitTypeToSection: { docs: null } }
+      )
+
+      const result = await step.execute(ctx)
+
+      const entry = result.stateUpdates?.changelogEntry
+      const docsSection = entry.sections.find((s: { type: string }) => s.type === 'documentation')
+      expect(docsSection).toBeUndefined()
+      const featuresSection = entry.sections.find((s: { type: string }) => s.type === 'features')
+      expect(featuresSection).toBeDefined()
+    })
+
+    it('falls back to chores for unmapped custom type without config', async () => {
+      const step = createGenerateChangelogStep()
+      const ctx = createMockContext(
+        {
+          nextVersion: '1.0.0',
+          bumpType: 'minor',
+          commits: [createMockCommit({ type: 'experiment', subject: 'try something' })],
+        },
+        { commitTypeToSection: { wip: 'other' } } // has custom config but not for 'experiment'
+      )
+
+      const result = await step.execute(ctx)
+
+      const entry = result.stateUpdates?.changelogEntry
+      const choresSection = entry.sections.find((s: { type: string }) => s.type === 'chores')
+      expect(choresSection).toBeDefined()
+    })
   })
 
   describe('execute - section ordering', () => {

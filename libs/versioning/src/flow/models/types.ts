@@ -1,6 +1,7 @@
 import type { Logger } from '@hyperfrontend/logging'
 import type { Tree } from '@hyperfrontend/project-scope'
 import type { ChangelogEntry } from '../../changelog/models/entry'
+import type { ChangelogSectionType } from '../../changelog/models/section'
 import type { ClassificationResult, InfrastructureConfig, InfrastructureMatcher } from '../../commits/classify'
 import type { ConventionalCommit } from '../../commits/models/conventional'
 import type { GitClient } from '../../git/factory'
@@ -298,13 +299,19 @@ export interface FlowConfig {
    * @default 'CHANGELOG.md'
    */
   readonly changelogFileName?: string
+
+  /**
+   * Custom mapping from commit type to changelog section.
+   * Merged with defaults; use `null` to exclude a type from changelog.
+   */
+  readonly commitTypeToSection?: Partial<Record<string, ChangelogSectionType | null>>
 }
 
 /**
  * Default flow configuration values.
  */
-export const DEFAULT_FLOW_CONFIG: Required<Omit<FlowConfig, 'repository' | 'scopeFiltering'>> &
-  Pick<FlowConfig, 'repository' | 'scopeFiltering'> = {
+export const DEFAULT_FLOW_CONFIG: Required<Omit<FlowConfig, 'repository' | 'scopeFiltering' | 'commitTypeToSection'>> &
+  Pick<FlowConfig, 'repository' | 'scopeFiltering' | 'commitTypeToSection'> = {
   preset: 'conventional',
   releaseTypes: ['feat', 'fix', 'perf', 'revert'],
   minorTypes: ['feat'],
@@ -325,6 +332,7 @@ export const DEFAULT_FLOW_CONFIG: Required<Omit<FlowConfig, 'repository' | 'scop
   repository: undefined,
   scopeFiltering: DEFAULT_SCOPE_FILTERING_CONFIG,
   changelogFileName: DEFAULT_CHANGELOG_FILENAME,
+  commitTypeToSection: undefined,
 }
 
 /**

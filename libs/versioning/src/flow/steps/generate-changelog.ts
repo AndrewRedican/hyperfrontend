@@ -33,6 +33,21 @@ export const DEFAULT_COMMIT_TYPE_TO_SECTION: Record<string, ChangelogSectionType
 }
 
 /**
+ * Resolves the commit type to section mapping by merging config with defaults.
+ *
+ * @param configMapping - User-provided partial mapping from FlowConfig
+ * @returns Resolved mapping with user overrides applied
+ */
+function resolveCommitTypeMapping(
+  configMapping: Partial<Record<string, ChangelogSectionType | null>> | undefined
+): Record<string, ChangelogSectionType | null> {
+  if (!configMapping) {
+    return DEFAULT_COMMIT_TYPE_TO_SECTION
+  }
+  return { ...DEFAULT_COMMIT_TYPE_TO_SECTION, ...configMapping }
+}
+
+/**
  * Checks if a commit source represents an indirect change.
  *
  * @param source - The commit source type
@@ -46,17 +61,25 @@ function isIndirectSource(source: ClassifiedCommit['source']): boolean {
  * Groups classified commits by their section type.
  *
  * @param commits - Array of classified commits
+ * @param mapping - Commit type to section mapping
  * @returns Record of section type to classified commits
  */
-function groupClassifiedCommitsBySection(commits: readonly ClassifiedCommit[]): Record<ChangelogSectionType, ClassifiedCommit[]> {
+function groupClassifiedCommitsBySection(
+  commits: readonly ClassifiedCommit[],
+  mapping: Record<string, ChangelogSectionType | null>
+): Record<ChangelogSectionType, ClassifiedCommit[]> {
   const groups: Record<string, ClassifiedCommit[]> = {}
 
   for (const classified of commits) {
-    const sectionType = DEFAULT_COMMIT_TYPE_TO_SECTION[classified.commit.type ?? 'chore'] ?? 'chores'
-    if (!groups[sectionType]) {
-      groups[sectionType] = []
+    const sectionType = mapping[classified.commit.type ?? 'chore']
+    // Skip if explicitly excluded (null)
+    if (sectionType === null) continue
+    // Fallback to 'chores' for unmapped types
+    const resolvedSection = sectionType ?? 'chores'
+    if (!groups[resolvedSection]) {
+      groups[resolvedSection] = []
     }
-    groups[sectionType].push(classified)
+    groups[resolvedSection].push(classified)
   }
 
   return <Record<ChangelogSectionType, ClassifiedCommit[]>>groups
@@ -66,17 +89,25 @@ function groupClassifiedCommitsBySection(commits: readonly ClassifiedCommit[]): 
  * Groups commits by their section type.
  *
  * @param commits - Array of conventional commits
+ * @param mapping - Commit type to section mapping
  * @returns Record of section type to commits
  */
-function groupCommitsBySection(commits: readonly ConventionalCommit[]): Record<ChangelogSectionType, ConventionalCommit[]> {
+function groupCommitsBySection(
+  commits: readonly ConventionalCommit[],
+  mapping: Record<string, ChangelogSectionType | null>
+): Record<ChangelogSectionType, ConventionalCommit[]> {
   const groups: Record<string, ConventionalCommit[]> = {}
 
   for (const commit of commits) {
-    const sectionType = DEFAULT_COMMIT_TYPE_TO_SECTION[commit.type ?? 'chore'] ?? 'chores'
-    if (!groups[sectionType]) {
-      groups[sectionType] = []
+    const sectionType = mapping[commit.type ?? 'chore']
+    // Skip if explicitly excluded (null)
+    if (sectionType === null) continue
+    // Fallback to 'chores' for unmapped types
+    const resolvedSection = sectionType ?? 'chores'
+    if (!groups[resolvedSection]) {
+      groups[resolvedSection] = []
     }
-    groups[sectionType].push(commit)
+    groups[resolvedSection].push(commit)
   }
 
   return <Record<ChangelogSectionType, ConventionalCommit[]>>groups
@@ -159,6 +190,9 @@ export function createGenerateChangelogStep(): FlowStep {
       const { config, state } = ctx
       const { commits, nextVersion, bumpType } = state
 
+      // Resolve commit type to section mapping
+      const commitTypeMapping = resolveCommitTypeMapping(config.commitTypeToSection)
+
       // Skip if no bump needed
       if (!nextVersion || bumpType === 'none') {
         return createSkippedResult('No version bump, skipping changelog generation')
@@ -234,7 +268,7 @@ export function createGenerateChangelogStep(): FlowStep {
         }
 
         // Group direct commits by section
-        const groupedDirect = groupClassifiedCommitsBySection(directCommits)
+        const groupedDirect = groupClassifiedCommitsBySection(directCommits, commitTypeMapping)
 
         // Add other sections in conventional order (direct commits only)
         const sectionOrder: readonly { type: ChangelogSectionType; heading: string }[] = [
@@ -269,7 +303,7 @@ export function createGenerateChangelogStep(): FlowStep {
         }
       } else {
         // Fallback: use commits without classification (backward compatibility)
-        const grouped = groupCommitsBySection(commits)
+        const grouped = groupCommitsBySection(commits, commitTypeMapping)
 
         // Add breaking changes section first if any
         const breakingCommits = commits.filter((c) => c.breaking)
