@@ -10,8 +10,8 @@ module.exports = [
   },
   ...baseConfig,
   {
-    // Ensure all publishable libraries are documented in content.ts
-    files: ['src/lib/content.ts'],
+    // Ensure all publishable libraries are documented in content.ts and generate-docs.ts
+    files: ['src/lib/content.ts', 'scripts/generate-docs.ts'],
     plugins: {
       workspace: eslintRules,
     },

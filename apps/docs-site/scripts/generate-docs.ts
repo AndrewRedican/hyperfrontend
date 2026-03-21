@@ -173,6 +173,13 @@ const LIBRARIES: LibraryConfig[] = [
   },
   { name: 'Logging', packageName: '@hyperfrontend/logging', slug: 'logging', srcPath: 'libs/logging', category: 'supporting' },
   { name: 'Web Worker', packageName: '@hyperfrontend/web-worker', slug: 'web-worker', srcPath: 'libs/web-worker', category: 'supporting' },
+  {
+    name: 'Versioning',
+    packageName: '@hyperfrontend/versioning',
+    slug: 'versioning',
+    srcPath: 'libs/versioning',
+    category: 'supporting',
+  },
 
   // Utils sub-packages
   { name: 'Data Utils', packageName: '@hyperfrontend/data-utils', slug: 'data-utils', srcPath: 'libs/utils/data', category: 'utils' },
@@ -235,6 +242,7 @@ const LIBRARY_SLUGS: Record<string, string> = {
   'state-machine': 'state-machine',
   logging: 'logging',
   'web-worker': 'web-worker',
+  versioning: 'versioning',
 }
 
 /**
