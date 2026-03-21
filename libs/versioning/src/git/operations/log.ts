@@ -1,5 +1,5 @@
 import type { GitCommit } from '../models/commit'
-import { execFileSync, execSync } from 'node:child_process'
+import { execFileSync } from 'node:child_process'
 import { createError } from '@hyperfrontend/immutable-api-utils/built-in-copy/error'
 import { createGitCommit } from '../models/commit'
 
@@ -113,7 +113,7 @@ export function getCommitLog(options: GitLogOptions = {}): readonly GitCommit[] 
   }
 
   try {
-    const output = execSync(`git ${args.join(' ')}`, {
+    const output = execFileSync('git', args, {
       encoding: 'utf-8',
       cwd: opts.cwd,
       timeout: opts.timeout,
@@ -196,7 +196,7 @@ export function commitExists(hash: string, options: Pick<GitLogOptions, 'cwd' | 
   const safeHash = escapeGitRef(hash)
 
   try {
-    execSync(`git cat-file -t ${safeHash}`, {
+    execFileSync('git', ['cat-file', '-t', safeHash], {
       encoding: 'utf-8',
       cwd: options.cwd,
       timeout: options.timeout ?? 5000,

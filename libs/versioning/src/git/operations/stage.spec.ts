@@ -1,9 +1,9 @@
-import { execSync } from 'node:child_process'
+import { execFileSync } from 'node:child_process'
 import { stage, unstage, stageAll, hasStagedChanges, hasUnstagedChanges } from './stage'
 
 jest.mock('node:child_process')
 
-const mockExecSync = execSync as jest.MockedFunction<typeof execSync>
+const mockExecFileSync = execFileSync as jest.MockedFunction<typeof execFileSync>
 
 describe('stage', () => {
   beforeEach(() => {
@@ -11,40 +11,44 @@ describe('stage', () => {
   })
 
   it('stages files', () => {
-    mockExecSync.mockReturnValue('')
+    mockExecFileSync.mockReturnValue('')
 
     const result = stage(['package.json', 'src/index.ts'])
 
     expect(result).toBe(true)
-    expect(mockExecSync).toHaveBeenCalledWith(expect.stringContaining('git add package.json src/index.ts'), expect.any(Object))
+    expect(mockExecFileSync).toHaveBeenCalledWith(
+      'git',
+      expect.arrayContaining(['add', 'package.json', 'src/index.ts']),
+      expect.any(Object)
+    )
   })
 
   it('stages all files with -A flag', () => {
-    mockExecSync.mockReturnValue('')
+    mockExecFileSync.mockReturnValue('')
 
     stage(['.'], { all: true })
 
-    expect(mockExecSync).toHaveBeenCalledWith(expect.stringContaining('git add -A'), expect.any(Object))
+    expect(mockExecFileSync).toHaveBeenCalledWith('git', expect.arrayContaining(['add', '-A']), expect.any(Object))
   })
 
   it('stages with update flag', () => {
-    mockExecSync.mockReturnValue('')
+    mockExecFileSync.mockReturnValue('')
 
     stage(['.'], { update: true })
 
-    expect(mockExecSync).toHaveBeenCalledWith(expect.stringContaining('git add -u'), expect.any(Object))
+    expect(mockExecFileSync).toHaveBeenCalledWith('git', expect.arrayContaining(['add', '-u']), expect.any(Object))
   })
 
   it('stages with force flag', () => {
-    mockExecSync.mockReturnValue('')
+    mockExecFileSync.mockReturnValue('')
 
     stage(['ignored-file.txt'], { force: true })
 
-    expect(mockExecSync).toHaveBeenCalledWith(expect.stringContaining('git add -f'), expect.any(Object))
+    expect(mockExecFileSync).toHaveBeenCalledWith('git', expect.arrayContaining(['add', '-f']), expect.any(Object))
   })
 
   it('returns false when staging fails', () => {
-    mockExecSync.mockImplementation(() => {
+    mockExecFileSync.mockImplementation(() => {
       throw new Error('File not found')
     })
 
@@ -54,11 +58,11 @@ describe('stage', () => {
   })
 
   it('uses custom options', () => {
-    mockExecSync.mockReturnValue('')
+    mockExecFileSync.mockReturnValue('')
 
     stage(['file.txt'], { cwd: '/custom', timeout: 5000 })
 
-    expect(mockExecSync).toHaveBeenCalledWith(expect.any(String), expect.objectContaining({ cwd: '/custom', timeout: 5000 }))
+    expect(mockExecFileSync).toHaveBeenCalledWith('git', expect.any(Array), expect.objectContaining({ cwd: '/custom', timeout: 5000 }))
   })
 })
 
@@ -68,16 +72,20 @@ describe('unstage', () => {
   })
 
   it('unstages files', () => {
-    mockExecSync.mockReturnValue('')
+    mockExecFileSync.mockReturnValue('')
 
     const result = unstage(['package.json'])
 
     expect(result).toBe(true)
-    expect(mockExecSync).toHaveBeenCalledWith(expect.stringContaining('git reset HEAD -- package.json'), expect.any(Object))
+    expect(mockExecFileSync).toHaveBeenCalledWith(
+      'git',
+      expect.arrayContaining(['reset', 'HEAD', '--', 'package.json']),
+      expect.any(Object)
+    )
   })
 
   it('returns false when unstaging fails', () => {
-    mockExecSync.mockImplementation(() => {
+    mockExecFileSync.mockImplementation(() => {
       throw new Error('Not in a git repository')
     })
 
@@ -87,11 +95,11 @@ describe('unstage', () => {
   })
 
   it('uses custom options', () => {
-    mockExecSync.mockReturnValue('')
+    mockExecFileSync.mockReturnValue('')
 
     unstage(['file.txt'], { cwd: '/custom', timeout: 5000 })
 
-    expect(mockExecSync).toHaveBeenCalledWith(expect.any(String), expect.objectContaining({ cwd: '/custom', timeout: 5000 }))
+    expect(mockExecFileSync).toHaveBeenCalledWith('git', expect.any(Array), expect.objectContaining({ cwd: '/custom', timeout: 5000 }))
   })
 })
 
@@ -101,20 +109,20 @@ describe('stageAll', () => {
   })
 
   it('stages all files', () => {
-    mockExecSync.mockReturnValue('')
+    mockExecFileSync.mockReturnValue('')
 
     const result = stageAll()
 
     expect(result).toBe(true)
-    expect(mockExecSync).toHaveBeenCalledWith(expect.stringContaining('git add -A'), expect.any(Object))
+    expect(mockExecFileSync).toHaveBeenCalledWith('git', expect.arrayContaining(['add', '-A']), expect.any(Object))
   })
 
   it('uses custom options', () => {
-    mockExecSync.mockReturnValue('')
+    mockExecFileSync.mockReturnValue('')
 
     stageAll({ cwd: '/custom' })
 
-    expect(mockExecSync).toHaveBeenCalledWith(expect.any(String), expect.objectContaining({ cwd: '/custom' }))
+    expect(mockExecFileSync).toHaveBeenCalledWith('git', expect.any(Array), expect.objectContaining({ cwd: '/custom' }))
   })
 })
 
@@ -124,18 +132,18 @@ describe('hasStagedChanges', () => {
   })
 
   it('returns true when there are staged changes', () => {
-    mockExecSync.mockImplementation(() => {
+    mockExecFileSync.mockImplementation(() => {
       throw new Error('Exit code 1')
     })
 
     const result = hasStagedChanges()
 
     expect(result).toBe(true)
-    expect(mockExecSync).toHaveBeenCalledWith('git diff --cached --quiet', expect.any(Object))
+    expect(mockExecFileSync).toHaveBeenCalledWith('git', ['diff', '--cached', '--quiet'], expect.any(Object))
   })
 
   it('returns false when there are no staged changes', () => {
-    mockExecSync.mockReturnValue('')
+    mockExecFileSync.mockReturnValue('')
 
     const result = hasStagedChanges()
 
@@ -143,11 +151,11 @@ describe('hasStagedChanges', () => {
   })
 
   it('uses custom options', () => {
-    mockExecSync.mockReturnValue('')
+    mockExecFileSync.mockReturnValue('')
 
     hasStagedChanges({ cwd: '/custom', timeout: 5000 })
 
-    expect(mockExecSync).toHaveBeenCalledWith(expect.any(String), expect.objectContaining({ cwd: '/custom', timeout: 5000 }))
+    expect(mockExecFileSync).toHaveBeenCalledWith('git', expect.any(Array), expect.objectContaining({ cwd: '/custom', timeout: 5000 }))
   })
 })
 
@@ -157,18 +165,18 @@ describe('hasUnstagedChanges', () => {
   })
 
   it('returns true when there are unstaged changes', () => {
-    mockExecSync.mockImplementation(() => {
+    mockExecFileSync.mockImplementation(() => {
       throw new Error('Exit code 1')
     })
 
     const result = hasUnstagedChanges()
 
     expect(result).toBe(true)
-    expect(mockExecSync).toHaveBeenCalledWith('git diff --quiet', expect.any(Object))
+    expect(mockExecFileSync).toHaveBeenCalledWith('git', ['diff', '--quiet'], expect.any(Object))
   })
 
   it('returns false when there are no unstaged changes', () => {
-    mockExecSync.mockReturnValue('')
+    mockExecFileSync.mockReturnValue('')
 
     const result = hasUnstagedChanges()
 
@@ -176,10 +184,10 @@ describe('hasUnstagedChanges', () => {
   })
 
   it('uses custom options', () => {
-    mockExecSync.mockReturnValue('')
+    mockExecFileSync.mockReturnValue('')
 
     hasUnstagedChanges({ cwd: '/custom', timeout: 5000 })
 
-    expect(mockExecSync).toHaveBeenCalledWith(expect.any(String), expect.objectContaining({ cwd: '/custom', timeout: 5000 }))
+    expect(mockExecFileSync).toHaveBeenCalledWith('git', expect.any(Array), expect.objectContaining({ cwd: '/custom', timeout: 5000 }))
   })
 })

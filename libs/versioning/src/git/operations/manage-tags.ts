@@ -1,6 +1,6 @@
 import type { GitTag } from '../models/tag'
 import type { GitTagOptions } from './query-tags'
-import { execSync } from 'node:child_process'
+import { execFileSync } from 'node:child_process'
 import { createError } from '@hyperfrontend/immutable-api-utils/built-in-copy/error'
 import { escapeGitRef } from './log'
 import { DEFAULT_TAG_OPTIONS, getTag } from './query-tags'
@@ -47,8 +47,7 @@ export function createTag(name: string, options: CreateTagOptions = {}): GitTag 
     // Annotated tag
     args.push('-a')
     args.push(safeName)
-    args.push('-m')
-    args.push(`"${escapeGitMessage(opts.message)}"`)
+    args.push('-m', escapeGitMessage(opts.message))
   } else {
     // Lightweight tag
     args.push(safeName)
@@ -59,7 +58,7 @@ export function createTag(name: string, options: CreateTagOptions = {}): GitTag 
   }
 
   try {
-    execSync(`git ${args.join(' ')}`, {
+    execFileSync('git', args, {
       encoding: 'utf-8',
       cwd: opts.cwd,
       timeout: opts.timeout,
@@ -96,7 +95,7 @@ export function deleteTag(name: string, options: GitTagOptions = {}): boolean {
   const safeName = escapeGitRef(name)
 
   try {
-    execSync(`git tag -d ${safeName}`, {
+    execFileSync('git', ['tag', '-d', safeName], {
       encoding: 'utf-8',
       cwd: opts.cwd,
       timeout: opts.timeout,
@@ -126,7 +125,7 @@ export function pushTag(name: string, remote = 'origin', options: GitTagOptions 
   const safeRemote = escapeGitRef(remote)
 
   try {
-    execSync(`git push ${safeRemote} ${safeName}`, {
+    execFileSync('git', ['push', safeRemote, safeName], {
       encoding: 'utf-8',
       cwd: opts.cwd,
       timeout: opts.timeout * 3, // Allow more time for network

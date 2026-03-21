@@ -1,5 +1,5 @@
 import type { GitCommitOptions } from './commit'
-import { execSync } from 'node:child_process'
+import { execFileSync } from 'node:child_process'
 import { DEFAULT_COMMIT_OPTIONS, escapeFilePath } from './commit'
 
 /**
@@ -47,7 +47,7 @@ export function stage(files: readonly string[], options: StageOptions = {}): boo
   }
 
   try {
-    execSync(`git ${args.join(' ')}`, {
+    execFileSync('git', args, {
       encoding: 'utf-8',
       cwd: opts.cwd,
       timeout: opts.timeout,
@@ -78,7 +78,7 @@ export function unstage(files: readonly string[], options: GitCommitOptions = {}
   }
 
   try {
-    execSync(`git ${args.join(' ')}`, {
+    execFileSync('git', args, {
       encoding: 'utf-8',
       cwd: opts.cwd,
       timeout: opts.timeout,
@@ -116,7 +116,7 @@ export function hasStagedChanges(options: GitCommitOptions = {}): boolean {
   const opts = { ...DEFAULT_COMMIT_OPTIONS, ...options }
 
   try {
-    execSync('git diff --cached --quiet', {
+    execFileSync('git', ['diff', '--cached', '--quiet'], {
       encoding: 'utf-8',
       cwd: opts.cwd,
       timeout: opts.timeout,
@@ -143,7 +143,7 @@ export function hasUnstagedChanges(options: GitCommitOptions = {}): boolean {
   const opts = { ...DEFAULT_COMMIT_OPTIONS, ...options }
 
   try {
-    execSync('git diff --quiet', {
+    execFileSync('git', ['diff', '--quiet'], {
       encoding: 'utf-8',
       cwd: opts.cwd,
       timeout: opts.timeout,

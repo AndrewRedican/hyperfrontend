@@ -1,9 +1,11 @@
 'use client'
 
+import type { NavItem as SharedNavItem } from '../lib/navigation'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import { createPortal } from 'react-dom'
+import { docsNavigation, mainNavLinks as sharedMainNavLinks } from '../lib/navigation'
 import { ThemeToggle } from './theme-toggle'
 
 interface NavItem {
@@ -12,59 +14,26 @@ interface NavItem {
   children?: NavItem[]
 }
 
-const navigation: NavItem[] = [
-  {
-    title: 'Getting Started',
-    children: [
-      { title: 'Installation', href: '/docs' },
-      { title: 'Quick Start', href: '/docs/quick-start' },
-      { title: 'Core Concepts', href: '/docs/core-concepts' },
-    ],
-  },
-  {
-    title: 'Libraries',
-    children: [
-      { title: '@hyperfrontend/nexus', href: '/docs/libraries/nexus' },
-      { title: '@hyperfrontend/network-protocol', href: '/docs/libraries/network-protocol' },
-      { title: '@hyperfrontend/cryptography', href: '/docs/libraries/cryptography' },
-      { title: '@hyperfrontend/state-machine', href: '/docs/libraries/state-machine' },
-      { title: '@hyperfrontend/web-worker', href: '/docs/libraries/web-worker' },
-      { title: '@hyperfrontend/logging', href: '/docs/libraries/logging' },
-      {
-        title: 'Utils',
-        children: [
-          { title: '@hyperfrontend/data-utils', href: '/docs/libraries/utils/data' },
-          { title: '@hyperfrontend/function-utils', href: '/docs/libraries/utils/function' },
-          { title: '@hyperfrontend/immutable-api-utils', href: '/docs/libraries/utils/immutable-api' },
-          { title: '@hyperfrontend/json-utils', href: '/docs/libraries/utils/json' },
-          { title: '@hyperfrontend/list-utils', href: '/docs/libraries/utils/list' },
-          { title: '@hyperfrontend/random-generator-utils', href: '/docs/libraries/utils/random-generator' },
-          { title: '@hyperfrontend/string-utils', href: '/docs/libraries/utils/string' },
-          { title: '@hyperfrontend/time-utils', href: '/docs/libraries/utils/time' },
-          { title: '@hyperfrontend/ui-utils', href: '/docs/libraries/utils/ui' },
-        ],
-      },
-    ],
-  },
-  {
-    title: 'Plugins',
-    children: [{ title: '@hyperfrontend/features', href: '/docs/plugins/features' }],
-  },
-  {
-    title: 'API Reference',
-    href: '/docs/api',
-  },
-  {
-    title: 'Contributing',
-    href: '/docs/contributing',
-  },
-]
+/**
+ * Converts shared navigation items to mobile menu-specific format.
+ * Uses the slug as the display title (without `@hyperfrontend/` prefix).
+ * @param items - The shared navigation items to convert
+ * @returns The converted navigation items for mobile menu
+ */
+function convertToMobileNav(items: SharedNavItem[]): NavItem[] {
+  return items.map((item) => ({
+    title: item.slug,
+    href: item.href,
+    children: item.children ? convertToMobileNav(item.children) : undefined,
+  }))
+}
 
-const mainNavLinks = [
-  { title: 'Docs', href: '/docs' },
-  { title: 'Demos', href: '/demos' },
-  { title: 'Architecture', href: '/architecture' },
-]
+const navigation = convertToMobileNav(docsNavigation)
+
+const mainNavLinks = sharedMainNavLinks.map((item) => ({
+  title: item.slug,
+  href: item.href ?? '',
+}))
 
 export function MobileMenu() {
   const [isOpen, setIsOpen] = useState(false)

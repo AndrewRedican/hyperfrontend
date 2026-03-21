@@ -1,8 +1,10 @@
 'use client'
 
+import type { NavItem as SharedNavItem } from '../lib/navigation'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useState } from 'react'
+import { docsNavigation } from '../lib/navigation'
 
 interface NavItem {
   title: string
@@ -10,54 +12,21 @@ interface NavItem {
   children?: NavItem[]
 }
 
-const navigation: NavItem[] = [
-  {
-    title: 'Getting Started',
-    children: [
-      { title: 'Installation', href: '/docs' },
-      { title: 'Quick Start', href: '/docs/quick-start' },
-      { title: 'Core Concepts', href: '/docs/core-concepts' },
-    ],
-  },
-  {
-    title: 'Libraries',
-    children: [
-      { title: 'nexus', href: '/docs/libraries/nexus' },
-      { title: 'network-protocol', href: '/docs/libraries/network-protocol' },
-      { title: 'cryptography', href: '/docs/libraries/cryptography' },
-      { title: 'project-scope', href: '/docs/libraries/project-scope' },
-      { title: 'state-machine', href: '/docs/libraries/state-machine' },
-      { title: 'web-worker', href: '/docs/libraries/web-worker' },
-      { title: 'logging', href: '/docs/libraries/logging' },
-      {
-        title: 'Utils',
-        children: [
-          { title: 'data-utils', href: '/docs/libraries/utils/data' },
-          { title: 'function-utils', href: '/docs/libraries/utils/function' },
-          { title: 'immutable-api-utils', href: '/docs/libraries/utils/immutable-api' },
-          { title: 'json-utils', href: '/docs/libraries/utils/json' },
-          { title: 'list-utils', href: '/docs/libraries/utils/list' },
-          { title: 'random-generator-utils', href: '/docs/libraries/utils/random-generator' },
-          { title: 'string-utils', href: '/docs/libraries/utils/string' },
-          { title: 'time-utils', href: '/docs/libraries/utils/time' },
-          { title: 'ui-utils', href: '/docs/libraries/utils/ui' },
-        ],
-      },
-    ],
-  },
-  {
-    title: 'Plugins',
-    children: [{ title: 'features', href: '/docs/plugins/features' }],
-  },
-  {
-    title: 'API Reference',
-    href: '/docs/api',
-  },
-  {
-    title: 'Contributing',
-    href: '/docs/contributing',
-  },
-]
+/**
+ * Converts shared navigation items to sidebar-specific format.
+ * Uses the slug as the display title (without `@hyperfrontend/` prefix).
+ * @param items - The shared navigation items to convert
+ * @returns The converted navigation items for sidebar
+ */
+function convertToSidebarNav(items: SharedNavItem[]): NavItem[] {
+  return items.map((item) => ({
+    title: item.slug,
+    href: item.href,
+    children: item.children ? convertToSidebarNav(item.children) : undefined,
+  }))
+}
+
+const navigation = convertToSidebarNav(docsNavigation)
 
 export function Sidebar() {
   const pathname = usePathname()

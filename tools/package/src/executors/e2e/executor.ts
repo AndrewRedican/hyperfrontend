@@ -1,6 +1,6 @@
 import type { ExecutorContext } from '@nx/devkit'
 import type { E2eExecutorOptions } from './schema'
-import { execSync } from 'node:child_process'
+import { execFileSync } from 'node:child_process'
 import { existsSync, readFileSync, unlinkSync, mkdirSync, renameSync } from 'node:fs'
 import { join } from 'node:path'
 import { logger } from '@nx/devkit'
@@ -30,7 +30,7 @@ function getPackageInfo(distPath: string): { name: string; version: string } {
 function packPackage(distPath: string, workspaceRoot: string): string {
   logger.info(`Running npm pack in ${distPath}`)
 
-  const result = execSync('npm pack --json', {
+  const result = execFileSync('npm', ['pack', '--json'], {
     cwd: distPath,
     encoding: 'utf-8',
     stdio: ['pipe', 'pipe', 'pipe'],
@@ -64,7 +64,7 @@ function packPackage(distPath: string, workspaceRoot: string): string {
 function installTarball(tarballPath: string, testDir: string): void {
   logger.info(`Installing ${tarballPath} in ${testDir}`)
 
-  execSync(`npm install "${tarballPath}" --save-exact`, {
+  execFileSync('npm', ['install', tarballPath, '--save-exact'], {
     cwd: testDir,
     encoding: 'utf-8',
     stdio: 'inherit',
@@ -92,7 +92,7 @@ function runJestTests(testDir: string, format: string, workspaceRoot: string): b
   logger.info(`Running ${format} tests...`)
 
   try {
-    execSync(`npx jest --config ${configPath} --passWithNoTests`, {
+    execFileSync('npx', ['jest', '--config', configPath, '--passWithNoTests'], {
       cwd: workspaceRoot,
       encoding: 'utf-8',
       stdio: 'inherit',

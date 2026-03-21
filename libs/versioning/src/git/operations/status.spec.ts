@@ -1,4 +1,4 @@
-import { execSync } from 'node:child_process'
+import { execFileSync } from 'node:child_process'
 import {
   getStatus,
   isClean,
@@ -19,7 +19,7 @@ import {
 
 jest.mock('node:child_process')
 
-const mockExecSync = execSync as jest.MockedFunction<typeof execSync>
+const mockExecFileSync = execFileSync as jest.MockedFunction<typeof execFileSync>
 
 describe('getStatus', () => {
   beforeEach(() => {
@@ -28,7 +28,7 @@ describe('getStatus', () => {
 
   describe('branch parsing', () => {
     it('parses branch name from status output', () => {
-      mockExecSync.mockReturnValue('# branch.head main\n')
+      mockExecFileSync.mockReturnValue('# branch.head main\n')
 
       const status = getStatus()
 
@@ -37,7 +37,7 @@ describe('getStatus', () => {
     })
 
     it('detects detached HEAD state', () => {
-      mockExecSync.mockReturnValue('# branch.head (detached)\n')
+      mockExecFileSync.mockReturnValue('# branch.head (detached)\n')
 
       const status = getStatus()
 
@@ -46,7 +46,7 @@ describe('getStatus', () => {
     })
 
     it('parses upstream branch', () => {
-      mockExecSync.mockReturnValue('# branch.head main\n# branch.upstream origin/main\n')
+      mockExecFileSync.mockReturnValue('# branch.head main\n# branch.upstream origin/main\n')
 
       const status = getStatus()
 
@@ -55,7 +55,7 @@ describe('getStatus', () => {
     })
 
     it('parses ahead/behind counts', () => {
-      mockExecSync.mockReturnValue('# branch.head main\n# branch.ab +5 -3\n')
+      mockExecFileSync.mockReturnValue('# branch.head main\n# branch.ab +5 -3\n')
 
       const status = getStatus()
 
@@ -64,7 +64,7 @@ describe('getStatus', () => {
     })
 
     it('handles ahead only', () => {
-      mockExecSync.mockReturnValue('# branch.head main\n# branch.ab +2 -0\n')
+      mockExecFileSync.mockReturnValue('# branch.head main\n# branch.ab +2 -0\n')
 
       const status = getStatus()
 
@@ -73,7 +73,7 @@ describe('getStatus', () => {
     })
 
     it('handles behind only', () => {
-      mockExecSync.mockReturnValue('# branch.head main\n# branch.ab +0 -7\n')
+      mockExecFileSync.mockReturnValue('# branch.head main\n# branch.ab +0 -7\n')
 
       const status = getStatus()
 
@@ -84,7 +84,7 @@ describe('getStatus', () => {
 
   describe('changed entries parsing', () => {
     it('parses modified files in staging area', () => {
-      mockExecSync.mockReturnValue('# branch.head main\n1 M. N... 100644 100644 100644 abc123 def456 src/index.ts\n')
+      mockExecFileSync.mockReturnValue('# branch.head main\n1 M. N... 100644 100644 100644 abc123 def456 src/index.ts\n')
 
       const status = getStatus()
 
@@ -94,7 +94,7 @@ describe('getStatus', () => {
     })
 
     it('parses added files in staging area', () => {
-      mockExecSync.mockReturnValue('# branch.head main\n1 A. N... 000000 100644 100644 0000000 abc123 new-file.ts\n')
+      mockExecFileSync.mockReturnValue('# branch.head main\n1 A. N... 000000 100644 100644 0000000 abc123 new-file.ts\n')
 
       const status = getStatus()
 
@@ -104,7 +104,7 @@ describe('getStatus', () => {
     })
 
     it('parses deleted files in staging area', () => {
-      mockExecSync.mockReturnValue('# branch.head main\n1 D. N... 100644 000000 000000 abc123 0000000 deleted.ts\n')
+      mockExecFileSync.mockReturnValue('# branch.head main\n1 D. N... 100644 000000 000000 abc123 0000000 deleted.ts\n')
 
       const status = getStatus()
 
@@ -114,7 +114,7 @@ describe('getStatus', () => {
     })
 
     it('parses modified files in working tree', () => {
-      mockExecSync.mockReturnValue('# branch.head main\n1 .M N... 100644 100644 100644 abc123 abc123 changed.ts\n')
+      mockExecFileSync.mockReturnValue('# branch.head main\n1 .M N... 100644 100644 100644 abc123 abc123 changed.ts\n')
 
       const status = getStatus()
 
@@ -124,7 +124,7 @@ describe('getStatus', () => {
     })
 
     it('parses files with both index and worktree changes', () => {
-      mockExecSync.mockReturnValue('# branch.head main\n1 MM N... 100644 100644 100644 abc123 def456 both.ts\n')
+      mockExecFileSync.mockReturnValue('# branch.head main\n1 MM N... 100644 100644 100644 abc123 def456 both.ts\n')
 
       const status = getStatus()
 
@@ -135,7 +135,7 @@ describe('getStatus', () => {
     })
 
     it('handles type change status', () => {
-      mockExecSync.mockReturnValue('# branch.head main\n1 T. N... 100644 120000 120000 abc123 def456 symlink.ts\n')
+      mockExecFileSync.mockReturnValue('# branch.head main\n1 T. N... 100644 120000 120000 abc123 def456 symlink.ts\n')
 
       const status = getStatus()
 
@@ -144,7 +144,7 @@ describe('getStatus', () => {
     })
 
     it('ignores entries with no status', () => {
-      mockExecSync.mockReturnValue('# branch.head main\n1 .. N... 100644 100644 100644 abc123 abc123 unchanged.ts\n')
+      mockExecFileSync.mockReturnValue('# branch.head main\n1 .. N... 100644 100644 100644 abc123 abc123 unchanged.ts\n')
 
       const status = getStatus()
 
@@ -155,7 +155,7 @@ describe('getStatus', () => {
 
   describe('renamed entries parsing', () => {
     it('parses renamed files with tab separator', () => {
-      mockExecSync.mockReturnValue('# branch.head main\n2 R. N... 100644 100644 100644 abc123 def456 R100 new-name.ts\told-name.ts\n')
+      mockExecFileSync.mockReturnValue('# branch.head main\n2 R. N... 100644 100644 100644 abc123 def456 R100 new-name.ts\told-name.ts\n')
 
       const status = getStatus()
 
@@ -166,7 +166,7 @@ describe('getStatus', () => {
     })
 
     it('parses renamed files without tab separator (no origPath)', () => {
-      mockExecSync.mockReturnValue('# branch.head main\n2 R. N... 100644 100644 100644 abc123 def456 R100 renamed-only.ts\n')
+      mockExecFileSync.mockReturnValue('# branch.head main\n2 R. N... 100644 100644 100644 abc123 def456 R100 renamed-only.ts\n')
 
       const status = getStatus()
 
@@ -177,7 +177,7 @@ describe('getStatus', () => {
     })
 
     it('parses copied files', () => {
-      mockExecSync.mockReturnValue('# branch.head main\n2 C. N... 100644 100644 100644 abc123 abc123 C100 copy.ts\toriginal.ts\n')
+      mockExecFileSync.mockReturnValue('# branch.head main\n2 C. N... 100644 100644 100644 abc123 abc123 C100 copy.ts\toriginal.ts\n')
 
       const status = getStatus()
 
@@ -186,7 +186,7 @@ describe('getStatus', () => {
     })
 
     it('parses renamed files with working tree changes', () => {
-      mockExecSync.mockReturnValue('# branch.head main\n2 RM N... 100644 100644 100644 abc123 def456 R100 renamed.ts\told.ts\n')
+      mockExecFileSync.mockReturnValue('# branch.head main\n2 RM N... 100644 100644 100644 abc123 def456 R100 renamed.ts\told.ts\n')
 
       const status = getStatus()
 
@@ -197,7 +197,7 @@ describe('getStatus', () => {
 
   describe('unmerged entries parsing', () => {
     it('parses unmerged files (conflicts)', () => {
-      mockExecSync.mockReturnValue('# branch.head main\nu UU N... 100644 100644 100644 100644 abc123 def456 ghi789 conflict.ts\n')
+      mockExecFileSync.mockReturnValue('# branch.head main\nu UU N... 100644 100644 100644 100644 abc123 def456 ghi789 conflict.ts\n')
 
       const status = getStatus()
 
@@ -211,7 +211,7 @@ describe('getStatus', () => {
 
   describe('untracked files parsing', () => {
     it('parses untracked files', () => {
-      mockExecSync.mockReturnValue('# branch.head main\n? new-file.txt\n')
+      mockExecFileSync.mockReturnValue('# branch.head main\n? new-file.txt\n')
 
       const status = getStatus()
 
@@ -220,7 +220,7 @@ describe('getStatus', () => {
     })
 
     it('parses multiple untracked files', () => {
-      mockExecSync.mockReturnValue('# branch.head main\n? file1.txt\n? file2.txt\n? dir/file3.ts\n')
+      mockExecFileSync.mockReturnValue('# branch.head main\n? file1.txt\n? file2.txt\n? dir/file3.ts\n')
 
       const status = getStatus()
 
@@ -233,7 +233,7 @@ describe('getStatus', () => {
 
   describe('clean status', () => {
     it('returns clean=true when no changes', () => {
-      mockExecSync.mockReturnValue('# branch.head main\n')
+      mockExecFileSync.mockReturnValue('# branch.head main\n')
 
       const status = getStatus()
 
@@ -241,7 +241,7 @@ describe('getStatus', () => {
     })
 
     it('returns clean=false when staged files exist', () => {
-      mockExecSync.mockReturnValue('# branch.head main\n1 A. N... 000000 100644 100644 0000000 abc123 new.ts\n')
+      mockExecFileSync.mockReturnValue('# branch.head main\n1 A. N... 000000 100644 100644 0000000 abc123 new.ts\n')
 
       const status = getStatus()
 
@@ -249,7 +249,7 @@ describe('getStatus', () => {
     })
 
     it('returns clean=false when modified files exist', () => {
-      mockExecSync.mockReturnValue('# branch.head main\n1 .M N... 100644 100644 100644 abc123 abc123 modified.ts\n')
+      mockExecFileSync.mockReturnValue('# branch.head main\n1 .M N... 100644 100644 100644 abc123 abc123 modified.ts\n')
 
       const status = getStatus()
 
@@ -257,7 +257,7 @@ describe('getStatus', () => {
     })
 
     it('returns clean=false when untracked files exist', () => {
-      mockExecSync.mockReturnValue('# branch.head main\n? untracked.txt\n')
+      mockExecFileSync.mockReturnValue('# branch.head main\n? untracked.txt\n')
 
       const status = getStatus()
 
@@ -265,7 +265,7 @@ describe('getStatus', () => {
     })
 
     it('returns clean=false when conflicts exist', () => {
-      mockExecSync.mockReturnValue('# branch.head main\nu UU N... 100644 100644 100644 100644 abc123 def456 ghi789 conflict.ts\n')
+      mockExecFileSync.mockReturnValue('# branch.head main\nu UU N... 100644 100644 100644 100644 abc123 def456 ghi789 conflict.ts\n')
 
       const status = getStatus()
 
@@ -275,36 +275,45 @@ describe('getStatus', () => {
 
   describe('options handling', () => {
     it('uses default timeout', () => {
-      mockExecSync.mockReturnValue('# branch.head main\n')
+      mockExecFileSync.mockReturnValue('# branch.head main\n')
 
       getStatus()
 
-      expect(mockExecSync).toHaveBeenCalledWith(
-        'git status --porcelain=v2 --branch',
+      expect(mockExecFileSync).toHaveBeenCalledWith(
+        'git',
+        ['status', '--porcelain=v2', '--branch'],
         expect.objectContaining({ timeout: DEFAULT_STATUS_OPTIONS.timeout })
       )
     })
 
     it('uses custom cwd', () => {
-      mockExecSync.mockReturnValue('# branch.head main\n')
+      mockExecFileSync.mockReturnValue('# branch.head main\n')
 
       getStatus({ cwd: '/custom/path' })
 
-      expect(mockExecSync).toHaveBeenCalledWith('git status --porcelain=v2 --branch', expect.objectContaining({ cwd: '/custom/path' }))
+      expect(mockExecFileSync).toHaveBeenCalledWith(
+        'git',
+        ['status', '--porcelain=v2', '--branch'],
+        expect.objectContaining({ cwd: '/custom/path' })
+      )
     })
 
     it('uses custom timeout', () => {
-      mockExecSync.mockReturnValue('# branch.head main\n')
+      mockExecFileSync.mockReturnValue('# branch.head main\n')
 
       getStatus({ timeout: 5000 })
 
-      expect(mockExecSync).toHaveBeenCalledWith('git status --porcelain=v2 --branch', expect.objectContaining({ timeout: 5000 }))
+      expect(mockExecFileSync).toHaveBeenCalledWith(
+        'git',
+        ['status', '--porcelain=v2', '--branch'],
+        expect.objectContaining({ timeout: 5000 })
+      )
     })
   })
 
   describe('edge cases', () => {
     it('handles empty output', () => {
-      mockExecSync.mockReturnValue('')
+      mockExecFileSync.mockReturnValue('')
 
       const status = getStatus()
 
@@ -313,7 +322,7 @@ describe('getStatus', () => {
     })
 
     it('handles files with spaces in path', () => {
-      mockExecSync.mockReturnValue('# branch.head main\n1 A. N... 000000 100644 100644 0000000 abc123 path with spaces/file name.ts\n')
+      mockExecFileSync.mockReturnValue('# branch.head main\n1 A. N... 000000 100644 100644 0000000 abc123 path with spaces/file name.ts\n')
 
       const status = getStatus()
 
@@ -321,7 +330,7 @@ describe('getStatus', () => {
     })
 
     it('skips malformed changed entry lines', () => {
-      mockExecSync.mockReturnValue('# branch.head main\n1 M. short\n')
+      mockExecFileSync.mockReturnValue('# branch.head main\n1 M. short\n')
 
       const status = getStatus()
 
@@ -329,7 +338,7 @@ describe('getStatus', () => {
     })
 
     it('skips malformed renamed entry lines', () => {
-      mockExecSync.mockReturnValue('# branch.head main\n2 R. N... too short\n')
+      mockExecFileSync.mockReturnValue('# branch.head main\n2 R. N... too short\n')
 
       const status = getStatus()
 
@@ -337,7 +346,7 @@ describe('getStatus', () => {
     })
 
     it('skips malformed unmerged entry lines', () => {
-      mockExecSync.mockReturnValue('# branch.head main\nu UU short line\n')
+      mockExecFileSync.mockReturnValue('# branch.head main\nu UU short line\n')
 
       const status = getStatus()
 
@@ -352,23 +361,23 @@ describe('isClean', () => {
   })
 
   it('returns true when working tree is clean', () => {
-    mockExecSync.mockReturnValue('# branch.head main\n')
+    mockExecFileSync.mockReturnValue('# branch.head main\n')
 
     expect(isClean()).toBe(true)
   })
 
   it('returns false when there are changes', () => {
-    mockExecSync.mockReturnValue('# branch.head main\n1 M. N... 100644 100644 100644 abc123 def456 changed.ts\n')
+    mockExecFileSync.mockReturnValue('# branch.head main\n1 M. N... 100644 100644 100644 abc123 def456 changed.ts\n')
 
     expect(isClean()).toBe(false)
   })
 
   it('passes options to getStatus', () => {
-    mockExecSync.mockReturnValue('# branch.head main\n')
+    mockExecFileSync.mockReturnValue('# branch.head main\n')
 
     isClean({ cwd: '/test/path' })
 
-    expect(mockExecSync).toHaveBeenCalledWith(expect.any(String), expect.objectContaining({ cwd: '/test/path' }))
+    expect(mockExecFileSync).toHaveBeenCalledWith('git', expect.any(Array), expect.objectContaining({ cwd: '/test/path' }))
   })
 })
 
@@ -378,13 +387,13 @@ describe('isGitRepository', () => {
   })
 
   it('returns true when in a git repository', () => {
-    mockExecSync.mockReturnValue('true\n')
+    mockExecFileSync.mockReturnValue('true\n')
 
     expect(isGitRepository()).toBe(true)
   })
 
   it('returns false when not in a git repository', () => {
-    mockExecSync.mockImplementation(() => {
+    mockExecFileSync.mockImplementation(() => {
       throw new Error('Not a git repository')
     })
 
@@ -392,11 +401,15 @@ describe('isGitRepository', () => {
   })
 
   it('passes options', () => {
-    mockExecSync.mockReturnValue('true\n')
+    mockExecFileSync.mockReturnValue('true\n')
 
     isGitRepository({ cwd: '/custom/dir' })
 
-    expect(mockExecSync).toHaveBeenCalledWith('git rev-parse --is-inside-work-tree', expect.objectContaining({ cwd: '/custom/dir' }))
+    expect(mockExecFileSync).toHaveBeenCalledWith(
+      'git',
+      ['rev-parse', '--is-inside-work-tree'],
+      expect.objectContaining({ cwd: '/custom/dir' })
+    )
   })
 })
 
@@ -406,13 +419,13 @@ describe('getRepositoryRoot', () => {
   })
 
   it('returns repository root path', () => {
-    mockExecSync.mockReturnValue('/path/to/repo\n')
+    mockExecFileSync.mockReturnValue('/path/to/repo\n')
 
     expect(getRepositoryRoot()).toBe('/path/to/repo')
   })
 
   it('returns null when not in a repository', () => {
-    mockExecSync.mockImplementation(() => {
+    mockExecFileSync.mockImplementation(() => {
       throw new Error('Not a git repository')
     })
 
@@ -420,7 +433,7 @@ describe('getRepositoryRoot', () => {
   })
 
   it('trims whitespace from output', () => {
-    mockExecSync.mockReturnValue('  /path/to/repo  \n')
+    mockExecFileSync.mockReturnValue('  /path/to/repo  \n')
 
     expect(getRepositoryRoot()).toBe('/path/to/repo')
   })
@@ -432,13 +445,13 @@ describe('getHeadHash', () => {
   })
 
   it('returns HEAD commit hash', () => {
-    mockExecSync.mockReturnValue('abc123def456789012345678901234567890abcd\n')
+    mockExecFileSync.mockReturnValue('abc123def456789012345678901234567890abcd\n')
 
     expect(getHeadHash()).toBe('abc123def456789012345678901234567890abcd')
   })
 
   it('returns null on error', () => {
-    mockExecSync.mockImplementation(() => {
+    mockExecFileSync.mockImplementation(() => {
       throw new Error('No HEAD')
     })
 
@@ -452,13 +465,13 @@ describe('getHeadShortHash', () => {
   })
 
   it('returns short HEAD hash', () => {
-    mockExecSync.mockReturnValue('abc123d\n')
+    mockExecFileSync.mockReturnValue('abc123d\n')
 
     expect(getHeadShortHash()).toBe('abc123d')
   })
 
   it('returns null on error', () => {
-    mockExecSync.mockImplementation(() => {
+    mockExecFileSync.mockImplementation(() => {
       throw new Error('No HEAD')
     })
 
@@ -472,13 +485,13 @@ describe('hasConflicts', () => {
   })
 
   it('returns true when conflicts exist', () => {
-    mockExecSync.mockReturnValue('# branch.head main\nu UU N... 100644 100644 100644 100644 abc123 def456 ghi789 conflict.ts\n')
+    mockExecFileSync.mockReturnValue('# branch.head main\nu UU N... 100644 100644 100644 100644 abc123 def456 ghi789 conflict.ts\n')
 
     expect(hasConflicts()).toBe(true)
   })
 
   it('returns false when no conflicts', () => {
-    mockExecSync.mockReturnValue('# branch.head main\n')
+    mockExecFileSync.mockReturnValue('# branch.head main\n')
 
     expect(hasConflicts()).toBe(false)
   })
@@ -490,13 +503,13 @@ describe('getAheadCount', () => {
   })
 
   it('returns number of commits ahead', () => {
-    mockExecSync.mockReturnValue('# branch.head main\n# branch.ab +5 -0\n')
+    mockExecFileSync.mockReturnValue('# branch.head main\n# branch.ab +5 -0\n')
 
     expect(getAheadCount()).toBe(5)
   })
 
   it('returns 0 when not ahead', () => {
-    mockExecSync.mockReturnValue('# branch.head main\n')
+    mockExecFileSync.mockReturnValue('# branch.head main\n')
 
     expect(getAheadCount()).toBe(0)
   })
@@ -508,13 +521,13 @@ describe('getBehindCount', () => {
   })
 
   it('returns number of commits behind', () => {
-    mockExecSync.mockReturnValue('# branch.head main\n# branch.ab +0 -3\n')
+    mockExecFileSync.mockReturnValue('# branch.head main\n# branch.ab +0 -3\n')
 
     expect(getBehindCount()).toBe(3)
   })
 
   it('returns 0 when not behind', () => {
-    mockExecSync.mockReturnValue('# branch.head main\n')
+    mockExecFileSync.mockReturnValue('# branch.head main\n')
 
     expect(getBehindCount()).toBe(0)
   })
@@ -526,13 +539,13 @@ describe('needsPush', () => {
   })
 
   it('returns true when ahead of upstream', () => {
-    mockExecSync.mockReturnValue('# branch.head main\n# branch.ab +2 -0\n')
+    mockExecFileSync.mockReturnValue('# branch.head main\n# branch.ab +2 -0\n')
 
     expect(needsPush()).toBe(true)
   })
 
   it('returns false when not ahead', () => {
-    mockExecSync.mockReturnValue('# branch.head main\n# branch.ab +0 -0\n')
+    mockExecFileSync.mockReturnValue('# branch.head main\n# branch.ab +0 -0\n')
 
     expect(needsPush()).toBe(false)
   })
@@ -544,13 +557,13 @@ describe('needsPull', () => {
   })
 
   it('returns true when behind upstream', () => {
-    mockExecSync.mockReturnValue('# branch.head main\n# branch.ab +0 -4\n')
+    mockExecFileSync.mockReturnValue('# branch.head main\n# branch.ab +0 -4\n')
 
     expect(needsPull()).toBe(true)
   })
 
   it('returns false when not behind', () => {
-    mockExecSync.mockReturnValue('# branch.head main\n# branch.ab +0 -0\n')
+    mockExecFileSync.mockReturnValue('# branch.head main\n# branch.ab +0 -0\n')
 
     expect(needsPull()).toBe(false)
   })
@@ -562,7 +575,7 @@ describe('getStagedFiles', () => {
   })
 
   it('returns paths of staged files', () => {
-    mockExecSync.mockReturnValue(
+    mockExecFileSync.mockReturnValue(
       '# branch.head main\n1 A. N... 000000 100644 100644 0000000 abc123 file1.ts\n1 M. N... 100644 100644 100644 abc123 def456 file2.ts\n'
     )
 
@@ -574,7 +587,7 @@ describe('getStagedFiles', () => {
   })
 
   it('returns empty array when no staged files', () => {
-    mockExecSync.mockReturnValue('# branch.head main\n')
+    mockExecFileSync.mockReturnValue('# branch.head main\n')
 
     expect(getStagedFiles()).toHaveLength(0)
   })
@@ -586,7 +599,7 @@ describe('getModifiedFiles', () => {
   })
 
   it('returns paths of modified files', () => {
-    mockExecSync.mockReturnValue('# branch.head main\n1 .M N... 100644 100644 100644 abc123 abc123 modified.ts\n')
+    mockExecFileSync.mockReturnValue('# branch.head main\n1 .M N... 100644 100644 100644 abc123 abc123 modified.ts\n')
 
     const files = getModifiedFiles()
 
@@ -595,7 +608,7 @@ describe('getModifiedFiles', () => {
   })
 
   it('returns empty array when no modified files', () => {
-    mockExecSync.mockReturnValue('# branch.head main\n')
+    mockExecFileSync.mockReturnValue('# branch.head main\n')
 
     expect(getModifiedFiles()).toHaveLength(0)
   })
@@ -607,7 +620,7 @@ describe('getUntrackedFiles', () => {
   })
 
   it('returns paths of untracked files', () => {
-    mockExecSync.mockReturnValue('# branch.head main\n? new1.txt\n? new2.txt\n')
+    mockExecFileSync.mockReturnValue('# branch.head main\n? new1.txt\n? new2.txt\n')
 
     const files = getUntrackedFiles()
 
@@ -617,7 +630,7 @@ describe('getUntrackedFiles', () => {
   })
 
   it('returns empty array when no untracked files', () => {
-    mockExecSync.mockReturnValue('# branch.head main\n')
+    mockExecFileSync.mockReturnValue('# branch.head main\n')
 
     expect(getUntrackedFiles()).toHaveLength(0)
   })

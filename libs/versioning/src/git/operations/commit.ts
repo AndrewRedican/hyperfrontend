@@ -1,5 +1,5 @@
 import type { GitCommit } from '../models/commit'
-import { execSync } from 'node:child_process'
+import { execFileSync } from 'node:child_process'
 import { createError } from '@hyperfrontend/immutable-api-utils/built-in-copy/error'
 import { getCommit } from './log'
 import { escapeGitMessage } from './manage-tags'
@@ -87,7 +87,7 @@ export function commit(message: string, options: CreateCommitOptions = {}): GitC
       fullMessage = `${safeMessage}\n\n${safeBody}`
     }
 
-    args.push('-m', `"${fullMessage}"`)
+    args.push('-m', fullMessage)
 
     if (opts.amend) {
       args.push('--amend')
@@ -108,7 +108,7 @@ export function commit(message: string, options: CreateCommitOptions = {}): GitC
 
   if (opts.author) {
     const safeAuthor = escapeAuthor(opts.author)
-    args.push(`--author="${safeAuthor}"`)
+    args.push('--author', safeAuthor)
   }
 
   // Add specific files if provided
@@ -120,7 +120,7 @@ export function commit(message: string, options: CreateCommitOptions = {}): GitC
   }
 
   try {
-    execSync(`git ${args.join(' ')}`, {
+    execFileSync('git', args, {
       encoding: 'utf-8',
       cwd: opts.cwd,
       timeout: opts.timeout,

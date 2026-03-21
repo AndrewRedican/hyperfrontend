@@ -6,7 +6,6 @@ import { log } from '@hyperfrontend/immutable-api-utils/built-in-copy/console'
 import { createDate } from '@hyperfrontend/immutable-api-utils/built-in-copy/date'
 import { parse, stringify } from '@hyperfrontend/immutable-api-utils/built-in-copy/json'
 import { entries } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
-import { createRegExp } from '@hyperfrontend/immutable-api-utils/built-in-copy/regexp'
 import { createSet } from '@hyperfrontend/immutable-api-utils/built-in-copy/set'
 import { createURL } from '@hyperfrontend/immutable-api-utils/built-in-copy/url'
 
@@ -173,6 +172,13 @@ const LIBRARIES: LibraryConfig[] = [
   },
   { name: 'Logging', packageName: '@hyperfrontend/logging', slug: 'logging', srcPath: 'libs/logging', category: 'supporting' },
   { name: 'Web Worker', packageName: '@hyperfrontend/web-worker', slug: 'web-worker', srcPath: 'libs/web-worker', category: 'supporting' },
+  {
+    name: 'Versioning',
+    packageName: '@hyperfrontend/versioning',
+    slug: 'versioning',
+    srcPath: 'libs/versioning',
+    category: 'supporting',
+  },
 
   // Utils sub-packages
   { name: 'Data Utils', packageName: '@hyperfrontend/data-utils', slug: 'data-utils', srcPath: 'libs/utils/data', category: 'utils' },
@@ -235,6 +241,112 @@ const LIBRARY_SLUGS: Record<string, string> = {
   'state-machine': 'state-machine',
   logging: 'logging',
   'web-worker': 'web-worker',
+  versioning: 'versioning',
+}
+
+/**
+ * Normalize a relative path by removing leading `./` and `../` segments.
+ *
+ * @param path - The path to normalize
+ * @returns The normalized filename (basename)
+ */
+function normalizeRelativePath(path: string): string {
+  let normalized = path
+  // Remove leading ./
+  if (normalized.startsWith('./')) {
+    normalized = normalized.slice(2)
+  }
+  // Remove all leading ../
+  while (normalized.startsWith('../')) {
+    normalized = normalized.slice(3)
+  }
+  return normalized
+}
+
+/**
+ * Extract link text and URL from a markdown link segment.
+ * Given a segment that starts after `[`, extracts the text and URL.
+ *
+ * @param segment - Text starting with link text, e.g., "click here](https://example.com) more text"
+ * @returns Object with linkText, url, and remainder, or null if not a valid link
+ */
+function extractMarkdownLink(segment: string): { linkText: string; url: string; remainder: string } | null {
+  const linkEndIndex = segment.indexOf('](')
+  if (linkEndIndex === -1) return null
+
+  const linkText = segment.slice(0, linkEndIndex)
+  const afterBracket = segment.slice(linkEndIndex + 2)
+
+  const urlEndIndex = afterBracket.indexOf(')')
+  if (urlEndIndex === -1) return null
+
+  const url = afterBracket.slice(0, urlEndIndex)
+  const remainder = afterBracket.slice(urlEndIndex + 1)
+
+  return { linkText, url, remainder }
+}
+
+/**
+ * Transform a single markdown link URL based on transformation rules.
+ *
+ * @param url - The original URL from the markdown link
+ * @param sourceContext - Where this content came from ('root' | 'library')
+ * @returns Object with transformed URL (or null to remove the link entirely)
+ */
+function transformLinkUrl(url: string, sourceContext: 'root' | 'library'): { url: string | null; keepAsText: boolean } {
+  const normalized = normalizeRelativePath(url)
+
+  // Root document mappings
+  const rootDocMappings: Record<string, string> = {
+    'README.md': '/',
+    'ARCHITECTURE.md': '/architecture',
+    'CONTRIBUTING.md': '/docs/contributing',
+    'MANIFESTO.md': 'https://github.com/AndrewRedican/hyperfrontend/blob/main/MANIFESTO.md',
+    'LICENSE.md': 'https://github.com/AndrewRedican/hyperfrontend/blob/main/LICENSE.md',
+    'SECURITY.md': 'https://github.com/AndrewRedican/hyperfrontend/blob/main/SECURITY.md',
+    'FUNDING.md': 'https://github.com/AndrewRedican/hyperfrontend/blob/main/FUNDING.md',
+  }
+
+  // Check root document mappings
+  if (rootDocMappings[normalized]) {
+    return { url: rootDocMappings[normalized], keepAsText: false }
+  }
+
+  // Transform roadmap links to GitHub
+  if (normalized.startsWith('roadmap/') && normalized.endsWith('.md')) {
+    return { url: `https://github.com/AndrewRedican/hyperfrontend/blob/main/${normalized}`, keepAsText: false }
+  }
+
+  // Transform .github links to GitHub
+  if (normalized.startsWith('.github/')) {
+    const path = normalized.slice(8) // Remove '.github/'
+    return { url: `https://github.com/AndrewRedican/hyperfrontend/tree/main/.github/${path}`, keepAsText: false }
+  }
+
+  // Transform libs/X/ARCHITECTURE.md links to library pages
+  if (normalized.startsWith('libs/') && normalized.includes('/ARCHITECTURE.md')) {
+    const parts = normalized.split('/')
+    if (parts.length >= 3) {
+      const libName = parts[1]
+      const slug = LIBRARY_SLUGS[libName]
+      if (slug) {
+        // Preserve anchor if present
+        const anchorIndex = normalized.indexOf('#')
+        const anchor = anchorIndex !== -1 ? normalized.slice(anchorIndex) : ''
+        return { url: `/docs/libraries/${slug}${anchor}`, keepAsText: false }
+      }
+    }
+  }
+
+  // For library context, remove internal src/ links
+  if (sourceContext === 'library') {
+    if (normalized.startsWith('src/') || normalized === 'src') {
+      return { url: null, keepAsText: true }
+    }
+  }
+
+  // No transformation needed
+  return { url, keepAsText: false }
 }
 
 /**
@@ -248,64 +360,45 @@ const LIBRARY_SLUGS: Record<string, string> = {
  *
  * @param content - Markdown content to transform
  * @param sourceContext - Where this content came from ('root' | 'library')
- * @param librarySlug - Optional library slug if from a library
  * @returns Transformed markdown content
  */
-function transformLinks(content: string, sourceContext: 'root' | 'library', librarySlug?: string): string {
-  let transformed = content
-
+function transformLinks(content: string, sourceContext: 'root' | 'library'): string {
   // Remove self-referential "See docs" lines added to library READMEs for GitHub/npm visibility.
   // Filter out any line that contains the 👉 See [**docs**] pattern pointing to the docs site.
-  transformed = transformed
+  const transformed = content
     .split('\n')
     .filter((line) => !(line.includes('👉 See') && containsDocsUrl(line)))
     .join('\n')
 
-  // Transform root document links to docs site pages
-  const rootDocMappings: Record<string, string> = {
-    'README.md': '/',
-    'ARCHITECTURE.md': '/docs/architecture',
-    'CONTRIBUTING.md': '/docs/contributing',
-    'MANIFESTO.md': 'https://github.com/AndrewRedican/hyperfrontend/blob/main/MANIFESTO.md',
-    'LICENSE.md': 'https://github.com/AndrewRedican/hyperfrontend/blob/main/LICENSE.md',
-    'SECURITY.md': 'https://github.com/AndrewRedican/hyperfrontend/blob/main/SECURITY.md',
-    'FUNDING.md': 'https://github.com/AndrewRedican/hyperfrontend/blob/main/FUNDING.md',
+  // Process all markdown links by splitting on '[' and reconstructing
+  const parts = transformed.split('[')
+  const result: string[] = [parts[0]] // First part is before any links
+
+  for (let i = 1; i < parts.length; i++) {
+    const segment = parts[i]
+    const linkInfo = extractMarkdownLink(segment)
+
+    if (linkInfo) {
+      const { linkText, url, remainder } = linkInfo
+      const transformation = transformLinkUrl(url, sourceContext)
+
+      if (transformation.url === null && transformation.keepAsText) {
+        // Remove link, keep text only
+        result.push(linkText + remainder)
+      } else if (transformation.url !== url) {
+        // URL was transformed
+        result.push(`[${linkText}](${transformation.url})${remainder}`)
+      } else {
+        // No transformation, keep original
+        result.push(`[${segment}`)
+      }
+    } else {
+      // Not a valid link, preserve original with the '['
+      result.push(`[${segment}`)
+    }
   }
 
-  for (const [file, url] of entries(rootDocMappings)) {
-    // Match [text](README.md) or [text](./README.md)
-    // eslint-disable-next-line workspace/no-unsafe-regex -- file names are from hardcoded mapping
-    const pattern = createRegExp(`\\]\\(\\.?\\/?${file.replace('.', '\\.')}\\)`, 'g')
-    transformed = transformed.replace(pattern, `](${url})`)
-  }
-
-  // Transform roadmap links
-  transformed = transformed.replace(/\]\(\.?\/?(roadmap\/[^)]+\.md)\)/g, '](https://github.com/AndrewRedican/hyperfrontend/blob/main/$1)')
-
-  // Transform .github links
-  transformed = transformed.replace(
-    /\]\(\.?\/?\.github\/([^)]+)\)/g,
-    '](https://github.com/AndrewRedican/hyperfrontend/tree/main/.github/$1)'
-  )
-
-  // Transform libs/X/ARCHITECTURE.md links to library pages
-  for (const [libName, slug] of entries(LIBRARY_SLUGS)) {
-    // eslint-disable-next-line workspace/no-unsafe-regex -- library names are from hardcoded mapping
-    const archPattern = createRegExp(`\\]\\(libs/${libName}/ARCHITECTURE\\.md(#[^)]*)?\\)`, 'g')
-    transformed = transformed.replace(archPattern, `](/docs/libraries/${slug}$1)`)
-  }
-
-  // For library context, transform internal src/ links
-  if (sourceContext === 'library' && librarySlug) {
-    // Remove or comment out links to internal src/ files that don't get copied
-    // These are internal documentation links that only make sense in the repo
-    transformed = transformed.replace(
-      /\[([^\]]+)\]\(src\/[^)]+\)/g,
-      '$1' // Just keep the link text, remove the link
-    )
-  }
-
-  return transformed
+  return result.join('')
 }
 
 /**
@@ -324,7 +417,7 @@ function extractReadme(lib: LibraryConfig): { content: string; exists: boolean }
 
   const content = readFileSync(readmePath, 'utf-8')
   // Transform links for docs site context
-  const transformedContent = transformLinks(content, 'library', lib.slug)
+  const transformedContent = transformLinks(content, 'library')
   return { content: transformedContent, exists: true }
 }
 
@@ -343,7 +436,7 @@ function extractArchitecture(lib: LibraryConfig): { content: string; exists: boo
 
   const content = readFileSync(archPath, 'utf-8')
   // Transform links for docs site context
-  const transformedContent = transformLinks(content, 'library', lib.slug)
+  const transformedContent = transformLinks(content, 'library')
   return { content: transformedContent, exists: true }
 }
 

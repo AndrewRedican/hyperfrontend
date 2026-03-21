@@ -1,6 +1,6 @@
 import type { GitTag } from '../models/tag'
 
-import { execSync } from 'node:child_process'
+import { execFileSync } from 'node:child_process'
 
 import { createDate } from '@hyperfrontend/immutable-api-utils/built-in-copy/date'
 import { createError } from '@hyperfrontend/immutable-api-utils/built-in-copy/error'
@@ -63,7 +63,7 @@ export function getTags(options: ListTagsOptions = {}): readonly GitTag[] {
   }
 
   try {
-    const output = execSync(`git ${args.join(' ')}`, {
+    const output = execFileSync('git', args, {
       encoding: 'utf-8',
       cwd: opts.cwd,
       timeout: opts.timeout,
@@ -119,7 +119,7 @@ function getTagDetails(name: string, options: Required<Omit<GitTagOptions, 'cwd'
 
   try {
     // Get the commit hash the tag points to
-    const commitHash = execSync(`git rev-list -1 ${safeName}`, {
+    const commitHash = execFileSync('git', ['rev-list', '-1', safeName], {
       encoding: 'utf-8',
       cwd: options.cwd,
       timeout: options.timeout,
@@ -128,7 +128,7 @@ function getTagDetails(name: string, options: Required<Omit<GitTagOptions, 'cwd'
 
     // Check if it's an annotated tag by trying to get tag message
     try {
-      const tagInfo = execSync(`git cat-file tag ${safeName}`, {
+      const tagInfo = execFileSync('git', ['cat-file', 'tag', safeName], {
         encoding: 'utf-8',
         cwd: options.cwd,
         timeout: options.timeout,
@@ -268,7 +268,7 @@ export function tagExists(name: string, options: GitTagOptions = {}): boolean {
   const safeName = escapeGitRef(name)
 
   try {
-    execSync(`git rev-parse ${safeName}`, {
+    execFileSync('git', ['rev-parse', safeName], {
       encoding: 'utf-8',
       cwd: opts.cwd,
       timeout: opts.timeout,

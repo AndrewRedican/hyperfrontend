@@ -7,7 +7,7 @@ import type { CreateTagOptions } from './operations/manage-tags'
 import type { ListTagsOptions } from './operations/query-tags'
 import type { StageOptions } from './operations/stage'
 import type { RepositoryStatus } from './operations/status'
-import { execFileSync, execSync } from 'node:child_process'
+import { execFileSync } from 'node:child_process'
 import { createGitRef } from './models/ref'
 import { commit, amendCommit, createEmptyCommit } from './operations/commit'
 import { getHead, getCurrentBranch, hasUntrackedFiles } from './operations/head-info'
@@ -408,7 +408,7 @@ export function createGitClient(config: GitClientConfig = {}): GitClient {
  */
 function getRefs(options: { cwd: string; timeout: number }): readonly GitRef[] {
   try {
-    const output = execSync('git show-ref', {
+    const output = execFileSync('git', ['show-ref'], {
       encoding: 'utf-8',
       cwd: options.cwd,
       timeout: options.timeout,
@@ -492,7 +492,7 @@ function fetch(options: { cwd: string; timeout: number }, remote = 'origin', fet
   }
 
   try {
-    execSync(`git ${args.join(' ')}`, {
+    execFileSync('git', args, {
       encoding: 'utf-8',
       cwd: options.cwd,
       timeout: options.timeout * 3, // Allow more time for network
@@ -521,7 +521,7 @@ function pull(options: { cwd: string; timeout: number }, remote = 'origin', bran
   }
 
   try {
-    execSync(`git ${args.join(' ')}`, {
+    execFileSync('git', args, {
       encoding: 'utf-8',
       cwd: options.cwd,
       timeout: options.timeout * 3,
@@ -565,7 +565,7 @@ function push(
   }
 
   try {
-    execSync(`git ${args.join(' ')}`, {
+    execFileSync('git', args, {
       encoding: 'utf-8',
       cwd: options.cwd,
       timeout: options.timeout * 3,

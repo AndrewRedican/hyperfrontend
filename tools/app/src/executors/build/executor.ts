@@ -1,6 +1,6 @@
 import type { ExecutorContext } from '@nx/devkit'
 import type { BuildExecutorOptions } from './schema'
-import { execSync } from 'node:child_process'
+import { execFileSync } from 'node:child_process'
 import { existsSync } from 'node:fs'
 import { join } from 'node:path'
 import { logger } from '@nx/devkit'
@@ -42,13 +42,14 @@ export default async function buildExecutor(
   }
 
   const command = options.command ?? 'npm run build'
+  const [cmd, ...args] = command.split(' ')
 
   logger.info(`Building ${projectName}...`)
   logger.info(`  Running: ${command}`)
   logger.info(`  In: ${cwd}`)
 
   try {
-    execSync(command, { cwd, stdio: 'inherit' })
+    execFileSync(cmd, args, { cwd, stdio: 'inherit' })
     logger.info(`Build completed for ${projectName}`)
     return { success: true }
   } catch {

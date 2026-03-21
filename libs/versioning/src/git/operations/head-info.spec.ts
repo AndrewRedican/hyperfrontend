@@ -1,9 +1,9 @@
-import { execSync } from 'node:child_process'
+import { execFileSync } from 'node:child_process'
 import { getHead, getCurrentBranch, hasUntrackedFiles } from './head-info'
 
 jest.mock('node:child_process')
 
-const mockExecSync = execSync as jest.MockedFunction<typeof execSync>
+const mockExecFileSync = execFileSync as jest.MockedFunction<typeof execFileSync>
 
 describe('getHead', () => {
   beforeEach(() => {
@@ -11,16 +11,16 @@ describe('getHead', () => {
   })
 
   it('returns HEAD commit hash', () => {
-    mockExecSync.mockReturnValue('abc123def456789012345678901234567890abcd\n')
+    mockExecFileSync.mockReturnValue('abc123def456789012345678901234567890abcd\n')
 
     const result = getHead()
 
     expect(result).toBe('abc123def456789012345678901234567890abcd')
-    expect(mockExecSync).toHaveBeenCalledWith('git rev-parse HEAD', expect.any(Object))
+    expect(mockExecFileSync).toHaveBeenCalledWith('git', ['rev-parse', 'HEAD'], expect.any(Object))
   })
 
   it('returns null when not in a git repository', () => {
-    mockExecSync.mockImplementation(() => {
+    mockExecFileSync.mockImplementation(() => {
       throw new Error('Not a git repository')
     })
 
@@ -30,11 +30,11 @@ describe('getHead', () => {
   })
 
   it('uses custom options', () => {
-    mockExecSync.mockReturnValue('abc123\n')
+    mockExecFileSync.mockReturnValue('abc123\n')
 
     getHead({ cwd: '/custom', timeout: 5000 })
 
-    expect(mockExecSync).toHaveBeenCalledWith(expect.any(String), expect.objectContaining({ cwd: '/custom', timeout: 5000 }))
+    expect(mockExecFileSync).toHaveBeenCalledWith('git', expect.any(Array), expect.objectContaining({ cwd: '/custom', timeout: 5000 }))
   })
 })
 
@@ -44,16 +44,16 @@ describe('getCurrentBranch', () => {
   })
 
   it('returns current branch name', () => {
-    mockExecSync.mockReturnValue('main\n')
+    mockExecFileSync.mockReturnValue('main\n')
 
     const result = getCurrentBranch()
 
     expect(result).toBe('main')
-    expect(mockExecSync).toHaveBeenCalledWith('git symbolic-ref --short HEAD', expect.any(Object))
+    expect(mockExecFileSync).toHaveBeenCalledWith('git', ['symbolic-ref', '--short', 'HEAD'], expect.any(Object))
   })
 
   it('returns feature branch name', () => {
-    mockExecSync.mockReturnValue('feature/add-tests\n')
+    mockExecFileSync.mockReturnValue('feature/add-tests\n')
 
     const result = getCurrentBranch()
 
@@ -61,7 +61,7 @@ describe('getCurrentBranch', () => {
   })
 
   it('returns null when detached HEAD', () => {
-    mockExecSync.mockImplementation(() => {
+    mockExecFileSync.mockImplementation(() => {
       throw new Error('Not a symbolic ref')
     })
 
@@ -71,7 +71,7 @@ describe('getCurrentBranch', () => {
   })
 
   it('returns null for empty result', () => {
-    mockExecSync.mockReturnValue('')
+    mockExecFileSync.mockReturnValue('')
 
     const result = getCurrentBranch()
 
@@ -79,11 +79,11 @@ describe('getCurrentBranch', () => {
   })
 
   it('uses custom options', () => {
-    mockExecSync.mockReturnValue('main\n')
+    mockExecFileSync.mockReturnValue('main\n')
 
     getCurrentBranch({ cwd: '/custom', timeout: 5000 })
 
-    expect(mockExecSync).toHaveBeenCalledWith(expect.any(String), expect.objectContaining({ cwd: '/custom', timeout: 5000 }))
+    expect(mockExecFileSync).toHaveBeenCalledWith('git', expect.any(Array), expect.objectContaining({ cwd: '/custom', timeout: 5000 }))
   })
 })
 
@@ -93,16 +93,16 @@ describe('hasUntrackedFiles', () => {
   })
 
   it('returns true when there are untracked files', () => {
-    mockExecSync.mockReturnValue('new-file.txt\nanother-file.ts\n')
+    mockExecFileSync.mockReturnValue('new-file.txt\nanother-file.ts\n')
 
     const result = hasUntrackedFiles()
 
     expect(result).toBe(true)
-    expect(mockExecSync).toHaveBeenCalledWith('git ls-files --others --exclude-standard', expect.any(Object))
+    expect(mockExecFileSync).toHaveBeenCalledWith('git', ['ls-files', '--others', '--exclude-standard'], expect.any(Object))
   })
 
   it('returns false when there are no untracked files', () => {
-    mockExecSync.mockReturnValue('')
+    mockExecFileSync.mockReturnValue('')
 
     const result = hasUntrackedFiles()
 
@@ -110,7 +110,7 @@ describe('hasUntrackedFiles', () => {
   })
 
   it('returns false on error', () => {
-    mockExecSync.mockImplementation(() => {
+    mockExecFileSync.mockImplementation(() => {
       throw new Error('Not a git repository')
     })
 
@@ -120,10 +120,10 @@ describe('hasUntrackedFiles', () => {
   })
 
   it('uses custom options', () => {
-    mockExecSync.mockReturnValue('')
+    mockExecFileSync.mockReturnValue('')
 
     hasUntrackedFiles({ cwd: '/custom', timeout: 5000 })
 
-    expect(mockExecSync).toHaveBeenCalledWith(expect.any(String), expect.objectContaining({ cwd: '/custom', timeout: 5000 }))
+    expect(mockExecFileSync).toHaveBeenCalledWith('git', expect.any(Array), expect.objectContaining({ cwd: '/custom', timeout: 5000 }))
   })
 })
