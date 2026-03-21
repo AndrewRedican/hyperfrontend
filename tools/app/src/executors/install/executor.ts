@@ -1,6 +1,6 @@
 import type { ExecutorContext } from '@nx/devkit'
 import type { InstallExecutorOptions } from './schema'
-import { execSync } from 'node:child_process'
+import { execFileSync } from 'node:child_process'
 import { existsSync } from 'node:fs'
 import { join } from 'node:path'
 import { logger } from '@nx/devkit'
@@ -38,16 +38,19 @@ export default async function installExecutor(options: InstallExecutorOptions, c
     return { success: false }
   }
 
-  const command = options.ci ? 'npm ci' : 'npm install'
-  const flags = options.frozen ? '--frozen-lockfile' : ''
-  const fullCommand = `${command} ${flags}`.trim()
+  const args: string[] = options.ci ? ['ci'] : ['install']
+  if (options.frozen) {
+    args.push('--frozen-lockfile')
+  }
+
+  const fullCommand = `npm ${args.join(' ')}`
 
   logger.info(`Installing dependencies for ${projectName}...`)
   logger.info(`  Running: ${fullCommand}`)
   logger.info(`  In: ${cwd}`)
 
   try {
-    execSync(fullCommand, { cwd, stdio: 'inherit' })
+    execFileSync('npm', args, { cwd, stdio: 'inherit' })
     logger.info(`Dependencies installed for ${projectName}`)
     return { success: true }
   } catch {
