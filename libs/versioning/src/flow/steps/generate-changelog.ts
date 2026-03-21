@@ -17,7 +17,7 @@ export const GENERATE_CHANGELOG_STEP_ID = 'generate-changelog'
 /**
  * Maps conventional commit types to changelog section types.
  */
-const COMMIT_TYPE_TO_SECTION: Record<string, ChangelogSectionType> = {
+export const DEFAULT_COMMIT_TYPE_TO_SECTION: Record<string, ChangelogSectionType> = {
   feat: 'features',
   fix: 'fixes',
   perf: 'performance',
@@ -51,7 +51,7 @@ function groupClassifiedCommitsBySection(commits: readonly ClassifiedCommit[]): 
   const groups: Record<string, ClassifiedCommit[]> = {}
 
   for (const classified of commits) {
-    const sectionType = COMMIT_TYPE_TO_SECTION[classified.commit.type ?? 'chore'] ?? 'chores'
+    const sectionType = DEFAULT_COMMIT_TYPE_TO_SECTION[classified.commit.type ?? 'chore'] ?? 'chores'
     if (!groups[sectionType]) {
       groups[sectionType] = []
     }
@@ -71,7 +71,7 @@ function groupCommitsBySection(commits: readonly ConventionalCommit[]): Record<C
   const groups: Record<string, ConventionalCommit[]> = {}
 
   for (const commit of commits) {
-    const sectionType = COMMIT_TYPE_TO_SECTION[commit.type ?? 'chore'] ?? 'chores'
+    const sectionType = DEFAULT_COMMIT_TYPE_TO_SECTION[commit.type ?? 'chore'] ?? 'chores'
     if (!groups[sectionType]) {
       groups[sectionType] = []
     }

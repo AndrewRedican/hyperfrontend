@@ -153,6 +153,12 @@ export { parseHeader, type ParsedHeader } from './commits/parse/header'
 export { parseBody, type ParsedBody } from './commits/parse/body'
 export { parseFooters, type ParsedFooters } from './commits/parse/footer'
 
+// Commits Classification - Constants
+export { DEFAULT_EXCLUDE_SCOPES, DEFAULT_PROJECT_PREFIXES } from './commits/classify'
+
+// Flow Steps - Constants
+export { DEFAULT_COMMIT_TYPE_TO_SECTION } from './flow/steps'
+
 // ============================================================================
 // SemVer module
 // ============================================================================
