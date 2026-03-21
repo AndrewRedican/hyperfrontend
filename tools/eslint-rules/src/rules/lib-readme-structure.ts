@@ -74,18 +74,21 @@ export const REQUIRED_SUBSECTIONS = [
 
 /**
  * Required badges in the badges block.
+ * Patterns are anchored to ensure they match at expected URL locations:
+ * - Domain patterns match after protocol ://
+ * - Path patterns match after a forward slash /
  */
 export const REQUIRED_BADGES = [
-  { pattern: /github\/actions\/workflow\/status/i, name: 'Build badge' },
-  { pattern: /codecov\.io/i, name: 'Coverage badge' },
-  { pattern: /npm\/v\//i, name: 'npm version badge' },
-  { pattern: /bundlephobia\.com/i, name: 'Bundle size badge' },
-  { pattern: /all-contributors/i, name: 'Contributors badge' },
-  { pattern: /license-MIT/i, name: 'License badge' },
-  { pattern: /npm\/dm\//i, name: 'npm downloads badge' },
-  { pattern: /github\/stars/i, name: 'GitHub stars badge' },
-  { pattern: /node-%3E%3D/i, name: 'Node version badge' },
-  { pattern: /tree%20shakeable/i, name: 'Tree-shakeable badge' },
+  { pattern: /\/github\/actions\/workflow\/status/i, name: 'Build badge' },
+  { pattern: /:\/\/codecov\.io/i, name: 'Coverage badge' },
+  { pattern: /\/npm\/v\//i, name: 'npm version badge' },
+  { pattern: /:\/\/bundlephobia\.com/i, name: 'Bundle size badge' },
+  { pattern: /\/all-contributors/i, name: 'Contributors badge' },
+  { pattern: /\/license-MIT/i, name: 'License badge' },
+  { pattern: /\/npm\/dm\//i, name: 'npm downloads badge' },
+  { pattern: /\/github\/stars/i, name: 'GitHub stars badge' },
+  { pattern: /[/=]node-%3E%3D/i, name: 'Node version badge' },
+  { pattern: /[/=]tree%20shakeable/i, name: 'Tree-shakeable badge' },
 ] as const
 
 /**
