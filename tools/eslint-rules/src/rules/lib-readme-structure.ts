@@ -3,6 +3,51 @@ import { dirname } from 'node:path'
 import { isPublishableLibrary } from '../utils/nx-project'
 
 /**
+ * The expected base URL for documentation links.
+ */
+const DOCS_BASE_URL = new URL('https://www.hyperfrontend.dev/docs/')
+
+/**
+ * Checks if a line contains a URL that starts with the expected documentation base URL.
+ * This properly parses URLs to avoid incomplete substring matching vulnerabilities.
+ *
+ * @param line - The line to check.
+ * @returns True if the line contains a valid documentation URL.
+ */
+function containsValidDocumentationUrl(line: string): boolean {
+  // Extract URLs from markdown link syntax: [text](url)
+  const urls: string[] = []
+  let searchStart = 0
+
+  while (true) {
+    const linkStart = line.indexOf('](', searchStart)
+    if (linkStart === -1) break
+
+    const urlStart = linkStart + 2
+    const urlEnd = line.indexOf(')', urlStart)
+    if (urlEnd === -1) break
+
+    urls.push(line.slice(urlStart, urlEnd))
+    searchStart = urlEnd + 1
+  }
+
+  if (urls.length === 0) {
+    return false
+  }
+
+  // Check if any extracted URL matches the expected base URL
+  return urls.some((url) => {
+    try {
+      const parsed = new URL(url)
+      // Verify the origin and pathname start correctly
+      return parsed.origin === DOCS_BASE_URL.origin && parsed.pathname.startsWith(DOCS_BASE_URL.pathname)
+    } catch {
+      return false
+    }
+  })
+}
+
+/**
  * Rule identifier for the lib-readme-structure rule.
  */
 export const RULE_NAME = 'lib-readme-structure'
@@ -220,13 +265,8 @@ export function extractDocumentationLink(content: string): { line: number } | nu
 
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i]
-    // Check for documentation link pattern using string methods
-    if (
-      line.includes('•') &&
-      line.includes('👉') &&
-      line.includes('**documentation**') &&
-      line.includes('https://www.hyperfrontend.dev/docs/')
-    ) {
+    // Check for documentation link pattern using string methods and proper URL validation
+    if (line.includes('•') && line.includes('👉') && line.includes('**documentation**') && containsValidDocumentationUrl(line)) {
       return { line: i + 1 }
     }
   }
