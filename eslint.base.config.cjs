@@ -154,6 +154,7 @@ module.exports = [
       'workspace/no-async-fs-api': 'error',
       'workspace/no-deprecated-tag': 'error',
       'workspace/no-unsafe-regex': 'error',
+      'workspace/prefer-exec-file-sync': 'error',
     },
   },
   {
