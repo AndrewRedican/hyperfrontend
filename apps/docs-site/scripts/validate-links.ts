@@ -8,8 +8,8 @@ const WORKSPACE_ROOT = resolve(__dirname, '../../..')
 const DOCS_SITE_ROOT = resolve(__dirname, '..')
 const GENERATED_DIR = join(DOCS_SITE_ROOT, '.generated')
 const SRC_DIR = join(DOCS_SITE_ROOT, 'src')
-const GITHUB_BLOB_PATTERN = /https:\/\/github\.com\/AndrewRedican\/hyperfrontend\/blob\/[^/]+\/(.+)/
-const GITHUB_TREE_PATTERN = /https:\/\/github\.com\/AndrewRedican\/hyperfrontend\/tree\/[^/]+\/(.+)/
+const GITHUB_BLOB_PATTERN = /^https:\/\/github\.com\/AndrewRedican\/hyperfrontend\/blob\/[^/]+\/(.+)/
+const GITHUB_TREE_PATTERN = /^https:\/\/github\.com\/AndrewRedican\/hyperfrontend\/tree\/[^/]+\/(.+)/
 
 interface LinkValidationResult {
   file: string

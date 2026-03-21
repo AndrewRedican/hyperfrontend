@@ -293,8 +293,8 @@ describe('analyze-commits step', () => {
           expect(logger.debug).toHaveBeenCalledWith(expect.stringContaining('Found 2 commits since'))
         })
 
-        it('gets all commits for first release (limited to 100)', async () => {
-          const commits = Array.from({ length: 150 }, (_, i) => ({
+        it('gets all commits for first release (limited by default maxCommitFallback of 500)', async () => {
+          const commits = Array.from({ length: 600 }, (_, i) => ({
             message: `feat: feature ${i}`,
             hash: `commit${i}`,
           }))
@@ -310,9 +310,31 @@ describe('analyze-commits step', () => {
           const result = await step.execute(context)
 
           expect(result.status).toBe('success')
-          // Should be limited to 100 commits
-          expect(result.stateUpdates?.commits?.length).toBeLessThanOrEqual(100)
+          // Should be limited to 500 commits (default maxCommitFallback)
+          expect(result.stateUpdates?.commits?.length).toBeLessThanOrEqual(500)
           expect(logger.debug).toHaveBeenCalledWith(expect.stringContaining('First release'))
+        })
+
+        it('respects custom maxCommitFallback config', async () => {
+          const commits = Array.from({ length: 200 }, (_, i) => ({
+            message: `feat: feature ${i}`,
+            hash: `commit${i}`,
+          }))
+          const git = createMockGitClient({ commits })
+          const logger = createMockLogger()
+          const context = createMockContext({
+            git,
+            logger,
+            state: { isFirstRelease: true },
+            config: { maxCommitFallback: 50 },
+          })
+          const step = createAnalyzeCommitsStep()
+
+          const result = await step.execute(context)
+
+          expect(result.status).toBe('success')
+          // Should be limited to custom maxCommitFallback of 50
+          expect(result.stateUpdates?.commits?.length).toBeLessThanOrEqual(50)
         })
 
         it('parses conventional commits and filters by release types', async () => {

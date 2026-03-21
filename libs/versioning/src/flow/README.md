@@ -235,22 +235,26 @@ sequenceDiagram
 
 ## Configuration
 
-| Option                | Type       | Default                               | Description                                    |
-| --------------------- | ---------- | ------------------------------------- | ---------------------------------------------- |
-| `preset`              | `string`   | `'conventional'`                      | Flow preset name                               |
-| `releaseTypes`        | `string[]` | `['feat', 'fix', 'perf', 'revert']`   | Types that trigger releases                    |
-| `minorTypes`          | `string[]` | `['feat']`                            | Types that trigger minor bumps                 |
-| `patchTypes`          | `string[]` | `['fix', 'perf', 'revert']`           | Types that trigger patch bumps                 |
-| `skipGit`             | `boolean`  | `false`                               | Skip git operations                            |
-| `skipTag`             | `boolean`  | `true`                                | Skip tag creation                              |
-| `skipChangelog`       | `boolean`  | `false`                               | Skip changelog update                          |
-| `dryRun`              | `boolean`  | `false`                               | Preview without changes                        |
-| `commitMessage`       | `string`   | `'chore(${projectName}): release...'` | Commit message template                        |
-| `tagFormat`           | `string`   | `'${projectName}@${version}'`         | Tag name template                              |
-| `trackDeps`           | `boolean`  | `false`                               | Track dependency bumps                         |
-| `releaseBranch`       | `string`   | `'main'`                              | Allowed release branch                         |
-| `firstReleaseVersion` | `string`   | `'0.1.0'`                             | Initial version for new packages               |
-| `repository`          | `*`        | `undefined`                           | Repository config for compare URLs (see below) |
+| Option                | Type       | Default                               | Description                                      |
+| --------------------- | ---------- | ------------------------------------- | ------------------------------------------------ |
+| `preset`              | `string`   | `'conventional'`                      | Flow preset name                                 |
+| `releaseTypes`        | `string[]` | `['feat', 'fix', 'perf', 'revert']`   | Types that trigger releases                      |
+| `minorTypes`          | `string[]` | `['feat']`                            | Types that trigger minor bumps                   |
+| `patchTypes`          | `string[]` | `['fix', 'perf', 'revert']`           | Types that trigger patch bumps                   |
+| `skipGit`             | `boolean`  | `false`                               | Skip git operations                              |
+| `skipTag`             | `boolean`  | `true`                                | Skip tag creation                                |
+| `skipChangelog`       | `boolean`  | `false`                               | Skip changelog update                            |
+| `dryRun`              | `boolean`  | `false`                               | Preview without changes                          |
+| `commitMessage`       | `string`   | `'chore(${projectName}): release...'` | Commit message template                          |
+| `tagFormat`           | `string`   | `'${projectName}@${version}'`         | Tag name template                                |
+| `trackDeps`           | `boolean`  | `false`                               | Track dependency bumps                           |
+| `releaseBranch`       | `string`   | `'main'`                              | Allowed release branch                           |
+| `firstReleaseVersion` | `string`   | `'0.1.0'`                             | Initial version for new packages                 |
+| `releaseAs`           | `string`   | `undefined`                           | Force bump type: 'major', 'minor', or 'patch'    |
+| `maxCommitFallback`   | `number`   | `500`                                 | Max commits to analyze when no base available    |
+| `repository`          | `*`        | `undefined`                           | Repository config for compare URLs (see below)   |
+| `changelogFileName`   | `string`   | `'CHANGELOG.md'`                      | Custom changelog filename                        |
+| `commitTypeToSection` | `object`   | `undefined`                           | Custom commit type → section mapping (see below) |
 
 ### Repository Configuration
 
@@ -288,6 +292,43 @@ When repository is resolved, changelog entries include compare URLs:
 ```markdown
 ## [1.2.0](https://github.com/owner/repo/compare/v1.1.0...v1.2.0) - 2026-03-17
 ```
+
+### Commit Type to Section Mapping
+
+The `commitTypeToSection` option customizes how commit types map to changelog sections:
+
+```typescript
+createVersionFlow('conventional', {
+  commitTypeToSection: {
+    // Override default mapping
+    chore: 'other',
+
+    // Add custom commit type
+    wip: 'other',
+
+    // Exclude type from changelog
+    docs: null,
+  },
+})
+```
+
+Default mapping:
+
+| Commit Type | Section         |
+| ----------- | --------------- |
+| `feat`      | `features`      |
+| `fix`       | `fixes`         |
+| `perf`      | `performance`   |
+| `docs`      | `documentation` |
+| `refactor`  | `refactoring`   |
+| `revert`    | `other`         |
+| `build`     | `build`         |
+| `ci`        | `ci`            |
+| `test`      | `tests`         |
+| `chore`     | `chores`        |
+| `style`     | `other`         |
+
+Unmapped types fall back to `chores`. Use `null` to exclude a type entirely.
 
 ## Step Dependencies
 

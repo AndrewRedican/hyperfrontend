@@ -34,6 +34,7 @@
 Versioning library with changelog parsing, conventional commits, and semver flow orchestration.
 
 • 👉 See [**documentation**](https://www.hyperfrontend.dev/docs/libraries/versioning/)
+• 👉 See [**roadmap**](https://github.com/AndrewRedican/hyperfrontend/blob/main/roadmap/versioning/)
 
 ## What is @hyperfrontend/versioning?
 
@@ -42,10 +43,10 @@ Versioning library with changelog parsing, conventional commits, and semver flow
 ### Key Features
 
 - **Changelog Parsing** - Parse CHANGELOG.md files into structured objects with lossless round-tripping
-- **Conventional Commits** - Parse commit messages following the conventional commits specification
-- **Semver Utilities** - Parse, compare, increment, and validate semantic versions
-- **Registry Client** - Query npm registry for published versions and package metadata
-- **Compare URLs** - Generate platform-specific compare URLs for changelog entries (GitHub, GitLab, Bitbucket, Azure DevOps)
+- **Conventional Commits** - Parse commit messages following the [Conventional Commits](https://www.conventionalcommits.org/) specification
+- **Semver Utilities** - Parse, compare, increment, and validate [semantic versions](https://semver.org/)
+- **Registry Client** - Query [npm](https://www.npmjs.com/) registry for published versions and package metadata
+- **Compare URLs** - Generate platform-specific compare URLs for changelog entries ([GitHub](https://github.com/), [GitLab](https://about.gitlab.com/), [Bitbucket](https://bitbucket.org/), [Azure DevOps](https://azure.microsoft.com/en-us/products/devops))
 - **Monorepo Scope Filtering** - Intelligent commit classification ensures changelogs only include relevant commits
 - **Composable Operations** - Build complex versioning workflows from simple, pure functions
 - **Zero External Dependencies** - Self-contained implementation with no third-party runtime dependencies
@@ -64,7 +65,7 @@ Working with CHANGELOG.md files programmatically typically involves fragile stri
 
 ### Unified Versioning Primitives
 
-Version management requires coordinating semver parsing, commit analysis, changelog generation, and registry queries. This library provides all these primitives in one cohesive package with consistent APIs. Query npm for published versions, parse commit history, calculate version bumps, and generate changelog entries — all composable into custom release workflows.
+Version management requires coordinating [semver](https://semver.org/) parsing, commit analysis, changelog generation, and registry queries. This library provides all these primitives in one cohesive package with consistent APIs. Query [npm](https://www.npmjs.com/) for published versions, parse commit history, calculate version bumps, and generate changelog entries — all composable into custom release workflows.
 
 ### Zero-Dependency CI Integration
 
@@ -97,7 +98,8 @@ for (const entry of changelog.entries) {
 }
 
 // Access metadata
-console.log(changelog.metadata.format) // 'keep-a-changelog', 'conventional', etc.
+// Formats: 'keep-a-changelog' (https://keepachangelog.com), 'conventional', etc.
+console.log(changelog.metadata.format)
 ```
 
 ### Parsing Conventional Commits

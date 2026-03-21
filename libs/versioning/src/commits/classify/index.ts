@@ -17,7 +17,13 @@ export {
   filterIncluded,
   toChangelogCommit,
 } from './classifier'
-export { DEFAULT_EXCLUDE_SCOPES, deriveProjectScopes, scopeIsExcluded, scopeMatchesProject } from './project-scopes'
+export {
+  DEFAULT_EXCLUDE_SCOPES,
+  DEFAULT_PROJECT_PREFIXES,
+  deriveProjectScopes,
+  scopeIsExcluded,
+  scopeMatchesProject,
+} from './project-scopes'
 export {
   scopeMatcher,
   scopePrefixMatcher,

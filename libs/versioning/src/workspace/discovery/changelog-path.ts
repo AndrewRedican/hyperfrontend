@@ -1,10 +1,5 @@
-/**
- * Changelog Path Utilities
- *
- * Functions for checking changelog existence and resolving expected paths.
- */
-
 import { join } from 'node:path'
+import { DEFAULT_CHANGELOG_FILENAME } from '../../flow/models/types'
 import { findProjectChangelog } from './discover-changelogs'
 
 /**
@@ -22,8 +17,9 @@ export function hasChangelog(projectPath: string): boolean {
  * Returns the standard CHANGELOG.md path regardless of whether it exists.
  *
  * @param projectPath - Directory containing the project files
- * @returns Absolute path to CHANGELOG.md in the project directory
+ * @param fileName - Changelog filename to use (default: 'CHANGELOG.md')
+ * @returns Absolute path to changelog file in the project directory
  */
-export function getExpectedChangelogPath(projectPath: string): string {
-  return join(projectPath, 'CHANGELOG.md')
+export function getExpectedChangelogPath(projectPath: string, fileName: string = DEFAULT_CHANGELOG_FILENAME): string {
+  return join(projectPath, fileName)
 }

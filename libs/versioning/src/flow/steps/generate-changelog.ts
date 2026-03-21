@@ -11,13 +11,14 @@ import { createCompareUrl } from '../../repository/url'
 import { gt } from '../../semver/compare'
 import { parseVersion } from '../../semver/parse/version'
 import { createStep, createSkippedResult } from '../models/step'
+import { DEFAULT_CHANGELOG_FILENAME } from '../models/types'
 
 export const GENERATE_CHANGELOG_STEP_ID = 'generate-changelog'
 
 /**
  * Maps conventional commit types to changelog section types.
  */
-const COMMIT_TYPE_TO_SECTION: Record<string, ChangelogSectionType> = {
+export const DEFAULT_COMMIT_TYPE_TO_SECTION: Record<string, ChangelogSectionType> = {
   feat: 'features',
   fix: 'fixes',
   perf: 'performance',
@@ -29,6 +30,21 @@ const COMMIT_TYPE_TO_SECTION: Record<string, ChangelogSectionType> = {
   test: 'tests',
   chore: 'chores',
   style: 'other',
+}
+
+/**
+ * Resolves the commit type to section mapping by merging config with defaults.
+ *
+ * @param configMapping - User-provided partial mapping from FlowConfig
+ * @returns Resolved mapping with user overrides applied
+ */
+function resolveCommitTypeMapping(
+  configMapping: Partial<Record<string, ChangelogSectionType | null>> | undefined
+): Record<string, ChangelogSectionType | null> {
+  if (!configMapping) {
+    return DEFAULT_COMMIT_TYPE_TO_SECTION
+  }
+  return { ...DEFAULT_COMMIT_TYPE_TO_SECTION, ...configMapping }
 }
 
 /**
@@ -45,17 +61,25 @@ function isIndirectSource(source: ClassifiedCommit['source']): boolean {
  * Groups classified commits by their section type.
  *
  * @param commits - Array of classified commits
+ * @param mapping - Commit type to section mapping
  * @returns Record of section type to classified commits
  */
-function groupClassifiedCommitsBySection(commits: readonly ClassifiedCommit[]): Record<ChangelogSectionType, ClassifiedCommit[]> {
+function groupClassifiedCommitsBySection(
+  commits: readonly ClassifiedCommit[],
+  mapping: Record<string, ChangelogSectionType | null>
+): Record<ChangelogSectionType, ClassifiedCommit[]> {
   const groups: Record<string, ClassifiedCommit[]> = {}
 
   for (const classified of commits) {
-    const sectionType = COMMIT_TYPE_TO_SECTION[classified.commit.type ?? 'chore'] ?? 'chores'
-    if (!groups[sectionType]) {
-      groups[sectionType] = []
+    const sectionType = mapping[classified.commit.type ?? 'chore']
+    // Skip if explicitly excluded (null)
+    if (sectionType === null) continue
+    // Fallback to 'chores' for unmapped types
+    const resolvedSection = sectionType ?? 'chores'
+    if (!groups[resolvedSection]) {
+      groups[resolvedSection] = []
     }
-    groups[sectionType].push(classified)
+    groups[resolvedSection].push(classified)
   }
 
   return <Record<ChangelogSectionType, ClassifiedCommit[]>>groups
@@ -65,17 +89,25 @@ function groupClassifiedCommitsBySection(commits: readonly ClassifiedCommit[]): 
  * Groups commits by their section type.
  *
  * @param commits - Array of conventional commits
+ * @param mapping - Commit type to section mapping
  * @returns Record of section type to commits
  */
-function groupCommitsBySection(commits: readonly ConventionalCommit[]): Record<ChangelogSectionType, ConventionalCommit[]> {
+function groupCommitsBySection(
+  commits: readonly ConventionalCommit[],
+  mapping: Record<string, ChangelogSectionType | null>
+): Record<ChangelogSectionType, ConventionalCommit[]> {
   const groups: Record<string, ConventionalCommit[]> = {}
 
   for (const commit of commits) {
-    const sectionType = COMMIT_TYPE_TO_SECTION[commit.type ?? 'chore'] ?? 'chores'
-    if (!groups[sectionType]) {
-      groups[sectionType] = []
+    const sectionType = mapping[commit.type ?? 'chore']
+    // Skip if explicitly excluded (null)
+    if (sectionType === null) continue
+    // Fallback to 'chores' for unmapped types
+    const resolvedSection = sectionType ?? 'chores'
+    if (!groups[resolvedSection]) {
+      groups[resolvedSection] = []
     }
-    groups[sectionType].push(commit)
+    groups[resolvedSection].push(commit)
   }
 
   return <Record<ChangelogSectionType, ConventionalCommit[]>>groups
@@ -158,6 +190,9 @@ export function createGenerateChangelogStep(): FlowStep {
       const { config, state } = ctx
       const { commits, nextVersion, bumpType } = state
 
+      // Resolve commit type to section mapping
+      const commitTypeMapping = resolveCommitTypeMapping(config.commitTypeToSection)
+
       // Skip if no bump needed
       if (!nextVersion || bumpType === 'none') {
         return createSkippedResult('No version bump, skipping changelog generation')
@@ -233,7 +268,7 @@ export function createGenerateChangelogStep(): FlowStep {
         }
 
         // Group direct commits by section
-        const groupedDirect = groupClassifiedCommitsBySection(directCommits)
+        const groupedDirect = groupClassifiedCommitsBySection(directCommits, commitTypeMapping)
 
         // Add other sections in conventional order (direct commits only)
         const sectionOrder: readonly { type: ChangelogSectionType; heading: string }[] = [
@@ -268,7 +303,7 @@ export function createGenerateChangelogStep(): FlowStep {
         }
       } else {
         // Fallback: use commits without classification (backward compatibility)
-        const grouped = groupCommitsBySection(commits)
+        const grouped = groupCommitsBySection(commits, commitTypeMapping)
 
         // Add breaking changes section first if any
         const breakingCommits = commits.filter((c) => c.breaking)
@@ -363,14 +398,15 @@ export function createWriteChangelogStep(): FlowStep {
         return createSkippedResult('No changelog to write')
       }
 
-      const changelogPath = `${projectRoot}/CHANGELOG.md`
+      const changelogFileName = config.changelogFileName ?? DEFAULT_CHANGELOG_FILENAME
+      const changelogPath = `${projectRoot}/${changelogFileName}`
       let existingContent = ''
 
       // Read existing changelog
       try {
         existingContent = tree.read(changelogPath, 'utf-8') ?? ''
       } catch {
-        logger.debug('No existing CHANGELOG.md found')
+        logger.debug(`No existing ${changelogFileName} found`)
       }
 
       // If no existing content, create new changelog
@@ -397,7 +433,7 @@ export function createWriteChangelogStep(): FlowStep {
           stateUpdates: {
             modifiedFiles: [...(state.modifiedFiles ?? []), changelogPath],
           },
-          message: `Created CHANGELOG.md with version ${nextVersion}`,
+          message: `Created ${changelogFileName} with version ${nextVersion}`,
         }
       }
 
@@ -438,7 +474,7 @@ export function createWriteChangelogStep(): FlowStep {
         stateUpdates: {
           modifiedFiles: [...(state.modifiedFiles ?? []), changelogPath],
         },
-        message: `Updated CHANGELOG.md with version ${nextVersion}`,
+        message: `Updated ${changelogFileName} with version ${nextVersion}`,
       }
     },
     {

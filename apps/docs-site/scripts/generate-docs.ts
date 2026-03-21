@@ -8,6 +8,32 @@ import { parse, stringify } from '@hyperfrontend/immutable-api-utils/built-in-co
 import { entries } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
 import { createRegExp } from '@hyperfrontend/immutable-api-utils/built-in-copy/regexp'
 import { createSet } from '@hyperfrontend/immutable-api-utils/built-in-copy/set'
+import { createURL } from '@hyperfrontend/immutable-api-utils/built-in-copy/url'
+
+/**
+ * Checks if a line contains a URL pointing to the docs site (www.hyperfrontend.dev).
+ * Uses proper URL parsing to validate the host instead of substring matching.
+ *
+ * @param line - Text line to check for docs URLs
+ * @returns True if the line contains a valid docs site URL
+ */
+function containsDocsUrl(line: string): boolean {
+  // Extract URLs from the line using a simple pattern
+  const urlPattern = /https?:\/\/[^\s)>\]"']+/g
+  const urls = line.match(urlPattern) ?? []
+
+  for (const url of urls) {
+    try {
+      const parsed = createURL(url)
+      if (parsed.host === 'www.hyperfrontend.dev' || parsed.host === 'hyperfrontend.dev') {
+        return true
+      }
+    } catch {
+      // Invalid URL, skip
+    }
+  }
+  return false
+}
 
 const WORKSPACE_ROOT = resolve(__dirname, '../../..')
 const OUTPUT_DIR = resolve(__dirname, '../.generated')
@@ -232,7 +258,7 @@ function transformLinks(content: string, sourceContext: 'root' | 'library', libr
   // Filter out any line that contains the 👉 See [**docs**] pattern pointing to the docs site.
   transformed = transformed
     .split('\n')
-    .filter((line) => !(line.includes('👉 See') && line.includes('https://www.hyperfrontend.dev/')))
+    .filter((line) => !(line.includes('👉 See') && containsDocsUrl(line)))
     .join('\n')
 
   // Transform root document links to docs site pages

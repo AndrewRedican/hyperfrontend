@@ -46,6 +46,7 @@ export function createAnalyzeCommitsStep(): FlowStep {
     'Analyze Commits',
     async (ctx) => {
       const { git, projectName, projectRoot, packageName, workspaceRoot, config, logger, state } = ctx
+      const maxFallback = config.maxCommitFallback ?? 500
 
       // Use publishedCommit from registry (set by fetch-registry step)
       const { publishedCommit, isFirstRelease } = state
@@ -66,12 +67,12 @@ export function createAnalyzeCommitsStep(): FlowStep {
               `This may indicate a rebase or force push occurred after publishing v${state.publishedVersion}. ` +
               `Falling back to recent commit analysis.`
           )
-          rawCommits = git.getCommitLog({ maxCount: 100 })
+          rawCommits = git.getCommitLog({ maxCount: maxFallback })
           // effectiveBaseCommit stays null - no compare URL will be generated
         }
       } else {
         // First release or no published version
-        rawCommits = git.getCommitLog({ maxCount: 100 })
+        rawCommits = git.getCommitLog({ maxCount: maxFallback })
         logger.debug(`First release - analyzing up to ${rawCommits.length} commits`)
       }
 
@@ -117,7 +118,7 @@ export function createAnalyzeCommitsStep(): FlowStep {
         const relativePath = getRelativePath(workspaceRoot, projectRoot)
         const pathFilteredCommits = effectiveBaseCommit
           ? git.getCommitsSince(effectiveBaseCommit, { path: relativePath })
-          : git.getCommitLog({ maxCount: 100, path: relativePath })
+          : git.getCommitLog({ maxCount: maxFallback, path: relativePath })
 
         fileCommitHashes = createSet(pathFilteredCommits.map((c) => c.hash))
         logger.debug(`Found ${fileCommitHashes.size} commits touching ${relativePath}`)
@@ -128,6 +129,7 @@ export function createAnalyzeCommitsStep(): FlowStep {
         projectName,
         packageName,
         additionalScopes: scopeFilteringConfig.includeScopes,
+        prefixes: scopeFilteringConfig.projectPrefixes,
       })
       logger.debug(`Project scopes: ${projectScopes.join(', ')}`)
 
@@ -138,13 +140,14 @@ export function createAnalyzeCommitsStep(): FlowStep {
         rawCommits,
         parsedCommits,
         scopeFilteringConfig,
-        logger
+        logger,
+        maxFallback
       )
 
       // Build dependency commit map if tracking is enabled (Phase 4)
       let dependencyCommitMap: ReadonlyMap<string, ReadonlySet<string>> | undefined
       if (scopeFilteringConfig.trackDependencyChanges) {
-        dependencyCommitMap = buildDependencyCommitMap(git, workspaceRoot, projectName, effectiveBaseCommit, logger)
+        dependencyCommitMap = buildDependencyCommitMap(git, workspaceRoot, projectName, effectiveBaseCommit, logger, maxFallback)
       }
 
       // Create classification context
@@ -310,6 +313,7 @@ function buildSummaryMessage(
  * @param config - Scope filtering configuration
  * @param logger - Logger with debug method for output
  * @param logger.debug - Debug logging function
+ * @param maxFallback - Maximum commits to query when baseCommit is null
  * @returns Set of commit hashes classified as infrastructure
  */
 function buildInfrastructureCommitHashes(
@@ -318,7 +322,8 @@ function buildInfrastructureCommitHashes(
   rawCommits: readonly GitCommit[],
   parsedCommits: readonly CommitWithRaw[],
   config: ScopeFilteringConfig,
-  logger: { debug: (msg: string) => void }
+  logger: { debug: (msg: string) => void },
+  maxFallback: number
 ): ReadonlySet<string> | undefined {
   // Collect all infrastructure commit hashes
   let infraHashes = createSet<string>()
@@ -329,7 +334,7 @@ function buildInfrastructureCommitHashes(
     for (const infraPath of infraPaths) {
       const pathCommits = baseCommit
         ? git.getCommitsSince(baseCommit, { path: infraPath })
-        : git.getCommitLog({ maxCount: 100, path: infraPath })
+        : git.getCommitLog({ maxCount: maxFallback, path: infraPath })
 
       for (const commit of pathCommits) {
         infraHashes = infraHashes.add(commit.hash)
@@ -406,6 +411,7 @@ function combineMatcher(a: InfrastructureMatcher | null, b: InfrastructureMatche
  * @param baseCommit - Base commit hash for commit range (null for first release/fallback)
  * @param logger - Logger with debug method for output
  * @param logger.debug - Debug logging function
+ * @param maxFallback - Maximum commits to query when baseCommit is null
  * @returns Map of dependency names to commit hashes touching that dependency
  */
 function buildDependencyCommitMap(
@@ -413,7 +419,8 @@ function buildDependencyCommitMap(
   workspaceRoot: string,
   projectName: string,
   baseCommit: string | null,
-  logger: { debug: (msg: string) => void }
+  logger: { debug: (msg: string) => void },
+  maxFallback: number
 ): ReadonlyMap<string, ReadonlySet<string>> {
   let dependencyMap = createMap<string, ReadonlySet<string>>()
 
@@ -446,7 +453,7 @@ function buildDependencyCommitMap(
       // Query git for commits touching this dependency's path
       const depCommits = baseCommit
         ? git.getCommitsSince(baseCommit, { path: depRoot })
-        : git.getCommitLog({ maxCount: 100, path: depRoot })
+        : git.getCommitLog({ maxCount: maxFallback, path: depRoot })
 
       if (depCommits.length > 0) {
         const hashSet = createSet(depCommits.map((c) => c.hash))

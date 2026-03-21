@@ -269,27 +269,32 @@ export function transformLinks(content: string): string {
   let transformed = content
 
   // Transform GitHub blob URLs to docs site URLs
+  // Patterns are anchored to markdown link syntax ](url) to prevent matching URLs
+  // embedded in unexpected locations (e.g., query strings)
   transformed = transformed.replace(
-    /https:\/\/github\.com\/AndrewRedican\/hyperfrontend\/blob\/main\/libs\/([^/]+)\/README\.md/g,
-    '/docs/libraries/$1'
+    /\]\(https:\/\/github\.com\/AndrewRedican\/hyperfrontend\/blob\/main\/libs\/([^/)]+)\/README\.md\)/g,
+    '](/docs/libraries/$1)'
   )
 
   transformed = transformed.replace(
-    /https:\/\/github\.com\/AndrewRedican\/hyperfrontend\/blob\/main\/libs\/utils\/([^/]+)\/README\.md/g,
-    '/docs/libraries/utils/$1'
+    /\]\(https:\/\/github\.com\/AndrewRedican\/hyperfrontend\/blob\/main\/libs\/utils\/([^/)]+)\/README\.md\)/g,
+    '](/docs/libraries/utils/$1)'
   )
 
   transformed = transformed.replace(
-    /https:\/\/github\.com\/AndrewRedican\/hyperfrontend\/blob\/main\/plugins\/([^/]+)\/README\.md/g,
-    '/docs/plugins/$1'
+    /\]\(https:\/\/github\.com\/AndrewRedican\/hyperfrontend\/blob\/main\/plugins\/([^/)]+)\/README\.md\)/g,
+    '](/docs/plugins/$1)'
   )
 
   // Transform GitHub architecture doc links
-  transformed = transformed.replace(/https:\/\/github\.com\/AndrewRedican\/hyperfrontend\/blob\/main\/ARCHITECTURE\.md/g, '/architecture')
+  transformed = transformed.replace(
+    /\]\(https:\/\/github\.com\/AndrewRedican\/hyperfrontend\/blob\/main\/ARCHITECTURE\.md\)/g,
+    '](/architecture)'
+  )
 
   transformed = transformed.replace(
-    /https:\/\/github\.com\/AndrewRedican\/hyperfrontend\/blob\/main\/libs\/([^/]+)\/ARCHITECTURE\.md/g,
-    '/docs/libraries/$1/architecture'
+    /\]\(https:\/\/github\.com\/AndrewRedican\/hyperfrontend\/blob\/main\/libs\/([^/)]+)\/ARCHITECTURE\.md\)/g,
+    '](/docs/libraries/$1/architecture)'
   )
 
   // Transform relative links

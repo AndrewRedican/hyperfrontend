@@ -1,4 +1,10 @@
-import { deriveProjectScopes, scopeMatchesProject, scopeIsExcluded, DEFAULT_EXCLUDE_SCOPES } from './project-scopes'
+import {
+  deriveProjectScopes,
+  scopeMatchesProject,
+  scopeIsExcluded,
+  DEFAULT_EXCLUDE_SCOPES,
+  DEFAULT_PROJECT_PREFIXES,
+} from './project-scopes'
 
 describe('deriveProjectScopes', () => {
   describe('project name variations', () => {
@@ -149,5 +155,52 @@ describe('DEFAULT_EXCLUDE_SCOPES', () => {
     expect(DEFAULT_EXCLUDE_SCOPES).toContain('repo')
     expect(DEFAULT_EXCLUDE_SCOPES).toContain('ci')
     expect(DEFAULT_EXCLUDE_SCOPES).toContain('build')
+  })
+})
+
+describe('DEFAULT_PROJECT_PREFIXES', () => {
+  it('includes common project prefixes', () => {
+    expect(DEFAULT_PROJECT_PREFIXES).toContain('lib-')
+    expect(DEFAULT_PROJECT_PREFIXES).toContain('app-')
+    expect(DEFAULT_PROJECT_PREFIXES).toContain('e2e-')
+    expect(DEFAULT_PROJECT_PREFIXES).toContain('tool-')
+    expect(DEFAULT_PROJECT_PREFIXES).toContain('plugin-')
+    expect(DEFAULT_PROJECT_PREFIXES).toContain('feature-')
+    expect(DEFAULT_PROJECT_PREFIXES).toContain('package-')
+  })
+})
+
+describe('custom prefixes', () => {
+  it('uses custom prefixes when provided', () => {
+    const scopes = deriveProjectScopes({
+      projectName: 'pkg-auth',
+      prefixes: ['pkg-', 'svc-'],
+    })
+    expect(scopes).toContain('pkg-auth')
+    expect(scopes).toContain('auth')
+  })
+
+  it('ignores default prefixes when custom provided', () => {
+    const scopes = deriveProjectScopes({
+      projectName: 'lib-auth',
+      prefixes: ['pkg-'],
+    })
+    expect(scopes).toEqual(['lib-auth']) // No 'auth' - 'lib-' not in custom prefixes
+  })
+
+  it('handles empty prefixes array', () => {
+    const scopes = deriveProjectScopes({
+      projectName: 'lib-auth',
+      prefixes: [],
+    })
+    expect(scopes).toEqual(['lib-auth']) // No prefix stripping
+  })
+
+  it('uses default prefixes when not specified', () => {
+    const scopes = deriveProjectScopes({
+      projectName: 'lib-versioning',
+    })
+    expect(scopes).toContain('lib-versioning')
+    expect(scopes).toContain('versioning')
   })
 })

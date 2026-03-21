@@ -136,6 +136,67 @@ This directory contains reusable composite actions for the hyperfrontend monorep
 
 ---
 
+### version-check
+
+**Purpose**: Validates version bumps for affected libraries and manages PR comments with idempotency.
+
+**Location**: `.github/actions/version-check/action.yml`
+
+**Inputs**:
+
+- `base-ref` (required): Base git reference for comparison (e.g., `origin/main`)
+- `head-ref` (optional, default: `'HEAD'`): Head git reference for comparison
+- `github-token` (required): GitHub token for PR comments
+- `pr-number` (required): Pull request number for commenting
+- `comment-on-success` (optional, default: `'false'`): Whether to post a success comment with version bump details
+
+**Outputs**:
+
+- `status`: Validation status (`valid`, `invalid`, or `skipped`)
+- `valid-libs`: Comma-separated list of libraries that passed validation
+- `invalid-libs`: Comma-separated list of libraries that failed validation
+- `skipped-libs`: Comma-separated list of libraries that were skipped
+
+**Usage**:
+
+```yaml
+- name: Validate versions
+  id: version-check
+  uses: ./.github/actions/version-check
+  with:
+    base-ref: origin/${{ github.base_ref }}
+    head-ref: HEAD
+    github-token: ${{ secrets.GITHUB_TOKEN }}
+    pr-number: ${{ github.event.pull_request.number }}
+    comment-on-success: 'false' # Set to 'true' for success comments
+```
+
+**What it does**:
+
+1. **Removes stale comments**: Deletes any existing version-check comments from previous runs (idempotency)
+2. **Validates versions**: Runs `nx version-check` for each affected library with a version target
+3. **Posts failure comment**: If validation fails, posts a comment with:
+   - List of libraries with issues
+   - Step-by-step fix instructions
+   - Detailed error messages in a collapsible section
+4. **Posts success comment** (optional): If `comment-on-success` is true and validation passes, posts success details
+
+**Comment Idempotency**:
+
+- Comments are identified by a hidden marker: `<!-- hyperfrontend-version-check -->`
+- Each workflow run removes existing comments before posting new ones
+- This prevents comment accumulation across multiple pushes
+- When validation passes (and `comment-on-success` is false), all previous failure comments are removed
+
+**Important Notes**:
+
+- Requires `fetch-depth: 0` in checkout for accurate git history
+- Requires `pull-requests: write` permission for commenting
+- Uses `gh` CLI for API calls (included in GitHub Actions runners)
+- Skips gracefully when no libraries with version targets are affected
+
+---
+
 ## Design Principles
 
 ### Composability

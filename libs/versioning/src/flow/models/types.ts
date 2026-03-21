@@ -1,14 +1,20 @@
 import type { Logger } from '@hyperfrontend/logging'
 import type { Tree } from '@hyperfrontend/project-scope'
 import type { ChangelogEntry } from '../../changelog/models/entry'
+import type { ChangelogSectionType } from '../../changelog/models/section'
 import type { ClassificationResult, InfrastructureConfig, InfrastructureMatcher } from '../../commits/classify'
 import type { ConventionalCommit } from '../../commits/models/conventional'
 import type { GitClient } from '../../git/factory'
 import type { Registry } from '../../registry/models/registry'
 import type { RepositoryConfig, RepositoryResolution } from '../../repository/models'
 import type { BumpType } from '../../semver/models/version'
-import { DEFAULT_EXCLUDE_SCOPES } from '../../commits/classify'
+import { DEFAULT_EXCLUDE_SCOPES, DEFAULT_PROJECT_PREFIXES } from '../../commits/classify'
 export type { Logger } from '@hyperfrontend/logging'
+
+/**
+ * Default changelog filename.
+ */
+export const DEFAULT_CHANGELOG_FILENAME = 'CHANGELOG.md'
 
 /**
  * Accumulated state during flow execution.
@@ -127,6 +133,14 @@ export interface ScopeFilteringConfig {
   readonly trackDependencyChanges?: boolean
 
   /**
+   * Project name prefixes stripped for scope matching.
+   * Example: ['lib-', 'pkg-'] means 'lib-auth' matches scope 'auth'.
+   *
+   * @default ['lib-', 'app-', 'e2e-', 'tool-', 'plugin-', 'feature-', 'package-']
+   */
+  readonly projectPrefixes?: readonly string[]
+
+  /**
    * Infrastructure tracking configuration.
    *
    * Defines how to detect commits that affect build/tooling infrastructure.
@@ -192,6 +206,7 @@ export const DEFAULT_SCOPE_FILTERING_CONFIG: Required<Omit<ScopeFilteringConfig,
   includeScopes: [],
   excludeScopes: DEFAULT_EXCLUDE_SCOPES,
   trackDependencyChanges: false,
+  projectPrefixes: DEFAULT_PROJECT_PREFIXES,
   infrastructure: undefined,
   infrastructureMatcher: undefined,
 }
@@ -249,6 +264,16 @@ export interface FlowConfig {
   readonly releaseAs?: 'major' | 'minor' | 'patch'
 
   /**
+   * Maximum commits to analyze when no base commit is available.
+   * Used for first releases, history rewrites, and path-filtered queries.
+   *
+   * Set higher if you expect >500 commits between releases.
+   *
+   * @default 500
+   */
+  readonly maxCommitFallback?: number
+
+  /**
    * Repository resolution configuration for compare URL generation.
    *
    * Controls how repository information is resolved:
@@ -267,13 +292,26 @@ export interface FlowConfig {
    * conventional commit scope OR file changes within the project.
    */
   readonly scopeFiltering?: ScopeFilteringConfig
+
+  /**
+   * Changelog file name relative to project root.
+   *
+   * @default 'CHANGELOG.md'
+   */
+  readonly changelogFileName?: string
+
+  /**
+   * Custom mapping from commit type to changelog section.
+   * Merged with defaults; use `null` to exclude a type from changelog.
+   */
+  readonly commitTypeToSection?: Partial<Record<string, ChangelogSectionType | null>>
 }
 
 /**
  * Default flow configuration values.
  */
-export const DEFAULT_FLOW_CONFIG: Required<Omit<FlowConfig, 'repository' | 'scopeFiltering'>> &
-  Pick<FlowConfig, 'repository' | 'scopeFiltering'> = {
+export const DEFAULT_FLOW_CONFIG: Required<Omit<FlowConfig, 'repository' | 'scopeFiltering' | 'commitTypeToSection'>> &
+  Pick<FlowConfig, 'repository' | 'scopeFiltering' | 'commitTypeToSection'> = {
   preset: 'conventional',
   releaseTypes: ['feat', 'fix', 'perf', 'revert'],
   minorTypes: ['feat'],
@@ -290,8 +328,11 @@ export const DEFAULT_FLOW_CONFIG: Required<Omit<FlowConfig, 'repository' | 'scop
   allowPrerelease: false,
   prereleaseId: 'alpha',
   releaseAs: undefined,
+  maxCommitFallback: 500,
   repository: undefined,
   scopeFiltering: DEFAULT_SCOPE_FILTERING_CONFIG,
+  changelogFileName: DEFAULT_CHANGELOG_FILENAME,
+  commitTypeToSection: undefined,
 }
 
 /**

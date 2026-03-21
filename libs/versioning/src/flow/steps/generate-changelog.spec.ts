@@ -536,6 +536,103 @@ describe('Generate Changelog Step', () => {
       const choresSection = entry.sections.find((s: { type: string }) => s.type === 'chores')
       expect(choresSection).toBeDefined()
     })
+
+    it('uses default mapping when commitTypeToSection is undefined', async () => {
+      const step = createGenerateChangelogStep()
+      const ctx = createMockContext(
+        {
+          nextVersion: '1.0.0',
+          bumpType: 'minor',
+          commits: [createMockCommit({ type: 'chore', subject: 'update deps' })],
+        },
+        { commitTypeToSection: undefined }
+      )
+
+      const result = await step.execute(ctx)
+
+      const entry = result.stateUpdates?.changelogEntry
+      const choresSection = entry.sections.find((s: { type: string }) => s.type === 'chores')
+      expect(choresSection).toBeDefined()
+    })
+
+    it('overrides existing mapping via config', async () => {
+      const step = createGenerateChangelogStep()
+      const ctx = createMockContext(
+        {
+          nextVersion: '1.0.0',
+          bumpType: 'minor',
+          commits: [createMockCommit({ type: 'chore', subject: 'update deps' })],
+        },
+        { commitTypeToSection: { chore: 'other' } }
+      )
+
+      const result = await step.execute(ctx)
+
+      const entry = result.stateUpdates?.changelogEntry
+      const otherSection = entry.sections.find((s: { type: string }) => s.type === 'other')
+      expect(otherSection).toBeDefined()
+      const choresSection = entry.sections.find((s: { type: string }) => s.type === 'chores')
+      expect(choresSection).toBeUndefined()
+    })
+
+    it('adds custom commit type via config', async () => {
+      const step = createGenerateChangelogStep()
+      const ctx = createMockContext(
+        {
+          nextVersion: '1.0.0',
+          bumpType: 'minor',
+          commits: [createMockCommit({ type: 'wip', subject: 'work in progress' })],
+        },
+        { commitTypeToSection: { wip: 'other' } }
+      )
+
+      const result = await step.execute(ctx)
+
+      const entry = result.stateUpdates?.changelogEntry
+      const otherSection = entry.sections.find((s: { type: string }) => s.type === 'other')
+      expect(otherSection).toBeDefined()
+    })
+
+    it('excludes commit type when mapped to null', async () => {
+      const step = createGenerateChangelogStep()
+      const ctx = createMockContext(
+        {
+          nextVersion: '1.0.0',
+          bumpType: 'minor',
+          commits: [
+            createMockCommit({ type: 'feat', subject: 'new feature' }),
+            createMockCommit({ type: 'docs', subject: 'update readme' }),
+          ],
+        },
+        { commitTypeToSection: { docs: null } }
+      )
+
+      const result = await step.execute(ctx)
+
+      const entry = result.stateUpdates?.changelogEntry
+      const docsSection = entry.sections.find((s: { type: string }) => s.type === 'documentation')
+      expect(docsSection).toBeUndefined()
+      const featuresSection = entry.sections.find((s: { type: string }) => s.type === 'features')
+      expect(featuresSection).toBeDefined()
+    })
+
+    it('falls back to chores for unmapped custom type without config', async () => {
+      const step = createGenerateChangelogStep()
+      const ctx = createMockContext(
+        {
+          nextVersion: '1.0.0',
+          bumpType: 'minor',
+          commits: [createMockCommit({ type: 'experiment', subject: 'try something' })],
+        },
+        { commitTypeToSection: { wip: 'other' } } // has custom config but not for 'experiment'
+      )
+
+      const result = await step.execute(ctx)
+
+      const entry = result.stateUpdates?.changelogEntry
+      const choresSection = entry.sections.find((s: { type: string }) => s.type === 'chores')
+      expect(choresSection).toBeDefined()
+    })
   })
 
   describe('execute - section ordering', () => {
@@ -1729,6 +1826,84 @@ describe('Write Changelog Step', () => {
       // Changelog serializes as "## [0.2.0]" or "## 0.2.0" depending on format
       const matches = writtenContent.match(/##\s+\[?0\.2\.0\]?/g)
       expect(matches).toHaveLength(1)
+    })
+  })
+
+  describe('execute - custom changelog filename', () => {
+    it('uses changelogFileName from config when creating new changelog', async () => {
+      const step = createWriteChangelogStep()
+      const tree = createMockTree({ files: {} })
+      const ctx: FlowContext = {
+        ...createMockContext(
+          {
+            nextVersion: '1.0.0',
+            bumpType: 'minor',
+            changelogEntry: createMockChangelogEntry({ version: '1.0.0' }),
+          },
+          { changelogFileName: 'HISTORY.md' }
+        ),
+        tree,
+      }
+
+      const result = await step.execute(ctx)
+
+      expect(result.status).toBe('success')
+      expect(tree.write).toHaveBeenCalledWith('/workspace/libs/test/HISTORY.md', expect.any(String))
+      expect(result.stateUpdates?.modifiedFiles).toContain('/workspace/libs/test/HISTORY.md')
+      expect(result.message).toContain('Created HISTORY.md')
+    })
+
+    it('uses changelogFileName from config when updating existing changelog', async () => {
+      const existingChangelog = `# Changelog
+
+## [0.1.0] - 2024-01-01
+
+### Features
+
+- Initial release
+`
+      const step = createWriteChangelogStep()
+      const tree = createMockTree({
+        files: { '/workspace/libs/test/RELEASES.md': existingChangelog },
+      })
+      const ctx: FlowContext = {
+        ...createMockContext(
+          {
+            nextVersion: '0.2.0',
+            bumpType: 'minor',
+            changelogEntry: createMockChangelogEntry({
+              version: '0.2.0',
+              sections: [{ type: 'features' as const, heading: 'Features', items: [createMockChangelogItem('New feature')] }],
+            }),
+          },
+          { changelogFileName: 'RELEASES.md' }
+        ),
+        tree,
+      }
+
+      const result = await step.execute(ctx)
+
+      expect(result.status).toBe('success')
+      expect(tree.write).toHaveBeenCalledWith('/workspace/libs/test/RELEASES.md', expect.any(String))
+      expect(result.message).toContain('Updated RELEASES.md')
+    })
+
+    it('defaults to CHANGELOG.md when changelogFileName not specified', async () => {
+      const step = createWriteChangelogStep()
+      const tree = createMockTree({ files: {} })
+      const ctx: FlowContext = {
+        ...createMockContext({
+          nextVersion: '1.0.0',
+          bumpType: 'minor',
+          changelogEntry: createMockChangelogEntry({ version: '1.0.0' }),
+        }),
+        tree,
+      }
+
+      const result = await step.execute(ctx)
+
+      expect(result.status).toBe('success')
+      expect(tree.write).toHaveBeenCalledWith('/workspace/libs/test/CHANGELOG.md', expect.any(String))
     })
   })
 })
