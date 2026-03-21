@@ -2,7 +2,7 @@ import type { PackageInfo } from '../models/package-info'
 import type { Registry, RegistryConfig } from '../models/registry'
 import type { VersionInfo, Maintainer } from '../models/version-info'
 import type { Cache } from './cache'
-import { execSync } from 'node:child_process'
+import { execFileSync } from 'node:child_process'
 import { isArray } from '@hyperfrontend/immutable-api-utils/built-in-copy/array'
 import { createDate } from '@hyperfrontend/immutable-api-utils/built-in-copy/date'
 import { createError } from '@hyperfrontend/immutable-api-utils/built-in-copy/error'
@@ -64,7 +64,7 @@ async function getLatestVersion(state: NpmRegistryState, packageName: string): P
 
   try {
     const safeName = escapePackageName(packageName)
-    const result = execSync(`npm view ${safeName} version`, {
+    const result = execFileSync('npm', ['view', safeName, 'version'], {
       encoding: 'utf-8',
       timeout: state.config.timeout,
       stdio: ['pipe', 'pipe', 'pipe'],
@@ -95,7 +95,7 @@ async function isVersionPublished(state: NpmRegistryState, packageName: string, 
   try {
     const safeName = escapePackageName(packageName)
     const safeVersion = escapeVersion(version)
-    const result = execSync(`npm view ${safeName}@${safeVersion} version`, {
+    const result = execFileSync('npm', ['view', `${safeName}@${safeVersion}`, 'version'], {
       encoding: 'utf-8',
       timeout: state.config.timeout,
       stdio: ['pipe', 'pipe', 'pipe'],
@@ -124,7 +124,7 @@ async function getPackageInfo(state: NpmRegistryState, packageName: string): Pro
 
   try {
     const safeName = escapePackageName(packageName)
-    const result = execSync(`npm view ${safeName} --json`, {
+    const result = execFileSync('npm', ['view', safeName, '--json'], {
       encoding: 'utf-8',
       timeout: state.config.timeout,
       stdio: ['pipe', 'pipe', 'pipe'],
@@ -175,7 +175,7 @@ async function getVersionInfo(state: NpmRegistryState, packageName: string, vers
   try {
     const safeName = escapePackageName(packageName)
     const safeVersion = escapeVersion(version)
-    const result = execSync(`npm view ${safeName}@${safeVersion} --json`, {
+    const result = execFileSync('npm', ['view', `${safeName}@${safeVersion}`, '--json'], {
       encoding: 'utf-8',
       timeout: state.config.timeout,
       stdio: ['pipe', 'pipe', 'pipe'],
@@ -221,7 +221,7 @@ async function listVersions(state: NpmRegistryState, packageName: string): Promi
 
   try {
     const safeName = escapePackageName(packageName)
-    const result = execSync(`npm view ${safeName} versions --json`, {
+    const result = execFileSync('npm', ['view', safeName, 'versions', '--json'], {
       encoding: 'utf-8',
       timeout: state.config.timeout,
       stdio: ['pipe', 'pipe', 'pipe'],

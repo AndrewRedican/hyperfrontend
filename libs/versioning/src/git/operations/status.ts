@@ -1,4 +1,4 @@
-import { execSync } from 'node:child_process'
+import { execFileSync } from 'node:child_process'
 import { parseInt } from '@hyperfrontend/immutable-api-utils/built-in-copy/number'
 
 /**
@@ -92,7 +92,7 @@ export function getStatus(options: GitStatusOptions = {}): RepositoryStatus {
   const opts = { ...DEFAULT_STATUS_OPTIONS, ...options }
 
   // Get porcelain status with branch info
-  const output = execSync('git status --porcelain=v2 --branch', {
+  const output = execFileSync('git', ['status', '--porcelain=v2', '--branch'], {
     encoding: 'utf-8',
     cwd: opts.cwd,
     timeout: opts.timeout,
@@ -370,7 +370,7 @@ export function isGitRepository(options: GitStatusOptions = {}): boolean {
   const opts = { ...DEFAULT_STATUS_OPTIONS, ...options }
 
   try {
-    execSync('git rev-parse --is-inside-work-tree', {
+    execFileSync('git', ['rev-parse', '--is-inside-work-tree'], {
       encoding: 'utf-8',
       cwd: opts.cwd,
       timeout: opts.timeout,
@@ -395,7 +395,7 @@ export function getRepositoryRoot(options: GitStatusOptions = {}): string | null
   const opts = { ...DEFAULT_STATUS_OPTIONS, ...options }
 
   try {
-    return execSync('git rev-parse --show-toplevel', {
+    return execFileSync('git', ['rev-parse', '--show-toplevel'], {
       encoding: 'utf-8',
       cwd: opts.cwd,
       timeout: opts.timeout,
@@ -416,7 +416,7 @@ export function getHeadHash(options: GitStatusOptions = {}): string | null {
   const opts = { ...DEFAULT_STATUS_OPTIONS, ...options }
 
   try {
-    return execSync('git rev-parse HEAD', {
+    return execFileSync('git', ['rev-parse', 'HEAD'], {
       encoding: 'utf-8',
       cwd: opts.cwd,
       timeout: opts.timeout,
@@ -437,7 +437,7 @@ export function getHeadShortHash(options: GitStatusOptions = {}): string | null 
   const opts = { ...DEFAULT_STATUS_OPTIONS, ...options }
 
   try {
-    return execSync('git rev-parse --short HEAD', {
+    return execFileSync('git', ['rev-parse', '--short', 'HEAD'], {
       encoding: 'utf-8',
       cwd: opts.cwd,
       timeout: opts.timeout,

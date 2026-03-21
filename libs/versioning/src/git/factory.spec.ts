@@ -1,4 +1,4 @@
-import { execFileSync, execSync } from 'node:child_process'
+import { execFileSync } from 'node:child_process'
 import { createGitClient, DEFAULT_GIT_CLIENT_CONFIG } from './factory'
 
 jest.mock('node:child_process')
@@ -73,8 +73,6 @@ jest.mock('./operations/manage-tags', () => ({
   deleteTag: jest.fn().mockReturnValue(true),
   pushTag: jest.fn().mockReturnValue(true),
 }))
-
-const mockExecSync = execSync as jest.MockedFunction<typeof execSync>
 
 describe('createGitClient', () => {
   beforeEach(() => {
@@ -429,7 +427,7 @@ describe('createGitClient', () => {
 
   describe('ref operations', () => {
     it('provides getRefs method', () => {
-      mockExecSync.mockReturnValue('abc123 refs/heads/main\ndef456 refs/tags/v1.0.0\n')
+      mockExecFileSync.mockReturnValue('abc123 refs/heads/main\ndef456 refs/tags/v1.0.0\n')
 
       const client = createGitClient()
       const result = client.getRefs()
@@ -438,7 +436,7 @@ describe('createGitClient', () => {
     })
 
     it('returns empty array when git show-ref fails', () => {
-      mockExecSync.mockImplementation(() => {
+      mockExecFileSync.mockImplementation(() => {
         throw new Error('Not a repository')
       })
 
@@ -449,7 +447,7 @@ describe('createGitClient', () => {
     })
 
     it('provides getBranches method', () => {
-      mockExecSync.mockReturnValue('abc123 refs/heads/main\ndef456 refs/heads/feature\n')
+      mockExecFileSync.mockReturnValue('abc123 refs/heads/main\ndef456 refs/heads/feature\n')
 
       const client = createGitClient()
       const result = client.getBranches()
@@ -458,7 +456,7 @@ describe('createGitClient', () => {
     })
 
     it('provides getRemoteBranches method', () => {
-      mockExecSync.mockReturnValue('abc123 refs/remotes/origin/main\n')
+      mockExecFileSync.mockReturnValue('abc123 refs/remotes/origin/main\n')
 
       const client = createGitClient()
       const result = client.getRemoteBranches()
@@ -467,7 +465,7 @@ describe('createGitClient', () => {
     })
 
     it('filters remote branches by remote name', () => {
-      mockExecSync.mockReturnValue('abc123 refs/remotes/origin/main\ndef456 refs/remotes/upstream/main\n')
+      mockExecFileSync.mockReturnValue('abc123 refs/remotes/origin/main\ndef456 refs/remotes/upstream/main\n')
 
       const client = createGitClient()
       const result = client.getRemoteBranches('origin')
@@ -478,44 +476,44 @@ describe('createGitClient', () => {
 
   describe('fetch operation', () => {
     it('provides fetch method that returns true on success', () => {
-      mockExecSync.mockReturnValue('')
+      mockExecFileSync.mockReturnValue('')
 
       const client = createGitClient()
       const result = client.fetch()
 
       expect(result).toBe(true)
-      expect(mockExecSync).toHaveBeenCalledWith(expect.stringContaining('git fetch origin'), expect.any(Object))
+      expect(mockExecFileSync).toHaveBeenCalledWith('git', expect.arrayContaining(['fetch', 'origin']), expect.any(Object))
     })
 
     it('passes custom remote to fetch', () => {
-      mockExecSync.mockReturnValue('')
+      mockExecFileSync.mockReturnValue('')
 
       const client = createGitClient()
       client.fetch('upstream')
 
-      expect(mockExecSync).toHaveBeenCalledWith(expect.stringContaining('git fetch upstream'), expect.any(Object))
+      expect(mockExecFileSync).toHaveBeenCalledWith('git', expect.arrayContaining(['fetch', 'upstream']), expect.any(Object))
     })
 
     it('adds prune flag when requested', () => {
-      mockExecSync.mockReturnValue('')
+      mockExecFileSync.mockReturnValue('')
 
       const client = createGitClient()
       client.fetch('origin', { prune: true })
 
-      expect(mockExecSync).toHaveBeenCalledWith(expect.stringContaining('--prune'), expect.any(Object))
+      expect(mockExecFileSync).toHaveBeenCalledWith('git', expect.arrayContaining(['--prune']), expect.any(Object))
     })
 
     it('adds tags flag when requested', () => {
-      mockExecSync.mockReturnValue('')
+      mockExecFileSync.mockReturnValue('')
 
       const client = createGitClient()
       client.fetch('origin', { tags: true })
 
-      expect(mockExecSync).toHaveBeenCalledWith(expect.stringContaining('--tags'), expect.any(Object))
+      expect(mockExecFileSync).toHaveBeenCalledWith('git', expect.arrayContaining(['--tags']), expect.any(Object))
     })
 
     it('returns false on fetch failure', () => {
-      mockExecSync.mockImplementation(() => {
+      mockExecFileSync.mockImplementation(() => {
         throw new Error('Network error')
       })
 
@@ -528,35 +526,35 @@ describe('createGitClient', () => {
 
   describe('pull operation', () => {
     it('provides pull method that returns true on success', () => {
-      mockExecSync.mockReturnValue('')
+      mockExecFileSync.mockReturnValue('')
 
       const client = createGitClient()
       const result = client.pull()
 
       expect(result).toBe(true)
-      expect(mockExecSync).toHaveBeenCalledWith(expect.stringContaining('git pull origin'), expect.any(Object))
+      expect(mockExecFileSync).toHaveBeenCalledWith('git', expect.arrayContaining(['pull', 'origin']), expect.any(Object))
     })
 
     it('passes custom remote to pull', () => {
-      mockExecSync.mockReturnValue('')
+      mockExecFileSync.mockReturnValue('')
 
       const client = createGitClient()
       client.pull('upstream')
 
-      expect(mockExecSync).toHaveBeenCalledWith(expect.stringContaining('git pull upstream'), expect.any(Object))
+      expect(mockExecFileSync).toHaveBeenCalledWith('git', expect.arrayContaining(['pull', 'upstream']), expect.any(Object))
     })
 
     it('passes branch name to pull', () => {
-      mockExecSync.mockReturnValue('')
+      mockExecFileSync.mockReturnValue('')
 
       const client = createGitClient()
       client.pull('origin', 'develop')
 
-      expect(mockExecSync).toHaveBeenCalledWith(expect.stringContaining('git pull origin develop'), expect.any(Object))
+      expect(mockExecFileSync).toHaveBeenCalledWith('git', expect.arrayContaining(['pull', 'origin', 'develop']), expect.any(Object))
     })
 
     it('returns false on pull failure', () => {
-      mockExecSync.mockImplementation(() => {
+      mockExecFileSync.mockImplementation(() => {
         throw new Error('Merge conflict')
       })
 
@@ -569,53 +567,53 @@ describe('createGitClient', () => {
 
   describe('push operation', () => {
     it('provides push method that returns true on success', () => {
-      mockExecSync.mockReturnValue('')
+      mockExecFileSync.mockReturnValue('')
 
       const client = createGitClient()
       const result = client.push()
 
       expect(result).toBe(true)
-      expect(mockExecSync).toHaveBeenCalledWith(expect.stringContaining('git push origin'), expect.any(Object))
+      expect(mockExecFileSync).toHaveBeenCalledWith('git', expect.arrayContaining(['push', 'origin']), expect.any(Object))
     })
 
     it('passes custom remote to push', () => {
-      mockExecSync.mockReturnValue('')
+      mockExecFileSync.mockReturnValue('')
 
       const client = createGitClient()
       client.push('upstream')
 
-      expect(mockExecSync).toHaveBeenCalledWith(expect.stringContaining('git push upstream'), expect.any(Object))
+      expect(mockExecFileSync).toHaveBeenCalledWith('git', expect.arrayContaining(['push', 'upstream']), expect.any(Object))
     })
 
     it('passes branch name to push', () => {
-      mockExecSync.mockReturnValue('')
+      mockExecFileSync.mockReturnValue('')
 
       const client = createGitClient()
       client.push('origin', 'feature-branch')
 
-      expect(mockExecSync).toHaveBeenCalledWith(expect.stringContaining('git push origin feature-branch'), expect.any(Object))
+      expect(mockExecFileSync).toHaveBeenCalledWith('git', expect.arrayContaining(['push', 'origin', 'feature-branch']), expect.any(Object))
     })
 
     it('adds force flag when requested', () => {
-      mockExecSync.mockReturnValue('')
+      mockExecFileSync.mockReturnValue('')
 
       const client = createGitClient()
       client.push('origin', 'main', { force: true })
 
-      expect(mockExecSync).toHaveBeenCalledWith(expect.stringContaining('--force'), expect.any(Object))
+      expect(mockExecFileSync).toHaveBeenCalledWith('git', expect.arrayContaining(['--force']), expect.any(Object))
     })
 
     it('adds set-upstream flag when requested', () => {
-      mockExecSync.mockReturnValue('')
+      mockExecFileSync.mockReturnValue('')
 
       const client = createGitClient()
       client.push('origin', 'new-branch', { setUpstream: true })
 
-      expect(mockExecSync).toHaveBeenCalledWith(expect.stringContaining('--set-upstream'), expect.any(Object))
+      expect(mockExecFileSync).toHaveBeenCalledWith('git', expect.arrayContaining(['--set-upstream']), expect.any(Object))
     })
 
     it('returns false on push failure', () => {
-      mockExecSync.mockImplementation(() => {
+      mockExecFileSync.mockImplementation(() => {
         throw new Error('Remote rejected')
       })
 

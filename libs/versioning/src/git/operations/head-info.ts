@@ -1,5 +1,5 @@
 import type { GitCommitOptions } from './commit'
-import { execSync } from 'node:child_process'
+import { execFileSync } from 'node:child_process'
 import { DEFAULT_COMMIT_OPTIONS } from './commit'
 
 /**
@@ -15,7 +15,7 @@ export function getHead(options: GitCommitOptions = {}): string | null {
   const opts = { ...DEFAULT_COMMIT_OPTIONS, ...options }
 
   try {
-    return execSync('git rev-parse HEAD', {
+    return execFileSync('git', ['rev-parse', 'HEAD'], {
       encoding: 'utf-8',
       cwd: opts.cwd,
       timeout: opts.timeout,
@@ -39,7 +39,7 @@ export function getCurrentBranch(options: GitCommitOptions = {}): string | null 
   const opts = { ...DEFAULT_COMMIT_OPTIONS, ...options }
 
   try {
-    const result = execSync('git symbolic-ref --short HEAD', {
+    const result = execFileSync('git', ['symbolic-ref', '--short', 'HEAD'], {
       encoding: 'utf-8',
       cwd: opts.cwd,
       timeout: opts.timeout,
@@ -62,7 +62,7 @@ export function hasUntrackedFiles(options: GitCommitOptions = {}): boolean {
   const opts = { ...DEFAULT_COMMIT_OPTIONS, ...options }
 
   try {
-    const result = execSync('git ls-files --others --exclude-standard', {
+    const result = execFileSync('git', ['ls-files', '--others', '--exclude-standard'], {
       encoding: 'utf-8',
       cwd: opts.cwd,
       timeout: opts.timeout,

@@ -1,4 +1,4 @@
-import { execFileSync, execSync } from 'node:child_process'
+import { execFileSync } from 'node:child_process'
 import {
   getCommitLog,
   getCommitsBetween,
@@ -14,7 +14,6 @@ import {
 
 jest.mock('node:child_process')
 
-const mockExecSync = execSync as jest.MockedFunction<typeof execSync>
 const mockExecFileSync = <jest.MockedFunction<typeof execFileSync>>execFileSync
 
 // Record separator used in git log format
@@ -85,7 +84,7 @@ describe('getCommitLog', () => {
   })
 
   it('returns empty array for empty output', () => {
-    mockExecSync.mockReturnValue('')
+    mockExecFileSync.mockReturnValue('')
 
     const result = getCommitLog()
 
@@ -93,7 +92,7 @@ describe('getCommitLog', () => {
   })
 
   it('returns empty array for whitespace-only output', () => {
-    mockExecSync.mockReturnValue('   \n\t  ')
+    mockExecFileSync.mockReturnValue('   \n\t  ')
 
     const result = getCommitLog()
 
@@ -107,7 +106,7 @@ describe('getCommitLog', () => {
       authorEmail: 'jane@example.com',
       subject: 'fix: resolve bug',
     })
-    mockExecSync.mockReturnValue(RECORD_SEPARATOR + entry)
+    mockExecFileSync.mockReturnValue(RECORD_SEPARATOR + entry)
 
     const result = getCommitLog()
 
@@ -123,7 +122,7 @@ describe('getCommitLog', () => {
     const entry2 = createMockLogEntry({ hash: 'bbb222', subject: 'second commit' })
     const entry3 = createMockLogEntry({ hash: 'ccc333', subject: 'third commit' })
 
-    mockExecSync.mockReturnValue(RECORD_SEPARATOR + entry1 + RECORD_SEPARATOR + entry2 + RECORD_SEPARATOR + entry3)
+    mockExecFileSync.mockReturnValue(RECORD_SEPARATOR + entry1 + RECORD_SEPARATOR + entry2 + RECORD_SEPARATOR + entry3)
 
     const result = getCommitLog()
 
@@ -138,7 +137,7 @@ describe('getCommitLog', () => {
       subject: 'feat: add feature',
       body: 'This is a detailed description\nwith multiple lines.',
     })
-    mockExecSync.mockReturnValue(RECORD_SEPARATOR + entry)
+    mockExecFileSync.mockReturnValue(RECORD_SEPARATOR + entry)
 
     const result = getCommitLog()
 
@@ -150,7 +149,7 @@ describe('getCommitLog', () => {
     const entry = createMockLogEntry({
       parents: 'parent1abc parent2def',
     })
-    mockExecSync.mockReturnValue(RECORD_SEPARATOR + entry)
+    mockExecFileSync.mockReturnValue(RECORD_SEPARATOR + entry)
 
     const result = getCommitLog()
 
@@ -162,7 +161,7 @@ describe('getCommitLog', () => {
     const entry = createMockLogEntry({
       refs: 'HEAD -> main, tag: v1.0.0, origin/main',
     })
-    mockExecSync.mockReturnValue(RECORD_SEPARATOR + entry)
+    mockExecFileSync.mockReturnValue(RECORD_SEPARATOR + entry)
 
     const result = getCommitLog()
 
@@ -177,7 +176,7 @@ describe('getCommitLog', () => {
     const entry = createMockLogEntry({
       refs: 'tag: v2.0.0',
     })
-    mockExecSync.mockReturnValue(RECORD_SEPARATOR + entry)
+    mockExecFileSync.mockReturnValue(RECORD_SEPARATOR + entry)
 
     const result = getCommitLog()
 
@@ -189,7 +188,7 @@ describe('getCommitLog', () => {
     const entry = createMockLogEntry({
       refs: '',
     })
-    mockExecSync.mockReturnValue(RECORD_SEPARATOR + entry)
+    mockExecFileSync.mockReturnValue(RECORD_SEPARATOR + entry)
 
     const result = getCommitLog()
 
@@ -202,7 +201,7 @@ describe('getCommitLog', () => {
     const invalidEntry = ['hash', 'short', 'name'].join(FIELD_SEPARATOR)
     const validEntry = createMockLogEntry({ hash: 'valid123' })
 
-    mockExecSync.mockReturnValue(RECORD_SEPARATOR + invalidEntry + RECORD_SEPARATOR + validEntry)
+    mockExecFileSync.mockReturnValue(RECORD_SEPARATOR + invalidEntry + RECORD_SEPARATOR + validEntry)
 
     const result = getCommitLog()
 
@@ -211,79 +210,79 @@ describe('getCommitLog', () => {
   })
 
   it('applies maxCount option', () => {
-    mockExecSync.mockReturnValue('')
+    mockExecFileSync.mockReturnValue('')
 
     getCommitLog({ maxCount: 50 })
 
-    expect(mockExecSync).toHaveBeenCalledWith(expect.stringContaining('-n50'), expect.any(Object))
+    expect(mockExecFileSync).toHaveBeenCalledWith('git', expect.arrayContaining(['-n50']), expect.any(Object))
   })
 
   it('applies includeMerges: false option', () => {
-    mockExecSync.mockReturnValue('')
+    mockExecFileSync.mockReturnValue('')
 
     getCommitLog({ includeMerges: false })
 
-    expect(mockExecSync).toHaveBeenCalledWith(expect.stringContaining('--no-merges'), expect.any(Object))
+    expect(mockExecFileSync).toHaveBeenCalledWith('git', expect.arrayContaining(['--no-merges']), expect.any(Object))
   })
 
   it('applies author filter', () => {
-    mockExecSync.mockReturnValue('')
+    mockExecFileSync.mockReturnValue('')
 
     getCommitLog({ author: 'John Doe' })
 
-    expect(mockExecSync).toHaveBeenCalledWith(expect.stringContaining('--author=John Doe'), expect.any(Object))
+    expect(mockExecFileSync).toHaveBeenCalledWith('git', expect.arrayContaining(['--author=John Doe']), expect.any(Object))
   })
 
   it('applies from..to range', () => {
-    mockExecSync.mockReturnValue('')
+    mockExecFileSync.mockReturnValue('')
 
     getCommitLog({ from: 'v1.0.0', to: 'v2.0.0' })
 
-    expect(mockExecSync).toHaveBeenCalledWith(expect.stringContaining('v1.0.0..v2.0.0'), expect.any(Object))
+    expect(mockExecFileSync).toHaveBeenCalledWith('git', expect.arrayContaining(['v1.0.0..v2.0.0']), expect.any(Object))
   })
 
   it('applies from..HEAD range when only from is specified', () => {
-    mockExecSync.mockReturnValue('')
+    mockExecFileSync.mockReturnValue('')
 
     getCommitLog({ from: 'v1.0.0' })
 
-    expect(mockExecSync).toHaveBeenCalledWith(expect.stringContaining('v1.0.0..HEAD'), expect.any(Object))
+    expect(mockExecFileSync).toHaveBeenCalledWith('git', expect.arrayContaining(['v1.0.0..HEAD']), expect.any(Object))
   })
 
   it('applies to only when specified', () => {
-    mockExecSync.mockReturnValue('')
+    mockExecFileSync.mockReturnValue('')
 
     getCommitLog({ to: 'abc123' })
 
-    expect(mockExecSync).toHaveBeenCalledWith(expect.stringContaining('abc123'), expect.any(Object))
+    expect(mockExecFileSync).toHaveBeenCalledWith('git', expect.arrayContaining(['abc123']), expect.any(Object))
   })
 
   it('applies path filter', () => {
-    mockExecSync.mockReturnValue('')
+    mockExecFileSync.mockReturnValue('')
 
     getCommitLog({ path: 'src/index.ts' })
 
-    expect(mockExecSync).toHaveBeenCalledWith(expect.stringContaining('-- src/index.ts'), expect.any(Object))
+    expect(mockExecFileSync).toHaveBeenCalledWith('git', expect.arrayContaining(['--', 'src/index.ts']), expect.any(Object))
   })
 
   it('uses custom cwd', () => {
-    mockExecSync.mockReturnValue('')
+    mockExecFileSync.mockReturnValue('')
 
     getCommitLog({ cwd: '/tmp/repo' })
 
-    expect(mockExecSync).toHaveBeenCalledWith(expect.any(String), expect.objectContaining({ cwd: '/tmp/repo' }))
+    expect(mockExecFileSync).toHaveBeenCalledWith('git', expect.any(Array), expect.objectContaining({ cwd: '/tmp/repo' }))
   })
 
   it('uses custom timeout', () => {
-    mockExecSync.mockReturnValue('')
+    mockExecFileSync.mockReturnValue('')
 
     getCommitLog({ timeout: 5000 })
 
-    expect(mockExecSync).toHaveBeenCalledWith(expect.any(String), expect.objectContaining({ timeout: 5000 }))
+    expect(mockExecFileSync).toHaveBeenCalledWith('git', expect.any(Array), expect.objectContaining({ timeout: 5000 }))
   })
 
   it('returns empty array when repository has no commits', () => {
-    mockExecSync.mockImplementation(() => {
+    mockExecFileSync.mockImplementation(() => {
       const error = new Error('does not have any commits yet')
       throw error
     })
@@ -294,7 +293,7 @@ describe('getCommitLog', () => {
   })
 
   it('throws error for other git errors', () => {
-    mockExecSync.mockImplementation(() => {
+    mockExecFileSync.mockImplementation(() => {
       throw new Error('fatal: not a git repository')
     })
 
@@ -308,27 +307,27 @@ describe('getCommitsBetween', () => {
   })
 
   it('calls getCommitLog with from and to options', () => {
-    mockExecSync.mockReturnValue('')
+    mockExecFileSync.mockReturnValue('')
 
     getCommitsBetween('v1.0.0', 'v2.0.0')
 
-    expect(mockExecSync).toHaveBeenCalledWith(expect.stringContaining('v1.0.0..v2.0.0'), expect.any(Object))
+    expect(mockExecFileSync).toHaveBeenCalledWith('git', expect.arrayContaining(['v1.0.0..v2.0.0']), expect.any(Object))
   })
 
   it('defaults to HEAD when to is not specified', () => {
-    mockExecSync.mockReturnValue('')
+    mockExecFileSync.mockReturnValue('')
 
     getCommitsBetween('v1.0.0')
 
-    expect(mockExecSync).toHaveBeenCalledWith(expect.stringContaining('v1.0.0..HEAD'), expect.any(Object))
+    expect(mockExecFileSync).toHaveBeenCalledWith('git', expect.arrayContaining(['v1.0.0..HEAD']), expect.any(Object))
   })
 
   it('passes additional options', () => {
-    mockExecSync.mockReturnValue('')
+    mockExecFileSync.mockReturnValue('')
 
     getCommitsBetween('v1.0.0', 'v2.0.0', { maxCount: 10 })
 
-    expect(mockExecSync).toHaveBeenCalledWith(expect.stringContaining('-n10'), expect.any(Object))
+    expect(mockExecFileSync).toHaveBeenCalledWith('git', expect.arrayContaining(['-n10']), expect.any(Object))
   })
 })
 
@@ -338,19 +337,19 @@ describe('getCommitsSince', () => {
   })
 
   it('calls getCommitLog with from option', () => {
-    mockExecSync.mockReturnValue('')
+    mockExecFileSync.mockReturnValue('')
 
     getCommitsSince('v1.0.0')
 
-    expect(mockExecSync).toHaveBeenCalledWith(expect.stringContaining('v1.0.0..HEAD'), expect.any(Object))
+    expect(mockExecFileSync).toHaveBeenCalledWith('git', expect.arrayContaining(['v1.0.0..HEAD']), expect.any(Object))
   })
 
   it('passes additional options', () => {
-    mockExecSync.mockReturnValue('')
+    mockExecFileSync.mockReturnValue('')
 
     getCommitsSince('v1.0.0', { includeMerges: false })
 
-    expect(mockExecSync).toHaveBeenCalledWith(expect.stringContaining('--no-merges'), expect.any(Object))
+    expect(mockExecFileSync).toHaveBeenCalledWith('git', expect.arrayContaining(['--no-merges']), expect.any(Object))
   })
 })
 
@@ -364,7 +363,7 @@ describe('getCommit', () => {
       hash: 'abc123def456',
       subject: 'test commit',
     })
-    mockExecSync.mockReturnValue(RECORD_SEPARATOR + entry)
+    mockExecFileSync.mockReturnValue(RECORD_SEPARATOR + entry)
 
     const result = getCommit('abc123')
 
@@ -373,7 +372,7 @@ describe('getCommit', () => {
   })
 
   it('returns null when commit not found', () => {
-    mockExecSync.mockImplementation(() => {
+    mockExecFileSync.mockImplementation(() => {
       throw new Error('fatal: bad revision')
     })
 
@@ -383,7 +382,7 @@ describe('getCommit', () => {
   })
 
   it('returns null when log is empty', () => {
-    mockExecSync.mockReturnValue('')
+    mockExecFileSync.mockReturnValue('')
 
     const result = getCommit('abc123')
 
@@ -397,16 +396,16 @@ describe('commitExists', () => {
   })
 
   it('returns true when commit exists', () => {
-    mockExecSync.mockReturnValue('commit')
+    mockExecFileSync.mockReturnValue('commit')
 
     const result = commitExists('abc123')
 
     expect(result).toBe(true)
-    expect(mockExecSync).toHaveBeenCalledWith(expect.stringContaining('git cat-file -t'), expect.any(Object))
+    expect(mockExecFileSync).toHaveBeenCalledWith('git', expect.arrayContaining(['cat-file', '-t']), expect.any(Object))
   })
 
   it('returns false when commit does not exist', () => {
-    mockExecSync.mockImplementation(() => {
+    mockExecFileSync.mockImplementation(() => {
       throw new Error('fatal: Not a valid object name')
     })
 
@@ -416,19 +415,19 @@ describe('commitExists', () => {
   })
 
   it('uses custom cwd', () => {
-    mockExecSync.mockReturnValue('commit')
+    mockExecFileSync.mockReturnValue('commit')
 
     commitExists('abc123', { cwd: '/tmp/repo' })
 
-    expect(mockExecSync).toHaveBeenCalledWith(expect.any(String), expect.objectContaining({ cwd: '/tmp/repo' }))
+    expect(mockExecFileSync).toHaveBeenCalledWith('git', expect.any(Array), expect.objectContaining({ cwd: '/tmp/repo' }))
   })
 
   it('uses custom timeout', () => {
-    mockExecSync.mockReturnValue('commit')
+    mockExecFileSync.mockReturnValue('commit')
 
     commitExists('abc123', { timeout: 1000 })
 
-    expect(mockExecSync).toHaveBeenCalledWith(expect.any(String), expect.objectContaining({ timeout: 1000 }))
+    expect(mockExecFileSync).toHaveBeenCalledWith('git', expect.any(Array), expect.objectContaining({ timeout: 1000 }))
   })
 })
 

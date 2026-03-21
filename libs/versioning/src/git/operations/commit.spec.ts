@@ -1,4 +1,4 @@
-import { execSync } from 'node:child_process'
+import { execFileSync } from 'node:child_process'
 import { commit, amendCommit, amendCommitNoEdit, createEmptyCommit, DEFAULT_COMMIT_OPTIONS } from './commit'
 
 // Mock getCommit from log module
@@ -11,7 +11,7 @@ import { getCommit } from './log'
 
 jest.mock('node:child_process')
 
-const mockExecSync = execSync as jest.MockedFunction<typeof execSync>
+const mockExecFileSync = execFileSync as jest.MockedFunction<typeof execFileSync>
 const mockGetCommit = getCommit as jest.MockedFunction<typeof getCommit>
 
 describe('commit', () => {
@@ -20,7 +20,7 @@ describe('commit', () => {
   })
 
   it('creates a simple commit', () => {
-    mockExecSync.mockReturnValue('')
+    mockExecFileSync.mockReturnValue('')
     mockGetCommit.mockReturnValue({
       hash: 'abc123def456789012345678901234567890abcd',
       shortHash: 'abc123d',
@@ -40,12 +40,12 @@ describe('commit', () => {
     const result = commit('feat: add new feature')
 
     expect(result.subject).toBe('feat: add new feature')
-    expect(mockExecSync).toHaveBeenCalledWith(expect.stringContaining('git commit'), expect.any(Object))
-    expect(mockExecSync).toHaveBeenCalledWith(expect.stringContaining('-m'), expect.any(Object))
+    expect(mockExecFileSync).toHaveBeenCalledWith('git', expect.arrayContaining(['commit']), expect.any(Object))
+    expect(mockExecFileSync).toHaveBeenCalledWith('git', expect.arrayContaining(['-m']), expect.any(Object))
   })
 
   it('creates commit with body', () => {
-    mockExecSync.mockReturnValue('')
+    mockExecFileSync.mockReturnValue('')
     mockGetCommit.mockReturnValue({
       hash: 'abc123',
       shortHash: 'abc123d',
@@ -65,11 +65,12 @@ describe('commit', () => {
     const result = commit('feat: add feature', { body: 'Detailed description' })
 
     expect(result).toBeDefined()
-    expect(mockExecSync).toHaveBeenCalledWith(expect.stringContaining('Detailed description'), expect.any(Object))
+    // Body is appended to message, check the -m flag was used and message contains body
+    expect(mockExecFileSync).toHaveBeenCalledWith('git', expect.arrayContaining(['-m']), expect.any(Object))
   })
 
   it('creates commit with allowEmpty option', () => {
-    mockExecSync.mockReturnValue('')
+    mockExecFileSync.mockReturnValue('')
     mockGetCommit.mockReturnValue({
       hash: 'abc123',
       shortHash: 'abc123d',
@@ -88,11 +89,11 @@ describe('commit', () => {
 
     commit('chore: trigger CI', { allowEmpty: true })
 
-    expect(mockExecSync).toHaveBeenCalledWith(expect.stringContaining('--allow-empty'), expect.any(Object))
+    expect(mockExecFileSync).toHaveBeenCalledWith('git', expect.arrayContaining(['--allow-empty']), expect.any(Object))
   })
 
   it('creates commit with amend option', () => {
-    mockExecSync.mockReturnValue('')
+    mockExecFileSync.mockReturnValue('')
     mockGetCommit.mockReturnValue({
       hash: 'abc123',
       shortHash: 'abc123d',
@@ -111,11 +112,11 @@ describe('commit', () => {
 
     commit('feat: improved feature', { amend: true })
 
-    expect(mockExecSync).toHaveBeenCalledWith(expect.stringContaining('--amend'), expect.any(Object))
+    expect(mockExecFileSync).toHaveBeenCalledWith('git', expect.arrayContaining(['--amend']), expect.any(Object))
   })
 
   it('creates commit with sign option', () => {
-    mockExecSync.mockReturnValue('')
+    mockExecFileSync.mockReturnValue('')
     mockGetCommit.mockReturnValue({
       hash: 'abc123',
       shortHash: 'abc123d',
@@ -134,11 +135,11 @@ describe('commit', () => {
 
     commit('feat: signed commit', { sign: true })
 
-    expect(mockExecSync).toHaveBeenCalledWith(expect.stringContaining('-S'), expect.any(Object))
+    expect(mockExecFileSync).toHaveBeenCalledWith('git', expect.arrayContaining(['-S']), expect.any(Object))
   })
 
   it('creates commit with noVerify option', () => {
-    mockExecSync.mockReturnValue('')
+    mockExecFileSync.mockReturnValue('')
     mockGetCommit.mockReturnValue({
       hash: 'abc123',
       shortHash: 'abc123d',
@@ -157,11 +158,11 @@ describe('commit', () => {
 
     commit('WIP: work in progress', { noVerify: true })
 
-    expect(mockExecSync).toHaveBeenCalledWith(expect.stringContaining('--no-verify'), expect.any(Object))
+    expect(mockExecFileSync).toHaveBeenCalledWith('git', expect.arrayContaining(['--no-verify']), expect.any(Object))
   })
 
   it('creates commit with custom author', () => {
-    mockExecSync.mockReturnValue('')
+    mockExecFileSync.mockReturnValue('')
     mockGetCommit.mockReturnValue({
       hash: 'abc123',
       shortHash: 'abc123d',
@@ -180,11 +181,15 @@ describe('commit', () => {
 
     commit('feat: bot commit', { author: 'Bot User <bot@example.com>' })
 
-    expect(mockExecSync).toHaveBeenCalledWith(expect.stringContaining('--author='), expect.any(Object))
+    expect(mockExecFileSync).toHaveBeenCalledWith(
+      'git',
+      expect.arrayContaining(['--author', 'Bot User <bot@example.com>']),
+      expect.any(Object)
+    )
   })
 
   it('creates commit with specific files', () => {
-    mockExecSync.mockReturnValue('')
+    mockExecFileSync.mockReturnValue('')
     mockGetCommit.mockReturnValue({
       hash: 'abc123',
       shortHash: 'abc123d',
@@ -203,7 +208,7 @@ describe('commit', () => {
 
     commit('chore: update files', { files: ['package.json', 'CHANGELOG.md'] })
 
-    expect(mockExecSync).toHaveBeenCalledWith(expect.stringContaining('-- package.json CHANGELOG.md'), expect.any(Object))
+    expect(mockExecFileSync).toHaveBeenCalledWith('git', expect.arrayContaining(['--', 'package.json', 'CHANGELOG.md']), expect.any(Object))
   })
 
   it('throws when message is empty', () => {
@@ -211,7 +216,7 @@ describe('commit', () => {
   })
 
   it('throws when commit fails', () => {
-    mockExecSync.mockImplementation(() => {
+    mockExecFileSync.mockImplementation(() => {
       throw new Error('Nothing to commit')
     })
 
@@ -219,14 +224,14 @@ describe('commit', () => {
   })
 
   it('throws when created commit cannot be retrieved', () => {
-    mockExecSync.mockReturnValue('')
+    mockExecFileSync.mockReturnValue('')
     mockGetCommit.mockReturnValue(null)
 
     expect(() => commit('feat: test')).toThrow('Failed to retrieve created commit')
   })
 
   it('uses custom cwd and timeout', () => {
-    mockExecSync.mockReturnValue('')
+    mockExecFileSync.mockReturnValue('')
     mockGetCommit.mockReturnValue({
       hash: 'abc123',
       shortHash: 'abc123d',
@@ -245,11 +250,11 @@ describe('commit', () => {
 
     commit('feat: test', { cwd: '/custom', timeout: 5000 })
 
-    expect(mockExecSync).toHaveBeenCalledWith(expect.any(String), expect.objectContaining({ cwd: '/custom', timeout: 5000 }))
+    expect(mockExecFileSync).toHaveBeenCalledWith('git', expect.any(Array), expect.objectContaining({ cwd: '/custom', timeout: 5000 }))
   })
 
   it('uses default timeout', () => {
-    mockExecSync.mockReturnValue('')
+    mockExecFileSync.mockReturnValue('')
     mockGetCommit.mockReturnValue({
       hash: 'abc123',
       shortHash: 'abc123d',
@@ -268,7 +273,11 @@ describe('commit', () => {
 
     commit('feat: test')
 
-    expect(mockExecSync).toHaveBeenCalledWith(expect.any(String), expect.objectContaining({ timeout: DEFAULT_COMMIT_OPTIONS.timeout }))
+    expect(mockExecFileSync).toHaveBeenCalledWith(
+      'git',
+      expect.any(Array),
+      expect.objectContaining({ timeout: DEFAULT_COMMIT_OPTIONS.timeout })
+    )
   })
 })
 
@@ -278,7 +287,7 @@ describe('amendCommit', () => {
   })
 
   it('amends the last commit', () => {
-    mockExecSync.mockReturnValue('')
+    mockExecFileSync.mockReturnValue('')
     mockGetCommit.mockReturnValue({
       hash: 'abc123',
       shortHash: 'abc123d',
@@ -298,7 +307,7 @@ describe('amendCommit', () => {
     const result = amendCommit('feat: improved message')
 
     expect(result.subject).toBe('feat: improved message')
-    expect(mockExecSync).toHaveBeenCalledWith(expect.stringContaining('--amend'), expect.any(Object))
+    expect(mockExecFileSync).toHaveBeenCalledWith('git', expect.arrayContaining(['--amend']), expect.any(Object))
   })
 })
 
@@ -308,7 +317,7 @@ describe('amendCommitNoEdit', () => {
   })
 
   it('amends the last commit without changing the message', () => {
-    mockExecSync.mockReturnValue('')
+    mockExecFileSync.mockReturnValue('')
     mockGetCommit.mockReturnValue({
       hash: 'def456',
       shortHash: 'def456a',
@@ -328,14 +337,14 @@ describe('amendCommitNoEdit', () => {
     const result = amendCommitNoEdit()
 
     expect(result.hash).toBe('def456')
-    expect(mockExecSync).toHaveBeenCalledWith(expect.stringContaining('--amend'), expect.any(Object))
-    expect(mockExecSync).toHaveBeenCalledWith(expect.stringContaining('--no-edit'), expect.any(Object))
+    expect(mockExecFileSync).toHaveBeenCalledWith('git', expect.arrayContaining(['--amend']), expect.any(Object))
+    expect(mockExecFileSync).toHaveBeenCalledWith('git', expect.arrayContaining(['--no-edit']), expect.any(Object))
     // Should NOT contain -m flag when using --no-edit
-    expect(mockExecSync).not.toHaveBeenCalledWith(expect.stringContaining('-m'), expect.any(Object))
+    expect(mockExecFileSync).not.toHaveBeenCalledWith('git', expect.arrayContaining(['-m']), expect.any(Object))
   })
 
   it('uses custom cwd option', () => {
-    mockExecSync.mockReturnValue('')
+    mockExecFileSync.mockReturnValue('')
     mockGetCommit.mockReturnValue({
       hash: 'abc123',
       shortHash: 'abc123d',
@@ -354,7 +363,7 @@ describe('amendCommitNoEdit', () => {
 
     amendCommitNoEdit({ cwd: '/custom/path' })
 
-    expect(mockExecSync).toHaveBeenCalledWith(expect.any(String), expect.objectContaining({ cwd: '/custom/path' }))
+    expect(mockExecFileSync).toHaveBeenCalledWith('git', expect.any(Array), expect.objectContaining({ cwd: '/custom/path' }))
   })
 })
 
@@ -364,7 +373,7 @@ describe('commit with noEdit option', () => {
   })
 
   it('allows empty message when noEdit and amend are both true', () => {
-    mockExecSync.mockReturnValue('')
+    mockExecFileSync.mockReturnValue('')
     mockGetCommit.mockReturnValue({
       hash: 'ghi789',
       shortHash: 'ghi789b',
@@ -384,8 +393,8 @@ describe('commit with noEdit option', () => {
     const result = commit('', { amend: true, noEdit: true })
 
     expect(result.hash).toBe('ghi789')
-    expect(mockExecSync).toHaveBeenCalledWith(expect.stringContaining('--amend'), expect.any(Object))
-    expect(mockExecSync).toHaveBeenCalledWith(expect.stringContaining('--no-edit'), expect.any(Object))
+    expect(mockExecFileSync).toHaveBeenCalledWith('git', expect.arrayContaining(['--amend']), expect.any(Object))
+    expect(mockExecFileSync).toHaveBeenCalledWith('git', expect.arrayContaining(['--no-edit']), expect.any(Object))
   })
 
   it('throws when noEdit is true but amend is false', () => {
@@ -400,7 +409,7 @@ describe('createEmptyCommit', () => {
   })
 
   it('creates an empty commit', () => {
-    mockExecSync.mockReturnValue('')
+    mockExecFileSync.mockReturnValue('')
     mockGetCommit.mockReturnValue({
       hash: 'abc123',
       shortHash: 'abc123d',
@@ -420,6 +429,6 @@ describe('createEmptyCommit', () => {
     const result = createEmptyCommit('chore: trigger CI')
 
     expect(result.subject).toBe('chore: trigger CI')
-    expect(mockExecSync).toHaveBeenCalledWith(expect.stringContaining('--allow-empty'), expect.any(Object))
+    expect(mockExecFileSync).toHaveBeenCalledWith('git', expect.arrayContaining(['--allow-empty']), expect.any(Object))
   })
 })
