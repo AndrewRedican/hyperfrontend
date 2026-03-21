@@ -226,25 +226,20 @@ const rule: Rule.RuleModule = {
   create(context) {
     const filePath = context.filename
     const fileName = basename(filePath)
-
-    // Only process content.ts files
-    if (fileName !== 'content.ts') {
-      return {}
-    }
-
-    // Check if this is in docs-site/src/lib/ directory
     const fileDir = dirname(filePath)
     const dirParts = fileDir.split('/')
-    const expectedPathSuffix = ['apps', 'docs-site', 'src', 'lib']
 
-    // Verify the file is in the expected location by checking directory suffix
-    let isDocsLibDir = false
-    if (dirParts.length >= expectedPathSuffix.length) {
-      const lastParts = dirParts.slice(-expectedPathSuffix.length)
-      isDocsLibDir = lastParts.every((part, index) => part === expectedPathSuffix[index])
-    }
+    // Check for docs-site/src/lib/content.ts
+    const isContentTs = fileName === 'content.ts' && checkPathSuffix(dirParts, ['apps', 'docs-site', 'src', 'lib'])
 
-    if (!isDocsLibDir) {
+    // Check for docs-site/scripts/generate-docs.ts
+    const isGenerateDocsTs = fileName === 'generate-docs.ts' && checkPathSuffix(dirParts, ['apps', 'docs-site', 'scripts'])
+
+    // Check for docs-site/src/lib/navigation.ts
+    const isNavigationTs = fileName === 'navigation.ts' && checkPathSuffix(dirParts, ['apps', 'docs-site', 'src', 'lib'])
+
+    // Only process relevant docs-site files
+    if (!isContentTs && !isGenerateDocsTs && !isNavigationTs) {
       return {}
     }
 
@@ -255,15 +250,22 @@ const rule: Rule.RuleModule = {
     }
 
     return {
-      // Look for: export const LIBRARIES: LibraryInfo[] = [...]
+      // Look for: export const LIBRARIES: LibraryInfo[] = [...] or const LIBRARIES: LibraryConfig[] = [...]
       VariableDeclaration(node: Node) {
         const varDecl = node as VariableDeclaration
-        // Check if this is an exported declaration
-        const parent = (node as { parent?: Node }).parent
-        const isExported = parent?.type === 'ExportNamedDeclaration'
         const isConst = varDecl.kind === 'const'
 
-        if (!isExported || !isConst) {
+        if (!isConst) {
+          return
+        }
+
+        // Check if this is an exported declaration (for content.ts) or a top-level const (for generate-docs.ts)
+        const parent = (node as { parent?: Node }).parent
+        const isExported = parent?.type === 'ExportNamedDeclaration'
+
+        // For content.ts, LIBRARIES must be exported
+        // For generate-docs.ts, LIBRARIES is a module-level const (not exported)
+        if (isContentTs && !isExported) {
           return
         }
 
@@ -305,6 +307,21 @@ const rule: Rule.RuleModule = {
       },
     }
   },
+}
+
+/**
+ * Checks if the directory path ends with the expected suffix.
+ *
+ * @param dirParts - The directory path split by '/'
+ * @param expectedSuffix - Array of path segments to match at the end (e.g., ['apps', 'docs-site', 'src', 'lib'])
+ * @returns True if the path ends with the expected suffix
+ */
+function checkPathSuffix(dirParts: string[], expectedSuffix: string[]): boolean {
+  if (dirParts.length < expectedSuffix.length) {
+    return false
+  }
+  const lastParts = dirParts.slice(-expectedSuffix.length)
+  return lastParts.every((part, index) => part === expectedSuffix[index])
 }
 
 export default rule

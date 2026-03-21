@@ -4,7 +4,7 @@ Ensure all publishable libraries are listed in the docs-site LIBRARIES array.
 
 ## Rule Details
 
-This rule validates that all publishable library projects from `libs/` and `plugins/` folders are included in the docs-site's `content.ts` LIBRARIES array. This ensures documentation stays in sync with publishable packages.
+This rule validates that all publishable library projects from `libs/` and `plugins/` folders are included in the docs-site's LIBRARIES arrays. This ensures documentation stays in sync with publishable packages.
 
 ### What is a Publishable Library?
 
@@ -15,9 +15,12 @@ A project is considered a publishable library if:
 3. Has both `build` and `publish` targets defined
 4. Has a `package.json` with a valid `name` field
 
-### What File is Checked?
+### What Files are Checked?
 
-The rule applies only to `apps/docs-site/src/lib/content.ts` and verifies that the exported `LIBRARIES` array contains entries for all publishable libraries.
+The rule validates LIBRARIES arrays in the following files:
+
+1. **`apps/docs-site/src/lib/content.ts`** - The exported `LIBRARIES` array used for documentation loading
+2. **`apps/docs-site/scripts/generate-docs.ts`** - The module-level `LIBRARIES` array used for doc generation
 
 ### Why?
 
@@ -75,14 +78,14 @@ export const LIBRARIES: LibraryInfo[] = [
 
 ## Configuration
 
-Apply this rule to the `content.ts` file in docs-site:
+Apply this rule to the docs-site files that contain LIBRARIES arrays:
 
 ```javascript
 // apps/docs-site/eslint.config.cjs
 module.exports = [
   // ... other configs
   {
-    files: ['**/src/lib/content.ts'],
+    files: ['**/src/lib/content.ts', '**/scripts/generate-docs.ts'],
     rules: {
       'workspace/docs-site-libraries': 'error',
     },
