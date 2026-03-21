@@ -2,6 +2,20 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.3.0](https://github.com/AndrewRedican/hyperfrontend/compare/31943a4b39484dba86b358e4f361abe76edc4fe1...2737bb00792930010cd0161b87b4ca80b2c155e0) - 2026-03-21
+
+### Features
+
+- add commit type to section config option
+- add changelog file name config option
+- export key configuration constants
+- make project prefixes configurable
+- add max commit fallback config option
+
+### Bug Fixes
+
+- **eslint-rules:** validate github urls via url parsing
+
 ## [0.2.0](https://github.com/AndrewRedican/hyperfrontend/compare/a9185d9b783d7d8d51cc4ad91eb3178eba3e3930...bdcdfe00e5c9680e7a1eb925ef69997601d0f393) - 2026-03-20
 
 ### Features
