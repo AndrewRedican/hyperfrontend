@@ -1,17 +1,28 @@
-/**
- * Changelog Parser
- *
- * Parses a changelog markdown string into a structured Changelog object.
- * Uses a state machine tokenizer for ReDoS-safe parsing.
- */
-
 import type { Changelog, ChangelogFormat, ChangelogHeader, ChangelogLink, ChangelogMetadata } from '../models/changelog'
 import type { ChangelogEntry, ChangelogItem, ChangelogSection } from '../models/entry'
 import type { Token } from './tokenizer'
+import { createURL } from '@hyperfrontend/immutable-api-utils/built-in-copy/url'
 import { createChangelogItem } from '../models/entry'
 import { getSectionType } from '../models/section'
 import { parseVersionFromHeading, parseScopeFromItem, parseCommitRefs, parseIssueRefs } from './line'
 import { tokenize } from './tokenizer'
+
+/**
+ * Validates that a URL is actually a GitHub URL by parsing it properly.
+ * This prevents SSRF attacks where 'github.com' could appear in path/query.
+ *
+ * @param url - The URL string to validate
+ * @returns True if the URL host is github.com or a subdomain
+ */
+function isGitHubUrl(url: string): boolean {
+  try {
+    const parsed = createURL(url)
+    // Check that the host is exactly github.com or ends with .github.com
+    return parsed.host === 'github.com' || parsed.host.endsWith('.github.com')
+  } catch {
+    return false
+  }
+}
 
 /**
  * Internal state used during changelog parsing to track position and collect metadata.
@@ -99,7 +110,7 @@ function parseHeader(state: ParserState): ChangelogHeader {
         links.push({ label: token.value, url: nextToken.value })
 
         // Try to detect repository URL
-        if (!state.repositoryUrl && nextToken.value.includes('github.com')) {
+        if (!state.repositoryUrl && isGitHubUrl(nextToken.value)) {
           state.repositoryUrl = extractRepoUrl(nextToken.value)
         }
 
