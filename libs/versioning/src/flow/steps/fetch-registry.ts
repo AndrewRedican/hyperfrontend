@@ -40,7 +40,7 @@ export function createFetchRegistryStep(): FlowStep {
     // Query registry for published version
     let publishedVersion: string | null = null
     let publishedCommit: string | null = null
-    let isFirstRelease = true
+    let isFirstRelease: boolean
 
     try {
       publishedVersion = await registry.getLatestVersion(packageName)
