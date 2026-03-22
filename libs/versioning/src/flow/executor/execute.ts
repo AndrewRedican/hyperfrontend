@@ -1,6 +1,6 @@
 /* eslint-disable @nx/enforce-module-boundaries */
 import type { Logger } from '@hyperfrontend/logging'
-import type { Tree } from '@hyperfrontend/project-scope'
+import type { FileDiff, Tree } from '@hyperfrontend/project-scope'
 import type { GitClient } from '../../git/factory'
 import type { Registry } from '../../registry/models/registry'
 import type { VersionFlow } from '../models/flow'
@@ -10,12 +10,17 @@ import { createError } from '@hyperfrontend/immutable-api-utils/built-in-copy/er
 import { parse } from '@hyperfrontend/immutable-api-utils/built-in-copy/json'
 import { createSet } from '@hyperfrontend/immutable-api-utils/built-in-copy/set'
 import { logger as defaultLogger } from '@hyperfrontend/logging'
-import { createTree, commitChanges } from '@hyperfrontend/project-scope'
+import { commitChanges, createTree, formatUnifiedDiff, generateAllDiffs } from '@hyperfrontend/project-scope'
 import { isNxWorkspace, discoverNxProjects } from '@hyperfrontend/project-scope/nx'
 import { createGitClient, DEFAULT_GIT_CLIENT_CONFIG } from '../../git/factory'
 import { createRegistry } from '../../registry/factory'
 import { discoverProjectByName } from '../../workspace/discovery'
 import { DEFAULT_FLOW_CONFIG } from '../models/types'
+
+/**
+ * Output format for diff preview.
+ */
+export type DiffFormat = 'unified' | 'summary'
 
 /**
  * Options for flow execution.
@@ -26,6 +31,12 @@ export interface ExecuteOptions {
 
   /** Verbose logging */
   verbose?: boolean
+
+  /** Show unified diff of changes before committing */
+  showDiff?: boolean
+
+  /** Output format for diff: 'unified' (full patch) or 'summary' (stats only) */
+  diffFormat?: DiffFormat
 
   /** Custom logger (defaults to console) */
   logger?: Logger
@@ -386,8 +397,29 @@ export async function executeFlow(
     changeType: change.type,
   }))
 
-  // Log changes when verbose
-  if (options.verbose && pendingChanges.length > 0) {
+  // Generate diffs for pending changes (for observability and showDiff output)
+  let diffs: readonly FileDiff[] | undefined
+  if (options.showDiff && pendingChanges.length > 0) {
+    diffs = generateAllDiffs(tree)
+
+    // Log diffs based on format
+    flowLogger.info(`\n${'='.repeat(60)}\nPending changes:\n${'='.repeat(60)}`)
+
+    for (const diff of diffs) {
+      if (options.diffFormat === 'summary') {
+        // Summary mode: just show stats
+        flowLogger.info(`${diff.path}: +${diff.additions} -${diff.deletions}`)
+      } else {
+        // Unified mode (default): show full diff
+        flowLogger.info(formatUnifiedDiff(diff))
+      }
+    }
+  } else if (options.showDiff && pendingChanges.length === 0) {
+    flowLogger.info('No file changes to commit')
+  }
+
+  // Log changes when verbose (only if not already showing diffs)
+  if (options.verbose && !options.showDiff && pendingChanges.length > 0) {
     flowLogger.info(`Pending changes: ${pendingChanges.length} file(s)`)
     for (const change of pendingChanges) {
       flowLogger.info(`  [${change.type}] ${change.path}`)
@@ -435,6 +467,7 @@ export async function executeFlow(
     duration,
     summary,
     modifiedFiles,
+    ...(diffs && { diffs }),
   }
 }
 

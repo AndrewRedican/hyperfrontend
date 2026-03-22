@@ -1,5 +1,5 @@
 import type { Logger } from '@hyperfrontend/logging'
-import type { Tree } from '@hyperfrontend/project-scope'
+import type { FileDiff, Tree } from '@hyperfrontend/project-scope'
 import type { ChangelogEntry } from '../../changelog/models/entry'
 import type { ChangelogSectionType } from '../../changelog/models/section'
 import type { ClassificationResult, InfrastructureConfig, InfrastructureMatcher } from '../../commits/classify'
@@ -438,4 +438,11 @@ export interface FlowResult {
 
   /** Files that were modified (or would be in dry-run) */
   readonly modifiedFiles?: readonly FileChangeInfo[]
+
+  /**
+   * Detailed diffs for pending changes.
+   * Populated when `showDiff: true` is passed to executeFlow.
+   * Provides unified diff format for programmatic access.
+   */
+  readonly diffs?: readonly FileDiff[]
 }
