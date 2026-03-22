@@ -47,4 +47,40 @@ export interface VersionExecutorSchema {
    * - Object: Fine-grained control with mode and options
    */
   repository?: FlowConfig['repository']
+  /**
+   * Show unified diff of changes before committing to VFS.
+   * Useful for debugging and CI output.
+   *
+   * @default false
+   */
+  showDiff?: boolean
+  /**
+   * Output format for diff preview.
+   *
+   * - `'unified'`: Full patch output (default)
+   * - `'summary'`: Stats only (files changed, insertions, deletions)
+   *
+   * @default 'unified'
+   */
+  diffFormat?: 'unified' | 'summary'
+  /**
+   * Discard all pending VFS changes if any step fails.
+   * Ensures no partial state remains.
+   *
+   * @default true
+   */
+  rollbackOnFailure?: boolean
+  /**
+   * Create a backup of existing changelog before modification.
+   *
+   * When enabled:
+   * 1. Existing CHANGELOG.md is renamed to CHANGELOG.backup.md
+   * 2. New changelog is written
+   * 3. Backup is deleted on success
+   *
+   * Useful for safety during changelog regeneration.
+   *
+   * @default false
+   */
+  backupChangelog?: boolean
 }

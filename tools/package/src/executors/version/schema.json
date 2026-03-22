@@ -100,6 +100,27 @@
       ],
       "default": "inferred"
     },
+    "showDiff": {
+      "type": "boolean",
+      "description": "Show unified diff of changes before committing to VFS. Useful for debugging and CI output.",
+      "default": false
+    },
+    "diffFormat": {
+      "type": "string",
+      "enum": ["unified", "summary"],
+      "description": "Output format for diff preview: 'unified' (full patch) or 'summary' (stats only).",
+      "default": "unified"
+    },
+    "rollbackOnFailure": {
+      "type": "boolean",
+      "description": "Discard all pending VFS changes if any step fails. Ensures no partial state remains.",
+      "default": true
+    },
+    "backupChangelog": {
+      "type": "boolean",
+      "description": "Create a backup of existing changelog before modification. Useful for safety during changelog regeneration.",
+      "default": false
+    },
     "scopeFiltering": {
       "type": "object",
       "description": "Scope filtering configuration for commit classification and changelog generation.",

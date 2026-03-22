@@ -29,20 +29,24 @@ npx nx version lib-cryptography --collectFiles
 
 ## Options
 
-| Option                | Type    | Default          | Description                                          |
-| --------------------- | ------- | ---------------- | ---------------------------------------------------- |
-| `dryRun`              | boolean | false            | Preview changes without committing                   |
-| `releaseAs`           | string  | -                | Force bump type: `major`, `minor`, or `patch`        |
-| `tagPrefix`           | string  | `{projectName}@` | Version tag prefix                                   |
-| `trackDeps`           | boolean | false            | Include dependencies in version calculation          |
-| `skipCommit`          | boolean | false            | Skip creating a version commit                       |
-| `skipTag`             | boolean | true             | Skip creating a git tag (tags created after publish) |
-| `updateDependents`    | boolean | true             | Update version references in dependent packages      |
-| `skipIfVersionCommit` | boolean | true             | Skip if current commit is a version commit           |
-| `skipIfUnstableGit`   | boolean | true             | Skip if git is in rebase/merge state                 |
-| `collectFiles`        | boolean | false            | Output modified files list (implies skipCommit)      |
-| `verbose`             | boolean | false            | Enable detailed logging                              |
-| `quiet`               | boolean | false            | Suppress non-error output                            |
+| Option                | Type    | Default          | Description                                              |
+| --------------------- | ------- | ---------------- | -------------------------------------------------------- |
+| `dryRun`              | boolean | false            | Preview changes without committing                       |
+| `releaseAs`           | string  | -                | Force bump type: `major`, `minor`, or `patch`            |
+| `tagPrefix`           | string  | `{projectName}@` | Version tag prefix                                       |
+| `trackDeps`           | boolean | false            | Include dependencies in version calculation              |
+| `skipCommit`          | boolean | false            | Skip creating a version commit                           |
+| `skipTag`             | boolean | true             | Skip creating a git tag (tags created after publish)     |
+| `updateDependents`    | boolean | true             | Update version references in dependent packages          |
+| `skipIfVersionCommit` | boolean | true             | Skip if current commit is a version commit               |
+| `skipIfUnstableGit`   | boolean | true             | Skip if git is in rebase/merge state                     |
+| `collectFiles`        | boolean | false            | Output modified files list (implies skipCommit)          |
+| `verbose`             | boolean | false            | Enable detailed logging                                  |
+| `quiet`               | boolean | false            | Suppress non-error output                                |
+| `showDiff`            | boolean | false            | Show unified diff of changes before committing           |
+| `diffFormat`          | string  | `unified`        | Diff format: `unified` (full patch) or `summary` (stats) |
+| `rollbackOnFailure`   | boolean | true             | Discard all VFS changes if any step fails                |
+| `backupChangelog`     | boolean | false            | Create backup of changelog before modification           |
 
 ## Commit Types and Version Impact
 
