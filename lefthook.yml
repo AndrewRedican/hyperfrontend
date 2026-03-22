@@ -43,6 +43,9 @@ pre-push:
     test:
       run: CI=1 npx nx run-many -t=test --skip-nx-cache
       fail_text: 'Tests failed. Fix failing tests before pushing.'
+    build:
+      run: CI=1 npx nx run-many -t=build --skip-nx-cache
+      fail_text: 'Build failed. Fix build errors before pushing.'
 
     # =========================================================================
     # Version Command - SOURCE OF TRUTH for version bumps
