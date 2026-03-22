@@ -1,18 +1,19 @@
 /* eslint-disable @nx/enforce-module-boundaries */
-import type { PackageJson } from '@hyperfrontend/project-scope'
+import type { PackageJson, Tree } from '@hyperfrontend/project-scope'
 import type { Project, CreateProjectOptions } from '../models/project'
 import type { WorkspaceConfig } from '../models/workspace'
 import { dirname, join } from 'node:path'
 import { createError } from '@hyperfrontend/immutable-api-utils/built-in-copy/error'
+import { parse } from '@hyperfrontend/immutable-api-utils/built-in-copy/json'
 import { createMap } from '@hyperfrontend/immutable-api-utils/built-in-copy/map'
 import { createSet } from '@hyperfrontend/immutable-api-utils/built-in-copy/set'
 import { readPackageJson } from '@hyperfrontend/project-scope/project/package'
 import { findWorkspaceRoot } from '@hyperfrontend/project-scope/project/root'
-import { findFiles } from '@hyperfrontend/project-scope/project/traversal'
+import { findFiles, findFilesInTree } from '@hyperfrontend/project-scope/project/traversal'
 import { createProject } from '../models/project'
 import { DEFAULT_WORKSPACE_CONFIG } from '../models/workspace'
 import { findInternalDependencies } from './dependencies'
-import { findChangelogs } from './discover-changelogs'
+import { findChangelogs, findChangelogsInTree } from './discover-changelogs'
 
 /**
  * Options for package discovery.
@@ -32,6 +33,9 @@ export interface DiscoveryOptions {
 
   /** Track internal dependencies */
   trackDependencies?: boolean
+
+  /** Optional VFS tree for VFS-aware discovery */
+  tree?: Tree
 }
 
 /**
@@ -95,8 +99,10 @@ interface RawPackageInfo {
  * ```
  */
 export function discoverPackages(options: DiscoveryOptions = {}): DiscoveryResult {
+  const { tree } = options
+
   // Resolve workspace root
-  const workspaceRoot = options.workspaceRoot ?? findWorkspaceRoot(process.cwd())
+  const workspaceRoot = options.workspaceRoot ?? (tree ? tree.root : findWorkspaceRoot(process.cwd()))
   if (!workspaceRoot) {
     throw createError('Could not find workspace root. Ensure you are in a monorepo with nx.json, turbo.json, or workspaces field.')
   }
@@ -109,17 +115,23 @@ export function discoverPackages(options: DiscoveryOptions = {}): DiscoveryResul
     trackDependencies: options.trackDependencies ?? DEFAULT_WORKSPACE_CONFIG.trackDependencies,
   }
 
-  // Find all package.json files
-  const packageJsonPaths = findPackageJsonFiles(workspaceRoot, config)
+  // Find all package.json files - use VFS-aware function when tree provided
+  const packageJsonPaths = tree ? findPackageJsonFilesInTree(tree, config) : findPackageJsonFiles(workspaceRoot, config)
 
-  // Parse package.json files
-  const rawPackages = parsePackageJsonFiles(workspaceRoot, packageJsonPaths)
+  // Parse package.json files - use VFS-aware function when tree provided
+  const rawPackages = tree
+    ? parsePackageJsonFilesFromTree(tree, workspaceRoot, packageJsonPaths)
+    : parsePackageJsonFiles(workspaceRoot, packageJsonPaths)
 
   // Collect all package names for internal dependency detection
   const packageNames = createSet(rawPackages.map((p) => p.name))
 
-  // Find changelogs if requested
-  const changelogMap = config.includeChangelogs ? findChangelogs(workspaceRoot, rawPackages) : createMap<string, string>()
+  // Find changelogs if requested - use VFS-aware function when tree provided
+  const changelogMap = config.includeChangelogs
+    ? tree
+      ? findChangelogsInTree(tree, rawPackages)
+      : findChangelogs(workspaceRoot, rawPackages)
+    : createMap<string, string>()
 
   // Build projects with changelog paths
   const rawWithChangelogs = rawPackages.map((pkg) => ({
@@ -179,6 +191,67 @@ function parsePackageJsonFiles(workspaceRoot: string, packageJsonPaths: string[]
 
     try {
       const packageJson = readPackageJson(absolutePath)
+
+      // Skip packages without a name
+      if (!packageJson.name) {
+        continue
+      }
+
+      packages.push({
+        name: packageJson.name,
+        version: packageJson.version ?? '0.0.0',
+        path: projectPath,
+        packageJsonPath: absolutePath,
+        packageJson,
+        changelogPath: null,
+      })
+    } catch {
+      // Skip packages that can't be parsed
+      continue
+    }
+  }
+
+  return packages
+}
+
+/**
+ * Finds all package.json files in a VFS tree matching the configured patterns.
+ *
+ * @param tree - VFS tree instance
+ * @param config - Workspace configuration
+ * @returns Array of relative paths to package.json files
+ */
+function findPackageJsonFilesInTree(tree: Tree, config: WorkspaceConfig): string[] {
+  const patterns = [...config.patterns]
+  const excludePatterns = [...config.exclude]
+
+  return findFilesInTree(tree, patterns, {
+    ignorePatterns: excludePatterns,
+  })
+}
+
+/**
+ * Parses package.json files from a VFS tree and extracts metadata.
+ *
+ * @param tree - VFS tree instance
+ * @param workspaceRoot - Workspace root path
+ * @param packageJsonPaths - Relative paths to package.json files
+ * @returns Array of raw package info objects
+ */
+function parsePackageJsonFilesFromTree(tree: Tree, workspaceRoot: string, packageJsonPaths: string[]): RawPackageInfo[] {
+  const packages: RawPackageInfo[] = []
+
+  for (const relativePath of packageJsonPaths) {
+    const absolutePath = join(workspaceRoot, relativePath)
+    const projectPath = dirname(absolutePath)
+
+    try {
+      const content = tree.read(relativePath, 'utf-8')
+      if (!content) {
+        continue
+      }
+
+      const packageJson = <PackageJson>parse(content)
 
       // Skip packages without a name
       if (!packageJson.name) {

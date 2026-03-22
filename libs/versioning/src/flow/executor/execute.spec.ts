@@ -1620,7 +1620,10 @@ describe('executeFlow - Nx workspace project discovery', () => {
     })
 
     expect(logger.debug).toHaveBeenCalledWith(expect.stringContaining('not found in Nx project graph'))
-    expect(workspaceDiscovery.discoverProjectByName).toHaveBeenCalledWith('lib-discovered', { workspaceRoot: '/workspace' })
+    expect(workspaceDiscovery.discoverProjectByName).toHaveBeenCalledWith(
+      'lib-discovered',
+      expect.objectContaining({ workspaceRoot: '/workspace', tree })
+    )
     expect(result.status).toBe('success')
   })
 })
@@ -1657,7 +1660,10 @@ describe('executeFlow - workspace discovery fallback', () => {
     })
 
     expect(projectScopeNx.discoverNxProjects).not.toHaveBeenCalled()
-    expect(workspaceDiscovery.discoverProjectByName).toHaveBeenCalledWith('my-lib', { workspaceRoot: '/workspace' })
+    expect(workspaceDiscovery.discoverProjectByName).toHaveBeenCalledWith(
+      'my-lib',
+      expect.objectContaining({ workspaceRoot: '/workspace', tree })
+    )
     expect(result.status).toBe('success')
     expect(logger.debug).toHaveBeenCalledWith(expect.stringContaining('workspace discovery'))
   })

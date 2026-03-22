@@ -95,13 +95,15 @@ interface ProjectRootResolution {
  * @param projectName - Project name (e.g., 'lib-versioning')
  * @param providedRoot - Explicitly provided project root (optional)
  * @param logger - Logger instance
+ * @param tree - Optional VFS tree for VFS-aware discovery
  * @returns Resolution result with path and source, or null if not found
  */
 function discoverProjectRoot(
   workspaceRoot: string,
   projectName: string,
   providedRoot: string | undefined,
-  logger: Logger
+  logger: Logger,
+  tree?: Tree
 ): ProjectRootResolution | null {
   // 1. Explicit projectRoot provided (preferred - from Nx executor)
   if (providedRoot) {
@@ -128,9 +130,10 @@ function discoverProjectRoot(
   }
 
   // 3. Try workspace discovery (handles any monorepo structure)
+  // Pass tree for VFS-aware discovery when available
   logger.debug('Attempting workspace discovery via discoverProjectByName')
   try {
-    const project = discoverProjectByName(projectName, { workspaceRoot })
+    const project = discoverProjectByName(projectName, { workspaceRoot, tree })
     if (project) {
       logger.debug(`Discovered project root via workspace discovery: ${project.path}`)
       return { projectRoot: project.path, source: 'workspace-discovery' }
@@ -262,8 +265,8 @@ export async function executeFlow(
   const registry = options.registry ?? createRegistry('npm')
   const git = options.git ?? createGitClient({ ...DEFAULT_GIT_CLIENT_CONFIG, cwd: workspaceRoot })
 
-  // Resolve project root with smart discovery
-  const resolution = discoverProjectRoot(workspaceRoot, projectName, options.projectRoot, flowLogger)
+  // Resolve project root with smart discovery (VFS-aware when tree available)
+  const resolution = discoverProjectRoot(workspaceRoot, projectName, options.projectRoot, flowLogger, tree)
 
   // Fail early if project cannot be discovered
   if (!resolution) {
