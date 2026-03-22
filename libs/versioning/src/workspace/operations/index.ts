@@ -10,7 +10,13 @@ export { DEFAULT_CASCADE_OPTIONS, calculateCascadeBumps, calculateCascadeBumpsFr
 
 // Batch update
 export type { BatchUpdateResult, UpdatedPackage, FailedUpdate, BatchUpdateOptions } from './batch-update'
-export { DEFAULT_BATCH_UPDATE_OPTIONS, applyBumps, updatePackageVersionInTree, summarizeBatchUpdate } from './batch-update'
+export {
+  DEFAULT_BATCH_UPDATE_OPTIONS,
+  applyBumps,
+  updatePackageVersionInTree,
+  updateDependencyReferencesInTree,
+  summarizeBatchUpdate,
+} from './batch-update'
 
 // Validation
 export type { ValidationResult, ValidationReport, ValidationCheckResult } from './validate'

@@ -64,7 +64,9 @@ module.exports = [
   },
   {
     files: ['**/*.ts', '**/*.tsx', '**/*.js', '**/*.jsx'],
-    rules: {},
+    rules: {
+      'no-useless-assignment': 'error',
+    },
   },
   {
     files: ['**/package.json'],

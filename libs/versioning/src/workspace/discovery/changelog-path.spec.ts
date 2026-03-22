@@ -1,8 +1,7 @@
 import { getExpectedChangelogPath, hasChangelog } from './changelog-path'
 
-jest.mock('@hyperfrontend/project-scope', () => ({
+jest.mock('@hyperfrontend/project-scope/core/fs', () => ({
   exists: jest.fn(),
-  findFiles: jest.fn(),
 }))
 
 describe('getExpectedChangelogPath', () => {
@@ -33,14 +32,14 @@ describe('getExpectedChangelogPath', () => {
 })
 
 describe('hasChangelog', () => {
-  const projectScope = require('@hyperfrontend/project-scope')
+  const projectScopeFs = require('@hyperfrontend/project-scope/core/fs')
 
   beforeEach(() => {
     jest.clearAllMocks()
   })
 
   it('returns true when changelog exists', () => {
-    projectScope.exists.mockImplementation((path: string) => {
+    projectScopeFs.exists.mockImplementation((path: string) => {
       return path.includes('CHANGELOG.md')
     })
 
@@ -48,7 +47,7 @@ describe('hasChangelog', () => {
   })
 
   it('returns false when no changelog exists', () => {
-    projectScope.exists.mockReturnValue(false)
+    projectScopeFs.exists.mockReturnValue(false)
 
     expect(hasChangelog('/workspace/libs/my-lib')).toBe(false)
   })

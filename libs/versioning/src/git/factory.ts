@@ -33,6 +33,48 @@ import {
 } from './operations/status'
 
 /**
+ * Validates a remote name to prevent command injection attacks.
+ *
+ * Git commands like fetch, pull, and push can execute arbitrary commands
+ * if a malicious remote name starting with '--' is passed (e.g., '--upload-pack=cmd').
+ *
+ * Allowed characters: a-z, A-Z, 0-9, underscore, hyphen (not first), dot
+ *
+ * @param remote - The remote name to validate
+ * @returns True if the remote name is safe
+ * @see https://cwe.mitre.org/data/definitions/88.html (Argument Injection)
+ */
+function isValidRemoteName(remote: string): boolean {
+  if (!remote || typeof remote !== 'string') {
+    return false
+  }
+
+  for (let i = 0; i < remote.length; i++) {
+    const code = remote.charCodeAt(i)
+
+    // Allow: a-z, A-Z, 0-9
+    if (
+      (code >= 97 && code <= 122) || // a-z
+      (code >= 65 && code <= 90) || // A-Z
+      (code >= 48 && code <= 57) || // 0-9
+      code === 95 // _
+    ) {
+      continue
+    }
+
+    // Allow hyphen and dot, but not as first character
+    if (i > 0 && (code === 45 || code === 46)) {
+      // - or .
+      continue
+    }
+
+    return false
+  }
+
+  return true
+}
+
+/**
  * Git client configuration.
  */
 export interface GitClientConfig {
@@ -482,6 +524,10 @@ function getRemoteBranches(options: { cwd: string; timeout: number }, remote?: s
  * @returns True if fetch succeeded
  */
 function fetch(options: { cwd: string; timeout: number }, remote = 'origin', fetchOptions?: { prune?: boolean; tags?: boolean }): boolean {
+  // Validate remote name to prevent command injection (CWE-88)
+  if (!isValidRemoteName(remote)) {
+    return false
+  }
   const args: string[] = ['fetch', remote]
 
   if (fetchOptions?.prune) {
@@ -515,6 +561,10 @@ function fetch(options: { cwd: string; timeout: number }, remote = 'origin', fet
  * @returns True if pull succeeded
  */
 function pull(options: { cwd: string; timeout: number }, remote = 'origin', branch?: string): boolean {
+  // Validate remote name to prevent command injection (CWE-88)
+  if (!isValidRemoteName(remote)) {
+    return false
+  }
   const args: string[] = ['pull', remote]
   if (branch) {
     args.push(branch)
@@ -552,6 +602,10 @@ function push(
   branch?: string,
   pushOptions?: { force?: boolean; setUpstream?: boolean }
 ): boolean {
+  // Validate remote name to prevent command injection (CWE-88)
+  if (!isValidRemoteName(remote)) {
+    return false
+  }
   const args: string[] = ['push', remote]
 
   if (branch) {
@@ -587,6 +641,10 @@ function push(
  * @returns The remote URL, or null if not found
  */
 function getRemoteUrl(options: { cwd: string; timeout: number }, remoteName = 'origin'): string | null {
+  // Validate remote name to prevent command injection (CWE-88)
+  if (!isValidRemoteName(remoteName)) {
+    return null
+  }
   try {
     const output = execFileSync('git', ['remote', 'get-url', remoteName], {
       encoding: 'utf-8',

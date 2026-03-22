@@ -98,15 +98,17 @@ flowchart LR
 
 ### Discovery
 
-| Function                            | Description                                      | Implementation                                               |
-| ----------------------------------- | ------------------------------------------------ | ------------------------------------------------------------ |
-| `discoverPackages(root, opts?)`     | Discover all packages in workspace               | [packages.ts](./discovery/packages.ts)                       |
-| `discoverProject(dir)`              | Discover single project from directory           | [packages.ts](./discovery/packages.ts)                       |
-| `buildDependencyGraph(projects)`    | Build dependency graph from projects             | [dependencies.ts](./discovery/dependencies.ts)               |
-| `getTopologicalOrder(workspace)`    | Get packages in topological build order          | [dependencies.ts](./discovery/dependencies.ts)               |
-| `getTransitiveDependents(ws, pkg)`  | Get all packages depending on pkg (transitively) | [dependencies.ts](./discovery/dependencies.ts)               |
-| `discoverAllChangelogs(root)`       | Find all changelog files in workspace            | [discover-changelogs.ts](./discovery/discover-changelogs.ts) |
-| `findProjectChangelog(projectPath)` | Find changelog for specific project              | [changelog-path.ts](./discovery/changelog-path.ts)           |
+| Function                              | Description                                      | Implementation                                               |
+| ------------------------------------- | ------------------------------------------------ | ------------------------------------------------------------ |
+| `discoverPackages(root, opts?)`       | Discover all packages in workspace               | [packages.ts](./discovery/packages.ts)                       |
+| `discoverProject(dir)`                | Discover single project from directory           | [packages.ts](./discovery/packages.ts)                       |
+| `buildDependencyGraph(projects)`      | Build dependency graph from projects             | [dependencies.ts](./discovery/dependencies.ts)               |
+| `getTopologicalOrder(workspace)`      | Get packages in topological build order          | [dependencies.ts](./discovery/dependencies.ts)               |
+| `getTransitiveDependents(ws, pkg)`    | Get all packages depending on pkg (transitively) | [dependencies.ts](./discovery/dependencies.ts)               |
+| `discoverAllChangelogs(root)`         | Find all changelog files in workspace            | [discover-changelogs.ts](./discovery/discover-changelogs.ts) |
+| `findProjectChangelog(projectPath)`   | Find changelog for specific project              | [changelog-path.ts](./discovery/changelog-path.ts)           |
+| `findProjectChangelogInTree(tree, p)` | VFS-aware: find changelog in virtual tree        | [discover-changelogs.ts](./discovery/discover-changelogs.ts) |
+| `findChangelogsInTree(tree, root)`    | VFS-aware: find all changelogs in virtual tree   | [discover-changelogs.ts](./discovery/discover-changelogs.ts) |
 
 ### Workspace Queries
 

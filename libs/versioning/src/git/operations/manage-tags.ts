@@ -120,6 +120,10 @@ export function deleteTag(name: string, options: GitTagOptions = {}): boolean {
  * pushTag('v1.0.0', 'upstream')
  */
 export function pushTag(name: string, remote = 'origin', options: GitTagOptions = {}): boolean {
+  // Reject remotes starting with '-' to prevent git option injection (CWE-88)
+  if (remote.startsWith('-')) {
+    return false
+  }
   const opts = { ...DEFAULT_TAG_OPTIONS, ...options }
   const safeName = escapeGitRef(name)
   const safeRemote = escapeGitRef(remote)
@@ -136,10 +140,6 @@ export function pushTag(name: string, remote = 'origin', options: GitTagOptions 
     return false
   }
 }
-
-// ============================================================================
-// Security helpers
-// ============================================================================
 
 /**
  * Maximum message length.

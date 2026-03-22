@@ -1,13 +1,9 @@
-/**
- * Changelog Discovery
- *
- * Discovers CHANGELOG.md files within workspace projects.
- */
-
-import { join, dirname } from 'node:path'
+/* eslint-disable @nx/enforce-module-boundaries */
+import type { Tree } from '@hyperfrontend/project-scope/vfs'
+import { join, dirname, relative } from 'node:path'
 import { createMap } from '@hyperfrontend/immutable-api-utils/built-in-copy/map'
-// eslint-disable-next-line @nx/enforce-module-boundaries
-import { exists, findFiles } from '@hyperfrontend/project-scope'
+import { exists } from '@hyperfrontend/project-scope/core/fs'
+import { findFiles } from '@hyperfrontend/project-scope/project/traversal'
 
 /**
  * Common changelog file names in priority order.
@@ -82,6 +78,49 @@ export function findProjectChangelog(projectPath: string): string | null {
     const changelogPath = join(projectPath, name)
     if (exists(changelogPath)) {
       return changelogPath
+    }
+  }
+  return null
+}
+
+/**
+ * Finds changelog files for a list of packages using VFS tree.
+ * Returns a map of project path to changelog absolute path.
+ *
+ * @param tree - VFS tree instance
+ * @param packages - List of packages to find changelogs for
+ * @returns Map of project path to changelog path
+ */
+export function findChangelogsInTree(tree: Tree, packages: readonly PackageInfo[]): Map<string, string> {
+  const result = createMap<string, string>()
+
+  for (const pkg of packages) {
+    const changelogPath = findProjectChangelogInTree(tree, pkg.path)
+    if (changelogPath) {
+      result.set(pkg.path, changelogPath)
+    }
+  }
+
+  return result
+}
+
+/**
+ * Finds the changelog file for a single project using VFS tree.
+ * Checks for common changelog names in order of priority.
+ *
+ * @param tree - VFS tree instance
+ * @param projectPath - Path to project directory
+ * @returns Absolute path to changelog or null if not found
+ */
+export function findProjectChangelogInTree(tree: Tree, projectPath: string): string | null {
+  // Convert absolute project path to relative path for tree operations
+  const relativePath = projectPath.startsWith(tree.root) ? relative(tree.root, projectPath) : projectPath
+
+  for (const name of CHANGELOG_NAMES) {
+    const changelogRelativePath = relativePath ? `${relativePath}/${name}` : name
+    const changelogAbsPath = join(projectPath, name)
+    if (tree.isFile(changelogRelativePath)) {
+      return changelogAbsPath
     }
   }
   return null

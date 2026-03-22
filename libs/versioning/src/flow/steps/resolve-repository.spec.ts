@@ -668,7 +668,7 @@ describe('resolve-repository step', () => {
         const step = createResolveRepositoryStep()
         await step.execute(ctx)
 
-        expect(logger.debug).toHaveBeenCalledWith('package.json not found at /workspace/libs/test/package.json')
+        expect(logger.debug).toHaveBeenCalledWith('package.json not found or not a file at /workspace/libs/test/package.json')
       })
 
       it('logs debug when successfully inferring from source', async () => {

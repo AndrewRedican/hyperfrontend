@@ -92,6 +92,7 @@ export default async function versionExecutor(options: VersionExecutorSchema, co
     releaseAs: options.releaseAs,
     repository: options.repository ?? 'inferred', // Default to auto-detect for compare URLs
     scopeFiltering: options.scopeFiltering,
+    backupChangelog: options.backupChangelog,
   }
 
   logger.debug(
@@ -104,6 +105,9 @@ export default async function versionExecutor(options: VersionExecutorSchema, co
   const flowResult = await executeFlow(flow, projectName, workspaceRoot, {
     dryRun: options.dryRun,
     verbose: options.verbose ?? false,
+    showDiff: options.showDiff,
+    diffFormat: options.diffFormat,
+    rollbackOnFailure: options.rollbackOnFailure,
     projectRoot,
   })
 

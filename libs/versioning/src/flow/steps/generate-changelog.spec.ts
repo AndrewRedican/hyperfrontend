@@ -1906,4 +1906,139 @@ describe('Write Changelog Step', () => {
       expect(tree.write).toHaveBeenCalledWith('/workspace/libs/test/CHANGELOG.md', expect.any(String))
     })
   })
+
+  describe('execute - backupChangelog feature', () => {
+    it('creates backup when backupChangelog enabled and changelog exists', async () => {
+      const existingChangelog = `# Changelog
+
+## [1.0.0] - 2025-01-01
+
+### Features
+
+- Existing feature
+`
+      const step = createWriteChangelogStep()
+      const tree = createMockTree({ files: { '/workspace/libs/test/CHANGELOG.md': existingChangelog } })
+      const ctx: FlowContext = {
+        ...createMockContext(
+          {
+            nextVersion: '1.1.0',
+            bumpType: 'minor',
+            changelogEntry: createMockChangelogEntry({
+              version: '1.1.0',
+              sections: [{ type: 'features' as const, heading: 'Features', items: [createMockChangelogItem('New feature')] }],
+            }),
+          },
+          { backupChangelog: true }
+        ),
+        tree,
+      }
+
+      const result = await step.execute(ctx)
+
+      expect(result.status).toBe('success')
+      expect(tree.rename).toHaveBeenCalledWith('/workspace/libs/test/CHANGELOG.md', '/workspace/libs/test/CHANGELOG.backup.md')
+    })
+
+    it('deletes backup after successful write', async () => {
+      const existingChangelog = `# Changelog
+
+## [1.0.0] - 2025-01-01
+
+### Features
+
+- Existing feature
+`
+      const step = createWriteChangelogStep()
+      const files: Record<string, string> = { '/workspace/libs/test/CHANGELOG.md': existingChangelog }
+      const tree = createMockTree({ files })
+      // Mock exists to also return true for backup path after rename
+      const originalExists = tree.exists.bind(tree)
+      tree.exists = jest.fn((path: string) => {
+        if (path === '/workspace/libs/test/CHANGELOG.backup.md') return true
+        return originalExists(path)
+      })
+      // Mock read to return content from backup path after rename
+      const originalRead = tree.read.bind(tree)
+      tree.read = jest.fn((path: string, encoding?: string) => {
+        if (path === '/workspace/libs/test/CHANGELOG.backup.md') {
+          return encoding ? existingChangelog : Buffer.from(existingChangelog)
+        }
+        return originalRead(path, encoding as BufferEncoding)
+      }) as typeof tree.read
+      const ctx: FlowContext = {
+        ...createMockContext(
+          {
+            nextVersion: '1.1.0',
+            bumpType: 'minor',
+            changelogEntry: createMockChangelogEntry({
+              version: '1.1.0',
+              sections: [{ type: 'features' as const, heading: 'Features', items: [createMockChangelogItem('New feature')] }],
+            }),
+          },
+          { backupChangelog: true }
+        ),
+        tree,
+      }
+
+      const result = await step.execute(ctx)
+
+      expect(result.status).toBe('success')
+      expect(tree.delete).toHaveBeenCalledWith('/workspace/libs/test/CHANGELOG.backup.md')
+    })
+
+    it('does not create backup when backupChangelog disabled', async () => {
+      const existingChangelog = `# Changelog
+
+## [1.0.0] - 2025-01-01
+
+### Features
+
+- Existing feature
+`
+      const step = createWriteChangelogStep()
+      const tree = createMockTree({ files: { '/workspace/libs/test/CHANGELOG.md': existingChangelog } })
+      const ctx: FlowContext = {
+        ...createMockContext({
+          nextVersion: '1.1.0',
+          bumpType: 'minor',
+          changelogEntry: createMockChangelogEntry({
+            version: '1.1.0',
+            sections: [{ type: 'features' as const, heading: 'Features', items: [createMockChangelogItem('New feature')] }],
+          }),
+        }),
+        tree,
+      }
+
+      const result = await step.execute(ctx)
+
+      expect(result.status).toBe('success')
+      expect(tree.rename).not.toHaveBeenCalled()
+    })
+
+    it('does not create backup when no existing changelog', async () => {
+      const step = createWriteChangelogStep()
+      const tree = createMockTree({ files: {} })
+      const ctx: FlowContext = {
+        ...createMockContext(
+          {
+            nextVersion: '1.0.0',
+            bumpType: 'minor',
+            changelogEntry: createMockChangelogEntry({
+              version: '1.0.0',
+              sections: [{ type: 'features' as const, heading: 'Features', items: [createMockChangelogItem('Initial feature')] }],
+            }),
+          },
+          { backupChangelog: true }
+        ),
+        tree,
+      }
+
+      const result = await step.execute(ctx)
+
+      expect(result.status).toBe('success')
+      expect(tree.rename).not.toHaveBeenCalled()
+      expect(result.message).toContain('Created')
+    })
+  })
 })

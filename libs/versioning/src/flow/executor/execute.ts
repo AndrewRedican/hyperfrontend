@@ -1,21 +1,26 @@
 /* eslint-disable @nx/enforce-module-boundaries */
 import type { Logger } from '@hyperfrontend/logging'
-import type { Tree } from '@hyperfrontend/project-scope'
+import type { FileDiff, Tree } from '@hyperfrontend/project-scope'
 import type { GitClient } from '../../git/factory'
 import type { Registry } from '../../registry/models/registry'
 import type { VersionFlow } from '../models/flow'
-import type { FlowConfig, FlowContext, FlowResult, FlowState, FlowStatus, FlowStepResultWithId } from '../models/types'
+import type { FileChangeInfo, FlowConfig, FlowContext, FlowResult, FlowState, FlowStatus, FlowStepResultWithId } from '../models/types'
 import { dateNow } from '@hyperfrontend/immutable-api-utils/built-in-copy/date'
 import { createError } from '@hyperfrontend/immutable-api-utils/built-in-copy/error'
 import { parse } from '@hyperfrontend/immutable-api-utils/built-in-copy/json'
 import { createSet } from '@hyperfrontend/immutable-api-utils/built-in-copy/set'
 import { logger as defaultLogger } from '@hyperfrontend/logging'
-import { createTree, commitChanges } from '@hyperfrontend/project-scope'
+import { commitChanges, createTree, formatUnifiedDiff, generateAllDiffs, rollbackChanges } from '@hyperfrontend/project-scope'
 import { isNxWorkspace, discoverNxProjects } from '@hyperfrontend/project-scope/nx'
 import { createGitClient, DEFAULT_GIT_CLIENT_CONFIG } from '../../git/factory'
 import { createRegistry } from '../../registry/factory'
 import { discoverProjectByName } from '../../workspace/discovery'
 import { DEFAULT_FLOW_CONFIG } from '../models/types'
+
+/**
+ * Output format for diff preview.
+ */
+export type DiffFormat = 'unified' | 'summary'
 
 /**
  * Options for flow execution.
@@ -26,6 +31,22 @@ export interface ExecuteOptions {
 
   /** Verbose logging */
   verbose?: boolean
+
+  /** Show unified diff of changes before committing */
+  showDiff?: boolean
+
+  /** Output format for diff: 'unified' (full patch) or 'summary' (stats only) */
+  diffFormat?: DiffFormat
+
+  /**
+   * Whether to rollback all pending changes on step failure.
+   *
+   * When true (default), pending VFS changes are discarded when a step fails
+   * and `continueOnError` is false. This ensures no partial state remains.
+   *
+   * @default true
+   */
+  rollbackOnFailure?: boolean
 
   /** Custom logger (defaults to console) */
   logger?: Logger
@@ -74,13 +95,15 @@ interface ProjectRootResolution {
  * @param projectName - Project name (e.g., 'lib-versioning')
  * @param providedRoot - Explicitly provided project root (optional)
  * @param logger - Logger instance
+ * @param tree - Optional VFS tree for VFS-aware discovery
  * @returns Resolution result with path and source, or null if not found
  */
 function discoverProjectRoot(
   workspaceRoot: string,
   projectName: string,
   providedRoot: string | undefined,
-  logger: Logger
+  logger: Logger,
+  tree?: Tree
 ): ProjectRootResolution | null {
   // 1. Explicit projectRoot provided (preferred - from Nx executor)
   if (providedRoot) {
@@ -107,9 +130,10 @@ function discoverProjectRoot(
   }
 
   // 3. Try workspace discovery (handles any monorepo structure)
+  // Pass tree for VFS-aware discovery when available
   logger.debug('Attempting workspace discovery via discoverProjectByName')
   try {
-    const project = discoverProjectByName(projectName, { workspaceRoot })
+    const project = discoverProjectByName(projectName, { workspaceRoot, tree })
     if (project) {
       logger.debug(`Discovered project root via workspace discovery: ${project.path}`)
       return { projectRoot: project.path, source: 'workspace-discovery' }
@@ -241,8 +265,8 @@ export async function executeFlow(
   const registry = options.registry ?? createRegistry('npm')
   const git = options.git ?? createGitClient({ ...DEFAULT_GIT_CLIENT_CONFIG, cwd: workspaceRoot })
 
-  // Resolve project root with smart discovery
-  const resolution = discoverProjectRoot(workspaceRoot, projectName, options.projectRoot, flowLogger)
+  // Resolve project root with smart discovery (VFS-aware when tree available)
+  const resolution = discoverProjectRoot(workspaceRoot, projectName, options.projectRoot, flowLogger, tree)
 
   // Fail early if project cannot be discovered
   if (!resolution) {
@@ -257,11 +281,11 @@ export async function executeFlow(
 
   const { projectRoot, source: projectRootSource } = resolution
 
-  // Early validation: ensure project root is valid
+  // Early validation: ensure project root has a valid package.json file
   const packageJsonPath = `${projectRoot}/package.json`
-  if (!tree.exists(packageJsonPath)) {
+  if (!tree.isFile(packageJsonPath)) {
     const errorMsg =
-      `Project root validation failed: ${packageJsonPath} does not exist. ` +
+      `Project root validation failed: ${packageJsonPath} does not exist or is not a file. ` +
       `Resolved projectRoot="${projectRoot}" (source: ${projectRootSource}) from projectName="${projectName}".`
     flowLogger.error(errorMsg)
     return {
@@ -355,6 +379,14 @@ export async function executeFlow(
       } else if (result.status === 'failed') {
         flowLogger.error(`Step "${step.name}" failed: ${result.message ?? result.error?.message ?? 'Unknown error'}`)
         if (!step.continueOnError) {
+          // Rollback pending changes on failure (default behavior)
+          if (options.rollbackOnFailure !== false) {
+            const changes = tree.listChanges()
+            if (changes.length > 0) {
+              flowLogger.warn(`Rolling back ${changes.length} pending file change(s)`)
+              rollbackChanges(tree)
+            }
+          }
           failed = true
           break
         }
@@ -373,9 +405,53 @@ export async function executeFlow(
       })
 
       if (!step.continueOnError) {
+        // Rollback pending changes on failure (default behavior)
+        if (options.rollbackOnFailure !== false) {
+          const changes = tree.listChanges()
+          if (changes.length > 0) {
+            flowLogger.warn(`Rolling back ${changes.length} pending file change(s)`)
+            rollbackChanges(tree)
+          }
+        }
         failed = true
         break
       }
+    }
+  }
+
+  // Capture pending file changes for observability
+  const pendingChanges = tree.listChanges()
+  const modifiedFiles: readonly FileChangeInfo[] = pendingChanges.map((change) => ({
+    path: change.path,
+    changeType: change.type,
+  }))
+
+  // Generate diffs for pending changes (for observability and showDiff output)
+  let diffs: readonly FileDiff[] | undefined
+  if (options.showDiff && pendingChanges.length > 0) {
+    diffs = generateAllDiffs(tree)
+
+    // Log diffs based on format
+    flowLogger.info(`\n${'='.repeat(60)}\nPending changes:\n${'='.repeat(60)}`)
+
+    for (const diff of diffs) {
+      if (options.diffFormat === 'summary') {
+        // Summary mode: just show stats
+        flowLogger.info(`${diff.path}: +${diff.additions} -${diff.deletions}`)
+      } else {
+        // Unified mode (default): show full diff
+        flowLogger.info(formatUnifiedDiff(diff))
+      }
+    }
+  } else if (options.showDiff && pendingChanges.length === 0) {
+    flowLogger.info('No file changes to commit')
+  }
+
+  // Log changes when verbose (only if not already showing diffs)
+  if (options.verbose && !options.showDiff && pendingChanges.length > 0) {
+    flowLogger.info(`Pending changes: ${pendingChanges.length} file(s)`)
+    for (const change of pendingChanges) {
+      flowLogger.info(`  [${change.type}] ${change.path}`)
     }
   }
 
@@ -388,7 +464,14 @@ export async function executeFlow(
       flowLogger.error(`Failed to commit file changes: ${error}`)
     }
   } else if (config.dryRun) {
-    flowLogger.info('Dry run mode - no changes written to disk')
+    if (pendingChanges.length > 0) {
+      flowLogger.info(`Dry run - would modify ${pendingChanges.length} file(s):`)
+      for (const change of pendingChanges) {
+        flowLogger.info(`  [${change.type}] ${change.path}`)
+      }
+    } else {
+      flowLogger.info('Dry run mode - no changes to write')
+    }
   }
 
   const duration = dateNow() - startTime
@@ -412,6 +495,8 @@ export async function executeFlow(
     state: context.state,
     duration,
     summary,
+    modifiedFiles,
+    ...(diffs && { diffs }),
   }
 }
 

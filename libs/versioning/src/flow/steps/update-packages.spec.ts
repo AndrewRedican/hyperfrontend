@@ -26,7 +26,7 @@ function createMockTree(options: MockTreeOptions = {}): Tree {
   const { readFails = false } = options
   const files = new Map(Object.entries(options.files ?? {}))
 
-  return {
+  const tree = {
     root: '/workspace',
     read(path: string, encoding?: string) {
       if (readFails) {
@@ -47,7 +47,18 @@ function createMockTree(options: MockTreeOptions = {}): Tree {
     isFile: (path: string) => files.has(path),
     children: () => [],
     listChanges: () => [],
-  } as unknown as Tree
+    changeFile: (path: string, transform: (content: Buffer) => Buffer) => {
+      const content = tree.read(path, undefined)
+      if (content === null) {
+        throw new Error(`File not found: ${path}`)
+      }
+      const buffer = typeof content === 'string' ? Buffer.from(content) : <Buffer>content
+      const result = transform(buffer)
+      tree.write(path, result.toString())
+    },
+  }
+
+  return tree as unknown as Tree
 }
 
 function createMockRegistry(): Registry {
@@ -187,7 +198,7 @@ describe('Update Packages Step', () => {
 
       expect(result.status).toBe('failed')
       expect(result.error).toBeDefined()
-      expect(result.message).toContain('Could not read package.json')
+      expect(result.message).toContain('File not found')
     })
 
     it('fails when reading package.json throws', async () => {
@@ -201,7 +212,8 @@ describe('Update Packages Step', () => {
       const result = await step.execute(ctx)
 
       expect(result.status).toBe('failed')
-      expect(result.message).toContain('Failed to read package.json')
+      expect(result.message).toContain('Failed to update package.json')
+      expect(result.message).toContain('Mock read failed')
     })
   })
 
@@ -221,7 +233,7 @@ describe('Update Packages Step', () => {
       const result = await step.execute(ctx)
 
       expect(result.status).toBe('failed')
-      expect(result.message).toContain('Failed to parse package.json')
+      expect(result.message).toContain('Failed to update package.json')
     })
   })
 
