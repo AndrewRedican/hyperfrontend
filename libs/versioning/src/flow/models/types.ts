@@ -408,6 +408,16 @@ export interface FlowStepResultWithId extends FlowStepResult {
 export type FlowStatus = 'success' | 'partial' | 'failed' | 'skipped'
 
 /**
+ * Information about a file change.
+ */
+export interface FileChangeInfo {
+  /** Relative path from workspace root */
+  readonly path: string
+  /** Type of change */
+  readonly changeType: 'CREATE' | 'UPDATE' | 'DELETE'
+}
+
+/**
  * Complete result of flow execution.
  */
 export interface FlowResult {
@@ -425,4 +435,7 @@ export interface FlowResult {
 
   /** Summary message */
   readonly summary: string
+
+  /** Files that were modified (or would be in dry-run) */
+  readonly modifiedFiles?: readonly FileChangeInfo[]
 }

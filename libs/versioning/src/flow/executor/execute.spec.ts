@@ -26,7 +26,12 @@ const projectScopeNx = require('@hyperfrontend/project-scope/nx')
 const workspaceDiscovery = require('../../workspace/discovery')
 const projectScope = require('@hyperfrontend/project-scope')
 
-function createMockTree(files: Record<string, string> = {}): Tree {
+interface MockFileChange {
+  path: string
+  type: 'CREATE' | 'UPDATE' | 'DELETE'
+}
+
+function createMockTree(files: Record<string, string> = {}, changes: MockFileChange[] = []): Tree {
   const fileSystem = new Map(Object.entries(files))
 
   return {
@@ -61,7 +66,7 @@ function createMockTree(files: Record<string, string> = {}): Tree {
       return []
     },
     listChanges() {
-      return []
+      return changes
     },
   } as unknown as Tree
 }
@@ -1786,7 +1791,7 @@ describe('executeFlow - VFS commit behavior', () => {
     })
 
     expect(projectScope.commitChanges).not.toHaveBeenCalled()
-    expect(logger.info).toHaveBeenCalledWith('Dry run mode - no changes written to disk')
+    expect(logger.info).toHaveBeenCalledWith('Dry run mode - no changes to write')
   })
 
   it('does not commit changes when flow fails', async () => {
@@ -1820,5 +1825,115 @@ describe('executeFlow - VFS commit behavior', () => {
 
     expect(projectScope.commitChanges).not.toHaveBeenCalled()
     expect(result.status).toBe('failed')
+  })
+
+  it('populates modifiedFiles in result from tree.listChanges()', async () => {
+    const logger = createMockLogger()
+    const flow = {
+      id: 'test',
+      name: 'Test Flow',
+      config: { dryRun: false },
+      steps: [createStep('step1', 'Step 1', async () => createSuccessResult('OK'))],
+    }
+
+    const mockChanges: MockFileChange[] = [
+      { path: 'libs/test/package.json', type: 'UPDATE' },
+      { path: 'libs/test/CHANGELOG.md', type: 'UPDATE' },
+    ]
+
+    const tree = createMockTree(
+      {
+        '/workspace/libs/test/package.json': JSON.stringify({
+          name: '@test/pkg',
+          version: '1.0.0',
+        }),
+      },
+      mockChanges
+    )
+
+    const result = await executeFlow(flow, 'lib-test', '/workspace', {
+      tree,
+      registry: createMockRegistry(),
+      git: createMockGitClient(),
+      logger,
+      projectRoot: 'libs/test',
+    })
+
+    expect(result.modifiedFiles).toEqual([
+      { path: 'libs/test/package.json', changeType: 'UPDATE' },
+      { path: 'libs/test/CHANGELOG.md', changeType: 'UPDATE' },
+    ])
+  })
+
+  it('logs pending changes when verbose is true', async () => {
+    const logger = createMockLogger()
+    const flow = {
+      id: 'test',
+      name: 'Test Flow',
+      config: { dryRun: false },
+      steps: [createStep('step1', 'Step 1', async () => createSuccessResult('OK'))],
+    }
+
+    const mockChanges: MockFileChange[] = [{ path: 'libs/test/package.json', type: 'UPDATE' }]
+
+    const tree = createMockTree(
+      {
+        '/workspace/libs/test/package.json': JSON.stringify({
+          name: '@test/pkg',
+          version: '1.0.0',
+        }),
+      },
+      mockChanges
+    )
+
+    await executeFlow(flow, 'lib-test', '/workspace', {
+      tree,
+      registry: createMockRegistry(),
+      git: createMockGitClient(),
+      logger,
+      verbose: true,
+      projectRoot: 'libs/test',
+    })
+
+    expect(logger.info).toHaveBeenCalledWith('Pending changes: 1 file(s)')
+    expect(logger.info).toHaveBeenCalledWith('  [UPDATE] libs/test/package.json')
+  })
+
+  it('shows would-modify message in dry-run mode with pending changes', async () => {
+    const logger = createMockLogger()
+    const flow = {
+      id: 'test',
+      name: 'Test Flow',
+      config: { dryRun: true },
+      steps: [createStep('step1', 'Step 1', async () => createSuccessResult('OK'))],
+    }
+
+    const mockChanges: MockFileChange[] = [
+      { path: 'libs/test/package.json', type: 'UPDATE' },
+      { path: 'libs/test/CHANGELOG.md', type: 'CREATE' },
+    ]
+
+    const tree = createMockTree(
+      {
+        '/workspace/libs/test/package.json': JSON.stringify({
+          name: '@test/pkg',
+          version: '1.0.0',
+        }),
+      },
+      mockChanges
+    )
+
+    await executeFlow(flow, 'lib-test', '/workspace', {
+      tree,
+      registry: createMockRegistry(),
+      git: createMockGitClient(),
+      logger,
+      projectRoot: 'libs/test',
+    })
+
+    expect(projectScope.commitChanges).not.toHaveBeenCalled()
+    expect(logger.info).toHaveBeenCalledWith('Dry run - would modify 2 file(s):')
+    expect(logger.info).toHaveBeenCalledWith('  [UPDATE] libs/test/package.json')
+    expect(logger.info).toHaveBeenCalledWith('  [CREATE] libs/test/CHANGELOG.md')
   })
 })

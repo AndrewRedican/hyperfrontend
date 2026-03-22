@@ -4,7 +4,7 @@ import type { Tree } from '@hyperfrontend/project-scope'
 import type { GitClient } from '../../git/factory'
 import type { Registry } from '../../registry/models/registry'
 import type { VersionFlow } from '../models/flow'
-import type { FlowConfig, FlowContext, FlowResult, FlowState, FlowStatus, FlowStepResultWithId } from '../models/types'
+import type { FileChangeInfo, FlowConfig, FlowContext, FlowResult, FlowState, FlowStatus, FlowStepResultWithId } from '../models/types'
 import { dateNow } from '@hyperfrontend/immutable-api-utils/built-in-copy/date'
 import { createError } from '@hyperfrontend/immutable-api-utils/built-in-copy/error'
 import { parse } from '@hyperfrontend/immutable-api-utils/built-in-copy/json'
@@ -379,6 +379,21 @@ export async function executeFlow(
     }
   }
 
+  // Capture pending file changes for observability
+  const pendingChanges = tree.listChanges()
+  const modifiedFiles: readonly FileChangeInfo[] = pendingChanges.map((change) => ({
+    path: change.path,
+    changeType: change.type,
+  }))
+
+  // Log changes when verbose
+  if (options.verbose && pendingChanges.length > 0) {
+    flowLogger.info(`Pending changes: ${pendingChanges.length} file(s)`)
+    for (const change of pendingChanges) {
+      flowLogger.info(`  [${change.type}] ${change.path}`)
+    }
+  }
+
   // Commit VFS changes if not dry run and not failed
   if (!config.dryRun && !failed) {
     try {
@@ -388,7 +403,14 @@ export async function executeFlow(
       flowLogger.error(`Failed to commit file changes: ${error}`)
     }
   } else if (config.dryRun) {
-    flowLogger.info('Dry run mode - no changes written to disk')
+    if (pendingChanges.length > 0) {
+      flowLogger.info(`Dry run - would modify ${pendingChanges.length} file(s):`)
+      for (const change of pendingChanges) {
+        flowLogger.info(`  [${change.type}] ${change.path}`)
+      }
+    } else {
+      flowLogger.info('Dry run mode - no changes to write')
+    }
   }
 
   const duration = dateNow() - startTime
@@ -412,6 +434,7 @@ export async function executeFlow(
     state: context.state,
     duration,
     summary,
+    modifiedFiles,
   }
 }
 
