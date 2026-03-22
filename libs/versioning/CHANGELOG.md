@@ -2,6 +2,22 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.4.0](https://github.com/AndrewRedican/hyperfrontend/compare/b8e66fb435b8c25cabc5360d735852bffc721916...9380caeb9549901e3803bd6836dfe21a49ff32d8) - 2026-03-22
+
+### Features
+
+- add backup changelog options and use is file for type safe validation
+- add vfs-aware discovery for multi-phase flow support
+- add rollback on failure option for clean failure recovery
+- add diff preview before committing changes
+- add list changes observability to flow execution
+
+### Bug Fixes
+
+- prevent command injection in git remote operations
+- remove useless initial assigment in parse version from heading
+- remove useless initial assignment in fetch-registry
+
 ## [0.3.0](https://github.com/AndrewRedican/hyperfrontend/compare/31943a4b39484dba86b358e4f361abe76edc4fe1...5d7250d27d1ae16bd36a1e20d91beac21a41600e) - 2026-03-21
 
 ### Features
