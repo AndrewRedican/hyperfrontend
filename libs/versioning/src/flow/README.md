@@ -105,6 +105,14 @@ flowchart LR
 | `dryRun(flow, project, root, opts)`      | Execute without making changes | [execute.ts](./executor/execute.ts) |
 | `validateFlow(flow)`                     | Validate flow structure        | [execute.ts](./executor/execute.ts) |
 
+**FlowExecutionOptions:**
+
+| Option              | Default     | Description                               |
+| ------------------- | ----------- | ----------------------------------------- |
+| `showDiff`          | `false`     | Preview changes before committing to VFS  |
+| `diffFormat`        | `'unified'` | Diff format: `'unified'` or `'simple'`    |
+| `rollbackOnFailure` | `false`     | Discard all VFS changes if any step fails |
+
 ### Models
 
 | Type             | Description                                      | Implementation                |
@@ -127,12 +135,18 @@ flowchart LR
 | `createCalculateBumpStep()`       | Calculate version bump type           | [calculate-bump.ts](./steps/calculate-bump.ts)         |
 | `createCheckIdempotencyStep()`    | Skip if version already published     | [fetch-registry.ts](./steps/fetch-registry.ts)         |
 | `createGenerateChangelogStep()`   | Generate changelog entry              | [generate-changelog.ts](./steps/generate-changelog.ts) |
-| `createWriteChangelogStep()`      | Write changelog to file               | [generate-changelog.ts](./steps/generate-changelog.ts) |
-| `createUpdatePackageStep()`       | Update package.json version           | [update-packages.ts](./steps/update-packages.ts)       |
-| `createCascadeDependenciesStep()` | Update dependent package versions     | [update-packages.ts](./steps/update-packages.ts)       |
-| `createGitCommitStep()`           | Create version commit                 | [create-commit.ts](./steps/create-commit.ts)           |
-| `createTagStep()`                 | Create git tag                        | [create-tag.ts](./steps/create-tag.ts)                 |
-| `createPushTagStep()`             | Push tag to remote                    | [create-tag.ts](./steps/create-tag.ts)                 |
+| `createWriteChangelogStep(opts?)` | Write changelog to file               | [generate-changelog.ts](./steps/generate-changelog.ts) |
+
+**WriteChangelogStepOptions:**
+
+| Option                            | Default                           | Description                                                     |
+| --------------------------------- | --------------------------------- | --------------------------------------------------------------- |
+| `backupChangelog`                 | `false`                           | Backup existing changelog before writing (uses `tree.rename()`) |
+| `createUpdatePackageStep()`       | Update package.json version       | [update-packages.ts](./steps/update-packages.ts)                |
+| `createCascadeDependenciesStep()` | Update dependent package versions | [update-packages.ts](./steps/update-packages.ts)                |
+| `createGitCommitStep()`           | Create version commit             | [create-commit.ts](./steps/create-commit.ts)                    |
+| `createTagStep()`                 | Create git tag                    | [create-tag.ts](./steps/create-tag.ts)                          |
+| `createPushTagStep()`             | Push tag to remote                | [create-tag.ts](./steps/create-tag.ts)                          |
 
 ### Flow Manipulation
 
