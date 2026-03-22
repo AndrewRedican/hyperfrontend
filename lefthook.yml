@@ -31,6 +31,9 @@ commit-msg:
 pre-push:
   parallel: false
   commands:
+    audit:
+      run: npm audit --audit-level=high
+      fail_text: 'Security audit failed. Run "npm audit" to see vulnerabilities and "npm audit fix" to resolve them.'
     typecheck:
       run: CI=1 npx nx run-many -t=typecheck --skip-nx-cache
       fail_text: 'Typecheck failed. Fix type errors before pushing.'
