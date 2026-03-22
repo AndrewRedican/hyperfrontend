@@ -142,6 +142,7 @@ describe('Channel Registry', () => {
       expect(getByWindow(registry, mockWindow)).toBe(channel)
 
       // After removing reference, WeakMap enables garbage collection
+      // eslint-disable-next-line no-useless-assignment -- intentional: demonstrates WeakMap GC behavior
       mockWindow = null
     })
   })
