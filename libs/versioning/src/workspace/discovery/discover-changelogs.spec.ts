@@ -195,7 +195,7 @@ describe('findProjectChangelogInTree', () => {
     write: jest.fn(),
     delete: jest.fn(),
     rename: jest.fn(),
-    isFile: jest.fn(),
+    isFile: jest.fn((path: string) => existingPaths.includes(path)),
     isDirectory: jest.fn(),
     isSymlink: jest.fn(),
     children: jest.fn(),
@@ -211,7 +211,7 @@ describe('findProjectChangelogInTree', () => {
     const result = findProjectChangelogInTree(tree as Tree, '/workspace/libs/my-lib')
 
     expect(result).toBe('/workspace/libs/my-lib/CHANGELOG.md')
-    expect(tree.exists).toHaveBeenCalledWith('libs/my-lib/CHANGELOG.md')
+    expect(tree.isFile).toHaveBeenCalledWith('libs/my-lib/CHANGELOG.md')
   })
 
   it('finds Changelog.md as fallback in tree', () => {
@@ -255,7 +255,7 @@ describe('findChangelogsInTree', () => {
     write: jest.fn(),
     delete: jest.fn(),
     rename: jest.fn(),
-    isFile: jest.fn(),
+    isFile: jest.fn((path: string) => existingPaths.includes(path)),
     isDirectory: jest.fn(),
     isSymlink: jest.fn(),
     children: jest.fn(),

@@ -305,6 +305,20 @@ export interface FlowConfig {
    * Merged with defaults; use `null` to exclude a type from changelog.
    */
   readonly commitTypeToSection?: Partial<Record<string, ChangelogSectionType | null>>
+
+  /**
+   * Create a backup of the existing changelog before modification.
+   *
+   * When enabled:
+   * 1. Existing `CHANGELOG.md` is renamed to `CHANGELOG.backup.md`
+   * 2. New changelog is written
+   * 3. Backup is deleted on success
+   *
+   * Useful for safety during changelog regeneration.
+   *
+   * @default false
+   */
+  readonly backupChangelog?: boolean
 }
 
 /**
@@ -333,6 +347,7 @@ export const DEFAULT_FLOW_CONFIG: Required<Omit<FlowConfig, 'repository' | 'scop
   scopeFiltering: DEFAULT_SCOPE_FILTERING_CONFIG,
   changelogFileName: DEFAULT_CHANGELOG_FILENAME,
   commitTypeToSection: undefined,
+  backupChangelog: false,
 }
 
 /**

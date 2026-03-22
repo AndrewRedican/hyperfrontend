@@ -400,13 +400,27 @@ export function createWriteChangelogStep(): FlowStep {
 
       const changelogFileName = config.changelogFileName ?? DEFAULT_CHANGELOG_FILENAME
       const changelogPath = `${projectRoot}/${changelogFileName}`
+      const backupPath = changelogPath.replace('.md', '.backup.md')
+      const shouldBackup = config.backupChangelog && tree.exists(changelogPath) && tree.isFile(changelogPath)
       let existingContent = ''
 
-      // Read existing changelog
-      try {
-        existingContent = tree.read(changelogPath, 'utf-8') ?? ''
-      } catch {
-        logger.debug(`No existing ${changelogFileName} found`)
+      // Create backup if enabled and changelog exists
+      if (shouldBackup) {
+        logger.debug(`Creating backup: ${changelogFileName} -> ${changelogFileName.replace('.md', '.backup.md')}`)
+        tree.rename(changelogPath, backupPath)
+        // Read from backup path since we renamed
+        try {
+          existingContent = tree.read(backupPath, 'utf-8') ?? ''
+        } catch {
+          logger.debug(`Could not read backup ${backupPath}`)
+        }
+      } else {
+        // Read existing changelog normally
+        try {
+          existingContent = tree.read(changelogPath, 'utf-8') ?? ''
+        } catch {
+          logger.debug(`No existing ${changelogFileName} found`)
+        }
       }
 
       // If no existing content, create new changelog
@@ -468,6 +482,12 @@ export function createWriteChangelogStep(): FlowStep {
       const serialized = serializeChangelog(updated)
 
       tree.write(changelogPath, serialized)
+
+      // Clean up backup after successful write
+      if (shouldBackup && tree.exists(backupPath)) {
+        logger.debug(`Removing backup: ${changelogFileName.replace('.md', '.backup.md')}`)
+        tree.delete(backupPath)
+      }
 
       return {
         status: 'success',

@@ -256,8 +256,8 @@ function inferFromPackageJson(
 ): RepositoryConfig | null {
   const packageJsonPath = `${projectRoot}/package.json`
 
-  if (!tree.exists(packageJsonPath)) {
-    logger.debug(`package.json not found at ${packageJsonPath}`)
+  if (!tree.isFile(packageJsonPath)) {
+    logger.debug(`package.json not found or not a file at ${packageJsonPath}`)
     return null
   }
 

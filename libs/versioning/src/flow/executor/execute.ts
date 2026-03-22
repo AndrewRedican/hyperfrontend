@@ -281,11 +281,11 @@ export async function executeFlow(
 
   const { projectRoot, source: projectRootSource } = resolution
 
-  // Early validation: ensure project root is valid
+  // Early validation: ensure project root has a valid package.json file
   const packageJsonPath = `${projectRoot}/package.json`
-  if (!tree.exists(packageJsonPath)) {
+  if (!tree.isFile(packageJsonPath)) {
     const errorMsg =
-      `Project root validation failed: ${packageJsonPath} does not exist. ` +
+      `Project root validation failed: ${packageJsonPath} does not exist or is not a file. ` +
       `Resolved projectRoot="${projectRoot}" (source: ${projectRootSource}) from projectName="${projectName}".`
     flowLogger.error(errorMsg)
     return {

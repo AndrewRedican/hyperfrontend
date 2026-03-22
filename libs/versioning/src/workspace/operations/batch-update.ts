@@ -216,8 +216,8 @@ export function updatePackageVersionInTree(tree: Tree, packageJsonPath: string, 
  * @param versionUpdates - Map of package name to new version
  */
 export function updateDependencyReferencesInTree(tree: Tree, packageJsonPath: string, versionUpdates: Map<string, string>): void {
-  // Skip if file doesn't exist (preserve silent failure behavior)
-  if (!tree.exists(packageJsonPath)) return
+  // Skip if file doesn't exist or is not a file (preserve silent failure behavior)
+  if (!tree.isFile(packageJsonPath)) return
 
   type PackageJson = {
     dependencies?: Record<string, string>

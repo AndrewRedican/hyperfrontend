@@ -119,7 +119,7 @@ export function findProjectChangelogInTree(tree: Tree, projectPath: string): str
   for (const name of CHANGELOG_NAMES) {
     const changelogRelativePath = relativePath ? `${relativePath}/${name}` : name
     const changelogAbsPath = join(projectPath, name)
-    if (tree.exists(changelogRelativePath)) {
+    if (tree.isFile(changelogRelativePath)) {
       return changelogAbsPath
     }
   }
