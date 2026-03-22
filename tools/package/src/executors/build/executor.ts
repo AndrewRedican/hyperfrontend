@@ -229,6 +229,7 @@ async function executeRollupConfig(
   } finally {
     await bundle.close()
     // Clear bundle reference immediately for GC
+    // eslint-disable-next-line no-useless-assignment -- intentional: GC hint
     bundle = <never>null
   }
 
@@ -270,6 +271,7 @@ async function buildSingleEntry(
   await executeRollupConfig(rollupConfig, entry.exportPath, logger, memMonitor)
 
   // Clear the config reference
+  // eslint-disable-next-line no-useless-assignment -- intentional: GC hint
   rollupConfig = null
 
   // Recover memory between entries
