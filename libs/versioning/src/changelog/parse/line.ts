@@ -1,9 +1,3 @@
-/**
- * Line Parser
- *
- * Utilities for parsing individual changelog lines without regex.
- */
-
 import type { CommitRef, IssueRef } from '../models/commit-ref'
 import { max } from '@hyperfrontend/immutable-api-utils/built-in-copy/math'
 import { parseInt } from '@hyperfrontend/immutable-api-utils/built-in-copy/number'
@@ -29,7 +23,6 @@ export function parseVersionFromHeading(heading: string): {
   }
 
   let pos = 0
-  let version = ''
   let date: string | null = null
   let compareUrl: string | undefined
 
@@ -64,7 +57,7 @@ export function parseVersionFromHeading(heading: string): {
     }
   }
 
-  version = trimmed.slice(versionStart, pos)
+  const version = trimmed.slice(versionStart, pos)
 
   // Skip trailing ] if present
   if (trimmed[pos] === ']') {
