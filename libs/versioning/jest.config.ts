@@ -11,7 +11,7 @@ export default <Config>{
     global: {
       branches: 93,
       functions: 99,
-      lines: 97,
+      lines: 98,
       statements: 98,
     },
   },

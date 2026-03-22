@@ -10,7 +10,7 @@ import { createError } from '@hyperfrontend/immutable-api-utils/built-in-copy/er
 import { parse } from '@hyperfrontend/immutable-api-utils/built-in-copy/json'
 import { createSet } from '@hyperfrontend/immutable-api-utils/built-in-copy/set'
 import { logger as defaultLogger } from '@hyperfrontend/logging'
-import { commitChanges, createTree, formatUnifiedDiff, generateAllDiffs } from '@hyperfrontend/project-scope'
+import { commitChanges, createTree, formatUnifiedDiff, generateAllDiffs, rollbackChanges } from '@hyperfrontend/project-scope'
 import { isNxWorkspace, discoverNxProjects } from '@hyperfrontend/project-scope/nx'
 import { createGitClient, DEFAULT_GIT_CLIENT_CONFIG } from '../../git/factory'
 import { createRegistry } from '../../registry/factory'
@@ -37,6 +37,16 @@ export interface ExecuteOptions {
 
   /** Output format for diff: 'unified' (full patch) or 'summary' (stats only) */
   diffFormat?: DiffFormat
+
+  /**
+   * Whether to rollback all pending changes on step failure.
+   *
+   * When true (default), pending VFS changes are discarded when a step fails
+   * and `continueOnError` is false. This ensures no partial state remains.
+   *
+   * @default true
+   */
+  rollbackOnFailure?: boolean
 
   /** Custom logger (defaults to console) */
   logger?: Logger
@@ -366,6 +376,14 @@ export async function executeFlow(
       } else if (result.status === 'failed') {
         flowLogger.error(`Step "${step.name}" failed: ${result.message ?? result.error?.message ?? 'Unknown error'}`)
         if (!step.continueOnError) {
+          // Rollback pending changes on failure (default behavior)
+          if (options.rollbackOnFailure !== false) {
+            const changes = tree.listChanges()
+            if (changes.length > 0) {
+              flowLogger.warn(`Rolling back ${changes.length} pending file change(s)`)
+              rollbackChanges(tree)
+            }
+          }
           failed = true
           break
         }
@@ -384,6 +402,14 @@ export async function executeFlow(
       })
 
       if (!step.continueOnError) {
+        // Rollback pending changes on failure (default behavior)
+        if (options.rollbackOnFailure !== false) {
+          const changes = tree.listChanges()
+          if (changes.length > 0) {
+            flowLogger.warn(`Rolling back ${changes.length} pending file change(s)`)
+            rollbackChanges(tree)
+          }
+        }
         failed = true
         break
       }

@@ -20,6 +20,7 @@ jest.mock('../../workspace/discovery', () => ({
 jest.mock('@hyperfrontend/project-scope', () => ({
   createTree: jest.fn(),
   commitChanges: jest.fn(),
+  rollbackChanges: jest.fn(),
   generateAllDiffs: jest.fn(),
   formatUnifiedDiff: jest.fn(),
 }))
@@ -35,6 +36,7 @@ interface MockFileChange {
 
 function createMockTree(files: Record<string, string> = {}, changes: MockFileChange[] = []): Tree {
   const fileSystem = new Map(Object.entries(files))
+  let pendingChanges = [...changes]
 
   const tree = {
     root: '/workspace',
@@ -68,7 +70,10 @@ function createMockTree(files: Record<string, string> = {}, changes: MockFileCha
       return []
     },
     listChanges() {
-      return changes
+      return pendingChanges
+    },
+    clearChanges() {
+      pendingChanges = []
     },
     changeFile(filePath: string, transform: (content: Buffer) => Buffer) {
       const content = tree.read(filePath, undefined)
@@ -2222,5 +2227,286 @@ describe('executeFlow - showDiff option', () => {
 
     expect(result.diffs).toHaveLength(2)
     expect(projectScope.formatUnifiedDiff).toHaveBeenCalledTimes(2)
+  })
+})
+
+describe('executeFlow - rollbackOnFailure option', () => {
+  beforeEach(() => {
+    projectScope.rollbackChanges.mockClear()
+  })
+
+  it('calls rollbackChanges when step returns failed status and rollbackOnFailure is default (true)', async () => {
+    const logger = createMockLogger()
+    const failStep = createStep('fail', 'Fail', async () => ({
+      status: 'failed' as const,
+      message: 'Step failed',
+    }))
+
+    const flow = {
+      id: 'test',
+      name: 'Test Flow',
+      config: { dryRun: true },
+      steps: [failStep],
+    }
+
+    const mockChanges: MockFileChange[] = [{ path: 'libs/test/package.json', type: 'UPDATE' }]
+
+    const tree = createMockTree(
+      {
+        '/workspace/libs/test/package.json': JSON.stringify({
+          name: '@test/pkg',
+          version: '1.0.0',
+        }),
+      },
+      mockChanges
+    )
+
+    const result = await executeFlow(flow, 'lib-test', '/workspace', {
+      tree,
+      registry: createMockRegistry(),
+      git: createMockGitClient(),
+      logger,
+      projectRoot: 'libs/test',
+    })
+
+    expect(result.status).toBe('failed')
+    expect(projectScope.rollbackChanges).toHaveBeenCalledWith(tree)
+    expect(logger.warn).toHaveBeenCalledWith('Rolling back 1 pending file change(s)')
+  })
+
+  it('calls rollbackChanges when step throws and rollbackOnFailure is default (true)', async () => {
+    const logger = createMockLogger()
+    const throwStep = createStep('throw', 'Throw', async () => {
+      throw new Error('Intentional error')
+    })
+
+    const flow = {
+      id: 'test',
+      name: 'Test Flow',
+      config: { dryRun: true },
+      steps: [throwStep],
+    }
+
+    const mockChanges: MockFileChange[] = [
+      { path: 'libs/test/package.json', type: 'UPDATE' },
+      { path: 'libs/test/CHANGELOG.md', type: 'CREATE' },
+    ]
+
+    const tree = createMockTree(
+      {
+        '/workspace/libs/test/package.json': JSON.stringify({
+          name: '@test/pkg',
+          version: '1.0.0',
+        }),
+      },
+      mockChanges
+    )
+
+    const result = await executeFlow(flow, 'lib-test', '/workspace', {
+      tree,
+      registry: createMockRegistry(),
+      git: createMockGitClient(),
+      logger,
+      projectRoot: 'libs/test',
+    })
+
+    expect(result.status).toBe('failed')
+    expect(projectScope.rollbackChanges).toHaveBeenCalledWith(tree)
+    expect(logger.warn).toHaveBeenCalledWith('Rolling back 2 pending file change(s)')
+  })
+
+  it('does not call rollbackChanges when rollbackOnFailure is false', async () => {
+    const logger = createMockLogger()
+    const failStep = createStep('fail', 'Fail', async () => ({
+      status: 'failed' as const,
+      message: 'Step failed',
+    }))
+
+    const flow = {
+      id: 'test',
+      name: 'Test Flow',
+      config: { dryRun: true },
+      steps: [failStep],
+    }
+
+    const mockChanges: MockFileChange[] = [{ path: 'libs/test/package.json', type: 'UPDATE' }]
+
+    const tree = createMockTree(
+      {
+        '/workspace/libs/test/package.json': JSON.stringify({
+          name: '@test/pkg',
+          version: '1.0.0',
+        }),
+      },
+      mockChanges
+    )
+
+    const result = await executeFlow(flow, 'lib-test', '/workspace', {
+      tree,
+      registry: createMockRegistry(),
+      git: createMockGitClient(),
+      logger,
+      projectRoot: 'libs/test',
+      rollbackOnFailure: false,
+    })
+
+    expect(result.status).toBe('failed')
+    expect(projectScope.rollbackChanges).not.toHaveBeenCalled()
+    expect(logger.warn).not.toHaveBeenCalledWith(expect.stringContaining('Rolling back'))
+  })
+
+  it('does not call rollbackChanges when step has continueOnError: true', async () => {
+    const logger = createMockLogger()
+    const failStep = createStep(
+      'fail',
+      'Fail',
+      async () => ({
+        status: 'failed' as const,
+        message: 'Step failed',
+      }),
+      { continueOnError: true }
+    )
+    const successStep = createStep('success', 'Success', async () => createSuccessResult('OK'))
+
+    const flow = {
+      id: 'test',
+      name: 'Test Flow',
+      config: { dryRun: true },
+      steps: [failStep, successStep],
+    }
+
+    const mockChanges: MockFileChange[] = [{ path: 'libs/test/package.json', type: 'UPDATE' }]
+
+    const tree = createMockTree(
+      {
+        '/workspace/libs/test/package.json': JSON.stringify({
+          name: '@test/pkg',
+          version: '1.0.0',
+        }),
+      },
+      mockChanges
+    )
+
+    const result = await executeFlow(flow, 'lib-test', '/workspace', {
+      tree,
+      registry: createMockRegistry(),
+      git: createMockGitClient(),
+      logger,
+      projectRoot: 'libs/test',
+    })
+
+    expect(result.status).toBe('partial')
+    expect(projectScope.rollbackChanges).not.toHaveBeenCalled()
+  })
+
+  it('does not call rollbackChanges when there are no pending changes', async () => {
+    const logger = createMockLogger()
+    const failStep = createStep('fail', 'Fail', async () => ({
+      status: 'failed' as const,
+      message: 'Step failed',
+    }))
+
+    const flow = {
+      id: 'test',
+      name: 'Test Flow',
+      config: { dryRun: true },
+      steps: [failStep],
+    }
+
+    const tree = createMockTree(
+      {
+        '/workspace/libs/test/package.json': JSON.stringify({
+          name: '@test/pkg',
+          version: '1.0.0',
+        }),
+      },
+      [] // No pending changes
+    )
+
+    const result = await executeFlow(flow, 'lib-test', '/workspace', {
+      tree,
+      registry: createMockRegistry(),
+      git: createMockGitClient(),
+      logger,
+      projectRoot: 'libs/test',
+    })
+
+    expect(result.status).toBe('failed')
+    expect(projectScope.rollbackChanges).not.toHaveBeenCalled()
+    expect(logger.warn).not.toHaveBeenCalledWith(expect.stringContaining('Rolling back'))
+  })
+
+  it('does not call rollbackChanges when flow succeeds', async () => {
+    const logger = createMockLogger()
+    const successStep = createStep('success', 'Success', async () => createSuccessResult('OK'))
+
+    const flow = {
+      id: 'test',
+      name: 'Test Flow',
+      config: { dryRun: true },
+      steps: [successStep],
+    }
+
+    const mockChanges: MockFileChange[] = [{ path: 'libs/test/package.json', type: 'UPDATE' }]
+
+    const tree = createMockTree(
+      {
+        '/workspace/libs/test/package.json': JSON.stringify({
+          name: '@test/pkg',
+          version: '1.0.0',
+        }),
+      },
+      mockChanges
+    )
+
+    const result = await executeFlow(flow, 'lib-test', '/workspace', {
+      tree,
+      registry: createMockRegistry(),
+      git: createMockGitClient(),
+      logger,
+      projectRoot: 'libs/test',
+    })
+
+    expect(result.status).toBe('success')
+    expect(projectScope.rollbackChanges).not.toHaveBeenCalled()
+  })
+
+  it('calls rollbackChanges when explicitly set to true', async () => {
+    const logger = createMockLogger()
+    const failStep = createStep('fail', 'Fail', async () => ({
+      status: 'failed' as const,
+      message: 'Step failed',
+    }))
+
+    const flow = {
+      id: 'test',
+      name: 'Test Flow',
+      config: { dryRun: true },
+      steps: [failStep],
+    }
+
+    const mockChanges: MockFileChange[] = [{ path: 'libs/test/package.json', type: 'UPDATE' }]
+
+    const tree = createMockTree(
+      {
+        '/workspace/libs/test/package.json': JSON.stringify({
+          name: '@test/pkg',
+          version: '1.0.0',
+        }),
+      },
+      mockChanges
+    )
+
+    const result = await executeFlow(flow, 'lib-test', '/workspace', {
+      tree,
+      registry: createMockRegistry(),
+      git: createMockGitClient(),
+      logger,
+      projectRoot: 'libs/test',
+      rollbackOnFailure: true,
+    })
+
+    expect(result.status).toBe('failed')
+    expect(projectScope.rollbackChanges).toHaveBeenCalledWith(tree)
   })
 })
