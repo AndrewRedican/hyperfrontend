@@ -1,6 +1,6 @@
 import type { FlowStep } from '../models/step'
 import { createError } from '@hyperfrontend/immutable-api-utils/built-in-copy/error'
-import { parse, stringify } from '@hyperfrontend/immutable-api-utils/built-in-copy/json'
+import { changeJsonFile } from '../../utils/change-json-file'
 import { createStep, createSkippedResult } from '../models/step'
 
 export const UPDATE_PACKAGES_STEP_ID = 'update-packages'
@@ -31,46 +31,22 @@ export function createUpdatePackageStep(): FlowStep {
       }
 
       const packageJsonPath = `${projectRoot}/package.json`
-      logger.debug(`Reading package.json from: ${packageJsonPath}`)
+      logger.debug(`Updating package.json at: ${packageJsonPath}`)
 
-      // Read package.json
-      let content: string
       try {
-        content = tree.read(packageJsonPath, 'utf-8') ?? ''
-        if (!content) {
-          logger.error(`package.json not found at ${packageJsonPath}`)
-          return {
-            status: 'failed',
-            error: createError(`package.json not found at ${packageJsonPath}`),
-            message: `Could not read package.json at ${packageJsonPath}`,
-          }
-        }
+        changeJsonFile<{ version: string }>(tree, packageJsonPath, (pkg) => {
+          pkg.version = nextVersion
+          return pkg
+        })
       } catch (error) {
-        logger.error(`Failed to read package.json at ${packageJsonPath}: ${error}`)
+        const message = error instanceof Error ? error.message : String(error)
+        logger.error(`Failed to update package.json at ${packageJsonPath}: ${message}`)
         return {
           status: 'failed',
           error: error instanceof Error ? error : createError(String(error)),
-          message: `Failed to read package.json at ${packageJsonPath}`,
+          message: `Failed to update package.json: ${message}`,
         }
       }
-
-      // Parse and update version
-      let pkg: Record<string, unknown>
-      try {
-        pkg = <Record<string, unknown>>parse(content)
-      } catch (error) {
-        return {
-          status: 'failed',
-          error: error instanceof Error ? error : createError(String(error)),
-          message: 'Failed to parse package.json',
-        }
-      }
-
-      pkg['version'] = nextVersion
-
-      // Write back with preserved formatting
-      const updated = stringify(pkg, null, 2) + '\n'
-      tree.write(packageJsonPath, updated)
 
       logger.info(`Updated package.json: ${currentVersion} → ${nextVersion}`)
 

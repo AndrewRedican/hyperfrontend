@@ -22,7 +22,7 @@ import {
 function createMockTree(files: Record<string, string | null>): Tree & { _getWrittenFiles: () => Record<string, string> } {
   const writtenFiles: Record<string, string> = {}
 
-  return {
+  const tree = {
     read: (path: string, encoding?: string) => {
       // Check written files first (for sequential operations in the same test)
       if (writtenFiles[path]) {
@@ -42,9 +42,20 @@ function createMockTree(files: Record<string, string | null>): Tree & { _getWrit
     children: jest.fn().mockReturnValue([]),
     listChanges: jest.fn().mockReturnValue([]),
     changePermissions: jest.fn(),
+    changeFile: (path: string, transform: (content: Buffer) => Buffer) => {
+      const content = tree.read(path, undefined)
+      if (content === null) {
+        throw new Error(`File not found: ${path}`)
+      }
+      const buffer = typeof content === 'string' ? Buffer.from(content) : content
+      const result = transform(buffer)
+      tree.write(path, result)
+    },
     root: '/workspace',
     _getWrittenFiles: () => writtenFiles,
-  } as unknown as Tree & { _getWrittenFiles: () => Record<string, string> }
+  }
+
+  return tree as unknown as Tree & { _getWrittenFiles: () => Record<string, string> }
 }
 
 function createTestProject(
@@ -340,7 +351,7 @@ describe('applyBumps', () => {
 
     expect(result.success).toBe(false)
     expect(result.failed).toHaveLength(1)
-    expect(result.failed[0].error).toContain('Could not read')
+    expect(result.failed[0].error).toContain('File not found')
   })
 
   it('updates dependency references when updateDependencyReferences is true', () => {
@@ -416,9 +427,10 @@ describe('applyBumps', () => {
       ])
     )
 
-    // lib-app file doesn't exist - simulates read failure
+    // lib-app has invalid JSON that will cause parse to throw during dependency update
     const tree = createMockTree({
       '/workspace/packages/lib-core/package.json': '{"name": "lib-core", "version": "1.0.0"}',
+      '/workspace/packages/lib-app/package.json': 'invalid json {{{',
     })
 
     const bumps = [createPlannedBump('lib-core', '1.0.0', '1.1.0')]
@@ -847,7 +859,7 @@ describe('updatePackageVersionInTree', () => {
   it('throws error when file does not exist', () => {
     const tree = createMockTree({})
 
-    expect(() => updatePackageVersionInTree(tree, 'nonexistent/package.json', '2.0.0')).toThrow('Could not read nonexistent/package.json')
+    expect(() => updatePackageVersionInTree(tree, 'nonexistent/package.json', '2.0.0')).toThrow('File not found: nonexistent/package.json')
   })
 
   it('throws error when file content is null', () => {
@@ -856,7 +868,7 @@ describe('updatePackageVersionInTree', () => {
     })
 
     expect(() => updatePackageVersionInTree(tree, 'packages/lib-a/package.json', '2.0.0')).toThrow(
-      'Could not read packages/lib-a/package.json'
+      'File not found: packages/lib-a/package.json'
     )
   })
 

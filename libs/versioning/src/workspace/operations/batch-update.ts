@@ -11,9 +11,9 @@
 import type { Tree } from '@hyperfrontend/project-scope'
 import type { Workspace } from '../models/workspace'
 import type { PlannedBump } from './cascade-bump'
-import { createError } from '@hyperfrontend/immutable-api-utils/built-in-copy/error'
-import { parse, stringify } from '@hyperfrontend/immutable-api-utils/built-in-copy/json'
+import { parse } from '@hyperfrontend/immutable-api-utils/built-in-copy/json'
 import { createMap } from '@hyperfrontend/immutable-api-utils/built-in-copy/map'
+import { changeJsonFile } from '../../utils/change-json-file'
 
 /**
  * Result of a batch update operation.
@@ -196,54 +196,77 @@ function extractVersionPrefix(versionRange: string): string {
  * @param tree - Virtual file system tree
  * @param packageJsonPath - Relative path to package.json
  * @param newVersion - New version string
+ * @throws {Error} If the file doesn't exist
  */
 export function updatePackageVersionInTree(tree: Tree, packageJsonPath: string, newVersion: string): void {
-  const content = tree.read(packageJsonPath, 'utf-8')
-  if (!content) {
-    throw createError(`Could not read ${packageJsonPath}`)
-  }
-
-  const pkg = parse(content)
-  pkg.version = newVersion
-  const formatted = stringify(pkg, null, 2) + '\n'
-  tree.write(packageJsonPath, formatted)
+  changeJsonFile<{ version: string }>(tree, packageJsonPath, (pkg) => {
+    pkg.version = newVersion
+    return pkg
+  })
 }
 
 /**
  * Updates dependency version references in a package.json file using a VFS Tree.
+ *
+ * Uses the `changeFile()` pattern for cleaner transformation.
+ * Silently skips if the file doesn't exist.
  *
  * @param tree - Virtual file system tree
  * @param packageJsonPath - Relative path to package.json
  * @param versionUpdates - Map of package name to new version
  */
 export function updateDependencyReferencesInTree(tree: Tree, packageJsonPath: string, versionUpdates: Map<string, string>): void {
+  // Skip if file doesn't exist (preserve silent failure behavior)
+  if (!tree.exists(packageJsonPath)) return
+
+  type PackageJson = {
+    dependencies?: Record<string, string>
+    devDependencies?: Record<string, string>
+    peerDependencies?: Record<string, string>
+    optionalDependencies?: Record<string, string>
+  }
+
+  // Check if any dependencies need to be updated before modifying
   const content = tree.read(packageJsonPath, 'utf-8')
-  if (!content) return // File doesn't exist or can't be read
+  if (!content) return
 
-  const pkg = parse(content)
-  let modified = false
-
+  const pkg = <PackageJson>parse(content)
   const depTypes = <const>['dependencies', 'devDependencies', 'peerDependencies', 'optionalDependencies']
 
+  let hasMatchingDeps = false
   for (const depType of depTypes) {
     const deps = pkg[depType]
     if (deps) {
-      for (const [name, newVersion] of versionUpdates) {
+      for (const [name] of versionUpdates) {
         if (deps[name]) {
-          // Preserve version prefix (^, ~, etc.) or use exact version
-          const currentRange = deps[name]
-          const prefix = extractVersionPrefix(currentRange)
-          deps[name] = prefix + newVersion
-          modified = true
+          hasMatchingDeps = true
+          break
         }
       }
     }
+    if (hasMatchingDeps) break
   }
 
-  if (modified) {
-    const formatted = stringify(pkg, null, 2) + '\n'
-    tree.write(packageJsonPath, formatted)
-  }
+  // Only write if there are matching dependencies to update
+  if (!hasMatchingDeps) return
+
+  changeJsonFile<PackageJson>(tree, packageJsonPath, (pkg) => {
+    for (const depType of depTypes) {
+      const deps = pkg[depType]
+      if (deps) {
+        for (const [name, newVersion] of versionUpdates) {
+          if (deps[name]) {
+            // Preserve version prefix (^, ~, etc.) or use exact version
+            const currentRange = deps[name]
+            const prefix = extractVersionPrefix(currentRange)
+            deps[name] = prefix + newVersion
+          }
+        }
+      }
+    }
+
+    return pkg
+  })
 }
 
 /**

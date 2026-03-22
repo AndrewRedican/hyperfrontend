@@ -19,7 +19,7 @@ import { createSyncedFlow, createSyncAllPackagesStep, createCombinedChangelogSte
 function createMockTree(files: Record<string, string> = {}): Tree {
   const fileSystem = new Map(Object.entries(files))
 
-  return {
+  const tree = {
     root: '/workspace',
     read(filePath: string, encoding?: string) {
       const content = fileSystem.get(filePath)
@@ -53,7 +53,18 @@ function createMockTree(files: Record<string, string> = {}): Tree {
     listChanges() {
       return []
     },
-  } as unknown as Tree
+    changeFile(filePath: string, transform: (content: Buffer) => Buffer) {
+      const content = tree.read(filePath, undefined)
+      if (content === null) {
+        throw new Error(`File not found: ${filePath}`)
+      }
+      const buffer = typeof content === 'string' ? Buffer.from(content) : <Buffer>content
+      const result = transform(buffer)
+      tree.write(filePath, result)
+    },
+  }
+
+  return tree as unknown as Tree
 }
 
 function createMockRegistry(publishedVersion: string | null = null): Registry {
