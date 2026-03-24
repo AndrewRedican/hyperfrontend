@@ -3,6 +3,7 @@ import type { VersionBatchExecutorSchema } from './schema'
 import { createProjectGraphAsync } from '@nx/devkit'
 import { getCurrentBranch } from '@hyperfrontend/versioning/git/operations'
 import { isInUnstableGitState } from '../version/lib/is-in-unstable-git-state'
+import { getLogger } from '../version/lib/logger'
 import { runVersionForProject } from '../version/lib/run-version-for-project'
 import { createBatchCommit } from './lib/create-batch-commit'
 import { getAffectedLibraries } from './lib/get-affected-libraries'
@@ -41,21 +42,14 @@ export default async function versionBatchExecutor(
   const workspaceRoot = context.root
   const { base = 'origin/main', head = 'HEAD', dryRun = false, verbose = false } = options
 
-  const log = (message: string) => {
-    console.log(message)
-  }
-
-  const verboseLog = (message: string) => {
-    if (verbose) {
-      console.log(`[verbose] ${message}`)
-    }
-  }
+  const logger = getLogger()
+  logger.setLogLevel({ verbose, quiet: false })
 
   // Set up interrupt handlers for cleanup
   let interrupted = false
   const cleanupAndExit = async () => {
     interrupted = true
-    console.log('\nInterrupted, cleaning up...')
+    logger.log('\nInterrupted, cleaning up...')
     await rollbackChanges(workspaceRoot)
     process.exit(1)
   }
@@ -67,37 +61,37 @@ export default async function versionBatchExecutor(
     // Prerequisite: Check if on main branch (skip versioning on main)
     const currentBranch = getCurrentBranch({ cwd: workspaceRoot })
     if (currentBranch === 'main') {
-      log('On main branch, skipping version-batch')
+      logger.log('On main branch, skipping version-batch')
       return { success: true }
     }
 
-    verboseLog(`Current branch: ${currentBranch ?? 'unknown'}`)
-    verboseLog(`Base: ${base}, Head: ${head}`)
+    logger.debug(`Current branch: ${currentBranch ?? 'unknown'}`)
+    logger.debug(`Base: ${base}, Head: ${head}`)
 
     // Prerequisite: Check for unstable git state
     if (isInUnstableGitState(workspaceRoot)) {
-      console.error('Git is in an unstable state (rebase/merge in progress). Aborting.')
+      logger.error('Git is in an unstable state (rebase/merge in progress). Aborting.')
       return { success: false }
     }
 
     // Get project graph
     const projectGraph = await createProjectGraphAsync()
-    verboseLog(`Loaded project graph with ${Object.keys(projectGraph.nodes).length} nodes`)
+    logger.debug(`Loaded project graph with ${Object.keys(projectGraph.nodes).length} nodes`)
 
     // Detect affected libraries
     const affectedLibraries = await getAffectedLibraries(workspaceRoot, projectGraph, base, head)
 
     if (affectedLibraries.length === 0) {
-      log('No affected libraries with version target found')
+      logger.log('No affected libraries with version target found')
       return { success: true }
     }
 
-    log(`Found ${affectedLibraries.length} affected libraries: ${affectedLibraries.join(', ')}`)
+    logger.log(`Found ${affectedLibraries.length} affected libraries: ${affectedLibraries.join(', ')}`)
 
     if (dryRun) {
-      log('[dry-run] Would version the following libraries:')
+      logger.log('[dry-run] Would version the following libraries:')
       for (const lib of affectedLibraries) {
-        log(`  - ${lib}`)
+        logger.log(`  - ${lib}`)
       }
       return { success: true }
     }
@@ -113,11 +107,11 @@ export default async function versionBatchExecutor(
 
       const project = projectGraph.nodes[lib]
       if (!project) {
-        console.warn(`Project ${lib} not found in graph, skipping`)
+        logger.warn(`Project ${lib} not found in graph, skipping`)
         continue
       }
 
-      verboseLog(`Processing ${lib}...`)
+      logger.debug(`Processing ${lib}...`)
 
       try {
         const result = await runVersionForProject({
@@ -135,15 +129,15 @@ export default async function versionBatchExecutor(
         if (result.success && result.bumped) {
           bumpedLibs.push(lib)
           allModifiedFiles.push(...result.modifiedFiles)
-          log(`  ✓ ${lib}: ${result.previousVersion} → ${result.newVersion}`)
+          logger.log(`  ✓ ${lib}: ${result.previousVersion} → ${result.newVersion}`)
         } else if (result.success) {
-          verboseLog(`  - ${lib}: no version bump needed`)
+          logger.debug(`  - ${lib}: no version bump needed`)
         } else {
-          console.error(`  ✗ ${lib}: ${result.error ?? 'unknown error'}`)
+          logger.error(`  ✗ ${lib}: ${result.error ?? 'unknown error'}`)
           // Continue with other libraries, don't fail entire batch
         }
       } catch (error) {
-        console.error(`  ✗ ${lib}: ${error instanceof Error ? error.message : error}`)
+        logger.error(`  ✗ ${lib}: ${error instanceof Error ? error.message : error}`)
         // Continue with other libraries
       }
     }
@@ -154,23 +148,23 @@ export default async function versionBatchExecutor(
 
     // Create batch commit if any libraries were bumped
     if (bumpedLibs.length > 0) {
-      log(`\nCreating batch commit for ${bumpedLibs.length} libraries...`)
+      logger.log(`\nCreating batch commit for ${bumpedLibs.length} libraries...`)
 
       const commitHash = await createBatchCommit(workspaceRoot, allModifiedFiles, bumpedLibs)
 
-      log(`Created commit: ${commitHash.slice(0, 8)}`)
-      log(`Bumped: ${bumpedLibs.join(', ')}`)
+      logger.log(`Created commit: ${commitHash.slice(0, 8)}`)
+      logger.log(`Bumped: ${bumpedLibs.join(', ')}`)
     } else {
-      log('\nNo version bumps needed')
+      logger.log('\nNo version bumps needed')
     }
 
     return { success: true }
   } catch (error) {
-    console.error('version-batch failed:', error instanceof Error ? error.message : error)
+    logger.error(`version-batch failed: ${error instanceof Error ? error.message : error}`)
 
     // Rollback on failure
     if (!dryRun) {
-      log('Rolling back changes...')
+      logger.log('Rolling back changes...')
       await rollbackChanges(workspaceRoot)
     }
 
