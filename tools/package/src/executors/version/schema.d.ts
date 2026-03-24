@@ -30,11 +30,6 @@ export interface VersionExecutorSchema {
   skipIfVersionCommit?: boolean
   /** Skip versioning if git is in rebase/merge state. */
   skipIfUnstableGit?: boolean
-  /**
-   * Output list of modified files without staging.
-   * Implies skipCommit=true and skipTag=true.
-   */
-  collectFiles?: boolean
   /** Enable verbose output for debugging. Shows additional details about each step. */
   verbose?: boolean
   /** Suppress all non-error output. */

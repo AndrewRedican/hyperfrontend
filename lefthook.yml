@@ -50,122 +50,20 @@ pre-push:
     # =========================================================================
     # Version Command - SOURCE OF TRUTH for version bumps
     # =========================================================================
-    # This command calculates and applies version bumps based on conventional
-    # commits. It runs AFTER all other pre-push checks (typecheck, lint, test).
+    # Uses the version-batch executor which:
+    #   - Skips on main branch
+    #   - Detects affected libraries programmatically
+    #   - Runs versioning for each affected library
+    #   - Creates a single batch commit: "chore: update versions for lib-x, lib-y"
+    #   - Handles interrupts and failures with cleanup/rollback
     #
-    # What it does:
-    #   - Detects affected libraries via `nx show projects --affected`
-    #   - Runs `nx version $lib --collectFiles` for each
-    #   - Updates package.json, CHANGELOG.md, and dependent package refs
-    #   - Creates a version commit: "chore: update versions for lib-x"
-    #
-    # CI validates this with `version-check` - it does NOT create version commits.
-    # If you skip this hook (--no-verify), CI will fail and guide you to fix it.
+    # CI validates with `version-check` - it does NOT create version commits.
     # =========================================================================
     version:
-      run: |
-        # Skip versioning when pushing to main - CI handles main branch
-        BRANCH=$(git branch --show-current)
-        if [ "$BRANCH" = "main" ]; then
-          echo "⏭️ Skipping versioning on main branch (CI will handle)"
-          exit 0
-        fi
-
-        # Get affected library projects that have a version target
-        AFFECTED=$(npx nx show projects --affected --base=origin/main --head=HEAD --type=lib --with-target=version 2>/dev/null | tr '\n' ' ')
-
-        if [ -z "$AFFECTED" ]; then
-          echo "✅ No affected libraries to version"
-          exit 0
-        fi
-
-        echo "📦 Versioning affected libraries: $AFFECTED"
-
-        # Capture tags before versioning to enable cleanup on interrupt
-        TAGS_BEFORE_FILE=$(mktemp)
-        git tag | grep -E "^lib-" | sort > "$TAGS_BEFORE_FILE"
-        cleanup_tags() {
-          echo ""
-          echo "⚠️  Interrupted! Cleaning up tags created during this session..."
-          TAGS_AFTER_FILE=$(mktemp)
-          git tag | grep -E "^lib-" | sort > "$TAGS_AFTER_FILE"
-          NEW_TAGS=$(comm -23 "$TAGS_AFTER_FILE" "$TAGS_BEFORE_FILE")
-          rm -f "$TAGS_AFTER_FILE"
-          if [ -n "$NEW_TAGS" ]; then
-            echo "$NEW_TAGS" | xargs -I {} git tag -d {}
-            echo "✓ Cleaned up tags. Run 'git checkout .' to discard file changes if needed."
-          fi
-          rm -f "$TAGS_BEFORE_FILE"
-          exit 1
-        }
-        trap cleanup_tags INT TERM
-
-        # Run versioning for each library with --collectFiles
-        # --collectFiles: Outputs modified files without staging, implies skipCommit/skipTag
-        # Track which libs were actually bumped and collect all modified files
-        BUMPED=""
-        ALL_FILES=""
-        FAILED=""
-
-        for lib in $AFFECTED; do
-          echo "  → Checking $lib..."
-          RESULT=$(npx nx version "$lib" --collectFiles 2>&1)
-          EXIT_CODE=$?
-
-          if [ $EXIT_CODE -ne 0 ]; then
-            FAILED="$FAILED $lib"
-            echo "    ✗ failed"
-            continue
-          fi
-
-          if echo "$RESULT" | grep -qE "Flow success"; then
-            if [ -z "$BUMPED" ]; then BUMPED="$lib"; else BUMPED="$BUMPED, $lib"; fi
-            # Collect modified files from MODIFIED: lines
-            FILES=$(echo "$RESULT" | grep "^MODIFIED:" | cut -d: -f2 | tr '\n' ' ')
-            ALL_FILES="$ALL_FILES $FILES"
-            echo "    ✓ version updated"
-          elif echo "$RESULT" | grep -qE "No release needed|already published"; then
-            echo "    ○ already versioned"
-          elif echo "$RESULT" | grep -q "Skipping"; then
-            echo "    ○ skipped (version commit or git state)"
-          else
-            echo "    ○ no version change needed"
-          fi
-        done
-
-        # Handle failures - abort cleanly by discarding all changes
-        if [ -n "$FAILED" ]; then
-          echo "❌ Version failed for:$FAILED"
-          echo "Discarding all changes..."
-          git checkout .
-          rm -f "$TAGS_BEFORE_FILE"
-          exit 1
-        fi
-
-        # Stage all collected files at once (only if all succeeded)
-        if [ -n "$ALL_FILES" ]; then
-          git add $ALL_FILES
-
-          # Commit message matches executor's isVersionCommit() Pattern 2: chore: update versions for lib-a, lib-b
-          if [ -n "$BUMPED" ]; then
-            git commit -m "chore: update versions for $BUMPED" --no-verify
-          else
-            git commit -m "chore: update versions for affected libs" --no-verify
-          fi
-          echo "✅ Version updates committed"
-        else
-          echo "✅ No version changes needed"
-        fi
-        rm -f "$TAGS_BEFORE_FILE"
+      run: npx nx version-batch
       fail_text: |
-        ❌ Version bump failed during pre-push.
+        ❌ Version batch processing failed.
 
-        How to fix:
-        1. Check the error output above for details
-        2. If there are conflicts, resolve them first
-        3. Run versioning manually: npx nx version <lib-name> --verbose
-        4. Stage and commit the changes
-        5. Push again
-
-        If you need to bypass (not recommended): git push --no-verify
+        Please check the output above for details.
+        If you need to skip versioning temporarily, use: git push --no-verify
         Note: CI will fail if versions are not properly applied.

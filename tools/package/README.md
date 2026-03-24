@@ -4,13 +4,14 @@ Nx plugin providing executors for building, type-checking, versioning, and publi
 
 ## Executors
 
-| Executor    | Description                                                       | Docs                                        |
-| ----------- | ----------------------------------------------------------------- | ------------------------------------------- |
-| `build`     | Format-centric build with explicit ESM/CJS/IIFE/UMD configuration | [README](./src/executors/build/README.md)   |
-| `typecheck` | TypeScript type checking without emitting files                   | -                                           |
-| `version`   | Zero-dependency conventional commits versioning (npm as source)   | [README](./src/executors/version/README.md) |
-| `publish`   | Publish to npm with dry-run support                               | [README](./src/executors/publish/README.md) |
-| `e2e`       | Test package outputs via npm pack + tarball install               | -                                           |
+| Executor        | Description                                                       | Docs                                        |
+| --------------- | ----------------------------------------------------------------- | ------------------------------------------- |
+| `build`         | Format-centric build with explicit ESM/CJS/IIFE/UMD configuration | [README](./src/executors/build/README.md)   |
+| `typecheck`     | TypeScript type checking without emitting files                   | -                                           |
+| `version`       | Zero-dependency conventional commits versioning (npm as source)   | [README](./src/executors/version/README.md) |
+| `version-batch` | Batch versioning for all affected libraries                       | -                                           |
+| `publish`       | Publish to npm with dry-run support                               | [README](./src/executors/publish/README.md) |
+| `e2e`           | Test package outputs via npm pack + tarball install               | -                                           |
 
 ## Quick Start
 
@@ -61,6 +62,34 @@ Idempotent version executor using `@hyperfrontend/versioning` - a zero-dependenc
 - **Dependent updates** — automatically updates version references in dependent packages
 
 **Full documentation:** [src/executors/version/README.md](./src/executors/version/README.md) | [Architecture](./src/executors/version/ARCHITECTURE.md)
+
+### version-batch
+
+Batch versioning executor for all affected libraries. This is the recommended approach for batch operations and is automatically invoked by lefthook on git push.
+
+- **Affected detection** — programmatically detects libraries changed between base and head refs
+- **Batch commit** — creates a single commit for all version updates
+- **Rollback on failure** — automatically rolls back changes if any library fails
+- **Signal handling** — cleans up properly on interruption (Ctrl+C)
+
+**Options:**
+
+| Option      | Description                         | Default       |
+| ----------- | ----------------------------------- | ------------- |
+| `--base`    | Base git ref for affected detection | `origin/main` |
+| `--head`    | Head git ref for affected detection | `HEAD`        |
+| `--dryRun`  | Preview without making changes      | `false`       |
+| `--verbose` | Enable verbose logging              | `false`       |
+
+**Usage:**
+
+```bash
+# Preview batch version changes
+npx nx version-batch --dryRun
+
+# Run batch versioning (typically done by lefthook)
+npx nx version-batch
+```
 
 ### publish
 
@@ -127,11 +156,19 @@ src/executors/
 │   ├── executor.ts
 │   ├── schema.json
 │   └── README.md
-└── version/         # Semver version executor
+├── version/         # Semver version executor
+│   ├── executor.ts
+│   ├── schema.json
+│   ├── README.md
+│   ├── ARCHITECTURE.md
+│   └── lib/         # Version utilities
+├── version-batch/   # Batch versioning executor
+│   ├── executor.ts
+│   ├── schema.json
+│   └── lib/         # Batch utilities
+└── version-check/   # Version validation executor
     ├── executor.ts
-    ├── schema.json
-    ├── README.md
-    └── ARCHITECTURE.md
+    └── schema.json
 ```
 
 ---
