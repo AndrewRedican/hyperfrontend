@@ -1,5 +1,5 @@
 import { execFileSync } from 'node:child_process'
-import { stage, unstage, stageAll, hasStagedChanges, hasUnstagedChanges } from './stage'
+import { stage, unstage, stageAll, hasStagedChanges, hasUnstagedChanges, discardChanges, discardAllChanges } from './stage'
 
 jest.mock('node:child_process')
 
@@ -187,6 +187,107 @@ describe('hasUnstagedChanges', () => {
     mockExecFileSync.mockReturnValue('')
 
     hasUnstagedChanges({ cwd: '/custom', timeout: 5000 })
+
+    expect(mockExecFileSync).toHaveBeenCalledWith('git', expect.any(Array), expect.objectContaining({ cwd: '/custom', timeout: 5000 }))
+  })
+})
+
+describe('discardChanges', () => {
+  beforeEach(() => {
+    jest.clearAllMocks()
+  })
+
+  it('discards all changes when no files specified', () => {
+    mockExecFileSync.mockReturnValue('')
+
+    const result = discardChanges()
+
+    expect(result).toBe(true)
+    expect(mockExecFileSync).toHaveBeenCalledWith('git', ['checkout', '--', '.'], expect.any(Object))
+  })
+
+  it('discards specific files when files provided', () => {
+    mockExecFileSync.mockReturnValue('')
+
+    const result = discardChanges({ files: ['package.json', 'CHANGELOG.md'] })
+
+    expect(result).toBe(true)
+    expect(mockExecFileSync).toHaveBeenCalledWith('git', ['checkout', '--', 'package.json', 'CHANGELOG.md'], expect.any(Object))
+  })
+
+  it('discards files with empty array (all changes)', () => {
+    mockExecFileSync.mockReturnValue('')
+
+    const result = discardChanges({ files: [] })
+
+    expect(result).toBe(true)
+    expect(mockExecFileSync).toHaveBeenCalledWith('git', ['checkout', '--', '.'], expect.any(Object))
+  })
+
+  it('returns false on error', () => {
+    mockExecFileSync.mockImplementation(() => {
+      throw new Error('No changes to discard')
+    })
+
+    const result = discardChanges()
+
+    expect(result).toBe(false)
+  })
+
+  it('uses custom options', () => {
+    mockExecFileSync.mockReturnValue('')
+
+    discardChanges({ cwd: '/custom', timeout: 5000 })
+
+    expect(mockExecFileSync).toHaveBeenCalledWith('git', expect.any(Array), expect.objectContaining({ cwd: '/custom', timeout: 5000 }))
+  })
+})
+
+describe('discardAllChanges', () => {
+  beforeEach(() => {
+    jest.clearAllMocks()
+  })
+
+  it('calls discardChanges and unstage', () => {
+    mockExecFileSync.mockReturnValue('')
+
+    const result = discardAllChanges()
+
+    expect(result).toBe(true)
+    // Should call git checkout -- .
+    expect(mockExecFileSync).toHaveBeenCalledWith('git', ['checkout', '--', '.'], expect.any(Object))
+    // Should call git reset HEAD -- .
+    expect(mockExecFileSync).toHaveBeenCalledWith('git', ['reset', 'HEAD', '--', '.'], expect.any(Object))
+  })
+
+  it('returns false if discardChanges fails', () => {
+    mockExecFileSync
+      .mockImplementationOnce(() => {
+        throw new Error('Discard failed')
+      })
+      .mockReturnValue('')
+
+    const result = discardAllChanges()
+
+    expect(result).toBe(false)
+  })
+
+  it('returns false if unstage fails', () => {
+    mockExecFileSync
+      .mockReturnValueOnce('') // discardChanges succeeds
+      .mockImplementationOnce(() => {
+        throw new Error('Unstage failed')
+      })
+
+    const result = discardAllChanges()
+
+    expect(result).toBe(false)
+  })
+
+  it('uses custom options', () => {
+    mockExecFileSync.mockReturnValue('')
+
+    discardAllChanges({ cwd: '/custom', timeout: 5000 })
 
     expect(mockExecFileSync).toHaveBeenCalledWith('git', expect.any(Array), expect.objectContaining({ cwd: '/custom', timeout: 5000 }))
   })

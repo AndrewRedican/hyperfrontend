@@ -17,6 +17,8 @@ jest.mock('./operations/stage', () => ({
   stageAll: jest.fn().mockReturnValue(true),
   hasStagedChanges: jest.fn().mockReturnValue(false),
   hasUnstagedChanges: jest.fn().mockReturnValue(false),
+  discardChanges: jest.fn().mockReturnValue(true),
+  discardAllChanges: jest.fn().mockReturnValue(true),
 }))
 jest.mock('./operations/head-info', () => ({
   ...jest.requireActual('./operations/head-info'),
@@ -300,6 +302,22 @@ describe('createGitClient', () => {
       const result = client.hasUnstagedChanges()
 
       expect(result).toBe(false)
+    })
+
+    it('provides discardChanges method', () => {
+      const client = createGitClient()
+
+      const result = client.discardChanges()
+
+      expect(result).toBe(true)
+    })
+
+    it('provides discardAllChanges method', () => {
+      const client = createGitClient()
+
+      const result = client.discardAllChanges()
+
+      expect(result).toBe(true)
     })
 
     it('provides hasUntrackedFiles method', () => {

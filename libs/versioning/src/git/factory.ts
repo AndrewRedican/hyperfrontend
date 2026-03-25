@@ -5,7 +5,7 @@ import type { CreateCommitOptions } from './operations/commit'
 import type { GitLogOptions } from './operations/log'
 import type { CreateTagOptions } from './operations/manage-tags'
 import type { ListTagsOptions } from './operations/query-tags'
-import type { StageOptions } from './operations/stage'
+import type { StageOptions, DiscardChangesOptions } from './operations/stage'
 import type { RepositoryStatus } from './operations/status'
 import { execFileSync } from 'node:child_process'
 import { createGitRef } from './models/ref'
@@ -14,7 +14,7 @@ import { getHead, getCurrentBranch, hasUntrackedFiles } from './operations/head-
 import { getCommitLog, getCommitsBetween, getCommitsSince, getCommit, commitExists, commitReachableFromHead } from './operations/log'
 import { createTag, deleteTag, pushTag } from './operations/manage-tags'
 import { getTags, getTag, tagExists, getLatestTag, getTagsForPackage } from './operations/query-tags'
-import { stage, unstage, stageAll, hasStagedChanges, hasUnstagedChanges } from './operations/stage'
+import { stage, unstage, stageAll, hasStagedChanges, hasUnstagedChanges, discardChanges, discardAllChanges } from './operations/stage'
 import {
   getStatus,
   isClean,
@@ -231,6 +231,20 @@ export interface GitClient {
   hasUnstagedChanges(): boolean
 
   /**
+   * Discards uncommitted changes to tracked files.
+   *
+   * **Warning:** Destructive operation — discarded changes cannot be recovered.
+   */
+  discardChanges(options?: Omit<DiscardChangesOptions, 'cwd'>): boolean
+
+  /**
+   * Discards all changes and unstages all files.
+   *
+   * **Warning:** Destructive operation — discarded changes cannot be recovered.
+   */
+  discardAllChanges(): boolean
+
+  /**
    * Checks if there are untracked files.
    */
   hasUntrackedFiles(): boolean
@@ -407,6 +421,8 @@ export function createGitClient(config: GitClientConfig = {}): GitClient {
     getCurrentBranch: () => getCurrentBranch(opts),
     hasStagedChanges: () => hasStagedChanges(opts),
     hasUnstagedChanges: () => hasUnstagedChanges(opts),
+    discardChanges: (options) => discardChanges({ ...opts, ...options }),
+    discardAllChanges: () => discardAllChanges(opts),
     hasUntrackedFiles: () => hasUntrackedFiles(opts),
 
     // Status operations

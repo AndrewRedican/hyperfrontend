@@ -147,9 +147,11 @@ flowchart TB
 | `createEmptyCommit()`  | Create an empty commit       | [commit.ts](./operations/commit.ts)       |
 | `getHead()`            | Get HEAD commit hash         | [head-info.ts](./operations/head-info.ts) |
 | `getCurrentBranch()`   | Get current branch name      | [head-info.ts](./operations/head-info.ts) |
-| `hasStagedChanges()`   | Check for staged changes     | [status.ts](./operations/status.ts)       |
-| `hasUnstagedChanges()` | Check for unstaged changes   | [status.ts](./operations/status.ts)       |
-| `hasUntrackedFiles()`  | Check for untracked files    | [status.ts](./operations/status.ts)       |
+| `hasStagedChanges()`   | Check for staged changes     | [stage.ts](./operations/stage.ts)         |
+| `hasUnstagedChanges()` | Check for unstaged changes   | [stage.ts](./operations/stage.ts)         |
+| `hasUntrackedFiles()`  | Check for untracked files    | [head-info.ts](./operations/head-info.ts) |
+| `discardChanges()`     | Discard uncommitted changes  | [stage.ts](./operations/stage.ts)         |
+| `discardAllChanges()`  | Discard and unstage all      | [stage.ts](./operations/stage.ts)         |
 
 ### Status Operations
 
