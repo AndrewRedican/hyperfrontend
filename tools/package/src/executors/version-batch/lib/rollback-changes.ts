@@ -1,29 +1,20 @@
-import { execFileSync } from 'node:child_process'
-import { deleteTag, unstage } from '@hyperfrontend/versioning/git/operations'
+import { deleteTag, discardAllChanges } from '@hyperfrontend/versioning/git/operations'
+import { getLogger } from '../../version/lib/logger'
+
+const logger = getLogger()
 
 /**
  * Rolls back all uncommitted changes in the working directory.
  *
- * Uses `git checkout .` to discard all modifications to tracked files.
- * Also cleans up any untracked files that were created.
+ * Uses discardAllChanges() to discard all modifications to tracked files
+ * and unstage any staged changes.
  *
  * @param workspaceRoot - Absolute path to workspace root
  */
 export async function rollbackChanges(workspaceRoot: string): Promise<void> {
-  try {
-    // Discard all changes to tracked files
-    // Note: Library doesn't have discardChanges() yet - using raw git
-    // TODO: Replace with library call when discardChanges() is added (Phase 2)
-    execFileSync('git', ['checkout', '.'], {
-      cwd: workspaceRoot,
-      encoding: 'utf-8',
-    })
-
-    // Reset staged changes using library operation
-    unstage(['.'], { cwd: workspaceRoot })
-  } catch (error) {
-    // Log but don't throw - rollback is best-effort
-    console.error('Failed to rollback changes:', error instanceof Error ? error.message : error)
+  const success = discardAllChanges({ cwd: workspaceRoot })
+  if (!success) {
+    logger.warn('Failed to rollback changes')
   }
 }
 
