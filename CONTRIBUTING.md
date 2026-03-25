@@ -269,7 +269,7 @@ Output goes to `dist/libs/<library>/` with ESM + CJS formats.
 Version bumps happen automatically via **lefthook pre-push hooks**. When you `git push`:
 
 1. lefthook runs typecheck, lint, and tests
-2. The `version-batch` executor detects affected libraries
+2. The `version:all` target detects affected libraries
 3. For each affected library, versioning runs (package.json, CHANGELOG.md updated)
 4. A single batch commit is created: `chore: update versions for lib-a, lib-b`
 5. Push proceeds with both your changes and the version commit
@@ -291,7 +291,7 @@ git push --no-verify
 
 ```bash
 # Preview batch version changes (dry run)
-npx nx version-batch --dryRun
+npx nx version:all --dryRun
 
 # Preview single library version changes
 npx nx version lib-nexus --dryRun

@@ -24,14 +24,14 @@ npx nx version lib-cryptography --dryRun
 npx nx version lib-cryptography --releaseAs=minor
 ```
 
-For batch versioning of all affected libraries, use the `version-batch` executor:
+For batch versioning of all affected libraries, use the `version:all` target:
 
 ```bash
 # Preview batch versioning
-npx nx version-batch --dryRun
+npx nx version:all --dryRun
 
 # Run batch versioning (typically done by lefthook)
-npx nx version-batch
+npx nx version:all
 ```
 
 ## Options
@@ -98,7 +98,7 @@ This is controlled by the `updateDependents` option (default: true).
 
 Version bumps are applied **locally** via lefthook pre-push hooks. When you `git push`:
 
-1. lefthook runs `nx version-batch` which detects affected libraries
+1. lefthook runs `nx version:all` which detects affected libraries
 2. For each affected library, package.json and CHANGELOG.md are updated
 3. A single batch commit is created: `chore: update versions for lib-a, lib-b`
 4. Push proceeds with the version commit included

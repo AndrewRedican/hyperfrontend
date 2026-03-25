@@ -4,14 +4,14 @@ Nx plugin providing executors for building, type-checking, versioning, and publi
 
 ## Executors
 
-| Executor        | Description                                                       | Docs                                        |
-| --------------- | ----------------------------------------------------------------- | ------------------------------------------- |
-| `build`         | Format-centric build with explicit ESM/CJS/IIFE/UMD configuration | [README](./src/executors/build/README.md)   |
-| `typecheck`     | TypeScript type checking without emitting files                   | -                                           |
-| `version`       | Zero-dependency conventional commits versioning (npm as source)   | [README](./src/executors/version/README.md) |
-| `version-batch` | Batch versioning for all affected libraries                       | -                                           |
-| `publish`       | Publish to npm with dry-run support                               | [README](./src/executors/publish/README.md) |
-| `e2e`           | Test package outputs via npm pack + tarball install               | -                                           |
+| Executor      | Description                                                       | Docs                                        |
+| ------------- | ----------------------------------------------------------------- | ------------------------------------------- |
+| `build`       | Format-centric build with explicit ESM/CJS/IIFE/UMD configuration | [README](./src/executors/build/README.md)   |
+| `typecheck`   | TypeScript type checking without emitting files                   | -                                           |
+| `version`     | Zero-dependency conventional commits versioning (npm as source)   | [README](./src/executors/version/README.md) |
+| `version:all` | Batch versioning for all affected libraries                       | -                                           |
+| `publish`     | Publish to npm with dry-run support                               | [README](./src/executors/publish/README.md) |
+| `e2e`         | Test package outputs via npm pack + tarball install               | -                                           |
 
 ## Quick Start
 
