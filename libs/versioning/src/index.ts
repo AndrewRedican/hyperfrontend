@@ -391,6 +391,10 @@ export {
   getUntrackedFiles,
 } from './git/operations/status'
 
+// Git Operations - Operation State
+export type { GitOperationState, GitOperationStateReason, GitOperationStateOptions } from './git/operations/operation-state'
+export { getOperationState, isOperationInProgress, DEFAULT_OPERATION_STATE_OPTIONS } from './git/operations/operation-state'
+
 // Git Client Factory
 export type { GitClient, GitClientConfig } from './git/factory'
 export { createGitClient, DEFAULT_GIT_CLIENT_CONFIG } from './git/factory'

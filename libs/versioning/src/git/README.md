@@ -29,6 +29,7 @@ flowchart TB
         TAG[tag.ts]
         CMT[commit.ts]
         STS[status.ts]
+        OPS[operation-state.ts]
     end
 
     subgraph Models
@@ -51,7 +52,8 @@ flowchart TB
     TAG --> EXEC --> GT
     CMT --> EXEC --> GC
     STS --> EXEC
-    CLIENT --> LOG & TAG & CMT & STS
+    OPS --> EXEC
+    CLIENT --> LOG & TAG & CMT & STS & OPS
     LOG --> GR
 ```
 
@@ -172,6 +174,15 @@ flowchart TB
 | `getModifiedFiles()`  | Get list of modified files        | [status.ts](./operations/status.ts)       |
 | `getUntrackedFiles()` | Get list of untracked files       | [status.ts](./operations/status.ts)       |
 
+### Operation State
+
+| Function                  | Description                                                     | Implementation                                        |
+| ------------------------- | --------------------------------------------------------------- | ----------------------------------------------------- |
+| `getOperationState()`     | Detect if git is mid-operation                                  | [operation-state.ts](./operations/operation-state.ts) |
+| `isOperationInProgress()` | Check if rebase/merge is in progress                            | [operation-state.ts](./operations/operation-state.ts) |
+| `GitOperationState`       | Result with inProgress, reason, details                         | [operation-state.ts](./operations/operation-state.ts) |
+| `GitOperationStateReason` | `'rebase-interactive' \| 'rebase-apply' \| 'merge-in-progress'` | [operation-state.ts](./operations/operation-state.ts) |
+
 ### Security Utilities
 
 | Function                | Description                                  | Implementation             |
@@ -203,6 +214,12 @@ const newCommits = git.getCommitsSince('v1.0.0')
 if (git.isClean()) {
   // Create a tag
   git.createTag('v1.1.0', { message: 'Release v1.1.0' })
+}
+
+// Check for in-progress operations before committing
+const state = git.getOperationState()
+if (state.inProgress) {
+  console.warn(`Cannot proceed: git ${state.reason} in progress`)
 }
 ```
 

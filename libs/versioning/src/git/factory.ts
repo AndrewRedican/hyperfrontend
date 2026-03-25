@@ -4,6 +4,7 @@ import type { GitTag } from './models/tag'
 import type { CreateCommitOptions } from './operations/commit'
 import type { GitLogOptions } from './operations/log'
 import type { CreateTagOptions } from './operations/manage-tags'
+import type { GitOperationState } from './operations/operation-state'
 import type { ListTagsOptions } from './operations/query-tags'
 import type { StageOptions, DiscardChangesOptions } from './operations/stage'
 import type { RepositoryStatus } from './operations/status'
@@ -13,6 +14,7 @@ import { commit, amendCommit, createEmptyCommit } from './operations/commit'
 import { getHead, getCurrentBranch, hasUntrackedFiles } from './operations/head-info'
 import { getCommitLog, getCommitsBetween, getCommitsSince, getCommit, commitExists, commitReachableFromHead } from './operations/log'
 import { createTag, deleteTag, pushTag } from './operations/manage-tags'
+import { getOperationState, isOperationInProgress } from './operations/operation-state'
 import { getTags, getTag, tagExists, getLatestTag, getTagsForPackage } from './operations/query-tags'
 import { stage, unstage, stageAll, hasStagedChanges, hasUnstagedChanges, discardChanges, discardAllChanges } from './operations/stage'
 import {
@@ -321,6 +323,21 @@ export interface GitClient {
    */
   getUntrackedFiles(): readonly string[]
 
+  // ========== Operation State ==========
+
+  /**
+   * Gets the current git operation state.
+   *
+   * Detects if git is in the middle of an incomplete operation such as
+   * a rebase or merge.
+   */
+  getOperationState(): GitOperationState
+
+  /**
+   * Checks if an operation (rebase, merge) is in progress.
+   */
+  isOperationInProgress(): boolean
+
   // ========== Ref Operations ==========
 
   /**
@@ -440,6 +457,10 @@ export function createGitClient(config: GitClientConfig = {}): GitClient {
     getStagedFiles: () => getStagedFiles(opts),
     getModifiedFiles: () => getModifiedFiles(opts),
     getUntrackedFiles: () => getUntrackedFiles(opts),
+
+    // Operation state
+    getOperationState: () => getOperationState(opts),
+    isOperationInProgress: () => isOperationInProgress(opts),
 
     // Ref operations
     getRefs: () => getRefs(opts),

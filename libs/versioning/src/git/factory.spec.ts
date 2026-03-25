@@ -75,6 +75,13 @@ jest.mock('./operations/manage-tags', () => ({
   deleteTag: jest.fn().mockReturnValue(true),
   pushTag: jest.fn().mockReturnValue(true),
 }))
+jest.mock('./operations/operation-state', () => ({
+  ...jest.requireActual('./operations/operation-state'),
+  getOperationState: jest
+    .fn()
+    .mockReturnValue({ inProgress: false, reason: null, details: { rebaseMerge: false, rebaseApply: false, mergeHead: false } }),
+  isOperationInProgress: jest.fn().mockReturnValue(false),
+}))
 
 describe('createGitClient', () => {
   beforeEach(() => {
@@ -440,6 +447,24 @@ describe('createGitClient', () => {
       const result = client.getUntrackedFiles()
 
       expect(result).toEqual([])
+    })
+  })
+
+  describe('operation state', () => {
+    it('provides getOperationState method', () => {
+      const client = createGitClient()
+
+      const result = client.getOperationState()
+
+      expect(result).toEqual(expect.objectContaining({ inProgress: false, reason: null }))
+    })
+
+    it('provides isOperationInProgress method', () => {
+      const client = createGitClient()
+
+      const result = client.isOperationInProgress()
+
+      expect(result).toBe(false)
     })
   })
 
