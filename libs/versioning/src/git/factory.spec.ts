@@ -35,6 +35,12 @@ jest.mock('./operations/log', () => ({
   commitExists: jest.fn().mockReturnValue(false),
   commitReachableFromHead: jest.fn().mockReturnValue(false),
 }))
+jest.mock('./operations/diff', () => ({
+  ...jest.requireActual('./operations/diff'),
+  getChangedFilesBetween: jest.fn().mockReturnValue([]),
+  getChangedFilesBetweenWithStatus: jest.fn().mockReturnValue([]),
+  getCommitWithFiles: jest.fn().mockReturnValue(null),
+}))
 jest.mock('./operations/status', () => ({
   getStatus: jest.fn().mockReturnValue({
     branch: 'main',
@@ -161,6 +167,48 @@ describe('createGitClient', () => {
       const result = client.commitReachableFromHead('abc123')
 
       expect(result).toBe(false)
+    })
+  })
+
+  describe('diff operations', () => {
+    it('provides getChangedFilesBetween method', () => {
+      const client = createGitClient()
+
+      const result = client.getChangedFilesBetween('origin/main')
+
+      expect(result).toEqual([])
+    })
+
+    it('provides getChangedFilesBetween with custom head', () => {
+      const client = createGitClient()
+
+      const result = client.getChangedFilesBetween('v1.0.0', 'v2.0.0')
+
+      expect(result).toEqual([])
+    })
+
+    it('provides getChangedFilesBetweenWithStatus method', () => {
+      const client = createGitClient()
+
+      const result = client.getChangedFilesBetweenWithStatus('origin/main')
+
+      expect(result).toEqual([])
+    })
+
+    it('provides getChangedFilesBetweenWithStatus with custom head', () => {
+      const client = createGitClient()
+
+      const result = client.getChangedFilesBetweenWithStatus('v1.0.0', 'v2.0.0')
+
+      expect(result).toEqual([])
+    })
+
+    it('provides getCommitWithFiles method', () => {
+      const client = createGitClient()
+
+      const result = client.getCommitWithFiles('abc123')
+
+      expect(result).toBeNull()
     })
   })
 

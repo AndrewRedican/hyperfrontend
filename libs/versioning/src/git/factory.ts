@@ -2,6 +2,7 @@ import type { GitCommit } from './models/commit'
 import type { GitRef } from './models/ref'
 import type { GitTag } from './models/tag'
 import type { CreateCommitOptions } from './operations/commit'
+import type { FileChange, GitCommitWithFiles } from './operations/diff'
 import type { GitLogOptions } from './operations/log'
 import type { CreateTagOptions } from './operations/manage-tags'
 import type { GitOperationState } from './operations/operation-state'
@@ -11,6 +12,7 @@ import type { RepositoryStatus } from './operations/status'
 import { execFileSync } from 'node:child_process'
 import { createGitRef } from './models/ref'
 import { commit, amendCommit, createEmptyCommit } from './operations/commit'
+import { getChangedFilesBetween, getChangedFilesBetweenWithStatus, getCommitWithFiles } from './operations/diff'
 import { getHead, getCurrentBranch, hasUntrackedFiles } from './operations/head-info'
 import { getCommitLog, getCommitsBetween, getCommitsSince, getCommit, commitExists, commitReachableFromHead } from './operations/log'
 import { createTag, deleteTag, pushTag } from './operations/manage-tags'
@@ -137,6 +139,23 @@ export interface GitClient {
    * range queries. Detects if history was rewritten after the reference was recorded.
    */
   commitReachableFromHead(hash: string): boolean
+
+  // ========== Diff Operations ==========
+
+  /**
+   * Gets files changed between two refs.
+   */
+  getChangedFilesBetween(base: string, head?: string): readonly string[]
+
+  /**
+   * Gets files changed between two refs with status.
+   */
+  getChangedFilesBetweenWithStatus(base: string, head?: string): readonly FileChange[]
+
+  /**
+   * Gets a commit with its changed files.
+   */
+  getCommitWithFiles(hash: string): GitCommitWithFiles | null
 
   // ========== Tag Operations ==========
 
@@ -416,6 +435,11 @@ export function createGitClient(config: GitClientConfig = {}): GitClient {
     getCommit: (hash) => getCommit(hash, opts),
     commitExists: (hash) => commitExists(hash, opts),
     commitReachableFromHead: (hash) => commitReachableFromHead(hash, opts),
+
+    // Diff operations
+    getChangedFilesBetween: (base, head) => getChangedFilesBetween(base, head, opts),
+    getChangedFilesBetweenWithStatus: (base, head) => getChangedFilesBetweenWithStatus(base, head, opts),
+    getCommitWithFiles: (hash) => getCommitWithFiles(hash, opts),
 
     // Tag operations
     getTags: (options) => getTags({ ...opts, ...options }),

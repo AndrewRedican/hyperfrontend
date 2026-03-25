@@ -395,6 +395,10 @@ export {
 export type { GitOperationState, GitOperationStateReason, GitOperationStateOptions } from './git/operations/operation-state'
 export { getOperationState, isOperationInProgress, DEFAULT_OPERATION_STATE_OPTIONS } from './git/operations/operation-state'
 
+// Git Operations - Diff
+export type { FileChangeStatus, FileChange, DiffOptions, GitCommitWithFiles } from './git/operations/diff'
+export { DEFAULT_DIFF_OPTIONS, getChangedFilesBetween, getChangedFilesBetweenWithStatus, getCommitWithFiles } from './git/operations/diff'
+
 // Git Client Factory
 export type { GitClient, GitClientConfig } from './git/factory'
 export { createGitClient, DEFAULT_GIT_CLIENT_CONFIG } from './git/factory'

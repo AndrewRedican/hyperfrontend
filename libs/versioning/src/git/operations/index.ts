@@ -5,6 +5,7 @@ export type { GitCommitOptions, CreateCommitOptions } from './commit'
 export type { StageOptions, DiscardChangesOptions } from './stage'
 export type { GitStatusOptions, FileStatus, FileStatusEntry, RepositoryStatus } from './status'
 export type { GitOperationStateReason, GitOperationState, GitOperationStateOptions } from './operation-state'
+export type { FileChangeStatus, FileChange, DiffOptions, GitCommitWithFiles } from './diff'
 export {
   DEFAULT_LOG_OPTIONS,
   getCommitLog,
@@ -40,3 +41,4 @@ export {
   getModifiedFiles,
   getUntrackedFiles,
 } from './status'
+export { DEFAULT_DIFF_OPTIONS, getChangedFilesBetween, getChangedFilesBetweenWithStatus, getCommitWithFiles } from './diff'
