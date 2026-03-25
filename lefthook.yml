@@ -1,19 +1,14 @@
 # Lefthook Configuration
 # See: https://github.com/evilmartians/lefthook
-#
-# Versioning Strategy:
-# ====================
-# Version bumps are applied locally via the pre-push `version` command below.
-# This is the SOURCE OF TRUTH for version bumps - CI only validates, it does NOT
-# create version commits. The workflow is:
-#
-#   1. Developer commits changes
-#   2. On `git push`, lefthook runs versioning for affected libraries
-#   3. Version commit is created automatically: "chore: update versions for lib-x"
-#   4. Push proceeds with both commits
-#   5. CI runs `version-check` to validate versions are correct
-#
-# If you bypass lefthook with --no-verify, CI will fail with remediation instructions.
+
+# Show output in real-time instead of buffering until completion
+output:
+  - meta # Show command names
+  - summary # Show summary at end
+  - success # Show successful commands
+  - failure # Show failed commands
+  - execution # Show command execution output in real-time
+  - execution_info # Show execution details
 
 pre-commit:
   parallel: false
@@ -46,21 +41,8 @@ pre-push:
     build:
       run: CI=1 npx nx run-many -t=build --skip-nx-cache
       fail_text: 'Build failed. Fix build errors before pushing.'
-
-    # =========================================================================
-    # Version Command - SOURCE OF TRUTH for version bumps
-    # =========================================================================
-    # Uses the version-batch executor which:
-    #   - Skips on main branch
-    #   - Detects affected libraries programmatically
-    #   - Runs versioning for each affected library
-    #   - Creates a single batch commit: "chore: update versions for lib-x, lib-y"
-    #   - Handles interrupts and failures with cleanup/rollback
-    #
-    # CI validates with `version-check` - it does NOT create version commits.
-    # =========================================================================
     version:
-      run: npx nx version-batch
+      run: npx nx version:all --verbose
       fail_text: |
         ❌ Version batch processing failed.
 
