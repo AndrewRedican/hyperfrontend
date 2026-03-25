@@ -1,5 +1,5 @@
 import type { ProjectGraph } from '@nx/devkit'
-import { execFileSync } from 'node:child_process'
+import { getChangedFilesBetween } from '@hyperfrontend/versioning'
 
 /**
  * Gets the list of affected libraries based on git changes.
@@ -20,8 +20,7 @@ export async function getAffectedLibraries(
   base = 'origin/main',
   head = 'HEAD'
 ): Promise<string[]> {
-  // Get changed files between base and head
-  const changedFiles = getChangedFiles(workspaceRoot, base, head)
+  const changedFiles = getChangedFilesBetween(base, head, { cwd: workspaceRoot })
 
   if (changedFiles.length === 0) {
     return []
@@ -50,33 +49,6 @@ export async function getAffectedLibraries(
   })
 
   return librariesWithVersionTarget.sort()
-}
-
-/**
- * Gets the list of files changed between two git refs.
- *
- * @param workspaceRoot - Absolute path to workspace root
- * @param base - Base git ref
- * @param head - Head git ref
- * @returns List of changed file paths relative to workspace root
- */
-function getChangedFiles(workspaceRoot: string, base: string, head: string): string[] {
-  try {
-    const output = execFileSync('git', ['diff', '--name-only', `${base}...${head}`], {
-      cwd: workspaceRoot,
-      encoding: 'utf-8',
-      maxBuffer: 10 * 1024 * 1024, // 10MB buffer for large diffs
-    })
-
-    return output
-      .trim()
-      .split('\n')
-      .filter((file) => file.length > 0)
-  } catch (error) {
-    // If git diff fails (e.g., refs don't exist), return empty
-    console.error('Failed to get changed files:', error instanceof Error ? error.message : error)
-    return []
-  }
 }
 
 /**
