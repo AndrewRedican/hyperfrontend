@@ -44,7 +44,7 @@ pre-push:
       fail_text: 'Tests failed. Fix failing tests before pushing.'
     build:
       priority: 5
-      run: CI=1 npx nx affected -t=build
+      run: CI=1 NODE_OPTIONS="--expose-gc --max-old-space-size=4096" npx nx affected -t=build
       fail_text: 'Build failed. Fix build errors before pushing.'
     version:
       priority: 6
