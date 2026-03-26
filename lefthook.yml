@@ -32,19 +32,19 @@ pre-push:
       fail_text: 'Security audit failed. Run "npm audit" to see vulnerabilities and "npm audit fix" to resolve them.'
     typecheck:
       priority: 2
-      run: CI=1 npx nx run-many -t=typecheck --skip-nx-cache
+      run: CI=1 npx nx affected -t=typecheck
       fail_text: 'Typecheck failed. Fix type errors before pushing.'
     lint:
       priority: 3
-      run: CI=1 npx nx run-many -t=lint --skip-nx-cache
+      run: CI=1 npx nx affected -t=lint
       fail_text: 'Lint failed. Fix lint errors before pushing.'
     test:
       priority: 4
-      run: CI=1 npx nx run-many -t=test --skip-nx-cache
+      run: CI=1 npx nx affected -t=test
       fail_text: 'Tests failed. Fix failing tests before pushing.'
     build:
       priority: 5
-      run: CI=1 npx nx run-many -t=build --skip-nx-cache
+      run: CI=1 npx nx affected -t=build
       fail_text: 'Build failed. Fix build errors before pushing.'
     version:
       priority: 6
