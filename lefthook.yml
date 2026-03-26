@@ -24,7 +24,7 @@ commit-msg:
       fail_text: 'Your commit message does not follow the standard conventional commit format. See https://www.conventionalcommits.org/en/v1.0.0/'
 
 pre-push:
-  parallel: false
+  piped: true # Run sequentially AND stop on first failure
   commands:
     audit:
       priority: 1
