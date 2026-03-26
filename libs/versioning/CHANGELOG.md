@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.5.0](https://github.com/AndrewRedican/hyperfrontend/compare/74ee35afe04d203271bf25992247df1d817c7fc2...edbf05933e1dfddf14fadc627f652f3ac3462373) - 2026-03-26
+
+### Features
+
+- support various files changed detection strategies
+- support unstable git state detection
+- add support to discard git changes
+
 ## [0.4.0](https://github.com/AndrewRedican/hyperfrontend/compare/b8e66fb435b8c25cabc5360d735852bffc721916...9380caeb9549901e3803bd6836dfe21a49ff32d8) - 2026-03-22
 
 ### Features
