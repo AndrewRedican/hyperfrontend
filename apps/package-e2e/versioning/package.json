@@ -6,7 +6,7 @@
     "pack-install": "cd ../../../dist/libs/versioning && npm pack && cd - && npm install ../../../dist/libs/versioning/*.tgz"
   },
   "dependencies": {
-    "@hyperfrontend/versioning": "file:../../../tmp/e2e-packs/hyperfrontend-versioning-0.4.0.tgz"
+    "@hyperfrontend/versioning": "file:../../../tmp/e2e-packs/hyperfrontend-versioning-0.5.0.tgz"
   },
   "devDependencies": {
     "@types/jest": "29.5.14",

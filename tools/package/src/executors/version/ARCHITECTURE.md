@@ -125,17 +125,18 @@ Version bumps happen **locally** via lefthook pre-push hooks, not in CI:
 flowchart TD
     A[Developer commits] --> B[git push]
     B --> C[lefthook pre-push]
-    C --> D[nx version --collectFiles]
-    D --> E[Stage modified files]
-    E --> F["Commit: chore: update versions for lib-xxx [skip ci]"]
+    C --> D[nx version:all]
+    D --> E[Version each affected library]
+    E --> F["Commit: chore: update versions for lib-a, lib-b"]
     F --> G[Push proceeds with version commit]
 ```
 
-The `--collectFiles` flag:
+The `version-batch` executor:
 
-- Implies `skipCommit` and `skipTag`
-- Outputs modified file paths (MODIFIED:path format)
-- lefthook parses this output to stage files before creating the version commit
+- Detects affected libraries programmatically using Nx project graph
+- Runs versioning for each affected library
+- Creates a single batch commit for all changes
+- Handles rollback on failure
 
 ### PR Workflow (validation-only)
 

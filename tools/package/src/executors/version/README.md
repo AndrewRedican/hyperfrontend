@@ -22,9 +22,16 @@ npx nx version lib-cryptography --dryRun
 
 # Force a specific bump type
 npx nx version lib-cryptography --releaseAs=minor
+```
 
-# Output modified files (for CI)
-npx nx version lib-cryptography --collectFiles
+For batch versioning of all affected libraries, use the `version:all` target:
+
+```bash
+# Preview batch versioning
+npx nx version:all --dryRun
+
+# Run batch versioning (typically done by lefthook)
+npx nx version:all
 ```
 
 ## Options
@@ -40,7 +47,6 @@ npx nx version lib-cryptography --collectFiles
 | `updateDependents`    | boolean | true             | Update version references in dependent packages          |
 | `skipIfVersionCommit` | boolean | true             | Skip if current commit is a version commit               |
 | `skipIfUnstableGit`   | boolean | true             | Skip if git is in rebase/merge state                     |
-| `collectFiles`        | boolean | false            | Output modified files list (implies skipCommit)          |
 | `verbose`             | boolean | false            | Enable detailed logging                                  |
 | `quiet`               | boolean | false            | Suppress non-error output                                |
 | `showDiff`            | boolean | false            | Show unified diff of changes before committing           |
@@ -92,9 +98,9 @@ This is controlled by the `updateDependents` option (default: true).
 
 Version bumps are applied **locally** via lefthook pre-push hooks. When you `git push`:
 
-1. lefthook runs `nx version <lib> --collectFiles` for affected libraries
-2. Package.json and CHANGELOG.md are updated
-3. A version commit is created: `chore: update versions for lib-xxx [skip ci]`
+1. lefthook runs `nx version:all` which detects affected libraries
+2. For each affected library, package.json and CHANGELOG.md are updated
+3. A single batch commit is created: `chore: update versions for lib-a, lib-b`
 4. Push proceeds with the version commit included
 
 See [lefthook.yml](../../../../lefthook.yml) for the hook configuration.

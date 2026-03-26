@@ -48,11 +48,6 @@
       "description": "Skip versioning if git is in rebase/merge state.",
       "default": true
     },
-    "collectFiles": {
-      "type": "boolean",
-      "description": "Output list of modified files without staging. Implies skipCommit=true and skipTag=true. When combined with --dryRun, reports files that would be modified.",
-      "default": false
-    },
     "verbose": {
       "type": "boolean",
       "description": "Enable verbose output for debugging. Shows additional details about each step.",

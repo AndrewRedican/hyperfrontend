@@ -26,9 +26,11 @@ flowchart TB
 
     subgraph Operations
         LOG[log.ts]
+        DIFF[diff.ts]
         TAG[tag.ts]
         CMT[commit.ts]
         STS[status.ts]
+        OPS[operation-state.ts]
     end
 
     subgraph Models
@@ -44,14 +46,16 @@ flowchart TB
     REF --> ESC1
     PATH --> ESC2
     MSG --> ESC3
-    ESC1 --> LOG & TAG
+    ESC1 --> LOG & TAG & DIFF
     ESC2 --> CMT
     ESC3 --> CMT & TAG
     LOG --> EXEC --> GC
+    DIFF --> EXEC
     TAG --> EXEC --> GT
     CMT --> EXEC --> GC
     STS --> EXEC
-    CLIENT --> LOG & TAG & CMT & STS
+    OPS --> EXEC
+    CLIENT --> LOG & TAG & CMT & STS & OPS & DIFF
     LOG --> GR
 ```
 
@@ -59,16 +63,19 @@ flowchart TB
 
 ### Models
 
-| Export             | Description                                             | Implementation                      |
-| ------------------ | ------------------------------------------------------- | ----------------------------------- |
-| `GitCommit`        | Commit with hash, author, date, subject, body, refs     | [commit.ts](./models/commit.ts)     |
-| `GitTag`           | Tag with name, commitHash, type (lightweight/annotated) | [tag.ts](./models/tag.ts)           |
-| `GitTagType`       | `'lightweight' \| 'annotated'`                          | [tag.ts](./models/tag.ts)           |
-| `GitRef`           | Reference with fullName, name, type, commitHash         | [ref.ts](./models/ref.ts)           |
-| `GitRefType`       | `'branch' \| 'tag' \| 'remote' \| 'head' \| 'stash'`    | [ref.ts](./models/ref.ts)           |
-| `RepositoryStatus` | Full repository status with branch, staged, modified    | [status.ts](./operations/status.ts) |
-| `FileStatus`       | `'added' \| 'modified' \| 'deleted' \| 'renamed' ...`   | [status.ts](./operations/status.ts) |
-| `FileStatusEntry`  | File path with its status                               | [status.ts](./operations/status.ts) |
+| Export               | Description                                             | Implementation                      |
+| -------------------- | ------------------------------------------------------- | ----------------------------------- |
+| `GitCommit`          | Commit with hash, author, date, subject, body, refs     | [commit.ts](./models/commit.ts)     |
+| `GitTag`             | Tag with name, commitHash, type (lightweight/annotated) | [tag.ts](./models/tag.ts)           |
+| `GitTagType`         | `'lightweight' \| 'annotated'`                          | [tag.ts](./models/tag.ts)           |
+| `GitRef`             | Reference with fullName, name, type, commitHash         | [ref.ts](./models/ref.ts)           |
+| `GitRefType`         | `'branch' \| 'tag' \| 'remote' \| 'head' \| 'stash'`    | [ref.ts](./models/ref.ts)           |
+| `RepositoryStatus`   | Full repository status with branch, staged, modified    | [status.ts](./operations/status.ts) |
+| `FileStatus`         | `'added' \| 'modified' \| 'deleted' \| 'renamed' ...`   | [status.ts](./operations/status.ts) |
+| `FileStatusEntry`    | File path with its status                               | [status.ts](./operations/status.ts) |
+| `FileChange`         | File change with path, status, and optional oldPath     | [diff.ts](./operations/diff.ts)     |
+| `FileChangeStatus`   | `'added' \| 'modified' \| 'deleted' \| 'renamed' ...`   | [diff.ts](./operations/diff.ts)     |
+| `GitCommitWithFiles` | GitCommit extended with changed files                   | [diff.ts](./operations/diff.ts)     |
 
 ### Model Factories
 
@@ -122,6 +129,14 @@ flowchart TB
 | `getCommit(hash)`     | Get single commit by hash    | [log.ts](./operations/log.ts) |
 | `commitExists(hash)`  | Check if commit exists       | [log.ts](./operations/log.ts) |
 
+### Diff Operations
+
+| Function                             | Description                         | Implementation                  |
+| ------------------------------------ | ----------------------------------- | ------------------------------- |
+| `getChangedFilesBetween()`           | Get file paths changed between refs | [diff.ts](./operations/diff.ts) |
+| `getChangedFilesBetweenWithStatus()` | Get files with status (add/mod/del) | [diff.ts](./operations/diff.ts) |
+| `getCommitWithFiles(hash)`           | Get commit with its changed files   | [diff.ts](./operations/diff.ts) |
+
 ### Tag Operations
 
 | Function              | Description                         | Implementation                                |
@@ -147,9 +162,11 @@ flowchart TB
 | `createEmptyCommit()`  | Create an empty commit       | [commit.ts](./operations/commit.ts)       |
 | `getHead()`            | Get HEAD commit hash         | [head-info.ts](./operations/head-info.ts) |
 | `getCurrentBranch()`   | Get current branch name      | [head-info.ts](./operations/head-info.ts) |
-| `hasStagedChanges()`   | Check for staged changes     | [status.ts](./operations/status.ts)       |
-| `hasUnstagedChanges()` | Check for unstaged changes   | [status.ts](./operations/status.ts)       |
-| `hasUntrackedFiles()`  | Check for untracked files    | [status.ts](./operations/status.ts)       |
+| `hasStagedChanges()`   | Check for staged changes     | [stage.ts](./operations/stage.ts)         |
+| `hasUnstagedChanges()` | Check for unstaged changes   | [stage.ts](./operations/stage.ts)         |
+| `hasUntrackedFiles()`  | Check for untracked files    | [head-info.ts](./operations/head-info.ts) |
+| `discardChanges()`     | Discard uncommitted changes  | [stage.ts](./operations/stage.ts)         |
+| `discardAllChanges()`  | Discard and unstage all      | [stage.ts](./operations/stage.ts)         |
 
 ### Status Operations
 
@@ -169,6 +186,15 @@ flowchart TB
 | `getStagedFiles()`    | Get list of staged files          | [status.ts](./operations/status.ts)       |
 | `getModifiedFiles()`  | Get list of modified files        | [status.ts](./operations/status.ts)       |
 | `getUntrackedFiles()` | Get list of untracked files       | [status.ts](./operations/status.ts)       |
+
+### Operation State
+
+| Function                  | Description                                                     | Implementation                                        |
+| ------------------------- | --------------------------------------------------------------- | ----------------------------------------------------- |
+| `getOperationState()`     | Detect if git is mid-operation                                  | [operation-state.ts](./operations/operation-state.ts) |
+| `isOperationInProgress()` | Check if rebase/merge is in progress                            | [operation-state.ts](./operations/operation-state.ts) |
+| `GitOperationState`       | Result with inProgress, reason, details                         | [operation-state.ts](./operations/operation-state.ts) |
+| `GitOperationStateReason` | `'rebase-interactive' \| 'rebase-apply' \| 'merge-in-progress'` | [operation-state.ts](./operations/operation-state.ts) |
 
 ### Security Utilities
 
@@ -197,21 +223,64 @@ const commits = git.getCommitLog({ maxCount: 10 })
 // Get commits since last release
 const newCommits = git.getCommitsSince('v1.0.0')
 
+// Get files changed between refs
+const changedFiles = git.getChangedFilesBetween('origin/main', 'HEAD')
+const changesWithStatus = git.getChangedFilesBetweenWithStatus('v1.0.0', 'v2.0.0')
+
+// Get commit with file details
+const commitWithFiles = git.getCommitWithFiles('abc1234')
+if (commitWithFiles) {
+  for (const file of commitWithFiles.files) {
+    console.log(`${file.status}: ${file.path}`)
+  }
+}
+
 // Check repository state
 if (git.isClean()) {
   // Create a tag
   git.createTag('v1.1.0', { message: 'Release v1.1.0' })
+}
+
+// Check for in-progress operations before committing
+const state = git.getOperationState()
+if (state.inProgress) {
+  console.warn(`Cannot proceed: git ${state.reason} in progress`)
 }
 ```
 
 ### Standalone Operations
 
 ```typescript
-import { getCommitsBetween, getTags, getLatestTag, commit, stage } from '@hyperfrontend/versioning'
+import {
+  getCommitsBetween,
+  getTags,
+  getLatestTag,
+  commit,
+  stage,
+  getChangedFilesBetween,
+  getChangedFilesBetweenWithStatus,
+  getCommitWithFiles,
+} from '@hyperfrontend/versioning'
 
 // Get commits between tags
 const commits = getCommitsBetween('v1.0.0', 'v2.0.0')
 console.log(`${commits.length} commits between releases`)
+
+// Get files changed since main
+const changedFiles = getChangedFilesBetween('origin/main', 'HEAD')
+console.log(`${changedFiles.length} files changed`)
+
+// Get files with status information
+const changes = getChangedFilesBetweenWithStatus('v1.0.0', 'v2.0.0')
+const added = changes.filter((c) => c.status === 'added')
+const deleted = changes.filter((c) => c.status === 'deleted')
+console.log(`${added.length} added, ${deleted.length} deleted`)
+
+// Get commit with file details for changelog attribution
+const commitWithFiles = getCommitWithFiles('abc1234')
+if (commitWithFiles) {
+  console.log(`${commitWithFiles.subject} touched ${commitWithFiles.files.length} files`)
+}
 
 // Find latest version tag
 const latest = getLatestTag({ pattern: '@scope/pkg@' })
@@ -299,11 +368,13 @@ git/
 │   └── ref.ts            # GitRef type & factories
 └── operations/           # Git command wrappers
     ├── log.ts            # Commit log queries
+    ├── diff.ts           # File change detection
     ├── query-tags.ts     # Tag listing & queries
     ├── manage-tags.ts    # Tag create/delete/push
     ├── commit.ts         # Commit creation
     ├── stage.ts          # File staging
     ├── status.ts         # Repository status
+    ├── operation-state.ts # Git operation state
     └── head-info.ts      # HEAD information
 ```
 

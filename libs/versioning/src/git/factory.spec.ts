@@ -17,6 +17,8 @@ jest.mock('./operations/stage', () => ({
   stageAll: jest.fn().mockReturnValue(true),
   hasStagedChanges: jest.fn().mockReturnValue(false),
   hasUnstagedChanges: jest.fn().mockReturnValue(false),
+  discardChanges: jest.fn().mockReturnValue(true),
+  discardAllChanges: jest.fn().mockReturnValue(true),
 }))
 jest.mock('./operations/head-info', () => ({
   ...jest.requireActual('./operations/head-info'),
@@ -32,6 +34,12 @@ jest.mock('./operations/log', () => ({
   getCommit: jest.fn().mockReturnValue(null),
   commitExists: jest.fn().mockReturnValue(false),
   commitReachableFromHead: jest.fn().mockReturnValue(false),
+}))
+jest.mock('./operations/diff', () => ({
+  ...jest.requireActual('./operations/diff'),
+  getChangedFilesBetween: jest.fn().mockReturnValue([]),
+  getChangedFilesBetweenWithStatus: jest.fn().mockReturnValue([]),
+  getCommitWithFiles: jest.fn().mockReturnValue(null),
 }))
 jest.mock('./operations/status', () => ({
   getStatus: jest.fn().mockReturnValue({
@@ -72,6 +80,13 @@ jest.mock('./operations/manage-tags', () => ({
   createTag: jest.fn().mockReturnValue({ name: 'v1.0.0', version: { major: 1, minor: 0, patch: 0 } }),
   deleteTag: jest.fn().mockReturnValue(true),
   pushTag: jest.fn().mockReturnValue(true),
+}))
+jest.mock('./operations/operation-state', () => ({
+  ...jest.requireActual('./operations/operation-state'),
+  getOperationState: jest
+    .fn()
+    .mockReturnValue({ inProgress: false, reason: null, details: { rebaseMerge: false, rebaseApply: false, mergeHead: false } }),
+  isOperationInProgress: jest.fn().mockReturnValue(false),
 }))
 
 describe('createGitClient', () => {
@@ -152,6 +167,48 @@ describe('createGitClient', () => {
       const result = client.commitReachableFromHead('abc123')
 
       expect(result).toBe(false)
+    })
+  })
+
+  describe('diff operations', () => {
+    it('provides getChangedFilesBetween method', () => {
+      const client = createGitClient()
+
+      const result = client.getChangedFilesBetween('origin/main')
+
+      expect(result).toEqual([])
+    })
+
+    it('provides getChangedFilesBetween with custom head', () => {
+      const client = createGitClient()
+
+      const result = client.getChangedFilesBetween('v1.0.0', 'v2.0.0')
+
+      expect(result).toEqual([])
+    })
+
+    it('provides getChangedFilesBetweenWithStatus method', () => {
+      const client = createGitClient()
+
+      const result = client.getChangedFilesBetweenWithStatus('origin/main')
+
+      expect(result).toEqual([])
+    })
+
+    it('provides getChangedFilesBetweenWithStatus with custom head', () => {
+      const client = createGitClient()
+
+      const result = client.getChangedFilesBetweenWithStatus('v1.0.0', 'v2.0.0')
+
+      expect(result).toEqual([])
+    })
+
+    it('provides getCommitWithFiles method', () => {
+      const client = createGitClient()
+
+      const result = client.getCommitWithFiles('abc123')
+
+      expect(result).toBeNull()
     })
   })
 
@@ -302,6 +359,22 @@ describe('createGitClient', () => {
       expect(result).toBe(false)
     })
 
+    it('provides discardChanges method', () => {
+      const client = createGitClient()
+
+      const result = client.discardChanges()
+
+      expect(result).toBe(true)
+    })
+
+    it('provides discardAllChanges method', () => {
+      const client = createGitClient()
+
+      const result = client.discardAllChanges()
+
+      expect(result).toBe(true)
+    })
+
     it('provides hasUntrackedFiles method', () => {
       const client = createGitClient()
 
@@ -422,6 +495,24 @@ describe('createGitClient', () => {
       const result = client.getUntrackedFiles()
 
       expect(result).toEqual([])
+    })
+  })
+
+  describe('operation state', () => {
+    it('provides getOperationState method', () => {
+      const client = createGitClient()
+
+      const result = client.getOperationState()
+
+      expect(result).toEqual(expect.objectContaining({ inProgress: false, reason: null }))
+    })
+
+    it('provides isOperationInProgress method', () => {
+      const client = createGitClient()
+
+      const result = client.isOperationInProgress()
+
+      expect(result).toBe(false)
     })
   })
 

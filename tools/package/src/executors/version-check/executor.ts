@@ -48,7 +48,6 @@ export default async function versionCheckExecutor(
     return { success: false }
   }
 
-  // === SAFETY CHECKS ===
   if (options.skipIfVersionCommit !== false) {
     logger.debug('Checking if current commit is a version/release commit')
     if (isVersionCommit(workspaceRoot, projectName)) {
@@ -57,7 +56,6 @@ export default async function versionCheckExecutor(
     }
   }
 
-  // Skip if git is in unstable state (rebase/merge)
   if (isInUnstableGitState(workspaceRoot)) {
     logger.info('Skipping - git is in rebase/merge state')
     return { success: true }
@@ -66,7 +64,6 @@ export default async function versionCheckExecutor(
   const projectRoot = projectConfig.root
   logger.setContextValue('projectRoot', projectRoot)
 
-  // === VALIDATE VERSION STATE ===
   logger.info('Validating version state...')
 
   const result = await validateVersionState({
@@ -78,7 +75,6 @@ export default async function versionCheckExecutor(
     repository: options.repository,
   })
 
-  // === FORMAT AND OUTPUT RESULT ===
   const formatted = formatValidationResult(result)
 
   switch (result.status) {
@@ -95,16 +91,15 @@ export default async function versionCheckExecutor(
       return { success: false }
 
     case 'invalid':
-      // Use console.log for formatted output with proper line breaks
-      console.log(formatted)
-      console.log('')
-      console.log('To fix this issue:')
-      console.log('  1. Pull latest changes: git pull origin <branch>')
-      console.log(`  2. Run versioning: npx nx version ${projectName}`)
-      console.log('  3. Commit the changes: git add . && git commit --amend --no-edit')
-      console.log('  4. Push: git push --force-with-lease')
-      console.log('')
-      console.log('Or push without --no-verify to let lefthook handle versioning automatically.')
+      logger.warn(formatted)
+      logger.log('')
+      logger.log('To fix this issue:')
+      logger.log('  1. Pull latest changes: git pull origin <branch>')
+      logger.log(`  2. Run versioning: npx nx version ${projectName}`)
+      logger.log('  3. Commit the changes: git add . && git commit --amend --no-edit')
+      logger.log('  4. Push: git push --force-with-lease')
+      logger.log('')
+      logger.log('Or push without --no-verify to let lefthook handle versioning automatically.')
       return { success: false }
   }
 }

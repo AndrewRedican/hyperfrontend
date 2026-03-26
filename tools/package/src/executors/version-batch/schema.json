@@ -1,0 +1,29 @@
+{
+  "$schema": "http://json-schema.org/schema",
+  "title": "Batch version executor",
+  "description": "Run versioning for all affected libraries and create a single batch commit",
+  "type": "object",
+  "properties": {
+    "base": {
+      "type": "string",
+      "description": "Base git ref for affected detection",
+      "default": "origin/main"
+    },
+    "head": {
+      "type": "string",
+      "description": "Head git ref for affected detection",
+      "default": "HEAD"
+    },
+    "dryRun": {
+      "type": "boolean",
+      "description": "Preview changes without making them",
+      "default": false
+    },
+    "verbose": {
+      "type": "boolean",
+      "description": "Enable verbose logging",
+      "default": false
+    }
+  },
+  "required": []
+}

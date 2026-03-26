@@ -2,19 +2,23 @@ import type { GitCommit } from './models/commit'
 import type { GitRef } from './models/ref'
 import type { GitTag } from './models/tag'
 import type { CreateCommitOptions } from './operations/commit'
+import type { FileChange, GitCommitWithFiles } from './operations/diff'
 import type { GitLogOptions } from './operations/log'
 import type { CreateTagOptions } from './operations/manage-tags'
+import type { GitOperationState } from './operations/operation-state'
 import type { ListTagsOptions } from './operations/query-tags'
-import type { StageOptions } from './operations/stage'
+import type { StageOptions, DiscardChangesOptions } from './operations/stage'
 import type { RepositoryStatus } from './operations/status'
 import { execFileSync } from 'node:child_process'
 import { createGitRef } from './models/ref'
 import { commit, amendCommit, createEmptyCommit } from './operations/commit'
+import { getChangedFilesBetween, getChangedFilesBetweenWithStatus, getCommitWithFiles } from './operations/diff'
 import { getHead, getCurrentBranch, hasUntrackedFiles } from './operations/head-info'
 import { getCommitLog, getCommitsBetween, getCommitsSince, getCommit, commitExists, commitReachableFromHead } from './operations/log'
 import { createTag, deleteTag, pushTag } from './operations/manage-tags'
+import { getOperationState, isOperationInProgress } from './operations/operation-state'
 import { getTags, getTag, tagExists, getLatestTag, getTagsForPackage } from './operations/query-tags'
-import { stage, unstage, stageAll, hasStagedChanges, hasUnstagedChanges } from './operations/stage'
+import { stage, unstage, stageAll, hasStagedChanges, hasUnstagedChanges, discardChanges, discardAllChanges } from './operations/stage'
 import {
   getStatus,
   isClean,
@@ -136,6 +140,23 @@ export interface GitClient {
    */
   commitReachableFromHead(hash: string): boolean
 
+  // ========== Diff Operations ==========
+
+  /**
+   * Gets files changed between two refs.
+   */
+  getChangedFilesBetween(base: string, head?: string): readonly string[]
+
+  /**
+   * Gets files changed between two refs with status.
+   */
+  getChangedFilesBetweenWithStatus(base: string, head?: string): readonly FileChange[]
+
+  /**
+   * Gets a commit with its changed files.
+   */
+  getCommitWithFiles(hash: string): GitCommitWithFiles | null
+
   // ========== Tag Operations ==========
 
   /**
@@ -231,6 +252,20 @@ export interface GitClient {
   hasUnstagedChanges(): boolean
 
   /**
+   * Discards uncommitted changes to tracked files.
+   *
+   * **Warning:** Destructive operation — discarded changes cannot be recovered.
+   */
+  discardChanges(options?: Omit<DiscardChangesOptions, 'cwd'>): boolean
+
+  /**
+   * Discards all changes and unstages all files.
+   *
+   * **Warning:** Destructive operation — discarded changes cannot be recovered.
+   */
+  discardAllChanges(): boolean
+
+  /**
    * Checks if there are untracked files.
    */
   hasUntrackedFiles(): boolean
@@ -306,6 +341,21 @@ export interface GitClient {
    * Gets untracked file paths.
    */
   getUntrackedFiles(): readonly string[]
+
+  // ========== Operation State ==========
+
+  /**
+   * Gets the current git operation state.
+   *
+   * Detects if git is in the middle of an incomplete operation such as
+   * a rebase or merge.
+   */
+  getOperationState(): GitOperationState
+
+  /**
+   * Checks if an operation (rebase, merge) is in progress.
+   */
+  isOperationInProgress(): boolean
 
   // ========== Ref Operations ==========
 
@@ -386,6 +436,11 @@ export function createGitClient(config: GitClientConfig = {}): GitClient {
     commitExists: (hash) => commitExists(hash, opts),
     commitReachableFromHead: (hash) => commitReachableFromHead(hash, opts),
 
+    // Diff operations
+    getChangedFilesBetween: (base, head) => getChangedFilesBetween(base, head, opts),
+    getChangedFilesBetweenWithStatus: (base, head) => getChangedFilesBetweenWithStatus(base, head, opts),
+    getCommitWithFiles: (hash) => getCommitWithFiles(hash, opts),
+
     // Tag operations
     getTags: (options) => getTags({ ...opts, ...options }),
     getTag: (name) => getTag(name, opts),
@@ -407,6 +462,8 @@ export function createGitClient(config: GitClientConfig = {}): GitClient {
     getCurrentBranch: () => getCurrentBranch(opts),
     hasStagedChanges: () => hasStagedChanges(opts),
     hasUnstagedChanges: () => hasUnstagedChanges(opts),
+    discardChanges: (options) => discardChanges({ ...opts, ...options }),
+    discardAllChanges: () => discardAllChanges(opts),
     hasUntrackedFiles: () => hasUntrackedFiles(opts),
 
     // Status operations
@@ -424,6 +481,10 @@ export function createGitClient(config: GitClientConfig = {}): GitClient {
     getStagedFiles: () => getStagedFiles(opts),
     getModifiedFiles: () => getModifiedFiles(opts),
     getUntrackedFiles: () => getUntrackedFiles(opts),
+
+    // Operation state
+    getOperationState: () => getOperationState(opts),
+    isOperationInProgress: () => isOperationInProgress(opts),
 
     // Ref operations
     getRefs: () => getRefs(opts),

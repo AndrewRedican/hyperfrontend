@@ -3,6 +3,17 @@ import { execFileSync } from 'node:child_process'
 import { DEFAULT_COMMIT_OPTIONS, escapeFilePath } from './commit'
 
 /**
+ * Options for discarding changes.
+ */
+export interface DiscardChangesOptions extends GitCommitOptions {
+  /**
+   * Files or directories to discard. If empty/undefined, discards ALL changes.
+   * Paths are relative to the working directory.
+   */
+  readonly files?: readonly string[]
+}
+
+/**
  * Options for staging files.
  */
 export interface StageOptions extends GitCommitOptions {
@@ -155,4 +166,76 @@ export function hasUnstagedChanges(options: GitCommitOptions = {}): boolean {
     // Exit code 1 means there are changes
     return true
   }
+}
+
+/**
+ * Discards uncommitted changes to tracked files.
+ *
+ * Uses `git checkout -- <files>` to restore files from HEAD.
+ * Returns true if successful, false otherwise (silent failure pattern).
+ *
+ * **Warning:** Destructive operation — discarded changes cannot be recovered.
+ *
+ * @param options - Configuration including optional file list
+ * @returns True if discard succeeded
+ *
+ * @example
+ * // Discard all changes
+ * discardChanges()
+ *
+ * // Discard specific files
+ * discardChanges({ files: ['package.json', 'CHANGELOG.md'] })
+ *
+ * @example
+ * // Typical rollback pattern
+ * if (hasUnstagedChanges()) {
+ *   discardChanges()
+ * }
+ * if (hasStagedChanges()) {
+ *   unstage(['.'])
+ * }
+ */
+export function discardChanges(options: DiscardChangesOptions = {}): boolean {
+  const opts = { ...DEFAULT_COMMIT_OPTIONS, ...options }
+
+  // Build args: git checkout -- [files...]
+  const args: string[] = ['checkout', '--']
+
+  if (opts.files && opts.files.length > 0) {
+    // Selective discard
+    for (const file of opts.files) {
+      args.push(escapeFilePath(file))
+    }
+  } else {
+    // Discard all: git checkout -- .
+    args.push('.')
+  }
+
+  try {
+    execFileSync('git', args, {
+      encoding: 'utf-8',
+      cwd: opts.cwd,
+      timeout: opts.timeout,
+      stdio: ['pipe', 'pipe', 'pipe'],
+    })
+    return true
+  } catch {
+    return false
+  }
+}
+
+/**
+ * Discards all uncommitted changes and unstages all files.
+ *
+ * Combines `discardChanges()` + `unstage(['.'])` for complete working tree reset.
+ *
+ * **Warning:** Destructive operation — discarded changes cannot be recovered.
+ *
+ * @param options - Configuration for the operation
+ * @returns True if both operations succeeded
+ */
+export function discardAllChanges(options: GitCommitOptions = {}): boolean {
+  const discarded = discardChanges(options)
+  const unstaged = unstage(['.'], options)
+  return discarded && unstaged
 }
