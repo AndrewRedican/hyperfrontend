@@ -55,9 +55,3 @@ pre-push:
         Please check the output above for details.
         If you need to skip versioning temporarily, use: git push --no-verify
         Note: CI will fail if versions are not properly applied.
-    push:
-      priority: 7
-      # Push version commits, then exit 1 to prevent the original git push from
-      # racing to update the same ref (causes "cannot lock ref" error otherwise)
-      run: git push origin HEAD --no-verify && exit 1
-      fail_text: ''
