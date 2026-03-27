@@ -1,5 +1,5 @@
 import type { ProjectGraph } from '@nx/devkit'
-import type { FlowConfig, FlowResult } from '@hyperfrontend/versioning'
+import type { FlowConfig, FlowResult } from '@hyperfrontend/versioning/flow/models'
 import { existsSync } from 'node:fs'
 import { join } from 'node:path'
 import { readPackageJsonIfExists } from '@hyperfrontend/project-scope/project/package'
