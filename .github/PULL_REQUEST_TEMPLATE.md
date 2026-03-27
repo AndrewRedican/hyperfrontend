@@ -33,6 +33,11 @@ Fixes #
 - [ ] I have updated relevant documentation
 - [ ] I have used `npm run commit` for conventional commit messages
 
+## AI Assistance
+
+<!-- Required. If no AI tooling was involved at any point in this PR, write "None." -->
+<!-- If AI was used, describe which parts (code, tests, docs, commit messages), which tools, and your level of familiarity with the output. Partial use, uncertainty, or heavy reliance are all fine to state plainly. Omitting this when AI was involved is not acceptable. -->
+
 ## Additional Notes
 
 <!-- Breaking changes, performance impact, or anything else reviewers should know -->
