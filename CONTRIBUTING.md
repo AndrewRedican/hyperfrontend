@@ -20,7 +20,7 @@ Thank you for your interest in contributing to hyperfrontend! We appreciate your
 
 ## Code of Conduct
 
-By participating in this project, you agree to maintain a respectful and inclusive environment for all contributors.
+By participating in this project, you agree to abide by our [Code of Conduct](CODE_OF_CONDUCT.md). Please read it to understand the standards we uphold for a respectful and inclusive community.
 
 ## Getting Started
 
