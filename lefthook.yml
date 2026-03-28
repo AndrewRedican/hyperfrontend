@@ -46,8 +46,12 @@ pre-push:
       priority: 5
       run: CI=1 NODE_OPTIONS="--expose-gc --max-old-space-size=4096" npx nx affected -t=build
       fail_text: 'Build failed. Fix build errors before pushing.'
-    version:
+    e2e:
       priority: 6
+      run: CI=1 npx nx affected -t=e2e
+      fail_text: 'E2E tests failed. Fix failing E2E tests before pushing.'
+    version:
+      priority: 7
       run: npx nx version:all --verbose
       fail_text: |
         ❌ Version batch processing failed.
