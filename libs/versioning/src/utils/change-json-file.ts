@@ -5,7 +5,7 @@
  * This reduces boilerplate by handling read, parse, transform, stringify, and write in one call.
  */
 
-import type { Tree } from '@hyperfrontend/project-scope'
+import type { Tree } from '@hyperfrontend/project-scope/vfs'
 import { parse, stringify } from '@hyperfrontend/immutable-api-utils/built-in-copy/json'
 
 /**

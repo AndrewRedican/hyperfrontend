@@ -1,4 +1,4 @@
-import type { PackageJson } from '@hyperfrontend/project-scope'
+import type { PackageJson } from '@hyperfrontend/project-scope/project/package'
 import {
   createProject,
   isPublishable,

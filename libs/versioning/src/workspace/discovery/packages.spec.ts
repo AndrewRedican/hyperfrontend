@@ -1,4 +1,4 @@
-import type { Tree } from '@hyperfrontend/project-scope'
+import type { Tree } from '@hyperfrontend/project-scope/vfs'
 import { discoverPackages, discoverProject, discoverProjectByName } from './packages'
 
 jest.mock('@hyperfrontend/project-scope/project/package', () => ({

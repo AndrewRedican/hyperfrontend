@@ -1,5 +1,5 @@
 import type { Logger } from '@hyperfrontend/logging'
-import type { Tree } from '@hyperfrontend/project-scope'
+import type { Tree } from '@hyperfrontend/project-scope/vfs'
 
 import type { ChangelogEntry } from '../../changelog/models/entry'
 import type { GitClient } from '../../git/factory'

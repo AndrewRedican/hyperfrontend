@@ -1,4 +1,4 @@
-import type { Tree } from '@hyperfrontend/project-scope'
+import type { Tree } from '@hyperfrontend/project-scope/vfs'
 import { changeJsonFile, DEFAULT_CHANGE_JSON_FILE_OPTIONS } from './change-json-file'
 
 /**

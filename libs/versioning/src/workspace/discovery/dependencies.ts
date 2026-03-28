@@ -6,7 +6,7 @@
  * build/release order.
  */
 
-import type { PackageJson } from '@hyperfrontend/project-scope'
+import type { PackageJson } from '@hyperfrontend/project-scope/project/package'
 import type { Project } from '../models/project'
 import type { Workspace } from '../models/workspace'
 import { createError } from '@hyperfrontend/immutable-api-utils/built-in-copy/error'

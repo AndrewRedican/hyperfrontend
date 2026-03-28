@@ -8,7 +8,7 @@
  * buffering changes until explicitly committed via `commitChanges()`.
  */
 
-import type { Tree } from '@hyperfrontend/project-scope'
+import type { Tree } from '@hyperfrontend/project-scope/vfs'
 import type { Workspace } from '../models/workspace'
 import type { PlannedBump } from './cascade-bump'
 import { parse } from '@hyperfrontend/immutable-api-utils/built-in-copy/json'

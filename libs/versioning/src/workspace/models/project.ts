@@ -5,7 +5,7 @@
  * Contains package.json data, paths, and dependency information.
  */
 
-import type { PackageJson } from '@hyperfrontend/project-scope'
+import type { PackageJson } from '@hyperfrontend/project-scope/project/package'
 
 /**
  * A single project within a workspace.
