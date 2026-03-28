@@ -1,10 +1,8 @@
-import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs'
-import { tmpdir } from 'node:os'
 import { join } from 'node:path'
-import { RuleTester } from 'eslint'
+import { createJsonRuleTester, createTempWorkspaceManager } from '../testing'
 import rule from './lib-e2e-project-required'
 
-const tempDirs: string[] = []
+const manager = createTempWorkspaceManager()
 
 /**
  * Creates a temporary workspace structure for testing.
@@ -19,47 +17,34 @@ function createTempWorkspace(config: { projectJson: object; hasE2eProject?: bool
   libProjectRoot: string
   e2eProjectRoot: string
 } {
-  const workspaceRoot = mkdtempSync(join(tmpdir(), 'eslint-test-workspace-'))
-  tempDirs.push(workspaceRoot)
+  const files: Record<string, string> = {
+    'nx.json': JSON.stringify({ version: 2 }, null, 2),
+    'libs/test-lib/project.json': JSON.stringify(config.projectJson, null, 2),
+  }
 
-  // Create nx.json to mark workspace root
-  writeFileSync(join(workspaceRoot, 'nx.json'), JSON.stringify({ version: 2 }, null, 2), { mode: 0o600 })
-
-  // Create libs/test-lib directory
-  const libProjectRoot = join(workspaceRoot, 'libs', 'test-lib')
-  mkdirSync(libProjectRoot, { recursive: true })
-
-  // Write project.json for the library
-  writeFileSync(join(libProjectRoot, 'project.json'), JSON.stringify(config.projectJson, null, 2), { mode: 0o600 })
-
-  // Create e2e project if specified
-  const e2eProjectRoot = join(workspaceRoot, 'apps', 'package-e2e', 'test-lib')
   if (config.hasE2eProject) {
-    mkdirSync(e2eProjectRoot, { recursive: true })
-    writeFileSync(
-      join(e2eProjectRoot, 'project.json'),
-      JSON.stringify(
-        {
-          name: 'e2e-lib-test-lib',
-          projectType: 'application',
-          tags: ['type:e2e'],
-          implicitDependencies: ['lib-test-lib'],
-        },
-        null,
-        2
-      ),
-      { mode: 0o600 }
+    files['apps/package-e2e/test-lib/project.json'] = JSON.stringify(
+      {
+        name: 'e2e-lib-test-lib',
+        projectType: 'application',
+        tags: ['type:e2e'],
+        implicitDependencies: ['lib-test-lib'],
+      },
+      null,
+      2
     )
   }
 
-  return { workspaceRoot, libProjectRoot, e2eProjectRoot }
+  const workspace = manager.create({ files })
+
+  return {
+    workspaceRoot: workspace.root,
+    libProjectRoot: join(workspace.root, 'libs', 'test-lib'),
+    e2eProjectRoot: join(workspace.root, 'apps', 'package-e2e', 'test-lib'),
+  }
 }
 
-const ruleTester = new RuleTester({
-  languageOptions: {
-    parser: require('jsonc-eslint-parser'),
-  },
-})
+const ruleTester = createJsonRuleTester()
 
 /**
  * Valid publishable library project.json.
@@ -93,9 +78,7 @@ const applicationProjectJson = {
 
 describe('lib-e2e-project-required', () => {
   afterAll(() => {
-    for (const dir of tempDirs) {
-      rmSync(dir, { recursive: true, force: true })
-    }
+    manager.cleanupAll()
   })
 
   ruleTester.run('lib-e2e-project-required', rule, {
@@ -126,32 +109,26 @@ describe('lib-e2e-project-required', () => {
         name: 'skips application projects',
         code: JSON.stringify(applicationProjectJson, null, 2),
         filename: (() => {
-          const workspaceRoot = mkdtempSync(join(tmpdir(), 'eslint-test-app-'))
-          tempDirs.push(workspaceRoot)
-
-          writeFileSync(join(workspaceRoot, 'nx.json'), JSON.stringify({ version: 2 }, null, 2), { mode: 0o600 })
-
-          const appRoot = join(workspaceRoot, 'apps', 'test-app')
-          mkdirSync(appRoot, { recursive: true })
-          writeFileSync(join(appRoot, 'project.json'), JSON.stringify(applicationProjectJson, null, 2), { mode: 0o600 })
-
-          return join(appRoot, 'project.json')
+          const workspace = manager.create({
+            files: {
+              'nx.json': JSON.stringify({ version: 2 }, null, 2),
+              'apps/test-app/project.json': JSON.stringify(applicationProjectJson, null, 2),
+            },
+          })
+          return join(workspace.root, 'apps', 'test-app', 'project.json')
         })(),
       },
       {
         name: 'skips projects outside libs folder',
         code: JSON.stringify(publishableProjectJson, null, 2),
         filename: (() => {
-          const workspaceRoot = mkdtempSync(join(tmpdir(), 'eslint-test-outside-'))
-          tempDirs.push(workspaceRoot)
-
-          writeFileSync(join(workspaceRoot, 'nx.json'), JSON.stringify({ version: 2 }, null, 2), { mode: 0o600 })
-
-          const projectRoot = join(workspaceRoot, 'packages', 'test-lib')
-          mkdirSync(projectRoot, { recursive: true })
-          writeFileSync(join(projectRoot, 'project.json'), JSON.stringify(publishableProjectJson, null, 2), { mode: 0o600 })
-
-          return join(projectRoot, 'project.json')
+          const workspace = manager.create({
+            files: {
+              'nx.json': JSON.stringify({ version: 2 }, null, 2),
+              'packages/test-lib/project.json': JSON.stringify(publishableProjectJson, null, 2),
+            },
+          })
+          return join(workspace.root, 'packages', 'test-lib', 'project.json')
         })(),
       },
     ],

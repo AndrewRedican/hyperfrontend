@@ -2,7 +2,9 @@ import type { TSESTree } from '@typescript-eslint/utils'
 import type { PackageJson } from '../utils/nx-project'
 import { dirname, join, relative, resolve } from 'node:path'
 import { ESLintUtils } from '@typescript-eslint/utils'
-import { findProjectRoot, isPublishableLibrary, parseJsonFile } from '../utils/nx-project'
+import { readJsonFileIfExists } from '../utils/fs'
+import { isPublishableLibrary } from '../utils/nx-project'
+import { findProjectRoot } from '../utils/workspace'
 
 /**
  * Rule identifier for the no-unwanted-barrel-files rule.
@@ -110,7 +112,7 @@ const rule = ESLintUtils.RuleCreator(
     }
 
     const packageJsonPath = join(projectRoot, 'package.json')
-    const packageJson = parseJsonFile<PackageJson>(packageJsonPath)
+    const packageJson = readJsonFileIfExists<PackageJson>(packageJsonPath)
 
     if (!packageJson) {
       return {}

@@ -1,10 +1,8 @@
-import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs'
-import { tmpdir } from 'node:os'
 import { join } from 'node:path'
-import { RuleTester } from 'eslint'
+import { createJsonRuleTester, createTempWorkspaceManager } from '../testing'
 import rule from './lib-tsconfig-paths'
 
-const tempDirs: string[] = []
+const manager = createTempWorkspaceManager()
 
 /**
  * Creates a temporary workspace structure for testing.
@@ -25,27 +23,24 @@ function createTempWorkspace(config: {
     hasPublish?: boolean
   }>
 }): string {
-  const workspaceDir = mkdtempSync(join(tmpdir(), 'eslint-test-workspace-'))
-  tempDirs.push(workspaceDir)
+  // Build the files map
+  const files: Record<string, string> = {}
 
-  // Create libs directory
-  mkdirSync(join(workspaceDir, 'libs'), { recursive: true })
-
-  // Create tsconfig.base.json
-  const tsconfig = {
-    compilerOptions: {
-      baseUrl: '.',
-      paths: config.tsconfigBasePaths ?? {},
+  // Add tsconfig.base.json
+  files['tsconfig.base.json'] = JSON.stringify(
+    {
+      compilerOptions: {
+        baseUrl: '.',
+        paths: config.tsconfigBasePaths ?? {},
+      },
     },
-  }
-  writeFileSync(join(workspaceDir, 'tsconfig.base.json'), JSON.stringify(tsconfig, null, 2), { mode: 0o600 })
+    null,
+    2
+  )
 
   // Create library projects
   if (config.libraries) {
     for (const lib of config.libraries) {
-      const libDir = join(workspaceDir, lib.path)
-      mkdirSync(libDir, { recursive: true })
-
       // Create project.json
       const projectJson = {
         projectType: lib.projectType ?? 'library',
@@ -54,41 +49,36 @@ function createTempWorkspace(config: {
           ...(lib.hasPublish !== false ? { publish: {} } : {}),
         },
       }
-      writeFileSync(join(libDir, 'project.json'), JSON.stringify(projectJson, null, 2), { mode: 0o600 })
+      files[join(lib.path, 'project.json')] = JSON.stringify(projectJson, null, 2)
 
       // Create package.json
       const packageJson = {
         name: lib.name,
         exports: lib.exports,
       }
-      writeFileSync(join(libDir, 'package.json'), JSON.stringify(packageJson, null, 2), { mode: 0o600 })
+      files[join(lib.path, 'package.json')] = JSON.stringify(packageJson, null, 2)
 
       // Create source files
-      mkdirSync(join(libDir, 'src'), { recursive: true })
       const sourceFiles = lib.sourceFiles ?? ['src/index.ts']
       for (const file of sourceFiles) {
-        const filePath = join(libDir, file)
-        const dirPath = join(filePath, '..')
-        mkdirSync(dirPath, { recursive: true })
-        writeFileSync(filePath, '// generated for test', { mode: 0o600 })
+        files[join(lib.path, file)] = '// generated for test'
       }
     }
   }
 
-  return workspaceDir
+  const workspace = manager.create({
+    files,
+    directories: ['libs'],
+  })
+
+  return workspace.root
 }
 
-const ruleTester = new RuleTester({
-  languageOptions: {
-    parser: require('jsonc-eslint-parser'),
-  },
-})
+const ruleTester = createJsonRuleTester()
 
 describe('lib-tsconfig-paths', () => {
   afterAll(() => {
-    for (const dir of tempDirs) {
-      rmSync(dir, { recursive: true, force: true })
-    }
+    manager.cleanupAll()
   })
 
   ruleTester.run('lib-tsconfig-paths', rule, {

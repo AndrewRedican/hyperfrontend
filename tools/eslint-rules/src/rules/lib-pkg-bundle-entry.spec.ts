@@ -1,46 +1,12 @@
-import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs'
-import { tmpdir } from 'node:os'
-import { join } from 'node:path'
-import { RuleTester } from 'eslint'
+import { createJsonRuleTester, createTempWorkspaceManager } from '../testing'
 import rule from './lib-pkg-bundle-entry'
 
-const tempDirs: string[] = []
-
-/**
- * Creates a temporary project structure for testing.
- *
- * @param config - Configuration for the temporary project.
- * @param config.projectJson - Optional project.json content.
- * @param config.packageJson - Optional package.json content.
- * @returns The path to the temporary project directory.
- */
-function createTempProject(config: { projectJson?: object; packageJson?: object }): string {
-  const testDir = mkdtempSync(join(tmpdir(), 'eslint-test-'))
-  tempDirs.push(testDir)
-
-  if (config.projectJson) {
-    writeFileSync(join(testDir, 'project.json'), JSON.stringify(config.projectJson, null, 2), { mode: 0o600 })
-  }
-
-  if (config.packageJson) {
-    writeFileSync(join(testDir, 'package.json'), JSON.stringify(config.packageJson, null, 2), { mode: 0o600 })
-  }
-
-  mkdirSync(join(testDir, 'src'), { recursive: true })
-  return testDir
-}
-
-const ruleTester = new RuleTester({
-  languageOptions: {
-    parser: require('jsonc-eslint-parser'),
-  },
-})
+const manager = createTempWorkspaceManager()
+const ruleTester = createJsonRuleTester()
 
 describe('lib-pkg-bundle-entry', () => {
   afterAll(() => {
-    for (const dir of tempDirs) {
-      rmSync(dir, { recursive: true, force: true })
-    }
+    manager.cleanupAll()
   })
 
   ruleTester.run('lib-pkg-bundle-entry', rule, {
@@ -49,7 +15,7 @@ describe('lib-pkg-bundle-entry', () => {
         name: 'skips non-publishable libraries',
         code: JSON.stringify({ exports: { '.': './src/index.js' } }, null, 2),
         filename: (() => {
-          const dir = createTempProject({
+          const workspace = manager.create({
             projectJson: {
               projectType: 'library',
               targets: {
@@ -58,14 +24,14 @@ describe('lib-pkg-bundle-entry', () => {
             },
             packageJson: { exports: { '.': './src/index.js' } },
           })
-          return join(dir, 'package.json')
+          return workspace.getPath('package.json')
         })(),
       },
       {
         name: 'skips application projects',
         code: JSON.stringify({ exports: { '.': './src/index.js' } }, null, 2),
         filename: (() => {
-          const dir = createTempProject({
+          const workspace = manager.create({
             projectJson: {
               projectType: 'application',
               targets: {
@@ -75,21 +41,21 @@ describe('lib-pkg-bundle-entry', () => {
             },
             packageJson: { exports: { '.': './src/index.js' } },
           })
-          return join(dir, 'package.json')
+          return workspace.getPath('package.json')
         })(),
       },
       {
         name: 'skips when no bundle entries defined',
         code: JSON.stringify({ exports: { '.': './src/index.js' } }, null, 2),
         filename: (() => {
-          const dir = createTempProject({
+          const workspace = manager.create({
             projectJson: {
               projectType: 'library',
               targets: { build: {}, publish: {} },
             },
             packageJson: { exports: { '.': './src/index.js' } },
           })
-          return join(dir, 'package.json')
+          return workspace.getPath('package.json')
         })(),
       },
       {
@@ -105,7 +71,7 @@ describe('lib-pkg-bundle-entry', () => {
           2
         ),
         filename: (() => {
-          const dir = createTempProject({
+          const workspace = manager.create({
             projectJson: {
               projectType: 'library',
               targets: {
@@ -120,7 +86,7 @@ describe('lib-pkg-bundle-entry', () => {
               },
             },
           })
-          return join(dir, 'package.json')
+          return workspace.getPath('package.json')
         })(),
       },
       {
@@ -136,7 +102,7 @@ describe('lib-pkg-bundle-entry', () => {
           2
         ),
         filename: (() => {
-          const dir = createTempProject({
+          const workspace = manager.create({
             projectJson: {
               projectType: 'library',
               targets: {
@@ -151,7 +117,7 @@ describe('lib-pkg-bundle-entry', () => {
               },
             },
           })
-          return join(dir, 'package.json')
+          return workspace.getPath('package.json')
         })(),
       },
       {
@@ -167,7 +133,7 @@ describe('lib-pkg-bundle-entry', () => {
           2
         ),
         filename: (() => {
-          const dir = createTempProject({
+          const workspace = manager.create({
             projectJson: {
               projectType: 'library',
               targets: {
@@ -187,7 +153,7 @@ describe('lib-pkg-bundle-entry', () => {
               },
             },
           })
-          return join(dir, 'package.json')
+          return workspace.getPath('package.json')
         })(),
       },
     ],
@@ -204,7 +170,7 @@ describe('lib-pkg-bundle-entry', () => {
           2
         ),
         filename: (() => {
-          const dir = createTempProject({
+          const workspace = manager.create({
             projectJson: {
               projectType: 'library',
               targets: {
@@ -216,7 +182,7 @@ describe('lib-pkg-bundle-entry', () => {
               exports: { '.': './src/index.js' },
             },
           })
-          return join(dir, 'package.json')
+          return workspace.getPath('package.json')
         })(),
         errors: [{ messageId: 'missingBundleEntry', data: { entry: './browser' } }],
       },
@@ -232,7 +198,7 @@ describe('lib-pkg-bundle-entry', () => {
           2
         ),
         filename: (() => {
-          const dir = createTempProject({
+          const workspace = manager.create({
             projectJson: {
               projectType: 'library',
               targets: {
@@ -244,7 +210,7 @@ describe('lib-pkg-bundle-entry', () => {
               exports: { '.': './src/index.js' },
             },
           })
-          return join(dir, 'package.json')
+          return workspace.getPath('package.json')
         })(),
         errors: [{ messageId: 'missingBundleEntry', data: { entry: './node' } }],
       },
@@ -252,7 +218,7 @@ describe('lib-pkg-bundle-entry', () => {
         name: 'reports when no exports field exists',
         code: JSON.stringify({ name: '@hyperfrontend/test-lib' }, null, 2),
         filename: (() => {
-          const dir = createTempProject({
+          const workspace = manager.create({
             projectJson: {
               projectType: 'library',
               targets: {
@@ -262,7 +228,7 @@ describe('lib-pkg-bundle-entry', () => {
             },
             packageJson: { name: '@hyperfrontend/test-lib' },
           })
-          return join(dir, 'package.json')
+          return workspace.getPath('package.json')
         })(),
         errors: [{ messageId: 'missingBundleEntry', data: { entry: './browser' } }],
       },

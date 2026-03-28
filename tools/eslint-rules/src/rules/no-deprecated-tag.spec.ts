@@ -1,17 +1,11 @@
 import type { InvalidTestCase, ValidTestCase } from '@typescript-eslint/rule-tester'
-import { RuleTester } from '@typescript-eslint/rule-tester'
+import { createTypeScriptRuleTester } from '../testing'
 import rule from './no-deprecated-tag'
 
 type TestOptions = readonly []
 type MessageIds = 'noDeprecatedTag'
 
-const ruleTester = new RuleTester({
-  languageOptions: {
-    parserOptions: {
-      projectService: false,
-    },
-  },
-})
+const ruleTester = createTypeScriptRuleTester()
 
 /**
  * Valid test cases - code without the deprecated tag

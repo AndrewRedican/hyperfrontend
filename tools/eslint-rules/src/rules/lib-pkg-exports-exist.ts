@@ -1,8 +1,7 @@
 import type { Rule } from 'eslint'
 import type { JSONNode } from 'jsonc-eslint-parser/lib/parser/ast'
-import { existsSync } from 'node:fs'
 import { dirname, join } from 'node:path'
-import { isPublishableLibrary } from '../utils/nx-project'
+import { exists, isPublishableLibrary } from '../utils'
 
 /**
  * Rule identifier for the lib-pkg-exports-exist rule.
@@ -24,7 +23,7 @@ function exportPathExists(exportPath: string, projectRoot: string): boolean {
   const resolvedPath = join(projectRoot, normalizedPath)
 
   // Check if the exact path exists
-  if (existsSync(resolvedPath)) {
+  if (exists(resolvedPath)) {
     return true
   }
 
@@ -36,7 +35,7 @@ function exportPathExists(exportPath: string, projectRoot: string): boolean {
     const mtsPath = resolvedPath.replace(/\.mjs$/, '.mts')
     const ctsPath = resolvedPath.replace(/\.cjs$/, '.cts')
 
-    return existsSync(tsPath) || existsSync(mtsPath) || existsSync(ctsPath)
+    return exists(tsPath) || exists(mtsPath) || exists(ctsPath)
   }
 
   return false

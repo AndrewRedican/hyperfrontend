@@ -1,8 +1,8 @@
 import type { Rule } from 'eslint'
 import type { JSONNode } from 'jsonc-eslint-parser/lib/parser/ast'
-import type { PackageJson, ProjectJson } from '../utils/nx-project'
-import { existsSync, readdirSync, readFileSync } from 'node:fs'
+import type { PackageJson } from '../utils/nx-project'
 import { dirname, join, relative } from 'node:path'
+import { exists, findLibraryDirectories, readJsonFileIfExists } from '../utils'
 
 /**
  * Rule identifier for the lib-tsconfig-paths rule.
@@ -32,80 +32,6 @@ interface EntryPointMapping {
 }
 
 /**
- * Parses a JSON file safely.
- *
- * @param filePath - The path to the JSON file.
- * @returns The parsed JSON object, or null if parsing fails.
- */
-function parseJsonFile<T>(filePath: string): T | null {
-  try {
-    const content = readFileSync(filePath, 'utf-8')
-    return <T>JSON.parse(content)
-    /* istanbul ignore next -- defensive error handling for malformed JSON */
-  } catch {
-    return null
-  }
-}
-
-/**
- * Checks if a project is a library by examining its project.json.
- *
- * @param projectDir - The project directory path.
- * @returns True if the project is a library.
- */
-function isLibrary(projectDir: string): boolean {
-  const projectJsonPath = join(projectDir, 'project.json')
-  const projectJson = parseJsonFile<ProjectJson>(projectJsonPath)
-
-  /* istanbul ignore if -- defensive for malformed project.json */
-  if (!projectJson) {
-    return false
-  }
-
-  return projectJson.projectType === 'library'
-}
-
-/**
- * Recursively finds all library directories in the workspace.
- *
- * @param dir - The directory to search in.
- * @param workspaceRoot - The workspace root directory.
- * @returns Array of library directory paths.
- */
-function findLibraryDirectories(dir: string, workspaceRoot: string): string[] {
-  const results: string[] = []
-
-  if (!existsSync(dir)) {
-    return results
-  }
-
-  const entries = readdirSync(dir, { withFileTypes: true })
-
-  for (const entry of entries) {
-    if (!entry.isDirectory()) {
-      continue
-    }
-
-    // Skip node_modules, hidden directories, and common non-project directories
-    if (entry.name.startsWith('.') || entry.name === 'node_modules' || entry.name === 'dist' || entry.name === 'coverage') {
-      continue
-    }
-
-    const fullPath = join(dir, entry.name)
-
-    // Check if this directory is a library
-    if (isLibrary(fullPath)) {
-      results.push(fullPath)
-    }
-
-    // Recurse into subdirectories
-    results.push(...findLibraryDirectories(fullPath, workspaceRoot))
-  }
-
-  return results
-}
-
-/**
  * Converts a package.json export path (./sub/path.js) to a TypeScript source path.
  *
  * @param exportPath - The export path from package.json.
@@ -124,7 +50,7 @@ function resolveExportToSourcePath(exportPath: string, projectDir: string, works
   const absolutePath = join(projectDir, normalizedPath)
 
   // Check if the TypeScript file exists
-  if (existsSync(absolutePath)) {
+  if (exists(absolutePath)) {
     return relative(workspaceRoot, absolutePath)
   }
 
@@ -133,11 +59,11 @@ function resolveExportToSourcePath(exportPath: string, projectDir: string, works
   const ctsPath = absolutePath.replace(/\.ts$/, '.cts')
 
   /* istanbul ignore if -- mts fallback tested via dedicated test */
-  if (existsSync(mtsPath)) {
+  if (exists(mtsPath)) {
     return relative(workspaceRoot, mtsPath)
   }
   /* istanbul ignore if -- cts fallback tested via dedicated test */
-  if (existsSync(ctsPath)) {
+  if (exists(ctsPath)) {
     return relative(workspaceRoot, ctsPath)
   }
 
@@ -153,7 +79,7 @@ function resolveExportToSourcePath(exportPath: string, projectDir: string, works
  */
 function getLibraryEntryPoints(projectDir: string, workspaceRoot: string): EntryPointMapping[] {
   const packageJsonPath = join(projectDir, 'package.json')
-  const packageJson = parseJsonFile<PackageJson>(packageJsonPath)
+  const packageJson = readJsonFileIfExists<PackageJson>(packageJsonPath)
 
   if (!packageJson?.name || !packageJson.exports) {
     return []
@@ -366,7 +292,7 @@ const rule: Rule.RuleModule = {
     const libraryDirs: string[] = []
     for (const dir of libraryDirectories) {
       const absoluteDir = join(workspaceRoot, dir)
-      const foundDirs = findLibraryDirectories(absoluteDir, workspaceRoot)
+      const foundDirs = findLibraryDirectories(absoluteDir)
 
       // Filter out excluded directories
       for (const foundDir of foundDirs) {
@@ -464,7 +390,7 @@ const rule: Rule.RuleModule = {
           let fileExists = false
           if (sourcePath) {
             const absolutePath = join(workspaceRoot, sourcePath)
-            fileExists = existsSync(absolutePath)
+            fileExists = exists(absolutePath)
           }
 
           // Check if this path belongs to a known package (one with exports in package.json)

@@ -1,8 +1,7 @@
-import { RuleTester } from '@typescript-eslint/rule-tester'
-
+import { createTypeScriptRuleTester } from '../testing'
 import { assertiveTestNames } from './assertive-test-names'
 
-const ruleTester = new RuleTester()
+const ruleTester = createTypeScriptRuleTester()
 
 ruleTester.run('assertive-test-names', assertiveTestNames, {
   valid: [

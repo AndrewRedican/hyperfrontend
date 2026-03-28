@@ -1,6 +1,5 @@
-import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs'
-import { tmpdir } from 'node:os'
 import { join } from 'node:path'
+import { createTempWorkspaceManager } from '../testing'
 import rule, {
   extractBadgesBlock,
   extractDocumentationLink,
@@ -13,7 +12,7 @@ import rule, {
   RULE_NAME,
 } from './lib-readme-structure'
 
-const tempDirs: string[] = []
+const manager = createTempWorkspaceManager()
 
 /**
  * Valid publishable library project.json for testing.
@@ -34,14 +33,11 @@ const validProjectJson = {
  * @returns The path to the temporary project directory.
  */
 function createTempProject(config: { projectJson: object }): string {
-  // mkdtempSync creates a unique directory atomically, avoiding TOCTOU race conditions
-  const testDir = mkdtempSync(join(tmpdir(), 'eslint-readme-test-'))
-  tempDirs.push(testDir)
-
-  writeFileSync(join(testDir, 'project.json'), JSON.stringify(config.projectJson, null, 2), { mode: 0o600 })
-  mkdirSync(join(testDir, 'src'), { recursive: true, mode: 0o700 })
-
-  return testDir
+  const workspace = manager.create({
+    projectJson: config.projectJson,
+    directories: ['src'],
+  })
+  return workspace.root
 }
 
 /**
@@ -136,9 +132,7 @@ import { something } from '@hyperfrontend/${packageName}'
 
 describe('lib-readme-structure', () => {
   afterAll(() => {
-    for (const dir of tempDirs) {
-      rmSync(dir, { recursive: true, force: true })
-    }
+    manager.cleanupAll()
   })
 
   describe('rule metadata', () => {

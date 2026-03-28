@@ -1,17 +1,8 @@
-import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs'
-import { tmpdir } from 'node:os'
 import { join } from 'node:path'
-import rule, {
-  deriveCoverageFlag,
-  findWorkspaceRoot,
-  hasCoverageEntry,
-  hasMatrixEntry,
-  hasPathFilter,
-  hasStatusWorkflow,
-  RULE_NAME,
-} from './lib-ci-workflows'
+import { createTempWorkspaceManager } from '../testing'
+import rule, { deriveCoverageFlag, hasCoverageEntry, hasMatrixEntry, hasPathFilter, hasStatusWorkflow, RULE_NAME } from './lib-ci-workflows'
 
-const tempDirs: string[] = []
+const manager = createTempWorkspaceManager()
 
 /**
  * Valid publishable library project.json for testing.
@@ -52,48 +43,37 @@ function createTempWorkspace(config: {
     statusWorkflows?: string[]
   }
 }): string {
-  // mkdtempSync creates a unique directory atomically
-  const workspaceDir = mkdtempSync(join(tmpdir(), 'eslint-ci-workflows-test-'))
-  tempDirs.push(workspaceDir)
-
-  // Create nx.json to mark as workspace root
-  writeFileSync(join(workspaceDir, 'nx.json'), JSON.stringify({ version: 2 }, null, 2), { mode: 0o600 })
+  const files: Record<string, string> = {
+    'nx.json': JSON.stringify({ version: 2 }, null, 2),
+  }
 
   // Create libs directory and libraries
   if (config.libs && config.libs.length > 0) {
-    const libsDir = join(workspaceDir, 'libs')
-    mkdirSync(libsDir, { recursive: true, mode: 0o700 })
-
     for (const lib of config.libs) {
       const folderName = lib.folderName ?? lib.name
-      const libDir = join(libsDir, folderName)
-      mkdirSync(libDir, { recursive: true, mode: 0o700 })
-      writeFileSync(join(libDir, 'project.json'), JSON.stringify(lib.projectJson, null, 2), { mode: 0o600 })
+      files[`libs/${folderName}/project.json`] = JSON.stringify(lib.projectJson, null, 2)
     }
   }
 
-  // Create .github/workflows directory
-  const workflowsDir = join(workspaceDir, '.github', 'workflows')
-  mkdirSync(workflowsDir, { recursive: true, mode: 0o700 })
-
   // Create ci-libraries.yml if provided
   if (config.workflows?.ciLibraries !== undefined) {
-    writeFileSync(join(workflowsDir, 'ci-libraries.yml'), config.workflows.ciLibraries, { mode: 0o600 })
+    files['.github/workflows/ci-libraries.yml'] = config.workflows.ciLibraries
   }
 
   // Create ci-main.yml if provided
   if (config.workflows?.ciMain !== undefined) {
-    writeFileSync(join(workflowsDir, 'ci-main.yml'), config.workflows.ciMain, { mode: 0o600 })
+    files['.github/workflows/ci-main.yml'] = config.workflows.ciMain
   }
 
   // Create status workflow files
   if (config.workflows?.statusWorkflows) {
     for (const workflowName of config.workflows.statusWorkflows) {
-      writeFileSync(join(workflowsDir, workflowName), '# Status workflow', { mode: 0o600 })
+      files[`.github/workflows/${workflowName}`] = '# Status workflow'
     }
   }
 
-  return workspaceDir
+  const workspace = manager.create({ files })
+  return workspace.root
 }
 
 /**
@@ -157,9 +137,7 @@ ${libsArray}
 
 describe('lib-ci-workflows', () => {
   afterAll(() => {
-    for (const dir of tempDirs) {
-      rmSync(dir, { recursive: true, force: true })
-    }
+    manager.cleanupAll()
   })
 
   describe('rule metadata', () => {
@@ -205,25 +183,6 @@ describe('lib-ci-workflows', () => {
 
     it('handles simple paths', () => {
       expect(deriveCoverageFlag('libs/cryptography')).toBe('cryptography')
-    })
-  })
-
-  describe('findWorkspaceRoot', () => {
-    it('finds workspace root when nx.json exists', () => {
-      const workspaceDir = createTempWorkspace({ libs: [] })
-      const nestedDir = join(workspaceDir, 'libs', 'nested')
-      mkdirSync(nestedDir, { recursive: true, mode: 0o700 })
-
-      const result = findWorkspaceRoot(nestedDir)
-      expect(result).toBe(workspaceDir)
-    })
-
-    it('returns null when no nx.json found', () => {
-      const tempDir = mkdtempSync(join(tmpdir(), 'no-nx-json-'))
-      tempDirs.push(tempDir)
-
-      const result = findWorkspaceRoot(tempDir)
-      expect(result).toBeNull()
     })
   })
 
@@ -344,13 +303,15 @@ describe('lib-ci-workflows', () => {
     })
 
     it('ignores ci-libraries.yml not in .github/workflows', () => {
-      const workspaceDir = createTempWorkspace({ libs: [] })
-      const otherDir = join(workspaceDir, 'other')
-      mkdirSync(otherDir, { recursive: true, mode: 0o700 })
-      writeFileSync(join(otherDir, 'ci-libraries.yml'), 'name: test', { mode: 0o600 })
+      const workspace = manager.create({
+        files: {
+          'nx.json': JSON.stringify({ version: 2 }, null, 2),
+          'other/ci-libraries.yml': 'name: test',
+        },
+      })
 
       const handler = rule.create({
-        filename: join(otherDir, 'ci-libraries.yml'),
+        filename: join(workspace.root, 'other', 'ci-libraries.yml'),
         sourceCode: { getText: () => 'name: test' },
       } as never)
 
@@ -616,28 +577,18 @@ describe('lib-ci-workflows', () => {
       const libs = [{ flag: 'json-utils', path: 'libs/utils/json', projectName: 'lib-json-utils' }]
 
       // Create workspace with nested utils structure
-      const workspaceDir = mkdtempSync(join(tmpdir(), 'eslint-ci-workflows-test-'))
-      tempDirs.push(workspaceDir)
-
-      // Create nx.json
-      writeFileSync(join(workspaceDir, 'nx.json'), JSON.stringify({ version: 2 }, null, 2), { mode: 0o600 })
-
-      // Create nested utils directory
-      const utilsJsonDir = join(workspaceDir, 'libs', 'utils', 'json')
-      mkdirSync(utilsJsonDir, { recursive: true, mode: 0o700 })
-      writeFileSync(join(utilsJsonDir, 'project.json'), JSON.stringify({ ...PUBLISHABLE_PROJECT_JSON, name: 'lib-json-utils' }, null, 2), {
-        mode: 0o600,
+      const workspace = manager.create({
+        files: {
+          'nx.json': JSON.stringify({ version: 2 }, null, 2),
+          'libs/utils/json/project.json': JSON.stringify({ ...PUBLISHABLE_PROJECT_JSON, name: 'lib-json-utils' }, null, 2),
+          '.github/workflows/ci-libraries.yml': createCiLibrariesContent(libs),
+          '.github/workflows/ci-main.yml': createCiMainContent(libs),
+          '.github/workflows/ci-lib-json-utils.yml': '# Status workflow',
+        },
       })
 
-      // Create workflows
-      const workflowsDir = join(workspaceDir, '.github', 'workflows')
-      mkdirSync(workflowsDir, { recursive: true, mode: 0o700 })
-      writeFileSync(join(workflowsDir, 'ci-libraries.yml'), createCiLibrariesContent(libs), { mode: 0o600 })
-      writeFileSync(join(workflowsDir, 'ci-main.yml'), createCiMainContent(libs), { mode: 0o600 })
-      writeFileSync(join(workflowsDir, 'ci-lib-json-utils.yml'), '# Status workflow', { mode: 0o600 })
-
       const errors: Array<{ messageId: string }> = []
-      const ciLibrariesPath = join(workspaceDir, '.github', 'workflows', 'ci-libraries.yml')
+      const ciLibrariesPath = join(workspace.root, '.github', 'workflows', 'ci-libraries.yml')
 
       const handler = rule.create({
         filename: ciLibrariesPath,
@@ -660,24 +611,17 @@ describe('lib-ci-workflows', () => {
     })
 
     it('ignores libraries with no project.json', () => {
-      const workspaceDir = mkdtempSync(join(tmpdir(), 'eslint-ci-workflows-test-'))
-      tempDirs.push(workspaceDir)
-
-      // Create nx.json
-      writeFileSync(join(workspaceDir, 'nx.json'), JSON.stringify({ version: 2 }, null, 2), { mode: 0o600 })
-
-      // Create libs directory with a folder but NO project.json
-      const libDir = join(workspaceDir, 'libs', 'no-project-json')
-      mkdirSync(libDir, { recursive: true, mode: 0o700 })
-      // No project.json file created
-
-      const workflowsDir = join(workspaceDir, '.github', 'workflows')
-      mkdirSync(workflowsDir, { recursive: true, mode: 0o700 })
-      writeFileSync(join(workflowsDir, 'ci-libraries.yml'), createCiLibrariesContent([]), { mode: 0o600 })
-      writeFileSync(join(workflowsDir, 'ci-main.yml'), createCiMainContent([]), { mode: 0o600 })
+      const workspace = manager.create({
+        files: {
+          'nx.json': JSON.stringify({ version: 2 }, null, 2),
+          '.github/workflows/ci-libraries.yml': createCiLibrariesContent([]),
+          '.github/workflows/ci-main.yml': createCiMainContent([]),
+        },
+        directories: ['libs/no-project-json'],
+      })
 
       const errors: Array<{ messageId: string }> = []
-      const ciLibrariesPath = join(workspaceDir, '.github', 'workflows', 'ci-libraries.yml')
+      const ciLibrariesPath = join(workspace.root, '.github', 'workflows', 'ci-libraries.yml')
 
       const handler = rule.create({
         filename: ciLibrariesPath,
@@ -696,24 +640,17 @@ describe('lib-ci-workflows', () => {
     })
 
     it('ignores libraries with invalid project.json', () => {
-      const workspaceDir = mkdtempSync(join(tmpdir(), 'eslint-ci-workflows-test-'))
-      tempDirs.push(workspaceDir)
-
-      // Create nx.json
-      writeFileSync(join(workspaceDir, 'nx.json'), JSON.stringify({ version: 2 }, null, 2), { mode: 0o600 })
-
-      // Create libs directory with invalid project.json
-      const libDir = join(workspaceDir, 'libs', 'invalid-json')
-      mkdirSync(libDir, { recursive: true, mode: 0o700 })
-      writeFileSync(join(libDir, 'project.json'), 'not valid json {{{', { mode: 0o600 })
-
-      const workflowsDir = join(workspaceDir, '.github', 'workflows')
-      mkdirSync(workflowsDir, { recursive: true, mode: 0o700 })
-      writeFileSync(join(workflowsDir, 'ci-libraries.yml'), createCiLibrariesContent([]), { mode: 0o600 })
-      writeFileSync(join(workflowsDir, 'ci-main.yml'), createCiMainContent([]), { mode: 0o600 })
+      const workspace = manager.create({
+        files: {
+          'nx.json': JSON.stringify({ version: 2 }, null, 2),
+          'libs/invalid-json/project.json': 'not valid json {{{',
+          '.github/workflows/ci-libraries.yml': createCiLibrariesContent([]),
+          '.github/workflows/ci-main.yml': createCiMainContent([]),
+        },
+      })
 
       const errors: Array<{ messageId: string }> = []
-      const ciLibrariesPath = join(workspaceDir, '.github', 'workflows', 'ci-libraries.yml')
+      const ciLibrariesPath = join(workspace.root, '.github', 'workflows', 'ci-libraries.yml')
 
       const handler = rule.create({
         filename: ciLibrariesPath,
@@ -732,32 +669,21 @@ describe('lib-ci-workflows', () => {
     })
 
     it('ignores application projects', () => {
-      const workspaceDir = mkdtempSync(join(tmpdir(), 'eslint-ci-workflows-test-'))
-      tempDirs.push(workspaceDir)
-
-      // Create nx.json
-      writeFileSync(join(workspaceDir, 'nx.json'), JSON.stringify({ version: 2 }, null, 2), { mode: 0o600 })
-
-      // Create libs directory with an application project (not library)
-      const libDir = join(workspaceDir, 'libs', 'app-project')
-      mkdirSync(libDir, { recursive: true, mode: 0o700 })
-      writeFileSync(
-        join(libDir, 'project.json'),
-        JSON.stringify({
-          name: 'app-project',
-          projectType: 'application',
-          targets: { build: {}, publish: {} },
-        }),
-        { mode: 0o600 }
-      )
-
-      const workflowsDir = join(workspaceDir, '.github', 'workflows')
-      mkdirSync(workflowsDir, { recursive: true, mode: 0o700 })
-      writeFileSync(join(workflowsDir, 'ci-libraries.yml'), createCiLibrariesContent([]), { mode: 0o600 })
-      writeFileSync(join(workflowsDir, 'ci-main.yml'), createCiMainContent([]), { mode: 0o600 })
+      const workspace = manager.create({
+        files: {
+          'nx.json': JSON.stringify({ version: 2 }, null, 2),
+          'libs/app-project/project.json': JSON.stringify({
+            name: 'app-project',
+            projectType: 'application',
+            targets: { build: {}, publish: {} },
+          }),
+          '.github/workflows/ci-libraries.yml': createCiLibrariesContent([]),
+          '.github/workflows/ci-main.yml': createCiMainContent([]),
+        },
+      })
 
       const errors: Array<{ messageId: string }> = []
-      const ciLibrariesPath = join(workspaceDir, '.github', 'workflows', 'ci-libraries.yml')
+      const ciLibrariesPath = join(workspace.root, '.github', 'workflows', 'ci-libraries.yml')
 
       const handler = rule.create({
         filename: ciLibrariesPath,
@@ -776,32 +702,21 @@ describe('lib-ci-workflows', () => {
     })
 
     it('ignores libraries without build target', () => {
-      const workspaceDir = mkdtempSync(join(tmpdir(), 'eslint-ci-workflows-test-'))
-      tempDirs.push(workspaceDir)
-
-      // Create nx.json
-      writeFileSync(join(workspaceDir, 'nx.json'), JSON.stringify({ version: 2 }, null, 2), { mode: 0o600 })
-
-      // Create libs directory with library missing build target
-      const libDir = join(workspaceDir, 'libs', 'no-build')
-      mkdirSync(libDir, { recursive: true, mode: 0o700 })
-      writeFileSync(
-        join(libDir, 'project.json'),
-        JSON.stringify({
-          name: 'lib-no-build',
-          projectType: 'library',
-          targets: { publish: {} }, // No build target
-        }),
-        { mode: 0o600 }
-      )
-
-      const workflowsDir = join(workspaceDir, '.github', 'workflows')
-      mkdirSync(workflowsDir, { recursive: true, mode: 0o700 })
-      writeFileSync(join(workflowsDir, 'ci-libraries.yml'), createCiLibrariesContent([]), { mode: 0o600 })
-      writeFileSync(join(workflowsDir, 'ci-main.yml'), createCiMainContent([]), { mode: 0o600 })
+      const workspace = manager.create({
+        files: {
+          'nx.json': JSON.stringify({ version: 2 }, null, 2),
+          'libs/no-build/project.json': JSON.stringify({
+            name: 'lib-no-build',
+            projectType: 'library',
+            targets: { publish: {} }, // No build target
+          }),
+          '.github/workflows/ci-libraries.yml': createCiLibrariesContent([]),
+          '.github/workflows/ci-main.yml': createCiMainContent([]),
+        },
+      })
 
       const errors: Array<{ messageId: string }> = []
-      const ciLibrariesPath = join(workspaceDir, '.github', 'workflows', 'ci-libraries.yml')
+      const ciLibrariesPath = join(workspace.root, '.github', 'workflows', 'ci-libraries.yml')
 
       const handler = rule.create({
         filename: ciLibrariesPath,
@@ -820,26 +735,17 @@ describe('lib-ci-workflows', () => {
     })
 
     it('skips hidden directories', () => {
-      const workspaceDir = mkdtempSync(join(tmpdir(), 'eslint-ci-workflows-test-'))
-      tempDirs.push(workspaceDir)
-
-      // Create nx.json
-      writeFileSync(join(workspaceDir, 'nx.json'), JSON.stringify({ version: 2 }, null, 2), { mode: 0o600 })
-
-      // Create libs directory with a hidden folder
-      const libsDir = join(workspaceDir, 'libs')
-      mkdirSync(libsDir, { recursive: true, mode: 0o700 })
-      const hiddenDir = join(libsDir, '.hidden-lib')
-      mkdirSync(hiddenDir, { recursive: true, mode: 0o700 })
-      writeFileSync(join(hiddenDir, 'project.json'), JSON.stringify(PUBLISHABLE_PROJECT_JSON), { mode: 0o600 })
-
-      const workflowsDir = join(workspaceDir, '.github', 'workflows')
-      mkdirSync(workflowsDir, { recursive: true, mode: 0o700 })
-      writeFileSync(join(workflowsDir, 'ci-libraries.yml'), createCiLibrariesContent([]), { mode: 0o600 })
-      writeFileSync(join(workflowsDir, 'ci-main.yml'), createCiMainContent([]), { mode: 0o600 })
+      const workspace = manager.create({
+        files: {
+          'nx.json': JSON.stringify({ version: 2 }, null, 2),
+          'libs/.hidden-lib/project.json': JSON.stringify(PUBLISHABLE_PROJECT_JSON),
+          '.github/workflows/ci-libraries.yml': createCiLibrariesContent([]),
+          '.github/workflows/ci-main.yml': createCiMainContent([]),
+        },
+      })
 
       const errors: Array<{ messageId: string }> = []
-      const ciLibrariesPath = join(workspaceDir, '.github', 'workflows', 'ci-libraries.yml')
+      const ciLibrariesPath = join(workspace.root, '.github', 'workflows', 'ci-libraries.yml')
 
       const handler = rule.create({
         filename: ciLibrariesPath,
@@ -858,32 +764,20 @@ describe('lib-ci-workflows', () => {
     })
 
     it('uses fallback name when project.json has no name', () => {
-      const workspaceDir = mkdtempSync(join(tmpdir(), 'eslint-ci-workflows-test-'))
-      tempDirs.push(workspaceDir)
-
-      // Create nx.json
-      writeFileSync(join(workspaceDir, 'nx.json'), JSON.stringify({ version: 2 }, null, 2), { mode: 0o600 })
-
-      // Create libs directory with project.json missing name field
-      const libDir = join(workspaceDir, 'libs', 'unnamed')
-      mkdirSync(libDir, { recursive: true, mode: 0o700 })
-      writeFileSync(
-        join(libDir, 'project.json'),
-        JSON.stringify({
-          projectType: 'library',
-          targets: { build: {}, publish: {} },
-        }),
-        { mode: 0o600 }
-      )
-
-      const workflowsDir = join(workspaceDir, '.github', 'workflows')
-      mkdirSync(workflowsDir, { recursive: true, mode: 0o700 })
-      // Not including the library so it will report missing CI config
-      writeFileSync(join(workflowsDir, 'ci-libraries.yml'), createCiLibrariesContent([]), { mode: 0o600 })
-      writeFileSync(join(workflowsDir, 'ci-main.yml'), createCiMainContent([]), { mode: 0o600 })
+      const workspace = manager.create({
+        files: {
+          'nx.json': JSON.stringify({ version: 2 }, null, 2),
+          'libs/unnamed/project.json': JSON.stringify({
+            projectType: 'library',
+            targets: { build: {}, publish: {} },
+          }),
+          '.github/workflows/ci-libraries.yml': createCiLibrariesContent([]),
+          '.github/workflows/ci-main.yml': createCiMainContent([]),
+        },
+      })
 
       const errors: Array<{ messageId: string; data?: Record<string, string> }> = []
-      const ciLibrariesPath = join(workspaceDir, '.github', 'workflows', 'ci-libraries.yml')
+      const ciLibrariesPath = join(workspace.root, '.github', 'workflows', 'ci-libraries.yml')
 
       const handler = rule.create({
         filename: ciLibrariesPath,
@@ -902,16 +796,15 @@ describe('lib-ci-workflows', () => {
     })
 
     it('returns empty handler when workspace root not found', () => {
-      const tempDir = mkdtempSync(join(tmpdir(), 'no-workspace-'))
-      tempDirs.push(tempDir)
-
-      // Create workflows dir but NO nx.json
-      const workflowsDir = join(tempDir, '.github', 'workflows')
-      mkdirSync(workflowsDir, { recursive: true, mode: 0o700 })
-      writeFileSync(join(workflowsDir, 'ci-libraries.yml'), 'name: test', { mode: 0o600 })
+      // Create workspace with workflows dir but NO nx.json
+      const workspace = manager.create({
+        files: {
+          '.github/workflows/ci-libraries.yml': 'name: test',
+        },
+      })
 
       const handler = rule.create({
-        filename: join(workflowsDir, 'ci-libraries.yml'),
+        filename: join(workspace.root, '.github', 'workflows', 'ci-libraries.yml'),
         sourceCode: { getText: () => 'name: test' },
       } as never)
 
