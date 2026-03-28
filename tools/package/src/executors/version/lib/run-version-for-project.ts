@@ -215,10 +215,24 @@ export async function runVersionForProject(options: RunVersionOptions): Promise<
 
   // === PROCESS RESULT ===
   const success = flowResult.status === 'success' || flowResult.status === 'skipped'
-  const bumped = flowResult.status === 'success'
+  // A bump only occurred if the flow succeeded AND there's actually a next version
+  const bumped = flowResult.status === 'success' && flowResult.state.nextVersion != null
 
   if (flowResult.status === 'success') {
     logger.info(flowResult.summary)
+
+    // If no nextVersion, flow succeeded but no bump was needed (e.g., no releasable commits)
+    if (!flowResult.state.nextVersion) {
+      logger.debug('No version bump needed (no releasable commits)')
+      return {
+        success: true,
+        bumped: false,
+        previousVersion: flowResult.state.currentVersion ?? null,
+        newVersion: null,
+        modifiedFiles: [],
+        flowResult,
+      }
+    }
   } else if (flowResult.status === 'skipped') {
     logger.info('No release needed or already published')
     return {
