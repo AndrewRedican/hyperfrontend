@@ -301,6 +301,8 @@ function transformLinkUrl(url: string, sourceContext: 'root' | 'library'): { url
     'README.md': '/',
     'ARCHITECTURE.md': '/architecture',
     'CONTRIBUTING.md': '/docs/contributing',
+    'CODE_OF_CONDUCT.md': 'https://github.com/AndrewRedican/hyperfrontend/blob/main/CODE_OF_CONDUCT.md',
+    'REGARDING_AI.md': 'https://github.com/AndrewRedican/hyperfrontend/blob/main/REGARDING_AI.md',
     'MANIFESTO.md': 'https://github.com/AndrewRedican/hyperfrontend/blob/main/MANIFESTO.md',
     'LICENSE.md': 'https://github.com/AndrewRedican/hyperfrontend/blob/main/LICENSE.md',
     'SECURITY.md': 'https://github.com/AndrewRedican/hyperfrontend/blob/main/SECURITY.md',

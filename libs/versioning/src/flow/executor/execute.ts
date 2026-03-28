@@ -1,6 +1,6 @@
 /* eslint-disable @nx/enforce-module-boundaries */
 import type { Logger } from '@hyperfrontend/logging'
-import type { FileDiff, Tree } from '@hyperfrontend/project-scope'
+import type { FileDiff, Tree } from '@hyperfrontend/project-scope/vfs'
 import type { GitClient } from '../../git/factory'
 import type { Registry } from '../../registry/models/registry'
 import type { VersionFlow } from '../models/flow'
@@ -10,8 +10,8 @@ import { createError } from '@hyperfrontend/immutable-api-utils/built-in-copy/er
 import { parse } from '@hyperfrontend/immutable-api-utils/built-in-copy/json'
 import { createSet } from '@hyperfrontend/immutable-api-utils/built-in-copy/set'
 import { logger as defaultLogger } from '@hyperfrontend/logging'
-import { commitChanges, createTree, formatUnifiedDiff, generateAllDiffs, rollbackChanges } from '@hyperfrontend/project-scope'
 import { isNxWorkspace, discoverNxProjects } from '@hyperfrontend/project-scope/nx'
+import { commitChanges, createTree, formatUnifiedDiff, generateAllDiffs, rollbackChanges } from '@hyperfrontend/project-scope/vfs'
 import { createGitClient, DEFAULT_GIT_CLIENT_CONFIG } from '../../git/factory'
 import { createRegistry } from '../../registry/factory'
 import { discoverProjectByName } from '../../workspace/discovery'

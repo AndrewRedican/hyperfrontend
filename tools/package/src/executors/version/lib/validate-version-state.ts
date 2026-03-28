@@ -2,7 +2,7 @@ import type { ChangelogEntry, FlowConfig, FlowResult } from '@hyperfrontend/vers
 import { existsSync, readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { readPackageJsonIfExists } from '@hyperfrontend/project-scope/project/package'
-import { parseChangelog, isEntryEqual, hasVersion, getEntryByVersion } from '@hyperfrontend/versioning'
+import { parseChangelog, isEntryEqual, hasVersion, getEntryByVersion } from '@hyperfrontend/versioning/changelog'
 import { createVersionFlow } from '@hyperfrontend/versioning/flow'
 import { executeFlow } from '@hyperfrontend/versioning/flow/executor'
 

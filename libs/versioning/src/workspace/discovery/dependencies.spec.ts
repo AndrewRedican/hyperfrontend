@@ -1,4 +1,4 @@
-import type { PackageJson } from '@hyperfrontend/project-scope'
+import type { PackageJson } from '@hyperfrontend/project-scope/project/package'
 import type { Project } from '../models/project'
 import type { Workspace } from '../models/workspace'
 import { createMap } from '@hyperfrontend/immutable-api-utils/built-in-copy/map'

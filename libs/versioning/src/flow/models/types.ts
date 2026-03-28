@@ -1,5 +1,5 @@
 import type { Logger } from '@hyperfrontend/logging'
-import type { FileDiff, Tree } from '@hyperfrontend/project-scope'
+import type { FileDiff, Tree } from '@hyperfrontend/project-scope/vfs'
 import type { ChangelogEntry } from '../../changelog/models/entry'
 import type { ChangelogSectionType } from '../../changelog/models/section'
 import type { ClassificationResult, InfrastructureConfig, InfrastructureMatcher } from '../../commits/classify'

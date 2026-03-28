@@ -305,6 +305,8 @@ We welcome contributions! Please read our [Contributing Guide](CONTRIBUTING.md) 
 - How to submit pull requests
 - Coding standards and commit message guidelines
 
+If you plan to use LLM assistance, see [REGARDING_AI.md](REGARDING_AI.md) for how AI tooling is used in this project.
+
 **Important**: All contributors must sign our [Contributor License Agreement (CLA)](CONTRIBUTING.md#contributor-license-agreement-cla) before pull requests can be merged.
 
 ## Security

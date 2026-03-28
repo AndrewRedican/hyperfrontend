@@ -1,4 +1,4 @@
-import type { FlowConfig } from '@hyperfrontend/versioning'
+import type { FlowConfig } from '@hyperfrontend/versioning/flow/models'
 
 export interface VersionCheckExecutorSchema {
   /**

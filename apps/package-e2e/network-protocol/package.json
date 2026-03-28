@@ -16,5 +16,8 @@
     "ts-jest": "29.2.6",
     "typescript": "5.7.3"
   },
+  "overrides": {
+    "picomatch": "4.0.4"
+  },
   "private": true
 }

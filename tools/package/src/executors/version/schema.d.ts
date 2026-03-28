@@ -1,4 +1,4 @@
-import type { FlowConfig } from '@hyperfrontend/versioning'
+import type { FlowConfig } from '@hyperfrontend/versioning/flow/models'
 
 export interface VersionExecutorSchema {
   /** See what commands would be run, without committing to git or updating files. */

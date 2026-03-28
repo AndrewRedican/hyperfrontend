@@ -1,4 +1,4 @@
-import type { Tree } from '@hyperfrontend/project-scope'
+import type { Tree } from '@hyperfrontend/project-scope/vfs'
 import {
   CHANGELOG_NAMES,
   findChangelogs,

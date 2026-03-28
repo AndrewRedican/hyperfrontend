@@ -1,4 +1,4 @@
-import type { Tree } from '@hyperfrontend/project-scope'
+import type { Tree } from '@hyperfrontend/project-scope/vfs'
 import type { Project } from '../models/project'
 import type { Workspace } from '../models/workspace'
 import type { PlannedBump } from './cascade-bump'

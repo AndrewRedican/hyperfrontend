@@ -1,5 +1,5 @@
 import type { ProjectGraph } from '@nx/devkit'
-import { getChangedFilesBetween } from '@hyperfrontend/versioning'
+import { getChangedFilesBetween } from '@hyperfrontend/versioning/git/operations'
 
 /**
  * Gets the list of affected libraries based on git changes.

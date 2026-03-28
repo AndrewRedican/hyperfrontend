@@ -1,4 +1,4 @@
-import type { Tree } from '@hyperfrontend/project-scope'
+import type { Tree } from '@hyperfrontend/project-scope/vfs'
 import type { ConventionalCommit } from '../../commits/models/conventional'
 import type { GitClient } from '../../git/factory'
 import type { Registry } from '../../registry/models/registry'
@@ -17,7 +17,7 @@ jest.mock('../../workspace/discovery', () => ({
   discoverProjectByName: jest.fn(),
 }))
 
-jest.mock('@hyperfrontend/project-scope', () => ({
+jest.mock('@hyperfrontend/project-scope/vfs', () => ({
   createTree: jest.fn(),
   commitChanges: jest.fn(),
   rollbackChanges: jest.fn(),
@@ -27,7 +27,7 @@ jest.mock('@hyperfrontend/project-scope', () => ({
 
 const projectScopeNx = require('@hyperfrontend/project-scope/nx')
 const workspaceDiscovery = require('../../workspace/discovery')
-const projectScope = require('@hyperfrontend/project-scope')
+const projectScopeVfs = require('@hyperfrontend/project-scope/vfs')
 
 interface MockFileChange {
   path: string
@@ -211,7 +211,7 @@ beforeEach(() => {
   projectScopeNx.isNxWorkspace.mockReturnValue(false)
   projectScopeNx.discoverNxProjects.mockReturnValue(new Map())
   workspaceDiscovery.discoverProjectByName.mockReturnValue(null)
-  projectScope.commitChanges.mockImplementation(() => void 0)
+  projectScopeVfs.commitChanges.mockImplementation(() => void 0)
 })
 
 describe('executeFlow - project discovery with explicit projectRoot', () => {
@@ -1723,7 +1723,7 @@ describe('executeFlow - VFS commit behavior', () => {
       dryRun: false,
     })
 
-    expect(projectScope.commitChanges).toHaveBeenCalledWith(tree, { verbose: undefined })
+    expect(projectScopeVfs.commitChanges).toHaveBeenCalledWith(tree, { verbose: undefined })
     expect(logger.info).toHaveBeenCalledWith('File changes committed to disk')
   })
 
@@ -1753,11 +1753,11 @@ describe('executeFlow - VFS commit behavior', () => {
       verbose: true,
     })
 
-    expect(projectScope.commitChanges).toHaveBeenCalledWith(tree, { verbose: true })
+    expect(projectScopeVfs.commitChanges).toHaveBeenCalledWith(tree, { verbose: true })
   })
 
   it('logs error when commitChanges throws but does not fail the flow', async () => {
-    projectScope.commitChanges.mockImplementation(() => {
+    projectScopeVfs.commitChanges.mockImplementation(() => {
       throw new Error('Filesystem permission denied')
     })
 
@@ -1814,7 +1814,7 @@ describe('executeFlow - VFS commit behavior', () => {
       projectRoot: 'libs/test',
     })
 
-    expect(projectScope.commitChanges).not.toHaveBeenCalled()
+    expect(projectScopeVfs.commitChanges).not.toHaveBeenCalled()
     expect(logger.info).toHaveBeenCalledWith('Dry run mode - no changes to write')
   })
 
@@ -1847,7 +1847,7 @@ describe('executeFlow - VFS commit behavior', () => {
       dryRun: false,
     })
 
-    expect(projectScope.commitChanges).not.toHaveBeenCalled()
+    expect(projectScopeVfs.commitChanges).not.toHaveBeenCalled()
     expect(result.status).toBe('failed')
   })
 
@@ -1955,7 +1955,7 @@ describe('executeFlow - VFS commit behavior', () => {
       projectRoot: 'libs/test',
     })
 
-    expect(projectScope.commitChanges).not.toHaveBeenCalled()
+    expect(projectScopeVfs.commitChanges).not.toHaveBeenCalled()
     expect(logger.info).toHaveBeenCalledWith('Dry run - would modify 2 file(s):')
     expect(logger.info).toHaveBeenCalledWith('  [UPDATE] libs/test/package.json')
     expect(logger.info).toHaveBeenCalledWith('  [CREATE] libs/test/CHANGELOG.md')
@@ -1976,8 +1976,8 @@ describe('executeFlow - showDiff option', () => {
   }
 
   beforeEach(() => {
-    projectScope.generateAllDiffs.mockReturnValue([mockFileDiff])
-    projectScope.formatUnifiedDiff.mockReturnValue('--- a/libs/test/package.json\n+++ b/libs/test/package.json')
+    projectScopeVfs.generateAllDiffs.mockReturnValue([mockFileDiff])
+    projectScopeVfs.formatUnifiedDiff.mockReturnValue('--- a/libs/test/package.json\n+++ b/libs/test/package.json')
   })
 
   it('does not generate diffs when showDiff is false', async () => {
@@ -2010,7 +2010,7 @@ describe('executeFlow - showDiff option', () => {
       projectRoot: 'libs/test',
     })
 
-    expect(projectScope.generateAllDiffs).not.toHaveBeenCalled()
+    expect(projectScopeVfs.generateAllDiffs).not.toHaveBeenCalled()
     expect(result.diffs).toBeUndefined()
   })
 
@@ -2044,8 +2044,8 @@ describe('executeFlow - showDiff option', () => {
       projectRoot: 'libs/test',
     })
 
-    expect(projectScope.generateAllDiffs).toHaveBeenCalledWith(expect.anything())
-    expect(projectScope.formatUnifiedDiff).toHaveBeenCalledWith(mockFileDiff)
+    expect(projectScopeVfs.generateAllDiffs).toHaveBeenCalledWith(expect.anything())
+    expect(projectScopeVfs.formatUnifiedDiff).toHaveBeenCalledWith(mockFileDiff)
     expect(logger.info).toHaveBeenCalledWith(expect.stringContaining('Pending changes:'))
     expect(logger.info).toHaveBeenCalledWith('--- a/libs/test/package.json\n+++ b/libs/test/package.json')
     expect(result.diffs).toEqual([mockFileDiff])
@@ -2082,8 +2082,8 @@ describe('executeFlow - showDiff option', () => {
       projectRoot: 'libs/test',
     })
 
-    expect(projectScope.generateAllDiffs).toHaveBeenCalledWith(expect.anything())
-    expect(projectScope.formatUnifiedDiff).not.toHaveBeenCalled()
+    expect(projectScopeVfs.generateAllDiffs).toHaveBeenCalledWith(expect.anything())
+    expect(projectScopeVfs.formatUnifiedDiff).not.toHaveBeenCalled()
     expect(logger.info).toHaveBeenCalledWith('libs/test/package.json: +1 -1')
     expect(result.diffs).toEqual([mockFileDiff])
   })
@@ -2116,7 +2116,7 @@ describe('executeFlow - showDiff option', () => {
       projectRoot: 'libs/test',
     })
 
-    expect(projectScope.generateAllDiffs).not.toHaveBeenCalled()
+    expect(projectScopeVfs.generateAllDiffs).not.toHaveBeenCalled()
     expect(logger.info).toHaveBeenCalledWith('No file changes to commit')
     expect(result.diffs).toBeUndefined()
   })
@@ -2196,8 +2196,8 @@ describe('executeFlow - showDiff option', () => {
       { path: 'libs/test/package.json', lines: [], additions: 1, deletions: 1 },
       { path: 'libs/test/CHANGELOG.md', lines: [], additions: 10, deletions: 0 },
     ]
-    projectScope.generateAllDiffs.mockReturnValue(mockDiffs)
-    projectScope.formatUnifiedDiff.mockImplementation((d: { path: string }) => `--- a/${d.path}\n+++ b/${d.path}`)
+    projectScopeVfs.generateAllDiffs.mockReturnValue(mockDiffs)
+    projectScopeVfs.formatUnifiedDiff.mockImplementation((d: { path: string }) => `--- a/${d.path}\n+++ b/${d.path}`)
 
     const logger = createMockLogger()
     const flow = {
@@ -2232,13 +2232,13 @@ describe('executeFlow - showDiff option', () => {
     })
 
     expect(result.diffs).toHaveLength(2)
-    expect(projectScope.formatUnifiedDiff).toHaveBeenCalledTimes(2)
+    expect(projectScopeVfs.formatUnifiedDiff).toHaveBeenCalledTimes(2)
   })
 })
 
 describe('executeFlow - rollbackOnFailure option', () => {
   beforeEach(() => {
-    projectScope.rollbackChanges.mockClear()
+    projectScopeVfs.rollbackChanges.mockClear()
   })
 
   it('calls rollbackChanges when step returns failed status and rollbackOnFailure is default (true)', async () => {
@@ -2276,7 +2276,7 @@ describe('executeFlow - rollbackOnFailure option', () => {
     })
 
     expect(result.status).toBe('failed')
-    expect(projectScope.rollbackChanges).toHaveBeenCalledWith(tree)
+    expect(projectScopeVfs.rollbackChanges).toHaveBeenCalledWith(tree)
     expect(logger.warn).toHaveBeenCalledWith('Rolling back 1 pending file change(s)')
   })
 
@@ -2317,7 +2317,7 @@ describe('executeFlow - rollbackOnFailure option', () => {
     })
 
     expect(result.status).toBe('failed')
-    expect(projectScope.rollbackChanges).toHaveBeenCalledWith(tree)
+    expect(projectScopeVfs.rollbackChanges).toHaveBeenCalledWith(tree)
     expect(logger.warn).toHaveBeenCalledWith('Rolling back 2 pending file change(s)')
   })
 
@@ -2357,7 +2357,7 @@ describe('executeFlow - rollbackOnFailure option', () => {
     })
 
     expect(result.status).toBe('failed')
-    expect(projectScope.rollbackChanges).not.toHaveBeenCalled()
+    expect(projectScopeVfs.rollbackChanges).not.toHaveBeenCalled()
     expect(logger.warn).not.toHaveBeenCalledWith(expect.stringContaining('Rolling back'))
   })
 
@@ -2402,7 +2402,7 @@ describe('executeFlow - rollbackOnFailure option', () => {
     })
 
     expect(result.status).toBe('partial')
-    expect(projectScope.rollbackChanges).not.toHaveBeenCalled()
+    expect(projectScopeVfs.rollbackChanges).not.toHaveBeenCalled()
   })
 
   it('does not call rollbackChanges when there are no pending changes', async () => {
@@ -2438,7 +2438,7 @@ describe('executeFlow - rollbackOnFailure option', () => {
     })
 
     expect(result.status).toBe('failed')
-    expect(projectScope.rollbackChanges).not.toHaveBeenCalled()
+    expect(projectScopeVfs.rollbackChanges).not.toHaveBeenCalled()
     expect(logger.warn).not.toHaveBeenCalledWith(expect.stringContaining('Rolling back'))
   })
 
@@ -2474,7 +2474,7 @@ describe('executeFlow - rollbackOnFailure option', () => {
     })
 
     expect(result.status).toBe('success')
-    expect(projectScope.rollbackChanges).not.toHaveBeenCalled()
+    expect(projectScopeVfs.rollbackChanges).not.toHaveBeenCalled()
   })
 
   it('calls rollbackChanges when explicitly set to true', async () => {
@@ -2513,6 +2513,6 @@ describe('executeFlow - rollbackOnFailure option', () => {
     })
 
     expect(result.status).toBe('failed')
-    expect(projectScope.rollbackChanges).toHaveBeenCalledWith(tree)
+    expect(projectScopeVfs.rollbackChanges).toHaveBeenCalledWith(tree)
   })
 })
