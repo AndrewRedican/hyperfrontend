@@ -1,6 +1,7 @@
 import type { ExecutorContext } from '@nx/devkit'
 import type { VersionBatchExecutorSchema } from './schema'
 import { createProjectGraphAsync } from '@nx/devkit'
+import { keys } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
 import { getCurrentBranch } from '@hyperfrontend/versioning/git/operations'
 import { isInUnstableGitState } from '../version/lib/is-in-unstable-git-state'
 import { getLogger } from '../version/lib/logger'
@@ -76,7 +77,7 @@ export default async function versionBatchExecutor(
 
     // Get project graph
     const projectGraph = await createProjectGraphAsync()
-    logger.debug(`Loaded project graph with ${Object.keys(projectGraph.nodes).length} nodes`)
+    logger.debug(`Loaded project graph with ${keys(projectGraph.nodes).length} nodes`)
 
     // Detect affected libraries
     const affectedLibraries = await getAffectedLibraries(workspaceRoot, projectGraph, base, head)

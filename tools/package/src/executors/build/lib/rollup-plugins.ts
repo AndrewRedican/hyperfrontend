@@ -4,6 +4,7 @@ import json from '@rollup/plugin-json'
 import nodeResolve from '@rollup/plugin-node-resolve'
 import terser from '@rollup/plugin-terser'
 import typescript from '@rollup/plugin-typescript'
+import {createError} from '@hyperfrontend/immutable-api-utils/built-in-copy/error'
 
 /**
  * Creates a node-resolve plugin for entry point builds.
@@ -77,7 +78,7 @@ export function createTypescriptPlugin(
   // multiple workspace packages. Declarations are generated separately via tsc.
   if (bundleWorkspaceDeps) {
     if (!workspaceRoot) {
-      throw new Error('workspaceRoot is required when bundleWorkspaceDeps is true')
+      throw createError('workspaceRoot is required when bundleWorkspaceDeps is true')
     }
     return <Plugin>typescript({
       tsconfig: tsConfigPath,

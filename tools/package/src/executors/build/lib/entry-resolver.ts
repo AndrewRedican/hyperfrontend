@@ -2,6 +2,7 @@ import type { EntryPoint, EntryPointCategory, EntryPointDiscovery, FormatEntryCo
 import { existsSync, readdirSync, statSync } from 'node:fs'
 import { join } from 'node:path'
 import { minimatch } from 'minimatch'
+import {isArray} from '@hyperfrontend/immutable-api-utils/built-in-copy/array'
 
 /** Known platform directory names */
 const PLATFORM_DIRS = <const>['browser', 'node']
@@ -211,12 +212,12 @@ export function resolveEntries(config: FormatEntryConfig, discoveredEntries: Ent
   let entries = discoveredEntries
 
   if (entryPatterns !== undefined) {
-    const patterns = Array.isArray(entryPatterns) ? entryPatterns : [entryPatterns]
+    const patterns = isArray(entryPatterns) ? entryPatterns : [entryPatterns]
     entries = entries.filter((entry) => patterns.some((pattern) => matchesPattern(entry, pattern)))
   }
 
   if (excludePatterns !== undefined) {
-    const patterns = Array.isArray(excludePatterns) ? excludePatterns : [excludePatterns]
+    const patterns = isArray(excludePatterns) ? excludePatterns : [excludePatterns]
     entries = entries.filter((entry) => !patterns.some((pattern) => matchesPattern(entry, pattern)))
   }
 

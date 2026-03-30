@@ -3,6 +3,7 @@ import { spawnSync } from 'node:child_process'
 import { existsSync, mkdirSync, cpSync, rmSync, readdirSync, statSync } from 'node:fs'
 import { dirname, join, relative, resolve } from 'node:path'
 import { logger } from '@nx/devkit'
+import {createError} from '@hyperfrontend/immutable-api-utils/built-in-copy/error'
 
 /**
  * Generates TypeScript declarations for all entry points.
@@ -55,7 +56,7 @@ export function generateDeclarations(
   }
 
   if (result.status !== 0) {
-    throw new Error(`tsc failed with exit code ${result.status}`)
+    throw createError(`tsc failed with exit code ${result.status}`)
   }
 
   flattenDeclarationPaths(projectRoot, outputPath, workspaceRoot, discovery)

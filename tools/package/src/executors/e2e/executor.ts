@@ -4,6 +4,8 @@ import { execFileSync } from 'node:child_process'
 import { existsSync, readFileSync, unlinkSync, mkdirSync, renameSync } from 'node:fs'
 import { join } from 'node:path'
 import { logger } from '@nx/devkit'
+import { createError } from '@hyperfrontend/immutable-api-utils/built-in-copy/error'
+import { parse } from '@hyperfrontend/immutable-api-utils/built-in-copy/json'
 
 /**
  * Reads package info from dist package.json.
@@ -14,9 +16,9 @@ import { logger } from '@nx/devkit'
 function getPackageInfo(distPath: string): { name: string; version: string } {
   const pkgPath = join(distPath, 'package.json')
   if (!existsSync(pkgPath)) {
-    throw new Error(`Package.json not found at ${pkgPath}. Has the library been built?`)
+    throw createError(`Package.json not found at ${pkgPath}. Has the library been built?`)
   }
-  const pkg = JSON.parse(readFileSync(pkgPath, 'utf-8'))
+  const pkg = parse(readFileSync(pkgPath, 'utf-8'))
   return { name: pkg.name, version: pkg.version }
 }
 
@@ -36,11 +38,11 @@ function packPackage(distPath: string, workspaceRoot: string): string {
     stdio: ['pipe', 'pipe', 'pipe'],
   })
 
-  const packResult = JSON.parse(result)
+  const packResult = parse(result)
   const tarballFilename = packResult[0]?.filename
 
   if (!tarballFilename) {
-    throw new Error('npm pack did not return a tarball filename')
+    throw createError('npm pack did not return a tarball filename')
   }
 
   // Move tarball from dist to tmp/e2e-packs to avoid accidental publishing

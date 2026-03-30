@@ -1,5 +1,6 @@
 import type { Logger } from '@hyperfrontend/logging'
 import { logger as nxLogger } from '@nx/devkit'
+import {dateNow} from '@hyperfrontend/immutable-api-utils/built-in-copy/date'
 import { freeze } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
 import { createLogger } from '@hyperfrontend/logging'
 
@@ -46,27 +47,27 @@ export const getLogger = () => {
       getLogLevel: logger.getLogLevel,
       channel: (channelPrefix: string) => createApi(prefix ? `${prefix}:${channelPrefix}` : channelPrefix),
       timed<T>(label: string, fn: () => T): T {
-        const start = Date.now()
+        const start = dateNow()
         try {
           const result = fn()
-          const elapsed = Date.now() - start
+          const elapsed = dateNow() - start
           debugFn(prefixMsg(`${label} completed in ${elapsed}ms`))
           return result
         } catch (error) {
-          const elapsed = Date.now() - start
+          const elapsed = dateNow() - start
           errorFn(prefixMsg(`${label} failed after ${elapsed}ms: ${error instanceof Error ? error.message : String(error)}`))
           throw error
         }
       },
       async timedAsync<T>(label: string, fn: () => Promise<T>): Promise<T> {
-        const start = Date.now()
+        const start = dateNow()
         try {
           const result = await fn()
-          const elapsed = Date.now() - start
+          const elapsed = dateNow() - start
           debugFn(prefixMsg(`${label} completed in ${elapsed}ms`))
           return result
         } catch (error) {
-          const elapsed = Date.now() - start
+          const elapsed = dateNow() - start
           errorFn(prefixMsg(`${label} failed after ${elapsed}ms: ${error instanceof Error ? error.message : String(error)}`))
           if (error instanceof Error && error.stack) {
             debugFn(prefixMsg(`Stack trace:\n${error.stack}`))
