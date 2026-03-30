@@ -1,3 +1,4 @@
+import { createError } from '@hyperfrontend/immutable-api-utils/built-in-copy/error'
 import { commit, stage } from '@hyperfrontend/versioning/git/operations'
 
 /**
@@ -10,17 +11,17 @@ import { commit, stage } from '@hyperfrontend/versioning/git/operations'
  */
 export async function createBatchCommit(workspaceRoot: string, files: string[], libraries: string[]): Promise<string> {
   if (files.length === 0) {
-    throw new Error('No files to commit')
+    throw createError('No files to commit')
   }
 
   if (libraries.length === 0) {
-    throw new Error('No libraries to include in commit message')
+    throw createError('No libraries to include in commit message')
   }
 
   // Stage all modified files
   const staged = stage(files, { cwd: workspaceRoot })
   if (!staged) {
-    throw new Error('Failed to stage files for commit')
+    throw createError('Failed to stage files for commit')
   }
 
   // Create commit message

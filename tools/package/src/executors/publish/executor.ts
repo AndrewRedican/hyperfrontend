@@ -4,6 +4,7 @@ import { execFileSync } from 'node:child_process'
 import { existsSync, readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { logger } from '@nx/devkit'
+import { parse } from '@hyperfrontend/immutable-api-utils/built-in-copy/json'
 
 /**
  * Verifies the project is a publishable library.
@@ -35,7 +36,7 @@ function getDistPath(projectRelativePath: string, workspaceRoot: string): string
  */
 function getPackageName(distPath: string): string {
   const pkgPath = join(distPath, 'package.json')
-  const pkg = JSON.parse(readFileSync(pkgPath, 'utf-8'))
+  const pkg = parse(readFileSync(pkgPath, 'utf-8'))
   return pkg.name
 }
 
@@ -47,7 +48,7 @@ function getPackageName(distPath: string): string {
  */
 function getPackageVersion(distPath: string): string {
   const pkgPath = join(distPath, 'package.json')
-  const pkg = JSON.parse(readFileSync(pkgPath, 'utf-8'))
+  const pkg = parse(readFileSync(pkgPath, 'utf-8'))
   return pkg.version
 }
 

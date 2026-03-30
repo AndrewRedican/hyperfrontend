@@ -1,8 +1,9 @@
 import type { Rule } from 'eslint'
 import type { ProjectJson } from '../utils/nx-project'
-import { existsSync, readdirSync, statSync } from 'node:fs'
 import { basename, dirname, join } from 'node:path'
-import { parseJsonFile } from '../utils/nx-project'
+import { createMap } from '@hyperfrontend/immutable-api-utils/built-in-copy/map'
+import { createSet } from '@hyperfrontend/immutable-api-utils/built-in-copy/set'
+import { exists, findNxWorkspaceRoot, isDirectory, isPublishableLibraryDir, readDirectory, readJsonFileIfExists } from '../utils'
 
 /**
  * Rule identifier for the root-readme-packages rule.
@@ -27,37 +28,6 @@ export interface PublishableLibrary {
 }
 
 /**
- * Checks if a directory contains a publishable library project.
- *
- * @param projectDir - The absolute path to the project directory.
- * @returns True if the project is a publishable library, false otherwise.
- */
-function isPublishableLibraryDir(projectDir: string): boolean {
-  const projectJsonPath = join(projectDir, 'project.json')
-
-  if (!existsSync(projectJsonPath)) {
-    return false
-  }
-
-  const projectJson = parseJsonFile<ProjectJson>(projectJsonPath)
-
-  if (!projectJson) {
-    return false
-  }
-
-  // Must be a library with build and publish targets
-  if (projectJson.projectType !== 'library') {
-    return false
-  }
-
-  if (!projectJson.targets?.build || !projectJson.targets?.publish) {
-    return false
-  }
-
-  return true
-}
-
-/**
  * Recursively finds all publishable libraries in a directory.
  *
  * @param baseDir - The absolute path to search.
@@ -65,7 +35,7 @@ function isPublishableLibraryDir(projectDir: string): boolean {
  * @param results - Array to accumulate results.
  */
 function findPublishableLibraries(baseDir: string, workspaceRoot: string, results: PublishableLibrary[]): void {
-  if (!existsSync(baseDir)) {
+  if (!exists(baseDir)) {
     return
   }
 
@@ -75,8 +45,8 @@ function findPublishableLibraries(baseDir: string, workspaceRoot: string, result
     const projectJsonPath = join(baseDir, 'project.json')
     const packageJsonPath = join(baseDir, 'package.json')
 
-    const projectJson = parseJsonFile<ProjectJson & { name?: string }>(projectJsonPath)
-    const packageJson = parseJsonFile<{ name?: string }>(packageJsonPath)
+    const projectJson = readJsonFileIfExists<ProjectJson & { name?: string }>(projectJsonPath)
+    const packageJson = readJsonFileIfExists<{ name?: string }>(packageJsonPath)
 
     results.push({
       name: projectJson?.name ?? basename(baseDir),
@@ -88,7 +58,7 @@ function findPublishableLibraries(baseDir: string, workspaceRoot: string, result
   // Recursively check subdirectories
   let entries: string[]
   try {
-    entries = readdirSync(baseDir)
+    entries = readDirectory(baseDir)
   } catch {
     return
   }
@@ -101,14 +71,7 @@ function findPublishableLibraries(baseDir: string, workspaceRoot: string, result
 
     const entryPath = join(baseDir, entry)
 
-    let stats
-    try {
-      stats = statSync(entryPath)
-    } catch {
-      continue
-    }
-
-    if (stats.isDirectory()) {
+    if (isDirectory(entryPath)) {
       findPublishableLibraries(entryPath, workspaceRoot, results)
     }
   }
@@ -156,33 +119,13 @@ export function extractMentionedPaths(sectionContent: string): string[] {
 }
 
 /**
- * Finds the workspace root by looking for nx.json.
- *
- * @param startDir - The directory to start searching from.
- * @returns The workspace root path, or null if not found.
- */
-export function findWorkspaceRoot(startDir: string): string | null {
-  let dir = startDir
-  const root = '/'
-
-  while (dir !== root) {
-    if (existsSync(join(dir, 'nx.json'))) {
-      return dir
-    }
-    dir = dirname(dir)
-  }
-
-  return null
-}
-
-/**
  * Parses markdown content to find sections.
  *
  * @param content - The markdown content.
  * @returns Map of section titles to their content and line numbers.
  */
 export function parseReadmeSections(content: string): Map<string, { content: string; startLine: number; endLine: number }> {
-  const sections = new Map<string, { content: string; startLine: number; endLine: number }>()
+  const sections = createMap<string, { content: string; startLine: number; endLine: number }>()
   const lines = content.split('\n')
   let currentSection: { title: string; startLine: number; lines: string[] } | null = null
 
@@ -246,7 +189,7 @@ const rule: Rule.RuleModule = {
     }
 
     const fileDir = dirname(filePath)
-    const workspaceRoot = findWorkspaceRoot(fileDir)
+    const workspaceRoot = findNxWorkspaceRoot(fileDir)
 
     // Only process root README.md (in workspace root)
     if (!workspaceRoot || fileDir !== workspaceRoot) {
@@ -287,7 +230,7 @@ const rule: Rule.RuleModule = {
         // Extract all mentioned paths from both sections
         const mainPaths = extractMentionedPaths(mainPackagesSection.content)
         const internalPaths = extractMentionedPaths(internalPackagesSection.content)
-        const allMentionedPaths = new Set([...mainPaths, ...internalPaths])
+        const allMentionedPaths = createSet([...mainPaths, ...internalPaths])
 
         // Find all publishable libraries in the workspace
         const publishableLibraries: PublishableLibrary[] = []

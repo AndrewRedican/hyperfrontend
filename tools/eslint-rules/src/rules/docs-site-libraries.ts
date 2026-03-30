@@ -1,9 +1,8 @@
 import type { Rule } from 'eslint'
 import type { ArrayExpression, Identifier, Node, VariableDeclaration, VariableDeclarator } from 'estree'
-import type { ProjectJson } from '../utils/nx-project'
-import { existsSync, readdirSync, statSync } from 'node:fs'
 import { basename, dirname, join } from 'node:path'
-import { parseJsonFile } from '../utils/nx-project'
+import { createSet } from '@hyperfrontend/immutable-api-utils/built-in-copy/set'
+import { exists, findNxWorkspaceRoot, isDirectory, isPublishableLibraryDir, readDirectory, readJsonFileIfExists } from '../utils'
 
 /**
  * Rule identifier for the docs-site-libraries rule.
@@ -28,37 +27,6 @@ export interface PublishableLibrary {
 }
 
 /**
- * Checks if a directory contains a publishable library project.
- *
- * @param projectDir - The absolute path to the project directory.
- * @returns True if the project is a publishable library, false otherwise.
- */
-function isPublishableLibraryDir(projectDir: string): boolean {
-  const projectJsonPath = join(projectDir, 'project.json')
-
-  if (!existsSync(projectJsonPath)) {
-    return false
-  }
-
-  const projectJson = parseJsonFile<ProjectJson>(projectJsonPath)
-
-  if (!projectJson) {
-    return false
-  }
-
-  // Must be a library with build and publish targets
-  if (projectJson.projectType !== 'library') {
-    return false
-  }
-
-  if (!projectJson.targets?.build || !projectJson.targets?.publish) {
-    return false
-  }
-
-  return true
-}
-
-/**
  * Gets the package name from a library's package.json.
  *
  * @param projectDir - The absolute path to the project directory.
@@ -66,7 +34,7 @@ function isPublishableLibraryDir(projectDir: string): boolean {
  */
 function getPackageName(projectDir: string): string | null {
   const packageJsonPath = join(projectDir, 'package.json')
-  const packageJson = parseJsonFile<{ name?: string }>(packageJsonPath)
+  const packageJson = readJsonFileIfExists<{ name?: string }>(packageJsonPath)
   return packageJson?.name ?? null
 }
 
@@ -78,7 +46,7 @@ function getPackageName(projectDir: string): string | null {
  * @param results - Array to accumulate results.
  */
 function findPublishableLibraries(baseDir: string, workspaceRoot: string, results: PublishableLibrary[]): void {
-  if (!existsSync(baseDir)) {
+  if (!exists(baseDir)) {
     return
   }
 
@@ -100,7 +68,7 @@ function findPublishableLibraries(baseDir: string, workspaceRoot: string, result
   // Recursively check subdirectories
   let entries: string[]
   try {
-    entries = readdirSync(baseDir)
+    entries = readDirectory(baseDir)
   } catch {
     return
   }
@@ -113,37 +81,10 @@ function findPublishableLibraries(baseDir: string, workspaceRoot: string, result
 
     const entryPath = join(baseDir, entry)
 
-    let stats
-    try {
-      stats = statSync(entryPath)
-    } catch {
-      continue
-    }
-
-    if (stats.isDirectory()) {
+    if (isDirectory(entryPath)) {
       findPublishableLibraries(entryPath, workspaceRoot, results)
     }
   }
-}
-
-/**
- * Finds the workspace root by looking for nx.json.
- *
- * @param startDir - The directory to start searching from.
- * @returns The workspace root path, or null if not found.
- */
-export function findWorkspaceRoot(startDir: string): string | null {
-  let dir = startDir
-  const root = '/'
-
-  while (dir !== root) {
-    if (existsSync(join(dir, 'nx.json'))) {
-      return dir
-    }
-    dir = dirname(dir)
-  }
-
-  return null
 }
 
 /**
@@ -154,7 +95,7 @@ export function findWorkspaceRoot(startDir: string): string | null {
  * @returns Set of package names found.
  */
 export function extractPackageNamesFromArray(arrayExpression: ArrayExpression): Set<string> {
-  const packageNames = new Set<string>()
+  const packageNames = createSet<string>()
 
   for (const element of arrayExpression.elements) {
     // Each element should be an object expression
@@ -243,7 +184,7 @@ const rule: Rule.RuleModule = {
       return {}
     }
 
-    const workspaceRoot = findWorkspaceRoot(fileDir)
+    const workspaceRoot = findNxWorkspaceRoot(fileDir)
 
     if (!workspaceRoot) {
       return {}

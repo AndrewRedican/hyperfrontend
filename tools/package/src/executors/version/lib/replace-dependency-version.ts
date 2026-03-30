@@ -1,4 +1,5 @@
 import { readFileSync, writeFileSync } from 'node:fs'
+import { parse, stringify } from '@hyperfrontend/immutable-api-utils/built-in-copy/json'
 
 /**
  * Dependency sections in package.json that can contain version references.
@@ -16,7 +17,7 @@ const DEPENDENCY_SECTIONS: readonly string[] = ['dependencies', 'devDependencies
  */
 export function replaceDependencyVersion(filePath: string, packageName: string, newVersion: string): boolean {
   const content = readFileSync(filePath, 'utf-8')
-  const pkg = <Record<string, unknown>>JSON.parse(content)
+  const pkg = <Record<string, unknown>>parse(content)
 
   let changed = false
 
@@ -32,7 +33,7 @@ export function replaceDependencyVersion(filePath: string, packageName: string, 
     return false
   }
 
-  const newContent = JSON.stringify(pkg, null, 2) + '\n'
+  const newContent = stringify(pkg, null, 2) + '\n'
   writeFileSync(filePath, newContent, 'utf-8')
   return true
 }
@@ -78,7 +79,7 @@ function replaceTgzInValue(value: string, tgzPrefix: string, newTgzName: string)
  */
 export function replaceTgzReference(filePath: string, packageName: string, tgzPrefix: string, newTgzName: string): boolean {
   const content = readFileSync(filePath, 'utf-8')
-  const pkg = <Record<string, unknown>>JSON.parse(content)
+  const pkg = <Record<string, unknown>>parse(content)
 
   let changed = false
 
@@ -100,7 +101,7 @@ export function replaceTgzReference(filePath: string, packageName: string, tgzPr
     return false
   }
 
-  const newContent = JSON.stringify(pkg, null, 2) + '\n'
+  const newContent = stringify(pkg, null, 2) + '\n'
   writeFileSync(filePath, newContent, 'utf-8')
   return true
 }

@@ -1,4 +1,5 @@
 import { ESLintUtils, AST_NODE_TYPES } from '@typescript-eslint/utils'
+import { createSet } from '@hyperfrontend/immutable-api-utils/built-in-copy/set'
 
 /**
  * Rule identifier for the prefer-exec-file-sync rule.
@@ -44,10 +45,10 @@ export default createRule<[], MessageIds>({
   defaultOptions: [],
   create(context) {
     // Track namespace imports for child_process module
-    const childProcessNamespaceBindings = new Set<string>()
+    const childProcessNamespaceBindings = createSet<string>()
 
     // Track local names of execSync imports (in case of aliased imports)
-    const execSyncLocalBindings = new Set<string>()
+    const execSyncLocalBindings = createSet<string>()
 
     return {
       // Check import declarations

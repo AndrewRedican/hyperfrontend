@@ -5,6 +5,10 @@ import { existsSync, mkdirSync, rmSync } from 'node:fs'
 import { join } from 'node:path'
 import { joinPathFragments } from '@nx/devkit'
 import { rollup } from 'rollup'
+import {isArray} from '@hyperfrontend/immutable-api-utils/built-in-copy/array'
+import {dateNow} from '@hyperfrontend/immutable-api-utils/built-in-copy/date'
+import {keys} from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
+import {createPromise} from '@hyperfrontend/immutable-api-utils/built-in-copy/promise'
 import { copyAssets, copyDefaultAssets, copyFundingAsset, copyThirdPartyLicensesAsset } from './lib/assets'
 import { createCJSEntryConfig } from './lib/config-cjs'
 import { createESMEntryConfig } from './lib/config-esm'
@@ -57,7 +61,7 @@ class MemoryMonitor {
       heapTotal: mem.heapTotal,
       external: mem.external,
       rss: mem.rss,
-      timestamp: Date.now(),
+      timestamp: dateNow(),
     }
 
     if (snap.heapUsed > this.peakHeapUsed) {
@@ -175,7 +179,7 @@ class MemoryMonitor {
     const gcTriggered = this.tryGC()
 
     // Yield to event loop
-    await new Promise<void>((resolve) => setImmediate(resolve))
+    await createPromise<void>((resolve) => setImmediate(resolve))
 
     const after = this.snapshot()
     const recovered = before.heapUsed - after.heapUsed
@@ -196,7 +200,7 @@ class MemoryMonitor {
  */
 function normalizeToArray<T>(config: T | T[] | undefined): T[] {
   if (config === undefined) return []
-  return Array.isArray(config) ? config : [config]
+  return isArray(config) ? config : [config]
 }
 
 /**
@@ -221,7 +225,7 @@ async function executeRollupConfig(
   let bundle = await rollup(config)
 
   try {
-    const outputs = Array.isArray(config.output) ? config.output : config.output ? [config.output] : []
+    const outputs = isArray(config.output) ? config.output : config.output ? [config.output] : []
     for (const output of outputs) {
       logger.debug(`Writing output for ${entryLabel}`)
       await bundle.write(output)
@@ -234,7 +238,7 @@ async function executeRollupConfig(
   }
 
   // Clear config reference (caller's copy remains)
-  const configKeys = <(keyof RollupOptions)[]>Object.keys(config)
+  const configKeys = <(keyof RollupOptions)[]>keys(config)
   for (const key of configKeys) {
     ;(<Record<string, unknown>>config)[key] = undefined
   }
@@ -376,7 +380,7 @@ export default async function runExecutor(options: BuildExecutorOptions, context
     umd: [],
   }
 
-  const buildStart = Date.now()
+  const buildStart = dateNow()
 
   try {
     // Build ESM - one entry at a time for memory efficiency
@@ -494,12 +498,12 @@ export default async function runExecutor(options: BuildExecutorOptions, context
       copyAssets(assets, projectRoot, outputPath, workspaceRoot)
     }
 
-    const totalTime = Date.now() - buildStart
+    const totalTime = dateNow() - buildStart
     logger.info(`Successfully built ${projectName} in ${totalTime}ms`)
     memMonitor.logSummary()
     return { success: true }
   } catch (error) {
-    const totalTime = Date.now() - buildStart
+    const totalTime = dateNow() - buildStart
     logger.error(`Failed to build ${projectName} after ${totalTime}ms`)
     memMonitor.logSummary()
     if (error instanceof Error) {

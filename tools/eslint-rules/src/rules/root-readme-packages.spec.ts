@@ -1,9 +1,8 @@
-import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs'
-import { tmpdir } from 'node:os'
 import { join } from 'node:path'
-import rule, { extractMentionedPaths, findWorkspaceRoot, parseReadmeSections, RULE_NAME } from './root-readme-packages'
+import { createTempWorkspaceManager } from '../testing'
+import rule, { extractMentionedPaths, parseReadmeSections, RULE_NAME } from './root-readme-packages'
 
-const tempDirs: string[] = []
+const manager = createTempWorkspaceManager()
 
 /**
  * Valid publishable library project.json for testing.
@@ -37,44 +36,32 @@ function createTempWorkspace(config: {
   libs?: Array<{ name: string; projectJson: object; packageJson?: object }>
   plugins?: Array<{ name: string; projectJson: object; packageJson?: object }>
 }): string {
-  // mkdtempSync creates a unique directory atomically, avoiding TOCTOU race conditions
-  const workspaceDir = mkdtempSync(join(tmpdir(), 'eslint-root-readme-test-'))
-  tempDirs.push(workspaceDir)
+  const files: Record<string, string> = {
+    'nx.json': JSON.stringify({ version: 2 }, null, 2),
+  }
 
-  // Create nx.json to mark as workspace root
-  writeFileSync(join(workspaceDir, 'nx.json'), JSON.stringify({ version: 2 }, null, 2), { mode: 0o600 })
-
-  // Create libs directory and libraries
+  // Create libraries
   if (config.libs && config.libs.length > 0) {
-    const libsDir = join(workspaceDir, 'libs')
-    mkdirSync(libsDir, { recursive: true, mode: 0o700 })
-
     for (const lib of config.libs) {
-      const libDir = join(libsDir, lib.name)
-      mkdirSync(libDir, { recursive: true, mode: 0o700 })
-      writeFileSync(join(libDir, 'project.json'), JSON.stringify(lib.projectJson, null, 2), { mode: 0o600 })
+      files[`libs/${lib.name}/project.json`] = JSON.stringify(lib.projectJson, null, 2)
       if (lib.packageJson) {
-        writeFileSync(join(libDir, 'package.json'), JSON.stringify(lib.packageJson, null, 2), { mode: 0o600 })
+        files[`libs/${lib.name}/package.json`] = JSON.stringify(lib.packageJson, null, 2)
       }
     }
   }
 
-  // Create plugins directory and plugins
+  // Create plugins
   if (config.plugins && config.plugins.length > 0) {
-    const pluginsDir = join(workspaceDir, 'plugins')
-    mkdirSync(pluginsDir, { recursive: true, mode: 0o700 })
-
     for (const plugin of config.plugins) {
-      const pluginDir = join(pluginsDir, plugin.name)
-      mkdirSync(pluginDir, { recursive: true, mode: 0o700 })
-      writeFileSync(join(pluginDir, 'project.json'), JSON.stringify(plugin.projectJson, null, 2), { mode: 0o600 })
+      files[`plugins/${plugin.name}/project.json`] = JSON.stringify(plugin.projectJson, null, 2)
       if (plugin.packageJson) {
-        writeFileSync(join(pluginDir, 'package.json'), JSON.stringify(plugin.packageJson, null, 2), { mode: 0o600 })
+        files[`plugins/${plugin.name}/package.json`] = JSON.stringify(plugin.packageJson, null, 2)
       }
     }
   }
 
-  return workspaceDir
+  const workspace = manager.create({ files })
+  return workspace.root
 }
 
 /**
@@ -112,9 +99,7 @@ ${internalRows}
 
 describe('root-readme-packages', () => {
   afterAll(() => {
-    for (const dir of tempDirs) {
-      rmSync(dir, { recursive: true, force: true })
-    }
+    manager.cleanupAll()
   })
 
   describe('rule metadata', () => {
@@ -203,25 +188,6 @@ describe('root-readme-packages', () => {
     })
   })
 
-  describe('findWorkspaceRoot', () => {
-    it('finds workspace root when nx.json exists', () => {
-      const workspaceDir = createTempWorkspace({ libs: [] })
-      const nestedDir = join(workspaceDir, 'libs', 'nested')
-      mkdirSync(nestedDir, { recursive: true, mode: 0o700 })
-
-      const result = findWorkspaceRoot(nestedDir)
-      expect(result).toBe(workspaceDir)
-    })
-
-    it('returns null when no nx.json found', () => {
-      const tempDir = mkdtempSync(join(tmpdir(), 'no-nx-json-'))
-      tempDirs.push(tempDir)
-
-      const result = findWorkspaceRoot(tempDir)
-      expect(result).toBeNull()
-    })
-  })
-
   describe('parseReadmeSections', () => {
     it('parses level 2 sections correctly', () => {
       const content = `# Title
@@ -293,12 +259,15 @@ Content.
     })
 
     it('ignores README.md not at workspace root', () => {
-      const workspaceDir = createTempWorkspace({ libs: [] })
-      const nestedDir = join(workspaceDir, 'libs', 'some-lib')
-      mkdirSync(nestedDir, { recursive: true, mode: 0o700 })
+      const workspace = manager.create({
+        files: {
+          'nx.json': JSON.stringify({ version: 2 }, null, 2),
+        },
+        directories: ['libs/some-lib'],
+      })
 
       const handler = rule.create({
-        filename: join(nestedDir, 'README.md'),
+        filename: join(workspace.root, 'libs', 'some-lib', 'README.md'),
         sourceCode: { getText: () => '# Some content' },
       } as never)
 
@@ -442,16 +411,17 @@ Content.
     })
 
     it('handles nested publishable libraries', () => {
-      const workspaceDir = createTempWorkspace({ libs: [] })
-      // Create nested lib structure manually
-      const nestedLibDir = join(workspaceDir, 'libs', 'utils', 'json')
-      mkdirSync(nestedLibDir, { recursive: true, mode: 0o700 })
-      writeFileSync(join(nestedLibDir, 'project.json'), JSON.stringify(PUBLISHABLE_PROJECT_JSON, null, 2), { mode: 0o600 })
-      writeFileSync(join(nestedLibDir, 'package.json'), JSON.stringify({ name: '@hyperfrontend/json-utils' }, null, 2), { mode: 0o600 })
+      const workspace = manager.create({
+        files: {
+          'nx.json': JSON.stringify({ version: 2 }, null, 2),
+          'libs/utils/json/project.json': JSON.stringify(PUBLISHABLE_PROJECT_JSON, null, 2),
+          'libs/utils/json/package.json': JSON.stringify({ name: '@hyperfrontend/json-utils' }, null, 2),
+        },
+      })
 
       const reportMock = jest.fn()
       const context = {
-        filename: join(workspaceDir, 'README.md'),
+        filename: join(workspace.root, 'README.md'),
         sourceCode: {
           getText: () => createValidReadme([], []),
         },
@@ -536,21 +506,17 @@ Content.
     })
 
     it('skips hidden directories and node_modules', () => {
-      const workspaceDir = createTempWorkspace({ libs: [] })
-
-      // Create hidden directory with project.json
-      const hiddenDir = join(workspaceDir, 'libs', '.hidden')
-      mkdirSync(hiddenDir, { recursive: true, mode: 0o700 })
-      writeFileSync(join(hiddenDir, 'project.json'), JSON.stringify(PUBLISHABLE_PROJECT_JSON, null, 2), { mode: 0o600 })
-
-      // Create node_modules with project.json
-      const nodeModulesDir = join(workspaceDir, 'libs', 'node_modules', 'some-pkg')
-      mkdirSync(nodeModulesDir, { recursive: true, mode: 0o700 })
-      writeFileSync(join(nodeModulesDir, 'project.json'), JSON.stringify(PUBLISHABLE_PROJECT_JSON, null, 2), { mode: 0o600 })
+      const workspace = manager.create({
+        files: {
+          'nx.json': JSON.stringify({ version: 2 }, null, 2),
+          'libs/.hidden/project.json': JSON.stringify(PUBLISHABLE_PROJECT_JSON, null, 2),
+          'libs/node_modules/some-pkg/project.json': JSON.stringify(PUBLISHABLE_PROJECT_JSON, null, 2),
+        },
+      })
 
       const reportMock = jest.fn()
       const context = {
-        filename: join(workspaceDir, 'README.md'),
+        filename: join(workspace.root, 'README.md'),
         sourceCode: {
           getText: () => createValidReadme([], []),
         },

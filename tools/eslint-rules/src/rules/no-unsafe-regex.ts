@@ -1,6 +1,8 @@
 import type { TSESTree } from '@typescript-eslint/utils'
 import { ESLintUtils, AST_NODE_TYPES } from '@typescript-eslint/utils'
 import safeRegex from 'safe-regex2'
+import { parseInt } from '@hyperfrontend/immutable-api-utils/built-in-copy/number'
+import { createSet } from '@hyperfrontend/immutable-api-utils/built-in-copy/set'
 
 /**
  * Rule identifier for the no-unsafe-regex rule.
@@ -242,7 +244,7 @@ export default createRule<[NoUnsafeRegexOptions], MessageIds>({
     } = options
 
     // Build set of factory function names for fast lookup
-    const factoryFunctions = new Set(['RegExp', ...regexpFactoryFunctions])
+    const factoryFunctions = createSet(['RegExp', ...regexpFactoryFunctions])
 
     /**
      * Checks if a pattern should be ignored based on ignorePatterns config.

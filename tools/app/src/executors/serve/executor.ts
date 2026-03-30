@@ -4,6 +4,7 @@ import { spawn } from 'node:child_process'
 import { existsSync } from 'node:fs'
 import { join } from 'node:path'
 import { logger } from '@nx/devkit'
+import { createPromise } from '@hyperfrontend/immutable-api-utils/built-in-copy/promise'
 
 /**
  * Serve executor for hyperfrontend application projects.
@@ -47,7 +48,7 @@ export default async function serveExecutor(options: ServeExecutorOptions, conte
   logger.info(`  Running: ${command}`)
   logger.info(`  In: ${cwd}`)
 
-  return new Promise((resolve) => {
+  return createPromise<{ success: boolean }>((resolve) => {
     const child = spawn(command, {
       cwd,
       stdio: 'inherit',

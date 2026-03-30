@@ -1,4 +1,5 @@
-import { ServeExecutorSchema } from './schema'
+import type { ServeExecutorSchema } from './schema'
+import { log } from '@hyperfrontend/immutable-api-utils/built-in-copy/console'
 
 /**
  * Nx executor that serves a hyperfrontend feature in a development playground.
@@ -149,10 +150,10 @@ export default async function* serveExecutor(options: ServeExecutorSchema) {
    *      - Links to documentation
    */
 
-  console.log('Starting feature playground...')
-  console.log('Feature project:', options.project)
-  console.log('Port:', options.port)
-  console.log('Mode:', options.mode)
+  log('Starting feature playground...')
+  log('Feature project:', options.project)
+  log('Port:', options.port)
+  log('Mode:', options.mode)
 
   // Implementation placeholder
   yield { success: true }

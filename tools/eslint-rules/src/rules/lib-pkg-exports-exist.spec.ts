@@ -1,58 +1,18 @@
-import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs'
-import { tmpdir } from 'node:os'
-import { join } from 'node:path'
-import { RuleTester } from 'eslint'
+import {
+  createJsonRuleTester,
+  createTempWorkspaceManager,
+  NON_PUBLISHABLE_LIBRARY_PROJECT_JSON,
+  APPLICATION_PROJECT_JSON,
+  PUBLISHABLE_LIBRARY_PROJECT_JSON,
+} from '../testing'
 import rule from './lib-pkg-exports-exist'
 
-const tempDirs: string[] = []
-
-/**
- * Creates a temporary project structure for testing.
- *
- * @param config - Configuration for the temporary project.
- * @param config.projectJson - Optional project.json content.
- * @param config.packageJson - Optional package.json content.
- * @param config.files - Optional array of file paths to create (relative to project root).
- * @returns The path to the temporary project directory.
- */
-function createTempProject(config: { projectJson?: object; packageJson?: object; files?: string[] }): string {
-  const testDir = mkdtempSync(join(tmpdir(), 'eslint-test-'))
-  tempDirs.push(testDir)
-
-  if (config.projectJson) {
-    writeFileSync(join(testDir, 'project.json'), JSON.stringify(config.projectJson, null, 2), { mode: 0o600 })
-  }
-
-  if (config.packageJson) {
-    writeFileSync(join(testDir, 'package.json'), JSON.stringify(config.packageJson, null, 2), { mode: 0o600 })
-  }
-
-  mkdirSync(join(testDir, 'src'), { recursive: true })
-
-  // Create any additional files specified
-  if (config.files) {
-    for (const file of config.files) {
-      const filePath = join(testDir, file)
-      const dirPath = join(filePath, '..')
-      mkdirSync(dirPath, { recursive: true })
-      writeFileSync(filePath, '// generated for test', { mode: 0o600 })
-    }
-  }
-
-  return testDir
-}
-
-const ruleTester = new RuleTester({
-  languageOptions: {
-    parser: require('jsonc-eslint-parser'),
-  },
-})
+const manager = createTempWorkspaceManager()
+const ruleTester = createJsonRuleTester()
 
 describe('lib-pkg-exports-exist', () => {
   afterAll(() => {
-    for (const dir of tempDirs) {
-      rmSync(dir, { recursive: true, force: true })
-    }
+    manager.cleanupAll()
   })
 
   ruleTester.run('lib-pkg-exports-exist', rule, {
@@ -61,33 +21,22 @@ describe('lib-pkg-exports-exist', () => {
         name: 'skips non-publishable libraries',
         code: JSON.stringify({ exports: { '.': './src/index.js' } }, null, 2),
         filename: (() => {
-          const dir = createTempProject({
-            projectJson: {
-              projectType: 'library',
-              targets: {
-                build: {},
-              },
-            },
+          const workspace = manager.create({
+            projectJson: NON_PUBLISHABLE_LIBRARY_PROJECT_JSON,
             packageJson: { exports: { '.': './src/index.js' } },
           })
-          return join(dir, 'package.json')
+          return workspace.getPath('package.json')
         })(),
       },
       {
         name: 'skips application projects',
         code: JSON.stringify({ exports: { '.': './src/index.js' } }, null, 2),
         filename: (() => {
-          const dir = createTempProject({
-            projectJson: {
-              projectType: 'application',
-              targets: {
-                build: {},
-                publish: {},
-              },
-            },
+          const workspace = manager.create({
+            projectJson: { ...APPLICATION_PROJECT_JSON, targets: { ...APPLICATION_PROJECT_JSON.targets, publish: {} } },
             packageJson: { exports: { '.': './src/index.js' } },
           })
-          return join(dir, 'package.json')
+          return workspace.getPath('package.json')
         })(),
       },
       {
@@ -103,20 +52,20 @@ describe('lib-pkg-exports-exist', () => {
           2
         ),
         filename: (() => {
-          const dir = createTempProject({
-            projectJson: {
-              projectType: 'library',
-              targets: { build: {}, publish: {} },
-            },
+          const workspace = manager.create({
+            projectJson: PUBLISHABLE_LIBRARY_PROJECT_JSON,
             packageJson: {
               exports: {
                 '.': './src/index.js',
                 './utils': './src/utils/index.js',
               },
             },
-            files: ['src/index.js', 'src/utils/index.js'],
+            files: {
+              'src/index.js': '// generated for test',
+              'src/utils/index.js': '// generated for test',
+            },
           })
-          return join(dir, 'package.json')
+          return workspace.getPath('package.json')
         })(),
       },
       {
@@ -132,20 +81,19 @@ describe('lib-pkg-exports-exist', () => {
           2
         ),
         filename: (() => {
-          const dir = createTempProject({
-            projectJson: {
-              projectType: 'library',
-              targets: { build: {}, publish: {} },
-            },
+          const workspace = manager.create({
+            projectJson: PUBLISHABLE_LIBRARY_PROJECT_JSON,
             packageJson: {
               exports: {
                 '.': './src/index.js',
                 './package.json': './package.json',
               },
             },
-            files: ['src/index.js'],
+            files: {
+              'src/index.js': '// generated for test',
+            },
           })
-          return join(dir, 'package.json')
+          return workspace.getPath('package.json')
         })(),
       },
       {
@@ -163,11 +111,8 @@ describe('lib-pkg-exports-exist', () => {
           2
         ),
         filename: (() => {
-          const dir = createTempProject({
-            projectJson: {
-              projectType: 'library',
-              targets: { build: {}, publish: {} },
-            },
+          const workspace = manager.create({
+            projectJson: PUBLISHABLE_LIBRARY_PROJECT_JSON,
             packageJson: {
               exports: {
                 '.': {
@@ -176,9 +121,12 @@ describe('lib-pkg-exports-exist', () => {
                 },
               },
             },
-            files: ['src/index.mjs', 'src/index.cjs'],
+            files: {
+              'src/index.mjs': '// generated for test',
+              'src/index.cjs': '// generated for test',
+            },
           })
-          return join(dir, 'package.json')
+          return workspace.getPath('package.json')
         })(),
       },
       {
@@ -194,20 +142,20 @@ describe('lib-pkg-exports-exist', () => {
           2
         ),
         filename: (() => {
-          const dir = createTempProject({
-            projectJson: {
-              projectType: 'library',
-              targets: { build: {}, publish: {} },
-            },
+          const workspace = manager.create({
+            projectJson: PUBLISHABLE_LIBRARY_PROJECT_JSON,
             packageJson: {
               exports: {
                 '.': './src/index.js',
                 './utils': './src/utils/index.js',
               },
             },
-            files: ['src/index.ts', 'src/utils/index.ts'],
+            files: {
+              'src/index.ts': '// generated for test',
+              'src/utils/index.ts': '// generated for test',
+            },
           })
-          return join(dir, 'package.json')
+          return workspace.getPath('package.json')
         })(),
       },
       {
@@ -225,11 +173,8 @@ describe('lib-pkg-exports-exist', () => {
           2
         ),
         filename: (() => {
-          const dir = createTempProject({
-            projectJson: {
-              projectType: 'library',
-              targets: { build: {}, publish: {} },
-            },
+          const workspace = manager.create({
+            projectJson: PUBLISHABLE_LIBRARY_PROJECT_JSON,
             packageJson: {
               exports: {
                 '.': {
@@ -238,9 +183,11 @@ describe('lib-pkg-exports-exist', () => {
                 },
               },
             },
-            files: ['src/index.ts'],
+            files: {
+              'src/index.ts': '// generated for test',
+            },
           })
-          return join(dir, 'package.json')
+          return workspace.getPath('package.json')
         })(),
       },
     ],
@@ -257,11 +204,8 @@ describe('lib-pkg-exports-exist', () => {
           2
         ),
         filename: (() => {
-          const dir = createTempProject({
-            projectJson: {
-              projectType: 'library',
-              targets: { build: {}, publish: {} },
-            },
+          const workspace = manager.create({
+            projectJson: PUBLISHABLE_LIBRARY_PROJECT_JSON,
             packageJson: {
               exports: {
                 '.': './src/index.js',
@@ -269,7 +213,7 @@ describe('lib-pkg-exports-exist', () => {
             },
             // Note: not creating the file
           })
-          return join(dir, 'package.json')
+          return workspace.getPath('package.json')
         })(),
         errors: [
           {
@@ -291,20 +235,19 @@ describe('lib-pkg-exports-exist', () => {
           2
         ),
         filename: (() => {
-          const dir = createTempProject({
-            projectJson: {
-              projectType: 'library',
-              targets: { build: {}, publish: {} },
-            },
+          const workspace = manager.create({
+            projectJson: PUBLISHABLE_LIBRARY_PROJECT_JSON,
             packageJson: {
               exports: {
                 '.': './src/index.js',
                 './utils': './src/utils/index.js',
               },
             },
-            files: ['src/index.js'], // Only create main export, not utils
+            files: {
+              'src/index.js': '// generated for test',
+            }, // Only create main export, not utils
           })
-          return join(dir, 'package.json')
+          return workspace.getPath('package.json')
         })(),
         errors: [
           {
@@ -328,11 +271,8 @@ describe('lib-pkg-exports-exist', () => {
           2
         ),
         filename: (() => {
-          const dir = createTempProject({
-            projectJson: {
-              projectType: 'library',
-              targets: { build: {}, publish: {} },
-            },
+          const workspace = manager.create({
+            projectJson: PUBLISHABLE_LIBRARY_PROJECT_JSON,
             packageJson: {
               exports: {
                 '.': {
@@ -341,9 +281,11 @@ describe('lib-pkg-exports-exist', () => {
                 },
               },
             },
-            files: ['src/index.mjs'], // Only create import, not require
+            files: {
+              'src/index.mjs': '// generated for test',
+            }, // Only create import, not require
           })
-          return join(dir, 'package.json')
+          return workspace.getPath('package.json')
         })(),
         errors: [
           {
@@ -366,11 +308,8 @@ describe('lib-pkg-exports-exist', () => {
           2
         ),
         filename: (() => {
-          const dir = createTempProject({
-            projectJson: {
-              projectType: 'library',
-              targets: { build: {}, publish: {} },
-            },
+          const workspace = manager.create({
+            projectJson: PUBLISHABLE_LIBRARY_PROJECT_JSON,
             packageJson: {
               exports: {
                 '.': './src/index.js',
@@ -380,7 +319,7 @@ describe('lib-pkg-exports-exist', () => {
             },
             // No files created
           })
-          return join(dir, 'package.json')
+          return workspace.getPath('package.json')
         })(),
         errors: [
           {

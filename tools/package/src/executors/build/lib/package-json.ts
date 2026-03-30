@@ -8,6 +8,8 @@ import type {
 } from './types'
 import { join } from 'node:path'
 import { readJsonFile, writeJsonFile } from '@nx/devkit'
+import {entries, fromEntries} from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
+import {createSet} from '@hyperfrontend/immutable-api-utils/built-in-copy/set'
 import { isWorkspacePackage } from './externals'
 
 /** Fields to inherit from root package.json */
@@ -149,14 +151,14 @@ export function generateExportsFromFormats(
     './package.json': './package.json',
   }
 
-  const esmPaths = new Set(formatOutputs.esm.map((e) => e.exportPath))
-  const cjsPaths = new Set(formatOutputs.cjs.map((e) => e.exportPath))
+  const esmPaths = createSet(formatOutputs.esm.map((e) => e.exportPath))
+  const cjsPaths = createSet(formatOutputs.cjs.map((e) => e.exportPath))
 
   // Source exports are authoritative
   const srcExports = srcPkg?.exports
   if (srcExports && typeof srcExports === 'object') {
     // Parse source exports and generate ONLY those
-    for (const [exportKey, srcPath] of Object.entries(srcExports)) {
+    for (const [exportKey, srcPath] of entries(srcExports)) {
       // Skip package.json export (already added)
       if (exportKey === './package.json') continue
 
@@ -214,9 +216,9 @@ function filterWorkspaceDependencies(srcPkg: PackageJson): PackageJson {
   const filtered = { ...srcPkg }
 
   if (filtered.dependencies) {
-    const externalDeps = Object.entries(filtered.dependencies).filter(([name]) => !isWorkspacePackage(name))
+    const externalDeps = entries(filtered.dependencies).filter(([name]) => !isWorkspacePackage(name))
     if (externalDeps.length > 0) {
-      filtered.dependencies = Object.fromEntries(externalDeps)
+      filtered.dependencies = fromEntries(externalDeps)
     } else {
       delete filtered.dependencies
     }

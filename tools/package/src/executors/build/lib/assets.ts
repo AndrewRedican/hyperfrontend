@@ -3,6 +3,7 @@ import { existsSync, mkdirSync, copyFileSync, readdirSync, readFileSync, writeFi
 import { join, dirname, basename, relative } from 'node:path'
 import { logger, readJsonFile } from '@nx/devkit'
 import { globSync } from 'glob'
+import {keys} from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
 import { parseRepositoryUrl } from '@hyperfrontend/versioning/repository/parse'
 
 /** License information for a third-party dependency */
@@ -142,11 +143,9 @@ export function getExternalDependencies(projectRoot: string): string[] {
   if (!existsSync(pkgPath)) {
     return []
   }
-
   const pkg = readJsonFile<PackageJson>(pkgPath)
   const deps = pkg.dependencies ?? {}
-
-  return Object.keys(deps).filter((name) => !name.startsWith('@hyperfrontend/'))
+  return keys(deps).filter((name) => !name.startsWith('@hyperfrontend/'))
 }
 
 /**

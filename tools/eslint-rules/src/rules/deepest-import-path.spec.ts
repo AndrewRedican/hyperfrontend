@@ -1,10 +1,8 @@
-import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs'
-import { tmpdir } from 'node:os'
 import { join } from 'node:path'
-import { RuleTester } from '@typescript-eslint/rule-tester'
+import { createTempWorkspaceManager, createTypeScriptRuleTester } from '../testing'
 import rule, { clearCache } from './deepest-import-path'
 
-const tempDirs: string[] = []
+const manager = createTempWorkspaceManager()
 
 /**
  * Creates a temporary workspace structure for testing.
@@ -15,38 +13,31 @@ const tempDirs: string[] = []
  * @returns The path to the temporary workspace directory.
  */
 function createTempWorkspace(config: { tsconfigBasePaths?: Record<string, string[]>; sourceFiles?: Record<string, string> }): string {
-  const workspaceDir = mkdtempSync(join(tmpdir(), 'eslint-deepest-import-'))
-  tempDirs.push(workspaceDir)
-
-  // Create tsconfig.base.json
-  const tsconfig = {
-    compilerOptions: {
-      baseUrl: '.',
-      paths: config.tsconfigBasePaths ?? {},
-    },
+  const files: Record<string, string> = {
+    'tsconfig.base.json': JSON.stringify(
+      {
+        compilerOptions: {
+          baseUrl: '.',
+          paths: config.tsconfigBasePaths ?? {},
+        },
+      },
+      null,
+      2
+    ),
   }
-  writeFileSync(join(workspaceDir, 'tsconfig.base.json'), JSON.stringify(tsconfig, null, 2), { mode: 0o600 })
 
   // Create source files
   if (config.sourceFiles) {
     for (const [filePath, content] of Object.entries(config.sourceFiles)) {
-      const fullPath = join(workspaceDir, filePath)
-      const dirPath = join(fullPath, '..')
-      mkdirSync(dirPath, { recursive: true })
-      writeFileSync(fullPath, content, { mode: 0o600 })
+      files[filePath] = content
     }
   }
 
-  return workspaceDir
+  const workspace = manager.create({ files })
+  return workspace.root
 }
 
-const ruleTester = new RuleTester({
-  languageOptions: {
-    parserOptions: {
-      projectService: false,
-    },
-  },
-})
+const ruleTester = createTypeScriptRuleTester()
 
 describe('deepest-import-path', () => {
   beforeEach(() => {
@@ -54,9 +45,7 @@ describe('deepest-import-path', () => {
   })
 
   afterAll(() => {
-    for (const dir of tempDirs) {
-      rmSync(dir, { recursive: true, force: true })
-    }
+    manager.cleanupAll()
   })
 
   describe('valid cases', () => {

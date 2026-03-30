@@ -1,6 +1,11 @@
 import type { PackageJson } from './types'
 import { existsSync, readFileSync } from 'node:fs'
 import { join } from 'node:path'
+import {from} from '@hyperfrontend/immutable-api-utils/built-in-copy/array'
+import {createError} from '@hyperfrontend/immutable-api-utils/built-in-copy/error'
+import {parse} from '@hyperfrontend/immutable-api-utils/built-in-copy/json'
+import {keys} from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
+import {createSet} from '@hyperfrontend/immutable-api-utils/built-in-copy/set'
 
 /**
  * Reads and parses a package.json file.
@@ -10,7 +15,7 @@ import { join } from 'node:path'
  */
 function readPackageJson(packageJsonPath: string): PackageJson {
   if (!existsSync(packageJsonPath)) return {}
-  return <PackageJson>JSON.parse(readFileSync(packageJsonPath, 'utf-8'))
+  return <PackageJson>parse(readFileSync(packageJsonPath, 'utf-8'))
 }
 
 /**
@@ -40,8 +45,8 @@ export function isWorkspacePackage(packageName: string): boolean {
 export function getExternalDependencies(packageJsonPath: string, additionalExternal: string[] = [], bundleWorkspaceDeps: boolean): string[] {
   const pkg = readPackageJson(packageJsonPath)
 
-  const deps = Object.keys(pkg.dependencies ?? {})
-  const peerDeps = Object.keys(pkg.peerDependencies ?? {})
+  const deps = keys(pkg.dependencies ?? {})
+  const peerDeps = keys(pkg.peerDependencies ?? {})
 
   // When bundleWorkspaceDeps is true, filter out workspace packages (they'll be bundled)
   // When bundleWorkspaceDeps is false, keep ALL dependencies as external (npm-style)
@@ -50,7 +55,7 @@ export function getExternalDependencies(packageJsonPath: string, additionalExter
   const externalAdditional = bundleWorkspaceDeps ? additionalExternal.filter((dep) => !isWorkspacePackage(dep)) : additionalExternal
 
   // Peer dependencies are ALWAYS external (even workspace packages) since they are optional
-  return Array.from(new Set([...externalRegularDeps, ...peerDeps, ...externalAdditional]))
+  return from(createSet([...externalRegularDeps, ...peerDeps, ...externalAdditional]))
 }
 
 /**
@@ -61,7 +66,7 @@ export function getExternalDependencies(packageJsonPath: string, additionalExter
  * @returns Function that determines if a module ID is external
  */
 export function createExternalFn(external: string[]): (id: string) => boolean {
-  const externalSet = new Set(external)
+  const externalSet = createSet(external)
   return (id: string): boolean => {
     return externalSet.has(id)
   }
@@ -80,7 +85,7 @@ export function validateExternalsConfig(external: string[] | undefined, globals:
 
   const missingGlobals = external.filter((dep) => !globals?.[dep])
   if (missingGlobals.length > 0) {
-    throw new Error(
+    throw createError(
       `IIFE/UMD build failed: Missing globals mapping for external dependencies:\n` +
         missingGlobals.map((d) => `  - ${d}`).join('\n') +
         `\n\nAdd globals mapping or remove from external list to inline.`
@@ -101,7 +106,7 @@ export function createBundleExternalFn(external: string[] | undefined): (id: str
     return () => false
   }
 
-  const externalSet = new Set<string>(external)
+  const externalSet = createSet(external)
   return (id: string): boolean => externalSet.has(id)
 }
 

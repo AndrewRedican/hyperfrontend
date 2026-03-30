@@ -1,4 +1,7 @@
 import type { ProjectGraph } from '@nx/devkit'
+import { from } from '@hyperfrontend/immutable-api-utils/built-in-copy/array'
+import { entries } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
+import { createSet } from '@hyperfrontend/immutable-api-utils/built-in-copy/set'
 import { getChangedFilesBetween } from '@hyperfrontend/versioning/git/operations'
 
 /**
@@ -27,7 +30,7 @@ export async function getAffectedLibraries(
   }
 
   // Map files to projects
-  const affectedProjects = new Set<string>()
+  const affectedProjects = createSet<string>()
 
   for (const file of changedFiles) {
     const project = findProjectForFile(file, projectGraph)
@@ -37,7 +40,7 @@ export async function getAffectedLibraries(
   }
 
   // Filter to libraries with version target
-  const librariesWithVersionTarget = Array.from(affectedProjects).filter((projectName) => {
+  const librariesWithVersionTarget = from(affectedProjects).filter((projectName) => {
     const project = projectGraph.nodes[projectName]
     if (!project) {
       return false
@@ -67,7 +70,7 @@ function findProjectForFile(filePath: string, projectGraph: ProjectGraph): strin
 
   // Find the project whose root is a prefix of the file path
   // Sort by root length descending to find the most specific match
-  const projects = Object.entries(projectGraph.nodes)
+  const projects = entries(projectGraph.nodes)
     .map(([name, node]) => ({
       name,
       root: node.data.root,

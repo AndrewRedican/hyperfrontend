@@ -1,7 +1,10 @@
 import type { TSESTree } from '@typescript-eslint/utils'
-import { existsSync, readFileSync } from 'node:fs'
 import { dirname, join, resolve } from 'node:path'
 import { AST_NODE_TYPES, ESLintUtils } from '@typescript-eslint/utils'
+import { createMap } from '@hyperfrontend/immutable-api-utils/built-in-copy/map'
+import { entries } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
+import { createSet } from '@hyperfrontend/immutable-api-utils/built-in-copy/set'
+import { exists, findTypeScriptWorkspaceRoot, readFileContent, readJsonFileIfExists } from '../utils'
 
 /**
  * Rule identifier for the deepest-import-path rule.
@@ -43,45 +46,7 @@ let cachedWorkspaceRoot: string | null = null
  * Cache for export analysis results.
  * Key: source file path, Value: Map of export name to deepest path.
  */
-const exportCache = new Map<string, Map<string, ExportMapping>>()
-
-/**
- * Finds the workspace root by locating tsconfig.base.json.
- *
- * @param startDir - The directory to start searching from.
- * @returns The workspace root path, or null if not found.
- */
-function findWorkspaceRoot(startDir: string): string | null {
-  let dir = startDir
-  const root = '/'
-  while (dir !== root) {
-    if (existsSync(join(dir, 'tsconfig.base.json'))) {
-      return dir
-    }
-    const parent = dirname(dir)
-    /* istanbul ignore if -- defensive infinite loop prevention */
-    if (parent === dir) {
-      break
-    }
-    dir = parent
-  }
-  return null
-}
-
-/**
- * Reads and parses a JSON file.
- *
- * @param filePath - The path to the JSON file.
- * @returns The parsed JSON object, or null if parsing fails.
- */
-function readJsonFile<T>(filePath: string): T | null {
-  try {
-    const content = readFileSync(filePath, 'utf-8')
-    return <T>JSON.parse(content)
-  } catch {
-    return null
-  }
-}
+const exportCache = createMap<string, Map<string, ExportMapping>>()
 
 /**
  * Gets the tsconfig paths for packages matching the given prefix.
@@ -97,19 +62,19 @@ function getTsconfigPaths(workspaceRoot: string, packagePrefix: string): Map<str
   }
 
   const tsconfigPath = join(workspaceRoot, 'tsconfig.base.json')
-  const tsconfig = readJsonFile<TsConfig>(tsconfigPath)
+  const tsconfig = readJsonFileIfExists<TsConfig>(tsconfigPath)
 
   /* istanbul ignore if -- defensive for malformed tsconfig */
   if (!tsconfig?.compilerOptions?.paths) {
-    cachedPaths = new Map()
+    cachedPaths = createMap()
     cachedWorkspaceRoot = workspaceRoot
     return cachedPaths
   }
 
-  const paths = new Map<string, string>()
+  const paths = createMap<string, string>()
   const baseUrl = tsconfig.compilerOptions.baseUrl ?? '.'
 
-  for (const [alias, targets] of Object.entries(tsconfig.compilerOptions.paths)) {
+  for (const [alias, targets] of entries(tsconfig.compilerOptions.paths)) {
     if (!alias.startsWith(packagePrefix)) {
       continue
     }
@@ -143,12 +108,12 @@ function resolveImportPath(importPath: string, fromFile: string): string | null 
   const extensions = ['.ts', '.tsx', '/index.ts', '/index.tsx']
   for (const ext of extensions) {
     const fullPath = basePath + ext
-    if (existsSync(fullPath)) {
+    if (exists(fullPath)) {
       return fullPath
     }
   }
 
-  if (existsSync(basePath)) {
+  if (exists(basePath)) {
     return basePath
   }
 
@@ -163,16 +128,16 @@ function resolveImportPath(importPath: string, fromFile: string): string | null 
  * @param visited - Set of already visited files to prevent circular dependencies.
  * @returns Set of exported names from this file.
  */
-function parseExports(filePath: string, visited: Set<string> = new Set()): Set<string> {
-  const exports = new Set<string>()
+function parseExports(filePath: string, visited: Set<string> = createSet()): Set<string> {
+  const exports = createSet<string>()
 
-  if (!existsSync(filePath) || visited.has(filePath)) {
+  if (!exists(filePath) || visited.has(filePath)) {
     return exports
   }
   visited.add(filePath)
 
   try {
-    const content = readFileSync(filePath, 'utf-8')
+    const content = readFileContent(filePath)
 
     const namedExportRegex = /export\s*\{([^}]+)\}/g
     let match: RegExpExecArray | null
@@ -369,7 +334,7 @@ export default createRule<[RuleOptions?], MessageIds>({
   create(context, [options]) {
     const packagePrefix = options?.packagePrefix ?? '@hyperfrontend/'
     const filename = context.filename
-    const workspaceRoot = findWorkspaceRoot(dirname(filename))
+    const workspaceRoot = findTypeScriptWorkspaceRoot(dirname(filename))
 
     /* istanbul ignore if -- defensive if workspace root not found */
     if (!workspaceRoot) {

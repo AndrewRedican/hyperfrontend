@@ -1,7 +1,15 @@
 import type { Rule } from 'eslint'
-import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs'
 import { basename, dirname, join } from 'node:path'
-import { parseJsonFile } from '../utils/nx-project'
+import { min } from '@hyperfrontend/immutable-api-utils/built-in-copy/math'
+import {
+  exists,
+  findNxWorkspaceRoot,
+  isDirectory,
+  isPublishableLibraryDir,
+  readDirectory,
+  readFileIfExists,
+  readJsonFileIfExists,
+} from '../utils'
 
 /**
  * Rule identifier for the lib-ci-workflows rule.
@@ -38,36 +46,6 @@ interface ProjectJson {
 }
 
 /**
- * Checks if a directory contains a publishable library project.
- *
- * @param projectDir - The absolute path to the project directory.
- * @returns True if the project is a publishable library, false otherwise.
- */
-function isPublishableLibraryDir(projectDir: string): boolean {
-  const projectJsonPath = join(projectDir, 'project.json')
-
-  if (!existsSync(projectJsonPath)) {
-    return false
-  }
-
-  const projectJson = parseJsonFile<ProjectJson>(projectJsonPath)
-
-  if (!projectJson) {
-    return false
-  }
-
-  if (projectJson.projectType !== 'library') {
-    return false
-  }
-
-  if (!projectJson.targets?.build || !projectJson.targets?.publish) {
-    return false
-  }
-
-  return true
-}
-
-/**
  * Derives the coverage flag from a library path.
  * Example: "libs/utils/json" -> "json-utils"
  * Example: "libs/network-protocol" -> "network-protocol"
@@ -100,7 +78,7 @@ export function deriveCoverageFlag(relativePath: string): string {
  * @param results - Array to accumulate results.
  */
 function findPublishableLibraries(baseDir: string, workspaceRoot: string, results: PublishableLibrary[]): void {
-  if (!existsSync(baseDir)) {
+  if (!exists(baseDir)) {
     return
   }
 
@@ -108,7 +86,7 @@ function findPublishableLibraries(baseDir: string, workspaceRoot: string, result
   if (isPublishableLibraryDir(baseDir)) {
     const relativePath = baseDir.slice(workspaceRoot.length + 1)
     const projectJsonPath = join(baseDir, 'project.json')
-    const projectJson = parseJsonFile<ProjectJson & { name?: string }>(projectJsonPath)
+    const projectJson = readJsonFileIfExists<ProjectJson & { name?: string }>(projectJsonPath)
 
     results.push({
       name: projectJson?.name ?? `lib-${basename(baseDir)}`,
@@ -120,7 +98,7 @@ function findPublishableLibraries(baseDir: string, workspaceRoot: string, result
   // Recursively check subdirectories
   let entries: string[]
   try {
-    entries = readdirSync(baseDir)
+    entries = readDirectory(baseDir)
   } catch {
     return
   }
@@ -133,37 +111,10 @@ function findPublishableLibraries(baseDir: string, workspaceRoot: string, result
 
     const entryPath = join(baseDir, entry)
 
-    let stats
-    try {
-      stats = statSync(entryPath)
-    } catch {
-      continue
-    }
-
-    if (stats.isDirectory()) {
+    if (isDirectory(entryPath)) {
       findPublishableLibraries(entryPath, workspaceRoot, results)
     }
   }
-}
-
-/**
- * Finds the workspace root by looking for nx.json.
- *
- * @param startDir - The directory to start searching from.
- * @returns The workspace root path, or null if not found.
- */
-export function findWorkspaceRoot(startDir: string): string | null {
-  let dir = startDir
-  const root = '/'
-
-  while (dir !== root) {
-    if (existsSync(join(dir, 'nx.json'))) {
-      return dir
-    }
-    dir = dirname(dir)
-  }
-
-  return null
 }
 
 /**
@@ -185,7 +136,7 @@ export function hasPathFilter(content: string, coverageFlag: string, relativePat
     // Look for the filter name followed by colon
     if (line === filterPattern || line.startsWith(`${filterPattern} `)) {
       // Check if the next line (or same line) contains the path pattern
-      for (let j = i; j < Math.min(i + 5, lines.length); j++) {
+      for (let j = i; j < min(i + 5, lines.length); j++) {
         if (lines[j].includes(pathPattern)) {
           return true
         }
@@ -244,7 +195,7 @@ export function hasMatrixEntry(content: string, projectName: string, coverageFla
  */
 export function hasStatusWorkflow(workspaceRoot: string, projectName: string): boolean {
   const workflowPath = join(workspaceRoot, '.github', 'workflows', `ci-${projectName}.yml`)
-  return existsSync(workflowPath)
+  return exists(workflowPath)
 }
 
 /**
@@ -269,14 +220,7 @@ export function hasCoverageEntry(content: string, coverageFlag: string, relative
  * @returns The file content or null.
  */
 function safeReadFile(filePath: string): string | null {
-  try {
-    if (!existsSync(filePath)) {
-      return null
-    }
-    return readFileSync(filePath, 'utf-8')
-  } catch {
-    return null
-  }
+  return readFileIfExists(filePath)
 }
 
 const rule: Rule.RuleModule = {
@@ -311,7 +255,7 @@ const rule: Rule.RuleModule = {
     }
 
     const fileDir = dirname(filePath)
-    const workspaceRoot = findWorkspaceRoot(fileDir)
+    const workspaceRoot = findNxWorkspaceRoot(fileDir)
 
     if (!workspaceRoot) {
       return {}

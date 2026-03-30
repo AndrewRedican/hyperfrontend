@@ -2,7 +2,10 @@ import type { TSESTree } from '@typescript-eslint/utils'
 import type { PackageJson } from '../utils/nx-project'
 import { dirname, join, relative, resolve } from 'node:path'
 import { ESLintUtils } from '@typescript-eslint/utils'
-import { findProjectRoot, isPublishableLibrary, parseJsonFile } from '../utils/nx-project'
+import { entries, keys, values } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
+import { readJsonFileIfExists } from '../utils/fs'
+import { isPublishableLibrary } from '../utils/nx-project'
+import { findProjectRoot } from '../utils/workspace'
 
 /**
  * Rule identifier for the no-unwanted-barrel-files rule.
@@ -40,7 +43,7 @@ function getAllowedIndexPaths(projectRoot: string, packageJson: PackageJson): st
   allowed.push(join(projectRoot, 'src', 'index.ts'))
 
   if (packageJson.exports) {
-    for (const exportValue of Object.values(packageJson.exports)) {
+    for (const exportValue of values(packageJson.exports)) {
       const resolvedPath = resolveExportValue(exportValue)
       if (resolvedPath) {
         const sourcePath = resolvedPath.replace(/^\.\//, '').replace(/\.(js|cjs|mjs)$/, '.ts')
@@ -59,8 +62,8 @@ function getAllowedIndexPaths(projectRoot: string, packageJson: PackageJson): st
  * @returns The formatted error details string.
  */
 function buildErrorDetails(packageJson: PackageJson): string {
-  if (packageJson.exports && Object.keys(packageJson.exports).length > 0) {
-    const exportsList = Object.entries(packageJson.exports)
+  if (packageJson.exports && keys(packageJson.exports).length > 0) {
+    const exportsList = entries(packageJson.exports)
       .map(([key, value]) => {
         const resolvedPath = resolveExportValue(value)
         const displayPath = resolvedPath ? resolvedPath.replace(/\.js$/, '.ts') : String(value)
@@ -110,7 +113,7 @@ const rule = ESLintUtils.RuleCreator(
     }
 
     const packageJsonPath = join(projectRoot, 'package.json')
-    const packageJson = parseJsonFile<PackageJson>(packageJsonPath)
+    const packageJson = readJsonFileIfExists<PackageJson>(packageJsonPath)
 
     if (!packageJson) {
       return {}

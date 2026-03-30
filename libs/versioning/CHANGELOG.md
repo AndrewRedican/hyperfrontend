@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.5.1](https://github.com/AndrewRedican/hyperfrontend/compare/f1adb23d9138f218c27c152ac18b9ec3ec554c72...dbc22a50298c81c8558a214abc3d5256db3d40fd) - 2026-03-30
+
+### Bug Fixes
+
+- add end-of-options separator to prevent git argument injection
+
 ## [0.5.0](https://github.com/AndrewRedican/hyperfrontend/compare/74ee35afe04d203271bf25992247df1d817c7fc2...3d23dade0efa7172d5311a8676cfe0d52dbe749d) - 2026-03-26
 
 ### Features

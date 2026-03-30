@@ -1,30 +1,12 @@
 import type { Rule } from 'eslint'
 import type { JSONNode } from 'jsonc-eslint-parser/lib/parser/ast'
-import { existsSync } from 'node:fs'
 import { dirname, join } from 'node:path'
-import { isPublishableLibrary } from '../utils/nx-project'
+import { exists, findNxWorkspaceRoot, isPublishableLibrary } from '../utils'
 
 /**
  * Rule identifier for the lib-e2e-project-required rule.
  */
 export const RULE_NAME = 'lib-e2e-project-required'
-
-/**
- * Finds the workspace root by locating nx.json.
- *
- * @param startDir - The directory to start searching from.
- * @returns The workspace root path, or null if not found.
- */
-function findWorkspaceRoot(startDir: string): string | null {
-  let dir = startDir
-  while (dir !== '/') {
-    if (existsSync(join(dir, 'nx.json'))) {
-      return dir
-    }
-    dir = dirname(dir)
-  }
-  return null
-}
 
 /**
  * Checks if the project directory is within the libs folder.
@@ -59,7 +41,7 @@ function getE2eFolderName(libraryName: string): string {
 function hasE2eProject(libraryName: string, workspaceRoot: string): boolean {
   const e2eFolderName = getE2eFolderName(libraryName)
   const e2eProjectJson = join(workspaceRoot, 'apps', 'package-e2e', e2eFolderName, 'project.json')
-  return existsSync(e2eProjectJson)
+  return exists(e2eProjectJson)
 }
 
 const rule: Rule.RuleModule = {
@@ -79,7 +61,7 @@ const rule: Rule.RuleModule = {
   create(context) {
     const filePath = context.filename
     const projectRoot = dirname(filePath)
-    const workspaceRoot = findWorkspaceRoot(projectRoot)
+    const workspaceRoot = findNxWorkspaceRoot(projectRoot)
 
     /* istanbul ignore next - workspace root should always exist */
     if (!workspaceRoot) {

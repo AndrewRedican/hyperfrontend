@@ -1,4 +1,7 @@
 import { ESLintUtils, AST_NODE_TYPES } from '@typescript-eslint/utils'
+import { createMap } from '@hyperfrontend/immutable-api-utils/built-in-copy/map'
+import { keys } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
+import { createSet } from '@hyperfrontend/immutable-api-utils/built-in-copy/set'
 
 /**
  * Rule identifier for the no-async-fs-api rule.
@@ -75,7 +78,7 @@ const ASYNC_TO_SYNC_METHODS: Record<string, string> = {
  * These are the same as ASYNC_TO_SYNC_METHODS keys but explicitly listed
  * for clarity when checking callback patterns.
  */
-const ASYNC_METHODS = new Set(Object.keys(ASYNC_TO_SYNC_METHODS))
+const ASYNC_METHODS = createSet(keys(ASYNC_TO_SYNC_METHODS))
 
 /**
  * fs/promises specific exports that are async-only.
@@ -112,7 +115,7 @@ export default createRule<[], MessageIds>({
   defaultOptions: [],
   create(context) {
     // Track namespace imports for fs module
-    const fsNamespaceBindings = new Map<string, 'fs' | 'fs/promises'>()
+    const fsNamespaceBindings = createMap<string, 'fs' | 'fs/promises'>()
 
     return {
       // Check for fs/promises imports (always async)

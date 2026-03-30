@@ -1,32 +1,8 @@
-import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs'
-import { tmpdir } from 'node:os'
-import { join } from 'node:path'
-import { RuleTester } from 'eslint'
+import { createJsonRuleTester, createTempWorkspaceManager } from '../testing'
 import rule from './lib-project-metadata'
 
-const tempDirs: string[] = []
-
-/**
- * Creates a temporary project structure for testing.
- *
- * @param config - Configuration for the temporary project.
- * @param config.projectJson - The project.json content.
- * @returns The path to the temporary project directory.
- */
-function createTempProject(config: { projectJson: object }): string {
-  const testDir = mkdtempSync(join(tmpdir(), 'eslint-test-'))
-  tempDirs.push(testDir)
-
-  writeFileSync(join(testDir, 'project.json'), JSON.stringify(config.projectJson, null, 2), { mode: 0o600 })
-  mkdirSync(join(testDir, 'src'), { recursive: true })
-  return testDir
-}
-
-const ruleTester = new RuleTester({
-  languageOptions: {
-    parser: require('jsonc-eslint-parser'),
-  },
-})
+const manager = createTempWorkspaceManager()
+const ruleTester = createJsonRuleTester()
 
 /**
  * Valid publishable library project.json.
@@ -41,9 +17,7 @@ const validProjectJson = {
 
 describe('lib-project-metadata', () => {
   afterAll(() => {
-    for (const dir of tempDirs) {
-      rmSync(dir, { recursive: true, force: true })
-    }
+    manager.cleanupAll()
   })
 
   ruleTester.run('lib-project-metadata', rule, {
@@ -52,28 +26,28 @@ describe('lib-project-metadata', () => {
         name: 'skips non-publishable libraries',
         code: JSON.stringify({ name: 'test', projectType: 'library', targets: { build: {} } }, null, 2),
         filename: (() => {
-          const dir = createTempProject({
+          const workspace = manager.create({
             projectJson: { name: 'test', projectType: 'library', targets: { build: {} } },
           })
-          return join(dir, 'project.json')
+          return workspace.getPath('project.json')
         })(),
       },
       {
         name: 'skips application projects',
         code: JSON.stringify({ name: 'app-test', projectType: 'application', targets: { build: {}, publish: {} } }, null, 2),
         filename: (() => {
-          const dir = createTempProject({
+          const workspace = manager.create({
             projectJson: { name: 'app-test', projectType: 'application', targets: { build: {}, publish: {} } },
           })
-          return join(dir, 'project.json')
+          return workspace.getPath('project.json')
         })(),
       },
       {
         name: 'passes with all required fields',
         code: JSON.stringify(validProjectJson, null, 2),
         filename: (() => {
-          const dir = createTempProject({ projectJson: validProjectJson })
-          return join(dir, 'project.json')
+          const workspace = manager.create({ projectJson: validProjectJson })
+          return workspace.getPath('project.json')
         })(),
       },
     ],
@@ -91,7 +65,7 @@ describe('lib-project-metadata', () => {
           2
         ),
         filename: (() => {
-          const dir = createTempProject({
+          const workspace = manager.create({
             projectJson: {
               name: 'lib-test',
               description: 'Test library',
@@ -99,7 +73,7 @@ describe('lib-project-metadata', () => {
               targets: { build: {}, publish: {} },
             },
           })
-          return join(dir, 'project.json')
+          return workspace.getPath('project.json')
         })(),
         errors: [{ messageId: 'missingTags' }],
       },
@@ -117,7 +91,7 @@ describe('lib-project-metadata', () => {
           2
         ),
         filename: (() => {
-          const dir = createTempProject({
+          const workspace = manager.create({
             projectJson: {
               name: 'lib-test',
               description: 'Test library',
@@ -126,7 +100,7 @@ describe('lib-project-metadata', () => {
               targets: { build: {}, publish: {} },
             },
           })
-          return join(dir, 'project.json')
+          return workspace.getPath('project.json')
         })(),
         errors: [{ messageId: 'emptyTags' }],
       },
@@ -143,7 +117,7 @@ describe('lib-project-metadata', () => {
           2
         ),
         filename: (() => {
-          const dir = createTempProject({
+          const workspace = manager.create({
             projectJson: {
               description: 'Test library',
               projectType: 'library',
@@ -151,7 +125,7 @@ describe('lib-project-metadata', () => {
               targets: { build: {}, publish: {} },
             },
           })
-          return join(dir, 'project.json')
+          return workspace.getPath('project.json')
         })(),
         errors: [{ messageId: 'missingName' }],
       },
@@ -169,7 +143,7 @@ describe('lib-project-metadata', () => {
           2
         ),
         filename: (() => {
-          const dir = createTempProject({
+          const workspace = manager.create({
             projectJson: {
               name: 'test-library',
               description: 'Test library',
@@ -178,7 +152,7 @@ describe('lib-project-metadata', () => {
               targets: { build: {}, publish: {} },
             },
           })
-          return join(dir, 'project.json')
+          return workspace.getPath('project.json')
         })(),
         errors: [{ messageId: 'invalidNamePrefix' }],
       },
@@ -195,7 +169,7 @@ describe('lib-project-metadata', () => {
           2
         ),
         filename: (() => {
-          const dir = createTempProject({
+          const workspace = manager.create({
             projectJson: {
               name: 'lib-test',
               projectType: 'library',
@@ -203,7 +177,7 @@ describe('lib-project-metadata', () => {
               targets: { build: {}, publish: {} },
             },
           })
-          return join(dir, 'project.json')
+          return workspace.getPath('project.json')
         })(),
         errors: [{ messageId: 'missingDescription' }],
       },
@@ -218,13 +192,13 @@ describe('lib-project-metadata', () => {
           2
         ),
         filename: (() => {
-          const dir = createTempProject({
+          const workspace = manager.create({
             projectJson: {
               projectType: 'library',
               targets: { build: {}, publish: {} },
             },
           })
-          return join(dir, 'project.json')
+          return workspace.getPath('project.json')
         })(),
         errors: [{ messageId: 'missingTags' }, { messageId: 'missingName' }, { messageId: 'missingDescription' }],
       },

@@ -1,6 +1,7 @@
 import type { Rule } from 'eslint'
 import type { JSONNode } from 'jsonc-eslint-parser/lib/parser/ast'
 import { dirname, extname } from 'node:path'
+import { createSet } from '@hyperfrontend/immutable-api-utils/built-in-copy/set'
 import { isPublishableLibrary } from '../utils/nx-project'
 
 /**
@@ -12,7 +13,7 @@ export const RULE_NAME = 'lib-pkg-exports-js-only'
  * Valid extensions for export paths in package.json.
  * Only compiled JavaScript and JSON files should be referenced.
  */
-const VALID_EXTENSIONS = new Set(['.js', '.mjs', '.cjs', '.json'])
+const VALID_EXTENSIONS = createSet<string>(['.js', '.mjs', '.cjs', '.json'])
 
 /**
  * Checks if a path represents a package.json self-reference export.

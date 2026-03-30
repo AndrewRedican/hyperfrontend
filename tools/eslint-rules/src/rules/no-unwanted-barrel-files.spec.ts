@@ -1,12 +1,12 @@
 import type { InvalidTestCase, ValidTestCase } from '@typescript-eslint/rule-tester'
-import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs'
-import { tmpdir } from 'node:os'
-import { dirname, join } from 'node:path'
-import { RuleTester } from '@typescript-eslint/rule-tester'
+import { join } from 'node:path'
+import { createTempWorkspaceManager, createTypeScriptRuleTester } from '../testing'
 import rule from './no-unwanted-barrel-files'
 
 type TestOptions = readonly []
 type MessageIds = 'unwantedBarrelFile'
+
+const manager = createTempWorkspaceManager()
 
 /**
  * Creates a temporary project structure for testing.
@@ -15,40 +15,42 @@ type MessageIds = 'unwantedBarrelFile'
  * @param config.projectJson - Optional project.json content.
  * @param config.packageJson - Optional package.json content.
  * @param config.indexFiles - Optional list of index files to create.
+ * @param config.invalidPackageJson - Optional flag to create invalid package.json.
+ * @param config.invalidProjectJson - Optional flag to create invalid project.json.
  * @returns The path to the temporary project directory.
  */
-function createTempProject(config: { projectJson?: object; packageJson?: object; indexFiles?: string[] }): string {
-  // mkdtempSync creates a unique directory atomically, avoiding TOCTOU race conditions
-  const testDir = mkdtempSync(join(tmpdir(), 'eslint-test-'))
+function createTempProject(config: {
+  projectJson?: object
+  packageJson?: object
+  indexFiles?: string[]
+  invalidPackageJson?: boolean
+  invalidProjectJson?: boolean
+}): string {
+  const files: Record<string, string> = {}
 
-  if (config.projectJson) {
-    writeFileSync(join(testDir, 'project.json'), JSON.stringify(config.projectJson, null, 2), { mode: 0o600 })
+  if (config.invalidProjectJson) {
+    files['project.json'] = 'invalid json {{{'
+  } else if (config.projectJson) {
+    files['project.json'] = JSON.stringify(config.projectJson, null, 2)
   }
 
-  if (config.packageJson) {
-    writeFileSync(join(testDir, 'package.json'), JSON.stringify(config.packageJson, null, 2), { mode: 0o600 })
+  if (config.invalidPackageJson) {
+    files['package.json'] = 'invalid json {{{'
+  } else if (config.packageJson) {
+    files['package.json'] = JSON.stringify(config.packageJson, null, 2)
   }
 
   if (config.indexFiles) {
     for (const indexFile of config.indexFiles) {
-      const fullPath = join(testDir, indexFile)
-      mkdirSync(dirname(fullPath), { recursive: true })
-      writeFileSync(fullPath, 'export {};\n', { mode: 0o600 })
+      files[indexFile] = 'export {};\n'
     }
   }
 
-  return testDir
+  const workspace = manager.create({ files })
+  return workspace.root
 }
 
-const ruleTester = new RuleTester({
-  languageOptions: {
-    parserOptions: {
-      projectService: false,
-    },
-  },
-})
-
-const tempDirs: string[] = []
+const ruleTester = createTypeScriptRuleTester()
 
 /**
  * Creates a valid test case for non-index.ts files.
@@ -75,8 +77,6 @@ function createMainEntryPointCase(): ValidTestCase<TestOptions> {
     },
     packageJson: { name: 'test-lib' },
   })
-  tempDirs.push(projectDir)
-  mkdirSync(join(projectDir, 'src'), { recursive: true })
   return {
     code: 'export * from "./lib";',
     filename: join(projectDir, 'src', 'index.ts'),
@@ -101,8 +101,6 @@ function createDeclaredExportCase(): ValidTestCase<TestOptions> {
       },
     },
   })
-  tempDirs.push(projectDir)
-  mkdirSync(join(projectDir, 'src', 'browser'), { recursive: true })
   return {
     code: 'export * from "./implementation";',
     filename: join(projectDir, 'src', 'browser', 'index.ts'),
@@ -122,8 +120,6 @@ function createNonLibraryCase(): ValidTestCase<TestOptions> {
     },
     packageJson: { name: 'test-app' },
   })
-  tempDirs.push(projectDir)
-  mkdirSync(join(projectDir, 'src', 'internal'), { recursive: true })
   return {
     code: 'export {}',
     filename: join(projectDir, 'src', 'internal', 'index.ts'),
@@ -143,8 +139,6 @@ function createNonPublishableCase(): ValidTestCase<TestOptions> {
     },
     packageJson: { name: 'internal-lib' },
   })
-  tempDirs.push(projectDir)
-  mkdirSync(join(projectDir, 'src', 'internal'), { recursive: true })
   return {
     code: 'export {}',
     filename: join(projectDir, 'src', 'internal', 'index.ts'),
@@ -160,8 +154,6 @@ function createNoProjectJsonCase(): ValidTestCase<TestOptions> {
   const projectDir = createTempProject({
     packageJson: { name: 'test-lib' },
   })
-  tempDirs.push(projectDir)
-  mkdirSync(join(projectDir, 'src'), { recursive: true })
   return {
     code: 'export {}',
     filename: join(projectDir, 'src', 'index.ts'),
@@ -181,8 +173,6 @@ function createUndeclaredBarrelNoExportsCase(): InvalidTestCase<MessageIds, Test
     },
     packageJson: { name: 'test-lib' },
   })
-  tempDirs.push(projectDir)
-  mkdirSync(join(projectDir, 'src', 'lib', 'creators'), { recursive: true })
   return {
     code: 'export * from "./creator";',
     filename: join(projectDir, 'src', 'lib', 'creators', 'index.ts'),
@@ -209,8 +199,6 @@ function createUndeclaredBarrelWithExportsCase(): InvalidTestCase<MessageIds, Te
       },
     },
   })
-  tempDirs.push(projectDir)
-  mkdirSync(join(projectDir, 'src', 'lib', 'utils'), { recursive: true })
   return {
     code: 'export * from "./internal-helper";',
     filename: join(projectDir, 'src', 'lib', 'utils', 'index.ts'),
@@ -239,8 +227,6 @@ function createObjectStyleExportsCase(): ValidTestCase<TestOptions> {
       },
     },
   })
-  tempDirs.push(projectDir)
-  mkdirSync(join(projectDir, 'src', 'browser'), { recursive: true })
   return {
     code: 'export * from "./implementation";',
     filename: join(projectDir, 'src', 'browser', 'index.ts'),
@@ -258,10 +244,8 @@ function createInvalidPackageJsonCase(): ValidTestCase<TestOptions> {
       projectType: 'library',
       targets: { build: {}, publish: {} },
     },
+    invalidPackageJson: true,
   })
-  tempDirs.push(projectDir)
-  writeFileSync(join(projectDir, 'package.json'), 'invalid json {{{', { mode: 0o600 })
-  mkdirSync(join(projectDir, 'src'), { recursive: true })
   return {
     code: 'export {}',
     filename: join(projectDir, 'src', 'index.ts'),
@@ -274,14 +258,12 @@ function createInvalidPackageJsonCase(): ValidTestCase<TestOptions> {
  * @returns A valid test case configuration.
  */
 function createInvalidProjectJsonCase(): ValidTestCase<TestOptions> {
-  // mkdtempSync creates a unique directory atomically, avoiding TOCTOU race conditions
-  const testDir = mkdtempSync(join(tmpdir(), 'eslint-test-'))
-  tempDirs.push(testDir)
-  writeFileSync(join(testDir, 'project.json'), 'invalid json {{{', { mode: 0o600 })
-  mkdirSync(join(testDir, 'src'), { recursive: true })
+  const projectDir = createTempProject({
+    invalidProjectJson: true,
+  })
   return {
     code: 'export {}',
-    filename: join(testDir, 'src', 'index.ts'),
+    filename: join(projectDir, 'src', 'index.ts'),
   }
 }
 
@@ -305,8 +287,6 @@ function createUnresolvableExportCase(): ValidTestCase<TestOptions> {
       },
     },
   })
-  tempDirs.push(projectDir)
-  mkdirSync(join(projectDir, 'src'), { recursive: true })
   return {
     code: 'export * from "./lib";',
     filename: join(projectDir, 'src', 'index.ts'),
@@ -319,31 +299,21 @@ function createUnresolvableExportCase(): ValidTestCase<TestOptions> {
  * @returns A valid test case configuration.
  */
 function createNullExportValueCase(): ValidTestCase<TestOptions> {
-  // mkdtempSync creates a unique directory atomically, avoiding TOCTOU race conditions
-  const testDir = mkdtempSync(join(tmpdir(), 'eslint-test-'))
-  tempDirs.push(testDir)
-  writeFileSync(
-    join(testDir, 'project.json'),
-    JSON.stringify({
+  const projectDir = createTempProject({
+    projectJson: {
       projectType: 'library',
       targets: { build: {}, publish: {} },
-    }),
-    { mode: 0o600 }
-  )
-  writeFileSync(
-    join(testDir, 'package.json'),
-    JSON.stringify({
+    },
+    packageJson: {
       name: 'test-lib',
       exports: {
         './special': null,
       },
-    }),
-    { mode: 0o600 }
-  )
-  mkdirSync(join(testDir, 'src'), { recursive: true })
+    },
+  })
   return {
     code: 'export * from "./lib";',
-    filename: join(testDir, 'src', 'index.ts'),
+    filename: join(projectDir, 'src', 'index.ts'),
   }
 }
 
@@ -363,8 +333,6 @@ function createEmptyExportsCase(): ValidTestCase<TestOptions> {
       exports: {},
     },
   })
-  tempDirs.push(projectDir)
-  mkdirSync(join(projectDir, 'src'), { recursive: true })
   return {
     code: 'export * from "./lib";',
     filename: join(projectDir, 'src', 'index.ts'),
@@ -391,8 +359,6 @@ function createRequireStyleExportsCase(): ValidTestCase<TestOptions> {
       },
     },
   })
-  tempDirs.push(projectDir)
-  mkdirSync(join(projectDir, 'src', 'node'), { recursive: true })
   return {
     code: 'export * from "./implementation";',
     filename: join(projectDir, 'src', 'node', 'index.ts'),
@@ -419,8 +385,6 @@ function createDefaultStyleExportsCase(): ValidTestCase<TestOptions> {
       },
     },
   })
-  tempDirs.push(projectDir)
-  mkdirSync(join(projectDir, 'src', 'default'), { recursive: true })
   return {
     code: 'export * from "./implementation";',
     filename: join(projectDir, 'src', 'default', 'index.ts'),
@@ -445,8 +409,6 @@ function createNonJsExportPathCase(): ValidTestCase<TestOptions> {
       },
     },
   })
-  tempDirs.push(projectDir)
-  mkdirSync(join(projectDir, 'src', 'special'), { recursive: true })
   return {
     code: 'export * from "./implementation";',
     filename: join(projectDir, 'src', 'special', 'index.ts'),
@@ -465,8 +427,6 @@ function createNoPackageJsonCase(): ValidTestCase<TestOptions> {
       targets: { build: {}, publish: {} },
     },
   })
-  tempDirs.push(projectDir)
-  mkdirSync(join(projectDir, 'src'), { recursive: true })
   return {
     code: 'export {}',
     filename: join(projectDir, 'src', 'index.ts'),
@@ -475,9 +435,7 @@ function createNoPackageJsonCase(): ValidTestCase<TestOptions> {
 
 describe('no-unwanted-barrel-files', () => {
   afterAll(() => {
-    for (const dir of tempDirs) {
-      rmSync(dir, { recursive: true, force: true })
-    }
+    manager.cleanupAll()
   })
 
   ruleTester.run('no-unwanted-barrel-files', rule, {

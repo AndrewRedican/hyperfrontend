@@ -1,8 +1,12 @@
 import type { Rule } from 'eslint'
 import type { JSONNode } from 'jsonc-eslint-parser/lib/parser/ast'
-import type { PackageJson, ProjectJson } from '../utils/nx-project'
-import { existsSync, readdirSync, readFileSync } from 'node:fs'
+import type { PackageJson } from '../utils/nx-project'
 import { dirname, join, relative } from 'node:path'
+import { from } from '@hyperfrontend/immutable-api-utils/built-in-copy/array'
+import { createMap } from '@hyperfrontend/immutable-api-utils/built-in-copy/map'
+import { entries, values } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
+import { createSet } from '@hyperfrontend/immutable-api-utils/built-in-copy/set'
+import { exists, findLibraryDirectories, readJsonFileIfExists } from '../utils'
 
 /**
  * Rule identifier for the lib-tsconfig-paths rule.
@@ -32,80 +36,6 @@ interface EntryPointMapping {
 }
 
 /**
- * Parses a JSON file safely.
- *
- * @param filePath - The path to the JSON file.
- * @returns The parsed JSON object, or null if parsing fails.
- */
-function parseJsonFile<T>(filePath: string): T | null {
-  try {
-    const content = readFileSync(filePath, 'utf-8')
-    return <T>JSON.parse(content)
-    /* istanbul ignore next -- defensive error handling for malformed JSON */
-  } catch {
-    return null
-  }
-}
-
-/**
- * Checks if a project is a library by examining its project.json.
- *
- * @param projectDir - The project directory path.
- * @returns True if the project is a library.
- */
-function isLibrary(projectDir: string): boolean {
-  const projectJsonPath = join(projectDir, 'project.json')
-  const projectJson = parseJsonFile<ProjectJson>(projectJsonPath)
-
-  /* istanbul ignore if -- defensive for malformed project.json */
-  if (!projectJson) {
-    return false
-  }
-
-  return projectJson.projectType === 'library'
-}
-
-/**
- * Recursively finds all library directories in the workspace.
- *
- * @param dir - The directory to search in.
- * @param workspaceRoot - The workspace root directory.
- * @returns Array of library directory paths.
- */
-function findLibraryDirectories(dir: string, workspaceRoot: string): string[] {
-  const results: string[] = []
-
-  if (!existsSync(dir)) {
-    return results
-  }
-
-  const entries = readdirSync(dir, { withFileTypes: true })
-
-  for (const entry of entries) {
-    if (!entry.isDirectory()) {
-      continue
-    }
-
-    // Skip node_modules, hidden directories, and common non-project directories
-    if (entry.name.startsWith('.') || entry.name === 'node_modules' || entry.name === 'dist' || entry.name === 'coverage') {
-      continue
-    }
-
-    const fullPath = join(dir, entry.name)
-
-    // Check if this directory is a library
-    if (isLibrary(fullPath)) {
-      results.push(fullPath)
-    }
-
-    // Recurse into subdirectories
-    results.push(...findLibraryDirectories(fullPath, workspaceRoot))
-  }
-
-  return results
-}
-
-/**
  * Converts a package.json export path (./sub/path.js) to a TypeScript source path.
  *
  * @param exportPath - The export path from package.json.
@@ -124,7 +54,7 @@ function resolveExportToSourcePath(exportPath: string, projectDir: string, works
   const absolutePath = join(projectDir, normalizedPath)
 
   // Check if the TypeScript file exists
-  if (existsSync(absolutePath)) {
+  if (exists(absolutePath)) {
     return relative(workspaceRoot, absolutePath)
   }
 
@@ -133,11 +63,11 @@ function resolveExportToSourcePath(exportPath: string, projectDir: string, works
   const ctsPath = absolutePath.replace(/\.ts$/, '.cts')
 
   /* istanbul ignore if -- mts fallback tested via dedicated test */
-  if (existsSync(mtsPath)) {
+  if (exists(mtsPath)) {
     return relative(workspaceRoot, mtsPath)
   }
   /* istanbul ignore if -- cts fallback tested via dedicated test */
-  if (existsSync(ctsPath)) {
+  if (exists(ctsPath)) {
     return relative(workspaceRoot, ctsPath)
   }
 
@@ -153,7 +83,7 @@ function resolveExportToSourcePath(exportPath: string, projectDir: string, works
  */
 function getLibraryEntryPoints(projectDir: string, workspaceRoot: string): EntryPointMapping[] {
   const packageJsonPath = join(projectDir, 'package.json')
-  const packageJson = parseJsonFile<PackageJson>(packageJsonPath)
+  const packageJson = readJsonFileIfExists<PackageJson>(packageJsonPath)
 
   if (!packageJson?.name || !packageJson.exports) {
     return []
@@ -162,7 +92,7 @@ function getLibraryEntryPoints(projectDir: string, workspaceRoot: string): Entry
   const mappings: EntryPointMapping[] = []
   const packageName = packageJson.name
 
-  for (const [exportKey, exportValue] of Object.entries(packageJson.exports)) {
+  for (const [exportKey, exportValue] of entries(packageJson.exports)) {
     // Skip package.json self-references
     /* istanbul ignore if -- tested in separate case */
     if (exportKey === './package.json' || exportValue === './package.json') {
@@ -176,7 +106,7 @@ function getLibraryEntryPoints(projectDir: string, workspaceRoot: string): Entry
       /* istanbul ignore else -- conditional exports tested separately */
     } else if (typeof exportValue === 'object' && exportValue !== null) {
       // Use 'import' or 'default' or first available path
-      exportPath = exportValue['import'] ?? exportValue['default'] ?? Object.values(exportValue)[0]
+      exportPath = exportValue['import'] ?? exportValue['default'] ?? values(exportValue)[0]
     }
 
     /* istanbul ignore if -- defensive for invalid export types */
@@ -221,7 +151,7 @@ function getLibraryEntryPoints(projectDir: string, workspaceRoot: string): Entry
  * @returns Map of path alias to source paths array.
  */
 function extractExistingPaths(pathsNode: JSONNode): Map<string, string[]> {
-  const paths = new Map<string, string[]>()
+  const paths = createMap<string, string[]>()
 
   /* istanbul ignore if -- defensive type guard for jsonc-eslint-parser */
   if (pathsNode.type !== 'JSONObjectExpression') {
@@ -366,7 +296,7 @@ const rule: Rule.RuleModule = {
     const libraryDirs: string[] = []
     for (const dir of libraryDirectories) {
       const absoluteDir = join(workspaceRoot, dir)
-      const foundDirs = findLibraryDirectories(absoluteDir, workspaceRoot)
+      const foundDirs = findLibraryDirectories(absoluteDir)
 
       // Filter out excluded directories
       for (const foundDir of foundDirs) {
@@ -428,10 +358,10 @@ const rule: Rule.RuleModule = {
         }
 
         const existingPaths = extractExistingPaths(pathsValue)
-        const existingPathsList = Array.from(existingPaths.keys())
+        const existingPathsList = from(existingPaths.keys())
 
         // Build a map of package names to their paths
-        const packageNameSet = new Set(expectedMappings.map((m) => m.packageName))
+        const packageNameSet = createSet(expectedMappings.map((m) => m.packageName))
 
         // Check for orphan paths (paths that point to non-existent files or don't match any package)
         const orphanPaths: Array<{ pathAlias: string; sourcePath: string; propertyNode: JSONNode; reason: 'nonexistent' | 'unknown' }> = []
@@ -464,12 +394,12 @@ const rule: Rule.RuleModule = {
           let fileExists = false
           if (sourcePath) {
             const absolutePath = join(workspaceRoot, sourcePath)
-            fileExists = existsSync(absolutePath)
+            fileExists = exists(absolutePath)
           }
 
           // Check if this path belongs to a known package (one with exports in package.json)
           /* istanbul ignore next -- callback may not execute if packageNameSet is empty */
-          const matchesKnownPackage = Array.from(packageNameSet).some((pkg) => keyName === pkg || keyName.startsWith(`${pkg}/`))
+          const matchesKnownPackage = from(packageNameSet).some((pkg) => keyName === pkg || keyName.startsWith(`${pkg}/`))
 
           if (!matchesKnownPackage) {
             // If the path doesn't match a known package but the file exists,
@@ -651,7 +581,7 @@ const rule: Rule.RuleModule = {
         /* istanbul ignore next -- callback may not execute if orphanPaths is empty */
         const nonOrphanPaths = existingPathsList.filter((p) => !orphanPaths.some((o) => o.pathAlias === p))
 
-        const packageIndices = new Map<string, number[]>()
+        const packageIndices = createMap<string, number[]>()
 
         for (let i = 0; i < nonOrphanPaths.length; i++) {
           const pathAlias = nonOrphanPaths[i]

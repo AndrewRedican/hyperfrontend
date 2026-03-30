@@ -1,17 +1,11 @@
 import type { InvalidTestCase, ValidTestCase } from '@typescript-eslint/rule-tester'
-import { RuleTester } from '@typescript-eslint/rule-tester'
+import { createTypeScriptRuleTester } from '../testing'
 import rule from './no-mixed-type-import'
 
 type TestOptions = readonly []
 type MessageIds = 'noMixedTypeImport'
 
-const ruleTester = new RuleTester({
-  languageOptions: {
-    parserOptions: {
-      projectService: false,
-    },
-  },
-})
+const ruleTester = createTypeScriptRuleTester()
 
 /**
  * Valid test cases - pure type imports, pure value imports, or import type syntax

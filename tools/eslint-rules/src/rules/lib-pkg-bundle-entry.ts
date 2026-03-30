@@ -1,7 +1,9 @@
 import type { Rule } from 'eslint'
 import type { JSONNode, JSONProperty } from 'jsonc-eslint-parser/lib/parser/ast'
 import { dirname, join } from 'node:path'
-import { isPublishableLibrary, parseJsonFile } from '../utils/nx-project'
+import { createSet } from '@hyperfrontend/immutable-api-utils/built-in-copy/set'
+import { readJsonFileIfExists } from '../utils/fs'
+import { isPublishableLibrary } from '../utils/nx-project'
 
 /**
  * Rule identifier for the lib-pkg-bundle-entry rule.
@@ -29,7 +31,7 @@ interface ProjectJson {
  */
 function getBundleEntries(projectRoot: string): string[] {
   const projectJsonPath = join(projectRoot, 'project.json')
-  const projectJson = parseJsonFile<ProjectJson>(projectJsonPath)
+  const projectJson = readJsonFileIfExists<ProjectJson>(projectJsonPath)
 
   if (!projectJson?.targets?.build?.options) {
     return []
@@ -46,7 +48,7 @@ function getBundleEntries(projectRoot: string): string[] {
     entries.push(options.umd.entry)
   }
 
-  return [...new Set(entries)]
+  return [...createSet(entries)]
 }
 
 const rule: Rule.RuleModule = {
@@ -79,7 +81,7 @@ const rule: Rule.RuleModule = {
       return {}
     }
 
-    const exportKeys = new Set<string>()
+    const exportKeys = createSet<string>()
     let exportsNode: JSONProperty | null = null
 
     return {

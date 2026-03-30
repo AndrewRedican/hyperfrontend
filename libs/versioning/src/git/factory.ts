@@ -589,7 +589,8 @@ function fetch(options: { cwd: string; timeout: number }, remote = 'origin', fet
   if (!isValidRemoteName(remote)) {
     return false
   }
-  const args: string[] = ['fetch', remote]
+  // '--' explicitly ends option processing so the remote cannot be interpreted as a flag (e.g. --upload-pack)
+  const args: string[] = ['fetch', '--', remote]
 
   if (fetchOptions?.prune) {
     args.push('--prune')
@@ -626,7 +627,8 @@ function pull(options: { cwd: string; timeout: number }, remote = 'origin', bran
   if (!isValidRemoteName(remote)) {
     return false
   }
-  const args: string[] = ['pull', remote]
+  // '--' explicitly ends option processing so the remote cannot be interpreted as a flag (e.g. --upload-pack)
+  const args: string[] = ['pull', '--', remote]
   if (branch) {
     args.push(branch)
   }

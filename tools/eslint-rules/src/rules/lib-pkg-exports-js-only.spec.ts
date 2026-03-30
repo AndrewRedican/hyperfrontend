@@ -1,49 +1,14 @@
 import type { RuleTester as ESLintRuleTester } from 'eslint'
-import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs'
-import { tmpdir } from 'node:os'
-import { join } from 'node:path'
-import { RuleTester } from 'eslint'
+import {
+  createJsonRuleTester,
+  createTempWorkspaceManager,
+  NON_PUBLISHABLE_LIBRARY_PROJECT_JSON,
+  PUBLISHABLE_LIBRARY_PROJECT_JSON,
+} from '../testing'
 import rule from './lib-pkg-exports-js-only'
 
-const tempDirs: string[] = []
-
-/**
- * Creates a temporary project structure for testing.
- *
- * @param config - Configuration for the temporary project.
- * @param config.projectJson - Optional project.json content.
- * @param config.packageJson - Optional package.json content.
- * @returns The path to the temporary project directory.
- */
-function createTempProject(config: { projectJson?: object; packageJson?: object }): string {
-  const testDir = mkdtempSync(join(tmpdir(), 'eslint-test-'))
-  tempDirs.push(testDir)
-
-  if (config.projectJson) {
-    writeFileSync(join(testDir, 'project.json'), JSON.stringify(config.projectJson, null, 2), { mode: 0o600 })
-  }
-
-  if (config.packageJson) {
-    writeFileSync(join(testDir, 'package.json'), JSON.stringify(config.packageJson, null, 2), { mode: 0o600 })
-  }
-
-  mkdirSync(join(testDir, 'src'), { recursive: true })
-  return testDir
-}
-
-const ruleTester = new RuleTester({
-  languageOptions: {
-    parser: require('jsonc-eslint-parser'),
-  },
-})
-
-/**
- * Publishable library project.json.
- */
-const publishableProjectJson = {
-  projectType: 'library',
-  targets: { build: {}, publish: {} },
-}
+const manager = createTempWorkspaceManager()
+const ruleTester = createJsonRuleTester()
 
 function createValidJsExportsCase(): ESLintRuleTester.ValidTestCase {
   const pkg = {
@@ -55,13 +20,13 @@ function createValidJsExportsCase(): ESLintRuleTester.ValidTestCase {
       './package.json': './package.json',
     },
   }
-  const projectDir = createTempProject({
-    projectJson: publishableProjectJson,
+  const workspace = manager.create({
+    projectJson: PUBLISHABLE_LIBRARY_PROJECT_JSON,
     packageJson: pkg,
   })
   return {
     code: JSON.stringify(pkg, null, 2),
-    filename: join(projectDir, 'package.json'),
+    filename: workspace.getPath('package.json'),
   }
 }
 
@@ -75,22 +40,19 @@ function createValidConditionalExportsCase(): ESLintRuleTester.ValidTestCase {
       },
     },
   }
-  const projectDir = createTempProject({
-    projectJson: publishableProjectJson,
+  const workspace = manager.create({
+    projectJson: PUBLISHABLE_LIBRARY_PROJECT_JSON,
     packageJson: pkg,
   })
   return {
     code: JSON.stringify(pkg, null, 2),
-    filename: join(projectDir, 'package.json'),
+    filename: workspace.getPath('package.json'),
   }
 }
 
 function createNonPublishableCase(): ESLintRuleTester.ValidTestCase {
-  const projectDir = createTempProject({
-    projectJson: {
-      projectType: 'library',
-      targets: { build: {} }, // No publish target
-    },
+  const workspace = manager.create({
+    projectJson: NON_PUBLISHABLE_LIBRARY_PROJECT_JSON,
     packageJson: {
       name: 'internal-lib',
       exports: { '.': './src/index.ts' }, // Would be invalid but skipped
@@ -98,7 +60,7 @@ function createNonPublishableCase(): ESLintRuleTester.ValidTestCase {
   })
   return {
     code: JSON.stringify({ name: 'internal-lib', exports: { '.': './src/index.ts' } }, null, 2),
-    filename: join(projectDir, 'package.json'),
+    filename: workspace.getPath('package.json'),
   }
 }
 
@@ -109,13 +71,13 @@ function createTsExtensionCase(): ESLintRuleTester.InvalidTestCase {
       '.': './src/index.ts',
     },
   }
-  const projectDir = createTempProject({
-    projectJson: publishableProjectJson,
+  const workspace = manager.create({
+    projectJson: PUBLISHABLE_LIBRARY_PROJECT_JSON,
     packageJson: pkg,
   })
   return {
     code: JSON.stringify(pkg, null, 2),
-    filename: join(projectDir, 'package.json'),
+    filename: workspace.getPath('package.json'),
     errors: [{ messageId: 'invalidExtension' }],
     output: `{
   "name": "@hyperfrontend/test-lib",
@@ -133,13 +95,13 @@ function createTsxExtensionCase(): ESLintRuleTester.InvalidTestCase {
       './component': './src/component.tsx',
     },
   }
-  const projectDir = createTempProject({
-    projectJson: publishableProjectJson,
+  const workspace = manager.create({
+    projectJson: PUBLISHABLE_LIBRARY_PROJECT_JSON,
     packageJson: pkg,
   })
   return {
     code: JSON.stringify(pkg, null, 2),
-    filename: join(projectDir, 'package.json'),
+    filename: workspace.getPath('package.json'),
     errors: [{ messageId: 'invalidExtension' }],
     output: `{
   "name": "@hyperfrontend/test-lib",
@@ -157,13 +119,13 @@ function createMtsExtensionCase(): ESLintRuleTester.InvalidTestCase {
       '.': './src/index.mts',
     },
   }
-  const projectDir = createTempProject({
-    projectJson: publishableProjectJson,
+  const workspace = manager.create({
+    projectJson: PUBLISHABLE_LIBRARY_PROJECT_JSON,
     packageJson: pkg,
   })
   return {
     code: JSON.stringify(pkg, null, 2),
-    filename: join(projectDir, 'package.json'),
+    filename: workspace.getPath('package.json'),
     errors: [{ messageId: 'invalidExtension' }],
     output: `{
   "name": "@hyperfrontend/test-lib",
@@ -181,13 +143,13 @@ function createCtsExtensionCase(): ESLintRuleTester.InvalidTestCase {
       '.': './src/index.cts',
     },
   }
-  const projectDir = createTempProject({
-    projectJson: publishableProjectJson,
+  const workspace = manager.create({
+    projectJson: PUBLISHABLE_LIBRARY_PROJECT_JSON,
     packageJson: pkg,
   })
   return {
     code: JSON.stringify(pkg, null, 2),
-    filename: join(projectDir, 'package.json'),
+    filename: workspace.getPath('package.json'),
     errors: [{ messageId: 'invalidExtension' }],
     output: `{
   "name": "@hyperfrontend/test-lib",
@@ -208,13 +170,13 @@ function createConditionalTsCase(): ESLintRuleTester.InvalidTestCase {
       },
     },
   }
-  const projectDir = createTempProject({
-    projectJson: publishableProjectJson,
+  const workspace = manager.create({
+    projectJson: PUBLISHABLE_LIBRARY_PROJECT_JSON,
     packageJson: pkg,
   })
   return {
     code: JSON.stringify(pkg, null, 2),
-    filename: join(projectDir, 'package.json'),
+    filename: workspace.getPath('package.json'),
     errors: [{ messageId: 'invalidExtension' }, { messageId: 'invalidExtension' }],
     output: `{
   "name": "@hyperfrontend/test-lib",
@@ -230,9 +192,7 @@ function createConditionalTsCase(): ESLintRuleTester.InvalidTestCase {
 
 describe('lib-pkg-exports-js-only', () => {
   afterAll(() => {
-    for (const dir of tempDirs) {
-      rmSync(dir, { recursive: true, force: true })
-    }
+    manager.cleanupAll()
   })
 
   ruleTester.run('lib-pkg-exports-js-only', rule, {

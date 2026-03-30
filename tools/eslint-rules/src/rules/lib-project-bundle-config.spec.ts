@@ -1,38 +1,12 @@
-import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs'
-import { tmpdir } from 'node:os'
-import { join } from 'node:path'
-import { RuleTester } from 'eslint'
+import { createJsonRuleTester, createTempWorkspaceManager } from '../testing'
 import rule from './lib-project-bundle-config'
 
-const tempDirs: string[] = []
-
-/**
- * Creates a temporary project structure for testing.
- *
- * @param config - Configuration for the temporary project.
- * @param config.projectJson - The project.json content.
- * @returns The path to the temporary project directory.
- */
-function createTempProject(config: { projectJson: object }): string {
-  const testDir = mkdtempSync(join(tmpdir(), 'eslint-test-'))
-  tempDirs.push(testDir)
-
-  writeFileSync(join(testDir, 'project.json'), JSON.stringify(config.projectJson, null, 2), { mode: 0o600 })
-  mkdirSync(join(testDir, 'src'), { recursive: true })
-  return testDir
-}
-
-const ruleTester = new RuleTester({
-  languageOptions: {
-    parser: require('jsonc-eslint-parser'),
-  },
-})
+const manager = createTempWorkspaceManager()
+const ruleTester = createJsonRuleTester()
 
 describe('lib-project-bundle-config', () => {
   afterAll(() => {
-    for (const dir of tempDirs) {
-      rmSync(dir, { recursive: true, force: true })
-    }
+    manager.cleanupAll()
   })
 
   ruleTester.run('lib-project-bundle-config', rule, {
@@ -50,13 +24,13 @@ describe('lib-project-bundle-config', () => {
           2
         ),
         filename: (() => {
-          const dir = createTempProject({
+          const workspace = manager.create({
             projectJson: {
               projectType: 'library',
               targets: { build: { options: { iife: {} } } },
             },
           })
-          return join(dir, 'project.json')
+          return workspace.getPath('project.json')
         })(),
       },
       {
@@ -73,7 +47,7 @@ describe('lib-project-bundle-config', () => {
           2
         ),
         filename: (() => {
-          const dir = createTempProject({
+          const workspace = manager.create({
             projectJson: {
               projectType: 'application',
               targets: {
@@ -82,7 +56,7 @@ describe('lib-project-bundle-config', () => {
               },
             },
           })
-          return join(dir, 'project.json')
+          return workspace.getPath('project.json')
         })(),
       },
       {
@@ -96,13 +70,13 @@ describe('lib-project-bundle-config', () => {
           2
         ),
         filename: (() => {
-          const dir = createTempProject({
+          const workspace = manager.create({
             projectJson: {
               projectType: 'library',
               targets: { build: {}, publish: {} },
             },
           })
-          return join(dir, 'project.json')
+          return workspace.getPath('project.json')
         })(),
       },
       {
@@ -123,7 +97,7 @@ describe('lib-project-bundle-config', () => {
           2
         ),
         filename: (() => {
-          const dir = createTempProject({
+          const workspace = manager.create({
             projectJson: {
               projectType: 'library',
               targets: {
@@ -136,7 +110,7 @@ describe('lib-project-bundle-config', () => {
               },
             },
           })
-          return join(dir, 'project.json')
+          return workspace.getPath('project.json')
         })(),
       },
       {
@@ -157,7 +131,7 @@ describe('lib-project-bundle-config', () => {
           2
         ),
         filename: (() => {
-          const dir = createTempProject({
+          const workspace = manager.create({
             projectJson: {
               projectType: 'library',
               targets: {
@@ -170,7 +144,7 @@ describe('lib-project-bundle-config', () => {
               },
             },
           })
-          return join(dir, 'project.json')
+          return workspace.getPath('project.json')
         })(),
       },
       {
@@ -192,7 +166,7 @@ describe('lib-project-bundle-config', () => {
           2
         ),
         filename: (() => {
-          const dir = createTempProject({
+          const workspace = manager.create({
             projectJson: {
               projectType: 'library',
               targets: {
@@ -206,7 +180,7 @@ describe('lib-project-bundle-config', () => {
               },
             },
           })
-          return join(dir, 'project.json')
+          return workspace.getPath('project.json')
         })(),
       },
     ],
@@ -229,7 +203,7 @@ describe('lib-project-bundle-config', () => {
           2
         ),
         filename: (() => {
-          const dir = createTempProject({
+          const workspace = manager.create({
             projectJson: {
               projectType: 'library',
               targets: {
@@ -242,7 +216,7 @@ describe('lib-project-bundle-config', () => {
               },
             },
           })
-          return join(dir, 'project.json')
+          return workspace.getPath('project.json')
         })(),
         errors: [{ messageId: 'missingEntry', data: { format: 'iife' } }],
       },
@@ -264,7 +238,7 @@ describe('lib-project-bundle-config', () => {
           2
         ),
         filename: (() => {
-          const dir = createTempProject({
+          const workspace = manager.create({
             projectJson: {
               projectType: 'library',
               targets: {
@@ -277,7 +251,7 @@ describe('lib-project-bundle-config', () => {
               },
             },
           })
-          return join(dir, 'project.json')
+          return workspace.getPath('project.json')
         })(),
         errors: [{ messageId: 'missingGlobalName', data: { format: 'iife' } }],
       },
@@ -299,7 +273,7 @@ describe('lib-project-bundle-config', () => {
           2
         ),
         filename: (() => {
-          const dir = createTempProject({
+          const workspace = manager.create({
             projectJson: {
               projectType: 'library',
               targets: {
@@ -312,7 +286,7 @@ describe('lib-project-bundle-config', () => {
               },
             },
           })
-          return join(dir, 'project.json')
+          return workspace.getPath('project.json')
         })(),
         errors: [{ messageId: 'missingEntry', data: { format: 'umd' } }],
       },
@@ -334,7 +308,7 @@ describe('lib-project-bundle-config', () => {
           2
         ),
         filename: (() => {
-          const dir = createTempProject({
+          const workspace = manager.create({
             projectJson: {
               projectType: 'library',
               targets: {
@@ -347,7 +321,7 @@ describe('lib-project-bundle-config', () => {
               },
             },
           })
-          return join(dir, 'project.json')
+          return workspace.getPath('project.json')
         })(),
         errors: [{ messageId: 'missingGlobalName', data: { format: 'umd' } }],
       },
@@ -369,7 +343,7 @@ describe('lib-project-bundle-config', () => {
           2
         ),
         filename: (() => {
-          const dir = createTempProject({
+          const workspace = manager.create({
             projectJson: {
               projectType: 'library',
               targets: {
@@ -382,7 +356,7 @@ describe('lib-project-bundle-config', () => {
               },
             },
           })
-          return join(dir, 'project.json')
+          return workspace.getPath('project.json')
         })(),
         errors: [
           { messageId: 'missingEntry', data: { format: 'iife' } },
@@ -408,7 +382,7 @@ describe('lib-project-bundle-config', () => {
           2
         ),
         filename: (() => {
-          const dir = createTempProject({
+          const workspace = manager.create({
             projectJson: {
               projectType: 'library',
               targets: {
@@ -422,7 +396,7 @@ describe('lib-project-bundle-config', () => {
               },
             },
           })
-          return join(dir, 'project.json')
+          return workspace.getPath('project.json')
         })(),
         errors: [
           { messageId: 'missingGlobalName', data: { format: 'iife' } },
