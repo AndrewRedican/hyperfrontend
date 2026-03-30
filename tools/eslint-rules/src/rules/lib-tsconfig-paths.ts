@@ -2,6 +2,10 @@ import type { Rule } from 'eslint'
 import type { JSONNode } from 'jsonc-eslint-parser/lib/parser/ast'
 import type { PackageJson } from '../utils/nx-project'
 import { dirname, join, relative } from 'node:path'
+import { from } from '@hyperfrontend/immutable-api-utils/built-in-copy/array'
+import { createMap } from '@hyperfrontend/immutable-api-utils/built-in-copy/map'
+import { entries, values } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
+import { createSet } from '@hyperfrontend/immutable-api-utils/built-in-copy/set'
 import { exists, findLibraryDirectories, readJsonFileIfExists } from '../utils'
 
 /**
@@ -88,7 +92,7 @@ function getLibraryEntryPoints(projectDir: string, workspaceRoot: string): Entry
   const mappings: EntryPointMapping[] = []
   const packageName = packageJson.name
 
-  for (const [exportKey, exportValue] of Object.entries(packageJson.exports)) {
+  for (const [exportKey, exportValue] of entries(packageJson.exports)) {
     // Skip package.json self-references
     /* istanbul ignore if -- tested in separate case */
     if (exportKey === './package.json' || exportValue === './package.json') {
@@ -102,7 +106,7 @@ function getLibraryEntryPoints(projectDir: string, workspaceRoot: string): Entry
       /* istanbul ignore else -- conditional exports tested separately */
     } else if (typeof exportValue === 'object' && exportValue !== null) {
       // Use 'import' or 'default' or first available path
-      exportPath = exportValue['import'] ?? exportValue['default'] ?? Object.values(exportValue)[0]
+      exportPath = exportValue['import'] ?? exportValue['default'] ?? values(exportValue)[0]
     }
 
     /* istanbul ignore if -- defensive for invalid export types */
@@ -147,7 +151,7 @@ function getLibraryEntryPoints(projectDir: string, workspaceRoot: string): Entry
  * @returns Map of path alias to source paths array.
  */
 function extractExistingPaths(pathsNode: JSONNode): Map<string, string[]> {
-  const paths = new Map<string, string[]>()
+  const paths = createMap<string, string[]>()
 
   /* istanbul ignore if -- defensive type guard for jsonc-eslint-parser */
   if (pathsNode.type !== 'JSONObjectExpression') {
@@ -354,10 +358,10 @@ const rule: Rule.RuleModule = {
         }
 
         const existingPaths = extractExistingPaths(pathsValue)
-        const existingPathsList = Array.from(existingPaths.keys())
+        const existingPathsList = from(existingPaths.keys())
 
         // Build a map of package names to their paths
-        const packageNameSet = new Set(expectedMappings.map((m) => m.packageName))
+        const packageNameSet = createSet(expectedMappings.map((m) => m.packageName))
 
         // Check for orphan paths (paths that point to non-existent files or don't match any package)
         const orphanPaths: Array<{ pathAlias: string; sourcePath: string; propertyNode: JSONNode; reason: 'nonexistent' | 'unknown' }> = []
@@ -395,7 +399,7 @@ const rule: Rule.RuleModule = {
 
           // Check if this path belongs to a known package (one with exports in package.json)
           /* istanbul ignore next -- callback may not execute if packageNameSet is empty */
-          const matchesKnownPackage = Array.from(packageNameSet).some((pkg) => keyName === pkg || keyName.startsWith(`${pkg}/`))
+          const matchesKnownPackage = from(packageNameSet).some((pkg) => keyName === pkg || keyName.startsWith(`${pkg}/`))
 
           if (!matchesKnownPackage) {
             // If the path doesn't match a known package but the file exists,
@@ -577,7 +581,7 @@ const rule: Rule.RuleModule = {
         /* istanbul ignore next -- callback may not execute if orphanPaths is empty */
         const nonOrphanPaths = existingPathsList.filter((p) => !orphanPaths.some((o) => o.pathAlias === p))
 
-        const packageIndices = new Map<string, number[]>()
+        const packageIndices = createMap<string, number[]>()
 
         for (let i = 0; i < nonOrphanPaths.length; i++) {
           const pathAlias = nonOrphanPaths[i]

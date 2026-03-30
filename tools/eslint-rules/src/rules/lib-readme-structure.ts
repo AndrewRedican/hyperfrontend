@@ -1,11 +1,12 @@
 import type { Rule } from 'eslint'
 import { dirname } from 'node:path'
+import { createURL } from '@hyperfrontend/immutable-api-utils/built-in-copy/url'
 import { isPublishableLibrary } from '../utils/nx-project'
 
 /**
  * The expected base URL for documentation links.
  */
-const DOCS_BASE_URL = new URL('https://www.hyperfrontend.dev/docs/')
+const DOCS_BASE_URL = createURL('https://www.hyperfrontend.dev/docs/')
 
 /**
  * Checks if a line contains a URL that starts with the expected documentation base URL.
@@ -38,7 +39,7 @@ function containsValidDocumentationUrl(line: string): boolean {
   // Check if any extracted URL matches the expected base URL
   return urls.some((url) => {
     try {
-      const parsed = new URL(url)
+      const parsed = createURL(url)
       // Verify the origin and pathname start correctly
       return parsed.origin === DOCS_BASE_URL.origin && parsed.pathname.startsWith(DOCS_BASE_URL.pathname)
     } catch {

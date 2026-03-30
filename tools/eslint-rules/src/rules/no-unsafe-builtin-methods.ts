@@ -1,5 +1,7 @@
 import type { TSESTree } from '@typescript-eslint/utils'
 import { ESLintUtils, AST_NODE_TYPES } from '@typescript-eslint/utils'
+import { fromEntries } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
+import { createSet } from '@hyperfrontend/immutable-api-utils/built-in-copy/set'
 
 /**
  * Rule identifier for the no-unsafe-builtin-methods rule.
@@ -41,7 +43,7 @@ type SafeImport = { import: string; from: string }
  * Maps unsafe method access to safe imports
  */
 const UNSAFE_METHODS: Record<string, Record<string, SafeImport>> = {
-  Object: Object.fromEntries(
+  Object: fromEntries(
     [
       'freeze',
       'create',
@@ -65,29 +67,29 @@ const UNSAFE_METHODS: Record<string, Record<string, SafeImport>> = {
       'getOwnPropertyDescriptors',
     ].map((m) => [m, { import: m, from: OBJECT }])
   ),
-  Array: Object.fromEntries(['isArray', 'from', 'of'].map((m) => [m, { import: m, from: ARRAY }])),
-  JSON: Object.fromEntries(['parse', 'stringify'].map((m) => [m, { import: m, from: JSON_COPY }])),
-  Promise: Object.fromEntries(
+  Array: fromEntries(['isArray', 'from', 'of'].map((m) => [m, { import: m, from: ARRAY }])),
+  JSON: fromEntries(['parse', 'stringify'].map((m) => [m, { import: m, from: JSON_COPY }])),
+  Promise: fromEntries(
     ['resolve', 'reject', 'all', 'race', 'allSettled', 'any', 'withResolvers'].map((m) => [
       m,
       { import: m === 'withResolvers' ? 'promiseWithResolvers' : `promise${m.charAt(0).toUpperCase()}${m.slice(1)}`, from: PROMISE },
     ])
   ),
-  Date: Object.fromEntries(
+  Date: fromEntries(
     [
       ['now', 'dateNow'],
       ['parse', 'dateParse'],
       ['UTC', 'dateUTC'],
     ].map(([m, i]) => [m, { import: i, from: DATE }])
   ),
-  Map: Object.fromEntries([['groupBy', { import: 'mapGroupBy', from: MAP }]]),
-  Symbol: Object.fromEntries(
+  Map: fromEntries([['groupBy', { import: 'mapGroupBy', from: MAP }]]),
+  Symbol: fromEntries(
     [
       ['for', 'symbolFor'],
       ['keyFor', 'symbolKeyFor'],
     ].map(([m, i]) => [m, { import: i, from: SYMBOL }])
   ),
-  Reflect: Object.fromEntries(
+  Reflect: fromEntries(
     [
       'apply',
       'construct',
@@ -104,7 +106,7 @@ const UNSAFE_METHODS: Record<string, Record<string, SafeImport>> = {
       'preventExtensions',
     ].map((m) => [m, { import: m, from: REFLECT }])
   ),
-  console: Object.fromEntries(
+  console: fromEntries(
     [
       'log',
       'warn',
@@ -126,7 +128,7 @@ const UNSAFE_METHODS: Record<string, Record<string, SafeImport>> = {
       'timeLog',
     ].map((m) => [m, { import: m, from: CONSOLE }])
   ),
-  Math: Object.fromEntries(
+  Math: fromEntries(
     [
       'abs',
       'sign',
@@ -165,7 +167,7 @@ const UNSAFE_METHODS: Record<string, Record<string, SafeImport>> = {
       'imul',
     ].map((m) => [m, { import: m, from: MATH }])
   ),
-  Number: Object.fromEntries(
+  Number: fromEntries(
     [
       ['isNaN', 'isNaN'],
       ['isFinite', 'isFinite'],
@@ -175,14 +177,14 @@ const UNSAFE_METHODS: Record<string, Record<string, SafeImport>> = {
       ['parseInt', 'parseInt'],
     ].map(([m, i]) => [m, { import: i, from: NUMBER_COPY }])
   ),
-  String: Object.fromEntries(
+  String: fromEntries(
     [
       ['fromCharCode', 'fromCharCode'],
       ['fromCodePoint', 'fromCodePoint'],
       ['raw', 'raw'],
     ].map(([m, i]) => [m, { import: i, from: STRING_COPY }])
   ),
-  URL: Object.fromEntries(
+  URL: fromEntries(
     [
       ['canParse', 'canParse'],
       ['createObjectURL', 'createObjectURL'],
@@ -190,8 +192,8 @@ const UNSAFE_METHODS: Record<string, Record<string, SafeImport>> = {
       ['parse', 'parseURL'],
     ].map(([m, i]) => [m, { import: i, from: URL_COPY }])
   ),
-  ArrayBuffer: Object.fromEntries([['isView', { import: 'isView', from: TYPED_ARRAYS }]]),
-  Uint8Array: Object.fromEntries(
+  ArrayBuffer: fromEntries([['isView', { import: 'isView', from: TYPED_ARRAYS }]]),
+  Uint8Array: fromEntries(
     [
       ['from', 'uint8ArrayFrom'],
       ['of', 'uint8ArrayOf'],
@@ -313,7 +315,7 @@ export default createRule<[], MessageIds>({
     }
 
     // Track identifiers imported from safe modules
-    const safeImports = new Set<string>()
+    const safeImports = createSet<string>()
 
     return {
       // Track imports from @hyperfrontend/immutable-api-utils

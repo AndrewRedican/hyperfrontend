@@ -1,4 +1,6 @@
-import { ESLintUtils, TSESTree } from '@typescript-eslint/utils'
+import type { TSESTree } from '@typescript-eslint/utils'
+import { ESLintUtils } from '@typescript-eslint/utils'
+import { createSet } from '@hyperfrontend/immutable-api-utils/built-in-copy/set'
 
 /**
  * Rule identifier for the assertive-test-names rule.
@@ -14,7 +16,7 @@ type MessageIds = 'noShouldInTestName'
 /**
  * Test function names that this rule checks (it and test variants only, not describe).
  */
-const TEST_FUNCTION_NAMES = new Set(['it', 'test', 'fit', 'xit'])
+const TEST_FUNCTION_NAMES = createSet(['it', 'test', 'fit', 'xit'])
 
 /**
  * Pattern to match the word "should" (case-insensitive, word boundary).

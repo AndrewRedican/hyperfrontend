@@ -1,6 +1,7 @@
 import type { Rule } from 'eslint'
 import type { JSONNode, JSONProperty } from 'jsonc-eslint-parser/lib/parser/ast'
 import { dirname, join } from 'node:path'
+import { createSet } from '@hyperfrontend/immutable-api-utils/built-in-copy/set'
 import { readJsonFileIfExists } from '../utils/fs'
 import { isPublishableLibrary } from '../utils/nx-project'
 
@@ -47,7 +48,7 @@ function getBundleEntries(projectRoot: string): string[] {
     entries.push(options.umd.entry)
   }
 
-  return [...new Set(entries)]
+  return [...createSet(entries)]
 }
 
 const rule: Rule.RuleModule = {
@@ -80,7 +81,7 @@ const rule: Rule.RuleModule = {
       return {}
     }
 
-    const exportKeys = new Set<string>()
+    const exportKeys = createSet<string>()
     let exportsNode: JSONProperty | null = null
 
     return {

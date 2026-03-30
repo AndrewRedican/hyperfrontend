@@ -1,5 +1,6 @@
 import type { Rule } from 'eslint'
 import { basename, dirname, join } from 'node:path'
+import { min } from '@hyperfrontend/immutable-api-utils/built-in-copy/math'
 import {
   exists,
   findNxWorkspaceRoot,
@@ -135,7 +136,7 @@ export function hasPathFilter(content: string, coverageFlag: string, relativePat
     // Look for the filter name followed by colon
     if (line === filterPattern || line.startsWith(`${filterPattern} `)) {
       // Check if the next line (or same line) contains the path pattern
-      for (let j = i; j < Math.min(i + 5, lines.length); j++) {
+      for (let j = i; j < min(i + 5, lines.length); j++) {
         if (lines[j].includes(pathPattern)) {
           return true
         }

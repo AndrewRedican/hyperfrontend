@@ -1,6 +1,7 @@
 import type { Rule } from 'eslint'
 import type { JSONNode } from 'jsonc-eslint-parser/lib/parser/ast'
 import { dirname } from 'node:path'
+import { createSet } from '@hyperfrontend/immutable-api-utils/built-in-copy/set'
 import { isPublishableLibrary } from '../utils/nx-project'
 
 /**
@@ -55,7 +56,7 @@ const rule: Rule.RuleModule = {
       return {}
     }
 
-    const foundFields = new Set<string>()
+    const foundFields = createSet<string>()
 
     return {
       /* istanbul ignore next - jsonc-eslint-parser always provides JSONProperty for object keys */

@@ -1,6 +1,8 @@
 import type { Rule } from 'eslint'
 import type { ProjectJson } from '../utils/nx-project'
 import { basename, dirname, join } from 'node:path'
+import { createMap } from '@hyperfrontend/immutable-api-utils/built-in-copy/map'
+import { createSet } from '@hyperfrontend/immutable-api-utils/built-in-copy/set'
 import { exists, findNxWorkspaceRoot, isDirectory, isPublishableLibraryDir, readDirectory, readJsonFileIfExists } from '../utils'
 
 /**
@@ -123,7 +125,7 @@ export function extractMentionedPaths(sectionContent: string): string[] {
  * @returns Map of section titles to their content and line numbers.
  */
 export function parseReadmeSections(content: string): Map<string, { content: string; startLine: number; endLine: number }> {
-  const sections = new Map<string, { content: string; startLine: number; endLine: number }>()
+  const sections = createMap<string, { content: string; startLine: number; endLine: number }>()
   const lines = content.split('\n')
   let currentSection: { title: string; startLine: number; lines: string[] } | null = null
 
@@ -228,7 +230,7 @@ const rule: Rule.RuleModule = {
         // Extract all mentioned paths from both sections
         const mainPaths = extractMentionedPaths(mainPackagesSection.content)
         const internalPaths = extractMentionedPaths(internalPackagesSection.content)
-        const allMentionedPaths = new Set([...mainPaths, ...internalPaths])
+        const allMentionedPaths = createSet([...mainPaths, ...internalPaths])
 
         // Find all publishable libraries in the workspace
         const publishableLibraries: PublishableLibrary[] = []

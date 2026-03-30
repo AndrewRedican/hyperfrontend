@@ -1,4 +1,5 @@
 import { ESLintUtils } from '@typescript-eslint/utils'
+import { createSet } from '@hyperfrontend/immutable-api-utils/built-in-copy/set'
 
 /**
  * Rule identifier for the no-deprecated-tag rule.
@@ -19,7 +20,7 @@ const DEPRECATED_TAG = '@deprecated'
 /**
  * Characters that can follow a valid tag (whitespace or end of string).
  */
-const TAG_TERMINATORS = new Set([' ', '\t', '\n', '\r', '*', undefined])
+const TAG_TERMINATORS = createSet([' ', '\t', '\n', '\r', '*', undefined])
 
 /**
  * Finds the index of the deprecated tag in a comment, case-insensitive.

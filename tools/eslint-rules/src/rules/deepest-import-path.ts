@@ -1,6 +1,9 @@
 import type { TSESTree } from '@typescript-eslint/utils'
 import { dirname, join, resolve } from 'node:path'
 import { AST_NODE_TYPES, ESLintUtils } from '@typescript-eslint/utils'
+import { createMap } from '@hyperfrontend/immutable-api-utils/built-in-copy/map'
+import { entries } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
+import { createSet } from '@hyperfrontend/immutable-api-utils/built-in-copy/set'
 import { exists, findTypeScriptWorkspaceRoot, readFileContent, readJsonFileIfExists } from '../utils'
 
 /**
@@ -43,7 +46,7 @@ let cachedWorkspaceRoot: string | null = null
  * Cache for export analysis results.
  * Key: source file path, Value: Map of export name to deepest path.
  */
-const exportCache = new Map<string, Map<string, ExportMapping>>()
+const exportCache = createMap<string, Map<string, ExportMapping>>()
 
 /**
  * Gets the tsconfig paths for packages matching the given prefix.
@@ -63,15 +66,15 @@ function getTsconfigPaths(workspaceRoot: string, packagePrefix: string): Map<str
 
   /* istanbul ignore if -- defensive for malformed tsconfig */
   if (!tsconfig?.compilerOptions?.paths) {
-    cachedPaths = new Map()
+    cachedPaths = createMap()
     cachedWorkspaceRoot = workspaceRoot
     return cachedPaths
   }
 
-  const paths = new Map<string, string>()
+  const paths = createMap<string, string>()
   const baseUrl = tsconfig.compilerOptions.baseUrl ?? '.'
 
-  for (const [alias, targets] of Object.entries(tsconfig.compilerOptions.paths)) {
+  for (const [alias, targets] of entries(tsconfig.compilerOptions.paths)) {
     if (!alias.startsWith(packagePrefix)) {
       continue
     }
@@ -125,8 +128,8 @@ function resolveImportPath(importPath: string, fromFile: string): string | null 
  * @param visited - Set of already visited files to prevent circular dependencies.
  * @returns Set of exported names from this file.
  */
-function parseExports(filePath: string, visited: Set<string> = new Set()): Set<string> {
-  const exports = new Set<string>()
+function parseExports(filePath: string, visited: Set<string> = createSet()): Set<string> {
+  const exports = createSet<string>()
 
   if (!exists(filePath) || visited.has(filePath)) {
     return exports

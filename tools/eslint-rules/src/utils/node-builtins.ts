@@ -1,8 +1,10 @@
+import { createSet } from '@hyperfrontend/immutable-api-utils/built-in-copy/set'
+
 /**
  * List of Node.js built-in module names.
  * These modules can be imported with or without the `node:` prefix.
  */
-export const NODE_BUILTIN_MODULES: ReadonlySet<string> = new Set([
+export const NODE_BUILTIN_MODULES: ReadonlySet<string> = createSet([
   'assert',
   'async_hooks',
   'buffer',

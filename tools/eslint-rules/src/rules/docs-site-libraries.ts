@@ -1,6 +1,7 @@
 import type { Rule } from 'eslint'
 import type { ArrayExpression, Identifier, Node, VariableDeclaration, VariableDeclarator } from 'estree'
 import { basename, dirname, join } from 'node:path'
+import { createSet } from '@hyperfrontend/immutable-api-utils/built-in-copy/set'
 import { exists, findNxWorkspaceRoot, isDirectory, isPublishableLibraryDir, readDirectory, readJsonFileIfExists } from '../utils'
 
 /**
@@ -94,7 +95,7 @@ function findPublishableLibraries(baseDir: string, workspaceRoot: string, result
  * @returns Set of package names found.
  */
 export function extractPackageNamesFromArray(arrayExpression: ArrayExpression): Set<string> {
-  const packageNames = new Set<string>()
+  const packageNames = createSet<string>()
 
   for (const element of arrayExpression.elements) {
     // Each element should be an object expression

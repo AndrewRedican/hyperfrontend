@@ -1,6 +1,8 @@
 import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
+import { stringify } from '@hyperfrontend/immutable-api-utils/built-in-copy/json'
+import { entries } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
 import { createRuleLogger } from '../utils/logger'
 
 const logger = createRuleLogger('testing:temp-workspace')
@@ -181,7 +183,7 @@ export function createTempWorkspace(config: TempWorkspaceConfig = {}): TempWorks
   }
 
   const writeJsonFile = (relativePath: string, content: object): void => {
-    writeFile(relativePath, JSON.stringify(content, null, 2))
+    writeFile(relativePath, stringify(content, null, 2))
   }
 
   const createDirectory = (relativePath: string): void => {
@@ -218,7 +220,7 @@ export function createTempWorkspace(config: TempWorkspaceConfig = {}): TempWorks
 
   // Write additional files
   if (config.files) {
-    for (const [relativePath, content] of Object.entries(config.files)) {
+    for (const [relativePath, content] of entries(config.files)) {
       writeFile(relativePath, content)
     }
   }
