@@ -238,9 +238,65 @@ describe('comment-analysis utilities', () => {
       expect(isDecorativeHeaderComment(comment, sourceCode)).toBe(false)
     })
 
+    it('returns false when comment precedes export declaration', () => {
+      const commentText = '\n * Nx project.json configuration types.\n '
+      const fullSource = '/*\n * Nx project.json configuration types.\n */\nexport interface ProjectJsonFixture {}'
+      const comment = createMockComment('Block', commentText, [0, 47])
+      const sourceCode = createMockSourceCode(fullSource)
+      expect(isDecorativeHeaderComment(comment, sourceCode)).toBe(false)
+    })
+
+    it('returns false when comment precedes interface declaration', () => {
+      const commentText = '\n * Configuration options.\n '
+      const fullSource = '/*\n * Configuration options.\n */\ninterface Config {}'
+      const comment = createMockComment('Block', commentText, [0, 33])
+      const sourceCode = createMockSourceCode(fullSource)
+      expect(isDecorativeHeaderComment(comment, sourceCode)).toBe(false)
+    })
+
+    it('returns false when comment precedes function declaration', () => {
+      const commentText = '\n * Processes the data.\n '
+      const fullSource = '/*\n * Processes the data.\n */\nfunction process() {}'
+      const comment = createMockComment('Block', commentText, [0, 30])
+      const sourceCode = createMockSourceCode(fullSource)
+      expect(isDecorativeHeaderComment(comment, sourceCode)).toBe(false)
+    })
+
+    it('returns false when comment precedes const declaration', () => {
+      const commentText = '\n * Default configuration.\n '
+      const fullSource = '/*\n * Default configuration.\n */\nconst DEFAULT = {}'
+      const comment = createMockComment('Block', commentText, [0, 33])
+      const sourceCode = createMockSourceCode(fullSource)
+      expect(isDecorativeHeaderComment(comment, sourceCode)).toBe(false)
+    })
+
+    it('returns false when comment precedes class declaration', () => {
+      const commentText = '\n * Base handler class.\n '
+      const fullSource = '/*\n * Base handler class.\n */\nclass Handler {}'
+      const comment = createMockComment('Block', commentText, [0, 30])
+      const sourceCode = createMockSourceCode(fullSource)
+      expect(isDecorativeHeaderComment(comment, sourceCode)).toBe(false)
+    })
+
+    it('returns false when comment precedes type declaration', () => {
+      const commentText = '\n * User type definition.\n '
+      const fullSource = '/*\n * User type definition.\n */\ntype User = { name: string }'
+      const comment = createMockComment('Block', commentText, [0, 32])
+      const sourceCode = createMockSourceCode(fullSource)
+      expect(isDecorativeHeaderComment(comment, sourceCode)).toBe(false)
+    })
+
     it('returns true for decorative multi-line header without tags', () => {
       const comment = createMockComment('Block', '\n * My Application\n * Version 1.0\n ', [0, 45])
+      // note: No declaration follows - file ends after the comment
       const sourceCode = createMockSourceCode('/*\n * My Application\n * Version 1.0\n */')
+      expect(isDecorativeHeaderComment(comment, sourceCode)).toBe(true)
+    })
+
+    it('returns true for decorative header followed by non-declaration code', () => {
+      const comment = createMockComment('Block', '\n * Application Banner\n ', [0, 30])
+      // note: 'console' is not in the declaration patterns list
+      const sourceCode = createMockSourceCode('/*\n * Application Banner\n */\nconsole.log("start")')
       expect(isDecorativeHeaderComment(comment, sourceCode)).toBe(true)
     })
 

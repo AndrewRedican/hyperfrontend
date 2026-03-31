@@ -88,6 +88,7 @@ export const TOOLING_DIRECTIVE_PATTERNS = [
   'eslint-enable',
   'eslint-disable-line',
   'eslint-disable-next-line',
+  'eslint-env',
   'istanbul ignore',
   'istanbul ignore next',
   'istanbul ignore line',
@@ -219,6 +220,44 @@ export function isDecorativeHeaderComment(comment: TSESTree.Comment, sourceCode:
   // note: If it contains JSDoc tags or tooling directives, it's not decorative
   if (containsJsDocTag(comment.value)) return false
   if (isToolingDirective(comment.value)) return false
+
+  // note: Check if comment immediately precedes a declaration (no blank line between)
+  // note: If there's no blank line, this is JSDoc for that code, not a decorative header
+  const fullText = sourceCode.getText()
+  const textAfter = fullText.slice(comment.range[1])
+
+  // note: Find the first non-whitespace content after the comment
+  const match = textAfter.match(/^(\s*)([^\s])/)
+  if (match) {
+    const whitespace = match[1]
+    // note: Check if there's a blank line (two or more newlines) between comment and code
+    const newlineCount = (whitespace.match(/\n/g) || []).length
+    const hasBlankLine = newlineCount >= 2
+
+    // note: If no blank line, check if it starts with a declaration
+    if (!hasBlankLine) {
+      const contentAfter = textAfter.trimStart()
+      const declarationPatterns = [
+        'export ',
+        'import ',
+        'interface ',
+        'type ',
+        'class ',
+        'function ',
+        'const ',
+        'let ',
+        'var ',
+        'async ',
+        'abstract ',
+        'enum ',
+        'namespace ',
+        'module ',
+        'declare ',
+      ]
+      const startsWithDeclaration = declarationPatterns.some((pattern) => contentAfter.startsWith(pattern))
+      if (startsWithDeclaration) return false
+    }
+  }
 
   // note: Check if it looks like a header comment (typically multi-line with prose)
   const lines = comment.value.split('\n')

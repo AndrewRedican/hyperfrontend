@@ -162,6 +162,7 @@ module.exports = [
       'workspace/no-section-dividers': 'error',
       'workspace/no-decorative-header-comments': 'error',
       'workspace/prefer-jsdoc-over-trailing-comments': 'error',
+      'workspace/no-plain-inline-comments': 'error',
     },
   },
   {
