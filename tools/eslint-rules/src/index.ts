@@ -2,6 +2,7 @@ import type { ESLint, Rule } from 'eslint'
 import assertiveTestNames, { RULE_NAME as ASSERTIVE_TEST_NAMES } from './rules/assertive-test-names'
 import deepestImportPath, { RULE_NAME as DEEPEST_IMPORT_PATH } from './rules/deepest-import-path'
 import docsSiteLibraries, { RULE_NAME as DOCS_SITE_LIBRARIES } from './rules/docs-site-libraries'
+import docsSiteRoutes, { RULE_NAME as DOCS_SITE_ROUTES } from './rules/docs-site-routes'
 import importOrder, { RULE_NAME as IMPORT_ORDER } from './rules/import-order'
 import libCiWorkflows, { RULE_NAME as LIB_CI_WORKFLOWS } from './rules/lib-ci-workflows'
 import libE2eProjectRequired, { RULE_NAME as LIB_E2E_PROJECT_REQUIRED } from './rules/lib-e2e-project-required'
@@ -37,6 +38,7 @@ export const rules: ESLint.Plugin['rules'] = {
   [ASSERTIVE_TEST_NAMES]: assertiveTestNames as unknown as Rule.RuleModule,
   [DEEPEST_IMPORT_PATH]: deepestImportPath as unknown as Rule.RuleModule,
   [DOCS_SITE_LIBRARIES]: docsSiteLibraries as unknown as Rule.RuleModule,
+  [DOCS_SITE_ROUTES]: docsSiteRoutes as unknown as Rule.RuleModule,
   [IMPORT_ORDER]: importOrder as unknown as Rule.RuleModule,
   [LIB_CI_WORKFLOWS]: libCiWorkflows as unknown as Rule.RuleModule,
   [LIB_E2E_PROJECT_REQUIRED]: libE2eProjectRequired as unknown as Rule.RuleModule,
