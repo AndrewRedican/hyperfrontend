@@ -159,6 +159,7 @@ module.exports = [
       'workspace/no-unsafe-regex': 'error',
       'workspace/prefer-exec-file-sync': 'error',
       'workspace/deepest-import-path': 'error',
+      'workspace/no-section-dividers': 'error',
     },
   },
   {
