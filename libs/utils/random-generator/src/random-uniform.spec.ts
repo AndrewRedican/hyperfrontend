@@ -14,7 +14,6 @@ describe('randomUniform', () => {
 
     const calculatedMean = sum / sampleSize
 
-    // Check if the calculated mean is close to the expected value.
     expect(calculatedMean).toBeCloseTo((min + max) / 2, 1)
   })
 })
