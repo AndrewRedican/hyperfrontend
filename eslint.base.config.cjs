@@ -160,6 +160,7 @@ module.exports = [
       'workspace/prefer-exec-file-sync': 'error',
       'workspace/deepest-import-path': 'error',
       'workspace/no-section-dividers': 'error',
+      'workspace/no-decorative-header-comments': 'error',
       'workspace/prefer-jsdoc-over-trailing-comments': 'error',
     },
   },
