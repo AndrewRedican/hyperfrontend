@@ -1,9 +1,4 @@
 /**
- * Pattern matching utilities with ReDoS protection.
- * Uses character-by-character matching instead of regex where possible.
- */
-
-/**
  * Match path against glob pattern using safe character iteration.
  * Avoids regex to prevent ReDoS attacks.
  *
