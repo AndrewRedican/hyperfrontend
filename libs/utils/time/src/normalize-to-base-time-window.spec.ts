@@ -4,7 +4,7 @@ import { normalizeToBaseTimeWindow } from './normalize-to-base-time-window'
 describe('normalizeToBaseTimeWindow', () => {
   it('returns the same time for a time exactly at a base time window', () => {
     const baseTime = new Date('2024-01-17T00:00:00Z')
-    const baseTimeWindow = 30 // 30 minutes
+    const baseTimeWindow = 30
     expect(normalizeToBaseTimeWindow(baseTime, baseTimeWindow)).toEqual(baseTime)
   })
 
