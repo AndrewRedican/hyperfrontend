@@ -1,8 +1,3 @@
-/**
- * Browser tests for data factory.
- * Node version: create-data-factory.spec.ts (identical except for imports)
- */
-
 import { createHash } from '@hyperfrontend/cryptography/browser'
 import { createDataFactory } from './create-data-factory'
 import { dataCreatorTestCases, invalidDataCreatorTestCases } from './test-fixtures'

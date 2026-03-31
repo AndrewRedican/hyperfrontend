@@ -1,7 +1,3 @@
-/**
- * Node.js tests for PSK handshake encryption factory.
- */
-
 import { encrypt, decrypt } from '@hyperfrontend/cryptography/node'
 import { createDataDecrypter } from '../../../data/security/create-decrypter'
 import { createDataEncrypter } from '../../../data/security/create-encrypter'

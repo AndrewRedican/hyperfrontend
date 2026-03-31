@@ -1,7 +1,3 @@
-/**
- * Tests for unencrypted packet creator
- */
-
 import { createUnencryptedPacket } from './create-unencrypted-packet'
 
 describe('createUnencryptedPacket', () => {

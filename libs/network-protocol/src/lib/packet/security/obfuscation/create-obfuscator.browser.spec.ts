@@ -1,8 +1,3 @@
-/**
- * Browser tests for packet obfuscation.
- * Node version: create-obfuscator.spec.ts (identical except for imports)
- */
-
 import type { SerializedEncryptedPacket } from '../../model'
 import { encrypt } from '@hyperfrontend/cryptography/browser'
 import { createPacketObfuscator } from './create-obfuscator'

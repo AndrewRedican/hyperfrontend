@@ -1,7 +1,3 @@
-/**
- * Tests for time-interval obfuscation factory
- */
-
 import type { SerializedEncryptedPacket } from '../../model'
 import { createTimeIntervalObfuscationFactory } from './time-interval-obfuscation-factory'
 

@@ -1,10 +1,3 @@
-/**
- * Node.js tests for PSK handshake protocol factory.
- *
- * The PSK handshake protocol uses a pre-shared key for the first message,
- * then switches to dynamically captured keys for subsequent messages.
- */
-
 import type { PacketEncrypter, PacketDecrypter } from '../../../packet/model'
 import { encrypt, decrypt } from '@hyperfrontend/cryptography/node'
 import { getTimeBasedPassword, getTimeBasedPasswords } from '@hyperfrontend/cryptography/node'

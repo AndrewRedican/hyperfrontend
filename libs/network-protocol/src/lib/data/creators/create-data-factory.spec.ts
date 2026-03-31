@@ -1,8 +1,3 @@
-/**
- * Node.js tests for data factory.
- * Browser version: create-data-factory.browser.spec.ts (identical except for imports)
- */
-
 import { createHash } from '@hyperfrontend/cryptography/node'
 import { createDataFactory } from './create-data-factory'
 import * as getSchemaModule from './get-schema'

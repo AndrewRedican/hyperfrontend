@@ -1,8 +1,3 @@
-/**
- * Browser tests for serialized encrypted packet creator.
- * Node version: create-serialized-encrypted-packet-creator.spec.ts (identical except for imports)
- */
-
 import type { UnserializedEncryptedPacket } from '../model'
 import { uint8ArrayToBase64 } from '@hyperfrontend/string-utils/browser'
 import { createSerializedEncryptedPacketCreator } from './create-serialized-encrypted-packet-creator'

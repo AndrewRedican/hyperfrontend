@@ -1,8 +1,3 @@
-/**
- * Browser tests for receiver factory.
- * Node version: create-receiver-factory.spec.ts (identical except for imports)
- */
-
 import type { UnencryptedPacket } from '../../packet/model'
 import { createHash, encrypt, decrypt } from '@hyperfrontend/cryptography/browser'
 import { uint8ArrayToBase64, base64ToUint8Array } from '@hyperfrontend/string-utils/browser'

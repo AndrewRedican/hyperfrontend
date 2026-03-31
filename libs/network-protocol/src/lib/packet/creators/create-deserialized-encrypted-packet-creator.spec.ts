@@ -1,8 +1,3 @@
-/**
- * Node.js tests for deserialized encrypted packet creator.
- * Browser version: create-deserialized-encrypted-packet-creator.browser.spec.ts (identical except for imports)
- */
-
 import type { SerializedEncryptedPacket } from '../model'
 import { base64ToUint8Array } from '@hyperfrontend/string-utils/node'
 import { createDeserializedEncryptedPacketCreator } from './create-deserialized-encrypted-packet-creator'

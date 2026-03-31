@@ -1,7 +1,3 @@
-/**
- * Tests for packet utility functions
- */
-
 import { withoutValidErrorMessage } from './without-valid-err-msg'
 
 describe('withoutValidErrorMessage', () => {

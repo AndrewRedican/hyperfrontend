@@ -1,8 +1,3 @@
-/**
- * Node.js tests for sender factory.
- * Browser version: create-sender-factory.browser.spec.ts (identical except for imports)
- */
-
 import { createHash, encrypt } from '@hyperfrontend/cryptography/node'
 import { uint8ArrayToBase64 } from '@hyperfrontend/string-utils/node'
 import { createDataFactory } from '../../data/creators/create-data-factory'

@@ -1,8 +1,3 @@
-/**
- * Browser tests for packet decryption.
- * Node.js version: create-decrypter.spec.ts (identical except for imports)
- */
-
 import type { UnencryptedPacket, UnserializedEncryptedPacket } from '../../model'
 import { encrypt, decrypt, createHash } from '@hyperfrontend/cryptography/browser'
 import { createDataFactory } from '../../../data/creators/create-data-factory'

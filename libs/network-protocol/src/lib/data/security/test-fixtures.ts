@@ -1,8 +1,3 @@
-/**
- * Shared test fixtures for data encryption and decryption tests.
- * These fixtures are used by both Node.js and browser test suites.
- */
-
 import type { SerializedData, JSONString } from '../model'
 import { stringify } from '@hyperfrontend/immutable-api-utils/built-in-copy/json'
 

@@ -1,8 +1,3 @@
-/**
- * Node.js integration tests for protocol factory.
- * Browser version: create-protocol-factory.browser.spec.ts (identical except for imports)
- */
-
 import { encrypt, decrypt } from '@hyperfrontend/cryptography/node'
 import { createHash } from '@hyperfrontend/cryptography/node'
 import { getTimeBasedPassword, getTimeBasedPasswords } from '@hyperfrontend/cryptography/node'

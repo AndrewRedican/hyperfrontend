@@ -1,8 +1,3 @@
-/**
- * Node.js tests for data encryption.
- * Browser version: create-encrypter.browser.spec.ts (identical except for imports)
- */
-
 import type { SerializedData } from '../model'
 import { encrypt } from '@hyperfrontend/cryptography/node'
 import { createDataEncrypter } from './create-encrypter'
