@@ -30,6 +30,9 @@ import noUnsafeRegex, { RULE_NAME as NO_UNSAFE_REGEX } from './rules/no-unsafe-r
 import noUnwantedBarrelFiles, { RULE_NAME as NO_UNWARRANTED_BARREL_FILES } from './rules/no-unwanted-barrel-files'
 import preferAngleBracketAssertion, { RULE_NAME as PREFER_ANGLE_BRACKET_ASSERTION } from './rules/prefer-angle-bracket-assertion'
 import preferExecFileSync, { RULE_NAME as PREFER_EXEC_FILE_SYNC } from './rules/prefer-exec-file-sync'
+import preferJsDocOverTrailingComments, {
+  RULE_NAME as PREFER_JSDOC_OVER_TRAILING_COMMENTS,
+} from './rules/prefer-jsdoc-over-trailing-comments'
 import requireNodeProtocol, { RULE_NAME as REQUIRE_NODE_PROTOCOL } from './rules/require-node-protocol'
 import rootReadmePackages, { RULE_NAME as ROOT_README_PACKAGES } from './rules/root-readme-packages'
 
@@ -69,6 +72,7 @@ export const rules: ESLint.Plugin['rules'] = {
   [NO_UNSAFE_BUILTIN_METHODS]: noUnsafeBuiltinMethods as unknown as Rule.RuleModule,
   [PREFER_ANGLE_BRACKET_ASSERTION]: preferAngleBracketAssertion as unknown as Rule.RuleModule,
   [PREFER_EXEC_FILE_SYNC]: preferExecFileSync as unknown as Rule.RuleModule,
+  [PREFER_JSDOC_OVER_TRAILING_COMMENTS]: preferJsDocOverTrailingComments as unknown as Rule.RuleModule,
   [REQUIRE_NODE_PROTOCOL]: requireNodeProtocol as unknown as Rule.RuleModule,
   [ROOT_README_PACKAGES]: rootReadmePackages as unknown as Rule.RuleModule,
 }
