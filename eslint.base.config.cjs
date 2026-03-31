@@ -232,4 +232,15 @@ module.exports = [
       'workspace/lib-readme-structure': 'error',
     },
   },
+  {
+    files: ['LIBRARY_COMPATIBILITY.md'],
+    plugins: {
+      workspace: eslintRules,
+      markdown: require('@eslint/markdown').default,
+    },
+    language: 'markdown/gfm',
+    rules: {
+      'workspace/lib-compatibility-docs': 'error',
+    },
+  },
 ]
