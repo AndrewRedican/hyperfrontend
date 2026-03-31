@@ -1,4 +1,5 @@
-import type { HandlerMap, RouteHandler } from './create-router'
+import type { HandlerMap } from './create-router'
+import type { RouteHandler } from './types'
 import { createRouter } from './create-router'
 
 describe('createRouter', () => {

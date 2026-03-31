@@ -1,4 +1,4 @@
-import type { ChannelState } from '../../types'
+import type { ChannelState } from '../../types/channel'
 import type { IMessage } from '../../types/message'
 import type { ChannelInternals } from '../types'
 import * as queueModule from './queue'
@@ -42,6 +42,15 @@ describe('channel/messaging/send', () => {
       securityReady: false,
       securityTransport: null,
       pendingSecurityRequest: null,
+      logger: {
+        log: jest.fn(),
+        debug: jest.fn(),
+        info: jest.fn(),
+        warn: jest.fn(),
+        error: jest.fn(),
+        setLogLevel: jest.fn(),
+        getLogLevel: jest.fn(),
+      },
     }
 
     mockGetState = jest.fn(() => state)

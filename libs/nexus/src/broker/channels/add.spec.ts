@@ -19,6 +19,15 @@ describe('addChannel', () => {
         emitted: [],
       },
     },
+    logger: {
+      log: jest.fn(),
+      debug: jest.fn(),
+      info: jest.fn(),
+      warn: jest.fn(),
+      error: jest.fn(),
+      setLogLevel: jest.fn(),
+      getLogLevel: jest.fn(),
+    },
   }
 
   let registry: ReturnType<typeof createRegistry>
