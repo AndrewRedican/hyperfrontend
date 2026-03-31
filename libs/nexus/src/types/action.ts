@@ -37,7 +37,8 @@ export type ActionType = (typeof ACTION_TYPES)[keyof typeof ACTION_TYPES]
  */
 export interface IActionBase {
   readonly type: ActionType
-  readonly senderId: string // Broker ID that sent this action
+  /** Broker ID that sent this action */
+  readonly senderId: string
   /** Optional security negotiation/confirmation data */
   readonly security?: SecurityNegotiationRequest | SecurityNegotiationResponse | SecurityConfirmation
 }
