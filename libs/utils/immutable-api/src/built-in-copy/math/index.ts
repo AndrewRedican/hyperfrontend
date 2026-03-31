@@ -11,10 +11,6 @@
 const _Math = globalThis.Math
 const _freeze = globalThis.Object.freeze
 
-// ============================================================================
-// Constants
-// ============================================================================
-
 /**
  * (Safe copy) The mathematical constant e, approximately 2.718.
  */
@@ -55,10 +51,6 @@ export const SQRT1_2 = _Math.SQRT1_2
  */
 export const SQRT2 = _Math.SQRT2
 
-// ============================================================================
-// Basic Operations
-// ============================================================================
-
 /**
  * (Safe copy) Returns the absolute value of a number.
  */
@@ -89,10 +81,6 @@ export const round = _Math.round
  */
 export const trunc = _Math.trunc
 
-// ============================================================================
-// Min/Max
-// ============================================================================
-
 /**
  * (Safe copy) Returns the larger of zero or more numbers.
  */
@@ -102,10 +90,6 @@ export const max = _Math.max
  * (Safe copy) Returns the smaller of zero or more numbers.
  */
 export const min = _Math.min
-
-// ============================================================================
-// Powers and Roots
-// ============================================================================
 
 /**
  * (Safe copy) Returns the base to the exponent power.
@@ -137,10 +121,6 @@ export const exp = _Math.exp
  */
 export const expm1 = _Math.expm1
 
-// ============================================================================
-// Logarithms
-// ============================================================================
-
 /**
  * (Safe copy) Returns the natural logarithm of a number.
  */
@@ -160,10 +140,6 @@ export const log10 = _Math.log10
  * (Safe copy) Returns the natural logarithm of 1 + a number.
  */
 export const log1p = _Math.log1p
-
-// ============================================================================
-// Trigonometry
-// ============================================================================
 
 /**
  * (Safe copy) Returns the sine of a number.
@@ -230,10 +206,6 @@ export const acosh = _Math.acosh
  */
 export const atanh = _Math.atanh
 
-// ============================================================================
-// Bitwise/Integer Operations
-// ============================================================================
-
 /**
  * (Safe copy) Returns the result of the C-like 32-bit multiplication.
  */
@@ -249,20 +221,12 @@ export const fround = _Math.fround
  */
 export const clz32 = _Math.clz32
 
-// ============================================================================
-// Random
-// ============================================================================
-
 /**
  * (Safe copy) Returns a pseudo-random number between 0 and 1.
  * Note: This is NOT cryptographically secure. For secure random values,
  * use crypto.getRandomValues().
  */
 export const random = _Math.random
-
-// ============================================================================
-// Namespace Export
-// ============================================================================
 
 /**
  * (Safe copy) Namespace object containing all Math utilities.

@@ -15,10 +15,6 @@ const _isNaN = globalThis.isNaN
 const _isFinite = globalThis.isFinite
 const _freeze = globalThis.Object.freeze
 
-// ============================================================================
-// Constants
-// ============================================================================
-
 /**
  * (Safe copy) The largest positive representable number.
  */
@@ -59,10 +55,6 @@ export const EPSILON = _Number.EPSILON
  */
 export const NUMBER_NaN = _Number.NaN
 
-// ============================================================================
-// Type Checking
-// ============================================================================
-
 /**
  * (Safe copy) Determines whether the passed value is NaN (Number method, stricter than global isNaN).
  */
@@ -83,10 +75,6 @@ export const isInteger = _Number.isInteger
  */
 export const isSafeInteger = _Number.isSafeInteger
 
-// ============================================================================
-// Parsing
-// ============================================================================
-
 /**
  * (Safe copy) Parses a string and returns an integer.
  */
@@ -97,10 +85,6 @@ export const parseInt = _parseInt
  */
 export const parseFloat = _parseFloat
 
-// ============================================================================
-// Global Type Checking (legacy, less strict)
-// ============================================================================
-
 /**
  * (Safe copy) Global isNaN function (coerces to number first, less strict than Number.isNaN).
  */
@@ -110,10 +94,6 @@ export const globalIsNaN = _isNaN
  * (Safe copy) Global isFinite function (coerces to number first, less strict than Number.isFinite).
  */
 export const globalIsFinite = _isFinite
-
-// ============================================================================
-// Namespace Export
-// ============================================================================
 
 /**
  * (Safe copy) Namespace object containing all Number utilities.
