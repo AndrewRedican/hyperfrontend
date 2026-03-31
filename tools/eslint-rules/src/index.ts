@@ -23,6 +23,7 @@ import noDeprecatedTag, { RULE_NAME as NO_DEPRECATED_TAG } from './rules/no-depr
 import noEnum, { RULE_NAME as NO_ENUM } from './rules/no-enum'
 import noMixedTypeImport, { RULE_NAME as NO_MIXED_TYPE_IMPORT } from './rules/no-mixed-type-import'
 import noNamespaceImport, { RULE_NAME as NO_NAMESPACE_IMPORT } from './rules/no-namespace-import'
+import noTodoComments, { RULE_NAME as NO_TODO_COMMENTS } from './rules/no-todo-comments'
 import noUnsafeBuiltinMethods, { RULE_NAME as NO_UNSAFE_BUILTIN_METHODS } from './rules/no-unsafe-builtin-methods'
 import noUnsafeRegex, { RULE_NAME as NO_UNSAFE_REGEX } from './rules/no-unsafe-regex'
 import noUnwantedBarrelFiles, { RULE_NAME as NO_UNWARRANTED_BARREL_FILES } from './rules/no-unwanted-barrel-files'
@@ -59,6 +60,7 @@ export const rules: ESLint.Plugin['rules'] = {
   [NO_DEPRECATED_TAG]: noDeprecatedTag as unknown as Rule.RuleModule,
   [NO_ENUM]: noEnum as unknown as Rule.RuleModule,
   [NO_MIXED_TYPE_IMPORT]: noMixedTypeImport as unknown as Rule.RuleModule,
+  [NO_TODO_COMMENTS]: noTodoComments as unknown as Rule.RuleModule,
   [NO_UNSAFE_REGEX]: noUnsafeRegex as unknown as Rule.RuleModule,
   [NO_NAMESPACE_IMPORT]: noNamespaceImport as unknown as Rule.RuleModule,
   [NO_UNWARRANTED_BARREL_FILES]: noUnwantedBarrelFiles as unknown as Rule.RuleModule,

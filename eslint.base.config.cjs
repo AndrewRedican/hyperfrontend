@@ -155,6 +155,7 @@ module.exports = [
       'workspace/no-enum': 'error',
       'workspace/no-async-fs-api': 'error',
       'workspace/no-deprecated-tag': 'error',
+      'workspace/no-todo-comments': 'error',
       'workspace/no-unsafe-regex': 'error',
       'workspace/prefer-exec-file-sync': 'error',
       'workspace/deepest-import-path': 'error',
