@@ -89,7 +89,6 @@ export default createRule<[], MessageIds>({
           const matches = findTodoOccurrences(comment.value)
           if (matches.length === 0) continue
 
-          // +2 for the comment opener (// or /*)
           const commentValueStart = comment.range[0] + 2
 
           for (const match of matches) {

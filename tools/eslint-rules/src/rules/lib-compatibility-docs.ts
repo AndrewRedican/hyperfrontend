@@ -87,14 +87,12 @@ function findPublishableLibraries(baseDir: string, workspaceRoot: string, result
     return
   }
 
-  // Check if current directory is a publishable library
   if (isPublishableLibraryDir(baseDir)) {
     const relativePath = baseDir.slice(workspaceRoot.length + 1)
     const projectJsonPath = join(baseDir, 'project.json')
     const packageName = getPackageName(baseDir)
     const projectJson = readJsonFileIfExists<ProjectJson & { name?: string }>(projectJsonPath)
 
-    // Only include libraries with valid package names
     if (packageName) {
       results.push({
         name: projectJson?.name ?? basename(baseDir),
@@ -105,7 +103,6 @@ function findPublishableLibraries(baseDir: string, workspaceRoot: string, result
     }
   }
 
-  // Recursively check subdirectories
   let entries: string[]
   try {
     entries = readDirectory(baseDir)
@@ -114,7 +111,6 @@ function findPublishableLibraries(baseDir: string, workspaceRoot: string, result
   }
 
   for (const entry of entries) {
-    // Skip common non-project directories
     if (entry === 'node_modules' || entry === 'dist' || entry === '.git' || entry.startsWith('.')) {
       continue
     }
@@ -141,7 +137,6 @@ function getAllPublishableLibraries(workspaceRoot: string): PublishableLibrary[]
     findPublishableLibraries(folderPath, workspaceRoot, libraries)
   }
 
-  // Sort by packageName for deterministic error reporting order
   libraries.sort((a, b) => a.packageName.localeCompare(b.packageName))
 
   return libraries
@@ -157,8 +152,6 @@ function getAllPublishableLibraries(workspaceRoot: string): PublishableLibrary[]
 export function extractMentionedPackages(content: string): Set<string> {
   const packages = createSet<string>()
 
-  // Match package names in backticks: `@hyperfrontend/package-name`
-  // This captures the standard format used in markdown tables
   const backtickPattern = /`(@hyperfrontend\/[a-z][a-z0-9-]*)`/g
   let match: RegExpExecArray | null
 
@@ -188,7 +181,6 @@ const rule: Rule.RuleModule = {
     const filePath = context.filename
     const fileName = basename(filePath)
 
-    // Only process LIBRARY_COMPATIBILITY.md
     if (fileName !== 'LIBRARY_COMPATIBILITY.md') {
       return {}
     }
@@ -196,7 +188,6 @@ const rule: Rule.RuleModule = {
     const fileDir = dirname(filePath)
     const workspaceRoot = findNxWorkspaceRoot(fileDir)
 
-    // Only process root LIBRARY_COMPATIBILITY.md (in workspace root)
     if (!workspaceRoot || fileDir !== workspaceRoot) {
       return {}
     }
@@ -206,17 +197,12 @@ const rule: Rule.RuleModule = {
         const sourceCode = context.sourceCode
         const content = sourceCode.getText()
 
-        // Extract all package names mentioned in the document
         const mentionedPackages = extractMentionedPackages(content)
 
-        // Find all publishable libraries in the workspace
         const publishableLibraries = getAllPublishableLibraries(workspaceRoot)
 
-        // Only check libraries with browser bundles (IIFE/UMD)
-        // Node.js-only tooling libraries don't need browser compatibility docs
         const browserLibraries = publishableLibraries.filter((lib) => lib.hasBrowserBundles)
 
-        // Check that each browser-compatible library is mentioned
         for (const lib of browserLibraries) {
           if (!mentionedPackages.has(lib.packageName)) {
             context.report({

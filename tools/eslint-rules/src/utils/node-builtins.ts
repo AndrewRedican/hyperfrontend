@@ -55,12 +55,10 @@ export const NODE_BUILTIN_MODULES: ReadonlySet<string> = createSet([
  * @returns True if the source is a bare Node.js built-in module.
  */
 export function isNodeBuiltinWithoutPrefix(source: string): boolean {
-  // Already has node: prefix
   if (source.startsWith('node:')) {
     return false
   }
 
-  // Check if it's a built-in module (with or without subpath)
   const moduleName = source.split('/')[0]
   /* istanbul ignore next - moduleName is always defined from split */
   return NODE_BUILTIN_MODULES.has(moduleName ?? '')

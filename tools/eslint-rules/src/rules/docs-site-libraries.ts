@@ -50,12 +50,10 @@ function findPublishableLibraries(baseDir: string, workspaceRoot: string, result
     return
   }
 
-  // Check if current directory is a publishable library
   if (isPublishableLibraryDir(baseDir)) {
     const relativePath = baseDir.slice(workspaceRoot.length + 1)
     const packageName = getPackageName(baseDir)
 
-    // Only include libraries with valid package names
     if (packageName) {
       results.push({
         name: basename(baseDir),
@@ -65,7 +63,6 @@ function findPublishableLibraries(baseDir: string, workspaceRoot: string, result
     }
   }
 
-  // Recursively check subdirectories
   let entries: string[]
   try {
     entries = readDirectory(baseDir)
@@ -74,7 +71,6 @@ function findPublishableLibraries(baseDir: string, workspaceRoot: string, result
   }
 
   for (const entry of entries) {
-    // Skip common non-project directories using string comparison
     if (entry === 'node_modules' || entry === 'dist' || entry === '.git' || entry.startsWith('.')) {
       continue
     }
@@ -98,18 +94,15 @@ export function extractPackageNamesFromArray(arrayExpression: ArrayExpression): 
   const packageNames = createSet<string>()
 
   for (const element of arrayExpression.elements) {
-    // Each element should be an object expression
     if (!element || element.type !== 'ObjectExpression') {
       continue
     }
 
-    // Look for the packageName property
     for (const property of element.properties) {
       if (property.type !== 'Property') {
         continue
       }
 
-      // Check if the key is 'packageName'
       let keyName: string | null = null
       if (property.key.type === 'Identifier') {
         keyName = property.key.name
@@ -121,7 +114,6 @@ export function extractPackageNamesFromArray(arrayExpression: ArrayExpression): 
         continue
       }
 
-      // Extract the string value
       if (property.value.type === 'Literal' && typeof property.value.value === 'string') {
         packageNames.add(property.value.value)
       }
@@ -145,7 +137,6 @@ export function getAllPublishableLibraries(workspaceRoot: string): PublishableLi
     findPublishableLibraries(folderPath, workspaceRoot, libraries)
   }
 
-  // Sort by packageName for deterministic error reporting order
   libraries.sort((a, b) => a.packageName.localeCompare(b.packageName))
 
   return libraries
@@ -170,16 +161,12 @@ const rule: Rule.RuleModule = {
     const fileDir = dirname(filePath)
     const dirParts = fileDir.split('/')
 
-    // Check for docs-site/src/lib/content.ts
     const isContentTs = fileName === 'content.ts' && checkPathSuffix(dirParts, ['apps', 'docs-site', 'src', 'lib'])
 
-    // Check for docs-site/scripts/generate-docs.ts
     const isGenerateDocsTs = fileName === 'generate-docs.ts' && checkPathSuffix(dirParts, ['apps', 'docs-site', 'scripts'])
 
-    // Check for docs-site/src/lib/navigation.ts
     const isNavigationTs = fileName === 'navigation.ts' && checkPathSuffix(dirParts, ['apps', 'docs-site', 'src', 'lib'])
 
-    // Only process relevant docs-site files
     if (!isContentTs && !isGenerateDocsTs && !isNavigationTs) {
       return {}
     }
@@ -191,7 +178,6 @@ const rule: Rule.RuleModule = {
     }
 
     return {
-      // Look for: export const LIBRARIES: LibraryInfo[] = [...] or const LIBRARIES: LibraryConfig[] = [...]
       VariableDeclaration(node: Node) {
         const varDecl = node as VariableDeclaration
         const isConst = varDecl.kind === 'const'
@@ -200,17 +186,13 @@ const rule: Rule.RuleModule = {
           return
         }
 
-        // Check if this is an exported declaration (for content.ts) or a top-level const (for generate-docs.ts)
         const parent = (node as { parent?: Node }).parent
         const isExported = parent?.type === 'ExportNamedDeclaration'
 
-        // For content.ts, LIBRARIES must be exported
-        // For generate-docs.ts, LIBRARIES is a module-level const (not exported)
         if (isContentTs && !isExported) {
           return
         }
 
-        // Find the LIBRARIES declaration
         for (const declarator of varDecl.declarations) {
           const decl = declarator as VariableDeclarator
           const id = decl.id as Identifier
@@ -218,20 +200,16 @@ const rule: Rule.RuleModule = {
             continue
           }
 
-          // Must have an initializer that is an array
           if (!decl.init || decl.init.type !== 'ArrayExpression') {
             continue
           }
 
           const arrayExpression = decl.init as ArrayExpression
 
-          // Extract package names from the array
           const declaredPackages = extractPackageNamesFromArray(arrayExpression)
 
-          // Get all publishable libraries from the workspace
           const publishableLibraries = getAllPublishableLibraries(workspaceRoot)
 
-          // Check that each publishable library is declared
           for (const lib of publishableLibraries) {
             if (!declaredPackages.has(lib.packageName)) {
               context.report({

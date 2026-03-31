@@ -17,30 +17,24 @@ const ruleTester = new RuleTester({
  * Valid test cases - angle bracket assertions
  */
 const validCases: ValidTestCase<TestOptions>[] = [
-  // Simple angle bracket assertions
   { code: `const user = <User>data` },
   { code: `const config = <Readonly<Config>>{}` },
   { code: `const value = <number>(<unknown>something)` },
 
-  // Angle bracket with complex types
   { code: `const arr = <Array<string>>[]` },
   { code: `const map = <Map<string, number>>new Map()` },
   { code: `const obj = <Record<string, unknown>>{}` },
 
-  // Nested angle bracket assertions
   { code: `const val = <number><unknown>str` },
   { code: `const result = <Result<T>><unknown>response` },
 
-  // Type annotations (not assertions)
   { code: `const x: number = 42` },
   { code: `const user: User = { name: 'John' }` },
   { code: `function fn(x: number): string { return String(x) }` },
 
-  // Generic function calls (not assertions)
   { code: `const result = parse<Config>(data)` },
   { code: `const items = getItems<Item[]>()` },
 
-  // No assertion at all
   { code: `const x = 42` },
   { code: `const str = 'hello'` },
 ]

@@ -245,7 +245,7 @@ describe('lib-pkg-exports-exist', () => {
             },
             files: {
               'src/index.js': '// generated for test',
-            }, // Only create main export, not utils
+            },
           })
           return workspace.getPath('package.json')
         })(),
@@ -283,7 +283,7 @@ describe('lib-pkg-exports-exist', () => {
             },
             files: {
               'src/index.mjs': '// generated for test',
-            }, // Only create import, not require
+            },
           })
           return workspace.getPath('package.json')
         })(),
@@ -317,7 +317,6 @@ describe('lib-pkg-exports-exist', () => {
                 './models': './src/models/index.js',
               },
             },
-            // No files created
           })
           return workspace.getPath('package.json')
         })(),

@@ -44,14 +44,11 @@ export default createRule<[], MessageIds>({
   },
   defaultOptions: [],
   create(context) {
-    // Track namespace imports for child_process module
     const childProcessNamespaceBindings = createSet<string>()
 
-    // Track local names of execSync imports (in case of aliased imports)
     const execSyncLocalBindings = createSet<string>()
 
     return {
-      // Check import declarations
       ImportDeclaration(node) {
         const source = node.source.value
 
@@ -60,23 +57,19 @@ export default createRule<[], MessageIds>({
           return
         }
 
-        // Only process child_process imports
         if (!isChildProcessModule(source)) {
           return
         }
 
         for (const specifier of node.specifiers) {
-          // Track namespace imports (import * as cp from 'child_process')
           if (specifier.type === AST_NODE_TYPES.ImportNamespaceSpecifier) {
             childProcessNamespaceBindings.add(specifier.local.name)
           }
 
-          // Check named imports for execSync
           if (specifier.type === AST_NODE_TYPES.ImportSpecifier) {
             const importedName = specifier.imported.type === AST_NODE_TYPES.Identifier ? specifier.imported.name : specifier.imported.value
 
             if (importedName === 'execSync') {
-              // Track the local name (handles aliased imports like `import { execSync as exec }`)
               execSyncLocalBindings.add(specifier.local.name)
 
               context.report({
@@ -88,32 +81,24 @@ export default createRule<[], MessageIds>({
         }
       },
 
-      // Check for member expressions like cp.execSync()
       MemberExpression(node) {
-        // Skip non-identifier objects (e.g., getCp().execSync, obj.cp.execSync)
         if (node.object.type !== AST_NODE_TYPES.Identifier) {
           return
         }
 
         const objectName = node.object.name
 
-        // Check if this is a tracked child_process namespace
         if (!childProcessNamespaceBindings.has(objectName)) {
           return
         }
 
         let methodName: string | undefined
 
-        // Handle cp.execSync (identifier property)
         if (node.property.type === AST_NODE_TYPES.Identifier) {
           methodName = node.property.name
-        }
-        // Handle cp['execSync'] (computed property with string literal)
-        else if (node.property.type === AST_NODE_TYPES.Literal && typeof node.property.value === 'string') {
+        } else if (node.property.type === AST_NODE_TYPES.Literal && typeof node.property.value === 'string') {
           methodName = node.property.value
-        }
-        // Skip computed properties with non-string values (e.g., cp[variable])
-        else {
+        } else {
           return
         }
 
@@ -125,9 +110,7 @@ export default createRule<[], MessageIds>({
         }
       },
 
-      // Check for require() calls
       CallExpression(node) {
-        // Check for require('child_process') destructuring patterns
         if (node.callee.type !== AST_NODE_TYPES.Identifier || node.callee.name !== 'require') {
           return
         }
@@ -139,13 +122,10 @@ export default createRule<[], MessageIds>({
 
         const source = arg.value
 
-        // Only process child_process requires
         if (!isChildProcessModule(source)) {
           return
         }
 
-        // Check if require is part of a variable declarator with destructuring
-        // e.g., const { execSync } = require('child_process')
         const parent = node.parent
         if (parent && parent.type === AST_NODE_TYPES.VariableDeclarator && parent.id.type === AST_NODE_TYPES.ObjectPattern) {
           for (const prop of parent.id.properties) {
@@ -156,10 +136,7 @@ export default createRule<[], MessageIds>({
               })
             }
           }
-        }
-        // Track if require result is assigned to a variable (namespace style)
-        // e.g., const cp = require('child_process')
-        else if (parent && parent.type === AST_NODE_TYPES.VariableDeclarator && parent.id.type === AST_NODE_TYPES.Identifier) {
+        } else if (parent && parent.type === AST_NODE_TYPES.VariableDeclarator && parent.id.type === AST_NODE_TYPES.Identifier) {
           childProcessNamespaceBindings.add(parent.id.name)
         }
       },

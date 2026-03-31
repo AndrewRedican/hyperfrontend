@@ -77,14 +77,12 @@ function formatMessage(namespace: string, message: string, meta?: object): strin
 export function createNxScopedLogger(namespace: string, options: ScopedLoggerOptions = {}): ScopedLogger {
   const { level = 'error' } = options
 
-  // Create wrapper functions that add namespace prefix (sanitization happens in formatMessage)
   const createLogFn =
     (baseFn: (message: string) => void) =>
     (message: string, meta?: object): void => {
       baseFn(formatMessage(namespace, message, meta))
     }
 
-  // Create base logger using @nx/devkit logger methods
   const baseLogger: Logger = createLogger(
     createLogFn((msg) => nxLogger.error(msg)),
     createLogFn((msg) => nxLogger.warn(msg)),
@@ -93,7 +91,6 @@ export function createNxScopedLogger(namespace: string, options: ScopedLoggerOpt
     createLogFn((msg) => nxLogger.debug(msg))
   )
 
-  // Set initial log level
   baseLogger.setLogLevel(level)
 
   return freeze({

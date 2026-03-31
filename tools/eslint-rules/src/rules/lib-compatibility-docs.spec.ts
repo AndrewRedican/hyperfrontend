@@ -66,7 +66,6 @@ function createTempWorkspace(config: {
     'nx.json': JSON.stringify({ version: 2 }, null, 2),
   }
 
-  // Create libraries
   if (config.libs && config.libs.length > 0) {
     for (const lib of config.libs) {
       files[`libs/${lib.name}/project.json`] = JSON.stringify(lib.projectJson, null, 2)
@@ -76,7 +75,6 @@ function createTempWorkspace(config: {
     }
   }
 
-  // Create plugins
   if (config.plugins && config.plugins.length > 0) {
     for (const plugin of config.plugins) {
       files[`plugins/${plugin.name}/project.json`] = JSON.stringify(plugin.projectJson, null, 2)
@@ -243,7 +241,6 @@ describe('lib-compatibility-docs', () => {
       const context = {
         filename: join(workspaceDir, 'LIBRARY_COMPATIBILITY.md'),
         sourceCode: {
-          // Document does not list @hyperfrontend/logging
           getText: () => createValidCompatibilityDoc([]),
         },
         report: reportMock,
@@ -351,7 +348,6 @@ describe('lib-compatibility-docs', () => {
           {
             name: 'no-pkg',
             projectJson: PUBLISHABLE_WITH_BROWSER_BUNDLES,
-            // No packageJson
           },
         ],
       })
@@ -471,7 +467,6 @@ describe('lib-compatibility-docs', () => {
       handler['root']?.(mockNode)
 
       expect(reportMock).toHaveBeenCalledTimes(2)
-      // Should be sorted alphabetically by packageName
       expect(reportMock).toHaveBeenNthCalledWith(
         1,
         expect.objectContaining({
@@ -505,7 +500,6 @@ describe('lib-compatibility-docs', () => {
       const context = {
         filename: join(workspaceDir, 'LIBRARY_COMPATIBILITY.md'),
         sourceCode: {
-          // Only data-utils is listed
           getText: () => createValidCompatibilityDoc(['@hyperfrontend/data-utils']),
         },
         report: reportMock,
@@ -516,7 +510,6 @@ describe('lib-compatibility-docs', () => {
       // @ts-expect-error - partial mock
       handler['root']?.(mockNode)
 
-      // Only logging should be reported
       expect(reportMock).toHaveBeenCalledTimes(1)
       expect(reportMock).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -554,7 +547,6 @@ describe('lib-compatibility-docs', () => {
       // @ts-expect-error - partial mock
       handler['root']?.(mockNode)
 
-      // Only browser-lib should be reported, not node-tooling
       expect(reportMock).toHaveBeenCalledTimes(1)
       expect(reportMock).toHaveBeenCalledWith(
         expect.objectContaining({

@@ -42,12 +42,10 @@ export default createRule<[], MessageIds>({
 
     return {
       ImportDeclaration(node) {
-        // Skip if entire import is type-only (import type { ... })
         if (node.importKind === 'type') {
           return
         }
 
-        // Get only ImportSpecifier nodes (not default or namespace)
         const specifiers = node.specifiers.filter((s): s is TSESTree.ImportSpecifier => s.type === AST_NODE_TYPES.ImportSpecifier)
 
         if (specifiers.length === 0) {
@@ -58,7 +56,6 @@ export default createRule<[], MessageIds>({
         /* istanbul ignore next - filter callback always executed when specifiers exist */
         const valueSpecifiers = specifiers.filter((s) => !isTypeSpecifier(s))
 
-        // Only report if there's a mix of type and value specifiers
         if (typeSpecifiers.length === 0 || valueSpecifiers.length === 0) {
           return
         }
@@ -70,7 +67,6 @@ export default createRule<[], MessageIds>({
             /* istanbul ignore next - raw is always defined for valid imports */
             const source = node.source.raw ?? `'${node.source.value}'`
 
-            // Build type import
             const typeNames = typeSpecifiers.map((s) => {
               /* istanbul ignore else - always Identifier for standard imports */
               if (s.imported.type === AST_NODE_TYPES.Identifier) {
@@ -83,7 +79,6 @@ export default createRule<[], MessageIds>({
               return sourceCode.getText(s)
             })
 
-            // Build value import
             const valueNames = valueSpecifiers.map((s) => {
               /* istanbul ignore else - always Identifier for standard imports */
               if (s.imported.type === AST_NODE_TYPES.Identifier) {

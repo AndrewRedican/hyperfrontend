@@ -56,13 +56,11 @@ interface ProjectJson {
 export function deriveCoverageFlag(relativePath: string): string {
   const parts = relativePath.split('/')
 
-  // Handle libs/utils/* pattern
   if (parts.length >= 3 && parts[0] === 'libs' && parts[1] === 'utils') {
     const utilName = parts[2]
     return `${utilName}-utils`
   }
 
-  // Handle libs/* or plugins/* pattern
   if (parts.length >= 2) {
     return parts[parts.length - 1]
   }
@@ -82,7 +80,6 @@ function findPublishableLibraries(baseDir: string, workspaceRoot: string, result
     return
   }
 
-  // Check if current directory is a publishable library
   if (isPublishableLibraryDir(baseDir)) {
     const relativePath = baseDir.slice(workspaceRoot.length + 1)
     const projectJsonPath = join(baseDir, 'project.json')
@@ -95,7 +92,6 @@ function findPublishableLibraries(baseDir: string, workspaceRoot: string, result
     })
   }
 
-  // Recursively check subdirectories
   let entries: string[]
   try {
     entries = readDirectory(baseDir)
@@ -104,7 +100,6 @@ function findPublishableLibraries(baseDir: string, workspaceRoot: string, result
   }
 
   for (const entry of entries) {
-    // Skip common non-project directories
     if (entry === 'node_modules' || entry === 'dist' || entry === '.git' || entry.startsWith('.')) {
       continue
     }
@@ -133,9 +128,7 @@ export function hasPathFilter(content: string, coverageFlag: string, relativePat
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i].trim()
 
-    // Look for the filter name followed by colon
     if (line === filterPattern || line.startsWith(`${filterPattern} `)) {
-      // Check if the next line (or same line) contains the path pattern
       for (let j = i; j < min(i + 5, lines.length); j++) {
         if (lines[j].includes(pathPattern)) {
           return true
@@ -159,11 +152,9 @@ export function hasPathFilter(content: string, coverageFlag: string, relativePat
 export function hasMatrixEntry(content: string, projectName: string, coverageFlag: string, relativePath: string): boolean {
   const lines = content.split('\n')
 
-  // Look for add_if_changed line with all required parameters
   for (const line of lines) {
     const trimmed = line.trim()
 
-    // Skip commented lines
     if (trimmed.startsWith('#')) {
       continue
     }
@@ -172,7 +163,6 @@ export function hasMatrixEntry(content: string, projectName: string, coverageFla
       continue
     }
 
-    // Check if the line contains all required components
     const hasFilterOutput = trimmed.includes(`filter.outputs.${coverageFlag}`)
     const hasProjectName = trimmed.includes(`"${projectName}"`)
     const hasPath = trimmed.includes(`"${relativePath}"`)
@@ -207,7 +197,6 @@ export function hasStatusWorkflow(workspaceRoot: string, projectName: string): b
  * @returns True if the coverage entry exists.
  */
 export function hasCoverageEntry(content: string, coverageFlag: string, relativePath: string): boolean {
-  // Look for the LIBS array entry format: "flag:path"
   const entry = `"${coverageFlag}:${relativePath}"`
   return content.includes(entry)
 }
@@ -249,7 +238,6 @@ const rule: Rule.RuleModule = {
     const filePath = context.filename
     const fileName = basename(filePath)
 
-    // Only process ci-libraries.yml
     if (fileName !== 'ci-libraries.yml') {
       return {}
     }
@@ -261,7 +249,6 @@ const rule: Rule.RuleModule = {
       return {}
     }
 
-    // Verify we're in the .github/workflows directory
     const expectedDir = join(workspaceRoot, '.github', 'workflows')
     if (fileDir !== expectedDir) {
       return {}
@@ -272,7 +259,6 @@ const rule: Rule.RuleModule = {
         const sourceCode = context.sourceCode
         const ciLibrariesContent = sourceCode.getText()
 
-        // Read ci-main.yml
         const ciMainPath = join(workspaceRoot, '.github', 'workflows', 'ci-main.yml')
         const ciMainContent = safeReadFile(ciMainPath)
 
@@ -284,7 +270,6 @@ const rule: Rule.RuleModule = {
           return
         }
 
-        // Find all publishable libraries
         const publishableLibraries: PublishableLibrary[] = []
 
         for (const folder of LIBRARY_FOLDERS) {
@@ -292,9 +277,7 @@ const rule: Rule.RuleModule = {
           findPublishableLibraries(folderPath, workspaceRoot, publishableLibraries)
         }
 
-        // Check each publishable library for CI/CD configuration
         for (const lib of publishableLibraries) {
-          // Check path filter in ci-libraries.yml
           if (!hasPathFilter(ciLibrariesContent, lib.coverageFlag, lib.relativePath)) {
             context.report({
               node,
@@ -307,7 +290,6 @@ const rule: Rule.RuleModule = {
             })
           }
 
-          // Check matrix entry in ci-libraries.yml
           if (!hasMatrixEntry(ciLibrariesContent, lib.name, lib.coverageFlag, lib.relativePath)) {
             context.report({
               node,
@@ -320,7 +302,6 @@ const rule: Rule.RuleModule = {
             })
           }
 
-          // Check status workflow exists
           if (!hasStatusWorkflow(workspaceRoot, lib.name)) {
             context.report({
               node,
@@ -332,7 +313,6 @@ const rule: Rule.RuleModule = {
             })
           }
 
-          // Check coverage entry in ci-main.yml
           if (!hasCoverageEntry(ciMainContent, lib.coverageFlag, lib.relativePath)) {
             context.report({
               node,

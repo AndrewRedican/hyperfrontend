@@ -46,11 +46,9 @@ function compareImports(a: TSESTree.ImportDeclaration, b: TSESTree.ImportDeclara
   const aIsType = isTypeOnlyImport(a)
   const bIsType = isTypeOnlyImport(b)
 
-  // Type imports come first
   if (aIsType && !bIsType) return -1
   if (!aIsType && bIsType) return 1
 
-  // Same type status: compare by source
   return compareImportSources(getImportSource(a), getImportSource(b))
 }
 
@@ -78,8 +76,6 @@ export default createRule<[], MessageIds>({
           return
         }
 
-        // Check if imports are contiguous (no non-import statements between them)
-        // Only auto-fix if imports are contiguous to avoid destroying code between imports
         const importIndices = imports.map((imp) => node.body.indexOf(imp))
         /* istanbul ignore next - defensive: importIndices always has values when imports.length > 1 */
         const firstIndex = importIndices[0] ?? 0
@@ -87,11 +83,9 @@ export default createRule<[], MessageIds>({
         const lastIndex = importIndices[importIndices.length - 1] ?? 0
         const isContiguous = lastIndex - firstIndex + 1 === imports.length
 
-        // Check if imports are in correct order
         const sortedImports = [...imports].sort(compareImports)
         const sourceCode = context.sourceCode
 
-        // Find first out-of-order import
         let isOutOfOrder = false
         for (let i = 0; i < imports.length; i++) {
           if (imports[i] !== sortedImports[i]) {
@@ -104,7 +98,6 @@ export default createRule<[], MessageIds>({
           return
         }
 
-        // Report on the first import with fix to reorder all
         const firstImport = imports[0]
         /* istanbul ignore next - defensive check, imports.length >= 2 */
         if (!firstImport) {
@@ -114,16 +107,13 @@ export default createRule<[], MessageIds>({
         context.report({
           node: firstImport,
           messageId: 'incorrectOrder',
-          // Only provide auto-fix if imports are contiguous
           fix: isContiguous
             ? (fixer) => {
-                // Get the text of each import including any comments before it
                 const importTexts = sortedImports.map((imp) => {
                   const text = sourceCode.getText(imp)
                   return text
                 })
 
-                // Calculate the range to replace (from first import to last import)
                 const lastImport = imports[imports.length - 1]
                 /* istanbul ignore next - defensive check, imports.length >= 2 */
                 if (!lastImport) {
@@ -132,7 +122,6 @@ export default createRule<[], MessageIds>({
                 const rangeStart = firstImport.range[0]
                 const rangeEnd = lastImport.range[1]
 
-                // Join imports with newlines
                 const newText = importTexts.join('\n')
 
                 return fixer.replaceTextRange([rangeStart, rangeEnd], newText)

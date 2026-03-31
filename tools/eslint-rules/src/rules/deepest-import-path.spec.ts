@@ -26,7 +26,6 @@ function createTempWorkspace(config: { tsconfigBasePaths?: Record<string, string
     ),
   }
 
-  // Create source files
   if (config.sourceFiles) {
     for (const [filePath, content] of Object.entries(config.sourceFiles)) {
       files[filePath] = content
@@ -51,7 +50,6 @@ describe('deepest-import-path', () => {
   describe('valid cases', () => {
     ruleTester.run('deepest-import-path - valid', rule, {
       valid: [
-        // External packages (non-@hyperfrontend)
         {
           name: 'allows external package imports',
           code: `import { useState } from 'react'`,
@@ -69,7 +67,6 @@ describe('deepest-import-path', () => {
           })(),
         },
 
-        // Node.js built-in imports
         {
           name: 'allows node built-in imports',
           code: `import { readFileSync } from 'node:fs'`,
@@ -79,7 +76,6 @@ describe('deepest-import-path', () => {
           })(),
         },
 
-        // Relative imports
         {
           name: 'allows relative imports',
           code: `import { helper } from './helper'`,
@@ -97,7 +93,6 @@ describe('deepest-import-path', () => {
           })(),
         },
 
-        // Already using deepest path
         {
           name: 'allows imports already using subpath',
           code: `import { runCli } from '@hyperfrontend/project-scope/cli'`,
@@ -116,7 +111,6 @@ describe('deepest-import-path', () => {
           })(),
         },
 
-        // Import from base when no deeper path exports the symbol
         {
           name: 'allows base import when symbol only exists at base level',
           code: `import { uniqueSymbol } from '@hyperfrontend/project-scope'`,
@@ -135,7 +129,6 @@ describe('deepest-import-path', () => {
           })(),
         },
 
-        // Multiple symbols that don't share a common subpath
         {
           name: 'allows base import when symbols come from different subpaths',
           code: `import { runCli, parseConfig } from '@hyperfrontend/project-scope'`,
@@ -156,7 +149,6 @@ describe('deepest-import-path', () => {
           })(),
         },
 
-        // Default imports (no named imports to check)
         {
           name: 'allows default imports',
           code: `import ProjectScope from '@hyperfrontend/project-scope'`,
@@ -173,7 +165,6 @@ describe('deepest-import-path', () => {
           })(),
         },
 
-        // Side effect imports
         {
           name: 'allows side effect imports',
           code: `import '@hyperfrontend/project-scope'`,
@@ -190,7 +181,6 @@ describe('deepest-import-path', () => {
           })(),
         },
 
-        // Namespace imports
         {
           name: 'allows namespace imports',
           code: `import * as ProjectScope from '@hyperfrontend/project-scope'`,
@@ -207,7 +197,6 @@ describe('deepest-import-path', () => {
           })(),
         },
 
-        // Type-only imports
         {
           name: 'works with type-only imports when no deeper path',
           code: `import type { Config } from '@hyperfrontend/project-scope'`,
@@ -224,7 +213,6 @@ describe('deepest-import-path', () => {
           })(),
         },
 
-        // Empty paths in tsconfig
         {
           name: 'handles empty tsconfig paths',
           code: `import { foo } from '@hyperfrontend/project-scope'`,
@@ -236,7 +224,6 @@ describe('deepest-import-path', () => {
           })(),
         },
 
-        // Custom prefix option - non-matching import
         {
           name: 'ignores imports not matching custom prefix',
           code: `import { foo } from '@myorg/package'`,
@@ -264,7 +251,6 @@ describe('deepest-import-path', () => {
     ruleTester.run('deepest-import-path - invalid', rule, {
       valid: [],
       invalid: [
-        // Basic case: single symbol with deeper path
         {
           name: 'reports when deeper subpath exports symbol',
           code: `import { runCli } from '@hyperfrontend/project-scope'`,
@@ -293,7 +279,6 @@ describe('deepest-import-path', () => {
           })(),
         },
 
-        // Multiple symbols from same subpath
         {
           name: 'reports when multiple symbols share deeper subpath',
           code: `import { runCli, parseArgs } from '@hyperfrontend/project-scope'`,
@@ -322,7 +307,6 @@ describe('deepest-import-path', () => {
           })(),
         },
 
-        // Type-only imports with deeper path
         {
           name: 'reports for type-only imports with deeper subpath',
           code: `import type { CliConfig } from '@hyperfrontend/project-scope'`,
@@ -351,7 +335,6 @@ describe('deepest-import-path', () => {
           })(),
         },
 
-        // Renamed imports (import { a as b })
         {
           name: 'handles aliased imports correctly',
           code: `import { runCli as execute } from '@hyperfrontend/project-scope'`,
@@ -380,7 +363,6 @@ describe('deepest-import-path', () => {
           })(),
         },
 
-        // Mixed type and value imports with common deeper path
         {
           name: 'handles mixed type and value imports',
           code: `import { type CliConfig, runCli } from '@hyperfrontend/project-scope'`,
@@ -409,7 +391,6 @@ describe('deepest-import-path', () => {
           })(),
         },
 
-        // Deepest available (chooses deepest when multiple match)
         {
           name: 'chooses deepest matching subpath',
           code: `import { deepFunction } from '@hyperfrontend/project-scope'`,
@@ -440,7 +421,6 @@ describe('deepest-import-path', () => {
           })(),
         },
 
-        // Double quotes preserved
         {
           name: 'preserves double quote style',
           code: `import { runCli } from "@hyperfrontend/project-scope"`,
@@ -469,7 +449,6 @@ describe('deepest-import-path', () => {
           })(),
         },
 
-        // Custom prefix option
         {
           name: 'respects custom packagePrefix option',
           code: `import { foo } from '@myorg/package'`,
@@ -499,7 +478,6 @@ describe('deepest-import-path', () => {
           })(),
         },
 
-        // Export declaration formats
         {
           name: 'handles export const declarations',
           code: `import { MY_CONSTANT } from '@hyperfrontend/project-scope'`,
@@ -528,7 +506,6 @@ describe('deepest-import-path', () => {
           })(),
         },
 
-        // Export class declarations
         {
           name: 'handles export class declarations',
           code: `import { MyClass } from '@hyperfrontend/project-scope'`,
@@ -557,7 +534,6 @@ describe('deepest-import-path', () => {
           })(),
         },
 
-        // Export type declarations
         {
           name: 'handles export type declarations',
           code: `import type { MyType } from '@hyperfrontend/project-scope'`,
@@ -586,7 +562,6 @@ describe('deepest-import-path', () => {
           })(),
         },
 
-        // Export interface declarations
         {
           name: 'handles export interface declarations',
           code: `import type { MyInterface } from '@hyperfrontend/project-scope'`,
@@ -615,7 +590,6 @@ describe('deepest-import-path', () => {
           })(),
         },
 
-        // Export enum declarations
         {
           name: 'handles export enum declarations',
           code: `import { MyEnum } from '@hyperfrontend/project-scope'`,
@@ -644,7 +618,6 @@ describe('deepest-import-path', () => {
           })(),
         },
 
-        // Re-exported with alias: export { foo as bar }
         {
           name: 'handles re-exported symbols with aliases',
           code: `import { aliasedFn } from '@hyperfrontend/project-scope'`,
@@ -679,14 +652,12 @@ describe('deepest-import-path', () => {
   describe('edge cases', () => {
     ruleTester.run('deepest-import-path - edge cases', rule, {
       valid: [
-        // File not in workspace with tsconfig.base.json
         {
           name: 'handles missing workspace root gracefully',
           code: `import { foo } from '@hyperfrontend/package'`,
           filename: '/tmp/orphan-file.ts',
         },
 
-        // Source file does not exist
         {
           name: 'handles non-existent source files',
           code: `import { foo } from '@hyperfrontend/package'`,
@@ -702,7 +673,6 @@ describe('deepest-import-path', () => {
           })(),
         },
 
-        // Export with let/var
         {
           name: 'handles export let declarations',
           code: `import { counter } from '@hyperfrontend/package'`,
@@ -719,7 +689,6 @@ describe('deepest-import-path', () => {
           })(),
         },
 
-        // Non-string import source (type guard)
         {
           name: 'handles various import syntax',
           code: `import '@hyperfrontend/polyfill'`,
@@ -744,7 +713,6 @@ describe('deepest-import-path', () => {
     ruleTester.run('deepest-import-path - export parsing', rule, {
       valid: [],
       invalid: [
-        // Named export list: export { a, b, c }
         {
           name: 'parses export list correctly',
           code: `import { funcA, funcB } from '@hyperfrontend/package'`,
@@ -768,7 +736,6 @@ export { _funcA as funcA, _funcB as funcB }`,
           })(),
         },
 
-        // export type { A, B }
         {
           name: 'parses export type list correctly',
           code: `import type { TypeA, TypeB } from '@hyperfrontend/package'`,
@@ -792,7 +759,6 @@ export type { _TypeA as TypeA, _TypeB as TypeB }`,
           })(),
         },
 
-        // export function name() {}
         {
           name: 'parses export function declaration',
           code: `import { myFunction } from '@hyperfrontend/package'`,
@@ -813,7 +779,6 @@ export type { _TypeA as TypeA, _TypeB as TypeB }`,
           })(),
         },
 
-        // export var declaration
         {
           name: 'parses export var declaration',
           code: `import { myVar } from '@hyperfrontend/package'`,
@@ -841,7 +806,6 @@ export type { _TypeA as TypeA, _TypeB as TypeB }`,
     ruleTester.run('deepest-import-path - non-scoped prefix', rule, {
       valid: [],
       invalid: [
-        // Test non-scoped package prefix (no @ symbol) - must import from base package
         {
           name: 'handles non-scoped package prefix',
           code: `import { helper } from 'mylib'`,

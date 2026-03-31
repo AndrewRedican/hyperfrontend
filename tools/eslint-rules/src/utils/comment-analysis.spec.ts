@@ -15,7 +15,6 @@ import {
   ALLOWED_HINT_PREFIXES,
 } from './comment-analysis'
 
-// Helper to create mock comments
 function createMockComment(
   type: 'Line' | 'Block',
   value: string,
@@ -28,7 +27,6 @@ function createMockComment(
   return { type, value, range, loc } as TSESTree.Comment
 }
 
-// Helper to create mock source code
 function createMockSourceCode(text: string, lines?: string[]): SourceCode {
   return {
     getText: () => text,
@@ -477,7 +475,7 @@ describe('comment-analysis utilities', () => {
       })
       const sourceCode = createMockSourceCode('// ====\nconst x = 1;')
       const blocks = findSectionDividerBlocks([comment], sourceCode)
-      expect(blocks[0]?.end).toBe(8) // includes the newline
+      expect(blocks[0]?.end).toBe(8)
     })
   })
 

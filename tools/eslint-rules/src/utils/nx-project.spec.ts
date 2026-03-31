@@ -120,7 +120,6 @@ describe('looksLikeLibraryDir', () => {
       },
     })
 
-    // Remove the default src directory that createTempWorkspace creates
     const { rmSync } = require('node:fs')
     rmSync(workspace.getPath('src'), { recursive: true, force: true })
 

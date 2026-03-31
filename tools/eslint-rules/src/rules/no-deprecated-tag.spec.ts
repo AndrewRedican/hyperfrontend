@@ -11,7 +11,6 @@ const ruleTester = createTypeScriptRuleTester()
  * Valid test cases - code without the deprecated tag
  */
 const validCases: ValidTestCase<TestOptions>[] = [
-  // Standard JSDoc without deprecated tag
   {
     code: `
       /**
@@ -24,14 +23,12 @@ const validCases: ValidTestCase<TestOptions>[] = [
       }
     `,
   },
-  // Line comments mentioning deprecated (not a JSDoc tag)
   {
     code: `
       // This is deprecated but in a line comment
       function oldFunction() {}
     `,
   },
-  // Word "deprecated" in description (not a tag)
   {
     code: `
       /**
@@ -40,7 +37,6 @@ const validCases: ValidTestCase<TestOptions>[] = [
       function newApproach() {}
     `,
   },
-  // Empty JSDoc block
   {
     code: `
       /**
@@ -48,7 +44,6 @@ const validCases: ValidTestCase<TestOptions>[] = [
       const x = 1
     `,
   },
-  // JSDoc with various tags but no deprecated
   {
     code: `
       /**
@@ -61,7 +56,6 @@ const validCases: ValidTestCase<TestOptions>[] = [
       function processData(data: object): void {}
     `,
   },
-  // Class with standard JSDoc
   {
     code: `
       /**
@@ -75,7 +69,6 @@ const validCases: ValidTestCase<TestOptions>[] = [
       }
     `,
   },
-  // Interface without deprecated
   {
     code: `
       /**
@@ -86,7 +79,6 @@ const validCases: ValidTestCase<TestOptions>[] = [
       }
     `,
   },
-  // Tag that starts with "deprecated" but is not the deprecated tag itself
   {
     code: `
       /**
@@ -96,7 +88,6 @@ const validCases: ValidTestCase<TestOptions>[] = [
       function annotated() {}
     `,
   },
-  // Multiple similar tags but none exactly "@deprecated"
   {
     code: `
       /**
@@ -112,7 +103,6 @@ const validCases: ValidTestCase<TestOptions>[] = [
  * Invalid test cases - code with the deprecated tag
  */
 const invalidCases: InvalidTestCase<MessageIds, TestOptions>[] = [
-  // Basic deprecated function
   {
     code: `
       /**
@@ -122,7 +112,6 @@ const invalidCases: InvalidTestCase<MessageIds, TestOptions>[] = [
     `,
     errors: [{ messageId: 'noDeprecatedTag' }],
   },
-  // Deprecated with other tags
   {
     code: `
       /**
@@ -134,7 +123,6 @@ const invalidCases: InvalidTestCase<MessageIds, TestOptions>[] = [
     `,
     errors: [{ messageId: 'noDeprecatedTag' }],
   },
-  // Deprecated class
   {
     code: `
       /**
@@ -144,7 +132,6 @@ const invalidCases: InvalidTestCase<MessageIds, TestOptions>[] = [
     `,
     errors: [{ messageId: 'noDeprecatedTag' }],
   },
-  // Deprecated constant
   {
     code: `
       /**
@@ -154,13 +141,11 @@ const invalidCases: InvalidTestCase<MessageIds, TestOptions>[] = [
     `,
     errors: [{ messageId: 'noDeprecatedTag' }],
   },
-  // Single-line JSDoc with deprecated
   {
     code: `/** @deprecated */
 const x = 1`,
     errors: [{ messageId: 'noDeprecatedTag' }],
   },
-  // Deprecated interface
   {
     code: `
       /**
@@ -172,7 +157,6 @@ const x = 1`,
     `,
     errors: [{ messageId: 'noDeprecatedTag' }],
   },
-  // Deprecated type alias
   {
     code: `
       /**
@@ -182,7 +166,6 @@ const x = 1`,
     `,
     errors: [{ messageId: 'noDeprecatedTag' }],
   },
-  // Case-insensitive: uppercase D
   {
     code: `
       /**
@@ -192,7 +175,6 @@ const x = 1`,
     `,
     errors: [{ messageId: 'noDeprecatedTag' }],
   },
-  // Deprecated method in class
   {
     code: `
       class MyClass {
@@ -204,7 +186,6 @@ const x = 1`,
     `,
     errors: [{ messageId: 'noDeprecatedTag' }],
   },
-  // Deprecated property in interface
   {
     code: `
       interface Config {
@@ -216,7 +197,6 @@ const x = 1`,
     `,
     errors: [{ messageId: 'noDeprecatedTag' }],
   },
-  // Non-matching prefix followed by real deprecated tag in same comment
   {
     code: `
       /**

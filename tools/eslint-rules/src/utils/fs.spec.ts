@@ -148,6 +148,6 @@ describe('readDirectory', () => {
 
     expect(entries).toContain('file1.ts')
     expect(entries).toContain('file2.ts')
-    expect(entries).toContain('src') // default src directory
+    expect(entries).toContain('src')
   })
 })

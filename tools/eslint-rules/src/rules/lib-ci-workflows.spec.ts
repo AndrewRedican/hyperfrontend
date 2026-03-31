@@ -47,7 +47,6 @@ function createTempWorkspace(config: {
     'nx.json': JSON.stringify({ version: 2 }, null, 2),
   }
 
-  // Create libs directory and libraries
   if (config.libs && config.libs.length > 0) {
     for (const lib of config.libs) {
       const folderName = lib.folderName ?? lib.name
@@ -55,17 +54,14 @@ function createTempWorkspace(config: {
     }
   }
 
-  // Create ci-libraries.yml if provided
   if (config.workflows?.ciLibraries !== undefined) {
     files['.github/workflows/ci-libraries.yml'] = config.workflows.ciLibraries
   }
 
-  // Create ci-main.yml if provided
   if (config.workflows?.ciMain !== undefined) {
     files['.github/workflows/ci-main.yml'] = config.workflows.ciMain
   }
 
-  // Create status workflow files
   if (config.workflows?.statusWorkflows) {
     for (const workflowName of config.workflows.statusWorkflows) {
       files[`.github/workflows/${workflowName}`] = '# Status workflow'
@@ -348,7 +344,6 @@ describe('lib-ci-workflows', () => {
         },
       } as never)
 
-      // Execute the Program handler
       if (handler.Program) {
         ;(handler.Program as (node: unknown) => void)({})
       }
@@ -366,7 +361,7 @@ describe('lib-ci-workflows', () => {
           },
         ],
         workflows: {
-          ciLibraries: createCiLibrariesContent([]), // No path filter
+          ciLibraries: createCiLibrariesContent([]),
           ciMain: createCiMainContent([{ flag: 'missing', path: 'libs/missing' }]),
           statusWorkflows: ['ci-lib-missing.yml'],
         },
@@ -400,7 +395,6 @@ describe('lib-ci-workflows', () => {
           },
         ],
         workflows: {
-          // Has path filter but no matrix entry
           ciLibraries: `filters: |
             no-matrix:
               - 'libs/no-matrix/**'`,
@@ -445,7 +439,7 @@ describe('lib-ci-workflows', () => {
         workflows: {
           ciLibraries: createCiLibrariesContent(libs),
           ciMain: createCiMainContent(libs),
-          statusWorkflows: [], // No status workflow
+          statusWorkflows: [],
         },
       })
 
@@ -480,7 +474,7 @@ describe('lib-ci-workflows', () => {
         ],
         workflows: {
           ciLibraries: createCiLibrariesContent(libs),
-          ciMain: createCiMainContent([]), // No coverage entry
+          ciMain: createCiMainContent([]),
           statusWorkflows: ['ci-lib-no-coverage.yml'],
         },
       })
@@ -516,7 +510,6 @@ describe('lib-ci-workflows', () => {
         ],
         workflows: {
           ciLibraries: createCiLibrariesContent(libs),
-          // No ciMain file
           statusWorkflows: ['ci-lib-test-lib.yml'],
         },
       })
@@ -545,11 +538,11 @@ describe('lib-ci-workflows', () => {
           {
             name: 'lib-internal',
             folderName: 'internal',
-            projectJson: NON_PUBLISHABLE_PROJECT_JSON, // No publish target
+            projectJson: NON_PUBLISHABLE_PROJECT_JSON,
           },
         ],
         workflows: {
-          ciLibraries: createCiLibrariesContent([]), // Empty - no CI needed
+          ciLibraries: createCiLibrariesContent([]),
           ciMain: createCiMainContent([]),
         },
       })
@@ -569,14 +562,12 @@ describe('lib-ci-workflows', () => {
         ;(handler.Program as (node: unknown) => void)({})
       }
 
-      // Should not report any errors for non-publishable libraries
       expect(errors).toHaveLength(0)
     })
 
     it('handles utils nested path correctly', () => {
       const libs = [{ flag: 'json-utils', path: 'libs/utils/json', projectName: 'lib-json-utils' }]
 
-      // Create workspace with nested utils structure
       const workspace = manager.create({
         files: {
           'nx.json': JSON.stringify({ version: 2 }, null, 2),
@@ -606,7 +597,6 @@ describe('lib-ci-workflows', () => {
     })
 
     it('handles single-segment path in deriveCoverageFlag', () => {
-      // Edge case: single segment path
       expect(deriveCoverageFlag('mylib')).toBe('mylib')
     })
 
@@ -635,7 +625,6 @@ describe('lib-ci-workflows', () => {
         ;(handler.Program as (node: unknown) => void)({})
       }
 
-      // Should not report errors for directories without project.json
       expect(errors).toHaveLength(0)
     })
 
@@ -664,7 +653,6 @@ describe('lib-ci-workflows', () => {
         ;(handler.Program as (node: unknown) => void)({})
       }
 
-      // Should not report errors for libraries with invalid project.json
       expect(errors).toHaveLength(0)
     })
 
@@ -697,7 +685,6 @@ describe('lib-ci-workflows', () => {
         ;(handler.Program as (node: unknown) => void)({})
       }
 
-      // Should not report errors for application projects
       expect(errors).toHaveLength(0)
     })
 
@@ -708,7 +695,7 @@ describe('lib-ci-workflows', () => {
           'libs/no-build/project.json': JSON.stringify({
             name: 'lib-no-build',
             projectType: 'library',
-            targets: { publish: {} }, // No build target
+            targets: { publish: {} },
           }),
           '.github/workflows/ci-libraries.yml': createCiLibrariesContent([]),
           '.github/workflows/ci-main.yml': createCiMainContent([]),
@@ -730,7 +717,6 @@ describe('lib-ci-workflows', () => {
         ;(handler.Program as (node: unknown) => void)({})
       }
 
-      // Should not report errors for libraries without build target
       expect(errors).toHaveLength(0)
     })
 
@@ -759,7 +745,6 @@ describe('lib-ci-workflows', () => {
         ;(handler.Program as (node: unknown) => void)({})
       }
 
-      // Should not report errors for hidden directories
       expect(errors).toHaveLength(0)
     })
 
@@ -791,12 +776,10 @@ describe('lib-ci-workflows', () => {
         ;(handler.Program as (node: unknown) => void)({})
       }
 
-      // Should use fallback name lib-unnamed
       expect(errors.some((e) => e.data?.['name'] === 'lib-unnamed')).toBe(true)
     })
 
     it('returns empty handler when workspace root not found', () => {
-      // Create workspace with workflows dir but NO nx.json
       const workspace = manager.create({
         files: {
           '.github/workflows/ci-libraries.yml': 'name: test',
@@ -808,7 +791,6 @@ describe('lib-ci-workflows', () => {
         sourceCode: { getText: () => 'name: test' },
       } as never)
 
-      // Should return empty object when no workspace root
       expect(handler).toEqual({})
     })
   })

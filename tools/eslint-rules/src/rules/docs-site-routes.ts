@@ -140,7 +140,6 @@ const rule: Rule.RuleModule = {
     const fileDir = dirname(filePath)
     const dirParts = fileDir.split('/')
 
-    // Only process apps/docs-site/src/lib/content.ts
     const isContentTs = fileName === 'content.ts' && checkPathSuffix(dirParts, ['apps', 'docs-site', 'src', 'lib'])
 
     if (!isContentTs) {
@@ -161,7 +160,6 @@ const rule: Rule.RuleModule = {
           return
         }
 
-        // Check if this is an exported declaration
         const parent = (node as { parent?: Node }).parent
         const isExported = parent?.type === 'ExportNamedDeclaration'
 

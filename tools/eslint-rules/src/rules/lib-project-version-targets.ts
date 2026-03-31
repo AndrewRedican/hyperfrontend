@@ -74,7 +74,6 @@ const rule: Rule.RuleModule = {
       },
 
       'Program:exit'(node: JSONNode) {
-        // Check version target exists
         if (!hasVersion) {
           context.report({
             node: (targetsNode ?? node) as unknown as Rule.Node,
@@ -82,7 +81,6 @@ const rule: Rule.RuleModule = {
           })
         }
 
-        // Check version-check target exists
         if (!hasVersionCheck) {
           context.report({
             node: (targetsNode ?? node) as unknown as Rule.Node,

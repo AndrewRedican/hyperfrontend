@@ -18,14 +18,12 @@ function createTempWorkspace(config: { routes?: string[]; pluginRoutes?: string[
     'nx.json': JSON.stringify({ version: 2 }, null, 2),
   }
 
-  // Create library routes
   if (config.routes && config.routes.length > 0) {
     for (const route of config.routes) {
       files[`apps/docs-site/src/app/docs/libraries/${route}/page.tsx`] = 'export default function Page() { return null }'
     }
   }
 
-  // Create plugin routes
   if (config.pluginRoutes && config.pluginRoutes.length > 0) {
     for (const route of config.pluginRoutes) {
       files[`apps/docs-site/src/app/docs/plugins/${route}/page.tsx`] = 'export default function Page() { return null }'
@@ -308,7 +306,7 @@ describe('docs-site-routes', () => {
             properties: [
               {
                 type: 'Property',
-                key: { type: 'Literal', value: 123 } as Literal, // numeric key
+                key: { type: 'Literal', value: 123 } as Literal,
                 value: { type: 'Literal', value: 'value' } as Literal,
                 kind: 'init',
                 method: false,
@@ -391,7 +389,7 @@ describe('docs-site-routes', () => {
               {
                 type: 'Property',
                 key: { type: 'Identifier', name: 'slug' } as Identifier,
-                value: { type: 'Literal', value: 42 } as Literal, // non-string value
+                value: { type: 'Literal', value: 42 } as Literal,
                 kind: 'init',
                 method: false,
                 shorthand: false,
@@ -416,7 +414,6 @@ describe('docs-site-routes', () => {
     })
   })
 
-  // RuleTester tests - inside describe block to run before afterAll cleanup
   describe('RuleTester', () => {
     const ruleTester = new RuleTester({
       languageOptions: {

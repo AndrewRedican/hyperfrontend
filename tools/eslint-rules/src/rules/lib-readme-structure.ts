@@ -16,7 +16,6 @@ const DOCS_BASE_URL = createURL('https://www.hyperfrontend.dev/docs/')
  * @returns True if the line contains a valid documentation URL.
  */
 function containsValidDocumentationUrl(line: string): boolean {
-  // Extract URLs from markdown link syntax: [text](url)
   const urls: string[] = []
   let searchStart = 0
 
@@ -36,11 +35,9 @@ function containsValidDocumentationUrl(line: string): boolean {
     return false
   }
 
-  // Check if any extracted URL matches the expected base URL
   return urls.some((url) => {
     try {
       const parsed = createURL(url)
-      // Verify the origin and pathname start correctly
       return parsed.origin === DOCS_BASE_URL.origin && parsed.pathname.startsWith(DOCS_BASE_URL.pathname)
     } catch {
       return false
@@ -115,33 +112,28 @@ export function parseMarkdownSections(content: string): ParsedSection[] {
 
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i]
-    // Parse markdown headers (# to ######) using string methods
     if (line.startsWith('#')) {
       let level = 0
       while (level < line.length && level < 6 && line[level] === '#') {
         level++
       }
-      // Valid header must have space after hashes
       if (level > 0 && level < line.length && line[level] === ' ') {
         const title = line.slice(level + 1).trim()
         sections.push({
           level,
           title,
-          startLine: i + 1, // 1-indexed
-          endLine: -1, // Will be set later
+          startLine: i + 1,
+          endLine: -1,
           content: '',
         })
       }
     }
   }
 
-  // Set end lines and extract content
-  // End line is determined by the next section at the same or higher level (smaller or equal heading number)
   for (let i = 0; i < sections.length; i++) {
     const currentLevel = sections[i].level
     const startLine = sections[i].startLine
 
-    // Find the next section at the same or higher level
     let endLine = lines.length
     for (let j = i + 1; j < sections.length; j++) {
       if (sections[j].level <= currentLevel) {
@@ -173,7 +165,6 @@ export function extractBadgesBlock(content: string): { block: string; startLine:
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i]
 
-    // Badges block starts with centered paragraph
     const trimmedLine = line.trim().toLowerCase()
     if (!inBadgesBlock && trimmedLine.startsWith('<p') && trimmedLine.includes('align="center"')) {
       inBadgesBlock = true
@@ -183,7 +174,6 @@ export function extractBadgesBlock(content: string): { block: string; startLine:
     if (inBadgesBlock) {
       blockLines.push(line)
       if (trimmedLine.includes('</p>')) {
-        // Check if next line is also a centered paragraph (continued badges)
         if (i + 1 < lines.length) {
           const nextLine = lines[i + 1].trim().toLowerCase()
           if (nextLine.startsWith('<p') && nextLine.includes('align="center"')) {
@@ -214,7 +204,6 @@ export function extractTitle(content: string): { title: string; line: number } |
 
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i]
-    // Check for level 1 heading: starts with single # followed by space
     if (line.startsWith('# ') && !line.startsWith('## ')) {
       return { title: line.slice(2).trim(), line: i + 1 }
     }
@@ -236,22 +225,18 @@ export function extractShortDescription(content: string, badgesEndLine: number):
   for (let i = badgesEndLine; i < lines.length; i++) {
     const line = lines[i].trim()
 
-    // Skip empty lines
     if (!line) {
       continue
     }
 
-    // Skip HTML tags
     if (line.startsWith('<') && !line.startsWith('<a')) {
       continue
     }
 
-    // Skip headers
     if (line.startsWith('#')) {
       return null
     }
 
-    // Found description paragraph
     return { text: line, line: i + 1 }
   }
 
@@ -269,7 +254,6 @@ export function extractDocumentationLink(content: string): { line: number } | nu
 
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i]
-    // Check for documentation link pattern using string methods and proper URL validation
     if (line.includes('•') && line.includes('👉') && line.includes('**documentation**') && containsValidDocumentationUrl(line)) {
       return { line: i + 1 }
     }
@@ -308,14 +292,12 @@ const rule: Rule.RuleModule = {
     const filePath = context.filename
     const fileName = filePath.split('/').pop()
 
-    // Only process README.md files
     if (fileName !== 'README.md') {
       return {}
     }
 
     const projectRoot = dirname(filePath)
 
-    // Only lint publishable library READMEs
     if (!isPublishableLibrary(projectRoot)) {
       return {}
     }
@@ -325,7 +307,6 @@ const rule: Rule.RuleModule = {
         const sourceCode = context.sourceCode
         const content = sourceCode.getText()
 
-        // Check title
         const titleInfo = extractTitle(content)
         if (!titleInfo) {
           context.report({
@@ -340,7 +321,6 @@ const rule: Rule.RuleModule = {
           })
         }
 
-        // Check badges block
         const badgesBlock = extractBadgesBlock(content)
         if (!badgesBlock) {
           context.report({
@@ -348,7 +328,6 @@ const rule: Rule.RuleModule = {
             messageId: 'missingBadgesBlock',
           })
         } else {
-          // Check for required badges
           for (const badge of REQUIRED_BADGES) {
             if (!badge.pattern.test(badgesBlock.block)) {
               context.report({
@@ -360,7 +339,6 @@ const rule: Rule.RuleModule = {
           }
         }
 
-        // Check short description
         const badgesEndLine = badgesBlock?.endLine ?? 0
         const shortDescription = extractShortDescription(content, badgesEndLine)
         if (!shortDescription) {
@@ -375,7 +353,6 @@ const rule: Rule.RuleModule = {
           })
         }
 
-        // Check documentation link
         const docLink = extractDocumentationLink(content)
         if (!docLink) {
           context.report({
@@ -384,11 +361,9 @@ const rule: Rule.RuleModule = {
           })
         }
 
-        // Parse sections
         const sections = parseMarkdownSections(content)
         const level2Sections = sections.filter((s) => s.level === 2)
 
-        // Check required sections exist and have content
         const foundSections: Array<{ name: string; index: number }> = []
 
         for (const required of REQUIRED_SECTIONS) {
@@ -404,7 +379,6 @@ const rule: Rule.RuleModule = {
             const index = level2Sections.indexOf(found)
             foundSections.push({ name: required.name, index })
 
-            // Check section has content
             if (!found.content.trim()) {
               context.report({
                 node,
@@ -415,7 +389,6 @@ const rule: Rule.RuleModule = {
           }
         }
 
-        // Check section order
         for (let i = 0; i < foundSections.length - 1; i++) {
           const current = foundSections[i]
           const next = foundSections[i + 1]
@@ -429,13 +402,10 @@ const rule: Rule.RuleModule = {
           }
         }
 
-        // Check required subsections
         for (const requiredSub of REQUIRED_SUBSECTIONS) {
-          // Find parent section
           const parentSection = level2Sections.find((s) => requiredSub.parent.test(s.title))
 
           if (parentSection) {
-            // Get subsections within parent section range
             const subsectionsInParent = sections.filter(
               (s) => s.level === requiredSub.level && s.startLine > parentSection.startLine && s.startLine < parentSection.endLine
             )
@@ -453,12 +423,10 @@ const rule: Rule.RuleModule = {
               })
             }
 
-            // Special check for Key Features - must have bullet list
             if (requiredSub.name === 'Key Features') {
               const keyFeaturesSection = subsectionsInParent.find((s) => requiredSub.pattern.test(s.title))
 
               if (keyFeaturesSection) {
-                // Check if any line starts with "- **" (bold bullet item)
                 const hasKeyFeaturesBullets = keyFeaturesSection.content.split('\n').some((line) => line.trimStart().startsWith('- **'))
                 if (!hasKeyFeaturesBullets) {
                   context.report({

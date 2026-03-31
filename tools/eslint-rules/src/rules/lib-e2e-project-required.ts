@@ -68,12 +68,10 @@ const rule: Rule.RuleModule = {
       return {}
     }
 
-    // Only apply to libraries in the libs/ folder
     if (!isInLibsFolder(projectRoot, workspaceRoot)) {
       return {}
     }
 
-    // Only apply to publishable libraries
     if (!isPublishableLibrary(projectRoot)) {
       return {}
     }

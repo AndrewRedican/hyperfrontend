@@ -42,7 +42,6 @@ function createTempWorkspace(config: {
     'nx.json': JSON.stringify({ version: 2 }, null, 2),
   }
 
-  // Create libraries
   if (config.libs && config.libs.length > 0) {
     for (const lib of config.libs) {
       files[`libs/${lib.name}/project.json`] = JSON.stringify(lib.projectJson, null, 2)
@@ -52,7 +51,6 @@ function createTempWorkspace(config: {
     }
   }
 
-  // Create plugins
   if (config.plugins && config.plugins.length > 0) {
     for (const plugin of config.plugins) {
       files[`plugins/${plugin.name}/project.json`] = JSON.stringify(plugin.projectJson, null, 2)
@@ -176,7 +174,6 @@ describe('docs-site-libraries', () => {
           {
             name: 'no-package',
             projectJson: PUBLISHABLE_PROJECT_JSON,
-            // No packageJson
           },
         ],
       })
@@ -250,7 +247,6 @@ describe('docs-site-libraries', () => {
     function createMockArrayExpression(entries: (string | null)[]): ArrayExpression {
       const elements = entries.map((packageName) => {
         if (packageName === null) {
-          // Return a non-object element to test filtering
           return { type: 'Literal', value: 'not-an-object' } as Literal
         }
 
@@ -430,7 +426,6 @@ describe('docs-site-libraries', () => {
         languageOptions: { ecmaVersion: 2020, sourceType: 'module' },
       } as never)
 
-      // Rule returns empty object for non-matching files
       expect(Object.keys(handler)).toEqual([])
     })
 
@@ -449,7 +444,6 @@ describe('docs-site-libraries', () => {
     })
   })
 
-  // RuleTester tests - inside describe block to run before afterAll cleanup
   describe('RuleTester', () => {
     const ruleTester = new RuleTester({
       languageOptions: {
@@ -460,7 +454,6 @@ describe('docs-site-libraries', () => {
 
     ruleTester.run('docs-site-libraries', rule, {
       valid: [
-        // Non-exported LIBRARIES array - should not trigger
         {
           name: 'passes when LIBRARIES array is not exported',
           code: `const LIBRARIES = []`,
@@ -469,7 +462,6 @@ describe('docs-site-libraries', () => {
             return join(dir, 'apps', 'docs-site', 'src', 'lib', 'content.ts')
           })(),
         },
-        // All publishable libraries listed
         {
           name: 'passes when all libraries are listed',
           code: createContentTsCode(['@hyperfrontend/logging']),
@@ -480,7 +472,6 @@ describe('docs-site-libraries', () => {
             return join(dir, 'apps', 'docs-site', 'src', 'lib', 'content.ts')
           })(),
         },
-        // No publishable libraries in workspace
         {
           name: 'passes with no publishable libraries in workspace',
           code: createContentTsCode([]),
@@ -491,7 +482,6 @@ describe('docs-site-libraries', () => {
             return join(dir, 'apps', 'docs-site', 'src', 'lib', 'content.ts')
           })(),
         },
-        // Plugin is listed
         {
           name: 'handles plugins',
           code: createContentTsCode(['@hyperfrontend/features']),
@@ -502,7 +492,6 @@ describe('docs-site-libraries', () => {
             return join(dir, 'apps', 'docs-site', 'src', 'lib', 'content.ts')
           })(),
         },
-        // let instead of const - should not trigger
         {
           name: 'ignores let declarations',
           code: `export let LIBRARIES = []`,
@@ -513,7 +502,6 @@ describe('docs-site-libraries', () => {
             return join(dir, 'apps', 'docs-site', 'src', 'lib', 'content.ts')
           })(),
         },
-        // Object instead of array - should not trigger
         {
           name: 'ignores non-array initializers',
           code: `export const LIBRARIES = {}`,
@@ -524,7 +512,6 @@ describe('docs-site-libraries', () => {
             return join(dir, 'apps', 'docs-site', 'src', 'lib', 'content.ts')
           })(),
         },
-        // Not exported - should not trigger
         {
           name: 'ignores non-exported LIBRARIES',
           code: `const LIBRARIES = []`,
@@ -535,7 +522,6 @@ describe('docs-site-libraries', () => {
             return join(dir, 'apps', 'docs-site', 'src', 'lib', 'content.ts')
           })(),
         },
-        // Different variable name - should not trigger
         {
           name: 'ignores different variable names',
           code: `export const OTHER_ARRAY = []`,
@@ -548,7 +534,6 @@ describe('docs-site-libraries', () => {
         },
       ],
       invalid: [
-        // Missing one library
         {
           name: 'reports missing library',
           code: createContentTsCode(['@hyperfrontend/logging']),
@@ -571,7 +556,6 @@ describe('docs-site-libraries', () => {
             },
           ],
         },
-        // Missing multiple libraries
         {
           name: 'reports multiple missing libraries',
           code: createContentTsCode(['@hyperfrontend/logging']),
@@ -602,7 +586,6 @@ describe('docs-site-libraries', () => {
             },
           ],
         },
-        // Empty LIBRARIES array when there are publishable libs
         {
           name: 'handles empty LIBRARIES array',
           code: `export const LIBRARIES = []
@@ -623,7 +606,6 @@ describe('docs-site-libraries', () => {
             },
           ],
         },
-        // Nested library path not listed
         {
           name: 'handles nested library paths',
           code: createContentTsCode([]),

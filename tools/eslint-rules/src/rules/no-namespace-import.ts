@@ -38,14 +38,12 @@ export default createRule<[], MessageIds>({
   create(context) {
     return {
       ImportDeclaration(node) {
-        // Allow type-only namespace imports (export type * as)
         if (node.importKind === 'type') {
           return
         }
 
         const source = node.source.value
 
-        // Allow JSON file imports
         if (typeof source === 'string' && isJsonImport(source)) {
           return
         }

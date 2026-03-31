@@ -105,12 +105,10 @@ export function isPublishableProjectJson(projectJson: ProjectJson): boolean {
  * @returns True if it looks like a library directory.
  */
 export function looksLikeLibraryDir(dirPath: string): boolean {
-  // Must have project.json
   if (!exists(join(dirPath, 'project.json'))) {
     return false
   }
 
-  // Must have src directory or an entry point file
   const hasSrcDir = isDirectory(join(dirPath, 'src'))
   const hasIndexTs = exists(join(dirPath, 'index.ts'))
   const hasMainTs = exists(join(dirPath, 'main.ts'))
@@ -138,7 +136,6 @@ export function findLibraryDirectories(searchDir: string): string[] {
   const entries = readDirectory(searchDir)
 
   for (const entry of entries) {
-    // Skip hidden and common ignore patterns
     if (entry.startsWith('.') || entry === 'node_modules' || entry === 'dist') {
       continue
     }
@@ -149,14 +146,12 @@ export function findLibraryDirectories(searchDir: string): string[] {
       continue
     }
 
-    // Check if this directory is a library
     const projectJsonPath = join(entryPath, 'project.json')
     const projectJson = readJsonFileIfExists<ProjectJson>(projectJsonPath)
 
     if (projectJson?.projectType === 'library') {
       libraries.push(entryPath)
     } else {
-      // Recursively search subdirectories
       libraries.push(...findLibraryDirectories(entryPath))
     }
   }
@@ -203,7 +198,6 @@ export function getAllPublishableLibraries(workspaceRoot: string, libsDir = 'lib
       continue
     }
 
-    // Derive name from package.json or directory name
     const name = packageJson?.name ?? dir.split('/').pop() ?? 'unknown'
 
     libraries.push({

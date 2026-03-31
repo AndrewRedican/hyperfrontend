@@ -52,7 +52,6 @@ export interface TypeScriptRuleTesterConfig {
  */
 export function createJsonRuleTester(config?: JsonRuleTesterConfig): RuleTester {
   // Note: Using require() here because jsonc-eslint-parser is a CommonJS module
-  // and we need to pass the actual parser object, not a string name
   const jsoncParser = require('jsonc-eslint-parser')
 
   return new RuleTester({

@@ -1,4 +1,3 @@
-// Mock @nx/devkit logger - must be defined before jest.mock hoisting
 jest.mock('@nx/devkit', () => ({
   logger: {
     error: jest.fn(),
@@ -118,7 +117,6 @@ describe('createNxScopedLogger invocation', () => {
     scopedLogger.debug('Debug message')
     scopedLogger.info('Info message')
     scopedLogger.log('Log message')
-    // These should not be called because level is 'warn'
     expect(mockNxLogger.debug).not.toHaveBeenCalled()
     expect(mockNxLogger.info).not.toHaveBeenCalled()
     expect(mockNxLogger.log).not.toHaveBeenCalled()

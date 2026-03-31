@@ -20,12 +20,10 @@ export type ImportCategoryType = (typeof ImportCategory)[keyof typeof ImportCate
  * @returns The category number (lower = higher priority).
  */
 export function getImportCategory(source: string): ImportCategoryType {
-  // Node.js built-in modules (with node: prefix)
   if (source.startsWith('node:')) {
     return ImportCategory.NodeBuiltin
   }
 
-  // Node.js built-in modules (without node: prefix - should be caught by require-node-protocol)
   /* istanbul ignore next - defensive fallback for empty source */
   const moduleName = source.split('/')[0] ?? ''
   /* istanbul ignore next - node builtins without prefix caught by require-node-protocol */
@@ -33,22 +31,18 @@ export function getImportCategory(source: string): ImportCategoryType {
     return ImportCategory.NodeBuiltin
   }
 
-  // Current directory imports
   if (source.startsWith('./')) {
     return ImportCategory.CurrentDir
   }
 
-  // Relative imports (parent directories)
   if (source.startsWith('../')) {
     return ImportCategory.Relative
   }
 
-  // Hyperfrontend packages
   if (source.startsWith('@hyperfrontend/')) {
     return ImportCategory.Hyperfrontend
   }
 
-  // Everything else is external
   return ImportCategory.External
 }
 
@@ -87,23 +81,20 @@ export function compareImportSources(sourceA: string, sourceB: string): number {
   const categoryA = getImportCategory(sourceA)
   const categoryB = getImportCategory(sourceB)
 
-  // Different categories: sort by category
   if (categoryA !== categoryB) {
     return categoryA - categoryB
   }
 
-  // Same category: special handling for relative imports (deeper first)
   /* istanbul ignore next - covered via import-order tests */
   if (categoryA === ImportCategory.Relative) {
     const depthA = getRelativeDepth(sourceA)
     const depthB = getRelativeDepth(sourceB)
     /* istanbul ignore else - same depth falls through to alphabetical */
     if (depthA !== depthB) {
-      return depthB - depthA // Deeper imports first
+      return depthB - depthA
     }
   }
 
-  // Same category and depth: alphabetical
   /* istanbul ignore next - alphabetical fallback */
   return sourceA.localeCompare(sourceB)
 }

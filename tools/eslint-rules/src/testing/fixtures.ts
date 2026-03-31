@@ -23,10 +23,6 @@ export interface PackageJsonFixture {
   [key: string]: unknown
 }
 
-// =============================================================================
-// Project.json Fixtures
-// =============================================================================
-
 /**
  * Valid publishable library project.json.
  * Has both `build` and `publish` targets.
@@ -87,10 +83,6 @@ export const E2E_PROJECT_JSON: ProjectJsonFixture = {
   },
   tags: ['type:e2e'],
 }
-
-// =============================================================================
-// Package.json Fixtures
-// =============================================================================
 
 /**
  * Valid publishable package.json with exports field.
@@ -169,10 +161,6 @@ export const TS_EXPORTS_PACKAGE_JSON: PackageJsonFixture = {
   },
 }
 
-// =============================================================================
-// tsconfig.json Fixtures
-// =============================================================================
-
 /**
  * Tsconfig with paths for library imports.
  */
@@ -194,10 +182,6 @@ export const MINIMAL_TSCONFIG = {
     module: 'ESNext',
   },
 }
-
-// =============================================================================
-// README Fixtures
-// =============================================================================
 
 /**
  * Valid library README with required sections.
@@ -236,10 +220,6 @@ This README is missing required sections.
  */
 export const EMPTY_README = ''
 
-// =============================================================================
-// Source File Fixtures
-// =============================================================================
-
 /**
  * Valid TypeScript index file with exports.
  */
@@ -255,10 +235,6 @@ export const VALID_BARREL_EXPORT = `export * from './foo'
 export * from './bar'
 export * from './baz'
 `
-
-// =============================================================================
-// Fixture Factories
-// =============================================================================
 
 /**
  * Creates a custom publishable library project.json.

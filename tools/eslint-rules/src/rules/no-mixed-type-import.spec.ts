@@ -11,31 +11,23 @@ const ruleTester = createTypeScriptRuleTester()
  * Valid test cases - pure type imports, pure value imports, or import type syntax
  */
 const validCases: ValidTestCase<TestOptions>[] = [
-  // Pure type imports using import type
   { code: `import type { User, Config } from './types'` },
   { code: `import type { Request, Response } from 'express'` },
 
-  // Pure value imports
   { code: `import { createUser, initConfig } from './module'` },
   { code: `import { readFile, writeFile } from 'node:fs'` },
 
-  // Default imports
   { code: `import express from 'express'` },
   { code: `import React from 'react'` },
 
-  // Mixed default and named (but no type specifiers)
   { code: `import React, { useState, useEffect } from 'react'` },
 
-  // Namespace imports
   { code: `import * as utils from './utils'` },
 
-  // Side-effect imports
   { code: `import './polyfill'` },
 
-  // All specifiers are inline type
   { code: `import { type User, type Config } from './types'` },
 
-  // All specifiers are value
   { code: `import { createUser, updateUser } from './users'` },
 ]
 
@@ -67,7 +59,6 @@ import { handle } from './handler'`,
 import { c, d, e } from 'some-package'`,
     errors: [{ messageId: 'noMixedTypeImport' }],
   },
-  // With aliased imports
   {
     code: `import { type User as U, createUser as create } from './module'`,
     output: `import type { User as U } from './module'
