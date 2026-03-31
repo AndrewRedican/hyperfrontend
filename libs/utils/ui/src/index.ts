@@ -1,10 +1,3 @@
-/**
- * \@hyperfrontend/ui-utils
- *
- * Modular DOM utilities for dynamic styling, gesture detection,
- * element lifecycle, and color manipulation.
- */
-
 export * from './audio'
 export * from './color'
 export * from './component'
