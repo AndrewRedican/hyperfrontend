@@ -1,9 +1,4 @@
 /**
- * Mermaid processing utilities for server-side use
- * These functions can be safely called from server components
- */
-
-/**
  * Process markdown content and replace mermaid code blocks with placeholders
  * for client-side rendering
  *

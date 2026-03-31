@@ -1,10 +1,3 @@
-/**
- * Navigation data for the docs site.
- *
- * This file serves as the single source of truth for navigation structure
- * across both desktop sidebar and mobile menu components.
- */
-
 export interface NavItem {
   /** Display title - package slug without `@hyperfrontend/` prefix */
   slug: string
