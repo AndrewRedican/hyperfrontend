@@ -1,10 +1,3 @@
-/**
- * Workspace Validation
- *
- * Validation utilities for workspace integrity checks.
- * Verifies package configurations, dependencies, and workspace structure.
- */
-
 import type { Project } from '../models/project'
 import type { Workspace } from '../models/workspace'
 import { createSet } from '@hyperfrontend/immutable-api-utils/built-in-copy/set'

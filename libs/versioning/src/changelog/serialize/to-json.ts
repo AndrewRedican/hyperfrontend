@@ -1,10 +1,3 @@
-/**
- * Changelog Serialization to JSON
- *
- * Converts a Changelog object to JSON format.
- * Useful for storing changelogs in databases or APIs.
- */
-
 import type { Changelog } from '../models/changelog'
 import { stringify } from '@hyperfrontend/immutable-api-utils/built-in-copy/json'
 

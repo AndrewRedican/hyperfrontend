@@ -1,9 +1,3 @@
-/**
- * Changelog Item Addition
- *
- * Functions for adding items to changelog entries.
- */
-
 import type { Changelog } from '../models/changelog'
 import type { ChangelogEntry, ChangelogSection, ChangelogItem } from '../models/entry'
 import { createError } from '@hyperfrontend/immutable-api-utils/built-in-copy/error'

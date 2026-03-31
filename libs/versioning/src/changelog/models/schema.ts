@@ -1,10 +1,3 @@
-/**
- * Changelog JSON Schema
- *
- * JSON Schema definitions for changelog validation and schema compatibility checking.
- * Uses `@hyperfrontend/json-utils` for validation.
- */
-
 import type { Schema, ValidationResult } from '@hyperfrontend/json-utils'
 import type { Changelog } from './changelog'
 import { createSet } from '@hyperfrontend/immutable-api-utils/built-in-copy/set'

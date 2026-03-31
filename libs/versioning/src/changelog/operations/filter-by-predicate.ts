@@ -1,9 +1,3 @@
-/**
- * Changelog Predicate-Based Filtering
- *
- * Functions for filtering changelog entries, sections, and items using predicates.
- */
-
 import type { Changelog } from '../models/changelog'
 import type { ChangelogEntry, ChangelogSection, ChangelogItem } from '../models/entry'
 import type { ChangelogSectionType } from '../models/section'

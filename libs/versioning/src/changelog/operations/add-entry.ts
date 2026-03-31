@@ -1,9 +1,3 @@
-/**
- * Changelog Entry Addition
- *
- * Functions for adding new entries to a changelog.
- */
-
 import type { Changelog, ChangelogMetadata } from '../models/changelog'
 import type { ChangelogEntry, ChangelogSection } from '../models/entry'
 import { createDate } from '@hyperfrontend/immutable-api-utils/built-in-copy/date'

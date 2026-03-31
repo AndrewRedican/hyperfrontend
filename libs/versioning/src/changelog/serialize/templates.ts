@@ -1,10 +1,3 @@
-/**
- * Changelog Serialization Templates
- *
- * Output templates and formatting helpers for changelog serialization.
- * Provides configurable options for different changelog styles.
- */
-
 import type { ChangelogSectionType } from '../models/section'
 import { SECTION_HEADINGS } from '../models/section'
 

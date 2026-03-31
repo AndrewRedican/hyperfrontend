@@ -1,10 +1,3 @@
-/**
- * Changelog Diff Algorithm
- *
- * Computes structural differences between two changelogs.
- * Identifies added, removed, and modified entries with detailed change tracking.
- */
-
 import type { Changelog } from '../models/changelog'
 import type { CommitRef, IssueRef } from '../models/commit-ref'
 import type { ChangelogEntry, ChangelogItem, ChangelogSection } from '../models/entry'

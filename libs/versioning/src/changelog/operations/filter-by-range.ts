@@ -1,9 +1,3 @@
-/**
- * Changelog Range-Based Filtering
- *
- * Functions for filtering changelog entries by version range, date range, and count.
- */
-
 import type { Changelog } from '../models/changelog'
 import type { ChangelogEntry } from '../models/entry'
 import { createError } from '@hyperfrontend/immutable-api-utils/built-in-copy/error'

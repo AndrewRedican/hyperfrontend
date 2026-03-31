@@ -1,13 +1,3 @@
-/**
- * Batch Update
- *
- * Utilities for updating multiple packages at once.
- * Supports updating versions, dependencies, and other package.json fields.
- *
- * All operations use the VFS (Virtual File System) Tree abstraction,
- * buffering changes until explicitly committed via `commitChanges()`.
- */
-
 import type { Tree } from '@hyperfrontend/project-scope/vfs'
 import type { Workspace } from '../models/workspace'
 import type { PlannedBump } from './cascade-bump'

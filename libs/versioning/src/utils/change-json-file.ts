@@ -1,10 +1,3 @@
-/**
- * JSON File Transformation Utility
- *
- * Provides a helper for transforming JSON files using the VFS Tree `changeFile()` pattern.
- * This reduces boilerplate by handling read, parse, transform, stringify, and write in one call.
- */
-
 import type { Tree } from '@hyperfrontend/project-scope/vfs'
 import { parse, stringify } from '@hyperfrontend/immutable-api-utils/built-in-copy/json'
 

@@ -1,10 +1,3 @@
-/**
- * Changelog Serialization to String
- *
- * Converts a Changelog object back to markdown format.
- * Supports configurable output formatting for different changelog styles.
- */
-
 import type { Changelog, ChangelogHeader, ChangelogLink } from '../models/changelog'
 import type { CommitRef, IssueRef } from '../models/commit-ref'
 import type { ChangelogEntry, ChangelogItem, ChangelogSection } from '../models/entry'

@@ -1,9 +1,3 @@
-/**
- * Workspace Models
- *
- * Type definitions and factory functions for workspace-related data structures.
- */
-
 // Workspace model
 export type { Workspace, WorkspaceConfig, WorkspaceType } from './workspace'
 export {

@@ -1,9 +1,3 @@
-/**
- * Workspace Operations
- *
- * Operations for managing workspace packages, versions, and dependencies.
- */
-
 // Cascade bump
 export type { PlannedBump, BumpReason, CascadeBumpOptions, CascadeBumpResult, DirectBumpInput } from './cascade-bump'
 export { DEFAULT_CASCADE_OPTIONS, calculateCascadeBumps, calculateCascadeBumpsFromPackage, summarizeCascadeBumps } from './cascade-bump'

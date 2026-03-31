@@ -1,10 +1,3 @@
-/**
- * Changelog Tokenizer
- *
- * A state machine tokenizer that processes markdown character-by-character.
- * No regex is used to ensure ReDoS safety.
- */
-
 import { createError } from '@hyperfrontend/immutable-api-utils/built-in-copy/error'
 
 /**

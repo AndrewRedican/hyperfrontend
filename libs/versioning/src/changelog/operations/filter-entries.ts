@@ -1,9 +1,3 @@
-/**
- * Changelog Entry Filtering
- *
- * Re-exports from split files for backward compatibility.
- */
-
 // Predicate-based filtering
 export type { EntryPredicate, SectionPredicate, ItemPredicate } from './filter-by-predicate'
 export {

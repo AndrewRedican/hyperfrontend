@@ -1,10 +1,3 @@
-/**
- * Changelog Equality Comparison
- *
- * Functions for comparing changelogs for structural equality.
- * Uses deep comparison without relying on JSON serialization.
- */
-
 import type { Changelog, ChangelogHeader, ChangelogLink, ChangelogMetadata } from '../models/changelog'
 import type { CommitRef, IssueRef } from '../models/commit-ref'
 import type { ChangelogEntry, ChangelogItem, ChangelogSection } from '../models/entry'

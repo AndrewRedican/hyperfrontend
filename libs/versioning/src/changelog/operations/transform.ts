@@ -1,9 +1,3 @@
-/**
- * Changelog Transformation Helpers
- *
- * Generic transformation functions for modifying changelogs.
- */
-
 import type { Changelog, ChangelogHeader, ChangelogMetadata } from '../models/changelog'
 import type { ChangelogEntry, ChangelogSection, ChangelogItem } from '../models/entry'
 import type { ChangelogSectionType } from '../models/section'

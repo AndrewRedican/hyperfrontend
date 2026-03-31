@@ -1,9 +1,3 @@
-/**
- * Changelog Merging
- *
- * Functions for merging multiple changelogs or changelog entries.
- */
-
 import type { Changelog, ChangelogHeader, ChangelogMetadata } from '../models/changelog'
 import type { ChangelogEntry, ChangelogSection, ChangelogItem } from '../models/entry'
 import { createError } from '@hyperfrontend/immutable-api-utils/built-in-copy/error'

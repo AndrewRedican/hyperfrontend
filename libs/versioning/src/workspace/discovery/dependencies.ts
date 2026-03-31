@@ -1,11 +1,3 @@
-/**
- * Dependency Graph
- *
- * Builds and analyzes dependency relationships between workspace projects.
- * Provides functions for traversing the dependency graph and determining
- * build/release order.
- */
-
 import type { PackageJson } from '@hyperfrontend/project-scope/project/package'
 import type { Project } from '../models/project'
 import type { Workspace } from '../models/workspace'

@@ -1,9 +1,3 @@
-/**
- * Changelog Section/Item Removal
- *
- * Functions for removing sections and items from changelog entries.
- */
-
 import type { Changelog } from '../models/changelog'
 import type { ChangelogEntry, ChangelogSection } from '../models/entry'
 import { createError } from '@hyperfrontend/immutable-api-utils/built-in-copy/error'

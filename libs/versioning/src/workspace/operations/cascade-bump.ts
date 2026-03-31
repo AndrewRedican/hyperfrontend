@@ -1,11 +1,3 @@
-/**
- * Cascade Bump
- *
- * Calculates which packages need version bumps when dependencies change.
- * Implements cascade versioning for monorepos where dependents may need
- * to be bumped when their dependencies are updated.
- */
-
 import type { BumpType, SemVer } from '../../semver/models/version'
 import type { Project } from '../models/project'
 import type { Workspace } from '../models/workspace'

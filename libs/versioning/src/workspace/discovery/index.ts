@@ -1,9 +1,3 @@
-/**
- * Workspace Discovery
- *
- * Package and changelog discovery utilities for monorepo workspaces.
- */
-
 // Package discovery
 export type { DiscoveryOptions, DiscoveryResult } from './packages'
 export { discoverPackages, discoverProject, discoverProjectByName } from './packages'
