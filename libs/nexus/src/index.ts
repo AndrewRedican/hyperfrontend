@@ -1,11 +1,3 @@
-/**
- * \@hyperfrontend/nexus
- *
- * Cross-window communication with contracts, lifecycle management, and security.
- * Provides a TCP-like handshake protocol for establishing reliable communication
- * channels between browser windows, iframes, and web workers.
- */
-
 // Core factory functions
 export { createBroker } from './broker/factory'
 export { createChannel } from './channel/factory'

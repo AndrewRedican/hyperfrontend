@@ -1,7 +1,3 @@
-/**
- * Tests for routeMessage function
- */
-
 import type { Logger } from '@hyperfrontend/logging'
 import type { ActionCreators } from '../../core/actions/factory'
 import type { IAction } from '../../types/action'

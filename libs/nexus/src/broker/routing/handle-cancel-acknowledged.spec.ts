@@ -1,7 +1,3 @@
-/**
- * Tests for handleCancelAcknowledged function
- */
-
 import type { Logger } from '@hyperfrontend/logging'
 import type { IAction } from '../../types/action'
 import type { IChannelContract } from '../../types/contract'

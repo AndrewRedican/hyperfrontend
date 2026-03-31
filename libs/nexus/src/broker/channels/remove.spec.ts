@@ -1,7 +1,3 @@
-/**
- * Tests for removeChannel function
- */
-
 import type { BrokerState } from '../types'
 import { createActionCreators } from '../../core/actions/factory'
 import { createProcessManager } from '../../core/processes/factory'

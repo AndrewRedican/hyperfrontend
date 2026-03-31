@@ -1,10 +1,3 @@
-/**
- * Default Singleton Broker Instance
- *
- * Provides a ready-to-use broker with sensible defaults for quick prototyping
- * and simple use cases. For production, create your own broker with createBroker().
- */
-
 import type { BrokerHandle } from './broker/types'
 import type { IChannelContract } from './types/contract'
 import { freeze } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'

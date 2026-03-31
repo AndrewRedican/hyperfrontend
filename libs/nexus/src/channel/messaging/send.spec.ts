@@ -1,7 +1,3 @@
-/**
- * Tests for send messaging operation
- */
-
 import type { ChannelState } from '../../types'
 import type { IMessage } from '../../types/message'
 import type { ChannelInternals } from '../types'

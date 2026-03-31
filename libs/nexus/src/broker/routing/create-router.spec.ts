@@ -1,7 +1,3 @@
-/**
- * Tests for createRouter function
- */
-
 import type { HandlerMap, RouteHandler } from './create-router'
 import { createRouter } from './create-router'
 

@@ -1,7 +1,3 @@
-/**
- * Tests for filterOrigin function
- */
-
 import { filterOrigin } from './filter-origin'
 
 describe('filterOrigin', () => {

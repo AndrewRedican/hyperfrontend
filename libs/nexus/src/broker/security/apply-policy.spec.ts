@@ -1,7 +1,3 @@
-/**
- * Tests for applyPolicy function
- */
-
 import type { Logger } from '@hyperfrontend/logging'
 import type { SecurityPolicy } from '../types'
 import { applyPolicy } from './apply-policy'

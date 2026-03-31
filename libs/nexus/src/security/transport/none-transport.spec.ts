@@ -1,10 +1,3 @@
-/**
- * Unit Tests: NoneTransport
- *
- * Tests the passthrough transport implementation that performs no
- * encryption or obfuscation.
- */
-
 import type { SecurityTransport } from '../../types/security'
 import { createNoneTransport } from './none-transport'
 
