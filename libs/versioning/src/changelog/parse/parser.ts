@@ -381,10 +381,6 @@ function extractRepoUrl(url: string): string | undefined {
   return undefined
 }
 
-// ============================================================================
-// Parser utilities
-// ============================================================================
-
 /**
  * Gets the current token at the parser position.
  *

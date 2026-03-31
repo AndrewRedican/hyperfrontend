@@ -3,10 +3,6 @@ import { escapeGitRef, escapeGitPath, escapeGitArg } from './log'
 import { escapeGitMessage } from './manage-tags'
 import { escapeGitTagPattern } from './query-tags'
 
-// ============================================================================
-// Log Escape Functions
-// ============================================================================
-
 describe('escapeGitRef', () => {
   it('allows valid refs', () => {
     expect(escapeGitRef('main')).toBe('main')
@@ -72,10 +68,6 @@ describe('escapeGitArg', () => {
   })
 })
 
-// ============================================================================
-// Tag Escape Functions
-// ============================================================================
-
 describe('escapeGitTagPattern', () => {
   it('allows valid patterns', () => {
     expect(escapeGitTagPattern('v')).toBe('v')
@@ -115,10 +107,6 @@ describe('escapeGitMessage', () => {
     expect(() => escapeGitMessage(longMessage)).toThrow('maximum length')
   })
 })
-
-// ============================================================================
-// Commit Escape Functions
-// ============================================================================
 
 describe('escapeFilePath', () => {
   it('allows valid file paths', () => {
@@ -161,11 +149,6 @@ describe('escapeAuthor', () => {
     expect(() => escapeAuthor(longAuthor)).toThrow('maximum length')
   })
 })
-
-// ============================================================================
-// Integration behavior tests (mocked)
-// These test the escape functions are called correctly in typical scenarios
-// ============================================================================
 
 describe('Escape function integration', () => {
   it('handles typical version flow arguments', () => {

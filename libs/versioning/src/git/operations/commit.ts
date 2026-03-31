@@ -185,10 +185,6 @@ export function createEmptyCommit(message: string, options: Omit<CreateCommitOpt
   return commit(message, { ...options, allowEmpty: true })
 }
 
-// ============================================================================
-// Security helpers - character-by-character validation (no regex)
-// ============================================================================
-
 /**
  * Maximum file path length.
  */

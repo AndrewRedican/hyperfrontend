@@ -22,10 +22,6 @@ function createMockContext(): FlowContext {
   }
 }
 
-// ============================================================================
-// Tests
-// ============================================================================
-
 describe('Flow Step Model', () => {
   describe('createStep', () => {
     it('creates a step with required properties', () => {

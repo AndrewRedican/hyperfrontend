@@ -246,10 +246,6 @@ export function coerceVersion(input: string): SemVer | null {
   })
 }
 
-// ============================================================================
-// Internal parsing helpers
-// ============================================================================
-
 interface NumericResult {
   success: boolean
   value: number

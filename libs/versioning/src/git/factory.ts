@@ -105,8 +105,6 @@ export interface GitClient {
   /** Default timeout */
   readonly timeout: number
 
-  // ========== Log Operations ==========
-
   /**
    * Gets the commit log.
    */
@@ -140,8 +138,6 @@ export interface GitClient {
    */
   commitReachableFromHead(hash: string): boolean
 
-  // ========== Diff Operations ==========
-
   /**
    * Gets files changed between two refs.
    */
@@ -156,8 +152,6 @@ export interface GitClient {
    * Gets a commit with its changed files.
    */
   getCommitWithFiles(hash: string): GitCommitWithFiles | null
-
-  // ========== Tag Operations ==========
 
   /**
    * Gets all tags.
@@ -198,8 +192,6 @@ export interface GitClient {
    * Pushes a tag to remote.
    */
   pushTag(name: string, remote?: string): boolean
-
-  // ========== Commit Operations ==========
 
   /**
    * Creates a commit.
@@ -269,8 +261,6 @@ export interface GitClient {
    * Checks if there are untracked files.
    */
   hasUntrackedFiles(): boolean
-
-  // ========== Status Operations ==========
 
   /**
    * Gets the full repository status.
@@ -342,8 +332,6 @@ export interface GitClient {
    */
   getUntrackedFiles(): readonly string[]
 
-  // ========== Operation State ==========
-
   /**
    * Gets the current git operation state.
    *
@@ -356,8 +344,6 @@ export interface GitClient {
    * Checks if an operation (rebase, merge) is in progress.
    */
   isOperationInProgress(): boolean
-
-  // ========== Ref Operations ==========
 
   /**
    * Gets all refs (branches, tags, remotes).
@@ -496,10 +482,6 @@ export function createGitClient(config: GitClientConfig = {}): GitClient {
     getRemoteUrl: (remoteName) => getRemoteUrl(opts, remoteName),
   }
 }
-
-// ============================================================================
-// Additional ref operations used by the client
-// ============================================================================
 
 /**
  * Gets all refs from the repository.

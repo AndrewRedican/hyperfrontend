@@ -142,10 +142,6 @@ function createMockContext(state: Partial<FlowState> = {}, config: Partial<FlowC
   }
 }
 
-// ============================================================================
-// Tests
-// ============================================================================
-
 describe('Create Commit Step', () => {
   describe('createGitCommitStep', () => {
     it('creates a step with correct ID and name', () => {

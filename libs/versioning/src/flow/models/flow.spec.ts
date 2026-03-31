@@ -27,10 +27,6 @@ function createTestFlow(stepIds: string[] = ['step-1', 'step-2', 'step-3']): Ver
   )
 }
 
-// ============================================================================
-// Tests
-// ============================================================================
-
 describe('Flow Model', () => {
   describe('createFlow', () => {
     it('creates a flow with required properties', () => {

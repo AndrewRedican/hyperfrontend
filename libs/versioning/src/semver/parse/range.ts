@@ -89,10 +89,6 @@ export function parseRangeStrict(input: string): Range {
   return result.range
 }
 
-// ============================================================================
-// Internal parsing helpers
-// ============================================================================
-
 interface SetResult {
   success: boolean
   set?: ComparatorSet

@@ -327,10 +327,6 @@ export function getTagsForPackage(packageName: string, options: ListTagsOptions 
   })
 }
 
-// ============================================================================
-// Helper functions
-// ============================================================================
-
 /**
  * Checks if string starts with prefix (no regex).
  *

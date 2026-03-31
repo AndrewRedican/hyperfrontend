@@ -410,10 +410,6 @@ function startsWithPrefix(str: string, prefix: string): boolean {
   return matchesAt(str, 0, prefix)
 }
 
-// ============================================================================
-// Security helpers - character-by-character validation (no regex)
-// ============================================================================
-
 /**
  * Maximum allowed git reference length.
  */

@@ -244,10 +244,6 @@ export function minSatisfying(versions: readonly SemVer[], range: Range): SemVer
   return min
 }
 
-// ============================================================================
-// Internal helpers
-// ============================================================================
-
 /**
  * Compares two prerelease identifiers.
  * Numeric identifiers have lower precedence than alphanumeric.

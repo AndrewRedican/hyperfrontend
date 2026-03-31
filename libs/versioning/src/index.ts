@@ -4,10 +4,6 @@
 // and semver flow orchestration. Uses character-by-character state machines
 // for parsing (no regex) to ensure ReDoS safety.
 
-// ============================================================================
-// Changelog module
-// ============================================================================
-
 // Changelog Models - Type definitions
 export type { Changelog, ChangelogFormat, ChangelogHeader, ChangelogLink, ChangelogMetadata } from './changelog/models/changelog'
 export type { ChangelogEntry, ChangelogItem, ChangelogSection } from './changelog/models/entry'
@@ -125,10 +121,6 @@ export {
   cloneChangelog,
 } from './changelog/operations'
 
-// ============================================================================
-// Commits module
-// ============================================================================
-
 // Commits Models - Type definitions
 export type { ConventionalCommit, CommitFooter } from './commits/models/conventional'
 export type { CommitType } from './commits/models/commit-type'
@@ -158,10 +150,6 @@ export { DEFAULT_EXCLUDE_SCOPES, DEFAULT_PROJECT_PREFIXES } from './commits/clas
 
 // Flow Steps - Constants
 export { DEFAULT_COMMIT_TYPE_TO_SECTION } from './flow/steps'
-
-// ============================================================================
-// SemVer module
-// ============================================================================
 
 // SemVer Models - Type definitions
 export type { SemVer, BumpType } from './semver/models/version'
@@ -195,10 +183,6 @@ export { increment, incrementPrerelease, diff } from './semver/increment/bump'
 // SemVer Format
 export { format, formatSimple, formatRange, formatComparator } from './semver/format/to-string'
 
-// ============================================================================
-// Registry module
-// ============================================================================
-
 // Registry Models - Type definitions
 export type { Registry, RegistryConfig } from './registry/models/registry'
 export type { PackageInfo } from './registry/models/package-info'
@@ -216,10 +200,6 @@ export type { Cache, CacheEntry } from './registry/npm/cache'
 // Registry factory
 export { createRegistry } from './registry/factory'
 export type { RegistryType } from './registry/factory'
-
-// ============================================================================
-// Workspace module
-// ============================================================================
 
 // Workspace Models - Type definitions
 export type { Workspace, WorkspaceConfig, WorkspaceType } from './workspace/models/workspace'
@@ -294,10 +274,6 @@ export { validateWorkspace, validateProject, summarizeValidation } from './works
 
 // Workspace convenience function
 export { createWorkspaceFromDisk } from './workspace'
-
-// ============================================================================
-// Git module
-// ============================================================================
 
 // Git Models - Type definitions
 export type { GitCommit, CreateGitCommitOptions } from './git/models/commit'
@@ -402,10 +378,6 @@ export { DEFAULT_DIFF_OPTIONS, getChangedFilesBetween, getChangedFilesBetweenWit
 // Git Client Factory
 export type { GitClient, GitClientConfig } from './git/factory'
 export { createGitClient, DEFAULT_GIT_CLIENT_CONFIG } from './git/factory'
-
-// ============================================================================
-// Flow module
-// ============================================================================
 
 // Flow Models - Type definitions
 export type {

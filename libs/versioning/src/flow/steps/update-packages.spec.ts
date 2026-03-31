@@ -143,10 +143,6 @@ function createMockContext(state: Partial<FlowState> = {}, config: Partial<FlowC
   }
 }
 
-// ============================================================================
-// Tests: createUpdatePackageStep
-// ============================================================================
-
 describe('Update Packages Step', () => {
   describe('createUpdatePackageStep', () => {
     it('creates a step with correct ID and name', () => {
@@ -398,10 +394,6 @@ describe('Update Packages Step', () => {
     })
   })
 })
-
-// ============================================================================
-// Tests: createCascadeDependenciesStep
-// ============================================================================
 
 describe('Cascade Dependencies Step', () => {
   describe('createCascadeDependenciesStep', () => {

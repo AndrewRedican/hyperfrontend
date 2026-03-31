@@ -166,10 +166,6 @@ function createMockContext(state: Partial<FlowState> = {}, config: Partial<FlowC
   }
 }
 
-// ============================================================================
-// Tests: createTagStep
-// ============================================================================
-
 describe('Create Tag Step', () => {
   describe('createTagStep', () => {
     it('creates a step with correct ID and name', () => {
@@ -406,10 +402,6 @@ describe('Create Tag Step', () => {
     })
   })
 })
-
-// ============================================================================
-// Tests: createPushTagStep
-// ============================================================================
 
 describe('Push Tag Step', () => {
   describe('createPushTagStep', () => {

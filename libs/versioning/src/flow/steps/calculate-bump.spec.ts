@@ -134,10 +134,6 @@ function createMockContext(state: Partial<FlowState> = {}, config: Partial<FlowC
   }
 }
 
-// ============================================================================
-// Tests: createCalculateBumpStep
-// ============================================================================
-
 describe('Calculate Bump Step', () => {
   describe('createCalculateBumpStep', () => {
     it('creates a step with correct ID and name', () => {
@@ -661,10 +657,6 @@ describe('Calculate Bump Step', () => {
     })
   })
 })
-
-// ============================================================================
-// Tests: createCheckIdempotencyStep
-// ============================================================================
 
 describe('Check Idempotency Step', () => {
   describe('createCheckIdempotencyStep', () => {

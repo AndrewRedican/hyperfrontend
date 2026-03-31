@@ -48,10 +48,6 @@ export const DEFAULT_DIFF_OPTIONS: Required<Omit<DiffOptions, 'cwd'>> = {
   timeout: 30000,
 }
 
-// ============================================================================
-// Core Functions
-// ============================================================================
-
 /**
  * Gets files changed between two git refs.
  *
@@ -190,10 +186,6 @@ function getCommitFiles(hash: string, options: Required<Omit<DiffOptions, 'cwd'>
     return []
   }
 }
-
-// ============================================================================
-// Parsing Helpers
-// ============================================================================
 
 /**
  * Parses file list output (from --name-only).

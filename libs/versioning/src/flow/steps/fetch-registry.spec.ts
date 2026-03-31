@@ -153,10 +153,6 @@ function createMockContext(overrides?: {
   }
 }
 
-// ============================================================================
-// Tests
-// ============================================================================
-
 describe('fetch-registry step', () => {
   describe('FETCH_REGISTRY_STEP_ID', () => {
     it('has the correct ID', () => {
