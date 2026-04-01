@@ -56,33 +56,27 @@ export interface BuildGraphOptions {
 function extractImports(content: string): string[] {
   const imports: string[] = []
 
-  // ES import with 'from': import X from 'path' or import { X } from 'path'
-  // Use non-greedy match and avoid nested quantifiers by matching "from" keyword directly
   const esImportFromRegex = /import\s+.+?\s+from\s+['"]([^'"]+)['"]/g
   let match: RegExpExecArray | null
   while ((match = esImportFromRegex.exec(content)) !== null) {
     imports.push(match[1])
   }
 
-  // Side-effect import: import 'path'
   const sideEffectImportRegex = /import\s+['"]([^'"]+)['"]/g
   while ((match = sideEffectImportRegex.exec(content)) !== null) {
     imports.push(match[1])
   }
 
-  // Dynamic import: import('path')
   const dynamicImportRegex = /import\s*\(\s*['"]([^'"]+)['"]\s*\)/g
   while ((match = dynamicImportRegex.exec(content)) !== null) {
     imports.push(match[1])
   }
 
-  // require: require('path')
   const requireRegex = /require\s*\(\s*['"]([^'"]+)['"]\s*\)/g
   while ((match = requireRegex.exec(content)) !== null) {
     imports.push(match[1])
   }
 
-  // Re-export: export * from 'path' or export { X } from 'path'
   const exportFromRegex = /export\s+.+?\s+from\s+['"]([^'"]+)['"]/g
   while ((match = exportFromRegex.exec(content)) !== null) {
     imports.push(match[1])

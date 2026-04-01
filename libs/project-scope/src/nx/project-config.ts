@@ -114,7 +114,6 @@ export function readProjectJson(projectPath: string): NxProjectConfig | null {
 export function getProjectConfig(projectPath: string, workspacePath: string): NxProjectConfig | null {
   nxConfigLogger.debug('Getting project config', { projectPath, workspacePath })
 
-  // Try project.json first
   const projectJson = readProjectJson(projectPath)
 
   if (projectJson) {
@@ -125,7 +124,6 @@ export function getProjectConfig(projectPath: string, workspacePath: string): Nx
     }
   }
 
-  // Try to infer from package.json nx field
   const packageJson = readPackageJsonIfExists(projectPath)
 
   if (packageJson && typeof packageJson['nx'] === 'object') {
@@ -164,7 +162,6 @@ function scanForProjects(
     const entries = readDirectory(dirPath)
 
     for (const entry of entries) {
-      // Skip node_modules and hidden directories
       if (entry.name.startsWith('.') || entry.name === 'node_modules' || entry.name === 'dist') {
         continue
       }
@@ -172,7 +169,6 @@ function scanForProjects(
       const fullPath = join(dirPath, entry.name)
 
       if (entry.isDirectory) {
-        // Check if this directory is an NX project
         if (isNxProject(fullPath)) {
           const config = getProjectConfig(fullPath, workspacePath)
           if (config) {
@@ -185,7 +181,6 @@ function scanForProjects(
           }
         }
 
-        // Recursively scan subdirectories
         scanForProjects(fullPath, workspacePath, projects, maxDepth, currentDepth + 1)
       }
     }
@@ -204,20 +199,17 @@ function scanForProjects(
 export function discoverNxProjects(workspacePath: string): Map<string, NxProjectConfig> {
   const projects = createMap<string, NxProjectConfig>()
 
-  // Check for workspace.json (older NX format)
   const workspaceJson = readJsonFileIfExists<{ projects?: Record<string, unknown> }>(join(workspacePath, 'workspace.json'))
 
   if (workspaceJson?.projects) {
     for (const [name, config] of entries(workspaceJson.projects)) {
       if (typeof config === 'string') {
-        // Path reference to project directory
         const projectPath = join(workspacePath, config)
         const projectConfig = getProjectConfig(projectPath, workspacePath)
         if (projectConfig) {
           projects.set(name, { ...projectConfig, name })
         }
       } else if (typeof config === 'object' && config !== null) {
-        // Inline config
         projects.set(name, { name, ...(<NxProjectConfig>config) })
       }
     }
@@ -225,14 +217,12 @@ export function discoverNxProjects(workspacePath: string): Map<string, NxProject
     return projects
   }
 
-  // Scan for project.json files (newer NX format)
   const workspaceInfo = getNxWorkspaceInfo(workspacePath)
   const appsDir = workspaceInfo?.workspaceLayout.appsDir ?? 'apps'
   const libsDir = workspaceInfo?.workspaceLayout.libsDir ?? 'libs'
 
   const searchDirs = [appsDir, libsDir]
 
-  // Also check packages directory (common in some setups)
   if (exists(join(workspacePath, 'packages'))) {
     searchDirs.push('packages')
   }
@@ -249,7 +239,6 @@ export function discoverNxProjects(workspacePath: string): Map<string, NxProject
     }
   }
 
-  // Also check root-level projects (standalone projects in monorepo root)
   if (isNxProject(workspacePath)) {
     const config = readProjectJson(workspacePath)
     if (config) {
@@ -288,10 +277,8 @@ export function buildSimpleProjectGraph(workspacePath: string, projects?: Map<st
 
     dependencies[name] = []
 
-    // Add implicit dependencies
     if (config.implicitDependencies) {
       for (const dep of config.implicitDependencies) {
-        // Skip negative dependencies (those starting with !)
         if (!dep.startsWith('!')) {
           dependencies[name].push({
             target: dep,

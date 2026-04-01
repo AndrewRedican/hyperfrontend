@@ -35,13 +35,11 @@ export function createTree(root: string, options?: CreateTreeOptions): Tree {
   const normalizedRoot = normalizePath(root)
   factoryLogger.debug('createTree', { root: normalizedRoot })
 
-  // Validate root exists
   if (!exists(normalizedRoot)) {
     factoryLogger.warn('createTree failed: root does not exist', { root: normalizedRoot })
     throw createError(`Root directory does not exist: ${normalizedRoot}`)
   }
 
-  // Validate root is a directory
   if (!isDirectory(normalizedRoot)) {
     factoryLogger.warn('createTree failed: root is not a directory', { root: normalizedRoot })
     throw createError(`Root path is not a directory: ${normalizedRoot}`)

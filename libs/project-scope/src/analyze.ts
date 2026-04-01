@@ -49,12 +49,10 @@ export interface AnalyzeOptions {
  * @returns Detected workspace type
  */
 function detectWorkspaceType(projectPath: string): WorkspaceType {
-  // Check for NX
   if (isNxWorkspace(projectPath) || findNxWorkspaceRoot(projectPath) !== null) {
     return 'nx'
   }
 
-  // Check for common monorepo markers
   if (exists(resolve(projectPath, 'turbo.json'))) {
     return 'turborepo'
   }
@@ -67,7 +65,6 @@ function detectWorkspaceType(projectPath: string): WorkspaceType {
     return 'pnpm'
   }
 
-  // Check package.json for workspaces
   const pkg = readPackageJsonIfExists(projectPath)
   if (pkg?.workspaces) {
     if (exists(resolve(projectPath, 'yarn.lock'))) {
@@ -76,7 +73,7 @@ function detectWorkspaceType(projectPath: string): WorkspaceType {
     if (exists(resolve(projectPath, 'package-lock.json'))) {
       return 'npm'
     }
-    return 'npm' // default for workspaces
+    return 'npm'
   }
 
   return 'standalone'
@@ -93,17 +90,14 @@ function shouldInclude(
   type: 'frameworks' | 'buildTools' | 'testing' | 'entryPoints' | 'configs' | 'dependencies',
   options?: AnalyzeOptions
 ): boolean {
-  // If include list is specified, item must be in it
   if (options?.include && options.include.length > 0) {
     return options.include.includes(type)
   }
 
-  // If exclude list is specified, item must not be in it
   if (options?.exclude && options.exclude.length > 0) {
     return !options.exclude.includes(type)
   }
 
-  // Default: include everything
   return true
 }
 
@@ -155,18 +149,15 @@ export function analyzeProject(projectPath: string, options?: AnalyzeOptions): A
   const startTime = dateNow()
   const resolvedPath = resolve(projectPath)
 
-  // Set log level based on verbose option
   if (options?.verbose) {
     analyzeLogger.setLogLevel('debug')
   }
 
   analyzeLogger.debug('Starting project analysis', { path: resolvedPath, options })
 
-  // Read package.json once for reuse
   const packageJson = readPackageJsonIfExists(resolvedPath)
   analyzeLogger.debug('Package.json loaded', { found: !!packageJson, name: packageJson?.name })
 
-  // Detect project and workspace types
   const projectTypeDetection = detectProjectType(resolvedPath, {
     skipTechDetection: options?.depth === 'basic',
   })
@@ -174,16 +165,13 @@ export function analyzeProject(projectPath: string, options?: AnalyzeOptions): A
   const workspaceType = detectWorkspaceType(resolvedPath)
   analyzeLogger.debug('Project type detected', { projectType, workspaceType })
 
-  // Get project name from package.json or directory name
   const projectName = packageJson?.name ?? basename(resolvedPath)
 
-  // Run all technology detectors
   const detections =
     shouldInclude('frameworks', options) || shouldInclude('buildTools', options) || shouldInclude('testing', options)
       ? detectAll(resolvedPath, packageJson ?? undefined)
       : null
 
-  // Convert framework detections to FrameworkInfo
   const frameworks: FrameworkInfo[] =
     shouldInclude('frameworks', options) && detections
       ? [
@@ -211,7 +199,6 @@ export function analyzeProject(projectPath: string, options?: AnalyzeOptions): A
         ]
       : []
 
-  // Convert build tool detections
   const buildTools: BuildToolInfo[] =
     shouldInclude('buildTools', options) && detections
       ? detections.buildTools.map((d) => ({
@@ -223,7 +210,6 @@ export function analyzeProject(projectPath: string, options?: AnalyzeOptions): A
         }))
       : []
 
-  // Convert testing framework detections
   const testingFrameworks: TestingInfo[] =
     shouldInclude('testing', options) && detections
       ? detections.testingFrameworks.map((d) => ({
@@ -236,7 +222,6 @@ export function analyzeProject(projectPath: string, options?: AnalyzeOptions): A
         }))
       : []
 
-  // Discover entry points
   const entryPoints: EntryPointInfo[] = shouldInclude('entryPoints', options)
     ? discoverEntryPoints(resolvedPath).map((e) => ({
         path: e.path,
@@ -245,7 +230,6 @@ export function analyzeProject(projectPath: string, options?: AnalyzeOptions): A
       }))
     : []
 
-  // Detect configuration files
   const configFiles: ConfigFileInfo[] = shouldInclude('configs', options)
     ? detectConfigs(resolvedPath).map((c) => ({
         path: c.path,
@@ -255,7 +239,6 @@ export function analyzeProject(projectPath: string, options?: AnalyzeOptions): A
       }))
     : []
 
-  // Get dependency summary
   let dependencies: DependencySummary
   if (shouldInclude('dependencies', options)) {
     const deps = getProjectDependencies(resolvedPath)
@@ -276,7 +259,6 @@ export function analyzeProject(projectPath: string, options?: AnalyzeOptions): A
     }
   }
 
-  // Build metadata
   const metadata: AnalysisMetadata = {
     timestamp: createDate(),
     durationMs: dateNow() - startTime,

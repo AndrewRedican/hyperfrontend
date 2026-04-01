@@ -27,7 +27,6 @@ export function koaDetector(projectPath: string, packageJson?: PackageJson): Bac
     sources.push({ type: 'package.json', field: 'dependencies.koa' })
   }
 
-  // @types/koa
   if (deps['@types/koa']) {
     confidence += 10
     sources.push({ type: 'package.json', field: 'dependencies.@types/koa' })

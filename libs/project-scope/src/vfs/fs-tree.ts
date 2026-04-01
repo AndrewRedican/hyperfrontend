@@ -358,7 +358,6 @@ export function createFsTree(root: string, options?: CreateTreeOptions): Tree {
       const prefix = normalPath === '.' || normalPath === '' ? '' : normalPath + '/'
 
       for (const [changedPath, change] of _changes) {
-        // Handle root-level files
         if (prefix === '') {
           const childName = changedPath.split('/')[0]
           if (change.type === 'DELETE' && !changedPath.includes('/')) {
@@ -377,7 +376,6 @@ export function createFsTree(root: string, options?: CreateTreeOptions): Tree {
         const childName = relativePath.split('/')[0]
 
         if (change.type === 'DELETE') {
-          // Only remove if it's a direct child being deleted
           if (!relativePath.includes('/')) {
             childSet.delete(childName)
           }

@@ -20,20 +20,17 @@ export function jqueryDetector(projectPath: string, packageJson?: PackageJson): 
 
   const deps = collectAllDependencies(pkg)
 
-  // jQuery package
   if (deps['jquery']) {
     confidence += 80
     version = parseVersionString(deps['jquery'])
     sources.push({ type: 'package.json', field: 'dependencies.jquery' })
   }
 
-  // jQuery UI
   if (deps['jquery-ui']) {
     confidence += 10
     sources.push({ type: 'package.json', field: 'dependencies.jquery-ui' })
   }
 
-  // jQuery plugins
   if (deps['jquery-validation']) {
     confidence += 5
     sources.push({ type: 'package.json', field: 'dependencies.jquery-validation' })

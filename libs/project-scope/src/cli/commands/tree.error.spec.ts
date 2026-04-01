@@ -8,7 +8,6 @@ import { resolve } from 'node:path'
 const FIXTURES_DIR = resolve(__dirname, '../../../__fixtures__')
 const MINIMAL_PROJECT = resolve(FIXTURES_DIR, 'minimal-project')
 
-// Mock the traversal module to control walkDirectory behavior
 jest.mock('../../project/traversal', () => {
   const actual = jest.requireActual('../../project/traversal')
   return {
@@ -17,7 +16,6 @@ jest.mock('../../project/traversal', () => {
   }
 })
 
-// Mock fs module to control file stat behavior for size testing
 jest.mock('../../core/fs', () => {
   const actual = jest.requireActual('../../core/fs')
   return {
@@ -26,7 +24,6 @@ jest.mock('../../core/fs', () => {
   }
 })
 
-// Import after mocking
 import * as fsModule from '../../core/fs'
 import * as traversalModule from '../../project/traversal'
 import { treeCommand } from './tree'
@@ -34,7 +31,6 @@ import { treeCommand } from './tree'
 const mockWalkDirectory = traversalModule.walkDirectory as jest.MockedFunction<typeof traversalModule.walkDirectory>
 const mockGetFileStat = fsModule.getFileStat as jest.MockedFunction<typeof fsModule.getFileStat>
 
-// Helper to create a valid FileStats mock
 function createMockStats(size: number): FileStats {
   const now = new Date()
   return {
@@ -52,7 +48,6 @@ function createMockStats(size: number): FileStats {
 describe('treeCommand error branches', () => {
   beforeEach(() => {
     jest.clearAllMocks()
-    // Restore actual implementations
     mockWalkDirectory.mockImplementation(jest.requireActual('../../project/traversal').walkDirectory)
     mockGetFileStat.mockImplementation(jest.requireActual('../../core/fs').getFileStat)
   })
@@ -87,15 +82,9 @@ describe('treeCommand error branches', () => {
     it('formats sizes in all ranges: bytes, KB, MB, GB', () => {
       let callCount = 0
 
-      // Mock getFileStat to return files of different sizes
       mockGetFileStat.mockImplementation(() => {
         callCount++
-        const sizes = [
-          100, // 100B (bytes)
-          5 * 1024, // 5KB
-          3 * 1024 * 1024, // 3MB
-          2 * 1024 * 1024 * 1024, // 2GB
-        ]
+        const sizes = [100, 5 * 1024, 3 * 1024 * 1024, 2 * 1024 * 1024 * 1024]
         const sizeIndex = callCount % sizes.length
         return createMockStats(sizes[sizeIndex])
       })
@@ -104,7 +93,6 @@ describe('treeCommand error branches', () => {
 
       expect(result.exitCode).toBe(0)
       expect(result.output).toBeDefined()
-      // Output should contain various size formats
       // Note: The actual formatting depends on which files are traversed
     })
 

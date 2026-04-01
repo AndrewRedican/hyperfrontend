@@ -54,7 +54,6 @@ export function prettierDetector(projectPath: string, packageJson?: PackageJson)
     sources.push({ type: 'package.json', field: 'prettier' })
   }
 
-  // .prettierignore file
   if (exists(join(projectPath, '.prettierignore'))) {
     confidence += 10
     sources.push({ type: 'config-file', path: '.prettierignore' })

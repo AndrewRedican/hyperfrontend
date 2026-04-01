@@ -7,7 +7,6 @@ import { resolve } from 'node:path'
 const FIXTURES_DIR = resolve(__dirname, '../../../__fixtures__')
 const MINIMAL_PROJECT = resolve(FIXTURES_DIR, 'minimal-project')
 
-// Mock the analyze module to control AnalysisResult
 jest.mock('../../analyze', () => {
   const actual = jest.requireActual('../../analyze')
   return {
@@ -16,14 +15,11 @@ jest.mock('../../analyze', () => {
   }
 })
 
-// Import after mocking
 import * as analyzeModule from '../../analyze'
 import { analyzeCommand } from './analyze'
 
 const mockAnalyzeProject = analyzeModule.analyzeProject as jest.MockedFunction<typeof analyzeModule.analyzeProject>
 
-// Helper to create a valid mock result with all required fields
-// Using loose typing since we're creating test fixtures
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function createMockResult(overrides: Record<string, any> = {}): ReturnType<typeof analyzeModule.analyzeProject> {
   return {
@@ -74,7 +70,6 @@ describe('analyzeCommand meta-frameworks branch (L72)', () => {
     expect(result.output).toContain('React')
     expect(result.output).toContain('Next.js')
     expect(result.output).toContain('Remix')
-    // Meta-frameworks should be indented with "    - "
     expect(result.output).toMatch(/\s+-\s+Next\.js/)
     expect(result.output).toMatch(/\s+-\s+Remix/)
   })
@@ -152,12 +147,9 @@ describe('analyzeCommand entry points truncation (L103)', () => {
 
     expect(result.exitCode).toBe(0)
     expect(result.output).toContain('Entry Points:')
-    // Should show first 5 entries
     expect(result.output).toContain('src/index.ts')
     expect(result.output).toContain('src/worker.ts')
-    // Should show truncation message
     expect(result.output).toContain('... and 3 more')
-    // Should NOT show entries beyond 5
     expect(result.output).not.toContain('src/utils.ts')
   })
 })
@@ -194,12 +186,9 @@ describe('analyzeCommand config files truncation (L114)', () => {
 
     expect(result.exitCode).toBe(0)
     expect(result.output).toContain('Configurations:')
-    // Should show first 8 entries
     expect(result.output).toContain('package.json')
     expect(result.output).toContain('postcss.config.js')
-    // Should show truncation message
     expect(result.output).toContain('... and 3 more')
-    // Should NOT show entries beyond 8
     expect(result.output).not.toContain('webpack.config.js')
   })
 })
@@ -226,7 +215,6 @@ describe('analyzeCommand YAML toYaml branches (L171, L185)', () => {
     const result = analyzeCommand({ path: MINIMAL_PROJECT, format: 'yaml' })
 
     expect(result.exitCode).toBe(0)
-    // Nested object should have proper indentation
     expect(result.output).toContain('dependencies:')
     expect(result.output).toMatch(/\s+production: 5/)
     expect(result.output).toMatch(/\s+development: 10/)
@@ -247,7 +235,6 @@ describe('analyzeCommand YAML toYaml branches (L171, L185)', () => {
 
     expect(result.exitCode).toBe(0)
     expect(result.output).toContain('frameworks:')
-    // Arrays should use YAML list syntax with dash
     expect(result.output).toMatch(/-\s+.*name:\s*React/s)
   })
 
@@ -261,7 +248,6 @@ describe('analyzeCommand YAML toYaml branches (L171, L185)', () => {
     const result = analyzeCommand({ path: MINIMAL_PROJECT, format: 'yaml' })
 
     expect(result.exitCode).toBe(0)
-    // Strings with colons should be quoted
     expect(result.output).toContain('"project:with:colons"')
   })
 
@@ -276,7 +262,6 @@ describe('analyzeCommand YAML toYaml branches (L171, L185)', () => {
     const result = analyzeCommand({ path: MINIMAL_PROJECT, format: 'yaml' })
 
     expect(result.exitCode).toBe(0)
-    // Empty arrays should render as []
     expect(result.output).toMatch(/frameworks: \[\]/)
   })
 
@@ -304,10 +289,8 @@ describe('analyzeCommand YAML toYaml branches (L171, L185)', () => {
     const result = analyzeCommand({ path: MINIMAL_PROJECT, format: 'yaml' })
 
     expect(result.exitCode).toBe(0)
-    // Should have proper indentation for nested objects
     expect(result.output).toContain('frameworks:')
     expect(result.output).toContain('buildTools:')
-    // Nested arrays within objects should use - prefix
     expect(result.output).toMatch(/-\s+.*name:/s)
   })
 })

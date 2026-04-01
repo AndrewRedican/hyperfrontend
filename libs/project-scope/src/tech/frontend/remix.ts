@@ -22,7 +22,6 @@ export function remixDetector(projectPath: string, packageJson?: PackageJson): F
 
   const deps = collectAllDependencies(pkg)
 
-  // @remix-run packages
   if (deps['@remix-run/react']) {
     confidence += 70
     version = parseVersionString(deps['@remix-run/react'])

@@ -33,7 +33,6 @@ export function fastifyDetector(projectPath: string, packageJson?: PackageJson):
     sources.push({ type: 'package.json', field: 'dependencies (fastify plugins)' })
   }
 
-  // @types/fastify (older versions)
   if (deps['@types/fastify']) {
     confidence += 5
     sources.push({ type: 'package.json', field: 'dependencies.@types/fastify' })

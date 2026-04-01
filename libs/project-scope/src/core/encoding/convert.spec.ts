@@ -25,7 +25,7 @@ describe('core/encoding/convert', () => {
     })
 
     it('throws for binary content', () => {
-      const buffer = Buffer.from([0x89, 0x50, 0x4e, 0x47]) // PNG
+      const buffer = Buffer.from([0x89, 0x50, 0x4e, 0x47])
       expect(() => bufferToString(buffer)).toThrow(/Cannot convert binary/)
     })
   })

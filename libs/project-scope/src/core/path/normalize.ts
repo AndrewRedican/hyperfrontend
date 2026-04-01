@@ -8,7 +8,6 @@ import { normalize, sep } from 'node:path'
  */
 export function normalizePath(filePath: string): string {
   if (!filePath) return ''
-  // Normalize path and convert backslashes to forward slashes
   const normalized = normalize(filePath)
   return sep === '\\' ? normalized.replace(/\\/g, '/') : normalized
 }

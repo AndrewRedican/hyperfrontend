@@ -102,7 +102,6 @@ describe('parseConfig', () => {
   it('returns raw content for .toml files (not parsed)', () => {
     const result = parseConfig(resolve(CONFIG_FILES, 'config.toml'))
 
-    // TOML is not fully parsed, returns as text
     expect(result.format).toBe('text')
     expect(result.raw).toBeDefined()
   })
@@ -366,7 +365,6 @@ describe('stripJsonComments edge cases', () => {
       'other': 'test'
     }`
     // Note: JSON5-style single quotes may not parse with standard JSON.parse
-    // This tests the comment stripping still works
     const result = parseJsonConfig('/test/config.jsonc', content.replace(/'/g, '"'), undefined, 'jsonc')
 
     expect(result.data).toEqual({
@@ -404,7 +402,6 @@ describe('parseIniConfig edge cases', () => {
   it('ignores INI comment lines starting with # or ;', () => {
     const result = parseConfig(resolve(CONFIG_FILES, 'config.ini'))
 
-    // Comments should not appear as keys
     expect(result.data).not.toHaveProperty('# This is a comment')
     expect(result.data).not.toHaveProperty('; Also a comment')
   })

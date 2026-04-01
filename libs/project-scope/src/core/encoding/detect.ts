@@ -44,7 +44,6 @@ export type EncodingInfo = { type: 'text'; encoding: BufferEncoding; hasBom: boo
 export function detectEncodingInfo(buffer: Buffer): EncodingInfo {
   encodingLogger.debug('Detecting encoding info', { bufferSize: buffer.length })
 
-  // Check for UTF-8 BOM
   if (buffer.length >= 3) {
     if (buffer[0] === UTF8_BOM_BYTES[0] && buffer[1] === UTF8_BOM_BYTES[1] && buffer[2] === UTF8_BOM_BYTES[2]) {
       encodingLogger.debug('Detected UTF-8 BOM')
@@ -52,11 +51,10 @@ export function detectEncodingInfo(buffer: Buffer): EncodingInfo {
     }
   }
 
-  // Check for UTF-16 BOMs
   if (buffer.length >= 2) {
     if (buffer[0] === UTF16_BE_BOM_BYTES[0] && buffer[1] === UTF16_BE_BOM_BYTES[1]) {
       encodingLogger.debug('Detected UTF-16 BE BOM')
-      return { type: 'text', encoding: 'utf16le', hasBom: true } // Node treats BE through utf16le
+      return { type: 'text', encoding: 'utf16le', hasBom: true }
     }
     if (buffer[0] === UTF16_LE_BOM_BYTES[0] && buffer[1] === UTF16_LE_BOM_BYTES[1]) {
       encodingLogger.debug('Detected UTF-16 LE BOM')
@@ -64,7 +62,6 @@ export function detectEncodingInfo(buffer: Buffer): EncodingInfo {
     }
   }
 
-  // Check for binary signatures
   for (const { signature, description } of BINARY_SIGNATURES) {
     if (buffer.length >= signature.length) {
       let matches = true
@@ -81,7 +78,6 @@ export function detectEncodingInfo(buffer: Buffer): EncodingInfo {
     }
   }
 
-  // Check for null bytes (usually indicates binary)
   const sampleSize = min(buffer.length, 8000)
   for (let i = 0; i < sampleSize; i++) {
     if (buffer[i] === 0) {
@@ -102,25 +98,21 @@ export function detectEncodingInfo(buffer: Buffer): EncodingInfo {
  */
 export function detectEncoding(buffer: Buffer): BufferEncoding {
   if (buffer.length >= 3) {
-    // Check for UTF-8 BOM
     if (buffer[0] === UTF8_BOM_BYTES[0] && buffer[1] === UTF8_BOM_BYTES[1] && buffer[2] === UTF8_BOM_BYTES[2]) {
       return 'utf-8'
     }
   }
 
   if (buffer.length >= 2) {
-    // Check for UTF-16 LE BOM
     if (buffer[0] === UTF16_LE_BOM_BYTES[0] && buffer[1] === UTF16_LE_BOM_BYTES[1]) {
       return 'utf16le'
     }
 
-    // Check for UTF-16 BE BOM
     if (buffer[0] === UTF16_BE_BOM_BYTES[0] && buffer[1] === UTF16_BE_BOM_BYTES[1]) {
-      return 'utf16le' // Node.js handles BE through utf16le
+      return 'utf16le'
     }
   }
 
-  // Default to UTF-8
   return 'utf-8'
 }
 

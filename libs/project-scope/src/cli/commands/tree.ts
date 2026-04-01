@@ -75,15 +75,12 @@ function buildTree(rootPath: string, walkEntries: WalkEntry[], options: TreeComm
     children: [],
   }
 
-  // Create a map for quick lookup
   const nodeMap = createMap<string, TreeNode>()
   nodeMap.set('.', root)
 
-  // Sort entries by path for proper parent-child relationships
   const sortedEntries = [...walkEntries].sort((a, b) => a.relativePath.localeCompare(b.relativePath))
 
   for (const entry of sortedEntries) {
-    // Skip based on filters
     if (options.dirsOnly && !entry.isDirectory) continue
     if (options.filesOnly && entry.isDirectory) continue
 
@@ -94,7 +91,6 @@ function buildTree(rootPath: string, walkEntries: WalkEntry[], options: TreeComm
       children: [],
     }
 
-    // Add size/modified if requested
     if ((options.showSize || options.showModified) && entry.isFile) {
       const stats = getFileStat(entry.path)
       if (stats) {
@@ -103,9 +99,8 @@ function buildTree(rootPath: string, walkEntries: WalkEntry[], options: TreeComm
       }
     }
 
-    // Find parent
     const parts = entry.relativePath.split('/')
-    parts.pop() // Remove current entry name
+    parts.pop()
     const parentPath = parts.join('/') || '.'
     const parent = nodeMap.get(parentPath)
 
@@ -131,12 +126,10 @@ function buildTree(rootPath: string, walkEntries: WalkEntry[], options: TreeComm
 function renderTreeText(node: TreeNode, options: TreeCommandOptions, prefix = '', isLast = true): string[] {
   const lines: string[] = []
 
-  // Current line
   const connector = isLast ? '└── ' : '├── '
   const dirMark = node.isDirectory ? '/' : ''
   let line = `${prefix}${connector}${node.name}${dirMark}`
 
-  // Add size/modified
   const meta: string[] = []
   if (options.showSize && node.size !== undefined) {
     meta.push(formatSize(node.size))
@@ -150,10 +143,8 @@ function renderTreeText(node: TreeNode, options: TreeCommandOptions, prefix = ''
 
   lines.push(line)
 
-  // Process children
   const childPrefix = prefix + (isLast ? '    ' : '│   ')
   const sortedChildren = [...node.children].sort((a, b) => {
-    // Directories first, then alphabetically
     if (a.isDirectory && !b.isDirectory) return -1
     if (!a.isDirectory && b.isDirectory) return 1
     return a.name.localeCompare(b.name)
@@ -179,10 +170,8 @@ function renderTreeText(node: TreeNode, options: TreeCommandOptions, prefix = ''
 function formatTreeText(rootPath: string, tree: TreeNode, options: TreeCommandOptions): string {
   const lines: string[] = []
 
-  // Root line
   lines.push(basename(rootPath))
 
-  // Count stats
   let dirCount = 0
   let fileCount = 0
 
@@ -202,7 +191,6 @@ function formatTreeText(rootPath: string, tree: TreeNode, options: TreeCommandOp
     }
   }
 
-  // Render children of root
   const sortedChildren = [...tree.children].sort((a, b) => {
     if (a.isDirectory && !b.isDirectory) return -1
     if (!a.isDirectory && b.isDirectory) return 1
@@ -216,7 +204,6 @@ function formatTreeText(rootPath: string, tree: TreeNode, options: TreeCommandOp
     countNodes(child)
   }
 
-  // Summary
   lines.push('')
   const dirText = dirCount === 1 ? '1 directory' : `${dirCount} directories`
   const fileText = fileCount === 1 ? '1 file' : `${fileCount} files`
@@ -284,7 +271,6 @@ export function treeCommand(options: TreeCommandOptions): CommandResult {
   const rootPath = options.path ? resolve(options.path) : process.cwd()
 
   try {
-    // Collect entries via walk
     const walkEntries: WalkEntry[] = []
     walkDirectory(
       rootPath,
@@ -299,10 +285,8 @@ export function treeCommand(options: TreeCommandOptions): CommandResult {
       }
     )
 
-    // Build tree structure
     const tree = buildTree(rootPath, walkEntries, options)
 
-    // Format output
     let output: string
     if (options.format === 'json') {
       output = formatTreeJson(tree)

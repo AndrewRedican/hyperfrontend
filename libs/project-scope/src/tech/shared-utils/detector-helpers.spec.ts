@@ -49,7 +49,6 @@ describe('collectAllDependencies', () => {
       devDependencies: { react: '^18.1.0' },
     }
     const result = collectAllDependencies(pkg)
-    // devDependencies should override dependencies due to spread order
     expect(result['react']).toBe('^18.1.0')
   })
 })

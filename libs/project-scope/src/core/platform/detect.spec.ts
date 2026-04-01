@@ -1,6 +1,5 @@
 import { detectPlatform, getPlatformInfo, detectCaseSensitivity, isCaseSensitiveFs, isWindows, isMac, isLinux } from './detect'
 
-// Store original platform value for restoration
 const originalPlatform = process.platform
 
 describe('core/platform/detect', () => {
@@ -33,7 +32,7 @@ describe('core/platform/detect', () => {
     it('returns same cached instance', () => {
       const info1 = getPlatformInfo()
       const info2 = getPlatformInfo()
-      expect(info1).toBe(info2) // Same reference
+      expect(info1).toBe(info2)
     })
   })
 
@@ -79,13 +78,11 @@ describe('core/platform/detect', () => {
 })
 
 describe('core/platform/detect with mocked platforms', () => {
-  // These tests require isolating module state
   beforeEach(() => {
     jest.resetModules()
   })
 
   afterAll(() => {
-    // Restore original platform
     Object.defineProperty(process, 'platform', { value: originalPlatform })
   })
 

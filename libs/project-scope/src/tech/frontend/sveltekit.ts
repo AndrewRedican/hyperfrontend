@@ -22,7 +22,6 @@ export function sveltekitDetector(projectPath: string, packageJson?: PackageJson
 
   const deps = collectAllDependencies(pkg)
 
-  // @sveltejs/kit package
   if (deps['@sveltejs/kit']) {
     confidence += 70
     version = parseVersionString(deps['@sveltejs/kit'])

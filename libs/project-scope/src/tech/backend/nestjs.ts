@@ -24,14 +24,12 @@ export function nestDetector(projectPath: string, packageJson?: PackageJson): Ba
 
   const deps = collectAllDependencies(pkg)
 
-  // @nestjs/core package
   if (deps['@nestjs/core']) {
     confidence += 70
     version = parseVersionString(deps['@nestjs/core'])
     sources.push({ type: 'package.json', field: 'dependencies.@nestjs/core' })
   }
 
-  // @nestjs/common
   if (deps['@nestjs/common']) {
     confidence += 15
     sources.push({ type: 'package.json', field: 'dependencies.@nestjs/common' })

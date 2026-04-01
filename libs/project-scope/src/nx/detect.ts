@@ -146,7 +146,6 @@ function detectNxVersion(workspacePath: string): string | null {
     const nxVersion = packageJson.devDependencies?.['nx'] ?? packageJson.dependencies?.['nx']
 
     if (nxVersion) {
-      // Strip semver range characters (^, ~, >=, etc.)
       return nxVersion.replace(/^[\^~>=<]+/, '')
     }
   }
@@ -181,7 +180,6 @@ export function getNxWorkspaceInfo(workspacePath: string): NxWorkspaceInfo | nul
   const nxJson = readJsonFileIfExists<NxJson>(join(workspacePath, 'nx.json'))
 
   if (!nxJson) {
-    // Check for workspace.json as fallback (older NX)
     const workspaceJson = readJsonFileIfExists<Record<string, unknown>>(join(workspacePath, 'workspace.json'))
     if (!workspaceJson) {
       nxLogger.debug('No nx.json or workspace.json found', { workspacePath })
@@ -189,7 +187,6 @@ export function getNxWorkspaceInfo(workspacePath: string): NxWorkspaceInfo | nul
     }
 
     nxLogger.debug('Using legacy workspace.json', { workspacePath })
-    // Create minimal nx.json from workspace.json
     return {
       root: workspacePath,
       version: detectNxVersion(workspacePath),

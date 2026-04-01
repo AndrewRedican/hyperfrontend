@@ -42,8 +42,6 @@ describe('detectBuildTools', () => {
   it('detects typescript fixture with no build tools other than what minimal project has', () => {
     const result = detectBuildTools(MINIMAL_PROJECT)
 
-    // Minimal project has jest and typescript, but no build tools like webpack/vite
-    // It should detect no major bundlers (may detect esbuild/swc/babel implicitly)
     const majorBundlers = result.filter((r) =>
       ['webpack', 'vite', 'rollup', 'parcel'].includes(r.id)
     )

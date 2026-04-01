@@ -6,7 +6,6 @@ const TEST_DIR = join(__dirname, '__test_fixtures__')
 
 describe('core/fs/read', () => {
   beforeAll(() => {
-    // Create test fixtures
     mkdirSync(TEST_DIR, { recursive: true })
     writeFileSync(join(TEST_DIR, 'text.txt'), 'Hello, World!')
     writeFileSync(join(TEST_DIR, 'utf8.txt'), 'Привет, мир!')
@@ -15,7 +14,6 @@ describe('core/fs/read', () => {
   })
 
   afterAll(() => {
-    // Clean up test fixtures
     rmSync(TEST_DIR, { recursive: true, force: true })
   })
 
@@ -98,11 +96,9 @@ describe('core/fs/read', () => {
 
   describe('error handling - read failures', () => {
     it('throws FS_READ_ERROR when readFileContent encounters I/O error', () => {
-      // Create a special test file
       const errorFile = join(TEST_DIR, 'error-test.txt')
       writeFileSync(errorFile, 'content')
 
-      // Mock readFileSync to throw after existsSync passes
       jest.spyOn(require('node:fs'), 'readFileSync').mockImplementationOnce(() => {
         const error = new Error('EACCES: permission denied')
         ;(<{ code?: string }>error).code = 'EACCES'

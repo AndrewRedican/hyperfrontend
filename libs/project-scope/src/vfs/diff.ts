@@ -91,20 +91,16 @@ function operationsToDiffLines(
   operations: { type: 'same' | 'add' | 'remove'; oldIdx: number; newIdx: number; content: string }[],
   contextLines: number
 ): DiffLine[] {
-  // Mark which lines should be included (changes + context)
   const include = new Array<boolean>(operations.length).fill(false)
 
-  // First pass: mark all changes
   for (let i = 0; i < operations.length; i++) {
     if (operations[i].type !== 'same') {
-      // Mark this line and context around it
       for (let j = max(0, i - contextLines); j <= min(operations.length - 1, i + contextLines); j++) {
         include[j] = true
       }
     }
   }
 
-  // Second pass: convert to DiffLine
   const lines: DiffLine[] = []
   let oldLineNum = 1
   let newLineNum = 1
@@ -125,7 +121,6 @@ function operationsToDiffLines(
         newLineNum++
       }
     } else {
-      // Skip but update line numbers
       if (op.type === 'same') {
         oldLineNum++
         newLineNum++
@@ -151,7 +146,6 @@ function operationsToDiffLines(
 function bufferToLines(content: Buffer | undefined): string[] {
   if (!content) return []
   const text = content.toString('utf-8')
-  // Split by newline, keeping empty last line if present
   return text.split('\n')
 }
 
@@ -181,9 +175,7 @@ export function generateDiff(change: FileChange, options: DiffOptions = {}): Fil
   const oldLines = bufferToLines(change.originalContent)
   const newLines = bufferToLines(change.content)
 
-  // Handle edge cases
   if (change.type === 'CREATE') {
-    // All lines are additions
     const lines: DiffLine[] = newLines
       .filter((line) => line !== '' || newLines.indexOf(line) !== newLines.length - 1 || newLines.length === 1)
       .map(
@@ -193,7 +185,6 @@ export function generateDiff(change: FileChange, options: DiffOptions = {}): Fil
           content,
         })
       )
-    // Filter out empty trailing line from split
     const filteredLines = lines.filter((l, i) => !(i === lines.length - 1 && l.content === '' && lines.length > 1))
     return {
       path: change.path,
@@ -204,7 +195,6 @@ export function generateDiff(change: FileChange, options: DiffOptions = {}): Fil
   }
 
   if (change.type === 'DELETE') {
-    // All lines are deletions
     const lines: DiffLine[] = oldLines.map(
       (content, idx): DiffLine => ({
         type: 'remove',
@@ -212,7 +202,6 @@ export function generateDiff(change: FileChange, options: DiffOptions = {}): Fil
         content,
       })
     )
-    // Filter out empty trailing line from split
     const filteredLines = lines.filter((l, i) => !(i === lines.length - 1 && l.content === '' && lines.length > 1))
     return {
       path: change.path,
@@ -222,7 +211,6 @@ export function generateDiff(change: FileChange, options: DiffOptions = {}): Fil
     }
   }
 
-  // UPDATE: compute actual diff
   const table = computeLcsTable(oldLines, newLines)
   const operations = backtrackLcs(table, oldLines, newLines)
   const lines = operationsToDiffLines(operations, contextLines)
@@ -260,7 +248,6 @@ export function generateDiff(change: FileChange, options: DiffOptions = {}): Fil
 export function formatUnifiedDiff(diff: FileDiff): string {
   const lines: string[] = []
 
-  // Header
   lines.push(`--- a/${diff.path}`)
   lines.push(`+++ b/${diff.path}`)
 
@@ -268,7 +255,6 @@ export function formatUnifiedDiff(diff: FileDiff): string {
     return lines.join('\n')
   }
 
-  // Group lines into hunks
   const hunks: DiffLine[][] = []
   const currentHunk: DiffLine[] = []
 
@@ -280,9 +266,7 @@ export function formatUnifiedDiff(diff: FileDiff): string {
     hunks.push(currentHunk)
   }
 
-  // Output hunks
   for (const hunk of hunks) {
-    // Calculate hunk header
     const contextAndRemove = hunk.filter((l) => l.type === 'context' || l.type === 'remove')
     const contextAndAdd = hunk.filter((l) => l.type === 'context' || l.type === 'add')
 
@@ -294,7 +278,6 @@ export function formatUnifiedDiff(diff: FileDiff): string {
 
     lines.push(`@@ -${oldStart},${oldCount} +${newStart},${newCount} @@`)
 
-    // Output lines
     for (const line of hunk) {
       const prefix = line.type === 'add' ? '+' : line.type === 'remove' ? '-' : ' '
       lines.push(`${prefix}${line.content}`)

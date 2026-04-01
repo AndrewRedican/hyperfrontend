@@ -3,13 +3,10 @@ import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals
 import { createCache, clearAllCaches, getCacheCount, unregisterCache, memoize } from './cache'
 
 describe('core/cache', () => {
-  // Track caches created in tests for cleanup
   const testCaches: Cache<unknown, unknown>[] = []
 
   afterEach(() => {
-    // Clear all caches after each test
     clearAllCaches()
-    // Unregister test caches to avoid accumulation
     for (const cache of testCaches) {
       unregisterCache(cache)
     }
@@ -51,7 +48,7 @@ describe('core/cache', () => {
         expect(cache.size()).toBe(1)
         cache.set('b', 2)
         expect(cache.size()).toBe(2)
-        cache.set('a', 3) // Update, not add
+        cache.set('a', 3)
         expect(cache.size()).toBe(2)
       })
 
@@ -71,7 +68,7 @@ describe('core/cache', () => {
         cache.set('key', 42)
         expect(cache.delete('key')).toBe(true)
         expect(cache.get('key')).toBeUndefined()
-        expect(cache.delete('key')).toBe(false) // Already deleted
+        expect(cache.delete('key')).toBe(false)
       })
 
       it('clears all entries', () => {
@@ -140,7 +137,6 @@ describe('core/cache', () => {
 
         cache.set('key', 42)
 
-        // Advance time but not past TTL
         jest.advanceTimersByTime(500)
 
         expect(cache.get('key')).toBe(42)
@@ -152,7 +148,6 @@ describe('core/cache', () => {
 
         cache.set('key', 42)
 
-        // Advance time past TTL
         jest.advanceTimersByTime(1001)
 
         expect(cache.get('key')).toBeUndefined()
@@ -176,13 +171,10 @@ describe('core/cache', () => {
         cache.set('key', 1)
         jest.advanceTimersByTime(800)
 
-        // Update value, which should refresh TTL
         cache.set('key', 2)
 
-        // Original TTL would have expired
         jest.advanceTimersByTime(500)
 
-        // But value should still be accessible
         expect(cache.get('key')).toBe(2)
       })
 
@@ -195,11 +187,9 @@ describe('core/cache', () => {
         jest.advanceTimersByTime(500)
         cache.set('second', 2)
 
-        jest.advanceTimersByTime(600) // Total: 1100ms
+        jest.advanceTimersByTime(600)
 
-        // First should be expired
         expect(cache.get('first')).toBeUndefined()
-        // Second should still be valid
         expect(cache.get('second')).toBe(2)
       })
     })
@@ -211,7 +201,7 @@ describe('core/cache', () => {
 
         cache.set('first', 1)
         cache.set('second', 2)
-        cache.set('third', 3) // Should evict 'first'
+        cache.set('third', 3)
 
         expect(cache.get('first')).toBeUndefined()
         expect(cache.get('second')).toBe(2)
@@ -225,7 +215,7 @@ describe('core/cache', () => {
 
         cache.set('first', 1)
         cache.set('second', 2)
-        cache.set('first', 100) // Update, not new entry
+        cache.set('first', 100)
 
         expect(cache.get('first')).toBe(100)
         expect(cache.get('second')).toBe(2)
@@ -239,9 +229,8 @@ describe('core/cache', () => {
         cache.set('a', 1)
         cache.set('b', 2)
 
-        // Now add more entries
-        cache.set('c', 3) // Evicts 'a'
-        cache.set('d', 4) // Evicts 'b'
+        cache.set('c', 3)
+        cache.set('d', 4)
 
         expect(cache.get('a')).toBeUndefined()
         expect(cache.get('b')).toBeUndefined()
@@ -281,16 +270,16 @@ describe('core/cache', () => {
         cache.set('b', 2)
 
         jest.advanceTimersByTime(500)
-        cache.set('c', 3) // Evicts 'a' due to maxSize
+        cache.set('c', 3)
 
-        expect(cache.get('a')).toBeUndefined() // Evicted
-        expect(cache.get('b')).toBe(2) // Still valid
-        expect(cache.get('c')).toBe(3) // Just added
+        expect(cache.get('a')).toBeUndefined()
+        expect(cache.get('b')).toBe(2)
+        expect(cache.get('c')).toBe(3)
 
-        jest.advanceTimersByTime(600) // Total 1100ms
+        jest.advanceTimersByTime(600)
 
-        expect(cache.get('b')).toBeUndefined() // Expired
-        expect(cache.get('c')).toBe(3) // Still valid
+        expect(cache.get('b')).toBeUndefined()
+        expect(cache.get('c')).toBe(3)
       })
     })
   })
@@ -378,7 +367,6 @@ describe('core/cache', () => {
 
       expect(callCount).toBe(3)
 
-      // Repeat calls should be cached
       expect(memoized('a')).toBe(1)
       expect(memoized('bb')).toBe(2)
       expect(memoized('ccc')).toBe(3)
@@ -441,11 +429,9 @@ describe('core/cache', () => {
 
       expect(callCount).toBe(3)
 
-      // 'a' should have been evicted
       memoized('a')
       expect(callCount).toBe(4)
 
-      // 'ccc' should still be cached
       memoized('ccc')
       expect(callCount).toBe(4)
     })

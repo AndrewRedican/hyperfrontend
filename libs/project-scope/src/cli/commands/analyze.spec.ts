@@ -31,15 +31,12 @@ describe('analyzeCommand', () => {
 
   it('uses current directory when no path specified', () => {
     const result = analyzeCommand({})
-    // Should return a valid result (may succeed or fail depending on cwd)
     expect(result).toHaveProperty('exitCode')
     expect([0, 1]).toContain(result.exitCode)
   })
 
   it('handles missing path gracefully', () => {
-    // Non-existent paths should either fail or return partial results
     const result = analyzeCommand({ path: '/nonexistent/path/xyz' })
-    // The function may return exit code 0 with partial result or 1 with error
     expect([0, 1]).toContain(result.exitCode)
   })
 })
@@ -67,7 +64,7 @@ describe('analyzeCommandDef', () => {
   it('respects global json option', () => {
     const result = analyzeCommandDef.execute([MINIMAL_PROJECT], { json: true })
     expect(result.output).toBeDefined()
-    JSON.parse(result.output as string) // Should not throw
+    JSON.parse(result.output as string)
   })
 
   it('parses --include argument', () => {
@@ -100,7 +97,6 @@ describe('analyzeCommand with include/exclude filters', () => {
   it('filters with comma-separated include patterns', () => {
     const result = analyzeCommand({ path: MINIMAL_PROJECT, include: ['frameworks', 'buildTools'] })
     expect(result.exitCode).toBe(0)
-    // Should have frameworks and buildTools, but not others
     const parsed = JSON.parse(
       analyzeCommand({ path: MINIMAL_PROJECT, include: ['frameworks', 'buildTools'], format: 'json' }).output as string
     )
@@ -138,23 +134,18 @@ describe('analyzeCommand output formatting', () => {
   it('shows framework meta-frameworks when present', () => {
     const result = analyzeCommand({ path: MINIMAL_PROJECT })
     expect(result.exitCode).toBe(0)
-    // Text output should handle meta-frameworks correctly
     expect(result.output).toBeDefined()
   })
 
   it('shows build tools section when build tools are detected', () => {
     const result = analyzeCommand({ path: MINIMAL_PROJECT })
     expect(result.exitCode).toBe(0)
-    // Build Tools section only appears if build tools are detected
-    // minimal-project may or may not have build tools
     expect(result.output).toBeDefined()
   })
 
   it('truncates entry points list with more indicator', () => {
-    // Use a project with many entry points if available
     const result = analyzeCommand({ path: MINIMAL_PROJECT })
     expect(result.exitCode).toBe(0)
-    // Should show entry points or indicate none
     expect(result.output).toBeDefined()
   })
 
@@ -188,7 +179,6 @@ describe('analyzeCommand output formatting', () => {
   it('formats nested objects in YAML mode', () => {
     const result = analyzeCommand({ path: MINIMAL_PROJECT, format: 'yaml' })
     expect(result.exitCode).toBe(0)
-    // Should have proper YAML structure
     expect(result.output).toContain('dependencies:')
     expect(result.output).toContain('metadata:')
   })
@@ -197,21 +187,18 @@ describe('analyzeCommand output formatting', () => {
     const emptyDir = resolve(FIXTURES_DIR, 'empty')
     const result = analyzeCommand({ path: emptyDir, format: 'yaml' })
     expect(result.exitCode).toBe(0)
-    // Empty arrays should render as []
     expect(result.output).toContain('[]')
   })
 
   it('formats dates in YAML output', () => {
     const result = analyzeCommand({ path: MINIMAL_PROJECT, format: 'yaml' })
     expect(result.exitCode).toBe(0)
-    // Should contain ISO date format
     expect(result.output).toMatch(/\d{4}-\d{2}-\d{2}/)
   })
 
   it('escapes special characters in YAML strings', () => {
     const result = analyzeCommand({ path: MINIMAL_PROJECT, format: 'yaml' })
     expect(result.exitCode).toBe(0)
-    // YAML output should be valid
     expect(result.output).toBeDefined()
   })
 })
@@ -240,24 +227,19 @@ describe('analyzeCommand meta-frameworks and build tools', () => {
   it('displays meta-frameworks for React with Next.js', () => {
     const result = analyzeCommand({ path: NEXTJS_APP })
     expect(result.exitCode).toBe(0)
-    // Should contain frameworks section
     expect(result.output).toContain('Frameworks')
-    // Next.js should appear as meta-framework or primary framework
     expect(result.output).toMatch(/next|Next/i)
   })
 
   it('displays meta-frameworks in text output with indentation', () => {
     const result = analyzeCommand({ path: NEXTJS_APP_ROUTER })
     expect(result.exitCode).toBe(0)
-    // Check structure of output
     expect(result.output).toBeDefined()
   })
 
   it('displays build tools when present', () => {
-    // Check for projects with build tools
     const result = analyzeCommand({ path: MINIMAL_PROJECT })
     expect(result.exitCode).toBe(0)
-    // Output structure check
     expect(result.output).toBeDefined()
   })
 })
@@ -269,21 +251,18 @@ describe('analyzeCommand entry points and config files truncation', () => {
   it('shows entry points section when entry points exist', () => {
     const result = analyzeCommand({ path: MINIMAL_PROJECT })
     expect(result.exitCode).toBe(0)
-    // Check if entry points section exists (may or may not have entries)
     expect(result.output).toBeDefined()
   })
 
   it('handles projects with many config files', () => {
     const result = analyzeCommand({ path: CONFIG_FILES })
     expect(result.exitCode).toBe(0)
-    // Config files should appear
     expect(result.output).toContain('Configurations')
   })
 
   it('truncates config files list when more than 8', () => {
     const result = analyzeCommand({ path: LARGE_CONFIG })
     expect(result.exitCode).toBe(0)
-    // Check output contains configurations
     expect(result.output).toBeDefined()
   })
 })
@@ -292,9 +271,7 @@ describe('analyzeCommand YAML output branches', () => {
   it('formats nested objects correctly in YAML', () => {
     const result = analyzeCommand({ path: MINIMAL_PROJECT, format: 'yaml' })
     expect(result.exitCode).toBe(0)
-    // Should have properly indented YAML
     expect(result.output).toContain('dependencies:')
-    // Nested objects should be properly formatted
     expect(result.output).toMatch(/\s+production:/)
     expect(result.output).toMatch(/\s+development:/)
   })
@@ -302,24 +279,19 @@ describe('analyzeCommand YAML output branches', () => {
   it('formats arrays correctly in YAML', () => {
     const result = analyzeCommand({ path: MINIMAL_PROJECT, format: 'yaml' })
     expect(result.exitCode).toBe(0)
-    // Arrays should use YAML list syntax
-    // Either empty [] or items with -
     expect(result.output).toBeDefined()
   })
 
   it('handles special characters in YAML strings', () => {
     const result = analyzeCommand({ path: MINIMAL_PROJECT, format: 'yaml' })
     expect(result.exitCode).toBe(0)
-    // YAML should be valid
     expect(result.output).toBeDefined()
   })
 
   it('formats non-empty arrays with dash prefix', () => {
-    // Project with frameworks should have arrays to format
     const NEXTJS_APP = resolve(FIXTURES_DIR, 'nextjs-app')
     const result = analyzeCommand({ path: NEXTJS_APP, format: 'yaml' })
     expect(result.exitCode).toBe(0)
-    // Should contain array item syntax for frameworks
     expect(result.output).toMatch(/-\s/)
   })
 })

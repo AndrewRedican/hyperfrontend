@@ -126,7 +126,6 @@ describe('NX Project Config', () => {
 
   describe('getProjectConfig extended', () => {
     it('reads config from package.json nx field when no project.json', () => {
-      // Test with a project that has nx field in package.json but no project.json
       const config = getProjectConfig(NX_PACKAGE_JSON_FIELD, FIXTURES_DIR)
 
       expect(config).not.toBeNull()
@@ -151,7 +150,6 @@ describe('NX Project Config', () => {
       const config = getProjectConfig(NX_PACKAGE_JSON_FIELD, FIXTURES_DIR)
 
       expect(config).not.toBeNull()
-      // Tags should be preserved from nx field
       expect(config?.tags).toEqual(['scope:shared'])
     })
   })
@@ -184,7 +182,6 @@ describe('NX Project Config', () => {
     it('uses custom workspaceLayout appsDir', () => {
       const projects = discoverNxProjects(NX_INTEGRATED_WORKSPACE)
 
-      // The integrated workspace uses 'applications' and 'libraries' directories
       expect(projects.has('main-app')).toBe(true)
 
       const mainApp = projects.get('main-app')
@@ -196,7 +193,6 @@ describe('NX Project Config', () => {
     it('discovers standalone project at workspace root', () => {
       const projects = discoverNxProjects(PROJECT_JSON_ONLY)
 
-      // project-json-only has project.json at root level
       expect(projects.size).toBeGreaterThan(0)
     })
   })
@@ -205,14 +201,12 @@ describe('NX Project Config', () => {
     it('scans packages directory when present', () => {
       const projects = discoverNxProjects(MONOREPO)
 
-      // Monorepo has packages/ directory
       expect(projects.size).toBeGreaterThan(0)
     })
 
     it('handles projects with custom names', () => {
       const projects = discoverNxProjects(MONOREPO)
 
-      // Each discovered project should have a name
       for (const [, config] of projects) {
         expect(typeof config.name).toBe('string')
         expect(config.name).toBeDefined()
@@ -220,10 +214,8 @@ describe('NX Project Config', () => {
     })
 
     it('scans apps and libs directories', () => {
-      // Tests the default appsDir/libsDir fallback paths
       const projects = discoverNxProjects(MONOREPO)
 
-      // Should return projects from configured directories
       expect(projects.size).toBeGreaterThanOrEqual(0)
     })
   })
@@ -232,7 +224,6 @@ describe('NX Project Config', () => {
     it('handles implicit dependencies', () => {
       const graph = buildSimpleProjectGraph(MONOREPO)
 
-      // Check structure of dependencies
       for (const [, deps] of Object.entries(graph.dependencies)) {
         expect(Array.isArray(deps)).toBe(true)
         for (const dep of deps) {
@@ -246,13 +237,11 @@ describe('NX Project Config', () => {
     it('includes implicit dependencies from implicitDependencies field', () => {
       const graph = buildSimpleProjectGraph(MONOREPO)
 
-      // project-with-deps has implicitDependencies: ['core', '!excluded-dep', 'utils']
       const projectDeps = graph.dependencies['project-with-deps']
 
       expect(projectDeps).toBeDefined()
       expect(Array.isArray(projectDeps)).toBe(true)
 
-      // Should include 'core' and 'utils' but not '!excluded-dep'
       const depTargets = projectDeps.map((d) => d.target)
       expect(depTargets).toContain('core')
       expect(depTargets).toContain('utils')
@@ -263,7 +252,6 @@ describe('NX Project Config', () => {
 
       const projectDeps = graph.dependencies['project-with-deps']
 
-      // Should NOT include 'excluded-dep' (the one with !)
       const depTargets = projectDeps.map((d) => d.target)
       expect(depTargets).not.toContain('excluded-dep')
       expect(depTargets).not.toContain('!excluded-dep')
@@ -273,7 +261,6 @@ describe('NX Project Config', () => {
       const graph = buildSimpleProjectGraph(MONOREPO)
 
       const core = graph.nodes['core']
-      // Core project type should be application or library
       expect(core === undefined || ['application', 'library'].includes(core.type)).toBe(true)
     })
 

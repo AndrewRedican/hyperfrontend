@@ -29,7 +29,7 @@ export function npmWorkspacesDetector(workspacePath: string, packageJson?: Packa
   }
 
   if (exists(join(workspacePath, 'yarn.lock'))) {
-    return null // Let yarn workspace detector handle this
+    return null
   }
 
   if (confidence === 0) {

@@ -50,10 +50,8 @@ describe('detectProjectType', () => {
     })
 
     it('produces evidence factors from analysis', () => {
-      // minimal-project has src/index.ts
       const result = detectProjectType(MINIMAL_PROJECT, { skipTechDetection: true })
 
-      // Should have some evidence factors
       expect(result.evidence.length).toBeGreaterThan(0)
     })
   })
@@ -64,7 +62,6 @@ describe('detectProjectType', () => {
 
       expect(result).toBeDefined()
       expect(result.type).toBeDefined()
-      // Monorepo analysis produces some result
       expect(result.confidence).toBeGreaterThanOrEqual(0)
     })
   })
@@ -84,7 +81,6 @@ describe('detectProjectType', () => {
 
       expect(result).toBeDefined()
       expect(result.type).toBeDefined()
-      // With tech detection, more evidence may be present
     })
   })
 
@@ -98,7 +94,6 @@ describe('detectProjectType', () => {
       detectProjectType(MINIMAL_PROJECT, { skipTechDetection: false })
       const full = Date.now() - start2
 
-      // Skip should generally be faster (though not guaranteed in CI)
       expect(typeof skip).toBe('number')
       expect(typeof full).toBe('number')
     })
@@ -106,15 +101,12 @@ describe('detectProjectType', () => {
 
   describe('name pattern detection', () => {
     it('detects e2e from name pattern', () => {
-      // Create mock detection context
       const result = detectProjectType(MINIMAL_PROJECT, { skipTechDetection: true })
-      // This test ensures the na me pattern logic is exercised
       expect(result.type).toBeDefined()
     })
 
     it('detects plugin from name pattern', () => {
       const result = detectProjectType(MINIMAL_PROJECT, { skipTechDetection: true })
-      // Plugin detection is based on name patterns
       expect(['library', 'application', 'e2e', 'tool', 'plugin', 'unknown']).toContain(result.type)
     })
 
@@ -128,23 +120,19 @@ describe('detectProjectType', () => {
     it('detects application from pages directory', () => {
       const result = detectProjectType(NEXTJS_APP, { skipTechDetection: true })
 
-      // Next.js apps often have pages directory
       expect(result).toBeDefined()
-      // Structure evidence increases confidence
       const hasStructureEvidence = result.evidence.some((e) => e.factor === 'structure')
       expect(hasStructureEvidence === false || result.confidence > 0).toBe(true)
     })
 
     it('detects e2e from cypress/e2e directory', () => {
       const result = detectProjectType(MINIMAL_PROJECT, { skipTechDetection: true })
-      // Tests the cypress/e2e directory detection path
       expect(result.type).toBeDefined()
     })
 
     it('detects application from public directory', () => {
       const result = detectProjectType(NEXTJS_APP, { skipTechDetection: true })
 
-      // Public directory is an application indicator
       const hasStructureEvidence = result.evidence.some((e) => e.factor === 'structure')
       expect(typeof hasStructureEvidence).toBe('boolean')
     })
@@ -154,28 +142,22 @@ describe('detectProjectType', () => {
     it('detects Next.js config', () => {
       const result = detectProjectType(NEXTJS_APP, { skipTechDetection: true })
 
-      // Should detect next.config.js presence
-      // Framework config evidence means type is defined
       expect(result.type).toBeDefined()
     })
 
     it('detects Angular config', () => {
       const result = detectProjectType(ANGULAR_APP, { skipTechDetection: true })
 
-      // Should handle angular.json if present
       expect(result.type).toBeDefined()
     })
   })
 
   describe('NX project type detection', () => {
     it('uses NX projectType from project.json', () => {
-      // Use monorepo packages which have project.json
       const coreProject = resolve(MONOREPO, 'packages/core')
       const result = detectProjectType(coreProject, { skipTechDetection: true })
 
-      // Should include nx-project-type evidence
       const hasNxEvidence = result.evidence.some((e) => e.factor === 'nx-project-type')
-      // NX evidence increases confidence
       expect(hasNxEvidence === false || result.confidence > 0).toBe(true)
     })
 
@@ -183,7 +165,6 @@ describe('detectProjectType', () => {
       const coreProject = resolve(MONOREPO, 'packages/core')
       const result = detectProjectType(coreProject, { skipTechDetection: true })
 
-      // Tags parsing is exercised
       expect(result.type).toBeDefined()
     })
   })
@@ -193,7 +174,6 @@ describe('detectProjectType', () => {
       const result = detectProjectType(MINIMAL_PROJECT, { skipTechDetection: true })
 
       expect(Array.isArray(result.secondaryTypes)).toBe(true)
-      // Secondary types should not include the primary type
       expect(result.secondaryTypes).not.toContain(result.type)
     })
   })
@@ -202,7 +182,6 @@ describe('detectProjectType', () => {
     it('detects library from exports field', () => {
       const result = detectProjectType(MINIMAL_PROJECT, { skipTechDetection: true })
 
-      // If package.json has exports, it should be detected
       const hasExportsEvidence = result.evidence.some((e) => e.factor === 'exports')
       expect(typeof hasExportsEvidence).toBe('boolean')
     })
@@ -212,7 +191,6 @@ describe('detectProjectType', () => {
     it('detects tool from bin field', () => {
       const result = detectProjectType(MINIMAL_PROJECT, { skipTechDetection: true })
 
-      // Bin field indicates CLI tool
       const hasBinEvidence = result.evidence.some((e) => e.factor === 'bin-field')
       expect(typeof hasBinEvidence).toBe('boolean')
     })
@@ -249,7 +227,6 @@ describe('detectProjectType name patterns', () => {
   it('detects application from -frontend name pattern', () => {
     const result = detectProjectType(FRONTEND_APP, { skipTechDetection: true })
 
-    // frontend-app name contains -frontend
     expect(result.type === 'application' || result.secondaryTypes.includes('application')).toBe(true)
   })
 })
@@ -267,7 +244,6 @@ describe('detectProjectType directory structure', () => {
   it('detects application from pages directory', () => {
     const result = detectProjectType(FRONTEND_APP, { skipTechDetection: true })
 
-    // Frontend app has src/pages directory
     const hasStructureEvidence = result.evidence.some((e) => e.factor === 'structure' && e.description.includes('pages'))
     expect(hasStructureEvidence || result.type === 'application').toBe(true)
   })
@@ -289,7 +265,6 @@ describe('detectProjectType with tech detection', () => {
   it('detects e2e from Cypress framework', () => {
     const result = detectProjectType(E2E_PROJECT, { skipTechDetection: false })
 
-    // Should have e2e-framework evidence
     expect(result.evidence.some((e) => e.factor === 'e2e-framework')).toBe(true)
     expect(result.type).toBe('e2e')
   })
@@ -297,7 +272,6 @@ describe('detectProjectType with tech detection', () => {
   it('detects library from unit testing without e2e', () => {
     const result = detectProjectType(UTILS_LIB, { skipTechDetection: false })
 
-    // Should have unit-framework evidence
     const hasUnitEvidence = result.evidence.some((e) => e.factor === 'unit-framework')
     expect(typeof hasUnitEvidence).toBe('boolean')
   })
@@ -305,7 +279,6 @@ describe('detectProjectType with tech detection', () => {
   it('detects application from frontend framework', () => {
     const result = detectProjectType(FRONTEND_APP, { skipTechDetection: false })
 
-    // React is a frontend framework
     const hasFrameworkEvidence = result.evidence.some((e) => e.factor === 'framework')
     expect(hasFrameworkEvidence || result.type === 'application').toBe(true)
   })
@@ -348,14 +321,12 @@ describe('detectProjectType unit framework detection', () => {
   it('detects library from unit test framework when no E2E', () => {
     const result = detectProjectType(LIBRARY_WITH_JEST, { skipTechDetection: false })
 
-    // Should have unit-framework evidence since Jest is present and no E2E
     expect(result.evidence.some((e) => e.factor === 'unit-framework')).toBe(true)
   })
 
   it('does not add unit-framework evidence when E2E is present', () => {
     const result = detectProjectType(E2E_PROJECT, { skipTechDetection: false })
 
-    // E2E project should have e2e-framework but not unit-framework
     expect(result.evidence.some((e) => e.factor === 'e2e-framework')).toBe(true)
   })
 })
@@ -364,7 +335,6 @@ describe('detectProjectType backend framework detection', () => {
   it('detects application from backend framework', () => {
     const result = detectProjectType(BACKEND_ONLY, { skipTechDetection: false })
 
-    // Express is a backend framework
     expect(result.evidence.some((e) => e.factor === 'framework')).toBe(true)
     expect(result.evidence.some((e) => e.description.toLowerCase().includes('express'))).toBe(true)
     expect(result.type === 'application' || result.secondaryTypes.includes('application')).toBe(true)
@@ -373,7 +343,6 @@ describe('detectProjectType backend framework detection', () => {
   it('includes backend framework names in evidence description', () => {
     const result = detectProjectType(DOCKER_APP, { skipTechDetection: false })
 
-    // Docker app has express
     const frameworkEvidence = result.evidence.find((e) => e.factor === 'framework')
     expect(frameworkEvidence).toBeDefined()
     expect(frameworkEvidence?.description.toLowerCase()).toContain('express')
@@ -384,7 +353,6 @@ describe('detectProjectType server entry detection', () => {
   it('detects application from server entry point', () => {
     const result = detectProjectType(BACKEND_ONLY, { skipTechDetection: true })
 
-    // backend-only has src/server.js
     expect(result.evidence.some((e) => e.factor === 'entry-point' && e.description.includes('server'))).toBe(true)
     expect(result.type === 'application' || result.secondaryTypes.includes('application')).toBe(true)
   })

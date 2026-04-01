@@ -64,17 +64,14 @@ function formatWorkspaceType(type: string): string {
 function formatAnalysisText(result: AnalysisResult): string {
   const lines: string[] = []
 
-  // Header
   lines.push(`Project Analysis: ${result.name}`)
   lines.push('='.repeat(30))
   lines.push('')
 
-  // Basic info
   lines.push(`Type:           ${formatProjectType(result.projectType)}`)
   lines.push(`Workspace:      ${formatWorkspaceType(result.workspaceType)}`)
   lines.push('')
 
-  // Frameworks
   if (result.frameworks.length > 0) {
     lines.push('Frameworks:')
     for (const framework of result.frameworks) {
@@ -89,7 +86,6 @@ function formatAnalysisText(result: AnalysisResult): string {
     lines.push('')
   }
 
-  // Build tools
   if (result.buildTools.length > 0) {
     lines.push('Build Tools:')
     for (const tool of result.buildTools) {
@@ -99,7 +95,6 @@ function formatAnalysisText(result: AnalysisResult): string {
     lines.push('')
   }
 
-  // Testing
   if (result.testingFrameworks.length > 0) {
     lines.push('Testing:')
     for (const framework of result.testingFrameworks) {
@@ -109,7 +104,6 @@ function formatAnalysisText(result: AnalysisResult): string {
     lines.push('')
   }
 
-  // Entry points
   if (result.entryPoints.length > 0) {
     lines.push('Entry Points:')
     for (const entry of result.entryPoints.slice(0, 5)) {
@@ -121,7 +115,6 @@ function formatAnalysisText(result: AnalysisResult): string {
     lines.push('')
   }
 
-  // Configurations
   if (result.configFiles.length > 0) {
     lines.push('Configurations:')
     for (const config of result.configFiles.slice(0, 8)) {
@@ -133,7 +126,6 @@ function formatAnalysisText(result: AnalysisResult): string {
     lines.push('')
   }
 
-  // Dependencies summary
   lines.push('Dependencies:')
   lines.push(`  Production:    ${result.dependencies.production}`)
   lines.push(`  Development:   ${result.dependencies.development}`)
@@ -222,7 +214,7 @@ function parseAnalyzeArgs(args: string[]): AnalyzeCommandOptions {
       exclude: { type: 'string', short: 'e' },
     },
     allowPositionals: true,
-    strict: false, // Allow global options to pass through
+    strict: false,
   })
 
   const format = <OutputFormat>values.format
@@ -289,7 +281,6 @@ export const analyzeCommandDef: Command = {
   execute(args: string[], globalOptions: GlobalOptions): CommandResult {
     const options = parseAnalyzeArgs(args)
 
-    // Global --json flag overrides format
     if (globalOptions.json) {
       options.format = 'json'
     }

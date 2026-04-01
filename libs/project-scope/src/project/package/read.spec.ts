@@ -136,10 +136,8 @@ describe('readPackageJson - validation edge cases', () => {
   })
 
   it('handles package.json that is an array by preserving array properties', () => {
-    // Arrays are objects in JS, so they pass the typeof check but have no useful fields
     writeFileSync(join(TEST_DIR, 'package.json'), '[]')
     const pkg = readPackageJson(TEST_DIR)
-    // Arrays have numeric keys and length, but no name/version
     expect(pkg.name).toBeUndefined()
     expect(pkg.version).toBeUndefined()
   })
@@ -153,16 +151,13 @@ describe('readPackageJson - validation edge cases', () => {
   })
 
   it('handles package.json with non-string name field', () => {
-    // Due to ...pkg spread, the raw value is preserved even if validation returns undefined
     writeFileSync(join(TEST_DIR, 'package.json'), JSON.stringify({ name: 123, version: '1.0.0' }))
     const pkg = readPackageJson(TEST_DIR)
 
-    // The spread preserves raw values, so we check the raw value is there
     expect(pkg['name']).toBe(123)
   })
 
   it('handles package.json with non-string version field', () => {
-    // Due to ...pkg spread, the raw value is preserved
     writeFileSync(join(TEST_DIR, 'package.json'), JSON.stringify({ name: 'test', version: 123 }))
     const pkg = readPackageJson(TEST_DIR)
 
@@ -198,7 +193,6 @@ describe('readPackageJson - validation edge cases', () => {
   })
 
   it('handles invalid bin field type', () => {
-    // Due to ...pkg spread, the raw value is preserved
     writeFileSync(join(TEST_DIR, 'package.json'), JSON.stringify({ name: 'test', bin: 123 }))
     const pkg = readPackageJson(TEST_DIR)
 
@@ -206,7 +200,6 @@ describe('readPackageJson - validation edge cases', () => {
   })
 
   it('handles invalid bin field object with non-string values', () => {
-    // Due to ...pkg spread, the raw value is preserved
     writeFileSync(join(TEST_DIR, 'package.json'), JSON.stringify({ name: 'test', bin: { cli: 123 } }))
     const pkg = readPackageJson(TEST_DIR)
 
@@ -214,7 +207,6 @@ describe('readPackageJson - validation edge cases', () => {
   })
 
   it('handles scripts with non-string values', () => {
-    // Due to ...pkg spread, the raw value is preserved
     writeFileSync(join(TEST_DIR, 'package.json'), JSON.stringify({ name: 'test', scripts: { test: 123 } }))
     const pkg = readPackageJson(TEST_DIR)
 
@@ -222,7 +214,6 @@ describe('readPackageJson - validation edge cases', () => {
   })
 
   it('handles dependencies with non-string values', () => {
-    // Due to ...pkg spread, the raw value is preserved
     writeFileSync(join(TEST_DIR, 'package.json'), JSON.stringify({ name: 'test', dependencies: { lodash: 123 } }))
     const pkg = readPackageJson(TEST_DIR)
 
@@ -244,7 +235,6 @@ describe('readPackageJson - validation edge cases', () => {
   })
 
   it('handles workspaces as object without packages array', () => {
-    // Due to ...pkg spread, the raw value is preserved
     writeFileSync(join(TEST_DIR, 'package.json'), JSON.stringify({ name: 'test', workspaces: { nopackages: true } }))
     const pkg = readPackageJson(TEST_DIR)
 
@@ -252,7 +242,6 @@ describe('readPackageJson - validation edge cases', () => {
   })
 
   it('handles workspaces as array with non-string values', () => {
-    // Due to ...pkg spread, the raw value is preserved
     writeFileSync(join(TEST_DIR, 'package.json'), JSON.stringify({ name: 'test', workspaces: [123, 'packages/*'] }))
     const pkg = readPackageJson(TEST_DIR)
 

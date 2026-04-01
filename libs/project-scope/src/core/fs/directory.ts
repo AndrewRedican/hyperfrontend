@@ -134,20 +134,17 @@ export function readDirectoryRecursive(dirPath: string, options?: RecursiveOptio
     try {
       entries = readDirectory(currentPath)
     } catch {
-      // Skip inaccessible directories
       fsDirLogger.debug('Skipping inaccessible directory', { path: currentPath })
       return
     }
 
     for (const entry of entries) {
-      // Skip hidden files/dirs if not included
       if (!includeHidden && entry.name.startsWith('.')) {
         continue
       }
 
       results.push({ ...entry, depth })
 
-      // Recurse into directories
       if (entry.isDirectory || (entry.isSymlink && followSymlinks && checkIsDirectory(entry.path))) {
         walk(entry.path, depth + 1)
       }

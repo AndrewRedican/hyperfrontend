@@ -24,13 +24,11 @@ function formatDependencyList(deps: DependencyMap, maxItems = 20): string[] {
   const lines: string[] = []
   const depEntries = entries(deps)
 
-  // Sort alphabetically
   depEntries.sort((a, b) => a[0].localeCompare(b[0]))
 
   const displayCount = min(depEntries.length, maxItems)
   for (let i = 0; i < displayCount; i++) {
     const [name, version] = depEntries[i]
-    // Pad name to align versions
     const paddedName = name.padEnd(30)
     lines.push(`  ${paddedName} ${version}`)
   }

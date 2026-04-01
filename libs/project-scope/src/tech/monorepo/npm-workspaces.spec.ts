@@ -14,7 +14,6 @@ jest.mock('../../project/package', () => ({
 describe('npmWorkspacesDetector', () => {
   beforeEach(() => {
     jest.clearAllMocks()
-    // Reset mock implementation to default (returns false)
     jest.mocked(fs.exists).mockReturnValue(false)
   })
 

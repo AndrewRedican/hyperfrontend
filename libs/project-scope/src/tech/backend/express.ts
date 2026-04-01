@@ -27,7 +27,6 @@ export function expressDetector(projectPath: string, packageJson?: PackageJson):
     sources.push({ type: 'package.json', field: 'dependencies.express' })
   }
 
-  // @types/express (indicates usage)
   if (deps['@types/express']) {
     confidence += 10
     sources.push({ type: 'package.json', field: 'dependencies.@types/express' })

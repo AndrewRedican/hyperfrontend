@@ -20,20 +20,17 @@ export function emberDetector(projectPath: string, packageJson?: PackageJson): L
 
   const deps = collectAllDependencies(pkg)
 
-  // Ember source package
   if (deps['ember-source']) {
     confidence += 70
     version = parseVersionString(deps['ember-source'])
     sources.push({ type: 'package.json', field: 'dependencies.ember-source' })
   }
 
-  // Ember CLI
   if (deps['ember-cli']) {
     confidence += 20
     sources.push({ type: 'package.json', field: 'devDependencies.ember-cli' })
   }
 
-  // Ember Data
   if (deps['ember-data']) {
     confidence += 10
     sources.push({ type: 'package.json', field: 'dependencies.ember-data' })

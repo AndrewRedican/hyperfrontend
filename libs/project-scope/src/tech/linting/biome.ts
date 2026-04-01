@@ -23,7 +23,6 @@ export function biomeDetector(projectPath: string, packageJson?: PackageJson): L
 
   const deps = collectAllDependencies(pkg)
 
-  // @biomejs/biome package
   if (deps['@biomejs/biome']) {
     confidence += 70
     version = parseVersionString(deps['@biomejs/biome'])

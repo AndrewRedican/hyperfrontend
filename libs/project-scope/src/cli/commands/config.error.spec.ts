@@ -7,7 +7,6 @@ import { resolve } from 'node:path'
 const FIXTURES_DIR = resolve(__dirname, '../../../__fixtures__')
 const MINIMAL_PROJECT = resolve(FIXTURES_DIR, 'minimal-project')
 
-// Mock the config module to control parseConfig and detectConfigs behavior
 jest.mock('../../project/config', () => {
   const actual = jest.requireActual('../../project/config')
   return {
@@ -17,7 +16,6 @@ jest.mock('../../project/config', () => {
   }
 })
 
-// Import after mocking
 import * as configModule from '../../project/config'
 import { configCommand } from './config'
 
@@ -30,19 +28,16 @@ describe('configCommand error branches', () => {
   })
 
   afterEach(() => {
-    // Restore actual implementations
     mockParseConfig.mockImplementation(jest.requireActual('../../project/config').parseConfig)
     mockDetectConfigs.mockImplementation(jest.requireActual('../../project/config').detectConfigs)
   })
 
   describe('formatConfigText catch block (L129)', () => {
     it('shows [Unable to read contents] when parseConfig throws in text format', () => {
-      // Make parseConfig throw an error
       mockParseConfig.mockImplementationOnce(() => {
         throw new Error('Cannot read file')
       })
 
-      // First call to detectConfigs should return real configs
       mockDetectConfigs.mockImplementationOnce((projectPath) => {
         return jest.requireActual('../../project/config').detectConfigs(projectPath)
       })
@@ -56,12 +51,10 @@ describe('configCommand error branches', () => {
 
   describe('formatConfigJson catch block (L176-177)', () => {
     it('sets error: Unable to parse and contents: null when parseConfig throws in JSON format', () => {
-      // Make parseConfig throw an error
       mockParseConfig.mockImplementationOnce(() => {
         throw new Error('Parse failed')
       })
 
-      // First call to detectConfigs should return real configs
       mockDetectConfigs.mockImplementationOnce((projectPath) => {
         return jest.requireActual('../../project/config').detectConfigs(projectPath)
       })
@@ -72,7 +65,6 @@ describe('configCommand error branches', () => {
       const parsed = JSON.parse(result.output as string)
       expect(Array.isArray(parsed)).toBe(true)
 
-      // Find the config with error field
       const errorConfig = parsed.find((c: Record<string, unknown>) => c['error'] === 'Unable to parse')
       expect(errorConfig).toBeDefined()
       expect(errorConfig['contents']).toBeNull()

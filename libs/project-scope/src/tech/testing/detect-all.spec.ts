@@ -56,9 +56,7 @@ describe('detectTestingFrameworks', () => {
       },
     })
 
-    // All should have similar confidence from deps alone
     expect(result.length).toBe(3)
-    // Results should be sorted by confidence desc
     for (let i = 0; i < result.length - 1; i++) {
       expect(result[i]?.confidence).toBeGreaterThanOrEqual(result[i + 1]?.confidence ?? 0)
     }

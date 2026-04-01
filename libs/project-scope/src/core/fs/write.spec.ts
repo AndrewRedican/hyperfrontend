@@ -6,13 +6,11 @@ const TEST_DIR = join(__dirname, '__test_write_fixtures__')
 
 describe('core/fs/write', () => {
   beforeEach(() => {
-    // Clean up before each test
     rmSync(TEST_DIR, { recursive: true, force: true })
     mkdirSync(TEST_DIR, { recursive: true })
   })
 
   afterAll(() => {
-    // Clean up test fixtures
     rmSync(TEST_DIR, { recursive: true, force: true })
   })
 
@@ -35,7 +33,7 @@ describe('core/fs/write', () => {
       const dirPath = join(TEST_DIR, 'existing-dir')
       mkdirSync(dirPath)
       expect(existsSync(dirPath)).toBe(true)
-      ensureDir(dirPath) // Should not throw
+      ensureDir(dirPath)
       expect(existsSync(dirPath)).toBe(true)
     })
   })
@@ -70,10 +68,9 @@ describe('core/fs/write', () => {
     })
 
     it('throws error when write fails', () => {
-      // Create a directory with the same name to force an error
       const dirPath = join(TEST_DIR, 'conflicting-dir')
       mkdirSync(dirPath)
-      const filePath = join(dirPath, '.', '.') // Invalid path
+      const filePath = join(dirPath, '.', '.')
 
       expect(() => writeFileContent(filePath, 'content')).toThrow()
     })
@@ -96,10 +93,9 @@ describe('core/fs/write', () => {
     })
 
     it('throws error when buffer write fails', () => {
-      // Create a directory with the same name to force an error
       const dirPath = join(TEST_DIR, 'buffer-conflict')
       mkdirSync(dirPath)
-      const filePath = join(dirPath, '.', '.') // Invalid path
+      const filePath = join(dirPath, '.', '.')
 
       expect(() => writeFileBuffer(filePath, Buffer.from('test'))).toThrow()
     })
@@ -112,7 +108,7 @@ describe('core/fs/write', () => {
       writeJsonFile(filePath, data)
       const content = readFileSync(filePath, 'utf-8')
       expect(JSON.parse(content)).toEqual(data)
-      expect(content).toContain('\n') // Should be formatted
+      expect(content).toContain('\n')
     })
 
     it('respects indent option', () => {
@@ -129,10 +125,9 @@ describe('core/fs/write', () => {
     })
 
     it('throws error when JSON write fails', () => {
-      // Create a directory with the same name to force an error
       const dirPath = join(TEST_DIR, 'json-conflict')
       mkdirSync(dirPath)
-      const filePath = join(dirPath, '.', '.') // Invalid path
+      const filePath = join(dirPath, '.', '.')
 
       expect(() => writeJsonFile(filePath, { test: true })).toThrow()
     })
@@ -140,16 +135,15 @@ describe('core/fs/write', () => {
     it('handles circular reference error from stringify', () => {
       const filePath = join(TEST_DIR, 'circular.json')
       const circular: Record<string, unknown> = { name: 'test' }
-      circular['self'] = circular // Create circular reference
+      circular['self'] = circular
 
       expect(() => writeJsonFile(filePath, circular)).toThrow()
     })
 
     it('re-throws FS_WRITE_ERROR without wrapping', () => {
-      // When writeFileContent throws an FS_WRITE_ERROR, writeJsonFile should re-throw it
       const dirPath = join(TEST_DIR, 'rethrow-conflict')
       mkdirSync(dirPath)
-      const filePath = join(dirPath, '.', '.') // Invalid path
+      const filePath = join(dirPath, '.', '.')
 
       expect(() => writeJsonFile(filePath, { test: true })).toThrow()
     })

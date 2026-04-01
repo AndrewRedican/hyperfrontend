@@ -50,7 +50,6 @@ export function normalizeLineEndings(content: string, style: LineEndingStyle = '
     target = style === 'crlf' ? CRLF : LF
   }
 
-  // First normalize all to LF, then convert to target
   const normalized = content.replace(/\r\n/g, LF).replace(/\r/g, LF)
 
   if (target === LF) {
@@ -68,7 +67,6 @@ export function normalizeLineEndings(content: string, style: LineEndingStyle = '
  */
 export function detectLineEnding(content: string): DetectedLineEnding {
   const hasCRLF = content.includes(CRLF)
-  // Check for LF that is NOT part of CRLF
   const hasLFOnly = content.includes('\n') && content.replace(/\r\n/g, '').includes('\n')
 
   if (hasCRLF && hasLFOnly) return 'mixed'
