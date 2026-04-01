@@ -20,7 +20,6 @@ export function validateDependencies(instance: Record<string, unknown>, schema: 
   let valid = true
 
   for (const [key, dependency] of entries(schema.dependencies)) {
-    // Only check dependency if the key is present
     /* istanbul ignore next -- key presence check */
     if (!hasOwn(instance, key)) {
       continue
@@ -28,7 +27,6 @@ export function validateDependencies(instance: Record<string, unknown>, schema: 
 
     /* istanbul ignore next -- dependency type check */
     if (isArray(dependency)) {
-      // Property dependency: if key is present, these properties must also be present
       for (const requiredKey of dependency) {
         /* istanbul ignore next -- required key check */
         if (!hasOwn(instance, requiredKey)) {
@@ -43,7 +41,6 @@ export function validateDependencies(instance: Record<string, unknown>, schema: 
         }
       }
     } else {
-      // Schema dependency: if key is present, the object must also validate against this schema
       /* istanbul ignore next -- schema dependency validation */
       if (!ctx.validate(instance, dependency, ctx)) {
         /* istanbul ignore next -- failure path */

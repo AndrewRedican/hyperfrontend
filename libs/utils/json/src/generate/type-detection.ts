@@ -22,7 +22,6 @@ export function getJsonType(value: unknown): JsonType {
     case 'object':
       return 'object'
     default:
-      // For functions, symbols, undefined - treat as null
       return 'null'
   }
 }

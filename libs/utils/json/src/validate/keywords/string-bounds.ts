@@ -33,7 +33,6 @@ export function validateStringBounds(instance: string, schema: Schema, ctx: Vali
   }
 
   if (schema.pattern !== undefined) {
-    // Check pattern safety if a checker is configured
     if (ctx.patternSafetyChecker) {
       const safetyResult = ctx.patternSafetyChecker(schema.pattern)
       if (!safetyResult.safe) {
@@ -43,7 +42,6 @@ export function validateStringBounds(instance: string, schema: Schema, ctx: Vali
         })
         valid = false
         if (!shouldContinue(ctx)) return false
-        // Skip executing the unsafe pattern
         return valid
       }
     }
@@ -59,7 +57,6 @@ export function validateStringBounds(instance: string, schema: Schema, ctx: Vali
         if (!shouldContinue(ctx)) return false
       }
     } catch (e) {
-      // Invalid regex pattern
       /* istanbul ignore next -- strictPatterns mode verified in validate.spec.ts */
       if (ctx.strictPatterns) {
         /* istanbul ignore next -- error reporting for invalid regex */
@@ -72,7 +69,6 @@ export function validateStringBounds(instance: string, schema: Schema, ctx: Vali
         /* istanbul ignore if -- early exit tested in validate.spec.ts */
         if (!shouldContinue(ctx)) return false
       }
-      // Otherwise skip validation silently
     }
   }
 

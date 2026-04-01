@@ -21,15 +21,12 @@ export interface Schema {
   /** Default value */
   default?: unknown
 
-  // Type constraint
   /** Type constraint */
   type?: JsonType | JsonType[]
 
-  // Enum constraint
   /** Enum constraint - value must be one of these */
   enum?: unknown[]
 
-  // String constraints
   /** Minimum string length */
   minLength?: number
   /** Maximum string length */
@@ -39,7 +36,6 @@ export interface Schema {
   /** String format (e.g., 'email', 'uri', 'date-time') */
   format?: string
 
-  // Number constraints
   /** Minimum value */
   minimum?: number
   /** Maximum value */
@@ -51,7 +47,6 @@ export interface Schema {
   /** Value must be a multiple of this */
   multipleOf?: number
 
-  // Object constraints
   /** Property schemas */
   properties?: Record<string, Schema>
   /** Required property names */
@@ -67,7 +62,6 @@ export interface Schema {
   /** Property dependencies */
   dependencies?: Record<string, string[] | Schema>
 
-  // Array constraints
   /** Schema for array items (single or tuple) */
   items?: Schema | Schema[]
   /** Schema for additional items beyond tuple */
@@ -79,7 +73,6 @@ export interface Schema {
   /** Whether array items must be unique */
   uniqueItems?: boolean
 
-  // Composition
   /** All schemas must match */
   allOf?: Schema[]
   /** At least one schema must match */
@@ -89,7 +82,6 @@ export interface Schema {
   /** Schema must NOT match */
   not?: Schema
 
-  // Schema definitions (reusable schemas)
   /** Reusable schema definitions */
   definitions?: Record<string, Schema>
 }

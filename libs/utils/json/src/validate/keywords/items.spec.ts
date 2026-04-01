@@ -42,9 +42,7 @@ describe('validateItems', () => {
     // @ts-expect-error readonly context
     ctx.validate = (v: unknown, s: Schema) => typeof v === s.type
     const schema: Schema = { items: [{ type: 'number' }], additionalItems: { type: 'string' } }
-    // First item is number (matches tuple), remaining are strings (matches additionalItems)
     expect(validateItems([1, 'a', 'b', 'c'], schema, ctx)).toBe(true)
-    // Third item is not a string
     expect(validateItems([1, 'a', 123], schema, ctx)).toBe(false)
   })
 
@@ -57,7 +55,6 @@ describe('validateItems', () => {
     // @ts-expect-error readonly context
     ctx.validate = () => true
     const schema: Schema = { items: [{ type: 'number' }] }
-    // No additionalItems constraint means all additional items are allowed
     expect(validateItems([1, 'extra', 123], schema, ctx)).toBe(true)
   })
 })

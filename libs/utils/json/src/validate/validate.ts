@@ -34,7 +34,6 @@ import { checkPatternSafety } from './utils/pattern-safety'
  * ```
  */
 export function validate(instance: unknown, schema: Schema, options?: ValidateOptions): ValidationResult {
-  // Resolve safePatterns option to a checker function
   let patternSafetyChecker: PatternSafetyChecker | undefined
   if (options?.safePatterns === true) {
     patternSafetyChecker = checkPatternSafety
@@ -65,12 +64,10 @@ export function validate(instance: unknown, schema: Schema, options?: ValidateOp
  * @returns true if validation passes, false otherwise
  */
 export function validateSchema(instance: unknown, schema: Schema, ctx: ValidationContext): boolean {
-  // Handle $ref
   if (schema.$ref) {
     const resolved = resolveRef(schema.$ref, ctx)
     /* istanbul ignore if -- $ref resolution failures are tested in resolve-ref.spec.ts */
     if (!resolved) {
-      // Could not resolve reference - treat as valid
       return true
     }
     return validateSchema(instance, resolved, ctx)
@@ -78,19 +75,16 @@ export function validateSchema(instance: unknown, schema: Schema, ctx: Validatio
 
   let valid = true
 
-  // Type validation
   if (!validateType(instance, schema, ctx)) {
     valid = false
     if (!shouldContinue(ctx)) return false
   }
 
-  // Enum validation
   if (!validateEnum(instance, schema, ctx)) {
     valid = false
     if (!shouldContinue(ctx)) return false
   }
 
-  // String-specific validations
   if (typeof instance === 'string') {
     if (!validateStringBounds(instance, schema, ctx)) {
       valid = false
@@ -102,7 +96,6 @@ export function validateSchema(instance: unknown, schema: Schema, ctx: Validatio
     }
   }
 
-  // Number-specific validations
   if (typeof instance === 'number') {
     if (!validateNumberBounds(instance, schema, ctx)) {
       valid = false
@@ -110,7 +103,6 @@ export function validateSchema(instance: unknown, schema: Schema, ctx: Validatio
     }
   }
 
-  // Array-specific validations
   if (isArray(instance)) {
     if (!validateItems(instance, schema, ctx)) {
       valid = false
@@ -122,7 +114,6 @@ export function validateSchema(instance: unknown, schema: Schema, ctx: Validatio
     }
   }
 
-  // Object-specific validations
   if (instance !== null && typeof instance === 'object' && !isArray(instance)) {
     const obj = <Record<string, unknown>>instance
 
@@ -161,7 +152,6 @@ export function validateSchema(instance: unknown, schema: Schema, ctx: Validatio
     }
   }
 
-  // Composition keywords
   if (!validateAllOf(instance, schema, ctx)) {
     valid = false
     if (!shouldContinue(ctx)) return false

@@ -67,8 +67,6 @@ describe('validateAdditionalProperties', () => {
       patternProperties: { '^x_': { type: 'string' } },
       additionalProperties: false,
     }
-    // x_bar matches the pattern, so should not trigger additionalProperties: false error
-    // bar does not match any pattern and should fail
     expect(validateAdditionalProperties({ foo: 1, x_bar: 'test' }, schema, ctx)).toBe(true)
     expect(validateAdditionalProperties({ foo: 1, bar: 2 }, schema, ctx)).toBe(false)
   })

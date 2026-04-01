@@ -37,7 +37,6 @@ export type PatternSafetyChecker = (pattern: string) => PatternSafetyResult
  * @returns The upper bound number or null
  */
 function extractQuantifierUpperBound(pattern: string): number | null {
-  // Look for {n,m} pattern - split by comma to avoid complex regex
   const braceIndex = pattern.indexOf('{')
   if (braceIndex === -1) return null
 
@@ -69,7 +68,6 @@ function extractQuantifierUpperBound(pattern: string): number | null {
  * @returns Result indicating if the pattern is safe
  */
 export function checkPatternSafety(pattern: string): PatternSafetyResult {
-  // Guard against extremely long patterns to prevent ReDoS on the safety checks themselves
   const MAX_PATTERN_LENGTH = 1000
   if (pattern.length > MAX_PATTERN_LENGTH) {
     return {
@@ -78,8 +76,6 @@ export function checkPatternSafety(pattern: string): PatternSafetyResult {
     }
   }
 
-  // Detect nested quantifiers: (...)+ followed by outer quantifier
-  // Matches patterns like (a+)+, (a*)+, (a+)*, ([a-z]+)+, etc.
   if (/\([^)]*[+*]\)[+*]/.test(pattern)) {
     return {
       safe: false,
@@ -87,8 +83,6 @@ export function checkPatternSafety(pattern: string): PatternSafetyResult {
     }
   }
 
-  // Detect nested quantifiers with {n,m} syntax
-  // Matches patterns like (a+){2,}, (a*){1,100}, etc.
   if (/\([^)]*[+*]\)\{\d+,\d*\}/.test(pattern)) {
     return {
       safe: false,
@@ -96,9 +90,6 @@ export function checkPatternSafety(pattern: string): PatternSafetyResult {
     }
   }
 
-  // Detect quantified groups containing alternation with similar branches
-  // Simplified check for patterns like (a|a)+, (ab|ab)+
-  // This catches (x|x)+ style patterns
   if (/\(([^|()]+)\|\1\)[+*]/.test(pattern)) {
     return {
       safe: false,
@@ -106,7 +97,6 @@ export function checkPatternSafety(pattern: string): PatternSafetyResult {
     }
   }
 
-  // Detect extremely large quantifier bounds
   const upper = extractQuantifierUpperBound(pattern)
   if (upper !== null && upper > 10000) {
     return {
@@ -115,7 +105,6 @@ export function checkPatternSafety(pattern: string): PatternSafetyResult {
     }
   }
 
-  // Detect .+ or .* followed by another .+ or .* (potential polynomial time)
   if (/\.\*.*\.\*|\.\+.*\.\+/.test(pattern)) {
     return {
       safe: false,

@@ -20,9 +20,7 @@ export function validatePatternProperties(instance: Record<string, unknown>, sch
   let valid = true
   const patterns: Array<{ regex: RegExp; schema: Schema }> = []
 
-  // Pre-compile all patterns
   for (const [pattern, patternSchema] of entries(schema.patternProperties)) {
-    // Check pattern safety if a checker is configured
     /* istanbul ignore if -- patternSafetyChecker branch tested in validate.spec.ts */
     if (ctx.patternSafetyChecker) {
       const safetyResult = ctx.patternSafetyChecker(pattern)
@@ -39,7 +37,7 @@ export function validatePatternProperties(instance: Record<string, unknown>, sch
         )
         valid = false
         if (!shouldContinue(ctx)) return false
-        continue // Skip this unsafe pattern
+        continue
       }
     }
 
@@ -47,7 +45,6 @@ export function validatePatternProperties(instance: Record<string, unknown>, sch
       // eslint-disable-next-line workspace/no-unsafe-regex -- Pattern safety validated above when safePatterns enabled
       patterns.push({ regex: createRegExp(pattern), schema: patternSchema })
     } catch (e) {
-      // Invalid regex
       /* istanbul ignore next -- strictPatterns mode verified in validate.spec.ts */
       if (ctx.strictPatterns) {
         /* istanbul ignore next -- error reporting for invalid regex */
@@ -61,11 +58,9 @@ export function validatePatternProperties(instance: Record<string, unknown>, sch
         /* istanbul ignore if -- early exit tested in validate.spec.ts */
         if (!shouldContinue(ctx)) return false
       }
-      // Otherwise skip silently
     }
   }
 
-  // Check each property against matching patterns
   for (const key of keys(instance)) {
     for (const { regex, schema: patternSchema } of patterns) {
       if (regex.test(key)) {
