@@ -9,9 +9,7 @@ import { remove as removeFromRegistry } from '../../core/registry/remove'
  * @param channel - The channel instance to cleanup and remove
  */
 export function removeChannel(registry: Registry, channel: ReturnType<typeof createChannel>): void {
-  // Destroy the channel (cleanup)
   channel.destroy(false)
 
-  // Remove from registry
   removeFromRegistry(registry, channel)
 }

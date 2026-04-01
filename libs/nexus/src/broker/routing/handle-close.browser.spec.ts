@@ -69,14 +69,11 @@ describe('handleClose', () => {
     const channel = addChannel(mockBrokerState, registry, processManager, actions, 'test-channel', mockWindow)
     const processId = processManager.create(channel)
 
-    // Mock channel as open
     Object.defineProperty(channel, 'isActive', { value: () => true, writable: true })
     Object.defineProperty(channel, 'id', { value: 'remote-broker-1', writable: true })
 
-    // Re-add to registry with new ID so getById can find it
     registry.add(channel)
 
-    // Re-add to registry with new ID so getById can find it
     registry.add(channel)
 
     const action: IAction = {
@@ -92,7 +89,6 @@ describe('handleClose', () => {
 
     handleClose(routingContext, message)
 
-    // Should send acknowledgement
     expect(mockWindow.postMessage).toHaveBeenCalledWith(
       expect.objectContaining({
         type: '[nexus] connection-closed-acknowledged',
@@ -123,10 +119,8 @@ describe('handleClose', () => {
     const channel = addChannel(mockBrokerState, registry, processManager, actions, 'test-channel', mockWindow)
     const processId = processManager.create(channel)
 
-    // Channel is not open (isOpen = false by default)
     Object.defineProperty(channel, 'id', { value: 'remote-broker-1', writable: true })
 
-    // Re-add to registry with new ID so getById can find it
     registry.add(channel)
 
     const action: IAction = {
@@ -144,7 +138,6 @@ describe('handleClose', () => {
 
     handleClose(routingContext, message)
 
-    // Should not send any messages
     expect((<jest.Mock>mockWindow.postMessage).mock.calls.length).toBe(postMessageCallsBefore)
   })
 
@@ -155,7 +148,6 @@ describe('handleClose', () => {
     Object.defineProperty(channel, 'isActive', { value: () => true, writable: true })
     Object.defineProperty(channel, 'id', { value: 'remote-broker-1', writable: true })
 
-    // Re-add to registry with new ID so getById can find it
     registry.add(channel)
 
     const closeSpy = jest.spyOn(channel, 'disconnect')
@@ -173,7 +165,6 @@ describe('handleClose', () => {
 
     handleClose(routingContext, message)
 
-    // Should call close with notify=false
     expect(closeSpy).toHaveBeenCalledWith(false)
   })
 
@@ -182,7 +173,6 @@ describe('handleClose', () => {
     Object.defineProperty(channel1, 'isActive', { value: () => true, writable: true })
     Object.defineProperty(channel1, 'id', { value: 'remote-1', writable: true })
 
-    // Re-add to registry with new ID
     registry.add(channel1)
     const processId1 = processManager.create(channel1)
 
@@ -191,7 +181,6 @@ describe('handleClose', () => {
     Object.defineProperty(channel2, 'isActive', { value: () => true, writable: true })
     Object.defineProperty(channel2, 'id', { value: 'remote-2', writable: true })
 
-    // Re-add to registry with new ID
     registry.add(channel2)
     const processId2 = processManager.create(channel2)
 
@@ -224,7 +213,6 @@ describe('handleClose', () => {
     Object.defineProperty(channel, 'isActive', { value: () => true, writable: true })
     Object.defineProperty(channel, 'id', { value: 'remote-broker-1', writable: true })
 
-    // Re-add to registry with new ID so getById can find it
     registry.add(channel)
 
     const action: IAction = {

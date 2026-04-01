@@ -21,11 +21,9 @@ import { createError } from '@hyperfrontend/immutable-api-utils/built-in-copy/er
 export function receive(channel: ChannelInternals, message: IMessage): void {
   const state = channel.getState()
 
-  // Validate message type against contract (emitted actions)
   if (state.contract && !state.contract.emitted.some((a) => a.type === message.type)) {
     throw createError(`Received message type '${message.type}' not emitted in ${state.name} channel contract.`)
   }
 
-  // Notify all message subscribers
   channel.notifyMessage(message)
 }

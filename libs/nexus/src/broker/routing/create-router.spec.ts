@@ -100,7 +100,6 @@ describe('createRouter', () => {
     const router = createRouter(handlers)
     const originalSize = router.size
 
-    // Adding new handler directly to the map
     router.set('new-action', mockHandler2)
 
     expect(router.size).toBe(originalSize + 1)

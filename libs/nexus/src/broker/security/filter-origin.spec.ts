@@ -16,7 +16,6 @@ describe('filterOrigin', () => {
     })
 
     it('prioritizes whitelist over blacklist', () => {
-      // Origin is in both whitelist and blacklist - should be allowed
       const result = filterOrigin(testOrigin, [testOrigin], [testOrigin])
       expect(result).toBe(true)
     })

@@ -56,14 +56,12 @@ describe('addChannel', () => {
     const channel1 = addChannel(mockBrokerState, registry, processManager, actions, 'channel-1', mockWindow)
     const channel2 = addChannel(mockBrokerState, registry, processManager, actions, 'channel-2', mockWindow)
 
-    // Should return the same channel instance
     expect(channel2).toBe(channel1)
   })
 
   it('passs broker contract to new channel', () => {
     const channel = addChannel(mockBrokerState, registry, processManager, actions, 'test-channel', mockWindow)
 
-    // Channel should have access to broker's contract
     expect(channel).toBeDefined()
   })
 

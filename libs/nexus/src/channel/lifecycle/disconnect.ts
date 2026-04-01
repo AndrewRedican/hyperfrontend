@@ -20,21 +20,17 @@ import type { ChannelInternals } from '../types'
 export function disconnect(channel: ChannelInternals, notify = true): void {
   const state = channel.getState()
 
-  // Only disconnect if currently active
   if (!state.active) {
     return
   }
 
-  // Set channel to inactive
   channel.updateState({ active: false })
 
-  // Notify target if requested
   if (notify) {
     const processId = channel.createProcess()
     const closeAction = channel.actions.closeConnection(processId)
     channel.sendAction(closeAction)
   }
 
-  // Notify event subscribers
   channel.notifyEvent('close')
 }

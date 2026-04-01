@@ -54,7 +54,6 @@ export function deepFreeze<T>(value: T, logger: Logger, config?: DeepFreezeConfi
       }
     }
   } catch (error) {
-    // Graceful degradation: if traversal itself fails, log and return value as-is
     logger.debug('Failed to traverse object for deep freeze', error)
   }
 

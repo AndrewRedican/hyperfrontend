@@ -85,7 +85,6 @@ describe('handleOpen', () => {
       handleOpen(routingContext, message)
     }).not.toThrow()
 
-    // Process should be terminated (removed)
     expect(processManager.get(processId)).toBeUndefined()
   })
 
@@ -111,7 +110,6 @@ describe('handleOpen', () => {
     const channel = addChannel(mockBrokerState, registry, processManager, actions, 'test-channel', mockWindow)
     const processId = processManager.create(channel)
 
-    // Add notifyEvent mock to channel
     const notifyEventMock = jest.fn()
     Object.defineProperty(channel, 'notifyEvent', {
       value: notifyEventMock,
@@ -297,7 +295,6 @@ describe('handleOpen', () => {
       source: window2,
     })
 
-    // Both should be processed (terminated)
     expect(processManager.get(processId1)).toBeUndefined()
     expect(processManager.get(processId2)).toBeUndefined()
   })

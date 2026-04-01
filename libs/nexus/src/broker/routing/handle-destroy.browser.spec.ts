@@ -70,7 +70,6 @@ describe('handleDestroy', () => {
 
     Object.defineProperty(channel, 'id', { value: 'remote-broker-1', writable: true })
 
-    // Re-add to registry with new ID so getById can find it
     registry.add(channel)
 
     const destroySpy = jest.spyOn(channel, 'destroy')
@@ -87,7 +86,6 @@ describe('handleDestroy', () => {
 
     handleDestroy(routingContext, message)
 
-    // Should call destroy with notify=false
     expect(destroySpy).toHaveBeenCalledWith(false)
   })
 
@@ -112,7 +110,6 @@ describe('handleDestroy', () => {
 
     Object.defineProperty(channel, 'id', { value: 'remote-broker-1', writable: true })
 
-    // Re-add to registry with new ID so getById can find it
     registry.add(channel)
 
     const action: IAction = {
@@ -129,7 +126,6 @@ describe('handleDestroy', () => {
 
     handleDestroy(routingContext, message)
 
-    // Should not send any messages (immediate destruction)
     expect((<jest.Mock>mockWindow.postMessage).mock.calls.length).toBe(postMessageCallsBefore)
   })
 
@@ -138,7 +134,6 @@ describe('handleDestroy', () => {
 
     Object.defineProperty(channel, 'id', { value: 'remote-broker-1', writable: true })
 
-    // Re-add to registry with new ID so getById can find it
     registry.add(channel)
     Object.defineProperty(channel, 'isActive', { value: () => true, writable: true })
 
@@ -164,7 +159,6 @@ describe('handleDestroy', () => {
 
     Object.defineProperty(channel, 'id', { value: 'remote-broker-1', writable: true })
 
-    // Re-add to registry with new ID so getById can find it
     registry.add(channel)
     Object.defineProperty(channel, 'isActive', { value: () => false, writable: true })
 
@@ -189,14 +183,12 @@ describe('handleDestroy', () => {
     const channel1 = addChannel(mockBrokerState, registry, processManager, actions, 'channel-1', mockWindow)
     Object.defineProperty(channel1, 'id', { value: 'remote-1', writable: true })
 
-    // Re-add to registry with new ID
     registry.add(channel1)
 
     const window2 = <Window>(<unknown>{ postMessage: jest.fn() })
     const channel2 = addChannel(mockBrokerState, registry, processManager, actions, 'channel-2', window2)
     Object.defineProperty(channel2, 'id', { value: 'remote-2', writable: true })
 
-    // Re-add to registry with new ID
     registry.add(channel2)
 
     const destroy1Spy = jest.spyOn(channel1, 'destroy')
@@ -227,7 +219,6 @@ describe('handleDestroy', () => {
 
     Object.defineProperty(channel, 'id', { value: 'remote-broker-1', writable: true })
 
-    // Re-add to registry with new ID so getById can find it
     registry.add(channel)
 
     const destroySpy = jest.spyOn(channel, 'destroy')
@@ -244,7 +235,6 @@ describe('handleDestroy', () => {
 
     handleDestroy(routingContext, message)
 
-    // Verify notify parameter is false (immediate, no handshake)
     expect(destroySpy).toHaveBeenCalledWith(false)
     expect(destroySpy).not.toHaveBeenCalledWith(true)
   })

@@ -18,7 +18,6 @@ import type { ChannelInternals } from '../types'
 export function notifyMessage(channel: ChannelInternals, message: IMessage): void {
   const state = channel.getState()
 
-  // Notify all message subscribers
   for (const handler of state.messageSubscriptions) {
     try {
       handler(message)

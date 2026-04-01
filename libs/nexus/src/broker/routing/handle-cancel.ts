@@ -30,26 +30,21 @@ export function handleCancel(context: RoutingContext, message: MessageEvent<IAct
   const senderId = <string>(<Record<string, unknown>>(<unknown>action))['senderId']
   const processId = <string>(<Record<string, unknown>>(<unknown>action))['processId']
 
-  // Try to find channel by sender ID or process ID
   const channel = <ChannelHandle | undefined>(getById(registry, senderId) || processManager.get(processId))
 
   if (!channel) {
-    return // Channel not found
+    return
   }
 
-  // Cancel the channel (without notifying - we'll notify after acknowledgement)
   channel.cancel(false)
 
-  // Send acknowledgement back to the sender
   channel.sendAction({
     type: '[nexus] connection-request-cancelled-acknowledged',
     processId,
     senderId: state.id,
   })
 
-  // Terminate process
   processManager.remove(processId)
 
-  // Notify CANCELLED event
   channel.notifyEvent('cancel', { notify: true })
 }

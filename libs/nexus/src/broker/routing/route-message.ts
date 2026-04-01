@@ -21,10 +21,8 @@ export function routeMessage(router: Map<string, RouteHandler>, context: Routing
       return
     }
 
-    // Log received action
     logAction(logger, action, 'received')
 
-    // Look up handler for this action type
     const handler = router.get(actionType)
 
     if (!handler) {
@@ -32,7 +30,6 @@ export function routeMessage(router: Map<string, RouteHandler>, context: Routing
       return
     }
 
-    // Execute handler with routing context
     handler(context, message)
   } catch (error) {
     logger.error('Error routing message:', <Error>error)

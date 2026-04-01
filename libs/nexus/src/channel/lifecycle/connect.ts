@@ -19,26 +19,21 @@ import { flush } from '../messaging/flush'
 export function connect(channel: ChannelInternals): void {
   const state = channel.getState()
 
-  // Don't connect if already active
   if (state.active) {
     return
   }
 
-  // Mark as ready to connect (for broker's REQUEST handler)
   if (!state.readyToConnect) {
     channel.updateState({ readyToConnect: true })
   }
 
-  // Set connect timestamp if not already set
   if (!state.connectTimestamp) {
     channel.updateState({ connectTimestamp: dateNow() })
   }
 
-  // If we have a scheduled activation, accept it
   if (state.scheduledActivation) {
     const [senderId, origin, contract, processId] = state.scheduledActivation
 
-    // Activate the channel
     channel.updateState({
       id: senderId,
       origin,
@@ -48,17 +43,14 @@ export function connect(channel: ChannelInternals): void {
       scheduledActivation: null,
     })
 
-    // Send acceptance
     const acceptAction = channel.actions.acceptConnection(processId)
     channel.sendAction(acceptAction)
 
-    // Notify subscribers
     channel.notifyEvent('open', { id: senderId, origin })
 
     return
   }
 
-  // Auto-activate broker-managed channels (same-context scenario)
   if (state.brokerManaged && state.contract) {
     channel.updateState({
       origin: '*',
@@ -66,16 +58,13 @@ export function connect(channel: ChannelInternals): void {
       acceptedActions: state.contract.accepted.map((a) => a.type),
     })
 
-    // Notify subscribers
     channel.notifyEvent('open', { id: state.id, origin: '*' })
 
-    // Flush any queued messages
     flush(channel)
 
     return
   }
 
-  // Create a new connection process
   const processId = channel.createProcess()
   const requestAction = channel.actions.requestConnection(processId)
   channel.sendAction(requestAction)

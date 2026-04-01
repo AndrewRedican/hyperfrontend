@@ -86,8 +86,8 @@ describe('Setup Utilities', () => {
       }
 
       const contract2: IChannelContract = {
-        accepted: [{ type: 'message' }], // Duplicate
-        emitted: [{ type: 'response' }], // Duplicate
+        accepted: [{ type: 'message' }],
+        emitted: [{ type: 'response' }],
       }
 
       const merged = mergeContracts(contract1, contract2)
@@ -253,7 +253,6 @@ describe('Setup Utilities', () => {
 
       const merged = mergeContracts(validContract, partialContract)
 
-      // Should still have the valid contract's data
       expect(merged.accepted).toContainEqual({ type: 'test' })
       expect(merged.emitted).toContainEqual({ type: 'result' })
     })
@@ -271,7 +270,6 @@ describe('Setup Utilities', () => {
 
       const merged = mergeContracts(contract1, contract2)
 
-      // Modifying merged should not affect originals
       merged.accepted.push({ type: 'new' })
 
       expect(contract1.accepted).toHaveLength(1)
@@ -345,7 +343,6 @@ describe('Setup Utilities', () => {
 
   describe('Integration', () => {
     it('works together for complete broker setup', () => {
-      // Create contracts
       const baseContract: IChannelContract = {
         accepted: ['ping', 'getData'].map((type) => ({ type })),
         emitted: ['pong', 'data'].map((type) => ({ type })),
@@ -356,10 +353,8 @@ describe('Setup Utilities', () => {
         emitted: ['updated', 'deleted'].map((type) => ({ type })),
       }
 
-      // Merge contracts
       const fullContract = mergeContracts(baseContract, extendedContract)
 
-      // Create broker
       const broker = setupBroker({
         name: 'integrated-broker',
         logLevel: 'debug',

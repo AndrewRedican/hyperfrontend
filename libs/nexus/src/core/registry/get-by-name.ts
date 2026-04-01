@@ -1,6 +1,5 @@
 import type { ChannelRegistry } from './factory'
 
-// Minimal channel structure required for registry operations
 interface MinimalChannel {
   id: string
   name: string

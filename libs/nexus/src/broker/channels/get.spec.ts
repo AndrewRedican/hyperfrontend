@@ -99,10 +99,8 @@ describe('getChannel', () => {
     it('prioritizes ID lookup over name lookup', () => {
       const mockWindow1 = <Window>{}
 
-      // Create channel with name 'test-channel'
       const channel1 = addChannel(mockBrokerState, registry, processManager, actions, 'test-channel', mockWindow1)
 
-      // If we search by channel1's ID, should get channel1 even if name matches another
       const found = getChannel(registry, channel1.id)
 
       expect(found).toBe(channel1)
@@ -121,7 +119,6 @@ describe('getChannel', () => {
 
       addChannel(mockBrokerState, registry, processManager, actions, 'duplicate-name', window1)
 
-      // getByName returns the first matching channel (duplicates are allowed)
       const found = getChannel(registry, 'duplicate-name')
 
       expect(found).toBeTruthy()

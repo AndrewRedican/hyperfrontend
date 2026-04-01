@@ -20,19 +20,16 @@ import { disconnect } from './disconnect'
 export function cancel(channel: ChannelInternals, notify = true): void {
   const state = channel.getState()
 
-  // If already open, just disconnect
   if (state.active) {
     disconnect(channel, notify)
     return
   }
 
-  // Send cancel notification if requested
   if (notify) {
     const processId = channel.createProcess()
     const cancelAction = channel.actions.cancelConnection(processId)
     channel.sendAction(cancelAction)
   }
 
-  // Notify event subscribers
   channel.notifyEvent('cancel')
 }

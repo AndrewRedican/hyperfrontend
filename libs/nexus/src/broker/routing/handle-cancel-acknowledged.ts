@@ -25,16 +25,13 @@ export function handleCancelAcknowledged(context: RoutingContext, message: Messa
   const action = message.data
   const processId = <string>(<Record<string, unknown>>(<unknown>action))['processId']
 
-  // Get channel by process ID
   const channel = <ChannelHandle | undefined>processManager.get(processId)
 
   if (!channel) {
-    return // Channel not found
+    return
   }
 
-  // Terminate process
   processManager.remove(processId)
 
-  // Notify CANCELLED event to subscribers
   channel.notifyEvent('cancel', { notify: false })
 }

@@ -43,30 +43,24 @@ export function handleRequest(context: RoutingContext, message: MessageEvent<IAc
   const action = message.data
   const senderId = <string>action.senderId
 
-  // Use type guards to safely access action properties
   if (!isActionWithContract(action)) {
-    return // Invalid action structure
+    return
   }
 
   const processId = action.processId
   const contract = action.contract
 
-  // Extract security request (may be undefined for backward compatibility)
   const securityRequest = <SecurityNegotiationRequest | undefined>(<IActionWithContractAndSecurity>action).security
 
-  // Get existing channel by ID or create new one
   let channel = <ChannelHandle | undefined>getById(registry, senderId)
   if (!channel) {
     channel = addChannel(state, registry, processManager, actions, senderId, <Window>message.source, {})
   }
 
-  // Track this process - associate processId with channel for later lookup
   processManager.create(channel)
 
-  // If channel is already open and sender matches
   if (channel.isActive()) {
     if (senderId === channel.id) {
-      // Send accept immediately (with security response if request was present)
       const securityResponse = securityRequest
         ? createSecurityResponse(negotiateProtocol(securityRequest, DEFAULT_RESPONDER_SUPPORTED).negotiated)
         : undefined
@@ -79,17 +73,14 @@ export function handleRequest(context: RoutingContext, message: MessageEvent<IAc
         ...(securityResponse && { security: securityResponse }),
       })
     } else {
-      // Page reloaded - log
       logger.info(`${state.name} detected channel [${channel.getName()}] reloaded.`)
     }
     return
   }
 
-  // Validate contract
   try {
     validateContractFn(contract)
   } catch {
-    // Invalid contract - deny and terminate
     channel.sendAction({
       type: '[nexus] connection-request-denied',
       processId,
@@ -100,7 +91,6 @@ export function handleRequest(context: RoutingContext, message: MessageEvent<IAc
     return
   }
 
-  // Apply security policy if configured
   if (state.settings.securityPolicy) {
     const allowed = applyPolicy(state.settings.securityPolicy, message, logger)
     if (!allowed) {
@@ -115,21 +105,17 @@ export function handleRequest(context: RoutingContext, message: MessageEvent<IAc
     }
   }
 
-  // Store pending security request for later use during acceptance
   if (securityRequest) {
     channel.setPendingSecurityRequest(securityRequest)
   }
 
-  // Check if channel is ready to connect (i.e., connect() has been called)
   if (!channel.isReadyToConnect()) {
-    // Schedule activation for when connect() is called
     channel.scheduleActivation(senderId, message.origin, contract, processId)
 
     logger.info(`${state.name} scheduled activation for channel ${channel.getName()}`)
     return
   }
 
-  // Negotiate security protocol
   let securityResponse = undefined
   if (securityRequest) {
     const result = negotiateProtocol(securityRequest, DEFAULT_RESPONDER_SUPPORTED)
@@ -139,10 +125,8 @@ export function handleRequest(context: RoutingContext, message: MessageEvent<IAc
     logger.info(`${state.name} negotiated security protocol: ${result.negotiated}`)
   }
 
-  // Activate channel with connection details
   channel.activate(message.origin, contract)
 
-  // Send acceptance with security response if applicable
   channel.sendAction({
     type: '[nexus] connection-request-accepted',
     processId,

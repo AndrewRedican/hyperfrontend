@@ -28,15 +28,11 @@ export function handleDestroy(context: RoutingContext, message: MessageEvent<IAc
   const action = message.data
   const senderId = <string>action.senderId
 
-  // Get channel by sender ID
   const channel = <ChannelHandle>(<unknown>getById(registry, senderId))
 
   if (!channel) {
-    return // Channel not found
+    return
   }
 
-  // Destroy channel immediately (without notifying)
   channel.destroy(false)
-
-  // Channel will be removed from registry by its destroy method
 }

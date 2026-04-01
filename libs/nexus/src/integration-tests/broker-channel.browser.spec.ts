@@ -22,17 +22,14 @@ describe('Integration: Broker + Channel', () => {
         contract: testContract,
       })
 
-      // Add channel
       const channel = broker.addChannel('test-channel', <Window>(<unknown>mockWindow))
       expect(channel).toBeDefined()
       expect(channel.name).toBe('test-channel')
       expect(channel.isActive()).toBe(false)
 
-      // Connect
       channel.connect()
       expect(channel.isActive()).toBe(true)
 
-      // Disconnect
       channel.disconnect()
       expect(channel.isActive()).toBe(false)
     })
@@ -46,10 +43,8 @@ describe('Integration: Broker + Channel', () => {
       const channel = broker.addChannel('test-channel', <Window>(<unknown>mockWindow))
       channel.connect()
 
-      // Send message
       channel.send('PING', { timestamp: Date.now() })
 
-      // Verify postMessage was called
       expect(mockWindow.postMessage).toHaveBeenCalled()
     })
 
@@ -62,16 +57,12 @@ describe('Integration: Broker + Channel', () => {
       const channel = broker.addChannel('test-channel', <Window>(<unknown>mockWindow))
       const messageHandler = jest.fn()
 
-      // Subscribe to messages
       const unsubscribe = channel.onMessage(messageHandler)
 
-      // Connect and send
       channel.connect()
 
-      // Verify subscription setup works (messages arrive via postMessage events)
       expect(unsubscribe).toBeInstanceOf(Function)
 
-      // Cleanup
       unsubscribe()
       channel.disconnect()
     })
@@ -85,10 +76,8 @@ describe('Integration: Broker + Channel', () => {
       const channel = broker.addChannel('test-channel', <Window>(<unknown>mockWindow))
       const eventHandler = jest.fn()
 
-      // Subscribe to open events
       const unsubscribe = channel.on(eventHandler)
 
-      // Connect should trigger open event
       channel.connect()
 
       expect(eventHandler).toHaveBeenCalledWith(
@@ -114,10 +103,8 @@ describe('Integration: Broker + Channel', () => {
       const channel = broker.addChannel('test-channel', <Window>(<unknown>mockWindow))
       channel.connect()
 
-      // Clear previous calls
       mockWindow.postMessage.mockClear()
 
-      // Send multiple messages
       channel.send('PING', { id: 1 })
       channel.send('DATA_REQUEST', { query: 'test' })
 
@@ -132,16 +119,12 @@ describe('Integration: Broker + Channel', () => {
 
       const channel = broker.addChannel('test-channel', <Window>(<unknown>mockWindow))
 
-      // Send message before connecting
       channel.send('PING', { id: 1 })
 
-      // Message should be queued, not sent immediately
       expect(mockWindow.postMessage).not.toHaveBeenCalled()
 
-      // Connect should flush the queue
       channel.connect()
 
-      // Now the message should be sent
       expect(mockWindow.postMessage).toHaveBeenCalled()
     })
   })
@@ -155,14 +138,11 @@ describe('Integration: Broker + Channel', () => {
 
       const channel = broker.addChannel('test-channel', <Window>(<unknown>mockWindow))
 
-      // Initial state
       expect(channel.isActive()).toBe(false)
 
-      // After connect
       channel.connect()
       expect(channel.isActive()).toBe(true)
 
-      // After disconnect
       channel.disconnect()
       expect(channel.isActive()).toBe(false)
     })
@@ -175,7 +155,6 @@ describe('Integration: Broker + Channel', () => {
 
       const channel = broker.addChannel('test-channel', <Window>(<unknown>mockWindow))
 
-      // Multiple cycles
       for (let i = 0; i < 3; i++) {
         channel.connect()
         expect(channel.isActive()).toBe(true)
@@ -195,15 +174,12 @@ describe('Integration: Broker + Channel', () => {
 
       const channel = broker.addChannel('test-channel', <Window>(<unknown>mockWindow))
 
-      // Get by window
       const byWindow = broker.getChannel(<Window>(<unknown>mockWindow))
       expect(byWindow).toBe(channel)
 
-      // Get by name
       const byName = broker.getChannel('test-channel')
       expect(byName).toBe(channel)
 
-      // Get by ID
       const byId = broker.getChannel(channel.id)
       expect(byId).toBe(channel)
     })
@@ -260,7 +236,6 @@ describe('Integration: Broker + Channel', () => {
 
       const channel = broker.addChannel('test-channel', <Window>(<unknown>mockWindow))
 
-      // Disconnect without connecting
       expect(() => {
         channel.disconnect()
       }).not.toThrow()
@@ -279,7 +254,6 @@ describe('Integration: Broker + Channel', () => {
       const eventHandler = jest.fn()
       channel.on(eventHandler)
 
-      // Destroy should trigger cleanup
       channel.destroy()
 
       expect(channel.isActive()).toBe(false)

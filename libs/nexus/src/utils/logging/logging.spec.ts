@@ -31,7 +31,6 @@ describe('Logging Utilities', () => {
       const logger1 = createLogger({ level: 'debug' })
       const logger2 = createLogger({ level: 'error' })
 
-      // They should be different instances
       expect(logger1).not.toBe(logger2)
     })
 
@@ -86,7 +85,6 @@ describe('Logging Utilities', () => {
         getLogLevel: jest.fn(() => 'debug'),
       }
 
-      // Custom logger should be used directly
       const logger = createLogger({ level: 'error', customLogger })
 
       logger.debug('should still be logged')
@@ -97,7 +95,6 @@ describe('Logging Utilities', () => {
     it('falls back to library logger when no custom logger provided', () => {
       const logger = createLogger({ level: 'debug' })
 
-      // Should have created a new logger, not be undefined
       expect(logger).toBeDefined()
       expect(logger.debug).toBeDefined()
       expect(logger.info).toBeDefined()
@@ -109,7 +106,6 @@ describe('Logging Utilities', () => {
       const logger = createLogger({ level: 'error' })
       const debugSpy = jest.spyOn(console, 'debug').mockImplementation()
 
-      // Call debug - should not invoke console.debug
       logger.debug('this should not appear')
 
       expect(debugSpy).not.toHaveBeenCalled()
@@ -293,7 +289,6 @@ describe('Logging Utilities', () => {
       actionTypes.forEach((type) => {
         let action: IAction
 
-        // Create appropriate action structure based on type
         if (type === ACTION_TYPES.REQUEST_CONNECTION || type === ACTION_TYPES.ACCEPT_CONNECTION) {
           action = {
             type,
@@ -429,12 +424,10 @@ describe('Logging Utilities', () => {
         data: { message: 'Hello' },
       }
 
-      // Log sending
       logAction(mockLogger, action, 'sent')
       expect(mockLogger.debug).toHaveBeenCalledWith('Action sent:', ACTION_TYPES.NEW_MESSAGE, action)
       ;(<jest.Mock>mockLogger.debug).mockClear()
 
-      // Log receiving
       logAction(mockLogger, action, 'received')
       expect(mockLogger.debug).toHaveBeenCalledWith('Action received:', ACTION_TYPES.NEW_MESSAGE, action)
     })
@@ -450,7 +443,6 @@ describe('Logging Utilities', () => {
         getLogLevel: jest.fn(() => 'debug'),
       }
 
-      // Log connection lifecycle
       logEvent(mockLogger, 'open', { channelId: '1' })
       expect(mockLogger.debug).toHaveBeenNthCalledWith(1, 'Channel event:', 'open', { channelId: '1' })
 

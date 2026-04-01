@@ -19,16 +19,13 @@ import type { ChannelInternals } from '../types'
  * ```
  */
 export function destroy(channel: ChannelInternals, notify = true): void {
-  // Set inactive immediately
   channel.updateState({ active: false })
 
-  // Notify target if requested
   if (notify) {
     const destroyAction = channel.actions.destroyConnection()
     channel.sendAction(destroyAction)
   }
 
-  // Remove from broker registries (if cleanup callback provided)
   if (channel.cleanup) {
     channel.cleanup()
   }

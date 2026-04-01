@@ -123,7 +123,6 @@ describe('channel/subscription/events', () => {
     unsubscribe()
     expect(state.eventSubscriptions).toHaveLength(0)
 
-    // Second call should not throw
     unsubscribe()
     expect(state.eventSubscriptions).toHaveLength(0)
   })
@@ -154,19 +153,17 @@ describe('channel/subscription/events', () => {
         queuedMessagesCount: 0,
       }
 
-      // Simulate 'open' event
       const wrappedOpenHandler = state.eventSubscriptions[0]
       wrappedOpenHandler('open', { origin: 'http://test.com', contract: { emitted: [], accepted: [] } }, mockChannelJSON)
 
       expect(openHandler).toHaveBeenCalledWith({ origin: 'http://test.com', contract: { emitted: [], accepted: [] } }, mockChannelJSON)
       expect(closeHandler).not.toHaveBeenCalled()
 
-      // Simulate 'close' event
       const wrappedCloseHandler = state.eventSubscriptions[1]
       wrappedCloseHandler('close', { notify: true }, mockChannelJSON)
 
       expect(closeHandler).toHaveBeenCalledWith({ notify: true }, mockChannelJSON)
-      expect(openHandler).toHaveBeenCalledTimes(1) // Still only called once
+      expect(openHandler).toHaveBeenCalledTimes(1)
     })
 
     it('does not call handler for non-matching event type', () => {
@@ -184,7 +181,6 @@ describe('channel/subscription/events', () => {
         queuedMessagesCount: 0,
       }
 
-      // Simulate 'close' event on open handler
       const wrappedHandler = state.eventSubscriptions[0]
       wrappedHandler('close', { notify: true }, mockChannelJSON)
 
@@ -244,7 +240,6 @@ describe('channel/subscription/events', () => {
         queuedMessagesCount: 0,
       }
 
-      // Both handlers should be called for 'open' event
       const openData = { origin: 'http://test.com', contract: { emitted: [], accepted: [] } }
       state.eventSubscriptions[0]('open', openData, mockChannelJSON)
       state.eventSubscriptions[1]('open', openData, mockChannelJSON)
@@ -274,13 +269,10 @@ describe('channel/subscription/events', () => {
 
       const openData = { origin: 'http://test.com', contract: { emitted: [], accepted: [] } }
 
-      // Call all handlers with 'open' event
       state.eventSubscriptions[0]('open', openData, mockChannelJSON)
       state.eventSubscriptions[1]('open', openData, mockChannelJSON)
 
-      // Generic handler receives full signature
       expect(genericHandler).toHaveBeenCalledWith('open', openData, mockChannelJSON)
-      // Event-specific handler receives data and channel only
       expect(openHandler).toHaveBeenCalledWith(openData, mockChannelJSON)
     })
   })

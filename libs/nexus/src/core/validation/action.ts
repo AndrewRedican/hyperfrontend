@@ -31,7 +31,6 @@ export function validateAction(action: unknown): void {
     throw createError('Action must have a valid positive timestamp')
   }
 
-  // Validate processId if present
   if (actionRecord['processId'] !== undefined && actionRecord['processId'] !== null && !isUuidV4(<string>actionRecord['processId'])) {
     throw createError('Action processId must be a valid UUID when present')
   }

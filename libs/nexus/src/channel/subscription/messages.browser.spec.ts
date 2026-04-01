@@ -121,7 +121,6 @@ describe('channel/subscription/messages', () => {
     unsubscribe()
     expect(state.messageSubscriptions).toHaveLength(0)
 
-    // Second call should not throw
     unsubscribe()
     expect(state.messageSubscriptions).toHaveLength(0)
   })

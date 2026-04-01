@@ -26,7 +26,6 @@ describe('Integration: Heartbeat', () => {
       const channel = broker.addChannel('heartbeat-channel', <Window>(<unknown>mockWindow))
       channel.connect()
 
-      // Send ping every 100ms
       const pings: number[] = []
       await new Promise<void>((resolve) => {
         const interval = setInterval(() => {
@@ -62,13 +61,10 @@ describe('Integration: Heartbeat', () => {
 
         channel.send('PING', { timestamp: Date.now() })
 
-        // Resolve after a short delay
         setTimeout(() => resolve(received), 50)
       })
 
-      // In real scenario, other side would respond with PONG
-      // For testing, we're just verifying the handler is set up
-      expect(pongReceived).toBe(false) // No actual response in mock
+      expect(pongReceived).toBe(false)
     })
   })
 
@@ -115,10 +111,9 @@ describe('Integration: Heartbeat', () => {
       const channel = broker.addChannel('timeout-channel', <Window>(<unknown>mockWindow))
       channel.connect()
 
-      const timeout = 500 // ms
+      const timeout = 500
       const lastPong = Date.now()
 
-      // Simulate timeout check
       await new Promise<void>((resolve) => {
         setTimeout(() => {
           const elapsed = Date.now() - lastPong
@@ -139,15 +134,12 @@ describe('Integration: Heartbeat', () => {
 
       const channel = broker.addChannel('reconnect-channel', <Window>(<unknown>mockWindow))
 
-      // First connection
       channel.connect()
       expect(channel.isActive()).toBe(true)
 
-      // Disconnect
       channel.disconnect()
       expect(channel.isActive()).toBe(false)
 
-      // Reconnect
       channel.connect()
       expect(channel.isActive()).toBe(true)
     })
@@ -202,7 +194,6 @@ describe('Integration: Heartbeat', () => {
       channel.connect()
       channel.disconnect()
 
-      // Send messages while disconnected (should be queued)
       channel.send('DATA', { message: 'queued-1' })
       channel.send('DATA', { message: 'queued-2' })
 
@@ -228,7 +219,6 @@ describe('Integration: Heartbeat', () => {
 
       channel.connect()
 
-      // After reconnect, queued messages should be sent
       expect(mockWindow.postMessage).toHaveBeenCalled()
     })
   })
@@ -246,7 +236,6 @@ describe('Integration: Heartbeat', () => {
       const openEventReceived = await new Promise<boolean>((resolve) => {
         channel.on((event, data) => {
           if (event === 'open') {
-            // Verify data is defined
             if (data !== undefined) {
               resolve(true)
             }
@@ -255,7 +244,6 @@ describe('Integration: Heartbeat', () => {
 
         channel.connect()
 
-        // Timeout after 100ms in case event doesn't fire
         setTimeout(() => resolve(false), 100)
       })
 
@@ -281,7 +269,6 @@ describe('Integration: Heartbeat', () => {
 
         channel.disconnect()
 
-        // Timeout after 100ms in case event doesn't fire
         setTimeout(() => resolve(false), 100)
       })
 

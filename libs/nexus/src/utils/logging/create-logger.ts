@@ -8,7 +8,6 @@ import {
 } from '@hyperfrontend/immutable-api-utils/built-in-copy/console'
 import { createLogger as createLoggerFromLib } from '@hyperfrontend/logging'
 
-// Re-export for consumers
 export type { Logger, LogLevel }
 
 /**
@@ -48,7 +47,6 @@ export function createLogger(options: NexusLoggerOptions = {}): Logger {
 function createLoggerInternal(options: NexusLoggerOptions): Logger {
   const { level = 'error', prefix = DEFAULT_PREFIX, customLogger } = options
 
-  // If a custom logger is provided, use it directly
   if (customLogger) {
     return customLogger
   }
@@ -63,7 +61,6 @@ function createLoggerInternal(options: NexusLoggerOptions): Logger {
 
   const logger = createLoggerFromLib(error, warn, log, info, debug)
 
-  // Set the log level
   logger.setLogLevel(level)
 
   return logger

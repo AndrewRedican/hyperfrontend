@@ -206,12 +206,9 @@ describe('SecureTransport', () => {
     it('does not deliver when handler not yet registered', () => {
       const transport = createTransport()
 
-      // Initialize protocol via send() without registering a handler
       transport.send({ type: 'TEST' })
 
-      // Now receivePacket exists but receiveHandler is undefined
       expect(capturedReceivePacket).toBeDefined()
-      // This should not throw and should be silently ignored
       expect(() => {
         if (capturedReceivePacket) {
           capturedReceivePacket({ origin: 'nexus', target: 'channel', data: { type: 'TEST' } })

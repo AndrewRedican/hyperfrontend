@@ -83,7 +83,6 @@ describe('channel/factory', () => {
       cleanup: jest.fn(),
     }
 
-    // Mock postMessage on window
     window.postMessage = jest.fn()
   })
 
@@ -91,7 +90,7 @@ describe('channel/factory', () => {
     it('creates channel with correct ID and name', () => {
       const channel = createChannel(config, deps)
 
-      expect(channel.getId()).toMatch(/^[a-f0-9-]{36}$/) // UUID format
+      expect(channel.getId()).toMatch(/^[a-f0-9-]{36}$/)
       expect(channel.getName()).toBe('test-channel')
       expect(channel.getTarget()).toBe(window)
       expect(channel.isActive()).toBe(false)
@@ -161,14 +160,10 @@ describe('channel/factory', () => {
     it('disconnect active channel', () => {
       const channel = createChannel(config, deps)
 
-      // Connect first
       channel.connect()
 
-      // The channel is not actually active in this test - it just sent REQUEST
-      // So disconnect won't actually send CLOSE (it only does so for active channels)
       channel.disconnect()
 
-      // Since channel is not active, closeConnection should NOT be called
       expect(deps.actions.closeConnection).not.toHaveBeenCalled()
     })
   })
@@ -177,10 +172,8 @@ describe('channel/factory', () => {
     it('queue messages when channel is inactive', () => {
       const channel = createChannel(config, deps)
 
-      // Channel is inactive by default, so messages should be queued
       channel.send('test-type', { foo: 'bar' })
 
-      // Message should be queued, not sent yet
       const json = channel.toJSON()
       expect(json.queuedMessagesCount).toBe(1)
     })
@@ -217,10 +210,8 @@ describe('channel/factory', () => {
 
       channel.scheduleActivation('sender-id', 'https://example.com', contract, 'process-123')
 
-      // When connect() is called, it should use the scheduled activation
       channel.connect()
 
-      // Should have sent acceptance, not request
       expect(deps.actions.acceptConnection).toHaveBeenCalledWith('process-123')
       expect(deps.actions.requestConnection).not.toHaveBeenCalled()
     })
@@ -262,7 +253,6 @@ describe('channel/factory', () => {
       channel.on('open', openHandler)
       channel.on('close', closeHandler)
 
-      // Trigger an 'open' event
       channel.notifyEvent('open', { origin: 'http://test.com', contract: { emitted: [], accepted: [] } })
 
       expect(openHandler).toHaveBeenCalledTimes(1)
@@ -302,7 +292,6 @@ describe('channel/factory', () => {
     it('includes queued messages count', () => {
       const channel = createChannel(config, deps)
 
-      // Queue some messages (channel is inactive by default, queueMessages is true)
       channel.send('msg1', {})
       channel.send('msg2', {})
 

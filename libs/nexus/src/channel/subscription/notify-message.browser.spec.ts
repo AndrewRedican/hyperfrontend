@@ -88,7 +88,6 @@ describe('channel/subscription/notify-message', () => {
       data: {},
     }
 
-    // Should not throw
     expect(() => notifyMessage(mockChannel, message)).not.toThrow()
   })
 

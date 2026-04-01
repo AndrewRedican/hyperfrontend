@@ -12,13 +12,11 @@ import { getByWindow } from '../../core/registry/get-by-window'
  * @returns The channel if found, null otherwise
  */
 export function getChannel(registry: Registry, reference: string | Window): ReturnType<typeof createChannel> | null {
-  // Window lookup - check if it's an object (Window-like) and not a string
   if (typeof reference === 'object' && reference !== null) {
     const channel = getByWindow(registry, <Window>reference)
     return <ReturnType<typeof createChannel>>(<unknown>channel) ?? null
   }
 
-  // String lookup - try ID first, then name
   if (typeof reference === 'string') {
     const channel = getById(registry, reference) ?? getByName(registry, reference)
     return <ReturnType<typeof createChannel>>(<unknown>channel) ?? null

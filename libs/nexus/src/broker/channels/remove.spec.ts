@@ -105,7 +105,6 @@ describe('removeChannel', () => {
 
     removeChannel(registry, channel)
 
-    // Should not throw when removing again
     expect(() => removeChannel(registry, channel)).not.toThrow()
   })
 })

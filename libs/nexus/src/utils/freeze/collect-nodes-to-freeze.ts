@@ -35,26 +35,20 @@ export function collectNodesToFreeze(value: unknown, config: DeepFreezeConfig = 
    * @param depth - Current depth in the tree (0 = root)
    */
   function visit(val: unknown, depth: number): void {
-    // Skip non-iterables (primitives, null, undefined)
     if (!isIterable(val)) return
 
     const obj = <object>val
 
-    // Skip already visited (handles circular references)
     if (visited.has(obj)) return
 
-    // Skip if depth limit exceeded
     if (depth > maxDepth) return
 
-    // Mark as visited before processing children (prevents infinite loops)
     visited.add(obj)
 
-    // Collect for freezing if not already frozen
     if (!isFrozen(obj)) {
       nodesToFreeze.push({ value: obj, depth })
     }
 
-    // Recursively visit children
     const type = getType(val)
     const keys = getKeysFromIterable(val, type)
     for (const key of keys) {
@@ -64,6 +58,5 @@ export function collectNodesToFreeze(value: unknown, config: DeepFreezeConfig = 
 
   visit(value, 0)
 
-  // Sort deepest first for bottom-up freezing
   return nodesToFreeze.sort((a, b) => b.depth - a.depth)
 }

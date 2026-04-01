@@ -90,12 +90,7 @@ export interface IActionWithData extends IActionBase {
 /**
  * Union type representing all possible action structures
  */
-export type IAction =
-  | IActionWithContract // REQUEST_CONNECTION, ACCEPT_CONNECTION
-  | IActionWithError // INVALID_REQUEST, DENY_CONNECTION
-  | IActionWithData // NEW_MESSAGE
-  | IActionWithProcess // CANCEL_*, OPEN_CONNECTION, CLOSE_*
-  | IActionBase // DESTROY_CONNECTION
+export type IAction = IActionWithContract | IActionWithError | IActionWithData | IActionWithProcess | IActionBase
 
 /**
  * Type guards for specific action types

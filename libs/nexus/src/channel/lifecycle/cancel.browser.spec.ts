@@ -3,7 +3,6 @@ import type { IAction } from '../../types/action'
 import type { ChannelInternals } from '../types'
 import { cancel } from './cancel'
 
-// Mutable version of ChannelState for testing
 type MutableChannelState = { -readonly [K in keyof ChannelState]: ChannelState[K] }
 
 describe('channel/lifecycle/cancel', () => {
@@ -19,7 +18,7 @@ describe('channel/lifecycle/cancel', () => {
       name: 'test-channel',
       target: window,
       origin: null,
-      active: false, // Start closed
+      active: false,
       connectTimestamp: null,
       contract: null,
       acceptedActions: [],
@@ -112,7 +111,6 @@ describe('channel/lifecycle/cancel', () => {
 
     cancel(mockChannel)
 
-    // Should have called disconnect, which sets inactive and sends CLOSE_CONNECTION
     expect(state.active).toBe(false)
     expect(mockChannel.actions.closeConnection).toHaveBeenCalled()
     expect(mockChannel.actions.cancelConnection).not.toHaveBeenCalled()
@@ -125,7 +123,6 @@ describe('channel/lifecycle/cancel', () => {
 
     cancel(mockChannel, false)
 
-    // Disconnect should be called with notify=false
     expect(state.active).toBe(false)
     expect(mockChannel.actions.closeConnection).not.toHaveBeenCalled()
     expect(sentActions).toHaveLength(0)

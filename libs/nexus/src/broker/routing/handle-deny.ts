@@ -27,16 +27,13 @@ export function handleDeny(context: RoutingContext, message: MessageEvent<IActio
   const processId = <string>(<Record<string, unknown>>(<unknown>action))['processId']
   const error = <string | undefined>(<Record<string, unknown>>(<unknown>action))['error']
 
-  // Get channel by process ID
   const channel = <ChannelHandle | undefined>processManager.get(processId)
 
   if (!channel) {
-    return // Channel not found
+    return
   }
 
-  // Terminate process by removing it from the process manager
   processManager.remove(processId)
 
-  // Notify DENIED event with error context
   channel.notifyEvent('deny', { error, origin: message.origin })
 }

@@ -21,12 +21,10 @@ export function validateOrigin(origin: string): void {
     throw createError('Origin cannot be empty')
   }
 
-  // Allow wildcard
   if (origin === '*') {
     return
   }
 
-  // Validate as URL
   try {
     const url = createURL(origin)
     if (!['http:', 'https:'].includes(url.protocol)) {

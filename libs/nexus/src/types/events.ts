@@ -6,15 +6,7 @@ import type { SecurityProtocolVersion } from './security'
 /**
  * Channel lifecycle event types
  */
-export type ChannelEvent =
-  | 'open' // Channel successfully opened
-  | 'close' // Channel closed gracefully
-  | 'cancel' // Connection cancelled
-  | 'deny' // Connection denied
-  | 'invalid' // Invalid request received
-  | 'security-negotiated' // Security protocol negotiated
-  | 'security-ready' // Security transport ready for messages
-  | 'security-error' // Security error occurred
+export type ChannelEvent = 'open' | 'close' | 'cancel' | 'deny' | 'invalid' | 'security-negotiated' | 'security-ready' | 'security-error'
 
 /**
  * Data payload for OPEN event

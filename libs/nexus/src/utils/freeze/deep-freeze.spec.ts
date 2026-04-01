@@ -420,7 +420,6 @@ describe('deepFreeze', () => {
       const obj: { name: string; self?: unknown } = { name: 'circular' }
       obj.self = obj
 
-      // Should complete without infinite loop
       expect(() => {
         deepFreeze(obj, mockLogger)
       }).not.toThrow()
@@ -446,7 +445,6 @@ describe('deepFreeze', () => {
       }
       const result = deepFreeze(obj, mockLogger)
 
-      // These should be accessible (TypeScript compilation check)
       expect(result.name).toBe('test')
       expect(result.value).toBe(42)
       expect(result.nested.flag).toBe(true)
@@ -456,7 +454,6 @@ describe('deepFreeze', () => {
       const arr = [1, 2, 3, 4, 5]
       const result = deepFreeze(arr, mockLogger)
 
-      // Should maintain array methods
       expect(result.length).toBe(5)
       expect(result.includes(3)).toBe(true)
       expect(result.indexOf(4)).toBe(3)
@@ -475,7 +472,6 @@ describe('deepFreeze', () => {
 
       const frozen = deepFreeze(config, mockLogger)
 
-      // All modifications should throw
       expect(() => {
         // @ts-expect-error - intentionally trying to modify frozen object
         frozen.name = 'x'
@@ -491,7 +487,6 @@ describe('deepFreeze', () => {
         frozen.settings.options.push('c')
       }).toThrow()
 
-      // Values should remain unchanged
       expect(frozen.name).toBe('app')
       expect(frozen.settings.debug).toBe(true)
       expect(frozen.settings.options).toEqual(['a', 'b'])
@@ -504,7 +499,6 @@ describe('deepFreeze', () => {
       const frozenParent = Object.freeze({ child: unfrozenChild })
       const root = { frozen: frozenParent }
 
-      // Should NOT throw - the problematic case before the fix
       expect(() => deepFreeze(root, mockLogger)).not.toThrow()
 
       const result = deepFreeze(root, mockLogger)
@@ -517,7 +511,6 @@ describe('deepFreeze', () => {
       const frozen = Object.freeze({ backToRoot: root })
       root.child.frozen = frozen
 
-      // Should NOT throw and complete gracefully
       expect(() => deepFreeze(root, mockLogger)).not.toThrow()
 
       const result = deepFreeze(root, mockLogger)
@@ -547,8 +540,6 @@ describe('deepFreeze', () => {
 
       deepFreeze(obj, mockLogger)
 
-      // logger.debug should not be called for freeze errors on already frozen objects
-      // because we skip them entirely
       expect(Object.isFrozen(obj)).toBe(true)
       expect(Object.isFrozen(obj.unfrozen)).toBe(true)
     })
@@ -563,7 +554,6 @@ describe('deepFreeze', () => {
 
       const result = deepFreeze(obj, mockLogger)
 
-      // Should freeze successfully
       expect(Object.isFrozen(result)).toBe(true)
       expect(Object.isFrozen(result.normal)).toBe(true)
       expect(Object.isFrozen(result.anotherNormal)).toBe(true)
@@ -589,15 +579,12 @@ describe('deepFreeze', () => {
 
       const result = deepFreeze(obj, mockLogger, { maxDepth: 1 })
 
-      // Root and level1 should be frozen (depth 0 and 1)
       expect(Object.isFrozen(result)).toBe(true)
       expect(Object.isFrozen(result.level1)).toBe(true)
-      // Deeper levels should NOT be frozen (depth 2+)
       expect(Object.isFrozen(result.level1.level2)).toBe(false)
     })
 
     it('uses sensible default maxDepth', () => {
-      // Create deep structure within default limit
       let current: Record<string, unknown> = {}
       const root = current
       for (let i = 0; i < 50; i++) {
@@ -607,10 +594,8 @@ describe('deepFreeze', () => {
 
       const result = deepFreeze(root, mockLogger)
 
-      // Should freeze all levels within default depth
       expect(Object.isFrozen(result)).toBe(true)
 
-      // Check a few intermediate levels are frozen
       let check = <Record<string, Record<string, unknown>>>result
       for (let i = 0; i < 10; i++) {
         expect(Object.isFrozen(check)).toBe(true)
@@ -621,7 +606,6 @@ describe('deepFreeze', () => {
 
   describe('error handling edge cases', () => {
     it('logs and continues when freeze throws on a node', () => {
-      // Create a proxy that throws when Object.freeze is attempted
       const throwingProxy = new Proxy(
         { value: 1 },
         {
@@ -637,27 +621,22 @@ describe('deepFreeze', () => {
         anotherNormal: { value: 'also normal' },
       }
 
-      // Should NOT throw, gracefully handles the failure
       expect(() => deepFreeze(obj, mockLogger)).not.toThrow()
 
-      // Logger should have been called with debug for the failed freeze
       expect(mockLogger.debug).toHaveBeenCalledWith('Failed to freeze node at depth', expect.any(Number), expect.any(Error))
 
-      // Other nodes should still be frozen
       expect(Object.isFrozen(obj)).toBe(true)
       expect(Object.isFrozen(obj.normal)).toBe(true)
       expect(Object.isFrozen(obj.anotherNormal)).toBe(true)
     })
 
     it('logs and returns value when traversal fails completely', () => {
-      // Create a pathological getter that throws during key enumeration
       const problematic = {
         get badProperty(): unknown {
           throw new Error('Property access error')
         },
       }
 
-      // Define property with throwing getter
       const obj = Object.create(null)
       Object.defineProperty(obj, 'trap', {
         get: () => {
@@ -666,10 +645,8 @@ describe('deepFreeze', () => {
         enumerable: true,
       })
 
-      // Should NOT throw - graceful degradation
       expect(() => deepFreeze(obj, mockLogger)).not.toThrow()
 
-      // Should return the original value
       const result = deepFreeze(problematic, mockLogger)
       expect(result).toBe(problematic)
     })
@@ -684,7 +661,6 @@ describe('deepFreeze', () => {
         configurable: false,
       })
 
-      // Should not crash the program
       expect(() => deepFreeze(obj, mockLogger)).not.toThrow()
     })
 
@@ -692,10 +668,8 @@ describe('deepFreeze', () => {
       const { proxy, revoke } = Proxy.revocable({ value: 1 }, {})
       const obj = { child: proxy }
 
-      // Revoke the proxy before freezing
       revoke()
 
-      // Should not throw - graceful degradation
       expect(() => deepFreeze(obj, mockLogger)).not.toThrow()
     })
   })

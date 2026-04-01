@@ -83,8 +83,8 @@ describe('listChannels', () => {
     const list1 = listChannels(registry)
     const list2 = listChannels(registry)
 
-    expect(list1).not.toBe(list2) // Different array instances
-    expect(list1).toEqual(list2) // But same content
+    expect(list1).not.toBe(list2)
+    expect(list1).toEqual(list2)
   })
 
   it('updates when channels are added', () => {

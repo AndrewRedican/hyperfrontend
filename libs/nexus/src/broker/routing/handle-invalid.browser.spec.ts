@@ -172,7 +172,6 @@ describe('handleInvalid', () => {
       source: window2,
     })
 
-    // Both should be processed without errors
     expect(true).toBe(true)
   })
 
@@ -221,7 +220,6 @@ describe('handleInvalid', () => {
 
     handleInvalid(routingContext, message)
 
-    // Should not send any messages (only notifies event handlers)
     expect((<jest.Mock>mockWindow.postMessage).mock.calls.length).toBe(postMessageCallsBefore)
   })
 

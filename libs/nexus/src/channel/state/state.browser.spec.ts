@@ -7,7 +7,6 @@ import { createInitialState } from './initial'
 import { queueMessage } from './queue-message'
 import { setOrigin } from './set-origin'
 
-// Mock uuidV4 to return controllable values
 let mockIdCounter = 0
 jest.mock('@hyperfrontend/random-generator-utils', () => ({
   uuidV4: jest.fn(() => {
@@ -132,8 +131,8 @@ describe('Channel State Management', () => {
       const inactiveState = deactivate(activeState)
 
       expect(inactiveState.active).toBe(false)
-      expect(inactiveState.origin).toBe('https://example.com') // Origin preserved
-      expect(inactiveState.contract).toBeTruthy() // Contract preserved
+      expect(inactiveState.origin).toBe('https://example.com')
+      expect(inactiveState.contract).toBeTruthy()
     })
 
     it('does not mutate original state', () => {

@@ -95,7 +95,6 @@ describe('channel/messaging/receive', () => {
       data: {},
     }
 
-    // Should not throw
     receive(mockChannel, message)
     expect(mockChannel.notifyMessage).toHaveBeenCalledWith(message)
   })

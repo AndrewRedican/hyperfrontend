@@ -36,7 +36,6 @@ export function subscribeToEvents<E extends ChannelEvent>(
   eventOrHandler: E | EventHandler,
   handler?: EventCallbackMap[E]
 ): () => void {
-  // Determine if this is the event-specific overload
   const isEventSpecific = typeof eventOrHandler === 'string' && typeof handler === 'function'
 
   let wrappedHandler: EventHandler
@@ -45,7 +44,6 @@ export function subscribeToEvents<E extends ChannelEvent>(
     const eventType = <E>eventOrHandler
     const callback = <EventCallbackMap[E]>handler
 
-    // Wrap the event-specific callback as a generic EventHandler
     wrappedHandler = (event, data, channelJSON) => {
       if (event === eventType) {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -64,11 +62,9 @@ export function subscribeToEvents<E extends ChannelEvent>(
 
   const state = channel.getState()
 
-  // Add handler to subscriptions
   const subscriptions = [...state.eventSubscriptions, wrappedHandler]
   channel.updateState({ eventSubscriptions: subscriptions })
 
-  // Return unsubscribe function
   return () => {
     const currentState = channel.getState()
     const filtered = currentState.eventSubscriptions.filter((h) => h !== wrappedHandler)
