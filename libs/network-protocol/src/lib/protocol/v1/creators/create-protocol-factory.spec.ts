@@ -236,7 +236,7 @@ describe('createProtocolFactory (Node.js)', () => {
 
       const createProtocol = createProtocolFactory(createDynamicKeyEncryption, createTimeIntervalObfuscation)
       const logger = createMockLogger()
-      const protocolProvider = createProtocol(logger, 1000) // 1 second refresh rate
+      const protocolProvider = createProtocol(logger, 1000)
 
       const sendPacket = () => void 0
       const receivePacket = () => void 0

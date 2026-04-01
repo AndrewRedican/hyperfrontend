@@ -21,7 +21,7 @@ import { sleep } from '@hyperfrontend/time-utils'
 import { createClient } from './create-client'
 
 describe('Network Protocol V1: Connection Established (Browser)', () => {
-  const PROCESSING_DELAY = 350 // Time to wait for async queue processing (ms)
+  const PROCESSING_DELAY = 350
 
   describe('Basic Connection', () => {
     it('establishes connection between two clients', () => {
@@ -30,7 +30,6 @@ describe('Network Protocol V1: Connection Established (Browser)', () => {
 
       clientA.connect(clientB)
 
-      // Both clients should have channels
       expect(clientA.getChannel()).toBeDefined()
       expect(clientB.getChannel()).toBeDefined()
 
@@ -52,7 +51,6 @@ describe('Network Protocol V1: Connection Established (Browser)', () => {
 
       await clientA.send({ type: 'TEXT', content: 'Hello from Client A!' })
 
-      // Wait for async queue processing
       await sleep(PROCESSING_DELAY)
 
       expect(receivedMessages.length).toBe(1)

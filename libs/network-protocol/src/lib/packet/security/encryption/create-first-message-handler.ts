@@ -22,8 +22,6 @@ export function createFirstMessageHandler<T = any>(
   textDecoder: (data: Uint8Array) => string
 ): FirstMessageHandler<T> {
   const serializeWithoutEncryption = async (packet: UnencryptedPacket<T>): Promise<UnserializedEncryptedPacket> => {
-    // Serialize the data to JSON string, then encode as binary
-    // This maintains the same packet shape (data: Uint8Array) but without encryption
     const serializedData: SerializedData<T> = {
       ...packet.data,
       message: <SerializedData<T>['message']>stringify(packet.data.message),
@@ -39,11 +37,9 @@ export function createFirstMessageHandler<T = any>(
   }
 
   const deserializeWithoutDecryption = async (packet: UnserializedEncryptedPacket): Promise<UnencryptedPacket<T>> => {
-    // Decode binary to JSON string, then parse
     const jsonString = textDecoder(packet.data)
     const serializedData: SerializedData<T> = parse(jsonString)
 
-    // Deserialize the data (parse the message from JSON string to object)
     const data = deserializeData(serializedData)
 
     return freeze({

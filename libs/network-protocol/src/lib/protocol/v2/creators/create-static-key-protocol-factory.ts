@@ -62,7 +62,6 @@ export function createPSKHandshakeProtocolFactory<T = any>(
         throw createError('Cannot create protocol without a valid receive function')
       }
 
-      // Dynamic key capture - same as V1
       let key: string | undefined
       const receive: ReceivePacketFn<T> = (packet) => {
         key = packet.data.key
@@ -70,7 +69,6 @@ export function createPSKHandshakeProtocolFactory<T = any>(
       }
       const getKey = () => key
 
-      // PSK handshake encryption: uses PSK when no dynamic key, then switches to dynamic
       const { packetEncryption, packetDecryption } = createPSKHandshakeEncryption(sharedKey, getKey)
       const { packetObfuscation, packetDeobfuscation } = createTimeIntervalObfuscation(refreshRate)
 

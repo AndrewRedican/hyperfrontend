@@ -47,9 +47,7 @@ describe('createPSKHandshakeEncryptionFactory (Node.js)', () => {
 
       const suite = createPSKHandshakeEncryption('my-psk', keyProvider)
 
-      // First message - no dynamic key yet
       expect(capturedKey).toBeUndefined()
-      // The suite should use PSK for encryption/decryption
       expect(suite.packetEncryption).toBeDefined()
       expect(suite.packetDecryption).toBeDefined()
     })
@@ -60,9 +58,7 @@ describe('createPSKHandshakeEncryptionFactory (Node.js)', () => {
 
       const suite = createPSKHandshakeEncryption('my-psk', keyProvider)
 
-      // After handshake - dynamic key is available
       expect(capturedKey).toBe('dynamic-key-from-handshake')
-      // The suite should use dynamic key for encryption/decryption
       expect(suite.packetEncryption).toBeDefined()
       expect(suite.packetDecryption).toBeDefined()
     })
@@ -73,16 +69,12 @@ describe('createPSKHandshakeEncryptionFactory (Node.js)', () => {
 
       const suite = createPSKHandshakeEncryption('my-psk', keyProvider)
 
-      // Initially no key - would use PSK
       expect(keyProvider()).toBeUndefined()
 
-      // Simulate key capture from handshake
       capturedKey = 'captured-dynamic-key'
 
-      // Now key is available - would use dynamic key
       expect(keyProvider()).toBe('captured-dynamic-key')
 
-      // Suite still works (key selection happens at call time)
       expect(suite.packetEncryption).toBeDefined()
     })
   })

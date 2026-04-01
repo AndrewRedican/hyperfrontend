@@ -22,7 +22,7 @@ export const sampleUnserializedPacket: UnserializedEncryptedPacket = {
 export const sampleSerializedPacket: SerializedEncryptedPacket = {
   origin: '550e8400-e29b-41d4-a716-446655440000',
   target: '641c7fcb-d7dd-4a18-ab50-ce797192ed82',
-  data: 'AQIDBAUGBwgJCgsMDQ4PEA==', // base64 of [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16]
+  data: 'AQIDBAUGBwgJCgsMDQ4PEA==',
 }
 
 /**
@@ -36,7 +36,7 @@ export const packetSerializationTestCases = [
       target: '641c7fcb-d7dd-4a18-ab50-ce797192ed82',
       data: createUint8Array([1, 2, 3]),
     },
-    expectedSerializedData: 'AQID', // base64 of [1,2,3]
+    expectedSerializedData: 'AQID',
   },
   {
     description: 'packet with longer data',
@@ -45,7 +45,7 @@ export const packetSerializationTestCases = [
       target: '641c7fcb-d7dd-4a18-ab50-ce797192ed82',
       data: createUint8Array([10, 20, 30, 40, 50, 60, 70, 80, 90, 100]),
     },
-    expectedSerializedData: 'ChQeKDI8RlBaZA==', // base64 of the array
+    expectedSerializedData: 'ChQeKDI8RlBaZA==',
   },
   {
     description: 'packet with single byte',
@@ -54,7 +54,7 @@ export const packetSerializationTestCases = [
       target: '641c7fcb-d7dd-4a18-ab50-ce797192ed82',
       data: createUint8Array([255]),
     },
-    expectedSerializedData: '/w==', // base64 of [255]
+    expectedSerializedData: '/w==',
   },
 ]
 

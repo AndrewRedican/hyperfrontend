@@ -13,11 +13,8 @@ import { typeTag } from '@hyperfrontend/immutable-api-utils/built-in-copy/object
 export function isValidUnserializedData(data: unknown): boolean {
   if (!data) return false
 
-  // Primary check - works in same realm
   if (data instanceof Uint8Array) return true
 
-  // Cross-realm fallback - check if it looks like a Uint8Array
-  // This handles cases like jsdom tests where different realms have different Uint8Array constructors
   const proto = typeTag(data)
   return proto === '[object Uint8Array]'
 }

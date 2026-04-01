@@ -85,7 +85,7 @@ describe('createDataFactory (Node.js)', () => {
 
     it('handles unserializable message', async () => {
       const createData = createDataFactory(createHash)
-      const message = { fn: () => 'test' } // Functions are not JSON-serializable
+      const message = { fn: () => 'test' }
 
       await expect(createData('550e8400-e29b-41d4-a716-446655440000', 1, message)).rejects.toThrow()
     })

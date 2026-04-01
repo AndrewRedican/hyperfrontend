@@ -12,7 +12,6 @@ import { encryptPacket, decryptPacket } from '../packet'
 const obfuscatePacket = createPacketObfuscator(encrypt)
 const deobfuscatePacket = createPacketDeobfuscator(decrypt)
 
-// Text encoding/decoding for first message handler (browser)
 const textEncoder = (text: string): Uint8Array => createTextEncoder().encode(text)
 const textDecoder = (data: Uint8Array): string => createTextDecoder().decode(data)
 const firstMessageHandler = createFirstMessageHandler(textEncoder, textDecoder)

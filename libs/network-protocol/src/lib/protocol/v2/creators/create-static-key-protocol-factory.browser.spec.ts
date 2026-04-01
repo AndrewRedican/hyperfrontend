@@ -150,7 +150,6 @@ describe('createPSKHandshakeProtocolFactory (Browser)', () => {
         () => void 0
       )
 
-      // PSK is used for initial handshake, then dynamic keys for subsequent messages
       expect(protocol.packetEncryption).toBeDefined()
       expect(protocol.packetDecryption).toBeDefined()
     })
