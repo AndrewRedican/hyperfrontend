@@ -1,4 +1,3 @@
-// Workspace model
 export type { Workspace, WorkspaceConfig, WorkspaceType } from './workspace'
 export {
   DEFAULT_PATTERNS,
@@ -15,7 +14,6 @@ export {
   dependsOn,
 } from './workspace'
 
-// Project model
 export type { Project, CreateProjectOptions } from './project'
 export {
   createProject,

@@ -41,7 +41,6 @@ export function addEntry(changelog: Changelog, entry: ChangelogEntry, options?: 
   const replaceExisting = options?.replaceExisting ?? false
   const updateMetadata = options?.updateMetadata ?? false
 
-  // Check for existing entry
   const existingIndex = changelog.entries.findIndex((e) => e.version === entry.version)
 
   if (existingIndex !== -1 && !replaceExisting) {
@@ -51,18 +50,15 @@ export function addEntry(changelog: Changelog, entry: ChangelogEntry, options?: 
   let newEntries: ChangelogEntry[]
 
   if (existingIndex !== -1 && replaceExisting) {
-    // Replace existing entry
     newEntries = [...changelog.entries]
     newEntries[existingIndex] = entry
   } else {
-    // Add new entry
     const insertIndex = position === 'start' ? 0 : position === 'end' ? changelog.entries.length : position
 
     newEntries = [...changelog.entries]
     newEntries.splice(insertIndex, 0, entry)
   }
 
-  // Build new metadata if requested
   const metadata: ChangelogMetadata = updateMetadata ? { ...changelog.metadata, warnings: [] } : changelog.metadata
 
   return {

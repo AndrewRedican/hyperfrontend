@@ -49,7 +49,6 @@ describe('Flow Step Model', () => {
 
       expect(step.skipIf).toBe(skipIf)
 
-      // Verify skipIf can be called
       const ctx = createMockContext()
       expect(step.skipIf?.(ctx)).toBe(true)
       expect(skipIf).toHaveBeenCalledWith(ctx)
@@ -148,7 +147,6 @@ describe('Flow Step Model', () => {
     it('always returns success status', async () => {
       const step = createNoopStep('always-success', 'Always Success')
 
-      // Execute multiple times to verify consistent behavior
       const ctx = createMockContext()
       const result1 = await step.execute(ctx)
       const result2 = await step.execute(ctx)

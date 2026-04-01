@@ -8,13 +8,13 @@ import type { ConventionalCommit } from '../models/conventional'
  * project's changelog and how its scope should be displayed.
  */
 export type CommitSource =
-  | 'direct-scope' // Conventional commit scope matches project
-  | 'direct-file' // Commit touched files in project directory
-  | 'unscoped-file' // No scope but touched project files (direct)
-  | 'indirect-dependency' // Commit to a dependency package
-  | 'indirect-infra' // Commit to build/tooling infrastructure
-  | 'unscoped-global' // No scope and no project files touched
-  | 'excluded' // Does not relate to project
+  | 'direct-scope'
+  | 'direct-file'
+  | 'unscoped-file'
+  | 'indirect-dependency'
+  | 'indirect-infra'
+  | 'unscoped-global'
+  | 'excluded'
 
 /**
  * A commit with classification metadata for changelog generation.
@@ -205,13 +205,13 @@ function shouldPreserveScope(source: CommitSource): boolean {
   switch (source) {
     case 'direct-scope':
     case 'unscoped-file':
-      return false // Scope would be redundant
+      return false
     case 'direct-file':
     case 'indirect-dependency':
     case 'indirect-infra':
-      return true // Scope provides context
+      return true
     case 'unscoped-global':
     case 'excluded':
-      return false // Won't be shown
+      return false
   }
 }

@@ -36,7 +36,6 @@ export function increment(version: SemVer, type: BumpType, prereleaseId?: string
       })
 
     case 'patch':
-      // If version has prerelease, just remove it (1.2.3-alpha -> 1.2.3)
       if (version.prerelease.length > 0) {
         return createSemVer({
           major: version.major,
@@ -101,7 +100,6 @@ export function incrementPrerelease(version: SemVer, id?: string): SemVer {
   const prerelease = [...version.prerelease]
 
   if (prerelease.length === 0) {
-    // No existing prerelease - start at patch+1 with id.0
     return createSemVer({
       major: version.major,
       minor: version.minor,
@@ -111,23 +109,18 @@ export function incrementPrerelease(version: SemVer, id?: string): SemVer {
     })
   }
 
-  // Check if the last identifier is numeric
   const lastIdx = prerelease.length - 1
   const last = prerelease[lastIdx]
   const lastNum = parseInt(last, 10)
 
   if (!globalIsNaN(lastNum)) {
-    // Increment the numeric part
     prerelease[lastIdx] = String(lastNum + 1)
   } else {
-    // Append .0
     prerelease.push('0')
   }
 
-  // If a different id is specified, replace the base identifier
   if (id && prerelease.length > 0 && prerelease[0] !== id) {
     prerelease[0] = id
-    // Reset numeric part
     if (prerelease.length > 1) {
       prerelease[prerelease.length - 1] = '0'
     }
@@ -155,7 +148,6 @@ export function incrementPrerelease(version: SemVer, id?: string): SemVer {
  * diff(parseVersion('1.0.0'), parseVersion('1.0.1')) // 'patch'
  */
 export function diff(older: SemVer, newer: SemVer): BumpType | null {
-  // Check major
   if (older.major !== newer.major) {
     if (newer.prerelease.length > 0) {
       return 'premajor'
@@ -163,7 +155,6 @@ export function diff(older: SemVer, newer: SemVer): BumpType | null {
     return 'major'
   }
 
-  // Check minor
   if (older.minor !== newer.minor) {
     if (newer.prerelease.length > 0) {
       return 'preminor'
@@ -171,7 +162,6 @@ export function diff(older: SemVer, newer: SemVer): BumpType | null {
     return 'minor'
   }
 
-  // Check patch
   if (older.patch !== newer.patch) {
     if (newer.prerelease.length > 0) {
       return 'prepatch'
@@ -179,7 +169,6 @@ export function diff(older: SemVer, newer: SemVer): BumpType | null {
     return 'patch'
   }
 
-  // Check prerelease
   if (older.prerelease.length !== newer.prerelease.length) {
     return 'prerelease'
   }
@@ -190,6 +179,5 @@ export function diff(older: SemVer, newer: SemVer): BumpType | null {
     }
   }
 
-  // Versions are equal (ignoring build)
   return null
 }

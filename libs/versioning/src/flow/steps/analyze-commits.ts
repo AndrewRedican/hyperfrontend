@@ -48,42 +48,35 @@ export function createAnalyzeCommitsStep(): FlowStep {
       const { git, projectName, projectRoot, packageName, workspaceRoot, config, logger, state } = ctx
       const maxFallback = config.maxCommitFallback ?? 500
 
-      // Use publishedCommit from registry (set by fetch-registry step)
       const { publishedCommit, isFirstRelease } = state
 
       let rawCommits: readonly GitCommit[]
       let effectiveBaseCommit: string | null = null
 
       if (publishedCommit && !isFirstRelease) {
-        // CRITICAL: Verify the commit exists and is reachable from HEAD
         if (git.commitReachableFromHead(publishedCommit)) {
           rawCommits = git.getCommitsSince(publishedCommit)
           effectiveBaseCommit = publishedCommit
           logger.debug(`Found ${rawCommits.length} commits since ${publishedCommit.slice(0, 7)}`)
         } else {
-          // GRACEFUL DEGRADATION: Commit not in history (rebase/force push occurred)
           logger.warn(
             `Published commit ${publishedCommit.slice(0, 7)} not found in history. ` +
               `This may indicate a rebase or force push occurred after publishing v${state.publishedVersion}. ` +
               `Falling back to recent commit analysis.`
           )
           rawCommits = git.getCommitLog({ maxCount: maxFallback })
-          // effectiveBaseCommit stays null - no compare URL will be generated
         }
       } else {
-        // First release or no published version
         rawCommits = git.getCommitLog({ maxCount: maxFallback })
         logger.debug(`First release - analyzing up to ${rawCommits.length} commits`)
       }
 
-      // Get scope filtering configuration
       const scopeFilteringConfig = {
         ...DEFAULT_SCOPE_FILTERING_CONFIG,
         ...config.scopeFiltering,
       }
       const strategy = resolveStrategy(scopeFilteringConfig.strategy ?? 'hybrid', rawCommits)
 
-      // Parse commits with conventional commit format
       const releaseTypes = config.releaseTypes ?? ['feat', 'fix', 'perf', 'revert']
       const parsedCommits: CommitWithRaw[] = []
 
@@ -111,10 +104,8 @@ export function createAnalyzeCommitsStep(): FlowStep {
         }
       }
 
-      // Build file commit hashes for hybrid/file-only strategies
       let fileCommitHashes = createSet<string>()
       if (strategy === 'hybrid' || strategy === 'file-only') {
-        // Get commits that touched project files using path filter
         const relativePath = getRelativePath(workspaceRoot, projectRoot)
         const pathFilteredCommits = effectiveBaseCommit
           ? git.getCommitsSince(effectiveBaseCommit, { path: relativePath })
@@ -124,7 +115,6 @@ export function createAnalyzeCommitsStep(): FlowStep {
         logger.debug(`Found ${fileCommitHashes.size} commits touching ${relativePath}`)
       }
 
-      // Derive project scopes
       const projectScopes = deriveProjectScopes({
         projectName,
         packageName,
@@ -133,7 +123,6 @@ export function createAnalyzeCommitsStep(): FlowStep {
       })
       logger.debug(`Project scopes: ${projectScopes.join(', ')}`)
 
-      // Build infrastructure commit hashes for file-based infrastructure detection
       const infrastructureCommitHashes = buildInfrastructureCommitHashes(
         git,
         effectiveBaseCommit,
@@ -144,13 +133,11 @@ export function createAnalyzeCommitsStep(): FlowStep {
         maxFallback
       )
 
-      // Build dependency commit map if tracking is enabled (Phase 4)
       let dependencyCommitMap: ReadonlyMap<string, ReadonlySet<string>> | undefined
       if (scopeFilteringConfig.trackDependencyChanges) {
         dependencyCommitMap = buildDependencyCommitMap(git, workspaceRoot, projectName, effectiveBaseCommit, logger, maxFallback)
       }
 
-      // Create classification context
       const classificationContext = createClassificationContext(projectScopes, fileCommitHashes, {
         excludeScopes: scopeFilteringConfig.excludeScopes,
         includeScopes: scopeFilteringConfig.includeScopes,
@@ -158,17 +145,12 @@ export function createAnalyzeCommitsStep(): FlowStep {
         dependencyCommitMap,
       })
 
-      // Classify commits
       const classificationResult = classifyCommits(parsedCommits, classificationContext)
 
-      // Apply strategy-specific filtering
       const includedCommits = applyStrategyFilter(classificationResult.included, strategy)
 
-      // Extract conventional commits for backward compatibility
-      // Use toChangelogCommit to properly handle scope based on classification
       const commits: ConventionalCommit[] = includedCommits.map((c) => toChangelogCommit(c))
 
-      // Build message with classification summary
       const { summary } = classificationResult
       const message = buildSummaryMessage(commits.length, rawCommits.length, summary, strategy)
 
@@ -209,8 +191,6 @@ function resolveStrategy(
     return strategy
   }
 
-  // Infer strategy from commit history
-  // Count commits with conventional scopes
   let scopedCount = 0
   for (const commit of commits) {
     const parsed = parseConventionalCommit(commit.message)
@@ -221,9 +201,6 @@ function resolveStrategy(
 
   const scopeRatio = commits.length > 0 ? scopedCount / commits.length : 0
 
-  // If >70% of commits have scopes, scope-only is viable
-  // If <30% have scopes, file-only is better
-  // Otherwise, use hybrid
   if (scopeRatio > 0.7) {
     return 'scope-only'
   } else if (scopeRatio < 0.3) {
@@ -245,16 +222,13 @@ function applyStrategyFilter(
 ): readonly ClassifiedCommit[] {
   switch (strategy) {
     case 'scope-only':
-      // Only include direct-scope commits
       return commits.filter((c) => c.source === 'direct-scope')
 
     case 'file-only':
-      // Only include file-based commits (direct-file, unscoped-file)
       return commits.filter((c) => c.source === 'direct-file' || c.source === 'unscoped-file')
 
     case 'hybrid':
     default:
-      // Include all non-excluded commits (already filtered in classifyCommits)
       return commits
   }
 }
@@ -325,10 +299,8 @@ function buildInfrastructureCommitHashes(
   logger: { debug: (msg: string) => void },
   maxFallback: number
 ): ReadonlySet<string> | undefined {
-  // Collect all infrastructure commit hashes
   let infraHashes = createSet<string>()
 
-  // Method 1: Path-based detection (query git for commits touching infra paths)
   const infraPaths = config.infrastructure?.paths ?? []
   if (infraPaths.length > 0) {
     for (const infraPath of infraPaths) {
@@ -343,29 +315,22 @@ function buildInfrastructureCommitHashes(
     logger.debug(`Found ${infraHashes.size} commits touching infrastructure paths: ${infraPaths.join(', ')}`)
   }
 
-  // Method 2 & 3: Scope-based and custom matcher detection
-  // Build a combined matcher from infrastructure config and/or custom matcher
   const configMatcher = config.infrastructure ? buildInfrastructureMatcher(config.infrastructure) : null
   const customMatcher = config.infrastructureMatcher
   const combinedMatcher = combineMatcher(configMatcher, customMatcher)
 
   if (combinedMatcher) {
-    // Build a lookup for parsed commits by hash
     let parsedByHash = createMap<string, CommitWithRaw>()
     for (const parsed of parsedCommits) {
       parsedByHash = parsedByHash.set(parsed.raw.hash, parsed)
     }
 
-    // Evaluate each raw commit against the matcher
     for (const rawCommit of rawCommits) {
-      // Skip if already matched by path
       if (infraHashes.has(rawCommit.hash)) continue
 
-      // Get parsed scope if available
       const parsed = parsedByHash.get(rawCommit.hash)
       const scope = parsed?.commit.scope
 
-      // Create match context and evaluate
       const context = createMatchContext(rawCommit, scope)
       if (combinedMatcher(context)) {
         infraHashes = infraHashes.add(rawCommit.hash)
@@ -374,7 +339,6 @@ function buildInfrastructureCommitHashes(
     logger.debug(`Infrastructure matcher found ${infraHashes.size} total commits`)
   }
 
-  // Return undefined if no infrastructure detection configured
   if (infraHashes.size === 0 && infraPaths.length === 0 && !combinedMatcher) {
     return undefined
   }
@@ -425,12 +389,9 @@ function buildDependencyCommitMap(
   let dependencyMap = createMap<string, ReadonlySet<string>>()
 
   try {
-    // Discover all projects in workspace using lib-project-scope
-    // This gracefully handles NX and non-NX workspaces
     const projects = discoverNxProjects(workspaceRoot)
     const projectGraph = buildSimpleProjectGraph(workspaceRoot, projects)
 
-    // Get dependencies for the current project
     const projectDeps = projectGraph.dependencies[projectName] ?? []
 
     if (projectDeps.length === 0) {
@@ -440,7 +401,6 @@ function buildDependencyCommitMap(
 
     logger.debug(`Found ${projectDeps.length} dependencies for ${projectName}: ${projectDeps.map((d) => d.target).join(', ')}`)
 
-    // For each dependency, find commits that touched its files
     for (const dep of projectDeps) {
       const depNode = projectGraph.nodes[dep.target]
       if (!depNode?.data?.root) {
@@ -450,7 +410,6 @@ function buildDependencyCommitMap(
 
       const depRoot = depNode.data.root
 
-      // Query git for commits touching this dependency's path
       const depCommits = baseCommit
         ? git.getCommitsSince(baseCommit, { path: depRoot })
         : git.getCommitLog({ maxCount: maxFallback, path: depRoot })
@@ -462,8 +421,6 @@ function buildDependencyCommitMap(
       }
     }
   } catch (error) {
-    // Graceful degradation: if project discovery fails, return empty map
-    // This allows versioning to proceed without dependency tracking
     const message = error instanceof Error ? error.message : String(error)
     logger.debug(`Failed to build dependency map: ${message}`)
   }

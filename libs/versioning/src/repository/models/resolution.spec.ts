@@ -129,7 +129,6 @@ describe('isRepositoryResolution', () => {
     })
 
     it('returns true for explicit mode without repository', () => {
-      // Type system prevents this, but runtime check should handle it
       expect(isRepositoryResolution({ mode: 'explicit' })).toBe(true)
     })
 

@@ -95,12 +95,10 @@ export function toJsonObject(changelog: Changelog, options?: JsonSerializeOption
   const opts = resolveJsonOptions(options)
   const result: Record<string, unknown> = {}
 
-  // Source
   if (opts.includeSource && changelog.source) {
     result['source'] = changelog.source
   }
 
-  // Header
   result['header'] = {
     title: changelog.header.title,
     description: filterEmpty(changelog.header.description, opts.includeEmptyArrays),
@@ -113,7 +111,6 @@ export function toJsonObject(changelog: Changelog, options?: JsonSerializeOption
     ),
   }
 
-  // Entries
   result['entries'] = changelog.entries.map((entry) => {
     const entryObj: Record<string, unknown> = {
       version: entry.version,
@@ -177,7 +174,6 @@ export function toJsonObject(changelog: Changelog, options?: JsonSerializeOption
     return entryObj
   })
 
-  // Metadata
   if (opts.includeMetadata) {
     const metadataObj: Record<string, unknown> = {
       format: changelog.metadata.format,

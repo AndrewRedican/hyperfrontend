@@ -36,7 +36,6 @@ const MAX_VERSION_LENGTH = 256
  * parseVersion('invalid') // { success: false, error: '...' }
  */
 export function parseVersion(input: string): ParseVersionResult {
-  // Input validation
   if (!input || typeof input !== 'string') {
     return { success: false, error: 'Version string is required' }
   }
@@ -45,71 +44,57 @@ export function parseVersion(input: string): ParseVersionResult {
     return { success: false, error: `Version string exceeds maximum length of ${MAX_VERSION_LENGTH}` }
   }
 
-  // Strip leading whitespace
   let pos = 0
   while (pos < input.length && isWhitespace(input.charCodeAt(pos))) {
     pos++
   }
 
-  // Strip trailing whitespace
   let end = input.length
   while (end > pos && isWhitespace(input.charCodeAt(end - 1))) {
     end--
   }
 
-  // Strip optional leading 'v' or '='
   if (pos < end) {
     const code = input.charCodeAt(pos)
     if (code === 118 || code === 86) {
-      // 'v' or 'V'
       pos++
     } else if (code === 61) {
-      // '='
       pos++
     }
   }
 
-  // Parse major version
   const majorResult = parseNumericIdentifier(input, pos, end)
   if (!majorResult.success) {
     return { success: false, error: majorResult.error ?? 'Invalid major version' }
   }
   pos = majorResult.endPos
 
-  // Expect dot
   if (pos >= end || input.charCodeAt(pos) !== 46) {
-    // '.'
     return { success: false, error: 'Expected "." after major version' }
   }
   pos++
 
-  // Parse minor version
   const minorResult = parseNumericIdentifier(input, pos, end)
   if (!minorResult.success) {
     return { success: false, error: minorResult.error ?? 'Invalid minor version' }
   }
   pos = minorResult.endPos
 
-  // Expect dot
   if (pos >= end || input.charCodeAt(pos) !== 46) {
-    // '.'
     return { success: false, error: 'Expected "." after minor version' }
   }
   pos++
 
-  // Parse patch version
   const patchResult = parseNumericIdentifier(input, pos, end)
   if (!patchResult.success) {
     return { success: false, error: patchResult.error ?? 'Invalid patch version' }
   }
   pos = patchResult.endPos
 
-  // Parse optional prerelease
   const prerelease: string[] = []
   if (pos < end && input.charCodeAt(pos) === 45) {
-    // '-'
     pos++
-    const prereleaseResult = parseIdentifiers(input, pos, end, [43]) // Stop at '+'
+    const prereleaseResult = parseIdentifiers(input, pos, end, [43])
     if (!prereleaseResult.success) {
       return { success: false, error: prereleaseResult.error ?? 'Invalid prerelease' }
     }
@@ -117,10 +102,8 @@ export function parseVersion(input: string): ParseVersionResult {
     pos = prereleaseResult.endPos
   }
 
-  // Parse optional build metadata
   const build: string[] = []
   if (pos < end && input.charCodeAt(pos) === 43) {
-    // '+'
     pos++
     const buildResult = parseIdentifiers(input, pos, end, [])
     if (!buildResult.success) {
@@ -130,7 +113,6 @@ export function parseVersion(input: string): ParseVersionResult {
     pos = buildResult.endPos
   }
 
-  // Check for trailing characters
   if (pos < end) {
     return { success: false, error: `Unexpected character at position ${pos}: "${input[pos]}"` }
   }
@@ -180,13 +162,11 @@ export function coerceVersion(input: string): SemVer | null {
     return null
   }
 
-  // Try strict parse first
   const strict = parseVersion(input)
   if (strict.success && strict.version) {
     return strict.version
   }
 
-  // Strip leading/trailing whitespace
   let pos = 0
   while (pos < input.length && isWhitespace(input.charCodeAt(pos))) {
     pos++
@@ -197,16 +177,13 @@ export function coerceVersion(input: string): SemVer | null {
     end--
   }
 
-  // Strip optional 'v' prefix
   if (pos < end) {
     const code = input.charCodeAt(pos)
     if (code === 118 || code === 86) {
-      // 'v' or 'V'
       pos++
     }
   }
 
-  // Parse major
   const majorResult = parseNumericIdentifier(input, pos, end)
   if (!majorResult.success) {
     return null
@@ -214,7 +191,6 @@ export function coerceVersion(input: string): SemVer | null {
   const major = majorResult.value
   pos = majorResult.endPos
 
-  // Parse optional minor
   let minor = 0
   if (pos < end && input.charCodeAt(pos) === 46) {
     pos++
@@ -225,14 +201,12 @@ export function coerceVersion(input: string): SemVer | null {
     }
   }
 
-  // Parse optional patch
   let patch = 0
   if (pos < end && input.charCodeAt(pos) === 46) {
     pos++
     const patchResult = parseNumericIdentifier(input, pos, end)
     if (patchResult.success) {
       patch = patchResult.value
-      // pos = patchResult.endPos // We ignore anything after patch in coerce
     }
   }
 
@@ -269,23 +243,19 @@ function parseNumericIdentifier(input: string, start: number, end: number): Nume
   let pos = start
   const firstCode = input.charCodeAt(pos)
 
-  // Must start with a digit
   if (!isDigit(firstCode)) {
     return { success: false, value: 0, endPos: pos, error: 'Expected digit' }
   }
 
-  // Check for leading zero (only "0" is valid, not "01", "007", etc.)
   if (firstCode === 48 && pos + 1 < end && isDigit(input.charCodeAt(pos + 1))) {
     return { success: false, value: 0, endPos: pos, error: 'Numeric identifier cannot have leading zeros' }
   }
 
-  // Consume digits
   let value = 0
   while (pos < end && isDigit(input.charCodeAt(pos))) {
     value = value * 10 + (input.charCodeAt(pos) - 48)
     pos++
 
-    // Prevent overflow
     if (value > Number.MAX_SAFE_INTEGER) {
       return { success: false, value: 0, endPos: pos, error: 'Numeric identifier is too large' }
     }
@@ -315,37 +285,30 @@ function parseIdentifiers(input: string, start: number, end: number, stopCodes: 
   let pos = start
 
   while (pos < end) {
-    // Check for stop characters
     if (stopCodes.includes(input.charCodeAt(pos))) {
       break
     }
 
-    // Parse one identifier
     const identStart = pos
     while (pos < end) {
       const code = input.charCodeAt(pos)
-      // Stop at dot or stop characters
       if (code === 46 || stopCodes.includes(code)) {
         break
       }
-      // Must be alphanumeric or hyphen
       if (!isAlphanumeric(code) && code !== 45) {
         return { success: false, identifiers: [], endPos: pos, error: `Invalid character in identifier: "${input[pos]}"` }
       }
       pos++
     }
 
-    // Empty identifier is not allowed
     if (pos === identStart) {
       return { success: false, identifiers: [], endPos: pos, error: 'Empty identifier' }
     }
 
     identifiers.push(input.slice(identStart, pos))
 
-    // Consume dot separator
     if (pos < end && input.charCodeAt(pos) === 46) {
       pos++
-      // Dot at end is invalid
       if (pos >= end || stopCodes.includes(input.charCodeAt(pos))) {
         return { success: false, identifiers: [], endPos: pos, error: 'Identifier expected after dot' }
       }
@@ -372,11 +335,7 @@ function isDigit(code: number): boolean {
  * @returns True if the code represents an alphanumeric character
  */
 function isAlphanumeric(code: number): boolean {
-  return (
-    (code >= 48 && code <= 57) || // 0-9
-    (code >= 65 && code <= 90) || // A-Z
-    (code >= 97 && code <= 122) // a-z
-  )
+  return (code >= 48 && code <= 57) || (code >= 65 && code <= 90) || (code >= 97 && code <= 122)
 }
 
 /**

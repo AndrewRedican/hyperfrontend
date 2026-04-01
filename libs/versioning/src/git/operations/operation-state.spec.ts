@@ -90,7 +90,6 @@ describe('getOperationState', () => {
   describe('exit-early pattern', () => {
     it('returns first detected reason (rebase-interactive) when multiple states exist', () => {
       mockExecFileSync.mockReturnValue('.git\n')
-      // All three exist
       mockExistsSync.mockReturnValue(true)
 
       const state = getOperationState()
@@ -149,10 +148,8 @@ describe('getOperationState', () => {
 
   describe('worktree support', () => {
     it('uses git dir path from rev-parse for worktree', () => {
-      // Worktrees return a different git directory path
       mockExecFileSync.mockReturnValue('/path/to/main/.git/worktrees/feature\n')
       mockExistsSync.mockImplementation((path) => {
-        // Should check in the worktree git dir
         return String(path).includes('/path/to/main/.git/worktrees/feature/rebase-merge')
       })
 

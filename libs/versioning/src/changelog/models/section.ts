@@ -22,62 +22,50 @@ export type ChangelogSectionType =
  * Used during parsing to normalize different heading styles.
  */
 export const SECTION_TYPE_MAP: Record<string, ChangelogSectionType> = {
-  // Breaking changes
   'breaking changes': 'breaking',
   breaking: 'breaking',
   'breaking change': 'breaking',
 
-  // Features
   features: 'features',
   feature: 'features',
   added: 'features',
   new: 'features',
 
-  // Fixes
   fixes: 'fixes',
   fix: 'fixes',
   'bug fixes': 'fixes',
   bugfixes: 'fixes',
   fixed: 'fixes',
 
-  // Performance
   performance: 'performance',
   'performance improvements': 'performance',
   perf: 'performance',
 
-  // Documentation
   documentation: 'documentation',
   docs: 'documentation',
 
-  // Deprecations
   deprecations: 'deprecations',
   deprecated: 'deprecations',
 
-  // Refactoring
   refactoring: 'refactoring',
   refactor: 'refactoring',
   'code refactoring': 'refactoring',
 
-  // Tests
   tests: 'tests',
   test: 'tests',
   testing: 'tests',
 
-  // Build
   build: 'build',
   'build system': 'build',
   dependencies: 'build',
 
-  // CI
   ci: 'ci',
   'continuous integration': 'ci',
 
-  // Chores
   chores: 'chores',
   chore: 'chores',
   maintenance: 'chores',
 
-  // Other
   other: 'other',
   miscellaneous: 'other',
   misc: 'other',

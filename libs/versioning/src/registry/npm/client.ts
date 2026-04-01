@@ -128,7 +128,7 @@ async function getPackageInfo(state: NpmRegistryState, packageName: string): Pro
       encoding: 'utf-8',
       timeout: state.config.timeout,
       stdio: ['pipe', 'pipe', 'pipe'],
-      maxBuffer: 10 * 1024 * 1024, // 10MB
+      maxBuffer: 10 * 1024 * 1024,
     })
 
     const data = parse(result)
@@ -179,7 +179,7 @@ async function getVersionInfo(state: NpmRegistryState, packageName: string, vers
       encoding: 'utf-8',
       timeout: state.config.timeout,
       stdio: ['pipe', 'pipe', 'pipe'],
-      maxBuffer: 5 * 1024 * 1024, // 5MB
+      maxBuffer: 5 * 1024 * 1024,
     })
 
     const data = parse(result)
@@ -264,16 +264,15 @@ export function escapePackageName(name: string): string {
   for (let i = 0; i < name.length; i++) {
     const code = name.charCodeAt(i)
 
-    // Allow: a-z, A-Z, 0-9, @, /, -, _, .
     if (
-      (code >= 97 && code <= 122) || // a-z
-      (code >= 65 && code <= 90) || // A-Z
-      (code >= 48 && code <= 57) || // 0-9
-      code === 64 || // @
-      code === 47 || // /
-      code === 45 || // -
-      code === 95 || // _
-      code === 46 // .
+      (code >= 97 && code <= 122) ||
+      (code >= 65 && code <= 90) ||
+      (code >= 48 && code <= 57) ||
+      code === 64 ||
+      code === 47 ||
+      code === 45 ||
+      code === 95 ||
+      code === 46
     ) {
       safe.push(name[i])
     } else {
@@ -310,14 +309,13 @@ export function escapeVersion(version: string): string {
   for (let i = 0; i < version.length; i++) {
     const code = version.charCodeAt(i)
 
-    // Allow: 0-9, ., -, +, a-z, A-Z
     if (
-      (code >= 48 && code <= 57) || // 0-9
-      (code >= 97 && code <= 122) || // a-z
-      (code >= 65 && code <= 90) || // A-Z
-      code === 46 || // .
-      code === 45 || // -
-      code === 43 // +
+      (code >= 48 && code <= 57) ||
+      (code >= 97 && code <= 122) ||
+      (code >= 65 && code <= 90) ||
+      code === 46 ||
+      code === 45 ||
+      code === 43
     ) {
       safe.push(version[i])
     } else {
@@ -340,7 +338,6 @@ function extractRepoUrl(repository: unknown): string | undefined {
   if (repository && typeof repository === 'object') {
     const repo = <{ url?: string; type?: string }>repository
     if (repo.url) {
-      // Clean up git+ prefix and .git suffix
       let url = repo.url
       if (url.startsWith('git+')) {
         url = url.slice(4)

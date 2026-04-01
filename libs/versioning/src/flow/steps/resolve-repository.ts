@@ -50,7 +50,6 @@ export function createResolveRepositoryStep(): FlowStep {
       const { config, logger, tree, git, projectRoot } = ctx
       const repoConfig = config.repository
 
-      // Disabled or undefined - no-op for backward compatibility
       if (repoConfig === undefined || repoConfig === 'disabled') {
         logger.debug('Repository resolution disabled')
         return {
@@ -59,7 +58,6 @@ export function createResolveRepositoryStep(): FlowStep {
         }
       }
 
-      // Direct RepositoryConfig provided
       if (isRepositoryConfig(repoConfig)) {
         logger.debug(`Using explicit repository config: ${repoConfig.platform}`)
         return {
@@ -71,7 +69,6 @@ export function createResolveRepositoryStep(): FlowStep {
         }
       }
 
-      // Shorthand 'inferred' mode
       if (repoConfig === 'inferred') {
         const resolved = await inferRepository(tree, git, projectRoot, DEFAULT_INFERENCE_ORDER, logger)
         if (resolved) {
@@ -84,7 +81,6 @@ export function createResolveRepositoryStep(): FlowStep {
           }
         }
 
-        // Graceful degradation - no error, just no URLs
         logger.debug('Could not infer repository from package.json or git remote')
         return {
           status: 'skipped',
@@ -92,12 +88,10 @@ export function createResolveRepositoryStep(): FlowStep {
         }
       }
 
-      // Full RepositoryResolution object
       if (isRepositoryResolution(repoConfig)) {
         return handleRepositoryResolution(repoConfig, tree, git, projectRoot, logger)
       }
 
-      // Unknown configuration - should not happen with TypeScript
       logger.warn('Unknown repository configuration format')
       return {
         status: 'skipped',
@@ -130,7 +124,6 @@ async function handleRepositoryResolution(
 ): Promise<import('../models/types').FlowStepResult> {
   const { mode, repository, inferenceOrder } = resolution
 
-  // Disabled mode
   if (mode === 'disabled') {
     logger.debug('Repository resolution explicitly disabled')
     return {
@@ -139,7 +132,6 @@ async function handleRepositoryResolution(
     }
   }
 
-  // Explicit mode - must have repository
   if (mode === 'explicit') {
     if (!repository) {
       return {
@@ -159,7 +151,6 @@ async function handleRepositoryResolution(
     }
   }
 
-  // Inferred mode
   const order = inferenceOrder ?? DEFAULT_INFERENCE_ORDER
   const resolved = await inferRepository(tree, git, projectRoot, order, logger)
 
@@ -173,7 +164,6 @@ async function handleRepositoryResolution(
     }
   }
 
-  // Graceful degradation
   logger.debug('Could not infer repository configuration')
   return {
     status: 'skipped',

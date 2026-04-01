@@ -482,7 +482,6 @@ describe('discoverPackages with VFS tree', () => {
     const tree = createMockTree({
       'libs/lib-a/package.json': JSON.stringify({ name: 'lib-a', version: '1.0.0' }),
     })
-    // Override read to return null for one file
     tree.read.mockImplementation((path: string, encoding?: string) => {
       if (path === 'libs/broken/package.json') return null
       if (path === 'libs/lib-a/package.json') {

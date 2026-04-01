@@ -120,12 +120,10 @@ export function inferRepositoryFromPackageJsonObject(packageJson: PackageJsonFor
     return null
   }
 
-  // Handle string format
   if (typeof repository === 'string') {
     return parseRepositoryString(repository)
   }
 
-  // Handle object format
   if (typeof repository === 'object' && repository.url) {
     return createRepositoryConfigFromUrl(repository.url)
   }
@@ -147,11 +145,9 @@ function parseRepositoryString(repoString: string): RepositoryConfig | null {
     return null
   }
 
-  // Check for shorthand format: platform:owner/repo
   const colonIndex = trimmed.indexOf(':')
   if (colonIndex > 0) {
     const potentialPlatform = trimmed.slice(0, colonIndex)
-    // Platform must be only letters (a-z, case insensitive)
     if (isOnlyLetters(potentialPlatform)) {
       const platform = potentialPlatform.toLowerCase()
       const path = trimmed.slice(colonIndex + 1)
@@ -159,28 +155,22 @@ function parseRepositoryString(repoString: string): RepositoryConfig | null {
       if (path) {
         const baseUrl = SHORTHAND_PLATFORMS.get(platform)
         if (baseUrl) {
-          // Construct full URL and parse it
           const fullUrl = `${baseUrl}/${path}`
           return createRepositoryConfigFromUrl(fullUrl)
         }
 
-        // Unknown shorthand platform - try as URL
         return createRepositoryConfigFromUrl(trimmed)
       }
     }
   }
 
-  // Check for bare shorthand: owner/repo (no protocol, no platform prefix)
-  // Must match pattern like "owner/repo" but not "https://..." or "git@..."
   if (!trimmed.includes('://') && !trimmed.startsWith('git@')) {
     if (isBareShorthand(trimmed)) {
-      // Bare shorthand defaults to GitHub
       const fullUrl = `https://github.com/${trimmed}`
       return createRepositoryConfigFromUrl(fullUrl)
     }
   }
 
-  // Try as a full URL
   return createRepositoryConfigFromUrl(trimmed)
 }
 
@@ -195,8 +185,8 @@ function parseRepositoryString(repoString: string): RepositoryConfig | null {
 function isOnlyLetters(str: string): boolean {
   for (let i = 0; i < str.length; i++) {
     const char = str.charCodeAt(i)
-    const isLowercase = char >= 97 && char <= 122 // a-z
-    const isUppercase = char >= 65 && char <= 90 // A-Z
+    const isLowercase = char >= 97 && char <= 122
+    const isUppercase = char >= 65 && char <= 90
     if (!isLowercase && !isUppercase) {
       return false
     }
@@ -218,7 +208,6 @@ function isBareShorthand(str: string): boolean {
   if (slashIndex <= 0 || slashIndex === str.length - 1) {
     return false
   }
-  // Must not have another slash
   return str.indexOf('/', slashIndex + 1) === -1
 }
 
@@ -258,19 +247,15 @@ export function extractRepositoryUrl(packageJsonContent: string): string | null 
     return null
   }
 
-  // String URL format
   if (typeof repository === 'string') {
-    // Check if it's a URL (has protocol)
     if (repository.includes('://') || repository.startsWith('git@')) {
       const parsed = parseRepositoryUrl(repository)
       return parsed && parsed.platform !== 'unknown' ? parsed.baseUrl : null
     }
-    // Shorthand - need to expand
     const config = parseRepositoryString(repository)
     return config ? config.baseUrl : null
   }
 
-  // Object format
   if (typeof repository === 'object' && repository.url) {
     const parsed = parseRepositoryUrl(repository.url)
     return parsed && parsed.platform !== 'unknown' ? parsed.baseUrl : null

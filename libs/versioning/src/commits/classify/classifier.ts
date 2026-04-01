@@ -37,28 +37,21 @@ export function classifyCommit(input: CommitWithRaw, context: ClassificationCont
   const hasScope = !!scope
   const allProjectScopes = [...projectScopes, ...includeScopes]
 
-  // First check: Is this scope explicitly excluded?
   if (hasScope && scopeIsExcluded(scope, excludeScopes)) {
     return createClassifiedCommit(commit, raw, 'excluded')
   }
 
-  // Priority 1: Scope-based direct match (fast path)
   if (hasScope && scopeMatchesProject(scope, allProjectScopes)) {
     return createClassifiedCommit(commit, raw, 'direct-scope')
   }
 
-  // Priority 2: File-based direct match (validation/catch-all)
   if (fileCommitHashes.has(raw.hash)) {
-    // Commit touched project files
     if (hasScope) {
-      // Has a scope but it's different - likely a typo or cross-cutting change
       return createClassifiedCommit(commit, raw, 'direct-file')
     }
-    // No scope but touched project files
     return createClassifiedCommit(commit, raw, 'unscoped-file')
   }
 
-  // Priority 3: Indirect dependency match
   if (hasScope && dependencyCommitMap) {
     const dependencyPath = findDependencyPath(scope, raw.hash, dependencyCommitMap)
     if (dependencyPath) {
@@ -66,18 +59,14 @@ export function classifyCommit(input: CommitWithRaw, context: ClassificationCont
     }
   }
 
-  // File-based infrastructure match
   if (infrastructureCommitHashes?.has(raw.hash)) {
     return createClassifiedCommit(commit, raw, 'indirect-infra')
   }
 
-  // Fallback: No match found
   if (!hasScope) {
-    // Unscoped commit that didn't touch any project files
     return createClassifiedCommit(commit, raw, 'unscoped-global')
   }
 
-  // Scoped commit that doesn't match anything
   return createClassifiedCommit(commit, raw, 'excluded')
 }
 
@@ -99,7 +88,6 @@ export function classifyCommits(commits: readonly CommitWithRaw[], context: Clas
     const result = classifyCommit(input, context)
     classified.push(result)
 
-    // Update summary
     bySource[result.source]++
 
     if (result.include) {
@@ -144,11 +132,8 @@ function findDependencyPath(
   const normalizedScope = scope.toLowerCase()
 
   for (const [depName, depHashes] of dependencyCommitMap) {
-    // Check if scope matches dependency name or variations
     const depVariations = getDependencyVariations(depName)
     if (depVariations.some((v) => v.toLowerCase() === normalizedScope)) {
-      // CRITICAL: Verify the commit actually touched this dependency's files
-      // This prevents false positives from mislabeled commits
       if (depHashes.has(hash)) {
         return [depName]
       }
@@ -167,12 +152,10 @@ function findDependencyPath(
 function getDependencyVariations(depName: string): readonly string[] {
   const variations: string[] = [depName]
 
-  // Handle lib- prefix
   if (depName.startsWith('lib-')) {
     variations.push(depName.slice(4))
   }
 
-  // Handle @scope/name
   if (depName.startsWith('@')) {
     const slashIndex = depName.indexOf('/')
     if (slashIndex !== -1) {
@@ -248,11 +231,9 @@ export function toChangelogCommit(classified: ClassifiedCommit): ConventionalCom
   const { commit, preserveScope } = classified
 
   if (!preserveScope && commit.scope) {
-    // Remove the scope for direct commits
     return {
       ...commit,
       scope: undefined,
-      // Rebuild raw to reflect removed scope
       raw: rebuildRawWithoutScope(commit),
     }
   }

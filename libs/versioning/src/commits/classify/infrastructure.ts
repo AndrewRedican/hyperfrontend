@@ -236,17 +236,14 @@ export const DEFAULT_INFRA_SCOPE_MATCHER: InfrastructureMatcher = anyOf(CI_SCOPE
 export function buildInfrastructureMatcher(config: InfrastructureConfig): InfrastructureMatcher | null {
   const matchers: InfrastructureMatcher[] = []
 
-  // Add scope matcher if scopes configured
   if (config.scopes && config.scopes.length > 0) {
     matchers.push(scopeMatcher(config.scopes))
   }
 
-  // Add custom matcher if provided
   if (config.matcher) {
     matchers.push(config.matcher)
   }
 
-  // Return combined or null
   if (matchers.length === 0) {
     return null
   }

@@ -140,7 +140,7 @@ export function removeEmptySections(changelog: Changelog): Changelog {
     const nonEmptySections = entry.sections.filter((s) => s.items.length > 0)
 
     if (nonEmptySections.length === entry.sections.length) {
-      return entry // No change
+      return entry
     }
 
     return {
@@ -164,7 +164,6 @@ export function removeEmptySections(changelog: Changelog): Changelog {
  */
 export function removeEmptyEntries(changelog: Changelog, keepUnreleased = true): Changelog {
   const newEntries = changelog.entries.filter((entry) => {
-    // Check if entry has any items
     const hasItems = entry.sections.some((s) => s.items.length > 0)
 
     if (hasItems) return true

@@ -113,7 +113,6 @@ export function findChangelogsInTree(tree: Tree, packages: readonly PackageInfo[
  * @returns Absolute path to changelog or null if not found
  */
 export function findProjectChangelogInTree(tree: Tree, projectPath: string): string | null {
-  // Convert absolute project path to relative path for tree operations
   const relativePath = projectPath.startsWith(tree.root) ? relative(tree.root, projectPath) : projectPath
 
   for (const name of CHANGELOG_NAMES) {

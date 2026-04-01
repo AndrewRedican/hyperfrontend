@@ -378,7 +378,7 @@ describe('Create Commit Step', () => {
       const git = {
         ...createMockGitClient(),
         stageAll: jest.fn(() => {
-          throw 'string error' // Non-Error throw
+          throw 'string error'
         }),
       } as unknown as GitClient
       const ctx: FlowContext = {

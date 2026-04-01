@@ -25,17 +25,14 @@ export function createGitCommitStep(): FlowStep {
       const { git, config, state, projectName, packageName, logger } = ctx
       const { nextVersion, bumpType, modifiedFiles } = state
 
-      // Skip if git operations disabled
       if (config.skipGit) {
         return createSkippedResult('Git operations disabled')
       }
 
-      // Skip if no bump needed
       if (!nextVersion || bumpType === 'none') {
         return createSkippedResult('No version bump, no commit needed')
       }
 
-      // Skip if dry run
       if (config.dryRun) {
         const message = interpolate(config.commitMessage ?? 'chore(${projectName}): release version ${version}', {
           projectName,
@@ -48,7 +45,6 @@ export function createGitCommitStep(): FlowStep {
         }
       }
 
-      // Stage files
       if (modifiedFiles && modifiedFiles.length > 0) {
         try {
           git.stage(modifiedFiles)
@@ -61,7 +57,6 @@ export function createGitCommitStep(): FlowStep {
           }
         }
       } else {
-        // Stage all changes
         try {
           git.stageAll()
           logger.debug('Staged all changes')
@@ -74,14 +69,12 @@ export function createGitCommitStep(): FlowStep {
         }
       }
 
-      // Create commit message
       const message = interpolate(config.commitMessage ?? 'chore(${projectName}): release version ${version}', {
         projectName,
         packageName,
         version: nextVersion,
       })
 
-      // Create commit
       try {
         const commit = git.createCommit(message)
         logger.info(`Created commit: ${commit.hash.slice(0, 7)}`)

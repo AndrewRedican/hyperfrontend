@@ -16,7 +16,6 @@ import { parseInt } from '@hyperfrontend/immutable-api-utils/built-in-copy/numbe
  * compare(parseVersion('2.0.0'), parseVersion('1.0.0')) // 1
  */
 export function compare(a: SemVer, b: SemVer): -1 | 0 | 1 {
-  // Compare major, minor, patch
   if (a.major !== b.major) {
     return a.major < b.major ? -1 : 1
   }
@@ -27,22 +26,18 @@ export function compare(a: SemVer, b: SemVer): -1 | 0 | 1 {
     return a.patch < b.patch ? -1 : 1
   }
 
-  // Compare prerelease
-  // Version with prerelease has lower precedence than release
   if (a.prerelease.length === 0 && b.prerelease.length > 0) {
-    return 1 // a is release, b is prerelease -> a > b
+    return 1
   }
   if (a.prerelease.length > 0 && b.prerelease.length === 0) {
-    return -1 // a is prerelease, b is release -> a < b
+    return -1
   }
 
-  // Both have prerelease - compare identifiers
   const maxLen = max(a.prerelease.length, b.prerelease.length)
   for (let i = 0; i < maxLen; i++) {
     const aId = a.prerelease[i]
     const bId = b.prerelease[i]
 
-    // Shorter prerelease array has lower precedence
     if (aId === undefined && bId !== undefined) {
       return -1
     }
@@ -53,7 +48,6 @@ export function compare(a: SemVer, b: SemVer): -1 | 0 | 1 {
       continue
     }
 
-    // Compare identifiers
     const cmp = compareIdentifiers(aId, bId)
     if (cmp !== 0) {
       return cmp
@@ -152,8 +146,6 @@ export function satisfiesComparator(version: SemVer, comparator: Comparator): bo
       return cmp <= 0
     case '^':
     case '~':
-      // These should have been expanded during parsing
-      // If we encounter them here, treat as >=
       return cmp >= 0
     default:
       return false
@@ -172,17 +164,13 @@ export function satisfiesComparator(version: SemVer, comparator: Comparator): bo
  * satisfies(parseVersion('2.0.0'), parseRange('^1.0.0')) // false
  */
 export function satisfies(version: SemVer, range: Range): boolean {
-  // Empty range matches any
   if (range.sets.length === 0) {
     return true
   }
 
-  // OR logic: at least one set must be satisfied
   for (const set of range.sets) {
-    // AND logic: all comparators in set must be satisfied
     let allSatisfied = true
 
-    // Empty comparator set matches any
     if (set.comparators.length === 0) {
       return true
     }
@@ -258,7 +246,6 @@ function compareIdentifiers(a: string, b: string): -1 | 0 | 1 {
   const aIsNumeric = isNumeric(a)
   const bIsNumeric = isNumeric(b)
 
-  // Numeric identifiers have lower precedence
   if (aIsNumeric && !bIsNumeric) {
     return -1
   }
@@ -266,7 +253,6 @@ function compareIdentifiers(a: string, b: string): -1 | 0 | 1 {
     return 1
   }
 
-  // Both numeric - compare as numbers
   if (aIsNumeric && bIsNumeric) {
     const aNum = parseInt(a, 10)
     const bNum = parseInt(b, 10)
@@ -275,7 +261,6 @@ function compareIdentifiers(a: string, b: string): -1 | 0 | 1 {
     return 0
   }
 
-  // Both alphanumeric - compare lexically
   if (a < b) return -1
   if (a > b) return 1
   return 0

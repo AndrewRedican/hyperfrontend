@@ -34,11 +34,7 @@ export interface ChangelogHeader {
  *
  * Detected format/style of the changelog file.
  */
-export type ChangelogFormat =
-  | 'keep-a-changelog' // https://keepachangelog.com
-  | 'conventional' // conventional-changelog
-  | 'custom' // Non-standard format
-  | 'unknown' // Could not determine
+export type ChangelogFormat = 'keep-a-changelog' | 'conventional' | 'custom' | 'unknown'
 
 /**
  * Changelog Metadata

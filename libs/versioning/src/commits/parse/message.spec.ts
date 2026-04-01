@@ -267,7 +267,6 @@ describe('body parsing edge cases', () => {
 
   it('handles body line that looks like footer but is not', () => {
     const commit = parseConventionalCommit('feat: test\n\nSome text with colon: in middle')
-    // This should be body, not footer, because it doesn't start with a token
     expect(commit.body).toContain('Some text with colon')
   })
 })
@@ -319,7 +318,6 @@ describe('footer parsing edge cases', () => {
 
   it('handles empty footer value', () => {
     const commit = parseConventionalCommit('feat: test\n\nNote:')
-    // Empty value still counts as footer
     expect(commit.footers.length).toBeGreaterThanOrEqual(0)
   })
 

@@ -35,10 +35,8 @@ export function parseConventionalCommit(message: string): ConventionalCommit {
     }
   }
 
-  // Parse header (first line)
   const header = parseHeader(lines[0])
 
-  // Parse body and footers
   let body: string | undefined
   let footersStartIndex = 1
 
@@ -50,17 +48,13 @@ export function parseConventionalCommit(message: string): ConventionalCommit {
     }
   }
 
-  // Parse footers
   const footersResult = parseFooters(lines, footersStartIndex)
   const breakingDescriptionFromFooter = footersResult.breakingDescription
 
-  // Determine breaking status
   const breaking = header.breaking || footersResult.footers.some((f) => hyphenToSpace(f.key.toUpperCase()) === 'BREAKING CHANGE')
 
-  // Determine breaking description
   let breakingDescription: string | undefined
   if (header.breaking && header.subject) {
-    // If breaking via !, the subject may describe the breaking change
     breakingDescription = header.subject
   }
   if (breakingDescriptionFromFooter) {
@@ -96,7 +90,6 @@ function splitLines(message: string): string[] {
     if (char === '\r') {
       lines.push(currentLine)
       currentLine = ''
-      // Skip \n if this is \r\n
       if (message[i + 1] === '\n') {
         i++
       }
@@ -110,7 +103,6 @@ function splitLines(message: string): string[] {
     i++
   }
 
-  // Add final line if not empty
   if (currentLine || message.endsWith('\n') || message.endsWith('\r')) {
     lines.push(currentLine)
   }
@@ -132,17 +124,14 @@ export function isConventionalCommit(message: string): boolean {
   const firstLine = message.split('\n')[0] ?? ''
   const header = parseHeader(firstLine)
 
-  // Must have a type and subject
   if (!header.type || !header.subject) {
     return false
   }
 
-  // Type should not be too long (indicates not a type)
   if (header.type.length > 20) {
     return false
   }
 
-  // Type should be a recognized conventional commit type
   if (!isStandardType(header.type)) {
     return false
   }

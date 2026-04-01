@@ -11,11 +11,8 @@ describe('createTag', () => {
   })
 
   it('creates a lightweight tag', () => {
-    // Create tag command
     mockExecFileSync.mockReturnValueOnce('')
-    // Get tag details (rev-list)
     mockExecFileSync.mockReturnValueOnce('abc123def456789012345678901234567890abcd')
-    // cat-file (fails for lightweight)
     mockExecFileSync.mockImplementationOnce(() => {
       throw new Error('Not annotated')
     })
@@ -73,9 +70,7 @@ describe('createTag', () => {
   })
 
   it('throws when created tag cannot be retrieved', () => {
-    // Create succeeds
     mockExecFileSync.mockReturnValueOnce('')
-    // But retrieval fails
     mockExecFileSync.mockImplementation(() => {
       throw new Error('Tag not found')
     })
@@ -167,11 +162,7 @@ describe('pushTag', () => {
 
     pushTag('v1.0.0', 'origin', { timeout: 10000 })
 
-    expect(mockExecFileSync).toHaveBeenCalledWith(
-      'git',
-      expect.any(Array),
-      expect.objectContaining({ timeout: 30000 }) // 3x the base timeout
-    )
+    expect(mockExecFileSync).toHaveBeenCalledWith('git', expect.any(Array), expect.objectContaining({ timeout: 30000 }))
   })
 
   it('uses custom options', () => {

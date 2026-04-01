@@ -1,4 +1,3 @@
-// Predicate-based filtering
 export type { EntryPredicate, SectionPredicate, ItemPredicate } from './filter-by-predicate'
 export {
   filterEntries,
@@ -10,7 +9,6 @@ export {
   excludeByScope,
 } from './filter-by-predicate'
 
-// Range-based filtering
 export {
   filterByVersionRange,
   filterFromVersion,

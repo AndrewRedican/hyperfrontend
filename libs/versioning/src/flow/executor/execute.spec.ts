@@ -7,7 +7,6 @@ import { createSkippedResult, createStep, createSuccessResult } from '../models/
 import { createMinimalFlow } from '../presets/conventional'
 import { dryRun, executeFlow, validateFlow } from './execute'
 
-// Mock external discovery modules
 jest.mock('@hyperfrontend/project-scope/nx', () => ({
   isNxWorkspace: jest.fn(),
   discoverNxProjects: jest.fn(),
@@ -204,10 +203,8 @@ function createMockLogger() {
   }
 }
 
-// Reset mocks before each test
 beforeEach(() => {
   jest.clearAllMocks()
-  // Default mock implementations - most tests use explicit projectRoot
   projectScopeNx.isNxWorkspace.mockReturnValue(false)
   projectScopeNx.discoverNxProjects.mockReturnValue(new Map())
   workspaceDiscovery.discoverProjectByName.mockReturnValue(null)
@@ -231,7 +228,6 @@ describe('executeFlow - project discovery with explicit projectRoot', () => {
       projectRoot: 'libs/utils',
     })
 
-    // Flow should execute and find the package
     expect(result.status).not.toBe('failed')
   })
 
@@ -282,7 +278,6 @@ describe('executeFlow - project discovery with explicit projectRoot', () => {
       }),
     })
 
-    // Without projectRoot, discovery must find the project (which won't work with mock tree)
     const result = await executeFlow(flow, 'nonexistent-project', '/workspace', {
       tree,
       registry: createMockRegistry(),
@@ -342,7 +337,7 @@ describe('executeFlow - resolvePackageName behavior', () => {
       steps: [captureStep],
     }
 
-    const tree = createMockTree({}) // No package.json
+    const tree = createMockTree({})
 
     await executeFlow(flow, 'lib-test', '/workspace', {
       tree,
@@ -351,7 +346,6 @@ describe('executeFlow - resolvePackageName behavior', () => {
       projectRoot: 'libs/test',
     })
 
-    // Project discovery fails when package.json is missing
     expect(capturedContext.packageName).toBeUndefined()
   })
 
@@ -373,7 +367,6 @@ describe('executeFlow - resolvePackageName behavior', () => {
     const tree = createMockTree({
       '/workspace/libs/test/package.json': JSON.stringify({
         version: '1.0.0',
-        // No name field
       }),
     })
 
@@ -402,7 +395,6 @@ describe('executeFlow - resolvePackageName behavior', () => {
       steps: [captureStep],
     }
 
-    // Create a mock tree that returns invalid JSON
     const tree = createMockTree({
       '/workspace/libs/test/package.json': '{ invalid json }',
     })
@@ -439,7 +431,6 @@ describe('executeFlow - buildSummary behavior', () => {
   })
 
   it('shows "No release needed" when bumpType is none and status is success', async () => {
-    // Create a flow that results in no bump needed
     const noBumpStep = createStep('no-bump', 'No Bump', async () =>
       createSuccessResult('Done', {
         bumpType: 'none',
@@ -878,7 +869,7 @@ describe('dryRun', () => {
     const flow = {
       id: 'test',
       name: 'Test Flow',
-      config: { dryRun: false }, // Explicitly false
+      config: { dryRun: false },
       steps: [captureStep],
     }
 
@@ -1125,7 +1116,6 @@ describe('executeFlow - discoverProjectRoot behavior', () => {
       steps: [createStep('step1', 'Step 1', async () => createSuccessResult('OK'))],
     }
 
-    // Empty tree - no package.json anywhere
     const tree = createMockTree({})
 
     const result = await executeFlow(flow, 'nonexistent-project', '/workspace', {
@@ -1146,7 +1136,6 @@ describe('executeFlow - discoverProjectRoot behavior', () => {
       steps: [createStep('step1', 'Step 1', async () => createSuccessResult('OK'))],
     }
 
-    // Tree has no package.json at the given path
     const tree = createMockTree({
       '/workspace/libs/other/package.json': JSON.stringify({ name: '@test/other', version: '1.0.0' }),
     })
@@ -1168,7 +1157,6 @@ describe('executeFlow - buildSummary edge cases', () => {
     const setNextVersionStep = createStep('set-next', 'Set Next', async () =>
       createSuccessResult('OK', {
         nextVersion: '2.0.0',
-        // currentVersion is NOT set
       })
     )
 
@@ -1237,7 +1225,6 @@ describe('executeFlow - buildSummary edge cases', () => {
 
 describe('executeFlow - context properties', () => {
   it('provides all expected context properties to steps', async () => {
-    // Use mutable object to capture values (FlowContext has readonly props)
     const capturedContext: {
       workspaceRoot?: string
       projectName?: string
@@ -1449,7 +1436,6 @@ describe('executeFlow - config merging', () => {
       tree,
       registry: createMockRegistry(),
       git: createMockGitClient(),
-      // dryRun not specified
       projectRoot: 'libs/test',
     })
 
@@ -1470,7 +1456,6 @@ describe('executeFlow - logging behavior', () => {
 
     const tree = createMockTree({
       '/workspace/libs/test/package.json': JSON.stringify({
-        // No name field
         version: '1.0.0',
       }),
     })
@@ -1518,7 +1503,6 @@ describe('executeFlow - logging behavior', () => {
 
 describe('executeFlow - Nx workspace project discovery', () => {
   it('discovers project via Nx when workspace is Nx-based and project exists', async () => {
-    // Mock Nx workspace detection and project discovery
     projectScopeNx.isNxWorkspace.mockReturnValue(true)
     projectScopeNx.discoverNxProjects.mockReturnValue(new Map([['lib-my-package', { root: 'libs/my-package', name: 'lib-my-package' }]]))
 
@@ -1590,7 +1574,7 @@ describe('executeFlow - Nx workspace project discovery', () => {
 
   it('falls back to workspace discovery when project not found in Nx graph', async () => {
     projectScopeNx.isNxWorkspace.mockReturnValue(true)
-    projectScopeNx.discoverNxProjects.mockReturnValue(new Map()) // Empty - project not found
+    projectScopeNx.discoverNxProjects.mockReturnValue(new Map())
     workspaceDiscovery.discoverProjectByName.mockReturnValue({
       name: 'discovered-pkg',
       path: '/workspace/packages/discovered',
@@ -1786,7 +1770,6 @@ describe('executeFlow - VFS commit behavior', () => {
     })
 
     expect(logger.error).toHaveBeenCalledWith(expect.stringContaining('Failed to commit file changes'))
-    // Flow status should still reflect step execution success
     expect(result.status).toBe('success')
   })
 
@@ -2104,7 +2087,7 @@ describe('executeFlow - showDiff option', () => {
           version: '1.0.0',
         }),
       },
-      [] // No pending changes
+      []
     )
 
     const result = await executeFlow(flow, 'lib-test', '/workspace', {
@@ -2152,7 +2135,6 @@ describe('executeFlow - showDiff option', () => {
       projectRoot: 'libs/test',
     })
 
-    // Should not see verbose "Pending changes: X file(s)" since diff output handles that
     const infoCallArgs = logger.info.mock.calls.map((c: unknown[]) => c[0])
     const pendingChangesVerboseCount = infoCallArgs.filter((arg: string) => arg === 'Pending changes: 1 file(s)').length
     expect(pendingChangesVerboseCount).toBe(0)
@@ -2426,7 +2408,7 @@ describe('executeFlow - rollbackOnFailure option', () => {
           version: '1.0.0',
         }),
       },
-      [] // No pending changes
+      []
     )
 
     const result = await executeFlow(flow, 'lib-test', '/workspace', {

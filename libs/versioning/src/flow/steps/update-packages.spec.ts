@@ -389,8 +389,8 @@ describe('Update Packages Step', () => {
       const writeCall = (tree.write as jest.Mock).mock.calls[0]
       const written = writeCall[1]
 
-      expect(written).toContain('  "') // 2-space indentation
-      expect(written).toMatch(/\n$/) // Trailing newline
+      expect(written).toContain('  "')
+      expect(written).toMatch(/\n$/)
     })
   })
 })

@@ -254,9 +254,7 @@ describe('discardAllChanges', () => {
     const result = discardAllChanges()
 
     expect(result).toBe(true)
-    // Should call git checkout -- .
     expect(mockExecFileSync).toHaveBeenCalledWith('git', ['checkout', '--', '.'], expect.any(Object))
-    // Should call git reset HEAD -- .
     expect(mockExecFileSync).toHaveBeenCalledWith('git', ['reset', 'HEAD', '--', '.'], expect.any(Object))
   })
 
@@ -273,11 +271,9 @@ describe('discardAllChanges', () => {
   })
 
   it('returns false if unstage fails', () => {
-    mockExecFileSync
-      .mockReturnValueOnce('') // discardChanges succeeds
-      .mockImplementationOnce(() => {
-        throw new Error('Unstage failed')
-      })
+    mockExecFileSync.mockReturnValueOnce('').mockImplementationOnce(() => {
+      throw new Error('Unstage failed')
+    })
 
     const result = discardAllChanges()
 

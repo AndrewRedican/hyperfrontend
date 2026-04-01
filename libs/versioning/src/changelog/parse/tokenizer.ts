@@ -4,19 +4,19 @@ import { createError } from '@hyperfrontend/immutable-api-utils/built-in-copy/er
  * Token Types
  */
 export type TokenType =
-  | 'heading-1' // #
-  | 'heading-2' // ##
-  | 'heading-3' // ###
-  | 'heading-4' // ####
-  | 'list-item' // - or *
-  | 'link-text' // [text]
-  | 'link-url' // (url)
-  | 'text' // Plain text
-  | 'newline' // \n
-  | 'blank-line' // Empty line
-  | 'bold' // **text**
-  | 'code' // `code`
-  | 'eof' // End of file
+  | 'heading-1'
+  | 'heading-2'
+  | 'heading-3'
+  | 'heading-4'
+  | 'list-item'
+  | 'link-text'
+  | 'link-url'
+  | 'text'
+  | 'newline'
+  | 'blank-line'
+  | 'bold'
+  | 'code'
+  | 'eof'
 
 /**
  * Represents a single parsed token from the changelog markdown.
@@ -67,13 +67,11 @@ export function tokenize(input: string): Token[] {
   while (state.pos < state.input.length) {
     const char = state.input[state.pos]
 
-    // Check for newline
     if (char === '\n') {
       consumeNewline(state)
       continue
     }
 
-    // Check for carriage return (handle \r\n)
     if (char === '\r') {
       state.pos++
       if (state.input[state.pos] === '\n') {
@@ -82,22 +80,18 @@ export function tokenize(input: string): Token[] {
       continue
     }
 
-    // At start of line, check for special markers
     if (state.column === 1) {
-      // Check for heading
       if (char === '#') {
         consumeHeading(state)
         continue
       }
 
-      // Check for list item
       if ((char === '-' || char === '*') && isWhitespace(state.input[state.pos + 1])) {
         consumeListItem(state)
         continue
       }
     }
 
-    // Check for inline markdown elements
     if (char === '[') {
       consumeLink(state)
       continue
@@ -113,11 +107,9 @@ export function tokenize(input: string): Token[] {
       continue
     }
 
-    // Default: consume as text
     consumeText(state)
   }
 
-  // Add EOF token
   pushToken(state, 'eof', '')
 
   return state.tokens
@@ -129,7 +121,6 @@ export function tokenize(input: string): Token[] {
  * @param state - The tokenizer state to update
  */
 function consumeNewline(state: TokenizerState): void {
-  // Check if this is a blank line (previous token was also newline or at start)
   const prevToken = state.tokens[state.tokens.length - 1]
   const isBlank = prevToken?.type === 'newline' || prevToken?.type === 'blank-line' || state.tokens.length === 0
 
@@ -148,20 +139,17 @@ function consumeHeading(state: TokenizerState): void {
   const startColumn = state.column
   let level = 0
 
-  // Count # characters
   while (state.input[state.pos] === '#' && level < 4) {
     state.pos++
     state.column++
     level++
   }
 
-  // Skip whitespace after #
   while (isWhitespace(state.input[state.pos]) && state.input[state.pos] !== '\n') {
     state.pos++
     state.column++
   }
 
-  // Consume the rest of the line as heading content
   const contentStart = state.pos
   while (state.pos < state.input.length && state.input[state.pos] !== '\n') {
     state.pos++
@@ -187,8 +175,7 @@ function consumeHeading(state: TokenizerState): void {
 function consumeListItem(state: TokenizerState): void {
   const startColumn = state.column
 
-  // Skip the marker and whitespace
-  state.pos++ // skip - or *
+  state.pos++
   state.column++
 
   while (isWhitespace(state.input[state.pos]) && state.input[state.pos] !== '\n') {
@@ -196,7 +183,6 @@ function consumeListItem(state: TokenizerState): void {
     state.column++
   }
 
-  // Consume the rest of the line as list item content
   const contentStart = state.pos
   while (state.pos < state.input.length && state.input[state.pos] !== '\n') {
     state.pos++
@@ -222,11 +208,9 @@ function consumeLink(state: TokenizerState): void {
   const startColumn = state.column
   const startLine = state.line
 
-  // Skip opening [
   state.pos++
   state.column++
 
-  // Find closing ]
   const textStart = state.pos
   let depth = 1
   while (state.pos < state.input.length && depth > 0) {
@@ -234,7 +218,6 @@ function consumeLink(state: TokenizerState): void {
     if (char === '[') depth++
     else if (char === ']') depth--
     else if (char === '\n') {
-      // Link text shouldn't span lines; emit '[' as text and reset
       state.tokens.push({
         type: 'text',
         value: '[',
@@ -252,7 +235,6 @@ function consumeLink(state: TokenizerState): void {
   }
 
   if (depth !== 0) {
-    // No closing ], emit '[' as text and reset
     state.tokens.push({
       type: 'text',
       value: '[',
@@ -265,12 +247,11 @@ function consumeLink(state: TokenizerState): void {
   }
 
   const linkText = state.input.slice(textStart, state.pos)
-  state.pos++ // skip ]
+  state.pos++
   state.column++
 
-  // Check for (url)
   if (state.input[state.pos] === '(') {
-    state.pos++ // skip (
+    state.pos++
     state.column++
 
     const urlStart = state.pos
@@ -280,7 +261,6 @@ function consumeLink(state: TokenizerState): void {
       if (char === '(') depth++
       else if (char === ')') depth--
       else if (char === '\n') {
-        // URL shouldn't span lines
         break
       }
       if (depth > 0) {
@@ -291,10 +271,9 @@ function consumeLink(state: TokenizerState): void {
 
     if (depth === 0) {
       const linkUrl = state.input.slice(urlStart, state.pos)
-      state.pos++ // skip )
+      state.pos++
       state.column++
 
-      // Emit link-text token
       state.tokens.push({
         type: 'link-text',
         value: linkText,
@@ -302,7 +281,6 @@ function consumeLink(state: TokenizerState): void {
         column: startColumn,
       })
 
-      // Emit link-url token
       state.tokens.push({
         type: 'link-url',
         value: linkUrl,
@@ -313,7 +291,6 @@ function consumeLink(state: TokenizerState): void {
     }
   }
 
-  // No URL part, emit as text
   state.tokens.push({
     type: 'text',
     value: `[${linkText}]`,
@@ -331,7 +308,7 @@ function consumeCode(state: TokenizerState): void {
   const startColumn = state.column
   const startLine = state.line
 
-  state.pos++ // skip opening `
+  state.pos++
   state.column++
 
   const contentStart = state.pos
@@ -342,7 +319,7 @@ function consumeCode(state: TokenizerState): void {
 
   if (state.input[state.pos] === '`') {
     const content = state.input.slice(contentStart, state.pos)
-    state.pos++ // skip closing `
+    state.pos++
     state.column++
 
     state.tokens.push({
@@ -352,7 +329,6 @@ function consumeCode(state: TokenizerState): void {
       column: startColumn,
     })
   } else {
-    // No closing `, emit as text
     state.tokens.push({
       type: 'text',
       value: '`' + state.input.slice(contentStart, state.pos),
@@ -371,12 +347,11 @@ function consumeBold(state: TokenizerState): void {
   const startColumn = state.column
   const startLine = state.line
 
-  state.pos += 2 // skip opening **
+  state.pos += 2
   state.column += 2
 
   const contentStart = state.pos
   while (state.pos < state.input.length) {
-    // Check for closing **
     if (state.input[state.pos] === '*' && state.input[state.pos + 1] === '*') {
       break
     }
@@ -390,7 +365,7 @@ function consumeBold(state: TokenizerState): void {
 
   if (state.input[state.pos] === '*' && state.input[state.pos + 1] === '*') {
     const content = state.input.slice(contentStart, state.pos)
-    state.pos += 2 // skip closing **
+    state.pos += 2
     state.column += 2
 
     state.tokens.push({
@@ -400,7 +375,6 @@ function consumeBold(state: TokenizerState): void {
       column: startColumn,
     })
   } else {
-    // No closing **, emit as text
     state.tokens.push({
       type: 'text',
       value: '**' + state.input.slice(contentStart, state.pos),
@@ -423,12 +397,10 @@ function consumeText(state: TokenizerState): void {
   while (state.pos < state.input.length) {
     const char = state.input[state.pos]
 
-    // Stop at newline
     if (char === '\n' || char === '\r') {
       break
     }
 
-    // Stop at special characters (but only if they start a pattern)
     if (char === '[') break
     if (char === '`') break
     if (char === '*' && state.input[state.pos + 1] === '*') break

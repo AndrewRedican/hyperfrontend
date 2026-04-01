@@ -35,10 +35,7 @@ export interface PlannedBump {
 /**
  * Reason for a version bump.
  */
-export type BumpReason =
-  | 'direct' // Direct changes in this package
-  | 'cascade' // Changes in dependencies
-  | 'sync' // Synced versioning mode
+export type BumpReason = 'direct' | 'cascade' | 'sync'
 
 /**
  * Options for cascade bump calculation.
@@ -141,7 +138,6 @@ export function calculateCascadeBumps(
   const directBumpMap = createMap(directBumps.map((b) => <[string, DirectBumpInput]>[b.name, b]))
   const allBumps = createMap<string, PlannedBump>()
 
-  // Process direct bumps first
   for (const input of directBumps) {
     const project = workspace.projects.get(input.name)
     if (!project) {
@@ -152,7 +148,6 @@ export function calculateCascadeBumps(
     allBumps.set(input.name, planned)
   }
 
-  // Calculate cascade bumps
   const processed = createSet<string>()
   const queue = [...directBumps.map((b) => b.name)]
 
@@ -163,18 +158,14 @@ export function calculateCascadeBumps(
     }
     processed.add(current)
 
-    // Get dependents
     const dependents = getTransitiveDependents(workspace, current)
 
     for (const depName of dependents) {
-      // Skip if already has a direct bump
       if (directBumpMap.has(depName)) {
         continue
       }
 
-      // Skip if already planned
       if (allBumps.has(depName)) {
-        // Update triggered by list
         const existing = allBumps.get(depName)
         if (existing && !existing.triggeredBy.includes(current)) {
           allBumps.set(depName, {
@@ -190,7 +181,6 @@ export function calculateCascadeBumps(
         continue
       }
 
-      // Check if we should include this dependent based on dependency type
       if (!shouldCascade(workspace, depName, current, opts)) {
         continue
       }
@@ -198,17 +188,14 @@ export function calculateCascadeBumps(
       const planned = createPlannedBump(project, opts.cascadeBumpType, 'cascade', [current], opts.prereleaseId)
       allBumps.set(depName, planned)
 
-      // Continue cascading from this dependent
       queue.push(depName)
     }
   }
 
-  // Convert to arrays and categorize
   const bumps = [...allBumps.values()]
   const directBumpsArray = bumps.filter((b) => b.reason === 'direct')
   const cascadeBumpsArray = bumps.filter((b) => b.reason === 'cascade')
 
-  // Sort bumps by name for consistent output
   bumps.sort((a, b) => a.name.localeCompare(b.name))
 
   return {
@@ -236,17 +223,14 @@ function shouldCascade(workspace: Workspace, dependent: string, dependency: stri
 
   const pkg = project.packageJson
 
-  // Check production dependencies (always cascades)
   if (pkg.dependencies?.[dependency]) {
     return true
   }
 
-  // Check dev dependencies
   if (opts.includeDevDependencies && pkg.devDependencies?.[dependency]) {
     return true
   }
 
-  // Check peer dependencies
   if (opts.includePeerDependencies && pkg.peerDependencies?.[dependency]) {
     return true
   }

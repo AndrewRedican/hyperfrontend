@@ -432,7 +432,6 @@ describe('edge cases', () => {
 
   it('skips cascade when project not found in shouldCascade', () => {
     const libCore = createTestProject('lib-core', '1.0.0')
-    // lib-a is in the graph but doesn't have lib-core in any dependency type
     const libA = createTestProject('lib-a', '1.0.0', {}, {}, {})
 
     const depGraph = createMap([
@@ -449,7 +448,6 @@ describe('edge cases', () => {
 
     const result = calculateCascadeBumps(workspace, [{ name: 'lib-core', bumpType: 'minor' }])
 
-    // lib-a should not be bumped because it doesn't actually depend on lib-core per packageJson
     const libABump = result.bumps.find((b) => b.name === 'lib-a')
     expect(libABump).toBeUndefined()
   })
@@ -477,7 +475,6 @@ describe('edge cases', () => {
   })
 
   it('skips already processed packages in queue', () => {
-    // Diamond dependency: core -> a, core -> b, a -> app, b -> app
     const libCore = createTestProject('lib-core', '1.0.0')
     const libA = createTestProject('lib-a', '1.0.0', { 'lib-core': '^1.0.0' })
     const libB = createTestProject('lib-b', '1.0.0', { 'lib-core': '^1.0.0' })
@@ -501,10 +498,8 @@ describe('edge cases', () => {
 
     const result = calculateCascadeBumps(workspace, [{ name: 'lib-core', bumpType: 'minor' }])
 
-    // app should only be bumped once, not twice
     const appBumps = result.bumps.filter((b) => b.name === 'app')
     expect(appBumps).toHaveLength(1)
-    // Should be triggered by one and updated with the other
     expect(appBumps[0].triggeredBy.length).toBeGreaterThanOrEqual(1)
   })
 })

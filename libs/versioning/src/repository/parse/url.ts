@@ -75,13 +75,11 @@ export function parseRepositoryUrl(gitUrl: string): ParsedRepository | null {
     return null
   }
 
-  // Try SSH format first: git@hostname:path
   const sshParsed = parseSshUrl(trimmed)
   if (sshParsed) {
     return sshParsed
   }
 
-  // Try HTTP(S) formats
   const httpParsed = parseHttpUrl(trimmed)
   if (httpParsed) {
     return httpParsed
@@ -99,21 +97,17 @@ export function parseRepositoryUrl(gitUrl: string): ParsedRepository | null {
  * @internal
  */
 function parseSshUrl(url: string): ParsedRepository | null {
-  // Handle optional ssh:// prefix
   let remaining = url
   if (remaining.startsWith('ssh://')) {
     remaining = remaining.slice(6)
   }
 
-  // Must start with git@
   if (!remaining.startsWith('git@')) {
     return null
   }
 
-  // Remove git@ prefix
   remaining = remaining.slice(4)
 
-  // Find the separator (: or /)
   const colonIndex = remaining.indexOf(':')
   const slashIndex = remaining.indexOf('/')
 
@@ -137,7 +131,6 @@ function parseSshUrl(url: string): ParsedRepository | null {
 
   const platform = detectPlatformFromHostname(hostname)
 
-  // For Azure DevOps, construct proper base URL
   if (platform === 'azure-devops') {
     const baseUrl = constructAzureDevOpsBaseUrl(hostname, pathPart)
     if (baseUrl) {
@@ -146,7 +139,6 @@ function parseSshUrl(url: string): ParsedRepository | null {
     return null
   }
 
-  // Standard platforms: https://hostname/path
   const baseUrl = `https://${hostname}/${pathPart}`
   return { platform, baseUrl }
 }
@@ -160,10 +152,7 @@ function parseSshUrl(url: string): ParsedRepository | null {
  * @internal
  */
 function parseHttpUrl(url: string): ParsedRepository | null {
-  // Normalize various git URL prefixes to https://
-  const normalized = url
-    .replace(/^git\+/, '') // git+https:// → https://
-    .replace(/^git:\/\//, 'https://') // git:// → https://
+  const normalized = url.replace(/^git\+/, '').replace(/^git:\/\//, 'https://')
 
   let parsed: URL
   try {
@@ -172,7 +161,6 @@ function parseHttpUrl(url: string): ParsedRepository | null {
     return null
   }
 
-  // Only support http and https protocols
   if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') {
     return null
   }
@@ -185,17 +173,14 @@ function parseHttpUrl(url: string): ParsedRepository | null {
     return null
   }
 
-  // Handle Azure DevOps special URL structure
   if (platform === 'azure-devops') {
     const baseUrl = constructAzureDevOpsBaseUrl(hostname, pathPart)
     if (baseUrl) {
       return { platform, baseUrl }
     }
-    // If Azure DevOps URL cannot be parsed properly, return null
     return null
   }
 
-  // Standard platforms
   const baseUrl = `${parsed.protocol}//${hostname}/${pathPart}`
   return { platform, baseUrl }
 }
@@ -211,22 +196,18 @@ function parseHttpUrl(url: string): ParsedRepository | null {
 function normalizePathPart(path: string): string | null {
   let normalized = path.trim()
 
-  // Remove leading slashes
   while (normalized.startsWith('/')) {
     normalized = normalized.slice(1)
   }
 
-  // Remove trailing slashes
   while (normalized.endsWith('/')) {
     normalized = normalized.slice(0, -1)
   }
 
-  // Remove .git suffix
   if (normalized.endsWith('.git')) {
     normalized = normalized.slice(0, -4)
   }
 
-  // Validate we have something
   if (!normalized) {
     return null
   }
@@ -251,14 +232,9 @@ function normalizePathPart(path: string): string | null {
 function constructAzureDevOpsBaseUrl(hostname: string, pathPart: string): string | null {
   const pathParts = pathPart.split('/')
 
-  // dev.azure.com format: org/project/_git/repo
   if (hostname === 'dev.azure.com' || hostname.endsWith('.azure.com')) {
-    // Need at least: org/project/_git/repo (4 parts)
-    // Or for SSH v3: v3/org/project/repo (4 parts)
     if (pathParts.length >= 4) {
-      // Check for v3 SSH format
       if (pathParts[0] === 'v3') {
-        // v3/org/project/repo → https://dev.azure.com/org/project/_git/repo
         const org = pathParts[1]
         const project = pathParts[2]
         const repo = pathParts[3]
@@ -267,7 +243,6 @@ function constructAzureDevOpsBaseUrl(hostname: string, pathPart: string): string
         }
       }
 
-      // Standard format: org/project/_git/repo
       const gitIndex = pathParts.indexOf('_git')
       if (gitIndex >= 2 && pathParts[gitIndex + 1]) {
         const org = pathParts.slice(0, gitIndex - 1).join('/')
@@ -281,7 +256,6 @@ function constructAzureDevOpsBaseUrl(hostname: string, pathPart: string): string
     return null
   }
 
-  // visualstudio.com format: {org}.visualstudio.com/project/_git/repo
   if (hostname.endsWith('.visualstudio.com')) {
     const org = hostname.replace('.visualstudio.com', '')
     const gitIndex = pathParts.indexOf('_git')
@@ -290,7 +264,6 @@ function constructAzureDevOpsBaseUrl(hostname: string, pathPart: string): string
       const project = pathParts.slice(0, gitIndex).join('/')
       const repo = pathParts[gitIndex + 1]
       if (project && repo) {
-        // Normalize to dev.azure.com format
         return `https://dev.azure.com/${org}/${project}/_git/${repo}`
       }
     }
@@ -325,7 +298,6 @@ export function createRepositoryConfigFromUrl(gitUrl: string): RepositoryConfig 
     return null
   }
 
-  // Don't create configs for unknown platforms as they can't generate URLs
   if (parsed.platform === 'unknown') {
     return null
   }

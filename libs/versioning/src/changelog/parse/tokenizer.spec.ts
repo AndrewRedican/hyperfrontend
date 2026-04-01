@@ -123,7 +123,6 @@ describe('tokenize', () => {
 
     it('handles unclosed bracket as text', () => {
       const tokens = tokenize('[unclosed')
-      // Emits '[' separately, then continues parsing the rest as text
       expect(tokens[0]).toMatchObject({ type: 'text', value: '[' })
       expect(tokens[1]).toMatchObject({ type: 'text', value: 'unclosed' })
     })
@@ -178,7 +177,6 @@ All notable changes will be documented here.
 
       const tokens = tokenize(content)
 
-      // Check for expected tokens
       const h1 = tokens.find((t) => t.type === 'heading-1')
       expect(h1?.value).toBe('Changelog')
 
@@ -227,7 +225,6 @@ All notable changes will be documented here.
   describe('code tokenization edge cases', () => {
     it('handles code with newline before closing (unclosed code at end of line)', () => {
       const tokens = tokenize('`code\nmore')
-      // Should emit text since newline ended the code before closing `
       expect(tokens.find((t) => t.type === 'text' && t.value.includes('`code'))).toBeDefined()
     })
   })
@@ -235,13 +232,11 @@ All notable changes will be documented here.
   describe('bold tokenization edge cases', () => {
     it('handles bold spanning multiple lines', () => {
       const tokens = tokenize('**bold\ntext**')
-      // Should find a bold token with content spanning lines
       expect(tokens.find((t) => t.type === 'bold' && t.value.includes('bold'))).toBeDefined()
     })
 
     it('handles bold that reaches end of input without closing', () => {
       const tokens = tokenize('**unclosed')
-      // Should emit as text
       expect(tokens.find((t) => t.type === 'text' && t.value.startsWith('**'))).toBeDefined()
     })
 
@@ -282,13 +277,11 @@ All notable changes will be documented here.
   describe('link tokenization edge cases', () => {
     it('handles link text spanning multiple lines (emits [ as text)', () => {
       const tokens = tokenize('[link\ntext](url)')
-      // Since link text spans lines, should emit '[' as text
       expect(tokens.find((t) => t.type === 'text' && t.value === '[')).toBeDefined()
     })
 
     it('handles unclosed link bracket (no closing ])', () => {
       const tokens = tokenize('[unclosed link text')
-      // Should emit '[' as text
       expect(tokens.find((t) => t.type === 'text' && t.value === '[')).toBeDefined()
     })
 
@@ -299,20 +292,17 @@ All notable changes will be documented here.
 
     it('handles link without URL', () => {
       const tokens = tokenize('[link text] no url')
-      // Link text without URL should emit as text (including brackets)
       expect(tokens.find((t) => t.type === 'text' && t.value === '[link text]')).toBeDefined()
     })
 
     it('handles link URL spanning lines', () => {
       const tokens = tokenize('[text](http://\nexample.com)')
-      // URL shouldn't span lines
       const linkUrl = tokens.find((t) => t.type === 'link-url')
       expect(linkUrl).toBeUndefined()
     })
 
     it('handles unclosed URL parenthesis', () => {
       const tokens = tokenize('[text](url-without-closing')
-      // Unclosed URL should emit link text as regular text
       expect(tokens.find((t) => t.type === 'text' && t.value === '[text]')).toBeDefined()
     })
   })

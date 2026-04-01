@@ -31,10 +31,8 @@ function calculateBumpFromCommits(
     return 'none'
   }
 
-  // Check for breaking changes
   const hasBreaking = commits.some((c) => c.breaking)
   if (hasBreaking) {
-    // Pre-1.0.0: breaking changes are minor, not major
     const parsed = parseVersion(currentVersion)
     if (parsed.success && parsed.version && parsed.version.major === 0) {
       return 'minor'
@@ -42,13 +40,11 @@ function calculateBumpFromCommits(
     return 'major'
   }
 
-  // Check for minor-triggering types
   const hasMinor = commits.some((c) => c.type && minorTypes.includes(c.type))
   if (hasMinor) {
     return 'minor'
   }
 
-  // Check for patch-triggering types
   const hasPatch = commits.some((c) => c.type && patchTypes.includes(c.type))
   if (hasPatch) {
     return 'patch'
@@ -79,7 +75,6 @@ export function createCalculateBumpStep(): FlowStep {
       const { config, state, logger } = ctx
       const { commits, currentVersion, isFirstRelease } = state
 
-      // Handle first release
       if (isFirstRelease) {
         const firstVersion = config.firstReleaseVersion ?? '0.1.0'
         logger.info(`First release: using version ${firstVersion}`)
@@ -94,7 +89,6 @@ export function createCalculateBumpStep(): FlowStep {
         }
       }
 
-      // Check for forced bump type (releaseAs)
       if (config.releaseAs) {
         const forcedBumpType = <BumpType>config.releaseAs
         const current = parseVersion(currentVersion ?? '0.0.0')
@@ -120,7 +114,6 @@ export function createCalculateBumpStep(): FlowStep {
         }
       }
 
-      // No commits = no bump needed
       if (!commits || commits.length === 0) {
         return createSkippedResult('No releasable commits found')
       }
@@ -141,7 +134,6 @@ export function createCalculateBumpStep(): FlowStep {
         }
       }
 
-      // Parse versions for comparison
       const current = parseVersion(currentVersion ?? '0.0.0')
       if (!current.success || !current.version) {
         return {
@@ -154,13 +146,10 @@ export function createCalculateBumpStep(): FlowStep {
       const { publishedVersion } = state
       const published = parseVersion(publishedVersion ?? '0.0.0')
 
-      // Detect pending publication state: currentVersion > publishedVersion
-      // This means a previous bump happened but was never published
       const isPendingPublication =
         published.success && published.version && publishedVersion != null && gt(current.version, published.version)
 
       if (isPendingPublication && published.version) {
-        // ALWAYS calculate from publishedVersion - commits may have changed
         const next = increment(published.version, bumpType)
         const nextVersion = format(next)
 
@@ -177,7 +166,6 @@ export function createCalculateBumpStep(): FlowStep {
         }
       }
 
-      // Normal path: increment from currentVersion
       const next = increment(current.version, bumpType)
       const nextVersion = format(next)
 
@@ -212,7 +200,6 @@ export function createCheckIdempotencyStep(): FlowStep {
       const { registry, packageName, state } = ctx
       const { nextVersion, bumpType } = state
 
-      // No bump = nothing to check
       if (!nextVersion || bumpType === 'none') {
         return {
           status: 'success',
@@ -220,7 +207,6 @@ export function createCheckIdempotencyStep(): FlowStep {
         }
       }
 
-      // Check if version is already published
       const isPublished = await registry.isVersionPublished(packageName, nextVersion)
 
       if (isPublished) {

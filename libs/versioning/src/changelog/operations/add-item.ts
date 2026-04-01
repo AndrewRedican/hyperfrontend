@@ -24,7 +24,6 @@ export function addItemToEntry(changelog: Changelog, version: string, sectionTyp
   let newSections: ChangelogSection[]
 
   if (sectionIndex === -1) {
-    // Create new section
     newSections = [
       ...entry.sections,
       {
@@ -34,7 +33,6 @@ export function addItemToEntry(changelog: Changelog, version: string, sectionTyp
       },
     ]
   } else {
-    // Add to existing section
     newSections = [...entry.sections]
     newSections[sectionIndex] = {
       ...newSections[sectionIndex],

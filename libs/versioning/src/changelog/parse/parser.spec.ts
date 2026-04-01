@@ -352,28 +352,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
       const changelog = parseChangelog(content)
 
-      // Header
       expect(changelog.header.title).toContain('Changelog')
       expect(changelog.header.description.length).toBeGreaterThan(0)
       expect(changelog.header.links.length).toBeGreaterThan(0)
 
-      // Entries
       expect(changelog.entries).toHaveLength(3)
 
-      // Unreleased
       expect(changelog.entries[0].unreleased).toBe(true)
       expect(changelog.entries[0].sections).toHaveLength(1)
 
-      // 1.1.0
       expect(changelog.entries[1].version).toBe('1.1.0')
       expect(changelog.entries[1].date).toBe('2024-02-01')
       expect(changelog.entries[1].sections).toHaveLength(3)
 
-      // 1.0.0
       expect(changelog.entries[2].version).toBe('1.0.0')
       expect(changelog.entries[2].date).toBe('2024-01-01')
 
-      // Metadata
       expect(changelog.metadata.format).toBe('keep-a-changelog')
     })
   })
@@ -392,7 +386,6 @@ Another paragraph.
 `
 
       const changelog = parseChangelog(content)
-      // Should trim trailing empty lines from description
       expect(changelog.header.description[changelog.header.description.length - 1]).not.toBe('')
     })
 
@@ -404,7 +397,7 @@ Another paragraph.
 `
 
       const changelog = parseChangelog(content)
-      expect(changelog.header.title).toBe('# Changelog') // Default title
+      expect(changelog.header.title).toBe('# Changelog')
     })
   })
 
@@ -564,7 +557,6 @@ Some random text
 `
 
       const changelog = parseChangelog(content)
-      // Should detect as custom since it has sections but not conventional ones
       expect(changelog.metadata.format).toBe('custom')
     })
 
@@ -591,7 +583,6 @@ Some text with [label only] no URL.
 `
 
       const changelog = parseChangelog(content)
-      // Should handle gracefully without crashing
       expect(changelog.header.description.length).toBeGreaterThan(0)
     })
   })

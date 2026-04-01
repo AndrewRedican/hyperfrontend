@@ -141,19 +141,13 @@ export function isLightweightTag(tag: GitTag): boolean {
  * extractVersionFromTag('release-1.2.3') // '1.2.3'
  */
 export function extractVersionFromTag(tagName: string): string | undefined {
-  // Strategy: Find last occurrence of '@' followed by version, or 'v' followed by version
-  // Version starts with digit and contains digits, dots, and possibly prerelease identifiers
-
-  // First, try to find @version pattern (for scoped packages)
   let i = tagName.length - 1
 
-  // Find last '@'
   while (i >= 0 && tagName[i] !== '@') {
     i--
   }
 
   if (i >= 0) {
-    // Found '@', check if followed by version
     const afterAt = tagName.slice(i + 1)
     const version = parseVersionPart(afterAt)
     if (version) {
@@ -161,13 +155,11 @@ export function extractVersionFromTag(tagName: string): string | undefined {
     }
   }
 
-  // Try to find 'v' followed by version
   i = 0
   while (i < tagName.length) {
     if ((tagName[i] === 'v' || tagName[i] === 'V') && i + 1 < tagName.length) {
       const nextCode = tagName.charCodeAt(i + 1)
       if (nextCode >= 48 && nextCode <= 57) {
-        // 0-9
         const version = parseVersionPart(tagName.slice(i + 1))
         if (version) {
           return version
@@ -177,7 +169,6 @@ export function extractVersionFromTag(tagName: string): string | undefined {
     i++
   }
 
-  // Try to find digit sequence after common separators (-, _)
   i = 0
   while (i < tagName.length) {
     const char = tagName[i]
@@ -185,7 +176,6 @@ export function extractVersionFromTag(tagName: string): string | undefined {
       const afterSep = tagName.slice(i + 1)
       const code = afterSep.charCodeAt(0)
       if (code >= 48 && code <= 57) {
-        // 0-9
         const version = parseVersionPart(afterSep)
         if (version) {
           return version
@@ -195,7 +185,6 @@ export function extractVersionFromTag(tagName: string): string | undefined {
     i++
   }
 
-  // Last resort: if entire string is a version
   return parseVersionPart(tagName)
 }
 
@@ -209,13 +198,11 @@ export function extractVersionFromTag(tagName: string): string | undefined {
 function parseVersionPart(input: string): string | undefined {
   if (!input) return undefined
 
-  // Must start with digit
   const firstCode = input.charCodeAt(0)
   if (firstCode < 48 || firstCode > 57) {
     return undefined
   }
 
-  // Collect version characters: digits, dots, hyphens, plus, letters (for prerelease)
   let i = 0
   let dotCount = 0
 
@@ -223,34 +210,27 @@ function parseVersionPart(input: string): string | undefined {
     const code = input.charCodeAt(i)
 
     if (code >= 48 && code <= 57) {
-      // 0-9
       i++
     } else if (code === 46) {
-      // .
       dotCount++
       i++
     } else if (code === 45) {
-      // -
       i++
     } else if (code === 43) {
-      // +
       i++
     } else if ((code >= 97 && code <= 122) || (code >= 65 && code <= 90)) {
-      // a-z, A-Z
       i++
     } else {
       break
     }
   }
 
-  // Must have at least one dot (e.g., 1.0)
   if (dotCount === 0) {
     return undefined
   }
 
   const version = input.slice(0, i)
 
-  // Basic validation: must contain at least two parts separated by dots
   if (!version.includes('.')) {
     return undefined
   }
@@ -272,17 +252,14 @@ function parseVersionPart(input: string): string | undefined {
  * extractPackageFromTag('v1.2.3') // undefined
  */
 export function extractPackageFromTag(tagName: string): string | undefined {
-  // Find the last '@' that's followed by a version number
   let lastVersionAt = -1
   let i = tagName.length - 1
 
   while (i >= 0) {
     if (tagName[i] === '@') {
-      // Check if followed by a digit
       if (i + 1 < tagName.length) {
         const nextCode = tagName.charCodeAt(i + 1)
         if (nextCode >= 48 && nextCode <= 57) {
-          // 0-9
           lastVersionAt = i
           break
         }
@@ -295,13 +272,11 @@ export function extractPackageFromTag(tagName: string): string | undefined {
     return tagName.slice(0, lastVersionAt)
   }
 
-  // Check for -v or _v pattern
   i = tagName.length - 1
   while (i > 0) {
     if (tagName[i] === 'v' || tagName[i] === 'V') {
       const prev = tagName[i - 1]
       if (prev === '-' || prev === '_') {
-        // Check if followed by digit
         if (i + 1 < tagName.length) {
           const nextCode = tagName.charCodeAt(i + 1)
           if (nextCode >= 48 && nextCode <= 57) {
@@ -330,7 +305,6 @@ export function extractPackageFromTag(tagName: string): string | undefined {
  * buildTagName('pkg', '2.0.0', '${package}-v${version}') // 'pkg-v2.0.0'
  */
 export function buildTagName(packageName: string, version: string, format = '${package}@${version}'): string {
-  // Simple character-by-character replacement (no regex)
   let result = ''
   let i = 0
 
@@ -366,7 +340,7 @@ export function compareTagsByVersion(a: GitTag, b: GitTag): number {
   if (!versionA) return 1
   if (!versionB) return -1
 
-  return compareVersionStrings(versionB, versionA) // Descending order
+  return compareVersionStrings(versionB, versionA)
 }
 
 /**
@@ -403,7 +377,6 @@ function compareVersionStrings(a: string, b: string): number {
 function parseNumericPart(part: string | undefined): number {
   if (!part) return 0
 
-  // Extract leading digits only
   let num = 0
   for (let i = 0; i < part.length; i++) {
     const code = part.charCodeAt(i)

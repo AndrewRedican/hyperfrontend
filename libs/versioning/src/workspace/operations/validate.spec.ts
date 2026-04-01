@@ -719,7 +719,6 @@ describe('summarizeValidation', () => {
     const report = validateWorkspace(workspace)
     const summary = summarizeValidation(report)
 
-    // Report is valid (just warnings), so should show "passed" with warning count
     expect(summary).toContain('passed')
     expect(summary).toContain('warning')
   })
@@ -818,7 +817,6 @@ describe('edge cases', () => {
 
     const report = validateWorkspace(workspace)
 
-    // Should detect invalid version on lib-core
     expect(report.invalidPackages).toContain('lib-core')
   })
 

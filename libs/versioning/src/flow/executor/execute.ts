@@ -105,14 +105,12 @@ function discoverProjectRoot(
   logger: Logger,
   tree?: Tree
 ): ProjectRootResolution | null {
-  // 1. Explicit projectRoot provided (preferred - from Nx executor)
   if (providedRoot) {
     const projectRoot = providedRoot.startsWith(workspaceRoot) ? providedRoot : `${workspaceRoot}/${providedRoot}`
     logger.debug(`Using provided project root: ${providedRoot}`)
     return { projectRoot, source: 'provided' }
   }
 
-  // 2. Try Nx project discovery (fast, if we're in an Nx workspace)
   if (isNxWorkspace(workspaceRoot)) {
     logger.debug('Nx workspace detected, attempting Nx project discovery')
     try {
@@ -129,8 +127,6 @@ function discoverProjectRoot(
     }
   }
 
-  // 3. Try workspace discovery (handles any monorepo structure)
-  // Pass tree for VFS-aware discovery when available
   logger.debug('Attempting workspace discovery via discoverProjectByName')
   try {
     const project = discoverProjectByName(projectName, { workspaceRoot, tree })
@@ -143,7 +139,6 @@ function discoverProjectRoot(
     logger.debug(`Workspace discovery failed: ${error}`)
   }
 
-  // All discovery methods failed
   logger.error(
     `Could not discover project "${projectName}" in workspace "${workspaceRoot}". ` +
       `Ensure the project exists and has a valid package.json, or pass projectRoot explicitly.`
@@ -252,23 +247,18 @@ export async function executeFlow(
   const startTime = dateNow()
   const flowLogger = options.logger ?? defaultLogger
 
-  // Set log level based on verbose option
   flowLogger.setLogLevel(options.verbose ? 'debug' : 'error')
 
-  // Merge configs
   const config = mergeConfig(flow.config, {
     dryRun: options.dryRun ?? flow.config.dryRun,
   })
 
-  // Initialize services
   const tree = options.tree ?? createTree(workspaceRoot)
   const registry = options.registry ?? createRegistry('npm')
   const git = options.git ?? createGitClient({ ...DEFAULT_GIT_CLIENT_CONFIG, cwd: workspaceRoot })
 
-  // Resolve project root with smart discovery (VFS-aware when tree available)
   const resolution = discoverProjectRoot(workspaceRoot, projectName, options.projectRoot, flowLogger, tree)
 
-  // Fail early if project cannot be discovered
   if (!resolution) {
     return {
       status: 'failed',
@@ -281,7 +271,6 @@ export async function executeFlow(
 
   const { projectRoot, source: projectRootSource } = resolution
 
-  // Early validation: ensure project root has a valid package.json file
   const packageJsonPath = `${projectRoot}/package.json`
   if (!tree.isFile(packageJsonPath)) {
     const errorMsg =
@@ -302,7 +291,6 @@ export async function executeFlow(
     flowLogger.warn(`Could not read package name from ${packageJsonPath}`)
   }
 
-  // Initialize context
   const context: FlowContext = {
     workspaceRoot,
     projectName,
@@ -322,9 +310,7 @@ export async function executeFlow(
   flowLogger.info(`Executing flow: ${flow.name}`)
   flowLogger.info(`Project: ${projectName} (${packageName})`)
 
-  // Execute steps in order
   for (const step of flow.steps) {
-    // Check dependencies
     if (step.dependsOn?.length) {
       const depsMet = step.dependsOn.every((depId) => {
         const depResult = stepResults.find((r) => r.stepId === depId)
@@ -343,7 +329,6 @@ export async function executeFlow(
       }
     }
 
-    // Check skip condition
     if (step.skipIf?.(context)) {
       flowLogger.debug(`Skipping step "${step.name}": skip condition met`)
       stepResults.push({
@@ -355,13 +340,11 @@ export async function executeFlow(
       continue
     }
 
-    // Execute step
     try {
       flowLogger.info(`Executing step: ${step.name}`)
 
       const result = await step.execute(context)
 
-      // Apply state updates
       if (result.stateUpdates) {
         context.state = { ...context.state, ...result.stateUpdates }
       }
@@ -379,7 +362,6 @@ export async function executeFlow(
       } else if (result.status === 'failed') {
         flowLogger.error(`Step "${step.name}" failed: ${result.message ?? result.error?.message ?? 'Unknown error'}`)
         if (!step.continueOnError) {
-          // Rollback pending changes on failure (default behavior)
           if (options.rollbackOnFailure !== false) {
             const changes = tree.listChanges()
             if (changes.length > 0) {
@@ -405,7 +387,6 @@ export async function executeFlow(
       })
 
       if (!step.continueOnError) {
-        // Rollback pending changes on failure (default behavior)
         if (options.rollbackOnFailure !== false) {
           const changes = tree.listChanges()
           if (changes.length > 0) {
@@ -419,27 +400,22 @@ export async function executeFlow(
     }
   }
 
-  // Capture pending file changes for observability
   const pendingChanges = tree.listChanges()
   const modifiedFiles: readonly FileChangeInfo[] = pendingChanges.map((change) => ({
     path: change.path,
     changeType: change.type,
   }))
 
-  // Generate diffs for pending changes (for observability and showDiff output)
   let diffs: readonly FileDiff[] | undefined
   if (options.showDiff && pendingChanges.length > 0) {
     diffs = generateAllDiffs(tree)
 
-    // Log diffs based on format
     flowLogger.info(`\n${'='.repeat(60)}\nPending changes:\n${'='.repeat(60)}`)
 
     for (const diff of diffs) {
       if (options.diffFormat === 'summary') {
-        // Summary mode: just show stats
         flowLogger.info(`${diff.path}: +${diff.additions} -${diff.deletions}`)
       } else {
-        // Unified mode (default): show full diff
         flowLogger.info(formatUnifiedDiff(diff))
       }
     }
@@ -447,7 +423,6 @@ export async function executeFlow(
     flowLogger.info('No file changes to commit')
   }
 
-  // Log changes when verbose (only if not already showing diffs)
   if (options.verbose && !options.showDiff && pendingChanges.length > 0) {
     flowLogger.info(`Pending changes: ${pendingChanges.length} file(s)`)
     for (const change of pendingChanges) {
@@ -455,7 +430,6 @@ export async function executeFlow(
     }
   }
 
-  // Commit VFS changes if not dry run and not failed
   if (!config.dryRun && !failed) {
     try {
       commitChanges(tree, { verbose: options.verbose })
@@ -476,7 +450,6 @@ export async function executeFlow(
 
   const duration = dateNow() - startTime
 
-  // Determine overall status
   const status: FlowStatus = failed
     ? 'failed'
     : stepResults.some((r) => r.status === 'failed')
@@ -538,7 +511,6 @@ export function validateFlow(flow: VersionFlow): readonly string[] {
   const errors: string[] = []
   const stepIds = createSet<string>()
 
-  // Check for duplicate IDs
   for (const step of flow.steps) {
     if (stepIds.has(step.id)) {
       errors.push(`Duplicate step ID: "${step.id}"`)
@@ -546,7 +518,6 @@ export function validateFlow(flow: VersionFlow): readonly string[] {
     stepIds.add(step.id)
   }
 
-  // Check for valid dependency references
   for (const step of flow.steps) {
     if (step.dependsOn) {
       for (const depId of step.dependsOn) {
@@ -557,7 +528,6 @@ export function validateFlow(flow: VersionFlow): readonly string[] {
     }
   }
 
-  // Check for circular dependencies (simple DFS)
   const visited = createSet<string>()
   const visiting = createSet<string>()
 
@@ -569,10 +539,10 @@ export function validateFlow(flow: VersionFlow): readonly string[] {
    */
   function visit(stepId: string): boolean {
     if (visiting.has(stepId)) {
-      return false // Cycle detected
+      return false
     }
     if (visited.has(stepId)) {
-      return true // Already checked
+      return true
     }
 
     visiting.add(stepId)

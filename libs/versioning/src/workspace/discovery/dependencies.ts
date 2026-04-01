@@ -153,13 +153,11 @@ export function buildDependencyGraph(projects: readonly Project[]): DependencyGr
   const packageNames = createSet(projects.map((p) => p.name))
   const edges: DependencyEdge[] = []
 
-  // Collect all edges
   for (const project of projects) {
     const projectEdges = findInternalDependenciesWithTypes(project.name, project.packageJson, packageNames)
     edges.push(...projectEdges)
   }
 
-  // Build forward graph (dependency -> dependents)
   const dependencyGraph = createMap<string, string[]>()
   for (const name of packageNames) {
     dependencyGraph.set(name, [])
@@ -171,7 +169,6 @@ export function buildDependencyGraph(projects: readonly Project[]): DependencyGr
     }
   }
 
-  // Build reverse graph (package -> dependencies)
   const reverseDependencyGraph = createMap<string, string[]>()
   for (const name of packageNames) {
     reverseDependencyGraph.set(name, [])
@@ -183,7 +180,6 @@ export function buildDependencyGraph(projects: readonly Project[]): DependencyGr
     }
   }
 
-  // Find leaf packages (no dependents)
   const leafPackages: string[] = []
   for (const [name, dependents] of dependencyGraph) {
     if (dependents.length === 0) {
@@ -191,7 +187,6 @@ export function buildDependencyGraph(projects: readonly Project[]): DependencyGr
     }
   }
 
-  // Find root packages (no dependencies)
   const rootPackages: string[] = []
   for (const [name, deps] of reverseDependencyGraph) {
     if (deps.length === 0) {
@@ -199,10 +194,8 @@ export function buildDependencyGraph(projects: readonly Project[]): DependencyGr
     }
   }
 
-  // Detect circular dependencies
   const { hasCircular, cycles } = detectCircularDependencies(reverseDependencyGraph)
 
-  // Convert to readonly maps
   const readonlyDependencyGraph = createMap<string, readonly string[]>()
   for (const [key, value] of dependencyGraph) {
     readonlyDependencyGraph.set(key, [...value])
@@ -257,10 +250,9 @@ function detectCircularDependencies(reverseDependencyGraph: Map<string, string[]
           return true
         }
       } else if (recursionStack.has(dep)) {
-        // Found a cycle
         const cycleStart = path.indexOf(dep)
         const cycle = path.slice(cycleStart)
-        cycle.push(dep) // Close the cycle
+        cycle.push(dep)
         cycles.push(cycle)
       }
     }
@@ -307,13 +299,11 @@ export function getTopologicalOrder(analysis: DependencyGraphAnalysis): readonly
   const inDegree = createMap<string, number>()
   const adjacency = createMap<string, string[]>()
 
-  // Initialize
   for (const [name, deps] of analysis.reverseDependencyGraph) {
     inDegree.set(name, deps.length)
     adjacency.set(name, [])
   }
 
-  // Build adjacency list (dependency -> dependents)
   for (const [name, deps] of analysis.reverseDependencyGraph) {
     for (const dep of deps) {
       const adj = adjacency.get(dep)
@@ -323,7 +313,6 @@ export function getTopologicalOrder(analysis: DependencyGraphAnalysis): readonly
     }
   }
 
-  // Kahn's algorithm
   const queue: string[] = [...analysis.rootPackages]
 
   while (queue.length > 0) {

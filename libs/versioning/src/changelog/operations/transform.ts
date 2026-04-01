@@ -161,7 +161,6 @@ export function updateEntry(
  */
 export function sortEntries(changelog: Changelog): Changelog {
   const sorted = [...changelog.entries].sort((a, b) => {
-    // Unreleased always comes first
     if (a.unreleased && !b.unreleased) return -1
     if (!a.unreleased && b.unreleased) return 1
     if (a.unreleased && b.unreleased) return 0
@@ -190,17 +189,14 @@ export function sortEntries(changelog: Changelog): Changelog {
  */
 export function sortEntriesByDate(changelog: Changelog): Changelog {
   const sorted = [...changelog.entries].sort((a, b) => {
-    // Unreleased always comes first
     if (a.unreleased && !b.unreleased) return -1
     if (!a.unreleased && b.unreleased) return 1
     if (a.unreleased && b.unreleased) return 0
 
-    // Entries without dates go to the end
     if (!a.date && b.date) return 1
     if (a.date && !b.date) return -1
     if (!a.date && !b.date) return 0
 
-    // Compare dates (descending)
     return (<string>b.date).localeCompare(<string>a.date)
   })
 

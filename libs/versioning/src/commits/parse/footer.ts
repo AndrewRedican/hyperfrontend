@@ -21,7 +21,6 @@ export function parseFooters(lines: string[], startIndex: number): ParsedFooters
 
   let pos = startIndex
 
-  // Skip blank lines
   while (pos < lines.length && lines[pos].trim() === '') {
     pos++
   }
@@ -33,11 +32,9 @@ export function parseFooters(lines: string[], startIndex: number): ParsedFooters
     if (footer) {
       footers.push(footer)
 
-      // Check for breaking change
       if (isBreakingFooterKey(footer.key)) {
         breakingDescription = footer.value
 
-        // Breaking description may span multiple lines
         pos++
         while (pos < lines.length && !isNewFooter(lines[pos])) {
           const nextLine = lines[pos]
@@ -68,7 +65,6 @@ function parseFooterLine(line: string): CommitFooter | null {
   const trimmed = line.trim()
   if (trimmed === '') return null
 
-  // Check for BREAKING CHANGE or BREAKING-CHANGE
   if (trimmed.startsWith('BREAKING CHANGE:')) {
     return {
       key: 'BREAKING CHANGE',
@@ -85,21 +81,14 @@ function parseFooterLine(line: string): CommitFooter | null {
     }
   }
 
-  // Parse token: value or token #value
   let pos = 0
 
-  // Read token
   const tokenStart = pos
   while (pos < trimmed.length) {
     const char = trimmed[pos]
     const code = char.charCodeAt(0)
 
-    if (
-      (code >= 97 && code <= 122) || // a-z
-      (code >= 65 && code <= 90) || // A-Z
-      (code >= 48 && code <= 57) || // 0-9
-      code === 45 // -
-    ) {
+    if ((code >= 97 && code <= 122) || (code >= 65 && code <= 90) || (code >= 48 && code <= 57) || code === 45) {
       pos++
     } else {
       break
@@ -110,7 +99,6 @@ function parseFooterLine(line: string): CommitFooter | null {
 
   const key = trimmed.slice(tokenStart, pos)
 
-  // Check separator
   let separator: ':' | ' #'
   let valueStart: number
 
@@ -124,7 +112,6 @@ function parseFooterLine(line: string): CommitFooter | null {
     return null
   }
 
-  // Skip whitespace after separator (for : case)
   if (separator === ':') {
     while (valueStart < trimmed.length && trimmed[valueStart] === ' ') {
       valueStart++

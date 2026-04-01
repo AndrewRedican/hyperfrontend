@@ -23,7 +23,7 @@ export const CONVENTIONAL_FLOW_CONFIG: FlowConfig = {
   minorTypes: ['feat'],
   patchTypes: ['fix', 'perf', 'revert'],
   skipGit: false,
-  skipTag: true, // Tags typically created after publish
+  skipTag: true,
   skipChangelog: false,
   dryRun: false,
   commitMessage: 'chore(${projectName}): release version ${version}',

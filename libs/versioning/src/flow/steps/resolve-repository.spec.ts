@@ -377,7 +377,6 @@ describe('resolve-repository step', () => {
           const result = await step.execute(ctx)
 
           expect(result.status).toBe('success')
-          // Should use package.json (default order)
           expect(result.stateUpdates?.repositoryConfig?.baseUrl).toBe('https://github.com/pkg-owner/pkg-repo')
         })
 
@@ -408,7 +407,6 @@ describe('resolve-repository step', () => {
           const result = await step.execute(ctx)
 
           expect(result.status).toBe('success')
-          // Should use git remote (custom order)
           expect(result.stateUpdates?.repositoryConfig?.baseUrl).toBe('https://github.com/git-owner/git-repo')
         })
 
@@ -416,7 +414,6 @@ describe('resolve-repository step', () => {
           const tree = createMockTree({
             '/workspace/libs/test/package.json': JSON.stringify({
               name: '@test/pkg',
-              // No repository field
             }),
           })
 
@@ -439,7 +436,6 @@ describe('resolve-repository step', () => {
           const result = await step.execute(ctx)
 
           expect(result.status).toBe('success')
-          // Should fall back to git remote
           expect(result.stateUpdates?.repositoryConfig?.baseUrl).toBe('https://github.com/git-owner/git-repo')
         })
       })
@@ -737,12 +733,11 @@ describe('resolve-repository step', () => {
 
     describe('edge cases', () => {
       it('handles tree.read returning null for existing file', async () => {
-        // Custom tree that returns null for read even when file exists
         const tree = {
           root: '/workspace',
           read: () => null,
           write: jest.fn(),
-          exists: () => true, // File exists
+          exists: () => true,
           delete: jest.fn(),
           rename: jest.fn(),
           isFile: () => true,
@@ -763,7 +758,6 @@ describe('resolve-repository step', () => {
         const step = createResolveRepositoryStep()
         const result = await step.execute(ctx)
 
-        // Should fall back to git remote
         expect(result.status).toBe('success')
         expect(result.stateUpdates?.repositoryConfig?.baseUrl).toBe('https://github.com/git-owner/git-repo')
       })
@@ -815,14 +809,12 @@ describe('resolve-repository step', () => {
         const step = createResolveRepositoryStep()
         const result = await step.execute(ctx)
 
-        // Should fall back to git remote
         expect(result.status).toBe('success')
         expect(result.stateUpdates?.repositoryConfig?.baseUrl).toBe('https://github.com/git-owner/git-repo')
       })
 
       it('handles unknown repository configuration format', async () => {
         const logger = createMockLogger()
-        // Force an unknown config type that bypasses TypeScript checks
         const ctx = createMockContext({
           logger,
           config: { repository: { unknownKey: 'unknownValue' } as unknown as RepositoryConfig },
@@ -840,7 +832,6 @@ describe('resolve-repository step', () => {
         const logger = createMockLogger()
         const resolution: RepositoryResolution = {
           mode: 'inferred',
-          // Force an unknown inference source that bypasses TypeScript checks
           inferenceOrder: ['unknown-source' as 'package-json'],
         }
 

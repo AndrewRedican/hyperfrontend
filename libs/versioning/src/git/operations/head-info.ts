@@ -47,7 +47,6 @@ export function getCurrentBranch(options: GitCommitOptions = {}): string | null 
     }).trim()
     return result || null
   } catch {
-    // Detached HEAD or not a git repo
     return null
   }
 }

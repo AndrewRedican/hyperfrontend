@@ -24,7 +24,6 @@ function createMockTree(files: Record<string, string | null>): Tree & { _getWrit
 
   const tree = {
     read: (path: string, encoding?: string) => {
-      // Check written files first (for sequential operations in the same test)
       if (writtenFiles[path]) {
         return encoding ? writtenFiles[path] : Buffer.from(writtenFiles[path])
       }
@@ -142,7 +141,6 @@ describe('applyBumps', () => {
     expect(result.updated[0].newVersion).toBe('1.1.0')
     expect(result.success).toBe(true)
 
-    // Verify tree was written to
     const written = tree._getWrittenFiles()
     expect(written['/workspace/packages/lib-a/package.json']).toContain('"version": "1.1.0"')
   })
@@ -343,7 +341,6 @@ describe('applyBumps', () => {
       createMap([['lib-a', [] as readonly string[]]])
     )
 
-    // File doesn't exist in the tree
     const tree = createMockTree({})
 
     const bumps = [createPlannedBump('lib-a', '1.0.0', '1.1.0')]
@@ -406,9 +403,7 @@ describe('applyBumps', () => {
     applyBumps(tree, workspace, bumps, { updateDependencyReferences: false })
 
     const written = tree._getWrittenFiles()
-    // lib-core version should be updated
     expect(written['/workspace/packages/lib-core/package.json']).toContain('"version": "1.1.0"')
-    // lib-app should NOT have dependency updated
     expect(written['/workspace/packages/lib-app/package.json']).toBeUndefined()
   })
 
@@ -427,7 +422,6 @@ describe('applyBumps', () => {
       ])
     )
 
-    // lib-app has invalid JSON that will cause parse to throw during dependency update
     const tree = createMockTree({
       '/workspace/packages/lib-core/package.json': '{"name": "lib-core", "version": "1.0.0"}',
       '/workspace/packages/lib-app/package.json': 'invalid json {{{',
@@ -436,7 +430,6 @@ describe('applyBumps', () => {
     const bumps = [createPlannedBump('lib-core', '1.0.0', '1.1.0')]
     const result = applyBumps(tree, workspace, bumps, { updateDependencyReferences: true })
 
-    // Should still succeed - dependency reference updates are best-effort
     expect(result.success).toBe(true)
   })
 
@@ -761,9 +754,7 @@ describe('applyBumps', () => {
     applyBumps(tree, workspace, bumps, { updateDependencyReferences: true })
 
     const written = tree._getWrittenFiles()
-    // lib-core should be updated
     expect(written['/workspace/packages/lib-core/package.json']).toBeDefined()
-    // lib-app should NOT be written (no matching deps)
     expect(written['/workspace/packages/lib-app/package.json']).toBeUndefined()
   })
 
@@ -791,9 +782,7 @@ describe('applyBumps', () => {
     applyBumps(tree, workspace, bumps, { updateDependencyReferences: true })
 
     const written = tree._getWrittenFiles()
-    // lib-core should be updated
     expect(written['/workspace/packages/lib-core/package.json']).toBeDefined()
-    // lib-app should NOT be written (no deps to update)
     expect(written['/workspace/packages/lib-app/package.json']).toBeUndefined()
   })
 
@@ -822,7 +811,6 @@ describe('applyBumps', () => {
     applyBumps(tree, workspace, bumps, { updateDependencyReferences: true })
 
     const written = tree._getWrittenFiles()
-    // Both dependency types should be updated with their respective prefixes preserved
     expect(written['/workspace/packages/lib-app/package.json']).toContain('"lib-core": "^1.1.0"')
     expect(written['/workspace/packages/lib-app/package.json']).toContain('"lib-core": ">=1.1.0"')
   })
@@ -881,8 +869,8 @@ describe('updatePackageVersionInTree', () => {
 
     const written = tree._getWrittenFiles()
     const content = written['packages/lib-a/package.json']
-    expect(content).toMatch(/^\{\n {2}"name"/) // 2-space indentation
-    expect(content).toMatch(/\n$/) // trailing newline
+    expect(content).toMatch(/^\{\n {2}"name"/)
+    expect(content).toMatch(/\n$/)
   })
 })
 

@@ -125,12 +125,10 @@ export interface CreateRepositoryConfigOptions {
 export function createRepositoryConfig(options: CreateRepositoryConfigOptions): RepositoryConfig {
   const { platform, formatCompareUrl } = options
 
-  // Validate custom platform has formatter
   if (platform === 'custom' && !formatCompareUrl) {
     throw createError("Repository config with platform 'custom' requires a formatCompareUrl function")
   }
 
-  // Normalize base URL - strip trailing slashes
   const baseUrl = normalizeBaseUrl(options.baseUrl)
 
   return {
@@ -179,12 +177,10 @@ export function isRepositoryConfig(value: unknown): value is RepositoryConfig {
 function normalizeBaseUrl(url: string): string {
   let normalized = url.trim()
 
-  // Remove trailing slashes
   while (normalized.endsWith('/')) {
     normalized = normalized.slice(0, -1)
   }
 
-  // Remove .git suffix if present
   if (normalized.endsWith('.git')) {
     normalized = normalized.slice(0, -4)
   }

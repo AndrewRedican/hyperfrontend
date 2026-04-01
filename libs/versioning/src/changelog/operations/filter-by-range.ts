@@ -26,7 +26,6 @@ export function filterByVersionRange(changelog: Changelog, range: string): Chang
   }
 
   return filterEntries(changelog, (entry) => {
-    // Skip unreleased
     if (entry.unreleased) return false
 
     const versionResult = parseVersion(entry.version)

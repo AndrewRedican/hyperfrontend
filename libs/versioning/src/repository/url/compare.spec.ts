@@ -99,7 +99,6 @@ describe('createCompareUrl', () => {
         toCommit: 'v1.1.0',
       })
 
-      // Bitbucket uses reversed order: toTag..fromTag
       expect(url).toBe('https://bitbucket.org/owner/repo/compare/v1.1.0..v1.0.0')
     })
 
@@ -137,7 +136,6 @@ describe('createCompareUrl', () => {
         toCommit: 'release/1.1.0',
       })
 
-      // Slashes should be encoded
       expect(url).toBe('https://dev.azure.com/org/project/_git/repo/compare?version=GTrelease%2F1.1.0&compareVersion=GTrelease%2F1.0.0')
     })
 
@@ -148,7 +146,6 @@ describe('createCompareUrl', () => {
         toCommit: 'lib-versioning@0.1.0',
       })
 
-      // @ should be encoded as %40
       expect(url).toBe(
         'https://dev.azure.com/org/project/_git/repo/compare?version=GTlib-versioning%400.1.0&compareVersion=GTlib-versioning%400.0.4'
       )

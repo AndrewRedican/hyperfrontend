@@ -245,7 +245,6 @@ export function validateChangelog(changelog: unknown): ValidationResult {
 export function checkSchemaCompatibility(source: Changelog, target: Changelog): CompatibilityResult {
   const differences: SchemaDifference[] = []
 
-  // Check format compatibility
   if (source.metadata.format !== target.metadata.format) {
     differences.push({
       path: 'metadata.format',
@@ -255,13 +254,9 @@ export function checkSchemaCompatibility(source: Changelog, target: Changelog): 
     })
   }
 
-  // Check header structure
   if (source.header.title !== target.header.title) {
-    // Title difference is not a schema incompatibility, just content difference
-    // We only track structural differences
   }
 
-  // Check section types used
   const sourceSectionTypes = createSet<string>()
   const targetSectionTypes = createSet<string>()
 
@@ -277,7 +272,6 @@ export function checkSchemaCompatibility(source: Changelog, target: Changelog): 
     }
   }
 
-  // Find section types in source but not in target
   for (const type of sourceSectionTypes) {
     if (!targetSectionTypes.has(type)) {
       differences.push({
@@ -288,7 +282,6 @@ export function checkSchemaCompatibility(source: Changelog, target: Changelog): 
     }
   }
 
-  // Find section types in target but not in source
   for (const type of targetSectionTypes) {
     if (!sourceSectionTypes.has(type)) {
       differences.push({

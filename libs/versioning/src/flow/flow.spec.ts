@@ -222,7 +222,7 @@ describe('Flow System', () => {
       const step = createStep('duplicate', 'Duplicate', async () => createSuccessResult('OK'))
       let flow = createConventionalFlow()
       flow = addStep(flow, step)
-      flow = addStep(flow, step) // Same ID again
+      flow = addStep(flow, step)
 
       const errors = validateFlow(flow)
       expect(errors.some((e) => e.includes('Duplicate step ID'))).toBe(true)
@@ -286,7 +286,7 @@ describe('Flow System', () => {
           version: '0.0.0',
         }),
       })
-      const registry = createMockRegistry(null) // Not published
+      const registry = createMockRegistry(null)
       const git = createMockGitClient([{ type: 'feat', subject: 'initial' }])
 
       const result = await dryRun(flow, 'lib-test', '/workspace', {
@@ -358,10 +358,8 @@ describe('Flow System', () => {
         projectRoot: 'libs/test',
       })
 
-      // Should be partial since one step failed
       expect(result.status).toBe('partial')
 
-      // After step should still have run
       const afterResult = result.steps.find((s) => s.stepId === 'after-fail')
       expect(afterResult?.status).toBe('success')
     })
@@ -610,7 +608,7 @@ describe('Step Execution Edge Cases', () => {
 
     expect(result.status).toBe('failed')
     const afterResult = result.steps.find((s) => s.stepId === 'after')
-    expect(afterResult).toBeUndefined() // After step should not have been executed
+    expect(afterResult).toBeUndefined()
   })
 
   it('skips step when dependencies fail', async () => {
@@ -833,7 +831,6 @@ describe('Synced Flow Steps', () => {
 
       const result = await step.execute(ctx as never)
 
-      // Should still succeed even if root package.json doesn't exist
       expect(result.status).toBe('success')
     })
 
@@ -865,7 +862,6 @@ describe('Synced Flow Steps', () => {
 
       const result = await step.execute(ctx as never)
 
-      // Should still succeed but log a warning
       expect(result.status).toBe('success')
       expect(warnFn).toHaveBeenCalled()
     })

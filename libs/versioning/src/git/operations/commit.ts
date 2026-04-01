@@ -65,7 +65,6 @@ export const DEFAULT_COMMIT_OPTIONS: Required<Omit<GitCommitOptions, 'cwd'>> = {
 export function commit(message: string, options: CreateCommitOptions = {}): GitCommit {
   const opts = { ...DEFAULT_COMMIT_OPTIONS, ...options }
 
-  // noEdit is only valid when amending - reuse existing commit message
   const isNoEditAmend = opts.amend && opts.noEdit
 
   if (!isNoEditAmend && (!message || typeof message !== 'string')) {
@@ -75,12 +74,10 @@ export function commit(message: string, options: CreateCommitOptions = {}): GitC
   const args: string[] = ['commit']
 
   if (isNoEditAmend) {
-    // Amend without changing the message
     args.push('--amend', '--no-edit')
   } else {
     const safeMessage = escapeGitMessage(message)
 
-    // Build message with optional body
     let fullMessage = safeMessage
     if (opts.body) {
       const safeBody = escapeGitMessage(opts.body)
@@ -111,7 +108,6 @@ export function commit(message: string, options: CreateCommitOptions = {}): GitC
     args.push('--author', safeAuthor)
   }
 
-  // Add specific files if provided
   if (opts.files && opts.files.length > 0) {
     args.push('--')
     for (const file of opts.files) {
@@ -127,7 +123,6 @@ export function commit(message: string, options: CreateCommitOptions = {}): GitC
       stdio: ['pipe', 'pipe', 'pipe'],
     })
 
-    // Get the created commit
     const commit = getCommit('HEAD', opts)
     if (!commit) {
       throw createError('Failed to retrieve created commit')
@@ -210,17 +205,16 @@ export function escapeFilePath(path: string): string {
   for (let i = 0; i < path.length; i++) {
     const code = path.charCodeAt(i)
 
-    // Allow: a-z, A-Z, 0-9, /, \, -, _, ., space
     if (
-      (code >= 97 && code <= 122) || // a-z
-      (code >= 65 && code <= 90) || // A-Z
-      (code >= 48 && code <= 57) || // 0-9
-      code === 47 || // /
-      code === 92 || // \
-      code === 45 || // -
-      code === 95 || // _
-      code === 46 || // .
-      code === 32 // space
+      (code >= 97 && code <= 122) ||
+      (code >= 65 && code <= 90) ||
+      (code >= 48 && code <= 57) ||
+      code === 47 ||
+      code === 92 ||
+      code === 45 ||
+      code === 95 ||
+      code === 46 ||
+      code === 32
     ) {
       safe.push(path[i])
     } else {
@@ -257,18 +251,17 @@ export function escapeAuthor(author: string): string {
   for (let i = 0; i < author.length; i++) {
     const code = author.charCodeAt(i)
 
-    // Allow: a-z, A-Z, 0-9, space, @, ., -, _, <, >
     if (
-      (code >= 97 && code <= 122) || // a-z
-      (code >= 65 && code <= 90) || // A-Z
-      (code >= 48 && code <= 57) || // 0-9
-      code === 32 || // space
-      code === 64 || // @
-      code === 46 || // .
-      code === 45 || // -
-      code === 95 || // _
-      code === 60 || // <
-      code === 62 // >
+      (code >= 97 && code <= 122) ||
+      (code >= 65 && code <= 90) ||
+      (code >= 48 && code <= 57) ||
+      code === 32 ||
+      code === 64 ||
+      code === 46 ||
+      code === 45 ||
+      code === 95 ||
+      code === 60 ||
+      code === 62
     ) {
       safe.push(author[i])
     } else {

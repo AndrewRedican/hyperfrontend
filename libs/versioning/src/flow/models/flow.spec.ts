@@ -449,7 +449,6 @@ describe('Flow Model', () => {
     it('supports method chaining pattern', () => {
       let flow = createFlow('custom', 'Custom Flow', [])
 
-      // Build up a flow using multiple operations
       flow = addStep(flow, createMockStep('fetch'))
       flow = addStep(flow, createMockStep('analyze'))
       flow = addStep(flow, createMockStep('bump'))

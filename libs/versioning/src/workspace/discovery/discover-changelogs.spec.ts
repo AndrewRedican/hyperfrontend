@@ -304,11 +304,7 @@ describe('findChangelogsInTree', () => {
   })
 
   it('finds changelogs created in tree during multi-phase flow', () => {
-    // Simulate a flow that creates a new package with changelog
-    const tree = createMockTree([
-      'libs/existing/CHANGELOG.md',
-      'libs/new-package/CHANGELOG.md', // Created in VFS, not on disk
-    ])
+    const tree = createMockTree(['libs/existing/CHANGELOG.md', 'libs/new-package/CHANGELOG.md'])
 
     const packages = [
       { path: '/workspace/libs/existing', name: 'existing' },
