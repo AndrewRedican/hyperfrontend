@@ -163,6 +163,13 @@ module.exports = [
       'workspace/no-decorative-header-comments': 'error',
       'workspace/prefer-jsdoc-over-trailing-comments': 'error',
       'workspace/no-plain-inline-comments': 'error',
+      'workspace/max-file-lines': [
+        'error',
+        {
+          maxLines: 500,
+          maxLinesTest: 1000,
+        },
+      ],
     },
   },
   {
