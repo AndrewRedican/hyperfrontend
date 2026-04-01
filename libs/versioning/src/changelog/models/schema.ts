@@ -254,9 +254,6 @@ export function checkSchemaCompatibility(source: Changelog, target: Changelog): 
     })
   }
 
-  if (source.header.title !== target.header.title) {
-  }
-
   const sourceSectionTypes = createSet<string>()
   const targetSectionTypes = createSet<string>()
 
