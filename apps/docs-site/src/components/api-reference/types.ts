@@ -1,5 +1,3 @@
-// TypeDoc JSON schema types (schemaVersion 2.0)
-
 export interface TypeDocOutput {
   schemaVersion: string
   id: number
@@ -131,7 +129,6 @@ export interface ReflectionFlags {
   isExternal?: boolean
 }
 
-// TypeDoc reflection kind constants
 export const ReflectionKind = <const>{
   Project: 1,
   Module: 2,

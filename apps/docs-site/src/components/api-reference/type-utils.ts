@@ -31,7 +31,6 @@ export function renderType(type: TypeRef | undefined): string {
     case 'array':
       if (type.elementType) {
         const elementType = renderType(type.elementType)
-        // Add parentheses for complex types
         if (type.elementType.type === 'union' || type.elementType.type === 'intersection') {
           return `(${elementType})[]`
         }
@@ -71,7 +70,6 @@ export function renderType(type: TypeRef | undefined): string {
         return `(${params}) => ${returnType}`
       }
       if (type.declaration?.children) {
-        // Object literal type
         const props = type.declaration.children.map((child) => `${child.name}: ${renderType(child.type)}`).join('; ')
         return `{ ${props} }`
       }

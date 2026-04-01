@@ -17,7 +17,6 @@ import { createURL } from '@hyperfrontend/immutable-api-utils/built-in-copy/url'
  * @returns True if the line contains a valid docs site URL
  */
 function containsDocsUrl(line: string): boolean {
-  // Extract URLs from the line using a simple pattern
   const urlPattern = /https?:\/\/[^\s)>\]"']+/g
   const urls = line.match(urlPattern) ?? []
 
@@ -73,16 +72,12 @@ function discoverEntryPointsFromPackageJson(libPath: string): string[] {
   const packageJson: PackageJson = parse(readFileSync(packageJsonPath, 'utf-8'))
   const entryPoints: string[] = []
 
-  // First try exports field (modern packages)
   if (packageJson.exports && typeof packageJson.exports === 'object') {
     for (const [, exportValue] of entries(packageJson.exports)) {
-      // Handle direct string exports: "./browser": "./src/browser/index.js"
       if (typeof exportValue === 'string') {
         const tsPath = convertJsPathToTs(exportValue)
         if (tsPath) entryPoints.push(tsPath)
-      }
-      // Handle conditional exports: "./browser": { "import": "./src/browser/index.js" }
-      else if (typeof exportValue === 'object') {
+      } else if (typeof exportValue === 'object') {
         const importPath = exportValue.import || exportValue.default || exportValue.require
         if (typeof importPath === 'string') {
           const tsPath = convertJsPathToTs(importPath)
@@ -92,13 +87,11 @@ function discoverEntryPointsFromPackageJson(libPath: string): string[] {
     }
   }
 
-  // Fall back to main field if no exports
   if (entryPoints.length === 0 && packageJson.main) {
     const tsPath = convertJsPathToTs(packageJson.main)
     if (tsPath) entryPoints.push(tsPath)
   }
 
-  // Final fallback: check for standard src/index.ts
   if (entryPoints.length === 0) {
     const defaultEntry = 'src/index.ts'
     if (existsSync(join(libPath, defaultEntry))) {
@@ -106,7 +99,7 @@ function discoverEntryPointsFromPackageJson(libPath: string): string[] {
     }
   }
 
-  return [...createSet(entryPoints)] // Deduplicate
+  return [...createSet(entryPoints)]
 }
 
 /**
@@ -118,19 +111,15 @@ function discoverEntryPointsFromPackageJson(libPath: string): string[] {
 function convertJsPathToTs(jsPath: string): string | null {
   if (!jsPath) return null
 
-  // Remove leading ./
   let normalized = jsPath.replace(/^\.\//, '')
 
-  // Skip non-source files (e.g., package.json exports)
   if (normalized.endsWith('.json')) {
     return null
   }
 
-  // Convert .js to .ts
   if (normalized.endsWith('.js')) {
     normalized = normalized.slice(0, -3) + '.ts'
   } else if (!normalized.endsWith('.ts')) {
-    // If no extension, assume it's a directory with index.ts
     normalized = join(normalized, 'index.ts')
   }
 
@@ -138,7 +127,6 @@ function convertJsPathToTs(jsPath: string): string | null {
 }
 
 const LIBRARIES: LibraryConfig[] = [
-  // Core libraries
   { name: 'Nexus', packageName: '@hyperfrontend/nexus', slug: 'nexus', srcPath: 'libs/nexus', category: 'core' },
   {
     name: 'Network Protocol',
@@ -162,7 +150,6 @@ const LIBRARIES: LibraryConfig[] = [
     category: 'core',
   },
 
-  // Supporting libraries
   {
     name: 'State Machine',
     packageName: '@hyperfrontend/state-machine',
@@ -180,7 +167,6 @@ const LIBRARIES: LibraryConfig[] = [
     category: 'supporting',
   },
 
-  // Utils sub-packages
   { name: 'Data Utils', packageName: '@hyperfrontend/data-utils', slug: 'data-utils', srcPath: 'libs/utils/data', category: 'utils' },
   {
     name: 'Function Utils',
@@ -215,7 +201,6 @@ const LIBRARIES: LibraryConfig[] = [
   { name: 'Time Utils', packageName: '@hyperfrontend/time-utils', slug: 'time-utils', srcPath: 'libs/utils/time', category: 'utils' },
   { name: 'UI Utils', packageName: '@hyperfrontend/ui-utils', slug: 'ui-utils', srcPath: 'libs/utils/ui', category: 'utils' },
 
-  // Plugin
   { name: 'Features Plugin', packageName: '@hyperfrontend/features', slug: 'features', srcPath: 'plugins/features', category: 'plugin' },
 ]
 
@@ -252,11 +237,9 @@ const LIBRARY_SLUGS: Record<string, string> = {
  */
 function normalizeRelativePath(path: string): string {
   let normalized = path
-  // Remove leading ./
   if (normalized.startsWith('./')) {
     normalized = normalized.slice(2)
   }
-  // Remove all leading ../
   while (normalized.startsWith('../')) {
     normalized = normalized.slice(3)
   }
@@ -296,7 +279,6 @@ function extractMarkdownLink(segment: string): { linkText: string; url: string; 
 function transformLinkUrl(url: string, sourceContext: 'root' | 'library'): { url: string | null; keepAsText: boolean } {
   const normalized = normalizeRelativePath(url)
 
-  // Root document mappings
   const rootDocMappings: Record<string, string> = {
     'README.md': '/',
     'ARCHITECTURE.md': '/architecture',
@@ -309,30 +291,25 @@ function transformLinkUrl(url: string, sourceContext: 'root' | 'library'): { url
     'FUNDING.md': 'https://github.com/AndrewRedican/hyperfrontend/blob/main/FUNDING.md',
   }
 
-  // Check root document mappings
   if (rootDocMappings[normalized]) {
     return { url: rootDocMappings[normalized], keepAsText: false }
   }
 
-  // Transform roadmap links to GitHub
   if (normalized.startsWith('roadmap/') && normalized.endsWith('.md')) {
     return { url: `https://github.com/AndrewRedican/hyperfrontend/blob/main/${normalized}`, keepAsText: false }
   }
 
-  // Transform .github links to GitHub
   if (normalized.startsWith('.github/')) {
-    const path = normalized.slice(8) // Remove '.github/'
+    const path = normalized.slice(8)
     return { url: `https://github.com/AndrewRedican/hyperfrontend/tree/main/.github/${path}`, keepAsText: false }
   }
 
-  // Transform libs/X/ARCHITECTURE.md links to library pages
   if (normalized.startsWith('libs/') && normalized.includes('/ARCHITECTURE.md')) {
     const parts = normalized.split('/')
     if (parts.length >= 3) {
       const libName = parts[1]
       const slug = LIBRARY_SLUGS[libName]
       if (slug) {
-        // Preserve anchor if present
         const anchorIndex = normalized.indexOf('#')
         const anchor = anchorIndex !== -1 ? normalized.slice(anchorIndex) : ''
         return { url: `/docs/libraries/${slug}${anchor}`, keepAsText: false }
@@ -340,14 +317,12 @@ function transformLinkUrl(url: string, sourceContext: 'root' | 'library'): { url
     }
   }
 
-  // For library context, remove internal src/ links
   if (sourceContext === 'library') {
     if (normalized.startsWith('src/') || normalized === 'src') {
       return { url: null, keepAsText: true }
     }
   }
 
-  // No transformation needed
   return { url, keepAsText: false }
 }
 
@@ -365,16 +340,13 @@ function transformLinkUrl(url: string, sourceContext: 'root' | 'library'): { url
  * @returns Transformed markdown content
  */
 function transformLinks(content: string, sourceContext: 'root' | 'library'): string {
-  // Remove self-referential "See docs" lines added to library READMEs for GitHub/npm visibility.
-  // Filter out any line that contains the 👉 See [**docs**] pattern pointing to the docs site.
   const transformed = content
     .split('\n')
     .filter((line) => !(line.includes('👉 See') && containsDocsUrl(line)))
     .join('\n')
 
-  // Process all markdown links by splitting on '[' and reconstructing
   const parts = transformed.split('[')
-  const result: string[] = [parts[0]] // First part is before any links
+  const result: string[] = [parts[0]]
 
   for (let i = 1; i < parts.length; i++) {
     const segment = parts[i]
@@ -385,17 +357,13 @@ function transformLinks(content: string, sourceContext: 'root' | 'library'): str
       const transformation = transformLinkUrl(url, sourceContext)
 
       if (transformation.url === null && transformation.keepAsText) {
-        // Remove link, keep text only
         result.push(linkText + remainder)
       } else if (transformation.url !== url) {
-        // URL was transformed
         result.push(`[${linkText}](${transformation.url})${remainder}`)
       } else {
-        // No transformation, keep original
         result.push(`[${segment}`)
       }
     } else {
-      // Not a valid link, preserve original with the '['
       result.push(`[${segment}`)
     }
   }
@@ -418,7 +386,6 @@ function extractReadme(lib: LibraryConfig): { content: string; exists: boolean }
   }
 
   const content = readFileSync(readmePath, 'utf-8')
-  // Transform links for docs site context
   const transformedContent = transformLinks(content, 'library')
   return { content: transformedContent, exists: true }
 }
@@ -437,7 +404,6 @@ function extractArchitecture(lib: LibraryConfig): { content: string; exists: boo
   }
 
   const content = readFileSync(archPath, 'utf-8')
-  // Transform links for docs site context
   const transformedContent = transformLinks(content, 'library')
   return { content: transformedContent, exists: true }
 }
@@ -454,7 +420,6 @@ function extractArchitecture(lib: LibraryConfig): { content: string; exists: boo
 function generateTypeDoc(lib: LibraryConfig): boolean {
   const libPath = join(WORKSPACE_ROOT, lib.srcPath)
 
-  // Dynamically discover entry points from package.json
   const discoveredEntryPoints = discoverEntryPointsFromPackageJson(libPath)
 
   if (discoveredEntryPoints.length === 0) {
@@ -464,7 +429,6 @@ function generateTypeDoc(lib: LibraryConfig): boolean {
 
   const entryPoints = discoveredEntryPoints.map((ep) => join(libPath, ep))
 
-  // Verify all entry points exist
   const missingEntryPoints = entryPoints.filter((ep) => !existsSync(ep))
   if (missingEntryPoints.length > 0) {
     log(`  ⚠ Missing entry points for ${lib.name}:`)
@@ -475,14 +439,12 @@ function generateTypeDoc(lib: LibraryConfig): boolean {
   const outputPath = join(API_OUTPUT, lib.slug, 'api.json')
   ensureDir(dirname(outputPath))
 
-  // Find tsconfig.json for the library
   const tsconfigPath = join(libPath, 'tsconfig.json')
   const hasTsconfig = existsSync(tsconfigPath)
 
   try {
     const args = ['typedoc', '--json', outputPath, '--excludePrivate', '--excludeInternal', '--excludeNotDocumented', 'false']
 
-    // Add tsconfig if it exists
     if (hasTsconfig) {
       args.push('--tsconfig', tsconfigPath)
     }
@@ -515,7 +477,6 @@ interface LibraryDoc {
 function generateDocs() {
   log('📚 Generating documentation...\n')
 
-  // Ensure output directories exist
   ensureDir(OUTPUT_DIR)
   ensureDir(DOCS_OUTPUT)
   ensureDir(API_OUTPUT)
@@ -525,23 +486,18 @@ function generateDocs() {
   for (const lib of LIBRARIES) {
     log(`📦 Processing ${lib.name}...`)
 
-    // Extract README
     const readme = extractReadme(lib)
 
-    // Extract Architecture doc (if exists)
     const architecture = extractArchitecture(lib)
 
-    // Generate TypeDoc API
     const hasApi = generateTypeDoc(lib)
 
-    // Save README content
     if (readme.exists) {
       const readmeOutput = join(DOCS_OUTPUT, lib.slug, 'readme.md')
       ensureDir(dirname(readmeOutput))
       writeFileSync(readmeOutput, readme.content)
     }
 
-    // Save Architecture content
     if (architecture.exists) {
       const archOutput = join(DOCS_OUTPUT, lib.slug, 'architecture.md')
       ensureDir(dirname(archOutput))
@@ -561,7 +517,6 @@ function generateDocs() {
     log('')
   }
 
-  // Extract root architecture document
   log('📐 Processing root ARCHITECTURE.md...')
   const rootArchPath = join(WORKSPACE_ROOT, 'ARCHITECTURE.md')
   if (existsSync(rootArchPath)) {
@@ -571,7 +526,6 @@ function generateDocs() {
     log('  ✓ Root architecture document extracted\n')
   }
 
-  // Extract CONTRIBUTING.md
   log('📝 Processing CONTRIBUTING.md...')
   const contributingPath = join(WORKSPACE_ROOT, 'CONTRIBUTING.md')
   if (existsSync(contributingPath)) {
@@ -581,7 +535,6 @@ function generateDocs() {
     log('  ✓ Contributing guide extracted\n')
   }
 
-  // Write manifest
   const manifest = {
     generatedAt: createDate().toISOString(),
     libraries: libraryDocs,
@@ -597,7 +550,6 @@ function generateDocs() {
   log(`   Output: ${OUTPUT_DIR}`)
 }
 
-// Run if executed directly
 if (require.main === module) {
   generateDocs()
 }

@@ -18,20 +18,16 @@ interface LibraryPageProps {
 }
 
 export async function LibraryDocPage({ title, packageName, slug, fallbackDescription, fallbackFeatures }: LibraryPageProps) {
-  // Try to load README content
   const readme = getLibraryReadme(slug)
   const hasArchitecture = !!getLibraryArchitecture(slug)
   const apiData = getLibraryApi(slug) as TypeDocOutput | null
 
   if (readme) {
-    // Process the README
     let processed = removeBadges(readme)
     processed = transformLinks(processed)
 
-    // Extract mermaid diagrams for client-side rendering
     const { processedContent, diagrams } = extractMermaidBlocks(processed)
 
-    // Convert markdown to HTML
     const html = await markdownToHtml(processedContent)
 
     return (
@@ -95,7 +91,6 @@ export async function LibraryDocPage({ title, packageName, slug, fallbackDescrip
     )
   }
 
-  // Fallback to stub page if no README available
   return (
     <>
       <Breadcrumb />

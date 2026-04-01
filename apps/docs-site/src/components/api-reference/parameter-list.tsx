@@ -6,7 +6,6 @@ interface ParameterListProps {
   paramDescriptions?: Record<string, string>
 }
 
-// Renders a table of function or method parameters
 export function ParameterList({ parameters, paramDescriptions = {} }: ParameterListProps) {
   if (parameters.length === 0) return null
 

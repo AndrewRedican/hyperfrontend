@@ -11,7 +11,6 @@ interface FunctionSignatureProps {
   node: TypeDocNode
 }
 
-// Renders a function or method with its signature, parameters, and documentation
 export function FunctionSignature({ node }: FunctionSignatureProps) {
   const signature = node.signatures?.[0]
   if (!signature) return null
@@ -21,7 +20,6 @@ export function FunctionSignature({ node }: FunctionSignatureProps) {
   const examples = getExamples(signature.comment)
   const paramDescriptions = getParamDescriptions(signature.comment)
 
-  // Build the signature string
   const typeParams = signature.typeParameters?.map((tp) => tp.name).join(', ')
   const params = signature.parameters?.map((p) => {
     const optional = p.flags?.isOptional ? '?' : ''

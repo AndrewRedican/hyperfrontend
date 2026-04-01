@@ -60,7 +60,6 @@ export function DemoShowcase({
         const startProgress = fastForwardStartRef.current.progress
         const remainingProgress = 100 - startProgress
 
-        // Ease-out cubic: 1 - (1-t)^3
         const t = min(elapsed / fastForwardDuration, 1)
         const easeOut = 1 - pow(1 - t, 3)
         const newProgress = startProgress + remainingProgress * easeOut
@@ -130,16 +129,13 @@ export function DemoShowcase({
 function ProgressBorder({ progress }: { progress: number }) {
   if (progress <= 0) return null
 
-  // Convert progress (0-100) to angle (0-360), starting from top
   const angle = (progress / 100) * 360
 
   return (
     <div
       className="pointer-events-none absolute inset-0 z-20 rounded-2xl"
       style={{
-        // Conic gradient creates the progress arc
         background: `conic-gradient(from -90deg, #6366f1 ${angle}deg, transparent ${angle}deg)`,
-        // Mask to show only the border area (2px border)
         WebkitMask: `
           linear-gradient(#fff 0 0) content-box,
           linear-gradient(#fff 0 0)

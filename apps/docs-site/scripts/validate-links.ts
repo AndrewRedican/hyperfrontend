@@ -39,16 +39,13 @@ function extractLinks(content: string): Array<{ link: string; line: number; text
   const links: Array<{ link: string; line: number; text: string }> = []
   const lines = content.split('\n')
 
-  // Markdown link pattern: [text](url)
   const markdownLinkPattern = /\[([^\]]*)\]\(([^)]+)\)/g
 
-  // HTML link pattern: href="url"
   const htmlLinkPattern = /href=["']([^"']+)["']/g
 
   lines.forEach((line, index) => {
     let match
 
-    // Extract markdown links
     while ((match = markdownLinkPattern.exec(line)) !== null) {
       links.push({
         text: match[1],
@@ -57,7 +54,6 @@ function extractLinks(content: string): Array<{ link: string; line: number; text
       })
     }
 
-    // Extract HTML links
     while ((match = htmlLinkPattern.exec(line)) !== null) {
       links.push({
         text: '',
@@ -97,11 +93,9 @@ function isAnchorLink(link: string): boolean {
  * @returns Object with transformed flag, original URL, and optional docs site path
  */
 function transformGitHubUrl(link: string): { transformed: boolean; url: string; docsSitePath?: string } {
-  // Match GitHub blob URLs
   let match = GITHUB_BLOB_PATTERN.exec(link)
   if (match) {
     const filePath = match[1]
-    // Transform libs/* paths to docs site library pages
     if (filePath.startsWith('libs/')) {
       const libPath = filePath.replace(/^libs\//, '').split('/')[0]
       return {
@@ -112,7 +106,6 @@ function transformGitHubUrl(link: string): { transformed: boolean; url: string; 
     }
   }
 
-  // Match GitHub tree URLs
   match = GITHUB_TREE_PATTERN.exec(link)
   if (match) {
     const dirPath = match[1]
@@ -137,15 +130,12 @@ function transformGitHubUrl(link: string): { transformed: boolean; url: string; 
  * @returns The absolute path of the resolved link
  */
 function resolveRelativePath(link: string, basePath: string): string {
-  // Remove anchor from link
   const linkWithoutAnchor = link.split('#')[0]
 
   if (linkWithoutAnchor.startsWith('/')) {
-    // Absolute path from docs site root
     return join(SRC_DIR, 'app', linkWithoutAnchor)
   }
 
-  // Relative path from current file
   const dir = dirname(basePath)
   return resolve(dir, linkWithoutAnchor)
 }
@@ -157,12 +147,10 @@ function resolveRelativePath(link: string, basePath: string): string {
  * @returns True if the path exists as a file or directory
  */
 function pathExists(targetPath: string): boolean {
-  // Try exact path
   if (existsSync(targetPath)) {
     return true
   }
 
-  // Try with common extensions
   const extensions = ['.md', '.mdx', '.tsx', '/page.tsx', '/index.tsx']
   for (const ext of extensions) {
     if (existsSync(targetPath + ext)) {
@@ -170,7 +158,6 @@ function pathExists(targetPath: string): boolean {
     }
   }
 
-  // For docs site routes, check if page.tsx exists
   const pageFile = join(targetPath, 'page.tsx')
   if (existsSync(pageFile)) {
     return true
@@ -188,7 +175,6 @@ function pathExists(targetPath: string): boolean {
  * @returns Validation result with status and optional message
  */
 function validateLink(link: string, filePath: string, line: number): LinkValidationResult {
-  // Skip anchor links
   if (isAnchorLink(link)) {
     return {
       file: filePath,
@@ -199,9 +185,7 @@ function validateLink(link: string, filePath: string, line: number): LinkValidat
     }
   }
 
-  // Handle external links
   if (isExternalLink(link)) {
-    // Check for GitHub URL transformation
     const githubTransform = transformGitHubUrl(link)
     if (githubTransform.transformed) {
       return {
@@ -223,7 +207,6 @@ function validateLink(link: string, filePath: string, line: number): LinkValidat
     }
   }
 
-  // Handle internal links
   const resolvedPath = resolveRelativePath(link, filePath)
 
   if (pathExists(resolvedPath)) {
@@ -274,13 +257,10 @@ async function validateLinks(): Promise<ValidationSummary> {
     errors: [],
   }
 
-  // Find all markdown files in generated docs
   const generatedMdFiles = await glob('**/*.md', { cwd: GENERATED_DIR, absolute: true })
 
-  // Find all markdown files in workspace root (READMEs, etc.)
   const rootMdFiles = await glob('*.md', { cwd: WORKSPACE_ROOT, absolute: true })
 
-  // Find markdown in libs
   const libMdFiles = await glob('libs/**/*.md', { cwd: WORKSPACE_ROOT, absolute: true })
 
   const allFiles = [...generatedMdFiles, ...rootMdFiles, ...libMdFiles]
@@ -312,7 +292,6 @@ async function validateLinks(): Promise<ValidationSummary> {
     }
   }
 
-  // Print results
   log('📊 Validation Summary')
   log('─'.repeat(40))
   log(`Total links:       ${summary.totalLinks}`)
@@ -339,11 +318,9 @@ async function validateLinks(): Promise<ValidationSummary> {
   return summary
 }
 
-// Run if executed directly
 if (require.main === module) {
   validateLinks()
     .then((summary) => {
-      // Exit with error code if there are broken links
       if (summary.brokenLinks > 0) {
         process.exit(1)
       }

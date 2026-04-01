@@ -10,7 +10,6 @@ interface TypeDefinitionProps {
   node: TypeDocNode
 }
 
-// Renders an interface or type alias definition
 export function TypeDefinition({ node }: TypeDefinitionProps) {
   const description = getDescription(node.comment)
   const isInterface = node.kind === ReflectionKind.Interface
@@ -24,7 +23,6 @@ export function TypeDefinition({ node }: TypeDefinitionProps) {
       ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/50 dark:text-amber-400'
       : 'bg-teal-100 text-teal-700 dark:bg-teal-900/50 dark:text-teal-400'
 
-  // Generate a copyable type definition string
   const getCopyableDefinition = () => {
     if (isTypeAlias && node.type) {
       return `type ${node.name} = ${renderType(node.type)}`

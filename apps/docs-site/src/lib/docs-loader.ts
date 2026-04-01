@@ -74,13 +74,11 @@ export function getManifest(): Manifest | null {
 export function getLibraryReadme(slug: string): string | null {
   const generatedSlug = resolveGeneratedSlug(slug)
 
-  // First check generated content
   const generatedPath = join(DOCS_DIR, generatedSlug, 'readme.md')
   if (existsSync(generatedPath)) {
     return readFileSync(generatedPath, 'utf-8')
   }
 
-  // Fall back to direct file access (for development)
   const directPaths = [
     join(WORKSPACE_ROOT, 'libs', slug, 'README.md'),
     join(WORKSPACE_ROOT, 'libs/utils', slug, 'README.md'),
@@ -105,13 +103,11 @@ export function getLibraryReadme(slug: string): string | null {
 export function getLibraryArchitecture(slug: string): string | null {
   const generatedSlug = resolveGeneratedSlug(slug)
 
-  // First check generated content
   const generatedPath = join(DOCS_DIR, generatedSlug, 'architecture.md')
   if (existsSync(generatedPath)) {
     return readFileSync(generatedPath, 'utf-8')
   }
 
-  // Fall back to direct file access
   const directPaths = [join(WORKSPACE_ROOT, 'libs', slug, 'ARCHITECTURE.md'), join(WORKSPACE_ROOT, 'libs/utils', slug, 'ARCHITECTURE.md')]
 
   for (const p of directPaths) {
@@ -151,7 +147,6 @@ export function getRootArchitecture(): string | null {
     return readFileSync(generatedPath, 'utf-8')
   }
 
-  // Fall back to direct file access
   const directPath = join(WORKSPACE_ROOT, 'ARCHITECTURE.md')
   if (existsSync(directPath)) {
     return readFileSync(directPath, 'utf-8')
@@ -171,7 +166,6 @@ export function getContributingGuide(): string | null {
     return readFileSync(generatedPath, 'utf-8')
   }
 
-  // Fall back to direct file access
   const directPath = join(WORKSPACE_ROOT, 'CONTRIBUTING.md')
   if (existsSync(directPath)) {
     return readFileSync(directPath, 'utf-8')
@@ -191,10 +185,8 @@ export function getAllLibrarySlugs(): string[] {
     return manifest.libraries.map((lib) => lib.slug)
   }
 
-  // Fall back to scanning directories
   const libs: string[] = []
 
-  // Main libs
   const libsDir = join(WORKSPACE_ROOT, 'libs')
   if (existsSync(libsDir)) {
     readdirSync(libsDir).forEach((item) => {
@@ -205,7 +197,6 @@ export function getAllLibrarySlugs(): string[] {
     })
   }
 
-  // Utils sub-packages
   const utilsDir = join(WORKSPACE_ROOT, 'libs/utils')
   if (existsSync(utilsDir)) {
     readdirSync(utilsDir).forEach((item) => {
@@ -216,7 +207,6 @@ export function getAllLibrarySlugs(): string[] {
     })
   }
 
-  // Plugins
   const pluginsDir = join(WORKSPACE_ROOT, 'plugins')
   if (existsSync(pluginsDir)) {
     readdirSync(pluginsDir).forEach((item) => {

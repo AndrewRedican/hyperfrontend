@@ -13,8 +13,6 @@ export function MarkdownContent({ html, mermaidDiagrams = [], className = '' }: 
   const [processedHtml, setProcessedHtml] = useState(html)
 
   useEffect(() => {
-    // Replace mermaid placeholders with actual components on client side
-    // This is handled by the MermaidRenderer below
     setProcessedHtml(html)
   }, [html])
 
@@ -38,12 +36,9 @@ interface MermaidRendererProps {
 
 function MermaidRenderer({ diagrams }: MermaidRendererProps) {
   useEffect(() => {
-    // Replace placeholder divs with rendered diagrams
     diagrams.forEach(({ id }) => {
       const placeholder = document.querySelector(`[data-mermaid-id="${id}"]`)
       if (placeholder) {
-        // Diagram will be rendered by MermaidDiagram component
-        // For now, just mark it as processed
         placeholder.setAttribute('data-processed', 'true')
       }
     })

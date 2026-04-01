@@ -15,7 +15,6 @@ export interface LibraryInfo {
 }
 
 export const LIBRARIES: LibraryInfo[] = [
-  // Core libraries
   {
     name: 'Nexus',
     packageName: '@hyperfrontend/nexus',
@@ -41,7 +40,6 @@ export const LIBRARIES: LibraryInfo[] = [
     entryPoints: ['libs/cryptography/src/browser/index.ts', 'libs/cryptography/src/node/index.ts', 'libs/cryptography/src/common/index.ts'],
     category: 'core',
   },
-  // Supporting libraries
   {
     name: 'State Machine',
     packageName: '@hyperfrontend/state-machine',
@@ -84,7 +82,6 @@ export const LIBRARIES: LibraryInfo[] = [
     entryPoints: ['libs/versioning/src/index.ts'],
     category: 'supporting',
   },
-  // Utils sub-packages
   {
     name: 'Data Utils',
     packageName: '@hyperfrontend/data-utils',
@@ -157,7 +154,6 @@ export const LIBRARIES: LibraryInfo[] = [
     entryPoints: ['libs/utils/ui/src/index.ts'],
     category: 'utils',
   },
-  // Plugin
   {
     name: 'Features Plugin',
     packageName: '@hyperfrontend/features',
@@ -213,7 +209,6 @@ export function extractSections(content: string): { title: string; level: number
     const headerMatch = line.match(/^(#{1,6})\s+(.+)$/)
 
     if (headerMatch) {
-      // Save previous section
       if (currentSection) {
         sections.push({
           ...currentSection,
@@ -234,7 +229,6 @@ export function extractSections(content: string): { title: string; level: number
     }
   }
 
-  // Don't forget the last section
   if (currentSection) {
     sections.push({
       ...currentSection,
@@ -252,10 +246,8 @@ export function extractSections(content: string): { title: string; level: number
  * @returns The content with badges removed
  */
 export function removeBadges(content: string): string {
-  // Remove badge blocks (typically <p align="center"> blocks with badges)
   const cleaned = content.replace(/<p align="center">[\s\S]*?<\/p>/g, '')
 
-  // Remove standalone badge markdown
   return cleaned.replace(/^\[!\[.*?\]\(.*?\)\]\(.*?\)\s*$/gm, '').trim()
 }
 
@@ -268,9 +260,6 @@ export function removeBadges(content: string): string {
 export function transformLinks(content: string): string {
   let transformed = content
 
-  // Transform GitHub blob URLs to docs site URLs
-  // Patterns are anchored to markdown link syntax ](url) to prevent matching URLs
-  // embedded in unexpected locations (e.g., query strings)
   transformed = transformed.replace(
     /\]\(https:\/\/github\.com\/AndrewRedican\/hyperfrontend\/blob\/main\/libs\/([^/)]+)\/README\.md\)/g,
     '](/docs/libraries/$1)'
@@ -286,7 +275,6 @@ export function transformLinks(content: string): string {
     '](/docs/plugins/$1)'
   )
 
-  // Transform GitHub architecture doc links
   transformed = transformed.replace(
     /\]\(https:\/\/github\.com\/AndrewRedican\/hyperfrontend\/blob\/main\/ARCHITECTURE\.md\)/g,
     '](/architecture)'
@@ -297,7 +285,6 @@ export function transformLinks(content: string): string {
     '](/docs/libraries/$1/architecture)'
   )
 
-  // Transform relative links
   transformed = transformed.replace(/\[([^\]]+)\]\(\.\/ARCHITECTURE\.md\)/g, '[$1](/architecture)')
 
   transformed = transformed.replace(/\[([^\]]+)\]\(\.\.\/\.\.\/libs\/([^/]+)\/README\.md\)/g, '[$1](/docs/libraries/$2)')

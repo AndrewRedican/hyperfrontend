@@ -5,7 +5,6 @@ interface TypeLinkProps {
   type: TypeRef | undefined
 }
 
-// Renders a type reference as text (could be enhanced to link to type definitions)
 export function TypeLink({ type }: TypeLinkProps) {
   const typeString = renderType(type)
 

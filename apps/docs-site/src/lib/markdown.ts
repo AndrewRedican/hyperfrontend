@@ -21,34 +21,28 @@ export async function markdownToHtml(markdown: string): Promise<string> {
  * @returns The first paragraph as a string
  */
 export function extractDescription(content: string): string {
-  // Skip headers and find first paragraph
   const lines = content.split('\n')
   let foundContent = false
   const paragraphLines: string[] = []
 
   for (const line of lines) {
-    // Skip headers
     if (line.startsWith('#')) {
       foundContent = false
       continue
     }
 
-    // Skip empty lines before content
     if (!foundContent && line.trim() === '') {
       continue
     }
 
-    // Skip badge lines
     if (line.includes('[![') || line.includes('<p align=')) {
       continue
     }
 
-    // Found content
     if (line.trim()) {
       foundContent = true
       paragraphLines.push(line)
     } else if (foundContent) {
-      // End of paragraph
       break
     }
   }
@@ -63,7 +57,6 @@ export function extractDescription(content: string): string {
  * @returns The HTML with processed code blocks
  */
 export function processCodeBlocks(html: string): string {
-  // Add language classes to code blocks for client-side highlighting
   return html.replace(/<pre><code class="language-(\w+)">/g, '<pre data-language="$1"><code class="language-$1">')
 }
 
