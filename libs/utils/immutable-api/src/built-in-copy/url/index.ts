@@ -8,7 +8,6 @@
  * @module @hyperfrontend/immutable-api-utils/built-in-copy/url
  */
 
-// Capture references at module initialization time
 const _URL = globalThis.URL
 const _URLSearchParams = globalThis.URLSearchParams
 const _Reflect = globalThis.Reflect

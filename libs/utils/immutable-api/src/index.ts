@@ -11,7 +11,6 @@
  * @module \@hyperfrontend/immutable-api-utils
  */
 
-// Re-export all built-in-copy modules
 export { Array } from './built-in-copy/array'
 export { Console } from './built-in-copy/console'
 export { Date } from './built-in-copy/date'
@@ -30,7 +29,6 @@ export { Timers } from './built-in-copy/timers'
 export { WeakMap } from './built-in-copy/weak-map'
 export { WeakSet } from './built-in-copy/weak-set'
 
-// Re-export locked utilities
 export * from './lib/locked'
 export * from './lib/locked-props'
 export * from './lib/locked-prop-descriptors'

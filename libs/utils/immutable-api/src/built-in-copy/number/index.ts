@@ -7,7 +7,6 @@
  * @module @hyperfrontend/immutable-api-utils/built-in-copy/number
  */
 
-// Capture references at module initialization time
 const _Number = globalThis.Number
 const _parseInt = globalThis.parseInt
 const _parseFloat = globalThis.parseFloat
@@ -100,7 +99,6 @@ export const globalIsFinite = _isFinite
  * Note: Importing this imports all methods in this namespace (no tree-shaking).
  */
 export const Number = _freeze(<const>{
-  // Constants
   MAX_VALUE,
   MIN_VALUE,
   MAX_SAFE_INTEGER,
@@ -109,15 +107,12 @@ export const Number = _freeze(<const>{
   NEGATIVE_INFINITY,
   EPSILON,
   NUMBER_NaN,
-  // Type checking
   isNaN,
   isFinite,
   isInteger,
   isSafeInteger,
-  // Parsing
   parseInt,
   parseFloat,
-  // Global (legacy)
   globalIsNaN,
   globalIsFinite,
 })

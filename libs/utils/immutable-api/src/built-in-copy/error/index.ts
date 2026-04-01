@@ -10,7 +10,6 @@
  * @module @hyperfrontend/immutable-api-utils/built-in-copy/error
  */
 
-// Capture references at module initialization time
 const _Error = globalThis.Error
 const _TypeError = globalThis.TypeError
 const _RangeError = globalThis.RangeError

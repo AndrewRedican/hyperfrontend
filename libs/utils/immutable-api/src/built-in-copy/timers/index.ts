@@ -7,7 +7,6 @@
  * @module @hyperfrontend/immutable-api-utils/built-in-copy/timers
  */
 
-// Capture references at module initialization time
 const _setTimeout = globalThis.setTimeout
 const _setInterval = globalThis.setInterval
 const _clearTimeout = globalThis.clearTimeout

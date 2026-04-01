@@ -10,7 +10,6 @@
  * @module @hyperfrontend/immutable-api-utils/built-in-copy/regexp
  */
 
-// Capture references at module initialization time
 const _RegExp = globalThis.RegExp
 const _Reflect = globalThis.Reflect
 const _freeze = globalThis.Object.freeze

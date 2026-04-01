@@ -10,7 +10,6 @@
  * @module @hyperfrontend/immutable-api-utils/built-in-copy/promise
  */
 
-// Capture references at module initialization time
 const _Promise = globalThis.Promise
 const _Reflect = globalThis.Reflect
 const _freeze = globalThis.Object.freeze

@@ -8,7 +8,6 @@
  * @module @hyperfrontend/immutable-api-utils/built-in-copy/encoding
  */
 
-// Capture references at module initialization time
 const _TextEncoder = globalThis.TextEncoder
 const _TextDecoder = globalThis.TextDecoder
 const _atob = globalThis.atob

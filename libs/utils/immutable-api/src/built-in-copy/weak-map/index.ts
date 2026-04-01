@@ -10,7 +10,6 @@
  * @module @hyperfrontend/immutable-api-utils/built-in-copy/weak-map
  */
 
-// Capture references at module initialization time
 const _WeakMap = globalThis.WeakMap
 const _Reflect = globalThis.Reflect
 const _freeze = globalThis.Object.freeze

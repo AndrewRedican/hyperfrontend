@@ -8,7 +8,6 @@
  * @module @hyperfrontend/immutable-api-utils/built-in-copy/typed-arrays
  */
 
-// Capture references at module initialization time
 const _ArrayBuffer = globalThis.ArrayBuffer
 const _SharedArrayBuffer = globalThis.SharedArrayBuffer
 const _DataView = globalThis.DataView

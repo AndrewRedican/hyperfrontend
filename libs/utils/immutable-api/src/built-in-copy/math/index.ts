@@ -7,7 +7,6 @@
  * @module @hyperfrontend/immutable-api-utils/built-in-copy/math
  */
 
-// Capture references at module initialization time
 const _Math = globalThis.Math
 const _freeze = globalThis.Object.freeze
 
@@ -233,7 +232,6 @@ export const random = _Math.random
  * Note: Importing this imports all methods in this namespace (no tree-shaking).
  */
 export const Math = _freeze(<const>{
-  // Constants
   E,
   LN2,
   LN10,
@@ -242,29 +240,24 @@ export const Math = _freeze(<const>{
   PI,
   SQRT1_2,
   SQRT2,
-  // Basic operations
   abs,
   sign,
   ceil,
   floor,
   round,
   trunc,
-  // Min/Max
   max,
   min,
-  // Powers and roots
   pow,
   sqrt,
   cbrt,
   hypot,
   exp,
   expm1,
-  // Logarithms
   log,
   log2,
   log10,
   log1p,
-  // Trigonometry
   sin,
   cos,
   tan,
@@ -278,10 +271,8 @@ export const Math = _freeze(<const>{
   asinh,
   acosh,
   atanh,
-  // Bitwise/Integer
   imul,
   fround,
   clz32,
-  // Random
   random,
 })

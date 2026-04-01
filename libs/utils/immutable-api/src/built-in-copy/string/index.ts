@@ -7,7 +7,6 @@
  * @module @hyperfrontend/immutable-api-utils/built-in-copy/string
  */
 
-// Capture references at module initialization time
 const _String = globalThis.String
 const _freeze = globalThis.Object.freeze
 
