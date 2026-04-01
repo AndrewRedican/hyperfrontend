@@ -27,23 +27,7 @@ export const UINT8_CONVERTION_SAMPLES = <const>{
   },
   NON_ASCII: {
     STRING: 'こんにちは',
-    ARRAY: createUint8Array([
-      227,
-      129,
-      147, // こ
-      227,
-      130,
-      147, // ん
-      227,
-      129,
-      171, // に
-      227,
-      129,
-      161, // ち
-      227,
-      129,
-      175, // は
-    ]),
+    ARRAY: createUint8Array([227, 129, 147, 227, 130, 147, 227, 129, 171, 227, 129, 161, 227, 129, 175]),
   },
   EMPTY: {
     STRING: '',
