@@ -87,12 +87,10 @@ describe('LifecycleAwareComponent', () => {
   it(`invokes onInitStatusChange callback function when initializing status changes`, (done) => {
     asyncProcess.onInitializingStatusChange(callback)
     sleep(100).then(() => {
-      // as it is initializing
       expect(asyncProcess.initializing).toBe(true)
       expect(callback).toHaveBeenNthCalledWith(1, true)
     })
     asyncProcess.init().then(() => {
-      // after its done initializing
       expect(asyncProcess.initializing).toBe(false)
       expect(callback).toHaveBeenNthCalledWith(2, false)
       done()
@@ -110,11 +108,9 @@ describe('LifecycleAwareComponent', () => {
     asyncProcess.onStartStatusChange(callback)
     asyncProcess.init().then(() => {
       sleep(100).then(() => {
-        // as it is starting
         expect(callback).toHaveBeenNthCalledWith(1, true)
       })
       asyncProcess.start().then(() => {
-        // after its done starting
         expect(callback).toHaveBeenNthCalledWith(2, false)
         done()
       })
@@ -134,11 +130,9 @@ describe('LifecycleAwareComponent', () => {
     asyncProcess.init().then(() => {
       asyncProcess.start().then(() => {
         sleep(100).then(() => {
-          // as it is stopping
           expect(callback).toHaveBeenNthCalledWith(1, true)
         })
         asyncProcess.stop().then(() => {
-          // after its done stopping
           expect(callback).toHaveBeenNthCalledWith(2, false)
           done()
         })

@@ -31,15 +31,12 @@ describe('Store', () => {
     const listener = jest.fn()
     const unsubscribe = store.subscribe(listener)
 
-    // Dispatch an action to check if the listener is called
     store.dispatch(pause())
     expect(listener).toHaveBeenCalledTimes(1)
 
-    // Unsubscribe the listener
     unsubscribe()
 
-    // Dispatch another action to check if the listener is not called again
     store.dispatch(cancel())
-    expect(listener).toHaveBeenCalledTimes(1) // Listener should still have been called only once
+    expect(listener).toHaveBeenCalledTimes(1)
   })
 })
