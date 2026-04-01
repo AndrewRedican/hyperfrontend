@@ -2,12 +2,12 @@
 import { getTimeBasedPassword } from './browser'
 
 describe('getTimeBasedPassword (browser)', () => {
-  const baseTimeWindow = 1 // 1 minute
+  const baseTimeWindow = 1
   const referenceTime = new Date('2024-01-01T00:00:00Z')
-  const s1 = 1000 // 1 second
-  const s5 = s1 * 5 // 5 seconds
-  const s30 = s1 * 30 // 30 seconds
-  const m1 = s1 * 60 // 1 minute
+  const s1 = 1000
+  const s5 = s1 * 5
+  const s30 = s1 * 30
+  const m1 = s1 * 60
 
   const getPassword = (offset = 0) => getTimeBasedPassword(new Date(referenceTime.getTime() + offset), baseTimeWindow)
 

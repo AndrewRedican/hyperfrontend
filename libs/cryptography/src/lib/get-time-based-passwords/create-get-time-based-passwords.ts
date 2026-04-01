@@ -15,7 +15,6 @@ export function createTimeBasedPasswords(
     const current = () => getTimeBasedPassword(currentUtcTime, baseTimeWindow, 0)
     const previous = () => getTimeBasedPassword(currentUtcTime, baseTimeWindow, -1)
     const next = () => getTimeBasedPassword(currentUtcTime, baseTimeWindow, 1)
-    // Freeze to prevent runtime modification of password generator methods
     return freeze({ current, previous, next })
   }
 }

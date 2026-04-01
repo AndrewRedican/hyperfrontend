@@ -2,7 +2,7 @@
 import { getTimeBasedPasswords } from './node'
 
 describe('getTimeBasedPasswords (node)', () => {
-  const baseTimeWindow = 1 // 1 minute for simplicity
+  const baseTimeWindow = 1
   const currentUtcTime = new Date()
 
   it('generates different passwords for current, previous, and next time windows', async () => {
