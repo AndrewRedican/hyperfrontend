@@ -130,7 +130,6 @@ export async function initGenerator(tree: Tree, options: InitGeneratorSchema) {
   log('Project:', options.project)
   log('Config path:', options.configPath)
 
-  // Implementation placeholder
   return () => {
     log('Feature generation complete!')
   }

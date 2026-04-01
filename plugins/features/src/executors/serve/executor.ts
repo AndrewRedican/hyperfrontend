@@ -155,6 +155,5 @@ export default async function* serveExecutor(options: ServeExecutorSchema) {
   log('Port:', options.port)
   log('Mode:', options.mode)
 
-  // Implementation placeholder
   yield { success: true }
 }
