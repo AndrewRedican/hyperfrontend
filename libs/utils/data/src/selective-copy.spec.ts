@@ -141,7 +141,6 @@ describe('selectiveCopy - with config detectCircularReferences:true', () => {
 
   afterEach(() => {
     setConfig({ detectCircularReferences: false })
-    // Clean up any potential pollution from tests
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     delete (<any>Object.prototype).polluted
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -306,7 +305,6 @@ describe('selectiveCopy - __proto__ pollution prevention (non-circular)', () => 
 
   afterEach(() => {
     setConfig({ detectCircularReferences: false })
-    // Clean up any potential pollution from tests
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     delete (<any>Object.prototype).polluted
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -358,7 +356,6 @@ describe('selectiveCopy - __proto__ pollution prevention (circular references)',
 
   afterEach(() => {
     setConfig({ detectCircularReferences: false })
-    // Clean up any potential pollution from tests
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     delete (<any>Object.prototype).polluted
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
