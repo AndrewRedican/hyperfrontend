@@ -55,7 +55,6 @@ export function createGestureListener(callback: Callback) {
   document.addEventListener('touchmove', handleTouchMove)
   document.addEventListener('touchend', handleTouchEnd)
 
-  // Return a function to remove event listeners
   return () => {
     document.removeEventListener('keydown', handleKeyDown)
     document.removeEventListener('touchstart', handleTouchStart)

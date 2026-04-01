@@ -15,10 +15,8 @@ export function cssObjectToString(cssObj: Style): string {
 
   const cssString = entries(cssObj).reduce((prev, [property, value]) => {
     try {
-      // Convert camelCase property to kebab-case.
       const kebabCaseProperty = property.replace(/([a-z0-9]|(?=[A-Z]))([A-Z])/g, '$1-$2').toLowerCase()
 
-      // Check if value is an empty string and handle it
       const cssValue = value === '' ? `''` : value
 
       return `${prev}${kebabCaseProperty}: ${cssValue}; `

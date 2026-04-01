@@ -10,7 +10,6 @@ import { rgbToHex } from './rgb-to-hex'
  * @returns A hexadecimal color string with # prefix
  */
 export function rgbStringToHex(rgbString: string): string {
-  // Match rgb/rgba with explicit bounds to avoid ReDoS
   const rgbOnlyRegex = /^rgba?\((\d{1,3}),\s*(\d{1,3}),\s*(\d{1,3})\)$/i
   const rgbaRegex = /^rgba?\((\d{1,3}),\s*(\d{1,3}),\s*(\d{1,3}),\s*(\d\.?\d*)\)$/i
   const match = rgbString.match(rgbaRegex) || rgbString.match(rgbOnlyRegex)
@@ -24,12 +23,10 @@ export function rgbStringToHex(rgbString: string): string {
   const b = parseInt(match[3], 10)
   const a = match[4] !== undefined ? parseFloat(match[4]) : undefined
 
-  // Check if RGB components are within the valid range (0-255)
   if (r < 0 || r > 255 || g < 0 || g > 255 || b < 0 || b > 255) {
     throw createError('Invalid RGB or RGBA string')
   }
 
-  // Check if the alpha component is within the valid range (0-1)
   if (a !== undefined) {
     /* istanbul ignore next */
     if (a < 0 || a > 1) {
