@@ -21,12 +21,10 @@ import { logEvent } from '../../utils/logging/log-event'
 export function notifyEvent(channel: ChannelInternals, event: ChannelEvent, data?: unknown): void {
   const state = channel.getState()
 
-  // Log event if logger is available
   if (state.logger) {
     logEvent(state.logger, event, data)
   }
 
-  // Create channel JSON manually
   const channelJSON: ChannelJSON = {
     id: state.id,
     name: state.name,
@@ -37,7 +35,6 @@ export function notifyEvent(channel: ChannelInternals, event: ChannelEvent, data
     queuedMessagesCount: state.queuedMessages.length,
   }
 
-  // Notify all event subscribers
   for (const handler of state.eventSubscriptions) {
     try {
       handler(event, data, channelJSON)

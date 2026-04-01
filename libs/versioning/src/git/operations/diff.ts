@@ -48,10 +48,6 @@ export const DEFAULT_DIFF_OPTIONS: Required<Omit<DiffOptions, 'cwd'>> = {
   timeout: 30000,
 }
 
-// ============================================================================
-// Core Functions
-// ============================================================================
-
 /**
  * Gets files changed between two git refs.
  *
@@ -81,12 +77,11 @@ export function getChangedFilesBetween(base: string, head = 'HEAD', options: Dif
       cwd: opts.cwd,
       timeout: opts.timeout,
       stdio: ['pipe', 'pipe', 'pipe'],
-      maxBuffer: 50 * 1024 * 1024, // 50MB
+      maxBuffer: 50 * 1024 * 1024,
     })
 
     return parseFileList(output)
   } catch {
-    // Return empty array if refs don't exist or diff fails
     return []
   }
 }
@@ -109,19 +104,16 @@ export function getChangedFilesBetweenWithStatus(base: string, head = 'HEAD', op
   const safeHead = escapeGitRef(head)
 
   try {
-    // Use --name-status to get status codes
-    // Use -M for rename detection
     const output = execFileSync('git', ['diff', '--name-status', '-M', `${safeBase}...${safeHead}`], {
       encoding: 'utf-8',
       cwd: opts.cwd,
       timeout: opts.timeout,
       stdio: ['pipe', 'pipe', 'pipe'],
-      maxBuffer: 50 * 1024 * 1024, // 50MB
+      maxBuffer: 50 * 1024 * 1024,
     })
 
     return parseNameStatusOutput(output)
   } catch {
-    // Return empty array if refs don't exist or diff fails
     return []
   }
 }
@@ -146,13 +138,11 @@ export function getChangedFilesBetweenWithStatus(base: string, head = 'HEAD', op
 export function getCommitWithFiles(hash: string, options: DiffOptions = {}): GitCommitWithFiles | null {
   const opts = { ...DEFAULT_DIFF_OPTIONS, ...options }
 
-  // Get the commit metadata
   const commit = getCommit(hash, { cwd: opts.cwd, timeout: opts.timeout })
   if (!commit) {
     return null
   }
 
-  // Get the files changed in this commit
   const files = getCommitFiles(hash, opts)
 
   return {
@@ -172,17 +162,12 @@ function getCommitFiles(hash: string, options: Required<Omit<DiffOptions, 'cwd'>
   const safeHash = escapeGitRef(hash)
 
   try {
-    // git diff-tree --no-commit-id -r --name-status -M <hash>
-    // --no-commit-id: suppress the commit hash line
-    // -r: recurse into subtrees
-    // --name-status: show status codes
-    // -M: detect renames
     const output = execFileSync('git', ['diff-tree', '--no-commit-id', '-r', '--name-status', '-M', safeHash], {
       encoding: 'utf-8',
       cwd: options.cwd,
       timeout: options.timeout,
       stdio: ['pipe', 'pipe', 'pipe'],
-      maxBuffer: 10 * 1024 * 1024, // 10MB
+      maxBuffer: 10 * 1024 * 1024,
     })
 
     return parseNameStatusOutput(output)
@@ -190,10 +175,6 @@ function getCommitFiles(hash: string, options: Required<Omit<DiffOptions, 'cwd'>
     return []
   }
 }
-
-// ============================================================================
-// Parsing Helpers
-// ============================================================================
 
 /**
  * Parses file list output (from --name-only).
@@ -223,7 +204,6 @@ function parseFileList(output: string): readonly string[] {
     }
   }
 
-  // Handle last line
   const lastFile = current.trim()
   if (lastFile) {
     files.push(lastFile)
@@ -271,7 +251,6 @@ function parseNameStatusLine(line: string): FileChange | null {
     return null
   }
 
-  // Find first tab to split status from path(s)
   const tabIndex = findChar(trimmed, '\t')
   if (tabIndex === -1) {
     return null
@@ -285,7 +264,6 @@ function parseNameStatusLine(line: string): FileChange | null {
     return null
   }
 
-  // Check for rename/copy (has two paths)
   if (status === 'renamed' || status === 'copied') {
     const secondTabIndex = findChar(pathPart, '\t')
     if (secondTabIndex !== -1) {
@@ -318,7 +296,6 @@ function parseStatusCode(code: string): FileChangeStatus | null {
 
   const firstChar = code[0]
 
-  // Handle rename/copy with percentage (e.g., R100, C95)
   if (firstChar === 'R') {
     return 'renamed'
   }
@@ -326,7 +303,6 @@ function parseStatusCode(code: string): FileChangeStatus | null {
     return 'copied'
   }
 
-  // Simple status codes
   switch (firstChar) {
     case 'A':
       return 'added'
@@ -359,7 +335,6 @@ function splitLines(str: string): string[] {
     }
   }
 
-  // Handle last line
   if (current) {
     lines.push(current)
   }

@@ -1,10 +1,3 @@
-/**
- * Integration Tests: Security Protocol Integration
- *
- * Tests the complete security layer integration including protocol
- * negotiation, transport encryption/decryption, and handshake flow.
- */
-
 import type { SecurityProtocolVersion, SecurityNegotiationRequest } from './types/security'
 import { negotiateProtocol, createSecurityRequest, createSecurityResponse } from './security/negotiation/negotiate'
 import { createProtocolRegistry } from './security/registry/factory'

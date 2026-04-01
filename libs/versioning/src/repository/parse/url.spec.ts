@@ -173,7 +173,6 @@ describe('parseRepositoryUrl', () => {
     })
 
     it('returns null for Azure DevOps URL with _git but invalid structure', () => {
-      // _git at index 1, but gitIndex must be >= 2
       const result = parseRepositoryUrl('https://dev.azure.com/org/_git/repo')
       expect(result).toBeNull()
     })

@@ -1,8 +1,3 @@
-/**
- * Browser tests for data factory.
- * Node version: create-data-factory.spec.ts (identical except for imports)
- */
-
 import { createHash } from '@hyperfrontend/cryptography/browser'
 import { createDataFactory } from './create-data-factory'
 import { dataCreatorTestCases, invalidDataCreatorTestCases } from './test-fixtures'
@@ -89,7 +84,7 @@ describe('createDataFactory (Browser)', () => {
 
     it('handles unserializable message', async () => {
       const createData = createDataFactory(createHash)
-      const message = { fn: () => 'test' } // Functions are not JSON-serializable
+      const message = { fn: () => 'test' }
 
       await expect(createData('550e8400-e29b-41d4-a716-446655440000', 1, message)).rejects.toThrow()
     })

@@ -5,7 +5,6 @@ import { useEffect, useRef, useState } from 'react'
 import { random } from '@hyperfrontend/immutable-api-utils/built-in-copy/math'
 import { logger } from '@hyperfrontend/logging'
 
-// Initialize mermaid with theme configuration
 mermaid.initialize({
   startOnLoad: false,
   theme: 'base',
@@ -51,7 +50,6 @@ export function MermaidDiagram({ chart, className = '' }: MermaidDiagramProps) {
       if (!containerRef.current) return
 
       try {
-        // Generate unique ID for each diagram
         const id = `mermaid-${random().toString(36).substring(2, 9)}`
         const { svg } = await mermaid.render(id, chart)
         setSvg(svg)

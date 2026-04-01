@@ -28,8 +28,6 @@ export function hexToRgb(hex: string, opacity?: number): Rgb | null {
     throw createError('Input opacity must be a number')
   }
 
-  // Try 6 or 8 digit hex first, then 3 or 4 digit hex
-  // Use explicit character ranges to avoid potential ReDoS
   const match6 = /^#?([a-fA-F0-9]{2})([a-fA-F0-9]{2})([a-fA-F0-9]{2})$/i.exec(hex)
   const match8 = /^#?([a-fA-F0-9]{2})([a-fA-F0-9]{2})([a-fA-F0-9]{2})([a-fA-F0-9]{2})$/i.exec(hex)
   const match3 = /^#?([a-fA-F0-9])([a-fA-F0-9])([a-fA-F0-9])$/i.exec(hex)

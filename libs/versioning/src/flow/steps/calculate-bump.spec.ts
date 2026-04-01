@@ -134,10 +134,6 @@ function createMockContext(state: Partial<FlowState> = {}, config: Partial<FlowC
   }
 }
 
-// ============================================================================
-// Tests: createCalculateBumpStep
-// ============================================================================
-
 describe('Calculate Bump Step', () => {
   describe('createCalculateBumpStep', () => {
     it('creates a step with correct ID and name', () => {
@@ -502,14 +498,11 @@ describe('Calculate Bump Step', () => {
       expect(result.status).toBe('success')
       expect(result.stateUpdates?.isPendingPublication).toBe(true)
       expect(result.stateUpdates?.bumpType).toBe('minor')
-      // Key: nextVersion is calculated from publishedVersion (0.1.0 → 0.2.0), not currentVersion
       expect(result.stateUpdates?.nextVersion).toBe('0.2.0')
       expect(result.message).toContain('pending')
     })
 
     it('recalculates version from publishedVersion when pending (same result)', async () => {
-      // Scenario: published=0.1.0, current=0.2.0, commits warrant minor
-      // Result: nextVersion should be 0.2.0 (recalculated from published)
       const step = createCalculateBumpStep()
       const ctx = createMockContext({
         currentVersion: '0.2.0',
@@ -524,8 +517,6 @@ describe('Calculate Bump Step', () => {
     })
 
     it('escalates version when pending publication needs higher bump', async () => {
-      // Scenario: published=0.1.0, current=0.1.1 (patch was done), but now commits warrant minor
-      // Result: nextVersion should escalate to 0.2.0
       const step = createCalculateBumpStep()
       const ctx = createMockContext({
         currentVersion: '0.1.1',
@@ -542,8 +533,6 @@ describe('Calculate Bump Step', () => {
     })
 
     it('de-escalates version when pending publication needs lower bump', async () => {
-      // Scenario: published=0.1.0, current=0.2.0 (minor was done), but now commits only warrant patch
-      // Result: nextVersion should de-escalate to 0.1.1
       const step = createCalculateBumpStep()
       const ctx = createMockContext({
         currentVersion: '0.2.0',
@@ -560,8 +549,6 @@ describe('Calculate Bump Step', () => {
     })
 
     it('handles pending publication with major bump (post-1.0.0)', async () => {
-      // Scenario: published=1.0.0, current=1.1.0, but now commits warrant major (breaking change)
-      // Result: nextVersion should be 2.0.0
       const step = createCalculateBumpStep()
       const ctx = createMockContext({
         currentVersion: '1.1.0',
@@ -578,7 +565,6 @@ describe('Calculate Bump Step', () => {
     })
 
     it('does not detect pending publication when versions are equal', async () => {
-      // Normal path: currentVersion === publishedVersion
       const step = createCalculateBumpStep()
       const ctx = createMockContext({
         currentVersion: '1.0.0',
@@ -595,7 +581,6 @@ describe('Calculate Bump Step', () => {
     })
 
     it('does not detect pending publication when publishedVersion is null', async () => {
-      // First publish scenario - should not be pending
       const step = createCalculateBumpStep()
       const ctx = createMockContext({
         currentVersion: '0.1.0',
@@ -607,16 +592,13 @@ describe('Calculate Bump Step', () => {
 
       expect(result.status).toBe('success')
       expect(result.stateUpdates?.isPendingPublication).toBeUndefined()
-      // Normal path: increment from currentVersion
       expect(result.stateUpdates?.nextVersion).toBe('0.2.0')
     })
 
     it('does not detect pending publication when publishedVersion is undefined', async () => {
-      // No registry info scenario
       const step = createCalculateBumpStep()
       const ctx = createMockContext({
         currentVersion: '0.1.0',
-        // publishedVersion not set (undefined)
         commits: [createMockCommit({ type: 'feat', subject: 'feature', breaking: false })],
       })
 
@@ -627,8 +609,6 @@ describe('Calculate Bump Step', () => {
     })
 
     it('handles multiple stacked pending versions correctly', async () => {
-      // Scenario: published=0.1.0, current=0.3.0 (ran bump twice without publishing)
-      // Result: should still recalculate from published
       const step = createCalculateBumpStep()
       const ctx = createMockContext({
         currentVersion: '0.3.0',
@@ -640,7 +620,6 @@ describe('Calculate Bump Step', () => {
 
       expect(result.status).toBe('success')
       expect(result.stateUpdates?.isPendingPublication).toBe(true)
-      // Should calculate from 0.1.0 → 0.2.0, not from 0.3.0
       expect(result.stateUpdates?.nextVersion).toBe('0.2.0')
     })
 
@@ -654,17 +633,12 @@ describe('Calculate Bump Step', () => {
 
       const result = await step.execute(ctx)
 
-      // Message should show transition from publishedVersion, not currentVersion
       expect(result.message).toContain('0.1.0')
       expect(result.message).toContain('0.1.1')
       expect(result.message).toContain('pending')
     })
   })
 })
-
-// ============================================================================
-// Tests: createCheckIdempotencyStep
-// ============================================================================
 
 describe('Check Idempotency Step', () => {
   describe('createCheckIdempotencyStep', () => {

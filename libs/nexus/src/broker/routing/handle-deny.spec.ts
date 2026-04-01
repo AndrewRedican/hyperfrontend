@@ -1,7 +1,3 @@
-/**
- * Tests for handleDeny function
- */
-
 import type { Logger } from '@hyperfrontend/logging'
 import type { IAction } from '../../types/action'
 import type { IChannelContract } from '../../types/contract'
@@ -153,13 +149,12 @@ describe('handleDeny', () => {
     const channel1 = addChannel(mockBrokerState, registry, processManager, actions, 'channel-1', mockWindow)
     const processId1 = processManager.create(channel1)
 
-    // Create a truly unique window object for channel2
     const window2 = <Window>(<unknown>{
       postMessage: jest.fn(),
-      _uniqueId: 'window-2', // Ensure uniqueness
+      _uniqueId: 'window-2',
     })
     const channel2 = addChannel(mockBrokerState, registry, processManager, actions, 'channel-2', window2)
-    expect(channel2).toBeDefined() // Channel should be created
+    expect(channel2).toBeDefined()
     const processId2 = processManager.create(channel2)
 
     const action1: IAction = {
@@ -186,8 +181,7 @@ describe('handleDeny', () => {
       source: window2,
     })
 
-    // Both should be processed without errors
-    expect(processManager.get(processId1)).toBeUndefined() // Terminated
-    expect(processManager.get(processId2)).toBeUndefined() // Terminated
+    expect(processManager.get(processId1)).toBeUndefined()
+    expect(processManager.get(processId2)).toBeUndefined()
   })
 })

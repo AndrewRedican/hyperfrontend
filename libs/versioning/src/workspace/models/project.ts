@@ -1,10 +1,3 @@
-/**
- * Project Model
- *
- * Represents a single project/package within a workspace.
- * Contains package.json data, paths, and dependency information.
- */
-
 import type { PackageJson } from '@hyperfrontend/project-scope/project/package'
 
 /**

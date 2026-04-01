@@ -1,6 +1,5 @@
 import { resolve } from 'node:path'
 
-// Mock the NX module to control workspace detection
 jest.mock('./nx', () => ({
   isNxWorkspace: jest.fn(() => false),
   findNxWorkspaceRoot: jest.fn(() => null),

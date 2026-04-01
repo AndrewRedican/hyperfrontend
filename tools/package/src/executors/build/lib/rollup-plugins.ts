@@ -18,7 +18,6 @@ export function createNodeResolvePlugin(bundleWorkspaceDeps: boolean): Plugin {
     extensions: ['.ts', '.js'],
   }
 
-  // When not bundling workspace deps, exclude @hyperfrontend/* from resolution
   if (!bundleWorkspaceDeps) {
     config.resolveOnly = [/^(?!@hyperfrontend\/)/]
   }
@@ -73,9 +72,6 @@ export function createTypescriptPlugin(
   bundleWorkspaceDeps: boolean,
   workspaceRoot?: string
 ): Plugin {
-  // When bundling workspace deps, use workspace-level configuration
-  // similar to bundle builds (IIFE/UMD) to allow compiling files from
-  // multiple workspace packages. Declarations are generated separately via tsc.
   if (bundleWorkspaceDeps) {
     if (!workspaceRoot) {
       throw createError('workspaceRoot is required when bundleWorkspaceDeps is true')
@@ -92,9 +88,6 @@ export function createTypescriptPlugin(
     })
   }
 
-  // When not bundling workspace deps, use project-level configuration
-  // with empty paths to prevent TypeScript from following workspace imports.
-  // Declarations are generated separately via tsc.
   return <Plugin>typescript({
     tsconfig: tsConfigPath,
     declaration: false,

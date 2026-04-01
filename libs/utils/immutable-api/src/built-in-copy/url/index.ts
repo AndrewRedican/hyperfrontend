@@ -8,15 +8,10 @@
  * @module @hyperfrontend/immutable-api-utils/built-in-copy/url
  */
 
-// Capture references at module initialization time
 const _URL = globalThis.URL
 const _URLSearchParams = globalThis.URLSearchParams
 const _Reflect = globalThis.Reflect
 const _freeze = globalThis.Object.freeze
-
-// ============================================================================
-// URL
-// ============================================================================
 
 /**
  * (Safe copy) Creates a new URL using the captured URL constructor.
@@ -74,10 +69,6 @@ export const revokeObjectURL: (typeof globalThis.URL)['revokeObjectURL'] =
  */
 export const parseURL = _URL.parse
 
-// ============================================================================
-// URLSearchParams
-// ============================================================================
-
 /**
  * (Safe copy) Creates a new URLSearchParams using the captured URLSearchParams constructor.
  * Use this instead of `new URLSearchParams()`.
@@ -88,10 +79,6 @@ export const parseURL = _URL.parse
 export const createURLSearchParams = (
   init?: string | URLSearchParams | Record<string, string> | Iterable<[string, string]>
 ): URLSearchParams => <URLSearchParams>_Reflect.construct(_URLSearchParams, [init])
-
-// ============================================================================
-// Namespace Export
-// ============================================================================
 
 /**
  * (Safe copy) Namespace object containing all URL utilities.

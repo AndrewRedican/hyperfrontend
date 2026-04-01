@@ -1,9 +1,4 @@
 /**
- * Pattern matching utilities with ReDoS protection.
- * Uses character-by-character matching instead of regex where possible.
- */
-
-/**
  * Match path against glob pattern using safe character iteration.
  * Avoids regex to prevent ReDoS attacks.
  *
@@ -41,20 +36,17 @@ export function matchGlobPattern(path: string, pattern: string): boolean {
  * @returns True if remaining segments match
  */
 function matchSegments(pathParts: string[], patternParts: string[], pathIdx: number, patternIdx: number): boolean {
-  // Base cases
   if (pathIdx === pathParts.length && patternIdx === patternParts.length) {
-    return true // Both exhausted = match
+    return true
   }
 
   if (patternIdx >= patternParts.length) {
-    return false // Pattern exhausted but path remains
+    return false
   }
 
   const patternPart = patternParts[patternIdx]
 
-  // Handle ** (globstar) - matches zero or more directories
   if (patternPart === '**') {
-    // Try matching rest of pattern against current position and all future positions
     for (let i = pathIdx; i <= pathParts.length; i++) {
       if (matchSegments(pathParts, patternParts, i, patternIdx + 1)) {
         return true
@@ -64,12 +56,11 @@ function matchSegments(pathParts: string[], patternParts: string[], pathIdx: num
   }
 
   if (pathIdx >= pathParts.length) {
-    return false // Path exhausted but pattern remains (and it's not **)
+    return false
   }
 
   const pathPart = pathParts[pathIdx]
 
-  // Match current segment
   if (matchSegment(pathPart, patternPart)) {
     return matchSegments(pathParts, patternParts, pathIdx + 1, patternIdx + 1)
   }
@@ -93,13 +84,11 @@ function matchSegment(text: string, pattern: string): boolean {
     const char = pattern[patternIdx]
 
     if (char === '*') {
-      // * matches zero or more characters
       patternIdx++
       if (patternIdx === pattern.length) {
-        return true // * at end matches rest of string
+        return true
       }
 
-      // Try matching rest of pattern at each position in text
       for (let i = textIdx; i <= text.length; i++) {
         if (matchSegmentFrom(text, i, pattern, patternIdx)) {
           return true
@@ -107,17 +96,14 @@ function matchSegment(text: string, pattern: string): boolean {
       }
       return false
     } else if (char === '?') {
-      // ? matches exactly one character
       if (textIdx >= text.length) {
         return false
       }
       textIdx++
       patternIdx++
     } else if (char === '{') {
-      // {a,b,c} matches any alternative
       const closeIdx = findClosingBrace(pattern, patternIdx)
       if (closeIdx === -1) {
-        // Unmatched brace, treat as literal
         if (textIdx >= text.length || text[textIdx] !== char) {
           return false
         }
@@ -133,7 +119,6 @@ function matchSegment(text: string, pattern: string): boolean {
         return false
       }
     } else {
-      // Literal character
       if (textIdx >= text.length || text[textIdx] !== char) {
         return false
       }

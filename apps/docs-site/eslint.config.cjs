@@ -20,6 +20,15 @@ module.exports = [
     },
   },
   {
+    files: ['src/lib/content.ts'],
+    plugins: {
+      workspace: eslintRules,
+    },
+    rules: {
+      'workspace/docs-site-routes': 'error',
+    },
+  },
+  {
     // Allow @hyperfrontend/ imports from npm packages installed in this app's node_modules
     files: ['**/*.ts', '**/*.tsx', '**/*.js', '**/*.jsx'],
     rules: {

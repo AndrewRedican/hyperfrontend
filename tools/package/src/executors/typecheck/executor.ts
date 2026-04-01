@@ -42,7 +42,6 @@ export default async function typecheckExecutor(
     return { success: false }
   }
 
-  // Use workspace's local tsc to prevent auto-download security risk
   const tscPath = join(workspaceRoot, 'node_modules', '.bin', 'tsc')
   if (!existsSync(tscPath)) {
     logger.error(`TypeScript compiler not found at: ${tscPath}`)

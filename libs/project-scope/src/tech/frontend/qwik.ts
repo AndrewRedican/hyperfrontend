@@ -22,14 +22,12 @@ export function qwikDetector(projectPath: string, packageJson?: PackageJson): Fr
 
   const deps = collectAllDependencies(pkg)
 
-  // @builder.io/qwik package
   if (deps['@builder.io/qwik']) {
     confidence += 70
     version = parseVersionString(deps['@builder.io/qwik'])
     sources.push({ type: 'package.json', field: 'dependencies.@builder.io/qwik' })
   }
 
-  // @builder.io/qwik-city
   if (deps['@builder.io/qwik-city']) {
     confidence += 20
     sources.push({ type: 'package.json', field: 'dependencies.@builder.io/qwik-city' })

@@ -7,7 +7,6 @@ const TEST_DIR = join(__dirname, '__test_fixtures_fstree__')
 
 describe('vfs/FsTree', () => {
   beforeAll(() => {
-    // Create test fixtures
     mkdirSync(TEST_DIR, { recursive: true })
     mkdirSync(join(TEST_DIR, 'src'), { recursive: true })
     mkdirSync(join(TEST_DIR, 'lib'), { recursive: true })
@@ -18,7 +17,6 @@ describe('vfs/FsTree', () => {
   })
 
   afterAll(() => {
-    // Clean up test fixtures
     rmSync(TEST_DIR, { recursive: true, force: true })
   })
 
@@ -638,7 +636,6 @@ describe('vfs/FsTree', () => {
         const tree = createFsTree(TEST_DIR)
         const linkPath = join(TEST_DIR, 'evil-link')
 
-        // Create symlink to /etc/passwd (or any path outside root)
         symlinkSync('/etc/passwd', linkPath)
 
         expect(() => tree.read('evil-link')).toThrow('Symlink target escapes tree root')
@@ -650,7 +647,6 @@ describe('vfs/FsTree', () => {
         const tree = createFsTree(TEST_DIR)
         const linkPath = join(TEST_DIR, 'evil-relative-link')
 
-        // Create symlink that escapes via ../
         symlinkSync('../../../etc/passwd', linkPath)
         console.log('Created symlink:', linkPath, '-> ../../../etc/passwd')
 
@@ -702,7 +698,6 @@ describe('vfs/FsTree', () => {
         writeFileSync(targetPath, 'existing')
         symlinkSync(targetPath, linkPath)
 
-        // Try to update the symlink
         expect(() => tree.write('existing-link.txt', 'updated content')).toThrow('Cannot access symlink when followSymlinks is disabled')
 
         rmSync(linkPath)
@@ -733,13 +728,11 @@ describe('vfs/FsTree', () => {
         const tree = createFsTree(TEST_DIR)
         const linkPath = join(TEST_DIR, 'src-link')
 
-        // Remove if exists from previous failed run
         rmSync(linkPath, { recursive: true, force: true })
 
         symlinkSync(join(TEST_DIR, 'src'), linkPath, 'dir')
 
         expect(tree.isSymlink('src-link')).toBe(true)
-        // Reading a directory via symlink should still work for directory checks
         expect(tree.isDirectory('src-link')).toBe(true)
 
         rmSync(linkPath, { recursive: true, force: true })
@@ -753,10 +746,8 @@ describe('vfs/FsTree', () => {
         writeFileSync(targetPath, 'original')
         symlinkSync('/etc/passwd', linkPath)
 
-        // First write to buffer
         tree.write('package.json', '{"name": "modified"}')
 
-        // Then try to read the evil symlink - should still validate
         expect(() => tree.read('update-link.txt')).toThrow('Symlink target escapes tree root')
 
         rmSync(linkPath)
@@ -768,13 +759,10 @@ describe('vfs/FsTree', () => {
         const targetPath = join(TEST_DIR, 'absolute-target.txt')
         const linkPath = join(TEST_DIR, 'absolute-link.txt')
 
-        // Create target file
         writeFileSync(targetPath, 'absolute target content')
 
-        // Create symlink with absolute path pointing within root
         symlinkSync(targetPath, linkPath)
 
-        // Should be able to read it
         const content = tree.read('absolute-link.txt', 'utf-8')
         expect(content).toBe('absolute target content')
 
@@ -786,12 +774,8 @@ describe('vfs/FsTree', () => {
         const tree = createFsTree(TEST_DIR)
         const linkPath = join(TEST_DIR, 'broken-symlink.txt')
 
-        // Create a symlink to a non-existent target (broken symlink)
-        // This will cause readlinkSync to succeed but the target resolution to potentially fail
         symlinkSync('non-existent-target.txt', linkPath)
 
-        // The symlink exists but points to nothing - read should return null
-        // because the file doesn't exist on disk
         const content = tree.read('broken-symlink.txt')
         expect(content).toBeNull()
 
@@ -805,13 +789,10 @@ describe('vfs/FsTree', () => {
       it('returns null for file marked as deleted in buffer', () => {
         const tree = createFsTree(TEST_DIR)
 
-        // Verify file exists initially
         expect(tree.exists('package.json')).toBe(true)
 
-        // Delete the file (buffered)
         tree.delete('package.json')
 
-        // Read should return null because file is marked DELETE in buffer
         const content = tree.read('package.json')
         expect(content).toBeNull()
       })
@@ -827,7 +808,6 @@ describe('vfs/FsTree', () => {
     describe('reading directory path', () => {
       it('returns null when reading a directory path', () => {
         const tree = createFsTree(TEST_DIR)
-        // src is a directory, not a file
         const content = tree.read('src')
         expect(content).toBeNull()
       })
@@ -836,7 +816,6 @@ describe('vfs/FsTree', () => {
     describe('delete non-existent file variations', () => {
       it('is no-op for file that never existed on disk', () => {
         const tree = createFsTree(TEST_DIR)
-        // File that doesn't exist
         tree.delete('completely-nonexistent-file-12345.txt')
         const changes = tree.listChanges()
         expect(changes).toHaveLength(0)

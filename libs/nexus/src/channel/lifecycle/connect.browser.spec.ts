@@ -3,7 +3,6 @@ import type { IAction } from '../../types/action'
 import type { ChannelInternals } from '../types'
 import { connect } from './connect'
 
-// Mutable version of ChannelState for testing
 type MutableChannelState = { -readonly [K in keyof ChannelState]: ChannelState[K] }
 
 describe('channel/lifecycle/connect', () => {
@@ -120,7 +119,6 @@ describe('channel/lifecycle/connect', () => {
 
     connect(mockChannel)
 
-    // Should activate channel
     expect(state.id).toBe('sender-789')
     expect(state.origin).toBe('https://example.com')
     expect(state.contract).toBe(contract)
@@ -128,12 +126,10 @@ describe('channel/lifecycle/connect', () => {
     expect(state.active).toBe(true)
     expect(state.scheduledActivation).toBe(null)
 
-    // Should send ACCEPT_CONNECTION
     expect(mockChannel.actions.acceptConnection).toHaveBeenCalledWith('process-999')
     expect(sentActions).toHaveLength(1)
     expect(sentActions[0].type).toBe('[nexus] connection-request-accepted')
 
-    // Should notify event subscribers
     expect(mockChannel.notifyEvent).toHaveBeenCalledWith('open', {
       id: 'sender-789',
       origin: 'https://example.com',

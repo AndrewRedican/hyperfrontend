@@ -10,7 +10,6 @@
  * @module @hyperfrontend/immutable-api-utils/built-in-copy/weak-set
  */
 
-// Capture references at module initialization time
 const _WeakSet = globalThis.WeakSet
 const _Reflect = globalThis.Reflect
 const _freeze = globalThis.Object.freeze

@@ -1,7 +1,3 @@
-/**
- * Tests for packet base creator
- */
-
 import { createPacketBase } from './create-packet-base'
 
 describe('createPacketBase', () => {

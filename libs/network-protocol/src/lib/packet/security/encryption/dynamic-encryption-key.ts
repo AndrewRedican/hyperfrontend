@@ -30,7 +30,6 @@ export function createDynamicKeyEncryptionFactory<T = any>(
     const packetEncryption: EncryptionSuite<T>['packetEncryption'] = (packet) => {
       const key = provider()
       if (!key) {
-        // First message - skip encryption, serialize directly
         return firstMessageHandler.serializeWithoutEncryption(packet)
       }
       return encryptPacket(packet, key)
@@ -39,7 +38,6 @@ export function createDynamicKeyEncryptionFactory<T = any>(
     const packetDecryption: EncryptionSuite<T>['packetDecryption'] = (packet) => {
       const key = provider()
       if (!key) {
-        // First message - skip decryption, deserialize directly
         return firstMessageHandler.deserializeWithoutDecryption(packet)
       }
       return decryptPacket(packet, key)

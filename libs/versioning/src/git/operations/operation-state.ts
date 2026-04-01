@@ -13,10 +13,7 @@ import { DEFAULT_COMMIT_OPTIONS } from './commit'
  * - `'rebase-apply'`: `.git/rebase-apply` exists (mailbox-based rebase or `git am`)
  * - `'merge-in-progress'`: `.git/MERGE_HEAD` exists (merge awaiting conflict resolution)
  */
-export type GitOperationStateReason =
-  | 'rebase-interactive' // .git/rebase-merge exists (interactive rebase)
-  | 'rebase-apply' // .git/rebase-apply exists (am/apply rebase)
-  | 'merge-in-progress' // .git/MERGE_HEAD exists
+export type GitOperationStateReason = 'rebase-interactive' | 'rebase-apply' | 'merge-in-progress'
 
 /**
  * Result of checking git's operation state.
@@ -76,7 +73,6 @@ export function getOperationState(options: GitOperationStateOptions = {}): GitOp
   const opts = { ...DEFAULT_OPERATION_STATE_OPTIONS, ...options }
 
   try {
-    // Get git directory (handles worktrees, submodules, GIT_DIR override)
     const gitDir = execFileSync('git', ['rev-parse', '--git-dir'], {
       cwd: opts.cwd,
       encoding: 'utf-8',
@@ -89,7 +85,6 @@ export function getOperationState(options: GitOperationStateOptions = {}): GitOp
     const rebaseApply = existsSync(join(basePath, gitDir, 'rebase-apply'))
     const mergeHead = existsSync(join(basePath, gitDir, 'MERGE_HEAD'))
 
-    // Exit-early pattern: return first detected reason
     let reason: GitOperationStateReason | null = null
     if (rebaseMerge) reason = 'rebase-interactive'
     else if (rebaseApply) reason = 'rebase-apply'
@@ -101,7 +96,6 @@ export function getOperationState(options: GitOperationStateOptions = {}): GitOp
       details: { rebaseMerge, rebaseApply, mergeHead },
     }
   } catch {
-    // Not a repo or git unavailable — assume no operation in progress (non-blocking)
     return {
       inProgress: false,
       reason: null,

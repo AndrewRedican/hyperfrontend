@@ -1,8 +1,3 @@
-/**
- * Browser tests for sender factory.
- * Node version: create-sender-factory.spec.ts (identical except for imports)
- */
-
 import { createHash, encrypt } from '@hyperfrontend/cryptography/browser'
 import { uint8ArrayToBase64 } from '@hyperfrontend/string-utils/browser'
 import { sleep } from '@hyperfrontend/time-utils'

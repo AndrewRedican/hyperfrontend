@@ -94,7 +94,6 @@ describe('Schema Validation', () => {
     it('detects missing required fields', () => {
       const action = <IAction>{
         type: ACTION_TYPES.REQUEST_CONNECTION,
-        // missing senderId
       }
 
       const result = validateAction(action)
@@ -159,7 +158,6 @@ describe('Schema Validation', () => {
     it('detects missing required properties', () => {
       const contract = <IChannelContract>{
         accepted: [],
-        // missing emitted
       }
 
       const result = validateContract(contract)

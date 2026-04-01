@@ -46,7 +46,6 @@ export default async function versionBatchExecutor(
   const logger = getLogger()
   logger.setLogLevel({ verbose, quiet: false })
 
-  // Set up interrupt handlers for cleanup
   let interrupted = false
   const cleanupAndExit = async () => {
     interrupted = true
@@ -59,7 +58,6 @@ export default async function versionBatchExecutor(
   process.on('SIGTERM', cleanupAndExit)
 
   try {
-    // Prerequisite: Check if on main branch (skip versioning on main)
     const currentBranch = getCurrentBranch({ cwd: workspaceRoot })
     if (currentBranch === 'main') {
       logger.log('On main branch, skipping version-batch')
@@ -69,17 +67,14 @@ export default async function versionBatchExecutor(
     logger.debug(`Current branch: ${currentBranch ?? 'unknown'}`)
     logger.debug(`Base: ${base}, Head: ${head}`)
 
-    // Prerequisite: Check for unstable git state
     if (isInUnstableGitState(workspaceRoot)) {
       logger.error('Git is in an unstable state (rebase/merge in progress). Aborting.')
       return { success: false }
     }
 
-    // Get project graph
     const projectGraph = await createProjectGraphAsync()
     logger.debug(`Loaded project graph with ${keys(projectGraph.nodes).length} nodes`)
 
-    // Detect affected libraries
     const affectedLibraries = await getAffectedLibraries(workspaceRoot, projectGraph, base, head)
 
     if (affectedLibraries.length === 0) {
@@ -97,7 +92,6 @@ export default async function versionBatchExecutor(
       return { success: true }
     }
 
-    // Run versioning for each affected library
     const bumpedLibs: string[] = []
     const allModifiedFiles: string[] = []
 
@@ -135,11 +129,9 @@ export default async function versionBatchExecutor(
           logger.debug(`  - ${lib}: no version bump needed`)
         } else {
           logger.error(`  ✗ ${lib}: ${result.error ?? 'unknown error'}`)
-          // Continue with other libraries, don't fail entire batch
         }
       } catch (error) {
         logger.error(`  ✗ ${lib}: ${error instanceof Error ? error.message : error}`)
-        // Continue with other libraries
       }
     }
 
@@ -147,7 +139,6 @@ export default async function versionBatchExecutor(
       return { success: false }
     }
 
-    // Create batch commit if any libraries were bumped
     if (bumpedLibs.length > 0) {
       logger.log(`\nCreating batch commit for ${bumpedLibs.length} libraries...`)
 
@@ -163,7 +154,6 @@ export default async function versionBatchExecutor(
   } catch (error) {
     logger.error(`version-batch failed: ${error instanceof Error ? error.message : error}`)
 
-    // Rollback on failure
     if (!dryRun) {
       logger.log('Rolling back changes...')
       await rollbackChanges(workspaceRoot)
@@ -171,7 +161,6 @@ export default async function versionBatchExecutor(
 
     return { success: false }
   } finally {
-    // Remove interrupt handlers
     process.removeListener('SIGINT', cleanupAndExit)
     process.removeListener('SIGTERM', cleanupAndExit)
   }

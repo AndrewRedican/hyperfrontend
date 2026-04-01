@@ -19,17 +19,12 @@ describe('getTags', () => {
   })
 
   it('returns tags from repository', () => {
-    // First call: list tags
     mockExecFileSync.mockReturnValueOnce('v1.0.0\nv2.0.0\n')
-    // Second call: rev-list for v1.0.0
     mockExecFileSync.mockReturnValueOnce('abc123def456789012345678901234567890abcd')
-    // Third call: cat-file tag (fails for lightweight tag)
     mockExecFileSync.mockImplementationOnce(() => {
       throw new Error('Not an annotated tag')
     })
-    // Fourth call: rev-list for v2.0.0
     mockExecFileSync.mockReturnValueOnce('def456abc789012345678901234567890abcdef')
-    // Fifth call: cat-file tag (fails for lightweight tag)
     mockExecFileSync.mockImplementationOnce(() => {
       throw new Error('Not an annotated tag')
     })
@@ -270,17 +265,14 @@ describe('getTagsForPackage', () => {
 
   it('returns tags matching package@version pattern', () => {
     mockExecFileSync.mockReturnValueOnce('@scope/pkg@1.0.0\n@scope/pkg@2.0.0\nother@1.0.0\n')
-    // Details for @scope/pkg@1.0.0
     mockExecFileSync.mockReturnValueOnce('abc123')
     mockExecFileSync.mockImplementationOnce(() => {
       throw new Error('Not annotated')
     })
-    // Details for @scope/pkg@2.0.0
     mockExecFileSync.mockReturnValueOnce('def456')
     mockExecFileSync.mockImplementationOnce(() => {
       throw new Error('Not annotated')
     })
-    // Details for other@1.0.0
     mockExecFileSync.mockReturnValueOnce('ghi789')
     mockExecFileSync.mockImplementationOnce(() => {
       throw new Error('Not annotated')

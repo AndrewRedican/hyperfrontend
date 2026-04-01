@@ -91,7 +91,6 @@ export const DEFAULT_STATUS_OPTIONS: Required<Omit<GitStatusOptions, 'cwd'>> = {
 export function getStatus(options: GitStatusOptions = {}): RepositoryStatus {
   const opts = { ...DEFAULT_STATUS_OPTIONS, ...options }
 
-  // Get porcelain status with branch info
   const output = execFileSync('git', ['status', '--porcelain=v2', '--branch'], {
     encoding: 'utf-8',
     cwd: opts.cwd,
@@ -125,7 +124,6 @@ function parseStatus(output: string): RepositoryStatus {
   for (const line of lines) {
     if (!line) continue
 
-    // Branch headers
     if (startsWithPrefix(line, '# branch.head ')) {
       const branchName = line.slice(14)
       if (branchName === '(detached)') {
@@ -139,9 +137,7 @@ function parseStatus(output: string): RepositoryStatus {
       const ab = parseAheadBehind(line.slice(12))
       ahead = ab.ahead
       behind = ab.behind
-    }
-    // Changed entries (ordinary changed)
-    else if (line[0] === '1') {
+    } else if (line[0] === '1') {
       const entry = parseChangedEntry(line)
       if (entry) {
         if (entry.indexStatus) {
@@ -151,9 +147,7 @@ function parseStatus(output: string): RepositoryStatus {
           modified.push(entry)
         }
       }
-    }
-    // Renamed/copied entries
-    else if (line[0] === '2') {
+    } else if (line[0] === '2') {
       const entry = parseRenamedEntry(line)
       if (entry) {
         if (entry.indexStatus) {
@@ -163,17 +157,13 @@ function parseStatus(output: string): RepositoryStatus {
           modified.push(entry)
         }
       }
-    }
-    // Unmerged entries
-    else if (line[0] === 'u') {
+    } else if (line[0] === 'u') {
       hasConflicts = true
       const entry = parseUnmergedEntry(line)
       if (entry) {
         staged.push(entry)
       }
-    }
-    // Untracked entries
-    else if (line[0] === '?') {
+    } else if (line[0] === '?') {
       const path = line.slice(2)
       untracked.push(path)
     }
@@ -224,7 +214,6 @@ function parseAheadBehind(str: string): { ahead: number; behind: number } {
  * @returns Parsed entry or null
  */
 function parseChangedEntry(line: string): FileStatusEntry | null {
-  // Format: 1 <XY> <sub> <mH> <mI> <mW> <hH> <hI> <path>
   const parts = line.split(' ')
   if (parts.length < 9) return null
 
@@ -248,14 +237,12 @@ function parseChangedEntry(line: string): FileStatusEntry | null {
  * @returns Parsed entry or null
  */
 function parseRenamedEntry(line: string): FileStatusEntry | null {
-  // Format: 2 <XY> <sub> <mH> <mI> <mW> <hH> <hI> <X><score> <path><tab><origPath>
   const parts = line.split(' ')
   if (parts.length < 10) return null
 
   const xy = parts[1]
   const pathPart = parts.slice(9).join(' ')
 
-  // Split by tab
   const tabIndex = pathPart.indexOf('\t')
   const path = tabIndex >= 0 ? pathPart.slice(0, tabIndex) : pathPart
   const origPath = tabIndex >= 0 ? pathPart.slice(tabIndex + 1) : undefined
@@ -278,7 +265,6 @@ function parseRenamedEntry(line: string): FileStatusEntry | null {
  * @returns Parsed entry or null
  */
 function parseUnmergedEntry(line: string): FileStatusEntry | null {
-  // Format: u <XY> <sub> <m1> <m2> <m3> <mW> <h1> <h2> <h3> <path>
   const parts = line.split(' ')
   if (parts.length < 11) return null
 
@@ -302,7 +288,7 @@ function statusFromChar(char: string): FileStatus | null {
     case 'M':
       return 'modified'
     case 'T':
-      return 'modified' // Type change
+      return 'modified'
     case 'A':
       return 'added'
     case 'D':

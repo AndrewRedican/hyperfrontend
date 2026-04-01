@@ -7,7 +7,6 @@
  * @module @hyperfrontend/immutable-api-utils/built-in-copy/json
  */
 
-// Capture references at module initialization time
 const _JSON = globalThis.JSON
 const _freeze = globalThis.Object.freeze
 

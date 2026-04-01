@@ -1,4 +1,3 @@
-// lgtm[js/regex/missing-regexp-anchor] - False positive: format validators use properly anchored regexes or URL constructor
 import type { Schema } from '../types/schema'
 import { validate } from './validate'
 
@@ -244,10 +243,10 @@ describe('validate', () => {
           { type: 'number', multipleOf: 5 },
         ],
       }
-      expect(validate(9, schema).valid).toBe(true) // Multiple of 3 only
-      expect(validate(10, schema).valid).toBe(true) // Multiple of 5 only
-      expect(validate(15, schema).valid).toBe(false) // Multiple of both
-      expect(validate(7, schema).valid).toBe(false) // Neither
+      expect(validate(9, schema).valid).toBe(true)
+      expect(validate(10, schema).valid).toBe(true)
+      expect(validate(15, schema).valid).toBe(false)
+      expect(validate(7, schema).valid).toBe(false)
     })
 
     it('validates not', () => {

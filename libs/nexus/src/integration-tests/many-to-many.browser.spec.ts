@@ -75,14 +75,12 @@ describe('Integration: Many-to-Many', () => {
 
   describe('Star Network Topology', () => {
     it('creates hub-and-spoke pattern', () => {
-      // Central hub broker
       const hub = createBroker({
         name: 'hub-broker',
         contract: networkContract,
         settings: { logLevel: 'error' },
       })
 
-      // Create spoke channels
       const spokes = windows.map((win, i) => hub.addChannel(`spoke-${i}`, <Window>(<unknown>win)))
 
       spokes.forEach((spoke) => spoke.connect())
@@ -101,15 +99,12 @@ describe('Integration: Many-to-Many', () => {
       const spokes = windows.map((win, i) => hub.addChannel(`spoke-${i}`, <Window>(<unknown>win)))
       spokes.forEach((spoke) => spoke.connect())
 
-      // Clear initial connection messages
       windows.forEach((win) => win.postMessage.mockClear())
 
-      // Broadcast to all spokes
       spokes.forEach((spoke) => {
         spoke.send('BROADCAST', { from: 'hub', message: 'Hello all' })
       })
 
-      // Verify all windows received message
       windows.forEach((win) => {
         expect(win.postMessage).toHaveBeenCalled()
       })
@@ -131,17 +126,14 @@ describe('Integration: Many-to-Many', () => {
       windows[0].postMessage.mockClear()
       windows[1].postMessage.mockClear()
 
-      // Send direct message from spoke1 to spoke2
       spoke1.send('DIRECT', { to: 'spoke-2', message: 'Private message' })
 
-      // In real scenario, hub would route to spoke2
       expect(windows[0].postMessage).toHaveBeenCalled()
     })
   })
 
   describe('Mesh Network Topology', () => {
     it('creates fully connected mesh', () => {
-      // Create brokers for each node
       const brokers = windows.map((_, i) =>
         createBroker({
           name: `node-${i}`,
@@ -150,7 +142,6 @@ describe('Integration: Many-to-Many', () => {
         })
       )
 
-      // Connect each broker to all others (full mesh)
       brokers.forEach((broker, i) => {
         windows.forEach((win, j) => {
           if (i !== j) {
@@ -160,7 +151,6 @@ describe('Integration: Many-to-Many', () => {
         })
       })
 
-      // Each broker should have connections to all others (n-1)
       brokers.forEach((broker) => {
         expect(broker.channels.length).toBe(windows.length - 1)
       })
@@ -185,7 +175,6 @@ describe('Integration: Many-to-Many', () => {
         settings: { logLevel: 'error' },
       })
 
-      // Create bidirectional connections
       const ch12 = broker1.addChannel('to-node-2', <Window>(<unknown>windows[1]))
       const ch13 = broker1.addChannel('to-node-3', <Window>(<unknown>windows[2]))
       const ch21 = broker2.addChannel('to-node-1', <Window>(<unknown>windows[0]))
@@ -215,14 +204,13 @@ describe('Integration: Many-to-Many', () => {
         settings: { logLevel: 'error' },
       })
 
-      // Distribute channels using round-robin
       windows.forEach((win, i) => {
         const broker = i % 2 === 0 ? broker1 : broker2
         broker.addChannel(`channel-${i}`, <Window>(<unknown>win)).connect()
       })
 
-      expect(broker1.channels).toHaveLength(3) // 0, 2, 4
-      expect(broker2.channels).toHaveLength(2) // 1, 3
+      expect(broker1.channels).toHaveLength(3)
+      expect(broker2.channels).toHaveLength(2)
     })
 
     it('handles failover between brokers', () => {
@@ -238,16 +226,13 @@ describe('Integration: Many-to-Many', () => {
         settings: { logLevel: 'error' },
       })
 
-      // Initially use primary
       const channel = primary.addChannel('failover-channel', <Window>(<unknown>windows[0]))
       channel.connect()
 
       expect(channel.isActive()).toBe(true)
 
-      // Simulate primary failure - disconnect channel
       channel.disconnect()
 
-      // Create new channel on backup broker
       const backupChannel = backup.addChannel('failover-channel', <Window>(<unknown>windows[0]))
       backupChannel.connect()
 
@@ -269,10 +254,8 @@ describe('Integration: Many-to-Many', () => {
         settings: { logLevel: 'error' },
       })
 
-      // Peer 1 creates channel to Peer 2
       const peer1ToPeer2 = peer1Broker.addChannel('to-peer-2', <Window>(<unknown>windows[1]))
 
-      // Peer 2 creates channel to Peer 1
       const peer2ToPeer1 = peer2Broker.addChannel('to-peer-1', <Window>(<unknown>windows[0]))
 
       peer1ToPeer2.connect()
@@ -281,7 +264,6 @@ describe('Integration: Many-to-Many', () => {
       expect(peer1ToPeer2.isActive()).toBe(true)
       expect(peer2ToPeer1.isActive()).toBe(true)
 
-      // Send message in both directions
       windows[0].postMessage.mockClear()
       windows[1].postMessage.mockClear()
 
@@ -307,29 +289,23 @@ describe('Integration: Many-to-Many', () => {
         settings: { logLevel: 'error' },
       })
 
-      // Domain 1 has channels 0,1,2
       const domain1Channels = [0, 1, 2].map((i) => domain1.addChannel(`d1-ch${i}`, <Window>(<unknown>windows[i])))
 
-      // Domain 2 has channels 3,4
       const domain2Channels = [3, 4].map((i) => domain2.addChannel(`d2-ch${i - 3}`, <Window>(<unknown>windows[i])))
 
       domain1Channels.forEach((ch) => ch.connect())
       domain2Channels.forEach((ch) => ch.connect())
 
-      // Verify isolation
       expect(domain1.channels).toHaveLength(3)
       expect(domain2.channels).toHaveLength(2)
 
-      // Broadcast in domain1 should not affect domain2
       windows.forEach((win) => win.postMessage.mockClear())
 
       domain1Channels.forEach((ch) => ch.send('BROADCAST', { domain: 1, message: 'Domain 1 broadcast' }))
 
-      // Only domain1 windows should receive
       expect(windows[0].postMessage).toHaveBeenCalled()
       expect(windows[1].postMessage).toHaveBeenCalled()
       expect(windows[2].postMessage).toHaveBeenCalled()
-      // Domain 2 windows should not be affected (no broadcast from their channels)
     })
   })
 })

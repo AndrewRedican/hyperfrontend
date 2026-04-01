@@ -238,9 +238,7 @@ describe('compareTagsByVersion', () => {
 
     const sorted = [...tags].sort(compareTagsByVersion)
 
-    // v1.0.1 is newest, v1.0 and v1.0.0 are equal (missing part treated as 0)
     expect(sorted[0].name).toBe('v1.0.1')
-    // v1.0 and v1.0.0 are equal so original order preserved (stable sort)
     expect(sorted[1].name).toBe('v1.0')
     expect(sorted[2].name).toBe('v1.0.0')
   })
@@ -254,7 +252,6 @@ describe('compareTagsByVersion', () => {
 
     const sorted = [...tags].sort(compareTagsByVersion)
 
-    // Numeric comparison treats these as 1.0.0 with different suffixes
     expect(sorted).toHaveLength(3)
   })
 

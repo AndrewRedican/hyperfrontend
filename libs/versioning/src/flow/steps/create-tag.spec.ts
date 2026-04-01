@@ -166,10 +166,6 @@ function createMockContext(state: Partial<FlowState> = {}, config: Partial<FlowC
   }
 }
 
-// ============================================================================
-// Tests: createTagStep
-// ============================================================================
-
 describe('Create Tag Step', () => {
   describe('createTagStep', () => {
     it('creates a step with correct ID and name', () => {
@@ -391,7 +387,7 @@ describe('Create Tag Step', () => {
       const git = {
         ...createMockGitClient(),
         createTag: jest.fn(() => {
-          throw 'string error' // Non-Error throw
+          throw 'string error'
         }),
       } as unknown as GitClient
       const ctx: FlowContext = {
@@ -406,10 +402,6 @@ describe('Create Tag Step', () => {
     })
   })
 })
-
-// ============================================================================
-// Tests: createPushTagStep
-// ============================================================================
 
 describe('Push Tag Step', () => {
   describe('createPushTagStep', () => {

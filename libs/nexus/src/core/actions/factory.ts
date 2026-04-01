@@ -1,14 +1,3 @@
-/**
- * PURPOSE:
- * Creates action creator functions with dependency injection.
- * Returns an object containing all action creators bound to their dependencies.
- *
- * IMPLEMENTATION COMPLETE:
- * - ActionDependencies interface defined
- * - All action creators imported and bound to dependencies
- * - Returns frozen object with all action creators
- */
-
 import type { IChannelContract } from '../../types/contract'
 import { freeze } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
 import { acceptConnection } from './accept'

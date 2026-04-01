@@ -1,10 +1,3 @@
-/**
- * Changelog Equality Comparison
- *
- * Functions for comparing changelogs for structural equality.
- * Uses deep comparison without relying on JSON serialization.
- */
-
 import type { Changelog, ChangelogHeader, ChangelogLink, ChangelogMetadata } from '../models/changelog'
 import type { CommitRef, IssueRef } from '../models/commit-ref'
 import type { ChangelogEntry, ChangelogItem, ChangelogSection } from '../models/entry'
@@ -25,19 +18,15 @@ import { createSet } from '@hyperfrontend/immutable-api-utils/built-in-copy/set'
  * ```
  */
 export function isChangelogEqual(a: Changelog, b: Changelog): boolean {
-  // Check source (optional field)
   if (a.source !== b.source) return false
 
-  // Check header
   if (!isHeaderEqual(a.header, b.header)) return false
 
-  // Check entries
   if (a.entries.length !== b.entries.length) return false
   for (let i = 0; i < a.entries.length; i++) {
     if (!isEntryEqual(a.entries[i], b.entries[i])) return false
   }
 
-  // Check metadata
   if (!isMetadataEqual(a.metadata, b.metadata)) return false
 
   return true
@@ -53,13 +42,11 @@ export function isChangelogEqual(a: Changelog, b: Changelog): boolean {
 export function isHeaderEqual(a: ChangelogHeader, b: ChangelogHeader): boolean {
   if (a.title !== b.title) return false
 
-  // Check description
   if (a.description.length !== b.description.length) return false
   for (let i = 0; i < a.description.length; i++) {
     if (a.description[i] !== b.description[i]) return false
   }
 
-  // Check links
   if (a.links.length !== b.links.length) return false
   for (let i = 0; i < a.links.length; i++) {
     if (!isLinkEqual(a.links[i], b.links[i])) return false
@@ -93,7 +80,6 @@ export function isEntryEqual(a: ChangelogEntry, b: ChangelogEntry): boolean {
   if (a.compareUrl !== b.compareUrl) return false
   if (a.rawContent !== b.rawContent) return false
 
-  // Check sections
   if (a.sections.length !== b.sections.length) return false
   for (let i = 0; i < a.sections.length; i++) {
     if (!isSectionEqual(a.sections[i], b.sections[i])) return false
@@ -113,7 +99,6 @@ export function isSectionEqual(a: ChangelogSection, b: ChangelogSection): boolea
   if (a.type !== b.type) return false
   if (a.heading !== b.heading) return false
 
-  // Check items
   if (a.items.length !== b.items.length) return false
   for (let i = 0; i < a.items.length; i++) {
     if (!isItemEqual(a.items[i], b.items[i])) return false
@@ -134,13 +119,11 @@ export function isItemEqual(a: ChangelogItem, b: ChangelogItem): boolean {
   if (a.description !== b.description) return false
   if (a.breaking !== b.breaking) return false
 
-  // Check commits
   if (a.commits.length !== b.commits.length) return false
   for (let i = 0; i < a.commits.length; i++) {
     if (!isCommitRefEqual(a.commits[i], b.commits[i])) return false
   }
 
-  // Check references
   if (a.references.length !== b.references.length) return false
   for (let i = 0; i < a.references.length; i++) {
     if (!isIssueRefEqual(a.references[i], b.references[i])) return false
@@ -184,7 +167,6 @@ export function isMetadataEqual(a: ChangelogMetadata, b: ChangelogMetadata): boo
   if (a.repositoryUrl !== b.repositoryUrl) return false
   if (a.packageName !== b.packageName) return false
 
-  // Check warnings
   if (a.warnings.length !== b.warnings.length) return false
   for (let i = 0; i < a.warnings.length; i++) {
     if (a.warnings[i] !== b.warnings[i]) return false

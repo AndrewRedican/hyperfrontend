@@ -25,7 +25,6 @@ describe('analyzeProject', () => {
 
     it('includes correct project name', () => {
       const result = analyzeProject(MINIMAL_PROJECT)
-      // Name should be from package.json or directory name
       expect(typeof result.name).toBe('string')
       expect(result.name.length).toBeGreaterThan(0)
     })
@@ -82,7 +81,6 @@ describe('analyzeProject', () => {
       const basic = analyzeProject(MINIMAL_PROJECT, { depth: 'basic' })
       const full = analyzeProject(MINIMAL_PROJECT, { depth: 'full' })
 
-      // Both should return complete results
       expect(basic.projectType).toBeDefined()
       expect(full.projectType).toBeDefined()
     })
@@ -94,10 +92,8 @@ describe('analyzeProject', () => {
         include: ['frameworks'],
       })
 
-      // Frameworks should be populated
       expect(Array.isArray(result.frameworks)).toBe(true)
 
-      // Other arrays should be empty
       expect(result.buildTools).toEqual([])
       expect(result.testingFrameworks).toEqual([])
       expect(result.entryPoints).toEqual([])
@@ -111,10 +107,8 @@ describe('analyzeProject', () => {
         exclude: ['dependencies'],
       })
 
-      // Dependencies should be zeros
       expect(result.dependencies.total).toBe(0)
 
-      // Other analyses should still run
       expect(result.projectType).toBeDefined()
     })
   })
@@ -170,14 +164,10 @@ describe('analyzeProject', () => {
 
   describe('workspace type detection', () => {
     // Note: These fixtures are inside the hyperfrontend NX workspace, so they detect as 'nx'
-    // due to the workspace detection looking up the directory tree and finding nx.json
-    // This is correct behavior - the fixtures inherit the parent workspace type
 
     it('detects nx workspace type (fixtures inherit parent workspace)', () => {
-      // All fixtures inside an NX workspace detect as NX
       const turborepoDir = resolve(FIXTURES_DIR, 'turborepo-workspace')
       const result = analyzeProject(turborepoDir)
-      // Detects nx because hyperfrontend root has nx.json
       expect(result.workspaceType).toBe('nx')
     })
 
@@ -187,7 +177,6 @@ describe('analyzeProject', () => {
     })
 
     it('returns valid workspace type for all fixtures', () => {
-      // Verify workspace type is one of the valid types
       const validTypes = ['nx', 'turborepo', 'lerna', 'pnpm', 'npm', 'yarn', 'rush', 'standalone', 'unknown']
       const result = analyzeProject(MINIMAL_PROJECT)
       expect(validTypes).toContain(result.workspaceType)
@@ -197,7 +186,6 @@ describe('analyzeProject', () => {
   describe('options.verbose', () => {
     it('enables verbose logging when verbose option is true', () => {
       const result = analyzeProject(MINIMAL_PROJECT, { verbose: true })
-      // Should complete successfully with verbose mode
       expect(result).toBeDefined()
       expect(result.projectType).toBeDefined()
     })
@@ -206,7 +194,6 @@ describe('analyzeProject', () => {
   describe('config format normalization', () => {
     it('normalizes various config formats to standard types', () => {
       const result = analyzeProject(MINIMAL_PROJECT)
-      // All config formats should be normalized
       for (const config of result.configFiles) {
         expect(['json', 'yaml', 'js', 'ts', 'toml', 'env']).toContain(config.format)
       }

@@ -35,5 +35,4 @@ export interface MonorepoDetector {
   detect(workspacePath: string, packageJson?: PackageJson): MonorepoDetection | null
 }
 
-// Re-export for convenience
 export type { DetectionSource }

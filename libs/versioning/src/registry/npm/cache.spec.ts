@@ -13,7 +13,7 @@ describe('createCache', () => {
   })
 
   it('expires values after TTL', async () => {
-    const cache = createCache(10) // 10ms TTL
+    const cache = createCache(10)
     cache.set('key', 'value')
     expect(cache.get('key')).toBe('value')
 

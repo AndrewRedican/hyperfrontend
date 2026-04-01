@@ -1,10 +1,3 @@
-/**
- * Unit Tests: Security Transport Factory
- *
- * Tests the unified factory for creating security transports based on
- * the negotiated protocol version.
- */
-
 import type { SecurityTransportConfig } from '../../types/security'
 import { createSecurityTransport } from './factory'
 

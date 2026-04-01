@@ -1,9 +1,3 @@
-/**
- * Unit Tests: Protocol Registry
- *
- * Tests the registry for managing protocol providers at the broker level.
- */
-
 import { createProtocolRegistry } from './factory'
 
 describe('Protocol Registry', () => {

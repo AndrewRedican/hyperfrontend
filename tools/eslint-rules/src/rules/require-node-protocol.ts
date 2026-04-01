@@ -51,7 +51,6 @@ export default createRule<[], MessageIds>({
             fixed,
           },
           fix(fixer) {
-            // Replace the source string including quotes
             const raw = node.source.raw
             /* istanbul ignore else - raw is always defined for valid imports */
             if (raw) {

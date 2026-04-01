@@ -31,7 +31,6 @@ export function handleAccept(context: RoutingContext, message: MessageEvent<IAct
   const { state, processManager, logger } = context
   const action = message.data
 
-  // Type guard to ensure action has contract and processId
   if (!isActionWithContract(action)) {
     return
   }
@@ -39,25 +38,21 @@ export function handleAccept(context: RoutingContext, message: MessageEvent<IAct
   const processId = action.processId
   const contract = action.contract
 
-  // Extract security response from action base (may be undefined for backward compatibility)
   const securityResponse = <SecurityNegotiationResponse | undefined>(<IActionBase>action).security
 
-  // Get channel by process ID
   const channel = <ChannelHandle | undefined>processManager.get(processId)
 
   if (!channel) {
-    return // Channel not found
+    return
   }
 
   if (channel.isActive()) {
-    return // Already open
+    return
   }
 
-  // Validate contract
   try {
     validateContract(contract)
   } catch {
-    // Invalid contract - cancel connection
     channel.sendAction({
       type: '[nexus] connection-request-cancelled',
       processId,
@@ -66,7 +61,6 @@ export function handleAccept(context: RoutingContext, message: MessageEvent<IAct
     return
   }
 
-  // Apply security policy if configured
   if (state.settings.securityPolicy) {
     const allowed = applyPolicy(state.settings.securityPolicy, message, logger)
     if (!allowed) {
@@ -79,32 +73,26 @@ export function handleAccept(context: RoutingContext, message: MessageEvent<IAct
     }
   }
 
-  // Handle security protocol negotiation result
   let securityConfirmation: SecurityConfirmation | undefined = undefined
   if (securityResponse) {
     const negotiatedProtocol = securityResponse.negotiated
 
-    // Store negotiated protocol in channel state
     channel.setNegotiatedProtocol(negotiatedProtocol)
 
     logger.info(`${state.name} accepted security protocol: ${negotiatedProtocol}`)
 
-    // For 'none' protocol, mark security as ready immediately
     if (negotiatedProtocol === 'none') {
       channel.setSecurityReady(true)
     }
 
-    // Create security confirmation for OPEN action
     securityConfirmation = {
       active: negotiatedProtocol !== 'none',
       protocol: negotiatedProtocol,
     }
   }
 
-  // Activate channel with connection details
   channel.activate(message.origin, contract)
 
-  // Send OPEN_CONNECTION with security confirmation if applicable
   channel.sendAction({
     type: '[nexus] connection-opened',
     processId,
@@ -112,9 +100,7 @@ export function handleAccept(context: RoutingContext, message: MessageEvent<IAct
     ...(securityConfirmation && { security: securityConfirmation }),
   })
 
-  // Terminate process (handshake complete)
   processManager.remove(processId)
 
-  // Notify OPENED event
   channel.notifyEvent('open', { origin: message.origin, contract })
 }

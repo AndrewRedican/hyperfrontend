@@ -100,7 +100,7 @@ describe('classifyCommit', () => {
 
       expect(result.source).toBe('direct-file')
       expect(result.include).toBe(true)
-      expect(result.preserveScope).toBe(true) // Keep scope for context
+      expect(result.preserveScope).toBe(true)
     })
 
     it('classifies unscoped commits touching project files', () => {
@@ -123,17 +123,16 @@ describe('classifyCommit', () => {
       const input = createCommitInput('versioning', 'abc123')
       const context: ClassificationContext = {
         projectScopes: ['versioning'],
-        fileCommitHashes: new Set(['abc123']), // Also in file commits
+        fileCommitHashes: new Set(['abc123']),
       }
 
       const result = classifyCommit(input, context)
 
-      // Scope match takes priority
       expect(result.source).toBe('direct-scope')
     })
 
     it('file-based catches typos in scope', () => {
-      const input = createCommitInput('versionng', 'abc123') // Typo
+      const input = createCommitInput('versionng', 'abc123')
       const context: ClassificationContext = {
         projectScopes: ['versioning'],
         fileCommitHashes: new Set(['abc123']),
@@ -141,7 +140,6 @@ describe('classifyCommit', () => {
 
       const result = classifyCommit(input, context)
 
-      // File check catches the typo
       expect(result.source).toBe('direct-file')
       expect(result.include).toBe(true)
     })
@@ -184,7 +182,7 @@ describe('classifyCommit', () => {
       const input = createCommitInput(undefined, 'abc123')
       const context: ClassificationContext = {
         projectScopes: ['versioning'],
-        fileCommitHashes: new Set(), // Does not touch project files
+        fileCommitHashes: new Set(),
       }
 
       const result = classifyCommit(input, context)
@@ -229,8 +227,8 @@ describe('classifyCommits', () => {
     const result = classifyCommits(commits, context)
 
     expect(result.commits).toHaveLength(4)
-    expect(result.included).toHaveLength(2) // versioning + file touch
-    expect(result.excluded).toHaveLength(2) // logging + release
+    expect(result.included).toHaveLength(2)
+    expect(result.excluded).toHaveLength(2)
   })
 
   it('provides accurate summary', () => {
@@ -432,7 +430,6 @@ describe('toChangelogCommit', () => {
 
     const changelogCommit = toChangelogCommit(classified)
 
-    // Breaking indicator is in footer, not header when breakingDescription exists
     expect(changelogCommit.raw).toBe('feat: breaking change')
   })
 
@@ -566,12 +563,10 @@ describe('infrastructure classification', () => {
   })
 
   it('file-based detection takes priority over infrastructure', () => {
-    // If a commit touches both project files AND infrastructure,
-    // file-based (direct-file) should win
     const input = createCommitInput('other-project', 'abc123')
     const context: ClassificationContext = {
       projectScopes: ['versioning'],
-      fileCommitHashes: new Set(['abc123']), // Also touched project files
+      fileCommitHashes: new Set(['abc123']),
       infrastructureCommitHashes: new Set(['abc123']),
     }
 
@@ -582,8 +577,6 @@ describe('infrastructure classification', () => {
   })
 
   it('dependency detection takes priority over infrastructure', () => {
-    // If a commit matches both dependency and infrastructure,
-    // dependency should win (checked first)
     const input = createCommitInput('lib-utils', 'abc123')
     const context: ClassificationContext = {
       projectScopes: ['versioning'],
@@ -620,7 +613,7 @@ describe('dependency scope variations', () => {
     const context: ClassificationContext = {
       projectScopes: ['versioning'],
       fileCommitHashes: new Set(),
-      dependencyCommitMap: new Map([['lib-utils', new Set(['def456'])]]), // Different hash
+      dependencyCommitMap: new Map([['lib-utils', new Set(['def456'])]]),
     }
 
     const result = classifyCommit(input, context)
@@ -630,24 +623,20 @@ describe('dependency scope variations', () => {
   })
 
   it('excludes commits when scope matches dependency but hash is not in commit set (mislabeled commit)', () => {
-    // This is the critical test for hash verification
-    // A commit labeled with 'lib-utils' scope but didn't actually touch lib-utils files
     const input = createCommitInput('lib-utils', 'abc123')
     const context: ClassificationContext = {
       projectScopes: ['versioning'],
       fileCommitHashes: new Set(),
-      dependencyCommitMap: new Map([['lib-utils', new Set(['different-hash'])]]), // Scope matches, hash doesn't
+      dependencyCommitMap: new Map([['lib-utils', new Set(['different-hash'])]]),
     }
 
     const result = classifyCommit(input, context)
 
-    // Should be excluded because hash verification failed - commit didn't actually touch the dependency
     expect(result.source).toBe('excluded')
     expect(result.include).toBe(false)
   })
 
   it('excludes commits when scope variation matches but hash is not verified', () => {
-    // Scope 'utils' matches 'lib-utils' via variation, but hash doesn't match
     const input = createCommitInput('utils', 'abc123')
     const context: ClassificationContext = {
       projectScopes: ['versioning'],
@@ -690,7 +679,6 @@ describe('dependency scope variations', () => {
 
     expect(result.source).toBe('indirect-dependency')
     expect(result.include).toBe(true)
-    // Should match lib-utils first (iteration order)
     expect(result.dependencyPath).toEqual(['lib-utils'])
   })
 })

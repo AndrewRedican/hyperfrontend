@@ -27,10 +27,6 @@ function createTestFlow(stepIds: string[] = ['step-1', 'step-2', 'step-3']): Ver
   )
 }
 
-// ============================================================================
-// Tests
-// ============================================================================
-
 describe('Flow Model', () => {
   describe('createFlow', () => {
     it('creates a flow with required properties', () => {
@@ -453,7 +449,6 @@ describe('Flow Model', () => {
     it('supports method chaining pattern', () => {
       let flow = createFlow('custom', 'Custom Flow', [])
 
-      // Build up a flow using multiple operations
       flow = addStep(flow, createMockStep('fetch'))
       flow = addStep(flow, createMockStep('analyze'))
       flow = addStep(flow, createMockStep('bump'))

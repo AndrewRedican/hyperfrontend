@@ -87,7 +87,6 @@ const rule: Rule.RuleModule = {
       },
 
       'Program:exit'(node: JSONNode) {
-        // Check tags
         if (!fields.tags) {
           context.report({
             node: node as unknown as Rule.Node,
@@ -100,7 +99,6 @@ const rule: Rule.RuleModule = {
           })
         }
 
-        // Check name
         if (!fields.name) {
           context.report({
             node: node as unknown as Rule.Node,
@@ -113,7 +111,6 @@ const rule: Rule.RuleModule = {
           })
         }
 
-        // Check description
         if (!fields.description || !fields.description.value) {
           context.report({
             node: node as unknown as Rule.Node,

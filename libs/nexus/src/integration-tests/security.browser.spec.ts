@@ -26,21 +26,6 @@ describe('Integration: Security', () => {
         },
       })
 
-      // This would be called by the window message event handler
-      // We're testing the security layer directly
-      // Example message event structure for reference:
-      // const messageEvent = {
-      //   origin: 'https://example.com',
-      //   data: {
-      //     type: 'REQUEST_CONNECTION',
-      //     brokerId: broker.id,
-      //     processId: 'test-process',
-      //   },
-      //   source: mockWindow,
-      // }
-
-      // In a real scenario, this would be handled by the broker's message router
-      // For now, we're testing that the broker was set up correctly
       expect(broker.settings.whitelist).toContain('https://example.com')
     })
 
@@ -110,7 +95,6 @@ describe('Integration: Security', () => {
 
       broker.setSecurityPolicy(customPolicy)
 
-      // Verify policy was set (we can't directly test execution without triggering message events)
       expect(customPolicy).toBeDefined()
     })
 
@@ -124,7 +108,6 @@ describe('Integration: Security', () => {
 
       broker.setSecurityPolicy(rejectAllPolicy)
 
-      // Policy is set, would reject all connections
       expect(rejectAllPolicy()).toBe(false)
     })
 
@@ -135,13 +118,11 @@ describe('Integration: Security', () => {
       })
 
       const conditionalPolicy = (event: MessageEvent) => {
-        // Only allow if origin matches specific pattern
         return event.origin.startsWith('https://')
       }
 
       broker.setSecurityPolicy(conditionalPolicy)
 
-      // Test policy logic with mock events
       const httpsEvent = <MessageEvent>{ origin: 'https://test.com' }
       const httpEvent = <MessageEvent>{ origin: 'http://test.com' }
       expect(conditionalPolicy(httpsEvent)).toBe(true)
@@ -159,7 +140,7 @@ describe('Integration: Security', () => {
 
       const result = broker.setSecurityPolicy(policy1).setSecurityPolicy(policy2)
 
-      expect(result).toBe(broker) // Should return broker for chaining
+      expect(result).toBe(broker)
     })
   })
 
@@ -174,7 +155,6 @@ describe('Integration: Security', () => {
         },
       })
 
-      // Whitelist takes precedence
       expect(broker.settings.whitelist).toContain('https://trusted.com')
       expect(broker.settings.blacklist).toContain('https://evil.com')
     })
@@ -203,7 +183,6 @@ describe('Integration: Security', () => {
 
       const channel = broker.addChannel('test-channel', <Window>(<unknown>mockWindow))
 
-      // Channel created, but security is enforced at broker level
       expect(channel).toBeDefined()
     })
 
@@ -221,7 +200,6 @@ describe('Integration: Security', () => {
       const channel1 = broker.addChannel('channel-1', <Window>(<unknown>mockWindow))
       const channel2 = broker.addChannel('channel-2', <Window>(<unknown>mockWindow2))
 
-      // Both channels inherit broker's security policy
       expect(channel1).toBeDefined()
       expect(channel2).toBeDefined()
     })
@@ -250,7 +228,6 @@ describe('Integration: Security', () => {
 
   describe('Real-World Security Scenarios', () => {
     it('handles multi-tenant security', () => {
-      // Broker that only accepts connections from specific tenants
       const broker = createBroker({
         name: 'multi-tenant-broker',
         contract: testContract,
@@ -265,7 +242,6 @@ describe('Integration: Security', () => {
 
       broker.setSecurityPolicy(tenantPolicy)
 
-      // Test policy with mock events
       const event1 = <MessageEvent>{ data: { processId: 'tenant-1-abc' } }
       const event2 = <MessageEvent>{ data: { processId: 'tenant-5-abc' } }
       expect(tenantPolicy(event1)).toBe(true)
@@ -290,13 +266,11 @@ describe('Integration: Security', () => {
 
       broker.setSecurityPolicy(rateLimitPolicy)
 
-      // Simulate multiple connection attempts
       const mockEvent = <MessageEvent>{ origin: 'https://test.com' }
       for (let i = 0; i < 7; i++) {
         rateLimitPolicy(mockEvent)
       }
 
-      // Should reject after max attempts
       expect(rateLimitPolicy(mockEvent)).toBe(false)
     })
 
@@ -306,7 +280,7 @@ describe('Integration: Security', () => {
         contract: testContract,
       })
 
-      const allowedHours = { start: 9, end: 17 } // 9 AM to 5 PM
+      const allowedHours = { start: 9, end: 17 }
 
       const timePolicy = () => {
         const hour = new Date().getHours()
@@ -315,7 +289,6 @@ describe('Integration: Security', () => {
 
       broker.setSecurityPolicy(timePolicy)
 
-      // Policy logic works (result depends on current time)
       const result = timePolicy()
       expect(typeof result).toBe('boolean')
     })

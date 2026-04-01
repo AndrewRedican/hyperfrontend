@@ -25,3 +25,4 @@ export {
 } from './nx-project'
 export * from './import-analysis'
 export * from './node-builtins'
+export * from './comment-analysis'

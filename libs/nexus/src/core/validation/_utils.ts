@@ -1,8 +1,3 @@
-/**
- * Internal utility functions for validation
- * These are simple implementations to avoid external dependencies
- */
-
 import { isArray } from '@hyperfrontend/immutable-api-utils/built-in-copy/array'
 
 /**

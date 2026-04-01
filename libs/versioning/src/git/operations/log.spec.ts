@@ -16,9 +16,7 @@ jest.mock('node:child_process')
 
 const mockExecFileSync = <jest.MockedFunction<typeof execFileSync>>execFileSync
 
-// Record separator used in git log format
 const RECORD_SEPARATOR = '\x1e'
-// Field separator (NUL)
 const FIELD_SEPARATOR = '\x00'
 
 /**
@@ -197,7 +195,6 @@ describe('getCommitLog', () => {
   })
 
   it('skips records with insufficient fields', () => {
-    // Create an invalid entry with fewer than 10 fields
     const invalidEntry = ['hash', 'short', 'name'].join(FIELD_SEPARATOR)
     const validEntry = createMockLogEntry({ hash: 'valid123' })
 
@@ -437,7 +434,6 @@ describe('commitReachableFromHead', () => {
   })
 
   it('returns true when commit is ancestor of HEAD', () => {
-    // git merge-base --is-ancestor exits with 0 (no output) when commit is ancestor
     mockExecFileSync.mockReturnValue('')
 
     const result = commitReachableFromHead('abc123')
@@ -447,7 +443,6 @@ describe('commitReachableFromHead', () => {
   })
 
   it('returns false when commit is not ancestor of HEAD', () => {
-    // git merge-base --is-ancestor exits with 1 when not an ancestor
     mockExecFileSync.mockImplementation(() => {
       const error = new Error('exit code 1')
       ;(error as NodeJS.ErrnoException).code = '1'
@@ -488,7 +483,6 @@ describe('commitReachableFromHead', () => {
   it('escapes potentially dangerous commit hashes', () => {
     mockExecFileSync.mockReturnValue('')
 
-    // The function should escape the hash before using it
     commitReachableFromHead('abc123')
 
     expect(mockExecFileSync).toHaveBeenCalledWith('git', ['merge-base', '--is-ancestor', 'abc123', 'HEAD'], expect.any(Object))

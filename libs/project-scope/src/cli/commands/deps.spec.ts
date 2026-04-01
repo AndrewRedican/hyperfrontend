@@ -113,14 +113,13 @@ describe('depsCommandDef', () => {
   it('respects global json option', () => {
     const result = depsCommandDef.execute([MINIMAL_PROJECT], { json: true })
     expect(result.output).toBeDefined()
-    JSON.parse(result.output as string) // Should not throw
+    JSON.parse(result.output as string)
   })
 
   it('parses --type argument', () => {
     const result = depsCommandDef.execute([MINIMAL_PROJECT, '--type', 'production'], {})
     expect(result.exitCode).toBe(0)
     expect(result.output).toContain('Production')
-    // Should not contain Development section header when filtered
     expect(result.output).not.toContain('Development (')
   })
 
@@ -139,26 +138,21 @@ describe('depsCommandDef', () => {
 
 describe('depsCommand edge cases', () => {
   it('handles projects without dependencies', () => {
-    // Empty project has no package.json or no deps
     const emptyDir = resolve(FIXTURES_DIR, 'empty')
     const result = depsCommand({ path: emptyDir })
-    // Should fail because no package.json
     expect(result.exitCode).toBe(1)
   })
 
   it('formats dependency list with padding', () => {
     const result = depsCommand({ path: MINIMAL_PROJECT })
     expect(result.exitCode).toBe(0)
-    // Should have formatted dependency names
     expect(result.output).toContain('lodash')
   })
 
   it('shows (none) for empty dependency categories', () => {
-    // Bare package may have minimal deps
     const bareDir = resolve(FIXTURES_DIR, 'bare-package')
     const result = depsCommand({ path: bareDir })
     expect(result.exitCode).toBe(0)
-    // Some category should show (none)
     expect(result.output).toContain('(none)')
   })
 
@@ -180,19 +174,14 @@ describe('depsCommand edge cases', () => {
   })
 
   it('truncates long dependency lists with more indicator', () => {
-    // We need a project with many dependencies to test truncation
-    // Use minimal project and verify it handles list correctly
     const result = depsCommand({ path: MINIMAL_PROJECT })
     expect(result.exitCode).toBe(0)
-    // If there are more than 20 deps, should show "... and X more"
-    // For minimal project, may not trigger truncation
     expect(result.output).toBeDefined()
   })
 
   it('sorts dependencies alphabetically', () => {
     const result = depsCommand({ path: MINIMAL_PROJECT })
     expect(result.exitCode).toBe(0)
-    // Dependencies should be listed alphabetically
     expect(result.output).toBeDefined()
   })
 })

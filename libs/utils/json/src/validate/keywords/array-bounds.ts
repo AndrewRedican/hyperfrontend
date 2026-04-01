@@ -33,7 +33,6 @@ export function validateArrayBounds(instance: unknown[], schema: Schema, ctx: Va
   }
 
   if (schema.uniqueItems === true) {
-    // Check for duplicates
     for (let i = 0; i < instance.length; i++) {
       for (let j = i + 1; j < instance.length; j++) {
         if (isEqual(instance[i], instance[j])) {

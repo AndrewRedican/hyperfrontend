@@ -22,7 +22,6 @@ export const selectiveCopyRecursive = <T extends Record<string, unknown>>(
   const keys = getKeys(target)
   for (let i = 0; i < keys.length; i += 1) {
     const nextKey = keys[i]
-    // Filter out __proto__ to prevent prototype pollution attacks
     if (nextKey === '__proto__') continue
     const nextTarget = read(target, nextKey)
     const nextPath = path.concat(nextKey)
@@ -74,7 +73,6 @@ export const selectiveCopyForCircularReferencesRecursive = <T extends Record<str
   const keys = getKeys(target)
   for (let i = 0; i < keys.length; i += 1) {
     const nextKey = keys[i]
-    // Filter out __proto__ to prevent prototype pollution attacks
     if (nextKey === '__proto__') continue
     const nextTarget = read(target, nextKey)
     const nextPath = path.concat(nextKey)
@@ -124,7 +122,6 @@ export const selectiveCopyForCircularReferencesRecursive = <T extends Record<str
         }
       }
 
-      // Set the circular reference
       const lastKey = startPath[startPath.length - 1]
       /* istanbul ignore else -- __proto__ is already filtered during iteration, this is defensive */
       if (lastKey !== '__proto__') {
@@ -140,7 +137,7 @@ export const selectiveCopyForCircularReferencesRecursive = <T extends Record<str
  * Creates a clone of the target. Options can be provided to selectively copy values.
  * Due to JavaScript language limitations context of bound functions is not known, thus functions cannot be reliably cloned.
  * This algorithm instead copies function references by default instead. For the same reason getters and setters are not replicate, only their
- * return values. This algorithm can replicate circular references, when configured to do so.
+ * return values. This algorithm can replicate circular references, when configured.
  * It supports other iterable data types, provided these have been made known using registerIterableClass.
  *
  * @param target - The value to clone

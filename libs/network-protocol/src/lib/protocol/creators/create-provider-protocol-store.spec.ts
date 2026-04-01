@@ -1,7 +1,3 @@
-/**
- * Tests for protocol provider store
- */
-
 import type { ProtocolProvider } from '../../channel/model'
 import { createProtocolProviderStore } from './create-provider-protocol-store'
 

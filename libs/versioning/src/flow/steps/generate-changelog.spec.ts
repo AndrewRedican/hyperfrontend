@@ -624,7 +624,7 @@ describe('Generate Changelog Step', () => {
           bumpType: 'minor',
           commits: [createMockCommit({ type: 'experiment', subject: 'try something' })],
         },
-        { commitTypeToSection: { wip: 'other' } } // has custom config but not for 'experiment'
+        { commitTypeToSection: { wip: 'other' } }
       )
 
       const result = await step.execute(ctx)
@@ -654,7 +654,6 @@ describe('Generate Changelog Step', () => {
       const entry = result.stateUpdates?.changelogEntry
       const types = entry.sections.map((s: { type: string }) => s.type)
 
-      // Features should come before fixes, fixes before docs, docs before chores
       expect(types.indexOf('features')).toBeLessThan(types.indexOf('fixes'))
       expect(types.indexOf('fixes')).toBeLessThan(types.indexOf('documentation'))
       expect(types.indexOf('documentation')).toBeLessThan(types.indexOf('chores'))
@@ -683,7 +682,6 @@ describe('Generate Changelog Step', () => {
 
   describe('execute - compare URL generation', () => {
     // Note: Compare URLs now use commit hashes only (not tags)
-    // Mock git client returns 'abc123' for getHeadHash()
 
     const createGitHubConfig = (): RepositoryConfig => ({
       platform: 'github',
@@ -752,8 +750,8 @@ describe('Generate Changelog Step', () => {
         nextVersion: '1.0.0',
         bumpType: 'minor',
         repositoryConfig: createGitHubConfig(),
-        publishedCommit: 'orphaned123', // Commit exists in registry but not in history
-        effectiveBaseCommit: null, // Null because fallback was used
+        publishedCommit: 'orphaned123',
+        effectiveBaseCommit: null,
         commits: [createMockCommit({ type: 'feat', subject: 'new feature' })],
       })
 
@@ -777,7 +775,6 @@ describe('Generate Changelog Step', () => {
       const result = await step.execute(ctx)
 
       expect(result.status).toBe('success')
-      // Uses commit hashes: effectiveBaseCommit...getHeadHash() (abc123 from mock)
       expect(result.stateUpdates?.changelogEntry.compareUrl).toBe('https://github.com/owner/repo/compare/def456789...abc123')
     })
 
@@ -810,7 +807,6 @@ describe('Generate Changelog Step', () => {
       const result = await step.execute(ctx)
 
       expect(result.status).toBe('success')
-      // Bitbucket uses reversed order (toCommit..fromCommit) with two dots
       expect(result.stateUpdates?.changelogEntry.compareUrl).toBe('https://bitbucket.org/owner/repo/compare/abc123..def456789')
     })
 
@@ -820,7 +816,6 @@ describe('Generate Changelog Step', () => {
         nextVersion: '0.1.0',
         bumpType: 'minor',
         repositoryConfig: createGitHubConfig(),
-        // No effectiveBaseCommit for initial release
         commits: [],
       })
 
@@ -828,7 +823,6 @@ describe('Generate Changelog Step', () => {
 
       expect(result.status).toBe('success')
       expect(result.message).toContain('initial release')
-      // No compareUrl for true initial release (no effectiveBaseCommit)
       expect(result.stateUpdates?.changelogEntry.compareUrl).toBeUndefined()
     })
 
@@ -839,7 +833,7 @@ describe('Generate Changelog Step', () => {
         bumpType: 'major',
         repositoryConfig: createGitHubConfig(),
         effectiveBaseCommit: 'def456789',
-        commits: [], // Empty commits but has effectiveBaseCommit (version reset scenario)
+        commits: [],
       })
 
       const result = await step.execute(ctx)
@@ -865,7 +859,6 @@ describe('Generate Changelog Step', () => {
 
       const result = await step.execute(ctx)
 
-      // Custom formatter receives commit hashes: effectiveBaseCommit, getHeadHash()
       expect(result.stateUpdates?.changelogEntry.compareUrl).toBe('https://my-git.internal/diff/def456789/abc123')
     })
 
@@ -1053,7 +1046,6 @@ describe('Write Changelog Step', () => {
       const step = createWriteChangelogStep()
       const logger = createMockLogger()
 
-      // Create a tree that throws when reading the changelog
       const throwingTree = {
         root: '/workspace',
         read: jest.fn((path: string) => {
@@ -1208,7 +1200,7 @@ describe('Write Changelog Step', () => {
         scope: 'lib-test',
         subject: 'add feature',
         source: 'direct-scope',
-        preserveScope: false, // direct-scope commits do NOT preserve scope
+        preserveScope: false,
       })
 
       const ctx = createMockContext({
@@ -1228,7 +1220,6 @@ describe('Write Changelog Step', () => {
       const entry = result.stateUpdates?.changelogEntry
       const featuresSection = entry.sections.find((s: { type: string }) => s.type === 'features')
       expect(featuresSection).toBeDefined()
-      // Scope should NOT appear in description for direct-scope commits
       expect(featuresSection.items[0].description).not.toContain('**lib-test:**')
       expect(featuresSection.items[0].description).toBe('add feature')
     })
@@ -1260,7 +1251,6 @@ describe('Write Changelog Step', () => {
       const entry = result.stateUpdates?.changelogEntry
       const featuresSection = entry.sections.find((s: { type: string }) => s.type === 'features')
       expect(featuresSection).toBeDefined()
-      // Scope SHOULD appear for direct-file commits
       expect(featuresSection.items[0].description).toContain('**lib-other:**')
     })
 
@@ -1289,7 +1279,6 @@ describe('Write Changelog Step', () => {
       const result = await step.execute(ctx)
 
       const entry = result.stateUpdates?.changelogEntry
-      // Indirect commits go to "Dependency Updates" section
       const depSection = entry.sections.find((s: { heading: string }) => s.heading === 'Dependency Updates')
       expect(depSection).toBeDefined()
       expect(depSection.items[0].description).toContain('**lib-utils:**')
@@ -1328,7 +1317,6 @@ describe('Write Changelog Step', () => {
       const result = await step.execute(ctx)
 
       const entry = result.stateUpdates?.changelogEntry
-      // Should have Features section and Dependency Updates section
       const featuresSection = entry.sections.find((s: { type: string }) => s.type === 'features')
       const depSection = entry.sections.find((s: { heading: string }) => s.heading === 'Dependency Updates')
 
@@ -1414,7 +1402,6 @@ describe('Write Changelog Step', () => {
         nextVersion: '1.0.0',
         bumpType: 'minor',
         commits: [createMockCommit({ type: 'feat', scope: 'other', subject: 'fallback feature' })],
-        // No classificationResult provided
       })
 
       const result = await step.execute(ctx)
@@ -1423,14 +1410,12 @@ describe('Write Changelog Step', () => {
       const entry = result.stateUpdates?.changelogEntry
       const featuresSection = entry.sections.find((s: { type: string }) => s.type === 'features')
       expect(featuresSection).toBeDefined()
-      // Fallback path preserves all scopes
       expect(featuresSection.items[0].description).toContain('**other:**')
     })
   })
 
   describe('execute - pending publication cleanup', () => {
     it('removes stacked entries when isPendingPublication is true', async () => {
-      // Existing changelog has an unpublished 0.2.0 entry stacked on top
       const existingChangelog = `# Changelog
 
 ## [0.2.0] - 2024-01-10
@@ -1453,8 +1438,8 @@ describe('Write Changelog Step', () => {
         ...createMockContext({
           nextVersion: '0.2.0',
           bumpType: 'minor',
-          publishedVersion: '0.1.0', // Published is 0.1.0
-          isPendingPublication: true, // Current 0.2.0 was never published
+          publishedVersion: '0.1.0',
+          isPendingPublication: true,
           changelogEntry: createMockChangelogEntry({
             version: '0.2.0',
             sections: [{ type: 'features' as const, heading: 'Features', items: [createMockChangelogItem('Updated feature')] }],
@@ -1466,17 +1451,13 @@ describe('Write Changelog Step', () => {
       const result = await step.execute(ctx)
 
       expect(result.status).toBe('success')
-      // The 0.2.0 entry should be replaced (not stacked)
       const writtenContent = (tree.write as jest.Mock).mock.calls[0][1] as string
-      // Should contain 0.2.0 with "Updated feature" not "Unpublished feature"
       expect(writtenContent).toContain('Updated feature')
       expect(writtenContent).not.toContain('Unpublished feature')
-      // Should still contain the published 0.1.0 entry
       expect(writtenContent).toContain('0.1.0')
     })
 
     it('removes multiple stacked entries when isPendingPublication is true', async () => {
-      // Multiple unpublished entries stacked
       const existingChangelog = `# Changelog
 
 ## [0.3.0] - 2024-01-15
@@ -1506,7 +1487,7 @@ describe('Write Changelog Step', () => {
         ...createMockContext({
           nextVersion: '0.2.0',
           bumpType: 'minor',
-          publishedVersion: '0.1.0', // Only 0.1.0 is published
+          publishedVersion: '0.1.0',
           isPendingPublication: true,
           changelogEntry: createMockChangelogEntry({
             version: '0.2.0',
@@ -1520,14 +1501,11 @@ describe('Write Changelog Step', () => {
       const result = await step.execute(ctx)
 
       expect(result.status).toBe('success')
-      // Both 0.2.0 and 0.3.0 entries should be removed and replaced with new 0.2.0
       const writtenContent = (tree.write as jest.Mock).mock.calls[0][1] as string
       expect(writtenContent).toContain('Correct feature')
       expect(writtenContent).not.toContain('Feature 0.3.0')
       expect(writtenContent).not.toContain('Feature 0.2.0')
-      // Should still contain published 0.1.0
       expect(writtenContent).toContain('0.1.0')
-      // Should log the removal
       expect(logger.info).toHaveBeenCalledWith(expect.stringContaining('Removing stacked entries'))
     })
 
@@ -1574,7 +1552,6 @@ describe('Write Changelog Step', () => {
 
       expect(result.status).toBe('success')
       const writtenContent = (tree.write as jest.Mock).mock.calls[0][1] as string
-      // Unreleased entry should be preserved
       expect(writtenContent).toContain('Unreleased')
       expect(writtenContent).toContain('Work in progress')
     })
@@ -1597,7 +1574,7 @@ describe('Write Changelog Step', () => {
           nextVersion: '0.2.0',
           bumpType: 'minor',
           publishedVersion: '0.1.0',
-          isPendingPublication: false, // Not pending - normal flow
+          isPendingPublication: false,
           changelogEntry: createMockChangelogEntry({
             version: '0.2.0',
             sections: [{ type: 'features' as const, heading: 'Features', items: [createMockChangelogItem('New feature')] }],
@@ -1610,7 +1587,6 @@ describe('Write Changelog Step', () => {
 
       expect(result.status).toBe('success')
       const writtenContent = (tree.write as jest.Mock).mock.calls[0][1] as string
-      // Both entries should exist - new one added, old one preserved
       expect(writtenContent).toContain('0.2.0')
       expect(writtenContent).toContain('0.1.0')
       expect(writtenContent).toContain('New feature')
@@ -1634,7 +1610,6 @@ describe('Write Changelog Step', () => {
         ...createMockContext({
           nextVersion: '0.2.0',
           bumpType: 'minor',
-          // isPendingPublication is undefined (legacy flow)
           changelogEntry: createMockChangelogEntry({
             version: '0.2.0',
             sections: [{ type: 'features' as const, heading: 'Features', items: [createMockChangelogItem('New feature')] }],
@@ -1647,13 +1622,11 @@ describe('Write Changelog Step', () => {
 
       expect(result.status).toBe('success')
       const writtenContent = (tree.write as jest.Mock).mock.calls[0][1] as string
-      // Both entries should exist
       expect(writtenContent).toContain('0.2.0')
       expect(writtenContent).toContain('0.1.0')
     })
 
     it('handles de-escalation scenario (version downgrade)', async () => {
-      // 0.2.0 was created but commits warranted only patch, so nextVersion is 0.1.1
       const existingChangelog = `# Changelog
 
 ## [0.2.0] - 2024-01-10
@@ -1674,7 +1647,7 @@ describe('Write Changelog Step', () => {
       })
       const ctx: FlowContext = {
         ...createMockContext({
-          nextVersion: '0.1.1', // De-escalated from 0.2.0 to 0.1.1
+          nextVersion: '0.1.1',
           bumpType: 'patch',
           publishedVersion: '0.1.0',
           isPendingPublication: true,
@@ -1690,7 +1663,6 @@ describe('Write Changelog Step', () => {
 
       expect(result.status).toBe('success')
       const writtenContent = (tree.write as jest.Mock).mock.calls[0][1] as string
-      // 0.2.0 should be removed, 0.1.1 should be added
       expect(writtenContent).toContain('0.1.1')
       expect(writtenContent).not.toContain('0.2.0')
       expect(writtenContent).toContain('Bug fix')
@@ -1698,7 +1670,6 @@ describe('Write Changelog Step', () => {
     })
 
     it('handles escalation scenario (version upgrade)', async () => {
-      // 0.1.1 was created but new breaking change warrants 0.2.0
       const existingChangelog = `# Changelog
 
 ## [0.1.1] - 2024-01-10
@@ -1719,7 +1690,7 @@ describe('Write Changelog Step', () => {
       })
       const ctx: FlowContext = {
         ...createMockContext({
-          nextVersion: '0.2.0', // Escalated from 0.1.1 to 0.2.0
+          nextVersion: '0.2.0',
           bumpType: 'minor',
           publishedVersion: '0.1.0',
           isPendingPublication: true,
@@ -1735,7 +1706,6 @@ describe('Write Changelog Step', () => {
 
       expect(result.status).toBe('success')
       const writtenContent = (tree.write as jest.Mock).mock.calls[0][1] as string
-      // 0.1.1 should be removed, 0.2.0 should be added
       expect(writtenContent).toContain('0.2.0')
       expect(writtenContent).not.toContain('0.1.1')
       expect(writtenContent).toContain('New feature')
@@ -1765,7 +1735,6 @@ describe('Write Changelog Step', () => {
         ...createMockContext({
           nextVersion: '0.2.0',
           bumpType: 'minor',
-          // publishedVersion is missing
           isPendingPublication: true,
           changelogEntry: createMockChangelogEntry({
             version: '0.2.0',
@@ -1777,12 +1746,10 @@ describe('Write Changelog Step', () => {
 
       const result = await step.execute(ctx)
 
-      // Should still succeed, just won't clean up entries
       expect(result.status).toBe('success')
     })
 
     it('uses replaceExisting when adding entry in pending publication state', async () => {
-      // Entry version already exists - should replace, not throw
       const existingChangelog = `# Changelog
 
 ## [0.2.0] - 2024-01-10
@@ -1819,11 +1786,8 @@ describe('Write Changelog Step', () => {
 
       expect(result.status).toBe('success')
       const writtenContent = (tree.write as jest.Mock).mock.calls[0][1] as string
-      // Should have replaced the entry, not added a duplicate
       expect(writtenContent).toContain('New content')
       expect(writtenContent).not.toContain('Old content')
-      // Count occurrences of version heading - should be exactly 1
-      // Changelog serializes as "## [0.2.0]" or "## 0.2.0" depending on format
       const matches = writtenContent.match(/##\s+\[?0\.2\.0\]?/g)
       expect(matches).toHaveLength(1)
     })
@@ -1952,13 +1916,11 @@ describe('Write Changelog Step', () => {
       const step = createWriteChangelogStep()
       const files: Record<string, string> = { '/workspace/libs/test/CHANGELOG.md': existingChangelog }
       const tree = createMockTree({ files })
-      // Mock exists to also return true for backup path after rename
       const originalExists = tree.exists.bind(tree)
       tree.exists = jest.fn((path: string) => {
         if (path === '/workspace/libs/test/CHANGELOG.backup.md') return true
         return originalExists(path)
       })
-      // Mock read to return content from backup path after rename
       const originalRead = tree.read.bind(tree)
       tree.read = jest.fn((path: string, encoding?: string) => {
         if (path === '/workspace/libs/test/CHANGELOG.backup.md') {

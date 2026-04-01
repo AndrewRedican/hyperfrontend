@@ -44,13 +44,10 @@ import { notifyMessage } from './subscription/notify-message'
 export function createChannel(config: IChannelConfig, deps: ChannelDependencies): ChannelHandle {
   assertNoCircularRef(config.settings, 'config.settings')
 
-  // Merge settings with defaults
   const settings = { ...DEFAULT_CHANNEL_SETTINGS, ...config.settings }
 
-  // Initialize state (private, mutable via setState only)
   let state = createInitialState(config.name, config.target, settings)
 
-  // Create internal channel API
   const internals: ChannelInternals = {
     getState: () => state,
 
@@ -83,14 +80,11 @@ export function createChannel(config: IChannelConfig, deps: ChannelDependencies)
     cleanup: deps.cleanup,
   }
 
-  // Create public handle
   const handle: ChannelHandle = {
-    // Properties for registry compatibility
     id: state.id,
     name: state.name,
     target: state.target,
 
-    // Methods
     getId: () => state.id,
     getName: () => state.name,
     getTarget: () => state.target,
@@ -121,15 +115,12 @@ export function createChannel(config: IChannelConfig, deps: ChannelDependencies)
     },
     onMessage: (handler) => subscribeToMessages(internals, handler),
 
-    // Broker-internal methods
     activate: (origin: string, contract: IChannelContract) => {
       const newState = activateState(state, origin, contract)
       internals.updateState(newState)
     },
 
     isReadyToConnect: () => {
-      // Channel is ready if connect() has been called (readyToConnect is true)
-      // OR if it's broker-managed (auto-activates)
       return state.readyToConnect || state.brokerManaged
     },
 
@@ -147,7 +138,6 @@ export function createChannel(config: IChannelConfig, deps: ChannelDependencies)
       notifyMessage(internals, message)
     },
 
-    // Security methods
     setPendingSecurityRequest: (request: SecurityNegotiationRequest | null) => {
       internals.updateState({ pendingSecurityRequest: request })
     },

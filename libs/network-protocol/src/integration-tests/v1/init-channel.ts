@@ -30,7 +30,6 @@ export function initChannel(label: string, sendPacket: SendPacketFn, receivePack
   const createReceiver = createReceiverFactory(deserializePacket)
   const channelFactory = createChannelFactory(createSender, createReceiver)
 
-  // Use production V1 protocol with dynamic key exchange
   const protocolProvider = createProtocol(logger, 1)
 
   return channelFactory(label, sendPacket, receivePacket, protocolProvider)

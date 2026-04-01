@@ -17,7 +17,6 @@ const ruleTester = new RuleTester({
  * Valid test cases - imports with node: prefix or non-Node.js modules
  */
 const validCases: ValidTestCase<TestOptions>[] = [
-  // Already has node: prefix
   { code: `import { readFile } from 'node:fs'` },
   { code: `import { join } from 'node:path'` },
   { code: `import { Buffer } from 'node:buffer'` },
@@ -27,16 +26,13 @@ const validCases: ValidTestCase<TestOptions>[] = [
   { code: `import { EventEmitter } from 'node:events'` },
   { code: `import { createServer } from 'node:http'` },
 
-  // External packages (not Node.js built-ins)
   { code: `import express from 'express'` },
   { code: `import { debounce } from 'lodash'` },
   { code: `import React from 'react'` },
 
-  // Relative imports
   { code: `import { helper } from './helper'` },
   { code: `import { config } from '../config'` },
 
-  // Workspace packages
   { code: `import { createChannel } from '@hyperfrontend/nexus'` },
 ]
 
@@ -114,7 +110,6 @@ const invalidCases: InvalidTestCase<MessageIds, TestOptions>[] = [
       },
     ],
   },
-  // Double-quoted imports
   {
     code: `import { readFile } from "fs"`,
     output: `import { readFile } from "node:fs"`,
@@ -125,7 +120,6 @@ const invalidCases: InvalidTestCase<MessageIds, TestOptions>[] = [
       },
     ],
   },
-  // Subpath imports
   {
     code: `import { promises } from 'fs/promises'`,
     output: `import { promises } from 'node:fs/promises'`,

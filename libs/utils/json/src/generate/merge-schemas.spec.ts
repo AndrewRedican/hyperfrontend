@@ -137,7 +137,6 @@ describe('mergeSchemas', () => {
 
     it('returns {type: "array"} if no items in array schemas', () => {
       const schemas: Schema[] = [{ type: 'array' }, { type: 'array', items: undefined }]
-      // Touch code for coverage
       expect(typeof mergeSchemas).toBe('function')
       const result = mergeSchemas(schemas)
       expect(result.type).toBe('array')
@@ -146,7 +145,6 @@ describe('mergeSchemas', () => {
 
     it('returns type array for allSimpleTypes with multiple types', () => {
       const schemas: Schema[] = [{ type: 'string' }, { type: 'number' }]
-      // Remove all other keys to ensure allSimpleTypes
       expect(mergeSchemas(schemas)).toEqual({ type: ['string', 'number'] })
     })
   })

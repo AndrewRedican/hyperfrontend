@@ -54,7 +54,6 @@ export type ConfigType =
  * Known configuration file patterns organized by type.
  */
 export const CONFIG_PATTERNS: Record<ConfigType, ConfigPatternInfo> = {
-  // Package Management
   'package.json': {
     patterns: ['package.json'],
     format: 'json',
@@ -82,7 +81,6 @@ export const CONFIG_PATTERNS: Record<ConfigType, ConfigPatternInfo> = {
     sensitive: true,
   },
 
-  // TypeScript
   tsconfig: {
     patterns: ['tsconfig.json', 'tsconfig.*.json'],
     format: 'jsonc',
@@ -90,7 +88,6 @@ export const CONFIG_PATTERNS: Record<ConfigType, ConfigPatternInfo> = {
     canExtend: true,
   },
 
-  // Monorepo
   nx: {
     patterns: ['nx.json'],
     format: 'json',
@@ -117,7 +114,6 @@ export const CONFIG_PATTERNS: Record<ConfigType, ConfigPatternInfo> = {
     description: 'Lerna configuration',
   },
 
-  // Build Tools
   webpack: {
     patterns: ['webpack.config.js', 'webpack.config.ts', 'webpack.config.cjs', 'webpack.config.mjs'],
     format: 'js',
@@ -149,7 +145,6 @@ export const CONFIG_PATTERNS: Record<ConfigType, ConfigPatternInfo> = {
     description: 'SWC configuration',
   },
 
-  // Testing
   jest: {
     patterns: ['jest.config.js', 'jest.config.ts', 'jest.config.mjs'],
     description: 'Jest configuration',
@@ -167,7 +162,6 @@ export const CONFIG_PATTERNS: Record<ConfigType, ConfigPatternInfo> = {
     description: 'Playwright configuration',
   },
 
-  // Framework configs
   next: {
     patterns: ['next.config.js', 'next.config.mjs', 'next.config.ts'],
     format: 'js',
@@ -194,7 +188,6 @@ export const CONFIG_PATTERNS: Record<ConfigType, ConfigPatternInfo> = {
     description: 'Astro configuration',
   },
 
-  // Linting & Formatting
   eslint: {
     patterns: [
       'eslint.config.js',
@@ -214,7 +207,6 @@ export const CONFIG_PATTERNS: Record<ConfigType, ConfigPatternInfo> = {
     description: 'Prettier configuration',
   },
 
-  // Environment (sensitive)
   env: {
     patterns: ['.env', '.env.*', '*.env'],
     format: 'dotenv',
@@ -222,7 +214,6 @@ export const CONFIG_PATTERNS: Record<ConfigType, ConfigPatternInfo> = {
     sensitive: true,
   },
 
-  // Git
   '.gitignore': {
     patterns: ['.gitignore'],
     format: 'text',

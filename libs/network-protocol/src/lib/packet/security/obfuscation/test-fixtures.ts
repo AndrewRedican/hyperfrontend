@@ -1,8 +1,3 @@
-/**
- * Shared test fixtures for packet obfuscation and deobfuscation tests.
- * These fixtures are used by both Node.js and browser test suites.
- */
-
 import type { SerializedEncryptedPacket } from '../../model'
 import { createUint8Array } from '@hyperfrontend/immutable-api-utils/built-in-copy/typed-arrays'
 

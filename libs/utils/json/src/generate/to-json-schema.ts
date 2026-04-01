@@ -153,7 +153,6 @@ function generateArraySchema(arr: unknown[], options: Required<GenerateOptions>)
   const mode = options.arrays.mode
 
   if (mode === 'first') {
-    // Use only the first item's schema (fast, no validation)
     return {
       type: 'array',
       items: generateSchema(arr[0], options),
@@ -161,7 +160,6 @@ function generateArraySchema(arr: unknown[], options: Required<GenerateOptions>)
   }
 
   if (mode === 'uniform') {
-    // Validate all items have the same type before using first item's schema
     const firstType = getJsonType(arr[0])
     const allSameType = arr.every((item) => getJsonType(item) === firstType)
 
@@ -173,7 +171,6 @@ function generateArraySchema(arr: unknown[], options: Required<GenerateOptions>)
       }
     }
 
-    // Fall back to 'all' mode if types are not uniform
     const itemSchemas = arr.map((item) => generateSchema(item, options))
     const uniqueSchemas = deduplicateSchemas(itemSchemas)
     /* istanbul ignore else -- single unique schema is common */
@@ -183,10 +180,8 @@ function generateArraySchema(arr: unknown[], options: Required<GenerateOptions>)
     return { type: 'array', items: mergeSchemas(uniqueSchemas) }
   }
 
-  // mode === 'all' - Generate schema for each item and merge
   const itemSchemas = arr.map((item) => generateSchema(item, options))
 
-  // Deduplicate identical schemas
   const uniqueSchemas = deduplicateSchemas(itemSchemas)
 
   if (uniqueSchemas.length === 1) {
@@ -196,7 +191,6 @@ function generateArraySchema(arr: unknown[], options: Required<GenerateOptions>)
     }
   }
 
-  // Merge all unique schemas
   return {
     type: 'array',
     items: mergeSchemas(uniqueSchemas),

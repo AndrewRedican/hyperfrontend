@@ -81,7 +81,6 @@ describe('Channel Registry', () => {
       add(registry, channel1)
       add(registry, channel2)
 
-      // Should have the latest version
       expect(getById(registry, 'test-id')).toBe(channel2)
     })
   })
@@ -141,7 +140,6 @@ describe('Channel Registry', () => {
       add(registry, channel)
       expect(getByWindow(registry, mockWindow)).toBe(channel)
 
-      // After removing reference, WeakMap enables garbage collection
       // eslint-disable-next-line no-useless-assignment -- intentional: demonstrates WeakMap GC behavior
       mockWindow = null
     })
@@ -316,7 +314,6 @@ describe('Channel Registry', () => {
 
       add(registry, channel)
 
-      // All lookups should return same channel
       const byId = getById(registry, 'test-id')
       const byName = getByName(registry, 'test-channel')
       const byWindow = getByWindow(registry, mockWindow)

@@ -52,7 +52,6 @@ function checkTsConfigStrict(projectPath: string): boolean | undefined {
   if (!content) return undefined
 
   try {
-    // Simple JSON parsing - doesn't handle comments but good enough for strict check
     const cleanContent = content.replace(/\/\*[\s\S]*?\*\/|\/\/.*/g, '')
     const parsed = parse(cleanContent)
     return parsed?.compilerOptions?.strict === true
@@ -77,21 +76,18 @@ export function typescriptDetector(projectPath: string, packageJson?: PackageJso
 
   const deps = collectAllDependencies(pkg)
 
-  // TypeScript package
   if (deps['typescript']) {
     confidence += 50
     version = parseVersionString(deps['typescript'])
     sources.push({ type: 'package.json', field: 'dependencies.typescript' })
   }
 
-  // tsconfig.json
   if (exists(join(projectPath, 'tsconfig.json'))) {
     confidence += 40
     configPath = 'tsconfig.json'
     sources.push({ type: 'config-file', path: 'tsconfig.json' })
   }
 
-  // tsconfig.*.json variants
   const tsconfigVariants = ['tsconfig.build.json', 'tsconfig.lib.json', 'tsconfig.spec.json', 'tsconfig.app.json']
   for (const variant of tsconfigVariants) {
     if (exists(join(projectPath, variant))) {
@@ -101,7 +97,6 @@ export function typescriptDetector(projectPath: string, packageJson?: PackageJso
     }
   }
 
-  // @types packages
   const typePackages = keys(deps).filter((d) => d.startsWith('@types/'))
   if (typePackages.length > 0) {
     confidence += 10
@@ -141,27 +136,23 @@ export function flowDetector(projectPath: string, packageJson?: PackageJson): Ty
 
   const deps = collectAllDependencies(pkg)
 
-  // flow-bin package
   if (deps['flow-bin']) {
     confidence += 60
     version = parseVersionString(deps['flow-bin'])
     sources.push({ type: 'package.json', field: 'dependencies.flow-bin' })
   }
 
-  // .flowconfig
   if (exists(join(projectPath, '.flowconfig'))) {
     confidence += 40
     configPath = '.flowconfig'
     sources.push({ type: 'config-file', path: '.flowconfig' })
   }
 
-  // flow-typed directory
   if (exists(join(projectPath, 'flow-typed'))) {
     confidence += 10
     sources.push({ type: 'directory', path: 'flow-typed/' })
   }
 
-  // @babel/preset-flow
   if (deps['@babel/preset-flow']) {
     confidence += 10
     sources.push({ type: 'package.json', field: 'dependencies.@babel/preset-flow' })
@@ -188,7 +179,6 @@ export function flowDetector(projectPath: string, packageJson?: PackageJson): Ty
  * @returns `true` if the content contains JSDoc type annotations.
  */
 function hasJsDocTypes(content: string): boolean {
-  // Check for JSDoc type annotations
   return (
     content.includes('@type {') ||
     content.includes('@param {') ||
@@ -212,15 +202,12 @@ export function jsdocDetector(projectPath: string, packageJson?: PackageJson): T
 
   const deps = collectAllDependencies(pkg)
 
-  // jsdoc package
   if (deps['jsdoc']) {
     confidence += 30
     sources.push({ type: 'package.json', field: 'dependencies.jsdoc' })
   }
 
-  // typescript with checkJs (JSDoc type checking)
   if (deps['typescript']) {
-    // Check if checkJs is enabled in tsconfig
     const tsconfigPath = join(projectPath, 'tsconfig.json')
     const content = readFileIfExists(tsconfigPath)
     if (content) {
@@ -237,13 +224,11 @@ export function jsdocDetector(projectPath: string, packageJson?: PackageJson): T
     }
   }
 
-  // Check for jsconfig.json (VS Code JS type checking)
   if (exists(join(projectPath, 'jsconfig.json'))) {
     confidence += 40
     sources.push({ type: 'config-file', path: 'jsconfig.json' })
   }
 
-  // Sample check for JSDoc annotations in source files
   const srcDir = join(projectPath, 'src')
   if (exists(srcDir)) {
     try {

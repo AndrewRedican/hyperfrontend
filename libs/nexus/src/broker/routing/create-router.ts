@@ -18,7 +18,6 @@ export interface HandlerMap {
 export function createRouter(handlers: HandlerMap): Map<string, RouteHandler> {
   const router = createMap<string, RouteHandler>()
 
-  // Register each handler
   entries(handlers).forEach(([type, handler]) => {
     router.set(type, handler)
   })

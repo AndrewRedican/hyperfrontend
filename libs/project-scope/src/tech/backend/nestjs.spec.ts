@@ -67,7 +67,6 @@ describe('nestDetector', () => {
     }
     const result = nestDetector('/some/path', pkg)
     expect(result).not.toBeNull()
-    // More @nestjs packages should boost confidence
     expect(result?.confidence).toBeGreaterThan(85)
     expect(result?.detectedFrom).toEqual(expect.arrayContaining([{ type: 'package.json', field: 'dependencies (@nestjs packages)' }]))
   })

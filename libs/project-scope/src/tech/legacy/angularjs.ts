@@ -21,26 +21,22 @@ export function angularJSDetector(projectPath: string, packageJson?: PackageJson
 
   const deps = collectAllDependencies(pkg)
 
-  // AngularJS package (angular, not @angular/core)
   if (deps['angular']) {
     confidence += 70
     version = parseVersionString(deps['angular'])
     sources.push({ type: 'package.json', field: 'dependencies.angular' })
   }
 
-  // AngularJS router
   if (deps['angular-route']) {
     confidence += 15
     sources.push({ type: 'package.json', field: 'dependencies.angular-route' })
   }
 
-  // AngularJS resource
   if (deps['angular-resource']) {
     confidence += 10
     sources.push({ type: 'package.json', field: 'dependencies.angular-resource' })
   }
 
-  // AngularJS animate
   if (deps['angular-animate']) {
     confidence += 5
     sources.push({ type: 'package.json', field: 'dependencies.angular-animate' })

@@ -1,8 +1,3 @@
-/**
- * Browser tests for data encryption.
- * Node version: create-encrypter.spec.ts (identical except for imports)
- */
-
 import type { SerializedData } from '../model'
 import { encrypt } from '@hyperfrontend/cryptography/browser'
 import { createDataEncrypter } from './create-encrypter'

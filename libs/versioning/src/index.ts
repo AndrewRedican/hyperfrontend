@@ -1,36 +1,21 @@
-// @hyperfrontend/versioning - Main entry point
-//
-// A versioning library with changelog parsing, conventional commits,
-// and semver flow orchestration. Uses character-by-character state machines
-// for parsing (no regex) to ensure ReDoS safety.
-
-// ============================================================================
-// Changelog module
-// ============================================================================
-
-// Changelog Models - Type definitions
 export type { Changelog, ChangelogFormat, ChangelogHeader, ChangelogLink, ChangelogMetadata } from './changelog/models/changelog'
 export type { ChangelogEntry, ChangelogItem, ChangelogSection } from './changelog/models/entry'
 export type { ChangelogSectionType } from './changelog/models/section'
 export type { CommitRef, IssueRef } from './changelog/models/commit-ref'
 export type { CompatibilityResult, SchemaDifference } from './changelog/models/schema'
 
-// Changelog Models - Factory functions
 export { createChangelog, createChangelogLink, createEmptyChangelog } from './changelog/models/changelog'
 export { createChangelogEntry, createChangelogItem, createChangelogSection, createUnreleasedEntry } from './changelog/models/entry'
 export { getSectionType, SECTION_HEADINGS, SECTION_TYPE_MAP } from './changelog/models/section'
 export { createCommitRef, createIssueRef, getShortHash } from './changelog/models/commit-ref'
 
-// Changelog Schema Validation
 export { changelogSchema, validateChangelog, checkSchemaCompatibility } from './changelog/models/schema'
 
-// Changelog Parsing
 export { parseChangelog } from './changelog/parse/parser'
 export { tokenize } from './changelog/parse/tokenizer'
 export type { Token, TokenType } from './changelog/parse/tokenizer'
 export { parseVersionFromHeading, parseCommitRefs, parseIssueRefs, parseScopeFromItem } from './changelog/parse/line'
 
-// Changelog Serialization
 export type { SerializeOptions, JsonSerializeOptions } from './changelog/serialize'
 export {
   serializeChangelog,
@@ -44,7 +29,6 @@ export {
   createSpacing,
 } from './changelog/serialize'
 
-// Changelog Comparison
 export type { ChangelogDiff, DiffStats, EntryDiff, SectionDiff, ItemDiff, PropertyDiff } from './changelog/compare'
 export {
   isChangelogEqual,
@@ -64,7 +48,6 @@ export {
   summarizeDiff,
 } from './changelog/compare'
 
-// Changelog Operations
 export type {
   AddEntryOptions,
   RemoveEntryOptions,
@@ -125,16 +108,10 @@ export {
   cloneChangelog,
 } from './changelog/operations'
 
-// ============================================================================
-// Commits module
-// ============================================================================
-
-// Commits Models - Type definitions
 export type { ConventionalCommit, CommitFooter } from './commits/models/conventional'
 export type { CommitType } from './commits/models/commit-type'
 export type { BreakingChange } from './commits/models/breaking'
 
-// Commits Models - Factory functions and utilities
 export { createCommitFooter, createConventionalCommit } from './commits/models/conventional'
 export {
   COMMIT_TYPES,
@@ -147,27 +124,18 @@ export {
 } from './commits/models/commit-type'
 export { createBreakingFromFooter, createBreakingFromSubject, createNonBreaking, isBreakingFooterKey } from './commits/models/breaking'
 
-// Commits Parsing
 export { parseConventionalCommit, isConventionalCommit } from './commits/parse/message'
 export { parseHeader, type ParsedHeader } from './commits/parse/header'
 export { parseBody, type ParsedBody } from './commits/parse/body'
 export { parseFooters, type ParsedFooters } from './commits/parse/footer'
 
-// Commits Classification - Constants
 export { DEFAULT_EXCLUDE_SCOPES, DEFAULT_PROJECT_PREFIXES } from './commits/classify'
 
-// Flow Steps - Constants
 export { DEFAULT_COMMIT_TYPE_TO_SECTION } from './flow/steps'
 
-// ============================================================================
-// SemVer module
-// ============================================================================
-
-// SemVer Models - Type definitions
 export type { SemVer, BumpType } from './semver/models/version'
 export type { Range, Comparator, ComparatorSet, RangeOperator } from './semver/models/range'
 
-// SemVer Models - Factory functions
 export {
   createSemVer,
   createInitialVersion,
@@ -179,53 +147,35 @@ export {
 } from './semver/models/version'
 export { createComparator, createComparatorSet, createRange, createAnyRange, createExactRange, isWildcard } from './semver/models/range'
 
-// SemVer Parsing
 export type { ParseVersionResult } from './semver/parse/version'
 export type { ParseRangeResult } from './semver/parse/range'
 export { parseVersion, parseVersionStrict, coerceVersion } from './semver/parse/version'
 export { parseRange, parseRangeStrict } from './semver/parse/range'
 
-// SemVer Comparison
 export { compare, eq, lt, lte, gt, gte, neq, satisfies, satisfiesComparator, maxSatisfying, minSatisfying } from './semver/compare/compare'
 export { sort, sortDescending, max, min } from './semver/compare/sort'
 
-// SemVer Increment
 export { increment, incrementPrerelease, diff } from './semver/increment/bump'
 
-// SemVer Format
 export { format, formatSimple, formatRange, formatComparator } from './semver/format/to-string'
 
-// ============================================================================
-// Registry module
-// ============================================================================
-
-// Registry Models - Type definitions
 export type { Registry, RegistryConfig } from './registry/models/registry'
 export type { PackageInfo } from './registry/models/package-info'
 export type { VersionInfo, Maintainer } from './registry/models/version-info'
 
-// Registry Models - Factory functions
 export { createPackageInfo } from './registry/models/package-info'
 export { createVersionInfo } from './registry/models/version-info'
 
-// Registry npm client
 export { createNpmRegistry, escapePackageName, escapeVersion } from './registry/npm/client'
 export { createCache } from './registry/npm/cache'
 export type { Cache, CacheEntry } from './registry/npm/cache'
 
-// Registry factory
 export { createRegistry } from './registry/factory'
 export type { RegistryType } from './registry/factory'
 
-// ============================================================================
-// Workspace module
-// ============================================================================
-
-// Workspace Models - Type definitions
 export type { Workspace, WorkspaceConfig, WorkspaceType } from './workspace/models/workspace'
 export type { Project, CreateProjectOptions } from './workspace/models/project'
 
-// Workspace Models - Factory functions
 export {
   DEFAULT_PATTERNS,
   DEFAULT_EXCLUDE,
@@ -253,7 +203,6 @@ export {
   addDependent,
 } from './workspace/models/project'
 
-// Workspace Discovery
 export type { DiscoveryOptions, DiscoveryResult } from './workspace/discovery/packages'
 export type { DiscoveredChangelog } from './workspace/discovery/discover-changelogs'
 export type { DependencyGraph, DependencyType, DependencyEdge, DependencyGraphAnalysis } from './workspace/discovery/dependencies'
@@ -270,7 +219,6 @@ export {
   transitivelyDependsOn,
 } from './workspace/discovery/dependencies'
 
-// Workspace Operations
 export type { PlannedBump, BumpReason, CascadeBumpOptions, CascadeBumpResult, DirectBumpInput } from './workspace/operations/cascade-bump'
 export type { BatchUpdateResult, UpdatedPackage, FailedUpdate, BatchUpdateOptions } from './workspace/operations/batch-update'
 export type {
@@ -292,19 +240,12 @@ export {
 } from './workspace/operations/batch-update'
 export { validateWorkspace, validateProject, summarizeValidation } from './workspace/operations/validate'
 
-// Workspace convenience function
 export { createWorkspaceFromDisk } from './workspace'
 
-// ============================================================================
-// Git module
-// ============================================================================
-
-// Git Models - Type definitions
 export type { GitCommit, CreateGitCommitOptions } from './git/models/commit'
 export type { GitTag, GitTagType, CreateLightweightTagOptions, CreateAnnotatedTagOptions } from './git/models/tag'
 export type { GitRef, GitRefType, CreateGitRefOptions } from './git/models/ref'
 
-// Git Models - Factory functions and utilities
 export {
   createGitCommit as createGitCommitModel,
   isSameCommit,
@@ -336,7 +277,6 @@ export {
   filterRefsByRemote,
 } from './git/models/ref'
 
-// Git Operations - Log
 export type { GitLogOptions } from './git/operations/log'
 export {
   DEFAULT_LOG_OPTIONS,
@@ -350,7 +290,6 @@ export {
   escapeGitArg,
 } from './git/operations/log'
 
-// Git Operations - Tag
 export type { GitTagOptions, ListTagsOptions } from './git/operations/query-tags'
 export type { CreateTagOptions } from './git/operations/manage-tags'
 export {
@@ -364,14 +303,12 @@ export {
 } from './git/operations/query-tags'
 export { createTag, deleteTag, pushTag, escapeGitMessage } from './git/operations/manage-tags'
 
-// Git Operations - Commit
 export type { GitCommitOptions, CreateCommitOptions } from './git/operations/commit'
 export type { StageOptions } from './git/operations/stage'
 export { DEFAULT_COMMIT_OPTIONS, commit, amendCommit, createEmptyCommit, escapeFilePath, escapeAuthor } from './git/operations/commit'
 export { stage, unstage, stageAll, hasStagedChanges, hasUnstagedChanges } from './git/operations/stage'
 export { getHead, getCurrentBranch, hasUntrackedFiles } from './git/operations/head-info'
 
-// Git Operations - Status
 export type { GitStatusOptions, FileStatus, FileStatusEntry, RepositoryStatus } from './git/operations/status'
 export {
   DEFAULT_STATUS_OPTIONS,
@@ -391,23 +328,15 @@ export {
   getUntrackedFiles,
 } from './git/operations/status'
 
-// Git Operations - Operation State
 export type { GitOperationState, GitOperationStateReason, GitOperationStateOptions } from './git/operations/operation-state'
 export { getOperationState, isOperationInProgress, DEFAULT_OPERATION_STATE_OPTIONS } from './git/operations/operation-state'
 
-// Git Operations - Diff
 export type { FileChangeStatus, FileChange, DiffOptions, GitCommitWithFiles } from './git/operations/diff'
 export { DEFAULT_DIFF_OPTIONS, getChangedFilesBetween, getChangedFilesBetweenWithStatus, getCommitWithFiles } from './git/operations/diff'
 
-// Git Client Factory
 export type { GitClient, GitClientConfig } from './git/factory'
 export { createGitClient, DEFAULT_GIT_CLIENT_CONFIG } from './git/factory'
 
-// ============================================================================
-// Flow module
-// ============================================================================
-
-// Flow Models - Type definitions
 export type {
   FlowConfig,
   FlowContext,
@@ -425,7 +354,6 @@ export type {
   CreateFlowOptions,
 } from './flow/models'
 
-// Flow Models - Factory functions and constants
 export { DEFAULT_FLOW_CONFIG, DEFAULT_CHANGELOG_FILENAME } from './flow/models'
 export { createStep, createNoopStep, createSkippedResult, createSuccessResult, createFailedResult } from './flow/models'
 export {
@@ -441,11 +369,9 @@ export {
   hasStep,
 } from './flow/models'
 
-// Flow Executor
 export type { ExecuteOptions } from './flow/executor'
 export { executeFlow, dryRun, validateFlow } from './flow/executor'
 
-// Flow Steps
 export {
   FETCH_REGISTRY_STEP_ID,
   createFetchRegistryStep,
@@ -467,7 +393,6 @@ export {
   createPushTagStep,
 } from './flow/steps'
 
-// Flow Presets
 export {
   CONVENTIONAL_FLOW_CONFIG,
   createConventionalFlow,
@@ -484,6 +409,5 @@ export {
   createCombinedChangelogStep,
 } from './flow/presets'
 
-// Flow Factory
 export type { FlowPreset } from './flow/factory'
 export { createVersionFlow, createDryRunFlow, getAvailablePresets, getPresetDescription } from './flow/factory'

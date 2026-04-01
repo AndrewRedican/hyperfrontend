@@ -22,6 +22,6 @@ export function activate(state: ChannelState, origin: string, contract: IChannel
     connectTimestamp: dateNow(),
     contract,
     acceptedActions: freeze(acceptedActions),
-    scheduledActivation: null, // Clear any pending activation
+    scheduledActivation: null,
   })
 }

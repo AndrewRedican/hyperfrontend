@@ -358,7 +358,6 @@ export default createRule<[RuleOptions?], MessageIds>({
 
         const basePackage = getBasePackageName(source)
 
-        // Only suggest when importing from base package (conservative approach)
         if (source !== basePackage) {
           return
         }

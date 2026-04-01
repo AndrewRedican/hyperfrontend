@@ -29,32 +29,26 @@ export function handleClose(context: RoutingContext, message: MessageEvent<IActi
   const action = message.data
   const senderId = <string>action.senderId
 
-  // Type guard to ensure action has processId
   if (!('processId' in action)) {
-    return // Action doesn't have processId
+    return
   }
   const processId = <string>action.processId
 
-  // Get channel by sender ID
   const channel = <ChannelHandle | undefined>getById(registry, senderId)
 
   if (!channel || !channel.isActive()) {
-    return // Channel not found or not open
+    return
   }
 
-  // Close the channel (without notifying yet)
   channel.disconnect(false)
 
-  // Send acknowledgement
   channel.sendAction({
     type: '[nexus] connection-closed-acknowledged',
     processId,
     senderId: state.id,
   })
 
-  // Terminate process
   processManager.remove(processId)
 
-  // Notify CLOSED event
   channel.notifyEvent('close', { notify: true })
 }

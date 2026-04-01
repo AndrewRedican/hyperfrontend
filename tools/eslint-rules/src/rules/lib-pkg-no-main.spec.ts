@@ -105,7 +105,6 @@ function createMainWithExportsCase(): ESLintRuleTester.InvalidTestCase {
 }
 
 function createMainLastPropertyWithExportsCase(): ESLintRuleTester.InvalidTestCase {
-  // main is THE LAST PROPERTY - this tests the leading comma removal branch
   const pkg = {
     name: '@hyperfrontend/test-lib',
     exports: {
@@ -131,7 +130,6 @@ function createMainLastPropertyWithExportsCase(): ESLintRuleTester.InvalidTestCa
 }
 
 function createMainWithNonStringValueCase(): ESLintRuleTester.InvalidTestCase {
-  // main has a non-string value (object) - fix returns null
   const pkg = {
     name: '@hyperfrontend/test-lib',
     main: { default: './src/index.js' },
@@ -144,7 +142,6 @@ function createMainWithNonStringValueCase(): ESLintRuleTester.InvalidTestCase {
     code: JSON.stringify(pkg, null, 2),
     filename: workspace.getPath('package.json'),
     errors: [{ messageId: 'noMainField' }],
-    // No output - fix returns null when main is not a string
     output: null,
   }
 }

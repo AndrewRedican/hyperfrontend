@@ -146,7 +146,6 @@ export async function runVersionForProject(options: RunVersionOptions): Promise<
 
   const modifiedFiles: string[] = []
 
-  // === SAFETY CHECKS ===
   if (skipIfVersionCommit) {
     logger.debug('Checking if current commit is a version/release commit')
     if (isVersionCommit(workspaceRoot, projectName)) {
@@ -183,7 +182,6 @@ export async function runVersionForProject(options: RunVersionOptions): Promise<
   logger.debug(`Package.json path: {packageJsonPath}`)
   logger.debug(`Tag prefix: {tagPrefix}`)
 
-  // === BUILD FLOW CONFIG ===
   const flowConfig: Partial<FlowConfig> = {
     dryRun,
     skipGit: skipCommit,
@@ -202,7 +200,6 @@ export async function runVersionForProject(options: RunVersionOptions): Promise<
   )
   logger.info('Starting version flow using @hyperfrontend/versioning')
 
-  // === EXECUTE FLOW ===
   const flow = createVersionFlow('conventional', flowConfig)
   const flowResult = await executeFlow(flow, projectName, workspaceRoot, {
     dryRun,
@@ -213,15 +210,12 @@ export async function runVersionForProject(options: RunVersionOptions): Promise<
     projectRoot,
   })
 
-  // === PROCESS RESULT ===
   const success = flowResult.status === 'success' || flowResult.status === 'skipped'
-  // A bump only occurred if the flow succeeded AND there's actually a next version
   const bumped = flowResult.status === 'success' && flowResult.state.nextVersion != null
 
   if (flowResult.status === 'success') {
     logger.info(flowResult.summary)
 
-    // If no nextVersion, flow succeeded but no bump was needed (e.g., no releasable commits)
     if (!flowResult.state.nextVersion) {
       logger.debug('No version bump needed (no releasable commits)')
       return {
@@ -256,7 +250,6 @@ export async function runVersionForProject(options: RunVersionOptions): Promise<
     }
   }
 
-  // === COLLECT MODIFIED FILES ===
   logger.debug('Collecting modified files')
   if (flowResult.state.modifiedFiles) {
     for (const file of flowResult.state.modifiedFiles) {
@@ -265,7 +258,6 @@ export async function runVersionForProject(options: RunVersionOptions): Promise<
       logger.debug(`Modified file: ${relPath}`)
     }
   } else {
-    // Fallback
     logger.debug('No modified files in flow result, using fallback')
     modifiedFiles.push(join(projectRoot, 'package.json'))
     const changelogPath = join(workspaceRoot, projectRoot, 'CHANGELOG.md')
@@ -274,11 +266,9 @@ export async function runVersionForProject(options: RunVersionOptions): Promise<
     }
   }
 
-  // === POST-PROCESSING: Update dependent packages ===
   if (updateDependents) {
     const pkg = readPackageJsonIfExists(packageJsonPath)
     const packageName = pkg?.name ?? null
-    // Use nextVersion from flow result (works in dry run), fallback to package.json
     const newVersion = flowResult.state.nextVersion ?? pkg?.version ?? '0.0.0'
 
     logger.debug(`Package: ${packageName}, Version: ${newVersion}`)
@@ -304,7 +294,6 @@ export async function runVersionForProject(options: RunVersionOptions): Promise<
       if (allUpdatedFiles.length > 0) {
         modifiedFiles.push(...allUpdatedFiles)
 
-        // Stage and amend the version commit (if not dry run and not skipping commit)
         if (!dryRun && !skipCommit) {
           logger.debug('Staging and amending commit with dependency updates')
           try {

@@ -28,7 +28,6 @@ interface ModuleGroup {
 export function ModuleGroupedView({ data, searchQuery = '' }: ModuleGroupedViewProps) {
   const [expandedModules, setExpandedModules] = useState<Set<string>>(createSet())
 
-  // Group exports by module
   const modules = useMemo(() => {
     if (!data.children) return []
 
@@ -36,9 +35,7 @@ export function ModuleGroupedView({ data, searchQuery = '' }: ModuleGroupedViewP
 
     for (const child of data.children) {
       if (child.kind === ReflectionKind.Module && child.children) {
-        // This is a module (entry point)
         const exports = child.children.filter((c) => {
-          // Filter by search query if provided
           if (searchQuery) {
             return c.name.toLowerCase().includes(searchQuery.toLowerCase())
           }
@@ -55,7 +52,6 @@ export function ModuleGroupedView({ data, searchQuery = '' }: ModuleGroupedViewP
       }
     }
 
-    // Sort modules alphabetically
     return groups.sort((a, b) => a.name.localeCompare(b.name))
   }, [data, searchQuery])
 
@@ -121,7 +117,6 @@ export function ModuleGroupedView({ data, searchQuery = '' }: ModuleGroupedViewP
         {modules.map((module) => {
           const isExpanded = expandedModules.has(module.name)
 
-          // Categorize exports within the module
           const functions = module.exports.filter((e) => e.kind === ReflectionKind.Function)
           const classes = module.exports.filter((e) => e.kind === ReflectionKind.Class)
           const interfaces = module.exports.filter((e) => e.kind === ReflectionKind.Interface)

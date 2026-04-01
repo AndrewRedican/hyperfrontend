@@ -14,7 +14,7 @@ describe('UUID generation and validation', () => {
   })
 
   it('invalidates a bad UUID', () => {
-    const badUUID = '123e4567-e89b-12d3-a456-426614174000' // version 1 UUID
+    const badUUID = '123e4567-e89b-12d3-a456-426614174000'
     expect(isUuidV4(badUUID)).toBeFalsy()
   })
 })

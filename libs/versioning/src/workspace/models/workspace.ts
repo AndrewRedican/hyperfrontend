@@ -1,10 +1,3 @@
-/**
- * Workspace Model
- *
- * Represents a monorepo workspace with multiple projects.
- * Used for package discovery, dependency tracking, and coordinated versioning.
- */
-
 import type { Project } from './project'
 
 /**

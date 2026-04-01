@@ -43,20 +43,13 @@ export function createCheckDependentBumpsStep(): FlowStep {
       const { config, state, logger } = ctx
       const { bumpType, nextVersion } = state
 
-      // Skip if dependency tracking not enabled
       if (!config.trackDeps) {
         return createSkippedResult('Dependency tracking not enabled')
       }
 
-      // Skip if no bump needed for this package
       if (!nextVersion || bumpType === 'none') {
         return createSkippedResult('No bump to propagate')
       }
-
-      // In a full implementation, this would:
-      // 1. Load workspace dependency graph
-      // 2. Find packages that depend on this one
-      // 3. Mark them for potential bumps
 
       logger.debug('Dependent bump checking not fully implemented')
 

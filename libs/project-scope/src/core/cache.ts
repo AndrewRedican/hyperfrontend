@@ -123,7 +123,6 @@ const cacheRegistry: Set<Cache<unknown, unknown>> = createSet()
 export function createCache<K, V>(options?: CacheOptions): Cache<K, V> {
   const { ttl, maxSize } = options ?? {}
   const store = createMap<K, CacheEntry<V>>()
-  // Track insertion order for FIFO eviction
   const insertionOrder: K[] = []
 
   /**
@@ -178,11 +177,9 @@ export function createCache<K, V>(options?: CacheOptions): Cache<K, V> {
     },
 
     set(key: K, value: V): void {
-      // If key exists, remove from order first
       if (store.has(key)) {
         removeFromOrder(key)
       } else {
-        // Evict if needed before adding new entry
         evictIfNeeded()
       }
 
@@ -223,7 +220,6 @@ export function createCache<K, V>(options?: CacheOptions): Cache<K, V> {
     },
   }
 
-  // Register cache for global operations
   cacheRegistry.add(<Cache<unknown, unknown>>cache)
 
   return freeze(cache)
@@ -311,7 +307,6 @@ export function memoize<K, V>(fn: (key: K) => V, options?: CacheOptions): ((key:
     return result
   }
 
-  // Attach cache for direct access
   defineProperty(memoized, 'cache', {
     value: cache,
     writable: false,

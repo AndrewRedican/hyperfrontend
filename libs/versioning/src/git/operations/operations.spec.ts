@@ -3,10 +3,6 @@ import { escapeGitRef, escapeGitPath, escapeGitArg } from './log'
 import { escapeGitMessage } from './manage-tags'
 import { escapeGitTagPattern } from './query-tags'
 
-// ============================================================================
-// Log Escape Functions
-// ============================================================================
-
 describe('escapeGitRef', () => {
   it('allows valid refs', () => {
     expect(escapeGitRef('main')).toBe('main')
@@ -72,10 +68,6 @@ describe('escapeGitArg', () => {
   })
 })
 
-// ============================================================================
-// Tag Escape Functions
-// ============================================================================
-
 describe('escapeGitTagPattern', () => {
   it('allows valid patterns', () => {
     expect(escapeGitTagPattern('v')).toBe('v')
@@ -116,10 +108,6 @@ describe('escapeGitMessage', () => {
   })
 })
 
-// ============================================================================
-// Commit Escape Functions
-// ============================================================================
-
 describe('escapeFilePath', () => {
   it('allows valid file paths', () => {
     expect(escapeFilePath('package.json')).toBe('package.json')
@@ -135,7 +123,7 @@ describe('escapeFilePath', () => {
   it('throws for injection attempts', () => {
     expect(() => escapeFilePath('; rm -rf /')).toThrow('Invalid character')
     expect(() => escapeFilePath('file`whoami`')).toThrow('Invalid character')
-    expect(escapeFilePath('../../../etc/passwd')).toBe('../../../etc/passwd') // Dots are allowed
+    expect(escapeFilePath('../../../etc/passwd')).toBe('../../../etc/passwd')
   })
 })
 
@@ -162,34 +150,24 @@ describe('escapeAuthor', () => {
   })
 })
 
-// ============================================================================
-// Integration behavior tests (mocked)
-// These test the escape functions are called correctly in typical scenarios
-// ============================================================================
-
 describe('Escape function integration', () => {
   it('handles typical version flow arguments', () => {
-    // Typical ref arguments
     expect(escapeGitRef('v1.0.0')).toBe('v1.0.0')
     expect(escapeGitRef('@hyperfrontend/versioning@1.0.0')).toBe('@hyperfrontend/versioning@1.0.0')
     expect(escapeGitRef('HEAD')).toBe('HEAD')
     expect(escapeGitRef('main')).toBe('main')
     expect(escapeGitRef('v1.0.0..HEAD')).toBe('v1.0.0..HEAD')
 
-    // Typical path arguments
     expect(escapeGitPath('libs/versioning/CHANGELOG.md')).toBe('libs/versioning/CHANGELOG.md')
     expect(escapeGitPath('package.json')).toBe('package.json')
 
-    // Typical message arguments
     expect(escapeGitMessage('chore(lib-versioning): release version 1.0.0')).toBe('chore(lib-versioning): release version 1.0.0')
     expect(escapeGitMessage('feat: add feature\n\nDetailed body here.')).toBe('feat: add feature\n\nDetailed body here.')
 
-    // Typical author arguments
     expect(escapeAuthor('Release Bot <release@hyperfrontend.dev>')).toBe('Release Bot <release@hyperfrontend.dev>')
   })
 
   it('handles scoped package names correctly', () => {
-    // Scoped package names have @ and / which should be allowed
     expect(escapeGitRef('@hyperfrontend/versioning@1.0.0')).toBe('@hyperfrontend/versioning@1.0.0')
     expect(escapeGitTagPattern('@hyperfrontend/')).toBe('@hyperfrontend/')
   })

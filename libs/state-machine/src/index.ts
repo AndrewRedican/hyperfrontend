@@ -1,11 +1,3 @@
-/**
- * \@hyperfrontend/state-machine
- *
- * Lightweight, functional state management library with Redux-inspired
- * actions/reducers, async operation orchestration, and lifecycle-aware
- * component abstractions for predictable application state.
- */
-
 export * from './actions'
 export * from './async-operation'
 export * from './coordinated-async-operation'

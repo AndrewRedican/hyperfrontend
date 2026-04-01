@@ -8,7 +8,6 @@ describe('Connection Flow Integration', () => {
   let windowB: MockWindow
   let originalWindow: Window
 
-  // Store original setTimeout for fake timers
   beforeAll(() => {
     jest.useFakeTimers()
   })
@@ -18,19 +17,15 @@ describe('Connection Flow Integration', () => {
   })
 
   beforeEach(() => {
-    // Save original window
     originalWindow = global.window
 
-    // Create mock windows
     windowA = createMockWindow()
     windowB = createMockWindow()
 
-    // Link windows for bidirectional communication
     linkMockWindows(windowA, windowB, 'http://host-a.com', 'http://host-b.com')
   })
 
   afterEach(() => {
-    // Restore original window
     global.window = <Window & typeof globalThis>(<unknown>originalWindow)
     jest.clearAllMocks()
     jest.clearAllTimers()
@@ -40,45 +35,36 @@ describe('Connection Flow Integration', () => {
     it('completes full handshake: REQUEST → ACCEPT → OPEN', async () => {
       const { contractA, contractB } = createContractPair(['PING'], ['PONG'])
 
-      // Create broker A (will initiate connection)
-      // Override window for broker A
       global.window = <Window & typeof globalThis>(<unknown>windowA)
       const brokerA = createBroker({
         name: 'broker-a',
         contract: contractA,
       })
 
-      // Create broker B (will respond to connection)
       global.window = <Window & typeof globalThis>(<unknown>windowB)
       const brokerB = createBroker({
         name: 'broker-b',
         contract: contractB,
       })
 
-      // Add channel on broker A pointing to window B
       global.window = <Window & typeof globalThis>(<unknown>windowA)
       const channelA = brokerA.addChannel('to-b', <Window>(<unknown>windowB))
 
-      // Add channel on broker B pointing to window A
       global.window = <Window & typeof globalThis>(<unknown>windowB)
       const channelB = brokerB.addChannel('to-a', <Window>(<unknown>windowA))
 
-      // Track events
       const eventsA: string[] = []
       const eventsB: string[] = []
 
       channelA.on((event) => eventsA.push(event))
       channelB.on((event) => eventsB.push(event))
 
-      // Connect both sides (in real scenario, order may vary)
-      channelB.connect() // Responder connects first (ready to accept)
-      channelA.connect() // Initiator sends REQUEST
+      channelB.connect()
+      channelA.connect()
 
-      // Verify initial state
       expect(channelA.isActive()).toBe(true)
       expect(channelB.isActive()).toBe(true)
 
-      // Both should have fired 'open' event
       expect(eventsA).toContain('open')
       expect(eventsB).toContain('open')
     })
@@ -137,21 +123,16 @@ describe('Connection Flow Integration', () => {
       const channelA = brokerA.addChannel('to-b', <Window>(<unknown>windowB))
       const channelB = brokerB.addChannel('to-a', <Window>(<unknown>windowA))
 
-      // Establish connection
       channelA.connect()
       channelB.connect()
 
-      // Track messages received
       const messagesB: unknown[] = []
       channelB.onMessage((msg) => messagesB.push(msg))
 
-      // Send message from A
       channelA.send('PING', { timestamp: 123 })
 
-      // Verify postMessage was called on window B
       expect(windowB.postMessage).toHaveBeenCalled()
 
-      // The message should contain the PING type
       const lastCall = windowB.postMessage.mock.calls.find((call) => call[0]?.type === '[nexus] new-message')
       expect(lastCall).toBeDefined()
     })
@@ -159,7 +140,6 @@ describe('Connection Flow Integration', () => {
 
   describe('Denial Flow', () => {
     it('denies on invalid contract', () => {
-      // Contract A emits types that B does not accept
       const contractA: IChannelContract = {
         emitted: [{ type: 'UNKNOWN_TYPE' }],
         accepted: [{ type: 'RESPONSE' }],
@@ -167,7 +147,7 @@ describe('Connection Flow Integration', () => {
 
       const contractB: IChannelContract = {
         emitted: [{ type: 'RESPONSE' }],
-        accepted: [{ type: 'EXPECTED_TYPE' }], // Does NOT accept UNKNOWN_TYPE
+        accepted: [{ type: 'EXPECTED_TYPE' }],
       }
 
       global.window = <Window & typeof globalThis>(<unknown>windowA)
@@ -190,13 +170,10 @@ describe('Connection Flow Integration', () => {
         if (event === 'deny') denyHandler(data)
       })
 
-      // Attempt connection
       channelA.connect()
       channelB.connect()
 
-      // Broker B should detect contract mismatch during validation
-      // This test verifies the flow exists
-      expect(channelA.isActive()).toBe(true) // Local activation happens
+      expect(channelA.isActive()).toBe(true)
     })
 
     it('denies on security policy rejection', () => {
@@ -214,7 +191,6 @@ describe('Connection Flow Integration', () => {
         contract: contractB,
       })
 
-      // Set security policy that rejects all connections
       brokerB.setSecurityPolicy(() => false)
 
       const channelA = brokerA.addChannel('to-b', <Window>(<unknown>windowB))
@@ -228,8 +204,6 @@ describe('Connection Flow Integration', () => {
       channelA.connect()
       channelB.connect()
 
-      // Policy rejection should be applied
-      // The exact behavior depends on security policy implementation
       expect(brokerB).toBeDefined()
     })
 
@@ -254,8 +228,6 @@ describe('Connection Flow Integration', () => {
       channelA.connect()
       channelB.connect()
 
-      // After handshake (success or failure), processes should be cleaned up
-      // Verify channel states are consistent
       expect(channelA.toJSON()).toBeDefined()
       expect(channelB.toJSON()).toBeDefined()
     })
@@ -280,7 +252,6 @@ describe('Connection Flow Integration', () => {
       const channelA = brokerA.addChannel('to-b', <Window>(<unknown>windowB))
       brokerB.addChannel('to-a', <Window>(<unknown>windowA))
 
-      // Track events - cancel fires if not active, close fires if active
       const cancelHandler = jest.fn()
       const closeHandler = jest.fn()
       channelA.on((event) => {
@@ -288,14 +259,10 @@ describe('Connection Flow Integration', () => {
         if (event === 'close') closeHandler()
       })
 
-      // Connect then immediately cancel
-      // connect() locally activates the channel, so cancel() triggers disconnect()
-      // which fires 'close' instead of 'cancel'
       channelA.connect()
       channelA.cancel()
 
       expect(channelA.isActive()).toBe(false)
-      // Either cancel or close event should have been fired
       expect(cancelHandler.mock.calls.length + closeHandler.mock.calls.length).toBeGreaterThan(0)
     })
 
@@ -320,10 +287,8 @@ describe('Connection Flow Integration', () => {
       channelA.connect()
       channelA.cancel()
 
-      // After cancellation, channel should be inactive
       expect(channelA.isActive()).toBe(false)
 
-      // Channel should still be retrievable for potential reconnection
       const retrieved = brokerA.getChannel('to-b')
       expect(retrieved).toBeDefined()
     })
@@ -359,14 +324,12 @@ describe('Connection Flow Integration', () => {
         if (event === 'close') closeHandlerB()
       })
 
-      // Establish connection
       channelA.connect()
       channelB.connect()
 
       expect(channelA.isActive()).toBe(true)
       expect(channelB.isActive()).toBe(true)
 
-      // Close from A's side
       channelA.disconnect()
 
       expect(channelA.isActive()).toBe(false)
@@ -391,16 +354,13 @@ describe('Connection Flow Integration', () => {
       const channelA = brokerA.addChannel('to-b', <Window>(<unknown>windowB))
       const channelB = brokerB.addChannel('to-a', <Window>(<unknown>windowA))
 
-      // First connection
       channelA.connect()
       channelB.connect()
       expect(channelA.isActive()).toBe(true)
 
-      // Close
       channelA.disconnect()
       expect(channelA.isActive()).toBe(false)
 
-      // Reconnect
       channelA.connect()
       expect(channelA.isActive()).toBe(true)
     })
@@ -424,14 +384,11 @@ describe('Connection Flow Integration', () => {
 
       const channelA = brokerA.addChannel('to-b', <Window>(<unknown>windowB))
 
-      // A connects BEFORE B has a channel ready
       channelA.connect()
 
-      // Now B creates channel and connects
       const channelB = brokerB.addChannel('to-a', <Window>(<unknown>windowA))
       channelB.connect()
 
-      // Both should eventually be active
       expect(channelA.isActive()).toBe(true)
       expect(channelB.isActive()).toBe(true)
     })
@@ -451,15 +408,12 @@ describe('Connection Flow Integration', () => {
         contract: contractB,
       })
 
-      // B sets up channel first
       const channelB = brokerB.addChannel('to-a', <Window>(<unknown>windowA))
       channelB.connect()
 
-      // Then A connects
       const channelA = brokerA.addChannel('to-b', <Window>(<unknown>windowB))
       channelA.connect()
 
-      // Both should be active immediately
       expect(channelA.isActive()).toBe(true)
       expect(channelB.isActive()).toBe(true)
     })
@@ -473,7 +427,7 @@ describe('Connection Flow Integration', () => {
       const brokerA = createBroker({
         name: 'broker-a',
         contract: contractA,
-        settings: { logLevel: 'debug' }, // Enable debug logging
+        settings: { logLevel: 'debug' },
       })
 
       global.window = <Window & typeof globalThis>(<unknown>windowB)
@@ -485,15 +439,12 @@ describe('Connection Flow Integration', () => {
       const channelA = brokerA.addChannel('to-b', <Window>(<unknown>windowB))
       const channelB = brokerB.addChannel('to-a', <Window>(<unknown>windowA))
 
-      // Initial connection
       channelA.connect()
       channelB.connect()
 
       expect(channelA.isActive()).toBe(true)
       expect(channelB.isActive()).toBe(true)
 
-      // Simulate "page reload" by reconnecting with same channel
-      // (In real scenario, the senderId would be same but processId different)
       channelA.disconnect()
       channelA.connect()
 

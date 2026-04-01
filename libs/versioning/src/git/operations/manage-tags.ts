@@ -44,12 +44,10 @@ export function createTag(name: string, options: CreateTagOptions = {}): GitTag 
   }
 
   if (opts.message) {
-    // Annotated tag
     args.push('-a')
     args.push(safeName)
     args.push('-m', escapeGitMessage(opts.message))
   } else {
-    // Lightweight tag
     args.push(safeName)
   }
 
@@ -65,7 +63,6 @@ export function createTag(name: string, options: CreateTagOptions = {}): GitTag 
       stdio: ['pipe', 'pipe', 'pipe'],
     })
 
-    // Get the created tag
     const tag = getTag(name, opts)
     if (!tag) {
       throw createError(`Failed to retrieve created tag: ${name}`)
@@ -120,7 +117,6 @@ export function deleteTag(name: string, options: GitTagOptions = {}): boolean {
  * pushTag('v1.0.0', 'upstream')
  */
 export function pushTag(name: string, remote = 'origin', options: GitTagOptions = {}): boolean {
-  // Reject remotes starting with '-' to prevent git option injection (CWE-88)
   if (remote.startsWith('-')) {
     return false
   }
@@ -132,7 +128,7 @@ export function pushTag(name: string, remote = 'origin', options: GitTagOptions 
     execFileSync('git', ['push', safeRemote, safeName], {
       encoding: 'utf-8',
       cwd: opts.cwd,
-      timeout: opts.timeout * 3, // Allow more time for network
+      timeout: opts.timeout * 3,
       stdio: ['pipe', 'pipe', 'pipe'],
     })
     return true
@@ -167,21 +163,12 @@ export function escapeGitMessage(message: string): string {
     const char = message[i]
     const code = message.charCodeAt(i)
 
-    // Escape double quotes and backslashes
     if (char === '"' || char === '\\') {
       safe.push('\\')
       safe.push(char)
-    }
-    // Allow printable ASCII and common whitespace
-    else if (
-      (code >= 32 && code <= 126) || // Printable ASCII
-      code === 10 || // newline
-      code === 13 || // carriage return
-      code === 9 // tab
-    ) {
+    } else if ((code >= 32 && code <= 126) || code === 10 || code === 13 || code === 9) {
       safe.push(char)
     }
-    // Skip other control characters
   }
 
   return safe.join('')

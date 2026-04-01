@@ -47,7 +47,6 @@ describe('Network Protocol V2: Connection Established (Browser)', () => {
 
       clientA.connect(clientB)
 
-      // Both clients should have channels
       expect(clientA.getChannel()).toBeDefined()
       expect(clientB.getChannel()).toBeDefined()
 
@@ -69,7 +68,6 @@ describe('Network Protocol V2: Connection Established (Browser)', () => {
 
       await clientA.send({ type: 'TEXT', content: 'Hello from Client A with PSK!' })
 
-      // Wait for message to be received (condition-based, more reliable than fixed delay)
       await waitFor(() => receivedMessages.length >= 1)
 
       expect(receivedMessages.length).toBe(1)
@@ -103,7 +101,6 @@ describe('Network Protocol V2: Connection Established (Browser)', () => {
 
       await clientA.send(originalMessage)
 
-      // Wait for message to be received (condition-based, more reliable than fixed delay)
       await waitFor(() => receivedPacket !== null)
 
       expect(receivedPacket).not.toBeNull()
@@ -128,7 +125,6 @@ describe('Network Protocol V2: Connection Established (Browser)', () => {
 
       await clientA.send({ type: 'TEXT', content: 'Message with custom PSK' })
 
-      // Wait for message to be received (condition-based, more reliable than fixed delay)
       await waitFor(() => receivedMessages.length >= 1)
 
       expect(receivedMessages.length).toBe(1)

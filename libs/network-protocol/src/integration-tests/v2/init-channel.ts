@@ -39,7 +39,6 @@ export function initChannel(
   const createReceiver = createReceiverFactory(deserializePacket)
   const channelFactory = createChannelFactory(createSender, createReceiver)
 
-  // Use production V2 protocol with pre-shared key
   const protocolProvider = createProtocol(logger, sharedKey, 1)
 
   return channelFactory(label, sendPacket, receivePacket, protocolProvider)

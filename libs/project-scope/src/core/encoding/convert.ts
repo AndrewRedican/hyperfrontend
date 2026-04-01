@@ -34,10 +34,8 @@ export function bufferToString(content: Buffer, encoding?: BufferEncoding): stri
     return content.toString(encoding)
   }
 
-  // Auto-detect and convert
   const info = detectEncodingInfo(content)
   if (info.type === 'text') {
-    // Remove BOM if present
     let offset = 0
     if (info.hasBom) {
       offset = info.encoding === 'utf-8' ? 3 : 2

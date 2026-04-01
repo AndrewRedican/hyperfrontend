@@ -20,7 +20,6 @@ export function validateItems(instance: unknown[], schema: Schema, ctx: Validati
   let valid = true
 
   if (isArray(items)) {
-    // Tuple validation
     for (let i = 0; i < items.length && i < instance.length; i++) {
       const itemSchema = items[i]
       /* istanbul ignore if -- defensive null check for sparse arrays */
@@ -33,14 +32,12 @@ export function validateItems(instance: unknown[], schema: Schema, ctx: Validati
       }
     }
 
-    // Handle additional items beyond the tuple
     if (instance.length > items.length) {
       if (!validateAdditionalItems(instance, schema, ctx, items.length)) {
         valid = false
       }
     }
   } else {
-    // All items must match the single schema
     for (let i = 0; i < instance.length; i++) {
       const itemCtx = pushPath(ctx, i)
       if (!ctx.validate(instance[i], items, itemCtx)) {
@@ -65,7 +62,6 @@ export function validateItems(instance: unknown[], schema: Schema, ctx: Validati
 function validateAdditionalItems(instance: unknown[], schema: Schema, ctx: ValidationContext, startIndex: number): boolean {
   const additionalItems = schema.additionalItems
 
-  // If not specified, additional items are allowed
   /* istanbul ignore if -- default case handled in items.spec.ts */
   if (additionalItems === undefined) {
     return true
@@ -76,7 +72,6 @@ function validateAdditionalItems(instance: unknown[], schema: Schema, ctx: Valid
 
   /* istanbul ignore next -- additionalItems branching */
   if (additionalItems === false) {
-    // No additional items allowed
     if (instance.length > startIndex) {
       addError(ctx, `Array has too many items. Expected at most ${startIndex}, got ${instance.length}`, instance, 'additionalItems', {
         limit: startIndex,
@@ -85,7 +80,6 @@ function validateAdditionalItems(instance: unknown[], schema: Schema, ctx: Valid
       valid = false
     }
   } else if (typeof additionalItems === 'object') {
-    // Additional items must match the schema
     for (let i = startIndex; i < instance.length; i++) {
       const itemCtx = pushPath(ctx, i)
       /* istanbul ignore else -- validation failure tested in items.spec.ts */
@@ -96,7 +90,6 @@ function validateAdditionalItems(instance: unknown[], schema: Schema, ctx: Valid
       }
     }
   }
-  // If additionalItems === true, any additional items are allowed
 
   return valid
 }

@@ -176,10 +176,6 @@ export interface ChannelHandle {
   /** Subscribe to user messages */
   onMessage(handler: MessageHandler): () => void
 
-  // ============================================
-  // Broker-internal methods (used by handlers)
-  // ============================================
-
   /**
    * Activates the channel with connection details.
    * Called when connection handshake completes.
@@ -209,10 +205,6 @@ export interface ChannelHandle {
    * Used by broker handlers to forward messages.
    */
   notifyMessage(message: IMessage): void
-
-  // ============================================
-  // Security-related methods (used by handlers)
-  // ============================================
 
   /**
    * Stores the pending security request from the initiator.

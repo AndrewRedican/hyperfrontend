@@ -60,33 +60,27 @@ describe('NX Detection', () => {
   describe('findNxWorkspaceRoot', () => {
     it('finds workspace root from nested project', () => {
       const root = findNxWorkspaceRoot(CORE_PROJECT)
-      // This tests line 128-129: if (result) { nxLogger.debug('Found NX workspace root'...) }
       expect(root).toBe(MONOREPO)
       expect(root).not.toBeNull()
     })
 
     it('finds workspace root from workspace root', () => {
       const root = findNxWorkspaceRoot(MONOREPO)
-      // Also covers the "found" branch
       expect(root).toBe(MONOREPO)
     })
 
     it('returns null for non-existent path', () => {
       const root = findNxWorkspaceRoot('/non/existent/path')
-      // This tests the else branch (not found)
       expect(root).toBeNull()
     })
 
     it('returns nearest NX workspace root', () => {
-      // minimal-project is inside hyperfrontend workspace, so it finds that
       const root = findNxWorkspaceRoot(MINIMAL_PROJECT)
-      // Either finds the parent NX workspace (string) or null (if truly isolated)
       const isValidResult = root === null || typeof root === 'string'
       expect(isValidResult).toBe(true)
     })
 
     it('finds workspace root from integrated workspace', () => {
-      // Test with integrated workspace to ensure "found" path is covered
       const root = findNxWorkspaceRoot(NX_INTEGRATED_WORKSPACE)
       expect(root).toBe(NX_INTEGRATED_WORKSPACE)
     })
@@ -128,7 +122,6 @@ describe('NX Detection', () => {
       expect(info?.isIntegrated).toBe(true)
       expect(info?.workspaceLayout.appsDir).toBe('apps')
       expect(info?.workspaceLayout.libsDir).toBe('libs')
-      // nxJson should be empty object for workspace.json fallback
       expect(info?.nxJson).toEqual({})
     })
 
@@ -141,7 +134,6 @@ describe('NX Detection', () => {
     it('detects NX version with semver range stripped', () => {
       const info = getNxWorkspaceInfo(NX_INTEGRATED_WORKSPACE)
 
-      // package.json has "nx": "^19.5.0"
       expect(info?.version).toBe('19.5.0')
     })
 

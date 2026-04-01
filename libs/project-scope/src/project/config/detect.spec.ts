@@ -103,23 +103,18 @@ describe('detectConfigs - caching', () => {
   })
 
   it('returns cached results on subsequent calls', () => {
-    // First call - populates cache
     const result1 = detectConfigs(MINIMAL_PROJECT)
 
-    // Second call - should use cache
     const result2 = detectConfigs(MINIMAL_PROJECT)
 
     expect(result1).toEqual(result2)
   })
 
   it('skips cache when skipCache option is true', () => {
-    // First call
     const result1 = detectConfigs(MINIMAL_PROJECT)
 
-    // Second call with skipCache
     const result2 = detectConfigs(MINIMAL_PROJECT, undefined, { skipCache: true })
 
-    // Results should be equal but the function was re-run
     expect(result1.length).toBe(result2.length)
   })
 
@@ -127,7 +122,6 @@ describe('detectConfigs - caching', () => {
     const allConfigs = detectConfigs(MINIMAL_PROJECT)
     const tsConfigs = detectConfigs(MINIMAL_PROJECT, ['tsconfig'])
 
-    // Should return different results since types are filtered
     expect(allConfigs.length).toBeGreaterThan(tsConfigs.length)
   })
 
@@ -135,7 +129,6 @@ describe('detectConfigs - caching', () => {
     const result1 = detectConfigs(MINIMAL_PROJECT, undefined, { maxDepth: 1 })
     const result2 = detectConfigs(MINIMAL_PROJECT, undefined, { maxDepth: 10 })
 
-    // Results may differ based on depth
     expect(result1).toBeDefined()
     expect(result2).toBeDefined()
   })
@@ -180,7 +173,6 @@ describe('detectConfigs - edge cases', () => {
     mkdirSync(join(TEST_DIR, 'nested-config', 'packages', 'lib'), { recursive: true })
     writeFileSync(join(TEST_DIR, 'nested-config', 'packages', 'lib', 'project.json'), '{}')
 
-    // project.json uses **/project.json pattern which is recursive
     const configs = detectConfigs(join(TEST_DIR, 'nested-config'), ['project.json'], { maxDepth: 10, skipCache: true })
 
     expect(configs.length).toBeGreaterThan(0)
@@ -219,7 +211,6 @@ describe('detectConfigs - edge cases', () => {
       skipCache: true,
     })
 
-    // Results may differ
     expect(withHidden.length).toBeGreaterThanOrEqual(withoutHidden.length)
   })
 })

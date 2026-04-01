@@ -40,7 +40,6 @@ function createTempWorkspace(config: {
     'nx.json': JSON.stringify({ version: 2 }, null, 2),
   }
 
-  // Create libraries
   if (config.libs && config.libs.length > 0) {
     for (const lib of config.libs) {
       files[`libs/${lib.name}/project.json`] = JSON.stringify(lib.projectJson, null, 2)
@@ -50,7 +49,6 @@ function createTempWorkspace(config: {
     }
   }
 
-  // Create plugins
   if (config.plugins && config.plugins.length > 0) {
     for (const plugin of config.plugins) {
       files[`plugins/${plugin.name}/project.json`] = JSON.stringify(plugin.projectJson, null, 2)
@@ -338,7 +336,6 @@ Content.
       const context = {
         filename: join(workspaceDir, 'README.md'),
         sourceCode: {
-          // README does not list libs/logging
           getText: () => createValidReadme([], []),
         },
         report: reportMock,
@@ -479,7 +476,6 @@ Content.
           {
             name: 'no-package-json',
             projectJson: { ...PUBLISHABLE_PROJECT_JSON, name: 'lib-no-package-json' },
-            // no packageJson
           },
         ],
       })
@@ -528,7 +524,6 @@ Content.
       // @ts-expect-error - partial mock
       handler['root']?.(mockNode)
 
-      // Should not report either hidden or node_modules projects
       expect(reportMock).not.toHaveBeenCalledWith(expect.objectContaining({ messageId: 'missingPackage' }))
     })
   })

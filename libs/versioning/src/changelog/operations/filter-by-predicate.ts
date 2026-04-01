@@ -1,9 +1,3 @@
-/**
- * Changelog Predicate-Based Filtering
- *
- * Functions for filtering changelog entries, sections, and items using predicates.
- */
-
 import type { Changelog } from '../models/changelog'
 import type { ChangelogEntry, ChangelogSection, ChangelogItem } from '../models/entry'
 import type { ChangelogSectionType } from '../models/section'
@@ -53,11 +47,9 @@ export function filterEntries(changelog: Changelog, predicate: EntryPredicate): 
  */
 export function filterBreakingChanges(changelog: Changelog): Changelog {
   return filterEntries(changelog, (entry) => {
-    // Check for breaking section
     const hasBreakingSection = entry.sections.some((s) => s.type === 'breaking')
     if (hasBreakingSection) return true
 
-    // Check for breaking items in other sections
     return entry.sections.some((section) => section.items.some((item) => item.breaking))
   })
 }

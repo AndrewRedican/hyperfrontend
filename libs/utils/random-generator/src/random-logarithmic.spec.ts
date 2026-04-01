@@ -13,7 +13,6 @@ describe('randomLogarithmic', () => {
 
     const calculatedMean = sum / sampleSize
 
-    // Check if the calculated mean is close to the expected value.
     expect(calculatedMean).toBeGreaterThan(1)
   })
 })

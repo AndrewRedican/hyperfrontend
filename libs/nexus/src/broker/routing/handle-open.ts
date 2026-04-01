@@ -28,41 +28,32 @@ export function handleOpen(context: RoutingContext, message: MessageEvent<IActio
   const action = message.data
   const processId = <string>(<Record<string, unknown>>(<unknown>action))['processId']
 
-  // Extract security confirmation (may be undefined for backward compatibility)
   const securityConfirmation = <SecurityConfirmation | undefined>(<Record<string, unknown>>(<unknown>action))['security']
 
-  // Get channel by process ID
   const channel = <ChannelHandle | undefined>processManager.get(processId)
 
   if (!channel) {
-    return // Channel not found
+    return
   }
 
-  // Terminate process (handshake complete)
   processManager.remove(processId)
 
-  // Handle security confirmation if present
   if (securityConfirmation) {
-    // Store negotiated protocol if not already set
     if (!channel.getNegotiatedProtocol()) {
       channel.setNegotiatedProtocol(securityConfirmation.protocol)
     }
 
-    // Mark security as ready
     channel.setSecurityReady(true)
 
     logger.info(`${state.name} security ready: protocol=${securityConfirmation.protocol}, active=${securityConfirmation.active}`)
 
-    // Emit security-ready event
     channel.notifyEvent('security-ready', {
       protocol: securityConfirmation.protocol,
       active: securityConfirmation.active,
     })
   } else {
-    // No security - mark as ready (passthrough mode)
     channel.setSecurityReady(true)
   }
 
-  // Notify OPENED event to subscribers
   channel.notifyEvent('open', { origin: message.origin })
 }

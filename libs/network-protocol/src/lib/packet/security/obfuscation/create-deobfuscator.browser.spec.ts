@@ -1,8 +1,3 @@
-/**
- * Browser tests for packet deobfuscation.
- * Node version: create-deobfuscator.spec.ts (identical except for imports)
- */
-
 import type { ObfuscatedPacket } from '../../model'
 import { encrypt, decrypt } from '@hyperfrontend/cryptography/browser'
 import { createPacketDeobfuscator } from './create-deobfuscator'

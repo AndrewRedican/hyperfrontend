@@ -7,7 +7,6 @@ const TEST_DIR = join(__dirname, '__test_fixtures_commit__')
 
 describe('vfs/commit', () => {
   beforeEach(() => {
-    // Create fresh test fixtures for each test
     rmSync(TEST_DIR, { recursive: true, force: true })
     mkdirSync(TEST_DIR, { recursive: true })
     mkdirSync(join(TEST_DIR, 'src'), { recursive: true })
@@ -16,7 +15,6 @@ describe('vfs/commit', () => {
   })
 
   afterAll(() => {
-    // Clean up test fixtures
     rmSync(TEST_DIR, { recursive: true, force: true })
   })
 
@@ -94,7 +92,6 @@ describe('vfs/commit', () => {
       commitChanges(tree)
 
       const stat = statSync(join(TEST_DIR, 'script.sh'))
-      // Check if executable bit is set (mask with 0o111)
       expect(stat.mode & 0o111).toBeGreaterThan(0)
     })
   })
@@ -109,7 +106,6 @@ describe('vfs/commit', () => {
       expect(result.dryRun).toBe(true)
       expect(result.created).toBe(1)
       expect(result.deleted).toBe(1)
-      // Files should not be modified
       expect(existsSync(join(TEST_DIR, 'new-file.txt'))).toBe(false)
       expect(existsSync(join(TEST_DIR, 'package.json'))).toBe(true)
     })
@@ -121,7 +117,6 @@ describe('vfs/commit', () => {
 
       expect(result.dryRun).toBe(true)
       expect(result.updated).toBe(1)
-      // File should not be modified
       expect(readFileSync(join(TEST_DIR, 'package.json'), 'utf-8')).toContain('test')
     })
 
@@ -130,7 +125,6 @@ describe('vfs/commit', () => {
       tree.write('file.txt', 'content')
       commitChanges(tree, { dryRun: true })
 
-      // Changes should still be present
       expect(tree.listChanges()).toHaveLength(1)
     })
   })
@@ -205,7 +199,6 @@ describe('vfs/commit', () => {
     })
 
     it('handles directory deletion', () => {
-      // Create a directory with files
       mkdirSync(join(TEST_DIR, 'to-delete'), { recursive: true })
       writeFileSync(join(TEST_DIR, 'to-delete', 'file.txt'), 'content')
 
@@ -219,37 +212,28 @@ describe('vfs/commit', () => {
 
     it('handles deleting non-existent file during commit', () => {
       const tree = createFsTree(TEST_DIR)
-      // Manually add a delete for already-deleted file (edge case)
       tree.write('temp.txt', 'content')
       commitChanges(tree)
 
-      // Now delete it
       const tree2 = createFsTree(TEST_DIR)
       tree2.delete('temp.txt')
-      // Delete the file directly to simulate concurrent deletion
       rmSync(join(TEST_DIR, 'temp.txt'), { force: true })
 
-      // Should not throw
       expect(() => commitChanges(tree2)).not.toThrow()
     })
 
     it('throws contextual error when commit fails with Error instance', () => {
       const tree = createFsTree(TEST_DIR)
-      // Create a directory where we'll try to write a file
       const blockerDir = join(TEST_DIR, 'blocker-file')
       mkdirSync(blockerDir, { recursive: true })
-      // Create a file inside the directory so directory cannot be used as a file
       writeFileSync(join(blockerDir, 'inner.txt'), 'content')
 
-      // Buffer a write that will fail - trying to write content to an existing directory path
-      // Since the directory already exists, tree sees this as UPDATE
       tree.write('blocker-file', 'content')
 
       expect(() => commitChanges(tree)).toThrow(/Failed to update blocker-file/)
     })
 
     it('handles DELETE change where unlinkSync succeeds for regular file', () => {
-      // Ensure we test the happy path where unlinkSync doesn't throw
       writeFileSync(join(TEST_DIR, 'regular-file.txt'), 'content')
       const tree = createFsTree(TEST_DIR)
       tree.delete('regular-file.txt')
@@ -260,10 +244,9 @@ describe('vfs/commit', () => {
     })
 
     it('throws contextual error when commit fails with non-Error throwable', () => {
-      // Mock writeFileSync to throw a non-Error
       const fs = require('node:fs')
       const mockWriteFileSync = jest.spyOn(fs, 'writeFileSync').mockImplementationOnce(() => {
-        throw 'string error' // non-Error throwable
+        throw 'string error'
       })
 
       const tree = createFsTree(TEST_DIR)

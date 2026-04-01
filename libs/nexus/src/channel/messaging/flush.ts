@@ -18,19 +18,16 @@ import { send } from './send'
 export function flush(channel: ChannelInternals): void {
   const state = channel.getState()
 
-  // Send each queued message
   for (const message of state.queuedMessages) {
     try {
       send(channel, message)
     } catch (error) {
-      // Continue flushing even if one message fails
       if (state.logger) {
         state.logger.error('Failed to send queued message:', <Error>error)
       }
     }
   }
 
-  // Clear the queue
   const newState = clearQueue(state)
   channel.updateState(newState)
 }

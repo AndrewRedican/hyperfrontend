@@ -1,14 +1,11 @@
-// Create a mock that throws on @nx/devkit
 jest.mock('@nx/devkit', () => {
   throw new Error('Cannot find module @nx/devkit')
 })
 
-// We need to re-import after mocking
 const { tryLoadDevkit, isDevkitAvailable, getDevkit, withDevkit, resetDevkitCache } = require('./devkit-loader')
 
 describe('Devkit Loader - Unavailable Scenario (mocked)', () => {
   beforeEach(() => {
-    // Reset the cache before each test
     resetDevkitCache()
   })
 
@@ -32,7 +29,7 @@ describe('Devkit Loader - Unavailable Scenario (mocked)', () => {
     it('caches unavailable result', () => {
       const result1 = tryLoadDevkit()
       const result2 = tryLoadDevkit()
-      expect(result1).toBe(result2) // Same reference (cached)
+      expect(result1).toBe(result2)
       expect(result1.available).toBe(false)
     })
   })

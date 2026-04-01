@@ -358,7 +358,6 @@ describe('createActionCreators', () => {
 
     it('freezes nested contract object', () => {
       const action = actions.requestConnection('process-test')
-      // Object.freeze provides shallow immutability (consistent with original implementation)
       expect(Object.isFrozen(action.contract)).toBe(false)
       expect(Object.isFrozen(action.contract.emitted)).toBe(false)
       expect(Object.isFrozen(action.contract.accepted)).toBe(false)
@@ -367,7 +366,6 @@ describe('createActionCreators', () => {
 
   describe('type safety', () => {
     it('haves correct TypeScript types', () => {
-      // Type tests - these will fail compilation if types are wrong
       const reqAction = actions.requestConnection('p1')
       expect(reqAction.type).toBe(ACTION_TYPES.REQUEST_CONNECTION)
       expect('contract' in reqAction).toBe(true)

@@ -31,17 +31,12 @@ export function addChannel(
 ): ReturnType<typeof createChannel> {
   assertNoCircularRef(settings, 'settings')
 
-  // Check if channel already exists for this window
   const existing = getByWindow(registry, target)
 
   if (existing) {
-    // If names differ, we'd need to update (for now, cast and return existing)
-    // In full implementation, might call renameChannel here
-    // Cast to ChannelHandle since the registry stores full channel objects
     return <ReturnType<typeof createChannel>>(<unknown>existing)
   }
 
-  // Create new channel with broker's contract and logger
   const channel = createChannel(
     {
       name,
@@ -57,13 +52,11 @@ export function addChannel(
       actions,
       processManager,
       cleanup: () => {
-        // Remove from registry when channel is destroyed
         removeFromRegistry(registry, channel)
       },
     }
   )
 
-  // Add to registry
   addToRegistry(registry, channel)
 
   return channel

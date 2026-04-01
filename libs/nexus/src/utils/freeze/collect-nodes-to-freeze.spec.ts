@@ -38,7 +38,6 @@ describe('collectNodesToFreeze', () => {
       }
       const result = collectNodesToFreeze(obj)
 
-      // root + 2 children
       expect(result).toHaveLength(3)
       expect(result.map((n) => n.value)).toContain(obj)
       expect(result.map((n) => n.value)).toContain(obj.a)
@@ -57,7 +56,6 @@ describe('collectNodesToFreeze', () => {
       }
       const result = collectNodesToFreeze(obj)
 
-      // root (0) + level1 (1) + level2 (2) + level3 (3)
       expect(result).toHaveLength(4)
 
       const depths = result.map((n) => n.depth).sort((a, b) => a - b)
@@ -99,7 +97,6 @@ describe('collectNodesToFreeze', () => {
       ]
       const result = collectNodesToFreeze(arr)
 
-      // root array + 2 inner arrays
       expect(result).toHaveLength(3)
       expect(result.map((n) => n.value)).toContain(arr)
       expect(result.map((n) => n.value)).toContain(arr[0])
@@ -110,7 +107,6 @@ describe('collectNodesToFreeze', () => {
       const arr = [{ a: 1 }, { b: 2 }]
       const result = collectNodesToFreeze(arr)
 
-      // root array + 2 objects
       expect(result).toHaveLength(3)
       expect(result.map((n) => n.value)).toContain(arr)
       expect(result.map((n) => n.value)).toContain(arr[0])
@@ -127,7 +123,6 @@ describe('collectNodesToFreeze', () => {
       }
       const result = collectNodesToFreeze(obj)
 
-      // root (0), settings (1), items (2), {id:1} (3), {id:2} (3)
       expect(result).toHaveLength(5)
     })
 
@@ -139,7 +134,6 @@ describe('collectNodesToFreeze', () => {
       }
       const result = collectNodesToFreeze(obj)
 
-      // root: 0, config: 1, list: 2, {nested:...}: 3, {deep:true}: 4
       expect(result).toHaveLength(5)
 
       const depths = result.map((n) => n.depth).sort((a, b) => a - b)
@@ -196,7 +190,6 @@ describe('collectNodesToFreeze', () => {
       const obj = { a: null, b: { c: null } }
       const result = collectNodesToFreeze(obj)
 
-      // root + obj.b
       expect(result).toHaveLength(2)
       expect(result.map((n) => n.value)).toContain(obj)
       expect(result.map((n) => n.value)).toContain(obj.b)
@@ -207,7 +200,6 @@ describe('collectNodesToFreeze', () => {
       const wrapper = { arr }
       const result = collectNodesToFreeze(wrapper)
 
-      // root wrapper + nested array
       expect(result).toHaveLength(2)
       expect(result.map((n) => n.value)).toContain(wrapper)
       expect(result.map((n) => n.value)).toContain(arr)
@@ -253,7 +245,6 @@ describe('collectNodesToFreeze', () => {
 
       const result = collectNodesToFreeze(obj)
 
-      // Should only collect the object once
       expect(result).toHaveLength(1)
       expect(result[0].value).toBe(obj)
     })
@@ -267,7 +258,6 @@ describe('collectNodesToFreeze', () => {
       const root = { a, b }
       const result = collectNodesToFreeze(root)
 
-      // root + a + b (each once)
       expect(result).toHaveLength(3)
       expect(result.map((n) => n.value)).toContain(root)
       expect(result.map((n) => n.value)).toContain(a)
@@ -284,17 +274,15 @@ describe('collectNodesToFreeze', () => {
 
       const result = collectNodesToFreeze(root)
 
-      // root + child + grandchild (each once)
       expect(result).toHaveLength(3)
     })
 
     it('handles array with circular reference to parent', () => {
       const arr: unknown[] = [1, 2]
-      arr.push(arr) // arr[2] = arr
+      arr.push(arr)
 
       const result = collectNodesToFreeze(arr)
 
-      // Only the array itself, collected once
       expect(result).toHaveLength(1)
       expect(result[0].value).toBe(arr)
     })
@@ -306,7 +294,6 @@ describe('collectNodesToFreeze', () => {
       const obj = { child: frozen }
       const result = collectNodesToFreeze(obj)
 
-      // Only root (child is already frozen)
       expect(result).toHaveLength(1)
       expect(result[0].value).toBe(obj)
     })
@@ -324,7 +311,6 @@ describe('collectNodesToFreeze', () => {
       const obj = { frozen, unfrozen }
       const result = collectNodesToFreeze(obj)
 
-      // root + unfrozen
       expect(result).toHaveLength(2)
       expect(result.map((n) => n.value)).toContain(obj)
       expect(result.map((n) => n.value)).toContain(unfrozen)
@@ -337,7 +323,6 @@ describe('collectNodesToFreeze', () => {
       const obj = { frozen }
       const result = collectNodesToFreeze(obj)
 
-      // root + unfrozenDeep (frozen is skipped but its children are visited)
       expect(result).toHaveLength(2)
       expect(result.map((n) => n.value)).toContain(obj)
       expect(result.map((n) => n.value)).toContain(unfrozenDeep)
@@ -350,11 +335,9 @@ describe('collectNodesToFreeze', () => {
       const frozen = Object.freeze({ backToRoot: root })
       root.child.frozen = frozen
 
-      // This should NOT throw and should handle gracefully
       expect(() => collectNodesToFreeze(root)).not.toThrow()
 
       const result = collectNodesToFreeze(root)
-      // root + child (frozen is skipped, backToRoot is circular back to root)
       expect(result.length).toBeGreaterThanOrEqual(2)
     })
 
@@ -388,14 +371,12 @@ describe('collectNodesToFreeze', () => {
       }
       const result = collectNodesToFreeze(obj, { maxDepth: 2 })
 
-      // Only root (0), level1 (1), level2 (2) - stops before 3+
       expect(result).toHaveLength(3)
       const depths = result.map((n) => n.depth)
       expect(Math.max(...depths)).toBeLessThanOrEqual(2)
     })
 
     it('uses default maxDepth when not specified', () => {
-      // Create a structure deeper than typical but less than default (100)
       let current: Record<string, unknown> = {}
       const root = current
       for (let i = 0; i < 50; i++) {
@@ -405,7 +386,6 @@ describe('collectNodesToFreeze', () => {
 
       const result = collectNodesToFreeze(root)
 
-      // Should collect all 51 nodes (depth 0-50)
       expect(result.length).toBe(51)
     })
 
@@ -424,7 +404,6 @@ describe('collectNodesToFreeze', () => {
       const unfrozen = { value: 'mutable' }
       const frozen = Object.freeze({ child: unfrozen })
 
-      // This was the problematic case - should work with WeakSet approach
       expect(() => collectNodesToFreeze(frozen)).not.toThrow()
 
       const result = collectNodesToFreeze(frozen)
@@ -438,7 +417,6 @@ describe('collectNodesToFreeze', () => {
       expect(() => collectNodesToFreeze(sealed)).not.toThrow()
 
       const result = collectNodesToFreeze(sealed)
-      // Both sealed parent and unfrozen child should be collected
       expect(result).toHaveLength(2)
     })
 

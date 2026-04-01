@@ -73,31 +73,25 @@ const rule: Rule.RuleModule = {
         const mainNodeCast = mainNode as unknown as Rule.Node
 
         if (hasExports) {
-          // Has both main and exports - just remove main
           context.report({
             node: mainNodeCast,
             messageId: 'mainWithExports',
             fix(fixer) {
-              // Remove the entire main property including leading newline/indent and trailing comma
               const tokenAfter = sourceCode.getTokenAfter(mainNodeCast)
               const tokenBefore = sourceCode.getTokenBefore(mainNodeCast)
               const text = sourceCode.getText()
 
-              // Check for trailing comma - remove from end of previous line to end of comma
               if (tokenAfter && (<{ value?: string }>tokenAfter).value === ',') {
-                // Find the start of the line containing "main" (go back to previous newline)
                 let startPos = mainNodeCast.range[0]
                 while (startPos > 0 && text[startPos - 1] !== '\n') {
                   startPos--
                 }
-                // Include the newline before this line
                 if (startPos > 0 && text[startPos - 1] === '\n') {
                   startPos--
                 }
                 return fixer.removeRange([startPos, tokenAfter.range[1]])
               }
 
-              // Check for leading comma (if main is not the first property)
               if (tokenBefore && (<{ value?: string }>tokenBefore).value === ',') {
                 return fixer.removeRange([tokenBefore.range[0], mainNodeCast.range[1]])
               }
@@ -106,14 +100,10 @@ const rule: Rule.RuleModule = {
             },
           })
         } else {
-          // Has main but no exports - report error with suggestion
-          // Auto-fix is complex here as we'd need to add a new exports field
-          // For safety, we just report and let the developer fix it
           context.report({
             node: mainNodeCast,
             messageId: 'noMainField',
             fix(fixer) {
-              // If we have the main value, we can transform main to exports
               if (mainValue) {
                 const mainNodeTyped = <{ range: [number, number] }>(<unknown>mainNode)
                 const replacement = `"exports": {\n    ".": "${mainValue}"\n  }`

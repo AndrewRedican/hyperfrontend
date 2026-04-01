@@ -79,7 +79,6 @@ describe('Integration: Contract Validation', () => {
 
       const updatedContract = broker.contract
 
-      // Should contain both base and extension actions
       expect(updatedContract.emitted).toHaveLength(2)
       expect(updatedContract.accepted).toHaveLength(2)
     })
@@ -126,7 +125,6 @@ describe('Integration: Contract Validation', () => {
 
       const finalContract = broker.contract
 
-      // Should contain base + ext1 + ext2
       expect(finalContract.emitted).toHaveLength(3)
       expect(finalContract.accepted).toHaveLength(3)
     })
@@ -163,7 +161,6 @@ describe('Integration: Contract Validation', () => {
 
       const merged = mergeContracts(contract1, contract2)
 
-      // Duplicate 'SHARED' should only appear once
       const sharedCount = merged.emitted.filter((a) => a.type === 'SHARED').length
       expect(sharedCount).toBe(1)
       expect(merged.accepted).toHaveLength(2)
@@ -228,12 +225,10 @@ describe('Integration: Contract Validation', () => {
       const channel = broker.addChannel('test-channel', <Window>(<unknown>mockWindow))
       channel.connect()
 
-      // Sending allowed type should work
       expect(() => {
         channel.send('ALLOWED_EMIT', {})
       }).not.toThrow()
 
-      // Sending non-contract type should throw an error
       expect(() => {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         channel.send(<any>'NOT_IN_CONTRACT', {})
@@ -260,7 +255,6 @@ describe('Integration: Contract Validation', () => {
       channel1.connect()
       channel2.connect()
 
-      // Both channels should use same contract
       expect(() => {
         channel1.send('SHARED_EMIT', {})
         channel2.send('SHARED_EMIT', {})
@@ -309,7 +303,6 @@ describe('Integration: Contract Validation', () => {
       const channel = broker.addChannel('bidirectional-channel', <Window>(<unknown>mockWindow))
       channel.connect()
 
-      // Can send in both directions
       expect(() => {
         channel.send('PING', {})
         channel.send('DATA_SEND', { payload: 'test' })
@@ -328,7 +321,6 @@ describe('Integration: Contract Validation', () => {
         settings: { contractExtension: true },
       })
 
-      // Extend with additional service capabilities
       const authExtension: IChannelContract = {
         emitted: [{ type: 'AUTH_LOGIN' }, { type: 'AUTH_LOGOUT' }],
         accepted: [{ type: 'AUTH_TOKEN' }, { type: 'AUTH_EXPIRED' }],
@@ -347,7 +339,7 @@ describe('Integration: Contract Validation', () => {
         createBroker({
           name: 'test-broker',
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          contract: <any>{}, // Missing emitted/accepted
+          contract: <any>{},
           settings: { logLevel: 'error' },
         })
       }).toThrow()
@@ -358,7 +350,7 @@ describe('Integration: Contract Validation', () => {
         createBroker({
           name: 'test-broker',
           contract: {
-            emitted: [{ type: '' }], // Empty type
+            emitted: [{ type: '' }],
             accepted: [{ type: 'VALID' }],
           },
           settings: { logLevel: 'error' },

@@ -50,7 +50,6 @@ export function createValidationContext(
 ): ValidationContext {
   const definitions = createMap<string, Schema>()
 
-  // Pre-populate definitions from root schema
   if (rootSchema.definitions) {
     for (const [name, schema] of entries(rootSchema.definitions)) {
       definitions.set(`#/definitions/${name}`, schema)

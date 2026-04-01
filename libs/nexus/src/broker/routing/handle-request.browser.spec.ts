@@ -80,7 +80,6 @@ describe('handleRequest', () => {
 
     handleRequest(routingContext, message)
 
-    // Channel should be created and added to registry
     const channel = registry.getByName('remote-broker-1')
     expect(channel).toBeDefined()
   })
@@ -98,11 +97,9 @@ describe('handleRequest', () => {
       source: mockWindow,
     }
 
-    // First request
     handleRequest(routingContext, message)
     const firstChannel = registry.getById('remote-broker-1')
 
-    // Second request with same sender
     handleRequest(routingContext, message)
     const secondChannel = registry.getById('remote-broker-1')
 
@@ -122,24 +119,18 @@ describe('handleRequest', () => {
       source: mockWindow,
     }
 
-    // First request to establish channel
     handleRequest(routingContext, message)
 
-    // Simulate channel being open (in real scenario, would be opened via handshake)
     const channel = registry.getById('remote-broker-1')
     if (channel) {
-      // Mock isOpen property
       Object.defineProperty(channel, 'isActive', { value: () => true, writable: true })
       Object.defineProperty(channel, 'id', { value: 'remote-broker-1', writable: true })
 
-      // Re-add to registry with new ID so getById can find it
       registry.add(channel)
     }
 
-    // Second request when channel already open
     handleRequest(routingContext, message)
 
-    // Should have sent acceptance
     expect(mockWindow.postMessage).toHaveBeenCalled()
   })
 
@@ -166,20 +157,15 @@ describe('handleRequest', () => {
       source: mockWindow,
     }
 
-    // First request
     handleRequest(debugContext, message)
 
-    // Get channel and mock it as open with different name
     const channel = registry.getByName('different-sender-id')
     if (channel) {
-      // Make channel active and change its ID to simulate reload scenario
-      // We need to access the internal state setter
       Object.defineProperty(channel, 'isActive', { value: () => true, writable: true, configurable: true })
       Object.defineProperty(channel, 'id', { value: 'original-id', writable: true, configurable: true })
       Object.defineProperty(channel, 'name', { value: 'test-channel', writable: true, configurable: true })
     }
 
-    // Second request with different sender ID (simulating reload)
     handleRequest(debugContext, message)
 
     expect(mockLogger.info).toHaveBeenCalledWith(expect.stringContaining('detected channel'))
@@ -187,7 +173,6 @@ describe('handleRequest', () => {
 
   it('denies connection for invalid contract', () => {
     const invalidContract = <IChannelContract>(<unknown>{
-      // Missing required fields
       accepted: null,
     })
 
@@ -205,7 +190,6 @@ describe('handleRequest', () => {
 
     handleRequest(routingContext, message)
 
-    // Should have sent denial
     expect(mockWindow.postMessage).toHaveBeenCalledWith(
       expect.objectContaining({
         type: '[nexus] connection-request-denied',
@@ -220,7 +204,7 @@ describe('handleRequest', () => {
       ...mockBrokerState,
       settings: {
         ...mockBrokerState.settings,
-        securityPolicy: jest.fn(() => false), // Reject all
+        securityPolicy: jest.fn(() => false),
       },
     }
 
@@ -243,7 +227,6 @@ describe('handleRequest', () => {
 
     handleRequest(contextWithPolicy, message)
 
-    // Should have sent denial
     expect(mockWindow.postMessage).toHaveBeenCalledWith(
       expect.objectContaining({
         type: '[nexus] connection-request-denied',
@@ -258,7 +241,7 @@ describe('handleRequest', () => {
       ...mockBrokerState,
       settings: {
         ...mockBrokerState.settings,
-        securityPolicy: jest.fn(() => true), // Allow all
+        securityPolicy: jest.fn(() => true),
       },
     }
 
@@ -281,7 +264,6 @@ describe('handleRequest', () => {
 
     handleRequest(contextWithPolicy, message)
 
-    // Should have sent acceptance
     expect(mockWindow.postMessage).toHaveBeenCalledWith(
       expect.objectContaining({
         type: '[nexus] connection-request-accepted',
@@ -306,7 +288,6 @@ describe('handleRequest', () => {
 
     handleRequest(routingContext, message)
 
-    // Should have sent acceptance with broker's contract
     expect(mockWindow.postMessage).toHaveBeenCalledWith(
       expect.objectContaining({
         contract: mockBrokerState.contract,
@@ -317,8 +298,6 @@ describe('handleRequest', () => {
   })
 
   it('immediately accepts broker-managed channels (isReadyToConnect returns true)', () => {
-    // Channels created by broker.addChannel are broker-managed
-    // and should accept immediately without scheduling
     const action: IAction = {
       type: '[nexus] connection-request',
       senderId: 'remote-broker-1',
@@ -334,8 +313,6 @@ describe('handleRequest', () => {
 
     handleRequest(routingContext, message)
 
-    // Broker-managed channels have isReadyToConnect() = true
-    // So acceptance should be sent immediately
     expect(mockWindow.postMessage).toHaveBeenCalledWith(
       expect.objectContaining({
         type: '[nexus] connection-request-accepted',
@@ -363,12 +340,10 @@ describe('handleRequest', () => {
     const channel = registry.getByName('remote-broker-1')
     expect(channel).toBeDefined()
 
-    // Mock channel as not ready
     Object.defineProperty(channel, 'isReadyToConnect', { value: () => false, writable: true })
     const scheduleActivationMock = jest.fn()
     Object.defineProperty(channel, 'scheduleActivation', { value: scheduleActivationMock, writable: true })
 
-    // New request
     const nextAction: IAction = {
       type: '[nexus] connection-request',
       senderId: 'new-remote-broker',
@@ -620,7 +595,6 @@ describe('handleRequest', () => {
 
     handleRequest(routingContext, message)
 
-    // Process should be removed after denial
     expect(mockWindow.postMessage).toHaveBeenCalledWith(
       expect.objectContaining({
         type: '[nexus] connection-request-denied',
@@ -681,7 +655,6 @@ describe('handleRequest', () => {
 
     handleRequest(routingContext, message)
 
-    // Should not create a channel since action is invalid
     const channel = registry.getByName('remote-broker-1')
     expect(channel).toBeFalsy()
     expect(mockWindow.postMessage).not.toHaveBeenCalled()

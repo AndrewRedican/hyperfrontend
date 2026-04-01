@@ -3,7 +3,6 @@ import type { IAction } from '../../types/action'
 import type { ChannelInternals } from '../types'
 import { disconnect } from './disconnect'
 
-// Mutable version of ChannelState for testing
 type MutableChannelState = { -readonly [K in keyof ChannelState]: ChannelState[K] }
 
 describe('channel/lifecycle/disconnect', () => {
@@ -19,7 +18,7 @@ describe('channel/lifecycle/disconnect', () => {
       name: 'test-channel',
       target: window,
       origin: 'https://example.com',
-      active: true, // Start active
+      active: true,
       connectTimestamp: Date.now(),
       contract: { accepted: [], emitted: [] },
       acceptedActions: [],

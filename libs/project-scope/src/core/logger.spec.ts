@@ -123,7 +123,6 @@ describe('core/logger', () => {
 
   describe('createScopedLogger', () => {
     beforeEach(() => {
-      // Suppress console output in tests
       jest.spyOn(console, 'error').mockImplementation()
       jest.spyOn(console, 'warn').mockImplementation()
       jest.spyOn(console, 'log').mockImplementation()
@@ -183,8 +182,6 @@ describe('core/logger', () => {
     })
 
     it('sanitizes secrets in metadata when sanitizeSecrets is true', () => {
-      // Test that sanitize is called by passing objects with sensitive keys
-      // The logger should not throw when handling sensitive data
       const log = createScopedLogger('test', { level: 'debug', sanitizeSecrets: true })
       expect(() => log.info('Config', { apiKey: 'secret', password: 'test' })).not.toThrow()
     })
@@ -219,7 +216,7 @@ describe('core/logger', () => {
     })
 
     it('getGlobalLogLevel returns current global level', () => {
-      expect(getGlobalLogLevel()).toBeNull() // Initially null
+      expect(getGlobalLogLevel()).toBeNull()
 
       setGlobalLogLevel('warn')
       expect(getGlobalLogLevel()).toBe('warn')

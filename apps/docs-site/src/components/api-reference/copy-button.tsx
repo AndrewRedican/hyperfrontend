@@ -32,7 +32,6 @@ export function CopyButton({ text, className = '', size = 'sm' }: CopyButtonProp
       await navigator.clipboard.writeText(text)
       setCopied(true)
     } catch {
-      // Fallback for browsers that don't support clipboard API
       const textArea = document.createElement('textarea')
       textArea.value = text
       textArea.style.position = 'fixed'

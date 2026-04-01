@@ -25,7 +25,6 @@ export type ChannelHandle = object
  * ```
  */
 export const createProcessManager = () => {
-  // Private state - Map from process ID to channel
   const processes = createMap<string, ChannelHandle>()
 
   return freeze({

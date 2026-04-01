@@ -40,7 +40,6 @@ export const assertiveTestNames = createRule<[], MessageIds>({
   create(context) {
     return {
       CallExpression(node: TSESTree.CallExpression) {
-        // Check if the callee is an identifier with a test function name
         if (node.callee.type !== 'Identifier') {
           return
         }
@@ -50,19 +49,16 @@ export const assertiveTestNames = createRule<[], MessageIds>({
           return
         }
 
-        // Get the first argument (test description)
         const firstArg = node.arguments[0]
         if (!firstArg) {
           return
         }
 
-        // Extract the string value from the first argument
         let testName: string | undefined
 
         if (firstArg.type === 'Literal' && typeof firstArg.value === 'string') {
           testName = firstArg.value
         } else if (firstArg.type === 'TemplateLiteral' && firstArg.quasis.length === 1) {
-          // Simple template literal without expressions
           /* istanbul ignore next - cooked is always defined for valid template literals */
           testName = firstArg.quasis[0].value.cooked ?? firstArg.quasis[0].value.raw
         }

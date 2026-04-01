@@ -72,9 +72,7 @@ function groupClassifiedCommitsBySection(
 
   for (const classified of commits) {
     const sectionType = mapping[classified.commit.type ?? 'chore']
-    // Skip if explicitly excluded (null)
     if (sectionType === null) continue
-    // Fallback to 'chores' for unmapped types
     const resolvedSection = sectionType ?? 'chores'
     if (!groups[resolvedSection]) {
       groups[resolvedSection] = []
@@ -100,9 +98,7 @@ function groupCommitsBySection(
 
   for (const commit of commits) {
     const sectionType = mapping[commit.type ?? 'chore']
-    // Skip if explicitly excluded (null)
     if (sectionType === null) continue
-    // Fallback to 'chores' for unmapped types
     const resolvedSection = sectionType ?? 'chores'
     if (!groups[resolvedSection]) {
       groups[resolvedSection] = []
@@ -124,18 +120,15 @@ function groupCommitsBySection(
  * @returns A changelog item with proper scope handling
  */
 function classifiedCommitToItem(classified: ClassifiedCommit): ChangelogItem {
-  // Apply scope transformation based on classification
   const commit = toChangelogCommit(classified)
   const indirect = isIndirectSource(classified.source)
 
   let text = commit.subject
 
-  // Add scope prefix if preserved (indirect commits)
   if (commit.scope) {
     text = `**${commit.scope}:** ${text}`
   }
 
-  // Add breaking change indicator
   if (commit.breaking) {
     text = `⚠️ BREAKING: ${text}`
   }
@@ -156,12 +149,10 @@ function classifiedCommitToItem(classified: ClassifiedCommit): ChangelogItem {
 function commitToItem(commit: ConventionalCommit): ChangelogItem {
   let text = commit.subject
 
-  // Add scope prefix if present
   if (commit.scope) {
     text = `**${commit.scope}:** ${text}`
   }
 
-  // Add breaking change indicator
   if (commit.breaking) {
     text = `⚠️ BREAKING: ${text}`
   }
@@ -190,23 +181,17 @@ export function createGenerateChangelogStep(): FlowStep {
       const { config, state } = ctx
       const { commits, nextVersion, bumpType } = state
 
-      // Resolve commit type to section mapping
       const commitTypeMapping = resolveCommitTypeMapping(config.commitTypeToSection)
 
-      // Skip if no bump needed
       if (!nextVersion || bumpType === 'none') {
         return createSkippedResult('No version bump, skipping changelog generation')
       }
 
-      // Skip if changelog disabled
       if (config.skipChangelog) {
         return createSkippedResult('Changelog generation disabled')
       }
 
-      // Handle case with no commits (e.g., first release)
       if (!commits || commits.length === 0) {
-        // Generate compare URL using commit hashes ONLY
-        // Only generate if we have a valid base commit (effectiveBaseCommit will be null if fallback was used)
         let compareUrl: string | undefined
         if (state.repositoryConfig && state.effectiveBaseCommit) {
           const currentCommit = ctx.git.getHeadHash()
@@ -217,7 +202,6 @@ export function createGenerateChangelogStep(): FlowStep {
               toCommit: currentCommit,
             }) ?? undefined
         } else if (state.publishedCommit && !state.effectiveBaseCommit) {
-          // Log why we're not generating a compare URL
           ctx.logger.info('Compare URL omitted: published commit not in current history')
         }
 
@@ -234,19 +218,15 @@ export function createGenerateChangelogStep(): FlowStep {
         }
       }
 
-      // Use classification result when available for proper scope handling
       const { classificationResult } = state
       const sections: ChangelogSection[] = []
 
       if (classificationResult && classificationResult.included.length > 0) {
-        // Use classified commits for proper scope display rules
         const classifiedCommits = classificationResult.included
 
-        // Separate direct and indirect commits
         const directCommits = classifiedCommits.filter((c) => !isIndirectSource(c.source))
         const indirectCommits = classifiedCommits.filter((c) => isIndirectSource(c.source))
 
-        // Add breaking changes section first if any
         const breakingCommits = classifiedCommits.filter((c) => c.commit.breaking)
         if (breakingCommits.length > 0) {
           sections.push(
@@ -267,10 +247,8 @@ export function createGenerateChangelogStep(): FlowStep {
           )
         }
 
-        // Group direct commits by section
         const groupedDirect = groupClassifiedCommitsBySection(directCommits, commitTypeMapping)
 
-        // Add other sections in conventional order (direct commits only)
         const sectionOrder: readonly { type: ChangelogSectionType; heading: string }[] = [
           { type: 'features', heading: 'Features' },
           { type: 'fixes', heading: 'Bug Fixes' },
@@ -291,21 +269,18 @@ export function createGenerateChangelogStep(): FlowStep {
           }
         }
 
-        // Add Dependency Updates section for indirect commits if any
         if (indirectCommits.length > 0) {
           sections.push(
             createChangelogSection(
-              'other', // Use 'other' as section type for dependency updates
+              'other',
               'Dependency Updates',
               indirectCommits.map((c) => classifiedCommitToItem(c))
             )
           )
         }
       } else {
-        // Fallback: use commits without classification (backward compatibility)
         const grouped = groupCommitsBySection(commits, commitTypeMapping)
 
-        // Add breaking changes section first if any
         const breakingCommits = commits.filter((c) => c.breaking)
         if (breakingCommits.length > 0) {
           sections.push(
@@ -320,7 +295,6 @@ export function createGenerateChangelogStep(): FlowStep {
           )
         }
 
-        // Add other sections in conventional order
         const sectionOrder: readonly { type: ChangelogSectionType; heading: string }[] = [
           { type: 'features', heading: 'Features' },
           { type: 'fixes', heading: 'Bug Fixes' },
@@ -342,8 +316,6 @@ export function createGenerateChangelogStep(): FlowStep {
         }
       }
 
-      // Generate compare URL using commit hashes ONLY
-      // Only generate if we have a valid base commit (effectiveBaseCommit will be null if fallback was used)
       let compareUrl: string | undefined
       if (state.repositoryConfig && state.effectiveBaseCommit) {
         const currentCommit = ctx.git.getHeadHash()
@@ -355,11 +327,9 @@ export function createGenerateChangelogStep(): FlowStep {
           }) ?? undefined
         ctx.logger.debug(`Compare URL: ${state.effectiveBaseCommit.slice(0, 7)}...${currentCommit.slice(0, 7)}`)
       } else if (state.publishedCommit && !state.effectiveBaseCommit) {
-        // Log why we're not generating a compare URL
         ctx.logger.info('Compare URL omitted: published commit not in current history')
       }
 
-      // Create the entry
       const entry = createChangelogEntry(nextVersion, {
         date: createDate().toISOString().split('T')[0],
         sections,
@@ -393,7 +363,6 @@ export function createWriteChangelogStep(): FlowStep {
       const { tree, projectRoot, config, state, logger } = ctx
       const { changelogEntry, nextVersion, bumpType } = state
 
-      // Skip if no bump or no changelog
       if (!nextVersion || bumpType === 'none' || !changelogEntry || config.skipChangelog) {
         return createSkippedResult('No changelog to write')
       }
@@ -404,18 +373,15 @@ export function createWriteChangelogStep(): FlowStep {
       const shouldBackup = config.backupChangelog && tree.exists(changelogPath) && tree.isFile(changelogPath)
       let existingContent = ''
 
-      // Create backup if enabled and changelog exists
       if (shouldBackup) {
         logger.debug(`Creating backup: ${changelogFileName} -> ${changelogFileName.replace('.md', '.backup.md')}`)
         tree.rename(changelogPath, backupPath)
-        // Read from backup path since we renamed
         try {
           existingContent = tree.read(backupPath, 'utf-8') ?? ''
         } catch {
           logger.debug(`Could not read backup ${backupPath}`)
         }
       } else {
-        // Read existing changelog normally
         try {
           existingContent = tree.read(changelogPath, 'utf-8') ?? ''
         } catch {
@@ -423,7 +389,6 @@ export function createWriteChangelogStep(): FlowStep {
         }
       }
 
-      // If no existing content, create new changelog
       if (!existingContent.trim()) {
         const newChangelog = {
           header: {
@@ -451,13 +416,11 @@ export function createWriteChangelogStep(): FlowStep {
         }
       }
 
-      // Parse existing and add entry
       const existing = parseChangelog(existingContent)
 
       const isPendingPublication = state.isPendingPublication === true
       let changelog = existing
 
-      // Clean up stacked entries when in pending publication state
       if (isPendingPublication && state.publishedVersion) {
         const publishedVer = parseVersion(state.publishedVersion)
         if (publishedVer.success && publishedVer.version) {
@@ -477,13 +440,11 @@ export function createWriteChangelogStep(): FlowStep {
         }
       }
 
-      // Add entry (replaceExisting handles case where nextVersion entry already exists)
       const updated = addEntry(changelog, changelogEntry, { replaceExisting: isPendingPublication })
       const serialized = serializeChangelog(updated)
 
       tree.write(changelogPath, serialized)
 
-      // Clean up backup after successful write
       if (shouldBackup && tree.exists(backupPath)) {
         logger.debug(`Removing backup: ${changelogFileName.replace('.md', '.backup.md')}`)
         tree.delete(backupPath)

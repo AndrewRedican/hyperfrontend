@@ -25,23 +25,19 @@ export function handleInvalid(context: RoutingContext, message: MessageEvent<IAc
   const { processManager } = context
   const action = message.data
 
-  // Use type guard to safely access processId
   if (!isActionWithProcess(action)) {
-    return // Invalid action structure
+    return
   }
 
   const processId = action.processId
 
-  // Get channel by process ID
   const channel = <ChannelHandle | undefined>processManager.get(processId)
 
   if (!channel) {
-    return // Channel not found
+    return
   }
 
-  // Extract error details
   const reason = <string | undefined>(<unknown>action)['error']
 
-  // Notify INVALID event with error details
   channel.notifyEvent('invalid', { reason, origin: message.origin })
 }

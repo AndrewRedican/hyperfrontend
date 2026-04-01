@@ -1,8 +1,3 @@
-/**
- * Node.js integration tests for protocol factory.
- * Browser version: create-protocol-factory.browser.spec.ts (identical except for imports)
- */
-
 import { encrypt, decrypt } from '@hyperfrontend/cryptography/node'
 import { createHash } from '@hyperfrontend/cryptography/node'
 import { getTimeBasedPassword, getTimeBasedPasswords } from '@hyperfrontend/cryptography/node'
@@ -241,7 +236,7 @@ describe('createProtocolFactory (Node.js)', () => {
 
       const createProtocol = createProtocolFactory(createDynamicKeyEncryption, createTimeIntervalObfuscation)
       const logger = createMockLogger()
-      const protocolProvider = createProtocol(logger, 1000) // 1 second refresh rate
+      const protocolProvider = createProtocol(logger, 1000)
 
       const sendPacket = () => void 0
       const receivePacket = () => void 0

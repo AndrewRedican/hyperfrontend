@@ -99,7 +99,6 @@ const rule: Rule.RuleModule = {
           keyName = key.value
         }
 
-        // Check for iife or umd configuration
         if (keyName === 'iife' || keyName === 'umd') {
           const value = node.value
           if (value.type === 'JSONObjectExpression') {

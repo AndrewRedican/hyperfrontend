@@ -7,7 +7,6 @@
  * @module @hyperfrontend/immutable-api-utils/built-in-copy/console
  */
 
-// Capture references at module initialization time
 const _console = globalThis.console
 const _freeze = globalThis.Object.freeze
 

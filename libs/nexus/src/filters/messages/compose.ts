@@ -15,7 +15,6 @@ export type MessageFilter<T extends IMessage = IMessage> = (handler: MessageHand
  */
 export function compose<T extends IMessage = IMessage>(...filters: MessageFilter<T>[]): MessageFilter<T> {
   return (handler: MessageHandler<T>): MessageHandler<T> => {
-    // Wrap left-to-right so rightmost filter executes first
     return filters.reduce((wrappedHandler, filter) => filter(wrappedHandler), handler)
   }
 }

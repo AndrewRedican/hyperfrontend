@@ -7,7 +7,6 @@
  * @module @hyperfrontend/immutable-api-utils/built-in-copy/object
  */
 
-// Capture references at module initialization time
 const _Object = globalThis.Object
 const _Reflect = globalThis.Reflect
 const _ObjectPrototype = _Object.prototype

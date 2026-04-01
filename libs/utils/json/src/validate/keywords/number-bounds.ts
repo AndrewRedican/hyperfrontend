@@ -43,7 +43,6 @@ export function validateNumberBounds(instance: number, schema: Schema, ctx: Vali
   }
 
   if (schema.multipleOf !== undefined && schema.multipleOf > 0) {
-    // Use epsilon comparison for floating point precision
     const remainder = abs(instance % schema.multipleOf)
     const epsilon = 1e-10
     if (remainder > epsilon && schema.multipleOf - remainder > epsilon) {

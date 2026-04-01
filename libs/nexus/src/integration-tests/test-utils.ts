@@ -82,18 +82,15 @@ export function createMockWindow(): MockWindow {
  * @param originB - Origin URL for window B (e.g., 'http://host-b.com')
  */
 export function linkMockWindows(windowA: MockWindow, windowB: MockWindow, originA: string, originB: string): void {
-  // When A posts a message, B receives it
   windowA.postMessage.mockImplementation((data: unknown) => {
     const event = new MessageEvent('message', {
       data,
       origin: originA,
       source: <Window>(<unknown>windowA),
     })
-    // Use setTimeout to simulate async message delivery
     setTimeout(() => windowB._dispatchMessage(event), 0)
   })
 
-  // When B posts a message, A receives it
   windowB.postMessage.mockImplementation((data: unknown) => {
     const event = new MessageEvent('message', {
       data,

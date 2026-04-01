@@ -72,7 +72,6 @@ const DEFAULT_OPTIONS: Required<NoUnsafeRegexOptions> = {
  * @returns An object indicating whether exponential bounds were found and the bound string if found.
  */
 function hasExponentialBounds(pattern: string, maxBound: number): { found: boolean; bound?: string } {
-  // Match quantifiers like {n,m} or {n,}
   // eslint-disable-next-line workspace/no-unsafe-regex -- This regex is safe and used for static analysis
   const quantifierRegex = /\{(\d+),(\d+)?\}/g
   let match: RegExpExecArray | null
@@ -96,10 +95,8 @@ function hasExponentialBounds(pattern: string, maxBound: number): { found: boole
  */
 function isUnsafePattern(pattern: string, limit: number): boolean {
   try {
-    // safe-regex2 returns true if safe, false if potentially dangerous
     return !safeRegex(pattern, { limit })
   } catch {
-    // If parsing fails, consider it potentially unsafe
     return true
   }
 }
@@ -243,7 +240,6 @@ export default createRule<[NoUnsafeRegexOptions], MessageIds>({
       ignorePatterns,
     } = options
 
-    // Build set of factory function names for fast lookup
     const factoryFunctions = createSet(['RegExp', ...regexpFactoryFunctions])
 
     /**
@@ -267,7 +263,6 @@ export default createRule<[NoUnsafeRegexOptions], MessageIds>({
         return
       }
 
-      // Check for exponential bounded quantifiers first
       const boundsCheck = hasExponentialBounds(pattern, maxQuantifierBound)
       if (boundsCheck.found) {
         context.report({
@@ -281,7 +276,6 @@ export default createRule<[NoUnsafeRegexOptions], MessageIds>({
         return
       }
 
-      // Use safe-regex2 to detect ReDoS-vulnerable patterns
       if (isUnsafePattern(pattern, maxStarHeight)) {
         context.report({
           node,
@@ -304,14 +298,12 @@ export default createRule<[NoUnsafeRegexOptions], MessageIds>({
 
       const patternArg = args[0]
 
-      // Check for string literals - these can be analyzed statically
       const staticValue = getStaticStringValue(patternArg)
       if (staticValue !== null) {
         analyzePattern(staticValue, node)
         return
       }
 
-      // Check for interpolated template literals
       if (isInterpolatedTemplateLiteral(patternArg)) {
         if (flagTemplateInterpolation !== 'off') {
           context.report({
@@ -322,7 +314,6 @@ export default createRule<[NoUnsafeRegexOptions], MessageIds>({
         return
       }
 
-      // Dynamic construction with non-literal argument
       if (flagDynamicConstruction) {
         context.report({
           node,
@@ -332,7 +323,6 @@ export default createRule<[NoUnsafeRegexOptions], MessageIds>({
     }
 
     return {
-      // Catch regex literals like /pattern/
       Literal(node) {
         const pattern = getRegexPattern(node)
         if (pattern !== null) {
@@ -340,22 +330,18 @@ export default createRule<[NoUnsafeRegexOptions], MessageIds>({
         }
       },
 
-      // Catch RegExp() calls (without new)
       CallExpression(node) {
         const callee = node.callee
 
-        // Handle direct calls: RegExp('pattern') or createRegExp('pattern')
         if (callee.type === AST_NODE_TYPES.Identifier && factoryFunctions.has(callee.name)) {
           const isCreateRegExp = callee.name !== 'RegExp'
           handleRegExpConstruction(node, isCreateRegExp)
         }
       },
 
-      // Catch new RegExp() calls
       NewExpression(node) {
         const callee = node.callee
 
-        // Handle: new RegExp('pattern')
         if (callee.type === AST_NODE_TYPES.Identifier && callee.name === 'RegExp') {
           handleRegExpConstruction(node, false)
         }

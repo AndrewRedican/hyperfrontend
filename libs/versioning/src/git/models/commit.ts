@@ -169,30 +169,24 @@ export function isRootCommit(commit: GitCommit): boolean {
  * extractScope('fix: resolve issue') // undefined
  */
 export function extractScope(subject: string): string | undefined {
-  // Look for pattern: type(scope): or type(scope)!:
   let i = 0
 
-  // Skip type characters (a-z)
   while (i < subject.length) {
     const code = subject.charCodeAt(i)
     if (code >= 97 && code <= 122) {
-      // a-z
       i++
     } else {
       break
     }
   }
 
-  // Must find opening parenthesis
   if (i >= subject.length || subject[i] !== '(') {
     return undefined
   }
 
-  // Skip '('
   i++
   const scopeStart = i
 
-  // Find closing parenthesis
   while (i < subject.length && subject[i] !== ')') {
     i++
   }
@@ -220,11 +214,9 @@ export function extractScope(subject: string): string | undefined {
 export function extractType(subject: string): string | undefined {
   let i = 0
 
-  // Collect type characters (a-z)
   while (i < subject.length) {
     const code = subject.charCodeAt(i)
     if (code >= 97 && code <= 122) {
-      // a-z
       i++
     } else {
       break
@@ -237,7 +229,6 @@ export function extractType(subject: string): string | undefined {
 
   const type = subject.slice(0, i)
 
-  // Next character must be '(' , '!' or ':'
   if (i >= subject.length) {
     return undefined
   }

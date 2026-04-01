@@ -575,12 +575,10 @@ describe('getTransitiveDependencies', () => {
 
 describe('edge cases', () => {
   it('handles graph with packages not in the project list', () => {
-    // A package references a dependency that doesn't exist in projects
     const projects = [createTestProject('app', '1.0.0', { 'missing-lib': '^1.0.0' })]
 
     const analysis = buildDependencyGraph(projects)
 
-    // Should not crash and should just have app with no internal deps
     expect(analysis.rootPackages).toContain('app')
     expect(analysis.leafPackages).toContain('app')
   })
@@ -619,7 +617,6 @@ describe('edge cases', () => {
   })
 
   it('correctly processes cycle detection with deep nesting', () => {
-    // Deep chain: a -> b -> c -> d -> e -> a
     const projects = [
       createTestProject('pkg-a', '1.0.0', { 'pkg-b': '^1.0.0' }),
       createTestProject('pkg-b', '1.0.0', { 'pkg-c': '^1.0.0' }),
@@ -635,11 +632,9 @@ describe('edge cases', () => {
   })
 
   it('handles adjacency list missing entry during topological sort', () => {
-    // Create a manually constructed analysis object that mimics edge case
     const projects = [createTestProject('standalone', '1.0.0')]
     const analysis = buildDependencyGraph(projects)
 
-    // Should work without crashing
     const order = getTopologicalOrder(analysis)
     expect(order).toHaveLength(1)
     expect(order[0]).toBe('standalone')

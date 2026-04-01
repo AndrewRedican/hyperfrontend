@@ -87,15 +87,12 @@ interface ParsedRefName {
  * parseRefName('refs/remotes/origin/main') // { type: 'remote', name: 'main', remote: 'origin' }
  */
 function parseRefName(fullName: string): ParsedRefName {
-  // Handle HEAD specially
   if (fullName === 'HEAD') {
     return { type: 'head', name: 'HEAD' }
   }
 
-  // Split by '/' character
   const parts = splitByChar(fullName, '/')
 
-  // refs/heads/... -> branch
   if (parts.length >= 3 && parts[0] === 'refs' && parts[1] === 'heads') {
     return {
       type: 'branch',
@@ -103,7 +100,6 @@ function parseRefName(fullName: string): ParsedRefName {
     }
   }
 
-  // refs/tags/... -> tag
   if (parts.length >= 3 && parts[0] === 'refs' && parts[1] === 'tags') {
     return {
       type: 'tag',
@@ -111,7 +107,6 @@ function parseRefName(fullName: string): ParsedRefName {
     }
   }
 
-  // refs/remotes/origin/... -> remote
   if (parts.length >= 4 && parts[0] === 'refs' && parts[1] === 'remotes') {
     return {
       type: 'remote',
@@ -120,7 +115,6 @@ function parseRefName(fullName: string): ParsedRefName {
     }
   }
 
-  // refs/stash -> stash
   if (parts.length >= 2 && parts[0] === 'refs' && parts[1] === 'stash') {
     return {
       type: 'stash',
@@ -128,7 +122,6 @@ function parseRefName(fullName: string): ParsedRefName {
     }
   }
 
-  // Default to branch for unknown patterns
   return {
     type: 'branch',
     name: fullName,

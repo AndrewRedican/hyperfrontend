@@ -87,7 +87,6 @@ describe('channel/subscription/notify-event', () => {
     state = { ...state, eventSubscriptions: [] }
     mockGetState.mockReturnValue(state)
 
-    // Should not throw
     expect(() => notifyEvent(mockChannel, 'open')).not.toThrow()
   })
 

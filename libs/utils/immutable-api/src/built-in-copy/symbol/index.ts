@@ -7,7 +7,6 @@
  * @module @hyperfrontend/immutable-api-utils/built-in-copy/symbol
  */
 
-// Capture references at module initialization time
 const _Symbol = globalThis.Symbol
 const _freeze = globalThis.Object.freeze
 
@@ -30,7 +29,6 @@ export const symbolFor = _Symbol.for
  */
 export const symbolKeyFor = _Symbol.keyFor
 
-// Well-known symbols (captured)
 /**
  * (Safe copy) A method that returns the default iterator for an object.
  */

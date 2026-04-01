@@ -7,7 +7,6 @@
  * @module @hyperfrontend/immutable-api-utils/built-in-copy/function
  */
 
-// Capture references at module initialization time
 const _Function = globalThis.Function
 const _FunctionPrototype = _Function.prototype
 const _Reflect = globalThis.Reflect

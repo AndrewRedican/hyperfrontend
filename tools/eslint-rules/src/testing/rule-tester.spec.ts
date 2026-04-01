@@ -15,8 +15,6 @@ describe('createJsonRuleTester', () => {
 })
 
 describe('createTypeScriptRuleTester', () => {
-  // TypeScriptRuleTester registers afterAll hooks in constructor,
-  // so we must instantiate outside test blocks
   const tester = createTypeScriptRuleTester()
   const testerWithOptions = createTypeScriptRuleTester({ projectService: false })
 

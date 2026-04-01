@@ -1,8 +1,5 @@
-/**
- * Tests for createRouter function
- */
-
-import type { HandlerMap, RouteHandler } from './create-router'
+import type { HandlerMap } from './create-router'
+import type { RouteHandler } from './types'
 import { createRouter } from './create-router'
 
 describe('createRouter', () => {
@@ -103,7 +100,6 @@ describe('createRouter', () => {
     const router = createRouter(handlers)
     const originalSize = router.size
 
-    // Adding new handler directly to the map
     router.set('new-action', mockHandler2)
 
     expect(router.size).toBe(originalSize + 1)

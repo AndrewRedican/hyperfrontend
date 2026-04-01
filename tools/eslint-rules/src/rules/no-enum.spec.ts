@@ -17,7 +17,6 @@ const ruleTester = new RuleTester({
  * Valid test cases - code that does not use enum keyword
  */
 const validCases: ValidTestCase<TestOptions>[] = [
-  // Frozen const objects (the recommended pattern)
   {
     code: `
       const Status = freeze(<const>{
@@ -36,7 +35,6 @@ const validCases: ValidTestCase<TestOptions>[] = [
       })
     `,
   },
-  // Regular const objects
   {
     code: `
       const Colors = {
@@ -46,15 +44,12 @@ const validCases: ValidTestCase<TestOptions>[] = [
       }
     `,
   },
-  // Type aliases (not enums)
   {
     code: `type Status = 'active' | 'inactive'`,
   },
-  // Union types
   {
     code: `type Direction = 'up' | 'down' | 'left' | 'right'`,
   },
-  // Interface (not enum)
   {
     code: `
       interface Config {
@@ -63,7 +58,6 @@ const validCases: ValidTestCase<TestOptions>[] = [
       }
     `,
   },
-  // Class (not enum)
   {
     code: `
       class MyClass {
@@ -78,7 +72,6 @@ const validCases: ValidTestCase<TestOptions>[] = [
  * Invalid test cases - code that uses enum keyword
  */
 const invalidCases: InvalidTestCase<MessageIds, TestOptions>[] = [
-  // String enum
   {
     code: `
       enum Status {
@@ -93,7 +86,6 @@ const invalidCases: InvalidTestCase<MessageIds, TestOptions>[] = [
       },
     ],
   },
-  // Numeric enum
   {
     code: `
       enum Direction {
@@ -110,7 +102,6 @@ const invalidCases: InvalidTestCase<MessageIds, TestOptions>[] = [
       },
     ],
   },
-  // Numeric enum with explicit values
   {
     code: `
       enum Priority {
@@ -126,7 +117,6 @@ const invalidCases: InvalidTestCase<MessageIds, TestOptions>[] = [
       },
     ],
   },
-  // Const enum
   {
     code: `
       const enum HttpStatus {
@@ -142,7 +132,6 @@ const invalidCases: InvalidTestCase<MessageIds, TestOptions>[] = [
       },
     ],
   },
-  // Exported enum
   {
     code: `
       export enum Color {
@@ -158,7 +147,6 @@ const invalidCases: InvalidTestCase<MessageIds, TestOptions>[] = [
       },
     ],
   },
-  // Single-member enum
   {
     code: `
       enum SingleValue {
@@ -172,7 +160,6 @@ const invalidCases: InvalidTestCase<MessageIds, TestOptions>[] = [
       },
     ],
   },
-  // Empty enum
   {
     code: `
       enum Empty {}
@@ -184,7 +171,6 @@ const invalidCases: InvalidTestCase<MessageIds, TestOptions>[] = [
       },
     ],
   },
-  // Declare enum (ambient)
   {
     code: `
       declare enum DeclaredEnum {

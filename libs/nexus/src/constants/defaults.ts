@@ -32,5 +32,5 @@ export const DEFAULT_CHANNEL_SETTINGS: Partial<IChannelSettings> = freeze(<Parti
   origin: '*',
   queueMessages: true,
   debug: false,
-  contract: undefined, // Inherit from broker
+  contract: undefined,
 })

@@ -40,17 +40,14 @@ export function MobileMenu() {
   const [mounted, setMounted] = useState(false)
   const pathname = usePathname()
 
-  // Set mounted to true after hydration (needed for portal)
   useEffect(() => {
     setMounted(true)
   }, [])
 
-  // Close menu when route changes
   useEffect(() => {
     setIsOpen(false)
   }, [pathname])
 
-  // Prevent body scroll when menu is open
   useEffect(() => {
     if (isOpen) {
       document.body.style.overflow = 'hidden'
@@ -135,7 +132,6 @@ function MobileNavSection({
   const [isOpen, setIsOpen] = useState(false)
   const hasChildren = section.children && section.children.length > 0
 
-  // Check if any child (or nested child) is active
   const isChildActive = hasChildren && checkIfChildActive(section.children || [], pathname)
 
   if (!hasChildren) {

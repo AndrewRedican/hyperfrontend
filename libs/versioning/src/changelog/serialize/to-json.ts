@@ -1,10 +1,3 @@
-/**
- * Changelog Serialization to JSON
- *
- * Converts a Changelog object to JSON format.
- * Useful for storing changelogs in databases or APIs.
- */
-
 import type { Changelog } from '../models/changelog'
 import { stringify } from '@hyperfrontend/immutable-api-utils/built-in-copy/json'
 
@@ -102,12 +95,10 @@ export function toJsonObject(changelog: Changelog, options?: JsonSerializeOption
   const opts = resolveJsonOptions(options)
   const result: Record<string, unknown> = {}
 
-  // Source
   if (opts.includeSource && changelog.source) {
     result['source'] = changelog.source
   }
 
-  // Header
   result['header'] = {
     title: changelog.header.title,
     description: filterEmpty(changelog.header.description, opts.includeEmptyArrays),
@@ -120,7 +111,6 @@ export function toJsonObject(changelog: Changelog, options?: JsonSerializeOption
     ),
   }
 
-  // Entries
   result['entries'] = changelog.entries.map((entry) => {
     const entryObj: Record<string, unknown> = {
       version: entry.version,
@@ -184,7 +174,6 @@ export function toJsonObject(changelog: Changelog, options?: JsonSerializeOption
     return entryObj
   })
 
-  // Metadata
   if (opts.includeMetadata) {
     const metadataObj: Record<string, unknown> = {
       format: changelog.metadata.format,

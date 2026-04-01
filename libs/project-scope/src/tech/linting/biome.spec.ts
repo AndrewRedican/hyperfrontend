@@ -46,7 +46,6 @@ describe('biomeDetector', () => {
   })
 
   it('prefers biome.json over biome.jsonc', () => {
-    // When both configs exist, biome.json takes precedence
     const result = biomeDetector(BIOME_PROJECT)
 
     expect(result?.configPath).toBe('biome.json')

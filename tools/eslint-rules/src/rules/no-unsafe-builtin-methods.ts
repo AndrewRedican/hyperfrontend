@@ -8,10 +8,8 @@ import { createSet } from '@hyperfrontend/immutable-api-utils/built-in-copy/set'
  */
 export const RULE_NAME = 'no-unsafe-builtin-methods'
 
-// Package name for immutable-api-utils
 const PKG = '@hyperfrontend/immutable-api-utils'
 
-// Secondary entrypoint paths
 const OBJECT = `${PKG}/built-in-copy/object`
 const ARRAY = `${PKG}/built-in-copy/array`
 const JSON_COPY = `${PKG}/built-in-copy/json`
@@ -201,7 +199,6 @@ const UNSAFE_METHODS: Record<string, Record<string, SafeImport>> = {
   ),
 }
 
-// Add special cases with different import names
 UNSAFE_METHODS['Object']['hasOwn'] = { import: 'hasOwn', from: OBJECT }
 
 /**
@@ -304,34 +301,28 @@ export default createRule<[], MessageIds>({
   create(context) {
     const filename = context.filename
 
-    // Exempt built-in-copy directory (these ARE the safe copies)
     if (filename.includes('built-in-copy')) {
       return {}
     }
 
-    // Exempt test files
     if (filename.includes('.spec.') || filename.includes('.test.')) {
       return {}
     }
 
-    // Track identifiers imported from safe modules
     const safeImports = createSet<string>()
 
     return {
-      // Track imports from @hyperfrontend/immutable-api-utils
       ImportDeclaration(node: TSESTree.ImportDeclaration) {
         const source = node.source.value
         if (typeof source === 'string' && source.startsWith(PKG)) {
           for (const specifier of node.specifiers) {
             if (specifier.type === AST_NODE_TYPES.ImportSpecifier) {
-              // Track the local name (what it's imported as)
               safeImports.add(specifier.local.name)
             }
           }
         }
       },
 
-      // Check for Object.freeze, Array.isArray, JSON.parse, etc.
       MemberExpression(node: TSESTree.MemberExpression) {
         if (node.object.type !== AST_NODE_TYPES.Identifier) return
         if (node.property.type !== AST_NODE_TYPES.Identifier) return
@@ -339,7 +330,6 @@ export default createRule<[], MessageIds>({
         const objectName = node.object.name
         const methodName = node.property.name
 
-        // Check static method access
         const objectMethods = UNSAFE_METHODS[objectName]
         if (objectMethods) {
           const safeMethod = objectMethods[methodName]
@@ -357,14 +347,10 @@ export default createRule<[], MessageIds>({
         }
       },
 
-      // Check for Object.prototype.hasOwnProperty.call, Object.prototype.toString.call
-      // and unsafe global function calls like setTimeout(), setInterval(), etc.
       CallExpression(node: TSESTree.CallExpression) {
-        // Check for direct global function calls: setTimeout(), setInterval(), etc.
         if (node.callee.type === AST_NODE_TYPES.Identifier) {
           const funcName = node.callee.name
           const safeMethod = UNSAFE_GLOBALS[funcName]
-          // Only report if the function is in UNSAFE_GLOBALS AND was NOT imported from safe module
           if (safeMethod && !safeImports.has(funcName)) {
             context.report({
               node,
@@ -378,7 +364,6 @@ export default createRule<[], MessageIds>({
           }
         }
 
-        // Check for pattern: Object.prototype.hasOwnProperty.call(obj, key)
         if (
           node.callee.type === AST_NODE_TYPES.MemberExpression &&
           node.callee.object.type === AST_NODE_TYPES.MemberExpression &&
@@ -413,7 +398,6 @@ export default createRule<[], MessageIds>({
         }
       },
 
-      // Check for new Promise(), new MessageChannel(), new BroadcastChannel()
       NewExpression(node: TSESTree.NewExpression) {
         if (node.callee.type === AST_NODE_TYPES.Identifier) {
           const constructorName = node.callee.name

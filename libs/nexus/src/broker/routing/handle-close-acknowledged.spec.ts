@@ -1,7 +1,3 @@
-/**
- * Tests for handleCloseAcknowledged function
- */
-
 import type { Logger } from '@hyperfrontend/logging'
 import type { IAction } from '../../types/action'
 import type { IChannelContract } from '../../types/contract'
@@ -88,7 +84,6 @@ describe('handleCloseAcknowledged', () => {
       handleCloseAcknowledged(routingContext, message)
     }).not.toThrow()
 
-    // Process should be terminated (removed)
     expect(processManager.get(processId)).toBeUndefined()
   })
 
@@ -113,7 +108,6 @@ describe('handleCloseAcknowledged', () => {
     const channel = addChannel(mockBrokerState, registry, processManager, actions, 'test-channel', mockWindow)
     const processId = processManager.create(channel)
 
-    // Add notifyEvent mock to channel
     const notifyEventMock = jest.fn()
     Object.defineProperty(channel, 'notifyEvent', {
       value: notifyEventMock,
@@ -169,7 +163,6 @@ describe('handleCloseAcknowledged', () => {
       source: window2,
     })
 
-    // Both should be processed (terminated)
     expect(processManager.get(processId1)).toBeUndefined()
     expect(processManager.get(processId2)).toBeUndefined()
   })

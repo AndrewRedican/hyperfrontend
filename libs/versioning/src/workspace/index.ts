@@ -32,9 +32,7 @@ import { buildDependencyGraph } from './discovery/dependencies'
 import { discoverPackages } from './discovery/packages'
 import { createWorkspace } from './models/workspace'
 
-// Models
 export {
-  // Workspace
   DEFAULT_PATTERNS,
   DEFAULT_EXCLUDE,
   DEFAULT_WORKSPACE_CONFIG,
@@ -47,7 +45,6 @@ export {
   getDependents,
   getDependencies,
   dependsOn,
-  // Project
   createProject,
   isPublishable,
   isPrivate,
@@ -61,10 +58,8 @@ export {
 } from './models'
 export type { Workspace, WorkspaceConfig, WorkspaceType, Project, CreateProjectOptions } from './models'
 
-// Discovery
 export * from './discovery'
 
-// Operations
 export * from './operations'
 
 /**
@@ -80,7 +75,6 @@ function detectWorkspaceType(workspaceRoot: string): WorkspaceType {
   if (exists(join(workspaceRoot, 'pnpm-workspace.yaml'))) return 'pnpm'
   if (exists(join(workspaceRoot, 'rush.json'))) return 'rush'
 
-  // Check for yarn workspaces in package.json
   const rootPkg = readPackageJsonIfExists(join(workspaceRoot, 'package.json'))
   if (rootPkg?.workspaces) return 'yarn'
 

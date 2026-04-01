@@ -507,7 +507,6 @@ describe('cloneChangelog', () => {
     })
 
     const clone = cloneChangelog(original)
-    // Verify it's a deep copy by checking reference inequality
     expect(clone).not.toBe(original)
     expect(clone.entries).not.toBe(original.entries)
     expect(clone.header).not.toBe(original.header)

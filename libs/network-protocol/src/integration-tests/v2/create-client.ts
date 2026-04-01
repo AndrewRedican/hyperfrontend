@@ -26,23 +26,17 @@ export function createClient<T = MessagePayload>(label: string, sharedKey: strin
   let channel: Channel | null = null
   let sequenceCounter = 0
 
-  // sendPacket: Transmits the encrypted/obfuscated packet to the peer
   const sendPacket: SendPacketFn = (packet) => {
     if (connectedPeer) {
-      // Simulate network delivery by calling peer's receive method
       connectedPeer._deliverPacket(packet)
     }
   }
 
-  // receivePacket: Called when channel completes decryption/deobfuscation
-  // The packet.data is a Data<T> structure with message field containing the actual T
   const receivePacket: ReceivePacketFn = (packet) => {
-    // Cast to the expected structure and notify listeners
     const typedPacket = <ReceivedPacket<T>>packet
     listeners.forEach((callback) => callback(typedPacket))
   }
 
-  // Initialize the channel with the shared key
   channel = initChannel(label, sendPacket, receivePacket, sharedKey)
 
   const client: Client<T> = {
@@ -61,7 +55,6 @@ export function createClient<T = MessagePayload>(label: string, sharedKey: strin
 
     connect(target: Client<T>): Client<T> {
       connectedPeer = target
-      // Establish bidirectional connection only if target isn't already connected
       if (!target.isConnected()) {
         target.connect(this)
       }
@@ -80,11 +73,8 @@ export function createClient<T = MessagePayload>(label: string, sharedKey: strin
       const pid = uuidV4()
       const serializedData = await createData<T>(pid, sequenceCounter, message)
 
-      // Deserialize the data (parse the message from JSON string to object)
-      // The channel expects Data<T> (deserialized), not SerializedData<T>
       const data = deserializeData(serializedData)
 
-      // Send the data through the channel
       channel.send(clientId, connectedPeer.id, data)
 
       return this

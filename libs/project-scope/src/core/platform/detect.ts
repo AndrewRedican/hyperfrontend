@@ -46,21 +46,16 @@ export function detectCaseSensitivity(): boolean {
     return cachedCaseSensitive
   }
 
-  // Quick check based on platform
   if (process.platform === 'win32') {
     cachedCaseSensitive = false
     return false
   }
 
-  // macOS is typically case-insensitive by default
   if (process.platform === 'darwin') {
-    // Could be case-sensitive HFS+/APFS, but assume insensitive by default
     cachedCaseSensitive = false
     return false
   }
 
-  // Test actual file system behavior for Linux and others
-  // Use mkdtempSync to create a secure temporary directory
   let secureTestDir: string | null = null
   try {
     secureTestDir = mkdtempSync(join(tmpdir(), 'case-sensitivity-test-'))
@@ -71,11 +66,8 @@ export function detectCaseSensitivity(): boolean {
     cachedCaseSensitive = !existsSync(testFileLower)
     unlinkSync(testFile)
   } catch {
-    // Default to case-sensitive on Linux/Unix if test fails
-    // (win32 and darwin already returned early, so we're on a case-sensitive platform)
     cachedCaseSensitive = true
   } finally {
-    // Clean up the secure temporary directory
     if (secureTestDir) {
       try {
         rmdirSync(secureTestDir)

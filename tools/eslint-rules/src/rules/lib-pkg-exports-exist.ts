@@ -18,18 +18,13 @@ export const RULE_NAME = 'lib-pkg-exports-exist'
  * @returns True if the file (or its TypeScript source) exists.
  */
 function exportPathExists(exportPath: string, projectRoot: string): boolean {
-  // Remove leading ./ if present
   const normalizedPath = exportPath.startsWith('./') ? exportPath.slice(2) : exportPath
   const resolvedPath = join(projectRoot, normalizedPath)
 
-  // Check if the exact path exists
   if (exists(resolvedPath)) {
     return true
   }
 
-  // For .js/.mjs/.cjs files, check for corresponding TypeScript source
-  // This is the standard pattern: exports point to compiled output,
-  // but at lint-time only source files exist
   if (/\.(m?js|cjs)$/.test(resolvedPath)) {
     const tsPath = resolvedPath.replace(/\.(m?js|cjs)$/, '.ts')
     const mtsPath = resolvedPath.replace(/\.mjs$/, '.mts')
@@ -106,11 +101,9 @@ const rule: Rule.RuleModule = {
 
           const propValue = prop.value
 
-          // Handle simple string exports: "./path": "./src/file.js"
           if (propValue.type === 'JSONLiteral' && typeof propValue.value === 'string') {
             const exportPath = propValue.value
 
-            // Skip package.json self-reference
             if (isPackageJsonExport(exportPath)) {
               continue
             }
@@ -124,7 +117,6 @@ const rule: Rule.RuleModule = {
             }
           }
 
-          // Handle conditional exports: "./path": { "import": "./src/file.mjs", "require": "./src/file.cjs" }
           if (propValue.type === 'JSONObjectExpression') {
             for (const conditionalProp of propValue.properties) {
               /* istanbul ignore if -- type guard for jsonc-eslint-parser */
@@ -136,7 +128,6 @@ const rule: Rule.RuleModule = {
               if (conditionalValue.type === 'JSONLiteral' && typeof conditionalValue.value === 'string') {
                 const exportPath = conditionalValue.value
 
-                // Skip package.json self-reference
                 if (isPackageJsonExport(exportPath)) {
                   continue
                 }

@@ -1,5 +1,3 @@
-// TypeDoc JSON schema types (schemaVersion 2.0)
-
 export interface TypeDocOutput {
   schemaVersion: string
   id: number
@@ -76,9 +74,11 @@ export interface TextBlock {
 }
 
 export interface BlockTag {
-  tag: string // '@example', '@remarks', '@returns', '@param', '@see', etc.
+  /** \@example, \@remarks, \@returns, \@param, \@see, etc. */
+  tag: string
   content: TextBlock[]
-  name?: string // Parameter name for @param tags
+  /** Parameter name for \@param tags */
+  name?: string
 }
 
 export interface TypeRef {
@@ -96,15 +96,24 @@ export interface TypeRef {
     | 'mapped'
     | 'indexedAccess'
     | 'templateLiteral'
-  name?: string // For intrinsic and reference types
-  target?: number | { sourceFileName: string; qualifiedName: string } // For reference types
-  package?: string // Package that contains the reference
-  typeArguments?: TypeRef[] // For generic references
-  elementType?: TypeRef // For array and rest types
-  elements?: TypeRef[] // For tuple types
-  types?: TypeRef[] // For union and intersection types
-  value?: unknown // For literal types
-  declaration?: TypeDocNode // For reflection types
+  /** For intrinsic and reference types */
+  name?: string
+  /** For reference types */
+  target?: number | { sourceFileName: string; qualifiedName: string }
+  /** Package that contains the reference */
+  package?: string
+  /** For generic references */
+  typeArguments?: TypeRef[]
+  /** For array and rest types */
+  elementType?: TypeRef
+  /** For tuple types */
+  elements?: TypeRef[]
+  /** For union and intersection types */
+  types?: TypeRef[]
+  /** For literal types */
+  value?: unknown
+  /** For reflection types */
+  declaration?: TypeDocNode
   refersToTypeParameter?: boolean
 }
 
@@ -120,7 +129,6 @@ export interface ReflectionFlags {
   isExternal?: boolean
 }
 
-// TypeDoc reflection kind constants
 export const ReflectionKind = <const>{
   Project: 1,
   Module: 2,

@@ -27,9 +27,6 @@ const ruleTester = new RuleTester({
  * Valid test cases - safe regex patterns that should NOT trigger errors
  */
 const validCases: ValidTestCase<TestOptions>[] = [
-  // ============================================
-  // Simple character class patterns
-  // ============================================
   {
     name: 'simple whitespace pattern',
     code: `const pattern = /\\s+/`,
@@ -47,9 +44,6 @@ const validCases: ValidTestCase<TestOptions>[] = [
     code: `const pattern = /[a-z]+/i`,
   },
 
-  // ============================================
-  // Anchored patterns (bounded input)
-  // ============================================
   {
     name: 'anchored digit validation',
     code: `const pattern = /^\\d+$/`,
@@ -67,9 +61,6 @@ const validCases: ValidTestCase<TestOptions>[] = [
     code: `const pattern = /^\\w+$/`,
   },
 
-  // ============================================
-  // Simple alternations (non-overlapping)
-  // ============================================
   {
     name: 'distinct word alternation',
     code: `const pattern = /cat|dog/`,
@@ -87,9 +78,6 @@ const validCases: ValidTestCase<TestOptions>[] = [
     code: `const pattern = /^https?:\\/\\//`,
   },
 
-  // ============================================
-  // Escaped special characters
-  // ============================================
   {
     name: 'escaped dot',
     code: `const pattern = /\\./`,
@@ -103,34 +91,22 @@ const validCases: ValidTestCase<TestOptions>[] = [
     code: `const pattern = /\\.\\*\\+\\?/`,
   },
 
-  // ============================================
-  // Non-capturing groups without nested quantifiers
-  // ============================================
   {
     name: 'non-capturing group for protocol',
     code: `const pattern = /(?:https?):\\/\\//`,
   },
 
-  // ============================================
-  // Character class ranges
-  // ============================================
   {
     name: 'hex character class',
     code: `const pattern = /[0-9a-fA-F]/`,
   },
 
-  // ============================================
-  // Simple lookahead (non-quantified)
   // Note: safe-regex2 may not fully support lookbehind assertions
-  // ============================================
   {
     name: 'positive lookahead',
     code: `const pattern = /(?=\\d)/`,
   },
 
-  // ============================================
-  // Safe RegExp constructor with string literals
-  // ============================================
   {
     name: 'RegExp constructor with string literal',
     code: `const pattern = new RegExp('^\\\\d+$')`,
@@ -144,9 +120,6 @@ const validCases: ValidTestCase<TestOptions>[] = [
     code: `const pattern = RegExp('\\\\d+')`,
   },
 
-  // ============================================
-  // Safe createRegExp with string literals
-  // ============================================
   {
     name: 'createRegExp with string literal',
     code: `const pattern = createRegExp('^\\\\d+$')`,
@@ -160,9 +133,6 @@ const validCases: ValidTestCase<TestOptions>[] = [
     code: `const pattern = createRegExp('\\\\]\\\\(\\\\.?\\\\/?file\\\\.ts\\\\)', 'g')`,
   },
 
-  // ============================================
-  // Safe simple template literal (no interpolation)
-  // ============================================
   {
     name: 'RegExp with simple template literal',
     code: 'const pattern = new RegExp(`^\\\\d+$`)',
@@ -172,9 +142,6 @@ const validCases: ValidTestCase<TestOptions>[] = [
     code: 'const pattern = createRegExp(`test`)',
   },
 
-  // ============================================
-  // Dynamic construction with flagDynamicConstruction: false
-  // ============================================
   {
     name: 'dynamic RegExp allowed when flagDynamicConstruction is false',
     code: `const pattern = new RegExp(userInput)`,
@@ -186,27 +153,18 @@ const validCases: ValidTestCase<TestOptions>[] = [
     options: [{ flagDynamicConstruction: false }],
   },
 
-  // ============================================
-  // Template interpolation with flagTemplateInterpolation: 'off'
-  // ============================================
   {
     name: 'template interpolation allowed when flagTemplateInterpolation is off',
     code: 'const pattern = new RegExp(`${prefix}test`)',
     options: [{ flagTemplateInterpolation: 'off' }],
   },
 
-  // ============================================
-  // Ignored patterns
-  // ============================================
   {
     name: 'ignored pattern via ignorePatterns option',
-    code: `const pattern = /(a+)+/`, // normally unsafe
+    code: `const pattern = /(a+)+/`,
     options: [{ ignorePatterns: ['(a+)+'] }],
   },
 
-  // ============================================
-  // Common real-world safe patterns
-  // ============================================
   {
     name: 'email-like pattern (simplified)',
     code: `const pattern = /^[^@]+@[^@]+$/`,
@@ -229,9 +187,6 @@ const validCases: ValidTestCase<TestOptions>[] = [
  * Invalid test cases - unsafe regex patterns that SHOULD trigger errors
  */
 const invalidCases: InvalidTestCase<MessageIds, TestOptions>[] = [
-  // ============================================
-  // Category A1: Nested quantifiers (same char class)
-  // ============================================
   {
     name: 'nested quantifiers (a+)+',
     code: `const pattern = /(a+)+/`,
@@ -258,16 +213,8 @@ const invalidCases: InvalidTestCase<MessageIds, TestOptions>[] = [
     errors: [{ messageId: 'unsafeRegexPattern' }],
   },
 
-  // ============================================
-  // Category A2: Overlapping alternations with quantifiers
   // Note: safe-regex2 detects nested quantifiers but may not catch all
-  // overlapping alternation patterns. These tests verify patterns that
-  // safe-regex2 DOES detect.
-  // ============================================
 
-  // ============================================
-  // Category A5: Exponential bounded quantifiers
-  // ============================================
   {
     name: 'exponential bounds a{1,100000}',
     code: `const pattern = /a{1,100000}/`,
@@ -280,18 +227,12 @@ const invalidCases: InvalidTestCase<MessageIds, TestOptions>[] = [
     errors: [{ messageId: 'exponentialBounds' }],
   },
 
-  // ============================================
-  // Category A6: Star-height > 1 patterns
-  // ============================================
   {
     name: 'star-height > 1 pattern',
     code: `const pattern = /((a*b*)*c*)+/`,
     errors: [{ messageId: 'unsafeRegexPattern' }],
   },
 
-  // ============================================
-  // Known CVE vulnerable patterns
-  // ============================================
   {
     name: 'CVE-2020-7660: serialize-javascript pattern',
     code: `const pattern = /(([^\\s]+)+)+/`,
@@ -303,9 +244,6 @@ const invalidCases: InvalidTestCase<MessageIds, TestOptions>[] = [
     errors: [{ messageId: 'unsafeRegexPattern' }],
   },
 
-  // ============================================
-  // Category B1: Dynamic RegExp construction
-  // ============================================
   {
     name: 'new RegExp with variable',
     code: `const pattern = new RegExp(userInput)`,
@@ -327,9 +265,6 @@ const invalidCases: InvalidTestCase<MessageIds, TestOptions>[] = [
     errors: [{ messageId: 'dynamicRegex' }],
   },
 
-  // ============================================
-  // Category B4: Dynamic createRegExp construction
-  // ============================================
   {
     name: 'createRegExp with variable',
     code: `const pattern = createRegExp(userInput)`,
@@ -346,9 +281,6 @@ const invalidCases: InvalidTestCase<MessageIds, TestOptions>[] = [
     errors: [{ messageId: 'dynamicCreateRegExp' }],
   },
 
-  // ============================================
-  // Category B3/B5: Template literal interpolation
-  // ============================================
   {
     name: 'new RegExp with template literal interpolation',
     code: 'const pattern = new RegExp(`${prefix}.*`)',
@@ -365,9 +297,6 @@ const invalidCases: InvalidTestCase<MessageIds, TestOptions>[] = [
     errors: [{ messageId: 'unsafeInterpolation' }],
   },
 
-  // ============================================
-  // Custom regexpFactoryFunctions
-  // ============================================
   {
     name: 'custom factory function with variable',
     code: `const pattern = myRegExpFactory(userInput)`,
@@ -375,9 +304,6 @@ const invalidCases: InvalidTestCase<MessageIds, TestOptions>[] = [
     errors: [{ messageId: 'dynamicCreateRegExp' }],
   },
 
-  // ============================================
-  // Unsafe patterns in RegExp constructor
-  // ============================================
   {
     name: 'unsafe pattern in RegExp constructor string literal',
     code: `const pattern = new RegExp('(a+)+')`,

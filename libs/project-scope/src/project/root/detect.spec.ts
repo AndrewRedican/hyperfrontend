@@ -66,12 +66,8 @@ describe('findProjectRoot', () => {
   })
 
   it('does not consider bare package as project root (no src, entry points, or project.json)', () => {
-    // A directory with only package.json and no identifying features
-    // should not be detected as a project root
     const result = findProjectRoot(BARE_PACKAGE)
 
-    // It will traverse up and find the fixtures directory or hyperfrontend workspace
-    // which have package.json AND looksLikeProjectDir returns true
     expect(result).not.toBe(BARE_PACKAGE)
   })
 
@@ -116,14 +112,12 @@ describe('findWorkspaceRoot', () => {
   it('falls back to finding the actual workspace root when starting from a project inside it', () => {
     const result = findWorkspaceRoot(MINIMAL_PROJECT)
 
-    // MINIMAL_PROJECT is inside the actual hyperfrontend workspace, so it finds that
     expect(result).toBe(GIT_ROOT)
   })
 
   it('falls back to nearest package.json when no workspace markers exist', () => {
     const result = findWorkspaceRoot(NO_MARKERS_PROJECT)
 
-    // This should eventually find the hyperfrontend workspace root
     expect(result).toBe(GIT_ROOT)
   })
 
@@ -134,11 +128,8 @@ describe('findWorkspaceRoot', () => {
   })
 
   it('finds workspace root by workspace markers before checking workspaces field', () => {
-    // The workspace-only fixture is nested inside hyperfrontend which has nx.json,
-    // so the function correctly finds the parent workspace root first (by marker)
     const result = findWorkspaceRoot(resolve(WORKSPACE_ONLY, 'packages/nested/src'))
 
-    // Since WORKSPACE_ONLY is inside GIT_ROOT (which has nx.json), it finds that first
     expect(result).toBe(GIT_ROOT)
   })
 })
@@ -147,10 +138,8 @@ describe('findWorkspaceRoot with isolated temp directories', () => {
   let TEMP_WORKSPACE: string
 
   beforeAll(() => {
-    // Create a secure temporary directory
     TEMP_WORKSPACE = mkdtempSync(join(tmpdir(), 'test-workspace-detection-'))
 
-    // Create a workspace with workspaces field but no workspace markers
     mkdirSync(join(TEMP_WORKSPACE, 'packages', 'app', 'src'), { recursive: true })
     writeFileSync(join(TEMP_WORKSPACE, 'package.json'), JSON.stringify({ name: 'test-workspace', workspaces: ['packages/*'] }))
     writeFileSync(join(TEMP_WORKSPACE, 'packages', 'app', 'package.json'), JSON.stringify({ name: 'test-app' }))
@@ -167,7 +156,6 @@ describe('findWorkspaceRoot with isolated temp directories', () => {
   })
 
   it('falls back to nearest package.json for deeply nested project without workspaces', () => {
-    // Create a secure temporary directory for deeply nested structure
     const DEEP_PROJECT = mkdtempSync(join(tmpdir(), 'test-deep-project-'))
     mkdirSync(join(DEEP_PROJECT, 'level1', 'level2', 'level3', 'src'), { recursive: true })
     writeFileSync(join(DEEP_PROJECT, 'package.json'), JSON.stringify({ name: 'deep-project' }))

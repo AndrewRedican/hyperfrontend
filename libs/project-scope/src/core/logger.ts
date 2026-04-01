@@ -203,7 +203,6 @@ export interface ScopedLogger {
 export function createScopedLogger(namespace: string, options: ScopedLoggerOptions = {}): ScopedLogger {
   const { level = 'error', sanitizeSecrets = true } = options
 
-  // Create wrapper functions that add namespace prefix and sanitization
   const createLogFn =
     (baseFn: (...args: unknown[]) => void) =>
     (message: string, meta?: object): void => {
@@ -211,7 +210,6 @@ export function createScopedLogger(namespace: string, options: ScopedLoggerOptio
       baseFn(formatMessage(namespace, message, processedMeta))
     }
 
-  // Create base logger with wrapped functions
   const baseLogger: Logger = createBaseLogger(
     createLogFn(error),
     createLogFn(warn),
@@ -220,7 +218,6 @@ export function createScopedLogger(namespace: string, options: ScopedLoggerOptio
     createLogFn(debug)
   )
 
-  // Set initial log level (use global override if set)
   baseLogger.setLogLevel(globalLogLevel ?? level)
 
   const scopedLogger: ScopedLogger = freeze({
@@ -233,7 +230,6 @@ export function createScopedLogger(namespace: string, options: ScopedLoggerOptio
     getLogLevel: baseLogger.getLogLevel,
   })
 
-  // Register logger for global level management
   loggerRegistry.add(scopedLogger)
 
   return scopedLogger

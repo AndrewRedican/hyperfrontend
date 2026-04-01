@@ -1,7 +1,7 @@
 import type { Metadata } from 'next'
 import { ThemeProvider } from '@/components/theme-provider'
 import '@/lib/dev-logger'
-import '@/styles/globals.css' // Configure logger for dev mode
+import '@/styles/globals.css'
 
 export const metadata: Metadata = {
   title: 'HyperFrontend - Micro-Frontend Architecture',

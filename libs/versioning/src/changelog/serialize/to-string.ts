@@ -1,10 +1,3 @@
-/**
- * Changelog Serialization to String
- *
- * Converts a Changelog object back to markdown format.
- * Supports configurable output formatting for different changelog styles.
- */
-
 import type { Changelog, ChangelogHeader, ChangelogLink } from '../models/changelog'
 import type { CommitRef, IssueRef } from '../models/commit-ref'
 import type { ChangelogEntry, ChangelogItem, ChangelogSection } from '../models/entry'
@@ -37,15 +30,12 @@ export function serializeChangelog(changelog: Changelog, options?: SerializeOpti
   const opts = resolveOptions(options)
   const parts: string[] = []
 
-  // Serialize header
   parts.push(serializeHeader(changelog.header, opts))
 
-  // Serialize entries
   for (let i = 0; i < changelog.entries.length; i++) {
     const entry = changelog.entries[i]
     parts.push(serializeEntry(entry, opts))
 
-    // Add spacing between entries (except after the last one)
     if (i < changelog.entries.length - 1) {
       parts.push(createSpacing(opts.entrySpacing, opts.lineEnding))
     }
@@ -65,11 +55,9 @@ function serializeHeader(header: ChangelogHeader, opts: Required<SerializeOption
   const parts: string[] = []
   const nl = opts.lineEnding
 
-  // Title
   parts.push(header.title + nl)
   parts.push(nl)
 
-  // Description
   if (opts.includeDescription && header.description.length > 0) {
     for (const line of header.description) {
       parts.push(line + nl)
@@ -77,7 +65,6 @@ function serializeHeader(header: ChangelogHeader, opts: Required<SerializeOption
     parts.push(nl)
   }
 
-  // Links section
   if (opts.includeLinks && header.links.length > 0) {
     for (const link of header.links) {
       parts.push(serializeLink(link) + nl)
@@ -109,25 +96,20 @@ function serializeEntry(entry: ChangelogEntry, opts: Required<SerializeOptions>)
   const parts: string[] = []
   const nl = opts.lineEnding
 
-  // Entry heading
   parts.push(serializeEntryHeading(entry, opts) + nl)
   parts.push(nl)
 
-  // Raw content fallback
   if (opts.includeRawContent && entry.rawContent) {
     parts.push(entry.rawContent + nl)
     return parts.join('')
   }
 
-  // Sort sections by specified order
   const sortedSections = sortSections(entry.sections, opts.sectionOrder)
 
-  // Serialize sections
   for (let i = 0; i < sortedSections.length; i++) {
     const section = sortedSections[i]
     parts.push(serializeSection(section, opts))
 
-    // Add spacing between sections (except after the last one)
     if (i < sortedSections.length - 1) {
       parts.push(createSpacing(opts.sectionSpacing, nl))
     }
@@ -146,14 +128,12 @@ function serializeEntry(entry: ChangelogEntry, opts: Required<SerializeOptions>)
 function serializeEntryHeading(entry: ChangelogEntry, opts: Required<SerializeOptions>): string {
   const parts: string[] = ['## ']
 
-  // Version with optional compare URL
   if (opts.includeCompareUrls && entry.compareUrl) {
     parts.push(formatLink(entry.version, entry.compareUrl))
   } else {
     parts.push(entry.version)
   }
 
-  // Date
   if (entry.date) {
     parts.push(` - ${entry.date}`)
   }
@@ -190,12 +170,10 @@ function serializeSection(section: ChangelogSection, opts: Required<SerializeOpt
   const parts: string[] = []
   const nl = opts.lineEnding
 
-  // Section heading - use original heading if available, otherwise generate
   const heading = section.heading || getSectionHeading(section.type, opts.sectionHeadings)
   parts.push(`### ${heading}${nl}`)
   parts.push(nl)
 
-  // Items
   for (const item of section.items) {
     parts.push(serializeItem(item, opts) + nl)
   }
@@ -216,27 +194,22 @@ function serializeItem(item: ChangelogItem, opts: Required<SerializeOptions>): s
 
   parts.push(marker)
 
-  // Breaking change indicator
   if (item.breaking) {
     parts.push('**BREAKING** ')
   }
 
-  // Scope
   if (opts.includeScope && item.scope) {
     parts.push(`**${item.scope}:** `)
   }
 
-  // Description
   parts.push(item.description)
 
-  // Commit references
   if (opts.includeCommits && item.commits.length > 0) {
     parts.push(' (')
     parts.push(item.commits.map(serializeCommitRef).join(', '))
     parts.push(')')
   }
 
-  // Issue/PR references
   if (opts.includeReferences && item.references.length > 0) {
     const refs = item.references.map(serializeIssueRef).join(', ')
     parts.push(` ${refs}`)

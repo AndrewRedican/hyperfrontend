@@ -2,7 +2,6 @@ import type { IChannelContract } from '../types/contract'
 import type { SecurityPolicy } from './types'
 import { createBroker } from './factory'
 
-// Mock uuidV4 to return unique IDs
 let uuidCounter = 0
 jest.mock('@hyperfrontend/random-generator-utils', () => ({
   uuidV4: () => {
@@ -23,7 +22,6 @@ describe('createBroker', () => {
   })
 
   afterEach(() => {
-    // Clean up any event listeners
     jest.clearAllMocks()
   })
 

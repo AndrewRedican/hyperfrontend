@@ -7,13 +7,10 @@ import { random } from '@hyperfrontend/immutable-api-utils/built-in-copy/math'
  */
 export function uuidV4(): string {
   return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (char) => {
-    // Generate a random hexadecimal digit, 0 - 15
     const randomHex = (random() * 16) | 0
 
-    // Use the randomHex for 'x' and a specific subset for 'y'
     const finalHex = char === 'x' ? randomHex : (randomHex & 0x3) | 0x8
 
-    // Convert the final hexadecimal digit to a string
     return finalHex.toString(16)
   })
 }

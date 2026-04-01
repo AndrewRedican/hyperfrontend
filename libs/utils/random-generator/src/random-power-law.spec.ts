@@ -15,7 +15,6 @@ describe('randomPowerLaw', () => {
 
     const calculatedMean = sum / sampleSize
 
-    // Check if the calculated mean is within the expected range.
     expect(calculatedMean).toBeGreaterThan(min)
     expect(calculatedMean).toBeLessThan(max)
   })

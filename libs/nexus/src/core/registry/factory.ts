@@ -13,7 +13,6 @@ export interface MinimalChannel {
   id: string
   name: string
   target: Window
-  // Optional methods for full channel support
   isActive?: () => boolean
   sendAction?: (action: unknown) => void
   destroy?: (notify?: boolean) => void
@@ -33,7 +32,6 @@ export interface ChannelRegistry {
   clear: () => void
 }
 
-// Export type alias for convenience
 export type Registry = ChannelRegistry
 
 /**

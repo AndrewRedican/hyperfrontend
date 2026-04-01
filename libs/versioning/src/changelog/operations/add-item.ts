@@ -1,9 +1,3 @@
-/**
- * Changelog Item Addition
- *
- * Functions for adding items to changelog entries.
- */
-
 import type { Changelog } from '../models/changelog'
 import type { ChangelogEntry, ChangelogSection, ChangelogItem } from '../models/entry'
 import { createError } from '@hyperfrontend/immutable-api-utils/built-in-copy/error'
@@ -30,7 +24,6 @@ export function addItemToEntry(changelog: Changelog, version: string, sectionTyp
   let newSections: ChangelogSection[]
 
   if (sectionIndex === -1) {
-    // Create new section
     newSections = [
       ...entry.sections,
       {
@@ -40,7 +33,6 @@ export function addItemToEntry(changelog: Changelog, version: string, sectionTyp
       },
     ]
   } else {
-    // Add to existing section
     newSections = [...entry.sections]
     newSections[sectionIndex] = {
       ...newSections[sectionIndex],

@@ -55,7 +55,6 @@ export function createObfuscatedHandshakeProtocolFactory<T = any>(
         throw createError('Cannot create protocol without a valid receive function')
       }
 
-      // Dynamic key capture
       let key: string
       const receive: ReceivePacketFn<T> = (packet) => {
         key = packet.data.key

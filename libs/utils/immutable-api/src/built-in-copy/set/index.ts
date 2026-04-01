@@ -10,7 +10,6 @@
  * @module @hyperfrontend/immutable-api-utils/built-in-copy/set
  */
 
-// Capture references at module initialization time
 const _Set = globalThis.Set
 const _Reflect = globalThis.Reflect
 const _freeze = globalThis.Object.freeze

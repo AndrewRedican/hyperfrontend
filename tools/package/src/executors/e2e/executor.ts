@@ -45,7 +45,6 @@ function packPackage(distPath: string, workspaceRoot: string): string {
     throw createError('npm pack did not return a tarball filename')
   }
 
-  // Move tarball from dist to tmp/e2e-packs to avoid accidental publishing
   const tmpDir = join(workspaceRoot, 'tmp', 'e2e-packs')
   mkdirSync(tmpDir, { recursive: true })
 
@@ -158,7 +157,6 @@ export default async function e2eExecutor(options: E2eExecutorOptions, context: 
 
   let tarballPath: string | undefined
 
-  // Step 1: Pack and install if not skipped
   if (!options.skipInstall) {
     try {
       tarballPath = packPackage(distPath, workspaceRoot)
@@ -169,7 +167,6 @@ export default async function e2eExecutor(options: E2eExecutorOptions, context: 
     }
   }
 
-  // Step 2: Run tests for each format
   const formats = options.formats ?? ['cjs', 'esm', 'browser']
   const results: boolean[] = []
 
@@ -178,7 +175,6 @@ export default async function e2eExecutor(options: E2eExecutorOptions, context: 
     results.push(success)
   }
 
-  // Step 3: Cleanup tarball if requested
   if (tarballPath && options.cleanupTarball !== false) {
     try {
       if (existsSync(tarballPath)) {

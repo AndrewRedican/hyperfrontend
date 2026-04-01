@@ -153,10 +153,6 @@ function createMockContext(overrides?: {
   }
 }
 
-// ============================================================================
-// Tests
-// ============================================================================
-
 describe('fetch-registry step', () => {
   describe('FETCH_REGISTRY_STEP_ID', () => {
     it('has the correct ID', () => {
@@ -194,7 +190,6 @@ describe('fetch-registry step', () => {
         const tree = createMockTree({
           '/workspace/libs/test/package.json': JSON.stringify({
             name: '@test/pkg',
-            // no version field
           }),
         })
         const context = createMockContext({ tree })
@@ -207,7 +202,7 @@ describe('fetch-registry step', () => {
       })
 
       it('defaults to 0.0.0 when package.json does not exist', async () => {
-        const tree = createMockTree({}) // empty - no package.json
+        const tree = createMockTree({})
         const context = createMockContext({ tree })
         const step = createFetchRegistryStep()
 
@@ -218,7 +213,7 @@ describe('fetch-registry step', () => {
       })
 
       it('logs warning and defaults to 0.0.0 when package.json read throws', async () => {
-        const tree = createMockTree({}, true) // throwOnRead = true
+        const tree = createMockTree({}, true)
         const logger = createMockLogger()
         const context = createMockContext({ tree, logger })
         const step = createFetchRegistryStep()

@@ -1,9 +1,3 @@
-/**
- * Changelog Entry Removal
- *
- * Functions for removing entries from a changelog.
- */
-
 import type { Changelog } from '../models/changelog'
 import { createError } from '@hyperfrontend/immutable-api-utils/built-in-copy/error'
 import { createSet } from '@hyperfrontend/immutable-api-utils/built-in-copy/set'

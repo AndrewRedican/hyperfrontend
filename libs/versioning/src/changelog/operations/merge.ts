@@ -1,9 +1,3 @@
-/**
- * Changelog Merging
- *
- * Functions for merging multiple changelogs or changelog entries.
- */
-
 import type { Changelog, ChangelogHeader, ChangelogMetadata } from '../models/changelog'
 import type { ChangelogEntry, ChangelogSection, ChangelogItem } from '../models/entry'
 import { createError } from '@hyperfrontend/immutable-api-utils/built-in-copy/error'
@@ -101,7 +95,6 @@ export interface MergeStats {
 export function mergeChangelogs(source: Changelog, target: Changelog, options?: MergeOptions): MergeResult {
   const opts = resolveOptions(options)
 
-  // Build version maps
   const sourceByVersion = createMap<string, ChangelogEntry>()
   const targetByVersion = createMap<string, ChangelogEntry>()
 
@@ -125,15 +118,12 @@ export function mergeChangelogs(source: Changelog, target: Changelog, options?: 
     const targetEntry = targetByVersion.get(version)
 
     if (sourceEntry && !targetEntry) {
-      // Only in source
       mergedEntries.push(sourceEntry)
       sourceOnly++
     } else if (!sourceEntry && targetEntry) {
-      // Only in target
       mergedEntries.push(targetEntry)
       targetOnly++
     } else if (sourceEntry && targetEntry) {
-      // In both - merge
       if (isEntryEqual(sourceEntry, targetEntry)) {
         mergedEntries.push(sourceEntry)
       } else {
@@ -145,16 +135,13 @@ export function mergeChangelogs(source: Changelog, target: Changelog, options?: 
     }
   }
 
-  // Sort by version if requested
   let finalEntries = mergedEntries
   if (opts.sortByVersion) {
     finalEntries = sortEntriesByVersion(mergedEntries)
   }
 
-  // Build header
   const header: ChangelogHeader = opts.useSourceHeader ? source.header : target.header
 
-  // Build metadata
   const metadata: ChangelogMetadata = {
     format: source.metadata.format,
     isConventional: source.metadata.isConventional || target.metadata.isConventional,
@@ -190,12 +177,10 @@ export function mergeChangelogs(source: Changelog, target: Changelog, options?: 
  * @returns Merged entry
  */
 function mergeEntries(source: ChangelogEntry, target: ChangelogEntry, opts: Required<MergeOptions>): ChangelogEntry {
-  // Use strategy for scalar values
   const date = opts.entryStrategy === 'target' ? target.date : source.date
   const compareUrl = opts.entryStrategy === 'target' ? target.compareUrl : source.compareUrl
   const unreleased = source.unreleased || target.unreleased
 
-  // Merge sections
   const sections = mergeSections(source.sections, target.sections, opts)
 
   return {
@@ -295,19 +280,15 @@ function mergeItems(
     return [...targetItems]
   }
 
-  // Union strategy - combine all items
   const result: ChangelogItem[] = [...sourceItems]
 
   for (const targetItem of targetItems) {
-    // Check if item already exists in source
     const exists = sourceItems.some((sourceItem) => isItemEqual(sourceItem, targetItem))
 
     if (!exists) {
-      // Check by description only (for 'latest' strategy)
       if (opts.itemStrategy === 'latest') {
         const existingIndex = result.findIndex((item) => item.description === targetItem.description)
         if (existingIndex !== -1) {
-          // Replace with target (newer)
           result[existingIndex] = targetItem
           continue
         }
@@ -349,21 +330,17 @@ function resolveOptions(options?: MergeOptions): Required<MergeOptions> {
  */
 function sortEntriesByVersion(entries: readonly ChangelogEntry[]): ChangelogEntry[] {
   return [...entries].sort((a, b) => {
-    // Unreleased always comes first
     if (a.unreleased && !b.unreleased) return -1
     if (!a.unreleased && b.unreleased) return 1
     if (a.unreleased && b.unreleased) return 0
 
-    // Parse versions for comparison
     const aResult = parseVersion(a.version)
     const bResult = parseVersion(b.version)
 
     if (!aResult.success || !bResult.success) {
-      // Fall back to string comparison
       return b.version.localeCompare(a.version)
     }
 
-    // Sort descending (newest first)
     return compare(bResult.version, aResult.version)
   })
 }

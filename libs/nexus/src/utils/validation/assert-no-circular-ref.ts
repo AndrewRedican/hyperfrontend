@@ -11,18 +11,14 @@ import { createWeakSet } from '@hyperfrontend/immutable-api-utils/built-in-copy/
  * @returns True if circular reference detected
  */
 function hasCircular(value: unknown, seen: WeakSet<object>): boolean {
-  // Primitives and non-iterables can't have circular references
   if (!isIterable(value)) return false
 
   const obj = <object>value
 
-  // If we've seen this object before, it's a circular reference
   if (seen.has(obj)) return true
 
-  // Mark as seen before recursing
   seen.add(obj)
 
-  // Check all children
   const type = getType(value)
   const keys = getKeysFromIterable(value, type)
   for (const key of keys) {

@@ -1,7 +1,3 @@
-/**
- * Tests for listChannels function
- */
-
 import type { BrokerState } from '../types'
 import { createActionCreators } from '../../core/actions/factory'
 import { createProcessManager } from '../../core/processes/factory'
@@ -23,6 +19,15 @@ describe('listChannels', () => {
         accepted: [{ type: 'test', description: 'Test action' }],
         emitted: [],
       },
+    },
+    logger: {
+      log: jest.fn(),
+      debug: jest.fn(),
+      info: jest.fn(),
+      warn: jest.fn(),
+      error: jest.fn(),
+      setLogLevel: jest.fn(),
+      getLogLevel: jest.fn(),
     },
   }
 
@@ -78,8 +83,8 @@ describe('listChannels', () => {
     const list1 = listChannels(registry)
     const list2 = listChannels(registry)
 
-    expect(list1).not.toBe(list2) // Different array instances
-    expect(list1).toEqual(list2) // But same content
+    expect(list1).not.toBe(list2)
+    expect(list1).toEqual(list2)
   })
 
   it('updates when channels are added', () => {

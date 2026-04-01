@@ -29,7 +29,6 @@ describe('discoverEntryPoints', () => {
       const result = discoverEntryPoints(MINIMAL_PROJECT)
 
       expect(Array.isArray(result)).toBe(true)
-      // minimal-project has src/index.ts
       expect(result.length).toBeGreaterThan(0)
     })
 
@@ -89,11 +88,8 @@ describe('discoverEntryPoints', () => {
     })
 
     it('respects skipCache option', () => {
-      // First call populates cache
       const result1 = discoverEntryPoints(MINIMAL_PROJECT)
-      // Second call uses cache
       const result2 = discoverEntryPoints(MINIMAL_PROJECT)
-      // Third call skips cache
       const result3 = discoverEntryPoints(MINIMAL_PROJECT, { skipCache: true })
 
       expect(result1).toEqual(result2)
@@ -159,7 +155,6 @@ describe('discoverEntryPoints', () => {
     it('detects exports field with conditional exports', () => {
       const result = discoverEntryPoints(LIBRARY_WITH_EXPORTS)
 
-      // The first condition (import) should be picked
       const helpersEntry = result.find((e) => e.path === './dist/helpers.mjs')
       expect(helpersEntry).toBeDefined()
       expect(helpersEntry?.type).toBe('main')
@@ -192,7 +187,6 @@ describe('discoverEntryPoints', () => {
       it('discovers page entries excluding _app, _document, and api routes', () => {
         const result = discoverEntryPoints(NEXTJS_APP, { includeFrameworkEntries: true })
 
-        // Should find pages but not _app.tsx or api routes
         const pageEntries = result.filter((e) => e.path.includes('pages/'))
         const appEntry = pageEntries.find((e) => e.path.includes('_app'))
         const apiEntry = pageEntries.find((e) => e.path.includes('api/'))

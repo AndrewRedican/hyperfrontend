@@ -34,7 +34,6 @@ export function commitChanges(tree: Tree, options?: CommitOptions): CommitResult
   const changes = tree.listChanges()
   const appliedChanges: FileChange[] = []
 
-  // Set log level based on verbose option
   if (options?.verbose) {
     vfsLogger.setLogLevel('debug')
   }
@@ -49,7 +48,6 @@ export function commitChanges(tree: Tree, options?: CommitOptions): CommitResult
     dryRun: options?.dryRun ?? false,
   }
 
-  // Dry run - just count changes without writing
   if (options?.dryRun) {
     for (const change of changes) {
       switch (change.type) {
@@ -68,7 +66,6 @@ export function commitChanges(tree: Tree, options?: CommitOptions): CommitResult
     return result
   }
 
-  // Sort changes: deletes first (to free names), then creates, then updates
   const sortedChanges = [...changes].sort((a, b) => {
     const order = { DELETE: 0, CREATE: 1, UPDATE: 2 }
     return order[a.type] - order[b.type]
@@ -83,13 +80,11 @@ export function commitChanges(tree: Tree, options?: CommitOptions): CommitResult
         case 'UPDATE':
           /* istanbul ignore if -- content is always defined for CREATE/UPDATE from tree.write() */
           if (change.content !== undefined) {
-            // Ensure directory exists
             const dir = dirname(absPath)
             ensureDir(dir)
 
             writeFileSync(absPath, change.content)
 
-            // Apply permissions if specified
             if (change.mode !== undefined) {
               chmodSync(absPath, change.mode)
             }
@@ -107,7 +102,6 @@ export function commitChanges(tree: Tree, options?: CommitOptions): CommitResult
             try {
               unlinkSync(absPath)
             } catch {
-              // Try recursive delete for directories
               rmSync(absPath, { recursive: true })
             }
           }
@@ -122,7 +116,6 @@ export function commitChanges(tree: Tree, options?: CommitOptions): CommitResult
         vfsLogger.info(`${prefix} ${change.path}`)
       }
     } catch (error) {
-      // On error, throw with context
       vfsLogger.error('Commit failed', { path: change.path, type: change.type })
       const message =
         error instanceof Error
@@ -134,7 +127,6 @@ export function commitChanges(tree: Tree, options?: CommitOptions): CommitResult
 
   result.changes = appliedChanges
 
-  // Clear the tree's pending changes after successful commit
   tree.clearChanges()
 
   return result

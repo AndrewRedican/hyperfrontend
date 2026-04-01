@@ -1,7 +1,3 @@
-/**
- * Tests for handleMessage function
- */
-
 import type { Logger } from '@hyperfrontend/logging'
 import type { IAction } from '../../types/action'
 import type { IChannelContract } from '../../types/contract'
@@ -74,7 +70,6 @@ describe('handleMessage', () => {
 
     Object.defineProperty(channel, 'id', { value: 'remote-broker-1', writable: true })
 
-    // Re-add to registry with new ID so getById can find it
     registry.add(channel)
     Object.defineProperty(channel, 'isActive', { value: () => true, writable: true })
 
@@ -122,7 +117,6 @@ describe('handleMessage', () => {
 
     Object.defineProperty(channel, 'id', { value: 'remote-broker-1', writable: true })
 
-    // Re-add to registry with new ID so getById can find it
     registry.add(channel)
     Object.defineProperty(channel, 'isActive', { value: () => false, writable: true })
 
@@ -142,7 +136,6 @@ describe('handleMessage', () => {
 
     handleMessage(routingContext, message)
 
-    // Should not process the message
     expect(mockLogger.info).not.toHaveBeenCalled()
   })
 
@@ -161,7 +154,6 @@ describe('handleMessage', () => {
 
     Object.defineProperty(channel, 'id', { value: 'remote-broker-1', writable: true })
 
-    // Re-add to registry with new ID so getById can find it
     registry.add(channel)
     Object.defineProperty(channel, 'isActive', { value: () => true, writable: true })
     Object.defineProperty(channel, 'name', { value: 'test-channel', writable: true })
@@ -169,7 +161,7 @@ describe('handleMessage', () => {
     const action: IAction = {
       type: '[nexus] new-message',
       senderId: 'remote-broker-1',
-      data: <unknown>null, // Invalid message
+      data: <unknown>null,
     }
 
     const message = <MessageEvent<IAction>>{
@@ -183,10 +175,8 @@ describe('handleMessage', () => {
   })
 
   it('does not output to console when log level is error', () => {
-    // Create a real logger with error level (info filtered out)
     const infoSpy = jest.spyOn(console, 'info').mockImplementation()
 
-    // Use a real logger with error level
     const { createLogger } = <typeof import('./../../utils/logging/create-logger')>require('./../../utils/logging/create-logger')
     const realLogger = createLogger({ level: 'error' })
 
@@ -199,14 +189,13 @@ describe('handleMessage', () => {
 
     Object.defineProperty(channel, 'id', { value: 'remote-broker-1', writable: true })
 
-    // Re-add to registry with new ID so getById can find it
     registry.add(channel)
     Object.defineProperty(channel, 'isActive', { value: () => true, writable: true })
 
     const action: IAction = {
       type: '[nexus] new-message',
       senderId: 'remote-broker-1',
-      data: <unknown>null, // Invalid message
+      data: <unknown>null,
     }
 
     const message = <MessageEvent<IAction>>{
@@ -216,7 +205,6 @@ describe('handleMessage', () => {
 
     handleMessage(errorLevelContext, message)
 
-    // Console.info should not be called because log level is 'error'
     expect(infoSpy).not.toHaveBeenCalled()
     infoSpy.mockRestore()
   })
@@ -226,7 +214,6 @@ describe('handleMessage', () => {
 
     Object.defineProperty(channel, 'id', { value: 'remote-broker-1', writable: true })
 
-    // Re-add to registry with new ID so getById can find it
     registry.add(channel)
     Object.defineProperty(channel, 'isActive', { value: () => true, writable: true })
 
@@ -259,7 +246,6 @@ describe('handleMessage', () => {
     const channel1 = addChannel(mockBrokerState, registry, processManager, actions, 'channel-1', mockWindow)
     Object.defineProperty(channel1, 'id', { value: 'remote-1', writable: true })
 
-    // Re-add to registry with new ID
     registry.add(channel1)
     Object.defineProperty(channel1, 'isActive', { value: () => true, writable: true })
 
@@ -267,7 +253,6 @@ describe('handleMessage', () => {
     const channel2 = addChannel(mockBrokerState, registry, processManager, actions, 'channel-2', window2)
     Object.defineProperty(channel2, 'id', { value: 'remote-2', writable: true })
 
-    // Re-add to registry with new ID
     registry.add(channel2)
     Object.defineProperty(channel2, 'isActive', { value: () => true, writable: true })
 
@@ -283,15 +268,11 @@ describe('handleMessage', () => {
       data: { type: 'test-message', payload: 'for channel 2' },
     }
 
-    // handleMessage routes messages through channel notification system
-    // This test verifies no errors occur during routing
-
     handleMessage(routingContext, <MessageEvent<IAction>>{
       data: action1,
       source: mockWindow,
     })
 
-    // Should not throw for channel 1
     expect(() => {
       handleMessage(routingContext, <MessageEvent<IAction>>{
         data: action2,
@@ -299,7 +280,6 @@ describe('handleMessage', () => {
       })
     }).not.toThrow()
 
-    // Both messages should be processed without validation errors (valid message type)
     expect(mockLogger.info).not.toHaveBeenCalled()
   })
 

@@ -26,7 +26,6 @@ export function traverseUpward(startPath: string, predicate: (dirPath: string) =
     currentPath = dirname(currentPath)
   }
 
-  // Check root directory
   if (predicate(rootPath)) {
     fsTraversalLogger.debug('Upward traversal found match at root', { startPath, foundPath: rootPath })
     return rootPath

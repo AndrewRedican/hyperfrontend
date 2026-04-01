@@ -14,7 +14,7 @@ describe('resolveOptions', () => {
   it('merges partial options with defaults', () => {
     const result = resolveOptions({ useAsterisks: true })
     expect(result.useAsterisks).toBe(true)
-    expect(result.includeDescription).toBe(true) // default
+    expect(result.includeDescription).toBe(true)
   })
 
   it('preserves all custom option values', () => {

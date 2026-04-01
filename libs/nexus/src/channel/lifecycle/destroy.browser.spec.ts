@@ -3,7 +3,6 @@ import type { IAction } from '../../types/action'
 import type { ChannelInternals } from '../types'
 import { destroy } from './destroy'
 
-// Mutable version of ChannelState for testing
 type MutableChannelState = { -readonly [K in keyof ChannelState]: ChannelState[K] }
 
 describe('channel/lifecycle/destroy', () => {
@@ -145,7 +144,6 @@ describe('channel/lifecycle/destroy', () => {
 
     destroy(mockChannel)
 
-    // Should: 1) set inactive, 2) send action, 3) cleanup (no event for forceful destroy)
     expect(operations).toEqual(['updateState', 'sendAction', 'cleanup'])
   })
 })

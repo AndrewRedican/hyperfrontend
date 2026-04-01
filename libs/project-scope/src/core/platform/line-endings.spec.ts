@@ -72,8 +72,6 @@ describe('core/platform/line-endings', () => {
 
     it('handles case sensitivity correctly on case-sensitive systems', () => {
       const caseSensitive = isCaseSensitiveFs()
-      // On case-sensitive systems, different case = different paths
-      // On case-insensitive systems, different case = same paths
       expect(pathsEqual('/a/B/c', '/a/b/c')).toBe(!caseSensitive)
     })
   })

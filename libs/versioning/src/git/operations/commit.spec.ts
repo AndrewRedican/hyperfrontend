@@ -1,7 +1,6 @@
 import { execFileSync } from 'node:child_process'
 import { commit, amendCommit, amendCommitNoEdit, createEmptyCommit, DEFAULT_COMMIT_OPTIONS } from './commit'
 
-// Mock getCommit from log module
 jest.mock('./log', () => ({
   ...jest.requireActual('./log'),
   getCommit: jest.fn(),
@@ -65,7 +64,6 @@ describe('commit', () => {
     const result = commit('feat: add feature', { body: 'Detailed description' })
 
     expect(result).toBeDefined()
-    // Body is appended to message, check the -m flag was used and message contains body
     expect(mockExecFileSync).toHaveBeenCalledWith('git', expect.arrayContaining(['-m']), expect.any(Object))
   })
 
@@ -339,7 +337,6 @@ describe('amendCommitNoEdit', () => {
     expect(result.hash).toBe('def456')
     expect(mockExecFileSync).toHaveBeenCalledWith('git', expect.arrayContaining(['--amend']), expect.any(Object))
     expect(mockExecFileSync).toHaveBeenCalledWith('git', expect.arrayContaining(['--no-edit']), expect.any(Object))
-    // Should NOT contain -m flag when using --no-edit
     expect(mockExecFileSync).not.toHaveBeenCalledWith('git', expect.arrayContaining(['-m']), expect.any(Object))
   })
 
@@ -398,7 +395,6 @@ describe('commit with noEdit option', () => {
   })
 
   it('throws when noEdit is true but amend is false', () => {
-    // noEdit only makes sense with amend
     expect(() => commit('', { noEdit: true })).toThrow('Commit message is required')
   })
 })

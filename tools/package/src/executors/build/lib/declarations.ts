@@ -43,7 +43,6 @@ export function generateDeclarations(
     outputPath,
   ]
 
-  // Use spawnSync to avoid buffer issues - stdio: 'pipe' captures output
   const result = spawnSync(tscPath, args, {
     cwd: projectRoot,
     encoding: 'utf-8',
@@ -88,22 +87,17 @@ export function flattenDeclarationPaths(
   workspaceRoot: string,
   discovery: EntryPointDiscovery
 ): void {
-  // Path to the nested declarations for THIS project (not bundled dependencies)
-  // e.g., dist/libs/logging/libs/logging/src
   const nestedDeclarations = join(outputPath, relative(workspaceRoot, join(projectRoot, 'src')))
 
   if (!existsSync(nestedDeclarations)) {
     return
   }
 
-  // Copy declarations for each entry point to its proper location
   for (let i = 0; i < discovery.entryPoints.length; i++) {
     const entry = discovery.entryPoints[i]
     if (entry.isRoot) {
-      // Root entry: copy root-level .d.ts files from nested src to package root
       copyRootDeclarations(nestedDeclarations, outputPath)
     } else {
-      // Non-root entry: copy from nested path to proper subpath
       const srcDir = entry.srcPath
       const declSrc = join(nestedDeclarations, srcDir)
       const declDest = join(outputPath, srcDir)
@@ -114,11 +108,8 @@ export function flattenDeclarationPaths(
     }
   }
 
-  // Copy lib/ folder if it exists (required for packages with nested re-exports)
-  // Entry point declaration files often re-export from ../lib/* paths
   copyLibDeclarations(nestedDeclarations, outputPath)
 
-  // Clean up the nested workspace structure (libs/, plugins/, etc.)
   cleanupNestedDeclarations(outputPath)
 }
 
@@ -141,7 +132,6 @@ function copyRootDeclarations(nestedSrc: string, outputPath: string): void {
     const srcPath = join(nestedSrc, entry)
     const stat = statSync(srcPath)
 
-    // Only copy files, not directories (subdirectories are separate entry points)
     if (stat.isFile() && (entry.endsWith('.d.ts') || entry.endsWith('.d.ts.map'))) {
       const destPath = join(outputPath, entry)
       cpSync(srcPath, destPath, { force: true })
@@ -173,9 +163,7 @@ function copyLibDeclarations(nestedSrc: string, outputPath: string): void {
     force: true,
     filter: (src) => {
       const stat = statSync(src)
-      // Allow directories (needed for recursive traversal)
       if (stat.isDirectory()) return true
-      // Only copy declaration files
       return src.endsWith('.d.ts') || src.endsWith('.d.ts.map')
     },
   })
@@ -193,7 +181,6 @@ function copyLibDeclarations(nestedSrc: string, outputPath: string): void {
  * @param outputPath - Absolute path to output directory
  */
 function cleanupNestedDeclarations(outputPath: string): void {
-  // Remove common workspace top-level directories that tsc might output
   const workspaceDirs = ['libs', 'plugins', 'apps']
 
   for (const dir of workspaceDirs) {

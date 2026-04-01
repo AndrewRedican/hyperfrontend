@@ -17,7 +17,6 @@ import { tokenize } from './tokenizer'
 function isGitHubUrl(url: string): boolean {
   try {
     const parsed = createURL(url)
-    // Check that the host is exactly github.com or ends with .github.com
     return parsed.host === 'github.com' || parsed.host.endsWith('.github.com')
   } catch {
     return false
@@ -49,16 +48,12 @@ export function parseChangelog(content: string, source?: string): Changelog {
     warnings: [],
   }
 
-  // Parse header
   const header = parseHeader(state)
 
-  // Parse entries
   const entries = parseEntries(state)
 
-  // Detect format
   const format = detectFormat(header, entries)
 
-  // Build metadata
   const metadata: ChangelogMetadata = {
     format,
     isConventional: format === 'conventional',
@@ -85,17 +80,14 @@ function parseHeader(state: ParserState): ChangelogHeader {
   const description: string[] = []
   const links: ChangelogLink[] = []
 
-  // Look for h1 title
   const headingToken = currentToken(state)
   if (headingToken?.type === 'heading-1') {
     title = `# ${headingToken.value}`
     advance(state)
   }
 
-  // Skip newlines
   skipNewlines(state)
 
-  // Collect description lines until we hit h2 (version entry)
   while (!isEOF(state) && currentToken(state)?.type !== 'heading-2') {
     const token = currentToken(state)
     if (!token) break
@@ -103,19 +95,17 @@ function parseHeader(state: ParserState): ChangelogHeader {
     if (token.type === 'text') {
       description.push(token.value)
     } else if (token.type === 'link-text') {
-      // Check for link definition
       const nextToken = peek(state, 1)
       if (nextToken?.type === 'link-url') {
         description.push(`[${token.value}](${nextToken.value})`)
         links.push({ label: token.value, url: nextToken.value })
 
-        // Try to detect repository URL
         if (!state.repositoryUrl && isGitHubUrl(nextToken.value)) {
           state.repositoryUrl = extractRepoUrl(nextToken.value)
         }
 
-        advance(state) // skip link-text
-        advance(state) // skip link-url
+        advance(state)
+        advance(state)
         continue
       }
     } else if (token.type === 'newline' || token.type === 'blank-line') {
@@ -127,7 +117,6 @@ function parseHeader(state: ParserState): ChangelogHeader {
     advance(state)
   }
 
-  // Trim trailing empty lines
   while (description.length > 0 && description[description.length - 1] === '') {
     description.pop()
   }
@@ -145,7 +134,6 @@ function parseEntries(state: ParserState): ChangelogEntry[] {
   const entries: ChangelogEntry[] = []
 
   while (!isEOF(state)) {
-    // Look for h2 heading (version entry)
     if (currentToken(state)?.type === 'heading-2') {
       const entry = parseEntry(state)
       if (entry) {
@@ -174,10 +162,9 @@ function parseEntry(state: ParserState): ChangelogEntry | null {
   const { version, date, compareUrl } = parseVersionFromHeading(headingToken.value)
   const unreleased = version.toLowerCase() === 'unreleased'
 
-  advance(state) // skip h2
+  advance(state)
   skipNewlines(state)
 
-  // Parse sections
   const sections = parseSections(state)
 
   return {
@@ -201,19 +188,16 @@ function parseSections(state: ParserState): ChangelogSection[] {
   while (!isEOF(state)) {
     const token = currentToken(state)
 
-    // Stop at next version entry (h2)
     if (token?.type === 'heading-2') {
       break
     }
 
-    // Parse section (h3)
     if (token?.type === 'heading-3') {
       const section = parseSection(state)
       if (section) {
         sections.push(section)
       }
     } else if (token?.type === 'list-item') {
-      // Items without section heading - create "other" section
       const items = parseItems(state)
       if (items.length > 0) {
         sections.push({
@@ -245,10 +229,9 @@ function parseSection(state: ParserState): ChangelogSection | null {
   const heading = headingToken.value
   const type = getSectionType(heading)
 
-  advance(state) // skip h3
+  advance(state)
   skipNewlines(state)
 
-  // Parse items
   const items = parseItems(state)
 
   return {
@@ -270,12 +253,10 @@ function parseItems(state: ParserState): ChangelogItem[] {
   while (!isEOF(state)) {
     const token = currentToken(state)
 
-    // Stop at headings
     if (token?.type === 'heading-2' || token?.type === 'heading-3') {
       break
     }
 
-    // Parse list item
     if (token?.type === 'list-item') {
       const item = parseItem(state)
       if (item) {
@@ -306,7 +287,6 @@ function parseItem(state: ParserState): ChangelogItem | null {
   const commits = parseCommitRefs(text, state.repositoryUrl)
   const references = parseIssueRefs(text, state.repositoryUrl)
 
-  // Check for breaking change indicators
   const breaking = isBreakingItem(text)
 
   advance(state)
@@ -340,12 +320,10 @@ function isBreakingItem(text: string): boolean {
 function detectFormat(header: ChangelogHeader, entries: ChangelogEntry[]): ChangelogFormat {
   const descriptionText = header.description.join(' ').toLowerCase()
 
-  // Check for Keep a Changelog
   if (descriptionText.includes('keep a changelog') || descriptionText.includes('keepachangelog')) {
     return 'keep-a-changelog'
   }
 
-  // Check for conventional changelog patterns
   const hasConventionalSections = entries.some((entry) =>
     entry.sections.some((section) => ['features', 'fixes', 'performance'].includes(section.type))
   )
@@ -354,7 +332,6 @@ function detectFormat(header: ChangelogHeader, entries: ChangelogEntry[]): Chang
     return 'conventional'
   }
 
-  // Check if we have entries with structured sections
   if (entries.some((entry) => entry.sections.length > 0)) {
     return 'custom'
   }
@@ -369,7 +346,6 @@ function detectFormat(header: ChangelogHeader, entries: ChangelogEntry[]): Chang
  * @returns The repository URL or undefined if not found
  */
 function extractRepoUrl(url: string): string | undefined {
-  // Try to extract base repo URL from various GitHub URL patterns
   const githubIndex = url.indexOf('github.com/')
   if (githubIndex !== -1) {
     const afterGithub = url.slice(githubIndex + 11)
@@ -380,10 +356,6 @@ function extractRepoUrl(url: string): string | undefined {
   }
   return undefined
 }
-
-// ============================================================================
-// Parser utilities
-// ============================================================================
 
 /**
  * Gets the current token at the parser position.

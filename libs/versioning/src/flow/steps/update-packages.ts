@@ -25,7 +25,6 @@ export function createUpdatePackageStep(): FlowStep {
       const { tree, projectRoot, state, logger } = ctx
       const { nextVersion, bumpType, currentVersion } = state
 
-      // Skip if no bump needed
       if (!nextVersion || bumpType === 'none') {
         return createSkippedResult('No version bump needed')
       }
@@ -80,20 +79,13 @@ export function createCascadeDependenciesStep(): FlowStep {
       const { config, state, logger } = ctx
       const { nextVersion, bumpType } = state
 
-      // Skip if dependency tracking not enabled
       if (!config.trackDeps) {
         return createSkippedResult('Dependency tracking not enabled')
       }
 
-      // Skip if no bump needed
       if (!nextVersion || bumpType === 'none') {
         return createSkippedResult('No version bump to cascade')
       }
-
-      // In a full implementation, this would:
-      // 1. Use workspace discovery to find dependent packages
-      // 2. Update their dependency references
-      // 3. Track the modified files
 
       logger.warn('Cascade dependencies step is not fully implemented yet')
 

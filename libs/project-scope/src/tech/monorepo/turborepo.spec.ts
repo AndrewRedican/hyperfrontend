@@ -70,6 +70,6 @@ describe('turborepoDetector', () => {
       scripts: { build: 'turbo run build', test: 'turbo run test' },
     })
 
-    expect(result?.confidence).toBe(100) // 80 + 15 + 5 capped at 100
+    expect(result?.confidence).toBe(100)
   })
 })

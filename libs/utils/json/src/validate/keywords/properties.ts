@@ -72,7 +72,6 @@ export function validateAdditionalProperties(instance: Record<string, unknown>, 
   }
 
   /* istanbul ignore next -- definedKeys initialization */
-  // Collect defined property names
   const definedKeys = createSet<string>()
 
   /* istanbul ignore next -- schema.properties may not exist */
@@ -82,16 +81,14 @@ export function validateAdditionalProperties(instance: Record<string, unknown>, 
     }
   }
 
-  // Collect pattern property regexes
   const patterns: RegExp[] = []
   /* istanbul ignore next -- patternProperties may not always be present */
   if (schema.patternProperties) {
     for (const pattern of keys(schema.patternProperties)) {
-      // Skip unsafe patterns if a checker is configured (already reported in patternProperties validator)
       if (ctx.patternSafetyChecker) {
         const safetyResult = ctx.patternSafetyChecker(pattern)
         if (!safetyResult.safe) {
-          continue // Skip this unsafe pattern
+          continue
         }
       }
 
@@ -108,17 +105,14 @@ export function validateAdditionalProperties(instance: Record<string, unknown>, 
   let valid = true
 
   for (const key of keys(instance)) {
-    // Skip if property is defined in 'properties'
     if (definedKeys.has(key)) {
       continue
     }
 
-    // Skip if property matches any pattern in 'patternProperties'
     if (patterns.some((p) => p.test(key))) {
       continue
     }
 
-    // This is an additional property
     if (additionalProperties === false) {
       addError(ctx, `Additional property not allowed: ${key}`, instance[key], 'additionalProperties', {
         property: key,
@@ -134,7 +128,6 @@ export function validateAdditionalProperties(instance: Record<string, unknown>, 
         if (!shouldContinue(ctx)) return false
       }
     }
-    // If additionalProperties === true, any additional property is allowed
   }
 
   return valid

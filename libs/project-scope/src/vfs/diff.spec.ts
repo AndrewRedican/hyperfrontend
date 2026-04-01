@@ -83,7 +83,6 @@ describe('vfs/diff', () => {
         const diff = generateDiff(change)
         expect(diff.additions).toBe(1)
         expect(diff.deletions).toBe(1)
-        // Check for context lines
         expect(diff.lines.filter((l) => l.type === 'context').length).toBeGreaterThan(0)
       })
 
@@ -134,7 +133,6 @@ describe('vfs/diff', () => {
         const diffDefault = generateDiff(change)
         const diffMinimal = generateDiff(change, { contextLines: 1 })
 
-        // Default should have more context lines
         const contextDefault = diffDefault.lines.filter((l) => l.type === 'context').length
         const contextMinimal = diffMinimal.lines.filter((l) => l.type === 'context').length
 
@@ -204,7 +202,6 @@ describe('vfs/diff', () => {
       const formatted = formatUnifiedDiff(fileDiff)
       const lines = formatted.split('\n')
 
-      // Find the content lines (after header and hunk)
       const contentLines = lines.slice(3)
       expect(contentLines.some((l) => l.startsWith(' context line'))).toBe(true)
       expect(contentLines.some((l) => l.startsWith('-removed line'))).toBe(true)
@@ -246,7 +243,6 @@ describe('vfs/diff', () => {
       const diffsWithContext = generateAllDiffs(tree, { contextLines: 5 })
       const diffsMinimal = generateAllDiffs(tree, { contextLines: 0 })
 
-      // Both should have the same file
       expect(diffsWithContext.length).toBe(1)
       expect(diffsMinimal.length).toBe(1)
     })
@@ -270,7 +266,6 @@ describe('vfs/diff', () => {
       tree.write('README.md', '# Project\n')
       tree.delete('src/index.ts')
 
-      // This actually tests the workflow
       const changes = tree.listChanges()
       expect(changes.length).toBeGreaterThan(0)
 
@@ -286,12 +281,10 @@ describe('vfs/diff', () => {
 
   describe('edge cases for branch coverage', () => {
     it('handles UPDATE diff with changes spread far apart to skip context lines', () => {
-      // Create a file with many lines, change only lines at the start and end
-      // to ensure some lines in the middle are skipped (not included in context)
       const originalLines = Array.from({ length: 20 }, (_, i) => `line${i + 1}`)
       const newLines = [...originalLines]
-      newLines[0] = 'CHANGED_LINE_1' // Change first line
-      newLines[19] = 'CHANGED_LINE_20' // Change last line
+      newLines[0] = 'CHANGED_LINE_1'
+      newLines[19] = 'CHANGED_LINE_20'
 
       const change: FileChange = {
         path: 'spread.txt',
@@ -302,20 +295,15 @@ describe('vfs/diff', () => {
 
       const diff = generateDiff(change, { contextLines: 2 })
 
-      // Should have additions and deletions
       expect(diff.additions).toBe(2)
       expect(diff.deletions).toBe(2)
 
-      // The middle lines should be skipped (not in diff output)
-      // This tests the "else" branch where include[i] is false
       const totalLines = diff.lines.length
-      expect(totalLines).toBeLessThan(20) // Not all lines should be included
+      expect(totalLines).toBeLessThan(20)
     })
 
     it('handles skipped add operations outside context window', () => {
-      // Test specifically the branch when an 'add' operation is skipped
       const originalLines = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J']
-      // Insert lines far from any changes to test skip branch for 'add'
       const newLines = ['A', 'X', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'Y']
 
       const change: FileChange = {
@@ -327,15 +315,13 @@ describe('vfs/diff', () => {
 
       const diff = generateDiff(change, { contextLines: 1 })
 
-      // Both X and Y are additions
       expect(diff.additions).toBe(2)
       expect(diff.deletions).toBe(0)
     })
 
     it('handles skipped remove operations outside context window', () => {
-      // Test specifically the branch when a 'remove' operation is skipped
       const originalLines = ['A', 'B', 'X', 'C', 'D', 'E', 'F', 'G', 'H', 'Y', 'I', 'J']
-      const newLines = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J'] // Remove X and Y
+      const newLines = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J']
 
       const change: FileChange = {
         path: 'skip-remove.txt',
@@ -346,23 +332,19 @@ describe('vfs/diff', () => {
 
       const diff = generateDiff(change, { contextLines: 1 })
 
-      // Both X and Y are removals
       expect(diff.deletions).toBe(2)
       expect(diff.additions).toBe(0)
     })
 
     it('handles skipped same operations outside context window', () => {
-      // Ensure 'same' lines far from changes are skipped
       const originalLines: string[] = []
       const newLines: string[] = []
 
-      // Add 30 lines of unchanged content
       for (let i = 0; i < 30; i++) {
         originalLines.push(`unchanged_${i}`)
         newLines.push(`unchanged_${i}`)
       }
 
-      // Change only line 0 and line 29
       newLines[0] = 'MODIFIED_START'
       newLines[29] = 'MODIFIED_END'
 
@@ -375,10 +357,8 @@ describe('vfs/diff', () => {
 
       const diff = generateDiff(change, { contextLines: 2 })
 
-      // Lines in the middle (e.g., lines 10-20) should be skipped
       expect(diff.lines.length).toBeLessThan(30)
 
-      // Check that we have context, additions, and deletions
       const contextLines = diff.lines.filter((l) => l.type === 'context')
       expect(contextLines.length).toBeGreaterThan(0)
       expect(diff.additions).toBe(2)

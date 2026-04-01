@@ -158,7 +158,7 @@ describe('scopeRegexMatcher', () => {
 
   it('returns false when scope does not match regex', () => {
     const matcher = scopeRegexMatcher(/^(ci|build|tool)-.+/)
-    expect(matcher(createMockContext({ scope: 'ci' }))).toBe(false) // No suffix
+    expect(matcher(createMockContext({ scope: 'ci' }))).toBe(false)
     expect(matcher(createMockContext({ scope: 'lib-utils' }))).toBe(false)
   })
 
@@ -283,18 +283,14 @@ describe('pre-built matchers', () => {
 
   describe('DEFAULT_INFRA_SCOPE_MATCHER', () => {
     it('combines CI, tooling, and tool-prefix matchers', () => {
-      // CI scopes
       expect(DEFAULT_INFRA_SCOPE_MATCHER(createMockContext({ scope: 'ci' }))).toBe(true)
       expect(DEFAULT_INFRA_SCOPE_MATCHER(createMockContext({ scope: 'build' }))).toBe(true)
 
-      // Tooling scopes
       expect(DEFAULT_INFRA_SCOPE_MATCHER(createMockContext({ scope: 'workspace' }))).toBe(true)
       expect(DEFAULT_INFRA_SCOPE_MATCHER(createMockContext({ scope: 'nx' }))).toBe(true)
 
-      // Tool-prefixed scopes
       expect(DEFAULT_INFRA_SCOPE_MATCHER(createMockContext({ scope: 'tool-package' }))).toBe(true)
 
-      // Non-infrastructure scopes
       expect(DEFAULT_INFRA_SCOPE_MATCHER(createMockContext({ scope: 'feat' }))).toBe(false)
       expect(DEFAULT_INFRA_SCOPE_MATCHER(createMockContext({ scope: 'lib-utils' }))).toBe(false)
     })
@@ -342,13 +338,10 @@ describe('buildInfrastructureMatcher', () => {
       throw new Error('Expected matcher to be defined')
     }
 
-    // Matches via scope
     expect(matcher(createMockContext({ scope: 'ci' }))).toBe(true)
 
-    // Matches via custom matcher
     expect(matcher(createMockContext({ scope: 'feat', message: 'feat: update [infra]' }))).toBe(true)
 
-    // Does not match either
     expect(matcher(createMockContext({ scope: 'feat', message: 'feat: normal update' }))).toBe(false)
   })
 
@@ -364,7 +357,6 @@ describe('buildInfrastructureMatcher', () => {
       throw new Error('Expected matcher to be defined')
     }
 
-    // Should work identically to the custom matcher
     expect(matcher(createMockContext({ scope: 'custom' }))).toBe(true)
   })
 })
@@ -416,7 +408,6 @@ describe('evaluateInfrastructure', () => {
 
 describe('complex composition scenarios', () => {
   it('creates complex matcher with nested composition', () => {
-    // Match: (ci OR build) AND NOT release
     const matcher = allOf(anyOf(scopeMatcher(['ci']), scopeMatcher(['build'])), not(scopeMatcher(['release'])))
 
     expect(matcher(createMockContext({ scope: 'ci' }))).toBe(true)
@@ -426,7 +417,6 @@ describe('complex composition scenarios', () => {
   })
 
   it('creates matcher for dependencies with security updates', () => {
-    // Match: deps scope AND message contains 'security'
     const matcher = allOf(scopeMatcher(['deps']), messageMatcher(['security']))
 
     expect(matcher(createMockContext({ scope: 'deps', message: 'chore(deps): security update' }))).toBe(true)
@@ -435,7 +425,6 @@ describe('complex composition scenarios', () => {
   })
 
   it('creates matcher with regex and scope combinations', () => {
-    // Match: starts with 'tool-' OR matches infra regex
     const matcher = anyOf(scopePrefixMatcher(['tool-']), scopeRegexMatcher(/^infra-/))
 
     expect(matcher(createMockContext({ scope: 'tool-package' }))).toBe(true)

@@ -101,13 +101,11 @@ interface RawPackageInfo {
 export function discoverPackages(options: DiscoveryOptions = {}): DiscoveryResult {
   const { tree } = options
 
-  // Resolve workspace root
   const workspaceRoot = options.workspaceRoot ?? (tree ? tree.root : findWorkspaceRoot(process.cwd()))
   if (!workspaceRoot) {
     throw createError('Could not find workspace root. Ensure you are in a monorepo with nx.json, turbo.json, or workspaces field.')
   }
 
-  // Build configuration
   const config: WorkspaceConfig = {
     patterns: options.patterns ?? DEFAULT_WORKSPACE_CONFIG.patterns,
     exclude: options.exclude ?? DEFAULT_WORKSPACE_CONFIG.exclude,
@@ -115,36 +113,29 @@ export function discoverPackages(options: DiscoveryOptions = {}): DiscoveryResul
     trackDependencies: options.trackDependencies ?? DEFAULT_WORKSPACE_CONFIG.trackDependencies,
   }
 
-  // Find all package.json files - use VFS-aware function when tree provided
   const packageJsonPaths = tree ? findPackageJsonFilesInTree(tree, config) : findPackageJsonFiles(workspaceRoot, config)
 
-  // Parse package.json files - use VFS-aware function when tree provided
   const rawPackages = tree
     ? parsePackageJsonFilesFromTree(tree, workspaceRoot, packageJsonPaths)
     : parsePackageJsonFiles(workspaceRoot, packageJsonPaths)
 
-  // Collect all package names for internal dependency detection
   const packageNames = createSet(rawPackages.map((p) => p.name))
 
-  // Find changelogs if requested - use VFS-aware function when tree provided
   const changelogMap = config.includeChangelogs
     ? tree
       ? findChangelogsInTree(tree, rawPackages)
       : findChangelogs(workspaceRoot, rawPackages)
     : createMap<string, string>()
 
-  // Build projects with changelog paths
   const rawWithChangelogs = rawPackages.map((pkg) => ({
     ...pkg,
     changelogPath: changelogMap.get(pkg.path) ?? null,
   }))
 
-  // Calculate internal dependencies
   const projects = config.trackDependencies
     ? buildProjectsWithDependencies(rawWithChangelogs, packageNames)
     : rawWithChangelogs.map((pkg) => createProject(pkg))
 
-  // Build project map
   const projectMap = createMap<string, Project>()
   for (const project of projects) {
     projectMap.set(project.name, project)
@@ -192,7 +183,6 @@ function parsePackageJsonFiles(workspaceRoot: string, packageJsonPaths: string[]
     try {
       const packageJson = readPackageJson(absolutePath)
 
-      // Skip packages without a name
       if (!packageJson.name) {
         continue
       }
@@ -206,7 +196,6 @@ function parsePackageJsonFiles(workspaceRoot: string, packageJsonPaths: string[]
         changelogPath: null,
       })
     } catch {
-      // Skip packages that can't be parsed
       continue
     }
   }
@@ -253,7 +242,6 @@ function parsePackageJsonFilesFromTree(tree: Tree, workspaceRoot: string, packag
 
       const packageJson = <PackageJson>parse(content)
 
-      // Skip packages without a name
       if (!packageJson.name) {
         continue
       }
@@ -267,7 +255,6 @@ function parsePackageJsonFilesFromTree(tree: Tree, workspaceRoot: string, packag
         changelogPath: null,
       })
     } catch {
-      // Skip packages that can't be parsed
       continue
     }
   }
@@ -283,7 +270,6 @@ function parsePackageJsonFilesFromTree(tree: Tree, workspaceRoot: string, packag
  * @returns Array of Project objects with dependencies populated
  */
 function buildProjectsWithDependencies(rawPackages: RawPackageInfo[], packageNames: Set<string>): Project[] {
-  // First pass: create projects with dependencies
   const projectsWithDeps: Array<CreateProjectOptions & { internalDependencies: string[] }> = []
 
   for (const pkg of rawPackages) {
@@ -294,7 +280,6 @@ function buildProjectsWithDependencies(rawPackages: RawPackageInfo[], packageNam
     })
   }
 
-  // Build dependency -> dependents map
   const dependentsMap = createMap<string, string[]>()
   for (const pkg of projectsWithDeps) {
     for (const dep of pkg.internalDependencies) {
@@ -304,7 +289,6 @@ function buildProjectsWithDependencies(rawPackages: RawPackageInfo[], packageNam
     }
   }
 
-  // Second pass: add dependents to each project
   return projectsWithDeps.map((pkg) => {
     const dependents = dependentsMap.get(pkg.name) ?? []
     return createProject({

@@ -14,7 +14,6 @@ export function applyPolicy(policy: SecurityPolicy, event: MessageEvent, logger:
     const result = policy(event)
     return Boolean(result)
   } catch (error) {
-    // Fail-safe: deny on error
     logger.error('Security policy threw an error:', <Error>error)
     return false
   }

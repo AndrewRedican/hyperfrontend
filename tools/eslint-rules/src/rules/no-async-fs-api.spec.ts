@@ -17,7 +17,6 @@ const ruleTester = new RuleTester({
  * Valid test cases - synchronous fs methods and non-fs imports
  */
 const validCases: ValidTestCase<TestOptions>[] = [
-  // Synchronous fs methods (allowed)
   { code: `import { readFileSync } from 'node:fs'` },
   { code: `import { writeFileSync } from 'node:fs'` },
   { code: `import { existsSync } from 'node:fs'` },
@@ -35,26 +34,20 @@ const validCases: ValidTestCase<TestOptions>[] = [
   { code: `import { accessSync } from 'node:fs'` },
   { code: `import { openSync, closeSync } from 'node:fs'` },
 
-  // Sync methods from fs without node: prefix
   { code: `import { readFileSync } from 'fs'` },
   { code: `import { writeFileSync, mkdirSync } from 'fs'` },
 
-  // Type imports (allowed)
   { code: `import type { Stats } from 'node:fs'` },
   { code: `import type { Dirent, PathLike } from 'node:fs'` },
 
-  // Non-fs modules
   { code: `import { join } from 'node:path'` },
   { code: `import { createServer } from 'node:http'` },
   { code: `import express from 'express'` },
 
-  // Relative imports
   { code: `import { helper } from './helper'` },
 
-  // Workspace packages
   { code: `import { createChannel } from '@hyperfrontend/nexus'` },
 
-  // Namespace import with sync method calls
   {
     code: `
       import * as fs from 'node:fs'
@@ -62,7 +55,6 @@ const validCases: ValidTestCase<TestOptions>[] = [
     `,
   },
 
-  // Namespace import with computed property access (sync method)
   {
     code: `
       import * as fs from 'node:fs'
@@ -70,7 +62,6 @@ const validCases: ValidTestCase<TestOptions>[] = [
     `,
   },
 
-  // Namespace import with dynamic property access (not a string literal)
   {
     code: `
       import * as fs from 'node:fs'
@@ -79,7 +70,6 @@ const validCases: ValidTestCase<TestOptions>[] = [
     `,
   },
 
-  // Member expression with non-identifier object (function call result)
   {
     code: `
       function getFs() { return require('node:fs') }
@@ -87,7 +77,6 @@ const validCases: ValidTestCase<TestOptions>[] = [
     `,
   },
 
-  // Member expression with nested property access
   {
     code: `
       const modules = { fs: require('node:fs') }
@@ -95,7 +84,6 @@ const validCases: ValidTestCase<TestOptions>[] = [
     `,
   },
 
-  // fs constants (allowed)
   { code: `import { constants } from 'node:fs'` },
 ]
 
@@ -103,7 +91,6 @@ const validCases: ValidTestCase<TestOptions>[] = [
  * Invalid test cases - async fs methods that should be flagged
  */
 const invalidCases: InvalidTestCase<MessageIds, TestOptions>[] = [
-  // fs/promises imports (completely prohibited)
   {
     code: `import { readFile } from 'node:fs/promises'`,
     errors: [
@@ -132,7 +119,6 @@ const invalidCases: InvalidTestCase<MessageIds, TestOptions>[] = [
     ],
   },
 
-  // Named imports of async methods from fs
   {
     code: `import { readFile } from 'node:fs'`,
     errors: [
@@ -345,7 +331,6 @@ const invalidCases: InvalidTestCase<MessageIds, TestOptions>[] = [
     ],
   },
 
-  // Async methods from fs without node: prefix
   {
     code: `import { readFile } from 'fs'`,
     errors: [
@@ -369,7 +354,6 @@ const invalidCases: InvalidTestCase<MessageIds, TestOptions>[] = [
     ],
   },
 
-  // Namespace import with async method calls
   {
     code: `
       import * as fs from 'node:fs'
@@ -407,7 +391,6 @@ const invalidCases: InvalidTestCase<MessageIds, TestOptions>[] = [
     ],
   },
 
-  // CommonJS require for fs/promises
   {
     code: `const fs = require('node:fs/promises')`,
     errors: [
@@ -427,7 +410,6 @@ const invalidCases: InvalidTestCase<MessageIds, TestOptions>[] = [
     ],
   },
 
-  // Namespace import with computed property access (async method)
   {
     code: `
       import * as fs from 'node:fs'
@@ -441,7 +423,6 @@ const invalidCases: InvalidTestCase<MessageIds, TestOptions>[] = [
     ],
   },
 
-  // String literal import specifier (ES2022 module syntax)
   {
     code: `import { "readFile" as rf } from 'node:fs'`,
     errors: [

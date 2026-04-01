@@ -1,8 +1,3 @@
-/**
- * Node.js tests for serialized encrypted packet creator.
- * Browser version: create-serialized-encrypted-packet-creator.browser.spec.ts (identical except for imports)
- */
-
 import type { UnserializedEncryptedPacket } from '../model'
 import { uint8ArrayToBase64 } from '@hyperfrontend/string-utils/node'
 import { createSerializedEncryptedPacketCreator } from './create-serialized-encrypted-packet-creator'

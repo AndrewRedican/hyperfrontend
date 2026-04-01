@@ -16,7 +16,6 @@ export function parseVersionFromHeading(heading: string): {
 } {
   const trimmed = heading.trim()
 
-  // Check for unreleased
   const lowerHeading = trimmed.toLowerCase()
   if (lowerHeading === 'unreleased' || lowerHeading === '[unreleased]') {
     return { version: 'Unreleased', date: null }
@@ -26,30 +25,26 @@ export function parseVersionFromHeading(heading: string): {
   let date: string | null = null
   let compareUrl: string | undefined
 
-  // Skip leading [ if present
   if (trimmed[pos] === '[') {
     pos++
   }
 
-  // Skip leading 'v' if present
   if (trimmed[pos] === 'v' || trimmed[pos] === 'V') {
     pos++
   }
 
-  // Parse version number (digits and dots)
   const versionStart = pos
   while (pos < trimmed.length) {
     const char = trimmed[pos]
     const code = char.charCodeAt(0)
 
-    // Allow digits, dots, hyphens (for prerelease), plus signs
     if (
-      (code >= 48 && code <= 57) || // 0-9
+      (code >= 48 && code <= 57) ||
       char === '.' ||
       char === '-' ||
       char === '+' ||
-      (code >= 97 && code <= 122) || // a-z (for prerelease tags like alpha, beta, rc)
-      (code >= 65 && code <= 90) // A-Z
+      (code >= 97 && code <= 122) ||
+      (code >= 65 && code <= 90)
     ) {
       pos++
     } else {
@@ -59,37 +54,30 @@ export function parseVersionFromHeading(heading: string): {
 
   const version = trimmed.slice(versionStart, pos)
 
-  // Skip trailing ] if present
   if (trimmed[pos] === ']') {
     pos++
   }
 
-  // Handle markdown link format [version](url) - jscutlery/semver style
-  // This extracts the compare URL from patterns like [0.0.4](https://github.com/.../compare/...)
   if (trimmed[pos] === '(') {
     const urlStart = pos + 1
     let depth = 1
     pos++
 
-    // Find matching closing parenthesis (handles nested parens in URLs)
     while (pos < trimmed.length && depth > 0) {
       if (trimmed[pos] === '(') depth++
       else if (trimmed[pos] === ')') depth--
       pos++
     }
 
-    // Extract URL if we found the closing paren
     if (depth === 0) {
       compareUrl = trimmed.slice(urlStart, pos - 1)
     }
   }
 
-  // Skip whitespace and separator
   while (pos < trimmed.length && (trimmed[pos] === ' ' || trimmed[pos] === '-' || trimmed[pos] === '–')) {
     pos++
   }
 
-  // Try to parse date (YYYY-MM-DD format)
   if (pos < trimmed.length) {
     const dateMatch = extractDate(trimmed.slice(pos))
     if (dateMatch) {
@@ -98,12 +86,10 @@ export function parseVersionFromHeading(heading: string): {
     }
   }
 
-  // Skip to check for compare URL (in parentheses or link)
   while (pos < trimmed.length && trimmed[pos] === ' ') {
     pos++
   }
 
-  // Check for link at end: [compare](url) - only if no URL was already extracted
   if (pos < trimmed.length && !compareUrl) {
     const linkMatch = extractLink(trimmed.slice(pos))
     if (linkMatch?.url) {
@@ -123,10 +109,8 @@ export function parseVersionFromHeading(heading: string): {
 function extractDate(str: string): { date: string; length: number } | null {
   let pos = 0
 
-  // Skip optional parentheses
   if (str[pos] === '(') pos++
 
-  // Parse year (4 digits)
   const yearStart = pos
   while (pos < str.length && pos - yearStart < 4) {
     const code = str.charCodeAt(pos)
@@ -139,12 +123,10 @@ function extractDate(str: string): { date: string; length: number } | null {
 
   if (pos - yearStart !== 4) return null
 
-  // Expect - or /
   if (str[pos] !== '-' && str[pos] !== '/') return null
   const separator = str[pos]
   pos++
 
-  // Parse month (2 digits)
   const monthStart = pos
   while (pos < str.length && pos - monthStart < 2) {
     const code = str.charCodeAt(pos)
@@ -157,11 +139,9 @@ function extractDate(str: string): { date: string; length: number } | null {
 
   if (pos - monthStart !== 2) return null
 
-  // Expect same separator
   if (str[pos] !== separator) return null
   pos++
 
-  // Parse day (2 digits)
   const dayStart = pos
   while (pos < str.length && pos - dayStart < 2) {
     const code = str.charCodeAt(pos)
@@ -174,7 +154,6 @@ function extractDate(str: string): { date: string; length: number } | null {
 
   if (pos - dayStart !== 2) return null
 
-  // Skip optional closing parenthesis
   if (str[pos] === ')') pos++
 
   const dateStr = str.slice(yearStart, dayStart + 2)
@@ -208,7 +187,6 @@ function extractLink(str: string): { text: string; url: string; length: number }
   let pos = 1
   let depth = 1
 
-  // Find closing ]
   while (pos < str.length && depth > 0) {
     if (str[pos] === '[') depth++
     else if (str[pos] === ']') depth--
@@ -219,7 +197,6 @@ function extractLink(str: string): { text: string; url: string; length: number }
 
   const text = str.slice(1, pos - 1)
 
-  // Expect (
   if (str[pos] !== '(') return null
   pos++
 
@@ -251,21 +228,15 @@ export function parseCommitRefs(text: string, baseUrl?: string): CommitRef[] {
   let pos = 0
 
   while (pos < text.length) {
-    // Look for potential hash patterns
-    // Common formats: (abc1234), [abc1234], abc1234fabcdef
-
-    // Check for parenthetical hash
     if (text[pos] === '(' || text[pos] === '[') {
       const closeChar = text[pos] === '(' ? ')' : ']'
       const start = pos + 1
       pos++
 
-      // Read potential hash
       while (pos < text.length && isHexDigit(text[pos])) {
         pos++
       }
 
-      // Check if valid hash (7-40 hex chars)
       const hash = text.slice(start, pos)
       if (hash.length >= 7 && hash.length <= 40 && text[pos] === closeChar) {
         refs.push({
@@ -273,7 +244,7 @@ export function parseCommitRefs(text: string, baseUrl?: string): CommitRef[] {
           shortHash: hash.slice(0, 7),
           url: baseUrl ? `${baseUrl}/commit/${hash}` : undefined,
         })
-        pos++ // skip closing bracket
+        pos++
         continue
       }
     }
@@ -297,7 +268,6 @@ export function parseIssueRefs(text: string, baseUrl?: string): IssueRef[] {
   let pos = 0
 
   while (pos < text.length) {
-    // Look for # followed by digits
     if (text[pos] === '#') {
       pos++
       const numStart = pos
@@ -309,7 +279,6 @@ export function parseIssueRefs(text: string, baseUrl?: string): IssueRef[] {
       if (pos > numStart) {
         const number = parseInt(text.slice(numStart, pos), 10)
 
-        // Check context for PR vs issue
         const beforeHash = text.slice(max(0, numStart - 10), numStart - 1).toLowerCase()
         const type: 'pull-request' | 'issue' = beforeHash.includes('pr') || beforeHash.includes('pull') ? 'pull-request' : 'issue'
 
@@ -338,48 +307,38 @@ export function parseIssueRefs(text: string, baseUrl?: string): IssueRef[] {
 export function parseScopeFromItem(text: string): { scope?: string; description: string } {
   const trimmed = text.trim()
 
-  // Check for **scope:** pattern (colon inside or outside bold)
   if (trimmed.startsWith('**')) {
     let pos = 2
     const scopeStart = pos
 
-    // Read until ** or :
     while (pos < trimmed.length && trimmed[pos] !== '*' && trimmed[pos] !== ':') {
       pos++
     }
 
-    // Handle **scope:** pattern (colon before closing **)
     if (trimmed[pos] === ':' && trimmed[pos + 1] === '*' && trimmed[pos + 2] === '*') {
       const scope = trimmed.slice(scopeStart, pos)
-      pos += 3 // skip :**
+      pos += 3
 
-      // Skip whitespace
       while (trimmed[pos] === ' ') pos++
 
       return { scope, description: trimmed.slice(pos) }
     }
 
-    // Handle **scope**: pattern (colon after closing **)
     if (trimmed[pos] === '*' && trimmed[pos + 1] === '*') {
       const scope = trimmed.slice(scopeStart, pos)
-      pos += 2 // skip **
+      pos += 2
 
-      // Skip : if present
       if (trimmed[pos] === ':') pos++
 
-      // Skip whitespace
       while (trimmed[pos] === ' ') pos++
 
       return { scope, description: trimmed.slice(pos) }
     }
   }
 
-  // Check for scope: pattern (without bold)
   const colonPos = trimmed.indexOf(':')
   if (colonPos > 0 && colonPos < 30) {
-    // scope shouldn't be too long
     const potentialScope = trimmed.slice(0, colonPos)
-    // Scope should be a simple identifier (letters, numbers, hyphens)
     if (isValidScope(potentialScope)) {
       const description = trimmed.slice(colonPos + 1).trim()
       return { scope: potentialScope, description }
@@ -400,12 +359,7 @@ function isValidScope(str: string): boolean {
 
   for (let i = 0; i < str.length; i++) {
     const code = str.charCodeAt(i)
-    if (
-      !(code >= 48 && code <= 57) && // 0-9
-      !(code >= 65 && code <= 90) && // A-Z
-      !(code >= 97 && code <= 122) && // a-z
-      code !== 45 // -
-    ) {
+    if (!(code >= 48 && code <= 57) && !(code >= 65 && code <= 90) && !(code >= 97 && code <= 122) && code !== 45) {
       return false
     }
   }
@@ -421,11 +375,7 @@ function isValidScope(str: string): boolean {
  */
 function isHexDigit(char: string): boolean {
   const code = char.charCodeAt(0)
-  return (
-    (code >= 48 && code <= 57) || // 0-9
-    (code >= 65 && code <= 70) || // A-F
-    (code >= 97 && code <= 102) // a-f
-  )
+  return (code >= 48 && code <= 57) || (code >= 65 && code <= 70) || (code >= 97 && code <= 102)
 }
 
 /**

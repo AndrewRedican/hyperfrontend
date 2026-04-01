@@ -1,10 +1,3 @@
-/**
- * Changelog Diff Algorithm
- *
- * Computes structural differences between two changelogs.
- * Identifies added, removed, and modified entries with detailed change tracking.
- */
-
 import type { Changelog } from '../models/changelog'
 import type { CommitRef, IssueRef } from '../models/commit-ref'
 import type { ChangelogEntry, ChangelogItem, ChangelogSection } from '../models/entry'
@@ -145,7 +138,6 @@ export interface PropertyDiff {
  * ```
  */
 export function diffChangelogs(source: Changelog, target: Changelog): ChangelogDiff {
-  // Build version maps for efficient lookup
   const sourceVersions = createMap<string, ChangelogEntry>()
   const targetVersions = createMap<string, ChangelogEntry>()
 
@@ -161,21 +153,18 @@ export function diffChangelogs(source: Changelog, target: Changelog): ChangelogD
   const removed: ChangelogEntry[] = []
   const modified: EntryDiff[] = []
 
-  // Find added entries (in target but not in source)
   for (const [version, entry] of targetVersions) {
     if (!sourceVersions.has(version)) {
       added.push(entry)
     }
   }
 
-  // Find removed entries (in source but not in target)
   for (const [version, entry] of sourceVersions) {
     if (!targetVersions.has(version)) {
       removed.push(entry)
     }
   }
 
-  // Find modified entries (in both but different)
   for (const [version, sourceEntry] of sourceVersions) {
     const targetEntry = targetVersions.get(version)
     if (targetEntry && !isEntryEqual(sourceEntry, targetEntry)) {
@@ -220,7 +209,6 @@ export function diffChangelogs(source: Changelog, target: Changelog): ChangelogD
 export function diffEntries(source: ChangelogEntry, target: ChangelogEntry): EntryDiff {
   const changes: PropertyDiff[] = []
 
-  // Check scalar properties
   if (source.date !== target.date) {
     changes.push({
       path: ['date'],
@@ -257,7 +245,6 @@ export function diffEntries(source: ChangelogEntry, target: ChangelogEntry): Ent
     })
   }
 
-  // Diff sections
   const { added: addedSections, removed: removedSections, modified: modifiedSections } = diffSections(source.sections, target.sections)
 
   return {
@@ -286,7 +273,6 @@ function diffSections(
   removed: ChangelogSection[]
   modified: SectionDiff[]
 } {
-  // Map by type for comparison
   const sourceByType = createMap<string, ChangelogSection>()
   const targetByType = createMap<string, ChangelogSection>()
 
@@ -302,21 +288,18 @@ function diffSections(
   const removed: ChangelogSection[] = []
   const modified: SectionDiff[] = []
 
-  // Find added sections
   for (const [type, section] of targetByType) {
     if (!sourceByType.has(type)) {
       added.push(section)
     }
   }
 
-  // Find removed sections
   for (const [type, section] of sourceByType) {
     if (!targetByType.has(type)) {
       removed.push(section)
     }
   }
 
-  // Find modified sections
   for (const [type, sourceSection] of sourceByType) {
     const targetSection = targetByType.get(type)
     if (targetSection && !isSectionEqual(sourceSection, targetSection)) {
@@ -336,7 +319,6 @@ function diffSections(
  * @returns Detailed section diff
  */
 function diffSection(source: ChangelogSection, target: ChangelogSection): SectionDiff {
-  // Use description as key for matching items
   const sourceByDesc = createMap<string, ChangelogItem>()
   const targetByDesc = createMap<string, ChangelogItem>()
 
@@ -352,21 +334,18 @@ function diffSection(source: ChangelogSection, target: ChangelogSection): Sectio
   const removedItems: ChangelogItem[] = []
   const modifiedItems: ItemDiff[] = []
 
-  // Find added items
   for (const [desc, item] of targetByDesc) {
     if (!sourceByDesc.has(desc)) {
       addedItems.push(item)
     }
   }
 
-  // Find removed items
   for (const [desc, item] of sourceByDesc) {
     if (!targetByDesc.has(desc)) {
       removedItems.push(item)
     }
   }
 
-  // Find modified items
   for (const [desc, sourceItem] of sourceByDesc) {
     const targetItem = targetByDesc.get(desc)
     if (targetItem && !isItemEqual(sourceItem, targetItem)) {
@@ -413,7 +392,6 @@ function diffItem(source: ChangelogItem, target: ChangelogItem): ItemDiff {
     })
   }
 
-  // Check commits
   if (!areCommitRefsEqual(source.commits, target.commits)) {
     changes.push({
       path: ['commits'],
@@ -423,7 +401,6 @@ function diffItem(source: ChangelogItem, target: ChangelogItem): ItemDiff {
     })
   }
 
-  // Check references
   if (!areIssueRefsEqual(source.references, target.references)) {
     changes.push({
       path: ['references'],

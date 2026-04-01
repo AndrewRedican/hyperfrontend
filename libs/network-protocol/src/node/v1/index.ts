@@ -11,7 +11,6 @@ import { encryptPacket, decryptPacket } from '../packet'
 const obfuscatePacket = createPacketObfuscator(encrypt)
 const deobfuscatePacket = createPacketDeobfuscator(decrypt)
 
-// Text encoding/decoding for first message handler (Node.js)
 const textEncoder = (text: string): Uint8Array => Buffer.from(text, 'utf-8')
 const textDecoder = (data: Uint8Array): string => Buffer.from(data).toString('utf-8')
 const firstMessageHandler = createFirstMessageHandler(textEncoder, textDecoder)

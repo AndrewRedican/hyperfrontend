@@ -55,7 +55,7 @@ function createNonPublishableCase(): ESLintRuleTester.ValidTestCase {
     projectJson: NON_PUBLISHABLE_LIBRARY_PROJECT_JSON,
     packageJson: {
       name: 'internal-lib',
-      exports: { '.': './src/index.ts' }, // Would be invalid but skipped
+      exports: { '.': './src/index.ts' },
     },
   })
   return {

@@ -7,7 +7,6 @@
  * @module @hyperfrontend/immutable-api-utils/built-in-copy/array
  */
 
-// Capture references at module initialization time
 const _Array = globalThis.Array
 const _freeze = globalThis.Object.freeze
 

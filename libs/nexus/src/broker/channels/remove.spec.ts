@@ -1,7 +1,3 @@
-/**
- * Tests for removeChannel function
- */
-
 import type { BrokerState } from '../types'
 import { createActionCreators } from '../../core/actions/factory'
 import { createProcessManager } from '../../core/processes/factory'
@@ -24,6 +20,15 @@ describe('removeChannel', () => {
         accepted: [{ type: 'test', description: 'Test action' }],
         emitted: [],
       },
+    },
+    logger: {
+      log: jest.fn(),
+      debug: jest.fn(),
+      info: jest.fn(),
+      warn: jest.fn(),
+      error: jest.fn(),
+      setLogLevel: jest.fn(),
+      getLogLevel: jest.fn(),
     },
   }
 
@@ -100,7 +105,6 @@ describe('removeChannel', () => {
 
     removeChannel(registry, channel)
 
-    // Should not throw when removing again
     expect(() => removeChannel(registry, channel)).not.toThrow()
   })
 })

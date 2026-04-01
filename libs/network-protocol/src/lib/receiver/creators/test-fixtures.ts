@@ -1,8 +1,3 @@
-/**
- * Shared test fixtures for receiver factory tests.
- * These fixtures are used by both Node.js and browser test suites.
- */
-
 import type { Logger } from '@hyperfrontend/logging'
 
 /**

@@ -17,13 +17,11 @@ export function parseHeader(line: string): ParsedHeader {
   let pos = 0
   const len = line.length
 
-  // Extract type (alphanumeric characters until ( or : or !)
   const typeStart = pos
   while (pos < len) {
     const char = line[pos]
     const code = char.charCodeAt(0)
 
-    // a-z, A-Z, 0-9
     if ((code >= 97 && code <= 122) || (code >= 65 && code <= 90) || (code >= 48 && code <= 57)) {
       pos++
     } else {
@@ -33,10 +31,9 @@ export function parseHeader(line: string): ParsedHeader {
 
   const type = <CommitType>line.slice(typeStart, pos).toLowerCase()
 
-  // Check for scope in parentheses
   let scope: string | undefined
   if (line[pos] === '(') {
-    pos++ // skip (
+    pos++
     const scopeStart = pos
 
     while (pos < len && line[pos] !== ')') {
@@ -46,27 +43,23 @@ export function parseHeader(line: string): ParsedHeader {
     scope = line.slice(scopeStart, pos)
 
     if (line[pos] === ')') {
-      pos++ // skip )
+      pos++
     }
   }
 
-  // Check for breaking change indicator (!)
   const breaking = line[pos] === '!'
   if (breaking) {
     pos++
   }
 
-  // Expect colon
   if (line[pos] === ':') {
     pos++
   }
 
-  // Skip whitespace after colon
   while (pos < len && line[pos] === ' ') {
     pos++
   }
 
-  // Rest is subject
   const subject = line.slice(pos).trim()
 
   return {

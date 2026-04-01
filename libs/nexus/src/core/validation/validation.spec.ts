@@ -1,7 +1,3 @@
-/**
- * Tests for validation functions
- */
-
 import { validateAction } from './action'
 import { validateContract } from './contract'
 import { validateName } from './name'

@@ -8,7 +8,6 @@
  * @module @hyperfrontend/immutable-api-utils/built-in-copy/typed-arrays
  */
 
-// Capture references at module initialization time
 const _ArrayBuffer = globalThis.ArrayBuffer
 const _SharedArrayBuffer = globalThis.SharedArrayBuffer
 const _DataView = globalThis.DataView
@@ -26,10 +25,6 @@ const _BigUint64Array = globalThis.BigUint64Array
 const _Reflect = globalThis.Reflect
 const _freeze = globalThis.Object.freeze
 
-// ============================================================================
-// ArrayBuffer
-// ============================================================================
-
 /**
  * (Safe copy) Creates a new ArrayBuffer using the captured ArrayBuffer constructor.
  * Use this instead of `new ArrayBuffer()`.
@@ -44,10 +39,6 @@ export const createArrayBuffer = (byteLength: number): ArrayBuffer => <ArrayBuff
  */
 export const isView = _ArrayBuffer.isView
 
-// ============================================================================
-// SharedArrayBuffer
-// ============================================================================
-
 /**
  * (Safe copy) Creates a new SharedArrayBuffer using the captured SharedArrayBuffer constructor.
  * Use this instead of `new SharedArrayBuffer()`.
@@ -57,10 +48,6 @@ export const isView = _ArrayBuffer.isView
  */
 export const createSharedArrayBuffer = (byteLength: number): SharedArrayBuffer =>
   <SharedArrayBuffer>_Reflect.construct(_SharedArrayBuffer, [byteLength])
-
-// ============================================================================
-// DataView
-// ============================================================================
 
 /**
  * (Safe copy) Creates a new DataView using the captured DataView constructor.
@@ -73,10 +60,6 @@ export const createSharedArrayBuffer = (byteLength: number): SharedArrayBuffer =
  */
 export const createDataView = (buffer: ArrayBuffer | SharedArrayBuffer, byteOffset?: number, byteLength?: number): DataView =>
   <DataView>_Reflect.construct(_DataView, [buffer, byteOffset, byteLength])
-
-// ============================================================================
-// Uint8Array
-// ============================================================================
 
 /**
  * (Safe copy) Creates a new Uint8Array using the captured Uint8Array constructor.
@@ -117,10 +100,6 @@ export const uint8ArrayFrom = <typeof Uint8Array.from>_Uint8Array.from.bind(_Uin
  */
 export const uint8ArrayOf = <typeof Uint8Array.of>_Uint8Array.of.bind(_Uint8Array)
 
-// ============================================================================
-// Uint8ClampedArray
-// ============================================================================
-
 /**
  * (Safe copy) Creates a new Uint8ClampedArray using the captured Uint8ClampedArray constructor.
  * Use this instead of `new Uint8ClampedArray()`.
@@ -141,10 +120,6 @@ export const uint8ClampedArrayFrom = <typeof Uint8ClampedArray.from>_Uint8Clampe
  */
 export const uint8ClampedArrayOf = <typeof Uint8ClampedArray.of>_Uint8ClampedArray.of.bind(_Uint8ClampedArray)
 
-// ============================================================================
-// Uint16Array
-// ============================================================================
-
 /**
  * (Safe copy) Creates a new Uint16Array using the captured Uint16Array constructor.
  * Use this instead of `new Uint16Array()`.
@@ -163,10 +138,6 @@ export const uint16ArrayFrom = <typeof Uint16Array.from>_Uint16Array.from.bind(_
  * (Safe copy) Creates a new Uint16Array from a variable number of arguments.
  */
 export const uint16ArrayOf = <typeof Uint16Array.of>_Uint16Array.of.bind(_Uint16Array)
-
-// ============================================================================
-// Uint32Array
-// ============================================================================
 
 /**
  * (Safe copy) Creates a new Uint32Array using the captured Uint32Array constructor.
@@ -187,10 +158,6 @@ export const uint32ArrayFrom = <typeof Uint32Array.from>_Uint32Array.from.bind(_
  */
 export const uint32ArrayOf = <typeof Uint32Array.of>_Uint32Array.of.bind(_Uint32Array)
 
-// ============================================================================
-// Int8Array
-// ============================================================================
-
 /**
  * (Safe copy) Creates a new Int8Array using the captured Int8Array constructor.
  * Use this instead of `new Int8Array()`.
@@ -209,10 +176,6 @@ export const int8ArrayFrom = <typeof Int8Array.from>_Int8Array.from.bind(_Int8Ar
  * (Safe copy) Creates a new Int8Array from a variable number of arguments.
  */
 export const int8ArrayOf = <typeof Int8Array.of>_Int8Array.of.bind(_Int8Array)
-
-// ============================================================================
-// Int16Array
-// ============================================================================
 
 /**
  * (Safe copy) Creates a new Int16Array using the captured Int16Array constructor.
@@ -233,10 +196,6 @@ export const int16ArrayFrom = <typeof Int16Array.from>_Int16Array.from.bind(_Int
  */
 export const int16ArrayOf = <typeof Int16Array.of>_Int16Array.of.bind(_Int16Array)
 
-// ============================================================================
-// Int32Array
-// ============================================================================
-
 /**
  * (Safe copy) Creates a new Int32Array using the captured Int32Array constructor.
  * Use this instead of `new Int32Array()`.
@@ -255,10 +214,6 @@ export const int32ArrayFrom = <typeof Int32Array.from>_Int32Array.from.bind(_Int
  * (Safe copy) Creates a new Int32Array from a variable number of arguments.
  */
 export const int32ArrayOf = <typeof Int32Array.of>_Int32Array.of.bind(_Int32Array)
-
-// ============================================================================
-// Float32Array
-// ============================================================================
 
 /**
  * (Safe copy) Creates a new Float32Array using the captured Float32Array constructor.
@@ -279,10 +234,6 @@ export const float32ArrayFrom = <typeof Float32Array.from>_Float32Array.from.bin
  */
 export const float32ArrayOf = <typeof Float32Array.of>_Float32Array.of.bind(_Float32Array)
 
-// ============================================================================
-// Float64Array
-// ============================================================================
-
 /**
  * (Safe copy) Creates a new Float64Array using the captured Float64Array constructor.
  * Use this instead of `new Float64Array()`.
@@ -301,10 +252,6 @@ export const float64ArrayFrom = <typeof Float64Array.from>_Float64Array.from.bin
  * (Safe copy) Creates a new Float64Array from a variable number of arguments.
  */
 export const float64ArrayOf = <typeof Float64Array.of>_Float64Array.of.bind(_Float64Array)
-
-// ============================================================================
-// BigInt64Array
-// ============================================================================
 
 /**
  * (Safe copy) Creates a new BigInt64Array using the captured BigInt64Array constructor.
@@ -325,10 +272,6 @@ export const bigInt64ArrayFrom = <typeof BigInt64Array.from>_BigInt64Array.from.
  */
 export const bigInt64ArrayOf = <typeof BigInt64Array.of>_BigInt64Array.of.bind(_BigInt64Array)
 
-// ============================================================================
-// BigUint64Array
-// ============================================================================
-
 /**
  * (Safe copy) Creates a new BigUint64Array using the captured BigUint64Array constructor.
  * Use this instead of `new BigUint64Array()`.
@@ -347,10 +290,6 @@ export const bigUint64ArrayFrom = <typeof BigUint64Array.from>_BigUint64Array.fr
  * (Safe copy) Creates a new BigUint64Array from a variable number of arguments.
  */
 export const bigUint64ArrayOf = <typeof BigUint64Array.of>_BigUint64Array.of.bind(_BigUint64Array)
-
-// ============================================================================
-// Namespace Export
-// ============================================================================
 
 /**
  * (Safe copy) Namespace object containing all TypedArray utilities.

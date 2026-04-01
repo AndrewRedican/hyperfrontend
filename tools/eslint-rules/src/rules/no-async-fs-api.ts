@@ -13,7 +13,6 @@ export const RULE_NAME = 'no-async-fs-api'
  * These are methods that have direct Sync counterparts.
  */
 const ASYNC_TO_SYNC_METHODS: Record<string, string> = {
-  // File operations
   readFile: 'readFileSync',
   writeFile: 'writeFileSync',
   appendFile: 'appendFileSync',
@@ -24,27 +23,22 @@ const ASYNC_TO_SYNC_METHODS: Record<string, string> = {
   rmdir: 'rmdirSync',
   truncate: 'truncateSync',
 
-  // Directory operations
   mkdir: 'mkdirSync',
   readdir: 'readdirSync',
   opendir: 'opendirSync',
 
-  // Link operations
   link: 'linkSync',
   symlink: 'symlinkSync',
   readlink: 'readlinkSync',
 
-  // Path operations
   realpath: 'realpathSync',
 
-  // File info operations
   stat: 'statSync',
   lstat: 'lstatSync',
   fstat: 'fstatSync',
   access: 'accessSync',
   exists: 'existsSync',
 
-  // Permission operations
   chmod: 'chmodSync',
   fchmod: 'fchmodSync',
   lchmod: 'lchmodSync',
@@ -55,7 +49,6 @@ const ASYNC_TO_SYNC_METHODS: Record<string, string> = {
   futimes: 'futimesSync',
   lutimes: 'lutimesSync',
 
-  // File descriptor operations
   open: 'openSync',
   close: 'closeSync',
   read: 'readSync',
@@ -64,7 +57,6 @@ const ASYNC_TO_SYNC_METHODS: Record<string, string> = {
   fsync: 'fsyncSync',
   ftruncate: 'ftruncateSync',
 
-  // Other operations
   mkdtemp: 'mkdtempSync',
   cp: 'cpSync',
   glob: 'globSync',
@@ -114,11 +106,9 @@ export default createRule<[], MessageIds>({
   },
   defaultOptions: [],
   create(context) {
-    // Track namespace imports for fs module
     const fsNamespaceBindings = createMap<string, 'fs' | 'fs/promises'>()
 
     return {
-      // Check for fs/promises imports (always async)
       ImportDeclaration(node) {
         const source = node.source.value
 
@@ -127,7 +117,6 @@ export default createRule<[], MessageIds>({
           return
         }
 
-        // Flag any import from fs/promises
         if (FS_PROMISES_MODULE_PATTERNS.some((pattern) => source === pattern)) {
           context.report({
             node: node.source,
@@ -137,13 +126,11 @@ export default createRule<[], MessageIds>({
           return
         }
 
-        // Track namespace imports for fs module
         if (FS_MODULE_PATTERNS.some((pattern) => source === pattern)) {
           for (const specifier of node.specifiers) {
             if (specifier.type === AST_NODE_TYPES.ImportNamespaceSpecifier) {
               fsNamespaceBindings.set(specifier.local.name, 'fs')
             }
-            // Check named imports for async methods
             if (specifier.type === AST_NODE_TYPES.ImportSpecifier) {
               const importedName =
                 specifier.imported.type === AST_NODE_TYPES.Identifier ? specifier.imported.name : specifier.imported.value
@@ -164,33 +151,24 @@ export default createRule<[], MessageIds>({
         }
       },
 
-      // Check for member expressions like fs.readFile()
       MemberExpression(node) {
-        // Skip non-identifier objects (e.g., getFs().readFile, obj.fs.readFile)
-        // Only track top-level namespace bindings
         if (node.object.type !== AST_NODE_TYPES.Identifier) {
           return
         }
 
         const objectName = node.object.name
 
-        // Check if this is a tracked fs namespace
         if (!fsNamespaceBindings.has(objectName)) {
           return
         }
 
         let methodName: string | undefined
 
-        // Handle fs.readFile (identifier property)
         if (node.property.type === AST_NODE_TYPES.Identifier) {
           methodName = node.property.name
-        }
-        // Handle fs['readFile'] (computed property with string literal)
-        else if (node.property.type === AST_NODE_TYPES.Literal && typeof node.property.value === 'string') {
+        } else if (node.property.type === AST_NODE_TYPES.Literal && typeof node.property.value === 'string') {
           methodName = node.property.value
-        }
-        // Skip computed properties with non-string values (e.g., fs[variable])
-        else {
+        } else {
           return
         }
 
@@ -207,7 +185,6 @@ export default createRule<[], MessageIds>({
         }
       },
 
-      // Check for require() calls
       CallExpression(node) {
         if (node.callee.type !== AST_NODE_TYPES.Identifier || node.callee.name !== 'require') {
           return
@@ -220,7 +197,6 @@ export default createRule<[], MessageIds>({
 
         const source = arg.value
 
-        // Flag require('fs/promises') or require('node:fs/promises')
         if (FS_PROMISES_MODULE_PATTERNS.some((pattern) => source === pattern)) {
           context.report({
             node,

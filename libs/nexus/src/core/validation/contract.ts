@@ -25,7 +25,6 @@ export function validateContract(contract: unknown): void {
     throw createError('Contract must contain at least one accepted or emitted action')
   }
 
-  // Validate that all action types are non-empty strings
   if (isArray(c['emitted'])) {
     for (const action of c['emitted']) {
       if (

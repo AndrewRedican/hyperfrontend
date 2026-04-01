@@ -89,29 +89,24 @@ export interface CreateCompareUrlOptions {
 export function createCompareUrl(options: CreateCompareUrlOptions): string | null {
   const { repository, fromCommit, toCommit } = options
 
-  // Validate inputs
   if (!repository || !fromCommit || !toCommit) {
     return null
   }
 
-  // If custom formatter is provided, use it (works for any platform including overrides)
   if (repository.formatCompareUrl) {
     return repository.formatCompareUrl(fromCommit, toCommit)
   }
 
   const { platform, baseUrl } = repository
 
-  // Cannot generate URL for unknown platforms without a formatter
   if (platform === 'unknown') {
     return null
   }
 
-  // Custom platform requires a formatter
   if (platform === 'custom') {
     return null
   }
 
-  // Generate URL for known platforms
   if (isKnownPlatform(platform)) {
     return formatKnownPlatformCompareUrl(platform, baseUrl, fromCommit, toCommit)
   }
@@ -133,20 +128,15 @@ export function createCompareUrl(options: CreateCompareUrlOptions): string | nul
 function formatKnownPlatformCompareUrl(platform: KnownPlatform, baseUrl: string, fromCommit: string, toCommit: string): string {
   switch (platform) {
     case 'github':
-      // GitHub: {baseUrl}/compare/{fromCommit}...{toCommit}
       return `${baseUrl}/compare/${fromCommit}...${toCommit}`
 
     case 'gitlab':
-      // GitLab: {baseUrl}/-/compare/{fromCommit}...{toCommit}
       return `${baseUrl}/-/compare/${fromCommit}...${toCommit}`
 
     case 'bitbucket':
-      // Bitbucket: {baseUrl}/compare/{toCommit}..{fromCommit} (reversed order, two dots)
       return `${baseUrl}/compare/${toCommit}..${fromCommit}`
 
     case 'azure-devops':
-      // Azure DevOps: {baseUrl}/compare?version=GT{toCommit}&compareVersion=GT{fromCommit}
-      // Use encodeURIComponent for query parameter values
       return `${baseUrl}/compare?version=GT${encodeURIComponent(toCommit)}&compareVersion=GT${encodeURIComponent(fromCommit)}`
   }
 }

@@ -1,4 +1,3 @@
-// lgtm[js/regex/missing-regexp-anchor] - False positive: format validators use properly anchored regexes or URL constructor
 import type { Schema } from '../../types/schema'
 import type { ValidationContext } from '../context'
 import { validateFormat } from './format'
@@ -41,11 +40,8 @@ describe('validateFormat', () => {
 
     it('returns false for invalid date components', () => {
       const schema: Schema = { format: 'date' }
-      // Feb 30 doesn't exist
       expect(validateFormat('2020-02-30', schema, ctx)).toBe(false)
-      // Month 13 doesn't exist
       expect(validateFormat('2020-13-01', schema, ctx)).toBe(false)
-      // Day 32 doesn't exist
       expect(validateFormat('2020-01-32', schema, ctx)).toBe(false)
     })
   })
@@ -185,7 +181,6 @@ describe('validateFormat', () => {
 
     it('returns false for ipv6 with too many groups in compressed form', () => {
       const schema: Schema = { format: 'ipv6' }
-      // 8 groups total with :: should be invalid (would need more than 8 when expanded)
       expect(validateFormat('1:2:3:4:5:6:7::8', schema, ctx)).toBe(false)
       expect(validateFormat('1:2:3:4::5:6:7:8', schema, ctx)).toBe(false)
     })
@@ -198,7 +193,7 @@ describe('validateFormat', () => {
     it('returns true for ipv6 compressed with valid group count', () => {
       const schema: Schema = { format: 'ipv6' }
       expect(validateFormat('2001:db8::1', schema, ctx)).toBe(true)
-      expect(validateFormat('::ffff:192.0.2.1', schema, ctx)).toBe(false) // IPv4-mapped format not supported
+      expect(validateFormat('::ffff:192.0.2.1', schema, ctx)).toBe(false)
     })
   })
 
@@ -224,7 +219,6 @@ describe('validateFormat', () => {
     })
 
     // Note: uri-reference accepts most strings as valid relative references
-    // since the URL constructor with a base URL is very permissive
   })
 
   describe('regex format', () => {

@@ -41,9 +41,7 @@ describe('syncElementDimensions', () => {
   it('syncs dimensions from source to target element', () => {
     const cleanup = syncElementDimensions(sourceElement, targetElement)
 
-    // Advance timers to trigger the interval check in getElementAsync
     jest.advanceTimersByTime(0)
-    // Advance again to ensure callback execution
     jest.runAllTimers()
 
     expect(targetElement.style.width).toBe('200px')
@@ -58,7 +56,6 @@ describe('syncElementDimensions', () => {
   it('syncs dimensions when source element resizes', () => {
     const cleanup = syncElementDimensions(sourceElement, targetElement)
 
-    // Advance timers to trigger the interval check in getElementAsync
     jest.runAllTimers()
 
     Object.defineProperty(sourceElement, 'getBoundingClientRect', {
@@ -104,7 +101,6 @@ describe('syncElementDimensions', () => {
 
     const cleanup = syncElementDimensions('#source', '#target')
 
-    // Advance timers to allow getElementAsync to find elements by selector
     jest.runAllTimers()
 
     expect(targetElement.style.width).toBe('200px')
@@ -118,7 +114,6 @@ describe('syncElementDimensions', () => {
 
     const cleanup = syncElementDimensions('#nonexistent', targetElement, { onFail })
 
-    // Advance timers past the timeout duration (10000ms default)
     jest.advanceTimersByTime(10001)
 
     expect(onFail).toHaveBeenCalled()
@@ -130,9 +125,7 @@ describe('syncElementDimensions', () => {
 
     const cleanup = syncElementDimensions(sourceElement, '#nonexistent', { onFail })
 
-    // First advance to let source element be found (it's a direct reference, so quick)
     jest.advanceTimersByTime(100)
-    // Then advance past the timeout duration for target (10000ms default)
     jest.advanceTimersByTime(10001)
 
     expect(onFail).toHaveBeenCalled()
@@ -142,7 +135,6 @@ describe('syncElementDimensions', () => {
   it('cleans up on returned function call', () => {
     const cleanup = syncElementDimensions(sourceElement, targetElement)
 
-    // Advance timers to trigger the interval check in getElementAsync
     jest.runAllTimers()
 
     cleanup()

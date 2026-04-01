@@ -8,15 +8,13 @@ interface ExampleBlockProps {
   code: string
 }
 
-// Renders an `@example` code block with syntax highlighting
 export function ExampleBlock({ code }: ExampleBlockProps) {
   const [copied, setCopied] = useState(false)
 
-  // Clean up the code - remove leading/trailing whitespace and common indentation
   const cleanCode = code
     .trim()
-    .replace(/^```\w*\n?/, '') // Remove opening code fence
-    .replace(/\n?```$/, '') // Remove closing code fence
+    .replace(/^```\w*\n?/, '')
+    .replace(/\n?```$/, '')
     .trim()
 
   useEffect(() => {
@@ -31,7 +29,6 @@ export function ExampleBlock({ code }: ExampleBlockProps) {
       await navigator.clipboard.writeText(cleanCode)
       setCopied(true)
     } catch {
-      // Fallback for browsers that don't support clipboard API
       logger.warn('Copy to clipboard failed')
     }
   }

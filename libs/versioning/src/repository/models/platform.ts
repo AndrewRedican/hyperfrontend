@@ -45,16 +45,12 @@ export function isKnownPlatform(platform: RepositoryPlatform): platform is Known
  * Includes both standard SaaS domains and common patterns for self-hosted instances.
  */
 export const PLATFORM_HOSTNAMES: ReadonlyMap<string, KnownPlatform> = createMap<string, KnownPlatform>([
-  // GitHub
   ['github.com', 'github'],
 
-  // GitLab
   ['gitlab.com', 'gitlab'],
 
-  // Bitbucket
   ['bitbucket.org', 'bitbucket'],
 
-  // Azure DevOps
   ['dev.azure.com', 'azure-devops'],
   ['visualstudio.com', 'azure-devops'],
 ])
@@ -78,34 +74,27 @@ export const PLATFORM_HOSTNAMES: ReadonlyMap<string, KnownPlatform> = createMap<
 export function detectPlatformFromHostname(hostname: string): RepositoryPlatform {
   const normalized = hostname.toLowerCase()
 
-  // Check exact matches first
   const exactMatch = PLATFORM_HOSTNAMES.get(normalized)
   if (exactMatch) {
     return exactMatch
   }
 
-  // Check for Azure DevOps legacy domain pattern
   if (normalized.endsWith('.visualstudio.com')) {
     return 'azure-devops'
   }
 
-  // Check for Azure DevOps modern domain pattern (includes ssh.dev.azure.com)
   if (normalized.endsWith('.azure.com')) {
     return 'azure-devops'
   }
 
-  // Heuristics for self-hosted instances
-  // GitHub Enterprise typically uses "github" in the hostname
   if (normalized.includes('github')) {
     return 'github'
   }
 
-  // GitLab self-hosted typically uses "gitlab" in the hostname
   if (normalized.includes('gitlab')) {
     return 'gitlab'
   }
 
-  // Bitbucket Data Center/Server might use "bitbucket" in hostname
   if (normalized.includes('bitbucket')) {
     return 'bitbucket'
   }

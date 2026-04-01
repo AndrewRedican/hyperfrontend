@@ -16,7 +16,6 @@ export interface ParsedBody {
  * @returns Parsed body or undefined if no body
  */
 export function parseBody(lines: string[], startIndex: number): ParsedBody | undefined {
-  // Skip blank lines to find body start
   let pos = startIndex
   while (pos < lines.length && lines[pos].trim() === '') {
     pos++
@@ -26,23 +25,19 @@ export function parseBody(lines: string[], startIndex: number): ParsedBody | und
     return undefined
   }
 
-  // If the first non-blank line is a footer, there's no body
   if (isFooterLine(lines[pos])) {
     return undefined
   }
 
   const bodyLines: string[] = []
 
-  // Collect body lines until we hit a footer or end
   while (pos < lines.length) {
     const line = lines[pos]
 
-    // Check if this line looks like a footer
     if (isFooterLine(line)) {
       break
     }
 
-    // Check for blank line followed by a footer
     if (line.trim() === '' && pos + 1 < lines.length && isFooterLine(lines[pos + 1])) {
       break
     }
@@ -51,7 +46,6 @@ export function parseBody(lines: string[], startIndex: number): ParsedBody | und
     pos++
   }
 
-  // Trim trailing blank lines from body
   while (bodyLines.length > 0 && bodyLines[bodyLines.length - 1].trim() === '') {
     bodyLines.pop()
   }
@@ -84,41 +78,30 @@ function isFooterLine(line: string): boolean {
   const trimmed = line.trim()
   if (trimmed === '') return false
 
-  // Check for BREAKING CHANGE or BREAKING-CHANGE
   if (trimmed.startsWith('BREAKING CHANGE:') || trimmed.startsWith('BREAKING-CHANGE:')) {
     return true
   }
 
-  // Check for token: value or token #value pattern
   let pos = 0
 
-  // Skip leading whitespace
   while (pos < trimmed.length && trimmed[pos] === ' ') {
     pos++
   }
 
-  // Read token (alphanumeric and hyphens)
   const tokenStart = pos
   while (pos < trimmed.length) {
     const char = trimmed[pos]
     const code = char.charCodeAt(0)
 
-    if (
-      (code >= 97 && code <= 122) || // a-z
-      (code >= 65 && code <= 90) || // A-Z
-      (code >= 48 && code <= 57) || // 0-9
-      code === 45 // -
-    ) {
+    if ((code >= 97 && code <= 122) || (code >= 65 && code <= 90) || (code >= 48 && code <= 57) || code === 45) {
       pos++
     } else {
       break
     }
   }
 
-  // Must have at least one character in token
   if (pos === tokenStart) return false
 
-  // Must be followed by : or space-#
   if (trimmed[pos] === ':') {
     return true
   }

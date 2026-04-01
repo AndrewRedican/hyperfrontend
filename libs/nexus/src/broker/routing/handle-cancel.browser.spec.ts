@@ -82,7 +82,6 @@ describe('handleCancel', () => {
 
     handleCancel(routingContext, message)
 
-    // Should send acknowledgement
     expect(mockWindow.postMessage).toHaveBeenCalledWith(
       expect.objectContaining({
         type: '[nexus] connection-request-cancelled-acknowledged',
@@ -96,10 +95,8 @@ describe('handleCancel', () => {
     const channel = addChannel(mockBrokerState, registry, processManager, actions, 'test-channel', mockWindow)
     const processId = processManager.create(channel)
 
-    // Mock channel with ID
     Object.defineProperty(channel, 'id', { value: 'remote-broker-1', writable: true })
 
-    // Re-add to registry with new ID so getById can find it
     registry.add(channel)
 
     const action: IAction = {
@@ -174,7 +171,6 @@ describe('handleCancel', () => {
 
     handleCancel(routingContext, message)
 
-    // Should call cancel with notify=false
     expect(cancelSpy).toHaveBeenCalledWith(false)
   })
 

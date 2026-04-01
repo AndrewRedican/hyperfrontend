@@ -6,14 +6,12 @@ const TEST_DIR = join(__dirname, '__test_fixtures_factory__')
 
 describe('vfs/factory', () => {
   beforeAll(() => {
-    // Create test fixtures
     rmSync(TEST_DIR, { recursive: true, force: true })
     mkdirSync(TEST_DIR, { recursive: true })
     writeFileSync(join(TEST_DIR, 'file.txt'), 'content')
   })
 
   afterAll(() => {
-    // Clean up test fixtures
     rmSync(TEST_DIR, { recursive: true, force: true })
   })
 
@@ -39,7 +37,6 @@ describe('vfs/factory', () => {
     })
 
     it('respects verbose option', () => {
-      // Should not throw
       const tree = createTree(TEST_DIR, { verbose: true })
       expect(tree).toHaveProperty('root')
       expect(tree).toHaveProperty('read')

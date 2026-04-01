@@ -54,12 +54,10 @@ describe('Event Filters', () => {
         const handler = jest.fn()
         const filteredHandler = create(eventType)(handler)
 
-        // Call with the same event type
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         filteredHandler(eventType, <any>{}, mockChannel)
         expect(handler).toHaveBeenCalledTimes(1)
 
-        // Call with different event types
         events
           .filter((e) => e !== eventType)
           .forEach((otherEvent) => {
@@ -67,7 +65,6 @@ describe('Event Filters', () => {
             filteredHandler(otherEvent, <any>{}, mockChannel)
           })
 
-        // Should still only be called once
         expect(handler).toHaveBeenCalledTimes(1)
       })
     })
@@ -231,7 +228,6 @@ describe('Event Filters', () => {
       const closeData: CloseEventData = { notify: true }
       const cancelData: CancelEventData = { notify: false }
 
-      // Simulate event sequence
       filteredOpen('open', openData, mockChannel)
       filteredClose('open', openData, mockChannel)
       filteredCancel('open', openData, mockChannel)

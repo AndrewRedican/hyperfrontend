@@ -1,9 +1,3 @@
-/**
- * Changelog Range-Based Filtering
- *
- * Functions for filtering changelog entries by version range, date range, and count.
- */
-
 import type { Changelog } from '../models/changelog'
 import type { ChangelogEntry } from '../models/entry'
 import { createError } from '@hyperfrontend/immutable-api-utils/built-in-copy/error'
@@ -32,7 +26,6 @@ export function filterByVersionRange(changelog: Changelog, range: string): Chang
   }
 
   return filterEntries(changelog, (entry) => {
-    // Skip unreleased
     if (entry.unreleased) return false
 
     const versionResult = parseVersion(entry.version)

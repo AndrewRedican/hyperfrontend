@@ -12,7 +12,6 @@ interface Narrative {
 }
 
 const narratives: Narrative[] = [
-  // Deployment Independence
   {
     segments: [
       'Coordination between engineering teams — different timezones, separate sprints, conflicting priorities — is ',
@@ -22,7 +21,6 @@ const narratives: Narrative[] = [
       '. No more "we\'re blocked on Platform."',
     ],
   },
-  // Version Freedom
   {
     segments: [
       "You want to upgrade React. But Team Auth is still on 17. And nobody's touching that until Q3. Meanwhile, you're stuck with ",
@@ -32,7 +30,6 @@ const narratives: Narrative[] = [
       ' — upgrade when it makes sense for your team.',
     ],
   },
-  // Legacy Modernization
   {
     segments: [
       'Sometimes the best move is to ',
@@ -42,7 +39,6 @@ const narratives: Narrative[] = [
       ' and migrate on your own terms — when it actually matters.',
     ],
   },
-  // Messaging Safety
   {
     segments: [
       'Everybody hand-rolls their own postMessage wrapper. None of them are compatible. Half of them ',
@@ -52,7 +48,6 @@ const narratives: Narrative[] = [
       ' out of the box — type errors at build time, not production crashes.',
     ],
   },
-  // Data Security
   {
     segments: [
       'Passing auth tokens and PII over postMessage feels sketchy ',
@@ -62,7 +57,6 @@ const narratives: Narrative[] = [
       ' — actual security, not security theater.',
     ],
   },
-  // Display Flexibility
   {
     segments: [
       'Need to show a feature inline? In a modal? Pop it out to a new tab? Everyone ',
@@ -72,7 +66,6 @@ const narratives: Narrative[] = [
       ' Write it once, mount it anywhere.',
     ],
   },
-  // Partner Integration
   {
     segments: [
       '"How long to integrate Partner X?" ',
@@ -82,7 +75,6 @@ const narratives: Narrative[] = [
       ' — partners drop in a script tag or npm install. Integration measured in days, not quarters.',
     ],
   },
-  // Framework Wars
   {
     segments: [
       'Half the team loves Vue. The other half swears by React. The architect demands Angular "for enterprise reasons." ',
@@ -92,7 +84,6 @@ const narratives: Narrative[] = [
       '. Pick what makes your team productive.',
     ],
   },
-  // Embeddable Widgets
   {
     segments: [
       'Your business ships payment widgets to thousands of merchant sites. Each host page is different — ',
@@ -102,7 +93,6 @@ const narratives: Narrative[] = [
       ' — your widget works reliably no matter how chaotic the host environment.',
     ],
   },
-  // Version Contract Safety
   {
     segments: [
       'You deploy a new feature version. Shell expects method A, feature now exports method B. ',
@@ -112,7 +102,6 @@ const narratives: Narrative[] = [
       ' — incompatible deploys fail fast at resolution, not in production.',
     ],
   },
-  // High-Throughput Messaging
   {
     segments: [
       'User opens twelve tabs. Each tab has five embedded features. Real-time data streaming to all of them. ',
@@ -122,7 +111,6 @@ const narratives: Narrative[] = [
       ' — offload to web workers when the main thread gets busy.',
     ],
   },
-  // Domain Boundaries
   {
     segments: [
       'CSS from Feature A overrides Feature B. Global state leaks everywhere. Debugging becomes ',
@@ -132,7 +120,6 @@ const narratives: Narrative[] = [
       ' — no leaky abstractions, no accidental coupling.',
     ],
   },
-  // Graceful Degradation
   {
     segments: [
       'CDN hiccup. Feature fails to load. In tightly-coupled apps, ',
@@ -142,7 +129,6 @@ const narratives: Narrative[] = [
       ' — one failed feature shows a fallback, everything else keeps working.',
     ],
   },
-  // Feature-Level Rollback
   {
     segments: [
       "Bug in production. Traditional apps: roll back the entire deploy, lose everyone's changes. ",
@@ -152,7 +138,6 @@ const narratives: Narrative[] = [
       " to its last stable version. The shell and other features don't even notice.",
     ],
   },
-  // Security Audit Efficiency
   {
     segments: [
       'Security review for every integration. ',
@@ -162,7 +147,6 @@ const narratives: Narrative[] = [
       '. Pass the audit once, deploy everywhere.',
     ],
   },
-  // Acquisition Integration
   {
     segments: [
       'You acquired a company. Great product. Built in Ember. Your stack is React. ',
@@ -172,7 +156,6 @@ const narratives: Narrative[] = [
       " — integrate in weeks, modernize when you're ready.",
     ],
   },
-  // Build Tool Freedom
   {
     segments: [
       "The messaging library you found only works with Webpack. You're migrating to Vite. ",

@@ -30,7 +30,7 @@ function getActualType(value: unknown): string {
   if (t === 'number') {
     const num = <number>value
     /* istanbul ignore next -- NaN/Infinity edge case */
-    if (!globalIsFinite(num)) return 'number' // NaN/Infinity
+    if (!globalIsFinite(num)) return 'number'
     return isInteger(num) ? 'integer' : 'number'
   }
   return t
@@ -56,10 +56,8 @@ export function validateType(instance: unknown, schema: Schema, ctx: ValidationC
     const checker = typeCheckers[type]
     /* istanbul ignore if -- defensive check for unknown type */
     if (checker && checker(instance)) {
-      // Special case: 'integer' should also pass 'number' check
       return true
     }
-    // If type is 'number' and value is an integer, it's still valid
     /* istanbul ignore if -- defensive fallback for integer/number coercion */
     if (type === 'number' && typeCheckers['integer']?.(instance)) {
       return true

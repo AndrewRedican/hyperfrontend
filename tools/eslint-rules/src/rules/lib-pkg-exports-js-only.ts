@@ -81,12 +81,10 @@ const rule: Rule.RuleModule = {
      * @param exportPath - The export path string.
      */
     function validateExportPath(valueNode: JSONNode, exportPath: string): void {
-      // Skip package.json self-reference
       if (isPackageJsonExport(exportPath)) {
         return
       }
 
-      // Only check relative paths
       if (!exportPath.startsWith('./') && !exportPath.startsWith('../')) {
         return
       }
@@ -104,7 +102,6 @@ const rule: Rule.RuleModule = {
             suggested,
           },
           fix(fixer) {
-            // Only auto-fix TypeScript extensions to their JS equivalents
             if (/\.(ts|tsx|mts|cts)$/.test(exportPath)) {
               const raw = (valueNode as unknown as { raw?: string }).raw
               if (raw) {
@@ -151,12 +148,10 @@ const rule: Rule.RuleModule = {
 
           const propValue = prop.value
 
-          // Handle simple string exports: "./path": "./src/file.js"
           if (propValue.type === 'JSONLiteral' && typeof propValue.value === 'string') {
             validateExportPath(propValue, propValue.value)
           }
 
-          // Handle conditional exports: "./path": { "import": "./src/file.mjs", "require": "./src/file.cjs" }
           if (propValue.type === 'JSONObjectExpression') {
             for (const conditionalProp of propValue.properties) {
               /* istanbul ignore if -- type guard for jsonc-eslint-parser */

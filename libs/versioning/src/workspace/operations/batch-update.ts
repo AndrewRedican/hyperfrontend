@@ -1,13 +1,3 @@
-/**
- * Batch Update
- *
- * Utilities for updating multiple packages at once.
- * Supports updating versions, dependencies, and other package.json fields.
- *
- * All operations use the VFS (Virtual File System) Tree abstraction,
- * buffering changes until explicitly committed via `commitChanges()`.
- */
-
 import type { Tree } from '@hyperfrontend/project-scope/vfs'
 import type { Workspace } from '../models/workspace'
 import type { PlannedBump } from './cascade-bump'
@@ -119,7 +109,6 @@ export function applyBumps(
   const updated: UpdatedPackage[] = []
   const failed: FailedUpdate[] = []
 
-  // Build a map for dependency reference updates
   const versionUpdates = createMap<string, string>()
   for (const bump of bumps) {
     versionUpdates.set(bump.name, bump.nextVersion)
@@ -154,7 +143,6 @@ export function applyBumps(
     }
   }
 
-  // Update dependency references if requested
   if (opts.updateDependencyReferences) {
     for (const project of workspace.projectList) {
       try {
@@ -216,7 +204,6 @@ export function updatePackageVersionInTree(tree: Tree, packageJsonPath: string, 
  * @param versionUpdates - Map of package name to new version
  */
 export function updateDependencyReferencesInTree(tree: Tree, packageJsonPath: string, versionUpdates: Map<string, string>): void {
-  // Skip if file doesn't exist or is not a file (preserve silent failure behavior)
   if (!tree.isFile(packageJsonPath)) return
 
   type PackageJson = {
@@ -226,7 +213,6 @@ export function updateDependencyReferencesInTree(tree: Tree, packageJsonPath: st
     optionalDependencies?: Record<string, string>
   }
 
-  // Check if any dependencies need to be updated before modifying
   const content = tree.read(packageJsonPath, 'utf-8')
   if (!content) return
 
@@ -247,7 +233,6 @@ export function updateDependencyReferencesInTree(tree: Tree, packageJsonPath: st
     if (hasMatchingDeps) break
   }
 
-  // Only write if there are matching dependencies to update
   if (!hasMatchingDeps) return
 
   changeJsonFile<PackageJson>(tree, packageJsonPath, (pkg) => {
@@ -256,7 +241,6 @@ export function updateDependencyReferencesInTree(tree: Tree, packageJsonPath: st
       if (deps) {
         for (const [name, newVersion] of versionUpdates) {
           if (deps[name]) {
-            // Preserve version prefix (^, ~, etc.) or use exact version
             const currentRange = deps[name]
             const prefix = extractVersionPrefix(currentRange)
             deps[name] = prefix + newVersion

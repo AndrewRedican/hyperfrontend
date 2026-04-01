@@ -25,29 +25,24 @@ export function createTagStep(): FlowStep {
       const { git, config, state, projectName, packageName, logger } = ctx
       const { nextVersion, bumpType, changelogEntry } = state
 
-      // Skip if git operations disabled
       if (config.skipGit) {
         return createSkippedResult('Git operations disabled')
       }
 
-      // Skip if tags disabled
       if (config.skipTag) {
         return createSkippedResult('Tag creation disabled')
       }
 
-      // Skip if no bump needed
       if (!nextVersion || bumpType === 'none') {
         return createSkippedResult('No version bump, no tag needed')
       }
 
-      // Generate tag name
       const tagName = interpolate(config.tagFormat ?? '${projectName}@${version}', {
         projectName,
         packageName,
         version: nextVersion,
       })
 
-      // Skip if dry run
       if (config.dryRun) {
         return {
           status: 'success',
@@ -56,7 +51,6 @@ export function createTagStep(): FlowStep {
         }
       }
 
-      // Create tag message from changelog entry if available
       let tagMessage = `Release ${nextVersion}`
       if (changelogEntry && changelogEntry.sections.length > 0) {
         const highlights: string[] = []
@@ -67,7 +61,6 @@ export function createTagStep(): FlowStep {
         tagMessage = `Release ${nextVersion}\n\n${highlights.join('\n')}`
       }
 
-      // Create tag
       try {
         const tag = git.createTag(tagName, {
           message: tagMessage,
@@ -108,17 +101,14 @@ export function createPushTagStep(): FlowStep {
       const { git, config, state, logger } = ctx
       const { tagName } = state
 
-      // Skip if git operations disabled
       if (config.skipGit || config.skipTag) {
         return createSkippedResult('Git/tag operations disabled')
       }
 
-      // Skip if no tag created
       if (!tagName) {
         return createSkippedResult('No tag to push')
       }
 
-      // Skip if dry run
       if (config.dryRun) {
         return {
           status: 'success',
@@ -144,7 +134,7 @@ export function createPushTagStep(): FlowStep {
     },
     {
       dependsOn: ['create-tag'],
-      continueOnError: true, // Don't fail flow if push fails
+      continueOnError: true,
     }
   )
 }

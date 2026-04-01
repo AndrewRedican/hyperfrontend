@@ -1,10 +1,3 @@
-/**
- * Workspace Validation
- *
- * Validation utilities for workspace integrity checks.
- * Verifies package configurations, dependencies, and workspace structure.
- */
-
 import type { Project } from '../models/project'
 import type { Workspace } from '../models/workspace'
 import { createSet } from '@hyperfrontend/immutable-api-utils/built-in-copy/set'
@@ -88,7 +81,6 @@ export interface ValidationCheckResult {
 export function validateWorkspace(workspace: Workspace): ValidationReport {
   const results: ValidationCheckResult[] = []
 
-  // Workspace-level checks
   results.push({
     checkId: 'workspace-has-projects',
     checkName: 'Workspace has projects',
@@ -103,7 +95,6 @@ export function validateWorkspace(workspace: Workspace): ValidationReport {
     result: validateNoCircularDependencies(workspace),
   })
 
-  // Package-level checks
   for (const project of workspace.projectList) {
     results.push({
       checkId: 'valid-version',
@@ -127,7 +118,6 @@ export function validateWorkspace(workspace: Workspace): ValidationReport {
     })
   }
 
-  // Aggregate results
   const errors = results.filter((r) => !r.result.valid)
   const warnings = results.filter((r) => r.result.warning !== undefined)
   const invalidPackageNames = errors
@@ -168,7 +158,6 @@ function validateHasProjects(workspace: Workspace): ValidationResult {
  * @returns Validation result indicating success or failure with cycle info
  */
 function validateNoCircularDependencies(workspace: Workspace): ValidationResult {
-  // Build adjacency list
   const visited = createSet<string>()
   const recursionStack = createSet<string>()
 
@@ -242,7 +231,6 @@ function validateProjectName(project: Project): ValidationResult {
     }
   }
 
-  // Check for valid npm package name using safe validation without complex regex
   const nameValidationResult = validatePackageNameFormat(project.name)
   if (!nameValidationResult.valid) {
     return {
@@ -251,7 +239,6 @@ function validateProjectName(project: Project): ValidationResult {
     }
   }
 
-  // Check length
   if (project.name.length > 214) {
     return {
       valid: false,
@@ -275,10 +262,9 @@ function validateDependencyVersions(workspace: Workspace, project: Project): Val
   for (const depName of project.internalDependencies) {
     const dep = workspace.projects.get(depName)
     if (!dep) {
-      continue // Handled by dependency existence check
+      continue
     }
 
-    // Get the version range from package.json
     const depTypes = <const>['dependencies', 'devDependencies', 'peerDependencies', 'optionalDependencies']
     let versionRange: string | undefined
 
@@ -293,10 +279,8 @@ function validateDependencyVersions(workspace: Workspace, project: Project): Val
     if (versionRange) {
       const depVersionResult = parseVersion(dep.version)
       if (depVersionResult.success && depVersionResult.version && !isWorkspaceVersion(versionRange)) {
-        // Parse the version range
         const rangeResult = parseRange(versionRange)
         if (rangeResult.success && rangeResult.range) {
-          // Check if the current version satisfies the range
           if (!satisfies(depVersionResult.version, rangeResult.range)) {
             warnings.push(`${depName}@${dep.version} does not satisfy ${versionRange}`)
           }
@@ -307,7 +291,7 @@ function validateDependencyVersions(workspace: Workspace, project: Project): Val
 
   if (warnings.length > 0) {
     return {
-      valid: true, // Warning, not error
+      valid: true,
       warning: warnings.join('; '),
     }
   }
@@ -323,46 +307,34 @@ function validateDependencyVersions(workspace: Workspace, project: Project): Val
  * @returns Validation result
  */
 function validatePackageNameFormat(name: string): { valid: boolean } {
-  // Valid characters for package names: lowercase letters, digits, hyphens, underscores, dots
   const isValidChar = (char: string): boolean => {
     const code = char.charCodeAt(0)
-    return (
-      (code >= 97 && code <= 122) || // a-z
-      (code >= 48 && code <= 57) || // 0-9
-      code === 45 || // -
-      code === 95 || // _
-      code === 46 // .
-    )
+    return (code >= 97 && code <= 122) || (code >= 48 && code <= 57) || code === 45 || code === 95 || code === 46
   }
 
-  // First char must be lowercase letter or digit
   const isValidFirstChar = (char: string): boolean => {
     const code = char.charCodeAt(0)
     return (code >= 97 && code <= 122) || (code >= 48 && code <= 57)
   }
 
-  // Handle scoped packages (@scope/name)
   if (name.startsWith('@')) {
     const slashIndex = name.indexOf('/')
     if (slashIndex === -1 || slashIndex === 1 || slashIndex === name.length - 1) {
       return { valid: false }
     }
 
-    // Validate scope (after @, before /)
     const scope = name.slice(1, slashIndex)
     if (!isValidFirstChar(scope[0])) return { valid: false }
     for (const char of scope) {
       if (!isValidChar(char)) return { valid: false }
     }
 
-    // Validate name (after /)
     const packageName = name.slice(slashIndex + 1)
     if (!isValidFirstChar(packageName[0])) return { valid: false }
     for (const char of packageName) {
       if (!isValidChar(char)) return { valid: false }
     }
   } else {
-    // Unscoped package
     if (!isValidFirstChar(name[0])) return { valid: false }
     for (const char of name) {
       if (!isValidChar(char)) return { valid: false }

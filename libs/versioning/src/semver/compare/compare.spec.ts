@@ -243,7 +243,6 @@ describe('satisfies - operator edge cases', () => {
 
   it('satisfies empty range (matches any version)', () => {
     const v = createSemVer({ major: 1, minor: 0, patch: 0 })
-    // Wildcard produces empty comparator set
     const range = parseRangeStrict('*')
     expect(satisfies(v, range)).toBe(true)
   })
@@ -271,7 +270,7 @@ describe('compare - prerelease deep comparison', () => {
   it('compares numerically when both prerelease identifiers are numeric', () => {
     const a = createSemVer({ major: 1, minor: 0, patch: 0, prerelease: ['100'] })
     const b = createSemVer({ major: 1, minor: 0, patch: 0, prerelease: ['20'] })
-    expect(compare(a, b)).toBe(1) // 100 > 20 numerically
+    expect(compare(a, b)).toBe(1)
   })
 
   it('returns correct result for equal length prerelease with difference in middle', () => {
@@ -281,18 +280,15 @@ describe('compare - prerelease deep comparison', () => {
   })
 
   it('compares prerelease identifiers at second position', () => {
-    // Force comparison to reach second identifier
     const a = createSemVer({ major: 1, minor: 0, patch: 0, prerelease: ['rc', '5'] })
     const b = createSemVer({ major: 1, minor: 0, patch: 0, prerelease: ['rc', '3'] })
-    // First identifiers equal ('rc' === 'rc'), second differs numerically (5 > 3)
     expect(compare(a, b)).toBe(1)
   })
 
   it('compares prerelease where numeric value at second position differs', () => {
-    // First identifier matches, second differs
     const a = createSemVer({ major: 1, minor: 0, patch: 0, prerelease: ['beta', '10'] })
     const b = createSemVer({ major: 1, minor: 0, patch: 0, prerelease: ['beta', '2'] })
-    expect(compare(a, b)).toBe(1) // 10 > 2
+    expect(compare(a, b)).toBe(1)
   })
 })
 
@@ -314,24 +310,22 @@ describe('satisfiesComparator - operator fallback', () => {
   it('handles caret operator as >= fallback', () => {
     const v1 = createSemVer({ major: 2, minor: 0, patch: 0 })
     const v2 = createSemVer({ major: 1, minor: 0, patch: 0 })
-    // Create comparator directly with ^ operator (normally expanded during parsing)
     const comp = createComparator('^', v2)
-    expect(satisfiesComparator(v1, comp)).toBe(true) // 2.0.0 >= 1.0.0
+    expect(satisfiesComparator(v1, comp)).toBe(true)
   })
 
   it('handles tilde operator as >= fallback', () => {
     const v1 = createSemVer({ major: 2, minor: 0, patch: 0 })
     const v2 = createSemVer({ major: 1, minor: 0, patch: 0 })
-    // Create comparator directly with ~ operator (normally expanded during parsing)
     const comp = createComparator('~', v2)
-    expect(satisfiesComparator(v1, comp)).toBe(true) // 2.0.0 >= 1.0.0
+    expect(satisfiesComparator(v1, comp)).toBe(true)
   })
 
   it('returns false for caret operator when version is lower', () => {
     const v1 = createSemVer({ major: 0, minor: 9, patch: 0 })
     const v2 = createSemVer({ major: 1, minor: 0, patch: 0 })
     const comp = createComparator('^', v2)
-    expect(satisfiesComparator(v1, comp)).toBe(false) // 0.9.0 < 1.0.0
+    expect(satisfiesComparator(v1, comp)).toBe(false)
   })
 
   it('handles <= operator', () => {
@@ -365,9 +359,9 @@ describe('satisfiesComparator - operator fallback', () => {
 
 describe('compare - additional prerelease edge cases', () => {
   it('handles release vs prerelease with release first', () => {
-    const a = createSemVer({ major: 1, minor: 0, patch: 0 }) // release
-    const b = createSemVer({ major: 1, minor: 0, patch: 0, prerelease: ['alpha'] }) // prerelease
-    expect(compare(a, b)).toBe(1) // release > prerelease
+    const a = createSemVer({ major: 1, minor: 0, patch: 0 })
+    const b = createSemVer({ major: 1, minor: 0, patch: 0, prerelease: ['alpha'] })
+    expect(compare(a, b)).toBe(1)
   })
 
   it('compares equal numeric prerelease identifiers', () => {

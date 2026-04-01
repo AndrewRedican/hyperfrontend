@@ -30,7 +30,6 @@ export function collectAllDependencies(packageJson?: PackageJson): Record<string
 export function parseVersionString(versionString?: string): string | undefined {
   if (versionString === undefined || versionString === null) return undefined
 
-  // Manual parsing instead of regex to avoid ReDoS
   let start = 0
   while (start < versionString.length) {
     const char = versionString[start]

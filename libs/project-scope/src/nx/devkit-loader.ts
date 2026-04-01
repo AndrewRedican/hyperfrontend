@@ -38,7 +38,6 @@ export function tryLoadDevkit(): DevkitLoadResult {
 
   devkitLogger.debug('Attempting to load @nx/devkit')
   try {
-    // Dynamic require to avoid bundling
     const devkit = require('@nx/devkit')
     devkitLogger.debug('@nx/devkit loaded successfully')
     cachedResult = { available: true, devkit }

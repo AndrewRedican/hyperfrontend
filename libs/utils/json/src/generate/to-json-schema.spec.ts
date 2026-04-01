@@ -142,7 +142,6 @@ describe('toJsonSchema', () => {
       const data = ['string', 123, true]
       const schema = toJsonSchema(data, { arrays: { mode: 'uniform' } })
 
-      // Should fall back to 'all' mode behavior when types are not uniform
       expect(schema.type).toBe('array')
       expect(schema.items).toBeDefined()
     })
@@ -153,13 +152,11 @@ describe('toJsonSchema', () => {
       const firstSchema = toJsonSchema(data, { arrays: { mode: 'first' } })
       const uniformSchema = toJsonSchema(data, { arrays: { mode: 'uniform' } })
 
-      // 'first' mode should just use string
       expect(firstSchema).toEqual({
         type: 'array',
         items: { type: 'string' },
       })
 
-      // 'uniform' mode should detect mixed types and merge
       expect(uniformSchema.items).toBeDefined()
     })
 
@@ -169,7 +166,6 @@ describe('toJsonSchema', () => {
 
       expect(schema.type).toBe('array')
       expect(schema.items).toBeDefined()
-      // Should have anyOf or merged type for mixed arrays
     })
   })
 
@@ -182,7 +178,6 @@ describe('toJsonSchema', () => {
       const schema = toJsonSchema(data, { arrays: { mode: 'all' } })
 
       expect(schema.type).toBe('array')
-      // Should handle merging different object shapes
     })
 
     it('generates schema that validates the original data', () => {
@@ -195,7 +190,6 @@ describe('toJsonSchema', () => {
       }
       const schema = toJsonSchema(data)
 
-      // Import validate to check round-trip
       const { validate } = require('../validate/validate')
       const result = validate(data, schema)
       expect(result.valid).toBe(true)

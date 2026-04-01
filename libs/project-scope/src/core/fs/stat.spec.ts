@@ -6,7 +6,6 @@ const TEST_DIR = join(__dirname, '__test_stat_fixtures__')
 
 describe('core/fs/stat', () => {
   beforeAll(() => {
-    // Create test fixtures
     rmSync(TEST_DIR, { recursive: true, force: true })
     mkdirSync(TEST_DIR, { recursive: true })
     mkdirSync(join(TEST_DIR, 'subdir'))
@@ -19,7 +18,6 @@ describe('core/fs/stat', () => {
   })
 
   afterAll(() => {
-    // Clean up test fixtures
     rmSync(TEST_DIR, { recursive: true, force: true })
   })
 
@@ -90,7 +88,6 @@ describe('core/fs/stat', () => {
 
   describe('getFileStat - followSymlinks option', () => {
     it('uses lstatSync when followSymlinks is false', () => {
-      // Test with a regular file to ensure lstatSync path works
       const stats = getFileStat(join(TEST_DIR, 'file.txt'), false)
       expect(stats).not.toBeNull()
       expect(stats?.isFile).toBe(true)
@@ -98,8 +95,6 @@ describe('core/fs/stat', () => {
 
     it('detects symlink as symlink when followSymlinks is false', () => {
       const stats = getFileStat(join(TEST_DIR, 'link.txt'), false)
-      // Symlinks may not be supported on all platforms, so stats could be null
-      // When stats exist and it's a symlink, the isSymlink flag should be true
       const isSymlinkDetected = stats?.isSymlink === true
       const isNullOrSymlink = stats === null || isSymlinkDetected
       expect(isNullOrSymlink).toBe(true)

@@ -6,7 +6,6 @@ const MINIMAL_PROJECT = resolve(FIXTURES_DIR, 'minimal-project')
 
 describe('run', () => {
   beforeEach(() => {
-    // Suppress console output in tests
     jest.spyOn(console, 'log').mockImplementation()
     jest.spyOn(console, 'error').mockImplementation()
   })
@@ -138,7 +137,6 @@ describe('run', () => {
     })
 
     it('handles command execution error gracefully', () => {
-      // Test with an invalid path that causes error
       const result = run(['deps', '/nonexistent/path/xyz'])
       expect(result.exitCode).toBe(1)
       expect(result.error).toBeDefined()

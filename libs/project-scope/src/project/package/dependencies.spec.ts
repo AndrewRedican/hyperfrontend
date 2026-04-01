@@ -198,7 +198,6 @@ describe('hasInstalledPackage', () => {
   beforeAll(() => {
     rmSync(TEST_DIR, { recursive: true, force: true })
     mkdirSync(TEST_DIR, { recursive: true })
-    // Create node_modules with a mock package
     mkdirSync(join(TEST_DIR, 'node_modules', 'mock-pkg'), { recursive: true })
     writeFileSync(join(TEST_DIR, 'node_modules', 'mock-pkg', 'package.json'), JSON.stringify({ name: 'mock-pkg', version: '1.2.3' }))
   })
@@ -230,10 +229,8 @@ describe('getInstalledVersion', () => {
   beforeAll(() => {
     rmSync(TEST_DIR, { recursive: true, force: true })
     mkdirSync(TEST_DIR, { recursive: true })
-    // Create node_modules with a mock package
     mkdirSync(join(TEST_DIR, 'node_modules', 'version-pkg'), { recursive: true })
     writeFileSync(join(TEST_DIR, 'node_modules', 'version-pkg', 'package.json'), JSON.stringify({ name: 'version-pkg', version: '2.0.0' }))
-    // Create a package without version
     mkdirSync(join(TEST_DIR, 'node_modules', 'no-version-pkg'), { recursive: true })
     writeFileSync(join(TEST_DIR, 'node_modules', 'no-version-pkg', 'package.json'), JSON.stringify({ name: 'no-version-pkg' }))
   })

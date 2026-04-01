@@ -123,7 +123,6 @@ describe('core/patterns/glob', () => {
         const path = 'a'.repeat(50) + '/file.ts'
         matchGlobPattern(path, pattern)
         const elapsed = Date.now() - start
-        // Should complete in reasonable time (< 100ms)
         expect(elapsed).toBeLessThan(100)
       })
 
@@ -133,7 +132,6 @@ describe('core/patterns/glob', () => {
         const pattern = `file.{${alternatives}}`
         matchGlobPattern('file.alt50', pattern)
         const elapsed = Date.now() - start
-        // Should complete in reasonable time (< 100ms)
         expect(elapsed).toBeLessThan(100)
       })
 
@@ -143,7 +141,6 @@ describe('core/patterns/glob', () => {
         const path = 'a/b/c/d/e/f/g/h/i/j/file.ts'
         matchGlobPattern(path, pattern)
         const elapsed = Date.now() - start
-        // Should complete in reasonable time (< 100ms)
         expect(elapsed).toBeLessThan(100)
       })
     })

@@ -49,7 +49,6 @@ describe('Integration: Multi-Channel', () => {
       const channel2 = broker.addChannel('channel-2', <Window>(<unknown>mockWindow2))
       const channel3 = broker.addChannel('channel-3', <Window>(<unknown>mockWindow3))
 
-      // Connect only channel1 and channel3
       channel1.connect()
       channel3.connect()
 
@@ -57,7 +56,6 @@ describe('Integration: Multi-Channel', () => {
       expect(channel2.isActive()).toBe(false)
       expect(channel3.isActive()).toBe(true)
 
-      // Disconnect channel1
       channel1.disconnect()
 
       expect(channel1.isActive()).toBe(false)
@@ -80,22 +78,17 @@ describe('Integration: Multi-Channel', () => {
       channel1.connect()
       channel2.connect()
 
-      // Clear any connection messages
       mockWindow1.postMessage.mockClear()
       mockWindow2.postMessage.mockClear()
 
-      // Send message through channel1
       channel1.send('BROADCAST', { from: 'channel-1' })
 
-      // Only window1 should receive the message
       expect(mockWindow1.postMessage).toHaveBeenCalledTimes(1)
       expect(mockWindow2.postMessage).not.toHaveBeenCalled()
 
-      // Send message through channel2
       channel2.send('BROADCAST', { from: 'channel-2' })
 
-      // Only window2 should receive the new message
-      expect(mockWindow1.postMessage).toHaveBeenCalledTimes(1) // Still 1
+      expect(mockWindow1.postMessage).toHaveBeenCalledTimes(1)
       expect(mockWindow2.postMessage).toHaveBeenCalledTimes(1)
     })
 
@@ -109,22 +102,17 @@ describe('Integration: Multi-Channel', () => {
       const channel1 = broker.addChannel('channel-1', <Window>(<unknown>mockWindow1))
       const channel2 = broker.addChannel('channel-2', <Window>(<unknown>mockWindow2))
 
-      // Send messages before connecting
       channel1.send('BROADCAST', { id: 1 })
       channel1.send('BROADCAST', { id: 2 })
       channel2.send('BROADCAST', { id: 3 })
 
-      // Connect channel1 first
       channel1.connect()
 
-      // Only channel1 messages should be sent
       expect(mockWindow1.postMessage).toHaveBeenCalled()
       expect(mockWindow2.postMessage).not.toHaveBeenCalled()
 
-      // Connect channel2
       channel2.connect()
 
-      // Now channel2 messages should be sent
       expect(mockWindow2.postMessage).toHaveBeenCalled()
     })
   })
@@ -146,17 +134,14 @@ describe('Integration: Multi-Channel', () => {
       channel1.on(handler1)
       channel2.on(handler2)
 
-      // Connect channel1
       channel1.connect()
 
       expect(handler1).toHaveBeenCalled()
       expect(handler2).not.toHaveBeenCalled()
 
-      // Clear
       handler1.mockClear()
       handler2.mockClear()
 
-      // Connect channel2
       channel2.connect()
 
       expect(handler1).not.toHaveBeenCalled()
@@ -179,14 +164,11 @@ describe('Integration: Multi-Channel', () => {
       const unsubscribe1 = channel1.on(handler1)
       channel2.on(handler2)
 
-      // Unsubscribe from channel1
       unsubscribe1()
 
-      // Connect both
       channel1.connect()
       channel2.connect()
 
-      // Only handler2 should be called
       expect(handler1).not.toHaveBeenCalled()
       expect(handler2).toHaveBeenCalled()
     })
@@ -204,7 +186,6 @@ describe('Integration: Multi-Channel', () => {
       const channel2 = broker.addChannel('channel-2', <Window>(<unknown>mockWindow2))
       const channel3 = broker.addChannel('channel-3', <Window>(<unknown>mockWindow3))
 
-      // Connect all at once
       channel1.connect()
       channel2.connect()
       channel3.connect()
@@ -229,12 +210,10 @@ describe('Integration: Multi-Channel', () => {
       channel2.connect()
       channel3.connect()
 
-      // Clear connection messages
       mockWindow1.postMessage.mockClear()
       mockWindow2.postMessage.mockClear()
       mockWindow3.postMessage.mockClear()
 
-      // Send messages concurrently
       channel1.send('BROADCAST', { from: 1 })
       channel2.send('BROADCAST', { from: 2 })
       channel3.send('BROADCAST', { from: 3 })
@@ -259,7 +238,6 @@ describe('Integration: Multi-Channel', () => {
       channel2.connect()
       channel3.connect()
 
-      // Disconnect all at once
       channel1.disconnect()
       channel2.disconnect()
       channel3.disconnect()
@@ -282,12 +260,8 @@ describe('Integration: Multi-Channel', () => {
       const channel2 = broker.addChannel('channel-2', <Window>(<unknown>mockWindow2))
       const channel3 = broker.addChannel('channel-3', <Window>(<unknown>mockWindow3))
 
-      // Channel1: connected
       channel1.connect()
 
-      // Channel2: never connected
-
-      // Channel3: connected then disconnected
       channel3.connect()
       channel3.disconnect()
 
@@ -295,17 +269,14 @@ describe('Integration: Multi-Channel', () => {
       expect(channel2.isActive()).toBe(false)
       expect(channel3.isActive()).toBe(false)
 
-      // Clear postMessage calls from connect/disconnect
       mockWindow1.postMessage.mockClear()
       mockWindow2.postMessage.mockClear()
       mockWindow3.postMessage.mockClear()
 
-      // Send messages
       channel1.send('BROADCAST', { id: 1 })
       channel2.send('BROADCAST', { id: 2 })
       channel3.send('BROADCAST', { id: 3 })
 
-      // Only channel1 should send immediately
       expect(mockWindow1.postMessage).toHaveBeenCalled()
       expect(mockWindow2.postMessage).not.toHaveBeenCalled()
       expect(mockWindow3.postMessage).not.toHaveBeenCalled()
@@ -323,7 +294,6 @@ describe('Integration: Multi-Channel', () => {
       const channelCount = 100
       const channels: ReturnType<typeof broker.addChannel>[] = []
 
-      // Create many channels
       for (let i = 0; i < channelCount; i++) {
         const mockWin = createMockWindow()
         const channel = broker.addChannel(`channel-${i}`, <Window>(<unknown>mockWin))
@@ -332,10 +302,8 @@ describe('Integration: Multi-Channel', () => {
 
       expect(broker.channels).toHaveLength(channelCount)
 
-      // Connect all
       channels.forEach((ch) => ch.connect())
 
-      // Verify all connected
       channels.forEach((ch) => {
         expect(ch.isActive()).toBe(true)
       })

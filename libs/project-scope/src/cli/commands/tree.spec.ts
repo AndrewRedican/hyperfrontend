@@ -33,7 +33,6 @@ describe('treeCommand', () => {
   it('respects depth option', () => {
     const shallow = treeCommand({ path: MINIMAL_PROJECT, depth: 1 })
     const deep = treeCommand({ path: MINIMAL_PROJECT, depth: 5 })
-    // Both should succeed
     expect(shallow.exitCode).toBe(0)
     expect(deep.exitCode).toBe(0)
   })
@@ -42,7 +41,6 @@ describe('treeCommand', () => {
     const result = treeCommand({ path: MINIMAL_PROJECT, dirsOnly: true, format: 'json' })
     const parsed = JSON.parse(result.output as string)
 
-    // Recursive helper to check all nodes are directories
     const checkDirsOnly = (node: { isDirectory: boolean; children: unknown[] }): void => {
       for (const child of node.children) {
         expect((child as { isDirectory: boolean }).isDirectory).toBe(true)
@@ -81,7 +79,7 @@ describe('treeCommandDef', () => {
   it('respects global json option', () => {
     const result = treeCommandDef.execute([MINIMAL_PROJECT], { json: true })
     expect(result.output).toBeDefined()
-    JSON.parse(result.output as string) // Should not throw
+    JSON.parse(result.output as string)
   })
 
   it('parses --depth argument', () => {
@@ -100,12 +98,10 @@ describe('treeCommand with options', () => {
     const result = treeCommand({ path: MINIMAL_PROJECT, filesOnly: true, format: 'json' })
     const parsed = JSON.parse(result.output as string)
 
-    // Recursive helper to check all children are files (not directories with children)
     const checkFilesOnly = (node: { isDirectory: boolean; children: unknown[] }): void => {
       for (const child of node.children) {
         const childNode = child as { isDirectory: boolean; children: unknown[] }
         if (childNode.children.length > 0) {
-          // If it has children, those should not be directories with files
           checkFilesOnly(childNode)
         }
       }
@@ -117,8 +113,6 @@ describe('treeCommand with options', () => {
   it('shows file sizes with showSize', () => {
     const result = treeCommand({ path: MINIMAL_PROJECT, showSize: true })
     expect(result.exitCode).toBe(0)
-    // The output should contain size indicators like K, M, B
-    // At minimum it should succeed
     expect(result.output).toBeDefined()
   })
 
@@ -138,7 +132,6 @@ describe('treeCommand with options', () => {
     const result = treeCommand({ path: MINIMAL_PROJECT, showSize: true, format: 'json' })
     const parsed = JSON.parse(result.output as string)
     expect(parsed).toBeDefined()
-    // Tree structure should be present
     expect(parsed).toHaveProperty('children')
   })
 
@@ -162,7 +155,6 @@ describe('treeCommand with options', () => {
 
   it('handles non-existent path gracefully', () => {
     const result = treeCommand({ path: '/non/existent/path/xyz' })
-    // Should either return error or empty tree
     expect(result).toBeDefined()
     expect(result).toHaveProperty('exitCode')
   })
@@ -181,7 +173,6 @@ describe('treeCommand with options', () => {
 describe('treeCommand edge cases', () => {
   it('validates max depth argument with invalid depth', () => {
     const result = treeCommand({ path: MINIMAL_PROJECT, depth: NaN })
-    // Should handle NaN gracefully
     expect(result).toHaveProperty('exitCode')
   })
 
@@ -198,12 +189,10 @@ describe('treeCommand edge cases', () => {
   it('formats file sizes for files of different sizes', () => {
     const result = treeCommand({ path: MINIMAL_PROJECT, showSize: true, filesOnly: true })
     expect(result.exitCode).toBe(0)
-    // Should contain size info with B, K, or M suffix
     expect(result.output).toBeDefined()
   })
 
   it('formats zero-byte files in size display', () => {
-    // Empty fixture has .gitkeep which may be 0 bytes
     const emptyDir = resolve(FIXTURES_DIR, 'empty')
     const result = treeCommand({ path: emptyDir, showSize: true })
     expect(result.exitCode).toBe(0)
@@ -221,7 +210,6 @@ describe('treeCommand edge cases', () => {
   })
 
   it('handles permission denied scenarios (skips inaccessible paths)', () => {
-    // Test with root path that may have some inaccessible dirs
     const result = treeCommand({ path: MINIMAL_PROJECT })
     expect(result.exitCode).toBe(0)
   })
@@ -230,11 +218,9 @@ describe('treeCommand edge cases', () => {
     const result = treeCommand({ path: MINIMAL_PROJECT, format: 'json' })
     expect(result.exitCode).toBe(0)
     const parsed = JSON.parse(result.output as string)
-    // Verify children are sorted properly (directories first)
     expect(parsed.children).toBeDefined()
     expect(parsed.children.length).toBeGreaterThan(1)
     const lastFile = parsed.children.findLastIndex((c: { isDirectory: boolean }) => !c.isDirectory)
-    // All directories should come before files
     const lastDir = parsed.children.findLastIndex((c: { isDirectory: boolean }) => c.isDirectory)
     expect(lastDir < lastFile || lastDir === -1 || lastFile === -1).toBe(true)
   })
@@ -273,25 +259,15 @@ describe('treeCommandDef argument parsing', () => {
 })
 
 describe('treeCommand formatSize coverage', () => {
-  // The formatSize function handles different size ranges:
-  // - bytes (< 1024): returns "${bytes}B"
-  // - KB (< 1024*1024): returns "${KB}K"
-  // - MB (< 1024*1024*1024): returns "${MB}M"
-  // - GB (>= 1024*1024*1024): returns "${GB}G"
-
   it('formats small file sizes in bytes', () => {
-    // Files in minimal-project should have some small files
     const result = treeCommand({ path: MINIMAL_PROJECT, showSize: true, filesOnly: true })
     expect(result.exitCode).toBe(0)
-    // Small files should show B suffix
     expect(result.output).toMatch(/\d+B/)
   })
 
   it('formats file sizes in KB range', () => {
-    // package.json files are typically in KB range
     const result = treeCommand({ path: MINIMAL_PROJECT, showSize: true })
     expect(result.exitCode).toBe(0)
-    // Files should show various size formats
     expect(result.output).toBeDefined()
   })
 
@@ -300,7 +276,6 @@ describe('treeCommand formatSize coverage', () => {
     expect(result.exitCode).toBe(0)
     const parsed = JSON.parse(result.output as string)
 
-    // Helper to find files with sizes
     const findFilesWithSize = (node: { size?: number; children: unknown[] }): number[] => {
       const sizes: number[] = []
       if (node.size !== undefined) sizes.push(node.size)
@@ -311,7 +286,6 @@ describe('treeCommand formatSize coverage', () => {
     }
 
     const sizes = findFilesWithSize(parsed)
-    // Should have found some file sizes
     expect(sizes.length).toBeGreaterThan(0)
   })
 })
@@ -320,12 +294,10 @@ describe('treeCommand error handling', () => {
   it('returns error for path with null bytes', () => {
     const result = treeCommand({ path: '/path/with/\x00/null' })
     expect([0, 1]).toContain(result.exitCode)
-    // Error message should be set when exitCode is 1
     expect(result.exitCode === 1 ? result.error : 'Tree failed').toContain('Tree failed')
   })
 
   it('returns error for permission denied paths', () => {
-    // /root is typically not accessible
     const result = treeCommand({ path: '/root' })
     expect([0, 1]).toContain(result.exitCode)
   })

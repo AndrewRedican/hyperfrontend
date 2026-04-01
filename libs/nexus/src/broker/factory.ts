@@ -70,7 +70,6 @@ export function createBroker(config: {
     customLogger: mergedSettings.logger,
   })
 
-  // Create broker state
   const state: BrokerState = {
     id: uuidV4(),
     name: config.name,
@@ -80,12 +79,10 @@ export function createBroker(config: {
     logger,
   }
 
-  // Create infrastructure
   const registry = createRegistry()
   const processManager = createProcessManager()
   const protocolRegistry = createProtocolRegistry()
 
-  // Register pre-configured protocol providers from settings
   if (config.settings?.security?.protocols) {
     const protocols = config.settings.security.protocols
 
@@ -98,13 +95,11 @@ export function createBroker(config: {
     }
   }
 
-  // Create action creators
   const actions = createActionCreators({
     getBrokerId: () => state.id,
     getContract: () => state.contract,
   })
 
-  // Create message router with all handlers
   const router = createRouter({
     [ACTION_TYPES.REQUEST_CONNECTION]: handleRequest,
     [ACTION_TYPES.ACCEPT_CONNECTION]: handleAccept,
@@ -119,7 +114,6 @@ export function createBroker(config: {
     [ACTION_TYPES.INVALID_REQUEST]: handleInvalid,
   })
 
-  // Create routing context for message handlers
   const routingContext: RoutingContext = {
     state,
     registry,
@@ -128,33 +122,27 @@ export function createBroker(config: {
     logger,
   }
 
-  // Message handler
   const onMessage = (event: MessageEvent<IAction | Uint8Array>) => {
     const origin = event?.origin
 
-    // Apply origin filtering
     if (!filterOrigin(origin, state.settings.whitelist, state.settings.blacklist)) {
       logger.info(`${state.name} ignored message from ${origin}`)
       return
     }
 
-    // Check if message is encrypted (Uint8Array)
     if (event.data instanceof Uint8Array) {
       routeEncryptedMessage(routingContext, router, <MessageEvent<Uint8Array>>event)
       return
     }
 
-    // Route plain object messages through existing handlers
     routeMessage(router, routingContext, <MessageEvent<IAction>>event)
   }
 
-  // Attach message listener
   /* istanbul ignore next -- environment detection for non-browser contexts */
   if (typeof window !== 'undefined') {
     window.addEventListener('message', <EventListener>onMessage)
   }
 
-  // Create broker handle
   const broker: BrokerHandle = {
     id: state.id,
     name: state.name,
@@ -189,9 +177,8 @@ export function createBroker(config: {
 
     setSecurityPolicy(policy: SecurityPolicy) {
       validatePolicy(policy)
-      // Use bracket notation to set the property
       ;(<Record<string, unknown>>(<unknown>state.settings))['securityPolicy'] = policy
-      return broker // Enable chaining
+      return broker
     },
 
     extendContract(contract: IChannelContract) {
@@ -200,7 +187,7 @@ export function createBroker(config: {
       }
       validateContract(contract)
       ;(<{ contract: unknown }>state).contract = mergeContracts(state.contract, contract)
-      return broker // Enable chaining
+      return broker
     },
 
     toJSON() {

@@ -1,7 +1,3 @@
-/**
- * Tests for validatePolicy function
- */
-
 import type { SecurityPolicy } from '../types'
 import { validatePolicy } from './validate-policy'
 

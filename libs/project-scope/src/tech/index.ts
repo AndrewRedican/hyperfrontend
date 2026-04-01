@@ -90,8 +90,6 @@ export interface DetectAllOptions {
  */
 function isDetectAllOptions(value: unknown): value is DetectAllOptions {
   if (typeof value !== 'object' || value === null) return false
-  // DetectAllOptions has skipCache or packageJson fields specifically
-  // PackageJson never has skipCache field
   return 'skipCache' in value || 'packageJson' in value
 }
 
@@ -124,10 +122,8 @@ function isDetectAllOptions(value: unknown): value is DetectAllOptions {
  * ```
  */
 export function detectAll(projectPath: string, packageJsonOrOptions?: PackageJson | DetectAllOptions): AllDetections {
-  // Handle backward-compatible arguments
   const options: DetectAllOptions = isDetectAllOptions(packageJsonOrOptions) ? packageJsonOrOptions : { packageJson: packageJsonOrOptions }
 
-  // Check cache first (unless skipCache is true)
   if (!options.skipCache) {
     const cached = detectAllCache.get(projectPath)
     if (cached) {
@@ -183,7 +179,6 @@ export function detectAll(projectPath: string, packageJsonOrOptions?: PackageJso
     testingFrameworks: result.testingFrameworks.map((f) => f.id),
   })
 
-  // Cache the result
   detectAllCache.set(projectPath, result)
 
   return result

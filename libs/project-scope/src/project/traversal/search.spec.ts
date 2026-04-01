@@ -129,7 +129,6 @@ describe('findFilesInTree - edge cases', () => {
     })
 
     expect(results.some((f) => f.endsWith('.json'))).toBe(true)
-    // May or may not find .ts files at root depending on structure
   })
 
   it('returns empty array when no files match', () => {

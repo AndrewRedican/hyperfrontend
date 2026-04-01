@@ -10,7 +10,6 @@ describe('core/fs/traversal', () => {
 
   beforeEach(() => {
     tempDir = mkdtempSync(join(tmpdir(), 'traversal-test-'))
-    // Create deep directory structure: tempDir/level1/level2/level3
     const level1 = join(tempDir, 'level1')
     const level2 = join(level1, 'level2')
     deepDir = join(level2, 'level3')
@@ -25,7 +24,6 @@ describe('core/fs/traversal', () => {
 
   describe('traverseUpward', () => {
     it('finds directory matching predicate', () => {
-      // Place a marker file in level1
       const markerPath = join(tempDir, 'level1', 'marker.txt')
       writeFileSync(markerPath, '')
 
@@ -52,7 +50,6 @@ describe('core/fs/traversal', () => {
     })
 
     it('stops at first match', () => {
-      // Place markers in multiple levels
       writeFileSync(join(tempDir, 'level1', 'marker.txt'), '')
       writeFileSync(join(tempDir, 'marker.txt'), '')
 
@@ -65,7 +62,6 @@ describe('core/fs/traversal', () => {
         }
       })
 
-      // Should find level1 first (closest to start)
       expect(result).toBe(join(tempDir, 'level1'))
     })
   })
@@ -120,7 +116,6 @@ describe('core/fs/traversal', () => {
     })
 
     it('works with custom test logic', () => {
-      // Find directory whose basename is 'level1'
       const result = findUpwardWhere(deepDir, (dir) => {
         const parts = dir.split('/')
         const basename = parts[parts.length - 1]
@@ -132,7 +127,6 @@ describe('core/fs/traversal', () => {
 
   describe('traverseUpward - root directory edge case', () => {
     it('checks root directory when no other match found', () => {
-      // Use a predicate that only returns true for root path
       const { root } = require('node:path').parse(deepDir)
 
       const result = traverseUpward(deepDir, (dir) => dir === root)

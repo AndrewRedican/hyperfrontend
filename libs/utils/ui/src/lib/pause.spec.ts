@@ -23,7 +23,6 @@ describe('pause', () => {
     expect(setTimeoutSpy).toHaveBeenLastCalledWith(expect.any(Function), timeMS)
   })
 
-  // Test case for zero timeMS value
   it('does not wait when given a zero timeMS value', async () => {
     const timeMS = 0
 

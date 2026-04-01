@@ -7,17 +7,12 @@
  * @module @hyperfrontend/immutable-api-utils/built-in-copy/number
  */
 
-// Capture references at module initialization time
 const _Number = globalThis.Number
 const _parseInt = globalThis.parseInt
 const _parseFloat = globalThis.parseFloat
 const _isNaN = globalThis.isNaN
 const _isFinite = globalThis.isFinite
 const _freeze = globalThis.Object.freeze
-
-// ============================================================================
-// Constants
-// ============================================================================
 
 /**
  * (Safe copy) The largest positive representable number.
@@ -59,10 +54,6 @@ export const EPSILON = _Number.EPSILON
  */
 export const NUMBER_NaN = _Number.NaN
 
-// ============================================================================
-// Type Checking
-// ============================================================================
-
 /**
  * (Safe copy) Determines whether the passed value is NaN (Number method, stricter than global isNaN).
  */
@@ -83,10 +74,6 @@ export const isInteger = _Number.isInteger
  */
 export const isSafeInteger = _Number.isSafeInteger
 
-// ============================================================================
-// Parsing
-// ============================================================================
-
 /**
  * (Safe copy) Parses a string and returns an integer.
  */
@@ -96,10 +83,6 @@ export const parseInt = _parseInt
  * (Safe copy) Parses a string and returns a floating point number.
  */
 export const parseFloat = _parseFloat
-
-// ============================================================================
-// Global Type Checking (legacy, less strict)
-// ============================================================================
 
 /**
  * (Safe copy) Global isNaN function (coerces to number first, less strict than Number.isNaN).
@@ -111,16 +94,11 @@ export const globalIsNaN = _isNaN
  */
 export const globalIsFinite = _isFinite
 
-// ============================================================================
-// Namespace Export
-// ============================================================================
-
 /**
  * (Safe copy) Namespace object containing all Number utilities.
  * Note: Importing this imports all methods in this namespace (no tree-shaking).
  */
 export const Number = _freeze(<const>{
-  // Constants
   MAX_VALUE,
   MIN_VALUE,
   MAX_SAFE_INTEGER,
@@ -129,15 +107,12 @@ export const Number = _freeze(<const>{
   NEGATIVE_INFINITY,
   EPSILON,
   NUMBER_NaN,
-  // Type checking
   isNaN,
   isFinite,
   isInteger,
   isSafeInteger,
-  // Parsing
   parseInt,
   parseFloat,
-  // Global (legacy)
   globalIsNaN,
   globalIsFinite,
 })

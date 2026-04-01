@@ -193,7 +193,6 @@ describe('walkTree', () => {
       entries.push(entry)
     }
 
-    // This should not throw, but just not find any children
     walkTree(tree, 'nonexistent', visitor)
 
     expect(entries.length).toBe(0)
@@ -229,14 +228,12 @@ describe('walkDirectory - edge cases', () => {
       entries.push(entry)
     }
 
-    // Should not throw
     walkDirectory('/non/existent/path', visitor)
 
     expect(entries.length).toBe(0)
   })
 
   it('respects .gitignore patterns', () => {
-    // Create test structure
     mkdirSync(join(TEST_DIR, 'gitignore-test'), { recursive: true })
     mkdirSync(join(TEST_DIR, 'gitignore-test', 'node_modules'), { recursive: true })
     mkdirSync(join(TEST_DIR, 'gitignore-test', 'dist'), { recursive: true })
@@ -255,7 +252,6 @@ describe('walkDirectory - edge cases', () => {
       respectGitignore: true,
     })
 
-    // node_modules and dist should be ignored
     expect(entries.some((e) => e.name === 'node_modules')).toBe(false)
     expect(entries.some((e) => e.name === 'dist')).toBe(false)
     expect(entries.some((e) => e.name === 'index.ts')).toBe(true)
@@ -272,12 +268,10 @@ describe('walkDirectory - edge cases', () => {
       respectGitignore: false,
     })
 
-    // node_modules should NOT be ignored
     expect(entries.some((e) => e.name === 'node_modules')).toBe(true)
   })
 
   it('handles negation patterns in ignore', () => {
-    // Create test structure with negation
     mkdirSync(join(TEST_DIR, 'negation-test'), { recursive: true })
     mkdirSync(join(TEST_DIR, 'negation-test', 'logs'), { recursive: true })
     writeFileSync(join(TEST_DIR, 'negation-test', '.gitignore'), 'logs\n!logs/important.log')
@@ -294,8 +288,6 @@ describe('walkDirectory - edge cases', () => {
       respectGitignore: true,
     })
 
-    // logs directory should be ignored, but important.log negated (still starts with logs/)
-    // The gitignore handling may vary - but we're testing the negation pattern matching
     expect(entries.length).toBeGreaterThanOrEqual(0)
   })
 
@@ -318,7 +310,6 @@ describe('walkDirectory - edge cases', () => {
   })
 
   it('handles stop return value in nested directories', () => {
-    // Create nested structure where stop file is first alphabetically
     mkdirSync(join(TEST_DIR, 'nested-stop'), { recursive: true })
     mkdirSync(join(TEST_DIR, 'nested-stop', 'zzz'), { recursive: true })
     writeFileSync(join(TEST_DIR, 'nested-stop', 'aaa-stop.txt'), 'stop here')
@@ -327,7 +318,6 @@ describe('walkDirectory - edge cases', () => {
     const entries: WalkEntry[] = []
     const visitor: WalkVisitor = (entry) => {
       entries.push(entry)
-      // Stop when finding the stop file
       if (entry.name === 'aaa-stop.txt') {
         return 'stop'
       }
@@ -335,7 +325,6 @@ describe('walkDirectory - edge cases', () => {
 
     walkDirectory(join(TEST_DIR, 'nested-stop'), visitor, { includeHidden: true })
 
-    // Should have stopped before reaching after.txt since stop file comes first alphabetically
     expect(entries.some((e) => e.name === 'aaa-stop.txt')).toBe(true)
     expect(entries.some((e) => e.name === 'after.txt')).toBe(false)
   })
@@ -361,7 +350,6 @@ describe('walkDirectory - edge cases', () => {
     const entries: WalkEntry[] = []
     const visitor: WalkVisitor = (entry) => {
       entries.push(entry)
-      // Return nothing explicitly
       return undefined
     }
 

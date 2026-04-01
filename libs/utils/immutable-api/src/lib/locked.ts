@@ -43,7 +43,6 @@ export const locked = (): LockedMethod => {
       enumerable: false,
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       get(this: any) {
-        // cache a bound function per instance
         if (!hasOwn(this, BOUND)) {
           defineProperty(this, BOUND, {
             value: original.bind(this),

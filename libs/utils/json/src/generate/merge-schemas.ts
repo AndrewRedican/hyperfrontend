@@ -21,7 +21,6 @@ export function mergeSchemas(schemas: Schema[]): Schema {
     return first ?? {}
   }
 
-  // Group schemas by type
   const typeGroups = createMap<JsonType | 'mixed', Schema[]>()
 
   for (const schema of schemas) {
@@ -32,7 +31,6 @@ export function mergeSchemas(schemas: Schema[]): Schema {
     typeGroups.set(key, group)
   }
 
-  // If all schemas have the same type, try to merge them
   /* istanbul ignore else -- multiple type groups tested separately */
   if (typeGroups.size === 1) {
     const [[type, group]] = [...typeGroups.entries()]
@@ -43,7 +41,6 @@ export function mergeSchemas(schemas: Schema[]): Schema {
   }
 
   /* istanbul ignore next -- multiple type groups is an edge case */
-  // Multiple types - use anyOf or a type array
   const uniqueTypes = createSet<JsonType>()
   for (const schema of schemas) {
     /* istanbul ignore else -- schema.type always exists in common case */
@@ -59,7 +56,6 @@ export function mergeSchemas(schemas: Schema[]): Schema {
 
   /* istanbul ignore next -- simple types optimization */
   if (uniqueTypes.size > 0 && uniqueTypes.size <= schemas.length) {
-    // Check if all schemas are just type definitions
     const allSimpleTypes = schemas.every((s) => keys(s).length === 1 && s.type)
     if (allSimpleTypes) {
       const types = [...uniqueTypes]
@@ -67,7 +63,6 @@ export function mergeSchemas(schemas: Schema[]): Schema {
     }
   }
 
-  // Fall back to anyOf for complex cases
   return { anyOf: schemas }
 }
 
@@ -93,7 +88,6 @@ function mergeSchemasByType(type: JsonType, schemas: Schema[]): Schema {
       return mergeArraySchemas(schemas)
     /* istanbul ignore next -- primitive types go here */
     default:
-      // For primitives, just return the type
       return { type }
   }
 }
@@ -132,7 +126,6 @@ function mergeObjectSchemas(schemas: Schema[]): Schema {
     properties[key] = mergeSchemas(propSchemas)
   }
 
-  // A property is required only if it's required in all schemas
   const required = keys(requiredCounts).filter((key) => requiredCounts[key] === schemas.length)
 
   const result: Schema = { type: 'object', properties }

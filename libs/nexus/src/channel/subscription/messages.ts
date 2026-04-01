@@ -29,11 +29,9 @@ export function subscribeToMessages(channel: ChannelInternals, handler: MessageH
 
   const state = channel.getState()
 
-  // Add handler to subscriptions
   const subscriptions = [...state.messageSubscriptions, handler]
   channel.updateState({ messageSubscriptions: subscriptions })
 
-  // Return unsubscribe function
   return () => {
     const currentState = channel.getState()
     const filtered = currentState.messageSubscriptions.filter((h) => h !== handler)

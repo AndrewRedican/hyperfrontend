@@ -30,7 +30,7 @@ const validPackageJson = {
 function createNonPublishableCase(): ESLintRuleTester.ValidTestCase {
   const workspace = manager.create({
     projectJson: NON_PUBLISHABLE_LIBRARY_PROJECT_JSON,
-    packageJson: { name: 'internal-lib' }, // Missing required fields but should be skipped
+    packageJson: { name: 'internal-lib' },
   })
   return {
     code: JSON.stringify({ name: 'internal-lib' }, null, 2),

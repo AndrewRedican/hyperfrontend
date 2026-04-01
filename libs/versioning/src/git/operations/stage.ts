@@ -52,7 +52,6 @@ export function stage(files: readonly string[], options: StageOptions = {}): boo
     args.push('-f')
   }
 
-  // Add files
   for (const file of files) {
     args.push(escapeFilePath(file))
   }
@@ -133,10 +132,8 @@ export function hasStagedChanges(options: GitCommitOptions = {}): boolean {
       timeout: opts.timeout,
       stdio: ['pipe', 'pipe', 'pipe'],
     })
-    // Exit code 0 means no changes
     return false
   } catch {
-    // Exit code 1 means there are changes
     return true
   }
 }
@@ -160,10 +157,8 @@ export function hasUnstagedChanges(options: GitCommitOptions = {}): boolean {
       timeout: opts.timeout,
       stdio: ['pipe', 'pipe', 'pipe'],
     })
-    // Exit code 0 means no changes
     return false
   } catch {
-    // Exit code 1 means there are changes
     return true
   }
 }
@@ -198,16 +193,13 @@ export function hasUnstagedChanges(options: GitCommitOptions = {}): boolean {
 export function discardChanges(options: DiscardChangesOptions = {}): boolean {
   const opts = { ...DEFAULT_COMMIT_OPTIONS, ...options }
 
-  // Build args: git checkout -- [files...]
   const args: string[] = ['checkout', '--']
 
   if (opts.files && opts.files.length > 0) {
-    // Selective discard
     for (const file of opts.files) {
       args.push(escapeFilePath(file))
     }
   } else {
-    // Discard all: git checkout -- .
     args.push('.')
   }
 

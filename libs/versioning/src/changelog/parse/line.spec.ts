@@ -247,7 +247,6 @@ describe('parseScopeFromItem', () => {
   })
 
   it('handles bold without scope pattern', () => {
-    // Bold without colon delimiter - returns entire text as description
     const result = parseScopeFromItem('**Important notice** This is important')
     expect(result.scope).toBe('Important notice')
     expect(result.description).toBe('This is important')
@@ -348,13 +347,11 @@ describe('parseIssueRefs', () => {
   })
 
   it('detects PR references from pull keyword within 10 char context', () => {
-    // Context window is 10 chars before the #, so 'pull #456' works
     const refs = parseIssueRefs('See pull #456')
     expect(refs[0].type).toBe('pull-request')
   })
 
   it('defaults to issue when pull keyword is too far', () => {
-    // 'pull request' is more than 10 chars before # so it's not detected
     const refs = parseIssueRefs('See pull request #456')
     expect(refs[0].type).toBe('issue')
   })

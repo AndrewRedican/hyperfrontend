@@ -35,7 +35,7 @@ describe('increment', () => {
     it('strips prerelease on patch bump', () => {
       const v = createSemVer({ major: 1, minor: 2, patch: 3, prerelease: ['alpha'] })
       const result = increment(v, 'patch')
-      expect(result.patch).toBe(3) // Same patch, just removes prerelease
+      expect(result.patch).toBe(3)
       expect(result.prerelease).toEqual([])
     })
   })

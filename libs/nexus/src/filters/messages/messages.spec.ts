@@ -51,19 +51,15 @@ describe('Message Filters', () => {
       }
       const filteredHandler = create(predicate)(handler)
 
-      // Should pass
       filteredHandler({ type: 'user-login', data: { id: 1 } }, mockChannel)
       expect(handler).toHaveBeenCalledTimes(1)
 
-      // Should not pass (wrong prefix)
       filteredHandler({ type: 'admin-login', data: { id: 1 } }, mockChannel)
       expect(handler).toHaveBeenCalledTimes(1)
 
-      // Should not pass (wrong data type)
       filteredHandler({ type: 'user-logout', data: 'string' }, mockChannel)
       expect(handler).toHaveBeenCalledTimes(1)
 
-      // Should pass again
       filteredHandler({ type: 'user-update', data: { name: 'test' } }, mockChannel)
       expect(handler).toHaveBeenCalledTimes(2)
     })
@@ -107,23 +103,18 @@ describe('Message Filters', () => {
     it('composess multiple filters', () => {
       const handler = jest.fn()
 
-      // Filter 1: only 'user' type
       const userFilter = byType('user')
-      // Filter 2: only if data has 'admin' property
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const adminFilter = create<IMessage>((msg) => (<any>msg.data)?.admin === true)
 
       const composedHandler = compose(adminFilter, userFilter)(handler)
 
-      // Should pass both filters
       composedHandler({ type: 'user', data: { admin: true } }, mockChannel)
       expect(handler).toHaveBeenCalledTimes(1)
 
-      // Should fail first filter (wrong type)
       composedHandler({ type: 'guest', data: { admin: true } }, mockChannel)
       expect(handler).toHaveBeenCalledTimes(1)
 
-      // Should fail second filter (not admin)
       composedHandler({ type: 'user', data: { admin: false } }, mockChannel)
       expect(handler).toHaveBeenCalledTimes(1)
     })
@@ -151,7 +142,6 @@ describe('Message Filters', () => {
 
       composedHandler({ type: 'test' }, mockChannel)
 
-      // Filters applied right-to-left: 3 -> 2 -> 1
       expect(executionOrder).toEqual(['filter3', 'filter2', 'filter1'])
     })
 
@@ -180,7 +170,6 @@ describe('Message Filters', () => {
     it('handless complex composition', () => {
       const handler = jest.fn()
 
-      // Create a chain of filters
       const typeFilter = byType('data-update')
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const priorityFilter = create<IMessage>((msg) => (<any>msg.data)?.priority === 'high')
@@ -188,7 +177,6 @@ describe('Message Filters', () => {
 
       const composedHandler = compose(typeFilter, priorityFilter, validDataFilter)(handler)
 
-      // Should pass all filters
       composedHandler(
         {
           type: 'data-update',
@@ -198,11 +186,9 @@ describe('Message Filters', () => {
       )
       expect(handler).toHaveBeenCalledTimes(1)
 
-      // Should fail validDataFilter
       composedHandler({ type: 'data-update' }, mockChannel)
       expect(handler).toHaveBeenCalledTimes(1)
 
-      // Should fail priorityFilter
       composedHandler(
         {
           type: 'data-update',
@@ -212,7 +198,6 @@ describe('Message Filters', () => {
       )
       expect(handler).toHaveBeenCalledTimes(1)
 
-      // Should fail typeFilter
       composedHandler(
         {
           type: 'user-update',
@@ -235,7 +220,6 @@ describe('Message Filters', () => {
       const filteredLogin = loginFilter(loginHandler)
       const filteredLogout = logoutFilter(logoutHandler)
 
-      // Simulate message stream
       const messages: IMessage[] = [
         { type: 'user-login', data: { userId: 1 } },
         { type: 'data-update', data: { id: 1 } },

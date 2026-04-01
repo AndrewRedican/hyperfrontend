@@ -44,16 +44,13 @@ export function deriveProjectScopes(options: DeriveProjectScopesOptions): readon
   const { projectName, packageName, additionalScopes = [], prefixes = DEFAULT_PROJECT_PREFIXES } = options
   const scopes = createSet<string>()
 
-  // Always include the full project name
   scopes.add(projectName)
 
-  // Add variations based on common prefixes
   const prefixVariations = extractPrefixVariations(projectName, prefixes)
   for (const variation of prefixVariations) {
     scopes.add(variation)
   }
 
-  // Add package name variations if provided
   if (packageName) {
     const packageVariations = extractPackageNameVariations(packageName)
     for (const variation of packageVariations) {
@@ -61,7 +58,6 @@ export function deriveProjectScopes(options: DeriveProjectScopesOptions): readon
     }
   }
 
-  // Add any additional scopes
   for (const scope of additionalScopes) {
     if (scope) {
       scopes.add(scope)
@@ -92,7 +88,7 @@ function extractPrefixVariations(projectName: string, prefixes: readonly string[
       if (withoutPrefix) {
         variations.push(withoutPrefix)
       }
-      break // Only remove one prefix
+      break
     }
   }
 
@@ -108,7 +104,6 @@ function extractPrefixVariations(projectName: string, prefixes: readonly string[
 function extractPackageNameVariations(packageName: string): readonly string[] {
   const variations: string[] = []
 
-  // Handle scoped packages: @scope/name -> name
   if (packageName.startsWith('@')) {
     const slashIndex = packageName.indexOf('/')
     if (slashIndex !== -1) {
@@ -118,7 +113,6 @@ function extractPackageNameVariations(packageName: string): readonly string[] {
       }
     }
   } else {
-    // Non-scoped package: just use the name
     variations.push(packageName)
   }
 
@@ -141,7 +135,6 @@ export function scopeMatchesProject(commitScope: string | undefined, projectScop
     return false
   }
 
-  // Case-insensitive comparison
   const normalizedScope = commitScope.toLowerCase()
   return projectScopes.some((scope) => scope.toLowerCase() === normalizedScope)
 }

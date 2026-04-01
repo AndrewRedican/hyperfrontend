@@ -36,14 +36,12 @@ export function createPSKHandshakeEncryptionFactory<T = any>(encryptPacket: Pack
 
     const packetEncryption: EncryptionSuite<T>['packetEncryption'] = (packet) => {
       const dynamicKey = keyProvider()
-      // Use dynamic key if available, otherwise use PSK for first message
       const key = dynamicKey || psk
       return encryptPacket(packet, key)
     }
 
     const packetDecryption: EncryptionSuite<T>['packetDecryption'] = (packet) => {
       const dynamicKey = keyProvider()
-      // Use dynamic key if available, otherwise use PSK for first message
       const key = dynamicKey || psk
       return decryptPacket(packet, key)
     }

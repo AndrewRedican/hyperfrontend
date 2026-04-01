@@ -18,8 +18,8 @@ export interface ICircularReference {
 export class CircularReference implements ICircularReference {
   public readonly location: Location
   public readonly target: Target
-  public readonly keyDelimiter = '\u00B7' // Middle dot
-  private readonly delimiter = ' \u2192 ' // Right arrow
+  public readonly keyDelimiter = '\u00B7'
+  private readonly delimiter = ' \u2192 '
 
   constructor(location: Location['path'], target: Target['path']) {
     if (!isArray(location) || location.length === 0) {

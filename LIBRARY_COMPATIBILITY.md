@@ -15,6 +15,7 @@ Last updated: February 15, 2026
 | `@hyperfrontend/string-utils`           |   ✅    |   ✅    |     ✅     |     ✅     |
 | `@hyperfrontend/time-utils`             |   ✅    |   ✅    |     ✅     |     ✅     |
 | `@hyperfrontend/immutable-api-utils`    |   ✅    |   ✅    |     ✅     |     ✅     |
+| `@hyperfrontend/json-utils`             |   ✅    |   ✅    |     ✅     |     ✅     |
 | `@hyperfrontend/list-utils`             |   ✅    |   ✅    |     ✅     |     ✅     |
 | `@hyperfrontend/random-generator-utils` |   ✅    |   ✅    |     ✅     |     ✅     |
 | `@hyperfrontend/ui-utils`               |   ✅    |   ⚠️¹   |     ✅     |     ✅     |
@@ -57,6 +58,7 @@ All libraries ship with multiple output formats:
 | `state-machine`          |   < 1 KB |       ✅       |
 | `ui-utils`               |   < 1 KB |       ✅       |
 | `cryptography`           |     3 KB |       ✅       |
+| `json-utils`             |     — KB |       ✅       |
 | `data-utils`             |    12 KB |       ✅       |
 | `nexus`                  |    21 KB |       ✅       |
 | `network-protocol` (v1)  |    66 KB |       ✅       |
@@ -103,6 +105,7 @@ All libraries ship with multiple output formats:
 | `string-utils`           | `HyperfrontendStringUtils`       |
 | `time-utils`             | `HyperfrontendTimeUtils`         |
 | `immutable-api-utils`    | `HyperfrontendImmutableApiUtils` |
+| `json-utils`             | `HyperfrontendJsonUtils`         |
 | `list-utils`             | `HyperfrontendListUtils`         |
 | `random-generator-utils` | `HyperfrontendRandomGenerator`   |
 | `ui-utils`               | `HyperfrontendUIUtils`           |
@@ -172,6 +175,7 @@ These libraries have no external dependencies:
 
 | Library                  | Depends On                                                     |
 | ------------------------ | -------------------------------------------------------------- |
+| `json-utils`             | immutable-api-utils                                            |
 | `list-utils`             | data-utils                                                     |
 | `random-generator-utils` | data-utils                                                     |
 | `logging`                | data-utils, function-utils                                     |
@@ -199,6 +203,7 @@ All libraries specify minimum Node.js and npm versions in their `package.json` `
 | `@hyperfrontend/function-utils`         | `>=18.0.0` | `>=8.0.0` | Platform-agnostic                            |
 | `@hyperfrontend/time-utils`             | `>=18.0.0` | `>=8.0.0` | Platform-agnostic                            |
 | `@hyperfrontend/immutable-api-utils`    | `>=18.0.0` | `>=8.0.0` | Platform-agnostic                            |
+| `@hyperfrontend/json-utils`             | `>=18.0.0` | `>=8.0.0` | Platform-agnostic                            |
 | `@hyperfrontend/list-utils`             | `>=18.0.0` | `>=8.0.0` | Platform-agnostic                            |
 | `@hyperfrontend/random-generator-utils` | `>=18.0.0` | `>=8.0.0` | Platform-agnostic                            |
 | `@hyperfrontend/logging`                | `>=18.0.0` | `>=8.0.0` | Platform-agnostic                            |

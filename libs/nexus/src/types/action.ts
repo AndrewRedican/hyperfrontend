@@ -37,7 +37,8 @@ export type ActionType = (typeof ACTION_TYPES)[keyof typeof ACTION_TYPES]
  */
 export interface IActionBase {
   readonly type: ActionType
-  readonly senderId: string // Broker ID that sent this action
+  /** Broker ID that sent this action */
+  readonly senderId: string
   /** Optional security negotiation/confirmation data */
   readonly security?: SecurityNegotiationRequest | SecurityNegotiationResponse | SecurityConfirmation
 }
@@ -89,12 +90,7 @@ export interface IActionWithData extends IActionBase {
 /**
  * Union type representing all possible action structures
  */
-export type IAction =
-  | IActionWithContract // REQUEST_CONNECTION, ACCEPT_CONNECTION
-  | IActionWithError // INVALID_REQUEST, DENY_CONNECTION
-  | IActionWithData // NEW_MESSAGE
-  | IActionWithProcess // CANCEL_*, OPEN_CONNECTION, CLOSE_*
-  | IActionBase // DESTROY_CONNECTION
+export type IAction = IActionWithContract | IActionWithError | IActionWithData | IActionWithProcess | IActionBase
 
 /**
  * Type guards for specific action types

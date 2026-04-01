@@ -81,14 +81,14 @@ describe('core/encoding/detect', () => {
     })
 
     it('returns false for binary content', () => {
-      const buffer = Buffer.from([0x89, 0x50, 0x4e, 0x47]) // PNG
+      const buffer = Buffer.from([0x89, 0x50, 0x4e, 0x47])
       expect(isTextFile(buffer)).toBe(false)
     })
   })
 
   describe('isBinaryFile', () => {
     it('returns true for binary content', () => {
-      const buffer = Buffer.from([0x89, 0x50, 0x4e, 0x47]) // PNG
+      const buffer = Buffer.from([0x89, 0x50, 0x4e, 0x47])
       expect(isBinaryFile(buffer)).toBe(true)
     })
 
@@ -118,31 +118,28 @@ describe('core/encoding/detect', () => {
 
   describe('detectEncodingInfo - null byte detection', () => {
     it('detects binary by null byte in middle of content', () => {
-      const buffer = Buffer.from([0x48, 0x65, 0x6c, 0x6c, 0x00, 0x6f]) // "Hell\0o"
+      const buffer = Buffer.from([0x48, 0x65, 0x6c, 0x6c, 0x00, 0x6f])
       const info = detectEncodingInfo(buffer)
       expect(info.type).toBe('binary')
     })
 
     it('samples only first 8000 bytes for null byte check', () => {
-      // Create buffer with no null bytes in first 8000, then null byte after
-      const before = Buffer.alloc(7999, 0x41) // 7999 'A's (no nulls)
-      const nullByte = Buffer.from([0x00]) // null at position 7999
-      const after = Buffer.alloc(1000, 0x42) // 1000 'B's
+      const before = Buffer.alloc(7999, 0x41)
+      const nullByte = Buffer.from([0x00])
+      const after = Buffer.alloc(1000, 0x42)
       const buffer = Buffer.concat([before, nullByte, after])
 
       const info = detectEncodingInfo(buffer)
-      // Null at position 7999 is within sample size 8000, so detected as binary
       expect(info.type).toBe('binary')
     })
 
     it('does not detect null bytes beyond sample size', () => {
-      // Create buffer > 8000 bytes with null only after sample size
-      const before = Buffer.alloc(8001, 0x41) // 8001 'A's (no nulls in first 8000)
-      const after = Buffer.from([0x00]) // null after sample size
+      const before = Buffer.alloc(8001, 0x41)
+      const after = Buffer.from([0x00])
       const buffer = Buffer.concat([before, after])
 
       const info = detectEncodingInfo(buffer)
-      expect(info.type).toBe('text') // null beyond sample = not detected
+      expect(info.type).toBe('text')
     })
   })
 

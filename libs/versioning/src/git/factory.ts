@@ -56,19 +56,11 @@ function isValidRemoteName(remote: string): boolean {
   for (let i = 0; i < remote.length; i++) {
     const code = remote.charCodeAt(i)
 
-    // Allow: a-z, A-Z, 0-9
-    if (
-      (code >= 97 && code <= 122) || // a-z
-      (code >= 65 && code <= 90) || // A-Z
-      (code >= 48 && code <= 57) || // 0-9
-      code === 95 // _
-    ) {
+    if ((code >= 97 && code <= 122) || (code >= 65 && code <= 90) || (code >= 48 && code <= 57) || code === 95) {
       continue
     }
 
-    // Allow hyphen and dot, but not as first character
     if (i > 0 && (code === 45 || code === 46)) {
-      // - or .
       continue
     }
 
@@ -105,8 +97,6 @@ export interface GitClient {
   /** Default timeout */
   readonly timeout: number
 
-  // ========== Log Operations ==========
-
   /**
    * Gets the commit log.
    */
@@ -140,8 +130,6 @@ export interface GitClient {
    */
   commitReachableFromHead(hash: string): boolean
 
-  // ========== Diff Operations ==========
-
   /**
    * Gets files changed between two refs.
    */
@@ -156,8 +144,6 @@ export interface GitClient {
    * Gets a commit with its changed files.
    */
   getCommitWithFiles(hash: string): GitCommitWithFiles | null
-
-  // ========== Tag Operations ==========
 
   /**
    * Gets all tags.
@@ -198,8 +184,6 @@ export interface GitClient {
    * Pushes a tag to remote.
    */
   pushTag(name: string, remote?: string): boolean
-
-  // ========== Commit Operations ==========
 
   /**
    * Creates a commit.
@@ -269,8 +253,6 @@ export interface GitClient {
    * Checks if there are untracked files.
    */
   hasUntrackedFiles(): boolean
-
-  // ========== Status Operations ==========
 
   /**
    * Gets the full repository status.
@@ -342,8 +324,6 @@ export interface GitClient {
    */
   getUntrackedFiles(): readonly string[]
 
-  // ========== Operation State ==========
-
   /**
    * Gets the current git operation state.
    *
@@ -356,8 +336,6 @@ export interface GitClient {
    * Checks if an operation (rebase, merge) is in progress.
    */
   isOperationInProgress(): boolean
-
-  // ========== Ref Operations ==========
 
   /**
    * Gets all refs (branches, tags, remotes).
@@ -428,7 +406,6 @@ export function createGitClient(config: GitClientConfig = {}): GitClient {
     cwd,
     timeout,
 
-    // Log operations
     getCommitLog: (options) => getCommitLog({ ...opts, ...options }),
     getCommitsBetween: (from, to, options) => getCommitsBetween(from, to, { ...opts, ...options }),
     getCommitsSince: (since, options) => getCommitsSince(since, { ...opts, ...options }),
@@ -436,12 +413,10 @@ export function createGitClient(config: GitClientConfig = {}): GitClient {
     commitExists: (hash) => commitExists(hash, opts),
     commitReachableFromHead: (hash) => commitReachableFromHead(hash, opts),
 
-    // Diff operations
     getChangedFilesBetween: (base, head) => getChangedFilesBetween(base, head, opts),
     getChangedFilesBetweenWithStatus: (base, head) => getChangedFilesBetweenWithStatus(base, head, opts),
     getCommitWithFiles: (hash) => getCommitWithFiles(hash, opts),
 
-    // Tag operations
     getTags: (options) => getTags({ ...opts, ...options }),
     getTag: (name) => getTag(name, opts),
     createTag: (name, options) => createTag(name, { ...opts, ...options }),
@@ -451,7 +426,6 @@ export function createGitClient(config: GitClientConfig = {}): GitClient {
     getTagsForPackage: (packageName, options) => getTagsForPackage(packageName, { ...opts, ...options }),
     pushTag: (name, remote) => pushTag(name, remote, opts),
 
-    // Commit operations
     createCommit: (message, options) => commit(message, { ...opts, ...options }),
     stage: (files, options) => stage(files, { ...opts, ...options }),
     unstage: (files) => unstage(files, opts),
@@ -466,7 +440,6 @@ export function createGitClient(config: GitClientConfig = {}): GitClient {
     discardAllChanges: () => discardAllChanges(opts),
     hasUntrackedFiles: () => hasUntrackedFiles(opts),
 
-    // Status operations
     getStatus: () => getStatus(opts),
     isClean: () => isClean(opts),
     isGitRepository: () => isGitRepository(opts),
@@ -482,11 +455,9 @@ export function createGitClient(config: GitClientConfig = {}): GitClient {
     getModifiedFiles: () => getModifiedFiles(opts),
     getUntrackedFiles: () => getUntrackedFiles(opts),
 
-    // Operation state
     getOperationState: () => getOperationState(opts),
     isOperationInProgress: () => isOperationInProgress(opts),
 
-    // Ref operations
     getRefs: () => getRefs(opts),
     getBranches: () => getBranches(opts),
     getRemoteBranches: (remote) => getRemoteBranches(opts, remote),
@@ -496,10 +467,6 @@ export function createGitClient(config: GitClientConfig = {}): GitClient {
     getRemoteUrl: (remoteName) => getRemoteUrl(opts, remoteName),
   }
 }
-
-// ============================================================================
-// Additional ref operations used by the client
-// ============================================================================
 
 /**
  * Gets all refs from the repository.
@@ -525,7 +492,6 @@ function getRefs(options: { cwd: string; timeout: number }): readonly GitRef[] {
       const trimmed = line.trim()
       if (!trimmed) continue
 
-      // Format: <hash> <refname>
       const spaceIndex = trimmed.indexOf(' ')
       if (spaceIndex === -1) continue
 
@@ -585,11 +551,9 @@ function getRemoteBranches(options: { cwd: string; timeout: number }, remote?: s
  * @returns True if fetch succeeded
  */
 function fetch(options: { cwd: string; timeout: number }, remote = 'origin', fetchOptions?: { prune?: boolean; tags?: boolean }): boolean {
-  // Validate remote name to prevent command injection (CWE-88)
   if (!isValidRemoteName(remote)) {
     return false
   }
-  // '--' explicitly ends option processing so the remote cannot be interpreted as a flag (e.g. --upload-pack)
   const args: string[] = ['fetch', '--', remote]
 
   if (fetchOptions?.prune) {
@@ -603,7 +567,7 @@ function fetch(options: { cwd: string; timeout: number }, remote = 'origin', fet
     execFileSync('git', args, {
       encoding: 'utf-8',
       cwd: options.cwd,
-      timeout: options.timeout * 3, // Allow more time for network
+      timeout: options.timeout * 3,
       stdio: ['pipe', 'pipe', 'pipe'],
     })
     return true
@@ -623,11 +587,9 @@ function fetch(options: { cwd: string; timeout: number }, remote = 'origin', fet
  * @returns True if pull succeeded
  */
 function pull(options: { cwd: string; timeout: number }, remote = 'origin', branch?: string): boolean {
-  // Validate remote name to prevent command injection (CWE-88)
   if (!isValidRemoteName(remote)) {
     return false
   }
-  // '--' explicitly ends option processing so the remote cannot be interpreted as a flag (e.g. --upload-pack)
   const args: string[] = ['pull', '--', remote]
   if (branch) {
     args.push(branch)
@@ -665,7 +627,6 @@ function push(
   branch?: string,
   pushOptions?: { force?: boolean; setUpstream?: boolean }
 ): boolean {
-  // Validate remote name to prevent command injection (CWE-88)
   if (!isValidRemoteName(remote)) {
     return false
   }
@@ -704,7 +665,6 @@ function push(
  * @returns The remote URL, or null if not found
  */
 function getRemoteUrl(options: { cwd: string; timeout: number }, remoteName = 'origin'): string | null {
-  // Validate remote name to prevent command injection (CWE-88)
   if (!isValidRemoteName(remoteName)) {
     return null
   }

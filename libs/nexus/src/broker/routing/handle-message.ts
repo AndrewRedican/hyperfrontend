@@ -31,28 +31,23 @@ export function handleMessage(context: RoutingContext, message: MessageEvent<IAc
   const action = message.data
   const senderId = <string>action.senderId
 
-  // Use type guard to safely access data property
   if (!isActionWithData(action)) {
-    return // Invalid action structure for message
+    return
   }
 
   const messageData = <IMessage>action.data
 
-  // Get channel by sender ID
   const channel = <ChannelHandle | undefined>getById(registry, senderId)
 
   if (!channel || !channel.isActive()) {
-    return // Channel not found or not open
+    return
   }
 
-  // Validate message structure
   const validationResult = validateMessage(messageData)
   if (!validationResult.valid) {
-    // Invalid message - log and ignore
     logger.info(`${state.name} ignored message from ${channel.getName()}`)
     return
   }
 
-  // Forward to channel's message handlers
   channel.notifyMessage(messageData)
 }

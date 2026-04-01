@@ -45,24 +45,12 @@ export const DEFAULT_LOG_OPTIONS: Required<Omit<GitLogOptions, 'from' | 'to' | '
  * Git log format string for structured output.
  * Uses ASCII delimiters that won't appear in commit messages.
  */
-const LOG_FORMAT = [
-  '%H', // full hash
-  '%an', // author name
-  '%ae', // author email
-  '%aI', // author date (ISO 8601)
-  '%cn', // committer name
-  '%ce', // committer email
-  '%cI', // commit date (ISO 8601)
-  '%s', // subject
-  '%b', // body
-  '%P', // parent hashes
-  '%D', // refs
-].join('%x00') // NUL separator
+const LOG_FORMAT = ['%H', '%an', '%ae', '%aI', '%cn', '%ce', '%cI', '%s', '%b', '%P', '%D'].join('%x00')
 
 /**
  * Record separator for commit entries.
  */
-const RECORD_SEPARATOR = '\x1e' // ASCII Record Separator
+const RECORD_SEPARATOR = '\x1e'
 
 /**
  * Gets the commit log from a git repository.
@@ -79,7 +67,6 @@ export function getCommitLog(options: GitLogOptions = {}): readonly GitCommit[] 
 
   const args: string[] = ['log', `--format=${RECORD_SEPARATOR}${LOG_FORMAT}`]
 
-  // Add options
   if (opts.maxCount !== undefined && opts.maxCount > 0) {
     args.push(`-n${opts.maxCount}`)
   }
@@ -93,7 +80,6 @@ export function getCommitLog(options: GitLogOptions = {}): readonly GitCommit[] 
     args.push(`--author=${safeAuthor}`)
   }
 
-  // Add range
   if (opts.from && opts.to) {
     const safeFrom = escapeGitRef(opts.from)
     const safeTo = escapeGitRef(opts.to)
@@ -106,7 +92,6 @@ export function getCommitLog(options: GitLogOptions = {}): readonly GitCommit[] 
     args.push(safeTo)
   }
 
-  // Add path filter
   if (opts.path) {
     const safePath = escapeGitPath(opts.path)
     args.push('--', safePath)
@@ -118,12 +103,11 @@ export function getCommitLog(options: GitLogOptions = {}): readonly GitCommit[] 
       cwd: opts.cwd,
       timeout: opts.timeout,
       stdio: ['pipe', 'pipe', 'pipe'],
-      maxBuffer: 50 * 1024 * 1024, // 50MB
+      maxBuffer: 50 * 1024 * 1024,
     })
 
     return parseCommitLog(output)
   } catch (error) {
-    // Check if error is due to no commits
     if (error instanceof Error && error.message.includes('does not have any commits')) {
       return []
     }
@@ -233,7 +217,6 @@ export function commitExists(hash: string, options: Pick<GitLogOptions, 'cwd' | 
 export function commitReachableFromHead(hash: string, options: Pick<GitLogOptions, 'cwd' | 'timeout'> = {}): boolean {
   const safeHash = escapeGitRef(hash)
   try {
-    // git merge-base --is-ancestor exits with 0 if commit is ancestor of HEAD
     execFileSync('git', ['merge-base', '--is-ancestor', safeHash, 'HEAD'], {
       encoding: 'utf-8',
       cwd: options.cwd,
@@ -242,7 +225,6 @@ export function commitReachableFromHead(hash: string, options: Pick<GitLogOption
     })
     return true
   } catch {
-    // Exit code 1 means not an ancestor, other errors also return false
     return false
   }
 }
@@ -260,14 +242,12 @@ function parseCommitLog(output: string): GitCommit[] {
     return commits
   }
 
-  // Split by record separator
   const records = splitByDelimiter(output, RECORD_SEPARATOR)
 
   for (const record of records) {
     const trimmed = record.trim()
     if (!trimmed) continue
 
-    // Split by NUL character
     const fields = splitByDelimiter(trimmed, '\x00')
 
     if (fields.length < 10) continue
@@ -275,10 +255,8 @@ function parseCommitLog(output: string): GitCommit[] {
     const [hash, authorName, authorEmail, authorDate, committerName, committerEmail, commitDate, subject, body, parentsStr, refsStr] =
       fields
 
-    // Parse parents (space-separated hashes)
     const parents = parentsStr ? splitByDelimiter(parentsStr, ' ').filter((p) => p.trim()) : []
 
-    // Parse refs (comma-separated, may have prefixes like 'HEAD -> ')
     const refs = parseRefs(refsStr || '')
 
     commits.push(
@@ -318,14 +296,12 @@ function parseRefs(refsStr: string): string[] {
   for (const part of parts) {
     let ref = part.trim()
 
-    // Handle 'HEAD -> branch' format
     const arrowIndex = findSubstring(ref, ' -> ')
     if (arrowIndex !== -1) {
       refs.push('HEAD')
       ref = ref.slice(arrowIndex + 4)
     }
 
-    // Handle 'tag: tagname' format
     if (startsWithPrefix(ref, 'tag: ')) {
       ref = ref.slice(5)
     }
@@ -410,10 +386,6 @@ function startsWithPrefix(str: string, prefix: string): boolean {
   return matchesAt(str, 0, prefix)
 }
 
-// ============================================================================
-// Security helpers - character-by-character validation (no regex)
-// ============================================================================
-
 /**
  * Maximum allowed git reference length.
  */
@@ -440,20 +412,19 @@ export function escapeGitRef(ref: string): string {
   for (let i = 0; i < ref.length; i++) {
     const code = ref.charCodeAt(i)
 
-    // Allow: a-z, A-Z, 0-9, /, -, _, ., ~, ^, @, {, }
     if (
-      (code >= 97 && code <= 122) || // a-z
-      (code >= 65 && code <= 90) || // A-Z
-      (code >= 48 && code <= 57) || // 0-9
-      code === 47 || // /
-      code === 45 || // -
-      code === 95 || // _
-      code === 46 || // .
-      code === 126 || // ~
-      code === 94 || // ^
-      code === 64 || // @
-      code === 123 || // {
-      code === 125 // }
+      (code >= 97 && code <= 122) ||
+      (code >= 65 && code <= 90) ||
+      (code >= 48 && code <= 57) ||
+      code === 47 ||
+      code === 45 ||
+      code === 95 ||
+      code === 46 ||
+      code === 126 ||
+      code === 94 ||
+      code === 64 ||
+      code === 123 ||
+      code === 125
     ) {
       safe.push(ref[i])
     } else {
@@ -490,17 +461,16 @@ export function escapeGitPath(path: string): string {
   for (let i = 0; i < path.length; i++) {
     const code = path.charCodeAt(i)
 
-    // Allow: a-z, A-Z, 0-9, /, \, -, _, ., space
     if (
-      (code >= 97 && code <= 122) || // a-z
-      (code >= 65 && code <= 90) || // A-Z
-      (code >= 48 && code <= 57) || // 0-9
-      code === 47 || // /
-      code === 92 || // \
-      code === 45 || // -
-      code === 95 || // _
-      code === 46 || // .
-      code === 32 // space
+      (code >= 97 && code <= 122) ||
+      (code >= 65 && code <= 90) ||
+      (code >= 48 && code <= 57) ||
+      code === 47 ||
+      code === 92 ||
+      code === 45 ||
+      code === 95 ||
+      code === 46 ||
+      code === 32
     ) {
       safe.push(path[i])
     } else {
@@ -537,19 +507,18 @@ export function escapeGitArg(arg: string): string {
   for (let i = 0; i < arg.length; i++) {
     const code = arg.charCodeAt(i)
 
-    // Allow: a-z, A-Z, 0-9, space, @, ., -, _, <, >, +
     if (
-      (code >= 97 && code <= 122) || // a-z
-      (code >= 65 && code <= 90) || // A-Z
-      (code >= 48 && code <= 57) || // 0-9
-      code === 32 || // space
-      code === 64 || // @
-      code === 46 || // .
-      code === 45 || // -
-      code === 95 || // _
-      code === 60 || // <
-      code === 62 || // >
-      code === 43 // +
+      (code >= 97 && code <= 122) ||
+      (code >= 65 && code <= 90) ||
+      (code >= 48 && code <= 57) ||
+      code === 32 ||
+      code === 64 ||
+      code === 46 ||
+      code === 45 ||
+      code === 95 ||
+      code === 60 ||
+      code === 62 ||
+      code === 43
     ) {
       safe.push(arg[i])
     } else {

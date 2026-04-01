@@ -75,10 +75,8 @@ export function getTags(options: ListTagsOptions = {}): readonly GitTag[] {
       .map((line) => line.trim())
       .filter((line) => line.length > 0)
 
-    // Limit results if requested
     const limitedNames = opts.maxCount ? tagNames.slice(0, opts.maxCount) : tagNames
 
-    // Get details for each tag
     const tags: GitTag[] = []
     for (const name of limitedNames) {
       const tag = getTagDetails(name, opts)
@@ -118,7 +116,6 @@ function getTagDetails(name: string, options: Required<Omit<GitTagOptions, 'cwd'
   const safeName = escapeGitRef(name)
 
   try {
-    // Get the commit hash the tag points to
     const commitHash = execFileSync('git', ['rev-list', '-1', safeName], {
       encoding: 'utf-8',
       cwd: options.cwd,
@@ -126,7 +123,6 @@ function getTagDetails(name: string, options: Required<Omit<GitTagOptions, 'cwd'
       stdio: ['pipe', 'pipe', 'pipe'],
     }).trim()
 
-    // Check if it's an annotated tag by trying to get tag message
     try {
       const tagInfo = execFileSync('git', ['cat-file', 'tag', safeName], {
         encoding: 'utf-8',
@@ -135,7 +131,6 @@ function getTagDetails(name: string, options: Required<Omit<GitTagOptions, 'cwd'
         stdio: ['pipe', 'pipe', 'pipe'],
       })
 
-      // Parse annotated tag info
       const parsed = parseAnnotatedTagInfo(tagInfo)
 
       return createAnnotatedTag({
@@ -147,7 +142,6 @@ function getTagDetails(name: string, options: Required<Omit<GitTagOptions, 'cwd'
         tagDate: parsed.tagDate,
       })
     } catch {
-      // Not an annotated tag, it's lightweight
       return createLightweightTag({
         name,
         commitHash,
@@ -192,7 +186,6 @@ function parseAnnotatedTagInfo(info: string): ParsedAnnotatedTagInfo {
       tagDate = parsed.date
     }
 
-    // Empty line marks start of message
     if (line === '' && messageStart === -1) {
       messageStart = i + 1
       break
@@ -221,7 +214,6 @@ function parseTaggerLine(line: string): { name: string; email: string; date: str
   let email = ''
   let date = ''
 
-  // Find email in angle brackets
   let emailStart = -1
   let emailEnd = -1
 
@@ -238,11 +230,9 @@ function parseTaggerLine(line: string): { name: string; email: string; date: str
     name = line.slice(0, emailStart - 1).trim()
     email = line.slice(emailStart, emailEnd)
 
-    // Rest is timestamp and timezone
     const rest = line.slice(emailEnd + 1).trim()
     const parts = rest.split(' ')
     if (parts.length >= 1) {
-      // Convert Unix timestamp to ISO 8601
       const timestamp = parseInt(parts[0], 10)
       if (!globalIsNaN(timestamp)) {
         date = createDate(timestamp * 1000).toISOString()
@@ -306,19 +296,15 @@ export function getLatestTag(options: ListTagsOptions = {}): GitTag | null {
  * const tags = getTagsForPackage('@scope/pkg')
  */
 export function getTagsForPackage(packageName: string, options: ListTagsOptions = {}): readonly GitTag[] {
-  // Common patterns: @scope/pkg@version, pkg@version, pkg-vversion
   const allTags = getTags(options)
 
   return allTags.filter((tag) => {
-    // Check if tag starts with package name followed by @ or -v
     const name = tag.name
 
-    // Pattern: package@version
     if (startsWithPrefix(name, packageName + '@')) {
       return true
     }
 
-    // Pattern: package-v
     if (startsWithPrefix(name, packageName + '-v')) {
       return true
     }
@@ -326,10 +312,6 @@ export function getTagsForPackage(packageName: string, options: ListTagsOptions 
     return false
   })
 }
-
-// ============================================================================
-// Helper functions
-// ============================================================================
 
 /**
  * Checks if string starts with prefix (no regex).
@@ -371,16 +353,15 @@ export function escapeGitTagPattern(pattern: string): string {
   for (let i = 0; i < pattern.length; i++) {
     const code = pattern.charCodeAt(i)
 
-    // Allow: a-z, A-Z, 0-9, /, -, _, ., @
     if (
-      (code >= 97 && code <= 122) || // a-z
-      (code >= 65 && code <= 90) || // A-Z
-      (code >= 48 && code <= 57) || // 0-9
-      code === 47 || // /
-      code === 45 || // -
-      code === 95 || // _
-      code === 46 || // .
-      code === 64 // @
+      (code >= 97 && code <= 122) ||
+      (code >= 65 && code <= 90) ||
+      (code >= 48 && code <= 57) ||
+      code === 47 ||
+      code === 45 ||
+      code === 95 ||
+      code === 46 ||
+      code === 64
     ) {
       safe.push(pattern[i])
     } else {

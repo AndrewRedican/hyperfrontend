@@ -124,7 +124,6 @@ export function insertStep(flow: VersionFlow, step: FlowStep, index: number): Ve
 export function insertStepAfter(flow: VersionFlow, step: FlowStep, afterStepId: string): VersionFlow {
   const index = flow.steps.findIndex((s) => s.id === afterStepId)
   if (index === -1) {
-    // If not found, append to end
     return addStep(flow, step)
   }
   return insertStep(flow, step, index + 1)
@@ -141,7 +140,6 @@ export function insertStepAfter(flow: VersionFlow, step: FlowStep, afterStepId: 
 export function insertStepBefore(flow: VersionFlow, step: FlowStep, beforeStepId: string): VersionFlow {
   const index = flow.steps.findIndex((s) => s.id === beforeStepId)
   if (index === -1) {
-    // If not found, prepend to beginning
     return insertStep(flow, step, 0)
   }
   return insertStep(flow, step, index)

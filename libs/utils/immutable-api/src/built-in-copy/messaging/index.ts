@@ -11,7 +11,6 @@
  * @module @hyperfrontend/immutable-api-utils/built-in-copy/messaging
  */
 
-// Capture references at module initialization time
 const _Reflect = globalThis.Reflect
 const _freeze = globalThis.Object.freeze
 const _structuredClone = typeof globalThis.structuredClone === 'function' ? globalThis.structuredClone : undefined

@@ -16,24 +16,19 @@ interface ApiReferenceProps {
   data: TypeDocOutput
 }
 
-// Main API reference component that renders TypeDoc JSON output
 export function ApiReference({ data }: ApiReferenceProps) {
   const [searchQuery, setSearchQuery] = useState('')
   const [filters, setFilters] = useState<ApiFilterState>(defaultFilters)
 
-  // For multi-entry-point libraries, allow switching between flat and grouped views
   const isMultiModule = useMemo(() => hasModules(data), [data])
   const [viewMode, setViewMode] = useState<ViewMode>(isMultiModule ? 'grouped' : 'flat')
 
-  // Extract all exports, handling both flat and module-grouped structures
   const allExports = useMemo(() => {
     if (!data.children) return []
 
-    // Check if the children are Modules (kind === 2) - multi-entry-point library
     const hasModules = data.children.some((child) => child.kind === ReflectionKind.Module)
 
     if (hasModules) {
-      // Flatten module exports and track source module
       const exports: Array<TypeDocNode & { sourceModule?: string }> = []
       for (const module of data.children) {
         if (module.kind === ReflectionKind.Module && module.children) {
@@ -45,11 +40,9 @@ export function ApiReference({ data }: ApiReferenceProps) {
       return exports
     }
 
-    // Flat structure - no modules
     return data.children
   }, [data])
 
-  // Categorize exports by kind
   const categorizedExports = useMemo(() => {
     const functions = allExports.filter((child) => child.kind === ReflectionKind.Function)
     const classes = allExports.filter((child) => child.kind === ReflectionKind.Class)
@@ -58,7 +51,6 @@ export function ApiReference({ data }: ApiReferenceProps) {
     const variables = allExports.filter((child) => child.kind === ReflectionKind.Variable)
     const enums = allExports.filter((child) => child.kind === ReflectionKind.Enum)
 
-    // Sort each category alphabetically
     const sortByName = (a: TypeDocNode, b: TypeDocNode) => a.name.localeCompare(b.name)
 
     return {
@@ -71,7 +63,6 @@ export function ApiReference({ data }: ApiReferenceProps) {
     }
   }, [allExports])
 
-  // Apply search filter
   const filterBySearch = useCallback(
     (items: TypeDocNode[]) => {
       if (!searchQuery.trim()) return items
@@ -81,7 +72,6 @@ export function ApiReference({ data }: ApiReferenceProps) {
     [searchQuery]
   )
 
-  // Get filtered results
   const filteredExports = useMemo(() => {
     return {
       functions: filters.functions ? filterBySearch(categorizedExports.functions) : [],
@@ -125,7 +115,6 @@ export function ApiReference({ data }: ApiReferenceProps) {
 
   const isFiltered = searchQuery.trim() !== '' || values(filters).some((v) => !v)
 
-  // For grouped view, render the module-grouped component
   if (isMultiModule && viewMode === 'grouped') {
     return (
       <div className="api-reference">
@@ -375,7 +364,6 @@ function ViewModeToggle({ mode, onModeChange }: ViewModeToggleProps) {
   )
 }
 
-// Re-export components for direct use if needed
 export { FunctionSignature } from './function-signature'
 export { TypeDefinition } from './type-definition'
 export { ParameterList } from './parameter-list'

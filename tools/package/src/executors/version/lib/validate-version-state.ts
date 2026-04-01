@@ -110,9 +110,8 @@ export async function validateVersionState(options: ValidateVersionStateOptions)
   const packageJsonPath = join(workspaceRoot, projectRoot, 'package.json')
   const changelogPath = join(workspaceRoot, projectRoot, 'CHANGELOG.md')
 
-  // === CALCULATE EXPECTED STATE ===
   const flowConfig: Partial<FlowConfig> = {
-    dryRun: true, // Critical: calculate without making changes
+    dryRun: true,
     skipGit: true,
     skipTag: true,
     skipChangelog: false,
@@ -137,7 +136,6 @@ export async function validateVersionState(options: ValidateVersionStateOptions)
     }
   }
 
-  // === HANDLE SKIP/FAILURE CASES ===
   if (flowResult.status === 'skipped') {
     return {
       status: 'skipped',
@@ -158,7 +156,6 @@ export async function validateVersionState(options: ValidateVersionStateOptions)
 
   const { state } = flowResult
 
-  // No bump needed
   if (state.bumpType === 'none' || !state.nextVersion) {
     return {
       status: 'skipped',
@@ -168,7 +165,6 @@ export async function validateVersionState(options: ValidateVersionStateOptions)
     }
   }
 
-  // === BUILD EXPECTED STATE ===
   const expected: ExpectedVersionState = {
     version: state.nextVersion,
     bumpType: <'major' | 'minor' | 'patch' | 'none'>state.bumpType,
@@ -176,7 +172,6 @@ export async function validateVersionState(options: ValidateVersionStateOptions)
     commitCount: state.commits?.length ?? 0,
   }
 
-  // === READ ACTUAL STATE ===
   const pkg = readPackageJsonIfExists(packageJsonPath)
   if (!pkg) {
     return {
@@ -187,7 +182,6 @@ export async function validateVersionState(options: ValidateVersionStateOptions)
     }
   }
 
-  // Parse changelog if it exists
   let actualHasVersionEntry = false
   let actualChangelogEntry: ChangelogEntry | undefined
   if (existsSync(changelogPath)) {
@@ -207,10 +201,8 @@ export async function validateVersionState(options: ValidateVersionStateOptions)
     changelogEntry: actualChangelogEntry,
   }
 
-  // === COMPARE STATES ===
   const discrepancies: Discrepancy[] = []
 
-  // Check version match
   if (actual.version !== expected.version) {
     discrepancies.push({
       file: 'package.json',
@@ -221,7 +213,6 @@ export async function validateVersionState(options: ValidateVersionStateOptions)
     })
   }
 
-  // Check changelog entry exists
   if (!actual.hasVersionEntry) {
     discrepancies.push({
       file: 'CHANGELOG.md',
@@ -231,7 +222,6 @@ export async function validateVersionState(options: ValidateVersionStateOptions)
       remedy: `Run: npx nx version ${projectName}\nThis will generate the changelog entry`,
     })
   } else if (expected.changelogEntry && actual.changelogEntry) {
-    // Check changelog entry content matches
     if (!isEntryEqual(expected.changelogEntry, actual.changelogEntry)) {
       discrepancies.push({
         file: 'CHANGELOG.md',
@@ -243,7 +233,6 @@ export async function validateVersionState(options: ValidateVersionStateOptions)
     }
   }
 
-  // === RETURN RESULT ===
   if (discrepancies.length === 0) {
     return {
       status: 'valid',
@@ -305,7 +294,6 @@ export function formatValidationResult(result: VersionValidationResult): string 
       }
       lines.push('')
       lines.push('Remedy:')
-      // Use the first discrepancy's remedy (they should be similar)
       if (result.discrepancies.length > 0) {
         lines.push(
           result.discrepancies[0].remedy

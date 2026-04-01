@@ -6,7 +6,6 @@ const TEST_DIR = join(__dirname, '__test_dir_fixtures__')
 
 describe('core/fs/directory', () => {
   beforeAll(() => {
-    // Create test fixtures
     rmSync(TEST_DIR, { recursive: true, force: true })
     mkdirSync(TEST_DIR, { recursive: true })
     mkdirSync(join(TEST_DIR, 'subdir'))
@@ -20,7 +19,6 @@ describe('core/fs/directory', () => {
   })
 
   afterAll(() => {
-    // Clean up test fixtures
     rmSync(TEST_DIR, { recursive: true, force: true })
   })
 
@@ -80,7 +78,7 @@ describe('core/fs/directory', () => {
       const names = entries.map((e) => e.name)
       expect(names).toContain('file1.txt')
       expect(names).toContain('subdir')
-      expect(names).not.toContain('file3.txt') // in subdir
+      expect(names).not.toContain('file3.txt')
     })
 
     it('respects maxDepth: 1 to include subdir but not deeply nested', () => {
@@ -88,8 +86,8 @@ describe('core/fs/directory', () => {
       const names = entries.map((e) => e.name)
       expect(names).toContain('file1.txt')
       expect(names).toContain('subdir')
-      expect(names).toContain('file3.txt') // in subdir at depth 1
-      expect(names).not.toContain('file4.txt') // in subdir/nested at depth 2
+      expect(names).toContain('file3.txt')
+      expect(names).not.toContain('file4.txt')
     })
 
     it('includes depth information', () => {

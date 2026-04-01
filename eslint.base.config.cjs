@@ -155,9 +155,21 @@ module.exports = [
       'workspace/no-enum': 'error',
       'workspace/no-async-fs-api': 'error',
       'workspace/no-deprecated-tag': 'error',
+      'workspace/no-todo-comments': 'error',
       'workspace/no-unsafe-regex': 'error',
       'workspace/prefer-exec-file-sync': 'error',
       'workspace/deepest-import-path': 'error',
+      'workspace/no-section-dividers': 'error',
+      'workspace/no-decorative-header-comments': 'error',
+      'workspace/prefer-jsdoc-over-trailing-comments': 'error',
+      'workspace/no-plain-inline-comments': 'error',
+      'workspace/max-file-lines': [
+        'warn',
+        {
+          maxLines: 750,
+          maxLinesTest: 1800,
+        },
+      ],
     },
   },
   {
@@ -230,6 +242,17 @@ module.exports = [
     language: 'markdown/gfm',
     rules: {
       'workspace/lib-readme-structure': 'error',
+    },
+  },
+  {
+    files: ['LIBRARY_COMPATIBILITY.md'],
+    plugins: {
+      workspace: eslintRules,
+      markdown: require('@eslint/markdown').default,
+    },
+    language: 'markdown/gfm',
+    rules: {
+      'workspace/lib-compatibility-docs': 'error',
     },
   },
 ]

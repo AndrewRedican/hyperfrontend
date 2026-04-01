@@ -61,7 +61,6 @@ describe('deriveProjectScopes', () => {
         projectName: 'lib-versioning',
         packageName: '@hyperfrontend/versioning',
       })
-      // 'versioning' appears from both project name and package name
       const versioningCount = scopes.filter((s) => s === 'versioning').length
       expect(versioningCount).toBe(1)
     })
@@ -185,7 +184,7 @@ describe('custom prefixes', () => {
       projectName: 'lib-auth',
       prefixes: ['pkg-'],
     })
-    expect(scopes).toEqual(['lib-auth']) // No 'auth' - 'lib-' not in custom prefixes
+    expect(scopes).toEqual(['lib-auth'])
   })
 
   it('handles empty prefixes array', () => {
@@ -193,7 +192,7 @@ describe('custom prefixes', () => {
       projectName: 'lib-auth',
       prefixes: [],
     })
-    expect(scopes).toEqual(['lib-auth']) // No prefix stripping
+    expect(scopes).toEqual(['lib-auth'])
   })
 
   it('uses default prefixes when not specified', () => {

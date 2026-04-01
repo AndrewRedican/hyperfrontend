@@ -1,8 +1,3 @@
-/**
- * Shared test fixtures for data creator tests.
- * These fixtures are used by both Node.js and browser test suites.
- */
-
 export interface DataCreatorTestCase {
   description: string
   pid: string

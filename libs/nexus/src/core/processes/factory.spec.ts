@@ -99,15 +99,12 @@ describe('createProcessManager', () => {
       const processId1 = manager1.create(channel1)
       const processId2 = manager2.create(channel2)
 
-      // Since mocked uuidV4 returns same value, processId1 === processId2
-      // But they're stored in separate Maps, so each manager should only see its own channel
       expect(manager1.get(processId1)).toBe(channel1)
       expect(manager2.get(processId2)).toBe(channel2)
 
-      // Clearing one manager shouldn't affect the other
       manager1.clear()
       expect(manager1.get(processId1)).toBeUndefined()
-      expect(manager2.get(processId2)).toBe(channel2) // Still present in manager2
+      expect(manager2.get(processId2)).toBe(channel2)
     })
   })
 

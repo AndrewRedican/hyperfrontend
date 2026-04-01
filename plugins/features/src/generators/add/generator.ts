@@ -167,7 +167,6 @@ export async function addGenerator(tree: Tree, options: AddGeneratorSchema) {
   log('Host project:', options.project)
   log('Install method:', options.installMethod)
 
-  // Implementation placeholder
   return () => {
     log('Feature consumption setup complete!')
   }

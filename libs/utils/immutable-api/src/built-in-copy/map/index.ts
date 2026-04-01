@@ -10,7 +10,6 @@
  * @module @hyperfrontend/immutable-api-utils/built-in-copy/map
  */
 
-// Capture references at module initialization time
 const _Map = globalThis.Map
 const _Reflect = globalThis.Reflect
 const _freeze = globalThis.Object.freeze

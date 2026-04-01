@@ -36,7 +36,6 @@ function findDeprecatedTagIndex(comment: string): number {
     const index = lowerComment.indexOf(DEPRECATED_TAG, searchStart)
     if (index === -1) return -1
 
-    // Check that this is a complete tag (followed by whitespace, *, or end)
     const charAfter = comment[index + DEPRECATED_TAG.length]
     if (TAG_TERMINATORS.has(charAfter)) {
       return index
@@ -75,7 +74,6 @@ export default createRule<[], MessageIds>({
           const tagIndex = findDeprecatedTagIndex(comment.value)
           if (tagIndex === -1) continue
 
-          // Calculate precise location: +2 for /*, then tagIndex for position in comment
           const tagStart = comment.range[0] + 2 + tagIndex
           const tagEnd = tagStart + DEPRECATED_TAG.length
 

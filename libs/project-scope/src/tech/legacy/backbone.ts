@@ -20,26 +20,22 @@ export function backboneDetector(projectPath: string, packageJson?: PackageJson)
 
   const deps = collectAllDependencies(pkg)
 
-  // Backbone package
   if (deps['backbone']) {
     confidence += 70
     version = parseVersionString(deps['backbone'])
     sources.push({ type: 'package.json', field: 'dependencies.backbone' })
 
-    // Underscore (commonly used with Backbone)
     if (deps['underscore']) {
       confidence += 15
       sources.push({ type: 'package.json', field: 'dependencies.underscore' })
     }
 
-    // Lodash can be used as underscore replacement
     if (deps['lodash']) {
       confidence += 5
       sources.push({ type: 'package.json', field: 'dependencies.lodash' })
     }
   }
 
-  // Marionette (Backbone framework)
   if (deps['backbone.marionette'] || deps['marionette']) {
     confidence += 10
     sources.push({ type: 'package.json', field: 'dependencies.backbone.marionette' })

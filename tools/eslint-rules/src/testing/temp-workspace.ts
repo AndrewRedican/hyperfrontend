@@ -191,10 +191,8 @@ export function createTempWorkspace(config: TempWorkspaceConfig = {}): TempWorks
     logger.debug(`Created directory: ${relativePath}`)
   }
 
-  // Create default src directory (common pattern)
   mkdirSync(join(root, 'src'), { recursive: true, mode: 0o700 })
 
-  // Write standard files
   if (config.projectJson) {
     writeJsonFile('project.json', config.projectJson)
   }
@@ -211,14 +209,12 @@ export function createTempWorkspace(config: TempWorkspaceConfig = {}): TempWorks
     writeJsonFile('tsconfig.json', config.tsconfigJson)
   }
 
-  // Create additional directories
   if (config.directories) {
     for (const dir of config.directories) {
       createDirectory(dir)
     }
   }
 
-  // Write additional files
   if (config.files) {
     for (const [relativePath, content] of entries(config.files)) {
       writeFile(relativePath, content)

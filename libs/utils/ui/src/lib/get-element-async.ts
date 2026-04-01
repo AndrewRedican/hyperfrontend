@@ -82,10 +82,8 @@ export function getElementAsync(elementRefOrString: ElementRefOrString, options?
     }
   }
 
-  // Start checking for the element
   timer = setInterval(checkElement, interval)
 
-  // Set a timeout to stop checking after the specified duration
   timeout = setTimeout(() => {
     cleanup()
     const element = getElement()
@@ -93,7 +91,6 @@ export function getElementAsync(elementRefOrString: ElementRefOrString, options?
     invoke(element ? onSuccess : onFail, element)
   }, duration)
 
-  // Return a function to cancel the operation
   return () => {
     isCancelled = true
     cleanup()

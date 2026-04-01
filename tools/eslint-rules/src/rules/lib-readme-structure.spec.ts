@@ -237,7 +237,6 @@ Content here`
 A short description here.
 
 ## Section`
-      // badgesEndLine = 2 means badges end at line 2, start searching from line 3 (index 2)
       const result = extractShortDescription(content, 2)
       expect(result).toEqual({ text: 'A short description here.', line: 4 })
     })
@@ -246,7 +245,6 @@ A short description here.
       const content = `</p>
 
 ## Section`
-      // Start after line 1 (where badges end), first non-empty line is ## Section (a header)
       const result = extractShortDescription(content, 1)
       expect(result).toBeNull()
     })
@@ -256,7 +254,6 @@ A short description here.
 </p>
 <div>skip me</div>
 A description`
-      // Start after line 2 (index 1), should skip </p> and <div> and find A description
       const result = extractShortDescription(content, 2)
       expect(result?.text).toBe('A description')
     })
@@ -335,13 +332,10 @@ Content
 ## Section 2`
       const sections = parseMarkdownSections(content)
 
-      // With the new logic, # Title (level 1) ends at line 4 (end of file) since no other level 1 heading exists
       expect(sections[0].startLine).toBe(1)
       expect(sections[0].endLine).toBe(4)
-      // ## Section 1 (level 2) ends before ## Section 2
       expect(sections[1].startLine).toBe(2)
       expect(sections[1].endLine).toBe(3)
-      // ## Section 2 goes to end
       expect(sections[2].startLine).toBe(4)
       expect(sections[2].endLine).toBe(4)
     })
@@ -360,7 +354,6 @@ Content 2
 ## Next Parent`
       const sections = parseMarkdownSections(content)
 
-      // Parent Section should include both children
       const parent = sections[0]
       expect(parent.title).toBe('Parent Section')
       expect(parent.level).toBe(2)
@@ -368,7 +361,6 @@ Content 2
       const child1 = sections[1]
       const child2 = sections[2]
 
-      // Children should be within parent's range
       expect(child1.startLine).toBeGreaterThan(parent.startLine)
       expect(child1.startLine).toBeLessThan(parent.endLine)
       expect(child2.startLine).toBeGreaterThan(parent.startLine)
@@ -448,7 +440,7 @@ Content 2
         projectJson: {
           name: 'lib-test',
           projectType: 'library',
-          targets: { build: {} }, // No publish target
+          targets: { build: {} },
         },
       })
       const context = {
@@ -573,7 +565,6 @@ npm install
       // @ts-expect-error - partial mock
       listener.root?.(mockNode)
 
-      // Should report missing What is, Why Use, Quick Start, API Overview, Compatibility
       const missingCalls = reportMock.mock.calls.filter((call) => call[0].messageId === 'missingSection')
       expect(missingCalls.length).toBeGreaterThanOrEqual(5)
     })
@@ -722,7 +713,7 @@ Compatible.
       listener.root?.(mockNode)
 
       const subCalls = reportMock.mock.calls.filter((call) => call[0].messageId === 'missingSubsection')
-      expect(subCalls.length).toBe(2) // Key Features and Architecture Highlights
+      expect(subCalls.length).toBe(2)
     })
 
     it('reports missing key features bullet list', () => {

@@ -49,15 +49,12 @@ export function parseRange(input: string): ParseRangeResult {
     return { success: false, error: `Range string exceeds maximum length of ${MAX_RANGE_LENGTH}` }
   }
 
-  // Trim whitespace
   const trimmed = input.trim()
 
-  // Handle wildcard/any
   if (trimmed === '' || trimmed === '*' || trimmed.toLowerCase() === 'x') {
     return { success: true, range: createRange([], input) }
   }
 
-  // Split by || for OR logic
   const orParts = splitByOr(trimmed)
   const sets: ComparatorSet[] = []
 
@@ -88,10 +85,6 @@ export function parseRangeStrict(input: string): Range {
   }
   return result.range
 }
-
-// ============================================================================
-// Internal parsing helpers
-// ============================================================================
 
 interface SetResult {
   success: boolean
@@ -133,12 +126,11 @@ function splitByOr(input: string): string[] {
  */
 function parseComparatorSet(input: string): SetResult {
   if (!input || input.trim() === '') {
-    return { success: true } // Empty set matches any
+    return { success: true }
   }
 
   const trimmed = input.trim()
 
-  // Check for hyphen range: "1.0.0 - 2.0.0"
   const hyphenMatch = parseHyphenRange(trimmed)
   if (hyphenMatch.isHyphenRange) {
     if (!hyphenMatch.success) {
@@ -147,7 +139,6 @@ function parseComparatorSet(input: string): SetResult {
     return { success: true, set: hyphenMatch.set }
   }
 
-  // Split by whitespace for AND logic
   const tokens = splitByWhitespace(trimmed)
   const comparators: Comparator[] = []
 
@@ -162,7 +153,7 @@ function parseComparatorSet(input: string): SetResult {
   }
 
   if (comparators.length === 0) {
-    return { success: true } // Empty matches any
+    return { success: true }
   }
 
   return { success: true, set: createComparatorSet(comparators) }
@@ -182,7 +173,6 @@ interface HyphenResult {
  * @returns Hyphen range parsing result
  */
 function parseHyphenRange(input: string): HyphenResult {
-  // Look for " - " (space-hyphen-space)
   let hyphenPos = -1
 
   for (let i = 0; i < input.length - 2; i++) {
@@ -209,7 +199,6 @@ function parseHyphenRange(input: string): HyphenResult {
     return { isHyphenRange: true, success: false, error: `Invalid right side of hyphen range: "${rightPart}"` }
   }
 
-  // Hyphen range: >=left <=right
   const comparators: Comparator[] = [createComparator('>=', leftVersion), createComparator('<=', rightVersion)]
 
   return {
@@ -263,7 +252,6 @@ function parseSingleComparator(token: string): ComparatorResult {
   let pos = 0
   let operator: RangeOperator = '='
 
-  // Parse operator
   if (token[pos] === '^') {
     operator = '^'
     pos++
@@ -293,24 +281,19 @@ function parseSingleComparator(token: string): ComparatorResult {
 
   const versionPart = token.slice(pos)
 
-  // Handle wildcards: *, x, X
   if (versionPart === '*' || versionPart.toLowerCase() === 'x') {
-    // Wildcard matches any - return empty (will be handled as match-all)
     return { success: true, comparators: [] }
   }
 
-  // Handle x-ranges: 1.x, 1.2.x
   if (versionPart.includes('x') || versionPart.includes('X') || versionPart.includes('*')) {
     return parseXRange(versionPart, operator)
   }
 
-  // Parse version
   const version = parseSimpleVersion(versionPart)
   if (!version) {
     return { success: false, error: `Invalid version in comparator: "${versionPart}"` }
   }
 
-  // For caret and tilde, expand to range
   if (operator === '^') {
     return expandCaretRange(version)
   }
@@ -330,7 +313,7 @@ function parseSingleComparator(token: string): ComparatorResult {
  * @returns Comparator result
  */
 function parseXRange(input: string, _operator: RangeOperator): ComparatorResult {
-  void _operator // Unused but kept for interface consistency with other range parsers
+  void _operator
   const parts = input.split('.')
   const nums: number[] = []
 
@@ -347,18 +330,15 @@ function parseXRange(input: string, _operator: RangeOperator): ComparatorResult 
   }
 
   if (nums.length === 0) {
-    // * or X alone - match any
     return { success: true, comparators: [] }
   }
 
   if (nums.length === 1) {
-    // 1.x or 1.* -> >=1.0.0 <2.0.0
     const lower = createSemVer({ major: nums[0], minor: 0, patch: 0 })
     const upper = createSemVer({ major: nums[0] + 1, minor: 0, patch: 0 })
     return { success: true, comparators: [createComparator('>=', lower), createComparator('<', upper)] }
   }
 
-  // 1.2.x -> >=1.2.0 <1.3.0
   const lower = createSemVer({ major: nums[0], minor: nums[1], patch: 0 })
   const upper = createSemVer({ major: nums[0], minor: nums[1] + 1, patch: 0 })
   return { success: true, comparators: [createComparator('>=', lower), createComparator('<', upper)] }
@@ -377,15 +357,12 @@ function expandCaretRange(version: SemVer): ComparatorResult {
 
   if (version.major === 0) {
     if (version.minor === 0) {
-      // ^0.0.x -> >=0.0.x <0.0.(x+1)
       upperPatch = version.patch + 1
       upperMinor = version.minor
     } else {
-      // ^0.x.y -> >=0.x.y <0.(x+1).0
       upperMinor = version.minor + 1
     }
   } else {
-    // ^x.y.z -> >=x.y.z <(x+1).0.0
     upperMajor = version.major + 1
   }
 
@@ -421,7 +398,6 @@ function parseSimpleVersion(input: string): SemVer | null {
 
   let pos = 0
 
-  // Skip leading v
   if (input[pos] === 'v' || input[pos] === 'V') {
     pos++
   }
@@ -431,7 +407,6 @@ function parseSimpleVersion(input: string): SemVer | null {
 
   const nums: number[] = []
   for (const part of parts) {
-    // Stop at prerelease or build
     const dashIdx = part.indexOf('-')
     const plusIdx = part.indexOf('+')
     let numPart = part

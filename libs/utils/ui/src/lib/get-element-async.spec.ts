@@ -107,7 +107,6 @@ describe('getElementAsync', () => {
     cancel()
     jest.runAllTimers()
 
-    // Advance timers by 100ms
     jest.advanceTimersByTime(100)
 
     expect(onSuccess).not.toHaveBeenCalled()
@@ -118,7 +117,6 @@ describe('getElementAsync', () => {
     const mockElement = document.createElement('div')
     mockQuerySelector.mockReturnValue(mockElement)
 
-    // This tests the defensive check in invoke function
     const cancel = getElementAsync('.my-element', {})
 
     expect(() => {

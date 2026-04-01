@@ -83,7 +83,6 @@ describe('handleAccept', () => {
 
     handleAccept(routingContext, message)
 
-    // Should send OPEN_CONNECTION
     expect(mockWindow.postMessage).toHaveBeenCalledWith(
       expect.objectContaining({
         type: '[nexus] connection-opened',
@@ -194,7 +193,6 @@ describe('handleAccept', () => {
     const channel = addChannel(mockBrokerState, registry, processManager, actions, 'test-channel', mockWindow)
     const processId = processManager.create(channel)
 
-    // Mock channel as already open
     Object.defineProperty(channel, 'isActive', { value: () => true, writable: true })
 
     const action: IAction = {
@@ -213,7 +211,6 @@ describe('handleAccept', () => {
 
     handleAccept(routingContext, message)
 
-    // Should not send any new messages
     expect((<jest.Mock>mockWindow.postMessage).mock.calls.length).toBe(postMessageCallsBefore)
   })
 
@@ -239,7 +236,6 @@ describe('handleAccept', () => {
 
     handleAccept(routingContext, message)
 
-    // Should send cancellation
     expect(mockWindow.postMessage).toHaveBeenCalledWith(
       expect.objectContaining({
         type: '[nexus] connection-request-cancelled',
@@ -254,7 +250,7 @@ describe('handleAccept', () => {
       ...mockBrokerState,
       settings: {
         ...mockBrokerState.settings,
-        securityPolicy: jest.fn(() => false), // Reject all
+        securityPolicy: jest.fn(() => false),
       },
     }
 
@@ -280,7 +276,6 @@ describe('handleAccept', () => {
 
     handleAccept(contextWithPolicy, message)
 
-    // Should send cancellation
     expect(mockWindow.postMessage).toHaveBeenCalledWith(
       expect.objectContaining({
         type: '[nexus] connection-request-cancelled',
@@ -289,7 +284,6 @@ describe('handleAccept', () => {
       expect.any(String)
     )
 
-    // Security policy should have been called
     expect(stateWithPolicy.settings.securityPolicy).toHaveBeenCalledWith(message)
   })
 
@@ -298,7 +292,7 @@ describe('handleAccept', () => {
       ...mockBrokerState,
       settings: {
         ...mockBrokerState.settings,
-        securityPolicy: jest.fn(() => true), // Allow all
+        securityPolicy: jest.fn(() => true),
       },
     }
 
@@ -324,7 +318,6 @@ describe('handleAccept', () => {
 
     handleAccept(contextWithPolicy, message)
 
-    // Should send OPEN_CONNECTION
     expect(mockWindow.postMessage).toHaveBeenCalledWith(
       expect.objectContaining({
         type: '[nexus] connection-opened',

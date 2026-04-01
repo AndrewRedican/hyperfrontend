@@ -45,10 +45,8 @@ export function validateAnyOf(instance: unknown, schema: Schema, ctx: Validation
     return true
   }
 
-  // Try each schema - if any matches, we pass
   for (const subSchema of anyOf) {
     const subCtx = createValidationContext(ctx.rootSchema, ctx.validate, false)
-    // Copy path from parent context
     defineProperty(subCtx, 'path', { value: ctx.path, writable: false })
     if (ctx.validate(instance, subSchema, subCtx)) {
       return true
@@ -80,7 +78,7 @@ export function validateOneOf(instance: unknown, schema: Schema, ctx: Validation
     defineProperty(subCtx, 'path', { value: ctx.path, writable: false })
     if (ctx.validate(instance, subSchema, subCtx)) {
       matchCount++
-      if (matchCount > 1) break // Early exit if more than one match
+      if (matchCount > 1) break
     }
   }
 
@@ -117,7 +115,6 @@ export function validateNot(instance: unknown, schema: Schema, ctx: ValidationCo
   defineProperty(subCtx, 'path', { value: ctx.path, writable: false })
 
   if (ctx.validate(instance, not, subCtx)) {
-    // Schema matched when it shouldn't have
     addError(ctx, 'Value should NOT match the schema', instance, 'not')
     return false
   }

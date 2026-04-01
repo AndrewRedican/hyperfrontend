@@ -11,34 +11,26 @@ const ruleTester = createTypeScriptRuleTester()
  * Valid test cases - named imports, default imports, type imports, and allowed exceptions
  */
 const validCases: ValidTestCase<TestOptions>[] = [
-  // Named imports
   { code: `import { readFile } from 'node:fs'` },
   { code: `import { join, resolve } from 'node:path'` },
   { code: `import { debounce, throttle } from 'lodash'` },
 
-  // Default imports
   { code: `import express from 'express'` },
   { code: `import React from 'react'` },
 
-  // Type imports
   { code: `import type { Stats } from 'node:fs'` },
   { code: `import type { Request, Response } from 'express'` },
 
-  // Mixed default and named
   { code: `import React, { useState } from 'react'` },
 
-  // Relative imports
   { code: `import { helper } from './helper'` },
   { code: `import { config } from '../config'` },
 
-  // Side-effect imports
   { code: `import './polyfill'` },
 
-  // EXCEPTIONS - Type-only namespace imports are allowed
   { code: `import type * as actions from './actions'` },
   { code: `import type * as Types from './types'` },
 
-  // EXCEPTIONS - JSON file imports are allowed
   { code: `import * as schema from './schema.json'` },
   { code: `import * as config from '../config.json'` },
   { code: `import * as v4Schema from './v4.json'` },

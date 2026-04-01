@@ -50,7 +50,6 @@ const rule: Rule.RuleModule = {
     const filePath = context.filename
     const projectRoot = dirname(filePath)
 
-    // Only apply to publishable libraries
     /* istanbul ignore next - only publishable libraries are linted via config */
     if (!isPublishableLibrary(projectRoot)) {
       return {}

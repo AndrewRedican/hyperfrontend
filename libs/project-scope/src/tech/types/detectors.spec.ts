@@ -175,7 +175,6 @@ describe('typescriptDetector with fixtures', () => {
   it('detects tsconfig variants', () => {
     const result = typescriptDetector(TYPESCRIPT_STRICT)
 
-    // tsconfig.build.json should be detected
     expect(result?.detectedFrom.some((s) => s.path?.includes('tsconfig.build.json'))).toBe(true)
   })
 })
@@ -229,7 +228,6 @@ describe('jsdocDetector with fixtures', () => {
   it('detects JSDoc annotations in source files', () => {
     const result = jsdocDetector(JSDOC_PROJECT)
 
-    // Should detect JSDoc annotations in src/index.js
     expect(result?.detectedFrom.some((s) => s.path?.includes('JSDoc annotations'))).toBe(true)
   })
 
@@ -271,10 +269,8 @@ describe('typescriptDetector edge cases', () => {
   it('handles invalid tsconfig.json gracefully', () => {
     const result = typescriptDetector(INVALID_TSCONFIG)
 
-    // Should still detect TypeScript but strictMode should be undefined
     expect(result).not.toBeNull()
     expect(result?.id).toBe('typescript')
-    // strictMode should be undefined or false when tsconfig is invalid
     expect(result?.strictMode === undefined || result?.strictMode === false).toBe(true)
   })
 
@@ -284,7 +280,6 @@ describe('typescriptDetector edge cases', () => {
       version: '1.0.0',
       devDependencies: { typescript: '^5.0.0' },
     }
-    // Path without tsconfig.json
     const result = typescriptDetector('/non/existent/path', pkg)
 
     expect(result).not.toBeNull()

@@ -137,7 +137,6 @@ export function createValueCreator(
       },
     })
 
-    // Freeze to prevent addition of new properties
     return freeze(vault)
   }
 }
