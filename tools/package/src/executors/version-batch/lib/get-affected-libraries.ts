@@ -29,7 +29,6 @@ export async function getAffectedLibraries(
     return []
   }
 
-  // Map files to projects
   const affectedProjects = createSet<string>()
 
   for (const file of changedFiles) {
@@ -39,14 +38,12 @@ export async function getAffectedLibraries(
     }
   }
 
-  // Filter to libraries with version target
   const librariesWithVersionTarget = from(affectedProjects).filter((projectName) => {
     const project = projectGraph.nodes[projectName]
     if (!project) {
       return false
     }
 
-    // Check if project has a version target
     const targets = project.data?.targets
     return targets && 'version' in targets
   })
@@ -65,11 +62,8 @@ export async function getAffectedLibraries(
  * @returns Project name or null if not found
  */
 function findProjectForFile(filePath: string, projectGraph: ProjectGraph): string | null {
-  // Normalize path separators
   const normalizedPath = filePath.replace(/\\/g, '/')
 
-  // Find the project whose root is a prefix of the file path
-  // Sort by root length descending to find the most specific match
   const projects = entries(projectGraph.nodes)
     .map(([name, node]) => ({
       name,

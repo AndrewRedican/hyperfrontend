@@ -18,16 +18,13 @@ export async function createBatchCommit(workspaceRoot: string, files: string[], 
     throw createError('No libraries to include in commit message')
   }
 
-  // Stage all modified files
   const staged = stage(files, { cwd: workspaceRoot })
   if (!staged) {
     throw createError('Failed to stage files for commit')
   }
 
-  // Create commit message
   const commitMessage = formatBatchCommitMessage(libraries)
 
-  // Create commit with --no-verify to skip hooks (we're creating the version commit)
   const gitCommit = commit(commitMessage, { cwd: workspaceRoot, noVerify: true })
 
   return gitCommit.hash

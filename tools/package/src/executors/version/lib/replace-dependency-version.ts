@@ -58,11 +58,9 @@ function isTgzReference(value: string, tgzPrefix: string): boolean {
  * @returns The updated value with the new tgz filename
  */
 function replaceTgzInValue(value: string, tgzPrefix: string, newTgzName: string): string {
-  // Find the start of the tgz filename (after the last / or after "file:")
   const lastSlashIndex = value.lastIndexOf('/')
   const tgzStartIndex = lastSlashIndex >= 0 ? lastSlashIndex + 1 : value.indexOf(':') + 1
 
-  // Extract the path prefix and replace the tgz filename
   const pathPrefix = value.substring(0, tgzStartIndex)
   return pathPrefix + newTgzName
 }

@@ -44,7 +44,6 @@ export default async function versionExecutor(options: VersionExecutorSchema, co
 
   logger.debug(`Executor started with log level: {logLevel}`)
 
-  // Delegate to core versioning logic
   const result = await runVersionForProject({
     projectName,
     workspaceRoot,

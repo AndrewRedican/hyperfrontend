@@ -20,10 +20,9 @@ import { getLogger } from './lib/logger'
 import { generatePackageJson, readProjectPackageJson, hasFunding } from './lib/package-json'
 import { resolveOutputPath, resolveTsConfigPath } from './lib/paths'
 
-// Memory thresholds in MB
 const MEMORY_WARNING_THRESHOLD_MB = 512
 const MEMORY_CRITICAL_THRESHOLD_MB = 768
-const MEMORY_GROWTH_WARNING_MB = 50 // Warn if single operation grows heap by this much
+const MEMORY_GROWTH_WARNING_MB = 50
 
 /**
  * Memory snapshot for tracking usage over time.
@@ -175,10 +174,8 @@ class MemoryMonitor {
   async recover(context: string): Promise<void> {
     const before = this.snapshot()
 
-    // Try explicit GC if available
     const gcTriggered = this.tryGC()
 
-    // Yield to event loop
     await createPromise<void>((resolve) => setImmediate(resolve))
 
     const after = this.snapshot()
@@ -232,12 +229,10 @@ async function executeRollupConfig(
     }
   } finally {
     await bundle.close()
-    // Clear bundle reference immediately for GC
     // eslint-disable-next-line no-useless-assignment -- intentional: GC hint
     bundle = <never>null
   }
 
-  // Clear config reference (caller's copy remains)
   const configKeys = <(keyof RollupOptions)[]>keys(config)
   for (const key of configKeys) {
     ;(<Record<string, unknown>>config)[key] = undefined
@@ -266,7 +261,6 @@ async function buildSingleEntry(
   logger: ReturnType<typeof getLogger>,
   memMonitor: MemoryMonitor
 ): Promise<void> {
-  // Create config just-in-time for this entry
   let rollupConfig: RollupOptions | null =
     format === 'ESM'
       ? createESMEntryConfig(entry, <ESMConfig>config, buildContext)
@@ -274,11 +268,9 @@ async function buildSingleEntry(
 
   await executeRollupConfig(rollupConfig, entry.exportPath, logger, memMonitor)
 
-  // Clear the config reference
   // eslint-disable-next-line no-useless-assignment -- intentional: GC hint
   rollupConfig = null
 
-  // Recover memory between entries
   await memMonitor.recover(`after:${entry.exportPath}`)
 }
 
@@ -298,7 +290,6 @@ export default async function runExecutor(options: BuildExecutorOptions, context
   const logger = getLogger()
   logger.setLogLevel(options.verbose ?? false)
 
-  // Initialize memory monitor
   const memMonitor = new MemoryMonitor(logger)
   memMonitor.logDebug('executor-start')
 
@@ -383,7 +374,6 @@ export default async function runExecutor(options: BuildExecutorOptions, context
   const buildStart = dateNow()
 
   try {
-    // Build ESM - one entry at a time for memory efficiency
     for (const esmConfig of esmConfigs) {
       const entries = resolveEntries(esmConfig, discovery.entryPoints)
       if (entries.length > 0) {
@@ -402,7 +392,6 @@ export default async function runExecutor(options: BuildExecutorOptions, context
       }
     }
 
-    // Build CJS - one entry at a time for memory efficiency
     for (const cjsConfig of cjsConfigs) {
       const entries = resolveEntries(cjsConfig, discovery.entryPoints)
       if (entries.length > 0) {
@@ -421,7 +410,6 @@ export default async function runExecutor(options: BuildExecutorOptions, context
       }
     }
 
-    // Build IIFE - one at a time for memory safety
     for (const iifeConfig of iifeConfigs) {
       const entries = resolveEntries(iifeConfig, discovery.entryPoints)
       if (entries.length > 0) {
@@ -446,7 +434,6 @@ export default async function runExecutor(options: BuildExecutorOptions, context
       }
     }
 
-    // Build UMD - one at a time for memory safety
     for (const umdConfig of umdConfigs) {
       const entries = resolveEntries(umdConfig, discovery.entryPoints)
       if (entries.length > 0) {
@@ -471,10 +458,8 @@ export default async function runExecutor(options: BuildExecutorOptions, context
       }
     }
 
-    // Recover memory before declarations
     await memMonitor.recover('pre-declarations')
 
-    // Generate declarations
     logger.debug('Generating TypeScript declarations...')
     memMonitor.check('declarations-start')
     logger.timed('TypeScript declarations', () => {
@@ -482,11 +467,9 @@ export default async function runExecutor(options: BuildExecutorOptions, context
     })
     memMonitor.check('declarations-end')
 
-    // Generate package.json
     const srcPkg = readProjectPackageJson(projectRoot)
     generatePackageJson(srcPkg, outputPath, discovery, workspaceRoot, formatOutputs, options)
 
-    // Copy assets
     copyDefaultAssets(projectRoot, outputPath, workspaceRoot)
     copyThirdPartyLicensesAsset(projectRoot, outputPath, workspaceRoot)
 

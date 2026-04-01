@@ -26,7 +26,6 @@ export async function rollbackChanges(workspaceRoot: string): Promise<void> {
  */
 export async function cleanupTags(workspaceRoot: string, tags: string[]): Promise<void> {
   for (const tag of tags) {
-    // deleteTag returns false if tag doesn't exist, which is fine
     deleteTag(tag, { cwd: workspaceRoot })
   }
 }

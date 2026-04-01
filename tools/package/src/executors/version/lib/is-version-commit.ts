@@ -27,14 +27,10 @@ export function isVersionCommit(cwd: string, projectName: string): boolean {
       return false
     }
 
-    // Check HEAD commit itself
     if (isCommitVersionCommit(commit, projectName, logger)) {
       return true
     }
 
-    // For merge commits (e.g., GitHub's synthetic PR merge commits), also check parent commits.
-    // GitHub creates merge commits like "Merge abc123 into def456" where the second parent
-    // is the actual PR branch head (which may be the version commit).
     if (commit.parents.length > 1) {
       logger.debug(`HEAD is a merge commit with ${commit.parents.length} parents, checking parent commits`)
       for (const parentHash of commit.parents) {

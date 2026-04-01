@@ -117,13 +117,11 @@ function extractOutputDirFromSourcePath(srcPath: ExportValue): string {
         (<ConditionalExport>srcPath).default ??
         '')
 
-  // Match "./src/<path>/index.[jt]s" pattern
   const subDirMatch = path.match(/^\.\/src\/(.+?)\/index\.[jt]s$/)
   if (subDirMatch && subDirMatch[1]) {
     return subDirMatch[1]
   }
 
-  // Match "./src/index.[jt]s" pattern (root entry)
   const rootMatch = path.match(/^\.\/src\/index\.[jt]s$/)
   if (rootMatch) {
     return ''
@@ -154,12 +152,9 @@ export function generateExportsFromFormats(
   const esmPaths = createSet(formatOutputs.esm.map((e) => e.exportPath))
   const cjsPaths = createSet(formatOutputs.cjs.map((e) => e.exportPath))
 
-  // Source exports are authoritative
   const srcExports = srcPkg?.exports
   if (srcExports && typeof srcExports === 'object') {
-    // Parse source exports and generate ONLY those
     for (const [exportKey, srcPath] of entries(srcExports)) {
-      // Skip package.json export (already added)
       if (exportKey === './package.json') continue
 
       const outputDir = extractOutputDirFromSourcePath(srcPath)
@@ -172,7 +167,6 @@ export function generateExportsFromFormats(
       }
     }
   } else {
-    // No source exports: root entry only (if exists)
     if (discovery.hasRootEntry) {
       const hasEsm = esmPaths.has('.')
       const hasCjs = cjsPaths.has('.')
@@ -182,7 +176,6 @@ export function generateExportsFromFormats(
     }
   }
 
-  // Always add bundle exports from build config
   for (const iife of formatOutputs.iife) {
     const bundleDir = iife.config.output ?? 'bundle'
     exports[`./${bundleDir}`] = {
@@ -225,7 +218,6 @@ function filterWorkspaceDependencies(srcPkg: PackageJson): PackageJson {
   }
 
   // Note: peerDependencies are kept as-is since they represent optional integrations
-  // that consumers may choose to use (e.g., @hyperfrontend/network-protocol in nexus)
 
   return filtered
 }
@@ -249,7 +241,6 @@ function getCdnPaths(
     return undefined
   }
 
-  // Priority: explicit config > UMD > IIFE
   let defaultPath: string | undefined
 
   if (hasUmd) {
@@ -299,7 +290,6 @@ export function generatePackageJson(
   const hasEsm = formatOutputs.esm.some((e) => e.isRoot)
   const hasCjs = formatOutputs.cjs.some((e) => e.isRoot)
 
-  // Filter out workspace dependencies - they are bundled into the output
   const filteredSrcPkg = filterWorkspaceDependencies(srcPkg)
 
   const distPkg: PackageJson = {
@@ -309,7 +299,6 @@ export function generatePackageJson(
     exports,
   }
 
-  // Add main/module/types only if there's a root entry
   if (discovery.hasRootEntry && (hasEsm || hasCjs)) {
     if (hasCjs) {
       distPkg.main = './index.cjs.js'
@@ -323,13 +312,11 @@ export function generatePackageJson(
       distPkg.types = './index.d.ts'
     }
   } else {
-    // Ensure these aren't carried over from source package.json
     delete distPkg.main
     delete distPkg.module
     delete distPkg.types
   }
 
-  // Always add CDN paths when bundles exist (regardless of root entry)
   if (cdnPaths) {
     distPkg.unpkg = cdnPaths.unpkg
     distPkg.jsdelivr = cdnPaths.jsdelivr

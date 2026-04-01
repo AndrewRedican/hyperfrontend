@@ -184,7 +184,6 @@ function constructLicenseUrl(repositoryUrl: string | { type: string; url: string
     return null
   }
 
-  // Use the baseUrl from the parsed result and construct platform-specific paths
   switch (parsed.platform) {
     case 'github':
       return `${parsed.baseUrl}/blob/master/${licenseFileName}`

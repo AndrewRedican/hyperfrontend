@@ -48,13 +48,10 @@ export function getExternalDependencies(packageJsonPath: string, additionalExter
   const deps = keys(pkg.dependencies ?? {})
   const peerDeps = keys(pkg.peerDependencies ?? {})
 
-  // When bundleWorkspaceDeps is true, filter out workspace packages (they'll be bundled)
-  // When bundleWorkspaceDeps is false, keep ALL dependencies as external (npm-style)
   const externalRegularDeps = bundleWorkspaceDeps ? deps.filter((dep) => !isWorkspacePackage(dep)) : deps
 
   const externalAdditional = bundleWorkspaceDeps ? additionalExternal.filter((dep) => !isWorkspacePackage(dep)) : additionalExternal
 
-  // Peer dependencies are ALWAYS external (even workspace packages) since they are optional
   return from(createSet([...externalRegularDeps, ...peerDeps, ...externalAdditional]))
 }
 
