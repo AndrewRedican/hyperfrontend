@@ -1,3 +1,4 @@
+import type { FileChange } from './types'
 import { mkdirSync, writeFileSync, rmSync, symlinkSync } from 'node:fs'
 import { join } from 'node:path'
 import { createFsTree } from './fs-tree'
@@ -128,18 +129,20 @@ describe('vfs/FsTree', () => {
       const tree = createFsTree(TEST_DIR)
       tree.write('new-file.txt', 'new content')
       const changes = tree.listChanges()
+      const first = <FileChange>changes[0]
       expect(changes).toHaveLength(1)
-      expect(changes[0].type).toBe('CREATE')
-      expect(changes[0].path).toBe('new-file.txt')
+      expect(first.type).toBe('CREATE')
+      expect(first.path).toBe('new-file.txt')
     })
 
     it('buffers file update', () => {
       const tree = createFsTree(TEST_DIR)
       tree.write('package.json', '{"updated": true}')
       const changes = tree.listChanges()
+      const first = <FileChange>changes[0]
       expect(changes).toHaveLength(1)
-      expect(changes[0].type).toBe('UPDATE')
-      expect(changes[0].originalContent).toBeDefined()
+      expect(first.type).toBe('UPDATE')
+      expect(first.originalContent).toBeDefined()
     })
 
     it('creates nested directories in changes', () => {
@@ -164,7 +167,8 @@ describe('vfs/FsTree', () => {
       const tree = createFsTree(TEST_DIR)
       tree.write('script.sh', '#!/bin/bash', { permissions: 0o755 })
       const changes = tree.listChanges()
-      expect(changes[0].mode).toBe(0o755)
+      const first = <FileChange>changes[0]
+      expect(first.mode).toBe(0o755)
     })
 
     it('handles Buffer content', () => {
@@ -216,8 +220,9 @@ describe('vfs/FsTree', () => {
       const tree = createFsTree(TEST_DIR)
       tree.delete('package.json')
       const changes = tree.listChanges()
+      const first = <FileChange>changes[0]
       expect(changes).toHaveLength(1)
-      expect(changes[0].type).toBe('DELETE')
+      expect(first.type).toBe('DELETE')
     })
 
     it('removes newly created file from changes', () => {
@@ -239,8 +244,9 @@ describe('vfs/FsTree', () => {
       const tree = createFsTree(TEST_DIR)
       tree.delete('package.json')
       const changes = tree.listChanges()
-      expect(changes[0].originalContent).toBeDefined()
-      expect(changes[0].originalContent?.toString()).toContain('test')
+      const first = <FileChange>changes[0]
+      expect(first.originalContent).toBeDefined()
+      expect(first.originalContent?.toString()).toContain('test')
     })
   })
 
@@ -364,8 +370,10 @@ describe('vfs/FsTree', () => {
       tree.write('z-file.txt', 'z')
       tree.write('a-file.txt', 'a')
       const changes = tree.listChanges()
-      expect(changes[0].path).toBe('a-file.txt')
-      expect(changes[1].path).toBe('z-file.txt')
+      const first = <FileChange>changes[0]
+      const second = <FileChange>changes[1]
+      expect(first.path).toBe('a-file.txt')
+      expect(second.path).toBe('z-file.txt')
     })
 
     it('includes all change types', () => {
@@ -383,8 +391,9 @@ describe('vfs/FsTree', () => {
       const tree = createFsTree(TEST_DIR)
       tree.changePermissions('package.json', 0o755)
       const changes = tree.listChanges()
+      const first = <FileChange>changes[0]
       expect(changes).toHaveLength(1)
-      expect(changes[0].mode).toBe(0o755)
+      expect(first.mode).toBe(0o755)
     })
 
     it('throws for non-existent file', () => {
@@ -397,8 +406,9 @@ describe('vfs/FsTree', () => {
       tree.write('script.sh', '#!/bin/bash')
       tree.changePermissions('script.sh', 0o755)
       const changes = tree.listChanges()
+      const first = <FileChange>changes[0]
       expect(changes).toHaveLength(1)
-      expect(changes[0].mode).toBe(0o755)
+      expect(first.mode).toBe(0o755)
     })
   })
 
@@ -648,7 +658,6 @@ describe('vfs/FsTree', () => {
         const linkPath = join(TEST_DIR, 'evil-relative-link')
 
         symlinkSync('../../../etc/passwd', linkPath)
-        console.log('Created symlink:', linkPath, '-> ../../../etc/passwd')
 
         expect(() => tree.read('evil-relative-link')).toThrow('Symlink target escapes tree root')
 
