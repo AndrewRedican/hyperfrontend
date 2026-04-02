@@ -3,6 +3,12 @@ const baseConfig = require('../../eslint.base.config.cjs')
 module.exports = [
   ...baseConfig,
   {
+    files: ['**/*.ts'],
+    rules: {
+      'workspace/no-direct-console': 'off',
+    },
+  },
+  {
     files: ['**/*.json'],
     rules: {
       '@nx/dependency-checks': [
