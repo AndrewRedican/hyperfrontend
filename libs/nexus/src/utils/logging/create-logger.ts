@@ -1,12 +1,5 @@
 import type { Logger, LogLevel } from '@hyperfrontend/logging'
-import {
-  error as consoleError,
-  warn as consoleWarn,
-  log as consoleLog,
-  info as consoleInfo,
-  debug as consoleDebug,
-} from '@hyperfrontend/immutable-api-utils/built-in-copy/console'
-import { createLogger as createLoggerFromLib } from '@hyperfrontend/logging'
+import { logger, createLogger as createLoggerFromLib } from '@hyperfrontend/logging'
 
 export type { Logger, LogLevel }
 
@@ -44,24 +37,17 @@ export function createLogger(options: NexusLoggerOptions = {}): Logger {
  * @returns Configured logger instance
  * @internal
  */
-function createLoggerInternal(options: NexusLoggerOptions): Logger {
+const createLoggerInternal = (options: NexusLoggerOptions): Logger => {
   const { level = 'error', prefix = DEFAULT_PREFIX, customLogger } = options
-
-  if (customLogger) {
-    return customLogger
-  }
-
-  const prefixArgs = (...args: unknown[]) => [prefix, ...args]
-
-  const error = (...args: unknown[]) => consoleError(...prefixArgs(...args))
-  const warn = (...args: unknown[]) => consoleWarn(...prefixArgs(...args))
-  const log = (...args: unknown[]) => consoleLog(...prefixArgs(...args))
-  const info = (...args: unknown[]) => consoleInfo(...prefixArgs(...args))
-  const debug = (...args: unknown[]) => consoleDebug(...prefixArgs(...args))
-
-  const logger = createLoggerFromLib(error, warn, log, info, debug)
-
-  logger.setLogLevel(level)
-
-  return logger
+  if (customLogger) return customLogger
+  logger.setLogLevel('debug')
+  const nexusLogger = createLoggerFromLib(
+    (...args: unknown[]) => logger.error(prefix, ...args),
+    (...args: unknown[]) => logger.warn(prefix, ...args),
+    (...args: unknown[]) => logger.log(prefix, ...args),
+    (...args: unknown[]) => logger.info(prefix, ...args),
+    (...args: unknown[]) => logger.debug(prefix, ...args)
+  )
+  nexusLogger.setLogLevel(level)
+  return nexusLogger
 }
