@@ -7,6 +7,7 @@ module.exports = [
     rules: {
       // Node.js type strip mode (used when require()'ing .ts files) doesn't support angle-bracket assertions - Vercel deployment issue
       'workspace/prefer-angle-bracket-assertion': 'off',
+      'workspace/no-direct-console': 'off',
     },
   },
   {

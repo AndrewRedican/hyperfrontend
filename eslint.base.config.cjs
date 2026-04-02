@@ -174,6 +174,16 @@ module.exports = [
   },
   {
     files: ['**/*.ts', '**/*.tsx'],
+    ignores: ['**/jest.config.ts', '**/jest.setup.ts', '**/jest.setup.browser.ts', '**/libs/logging/**'],
+    plugins: {
+      workspace: eslintRules,
+    },
+    rules: {
+      'workspace/no-direct-console': 'error',
+    },
+  },
+  {
+    files: ['**/*.ts', '**/*.tsx'],
     ignores: ['**/jest.config.ts', '**/jest.setup.ts', '**/jest.setup.browser.ts', '**/*.spec.ts'],
     plugins: {
       workspace: eslintRules,
