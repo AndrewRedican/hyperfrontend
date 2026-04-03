@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import type { Style } from '../style'
-import { warn } from '@hyperfrontend/immutable-api-utils/built-in-copy/console'
 import { entries } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
+import { logger } from '@hyperfrontend/logging'
 
 /**
  * Converts a CSS object into a CSS string suitable for inline styles or style sheets.
@@ -27,7 +27,7 @@ export function cssObjectToString(cssObj: Style): string {
   }, '')
 
   if (errors.length > 0) {
-    warn('Some properties failed to convert:\n' + errors.join('\n'))
+    logger.warn('Some properties failed to convert:\n' + errors.join('\n'))
   }
 
   return cssString
