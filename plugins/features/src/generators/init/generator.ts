@@ -1,6 +1,6 @@
 import type { Tree } from '@nx/devkit'
 import type { InitGeneratorSchema } from './schema'
-import { log } from '@hyperfrontend/immutable-api-utils/built-in-copy/console'
+import { logger } from '@hyperfrontend/logging'
 
 /**
  * Nx generator that initializes a project as a hyperfrontend microfrontend feature.
@@ -126,12 +126,12 @@ export async function initGenerator(tree: Tree, options: InitGeneratorSchema) {
    *      - Commands to build and test the feature
    */
 
-  log('Generating hyperfrontend feature...')
-  log('Project:', options.project)
-  log('Config path:', options.configPath)
+  logger.log('Generating hyperfrontend feature...')
+  logger.log('Project:', options.project)
+  logger.log('Config path:', options.configPath)
 
   return () => {
-    log('Feature generation complete!')
+    logger.log('Feature generation complete!')
   }
 }
 
