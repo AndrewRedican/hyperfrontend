@@ -1,10 +1,11 @@
 import type { AssetConfig, PackageJson } from './types'
 import { existsSync, mkdirSync, copyFileSync, readdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { join, dirname, basename, relative } from 'node:path'
-import { logger, readJsonFile } from '@nx/devkit'
+import { readJsonFile } from '@nx/devkit'
 import { globSync } from 'glob'
 import {keys} from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
 import { parseRepositoryUrl } from '@hyperfrontend/versioning/repository/parse'
+import { logger } from '../../../lib/logger'
 
 /** License information for a third-party dependency */
 export interface ThirdPartyLicenseEntry {

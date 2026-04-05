@@ -3,8 +3,8 @@ import type { PublishExecutorOptions } from './schema'
 import { execFileSync } from 'node:child_process'
 import { existsSync, readFileSync } from 'node:fs'
 import { join } from 'node:path'
-import { logger } from '@nx/devkit'
 import { parse } from '@hyperfrontend/immutable-api-utils/built-in-copy/json'
+import { logger } from '../../lib/logger'
 
 /**
  * Verifies the project is a publishable library.
