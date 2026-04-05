@@ -95,6 +95,29 @@ const validCases: ValidTestCase<TestOptions>[] = [
       appLogger.log('test')
     `,
   },
+  {
+    code: `
+      import { logger as nxLogger } from '@nx/devkit'
+      import { createLogger } from '@hyperfrontend/logging'
+      export const logger = createLogger(
+        nxLogger.error,
+        nxLogger.warn,
+        nxLogger.log,
+        nxLogger.info,
+        nxLogger.debug
+      )
+    `,
+  },
+  {
+    code: `
+      import { logger } from '@nx/devkit'
+      import { createLogger } from '@hyperfrontend/logging'
+      const myLogger = createLogger(logger.error, logger.warn, logger.log)
+    `,
+  },
+  { code: `import { logger } from '@nx/devkit'` },
+  { code: `import { logger as nxLogger } from '@nx/devkit'` },
+  { code: `import { logger, readJsonFile } from '@nx/devkit'` },
 ]
 
 /**
@@ -322,30 +345,6 @@ const invalidCases: InvalidTestCase<MessageIds, TestOptions>[] = [
   },
 
   {
-    code: `import { logger } from '@nx/devkit'`,
-    errors: [
-      {
-        messageId: 'noNxDevkitLogger',
-      },
-    ],
-  },
-  {
-    code: `import { logger as nxLogger } from '@nx/devkit'`,
-    errors: [
-      {
-        messageId: 'noNxDevkitLogger',
-      },
-    ],
-  },
-  {
-    code: `import { logger, readJsonFile } from '@nx/devkit'`,
-    errors: [
-      {
-        messageId: 'noNxDevkitLogger',
-      },
-    ],
-  },
-  {
     code: `
       import { logger } from '@nx/devkit'
       logger.log('test')
@@ -397,6 +396,23 @@ const invalidCases: InvalidTestCase<MessageIds, TestOptions>[] = [
       {
         messageId: 'noDisallowedLoggerUsage',
         data: { name: 'logger.debug' },
+      },
+    ],
+  },
+  {
+    code: `
+      import { logger as nxLogger } from '@nx/devkit'
+      import { createLogger } from '@hyperfrontend/logging'
+      const wrapper = createLogger(nxLogger.error, nxLogger.warn, nxLogger.log)
+      nxLogger.info('direct call')
+    `,
+    errors: [
+      {
+        messageId: 'noNxDevkitLogger',
+      },
+      {
+        messageId: 'noDisallowedLoggerUsage',
+        data: { name: 'nxLogger.info' },
       },
     ],
   },

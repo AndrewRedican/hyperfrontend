@@ -59,6 +59,12 @@ const appLogger = createLogger(error, warn, log, info, debug)
 
 appLogger.log('Custom logger initialized')
 appLogger.setLogLevel('debug') // Enable all log levels
+
+// Wrap @nx/devkit logger for Nx executor/generator integration
+import { logger as nxLogger } from '@nx/devkit'
+import { createLogger } from '@hyperfrontend/logging'
+
+export const logger = createLogger(nxLogger.error, nxLogger.warn, nxLogger.log, nxLogger.info, nxLogger.debug)
 ```
 
 ## Available APIs from @hyperfrontend/logging

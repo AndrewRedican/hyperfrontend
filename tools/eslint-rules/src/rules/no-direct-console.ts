@@ -111,6 +111,8 @@ export default createRule<[], MessageIds>({
     const nxDevkitLoggerBindings = createSet<string>()
     const immutableConsoleBindings = createSet<string>()
     const loggingLibraryBindings = createSet<string>()
+    const pendingNxDevkitImports: { specifier: TSESTree.ImportSpecifier; bindingName: string }[] = []
+    const nxDevkitBindingsWithDisallowedUsage = createSet<string>()
 
     /**
      * Checks if a node is being passed as an argument to a logging library function.
@@ -171,10 +173,7 @@ export default createRule<[], MessageIds>({
                 specifier.imported.type === AST_NODE_TYPES.Identifier ? specifier.imported.name : specifier.imported.value
 
               if (importedName === 'logger') {
-                context.report({
-                  node: specifier,
-                  messageId: 'noNxDevkitLogger',
-                })
+                pendingNxDevkitImports.push({ specifier, bindingName: specifier.local.name })
                 nxDevkitLoggerBindings.add(specifier.local.name)
               }
             }
@@ -226,6 +225,10 @@ export default createRule<[], MessageIds>({
           }
 
           if (methodName && LOGGER_METHODS.has(methodName)) {
+            if (isArgumentToLoggingLibraryCall(node, loggingLibraryBindings)) {
+              return
+            }
+            nxDevkitBindingsWithDisallowedUsage.add(objectName)
             context.report({
               node,
               messageId: 'noDisallowedLoggerUsage',
@@ -278,6 +281,17 @@ export default createRule<[], MessageIds>({
                 })
               }
             }
+          }
+        }
+      },
+
+      'Program:exit'() {
+        for (const { specifier, bindingName } of pendingNxDevkitImports) {
+          if (nxDevkitBindingsWithDisallowedUsage.has(bindingName)) {
+            context.report({
+              node: specifier,
+              messageId: 'noNxDevkitLogger',
+            })
           }
         }
       },
