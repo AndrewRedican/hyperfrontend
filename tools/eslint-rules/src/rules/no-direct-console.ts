@@ -256,7 +256,6 @@ export default createRule<[], MessageIds>({
             if (isArgumentToLoggingLibraryCall(node, loggingLibraryBindings)) {
               return
             }
-            // Allow nxLogger usage inside wrapper functions in files that import createLogger
             if (importsCreateLogger && isInsideFunctionBody(node)) {
               return
             }
