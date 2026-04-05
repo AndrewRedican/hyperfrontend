@@ -113,6 +113,7 @@ export default createRule<[], MessageIds>({
     const loggingLibraryBindings = createSet<string>()
     const pendingNxDevkitImports: { specifier: TSESTree.ImportSpecifier; bindingName: string }[] = []
     const nxDevkitBindingsWithDisallowedUsage = createSet<string>()
+    let importsCreateLogger = false
 
     /**
      * Checks if a node is being passed as an argument to a logging library function.
@@ -133,6 +134,28 @@ export default createRule<[], MessageIds>({
       return false
     }
 
+    /**
+     * Checks if a node is inside a function/arrow function body.
+     * This allows logger wrappers like `(msg) => nxLogger.error(msg)`.
+     *
+     * @param node - The AST node to check.
+     * @returns Whether the node is inside a function body.
+     */
+    function isInsideFunctionBody(node: TSESTree.Node): boolean {
+      let current: TSESTree.Node | undefined = node.parent
+      while (current) {
+        if (
+          current.type === AST_NODE_TYPES.ArrowFunctionExpression ||
+          current.type === AST_NODE_TYPES.FunctionExpression ||
+          current.type === AST_NODE_TYPES.FunctionDeclaration
+        ) {
+          return true
+        }
+        current = current.parent
+      }
+      return false
+    }
+
     return {
       ImportDeclaration(node) {
         const source = node.source.value
@@ -146,6 +169,11 @@ export default createRule<[], MessageIds>({
           for (const specifier of node.specifiers) {
             if (specifier.type === AST_NODE_TYPES.ImportSpecifier) {
               loggingLibraryBindings.add(specifier.local.name)
+              const importedName =
+                specifier.imported.type === AST_NODE_TYPES.Identifier ? specifier.imported.name : specifier.imported.value
+              if (importedName === 'createLogger') {
+                importsCreateLogger = true
+              }
             } else if (specifier.type === AST_NODE_TYPES.ImportDefaultSpecifier) {
               loggingLibraryBindings.add(specifier.local.name)
             } else if (specifier.type === AST_NODE_TYPES.ImportNamespaceSpecifier) {
@@ -226,6 +254,10 @@ export default createRule<[], MessageIds>({
 
           if (methodName && LOGGER_METHODS.has(methodName)) {
             if (isArgumentToLoggingLibraryCall(node, loggingLibraryBindings)) {
+              return
+            }
+            // Allow nxLogger usage inside wrapper functions in files that import createLogger
+            if (importsCreateLogger && isInsideFunctionBody(node)) {
               return
             }
             nxDevkitBindingsWithDisallowedUsage.add(objectName)

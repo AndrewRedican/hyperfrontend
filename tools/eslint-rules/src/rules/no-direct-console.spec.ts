@@ -118,6 +118,18 @@ const validCases: ValidTestCase<TestOptions>[] = [
   { code: `import { logger } from '@nx/devkit'` },
   { code: `import { logger as nxLogger } from '@nx/devkit'` },
   { code: `import { logger, readJsonFile } from '@nx/devkit'` },
+  {
+    code: `
+      import { logger as nxLogger } from '@nx/devkit'
+      import { createLogger } from '@hyperfrontend/logging'
+      const errorFn = (message: string) => nxLogger.error(message)
+      const warnFn = (message: string) => nxLogger.warn(message)
+      const logFn = (message: string) => nxLogger.log(message)
+      const infoFn = (message: string) => nxLogger.info(message)
+      const debugFn = (message: string) => nxLogger.debug(message)
+      export const logger = createLogger(errorFn, warnFn, logFn, infoFn, debugFn)
+    `,
+  },
 ]
 
 /**
