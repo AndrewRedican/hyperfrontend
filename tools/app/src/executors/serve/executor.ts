@@ -3,8 +3,8 @@ import type { ServeExecutorOptions } from './schema'
 import { spawn } from 'node:child_process'
 import { existsSync } from 'node:fs'
 import { join } from 'node:path'
-import { logger } from '@nx/devkit'
 import { createPromise } from '@hyperfrontend/immutable-api-utils/built-in-copy/promise'
+import { logger } from '../../lib/logger'
 
 /**
  * Serve executor for hyperfrontend application projects.
