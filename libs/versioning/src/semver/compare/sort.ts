@@ -36,10 +36,10 @@ export function sortDescending(versions: readonly SemVer[]): SemVer[] {
 export function max(versions: readonly SemVer[]): SemVer | null {
   if (versions.length === 0) return null
 
-  let maxVer = versions[0]
+  let maxVer = <SemVer>versions[0]
   for (let i = 1; i < versions.length; i++) {
-    if (compare(versions[i], maxVer) === 1) {
-      maxVer = versions[i]
+    if (compare(<SemVer>versions[i], maxVer) === 1) {
+      maxVer = <SemVer>versions[i]
     }
   }
 
@@ -55,10 +55,10 @@ export function max(versions: readonly SemVer[]): SemVer | null {
 export function min(versions: readonly SemVer[]): SemVer | null {
   if (versions.length === 0) return null
 
-  let minVer = versions[0]
+  let minVer = <SemVer>versions[0]
   for (let i = 1; i < versions.length; i++) {
-    if (compare(versions[i], minVer) === -1) {
-      minVer = versions[i]
+    if (compare(<SemVer>versions[i], minVer) === -1) {
+      minVer = <SemVer>versions[i]
     }
   }
 

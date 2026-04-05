@@ -109,10 +109,10 @@ describe('getCommitLog', () => {
     const result = getCommitLog()
 
     expect(result).toHaveLength(1)
-    expect(result[0].hash).toBe('abc1234567890def1234567890abc1234567890de')
-    expect(result[0].authorName).toBe('Jane Doe')
-    expect(result[0].authorEmail).toBe('jane@example.com')
-    expect(result[0].subject).toBe('fix: resolve bug')
+    expect(result[0]?.hash).toBe('abc1234567890def1234567890abc1234567890de')
+    expect(result[0]?.authorName).toBe('Jane Doe')
+    expect(result[0]?.authorEmail).toBe('jane@example.com')
+    expect(result[0]?.subject).toBe('fix: resolve bug')
   })
 
   it('parses multiple commits', () => {
@@ -125,9 +125,9 @@ describe('getCommitLog', () => {
     const result = getCommitLog()
 
     expect(result).toHaveLength(3)
-    expect(result[0].hash).toBe('aaa111')
-    expect(result[1].hash).toBe('bbb222')
-    expect(result[2].hash).toBe('ccc333')
+    expect(result[0]?.hash).toBe('aaa111')
+    expect(result[1]?.hash).toBe('bbb222')
+    expect(result[2]?.hash).toBe('ccc333')
   })
 
   it('parses commit with body', () => {
@@ -140,7 +140,7 @@ describe('getCommitLog', () => {
     const result = getCommitLog()
 
     expect(result).toHaveLength(1)
-    expect(result[0].body).toBe('This is a detailed description\nwith multiple lines.')
+    expect(result[0]?.body).toBe('This is a detailed description\nwith multiple lines.')
   })
 
   it('parses commit with parent hashes', () => {
@@ -152,7 +152,7 @@ describe('getCommitLog', () => {
     const result = getCommitLog()
 
     expect(result).toHaveLength(1)
-    expect(result[0].parents).toEqual(['parent1abc', 'parent2def'])
+    expect(result[0]?.parents).toEqual(['parent1abc', 'parent2def'])
   })
 
   it('parses commit with refs (branch and tag)', () => {
@@ -164,10 +164,10 @@ describe('getCommitLog', () => {
     const result = getCommitLog()
 
     expect(result).toHaveLength(1)
-    expect(result[0].refs).toContain('HEAD')
-    expect(result[0].refs).toContain('main')
-    expect(result[0].refs).toContain('v1.0.0')
-    expect(result[0].refs).toContain('origin/main')
+    expect(result[0]?.refs).toContain('HEAD')
+    expect(result[0]?.refs).toContain('main')
+    expect(result[0]?.refs).toContain('v1.0.0')
+    expect(result[0]?.refs).toContain('origin/main')
   })
 
   it('parses commit with only tag refs', () => {
@@ -179,7 +179,7 @@ describe('getCommitLog', () => {
     const result = getCommitLog()
 
     expect(result).toHaveLength(1)
-    expect(result[0].refs).toContain('v2.0.0')
+    expect(result[0]?.refs).toContain('v2.0.0')
   })
 
   it('handles empty refs string', () => {
@@ -191,7 +191,7 @@ describe('getCommitLog', () => {
     const result = getCommitLog()
 
     expect(result).toHaveLength(1)
-    expect(result[0].refs).toEqual([])
+    expect(result[0]?.refs).toEqual([])
   })
 
   it('skips records with insufficient fields', () => {
@@ -203,7 +203,7 @@ describe('getCommitLog', () => {
     const result = getCommitLog()
 
     expect(result).toHaveLength(1)
-    expect(result[0].hash).toBe('valid123')
+    expect(result[0]?.hash).toBe('valid123')
   })
 
   it('applies maxCount option', () => {

@@ -21,12 +21,18 @@ export function parseFooters(lines: string[], startIndex: number): ParsedFooters
 
   let pos = startIndex
 
-  while (pos < lines.length && lines[pos].trim() === '') {
+  while (pos < lines.length) {
+    const currentLine = lines[pos]
+    if (currentLine === undefined || currentLine.trim() !== '') break
     pos++
   }
 
   while (pos < lines.length) {
     const line = lines[pos]
+    if (line === undefined) {
+      pos++
+      continue
+    }
     const footer = parseFooterLine(line)
 
     if (footer) {
@@ -36,8 +42,10 @@ export function parseFooters(lines: string[], startIndex: number): ParsedFooters
         breakingDescription = footer.value
 
         pos++
-        while (pos < lines.length && !isNewFooter(lines[pos])) {
-          const nextLine = lines[pos]
+        while (pos < lines.length) {
+          const nextLineCheck = lines[pos]
+          if (nextLineCheck === undefined || isNewFooter(nextLineCheck)) break
+          const nextLine = nextLineCheck
           if (nextLine.trim() !== '') {
             breakingDescription += '\n' + nextLine
           }
@@ -85,8 +93,7 @@ function parseFooterLine(line: string): CommitFooter | null {
 
   const tokenStart = pos
   while (pos < trimmed.length) {
-    const char = trimmed[pos]
-    const code = char.charCodeAt(0)
+    const code = trimmed.charCodeAt(pos)
 
     if ((code >= 97 && code <= 122) || (code >= 65 && code <= 90) || (code >= 48 && code <= 57) || code === 45) {
       pos++

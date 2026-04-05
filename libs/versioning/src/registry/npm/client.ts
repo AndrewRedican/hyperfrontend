@@ -274,7 +274,7 @@ export function escapePackageName(name: string): string {
       code === 95 ||
       code === 46
     ) {
-      safe.push(name[i])
+      safe.push(<string>name[i])
     } else {
       throw createError(`Invalid character in package name at position ${i}: "${name[i]}"`)
     }
@@ -317,7 +317,7 @@ export function escapeVersion(version: string): string {
       code === 45 ||
       code === 43
     ) {
-      safe.push(version[i])
+      safe.push(<string>version[i])
     } else {
       throw createError(`Invalid character in version at position ${i}: "${version[i]}"`)
     }

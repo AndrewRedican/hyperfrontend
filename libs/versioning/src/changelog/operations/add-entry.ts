@@ -96,7 +96,7 @@ export function releaseUnreleased(changelog: Changelog, version: string, date?: 
     throw createError('No unreleased entry found')
   }
 
-  const unreleased = changelog.entries[unreleasedIndex]
+  const unreleased = <ChangelogEntry>changelog.entries[unreleasedIndex]
   const releaseDate = date ?? createDate().toISOString().split('T')[0]
 
   const releaseEntry = createChangelogEntry(version, {

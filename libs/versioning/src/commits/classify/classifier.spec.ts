@@ -498,9 +498,9 @@ describe('extractConventionalCommits', () => {
     const conventional = extractConventionalCommits(result.commits)
 
     expect(conventional).toHaveLength(2)
-    expect(conventional[0].subject).toBe('first')
-    expect(conventional[1].subject).toBe('second')
-    expect(conventional[0].type).toBe('feat')
+    expect(conventional[0]?.subject).toBe('first')
+    expect(conventional[1]?.subject).toBe('second')
+    expect(conventional[0]?.type).toBe('feat')
   })
 })
 

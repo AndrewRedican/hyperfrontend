@@ -216,7 +216,8 @@ export function escapeFilePath(path: string): string {
       code === 46 ||
       code === 32
     ) {
-      safe.push(path[i])
+      const char = path[i]
+      if (char !== undefined) safe.push(char)
     } else {
       throw createError(`Invalid character in path at position ${i}: "${path[i]}"`)
     }
@@ -263,7 +264,8 @@ export function escapeAuthor(author: string): string {
       code === 60 ||
       code === 62
     ) {
-      safe.push(author[i])
+      const char = author[i]
+      if (char !== undefined) safe.push(char)
     } else {
       throw createError(`Invalid character in author at position ${i}: "${author[i]}"`)
     }

@@ -248,7 +248,7 @@ export function buildInfrastructureMatcher(config: InfrastructureConfig): Infras
     return null
   }
   if (matchers.length === 1) {
-    return matchers[0]
+    return matchers[0] ?? null
   }
   return anyOf(...matchers)
 }

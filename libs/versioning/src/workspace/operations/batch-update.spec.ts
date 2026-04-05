@@ -135,11 +135,18 @@ describe('applyBumps', () => {
     const bumps = [createPlannedBump('lib-a', '1.0.0', '1.1.0')]
     const result = applyBumps(tree, workspace, bumps)
 
-    expect(result.updated).toHaveLength(1)
-    expect(result.updated[0].name).toBe('lib-a')
-    expect(result.updated[0].previousVersion).toBe('1.0.0')
-    expect(result.updated[0].newVersion).toBe('1.1.0')
-    expect(result.success).toBe(true)
+    expect(result).toEqual(
+      expect.objectContaining({
+        success: true,
+        updated: [
+          expect.objectContaining({
+            name: 'lib-a',
+            previousVersion: '1.0.0',
+            newVersion: '1.1.0',
+          }),
+        ],
+      })
+    )
 
     const written = tree._getWrittenFiles()
     expect(written['/workspace/packages/lib-a/package.json']).toContain('"version": "1.1.0"')
@@ -197,10 +204,13 @@ describe('applyBumps', () => {
     const bumps = [createPlannedBump('lib-a', '1.0.0', '1.1.0'), createPlannedBump('nonexistent', '1.0.0', '1.1.0')]
     const result = applyBumps(tree, workspace, bumps)
 
-    expect(result.updated).toHaveLength(1)
-    expect(result.failed).toHaveLength(1)
-    expect(result.failed[0].name).toBe('nonexistent')
-    expect(result.success).toBe(false)
+    expect(result).toEqual(
+      expect.objectContaining({
+        success: false,
+        updated: [expect.objectContaining({ name: 'lib-a' })],
+        failed: [expect.objectContaining({ name: 'nonexistent' })],
+      })
+    )
   })
 
   it('returns empty when no bumps provided', () => {
@@ -271,8 +281,11 @@ describe('applyBumps', () => {
     ]
     const result = applyBumps(tree, workspace, bumps)
 
-    expect(result.updated).toHaveLength(1)
-    expect(result.updated[0].newVersion).toBe('1.1.0-alpha.0')
+    expect(result).toEqual(
+      expect.objectContaining({
+        updated: [expect.objectContaining({ newVersion: '1.1.0-alpha.0' })],
+      })
+    )
   })
 
   it('includes package paths in result', () => {
@@ -290,7 +303,11 @@ describe('applyBumps', () => {
     const bumps = [createPlannedBump('lib-a', '1.0.0', '1.1.0')]
     const result = applyBumps(tree, workspace, bumps)
 
-    expect(result.updated[0].packageJsonPath).toBe('/workspace/packages/lib-a/package.json')
+    expect(result).toEqual(
+      expect.objectContaining({
+        updated: [expect.objectContaining({ packageJsonPath: '/workspace/packages/lib-a/package.json' })],
+      })
+    )
   })
 
   it('reports success as false when any update fails', () => {
@@ -346,9 +363,12 @@ describe('applyBumps', () => {
     const bumps = [createPlannedBump('lib-a', '1.0.0', '1.1.0')]
     const result = applyBumps(tree, workspace, bumps)
 
-    expect(result.success).toBe(false)
-    expect(result.failed).toHaveLength(1)
-    expect(result.failed[0].error).toContain('File not found')
+    expect(result).toEqual(
+      expect.objectContaining({
+        success: false,
+        failed: [expect.objectContaining({ error: expect.stringContaining('File not found') })],
+      })
+    )
   })
 
   it('updates dependency references when updateDependencyReferences is true', () => {
@@ -825,7 +845,9 @@ describe('updatePackageVersionInTree', () => {
     updatePackageVersionInTree(tree, 'packages/lib-a/package.json', '2.0.0')
 
     const written = tree._getWrittenFiles()
-    const content = JSON.parse(written['packages/lib-a/package.json'])
+    const raw = written['packages/lib-a/package.json']
+    expect(raw).toBeDefined()
+    const content = JSON.parse(raw as string)
     expect(content.version).toBe('2.0.0')
   })
 
@@ -837,11 +859,17 @@ describe('updatePackageVersionInTree', () => {
     updatePackageVersionInTree(tree, 'packages/lib-a/package.json', '2.0.0')
 
     const written = tree._getWrittenFiles()
-    const content = JSON.parse(written['packages/lib-a/package.json'])
-    expect(content.name).toBe('lib-a')
-    expect(content.description).toBe('Test')
-    expect(content.main).toBe('index.js')
-    expect(content.version).toBe('2.0.0')
+    const raw = written['packages/lib-a/package.json']
+    expect(raw).toBeDefined()
+    const content = JSON.parse(raw as string)
+    expect(content).toEqual(
+      expect.objectContaining({
+        name: 'lib-a',
+        description: 'Test',
+        main: 'index.js',
+        version: '2.0.0',
+      })
+    )
   })
 
   it('throws error when file does not exist', () => {

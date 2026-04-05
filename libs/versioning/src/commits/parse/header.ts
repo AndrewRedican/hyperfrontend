@@ -19,8 +19,7 @@ export function parseHeader(line: string): ParsedHeader {
 
   const typeStart = pos
   while (pos < len) {
-    const char = line[pos]
-    const code = char.charCodeAt(0)
+    const code = line.charCodeAt(pos)
 
     if ((code >= 97 && code <= 122) || (code >= 65 && code <= 90) || (code >= 48 && code <= 57)) {
       pos++

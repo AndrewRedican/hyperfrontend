@@ -35,8 +35,8 @@ export function parseVersionFromHeading(heading: string): {
 
   const versionStart = pos
   while (pos < trimmed.length) {
+    const code = trimmed.charCodeAt(pos)
     const char = trimmed[pos]
-    const code = char.charCodeAt(0)
 
     if (
       (code >= 48 && code <= 57) ||
@@ -170,7 +170,8 @@ function extractDate(str: string): { date: string; length: number } | null {
 function slashToHyphen(input: string): string {
   const result: string[] = []
   for (let i = 0; i < input.length; i++) {
-    result.push(input[i] === '/' ? '-' : input[i])
+    const char = input[i]
+    if (char !== undefined) result.push(char === '/' ? '-' : char)
   }
   return result.join('')
 }
@@ -233,7 +234,9 @@ export function parseCommitRefs(text: string, baseUrl?: string): CommitRef[] {
       const start = pos + 1
       pos++
 
-      while (pos < text.length && isHexDigit(text[pos])) {
+      while (pos < text.length) {
+        const char = text[pos]
+        if (char === undefined || !isHexDigit(char)) break
         pos++
       }
 
@@ -272,7 +275,9 @@ export function parseIssueRefs(text: string, baseUrl?: string): IssueRef[] {
       pos++
       const numStart = pos
 
-      while (pos < text.length && isDigitChar(text[pos])) {
+      while (pos < text.length) {
+        const char = text[pos]
+        if (char === undefined || !isDigitChar(char)) break
         pos++
       }
 

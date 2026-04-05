@@ -10,10 +10,7 @@ describe('diffChangelogs', () => {
     })
 
     const diff = diffChangelogs(changelog, changelog)
-    expect(diff.identical).toBe(true)
-    expect(diff.added).toHaveLength(0)
-    expect(diff.removed).toHaveLength(0)
-    expect(diff.modified).toHaveLength(0)
+    expect(diff).toMatchObject({ identical: true, added: [], removed: [], modified: [] })
   })
 
   it('identifies added entries', () => {
@@ -29,10 +26,11 @@ describe('diffChangelogs', () => {
     })
 
     const diff = diffChangelogs(source, target)
-    expect(diff.identical).toBe(false)
-    expect(diff.added).toHaveLength(1)
-    expect(diff.added[0].version).toBe('2.0.0')
-    expect(diff.removed).toHaveLength(0)
+    expect(diff).toMatchObject({
+      identical: false,
+      added: [expect.objectContaining({ version: '2.0.0' })],
+      removed: [],
+    })
   })
 
   it('identifies removed entries', () => {
@@ -48,10 +46,11 @@ describe('diffChangelogs', () => {
     })
 
     const diff = diffChangelogs(source, target)
-    expect(diff.identical).toBe(false)
-    expect(diff.removed).toHaveLength(1)
-    expect(diff.removed[0].version).toBe('1.0.0')
-    expect(diff.added).toHaveLength(0)
+    expect(diff).toMatchObject({
+      identical: false,
+      removed: [expect.objectContaining({ version: '1.0.0' })],
+      added: [],
+    })
   })
 
   it('identifies modified entries', () => {
@@ -67,17 +66,15 @@ describe('diffChangelogs', () => {
     })
 
     const diff = diffChangelogs(source, target)
-    expect(diff.identical).toBe(false)
-    expect(diff.modified).toHaveLength(1)
-    expect(diff.modified[0].version).toBe('1.0.0')
-    expect(diff.modified[0].changes).toContainEqual(
-      expect.objectContaining({
-        path: ['date'],
-        type: 'changed',
-        oldValue: '2024-01-01',
-        newValue: '2024-01-02',
-      })
-    )
+    expect(diff).toMatchObject({
+      identical: false,
+      modified: [
+        expect.objectContaining({
+          version: '1.0.0',
+          changes: expect.arrayContaining([{ path: ['date'], type: 'changed', oldValue: '2024-01-01', newValue: '2024-01-02' }]),
+        }),
+      ],
+    })
   })
 
   it('reports correct stats', () => {
@@ -93,9 +90,7 @@ describe('diffChangelogs', () => {
     })
 
     const diff = diffChangelogs(source, target)
-    expect(diff.stats.addedCount).toBe(1)
-    expect(diff.stats.removedCount).toBe(1)
-    expect(diff.stats.modifiedCount).toBe(1)
+    expect(diff.stats).toEqual({ addedCount: 1, removedCount: 1, modifiedCount: 1, totalChanges: 1 })
   })
 })
 
@@ -109,8 +104,7 @@ describe('diffEntries', () => {
     })
 
     const diff = diffEntries(source, target)
-    expect(diff.addedSections).toHaveLength(1)
-    expect(diff.addedSections[0].type).toBe('fixes')
+    expect(diff.addedSections).toEqual([expect.objectContaining({ type: 'fixes' })])
   })
 
   it('detects date added (null to value)', () => {
@@ -239,8 +233,7 @@ describe('diffEntries', () => {
     })
 
     const diff = diffEntries(source, target)
-    expect(diff.removedSections).toHaveLength(1)
-    expect(diff.removedSections[0].type).toBe('fixes')
+    expect(diff.removedSections).toEqual([expect.objectContaining({ type: 'fixes' })])
   })
 
   it('detects modified sections with added items', () => {
@@ -254,10 +247,12 @@ describe('diffEntries', () => {
     })
 
     const diff = diffEntries(source, target)
-    expect(diff.modifiedSections).toHaveLength(1)
-    expect(diff.modifiedSections[0].type).toBe('features')
-    expect(diff.modifiedSections[0].addedItems).toHaveLength(1)
-    expect(diff.modifiedSections[0].addedItems[0].description).toBe('new feature')
+    expect(diff.modifiedSections).toEqual([
+      expect.objectContaining({
+        type: 'features',
+        addedItems: [expect.objectContaining({ description: 'new feature' })],
+      }),
+    ])
   })
 
   it('detects modified sections with removed items', () => {
@@ -271,9 +266,11 @@ describe('diffEntries', () => {
     })
 
     const diff = diffEntries(source, target)
-    expect(diff.modifiedSections).toHaveLength(1)
-    expect(diff.modifiedSections[0].removedItems).toHaveLength(1)
-    expect(diff.modifiedSections[0].removedItems[0].description).toBe('old feature')
+    expect(diff.modifiedSections).toEqual([
+      expect.objectContaining({
+        removedItems: [expect.objectContaining({ description: 'old feature' })],
+      }),
+    ])
   })
 
   it('detects modified items with scope changes', () => {
@@ -285,14 +282,15 @@ describe('diffEntries', () => {
     })
 
     const diff = diffEntries(source, target)
-    expect(diff.modifiedSections).toHaveLength(1)
-    expect(diff.modifiedSections[0].modifiedItems).toHaveLength(1)
-    expect(diff.modifiedSections[0].modifiedItems[0].changes).toContainEqual({
-      path: ['scope'],
-      type: 'changed',
-      oldValue: 'core',
-      newValue: 'api',
-    })
+    expect(diff.modifiedSections).toEqual([
+      expect.objectContaining({
+        modifiedItems: [
+          expect.objectContaining({
+            changes: expect.arrayContaining([{ path: ['scope'], type: 'changed', oldValue: 'core', newValue: 'api' }]),
+          }),
+        ],
+      }),
+    ])
   })
 
   it('detects scope added', () => {
@@ -304,12 +302,15 @@ describe('diffEntries', () => {
     })
 
     const diff = diffEntries(source, target)
-    expect(diff.modifiedSections[0].modifiedItems[0].changes).toContainEqual({
-      path: ['scope'],
-      type: 'added',
-      oldValue: undefined,
-      newValue: 'api',
-    })
+    expect(diff.modifiedSections).toEqual([
+      expect.objectContaining({
+        modifiedItems: [
+          expect.objectContaining({
+            changes: expect.arrayContaining([{ path: ['scope'], type: 'added', oldValue: undefined, newValue: 'api' }]),
+          }),
+        ],
+      }),
+    ])
   })
 
   it('detects scope removed', () => {
@@ -321,12 +322,15 @@ describe('diffEntries', () => {
     })
 
     const diff = diffEntries(source, target)
-    expect(diff.modifiedSections[0].modifiedItems[0].changes).toContainEqual({
-      path: ['scope'],
-      type: 'removed',
-      oldValue: 'api',
-      newValue: undefined,
-    })
+    expect(diff.modifiedSections).toEqual([
+      expect.objectContaining({
+        modifiedItems: [
+          expect.objectContaining({
+            changes: expect.arrayContaining([{ path: ['scope'], type: 'removed', oldValue: 'api', newValue: undefined }]),
+          }),
+        ],
+      }),
+    ])
   })
 
   it('detects breaking flag changes', () => {
@@ -338,12 +342,15 @@ describe('diffEntries', () => {
     })
 
     const diff = diffEntries(source, target)
-    expect(diff.modifiedSections[0].modifiedItems[0].changes).toContainEqual({
-      path: ['breaking'],
-      type: 'changed',
-      oldValue: false,
-      newValue: true,
-    })
+    expect(diff.modifiedSections).toEqual([
+      expect.objectContaining({
+        modifiedItems: [
+          expect.objectContaining({
+            changes: expect.arrayContaining([{ path: ['breaking'], type: 'changed', oldValue: false, newValue: true }]),
+          }),
+        ],
+      }),
+    ])
   })
 
   it('detects commit ref changes', () => {
@@ -363,12 +370,15 @@ describe('diffEntries', () => {
     })
 
     const diff = diffEntries(source, target)
-    expect(diff.modifiedSections[0].modifiedItems[0].changes).toContainEqual(
+    expect(diff.modifiedSections).toEqual([
       expect.objectContaining({
-        path: ['commits'],
-        type: 'changed',
-      })
-    )
+        modifiedItems: [
+          expect.objectContaining({
+            changes: expect.arrayContaining([expect.objectContaining({ path: ['commits'], type: 'changed' })]),
+          }),
+        ],
+      }),
+    ])
   })
 
   it('detects commit ref length changes', () => {
@@ -393,12 +403,15 @@ describe('diffEntries', () => {
     })
 
     const diff = diffEntries(source, target)
-    expect(diff.modifiedSections[0].modifiedItems[0].changes).toContainEqual(
+    expect(diff.modifiedSections).toEqual([
       expect.objectContaining({
-        path: ['commits'],
-        type: 'changed',
-      })
-    )
+        modifiedItems: [
+          expect.objectContaining({
+            changes: expect.arrayContaining([expect.objectContaining({ path: ['commits'], type: 'changed' })]),
+          }),
+        ],
+      }),
+    ])
   })
 
   it('detects issue ref changes', () => {
@@ -414,12 +427,15 @@ describe('diffEntries', () => {
     })
 
     const diff = diffEntries(source, target)
-    expect(diff.modifiedSections[0].modifiedItems[0].changes).toContainEqual(
+    expect(diff.modifiedSections).toEqual([
       expect.objectContaining({
-        path: ['references'],
-        type: 'changed',
-      })
-    )
+        modifiedItems: [
+          expect.objectContaining({
+            changes: expect.arrayContaining([expect.objectContaining({ path: ['references'], type: 'changed' })]),
+          }),
+        ],
+      }),
+    ])
   })
 
   it('detects issue ref length changes', () => {
@@ -442,12 +458,15 @@ describe('diffEntries', () => {
     })
 
     const diff = diffEntries(source, target)
-    expect(diff.modifiedSections[0].modifiedItems[0].changes).toContainEqual(
+    expect(diff.modifiedSections).toEqual([
       expect.objectContaining({
-        path: ['references'],
-        type: 'changed',
-      })
-    )
+        modifiedItems: [
+          expect.objectContaining({
+            changes: expect.arrayContaining([expect.objectContaining({ path: ['references'], type: 'changed' })]),
+          }),
+        ],
+      }),
+    ])
   })
 
   it('includes source and target in item diff', () => {
@@ -461,9 +480,11 @@ describe('diffEntries', () => {
     })
 
     const diff = diffEntries(source, target)
-    expect(diff.modifiedSections[0].modifiedItems[0].source).toEqual(sourceItem)
-    expect(diff.modifiedSections[0].modifiedItems[0].target).toEqual(targetItem)
-    expect(diff.modifiedSections[0].modifiedItems[0].sourceDescription).toBe('feature')
+    expect(diff.modifiedSections).toEqual([
+      expect.objectContaining({
+        modifiedItems: [expect.objectContaining({ source: sourceItem, target: targetItem, sourceDescription: 'feature' })],
+      }),
+    ])
   })
 })
 

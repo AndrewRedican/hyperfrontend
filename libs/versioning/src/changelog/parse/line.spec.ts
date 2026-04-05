@@ -280,7 +280,7 @@ describe('parseCommitRefs', () => {
   it('parses hash in parentheses', () => {
     const refs = parseCommitRefs('Fix bug (abc1234)')
     expect(refs).toHaveLength(1)
-    expect(refs[0].shortHash).toBe('abc1234')
+    expect(refs[0]?.shortHash).toBe('abc1234')
   })
 
   it('parses hash in brackets', () => {
@@ -296,13 +296,13 @@ describe('parseCommitRefs', () => {
   it('handles full hash', () => {
     const fullHash = 'abc1234567890abc1234567890abc1234567890a'
     const refs = parseCommitRefs(`Fix (${fullHash})`)
-    expect(refs[0].hash).toBe(fullHash)
-    expect(refs[0].shortHash).toBe('abc1234')
+    expect(refs[0]?.hash).toBe(fullHash)
+    expect(refs[0]?.shortHash).toBe('abc1234')
   })
 
   it('includes URL if base URL provided', () => {
     const refs = parseCommitRefs('Fix (abc1234)', 'https://github.com/owner/repo')
-    expect(refs[0].url).toBe('https://github.com/owner/repo/commit/abc1234')
+    expect(refs[0]?.url).toBe('https://github.com/owner/repo/commit/abc1234')
   })
 
   it('rejects hash that is too short', () => {
@@ -330,35 +330,35 @@ describe('parseIssueRefs', () => {
   it('parses issue reference', () => {
     const refs = parseIssueRefs('Fix #123')
     expect(refs).toHaveLength(1)
-    expect(refs[0].number).toBe(123)
-    expect(refs[0].type).toBe('issue')
+    expect(refs[0]?.number).toBe(123)
+    expect(refs[0]?.type).toBe('issue')
   })
 
   it('parses multiple references', () => {
     const refs = parseIssueRefs('Fix #123 and #456')
     expect(refs).toHaveLength(2)
-    expect(refs[0].number).toBe(123)
-    expect(refs[1].number).toBe(456)
+    expect(refs[0]?.number).toBe(123)
+    expect(refs[1]?.number).toBe(456)
   })
 
   it('detects PR references from PR keyword', () => {
     const refs = parseIssueRefs('Merged PR #123')
-    expect(refs[0].type).toBe('pull-request')
+    expect(refs[0]?.type).toBe('pull-request')
   })
 
   it('detects PR references from pull keyword within 10 char context', () => {
     const refs = parseIssueRefs('See pull #456')
-    expect(refs[0].type).toBe('pull-request')
+    expect(refs[0]?.type).toBe('pull-request')
   })
 
   it('defaults to issue when pull keyword is too far', () => {
     const refs = parseIssueRefs('See pull request #456')
-    expect(refs[0].type).toBe('issue')
+    expect(refs[0]?.type).toBe('issue')
   })
 
   it('includes URL if base URL provided', () => {
     const refs = parseIssueRefs('Fix #123', 'https://github.com/owner/repo')
-    expect(refs[0].url).toBe('https://github.com/owner/repo/issues/123')
+    expect(refs[0]?.url).toBe('https://github.com/owner/repo/issues/123')
   })
 
   it('handles no issue refs', () => {
@@ -374,6 +374,6 @@ describe('parseIssueRefs', () => {
   it('handles reference at start of text', () => {
     const refs = parseIssueRefs('#42 is the answer')
     expect(refs).toHaveLength(1)
-    expect(refs[0].number).toBe(42)
+    expect(refs[0]?.number).toBe(42)
   })
 })

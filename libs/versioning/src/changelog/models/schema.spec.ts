@@ -1,4 +1,5 @@
 import type { Changelog } from './changelog'
+import type { ChangelogEntry } from './entry'
 import { validateChangelog, checkSchemaCompatibility, changelogSchema } from './schema'
 
 describe('changelogSchema', () => {
@@ -87,26 +88,26 @@ describe('validateChangelog', () => {
 })
 
 describe('checkSchemaCompatibility', () => {
+  const baseEntry: ChangelogEntry = {
+    version: '1.0.0',
+    date: '2024-01-15',
+    unreleased: false,
+    sections: [
+      {
+        type: 'features',
+        heading: 'Features',
+        items: [],
+      },
+    ],
+  }
+
   const baseChangelog: Changelog = {
     header: {
       title: '# Changelog',
       description: [],
       links: [],
     },
-    entries: [
-      {
-        version: '1.0.0',
-        date: '2024-01-15',
-        unreleased: false,
-        sections: [
-          {
-            type: 'features',
-            heading: 'Features',
-            items: [],
-          },
-        ],
-      },
-    ],
+    entries: [baseEntry],
     metadata: {
       format: 'keep-a-changelog',
       isConventional: false,
@@ -135,7 +136,7 @@ describe('checkSchemaCompatibility', () => {
       ...baseChangelog,
       entries: [
         {
-          ...baseChangelog.entries[0],
+          ...baseEntry,
           sections: [],
         },
       ],
@@ -150,9 +151,9 @@ describe('checkSchemaCompatibility', () => {
       ...baseChangelog,
       entries: [
         {
-          ...baseChangelog.entries[0],
+          ...baseEntry,
           sections: [
-            ...baseChangelog.entries[0].sections,
+            ...baseEntry.sections,
             {
               type: 'fixes',
               heading: 'Bug Fixes',

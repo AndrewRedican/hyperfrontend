@@ -30,8 +30,8 @@ describe('parseFooters', () => {
     const result = parseFooters(lines, 0)
 
     expect(result.footers).toHaveLength(2)
-    expect(result.footers[0].key).toBe('Refs')
-    expect(result.footers[1].key).toBe('Reviewed-by')
+    expect(result.footers[0]?.key).toBe('Refs')
+    expect(result.footers[1]?.key).toBe('Reviewed-by')
   })
 
   it('parses BREAKING CHANGE footer', () => {
@@ -39,7 +39,7 @@ describe('parseFooters', () => {
     const result = parseFooters(lines, 0)
 
     expect(result.footers).toHaveLength(1)
-    expect(result.footers[0].key).toBe('BREAKING CHANGE')
+    expect(result.footers[0]?.key).toBe('BREAKING CHANGE')
     expect(result.breakingDescription).toBe('The API has changed')
   })
 
@@ -48,7 +48,7 @@ describe('parseFooters', () => {
     const result = parseFooters(lines, 0)
 
     expect(result.footers).toHaveLength(1)
-    expect(result.footers[0].key).toBe('BREAKING-CHANGE')
+    expect(result.footers[0]?.key).toBe('BREAKING-CHANGE')
     expect(result.breakingDescription).toBe('New API signature')
   })
 
@@ -79,14 +79,14 @@ describe('parseFooters', () => {
     const result = parseFooters(lines, 0)
 
     expect(result.footers).toHaveLength(1)
-    expect(result.footers[0].key).toBe('Signed-off-by')
+    expect(result.footers[0]?.key).toBe('Signed-off-by')
   })
 
   it('handles footer value with special characters', () => {
     const lines = ['Refs: ABC-123/DEF:456']
     const result = parseFooters(lines, 0)
 
-    expect(result.footers[0].value).toBe('ABC-123/DEF:456')
+    expect(result.footers[0]?.value).toBe('ABC-123/DEF:456')
   })
 
   it('handles empty footer value', () => {
@@ -94,7 +94,7 @@ describe('parseFooters', () => {
     const result = parseFooters(lines, 0)
 
     expect(result.footers).toHaveLength(1)
-    expect(result.footers[0].value).toBe('')
+    expect(result.footers[0]?.value).toBe('')
   })
 
   it('handles multiple consecutive footers', () => {
@@ -117,7 +117,7 @@ describe('parseFooters', () => {
     const result = parseFooters(lines, 2)
 
     expect(result.footers).toHaveLength(1)
-    expect(result.footers[0].key).toBe('Refs')
+    expect(result.footers[0]?.key).toBe('Refs')
   })
 
   it('skips lines starting with special characters', () => {
@@ -125,7 +125,7 @@ describe('parseFooters', () => {
     const result = parseFooters(lines, 0)
 
     expect(result.footers).toHaveLength(1)
-    expect(result.footers[0].key).toBe('Refs')
+    expect(result.footers[0]?.key).toBe('Refs')
   })
 
   it('skips lines with no valid separator', () => {
@@ -133,7 +133,7 @@ describe('parseFooters', () => {
     const result = parseFooters(lines, 0)
 
     expect(result.footers).toHaveLength(1)
-    expect(result.footers[0].key).toBe('Refs')
+    expect(result.footers[0]?.key).toBe('Refs')
   })
 
   it('handles multi-line breaking change with blank lines in between', () => {

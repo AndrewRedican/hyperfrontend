@@ -22,11 +22,11 @@ describe('parseChangelog', () => {
 
       expect(changelog.header.title).toBe('# Changelog')
       expect(changelog.entries).toHaveLength(1)
-      expect(changelog.entries[0].version).toBe('1.0.0')
-      expect(changelog.entries[0].date).toBe('2024-01-01')
-      expect(changelog.entries[0].sections).toHaveLength(1)
-      expect(changelog.entries[0].sections[0].type).toBe('features')
-      expect(changelog.entries[0].sections[0].items).toHaveLength(1)
+      expect(changelog.entries[0]?.version).toBe('1.0.0')
+      expect(changelog.entries[0]?.date).toBe('2024-01-01')
+      expect(changelog.entries[0]?.sections).toHaveLength(1)
+      expect(changelog.entries[0]?.sections[0]?.type).toBe('features')
+      expect(changelog.entries[0]?.sections[0]?.items).toHaveLength(1)
     })
   })
 
@@ -68,24 +68,24 @@ Based on [Keep a Changelog](https://keepachangelog.com).
   describe('version parsing', () => {
     it('parses version without brackets', () => {
       const changelog = parseChangelog('## 1.0.0 - 2024-01-01\n-test')
-      expect(changelog.entries[0].version).toBe('1.0.0')
+      expect(changelog.entries[0]?.version).toBe('1.0.0')
     })
 
     it('parses version with v prefix', () => {
       const changelog = parseChangelog('## v1.0.0 - 2024-01-01\n-test')
-      expect(changelog.entries[0].version).toBe('1.0.0')
+      expect(changelog.entries[0]?.version).toBe('1.0.0')
     })
 
     it('parses unreleased section', () => {
       const changelog = parseChangelog('## [Unreleased]\n- Upcoming feature')
-      expect(changelog.entries[0].version).toBe('Unreleased')
-      expect(changelog.entries[0].unreleased).toBe(true)
-      expect(changelog.entries[0].date).toBeNull()
+      expect(changelog.entries[0]?.version).toBe('Unreleased')
+      expect(changelog.entries[0]?.unreleased).toBe(true)
+      expect(changelog.entries[0]?.date).toBeNull()
     })
 
     it('parses prerelease versions', () => {
       const changelog = parseChangelog('## [1.0.0-alpha.1] - 2024-01-01\n- test')
-      expect(changelog.entries[0].version).toBe('1.0.0-alpha.1')
+      expect(changelog.entries[0]?.version).toBe('1.0.0-alpha.1')
     })
 
     it('parses multiple versions', () => {
@@ -105,8 +105,8 @@ Based on [Keep a Changelog](https://keepachangelog.com).
       const changelog = parseChangelog(content)
 
       expect(changelog.entries).toHaveLength(2)
-      expect(changelog.entries[0].version).toBe('2.0.0')
-      expect(changelog.entries[1].version).toBe('1.0.0')
+      expect(changelog.entries[0]?.version).toBe('2.0.0')
+      expect(changelog.entries[1]?.version).toBe('1.0.0')
     })
   })
 
@@ -131,13 +131,13 @@ Based on [Keep a Changelog](https://keepachangelog.com).
 `
 
       const changelog = parseChangelog(content)
-      const sections = changelog.entries[0].sections
+      const sections = changelog.entries[0]?.sections
 
-      expect(sections.find((s) => s.type === 'breaking')).toBeDefined()
-      expect(sections.find((s) => s.type === 'features')).toBeDefined()
-      expect(sections.find((s) => s.type === 'fixes')).toBeDefined()
-      expect(sections.find((s) => s.type === 'performance')).toBeDefined()
-      expect(sections.find((s) => s.type === 'documentation')).toBeDefined()
+      expect(sections?.find((s) => s.type === 'breaking')).toBeDefined()
+      expect(sections?.find((s) => s.type === 'features')).toBeDefined()
+      expect(sections?.find((s) => s.type === 'fixes')).toBeDefined()
+      expect(sections?.find((s) => s.type === 'performance')).toBeDefined()
+      expect(sections?.find((s) => s.type === 'documentation')).toBeDefined()
     })
 
     it('normalizes section headings', () => {
@@ -151,10 +151,10 @@ Based on [Keep a Changelog](https://keepachangelog.com).
 `
 
       const changelog = parseChangelog(content)
-      const sections = changelog.entries[0].sections
+      const sections = changelog.entries[0]?.sections
 
-      expect(sections[0].type).toBe('features')
-      expect(sections[1].type).toBe('fixes')
+      expect(sections?.[0]?.type).toBe('features')
+      expect(sections?.[1]?.type).toBe('fixes')
     })
   })
 
@@ -169,12 +169,12 @@ Based on [Keep a Changelog](https://keepachangelog.com).
 `
 
       const changelog = parseChangelog(content)
-      const items = changelog.entries[0].sections[0].items
+      const items = changelog.entries[0]?.sections[0]?.items
 
       expect(items).toHaveLength(3)
-      expect(items[0].description).toBe('First item')
-      expect(items[1].description).toBe('Second item')
-      expect(items[2].description).toBe('Third item')
+      expect(items?.[0]?.description).toBe('First item')
+      expect(items?.[1]?.description).toBe('Second item')
+      expect(items?.[2]?.description).toBe('Third item')
     })
 
     it('detects breaking change items', () => {
@@ -186,10 +186,10 @@ Based on [Keep a Changelog](https://keepachangelog.com).
 `
 
       const changelog = parseChangelog(content)
-      const items = changelog.entries[0].sections[0].items
+      const items = changelog.entries[0]?.sections[0]?.items
 
-      expect(items[0].breaking).toBe(true)
-      expect(items[1].breaking).toBe(false)
+      expect(items?.[0]?.breaking).toBe(true)
+      expect(items?.[1]?.breaking).toBe(false)
     })
 
     it('detects breaking change with ! prefix', () => {
@@ -200,9 +200,9 @@ Based on [Keep a Changelog](https://keepachangelog.com).
 `
 
       const changelog = parseChangelog(content)
-      const items = changelog.entries[0].sections[0].items
+      const items = changelog.entries[0]?.sections[0]?.items
 
-      expect(items[0].breaking).toBe(true)
+      expect(items?.[0]?.breaking).toBe(true)
     })
 
     it('detects breaking change with [breaking] tag', () => {
@@ -213,9 +213,9 @@ Based on [Keep a Changelog](https://keepachangelog.com).
 `
 
       const changelog = parseChangelog(content)
-      const items = changelog.entries[0].sections[0].items
+      const items = changelog.entries[0]?.sections[0]?.items
 
-      expect(items[0].breaking).toBe(true)
+      expect(items?.[0]?.breaking).toBe(true)
     })
 
     it('detects breaking change with "breaking change" text', () => {
@@ -226,9 +226,9 @@ Based on [Keep a Changelog](https://keepachangelog.com).
 `
 
       const changelog = parseChangelog(content)
-      const items = changelog.entries[0].sections[0].items
+      const items = changelog.entries[0]?.sections[0]?.items
 
-      expect(items[0].breaking).toBe(true)
+      expect(items?.[0]?.breaking).toBe(true)
     })
 
     it('parses scope from items', () => {
@@ -240,10 +240,10 @@ Based on [Keep a Changelog](https://keepachangelog.com).
 `
 
       const changelog = parseChangelog(content)
-      const items = changelog.entries[0].sections[0].items
+      const items = changelog.entries[0]?.sections[0]?.items
 
-      expect(items[0].scope).toBe('api')
-      expect(items[1].scope).toBe('cli')
+      expect(items?.[0]?.scope).toBe('api')
+      expect(items?.[1]?.scope).toBe('cli')
     })
 
     it('creates other section for items without heading', () => {
@@ -254,12 +254,12 @@ Based on [Keep a Changelog](https://keepachangelog.com).
 `
 
       const changelog = parseChangelog(content)
-      const sections = changelog.entries[0].sections
+      const sections = changelog.entries[0]?.sections
 
       expect(sections).toHaveLength(1)
-      expect(sections[0].type).toBe('other')
-      expect(sections[0].heading).toBe('Changes')
-      expect(sections[0].items).toHaveLength(2)
+      expect(sections?.[0]?.type).toBe('other')
+      expect(sections?.[0]?.heading).toBe('Changes')
+      expect(sections?.[0]?.items).toHaveLength(2)
     })
   })
 
@@ -358,15 +358,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
       expect(changelog.entries).toHaveLength(3)
 
-      expect(changelog.entries[0].unreleased).toBe(true)
-      expect(changelog.entries[0].sections).toHaveLength(1)
+      expect(changelog.entries[0]?.unreleased).toBe(true)
+      expect(changelog.entries[0]?.sections).toHaveLength(1)
 
-      expect(changelog.entries[1].version).toBe('1.1.0')
-      expect(changelog.entries[1].date).toBe('2024-02-01')
-      expect(changelog.entries[1].sections).toHaveLength(3)
+      expect(changelog.entries[1]?.version).toBe('1.1.0')
+      expect(changelog.entries[1]?.date).toBe('2024-02-01')
+      expect(changelog.entries[1]?.sections).toHaveLength(3)
 
-      expect(changelog.entries[2].version).toBe('1.0.0')
-      expect(changelog.entries[2].date).toBe('2024-01-01')
+      expect(changelog.entries[2]?.version).toBe('1.0.0')
+      expect(changelog.entries[2]?.date).toBe('2024-01-01')
 
       expect(changelog.metadata.format).toBe('keep-a-changelog')
     })
@@ -412,9 +412,9 @@ Another paragraph.
 `
 
       const changelog = parseChangelog(content)
-      expect(changelog.entries[0].sections).toHaveLength(1)
-      expect(changelog.entries[0].sections[0].type).toBe('other')
-      expect(changelog.entries[0].sections[0].items).toHaveLength(2)
+      expect(changelog.entries[0]?.sections).toHaveLength(1)
+      expect(changelog.entries[0]?.sections[0]?.type).toBe('other')
+      expect(changelog.entries[0]?.sections[0]?.items).toHaveLength(2)
     })
   })
 
@@ -429,7 +429,7 @@ Another paragraph.
 `
 
       const changelog = parseChangelog(content)
-      expect(changelog.entries[0].sections[0].items[0].breaking).toBe(true)
+      expect(changelog.entries[0]?.sections[0]?.items[0]?.breaking).toBe(true)
     })
 
     it('detects breaking change via breaking: prefix', () => {
@@ -442,7 +442,7 @@ Another paragraph.
 `
 
       const changelog = parseChangelog(content)
-      expect(changelog.entries[0].sections[0].items[0].breaking).toBe(true)
+      expect(changelog.entries[0]?.sections[0]?.items[0]?.breaking).toBe(true)
     })
 
     it('detects breaking change via ! prefix', () => {
@@ -455,7 +455,7 @@ Another paragraph.
 `
 
       const changelog = parseChangelog(content)
-      expect(changelog.entries[0].sections[0].items[0].breaking).toBe(true)
+      expect(changelog.entries[0]?.sections[0]?.items[0]?.breaking).toBe(true)
     })
 
     it('detects breaking change via "breaking change" text', () => {
@@ -468,7 +468,7 @@ Another paragraph.
 `
 
       const changelog = parseChangelog(content)
-      expect(changelog.entries[0].sections[0].items[0].breaking).toBe(true)
+      expect(changelog.entries[0]?.sections[0]?.items[0]?.breaking).toBe(true)
     })
 
     it('does not mark non-breaking items', () => {
@@ -481,7 +481,7 @@ Another paragraph.
 `
 
       const changelog = parseChangelog(content)
-      expect(changelog.entries[0].sections[0].items[0].breaking).toBe(false)
+      expect(changelog.entries[0]?.sections[0]?.items[0]?.breaking).toBe(false)
     })
   })
 
@@ -496,7 +496,7 @@ Another paragraph.
 
       const changelog = parseChangelog(content)
       expect(changelog.entries).toHaveLength(2)
-      expect(changelog.entries[0].sections).toHaveLength(0)
+      expect(changelog.entries[0]?.sections).toHaveLength(0)
     })
 
     it('handles entry with only blank lines', () => {
@@ -511,7 +511,7 @@ Another paragraph.
 `
 
       const changelog = parseChangelog(content)
-      expect(changelog.entries[0].sections).toHaveLength(1)
+      expect(changelog.entries[0]?.sections).toHaveLength(1)
     })
 
     it('parses entry with text but no sections', () => {

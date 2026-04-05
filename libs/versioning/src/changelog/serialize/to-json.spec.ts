@@ -87,7 +87,7 @@ describe('toJsonObject', () => {
 
     const result = toJsonObject(changelog)
     const entries = result['entries'] as Array<Record<string, unknown>>
-    expect(entries[0]['compareUrl']).toBe('http://compare')
+    expect(entries[0]?.['compareUrl']).toBe('http://compare')
   })
 
   it('includes rawContent when present', () => {
@@ -99,7 +99,7 @@ describe('toJsonObject', () => {
 
     const result = toJsonObject(changelog)
     const entries = result['entries'] as Array<Record<string, unknown>>
-    expect(entries[0]['rawContent']).toBe('Raw content here')
+    expect(entries[0]?.['rawContent']).toBe('Raw content here')
   })
 
   it('includes scope in items when present', () => {
@@ -115,9 +115,9 @@ describe('toJsonObject', () => {
 
     const result = toJsonObject(changelog)
     const entries = result['entries'] as Array<Record<string, unknown>>
-    const sections = entries[0]['sections'] as Array<Record<string, unknown>>
-    const items = sections[0]['items'] as Array<Record<string, unknown>>
-    expect(items[0]['scope']).toBe('api')
+    const sections = entries[0]?.['sections'] as Array<Record<string, unknown>> | undefined
+    const items = sections?.[0]?.['items'] as Array<Record<string, unknown>> | undefined
+    expect(items?.[0]?.['scope']).toBe('api')
   })
 
   it('includes commit with url when present', () => {
@@ -137,10 +137,10 @@ describe('toJsonObject', () => {
 
     const result = toJsonObject(changelog)
     const entries = result['entries'] as Array<Record<string, unknown>>
-    const sections = entries[0]['sections'] as Array<Record<string, unknown>>
-    const items = sections[0]['items'] as Array<Record<string, unknown>>
-    const commits = items[0]['commits'] as Array<Record<string, unknown>>
-    expect(commits[0]['url']).toBe('http://commit')
+    const sections = entries[0]?.['sections'] as Array<Record<string, unknown>> | undefined
+    const items = sections?.[0]?.['items'] as Array<Record<string, unknown>> | undefined
+    const commits = items?.[0]?.['commits'] as Array<Record<string, unknown>> | undefined
+    expect(commits?.[0]?.['url']).toBe('http://commit')
   })
 
   it('includes reference with url when present', () => {
@@ -160,10 +160,10 @@ describe('toJsonObject', () => {
 
     const result = toJsonObject(changelog)
     const entries = result['entries'] as Array<Record<string, unknown>>
-    const sections = entries[0]['sections'] as Array<Record<string, unknown>>
-    const items = sections[0]['items'] as Array<Record<string, unknown>>
-    const refs = items[0]['references'] as Array<Record<string, unknown>>
-    expect(refs[0]['url']).toBe('http://issue')
+    const sections = entries[0]?.['sections'] as Array<Record<string, unknown>> | undefined
+    const items = sections?.[0]?.['items'] as Array<Record<string, unknown>> | undefined
+    const refs = items?.[0]?.['references'] as Array<Record<string, unknown>> | undefined
+    expect(refs?.[0]?.['url']).toBe('http://issue')
   })
 
   it('includes repositoryUrl in metadata when present', () => {

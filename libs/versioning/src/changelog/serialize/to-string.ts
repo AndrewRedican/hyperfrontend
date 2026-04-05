@@ -34,7 +34,7 @@ export function serializeChangelog(changelog: Changelog, options?: SerializeOpti
 
   for (let i = 0; i < changelog.entries.length; i++) {
     const entry = changelog.entries[i]
-    parts.push(serializeEntry(entry, opts))
+    if (entry) parts.push(serializeEntry(entry, opts))
 
     if (i < changelog.entries.length - 1) {
       parts.push(createSpacing(opts.entrySpacing, opts.lineEnding))
@@ -108,7 +108,7 @@ function serializeEntry(entry: ChangelogEntry, opts: Required<SerializeOptions>)
 
   for (let i = 0; i < sortedSections.length; i++) {
     const section = sortedSections[i]
-    parts.push(serializeSection(section, opts))
+    if (section) parts.push(serializeSection(section, opts))
 
     if (i < sortedSections.length - 1) {
       parts.push(createSpacing(opts.sectionSpacing, nl))

@@ -35,7 +35,18 @@ export function parseConventionalCommit(message: string): ConventionalCommit {
     }
   }
 
-  const header = parseHeader(lines[0])
+  const firstLine = lines[0]
+  if (firstLine === undefined) {
+    return {
+      type: '',
+      subject: '',
+      footers: [],
+      breaking: false,
+      raw: message,
+    }
+  }
+
+  const header = parseHeader(firstLine)
 
   let body: string | undefined
   let footersStartIndex = 1

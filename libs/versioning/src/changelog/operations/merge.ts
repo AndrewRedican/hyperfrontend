@@ -1,3 +1,4 @@
+import type { SemVer } from '../../semver/models'
 import type { Changelog, ChangelogHeader, ChangelogMetadata } from '../models/changelog'
 import type { ChangelogEntry, ChangelogSection, ChangelogItem } from '../models/entry'
 import { createError } from '@hyperfrontend/immutable-api-utils/built-in-copy/error'
@@ -341,7 +342,7 @@ function sortEntriesByVersion(entries: readonly ChangelogEntry[]): ChangelogEntr
       return b.version.localeCompare(a.version)
     }
 
-    return compare(bResult.version, aResult.version)
+    return compare(<SemVer>bResult.version, <SemVer>aResult.version)
   })
 }
 
@@ -375,12 +376,12 @@ export function combineChangelogs(changelogs: readonly Changelog[], options?: Me
   }
 
   if (changelogs.length === 1) {
-    return changelogs[0]
+    return <Changelog>changelogs[0]
   }
 
-  let result = changelogs[0]
-  for (let i = 1; i < changelogs.length; i++) {
-    const mergeResult = mergeChangelogs(result, changelogs[i], options)
+  let result = <Changelog>changelogs[0]
+  for (const changelog of changelogs.slice(1)) {
+    const mergeResult = mergeChangelogs(result, changelog, options)
     result = mergeResult.changelog
   }
 

@@ -428,7 +428,9 @@ function diffItem(source: ChangelogItem, target: ChangelogItem): ItemDiff {
 function areCommitRefsEqual(a: readonly CommitRef[], b: readonly CommitRef[]): boolean {
   if (a.length !== b.length) return false
   for (let i = 0; i < a.length; i++) {
-    if (!isCommitRefEqual(a[i], b[i])) return false
+    const aRef = a[i]
+    const bRef = b[i]
+    if (aRef === undefined || bRef === undefined || !isCommitRefEqual(aRef, bRef)) return false
   }
   return true
 }
@@ -443,7 +445,9 @@ function areCommitRefsEqual(a: readonly CommitRef[], b: readonly CommitRef[]): b
 function areIssueRefsEqual(a: readonly IssueRef[], b: readonly IssueRef[]): boolean {
   if (a.length !== b.length) return false
   for (let i = 0; i < a.length; i++) {
-    if (!isIssueRefEqual(a[i], b[i])) return false
+    const aRef = a[i]
+    const bRef = b[i]
+    if (aRef === undefined || bRef === undefined || !isIssueRefEqual(aRef, bRef)) return false
   }
   return true
 }

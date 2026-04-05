@@ -13,12 +13,12 @@ import { createError } from '@hyperfrontend/immutable-api-utils/built-in-copy/er
  */
 export function addItemToEntry(changelog: Changelog, version: string, sectionType: string, item: ChangelogItem): Changelog {
   const entryIndex = changelog.entries.findIndex((e) => e.version === version)
+  const entry = changelog.entries[entryIndex]
 
-  if (entryIndex === -1) {
+  if (entryIndex === -1 || !entry) {
     throw createError(`Entry with version "${version}" not found`)
   }
 
-  const entry = changelog.entries[entryIndex]
   const sectionIndex = entry.sections.findIndex((s) => s.type === sectionType)
 
   let newSections: ChangelogSection[]
@@ -33,10 +33,14 @@ export function addItemToEntry(changelog: Changelog, version: string, sectionTyp
       },
     ]
   } else {
+    const existingSection = entry.sections[sectionIndex]
+    if (!existingSection) {
+      throw createError(`Section at index ${sectionIndex} not found`)
+    }
     newSections = [...entry.sections]
     newSections[sectionIndex] = {
-      ...newSections[sectionIndex],
-      items: [...newSections[sectionIndex].items, item],
+      ...existingSection,
+      items: [...existingSection.items, item],
     }
   }
 

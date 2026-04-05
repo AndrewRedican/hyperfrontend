@@ -10,8 +10,7 @@ describe('removeEntry', () => {
     })
 
     const result = removeEntry(changelog, '1.0.0')
-    expect(result.entries).toHaveLength(1)
-    expect(result.entries[0].version).toBe('2.0.0')
+    expect(result.entries).toEqual([expect.objectContaining({ version: '2.0.0' })])
   })
 
   it('returns unchanged changelog if version not found', () => {
@@ -49,8 +48,7 @@ describe('removeEntries', () => {
     })
 
     const result = removeEntries(changelog, ['1.0.0', '3.0.0'])
-    expect(result.entries).toHaveLength(1)
-    expect(result.entries[0].version).toBe('2.0.0')
+    expect(result.entries).toEqual([expect.objectContaining({ version: '2.0.0' })])
   })
 
   it('ignores versions not found', () => {
@@ -61,7 +59,7 @@ describe('removeEntries', () => {
     })
 
     const result = removeEntries(changelog, ['2.0.0', '3.0.0'], { throwIfNotFound: false })
-    expect(result.entries).toHaveLength(1)
+    expect(result.entries).toEqual([expect.objectContaining({ version: '1.0.0' })])
   })
 
   it('throws error for versions not found by default', () => {
@@ -84,8 +82,7 @@ describe('removeUnreleased', () => {
     })
 
     const result = removeUnreleased(changelog)
-    expect(result.entries).toHaveLength(1)
-    expect(result.entries[0].version).toBe('1.0.0')
+    expect(result.entries).toEqual([expect.objectContaining({ version: '1.0.0' })])
   })
 
   it('returns unchanged changelog if no unreleased', () => {
@@ -96,7 +93,7 @@ describe('removeUnreleased', () => {
     })
 
     const result = removeUnreleased(changelog, { throwIfNotFound: false })
-    expect(result.entries).toHaveLength(1)
+    expect(result.entries).toEqual([expect.objectContaining({ version: '1.0.0' })])
   })
 
   it('throws error if no unreleased entry by default', () => {
