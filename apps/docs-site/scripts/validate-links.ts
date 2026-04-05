@@ -2,7 +2,7 @@
 import { existsSync, readFileSync } from 'node:fs'
 import { resolve, join, dirname, relative } from 'node:path'
 import { glob } from 'glob'
-import { log, error } from '@hyperfrontend/immutable-api-utils/built-in-copy/console'
+import { logger } from '@hyperfrontend/logging'
 
 const WORKSPACE_ROOT = resolve(__dirname, '../../..')
 const DOCS_SITE_ROOT = resolve(__dirname, '..')
@@ -246,7 +246,7 @@ function validateFile(filePath: string): LinkValidationResult[] {
  * @returns Promise resolving to validation summary with counts and errors
  */
 async function validateLinks(): Promise<ValidationSummary> {
-  log('🔗 Validating documentation links...\n')
+  logger.log('🔗 Validating documentation links...\n')
 
   const summary: ValidationSummary = {
     totalLinks: 0,
@@ -265,7 +265,7 @@ async function validateLinks(): Promise<ValidationSummary> {
 
   const allFiles = [...generatedMdFiles, ...rootMdFiles, ...libMdFiles]
 
-  log(`📄 Found ${allFiles.length} markdown files to validate\n`)
+  logger.log(`📄 Found ${allFiles.length} markdown files to validate\n`)
 
   for (const file of allFiles) {
     const results = validateFile(file)
@@ -292,27 +292,27 @@ async function validateLinks(): Promise<ValidationSummary> {
     }
   }
 
-  log('📊 Validation Summary')
-  log('─'.repeat(40))
-  log(`Total links:       ${summary.totalLinks}`)
-  log(`✓ Valid:           ${summary.validLinks}`)
-  log(`↗ External:        ${summary.externalLinks}`)
-  log(`⟳ Transformable:   ${summary.transformedLinks}`)
-  log(`✗ Broken:          ${summary.brokenLinks}`)
-  log('')
+  logger.log('📊 Validation Summary')
+  logger.log('─'.repeat(40))
+  logger.log(`Total links:       ${summary.totalLinks}`)
+  logger.log(`✓ Valid:           ${summary.validLinks}`)
+  logger.log(`↗ External:        ${summary.externalLinks}`)
+  logger.log(`⟳ Transformable:   ${summary.transformedLinks}`)
+  logger.log(`✗ Broken:          ${summary.brokenLinks}`)
+  logger.log('')
 
   if (summary.brokenLinks > 0) {
-    log('❌ Broken Links:')
-    log('─'.repeat(40))
+    logger.log('❌ Broken Links:')
+    logger.log('─'.repeat(40))
     for (const err of summary.errors) {
-      log(`  ${err.file}:${err.line}`)
-      log(`    Link: ${err.link}`)
-      log(`    ${err.message}\n`)
+      logger.log(`  ${err.file}:${err.line}`)
+      logger.log(`    Link: ${err.link}`)
+      logger.log(`    ${err.message}\n`)
     }
   }
 
   if (summary.brokenLinks === 0) {
-    log('✅ All internal links are valid!')
+    logger.log('✅ All internal links are valid!')
   }
 
   return summary
@@ -326,7 +326,7 @@ if (require.main === module) {
       }
     })
     .catch((err) => {
-      error('Link validation failed:', err)
+      logger.error('Link validation failed:', err)
       process.exit(1)
     })
 }

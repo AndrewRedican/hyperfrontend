@@ -2,12 +2,12 @@
 import { execFileSync } from 'node:child_process'
 import { existsSync, readFileSync, mkdirSync, writeFileSync } from 'node:fs'
 import { resolve, join, dirname } from 'node:path'
-import { log } from '@hyperfrontend/immutable-api-utils/built-in-copy/console'
 import { createDate } from '@hyperfrontend/immutable-api-utils/built-in-copy/date'
 import { parse, stringify } from '@hyperfrontend/immutable-api-utils/built-in-copy/json'
 import { entries } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
 import { createSet } from '@hyperfrontend/immutable-api-utils/built-in-copy/set'
 import { createURL } from '@hyperfrontend/immutable-api-utils/built-in-copy/url'
+import { logger } from '@hyperfrontend/logging'
 
 /**
  * Checks if a line contains a URL pointing to the docs site (www.hyperfrontend.dev).
@@ -65,7 +65,7 @@ function discoverEntryPointsFromPackageJson(libPath: string): string[] {
   const packageJsonPath = join(libPath, 'package.json')
 
   if (!existsSync(packageJsonPath)) {
-    log(`  ⚠ No package.json found at ${libPath}`)
+    logger.log(`  ⚠ No package.json found at ${libPath}`)
     return []
   }
 
@@ -381,7 +381,7 @@ function extractReadme(lib: LibraryConfig): { content: string; exists: boolean }
   const readmePath = join(WORKSPACE_ROOT, lib.srcPath, 'README.md')
 
   if (!existsSync(readmePath)) {
-    log(`  ⚠ No README.md found for ${lib.name}`)
+    logger.log(`  ⚠ No README.md found for ${lib.name}`)
     return { content: '', exists: false }
   }
 
@@ -423,7 +423,7 @@ function generateTypeDoc(lib: LibraryConfig): boolean {
   const discoveredEntryPoints = discoverEntryPointsFromPackageJson(libPath)
 
   if (discoveredEntryPoints.length === 0) {
-    log(`  ⚠ No entry points found for ${lib.name}`)
+    logger.log(`  ⚠ No entry points found for ${lib.name}`)
     return false
   }
 
@@ -431,8 +431,8 @@ function generateTypeDoc(lib: LibraryConfig): boolean {
 
   const missingEntryPoints = entryPoints.filter((ep) => !existsSync(ep))
   if (missingEntryPoints.length > 0) {
-    log(`  ⚠ Missing entry points for ${lib.name}:`)
-    missingEntryPoints.forEach((ep) => log(`      - ${ep}`))
+    logger.log(`  ⚠ Missing entry points for ${lib.name}:`)
+    missingEntryPoints.forEach((ep) => logger.log(`      - ${ep}`))
     return false
   }
 
@@ -451,12 +451,12 @@ function generateTypeDoc(lib: LibraryConfig): boolean {
 
     args.push(...entryPoints)
 
-    log(`  → Running TypeDoc for ${lib.name} (${discoveredEntryPoints.length} entry points)`)
+    logger.log(`  → Running TypeDoc for ${lib.name} (${discoveredEntryPoints.length} entry points)`)
     execFileSync('npx', args, { cwd: WORKSPACE_ROOT, stdio: 'pipe' })
     return true
   } catch (error) {
     const errorMsg = error instanceof Error ? error.message : String(error)
-    log(`  ⚠ TypeDoc failed for ${lib.name}: ${errorMsg.slice(0, 200)}`)
+    logger.log(`  ⚠ TypeDoc failed for ${lib.name}: ${errorMsg.slice(0, 200)}`)
     return false
   }
 }
@@ -475,7 +475,7 @@ interface LibraryDoc {
  * Main documentation generation function that processes all libraries
  */
 function generateDocs() {
-  log('📚 Generating documentation...\n')
+  logger.log('📚 Generating documentation...\n')
 
   ensureDir(OUTPUT_DIR)
   ensureDir(DOCS_OUTPUT)
@@ -484,7 +484,7 @@ function generateDocs() {
   const libraryDocs: LibraryDoc[] = []
 
   for (const lib of LIBRARIES) {
-    log(`📦 Processing ${lib.name}...`)
+    logger.log(`📦 Processing ${lib.name}...`)
 
     const readme = extractReadme(lib)
 
@@ -514,25 +514,25 @@ function generateDocs() {
       hasApi,
     })
 
-    log('')
+    logger.log('')
   }
 
-  log('📐 Processing root ARCHITECTURE.md...')
+  logger.log('📐 Processing root ARCHITECTURE.md...')
   const rootArchPath = join(WORKSPACE_ROOT, 'ARCHITECTURE.md')
   if (existsSync(rootArchPath)) {
     const archContent = readFileSync(rootArchPath, 'utf-8')
     const transformedArchContent = transformLinks(archContent, 'root')
     writeFileSync(join(DOCS_OUTPUT, 'architecture.md'), transformedArchContent)
-    log('  ✓ Root architecture document extracted\n')
+    logger.log('  ✓ Root architecture document extracted\n')
   }
 
-  log('📝 Processing CONTRIBUTING.md...')
+  logger.log('📝 Processing CONTRIBUTING.md...')
   const contributingPath = join(WORKSPACE_ROOT, 'CONTRIBUTING.md')
   if (existsSync(contributingPath)) {
     const contributingContent = readFileSync(contributingPath, 'utf-8')
     const transformedContributingContent = transformLinks(contributingContent, 'root')
     writeFileSync(join(DOCS_OUTPUT, 'contributing.md'), transformedContributingContent)
-    log('  ✓ Contributing guide extracted\n')
+    logger.log('  ✓ Contributing guide extracted\n')
   }
 
   const manifest = {
@@ -546,8 +546,8 @@ function generateDocs() {
 
   writeFileSync(join(OUTPUT_DIR, 'manifest.json'), stringify(manifest, null, 2))
 
-  log('✅ Documentation generation complete!')
-  log(`   Output: ${OUTPUT_DIR}`)
+  logger.log('✅ Documentation generation complete!')
+  logger.log(`   Output: ${OUTPUT_DIR}`)
 }
 
 if (require.main === module) {
