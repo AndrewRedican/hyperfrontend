@@ -28,8 +28,11 @@ export function createTimeIntervalObfuscationFactory(
     date: Date,
     refreshRate: number
   ) => {
+    /** Gets password for current time window */
     current: () => Promise<string>
+    /** Gets password for previous time window */
     previous: () => Promise<string>
+    /** Gets password for next time window */
     next: () => Promise<string>
   }
 ) {

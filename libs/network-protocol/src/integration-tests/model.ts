@@ -13,7 +13,9 @@ export type { ReceivePacketFn }
  * Simple text message payload
  */
 export interface TextMessage {
+  /** Message type discriminator */
   type: 'TEXT'
+  /** Text content of the message */
   content: string
 }
 
@@ -21,7 +23,9 @@ export interface TextMessage {
  * Ping request for connection health check
  */
 export interface PingMessage {
+  /** Message type discriminator */
   type: 'PING'
+  /** Timestamp when ping was sent */
   timestamp: number
 }
 
@@ -29,8 +33,11 @@ export interface PingMessage {
  * Pong response to ping request
  */
 export interface PongMessage {
+  /** Message type discriminator */
   type: 'PONG'
+  /** Timestamp when pong was sent */
   timestamp: number
+  /** Original ping timestamp for round-trip calculation */
   originalTimestamp: number
 }
 
@@ -38,7 +45,9 @@ export interface PongMessage {
  * Generic data payload
  */
 export interface DataMessage<T = unknown> {
+  /** Message type discriminator */
   type: 'DATA'
+  /** Typed data payload */
   payload: T
 }
 
@@ -75,8 +84,11 @@ export interface Client<T = MessagePayload> {
  * Received packet structure - the Data wrapper contains the actual message
  */
 export interface ReceivedPacket<T> {
+  /** Sender identifier */
   origin: string
+  /** Recipient identifier */
   target: string
+  /** The data wrapper containing the message */
   data: Data<T>
 }
 

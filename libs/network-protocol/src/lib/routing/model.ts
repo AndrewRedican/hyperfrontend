@@ -3,21 +3,38 @@ import type { Channel } from '../channel/model'
 import type { UnencryptedPacket } from '../packet/model'
 import type { Topic } from '../topic/model'
 
+/**
+ * A packet routed to a specific topic.
+ */
 export interface RoutedPacket {
+  /** Topic identifier for routing */
   topicId: string
+  /** The packet payload */
   packet: unknown
 }
 
+/**
+ * A routed packet with obfuscated (binary) payload.
+ */
 export interface RoutedObfuscatedPacket extends RoutedPacket {
+  /** Binary obfuscated packet data */
   packet: Uint8Array
 }
 
+/**
+ * A routed packet with unencrypted payload.
+ */
 export interface RoutedUnencryptedPacket<T = any> extends RoutedPacket {
+  /** Unencrypted packet with typed payload */
   packet: UnencryptedPacket<T>
 }
 
+/** Maps channels to their subscribed topics */
 export type Subscriptions = WeakMap<Channel, Topic[]>
 
+/**
+ * Configuration options for message routing.
+ */
 export interface RoutingOptions {
   /**
    * Controls subscription fetching behavior:

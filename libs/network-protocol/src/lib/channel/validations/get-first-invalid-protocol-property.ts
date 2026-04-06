@@ -2,6 +2,9 @@ import type { Protocol } from '../model'
 import { getType } from '@hyperfrontend/data-utils'
 import { keys, entries } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
 
+/**
+ * Result object mapping each protocol property to its validation status.
+ */
 type ValidProtocolResult = Record<keyof Protocol, boolean | undefined>
 
 /**
