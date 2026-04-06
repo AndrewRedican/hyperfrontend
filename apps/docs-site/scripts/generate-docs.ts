@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+import type { MarkdownLinkResult, TransformLinkResult, ContentExtractionResult } from './generate-docs.types'
 import { execFileSync } from 'node:child_process'
 import { existsSync, readFileSync, mkdirSync, writeFileSync } from 'node:fs'
 import { resolve, join, dirname } from 'node:path'
@@ -38,17 +39,27 @@ const OUTPUT_DIR = resolve(__dirname, '../.generated')
 const DOCS_OUTPUT = join(OUTPUT_DIR, 'docs')
 const API_OUTPUT = join(OUTPUT_DIR, 'api')
 
+/** Configuration for a library to document */
 interface LibraryConfig {
+  /** Display name */
   name: string
+  /** npm package name */
   packageName: string
+  /** URL slug */
   slug: string
+  /** Source path relative to workspace root */
   srcPath: string
+  /** Library category */
   category: 'core' | 'supporting' | 'utils' | 'plugin'
 }
 
+/** Package.json structure for entry point discovery */
 interface PackageJson {
+  /** Package name */
   name?: string
+  /** Main entry point */
   main?: string
+  /** Export map */
   exports?: Record<string, string | Record<string, string>>
 }
 
@@ -149,7 +160,6 @@ const LIBRARIES: LibraryConfig[] = [
     srcPath: 'libs/project-scope',
     category: 'core',
   },
-
   {
     name: 'State Machine',
     packageName: '@hyperfrontend/state-machine',
@@ -159,14 +169,7 @@ const LIBRARIES: LibraryConfig[] = [
   },
   { name: 'Logging', packageName: '@hyperfrontend/logging', slug: 'logging', srcPath: 'libs/logging', category: 'supporting' },
   { name: 'Web Worker', packageName: '@hyperfrontend/web-worker', slug: 'web-worker', srcPath: 'libs/web-worker', category: 'supporting' },
-  {
-    name: 'Versioning',
-    packageName: '@hyperfrontend/versioning',
-    slug: 'versioning',
-    srcPath: 'libs/versioning',
-    category: 'supporting',
-  },
-
+  { name: 'Versioning', packageName: '@hyperfrontend/versioning', slug: 'versioning', srcPath: 'libs/versioning', category: 'supporting' },
   { name: 'Data Utils', packageName: '@hyperfrontend/data-utils', slug: 'data-utils', srcPath: 'libs/utils/data', category: 'utils' },
   {
     name: 'Function Utils',
@@ -200,7 +203,6 @@ const LIBRARIES: LibraryConfig[] = [
   },
   { name: 'Time Utils', packageName: '@hyperfrontend/time-utils', slug: 'time-utils', srcPath: 'libs/utils/time', category: 'utils' },
   { name: 'UI Utils', packageName: '@hyperfrontend/ui-utils', slug: 'ui-utils', srcPath: 'libs/utils/ui', category: 'utils' },
-
   { name: 'Features Plugin', packageName: '@hyperfrontend/features', slug: 'features', srcPath: 'plugins/features', category: 'plugin' },
 ]
 
@@ -253,7 +255,7 @@ function normalizeRelativePath(path: string): string {
  * @param segment - Text starting with link text, e.g., "click here](https://example.com) more text"
  * @returns Object with linkText, url, and remainder, or null if not a valid link
  */
-function extractMarkdownLink(segment: string): { linkText: string; url: string; remainder: string } | null {
+function extractMarkdownLink(segment: string): MarkdownLinkResult | null {
   const linkEndIndex = segment.indexOf('](')
   if (linkEndIndex === -1) return null
 
@@ -276,7 +278,7 @@ function extractMarkdownLink(segment: string): { linkText: string; url: string; 
  * @param sourceContext - Where this content came from ('root' | 'library')
  * @returns Object with transformed URL (or null to remove the link entirely)
  */
-function transformLinkUrl(url: string, sourceContext: 'root' | 'library'): { url: string | null; keepAsText: boolean } {
+function transformLinkUrl(url: string, sourceContext: 'root' | 'library'): TransformLinkResult {
   const normalized = normalizeRelativePath(url)
 
   const rootDocMappings: Record<string, string> = {
@@ -377,7 +379,7 @@ function transformLinks(content: string, sourceContext: 'root' | 'library'): str
  * @param lib - The library configuration
  * @returns An object with the content and whether it exists
  */
-function extractReadme(lib: LibraryConfig): { content: string; exists: boolean } {
+function extractReadme(lib: LibraryConfig): ContentExtractionResult {
   const readmePath = join(WORKSPACE_ROOT, lib.srcPath, 'README.md')
 
   if (!existsSync(readmePath)) {
@@ -396,7 +398,7 @@ function extractReadme(lib: LibraryConfig): { content: string; exists: boolean }
  * @param lib - The library configuration
  * @returns An object with the content and whether it exists
  */
-function extractArchitecture(lib: LibraryConfig): { content: string; exists: boolean } {
+function extractArchitecture(lib: LibraryConfig): ContentExtractionResult {
   const archPath = join(WORKSPACE_ROOT, lib.srcPath, 'ARCHITECTURE.md')
 
   if (!existsSync(archPath)) {
@@ -461,13 +463,21 @@ function generateTypeDoc(lib: LibraryConfig): boolean {
   }
 }
 
+/** Generated documentation for a library */
 interface LibraryDoc {
+  /** Display name */
   name: string
+  /** npm package name */
   packageName: string
+  /** URL slug */
   slug: string
+  /** Library category */
   category: string
+  /** README content, if present */
   readme: string | null
+  /** Architecture doc content, if present */
   architecture: string | null
+  /** Whether API docs were generated */
   hasApi: boolean
 }
 

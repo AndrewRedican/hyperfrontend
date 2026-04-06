@@ -11,22 +11,52 @@ const SRC_DIR = join(DOCS_SITE_ROOT, 'src')
 const GITHUB_BLOB_PATTERN = /^https:\/\/github\.com\/AndrewRedican\/hyperfrontend\/blob\/[^/]+\/(.+)/
 const GITHUB_TREE_PATTERN = /^https:\/\/github\.com\/AndrewRedican\/hyperfrontend\/tree\/[^/]+\/(.+)/
 
+/**
+ * Result of validating a single link.
+ */
 interface LinkValidationResult {
+  /** Source file containing the link */
   file: string
+  /** Line number where link appears */
   line: number
+  /** The link URL */
   link: string
+  /** Validation status */
   status: 'valid' | 'broken' | 'external' | 'transformed'
+  /** Optional message explaining the status */
   message?: string
+  /** Target URL after transformation (if applicable) */
   transformedTo?: string
 }
 
+/**
+ * Summary of link validation across all files.
+ */
 interface ValidationSummary {
+  /** Total number of links checked */
   totalLinks: number
+  /** Number of valid links */
   validLinks: number
+  /** Number of broken links */
   brokenLinks: number
+  /** Number of external links (skipped) */
   externalLinks: number
+  /** Number of transformed links */
   transformedLinks: number
+  /** List of validation errors */
   errors: LinkValidationResult[]
+}
+
+/**
+ * Extracted link information from markdown content.
+ */
+interface ExtractedLink {
+  /** The link URL */
+  link: string
+  /** Line number where link appears */
+  line: number
+  /** Link text (display text) */
+  text: string
 }
 
 /**
@@ -35,8 +65,8 @@ interface ValidationSummary {
  * @param content - The markdown content to parse
  * @returns Array of link objects with link URL, line number, and link text
  */
-function extractLinks(content: string): Array<{ link: string; line: number; text: string }> {
-  const links: Array<{ link: string; line: number; text: string }> = []
+function extractLinks(content: string): ExtractedLink[] {
+  const links: ExtractedLink[] = []
   const lines = content.split('\n')
 
   const markdownLinkPattern = /\[([^\]]*)\]\(([^)]+)\)/g
@@ -87,12 +117,24 @@ function isAnchorLink(link: string): boolean {
 }
 
 /**
+ * Result of transforming a GitHub URL.
+ */
+interface TransformResult {
+  /** Whether the URL was transformed */
+  transformed: boolean
+  /** Original URL */
+  url: string
+  /** Docs site path (if transformed) */
+  docsSitePath?: string
+}
+
+/**
  * Transform GitHub blob/tree URLs to docs site paths
  *
  * @param link - The GitHub URL to transform
  * @returns Object with transformed flag, original URL, and optional docs site path
  */
-function transformGitHubUrl(link: string): { transformed: boolean; url: string; docsSitePath?: string } {
+function transformGitHubUrl(link: string): TransformResult {
   let match = GITHUB_BLOB_PATTERN.exec(link)
   if (match) {
     const filePath = match[1]
