@@ -36,6 +36,7 @@ export type ActionType = (typeof ACTION_TYPES)[keyof typeof ACTION_TYPES]
  * Base action interface - all actions extend this
  */
 export interface IActionBase {
+  /** The type of action being performed */
   readonly type: ActionType
   /** Broker ID that sent this action */
   readonly senderId: string
@@ -47,6 +48,7 @@ export interface IActionBase {
  * Action with process ID (most connection lifecycle actions)
  */
 export interface IActionWithProcess extends IActionBase {
+  /** Unique identifier for the connection process */
   readonly processId: string
 }
 
@@ -54,6 +56,7 @@ export interface IActionWithProcess extends IActionBase {
  * Action with contract (REQUEST_CONNECTION, ACCEPT_CONNECTION)
  */
 export interface IActionWithContract extends IActionWithProcess {
+  /** Channel contract defining accepted and emitted actions */
   readonly contract: IChannelContract
 }
 
@@ -62,6 +65,7 @@ export interface IActionWithContract extends IActionWithProcess {
  * Used for REQUEST_CONNECTION with security.
  */
 export interface IActionWithContractAndSecurity extends IActionWithContract {
+  /** Optional security negotiation request data */
   readonly security?: SecurityNegotiationRequest
 }
 
@@ -70,6 +74,7 @@ export interface IActionWithContractAndSecurity extends IActionWithContract {
  * Used for handshake actions that carry security negotiation/confirmation.
  */
 export interface IActionWithSecurity extends IActionBase {
+  /** Optional security negotiation or confirmation data */
   readonly security?: SecurityNegotiationRequest | SecurityNegotiationResponse | SecurityConfirmation
 }
 
@@ -77,6 +82,7 @@ export interface IActionWithSecurity extends IActionBase {
  * Action with error/reason (INVALID_REQUEST, DENY_CONNECTION)
  */
 export interface IActionWithError extends IActionWithProcess {
+  /** Error message describing what went wrong */
   readonly error: string
 }
 
@@ -84,6 +90,7 @@ export interface IActionWithError extends IActionWithProcess {
  * Action with message data (NEW_MESSAGE)
  */
 export interface IActionWithData extends IActionBase {
+  /** The message payload data */
   readonly data: unknown
 }
 

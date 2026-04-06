@@ -80,7 +80,14 @@ export interface SecurityTransportConfig {
   readonly origin?: string
 
   /** Optional error handler for security failures */
-  readonly onError?: (error: { message: string; code: string; cause?: Error }) => void
+  readonly onError?: (error: {
+    /** Human-readable error message */
+    message: string
+    /** Machine-readable error code */
+    code: string
+    /** Optional underlying cause */
+    cause?: Error
+  }) => void
 }
 
 /**
@@ -153,7 +160,9 @@ export type ProtocolLoader = (version: 'v1' | 'v2', platform: 'browser' | 'node'
 export interface BrokerSecurityConfig {
   /** Pre-registered protocol providers keyed by version */
   readonly protocols?: Readonly<{
+    /** Protocol v1 provider */
     v1?: unknown
+    /** Protocol v2 provider */
     v2?: unknown
   }>
 

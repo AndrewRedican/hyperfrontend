@@ -9,29 +9,53 @@ import { freeze } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
 import { createSet } from '@hyperfrontend/immutable-api-utils/built-in-copy/set'
 import { createWeakMap } from '@hyperfrontend/immutable-api-utils/built-in-copy/weak-map'
 
+/**
+ * Minimal channel structure required for registry operations.
+ */
 export interface MinimalChannel {
+  /** Unique channel identifier */
   id: string
+  /** Channel name */
   name: string
+  /** Target window for the channel */
   target: Window
+  /** Returns whether the channel is active */
   isActive?: () => boolean
+  /** Sends an action through the channel */
   sendAction?: (action: unknown) => void
+  /** Destroys the channel */
   destroy?: (notify?: boolean) => void
+  /** Cancels the channel */
   cancel?: (notify?: boolean) => void
+  /** Disconnects the channel */
   disconnect?: (notify?: boolean) => void
+  /** Notifies an event with optional data */
   notifyEvent?: (event: unknown, data?: unknown) => void
+  /** Notifies a message */
   notifyMessage?: (message: unknown) => void
 }
 
+/**
+ * Registry interface for managing channels.
+ */
 export interface ChannelRegistry {
+  /** Adds a channel to the registry */
   add: (channel: MinimalChannel) => void
+  /** Removes a channel from the registry */
   remove: (channel: MinimalChannel) => void
+  /** Gets a channel by its target window */
   getByWindow: (target: Window) => MinimalChannel | undefined
+  /** Gets a channel by its ID */
   getById: (id: string) => MinimalChannel | undefined
+  /** Gets a channel by its name */
   getByName: (name: string) => MinimalChannel | undefined
+  /** Gets all channels in the registry */
   getAll: () => MinimalChannel[]
+  /** Clears all channels from the registry */
   clear: () => void
 }
 
+/** Alias for ChannelRegistry */
 export type Registry = ChannelRegistry
 
 /**

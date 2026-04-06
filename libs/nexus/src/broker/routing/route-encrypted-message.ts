@@ -19,8 +19,11 @@ import { createSecurityErrorEventData, logSecurityError } from '../../security/e
  * @internal
  */
 interface SecurityTransportWithReceive {
+  /** Handles receiving and processing an encrypted packet */
   handleReceive: (packet: Uint8Array) => void
+  /** Checks if the transport is ready for communication */
   isReady: () => boolean
+  /** Returns the active security protocol identifier */
   getProtocol: () => string
 }
 

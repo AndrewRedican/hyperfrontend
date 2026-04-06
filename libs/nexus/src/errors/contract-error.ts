@@ -20,7 +20,14 @@ export class ContractError extends Error {
    *
    * @returns JSON object with error details
    */
-  toJSON(): { name: string; message: string; contract?: IChannelContract } {
+  toJSON(): {
+    /** Error name */
+    name: string
+    /** Error message */
+    message: string
+    /** Contract if available */
+    contract?: IChannelContract
+  } {
     return {
       name: this.name,
       message: this.message,

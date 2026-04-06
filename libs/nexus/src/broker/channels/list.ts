@@ -10,5 +10,5 @@ import { getAll } from '../../core/registry/get-all'
  */
 export function listChannels(registry: Registry): ChannelJSON[] {
   const channels = getAll(registry)
-  return channels.map((channel) => (<{ toJSON: () => ChannelJSON }>(<unknown>channel)).toJSON())
+  return channels.map((channel) => (<{ /** Serializes channel to JSON */ toJSON: () => ChannelJSON }>(<unknown>channel)).toJSON())
 }

@@ -88,14 +88,14 @@ export interface SecurityErrorEventData {
  * Discriminated union of all event data types
  */
 export type EventData =
-  | { event: 'open'; data: OpenEventData }
-  | { event: 'close'; data: CloseEventData }
-  | { event: 'cancel'; data: CancelEventData }
-  | { event: 'deny'; data: DenyEventData }
-  | { event: 'invalid'; data: InvalidEventData }
-  | { event: 'security-negotiated'; data: SecurityNegotiatedEventData }
-  | { event: 'security-ready'; data: SecurityReadyEventData }
-  | { event: 'security-error'; data: SecurityErrorEventData }
+  | { /** Event type */ event: 'open'; /** Event payload */ data: OpenEventData }
+  | { /** Event type */ event: 'close'; /** Event payload */ data: CloseEventData }
+  | { /** Event type */ event: 'cancel'; /** Event payload */ data: CancelEventData }
+  | { /** Event type */ event: 'deny'; /** Event payload */ data: DenyEventData }
+  | { /** Event type */ event: 'invalid'; /** Event payload */ data: InvalidEventData }
+  | { /** Event type */ event: 'security-negotiated'; /** Event payload */ data: SecurityNegotiatedEventData }
+  | { /** Event type */ event: 'security-ready'; /** Event payload */ data: SecurityReadyEventData }
+  | { /** Event type */ event: 'security-error'; /** Event payload */ data: SecurityErrorEventData }
 
 /**
  * Type-safe event handler for OPEN events
@@ -195,12 +195,20 @@ export type SecurityErrorCallback = (data: SecurityErrorEventData, channel: Chan
  * Used for type-safe on(event, handler) overloads.
  */
 export interface EventCallbackMap {
+  /** Callback for open events */
   open: OpenCallback
+  /** Callback for close events */
   close: CloseCallback
+  /** Callback for cancel events */
   cancel: CancelCallback
+  /** Callback for deny events */
   deny: DenyCallback
+  /** Callback for invalid events */
   invalid: InvalidCallback
+  /** Callback for security-negotiated events */
   'security-negotiated': SecurityNegotiatedCallback
+  /** Callback for security-ready events */
   'security-ready': SecurityReadyCallback
+  /** Callback for security-error events */
   'security-error': SecurityErrorCallback
 }

@@ -47,11 +47,17 @@ export interface BrokerConfig {
  * Internal broker state
  */
 export interface BrokerState {
+  /** Unique broker identifier */
   readonly id: string
+  /** Broker name */
   readonly name: string
+  /** Window context for the broker */
   readonly window: Window
+  /** Broker configuration settings */
   readonly settings: BrokerSettings
+  /** Channel contract for messaging */
   readonly contract: IChannelContract
+  /** Logger instance for debugging */
   readonly logger: Logger
 }
 
@@ -59,18 +65,60 @@ export interface BrokerState {
  * Broker handle returned by factory
  */
 export interface BrokerHandle {
+  /** Unique broker identifier */
   readonly id: string
+  /** Broker name */
   readonly name: string
+  /** Channel contract for messaging */
   readonly contract: IChannelContract
+  /** Broker configuration settings */
   readonly settings: BrokerSettings
+  /** List of registered channels */
   readonly channels: ReadonlyArray<ChannelJSON>
+  /** Action types accepted by this broker */
   readonly acceptedActionTypes: readonly string[]
 
+  /**
+   * Add a new channel to the broker.
+   *
+   * @param name - Channel identifier
+   * @param target - Target window for the channel
+   * @param settings - Optional channel settings
+   * @returns Handle to the created channel
+   */
   addChannel(name: string, target: Window, settings?: Record<string, unknown>): ChannelHandle
+  /**
+   * Get a channel by reference.
+   *
+   * @param reference - Channel ID or target window
+   * @returns Channel handle if found, null otherwise
+   */
   getChannel(reference: string | Window): ChannelHandle | null
+  /**
+   * Remove a channel from the broker.
+   *
+   * @param reference - Channel ID or target window
+   */
   removeChannel(reference: string | Window): void
+  /**
+   * Set the security policy for all channels.
+   *
+   * @param policy - Security policy to apply
+   * @returns The broker handle for chaining
+   */
   setSecurityPolicy(policy: SecurityPolicy): BrokerHandle
+  /**
+   * Extend the channel contract with additional actions.
+   *
+   * @param contract - Contract extension to merge
+   * @returns The broker handle for chaining
+   */
   extendContract(contract: IChannelContract): BrokerHandle
+  /**
+   * Convert broker state to JSON representation.
+   *
+   * @returns JSON object with broker state
+   */
   toJSON(): Record<string, unknown>
 
   /**

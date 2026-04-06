@@ -10,10 +10,15 @@ import type { BrokerState } from '../types'
  * Provides access to broker state, infrastructure, and logger.
  */
 export interface RoutingContext {
+  /** Current broker state snapshot */
   readonly state: BrokerState
+  /** Process registry for window/process lookup */
   readonly registry: Registry
+  /** Manager for process lifecycle operations */
   readonly processManager: ProcessManager
+  /** Factory for creating broker actions */
   readonly actions: ActionCreators
+  /** Scoped logger for routing operations */
   readonly logger: Logger
 }
 
