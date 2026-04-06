@@ -92,7 +92,12 @@ module.exports = [
   {
     files: ['**/*.ts'],
     rules: {
-      'jsdoc/require-jsdoc': 'error',
+      'jsdoc/require-jsdoc': [
+        'error',
+        {
+          contexts: ['TSInterfaceDeclaration', 'TSTypeAliasDeclaration', 'TSPropertySignature', 'TSMethodSignature'],
+        },
+      ],
       'jsdoc/require-param-description': 'error',
       'jsdoc/require-returns-description': 'error',
       'jsdoc/require-returns': 'error',
