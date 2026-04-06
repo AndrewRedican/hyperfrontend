@@ -1,5 +1,6 @@
 import { sqrt } from '@hyperfrontend/immutable-api-utils/built-in-copy/math'
 
+/** Callback function invoked when a gesture is detected. */
 export type Callback = () => void
 
 /**
