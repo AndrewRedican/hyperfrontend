@@ -1,0 +1,9 @@
+{
+  "executors": {
+    "lint-report": {
+      "implementation": "./src/executors/lint-report/executor",
+      "schema": "./src/executors/lint-report/schema.json",
+      "description": "Run lint across all projects and generate an LLM-optimized report."
+    }
+  }
+}

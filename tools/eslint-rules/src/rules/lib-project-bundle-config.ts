@@ -8,12 +8,18 @@ import { isPublishableLibrary } from '../utils/nx-project'
  */
 export const RULE_NAME = 'lib-project-bundle-config'
 
+/** Supported browser bundle formats */
 type BundleFormat = 'iife' | 'umd'
 
+/** Represents an issue found in bundle configuration */
 interface BundleIssue {
+  /** The bundle format with the issue */
   format: BundleFormat
+  /** The JSON property node where the issue was found */
   node: JSONProperty
+  /** Whether the entry field is missing */
   missingEntry: boolean
+  /** Whether the globalName field is missing */
   missingGlobalName: boolean
 }
 

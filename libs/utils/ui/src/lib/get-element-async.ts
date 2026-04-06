@@ -4,16 +4,26 @@
 import { getType } from '@hyperfrontend/data-utils'
 import { setTimeout, setInterval, clearTimeout, clearInterval } from '@hyperfrontend/immutable-api-utils/built-in-copy/timers'
 
+/** Element reference as either an HTMLElement or a CSS selector string */
 export type ElementRefOrString<T extends HTMLElement = HTMLElement> = T | string
 
+/** Callback invoked when the element is found */
 export type OnSuccess = (element: HTMLElement) => void
 
+/** Callback invoked when the element lookup times out */
 export type OnFail = () => void
 
+/**
+ * Configuration options for async element retrieval.
+ */
 export interface GetElementAsyncOptions {
+  /** Maximum time to wait in milliseconds */
   duration?: number
+  /** Polling interval in milliseconds */
   interval?: number
+  /** Callback when element is found */
   onSuccess?: OnSuccess
+  /** Callback when lookup times out */
   onFail?: OnFail
 }
 

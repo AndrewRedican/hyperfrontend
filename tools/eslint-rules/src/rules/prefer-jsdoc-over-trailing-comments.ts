@@ -12,6 +12,7 @@ const createRule = ESLintUtils.RuleCreator(
   (name) => `https://github.com/AndrewRedican/hyperfrontend/blob/main/tools/eslint-rules/docs/${name}.md`
 )
 
+/** Message identifiers for rule violations. */
 type MessageIds = 'preferJsDocOverTrailing'
 
 /**
@@ -35,7 +36,7 @@ const INTERFACE_MEMBER_NODE_TYPES = createSet([
 function getIndentation(sourceCode: SourceCode, line: number): string {
   const lineText = sourceCode.getLines()[line - 1] || ''
   const match = lineText.match(/^(\s*)/)
-  return match ? match[1] : ''
+  return match ? <string>match[1] : ''
 }
 
 export default createRule<[], MessageIds>({

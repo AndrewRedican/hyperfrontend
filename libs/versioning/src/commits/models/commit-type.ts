@@ -1,6 +1,7 @@
+/** Conventional commit type identifier (e.g., 'feat', 'fix', 'docs'). */
 export type CommitType = 'feat' | 'fix' | 'docs' | 'style' | 'refactor' | 'perf' | 'test' | 'build' | 'ci' | 'chore' | 'revert' | string
 
-export const COMMIT_TYPES: Record<string, { description: string; semverBump: 'major' | 'minor' | 'patch' | 'none' }> = {
+export const COMMIT_TYPES = <const>{
   feat: { description: 'A new feature', semverBump: 'minor' },
   fix: { description: 'A bug fix', semverBump: 'patch' },
   docs: { description: 'Documentation only changes', semverBump: 'none' },
@@ -14,9 +15,9 @@ export const COMMIT_TYPES: Record<string, { description: string; semverBump: 'ma
   revert: { description: 'Revert a previous commit', semverBump: 'patch' },
 }
 
-export const RELEASE_TYPES: readonly CommitType[] = ['feat', 'fix', 'perf', 'revert']
-export const MINOR_TYPES: readonly CommitType[] = ['feat']
-export const PATCH_TYPES: readonly CommitType[] = ['fix', 'perf', 'revert']
+export const RELEASE_TYPES = <const>['feat', 'fix', 'perf', 'revert']
+export const MINOR_TYPES = <const>['feat']
+export const PATCH_TYPES = <const>['fix', 'perf', 'revert']
 
 /**
  * Checks if a commit type is a standard type.
@@ -35,7 +36,7 @@ export function isStandardType(type: string): type is CommitType {
  * @returns True if the type triggers a release
  */
 export function isReleaseType(type: string): boolean {
-  return RELEASE_TYPES.includes(type)
+  return (<ReadonlyArray<string>>RELEASE_TYPES).includes(type)
 }
 
 /**
@@ -49,6 +50,6 @@ export function isReleaseType(type: string): boolean {
 export function getSemverBump(type: string, breaking: boolean): 'major' | 'minor' | 'patch' | 'none' {
   if (breaking) return 'major'
 
-  const info = COMMIT_TYPES[type]
+  const info = COMMIT_TYPES[<keyof typeof COMMIT_TYPES>type]
   return info?.semverBump ?? 'none'
 }

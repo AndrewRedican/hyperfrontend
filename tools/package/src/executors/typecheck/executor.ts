@@ -3,7 +3,7 @@ import type { TypecheckExecutorOptions } from './schema'
 import { execFileSync } from 'node:child_process'
 import { existsSync } from 'node:fs'
 import { join } from 'node:path'
-import { logger } from '@nx/devkit'
+import { logger } from '../../lib/logger'
 
 /**
  * Typecheck executor for hyperfrontend library packages.
@@ -19,7 +19,10 @@ import { logger } from '@nx/devkit'
 export default async function typecheckExecutor(
   options: TypecheckExecutorOptions,
   context: ExecutorContext
-): Promise<{ success: boolean }> {
+): Promise<{
+  /** Whether the type check completed successfully. */
+  success: boolean
+}> {
   const projectName = context.projectName
   if (!projectName) {
     logger.error('No project name provided')

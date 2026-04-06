@@ -1,9 +1,16 @@
 import type { CommitType } from '../models/commit-type'
 
+/**
+ * Parsed conventional commit header components.
+ */
 export interface ParsedHeader {
+  /** Commit type (feat, fix, chore, etc.) */
   type: CommitType
+  /** Optional scope in parentheses */
   scope?: string
+  /** Commit subject line */
   subject: string
+  /** Whether this is a breaking change */
   breaking: boolean
 }
 
@@ -19,8 +26,7 @@ export function parseHeader(line: string): ParsedHeader {
 
   const typeStart = pos
   while (pos < len) {
-    const char = line[pos]
-    const code = char.charCodeAt(0)
+    const code = line.charCodeAt(pos)
 
     if ((code >= 97 && code <= 122) || (code >= 65 && code <= 90) || (code >= 48 && code <= 57)) {
       pos++

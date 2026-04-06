@@ -48,6 +48,9 @@ export const DEFAULT_DIFF_OPTIONS: Required<Omit<DiffOptions, 'cwd'>> = {
   timeout: 30000,
 }
 
+/** Options for commit file queries with optional working directory. */
+type CommitFilesOptions = Required<Omit<DiffOptions, 'cwd'>> & Pick<DiffOptions, 'cwd'>
+
 /**
  * Gets files changed between two git refs.
  *
@@ -158,7 +161,7 @@ export function getCommitWithFiles(hash: string, options: DiffOptions = {}): Git
  * @param options - Configuration including timeout and working directory
  * @returns Array of file changes
  */
-function getCommitFiles(hash: string, options: Required<Omit<DiffOptions, 'cwd'>> & { cwd?: string }): readonly FileChange[] {
+function getCommitFiles(hash: string, options: CommitFilesOptions): readonly FileChange[] {
   const safeHash = escapeGitRef(hash)
 
   try {

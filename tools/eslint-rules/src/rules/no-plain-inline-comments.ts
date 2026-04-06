@@ -30,6 +30,9 @@ const createRule = ESLintUtils.RuleCreator(
   (name) => `https://github.com/AndrewRedican/hyperfrontend/blob/main/tools/eslint-rules/docs/${name}.md`
 )
 
+/**
+ * Message identifiers for the no-plain-inline-comments rule.
+ */
 type MessageIds = 'noPlainInlineComments'
 
 export default createRule<[], MessageIds>({
@@ -111,7 +114,7 @@ export default createRule<[], MessageIds>({
             // note: Trailing comment - remove from before the comment to end of comment
             // note: Find whitespace before the comment
             let wsStart = comment.range[0]
-            while (wsStart > lineStart && /\s/.test(fullText[wsStart - 1])) {
+            while (wsStart > lineStart && /\s/.test(<string>fullText[wsStart - 1])) {
               wsStart--
             }
             start = wsStart

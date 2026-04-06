@@ -14,6 +14,7 @@ import { rollbackChanges } from './lib/rollback-changes'
  * Result of version-batch executor.
  */
 export interface VersionBatchResult {
+  /** Whether the batch versioning operation succeeded */
   success: boolean
   /** Libraries that were actually bumped */
   bumpedLibraries: string[]
@@ -39,7 +40,10 @@ export interface VersionBatchResult {
 export default async function versionBatchExecutor(
   options: VersionBatchExecutorSchema,
   context: ExecutorContext
-): Promise<{ success: boolean }> {
+): Promise<{
+  /** Whether the batch versioning operation succeeded */
+  success: boolean
+}> {
   const workspaceRoot = context.root
   const { base = 'origin/main', head = 'HEAD', dryRun = false, verbose = false } = options
 

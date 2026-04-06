@@ -3,8 +3,8 @@ import type { PublishExecutorOptions } from './schema'
 import { execFileSync } from 'node:child_process'
 import { existsSync, readFileSync } from 'node:fs'
 import { join } from 'node:path'
-import { logger } from '@nx/devkit'
 import { parse } from '@hyperfrontend/immutable-api-utils/built-in-copy/json'
+import { logger } from '../../lib/logger'
 
 /**
  * Verifies the project is a publishable library.
@@ -13,7 +13,10 @@ import { parse } from '@hyperfrontend/immutable-api-utils/built-in-copy/json'
  * @param projectConfig.projectType - Type of the project (e.g., 'library', 'application')
  * @returns True if the project is a library
  */
-function isLibraryProject(projectConfig: { projectType?: string }): boolean {
+function isLibraryProject(projectConfig: {
+  /** Type of the project (e.g., 'library', 'application') */
+  projectType?: string
+}): boolean {
   return projectConfig.projectType === 'library'
 }
 
@@ -98,7 +101,13 @@ function buildPublishArgs(options: PublishExecutorOptions): string[] {
  * @param context - Nx executor context
  * @returns Success status
  */
-export default async function publishExecutor(options: PublishExecutorOptions, context: ExecutorContext): Promise<{ success: boolean }> {
+export default async function publishExecutor(
+  options: PublishExecutorOptions,
+  context: ExecutorContext
+): Promise<{
+  /** Whether the publish operation succeeded */
+  success: boolean
+}> {
   const { projectName, root: workspaceRoot } = context
 
   if (!projectName) {
@@ -191,7 +200,16 @@ export default async function publishExecutor(options: PublishExecutorOptions, c
     if (error instanceof Error) {
       logger.error(error.message)
       if ('stderr' in error) {
-        logger.error(String((<{ stderr: unknown }>error).stderr))
+        logger.error(
+          String(
+            (<
+              {
+                /** Standard error output */
+                stderr: unknown
+              }
+            >error).stderr
+          )
+        )
       }
     }
     return { success: false }

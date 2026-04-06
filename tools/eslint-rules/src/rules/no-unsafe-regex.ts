@@ -71,7 +71,15 @@ const DEFAULT_OPTIONS: Required<NoUnsafeRegexOptions> = {
  * @param maxBound - The maximum allowed quantifier bound.
  * @returns An object indicating whether exponential bounds were found and the bound string if found.
  */
-function hasExponentialBounds(pattern: string, maxBound: number): { found: boolean; bound?: string } {
+function hasExponentialBounds(
+  pattern: string,
+  maxBound: number
+): {
+  /** Whether exponential bounds were detected in the pattern. */
+  found: boolean
+  /** The bound string if found (e.g., "{1,100000}"). */
+  bound?: string
+} {
   // eslint-disable-next-line workspace/no-unsafe-regex -- This regex is safe and used for static analysis
   const quantifierRegex = /\{(\d+),(\d+)?\}/g
   let match: RegExpExecArray | null
@@ -155,7 +163,8 @@ function getStaticStringValue(node: TSESTree.Node): string | null {
     return String(node.value)
   }
   if (isSimpleTemplateLiteral(node)) {
-    return node.quasis[0].value.cooked ?? node.quasis[0].value.raw
+    const firstQuasi = <TSESTree.TemplateElement>node.quasis[0]
+    return firstQuasi.value.cooked ?? firstQuasi.value.raw
   }
   return null
 }
@@ -296,7 +305,7 @@ export default createRule<[NoUnsafeRegexOptions], MessageIds>({
         return
       }
 
-      const patternArg = args[0]
+      const patternArg = <TSESTree.Node>args[0]
 
       const staticValue = getStaticStringValue(patternArg)
       if (staticValue !== null) {

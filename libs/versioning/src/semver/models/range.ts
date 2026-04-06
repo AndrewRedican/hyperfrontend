@@ -27,6 +27,7 @@ export interface Comparator {
  * Example: ">=1.0.0 <2.0.0" -> two comparators in one set
  */
 export interface ComparatorSet {
+  /** Array of comparators that must all be satisfied (AND logic). */
   readonly comparators: readonly Comparator[]
 }
 

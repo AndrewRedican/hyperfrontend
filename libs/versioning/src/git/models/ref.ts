@@ -70,8 +70,11 @@ export function createGitRef(options: CreateGitRefOptions): GitRef {
  * Parsed reference name components.
  */
 interface ParsedRefName {
+  /** Type of the Git reference (branch, tag, etc.) */
   type: GitRefType
+  /** Name of the reference */
   name: string
+  /** Remote name if this is a remote tracking branch */
   remote?: string
 }
 

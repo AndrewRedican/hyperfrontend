@@ -2,8 +2,8 @@ import type { EntryPointDiscovery } from './types'
 import { spawnSync } from 'node:child_process'
 import { existsSync, mkdirSync, cpSync, rmSync, readdirSync, statSync } from 'node:fs'
 import { dirname, join, relative, resolve } from 'node:path'
-import { logger } from '@nx/devkit'
 import {createError} from '@hyperfrontend/immutable-api-utils/built-in-copy/error'
+import { logger } from '../../../lib/logger'
 
 /**
  * Generates TypeScript declarations for all entry points.
@@ -93,8 +93,7 @@ export function flattenDeclarationPaths(
     return
   }
 
-  for (let i = 0; i < discovery.entryPoints.length; i++) {
-    const entry = discovery.entryPoints[i]
+  for (const entry of discovery.entryPoints) {
     if (entry.isRoot) {
       copyRootDeclarations(nestedDeclarations, outputPath)
     } else {

@@ -1,10 +1,9 @@
 import type { Logger } from '@hyperfrontend/logging'
 import type { VersionExecutorSchema } from '../schema'
-import { logger as nxLogger } from '@nx/devkit'
 import { from } from '@hyperfrontend/immutable-api-utils/built-in-copy/array'
 import { createMap } from '@hyperfrontend/immutable-api-utils/built-in-copy/map'
 import { freeze } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
-import { createLogger } from '@hyperfrontend/logging'
+import { logger as baseLogger } from '@hyperfrontend/logging'
 
 export type { LogLevel, Logger } from '@hyperfrontend/logging'
 
@@ -28,9 +27,15 @@ export interface ChannelLogger {
   getLogLevel: () => string
 }
 
+/**
+ * Extended logger interface for version executor operations.
+ */
 interface ExecutorLogger extends Omit<Logger, 'setLogLevel'> {
+  /** Sets log level based on verbose/quiet flags */
   setLogLevel: (level: Pick<VersionExecutorSchema, 'verbose' | 'quiet'>) => void
+  /** Creates a prefixed sub-logger channel */
   channel(prefix: string): ChannelLogger
+  /** Sets a context value for message interpolation */
   setContextValue: (label: string, value: unknown) => void
 }
 
@@ -57,15 +62,14 @@ export const getLogger = () => {
     })
     return message
   }
-  const errorFn = (message: string) => nxLogger.error(msg(message))
-  const warnFn = (message: string) => nxLogger.warn(msg(message))
-  const logFn = (message: string) => nxLogger.log(msg(message))
-  const infoFn = (message: string) => nxLogger.info(msg(message))
-  const debugFn = (message: string) => nxLogger.debug(msg(message))
-  const logger = createLogger(errorFn, warnFn, logFn, infoFn, debugFn)
+  const errorFn = (message: string) => baseLogger.error(msg(message))
+  const warnFn = (message: string) => baseLogger.warn(msg(message))
+  const logFn = (message: string) => baseLogger.log(msg(message))
+  const infoFn = (message: string) => baseLogger.info(msg(message))
+  const debugFn = (message: string) => baseLogger.debug(msg(message))
   const setLogLevel: ({ verbose, quiet }: Pick<VersionExecutorSchema, 'verbose' | 'quiet'>) => void = ({ verbose, quiet }) => {
-    logger.setLogLevel(quiet ? 'error' : verbose ? 'debug' : 'log')
-    context.set('logLevel', logger.getLogLevel())
+    baseLogger.setLogLevel(quiet ? 'error' : verbose ? 'debug' : 'log')
+    context.set('logLevel', baseLogger.getLogLevel())
   }
   setLogLevel({ verbose: false, quiet: false })
 
@@ -76,8 +80,8 @@ export const getLogger = () => {
 
     const ensureHeader = () => {
       if (!hasEmittedHeader) {
-        nxLogger.log('')
-        nxLogger.log(header)
+        baseLogger.log('')
+        baseLogger.log(header)
         hasEmittedHeader = true
       }
     }
@@ -113,7 +117,7 @@ export const getLogger = () => {
         ensureHeader()
         logFn(`  ${message}`)
       },
-      getLogLevel: logger.getLogLevel,
+      getLogLevel: baseLogger.getLogLevel,
     })
   }
 
@@ -125,7 +129,7 @@ export const getLogger = () => {
       info: infoFn,
       debug: debugFn,
       setLogLevel,
-      getLogLevel: logger.getLogLevel,
+      getLogLevel: baseLogger.getLogLevel,
       setContextValue: (label: string, value: unknown) => {
         context.set(label, value)
       },

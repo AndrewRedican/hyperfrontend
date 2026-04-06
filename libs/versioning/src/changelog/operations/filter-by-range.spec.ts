@@ -67,7 +67,7 @@ describe('filterByVersionRange', () => {
 
     const result = filterByVersionRange(changelog, '>=1.0.0')
     expect(result.entries).toHaveLength(1)
-    expect(result.entries[0].version).toBe('1.0.0')
+    expect(result.entries).toEqual([expect.objectContaining({ version: '1.0.0' })])
   })
 
   it('excludes entries with invalid versions', () => {
@@ -79,7 +79,7 @@ describe('filterByVersionRange', () => {
 
     const result = filterByVersionRange(changelog, '>=1.0.0')
     expect(result.entries).toHaveLength(1)
-    expect(result.entries[0].version).toBe('1.0.0')
+    expect(result.entries).toEqual([expect.objectContaining({ version: '1.0.0' })])
   })
 })
 
@@ -126,7 +126,7 @@ describe('filterFromVersion', () => {
 
     const result = filterFromVersion(changelog, '1.0.0')
     expect(result.entries).toHaveLength(1)
-    expect(result.entries[0].version).toBe('2.0.0')
+    expect(result.entries).toEqual([expect.objectContaining({ version: '2.0.0' })])
   })
 })
 
@@ -183,7 +183,7 @@ describe('filterToVersion', () => {
 
     const result = filterToVersion(changelog, '2.0.0')
     expect(result.entries).toHaveLength(1)
-    expect(result.entries[0].version).toBe('1.0.0')
+    expect(result.entries).toEqual([expect.objectContaining({ version: '1.0.0' })])
   })
 })
 
@@ -261,8 +261,7 @@ describe('filterRecentEntries', () => {
 
     const result = filterRecentEntries(changelog, 2)
     expect(result.entries).toHaveLength(2)
-    expect(result.entries[0].version).toBe('3.0.0')
-    expect(result.entries[1].version).toBe('2.0.0')
+    expect(result.entries).toEqual([expect.objectContaining({ version: '3.0.0' }), expect.objectContaining({ version: '2.0.0' })])
   })
 
   it('includes unreleased in count when requested', () => {
@@ -278,8 +277,7 @@ describe('filterRecentEntries', () => {
 
     const result = filterRecentEntries(changelog, 2, true)
     expect(result.entries).toHaveLength(2)
-    expect(result.entries[0].version).toBe('Unreleased')
-    expect(result.entries[1].version).toBe('2.0.0')
+    expect(result.entries).toEqual([expect.objectContaining({ version: 'Unreleased' }), expect.objectContaining({ version: '2.0.0' })])
   })
 
   it('excludes unreleased from count by default', () => {
@@ -295,8 +293,7 @@ describe('filterRecentEntries', () => {
 
     const result = filterRecentEntries(changelog, 1)
     expect(result.entries).toHaveLength(2)
-    expect(result.entries[0].version).toBe('Unreleased')
-    expect(result.entries[1].version).toBe('2.0.0')
+    expect(result.entries).toEqual([expect.objectContaining({ version: 'Unreleased' }), expect.objectContaining({ version: '2.0.0' })])
   })
 
   it('returns empty entries for count 0', () => {
@@ -320,7 +317,7 @@ describe('filterByDateRange', () => {
 
     const result = filterByDateRange(changelog, '2024-01-15', '2024-02-15')
     expect(result.entries).toHaveLength(1)
-    expect(result.entries[0].version).toBe('2.0.0')
+    expect(result.entries).toEqual([expect.objectContaining({ version: '2.0.0' })])
   })
 
   it('excludes entries without dates', () => {
@@ -332,7 +329,7 @@ describe('filterByDateRange', () => {
 
     const result = filterByDateRange(changelog, '2024-01-01', '2024-12-31')
     expect(result.entries).toHaveLength(1)
-    expect(result.entries[0].version).toBe('2.0.0')
+    expect(result.entries).toEqual([expect.objectContaining({ version: '2.0.0' })])
   })
 
   it('handles open-ended start date', () => {
@@ -347,7 +344,7 @@ describe('filterByDateRange', () => {
 
     const result = filterByDateRange(changelog, undefined, '2024-01-15')
     expect(result.entries).toHaveLength(1)
-    expect(result.entries[0].version).toBe('1.0.0')
+    expect(result.entries).toEqual([expect.objectContaining({ version: '1.0.0' })])
   })
 
   it('handles open-ended end date', () => {
@@ -362,6 +359,6 @@ describe('filterByDateRange', () => {
 
     const result = filterByDateRange(changelog, '2024-01-15')
     expect(result.entries).toHaveLength(1)
-    expect(result.entries[0].version).toBe('2.0.0')
+    expect(result.entries).toEqual([expect.objectContaining({ version: '2.0.0' })])
   })
 })

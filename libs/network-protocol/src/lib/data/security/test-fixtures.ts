@@ -1,9 +1,15 @@
 import type { SerializedData, JSONString } from '../model'
 import { stringify } from '@hyperfrontend/immutable-api-utils/built-in-copy/json'
 
+/**
+ * Test case for encryption/decryption operations.
+ */
 export interface EncryptionTestCase {
+  /** Human-readable description of the test case */
   description: string
+  /** Serialized data to encrypt */
   data: SerializedData
+  /** Password used for encryption/decryption */
   password: string
 }
 

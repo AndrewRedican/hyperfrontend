@@ -131,9 +131,7 @@ describe('docs-site-libraries', () => {
       })
 
       const result = getAllPublishableLibraries(workspaceDir)
-      expect(result).toHaveLength(1)
-      expect(result[0].packageName).toBe('@hyperfrontend/logging')
-      expect(result[0].relativePath).toBe('libs/logging')
+      expect(result).toEqual([expect.objectContaining({ packageName: '@hyperfrontend/logging', relativePath: 'libs/logging' })])
     })
 
     it('finds publishable libraries in plugins folder', () => {
@@ -148,9 +146,7 @@ describe('docs-site-libraries', () => {
       })
 
       const result = getAllPublishableLibraries(workspaceDir)
-      expect(result).toHaveLength(1)
-      expect(result[0].packageName).toBe('@hyperfrontend/features')
-      expect(result[0].relativePath).toBe('plugins/features')
+      expect(result).toEqual([expect.objectContaining({ packageName: '@hyperfrontend/features', relativePath: 'plugins/features' })])
     })
 
     it('ignores non-publishable libraries', () => {
@@ -193,9 +189,7 @@ describe('docs-site-libraries', () => {
       })
 
       const result = getAllPublishableLibraries(workspace.root)
-      expect(result).toHaveLength(1)
-      expect(result[0].packageName).toBe('@hyperfrontend/json-utils')
-      expect(result[0].relativePath).toBe('libs/utils/json')
+      expect(result).toEqual([expect.objectContaining({ packageName: '@hyperfrontend/json-utils', relativePath: 'libs/utils/json' })])
     })
 
     it('handles empty workspace', () => {

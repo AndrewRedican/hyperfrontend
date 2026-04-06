@@ -177,6 +177,18 @@ execFileSync('git', ['add', filePath])
 
 Unsafe: `/(a+)+$/`, `/(a|a)+/`, `/([a-zA-Z]+)*$/`. Prefer `startsWith()`, `endsWith()`, `includes()`, `split()`.
 
+### No Non-Null Assertion
+
+```typescript
+// ❌
+const value = map.get(key)!
+// ✅ — type narrowing
+const value = map.get(key)
+if (value === undefined) throw new Error(`key not found: ${key}`)
+// ✅ — optional chaining
+const name = user?.profile?.name
+```
+
 ---
 
 ## JSDoc
@@ -236,12 +248,18 @@ Only applies when a file has **more than one function**:
 
 | File type        | Max lines |
 | ---------------- | --------- |
-| Implementation   | 300       |
-| Test (`.spec.*`) | 500       |
+| Implementation   | 400       |
+| Test (`.spec.*`) | 700       |
+
+When a file approaches the limit, split into discrete functions. Colocate internal helpers in the same folder as the module they support (e.g. a `utils/` or `shared/` subfolder beside the main file — not `<workspace-root>/libs`).
+
+Before extracting a helper as reusable, confirm it immediately deduplicates existing code. Check local `utils/`, `shared/`, and feature-adjacent folders first. Only promote to a shared location if other code can be deduplicated right now.
 
 ---
 
-## Test Names — assertive, no "should"
+## Testing
+
+### Names — assertive, no "should"
 
 ```typescript
 // ❌
@@ -249,6 +267,48 @@ it('should return the correct value', ...)
 // ✅
 it('returns the correct value', ...)
 ```
+
+### Assertions — one per test, use Jest APIs, consolidate with asymmetric matchers
+
+**One assertion per test.** Each `it` block should express a single observable fact. Multiple `expect` calls are only acceptable when asserting over a collection or validating tightly coupled state that cannot be expressed as a single matcher.
+
+Use built-in Jest matchers (`expect`, `toBe`, `toEqual`, `toThrow`, `toHaveBeenCalledWith`, etc.). Do **not** introduce raw assertion libraries or custom matchers unless they already exist in the file.
+
+Consolidate multiple property checks into a single `toEqual` with asymmetric matchers:
+
+```typescript
+// ❌
+expect(result.projects).toHaveLength(1)
+expect(result.projects[0].name).toBe('lib-a')
+// ✅
+expect(result.projects).toEqual([expect.objectContaining({ name: 'lib-a' })])
+
+// ❌
+expect(workspace.projectList[0].name).toBe('a-project')
+expect(workspace.projectList[1].name).toBe('m-project')
+// ✅
+expect(workspace.projectList).toEqual(
+  expect.arrayContaining([expect.objectContaining({ name: 'a-project' }), expect.objectContaining({ name: 'm-project' })])
+)
+
+// ❌
+expect(result).toHaveLength(2)
+expect(result[0].relativePath).toBe('libs/lib-a/CHANGELOG.md')
+expect(result[0].path).toBe('/workspace/libs/lib-a/CHANGELOG.md')
+// ✅
+expect(result).toEqual(
+  expect.arrayContaining([
+    expect.objectContaining({
+      relativePath: 'libs/lib-a/CHANGELOG.md',
+      path: '/workspace/libs/lib-a/CHANGELOG.md',
+    }),
+  ])
+)
+```
+
+### Branching — no unnecessary or unreachable code
+
+Do not add branches that cannot be reached, and avoid defensive branching that adds complexity without observable behaviour. Every new branch **requires** a corresponding unit test; if the test cannot be written, the branch should not exist.
 
 ---
 
@@ -284,7 +344,12 @@ it('returns the correct value', ...)
 - [ ] Comments use categorized prefixes; no plain `//`, no `TODO`, no `====` blocks
 - [ ] Single-use consts inlined (non-exported, non-complex)
 - [ ] Angle-bracket assertions in `.ts` (not `as`)
+- [ ] No non-null assertion (`!`) — use narrowing, optional chaining, or explicit checks
 - [ ] Type imports separated from value imports
-- [ ] File ≤300 lines (≤500 for tests) when multi-function
+- [ ] File ≤400 lines (≤700 for tests) when multi-function; split if needed, colocate helpers
+- [ ] Reused logic extracted only when it deduplicates existing code immediately
 - [ ] Test names assertive (no "should")
+- [ ] One assertion per test; multiple `expect` calls only for collections or tightly coupled state
+- [ ] Spec assertions use Jest asymmetric matchers (`objectContaining`, `arrayContaining`, etc.) — no redundant property-by-property checks
+- [ ] No unreachable or unexercised branches
 - [ ] Validated: `test` → `lint --fix` → `typecheck` → `format:write` (targeted)

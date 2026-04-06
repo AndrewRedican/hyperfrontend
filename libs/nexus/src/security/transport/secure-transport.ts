@@ -27,19 +27,37 @@ import { createSecurityErrorEventData } from '../errors'
  * @internal
  */
 interface NetworkProtocol {
+  /** Sends encrypted data from origin to target */
   send: (origin: string, target: string, data: unknown) => void
+  /** Receives and decrypts an incoming packet */
   receive: (packet: Uint8Array) => void
 }
 
 /**
  * ProtocolProvider function signature from network-protocol.
  *
+ * Creates a NetworkProtocol instance with packet send/receive handlers.
+ *
  * @internal
  */
 type NetworkProtocolProvider = (
   sendPacket: (packet: Uint8Array) => void,
-  receivePacket: (packet: { origin: string; target: string; data: unknown }) => void
+  receivePacket: (packet: DecryptedPacket) => void
 ) => NetworkProtocol
+
+/**
+ * Decrypted packet data structure from the network protocol.
+ *
+ * @internal
+ */
+interface DecryptedPacket {
+  /** Sender identifier for the decrypted message */
+  origin: string
+  /** Recipient identifier for the decrypted message */
+  target: string
+  /** Decrypted action payload */
+  data: unknown
+}
 
 /**
  * Creates a secure transport adapter wrapping network-protocol.
@@ -120,11 +138,8 @@ export function createSecureTransport(config: SecureTransportConfig): SecurityTr
    * This is called after deobfuscation/decryption completes.
    *
    * @param packet - The decrypted packet containing message data
-   * @param packet.origin - Sender identifier for the decrypted message
-   * @param packet.target - Recipient identifier for the decrypted message
-   * @param packet.data - Decrypted action payload to forward to the handler
    */
-  const receivePacket = (packet: { origin: string; target: string; data: unknown }): void => {
+  const receivePacket = (packet: DecryptedPacket): void => {
     if (state.stopped || !receiveHandler) {
       return
     }
@@ -233,14 +248,13 @@ export function createSecureTransport(config: SecureTransportConfig): SecurityTr
     return protocol
   }
 
-  return freeze(<SecurityTransport & { handleReceive: (packet: Uint8Array) => void }>{
+  return freeze(<SecurityTransport & { /** @internal */ handleReceive: (packet: Uint8Array) => void }>{
     send,
     onReceive,
     stop,
     resume,
     isReady,
     getProtocol,
-    /** @internal */
     handleReceive,
   })
 }

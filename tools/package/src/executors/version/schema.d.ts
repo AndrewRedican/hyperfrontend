@@ -1,5 +1,6 @@
 import type { FlowConfig } from '@hyperfrontend/versioning/flow/models'
 
+/** Configuration schema for the version executor. */
 export interface VersionExecutorSchema {
   /** See what commands would be run, without committing to git or updating files. */
   dryRun?: boolean

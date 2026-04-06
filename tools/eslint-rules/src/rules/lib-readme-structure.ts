@@ -93,11 +93,28 @@ export const REQUIRED_BADGES = [
  * Represents a parsed section from the README.
  */
 export interface ParsedSection {
+  /** Heading level (1-6) */
   level: number
+  /** Section title text */
   title: string
+  /** Line number where section starts (1-based) */
   startLine: number
+  /** Line number where section ends (1-based) */
   endLine: number
+  /** Section content excluding the heading */
   content: string
+}
+
+/**
+ * Extracted badges block information.
+ */
+export interface BadgesBlockInfo {
+  /** The badges block content */
+  block: string
+  /** Line number where badges start (1-based) */
+  startLine: number
+  /** Line number where badges end (1-based) */
+  endLine: number
 }
 
 /**
@@ -111,7 +128,7 @@ export function parseMarkdownSections(content: string): ParsedSection[] {
   const sections: ParsedSection[] = []
 
   for (let i = 0; i < lines.length; i++) {
-    const line = lines[i]
+    const line = <string>lines[i]
     if (line.startsWith('#')) {
       let level = 0
       while (level < line.length && level < 6 && line[level] === '#') {
@@ -131,19 +148,20 @@ export function parseMarkdownSections(content: string): ParsedSection[] {
   }
 
   for (let i = 0; i < sections.length; i++) {
-    const currentLevel = sections[i].level
-    const startLine = sections[i].startLine
+    const section = <ParsedSection>sections[i]
+    const currentLevel = section.level
+    const startLine = section.startLine
 
     let endLine = lines.length
     for (let j = i + 1; j < sections.length; j++) {
-      if (sections[j].level <= currentLevel) {
-        endLine = sections[j].startLine - 1
+      if ((<ParsedSection>sections[j]).level <= currentLevel) {
+        endLine = (<ParsedSection>sections[j]).startLine - 1
         break
       }
     }
 
-    sections[i].endLine = endLine
-    sections[i].content = lines.slice(startLine, endLine).join('\n').trim()
+    section.endLine = endLine
+    section.content = lines.slice(startLine, endLine).join('\n').trim()
   }
 
   return sections
@@ -155,7 +173,7 @@ export function parseMarkdownSections(content: string): ParsedSection[] {
  * @param content - The markdown content.
  * @returns The badges block content, or null if not found.
  */
-export function extractBadgesBlock(content: string): { block: string; startLine: number; endLine: number } | null {
+export function extractBadgesBlock(content: string): BadgesBlockInfo | null {
   const lines = content.split('\n')
   let inBadgesBlock = false
   let startLine = -1
@@ -163,7 +181,7 @@ export function extractBadgesBlock(content: string): { block: string; startLine:
   const blockLines: string[] = []
 
   for (let i = 0; i < lines.length; i++) {
-    const line = lines[i]
+    const line = <string>lines[i]
 
     const trimmedLine = line.trim().toLowerCase()
     if (!inBadgesBlock && trimmedLine.startsWith('<p') && trimmedLine.includes('align="center"')) {
@@ -175,7 +193,7 @@ export function extractBadgesBlock(content: string): { block: string; startLine:
       blockLines.push(line)
       if (trimmedLine.includes('</p>')) {
         if (i + 1 < lines.length) {
-          const nextLine = lines[i + 1].trim().toLowerCase()
+          const nextLine = (<string>lines[i + 1]).trim().toLowerCase()
           if (nextLine.startsWith('<p') && nextLine.includes('align="center"')) {
             continue
           }
@@ -194,16 +212,26 @@ export function extractBadgesBlock(content: string): { block: string; startLine:
 }
 
 /**
+ * Extracted title information.
+ */
+export interface TitleInfo {
+  /** The title text */
+  title: string
+  /** Line number where title appears (1-based) */
+  line: number
+}
+
+/**
  * Extracts the title from the README content.
  *
  * @param content - The markdown content.
  * @returns The title and its line number, or null if not found.
  */
-export function extractTitle(content: string): { title: string; line: number } | null {
+export function extractTitle(content: string): TitleInfo | null {
   const lines = content.split('\n')
 
   for (let i = 0; i < lines.length; i++) {
-    const line = lines[i]
+    const line = <string>lines[i]
     if (line.startsWith('# ') && !line.startsWith('## ')) {
       return { title: line.slice(2).trim(), line: i + 1 }
     }
@@ -213,17 +241,27 @@ export function extractTitle(content: string): { title: string; line: number } |
 }
 
 /**
+ * Extracted short description information.
+ */
+export interface DescriptionInfo {
+  /** The description text */
+  text: string
+  /** Line number where description appears (1-based) */
+  line: number
+}
+
+/**
  * Extracts the short description paragraph after badges block.
  *
  * @param content - The markdown content.
  * @param badgesEndLine - The ending line of the badges block.
  * @returns The description and its line number, or null if not found.
  */
-export function extractShortDescription(content: string, badgesEndLine: number): { text: string; line: number } | null {
+export function extractShortDescription(content: string, badgesEndLine: number): DescriptionInfo | null {
   const lines = content.split('\n')
 
   for (let i = badgesEndLine; i < lines.length; i++) {
-    const line = lines[i].trim()
+    const line = (<string>lines[i]).trim()
 
     if (!line) {
       continue
@@ -244,16 +282,34 @@ export function extractShortDescription(content: string, badgesEndLine: number):
 }
 
 /**
+ * Extracted documentation link information.
+ */
+export interface DocLinkInfo {
+  /** Line number where link appears (1-based) */
+  line: number
+}
+
+/**
+ * Represents a found section entry with name and position.
+ */
+interface FoundSectionEntry {
+  /** Section name */
+  name: string
+  /** Index in the sections array */
+  index: number
+}
+
+/**
  * Extracts the documentation link from the content.
  *
  * @param content - The markdown content.
  * @returns The documentation link info, or null if not found.
  */
-export function extractDocumentationLink(content: string): { line: number } | null {
+export function extractDocumentationLink(content: string): DocLinkInfo | null {
   const lines = content.split('\n')
 
   for (let i = 0; i < lines.length; i++) {
-    const line = lines[i]
+    const line = <string>lines[i]
     if (line.includes('•') && line.includes('👉') && line.includes('**documentation**') && containsValidDocumentationUrl(line)) {
       return { line: i + 1 }
     }
@@ -364,7 +420,7 @@ const rule: Rule.RuleModule = {
         const sections = parseMarkdownSections(content)
         const level2Sections = sections.filter((s) => s.level === 2)
 
-        const foundSections: Array<{ name: string; index: number }> = []
+        const foundSections: FoundSectionEntry[] = []
 
         for (const required of REQUIRED_SECTIONS) {
           const found = level2Sections.find((s) => required.pattern.test(s.title))
@@ -390,8 +446,8 @@ const rule: Rule.RuleModule = {
         }
 
         for (let i = 0; i < foundSections.length - 1; i++) {
-          const current = foundSections[i]
-          const next = foundSections[i + 1]
+          const current = <FoundSectionEntry>foundSections[i]
+          const next = <FoundSectionEntry>foundSections[i + 1]
 
           if (current.index > next.index) {
             context.report({

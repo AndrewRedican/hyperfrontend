@@ -24,7 +24,7 @@ const UTILS_SLUG_MAP: Record<string, string> = {
 }
 
 /**
- * Convert a URL slug to the corresponding generated content slug
+ * Convert a URL slug to the corresponding generated content slug.
  *
  * @param slug - The URL slug (e.g., 'data' or 'nexus')
  * @returns The generated content slug (e.g., 'data-utils' or 'nexus')
@@ -33,19 +33,34 @@ function resolveGeneratedSlug(slug: string): string {
   return UTILS_SLUG_MAP[slug] || slug
 }
 
+/**
+ * Documentation manifest containing library metadata and generation info.
+ */
 interface Manifest {
+  /** Timestamp when docs were generated */
   generatedAt: string
+  /** Library metadata entries */
   libraries: {
+    /** Library display name */
     name: string
+    /** npm package name */
     packageName: string
+    /** URL slug */
     slug: string
+    /** Library category */
     category: string
+    /** Path to README file (null if missing) */
     readme: string | null
+    /** Path to architecture doc (null if missing) */
     architecture: string | null
+    /** Whether API docs exist */
     hasApi: boolean
   }[]
+  /** Root documentation availability */
   rootDocs: {
+    /** Whether architecture doc exists */
     architecture: boolean
+    /** Whether contributing doc exists */
     contributing: boolean
   }
 }

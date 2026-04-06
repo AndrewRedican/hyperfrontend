@@ -11,6 +11,7 @@ export const ImportCategory = <const>{
   CurrentDir: 4,
 }
 
+/** Numeric type representing import category values for ordering. */
 export type ImportCategoryType = (typeof ImportCategory)[keyof typeof ImportCategory]
 
 /**

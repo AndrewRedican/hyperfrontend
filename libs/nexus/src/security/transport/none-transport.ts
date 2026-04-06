@@ -128,7 +128,7 @@ export function createNoneTransport(config: NoneTransportConfig): SecurityTransp
     return 'none'
   }
 
-  return freeze(<SecurityTransport & { handleReceive: (action: unknown) => void }>{
+  return freeze(<SecurityTransport & { /** Processes incoming actions (for testing) */ handleReceive: (action: unknown) => void }>{
     send,
     onReceive,
     stop,

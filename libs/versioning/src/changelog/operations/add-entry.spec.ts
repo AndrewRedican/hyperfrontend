@@ -40,7 +40,7 @@ describe('addEntry', () => {
     const result = addEntry(changelog, newEntry)
 
     expect(result.entries).toHaveLength(3)
-    expect(result.entries[0].version).toBe('3.0.0')
+    expect(result.entries[0]).toEqual(expect.objectContaining({ version: '3.0.0' }))
   })
 
   it('adds entry at specified position', () => {
@@ -52,7 +52,7 @@ describe('addEntry', () => {
 
     const result = addEntry(changelog, newEntry, { position: 1 })
 
-    expect(result.entries[1].version).toBe('1.5.0')
+    expect(result.entries[1]).toEqual(expect.objectContaining({ version: '1.5.0' }))
   })
 
   it('adds entry at end position', () => {
@@ -64,7 +64,7 @@ describe('addEntry', () => {
 
     const result = addEntry(changelog, newEntry, { position: 'end' })
 
-    expect(result.entries[result.entries.length - 1].version).toBe('0.1.0')
+    expect(result.entries.at(-1)).toEqual(expect.objectContaining({ version: '0.1.0' }))
   })
 
   it('throws error for duplicate version without replaceExisting', () => {
@@ -110,7 +110,7 @@ describe('addUnreleasedEntry', () => {
     const changelog = createTestChangelog()
     const result = addUnreleasedEntry(changelog, [])
 
-    expect(result.entries[0].version).toBe('Unreleased')
+    expect(result.entries[0]).toEqual(expect.objectContaining({ version: 'Unreleased' }))
     expect(result.entries).toHaveLength(3)
   })
 
@@ -128,8 +128,7 @@ describe('releaseUnreleased', () => {
     const changelog = addUnreleasedEntry(createTestChangelog(), [])
     const result = releaseUnreleased(changelog, '3.0.0', '2024-03-01')
 
-    expect(result.entries[0].version).toBe('3.0.0')
-    expect(result.entries[0].date).toBe('2024-03-01')
+    expect(result.entries[0]).toEqual(expect.objectContaining({ version: '3.0.0', date: '2024-03-01' }))
   })
 
   it('throws error if no Unreleased entry', () => {

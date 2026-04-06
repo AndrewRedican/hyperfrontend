@@ -7,6 +7,14 @@ import { increment } from '../../semver/increment/bump'
 import { parseVersion } from '../../semver/parse/version'
 import { createStep, createSkippedResult } from '../models/step'
 
+/** Minimal commit data for bump calculation. */
+interface CommitForBump {
+  /** Commit type (e.g., 'feat', 'fix'). */
+  type?: string
+  /** Whether this is a breaking change. */
+  breaking: boolean
+}
+
 export const CALCULATE_BUMP_STEP_ID = 'calculate-bump'
 
 /**
@@ -22,7 +30,7 @@ export const CALCULATE_BUMP_STEP_ID = 'calculate-bump'
  * @returns The highest bump type needed
  */
 function calculateBumpFromCommits(
-  commits: readonly { type?: string; breaking: boolean }[],
+  commits: readonly CommitForBump[],
   minorTypes: readonly string[],
   patchTypes: readonly string[],
   currentVersion: string

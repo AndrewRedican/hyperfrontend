@@ -41,8 +41,9 @@ describe('createExactRange', () => {
   it('creates an exact match range', () => {
     const v = createSemVer({ major: 1, minor: 2, patch: 3 })
     const range = createExactRange(v)
-    expect(range.sets).toHaveLength(1)
-    expect(range.sets[0].comparators[0].operator).toBe('=')
+    expect(range.sets).toEqual([
+      expect.objectContaining({ comparators: expect.arrayContaining([expect.objectContaining({ operator: '=' })]) }),
+    ])
   })
 })
 

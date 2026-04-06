@@ -98,6 +98,7 @@ export interface Tree {
    * @returns Buffer if no encoding specified, string otherwise
    */
   read(filePath: string): Buffer | null
+  /** Read file contents with encoding, returning string. */
   read(filePath: string, encoding: BufferEncoding): string | null
 
   /**

@@ -209,9 +209,9 @@ describe('compareTagsByVersion', () => {
 
     const sorted = [...tags].sort(compareTagsByVersion)
 
-    expect(sorted[0].name).toBe('v2.0.0')
-    expect(sorted[1].name).toBe('v1.5.0')
-    expect(sorted[2].name).toBe('v1.0.0')
+    expect(sorted[0]?.name).toBe('v2.0.0')
+    expect(sorted[1]?.name).toBe('v1.5.0')
+    expect(sorted[2]?.name).toBe('v1.0.0')
   })
 
   it('handles tags with no version (both have no version)', () => {
@@ -238,9 +238,9 @@ describe('compareTagsByVersion', () => {
 
     const sorted = [...tags].sort(compareTagsByVersion)
 
-    expect(sorted[0].name).toBe('v1.0.1')
-    expect(sorted[1].name).toBe('v1.0')
-    expect(sorted[2].name).toBe('v1.0.0')
+    expect(sorted[0]?.name).toBe('v1.0.1')
+    expect(sorted[1]?.name).toBe('v1.0')
+    expect(sorted[2]?.name).toBe('v1.0.0')
   })
 
   it('handles versions with prerelease identifiers', () => {

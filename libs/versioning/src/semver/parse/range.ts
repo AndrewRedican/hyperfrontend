@@ -86,9 +86,13 @@ export function parseRangeStrict(input: string): Range {
   return result.range
 }
 
+/** Result of parsing a comparator set */
 interface SetResult {
+  /** Whether parsing succeeded */
   success: boolean
+  /** The parsed comparator set (if successful) */
   set?: ComparatorSet
+  /** Error message (if failed) */
   error?: string
 }
 
@@ -159,10 +163,15 @@ function parseComparatorSet(input: string): SetResult {
   return { success: true, set: createComparatorSet(comparators) }
 }
 
+/** Result of parsing a hyphen range */
 interface HyphenResult {
+  /** Whether input was a hyphen range */
   isHyphenRange: boolean
+  /** Whether parsing succeeded */
   success: boolean
+  /** The parsed comparator set (if successful) */
   set?: ComparatorSet
+  /** Error message (if failed) */
   error?: string
 }
 
@@ -236,9 +245,13 @@ function splitByWhitespace(input: string): string[] {
   return tokens
 }
 
+/** Result of parsing a single comparator */
 interface ComparatorResult {
+  /** Whether parsing succeeded */
   success: boolean
+  /** The parsed comparators (if successful) */
   comparators?: Comparator[]
+  /** Error message (if failed) */
   error?: string
 }
 
@@ -334,13 +347,13 @@ function parseXRange(input: string, _operator: RangeOperator): ComparatorResult 
   }
 
   if (nums.length === 1) {
-    const lower = createSemVer({ major: nums[0], minor: 0, patch: 0 })
-    const upper = createSemVer({ major: nums[0] + 1, minor: 0, patch: 0 })
+    const lower = createSemVer({ major: <number>nums[0], minor: 0, patch: 0 })
+    const upper = createSemVer({ major: <number>nums[0] + 1, minor: 0, patch: 0 })
     return { success: true, comparators: [createComparator('>=', lower), createComparator('<', upper)] }
   }
 
-  const lower = createSemVer({ major: nums[0], minor: nums[1], patch: 0 })
-  const upper = createSemVer({ major: nums[0], minor: nums[1] + 1, patch: 0 })
+  const lower = createSemVer({ major: <number>nums[0], minor: <number>nums[1], patch: 0 })
+  const upper = createSemVer({ major: <number>nums[0], minor: <number>nums[1] + 1, patch: 0 })
   return { success: true, comparators: [createComparator('>=', lower), createComparator('<', upper)] }
 }
 
@@ -429,7 +442,7 @@ function parseSimpleVersion(input: string): SemVer | null {
   if (nums.length === 0) return null
 
   return createSemVer({
-    major: nums[0],
+    major: <number>nums[0],
     minor: nums[1] ?? 0,
     patch: nums[2] ?? 0,
     prerelease: [],

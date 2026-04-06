@@ -3,10 +3,17 @@ import { createError } from '@hyperfrontend/immutable-api-utils/built-in-copy/er
 import { round } from '@hyperfrontend/immutable-api-utils/built-in-copy/math'
 import { parseInt } from '@hyperfrontend/immutable-api-utils/built-in-copy/number'
 
+/**
+ * RGB color representation with optional alpha channel.
+ */
 export interface Rgb {
+  /** Red channel (0-255) */
   r: number
+  /** Green channel (0-255) */
   g: number
+  /** Blue channel (0-255) */
   b: number
+  /** Alpha channel (0-1) */
   a?: number
 }
 

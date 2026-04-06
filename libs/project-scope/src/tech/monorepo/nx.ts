@@ -20,7 +20,7 @@ export function nxDetector(workspacePath: string, packageJson?: PackageJson): Mo
   const sources: DetectionSource[] = []
   let confidence = 0
   let version: string | undefined
-  let workspaceLayout: { appsDir: string; libsDir: string } | undefined
+  let workspaceLayout: { /** Applications directory */ appsDir: string; /** Libraries directory */ libsDir: string } | undefined
 
   const nxJsonPath = join(workspacePath, 'nx.json')
   if (exists(nxJsonPath)) {

@@ -199,7 +199,9 @@ export interface ScopeFilteringConfig {
  * between flow-level filtering and commit classification.
  */
 export const DEFAULT_SCOPE_FILTERING_CONFIG: Required<Omit<ScopeFilteringConfig, 'infrastructure' | 'infrastructureMatcher'>> & {
+  /** Infrastructure projects configuration (unused in default) */
   infrastructure: undefined
+  /** Infrastructure matcher function (unused in default) */
   infrastructureMatcher: undefined
 } = {
   strategy: 'hybrid',
@@ -324,8 +326,8 @@ export interface FlowConfig {
 /**
  * Default flow configuration values.
  */
-export const DEFAULT_FLOW_CONFIG: Required<Omit<FlowConfig, 'repository' | 'scopeFiltering' | 'commitTypeToSection'>> &
-  Pick<FlowConfig, 'repository' | 'scopeFiltering' | 'commitTypeToSection'> = {
+export const DEFAULT_FLOW_CONFIG: Required<Omit<FlowConfig, 'repository' | 'scopeFiltering' | 'commitTypeToSection' | 'releaseAs'>> &
+  Pick<FlowConfig, 'repository' | 'scopeFiltering' | 'commitTypeToSection' | 'releaseAs'> = {
   preset: 'conventional',
   releaseTypes: ['feat', 'fix', 'perf', 'revert'],
   minorTypes: ['feat'],

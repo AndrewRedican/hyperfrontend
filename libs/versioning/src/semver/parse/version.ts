@@ -220,10 +220,17 @@ export function coerceVersion(input: string): SemVer | null {
   })
 }
 
+/**
+ * Result of parsing a numeric identifier.
+ */
 interface NumericResult {
+  /** Whether parsing succeeded */
   success: boolean
+  /** The parsed numeric value */
   value: number
+  /** Position after the parsed content */
   endPos: number
+  /** Error message if parsing failed */
   error?: string
 }
 
@@ -264,10 +271,17 @@ function parseNumericIdentifier(input: string, start: number, end: number): Nume
   return { success: true, value, endPos: pos }
 }
 
+/**
+ * Result of parsing dot-separated identifiers.
+ */
 interface IdentifiersResult {
+  /** Whether parsing succeeded */
   success: boolean
+  /** The parsed identifier strings */
   identifiers: string[]
+  /** Position after the parsed content */
   endPos: number
+  /** Error message if parsing failed */
   error?: string
 }
 

@@ -220,8 +220,7 @@ describe('discoverPackages', () => {
 
     const result = discoverPackages({ includeChangelogs: false })
 
-    expect(result.projects).toHaveLength(1)
-    expect(result.projects[0].changelogPath).toBeNull()
+    expect(result.projects).toEqual([expect.objectContaining({ changelogPath: null })])
     expect(projectScope.exists).not.toHaveBeenCalled()
   })
 
@@ -247,8 +246,7 @@ describe('discoverPackages', () => {
 
     const result = discoverPackages()
 
-    expect(result.projects).toHaveLength(1)
-    expect(result.projects[0].name).toBe('lib-a')
+    expect(result.projects).toEqual([expect.objectContaining({ name: 'lib-a' })])
   })
 
   it('skips packages that fail to parse', () => {
@@ -261,8 +259,7 @@ describe('discoverPackages', () => {
 
     const result = discoverPackages()
 
-    expect(result.projects).toHaveLength(1)
-    expect(result.projects[0].name).toBe('lib-a')
+    expect(result.projects).toEqual([expect.objectContaining({ name: 'lib-a' })])
   })
 
   it('uses default version 0.0.0 for packages without version', () => {
@@ -273,8 +270,7 @@ describe('discoverPackages', () => {
 
     const result = discoverPackages()
 
-    expect(result.projects).toHaveLength(1)
-    expect(result.projects[0].version).toBe('0.0.0')
+    expect(result.projects).toEqual([expect.objectContaining({ version: '0.0.0' })])
   })
 
   it('applies custom patterns and exclude', () => {
@@ -318,7 +314,7 @@ describe('discoverPackages', () => {
 
     const result = discoverPackages({ includeChangelogs: true })
 
-    expect(result.projects[0].changelogPath).toBe('/workspace/libs/lib-a/CHANGELOG.md')
+    expect(result.projects).toEqual([expect.objectContaining({ changelogPath: '/workspace/libs/lib-a/CHANGELOG.md' })])
   })
 
   it('tracks internalDependencies correctly', () => {
@@ -418,8 +414,7 @@ describe('discoverPackages with VFS tree', () => {
 
     expect(projectScope.findFilesInTree).toHaveBeenCalledWith(tree, expect.any(Array), expect.any(Object))
     expect(projectScope.findFiles).not.toHaveBeenCalled()
-    expect(result.projects).toHaveLength(1)
-    expect(result.projects[0].name).toBe('lib-a')
+    expect(result.projects).toEqual([expect.objectContaining({ name: 'lib-a' })])
   })
 
   it('reads package.json from tree instead of disk', () => {
@@ -437,8 +432,7 @@ describe('discoverPackages with VFS tree', () => {
 
     expect(tree.read).toHaveBeenCalledWith('libs/lib-a/package.json', 'utf-8')
     expect(projectScope.readPackageJson).not.toHaveBeenCalled()
-    expect(result.projects[0].name).toBe('from-tree')
-    expect(result.projects[0].version).toBe('2.0.0')
+    expect(result.projects).toEqual([expect.objectContaining({ name: 'from-tree', version: '2.0.0' })])
   })
 
   it('uses tree.root as workspace root when not explicitly provided', () => {
@@ -499,8 +493,7 @@ describe('discoverPackages with VFS tree', () => {
       trackDependencies: false,
     })
 
-    expect(result.projects).toHaveLength(1)
-    expect(result.projects[0].name).toBe('lib-a')
+    expect(result.projects).toEqual([expect.objectContaining({ name: 'lib-a' })])
   })
 
   it('skips packages with invalid JSON in tree', () => {
@@ -517,7 +510,6 @@ describe('discoverPackages with VFS tree', () => {
       trackDependencies: false,
     })
 
-    expect(result.projects).toHaveLength(1)
-    expect(result.projects[0].name).toBe('lib-a')
+    expect(result.projects).toEqual([expect.objectContaining({ name: 'lib-a' })])
   })
 })

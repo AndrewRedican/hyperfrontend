@@ -1,3 +1,6 @@
+/**
+ * Navigation item for the docs site sidebar.
+ */
 export interface NavItem {
   /** Display title - package slug without `@hyperfrontend/` prefix */
   slug: string

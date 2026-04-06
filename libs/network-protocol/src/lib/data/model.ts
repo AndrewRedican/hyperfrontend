@@ -16,7 +16,9 @@ import { freeze } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
  * ```
  */
 export type JSONString<T = unknown> = string & {
+  /** Brand symbol ensuring type safety for JSON strings */
   readonly __jsonBrand: unique symbol
+  /** Phantom type parameter for the serialized type */
   readonly __type: T
 }
 
@@ -74,6 +76,9 @@ export interface Data<T = unknown> {
  */
 export type DataCreater = <T = unknown>(pid: string, sequence: number, message: T) => Promise<SerializedData<T>>
 
+/**
+ * Creates a schema from input data.
+ */
 export type SchemaCreater = (data: unknown) => Schema
 
 /**

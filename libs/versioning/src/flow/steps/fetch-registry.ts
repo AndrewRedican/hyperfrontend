@@ -2,6 +2,12 @@ import type { FlowStep } from '../models/step'
 import { parse } from '@hyperfrontend/immutable-api-utils/built-in-copy/json'
 import { createStep } from '../models/step'
 
+/** Minimal package.json structure with version field. */
+interface PackageJsonWithVersion {
+  /** Package version string. */
+  version?: string
+}
+
 export const FETCH_REGISTRY_STEP_ID = 'fetch-registry'
 
 /**
@@ -29,7 +35,7 @@ export function createFetchRegistryStep(): FlowStep {
     try {
       const content = tree.read(packageJsonPath, 'utf-8')
       if (content) {
-        const pkg = <{ version?: string }>parse(content)
+        const pkg = <PackageJsonWithVersion>parse(content)
         currentVersion = pkg.version ?? '0.0.0'
       }
     } catch (error) {

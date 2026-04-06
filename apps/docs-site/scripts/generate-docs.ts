@@ -1,13 +1,14 @@
 #!/usr/bin/env node
+import type { MarkdownLinkResult, TransformLinkResult, ContentExtractionResult } from './generate-docs.types'
 import { execFileSync } from 'node:child_process'
 import { existsSync, readFileSync, mkdirSync, writeFileSync } from 'node:fs'
 import { resolve, join, dirname } from 'node:path'
-import { log } from '@hyperfrontend/immutable-api-utils/built-in-copy/console'
 import { createDate } from '@hyperfrontend/immutable-api-utils/built-in-copy/date'
 import { parse, stringify } from '@hyperfrontend/immutable-api-utils/built-in-copy/json'
 import { entries } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
 import { createSet } from '@hyperfrontend/immutable-api-utils/built-in-copy/set'
 import { createURL } from '@hyperfrontend/immutable-api-utils/built-in-copy/url'
+import { logger } from '@hyperfrontend/logging'
 
 /**
  * Checks if a line contains a URL pointing to the docs site (www.hyperfrontend.dev).
@@ -38,17 +39,27 @@ const OUTPUT_DIR = resolve(__dirname, '../.generated')
 const DOCS_OUTPUT = join(OUTPUT_DIR, 'docs')
 const API_OUTPUT = join(OUTPUT_DIR, 'api')
 
+/** Configuration for a library to document */
 interface LibraryConfig {
+  /** Display name */
   name: string
+  /** npm package name */
   packageName: string
+  /** URL slug */
   slug: string
+  /** Source path relative to workspace root */
   srcPath: string
+  /** Library category */
   category: 'core' | 'supporting' | 'utils' | 'plugin'
 }
 
+/** Package.json structure for entry point discovery */
 interface PackageJson {
+  /** Package name */
   name?: string
+  /** Main entry point */
   main?: string
+  /** Export map */
   exports?: Record<string, string | Record<string, string>>
 }
 
@@ -65,7 +76,7 @@ function discoverEntryPointsFromPackageJson(libPath: string): string[] {
   const packageJsonPath = join(libPath, 'package.json')
 
   if (!existsSync(packageJsonPath)) {
-    log(`  ⚠ No package.json found at ${libPath}`)
+    logger.log(`  ⚠ No package.json found at ${libPath}`)
     return []
   }
 
@@ -149,7 +160,6 @@ const LIBRARIES: LibraryConfig[] = [
     srcPath: 'libs/project-scope',
     category: 'core',
   },
-
   {
     name: 'State Machine',
     packageName: '@hyperfrontend/state-machine',
@@ -159,14 +169,7 @@ const LIBRARIES: LibraryConfig[] = [
   },
   { name: 'Logging', packageName: '@hyperfrontend/logging', slug: 'logging', srcPath: 'libs/logging', category: 'supporting' },
   { name: 'Web Worker', packageName: '@hyperfrontend/web-worker', slug: 'web-worker', srcPath: 'libs/web-worker', category: 'supporting' },
-  {
-    name: 'Versioning',
-    packageName: '@hyperfrontend/versioning',
-    slug: 'versioning',
-    srcPath: 'libs/versioning',
-    category: 'supporting',
-  },
-
+  { name: 'Versioning', packageName: '@hyperfrontend/versioning', slug: 'versioning', srcPath: 'libs/versioning', category: 'supporting' },
   { name: 'Data Utils', packageName: '@hyperfrontend/data-utils', slug: 'data-utils', srcPath: 'libs/utils/data', category: 'utils' },
   {
     name: 'Function Utils',
@@ -200,7 +203,6 @@ const LIBRARIES: LibraryConfig[] = [
   },
   { name: 'Time Utils', packageName: '@hyperfrontend/time-utils', slug: 'time-utils', srcPath: 'libs/utils/time', category: 'utils' },
   { name: 'UI Utils', packageName: '@hyperfrontend/ui-utils', slug: 'ui-utils', srcPath: 'libs/utils/ui', category: 'utils' },
-
   { name: 'Features Plugin', packageName: '@hyperfrontend/features', slug: 'features', srcPath: 'plugins/features', category: 'plugin' },
 ]
 
@@ -253,7 +255,7 @@ function normalizeRelativePath(path: string): string {
  * @param segment - Text starting with link text, e.g., "click here](https://example.com) more text"
  * @returns Object with linkText, url, and remainder, or null if not a valid link
  */
-function extractMarkdownLink(segment: string): { linkText: string; url: string; remainder: string } | null {
+function extractMarkdownLink(segment: string): MarkdownLinkResult | null {
   const linkEndIndex = segment.indexOf('](')
   if (linkEndIndex === -1) return null
 
@@ -276,7 +278,7 @@ function extractMarkdownLink(segment: string): { linkText: string; url: string; 
  * @param sourceContext - Where this content came from ('root' | 'library')
  * @returns Object with transformed URL (or null to remove the link entirely)
  */
-function transformLinkUrl(url: string, sourceContext: 'root' | 'library'): { url: string | null; keepAsText: boolean } {
+function transformLinkUrl(url: string, sourceContext: 'root' | 'library'): TransformLinkResult {
   const normalized = normalizeRelativePath(url)
 
   const rootDocMappings: Record<string, string> = {
@@ -377,11 +379,11 @@ function transformLinks(content: string, sourceContext: 'root' | 'library'): str
  * @param lib - The library configuration
  * @returns An object with the content and whether it exists
  */
-function extractReadme(lib: LibraryConfig): { content: string; exists: boolean } {
+function extractReadme(lib: LibraryConfig): ContentExtractionResult {
   const readmePath = join(WORKSPACE_ROOT, lib.srcPath, 'README.md')
 
   if (!existsSync(readmePath)) {
-    log(`  ⚠ No README.md found for ${lib.name}`)
+    logger.log(`  ⚠ No README.md found for ${lib.name}`)
     return { content: '', exists: false }
   }
 
@@ -396,7 +398,7 @@ function extractReadme(lib: LibraryConfig): { content: string; exists: boolean }
  * @param lib - The library configuration
  * @returns An object with the content and whether it exists
  */
-function extractArchitecture(lib: LibraryConfig): { content: string; exists: boolean } {
+function extractArchitecture(lib: LibraryConfig): ContentExtractionResult {
   const archPath = join(WORKSPACE_ROOT, lib.srcPath, 'ARCHITECTURE.md')
 
   if (!existsSync(archPath)) {
@@ -423,7 +425,7 @@ function generateTypeDoc(lib: LibraryConfig): boolean {
   const discoveredEntryPoints = discoverEntryPointsFromPackageJson(libPath)
 
   if (discoveredEntryPoints.length === 0) {
-    log(`  ⚠ No entry points found for ${lib.name}`)
+    logger.log(`  ⚠ No entry points found for ${lib.name}`)
     return false
   }
 
@@ -431,8 +433,8 @@ function generateTypeDoc(lib: LibraryConfig): boolean {
 
   const missingEntryPoints = entryPoints.filter((ep) => !existsSync(ep))
   if (missingEntryPoints.length > 0) {
-    log(`  ⚠ Missing entry points for ${lib.name}:`)
-    missingEntryPoints.forEach((ep) => log(`      - ${ep}`))
+    logger.log(`  ⚠ Missing entry points for ${lib.name}:`)
+    missingEntryPoints.forEach((ep) => logger.log(`      - ${ep}`))
     return false
   }
 
@@ -451,23 +453,31 @@ function generateTypeDoc(lib: LibraryConfig): boolean {
 
     args.push(...entryPoints)
 
-    log(`  → Running TypeDoc for ${lib.name} (${discoveredEntryPoints.length} entry points)`)
+    logger.log(`  → Running TypeDoc for ${lib.name} (${discoveredEntryPoints.length} entry points)`)
     execFileSync('npx', args, { cwd: WORKSPACE_ROOT, stdio: 'pipe' })
     return true
   } catch (error) {
     const errorMsg = error instanceof Error ? error.message : String(error)
-    log(`  ⚠ TypeDoc failed for ${lib.name}: ${errorMsg.slice(0, 200)}`)
+    logger.log(`  ⚠ TypeDoc failed for ${lib.name}: ${errorMsg.slice(0, 200)}`)
     return false
   }
 }
 
+/** Generated documentation for a library */
 interface LibraryDoc {
+  /** Display name */
   name: string
+  /** npm package name */
   packageName: string
+  /** URL slug */
   slug: string
+  /** Library category */
   category: string
+  /** README content, if present */
   readme: string | null
+  /** Architecture doc content, if present */
   architecture: string | null
+  /** Whether API docs were generated */
   hasApi: boolean
 }
 
@@ -475,7 +485,7 @@ interface LibraryDoc {
  * Main documentation generation function that processes all libraries
  */
 function generateDocs() {
-  log('📚 Generating documentation...\n')
+  logger.log('📚 Generating documentation...\n')
 
   ensureDir(OUTPUT_DIR)
   ensureDir(DOCS_OUTPUT)
@@ -484,7 +494,7 @@ function generateDocs() {
   const libraryDocs: LibraryDoc[] = []
 
   for (const lib of LIBRARIES) {
-    log(`📦 Processing ${lib.name}...`)
+    logger.log(`📦 Processing ${lib.name}...`)
 
     const readme = extractReadme(lib)
 
@@ -514,25 +524,25 @@ function generateDocs() {
       hasApi,
     })
 
-    log('')
+    logger.log('')
   }
 
-  log('📐 Processing root ARCHITECTURE.md...')
+  logger.log('📐 Processing root ARCHITECTURE.md...')
   const rootArchPath = join(WORKSPACE_ROOT, 'ARCHITECTURE.md')
   if (existsSync(rootArchPath)) {
     const archContent = readFileSync(rootArchPath, 'utf-8')
     const transformedArchContent = transformLinks(archContent, 'root')
     writeFileSync(join(DOCS_OUTPUT, 'architecture.md'), transformedArchContent)
-    log('  ✓ Root architecture document extracted\n')
+    logger.log('  ✓ Root architecture document extracted\n')
   }
 
-  log('📝 Processing CONTRIBUTING.md...')
+  logger.log('📝 Processing CONTRIBUTING.md...')
   const contributingPath = join(WORKSPACE_ROOT, 'CONTRIBUTING.md')
   if (existsSync(contributingPath)) {
     const contributingContent = readFileSync(contributingPath, 'utf-8')
     const transformedContributingContent = transformLinks(contributingContent, 'root')
     writeFileSync(join(DOCS_OUTPUT, 'contributing.md'), transformedContributingContent)
-    log('  ✓ Contributing guide extracted\n')
+    logger.log('  ✓ Contributing guide extracted\n')
   }
 
   const manifest = {
@@ -546,8 +556,8 @@ function generateDocs() {
 
   writeFileSync(join(OUTPUT_DIR, 'manifest.json'), stringify(manifest, null, 2))
 
-  log('✅ Documentation generation complete!')
-  log(`   Output: ${OUTPUT_DIR}`)
+  logger.log('✅ Documentation generation complete!')
+  logger.log(`   Output: ${OUTPUT_DIR}`)
 }
 
 if (require.main === module) {

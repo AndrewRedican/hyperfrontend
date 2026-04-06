@@ -31,7 +31,9 @@ export interface DiscoveredChangelog {
  * Package info for changelog lookup.
  */
 interface PackageInfo {
+  /** Absolute path to the package directory */
   path: string
+  /** Package name from package.json */
   name: string
 }
 

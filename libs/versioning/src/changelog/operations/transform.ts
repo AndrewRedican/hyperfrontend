@@ -1,3 +1,4 @@
+import type { SemVer } from '../../semver/models/version'
 import type { Changelog, ChangelogHeader, ChangelogMetadata } from '../models/changelog'
 import type { ChangelogEntry, ChangelogSection, ChangelogItem } from '../models/entry'
 import type { ChangelogSectionType } from '../models/section'
@@ -141,7 +142,7 @@ export function updateEntry(
     throw createError(`Entry with version "${version}" not found`)
   }
 
-  const entry = changelog.entries[entryIndex]
+  const entry = <ChangelogEntry>changelog.entries[entryIndex]
   const updatedEntry = typeof updates === 'function' ? updates(entry) : { ...entry, ...updates }
 
   const newEntries = [...changelog.entries]
@@ -172,7 +173,7 @@ export function sortEntries(changelog: Changelog): Changelog {
       return b.version.localeCompare(a.version)
     }
 
-    return compare(bResult.version, aResult.version)
+    return compare(<SemVer>bResult.version, <SemVer>aResult.version)
   })
 
   return {

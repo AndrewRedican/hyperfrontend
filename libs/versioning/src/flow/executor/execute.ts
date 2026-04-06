@@ -17,6 +17,12 @@ import { createRegistry } from '../../registry/factory'
 import { discoverProjectByName } from '../../workspace/discovery'
 import { DEFAULT_FLOW_CONFIG } from '../models/types'
 
+/** Minimal package.json structure with name field. */
+interface PackageJsonWithName {
+  /** Package name. */
+  name?: string
+}
+
 /**
  * Output format for diff preview.
  */
@@ -163,7 +169,7 @@ function resolvePackageName(tree: Tree, projectRoot: string, logger: Logger): st
       logger.debug(`package.json is empty or not found at ${packageJsonPath}`)
       return 'unknown'
     }
-    const pkg = <{ name?: string }>parse(content)
+    const pkg = <PackageJsonWithName>parse(content)
     if (!pkg.name) {
       logger.debug(`package.json at ${packageJsonPath} has no name field`)
     }

@@ -1,4 +1,5 @@
 import type { Style } from '../style'
+import { logger } from '@hyperfrontend/logging'
 import { cssObjectToString } from './css-object-to-string'
 
 describe('cssObjectToString', () => {
@@ -17,7 +18,7 @@ describe('cssObjectToString', () => {
   })
 
   it('logs warning when property conversion fails', () => {
-    const consoleWarnSpy = jest.spyOn(console, 'warn').mockImplementation()
+    const loggerWarnSpy = jest.spyOn(logger, 'warn').mockImplementation(() => void 0)
 
     const problematicValue = {
       toString() {
@@ -30,12 +31,12 @@ describe('cssObjectToString', () => {
       badProperty: problematicValue,
     }
 
-    const result = cssObjectToString(problematicObject)
+    const result = cssObjectToString(<Partial<CSSStyleDeclaration>>problematicObject)
 
     expect(result).toContain('background-color: red;')
-    expect(consoleWarnSpy).toHaveBeenCalledWith(expect.stringContaining('Some properties failed to convert'))
-    expect(consoleWarnSpy).toHaveBeenCalledWith(expect.stringContaining('Failed to convert property "badProperty"'))
+    expect(loggerWarnSpy).toHaveBeenCalledWith(expect.stringContaining('Some properties failed to convert'))
+    expect(loggerWarnSpy).toHaveBeenCalledWith(expect.stringContaining('Failed to convert property "badProperty"'))
 
-    consoleWarnSpy.mockRestore()
+    loggerWarnSpy.mockRestore()
   })
 })

@@ -4,20 +4,37 @@ import { isArray } from '@hyperfrontend/immutable-api-utils/built-in-copy/array'
 import { assign } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
 import { nonEmptyStrings, uniqueStrings } from '@hyperfrontend/list-utils'
 
+/**
+ * Configuration options for creating an HTML element.
+ */
 export type ElementConfig = {
+  /** Inline styles to apply to the element */
   inlineStyle?: Style
+  /** Single class name to add */
   className?: string
+  /** Multiple class names to add */
   classNames?: string[]
 }
 
+/**
+ * Utility methods and properties for manipulating a created HTML element.
+ */
 export type ElementMethods<T extends HTMLElement> = {
+  /** Appends a child element */
   addChild: (target: HTMLElement | ElementMethods<HTMLElement>) => void
+  /** Attaches this element to a parent */
   attachTo: (target: HTMLElement | ElementMethods<HTMLElement>) => void
+  /** Shows the element with optional animation duration */
   show: (duration?: number) => void
+  /** Hides the element with optional animation duration */
   hide: (duration?: number) => void
+  /** Removes a child element */
   removeChild: (child: HTMLElement | ElementMethods<HTMLElement>) => void
+  /** Detaches this element from its parent */
   detachFromParent: () => void
+  /** Reference to the underlying DOM element */
   ref: T
+  /** Current visibility state */
   visible: boolean
 }
 

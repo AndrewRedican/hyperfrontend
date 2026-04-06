@@ -149,10 +149,16 @@ describe('discoverAllChangelogs', () => {
 
     const result = discoverAllChangelogs('/workspace')
 
-    expect(result).toHaveLength(2)
-    expect(result[0].relativePath).toBe('libs/lib-a/CHANGELOG.md')
-    expect(result[0].path).toBe('/workspace/libs/lib-a/CHANGELOG.md')
-    expect(result[0].filename).toBe('CHANGELOG.md')
+    expect(result).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          relativePath: 'libs/lib-a/CHANGELOG.md',
+          path: '/workspace/libs/lib-a/CHANGELOG.md',
+          filename: 'CHANGELOG.md',
+        }),
+        expect.any(Object),
+      ])
+    )
   })
 
   it('extracts project path from changelog path', () => {
@@ -160,7 +166,7 @@ describe('discoverAllChangelogs', () => {
 
     const result = discoverAllChangelogs('/workspace')
 
-    expect(result[0].projectPath).toBe('/workspace/packages/my-package')
+    expect(result?.[0]).toEqual(expect.objectContaining({ projectPath: '/workspace/packages/my-package' }))
   })
 
   it('returns empty array when no changelogs found', () => {

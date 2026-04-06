@@ -26,6 +26,7 @@
     "types": ["node"],
     "skipLibCheck": true,
     "baseUrl": ".",
+    "ignoreDeprecations": "5.0",
     "paths": {
       "@hyperfrontend/app": ["tools/app/src/index.ts"],
       "@hyperfrontend/cryptography/browser": ["libs/cryptography/src/browser/index.ts"],
@@ -130,6 +131,7 @@
       "@hyperfrontend/string-utils/browser": ["libs/utils/string/src/browser/index.ts"],
       "@hyperfrontend/string-utils/node": ["libs/utils/string/src/node/index.ts"],
       "@hyperfrontend/time-utils": ["libs/utils/time/src/index.ts"],
+      "@hyperfrontend/workspace": ["tools/workspace/src/index.ts"],
       "@hyperfrontend/ui-utils": ["libs/utils/ui/src/index.ts"],
       "@hyperfrontend/ui-utils/audio": ["libs/utils/ui/src/audio/index.ts"],
       "@hyperfrontend/ui-utils/color": ["libs/utils/ui/src/color/index.ts"],

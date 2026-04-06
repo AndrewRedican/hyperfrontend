@@ -13,8 +13,11 @@ type MessageListener = (event: MessageEvent) => void
  * Mock window interface for testing
  */
 export interface MockWindow extends Partial<Window> {
+  /** Mock postMessage function */
   postMessage: jest.Mock
+  /** Mock addEventListener function */
   addEventListener: jest.Mock
+  /** Mock removeEventListener function */
   removeEventListener: jest.Mock
   /** Internal: Get all registered message listeners */
   _getMessageListeners: () => MessageListener[]

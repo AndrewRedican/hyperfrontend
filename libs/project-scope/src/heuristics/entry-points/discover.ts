@@ -21,13 +21,50 @@ const entryPointCache = createCache<string, EntryPointInfo[]>({ ttl: 60000, maxS
 export type EntryPointType = 'main' | 'app' | 'server' | 'cli' | 'test'
 
 /**
- * Entry point source information.
+ * Entry point discovered from package.json exports/main/bin.
  */
-export type EntryPointSource =
-  | { type: 'package.json'; field: string }
-  | { type: 'convention'; pattern: string }
-  | { type: 'framework'; framework: string }
-  | { type: 'config'; tool: string }
+interface PackageJsonEntrySource {
+  /** Source type identifier */
+  type: 'package.json'
+  /** Field name in package.json (exports, main, bin) */
+  field: string
+}
+
+/**
+ * Entry point discovered by naming convention.
+ */
+interface ConventionEntrySource {
+  /** Source type identifier */
+  type: 'convention'
+  /** File pattern that matched */
+  pattern: string
+}
+
+/**
+ * Entry point from framework-specific patterns.
+ */
+interface FrameworkEntrySource {
+  /** Source type identifier */
+  type: 'framework'
+  /** Framework name (Next.js, Angular, etc.) */
+  framework: string
+}
+
+/**
+ * Entry point from build tool configuration.
+ */
+interface ConfigEntrySource {
+  /** Source type identifier */
+  type: 'config'
+  /** Tool name (webpack, vite, etc.) */
+  tool: string
+}
+
+/**
+ * Entry point source information.
+ * Describes how an entry point was discovered.
+ */
+export type EntryPointSource = PackageJsonEntrySource | ConventionEntrySource | FrameworkEntrySource | ConfigEntrySource
 
 /**
  * Extended entry point info with source.
@@ -50,7 +87,8 @@ export interface DiscoverEntryPointsOptions {
 }
 
 /**
- * Common entry point patterns.
+ * Common entry point patterns by project type.
+ * Used for convention-based entry point discovery.
  */
 export const ENTRY_POINT_PATTERNS = <const>{
   /** Library entry patterns */
@@ -64,9 +102,21 @@ export const ENTRY_POINT_PATTERNS = <const>{
 }
 
 /**
+ * Convention-based entry pattern definition.
+ */
+interface ConventionEntry {
+  /** File path pattern to match */
+  pattern: string
+  /** Entry point type category */
+  type: EntryPointType
+  /** Detection confidence score (0-100) */
+  confidence: number
+}
+
+/**
  * Convention-based entry patterns with types and confidence.
  */
-const CONVENTION_ENTRIES: Array<{ pattern: string; type: EntryPointType; confidence: number }> = [
+const CONVENTION_ENTRIES: ConventionEntry[] = [
   { pattern: 'src/index.ts', type: 'main', confidence: 90 },
   { pattern: 'src/index.js', type: 'main', confidence: 90 },
   { pattern: 'src/main.ts', type: 'app', confidence: 85 },

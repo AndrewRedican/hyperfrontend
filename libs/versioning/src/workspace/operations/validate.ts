@@ -306,7 +306,10 @@ function validateDependencyVersions(workspace: Workspace, project: Project): Val
  * @param name - Package name to validate
  * @returns Validation result
  */
-function validatePackageNameFormat(name: string): { valid: boolean } {
+function validatePackageNameFormat(name: string): {
+  /** Whether the package name format is valid. */
+  valid: boolean
+} {
   const isValidChar = (char: string): boolean => {
     const code = char.charCodeAt(0)
     return (code >= 97 && code <= 122) || (code >= 48 && code <= 57) || code === 45 || code === 95 || code === 46
@@ -323,19 +326,19 @@ function validatePackageNameFormat(name: string): { valid: boolean } {
       return { valid: false }
     }
 
-    const scope = name.slice(1, slashIndex)
-    if (!isValidFirstChar(scope[0])) return { valid: false }
+    const scope = <string>name.slice(1, slashIndex)
+    if (!isValidFirstChar(<string>scope[0])) return { valid: false }
     for (const char of scope) {
       if (!isValidChar(char)) return { valid: false }
     }
 
-    const packageName = name.slice(slashIndex + 1)
-    if (!isValidFirstChar(packageName[0])) return { valid: false }
+    const packageName = <string>name.slice(slashIndex + 1)
+    if (!isValidFirstChar(<string>packageName[0])) return { valid: false }
     for (const char of packageName) {
       if (!isValidChar(char)) return { valid: false }
     }
   } else {
-    if (!isValidFirstChar(name[0])) return { valid: false }
+    if (!isValidFirstChar(<string>name[0])) return { valid: false }
     for (const char of name) {
       if (!isValidChar(char)) return { valid: false }
     }

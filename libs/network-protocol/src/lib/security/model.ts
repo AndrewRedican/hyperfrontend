@@ -10,16 +10,23 @@ import type {
 
 export type { PacketObfuscation, PacketDeobfuscation, PacketEncryption, PacketDecryption }
 
+/** Suite of encryption operations for packets */
 export interface EncryptionSuite<T = any> {
+  /** Function to encrypt outgoing packets */
   readonly packetEncryption: PacketEncryption<T>
+  /** Function to decrypt incoming packets */
   readonly packetDecryption: PacketDecryption<T>
 }
 
+/** Suite of obfuscation operations for packets */
 export interface ObfuscationSuite {
+  /** Function to obfuscate outgoing packets */
   readonly packetObfuscation: PacketObfuscation
+  /** Function to deobfuscate incoming packets */
   readonly packetDeobfuscation: PacketDeobfuscation
 }
 
+/** Combined encryption and obfuscation security suite */
 export interface SecuritySuite<T = any> extends EncryptionSuite<T>, ObfuscationSuite {}
 
 /**

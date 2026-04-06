@@ -49,8 +49,11 @@ import { validatePolicy } from './security/validate-policy'
  * @returns Broker handle with public API
  */
 export function createBroker(config: {
+  /** Unique name for the broker instance */
   name: string
+  /** Channel contract defining message protocols */
   contract: IChannelContract
+  /** Optional configuration overrides for broker behavior */
   settings?: Partial<BrokerConfig['settings']>
 }): BrokerHandle {
   assertNoCircularRef(config.contract, 'config.contract')
@@ -186,7 +189,12 @@ export function createBroker(config: {
         throw createError('Original contract cannot be extended.')
       }
       validateContract(contract)
-      ;(<{ contract: unknown }>state).contract = mergeContracts(state.contract, contract)
+      ;(<
+        {
+          /** The channel contract */
+          contract: unknown
+        }
+      >state).contract = mergeContracts(state.contract, contract)
       return broker
     },
 

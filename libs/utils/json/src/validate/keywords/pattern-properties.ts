@@ -18,7 +18,7 @@ export function validatePatternProperties(instance: Record<string, unknown>, sch
   }
 
   let valid = true
-  const patterns: Array<{ regex: RegExp; schema: Schema }> = []
+  const patterns: Array<{ /** Compiled regex pattern */ regex: RegExp; /** Schema to validate against */ schema: Schema }> = []
 
   for (const [pattern, patternSchema] of entries(schema.patternProperties)) {
     /* istanbul ignore if -- patternSafetyChecker branch tested in validate.spec.ts */

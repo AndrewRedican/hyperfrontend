@@ -20,7 +20,14 @@ export class ValidationError extends Error {
    *
    * @returns JSON object with error details
    */
-  toJSON(): { name: string; message: string; errors: IValidationError[] } {
+  toJSON(): {
+    /** Error name */
+    name: string
+    /** Error message */
+    message: string
+    /** Validation errors */
+    errors: IValidationError[]
+  } {
     return {
       name: this.name,
       message: this.message,

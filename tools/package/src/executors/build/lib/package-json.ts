@@ -17,9 +17,22 @@ const INHERITABLE_FIELDS = <const>['repository', 'bugs', 'homepage', 'author']
 
 /** Export entry for package.json */
 interface ExportEntry {
+  /** Path to TypeScript declarations */
   types?: string
+  /** Path to ESM entry point */
   import?: string
+  /** Path to CommonJS entry point */
   require?: string
+}
+
+/**
+ * CDN paths for unpkg and jsdelivr.
+ */
+interface CdnPaths {
+  /** Path for unpkg CDN */
+  unpkg: string
+  /** Path for jsdelivr CDN */
+  jsdelivr: string
 }
 
 /**
@@ -233,7 +246,7 @@ function filterWorkspaceDependencies(srcPkg: PackageJson): PackageJson {
 function getCdnPaths(
   formatOutputs: FormatOutputs,
   options?: Pick<BuildExecutorOptions, 'unpkg' | 'jsdelivr'>
-): { unpkg: string; jsdelivr: string } | undefined {
+): CdnPaths | undefined {
   const hasUmd = formatOutputs.umd.length > 0
   const hasIife = formatOutputs.iife.length > 0
 

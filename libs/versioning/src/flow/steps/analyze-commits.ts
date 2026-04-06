@@ -185,7 +185,10 @@ export function createAnalyzeCommitsStep(): FlowStep {
  */
 function resolveStrategy(
   strategy: ScopeFilteringStrategy,
-  commits: readonly { message: string }[]
+  commits: readonly {
+    /** Commit message to analyze */
+    message: string
+  }[]
 ): Exclude<ScopeFilteringStrategy, 'inferred'> {
   if (strategy !== 'inferred') {
     return strategy
@@ -260,7 +263,10 @@ function getRelativePath(workspaceRoot: string, projectRoot: string): string {
 function buildSummaryMessage(
   includedCount: number,
   totalCount: number,
-  summary: { bySource: Record<string, number> },
+  summary: {
+    /** Count of commits by source type */
+    bySource: Record<string, number>
+  },
   strategy: string
 ): string {
   if (includedCount === 0) {
@@ -296,7 +302,10 @@ function buildInfrastructureCommitHashes(
   rawCommits: readonly GitCommit[],
   parsedCommits: readonly CommitWithRaw[],
   config: ScopeFilteringConfig,
-  logger: { debug: (msg: string) => void },
+  logger: {
+    /** Debug logging function */
+    debug: (msg: string) => void
+  },
   maxFallback: number
 ): ReadonlySet<string> | undefined {
   let infraHashes = createSet<string>()
@@ -383,7 +392,10 @@ function buildDependencyCommitMap(
   workspaceRoot: string,
   projectName: string,
   baseCommit: string | null,
-  logger: { debug: (msg: string) => void },
+  logger: {
+    /** Debug logging function */
+    debug: (msg: string) => void
+  },
   maxFallback: number
 ): ReadonlyMap<string, ReadonlySet<string>> {
   let dependencyMap = createMap<string, ReadonlySet<string>>()

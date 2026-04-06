@@ -5,14 +5,14 @@ describe('tokenize', () => {
     it('tokenizes an empty string', () => {
       const tokens = tokenize('')
       expect(tokens).toHaveLength(1)
-      expect(tokens[0].type).toBe('eof')
+      expect(tokens[0]?.type).toBe('eof')
     })
 
     it('tokenizes plain text', () => {
       const tokens = tokenize('Hello world')
       expect(tokens).toHaveLength(2)
       expect(tokens[0]).toMatchObject({ type: 'text', value: 'Hello world' })
-      expect(tokens[1].type).toBe('eof')
+      expect(tokens[1]?.type).toBe('eof')
     })
 
     it('tokenizes text with newlines', () => {
@@ -21,7 +21,7 @@ describe('tokenize', () => {
       expect(tokens[0]).toMatchObject({ type: 'text', value: 'Line 1' })
       expect(tokens[1]).toMatchObject({ type: 'newline' })
       expect(tokens[2]).toMatchObject({ type: 'text', value: 'Line 2' })
-      expect(tokens[3].type).toBe('eof')
+      expect(tokens[3]?.type).toBe('eof')
     })
 
     it('handles blank lines', () => {
@@ -96,9 +96,9 @@ describe('tokenize', () => {
       const tokens = tokenize('- Item 1\n- Item 2\n- Item 3')
       const listItems = tokens.filter((t) => t.type === 'list-item')
       expect(listItems).toHaveLength(3)
-      expect(listItems[0].value).toBe('Item 1')
-      expect(listItems[1].value).toBe('Item 2')
-      expect(listItems[2].value).toBe('Item 3')
+      expect(listItems[0]?.value).toBe('Item 1')
+      expect(listItems[1]?.value).toBe('Item 2')
+      expect(listItems[2]?.value).toBe('Item 3')
     })
   })
 
@@ -185,8 +185,8 @@ All notable changes will be documented here.
 
       const h3s = tokens.filter((t) => t.type === 'heading-3')
       expect(h3s).toHaveLength(2)
-      expect(h3s[0].value).toBe('Added')
-      expect(h3s[1].value).toBe('Fixed')
+      expect(h3s[0]?.value).toBe('Added')
+      expect(h3s[1]?.value).toBe('Fixed')
 
       const listItems = tokens.filter((t) => t.type === 'list-item')
       expect(listItems).toHaveLength(3)

@@ -43,7 +43,7 @@ describe('filterEntries', () => {
     const result = filterEntries(changelog, (entry) => entry.version === '1.0.0')
 
     expect(result.entries).toHaveLength(1)
-    expect(result.entries[0].version).toBe('1.0.0')
+    expect(result.entries[0]).toEqual(expect.objectContaining({ version: '1.0.0' }))
   })
 })
 
@@ -61,7 +61,7 @@ describe('filterBreakingChanges', () => {
 
     const result = filterBreakingChanges(changelog)
     expect(result.entries).toHaveLength(1)
-    expect(result.entries[0].version).toBe('2.0.0')
+    expect(result.entries[0]).toEqual(expect.objectContaining({ version: '2.0.0' }))
   })
 
   it('includes entries with breaking items in non-breaking sections', () => {
@@ -78,7 +78,7 @@ describe('filterBreakingChanges', () => {
 
     const result = filterBreakingChanges(changelog)
     expect(result.entries).toHaveLength(1)
-    expect(result.entries[0].version).toBe('2.0.0')
+    expect(result.entries[0]).toEqual(expect.objectContaining({ version: '2.0.0' }))
   })
 })
 
@@ -98,8 +98,11 @@ describe('filterSections', () => {
     })
 
     const result = filterSections(changelog, (section) => section.type === 'features')
-    expect(result.entries[0].sections).toHaveLength(1)
-    expect(result.entries[0].sections[0].type).toBe('features')
+    expect(result.entries[0]).toEqual(
+      expect.objectContaining({
+        sections: [expect.objectContaining({ type: 'features' })],
+      })
+    )
   })
 })
 
@@ -120,8 +123,11 @@ describe('filterSectionTypes', () => {
     })
 
     const result = filterSectionTypes(changelog, ['features', 'fixes'])
-    expect(result.entries[0].sections).toHaveLength(2)
-    expect(result.entries[0].sections.map((s) => s.type)).toEqual(['features', 'fixes'])
+    expect(result.entries[0]).toEqual(
+      expect.objectContaining({
+        sections: [expect.objectContaining({ type: 'features' }), expect.objectContaining({ type: 'fixes' })],
+      })
+    )
   })
 })
 
@@ -144,8 +150,11 @@ describe('filterItems', () => {
     })
 
     const result = filterItems(changelog, (item) => item.scope === 'api')
-    expect(result.entries[0].sections[0].items).toHaveLength(1)
-    expect(result.entries[0].sections[0].items[0].scope).toBe('api')
+    expect(result.entries[0]).toEqual(
+      expect.objectContaining({
+        sections: [expect.objectContaining({ items: [expect.objectContaining({ scope: 'api' })] })],
+      })
+    )
   })
 
   it('receives section and entry in predicate', () => {
@@ -165,8 +174,11 @@ describe('filterItems', () => {
     const result = filterItems(changelog, (_item, section, entry) => {
       return section.type === 'features' && entry.version === '1.0.0'
     })
-    expect(result.entries[0].sections[0].items).toHaveLength(1)
-    expect(result.entries[0].sections[1].items).toHaveLength(0)
+    expect(result.entries[0]).toEqual(
+      expect.objectContaining({
+        sections: [expect.objectContaining({ items: [expect.anything()] }), expect.objectContaining({ items: [] })],
+      })
+    )
   })
 })
 
@@ -185,10 +197,14 @@ describe('filterByScope', () => {
     })
 
     const result = filterByScope(changelog, ['api'])
-    expect(result.entries).toHaveLength(2)
-    expect(result.entries[0].sections[0].items).toHaveLength(1)
-    expect(result.entries[0].sections[0].items[0].scope).toBe('api')
-    expect(result.entries[1].sections[0].items).toHaveLength(0)
+    expect(result.entries).toEqual([
+      expect.objectContaining({
+        sections: [expect.objectContaining({ items: [expect.objectContaining({ scope: 'api' })] })],
+      }),
+      expect.objectContaining({
+        sections: [expect.objectContaining({ items: [] })],
+      }),
+    ])
   })
 })
 
@@ -211,8 +227,14 @@ describe('excludeByScope', () => {
     })
 
     const result = excludeByScope(changelog, ['api'])
-    const items = result.entries[0].sections[0].items
-    expect(items).toHaveLength(2)
-    expect(items.map((i) => i.description)).toEqual(['Core feature', 'No scope feature'])
+    expect(result.entries[0]).toEqual(
+      expect.objectContaining({
+        sections: [
+          expect.objectContaining({
+            items: [expect.objectContaining({ description: 'Core feature' }), expect.objectContaining({ description: 'No scope feature' })],
+          }),
+        ],
+      })
+    )
   })
 })

@@ -14,8 +14,14 @@ export const RULE_NAME = 'lib-pkg-fields'
  */
 const REQUIRED_FIELDS = <const>['name', 'description', 'license', 'sideEffects', 'engines', 'keywords']
 
+/**
+ * Union type of all required field names for publishable libraries.
+ */
 type RequiredField = (typeof REQUIRED_FIELDS)[number]
 
+/**
+ * Message identifiers for the lib-pkg-fields rule.
+ */
 type MessageIds = 'missingName' | 'missingDescription' | 'missingLicense' | 'missingSideEffects' | 'missingEngines' | 'missingKeywords'
 
 const messageIdMap: Record<RequiredField, MessageIds> = {

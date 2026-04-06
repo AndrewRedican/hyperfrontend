@@ -3,7 +3,7 @@ import type { InstallExecutorOptions } from './schema'
 import { execFileSync } from 'node:child_process'
 import { existsSync } from 'node:fs'
 import { join } from 'node:path'
-import { logger } from '@nx/devkit'
+import { logger } from '../../lib/logger'
 
 /**
  * Install executor for hyperfrontend application projects.
@@ -16,7 +16,13 @@ import { logger } from '@nx/devkit'
  * @param context - Executor context providing project information
  * @returns An object indicating success or failure of the install
  */
-export default async function installExecutor(options: InstallExecutorOptions, context: ExecutorContext): Promise<{ success: boolean }> {
+export default async function installExecutor(
+  options: InstallExecutorOptions,
+  context: ExecutorContext
+): Promise<{
+  /** Indicates whether the install succeeded. */
+  success: boolean
+}> {
   const projectName = context.projectName
   if (!projectName) {
     logger.error('No project name provided')

@@ -26,8 +26,7 @@ describe('transformEntries', () => {
     })
 
     const result = transformEntries(changelog, (entry) => ({ ...entry, date: '2024-01-01' }))
-    expect(result.entries[0].date).toBe('2024-01-01')
-    expect(result.entries[1].date).toBe('2024-01-01')
+    expect(result.entries.map((e) => e.date)).toEqual(['2024-01-01', '2024-01-01'])
   })
 
   it('can transform entries conditionally', () => {
@@ -38,8 +37,7 @@ describe('transformEntries', () => {
     })
 
     const result = transformEntries(changelog, (entry) => (entry.unreleased ? { ...entry, version: '[Unreleased]' } : entry))
-    expect(result.entries[0].version).toBe('[Unreleased]')
-    expect(result.entries[1].version).toBe('1.0.0')
+    expect(result.entries.map((e) => e.version)).toEqual(['[Unreleased]', '1.0.0'])
   })
 })
 
@@ -56,7 +54,7 @@ describe('transformSections', () => {
     })
 
     const result = transformSections(changelog, (section) => ({ ...section, heading: 'Changed' }))
-    expect(result.entries[0].sections[0].heading).toBe('Changed')
+    expect(result).toMatchObject({ entries: [{ sections: [{ heading: 'Changed' }] }] })
   })
 
   it('can transform sections conditionally', () => {
@@ -76,8 +74,7 @@ describe('transformSections', () => {
     const result = transformSections(changelog, (section) =>
       section.type === 'deprecations' ? { ...section, heading: 'Legacy' } : section
     )
-    expect(result.entries[0].sections[0].heading).toBe('Features')
-    expect(result.entries[0].sections[1].heading).toBe('Legacy')
+    expect(result).toMatchObject({ entries: [{ sections: [{ heading: 'Features' }, { heading: 'Legacy' }] }] })
   })
 })
 
@@ -94,7 +91,7 @@ describe('transformItems', () => {
     })
 
     const result = transformItems(changelog, (item) => ({ ...item, description: 'Changed' }))
-    expect(result.entries[0].sections[0].items[0].description).toBe('Changed')
+    expect(result).toMatchObject({ entries: [{ sections: [{ items: [{ description: 'Changed' }] }] }] })
   })
 
   it('can transform items conditionally', () => {
@@ -105,7 +102,7 @@ describe('transformItems', () => {
           sections: [
             createChangelogSection('features', 'Features', [
               createChangelogItem('Feature A'),
-              { description: 'WIP', scope: null, breaking: false, commits: [], references: [] },
+              { description: 'WIP', scope: undefined, breaking: false, commits: [], references: [] },
             ]),
           ],
         }),
@@ -114,8 +111,9 @@ describe('transformItems', () => {
     })
 
     const result = transformItems(changelog, (item) => (item.description === 'WIP' ? { ...item, description: 'Work In Progress' } : item))
-    expect(result.entries[0].sections[0].items[0].description).toBe('Feature A')
-    expect(result.entries[0].sections[0].items[1].description).toBe('Work In Progress')
+    expect(result).toMatchObject({
+      entries: [{ sections: [{ items: [{ description: 'Feature A' }, { description: 'Work In Progress' }] }] }],
+    })
   })
 })
 
@@ -176,8 +174,7 @@ describe('updateEntry', () => {
     })
 
     const result = updateEntry(changelog, '1.0.0', { date: '2024-01-01' })
-    expect(result.entries[1].date).toBe('2024-01-01')
-    expect(result.entries[0].date).toBeNull()
+    expect(result.entries.map((e) => e.date)).toEqual([null, '2024-01-01'])
   })
 
   it('throws if version not found', () => {
@@ -201,7 +198,7 @@ describe('updateEntry', () => {
       ...entry,
       date: entry.date ? entry.date.replace('2024', '2025') : null,
     }))
-    expect(result.entries[0].date).toBe('2025-01-01')
+    expect(result).toMatchObject({ entries: [{ date: '2025-01-01' }] })
   })
 })
 
@@ -233,7 +230,7 @@ describe('sortEntries', () => {
     })
 
     const result = sortEntries(changelog)
-    expect(result.entries[0].unreleased).toBe(true)
+    expect(result.entries[0]?.unreleased).toBe(true)
     expect(result.entries.slice(1).map((e) => e.version)).toEqual(['2.0.0', '1.0.0'])
   })
 
@@ -264,8 +261,7 @@ describe('sortEntries', () => {
     })
 
     const result = sortEntries(changelog)
-    expect(result.entries[0].version).toBe('Unreleased-A')
-    expect(result.entries[1].version).toBe('Unreleased-B')
+    expect(result.entries.map((e) => e.version)).toEqual(['Unreleased-A', 'Unreleased-B', '1.0.0'])
   })
 
   it('falls back to localeCompare for non-semver versions', () => {
@@ -312,7 +308,7 @@ describe('sortEntriesByDate', () => {
     })
 
     const result = sortEntriesByDate(changelog)
-    expect(result.entries[0].unreleased).toBe(true)
+    expect(result.entries[0]?.unreleased).toBe(true)
   })
 
   it('puts entries without dates after dated entries', () => {
@@ -323,8 +319,7 @@ describe('sortEntriesByDate', () => {
     })
 
     const result = sortEntriesByDate(changelog)
-    expect(result.entries[0].version).toBe('2.0.0')
-    expect(result.entries[1].version).toBe('1.0.0')
+    expect(result.entries.map((e) => e.version)).toEqual(['2.0.0', '1.0.0'])
   })
 
   it('keeps multiple unreleased entries in original order', () => {
@@ -339,8 +334,7 @@ describe('sortEntriesByDate', () => {
     })
 
     const result = sortEntriesByDate(changelog)
-    expect(result.entries[0].version).toBe('Unreleased-A')
-    expect(result.entries[1].version).toBe('Unreleased-B')
+    expect(result.entries.map((e) => e.version)).toEqual(['Unreleased-A', 'Unreleased-B', '1.0.0'])
   })
 
   it('keeps entries without dates in original order', () => {
@@ -351,8 +345,7 @@ describe('sortEntriesByDate', () => {
     })
 
     const result = sortEntriesByDate(changelog)
-    expect(result.entries[0].version).toBe('2.0.0')
-    expect(result.entries[1].version).toBe('1.0.0')
+    expect(result.entries.map((e) => e.version)).toEqual(['2.0.0', '1.0.0'])
   })
 })
 
@@ -372,8 +365,7 @@ describe('normalizeSectionHeadings', () => {
     })
 
     const result = normalizeSectionHeadings(changelog)
-    expect(result.entries[0].sections[0].heading).toBe('Features')
-    expect(result.entries[0].sections[1].heading).toBe('Bug Fixes')
+    expect(result).toMatchObject({ entries: [{ sections: [{ heading: 'Features' }, { heading: 'Bug Fixes' }] }] })
   })
 
   it('normalizes across all entries', () => {
@@ -391,7 +383,9 @@ describe('normalizeSectionHeadings', () => {
     })
 
     const result = normalizeSectionHeadings(changelog)
-    expect(result.entries[0].sections[0].heading).toBe(result.entries[1].sections[0].heading)
+    const headings = result.entries.flatMap((e) => e.sections.map((s) => s.heading))
+    expect(headings).toHaveLength(2)
+    expect(headings[0]).toBe(headings[1])
   })
 })
 
@@ -412,8 +406,9 @@ describe('compact', () => {
     })
 
     const result = compact(changelog)
+    expect(result).toMatchObject({ entries: [{ sections: expect.any(Array) }] })
     expect(result.entries).toHaveLength(1)
-    expect(result.entries[0].sections).toHaveLength(1)
+    expect(result.entries[0]?.sections).toHaveLength(1)
   })
 
   it('preserves non-empty content', () => {
@@ -431,8 +426,9 @@ describe('compact', () => {
     })
 
     const result = compact(changelog)
+    expect(result).toMatchObject({ entries: [{ sections: expect.any(Array) }] })
     expect(result.entries).toHaveLength(1)
-    expect(result.entries[0].sections).toHaveLength(2)
+    expect(result.entries[0]?.sections).toHaveLength(2)
   })
 
   it('keeps empty unreleased entry by default', () => {
@@ -444,7 +440,7 @@ describe('compact', () => {
 
     const result = compact(changelog)
     expect(result.entries).toHaveLength(1)
-    expect(result.entries[0].unreleased).toBe(true)
+    expect(result).toMatchObject({ entries: [{ unreleased: true }] })
   })
 
   it('removes empty unreleased entry when keepUnreleased is false', () => {
@@ -459,7 +455,7 @@ describe('compact', () => {
 
     const result = compact(changelog, false)
     expect(result.entries).toHaveLength(1)
-    expect(result.entries[0].version).toBe('1.0.0')
+    expect(result).toMatchObject({ entries: [{ version: '1.0.0' }] })
   })
 
   it('preserves entries with rawContent even if no sections', () => {
@@ -474,8 +470,7 @@ describe('compact', () => {
 
     const result = compact(changelog)
     expect(result.entries).toHaveLength(1)
-    expect(result.entries[0].version).toBe('1.0.0')
-    expect(result.entries[0].rawContent).toBe('Some raw content')
+    expect(result).toMatchObject({ entries: [{ version: '1.0.0', rawContent: 'Some raw content' }] })
   })
 })
 
@@ -496,7 +491,7 @@ describe('cloneChangelog', () => {
     expect(clone).not.toBe(original)
     expect(clone.entries).not.toBe(original.entries)
     expect(clone.entries[0]).not.toBe(original.entries[0])
-    expect(clone.entries[0].sections[0]).not.toBe(original.entries[0].sections[0])
+    expect(clone.entries[0]?.sections[0]).not.toBe(original.entries[0]?.sections[0])
   })
 
   it('modifications to clone do not affect original', () => {
@@ -530,7 +525,7 @@ describe('sortSections', () => {
     })
 
     const result = sortSections(changelog)
-    expect(result.entries[0].sections.map((s) => s.type)).toEqual(['breaking', 'features', 'fixes'])
+    expect(result.entries[0]?.sections.map((s) => s.type)).toEqual(['breaking', 'features', 'fixes'])
   })
 
   it('sorts across all entries', () => {
@@ -554,8 +549,7 @@ describe('sortSections', () => {
     })
 
     const result = sortSections(changelog)
-    expect(result.entries[0].sections[0].type).toBe('features')
-    expect(result.entries[1].sections[0].type).toBe('features')
+    expect(result.entries.map((e) => e.sections[0]?.type)).toEqual(['features', 'features'])
   })
 })
 
@@ -595,7 +589,7 @@ describe('deduplicateItems', () => {
     })
 
     const result = deduplicateItems(changelog)
-    expect(result.entries[0].sections[0].items).toHaveLength(2)
+    expect(result.entries[0]?.sections[0]?.items).toHaveLength(2)
   })
 
   it('preserves first occurrence', () => {
@@ -615,7 +609,7 @@ describe('deduplicateItems', () => {
     })
 
     const result = deduplicateItems(changelog)
-    expect(result.entries[0].sections[0].items[0].scope).toBe('first')
+    expect(result.entries[0]?.sections[0]?.items[0]?.scope).toBe('first')
   })
 
   it('deduplicates across all entries', () => {
@@ -633,8 +627,8 @@ describe('deduplicateItems', () => {
     })
 
     const result = deduplicateItems(changelog)
-    expect(result.entries[0].sections[0].items).toHaveLength(1)
-    expect(result.entries[1].sections[0].items).toHaveLength(1)
+    expect(result.entries[0]?.sections[0]?.items).toHaveLength(1)
+    expect(result.entries[1]?.sections[0]?.items).toHaveLength(1)
   })
 })
 
@@ -675,6 +669,6 @@ describe('stripMetadata', () => {
     const result = stripMetadata(changelog)
     expect(result.header.title).toBe('# Changelog')
     expect(result.entries).toHaveLength(1)
-    expect(result.entries[0].sections[0].items[0].description).toBe('Feature')
+    expect(result).toMatchObject({ entries: [{ sections: [{ items: [{ description: 'Feature' }] }] }] })
   })
 })

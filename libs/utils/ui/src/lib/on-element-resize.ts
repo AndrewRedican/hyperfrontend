@@ -1,3 +1,4 @@
+/** Callback invoked when an element is resized with the new content rect. */
 export type ElementResizeCallback = (rect: DOMRectReadOnly) => void
 
 /**

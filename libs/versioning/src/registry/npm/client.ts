@@ -13,8 +13,33 @@ import { createCache } from './cache'
  * Internal state for the npm registry client.
  */
 interface NpmRegistryState {
-  readonly config: Required<Omit<RegistryConfig, 'authToken'>> & { authToken?: string }
+  /** Resolved configuration settings */
+  readonly config: Required<Omit<RegistryConfig, 'authToken'>> & {
+    /** Optional authentication token for private registries */
+    authToken?: string
+  }
+  /** Cache instance for storing results */
   readonly cache: Cache
+}
+
+/**
+ * Raw maintainer data from npm registry response.
+ */
+interface RawMaintainer {
+  /** Maintainer name */
+  name?: string
+  /** Maintainer email address */
+  email?: string
+}
+
+/**
+ * Raw repository data from npm registry response.
+ */
+interface RawRepository {
+  /** Repository URL */
+  url?: string
+  /** Repository type (e.g., 'git') */
+  type?: string
 }
 
 /**
@@ -141,7 +166,7 @@ async function getPackageInfo(state: NpmRegistryState, packageName: string): Pro
       license: data.license,
       repository: extractRepoUrl(data.repository),
       homepage: data.homepage,
-      maintainers: (data.maintainers ?? []).map((m: { name?: string; email?: string } | string): Maintainer => {
+      maintainers: (data.maintainers ?? []).map((m: RawMaintainer | string): Maintainer => {
         if (typeof m === 'string') {
           return { name: m }
         }
@@ -274,7 +299,7 @@ export function escapePackageName(name: string): string {
       code === 95 ||
       code === 46
     ) {
-      safe.push(name[i])
+      safe.push(<string>name[i])
     } else {
       throw createError(`Invalid character in package name at position ${i}: "${name[i]}"`)
     }
@@ -317,7 +342,7 @@ export function escapeVersion(version: string): string {
       code === 45 ||
       code === 43
     ) {
-      safe.push(version[i])
+      safe.push(<string>version[i])
     } else {
       throw createError(`Invalid character in version at position ${i}: "${version[i]}"`)
     }
@@ -336,7 +361,7 @@ function extractRepoUrl(repository: unknown): string | undefined {
   if (typeof repository === 'string') return repository
 
   if (repository && typeof repository === 'object') {
-    const repo = <{ url?: string; type?: string }>repository
+    const repo = <RawRepository>repository
     if (repo.url) {
       let url = repo.url
       if (url.startsWith('git+')) {

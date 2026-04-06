@@ -33,8 +33,11 @@ export interface GitOperationState {
    * Useful for diagnostics or when multiple states could theoretically overlap.
    */
   readonly details: {
+    /** True if an interactive/merge rebase is in progress */
     readonly rebaseMerge: boolean
+    /** True if a non-interactive rebase is in progress */
     readonly rebaseApply: boolean
+    /** True if a merge is in progress */
     readonly mergeHead: boolean
   }
 }

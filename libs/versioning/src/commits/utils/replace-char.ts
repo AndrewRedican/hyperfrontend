@@ -11,7 +11,8 @@ export function replaceChar(input: string, target: string, replacement: string):
   const result: string[] = []
 
   for (let i = 0; i < input.length; i++) {
-    result.push(input[i] === target ? replacement : input[i])
+    const char = input[i]
+    if (char !== undefined) result.push(char === target ? replacement : char)
   }
 
   return result.join('')

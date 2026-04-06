@@ -10,6 +10,9 @@ const createRule = ESLintUtils.RuleCreator(
   (name) => `https://github.com/AndrewRedican/hyperfrontend/blob/main/tools/eslint-rules/docs/${name}.md`
 )
 
+/**
+ * Message identifiers for the no-decorative-header-comments rule.
+ */
 type MessageIds = 'noDecorativeHeaderComments'
 
 export default createRule<[], MessageIds>({
@@ -43,7 +46,7 @@ export default createRule<[], MessageIds>({
           let end = comment.range[1]
 
           // note: skip all whitespace and newlines after the comment to clean up formatting
-          while (end < fullText.length && /\s/.test(fullText[end])) {
+          while (end < fullText.length && /\s/.test(<string>fullText[end])) {
             end++
           }
 

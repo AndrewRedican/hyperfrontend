@@ -2,8 +2,11 @@
  * Nx project.json configuration types.
  */
 export interface ProjectJsonFixture {
+  /** Type of project */
   projectType?: 'library' | 'application'
+  /** Build targets configuration */
   targets?: Record<string, object>
+  /** Project tags for module boundaries */
   tags?: string[]
   [key: string]: unknown
 }
@@ -12,13 +15,21 @@ export interface ProjectJsonFixture {
  * npm package.json configuration.
  */
 export interface PackageJsonFixture {
+  /** Package name */
   name?: string
+  /** Package version */
   version?: string
+  /** Entry point exports map */
   exports?: Record<string, unknown> | string
+  /** CommonJS entry point */
   main?: string
+  /** ES module entry point */
   module?: string
+  /** TypeScript types entry point */
   types?: string
+  /** Files to include in package */
   files?: string[]
+  /** npm publish configuration */
   publishConfig?: object
   [key: string]: unknown
 }

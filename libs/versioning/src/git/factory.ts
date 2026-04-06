@@ -85,6 +85,36 @@ export interface GitClientConfig {
 }
 
 /**
+ * Options for git fetch operations.
+ */
+export interface GitFetchOptions {
+  /** Whether to prune deleted remote branches */
+  prune?: boolean
+  /** Whether to fetch tags */
+  tags?: boolean
+}
+
+/**
+ * Options for git push operations.
+ */
+export interface GitPushOptions {
+  /** Whether to force push */
+  force?: boolean
+  /** Whether to set upstream tracking */
+  setUpstream?: boolean
+}
+
+/**
+ * Internal options for git command execution.
+ */
+interface GitCommandOptions {
+  /** Working directory for the git command */
+  cwd: string
+  /** Command timeout in milliseconds */
+  timeout: number
+}
+
+/**
  * Git client interface.
  *
  * Provides a unified interface for all git operations
@@ -355,7 +385,7 @@ export interface GitClient {
   /**
    * Fetches from remote.
    */
-  fetch(remote?: string, options?: { prune?: boolean; tags?: boolean }): boolean
+  fetch(remote?: string, options?: GitFetchOptions): boolean
 
   /**
    * Pulls from remote.
@@ -365,7 +395,7 @@ export interface GitClient {
   /**
    * Pushes to remote.
    */
-  push(remote?: string, branch?: string, options?: { force?: boolean; setUpstream?: boolean }): boolean
+  push(remote?: string, branch?: string, options?: GitPushOptions): boolean
 
   /**
    * Gets the URL of a remote.
@@ -379,7 +409,7 @@ export interface GitClient {
 /**
  * Default git client configuration.
  */
-export const DEFAULT_GIT_CLIENT_CONFIG: Required<Omit<GitClientConfig, 'cwd'>> & { cwd: string } = {
+export const DEFAULT_GIT_CLIENT_CONFIG: Required<Omit<GitClientConfig, 'cwd'>> & Pick<GitCommandOptions, 'cwd'> = {
   cwd: process.cwd(),
   timeout: 30000,
   throwOnError: true,
@@ -476,7 +506,7 @@ export function createGitClient(config: GitClientConfig = {}): GitClient {
  * @param options.timeout - Command timeout in milliseconds
  * @returns Array of GitRef objects representing all refs in the repository
  */
-function getRefs(options: { cwd: string; timeout: number }): readonly GitRef[] {
+function getRefs(options: GitCommandOptions): readonly GitRef[] {
   try {
     const output = execFileSync('git', ['show-ref'], {
       encoding: 'utf-8',
@@ -515,7 +545,7 @@ function getRefs(options: { cwd: string; timeout: number }): readonly GitRef[] {
  * @param options.timeout - Command timeout in milliseconds
  * @returns Array of GitRef objects representing local branches
  */
-function getBranches(options: { cwd: string; timeout: number }): readonly GitRef[] {
+function getBranches(options: GitCommandOptions): readonly GitRef[] {
   const refs = getRefs(options)
   return refs.filter((ref) => ref.type === 'branch')
 }
@@ -529,7 +559,7 @@ function getBranches(options: { cwd: string; timeout: number }): readonly GitRef
  * @param remote - Optional remote name to filter branches by
  * @returns Array of GitRef objects representing remote branches
  */
-function getRemoteBranches(options: { cwd: string; timeout: number }, remote?: string): readonly GitRef[] {
+function getRemoteBranches(options: GitCommandOptions, remote?: string): readonly GitRef[] {
   const refs = getRefs(options)
   return refs.filter((ref) => {
     if (ref.type !== 'remote') return false
@@ -550,7 +580,7 @@ function getRemoteBranches(options: { cwd: string; timeout: number }, remote?: s
  * @param fetchOptions.tags - Whether to fetch tags
  * @returns True if fetch succeeded
  */
-function fetch(options: { cwd: string; timeout: number }, remote = 'origin', fetchOptions?: { prune?: boolean; tags?: boolean }): boolean {
+function fetch(options: GitCommandOptions, remote = 'origin', fetchOptions?: GitFetchOptions): boolean {
   if (!isValidRemoteName(remote)) {
     return false
   }
@@ -586,7 +616,7 @@ function fetch(options: { cwd: string; timeout: number }, remote = 'origin', fet
  * @param branch - Optional branch name to pull
  * @returns True if pull succeeded
  */
-function pull(options: { cwd: string; timeout: number }, remote = 'origin', branch?: string): boolean {
+function pull(options: GitCommandOptions, remote = 'origin', branch?: string): boolean {
   if (!isValidRemoteName(remote)) {
     return false
   }
@@ -621,12 +651,7 @@ function pull(options: { cwd: string; timeout: number }, remote = 'origin', bran
  * @param pushOptions.setUpstream - Whether to set upstream tracking
  * @returns True if push succeeded
  */
-function push(
-  options: { cwd: string; timeout: number },
-  remote = 'origin',
-  branch?: string,
-  pushOptions?: { force?: boolean; setUpstream?: boolean }
-): boolean {
+function push(options: GitCommandOptions, remote = 'origin', branch?: string, pushOptions?: GitPushOptions): boolean {
   if (!isValidRemoteName(remote)) {
     return false
   }
@@ -664,7 +689,7 @@ function push(
  * @param remoteName - Name of the remote (defaults to 'origin')
  * @returns The remote URL, or null if not found
  */
-function getRemoteUrl(options: { cwd: string; timeout: number }, remoteName = 'origin'): string | null {
+function getRemoteUrl(options: GitCommandOptions, remoteName = 'origin'): string | null {
   if (!isValidRemoteName(remoteName)) {
     return null
   }

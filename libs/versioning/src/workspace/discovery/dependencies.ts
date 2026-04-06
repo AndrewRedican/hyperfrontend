@@ -224,7 +224,9 @@ export function buildDependencyGraph(projects: readonly Project[]): DependencyGr
  * @returns Detection result with cycle information
  */
 function detectCircularDependencies(reverseDependencyGraph: Map<string, string[]>): {
+  /** Whether any circular dependency was detected */
   hasCircular: boolean
+  /** List of detected dependency cycles */
   cycles: string[][]
 } {
   const cycles: string[][] = []

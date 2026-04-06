@@ -1,6 +1,7 @@
 import type { Command, CommandResult, GlobalOptions } from './types'
 import { parseArgs } from 'node:util'
-import { error as consoleError, log } from '@hyperfrontend/immutable-api-utils/built-in-copy/console'
+import { error as consoleError, log as consoleLog } from '@hyperfrontend/immutable-api-utils/built-in-copy/console'
+import { createLogger } from '@hyperfrontend/logging'
 import { createScopedLogger, setGlobalLogLevel } from '../core/logger'
 import { analyzeCommandDef } from './commands/analyze'
 import { configCommandDef } from './commands/config'
@@ -9,6 +10,10 @@ import { treeCommandDef } from './commands/tree'
 
 /** Logger for CLI operations */
 const cliLogger = createScopedLogger('project-scope:cli')
+
+/** Output printer for user-facing CLI output (help, version, command results). */
+const output = createLogger(consoleError, undefined, consoleLog)
+output.setLogLevel('log')
 
 /** Library version */
 const VERSION = '0.1.0'
@@ -27,7 +32,7 @@ const commands: Record<string, Command> = {
  * Print general help information.
  */
 function printHelp(): void {
-  log(
+  output.log(
     `
 project-scope <command> [options]
 
@@ -62,7 +67,7 @@ Examples:
  * Print CLI version.
  */
 function printVersion(): void {
-  log(`project-scope v${VERSION}`)
+  output.log(`project-scope v${VERSION}`)
 }
 
 /**
@@ -130,28 +135,29 @@ export function run(args: string[]): CommandResult {
 
   cliLogger.debug('CLI invoked', { args, globalOptions })
 
+  const commandName = <string>args[0]
+
   if (globalOptions.version) {
     printVersion()
     return { exitCode: 0 }
   }
 
-  if (globalOptions.help && (args.length === 1 || !commands[args[0]])) {
+  if (globalOptions.help && (args.length === 1 || !commands[commandName])) {
     printHelp()
     return { exitCode: 0 }
   }
 
-  const commandName = args[0]
   const command = commands[commandName]
 
   if (!command) {
     cliLogger.warn('Unknown command requested', { commandName })
-    consoleError(`Unknown command: ${commandName}`)
-    consoleError('Run "project-scope --help" for usage information.')
+    output.error(`Unknown command: ${commandName}`)
+    output.error('Run "project-scope --help" for usage information.')
     return { exitCode: 1, error: `Unknown command: ${commandName}` }
   }
 
   if (globalOptions.help) {
-    log(command.getHelp())
+    output.log(command.getHelp())
     return { exitCode: 0 }
   }
 
@@ -161,11 +167,11 @@ export function run(args: string[]): CommandResult {
   cliLogger.debug('Command completed', { commandName, exitCode: result.exitCode })
 
   if (result.output) {
-    log(result.output)
+    output.log(result.output)
   }
   if (result.error) {
     cliLogger.error('Command error', { commandName, error: result.error })
-    consoleError(result.error)
+    output.error(result.error)
   }
 
   return result

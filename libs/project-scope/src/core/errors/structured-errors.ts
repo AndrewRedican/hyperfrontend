@@ -4,7 +4,9 @@ import { createError } from '@hyperfrontend/immutable-api-utils/built-in-copy/er
  * Structured error with code and context.
  */
 export interface StructuredError extends Error {
+  /** Machine-readable error code for programmatic handling */
   code: string
+  /** Additional contextual information about the error */
   context?: Record<string, unknown>
 }
 

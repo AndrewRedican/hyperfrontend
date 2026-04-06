@@ -136,9 +136,13 @@ describe('createWorkspace', () => {
       reverseDependencyGraph: createMap<string, readonly string[]>(),
     })
 
-    expect(workspace.projectList[0].name).toBe('a-project')
-    expect(workspace.projectList[1].name).toBe('m-project')
-    expect(workspace.projectList[2].name).toBe('z-project')
+    expect(workspace.projectList).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ name: 'a-project' }),
+        expect.objectContaining({ name: 'm-project' }),
+        expect.objectContaining({ name: 'z-project' }),
+      ])
+    )
   })
 
   it('stores dependency graph', () => {

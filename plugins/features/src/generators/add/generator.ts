@@ -1,6 +1,6 @@
 import type { Tree } from '@nx/devkit'
 import type { AddGeneratorSchema } from './schema'
-import { log } from '@hyperfrontend/immutable-api-utils/built-in-copy/console'
+import { logger } from '@hyperfrontend/logging'
 
 /**
  * Nx generator that adds a hyperfrontend microfrontend feature to a host application.
@@ -162,13 +162,13 @@ export async function addGenerator(tree: Tree, options: AddGeneratorSchema) {
    *      - Next steps
    */
 
-  log('Adding hyperfrontend feature to host...')
-  log('Feature:', options.featureName)
-  log('Host project:', options.project)
-  log('Install method:', options.installMethod)
+  logger.log('Adding hyperfrontend feature to host...')
+  logger.log('Feature:', options.featureName)
+  logger.log('Host project:', options.project)
+  logger.log('Install method:', options.installMethod)
 
   return () => {
-    log('Feature consumption setup complete!')
+    logger.log('Feature consumption setup complete!')
   }
 }
 

@@ -3,7 +3,7 @@ import type { BuildExecutorOptions } from './schema'
 import { execFileSync } from 'node:child_process'
 import { existsSync } from 'node:fs'
 import { join } from 'node:path'
-import { logger } from '@nx/devkit'
+import { logger } from '../../lib/logger'
 
 /**
  * Build executor for hyperfrontend application projects.
@@ -19,7 +19,10 @@ import { logger } from '@nx/devkit'
 export default async function buildExecutor(
   options: BuildExecutorOptions,
   context: ExecutorContext
-): Promise<{ success: boolean }> {
+): Promise<{
+  /** Indicates whether the build succeeded. */
+  success: boolean
+}> {
   const projectName = context.projectName
   if (!projectName) {
     logger.error('No project name provided')

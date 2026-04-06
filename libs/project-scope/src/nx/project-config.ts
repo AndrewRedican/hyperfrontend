@@ -23,7 +23,15 @@ export interface NxTargetConfig {
   /** Default configuration */
   defaultConfiguration?: string
   /** Depends on other targets */
-  dependsOn?: Array<string | { target: string; projects: string | string[] }>
+  dependsOn?: Array<
+    | string
+    | {
+        /** Target name to depend on */
+        target: string
+        /** Project(s) containing the target */
+        projects: string | string[]
+      }
+  >
   /** Target inputs for caching */
   inputs?: unknown[]
 }
@@ -199,7 +207,10 @@ function scanForProjects(
 export function discoverNxProjects(workspacePath: string): Map<string, NxProjectConfig> {
   const projects = createMap<string, NxProjectConfig>()
 
-  const workspaceJson = readJsonFileIfExists<{ projects?: Record<string, unknown> }>(join(workspacePath, 'workspace.json'))
+  const workspaceJson = readJsonFileIfExists<{
+    /** Map of project name to configuration path or inline config */
+    projects?: Record<string, unknown>
+  }>(join(workspacePath, 'workspace.json'))
 
   if (workspaceJson?.projects) {
     for (const [name, config] of entries(workspaceJson.projects)) {

@@ -182,9 +182,13 @@ export function createClassificationContext(
   projectScopes: readonly string[],
   fileCommitHashes: ReadonlySet<string>,
   options?: {
+    /** Map of dependency names to commit hashes touching them */
     readonly dependencyCommitMap?: ReadonlyMap<string, ReadonlySet<string>>
+    /** Set of commit hashes touching infrastructure paths */
     readonly infrastructureCommitHashes?: ReadonlySet<string>
+    /** Scopes to explicitly exclude from classification */
     readonly excludeScopes?: readonly string[]
+    /** Additional scopes to include as direct matches */
     readonly includeScopes?: readonly string[]
   }
 ): ClassificationContext {

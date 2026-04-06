@@ -3,9 +3,9 @@ import type { E2eExecutorOptions } from './schema'
 import { execFileSync } from 'node:child_process'
 import { existsSync, readFileSync, unlinkSync, mkdirSync, renameSync } from 'node:fs'
 import { join } from 'node:path'
-import { logger } from '@nx/devkit'
 import { createError } from '@hyperfrontend/immutable-api-utils/built-in-copy/error'
 import { parse } from '@hyperfrontend/immutable-api-utils/built-in-copy/json'
+import { logger } from '../../lib/logger'
 
 /**
  * Reads package info from dist package.json.
@@ -13,7 +13,12 @@ import { parse } from '@hyperfrontend/immutable-api-utils/built-in-copy/json'
  * @param distPath - The path to the dist directory containing package.json
  * @returns An object containing the package name and version
  */
-function getPackageInfo(distPath: string): { name: string; version: string } {
+function getPackageInfo(distPath: string): {
+  /** The package name from package.json */
+  name: string
+  /** The package version from package.json */
+  version: string
+} {
   const pkgPath = join(distPath, 'package.json')
   if (!existsSync(pkgPath)) {
     throw createError(`Package.json not found at ${pkgPath}. Has the library been built?`)
@@ -119,7 +124,13 @@ function runJestTests(testDir: string, format: string, workspaceRoot: string): b
  * @param context - The Nx executor context
  * @returns A promise resolving to an object indicating success or failure
  */
-export default async function e2eExecutor(options: E2eExecutorOptions, context: ExecutorContext): Promise<{ success: boolean }> {
+export default async function e2eExecutor(
+  options: E2eExecutorOptions,
+  context: ExecutorContext
+): Promise<{
+  /** Whether the E2E tests passed */
+  success: boolean
+}> {
   const { projectName, root: workspaceRoot, projectGraph } = context
 
   if (!projectName) {

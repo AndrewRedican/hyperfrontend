@@ -15,14 +15,18 @@ const createRule = ESLintUtils.RuleCreator(
   (name) => `https://github.com/AndrewRedican/hyperfrontend/blob/main/tools/eslint-rules/docs/${name}.md`
 )
 
+/** Message IDs for rule violations */
 type MessageIds = 'useDeeperImport'
 
 /**
  * Represents a parsed tsconfig.json structure.
  */
 interface TsConfig {
+  /** Compiler options from tsconfig.json */
   compilerOptions?: {
+    /** Base URL for module resolution */
     baseUrl?: string
+    /** Path alias mappings */
     paths?: Record<string, string[]>
   }
 }
@@ -32,7 +36,7 @@ interface TsConfig {
  * Maps export name to the deepest path that exports it.
  */
 interface ExportMapping {
-  /** The deepest path that exports this symbol. */
+  /** The deepest subpath alias that exports this symbol */
   deepestPath: string
 }
 
@@ -208,8 +212,23 @@ function parseExports(filePath: string, visited: Set<string> = createSet()): Set
  * @param tsconfigPaths - Map of all available path aliases.
  * @returns Array of subpath entries sorted by depth (deepest first).
  */
-function getPackageSubpaths(packageName: string, tsconfigPaths: Map<string, string>): Array<{ alias: string; sourcePath: string }> {
-  const subpaths: Array<{ alias: string; sourcePath: string; depth: number }> = []
+function getPackageSubpaths(
+  packageName: string,
+  tsconfigPaths: Map<string, string>
+): Array<{
+  /** The path alias (e.g., '@hyperfrontend/project-scope/cli') */
+  alias: string
+  /** The resolved source file path */
+  sourcePath: string
+}> {
+  const subpaths: Array<{
+    /** The path alias */
+    alias: string
+    /** The resolved source file path */
+    sourcePath: string
+    /** Depth of the path (number of segments) */
+    depth: number
+  }> = []
 
   for (const [alias, sourcePath] of tsconfigPaths) {
     if (alias === packageName || alias.startsWith(`${packageName}/`)) {

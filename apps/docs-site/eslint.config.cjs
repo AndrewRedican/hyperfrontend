@@ -79,6 +79,21 @@ module.exports = [
     },
   },
   {
+    files: ['**/*.ts', '**/*.tsx'],
+    plugins: {
+      workspace: eslintRules,
+    },
+    rules: {
+      'workspace/max-file-lines': [
+        'error',
+        {
+          maxLines: 800,
+          maxLinesTest: 900,
+        },
+      ],
+    },
+  },
+  {
     files: ['**/*.json'],
     rules: {
       '@nx/dependency-checks': [

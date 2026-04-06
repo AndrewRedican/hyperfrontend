@@ -195,8 +195,7 @@ describe('findInternalDependenciesWithTypes', () => {
 
     const edges = findInternalDependenciesWithTypes('my-lib', packageJson, allPackages)
 
-    expect(edges).toHaveLength(1)
-    expect(edges[0].type).toBe('peerDependencies')
+    expect(edges).toEqual([expect.objectContaining({ type: 'peerDependencies' })])
   })
 
   it('includes optional dependencies', () => {
@@ -211,8 +210,7 @@ describe('findInternalDependenciesWithTypes', () => {
 
     const edges = findInternalDependenciesWithTypes('my-lib', packageJson, allPackages)
 
-    expect(edges).toHaveLength(1)
-    expect(edges[0].type).toBe('optionalDependencies')
+    expect(edges).toEqual([expect.objectContaining({ type: 'optionalDependencies' })])
   })
 
   it('returns empty array when no internal dependencies', () => {

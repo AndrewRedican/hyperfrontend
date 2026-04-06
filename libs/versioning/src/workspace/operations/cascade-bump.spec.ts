@@ -67,12 +67,15 @@ describe('calculateCascadeBumps', () => {
 
     const result = calculateCascadeBumps(workspace, [{ name: 'lib-a', bumpType: 'minor' }])
 
-    expect(result.directBumps).toHaveLength(1)
-    expect(result.directBumps[0].name).toBe('lib-a')
-    expect(result.directBumps[0].currentVersion).toBe('1.0.0')
-    expect(result.directBumps[0].nextVersion).toBe('1.1.0')
-    expect(result.directBumps[0].bumpType).toBe('minor')
-    expect(result.directBumps[0].reason).toBe('direct')
+    expect(result.bumps).toEqual([
+      expect.objectContaining({
+        name: 'lib-a',
+        currentVersion: '1.0.0',
+        nextVersion: '1.1.0',
+        bumpType: 'minor',
+        reason: 'direct',
+      }),
+    ])
   })
 
   it('cascades to dependents', () => {
@@ -284,9 +287,11 @@ describe('calculateCascadeBumps', () => {
       { name: 'm-lib', bumpType: 'minor' },
     ])
 
-    expect(result.bumps[0].name).toBe('a-lib')
-    expect(result.bumps[1].name).toBe('m-lib')
-    expect(result.bumps[2].name).toBe('z-lib')
+    expect(result.bumps).toEqual([
+      expect.objectContaining({ name: 'a-lib' }),
+      expect.objectContaining({ name: 'm-lib' }),
+      expect.objectContaining({ name: 'z-lib' }),
+    ])
   })
 
   it('updates triggeredBy list when multiple packages trigger same dependent', () => {
@@ -330,8 +335,7 @@ describe('calculateCascadeBumpsFromPackage', () => {
 
     const result = calculateCascadeBumpsFromPackage(workspace, 'lib-a', 'minor')
 
-    expect(result.directBumps).toHaveLength(1)
-    expect(result.directBumps[0].name).toBe('lib-a')
+    expect(result.bumps).toEqual([expect.objectContaining({ name: 'lib-a' })])
   })
 })
 
@@ -426,8 +430,7 @@ describe('edge cases', () => {
 
     const result = calculateCascadeBumps(workspace, [{ name: 'lib-a', bumpType: 'none' }])
 
-    expect(result.bumps).toHaveLength(1)
-    expect(result.bumps[0].nextVersion).toBe('1.0.0')
+    expect(result.bumps).toEqual([expect.objectContaining({ nextVersion: '1.0.0' })])
   })
 
   it('skips cascade when project not found in shouldCascade', () => {
@@ -499,7 +502,6 @@ describe('edge cases', () => {
     const result = calculateCascadeBumps(workspace, [{ name: 'lib-core', bumpType: 'minor' }])
 
     const appBumps = result.bumps.filter((b) => b.name === 'app')
-    expect(appBumps).toHaveLength(1)
-    expect(appBumps[0].triggeredBy.length).toBeGreaterThanOrEqual(1)
+    expect(appBumps).toEqual([expect.objectContaining({ triggeredBy: expect.arrayContaining(['lib-a', 'lib-b']) })])
   })
 })

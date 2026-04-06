@@ -1,3 +1,5 @@
+import type { Range } from '../../semver/models/range'
+import type { SemVer } from '../../semver/models/version'
 import type { Changelog } from '../models/changelog'
 import type { ChangelogEntry } from '../models/entry'
 import { createError } from '@hyperfrontend/immutable-api-utils/built-in-copy/error'
@@ -25,13 +27,15 @@ export function filterByVersionRange(changelog: Changelog, range: string): Chang
     throw createError(`Invalid version range: ${range}`)
   }
 
+  const parsedRange = <Range>rangeResult.range
+
   return filterEntries(changelog, (entry) => {
     if (entry.unreleased) return false
 
     const versionResult = parseVersion(entry.version)
-    if (!versionResult.success) return false
+    if (!versionResult.version) return false
 
-    return satisfies(versionResult.version, rangeResult.range)
+    return satisfies(versionResult.version, parsedRange)
   })
 }
 
@@ -48,13 +52,15 @@ export function filterFromVersion(changelog: Changelog, startVersion: string): C
     throw createError(`Invalid start version: ${startVersion}`)
   }
 
+  const parsedStart = <SemVer>startResult.version
+
   return filterEntries(changelog, (entry) => {
     if (entry.unreleased) return true
 
     const versionResult = parseVersion(entry.version)
-    if (!versionResult.success) return false
+    if (!versionResult.version) return false
 
-    return compare(versionResult.version, startResult.version) >= 0
+    return compare(versionResult.version, parsedStart) >= 0
   })
 }
 
@@ -71,13 +77,15 @@ export function filterToVersion(changelog: Changelog, endVersion: string): Chang
     throw createError(`Invalid end version: ${endVersion}`)
   }
 
+  const parsedEnd = <SemVer>endResult.version
+
   return filterEntries(changelog, (entry) => {
     if (entry.unreleased) return false
 
     const versionResult = parseVersion(entry.version)
-    if (!versionResult.success) return false
+    if (!versionResult.version) return false
 
-    return compare(versionResult.version, endResult.version) <= 0
+    return compare(versionResult.version, parsedEnd) <= 0
   })
 }
 
@@ -100,14 +108,17 @@ export function filterVersionRange(changelog: Changelog, startVersion: string, e
     throw createError(`Invalid end version: ${endVersion}`)
   }
 
+  const parsedStart = <SemVer>startResult.version
+  const parsedEnd = <SemVer>endResult.version
+
   return filterEntries(changelog, (entry) => {
     if (entry.unreleased) return false
 
     const versionResult = parseVersion(entry.version)
-    if (!versionResult.success) return false
+    if (!versionResult.version) return false
 
-    const cmpStart = compare(versionResult.version, startResult.version)
-    const cmpEnd = compare(versionResult.version, endResult.version)
+    const cmpStart = compare(versionResult.version, parsedStart)
+    const cmpEnd = compare(versionResult.version, parsedEnd)
 
     return cmpStart >= 0 && cmpEnd <= 0
   })

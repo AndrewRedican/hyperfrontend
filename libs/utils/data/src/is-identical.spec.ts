@@ -75,7 +75,7 @@ describe('isIdentical', () => {
     expect(
       isIdentical(
         function () {
-          console.log(void 0)
+          void 0
         },
         function () {}
       )
@@ -202,7 +202,7 @@ describe('isIdentical - with config detectCircularReferences:true', () => {
     expect(
       isIdentical(
         function () {
-          console.log(void 0)
+          void 0
         },
         function () {}
       )

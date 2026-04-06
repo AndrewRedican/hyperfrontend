@@ -6,6 +6,18 @@ module.exports = [
     ignores: ['**/__fixtures__/**'],
   },
   {
+    files: ['**/*.ts', '**/*.tsx'],
+    rules: {
+      'workspace/max-file-lines': [
+        'error',
+        {
+          maxLines: 450,
+          maxLinesTest: 870,
+        },
+      ],
+    },
+  },
+  {
     files: ['**/*.json'],
     rules: {
       '@nx/dependency-checks': [

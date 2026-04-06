@@ -181,12 +181,10 @@ describe('docs-site-routes', () => {
       }
 
       const result = extractLibraryEntries(arrayNode)
-      expect(result).toHaveLength(2)
-      expect(result[0].slug).toBe('nexus')
-      expect(result[0].category).toBe('core')
-      expect(result[0].name).toBe('Nexus')
-      expect(result[1].slug).toBe('logging')
-      expect(result[1].category).toBe('supporting')
+      expect(result).toEqual([
+        expect.objectContaining({ slug: 'nexus', category: 'core', name: 'Nexus' }),
+        expect.objectContaining({ slug: 'logging', category: 'supporting' }),
+      ])
     })
 
     it('handles empty array', () => {
@@ -209,8 +207,7 @@ describe('docs-site-routes', () => {
       }
 
       const result = extractLibraryEntries(arrayNode)
-      expect(result).toHaveLength(1)
-      expect(result[0].slug).toBe('nexus')
+      expect(result).toEqual([expect.objectContaining({ slug: 'nexus' })])
     })
 
     it('ignores null elements', () => {
@@ -293,8 +290,7 @@ describe('docs-site-routes', () => {
       }
 
       const result = extractLibraryEntries(arrayNode)
-      expect(result).toHaveLength(1)
-      expect(result[0].slug).toBe('nexus')
+      expect(result).toEqual([expect.objectContaining({ slug: 'nexus' })])
     })
 
     it('handles non-identifier non-literal keys', () => {
@@ -366,8 +362,7 @@ describe('docs-site-routes', () => {
       }
 
       const result = extractLibraryEntries(arrayNode)
-      expect(result).toHaveLength(1)
-      expect(result[0].slug).toBe('nexus')
+      expect(result).toEqual([expect.objectContaining({ slug: 'nexus' })])
     })
 
     it('ignores non-string property values', () => {

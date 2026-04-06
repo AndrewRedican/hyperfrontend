@@ -19,7 +19,13 @@ import { VersionExecutorSchema } from './schema'
  * @param context - Nx executor context
  * @returns Success status
  */
-export default async function versionExecutor(options: VersionExecutorSchema, context: ExecutorContext): Promise<{ success: boolean }> {
+export default async function versionExecutor(
+  options: VersionExecutorSchema,
+  context: ExecutorContext
+): Promise<{
+  /** Whether the version operation completed successfully. */
+  success: boolean
+}> {
   const { projectName, root: workspaceRoot, projectGraph } = context
   const logger = getLogger()
   logger.setLogLevel(options)

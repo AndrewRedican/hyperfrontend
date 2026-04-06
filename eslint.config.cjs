@@ -1,5 +1,4 @@
 const baseConfig = require('./eslint.base.config.cjs')
-const eslintRules = require('./tools/eslint-rules/src/index.ts')
 
 module.exports = [
   {
@@ -15,7 +14,6 @@ module.exports = [
   {
     files: ['README.md'],
     plugins: {
-      workspace: eslintRules,
       markdown: require('@eslint/markdown').default,
     },
     language: 'markdown/gfm',
@@ -25,9 +23,6 @@ module.exports = [
   },
   {
     files: ['.github/workflows/ci-libraries.yml'],
-    plugins: {
-      workspace: eslintRules,
-    },
     languageOptions: {
       parser: require('yaml-eslint-parser'),
     },
@@ -37,9 +32,6 @@ module.exports = [
   },
   {
     files: ['tsconfig.base.json'],
-    plugins: {
-      workspace: eslintRules,
-    },
     languageOptions: {
       parser: require('jsonc-eslint-parser'),
     },

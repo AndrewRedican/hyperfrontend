@@ -52,15 +52,25 @@ export interface PackageInfo {
  * @returns A new PackageInfo object
  */
 export function createPackageInfo(options: {
+  /** Package name, e.g., 'lodash' or '@scope/pkg' */
   name: string
+  /** The most recently published semver string */
   latestVersion: string
+  /** All published semver strings in chronological order */
   versions: readonly string[]
+  /** Brief summary of package functionality */
   description?: string
+  /** SPDX license identifier */
   license?: string
+  /** URL to source code repository */
   repository?: string
+  /** URL to project homepage or documentation site */
   homepage?: string
+  /** List of maintainers with name and email */
   maintainers?: readonly Maintainer[]
+  /** Search terms for npm registry discovery */
   keywords?: readonly string[]
+  /** Time of last modification */
   lastModified?: string
 }): PackageInfo {
   return {

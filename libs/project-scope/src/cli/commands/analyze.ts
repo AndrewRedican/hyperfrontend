@@ -8,11 +8,19 @@ import { stringify } from '@hyperfrontend/immutable-api-utils/built-in-copy/json
 import { entries } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
 import { analyzeProject } from '../../analyze'
 
+/**
+ * Options for the analyze CLI command.
+ */
 export interface AnalyzeCommandOptions {
+  /** Target directory path to analyze */
   path?: string
+  /** Output format (json, table, etc.) */
   format?: OutputFormat
+  /** Analysis depth level */
   depth?: 'basic' | 'full' | 'deep'
+  /** Glob patterns to include */
   include?: string[]
+  /** Glob patterns to exclude */
   exclude?: string[]
 }
 

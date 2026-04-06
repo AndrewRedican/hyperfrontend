@@ -5,33 +5,48 @@ import { createError } from '@hyperfrontend/immutable-api-utils/built-in-copy/er
 import { freeze } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
 import { createLogLevelConfig } from './create-log-level-config'
 
+/** Function signature for standard log output */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type LogLevelFn = (...data: any[]) => void
 
+/** Function signature for warning output */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type WarnLevelFn = (...data: any[]) => void
 
+/** Function signature for error output */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type ErrorLevelFn = (...data: any[]) => void
 
+/** Function signature for info output */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type InfoLevelFn = (...data: any[]) => void
 
+/** Function signature for debug output */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type DebugLevelFn = (...data: any[]) => void
 
+/** Logger interface with level-specific methods and level control */
 export interface Logger {
+  /** Standard log output */
   log: LogLevelFn
+  /** Warning-level output */
   warn: WarnLevelFn
+  /** Error-level output */
   error: ErrorLevelFn
+  /** Info-level output */
   info: InfoLevelFn
+  /** Debug-level output */
   debug: DebugLevelFn
+  /** Sets the current log level */
   setLogLevel: SetLogLevel
+  /** Gets the current log level */
   getLogLevel: GetLogLevel
 }
 
+/** Keys of Logger that represent log functions */
 export type LogFnName = Exclude<keyof Logger, 'setLevel' | 'getLevel'>
 
+/** Union type of all log function signatures */
 export type LogFunction = Logger[LogFnName]
 
 /**

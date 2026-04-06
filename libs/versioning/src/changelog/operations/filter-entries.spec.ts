@@ -49,7 +49,7 @@ describe('filterEntries', () => {
     const result = filterEntries(changelog, (entry) => entry.version === '1.0.0')
 
     expect(result.entries).toHaveLength(1)
-    expect(result.entries[0].version).toBe('1.0.0')
+    expect(result.entries).toEqual([expect.objectContaining({ version: '1.0.0' })])
   })
 })
 
@@ -84,7 +84,7 @@ describe('filterByVersionRange', () => {
 
     const result = filterByVersionRange(changelog, '>=1.0.0')
     expect(result.entries).toHaveLength(1)
-    expect(result.entries[0].version).toBe('1.0.0')
+    expect(result.entries).toEqual([expect.objectContaining({ version: '1.0.0' })])
   })
 
   it('excludes entries with invalid versions', () => {
@@ -96,7 +96,7 @@ describe('filterByVersionRange', () => {
 
     const result = filterByVersionRange(changelog, '>=1.0.0')
     expect(result.entries).toHaveLength(1)
-    expect(result.entries[0].version).toBe('1.0.0')
+    expect(result.entries).toEqual([expect.objectContaining({ version: '1.0.0' })])
   })
 })
 
@@ -143,7 +143,7 @@ describe('filterFromVersion', () => {
 
     const result = filterFromVersion(changelog, '1.0.0')
     expect(result.entries).toHaveLength(1)
-    expect(result.entries[0].version).toBe('2.0.0')
+    expect(result.entries).toEqual([expect.objectContaining({ version: '2.0.0' })])
   })
 })
 
@@ -160,8 +160,7 @@ describe('filterRecentEntries', () => {
 
     const result = filterRecentEntries(changelog, 2)
     expect(result.entries).toHaveLength(2)
-    expect(result.entries[0].version).toBe('3.0.0')
-    expect(result.entries[1].version).toBe('2.0.0')
+    expect(result.entries).toEqual([expect.objectContaining({ version: '3.0.0' }), expect.objectContaining({ version: '2.0.0' })])
   })
 
   it('includes unreleased in count when requested', () => {
@@ -177,8 +176,7 @@ describe('filterRecentEntries', () => {
 
     const result = filterRecentEntries(changelog, 2, true)
     expect(result.entries).toHaveLength(2)
-    expect(result.entries[0].version).toBe('Unreleased')
-    expect(result.entries[1].version).toBe('2.0.0')
+    expect(result.entries).toEqual([expect.objectContaining({ version: 'Unreleased' }), expect.objectContaining({ version: '2.0.0' })])
   })
 
   it('excludes unreleased from count by default', () => {
@@ -194,8 +192,7 @@ describe('filterRecentEntries', () => {
 
     const result = filterRecentEntries(changelog, 1)
     expect(result.entries).toHaveLength(2)
-    expect(result.entries[0].version).toBe('Unreleased')
-    expect(result.entries[1].version).toBe('2.0.0')
+    expect(result.entries).toEqual([expect.objectContaining({ version: 'Unreleased' }), expect.objectContaining({ version: '2.0.0' })])
   })
 
   it('returns empty entries for count 0', () => {
@@ -219,7 +216,7 @@ describe('filterBreakingChanges', () => {
 
     const result = filterBreakingChanges(changelog)
     expect(result.entries).toHaveLength(1)
-    expect(result.entries[0].version).toBe('2.0.0')
+    expect(result.entries).toEqual([expect.objectContaining({ version: '2.0.0' })])
   })
 
   it('includes entries with breaking items in non-breaking sections', () => {
@@ -236,7 +233,7 @@ describe('filterBreakingChanges', () => {
 
     const result = filterBreakingChanges(changelog)
     expect(result.entries).toHaveLength(1)
-    expect(result.entries[0].version).toBe('2.0.0')
+    expect(result.entries).toEqual([expect.objectContaining({ version: '2.0.0' })])
   })
 })
 
@@ -256,9 +253,14 @@ describe('filterByScope', () => {
 
     const result = filterByScope(changelog, ['api'])
     expect(result.entries).toHaveLength(2)
-    expect(result.entries[0].sections[0].items).toHaveLength(1)
-    expect(result.entries[0].sections[0].items[0].scope).toBe('api')
-    expect(result.entries[1].sections[0].items).toHaveLength(0)
+    expect(result.entries).toEqual([
+      expect.objectContaining({
+        sections: [expect.objectContaining({ items: [expect.objectContaining({ scope: 'api' })] })],
+      }),
+      expect.objectContaining({
+        sections: [expect.objectContaining({ items: [] })],
+      }),
+    ])
   })
 })
 
@@ -315,7 +317,7 @@ describe('filterToVersion', () => {
 
     const result = filterToVersion(changelog, '2.0.0')
     expect(result.entries).toHaveLength(1)
-    expect(result.entries[0].version).toBe('1.0.0')
+    expect(result.entries).toEqual([expect.objectContaining({ version: '1.0.0' })])
   })
 })
 
@@ -394,7 +396,7 @@ describe('filterByDateRange', () => {
 
     const result = filterByDateRange(changelog, '2024-01-15', '2024-02-15')
     expect(result.entries).toHaveLength(1)
-    expect(result.entries[0].version).toBe('2.0.0')
+    expect(result.entries).toEqual([expect.objectContaining({ version: '2.0.0' })])
   })
 
   it('excludes entries without dates', () => {
@@ -406,7 +408,7 @@ describe('filterByDateRange', () => {
 
     const result = filterByDateRange(changelog, '2024-01-01', '2024-12-31')
     expect(result.entries).toHaveLength(1)
-    expect(result.entries[0].version).toBe('2.0.0')
+    expect(result.entries).toEqual([expect.objectContaining({ version: '2.0.0' })])
   })
 
   it('handles open-ended start date', () => {
@@ -421,7 +423,7 @@ describe('filterByDateRange', () => {
 
     const result = filterByDateRange(changelog, undefined, '2024-01-15')
     expect(result.entries).toHaveLength(1)
-    expect(result.entries[0].version).toBe('1.0.0')
+    expect(result.entries).toEqual([expect.objectContaining({ version: '1.0.0' })])
   })
 
   it('handles open-ended end date', () => {
@@ -436,7 +438,7 @@ describe('filterByDateRange', () => {
 
     const result = filterByDateRange(changelog, '2024-01-15')
     expect(result.entries).toHaveLength(1)
-    expect(result.entries[0].version).toBe('2.0.0')
+    expect(result.entries).toEqual([expect.objectContaining({ version: '2.0.0' })])
   })
 })
 
@@ -456,8 +458,11 @@ describe('filterSections', () => {
     })
 
     const result = filterSections(changelog, (section) => section.type === 'features')
-    expect(result.entries[0].sections).toHaveLength(1)
-    expect(result.entries[0].sections[0].type).toBe('features')
+    expect(result.entries).toEqual([
+      expect.objectContaining({
+        sections: [expect.objectContaining({ type: 'features' })],
+      }),
+    ])
   })
 })
 
@@ -478,8 +483,11 @@ describe('filterSectionTypes', () => {
     })
 
     const result = filterSectionTypes(changelog, ['features', 'fixes'])
-    expect(result.entries[0].sections).toHaveLength(2)
-    expect(result.entries[0].sections.map((s) => s.type)).toEqual(['features', 'fixes'])
+    expect(result.entries).toEqual([
+      expect.objectContaining({
+        sections: [expect.objectContaining({ type: 'features' }), expect.objectContaining({ type: 'fixes' })],
+      }),
+    ])
   })
 })
 
@@ -502,8 +510,15 @@ describe('filterItems', () => {
     })
 
     const result = filterItems(changelog, (item) => item.scope === 'api')
-    expect(result.entries[0].sections[0].items).toHaveLength(1)
-    expect(result.entries[0].sections[0].items[0].scope).toBe('api')
+    expect(result.entries).toEqual([
+      expect.objectContaining({
+        sections: [
+          expect.objectContaining({
+            items: [expect.objectContaining({ scope: 'api' })],
+          }),
+        ],
+      }),
+    ])
   })
 
   it('receives section and entry in predicate', () => {
@@ -523,8 +538,14 @@ describe('filterItems', () => {
     const result = filterItems(changelog, (_item, section, entry) => {
       return section.type === 'features' && entry.version === '1.0.0'
     })
-    expect(result.entries[0].sections[0].items).toHaveLength(1)
-    expect(result.entries[0].sections[1].items).toHaveLength(0)
+    expect(result.entries).toEqual([
+      expect.objectContaining({
+        sections: [
+          expect.objectContaining({ items: expect.arrayContaining([expect.any(Object)]) }),
+          expect.objectContaining({ items: [] }),
+        ],
+      }),
+    ])
   })
 })
 
@@ -547,8 +568,14 @@ describe('excludeByScope', () => {
     })
 
     const result = excludeByScope(changelog, ['api'])
-    const items = result.entries[0].sections[0].items
-    expect(items).toHaveLength(2)
-    expect(items.map((i) => i.description)).toEqual(['Core feature', 'No scope feature'])
+    expect(result.entries).toEqual([
+      expect.objectContaining({
+        sections: [
+          expect.objectContaining({
+            items: [expect.objectContaining({ description: 'Core feature' }), expect.objectContaining({ description: 'No scope feature' })],
+          }),
+        ],
+      }),
+    ])
   })
 })

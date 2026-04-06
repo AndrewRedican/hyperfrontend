@@ -103,7 +103,12 @@ const rule: Rule.RuleModule = {
           },
           fix(fixer) {
             if (/\.(ts|tsx|mts|cts)$/.test(exportPath)) {
-              const raw = (valueNode as unknown as { raw?: string }).raw
+              const raw = (
+                valueNode as unknown as {
+                  /** Raw string representation of the node value. */
+                  raw?: string
+                }
+              ).raw
               if (raw) {
                 const quote = raw[0]
                 return fixer.replaceText(valueNode as unknown as Rule.Node, `${quote}${suggested}${quote}`)

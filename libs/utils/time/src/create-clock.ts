@@ -2,10 +2,17 @@ import { createDate } from '@hyperfrontend/immutable-api-utils/built-in-copy/dat
 import { freeze } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
 import { setInterval, clearInterval } from '@hyperfrontend/immutable-api-utils/built-in-copy/timers'
 
+/**
+ * Clock interface for interval-based time updates.
+ */
 export interface Clock {
+  /** Start the clock interval */
   readonly start: () => void
+  /** Stop the clock interval */
   readonly stop: () => void
+  /** Subscribe to time updates */
   readonly subscribe: (callback: (currentTime: Date) => void) => void
+  /** Unsubscribe from time updates */
   readonly unsubscribe: (callback: (currentTime: Date) => void) => void
   /** Interval in milliseconds */
   readonly interval: number

@@ -24,7 +24,9 @@ export function isChangelogEqual(a: Changelog, b: Changelog): boolean {
 
   if (a.entries.length !== b.entries.length) return false
   for (let i = 0; i < a.entries.length; i++) {
-    if (!isEntryEqual(a.entries[i], b.entries[i])) return false
+    const aEntry = a.entries[i]
+    const bEntry = b.entries[i]
+    if (aEntry === undefined || bEntry === undefined || !isEntryEqual(aEntry, bEntry)) return false
   }
 
   if (!isMetadataEqual(a.metadata, b.metadata)) return false
@@ -49,7 +51,9 @@ export function isHeaderEqual(a: ChangelogHeader, b: ChangelogHeader): boolean {
 
   if (a.links.length !== b.links.length) return false
   for (let i = 0; i < a.links.length; i++) {
-    if (!isLinkEqual(a.links[i], b.links[i])) return false
+    const aLink = a.links[i]
+    const bLink = b.links[i]
+    if (aLink === undefined || bLink === undefined || !isLinkEqual(aLink, bLink)) return false
   }
 
   return true
@@ -82,7 +86,9 @@ export function isEntryEqual(a: ChangelogEntry, b: ChangelogEntry): boolean {
 
   if (a.sections.length !== b.sections.length) return false
   for (let i = 0; i < a.sections.length; i++) {
-    if (!isSectionEqual(a.sections[i], b.sections[i])) return false
+    const aSection = a.sections[i]
+    const bSection = b.sections[i]
+    if (aSection === undefined || bSection === undefined || !isSectionEqual(aSection, bSection)) return false
   }
 
   return true
@@ -101,7 +107,9 @@ export function isSectionEqual(a: ChangelogSection, b: ChangelogSection): boolea
 
   if (a.items.length !== b.items.length) return false
   for (let i = 0; i < a.items.length; i++) {
-    if (!isItemEqual(a.items[i], b.items[i])) return false
+    const aItem = a.items[i]
+    const bItem = b.items[i]
+    if (aItem === undefined || bItem === undefined || !isItemEqual(aItem, bItem)) return false
   }
 
   return true
@@ -121,12 +129,16 @@ export function isItemEqual(a: ChangelogItem, b: ChangelogItem): boolean {
 
   if (a.commits.length !== b.commits.length) return false
   for (let i = 0; i < a.commits.length; i++) {
-    if (!isCommitRefEqual(a.commits[i], b.commits[i])) return false
+    const aCommit = a.commits[i]
+    const bCommit = b.commits[i]
+    if (aCommit === undefined || bCommit === undefined || !isCommitRefEqual(aCommit, bCommit)) return false
   }
 
   if (a.references.length !== b.references.length) return false
   for (let i = 0; i < a.references.length; i++) {
-    if (!isIssueRefEqual(a.references[i], b.references[i])) return false
+    const aRef = a.references[i]
+    const bRef = b.references[i]
+    if (aRef === undefined || bRef === undefined || !isIssueRefEqual(aRef, bRef)) return false
   }
 
   return true

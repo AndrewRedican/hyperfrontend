@@ -269,8 +269,11 @@ function diffSections(
   sourceSections: readonly ChangelogSection[],
   targetSections: readonly ChangelogSection[]
 ): {
+  /** Sections present in target but not in source */
   added: ChangelogSection[]
+  /** Sections present in source but not in target */
   removed: ChangelogSection[]
+  /** Sections present in both with differences */
   modified: SectionDiff[]
 } {
   const sourceByType = createMap<string, ChangelogSection>()
@@ -428,7 +431,9 @@ function diffItem(source: ChangelogItem, target: ChangelogItem): ItemDiff {
 function areCommitRefsEqual(a: readonly CommitRef[], b: readonly CommitRef[]): boolean {
   if (a.length !== b.length) return false
   for (let i = 0; i < a.length; i++) {
-    if (!isCommitRefEqual(a[i], b[i])) return false
+    const aRef = a[i]
+    const bRef = b[i]
+    if (aRef === undefined || bRef === undefined || !isCommitRefEqual(aRef, bRef)) return false
   }
   return true
 }
@@ -443,7 +448,9 @@ function areCommitRefsEqual(a: readonly CommitRef[], b: readonly CommitRef[]): b
 function areIssueRefsEqual(a: readonly IssueRef[], b: readonly IssueRef[]): boolean {
   if (a.length !== b.length) return false
   for (let i = 0; i < a.length; i++) {
-    if (!isIssueRefEqual(a[i], b[i])) return false
+    const aRef = a[i]
+    const bRef = b[i]
+    if (aRef === undefined || bRef === undefined || !isIssueRefEqual(aRef, bRef)) return false
   }
   return true
 }

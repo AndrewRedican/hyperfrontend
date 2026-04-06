@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.5.2](https://github.com/AndrewRedican/hyperfrontend/compare/bf1304e36ce20eb196dae60d2b311ab10461860e...61a93d778d6b84915c51120f315e81b3a16fd67c) - 2026-04-06
+
+### Bug Fixes
+
+- **@hyperfrontend/workspace:** define local custom eslint rules plugin globally on config files
+
 ## [0.5.1](https://github.com/AndrewRedican/hyperfrontend/compare/f1adb23d9138f218c27c152ac18b9ec3ec554c72...dbc22a50298c81c8558a214abc3d5256db3d40fd) - 2026-03-30
 
 ### Bug Fixes

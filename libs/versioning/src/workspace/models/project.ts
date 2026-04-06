@@ -39,13 +39,21 @@ export interface Project {
  * Options for creating a project.
  */
 export interface CreateProjectOptions {
+  /** Package name */
   name: string
+  /** Package version */
   version: string
+  /** Absolute path to project root */
   path: string
+  /** Absolute path to package.json */
   packageJsonPath: string
+  /** Parsed package.json content */
   packageJson: PackageJson
+  /** Absolute path to CHANGELOG.md */
   changelogPath?: string | null
+  /** Names of workspace packages this project depends on */
   internalDependencies?: readonly string[]
+  /** Names of workspace packages that depend on this project */
   internalDependents?: readonly string[]
 }
 

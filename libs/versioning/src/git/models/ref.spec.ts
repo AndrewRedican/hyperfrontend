@@ -202,8 +202,8 @@ describe('filterRefsByType', () => {
 
     const branches = filterRefsByType(refs, 'branch')
     expect(branches.length).toBe(2)
-    expect(branches[0].name).toBe('main')
-    expect(branches[1].name).toBe('feature')
+    expect(branches[0]?.name).toBe('main')
+    expect(branches[1]?.name).toBe('feature')
   })
 })
 

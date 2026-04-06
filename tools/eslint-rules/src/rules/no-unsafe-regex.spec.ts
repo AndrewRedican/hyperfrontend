@@ -10,7 +10,7 @@ type TestOptions = readonly [
     flagTemplateInterpolation?: 'error' | 'warn' | 'off'
     regexpFactoryFunctions?: string[]
     ignorePatterns?: string[]
-  }?,
+  },
 ]
 
 type MessageIds = 'unsafeRegexPattern' | 'dynamicRegex' | 'dynamicCreateRegExp' | 'unsafeInterpolation' | 'exponentialBounds'

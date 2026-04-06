@@ -37,10 +37,15 @@ export interface PublishableLibrary {
  * Interface for project.json structure.
  */
 interface ProjectJson {
+  /** Project name identifier */
   name?: string
+  /** Type of project (library, application, etc.) */
   projectType?: string
+  /** Build targets configuration */
   targets?: {
+    /** Build target configuration */
     build?: unknown
+    /** Publish target configuration */
     publish?: unknown
   }
 }
@@ -57,15 +62,15 @@ export function deriveCoverageFlag(relativePath: string): string {
   const parts = relativePath.split('/')
 
   if (parts.length >= 3 && parts[0] === 'libs' && parts[1] === 'utils') {
-    const utilName = parts[2]
+    const utilName = <string>parts[2]
     return `${utilName}-utils`
   }
 
   if (parts.length >= 2) {
-    return parts[parts.length - 1]
+    return <string>parts[parts.length - 1]
   }
 
-  return parts[parts.length - 1]
+  return <string>parts[parts.length - 1]
 }
 
 /**
@@ -83,7 +88,12 @@ function findPublishableLibraries(baseDir: string, workspaceRoot: string, result
   if (isPublishableLibraryDir(baseDir)) {
     const relativePath = baseDir.slice(workspaceRoot.length + 1)
     const projectJsonPath = join(baseDir, 'project.json')
-    const projectJson = readJsonFileIfExists<ProjectJson & { name?: string }>(projectJsonPath)
+    const projectJson = readJsonFileIfExists<
+      ProjectJson & {
+        /** Project name from project.json */
+        name?: string
+      }
+    >(projectJsonPath)
 
     results.push({
       name: projectJson?.name ?? `lib-${basename(baseDir)}`,
@@ -92,6 +102,7 @@ function findPublishableLibraries(baseDir: string, workspaceRoot: string, result
     })
   }
 
+  /** Directory entries read from the file system */
   let entries: string[]
   try {
     entries = readDirectory(baseDir)
@@ -126,11 +137,11 @@ export function hasPathFilter(content: string, coverageFlag: string, relativePat
   const pathPattern = `'${relativePath}/**'`
 
   for (let i = 0; i < lines.length; i++) {
-    const line = lines[i].trim()
+    const line = (<string>lines[i]).trim()
 
     if (line === filterPattern || line.startsWith(`${filterPattern} `)) {
       for (let j = i; j < min(i + 5, lines.length); j++) {
-        if (lines[j].includes(pathPattern)) {
+        if ((<string>lines[j]).includes(pathPattern)) {
           return true
         }
       }

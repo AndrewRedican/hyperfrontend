@@ -1,6 +1,17 @@
 jest.useFakeTimers()
 
 /**
+ * Mock object built-in copies so freeze is a no-op in tests.
+ *
+ * The logger object is created with freeze(), which makes it non-writable.
+ * Without this mock, jest.spyOn() cannot replace methods on the logger.
+ */
+jest.mock('@hyperfrontend/immutable-api-utils/built-in-copy/object', () => ({
+  ...jest.requireActual('@hyperfrontend/immutable-api-utils/built-in-copy/object'),
+  freeze: <T>(obj: T): T => obj,
+}))
+
+/**
  * Mock console built-in copies to use actual console methods.
  *
  * The ui-utils modules capture console references at module load time from

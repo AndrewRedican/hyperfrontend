@@ -1,3 +1,4 @@
+/** Parsed body section of a commit message. */
 export interface ParsedBody {
   /** The body text (may be multiline) */
   body: string
@@ -17,7 +18,9 @@ export interface ParsedBody {
  */
 export function parseBody(lines: string[], startIndex: number): ParsedBody | undefined {
   let pos = startIndex
-  while (pos < lines.length && lines[pos].trim() === '') {
+  while (pos < lines.length) {
+    const currentLine = lines[pos]
+    if (currentLine === undefined || currentLine.trim() !== '') break
     pos++
   }
 
@@ -25,7 +28,8 @@ export function parseBody(lines: string[], startIndex: number): ParsedBody | und
     return undefined
   }
 
-  if (isFooterLine(lines[pos])) {
+  const firstLine = lines[pos]
+  if (firstLine === undefined || isFooterLine(firstLine)) {
     return undefined
   }
 
@@ -33,12 +37,14 @@ export function parseBody(lines: string[], startIndex: number): ParsedBody | und
 
   while (pos < lines.length) {
     const line = lines[pos]
+    if (line === undefined) break
 
     if (isFooterLine(line)) {
       break
     }
 
-    if (line.trim() === '' && pos + 1 < lines.length && isFooterLine(lines[pos + 1])) {
+    const nextLine = lines[pos + 1]
+    if (line.trim() === '' && pos + 1 < lines.length && nextLine !== undefined && isFooterLine(nextLine)) {
       break
     }
 
@@ -46,7 +52,7 @@ export function parseBody(lines: string[], startIndex: number): ParsedBody | und
     pos++
   }
 
-  while (bodyLines.length > 0 && bodyLines[bodyLines.length - 1].trim() === '') {
+  while (bodyLines.length > 0 && bodyLines[bodyLines.length - 1]?.trim() === '') {
     bodyLines.pop()
   }
 
@@ -90,8 +96,7 @@ function isFooterLine(line: string): boolean {
 
   const tokenStart = pos
   while (pos < trimmed.length) {
-    const char = trimmed[pos]
-    const code = char.charCodeAt(0)
+    const code = trimmed.charCodeAt(pos)
 
     if ((code >= 97 && code <= 122) || (code >= 65 && code <= 90) || (code >= 48 && code <= 57) || code === 45) {
       pos++

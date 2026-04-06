@@ -36,8 +36,8 @@ describe('Flow Model', () => {
       expect(flow.id).toBe('my-flow')
       expect(flow.name).toBe('My Flow')
       expect(flow.steps).toHaveLength(2)
-      expect(flow.steps[0].id).toBe('step-1')
-      expect(flow.steps[1].id).toBe('step-2')
+      expect(flow.steps[0]?.id).toBe('step-1')
+      expect(flow.steps[1]?.id).toBe('step-2')
     })
 
     it('creates a flow with empty steps', () => {
@@ -98,7 +98,7 @@ describe('Flow Model', () => {
       const modified = addStep(flow, newStep)
 
       expect(modified.steps).toHaveLength(3)
-      expect(modified.steps[2].id).toBe('step-3')
+      expect(modified.steps[2]?.id).toBe('step-3')
     })
 
     it('returns a new flow (immutable)', () => {
@@ -297,7 +297,7 @@ describe('Flow Model', () => {
       const modified = replaceStep(flow, 'old', createMockStep('new', 'New Step'))
 
       expect(modified.steps.map((s) => s.id)).toEqual(['a', 'new', 'c'])
-      expect(modified.steps[1].name).toBe('New Step')
+      expect(modified.steps[1]?.name).toBe('New Step')
     })
 
     it('returns unchanged flow if step not found', () => {
@@ -465,7 +465,7 @@ describe('Flow Model', () => {
       flow = insertStep(flow, createMockStep('b-new', 'B New'), 1)
 
       expect(flow.steps.map((s) => s.id)).toEqual(['a', 'b-new', 'c'])
-      expect(flow.steps[1].name).toBe('B New')
+      expect(flow.steps[1]?.name).toBe('B New')
     })
 
     it('supports replacing and configuring', () => {
@@ -475,7 +475,7 @@ describe('Flow Model', () => {
       flow = replaceStep(flow, 'old', createMockStep('new'))
       flow = withConfig(flow, { skipGit: true })
 
-      expect(flow.steps[0].id).toBe('new')
+      expect(flow.steps[0]?.id).toBe('new')
       expect(flow.config.preset).toBe('conventional')
       expect(flow.config.skipGit).toBe(true)
     })

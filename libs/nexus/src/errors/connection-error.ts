@@ -20,7 +20,16 @@ export class ConnectionError extends Error {
    *
    * @returns JSON object with error details
    */
-  toJSON(): { name: string; message: string; channelId?: string; origin?: string } {
+  toJSON(): {
+    /** Error name */
+    name: string
+    /** Error message */
+    message: string
+    /** Channel ID if available */
+    channelId?: string
+    /** Origin if available */
+    origin?: string
+  } {
     return {
       name: this.name,
       message: this.message,

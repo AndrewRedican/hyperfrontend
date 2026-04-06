@@ -1,8 +1,14 @@
 import type { ChannelRegistry } from './factory'
 
+/**
+ * Minimal channel representation for registry operations.
+ */
 interface MinimalChannel {
+  /** Unique identifier for the channel */
   id: string
+  /** Display name of the channel */
   name: string
+  /** Target window for cross-frame communication */
   target: Window
 }
 

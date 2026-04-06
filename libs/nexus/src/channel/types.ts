@@ -33,14 +33,23 @@ export interface ChannelInternals {
 
   /** Action creators bound to broker */
   actions: {
+    /** Requests a connection with optional security negotiation */
     requestConnection(processId: string, security?: SecurityNegotiationRequest): IAction
+    /** Accepts a pending connection request */
     acceptConnection(processId: string, security?: SecurityNegotiationResponse): IAction
+    /** Denies a connection request with a reason */
     denyConnection(processId: string, reason: string): IAction
+    /** Cancels an ongoing connection attempt */
     cancelConnection(processId: string): IAction
+    /** Opens an established connection */
     openConnection(processId: string, security?: SecurityConfirmation): IAction
+    /** Closes an active connection */
     closeConnection(processId: string): IAction
+    /** Destroys the connection entirely */
     destroyConnection(): IAction
+    /** Sends a new message through the channel */
     newMessage(data: unknown): IAction
+    /** Reports an invalid request error */
     invalidRequest(processId: string, error: string): IAction
   }
 
@@ -57,7 +66,9 @@ export interface ChannelDependencies {
 
   /** Process manager for tracking connection processes */
   processManager: {
+    /** Creates a new process and returns its ID */
     create(channel: unknown): string
+    /** Removes a process by ID */
     remove(processId: string): void
   }
 

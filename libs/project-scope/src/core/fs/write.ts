@@ -120,7 +120,7 @@ export function writeJsonFile<T>(filePath: string, data: T, options?: WriteJsonO
     writeFileContent(filePath, content, options)
     fsWriteLogger.debug('JSON file written successfully', { path: filePath })
   } catch (error) {
-    if ((<{ code?: string }>error)?.code === 'FS_WRITE_ERROR') {
+    if ((<{ /** Error code */ code?: string }>error)?.code === 'FS_WRITE_ERROR') {
       throw error
     }
     fsWriteLogger.warn('Failed to write JSON file', { path: filePath, error: error instanceof Error ? error.message : String(error) })

@@ -1,4 +1,4 @@
-import { createSemVer } from '../models/version'
+import { createSemVer, SemVer } from '../models/version'
 import { sort, sortDescending, max, min } from './sort'
 
 describe('sort', () => {
@@ -9,15 +9,15 @@ describe('sort', () => {
       createSemVer({ major: 3, minor: 0, patch: 0 }),
     ]
     const sorted = sort(versions)
-    expect(sorted[0].major).toBe(1)
-    expect(sorted[1].major).toBe(2)
-    expect(sorted[2].major).toBe(3)
+    expect((<SemVer>sorted[0]).major).toBe(1)
+    expect((<SemVer>sorted[1]).major).toBe(2)
+    expect((<SemVer>sorted[2]).major).toBe(3)
   })
 
   it('does not mutate original array', () => {
     const versions = [createSemVer({ major: 2, minor: 0, patch: 0 }), createSemVer({ major: 1, minor: 0, patch: 0 })]
     sort(versions)
-    expect(versions[0].major).toBe(2)
+    expect((<SemVer>versions[0]).major).toBe(2)
   })
 })
 
@@ -29,9 +29,9 @@ describe('sortDescending', () => {
       createSemVer({ major: 2, minor: 0, patch: 0 }),
     ]
     const sorted = sortDescending(versions)
-    expect(sorted[0].major).toBe(3)
-    expect(sorted[1].major).toBe(2)
-    expect(sorted[2].major).toBe(1)
+    expect((<SemVer>sorted[0]).major).toBe(3)
+    expect((<SemVer>sorted[1]).major).toBe(2)
+    expect((<SemVer>sorted[2]).major).toBe(1)
   })
 })
 

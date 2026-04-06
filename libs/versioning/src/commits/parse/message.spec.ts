@@ -275,7 +275,7 @@ describe('footer parsing edge cases', () => {
   it('handles footer with alphanumeric key', () => {
     const commit = parseConventionalCommit('feat: test\n\nSigned-off-by: John')
     expect(commit.footers).toHaveLength(1)
-    expect(commit.footers[0].key).toBe('Signed-off-by')
+    expect(commit.footers[0]?.key).toBe('Signed-off-by')
   })
 
   it('handles multiple consecutive footers', () => {
@@ -285,7 +285,7 @@ describe('footer parsing edge cases', () => {
 
   it('handles footer value with special characters', () => {
     const commit = parseConventionalCommit('feat: test\n\nRefs: ABC-123/DEF:456')
-    expect(commit.footers[0].value).toBe('ABC-123/DEF:456')
+    expect(commit.footers[0]?.value).toBe('ABC-123/DEF:456')
   })
 
   it('handles BREAKING-CHANGE followed by another footer', () => {
@@ -299,8 +299,8 @@ describe('footer parsing edge cases', () => {
     const commit = parseConventionalCommit('feat: subject\n\nRefs #123')
     expect(commit.body).toBeUndefined()
     expect(commit.footers).toHaveLength(1)
-    expect(commit.footers[0].key).toBe('Refs')
-    expect(commit.footers[0].value).toBe('123')
+    expect(commit.footers[0]?.key).toBe('Refs')
+    expect(commit.footers[0]?.value).toBe('123')
   })
 
   it('stops body parsing when footer line is encountered', () => {
@@ -312,8 +312,8 @@ describe('footer parsing edge cases', () => {
   it('handles footer with hash reference format', () => {
     const commit = parseConventionalCommit('fix: bug\n\nCloses #456')
     expect(commit.footers).toHaveLength(1)
-    expect(commit.footers[0].key).toBe('Closes')
-    expect(commit.footers[0].value).toBe('456')
+    expect(commit.footers[0]?.key).toBe('Closes')
+    expect(commit.footers[0]?.value).toBe('456')
   })
 
   it('handles empty footer value', () => {

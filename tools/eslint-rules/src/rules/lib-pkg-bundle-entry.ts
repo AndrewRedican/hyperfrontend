@@ -10,14 +10,27 @@ import { isPublishableLibrary } from '../utils/nx-project'
  */
 export const RULE_NAME = 'lib-pkg-bundle-entry'
 
+/** Build options for bundle configuration */
 interface BuildOptions {
-  iife?: { entry?: string }
-  umd?: { entry?: string }
+  /** IIFE bundle entry configuration */
+  iife?: {
+    /** Entry point path for the bundle */
+    entry?: string
+  }
+  /** UMD bundle entry configuration */
+  umd?: {
+    /** Entry point path for the bundle */
+    entry?: string
+  }
 }
 
+/** Project.json structure for reading build targets */
 interface ProjectJson {
+  /** Project targets configuration */
   targets?: {
+    /** Build target configuration */
     build?: {
+      /** Build options including bundle entries */
       options?: BuildOptions
     }
   }

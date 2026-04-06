@@ -37,9 +37,27 @@ const rule: Rule.RuleModule = {
 
     // istanbul ignore next -- fields initialization
     const fields: {
-      name?: { value: string | null; node: JSONProperty }
-      tags?: { value: unknown[] | null; node: JSONProperty }
-      description?: { value: string | null; node: JSONProperty }
+      /** Project name field data */
+      name?: {
+        /** Field value or null if not set */
+        value: string | null
+        /** AST node reference */
+        node: JSONProperty
+      }
+      /** Project tags field data */
+      tags?: {
+        /** Field value or null if not set */
+        value: unknown[] | null
+        /** AST node reference */
+        node: JSONProperty
+      }
+      /** Project description field data */
+      description?: {
+        /** Field value or null if not set */
+        value: string | null
+        /** AST node reference */
+        node: JSONProperty
+      }
     } = {}
 
     return {

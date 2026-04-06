@@ -22,9 +22,13 @@ export type TokenType =
  * Represents a single parsed token from the changelog markdown.
  */
 export interface Token {
+  /** The type classification of the token */
   readonly type: TokenType
+  /** The raw text content of the token */
   readonly value: string
+  /** Line number where the token appears (1-indexed) */
   readonly line: number
+  /** Column position where the token starts (1-indexed) */
   readonly column: number
 }
 
@@ -32,10 +36,15 @@ export interface Token {
  * Internal state used during tokenization to track position and collect tokens.
  */
 interface TokenizerState {
+  /** Current position in the input string */
   pos: number
+  /** Current line number */
   line: number
+  /** Current column position */
   column: number
+  /** The input string being tokenized */
   input: string
+  /** Collected tokens */
   tokens: Token[]
 }
 

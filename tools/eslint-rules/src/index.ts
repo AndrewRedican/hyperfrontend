@@ -22,6 +22,7 @@ import maxFileLines, { RULE_NAME as MAX_FILE_LINES } from './rules/max-file-line
 import noAsyncFsApi, { RULE_NAME as NO_ASYNC_FS_API } from './rules/no-async-fs-api'
 import noDecorativeHeaderComments, { RULE_NAME as NO_DECORATIVE_HEADER_COMMENTS } from './rules/no-decorative-header-comments'
 import noDeprecatedTag, { RULE_NAME as NO_DEPRECATED_TAG } from './rules/no-deprecated-tag'
+import noDirectConsole, { RULE_NAME as NO_DIRECT_CONSOLE } from './rules/no-direct-console'
 import noEnum, { RULE_NAME as NO_ENUM } from './rules/no-enum'
 import noMixedTypeImport, { RULE_NAME as NO_MIXED_TYPE_IMPORT } from './rules/no-mixed-type-import'
 import noNamespaceImport, { RULE_NAME as NO_NAMESPACE_IMPORT } from './rules/no-namespace-import'
@@ -68,6 +69,7 @@ export const rules: ESLint.Plugin['rules'] = {
   [NO_ASYNC_FS_API]: noAsyncFsApi as unknown as Rule.RuleModule,
   [NO_DECORATIVE_HEADER_COMMENTS]: noDecorativeHeaderComments as unknown as Rule.RuleModule,
   [NO_DEPRECATED_TAG]: noDeprecatedTag as unknown as Rule.RuleModule,
+  [NO_DIRECT_CONSOLE]: noDirectConsole as unknown as Rule.RuleModule,
   [NO_ENUM]: noEnum as unknown as Rule.RuleModule,
   [NO_MIXED_TYPE_IMPORT]: noMixedTypeImport as unknown as Rule.RuleModule,
   [NO_NAMESPACE_IMPORT]: noNamespaceImport as unknown as Rule.RuleModule,

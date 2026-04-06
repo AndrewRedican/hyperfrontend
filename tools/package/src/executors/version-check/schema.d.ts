@@ -1,5 +1,6 @@
 import type { FlowConfig } from '@hyperfrontend/versioning/flow/models'
 
+/** Configuration schema for the version-check executor. */
 export interface VersionCheckExecutorSchema {
   /**
    * Scope filtering configuration for commit classification and changelog generation.

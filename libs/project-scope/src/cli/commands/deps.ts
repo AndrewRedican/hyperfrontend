@@ -7,9 +7,15 @@ import { min } from '@hyperfrontend/immutable-api-utils/built-in-copy/math'
 import { entries, keys } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
 import { getDependencies, readPackageJson } from '../../project/package'
 
+/**
+ * Options for the deps command.
+ */
 export interface DepsCommandOptions {
+  /** Path to the package.json file */
   path?: string
+  /** Type of dependencies to list */
   type?: 'production' | 'development' | 'peer' | 'optional' | 'all'
+  /** Output format for the results */
   format?: OutputFormat
 }
 

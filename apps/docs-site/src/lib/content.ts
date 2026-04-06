@@ -4,13 +4,23 @@ import matter from 'gray-matter'
 
 const WORKSPACE_ROOT = resolve(process.cwd(), '../..')
 
+/**
+ * Information about a library in the documentation system.
+ */
 export interface LibraryInfo {
+  /** Display name of the library */
   name: string
+  /** npm package name */
   packageName: string
+  /** URL slug for routing */
   slug: string
+  /** Path to README file */
   readmePath: string
+  /** Path to architecture documentation (optional) */
   architecturePath?: string
+  /** TypeScript entry point files */
   entryPoints: string[]
+  /** Library category */
   category: 'core' | 'supporting' | 'utils' | 'plugin'
 }
 
@@ -164,10 +174,44 @@ export const LIBRARIES: LibraryInfo[] = [
   },
 ]
 
+/**
+ * Parsed markdown file with frontmatter data extracted.
+ */
 export interface ParsedMarkdown {
+  /** Markdown content without frontmatter */
   content: string
+  /** Frontmatter data as key-value pairs */
   data: Record<string, unknown>
+  /** Original file content including frontmatter */
   rawContent: string
+}
+
+/**
+ * Extracted section from markdown content.
+ */
+export interface ExtractedSection {
+  /** Section heading text */
+  title: string
+  /** Heading level (1-6) */
+  level: number
+  /** Section content (excluding heading) */
+  content: string
+  /** URL anchor slug */
+  anchor: string
+}
+
+/**
+ * Internal section builder during parsing.
+ */
+interface SectionBuilder {
+  /** Section heading text */
+  title: string
+  /** Heading level (1-6) */
+  level: number
+  /** Lines of content being collected */
+  content: string[]
+  /** URL anchor slug */
+  anchor: string
 }
 
 /**
@@ -199,11 +243,11 @@ export function parseMarkdownFile(relativePath: string): ParsedMarkdown | null {
  * @param content - The markdown content to extract sections from
  * @returns An array of sections with title, level, content, and anchor
  */
-export function extractSections(content: string): { title: string; level: number; content: string; anchor: string }[] {
-  const sections: { title: string; level: number; content: string; anchor: string }[] = []
+export function extractSections(content: string): ExtractedSection[] {
+  const sections: ExtractedSection[] = []
   const lines = content.split('\n')
 
-  let currentSection: { title: string; level: number; content: string[]; anchor: string } | null = null
+  let currentSection: SectionBuilder | null = null
 
   for (const line of lines) {
     const headerMatch = line.match(/^(#{1,6})\s+(.+)$/)
@@ -293,13 +337,23 @@ export function transformLinks(content: string): string {
 }
 
 /**
+ * Mermaid diagram extracted from markdown.
+ */
+export interface MermaidDiagram {
+  /** The diagram markup */
+  diagram: string
+  /** Position index in the original content */
+  index: number
+}
+
+/**
  * Extract Mermaid diagram blocks from markdown
  *
  * @param content - The markdown content to extract diagrams from
  * @returns An array of diagram objects with diagram text and index
  */
-export function extractMermaidDiagrams(content: string): { diagram: string; index: number }[] {
-  const diagrams: { diagram: string; index: number }[] = []
+export function extractMermaidDiagrams(content: string): MermaidDiagram[] {
+  const diagrams: MermaidDiagram[] = []
   const regex = /```mermaid\n([\s\S]*?)```/g
   let match
 

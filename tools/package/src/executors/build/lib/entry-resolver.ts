@@ -6,6 +6,7 @@ import {isArray} from '@hyperfrontend/immutable-api-utils/built-in-copy/array'
 
 /** Known platform directory names */
 const PLATFORM_DIRS = <const>['browser', 'node']
+/** Platform-specific directory type ('browser' or 'node'). */
 type PlatformDir = (typeof PLATFORM_DIRS)[number]
 
 /**

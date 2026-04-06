@@ -1,7 +1,14 @@
+/**
+ * Test case definition for data creator validation.
+ */
 export interface DataCreatorTestCase {
+  /** Human-readable description of the test case */
   description: string
+  /** Process identifier (must be a valid UUID v4) */
   pid: string
+  /** Sequence number for ordering */
   sequence: number
+  /** Message payload to test */
   message: unknown
 }
 

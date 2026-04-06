@@ -1,6 +1,12 @@
+/**
+ * Mock implementation of ResizeObserver for testing.
+ */
 export interface ResizeObserverMock {
+  /** Mock observe function */
   observe: jest.Mock
+  /** Mock unobserve function */
   unobserve: jest.Mock
+  /** Captured callback from ResizeObserver constructor */
   callback: ResizeObserverCallback
 }
 

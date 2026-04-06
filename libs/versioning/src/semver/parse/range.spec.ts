@@ -16,9 +16,16 @@ describe('parseRange', () => {
 
     it('parses >= range', () => {
       const result = parseRange('>=1.0.0')
-      expect(result.success).toBe(true)
-      const comp = result.range?.sets[0].comparators[0]
-      expect(comp?.operator).toBe('>=')
+      expect(result).toEqual(
+        expect.objectContaining({
+          success: true,
+          range: expect.objectContaining({
+            sets: expect.arrayContaining([
+              expect.objectContaining({ comparators: expect.arrayContaining([expect.objectContaining({ operator: '>=' })]) }),
+            ]),
+          }),
+        })
+      )
     })
 
     it('parses < range', () => {
@@ -30,8 +37,18 @@ describe('parseRange', () => {
   describe('caret ranges', () => {
     it('expands ^1.2.3 to >=1.2.3 <2.0.0', () => {
       const result = parseRange('^1.2.3')
-      expect(result.success).toBe(true)
-      expect(result.range?.sets[0].comparators).toHaveLength(2)
+      expect(result).toEqual(
+        expect.objectContaining({
+          success: true,
+          range: expect.objectContaining({
+            sets: expect.arrayContaining([
+              expect.objectContaining({
+                comparators: [expect.objectContaining({ operator: '>=' }), expect.objectContaining({ operator: '<' })],
+              }),
+            ]),
+          }),
+        })
+      )
     })
 
     it('expands ^0.2.3 to >=0.2.3 <0.3.0', () => {
@@ -48,8 +65,21 @@ describe('parseRange', () => {
   describe('tilde ranges', () => {
     it('expands ~1.2.3 to >=1.2.3 <1.3.0', () => {
       const result = parseRange('~1.2.3')
-      expect(result.success).toBe(true)
-      expect(result.range?.sets[0].comparators).toHaveLength(2)
+      expect(result).toEqual(
+        expect.objectContaining({
+          success: true,
+          range: expect.objectContaining({
+            sets: [
+              expect.objectContaining({
+                comparators: expect.arrayContaining([
+                  expect.objectContaining({ operator: '>=' }),
+                  expect.objectContaining({ operator: '<' }),
+                ]),
+              }),
+            ],
+          }),
+        })
+      )
     })
   })
 
@@ -68,8 +98,14 @@ describe('parseRange', () => {
   describe('hyphen ranges', () => {
     it('parses 1.0.0 - 2.0.0', () => {
       const result = parseRange('1.0.0 - 2.0.0')
-      expect(result.success).toBe(true)
-      expect(result.range?.sets[0].comparators).toHaveLength(2)
+      expect(result).toEqual(
+        expect.objectContaining({
+          success: true,
+          range: expect.objectContaining({
+            sets: [expect.objectContaining({ comparators: expect.arrayContaining([expect.any(Object), expect.any(Object)]) })],
+          }),
+        })
+      )
     })
   })
 
@@ -84,8 +120,14 @@ describe('parseRange', () => {
   describe('AND ranges', () => {
     it('parses >=1.0.0 <2.0.0', () => {
       const result = parseRange('>=1.0.0 <2.0.0')
-      expect(result.success).toBe(true)
-      expect(result.range?.sets[0].comparators).toHaveLength(2)
+      expect(result).toEqual(
+        expect.objectContaining({
+          success: true,
+          range: expect.objectContaining({
+            sets: [expect.objectContaining({ comparators: expect.arrayContaining([expect.any(Object), expect.any(Object)]) })],
+          }),
+        })
+      )
     })
   })
 })
@@ -109,8 +151,14 @@ describe('parseRange - x-range variations', () => {
 
   it('parses 1.X', () => {
     const result = parseRange('1.X')
-    expect(result.success).toBe(true)
-    expect(result.range?.sets[0].comparators.length).toBeGreaterThan(0)
+    expect(result).toEqual(
+      expect.objectContaining({
+        success: true,
+        range: expect.objectContaining({
+          sets: [expect.objectContaining({ comparators: expect.arrayContaining([expect.any(Object)]) })],
+        }),
+      })
+    )
   })
 
   it('parses 1.2.X', () => {
@@ -141,22 +189,39 @@ describe('parseRange - error conditions', () => {
 describe('parseRange - caret edge cases', () => {
   it('expands ^0.0.5 to >=0.0.5 <0.0.6', () => {
     const result = parseRange('^0.0.5')
-    expect(result.success).toBe(true)
-    const comps = result.range?.sets[0].comparators ?? []
-    expect(comps.length).toBe(2)
-    const lower = comps.find((c) => c.operator === '>=')
-    expect(lower?.version.patch).toBe(5)
-    const upper = comps.find((c) => c.operator === '<')
-    expect(upper?.version.patch).toBe(6)
+    expect(result).toEqual(
+      expect.objectContaining({
+        success: true,
+        range: expect.objectContaining({
+          sets: [
+            expect.objectContaining({
+              comparators: expect.arrayContaining([
+                expect.objectContaining({ operator: '>=', version: expect.objectContaining({ patch: 5 }) }),
+                expect.objectContaining({ operator: '<', version: expect.objectContaining({ patch: 6 }) }),
+              ]),
+            }),
+          ],
+        }),
+      })
+    )
   })
 
   it('expands ^0.2.5 to >=0.2.5 <0.3.0', () => {
     const result = parseRange('^0.2.5')
-    expect(result.success).toBe(true)
-    const comps = result.range?.sets[0].comparators ?? []
-    const upper = comps.find((c) => c.operator === '<')
-    expect(upper?.version.minor).toBe(3)
-    expect(upper?.version.patch).toBe(0)
+    expect(result).toEqual(
+      expect.objectContaining({
+        success: true,
+        range: expect.objectContaining({
+          sets: [
+            expect.objectContaining({
+              comparators: expect.arrayContaining([
+                expect.objectContaining({ operator: '<', version: expect.objectContaining({ minor: 3, patch: 0 }) }),
+              ]),
+            }),
+          ],
+        }),
+      })
+    )
   })
 })
 
@@ -173,9 +238,14 @@ describe('parseRange - x-range edge cases', () => {
 
   it('parses wildcard with asterisk', () => {
     const result = parseRange('1.*')
-    expect(result.success).toBe(true)
-    const comps = result.range?.sets[0].comparators ?? []
-    expect(comps.length).toBe(2)
+    expect(result).toEqual(
+      expect.objectContaining({
+        success: true,
+        range: expect.objectContaining({
+          sets: [expect.objectContaining({ comparators: expect.arrayContaining([expect.any(Object), expect.any(Object)]) })],
+        }),
+      })
+    )
   })
 })
 
@@ -194,10 +264,20 @@ describe('parseRange - hyphen range details', () => {
 describe('parseRange - tilde edge cases', () => {
   it('expands ~0.2.3 to >=0.2.3 <0.3.0', () => {
     const result = parseRange('~0.2.3')
-    expect(result.success).toBe(true)
-    const comps = result.range?.sets[0].comparators ?? []
-    const upper = comps.find((c) => c.operator === '<')
-    expect(upper?.version.minor).toBe(3)
+    expect(result).toEqual(
+      expect.objectContaining({
+        success: true,
+        range: expect.objectContaining({
+          sets: expect.arrayContaining([
+            expect.objectContaining({
+              comparators: expect.arrayContaining([
+                expect.objectContaining({ operator: '<', version: expect.objectContaining({ minor: 3 }) }),
+              ]),
+            }),
+          ]),
+        }),
+      })
+    )
   })
 })
 
@@ -222,16 +302,26 @@ describe('parseRange - complex combinations', () => {
 
   it('handles multiple spaces between comparators', () => {
     const result = parseRange('>=1.0.0    <2.0.0')
-    expect(result.success).toBe(true)
-    const comps = result.range?.sets[0].comparators ?? []
-    expect(comps.length).toBe(2)
+    expect(result).toEqual(
+      expect.objectContaining({
+        success: true,
+        range: expect.objectContaining({
+          sets: [expect.objectContaining({ comparators: expect.arrayContaining([expect.any(Object), expect.any(Object)]) })],
+        }),
+      })
+    )
   })
 
   it('handles tabs between comparators', () => {
     const result = parseRange('>=1.0.0\t<2.0.0')
-    expect(result.success).toBe(true)
-    const comps = result.range?.sets[0].comparators ?? []
-    expect(comps.length).toBe(2)
+    expect(result).toEqual(
+      expect.objectContaining({
+        success: true,
+        range: expect.objectContaining({
+          sets: [expect.objectContaining({ comparators: expect.arrayContaining([expect.any(Object), expect.any(Object)]) })],
+        }),
+      })
+    )
   })
 
   it('parses sole wildcard star', () => {
@@ -248,33 +338,58 @@ describe('parseRange - complex combinations', () => {
 
   it('parses 1.x as >=1.0.0 <2.0.0', () => {
     const result = parseRange('1.x')
-    expect(result.success).toBe(true)
-    const comps = result.range?.sets[0].comparators ?? []
-    const lower = comps.find((c) => c.operator === '>=')
-    const upper = comps.find((c) => c.operator === '<')
-    expect(lower?.version.major).toBe(1)
-    expect(upper?.version.major).toBe(2)
+    expect(result).toEqual(
+      expect.objectContaining({
+        success: true,
+        range: expect.objectContaining({
+          sets: [
+            expect.objectContaining({
+              comparators: expect.arrayContaining([
+                expect.objectContaining({ operator: '>=', version: expect.objectContaining({ major: 1 }) }),
+                expect.objectContaining({ operator: '<', version: expect.objectContaining({ major: 2 }) }),
+              ]),
+            }),
+          ],
+        }),
+      })
+    )
   })
 
   it('parses 1.2.x as >=1.2.0 <1.3.0', () => {
     const result = parseRange('1.2.x')
-    expect(result.success).toBe(true)
-    const comps = result.range?.sets[0].comparators ?? []
-    const lower = comps.find((c) => c.operator === '>=')
-    const upper = comps.find((c) => c.operator === '<')
-    expect(lower?.version.minor).toBe(2)
-    expect(upper?.version.minor).toBe(3)
+    expect(result).toEqual(
+      expect.objectContaining({
+        success: true,
+        range: expect.objectContaining({
+          sets: [
+            expect.objectContaining({
+              comparators: expect.arrayContaining([
+                expect.objectContaining({ operator: '>=', version: expect.objectContaining({ minor: 2 }) }),
+                expect.objectContaining({ operator: '<', version: expect.objectContaining({ minor: 3 }) }),
+              ]),
+            }),
+          ],
+        }),
+      })
+    )
   })
 })
 
 describe('parseRange - hyphen range edge cases', () => {
   it('detects hyphen range with single space separators', () => {
     const result = parseRange('1.0.0 - 2.0.0')
-    expect(result.success).toBe(true)
-    const comps = result.range?.sets[0].comparators ?? []
-    expect(comps.length).toBe(2)
-    expect(comps[0].operator).toBe('>=')
-    expect(comps[1].operator).toBe('<=')
+    expect(result).toEqual(
+      expect.objectContaining({
+        success: true,
+        range: expect.objectContaining({
+          sets: [
+            expect.objectContaining({
+              comparators: [expect.objectContaining({ operator: '>=' }), expect.objectContaining({ operator: '<=' })],
+            }),
+          ],
+        }),
+      })
+    )
   })
 
   it('rejects invalid left side of hyphen range', () => {
@@ -303,20 +418,38 @@ describe('parseRange - invalid comparator versions', () => {
 describe('parseRange - operator', () => {
   it('parses > operator directly', () => {
     const result = parseRange('>1.0.0')
-    expect(result.success).toBe(true)
-    expect(result.range?.sets[0].comparators[0].operator).toBe('>')
+    expect(result).toEqual(
+      expect.objectContaining({
+        success: true,
+        range: expect.objectContaining({
+          sets: [expect.objectContaining({ comparators: [expect.objectContaining({ operator: '>' })] })],
+        }),
+      })
+    )
   })
 
   it('parses <= operator directly', () => {
     const result = parseRange('<=2.0.0')
-    expect(result.success).toBe(true)
-    expect(result.range?.sets[0].comparators[0].operator).toBe('<=')
+    expect(result).toEqual(
+      expect.objectContaining({
+        success: true,
+        range: expect.objectContaining({
+          sets: [expect.objectContaining({ comparators: [expect.objectContaining({ operator: '<=' })] })],
+        }),
+      })
+    )
   })
 
   it('parses = operator as exact match', () => {
     const result = parseRange('=1.0.0')
-    expect(result.success).toBe(true)
-    expect(result.range?.sets[0].comparators[0].operator).toBe('=')
+    expect(result).toEqual(
+      expect.objectContaining({
+        success: true,
+        range: expect.objectContaining({
+          sets: [expect.objectContaining({ comparators: [expect.objectContaining({ operator: '=' })] })],
+        }),
+      })
+    )
   })
 
   it('handles version number directly (no operator)', () => {
@@ -326,10 +459,18 @@ describe('parseRange - operator', () => {
 
   it('parses > followed by < in same set', () => {
     const result = parseRange('>1.0.0 <3.0.0')
-    expect(result.success).toBe(true)
-    const comps = result.range?.sets[0].comparators ?? []
-    expect(comps[0].operator).toBe('>')
-    expect(comps[1].operator).toBe('<')
+    expect(result).toEqual(
+      expect.objectContaining({
+        success: true,
+        range: expect.objectContaining({
+          sets: [
+            expect.objectContaining({
+              comparators: [expect.objectContaining({ operator: '>' }), expect.objectContaining({ operator: '<' })],
+            }),
+          ],
+        }),
+      })
+    )
   })
 
   it('parses multiple operators in OR groups', () => {
@@ -367,16 +508,26 @@ describe('parseRange - x-range invalid number handling', () => {
 describe('parseRange - whitespace handling', () => {
   it('handles tab characters between comparators', () => {
     const result = parseRange('>=1.0.0\t\t<2.0.0')
-    expect(result.success).toBe(true)
-    const comps = result.range?.sets[0].comparators ?? []
-    expect(comps.length).toBe(2)
+    expect(result).toEqual(
+      expect.objectContaining({
+        success: true,
+        range: expect.objectContaining({
+          sets: [expect.objectContaining({ comparators: expect.arrayContaining([expect.any(Object), expect.any(Object)]) })],
+        }),
+      })
+    )
   })
 
   it('handles mixed spaces and tabs', () => {
     const result = parseRange('>=1.0.0 \t <2.0.0')
-    expect(result.success).toBe(true)
-    const comps = result.range?.sets[0].comparators ?? []
-    expect(comps.length).toBe(2)
+    expect(result).toEqual(
+      expect.objectContaining({
+        success: true,
+        range: expect.objectContaining({
+          sets: [expect.objectContaining({ comparators: expect.arrayContaining([expect.any(Object), expect.any(Object)]) })],
+        }),
+      })
+    )
   })
 
   it('handles trailing tabs in comparator set', () => {
@@ -412,15 +563,21 @@ describe('parseRange - hyphen range error messages', () => {
 describe('parseRange - caret range with major > 0', () => {
   it('expands ^2.3.4 to >=2.3.4 <3.0.0', () => {
     const result = parseRange('^2.3.4')
-    expect(result.success).toBe(true)
-    const comps = result.range?.sets[0].comparators ?? []
-    expect(comps.length).toBe(2)
-    const lower = comps.find((c) => c.operator === '>=')
-    const upper = comps.find((c) => c.operator === '<')
-    expect(lower?.version.major).toBe(2)
-    expect(upper?.version.major).toBe(3)
-    expect(upper?.version.minor).toBe(0)
-    expect(upper?.version.patch).toBe(0)
+    expect(result).toEqual(
+      expect.objectContaining({
+        success: true,
+        range: expect.objectContaining({
+          sets: [
+            expect.objectContaining({
+              comparators: expect.arrayContaining([
+                expect.objectContaining({ operator: '>=', version: expect.objectContaining({ major: 2 }) }),
+                expect.objectContaining({ operator: '<', version: expect.objectContaining({ major: 3, minor: 0, patch: 0 }) }),
+              ]),
+            }),
+          ],
+        }),
+      })
+    )
   })
 })
 
@@ -444,89 +601,146 @@ describe('parseRange - OR splitting edge cases', () => {
 describe('parseRange - x-range nums.length branches', () => {
   it('handles x-range with exactly one numeric part before x', () => {
     const result = parseRange('5.x')
-    expect(result.success).toBe(true)
-    const comps = result.range?.sets[0].comparators ?? []
-    expect(comps.length).toBe(2)
-    const lower = comps.find((c) => c.operator === '>=')
-    const upper = comps.find((c) => c.operator === '<')
-    expect(lower?.version.major).toBe(5)
-    expect(lower?.version.minor).toBe(0)
-    expect(lower?.version.patch).toBe(0)
-    expect(upper?.version.major).toBe(6)
+    expect(result).toEqual(
+      expect.objectContaining({
+        success: true,
+        range: expect.objectContaining({
+          sets: [
+            expect.objectContaining({
+              comparators: expect.arrayContaining([
+                expect.objectContaining({ operator: '>=', version: expect.objectContaining({ major: 5, minor: 0, patch: 0 }) }),
+                expect.objectContaining({ operator: '<', version: expect.objectContaining({ major: 6 }) }),
+              ]),
+            }),
+          ],
+        }),
+      })
+    )
   })
 
   it('handles x-range with exactly two numeric parts before x', () => {
     const result = parseRange('3.4.x')
-    expect(result.success).toBe(true)
-    const comps = result.range?.sets[0].comparators ?? []
-    expect(comps.length).toBe(2)
-    const lower = comps.find((c) => c.operator === '>=')
-    const upper = comps.find((c) => c.operator === '<')
-    expect(lower?.version.major).toBe(3)
-    expect(lower?.version.minor).toBe(4)
-    expect(upper?.version.minor).toBe(5)
+    expect(result).toEqual(
+      expect.objectContaining({
+        success: true,
+        range: expect.objectContaining({
+          sets: [
+            expect.objectContaining({
+              comparators: expect.arrayContaining([
+                expect.objectContaining({ operator: '>=', version: expect.objectContaining({ major: 3, minor: 4 }) }),
+                expect.objectContaining({ operator: '<', version: expect.objectContaining({ minor: 5 }) }),
+              ]),
+            }),
+          ],
+        }),
+      })
+    )
   })
 
   it('handles x-range with asterisk notation for minor', () => {
     const result = parseRange('2.*')
-    expect(result.success).toBe(true)
-    const comps = result.range?.sets[0].comparators ?? []
-    expect(comps.length).toBe(2)
+    expect(result).toEqual(
+      expect.objectContaining({
+        success: true,
+        range: expect.objectContaining({
+          sets: [expect.objectContaining({ comparators: expect.arrayContaining([expect.any(Object), expect.any(Object)]) })],
+        }),
+      })
+    )
   })
 
   it('handles x-range with asterisk notation for patch', () => {
     const result = parseRange('2.1.*')
-    expect(result.success).toBe(true)
-    const comps = result.range?.sets[0].comparators ?? []
-    expect(comps.length).toBe(2)
+    expect(result).toEqual(
+      expect.objectContaining({
+        success: true,
+        range: expect.objectContaining({
+          sets: [expect.objectContaining({ comparators: expect.arrayContaining([expect.any(Object), expect.any(Object)]) })],
+        }),
+      })
+    )
   })
 })
 
 describe('parseRange - expandCaretRange branches', () => {
   it('expands caret range for version with major=0 minor=0', () => {
     const result = parseRange('^0.0.1')
-    expect(result.success).toBe(true)
-    const comps = result.range?.sets[0].comparators ?? []
-    const upper = comps.find((c) => c.operator === '<')
-    expect(upper?.version.major).toBe(0)
-    expect(upper?.version.minor).toBe(0)
-    expect(upper?.version.patch).toBe(2)
+    expect(result).toEqual(
+      expect.objectContaining({
+        success: true,
+        range: expect.objectContaining({
+          sets: [
+            expect.objectContaining({
+              comparators: expect.arrayContaining([
+                expect.objectContaining({ operator: '<', version: expect.objectContaining({ major: 0, minor: 0, patch: 2 }) }),
+              ]),
+            }),
+          ],
+        }),
+      })
+    )
   })
 
   it('expands caret range for version with major=0 minor>0', () => {
     const result = parseRange('^0.1.5')
-    expect(result.success).toBe(true)
-    const comps = result.range?.sets[0].comparators ?? []
-    const upper = comps.find((c) => c.operator === '<')
-    expect(upper?.version.major).toBe(0)
-    expect(upper?.version.minor).toBe(2)
-    expect(upper?.version.patch).toBe(0)
+    expect(result).toEqual(
+      expect.objectContaining({
+        success: true,
+        range: expect.objectContaining({
+          sets: [
+            expect.objectContaining({
+              comparators: expect.arrayContaining([
+                expect.objectContaining({ operator: '<', version: expect.objectContaining({ major: 0, minor: 2, patch: 0 }) }),
+              ]),
+            }),
+          ],
+        }),
+      })
+    )
   })
 
   it('expands caret range for version with major>0', () => {
     const result = parseRange('^3.2.1')
-    expect(result.success).toBe(true)
-    const comps = result.range?.sets[0].comparators ?? []
-    const upper = comps.find((c) => c.operator === '<')
-    expect(upper?.version.major).toBe(4)
-    expect(upper?.version.minor).toBe(0)
-    expect(upper?.version.patch).toBe(0)
+    expect(result).toEqual(
+      expect.objectContaining({
+        success: true,
+        range: expect.objectContaining({
+          sets: [
+            expect.objectContaining({
+              comparators: expect.arrayContaining([
+                expect.objectContaining({ operator: '<', version: expect.objectContaining({ major: 4, minor: 0, patch: 0 }) }),
+              ]),
+            }),
+          ],
+        }),
+      })
+    )
   })
 })
 
 describe('parseRange - splitByWhitespace edge cases', () => {
   it('handles multiple consecutive spaces', () => {
     const result = parseRange('>=1.0.0     <2.0.0')
-    expect(result.success).toBe(true)
-    const comps = result.range?.sets[0].comparators ?? []
-    expect(comps.length).toBe(2)
+    expect(result).toEqual(
+      expect.objectContaining({
+        success: true,
+        range: expect.objectContaining({
+          sets: [expect.objectContaining({ comparators: expect.arrayContaining([expect.any(Object), expect.any(Object)]) })],
+        }),
+      })
+    )
   })
 
   it('handles multiple consecutive tabs', () => {
     const result = parseRange('>=1.0.0\t\t\t<2.0.0')
-    expect(result.success).toBe(true)
-    const comps = result.range?.sets[0].comparators ?? []
-    expect(comps.length).toBe(2)
+    expect(result).toEqual(
+      expect.objectContaining({
+        success: true,
+        range: expect.objectContaining({
+          sets: [expect.objectContaining({ comparators: expect.arrayContaining([expect.any(Object), expect.any(Object)]) })],
+        }),
+      })
+    )
   })
 
   it('handles spaces at beginning of comparator set', () => {
