@@ -1,5 +1,6 @@
 import type { CommitType } from './commit-type'
 
+/** Footer trailer in a conventional commit message */
 export interface CommitFooter {
   /** Footer key (e.g., "BREAKING CHANGE", "Refs", "Fixes") */
   readonly key: string
@@ -65,7 +66,10 @@ export function createCommitFooter(key: string, value: string, separator: ':' | 
 export function createConventionalCommit(
   type: CommitType,
   subject: string,
-  options?: Partial<Omit<ConventionalCommit, 'type' | 'subject' | 'raw'>> & { raw?: string }
+  options?: Partial<Omit<ConventionalCommit, 'type' | 'subject' | 'raw'>> & {
+    /** Raw commit message string override */
+    raw?: string
+  }
 ): ConventionalCommit {
   const raw = options?.raw ?? buildRaw(type, subject, options)
 

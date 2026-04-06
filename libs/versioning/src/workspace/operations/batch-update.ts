@@ -187,7 +187,10 @@ function extractVersionPrefix(versionRange: string): string {
  * @throws {Error} If the file doesn't exist
  */
 export function updatePackageVersionInTree(tree: Tree, packageJsonPath: string, newVersion: string): void {
-  changeJsonFile<{ version: string }>(tree, packageJsonPath, (pkg) => {
+  changeJsonFile<{
+    /** Package version string */
+    version: string
+  }>(tree, packageJsonPath, (pkg) => {
     pkg.version = newVersion
     return pkg
   })
@@ -206,10 +209,15 @@ export function updatePackageVersionInTree(tree: Tree, packageJsonPath: string, 
 export function updateDependencyReferencesInTree(tree: Tree, packageJsonPath: string, versionUpdates: Map<string, string>): void {
   if (!tree.isFile(packageJsonPath)) return
 
+  /** Structure representing dependency sections in package.json */
   type PackageJson = {
+    /** Production dependencies */
     dependencies?: Record<string, string>
+    /** Development dependencies */
     devDependencies?: Record<string, string>
+    /** Peer dependencies */
     peerDependencies?: Record<string, string>
+    /** Optional dependencies */
     optionalDependencies?: Record<string, string>
   }
 

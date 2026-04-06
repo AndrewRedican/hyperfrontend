@@ -75,17 +75,29 @@ export interface VersionInfo {
  * @returns A new VersionInfo object
  */
 export function createVersionInfo(options: {
+  /** Semver version string (e.g., '1.2.3') */
   version: string
+  /** ISO 8601 timestamp of publication */
   publishedAt: string
+  /** URL to the package tarball */
   tarball: string
+  /** Subresource integrity hash */
   integrity?: string
+  /** Production dependencies map */
   dependencies?: Record<string, string>
+  /** Development dependencies map */
   devDependencies?: Record<string, string>
+  /** Peer dependencies map */
   peerDependencies?: Record<string, string>
+  /** Optional dependencies map */
   optionalDependencies?: Record<string, string>
+  /** Engine requirements (Node/npm) */
   engines?: Record<string, string>
+  /** Node.js version used during publish */
   nodeVersion?: string
+  /** npm version used during publish */
   npmVersion?: string
+  /** Git commit hash at publish time */
   gitHead?: string
 }): VersionInfo {
   return {

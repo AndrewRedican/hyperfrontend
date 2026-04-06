@@ -1,6 +1,14 @@
 import { execFileSync } from 'node:child_process'
 import { parseInt } from '@hyperfrontend/immutable-api-utils/built-in-copy/number'
 
+/** Ahead/behind count for branch tracking. */
+interface AheadBehind {
+  /** Commits ahead of tracking branch. */
+  ahead: number
+  /** Commits behind tracking branch. */
+  behind: number
+}
+
 /**
  * Options for status operations.
  */
@@ -191,7 +199,7 @@ function parseStatus(output: string): RepositoryStatus {
  * @param str - String like "+5 -2"
  * @returns Parsed values
  */
-function parseAheadBehind(str: string): { ahead: number; behind: number } {
+function parseAheadBehind(str: string): AheadBehind {
   let ahead = 0
   let behind = 0
 

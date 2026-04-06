@@ -154,7 +154,9 @@ export function createClassifiedCommit(
   raw: GitCommit,
   source: CommitSource,
   options?: {
+    /** Files in the project modified by this commit */
     readonly touchedFiles?: readonly string[]
+    /** Chain of dependencies leading to indirect inclusion */
     readonly dependencyPath?: readonly string[]
   }
 ): ClassifiedCommit {

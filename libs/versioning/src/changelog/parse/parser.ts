@@ -27,9 +27,13 @@ function isGitHubUrl(url: string): boolean {
  * Internal state used during changelog parsing to track position and collect metadata.
  */
 interface ParserState {
+  /** Tokenized changelog content */
   tokens: Token[]
+  /** Current position in the token stream */
   pos: number
+  /** Parsing warnings encountered */
   warnings: string[]
+  /** Repository URL if detected */
   repositoryUrl?: string
 }
 

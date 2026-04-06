@@ -249,7 +249,12 @@ export function createGenerateChangelogStep(): FlowStep {
 
         const groupedDirect = groupClassifiedCommitsBySection(directCommits, commitTypeMapping)
 
-        const sectionOrder: readonly { type: ChangelogSectionType; heading: string }[] = [
+        const sectionOrder: readonly {
+          /** Changelog section type identifier */
+          type: ChangelogSectionType
+          /** Display heading for the section */
+          heading: string
+        }[] = [
           { type: 'features', heading: 'Features' },
           { type: 'fixes', heading: 'Bug Fixes' },
           { type: 'performance', heading: 'Performance' },
@@ -295,7 +300,12 @@ export function createGenerateChangelogStep(): FlowStep {
           )
         }
 
-        const sectionOrder: readonly { type: ChangelogSectionType; heading: string }[] = [
+        const sectionOrder: readonly {
+          /** Changelog section type identifier */
+          type: ChangelogSectionType
+          /** Display heading for the section */
+          heading: string
+        }[] = [
           { type: 'features', heading: 'Features' },
           { type: 'fixes', heading: 'Bug Fixes' },
           { type: 'performance', heading: 'Performance' },

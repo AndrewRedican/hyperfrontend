@@ -10,8 +10,11 @@ import { parseInt } from '@hyperfrontend/immutable-api-utils/built-in-copy/numbe
  * @returns An object containing the parsed version, date, and optional compareUrl
  */
 export function parseVersionFromHeading(heading: string): {
+  /** The parsed version string */
   version: string
+  /** The parsed date in YYYY-MM-DD format, or null if not found */
   date: string | null
+  /** Optional URL for comparing versions */
   compareUrl?: string
 } {
   const trimmed = heading.trim()
@@ -106,7 +109,12 @@ export function parseVersionFromHeading(heading: string): {
  * @param str - The string to extract a date from
  * @returns The extracted date and its length, or null if no date found
  */
-function extractDate(str: string): { date: string; length: number } | null {
+function extractDate(str: string): {
+  /** The extracted date string in YYYY-MM-DD format */
+  date: string
+  /** Number of characters consumed from the input */
+  length: number
+} | null {
   let pos = 0
 
   if (str[pos] === '(') pos++
@@ -182,7 +190,14 @@ function slashToHyphen(input: string): string {
  * @param str - The string to extract a link from
  * @returns The extracted link text, url, and length, or null if no link found
  */
-function extractLink(str: string): { text: string; url: string; length: number } | null {
+function extractLink(str: string): {
+  /** The link text content */
+  text: string
+  /** The link URL */
+  url: string
+  /** Number of characters consumed from the input */
+  length: number
+} | null {
   if (str[0] !== '[') return null
 
   let pos = 1
@@ -309,7 +324,12 @@ export function parseIssueRefs(text: string, baseUrl?: string): IssueRef[] {
  * @param text - The text to parse for scope
  * @returns An object with optional scope and the description
  */
-export function parseScopeFromItem(text: string): { scope?: string; description: string } {
+export function parseScopeFromItem(text: string): {
+  /** Optional scope extracted from the text */
+  scope?: string
+  /** The description text after the scope */
+  description: string
+} {
   const trimmed = text.trim()
 
   if (trimmed.startsWith('**')) {

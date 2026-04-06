@@ -31,13 +31,23 @@ export interface SemVer {
  */
 export type BumpType = 'major' | 'minor' | 'patch' | 'premajor' | 'preminor' | 'prepatch' | 'prerelease' | 'none'
 
+/** Required version number components for creating a SemVer. */
+interface RequiredVersionComponents {
+  /** Major version number. */
+  major: number
+  /** Minor version number. */
+  minor: number
+  /** Patch version number. */
+  patch: number
+}
+
 /**
  * Creates a new SemVer object.
  *
  * @param options - Version components
  * @returns A new SemVer object
  */
-export function createSemVer(options: Partial<SemVer> & { major: number; minor: number; patch: number }): SemVer {
+export function createSemVer(options: Partial<SemVer> & RequiredVersionComponents): SemVer {
   return {
     major: options.major,
     minor: options.minor,

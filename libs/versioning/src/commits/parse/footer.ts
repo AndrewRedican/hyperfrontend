@@ -1,6 +1,7 @@
 import type { CommitFooter } from '../models/conventional'
 import { isBreakingFooterKey } from '../models/breaking'
 
+/** Parsed footer section of a commit message. */
 export interface ParsedFooters {
   /** All parsed footers */
   footers: CommitFooter[]

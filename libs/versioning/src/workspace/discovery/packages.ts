@@ -62,11 +62,17 @@ export interface DiscoveryResult {
  * Raw discovered package before dependency analysis.
  */
 interface RawPackageInfo {
+  /** Package name from package.json */
   name: string
+  /** Package version string */
   version: string
+  /** Absolute path to the package directory */
   path: string
+  /** Absolute path to the package.json file */
   packageJsonPath: string
+  /** Parsed contents of package.json */
   packageJson: PackageJson
+  /** Path to CHANGELOG.md or null if not found */
   changelogPath: string | null
 }
 
@@ -270,7 +276,12 @@ function parsePackageJsonFilesFromTree(tree: Tree, workspaceRoot: string, packag
  * @returns Array of Project objects with dependencies populated
  */
 function buildProjectsWithDependencies(rawPackages: RawPackageInfo[], packageNames: Set<string>): Project[] {
-  const projectsWithDeps: Array<CreateProjectOptions & { internalDependencies: string[] }> = []
+  const projectsWithDeps: Array<
+    CreateProjectOptions & {
+      /** List of internal package dependencies */
+      internalDependencies: string[]
+    }
+  > = []
 
   for (const pkg of rawPackages) {
     const internalDeps = findInternalDependencies(pkg.packageJson, packageNames)

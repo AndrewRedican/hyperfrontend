@@ -1,3 +1,4 @@
+/** Conventional commit type identifier (e.g., 'feat', 'fix', 'docs'). */
 export type CommitType = 'feat' | 'fix' | 'docs' | 'style' | 'refactor' | 'perf' | 'test' | 'build' | 'ci' | 'chore' | 'revert' | string
 
 export const COMMIT_TYPES = <const>{

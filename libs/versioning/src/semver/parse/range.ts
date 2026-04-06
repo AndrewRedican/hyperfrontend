@@ -86,9 +86,13 @@ export function parseRangeStrict(input: string): Range {
   return result.range
 }
 
+/** Result of parsing a comparator set */
 interface SetResult {
+  /** Whether parsing succeeded */
   success: boolean
+  /** The parsed comparator set (if successful) */
   set?: ComparatorSet
+  /** Error message (if failed) */
   error?: string
 }
 
@@ -159,10 +163,15 @@ function parseComparatorSet(input: string): SetResult {
   return { success: true, set: createComparatorSet(comparators) }
 }
 
+/** Result of parsing a hyphen range */
 interface HyphenResult {
+  /** Whether input was a hyphen range */
   isHyphenRange: boolean
+  /** Whether parsing succeeded */
   success: boolean
+  /** The parsed comparator set (if successful) */
   set?: ComparatorSet
+  /** Error message (if failed) */
   error?: string
 }
 
@@ -236,9 +245,13 @@ function splitByWhitespace(input: string): string[] {
   return tokens
 }
 
+/** Result of parsing a single comparator */
 interface ComparatorResult {
+  /** Whether parsing succeeded */
   success: boolean
+  /** The parsed comparators (if successful) */
   comparators?: Comparator[]
+  /** Error message (if failed) */
   error?: string
 }
 

@@ -1,3 +1,4 @@
+/** Parsed body section of a commit message. */
 export interface ParsedBody {
   /** The body text (may be multiline) */
   body: string

@@ -306,7 +306,10 @@ function validateDependencyVersions(workspace: Workspace, project: Project): Val
  * @param name - Package name to validate
  * @returns Validation result
  */
-function validatePackageNameFormat(name: string): { valid: boolean } {
+function validatePackageNameFormat(name: string): {
+  /** Whether the package name format is valid. */
+  valid: boolean
+} {
   const isValidChar = (char: string): boolean => {
     const code = char.charCodeAt(0)
     return (code >= 97 && code <= 122) || (code >= 48 && code <= 57) || code === 45 || code === 95 || code === 46

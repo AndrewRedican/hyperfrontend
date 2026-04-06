@@ -269,8 +269,11 @@ function diffSections(
   sourceSections: readonly ChangelogSection[],
   targetSections: readonly ChangelogSection[]
 ): {
+  /** Sections present in target but not in source */
   added: ChangelogSection[]
+  /** Sections present in source but not in target */
   removed: ChangelogSection[]
+  /** Sections present in both with differences */
   modified: SectionDiff[]
 } {
   const sourceByType = createMap<string, ChangelogSection>()

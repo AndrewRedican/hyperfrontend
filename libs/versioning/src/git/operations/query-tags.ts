@@ -156,9 +156,13 @@ function getTagDetails(name: string, options: Required<Omit<GitTagOptions, 'cwd'
  * Represents the extracted data from an annotated tag.
  */
 interface ParsedAnnotatedTagInfo {
+  /** Tag message/annotation */
   message: string
+  /** Name of the person who created the tag */
   taggerName: string
+  /** Email of the person who created the tag */
   taggerEmail: string
+  /** ISO date string when the tag was created */
   tagDate: string
 }
 
@@ -203,13 +207,25 @@ function parseAnnotatedTagInfo(info: string): ParsedAnnotatedTagInfo {
 }
 
 /**
+ * Parsed tagger information from an annotated tag.
+ */
+interface ParsedTaggerInfo {
+  /** Tagger's name */
+  name: string
+  /** Tagger's email address */
+  email: string
+  /** Tag creation date string */
+  date: string
+}
+
+/**
  * Parses tagger line from annotated tag.
  * Format: Name <email> timestamp timezone
  *
  * @param line - Raw tagger line from git output
  * @returns Parsed tagger info with name, email, and date
  */
-function parseTaggerLine(line: string): { name: string; email: string; date: string } {
+function parseTaggerLine(line: string): ParsedTaggerInfo {
   let name = ''
   let email = ''
   let date = ''

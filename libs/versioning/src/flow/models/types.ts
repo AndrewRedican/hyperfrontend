@@ -199,7 +199,9 @@ export interface ScopeFilteringConfig {
  * between flow-level filtering and commit classification.
  */
 export const DEFAULT_SCOPE_FILTERING_CONFIG: Required<Omit<ScopeFilteringConfig, 'infrastructure' | 'infrastructureMatcher'>> & {
+  /** Infrastructure projects configuration (unused in default) */
   infrastructure: undefined
+  /** Infrastructure matcher function (unused in default) */
   infrastructureMatcher: undefined
 } = {
   strategy: 'hybrid',

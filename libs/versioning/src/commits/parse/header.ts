@@ -1,9 +1,16 @@
 import type { CommitType } from '../models/commit-type'
 
+/**
+ * Parsed conventional commit header components.
+ */
 export interface ParsedHeader {
+  /** Commit type (feat, fix, chore, etc.) */
   type: CommitType
+  /** Optional scope in parentheses */
   scope?: string
+  /** Commit subject line */
   subject: string
+  /** Whether this is a breaking change */
   breaking: boolean
 }
 

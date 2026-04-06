@@ -3,6 +3,12 @@ import { createError } from '@hyperfrontend/immutable-api-utils/built-in-copy/er
 import { changeJsonFile } from '../../utils/change-json-file'
 import { createStep, createSkippedResult } from '../models/step'
 
+/** Package.json structure with required version field. */
+interface PackageJsonVersion {
+  /** Package version string. */
+  version: string
+}
+
 export const UPDATE_PACKAGES_STEP_ID = 'update-packages'
 
 /**
@@ -33,7 +39,7 @@ export function createUpdatePackageStep(): FlowStep {
       logger.debug(`Updating package.json at: ${packageJsonPath}`)
 
       try {
-        changeJsonFile<{ version: string }>(tree, packageJsonPath, (pkg) => {
+        changeJsonFile<PackageJsonVersion>(tree, packageJsonPath, (pkg) => {
           pkg.version = nextVersion
           return pkg
         })
