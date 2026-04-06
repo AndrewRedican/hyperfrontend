@@ -26,7 +26,7 @@
     "types": ["node"],
     "skipLibCheck": true,
     "baseUrl": ".",
-    "ignoreDeprecations": "6.0",
+    "ignoreDeprecations": "5.0",
     "paths": {
       "@hyperfrontend/app": ["tools/app/src/index.ts"],
       "@hyperfrontend/cryptography/browser": ["libs/cryptography/src/browser/index.ts"],
