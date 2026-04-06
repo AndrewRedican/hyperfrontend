@@ -19,7 +19,10 @@ import { logger } from '../../lib/logger'
 export default async function typecheckExecutor(
   options: TypecheckExecutorOptions,
   context: ExecutorContext
-): Promise<{ success: boolean }> {
+): Promise<{
+  /** Whether the type check completed successfully. */
+  success: boolean
+}> {
   const projectName = context.projectName
   if (!projectName) {
     logger.error('No project name provided')

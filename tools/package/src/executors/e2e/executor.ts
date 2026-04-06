@@ -13,7 +13,12 @@ import { logger } from '../../lib/logger'
  * @param distPath - The path to the dist directory containing package.json
  * @returns An object containing the package name and version
  */
-function getPackageInfo(distPath: string): { name: string; version: string } {
+function getPackageInfo(distPath: string): {
+  /** The package name from package.json */
+  name: string
+  /** The package version from package.json */
+  version: string
+} {
   const pkgPath = join(distPath, 'package.json')
   if (!existsSync(pkgPath)) {
     throw createError(`Package.json not found at ${pkgPath}. Has the library been built?`)
@@ -119,7 +124,13 @@ function runJestTests(testDir: string, format: string, workspaceRoot: string): b
  * @param context - The Nx executor context
  * @returns A promise resolving to an object indicating success or failure
  */
-export default async function e2eExecutor(options: E2eExecutorOptions, context: ExecutorContext): Promise<{ success: boolean }> {
+export default async function e2eExecutor(
+  options: E2eExecutorOptions,
+  context: ExecutorContext
+): Promise<{
+  /** Whether the E2E tests passed */
+  success: boolean
+}> {
   const { projectName, root: workspaceRoot, projectGraph } = context
 
   if (!projectName) {

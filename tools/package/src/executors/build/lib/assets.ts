@@ -173,7 +173,12 @@ function findLicenseFile(packageDir: string): string | null {
  * @param licenseFileName - Name of the license file (e.g., 'LICENSE', 'LICENSE.md')
  * @returns URL to the license file or null if URL cannot be constructed
  */
-function constructLicenseUrl(repositoryUrl: string | { type: string; url: string } | undefined, licenseFileName: string): string | null {
+function constructLicenseUrl(repositoryUrl: string | {
+    /** Repository provider type */
+    type: string
+    /** Repository URL */
+    url: string
+  } | undefined, licenseFileName: string): string | null {
   if (!repositoryUrl) {
     return null
   }
@@ -205,7 +210,12 @@ function constructLicenseUrl(repositoryUrl: string | { type: string; url: string
  * @returns Detected license type or 'Unknown'
  */
 function detectLicenseFromContent(licenseContent: string): string | null {
-  const patterns: Array<{ pattern: RegExp; type: string }> = [
+  const patterns: Array<{
+    /** Regular expression to match license text */
+    pattern: RegExp
+    /** SPDX license type identifier */
+    type: string
+  }> = [
     { pattern: /MIT License/i, type: 'MIT' },
     { pattern: /The MIT License/i, type: 'MIT' },
     { pattern: /Apache License.*Version 2\.0/i, type: 'Apache-2.0' },

@@ -6,14 +6,20 @@ import { createLogger } from '@hyperfrontend/logging'
 
 export type { LogLevel, Logger } from '@hyperfrontend/logging'
 
+/**
+ * Extended logger interface for build operations with timing support.
+ */
 interface BuildLogger extends Omit<Logger, 'setLogLevel'> {
+  /** Sets log level based on verbose flag */
   setLogLevel: (verbose: boolean) => void
+  /** Creates a prefixed sub-logger channel */
   channel(prefix: string): Omit<BuildLogger, 'channel'>
   /**
    * Logs execution time for an operation.
    * Returns result of the operation.
    */
   timed<T>(label: string, fn: () => T): T
+  /** Logs execution time for an async operation */
   timedAsync<T>(label: string, fn: () => Promise<T>): Promise<T>
 }
 

@@ -27,9 +27,15 @@ export interface ChannelLogger {
   getLogLevel: () => string
 }
 
+/**
+ * Extended logger interface for version executor operations.
+ */
 interface ExecutorLogger extends Omit<Logger, 'setLogLevel'> {
+  /** Sets log level based on verbose/quiet flags */
   setLogLevel: (level: Pick<VersionExecutorSchema, 'verbose' | 'quiet'>) => void
+  /** Creates a prefixed sub-logger channel */
   channel(prefix: string): ChannelLogger
+  /** Sets a context value for message interpolation */
   setContextValue: (label: string, value: unknown) => void
 }
 

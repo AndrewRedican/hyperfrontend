@@ -5,10 +5,10 @@ import { existsSync, mkdirSync, rmSync } from 'node:fs'
 import { join } from 'node:path'
 import { joinPathFragments } from '@nx/devkit'
 import { rollup } from 'rollup'
-import {isArray} from '@hyperfrontend/immutable-api-utils/built-in-copy/array'
-import {dateNow} from '@hyperfrontend/immutable-api-utils/built-in-copy/date'
-import {keys} from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
-import {createPromise} from '@hyperfrontend/immutable-api-utils/built-in-copy/promise'
+import { isArray } from '@hyperfrontend/immutable-api-utils/built-in-copy/array'
+import { dateNow } from '@hyperfrontend/immutable-api-utils/built-in-copy/date'
+import { keys } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
+import { createPromise } from '@hyperfrontend/immutable-api-utils/built-in-copy/promise'
 import { copyAssets, copyDefaultAssets, copyFundingAsset, copyThirdPartyLicensesAsset } from './lib/assets'
 import { createCJSEntryConfig } from './lib/config-cjs'
 import { createESMEntryConfig } from './lib/config-esm'
@@ -28,10 +28,15 @@ const MEMORY_GROWTH_WARNING_MB = 50
  * Memory snapshot for tracking usage over time.
  */
 interface MemorySnapshot {
+  /** Heap memory currently in use (bytes) */
   heapUsed: number
+  /** Total heap memory allocated (bytes) */
   heapTotal: number
+  /** Memory used by C++ objects bound to JS (bytes) */
   external: number
+  /** Resident set size - total memory allocated (bytes) */
   rss: number
+  /** Time when snapshot was taken (ms since epoch) */
   timestamp: number
 }
 
@@ -144,7 +149,7 @@ class MemoryMonitor {
    */
   logSummary(): void {
     const final = this.snapshot()
-    const initial = this.snapshots[0]
+    const initial = <MemorySnapshot>this.snapshots[0]
 
     this.logger.info(`Memory summary:`)
     this.logger.info(`  Peak heap: ${this.formatMB(this.peakHeapUsed)}`)
@@ -285,7 +290,13 @@ async function buildSingleEntry(
  * @param context - Nx executor context
  * @returns Success status
  */
-export default async function runExecutor(options: BuildExecutorOptions, context: ExecutorContext): Promise<{ success: boolean }> {
+export default async function runExecutor(
+  options: BuildExecutorOptions,
+  context: ExecutorContext
+): Promise<{
+  /** Whether the build succeeded */
+  success: boolean
+}> {
   const { projectName, root: workspaceRoot } = context
   const logger = getLogger()
   logger.setLogLevel(options.verbose ?? false)
@@ -318,7 +329,6 @@ export default async function runExecutor(options: BuildExecutorOptions, context
     workspaceRoot
   )
   const assets = options.assets ?? []
-
   const esmConfigs = normalizeToArray(options.esm)
   const cjsConfigs = normalizeToArray(options.cjs)
   const iifeConfigs = normalizeToArray(options.iife)
@@ -335,14 +345,12 @@ export default async function runExecutor(options: BuildExecutorOptions, context
   logger.info(`  Project root: ${projectRoot}`)
   logger.info(`  Output path: ${outputPath}`)
   logger.info(`  TS config: ${tsConfigPath}`)
-
   const formats: string[] = []
   if (esmConfigs.length > 0) formats.push('ESM')
   if (cjsConfigs.length > 0) formats.push('CJS')
   if (iifeConfigs.length > 0) formats.push('IIFE')
   if (umdConfigs.length > 0) formats.push('UMD')
   logger.info(`  Formats: ${formats.join(', ')}`)
-
   const discovery = discoverEntryPoints(projectRoot)
   logger.info(`  Entry point category: ${discovery.category}`)
   logger.info(`  Entry points: ${discovery.entryPoints.map((e) => e.exportPath).join(', ')}`)
@@ -466,7 +474,6 @@ export default async function runExecutor(options: BuildExecutorOptions, context
       generateDeclarations(projectRoot, outputPath, tsConfigPath, workspaceRoot, discovery)
     })
     memMonitor.check('declarations-end')
-
     const srcPkg = readProjectPackageJson(projectRoot)
     generatePackageJson(srcPkg, outputPath, discovery, workspaceRoot, formatOutputs, options)
 

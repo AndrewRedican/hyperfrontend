@@ -229,25 +229,103 @@ export interface ConditionalExport {
 /** Export value in package.json - can be a string path or conditional exports object */
 export type ExportValue = string | ConditionalExport | Record<string, unknown>
 
+/**
+ * Repository field in package.json.
+ */
+export interface RepositoryField {
+  /** Repository type (e.g., 'git') */
+  type: string
+  /** Repository URL */
+  url: string
+}
+
+/**
+ * Bugs field in package.json.
+ */
+export interface BugsField {
+  /** Bug tracker URL */
+  url: string
+}
+
+/**
+ * Author field in package.json.
+ */
+export interface AuthorField {
+  /** Author name */
+  name: string
+  /** Author email */
+  email?: string
+  /** Author URL */
+  url?: string
+}
+
+/**
+ * Funding field in package.json.
+ */
+export interface FundingField {
+  /** Funding type */
+  type: string
+  /** Funding URL */
+  url: string
+}
+
+/**
+ * Build output for IIFE format.
+ */
+export interface IIFEOutput {
+  /** IIFE bundle configuration */
+  config: IIFEConfig
+  /** Entry points included in the bundle */
+  entries: EntryPoint[]
+}
+
+/**
+ * Build output for UMD format.
+ */
+export interface UMDOutput {
+  /** UMD bundle configuration */
+  config: UMDConfig
+  /** Entry points included in the bundle */
+  entries: EntryPoint[]
+}
+
 /** Package.json type with standard fields */
 export interface PackageJson {
+  /** Package name */
   name?: string
+  /** Package version */
   version?: string
+  /** Package license */
   license?: string
+  /** Main entry point (CommonJS) */
   main?: string
+  /** Module entry point (ESM) */
   module?: string
+  /** TypeScript types entry point */
   types?: string
+  /** Export map for subpath exports */
   exports?: Record<string, ExportValue>
+  /** Runtime dependencies */
   dependencies?: Record<string, string>
+  /** Peer dependencies */
   peerDependencies?: Record<string, string>
-  repository?: { type: string; url: string } | string
-  bugs?: { url: string } | string
+  /** Repository information */
+  repository?: RepositoryField | string
+  /** Bug tracker information */
+  bugs?: BugsField | string
+  /** Package homepage URL */
   homepage?: string
-  author?: { name: string; email?: string; url?: string } | string
-  funding?: { type: string; url: string } | string
+  /** Package author information */
+  author?: AuthorField | string
+  /** Funding information */
+  funding?: FundingField | string
+  /** Whether package has side effects */
   sideEffects?: boolean
+  /** unpkg CDN entry point */
   unpkg?: string
+  /** jsdelivr CDN entry point */
   jsdelivr?: string
+  /** Additional package.json fields */
   [key: string]: unknown
 }
 
@@ -258,7 +336,7 @@ export interface FormatOutputs {
   /** CJS entry points built */
   cjs: EntryPoint[]
   /** IIFE bundles built */
-  iife: { config: IIFEConfig; entries: EntryPoint[] }[]
+  iife: IIFEOutput[]
   /** UMD bundles built */
-  umd: { config: UMDConfig; entries: EntryPoint[] }[]
+  umd: UMDOutput[]
 }

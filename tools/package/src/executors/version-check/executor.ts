@@ -28,7 +28,10 @@ import { validateVersionState, formatValidationResult } from '../version/lib/val
 export default async function versionCheckExecutor(
   options: VersionCheckExecutorSchema,
   context: ExecutorContext
-): Promise<{ success: boolean }> {
+): Promise<{
+  /** Whether the version check completed successfully. */
+  success: boolean
+}> {
   const { projectName, root: workspaceRoot, projectGraph } = context
   const logger = getLogger()
   logger.setLogLevel(options)
