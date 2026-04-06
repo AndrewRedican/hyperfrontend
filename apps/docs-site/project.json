@@ -21,7 +21,7 @@
     "build": {
       "executor": "@hyperfrontend/app:build",
       "dependsOn": ["install"],
-      "outputs": ["{projectRoot}/.next", "{projectRoot}/out"],
+      "outputs": ["{projectRoot}/.generated", "{projectRoot}/.next", "{projectRoot}/out"],
       "options": {
         "command": "npm run build"
       }
