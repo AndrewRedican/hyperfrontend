@@ -14,6 +14,11 @@ module.exports = [
     ignores: ['docs/', '.nx/', 'dist/', 'coverage/', 'tmp/', '**/node_modules/', '**/.next/', '**/out/'],
   },
   {
+    plugins: {
+      workspace: eslintRules,
+    },
+  },
+  {
     files: ['**/*.ts', '**/*.tsx', '**/*.js', '**/*.jsx'],
     rules: {
       '@nx/enforce-module-boundaries': [
@@ -125,9 +130,6 @@ module.exports = [
   },
   {
     files: ['**/index.ts'],
-    plugins: {
-      workspace: eslintRules,
-    },
     rules: {
       'workspace/no-unwanted-barrel-files': 'error',
     },
@@ -135,9 +137,6 @@ module.exports = [
   {
     files: ['**/*.ts', '**/*.tsx'],
     ignores: ['**/jest.config.ts', '**/jest.setup.ts', '**/jest.setup.browser.ts'],
-    plugins: {
-      workspace: eslintRules,
-    },
     rules: {
       'workspace/no-unsafe-builtin-methods': 'error',
     },
@@ -145,9 +144,6 @@ module.exports = [
   {
     files: ['**/*.ts', '**/*.tsx'],
     ignores: ['**/jest.config.ts', '**/jest.setup.ts', '**/jest.setup.browser.ts'],
-    plugins: {
-      workspace: eslintRules,
-    },
     rules: {
       'workspace/require-node-protocol': 'error',
       'workspace/no-mixed-type-import': 'error',
@@ -175,9 +171,6 @@ module.exports = [
   {
     files: ['**/*.ts', '**/*.tsx'],
     ignores: ['**/jest.config.ts', '**/jest.setup.ts', '**/jest.setup.browser.ts', '**/libs/logging/**'],
-    plugins: {
-      workspace: eslintRules,
-    },
     rules: {
       'workspace/no-direct-console': 'error',
     },
@@ -185,9 +178,6 @@ module.exports = [
   {
     files: ['**/*.ts', '**/*.tsx'],
     ignores: ['**/jest.config.ts', '**/jest.setup.ts', '**/jest.setup.browser.ts', '**/*.spec.ts'],
-    plugins: {
-      workspace: eslintRules,
-    },
     rules: {
       'workspace/no-namespace-import': 'error',
     },
@@ -195,27 +185,18 @@ module.exports = [
   {
     files: ['**/*.ts'],
     ignores: ['**/jest.config.ts', '**/jest.setup.ts', '**/jest.setup.browser.ts', '**/*.spec.ts'],
-    plugins: {
-      workspace: eslintRules,
-    },
     rules: {
       'workspace/prefer-angle-bracket-assertion': 'error',
     },
   },
   {
     files: ['**/*.spec.ts'],
-    plugins: {
-      workspace: eslintRules,
-    },
     rules: {
       'workspace/assertive-test-names': 'error',
     },
   },
   {
     files: ['**/package.json'],
-    plugins: {
-      workspace: eslintRules,
-    },
     languageOptions: {
       parser: require('jsonc-eslint-parser'),
     },
@@ -230,9 +211,6 @@ module.exports = [
   },
   {
     files: ['**/project.json'],
-    plugins: {
-      workspace: eslintRules,
-    },
     languageOptions: {
       parser: require('jsonc-eslint-parser'),
     },
@@ -246,7 +224,6 @@ module.exports = [
   {
     files: ['**/README.md'],
     plugins: {
-      workspace: eslintRules,
       markdown: require('@eslint/markdown').default,
     },
     language: 'markdown/gfm',
@@ -257,7 +234,6 @@ module.exports = [
   {
     files: ['LIBRARY_COMPATIBILITY.md'],
     plugins: {
-      workspace: eslintRules,
       markdown: require('@eslint/markdown').default,
     },
     language: 'markdown/gfm',
