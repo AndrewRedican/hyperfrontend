@@ -1,21 +1,35 @@
+/** Valid log level values in order of verbosity */
 export type LogLevel = 'none' | 'error' | 'warn' | 'log' | 'info' | 'debug'
 
 import { createError } from '@hyperfrontend/immutable-api-utils/built-in-copy/error'
 import { freeze } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
 
+/**
+ * Encapsulates the current log level state.
+ */
 export interface LogLevelState {
+  /** The active log level */
   level: LogLevel
 }
 
+/** Function to update the log level */
 export type SetLogLevel = (level: LogLevel) => void
 
+/** Function to retrieve the current log level */
 export type GetLogLevel = () => LogLevel
 
+/** Predicate to determine if a message should be logged */
 export type ShouldLog = (level: LogLevel) => boolean
 
+/**
+ * Configuration interface for managing log levels.
+ */
 export interface LogLevelConfig {
+  /** Updates the log level */
   setLogLevel: SetLogLevel
+  /** Retrieves the current log level */
   getLogLevel: GetLogLevel
+  /** Checks if a given level should be logged */
   shouldLog: ShouldLog
 }
 
