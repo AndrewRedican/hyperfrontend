@@ -1,7 +1,12 @@
 import { createError } from '@hyperfrontend/immutable-api-utils/built-in-copy/error'
 
+/**
+ * Interface for cycling through a list of values.
+ */
 export interface ValuePicker {
+  /** Returns the current value without advancing. */
   current: () => string
+  /** Advances and returns the next value, cycling at end. */
   next: () => string
 }
 

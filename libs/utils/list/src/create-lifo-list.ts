@@ -4,14 +4,25 @@ import { createError } from '@hyperfrontend/immutable-api-utils/built-in-copy/er
 import { freeze } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
 import { createSet } from '@hyperfrontend/immutable-api-utils/built-in-copy/set'
 
+/**
+ * A LIFO (Last-In-First-Out) list interface.
+ */
 export interface LifoList<T extends object> {
+  /** Adds an item to the list */
   push(item: T): void
+  /** Removes and returns the last item in the list */
   pull(): T | undefined
+  /** Maps each item using the provided callback */
   map<U>(callback: (item: T) => U): U[]
+  /** Iterates over each item in the list */
   forEach(callback: (item: T) => void): void
+  /** Removes a specific item from the list */
   remove(item: T): boolean
+  /** Checks if an item exists in the list */
   has(item: T): boolean
+  /** Returns the number of items in the list */
   size(): number
+  /** Removes all items from the list */
   clear(): void
 }
 
