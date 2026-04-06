@@ -1,6 +1,7 @@
 import { createTypeError } from '../built-in-copy/error'
 import { hasOwn, defineProperty } from '../built-in-copy/object'
 
+/** Method decorator that locks the method preventing overwrites and ensuring correct this binding. */
 export type LockedMethod = (
   target: object,
   propertyKey: string | symbol,
