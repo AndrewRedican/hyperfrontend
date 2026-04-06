@@ -4,6 +4,8 @@ import { resolve, join, dirname, relative } from 'node:path'
 import { glob } from 'glob'
 import { logger } from '@hyperfrontend/logging'
 
+logger.setLogLevel('log')
+
 const WORKSPACE_ROOT = resolve(__dirname, '../../..')
 const DOCS_SITE_ROOT = resolve(__dirname, '..')
 const GENERATED_DIR = join(DOCS_SITE_ROOT, '.generated')

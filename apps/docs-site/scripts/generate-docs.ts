@@ -10,6 +10,8 @@ import { createSet } from '@hyperfrontend/immutable-api-utils/built-in-copy/set'
 import { createURL } from '@hyperfrontend/immutable-api-utils/built-in-copy/url'
 import { logger } from '@hyperfrontend/logging'
 
+logger.setLogLevel('log')
+
 /**
  * Checks if a line contains a URL pointing to the docs site (www.hyperfrontend.dev).
  * Uses proper URL parsing to validate the host instead of substring matching.
