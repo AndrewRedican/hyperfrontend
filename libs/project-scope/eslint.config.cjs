@@ -1,9 +1,25 @@
 const baseConfig = require('../../eslint.base.config.cjs')
+const eslintRules = require('../../tools/eslint-rules/src/index.ts')
 
 module.exports = [
   ...baseConfig,
   {
     ignores: ['**/__fixtures__/**'],
+  },
+  {
+    files: ['**/*.ts', '**/*.tsx'],
+    plugins: {
+      workspace: eslintRules,
+    },
+    rules: {
+      'workspace/max-file-lines': [
+        'error',
+        {
+          maxLines: 450,
+          maxLinesTest: 870,
+        },
+      ],
+    },
   },
   {
     files: ['**/*.json'],

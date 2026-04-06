@@ -1,4 +1,5 @@
 const baseConfig = require('../../eslint.base.config.cjs')
+const eslintRules = require('./src/index.ts')
 
 module.exports = [
   ...baseConfig,
@@ -8,6 +9,21 @@ module.exports = [
       // Node.js type strip mode (used when require()'ing .ts files) doesn't support angle-bracket assertions - Vercel deployment issue
       'workspace/prefer-angle-bracket-assertion': 'off',
       'workspace/no-direct-console': 'off',
+    },
+  },
+  {
+    files: ['**/*.ts', '**/*.tsx'],
+    plugins: {
+      workspace: eslintRules,
+    },
+    rules: {
+      'workspace/max-file-lines': [
+        'error',
+        {
+          maxLines: 710,
+          maxLinesTest: 1420,
+        },
+      ],
     },
   },
   {

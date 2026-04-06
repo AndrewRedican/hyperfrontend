@@ -164,10 +164,10 @@ module.exports = [
       'workspace/prefer-jsdoc-over-trailing-comments': 'error',
       'workspace/no-plain-inline-comments': 'error',
       'workspace/max-file-lines': [
-        'warn',
+        'error',
         {
-          maxLines: 750,
-          maxLinesTest: 1800,
+          maxLines: 400,
+          maxLinesTest: 700,
         },
       ],
     },
