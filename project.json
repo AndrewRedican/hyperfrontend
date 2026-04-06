@@ -30,6 +30,15 @@
         "base": "origin/main",
         "head": "HEAD"
       }
+    },
+    "lint:all": {
+      "executor": "@hyperfrontend/workspace:lint-report",
+      "options": {
+        "outputPath": "lint-output.txt",
+        "affected": false,
+        "maxFixes": 5,
+        "failOnError": true
+      }
     }
   }
 }

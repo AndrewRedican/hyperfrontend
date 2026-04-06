@@ -1,0 +1,8 @@
+{
+  "name": "@hyperfrontend/workspace",
+  "version": "0.0.0",
+  "description": "Nx plugin providing workspace-wide executors for LLM-optimized reports (lint, typecheck, tests).",
+  "private": true,
+  "generators": "./generators.json",
+  "executors": "./executors.json"
+}

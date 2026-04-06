@@ -38,6 +38,9 @@ projectStructure.cache.json
 .DS_Store
 Thumbs.db
 
+# generated reports
+lint-output.txt
+
 # nx
 .nx/cache
 .nx/workspace-data

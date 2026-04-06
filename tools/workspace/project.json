@@ -1,0 +1,11 @@
+{
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "name": "tool-workspace",
+  "description": "Nx plugin providing workspace-wide executors for LLM-optimized reports (lint, typecheck, tests).",
+  "sourceRoot": "{projectRoot}/src",
+  "projectType": "library",
+  "tags": ["type:util", "scope:internal"],
+  "targets": {
+    "typecheck": {}
+  }
+}
