@@ -16,7 +16,13 @@ import { logger } from '../../lib/logger'
  * @param context - Executor context providing project information
  * @returns An object indicating success or failure of the install
  */
-export default async function installExecutor(options: InstallExecutorOptions, context: ExecutorContext): Promise<{ success: boolean }> {
+export default async function installExecutor(
+  options: InstallExecutorOptions,
+  context: ExecutorContext
+): Promise<{
+  /** Indicates whether the install succeeded. */
+  success: boolean
+}> {
   const projectName = context.projectName
   if (!projectName) {
     logger.error('No project name provided')

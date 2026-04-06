@@ -17,7 +17,13 @@ import { logger } from '../../lib/logger'
  * @param context - Executor context providing project information
  * @returns An object indicating success or failure of the serve command
  */
-export default async function serveExecutor(options: ServeExecutorOptions, context: ExecutorContext): Promise<{ success: boolean }> {
+export default async function serveExecutor(
+  options: ServeExecutorOptions,
+  context: ExecutorContext
+): Promise<{
+  /** Whether the serve operation completed successfully */
+  success: boolean
+}> {
   const projectName = context.projectName
   if (!projectName) {
     logger.error('No project name provided')
@@ -48,7 +54,10 @@ export default async function serveExecutor(options: ServeExecutorOptions, conte
   logger.info(`  Running: ${command}`)
   logger.info(`  In: ${cwd}`)
 
-  return createPromise<{ success: boolean }>((resolve) => {
+  return createPromise<{
+    /** Whether the serve operation completed successfully */
+    success: boolean
+  }>((resolve) => {
     const child = spawn(command, {
       cwd,
       stdio: 'inherit',

@@ -19,7 +19,10 @@ import { logger } from '../../lib/logger'
 export default async function buildExecutor(
   options: BuildExecutorOptions,
   context: ExecutorContext
-): Promise<{ success: boolean }> {
+): Promise<{
+  /** Indicates whether the build succeeded. */
+  success: boolean
+}> {
   const projectName = context.projectName
   if (!projectName) {
     logger.error('No project name provided')
