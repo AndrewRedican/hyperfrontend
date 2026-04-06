@@ -9,6 +9,7 @@ const createRule = ESLintUtils.RuleCreator(
   (name) => `https://github.com/AndrewRedican/hyperfrontend/blob/main/tools/eslint-rules/docs/${name}.md`
 )
 
+/** Message IDs for the no-todo-comments rule. */
 type MessageIds = 'noTodoComment'
 
 /**
@@ -37,9 +38,19 @@ function isWordChar(ch: string | undefined): boolean {
  * @param text - The text to search.
  * @returns Array of index and length for each match.
  */
-function findTodoOccurrences(text: string): Array<{ index: number; length: number }> {
+function findTodoOccurrences(text: string): Array<{
+  /** Starting index of the match */
+  index: number
+  /** Length of the matched pattern */
+  length: number
+}> {
   const lower = text.toLowerCase()
-  const results: Array<{ index: number; length: number }> = []
+  const results: Array<{
+    /** Starting index of the match */
+    index: number
+    /** Length of the matched pattern */
+    length: number
+  }> = []
 
   for (const pattern of TODO_PATTERNS) {
     let searchStart = 0

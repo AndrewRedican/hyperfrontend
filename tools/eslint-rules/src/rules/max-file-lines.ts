@@ -12,6 +12,9 @@ const createRule = ESLintUtils.RuleCreator(
   (name) => `https://github.com/AndrewRedican/hyperfrontend/blob/main/tools/eslint-rules/docs/${name}.md`
 )
 
+/**
+ * Message identifiers for the max-file-lines rule.
+ */
 type MessageIds = 'fileTooLong'
 
 /**

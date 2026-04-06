@@ -82,7 +82,12 @@ const rule: Rule.RuleModule = {
               const text = sourceCode.getText()
               const range = <[number, number]>mainNodeCast.range
 
-              if (tokenAfter && (<{ value?: string }>tokenAfter).value === ',') {
+              if (tokenAfter && (<
+                  {
+                    /** Token string value */
+                    value?: string
+                  }
+                >tokenAfter).value === ',') {
                 let startPos = range[0]
                 while (startPos > 0 && text[startPos - 1] !== '\n') {
                   startPos--
@@ -93,7 +98,12 @@ const rule: Rule.RuleModule = {
                 return fixer.removeRange([startPos, tokenAfter.range[1]])
               }
 
-              if (tokenBefore && (<{ value?: string }>tokenBefore).value === ',') {
+              if (tokenBefore && (<
+                  {
+                    /** Token string value */
+                    value?: string
+                  }
+                >tokenBefore).value === ',') {
                 return fixer.removeRange([tokenBefore.range[0], range[1]])
               }
 
@@ -106,7 +116,12 @@ const rule: Rule.RuleModule = {
             messageId: 'noMainField',
             fix(fixer) {
               if (mainValue) {
-                const mainNodeTyped = <{ range: [number, number] }>(<unknown>mainNode)
+                const mainNodeTyped = <
+                  {
+                    /** Source range as [start, end] positions */
+                    range: [number, number]
+                  }
+                >(<unknown>mainNode)
                 const replacement = `"exports": {\n    ".": "${mainValue}"\n  }`
                 return fixer.replaceTextRange(mainNodeTyped.range, replacement)
               }

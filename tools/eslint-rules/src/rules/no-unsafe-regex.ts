@@ -71,7 +71,15 @@ const DEFAULT_OPTIONS: Required<NoUnsafeRegexOptions> = {
  * @param maxBound - The maximum allowed quantifier bound.
  * @returns An object indicating whether exponential bounds were found and the bound string if found.
  */
-function hasExponentialBounds(pattern: string, maxBound: number): { found: boolean; bound?: string } {
+function hasExponentialBounds(
+  pattern: string,
+  maxBound: number
+): {
+  /** Whether exponential bounds were detected in the pattern. */
+  found: boolean
+  /** The bound string if found (e.g., "{1,100000}"). */
+  bound?: string
+} {
   // eslint-disable-next-line workspace/no-unsafe-regex -- This regex is safe and used for static analysis
   const quantifierRegex = /\{(\d+),(\d+)?\}/g
   let match: RegExpExecArray | null

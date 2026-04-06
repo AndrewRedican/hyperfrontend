@@ -34,7 +34,10 @@ export interface PublishableLibrary {
  */
 function getPackageName(projectDir: string): string | null {
   const packageJsonPath = join(projectDir, 'package.json')
-  const packageJson = readJsonFileIfExists<{ name?: string }>(packageJsonPath)
+  const packageJson = readJsonFileIfExists<{
+    /** Package name field */
+    name?: string
+  }>(packageJsonPath)
   return packageJson?.name ?? null
 }
 
@@ -186,7 +189,12 @@ const rule: Rule.RuleModule = {
           return
         }
 
-        const parent = (node as { parent?: Node }).parent
+        const parent = (<
+          {
+            /** Parent AST node */
+            parent?: Node
+          }
+        >node).parent
         const isExported = parent?.type === 'ExportNamedDeclaration'
 
         if (isContentTs && !isExported) {

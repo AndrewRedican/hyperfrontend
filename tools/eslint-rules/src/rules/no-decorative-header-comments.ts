@@ -10,6 +10,9 @@ const createRule = ESLintUtils.RuleCreator(
   (name) => `https://github.com/AndrewRedican/hyperfrontend/blob/main/tools/eslint-rules/docs/${name}.md`
 )
 
+/**
+ * Message identifiers for the no-decorative-header-comments rule.
+ */
 type MessageIds = 'noDecorativeHeaderComments'
 
 export default createRule<[], MessageIds>({

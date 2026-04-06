@@ -35,7 +35,15 @@ const MATH = `${PKG}/built-in-copy/math`
 const NUMBER_COPY = `${PKG}/built-in-copy/number`
 const STRING_COPY = `${PKG}/built-in-copy/string`
 
-type SafeImport = { import: string; from: string }
+/**
+ * Describes a safe import alternative for unsafe built-in methods.
+ */
+type SafeImport = {
+  /** The name of the safe import function */
+  import: string
+  /** The module path to import from */
+  from: string
+}
 
 /**
  * Maps unsafe method access to safe imports
@@ -276,6 +284,9 @@ const createRule = ESLintUtils.RuleCreator(
   (name) => `https://github.com/AndrewRedican/hyperfrontend/blob/main/tools/eslint-rules/docs/${name}.md`
 )
 
+/**
+ * Message identifiers for the no-unsafe-builtin-methods rule.
+ */
 type MessageIds = 'unsafeBuiltinMethod' | 'unsafePrototypeCall' | 'unsafeConstructor' | 'unsafeGlobalFunction'
 
 export default createRule<[], MessageIds>({

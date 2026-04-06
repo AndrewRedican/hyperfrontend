@@ -17,22 +17,46 @@ export const RULE_NAME = 'lib-tsconfig-paths'
  * Represents a library entry point mapping.
  */
 interface EntryPointMapping {
-  /**
-   * The tsconfig path alias (e.g., "@hyperfrontend/project-scope/cli").
-   */
+  /** The tsconfig path alias (e.g., "@hyperfrontend/project-scope/cli"). */
   pathAlias: string
-  /**
-   * The relative source file path (e.g., "libs/project-scope/src/cli/index.ts").
-   */
+  /** The relative source file path (e.g., "libs/project-scope/src/cli/index.ts"). */
   sourcePath: string
-  /**
-   * The package name this entry point belongs to.
-   */
+  /** The package name this entry point belongs to. */
   packageName: string
-  /**
-   * The export key from package.json (e.g., "." or "./cli").
-   */
+  /** The export key from package.json (e.g., "." or "./cli"). */
   exportKey: string
+}
+
+/**
+ * Extended JSONNode with optional parent reference.
+ */
+type JSONNodeWithParent = JSONNode & {
+  /** Reference to parent node in AST */
+  parent?: JSONNode
+}
+
+/**
+ * Information about an orphan path that should be removed.
+ */
+interface OrphanPathInfo {
+  /** The tsconfig path alias */
+  pathAlias: string
+  /** The source path that was configured */
+  sourcePath: string
+  /** The AST node for this property */
+  propertyNode: JSONNode
+  /** Reason why this path is orphaned */
+  reason: 'nonexistent' | 'unknown'
+}
+
+/**
+ * Path mapping entry for generating tsconfig paths.
+ */
+interface PathMappingEntry {
+  /** The tsconfig path alias */
+  pathAlias: string
+  /** Array of source paths for this alias */
+  sourcePaths: string[]
 }
 
 /**
@@ -53,12 +77,10 @@ function resolveExportToSourcePath(exportPath: string, projectDir: string, works
 
   const absolutePath = join(projectDir, normalizedPath)
 
-  // Check if the TypeScript file exists
   if (exists(absolutePath)) {
     return relative(workspaceRoot, absolutePath)
   }
 
-  // Also try .mts and .cts if the original was .mjs/.cjs
   const mtsPath = absolutePath.replace(/\.ts$/, '.mts')
   const ctsPath = absolutePath.replace(/\.ts$/, '.cts')
 
@@ -93,19 +115,16 @@ function getLibraryEntryPoints(projectDir: string, workspaceRoot: string): Entry
   const packageName = packageJson.name
 
   for (const [exportKey, exportValue] of entries(packageJson.exports)) {
-    // Skip package.json self-references
     /* istanbul ignore if -- tested in separate case */
     if (exportKey === './package.json' || exportValue === './package.json') {
       continue
     }
 
-    // Handle conditional exports (object with import/require keys)
     let exportPath: string | null = null
     if (typeof exportValue === 'string') {
       exportPath = exportValue
       /* istanbul ignore else -- conditional exports tested separately */
     } else if (typeof exportValue === 'object' && exportValue !== null) {
-      // Use 'import' or 'default' or first available path
       exportPath = exportValue['import'] ?? exportValue['default'] ?? <string>values(exportValue)[0] ?? null
     }
 
@@ -197,19 +216,9 @@ function extractExistingPaths(pathsNode: JSONNode): Map<string, string[]> {
  * Options for the lib-tsconfig-paths rule.
  */
 interface RuleOptions {
-  /**
-   * Directories to scan for library-type projects (relative to workspace root).
-   * Each directory will be recursively searched for projects with projectType: "library".
-   *
-   * @example ["libs", "plugins", "tools"]
-   */
+  /** Directories to scan for library-type projects (relative to workspace root). Each directory will be recursively searched for projects with projectType: "library". Example: ["libs", "plugins", "tools"] */
   libraryDirectories: string[]
-  /**
-   * Directory path segments to exclude from scanning.
-   * Any path containing one of these segments will be skipped.
-   *
-   * @example ["__fixtures__", "node_modules"]
-   */
+  /** Directory path segments to exclude from scanning. Any path containing one of these segments will be skipped. Example: ["__fixtures__", "node_modules"] */
   excludePatterns?: string[]
 }
 
@@ -277,10 +286,9 @@ const rule: Rule.RuleModule = {
 
     /**
      * Checks if a directory path should be excluded based on exclude patterns.
-     * Uses simple segment matching - if any segment in the path matches an exclude pattern, the path is excluded.
      *
-     * @param relativePath - The path relative to workspace root.
-     * @returns True if the path should be excluded, false otherwise.
+     * @param relativePath - The relative path to check against exclude patterns
+     * @returns True if the path matches an exclude pattern
      */
     const isExcludedPath = (relativePath: string): boolean => {
       const pathSegments = relativePath.split('/')
@@ -335,9 +343,9 @@ const rule: Rule.RuleModule = {
         }
 
         // Verify we're inside compilerOptions
-        const parent = (node as JSONNode & { parent?: JSONNode }).parent
+        const parent = (<JSONNodeWithParent>node).parent
         if (parent?.type === 'JSONObjectExpression') {
-          const grandparent = (parent as JSONNode & { parent?: JSONNode }).parent
+          const grandparent = (<JSONNodeWithParent>parent).parent
           if (grandparent?.type === 'JSONProperty') {
             const gpKey = grandparent.key
             let gpKeyName: string | null = null
@@ -364,7 +372,7 @@ const rule: Rule.RuleModule = {
         const packageNameSet = createSet(expectedMappings.map((m) => m.packageName))
 
         // Check for orphan paths (paths that point to non-existent files or don't match any package)
-        const orphanPaths: Array<{ pathAlias: string; sourcePath: string; propertyNode: JSONNode; reason: 'nonexistent' | 'unknown' }> = []
+        const orphanPaths: OrphanPathInfo[] = []
 
         for (const prop of pathsValue.properties) {
           /* istanbul ignore if -- defensive type guard for jsonc-eslint-parser */
@@ -519,7 +527,7 @@ const rule: Rule.RuleModule = {
               i === 0
                 ? (fixer) => {
                     // Build the complete new paths object with all existing + missing mappings
-                    const allMappings: Array<{ pathAlias: string; sourcePaths: string[] }> = []
+                    const allMappings: PathMappingEntry[] = []
 
                     // Add existing paths (excluding orphans which will be removed by their own fix)
                     for (const [alias, sourcePaths] of existingPaths.entries()) {
@@ -621,7 +629,7 @@ const rule: Rule.RuleModule = {
               data: { packageName },
               fix(fixer) {
                 // Reorganize all paths to be grouped by package, alphabetically sorted within each package
-                const allMappings: Array<{ pathAlias: string; sourcePaths: string[] }> = []
+                const allMappings: PathMappingEntry[] = []
 
                 for (const prop of pathsValue.properties) {
                   /* istanbul ignore if -- defensive type guard for jsonc-eslint-parser */

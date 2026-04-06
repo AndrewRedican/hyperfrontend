@@ -32,11 +32,26 @@ export interface PublishableLibrary {
  * Extended project.json structure with build options.
  */
 interface ProjectJsonWithBuildOptions extends ProjectJson {
+  /** Build targets configuration */
   targets?: {
+    /** Build target with bundle options */
     build?: {
+      /** Build configuration options */
       options?: {
-        iife?: { entry?: string; globalName?: string }
-        umd?: { entry?: string; globalName?: string }
+        /** IIFE bundle configuration */
+        iife?: {
+          /** Entry point for the bundle */
+          entry?: string
+          /** Global variable name for the bundle */
+          globalName?: string
+        }
+        /** UMD bundle configuration */
+        umd?: {
+          /** Entry point for the bundle */
+          entry?: string
+          /** Global variable name for the bundle */
+          globalName?: string
+        }
         [key: string]: unknown
       }
       [key: string]: unknown
@@ -71,7 +86,10 @@ function hasBrowserBundles(projectDir: string): boolean {
  */
 function getPackageName(projectDir: string): string | null {
   const packageJsonPath = join(projectDir, 'package.json')
-  const packageJson = readJsonFileIfExists<{ name?: string }>(packageJsonPath)
+  const packageJson = readJsonFileIfExists<{
+    /** Package name from package.json */
+    name?: string
+  }>(packageJsonPath)
   return packageJson?.name ?? null
 }
 
@@ -91,7 +109,12 @@ function findPublishableLibraries(baseDir: string, workspaceRoot: string, result
     const relativePath = baseDir.slice(workspaceRoot.length + 1)
     const projectJsonPath = join(baseDir, 'project.json')
     const packageName = getPackageName(baseDir)
-    const projectJson = readJsonFileIfExists<ProjectJson & { name?: string }>(projectJsonPath)
+    const projectJson = readJsonFileIfExists<
+      ProjectJson & {
+        /** Project name from project.json */
+        name?: string
+      }
+    >(projectJsonPath)
 
     if (packageName) {
       results.push({

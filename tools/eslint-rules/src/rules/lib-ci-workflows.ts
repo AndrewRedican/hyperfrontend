@@ -37,10 +37,15 @@ export interface PublishableLibrary {
  * Interface for project.json structure.
  */
 interface ProjectJson {
+  /** Project name identifier */
   name?: string
+  /** Type of project (library, application, etc.) */
   projectType?: string
+  /** Build targets configuration */
   targets?: {
+    /** Build target configuration */
     build?: unknown
+    /** Publish target configuration */
     publish?: unknown
   }
 }
@@ -83,7 +88,12 @@ function findPublishableLibraries(baseDir: string, workspaceRoot: string, result
   if (isPublishableLibraryDir(baseDir)) {
     const relativePath = baseDir.slice(workspaceRoot.length + 1)
     const projectJsonPath = join(baseDir, 'project.json')
-    const projectJson = readJsonFileIfExists<ProjectJson & { name?: string }>(projectJsonPath)
+    const projectJson = readJsonFileIfExists<
+      ProjectJson & {
+        /** Project name from project.json */
+        name?: string
+      }
+    >(projectJsonPath)
 
     results.push({
       name: projectJson?.name ?? `lib-${basename(baseDir)}`,
@@ -92,6 +102,7 @@ function findPublishableLibraries(baseDir: string, workspaceRoot: string, result
     })
   }
 
+  /** Directory entries read from the file system */
   let entries: string[]
   try {
     entries = readDirectory(baseDir)

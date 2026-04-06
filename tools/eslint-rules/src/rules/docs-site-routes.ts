@@ -160,7 +160,12 @@ const rule: Rule.RuleModule = {
           return
         }
 
-        const parent = (node as { parent?: Node }).parent
+        const parent = (
+          node as {
+            /** Parent AST node, if present. */
+            parent?: Node
+          }
+        ).parent
         const isExported = parent?.type === 'ExportNamedDeclaration'
 
         if (!isExported) {

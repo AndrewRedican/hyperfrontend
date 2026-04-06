@@ -12,7 +12,14 @@ const createRule = ESLintUtils.RuleCreator(
   (name) => `https://github.com/AndrewRedican/hyperfrontend/blob/main/tools/eslint-rules/docs/${name}.md`
 )
 
+/**
+ * Message identifiers for the prefer-inline-single-use rule.
+ */
 type MessageIds = 'preferInline'
+
+/**
+ * Options configuration for the prefer-inline-single-use rule.
+ */
 type Options = readonly []
 
 /**

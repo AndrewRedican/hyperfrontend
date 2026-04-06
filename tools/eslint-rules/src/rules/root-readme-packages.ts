@@ -28,6 +28,46 @@ export interface PublishableLibrary {
 }
 
 /**
+ * Extended project JSON with optional name field.
+ */
+type ProjectJsonWithName = ProjectJson & {
+  /** Project name */
+  name?: string
+}
+
+/**
+ * Package JSON subset with name field.
+ */
+interface PackageJsonWithName {
+  /** Package name */
+  name?: string
+}
+
+/**
+ * README section content with location information.
+ */
+interface ReadmeSection {
+  /** Section content text */
+  content: string
+  /** Starting line number (1-based) */
+  startLine: number
+  /** Ending line number (1-based) */
+  endLine: number
+}
+
+/**
+ * Tracks current section state during parsing.
+ */
+interface SectionParseState {
+  /** Section title */
+  title: string
+  /** Starting line number */
+  startLine: number
+  /** Accumulated lines */
+  lines: string[]
+}
+
+/**
  * Recursively finds all publishable libraries in a directory.
  *
  * @param baseDir - The absolute path to search.
@@ -44,8 +84,8 @@ function findPublishableLibraries(baseDir: string, workspaceRoot: string, result
     const projectJsonPath = join(baseDir, 'project.json')
     const packageJsonPath = join(baseDir, 'package.json')
 
-    const projectJson = readJsonFileIfExists<ProjectJson & { name?: string }>(projectJsonPath)
-    const packageJson = readJsonFileIfExists<{ name?: string }>(packageJsonPath)
+    const projectJson = readJsonFileIfExists<ProjectJsonWithName>(projectJsonPath)
+    const packageJson = readJsonFileIfExists<PackageJsonWithName>(packageJsonPath)
 
     results.push({
       name: projectJson?.name ?? basename(baseDir),
@@ -115,10 +155,10 @@ export function extractMentionedPaths(sectionContent: string): string[] {
  * @param content - The markdown content.
  * @returns Map of section titles to their content and line numbers.
  */
-export function parseReadmeSections(content: string): Map<string, { content: string; startLine: number; endLine: number }> {
-  const sections = createMap<string, { content: string; startLine: number; endLine: number }>()
+export function parseReadmeSections(content: string): Map<string, ReadmeSection> {
+  const sections = createMap<string, ReadmeSection>()
   const lines = content.split('\n')
-  let currentSection: { title: string; startLine: number; lines: string[] } | null = null
+  let currentSection: SectionParseState | null = null
 
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i]

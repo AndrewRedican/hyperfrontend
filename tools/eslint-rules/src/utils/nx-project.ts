@@ -8,12 +8,18 @@ const logger = createRuleLogger('nx-project')
  * Represents the structure of a project.json file.
  */
 export interface ProjectJson {
+  /** The type of project - library or application */
   projectType?: 'library' | 'application'
+  /** Build targets configuration */
   targets?: {
+    /** Build target configuration */
     build?: unknown
+    /** Publish target configuration */
     publish?: unknown
+    /** Additional target configurations */
     [key: string]: unknown
   }
+  /** Tags associated with the project */
   tags?: string[]
   [key: string]: unknown
 }
@@ -22,13 +28,21 @@ export interface ProjectJson {
  * Represents the structure of a package.json file.
  */
 export interface PackageJson {
+  /** Package name */
   name?: string
+  /** Package version */
   version?: string
+  /** Export map for subpath exports */
   exports?: Record<string, string | Record<string, string>>
+  /** Main entry point (CommonJS) */
   main?: string
+  /** Module entry point (ESM) */
   module?: string
+  /** TypeScript types entry point */
   types?: string
+  /** Files to include in package */
   files?: string[]
+  /** Workspace package patterns */
   workspaces?: string[]
   [key: string]: unknown
 }
@@ -37,9 +51,13 @@ export interface PackageJson {
  * Represents a publishable library.
  */
 export interface PublishableLibrary {
+  /** Library name */
   name: string
+  /** Root directory path */
   root: string
+  /** Project configuration */
   projectJson: ProjectJson
+  /** Package configuration, if present */
   packageJson: PackageJson | null
 }
 

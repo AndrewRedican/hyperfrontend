@@ -56,6 +56,9 @@ const DISALLOWED_IMPORT_SOURCES = {
  */
 const LOGGING_LIBRARY = '@hyperfrontend/logging'
 
+/**
+ * Message identifiers for the no-direct-console rule.
+ */
 type MessageIds = 'noGlobalConsole' | 'noNxDevkitLogger' | 'noImmutableConsole' | 'noDisallowedLoggerUsage'
 
 /**
@@ -111,7 +114,12 @@ export default createRule<[], MessageIds>({
     const nxDevkitLoggerBindings = createSet<string>()
     const immutableConsoleBindings = createSet<string>()
     const loggingLibraryBindings = createSet<string>()
-    const pendingNxDevkitImports: { specifier: TSESTree.ImportSpecifier; bindingName: string }[] = []
+    const pendingNxDevkitImports: {
+      /** The import specifier node */
+      specifier: TSESTree.ImportSpecifier
+      /** The local binding name */
+      bindingName: string
+    }[] = []
     const nxDevkitBindingsWithDisallowedUsage = createSet<string>()
     let importsCreateLogger = false
 

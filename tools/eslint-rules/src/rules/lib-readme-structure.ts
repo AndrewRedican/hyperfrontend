@@ -93,11 +93,28 @@ export const REQUIRED_BADGES = [
  * Represents a parsed section from the README.
  */
 export interface ParsedSection {
+  /** Heading level (1-6) */
   level: number
+  /** Section title text */
   title: string
+  /** Line number where section starts (1-based) */
   startLine: number
+  /** Line number where section ends (1-based) */
   endLine: number
+  /** Section content excluding the heading */
   content: string
+}
+
+/**
+ * Extracted badges block information.
+ */
+export interface BadgesBlockInfo {
+  /** The badges block content */
+  block: string
+  /** Line number where badges start (1-based) */
+  startLine: number
+  /** Line number where badges end (1-based) */
+  endLine: number
 }
 
 /**
@@ -156,7 +173,7 @@ export function parseMarkdownSections(content: string): ParsedSection[] {
  * @param content - The markdown content.
  * @returns The badges block content, or null if not found.
  */
-export function extractBadgesBlock(content: string): { block: string; startLine: number; endLine: number } | null {
+export function extractBadgesBlock(content: string): BadgesBlockInfo | null {
   const lines = content.split('\n')
   let inBadgesBlock = false
   let startLine = -1
@@ -195,12 +212,22 @@ export function extractBadgesBlock(content: string): { block: string; startLine:
 }
 
 /**
+ * Extracted title information.
+ */
+export interface TitleInfo {
+  /** The title text */
+  title: string
+  /** Line number where title appears (1-based) */
+  line: number
+}
+
+/**
  * Extracts the title from the README content.
  *
  * @param content - The markdown content.
  * @returns The title and its line number, or null if not found.
  */
-export function extractTitle(content: string): { title: string; line: number } | null {
+export function extractTitle(content: string): TitleInfo | null {
   const lines = content.split('\n')
 
   for (let i = 0; i < lines.length; i++) {
@@ -214,13 +241,23 @@ export function extractTitle(content: string): { title: string; line: number } |
 }
 
 /**
+ * Extracted short description information.
+ */
+export interface DescriptionInfo {
+  /** The description text */
+  text: string
+  /** Line number where description appears (1-based) */
+  line: number
+}
+
+/**
  * Extracts the short description paragraph after badges block.
  *
  * @param content - The markdown content.
  * @param badgesEndLine - The ending line of the badges block.
  * @returns The description and its line number, or null if not found.
  */
-export function extractShortDescription(content: string, badgesEndLine: number): { text: string; line: number } | null {
+export function extractShortDescription(content: string, badgesEndLine: number): DescriptionInfo | null {
   const lines = content.split('\n')
 
   for (let i = badgesEndLine; i < lines.length; i++) {
@@ -245,12 +282,30 @@ export function extractShortDescription(content: string, badgesEndLine: number):
 }
 
 /**
+ * Extracted documentation link information.
+ */
+export interface DocLinkInfo {
+  /** Line number where link appears (1-based) */
+  line: number
+}
+
+/**
+ * Represents a found section entry with name and position.
+ */
+interface FoundSectionEntry {
+  /** Section name */
+  name: string
+  /** Index in the sections array */
+  index: number
+}
+
+/**
  * Extracts the documentation link from the content.
  *
  * @param content - The markdown content.
  * @returns The documentation link info, or null if not found.
  */
-export function extractDocumentationLink(content: string): { line: number } | null {
+export function extractDocumentationLink(content: string): DocLinkInfo | null {
   const lines = content.split('\n')
 
   for (let i = 0; i < lines.length; i++) {
@@ -365,7 +420,7 @@ const rule: Rule.RuleModule = {
         const sections = parseMarkdownSections(content)
         const level2Sections = sections.filter((s) => s.level === 2)
 
-        const foundSections: Array<{ name: string; index: number }> = []
+        const foundSections: FoundSectionEntry[] = []
 
         for (const required of REQUIRED_SECTIONS) {
           const found = level2Sections.find((s) => required.pattern.test(s.title))
@@ -391,8 +446,8 @@ const rule: Rule.RuleModule = {
         }
 
         for (let i = 0; i < foundSections.length - 1; i++) {
-          const current = <{ name: string; index: number }>foundSections[i]
-          const next = <{ name: string; index: number }>foundSections[i + 1]
+          const current = <FoundSectionEntry>foundSections[i]
+          const next = <FoundSectionEntry>foundSections[i + 1]
 
           if (current.index > next.index) {
             context.report({

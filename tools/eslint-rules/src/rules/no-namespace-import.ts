@@ -9,6 +9,9 @@ const createRule = ESLintUtils.RuleCreator(
   (name) => `https://github.com/AndrewRedican/hyperfrontend/blob/main/tools/eslint-rules/docs/${name}.md`
 )
 
+/**
+ * Message identifiers for the no-namespace-import rule.
+ */
 type MessageIds = 'noNamespaceImport'
 
 /**
