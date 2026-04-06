@@ -8,7 +8,16 @@
  * @param root0.keepPadding - Whether to preserve padding characters (=)
  * @returns The URL-safe base64 encoded string
  */
-export function base64ToUrlSafeBase64(base64: string, { urlSafe, keepPadding }: { urlSafe: boolean; keepPadding: boolean }): string {
+export function base64ToUrlSafeBase64(
+  base64: string,
+  {
+    urlSafe,
+    keepPadding,
+  }: {
+    /** Whether to apply URL-safe transformations */ urlSafe: boolean
+    /** Whether to preserve padding characters */ keepPadding: boolean
+  }
+): string {
   if (urlSafe) {
     base64 = base64.replaceAll('+', '-').replaceAll('/', '_')
     if (keepPadding === false) {
