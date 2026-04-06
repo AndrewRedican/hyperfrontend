@@ -8,15 +8,27 @@ import { parseInt as safeParseInt } from '@hyperfrontend/immutable-api-utils/bui
 import { getFileStat } from '../../core/fs'
 import { walkDirectory } from '../../project/traversal'
 
+/**
+ * Configuration options for the tree command.
+ */
 export interface TreeCommandOptions {
+  /** Root path to display tree from */
   path?: string
+  /** Maximum directory depth to traverse */
   depth?: number
+  /** Glob pattern to filter entries */
   pattern?: string
+  /** Patterns to exclude from output */
   ignore?: string[]
+  /** Show only directories */
   dirsOnly?: boolean
+  /** Show only files */
   filesOnly?: boolean
+  /** Display file sizes */
   showSize?: boolean
+  /** Display modification dates */
   showModified?: boolean
+  /** Output format (text, json, etc.) */
   format?: OutputFormat
 }
 
@@ -24,11 +36,17 @@ export interface TreeCommandOptions {
  * Tree node for building the tree structure.
  */
 interface TreeNode {
+  /** Display name of the node */
   name: string
+  /** Full path to the entry */
   path: string
+  /** Whether this node is a directory */
   isDirectory: boolean
+  /** File size in bytes (if applicable) */
   size?: number
+  /** Last modification date */
   modified?: Date
+  /** Child nodes */
   children: TreeNode[]
 }
 

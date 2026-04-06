@@ -40,7 +40,12 @@ export interface PackageJson {
   /** Optional dependencies */
   optionalDependencies?: Record<string, string>
   /** Workspaces configuration */
-  workspaces?: string[] | { packages: string[] }
+  workspaces?:
+    | string[]
+    | {
+        /** Array of workspace glob patterns */
+        packages: string[]
+      }
   /** Exports map */
   exports?: Record<string, unknown>
   /** Engines */
@@ -68,7 +73,13 @@ function isStringRecord(value: unknown): value is Record<string, string> {
  * @param value - Raw workspaces value from package.json
  * @returns Normalized workspace patterns or undefined if invalid
  */
-function parseWorkspaces(value: unknown): string[] | { packages: string[] } | undefined {
+function parseWorkspaces(value: unknown):
+  | string[]
+  | {
+      /** Array of workspace glob patterns */
+      packages: string[]
+    }
+  | undefined {
   if (isArray(value) && value.every((v) => typeof v === 'string')) {
     return <string[]>value
   }

@@ -15,8 +15,11 @@ export type FileSystemErrorCode = 'FS_NOT_FOUND' | 'FS_READ_ERROR' | 'FS_WRITE_E
  * File system error with code and context.
  */
 export interface FileSystemErrorContext {
+  /** Absolute or relative path where the error occurred */
   path: string
+  /** The filesystem operation that failed */
   operation: 'read' | 'write' | 'stat' | 'readdir'
+  /** Original error that caused the failure */
   cause?: unknown
 }
 
@@ -105,6 +108,22 @@ export function readFileIfExists(filePath: string, encoding: BufferEncoding = 'u
 }
 
 /**
+ * Error object with optional code property.
+ */
+interface ErrorWithCode {
+  /** Error code (e.g., 'ENOENT') */
+  code?: string
+}
+
+/**
+ * Options for reading a JSON file.
+ */
+export interface ReadJsonFileOptions<T> {
+  /** Default value to return if the file is not found */
+  default?: T
+}
+
+/**
  * Read and parse JSON file.
  *
  * @param filePath - Path to JSON file
@@ -125,7 +144,7 @@ export function readFileIfExists(filePath: string, encoding: BufferEncoding = 'u
  * const settings = readJsonFile('./settings.json', { default: {} })
  * ```
  */
-export function readJsonFile<T>(filePath: string, options?: { default?: T }): T {
+export function readJsonFile<T>(filePath: string, options?: ReadJsonFileOptions<T>): T {
   if (!existsSync(filePath)) {
     if (options && 'default' in options) {
       fsLogger.debug('JSON file not found, using default', { path: filePath })
@@ -139,7 +158,7 @@ export function readJsonFile<T>(filePath: string, options?: { default?: T }): T 
     const content = readFileSync(filePath, { encoding: 'utf-8' })
     return <T>parse(content)
   } catch (error) {
-    if ((<{ code?: string }>error)?.code === 'ENOENT') {
+    if ((<ErrorWithCode>error)?.code === 'ENOENT') {
       fsLogger.debug('JSON file not found (ENOENT)', { path: filePath })
       throw createFileSystemError(`File not found: ${filePath}`, 'FS_NOT_FOUND', { path: filePath, operation: 'read', cause: error })
     }

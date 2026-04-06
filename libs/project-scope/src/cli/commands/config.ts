@@ -6,10 +6,17 @@ import { stringify } from '@hyperfrontend/immutable-api-utils/built-in-copy/json
 import { entries, keys } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
 import { detectConfigs, CONFIG_PATTERNS, parseConfig } from '../../project/config'
 
+/**
+ * Options for the config CLI command.
+ */
 export interface ConfigCommandOptions {
+  /** Target directory path to scan for configs */
   path?: string
+  /** Filter by specific config type */
   type?: ConfigType
+  /** Include file contents in output */
   showContents?: boolean
+  /** Output format (json, table, etc.) */
   format?: OutputFormat
 }
 

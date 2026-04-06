@@ -293,7 +293,13 @@ export function unregisterCache<K, V>(cache: Cache<K, V>): boolean {
  * detectTechStackMemo.cache.clear()
  * ```
  */
-export function memoize<K, V>(fn: (key: K) => V, options?: CacheOptions): ((key: K) => V) & { cache: Cache<K, V> } {
+export function memoize<K, V>(
+  fn: (key: K) => V,
+  options?: CacheOptions
+): ((key: K) => V) & {
+  /** Underlying cache instance for direct access and control */
+  cache: Cache<K, V>
+} {
   const cache = createCache<K, V>(options)
 
   const memoized = (key: K): V => {
@@ -313,5 +319,10 @@ export function memoize<K, V>(fn: (key: K) => V, options?: CacheOptions): ((key:
     enumerable: true,
   })
 
-  return <((key: K) => V) & { cache: Cache<K, V> }>memoized
+  return <
+    ((key: K) => V) & {
+      /** Underlying cache instance for direct access and control */
+      cache: Cache<K, V>
+    }
+  >memoized
 }

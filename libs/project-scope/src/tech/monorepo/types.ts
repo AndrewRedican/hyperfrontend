@@ -18,7 +18,7 @@ export interface MonorepoDetection {
   /** Detection sources */
   detectedFrom: DetectionSource[]
   /** Workspace layout */
-  workspaceLayout?: { appsDir: string; libsDir: string }
+  workspaceLayout?: { /** Applications directory */ appsDir: string; /** Libraries directory */ libsDir: string }
   /** Detected project paths */
   projects?: string[]
 }

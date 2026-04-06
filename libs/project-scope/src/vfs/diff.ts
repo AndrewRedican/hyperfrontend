@@ -58,8 +58,26 @@ function backtrackLcs(
   table: number[][],
   oldLines: string[],
   newLines: string[]
-): { type: 'same' | 'add' | 'remove'; oldIdx: number; newIdx: number; content: string }[] {
-  const result: { type: 'same' | 'add' | 'remove'; oldIdx: number; newIdx: number; content: string }[] = []
+): {
+  /** Operation type: same, add, or remove */
+  type: 'same' | 'add' | 'remove'
+  /** Index in the old lines array */
+  oldIdx: number
+  /** Index in the new lines array */
+  newIdx: number
+  /** Line content */
+  content: string
+}[] {
+  const result: {
+    /** Operation type: same, add, or remove */
+    type: 'same' | 'add' | 'remove'
+    /** Index in the old lines array */
+    oldIdx: number
+    /** Index in the new lines array */
+    newIdx: number
+    /** Line content */
+    content: string
+  }[] = []
   let i = oldLines.length
   let j = newLines.length
 
@@ -88,7 +106,16 @@ function backtrackLcs(
  * @returns Filtered DiffLine array
  */
 function operationsToDiffLines(
-  operations: { type: 'same' | 'add' | 'remove'; oldIdx: number; newIdx: number; content: string }[],
+  operations: {
+    /** Operation type: same, add, or remove */
+    type: 'same' | 'add' | 'remove'
+    /** Index in the old lines array */
+    oldIdx: number
+    /** Index in the new lines array */
+    newIdx: number
+    /** Line content */
+    content: string
+  }[],
   contextLines: number
 ): DiffLine[] {
   const include = new Array<boolean>(operations.length).fill(false)

@@ -33,7 +33,21 @@ export const BINARY_SIGNATURES = <const>[
 /**
  * Encoding detection result.
  */
-export type EncodingInfo = { type: 'text'; encoding: BufferEncoding; hasBom: boolean } | { type: 'binary'; format?: string }
+export type EncodingInfo =
+  | {
+      /** Content type indicator */
+      type: 'text'
+      /** Character encoding */
+      encoding: BufferEncoding
+      /** Whether BOM was detected */
+      hasBom: boolean
+    }
+  | {
+      /** Content type indicator */
+      type: 'binary'
+      /** Binary format description */
+      format?: string
+    }
 
 /**
  * Detect if content is likely text or binary with encoding information.
