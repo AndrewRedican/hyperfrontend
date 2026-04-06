@@ -1,17 +1,23 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
+/** Function that tests if a value matches a condition */
 export type Predicate = (x: unknown) => boolean
 
+/** JavaScript data type names including 'null' and 'array' */
 export type DataType = 'undefined' | 'object' | 'boolean' | 'number' | 'bigint' | 'string' | 'symbol' | 'function' | 'null' | 'array'
 
+/** Any iterable of unknown values */
 export type UnknownIterable = Iterable<unknown>
 
+/** String keys of UnknownIterable */
 export type UnknownIterableKey = keyof UnknownIterable & string
 
+/** Constructor type for unknown class instances */
 export type UnknownClass<T = unknown> = {
   new (...args: any[]): T
 }
 
+/** Registered iterable class with operators for traversal */
 export interface RegisteredIterableClassEntry<T = unknown> {
   /** A reference to a class definition. */
   classRef: UnknownClass<T>
@@ -32,6 +38,7 @@ export interface RegisteredIterableClassEntry<T = unknown> {
   remove: (instance: T, key: unknown) => void
 }
 
+/** Operators for iterating over custom class instances */
 export interface IterableOperators<T = unknown> {
   /** Returns a new (empty) instance. */
   instantiate: () => T
@@ -49,6 +56,7 @@ export interface IterableOperators<T = unknown> {
   remove: (instance: T, key: unknown) => void
 }
 
+/** Configuration options for comparison and traversal */
 export interface Config {
   /**
    * A flag that indicates the API that two values can match only if their properties
@@ -63,6 +71,7 @@ export interface Config {
   detectCircularReferences: boolean
 }
 
+/** Stack for tracking object references during traversal */
 export interface ReferenceStack {
   /**
    * Total number of references in the stack.
@@ -97,19 +106,27 @@ export interface ReferenceStack {
   clear: () => void
 }
 
+/** Configuration specifying traversal depth range */
 export interface DepthConfig {
+  /** Depth range: [min, max] or [min] or empty */
   depth: [number, number | '*'] | [number] | []
 }
 
+/** Internal traversal configuration */
 export interface TraverseConfig {
+  /** Depth range with resolved max value */
   depth: [number, number | '*']
+  /** Whether to exit traversal early */
   exitEarly: boolean
 }
 
+/** Condition function to determine if a node should be processed */
 export type Condition = (config: TraverseConfig, key: string, value: unknown, path: string[], parent: unknown) => boolean
 
+/** Callback function invoked for each traversed node */
 export type Callback = (key: string, value: unknown, path: string[], state: any, parent: unknown) => void
 
+/** Arguments tuple for traversal functions */
 export type TraversalArgs<T = unknown, S extends Record<string, unknown> = Record<string, unknown>> = [
   Condition,
   Callback,
@@ -121,6 +138,7 @@ export type TraversalArgs<T = unknown, S extends Record<string, unknown> = Recor
   S,
 ]
 
+/** Traversal function for non-circular structures */
 export type TraversalNonCircular<S extends Record<string, unknown> = Record<string, unknown>> = (
   condition: Condition,
   callback: Callback,
@@ -132,6 +150,7 @@ export type TraversalNonCircular<S extends Record<string, unknown> = Record<stri
   state: S
 ) => S
 
+/** Traversal function for structures with circular references */
 export type TraversalCircular = (
   condition: Condition,
   callback: Callback,
@@ -145,8 +164,11 @@ export type TraversalCircular = (
   root?: boolean
 ) => any
 
+/** Generic traversal function */
 export type Traversal<T = unknown> = (target: T, condition: Condition, callback: Callback, options: DepthConfig, state: any) => any
 
+/** Factory function that creates a traverse function with a fixed condition */
 export type TraversalCreator<T = unknown> = (condition: Condition) => Traverse<T>
 
+/** Function to traverse a target with callback and options */
 export type Traverse<T = unknown> = (target: T, callback: Callback, options?: DepthConfig, state?: any) => any

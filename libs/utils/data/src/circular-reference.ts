@@ -1,17 +1,31 @@
 import { isArray } from '@hyperfrontend/immutable-api-utils/built-in-copy/array'
 import { createError } from '@hyperfrontend/immutable-api-utils/built-in-copy/error'
 
+/**
+ * Represents the location where a circular reference was detected.
+ */
 export interface Location {
+  /** Path segments from root to the location */
   path: [string, ...string[]]
 }
 
+/**
+ * Represents the target of a circular reference.
+ */
 export interface Target {
+  /** Path segments from root to the target */
   path: string[]
 }
 
+/**
+ * Describes a circular reference in an object graph.
+ */
 export interface ICircularReference {
+  /** Location where the circular reference was detected */
   readonly location: Location
+  /** Target of the circular reference */
   readonly target: Target
+  /** Depth of the circular reference */
   readonly depth: number
 }
 

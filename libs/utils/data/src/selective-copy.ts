@@ -144,7 +144,10 @@ export const selectiveCopyForCircularReferencesRecursive = <T extends Record<str
  * @param options - Configuration options for selective copying
  * @returns An object containing the cloned value and array of skipped data points
  */
-export const selectiveCopy = <T = unknown>(target: T, options?: SelectiveCopyOptions): { clone: Partial<T>; skipped: DataPoint[] } => {
+export const selectiveCopy = <T = unknown>(
+  target: T,
+  options?: SelectiveCopyOptions
+): { /** Cloned value */ clone: Partial<T>; /** Skipped data points */ skipped: DataPoint[] } => {
   if (options !== void 0 && getType(options) !== 'object') throw createError('Invalid options argument.')
   if (!options) options = {}
   if (!options.skipFunctions) options.skipFunctions = false
