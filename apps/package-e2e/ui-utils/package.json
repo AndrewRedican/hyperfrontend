@@ -7,7 +7,7 @@
     "pack-install": "cd ../../../dist/libs/utils/ui && npm pack && cd - && npm install ../../../dist/libs/utils/ui/*.tgz"
   },
   "dependencies": {
-    "@hyperfrontend/ui-utils": "file:../../../tmp/e2e-packs/hyperfrontend-ui-utils-0.0.4.tgz"
+    "@hyperfrontend/ui-utils": "file:../../../tmp/e2e-packs/hyperfrontend-ui-utils-0.0.5.tgz"
   },
   "devDependencies": {
     "@types/jest": "29.5.14",
