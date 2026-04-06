@@ -1,5 +1,8 @@
+'use client'
+
 import type { Parameter } from './types'
 import { TypeLink } from './type-link'
+import { getDescription } from './type-utils'
 
 interface ParameterListProps {
   parameters: Parameter[]
@@ -23,7 +26,7 @@ export function ParameterList({ parameters, paramDescriptions = {} }: ParameterL
           </thead>
           <tbody>
             {parameters.map((param) => {
-              const description = paramDescriptions[param.name] || ''
+              const description = paramDescriptions[param.name] || getDescription(param.comment)
               const isOptional = param.flags?.isOptional
               const isRest = param.flags?.isRest
 
