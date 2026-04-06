@@ -2,6 +2,7 @@ import { dateNow } from '@hyperfrontend/immutable-api-utils/built-in-copy/date'
 import { freeze } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
 import { setTimeout, clearTimeout } from '@hyperfrontend/immutable-api-utils/built-in-copy/timers'
 
+/** Timer interface with pause, resume, and reset capabilities. */
 export interface Timer {
   /** Stops the progression of tracked time until further notice. */
   readonly pause: () => void
