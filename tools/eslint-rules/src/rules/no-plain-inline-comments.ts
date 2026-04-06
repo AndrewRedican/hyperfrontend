@@ -111,7 +111,7 @@ export default createRule<[], MessageIds>({
             // note: Trailing comment - remove from before the comment to end of comment
             // note: Find whitespace before the comment
             let wsStart = comment.range[0]
-            while (wsStart > lineStart && /\s/.test(fullText[wsStart - 1])) {
+            while (wsStart > lineStart && /\s/.test(<string>fullText[wsStart - 1])) {
               wsStart--
             }
             start = wsStart

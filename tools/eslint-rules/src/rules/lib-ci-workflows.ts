@@ -57,15 +57,15 @@ export function deriveCoverageFlag(relativePath: string): string {
   const parts = relativePath.split('/')
 
   if (parts.length >= 3 && parts[0] === 'libs' && parts[1] === 'utils') {
-    const utilName = parts[2]
+    const utilName = <string>parts[2]
     return `${utilName}-utils`
   }
 
   if (parts.length >= 2) {
-    return parts[parts.length - 1]
+    return <string>parts[parts.length - 1]
   }
 
-  return parts[parts.length - 1]
+  return <string>parts[parts.length - 1]
 }
 
 /**
@@ -126,11 +126,11 @@ export function hasPathFilter(content: string, coverageFlag: string, relativePat
   const pathPattern = `'${relativePath}/**'`
 
   for (let i = 0; i < lines.length; i++) {
-    const line = lines[i].trim()
+    const line = (<string>lines[i]).trim()
 
     if (line === filterPattern || line.startsWith(`${filterPattern} `)) {
       for (let j = i; j < min(i + 5, lines.length); j++) {
-        if (lines[j].includes(pathPattern)) {
+        if ((<string>lines[j]).includes(pathPattern)) {
           return true
         }
       }

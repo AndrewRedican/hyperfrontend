@@ -155,7 +155,8 @@ function getStaticStringValue(node: TSESTree.Node): string | null {
     return String(node.value)
   }
   if (isSimpleTemplateLiteral(node)) {
-    return node.quasis[0].value.cooked ?? node.quasis[0].value.raw
+    const firstQuasi = <TSESTree.TemplateElement>node.quasis[0]
+    return firstQuasi.value.cooked ?? firstQuasi.value.raw
   }
   return null
 }
@@ -296,7 +297,7 @@ export default createRule<[NoUnsafeRegexOptions], MessageIds>({
         return
       }
 
-      const patternArg = args[0]
+      const patternArg = <TSESTree.Node>args[0]
 
       const staticValue = getStaticStringValue(patternArg)
       if (staticValue !== null) {

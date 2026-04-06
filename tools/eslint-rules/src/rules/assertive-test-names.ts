@@ -60,7 +60,8 @@ export const assertiveTestNames = createRule<[], MessageIds>({
           testName = firstArg.value
         } else if (firstArg.type === 'TemplateLiteral' && firstArg.quasis.length === 1) {
           /* istanbul ignore next - cooked is always defined for valid template literals */
-          testName = firstArg.quasis[0].value.cooked ?? firstArg.quasis[0].value.raw
+          const firstQuasi = <TSESTree.TemplateElement>firstArg.quasis[0]
+          testName = firstQuasi.value.cooked ?? firstQuasi.value.raw
         }
 
         if (testName && SHOULD_PATTERN.test(testName)) {

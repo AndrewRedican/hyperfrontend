@@ -80,9 +80,10 @@ const rule: Rule.RuleModule = {
               const tokenAfter = sourceCode.getTokenAfter(mainNodeCast)
               const tokenBefore = sourceCode.getTokenBefore(mainNodeCast)
               const text = sourceCode.getText()
+              const range = <[number, number]>mainNodeCast.range
 
               if (tokenAfter && (<{ value?: string }>tokenAfter).value === ',') {
-                let startPos = mainNodeCast.range[0]
+                let startPos = range[0]
                 while (startPos > 0 && text[startPos - 1] !== '\n') {
                   startPos--
                 }
@@ -93,7 +94,7 @@ const rule: Rule.RuleModule = {
               }
 
               if (tokenBefore && (<{ value?: string }>tokenBefore).value === ',') {
-                return fixer.removeRange([tokenBefore.range[0], mainNodeCast.range[1]])
+                return fixer.removeRange([tokenBefore.range[0], range[1]])
               }
 
               return fixer.remove(mainNodeCast)

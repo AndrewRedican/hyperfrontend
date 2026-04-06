@@ -43,7 +43,7 @@ export default createRule<[], MessageIds>({
           let end = comment.range[1]
 
           // note: skip all whitespace and newlines after the comment to clean up formatting
-          while (end < fullText.length && /\s/.test(fullText[end])) {
+          while (end < fullText.length && /\s/.test(<string>fullText[end])) {
             end++
           }
 

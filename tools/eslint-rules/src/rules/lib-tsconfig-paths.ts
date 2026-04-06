@@ -106,7 +106,7 @@ function getLibraryEntryPoints(projectDir: string, workspaceRoot: string): Entry
       /* istanbul ignore else -- conditional exports tested separately */
     } else if (typeof exportValue === 'object' && exportValue !== null) {
       // Use 'import' or 'default' or first available path
-      exportPath = exportValue['import'] ?? exportValue['default'] ?? values(exportValue)[0]
+      exportPath = exportValue['import'] ?? exportValue['default'] ?? <string>values(exportValue)[0] ?? null
     }
 
     /* istanbul ignore if -- defensive for invalid export types */
