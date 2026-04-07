@@ -164,7 +164,8 @@ export function getParamDescriptions(comment: Comment | undefined): Record<strin
     .filter((tag) => tag.tag === '@param' && tag.name)
     .forEach((tag) => {
       if (tag.name) {
-        result[tag.name] = renderTextBlocks(tag.content)
+        const raw = renderTextBlocks(tag.content).trim()
+        result[tag.name] = raw.startsWith('-') ? raw.slice(1).trim() : raw
       }
     })
   return result
