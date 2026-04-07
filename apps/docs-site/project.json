@@ -21,6 +21,15 @@
     "build": {
       "executor": "@hyperfrontend/app:build",
       "dependsOn": ["install"],
+      "inputs": [
+        "default",
+        "{workspaceRoot}/ARCHITECTURE.md",
+        "{workspaceRoot}/CONTRIBUTING.md",
+        "{workspaceRoot}/libs/**/*.md",
+        "{workspaceRoot}/libs/**/src/**/*.ts",
+        "{workspaceRoot}/plugins/**/*.md",
+        "{workspaceRoot}/plugins/**/src/**/*.ts"
+      ],
       "outputs": ["{projectRoot}/.generated", "{projectRoot}/.next", "{projectRoot}/out"],
       "options": {
         "command": "npm run build"
