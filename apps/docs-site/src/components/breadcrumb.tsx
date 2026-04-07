@@ -11,6 +11,7 @@ const pathLabels: Record<string, string> = {
   contributing: 'Contributing',
   'quick-start': 'Quick Start',
   'core-concepts': 'Core Concepts',
+  architecture: 'Architecture',
   nexus: '@hyperfrontend/nexus',
   'network-protocol': '@hyperfrontend/network-protocol',
   cryptography: '@hyperfrontend/cryptography',
@@ -19,6 +20,8 @@ const pathLabels: Record<string, string> = {
   utils: '@hyperfrontend/utils',
   logging: '@hyperfrontend/logging',
   features: '@hyperfrontend/features',
+  'project-scope': '@hyperfrontend/project-scope',
+  versioning: '@hyperfrontend/versioning',
 }
 
 export function Breadcrumb() {
