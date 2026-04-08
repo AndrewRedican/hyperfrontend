@@ -48,6 +48,12 @@ const priority = {
  *
  * @param level - The log level to validate
  * @returns True if the level is valid, false otherwise
+ *
+ * @example
+ * ```typescript
+ * isValidLogLevel('error') // => true
+ * isValidLogLevel('verbose') // => false
+ * ```
  */
 export function isValidLogLevel(level: LogLevel) {
   return logLevels.includes(level)
@@ -60,6 +66,15 @@ export function isValidLogLevel(level: LogLevel) {
  * @param level - The initial log level (defaults to 'error')
  * @returns A configuration object with log level management methods
  * @throws {Error} When the provided level is not a valid log level
+ *
+ * @example
+ * ```typescript
+ * const config = createLogLevelConfig('warn')
+ * config.shouldLog('error') // => true (error >= warn)
+ * config.shouldLog('debug') // => false (debug < warn)
+ * config.setLogLevel('debug')
+ * config.shouldLog('debug') // => true
+ * ```
  */
 export function createLogLevelConfig(level: LogLevel = 'error'): LogLevelConfig {
   if (!isValidLogLevel(level)) {
