@@ -31,6 +31,17 @@ export interface LifoList<T extends object> {
  *
  * @template T The type of elements in the list, must be an object.
  * @returns {LifoList<T>} A LIFO list with methods to manipulate and query the list.
+ * @example
+ * ```typescript
+ * interface HistoryEntry { url: string; timestamp: number }
+ * const history = createLifoList<HistoryEntry>()
+ *
+ * history.push({ url: '/home', timestamp: 1 })
+ * history.push({ url: '/about', timestamp: 2 })
+ *
+ * history.pull() // => { url: '/about', timestamp: 2 }
+ * history.pull() // => { url: '/home', timestamp: 1 }
+ * ```
  */
 export function createLifoList<T extends object>(): LifoList<T> {
   const list: Set<T> = createSet()

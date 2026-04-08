@@ -6,6 +6,11 @@ import { createSet } from '@hyperfrontend/immutable-api-utils/built-in-copy/set'
  *
  * @param values - The array of strings to deduplicate
  * @returns A new array containing only unique strings
+ * @example
+ * ```typescript
+ * uniqueStrings(['apple', 'banana', 'apple', 'cherry', 'banana'])
+ * // => ['apple', 'banana', 'cherry']
+ * ```
  */
 export function uniqueStrings(values: string[]): string[] {
   return from(createSet(values))

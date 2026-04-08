@@ -15,6 +15,16 @@ export interface ValuePicker {
  *
  * @param values - The array of string values to cycle through
  * @returns A ValuePicker instance with current and next methods
+ * @example
+ * ```typescript
+ * const colorPicker = createValuePicker(['red', 'green', 'blue'])
+ *
+ * colorPicker.current() // => 'red'
+ * colorPicker.next()    // => 'red' (first call initializes)
+ * colorPicker.next()    // => 'green'
+ * colorPicker.next()    // => 'blue'
+ * colorPicker.next()    // => 'red' (cycles back)
+ * ```
  */
 export function createValuePicker(values: string[]): ValuePicker {
   if (!values || !values.length) {

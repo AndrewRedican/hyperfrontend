@@ -4,6 +4,14 @@
  * @param start - The starting number of the range
  * @param end - The ending number of the range (inclusive)
  * @returns An array containing all numbers from start to end
+ * @example
+ * ```typescript
+ * createRange(1, 5)
+ * // => [1, 2, 3, 4, 5]
+ *
+ * createRange(3, 3)
+ * // => [3]
+ * ```
  */
 export function createRange(start: number, end: number): number[] {
   const range: number[] = []

@@ -31,6 +31,17 @@ export interface FifoList<T extends object> {
  *
  * @template T The type of elements in the list, must be an object.
  * @returns {FifoList<T>} A FIFO list with methods to manipulate and query the list.
+ * @example
+ * ```typescript
+ * interface Task { id: number; name: string }
+ * const queue = createFifoList<Task>()
+ *
+ * queue.push({ id: 1, name: 'first' })
+ * queue.push({ id: 2, name: 'second' })
+ *
+ * queue.pull() // => { id: 1, name: 'first' }
+ * queue.pull() // => { id: 2, name: 'second' }
+ * ```
  */
 export function createFifoList<T extends object>(): FifoList<T> {
   const list: Set<T> = createSet()
