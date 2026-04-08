@@ -7,6 +7,9 @@ import { derivedState } from '../selectors'
 import { StateChange } from '../state-change'
 import { Store } from '../store/store'
 
+/**
+ * Event system that tracks state changes and dispatches events to registered handlers.
+ */
 export class Events {
   private readonly store = new Store()
   private readonly change = new StateChange()

@@ -26,6 +26,13 @@ const handlers: Handlers = {
   }),
 }
 
+/**
+ * Root reducer that handles state transitions based on action types.
+ *
+ * @param state - Current state or undefined for initial state
+ * @param action - Action to process
+ * @returns Updated state after applying the action
+ */
 export const rootReducer = (state = createInitialState(), action: Action): State => {
   const handler = <((state: State, action: Action) => State) | undefined>handlers[<keyof Handlers>action.type]
   return handler ? handler(state, action) : state

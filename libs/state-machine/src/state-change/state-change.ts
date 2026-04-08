@@ -1,6 +1,9 @@
 import type { DerivedState } from '../models'
 import type { States, StateChangeHandler } from './state-change.model'
 
+/**
+ * Tracks state changes and notifies registered callbacks when state transitions occur.
+ */
 export class StateChange {
   private states: States = [null, null]
   private callbacks: StateChangeHandler[] = []

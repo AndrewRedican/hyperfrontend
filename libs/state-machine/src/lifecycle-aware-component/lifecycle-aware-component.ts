@@ -9,6 +9,10 @@ import type {
 } from './lifecycle-aware-component.model'
 import { callStack } from '../call-stack/call-stack'
 
+/**
+ * Abstract base class for components that need lifecycle state management.
+ * Tracks initializing, ready, starting, stopping, and active states.
+ */
 export abstract class LifecycleAwareComponent {
   private _initializing = false
   private _ready = false

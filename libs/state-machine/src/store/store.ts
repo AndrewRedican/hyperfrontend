@@ -3,6 +3,9 @@ import type { Listener } from './store.model'
 import { createSet } from '@hyperfrontend/immutable-api-utils/built-in-copy/set'
 import { rootReducer } from '../reducer/reducer'
 
+/**
+ * Redux-like store for managing state with dispatch and subscribe capabilities.
+ */
 export class Store {
   private state = rootReducer(void 0, { type: '' })
   private listeners = createSet<Listener>()
