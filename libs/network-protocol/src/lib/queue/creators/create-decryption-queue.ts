@@ -16,6 +16,17 @@ import { createQueue } from './create-queue'
  * @param onSuccess - Callback invoked when a packet is successfully decrypted
  * @param onFail - Callback invoked when decryption fails
  * @returns A queue instance for processing encrypted packets
+ *
+ * @example
+ * ```typescript
+ * const queue = createDecryptionQueue(
+ *   'incoming-messages',
+ *   async (packet) => ({ ...packet, data: decrypt(packet.data) }),
+ *   logger,
+ *   (decrypted) => handleDecrypted(decrypted),
+ *   (failed) => handleFailed(failed)
+ * )
+ * ```
  */
 export const createDecryptionQueue: DecryptionQueueCreater = (label, packetDecryption, logger, onSuccess, onFail) => {
   const validity = isValidQueueCreaterArguments({

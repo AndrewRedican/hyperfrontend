@@ -13,6 +13,15 @@ import { isValidTarget } from '../validations/is-valid-target'
  * @param target - The target URL of the packet recipient
  * @returns A frozen PacketBase object with validated origin and target
  * @throws {Error} When origin or target validation fails
+ *
+ * @example
+ * ```typescript
+ * const base = createPacketBase(
+ *   '550e8400-e29b-41d4-a716-446655440000',
+ *   '6ba7b810-9dad-11d1-80b4-00c04fd430c8'
+ * )
+ * // => { origin: '550e8400-...', target: '6ba7b810-...' }
+ * ```
  */
 export function createPacketBase(origin: string, target: string): PacketBase {
   if (!isValidOrigin(origin)) {

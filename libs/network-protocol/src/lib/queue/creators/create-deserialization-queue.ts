@@ -16,6 +16,17 @@ import { createQueue } from './create-queue'
  * @param onSuccess - Callback invoked when a packet is successfully deserialized
  * @param onFail - Callback invoked when deserialization fails
  * @returns A queue instance for processing serialized packets
+ *
+ * @example
+ * ```typescript
+ * const queue = createDeserializationQueue(
+ *   'message-parser',
+ *   async (packet) => ({ ...packet, data: JSON.parse(packet.data) }),
+ *   logger,
+ *   (deserialized) => handleDeserialized(deserialized),
+ *   (failed) => handleFailed(failed)
+ * )
+ * ```
  */
 export const createDeserializationQueue: DeserializationQueueCreater = (label, packetDeserialization, logger, onSuccess, onFail) => {
   const validity = isValidQueueCreaterArguments({

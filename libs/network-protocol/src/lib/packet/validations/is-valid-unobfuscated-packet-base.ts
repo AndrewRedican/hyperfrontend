@@ -10,6 +10,16 @@ import { isValidTarget } from './is-valid-target'
  *
  * @param packet - The value to validate as an unobfuscated packet base
  * @returns An object containing the validation result and the packet cast to UnobfuscatedPacket
+ *
+ * @example
+ * ```typescript
+ * const { isValid, pkt } = isValidUnobfuscatedPacketBase({
+ *   origin: '550e8400-e29b-41d4-a716-446655440000',
+ *   target: '6ba7b810-9dad-11d1-80b4-00c04fd430c8',
+ *   data: { key: 'abc', message: {} }
+ * })
+ * // => { isValid: true, pkt: { origin, target, data } }
+ * ```
  */
 export function isValidUnobfuscatedPacketBase(packet: unknown): ValidUnobfuscatedPacketBaseResult {
   const pkt = <UnobfuscatedPacket>packet

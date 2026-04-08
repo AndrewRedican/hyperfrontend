@@ -12,6 +12,14 @@ import { isValidName } from '../validations/is-valid-name'
  * Provides methods to create, retrieve, and list topics by name or ID.
  *
  * @returns A TopicStore with methods for managing topics
+ *
+ * @example
+ * ```typescript
+ * const store = createTopicStore()
+ * store.create('notifications')
+ * const topic = store.getByName('notifications')
+ * // => { name: 'notifications', id: '550e8400-...' }
+ * ```
  */
 export function createTopicStore(): TopicStore {
   const topics = createSet<Topic>()

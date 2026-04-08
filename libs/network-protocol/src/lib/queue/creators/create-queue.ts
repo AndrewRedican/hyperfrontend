@@ -13,6 +13,14 @@ import { createFifoList } from '@hyperfrontend/list-utils'
  * @param autoStart - Whether to automatically start processing messages (default: true)
  * @returns A Queue instance with methods to manage message processing
  * @throws {Error} When processMessage is not a function or autoStart is not a boolean
+ *
+ * @example
+ * ```typescript
+ * const queue = createQueue(async (message) => {
+ *   await processMessage(message)
+ * })
+ * queue.addMessage({ type: 'ping', data: {} })
+ * ```
  */
 export function createQueue<T extends Record<string, any> = any>(processMessage: MessageHandler<T>, autoStart = true): Queue<T> {
   if (getType(processMessage) !== 'function') {

@@ -16,6 +16,17 @@ import { isValidTopicId } from '../../topic/validations/is-valid-topic-id'
  * @param data - The data payload to include in the packet
  * @returns A frozen RoutedUnencryptedPacket
  * @throws {Error} When topic ID validation fails
+ *
+ * @example
+ * ```typescript
+ * const routedPacket = createRoutedUnencryptedPacket(
+ *   '550e8400-e29b-41d4-a716-446655440000',
+ *   'origin-uuid',
+ *   'target-uuid',
+ *   { message: 'hello' }
+ * )
+ * // => { topicId: '550e8400-...', packet: { origin, target, data } }
+ * ```
  */
 export function createRoutedUnencryptedPacket<T = any>(
   topicId: string,

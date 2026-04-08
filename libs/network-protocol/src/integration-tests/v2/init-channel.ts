@@ -26,6 +26,12 @@ export const INTEGRATION_TEST_PSK = 'integration-test-shared-secret-key-2024'
  * @param receivePacket - Callback to receive packets
  * @param sharedKey - Pre-shared key for handshake encryption (defaults to test key)
  * @returns Channel instance
+ *
+ * @example
+ * ```typescript
+ * const channel = initChannel('secure-channel', sendFn, receiveFn, 'psk-secret')
+ * channel.send(packetData)
+ * ```
  */
 export function initChannel(
   label: string,

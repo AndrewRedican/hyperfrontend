@@ -23,6 +23,11 @@ export const label = 'channel-label'
  * Mock stop function.
  *
  * @returns void
+ *
+ * @example
+ * ```typescript
+ * stop() // no-op for testing
+ * ```
  */
 export const stop = () => void 0
 
@@ -30,6 +35,11 @@ export const stop = () => void 0
  * Mock resume function.
  *
  * @returns void
+ *
+ * @example
+ * ```typescript
+ * resume() // no-op for testing
+ * ```
  */
 export const resume = () => void 0
 
@@ -37,6 +47,11 @@ export const resume = () => void 0
  * Mock send function.
  *
  * @returns void
+ *
+ * @example
+ * ```typescript
+ * send() // no-op for testing
+ * ```
  */
 export const send = () => void 0
 
@@ -44,6 +59,11 @@ export const send = () => void 0
  * Mock receive function.
  *
  * @returns void
+ *
+ * @example
+ * ```typescript
+ * receive() // no-op for testing
+ * ```
  */
 export const receive = () => void 0
 

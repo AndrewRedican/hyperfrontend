@@ -34,6 +34,16 @@ import { isValidSendFn } from '../../validations/is-valid-send-fn'
  * @param {(provider: () => string) => EncryptionSuite<T>} createDynamicKeyEncryption - Factory for dynamic key-based encryption
  * @param {(refreshRate: number) => ObfuscationSuite} createTimeIntervalObfuscation - Factory for time-based obfuscation
  * @returns {(logger: Logger, refreshRate?: number) => ProtocolProvider<T>} A function that creates protocol providers
+ *
+ * @example
+ * ```typescript
+ * const createProvider = createObfuscatedHandshakeProtocolFactory(
+ *   createDynamicKeyEncryption,
+ *   createTimeIntervalObfuscation
+ * )
+ * const protocolProvider = createProvider(logger, 5)
+ * const protocol = protocolProvider(sendFn, receiveFn)
+ * ```
  */
 export function createObfuscatedHandshakeProtocolFactory<T = any>(
   createDynamicKeyEncryption: (provider: () => string) => EncryptionSuite<T>,

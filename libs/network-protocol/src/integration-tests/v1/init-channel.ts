@@ -22,6 +22,12 @@ import { createSenderFactory } from '../../lib/sender/creators/create-sender-fac
  * @param sendPacket - Callback to send packets
  * @param receivePacket - Callback to receive packets
  * @returns Channel instance
+ *
+ * @example
+ * ```typescript
+ * const channel = initChannel('test-channel', sendFn, receiveFn)
+ * channel.send(packetData)
+ * ```
  */
 export function initChannel(label: string, sendPacket: SendPacketFn, receivePacket: ReceivePacketFn): Channel {
   const serializePacket = createSerializedEncryptedPacketCreator(uint8ArrayToBase64)

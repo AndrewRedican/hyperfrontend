@@ -6,6 +6,12 @@ import { getType } from '@hyperfrontend/data-utils'
  *
  * @param channel - The channel object to validate
  * @returns True if the channel is valid, false otherwise
+ *
+ * @example
+ * ```typescript
+ * isValidChannel(channel) // => true
+ * isValidChannel({}) // => false
+ * ```
  */
 export function isValidChannel(channel: unknown): boolean {
   const ch = <Channel>channel

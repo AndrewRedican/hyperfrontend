@@ -16,6 +16,17 @@ import { createQueue } from './create-queue'
  * @param onSuccess - Callback invoked when a packet is successfully deobfuscated
  * @param onFail - Callback invoked when deobfuscation fails
  * @returns A queue instance for processing obfuscated packets
+ *
+ * @example
+ * ```typescript
+ * const queue = createDeobfuscationQueue(
+ *   'receiver',
+ *   async (packet) => ({ ...packet, data: deobfuscate(packet.data) }),
+ *   logger,
+ *   (deobfuscated) => handleDeobfuscated(deobfuscated),
+ *   (failed) => handleFailed(failed)
+ * )
+ * ```
  */
 export const createDeobfuscationQueue: DeobfuscationQueueCreater = (label, packetDeobfuscation, logger, onSuccess, onFail) => {
   const validity = isValidQueueCreaterArguments({

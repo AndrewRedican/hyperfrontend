@@ -16,6 +16,16 @@ import { createPacketBase } from './create-packet-base'
  * @param data - The data payload to include in the packet
  * @returns A frozen UnencryptedPacket containing the origin, target, and data
  * @throws {Error} When origin, target, or data validation fails
+ *
+ * @example
+ * ```typescript
+ * const packet = createUnencryptedPacket(
+ *   '550e8400-e29b-41d4-a716-446655440000',
+ *   '6ba7b810-9dad-11d1-80b4-00c04fd430c8',
+ *   { key: 'session-abc', message: { action: 'ping' } }
+ * )
+ * // => { origin, target, data: { key, message } }
+ * ```
  */
 export function createUnencryptedPacket<T = any>(origin: string, target: string, data: Data<T>): UnencryptedPacket<T> {
   const base = createPacketBase(origin, target)

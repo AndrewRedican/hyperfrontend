@@ -10,6 +10,13 @@ import { isValidName } from '../validations/is-valid-name'
  * Provides methods to register, retrieve, and list protocol providers.
  *
  * @returns A ProtocolProviderStore with methods for managing protocol providers
+ *
+ * @example
+ * ```typescript
+ * const store = createProtocolProviderStore()
+ * store.add('websocket', myProtocolProvider)
+ * const provider = store.getByName('websocket')
+ * ```
  */
 export function createProtocolProviderStore(): ProtocolProviderStore {
   const entries: ProtocolProviderEntry[] = []

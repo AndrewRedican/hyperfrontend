@@ -12,6 +12,14 @@ import { freeze } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
  * @param {PacketObfuscater} obfuscatePacket - Function to obfuscate a packet with a password
  * @param {PacketDeobfuscater} deobfuscatePacket - Function to deobfuscate data with a password
  * @returns {(provider: () => string) => ObfuscationSuite} A factory function that accepts a key provider and returns an obfuscation suite
+ *
+ * @example
+ * ```typescript
+ * const factory = createDynamicKeyObfuscationFactory(obfuscatePacket, deobfuscatePacket)
+ * let rotatingKey = 'initial-key'
+ * const suite = factory(() => rotatingKey)
+ * const obfuscated = await suite.packetObfuscation(packet)
+ * ```
  */
 export function createDynamicKeyObfuscationFactory(obfuscatePacket: PacketObfuscater, deobfuscatePacket: PacketDeobfuscater) {
   return (provider: () => string): ObfuscationSuite => {

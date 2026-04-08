@@ -6,6 +6,15 @@ import { getType } from '@hyperfrontend/data-utils'
  *
  * @param protocolProvider - The value to validate as a protocol provider
  * @returns True if the value is a function, false otherwise
+ *
+ * @example
+ * ```typescript
+ * isValidProtocolProvider(() => protocol)
+ * // => true
+ *
+ * isValidProtocolProvider('not-a-function')
+ * // => false
+ * ```
  */
 export function isValidProtocolProvider(protocolProvider: unknown): boolean {
   return getType(protocolProvider) === 'function'

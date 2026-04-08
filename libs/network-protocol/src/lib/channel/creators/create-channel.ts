@@ -16,6 +16,13 @@ import { isValidSender } from '../validations/is-valid-sender'
  * @param createSender - Factory function to create senders
  * @param createReceiver - Factory function to create receivers
  * @returns A channel creator function
+ *
+ * @example
+ * ```typescript
+ * const createChannel = createChannelFactory(senderFactory, receiverFactory)
+ * const channel = createChannel('comms', sendFn, receiveFn, protocolProvider)
+ * channel.send(message)
+ * ```
  */
 export function createChannelFactory(createSender: SenderFactory, createReceiver: ReceiverFactory): ChannelCreater {
   return (label, sendPacket, receivePacket, protocolProvider) => {

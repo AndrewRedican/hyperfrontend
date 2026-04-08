@@ -16,6 +16,17 @@ import { createQueue } from './create-queue'
  * @param onSuccess - Callback invoked when a packet is successfully obfuscated
  * @param onFail - Callback invoked when obfuscation fails
  * @returns A queue instance for processing serialized packets
+ *
+ * @example
+ * ```typescript
+ * const queue = createObfuscationQueue(
+ *   'sender',
+ *   async (packet) => ({ ...packet, data: obfuscate(packet.data) }),
+ *   logger,
+ *   (obfuscated) => handleObfuscated(obfuscated),
+ *   (failed) => handleFailed(failed)
+ * )
+ * ```
  */
 export const createObfuscationQueue: ObfuscationQueueCreater = (label, packetObfuscation, logger, onSuccess, onFail) => {
   const validity = isValidQueueCreaterArguments({

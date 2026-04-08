@@ -6,6 +6,15 @@ import { getType } from '@hyperfrontend/data-utils'
  *
  * @param send - The value to validate as a send function
  * @returns True if the value is a function, false otherwise
+ *
+ * @example
+ * ```typescript
+ * isValidSendFn((packet) => websocket.send(packet))
+ * // => true
+ *
+ * isValidSendFn('not-a-function')
+ * // => false
+ * ```
  */
 export function isValidSendFn(send: unknown) {
   return getType(send) === 'function'

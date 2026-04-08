@@ -5,6 +5,12 @@ import { getType } from '@hyperfrontend/data-utils'
  *
  * @param label - The label string to validate
  * @returns True if the label is valid, false otherwise
+ *
+ * @example
+ * ```typescript
+ * isValidLabel('channel-1') // => true
+ * isValidLabel('') // => false
+ * ```
  */
 export function isValidLabel(label: string) {
   return getType(label) === 'string' && label.length > 0

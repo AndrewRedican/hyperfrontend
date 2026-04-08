@@ -26,6 +26,15 @@ function isValidCondition(data: unknown): boolean {
  *
  * @param message - The message to validate
  * @returns True if all message data is valid and serializable, false otherwise
+ *
+ * @example
+ * ```typescript
+ * isValidMessage({ name: 'Alice', items: [1, 2, 3] })
+ * // => true
+ *
+ * isValidMessage({ callback: () => {} })
+ * // => false (functions are not serializable)
+ * ```
  */
 export function isValidMessage<T = any>(message: T): boolean {
   /* istanbul ignore next - options always initialized, line reported incorrectly by coverage tool */

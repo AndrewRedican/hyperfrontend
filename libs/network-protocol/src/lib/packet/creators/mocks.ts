@@ -23,6 +23,12 @@ import { unencryptedData, encryptedData, password as passw0rd } from '../../data
  * @param _packet - The unencrypted packet
  * @param _password - The encryption password
  * @returns Promise resolving to encrypted data
+ *
+ * @example
+ * ```typescript
+ * const encrypted = await encryptPacket(unencryptedPacket, 'secret')
+ * // => Uint8Array (mock encrypted data)
+ * ```
  */
 export const encryptPacket = async (_packet: UnencryptedPacket, _password: string): Promise<Uint8Array> => encryptedData
 
@@ -32,6 +38,12 @@ export const encryptPacket = async (_packet: UnencryptedPacket, _password: strin
  * @param _encrypted - The encrypted data
  * @param _password - The decryption password
  * @returns Promise resolving to decrypted data
+ *
+ * @example
+ * ```typescript
+ * const decrypted = await decryptPacket(encryptedData, 'secret')
+ * // => { message: 'hello' } (mock decrypted data)
+ * ```
  */
 export const decryptPacket = async (_encrypted: Uint8Array, _password: string): Promise<Data> => unencryptedData
 
@@ -41,6 +53,12 @@ export const decryptPacket = async (_encrypted: Uint8Array, _password: string): 
  * @param _packet - The packet data to obfuscate
  * @param _password - The obfuscation password
  * @returns Promise resolving to obfuscated data
+ *
+ * @example
+ * ```typescript
+ * const obfuscated = await obfuscatePacket(serializedData, 'secret')
+ * // => Uint8Array([1, 2, 3, 4, 5])
+ * ```
  */
 export const obfuscatePacket = async (_packet: Uint8Array, _password: string): Promise<Uint8Array> => createUint8Array([1, 2, 3, 4, 5])
 
@@ -50,6 +68,12 @@ export const obfuscatePacket = async (_packet: Uint8Array, _password: string): P
  * @param _obfuscated - The obfuscated data
  * @param _password - The deobfuscation password
  * @returns Promise resolving to deobfuscated data
+ *
+ * @example
+ * ```typescript
+ * const deobfuscated = await deobfuscatePacket(obfuscatedData, 'secret')
+ * // => Uint8Array (mock encrypted data)
+ * ```
  */
 export const deobfuscatePacket = async (_obfuscated: Uint8Array, _password: string): Promise<Uint8Array> => encryptedData
 /* eslint-enable @typescript-eslint/no-unused-vars */
@@ -59,6 +83,16 @@ export const deobfuscatePacket = async (_obfuscated: Uint8Array, _password: stri
  *
  * @param packet - The unserialized encrypted packet
  * @returns A serialized encrypted packet
+ *
+ * @example
+ * ```typescript
+ * const serialized = createSerializedEncryptedPacket({
+ *   origin: 'uuid-a',
+ *   target: 'uuid-b',
+ *   data: encryptedBytes,
+ * })
+ * // => { origin: 'uuid-a', target: 'uuid-b', data: 'base64...' }
+ * ```
  */
 export const createSerializedEncryptedPacket = (packet: UnserializedEncryptedPacket): SerializedEncryptedPacket => ({
   origin: packet.origin,
@@ -71,6 +105,16 @@ export const createSerializedEncryptedPacket = (packet: UnserializedEncryptedPac
  *
  * @param packet - The serialized encrypted packet
  * @returns An unserialized encrypted packet
+ *
+ * @example
+ * ```typescript
+ * const deserialized = createDeserializedEncryptedPacket({
+ *   origin: 'uuid-a',
+ *   target: 'uuid-b',
+ *   data: 'base64string',
+ * })
+ * // => { origin: 'uuid-a', target: 'uuid-b', data: Uint8Array }
+ * ```
  */
 export const createDeserializedEncryptedPacket = (packet: SerializedEncryptedPacket): UnserializedEncryptedPacket => ({
   origin: packet.origin,
@@ -85,6 +129,12 @@ export const password = passw0rd
  * Provides the encryption key for packet operations.
  *
  * @returns The password used for encryption
+ *
+ * @example
+ * ```typescript
+ * const key = keyProvider()
+ * // => 'test-password' (mock password)
+ * ```
  */
 export const keyProvider = () => password
 
@@ -188,6 +238,12 @@ export const serializedEncryptedPacket: SerializedEncryptedPacket = {
  *
  * @param packet - The unencrypted packet to process
  * @returns Promise resolving to an unserialized encrypted packet
+ *
+ * @example
+ * ```typescript
+ * const encrypted = await packetEncryption(unencryptedPacket)
+ * // => { origin, target, data: Uint8Array }
+ * ```
  */
 export const packetEncryption: PacketEncryption = async (packet) => ({
   origin: packet.origin,
@@ -203,6 +259,12 @@ export const packetSerialization: PacketSerialization = createSerializedEncrypte
  *
  * @param packet - The serialized encrypted packet to obfuscate
  * @returns Promise resolving to obfuscated packet data
+ *
+ * @example
+ * ```typescript
+ * const obfuscated = await packetObfuscation(serializedPacket)
+ * // => Uint8Array (obfuscated bytes)
+ * ```
  */
 export const packetObfuscation: PacketObfuscation = async (packet) => {
   const serialized = createTextEncoder().encode(packet.data)
@@ -214,6 +276,12 @@ export const packetObfuscation: PacketObfuscation = async (packet) => {
  *
  * @param packet - The unserialized encrypted packet to decrypt
  * @returns Promise resolving to an unencrypted packet
+ *
+ * @example
+ * ```typescript
+ * const decrypted = await packetDecryption(encryptedPacket)
+ * // => { origin, target, data: { message: 'hello' } }
+ * ```
  */
 export const packetDecryption: PacketDecryption = async (packet) => ({
   origin: packet.origin,
@@ -229,6 +297,12 @@ export const packetDeserialization: PacketDeserialization = createDeserializedEn
  *
  * @param packet - The obfuscated packet data to deobfuscate
  * @returns Promise resolving to a serialized encrypted packet
+ *
+ * @example
+ * ```typescript
+ * const deobfuscated = await packetDeobfuscation(obfuscatedPacket)
+ * // => { origin, target, data: 'base64...' }
+ * ```
  */
 export const packetDeobfuscation: PacketDeobfuscation = async (packet) => {
   const decryptedData = await deobfuscatePacket(packet, password)
