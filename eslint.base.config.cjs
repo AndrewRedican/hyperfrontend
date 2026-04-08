@@ -95,7 +95,18 @@ module.exports = [
       'jsdoc/require-jsdoc': [
         'error',
         {
-          contexts: ['TSInterfaceDeclaration', 'TSTypeAliasDeclaration', 'TSPropertySignature', 'TSMethodSignature'],
+          contexts: [
+            'ExportNamedDeclaration > FunctionDeclaration',
+            'ExportDefaultDeclaration > FunctionDeclaration',
+            'ExportNamedDeclaration > ClassDeclaration',
+            'ExportDefaultDeclaration > ClassDeclaration',
+            'ExportNamedDeclaration > VariableDeclaration > VariableDeclarator > ArrowFunctionExpression',
+            'ExportNamedDeclaration > VariableDeclaration > VariableDeclarator > FunctionExpression',
+            'TSInterfaceDeclaration',
+            'TSTypeAliasDeclaration',
+            'TSPropertySignature',
+            'TSMethodSignature',
+          ],
         },
       ],
       'jsdoc/require-param-description': 'error',
