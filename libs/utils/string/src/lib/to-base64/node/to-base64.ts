@@ -8,6 +8,18 @@ import { base64ToUrlSafeBase64 } from '../../utils/base64-to-url-safe-base64'
  * @param urlSafe - Whether to use URL-safe base64 encoding (replaces + and / with - and _)
  * @param keepPadding - Whether to keep padding characters (=) in the output
  * @returns The base64 encoded string
+ *
+ * @example Standard base64
+ * ```typescript
+ * const encoded = toBase64('Hello, World!')
+ * // => 'SGVsbG8sIFdvcmxkIQ=='
+ * ```
+ *
+ * @example URL-safe without padding (for URLs/tokens)
+ * ```typescript
+ * const token = toBase64('{"userId":123}', true, false)
+ * // => 'eyJ1c2VySWQiOjEyM30'
+ * ```
  */
 export function toBase64(text: string, urlSafe = false, keepPadding = false): string {
   return base64ToUrlSafeBase64(Buffer.from(text, 'utf8').toString('base64'), {
