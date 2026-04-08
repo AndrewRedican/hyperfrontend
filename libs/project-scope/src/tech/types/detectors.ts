@@ -66,6 +66,19 @@ function checkTsConfigStrict(projectPath: string): boolean | undefined {
  * @param projectPath - Project directory path
  * @param packageJson - Optional pre-loaded package.json
  * @returns Detection result or null if not detected
+ *
+ * @example
+ * ```typescript
+ * import { typescriptDetector } from '@hyperfrontend/project-scope'
+ *
+ * const result = typescriptDetector('./my-project')
+ * if (result) {
+ *   console.log(`TypeScript ${result.version}`)
+ *   console.log(`Strict mode: ${result.strictMode ?? 'unknown'}`)
+ *   // => "TypeScript 5.3.0"
+ *   // => "Strict mode: true"
+ * }
+ * ```
  */
 export function typescriptDetector(projectPath: string, packageJson?: PackageJson): TypeSystemDetection | null {
   const pkg = packageJson ?? readPackageJsonIfExists(projectPath)
@@ -126,6 +139,17 @@ export function typescriptDetector(projectPath: string, packageJson?: PackageJso
  * @param projectPath - Project directory path
  * @param packageJson - Optional pre-loaded package.json
  * @returns Detection result or null if not detected
+ *
+ * @example
+ * ```typescript
+ * import { flowDetector } from '@hyperfrontend/project-scope'
+ *
+ * const result = flowDetector('./my-project')
+ * if (result) {
+ *   console.log(`Flow ${result.version} with config: ${result.configPath}`)
+ *   // => "Flow 0.232.0 with config: .flowconfig"
+ * }
+ * ```
  */
 export function flowDetector(projectPath: string, packageJson?: PackageJson): TypeSystemDetection | null {
   const pkg = packageJson ?? readPackageJsonIfExists(projectPath)
@@ -194,6 +218,18 @@ function hasJsDocTypes(content: string): boolean {
  * @param projectPath - Project directory path
  * @param packageJson - Optional pre-loaded package.json
  * @returns Detection result or null if not detected
+ *
+ * @example
+ * ```typescript
+ * import { jsdocDetector } from '@hyperfrontend/project-scope'
+ *
+ * const result = jsdocDetector('./my-project')
+ * if (result) {
+ *   console.log('JSDoc types detected')
+ *   console.log('Sources:', result.detectedFrom.map(s => s.path ?? s.field))
+ *   // => "Sources: ['jsconfig.json', 'src/utils.js (JSDoc annotations)']"
+ * }
+ * ```
  */
 export function jsdocDetector(projectPath: string, packageJson?: PackageJson): TypeSystemDetection | null {
   const pkg = packageJson ?? readPackageJsonIfExists(projectPath)
@@ -272,6 +308,20 @@ export const typeSystemDetectors: TypeSystemDetector[] = [
  * @param projectPath - Project directory path
  * @param packageJson - Optional pre-loaded package.json
  * @returns Array of detected type systems, sorted by confidence
+ *
+ * @example
+ * ```typescript
+ * import { detectTypeSystems } from '@hyperfrontend/project-scope'
+ *
+ * const typeSystems = detectTypeSystems('./my-project')
+ * // => [
+ * //   { id: 'typescript', name: 'TypeScript', version: '5.3.0', strictMode: true, confidence: 95, ... },
+ * //   { id: 'jsdoc', name: 'JSDoc', confidence: 40, ... }
+ * // ]
+ *
+ * const primary = typeSystems[0]?.name ?? 'None'
+ * console.log(`Primary type system: ${primary}`)
+ * ```
  */
 export function detectTypeSystems(projectPath: string, packageJson?: PackageJson): TypeSystemDetection[] {
   const pkg = packageJson ?? readPackageJsonIfExists(projectPath)

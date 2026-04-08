@@ -14,6 +14,23 @@ import { collectAllDependencies, parseVersionString } from '../shared-utils/dete
  * @param workspacePath - Workspace directory path
  * @param packageJson - Optional pre-loaded package.json
  * @returns Detection result or null if not detected
+ *
+ * @example
+ * ```typescript
+ * // Project with turbo.json and turbo dependency
+ * const result = turborepoDetector('/path/to/turbo-project')
+ * // => {
+ * //   id: 'turborepo',
+ * //   name: 'Turborepo',
+ * //   confidence: 95,
+ * //   configPath: 'turbo.json',
+ * //   version: '2.0.0',
+ * //   detectedFrom: [
+ * //     { type: 'config-file', path: 'turbo.json' },
+ * //     { type: 'package.json', field: 'dependencies.turbo' }
+ * //   ]
+ * // }
+ * ```
  */
 export function turborepoDetector(workspacePath: string, packageJson?: PackageJson): MonorepoDetection | null {
   const pkg = packageJson ?? readPackageJsonIfExists(workspacePath)

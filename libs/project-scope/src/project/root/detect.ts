@@ -135,6 +135,15 @@ export function findWorkspaceRoot(startPath: string): string | null {
  * @param startPath - Starting path
  * @param markers - Files to search for
  * @returns Root directory path or null
+ *
+ * @example
+ * ```typescript
+ * import { findRootDirectory } from '@hyperfrontend/project-scope'
+ *
+ * // Find monorepo root by looking for nx.json or lerna.json
+ * const root = findRootDirectory('./libs/my-lib', ['nx.json', 'lerna.json'])
+ * // => '/path/to/monorepo'
+ * ```
  */
 export function findRootDirectory(startPath: string, markers: readonly string[] | string[]): string | null {
   return locateByMarkers(startPath, markers)
@@ -145,6 +154,14 @@ export function findRootDirectory(startPath: string, markers: readonly string[] 
  *
  * @param startPath - Starting path
  * @returns Git root path or null
+ *
+ * @example
+ * ```typescript
+ * import { findGitRoot } from '@hyperfrontend/project-scope'
+ *
+ * const gitRoot = findGitRoot('./src/deep/nested/file.ts')
+ * // => '/path/to/repository'
+ * ```
  */
 export function findGitRoot(startPath: string): string | null {
   return locateByMarkers(startPath, ['.git'])

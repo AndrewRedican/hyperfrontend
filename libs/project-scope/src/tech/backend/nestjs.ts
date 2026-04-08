@@ -14,6 +14,32 @@ import { collectAllDependencies, parseVersionString } from '../shared-utils/dete
  * @param projectPath - Project directory path
  * @param packageJson - Optional pre-loaded package.json
  * @returns Detection result or null if not detected
+ * @example
+ * ```typescript
+ * // Project with nest-cli.json and NestJS packages
+ * const pkg = {
+ *   dependencies: {
+ *     '@nestjs/core': '^10.2.0',
+ *     '@nestjs/common': '^10.2.0',
+ *     '@nestjs/platform-express': '^10.2.0',
+ *   },
+ * }
+ *
+ * const result = nestDetector('/path/to/nest-project', pkg)
+ * // => {
+ * //   id: 'nestjs',
+ * //   name: 'NestJS',
+ * //   version: '10.2.0',
+ * //   configPath: 'nest-cli.json',  // if present
+ * //   confidence: 100,
+ * //   detectedFrom: [
+ * //     { type: 'package.json', field: 'dependencies.@nestjs/core' },
+ * //     { type: 'package.json', field: 'dependencies.@nestjs/common' },
+ * //     { type: 'config-file', path: 'nest-cli.json' },
+ * //     { type: 'package.json', field: 'dependencies (@nestjs packages)' },
+ * //   ],
+ * // }
+ * ```
  */
 export function nestDetector(projectPath: string, packageJson?: PackageJson): BackendDetection | null {
   const pkg = packageJson ?? readPackageJsonIfExists(projectPath)

@@ -20,6 +20,14 @@ export const legacyDetectors: LegacyFrameworkDetector[] = [
  * @param projectPath - Project directory path
  * @param packageJson - Optional pre-loaded package.json
  * @returns Array of detected legacy frameworks, sorted by confidence
+ *
+ * @example
+ * ```typescript
+ * const results = detectLegacyFrameworks('/path/to/project', {
+ *   dependencies: { jquery: '^3.6.0', backbone: '^1.4.0' },
+ * })
+ * // => [{ id: 'jquery', confidence: 80 }, { id: 'backbone', confidence: 70 }]
+ * ```
  */
 export function detectLegacyFrameworks(projectPath: string, packageJson?: PackageJson): LegacyFrameworkDetection[] {
   const pkg = packageJson ?? readPackageJsonIfExists(projectPath)

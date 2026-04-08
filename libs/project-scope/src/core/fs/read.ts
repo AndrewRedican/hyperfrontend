@@ -30,6 +30,15 @@ export interface FileSystemErrorContext {
  * @param code - The category code for this type of filesystem failure
  * @param context - Additional context including path, operation, and cause
  * @returns A configured Error object with code and context properties
+ *
+ * @example
+ * ```typescript
+ * throw createFileSystemError(
+ *   'Cannot read file',
+ *   'FS_READ_ERROR',
+ *   { path: './missing.txt', operation: 'read' }
+ * )
+ * ```
  */
 export function createFileSystemError(message: string, code: FileSystemErrorCode, context: FileSystemErrorContext): Error {
   const error = createError(message)
@@ -76,6 +85,12 @@ export function readFileContent(filePath: string, encoding: BufferEncoding = 'ut
  * @param filePath - Path to file
  * @returns File contents as Buffer
  * @throws {Error} If file doesn't exist or can't be read
+ *
+ * @example
+ * ```typescript
+ * const buffer = readFileBuffer('./image.png')
+ * console.log(buffer.length) // File size in bytes
+ * ```
  */
 export function readFileBuffer(filePath: string): Buffer {
   if (!existsSync(filePath)) {
@@ -95,6 +110,14 @@ export function readFileBuffer(filePath: string): Buffer {
  * @param filePath - Path to file
  * @param encoding - File encoding (default: utf-8)
  * @returns File contents or null if file doesn't exist
+ *
+ * @example
+ * ```typescript
+ * const content = readFileIfExists('./optional-config.json')
+ * if (content) {
+ *   // File existed, use content
+ * }
+ * ```
  */
 export function readFileIfExists(filePath: string, encoding: BufferEncoding = 'utf-8'): string | null {
   if (!existsSync(filePath)) {
@@ -176,6 +199,13 @@ export function readJsonFile<T>(filePath: string, options?: ReadJsonFileOptions<
  *
  * @param filePath - Path to JSON file
  * @returns Parsed JSON object or null if file doesn't exist or is invalid
+ *
+ * @example
+ * ```typescript
+ * interface UserSettings { theme: string }
+ * const settings = readJsonFileIfExists<UserSettings>('./user-settings.json')
+ * const theme = settings?.theme ?? 'default'
+ * ```
  */
 export function readJsonFileIfExists<T>(filePath: string): T | null {
   if (!existsSync(filePath)) {

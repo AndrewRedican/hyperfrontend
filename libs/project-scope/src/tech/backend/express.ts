@@ -12,6 +12,26 @@ import { collectAllDependencies, parseVersionString } from '../shared-utils/dete
  * @param projectPath - Project directory path
  * @param packageJson - Optional pre-loaded package.json
  * @returns Detection result or null if not detected
+ * @example
+ * ```typescript
+ * const pkg = {
+ *   dependencies: { express: '^4.18.2', cors: '^2.8.5' },
+ *   devDependencies: { '@types/express': '^4.17.17' },
+ * }
+ *
+ * const result = expressDetector('/path/to/project', pkg)
+ * // => {
+ * //   id: 'express',
+ * //   name: 'Express',
+ * //   version: '4.18.2',
+ * //   confidence: 100,
+ * //   detectedFrom: [
+ * //     { type: 'package.json', field: 'dependencies.express' },
+ * //     { type: 'package.json', field: 'dependencies.@types/express' },
+ * //     { type: 'package.json', field: 'dependencies (express middleware)' },
+ * //   ],
+ * // }
+ * ```
  */
 export function expressDetector(projectPath: string, packageJson?: PackageJson): BackendDetection | null {
   const pkg = packageJson ?? readPackageJsonIfExists(projectPath)

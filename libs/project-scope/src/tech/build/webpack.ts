@@ -20,6 +20,26 @@ export const WEBPACK_CONFIG_PATTERNS = [
  * @param projectPath - Project directory path
  * @param packageJson - Optional pre-loaded package.json
  * @returns Detection result or null if not detected
+ *
+ * @example
+ * ```typescript
+ * const result = webpackDetector('/path/to/project', {
+ *   name: 'my-app',
+ *   devDependencies: { 'webpack': '^5.89.0', 'webpack-cli': '^5.1.0' },
+ *   scripts: { 'build': 'webpack --mode production' }
+ * })
+ * // => {
+ * //   id: 'webpack',
+ * //   name: 'Webpack',
+ * //   version: '5.89.0',
+ * //   confidence: 65,
+ * //   detectedFrom: [
+ * //     { type: 'package.json', field: 'dependencies.webpack' },
+ * //     { type: 'package.json', field: 'dependencies.webpack-cli' },
+ * //     { type: 'package.json', field: 'scripts.build' }
+ * //   ]
+ * // }
+ * ```
  */
 export function webpackDetector(projectPath: string, packageJson?: PackageJson): BuildToolDetection | null {
   const pkg = packageJson ?? readPackageJsonIfExists(projectPath)

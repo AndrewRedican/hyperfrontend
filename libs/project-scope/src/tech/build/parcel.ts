@@ -14,6 +14,26 @@ export const PARCEL_CONFIG_PATTERNS = ['.parcelrc']
  * @param projectPath - Project directory path
  * @param packageJson - Optional pre-loaded package.json
  * @returns Detection result or null if not detected
+ *
+ * @example
+ * ```typescript
+ * const result = parcelDetector('/path/to/project', {
+ *   name: 'my-app',
+ *   devDependencies: { 'parcel': '^2.10.0' },
+ *   scripts: { 'dev': 'parcel src/index.html', 'build': 'parcel build src/index.html' }
+ * })
+ * // => {
+ * //   id: 'parcel',
+ * //   name: 'Parcel',
+ * //   version: '2.10.0',
+ * //   confidence: 80,
+ * //   detectedFrom: [
+ * //     { type: 'package.json', field: 'dependencies.parcel' },
+ * //     { type: 'package.json', field: 'scripts.dev' },
+ * //     { type: 'package.json', field: 'scripts.build' }
+ * //   ]
+ * // }
+ * ```
  */
 export function parcelDetector(projectPath: string, packageJson?: PackageJson): BuildToolDetection | null {
   const pkg = packageJson ?? readPackageJsonIfExists(projectPath)

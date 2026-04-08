@@ -11,6 +11,24 @@ import { collectAllDependencies, parseVersionString } from '../shared-utils/dete
  * @param projectPath - Project directory path
  * @param packageJson - Optional pre-loaded package.json
  * @returns Detection result or null if not detected
+ *
+ * @example
+ * ```typescript
+ * const result = solidDetector('/path/to/solid-app', {
+ *   dependencies: { 'solid-js': '^1.8.0', 'vite-plugin-solid': '^2.0.0' }
+ * })
+ * // => {
+ * //   id: 'solid',
+ * //   name: 'Solid',
+ * //   category: 'frontend',
+ * //   version: '1.8.0',
+ * //   confidence: 90,
+ * //   detectedFrom: [
+ * //     { type: 'package.json', field: 'dependencies.solid-js' },
+ * //     { type: 'package.json', field: 'dependencies.vite-plugin-solid' }
+ * //   ]
+ * // }
+ * ```
  */
 export function solidDetector(projectPath: string, packageJson?: PackageJson): FrameworkDetection | null {
   const pkg = packageJson ?? readPackageJsonIfExists(projectPath)

@@ -142,6 +142,14 @@ export function detectConfigs(rootPath: string, types?: ConfigType[], options?: 
  * Clear the config detection cache.
  *
  * Useful for testing or when the project files have changed.
+ *
+ * @example
+ * ```typescript
+ * import { clearConfigDetectionCache } from '@hyperfrontend/project-scope'
+ *
+ * // Reset cache after modifying config files
+ * clearConfigDetectionCache()
+ * ```
  */
 export function clearConfigDetectionCache(): void {
   configDetectionCache.clear()
@@ -153,6 +161,17 @@ export function clearConfigDetectionCache(): void {
  * @param rootPath - Project root directory
  * @param type - Config type to find
  * @returns Full path to config file or null if not found
+ *
+ * @example
+ * ```typescript
+ * import { findConfigFile } from '@hyperfrontend/project-scope'
+ *
+ * const tsConfig = findConfigFile('/project', 'typescript')
+ * // => '/project/tsconfig.json'
+ *
+ * const eslint = findConfigFile('/project', 'eslint')
+ * // => '/project/.eslintrc.js' or null if not found
+ * ```
  */
 export function findConfigFile(rootPath: string, type: ConfigType): string | null {
   const info = CONFIG_PATTERNS[type]
@@ -184,6 +203,14 @@ export function findConfigFile(rootPath: string, type: ConfigType): string | nul
  *
  * @param type - Configuration type identifier
  * @returns Array of glob patterns for matching config files
+ *
+ * @example
+ * ```typescript
+ * import { getConfigPaths } from '@hyperfrontend/project-scope'
+ *
+ * const patterns = getConfigPaths('typescript')
+ * // => ['tsconfig.json', 'tsconfig.*.json']
+ * ```
  */
 export function getConfigPaths(type: ConfigType): string[] {
   const info = CONFIG_PATTERNS[type]

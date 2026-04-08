@@ -13,6 +13,24 @@ import { collectAllDependencies, parseVersionString } from '../shared-utils/dete
  * @param projectPath - Project directory path
  * @param packageJson - Optional pre-loaded package.json
  * @returns Detection result or null if not detected
+ *
+ * @example
+ * ```typescript
+ * const result = angularDetector('/path/to/angular-app', {
+ *   dependencies: { '@angular/core': '^17.0.0', '@angular/cli': '^17.0.0' }
+ * })
+ * // => {
+ * //   id: 'angular',
+ * //   name: 'Angular',
+ * //   category: 'frontend',
+ * //   version: '17.0.0',
+ * //   confidence: 85,
+ * //   detectedFrom: [
+ * //     { type: 'package.json', field: 'dependencies.@angular/core' },
+ * //     { type: 'package.json', field: 'dependencies.@angular/cli' }
+ * //   ]
+ * // }
+ * ```
  */
 export function angularDetector(projectPath: string, packageJson?: PackageJson): FrameworkDetection | null {
   const pkg = packageJson ?? readPackageJsonIfExists(projectPath)

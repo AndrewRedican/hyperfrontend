@@ -14,6 +14,18 @@ export const JEST_CONFIG_PATTERNS = ['jest.config.js', 'jest.config.ts', 'jest.c
  * @param projectPath - Project directory path
  * @param packageJson - Optional pre-loaded package.json
  * @returns Detection result or null if not detected
+ *
+ * @example
+ * ```typescript
+ * import { jestDetector } from '@hyperfrontend/project-scope'
+ *
+ * const result = jestDetector('./my-project')
+ * if (result) {
+ *   console.log(`Jest ${result.version} detected`)
+ *   console.log('Sources:', result.detectedFrom.map(s => s.type))
+ *   // => "Sources: ['package.json', 'config-file']"
+ * }
+ * ```
  */
 export function jestDetector(projectPath: string, packageJson?: PackageJson): TestingFrameworkDetection | null {
   const pkg = packageJson ?? readPackageJsonIfExists(projectPath)

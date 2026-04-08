@@ -27,6 +27,15 @@ export interface AllDependencies {
  *
  * @param packageJson - Parsed package.json
  * @returns All dependencies categorized
+ *
+ * @example
+ * ```typescript
+ * import { getDependencies } from '@hyperfrontend/project-scope'
+ *
+ * const deps = getDependencies(packageJson)
+ * console.log('Runtime:', Object.keys(deps.dependencies))
+ * console.log('Dev:', Object.keys(deps.devDependencies))
+ * ```
  */
 export function getDependencies(packageJson: PackageJson): AllDependencies {
   return {
@@ -42,6 +51,14 @@ export function getDependencies(packageJson: PackageJson): AllDependencies {
  *
  * @param packageJson - Parsed package.json
  * @returns Map of dependency name to version for runtime dependencies
+ *
+ * @example
+ * ```typescript
+ * import { getProductionDependencies } from '@hyperfrontend/project-scope'
+ *
+ * const prodDeps = getProductionDependencies(packageJson)
+ * // => { 'express': '^4.18.0', 'lodash': '^4.17.21' }
+ * ```
  */
 export function getProductionDependencies(packageJson: PackageJson): DependencyMap {
   return packageJson.dependencies ?? {}
@@ -52,6 +69,14 @@ export function getProductionDependencies(packageJson: PackageJson): DependencyM
  *
  * @param packageJson - Parsed package.json
  * @returns Map of dependency name to version for dev-time dependencies
+ *
+ * @example
+ * ```typescript
+ * import { getDevDependencies } from '@hyperfrontend/project-scope'
+ *
+ * const devDeps = getDevDependencies(packageJson)
+ * // => { 'jest': '^29.0.0', 'typescript': '^5.0.0' }
+ * ```
  */
 export function getDevDependencies(packageJson: PackageJson): DependencyMap {
   return packageJson.devDependencies ?? {}
@@ -62,6 +87,14 @@ export function getDevDependencies(packageJson: PackageJson): DependencyMap {
  *
  * @param packageJson - Parsed package.json
  * @returns Map of dependency name to version for peer requirements
+ *
+ * @example
+ * ```typescript
+ * import { getPeerDependencies } from '@hyperfrontend/project-scope'
+ *
+ * const peerDeps = getPeerDependencies(packageJson)
+ * // => { 'react': '^18.0.0', 'react-dom': '^18.0.0' }
+ * ```
  */
 export function getPeerDependencies(packageJson: PackageJson): DependencyMap {
   return packageJson.peerDependencies ?? {}
@@ -72,6 +105,16 @@ export function getPeerDependencies(packageJson: PackageJson): DependencyMap {
  *
  * @param packageJson - Parsed package.json
  * @returns All dependencies merged
+ *
+ * @example
+ * ```typescript
+ * import { getAllDependencies } from '@hyperfrontend/project-scope'
+ *
+ * const allDeps = getAllDependencies(packageJson)
+ * if ('typescript' in allDeps) {
+ *   console.log('TypeScript version:', allDeps['typescript'])
+ * }
+ * ```
  */
 export function getAllDependencies(packageJson: PackageJson): DependencyMap {
   return {
@@ -89,6 +132,17 @@ export function getAllDependencies(packageJson: PackageJson): DependencyMap {
  * @param name - Name of the dependency to check
  * @param depTypes - Optional array of dependency types to check (defaults to all)
  * @returns True if dependency exists in specified categories
+ *
+ * @example
+ * ```typescript
+ * import { hasDependency } from '@hyperfrontend/project-scope'
+ *
+ * // Check any dependency type
+ * hasDependency(packageJson, 'lodash')
+ *
+ * // Check only production dependencies
+ * hasDependency(packageJson, 'lodash', ['dependencies'])
+ * ```
  */
 export function hasDependency(
   packageJson: PackageJson,
@@ -112,6 +166,14 @@ export function hasDependency(
  * @param packageJson - Parsed package.json content
  * @param name - Name of the dependency to look up
  * @returns Version string or null if not found
+ *
+ * @example
+ * ```typescript
+ * import { getDependencyVersion } from '@hyperfrontend/project-scope'
+ *
+ * const version = getDependencyVersion(packageJson, 'react')
+ * // => '^18.2.0' or null
+ * ```
  */
 export function getDependencyVersion(packageJson: PackageJson, name: string): string | null {
   const deps = getDependencies(packageJson)
@@ -123,6 +185,14 @@ export function getDependencyVersion(packageJson: PackageJson, name: string): st
  *
  * @param packageJson - Parsed package.json
  * @returns Array of workspace patterns or empty array
+ *
+ * @example
+ * ```typescript
+ * import { getWorkspaces } from '@hyperfrontend/project-scope'
+ *
+ * const patterns = getWorkspaces(packageJson)
+ * // => ['packages/*', 'apps/*']
+ * ```
  */
 export function getWorkspaces(packageJson: PackageJson): string[] {
   if (!packageJson.workspaces) return []
@@ -143,6 +213,15 @@ export function getWorkspaces(packageJson: PackageJson): string[] {
  *
  * @param packageJson - Parsed package.json
  * @returns True if workspaces are defined
+ *
+ * @example
+ * ```typescript
+ * import { hasWorkspaces } from '@hyperfrontend/project-scope'
+ *
+ * if (hasWorkspaces(packageJson)) {
+ *   console.log('This is a monorepo')
+ * }
+ * ```
  */
 export function hasWorkspaces(packageJson: PackageJson): boolean {
   return getWorkspaces(packageJson).length > 0
@@ -154,6 +233,15 @@ export function hasWorkspaces(packageJson: PackageJson): boolean {
  * @param projectPath - Project root directory
  * @param packageName - Package name to check
  * @returns Boolean indicating whether the package exists in node_modules
+ *
+ * @example
+ * ```typescript
+ * import { hasInstalledPackage } from '@hyperfrontend/project-scope'
+ *
+ * if (hasInstalledPackage('/project', 'typescript')) {
+ *   console.log('TypeScript is installed')
+ * }
+ * ```
  */
 export function hasInstalledPackage(projectPath: string, packageName: string): boolean {
   const pkgPath = join(projectPath, 'node_modules', packageName, 'package.json')
@@ -166,6 +254,14 @@ export function hasInstalledPackage(projectPath: string, packageName: string): b
  * @param projectPath - Project root directory
  * @param packageName - Name of the npm package to look up
  * @returns Installed version or null if not found
+ *
+ * @example
+ * ```typescript
+ * import { getInstalledVersion } from '@hyperfrontend/project-scope'
+ *
+ * const version = getInstalledVersion('/project', 'typescript')
+ * // => '5.3.2' or null
+ * ```
  */
 export function getInstalledVersion(projectPath: string, packageName: string): string | null {
   const pkg = readPackageJsonIfExists(join(projectPath, 'node_modules', packageName, 'package.json'))

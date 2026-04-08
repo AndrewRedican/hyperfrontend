@@ -13,6 +13,14 @@ import { collectAllDependencies, parseVersionString } from '../shared-utils/dete
  * @param projectPath - Project directory path
  * @param packageJson - Optional pre-loaded package.json
  * @returns Detection result or null if not detected
+ *
+ * @example
+ * ```typescript
+ * const result = biomeDetector('/path/to/project', {
+ *   devDependencies: { '@biomejs/biome': '^1.5.0' },
+ * })
+ * // => { id: 'biome', name: 'Biome', confidence: 70, version: '1.5.0', ... }
+ * ```
  */
 export function biomeDetector(projectPath: string, packageJson?: PackageJson): LintingToolDetection | null {
   const pkg = packageJson ?? readPackageJsonIfExists(projectPath)

@@ -289,6 +289,15 @@ export function buildDependencyGraph(projectPath: string, options?: BuildGraphOp
  *
  * @param graph - Dependency graph
  * @returns Array of circular dependencies found
+ *
+ * @example
+ * ```typescript
+ * import { buildDependencyGraph, findCircularDependencies } from '@hyperfrontend/project-scope'
+ *
+ * const graph = buildDependencyGraph('/workspace')
+ * const cycles = findCircularDependencies(graph)
+ * cycles.forEach(c => console.log(`Cycle: ${c.cycle.join(' -> ')}`))
+ * ```
  */
 export function findCircularDependencies(graph: DependencyGraph): CircularDependency[] {
   depsLogger.debug('Searching for circular dependencies', { nodeCount: graph.nodes.size })
@@ -360,6 +369,16 @@ export function findCircularDependencies(graph: DependencyGraph): CircularDepend
  *
  * @param projectPath - Project directory
  * @returns Dependencies grouped by runtime, dev, peer, and optional
+ *
+ * @example
+ * ```typescript
+ * import { getProjectDependencies } from '@hyperfrontend/project-scope'
+ *
+ * const deps = getProjectDependencies('/path/to/project')
+ * console.log('Runtime:', deps.runtime)     // ['express', 'lodash']
+ * console.log('Dev:', deps.development)     // ['jest', 'typescript']
+ * console.log('Total:', deps.total)         // 15
+ * ```
  */
 export function getProjectDependencies(projectPath: string): ProjectDependencies {
   const packageJson = readPackageJsonIfExists(projectPath)

@@ -9,6 +9,14 @@ import { join } from '../../core/path'
  *
  * @param packageJson - The package.json object to extract dependencies from
  * @returns Combined dependencies as a single record
+ *
+ * @example
+ * ```typescript
+ * import { collectAllDependencies } from '@hyperfrontend/project-scope'
+ *
+ * const allDeps = collectAllDependencies(packageJson)
+ * // => { 'react': '^18.0.0', 'typescript': '^5.0.0', ... }
+ * ```
  */
 export function collectAllDependencies(packageJson?: PackageJson): Record<string, string> {
   return {
@@ -26,6 +34,15 @@ export function collectAllDependencies(packageJson?: PackageJson): Record<string
  *
  * @param versionString - The version string with optional prefix characters
  * @returns The cleaned version string without prefix characters
+ *
+ * @example
+ * ```typescript
+ * import { parseVersionString } from '@hyperfrontend/project-scope'
+ *
+ * parseVersionString('^1.2.3')   // => '1.2.3'
+ * parseVersionString('~2.0.0')   // => '2.0.0'
+ * parseVersionString('>=3.0.0')  // => '3.0.0'
+ * ```
  */
 export function parseVersionString(versionString?: string): string | undefined {
   if (versionString === undefined || versionString === null) return undefined
@@ -49,6 +66,14 @@ export function parseVersionString(versionString?: string): string | undefined {
  * @param projectPath - The project directory path
  * @param patterns - Array of config file patterns to search for
  * @returns The first matching config file path or undefined
+ *
+ * @example
+ * ```typescript
+ * import { locateConfigFile } from '@hyperfrontend/project-scope'
+ *
+ * const eslintConfig = locateConfigFile('/project', ['.eslintrc', '.eslintrc.js', 'eslint.config.js'])
+ * // => '.eslintrc.js'
+ * ```
  */
 export function locateConfigFile(projectPath: string, patterns: readonly string[]): string | undefined {
   for (const pattern of patterns) {
@@ -66,6 +91,14 @@ export function locateConfigFile(projectPath: string, patterns: readonly string[
  * @param scripts - The scripts object from package.json
  * @param command - The command string to search for
  * @returns Array of script names that contain the command
+ *
+ * @example
+ * ```typescript
+ * import { filterScriptsByCommand } from '@hyperfrontend/project-scope'
+ *
+ * const jestScripts = filterScriptsByCommand(pkg.scripts, 'jest')
+ * // => ['test', 'test:watch', 'test:coverage']
+ * ```
  */
 export function filterScriptsByCommand(scripts: Record<string, string> | undefined, command: string): string[] {
   if (!scripts) return []
@@ -80,6 +113,15 @@ export function filterScriptsByCommand(scripts: Record<string, string> | undefin
  * @param packageJson - The package.json object
  * @param packageName - The package name to check
  * @returns True if the package is found in any dependency type
+ *
+ * @example
+ * ```typescript
+ * import { hasDependency } from '@hyperfrontend/project-scope'
+ *
+ * if (hasDependency(packageJson, 'typescript')) {
+ *   console.log('TypeScript is installed')
+ * }
+ * ```
  */
 export function hasDependency(packageJson: PackageJson | undefined, packageName: string): boolean {
   const deps = collectAllDependencies(packageJson)
@@ -92,6 +134,14 @@ export function hasDependency(packageJson: PackageJson | undefined, packageName:
  * @param packageJson - The package.json object
  * @param packageName - The package name to get the version for
  * @returns The version string without prefix characters, or undefined if not found
+ *
+ * @example
+ * ```typescript
+ * import { getDependencyVersion } from '@hyperfrontend/project-scope'
+ *
+ * const reactVersion = getDependencyVersion(packageJson, 'react')
+ * // => '18.2.0'
+ * ```
  */
 export function getDependencyVersion(packageJson: PackageJson | undefined, packageName: string): string | undefined {
   const deps = collectAllDependencies(packageJson)

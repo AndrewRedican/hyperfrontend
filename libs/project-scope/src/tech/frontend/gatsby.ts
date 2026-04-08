@@ -14,6 +14,28 @@ import { collectAllDependencies, parseVersionString } from '../shared-utils/dete
  * @param projectPath - Project directory path
  * @param packageJson - Optional pre-loaded package.json
  * @returns Detection result or null if not detected
+ *
+ * @example
+ * ```typescript
+ * const result = gatsbyDetector('/path/to/gatsby-blog', {
+ *   dependencies: {
+ *     'gatsby': '^5.0.0',
+ *     'gatsby-plugin-image': '^3.0.0',
+ *     'gatsby-source-filesystem': '^5.0.0'
+ *   }
+ * })
+ * // => {
+ * //   id: 'gatsby',
+ * //   name: 'Gatsby',
+ * //   category: 'meta-framework',
+ * //   version: '5.0.0',
+ * //   confidence: 75,
+ * //   detectedFrom: [
+ * //     { type: 'package.json', field: 'dependencies.gatsby' },
+ * //     { type: 'package.json', field: 'dependencies (gatsby plugins)' }
+ * //   ]
+ * // }
+ * ```
  */
 export function gatsbyDetector(projectPath: string, packageJson?: PackageJson): FrameworkDetection | null {
   const pkg = packageJson ?? readPackageJsonIfExists(projectPath)

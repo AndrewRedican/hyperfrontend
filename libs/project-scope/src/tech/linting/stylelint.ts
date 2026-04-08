@@ -23,6 +23,14 @@ export const STYLELINT_CONFIG_PATTERNS = [
  * @param projectPath - Project directory path
  * @param packageJson - Optional pre-loaded package.json
  * @returns Detection result or null if not detected
+ *
+ * @example
+ * ```typescript
+ * const result = stylelintDetector('/path/to/project', {
+ *   devDependencies: { stylelint: '^15.0.0', 'stylelint-config-standard': '^30.0.0' },
+ * })
+ * // => { id: 'stylelint', name: 'Stylelint', confidence: 65, version: '15.0.0', ... }
+ * ```
  */
 export function stylelintDetector(projectPath: string, packageJson?: PackageJson): LintingToolDetection | null {
   const pkg = packageJson ?? readPackageJsonIfExists(projectPath)

@@ -43,6 +43,15 @@ export function createStructuredError(message: string, code: string, context?: R
  * @param code - The machine-readable error code for programmatic handling
  * @param context - Additional contextual information (e.g., file path, config key)
  * @returns Structured error instance tagged with type 'config'
+ *
+ * @example
+ * ```typescript
+ * throw createConfigError(
+ *   'Invalid port number',
+ *   'CONFIG_INVALID_PORT',
+ *   { configFile: './app.config.json', value: -1 }
+ * )
+ * ```
  */
 export function createConfigError(message: string, code: string, context?: Record<string, unknown>): StructuredError {
   return createStructuredError(message, code, { ...context, type: 'config' })
@@ -55,6 +64,15 @@ export function createConfigError(message: string, code: string, context?: Recor
  * @param code - The filesystem error code (e.g., ENOENT for not found, EACCES for access denied)
  * @param context - Additional contextual information (e.g., file path, operation attempted)
  * @returns Structured error instance tagged with type 'fs'
+ *
+ * @example
+ * ```typescript
+ * throw createFsError(
+ *   'Configuration file not found',
+ *   'ENOENT',
+ *   { path: './missing.json', operation: 'read' }
+ * )
+ * ```
  */
 export function createFsError(message: string, code: string, context?: Record<string, unknown>): StructuredError {
   return createStructuredError(message, code, { ...context, type: 'fs' })
@@ -67,6 +85,15 @@ export function createFsError(message: string, code: string, context?: Record<st
  * @param code - The machine-readable error code for programmatic handling
  * @param context - Additional contextual information (e.g., file path, line/column numbers, expected format)
  * @returns Structured error instance tagged with type 'parse'
+ *
+ * @example
+ * ```typescript
+ * throw createParseError(
+ *   'Invalid JSON syntax',
+ *   'JSON_PARSE_ERROR',
+ *   { file: './config.json', line: 42, column: 15 }
+ * )
+ * ```
  */
 export function createParseError(message: string, code: string, context?: Record<string, unknown>): StructuredError {
   return createStructuredError(message, code, { ...context, type: 'parse' })
@@ -79,6 +106,15 @@ export function createParseError(message: string, code: string, context?: Record
  * @param code - The machine-readable error code for programmatic handling
  * @param context - Additional contextual information (e.g., field name, actual vs expected values)
  * @returns Structured error instance tagged with type 'validation'
+ *
+ * @example
+ * ```typescript
+ * throw createValidationError(
+ *   'Email format is invalid',
+ *   'INVALID_EMAIL',
+ *   { field: 'email', value: 'not-an-email' }
+ * )
+ * ```
  */
 export function createValidationError(message: string, code: string, context?: Record<string, unknown>): StructuredError {
   return createStructuredError(message, code, { ...context, type: 'validation' })

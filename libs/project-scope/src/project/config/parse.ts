@@ -266,6 +266,18 @@ function parseDotenv(content: string): Record<string, unknown> {
  * @param type - Category of configuration (e.g., typescript, eslint)
  * @param format - Whether to strip comments (jsonc) or parse strictly (json)
  * @returns Configuration object with parsed data and extends references
+ *
+ * @example
+ * ```typescript
+ * import { parseJsonConfig } from '@hyperfrontend/project-scope'
+ *
+ * const config = parseJsonConfig(
+ *   'tsconfig.json',
+ *   '{ "extends": "./base.json", "compilerOptions": {} }',
+ *   'typescript'
+ * )
+ * // => { type: 'typescript', path: 'tsconfig.json', data: {...}, extends: ['./base.json'] }
+ * ```
  */
 export function parseJsonConfig(filePath: string, content: string, type?: ConfigType, format: 'json' | 'jsonc' = 'json'): ParsedConfig {
   const cleanContent = format === 'jsonc' ? stripJsonComments(content) : content
@@ -303,6 +315,14 @@ export function parseJsonConfig(filePath: string, content: string, type?: Config
  * @param content - Raw file content to parse
  * @param type - Category of configuration (e.g., github-actions, docker-compose)
  * @returns Configuration object with parsed YAML data
+ *
+ * @example
+ * ```typescript
+ * import { parseYamlConfig } from '@hyperfrontend/project-scope'
+ *
+ * const config = parseYamlConfig('.github/workflows/ci.yml', yamlContent, 'github-actions')
+ * // => { type: 'github-actions', path: '...', format: 'yaml', data: {...} }
+ * ```
  */
 export function parseYamlConfig(filePath: string, content: string, type?: ConfigType): ParsedConfig {
   const data = parseSimpleYaml(content)
@@ -321,6 +341,14 @@ export function parseYamlConfig(filePath: string, content: string, type?: Config
  * @param filePath - Path to config file
  * @param type - Optional config type (auto-detected if not provided)
  * @returns Parsed configuration
+ *
+ * @example
+ * ```typescript
+ * import { parseConfig } from '@hyperfrontend/project-scope'
+ *
+ * const tsConfig = parseConfig('/project/tsconfig.json')
+ * const eslintConfig = parseConfig('/project/.eslintrc.yml', 'eslint')
+ * ```
  */
 export function parseConfig(filePath: string, type?: ConfigType): ParsedConfig {
   const content = readFileContent(filePath)
@@ -378,6 +406,16 @@ export function parseConfig(filePath: string, type?: ConfigType): ParsedConfig {
  *
  * @param configPath - Path to config file
  * @returns Parsed config or null if file doesn't exist
+ *
+ * @example
+ * ```typescript
+ * import { readConfigIfExists } from '@hyperfrontend/project-scope'
+ *
+ * const config = readConfigIfExists<{ strict: boolean }>('/project/tsconfig.json')
+ * if (config?.strict) {
+ *   console.log('Strict mode enabled')
+ * }
+ * ```
  */
 export function readConfigIfExists<T = unknown>(configPath: string): T | null {
   const content = readFileIfExists(configPath)

@@ -242,6 +242,26 @@ function parseConfigArgs(args: string[]): ConfigCommandOptions {
  *
  * @param options - Configuration command options
  * @returns Command execution result with exit code and output
+ *
+ * @example Detect all configs in a project
+ * ```typescript
+ * const result = configCommand({ path: './my-project' })
+ * if (result.exitCode === 0) {
+ *   console.log(result.output)
+ *   // => "TypeScript: tsconfig.json\nLinting: eslint.config.js\n..."
+ * }
+ * ```
+ *
+ * @example Filter by type with contents
+ * ```typescript
+ * const result = configCommand({
+ *   path: './my-project',
+ *   type: 'tsconfig',
+ *   showContents: true,
+ *   format: 'json',
+ * })
+ * // => { exitCode: 0, output: '[{"type":"tsconfig","path":"tsconfig.json",...}]' }
+ * ```
  */
 export function configCommand(options: ConfigCommandOptions): CommandResult {
   const projectPath = options.path ? resolve(options.path) : process.cwd()

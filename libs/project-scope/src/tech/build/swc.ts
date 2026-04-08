@@ -15,6 +15,24 @@ export const SWC_CONFIG_PATTERNS = ['.swcrc', 'swc.config.js']
  * @param projectPath - Project directory path
  * @param packageJson - Optional pre-loaded package.json
  * @returns Detection result or null if not detected
+ *
+ * @example
+ * ```typescript
+ * const result = swcDetector('/path/to/project', {
+ *   name: 'my-app',
+ *   devDependencies: { '@swc/core': '^1.3.0', '@swc/cli': '^0.1.0' }
+ * })
+ * // => {
+ * //   id: 'swc',
+ * //   name: 'SWC',
+ * //   version: '1.3.0',
+ * //   confidence: 70,
+ * //   detectedFrom: [
+ * //     { type: 'package.json', field: 'dependencies.@swc/core' },
+ * //     { type: 'package.json', field: 'dependencies.@swc/cli' }
+ * //   ]
+ * // }
+ * ```
  */
 export function swcDetector(projectPath: string, packageJson?: PackageJson): BuildToolDetection | null {
   const pkg = packageJson ?? readPackageJsonIfExists(projectPath)

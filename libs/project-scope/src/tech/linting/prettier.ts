@@ -28,6 +28,15 @@ export const PRETTIER_CONFIG_PATTERNS = [
  * @param projectPath - Project directory path
  * @param packageJson - Optional pre-loaded package.json
  * @returns Detection result or null if not detected
+ *
+ * @example
+ * ```typescript
+ * const result = prettierDetector('/path/to/project', {
+ *   devDependencies: { prettier: '^3.0.0' },
+ *   scripts: { format: 'prettier --write .' },
+ * })
+ * // => { id: 'prettier', name: 'Prettier', confidence: 55, version: '3.0.0', ... }
+ * ```
  */
 export function prettierDetector(projectPath: string, packageJson?: PackageJson): LintingToolDetection | null {
   const pkg = packageJson ?? readPackageJsonIfExists(projectPath)

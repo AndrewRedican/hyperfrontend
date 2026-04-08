@@ -16,6 +16,17 @@ export const CYPRESS_CONFIG_PATTERNS = ['cypress.config.js', 'cypress.config.ts'
  * @param projectPath - Project directory path
  * @param packageJson - Optional pre-loaded package.json
  * @returns Detection result or null if not detected
+ *
+ * @example
+ * ```typescript
+ * import { cypressDetector } from '@hyperfrontend/project-scope'
+ *
+ * const result = cypressDetector('./my-project')
+ * if (result) {
+ *   console.log(`Cypress ${result.version} detected (${result.confidence}% confidence)`)
+ *   // => "Cypress 13.6.0 detected (95% confidence)"
+ * }
+ * ```
  */
 export function cypressDetector(projectPath: string, packageJson?: PackageJson): TestingFrameworkDetection | null {
   const pkg = packageJson ?? readPackageJsonIfExists(projectPath)

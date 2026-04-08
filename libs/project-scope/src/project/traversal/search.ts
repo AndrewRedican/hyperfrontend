@@ -95,6 +95,15 @@ export function findFiles(startPath: string, patterns: string | string[], option
  * @param patterns - Glob patterns (e.g., '*.ts', '**\/*.json') to filter files
  * @param options - Configuration for search behavior
  * @returns List of virtual file paths that match the patterns
+ *
+ * @example
+ * ```typescript
+ * import { createTree, findFilesInTree } from '@hyperfrontend/project-scope'
+ *
+ * const tree = createTree('/workspace')
+ * const tsFiles = findFilesInTree(tree, '**\/*.ts', { maxDepth: 3 })
+ * // => ['src/index.ts', 'src/utils/helpers.ts']
+ * ```
  */
 export function findFilesInTree(tree: Tree, patterns: string | string[], options?: FindOptions): string[] {
   const normalizedPatterns = isArray(patterns) ? patterns : [patterns]
@@ -133,6 +142,14 @@ export function findFilesInTree(tree: Tree, patterns: string | string[], options
  * @param patterns - Glob patterns to filter directories (supports wildcards)
  * @param options - Configuration for search behavior
  * @returns List of relative directory paths that match the patterns
+ *
+ * @example
+ * ```typescript
+ * import { findDirectories } from '@hyperfrontend/project-scope'
+ *
+ * const componentDirs = findDirectories('./src', 'components')
+ * // => ['features/auth/components', 'features/dashboard/components']
+ * ```
  */
 export function findDirectories(startPath: string, patterns: string | string[], options?: FindOptions): string[] {
   const normalizedPatterns = isArray(patterns) ? patterns : [patterns]

@@ -136,6 +136,16 @@ export function commitChanges(tree: Tree, options?: CommitOptions): CommitResult
  * Discard all pending changes.
  *
  * @param tree - Virtual file system tree
+ *
+ * @example
+ * ```typescript
+ * import { createTree, rollbackChanges } from '@hyperfrontend/project-scope'
+ *
+ * const tree = createTree('/workspace')
+ * tree.write('new-file.ts', 'content')
+ * // Decide to abort - discard all pending changes
+ * rollbackChanges(tree)
+ * ```
  */
 export function rollbackChanges(tree: Tree): void {
   tree.clearChanges()

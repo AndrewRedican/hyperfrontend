@@ -26,6 +26,22 @@ export const buildToolDetectors: BuildToolDetector[] = [
  * @param projectPath - Project directory path
  * @param packageJson - Optional pre-loaded package.json
  * @returns Array of detected build tools, sorted by confidence
+ *
+ * @example
+ * ```typescript
+ * const tools = detectBuildTools('/path/to/project', {
+ *   name: 'my-app',
+ *   devDependencies: {
+ *     'vite': '^5.0.0',
+ *     '@vitejs/plugin-react': '^4.0.0',
+ *     '@babel/core': '^7.23.0'
+ *   }
+ * })
+ * // => [
+ * //   { id: 'vite', name: 'Vite', version: '5.0.0', confidence: 70, ... },
+ * //   { id: 'babel', name: 'Babel', version: '7.23.0', confidence: 50, ... }
+ * // ]
+ * ```
  */
 export function detectBuildTools(projectPath: string, packageJson?: PackageJson): BuildToolDetection[] {
   const pkg = packageJson ?? readPackageJsonIfExists(projectPath)

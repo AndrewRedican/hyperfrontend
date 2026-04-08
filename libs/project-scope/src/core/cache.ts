@@ -251,6 +251,12 @@ export function clearAllCaches(): void {
  * Primarily used for testing.
  *
  * @returns Number of registered caches
+ *
+ * @example
+ * ```typescript
+ * const count = getCacheCount()
+ * // => 3 (number of active caches)
+ * ```
  */
 export function getCacheCount(): number {
   return cacheRegistry.size
@@ -263,6 +269,13 @@ export function getCacheCount(): number {
  *
  * @param cache - Cache to unregister
  * @returns True if cache was unregistered
+ *
+ * @example
+ * ```typescript
+ * const myCache = createCache<string, number>({ name: 'temp-cache' })
+ * const wasRemoved = unregisterCache(myCache)
+ * // => true
+ * ```
  */
 export function unregisterCache<K, V>(cache: Cache<K, V>): boolean {
   return cacheRegistry.delete(<Cache<unknown, unknown>>cache)

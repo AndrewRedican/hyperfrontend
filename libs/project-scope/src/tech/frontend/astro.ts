@@ -13,6 +13,21 @@ import { collectAllDependencies, parseVersionString } from '../shared-utils/dete
  * @param projectPath - Project directory path
  * @param packageJson - Optional pre-loaded package.json
  * @returns Detection result or null if not detected
+ *
+ * @example
+ * ```typescript
+ * const result = astroDetector('/path/to/astro-project', {
+ *   dependencies: { 'astro': '^4.0.0' }
+ * })
+ * // => {
+ * //   id: 'astro',
+ * //   name: 'Astro',
+ * //   category: 'meta-framework',
+ * //   version: '4.0.0',
+ * //   confidence: 70,
+ * //   detectedFrom: [{ type: 'package.json', field: 'dependencies.astro' }]
+ * // }
+ * ```
  */
 export function astroDetector(projectPath: string, packageJson?: PackageJson): FrameworkDetection | null {
   const pkg = packageJson ?? readPackageJsonIfExists(projectPath)

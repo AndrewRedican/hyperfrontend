@@ -6,6 +6,12 @@ import { join as nodeJoin, posix } from 'node:path'
  *
  * @param paths - Path segments to join
  * @returns Joined path
+ *
+ * @example
+ * ```typescript
+ * const fullPath = join('src', 'components', 'Button.tsx')
+ * // => 'src/components/Button.tsx' (or 'src\\components\\Button.tsx' on Windows)
+ * ```
  */
 export function join(...paths: string[]): string {
   return nodeJoin(...paths)
@@ -17,6 +23,12 @@ export function join(...paths: string[]): string {
  *
  * @param paths - Path segments to join
  * @returns Joined path with forward slashes
+ *
+ * @example
+ * ```typescript
+ * const configPath = joinPosix('config', 'settings', 'app.json')
+ * // => 'config/settings/app.json'
+ * ```
  */
 export function joinPosix(...paths: string[]): string {
   return posix.join(...paths)

@@ -13,6 +13,19 @@ import { collectAllDependencies, parseVersionString } from '../shared-utils/dete
  * @param workspacePath - Workspace directory path
  * @param packageJson - Optional pre-loaded package.json
  * @returns Detection result or null if not detected
+ *
+ * @example
+ * ```typescript
+ * // Project with lerna.json config file
+ * const result = lernaDetector('/path/to/lerna-project')
+ * // => {
+ * //   id: 'lerna',
+ * //   name: 'Lerna',
+ * //   confidence: 80,
+ * //   configPath: 'lerna.json',
+ * //   detectedFrom: [{ type: 'config-file', path: 'lerna.json' }]
+ * // }
+ * ```
  */
 export function lernaDetector(workspacePath: string, packageJson?: PackageJson): MonorepoDetection | null {
   const pkg = packageJson ?? readPackageJsonIfExists(workspacePath)

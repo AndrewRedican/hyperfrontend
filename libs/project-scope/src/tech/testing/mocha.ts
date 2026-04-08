@@ -14,6 +14,17 @@ export const MOCHA_CONFIG_PATTERNS = ['.mocharc.js', '.mocharc.json', '.mocharc.
  * @param projectPath - Project directory path
  * @param packageJson - Optional pre-loaded package.json
  * @returns Detection result or null if not detected
+ *
+ * @example
+ * ```typescript
+ * import { mochaDetector } from '@hyperfrontend/project-scope'
+ *
+ * const result = mochaDetector('./my-project')
+ * if (result) {
+ *   console.log(`Mocha ${result.version} detected (${result.confidence}%)`)
+ *   // => "Mocha 10.2.0 detected (95%)"
+ * }
+ * ```
  */
 export function mochaDetector(projectPath: string, packageJson?: PackageJson): TestingFrameworkDetection | null {
   const pkg = packageJson ?? readPackageJsonIfExists(projectPath)

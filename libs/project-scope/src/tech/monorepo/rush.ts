@@ -13,6 +13,19 @@ import { collectAllDependencies, parseVersionString } from '../shared-utils/dete
  * @param workspacePath - Workspace directory path
  * @param packageJson - Optional pre-loaded package.json
  * @returns Detection result or null if not detected
+ *
+ * @example
+ * ```typescript
+ * // Project with rush.json config file
+ * const result = rushDetector('/path/to/rush-project')
+ * // => {
+ * //   id: 'rush',
+ * //   name: 'Rush',
+ * //   confidence: 90,
+ * //   configPath: 'rush.json',
+ * //   detectedFrom: [{ type: 'config-file', path: 'rush.json' }]
+ * // }
+ * ```
  */
 export function rushDetector(workspacePath: string, packageJson?: PackageJson): MonorepoDetection | null {
   const pkg = packageJson ?? readPackageJsonIfExists(workspacePath)

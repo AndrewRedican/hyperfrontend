@@ -12,6 +12,15 @@ const fsTraversalLogger = createScopedLogger('project-scope:fs:traversal')
  * @param startPath - Starting directory
  * @param predicate - Function to test each directory
  * @returns First matching directory or null
+ *
+ * @example
+ * ```typescript
+ * // Find first directory containing a README
+ * const readmeDir = traverseUpward('./src/utils', (dir) =>
+ *   existsSync(join(dir, 'README.md'))
+ * )
+ * // => '/project' or null
+ * ```
  */
 export function traverseUpward(startPath: string, predicate: (dirPath: string) => boolean): string | null {
   fsTraversalLogger.debug('Starting upward traversal', { startPath })
@@ -41,6 +50,17 @@ export function traverseUpward(startPath: string, predicate: (dirPath: string) =
  * @param startPath - Starting directory
  * @param markers - Array of marker file names to search for
  * @returns First directory containing any marker, or null
+ *
+ * @example
+ * ```typescript
+ * // Find project root by looking for common marker files
+ * const projectRoot = locateByMarkers('./src/components', [
+ *   'package.json',
+ *   'nx.json',
+ *   'tsconfig.base.json'
+ * ])
+ * // => '/workspace/my-project'
+ * ```
  */
 export function locateByMarkers(startPath: string, markers: readonly string[]): string | null {
   fsTraversalLogger.debug('Locating by markers', { startPath, markers })
@@ -57,6 +77,14 @@ export function locateByMarkers(startPath: string, markers: readonly string[]): 
  * @param startPath - Starting directory
  * @param test - Function to test if directory matches criteria
  * @returns Matching directory path or null
+ *
+ * @example
+ * ```typescript
+ * // Find directory with a specific config
+ * const configDir = findUpwardWhere('./deep/nested/path', (dir) =>
+ *   existsSync(join(dir, '.eslintrc.js'))
+ * )
+ * ```
  */
 export function findUpwardWhere(startPath: string, test: (dirPath: string) => boolean): string | null {
   fsTraversalLogger.debug('Finding upward where condition met', { startPath })

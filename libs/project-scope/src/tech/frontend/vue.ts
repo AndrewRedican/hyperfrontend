@@ -13,6 +13,24 @@ import { collectAllDependencies, parseVersionString } from '../shared-utils/dete
  * @param projectPath - Project directory path
  * @param packageJson - Optional pre-loaded package.json
  * @returns Detection result or null if not detected
+ *
+ * @example
+ * ```typescript
+ * const result = vueDetector('/path/to/vue-app', {
+ *   dependencies: { 'vue': '^3.0.0', '@vue/cli-service': '^5.0.0' }
+ * })
+ * // => {
+ * //   id: 'vue',
+ * //   name: 'Vue',
+ * //   category: 'frontend',
+ * //   version: '3.0.0',
+ * //   confidence: 85,
+ * //   detectedFrom: [
+ * //     { type: 'package.json', field: 'dependencies.vue' },
+ * //     { type: 'package.json', field: 'dependencies.@vue/cli-service' }
+ * //   ]
+ * // }
+ * ```
  */
 export function vueDetector(projectPath: string, packageJson?: PackageJson): FrameworkDetection | null {
   const pkg = packageJson ?? readPackageJsonIfExists(projectPath)

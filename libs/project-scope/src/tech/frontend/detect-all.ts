@@ -36,6 +36,17 @@ export const frameworkDetectors: FrameworkDetector[] = [
  * @param projectPath - Project directory path
  * @param packageJson - Optional pre-loaded package.json
  * @returns Array of detected frameworks, sorted by confidence
+ *
+ * @example
+ * ```typescript
+ * const frameworks = detectFrontendFrameworks('/path/to/nextjs-app', {
+ *   dependencies: { 'react': '^18.0.0', 'next': '^14.0.0' }
+ * })
+ * // => [
+ * //   { id: 'nextjs', name: 'Next.js', category: 'meta-framework', confidence: 70, ... },
+ * //   { id: 'react', name: 'React', category: 'frontend', confidence: 60, ... }
+ * // ]
+ * ```
  */
 export function detectFrontendFrameworks(projectPath: string, packageJson?: PackageJson): FrameworkDetection[] {
   const pkg = packageJson ?? readPackageJsonIfExists(projectPath)

@@ -15,6 +15,24 @@ export const BABEL_CONFIG_PATTERNS = ['babel.config.js', 'babel.config.cjs', 'ba
  * @param projectPath - Project directory path
  * @param packageJson - Optional pre-loaded package.json
  * @returns Detection result or null if not detected
+ *
+ * @example
+ * ```typescript
+ * const result = babelDetector('/path/to/project', {
+ *   name: 'my-app',
+ *   devDependencies: { '@babel/core': '^7.23.0', '@babel/preset-env': '^7.23.0' }
+ * })
+ * // => {
+ * //   id: 'babel',
+ * //   name: 'Babel',
+ * //   version: '7.23.0',
+ * //   confidence: 60,
+ * //   detectedFrom: [
+ * //     { type: 'package.json', field: 'dependencies.@babel/core' },
+ * //     { type: 'package.json', field: 'dependencies (@babel packages)' }
+ * //   ]
+ * // }
+ * ```
  */
 export function babelDetector(projectPath: string, packageJson?: PackageJson): BuildToolDetection | null {
   const pkg = packageJson ?? readPackageJsonIfExists(projectPath)

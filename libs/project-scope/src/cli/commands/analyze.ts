@@ -244,6 +244,26 @@ function parseAnalyzeArgs(args: string[]): AnalyzeCommandOptions {
  *
  * @param options - Configuration for the analyze operation
  * @returns Command execution result with exit code and output
+ *
+ * @example Basic analysis of current directory
+ * ```typescript
+ * const result = analyzeCommand({ depth: 'basic' })
+ * if (result.exitCode === 0) {
+ *   console.log(result.output)
+ *   // => "Project Type: Library\nWorkspace: NX Monorepo\n..."
+ * }
+ * ```
+ *
+ * @example JSON output with filters
+ * ```typescript
+ * const result = analyzeCommand({
+ *   path: './apps/frontend',
+ *   format: 'json',
+ *   depth: 'deep',
+ *   exclude: ['node_modules', 'dist'],
+ * })
+ * // => { exitCode: 0, output: '{"type":"application",...}' }
+ * ```
  */
 export function analyzeCommand(options: AnalyzeCommandOptions): CommandResult {
   const projectPath = options.path ? resolve(options.path) : process.cwd()

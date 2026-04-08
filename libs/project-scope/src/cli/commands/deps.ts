@@ -189,6 +189,25 @@ function parseDepsArgs(args: string[]): DepsCommandOptions {
  *
  * @param options - Parsed command options
  * @returns Command execution result with exit code and output
+ *
+ * @example List all dependencies
+ * ```typescript
+ * const result = depsCommand({ path: './my-project' })
+ * if (result.exitCode === 0) {
+ *   console.log(result.output)
+ *   // => "Dependencies\n============\nProduction (3):\n  react  ^18.2.0\n..."
+ * }
+ * ```
+ *
+ * @example Filter to dev dependencies as JSON
+ * ```typescript
+ * const result = depsCommand({
+ *   path: './my-project',
+ *   type: 'development',
+ *   format: 'json',
+ * })
+ * // => { exitCode: 0, output: '{"devDependencies":{"typescript":"^5.0.0",...}}' }
+ * ```
  */
 export function depsCommand(options: DepsCommandOptions): CommandResult {
   const projectPath = options.path ? resolve(options.path) : process.cwd()

@@ -12,6 +12,24 @@ import { collectAllDependencies, parseVersionString } from '../shared-utils/dete
  * @param projectPath - Project directory path
  * @param packageJson - Optional pre-loaded package.json
  * @returns Detection result or null if not detected
+ * @example
+ * ```typescript
+ * const pkg = {
+ *   dependencies: { fastify: '^4.24.0', '@fastify/cors': '^8.4.0' },
+ * }
+ *
+ * const result = fastifyDetector('/path/to/project', pkg)
+ * // => {
+ * //   id: 'fastify',
+ * //   name: 'Fastify',
+ * //   version: '4.24.0',
+ * //   confidence: 95,
+ * //   detectedFrom: [
+ * //     { type: 'package.json', field: 'dependencies.fastify' },
+ * //     { type: 'package.json', field: 'dependencies (fastify plugins)' },
+ * //   ],
+ * // }
+ * ```
  */
 export function fastifyDetector(projectPath: string, packageJson?: PackageJson): BackendDetection | null {
   const pkg = packageJson ?? readPackageJsonIfExists(projectPath)

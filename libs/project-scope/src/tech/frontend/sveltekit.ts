@@ -13,6 +13,21 @@ import { collectAllDependencies, parseVersionString } from '../shared-utils/dete
  * @param projectPath - Project directory path
  * @param packageJson - Optional pre-loaded package.json
  * @returns Detection result or null if not detected
+ *
+ * @example
+ * ```typescript
+ * const result = sveltekitDetector('/path/to/sveltekit-app', {
+ *   devDependencies: { '@sveltejs/kit': '^2.0.0', 'svelte': '^4.0.0' }
+ * })
+ * // => {
+ * //   id: 'sveltekit',
+ * //   name: 'SvelteKit',
+ * //   category: 'meta-framework',
+ * //   version: '2.0.0',
+ * //   confidence: 70,
+ * //   detectedFrom: [{ type: 'package.json', field: 'dependencies.@sveltejs/kit' }]
+ * // }
+ * ```
  */
 export function sveltekitDetector(projectPath: string, packageJson?: PackageJson): FrameworkDetection | null {
   const pkg = packageJson ?? readPackageJsonIfExists(projectPath)
