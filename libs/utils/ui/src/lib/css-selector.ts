@@ -69,6 +69,9 @@ export function validateAttributeSelector(attribute: string): void {
   }
 }
 
+/**
+ * Builder class for constructing CSS selectors with a fluent API.
+ */
 export class CssSelector {
   private selector: string
 
