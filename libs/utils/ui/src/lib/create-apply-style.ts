@@ -9,6 +9,23 @@ import { addStylesheet } from './stylesheets'
  * @param selector - CSS selector to apply the style to
  * @param style - Style object to apply
  * @returns A function that applies the style when called
+ *
+ * @example
+ * ```typescript
+ * const applyTooltipStyle = createApplyStyle('.tooltip', {
+ *   position: 'absolute',
+ *   backgroundColor: '#333',
+ *   color: '#fff',
+ *   padding: '4px 8px',
+ *   borderRadius: '4px'
+ * })
+ *
+ * // Style is injected into document on first call
+ * applyTooltipStyle()
+ *
+ * // Subsequent calls are no-ops (style already applied)
+ * applyTooltipStyle()
+ * ```
  */
 export const createApplyStyle = (selector: string, style: Style) =>
   createRunOnceFunction(() => addStylesheet({ [selector]: style }, uuidV4()))

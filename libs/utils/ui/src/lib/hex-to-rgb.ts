@@ -25,6 +25,24 @@ export interface Rgb {
  * @param opacity - Optional opacity value (0-1) to override alpha channel
  * @returns An RGB object with r, g, b, and optional a properties, or null if conversion fails
  * @throws {Error} When hex is not a string, opacity is not a number, or hex format is invalid
+ *
+ * @example 6-digit hex
+ * ```typescript
+ * hexToRgb('#ff5733')
+ * // => { r: 255, g: 87, b: 51 }
+ * ```
+ *
+ * @example 3-digit shorthand
+ * ```typescript
+ * hexToRgb('#f00')
+ * // => { r: 255, g: 0, b: 0 }
+ * ```
+ *
+ * @example With opacity override
+ * ```typescript
+ * hexToRgb('#3498db', 0.5)
+ * // => { r: 52, g: 152, b: 219, a: 0.5 }
+ * ```
  */
 export function hexToRgb(hex: string, opacity?: number): Rgb | null {
   if (getType(hex) !== 'string') {

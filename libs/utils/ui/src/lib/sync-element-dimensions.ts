@@ -10,6 +10,17 @@ import { onElementResize } from './on-element-resize'
  * @param targetElementRefOrString - The target element to apply dimensions to (element or selector)
  * @param options - Optional configuration for element retrieval and callbacks
  * @returns A cleanup function to stop synchronization
+ *
+ * @example
+ * ```typescript
+ * // Sync an overlay to match a video player's dimensions
+ * const stopSync = syncElementDimensions('#video-player', '#overlay', {
+ *   onSuccess: () => console.log('Elements synced'),
+ * })
+ *
+ * // Stop syncing when component unmounts
+ * stopSync()
+ * ```
  */
 export function syncElementDimensions<S extends HTMLElement = HTMLElement, T extends HTMLElement = HTMLElement>(
   sourceElementRefOrString: ElementRefOrString<S>,

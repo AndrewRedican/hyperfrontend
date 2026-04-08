@@ -8,6 +8,18 @@ import { round } from '@hyperfrontend/immutable-api-utils/built-in-copy/math'
  * @param b - The blue component (0-255)
  * @param a - Optional alpha component (0-1)
  * @returns A hexadecimal color string with # prefix
+ *
+ * @example Basic RGB
+ * ```typescript
+ * rgbToHex(255, 87, 51)
+ * // => '#ff5733'
+ * ```
+ *
+ * @example With alpha channel
+ * ```typescript
+ * rgbToHex(52, 152, 219, 0.5)
+ * // => '#3498db80'
+ * ```
  */
 export function rgbToHex(r: number, g: number, b: number, a?: number): string {
   const rgbToHexComponent = (value: number): string => value.toString(16).padStart(2, '0')

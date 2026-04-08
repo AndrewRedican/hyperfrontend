@@ -11,6 +11,18 @@ import { rgbToString } from './rgb-to-string'
  * @param baseColor - The base color in hex format (with or without # prefix)
  * @param intensity - The intensity of the variation (-1 to 1, where negative darkens and positive lightens)
  * @returns A hexadecimal color string representing the variation
+ *
+ * @example
+ * ```typescript
+ * // Generate a lighter shade for hover states
+ * const primaryColor = '#3b82f6'
+ * const hoverColor = getColorVariation(primaryColor, 200)
+ * // => 'rgba(46, 102, 192, 0.78)'
+ *
+ * // Generate a darker shade for active states
+ * const activeColor = getColorVariation(primaryColor, 100)
+ * // => 'rgba(23, 51, 96, 0.39)'
+ * ```
  */
 export function getColorVariation(baseColor: string, intensity: number) {
   if (getType(baseColor) !== 'string' || getType(intensity) !== 'number') {

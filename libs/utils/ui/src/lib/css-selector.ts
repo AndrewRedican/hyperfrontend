@@ -8,6 +8,12 @@ import { createError } from '@hyperfrontend/immutable-api-utils/built-in-copy/er
  * @param arg - The CSS name to validate
  * @param argName - The name of the argument (used in error messages)
  * @throws {Error} When the CSS name format is invalid
+ *
+ * @example
+ * ```typescript
+ * validateCssName('my-class', 'className') // passes
+ * validateCssName('123invalid', 'className') // throws Error
+ * ```
  */
 export function validateCssName(arg: string, argName: string): void {
   const isValid = /^[a-zA-Z][\w-]*$/.test(arg)
@@ -22,6 +28,13 @@ export function validateCssName(arg: string, argName: string): void {
  * @param arg - The string to validate
  * @param argName - The name of the argument (used in error messages)
  * @throws {Error} When the string is undefined, null, or empty
+ *
+ * @example
+ * ```typescript
+ * validateStringArgument('valid', 'name') // passes
+ * validateStringArgument('', 'name') // throws Error
+ * validateStringArgument('   ', 'name') // throws Error (whitespace only)
+ * ```
  */
 export function validateStringArgument(arg: string, argName: string): void {
   if ([undefined, null, ''].includes(arg) || !arg.trim()) {
@@ -34,6 +47,12 @@ export function validateStringArgument(arg: string, argName: string): void {
  *
  * @param id - The ID to validate
  * @throws {Error} When the ID format is invalid or empty
+ *
+ * @example
+ * ```typescript
+ * validateIdSelector('main-header') // passes
+ * validateIdSelector('') // throws Error
+ * ```
  */
 export function validateIdSelector(id: string): void {
   const label = 'Id'
@@ -46,6 +65,12 @@ export function validateIdSelector(id: string): void {
  *
  * @param className - The class name to validate
  * @throws {Error} When the class name format is invalid or empty
+ *
+ * @example
+ * ```typescript
+ * validateClassSelector('btn-primary') // passes
+ * validateClassSelector('1invalid') // throws Error
+ * ```
  */
 export function validateClassSelector(className: string): void {
   const label = 'Class'
@@ -59,6 +84,12 @@ export function validateClassSelector(className: string): void {
  *
  * @param attribute - The attribute name to validate
  * @throws {Error} When the attribute name format is invalid or empty
+ *
+ * @example
+ * ```typescript
+ * validateAttributeSelector('data-testid') // passes
+ * validateAttributeSelector('attr=value') // throws Error
+ * ```
  */
 export function validateAttributeSelector(attribute: string): void {
   const label = 'Attribute'
@@ -71,6 +102,14 @@ export function validateAttributeSelector(attribute: string): void {
 
 /**
  * Builder class for constructing CSS selectors with a fluent API.
+ *
+ * @example
+ * ```typescript
+ * const selector = new CssSelector('div')
+ *   .class('container')
+ *   .id('main')
+ * selector.toString() // => 'div.container#main'
+ * ```
  */
 export class CssSelector {
   private selector: string
@@ -258,6 +297,12 @@ export class CssSelector {
  * Creates a new empty CSS selector builder.
  *
  * @returns A new CssSelector instance
+ *
+ * @example
+ * ```typescript
+ * const selector = select().class('active').id('panel')
+ * selector.toString() // => '.active#panel'
+ * ```
  */
 export function select(): CssSelector {
   return new CssSelector('')
@@ -268,6 +313,12 @@ export function select(): CssSelector {
  *
  * @param selector - The initial CSS selector string
  * @returns A new CssSelector instance
+ *
+ * @example
+ * ```typescript
+ * const selector = selectBy('article').class('featured')
+ * selector.toString() // => 'article.featured'
+ * ```
  */
 export function selectBy(selector: string): CssSelector {
   return new CssSelector(selector)
@@ -278,6 +329,12 @@ export function selectBy(selector: string): CssSelector {
  *
  * @param tagName - The HTML tag name to select
  * @returns A new CssSelector instance
+ *
+ * @example
+ * ```typescript
+ * const selector = selectByElement('button').class('primary')
+ * selector.toString() // => 'button.primary'
+ * ```
  */
 export function selectByElement(tagName: HtmlTagName): CssSelector {
   return selectBy(tagName)
@@ -287,6 +344,12 @@ export function selectByElement(tagName: HtmlTagName): CssSelector {
  * Creates a CSS selector builder for the universal selector (*).
  *
  * @returns A new CssSelector instance that matches all elements
+ *
+ * @example
+ * ```typescript
+ * const selector = selectAllElements().class('visible')
+ * selector.toString() // => '*.visible'
+ * ```
  */
 export function selectAllElements(): CssSelector {
   return selectBy('*')
@@ -298,6 +361,12 @@ export function selectAllElements(): CssSelector {
  * @param id - The ID to select
  * @returns A new CssSelector instance
  * @throws {Error} When the ID format is invalid
+ *
+ * @example
+ * ```typescript
+ * const selector = selectById('main-content')
+ * selector.toString() // => '#main-content'
+ * ```
  */
 export function selectById(id: string): CssSelector {
   return selectBy('').id(id)
@@ -309,6 +378,12 @@ export function selectById(id: string): CssSelector {
  * @param className - The class name to select
  * @returns A new CssSelector instance
  * @throws {Error} When the class name format is invalid
+ *
+ * @example
+ * ```typescript
+ * const selector = selectByClass('highlighted')
+ * selector.toString() // => '.highlighted'
+ * ```
  */
 export function selectByClass(className: string): CssSelector {
   return selectBy('').class(className)
@@ -321,6 +396,12 @@ export function selectByClass(className: string): CssSelector {
  * @param value - Optional attribute value to match
  * @returns A new CssSelector instance
  * @throws {Error} When the attribute name format is invalid
+ *
+ * @example
+ * ```typescript
+ * selectByAttribute('disabled').toString() // => '[disabled]'
+ * selectByAttribute('data-role', 'button').toString() // => '[data-role="button"]'
+ * ```
  */
 export function selectByAttribute(attribute: string, value?: string): CssSelector {
   return selectBy('').attribute(attribute, value)

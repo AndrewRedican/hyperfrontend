@@ -8,6 +8,19 @@ export type Callback = () => void
  *
  * @param callback - The function to execute when a gesture is detected (Escape key or pinch gesture)
  * @returns A cleanup function to remove all event listeners
+ *
+ * @example
+ * ```typescript
+ * const closeOverlay = () => {
+ *   overlay.style.display = 'none'
+ * }
+ *
+ * // Listen for Escape key or pinch-out gesture
+ * const cleanup = createGestureListener(closeOverlay)
+ *
+ * // Remove listeners when overlay is destroyed
+ * cleanup()
+ * ```
  */
 export function createGestureListener(callback: Callback) {
   let initialDistance: number | null = null

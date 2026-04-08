@@ -8,6 +8,18 @@ import { rgbToHex } from './rgb-to-hex'
  *
  * @param rgbString - The RGB string (e.g., "rgb(255, 0, 0)" or "rgba(255, 0, 0, 0.5)")
  * @returns A hexadecimal color string with # prefix
+ *
+ * @example RGB string
+ * ```typescript
+ * rgbStringToHex('rgb(255, 87, 51)')
+ * // => '#ff5733'
+ * ```
+ *
+ * @example RGBA string with alpha
+ * ```typescript
+ * rgbStringToHex('rgba(52, 152, 219, 0.5)')
+ * // => '#3498db80'
+ * ```
  */
 export function rgbStringToHex(rgbString: string): string {
   const rgbOnlyRegex = /^rgba?\((\d{1,3}),\s*(\d{1,3}),\s*(\d{1,3})\)$/i

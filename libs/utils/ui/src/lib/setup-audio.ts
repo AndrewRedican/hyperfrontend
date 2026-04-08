@@ -11,6 +11,17 @@ import { getElementAsync } from './get-element-async'
  * @param selector - Either an HTMLElement reference or a CSS selector string for the target element
  * @returns A promise that resolves to an AudioContext once the user interacts with the element
  * @throws {Error} When the target element is not found
+ *
+ * @example
+ * ```typescript
+ * const playButton = document.getElementById('play-button')
+ * const audioContext = await setupAudio(playButton)
+ *
+ * // Audio context is now ready after user clicked the button
+ * const oscillator = audioContext.createOscillator()
+ * oscillator.connect(audioContext.destination)
+ * oscillator.start()
+ * ```
  */
 export async function setupAudio(selector: ElementRefOrString): Promise<AudioContext> {
   return createPromise((resolve, reject) => {

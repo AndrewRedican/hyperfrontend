@@ -3,6 +3,18 @@
  *
  * @param selector - The CSS selector string to validate
  * @returns True if the selector is valid, false otherwise
+ *
+ * @example
+ * ```typescript
+ * isValidCssSelector('.my-class')
+ * // => true
+ *
+ * isValidCssSelector('#header nav > ul')
+ * // => true
+ *
+ * isValidCssSelector('[invalid')
+ * // => false
+ * ```
  */
 export function isValidCssSelector(selector: string): boolean {
   try {
