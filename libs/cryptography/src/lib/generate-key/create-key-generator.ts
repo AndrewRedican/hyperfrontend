@@ -9,6 +9,13 @@ import { encryptionConfig } from '../encryption-config'
  * @param subtle - The SubtleCrypto interface for cryptographic operations
  * @param utf8StringToUint8Array - Function to convert UTF-8 strings to byte arrays
  * @returns A function that generates CryptoKey instances from passwords and salts
+ *
+ * @example
+ * ```typescript
+ * const generateKey = createKeyGenerator(crypto.subtle, utf8StringToUint8Array)
+ * const salt = getRandomValues(16)
+ * const key = await generateKey('user-password', salt)
+ * ```
  */
 export function createKeyGenerator(
   subtle: SubtleCrypto,

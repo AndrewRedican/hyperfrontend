@@ -7,6 +7,14 @@ import { freeze } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
  *
  * @param getTimeBasedPassword - Function to generate a single time-based password with window offset
  * @returns A function that creates password generators for adjacent time windows
+ *
+ * @example
+ * ```typescript
+ * const getPasswords = createTimeBasedPasswords(getTimeBasedPassword)
+ * const passwords = getPasswords(new Date(), 5)
+ * const current = await passwords.current()
+ * const previous = await passwords.previous()
+ * ```
  */
 export function createTimeBasedPasswords(
   getTimeBasedPassword: (currentUtcTime: Date, baseTimeWindow: number, windowOffset?: -1 | 0 | 1) => Promise<string>

@@ -11,6 +11,12 @@ import { encryptionConfig } from '../encryption-config'
  * @param generateKey - Function to derive encryption keys from passwords
  * @param subtle - The SubtleCrypto interface for cryptographic operations
  * @returns A function that encrypts messages with passwords
+ *
+ * @example
+ * ```typescript
+ * const encrypt = createEncrypt(utf8StringToUint8Array, getRandomValues, generateKey, crypto.subtle)
+ * const encrypted = await encrypt('sensitive-data', 'user-password')
+ * ```
  */
 export function createEncrypt(
   utf8StringToUint8Array: (text: string) => Uint8Array,

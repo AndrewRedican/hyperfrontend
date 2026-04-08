@@ -9,6 +9,12 @@ import { encryptionConfig } from '../encryption-config'
  * @param generateKey - Function to derive decryption keys from passwords
  * @param subtle - The SubtleCrypto interface for cryptographic operations
  * @returns A function that decrypts encrypted messages with passwords
+ *
+ * @example
+ * ```typescript
+ * const decrypt = createDecrypt(arrayBufferToUtf8String, generateKey, crypto.subtle)
+ * const plaintext = await decrypt(encryptedData, 'user-password')
+ * ```
  */
 export function createDecrypt(
   arrayBufferToUtf8String: (bytes: ArrayBuffer) => string,
