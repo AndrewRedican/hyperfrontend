@@ -11,6 +11,12 @@ import { isEqual } from '../utils/deep-equal'
  * @param schema - Schema containing the enum constraint
  * @param ctx - Validation context
  * @returns true if validation passes, false otherwise
+ * @example
+ * ```typescript
+ * const schema = { enum: ['draft', 'published', 'archived'] }
+ * validateEnum('published', schema, ctx) // => true
+ * validateEnum('deleted', schema, ctx)   // => false (not in enum)
+ * ```
  */
 export function validateEnum(instance: unknown, schema: Schema, ctx: ValidationContext): boolean {
   if (!schema.enum) {

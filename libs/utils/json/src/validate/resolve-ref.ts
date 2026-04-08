@@ -7,6 +7,17 @@ import type { ValidationContext } from './context'
  * @param ref - The $ref string (e.g., '#/definitions/Address')
  * @param ctx - Validation context containing root schema and definitions
  * @returns The resolved schema, or undefined if not found
+ * @example
+ * ```typescript
+ * const rootSchema = {
+ *   definitions: {
+ *     Address: { type: 'object', properties: { street: { type: 'string' } } }
+ *   }
+ * }
+ * const ctx = createValidationContext(rootSchema, validate)
+ * resolveRef('#/definitions/Address', ctx)
+ * // => { type: 'object', properties: { street: { type: 'string' } } }
+ * ```
  */
 export function resolveRef(ref: string, ctx: ValidationContext): Schema | undefined {
   const cached = ctx.definitions.get(ref)

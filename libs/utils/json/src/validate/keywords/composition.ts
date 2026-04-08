@@ -10,6 +10,17 @@ import { addError, createValidationContext, shouldContinue } from '../context'
  * @param schema - Schema containing the allOf constraint
  * @param ctx - Validation context
  * @returns true if validation passes, false otherwise
+ * @example
+ * ```typescript
+ * const schema = {
+ *   allOf: [
+ *     { type: 'object', required: ['name'] },
+ *     { type: 'object', required: ['email'] }
+ *   ]
+ * }
+ * validateAllOf({ name: 'Alice', email: 'alice@example.com' }, schema, ctx) // => true
+ * validateAllOf({ name: 'Alice' }, schema, ctx) // => false (missing email)
+ * ```
  */
 export function validateAllOf(instance: unknown, schema: Schema, ctx: ValidationContext): boolean {
   const allOf = schema.allOf
@@ -38,6 +49,18 @@ export function validateAllOf(instance: unknown, schema: Schema, ctx: Validation
  * @param schema - Schema containing the anyOf constraint
  * @param ctx - Validation context
  * @returns true if validation passes, false otherwise
+ * @example
+ * ```typescript
+ * const schema = {
+ *   anyOf: [
+ *     { type: 'string' },
+ *     { type: 'number' }
+ *   ]
+ * }
+ * validateAnyOf('hello', schema, ctx) // => true
+ * validateAnyOf(42, schema, ctx)      // => true
+ * validateAnyOf(true, schema, ctx)    // => false (neither string nor number)
+ * ```
  */
 export function validateAnyOf(instance: unknown, schema: Schema, ctx: ValidationContext): boolean {
   const anyOf = schema.anyOf
@@ -64,6 +87,18 @@ export function validateAnyOf(instance: unknown, schema: Schema, ctx: Validation
  * @param schema - Schema containing the oneOf constraint
  * @param ctx - Validation context
  * @returns true if validation passes, false otherwise
+ * @example
+ * ```typescript
+ * const schema = {
+ *   oneOf: [
+ *     { type: 'integer' },
+ *     { minimum: 5 }
+ *   ]
+ * }
+ * validateOneOf(3, schema, ctx)    // => true (matches first only)
+ * validateOneOf(10, schema, ctx)   // => false (matches both)
+ * validateOneOf('hi', schema, ctx) // => false (matches neither)
+ * ```
  */
 export function validateOneOf(instance: unknown, schema: Schema, ctx: ValidationContext): boolean {
   const oneOf = schema.oneOf
@@ -104,6 +139,12 @@ export function validateOneOf(instance: unknown, schema: Schema, ctx: Validation
  * @param schema - Schema containing the not constraint
  * @param ctx - Validation context
  * @returns true if validation passes, false otherwise
+ * @example
+ * ```typescript
+ * const schema = { not: { type: 'string' } }
+ * validateNot(42, schema, ctx)      // => true (not a string)
+ * validateNot('hello', schema, ctx) // => false (is a string)
+ * ```
  */
 export function validateNot(instance: unknown, schema: Schema, ctx: ValidationContext): boolean {
   const not = schema.not

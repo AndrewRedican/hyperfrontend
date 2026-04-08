@@ -10,6 +10,19 @@ import { addError, pushPath, shouldContinue } from '../context'
  * @param schema - Schema containing the items constraint
  * @param ctx - Validation context
  * @returns true if validation passes, false otherwise
+ * @example Single schema for all items
+ * ```typescript
+ * const schema = { items: { type: 'string' } }
+ * validateItems(['a', 'b', 'c'], schema, ctx) // => true
+ * validateItems(['a', 1, 'c'], schema, ctx)   // => false (1 is not a string)
+ * ```
+ *
+ * @example Tuple validation
+ * ```typescript
+ * const schema = { items: [{ type: 'string' }, { type: 'number' }] }
+ * validateItems(['name', 42], schema, ctx)  // => true
+ * validateItems([42, 'name'], schema, ctx)  // => false (wrong types)
+ * ```
  */
 export function validateItems(instance: unknown[], schema: Schema, ctx: ValidationContext): boolean {
   const items = schema.items

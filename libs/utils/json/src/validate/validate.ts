@@ -62,6 +62,13 @@ export function validate(instance: unknown, schema: Schema, options?: ValidateOp
  * @param schema - Schema to validate against
  * @param ctx - Validation context
  * @returns true if validation passes, false otherwise
+ * @example
+ * ```typescript
+ * const schema = { type: 'object', properties: { count: { type: 'integer' } } }
+ * const ctx = createValidationContext(schema, validateSchema)
+ * validateSchema({ count: 5 }, schema, ctx) // => true
+ * validateSchema({ count: 'five' }, schema, ctx) // => false
+ * ```
  */
 export function validateSchema(instance: unknown, schema: Schema, ctx: ValidationContext): boolean {
   if (schema.$ref) {

@@ -12,6 +12,17 @@ import { addError, pushPath, shouldContinue } from '../context'
  * @param schema - Schema containing the properties constraint
  * @param ctx - Validation context
  * @returns true if validation passes, false otherwise
+ * @example
+ * ```typescript
+ * const schema = {
+ *   properties: {
+ *     name: { type: 'string' },
+ *     age: { type: 'integer' }
+ *   }
+ * }
+ * validateProperties({ name: 'Alice', age: 30 }, schema, ctx) // => true
+ * validateProperties({ name: 123 }, schema, ctx) // => false (name should be string)
+ * ```
  */
 export function validateProperties(instance: Record<string, unknown>, schema: Schema, ctx: ValidationContext): boolean {
   if (!schema.properties) {
@@ -39,6 +50,12 @@ export function validateProperties(instance: Record<string, unknown>, schema: Sc
  * @param schema - Schema containing the required constraint
  * @param ctx - Validation context
  * @returns true if validation passes, false otherwise
+ * @example
+ * ```typescript
+ * const schema = { required: ['name', 'email'] }
+ * validateRequired({ name: 'Alice', email: 'alice@example.com' }, schema, ctx) // => true
+ * validateRequired({ name: 'Alice' }, schema, ctx) // => false (missing email)
+ * ```
  */
 export function validateRequired(instance: Record<string, unknown>, schema: Schema, ctx: ValidationContext): boolean {
   if (!schema.required) {
@@ -64,6 +81,15 @@ export function validateRequired(instance: Record<string, unknown>, schema: Sche
  * @param schema - Schema containing the additionalProperties constraint
  * @param ctx - Validation context
  * @returns true if validation passes, false otherwise
+ * @example
+ * ```typescript
+ * const schema = {
+ *   properties: { name: { type: 'string' } },
+ *   additionalProperties: false
+ * }
+ * validateAdditionalProperties({ name: 'Alice' }, schema, ctx) // => true
+ * validateAdditionalProperties({ name: 'Alice', extra: 1 }, schema, ctx) // => false
+ * ```
  */
 export function validateAdditionalProperties(instance: Record<string, unknown>, schema: Schema, ctx: ValidationContext): boolean {
   const additionalProperties = schema.additionalProperties

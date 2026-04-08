@@ -10,6 +10,14 @@ import { addError, shouldContinue } from '../context'
  * @param schema - Schema containing number constraints
  * @param ctx - Validation context
  * @returns true if validation passes, false otherwise
+ * @example
+ * ```typescript
+ * const schema = { minimum: 0, maximum: 100, multipleOf: 5 }
+ * validateNumberBounds(50, schema, ctx)  // => true
+ * validateNumberBounds(-1, schema, ctx)  // => false (below minimum)
+ * validateNumberBounds(101, schema, ctx) // => false (above maximum)
+ * validateNumberBounds(17, schema, ctx)  // => false (not multiple of 5)
+ * ```
  */
 export function validateNumberBounds(instance: number, schema: Schema, ctx: ValidationContext): boolean {
   let valid = true

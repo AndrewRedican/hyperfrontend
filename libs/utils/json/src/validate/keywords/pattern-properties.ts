@@ -11,6 +11,17 @@ import { addError, pushPath, shouldContinue } from '../context'
  * @param schema - Schema containing the patternProperties constraint
  * @param ctx - Validation context
  * @returns true if validation passes, false otherwise
+ * @example
+ * ```typescript
+ * const schema = {
+ *   patternProperties: {
+ *     '^x-': { type: 'string' },  // extension properties must be strings
+ *     '^\\d+$': { type: 'number' } // numeric keys must have number values
+ *   }
+ * }
+ * validatePatternProperties({ 'x-custom': 'value', '42': 100 }, schema, ctx) // => true
+ * validatePatternProperties({ 'x-custom': 123 }, schema, ctx) // => false (should be string)
+ * ```
  */
 export function validatePatternProperties(instance: Record<string, unknown>, schema: Schema, ctx: ValidationContext): boolean {
   if (!schema.patternProperties) {
