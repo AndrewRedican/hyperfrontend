@@ -99,6 +99,15 @@ export function isNxWorkspace(path: string): boolean {
  *
  * @param path - Directory path to check
  * @returns True if the directory contains project.json
+ *
+ * @example
+ * ```typescript
+ * import { isNxProject } from '@hyperfrontend/project-scope'
+ *
+ * if (isNxProject('./libs/my-lib')) {
+ *   console.log('This is an NX project')
+ * }
+ * ```
  */
 export function isNxProject(path: string): boolean {
   const isProject = exists(join(path, NX_PROJECT_FILE))
@@ -169,6 +178,17 @@ function isIntegratedRepo(nxJson: NxJson): boolean {
  *
  * @param workspacePath - Workspace root path
  * @returns Workspace info or null if not an NX workspace
+ *
+ * @example
+ * ```typescript
+ * import { getNxWorkspaceInfo } from '@hyperfrontend/project-scope'
+ *
+ * const info = getNxWorkspaceInfo('/path/to/monorepo')
+ * if (info) {
+ *   console.log('NX version:', info.version)
+ *   console.log('Apps dir:', info.workspaceLayout.appsDir)
+ * }
+ * ```
  */
 export function getNxWorkspaceInfo(workspacePath: string): NxWorkspaceInfo | null {
   nxLogger.debug('Getting NX workspace info', { workspacePath })

@@ -17,6 +17,12 @@ import { isIterableType } from './is-iterable-type'
  * @remarks
  * - If `defaultValue.onMissingKey` is provided, it will be returned when a key in the path is missing.
  * - If `defaultValue.onError` is provided, it will be returned when any error occurs during the retrieval process.
+ *
+ * @example
+ * ```typescript
+ * getValue({ a: { b: 1 } }, ['a', 'b']) // 1
+ * getValue({ a: 1 }, ['x'], { onMissingKey: 0 }) // 0
+ * ```
  */
 export const getValue = <T = unknown>(target: unknown, path: [string, ...string[]], defaultValue?: DefaultValueOptions<T>): T => {
   if (isArray(path) === false) {

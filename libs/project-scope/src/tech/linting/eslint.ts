@@ -26,6 +26,15 @@ export const ESLINT_CONFIG_PATTERNS = [
  * @param projectPath - Project directory path
  * @param packageJson - Optional pre-loaded package.json
  * @returns Detection result or null if not detected
+ *
+ * @example
+ * ```typescript
+ * const result = eslintDetector('/path/to/project', {
+ *   devDependencies: { eslint: '^8.50.0', '@typescript-eslint/parser': '^6.0.0' },
+ *   scripts: { lint: 'eslint src/' },
+ * })
+ * // => { id: 'eslint', name: 'ESLint', confidence: 65, version: '8.50.0', ... }
+ * ```
  */
 export function eslintDetector(projectPath: string, packageJson?: PackageJson): LintingToolDetection | null {
   const pkg = packageJson ?? readPackageJsonIfExists(projectPath)

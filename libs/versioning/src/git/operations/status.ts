@@ -405,6 +405,12 @@ export function getRepositoryRoot(options: GitStatusOptions = {}): string | null
  *
  * @param options - Status options
  * @returns Commit hash or null
+ *
+ * @example
+ * ```typescript
+ * const hash = getHeadHash()
+ * // => 'abc123def456789012345678901234567890abcd'
+ * ```
  */
 export function getHeadHash(options: GitStatusOptions = {}): string | null {
   const opts = { ...DEFAULT_STATUS_OPTIONS, ...options }
@@ -426,6 +432,12 @@ export function getHeadHash(options: GitStatusOptions = {}): string | null {
  *
  * @param options - Status options
  * @returns Short hash or null
+ *
+ * @example
+ * ```typescript
+ * const shortHash = getHeadShortHash()
+ * // => 'abc123d'
+ * ```
  */
 export function getHeadShortHash(options: GitStatusOptions = {}): string | null {
   const opts = { ...DEFAULT_STATUS_OPTIONS, ...options }
@@ -447,6 +459,13 @@ export function getHeadShortHash(options: GitStatusOptions = {}): string | null 
  *
  * @param options - Status options
  * @returns True if there are conflicts
+ *
+ * @example
+ * ```typescript
+ * if (hasConflicts()) {
+ *   console.log('Resolve merge conflicts before continuing')
+ * }
+ * ```
  */
 export function hasConflicts(options: GitStatusOptions = {}): boolean {
   const status = getStatus(options)
@@ -458,6 +477,12 @@ export function hasConflicts(options: GitStatusOptions = {}): boolean {
  *
  * @param options - Status options
  * @returns Number of commits ahead
+ *
+ * @example
+ * ```typescript
+ * const ahead = getAheadCount()
+ * console.log(`${ahead} commits to push`)
+ * ```
  */
 export function getAheadCount(options: GitStatusOptions = {}): number {
   const status = getStatus(options)
@@ -469,6 +494,12 @@ export function getAheadCount(options: GitStatusOptions = {}): number {
  *
  * @param options - Status options
  * @returns Number of commits behind
+ *
+ * @example
+ * ```typescript
+ * const behind = getBehindCount()
+ * console.log(`${behind} commits to pull`)
+ * ```
  */
 export function getBehindCount(options: GitStatusOptions = {}): number {
   const status = getStatus(options)
@@ -480,6 +511,13 @@ export function getBehindCount(options: GitStatusOptions = {}): number {
  *
  * @param options - Status options
  * @returns True if there are unpushed commits
+ *
+ * @example
+ * ```typescript
+ * if (needsPush()) {
+ *   console.log('Local commits need to be pushed')
+ * }
+ * ```
  */
 export function needsPush(options: GitStatusOptions = {}): boolean {
   return getAheadCount(options) > 0
@@ -490,6 +528,13 @@ export function needsPush(options: GitStatusOptions = {}): boolean {
  *
  * @param options - Status options
  * @returns True if there are commits to pull
+ *
+ * @example
+ * ```typescript
+ * if (needsPull()) {
+ *   console.log('Remote commits need to be pulled')
+ * }
+ * ```
  */
 export function needsPull(options: GitStatusOptions = {}): boolean {
   return getBehindCount(options) > 0
@@ -500,6 +545,12 @@ export function needsPull(options: GitStatusOptions = {}): boolean {
  *
  * @param options - Status options
  * @returns Array of staged file paths
+ *
+ * @example
+ * ```typescript
+ * const staged = getStagedFiles()
+ * // => ['src/index.ts', 'package.json']
+ * ```
  */
 export function getStagedFiles(options: GitStatusOptions = {}): readonly string[] {
   const status = getStatus(options)
@@ -511,6 +562,12 @@ export function getStagedFiles(options: GitStatusOptions = {}): readonly string[
  *
  * @param options - Status options
  * @returns Array of modified file paths
+ *
+ * @example
+ * ```typescript
+ * const modified = getModifiedFiles()
+ * // => ['src/utils.ts', 'README.md']
+ * ```
  */
 export function getModifiedFiles(options: GitStatusOptions = {}): readonly string[] {
   const status = getStatus(options)
@@ -522,6 +579,12 @@ export function getModifiedFiles(options: GitStatusOptions = {}): readonly strin
  *
  * @param options - Status options
  * @returns Array of untracked file paths
+ *
+ * @example
+ * ```typescript
+ * const untracked = getUntrackedFiles()
+ * // => ['new-file.ts', 'temp.log']
+ * ```
  */
 export function getUntrackedFiles(options: GitStatusOptions = {}): readonly string[] {
   const status = getStatus(options)

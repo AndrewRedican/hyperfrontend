@@ -99,6 +99,16 @@ export interface NxProjectGraph {
  *
  * @param projectPath - Project directory path
  * @returns Parsed project.json or null if not found
+ *
+ * @example
+ * ```typescript
+ * import { readProjectJson } from '@hyperfrontend/project-scope'
+ *
+ * const config = readProjectJson('./libs/my-lib')
+ * if (config) {
+ *   console.log('Project:', config.name, 'Type:', config.projectType)
+ * }
+ * ```
  */
 export function readProjectJson(projectPath: string): NxProjectConfig | null {
   const projectJsonPath = join(projectPath, NX_PROJECT_FILE)
@@ -118,6 +128,14 @@ export function readProjectJson(projectPath: string): NxProjectConfig | null {
  * @param projectPath - Project directory path
  * @param workspacePath - Workspace root path (for relative path calculation)
  * @returns Project configuration or null if not found
+ *
+ * @example
+ * ```typescript
+ * import { getProjectConfig } from '@hyperfrontend/project-scope'
+ *
+ * const config = getProjectConfig('./libs/my-lib', '/workspace')
+ * // => { name: 'my-lib', root: 'libs/my-lib', projectType: 'library' }
+ * ```
  */
 export function getProjectConfig(projectPath: string, workspacePath: string): NxProjectConfig | null {
   nxConfigLogger.debug('Getting project config', { projectPath, workspacePath })
@@ -203,6 +221,16 @@ function scanForProjects(
  *
  * @param workspacePath - Workspace root path
  * @returns Map of project name to configuration
+ *
+ * @example
+ * ```typescript
+ * import { discoverNxProjects } from '@hyperfrontend/project-scope'
+ *
+ * const projects = discoverNxProjects('/workspace')
+ * for (const [name, config] of projects) {
+ *   console.log(`${name}: ${config.projectType} at ${config.root}`)
+ * }
+ * ```
  */
 export function discoverNxProjects(workspacePath: string): Map<string, NxProjectConfig> {
   const projects = createMap<string, NxProjectConfig>()
@@ -272,6 +300,15 @@ export function discoverNxProjects(workspacePath: string): Map<string, NxProject
  * @param workspacePath - Workspace root path
  * @param projects - Existing configuration map to skip auto-discovery
  * @returns NxProjectGraph with nodes and dependencies
+ *
+ * @example
+ * ```typescript
+ * import { buildSimpleProjectGraph } from '@hyperfrontend/project-scope'
+ *
+ * const graph = buildSimpleProjectGraph('/workspace')
+ * console.log('Projects:', Object.keys(graph.nodes))
+ * console.log('Dependencies:', graph.dependencies['my-app'])
+ * ```
  */
 export function buildSimpleProjectGraph(workspacePath: string, projects?: Map<string, NxProjectConfig>): NxProjectGraph {
   const projectMap = projects ?? discoverNxProjects(workspacePath)

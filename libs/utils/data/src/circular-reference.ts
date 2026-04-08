@@ -29,6 +29,16 @@ export interface ICircularReference {
   readonly depth: number
 }
 
+/**
+ * Represents a detected circular reference in an object graph.
+ * Tracks the location where the reference was found and its target.
+ *
+ * @example
+ * ```typescript
+ * const ref = new CircularReference(['root', 'child'], ['root'])
+ * console.log(ref.depth) // 1
+ * ```
+ */
 export class CircularReference implements ICircularReference {
   public readonly location: Location
   public readonly target: Target

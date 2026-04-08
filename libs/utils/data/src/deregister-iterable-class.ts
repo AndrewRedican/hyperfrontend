@@ -7,6 +7,12 @@ import { registeredIterableClasses } from './shared/consts'
  * Removes all registered iterable classes except built-ins (Array and Object) when no references are provided.
  *
  * @param classRefs - The class constructors to deregister
+ *
+ * @example
+ * ```typescript
+ * deregisterIterableClass(MyCollection)
+ * deregisterIterableClass() // clears all except Array/Object
+ * ```
  */
 export const deregisterIterableClass = <T = unknown>(...classRefs: UnknownClass<T>[]): void => {
   if (classRefs.length === 0) {

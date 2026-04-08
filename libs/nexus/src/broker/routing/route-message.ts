@@ -8,6 +8,12 @@ import { logAction } from '../../utils/logging/log-action'
  * @param router - Handler map containing action type to handler mappings
  * @param context - Routing context with state, registry, actions, and logger
  * @param message - Incoming message event containing the action to route
+ *
+ * @example
+ * ```typescript
+ * const router = createRouter({ 'MESSAGE': handleMessage })
+ * routeMessage(router, routingContext, incomingEvent)
+ * ```
  */
 export function routeMessage(router: Map<string, RouteHandler>, context: RoutingContext, message: MessageEvent<IAction>): void {
   const { logger } = context

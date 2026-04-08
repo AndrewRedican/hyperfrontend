@@ -9,6 +9,22 @@ import { exists } from '../../core/fs'
  *
  * @param workspacePath - Workspace directory path
  * @returns Detection result or null if not detected
+ *
+ * @example
+ * ```typescript
+ * // Project with pnpm-workspace.yaml
+ * const result = pnpmWorkspacesDetector('/path/to/pnpm-project')
+ * // => {
+ * //   id: 'pnpm-workspaces',
+ * //   name: 'pnpm Workspaces',
+ * //   confidence: 100,
+ * //   configPath: 'pnpm-workspace.yaml',
+ * //   detectedFrom: [
+ * //     { type: 'config-file', path: 'pnpm-workspace.yaml' },
+ * //     { type: 'lockfile', path: 'pnpm-lock.yaml' }
+ * //   ]
+ * // }
+ * ```
  */
 export function pnpmWorkspacesDetector(workspacePath: string): MonorepoDetection | null {
   const sources: DetectionSource[] = []

@@ -5,6 +5,12 @@ import { createTextEncoder } from '@hyperfrontend/immutable-api-utils/built-in-c
  *
  * @param text - The UTF-8 string to convert
  * @returns The encoded Uint8Array
+ *
+ * @example
+ * ```typescript
+ * const bytes = utf8StringToUint8Array('Hello')
+ * // => Uint8Array([72, 101, 108, 108, 111])
+ * ```
  */
 export function utf8StringToUint8Array(text: string): Uint8Array {
   return createTextEncoder().encode(text)

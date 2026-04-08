@@ -22,6 +22,12 @@ export interface ParsedPath {
  *
  * @param filePath - Path to split
  * @returns Array of path segments
+ *
+ * @example
+ * ```typescript
+ * pathSegments('src/components/Button.tsx')
+ * // => ['src', 'components', 'Button.tsx']
+ * ```
  */
 export function pathSegments(filePath: string): string[] {
   return filePath.split(/[/\\]/).filter((segment) => segment.length > 0)
@@ -33,6 +39,15 @@ export function pathSegments(filePath: string): string[] {
  * @param filePath - Path to extract basename from
  * @param ext - Optional extension to strip
  * @returns Basename of path
+ *
+ * @example
+ * ```typescript
+ * getBasename('src/components/Button.tsx')
+ * // => 'Button.tsx'
+ *
+ * getBasename('src/components/Button.tsx', '.tsx')
+ * // => 'Button'
+ * ```
  */
 export function getBasename(filePath: string, ext?: string): string {
   return basename(filePath, ext)
@@ -43,6 +58,12 @@ export function getBasename(filePath: string, ext?: string): string {
  *
  * @param filePath - Path to extract directory from
  * @returns Directory name
+ *
+ * @example
+ * ```typescript
+ * getDirname('src/components/Button.tsx')
+ * // => 'src/components'
+ * ```
  */
 export function getDirname(filePath: string): string {
   return normalizePath(dirname(filePath))
@@ -53,6 +74,15 @@ export function getDirname(filePath: string): string {
  *
  * @param filePath - Path to extract extension from
  * @returns Extension including dot (e.g., '.ts')
+ *
+ * @example
+ * ```typescript
+ * getExtension('src/utils/helpers.ts')
+ * // => '.ts'
+ *
+ * getExtension('package.json')
+ * // => '.json'
+ * ```
  */
 export function getExtension(filePath: string): string {
   return extname(filePath)
@@ -63,6 +93,12 @@ export function getExtension(filePath: string): string {
  *
  * @param filePath - Path to extract name from
  * @returns Filename without extension
+ *
+ * @example
+ * ```typescript
+ * getFileNameWithoutExtension('src/utils/helpers.ts')
+ * // => 'helpers'
+ * ```
  */
 export function getFileNameWithoutExtension(filePath: string): string {
   const parsed = parse(filePath)
@@ -74,6 +110,12 @@ export function getFileNameWithoutExtension(filePath: string): string {
  *
  * @param filePath - Path to parse
  * @returns Parsed path components
+ *
+ * @example
+ * ```typescript
+ * const parsed = parsePath('/workspace/src/index.ts')
+ * // => { root: '/', dir: '/workspace/src', base: 'index.ts', ext: '.ts', name: 'index' }
+ * ```
  */
 export function parsePath(filePath: string): ParsedPath {
   const parsed = parse(filePath)

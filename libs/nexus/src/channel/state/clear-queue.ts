@@ -7,6 +7,12 @@ import { freeze } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
  *
  * @param state - Current channel state
  * @returns New state with cleared message queue
+ *
+ * @example
+ * ```typescript
+ * const clearedState = clearQueue(channelState)
+ * // => { ...channelState, queuedMessages: [] }
+ * ```
  */
 export function clearQueue(state: ChannelState): ChannelState {
   return freeze(<ChannelState>{

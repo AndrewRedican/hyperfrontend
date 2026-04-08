@@ -19,6 +19,24 @@ export interface Timer {
  * @param callback - The function to invoke after the delay
  * @param delay - Time in milliseconds to wait until callback is invoked
  * @returns A Timer instance with pause, resume, and reset methods
+ *
+ * @example
+ * ```typescript
+ * const timer = createTimer(() => {
+ *   console.log('Session expired')
+ * }, 30_000)
+ *
+ * timer.resume() // Start the 30-second countdown
+ *
+ * // User activity detected - pause the timer
+ * timer.pause()
+ *
+ * // User idle again - resume from where we left off
+ * timer.resume()
+ *
+ * // Reset to full 30 seconds on explicit action
+ * timer.reset()
+ * ```
  */
 export function createTimer(callback: () => void, delay: number): Timer {
   let timerId: NodeJS.Timeout | null = null

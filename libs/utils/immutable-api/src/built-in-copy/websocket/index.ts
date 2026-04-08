@@ -19,6 +19,12 @@ const _freeze = globalThis.Object.freeze
  * @param url - The URL to connect to.
  * @param protocols - Optional sub-protocol string or array of strings.
  * @returns A new WebSocket instance.
+ *
+ * @example
+ * ```typescript
+ * const socket = createWebSocket('wss://api.example.com/stream')
+ * socket.onmessage = (event) => console.log(event.data)
+ * ```
  */
 export const createWebSocket = (url: string | URL, protocols?: string | string[]): WebSocket =>
   <WebSocket>_Reflect.construct(_WebSocket, [url, protocols])

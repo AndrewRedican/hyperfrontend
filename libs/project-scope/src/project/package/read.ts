@@ -133,6 +133,14 @@ function validatePackageJson(data: unknown): PackageJson {
  * @param projectPath - Project directory path or path to package.json
  * @returns Parsed package.json
  * @throws {Error} Error if file doesn't exist or is invalid
+ *
+ * @example
+ * ```typescript
+ * import { readPackageJson } from '@hyperfrontend/project-scope'
+ *
+ * const pkg = readPackageJson('/path/to/project')
+ * console.log(pkg.name, pkg.version)
+ * ```
  */
 export function readPackageJson(projectPath: string): PackageJson {
   const packageJsonPath = projectPath.endsWith('package.json') ? projectPath : join(projectPath, 'package.json')
@@ -163,6 +171,16 @@ export function readPackageJson(projectPath: string): PackageJson {
  *
  * @param projectPath - Project directory path or path to package.json
  * @returns Parsed package.json or null if not found
+ *
+ * @example
+ * ```typescript
+ * import { readPackageJsonIfExists } from '@hyperfrontend/project-scope'
+ *
+ * const pkg = readPackageJsonIfExists('/path/to/project')
+ * if (pkg) {
+ *   console.log('Found:', pkg.name)
+ * }
+ * ```
  */
 export function readPackageJsonIfExists(projectPath: string): PackageJson | null {
   const packageJsonPath = projectPath.endsWith('package.json') ? projectPath : join(projectPath, 'package.json')
@@ -188,6 +206,14 @@ export function readPackageJsonIfExists(projectPath: string): PackageJson | null
  *
  * @param startPath - Starting path
  * @returns Path to directory containing package.json, or null if not found
+ *
+ * @example
+ * ```typescript
+ * import { findNearestPackageJson } from '@hyperfrontend/project-scope'
+ *
+ * const pkgDir = findNearestPackageJson('./src/deep/nested/file.ts')
+ * // => '/path/to/project'
+ * ```
  */
 export function findNearestPackageJson(startPath: string): string | null {
   return locateByMarkers(startPath, ['package.json'])

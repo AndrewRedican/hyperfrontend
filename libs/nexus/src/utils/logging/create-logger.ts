@@ -25,6 +25,12 @@ const DEFAULT_PREFIX = '[nexus]'
  *
  * @param options - Logger configuration options
  * @returns Logger instance
+ *
+ * @example
+ * ```typescript
+ * const logger = createLogger({ level: 'debug', prefix: '[my-channel]' })
+ * logger.debug('Channel initialized')
+ * ```
  */
 export function createLogger(options: NexusLoggerOptions = {}): Logger {
   return createLoggerInternal(options)

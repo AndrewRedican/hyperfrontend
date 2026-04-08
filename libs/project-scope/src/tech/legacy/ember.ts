@@ -11,6 +11,15 @@ import { collectAllDependencies, parseVersionString } from '../shared-utils/dete
  * @param projectPath - Project directory path
  * @param packageJson - Optional pre-loaded package.json
  * @returns Detection result or null if not detected
+ *
+ * @example
+ * ```typescript
+ * const result = emberDetector('/path/to/project', {
+ *   dependencies: { 'ember-source': '^4.0.0' },
+ *   devDependencies: { 'ember-cli': '^4.0.0' },
+ * })
+ * // => { id: 'ember', name: 'Ember.js', confidence: 90, version: '4.0.0', ... }
+ * ```
  */
 export function emberDetector(projectPath: string, packageJson?: PackageJson): LegacyFrameworkDetection | null {
   const pkg = packageJson ?? readPackageJsonIfExists(projectPath)

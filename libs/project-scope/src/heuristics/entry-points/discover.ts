@@ -381,6 +381,14 @@ export function discoverEntryPoints(projectPath: string, options?: DiscoverEntry
  * Clear the entry point discovery cache.
  *
  * Useful for testing or when the project files have changed.
+ *
+ * @example
+ * ```typescript
+ * import { clearEntryPointCache } from '@hyperfrontend/project-scope'
+ *
+ * // Reset cache before re-analyzing after file changes
+ * clearEntryPointCache()
+ * ```
  */
 export function clearEntryPointCache(): void {
   entryPointCache.clear()

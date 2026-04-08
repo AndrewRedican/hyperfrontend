@@ -18,6 +18,12 @@ export interface RemoveSectionOptions {
  * @param sectionType - The section type to remove
  * @param options - Optional removal options
  * @returns A new changelog without the specified section
+ *
+ * @example
+ * ```typescript
+ * const updated = removeSection(changelog, '1.0.0', 'deprecated')
+ * // Version 1.0.0 no longer has a deprecated section
+ * ```
  */
 export function removeSection(changelog: Changelog, version: string, sectionType: string, options?: RemoveSectionOptions): Changelog {
   const throwIfNotFound = options?.throwIfNotFound ?? true
@@ -66,6 +72,12 @@ export function removeSection(changelog: Changelog, version: string, sectionType
  * @param itemDescription - The description of the item to remove
  * @param options - Optional removal options
  * @returns A new changelog without the specified item
+ *
+ * @example
+ * ```typescript
+ * const updated = removeItem(changelog, '1.0.0', 'features', 'Add dark mode')
+ * // The 'Add dark mode' item is removed from features in 1.0.0
+ * ```
  */
 export function removeItem(
   changelog: Changelog,
@@ -134,6 +146,12 @@ export function removeItem(
  *
  * @param changelog - The changelog to remove empty sections from
  * @returns A new changelog with empty sections removed
+ *
+ * @example
+ * ```typescript
+ * const cleaned = removeEmptySections(changelog)
+ * // Sections with no items are removed from all entries
+ * ```
  */
 export function removeEmptySections(changelog: Changelog): Changelog {
   const newEntries = changelog.entries.map((entry) => {
@@ -161,6 +179,15 @@ export function removeEmptySections(changelog: Changelog): Changelog {
  * @param changelog - The changelog to remove empty entries from
  * @param keepUnreleased - Whether to keep an empty unreleased entry (default: true)
  * @returns A new changelog with empty entries removed
+ *
+ * @example
+ * ```typescript
+ * const cleaned = removeEmptyEntries(changelog)
+ * // Entries with no content are removed (unreleased kept by default)
+ *
+ * const strict = removeEmptyEntries(changelog, false)
+ * // Even empty unreleased entry is removed
+ * ```
  */
 export function removeEmptyEntries(changelog: Changelog, keepUnreleased = true): Changelog {
   const newEntries = changelog.entries.filter((entry) => {

@@ -28,6 +28,15 @@ export interface FileStats {
  * @param filePath - Path to file
  * @param followSymlinks - Whether to follow symlinks (default: true)
  * @returns File stats or null if path doesn't exist
+ *
+ * @example
+ * ```typescript
+ * const stats = getFileStat('./package.json')
+ * if (stats) {
+ *   console.log(`Size: ${stats.size} bytes`)
+ *   console.log(`Modified: ${stats.modified}`)
+ * }
+ * ```
  */
 export function getFileStat(filePath: string, followSymlinks = true): FileStats | null {
   if (!existsSync(filePath)) {
@@ -56,6 +65,13 @@ export function getFileStat(filePath: string, followSymlinks = true): FileStats 
  *
  * @param filePath - Path to check
  * @returns True if path is a file
+ *
+ * @example
+ * ```typescript
+ * if (isFile('./package.json')) {
+ *   // Path exists and is a regular file
+ * }
+ * ```
  */
 export function isFile(filePath: string): boolean {
   const stats = getFileStat(filePath)
@@ -67,6 +83,13 @@ export function isFile(filePath: string): boolean {
  *
  * @param dirPath - Path to check
  * @returns True if path is a directory
+ *
+ * @example
+ * ```typescript
+ * if (isDirectory('./src')) {
+ *   // Path exists and is a directory
+ * }
+ * ```
  */
 export function isDirectory(dirPath: string): boolean {
   const stats = getFileStat(dirPath)
@@ -78,6 +101,13 @@ export function isDirectory(dirPath: string): boolean {
  *
  * @param linkPath - Path to check
  * @returns True if path is a symlink
+ *
+ * @example
+ * ```typescript
+ * if (isSymlink('./node_modules/.bin/tsc')) {
+ *   // Path is a symbolic link
+ * }
+ * ```
  */
 export function isSymlink(linkPath: string): boolean {
   const stats = getFileStat(linkPath, false)
@@ -89,6 +119,13 @@ export function isSymlink(linkPath: string): boolean {
  *
  * @param filePath - Path to check
  * @returns True if path exists
+ *
+ * @example
+ * ```typescript
+ * if (exists('./config.json')) {
+ *   const config = readJsonFile('./config.json')
+ * }
+ * ```
  */
 export function exists(filePath: string): boolean {
   return existsSync(filePath)

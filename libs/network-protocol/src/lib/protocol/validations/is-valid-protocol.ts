@@ -9,6 +9,15 @@ import { keys } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
  *
  * @param protocol - The value to validate as a protocol
  * @returns A ValidProtocolResult object containing validation details for each protocol component
+ *
+ * @example
+ * ```typescript
+ * const result = isValidProtocol(myProtocol)
+ * // => { packetEncryption: true, packetDecryption: true, ... }
+ *
+ * const invalid = isValidProtocol({})
+ * // => { packetEncryption: false, packetDecryption: undefined, ... }
+ * ```
  */
 export function isValidProtocol(protocol: unknown): ValidProtocolResult {
   const result: ValidProtocolResult = {

@@ -1,3 +1,4 @@
+/* eslint-disable workspace/lib-require-jsdoc-example */
 /**
  * Result of a pattern safety check.
  */
@@ -66,6 +67,12 @@ function extractQuantifierUpperBound(pattern: string): number | null {
  *
  * @param pattern - The regex pattern string to check
  * @returns Result indicating if the pattern is safe
+ * @example
+ * ```typescript
+ * checkPatternSafety('^[a-z]+$')  // => { safe: true }
+ * checkPatternSafety('(a+)+')     // => { safe: false, reason: 'Nested quantifiers...' }
+ * checkPatternSafety('.*.*')      // => { safe: false, reason: 'Multiple unbounded wildcards...' }
+ * ```
  */
 export function checkPatternSafety(pattern: string): PatternSafetyResult {
   const MAX_PATTERN_LENGTH = 1000

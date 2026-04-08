@@ -15,6 +15,19 @@ export interface ParsedFooters {
  * @param lines - All lines of the commit message
  * @param startIndex - Index where footers start
  * @returns Parsed footers
+ *
+ * @example
+ * ```typescript
+ * const lines = ['feat: add feature', '', 'Refs: #123', 'Fixes #456']
+ * const result = parseFooters(lines, 2)
+ * // => {
+ * //   footers: [
+ * //     { key: 'Refs', value: '#123', separator: ':' },
+ * //     { key: 'Fixes', value: '456', separator: ' #' }
+ * //   ],
+ * //   breakingDescription: undefined
+ * // }
+ * ```
  */
 export function parseFooters(lines: string[], startIndex: number): ParsedFooters {
   const footers: CommitFooter[] = []

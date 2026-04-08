@@ -19,6 +19,15 @@ export interface ParsedHeader {
  *
  * @param line - The first line of the commit message
  * @returns Parsed header with type, scope, subject, and breaking flag
+ *
+ * @example
+ * ```typescript
+ * parseHeader('feat(auth): add OAuth login')
+ * // => { type: 'feat', scope: 'auth', subject: 'add OAuth login', breaking: false }
+ *
+ * parseHeader('fix!: critical security patch')
+ * // => { type: 'fix', scope: undefined, subject: 'critical security patch', breaking: true }
+ * ```
  */
 export function parseHeader(line: string): ParsedHeader {
   let pos = 0

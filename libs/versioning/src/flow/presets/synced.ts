@@ -31,6 +31,17 @@ export const SYNCED_FLOW_CONFIG: FlowConfig = {
  * Creates a step that updates all workspace packages to the same version.
  *
  * @returns A FlowStep that syncs all package versions
+ *
+ * @example
+ * ```typescript
+ * import { createSyncAllPackagesStep, executeStep } from '@hyperfrontend/versioning'
+ *
+ * const step = createSyncAllPackagesStep()
+ * const result = await executeStep(step, context)
+ *
+ * // All packages updated to same version
+ * console.log(result.stateUpdates?.modifiedFiles)
+ * ```
  */
 export function createSyncAllPackagesStep(): FlowStep {
   return createStep(
@@ -78,6 +89,17 @@ export function createSyncAllPackagesStep(): FlowStep {
  * Creates a step that generates a combined changelog for all packages.
  *
  * @returns A FlowStep that creates a combined changelog
+ *
+ * @example
+ * ```typescript
+ * import { createCombinedChangelogStep, executeStep } from '@hyperfrontend/versioning'
+ *
+ * const step = createCombinedChangelogStep()
+ * const result = await executeStep(step, context)
+ *
+ * // Single changelog for all packages
+ * console.log(result.message)
+ * ```
  */
 export function createCombinedChangelogStep(): FlowStep {
   return createStep(
@@ -172,6 +194,18 @@ export function createSyncedFlow(config?: Partial<FlowConfig>): VersionFlow {
  * @param version - The fixed version to use
  * @param config - Optional configuration overrides
  * @returns A VersionFlow with a fixed version
+ *
+ * @example
+ * ```typescript
+ * import { createFixedVersionFlow, executeFlow } from '@hyperfrontend/versioning'
+ *
+ * // Release with explicit version, ignoring commit analysis
+ * const flow = createFixedVersionFlow('2.0.0')
+ * const result = await executeFlow(flow, 'workspace', '/workspace')
+ *
+ * console.log(result.state.nextVersion)
+ * // => '2.0.0'
+ * ```
  */
 export function createFixedVersionFlow(version: string, config?: Partial<FlowConfig>): VersionFlow {
   const fixedBumpStep: FlowStep = createStep(

@@ -172,6 +172,19 @@ function commitToItem(commit: ConventionalCommit): ChangelogItem {
  * - changelogEntry: The generated ChangelogEntry
  *
  * @returns A FlowStep that generates changelog
+ *
+ * @example
+ * ```typescript
+ * import { createGenerateChangelogStep, executeStep } from '@hyperfrontend/versioning'
+ *
+ * const step = createGenerateChangelogStep()
+ * const result = await executeStep(step, context)
+ *
+ * // Access the generated changelog entry
+ * const entry = result.stateUpdates?.changelogEntry
+ * console.log(entry?.version, entry?.sections.length)
+ * // => '1.2.0', 3
+ * ```
  */
 export function createGenerateChangelogStep(): FlowStep {
   return createStep(
@@ -364,6 +377,18 @@ export function createGenerateChangelogStep(): FlowStep {
  * This step writes the generated changelog entry to CHANGELOG.md.
  *
  * @returns A FlowStep that writes changelog to file
+ *
+ * @example
+ * ```typescript
+ * import { createWriteChangelogStep, executeStep } from '@hyperfrontend/versioning'
+ *
+ * const step = createWriteChangelogStep()
+ * const result = await executeStep(step, context)
+ *
+ * // CHANGELOG.md is updated with the new entry
+ * console.log(result.message)
+ * // => 'Updated CHANGELOG.md with version 1.2.0'
+ * ```
  */
 export function createWriteChangelogStep(): FlowStep {
   return createStep(

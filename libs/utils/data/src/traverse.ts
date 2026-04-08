@@ -95,6 +95,12 @@ const traversal: Traversal = (target, condition, callback, options, state) => {
  *
  * @param condition - Predicate function to determine whether to traverse a data point
  * @returns A traversal function configured with the condition
+ *
+ * @example
+ * ```typescript
+ * const customTraverse = createTraversal((config, key, value) => value !== null)
+ * customTraverse(data, callback, options)
+ * ```
  */
 export const createTraversal: TraversalCreator<unknown> = (condition) => (target, callback, options, state) =>
   traversal(target, condition, callback, options ?? { depth: [0, '*'] }, state ?? {})
@@ -112,6 +118,13 @@ const traverseBetweenDepthRange = createTraversal(condition)
  * @param options - Optional configuration to control traversal depth
  * @param state - Optional state object to maintain across traversal callbacks
  * @returns The state object after traversal completes
+ *
+ * @example
+ * ```typescript
+ * traverse({ a: { b: 1 } }, (key, value, path) => {
+ *   console.log(path.join('.'), '=', value)
+ * })
+ * ```
  */
 export const traverse = <T = unknown, S extends Record<string, unknown> = Record<string, unknown>>(
   target: T,

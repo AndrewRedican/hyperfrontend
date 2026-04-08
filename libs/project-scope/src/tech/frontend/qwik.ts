@@ -13,6 +13,27 @@ import { collectAllDependencies, parseVersionString } from '../shared-utils/dete
  * @param projectPath - Project directory path
  * @param packageJson - Optional pre-loaded package.json
  * @returns Detection result or null if not detected
+ *
+ * @example
+ * ```typescript
+ * const result = qwikDetector('/path/to/qwik-app', {
+ *   dependencies: {
+ *     '@builder.io/qwik': '^1.0.0',
+ *     '@builder.io/qwik-city': '^1.0.0'
+ *   }
+ * })
+ * // => {
+ * //   id: 'qwik',
+ * //   name: 'Qwik',
+ * //   category: 'frontend',
+ * //   version: '1.0.0',
+ * //   confidence: 90,
+ * //   detectedFrom: [
+ * //     { type: 'package.json', field: 'dependencies.@builder.io/qwik' },
+ * //     { type: 'package.json', field: 'dependencies.@builder.io/qwik-city' }
+ * //   ]
+ * // }
+ * ```
  */
 export function qwikDetector(projectPath: string, packageJson?: PackageJson): FrameworkDetection | null {
   const pkg = packageJson ?? readPackageJsonIfExists(projectPath)

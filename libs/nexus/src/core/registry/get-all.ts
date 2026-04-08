@@ -18,6 +18,13 @@ interface MinimalChannel {
  *
  * @param registry - The channel registry instance
  * @returns Array of all registered channels
+ *
+ * @example
+ * ```typescript
+ * const registry = createRegistry()
+ * const channels = getAll(registry)
+ * channels.forEach(ch => console.log(ch.name))
+ * ```
  */
 export function getAll(registry: ChannelRegistry): MinimalChannel[] {
   return registry.getAll()

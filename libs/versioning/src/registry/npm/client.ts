@@ -274,6 +274,13 @@ const MAX_PACKAGE_NAME_LENGTH = 214
  * @param name - Package name to escape
  * @returns Safe package name
  * @throws {Error} If package name contains invalid characters
+ *
+ * @example
+ * ```typescript
+ * escapePackageName('@scope/package') // => '@scope/package'
+ * escapePackageName('simple-pkg') // => 'simple-pkg'
+ * escapePackageName('pkg$invalid') // throws - '$' is invalid
+ * ```
  */
 export function escapePackageName(name: string): string {
   if (!name || typeof name !== 'string') {
@@ -319,6 +326,13 @@ const MAX_VERSION_LENGTH = 256
  * @param version - Version string to escape
  * @returns Safe version string
  * @throws {Error} If version contains invalid characters
+ *
+ * @example
+ * ```typescript
+ * escapeVersion('1.2.3') // => '1.2.3'
+ * escapeVersion('1.0.0-beta.1') // => '1.0.0-beta.1'
+ * escapeVersion('1.0.0+build') // => '1.0.0+build'
+ * ```
  */
 export function escapeVersion(version: string): string {
   if (!version || typeof version !== 'string') {

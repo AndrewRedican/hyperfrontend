@@ -20,6 +20,14 @@ export const lintingDetectors: LintingToolDetector[] = [
  * @param projectPath - Project directory path
  * @param packageJson - Optional pre-loaded package.json
  * @returns Array of detected linting tools, sorted by confidence
+ *
+ * @example
+ * ```typescript
+ * const results = detectLintingTools('/path/to/project', {
+ *   devDependencies: { eslint: '^8.0.0', prettier: '^3.0.0' },
+ * })
+ * // => [{ id: 'eslint', confidence: 50 }, { id: 'prettier', confidence: 50 }]
+ * ```
  */
 export function detectLintingTools(projectPath: string, packageJson?: PackageJson): LintingToolDetection[] {
   const pkg = packageJson ?? readPackageJsonIfExists(projectPath)

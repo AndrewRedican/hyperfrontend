@@ -15,6 +15,28 @@ export const ROLLUP_CONFIG_PATTERNS = ['rollup.config.js', 'rollup.config.ts', '
  * @param projectPath - Project directory path
  * @param packageJson - Optional pre-loaded package.json
  * @returns Detection result or null if not detected
+ *
+ * @example
+ * ```typescript
+ * const result = rollupDetector('/path/to/project', {
+ *   name: 'my-lib',
+ *   devDependencies: {
+ *     'rollup': '^4.0.0',
+ *     '@rollup/plugin-node-resolve': '^15.0.0',
+ *     '@rollup/plugin-commonjs': '^25.0.0'
+ *   }
+ * })
+ * // => {
+ * //   id: 'rollup',
+ * //   name: 'Rollup',
+ * //   version: '4.0.0',
+ * //   confidence: 65,
+ * //   detectedFrom: [
+ * //     { type: 'package.json', field: 'dependencies.rollup' },
+ * //     { type: 'package.json', field: 'dependencies (rollup plugins)' }
+ * //   ]
+ * // }
+ * ```
  */
 export function rollupDetector(projectPath: string, packageJson?: PackageJson): BuildToolDetection | null {
   const pkg = packageJson ?? readPackageJsonIfExists(projectPath)

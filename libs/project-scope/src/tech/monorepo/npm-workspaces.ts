@@ -12,6 +12,22 @@ import { readPackageJsonIfExists } from '../../project/package'
  * @param workspacePath - Workspace directory path
  * @param packageJson - Optional pre-loaded package.json
  * @returns Detection result or null if not detected
+ *
+ * @example
+ * ```typescript
+ * // Project with workspaces in package.json and package-lock.json
+ * const result = npmWorkspacesDetector('/path/to/npm-project')
+ * // => {
+ * //   id: 'npm-workspaces',
+ * //   name: 'npm Workspaces',
+ * //   confidence: 90,
+ * //   configPath: 'package.json',
+ * //   detectedFrom: [
+ * //     { type: 'package.json', field: 'workspaces' },
+ * //     { type: 'lockfile', path: 'package-lock.json' }
+ * //   ]
+ * // }
+ * ```
  */
 export function npmWorkspacesDetector(workspacePath: string, packageJson?: PackageJson): MonorepoDetection | null {
   const pkg = packageJson ?? readPackageJsonIfExists(workspacePath)

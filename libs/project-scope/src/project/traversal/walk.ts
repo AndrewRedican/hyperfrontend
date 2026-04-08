@@ -124,6 +124,18 @@ function matchPattern(path: string, pattern: string): boolean {
  * @param startPath - Root directory to begin traversal
  * @param visitor - Callback function invoked for each file system entry
  * @param options - Configuration for traversal behavior
+ *
+ * @example
+ * ```typescript
+ * import { walkDirectory } from '@hyperfrontend/project-scope'
+ *
+ * const tsFiles: string[] = []
+ * walkDirectory('./src', (entry) => {
+ *   if (entry.isFile && entry.name.endsWith('.ts')) {
+ *     tsFiles.push(entry.relativePath)
+ *   }
+ * }, { maxDepth: 5, respectGitignore: true })
+ * ```
  */
 export function walkDirectory(startPath: string, visitor: WalkVisitor, options?: WalkOptions): void {
   walkLogger.debug('Starting directory walk', {
@@ -221,6 +233,19 @@ export function walkDirectory(startPath: string, visitor: WalkVisitor, options?:
  * @param startPath - Root path within the tree to begin traversal
  * @param visitor - Callback function invoked for each tree entry
  * @param options - Configuration for traversal behavior
+ *
+ * @example
+ * ```typescript
+ * import { createTree, walkTree } from '@hyperfrontend/project-scope'
+ *
+ * const tree = createTree('/workspace')
+ * walkTree(tree, 'src', (entry) => {
+ *   if (entry.isDirectory) {
+ *     console.log('Dir:', entry.relativePath)
+ *     return 'skip' // Don't recurse into this directory
+ *   }
+ * })
+ * ```
  */
 export function walkTree(tree: Tree, startPath: string, visitor: WalkVisitor, options?: WalkOptions): void {
   const maxDepth = options?.maxDepth ?? -1

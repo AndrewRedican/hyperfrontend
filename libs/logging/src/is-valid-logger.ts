@@ -8,6 +8,13 @@ import { isArray } from '@hyperfrontend/immutable-api-utils/built-in-copy/array'
  *
  * @param logger - The object to validate
  * @returns True if the object is a valid logger, false otherwise
+ *
+ * @example
+ * ```typescript
+ * const logger = createLogger(console.error)
+ * isValidLogger(logger) // => true
+ * isValidLogger({}) // => false
+ * ```
  */
 export function isValidLogger(logger: unknown): boolean {
   const l = <Logger>logger

@@ -27,6 +27,21 @@ export interface Clock {
  *
  * @param interval - Time in milliseconds between each callback invocation (default: 1000ms)
  * @returns A Clock instance with start, stop, subscribe, and unsubscribe methods
+ *
+ * @example
+ * ```typescript
+ * const clock = createClock(1000)
+ *
+ * const updateDisplay = (currentTime: Date) => {
+ *   console.log(currentTime.toISOString())
+ * }
+ *
+ * clock.subscribe(updateDisplay)
+ * clock.start()
+ *
+ * // Later: stop receiving updates
+ * clock.stop()
+ * ```
  */
 export function createClock(interval = 1000): Clock {
   let clockId: NodeJS.Timeout | null = null

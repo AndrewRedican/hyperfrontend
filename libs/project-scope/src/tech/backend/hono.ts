@@ -12,6 +12,24 @@ import { collectAllDependencies, parseVersionString } from '../shared-utils/dete
  * @param projectPath - Project directory path
  * @param packageJson - Optional pre-loaded package.json
  * @returns Detection result or null if not detected
+ * @example
+ * ```typescript
+ * const pkg = {
+ *   dependencies: { hono: '^3.11.0', '@hono/node-server': '^1.3.0' },
+ * }
+ *
+ * const result = honoDetector('/path/to/project', pkg)
+ * // => {
+ * //   id: 'hono',
+ * //   name: 'Hono',
+ * //   version: '3.11.0',
+ * //   confidence: 100,
+ * //   detectedFrom: [
+ * //     { type: 'package.json', field: 'dependencies.hono' },
+ * //     { type: 'package.json', field: 'dependencies (@hono adapters)' },
+ * //   ],
+ * // }
+ * ```
  */
 export function honoDetector(projectPath: string, packageJson?: PackageJson): BackendDetection | null {
   const pkg = packageJson ?? readPackageJsonIfExists(projectPath)

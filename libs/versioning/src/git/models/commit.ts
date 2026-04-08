@@ -121,6 +121,11 @@ export function createGitCommit(options: CreateGitCommitOptions): GitCommit {
  *
  * @param hash - Full commit hash
  * @returns Short hash (7 characters)
+ *
+ * @example
+ * ```typescript
+ * getShortHash('abc123def456789') // => 'abc123d'
+ * ```
  */
 export function getShortHash(hash: string): string {
   return hash.slice(0, 7)
@@ -132,6 +137,11 @@ export function getShortHash(hash: string): string {
  * @param a - First commit
  * @param b - Second commit
  * @returns True if commits have the same hash
+ *
+ * @example
+ * ```typescript
+ * isSameCommit(commitA, commitB) // => true if commitA.hash === commitB.hash
+ * ```
  */
 export function isSameCommit(a: GitCommit, b: GitCommit): boolean {
   return a.hash === b.hash
@@ -142,6 +152,13 @@ export function isSameCommit(a: GitCommit, b: GitCommit): boolean {
  *
  * @param commit - Commit to check
  * @returns True if commit has more than one parent
+ *
+ * @example
+ * ```typescript
+ * if (isMergeCommit(commit)) {
+ *   console.log('Commit has parents:', commit.parents)
+ * }
+ * ```
  */
 export function isMergeCommit(commit: GitCommit): boolean {
   return commit.parents.length > 1
@@ -152,6 +169,13 @@ export function isMergeCommit(commit: GitCommit): boolean {
  *
  * @param commit - Commit to check
  * @returns True if commit has no parents
+ *
+ * @example
+ * ```typescript
+ * if (isRootCommit(commit)) {
+ *   console.log('This is the initial commit')
+ * }
+ * ```
  */
 export function isRootCommit(commit: GitCommit): boolean {
   return commit.parents.length === 0

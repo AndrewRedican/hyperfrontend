@@ -35,6 +35,17 @@ import { isValidSendFn } from '../../validations/is-valid-send-fn'
  * @param {PacketDecrypter} decryptPacket - Function to decrypt a packet with password
  * @param {(refreshRate: number) => ObfuscationSuite} createTimeIntervalObfuscation - Factory for time-based obfuscation
  * @returns {(logger: Logger, sharedKey: string, refreshRate?: number) => ProtocolProvider<T>} A function that creates protocol providers
+ *
+ * @example
+ * ```typescript
+ * const createProvider = createPSKHandshakeProtocolFactory(
+ *   encryptPacket,
+ *   decryptPacket,
+ *   createTimeIntervalObfuscation
+ * )
+ * const protocolProvider = createProvider(logger, 'shared-secret-key', 5)
+ * const protocol = protocolProvider(sendFn, receiveFn)
+ * ```
  */
 export function createPSKHandshakeProtocolFactory<T = any>(
   encryptPacket: PacketEncrypter,

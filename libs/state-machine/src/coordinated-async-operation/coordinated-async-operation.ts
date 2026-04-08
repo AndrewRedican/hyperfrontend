@@ -2,6 +2,17 @@ import type { AsyncProcess } from '../async-operation/async-operation.model'
 import { promiseAll } from '@hyperfrontend/immutable-api-utils/built-in-copy/promise'
 import { AsyncOperation } from '../async-operation/async-operation'
 
+/**
+ * Coordinates multiple async operations, allowing them to be started, cancelled, or paused together.
+ *
+ * @example
+ * ```typescript
+ * const coordinator = new CoordinatedAsyncProcess()
+ *   .registerProcess(fetchUsers)
+ *   .registerProcess(fetchOrders)
+ * await coordinator.startAll()
+ * ```
+ */
 export class CoordinatedAsyncProcess {
   private asyncOperations: AsyncOperation[] = []
 

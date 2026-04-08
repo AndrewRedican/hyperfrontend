@@ -45,6 +45,22 @@ export type ElementMethods<T extends HTMLElement> = {
  * @param tagName - The HTML tag name to create
  * @param config - Optional configuration for the element including styles and class names
  * @returns An ElementMethods object with helper methods and a reference to the created element
+ *
+ * @example
+ * ```typescript
+ * const card = createElement('div', {
+ *   className: 'card',
+ *   classNames: ['shadow', 'rounded'],
+ *   inlineStyle: { padding: '16px', margin: '8px' }
+ * })
+ *
+ * const title = createElement('h2')
+ * title.ref.textContent = 'Card Title'
+ *
+ * card.addChild(title)
+ * card.attachTo(document.body)
+ * card.show(300) // Fade in over 300ms
+ * ```
  */
 export function createElement<T extends HTMLElement>(tagName: HtmlTagName, config?: ElementConfig): ElementMethods<T> {
   const element = <T>document.createElement(tagName)

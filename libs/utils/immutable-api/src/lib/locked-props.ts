@@ -8,6 +8,22 @@ export type PropertyLock = (
   propertyValuePairs: [string, any][]
 ) => void
 
+/**
+ * Locks multiple properties on an object making them non-writable and non-configurable.
+ *
+ * @param object - The object to lock properties on
+ * @param propertyValuePairs - Array of [key, value] pairs to lock
+ *
+ * @example
+ * ```typescript
+ * const config = {}
+ * lockedProps(config, [
+ *   ['apiUrl', 'https://api.example.com'],
+ *   ['version', '1.0.0'],
+ * ])
+ * config.apiUrl = 'hacked' // throws in strict mode, silently fails otherwise
+ * ```
+ */
 export const lockedProps: PropertyLock = (object, propertyValuePairs) => {
   const propertyMap: PropertyDescriptorMap = {}
   propertyValuePairs.forEach(([key, value]) => (propertyMap[key] = lockedPropertyDescriptors(value)))

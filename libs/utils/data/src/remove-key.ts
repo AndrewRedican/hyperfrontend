@@ -15,6 +15,12 @@ import { traverse } from './traverse'
  * @param pattern - The string or regular expression pattern to match against key names for removal
  * @param options - Optional configuration to control traversal depth
  * @returns An array of paths to locations where keys were removed
+ *
+ * @example
+ * ```typescript
+ * const obj = { a: 1, temp: 2, b: { temp: 3 } }
+ * removeKey(obj, 'temp') // [['temp'], ['b', 'temp']]
+ * ```
  */
 export const removeKey = (target: unknown, pattern: string | RegExp, options?: DepthConfig): string[][] => {
   const patternIsString = typeof pattern === 'string'

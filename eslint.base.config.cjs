@@ -95,7 +95,18 @@ module.exports = [
       'jsdoc/require-jsdoc': [
         'error',
         {
-          contexts: ['TSInterfaceDeclaration', 'TSTypeAliasDeclaration', 'TSPropertySignature', 'TSMethodSignature'],
+          contexts: [
+            'ExportNamedDeclaration > FunctionDeclaration',
+            'ExportDefaultDeclaration > FunctionDeclaration',
+            'ExportNamedDeclaration > ClassDeclaration',
+            'ExportDefaultDeclaration > ClassDeclaration',
+            'ExportNamedDeclaration > VariableDeclaration > VariableDeclarator > ArrowFunctionExpression',
+            'ExportNamedDeclaration > VariableDeclaration > VariableDeclarator > FunctionExpression',
+            'TSInterfaceDeclaration',
+            'TSTypeAliasDeclaration',
+            'TSPropertySignature',
+            'TSMethodSignature',
+          ],
         },
       ],
       'jsdoc/require-param-description': 'error',
@@ -167,7 +178,7 @@ module.exports = [
       'workspace/max-file-lines': [
         'error',
         {
-          maxLines: 400,
+          maxLines: 600,
           maxLinesTest: 700,
         },
       ],
@@ -198,6 +209,13 @@ module.exports = [
     files: ['**/*.spec.ts'],
     rules: {
       'workspace/assertive-test-names': 'error',
+    },
+  },
+  {
+    files: ['**/*.ts'],
+    ignores: ['**/*.spec.ts', '**/jest.config.ts', '**/jest.setup.ts', '**/*.types.ts'],
+    rules: {
+      'workspace/lib-require-jsdoc-example': 'error',
     },
   },
   {

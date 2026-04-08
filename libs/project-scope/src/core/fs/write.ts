@@ -28,6 +28,12 @@ export interface WriteJsonOptions extends WriteFileOptions {
  * Ensure directory exists, create recursively if not.
  *
  * @param dirPath - Directory path to ensure exists
+ *
+ * @example
+ * ```typescript
+ * ensureDir('./output/reports')
+ * // Directory now exists (created if missing)
+ * ```
  */
 export function ensureDir(dirPath: string): void {
   if (!existsSync(dirPath)) {
@@ -79,6 +85,12 @@ export function writeFileContent(filePath: string, content: string, options?: Wr
  * @param content - Buffer containing binary data to write
  * @param options - Optional write configuration (mode)
  * @throws {Error} If write fails
+ *
+ * @example
+ * ```typescript
+ * const imageBuffer = Buffer.from([0x89, 0x50, 0x4e, 0x47])
+ * writeFileBuffer('./output/image.png', imageBuffer)
+ * ```
  */
 export function writeFileBuffer(filePath: string, content: Buffer, options?: WriteFileOptions): void {
   try {

@@ -9,6 +9,15 @@ import * as v4Schema from './v4.json'
  *
  * @param schema - The value to validate as a JSON Schema
  * @returns True if the value is a valid JSON Schema v4 schema, false otherwise
+ *
+ * @example
+ * ```typescript
+ * isValidSchema({ type: 'object', properties: { name: { type: 'string' } } })
+ * // => true
+ *
+ * isValidSchema({ type: 'invalid-type' })
+ * // => false
+ * ```
  */
 export function isValidSchema(schema: unknown): boolean {
   return validate(schema, <Schema>v4Schema).valid

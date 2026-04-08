@@ -90,6 +90,15 @@ export function serializeChangelogToJson(changelog: Changelog, options?: JsonSer
  * @param changelog - The changelog to convert
  * @param options - Optional JSON serialization options
  * @returns A plain object suitable for JSON serialization
+ *
+ * @example
+ * ```typescript
+ * const obj = toJsonObject(changelog, { includeSource: true })
+ * // => { source: 'CHANGELOG.md', header: { title: '...', ... }, entries: [...] }
+ *
+ * // Send as API response
+ * res.json(obj)
+ * ```
  */
 export function toJsonObject(changelog: Changelog, options?: JsonSerializeOptions): Record<string, unknown> {
   const opts = resolveJsonOptions(options)

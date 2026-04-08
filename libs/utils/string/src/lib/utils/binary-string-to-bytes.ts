@@ -7,6 +7,12 @@ import { createUint8Array } from '@hyperfrontend/immutable-api-utils/built-in-co
  *
  * @param binaryStr - The Latin-1 binary string to convert
  * @returns A Uint8Array containing the byte values from the string
+ *
+ * @example
+ * ```typescript
+ * const bytes = binaryStringToBytes('Hello')
+ * // => Uint8Array([72, 101, 108, 108, 111])
+ * ```
  */
 export function binaryStringToBytes(binaryStr: string) {
   const bytes = createUint8Array(binaryStr.length)

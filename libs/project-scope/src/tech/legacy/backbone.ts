@@ -11,6 +11,14 @@ import { collectAllDependencies, parseVersionString } from '../shared-utils/dete
  * @param projectPath - Project directory path
  * @param packageJson - Optional pre-loaded package.json
  * @returns Detection result or null if not detected
+ *
+ * @example
+ * ```typescript
+ * const result = backboneDetector('/path/to/project', {
+ *   dependencies: { backbone: '^1.4.0', underscore: '^1.13.0' },
+ * })
+ * // => { id: 'backbone', name: 'Backbone.js', confidence: 85, version: '1.4.0', ... }
+ * ```
  */
 export function backboneDetector(projectPath: string, packageJson?: PackageJson): LegacyFrameworkDetection | null {
   const pkg = packageJson ?? readPackageJsonIfExists(projectPath)

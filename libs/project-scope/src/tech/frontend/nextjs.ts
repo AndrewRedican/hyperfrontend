@@ -13,6 +13,21 @@ import { collectAllDependencies, parseVersionString } from '../shared-utils/dete
  * @param projectPath - Project directory path
  * @param packageJson - Optional pre-loaded package.json
  * @returns Detection result or null if not detected
+ *
+ * @example
+ * ```typescript
+ * const result = nextjsDetector('/path/to/nextjs-app', {
+ *   dependencies: { 'next': '^14.0.0', 'react': '^18.0.0' }
+ * })
+ * // => {
+ * //   id: 'nextjs',
+ * //   name: 'Next.js',
+ * //   category: 'meta-framework',
+ * //   version: '14.0.0',
+ * //   confidence: 70,
+ * //   detectedFrom: [{ type: 'package.json', field: 'dependencies.next' }]
+ * // }
+ * ```
  */
 export function nextjsDetector(projectPath: string, packageJson?: PackageJson): FrameworkDetection | null {
   const pkg = packageJson ?? readPackageJsonIfExists(projectPath)

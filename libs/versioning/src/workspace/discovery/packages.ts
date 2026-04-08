@@ -314,6 +314,19 @@ function buildProjectsWithDependencies(rawPackages: RawPackageInfo[], packageNam
  *
  * @param projectPath - Path to project directory or package.json
  * @returns The discovered project or null if not found
+ *
+ * @example
+ * ```typescript
+ * import { discoverProject } from '@hyperfrontend/versioning'
+ *
+ * const project = discoverProject('./libs/utils')
+ * if (project) {
+ *   console.log(`Found ${project.name}@${project.version}`)
+ * }
+ *
+ * // Also accepts direct package.json path
+ * const project2 = discoverProject('./libs/utils/package.json')
+ * ```
  */
 export function discoverProject(projectPath: string): Project | null {
   const packageJsonPath = projectPath.endsWith('package.json') ? projectPath : join(projectPath, 'package.json')
@@ -345,6 +358,19 @@ export function discoverProject(projectPath: string): Project | null {
  * @param projectName - Name of the project to find
  * @param options - Discovery options
  * @returns The project or null if not found
+ *
+ * @example
+ * ```typescript
+ * import { discoverProjectByName } from '@hyperfrontend/versioning'
+ *
+ * const project = discoverProjectByName('@myorg/utils')
+ * if (project) {
+ *   console.log(`Found at ${project.path}`)
+ * }
+ *
+ * // With custom workspace root
+ * const project2 = discoverProjectByName('@myorg/core', { workspaceRoot: '/custom/path' })
+ * ```
  */
 export function discoverProjectByName(projectName: string, options: DiscoveryOptions = {}): Project | null {
   const result = discoverPackages(options)

@@ -7,6 +7,27 @@ import { getValidationError } from '../utils/get-validation-error'
 import { isValidQueueCreaterArguments } from '../validations/is-valid-queue-creater-arguments'
 import { createQueue } from './create-queue'
 
+/**
+ * Creates a serialization queue for processing unserialized encrypted packets.
+ *
+ * @param label - Identifier for the queue used in logging
+ * @param packetSerialization - Function to serialize packets
+ * @param logger - Logger instance for debug and error messages
+ * @param onSuccess - Callback invoked when a packet is successfully serialized
+ * @param onFail - Callback invoked when serialization fails
+ * @returns A queue instance for processing unserialized packets
+ *
+ * @example
+ * ```typescript
+ * const queue = createSerializationQueue(
+ *   'message-encoder',
+ *   async (packet) => ({ ...packet, data: JSON.stringify(packet.data) }),
+ *   logger,
+ *   (serialized) => handleSerialized(serialized),
+ *   (failed) => handleFailed(failed)
+ * )
+ * ```
+ */
 export const createSerializationQueue: SerializationQueueCreater = (label, packetSerialization, logger, onSuccess, onFail) => {
   const validity = isValidQueueCreaterArguments({
     label,

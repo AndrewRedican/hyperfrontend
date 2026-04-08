@@ -7,6 +7,14 @@ import { isObject } from './_utils'
  *
  * @param contract - The contract to validate
  * @throws {Error} Error if contract is invalid
+ *
+ * @example
+ * ```typescript
+ * validateContract({
+ *   emitted: [{ type: 'ping' }],
+ *   accepted: [{ type: 'pong' }]
+ * })
+ * ```
  */
 export function validateContract(contract: unknown): void {
   if (!contract) {

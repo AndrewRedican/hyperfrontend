@@ -11,6 +11,17 @@ import { addError, shouldContinue } from '../context'
  * @param schema - Schema containing the dependencies constraint
  * @param ctx - Validation context
  * @returns true if validation passes, false otherwise
+ * @example
+ * ```typescript
+ * const schema = {
+ *   dependencies: {
+ *     creditCard: ['billingAddress'],  // if creditCard present, billingAddress required
+ *     name: { required: ['email'] }    // if name present, email required via schema
+ *   }
+ * }
+ * validateDependencies({ creditCard: '1234', billingAddress: '123 Main St' }, schema, ctx) // => true
+ * validateDependencies({ creditCard: '1234' }, schema, ctx) // => false (missing billingAddress)
+ * ```
  */
 export function validateDependencies(instance: Record<string, unknown>, schema: Schema, ctx: ValidationContext): boolean {
   if (!schema.dependencies) {

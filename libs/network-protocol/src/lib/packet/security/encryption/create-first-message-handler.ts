@@ -16,6 +16,15 @@ import { deserializeData } from '../../../data/model'
  * @param textEncoder - Function to encode a string to Uint8Array
  * @param textDecoder - Function to decode Uint8Array to string
  * @returns FirstMessageHandler for handling unencrypted first messages
+ *
+ * @example
+ * ```typescript
+ * const handler = createFirstMessageHandler(
+ *   (text) => new TextEncoder().encode(text),
+ *   (data) => new TextDecoder().decode(data)
+ * )
+ * const serialized = await handler.serializeWithoutEncryption(packet)
+ * ```
  */
 export function createFirstMessageHandler<T = any>(
   textEncoder: (text: string) => Uint8Array,

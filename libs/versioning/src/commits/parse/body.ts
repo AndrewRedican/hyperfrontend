@@ -15,6 +15,19 @@ export interface ParsedBody {
  * @param lines - All lines of the commit message
  * @param startIndex - Index to start looking for body (after header)
  * @returns Parsed body or undefined if no body
+ *
+ * @example
+ * ```typescript
+ * const lines = [
+ *   'feat: add login',
+ *   '',
+ *   'Implements OAuth flow.',
+ *   '',
+ *   'Refs: #123'
+ * ]
+ * const result = parseBody(lines, 1)
+ * // => { body: 'Implements OAuth flow.', endIndex: 4 }
+ * ```
  */
 export function parseBody(lines: string[], startIndex: number): ParsedBody | undefined {
   let pos = startIndex

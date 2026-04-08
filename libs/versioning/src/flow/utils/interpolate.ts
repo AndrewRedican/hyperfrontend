@@ -8,6 +8,17 @@ import { entries } from '@hyperfrontend/immutable-api-utils/built-in-copy/object
  * @param template - Template string with ${var} placeholders
  * @param vars - Variable values
  * @returns Interpolated string
+ *
+ * @example
+ * ```typescript
+ * import { interpolate } from '@hyperfrontend/versioning'
+ *
+ * const message = interpolate('chore(${projectName}): release ${version}', {
+ *   projectName: 'my-lib',
+ *   version: '1.2.0'
+ * })
+ * // => 'chore(my-lib): release 1.2.0'
+ * ```
  */
 export function interpolate(template: string, vars: Record<string, string>): string {
   let result = template

@@ -63,6 +63,12 @@ export function compare(a: SemVer, b: SemVer): -1 | 0 | 1 {
  * @param a - First version
  * @param b - Second version
  * @returns True if versions are equal
+ *
+ * @example
+ * ```typescript
+ * eq(parseVersionStrict('1.0.0'), parseVersionStrict('1.0.0')) // => true
+ * eq(parseVersionStrict('1.0.0'), parseVersionStrict('1.0.1')) // => false
+ * ```
  */
 export function eq(a: SemVer, b: SemVer): boolean {
   return compare(a, b) === 0
@@ -74,6 +80,12 @@ export function eq(a: SemVer, b: SemVer): boolean {
  * @param a - First version to compare
  * @param b - Second version to compare
  * @returns True if a is less than b
+ *
+ * @example
+ * ```typescript
+ * lt(parseVersionStrict('1.0.0'), parseVersionStrict('2.0.0')) // => true
+ * lt(parseVersionStrict('2.0.0'), parseVersionStrict('1.0.0')) // => false
+ * ```
  */
 export function lt(a: SemVer, b: SemVer): boolean {
   return compare(a, b) === -1
@@ -85,6 +97,12 @@ export function lt(a: SemVer, b: SemVer): boolean {
  * @param a - First version to compare
  * @param b - Second version to compare
  * @returns True if a is less than or equal to b
+ *
+ * @example
+ * ```typescript
+ * lte(parseVersionStrict('1.0.0'), parseVersionStrict('1.0.0')) // => true
+ * lte(parseVersionStrict('1.0.0'), parseVersionStrict('2.0.0')) // => true
+ * ```
  */
 export function lte(a: SemVer, b: SemVer): boolean {
   return compare(a, b) !== 1
@@ -96,6 +114,12 @@ export function lte(a: SemVer, b: SemVer): boolean {
  * @param a - First version to compare
  * @param b - Second version to compare
  * @returns True if a is greater than b
+ *
+ * @example
+ * ```typescript
+ * gt(parseVersionStrict('2.0.0'), parseVersionStrict('1.0.0')) // => true
+ * gt(parseVersionStrict('1.0.0'), parseVersionStrict('2.0.0')) // => false
+ * ```
  */
 export function gt(a: SemVer, b: SemVer): boolean {
   return compare(a, b) === 1
@@ -107,6 +131,12 @@ export function gt(a: SemVer, b: SemVer): boolean {
  * @param a - First version to compare
  * @param b - Second version to compare
  * @returns True if a is greater than or equal to b
+ *
+ * @example
+ * ```typescript
+ * gte(parseVersionStrict('2.0.0'), parseVersionStrict('1.0.0')) // => true
+ * gte(parseVersionStrict('1.0.0'), parseVersionStrict('1.0.0')) // => true
+ * ```
  */
 export function gte(a: SemVer, b: SemVer): boolean {
   return compare(a, b) !== -1
@@ -118,6 +148,12 @@ export function gte(a: SemVer, b: SemVer): boolean {
  * @param a - First version to compare
  * @param b - Second version to compare
  * @returns True if versions are not equal
+ *
+ * @example
+ * ```typescript
+ * neq(parseVersionStrict('1.0.0'), parseVersionStrict('2.0.0')) // => true
+ * neq(parseVersionStrict('1.0.0'), parseVersionStrict('1.0.0')) // => false
+ * ```
  */
 export function neq(a: SemVer, b: SemVer): boolean {
   return compare(a, b) !== 0
@@ -129,6 +165,13 @@ export function neq(a: SemVer, b: SemVer): boolean {
  * @param version - Version to check
  * @param comparator - Comparator to test against
  * @returns True if version satisfies the comparator
+ *
+ * @example
+ * ```typescript
+ * const gte100 = createComparator('>=', parseVersionStrict('1.0.0'))
+ * satisfiesComparator(parseVersionStrict('2.0.0'), gte100) // => true
+ * satisfiesComparator(parseVersionStrict('0.9.0'), gte100) // => false
+ * ```
  */
 export function satisfiesComparator(version: SemVer, comparator: Comparator): boolean {
   const cmp = compare(version, comparator.version)
@@ -196,6 +239,13 @@ export function satisfies(version: SemVer, range: Range): boolean {
  * @param versions - Array of versions to check
  * @param range - Range to test against
  * @returns The maximum satisfying version, or null if none satisfy
+ *
+ * @example
+ * ```typescript
+ * const versions = ['1.0.0', '1.5.0', '2.0.0'].map(parseVersionStrict)
+ * maxSatisfying(versions, parseRangeStrict('^1.0.0'))
+ * // => { major: 1, minor: 5, patch: 0, ... }
+ * ```
  */
 export function maxSatisfying(versions: readonly SemVer[], range: Range): SemVer | null {
   let max: SemVer | null = null
@@ -217,6 +267,13 @@ export function maxSatisfying(versions: readonly SemVer[], range: Range): SemVer
  * @param versions - Array of versions to check
  * @param range - Range to test against
  * @returns The minimum satisfying version, or null if none satisfy
+ *
+ * @example
+ * ```typescript
+ * const versions = ['1.0.0', '1.5.0', '2.0.0'].map(parseVersionStrict)
+ * minSatisfying(versions, parseRangeStrict('^1.0.0'))
+ * // => { major: 1, minor: 0, patch: 0, ... }
+ * ```
  */
 export function minSatisfying(versions: readonly SemVer[], range: Range): SemVer | null {
   let min: SemVer | null = null

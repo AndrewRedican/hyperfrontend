@@ -14,6 +14,25 @@ import { collectAllDependencies, parseVersionString } from '../shared-utils/dete
  * @param workspacePath - Workspace directory path
  * @param packageJson - Optional pre-loaded package.json
  * @returns Detection result or null if not detected
+ *
+ * @example
+ * ```typescript
+ * // Project with nx.json and apps/libs directories
+ * const result = nxDetector('/path/to/nx-workspace')
+ * // => {
+ * //   id: 'nx',
+ * //   name: 'NX',
+ * //   confidence: 100,
+ * //   configPath: 'nx.json',
+ * //   version: '17.0.0',
+ * //   workspaceLayout: { appsDir: 'apps', libsDir: 'libs' },
+ * //   detectedFrom: [
+ * //     { type: 'config-file', path: 'nx.json' },
+ * //     { type: 'package.json', field: 'dependencies.nx' },
+ * //     { type: 'directory', path: 'apps/ or libs/' }
+ * //   ]
+ * // }
+ * ```
  */
 export function nxDetector(workspacePath: string, packageJson?: PackageJson): MonorepoDetection | null {
   const pkg = packageJson ?? readPackageJsonIfExists(workspacePath)

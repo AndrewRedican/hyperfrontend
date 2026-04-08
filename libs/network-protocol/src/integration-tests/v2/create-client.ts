@@ -18,6 +18,14 @@ import { initChannel, INTEGRATION_TEST_PSK } from './init-channel'
  * @param label - Human-readable label for the client
  * @param sharedKey - Pre-shared key for handshake encryption (defaults to test key)
  * @returns Client instance with connection and messaging capabilities
+ *
+ * @example
+ * ```typescript
+ * const alice = createClient('alice', 'secret-psk')
+ * const bob = createClient('bob', 'secret-psk')
+ * alice.connect(bob)
+ * await alice.send({ type: 'secure-message', data: 'encrypted' })
+ * ```
  */
 export function createClient<T = MessagePayload>(label: string, sharedKey: string = INTEGRATION_TEST_PSK): Client<T> {
   const clientId = uuidV4()

@@ -6,6 +6,12 @@
  *
  * @param func - The void function to be wrapped.
  * @returns A wrapped version of the input function that ignores errors.
+ *
+ * @example
+ * ```typescript
+ * const safeParse = createErrorIgnoringFunction(() => JSON.parse('invalid'))
+ * safeParse() // silently fails without throwing
+ * ```
  */
 export function createErrorIgnoringFunction<T extends (...args: any[]) => void>(func: T): (...args: Parameters<T>) => void {
   return function (...args: Parameters<T>): void {

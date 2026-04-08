@@ -1,3 +1,4 @@
+/* eslint-disable workspace/lib-require-jsdoc-example */
 /**
  * Safe copies of Symbol built-in and well-known symbols.
  *

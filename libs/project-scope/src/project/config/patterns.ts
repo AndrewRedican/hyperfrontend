@@ -231,6 +231,14 @@ export const CONFIG_PATTERNS: Record<ConfigType, ConfigPatternInfo> = {
  *
  * @param types - Array of config types to get patterns for
  * @returns Array of file patterns
+ *
+ * @example
+ * ```typescript
+ * import { getConfigPatternsByType } from '@hyperfrontend/project-scope'
+ *
+ * const patterns = getConfigPatternsByType(['typescript', 'eslint'])
+ * // => ['tsconfig.json', 'tsconfig.*.json', '.eslintrc', '.eslintrc.js', ...]
+ * ```
  */
 export function getConfigPatternsByType(types: ConfigType[]): string[] {
   return types.flatMap((type) => CONFIG_PATTERNS[type]?.patterns ?? [])

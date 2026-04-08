@@ -25,6 +25,11 @@ interface BuildLogger extends Omit<Logger, 'setLogLevel'> {
 
 let loggerInstance: BuildLogger
 
+/**
+ * Gets or creates the singleton build logger instance.
+ *
+ * @returns The BuildLogger instance for build operations
+ */
 export const getLogger = () => {
   if (loggerInstance) return loggerInstance
 

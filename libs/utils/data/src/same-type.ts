@@ -7,6 +7,12 @@ import { getType } from './get-type'
  * @param targetA The first target to compare
  * @param targetB The second target to compare
  * @returns The common data type if both targets are of the same type; otherwise, false.
+ *
+ * @example
+ * ```typescript
+ * sameType([1], [2]) // 'array'
+ * sameType({}, []) // false
+ * ```
  */
 export const sameType = <T extends string = DataType>(targetA: unknown, targetB: unknown): T | false => {
   const firstType = getType<T>(targetA)

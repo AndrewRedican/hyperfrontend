@@ -5,6 +5,12 @@ import { normalize, sep } from 'node:path'
  *
  * @param filePath - Path to normalize
  * @returns Normalized path with forward slashes
+ *
+ * @example
+ * ```typescript
+ * const path = normalizePath('src\\components\\Button.tsx')
+ * // => 'src/components/Button.tsx'
+ * ```
  */
 export function normalizePath(filePath: string): string {
   if (!filePath) return ''
@@ -18,6 +24,12 @@ export function normalizePath(filePath: string): string {
  *
  * @param filePath - The input path to convert
  * @returns Path with forward slashes and resolved segments
+ *
+ * @example
+ * ```typescript
+ * const path = normalizeToForwardSlashes('./src/../lib/utils')
+ * // => 'lib/utils'
+ * ```
  */
 export function normalizeToForwardSlashes(filePath: string): string {
   if (!filePath) return ''
@@ -29,6 +41,13 @@ export function normalizeToForwardSlashes(filePath: string): string {
  *
  * @param filePath - The input path to convert
  * @returns Path with native separators (backslash on Windows, forward slash elsewhere)
+ *
+ * @example
+ * ```typescript
+ * const path = normalizeToNative('src/components/Button.tsx')
+ * // => 'src\\components\\Button.tsx' on Windows
+ * // => 'src/components/Button.tsx' on Unix
+ * ```
  */
 export function normalizeToNative(filePath: string): string {
   if (!filePath) return ''
@@ -40,6 +59,15 @@ export function normalizeToNative(filePath: string): string {
  *
  * @param filePath - Path that may have trailing slashes
  * @returns Path with trailing slashes removed
+ *
+ * @example
+ * ```typescript
+ * removeTrailingSlash('src/components/')
+ * // => 'src/components'
+ *
+ * removeTrailingSlash('path\\to\\dir\\')
+ * // => 'path\\to\\dir'
+ * ```
  */
 export function removeTrailingSlash(filePath: string): string {
   let i = filePath.length
@@ -54,6 +82,15 @@ export function removeTrailingSlash(filePath: string): string {
  *
  * @param filePath - Path to process
  * @returns Path with trailing forward slash
+ *
+ * @example
+ * ```typescript
+ * ensureTrailingSlash('src/components')
+ * // => 'src/components/'
+ *
+ * ensureTrailingSlash('already/has/')
+ * // => 'already/has/'
+ * ```
  */
 export function ensureTrailingSlash(filePath: string): string {
   const normalized = removeTrailingSlash(filePath)

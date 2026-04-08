@@ -2,6 +2,15 @@
  * Detects whether the current device is a mobile device based on the user agent.
  *
  * @returns True if the device is mobile, false otherwise
+ *
+ * @example
+ * ```typescript
+ * if (isMobileDevice()) {
+ *   showMobileLayout()
+ * } else {
+ *   showDesktopLayout()
+ * }
+ * ```
  */
 export function isMobileDevice(): boolean {
   const userAgent = navigator.userAgent

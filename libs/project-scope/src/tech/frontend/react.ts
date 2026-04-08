@@ -13,6 +13,24 @@ import { collectAllDependencies, parseVersionString } from '../shared-utils/dete
  * @param projectPath - Project directory path
  * @param packageJson - Optional pre-loaded package.json
  * @returns Detection result or null if not detected
+ *
+ * @example
+ * ```typescript
+ * const result = reactDetector('/path/to/react-app', {
+ *   dependencies: { 'react': '^18.0.0', 'react-dom': '^18.0.0' }
+ * })
+ * // => {
+ * //   id: 'react',
+ * //   name: 'React',
+ * //   category: 'frontend',
+ * //   version: '18.0.0',
+ * //   confidence: 80,
+ * //   detectedFrom: [
+ * //     { type: 'package.json', field: 'dependencies.react' },
+ * //     { type: 'package.json', field: 'dependencies.react-dom' }
+ * //   ]
+ * // }
+ * ```
  */
 export function reactDetector(projectPath: string, packageJson?: PackageJson): FrameworkDetection | null {
   const pkg = packageJson ?? readPackageJsonIfExists(projectPath)

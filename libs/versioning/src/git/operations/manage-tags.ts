@@ -147,6 +147,12 @@ const MAX_MESSAGE_LENGTH = 10000
  *
  * @param message - Message to escape
  * @returns Safe message string
+ *
+ * @example
+ * ```typescript
+ * const safeMessage = escapeGitMessage('Release v1.0.0 "stable"')
+ * // => 'Release v1.0.0 \"stable\"'
+ * ```
  */
 export function escapeGitMessage(message: string): string {
   if (!message || typeof message !== 'string') {

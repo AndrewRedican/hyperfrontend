@@ -22,6 +22,19 @@ export const backendDetectors: BackendDetector[] = [
  * @param projectPath - Project directory path
  * @param packageJson - Optional pre-loaded package.json
  * @returns Array of detected frameworks, sorted by confidence
+ * @example
+ * ```typescript
+ * const pkg = {
+ *   dependencies: { '@nestjs/core': '^10.0.0', '@nestjs/common': '^10.0.0' },
+ *   devDependencies: { express: '^4.18.0' },
+ * }
+ *
+ * const results = detectBackendFrameworks('/path/to/project', pkg)
+ * // => [
+ * //   { id: 'nestjs', name: 'NestJS', confidence: 85, ... },
+ * //   { id: 'express', name: 'Express', confidence: 80, ... },
+ * // ]
+ * ```
  */
 export function detectBackendFrameworks(projectPath: string, packageJson?: PackageJson): BackendDetection[] {
   const pkg = packageJson ?? readPackageJsonIfExists(projectPath)

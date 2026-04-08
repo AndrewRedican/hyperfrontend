@@ -296,6 +296,19 @@ function computeNextVersion(current: SemVer, bumpType: BumpType, prereleaseId?: 
  * @param bumpType - Type of bump for the direct change
  * @param options - Configuration for cascade behavior
  * @returns Cascade bump result
+ *
+ * @example
+ * ```typescript
+ * import { discoverWorkspace, calculateCascadeBumpsFromPackage } from '@hyperfrontend/versioning'
+ *
+ * const workspace = discoverWorkspace()
+ * const result = calculateCascadeBumpsFromPackage(workspace, '@myorg/utils', 'minor')
+ *
+ * console.log(`${result.totalAffected} packages will be bumped`)
+ * for (const bump of result.bumps) {
+ *   console.log(`${bump.name}: ${bump.currentVersion} -> ${bump.nextVersion}`)
+ * }
+ * ```
  */
 export function calculateCascadeBumpsFromPackage(
   workspace: Workspace,
@@ -311,6 +324,18 @@ export function calculateCascadeBumpsFromPackage(
  *
  * @param result - Result object from cascade bump calculation
  * @returns Human-readable summary
+ *
+ * @example
+ * ```typescript
+ * import { calculateCascadeBumps, summarizeCascadeBumps } from '@hyperfrontend/versioning'
+ *
+ * const result = calculateCascadeBumps(workspace, [{ name: '@myorg/utils', bumpType: 'patch' }])
+ * console.log(summarizeCascadeBumps(result))
+ * // Output:
+ * // 3 package(s) affected:
+ * //   - 1 direct bump(s)
+ * //   - 2 cascade bump(s)
+ * ```
  */
 export function summarizeCascadeBumps(result: CascadeBumpResult): string {
   if (result.totalAffected === 0) {

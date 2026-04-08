@@ -11,6 +11,12 @@ import { normalizeToBaseTimeWindow } from '@hyperfrontend/time-utils'
  *
  * @param createHash - Function to create cryptographic hashes
  * @returns A function that generates time-based passwords
+ *
+ * @example
+ * ```typescript
+ * const getPassword = createGetTimeBasedPassword(createHash)
+ * const password = await getPassword(new Date(), 5) // 5-minute window
+ * ```
  */
 export function createGetTimeBasedPassword(
   createHash: (data: string, algorithm?: HashAlgorithm) => Promise<string>

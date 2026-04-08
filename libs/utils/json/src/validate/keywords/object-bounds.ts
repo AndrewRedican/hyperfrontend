@@ -10,6 +10,13 @@ import { addError, shouldContinue } from '../context'
  * @param schema - Schema containing object bounds
  * @param ctx - Validation context
  * @returns true if validation passes, false otherwise
+ * @example
+ * ```typescript
+ * const schema = { minProperties: 1, maxProperties: 3 }
+ * validateObjectBounds({ a: 1, b: 2 }, schema, ctx) // => true
+ * validateObjectBounds({}, schema, ctx)            // => false (no properties)
+ * validateObjectBounds({ a: 1, b: 2, c: 3, d: 4 }, schema, ctx) // => false (too many)
+ * ```
  */
 export function validateObjectBounds(instance: Record<string, unknown>, schema: Schema, ctx: ValidationContext): boolean {
   let valid = true

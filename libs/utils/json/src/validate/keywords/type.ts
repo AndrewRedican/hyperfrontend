@@ -43,6 +43,13 @@ function getActualType(value: unknown): string {
  * @param schema - Schema containing the type constraint
  * @param ctx - Validation context
  * @returns true if validation passes, false otherwise
+ * @example
+ * ```typescript
+ * validateType('hello', { type: 'string' }, ctx)     // => true
+ * validateType(42, { type: 'integer' }, ctx)         // => true
+ * validateType('42', { type: 'integer' }, ctx)       // => false
+ * validateType(null, { type: ['string', 'null'] }, ctx) // => true (union type)
+ * ```
  */
 export function validateType(instance: unknown, schema: Schema, ctx: ValidationContext): boolean {
   const schemaType = schema.type

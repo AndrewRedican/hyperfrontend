@@ -4,6 +4,12 @@
  *
  * @param label - The name of the invalid configuration parameter
  * @returns A formatted error message string
+ *
+ * @example
+ * ```typescript
+ * withoutValidErrorMessage('sender')
+ * // => 'Cannot create a channel without a valid sender'
+ * ```
  */
 export function withoutValidErrorMessage(label: string): string {
   return `Cannot create a channel without a valid ${label}`

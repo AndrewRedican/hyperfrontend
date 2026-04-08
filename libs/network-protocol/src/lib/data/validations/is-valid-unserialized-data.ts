@@ -9,6 +9,15 @@ import { typeTag } from '@hyperfrontend/immutable-api-utils/built-in-copy/object
  *
  * @param data - The value to validate as unserialized data
  * @returns True if the value is a Uint8Array, false otherwise
+ *
+ * @example
+ * ```typescript
+ * isValidUnserializedData(new Uint8Array([1, 2, 3]))
+ * // => true
+ *
+ * isValidUnserializedData('string-data')
+ * // => false
+ * ```
  */
 export function isValidUnserializedData(data: unknown): boolean {
   if (!data) return false

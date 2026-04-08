@@ -13,6 +13,27 @@ import { collectAllDependencies, parseVersionString } from '../shared-utils/dete
  * @param projectPath - Project directory path
  * @param packageJson - Optional pre-loaded package.json
  * @returns Detection result or null if not detected
+ *
+ * @example
+ * ```typescript
+ * const result = remixDetector('/path/to/remix-app', {
+ *   dependencies: {
+ *     '@remix-run/react': '^2.0.0',
+ *     '@remix-run/node': '^2.0.0'
+ *   }
+ * })
+ * // => {
+ * //   id: 'remix',
+ * //   name: 'Remix',
+ * //   category: 'meta-framework',
+ * //   version: '2.0.0',
+ * //   confidence: 90,
+ * //   detectedFrom: [
+ * //     { type: 'package.json', field: 'dependencies.@remix-run/react' },
+ * //     { type: 'package.json', field: 'dependencies.@remix-run/*' }
+ * //   ]
+ * // }
+ * ```
  */
 export function remixDetector(projectPath: string, packageJson?: PackageJson): FrameworkDetection | null {
   const pkg = packageJson ?? readPackageJsonIfExists(projectPath)

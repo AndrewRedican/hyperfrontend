@@ -15,6 +15,29 @@ export const VITE_CONFIG_PATTERNS = ['vite.config.js', 'vite.config.ts', 'vite.c
  * @param projectPath - Project directory path
  * @param packageJson - Optional pre-loaded package.json
  * @returns Detection result or null if not detected
+ *
+ * @example
+ * ```typescript
+ * const result = viteDetector('/path/to/project', {
+ *   name: 'my-app',
+ *   devDependencies: {
+ *     'vite': '^5.0.0',
+ *     '@vitejs/plugin-react': '^4.0.0',
+ *     'vitest': '^1.0.0'
+ *   }
+ * })
+ * // => {
+ * //   id: 'vite',
+ * //   name: 'Vite',
+ * //   version: '5.0.0',
+ * //   confidence: 80,
+ * //   detectedFrom: [
+ * //     { type: 'package.json', field: 'dependencies.vite' },
+ * //     { type: 'package.json', field: 'dependencies.vitest' },
+ * //     { type: 'package.json', field: 'dependencies (vite plugins)' }
+ * //   ]
+ * // }
+ * ```
  */
 export function viteDetector(projectPath: string, packageJson?: PackageJson): BuildToolDetection | null {
   const pkg = packageJson ?? readPackageJsonIfExists(projectPath)

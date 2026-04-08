@@ -7,6 +7,14 @@ import { remove as removeFromRegistry } from '../../core/registry/remove'
  *
  * @param registry - Channel registry from which to remove the channel
  * @param channel - The channel instance to cleanup and remove
+ *
+ * @example
+ * ```typescript
+ * const channel = getChannel(registry, 'widget-channel')
+ * if (channel) {
+ *   removeChannel(registry, channel)
+ * }
+ * ```
  */
 export function removeChannel(registry: Registry, channel: ReturnType<typeof createChannel>): void {
   channel.destroy(false)

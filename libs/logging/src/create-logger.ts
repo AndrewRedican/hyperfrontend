@@ -60,6 +60,14 @@ export type LogFunction = Logger[LogFnName]
  * @param debug - Function to handle debug-level logs (optional, defaults to noop)
  * @returns A frozen logger object with log methods and level control
  * @throws {ErrorLevelFn} When any provided log function is invalid
+ *
+ * @example
+ * ```typescript
+ * const logger = createLogger(console.error, console.warn, console.log)
+ * logger.setLogLevel('warn')
+ * logger.warn('Connection timeout') // logs
+ * logger.info('Request complete')   // suppressed (below 'warn' level)
+ * ```
  */
 export function createLogger(
   error: ErrorLevelFn,

@@ -74,6 +74,20 @@ function calculateBumpFromCommits(
  * - nextVersion: Calculated next version string
  *
  * @returns A FlowStep that calculates version bump
+ *
+ * @example
+ * ```typescript
+ * import { createCalculateBumpStep, executeStep } from '@hyperfrontend/versioning'
+ *
+ * const step = createCalculateBumpStep()
+ * const result = await executeStep(step, context)
+ *
+ * // Get the calculated bump
+ * console.log(result.stateUpdates?.bumpType)
+ * // => 'minor'
+ * console.log(result.stateUpdates?.nextVersion)
+ * // => '1.2.0'
+ * ```
  */
 export function createCalculateBumpStep(): FlowStep {
   return createStep(
@@ -199,6 +213,19 @@ export function createCalculateBumpStep(): FlowStep {
  * calculated version is already published.
  *
  * @returns A FlowStep that checks idempotency
+ *
+ * @example
+ * ```typescript
+ * import { createCheckIdempotencyStep, executeStep } from '@hyperfrontend/versioning'
+ *
+ * const step = createCheckIdempotencyStep()
+ * const result = await executeStep(step, context)
+ *
+ * // If version already published, step skips with bumpType: 'none'
+ * if (result.status === 'skipped') {
+ *   console.log('Version already published')
+ * }
+ * ```
  */
 export function createCheckIdempotencyStep(): FlowStep {
   return createStep(

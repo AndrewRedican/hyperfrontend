@@ -40,6 +40,15 @@ let cachedCaseSensitive: boolean | null = null
  * Detect if file system is case sensitive.
  *
  * @returns True if file system is case-sensitive
+ *
+ * @example
+ * ```typescript
+ * if (detectCaseSensitivity()) {
+ *   // Linux: 'File.ts' and 'file.ts' are different files
+ * } else {
+ *   // Windows/macOS: treat as same file
+ * }
+ * ```
  */
 export function detectCaseSensitivity(): boolean {
   if (cachedCaseSensitive !== null) {
@@ -84,6 +93,12 @@ export function detectCaseSensitivity(): boolean {
  * Check if file system is case-sensitive.
  *
  * @returns True if file system is case-sensitive
+ *
+ * @example
+ * ```typescript
+ * const caseSensitive = isCaseSensitiveFs()
+ * // => true on Linux, false on Windows/macOS
+ * ```
  */
 export function isCaseSensitiveFs(): boolean {
   return detectCaseSensitivity()
@@ -93,6 +108,14 @@ export function isCaseSensitiveFs(): boolean {
  * Get comprehensive platform information.
  *
  * @returns Platform information object (cached after first call)
+ *
+ * @example
+ * ```typescript
+ * const info = getPlatformInfo()
+ * console.log(info.os)           // => 'linux'
+ * console.log(info.pathSeparator) // => '/'
+ * console.log(info.lineEnding)    // => '\n'
+ * ```
  */
 export function getPlatformInfo(): PlatformInfo {
   if (cachedPlatformInfo) {
@@ -145,6 +168,14 @@ export function getPlatformInfo(): PlatformInfo {
  * Detect current platform.
  *
  * @returns Platform information object
+ *
+ * @example
+ * ```typescript
+ * const platform = detectPlatform()
+ * if (platform.isWindows) {
+ *   // Windows-specific handling
+ * }
+ * ```
  */
 export function detectPlatform(): PlatformInfo {
   return getPlatformInfo()
@@ -154,6 +185,13 @@ export function detectPlatform(): PlatformInfo {
  * Check if running on Windows.
  *
  * @returns True if running on Windows
+ *
+ * @example
+ * ```typescript
+ * if (isWindows()) {
+ *   // Use Windows-specific paths or commands
+ * }
+ * ```
  */
 export function isWindows(): boolean {
   return process.platform === 'win32'
@@ -163,6 +201,13 @@ export function isWindows(): boolean {
  * Check if running on macOS.
  *
  * @returns True if running on macOS
+ *
+ * @example
+ * ```typescript
+ * if (isMac()) {
+ *   // Use macOS-specific behavior
+ * }
+ * ```
  */
 export function isMac(): boolean {
   return process.platform === 'darwin'
@@ -172,6 +217,13 @@ export function isMac(): boolean {
  * Check if running on Linux.
  *
  * @returns True if running on Linux
+ *
+ * @example
+ * ```typescript
+ * if (isLinux()) {
+ *   // Use Linux-specific behavior
+ * }
+ * ```
  */
 export function isLinux(): boolean {
   return process.platform === 'linux'

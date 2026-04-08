@@ -10,6 +10,12 @@ import { uuidV4 } from '@hyperfrontend/random-generator-utils'
  * @param target - Target window for communication
  * @param settings - Channel settings (queueMessages, debug, logger, etc.)
  * @returns Fresh channel state object
+ *
+ * @example
+ * ```typescript
+ * const state = createInitialState('my-channel', targetWindow, { queueMessages: true })
+ * // => { id: '...', name: 'my-channel', active: false, queuedMessages: [], ... }
+ * ```
  */
 export function createInitialState(name: string, target: Window, settings: Partial<IChannelSettings>): ChannelState {
   return freeze(<ChannelState>{

@@ -53,6 +53,11 @@ const toTitleCase = (camelCase: string): string =>
 
 let loggerInstance: ExecutorLogger
 
+/**
+ * Gets or creates the singleton executor logger instance.
+ *
+ * @returns The ExecutorLogger instance for version executor operations
+ */
 export const getLogger = () => {
   if (loggerInstance) return loggerInstance
   const context = createMap<string, unknown>()

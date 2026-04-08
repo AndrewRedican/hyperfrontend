@@ -18,4 +18,15 @@ export const protocol: Protocol = {
   getLogger: () => ({ ...logger }),
 }
 
+/**
+ * Provides a mock protocol instance for testing.
+ *
+ * @returns A mock Protocol instance
+ *
+ * @example
+ * ```typescript
+ * const mockProtocol = protocolProvider(sendFn, receiveFn)
+ * mockProtocol.send(packet)
+ * ```
+ */
 export const protocolProvider: ProtocolProvider = () => protocol

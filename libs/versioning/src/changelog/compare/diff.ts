@@ -205,6 +205,12 @@ export function diffChangelogs(source: Changelog, target: Changelog): ChangelogD
  * @param source - The source entry
  * @param target - The target entry
  * @returns Detailed entry diff
+ *
+ * @example
+ * ```typescript
+ * const diff = diffEntries(entryV1, entryV2)
+ * // => { version: '1.0.0', changes: [{ path: ['date'], type: 'changed', ... }], sectionsChanged: true }
+ * ```
  */
 export function diffEntries(source: ChangelogEntry, target: ChangelogEntry): EntryDiff {
   const changes: PropertyDiff[] = []
@@ -460,6 +466,13 @@ function areIssueRefsEqual(a: readonly IssueRef[], b: readonly IssueRef[]): bool
  *
  * @param diff - The diff to summarize
  * @returns A string summary of the changes
+ *
+ * @example
+ * ```typescript
+ * const diff = diffChangelogs(oldChangelog, newChangelog)
+ * summarizeDiff(diff)
+ * // => 'Added 2 version(s): 1.2.0, 1.1.0; Modified 1 version(s): 1.0.0'
+ * ```
  */
 export function summarizeDiff(diff: ChangelogDiff): string {
   if (diff.identical) {

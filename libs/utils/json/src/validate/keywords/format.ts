@@ -136,6 +136,13 @@ const formatValidators: Record<string, (value: string) => boolean> = {
  * @param schema - Schema containing the format constraint
  * @param ctx - Validation context
  * @returns true if validation passes, false otherwise
+ * @example
+ * ```typescript
+ * validateFormat('user@example.com', { format: 'email' }, ctx) // => true
+ * validateFormat('invalid-email', { format: 'email' }, ctx)    // => false
+ * validateFormat('2024-01-15', { format: 'date' }, ctx)        // => true
+ * validateFormat('192.168.1.1', { format: 'ipv4' }, ctx)       // => true
+ * ```
  */
 export function validateFormat(instance: string, schema: Schema, ctx: ValidationContext): boolean {
   if (!schema.format) {

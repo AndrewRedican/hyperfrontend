@@ -82,6 +82,12 @@ export const DEFAULT_SERIALIZE_OPTIONS: Required<SerializeOptions> = {
  *
  * @param options - User-provided options
  * @returns Complete options with defaults applied
+ *
+ * @example
+ * ```typescript
+ * const opts = resolveOptions({ includeCommits: true })
+ * // => { includeCommits: true, includeScope: true, lineEnding: '\n', ... }
+ * ```
  */
 export function resolveOptions(options?: SerializeOptions): Required<SerializeOptions> {
   if (!options) {
@@ -111,6 +117,15 @@ export function resolveOptions(options?: SerializeOptions): Required<SerializeOp
  * @param type - The changelog section type to get the heading for
  * @param customHeadings - Optional map of custom section type to heading overrides
  * @returns The heading string to use
+ *
+ * @example
+ * ```typescript
+ * getSectionHeading('features')
+ * // => 'Added'
+ *
+ * getSectionHeading('features', { features: 'New Features' })
+ * // => 'New Features'
+ * ```
  */
 export function getSectionHeading(type: ChangelogSectionType, customHeadings?: Partial<Record<ChangelogSectionType, string>>): string {
   return customHeadings?.[type] ?? SECTION_HEADINGS[type]
@@ -122,6 +137,12 @@ export function getSectionHeading(type: ChangelogSectionType, customHeadings?: P
  * @param text - The display text for the link
  * @param url - The destination URL for the link
  * @returns Formatted markdown link
+ *
+ * @example
+ * ```typescript
+ * formatLink('1.0.0', 'https://github.com/org/repo/releases/tag/v1.0.0')
+ * // => '[1.0.0](https://github.com/org/repo/releases/tag/v1.0.0)'
+ * ```
  */
 export function formatLink(text: string, url: string): string {
   return `[${text}](${url})`
@@ -132,6 +153,12 @@ export function formatLink(text: string, url: string): string {
  *
  * @param useAsterisks - Whether to use * instead of -
  * @returns The list item marker ('- ' or '* ')
+ *
+ * @example
+ * ```typescript
+ * getListMarker(false) // => '- '
+ * getListMarker(true)  // => '* '
+ * ```
  */
 export function getListMarker(useAsterisks: boolean): string {
   return useAsterisks ? '* ' : '- '
@@ -143,6 +170,12 @@ export function getListMarker(useAsterisks: boolean): string {
  * @param count - Number of blank lines
  * @param lineEnding - Line ending style
  * @returns String with specified number of blank lines
+ *
+ * @example
+ * ```typescript
+ * createSpacing(2, '\n')
+ * // => '\n\n'
+ * ```
  */
 export function createSpacing(count: number, lineEnding: string): string {
   if (count <= 0) return ''

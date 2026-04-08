@@ -10,6 +10,13 @@ import { createError } from '@hyperfrontend/immutable-api-utils/built-in-copy/er
  * @param sectionType - Category identifier for grouping changes (e.g., 'features', 'fixes')
  * @param item - Description of the change with optional scope and metadata
  * @returns A new changelog with the item added
+ *
+ * @example
+ * ```typescript
+ * const item = { description: 'Add dark mode support', scope: 'ui' }
+ * const updated = addItemToEntry(changelog, '1.2.0', 'features', item)
+ * // Item added to the features section of version 1.2.0
+ * ```
  */
 export function addItemToEntry(changelog: Changelog, version: string, sectionType: string, item: ChangelogItem): Changelog {
   const entryIndex = changelog.entries.findIndex((e) => e.version === version)

@@ -11,6 +11,14 @@ import { collectAllDependencies, parseVersionString } from '../shared-utils/dete
  * @param projectPath - Project directory path
  * @param packageJson - Optional pre-loaded package.json
  * @returns Detection result or null if not detected
+ *
+ * @example
+ * ```typescript
+ * const result = jqueryDetector('/path/to/project', {
+ *   dependencies: { jquery: '^3.6.0', 'jquery-ui': '^1.13.0' },
+ * })
+ * // => { id: 'jquery', name: 'jQuery', confidence: 90, version: '3.6.0', ... }
+ * ```
  */
 export function jqueryDetector(projectPath: string, packageJson?: PackageJson): LegacyFrameworkDetection | null {
   const pkg = packageJson ?? readPackageJsonIfExists(projectPath)

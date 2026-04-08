@@ -54,6 +54,14 @@ export function transformEntries(changelog: Changelog, transformer: EntryTransfo
  * @param changelog - The changelog to transform
  * @param transformer - Function to transform each section
  * @returns A new changelog with transformed sections
+ *
+ * @example
+ * ```typescript
+ * const renamed = transformSections(changelog, (section) => ({
+ *   ...section,
+ *   heading: section.heading.toUpperCase(),
+ * }))
+ * ```
  */
 export function transformSections(changelog: Changelog, transformer: SectionTransformer): Changelog {
   const newEntries = changelog.entries.map((entry) => ({
@@ -73,6 +81,14 @@ export function transformSections(changelog: Changelog, transformer: SectionTran
  * @param changelog - The changelog to transform
  * @param transformer - Function to transform each item
  * @returns A new changelog with transformed items
+ *
+ * @example
+ * ```typescript
+ * const prefixed = transformItems(changelog, (item) => ({
+ *   ...item,
+ *   description: `[${item.scope || 'misc'}] ${item.description}`,
+ * }))
+ * ```
  */
 export function transformItems(changelog: Changelog, transformer: ItemTransformer): Changelog {
   const newEntries = changelog.entries.map((entry) => ({
@@ -95,6 +111,11 @@ export function transformItems(changelog: Changelog, transformer: ItemTransforme
  * @param changelog - The changelog to update
  * @param updates - Partial header updates
  * @returns A new changelog with updated header
+ *
+ * @example
+ * ```typescript
+ * const updated = updateHeader(changelog, { title: '# Release Notes' })
+ * ```
  */
 export function updateHeader(changelog: Changelog, updates: Partial<ChangelogHeader>): Changelog {
   return {
@@ -112,6 +133,11 @@ export function updateHeader(changelog: Changelog, updates: Partial<ChangelogHea
  * @param changelog - The changelog to update
  * @param updates - Partial metadata updates
  * @returns A new changelog with updated metadata
+ *
+ * @example
+ * ```typescript
+ * const updated = updateMetadata(changelog, { repositoryUrl: 'https://github.com/org/repo' })
+ * ```
  */
 export function updateMetadata(changelog: Changelog, updates: Partial<ChangelogMetadata>): Changelog {
   return {
@@ -130,6 +156,17 @@ export function updateMetadata(changelog: Changelog, updates: Partial<ChangelogM
  * @param version - Version of entry to update
  * @param updates - Partial entry updates or transformer function
  * @returns A new changelog with updated entry
+ *
+ * @example
+ * ```typescript
+ * const updated = updateEntry(changelog, '1.0.0', { date: '2024-01-15' })
+ *
+ * // Or with transformer function
+ * const modified = updateEntry(changelog, '1.0.0', (entry) => ({
+ *   ...entry,
+ *   compareUrl: `https://github.com/org/repo/compare/v0.9.0...v${entry.version}`,
+ * }))
+ * ```
  */
 export function updateEntry(
   changelog: Changelog,
@@ -159,6 +196,12 @@ export function updateEntry(
  *
  * @param changelog - The changelog to sort
  * @returns A new changelog with sorted entries
+ *
+ * @example
+ * ```typescript
+ * const sorted = sortEntries(changelog)
+ * // Entries ordered: Unreleased, 2.0.0, 1.1.0, 1.0.0, ...
+ * ```
  */
 export function sortEntries(changelog: Changelog): Changelog {
   const sorted = [...changelog.entries].sort((a, b) => {
@@ -187,6 +230,12 @@ export function sortEntries(changelog: Changelog): Changelog {
  *
  * @param changelog - The changelog to sort
  * @returns A new changelog with sorted entries
+ *
+ * @example
+ * ```typescript
+ * const sorted = sortEntriesByDate(changelog)
+ * // Entries ordered by release date, most recent first
+ * ```
  */
 export function sortEntriesByDate(changelog: Changelog): Changelog {
   const sorted = [...changelog.entries].sort((a, b) => {
@@ -212,6 +261,12 @@ export function sortEntriesByDate(changelog: Changelog): Changelog {
  *
  * @param changelog - The changelog to reverse
  * @returns A new changelog with reversed entries
+ *
+ * @example
+ * ```typescript
+ * const reversed = reverseEntries(changelog)
+ * // Oldest entries now appear first
+ * ```
  */
 export function reverseEntries(changelog: Changelog): Changelog {
   return {
@@ -226,6 +281,15 @@ export function reverseEntries(changelog: Changelog): Changelog {
  * @param changelog - The changelog to sort
  * @param order - Optional custom section order (defaults to standard order)
  * @returns A new changelog with sorted sections
+ *
+ * @example
+ * ```typescript
+ * const sorted = sortSections(changelog)
+ * // Sections in each entry follow: breaking, features, fixes, ...
+ *
+ * const custom = sortSections(changelog, ['fixes', 'features', 'breaking'])
+ * // Custom ordering: fixes first, then features, then breaking
+ * ```
  */
 export function sortSections(changelog: Changelog, order?: readonly ChangelogSectionType[]): Changelog {
   const defaultOrder: ChangelogSectionType[] = [
@@ -267,6 +331,12 @@ export function sortSections(changelog: Changelog, order?: readonly ChangelogSec
  *
  * @param changelog - The changelog to normalize
  * @returns A new changelog with normalized section headings
+ *
+ * @example
+ * ```typescript
+ * const normalized = normalizeSectionHeadings(changelog)
+ * // 'New Features' becomes 'Added', 'Bug Fixes' becomes 'Fixed', etc.
+ * ```
  */
 export function normalizeSectionHeadings(changelog: Changelog): Changelog {
   return transformSections(changelog, (section) => ({
@@ -280,6 +350,12 @@ export function normalizeSectionHeadings(changelog: Changelog): Changelog {
  *
  * @param changelog - The changelog to deduplicate
  * @returns A new changelog without duplicate items
+ *
+ * @example
+ * ```typescript
+ * const deduped = deduplicateItems(changelog)
+ * // Duplicate items (same scope:description) are removed
+ * ```
  */
 export function deduplicateItems(changelog: Changelog): Changelog {
   const newEntries = changelog.entries.map((entry) => {
@@ -319,6 +395,15 @@ export function deduplicateItems(changelog: Changelog): Changelog {
  * @param changelog - The changelog to compact
  * @param keepUnreleased - Whether to keep empty unreleased entry (default: true)
  * @returns A new compacted changelog
+ *
+ * @example
+ * ```typescript
+ * const compacted = compact(changelog)
+ * // Empty sections and entries removed (unreleased kept)
+ *
+ * const strict = compact(changelog, false)
+ * // Even empty unreleased entry is removed
+ * ```
  */
 export function compact(changelog: Changelog, keepUnreleased = true): Changelog {
   const newEntries = changelog.entries
@@ -344,6 +429,12 @@ export function compact(changelog: Changelog, keepUnreleased = true): Changelog 
  *
  * @param changelog - The changelog to strip
  * @returns A new changelog with minimal metadata
+ *
+ * @example
+ * ```typescript
+ * const stripped = stripMetadata(changelog)
+ * // Source and warnings removed, only format and isConventional retained
+ * ```
  */
 export function stripMetadata(changelog: Changelog): Changelog {
   return {
@@ -362,6 +453,12 @@ export function stripMetadata(changelog: Changelog): Changelog {
  *
  * @param changelog - The changelog to clone
  * @returns A deep copy of the changelog
+ *
+ * @example
+ * ```typescript
+ * const copy = cloneChangelog(changelog)
+ * // Independent deep copy, safe to mutate
+ * ```
  */
 export function cloneChangelog(changelog: Changelog): Changelog {
   return {

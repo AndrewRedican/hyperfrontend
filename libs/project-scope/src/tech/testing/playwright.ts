@@ -16,6 +16,17 @@ export const PLAYWRIGHT_CONFIG_PATTERNS = ['playwright.config.js', 'playwright.c
  * @param projectPath - Project directory path
  * @param packageJson - Optional pre-loaded package.json
  * @returns Detection result or null if not detected
+ *
+ * @example
+ * ```typescript
+ * import { playwrightDetector } from '@hyperfrontend/project-scope'
+ *
+ * const result = playwrightDetector('./my-project')
+ * if (result) {
+ *   console.log(`Playwright ${result.version} (${result.type} tests)`)
+ *   // => "Playwright 1.42.0 (e2e tests)"
+ * }
+ * ```
  */
 export function playwrightDetector(projectPath: string, packageJson?: PackageJson): TestingFrameworkDetection | null {
   const pkg = packageJson ?? readPackageJsonIfExists(projectPath)

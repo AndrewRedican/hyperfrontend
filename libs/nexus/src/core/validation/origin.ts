@@ -7,6 +7,13 @@ import { isEmpty } from './_utils'
  *
  * @param origin - The origin to validate
  * @throws {Error} Error if origin is invalid
+ *
+ * @example
+ * ```typescript
+ * validateOrigin('https://example.com') // valid
+ * validateOrigin('*') // valid (wildcard)
+ * validateOrigin('ftp://invalid.com') // throws Error
+ * ```
  */
 export function validateOrigin(origin: string): void {
   if (origin === null || origin === undefined) {

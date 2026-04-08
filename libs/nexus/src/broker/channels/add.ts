@@ -19,6 +19,19 @@ import { assertNoCircularRef } from '../../utils/validation/assert-no-circular-r
  * @param target - Target window to communicate with
  * @param settings - Optional configuration settings for the channel
  * @returns The created or existing channel
+ *
+ * @example
+ * ```typescript
+ * const channel = addChannel(
+ *   brokerState,
+ *   registry,
+ *   processManager,
+ *   actions,
+ *   'widget-channel',
+ *   iframe.contentWindow,
+ *   { timeout: 5000 }
+ * )
+ * ```
  */
 export function addChannel(
   state: BrokerState,

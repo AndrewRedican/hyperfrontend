@@ -13,6 +13,14 @@ import { initChannel } from './init-channel'
  *
  * @param label - Human-readable label for the client
  * @returns Client instance with connection and messaging capabilities
+ *
+ * @example
+ * ```typescript
+ * const alice = createClient('alice')
+ * const bob = createClient('bob')
+ * alice.connect(bob)
+ * await alice.send({ type: 'greeting', text: 'hello' })
+ * ```
  */
 export function createClient<T = MessagePayload>(label: string): Client<T> {
   const clientId = uuidV4()

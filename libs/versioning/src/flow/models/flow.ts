@@ -73,6 +73,17 @@ export function createFlow(id: string, name: string, steps: readonly FlowStep[],
  * @param flow - The flow to extend
  * @param step - The step to add
  * @returns A new VersionFlow with the step added
+ *
+ * @example
+ * ```typescript
+ * import { addStep, createConventionalFlow, createNoopStep } from '@hyperfrontend/versioning'
+ *
+ * const flow = createConventionalFlow()
+ * const extended = addStep(flow, createNoopStep('custom', 'Custom Step'))
+ *
+ * console.log(extended.steps.length)
+ * // => original steps + 1
+ * ```
  */
 export function addStep(flow: VersionFlow, step: FlowStep): VersionFlow {
   return {
@@ -88,6 +99,18 @@ export function addStep(flow: VersionFlow, step: FlowStep): VersionFlow {
  * @param flow - The flow to modify
  * @param stepId - The ID of the step to remove
  * @returns A new VersionFlow without the step
+ *
+ * @example
+ * ```typescript
+ * import { removeStep, createConventionalFlow } from '@hyperfrontend/versioning'
+ *
+ * const flow = createConventionalFlow()
+ * const minimal = removeStep(flow, 'generate-changelog')
+ *
+ * // Flow no longer has changelog step
+ * console.log(minimal.steps.find(s => s.id === 'generate-changelog'))
+ * // => undefined
+ * ```
  */
 export function removeStep(flow: VersionFlow, stepId: string): VersionFlow {
   return {
@@ -103,6 +126,17 @@ export function removeStep(flow: VersionFlow, stepId: string): VersionFlow {
  * @param step - The step to insert
  * @param index - Position to insert at (0-based)
  * @returns A new VersionFlow with the step inserted
+ *
+ * @example
+ * ```typescript
+ * import { insertStep, createConventionalFlow, createNoopStep } from '@hyperfrontend/versioning'
+ *
+ * const flow = createConventionalFlow()
+ * const modified = insertStep(flow, createNoopStep('early', 'Early Step'), 0)
+ *
+ * console.log(modified.steps[0].id)
+ * // => 'early'
+ * ```
  */
 export function insertStep(flow: VersionFlow, step: FlowStep, index: number): VersionFlow {
   const steps = [...flow.steps]
@@ -120,6 +154,16 @@ export function insertStep(flow: VersionFlow, step: FlowStep, index: number): Ve
  * @param step - The step to insert
  * @param afterStepId - ID of the step to insert after
  * @returns A new VersionFlow with the step inserted
+ *
+ * @example
+ * ```typescript
+ * import { insertStepAfter, createConventionalFlow, createNoopStep } from '@hyperfrontend/versioning'
+ *
+ * const flow = createConventionalFlow()
+ * const modified = insertStepAfter(flow, createNoopStep('validate', 'Validate'), 'analyze-commits')
+ *
+ * // 'validate' step now follows 'analyze-commits'
+ * ```
  */
 export function insertStepAfter(flow: VersionFlow, step: FlowStep, afterStepId: string): VersionFlow {
   const index = flow.steps.findIndex((s) => s.id === afterStepId)
@@ -136,6 +180,16 @@ export function insertStepAfter(flow: VersionFlow, step: FlowStep, afterStepId: 
  * @param step - The step to insert
  * @param beforeStepId - ID of the step to insert before
  * @returns A new VersionFlow with the step inserted
+ *
+ * @example
+ * ```typescript
+ * import { insertStepBefore, createConventionalFlow, createNoopStep } from '@hyperfrontend/versioning'
+ *
+ * const flow = createConventionalFlow()
+ * const modified = insertStepBefore(flow, createNoopStep('prep', 'Prepare'), 'create-commit')
+ *
+ * // 'prep' step now runs before 'create-commit'
+ * ```
  */
 export function insertStepBefore(flow: VersionFlow, step: FlowStep, beforeStepId: string): VersionFlow {
   const index = flow.steps.findIndex((s) => s.id === beforeStepId)
@@ -152,6 +206,16 @@ export function insertStepBefore(flow: VersionFlow, step: FlowStep, beforeStepId
  * @param stepId - ID of the step to replace
  * @param newStep - The replacement step
  * @returns A new VersionFlow with the step replaced
+ *
+ * @example
+ * ```typescript
+ * import { replaceStep, createConventionalFlow, createNoopStep } from '@hyperfrontend/versioning'
+ *
+ * const flow = createConventionalFlow()
+ * const modified = replaceStep(flow, 'create-tag', createNoopStep('create-tag', 'Custom Tag'))
+ *
+ * // 'create-tag' now uses custom implementation
+ * ```
  */
 export function replaceStep(flow: VersionFlow, stepId: string, newStep: FlowStep): VersionFlow {
   return {
@@ -166,6 +230,16 @@ export function replaceStep(flow: VersionFlow, stepId: string, newStep: FlowStep
  * @param flow - The flow to configure
  * @param config - Configuration updates to merge
  * @returns A new VersionFlow with updated config
+ *
+ * @example
+ * ```typescript
+ * import { withConfig, createConventionalFlow } from '@hyperfrontend/versioning'
+ *
+ * const flow = createConventionalFlow()
+ * const dryRunFlow = withConfig(flow, { dryRun: true })
+ *
+ * // Flow now runs in dry-run mode
+ * ```
  */
 export function withConfig(flow: VersionFlow, config: Partial<FlowConfig>): VersionFlow {
   return {
@@ -180,6 +254,17 @@ export function withConfig(flow: VersionFlow, config: Partial<FlowConfig>): Vers
  * @param flow - The flow to search
  * @param stepId - The step ID to find
  * @returns The step if found, undefined otherwise
+ *
+ * @example
+ * ```typescript
+ * import { getStep, createConventionalFlow } from '@hyperfrontend/versioning'
+ *
+ * const flow = createConventionalFlow()
+ * const step = getStep(flow, 'analyze-commits')
+ *
+ * console.log(step?.name)
+ * // => 'Analyze Commits'
+ * ```
  */
 export function getStep(flow: VersionFlow, stepId: string): FlowStep | undefined {
   return flow.steps.find((s) => s.id === stepId)
@@ -191,6 +276,18 @@ export function getStep(flow: VersionFlow, stepId: string): FlowStep | undefined
  * @param flow - The flow to check
  * @param stepId - The step ID to look for
  * @returns True if the flow contains the step
+ *
+ * @example
+ * ```typescript
+ * import { hasStep, createConventionalFlow } from '@hyperfrontend/versioning'
+ *
+ * const flow = createConventionalFlow()
+ *
+ * console.log(hasStep(flow, 'create-commit'))
+ * // => true
+ * console.log(hasStep(flow, 'custom-step'))
+ * // => false
+ * ```
  */
 export function hasStep(flow: VersionFlow, stepId: string): boolean {
   return flow.steps.some((s) => s.id === stepId)

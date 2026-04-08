@@ -98,6 +98,17 @@ export function createConventionalFlow(config?: Partial<FlowConfig>): VersionFlo
  *
  * @param config - Optional configuration overrides
  * @returns A minimal VersionFlow
+ *
+ * @example
+ * ```typescript
+ * import { createMinimalFlow, executeFlow } from '@hyperfrontend/versioning'
+ *
+ * const flow = createMinimalFlow()
+ * const result = await executeFlow(flow, 'my-lib', '/workspace')
+ *
+ * // Quick release without changelog or tags
+ * console.log('Released:', result.state.nextVersion)
+ * ```
  */
 export function createMinimalFlow(config?: Partial<FlowConfig>): VersionFlow {
   return createConventionalFlow({
@@ -114,6 +125,17 @@ export function createMinimalFlow(config?: Partial<FlowConfig>): VersionFlow {
  *
  * @param config - Optional configuration overrides
  * @returns A VersionFlow that only updates changelog
+ *
+ * @example
+ * ```typescript
+ * import { createChangelogOnlyFlow, executeFlow } from '@hyperfrontend/versioning'
+ *
+ * const flow = createChangelogOnlyFlow()
+ * const result = await executeFlow(flow, 'my-lib', '/workspace')
+ *
+ * // Only changelog is updated, no version bump
+ * console.log(result.state.changelogEntry)
+ * ```
  */
 export function createChangelogOnlyFlow(config?: Partial<FlowConfig>): VersionFlow {
   return createFlow(

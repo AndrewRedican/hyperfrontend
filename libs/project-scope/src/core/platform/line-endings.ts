@@ -20,6 +20,13 @@ export type DetectedLineEnding = 'lf' | 'crlf' | 'mixed' | 'none'
  * Get platform-appropriate line ending.
  *
  * @returns Line ending for current platform
+ *
+ * @example
+ * ```typescript
+ * const eol = getLineEnding()
+ * const lines = ['line1', 'line2', 'line3']
+ * const content = lines.join(eol)
+ * ```
  */
 export function getLineEnding(): '\n' | '\r\n' {
   return isWindows() ? CRLF : LF
@@ -29,6 +36,12 @@ export function getLineEnding(): '\n' | '\r\n' {
  * Get platform-appropriate path separator.
  *
  * @returns Path separator for current platform
+ *
+ * @example
+ * ```typescript
+ * const sep = getPathSeparator()
+ * const fullPath = ['src', 'utils', 'helpers.ts'].join(sep)
+ * ```
  */
 export function getPathSeparator(): '/' | '\\' {
   return isWindows() ? '\\' : '/'
@@ -40,6 +53,16 @@ export function getPathSeparator(): '/' | '\\' {
  * @param content - Content to normalize
  * @param style - Target line ending style ('lf', 'crlf', or 'auto' for platform default)
  * @returns Content with normalized line endings
+ *
+ * @example
+ * ```typescript
+ * // Normalize to Unix line endings
+ * const normalized = normalizeLineEndings('line1\r\nline2\r\n', 'lf')
+ * // => 'line1\nline2\n'
+ *
+ * // Use platform default
+ * const platformNormalized = normalizeLineEndings(content, 'auto')
+ * ```
  */
 export function normalizeLineEndings(content: string, style: LineEndingStyle = 'lf'): string {
   let target: string
@@ -64,6 +87,15 @@ export function normalizeLineEndings(content: string, style: LineEndingStyle = '
  *
  * @param content - Content to analyze
  * @returns Detected line ending style
+ *
+ * @example
+ * ```typescript
+ * const ending = detectLineEnding('line1\nline2\n')
+ * // => 'lf'
+ *
+ * const mixed = detectLineEnding('line1\r\nline2\nline3')
+ * // => 'mixed'
+ * ```
  */
 export function detectLineEnding(content: string): DetectedLineEnding {
   const hasCRLF = content.includes(CRLF)
@@ -81,6 +113,17 @@ export function detectLineEnding(content: string): DetectedLineEnding {
  * @param path1 - First path
  * @param path2 - Second path
  * @returns True if paths are equal (respecting case sensitivity)
+ *
+ * @example
+ * ```typescript
+ * // On case-insensitive filesystem (Windows/macOS)
+ * pathsEqual('src/App.tsx', 'src/app.tsx')
+ * // => true
+ *
+ * // On case-sensitive filesystem (Linux)
+ * pathsEqual('src/App.tsx', 'src/app.tsx')
+ * // => false
+ * ```
  */
 export function pathsEqual(path1: string, path2: string): boolean {
   const caseSensitive = detectCaseSensitivity()

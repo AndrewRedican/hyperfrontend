@@ -22,6 +22,18 @@ export const UPDATE_PACKAGES_STEP_ID = 'update-packages'
  * - modifiedFiles: Adds package.json to list
  *
  * @returns A FlowStep that updates package.json
+ *
+ * @example
+ * ```typescript
+ * import { createUpdatePackageStep, executeStep } from '@hyperfrontend/versioning'
+ *
+ * const step = createUpdatePackageStep()
+ * const result = await executeStep(step, context)
+ *
+ * // package.json version field is updated
+ * console.log(result.stateUpdates?.modifiedFiles)
+ * // => ['/workspace/libs/my-lib/package.json']
+ * ```
  */
 export function createUpdatePackageStep(): FlowStep {
   return createStep(
@@ -76,6 +88,17 @@ export function createUpdatePackageStep(): FlowStep {
  * on the updated package.
  *
  * @returns A FlowStep that cascades dependency updates
+ *
+ * @example
+ * ```typescript
+ * import { createCascadeDependenciesStep, executeStep } from '@hyperfrontend/versioning'
+ *
+ * const step = createCascadeDependenciesStep()
+ * const result = await executeStep(step, contextWithTrackDeps)
+ *
+ * // Dependent packages are updated
+ * console.log(result.message)
+ * ```
  */
 export function createCascadeDependenciesStep(): FlowStep {
   return createStep(

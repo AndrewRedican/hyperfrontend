@@ -34,6 +34,23 @@ export interface GetElementAsyncOptions {
  * @param elementRefOrString - Either an HTMLElement reference or a CSS selector string
  * @param options - Configuration options including duration, interval, and callbacks
  * @returns A cleanup function to cancel the polling
+ *
+ * @example
+ * ```typescript
+ * const cancel = getElementAsync('#dynamic-content', {
+ *   duration: 5000,
+ *   interval: 100,
+ *   onSuccess: (element) => {
+ *     console.log('Element found:', element)
+ *   },
+ *   onFail: () => {
+ *     console.log('Element not found within timeout')
+ *   },
+ * })
+ *
+ * // Cancel polling if no longer needed
+ * cancel()
+ * ```
  */
 export function getElementAsync(elementRefOrString: ElementRefOrString, options?: GetElementAsyncOptions): () => void {
   const { duration, interval, onSuccess, onFail } = <GetElementAsyncOptions>{

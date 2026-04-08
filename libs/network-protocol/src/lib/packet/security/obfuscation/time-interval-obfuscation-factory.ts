@@ -19,6 +19,18 @@ import { isValidRefreshRate } from './is-valid-refresh-rate'
  * @param {(date: Date, refreshRate: number, offset: number) => Promise<string>} getTimeBasedPassword - Function to get a time-based password
  * @param {(date: Date, refreshRate: number) => {current: () => Promise<string>, previous: () => Promise<string>, next: () => Promise<string>}} getTimeBasedPasswords - Function to get multiple time-based passwords
  * @returns {(refreshRate: number) => ObfuscationSuite} A factory function that accepts a refresh rate and returns an obfuscation suite
+ *
+ * @example
+ * ```typescript
+ * const factory = createTimeIntervalObfuscationFactory(
+ *   obfuscatePacket,
+ *   deobfuscatePacket,
+ *   getTimeBasedPassword,
+ *   getTimeBasedPasswords
+ * )
+ * const suite = factory(60) // 60-second refresh interval
+ * const obfuscated = await suite.packetObfuscation(packet)
+ * ```
  */
 export function createTimeIntervalObfuscationFactory(
   obfuscatePacket: PacketObfuscater,

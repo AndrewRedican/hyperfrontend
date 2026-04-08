@@ -13,6 +13,21 @@ import { collectAllDependencies, parseVersionString } from '../shared-utils/dete
  * @param projectPath - Project directory path
  * @param packageJson - Optional pre-loaded package.json
  * @returns Detection result or null if not detected
+ *
+ * @example
+ * ```typescript
+ * const result = nuxtDetector('/path/to/nuxt-app', {
+ *   dependencies: { 'nuxt': '^3.0.0', 'vue': '^3.0.0' }
+ * })
+ * // => {
+ * //   id: 'nuxt',
+ * //   name: 'Nuxt',
+ * //   category: 'meta-framework',
+ * //   version: '3.0.0',
+ * //   confidence: 70,
+ * //   detectedFrom: [{ type: 'package.json', field: 'dependencies.nuxt' }]
+ * // }
+ * ```
  */
 export function nuxtDetector(projectPath: string, packageJson?: PackageJson): FrameworkDetection | null {
   const pkg = packageJson ?? readPackageJsonIfExists(projectPath)

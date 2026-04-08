@@ -26,6 +26,15 @@ export const monorepoDetectors: MonorepoDetector[] = [
  * @param workspacePath - Workspace directory path
  * @param packageJson - Optional pre-loaded package.json
  * @returns Array of detected monorepo tools, sorted by confidence
+ *
+ * @example
+ * ```typescript
+ * const detections = detectMonorepoTools('/path/to/project')
+ * // => [
+ * //   { id: 'nx', name: 'NX', confidence: 90, configPath: 'nx.json', detectedFrom: [...] },
+ * //   { id: 'npm-workspaces', name: 'npm Workspaces', confidence: 80, ... }
+ * // ]
+ * ```
  */
 export function detectMonorepoTools(workspacePath: string, packageJson?: PackageJson): MonorepoDetection[] {
   const pkg = packageJson ?? readPackageJsonIfExists(workspacePath)

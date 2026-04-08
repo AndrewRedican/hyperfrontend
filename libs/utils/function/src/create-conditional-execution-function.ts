@@ -5,6 +5,15 @@
  * @param func - The function to be conditionally executed.
  * @param conditionFunc - A function that returns a boolean, determining if `func` should be executed.
  * @returns A wrapped version of `func` that executes conditionally.
+ *
+ * @example
+ * ```typescript
+ * let enabled = false
+ * const conditionalLog = createConditionalExecutionFunction(console.log, () => enabled)
+ * conditionalLog('test') // does nothing
+ * enabled = true
+ * conditionalLog('test') // logs 'test'
+ * ```
  */
 export function createConditionalExecutionFunction<T extends (...args: any[]) => any>(
   func: T,

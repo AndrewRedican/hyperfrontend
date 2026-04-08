@@ -239,6 +239,14 @@ export function identifyFrameworks(projectPath: string, options?: IdentifyFramew
  * Clear the framework identification cache.
  *
  * Useful for testing or when the project files have changed.
+ *
+ * @example
+ * ```typescript
+ * import { clearFrameworkIdentificationCache } from '@hyperfrontend/project-scope'
+ *
+ * // Reset cache before re-identifying frameworks
+ * clearFrameworkIdentificationCache()
+ * ```
  */
 export function clearFrameworkIdentificationCache(): void {
   frameworkIdCache.clear()
@@ -251,6 +259,15 @@ export function clearFrameworkIdentificationCache(): void {
  * @param frameworkId - Framework identifier to check
  * @param minConfidence - Minimum confidence threshold (default: 50)
  * @returns True if the framework is detected with sufficient confidence
+ *
+ * @example
+ * ```typescript
+ * import { usesFramework } from '@hyperfrontend/project-scope'
+ *
+ * if (usesFramework('/path/to/project', 'react', 70)) {
+ *   console.log('Project uses React with high confidence')
+ * }
+ * ```
  */
 export function usesFramework(projectPath: string, frameworkId: string, minConfidence = 50): boolean {
   const identification = identifyFrameworks(projectPath, { minConfidence })

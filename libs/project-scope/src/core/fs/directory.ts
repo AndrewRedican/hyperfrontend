@@ -162,6 +162,15 @@ export function readDirectoryRecursive(dirPath: string, options?: RecursiveOptio
  * @param dirPath - Path where the directory should be created
  * @param options - Creation options
  * @param options.recursive - Create parent directories if missing (default: true)
+ *
+ * @example
+ * ```typescript
+ * // Create nested directories
+ * createDirectory('./output/reports/2024')
+ *
+ * // Create single directory without parents
+ * createDirectory('./logs', { recursive: false })
+ * ```
  */
 export function createDirectory(
   dirPath: string,
@@ -182,6 +191,15 @@ export function createDirectory(
  * @param options - Removal configuration
  * @param options.recursive - Delete directory contents recursively
  * @param options.force - Ignore errors if directory doesn't exist
+ *
+ * @example
+ * ```typescript
+ * // Remove directory and all contents
+ * removeDirectory('./temp', { recursive: true })
+ *
+ * // Safe removal (no error if missing)
+ * removeDirectory('./cache', { recursive: true, force: true })
+ * ```
  */
 export function removeDirectory(
   dirPath: string,

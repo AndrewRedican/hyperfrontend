@@ -175,6 +175,13 @@ export function getCommit(hash: string, options: Pick<GitLogOptions, 'cwd' | 'ti
  * @param hash - Commit hash to check
  * @param options - Additional options
  * @returns True if commit exists
+ *
+ * @example
+ * ```typescript
+ * if (commitExists('abc123def')) {
+ *   console.log('Commit found in repository')
+ * }
+ * ```
  */
 export function commitExists(hash: string, options: Pick<GitLogOptions, 'cwd' | 'timeout'> = {}): boolean {
   const safeHash = escapeGitRef(hash)
@@ -397,6 +404,13 @@ const MAX_REF_LENGTH = 256
  * @param ref - Reference to escape
  * @returns Safe reference string
  * @throws {Error} If reference contains invalid characters
+ *
+ * @example
+ * ```typescript
+ * escapeGitRef('refs/heads/main') // => 'refs/heads/main'
+ * escapeGitRef('feature/test') // => 'feature/test'
+ * escapeGitRef('ref$invalid') // throws - '$' is invalid
+ * ```
  */
 export function escapeGitRef(ref: string): string {
   if (!ref || typeof ref !== 'string') {
@@ -446,6 +460,12 @@ const MAX_PATH_LENGTH = 4096
  * @param path - Path to escape
  * @returns Safe path string
  * @throws {Error} If path contains invalid characters
+ *
+ * @example
+ * ```typescript
+ * escapeGitPath('src/utils/helper.ts') // => 'src/utils/helper.ts'
+ * escapeGitPath('path with spaces/file.ts') // => 'path with spaces/file.ts'
+ * ```
  */
 export function escapeGitPath(path: string): string {
   if (!path || typeof path !== 'string') {
@@ -492,6 +512,11 @@ const MAX_ARG_LENGTH = 1000
  * @param arg - Argument to escape
  * @returns Safe argument string
  * @throws {Error} If argument contains invalid characters
+ *
+ * @example
+ * ```typescript
+ * escapeGitArg('John Doe <john@example.com>') // => 'John Doe <john@example.com>'
+ * ```
  */
 export function escapeGitArg(arg: string): string {
   if (!arg || typeof arg !== 'string') {

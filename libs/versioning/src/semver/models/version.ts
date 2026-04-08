@@ -46,6 +46,14 @@ interface RequiredVersionComponents {
  *
  * @param options - Version components
  * @returns A new SemVer object
+ *
+ * @example
+ * ```typescript
+ * createSemVer({ major: 1, minor: 2, patch: 3 })
+ * // => { major: 1, minor: 2, patch: 3, prerelease: [], build: [] }
+ * createSemVer({ major: 1, minor: 0, patch: 0, prerelease: ['beta', '1'] })
+ * // => 1.0.0-beta.1
+ * ```
  */
 export function createSemVer(options: Partial<SemVer> & RequiredVersionComponents): SemVer {
   return {
@@ -62,6 +70,12 @@ export function createSemVer(options: Partial<SemVer> & RequiredVersionComponent
  * Creates a SemVer representing version 0.0.0.
  *
  * @returns A SemVer at version 0.0.0
+ *
+ * @example
+ * ```typescript
+ * const initial = createInitialVersion()
+ * format(initial) // => '0.0.0'
+ * ```
  */
 export function createInitialVersion(): SemVer {
   return createSemVer({ major: 0, minor: 0, patch: 0 })
@@ -71,6 +85,12 @@ export function createInitialVersion(): SemVer {
  * Creates a SemVer representing version 1.0.0.
  *
  * @returns A SemVer at version 1.0.0
+ *
+ * @example
+ * ```typescript
+ * const first = createFirstRelease()
+ * format(first) // => '1.0.0'
+ * ```
  */
 export function createFirstRelease(): SemVer {
   return createSemVer({ major: 1, minor: 0, patch: 0 })
@@ -81,6 +101,12 @@ export function createFirstRelease(): SemVer {
  *
  * @param version - The version to check
  * @returns True if version has prerelease identifiers
+ *
+ * @example
+ * ```typescript
+ * isPrerelease(parseVersionStrict('1.0.0-beta.1')) // => true
+ * isPrerelease(parseVersionStrict('1.0.0')) // => false
+ * ```
  */
 export function isPrerelease(version: SemVer): boolean {
   return version.prerelease.length > 0
@@ -91,6 +117,13 @@ export function isPrerelease(version: SemVer): boolean {
  *
  * @param version - The version to check
  * @returns True if version is stable
+ *
+ * @example
+ * ```typescript
+ * isStable(parseVersionStrict('1.0.0')) // => true
+ * isStable(parseVersionStrict('0.9.0')) // => false (< 1.0.0)
+ * isStable(parseVersionStrict('1.0.0-beta')) // => false (prerelease)
+ * ```
  */
 export function isStable(version: SemVer): boolean {
   return version.major >= 1 && version.prerelease.length === 0
@@ -101,6 +134,12 @@ export function isStable(version: SemVer): boolean {
  *
  * @param version - The version to strip
  * @returns A new SemVer without build metadata
+ *
+ * @example
+ * ```typescript
+ * const v = parseVersionStrict('1.0.0+build.123')
+ * format(stripBuild(v)) // => '1.0.0'
+ * ```
  */
 export function stripBuild(version: SemVer): SemVer {
   return createSemVer({
@@ -117,6 +156,12 @@ export function stripBuild(version: SemVer): SemVer {
  *
  * @param version - The version to strip
  * @returns A new SemVer without prerelease identifiers
+ *
+ * @example
+ * ```typescript
+ * const v = parseVersionStrict('1.0.0-beta.1')
+ * format(stripPrerelease(v)) // => '1.0.0'
+ * ```
  */
 export function stripPrerelease(version: SemVer): SemVer {
   return createSemVer({

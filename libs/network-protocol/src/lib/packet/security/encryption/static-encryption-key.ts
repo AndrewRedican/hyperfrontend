@@ -20,6 +20,13 @@ import { freeze } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
  * @param {PacketEncrypter} encryptPacket - Function to encrypt a packet with a password
  * @param {PacketDecrypter} decryptPacket - Function to decrypt a packet with a password
  * @returns {(key: string) => EncryptionSuite<T>} A factory function that accepts a static key and returns an encryption suite
+ *
+ * @example
+ * ```typescript
+ * const factory = createStaticKeyEncryptionFactory(encryptPacket, decryptPacket)
+ * const suite = factory('shared-secret-key')
+ * const encrypted = await suite.packetEncryption(packet)
+ * ```
  */
 export function createStaticKeyEncryptionFactory<T = any>(encryptPacket: PacketEncrypter, decryptPacket: PacketDecrypter) {
   return (key: string): EncryptionSuite<T> => {

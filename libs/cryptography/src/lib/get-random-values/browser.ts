@@ -7,6 +7,12 @@ import { createUint8Array } from '@hyperfrontend/immutable-api-utils/built-in-co
  * @param byteLength - The number of random bytes to generate
  * @returns A Uint8Array containing the random bytes
  * @throws {Error} When byteLength is not provided or is zero
+ *
+ * @example
+ * ```typescript
+ * const randomBytes = getRandomValues(16)
+ * // => Uint8Array(16) with cryptographically secure random values
+ * ```
  */
 export function getRandomValues(byteLength: number): Uint8Array {
   if (!byteLength) {

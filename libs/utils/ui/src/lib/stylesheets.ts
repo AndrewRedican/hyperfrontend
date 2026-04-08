@@ -18,6 +18,25 @@ const stylesheetLabels = createWeakMap<HTMLStyleElement, string>()
  * @param label - Optional label for the new stylesheet
  * @returns A tuple where the first item is the created HTMLStyleElement, and the second item is a cleanup function
  * @throws {Error} When css is not a string or StyleMap, is empty, or a stylesheet with the same label already exists
+ *
+ * @example CSS string
+ * ```typescript
+ * const [styleElement, removeStyles] = addStylesheet(`
+ *   .modal { display: flex; align-items: center; }
+ *   .modal-overlay { background: rgba(0, 0, 0, 0.5); }
+ * `, 'modal-styles')
+ *
+ * // Remove when done
+ * removeStyles()
+ * ```
+ *
+ * @example StyleMap object
+ * ```typescript
+ * const [styleElement, removeStyles] = addStylesheet({
+ *   '.button': { backgroundColor: '#3498db', padding: '10px 20px' },
+ *   '.button:hover': { backgroundColor: '#2980b9' },
+ * })
+ * ```
  */
 export function addStylesheet(css: string | StyleMap, label?: string): [HTMLStyleElement, () => void] {
   if (getType(css) === 'object') {
@@ -53,6 +72,18 @@ export function addStylesheet(css: string | StyleMap, label?: string): [HTMLStyl
  * Removes a stylesheet from the document.
  *
  * @param {string | HTMLStyleElement} ref - The label or the HTMLStyleElement of the stylesheet to be removed.
+ *
+ * @example By label
+ * ```typescript
+ * addStylesheet('.theme { color: red; }', 'theme-styles')
+ * removeStylesheet('theme-styles')
+ * ```
+ *
+ * @example By element reference
+ * ```typescript
+ * const [styleElement] = addStylesheet('.custom { margin: 0; }')
+ * removeStylesheet(styleElement)
+ * ```
  */
 export function removeStylesheet(ref: string | HTMLStyleElement): void {
   const isLabel = getType(ref) === 'string'

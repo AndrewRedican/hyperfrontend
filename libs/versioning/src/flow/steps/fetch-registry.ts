@@ -24,6 +24,19 @@ export const FETCH_REGISTRY_STEP_ID = 'fetch-registry'
  * - isFirstRelease: True if never published
  *
  * @returns A FlowStep that fetches registry information
+ *
+ * @example
+ * ```typescript
+ * import { createFetchRegistryStep, executeStep } from '@hyperfrontend/versioning'
+ *
+ * const step = createFetchRegistryStep()
+ * const result = await executeStep(step, context)
+ *
+ * // Check if first release
+ * if (result.stateUpdates?.isFirstRelease) {
+ *   console.log('First release detected')
+ * }
+ * ```
  */
 export function createFetchRegistryStep(): FlowStep {
   return createStep(FETCH_REGISTRY_STEP_ID, 'Fetch Registry Version', async (ctx) => {

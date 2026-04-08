@@ -9,6 +9,13 @@ import { isValidLabel } from '../validations/is-valid-label'
  *
  * @param createChannel - The channel creator function
  * @returns A function that creates channel stores
+ *
+ * @example
+ * ```typescript
+ * const createStore = createChannelStoreFactory(channelCreator)
+ * const store = createStore()
+ * const channel = store.create('main', sendFn, receiveFn, protocol)
+ * ```
  */
 export function createChannelStoreFactory(createChannel: ChannelCreater) {
   return function createChannelStore(): ChannelStore {

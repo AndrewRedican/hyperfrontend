@@ -59,6 +59,12 @@ const MAX_INPUT_LENGTH = 1024 * 1024
  * @param input - The markdown content to tokenize
  * @returns Array of tokens
  * @throws {Error} If input exceeds maximum length
+ *
+ * @example
+ * ```typescript
+ * const tokens = tokenize('# Changelog\n\n## [1.0.0]\n- Added feature')
+ * // => [{ type: 'heading-1', value: 'Changelog', ... }, { type: 'heading-2', ... }, ...]
+ * ```
  */
 export function tokenize(input: string): Token[] {
   if (input.length > MAX_INPUT_LENGTH) {
@@ -460,6 +466,13 @@ function isWhitespace(char: string | undefined): boolean {
  *
  * @param char - The character to check
  * @returns True if the character is a letter
+ *
+ * @example
+ * ```typescript
+ * isLetter('a') // => true
+ * isLetter('Z') // => true
+ * isLetter('5') // => false
+ * ```
  */
 export function isLetter(char: string | undefined): boolean {
   if (!char) return false
@@ -472,6 +485,12 @@ export function isLetter(char: string | undefined): boolean {
  *
  * @param char - The character to check
  * @returns True if the character is a digit
+ *
+ * @example
+ * ```typescript
+ * isDigit('5') // => true
+ * isDigit('a') // => false
+ * ```
  */
 export function isDigit(char: string | undefined): boolean {
   if (!char) return false
@@ -484,6 +503,13 @@ export function isDigit(char: string | undefined): boolean {
  *
  * @param char - The character to check
  * @returns True if the character is alphanumeric
+ *
+ * @example
+ * ```typescript
+ * isAlphanumeric('a') // => true
+ * isAlphanumeric('5') // => true
+ * isAlphanumeric('-') // => false
+ * ```
  */
 export function isAlphanumeric(char: string | undefined): boolean {
   return isLetter(char) || isDigit(char)

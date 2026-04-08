@@ -10,6 +10,13 @@ import { addError, shouldContinue } from '../context'
  * @param schema - Schema containing string constraints
  * @param ctx - Validation context
  * @returns true if validation passes, false otherwise
+ * @example
+ * ```typescript
+ * const schema = { minLength: 3, maxLength: 10, pattern: '^[a-z]+$' }
+ * validateStringBounds('hello', schema, ctx) // => true
+ * validateStringBounds('hi', schema, ctx)    // => false (too short)
+ * validateStringBounds('Hello', schema, ctx) // => false (contains uppercase)
+ * ```
  */
 export function validateStringBounds(instance: string, schema: Schema, ctx: ValidationContext): boolean {
   let valid = true

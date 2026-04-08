@@ -185,6 +185,16 @@ function extractVersionPrefix(versionRange: string): string {
  * @param packageJsonPath - Relative path to package.json
  * @param newVersion - New version string
  * @throws {Error} If the file doesn't exist
+ *
+ * @example
+ * ```typescript
+ * import { updatePackageVersionInTree } from '@hyperfrontend/versioning'
+ *
+ * // Inside an Nx generator
+ * export default function bumpVersion(tree: Tree) {
+ *   updatePackageVersionInTree(tree, 'libs/my-lib/package.json', '2.0.0')
+ * }
+ * ```
  */
 export function updatePackageVersionInTree(tree: Tree, packageJsonPath: string, newVersion: string): void {
   changeJsonFile<{
@@ -205,6 +215,21 @@ export function updatePackageVersionInTree(tree: Tree, packageJsonPath: string, 
  * @param tree - Virtual file system tree
  * @param packageJsonPath - Relative path to package.json
  * @param versionUpdates - Map of package name to new version
+ *
+ * @example
+ * ```typescript
+ * import { updateDependencyReferencesInTree } from '@hyperfrontend/versioning'
+ *
+ * // Inside an Nx generator
+ * export default function syncDeps(tree: Tree) {
+ *   const updates = new Map([
+ *     ['@myorg/utils', '2.0.0'],
+ *     ['@myorg/core', '3.1.0'],
+ *   ])
+ *
+ *   updateDependencyReferencesInTree(tree, 'apps/my-app/package.json', updates)
+ * }
+ * ```
  */
 export function updateDependencyReferencesInTree(tree: Tree, packageJsonPath: string, versionUpdates: Map<string, string>): void {
   if (!tree.isFile(packageJsonPath)) return
@@ -266,6 +291,20 @@ export function updateDependencyReferencesInTree(tree: Tree, packageJsonPath: st
  *
  * @param result - Result object from batch update operation
  * @returns Human-readable summary
+ *
+ * @example
+ * ```typescript
+ * import { batchUpdateVersions, summarizeBatchUpdate } from '@hyperfrontend/versioning'
+ *
+ * const result = batchUpdateVersions(workspace, updates)
+ * console.log(summarizeBatchUpdate(result))
+ * // Output:
+ * // Successfully updated 3 package(s)
+ * //
+ * // Updated packages:
+ * //   @myorg/utils: 1.0.0 -> 1.1.0
+ * //   @myorg/core: 2.0.0 -> 2.1.0
+ * ```
  */
 export function summarizeBatchUpdate(result: BatchUpdateResult): string {
   const lines = []

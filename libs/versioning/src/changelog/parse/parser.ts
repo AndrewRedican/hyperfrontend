@@ -43,6 +43,19 @@ interface ParserState {
  * @param content - The markdown content to parse
  * @param source - Optional source file path
  * @returns Parsed Changelog object
+ *
+ * @example
+ * ```typescript
+ * const markdown = `# Changelog
+ *
+ * ## [1.0.0] - 2024-01-15
+ *
+ * ### Added
+ * - Initial release`
+ *
+ * const changelog = parseChangelog(markdown, 'CHANGELOG.md')
+ * // => { header: { title: '# Changelog', ... }, entries: [{ version: '1.0.0', ... }] }
+ * ```
  */
 export function parseChangelog(content: string, source?: string): Changelog {
   const tokens = tokenize(content)

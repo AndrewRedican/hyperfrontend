@@ -31,6 +31,12 @@ export const testMessages = {
  * Mock logger for testing.
  *
  * @returns A mock logger with no-op implementations for all log methods
+ *
+ * @example
+ * ```typescript
+ * const logger = createMockLogger()
+ * logger.info('test') // does nothing
+ * ```
  */
 export const createMockLogger = (): Logger => ({
   debug: () => void 0,

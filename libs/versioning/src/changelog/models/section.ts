@@ -100,6 +100,18 @@ export const SECTION_HEADINGS: Record<ChangelogSectionType, string> = {
  *
  * @param heading - The heading string to parse
  * @returns The corresponding ChangelogSectionType
+ *
+ * @example
+ * ```typescript
+ * getSectionType('Added')
+ * // => 'features'
+ *
+ * getSectionType('Bug Fixes')
+ * // => 'fixes'
+ *
+ * getSectionType('Custom Section')
+ * // => 'other'
+ * ```
  */
 export function getSectionType(heading: string): ChangelogSectionType {
   const normalized = heading.toLowerCase().trim()

@@ -1,3 +1,4 @@
+/* eslint-disable workspace/lib-require-jsdoc-example */
 /**
  * Safe copies of Function built-in and utilities.
  *

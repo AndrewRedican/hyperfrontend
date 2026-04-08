@@ -80,6 +80,16 @@ export const DEFAULT_WORKSPACE_CONFIG: WorkspaceConfig = {
  *
  * @param options - Partial configuration options
  * @returns Complete workspace configuration
+ *
+ * @example
+ * ```typescript
+ * import { createWorkspaceConfig } from '@hyperfrontend/versioning'
+ *
+ * const config = createWorkspaceConfig({
+ *   patterns: ['packages/*', 'libs/*'],
+ *   exclude: ['node_modules', 'dist'],
+ * })
+ * ```
  */
 export function createWorkspaceConfig(options?: Partial<WorkspaceConfig>): WorkspaceConfig {
   return {
@@ -101,6 +111,21 @@ export function createWorkspaceConfig(options?: Partial<WorkspaceConfig>): Works
  * @param options.dependencyGraph - Map of package names to their dependents
  * @param options.reverseDependencyGraph - Map of package names to their dependencies
  * @returns A new Workspace object
+ *
+ * @example
+ * ```typescript
+ * import { createWorkspace, createWorkspaceConfig, createProject } from '@hyperfrontend/versioning'
+ *
+ * const projects = new Map([['@myorg/utils', createProject({ ... })]])
+ * const workspace = createWorkspace({
+ *   root: '/path/to/workspace',
+ *   type: 'nx',
+ *   projects,
+ *   config: createWorkspaceConfig(),
+ *   dependencyGraph: new Map(),
+ *   reverseDependencyGraph: new Map(),
+ * })
+ * ```
  */
 export function createWorkspace(options: {
   /** Absolute path to workspace root directory */
@@ -135,6 +160,17 @@ export function createWorkspace(options: {
  * @param workspace - Workspace to search in
  * @param projectName - Identifier of the project to retrieve
  * @returns The project or undefined if not found
+ *
+ * @example
+ * ```typescript
+ * import { discoverWorkspace, getProject } from '@hyperfrontend/versioning'
+ *
+ * const workspace = discoverWorkspace()
+ * const project = getProject(workspace, '@myorg/utils')
+ * if (project) {
+ *   console.log(`Version: ${project.version}`)
+ * }
+ * ```
  */
 export function getProject(workspace: Workspace, projectName: string): Project | undefined {
   return workspace.projects.get(projectName)
@@ -146,6 +182,16 @@ export function getProject(workspace: Workspace, projectName: string): Project |
  * @param workspace - Workspace to search in
  * @param projectName - Identifier of the project to check
  * @returns True if the project exists
+ *
+ * @example
+ * ```typescript
+ * import { discoverWorkspace, hasProject } from '@hyperfrontend/versioning'
+ *
+ * const workspace = discoverWorkspace()
+ * if (hasProject(workspace, '@myorg/utils')) {
+ *   console.log('Package exists in workspace')
+ * }
+ * ```
  */
 export function hasProject(workspace: Workspace, projectName: string): boolean {
   return workspace.projects.has(projectName)
@@ -156,6 +202,15 @@ export function hasProject(workspace: Workspace, projectName: string): boolean {
  *
  * @param workspace - Workspace to retrieve project names from
  * @returns Array of project names
+ *
+ * @example
+ * ```typescript
+ * import { discoverWorkspace, getProjectNames } from '@hyperfrontend/versioning'
+ *
+ * const workspace = discoverWorkspace()
+ * const names = getProjectNames(workspace)
+ * console.log(`Found ${names.length} projects:`, names)
+ * ```
  */
 export function getProjectNames(workspace: Workspace): readonly string[] {
   return workspace.projectList.map((p) => p.name)
@@ -166,6 +221,14 @@ export function getProjectNames(workspace: Workspace): readonly string[] {
  *
  * @param workspace - Workspace to count projects in
  * @returns Number of projects
+ *
+ * @example
+ * ```typescript
+ * import { discoverWorkspace, getProjectCount } from '@hyperfrontend/versioning'
+ *
+ * const workspace = discoverWorkspace()
+ * console.log(`Workspace contains ${getProjectCount(workspace)} projects`)
+ * ```
  */
 export function getProjectCount(workspace: Workspace): number {
   return workspace.projects.size
@@ -177,6 +240,15 @@ export function getProjectCount(workspace: Workspace): number {
  * @param workspace - Workspace containing the dependency graph
  * @param projectName - Name of the dependency
  * @returns Array of dependent project names
+ *
+ * @example
+ * ```typescript
+ * import { discoverWorkspace, getDependents } from '@hyperfrontend/versioning'
+ *
+ * const workspace = discoverWorkspace()
+ * const dependents = getDependents(workspace, '@myorg/utils')
+ * console.log(`Packages depending on @myorg/utils:`, dependents)
+ * ```
  */
 export function getDependents(workspace: Workspace, projectName: string): readonly string[] {
   return workspace.dependencyGraph.get(projectName) ?? []
@@ -188,6 +260,15 @@ export function getDependents(workspace: Workspace, projectName: string): readon
  * @param workspace - Workspace containing the dependency graph
  * @param projectName - Identifier of the project to look up
  * @returns Array of dependency project names
+ *
+ * @example
+ * ```typescript
+ * import { discoverWorkspace, getDependencies } from '@hyperfrontend/versioning'
+ *
+ * const workspace = discoverWorkspace()
+ * const deps = getDependencies(workspace, '@myorg/app')
+ * console.log(`@myorg/app depends on:`, deps)
+ * ```
  */
 export function getDependencies(workspace: Workspace, projectName: string): readonly string[] {
   return workspace.reverseDependencyGraph.get(projectName) ?? []
@@ -200,6 +281,16 @@ export function getDependencies(workspace: Workspace, projectName: string): read
  * @param projectA - Name of the potentially dependent project
  * @param projectB - Name of the potential dependency
  * @returns True if projectA depends on projectB
+ *
+ * @example
+ * ```typescript
+ * import { discoverWorkspace, dependsOn } from '@hyperfrontend/versioning'
+ *
+ * const workspace = discoverWorkspace()
+ * if (dependsOn(workspace, '@myorg/app', '@myorg/utils')) {
+ *   console.log('@myorg/app directly depends on @myorg/utils')
+ * }
+ * ```
  */
 export function dependsOn(workspace: Workspace, projectA: string, projectB: string): boolean {
   const deps = getDependencies(workspace, projectA)

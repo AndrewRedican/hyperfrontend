@@ -12,6 +12,25 @@ import { collectAllDependencies, parseVersionString, filterScriptsByCommand } fr
  * @param projectPath - Project directory path
  * @param packageJson - Optional pre-loaded package.json
  * @returns Detection result or null if not detected
+ *
+ * @example
+ * ```typescript
+ * const result = esbuildDetector('/path/to/project', {
+ *   name: 'my-lib',
+ *   devDependencies: { 'esbuild': '^0.19.0' },
+ *   scripts: { 'build': 'esbuild src/index.ts --bundle --outfile=dist/index.js' }
+ * })
+ * // => {
+ * //   id: 'esbuild',
+ * //   name: 'esbuild',
+ * //   version: '0.19.0',
+ * //   confidence: 80,
+ * //   detectedFrom: [
+ * //     { type: 'package.json', field: 'dependencies.esbuild' },
+ * //     { type: 'package.json', field: 'scripts.build' }
+ * //   ]
+ * // }
+ * ```
  */
 export function esbuildDetector(projectPath: string, packageJson?: PackageJson): BuildToolDetection | null {
   const pkg = packageJson ?? readPackageJsonIfExists(projectPath)

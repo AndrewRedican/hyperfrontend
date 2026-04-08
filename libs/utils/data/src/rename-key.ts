@@ -16,6 +16,12 @@ import { traverse } from './traverse'
  * @param name - The new name to assign to matching keys
  * @param options - Optional configuration to control traversal depth
  * @returns An array of paths to locations where keys were renamed
+ *
+ * @example
+ * ```typescript
+ * const obj = { old: 1, nested: { old: 2 } }
+ * renameKey(obj, 'old', 'new') // [['new'], ['nested', 'new']]
+ * ```
  */
 export const renameKey = (target: unknown, pattern: string | RegExp, name: string, options?: DepthConfig): string[][] => {
   const patternIsString = typeof pattern === 'string'

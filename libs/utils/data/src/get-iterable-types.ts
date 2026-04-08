@@ -6,6 +6,11 @@ import { registeredIterableClasses } from './shared/consts'
  * but can be extended by using `registerIterableClass`.
  *
  * @returns Array of iterable data types.
+ *
+ * @example
+ * ```typescript
+ * getIterableTypes() // ['array', 'object', ...registered types]
+ * ```
  */
 export const getIterableTypes = <T extends string = DataType>(): T[] =>
   registeredIterableClasses.map(({ classRef }) => {

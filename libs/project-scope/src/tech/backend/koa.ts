@@ -12,6 +12,26 @@ import { collectAllDependencies, parseVersionString } from '../shared-utils/dete
  * @param projectPath - Project directory path
  * @param packageJson - Optional pre-loaded package.json
  * @returns Detection result or null if not detected
+ * @example
+ * ```typescript
+ * const pkg = {
+ *   dependencies: { koa: '^2.14.2', 'koa-router': '^12.0.0' },
+ *   devDependencies: { '@types/koa': '^2.13.9' },
+ * }
+ *
+ * const result = koaDetector('/path/to/project', pkg)
+ * // => {
+ * //   id: 'koa',
+ * //   name: 'Koa',
+ * //   version: '2.14.2',
+ * //   confidence: 100,
+ * //   detectedFrom: [
+ * //     { type: 'package.json', field: 'dependencies.koa' },
+ * //     { type: 'package.json', field: 'dependencies.@types/koa' },
+ * //     { type: 'package.json', field: 'dependencies (koa middleware)' },
+ * //   ],
+ * // }
+ * ```
  */
 export function koaDetector(projectPath: string, packageJson?: PackageJson): BackendDetection | null {
   const pkg = packageJson ?? readPackageJsonIfExists(projectPath)

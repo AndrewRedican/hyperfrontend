@@ -10,6 +10,13 @@ import { marker } from './marker'
  * A ReferenceStack is used to keep track of iterables that have already been processed.
  * This is particularly useful for handling circular references in data structures.
  * @returns A new ReferenceStack instance.
+ *
+ * @example
+ * ```typescript
+ * const stack = referenceStack()
+ * stack.add(myObject)
+ * stack.exists(myObject) // true
+ * ```
  */
 export const referenceStack = (): ReferenceStack => {
   const records = createMap<symbol, [UnknownIterableKey, UnknownIterable, number]>()

@@ -45,6 +45,12 @@ export function filterByVersionRange(changelog: Changelog, range: string): Chang
  * @param changelog - The changelog to filter
  * @param startVersion - The minimum version (inclusive)
  * @returns A new changelog with entries >= startVersion
+ *
+ * @example
+ * ```typescript
+ * const recent = filterFromVersion(changelog, '2.0.0')
+ * // Only entries for version 2.0.0 and later
+ * ```
  */
 export function filterFromVersion(changelog: Changelog, startVersion: string): Changelog {
   const startResult = parseVersion(startVersion)
@@ -70,6 +76,12 @@ export function filterFromVersion(changelog: Changelog, startVersion: string): C
  * @param changelog - The changelog to apply the version filter to
  * @param endVersion - The maximum version (inclusive)
  * @returns A new changelog with entries <= endVersion
+ *
+ * @example
+ * ```typescript
+ * const legacy = filterToVersion(changelog, '1.9.9')
+ * // Only entries for versions up to 1.9.9
+ * ```
  */
 export function filterToVersion(changelog: Changelog, endVersion: string): Changelog {
   const endResult = parseVersion(endVersion)
@@ -96,6 +108,12 @@ export function filterToVersion(changelog: Changelog, endVersion: string): Chang
  * @param startVersion - The minimum version (inclusive)
  * @param endVersion - The maximum version (inclusive)
  * @returns A new changelog with entries in the range
+ *
+ * @example
+ * ```typescript
+ * const range = filterVersionRange(changelog, '1.5.0', '2.0.0')
+ * // Entries from 1.5.0 through 2.0.0
+ * ```
  */
 export function filterVersionRange(changelog: Changelog, startVersion: string, endVersion: string): Changelog {
   const startResult = parseVersion(startVersion)
@@ -131,6 +149,12 @@ export function filterVersionRange(changelog: Changelog, startVersion: string, e
  * @param count - Number of entries to keep
  * @param includeUnreleased - Whether to include unreleased in count (default: false)
  * @returns A new changelog with only the most recent entries
+ *
+ * @example
+ * ```typescript
+ * const latest = filterRecentEntries(changelog, 5)
+ * // Last 5 released versions (plus unreleased if present)
+ * ```
  */
 export function filterRecentEntries(changelog: Changelog, count: number, includeUnreleased = false): Changelog {
   if (count <= 0) {
@@ -167,6 +191,12 @@ export function filterRecentEntries(changelog: Changelog, count: number, include
  * @param startDate - Start date (inclusive, ISO format)
  * @param endDate - End date (inclusive, ISO format)
  * @returns A new changelog with entries in the date range
+ *
+ * @example
+ * ```typescript
+ * const q1 = filterByDateRange(changelog, '2024-01-01', '2024-03-31')
+ * // Entries released in Q1 2024
+ * ```
  */
 export function filterByDateRange(changelog: Changelog, startDate?: string, endDate?: string): Changelog {
   return filterEntries(changelog, (entry) => {

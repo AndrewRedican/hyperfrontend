@@ -16,6 +16,18 @@ export const VITEST_CONFIG_PATTERNS = ['vitest.config.js', 'vitest.config.ts', '
  * @param projectPath - Project directory path
  * @param packageJson - Optional pre-loaded package.json
  * @returns Detection result or null if not detected
+ *
+ * @example
+ * ```typescript
+ * import { vitestDetector } from '@hyperfrontend/project-scope'
+ *
+ * const result = vitestDetector('./my-project')
+ * if (result) {
+ *   console.log(`Vitest ${result.version} detected`)
+ *   console.log('Config:', result.configPath)
+ *   // => "Config: vitest.config.ts"
+ * }
+ * ```
  */
 export function vitestDetector(projectPath: string, packageJson?: PackageJson): TestingFrameworkDetection | null {
   const pkg = packageJson ?? readPackageJsonIfExists(projectPath)

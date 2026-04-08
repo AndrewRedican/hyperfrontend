@@ -95,6 +95,13 @@ export function increment(version: SemVer, type: BumpType, prereleaseId?: string
  * @param version - The version to increment
  * @param id - Optional prerelease identifier
  * @returns A new version with incremented prerelease
+ *
+ * @example
+ * ```typescript
+ * incrementPrerelease(parseVersionStrict('1.0.0')) // => 1.0.1-alpha.0
+ * incrementPrerelease(parseVersionStrict('1.0.0-alpha.0')) // => 1.0.0-alpha.1
+ * incrementPrerelease(parseVersionStrict('1.0.0'), 'beta') // => 1.0.1-beta.0
+ * ```
  */
 export function incrementPrerelease(version: SemVer, id?: string): SemVer {
   const prerelease = [...version.prerelease]

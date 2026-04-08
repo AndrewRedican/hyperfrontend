@@ -8,6 +8,21 @@ import { referenceStack } from './reference-stack'
 import { SelectiveCopyOptions, SelectiveCopyPredicate, DataPointOperation, DataPoint, ReferenceLoop } from './selective-copy.model'
 import { getConfig } from './shared/consts'
 
+/**
+ * Recursively creates a selective copy of an object based on predicate conditions.
+ *
+ * @param target - The object to copy
+ * @param path - Current path in the object
+ * @param includeKey - Predicate to determine if a key should be included
+ * @param skipFunctions - Whether to skip function values
+ * @param recordSkip - Callback to record skipped data points
+ * @returns Partial copy of the target based on predicate
+ *
+ * @example
+ * ```typescript
+ * selectiveCopyRecursive(obj, [], () => true, false, () => {})
+ * ```
+ */
 export const selectiveCopyRecursive = <T extends Record<string, unknown>>(
   target: T,
   path: string[],
@@ -52,6 +67,11 @@ export const selectiveCopyRecursive = <T extends Record<string, unknown>>(
  * @param circularRefs - Array to store circular reference information
  * @param root - Whether this is the root call
  * @returns A partial clone of the target object
+ *
+ * @example
+ * ```typescript
+ * selectiveCopyForCircularReferencesRecursive(obj, [], () => true, false, () => {}, referenceStack(), [], true)
+ * ```
  */
 export const selectiveCopyForCircularReferencesRecursive = <T extends Record<string, unknown>>(
   target: T,
@@ -143,6 +163,12 @@ export const selectiveCopyForCircularReferencesRecursive = <T extends Record<str
  * @param target - The value to clone
  * @param options - Configuration options for selective copying
  * @returns An object containing the cloned value and array of skipped data points
+ *
+ * @example
+ * ```typescript
+ * const { clone, skipped } = selectiveCopy({ a: 1, b: 2 }, { includeKeys: ['a'] })
+ * // clone = { a: 1 }, skipped = [{ path: ['b'], ... }]
+ * ```
  */
 export const selectiveCopy = <T = unknown>(
   target: T,

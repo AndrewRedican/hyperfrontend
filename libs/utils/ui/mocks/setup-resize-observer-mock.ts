@@ -15,6 +15,21 @@ export interface ResizeObserverMock {
  * Creates mock implementations of observe, unobserve, and disconnect methods.
  *
  * @returns An object containing the mocked ResizeObserver and a disconnect function
+ *
+ * @example
+ * ```typescript
+ * const mock = setupResizeObserverMock()
+ *
+ * // Component under test uses ResizeObserver
+ * const element = document.createElement('div')
+ * const observer = new ResizeObserver(() => {})
+ * observer.observe(element)
+ *
+ * expect(mock.observe).toHaveBeenCalledWith(element)
+ *
+ * // Simulate a resize event
+ * mock.callback([{ contentRect: { width: 100, height: 50 } }], observer)
+ * ```
  */
 export function setupResizeObserverMock() {
   const mockDisconnect = jest.fn()

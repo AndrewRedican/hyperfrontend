@@ -23,6 +23,13 @@ const _freeze = globalThis.Object.freeze
  * @param delay - Time in milliseconds before executing.
  * @param args - Additional arguments to pass to the callback.
  * @returns A numeric ID for the timer.
+ *
+ * @example
+ * ```typescript
+ * const timerId = setTimeout(() => console.log('Executed'), 1000)
+ * // Pass arguments to callback
+ * setTimeout((name, count) => console.log(name, count), 500, 'items', 5)
+ * ```
  */
 export const setTimeout = <TArgs extends unknown[]>(
   callback: (...args: TArgs) => void,
@@ -37,6 +44,15 @@ export const setTimeout = <TArgs extends unknown[]>(
  * @param delay - Time in milliseconds between calls.
  * @param args - Additional arguments to pass to the callback.
  * @returns A numeric ID for the interval.
+ *
+ * @example
+ * ```typescript
+ * let count = 0
+ * const intervalId = setInterval(() => {
+ *   count++
+ *   if (count >= 5) clearInterval(intervalId)
+ * }, 1000)
+ * ```
  */
 export const setInterval = <TArgs extends unknown[]>(
   callback: (...args: TArgs) => void,
@@ -48,6 +64,12 @@ export const setInterval = <TArgs extends unknown[]>(
  * (Safe copy) Cancels a timeout previously established by setTimeout.
  *
  * @param id - The identifier of the timeout to cancel.
+ *
+ * @example
+ * ```typescript
+ * const timerId = setTimeout(() => console.log('Never runs'), 5000)
+ * clearTimeout(timerId)
+ * ```
  */
 export const clearTimeout = (id: ReturnType<typeof globalThis.setTimeout> | undefined): void => {
   _clearTimeout(id)
@@ -57,6 +79,13 @@ export const clearTimeout = (id: ReturnType<typeof globalThis.setTimeout> | unde
  * (Safe copy) Cancels a timed, repeating action previously established by setInterval.
  *
  * @param id - The identifier of the interval to cancel.
+ *
+ * @example
+ * ```typescript
+ * const intervalId = setInterval(() => console.log('tick'), 1000)
+ * // Stop after some condition
+ * clearInterval(intervalId)
+ * ```
  */
 export const clearInterval = (id: ReturnType<typeof globalThis.setInterval> | undefined): void => {
   _clearInterval(id)
@@ -66,6 +95,14 @@ export const clearInterval = (id: ReturnType<typeof globalThis.setInterval> | un
  * (Safe copy) Queues a microtask to be executed before control returns to the event loop.
  *
  * @param callback - Function to execute.
+ *
+ * @example
+ * ```typescript
+ * console.log('Start')
+ * queueMicrotask(() => console.log('Microtask'))
+ * console.log('End')
+ * // Output: Start, End, Microtask
+ * ```
  */
 export const queueMicrotask = (callback: VoidFunction): void => {
   _queueMicrotask(callback)

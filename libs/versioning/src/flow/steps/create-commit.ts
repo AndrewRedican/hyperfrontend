@@ -16,6 +16,18 @@ export const CREATE_COMMIT_STEP_ID = 'create-commit'
  * - commitHash: Hash of the created commit
  *
  * @returns A FlowStep that creates a git commit
+ *
+ * @example
+ * ```typescript
+ * import { createGitCommitStep, executeStep } from '@hyperfrontend/versioning'
+ *
+ * const step = createGitCommitStep()
+ * const result = await executeStep(step, context)
+ *
+ * // Get the created commit hash
+ * console.log(result.stateUpdates?.commitHash)
+ * // => 'a1b2c3d4e5f6...'
+ * ```
  */
 export function createGitCommitStep(): FlowStep {
   return createStep(

@@ -16,6 +16,18 @@ import { isValidCssSelector } from './is-valid-css-selector'
  * @param css - The styles to apply, either as a string or CSSStyleDeclaration object
  * @returns A string representing a complete CSS rule
  * @throws {Error} When the selector is invalid or the css argument is not a valid string or object
+ *
+ * @example With style object
+ * ```typescript
+ * cssRule('.button', { padding: '8px 16px', borderRadius: '4px' })
+ * // => '.button{padding: 8px 16px; border-radius: 4px}'
+ * ```
+ *
+ * @example With CSS string
+ * ```typescript
+ * cssRule('.button:hover', 'background-color: #007bff; color: white')
+ * // => '.button:hover{background-color: #007bff; color: white}'
+ * ```
  */
 export function cssRule(selector: string, css: string | Style): string {
   if (!isValidCssSelector(selector)) {

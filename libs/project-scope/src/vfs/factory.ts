@@ -56,6 +56,14 @@ export function createTree(root: string, options?: CreateTreeOptions): Tree {
  * @param root - Root directory path
  * @param options - Tree creation options
  * @returns A new Tree instance backed by disk
+ *
+ * @example
+ * ```typescript
+ * import { createTreeFromDisk } from '@hyperfrontend/project-scope'
+ *
+ * const tree = createTreeFromDisk('/path/to/project', { verbose: true })
+ * const files = tree.children('/src')
+ * ```
  */
 export function createTreeFromDisk(root: string, options?: CreateTreeOptions): Tree {
   return createTree(root, options)

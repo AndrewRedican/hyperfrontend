@@ -9,6 +9,15 @@ import { isValidTopicId } from '../../topic/validations/is-valid-topic-id'
  *
  * @param routedPacket - The value to validate as a routed obfuscated packet
  * @returns True if the value is a valid routed obfuscated packet, false otherwise
+ *
+ * @example
+ * ```typescript
+ * isValidRoutedObfuscatedPacket({ topicId: '550e8400-e29b-41d4-a716-446655440000', packet: obfuscatedPacket })
+ * // => true
+ *
+ * isValidRoutedObfuscatedPacket({ topicId: 'invalid', packet: null })
+ * // => false
+ * ```
  */
 export function isValidRoutedObfuscatedPacket(routedPacket: unknown) {
   const rtp = <RoutedUnencryptedPacket>routedPacket

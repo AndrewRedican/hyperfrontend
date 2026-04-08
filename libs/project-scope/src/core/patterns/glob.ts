@@ -207,6 +207,13 @@ function extractAlternatives(content: string): string[] {
  * @param path - Path to test
  * @param patterns - Array of glob patterns
  * @returns True if path matches any pattern
+ *
+ * @example
+ * ```typescript
+ * const ignorePatterns = ['*.log', 'node_modules/**', '*.tmp']
+ * const shouldIgnore = matchesAnyPattern('debug.log', ignorePatterns)
+ * // => true
+ * ```
  */
 export function matchesAnyPattern(path: string, patterns: readonly string[]): boolean {
   return patterns.some((pattern) => matchGlobPattern(path, pattern))
@@ -218,6 +225,15 @@ export function matchesAnyPattern(path: string, patterns: readonly string[]): bo
  * @param path - Path to test
  * @param pattern - Exact pattern to match
  * @returns True if path equals pattern
+ *
+ * @example
+ * ```typescript
+ * matchesExact('package.json', 'package.json')
+ * // => true
+ *
+ * matchesExact('src/package.json', 'package.json')
+ * // => false
+ * ```
  */
 export function matchesExact(path: string, pattern: string): boolean {
   return path === pattern

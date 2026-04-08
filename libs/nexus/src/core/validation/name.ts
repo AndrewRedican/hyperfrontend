@@ -15,6 +15,12 @@ function isEmpty(str: string): boolean {
  *
  * @param name - The name to validate
  * @throws {Error} Error if name is invalid
+ *
+ * @example
+ * ```typescript
+ * validateName('my-channel') // valid
+ * validateName('') // throws Error
+ * ```
  */
 export function validateName(name: string): void {
   if (name === null || name === undefined) {

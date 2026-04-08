@@ -3,6 +3,17 @@ import { start, cancel, pause, success, fail } from '../actions/actions'
 import { Events } from '../events/events'
 import { AsyncProcess } from './async-operation.model'
 
+/**
+ * Manages the lifecycle of an asynchronous operation with start, cancel, and pause capabilities.
+ *
+ * @example
+ * ```typescript
+ * const operation = new AsyncOperation(async () => {
+ *   await fetchData()
+ * })
+ * operation.start()
+ * ```
+ */
 export class AsyncOperation {
   private events: Events
   private process: AsyncProcess

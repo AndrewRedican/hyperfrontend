@@ -46,6 +46,15 @@ export interface ConventionalCommit {
  * @param value - Associated content for the footer entry
  * @param separator - Delimiter between key and value (':' or ' #')
  * @returns A new CommitFooter object
+ *
+ * @example
+ * ```typescript
+ * createCommitFooter('Refs', '#123')
+ * // => { key: 'Refs', value: '#123', separator: ':' }
+ *
+ * createCommitFooter('Fixes', '456', ' #')
+ * // => { key: 'Fixes', value: '456', separator: ' #' }
+ * ```
  */
 export function createCommitFooter(key: string, value: string, separator: ':' | ' #' = ':'): CommitFooter {
   return {
@@ -62,6 +71,15 @@ export function createCommitFooter(key: string, value: string, separator: ':' | 
  * @param subject - The commit subject line
  * @param options - Optional configuration for scope, body, footers, etc.
  * @returns A new ConventionalCommit object
+ *
+ * @example
+ * ```typescript
+ * createConventionalCommit('feat', 'add user authentication')
+ * // => { type: 'feat', subject: 'add user authentication', footers: [], breaking: false, raw: 'feat: add user authentication' }
+ *
+ * createConventionalCommit('fix', 'resolve memory leak', { scope: 'core', breaking: true })
+ * // => { type: 'fix', subject: 'resolve memory leak', scope: 'core', breaking: true, ... }
+ * ```
  */
 export function createConventionalCommit(
   type: CommitType,

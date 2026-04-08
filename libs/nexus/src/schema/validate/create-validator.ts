@@ -8,6 +8,17 @@ import { createValidator as createJsonValidator } from '@hyperfrontend/json-util
  *
  * @param schema - JSON Schema to validate against
  * @returns Validator function that returns validation results
+ *
+ * @example
+ * ```typescript
+ * const validateUser = createValidator({
+ *   type: 'object',
+ *   properties: { name: { type: 'string' } },
+ *   required: ['name']
+ * })
+ * const result = validateUser({ name: 'Alice' })
+ * // => { valid: true, errors: [] }
+ * ```
  */
 export function createValidator(schema: Schema): (data: unknown) => ValidationResult {
   const validator = createJsonValidator(schema)

@@ -12,6 +12,12 @@ import { subtle } from '../subtle/browser'
  * @param algorithm - The hash algorithm to use (defaults to SHA-256)
  * @returns A promise that resolves to the hexadecimal hash string
  * @throws {Error} When hash creation fails
+ *
+ * @example
+ * ```typescript
+ * const hash = await createHash('secret-message')
+ * // => '64-character hexadecimal string'
+ * ```
  */
 export async function createHash(data: string, algorithm: HashAlgorithm = 'SHA-256'): Promise<string> {
   try {

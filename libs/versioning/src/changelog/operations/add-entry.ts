@@ -74,6 +74,13 @@ export function addEntry(changelog: Changelog, entry: ChangelogEntry, options?: 
  * @param changelog - The changelog to add the unreleased entry to
  * @param sections - Sections to include in the unreleased entry
  * @returns A new changelog with unreleased entry added/updated
+ *
+ * @example
+ * ```typescript
+ * const sections = [createChangelogSection('features', 'Added', [item])]
+ * const updated = addUnreleasedEntry(changelog, sections)
+ * // => Changelog with unreleased entry at the top
+ * ```
  */
 export function addUnreleasedEntry(changelog: Changelog, sections: readonly ChangelogSection[]): Changelog {
   const unreleasedEntry = createUnreleasedEntry(sections)
@@ -88,6 +95,12 @@ export function addUnreleasedEntry(changelog: Changelog, sections: readonly Chan
  * @param date - The release date (defaults to today)
  * @param compareUrl - Optional comparison URL
  * @returns A new changelog with the unreleased entry converted to a release
+ *
+ * @example
+ * ```typescript
+ * const released = releaseUnreleased(changelog, '2.0.0', '2024-03-01')
+ * // Unreleased entry becomes version 2.0.0 with the specified date
+ * ```
  */
 export function releaseUnreleased(changelog: Changelog, version: string, date?: string, compareUrl?: string): Changelog {
   const unreleasedIndex = changelog.entries.findIndex((e) => e.unreleased)

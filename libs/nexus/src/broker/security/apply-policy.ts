@@ -8,6 +8,13 @@ import type { SecurityPolicy } from '../types'
  * @param event - The MessageEvent to validate
  * @param logger - Logger instance for error reporting
  * @returns true if policy allows connection, false otherwise
+ *
+ * @example
+ * ```typescript
+ * const policy = (event) => event.origin === 'https://trusted.example.com'
+ * const allowed = applyPolicy(policy, messageEvent, logger)
+ * // => true or false
+ * ```
  */
 export function applyPolicy(policy: SecurityPolicy, event: MessageEvent, logger: Logger): boolean {
   try {

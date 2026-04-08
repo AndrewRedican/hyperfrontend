@@ -188,6 +188,18 @@ export function detectAll(projectPath: string, packageJsonOrOptions?: PackageJso
  * Clear the tech detection cache.
  *
  * Useful for testing or when the project files have changed.
+ *
+ * @example
+ * ```typescript
+ * import { detectAll, clearTechDetectionCache } from '@hyperfrontend/project-scope'
+ *
+ * // Initial detection (cached)
+ * const first = detectAll('./my-project')
+ *
+ * // After modifying package.json, clear cache to re-detect
+ * clearTechDetectionCache()
+ * const fresh = detectAll('./my-project')
+ * ```
  */
 export function clearTechDetectionCache(): void {
   detectAllCache.clear()

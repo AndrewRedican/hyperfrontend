@@ -3,6 +3,11 @@ import { setPrototypeOf } from '@hyperfrontend/immutable-api-utils/built-in-copy
 
 /**
  * Custom error class for contract-related failures
+ *
+ * @example
+ * ```typescript
+ * throw new ContractError('Invalid action type', { emitted: [], accepted: [] })
+ * ```
  */
 export class ContractError extends Error {
   override readonly name = 'ContractError'

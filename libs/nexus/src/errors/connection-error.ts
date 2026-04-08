@@ -1,8 +1,13 @@
-/**
- * Custom error class for connection-related failures
- */
 import { setPrototypeOf } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
 
+/**
+ * Custom error class for connection-related failures.
+ *
+ * @example
+ * ```typescript
+ * throw new ConnectionError('Connection timeout', 'ch-123', 'https://example.com')
+ * ```
+ */
 export class ConnectionError extends Error {
   override readonly name = 'ConnectionError'
 

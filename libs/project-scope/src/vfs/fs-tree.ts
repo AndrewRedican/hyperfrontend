@@ -34,6 +34,16 @@ interface ChangeRecord {
  * @param root - Absolute path to the workspace root directory
  * @param options - Configuration for verbose logging
  * @returns A Tree instance
+ *
+ * @example
+ * ```typescript
+ * import { createFsTree, commitChanges } from '@hyperfrontend/project-scope'
+ *
+ * const tree = createFsTree('/workspace')
+ * tree.write('src/new-file.ts', 'export const value = 42')
+ * tree.delete('old-file.ts')
+ * commitChanges(tree) // Atomically apply all changes to disk
+ * ```
  */
 export function createFsTree(root: string, options?: CreateTreeOptions): Tree {
   const _root = removeTrailingSlash(normalizePath(root))

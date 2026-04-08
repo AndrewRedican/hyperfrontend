@@ -9,6 +9,16 @@
  *
  * @param func - The function to be wrapped for single execution.
  * @returns A wrapped version of the input function that executes once and returns the same result for all subsequent calls.
+ *
+ * @example
+ * ```typescript
+ * const initialize = createRunOnceFunction(() => {
+ *   console.log('Initializing...')
+ *   return { ready: true }
+ * })
+ * initialize() // logs 'Initializing...', returns { ready: true }
+ * initialize() // returns { ready: true } (no re-initialization)
+ * ```
  */
 export function createRunOnceFunction<T extends (...args: any[]) => any>(func: T): (...args: Parameters<T>) => ReturnType<T> {
   let hasRun = false

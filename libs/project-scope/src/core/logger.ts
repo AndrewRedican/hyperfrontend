@@ -46,6 +46,13 @@ export function setGlobalLogLevel(level: LogLevel): void {
  * Get the current global log level.
  *
  * @returns The global log level, or null if not set
+ *
+ * @example
+ * ```typescript
+ * setGlobalLogLevel('debug')
+ * const level = getGlobalLogLevel()
+ * // => 'debug'
+ * ```
  */
 export function getGlobalLogLevel(): LogLevel | null {
   return globalLogLevel
@@ -54,6 +61,14 @@ export function getGlobalLogLevel(): LogLevel | null {
 /**
  * Reset the global log level override.
  * Each logger will retain its current level but new loggers will use their default.
+ *
+ * @example
+ * ```typescript
+ * setGlobalLogLevel('debug')
+ * // ... perform debugging ...
+ * resetGlobalLogLevel()
+ * // Global override removed, loggers use individual levels
+ * ```
  */
 export function resetGlobalLogLevel(): void {
   globalLogLevel = null
@@ -95,6 +110,13 @@ function isSensitiveKey(key: string): boolean {
  *
  * @param obj - Object to sanitize
  * @returns New object with sensitive values redacted
+ *
+ * @example
+ * ```typescript
+ * const config = { apiKey: 'secret123', endpoint: 'https://api.example.com' }
+ * const safe = sanitize(config)
+ * // => { apiKey: '[REDACTED]', endpoint: 'https://api.example.com' }
+ * ```
  */
 export function sanitize(obj: unknown): unknown {
   if (obj === null || obj === undefined) {

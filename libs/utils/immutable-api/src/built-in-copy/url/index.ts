@@ -20,6 +20,13 @@ const _freeze = globalThis.Object.freeze
  * @param url - The URL string to parse.
  * @param base - Optional base URL for relative URLs.
  * @returns A new URL instance.
+ *
+ * @example
+ * ```typescript
+ * const absolute = createURL('https://example.com/path?query=1')
+ * const relative = createURL('/api/users', 'https://example.com')
+ * // => URL { href: 'https://example.com/api/users' }
+ * ```
  */
 export const createURL = (url: string | URL, base?: string | URL): URL => <URL>_Reflect.construct(_URL, [url, base])
 
@@ -75,6 +82,13 @@ export const parseURL = _URL.parse
  *
  * @param init - Optional initialization value (string, object, or iterable).
  * @returns A new URLSearchParams instance.
+ *
+ * @example
+ * ```typescript
+ * const fromString = createURLSearchParams('page=1&limit=10')
+ * const fromObject = createURLSearchParams({ page: '1', limit: '10' })
+ * fromObject.get('page') // => '1'
+ * ```
  */
 export const createURLSearchParams = (
   init?: string | URLSearchParams | Record<string, string> | Iterable<[string, string]>

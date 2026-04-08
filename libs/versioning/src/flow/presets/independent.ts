@@ -34,6 +34,17 @@ export const INDEPENDENT_FLOW_CONFIG: FlowConfig = {
  * dependents may also need version bumps.
  *
  * @returns A FlowStep that checks dependent bumps
+ *
+ * @example
+ * ```typescript
+ * import { createCheckDependentBumpsStep, executeStep } from '@hyperfrontend/versioning'
+ *
+ * const step = createCheckDependentBumpsStep()
+ * const result = await executeStep(step, contextWithTrackDeps)
+ *
+ * // Result indicates if any dependents need bumps
+ * console.log(result.message)
+ * ```
  */
 export function createCheckDependentBumpsStep(): FlowStep {
   return createStep(
@@ -132,6 +143,17 @@ export function createIndependentFlow(config?: Partial<FlowConfig>): VersionFlow
  *
  * @param config - Optional configuration overrides
  * @returns A VersionFlow for batch independent releases
+ *
+ * @example
+ * ```typescript
+ * import { createBatchReleaseFlow, executeFlow } from '@hyperfrontend/versioning'
+ *
+ * // Release multiple packages without individual commits
+ * for (const pkg of ['lib-a', 'lib-b', 'lib-c']) {
+ *   await executeFlow(createBatchReleaseFlow(), pkg, '/workspace')
+ * }
+ * // Then create a single combined commit
+ * ```
  */
 export function createBatchReleaseFlow(config?: Partial<FlowConfig>): VersionFlow {
   return createFlow(

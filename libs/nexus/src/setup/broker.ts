@@ -26,6 +26,15 @@ export interface SetupBrokerConfig {
  *
  * @param config - Broker configuration
  * @returns Broker handle
+ *
+ * @example
+ * ```typescript
+ * const broker = setupBroker({
+ *   name: 'main',
+ *   contract: { emitted: ['ping'], accepted: ['pong'] },
+ *   logLevel: 'debug'
+ * })
+ * ```
  */
 export function setupBroker(config: SetupBrokerConfig): BrokerHandle {
   assertNoCircularRef(config, 'config')

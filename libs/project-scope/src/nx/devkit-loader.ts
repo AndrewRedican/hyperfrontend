@@ -29,6 +29,16 @@ let cachedResult: DevkitLoadResult | null = null
  * Results are cached for subsequent calls.
  *
  * @returns DevkitLoadResult with availability status and devkit module or error
+ *
+ * @example
+ * ```typescript
+ * import { tryLoadDevkit } from '@hyperfrontend/project-scope'
+ *
+ * const result = tryLoadDevkit()
+ * if (result.available) {
+ *   const tree = result.devkit.createTree()
+ * }
+ * ```
  */
 export function tryLoadDevkit(): DevkitLoadResult {
   if (cachedResult !== null) {
@@ -56,6 +66,17 @@ export function tryLoadDevkit(): DevkitLoadResult {
  * Check if `@nx/devkit` is available.
  *
  * @returns true if devkit can be loaded, false otherwise
+ *
+ * @example
+ * ```typescript
+ * import { isDevkitAvailable } from '@hyperfrontend/project-scope'
+ *
+ * if (isDevkitAvailable()) {
+ *   // Use full NX devkit features
+ * } else {
+ *   // Fall back to standalone mode
+ * }
+ * ```
  */
 export function isDevkitAvailable(): boolean {
   return tryLoadDevkit().available
@@ -67,6 +88,14 @@ export function isDevkitAvailable(): boolean {
  *
  * @returns The `@nx/devkit` module with full type information
  * @throws {Error} If `@nx/devkit` is not available
+ *
+ * @example
+ * ```typescript
+ * import { getDevkit } from '@hyperfrontend/project-scope'
+ *
+ * const devkit = getDevkit()
+ * const projects = devkit.getProjects(tree)
+ * ```
  */
 export function getDevkit(): NxDevkit {
   const result = tryLoadDevkit()
@@ -109,6 +138,14 @@ export function withDevkit<T>(ifAvailable: (devkit: NxDevkit) => T, fallback: ()
  * Primarily useful for testing.
  *
  * @internal
+ *
+ * @example
+ * ```typescript
+ * import { resetDevkitCache } from '@hyperfrontend/project-scope'
+ *
+ * // In test teardown
+ * resetDevkitCache()
+ * ```
  */
 export function resetDevkitCache(): void {
   cachedResult = null

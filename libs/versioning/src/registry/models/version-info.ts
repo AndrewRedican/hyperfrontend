@@ -73,6 +73,15 @@ export interface VersionInfo {
  * @param options.npmVersion - npm version used during publish
  * @param options.gitHead - Git commit hash at publish time
  * @returns A new VersionInfo object
+ *
+ * @example
+ * ```typescript
+ * const release = createVersionInfo({
+ *   version: '1.2.3',
+ *   publishedAt: '2024-01-15T10:30:00Z',
+ *   tarball: 'https://registry.npmjs.org/pkg/-/pkg-1.2.3.tgz'
+ * })
+ * ```
  */
 export function createVersionInfo(options: {
   /** Semver version string (e.g., '1.2.3') */

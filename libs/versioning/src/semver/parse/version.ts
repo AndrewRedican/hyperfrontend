@@ -136,6 +136,13 @@ export function parseVersion(input: string): ParseVersionResult {
  * @param input - The version string to parse
  * @returns The parsed SemVer
  * @throws {Error} If the input is not a valid version
+ *
+ * @example
+ * ```typescript
+ * const v = parseVersionStrict('1.2.3')
+ * // => { major: 1, minor: 2, patch: 3, prerelease: [], build: [] }
+ * parseVersionStrict('invalid') // throws Error
+ * ```
  */
 export function parseVersionStrict(input: string): SemVer {
   const result = parseVersion(input)

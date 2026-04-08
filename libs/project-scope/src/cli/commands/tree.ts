@@ -284,6 +284,27 @@ function parseTreeArgs(args: string[]): TreeCommandOptions {
  *
  * @param options - Configuration for the tree operation
  * @returns Command execution result with exit code and output
+ *
+ * @example Basic tree of current directory
+ * ```typescript
+ * const result = treeCommand({ depth: 2 })
+ * if (result.exitCode === 0) {
+ *   console.log(result.output)
+ *   // => "src/\n├── index.ts\n├── lib/\n│   └── utils.ts\n..."
+ * }
+ * ```
+ *
+ * @example Directories only with metadata
+ * ```typescript
+ * const result = treeCommand({
+ *   path: './project',
+ *   dirsOnly: true,
+ *   showSize: true,
+ *   ignore: ['node_modules', '.git'],
+ *   format: 'json',
+ * })
+ * // => { exitCode: 0, output: '[{"name":"src","isDirectory":true,...}]' }
+ * ```
  */
 export function treeCommand(options: TreeCommandOptions): CommandResult {
   const rootPath = options.path ? resolve(options.path) : process.cwd()

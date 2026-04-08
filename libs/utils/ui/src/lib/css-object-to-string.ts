@@ -9,6 +9,18 @@ import { logger } from '@hyperfrontend/logging'
  *
  * @param cssObj - The CSS object with property-value pairs
  * @returns A CSS string representation
+ *
+ * @example
+ * ```typescript
+ * const styles = {
+ *   backgroundColor: '#f0f0f0',
+ *   fontSize: '14px',
+ *   marginTop: '8px'
+ * }
+ *
+ * cssObjectToString(styles)
+ * // => 'background-color: #f0f0f0; font-size: 14px; margin-top: 8px; '
+ * ```
  */
 export function cssObjectToString(cssObj: Style): string {
   const errors: string[] = []

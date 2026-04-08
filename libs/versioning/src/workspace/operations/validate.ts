@@ -362,6 +362,19 @@ function isWorkspaceVersion(versionRange: string): boolean {
  *
  * @param project - The project to validate
  * @returns Validation result
+ *
+ * @example
+ * ```typescript
+ * import { discoverProject, validateProject } from '@hyperfrontend/versioning'
+ *
+ * const project = discoverProject('./libs/my-lib')
+ * if (project) {
+ *   const result = validateProject(project)
+ *   if (!result.valid) {
+ *     console.error('Validation failed:', result.error)
+ *   }
+ * }
+ * ```
  */
 export function validateProject(project: Project): ValidationResult {
   const versionResult = validateProjectVersion(project)
@@ -382,6 +395,17 @@ export function validateProject(project: Project): ValidationResult {
  *
  * @param report - Report object from workspace validation
  * @returns Human-readable summary
+ *
+ * @example
+ * ```typescript
+ * import { validateWorkspace, summarizeValidation } from '@hyperfrontend/versioning'
+ *
+ * const report = validateWorkspace(workspace)
+ * console.log(summarizeValidation(report))
+ * // Output:
+ * // Workspace validation passed
+ * //   2 warning(s)
+ * ```
  */
 export function summarizeValidation(report: ValidationReport): string {
   const lines = []

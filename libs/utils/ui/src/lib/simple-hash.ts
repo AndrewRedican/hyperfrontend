@@ -3,7 +3,16 @@
  * Uses a basic hash algorithm suitable for non-cryptographic purposes.
  *
  * @param input - The string to hash
- * @returns A numeric hash code
+ * @returns A 6-character alphanumeric hash string
+ *
+ * @example
+ * ```typescript
+ * simpleHash('user@example.com')
+ * // => 'a1b2c3'
+ *
+ * simpleHash('hello world')
+ * // => 'd4e5f6'
+ * ```
  */
 export function simpleHash(input: string): string {
   let hash = 0

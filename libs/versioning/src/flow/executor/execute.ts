@@ -489,6 +489,18 @@ export async function executeFlow(
  * @param workspaceRoot - Absolute path to workspace root
  * @param options - Execution options (dryRun forced to true)
  * @returns Flow execution result (no actual changes made)
+ *
+ * @example
+ * ```typescript
+ * import { dryRun, createConventionalFlow } from '@hyperfrontend/versioning'
+ *
+ * const flow = createConventionalFlow()
+ * const result = await dryRun(flow, 'my-lib', '/workspace')
+ *
+ * // Preview what would happen
+ * console.log('Would bump to:', result.state.nextVersion)
+ * // No files modified, no git operations performed
+ * ```
  */
 export async function dryRun(
   flow: VersionFlow,
@@ -512,6 +524,19 @@ export async function dryRun(
  *
  * @param flow - The flow to validate
  * @returns Array of validation errors (empty if valid)
+ *
+ * @example
+ * ```typescript
+ * import { validateFlow, createConventionalFlow } from '@hyperfrontend/versioning'
+ *
+ * const flow = createConventionalFlow()
+ * const errors = validateFlow(flow)
+ *
+ * if (errors.length > 0) {
+ *   console.error('Invalid flow:', errors)
+ * }
+ * // => []
+ * ```
  */
 export function validateFlow(flow: VersionFlow): readonly string[] {
   const errors: string[] = []

@@ -8,6 +8,13 @@ import { entries } from '@hyperfrontend/immutable-api-utils/built-in-copy/object
  * @param operationType - The type of operation being validated (e.g., 'send', 'receive')
  * @param validity - The validation results indicating which fields are invalid
  * @returns A formatted error message describing the validation failure
+ *
+ * @example
+ * ```typescript
+ * const validity = { label: true, operation: false, logger: true, onSuccess: true, onFail: true }
+ * getValidationError('encryption', validity)
+ * // => 'Cannot create encryption queue without encryption function'
+ * ```
  */
 export function getValidationError(operationType: string, validity: QueueCreatorValidity): string {
   const errorMap: Record<string, string> = {

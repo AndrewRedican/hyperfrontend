@@ -12,6 +12,14 @@ import { collectAllDependencies, parseVersionString } from '../shared-utils/dete
  * @param projectPath - Project directory path
  * @param packageJson - Optional pre-loaded package.json
  * @returns Detection result or null if not detected
+ *
+ * @example
+ * ```typescript
+ * const result = angularJSDetector('/path/to/project', {
+ *   dependencies: { angular: '^1.8.0', 'angular-route': '^1.8.0' },
+ * })
+ * // => { id: 'angularjs', name: 'AngularJS', confidence: 85, version: '1.8.0', ... }
+ * ```
  */
 export function angularJSDetector(projectPath: string, packageJson?: PackageJson): LegacyFrameworkDetection | null {
   const pkg = packageJson ?? readPackageJsonIfExists(projectPath)

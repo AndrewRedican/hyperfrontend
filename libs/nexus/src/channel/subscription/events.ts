@@ -31,6 +31,26 @@ import { createError } from '@hyperfrontend/immutable-api-utils/built-in-copy/er
  */
 export function subscribeToEvents(channel: ChannelInternals, handler: EventHandler): () => void
 export function subscribeToEvents<E extends ChannelEvent>(channel: ChannelInternals, event: E, handler: EventCallbackMap[E]): () => void
+/**
+ * Implementation of subscribeToEvents that handles both overload signatures.
+ *
+ * @param channel - The channel internals object
+ * @param eventOrHandler - Either an event name or a handler function
+ * @param handler - Handler function when event name is provided
+ * @returns Unsubscribe function to remove the handler
+ *
+ * @example
+ * ```typescript
+ * const unsubscribe = subscribeToEvents(channel, (event, data) => {
+ *   if (event === 'open') {
+ *     console.log('Channel opened:', data)
+ *   }
+ * })
+ *
+ * // Cleanup when no longer needed
+ * unsubscribe()
+ * ```
+ */
 export function subscribeToEvents<E extends ChannelEvent>(
   channel: ChannelInternals,
   eventOrHandler: E | EventHandler,

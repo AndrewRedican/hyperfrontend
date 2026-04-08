@@ -145,6 +145,18 @@ export function scopeMatchesProject(commitScope: string | undefined, projectScop
  * @param commitScope - The scope from a conventional commit
  * @param excludeScopes - Array of scopes to exclude
  * @returns True if the scope should be excluded
+ *
+ * @example
+ * ```typescript
+ * scopeIsExcluded('release', ['release', 'deps'])
+ * // => true
+ *
+ * scopeIsExcluded('auth', ['release', 'deps'])
+ * // => false
+ *
+ * scopeIsExcluded(undefined, ['release'])
+ * // => false
+ * ```
  */
 export function scopeIsExcluded(commitScope: string | undefined, excludeScopes: readonly string[]): boolean {
   if (!commitScope) {

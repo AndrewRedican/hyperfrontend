@@ -83,6 +83,12 @@ export interface Changelog {
  *
  * @param options - Optional configuration to customize the changelog
  * @returns A new Changelog object with the specified options or defaults
+ *
+ * @example
+ * ```typescript
+ * const changelog = createChangelog({ source: 'CHANGELOG.md' })
+ * // => { source: 'CHANGELOG.md', header: { title: '# Changelog', ... }, entries: [] }
+ * ```
  */
 export function createChangelog(options?: Partial<Changelog>): Changelog {
   return {
@@ -105,6 +111,12 @@ export function createChangelog(options?: Partial<Changelog>): Changelog {
  * Creates a new empty changelog with standard header.
  *
  * @returns A new empty Changelog with Keep a Changelog format
+ *
+ * @example
+ * ```typescript
+ * const changelog = createEmptyChangelog()
+ * // => Changelog with standard Keep a Changelog header and no entries
+ * ```
  */
 export function createEmptyChangelog(): Changelog {
   return {
@@ -133,6 +145,12 @@ export function createEmptyChangelog(): Changelog {
  * @param label - The display text for the link
  * @param url - The URL the link points to
  * @returns A new ChangelogLink object
+ *
+ * @example
+ * ```typescript
+ * const link = createChangelogLink('1.0.0', 'https://github.com/org/repo/compare/v0.9.0...v1.0.0')
+ * // => { label: '1.0.0', url: 'https://github.com/...' }
+ * ```
  */
 export function createChangelogLink(label: string, url: string): ChangelogLink {
   return { label, url }

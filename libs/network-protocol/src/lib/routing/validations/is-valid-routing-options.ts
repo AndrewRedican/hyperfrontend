@@ -8,6 +8,15 @@ import { isValidSubscriptions } from './is-valid-subscriptions'
  *
  * @param options - The value to validate as routing options
  * @returns True if the value is a valid routing options object, false otherwise
+ *
+ * @example
+ * ```typescript
+ * isValidRoutingOptions({ isDynamic: false, subscriptions: new WeakMap() })
+ * // => true
+ *
+ * isValidRoutingOptions({ isDynamic: 'no' })
+ * // => false
+ * ```
  */
 export function isValidRoutingOptions(options: unknown): boolean {
   const op = <RoutingOptions>options

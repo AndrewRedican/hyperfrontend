@@ -40,6 +40,14 @@ export interface ValidationContext {
  * @param strictPatterns - Whether to report errors for invalid regex patterns (default: false)
  * @param patternSafetyChecker - Optional pattern safety checker for ReDoS detection
  * @returns A new validation context
+ * @example
+ * ```typescript
+ * const schema = { type: 'string' }
+ * const ctx = createValidationContext(schema, validateSchema)
+ * // ctx.path === ''
+ * // ctx.errors === []
+ * // ctx.collectAllErrors === true
+ * ```
  */
 export function createValidationContext(
   rootSchema: Schema,
@@ -74,6 +82,14 @@ export function createValidationContext(
  * @param ctx - Parent context
  * @param segment - Path segment to append
  * @returns New context with updated path
+ * @example
+ * ```typescript
+ * const ctx = createValidationContext(schema, validate)
+ * const childCtx = pushPath(ctx, 'items')
+ * // childCtx.path === '/items'
+ * const nestedCtx = pushPath(childCtx, 0)
+ * // nestedCtx.path === '/items/0'
+ * ```
  */
 export function pushPath(ctx: ValidationContext, segment: string | number): ValidationContext {
   const escapedSegment = String(segment).replace(/~/g, '~0').replace(/\//g, '~1')
@@ -91,6 +107,13 @@ export function pushPath(ctx: ValidationContext, segment: string | number): Vali
  * @param instance - The failing value
  * @param code - Optional error code for programmatic handling
  * @param params - Optional additional parameters
+ * @example
+ * ```typescript
+ * const ctx = createValidationContext(schema, validate)
+ * addError(ctx, 'Value must be a string', 42, 'type', { expected: 'string' })
+ * // ctx.errors[0].message === 'Value must be a string'
+ * // ctx.errors[0].code === 'type'
+ * ```
  */
 export function addError(
   ctx: ValidationContext,
@@ -113,6 +136,16 @@ export function addError(
  *
  * @param ctx - Validation context
  * @returns true if we should continue, false if we should stop
+ * @example
+ * ```typescript
+ * const ctx = createValidationContext(schema, validate, true) // collectAllErrors: true
+ * addError(ctx, 'First error', 'value', 'error')
+ * shouldContinue(ctx) // => true (keep collecting errors)
+ *
+ * const ctx2 = createValidationContext(schema, validate, false) // collectAllErrors: false
+ * addError(ctx2, 'First error', 'value', 'error')
+ * shouldContinue(ctx2) // => false (stop at first error)
+ * ```
  */
 export function shouldContinue(ctx: ValidationContext): boolean {
   return ctx.collectAllErrors || ctx.errors.length === 0
