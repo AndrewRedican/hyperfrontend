@@ -212,6 +212,13 @@ module.exports = [
     },
   },
   {
+    files: ['**/*.ts'],
+    ignores: ['**/*.spec.ts', '**/jest.config.ts', '**/jest.setup.ts', '**/*.types.ts'],
+    rules: {
+      'workspace/lib-require-jsdoc-example': 'error',
+    },
+  },
+  {
     files: ['**/package.json'],
     languageOptions: {
       parser: require('jsonc-eslint-parser'),
