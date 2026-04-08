@@ -27,4 +27,9 @@ export const dynamicRouting: RoutingOptions = {
   subscriptions,
 }
 
+/**
+ * Mock router that returns static routing options.
+ *
+ * @returns Static routing configuration
+ */
 export const router: Router = () => staticRouting

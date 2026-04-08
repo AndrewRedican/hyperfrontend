@@ -7,6 +7,16 @@ import { getValidationError } from '../utils/get-validation-error'
 import { isValidQueueCreaterArguments } from '../validations/is-valid-queue-creater-arguments'
 import { createQueue } from './create-queue'
 
+/**
+ * Creates an obfuscation queue for processing serialized encrypted packets.
+ *
+ * @param label - Identifier for the queue used in logging
+ * @param packetObfuscation - Function to obfuscate packets
+ * @param logger - Logger instance for debug and error messages
+ * @param onSuccess - Callback invoked when a packet is successfully obfuscated
+ * @param onFail - Callback invoked when obfuscation fails
+ * @returns A queue instance for processing serialized packets
+ */
 export const createObfuscationQueue: ObfuscationQueueCreater = (label, packetObfuscation, logger, onSuccess, onFail) => {
   const validity = isValidQueueCreaterArguments({
     label,

@@ -7,6 +7,16 @@ import { getValidationError } from '../utils/get-validation-error'
 import { isValidQueueCreaterArguments } from '../validations/is-valid-queue-creater-arguments'
 import { createQueue } from './create-queue'
 
+/**
+ * Creates a decryption queue for processing encrypted packets.
+ *
+ * @param label - Identifier for the queue used in logging
+ * @param packetDecryption - Function to decrypt packets
+ * @param logger - Logger instance for debug and error messages
+ * @param onSuccess - Callback invoked when a packet is successfully decrypted
+ * @param onFail - Callback invoked when decryption fails
+ * @returns A queue instance for processing encrypted packets
+ */
 export const createDecryptionQueue: DecryptionQueueCreater = (label, packetDecryption, logger, onSuccess, onFail) => {
   const validity = isValidQueueCreaterArguments({
     label,

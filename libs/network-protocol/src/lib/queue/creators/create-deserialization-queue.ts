@@ -7,6 +7,16 @@ import { getValidationError } from '../utils/get-validation-error'
 import { isValidQueueCreaterArguments } from '../validations/is-valid-queue-creater-arguments'
 import { createQueue } from './create-queue'
 
+/**
+ * Creates a deserialization queue for processing serialized encrypted packets.
+ *
+ * @param label - Identifier for the queue used in logging
+ * @param packetDeserialization - Function to deserialize packets
+ * @param logger - Logger instance for debug and error messages
+ * @param onSuccess - Callback invoked when a packet is successfully deserialized
+ * @param onFail - Callback invoked when deserialization fails
+ * @returns A queue instance for processing serialized packets
+ */
 export const createDeserializationQueue: DeserializationQueueCreater = (label, packetDeserialization, logger, onSuccess, onFail) => {
   const validity = isValidQueueCreaterArguments({
     label,
