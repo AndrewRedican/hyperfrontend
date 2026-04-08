@@ -115,6 +115,18 @@ export const isActionWithContract = (action: IAction): action is IActionWithCont
  */
 export const isActionWithError = (action: IAction): action is IActionWithError => 'error' in action
 
+/**
+ * Type guard for actions with data property.
+ *
+ * @param action - The action to check
+ * @returns True if action contains a data property
+ */
 export const isActionWithData = (action: IAction): action is IActionWithData => 'data' in action
 
+/**
+ * Type guard for actions with processId property.
+ *
+ * @param action - The action to check
+ * @returns True if action contains a processId property
+ */
 export const isActionWithProcess = (action: IAction): action is IActionWithProcess => 'processId' in action

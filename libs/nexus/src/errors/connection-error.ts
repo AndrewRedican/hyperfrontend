@@ -1,8 +1,8 @@
-/**
- * Custom error class for connection-related failures
- */
 import { setPrototypeOf } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
 
+/**
+ * Custom error class for connection-related failures.
+ */
 export class ConnectionError extends Error {
   override readonly name = 'ConnectionError'
 
