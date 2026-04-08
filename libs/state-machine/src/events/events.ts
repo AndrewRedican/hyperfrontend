@@ -9,6 +9,13 @@ import { Store } from '../store/store'
 
 /**
  * Event system that tracks state changes and dispatches events to registered handlers.
+ *
+ * @example
+ * ```typescript
+ * const events = new Events()
+ * events.on(event.Done, () => console.log('Operation completed'))
+ * events.dispatch(success())
+ * ```
  */
 export class Events {
   private readonly store = new Store()

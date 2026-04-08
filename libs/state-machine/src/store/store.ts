@@ -5,6 +5,13 @@ import { rootReducer } from '../reducer/reducer'
 
 /**
  * Redux-like store for managing state with dispatch and subscribe capabilities.
+ *
+ * @example
+ * ```typescript
+ * const store = new Store()
+ * store.subscribe((state, action) => console.log('State:', state))
+ * store.dispatch(start())
+ * ```
  */
 export class Store {
   private state = rootReducer(void 0, { type: '' })
