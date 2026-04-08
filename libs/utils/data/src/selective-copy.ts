@@ -8,6 +8,16 @@ import { referenceStack } from './reference-stack'
 import { SelectiveCopyOptions, SelectiveCopyPredicate, DataPointOperation, DataPoint, ReferenceLoop } from './selective-copy.model'
 import { getConfig } from './shared/consts'
 
+/**
+ * Recursively creates a selective copy of an object based on predicate conditions.
+ *
+ * @param target - The object to copy
+ * @param path - Current path in the object
+ * @param includeKey - Predicate to determine if a key should be included
+ * @param skipFunctions - Whether to skip function values
+ * @param recordSkip - Callback to record skipped data points
+ * @returns Partial copy of the target based on predicate
+ */
 export const selectiveCopyRecursive = <T extends Record<string, unknown>>(
   target: T,
   path: string[],

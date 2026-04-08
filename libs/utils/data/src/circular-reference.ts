@@ -29,6 +29,10 @@ export interface ICircularReference {
   readonly depth: number
 }
 
+/**
+ * Represents a detected circular reference in an object graph.
+ * Tracks the location where the reference was found and its target.
+ */
 export class CircularReference implements ICircularReference {
   public readonly location: Location
   public readonly target: Target

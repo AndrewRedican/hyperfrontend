@@ -9,6 +9,17 @@ import { getConfig, setConfig } from './shared/consts'
 
 const invalidmaxResults = 'Invalid maxResults argument.'
 
+/**
+ * Recursively searches for circular references in an object graph.
+ *
+ * @param target - The value to search
+ * @param maxResults - Maximum number of results to find
+ * @param path - Current path in the object graph
+ * @param stack - Reference stack for tracking visited objects
+ * @param result - Array to collect found circular references
+ * @param root - Whether this is the root call
+ * @returns Array of CircularReference objects found
+ */
 export const locateCircularReferenceRecursive = (
   target: unknown,
   maxResults: '*' | number,
