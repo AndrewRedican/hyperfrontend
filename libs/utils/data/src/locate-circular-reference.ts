@@ -19,6 +19,12 @@ const invalidmaxResults = 'Invalid maxResults argument.'
  * @param result - Array to collect found circular references
  * @param root - Whether this is the root call
  * @returns Array of CircularReference objects found
+ *
+ * @example
+ * ```typescript
+ * const stack = referenceStack()
+ * locateCircularReferenceRecursive(obj, 1, [], stack, [], true)
+ * ```
  */
 export const locateCircularReferenceRecursive = (
   target: unknown,
@@ -50,6 +56,13 @@ export const locateCircularReferenceRecursive = (
  * @param target - The value to search for circular references
  * @param maxResults - Maximum number of circular references to find (number or '*' for all)
  * @returns An array of CircularReference objects indicating locations of circular references
+ *
+ * @example
+ * ```typescript
+ * const obj = { a: {} }
+ * obj.a.self = obj
+ * locateCircularReference(obj) // [CircularReference { location: ['a', 'self'], target: [] }]
+ * ```
  */
 export const locateCircularReference = (target: unknown, maxResults: '*' | number = 1): CircularReference[] => {
   const resultsType = typeof maxResults

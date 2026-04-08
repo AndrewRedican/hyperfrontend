@@ -12,6 +12,11 @@ import { traverse } from './traverse'
  * @param pattern - The string or regular expression pattern to match against text values
  * @param options - Optional configuration to control traversal depth
  * @returns An array of paths to locations where the text pattern was found
+ *
+ * @example
+ * ```typescript
+ * locateText({ a: 'hello', b: { c: 'hello' } }, 'hello') // [['a'], ['b', 'c']]
+ * ```
  */
 export const locateText = (target: unknown, pattern: string | RegExp, options?: DepthConfig): string[][] => {
   const patternIsString = typeof pattern === 'string'

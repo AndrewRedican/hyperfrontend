@@ -16,6 +16,17 @@ import { getConfig } from './shared/consts'
  * @param instantiate - Factory function to create new instances (defaults to calling constructor)
  * @remarks
  * If the class is already registered, its entry will be updated with the new handlers.
+ *
+ * @example
+ * ```typescript
+ * registerIterableClass(
+ *   MyMap,
+ *   (m) => [...m.keys()],
+ *   (m, k) => m.get(k),
+ *   (m, v, k) => m.set(k, v),
+ *   (m, k) => m.delete(k)
+ * )
+ * ```
  */
 export const registerIterableClass = <T = unknown>(
   classRef: UnknownClass<T>,

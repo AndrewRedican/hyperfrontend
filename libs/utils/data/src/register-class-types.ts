@@ -6,6 +6,12 @@ import { registeredClasses } from './shared/consts'
  *
  * @param classRefs - One or more class references to register.
  * @returns The result of the forEach operation (void)
+ *
+ * @example
+ * ```typescript
+ * registerClassTypes(MyCustomClass, AnotherClass)
+ * getType(new MyCustomClass()) // 'MyCustomClass'
+ * ```
  */
 export const registerClassTypes = (...classRefs: UnknownClass[]): void =>
   classRefs.forEach((classRef) => !registeredClasses.includes(classRef) && registeredClasses.push(classRef))

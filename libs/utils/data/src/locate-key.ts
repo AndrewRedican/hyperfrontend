@@ -14,6 +14,11 @@ import { traverse } from './traverse'
  * @param pattern - The string or regular expression pattern to match against key names
  * @param options - Optional configuration to control traversal depth
  * @returns An array of paths to locations where the key pattern was found
+ *
+ * @example
+ * ```typescript
+ * locateKey({ a: { b: 1 }, c: { b: 2 } }, 'b') // [['a', 'b'], ['c', 'b']]
+ * ```
  */
 export const locateKey = (target: unknown, pattern: string | RegExp, options?: DepthConfig): string[][] => {
   const patternIsString = typeof pattern === 'string'

@@ -9,6 +9,13 @@ import { registeredClasses } from './shared/consts'
  *
  * @param target - The target to get the data type of.
  * @returns The data type of the target.
+ *
+ * @example
+ * ```typescript
+ * getType([1, 2]) // 'array'
+ * getType({ a: 1 }) // 'object'
+ * getType(null) // 'null'
+ * ```
  */
 export const getType = <T extends string = DataType>(target: unknown): T => {
   if (target === null) return <T>'null'

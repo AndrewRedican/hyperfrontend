@@ -6,5 +6,12 @@ import { isIterableType } from './is-iterable-type'
  *
  * @param target - The target to check.
  * @returns `true` if the target is iterable, `false` otherwise.
+ *
+ * @example
+ * ```typescript
+ * isIterable([1, 2]) // true
+ * isIterable({ a: 1 }) // true
+ * isIterable('string') // false
+ * ```
  */
 export const isIterable = (target: unknown): boolean => isIterableType(getType(target))

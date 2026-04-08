@@ -16,6 +16,12 @@ import { traverse } from './traverse'
  * @param text - The replacement text for matching values
  * @param options - Optional configuration to control traversal depth
  * @returns An array of paths to locations where text was replaced
+ *
+ * @example
+ * ```typescript
+ * const obj = { a: 'hello world', b: { c: 'hello' } }
+ * replaceText(obj, 'hello', 'hi') // [['a'], ['b', 'c']]
+ * ```
  */
 export const replaceText = (target: unknown, pattern: string | RegExp, text: string, options?: DepthConfig): string[][] => {
   const patternIsString = typeof pattern === 'string'

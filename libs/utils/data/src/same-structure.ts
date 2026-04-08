@@ -15,6 +15,12 @@ import { getConfig } from './shared/consts'
  * @param targetA data to compare
  * @param targetB data to compare
  * @returns The data type if both targets have the same structure, otherwise `false`.
+ *
+ * @example
+ * ```typescript
+ * sameStructure({ a: 1, b: 2 }, { a: 'x', b: 'y' }) // 'object'
+ * sameStructure({ a: 1 }, { b: 1 }) // false
+ * ```
  */
 export const sameStructure = (targetA: unknown, targetB: unknown): DataType | false => {
   const typeMatch = sameType(targetA, targetB)

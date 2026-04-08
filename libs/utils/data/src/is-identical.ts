@@ -107,6 +107,13 @@ const isIdenticalForCircularReferencesRecursive = (
  * @param targetA - The first value to compare
  * @param targetB - The second value to compare
  * @returns True if the values are identical, false otherwise
+ *
+ * @example
+ * ```typescript
+ * isIdentical({ a: 1 }, { a: 1 }) // true
+ * isIdentical([1, 2], [1, 2]) // true
+ * isIdentical({ a: 1 }, { a: 2 }) // false
+ * ```
  */
 export const isIdentical = (targetA: unknown, targetB: unknown): boolean => {
   const targets = <[UnknownIterable, UnknownIterable]>[targetA, targetB]
