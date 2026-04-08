@@ -8,6 +8,12 @@ export type PropertyLock = (
   propertyValuePairs: [string, any][]
 ) => void
 
+/**
+ * Locks multiple properties on an object making them non-writable and non-configurable.
+ *
+ * @param object - The object to lock properties on
+ * @param propertyValuePairs - Array of [key, value] pairs to lock
+ */
 export const lockedProps: PropertyLock = (object, propertyValuePairs) => {
   const propertyMap: PropertyDescriptorMap = {}
   propertyValuePairs.forEach(([key, value]) => (propertyMap[key] = lockedPropertyDescriptors(value)))
