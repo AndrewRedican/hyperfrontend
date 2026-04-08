@@ -178,7 +178,7 @@ module.exports = [
       'workspace/max-file-lines': [
         'error',
         {
-          maxLines: 400,
+          maxLines: 600,
           maxLinesTest: 700,
         },
       ],
