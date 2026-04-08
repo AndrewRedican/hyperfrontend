@@ -21,6 +21,7 @@
     "build": {
       "executor": "@hyperfrontend/app:build",
       "dependsOn": ["install"],
+      "cache": false,
       "inputs": [
         "default",
         "{workspaceRoot}/ARCHITECTURE.md",
