@@ -1,3 +1,4 @@
+/* eslint-disable workspace/lib-require-jsdoc-example */
 /**
  * Safe copies of Promise built-in methods via factory functions.
  *

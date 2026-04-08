@@ -72,6 +72,14 @@ export interface PostMessageToWindowOptions {
  * @param target - Destination window, iframe, or popup context.
  * @param message - The data payload to send, must be structured-cloneable.
  * @param options - Target origin and optional transferables.
+ *
+ * @example
+ * ```typescript
+ * const iframe = document.querySelector('iframe')
+ * postMessageToWindow(iframe.contentWindow, { action: 'refresh' }, {
+ *   targetOrigin: 'https://trusted.example.com',
+ * })
+ * ```
  */
 export const postMessageToWindow = (target: Window, message: unknown, options: PostMessageToWindowOptions): void => {
   target.postMessage(message, options.targetOrigin, options.transfer)
@@ -83,6 +91,12 @@ export const postMessageToWindow = (target: Window, message: unknown, options: P
  * @param target - Web Worker or service worker instance.
  * @param message - The data payload to send, must be structured-cloneable.
  * @param transfer - Optional array of Transferable objects.
+ *
+ * @example
+ * ```typescript
+ * const worker = new Worker('worker.js')
+ * postMessageToWorker(worker, { task: 'process', data: [1, 2, 3] })
+ * ```
  */
 export const postMessageToWorker = (target: Worker, message: unknown, transfer?: Transferable[]): void => {
   if (transfer) {
@@ -98,6 +112,12 @@ export const postMessageToWorker = (target: Worker, message: unknown, transfer?:
  * @param port - One end of a two-way communication channel.
  * @param message - The data payload to send, must be structured-cloneable.
  * @param transfer - Optional array of Transferable objects.
+ *
+ * @example
+ * ```typescript
+ * const channel = new MessageChannel()
+ * postMessageToPort(channel.port1, { status: 'ready' })
+ * ```
  */
 export const postMessageToPort = (port: MessagePort, message: unknown, transfer?: Transferable[]): void => {
   if (transfer) {
@@ -112,6 +132,12 @@ export const postMessageToPort = (port: MessagePort, message: unknown, transfer?
  *
  * @param channel - Named broadcast channel for same-origin contexts.
  * @param message - The data payload to send, must be structured-cloneable.
+ *
+ * @example
+ * ```typescript
+ * const channel = new BroadcastChannel('app-updates')
+ * postMessageToBroadcast(channel, { type: 'cache-invalidate' })
+ * ```
  */
 export const postMessageToBroadcast = (channel: BroadcastChannel, message: unknown): void => {
   channel.postMessage(message)

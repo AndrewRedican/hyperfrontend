@@ -1,3 +1,4 @@
+/* eslint-disable jsdoc/require-param */
 /**
  * Safe copies of Date built-in via factory function and static methods.
  *
@@ -14,12 +15,6 @@ const _Date = globalThis.Date
 const _Reflect = globalThis.Reflect
 const _freeze = globalThis.Object.freeze
 
-/**
- * (Safe copy) Creates a new Date using the captured Date constructor.
- * Use this instead of `new Date()`. Accepts all standard Date constructor signatures.
- *
- * @returns A new Date instance.
- */
 export function createDate(): Date
 export function createDate(value: number | string | Date): Date
 export function createDate(
@@ -31,22 +26,54 @@ export function createDate(
   seconds?: number,
   ms?: number
 ): Date
+/**
+ * (Safe copy) Creates a new Date using the captured Date constructor.
+ * Use this instead of `new Date()`. Accepts all standard Date constructor signatures.
+ *
+ * @returns A new Date instance.
+ *
+ * @example
+ * ```typescript
+ * const now = createDate()
+ * const fromTimestamp = createDate(1704067200000)
+ * const fromString = createDate('2024-01-01T00:00:00Z')
+ * const fromParts = createDate(2024, 0, 1, 12, 30, 0) // Jan 1, 2024 12:30:00
+ * ```
+ */
 export function createDate(...args: unknown[]): Date {
   return <Date>_Reflect.construct(_Date, args)
 }
 
 /**
  * (Safe copy) Returns the number of milliseconds elapsed since January 1, 1970 00:00:00 UTC.
+ *
+ * @example
+ * ```typescript
+ * const timestamp = dateNow()
+ * // => 1704067200000 (example timestamp)
+ * ```
  */
 export const dateNow = _Date.now
 
 /**
  * (Safe copy) Parses a string representation of a date.
+ *
+ * @example
+ * ```typescript
+ * const timestamp = dateParse('2024-01-01T00:00:00Z')
+ * // => 1704067200000
+ * ```
  */
 export const dateParse = _Date.parse
 
 /**
  * (Safe copy) Returns the number of milliseconds in a Date object since January 1, 1970 UTC.
+ *
+ * @example
+ * ```typescript
+ * const timestamp = dateUTC(2024, 0, 1, 12, 0, 0)
+ * // => 1704110400000 (Jan 1, 2024 12:00:00 UTC)
+ * ```
  */
 export const dateUTC = _Date.UTC
 

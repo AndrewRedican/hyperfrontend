@@ -7,6 +7,13 @@ export type LockedPropDescriptorsCreator = (value: unknown, enumerable?: boolean
  * @param value - The value for the property
  * @param enumerable - Whether the property should be enumerable
  * @returns PropertyDescriptor with locked configuration
+ *
+ * @example
+ * ```typescript
+ * const descriptor = lockedPropertyDescriptors('immutable', true)
+ * // => { value: 'immutable', writable: false, configurable: false, enumerable: true }
+ * Object.defineProperty(obj, 'key', descriptor)
+ * ```
  */
 export const lockedPropertyDescriptors: LockedPropDescriptorsCreator = (value, enumerable = false) => ({
   value,

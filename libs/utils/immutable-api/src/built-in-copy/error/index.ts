@@ -28,6 +28,13 @@ const _freeze = globalThis.Object.freeze
  * @param message - Optional error message.
  * @param options - Optional error options.
  * @returns A new Error instance.
+ *
+ * @example
+ * ```typescript
+ * const error = createError('Operation failed')
+ * // With cause for error chaining
+ * const wrapped = createError('Request failed', { cause: originalError })
+ * ```
  */
 export const createError = (message?: string, options?: ErrorOptions): Error => <Error>_Reflect.construct(_Error, [message, options])
 
@@ -38,6 +45,13 @@ export const createError = (message?: string, options?: ErrorOptions): Error => 
  * @param message - Optional error message.
  * @param options - Optional error options.
  * @returns A new TypeError instance.
+ *
+ * @example
+ * ```typescript
+ * if (typeof value !== 'string') {
+ *   throw createTypeError('Expected a string')
+ * }
+ * ```
  */
 export const createTypeError = (message?: string, options?: ErrorOptions): TypeError =>
   <TypeError>_Reflect.construct(_TypeError, [message, options])
@@ -49,6 +63,13 @@ export const createTypeError = (message?: string, options?: ErrorOptions): TypeE
  * @param message - Optional error message.
  * @param options - Optional error options.
  * @returns A new RangeError instance.
+ *
+ * @example
+ * ```typescript
+ * if (index < 0 || index >= array.length) {
+ *   throw createRangeError(`Index ${index} out of bounds`)
+ * }
+ * ```
  */
 export const createRangeError = (message?: string, options?: ErrorOptions): RangeError =>
   <RangeError>_Reflect.construct(_RangeError, [message, options])
@@ -60,6 +81,13 @@ export const createRangeError = (message?: string, options?: ErrorOptions): Rang
  * @param message - Optional error message.
  * @param options - Optional error options.
  * @returns A new ReferenceError instance.
+ *
+ * @example
+ * ```typescript
+ * if (!(key in registry)) {
+ *   throw createReferenceError(`Unknown key: ${key}`)
+ * }
+ * ```
  */
 export const createReferenceError = (message?: string, options?: ErrorOptions): ReferenceError =>
   <ReferenceError>_Reflect.construct(_ReferenceError, [message, options])
@@ -71,6 +99,13 @@ export const createReferenceError = (message?: string, options?: ErrorOptions): 
  * @param message - Optional error message.
  * @param options - Optional error options.
  * @returns A new SyntaxError instance.
+ *
+ * @example
+ * ```typescript
+ * if (!isValidJson(input)) {
+ *   throw createSyntaxError('Invalid JSON format')
+ * }
+ * ```
  */
 export const createSyntaxError = (message?: string, options?: ErrorOptions): SyntaxError =>
   <SyntaxError>_Reflect.construct(_SyntaxError, [message, options])
@@ -82,6 +117,13 @@ export const createSyntaxError = (message?: string, options?: ErrorOptions): Syn
  * @param message - Optional error message.
  * @param options - Optional error options.
  * @returns A new URIError instance.
+ *
+ * @example
+ * ```typescript
+ * if (!isValidUtf8(encoded)) {
+ *   throw createURIError('Malformed URI sequence')
+ * }
+ * ```
  */
 export const createURIError = (message?: string, options?: ErrorOptions): URIError =>
   <URIError>_Reflect.construct(_URIError, [message, options])
@@ -93,6 +135,11 @@ export const createURIError = (message?: string, options?: ErrorOptions): URIErr
  * @param message - Optional error message.
  * @param options - Optional error options.
  * @returns A new EvalError instance.
+ *
+ * @example
+ * ```typescript
+ * throw createEvalError('Dynamic code execution is not allowed')
+ * ```
  */
 export const createEvalError = (message?: string, options?: ErrorOptions): EvalError =>
   <EvalError>_Reflect.construct(_EvalError, [message, options])
@@ -105,6 +152,15 @@ export const createEvalError = (message?: string, options?: ErrorOptions): EvalE
  * @param message - Optional error message.
  * @param options - Optional error options.
  * @returns A new AggregateError instance.
+ *
+ * @example
+ * ```typescript
+ * const results = await Promise.allSettled(promises)
+ * const failures = results.filter(r => r.status === 'rejected').map(r => r.reason)
+ * if (failures.length > 0) {
+ *   throw createAggregateError(failures, 'Multiple operations failed')
+ * }
+ * ```
  */
 export const createAggregateError = (errors: Iterable<unknown>, message?: string, options?: ErrorOptions): AggregateError =>
   <AggregateError>_Reflect.construct(_AggregateError, [errors, message, options])

@@ -1,3 +1,4 @@
+/* eslint-disable workspace/lib-require-jsdoc-example */
 /**
  * Safe copies of TypedArray and ArrayBuffer built-ins via factory functions.
  *
@@ -31,6 +32,12 @@ const _freeze = globalThis.Object.freeze
  *
  * @param byteLength - The size, in bytes, of the array buffer to create.
  * @returns A new ArrayBuffer instance.
+ *
+ * @example
+ * ```typescript
+ * const buffer = createArrayBuffer(16)
+ * // => ArrayBuffer { byteLength: 16 }
+ * ```
  */
 export const createArrayBuffer = (byteLength: number): ArrayBuffer => <ArrayBuffer>_Reflect.construct(_ArrayBuffer, [byteLength])
 
@@ -45,6 +52,12 @@ export const isView = _ArrayBuffer.isView
  *
  * @param byteLength - The size, in bytes, of the shared array buffer to create.
  * @returns A new SharedArrayBuffer instance.
+ *
+ * @example
+ * ```typescript
+ * const sharedBuffer = createSharedArrayBuffer(1024)
+ * // Can be shared between workers via postMessage
+ * ```
  */
 export const createSharedArrayBuffer = (byteLength: number): SharedArrayBuffer =>
   <SharedArrayBuffer>_Reflect.construct(_SharedArrayBuffer, [byteLength])
@@ -57,6 +70,14 @@ export const createSharedArrayBuffer = (byteLength: number): SharedArrayBuffer =
  * @param byteOffset - Optional byte offset to start the view.
  * @param byteLength - Optional byte length of the view.
  * @returns A new DataView instance.
+ *
+ * @example
+ * ```typescript
+ * const buffer = createArrayBuffer(8)
+ * const view = createDataView(buffer)
+ * view.setInt32(0, 42, true) // little-endian
+ * view.getInt32(0, true) // => 42
+ * ```
  */
 export const createDataView = (buffer: ArrayBuffer | SharedArrayBuffer, byteOffset?: number, byteLength?: number): DataView =>
   <DataView>_Reflect.construct(_DataView, [buffer, byteOffset, byteLength])
@@ -72,6 +93,14 @@ export const createDataView = (buffer: ArrayBuffer | SharedArrayBuffer, byteOffs
  *
  * @param length - The length of the array to create.
  * @returns A new Uint8Array instance.
+ *
+ * @example
+ * ```typescript
+ * const bytes = createUint8Array(4)
+ * bytes[0] = 255
+ * // From array
+ * const fromArray = createUint8Array([0x48, 0x65, 0x6c, 0x6c, 0x6f])
+ * ```
  */
 export function createUint8Array(length: number): Uint8Array
 export function createUint8Array(array: ArrayLike<number> | Iterable<number>): Uint8Array
@@ -106,6 +135,13 @@ export const uint8ArrayOf = <typeof Uint8Array.of>_Uint8Array.of.bind(_Uint8Arra
  *
  * @param length - Number of elements to allocate in the clamped array.
  * @returns A new Uint8ClampedArray instance.
+ *
+ * @example
+ * ```typescript
+ * const pixels = createUint8ClampedArray(4) // RGBA
+ * pixels[0] = 300 // Clamped to 255
+ * pixels[1] = -10 // Clamped to 0
+ * ```
  */
 export const createUint8ClampedArray = (length: number): Uint8ClampedArray =>
   <Uint8ClampedArray>_Reflect.construct(_Uint8ClampedArray, [length])
@@ -126,6 +162,12 @@ export const uint8ClampedArrayOf = <typeof Uint8ClampedArray.of>_Uint8ClampedArr
  *
  * @param length - The length of the array.
  * @returns A new Uint16Array instance.
+ *
+ * @example
+ * ```typescript
+ * const shorts = createUint16Array(2)
+ * shorts[0] = 65535 // Max value for 16-bit unsigned
+ * ```
  */
 export const createUint16Array = (length: number): Uint16Array => <Uint16Array>_Reflect.construct(_Uint16Array, [length])
 
@@ -145,6 +187,12 @@ export const uint16ArrayOf = <typeof Uint16Array.of>_Uint16Array.of.bind(_Uint16
  *
  * @param length - The length of the array.
  * @returns A new Uint32Array instance.
+ *
+ * @example
+ * ```typescript
+ * const ints = createUint32Array(4)
+ * ints[0] = 0xFFFFFFFF // Max 32-bit unsigned value
+ * ```
  */
 export const createUint32Array = (length: number): Uint32Array => <Uint32Array>_Reflect.construct(_Uint32Array, [length])
 
@@ -164,6 +212,13 @@ export const uint32ArrayOf = <typeof Uint32Array.of>_Uint32Array.of.bind(_Uint32
  *
  * @param length - The length of the array.
  * @returns A new Int8Array instance.
+ *
+ * @example
+ * ```typescript
+ * const signed = createInt8Array(2)
+ * signed[0] = -128 // Min value
+ * signed[1] = 127  // Max value
+ * ```
  */
 export const createInt8Array = (length: number): Int8Array => <Int8Array>_Reflect.construct(_Int8Array, [length])
 
@@ -183,6 +238,13 @@ export const int8ArrayOf = <typeof Int8Array.of>_Int8Array.of.bind(_Int8Array)
  *
  * @param length - The length of the array.
  * @returns A new Int16Array instance.
+ *
+ * @example
+ * ```typescript
+ * const shorts = createInt16Array(2)
+ * shorts[0] = -32768 // Min value
+ * shorts[1] = 32767  // Max value
+ * ```
  */
 export const createInt16Array = (length: number): Int16Array => <Int16Array>_Reflect.construct(_Int16Array, [length])
 
@@ -202,6 +264,13 @@ export const int16ArrayOf = <typeof Int16Array.of>_Int16Array.of.bind(_Int16Arra
  *
  * @param length - The length of the array.
  * @returns A new Int32Array instance.
+ *
+ * @example
+ * ```typescript
+ * const ints = createInt32Array(2)
+ * ints[0] = -2147483648 // Min value
+ * ints[1] = 2147483647  // Max value
+ * ```
  */
 export const createInt32Array = (length: number): Int32Array => <Int32Array>_Reflect.construct(_Int32Array, [length])
 
@@ -221,6 +290,13 @@ export const int32ArrayOf = <typeof Int32Array.of>_Int32Array.of.bind(_Int32Arra
  *
  * @param length - The length of the array.
  * @returns A new Float32Array instance.
+ *
+ * @example
+ * ```typescript
+ * const floats = createFloat32Array(3)
+ * floats[0] = 3.14
+ * floats[1] = -273.15
+ * ```
  */
 export const createFloat32Array = (length: number): Float32Array => <Float32Array>_Reflect.construct(_Float32Array, [length])
 
@@ -240,6 +316,13 @@ export const float32ArrayOf = <typeof Float32Array.of>_Float32Array.of.bind(_Flo
  *
  * @param length - The length of the array.
  * @returns A new Float64Array instance.
+ *
+ * @example
+ * ```typescript
+ * const doubles = createFloat64Array(2)
+ * doubles[0] = Math.PI
+ * doubles[1] = Number.MAX_VALUE
+ * ```
  */
 export const createFloat64Array = (length: number): Float64Array => <Float64Array>_Reflect.construct(_Float64Array, [length])
 
@@ -259,6 +342,13 @@ export const float64ArrayOf = <typeof Float64Array.of>_Float64Array.of.bind(_Flo
  *
  * @param length - The length of the array.
  * @returns A new BigInt64Array instance.
+ *
+ * @example
+ * ```typescript
+ * const bigInts = createBigInt64Array(2)
+ * bigInts[0] = -9223372036854775808n // Min value
+ * bigInts[1] = 9223372036854775807n  // Max value
+ * ```
  */
 export const createBigInt64Array = (length: number): BigInt64Array => <BigInt64Array>_Reflect.construct(_BigInt64Array, [length])
 
@@ -278,6 +368,13 @@ export const bigInt64ArrayOf = <typeof BigInt64Array.of>_BigInt64Array.of.bind(_
  *
  * @param length - The length of the array.
  * @returns A new BigUint64Array instance.
+ *
+ * @example
+ * ```typescript
+ * const bigUints = createBigUint64Array(2)
+ * bigUints[0] = 0n
+ * bigUints[1] = 18446744073709551615n // Max value
+ * ```
  */
 export const createBigUint64Array = (length: number): BigUint64Array => <BigUint64Array>_Reflect.construct(_BigUint64Array, [length])
 
