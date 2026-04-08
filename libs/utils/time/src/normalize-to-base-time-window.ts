@@ -9,6 +9,14 @@ import { globalIsNaN } from '@hyperfrontend/immutable-api-utils/built-in-copy/nu
  * @param time - The Date object to normalize to the nearest time window
  * @param baseTimeWindow - The size of the time window in minutes for normalization
  * @returns A new Date object normalized to the start of the time window
+ *
+ * @example
+ * ```typescript
+ * // Round timestamps to 15-minute intervals for analytics bucketing
+ * const eventTime = new Date('2024-03-15T14:23:45Z')
+ * const bucketTime = normalizeToBaseTimeWindow(eventTime, 15)
+ * // => 2024-03-15T14:15:00.000Z
+ * ```
  */
 export function normalizeToBaseTimeWindow(time: Date, baseTimeWindow: number): Date {
   if (!time || !(time instanceof Date) || globalIsNaN(time.getTime())) {
