@@ -7,6 +7,18 @@ import { log, random, sqrt } from '@hyperfrontend/immutable-api-utils/built-in-c
  * @param min - The minimum value of the range
  * @param max - The maximum value of the range
  * @returns A random number from the Gaussian distribution bounded by min and max
+ *
+ * @example Simulating human heights in centimeters
+ * ```typescript
+ * const heightCm = randomGaussian(150, 200)
+ * // => 174.3 (most values cluster around the midpoint 175)
+ * ```
+ *
+ * @example Generating test scores with realistic distribution
+ * ```typescript
+ * const testScore = randomGaussian(0, 100)
+ * // => 52.8 (bell curve centered at 50, rarely hits extremes)
+ * ```
  */
 export function randomGaussian(min: number, max: number): number {
   if (min > max) {
