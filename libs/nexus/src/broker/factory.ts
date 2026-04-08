@@ -47,6 +47,15 @@ import { validatePolicy } from './security/validate-policy'
  * @param config.contract - Channel contract defining message protocols
  * @param config.settings - Optional configuration overrides for broker behavior
  * @returns Broker handle with public API
+ *
+ * @example
+ * ```typescript
+ * const broker = createBroker({
+ *   name: 'app-broker',
+ *   contract: { messages: { ping: {}, pong: {} } },
+ *   settings: { logLevel: 'warn' },
+ * })
+ * ```
  */
 export function createBroker(config: {
   /** Unique name for the broker instance */

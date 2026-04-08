@@ -12,6 +12,15 @@ export type MessageFilter<T extends IMessage = IMessage> = (handler: MessageHand
  *
  * @param filters - Variable number of filter functions to compose
  * @returns A single composed filter
+ *
+ * @example
+ * ```typescript
+ * const combinedFilter = compose(
+ *   byType('notification'),
+ *   create((msg) => msg.priority === 'high')
+ * )
+ * const handler = combinedFilter((msg) => console.log(msg))
+ * ```
  */
 export function compose<T extends IMessage = IMessage>(...filters: MessageFilter<T>[]): MessageFilter<T> {
   return (handler: MessageHandler<T>): MessageHandler<T> => {

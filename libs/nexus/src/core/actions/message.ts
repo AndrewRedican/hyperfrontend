@@ -8,6 +8,13 @@ import { ACTION_TYPES } from '../../types/action'
  *
  * @param deps - Action dependencies containing broker ID
  * @returns A function that creates a new message action with data
+ *
+ * @example
+ * ```typescript
+ * const createMessageAction = newMessage({ getBrokerId: () => 'broker-1' })
+ * const action = createMessageAction({ userId: 123, event: 'login' })
+ * // => { type: 'NEW_MESSAGE', senderId: 'broker-1', data: { userId: 123, event: 'login' } }
+ * ```
  */
 export const newMessage =
   (deps: ActionDependencies) =>

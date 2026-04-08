@@ -3,6 +3,11 @@ import { setPrototypeOf } from '@hyperfrontend/immutable-api-utils/built-in-copy
 
 /**
  * Custom error class for validation failures
+ *
+ * @example
+ * ```typescript
+ * throw new ValidationError('Schema mismatch', [{ path: 'data.id', message: 'Required' }])
+ * ```
  */
 export class ValidationError extends Error {
   override readonly name = 'ValidationError'

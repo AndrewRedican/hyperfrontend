@@ -10,6 +10,12 @@ import { getByWindow } from '../../core/registry/get-by-window'
  * @param registry - Channel registry containing all registered channels
  * @param reference - Channel identifier (id, name, or window object)
  * @returns The channel if found, null otherwise
+ *
+ * @example
+ * ```typescript
+ * const channelByName = getChannel(registry, 'widget-channel')
+ * const channelByWindow = getChannel(registry, iframe.contentWindow)
+ * ```
  */
 export function getChannel(registry: Registry, reference: string | Window): ReturnType<typeof createChannel> | null {
   if (typeof reference === 'object' && reference !== null) {

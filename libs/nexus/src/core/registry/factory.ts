@@ -63,6 +63,13 @@ export type Registry = ChannelRegistry
  * All lookup operations are O(1) using WeakMap/Map.
  *
  * @returns Registry functions for managing channels
+ *
+ * @example
+ * ```typescript
+ * const registry = createRegistry()
+ * registry.add({ id: 'ch-1', name: 'main', target: iframe.contentWindow })
+ * const channel = registry.getById('ch-1')
+ * ```
  */
 export function createRegistry(): ChannelRegistry {
   const windowMap = createWeakMap<Window, MinimalChannel>()

@@ -1,3 +1,4 @@
+/* eslint-disable workspace/lib-require-jsdoc-example */
 import type { CloseEventHandler } from '../../types/events'
 import type { EventHandler } from './create'
 import { create } from './create'

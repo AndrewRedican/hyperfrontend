@@ -19,6 +19,11 @@ export type SecurityErrorCode = 'decryption_failed' | 'deobfuscation_failed' | '
 
 /**
  * Security error class with additional metadata for programmatic handling.
+ *
+ * @example
+ * ```typescript
+ * throw new SecurityError('Decryption failed', 'decryption_failed', originalError)
+ * ```
  */
 export class SecurityError extends Error {
   readonly code: SecurityErrorCode

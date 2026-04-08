@@ -7,6 +7,12 @@ import { getAll } from '../../core/registry/get-all'
  *
  * @param registry - Channel registry containing all registered channels
  * @returns Array of channel JSON representations
+ *
+ * @example
+ * ```typescript
+ * const channels = listChannels(registry)
+ * // => [{ id: 'abc-123', name: 'widget', state: 'connected' }, ...]
+ * ```
  */
 export function listChannels(registry: Registry): ChannelJSON[] {
   const channels = getAll(registry)

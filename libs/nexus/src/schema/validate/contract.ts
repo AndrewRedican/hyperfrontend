@@ -1,3 +1,4 @@
+/* eslint-disable workspace/lib-require-jsdoc-example */
 import type { Schema } from '@hyperfrontend/json-utils'
 import type { IChannelContract } from '../../types/contract'
 import type { ValidationResult } from '../../types/validation'

@@ -83,6 +83,13 @@ export function createMockWindow(): MockWindow {
  * @param windowB - Second mock window
  * @param originA - Origin URL for window A (e.g., 'http://host-a.com')
  * @param originB - Origin URL for window B (e.g., 'http://host-b.com')
+ *
+ * @example
+ * ```typescript
+ * const windowA = createMockWindow()
+ * const windowB = createMockWindow()
+ * linkMockWindows(windowA, windowB, 'http://host-a.com', 'http://host-b.com')
+ * ```
  */
 export function linkMockWindows(windowA: MockWindow, windowB: MockWindow, originA: string, originB: string): void {
   windowA.postMessage.mockImplementation((data: unknown) => {
@@ -114,6 +121,11 @@ export function linkMockWindows(windowA: MockWindow, windowB: MockWindow, origin
  * @param message - The action/message data to send
  * @param origin - The origin URL of the sender
  * @param source - Optional source window reference
+ *
+ * @example
+ * ```typescript
+ * simulateMessage(mockWindow, { type: 'PING' }, 'http://origin.com')
+ * ```
  */
 export function simulateMessage(targetWindow: MockWindow, message: IAction, origin: string, source?: MockWindow): void {
   const event = new MessageEvent('message', {
@@ -133,6 +145,12 @@ export function simulateMessage(targetWindow: MockWindow, message: IAction, orig
  * @param origin - The origin URL
  * @param source - Optional source window
  * @returns A MessageEvent object
+ *
+ * @example
+ * ```typescript
+ * const event = createMessageEvent({ type: 'PING' }, 'http://origin.com')
+ * handler(event)
+ * ```
  */
 export function createMessageEvent<T = IAction>(data: T, origin: string, source?: MockWindow): MessageEvent<T> {
   return new MessageEvent<T>('message', {
@@ -149,6 +167,12 @@ export function createMessageEvent<T = IAction>(data: T, origin: string, source?
  *
  * @param ms - Number of milliseconds to wait
  * @returns A promise that resolves after the specified time
+ *
+ * @example
+ * ```typescript
+ * await wait(100)
+ * // 100ms have passed
+ * ```
  */
 export function wait(ms: number): Promise<void> {
   return createPromise((resolve) => setTimeout(resolve, ms))
@@ -159,6 +183,13 @@ export function wait(ms: number): Promise<void> {
  *
  * Call this after operations that use setTimeout to ensure all
  * async operations complete.
+ *
+ * @example
+ * ```typescript
+ * windowA.postMessage({ type: 'PING' })
+ * await flushAsync()
+ * // All async callbacks have completed
+ * ```
  */
 export async function flushAsync(): Promise<void> {
   await wait(0)
@@ -172,6 +203,12 @@ export async function flushAsync(): Promise<void> {
  * @param emitted - Array of message types this side emits
  * @param accepted - Array of message types this side accepts
  * @returns A channel contract object
+ *
+ * @example
+ * ```typescript
+ * const contract = createTestContract(['PING'], ['PONG'])
+ * // => { emitted: [{ type: 'PING' }], accepted: [{ type: 'PONG' }] }
+ * ```
  */
 export function createTestContract(emitted: string[] = [], accepted: string[] = []) {
   return {
@@ -188,6 +225,13 @@ export function createTestContract(emitted: string[] = [], accepted: string[] = 
  * @param aEmits - Message types that side A emits (B accepts)
  * @param bEmits - Message types that side B emits (A accepts)
  * @returns Object with contractA and contractB
+ *
+ * @example
+ * ```typescript
+ * const { contractA, contractB } = createContractPair(['PING'], ['PONG'])
+ * // contractA emits PING, accepts PONG
+ * // contractB emits PONG, accepts PING
+ * ```
  */
 export function createContractPair(aEmits: string[] = [], bEmits: string[] = []) {
   return {

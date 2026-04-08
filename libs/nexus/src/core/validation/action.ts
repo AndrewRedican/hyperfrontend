@@ -7,6 +7,15 @@ import { isObject } from './_utils'
  *
  * @param action - The action to validate
  * @throws {Error} Error if action is invalid
+ *
+ * @example
+ * ```typescript
+ * validateAction({
+ *   type: 'MESSAGE',
+ *   senderId: '550e8400-e29b-41d4-a716-446655440000',
+ *   timestamp: Date.now()
+ * })
+ * ```
  */
 export function validateAction(action: unknown): void {
   if (!action) {

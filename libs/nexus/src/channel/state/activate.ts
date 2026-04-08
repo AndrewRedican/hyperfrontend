@@ -11,6 +11,13 @@ import { freeze } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
  * @param origin - Origin of the connected channel
  * @param contract - Negotiated channel contract
  * @returns New state with channel activated
+ *
+ * @example
+ * ```typescript
+ * const contract = { accepted: [{ type: 'message' }] }
+ * const activeState = activate(channelState, 'https://example.com', contract)
+ * // => { ...channelState, active: true, origin: 'https://example.com', ... }
+ * ```
  */
 export function activate(state: ChannelState, origin: string, contract: IChannelContract): ChannelState {
   const acceptedActions = (contract.accepted || []).map((action) => action.type)

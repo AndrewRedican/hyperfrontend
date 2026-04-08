@@ -8,6 +8,13 @@ import { ACTION_TYPES } from '../../types/action'
  *
  * @param deps - Action dependencies containing broker ID
  * @returns A function that creates a destroy connection action
+ *
+ * @example
+ * ```typescript
+ * const createDestroyAction = destroyConnection({ getBrokerId: () => 'broker-1' })
+ * const action = createDestroyAction()
+ * // => { type: 'DESTROY_CONNECTION', senderId: 'broker-1' }
+ * ```
  */
 export const destroyConnection = (deps: ActionDependencies) => (): IActionBase =>
   freeze({
