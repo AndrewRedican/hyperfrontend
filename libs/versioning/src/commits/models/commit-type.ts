@@ -24,6 +24,15 @@ export const PATCH_TYPES = <const>['fix', 'perf', 'revert']
  *
  * @param type - The commit type to check
  * @returns True if the type is a standard conventional commit type
+ *
+ * @example
+ * ```typescript
+ * isStandardType('feat')
+ * // => true
+ *
+ * isStandardType('custom')
+ * // => false
+ * ```
  */
 export function isStandardType(type: string): type is CommitType {
   return type in COMMIT_TYPES
@@ -34,6 +43,15 @@ export function isStandardType(type: string): type is CommitType {
  *
  * @param type - The commit type to check
  * @returns True if the type triggers a release
+ *
+ * @example
+ * ```typescript
+ * isReleaseType('feat')
+ * // => true
+ *
+ * isReleaseType('chore')
+ * // => false
+ * ```
  */
 export function isReleaseType(type: string): boolean {
   return (<ReadonlyArray<string>>RELEASE_TYPES).includes(type)
@@ -46,6 +64,18 @@ export function isReleaseType(type: string): boolean {
  * @param type - The commit type
  * @param breaking - Whether this is a breaking change
  * @returns The semver bump level ('major', 'minor', 'patch', or 'none')
+ *
+ * @example
+ * ```typescript
+ * getSemverBump('feat', false)
+ * // => 'minor'
+ *
+ * getSemverBump('fix', true)
+ * // => 'major'
+ *
+ * getSemverBump('docs', false)
+ * // => 'none'
+ * ```
  */
 export function getSemverBump(type: string, breaking: boolean): 'major' | 'minor' | 'patch' | 'none' {
   if (breaking) return 'major'

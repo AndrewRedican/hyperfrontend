@@ -6,6 +6,15 @@
  * @param target - The character to replace
  * @param replacement - The replacement character
  * @returns String with all occurrences replaced
+ *
+ * @example
+ * ```typescript
+ * replaceChar('hello-world', '-', '_')
+ * // => 'hello_world'
+ *
+ * replaceChar('a.b.c', '.', '/')
+ * // => 'a/b/c'
+ * ```
  */
 export function replaceChar(input: string, target: string, replacement: string): string {
   const result: string[] = []
@@ -24,6 +33,15 @@ export function replaceChar(input: string, target: string, replacement: string):
  *
  * @param input - The input string
  * @returns String with hyphens replaced by spaces
+ *
+ * @example
+ * ```typescript
+ * hyphenToSpace('BREAKING-CHANGE')
+ * // => 'BREAKING CHANGE'
+ *
+ * hyphenToSpace('no-hyphens-here')
+ * // => 'no hyphens here'
+ * ```
  */
 export function hyphenToSpace(input: string): string {
   return replaceChar(input, '-', ' ')

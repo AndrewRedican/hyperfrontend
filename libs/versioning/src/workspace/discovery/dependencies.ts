@@ -100,6 +100,19 @@ export function findInternalDependencies(packageJson: PackageJson, workspacePack
  * @param packageJson - Parsed package.json content
  * @param workspacePackageNames - Set of all package names in the workspace
  * @returns Array of dependency edges with type information
+ *
+ * @example
+ * ```typescript
+ * import { findInternalDependenciesWithTypes, readPackageJson } from '@hyperfrontend/versioning'
+ *
+ * const packageJson = readPackageJson('./libs/my-lib/package.json')
+ * const workspacePackages = new Set(['@myorg/utils', '@myorg/core'])
+ *
+ * const edges = findInternalDependenciesWithTypes('@myorg/my-lib', packageJson, workspacePackages)
+ * for (const edge of edges) {
+ *   console.log(`${edge.from} -> ${edge.to} (${edge.type})`)
+ * }
+ * ```
  */
 export function findInternalDependenciesWithTypes(
   packageName: string,
@@ -378,6 +391,19 @@ export function getTransitiveDependents(workspace: Workspace, packageName: strin
  * @param workspace - The workspace containing projects
  * @param packageName - Name of the package to analyze
  * @returns Set of all packages this package depends on
+ *
+ * @example
+ * ```typescript
+ * import { discoverWorkspace, getTransitiveDependencies } from '@hyperfrontend/versioning'
+ *
+ * const workspace = discoverWorkspace()
+ * const allDeps = getTransitiveDependencies(workspace, '@myorg/app')
+ *
+ * console.log(`@myorg/app transitively depends on ${allDeps.size} packages`)
+ * for (const dep of allDeps) {
+ *   console.log(`  - ${dep}`)
+ * }
+ * ```
  */
 export function getTransitiveDependencies(workspace: Workspace, packageName: string): Set<string> {
   const dependencies = createSet<string>()
@@ -408,6 +434,17 @@ export function getTransitiveDependencies(workspace: Workspace, packageName: str
  * @param packageA - Name of the potentially dependent package
  * @param packageB - Name of the potential dependency
  * @returns True if packageA transitively depends on packageB
+ *
+ * @example
+ * ```typescript
+ * import { discoverWorkspace, transitivelyDependsOn } from '@hyperfrontend/versioning'
+ *
+ * const workspace = discoverWorkspace()
+ *
+ * if (transitivelyDependsOn(workspace, '@myorg/app', '@myorg/utils')) {
+ *   console.log('Bumping @myorg/utils will affect @myorg/app')
+ * }
+ * ```
  */
 export function transitivelyDependsOn(workspace: Workspace, packageA: string, packageB: string): boolean {
   const deps = getTransitiveDependencies(workspace, packageA)

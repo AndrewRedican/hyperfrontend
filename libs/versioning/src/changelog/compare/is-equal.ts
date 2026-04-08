@@ -40,6 +40,12 @@ export function isChangelogEqual(a: Changelog, b: Changelog): boolean {
  * @param a - First header
  * @param b - Second header
  * @returns True if headers are equal
+ *
+ * @example
+ * ```typescript
+ * isHeaderEqual(changelog1.header, changelog2.header)
+ * // => true if titles, descriptions, and links match
+ * ```
  */
 export function isHeaderEqual(a: ChangelogHeader, b: ChangelogHeader): boolean {
   if (a.title !== b.title) return false
@@ -65,6 +71,12 @@ export function isHeaderEqual(a: ChangelogHeader, b: ChangelogHeader): boolean {
  * @param a - First link
  * @param b - Second link
  * @returns True if links are equal
+ *
+ * @example
+ * ```typescript
+ * isLinkEqual({ label: '1.0.0', url: '...' }, { label: '1.0.0', url: '...' })
+ * // => true
+ * ```
  */
 export function isLinkEqual(a: ChangelogLink, b: ChangelogLink): boolean {
   return a.label === b.label && a.url === b.url
@@ -76,6 +88,12 @@ export function isLinkEqual(a: ChangelogLink, b: ChangelogLink): boolean {
  * @param a - First entry
  * @param b - Second entry
  * @returns True if entries are equal
+ *
+ * @example
+ * ```typescript
+ * isEntryEqual(entryA, entryB)
+ * // => true if version, date, sections, and all nested data match
+ * ```
  */
 export function isEntryEqual(a: ChangelogEntry, b: ChangelogEntry): boolean {
   if (a.version !== b.version) return false
@@ -100,6 +118,12 @@ export function isEntryEqual(a: ChangelogEntry, b: ChangelogEntry): boolean {
  * @param a - First section
  * @param b - Second section
  * @returns True if sections are equal
+ *
+ * @example
+ * ```typescript
+ * isSectionEqual(featuresA, featuresB)
+ * // => true if type, heading, and all items match
+ * ```
  */
 export function isSectionEqual(a: ChangelogSection, b: ChangelogSection): boolean {
   if (a.type !== b.type) return false
@@ -121,6 +145,12 @@ export function isSectionEqual(a: ChangelogSection, b: ChangelogSection): boolea
  * @param a - First item
  * @param b - Second item
  * @returns True if items are equal
+ *
+ * @example
+ * ```typescript
+ * isItemEqual(itemA, itemB)
+ * // => true if description, scope, breaking, commits, and references match
+ * ```
  */
 export function isItemEqual(a: ChangelogItem, b: ChangelogItem): boolean {
   if (a.scope !== b.scope) return false
@@ -150,6 +180,12 @@ export function isItemEqual(a: ChangelogItem, b: ChangelogItem): boolean {
  * @param a - First commit ref
  * @param b - Second commit ref
  * @returns True if commit refs are equal
+ *
+ * @example
+ * ```typescript
+ * isCommitRefEqual(commitA, commitB)
+ * // => true if hash, shortHash, and url match
+ * ```
  */
 export function isCommitRefEqual(a: CommitRef, b: CommitRef): boolean {
   return a.hash === b.hash && a.shortHash === b.shortHash && a.url === b.url
@@ -161,6 +197,12 @@ export function isCommitRefEqual(a: CommitRef, b: CommitRef): boolean {
  * @param a - First issue ref
  * @param b - Second issue ref
  * @returns True if issue refs are equal
+ *
+ * @example
+ * ```typescript
+ * isIssueRefEqual({ number: 42, type: 'issue' }, { number: 42, type: 'issue' })
+ * // => true
+ * ```
  */
 export function isIssueRefEqual(a: IssueRef, b: IssueRef): boolean {
   return a.number === b.number && a.type === b.type && a.url === b.url
@@ -172,6 +214,12 @@ export function isIssueRefEqual(a: IssueRef, b: IssueRef): boolean {
  * @param a - First metadata
  * @param b - Second metadata
  * @returns True if metadata are equal
+ *
+ * @example
+ * ```typescript
+ * isMetadataEqual(changelog1.metadata, changelog2.metadata)
+ * // => true if format, isConventional, repositoryUrl, and warnings match
+ * ```
  */
 export function isMetadataEqual(a: ChangelogMetadata, b: ChangelogMetadata): boolean {
   if (a.format !== b.format) return false
@@ -194,6 +242,12 @@ export function isMetadataEqual(a: ChangelogMetadata, b: ChangelogMetadata): boo
  * @param a - First changelog
  * @param b - Second changelog
  * @returns True if both changelogs have the same versions
+ *
+ * @example
+ * ```typescript
+ * haveSameVersions(changelog1, changelog2)
+ * // => true if both have entries for the same version strings
+ * ```
  */
 export function haveSameVersions(a: Changelog, b: Changelog): boolean {
   if (a.entries.length !== b.entries.length) return false
@@ -216,6 +270,12 @@ export function haveSameVersions(a: Changelog, b: Changelog): boolean {
  * @param changelog - The changelog to search
  * @param version - The version to look for
  * @returns True if the version exists in the changelog
+ *
+ * @example
+ * ```typescript
+ * hasVersion(changelog, '2.0.0')
+ * // => true if an entry for version 2.0.0 exists
+ * ```
  */
 export function hasVersion(changelog: Changelog, version: string): boolean {
   return changelog.entries.some((e) => e.version === version)
@@ -227,6 +287,12 @@ export function hasVersion(changelog: Changelog, version: string): boolean {
  * @param changelog - The changelog to search
  * @param version - The version to find
  * @returns The entry if found, undefined otherwise
+ *
+ * @example
+ * ```typescript
+ * const entry = getEntryByVersion(changelog, '1.0.0')
+ * // => ChangelogEntry for 1.0.0 or undefined
+ * ```
  */
 export function getEntryByVersion(changelog: Changelog, version: string): ChangelogEntry | undefined {
   return changelog.entries.find((e) => e.version === version)

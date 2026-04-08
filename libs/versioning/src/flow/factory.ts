@@ -58,6 +58,17 @@ export function createVersionFlow(preset: FlowPreset = 'conventional', config?: 
  * @param preset - The preset to use
  * @param config - Optional configuration overrides
  * @returns A VersionFlow configured for dry run
+ *
+ * @example
+ * ```typescript
+ * import { createDryRunFlow, executeFlow } from '@hyperfrontend/versioning'
+ *
+ * const flow = createDryRunFlow('conventional')
+ * const result = await executeFlow(flow, 'my-lib', '/workspace')
+ *
+ * // Preview changes without modifying files
+ * console.log('Would release:', result.state.nextVersion)
+ * ```
  */
 export function createDryRunFlow(preset: FlowPreset = 'conventional', config?: Partial<FlowConfig>): VersionFlow {
   return createVersionFlow(preset, {
@@ -70,6 +81,14 @@ export function createDryRunFlow(preset: FlowPreset = 'conventional', config?: P
  * Gets the list of available presets.
  *
  * @returns Array of preset names
+ *
+ * @example
+ * ```typescript
+ * import { getAvailablePresets } from '@hyperfrontend/versioning'
+ *
+ * const presets = getAvailablePresets()
+ * // => ['conventional', 'independent', 'synced']
+ * ```
  */
 export function getAvailablePresets(): readonly FlowPreset[] {
   return ['conventional', 'independent', 'synced']
@@ -80,6 +99,14 @@ export function getAvailablePresets(): readonly FlowPreset[] {
  *
  * @param preset - The preset name
  * @returns Human-readable description
+ *
+ * @example
+ * ```typescript
+ * import { getPresetDescription } from '@hyperfrontend/versioning'
+ *
+ * console.log(getPresetDescription('independent'))
+ * // => 'Version packages independently with dependency tracking'
+ * ```
  */
 export function getPresetDescription(preset: FlowPreset): string {
   switch (preset) {

@@ -56,6 +56,13 @@ export function getCurrentBranch(options: GitCommitOptions = {}): string | null 
  *
  * @param options - Configuration for the operation
  * @returns True if there are untracked files in the working directory
+ *
+ * @example
+ * ```typescript
+ * if (hasUntrackedFiles()) {
+ *   console.log('New files detected that are not tracked by git')
+ * }
+ * ```
  */
 export function hasUntrackedFiles(options: GitCommitOptions = {}): boolean {
   const opts = { ...DEFAULT_COMMIT_OPTIONS, ...options }

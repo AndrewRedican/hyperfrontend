@@ -50,6 +50,16 @@ export interface PackageInfo {
  * @param options.keywords - Search terms for npm registry discovery
  * @param options.lastModified - Time of last modification
  * @returns A new PackageInfo object
+ *
+ * @example
+ * ```typescript
+ * const info = createPackageInfo({
+ *   name: '@scope/my-package',
+ *   latestVersion: '2.0.0',
+ *   versions: ['1.0.0', '1.1.0', '2.0.0'],
+ *   license: 'MIT'
+ * })
+ * ```
  */
 export function createPackageInfo(options: {
   /** Package name, e.g., 'lodash' or '@scope/pkg' */

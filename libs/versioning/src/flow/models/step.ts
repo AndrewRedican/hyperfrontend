@@ -105,6 +105,17 @@ export function createStep(id: string, name: string, execute: StepExecutor, opti
  * @param name - Display label shown during execution
  * @param message - Success message
  * @returns A FlowStep that always succeeds
+ *
+ * @example
+ * ```typescript
+ * import { createNoopStep, executeStep } from '@hyperfrontend/versioning'
+ *
+ * const step = createNoopStep('placeholder', 'Placeholder Step')
+ * const result = await executeStep(step, context)
+ *
+ * console.log(result.status)
+ * // => 'success'
+ * ```
  */
 export function createNoopStep(id: string, name: string, message = 'Step completed (no-op)'): FlowStep {
   return createStep(id, name, async () => ({
@@ -118,6 +129,16 @@ export function createNoopStep(id: string, name: string, message = 'Step complet
  *
  * @param message - Explanation for why the step was skipped
  * @returns A FlowStepResult with 'skipped' status
+ *
+ * @example
+ * ```typescript
+ * import { createSkippedResult } from '@hyperfrontend/versioning'
+ *
+ * // In a step handler:
+ * if (!config.enabled) {
+ *   return createSkippedResult('Feature disabled in config')
+ * }
+ * ```
  */
 export function createSkippedResult(message: string): FlowStepResult {
   return {
@@ -132,6 +153,16 @@ export function createSkippedResult(message: string): FlowStepResult {
  * @param message - Output text describing what the step accomplished
  * @param stateUpdates - Optional state updates to apply after step completion
  * @returns A FlowStepResult with 'success' status
+ *
+ * @example
+ * ```typescript
+ * import { createSuccessResult } from '@hyperfrontend/versioning'
+ *
+ * // In a step handler:
+ * return createSuccessResult('Updated 3 files', {
+ *   modifiedFiles: ['/path/a.ts', '/path/b.ts', '/path/c.ts']
+ * })
+ * ```
  */
 export function createSuccessResult(message: string, stateUpdates?: FlowStepResult['stateUpdates']): FlowStepResult {
   return {
@@ -147,6 +178,18 @@ export function createSuccessResult(message: string, stateUpdates?: FlowStepResu
  * @param error - Error that caused the failure
  * @param message - Optional message (defaults to error.message)
  * @returns A FlowStepResult with 'failed' status
+ *
+ * @example
+ * ```typescript
+ * import { createFailedResult } from '@hyperfrontend/versioning'
+ *
+ * // In a step handler:
+ * try {
+ *   await doOperation()
+ * } catch (err) {
+ *   return createFailedResult(err as Error, 'Operation failed')
+ * }
+ * ```
  */
 export function createFailedResult(error: Error, message?: string): FlowStepResult {
   return {

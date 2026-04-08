@@ -225,6 +225,14 @@ export function discardChanges(options: DiscardChangesOptions = {}): boolean {
  *
  * @param options - Configuration for the operation
  * @returns True if both operations succeeded
+ *
+ * @example
+ * ```typescript
+ * // Reset working directory to match HEAD
+ * if (discardAllChanges()) {
+ *   console.log('Working tree reset to HEAD')
+ * }
+ * ```
  */
 export function discardAllChanges(options: GitCommitOptions = {}): boolean {
   const discarded = discardChanges(options)

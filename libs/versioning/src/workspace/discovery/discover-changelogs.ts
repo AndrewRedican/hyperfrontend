@@ -44,6 +44,18 @@ interface PackageInfo {
  * @param workspaceRoot - Workspace root path
  * @param packages - List of packages to find changelogs for
  * @returns Map of project path to changelog path
+ *
+ * @example
+ * ```typescript
+ * import { findChangelogs, discoverPackages } from '@hyperfrontend/versioning'
+ *
+ * const { packages } = discoverPackages()
+ * const changelogs = findChangelogs('/workspace', packages)
+ *
+ * for (const [projectPath, changelogPath] of changelogs) {
+ *   console.log(`${projectPath} -> ${changelogPath}`)
+ * }
+ * ```
  */
 export function findChangelogs(workspaceRoot: string, packages: readonly PackageInfo[]): Map<string, string> {
   const result = createMap<string, string>()
@@ -92,6 +104,21 @@ export function findProjectChangelog(projectPath: string): string | null {
  * @param tree - VFS tree instance
  * @param packages - List of packages to find changelogs for
  * @returns Map of project path to changelog path
+ *
+ * @example
+ * ```typescript
+ * import { findChangelogsInTree, discoverPackages } from '@hyperfrontend/versioning'
+ *
+ * // Inside an Nx generator
+ * export default function myGenerator(tree: Tree) {
+ *   const { packages } = discoverPackages()
+ *   const changelogs = findChangelogsInTree(tree, packages)
+ *
+ *   for (const [projectPath, changelogPath] of changelogs) {
+ *     console.log(`Found changelog at ${changelogPath}`)
+ *   }
+ * }
+ * ```
  */
 export function findChangelogsInTree(tree: Tree, packages: readonly PackageInfo[]): Map<string, string> {
   const result = createMap<string, string>()
@@ -113,6 +140,20 @@ export function findChangelogsInTree(tree: Tree, packages: readonly PackageInfo[
  * @param tree - VFS tree instance
  * @param projectPath - Path to project directory
  * @returns Absolute path to changelog or null if not found
+ *
+ * @example
+ * ```typescript
+ * import { findProjectChangelogInTree } from '@hyperfrontend/versioning'
+ *
+ * // Inside an Nx generator
+ * export default function myGenerator(tree: Tree) {
+ *   const changelogPath = findProjectChangelogInTree(tree, 'libs/my-lib')
+ *   if (changelogPath) {
+ *     const content = tree.read(changelogPath, 'utf-8')
+ *     // Process changelog content
+ *   }
+ * }
+ * ```
  */
 export function findProjectChangelogInTree(tree: Tree, projectPath: string): string | null {
   const relativePath = projectPath.startsWith(tree.root) ? relative(tree.root, projectPath) : projectPath

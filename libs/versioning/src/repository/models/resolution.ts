@@ -135,6 +135,16 @@ export function createInferredResolution(
  *
  * @param value - Value to check
  * @returns True if the value is a RepositoryResolution
+ *
+ * @example
+ * ```typescript
+ * import { isRepositoryResolution } from '@hyperfrontend/versioning'
+ *
+ * const config = loadConfig()
+ * if (isRepositoryResolution(config.repository)) {
+ *   console.log('Repository mode:', config.repository.mode)
+ * }
+ * ```
  */
 export function isRepositoryResolution(value: unknown): value is RepositoryResolution {
   if (typeof value !== 'object' || value === null) {

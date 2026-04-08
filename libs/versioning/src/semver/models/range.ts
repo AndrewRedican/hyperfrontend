@@ -51,6 +51,12 @@ export interface Range {
  * @param operator - The comparison operator
  * @param version - The version to compare against
  * @returns A new Comparator
+ *
+ * @example
+ * ```typescript
+ * createComparator('>=', parseVersionStrict('1.0.0'))
+ * // => { operator: '>=', version: { major: 1, minor: 0, patch: 0, ... } }
+ * ```
  */
 export function createComparator(operator: RangeOperator, version: SemVer): Comparator {
   return { operator, version }
@@ -61,6 +67,11 @@ export function createComparator(operator: RangeOperator, version: SemVer): Comp
  *
  * @param comparators - Array of comparators (AND logic)
  * @returns A new ComparatorSet
+ *
+ * @example
+ * ```typescript
+ * createComparatorSet([gte100, lt200]) // AND: >=1.0.0 AND <2.0.0
+ * ```
  */
 export function createComparatorSet(comparators: readonly Comparator[]): ComparatorSet {
   return { comparators }
@@ -72,6 +83,11 @@ export function createComparatorSet(comparators: readonly Comparator[]): Compara
  * @param sets - Array of comparator sets (OR logic)
  * @param raw - Original raw string
  * @returns A new Range
+ *
+ * @example
+ * ```typescript
+ * createRange([set1, set2], '>=1.0.0 || >=2.0.0 <3.0.0')
+ * ```
  */
 export function createRange(sets: readonly ComparatorSet[], raw?: string): Range {
   return { sets, raw }
@@ -81,6 +97,12 @@ export function createRange(sets: readonly ComparatorSet[], raw?: string): Range
  * Creates a range that matches any version.
  *
  * @returns A Range matching any version (*)
+ *
+ * @example
+ * ```typescript
+ * const anyRange = createAnyRange()
+ * satisfies(parseVersionStrict('999.999.999'), anyRange) // => true
+ * ```
  */
 export function createAnyRange(): Range {
   return createRange([], '*')
@@ -91,6 +113,13 @@ export function createAnyRange(): Range {
  *
  * @param version - The exact version to match
  * @returns A Range matching exactly the specified version
+ *
+ * @example
+ * ```typescript
+ * const exact = createExactRange(parseVersionStrict('1.2.3'))
+ * satisfies(parseVersionStrict('1.2.3'), exact) // => true
+ * satisfies(parseVersionStrict('1.2.4'), exact) // => false
+ * ```
  */
 export function createExactRange(version: SemVer): Range {
   return createRange([createComparatorSet([createComparator('=', version)])])
@@ -101,6 +130,12 @@ export function createExactRange(version: SemVer): Range {
  *
  * @param range - The range to check
  * @returns True if the range matches any version
+ *
+ * @example
+ * ```typescript
+ * isWildcard(parseRangeStrict('*')) // => true
+ * isWildcard(parseRangeStrict('^1.0.0')) // => false
+ * ```
  */
 export function isWildcard(range: Range): boolean {
   return range.sets.length === 0 || range.raw === '*' || range.raw === ''

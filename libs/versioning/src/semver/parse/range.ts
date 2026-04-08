@@ -39,6 +39,13 @@ const MAX_RANGE_LENGTH = 1024
  *
  * @param input - The range string to parse
  * @returns A ParseRangeResult with the parsed range or error
+ *
+ * @example
+ * ```typescript
+ * parseRange('^1.0.0') // => { success: true, range: ... }
+ * parseRange('>=1.0.0 <2.0.0') // => { success: true, range: ... }
+ * parseRange('1.0.0 || 2.0.0') // => { success: true, range: ... }
+ * ```
  */
 export function parseRange(input: string): ParseRangeResult {
   if (!input || typeof input !== 'string') {
@@ -77,6 +84,12 @@ export function parseRange(input: string): ParseRangeResult {
  * @param input - The range string to parse
  * @returns The parsed Range
  * @throws {Error} If the input is not a valid range
+ *
+ * @example
+ * ```typescript
+ * const range = parseRangeStrict('^1.0.0')
+ * parseRangeStrict('invalid range!!!') // throws Error
+ * ```
  */
 export function parseRangeStrict(input: string): Range {
   const result = parseRange(input)

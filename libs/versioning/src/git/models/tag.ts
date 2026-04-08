@@ -112,6 +112,12 @@ export function createAnnotatedTag(options: CreateAnnotatedTagOptions): GitTag {
  *
  * @param tag - Tag to check
  * @returns True if tag is annotated
+ *
+ * @example
+ * ```typescript
+ * const tag = createAnnotatedTag({ name: 'v1.0.0', commitHash: 'abc123', message: 'Release' })
+ * isAnnotatedTag(tag) // => true
+ * ```
  */
 export function isAnnotatedTag(tag: GitTag): boolean {
   return tag.type === 'annotated'
@@ -122,6 +128,12 @@ export function isAnnotatedTag(tag: GitTag): boolean {
  *
  * @param tag - Tag to check
  * @returns True if tag is lightweight
+ *
+ * @example
+ * ```typescript
+ * const tag = createLightweightTag({ name: 'v1.0.0', commitHash: 'abc123' })
+ * isLightweightTag(tag) // => true
+ * ```
  */
 export function isLightweightTag(tag: GitTag): boolean {
   return tag.type === 'lightweight'
@@ -331,6 +343,12 @@ export function buildTagName(packageName: string, version: string, format = '${p
  * @param a - First tag
  * @param b - Second tag
  * @returns Comparison result (-1, 0, or 1)
+ *
+ * @example
+ * ```typescript
+ * const tags = [tagV1, tagV2, tagV3]
+ * tags.sort(compareTagsByVersion) // => [tagV3, tagV2, tagV1]
+ * ```
  */
 export function compareTagsByVersion(a: GitTag, b: GitTag): number {
   const versionA = extractVersionFromTag(a.name)

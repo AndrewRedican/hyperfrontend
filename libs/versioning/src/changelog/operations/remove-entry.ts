@@ -50,6 +50,12 @@ export function removeEntry(changelog: Changelog, version: string, options?: Rem
  * @param versions - The versions to remove
  * @param options - Optional removal options
  * @returns A new changelog without the specified entries
+ *
+ * @example
+ * ```typescript
+ * const cleaned = removeEntries(changelog, ['0.1.0', '0.2.0'])
+ * // Pre-release versions removed from changelog
+ * ```
  */
 export function removeEntries(changelog: Changelog, versions: readonly string[], options?: RemoveEntryOptions): Changelog {
   const versionsSet = createSet(versions)
@@ -76,6 +82,15 @@ export function removeEntries(changelog: Changelog, versions: readonly string[],
  * @param changelog - The changelog to remove the unreleased entry from
  * @param options - Optional removal options
  * @returns A new changelog without the unreleased entry
+ *
+ * @example
+ * ```typescript
+ * const released = removeUnreleased(changelog)
+ * // Changelog without the unreleased entry
+ *
+ * // Silently ignore if not found
+ * const safe = removeUnreleased(changelog, { throwIfNotFound: false })
+ * ```
  */
 export function removeUnreleased(changelog: Changelog, options?: RemoveEntryOptions): Changelog {
   const unreleasedIndex = changelog.entries.findIndex((e) => e.unreleased)

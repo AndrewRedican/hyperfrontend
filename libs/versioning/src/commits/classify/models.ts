@@ -120,6 +120,12 @@ export interface ClassificationSummary {
  * Creates an empty classification summary.
  *
  * @returns A new ClassificationSummary with all counts at zero
+ *
+ * @example
+ * ```typescript
+ * const summary = createEmptyClassificationSummary()
+ * // => { total: 0, included: 0, excluded: 0, bySource: { 'direct-scope': 0, ... } }
+ * ```
  */
 export function createEmptyClassificationSummary(): ClassificationSummary {
   return {
@@ -148,6 +154,14 @@ export function createEmptyClassificationSummary(): ClassificationSummary {
  * @param options.touchedFiles - Files in the project modified by this commit
  * @param options.dependencyPath - Chain of dependencies leading to indirect inclusion
  * @returns A new ClassifiedCommit object
+ *
+ * @example
+ * ```typescript
+ * const commit = { type: 'feat', subject: 'add feature', footers: [], breaking: false, raw: '...' }
+ * const raw = { hash: 'abc123', subject: 'feat: add feature', message: '...' }
+ * const classified = createClassifiedCommit(commit, raw, 'direct-scope')
+ * // => { commit, raw, source: 'direct-scope', include: true, preserveScope: false, ... }
+ * ```
  */
 export function createClassifiedCommit(
   commit: ConventionalCommit,

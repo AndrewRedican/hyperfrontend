@@ -16,6 +16,18 @@ export const CREATE_TAG_STEP_ID = 'create-tag'
  * - tagName: Name of the created tag
  *
  * @returns A FlowStep that creates a git tag
+ *
+ * @example
+ * ```typescript
+ * import { createTagStep, executeStep } from '@hyperfrontend/versioning'
+ *
+ * const step = createTagStep()
+ * const result = await executeStep(step, context)
+ *
+ * // Get the created tag name
+ * console.log(result.stateUpdates?.tagName)
+ * // => 'my-lib@1.2.0'
+ * ```
  */
 export function createTagStep(): FlowStep {
   return createStep(
@@ -92,6 +104,18 @@ export function createTagStep(): FlowStep {
  * Creates a step that pushes the created tag to remote.
  *
  * @returns A FlowStep that pushes the git tag
+ *
+ * @example
+ * ```typescript
+ * import { createPushTagStep, executeStep } from '@hyperfrontend/versioning'
+ *
+ * const step = createPushTagStep()
+ * const result = await executeStep(step, context)
+ *
+ * // Tag is pushed to remote
+ * console.log(result.message)
+ * // => 'Pushed tag: my-lib@1.2.0'
+ * ```
  */
 export function createPushTagStep(): FlowStep {
   return createStep(

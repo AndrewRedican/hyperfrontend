@@ -44,6 +44,12 @@ export function filterEntries(changelog: Changelog, predicate: EntryPredicate): 
  *
  * @param changelog - The changelog to filter
  * @returns A new changelog with only entries containing breaking changes
+ *
+ * @example
+ * ```typescript
+ * const breaking = filterBreakingChanges(changelog)
+ * // Only entries containing breaking changes or items marked as breaking
+ * ```
  */
 export function filterBreakingChanges(changelog: Changelog): Changelog {
   return filterEntries(changelog, (entry) => {
@@ -60,6 +66,13 @@ export function filterBreakingChanges(changelog: Changelog): Changelog {
  * @param changelog - The changelog to filter
  * @param predicate - Function that returns true for sections to keep
  * @returns A new changelog with filtered sections
+ *
+ * @example
+ * ```typescript
+ * const userFacing = filterSections(changelog, (section) =>
+ *   ['features', 'fixes', 'breaking'].includes(section.type)
+ * )
+ * ```
  */
 export function filterSections(changelog: Changelog, predicate: SectionPredicate): Changelog {
   const newEntries = changelog.entries.map((entry) => ({
@@ -76,6 +89,12 @@ export function filterSections(changelog: Changelog, predicate: SectionPredicate
  * @param changelog - The changelog to filter
  * @param types - Section types to keep
  * @returns A new changelog with only specified section types
+ *
+ * @example
+ * ```typescript
+ * const userChanges = filterSectionTypes(changelog, ['features', 'fixes'])
+ * // Only features and fixes sections remain
+ * ```
  */
 export function filterSectionTypes(changelog: Changelog, types: readonly ChangelogSectionType[]): Changelog {
   const typeSet = createSet<string>(types)
@@ -89,6 +108,12 @@ export function filterSectionTypes(changelog: Changelog, types: readonly Changel
  * @param changelog - The changelog to filter
  * @param predicate - Function that returns true for items to keep
  * @returns A new changelog with filtered items
+ *
+ * @example
+ * ```typescript
+ * const withRefs = filterItems(changelog, (item) => item.references.length > 0)
+ * // Only items with issue/PR references
+ * ```
  */
 export function filterItems(changelog: Changelog, predicate: ItemPredicate): Changelog {
   const newEntries = changelog.entries.map((entry) => ({
@@ -108,6 +133,12 @@ export function filterItems(changelog: Changelog, predicate: ItemPredicate): Cha
  * @param changelog - The changelog to filter
  * @param scopes - Scopes to include
  * @returns A new changelog with only items matching the scopes
+ *
+ * @example
+ * ```typescript
+ * const apiChanges = filterByScope(changelog, ['api', 'core'])
+ * // Only items scoped to 'api' or 'core'
+ * ```
  */
 export function filterByScope(changelog: Changelog, scopes: readonly string[]): Changelog {
   const scopeSet = createSet(scopes)
@@ -124,6 +155,12 @@ export function filterByScope(changelog: Changelog, scopes: readonly string[]): 
  * @param changelog - The changelog to filter
  * @param scopes - Scopes to exclude
  * @returns A new changelog without items matching the scopes
+ *
+ * @example
+ * ```typescript
+ * const publicChanges = excludeByScope(changelog, ['internal', 'test'])
+ * // Items scoped to 'internal' or 'test' are removed
+ * ```
  */
 export function excludeByScope(changelog: Changelog, scopes: readonly string[]): Changelog {
   const scopeSet = createSet(scopes)

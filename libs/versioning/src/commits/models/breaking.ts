@@ -19,6 +19,12 @@ export interface BreakingChange {
  *
  * @param description - Optional description of the breaking change
  * @returns A BreakingChange object with source 'subject'
+ *
+ * @example
+ * ```typescript
+ * createBreakingFromSubject('remove deprecated API')
+ * // => { isBreaking: true, description: 'remove deprecated API', source: 'subject' }
+ * ```
  */
 export function createBreakingFromSubject(description?: string): BreakingChange {
   return {
@@ -33,6 +39,12 @@ export function createBreakingFromSubject(description?: string): BreakingChange 
  *
  * @param description - The description of the breaking change
  * @returns A BreakingChange object with source 'footer'
+ *
+ * @example
+ * ```typescript
+ * createBreakingFromFooter('The config format has changed')
+ * // => { isBreaking: true, description: 'The config format has changed', source: 'footer' }
+ * ```
  */
 export function createBreakingFromFooter(description: string): BreakingChange {
   return {
@@ -46,6 +58,12 @@ export function createBreakingFromFooter(description: string): BreakingChange {
  * Creates a non-breaking change.
  *
  * @returns A BreakingChange object indicating no breaking change
+ *
+ * @example
+ * ```typescript
+ * createNonBreaking()
+ * // => { isBreaking: false, source: 'none' }
+ * ```
  */
 export function createNonBreaking(): BreakingChange {
   return {
@@ -59,6 +77,18 @@ export function createNonBreaking(): BreakingChange {
  *
  * @param key - The footer key to check
  * @returns True if the key indicates a breaking change
+ *
+ * @example
+ * ```typescript
+ * isBreakingFooterKey('BREAKING CHANGE')
+ * // => true
+ *
+ * isBreakingFooterKey('BREAKING-CHANGE')
+ * // => true
+ *
+ * isBreakingFooterKey('Refs')
+ * // => false
+ * ```
  */
 export function isBreakingFooterKey(key: string): boolean {
   const normalized = hyphenToSpace(key.toUpperCase())

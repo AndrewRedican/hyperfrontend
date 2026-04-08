@@ -8,6 +8,15 @@ import { parseInt } from '@hyperfrontend/immutable-api-utils/built-in-copy/numbe
  *
  * @param heading - The heading string to parse
  * @returns An object containing the parsed version, date, and optional compareUrl
+ *
+ * @example
+ * ```typescript
+ * parseVersionFromHeading('[1.2.3] - 2024-01-15')
+ * // => { version: '1.2.3', date: '2024-01-15', compareUrl: undefined }
+ *
+ * parseVersionFromHeading('v2.0.0')
+ * // => { version: '2.0.0', date: null, compareUrl: undefined }
+ * ```
  */
 export function parseVersionFromHeading(heading: string): {
   /** The parsed version string */
@@ -238,6 +247,12 @@ function extractLink(str: string): {
  * @param text - The text to parse for commit references
  * @param baseUrl - Optional base URL for constructing commit links
  * @returns An array of parsed CommitRef objects
+ *
+ * @example
+ * ```typescript
+ * parseCommitRefs('Fixed bug (abc1234)', 'https://github.com/org/repo')
+ * // => [{ hash: 'abc1234', shortHash: 'abc1234', url: 'https://github.com/org/repo/commit/abc1234' }]
+ * ```
  */
 export function parseCommitRefs(text: string, baseUrl?: string): CommitRef[] {
   const refs: CommitRef[] = []
@@ -280,6 +295,12 @@ export function parseCommitRefs(text: string, baseUrl?: string): CommitRef[] {
  * @param text - The text to parse for issue references
  * @param baseUrl - Optional base URL for constructing issue links
  * @returns An array of parsed IssueRef objects
+ *
+ * @example
+ * ```typescript
+ * parseIssueRefs('Closes #42 and PR #123', 'https://github.com/org/repo')
+ * // => [{ number: 42, type: 'issue', url: '...' }, { number: 123, type: 'pull-request', url: '...' }]
+ * ```
  */
 export function parseIssueRefs(text: string, baseUrl?: string): IssueRef[] {
   const refs: IssueRef[] = []
@@ -323,6 +344,15 @@ export function parseIssueRefs(text: string, baseUrl?: string): IssueRef[] {
  *
  * @param text - The text to parse for scope
  * @returns An object with optional scope and the description
+ *
+ * @example
+ * ```typescript
+ * parseScopeFromItem('**api:** Add new endpoint')
+ * // => { scope: 'api', description: 'Add new endpoint' }
+ *
+ * parseScopeFromItem('Simple change without scope')
+ * // => { scope: undefined, description: 'Simple change without scope' }
+ * ```
  */
 export function parseScopeFromItem(text: string): {
   /** Optional scope extracted from the text */

@@ -39,6 +39,18 @@ export const ANALYZE_COMMITS_STEP_ID = 'analyze-commits'
  * - classificationResult: Full classification result with source attribution
  *
  * @returns A FlowStep that analyzes commits
+ *
+ * @example
+ * ```typescript
+ * import { createAnalyzeCommitsStep, executeStep } from '@hyperfrontend/versioning'
+ *
+ * const step = createAnalyzeCommitsStep()
+ * const result = await executeStep(step, context)
+ *
+ * // Access analyzed commits
+ * console.log(result.stateUpdates?.commits)
+ * // => [{ type: 'feat', subject: 'add feature' }, ...]
+ * ```
  */
 export function createAnalyzeCommitsStep(): FlowStep {
   return createStep(

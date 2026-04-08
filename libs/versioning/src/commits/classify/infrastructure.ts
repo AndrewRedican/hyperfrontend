@@ -261,6 +261,13 @@ export function buildInfrastructureMatcher(config: InfrastructureConfig): Infras
  * @param commit - Git commit to create context for
  * @param scope - Pre-parsed scope (optional, saves re-parsing)
  * @returns Match context for use with matchers
+ *
+ * @example
+ * ```typescript
+ * const commit = { hash: 'abc123', subject: 'chore(ci): update workflow', message: 'chore(ci): update workflow' }
+ * createMatchContext(commit, 'ci')
+ * // => { commit, scope: 'ci', subject: 'chore(ci): update workflow', message: 'chore(ci): update workflow' }
+ * ```
  */
 export function createMatchContext(commit: GitCommit, scope?: string): InfrastructureMatchContext {
   return {
@@ -278,6 +285,14 @@ export function createMatchContext(commit: GitCommit, scope?: string): Infrastru
  * @param matcher - Matcher function to apply
  * @param scope - Pre-parsed scope (optional)
  * @returns True if commit matches infrastructure criteria
+ *
+ * @example
+ * ```typescript
+ * const commit = { hash: 'abc123', subject: 'chore(ci): update workflow', message: '...' }
+ * const ciMatcher = (ctx) => ctx.scope === 'ci'
+ * evaluateInfrastructure(commit, ciMatcher, 'ci')
+ * // => true
+ * ```
  */
 export function evaluateInfrastructure(commit: GitCommit, matcher: InfrastructureMatcher, scope?: string): boolean {
   const context = createMatchContext(commit, scope)

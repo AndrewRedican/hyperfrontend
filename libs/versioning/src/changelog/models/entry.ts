@@ -77,6 +77,15 @@ export interface ChangelogEntry {
  * @param description - The description text of the change
  * @param options - Optional configuration for scope, commits, references, and breaking flag
  * @returns A new ChangelogItem object
+ *
+ * @example
+ * ```typescript
+ * const item = createChangelogItem('Add user authentication', {
+ *   scope: 'auth',
+ *   breaking: false,
+ *   references: [{ number: 42, type: 'issue' }],
+ * })
+ * ```
  */
 export function createChangelogItem(description: string, options?: Partial<Omit<ChangelogItem, 'description'>>): ChangelogItem {
   return {
@@ -97,6 +106,13 @@ export function createChangelogItem(description: string, options?: Partial<Omit<
  * @param heading - The display heading for the section
  * @param items - Optional array of changelog items in this section
  * @returns A new ChangelogSection object
+ *
+ * @example
+ * ```typescript
+ * const section = createChangelogSection('features', 'Added', [
+ *   createChangelogItem('New dashboard widget'),
+ * ])
+ * ```
  */
 export function createChangelogSection(
   type: ChangelogSectionType,
@@ -116,6 +132,14 @@ export function createChangelogSection(
  * @param version - The version string (e.g., '1.0.0')
  * @param options - Optional configuration for date, sections, and other properties
  * @returns A new ChangelogEntry object
+ *
+ * @example
+ * ```typescript
+ * const entry = createChangelogEntry('1.0.0', {
+ *   date: '2024-01-15',
+ *   sections: [createChangelogSection('features', 'Added', items)],
+ * })
+ * ```
  */
 export function createChangelogEntry(version: string, options?: Partial<Omit<ChangelogEntry, 'version'>>): ChangelogEntry {
   return {
@@ -133,6 +157,14 @@ export function createChangelogEntry(version: string, options?: Partial<Omit<Cha
  *
  * @param sections - Optional array of changelog sections
  * @returns A new ChangelogEntry object marked as unreleased
+ *
+ * @example
+ * ```typescript
+ * const unreleased = createUnreleasedEntry([
+ *   createChangelogSection('features', 'Added', [item]),
+ * ])
+ * // => { version: 'Unreleased', date: null, unreleased: true, sections: [...] }
+ * ```
  */
 export function createUnreleasedEntry(sections: readonly ChangelogSection[] = []): ChangelogEntry {
   return {

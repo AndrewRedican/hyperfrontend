@@ -190,6 +190,13 @@ const MAX_PATH_LENGTH = 4096
  *
  * @param path - Path to escape
  * @returns Safe path string
+ *
+ * @example
+ * ```typescript
+ * const safePath = escapeFilePath('src/utils/helper.ts')
+ * // => 'src/utils/helper.ts'
+ * escapeFilePath('file$name.ts') // throws - '$' is invalid
+ * ```
  */
 export function escapeFilePath(path: string): string {
   if (!path || typeof path !== 'string') {
@@ -237,6 +244,12 @@ const MAX_AUTHOR_LENGTH = 500
  *
  * @param author - Author to escape
  * @returns Safe author string
+ *
+ * @example
+ * ```typescript
+ * const safeAuthor = escapeAuthor('John Doe <john@example.com>')
+ * // => 'John Doe <john@example.com>'
+ * ```
  */
 export function escapeAuthor(author: string): string {
   if (!author || typeof author !== 'string') {

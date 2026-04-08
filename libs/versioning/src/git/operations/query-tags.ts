@@ -354,6 +354,13 @@ const MAX_PATTERN_LENGTH = 256
  *
  * @param pattern - Pattern to escape
  * @returns Safe pattern string
+ *
+ * @example
+ * ```typescript
+ * const safePattern = escapeGitTagPattern('@scope/package@')
+ * // => '@scope/package@'
+ * escapeGitTagPattern('v1.0.*') // throws - '*' is invalid
+ * ```
  */
 export function escapeGitTagPattern(pattern: string): string {
   if (!pattern || typeof pattern !== 'string') {

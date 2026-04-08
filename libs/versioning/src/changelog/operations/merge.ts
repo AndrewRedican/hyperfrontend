@@ -353,6 +353,12 @@ function sortEntriesByVersion(entries: readonly ChangelogEntry[]): ChangelogEntr
  * @param target - The changelog whose entries will be appended
  * @param position - Where to insert ('start' or 'end')
  * @returns A new changelog with combined entries
+ *
+ * @example
+ * ```typescript
+ * const combined = appendChangelog(mainChangelog, newChangelog, 'start')
+ * // newChangelog entries appear before mainChangelog entries
+ * ```
  */
 export function appendChangelog(source: Changelog, target: Changelog, position: 'start' | 'end' = 'end'): Changelog {
   const entries = position === 'start' ? [...target.entries, ...source.entries] : [...source.entries, ...target.entries]
@@ -369,6 +375,14 @@ export function appendChangelog(source: Changelog, target: Changelog, position: 
  * @param changelogs - Array of changelogs to combine
  * @param options - Optional merge options
  * @returns The combined changelog
+ *
+ * @example
+ * ```typescript
+ * const unified = combineChangelogs([pkg1Changelog, pkg2Changelog], {
+ *   strategy: 'merge-sections',
+ * })
+ * // All entries from both changelogs merged with conflict resolution
+ * ```
  */
 export function combineChangelogs(changelogs: readonly Changelog[], options?: MergeOptions): Changelog {
   if (changelogs.length === 0) {

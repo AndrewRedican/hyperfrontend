@@ -6,6 +6,13 @@ import type { SemVer } from '../models/version'
  *
  * @param version - The version to format
  * @returns The version string (e.g., "1.2.3-alpha.1+build.123")
+ *
+ * @example
+ * ```typescript
+ * format(parseVersionStrict('1.2.3')) // => '1.2.3'
+ * format(createSemVer({ major: 1, minor: 0, patch: 0, prerelease: ['beta', '1'] }))
+ * // => '1.0.0-beta.1'
+ * ```
  */
 export function format(version: SemVer): string {
   let result = `${version.major}.${version.minor}.${version.patch}`
@@ -26,6 +33,11 @@ export function format(version: SemVer): string {
  *
  * @param version - The version to format
  * @returns The version string (e.g., "1.2.3")
+ *
+ * @example
+ * ```typescript
+ * formatSimple(parseVersionStrict('1.2.3-beta.1+build')) // => '1.2.3'
+ * ```
  */
 export function formatSimple(version: SemVer): string {
   return `${version.major}.${version.minor}.${version.patch}`
@@ -36,6 +48,12 @@ export function formatSimple(version: SemVer): string {
  *
  * @param range - The range to format
  * @returns The range string
+ *
+ * @example
+ * ```typescript
+ * formatRange(parseRangeStrict('^1.0.0')) // => '^1.0.0'
+ * formatRange(createAnyRange()) // => '*'
+ * ```
  */
 export function formatRange(range: Range): string {
   if (range.raw) {
@@ -54,6 +72,12 @@ export function formatRange(range: Range): string {
  *
  * @param comparator - The comparator to format
  * @returns The comparator string (e.g., ">=1.0.0")
+ *
+ * @example
+ * ```typescript
+ * formatComparator(createComparator('>=', parseVersionStrict('1.0.0')))
+ * // => '>=1.0.0'
+ * ```
  */
 export function formatComparator(comparator: Comparator): string {
   const op = comparator.operator === '=' ? '' : comparator.operator

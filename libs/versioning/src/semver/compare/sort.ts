@@ -32,6 +32,13 @@ export function sortDescending(versions: readonly SemVer[]): SemVer[] {
  *
  * @param versions - Array of versions
  * @returns The maximum version, or null if array is empty
+ *
+ * @example
+ * ```typescript
+ * const versions = [parseVersionStrict('1.0.0'), parseVersionStrict('2.0.0')]
+ * max(versions) // => { major: 2, minor: 0, patch: 0, ... }
+ * max([]) // => null
+ * ```
  */
 export function max(versions: readonly SemVer[]): SemVer | null {
   if (versions.length === 0) return null
@@ -51,6 +58,13 @@ export function max(versions: readonly SemVer[]): SemVer | null {
  *
  * @param versions - Array of versions
  * @returns The minimum version, or null if array is empty
+ *
+ * @example
+ * ```typescript
+ * const versions = [parseVersionStrict('1.0.0'), parseVersionStrict('2.0.0')]
+ * min(versions) // => { major: 1, minor: 0, patch: 0, ... }
+ * min([]) // => null
+ * ```
  */
 export function min(versions: readonly SemVer[]): SemVer | null {
   if (versions.length === 0) return null

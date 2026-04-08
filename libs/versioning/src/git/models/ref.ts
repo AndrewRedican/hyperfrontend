@@ -161,6 +161,11 @@ function splitByChar(str: string, char: string): string[] {
  *
  * @param ref - Reference to check
  * @returns True if reference is a branch
+ *
+ * @example
+ * ```typescript
+ * isBranchRef({ type: 'branch', name: 'main' }) // => true
+ * ```
  */
 export function isBranchRef(ref: GitRef): boolean {
   return ref.type === 'branch'
@@ -171,6 +176,11 @@ export function isBranchRef(ref: GitRef): boolean {
  *
  * @param ref - Reference to check
  * @returns True if reference is a tag
+ *
+ * @example
+ * ```typescript
+ * isTagRef({ type: 'tag', name: 'v1.0.0' }) // => true
+ * ```
  */
 export function isTagRef(ref: GitRef): boolean {
   return ref.type === 'tag'
@@ -181,6 +191,11 @@ export function isTagRef(ref: GitRef): boolean {
  *
  * @param ref - Reference to check
  * @returns True if reference is a remote
+ *
+ * @example
+ * ```typescript
+ * isRemoteRef({ type: 'remote', name: 'main', remote: 'origin' }) // => true
+ * ```
  */
 export function isRemoteRef(ref: GitRef): boolean {
   return ref.type === 'remote'
@@ -191,6 +206,12 @@ export function isRemoteRef(ref: GitRef): boolean {
  *
  * @param ref - Reference to check
  * @returns True if reference is HEAD
+ *
+ * @example
+ * ```typescript
+ * isHeadRef({ type: 'head', name: 'HEAD' }) // => true
+ * isHeadRef({ type: 'branch', name: 'main', isHead: true }) // => true
+ * ```
  */
 export function isHeadRef(ref: GitRef): boolean {
   return ref.type === 'head' || ref.isHead === true
@@ -201,6 +222,12 @@ export function isHeadRef(ref: GitRef): boolean {
  *
  * @param ref - Reference to check
  * @returns Remote name or undefined
+ *
+ * @example
+ * ```typescript
+ * getRemote({ type: 'remote', name: 'main', remote: 'origin' }) // => 'origin'
+ * getRemote({ type: 'branch', name: 'main' }) // => undefined
+ * ```
  */
 export function getRemote(ref: GitRef): string | undefined {
   return ref.remote
@@ -242,6 +269,12 @@ export function buildRefName(type: GitRefType, name: string, remote?: string): s
  * @param a - First reference
  * @param b - Second reference
  * @returns Comparison result (-1, 0, or 1)
+ *
+ * @example
+ * ```typescript
+ * const refs = [refB, refA, refC]
+ * refs.sort(compareRefsByName) // => [refA, refB, refC]
+ * ```
  */
 export function compareRefsByName(a: GitRef, b: GitRef): number {
   if (a.name < b.name) return -1
@@ -255,6 +288,12 @@ export function compareRefsByName(a: GitRef, b: GitRef): number {
  * @param refs - References to filter
  * @param type - Type to filter by
  * @returns Filtered references
+ *
+ * @example
+ * ```typescript
+ * const branches = filterRefsByType(allRefs, 'branch')
+ * const tags = filterRefsByType(allRefs, 'tag')
+ * ```
  */
 export function filterRefsByType(refs: readonly GitRef[], type: GitRefType): readonly GitRef[] {
   const result: GitRef[] = []
@@ -272,6 +311,12 @@ export function filterRefsByType(refs: readonly GitRef[], type: GitRefType): rea
  * @param refs - References to filter
  * @param remote - Remote name to filter by
  * @returns Filtered references
+ *
+ * @example
+ * ```typescript
+ * const originRefs = filterRefsByRemote(remoteRefs, 'origin')
+ * const upstreamRefs = filterRefsByRemote(remoteRefs, 'upstream')
+ * ```
  */
 export function filterRefsByRemote(refs: readonly GitRef[], remote: string): readonly GitRef[] {
   const result: GitRef[] = []
