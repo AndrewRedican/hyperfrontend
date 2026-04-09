@@ -2,12 +2,15 @@
 
 import type { ApiFilterState } from './api-search-filter'
 import type { TypeDocOutput, TypeDocNode } from './types'
-import { useState, useMemo, useCallback } from 'react'
+import { useState, useMemo, useCallback, useEffect } from 'react'
 import { values } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
+import { createSet } from '@hyperfrontend/immutable-api-utils/built-in-copy/set'
+import { useHashNavigation } from '../../hooks/use-hash-navigation'
 import { ApiSearchFilter, defaultFilters } from './api-search-filter'
 import { FunctionSignature } from './function-signature'
 import { ModuleGroupedView, hasModules } from './module-grouped-view'
 import { TypeDefinition } from './type-definition'
+import { buildNodeLookup, resolveReference } from './type-utils'
 import { ReflectionKind } from './types'
 
 type ViewMode = 'flat' | 'grouped'
@@ -19,9 +22,19 @@ interface ApiReferenceProps {
 export function ApiReference({ data }: ApiReferenceProps) {
   const [searchQuery, setSearchQuery] = useState('')
   const [filters, setFilters] = useState<ApiFilterState>(defaultFilters)
+  const [initialHash, setInitialHash] = useState('')
 
   const isMultiModule = useMemo(() => hasModules(data), [data])
   const [viewMode, setViewMode] = useState<ViewMode>(isMultiModule ? 'grouped' : 'flat')
+
+  useHashNavigation({ enabled: viewMode !== 'grouped' })
+
+  useEffect(() => {
+    const hash = window.location.hash
+    if (hash) {
+      setInitialHash(hash)
+    }
+  }, [])
 
   const allExports = useMemo(() => {
     if (!data.children) return []
@@ -29,11 +42,18 @@ export function ApiReference({ data }: ApiReferenceProps) {
     const hasModules = data.children.some((child) => child.kind === ReflectionKind.Module)
 
     if (hasModules) {
+      const lookup = buildNodeLookup(data)
       const exports: Array<TypeDocNode & { sourceModule?: string }> = []
+      const seenIds = createSet<number>()
+
       for (const module of data.children) {
         if (module.kind === ReflectionKind.Module && module.children) {
           for (const child of module.children) {
-            exports.push({ ...child, sourceModule: module.name })
+            const resolved = resolveReference(child, lookup)
+            if (!seenIds.has(resolved.id)) {
+              seenIds.add(resolved.id)
+              exports.push({ ...resolved, sourceModule: module.name })
+            }
           }
         }
       }
@@ -132,7 +152,7 @@ export function ApiReference({ data }: ApiReferenceProps) {
           />
         </div>
 
-        <ModuleGroupedView data={data} searchQuery={searchQuery} />
+        <ModuleGroupedView data={data} searchQuery={searchQuery} initialHash={initialHash} />
       </div>
     )
   }

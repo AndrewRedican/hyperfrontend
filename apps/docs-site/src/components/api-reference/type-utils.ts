@@ -1,4 +1,6 @@
-import type { TypeRef, TextBlock, Comment } from './types'
+import type { TypeRef, TextBlock, Comment, TypeDocOutput, TypeDocNode } from './types'
+import { createMap } from '@hyperfrontend/immutable-api-utils/built-in-copy/map'
+import { ReflectionKind } from './types'
 
 /**
  * Render a TypeRef to a human-readable type string
@@ -169,4 +171,49 @@ export function getParamDescriptions(comment: Comment | undefined): Record<strin
       }
     })
   return result
+}
+
+/**
+ * Builds a lookup map of node ID to TypeDocNode.
+ * Traverses the entire TypeDoc output tree to index all nodes.
+ *
+ * @param data - TypeDoc output data to index
+ * @returns Map from node ID to TypeDocNode
+ */
+export function buildNodeLookup(data: TypeDocOutput): Map<number, TypeDocNode> {
+  const lookup = createMap<number, TypeDocNode>()
+
+  /**
+   * Recursively traverses a TypeDocNode and its children to populate the lookup map.
+   *
+   * @param node - The node to traverse and index
+   */
+  function traverse(node: TypeDocNode) {
+    lookup.set(node.id, node)
+    if (node.children) {
+      node.children.forEach(traverse)
+    }
+  }
+
+  if (data.children) {
+    data.children.forEach(traverse)
+  }
+
+  return lookup
+}
+
+/**
+ * Resolves a Reference node to its target declaration.
+ * If the node is a Reference (kind 4194304), returns the target declaration.
+ * Otherwise returns the node unchanged.
+ *
+ * @param node - The node to potentially resolve
+ * @param lookup - Map of node IDs to TypeDocNodes
+ * @returns The resolved target declaration or the original node
+ */
+export function resolveReference(node: TypeDocNode, lookup: Map<number, TypeDocNode>): TypeDocNode {
+  if (node.kind === ReflectionKind.Reference && node.target !== undefined) {
+    return lookup.get(node.target) ?? node
+  }
+  return node
 }

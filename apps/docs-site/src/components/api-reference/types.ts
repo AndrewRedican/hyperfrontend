@@ -23,7 +23,7 @@ export interface TypeDocNode {
   /** Element name */
   name: string
   /** Node variant type */
-  variant: 'declaration' | 'signature' | 'param' | 'typeParam'
+  variant: 'declaration' | 'signature' | 'param' | 'typeParam' | 'reference'
   /** Reflection kind number */
   kind: number
   /** Reflection flags */
@@ -40,6 +40,8 @@ export interface TypeDocNode {
   defaultValue?: string
   /** Documentation comment */
   comment?: Comment
+  /** Target node ID for 'reference' variant (re-exported symbols) */
+  target?: number
 }
 
 /** Function or method signature */

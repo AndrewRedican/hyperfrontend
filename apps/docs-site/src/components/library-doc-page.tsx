@@ -1,6 +1,7 @@
 import type { TypeDocOutput } from '@/components/api-reference'
 import { ApiReference } from '@/components/api-reference'
 import { Breadcrumb } from '@/components/breadcrumb'
+import { CodeBlock } from '@/components/code-block'
 import { removeBadges, transformLinks } from '@/lib/content'
 import { getLibraryReadme, getLibraryArchitecture, getLibraryApi } from '@/lib/docs-loader'
 import { markdownToHtml } from '@/lib/markdown'
@@ -134,11 +135,7 @@ export async function LibraryDocPage({ title, packageName, slug, fallbackDescrip
 
       <section className="mt-10 rounded-xl border border-slate-200 bg-slate-50 p-6 dark:border-slate-700 dark:bg-slate-800/50">
         <h2 className="text-lg font-bold text-slate-900 dark:text-white">Quick Install</h2>
-        <div className="mt-4 overflow-hidden rounded-lg border border-slate-200 bg-slate-900 dark:border-slate-700">
-          <pre className="overflow-x-auto p-4">
-            <code className="text-sm text-slate-100">npm install {packageName}</code>
-          </pre>
-        </div>
+        <CodeBlock code={`npm install ${packageName}`} />
       </section>
     </>
   )

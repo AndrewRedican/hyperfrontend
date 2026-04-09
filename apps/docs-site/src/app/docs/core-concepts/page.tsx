@@ -1,19 +1,21 @@
 import { Breadcrumb } from '@/components/breadcrumb'
+import { DocsContentWrapper } from '@/components/docs-content-wrapper'
+import { H1, H2 } from '@/components/heading-with-anchor'
 import Link from 'next/link'
 
 export default function CoreConceptsPage() {
   return (
-    <>
+    <DocsContentWrapper>
       <Breadcrumb />
 
-      <h1 className="font-display text-4xl font-bold tracking-tight text-slate-900 dark:text-white">Core Concepts</h1>
+      <H1 className="font-display text-4xl font-bold tracking-tight text-slate-900 dark:text-white">Core Concepts</H1>
       <p className="mt-4 text-lg text-slate-600 dark:text-slate-400">
         Understand the fundamental building blocks of HyperFrontend architecture.
       </p>
 
       {/* Features */}
       <section className="mt-12">
-        <h2 className="text-2xl font-bold text-slate-900 dark:text-white">Features</h2>
+        <H2 className="text-2xl font-bold text-slate-900 dark:text-white">Features</H2>
         <p className="mt-3 text-slate-600 dark:text-slate-400">
           A <strong className="text-slate-900 dark:text-white">feature</strong> is a self-contained micro-frontend that runs in isolation.
           Each feature bundles its own framework, dependencies, and assets. Features communicate with their host through a standardized
@@ -28,7 +30,7 @@ export default function CoreConceptsPage() {
 
       {/* Host Applications */}
       <section className="mt-12">
-        <h2 className="text-2xl font-bold text-slate-900 dark:text-white">Host Applications</h2>
+        <H2 className="text-2xl font-bold text-slate-900 dark:text-white">Host Applications</H2>
         <p className="mt-3 text-slate-600 dark:text-slate-400">
           A <strong className="text-slate-900 dark:text-white">host</strong> (or shell) is the parent application that loads and
           orchestrates features. The host manages feature lifecycle, routes messages, and provides shared context like authentication.
@@ -51,7 +53,7 @@ export default function CoreConceptsPage() {
 
       {/* Contracts */}
       <section className="mt-12">
-        <h2 className="text-2xl font-bold text-slate-900 dark:text-white">Contracts</h2>
+        <H2 className="text-2xl font-bold text-slate-900 dark:text-white">Contracts</H2>
         <p className="mt-3 text-slate-600 dark:text-slate-400">
           <strong className="text-slate-900 dark:text-white">Contracts</strong> define the messages a feature can send and receive. They
           specify <code className="rounded bg-slate-100 px-1 py-0.5 text-slate-700 dark:bg-slate-800 dark:text-slate-300">emitted</code>{' '}
@@ -80,7 +82,7 @@ export default function CoreConceptsPage() {
 
       {/* Channels */}
       <section className="mt-12">
-        <h2 className="text-2xl font-bold text-slate-900 dark:text-white">Channels</h2>
+        <H2 className="text-2xl font-bold text-slate-900 dark:text-white">Channels</H2>
         <p className="mt-3 text-slate-600 dark:text-slate-400">
           A <strong className="text-slate-900 dark:text-white">channel</strong> is a bidirectional communication pipe between a host and a
           feature. Channels provide reliable message delivery with ordering guarantees.
@@ -107,7 +109,7 @@ export default function CoreConceptsPage() {
 
       {/* Isolation */}
       <section className="mt-12">
-        <h2 className="text-2xl font-bold text-slate-900 dark:text-white">Isolation Model</h2>
+        <H2 className="text-2xl font-bold text-slate-900 dark:text-white">Isolation Model</H2>
         <p className="mt-3 text-slate-600 dark:text-slate-400">
           Features typically run in separate browser contexts (iframes, windows, or web workers) with{' '}
           <strong className="text-slate-900 dark:text-white">strict isolation</strong>:
@@ -136,7 +138,7 @@ export default function CoreConceptsPage() {
 
       {/* Architecture Diagram Placeholder */}
       <section className="mt-12 rounded-xl border border-slate-200 bg-slate-50 p-6 dark:border-slate-700 dark:bg-slate-800/50">
-        <h2 className="text-lg font-bold text-slate-900 dark:text-white">Architecture Overview</h2>
+        <H2 className="text-lg font-bold text-slate-900 dark:text-white">Architecture Overview</H2>
         <div className="mt-4 flex items-center justify-center rounded-lg border border-dashed border-slate-300 bg-white p-8 dark:border-slate-600 dark:bg-slate-900">
           <p className="text-sm text-slate-500 dark:text-slate-400">
             See the full{' '}
@@ -150,7 +152,7 @@ export default function CoreConceptsPage() {
 
       {/* Next Steps */}
       <section className="mt-12">
-        <h2 className="text-lg font-bold text-slate-900 dark:text-white">Continue Learning</h2>
+        <H2 className="text-lg font-bold text-slate-900 dark:text-white">Continue Learning</H2>
         <div className="mt-4 grid gap-4 sm:grid-cols-2">
           <Link
             href="/docs/libraries/nexus"
@@ -172,7 +174,7 @@ export default function CoreConceptsPage() {
           </Link>
         </div>
       </section>
-    </>
+    </DocsContentWrapper>
   )
 }
 

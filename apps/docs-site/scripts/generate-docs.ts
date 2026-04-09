@@ -37,9 +37,11 @@ function containsDocsUrl(line: string): boolean {
 }
 
 const WORKSPACE_ROOT = resolve(__dirname, '../../..')
+const DOCS_SITE_ROOT = resolve(__dirname, '..')
 const OUTPUT_DIR = resolve(__dirname, '../.generated')
 const DOCS_OUTPUT = join(OUTPUT_DIR, 'docs')
 const API_OUTPUT = join(OUTPUT_DIR, 'api')
+const TYPEDOC_BIN = join(DOCS_SITE_ROOT, 'node_modules', '.bin', 'typedoc')
 
 /** Configuration for a library to document */
 interface LibraryConfig {
@@ -447,7 +449,7 @@ function generateTypeDoc(lib: LibraryConfig): boolean {
   const hasTsconfig = existsSync(tsconfigPath)
 
   try {
-    const args = ['typedoc', '--json', outputPath, '--excludePrivate', '--excludeInternal', '--excludeNotDocumented', 'false']
+    const args = ['--json', outputPath, '--excludePrivate', '--excludeInternal', '--excludeNotDocumented', 'false']
 
     if (hasTsconfig) {
       args.push('--tsconfig', tsconfigPath)
@@ -456,11 +458,11 @@ function generateTypeDoc(lib: LibraryConfig): boolean {
     args.push(...entryPoints)
 
     logger.log(`  → Running TypeDoc for ${lib.name} (${discoveredEntryPoints.length} entry points)`)
-    execFileSync('npx', args, { cwd: WORKSPACE_ROOT, stdio: 'pipe' })
+    execFileSync(TYPEDOC_BIN, args, { cwd: WORKSPACE_ROOT, stdio: 'pipe' })
     return true
   } catch (error) {
     const errorMsg = error instanceof Error ? error.message : String(error)
-    logger.log(`  ⚠ TypeDoc failed for ${lib.name}: ${errorMsg.slice(0, 200)}`)
+    logger.log(`  ⚠ TypeDoc failed for ${lib.name}: ${errorMsg}`)
     return false
   }
 }

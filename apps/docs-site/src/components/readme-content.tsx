@@ -1,5 +1,10 @@
 'use client'
 
+import { useEffect, useRef, useCallback } from 'react'
+import { createSet } from '@hyperfrontend/immutable-api-utils/built-in-copy/set'
+import { setTimeout, clearTimeout } from '@hyperfrontend/immutable-api-utils/built-in-copy/timers'
+import { useHashNavigation } from '../hooks/use-hash-navigation'
+import { generateSlug } from '../lib/markdown'
 import { MermaidDiagram } from './mermaid-diagram'
 
 interface ReadmeContentProps {
@@ -7,9 +12,226 @@ interface ReadmeContentProps {
   mermaidDiagrams: { id: string; chart: string }[]
 }
 
+/**
+ * Injects copy buttons into all `<pre>` code blocks within a container.
+ * Handles clipboard copy with visual feedback.
+ * @param container
+ */
+function injectCopyButtons(container: HTMLElement): () => void {
+  const preBlocks = container.querySelectorAll('pre')
+  const cleanupFns: (() => void)[] = []
+
+  preBlocks.forEach((pre) => {
+    if (pre.querySelector('[data-copy-btn]')) return
+
+    const btn = document.createElement('button')
+    btn.setAttribute('data-copy-btn', 'true')
+    btn.setAttribute('type', 'button')
+    btn.setAttribute('aria-label', 'Copy code to clipboard')
+    btn.className = [
+      'absolute',
+      'right-2',
+      'top-2',
+      'rounded',
+      'bg-slate-700',
+      'px-2',
+      'py-1',
+      'text-xs',
+      'font-medium',
+      'text-slate-300',
+      'opacity-0',
+      'transition-opacity',
+      'hover:bg-slate-600',
+      'hover:text-white',
+      'focus:opacity-100',
+      'focus:outline-none',
+      'focus:ring-2',
+      'focus:ring-primary-500',
+      'group-hover:opacity-100',
+    ].join(' ')
+    btn.textContent = 'Copy'
+
+    const handleClick = async () => {
+      const code = pre.querySelector('code')?.textContent ?? pre.textContent ?? ''
+      try {
+        await navigator.clipboard.writeText(code)
+        btn.textContent = 'Copied!'
+        btn.classList.add('bg-green-600')
+        btn.classList.remove('bg-slate-700')
+        setTimeout(() => {
+          btn.textContent = 'Copy'
+          btn.classList.remove('bg-green-600')
+          btn.classList.add('bg-slate-700')
+        }, 2000)
+      } catch {
+        btn.textContent = 'Failed'
+        setTimeout(() => {
+          btn.textContent = 'Copy'
+        }, 2000)
+      }
+    }
+
+    btn.addEventListener('click', handleClick)
+
+    pre.style.position = 'relative'
+    pre.classList.add('group')
+    pre.appendChild(btn)
+
+    cleanupFns.push(() => {
+      btn.removeEventListener('click', handleClick)
+      btn.remove()
+    })
+  })
+
+  return () => {
+    cleanupFns.forEach((fn) => fn())
+  }
+}
+
+/**
+ * Injects anchor IDs and clickable anchor links into all headings within a container.
+ * Clicking the anchor copies the link and updates the URL hash.
+ * @param container - The container element with rendered HTML content
+ */
+function injectHeadingAnchors(container: HTMLElement): () => void {
+  const headings = container.querySelectorAll('h1, h2, h3, h4, h5, h6')
+  const cleanupFns: (() => void)[] = []
+  const usedIds = createSet<string>()
+
+  headings.forEach((heading) => {
+    if (heading.querySelector('[data-anchor-link]')) return
+
+    const text = heading.textContent ?? ''
+    let id = generateSlug(text)
+
+    if (usedIds.has(id)) {
+      let suffix = 1
+      while (usedIds.has(`${id}-${suffix}`)) {
+        suffix++
+      }
+      id = `${id}-${suffix}`
+    }
+    usedIds.add(id)
+
+    heading.id = id
+
+    heading.classList.add('group', 'flex', 'items-center', 'gap-2')
+
+    const anchor = document.createElement('a')
+    anchor.setAttribute('data-anchor-link', 'true')
+    anchor.setAttribute('href', `#${id}`)
+    anchor.setAttribute('aria-label', 'Copy link to this section')
+    anchor.setAttribute('title', 'Copy link to this section')
+    anchor.className = [
+      'opacity-0',
+      'group-hover:opacity-100',
+      'transition-opacity',
+      'duration-200',
+      'text-slate-400',
+      'hover:text-primary-600',
+      'dark:text-slate-500',
+      'dark:hover:text-primary-400',
+      'shrink-0',
+      'no-underline',
+      'font-mono',
+      'text-sm',
+    ].join(' ')
+    anchor.textContent = '§'
+
+    let copiedTimer: ReturnType<typeof setTimeout> | null = null
+
+    const handleClick = async (e: MouseEvent) => {
+      e.preventDefault()
+      e.stopPropagation()
+
+      const url = `${window.location.origin}${window.location.pathname}#${id}`
+      window.history.pushState(null, '', `#${id}`)
+
+      try {
+        await navigator.clipboard.writeText(url)
+        anchor.textContent = '✓'
+        anchor.setAttribute('title', 'Link copied!')
+        if (copiedTimer) clearTimeout(copiedTimer)
+        copiedTimer = setTimeout(() => {
+          anchor.textContent = '§'
+          anchor.setAttribute('title', 'Copy link to this section')
+        }, 2000)
+      } catch {
+        const textArea = document.createElement('textarea')
+        textArea.value = url
+        textArea.style.position = 'fixed'
+        textArea.style.left = '-9999px'
+        document.body.appendChild(textArea)
+        textArea.select()
+        try {
+          document.execCommand('copy')
+          anchor.textContent = '✓'
+          anchor.setAttribute('title', 'Link copied!')
+          if (copiedTimer) clearTimeout(copiedTimer)
+          copiedTimer = setTimeout(() => {
+            anchor.textContent = '§'
+            anchor.setAttribute('title', 'Copy link to this section')
+          }, 2000)
+        } catch {
+          // Silent fail
+        }
+        document.body.removeChild(textArea)
+      }
+    }
+
+    anchor.addEventListener('click', handleClick)
+    heading.appendChild(anchor)
+
+    cleanupFns.push(() => {
+      anchor.removeEventListener('click', handleClick)
+      if (copiedTimer) clearTimeout(copiedTimer)
+      anchor.remove()
+      heading.removeAttribute('id')
+      heading.classList.remove('group', 'flex', 'items-center', 'gap-2')
+    })
+  })
+
+  return () => {
+    cleanupFns.forEach((fn) => fn())
+  }
+}
+
 export function ReadmeContent({ html, mermaidDiagrams }: ReadmeContentProps) {
+  const containerRef = useRef<HTMLDivElement>(null)
+
+  const triggerHashNavigation = useCallback(() => {
+    const hash = window.location.hash
+    if (hash) {
+      const element = document.querySelector(hash)
+      if (element) {
+        element.scrollIntoView({ behavior: 'smooth', block: 'start' })
+        element.classList.add('ring-2', 'ring-primary-500', 'ring-offset-2')
+        setTimeout(() => {
+          element.classList.remove('ring-2', 'ring-primary-500', 'ring-offset-2')
+        }, 2000)
+      }
+    }
+  }, [])
+
+  useHashNavigation()
+
+  useEffect(() => {
+    const container = containerRef.current
+    if (!container) return
+
+    const cleanupCopyBtns = injectCopyButtons(container)
+    const cleanupAnchors = injectHeadingAnchors(container)
+
+    triggerHashNavigation()
+
+    return () => {
+      cleanupCopyBtns()
+      cleanupAnchors()
+    }
+  }, [html, triggerHashNavigation])
+
   return (
-    <div className="readme-content">
+    <div className="readme-content" ref={containerRef}>
       {/* Main HTML content */}
       <div
         className="prose prose-slate max-w-none dark:prose-invert
@@ -22,8 +244,10 @@ export function ReadmeContent({ html, mermaidDiagrams }: ReadmeContentProps) {
           prose-code:rounded prose-code:bg-slate-100 prose-code:px-1.5 prose-code:py-0.5
           prose-code:font-normal prose-code:text-slate-700 prose-code:before:content-none prose-code:after:content-none
           dark:prose-code:bg-slate-800 dark:prose-code:text-slate-300
-          prose-pre:bg-slate-900 prose-pre:border prose-pre:border-slate-200 dark:prose-pre:border-slate-700
+          prose-pre:relative prose-pre:bg-slate-900 prose-pre:border prose-pre:border-slate-200 dark:prose-pre:border-slate-700
           prose-pre:rounded-lg prose-pre:overflow-x-auto
+          [&_pre_code]:bg-transparent [&_pre_code]:p-0 [&_pre_code]:text-slate-100
+          [&_pre_code]:text-sm [&_pre_code]:leading-relaxed
           prose-table:border prose-table:border-slate-200 dark:prose-table:border-slate-700
           prose-th:bg-slate-50 dark:prose-th:bg-slate-800 prose-th:px-4 prose-th:py-3 prose-th:text-left prose-th:font-semibold
           prose-td:px-4 prose-td:py-3 prose-td:border-t prose-td:border-slate-200 dark:prose-td:border-slate-700
