@@ -1,7 +1,7 @@
 'use client'
 
 import type { TypeDocNode } from './types'
-import { CopyButton } from './copy-button'
+import { AnchorLink } from './anchor-link'
 import { ExampleBlock } from './example-block'
 import { ParameterList } from './parameter-list'
 import { TypeLink } from './type-link'
@@ -33,17 +33,17 @@ export function FunctionSignature({ node }: FunctionSignatureProps) {
   return (
     <div className="py-4 border-b border-slate-200 dark:border-slate-800 last:border-0" id={`api-${node.name}`}>
       <div className="flex items-start gap-2 group">
+        <AnchorLink id={`api-${node.name}`} />
         <span className="px-2 py-0.5 text-xs font-medium rounded bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-400 shrink-0">
           function
         </span>
         <h3 className="font-mono text-base font-semibold text-slate-900 dark:text-white break-all flex-1">{signatureString}</h3>
-        <CopyButton text={signatureString} className="opacity-0 group-hover:opacity-100 transition-opacity shrink-0" />
       </div>
 
       {description && <p className="mt-2 text-sm text-slate-600 dark:text-slate-400">{description}</p>}
 
       {signature.parameters && signature.parameters.length > 0 && (
-        <ParameterList parameters={signature.parameters} paramDescriptions={paramDescriptions} />
+        <ParameterList parameters={signature.parameters} paramDescriptions={paramDescriptions} parentName={node.name} />
       )}
 
       {returnsDescription && (

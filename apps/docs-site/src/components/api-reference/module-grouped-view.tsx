@@ -1,8 +1,9 @@
 'use client'
 
 import type { TypeDocOutput, TypeDocNode } from './types'
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect, useCallback } from 'react'
 import { createSet } from '@hyperfrontend/immutable-api-utils/built-in-copy/set'
+import { requestAnimationFrame, setTimeout } from '@hyperfrontend/immutable-api-utils/built-in-copy/timers'
 import { FunctionSignature } from './function-signature'
 import { TypeDefinition } from './type-definition'
 import { ReflectionKind } from './types'
@@ -10,6 +11,7 @@ import { ReflectionKind } from './types'
 interface ModuleGroupedViewProps {
   data: TypeDocOutput
   searchQuery?: string
+  initialHash?: string
 }
 
 interface ModuleGroup {
@@ -24,8 +26,9 @@ interface ModuleGroup {
  * @param props - Component props
  * @param props.data - TypeDoc output data to render
  * @param props.searchQuery - Optional search query to filter exports
+ * @param props.initialHash - Optional URL hash to auto-expand module and scroll to element
  */
-export function ModuleGroupedView({ data, searchQuery = '' }: ModuleGroupedViewProps) {
+export function ModuleGroupedView({ data, searchQuery = '', initialHash }: ModuleGroupedViewProps) {
   const [expandedModules, setExpandedModules] = useState<Set<string>>(createSet())
 
   const modules = useMemo(() => {
@@ -74,6 +77,88 @@ export function ModuleGroupedView({ data, searchQuery = '' }: ModuleGroupedViewP
   const collapseAll = () => {
     setExpandedModules(createSet())
   }
+
+  /**
+   * Scrolls to an element and highlights it temporarily
+   */
+  const scrollToElement = useCallback((hash: string) => {
+    requestAnimationFrame(() => {
+      const element = document.querySelector(hash)
+      if (element) {
+        element.scrollIntoView({ behavior: 'smooth', block: 'start' })
+        element.classList.add('ring-2', 'ring-primary-500', 'ring-offset-2')
+        setTimeout(() => {
+          element.classList.remove('ring-2', 'ring-primary-500', 'ring-offset-2')
+        }, 2000)
+      }
+    })
+  }, [])
+
+  useEffect(() => {
+    if (!initialHash) return
+
+    const match = initialHash.match(/^#api-([^-]+)/)
+    if (!match) return
+
+    const targetName = match[1]
+
+    for (const module of modules) {
+      const hasTarget = module.exports.some((exp) => exp.name === targetName)
+      if (hasTarget) {
+        setExpandedModules((prev) => {
+          const next = createSet(prev)
+          next.add(module.name)
+          return next
+        })
+
+        requestAnimationFrame(() => {
+          requestAnimationFrame(() => {
+            scrollToElement(initialHash)
+          })
+        })
+        break
+      }
+    }
+  }, [initialHash, modules, scrollToElement])
+
+  useEffect(() => {
+    const handleHashChange = () => {
+      const hash = window.location.hash
+      if (!hash) return
+
+      const element = document.querySelector(hash)
+      if (element) {
+        scrollToElement(hash)
+        return
+      }
+
+      const match = hash.match(/^#api-([^-]+)/)
+      if (!match) return
+
+      const targetName = match[1]
+
+      for (const module of modules) {
+        const hasTarget = module.exports.some((exp) => exp.name === targetName)
+        if (hasTarget) {
+          setExpandedModules((prev) => {
+            const next = createSet(prev)
+            next.add(module.name)
+            return next
+          })
+
+          requestAnimationFrame(() => {
+            requestAnimationFrame(() => {
+              scrollToElement(hash)
+            })
+          })
+          break
+        }
+      }
+    }
+
+    window.addEventListener('hashchange', handleHashChange)
+    return () => window.removeEventListener('hashchange', handleHashChange)
+  }, [modules, scrollToElement])
 
   if (modules.length === 0) {
     return <div className="text-sm text-slate-500 dark:text-slate-400 py-4">No modules found in this package.</div>
