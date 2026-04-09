@@ -1,5 +1,7 @@
 'use client'
 
+import { useEffect, useRef } from 'react'
+import { setTimeout } from '@hyperfrontend/immutable-api-utils/built-in-copy/timers'
 import { MermaidDiagram } from './mermaid-diagram'
 
 interface ReadmeContentProps {
@@ -7,9 +9,95 @@ interface ReadmeContentProps {
   mermaidDiagrams: { id: string; chart: string }[]
 }
 
+/**
+ * Injects copy buttons into all `<pre>` code blocks within a container.
+ * Handles clipboard copy with visual feedback.
+ * @param container
+ */
+function injectCopyButtons(container: HTMLElement): () => void {
+  const preBlocks = container.querySelectorAll('pre')
+  const cleanupFns: (() => void)[] = []
+
+  preBlocks.forEach((pre) => {
+    if (pre.querySelector('[data-copy-btn]')) return
+
+    const btn = document.createElement('button')
+    btn.setAttribute('data-copy-btn', 'true')
+    btn.setAttribute('type', 'button')
+    btn.setAttribute('aria-label', 'Copy code to clipboard')
+    btn.className = [
+      'absolute',
+      'right-2',
+      'top-2',
+      'rounded',
+      'bg-slate-700',
+      'px-2',
+      'py-1',
+      'text-xs',
+      'font-medium',
+      'text-slate-300',
+      'opacity-0',
+      'transition-opacity',
+      'hover:bg-slate-600',
+      'hover:text-white',
+      'focus:opacity-100',
+      'focus:outline-none',
+      'focus:ring-2',
+      'focus:ring-primary-500',
+      'group-hover:opacity-100',
+    ].join(' ')
+    btn.textContent = 'Copy'
+
+    const handleClick = async () => {
+      const code = pre.querySelector('code')?.textContent ?? pre.textContent ?? ''
+      try {
+        await navigator.clipboard.writeText(code)
+        btn.textContent = 'Copied!'
+        btn.classList.add('bg-green-600')
+        btn.classList.remove('bg-slate-700')
+        setTimeout(() => {
+          btn.textContent = 'Copy'
+          btn.classList.remove('bg-green-600')
+          btn.classList.add('bg-slate-700')
+        }, 2000)
+      } catch {
+        btn.textContent = 'Failed'
+        setTimeout(() => {
+          btn.textContent = 'Copy'
+        }, 2000)
+      }
+    }
+
+    btn.addEventListener('click', handleClick)
+
+    pre.style.position = 'relative'
+    pre.classList.add('group')
+    pre.appendChild(btn)
+
+    cleanupFns.push(() => {
+      btn.removeEventListener('click', handleClick)
+      btn.remove()
+    })
+  })
+
+  return () => {
+    cleanupFns.forEach((fn) => fn())
+  }
+}
+
 export function ReadmeContent({ html, mermaidDiagrams }: ReadmeContentProps) {
+  const containerRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    const container = containerRef.current
+    if (!container) return
+
+    const cleanup = injectCopyButtons(container)
+    return cleanup
+  }, [html])
+
   return (
-    <div className="readme-content">
+    <div className="readme-content" ref={containerRef}>
       {/* Main HTML content */}
       <div
         className="prose prose-slate max-w-none dark:prose-invert

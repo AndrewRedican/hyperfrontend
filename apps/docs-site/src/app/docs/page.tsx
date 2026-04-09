@@ -1,4 +1,5 @@
 import { Breadcrumb } from '@/components/breadcrumb'
+import { CodeBlock } from '@/components/code-block'
 import Link from 'next/link'
 
 export default function DocsPage() {
@@ -122,19 +123,6 @@ export default function DocsPage() {
         </div>
       </section>
     </>
-  )
-}
-
-function CodeBlock({ code, language }: { code: string; language: string }) {
-  return (
-    <div className="mt-4 overflow-hidden rounded-lg border border-slate-200 bg-slate-900 dark:border-slate-700">
-      <div className="flex items-center justify-between border-b border-slate-700 px-4 py-2">
-        <span className="text-xs text-slate-400">{language}</span>
-      </div>
-      <pre className="overflow-x-auto p-4">
-        <code className="text-sm text-slate-100">{code}</code>
-      </pre>
-    </div>
   )
 }
 

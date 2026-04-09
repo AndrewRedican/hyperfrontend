@@ -1,4 +1,5 @@
 import { Breadcrumb } from '@/components/breadcrumb'
+import { CodeBlock } from '@/components/code-block'
 import Link from 'next/link'
 
 export default function QuickStartPage() {
@@ -91,15 +92,5 @@ export default function QuickStartPage() {
         </div>
       </section>
     </>
-  )
-}
-
-function CodeBlock({ code }: { code: string }) {
-  return (
-    <div className="mt-3 overflow-hidden rounded-lg border border-slate-200 bg-slate-900 dark:border-slate-700">
-      <pre className="overflow-x-auto p-4">
-        <code className="text-sm text-slate-100">{code}</code>
-      </pre>
-    </div>
   )
 }
