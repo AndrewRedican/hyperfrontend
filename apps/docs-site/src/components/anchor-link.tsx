@@ -4,16 +4,29 @@ import { useState, useEffect, useCallback } from 'react'
 import { setTimeout, clearTimeout } from '@hyperfrontend/immutable-api-utils/built-in-copy/timers'
 
 interface AnchorLinkProps {
+  /**
+   * The anchor ID to link to (without the # prefix)
+   */
   id: string
+  /**
+   * Additional CSS classes
+   */
   className?: string
 }
 
 /**
  * A clickable anchor link icon (§) that appears on hover.
  * Clicking copies the anchor URL to clipboard and updates the URL hash.
- * @param props - Component props
- * @param props.id - The anchor ID to link to (without the # prefix)
- * @param props.className - Additional CSS classes
+ * @param root0
+ * @param root0.id
+ * @param root0.className
+ * @example
+ * ```tsx
+ * <h2 id="installation" className="group flex items-center gap-2">
+ *   Installation
+ *   <AnchorLink id="installation" />
+ * </h2>
+ * ```
  */
 export function AnchorLink({ id, className = '' }: AnchorLinkProps) {
   const [copied, setCopied] = useState(false)
@@ -68,6 +81,7 @@ export function AnchorLink({ id, className = '' }: AnchorLinkProps) {
         text-slate-400 hover:text-primary-600
         dark:text-slate-500 dark:hover:text-primary-400
         shrink-0
+        no-underline
         ${className}
       `}
     >

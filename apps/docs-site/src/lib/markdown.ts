@@ -74,3 +74,26 @@ export function processMarkdownTables(html: string): string {
     .replace(/<tbody>/g, '<tbody class="divide-y divide-slate-200 bg-white dark:divide-slate-700 dark:bg-slate-900">')
     .replace(/<td>/g, '<td class="whitespace-nowrap px-4 py-3 text-sm text-slate-600 dark:text-slate-400">')
 }
+
+/**
+ * Generate a URL-friendly slug from a heading text.
+ * Follows the same algorithm as GitHub's anchor generation.
+ *
+ * @param text - The heading text to convert to a slug
+ * @returns A URL-safe slug string
+ *
+ * @example
+ * ```typescript
+ * generateSlug('Installation Guide')  // 'installation-guide'
+ * generateSlug('API Reference')       // 'api-reference'
+ * generateSlug('Getting Started!')    // 'getting-started'
+ * ```
+ */
+export function generateSlug(text: string): string {
+  return text
+    .toLowerCase()
+    .replace(/[^a-z0-9\s-]/g, '')
+    .replace(/\s+/g, '-')
+    .replace(/-+/g, '-')
+    .replace(/^-|-$/g, '')
+}

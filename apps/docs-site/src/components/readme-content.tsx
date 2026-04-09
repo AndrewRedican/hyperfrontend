@@ -1,7 +1,10 @@
 'use client'
 
-import { useEffect, useRef } from 'react'
-import { setTimeout } from '@hyperfrontend/immutable-api-utils/built-in-copy/timers'
+import { useEffect, useRef, useCallback } from 'react'
+import { createSet } from '@hyperfrontend/immutable-api-utils/built-in-copy/set'
+import { setTimeout, clearTimeout } from '@hyperfrontend/immutable-api-utils/built-in-copy/timers'
+import { useHashNavigation } from '../hooks/use-hash-navigation'
+import { generateSlug } from '../lib/markdown'
 import { MermaidDiagram } from './mermaid-diagram'
 
 interface ReadmeContentProps {
@@ -85,16 +88,147 @@ function injectCopyButtons(container: HTMLElement): () => void {
   }
 }
 
+/**
+ * Injects anchor IDs and clickable anchor links into all headings within a container.
+ * Clicking the anchor copies the link and updates the URL hash.
+ * @param container - The container element with rendered HTML content
+ */
+function injectHeadingAnchors(container: HTMLElement): () => void {
+  const headings = container.querySelectorAll('h1, h2, h3, h4, h5, h6')
+  const cleanupFns: (() => void)[] = []
+  const usedIds = createSet<string>()
+
+  headings.forEach((heading) => {
+    if (heading.querySelector('[data-anchor-link]')) return
+
+    const text = heading.textContent ?? ''
+    let id = generateSlug(text)
+
+    if (usedIds.has(id)) {
+      let suffix = 1
+      while (usedIds.has(`${id}-${suffix}`)) {
+        suffix++
+      }
+      id = `${id}-${suffix}`
+    }
+    usedIds.add(id)
+
+    heading.id = id
+
+    heading.classList.add('group', 'flex', 'items-center', 'gap-2')
+
+    const anchor = document.createElement('a')
+    anchor.setAttribute('data-anchor-link', 'true')
+    anchor.setAttribute('href', `#${id}`)
+    anchor.setAttribute('aria-label', 'Copy link to this section')
+    anchor.setAttribute('title', 'Copy link to this section')
+    anchor.className = [
+      'opacity-0',
+      'group-hover:opacity-100',
+      'transition-opacity',
+      'duration-200',
+      'text-slate-400',
+      'hover:text-primary-600',
+      'dark:text-slate-500',
+      'dark:hover:text-primary-400',
+      'shrink-0',
+      'no-underline',
+      'font-mono',
+      'text-sm',
+    ].join(' ')
+    anchor.textContent = '§'
+
+    let copiedTimer: ReturnType<typeof setTimeout> | null = null
+
+    const handleClick = async (e: MouseEvent) => {
+      e.preventDefault()
+      e.stopPropagation()
+
+      const url = `${window.location.origin}${window.location.pathname}#${id}`
+      window.history.pushState(null, '', `#${id}`)
+
+      try {
+        await navigator.clipboard.writeText(url)
+        anchor.textContent = '✓'
+        anchor.setAttribute('title', 'Link copied!')
+        if (copiedTimer) clearTimeout(copiedTimer)
+        copiedTimer = setTimeout(() => {
+          anchor.textContent = '§'
+          anchor.setAttribute('title', 'Copy link to this section')
+        }, 2000)
+      } catch {
+        const textArea = document.createElement('textarea')
+        textArea.value = url
+        textArea.style.position = 'fixed'
+        textArea.style.left = '-9999px'
+        document.body.appendChild(textArea)
+        textArea.select()
+        try {
+          document.execCommand('copy')
+          anchor.textContent = '✓'
+          anchor.setAttribute('title', 'Link copied!')
+          if (copiedTimer) clearTimeout(copiedTimer)
+          copiedTimer = setTimeout(() => {
+            anchor.textContent = '§'
+            anchor.setAttribute('title', 'Copy link to this section')
+          }, 2000)
+        } catch {
+          // Silent fail
+        }
+        document.body.removeChild(textArea)
+      }
+    }
+
+    anchor.addEventListener('click', handleClick)
+    heading.appendChild(anchor)
+
+    cleanupFns.push(() => {
+      anchor.removeEventListener('click', handleClick)
+      if (copiedTimer) clearTimeout(copiedTimer)
+      anchor.remove()
+      heading.removeAttribute('id')
+      heading.classList.remove('group', 'flex', 'items-center', 'gap-2')
+    })
+  })
+
+  return () => {
+    cleanupFns.forEach((fn) => fn())
+  }
+}
+
 export function ReadmeContent({ html, mermaidDiagrams }: ReadmeContentProps) {
   const containerRef = useRef<HTMLDivElement>(null)
+
+  const triggerHashNavigation = useCallback(() => {
+    const hash = window.location.hash
+    if (hash) {
+      const element = document.querySelector(hash)
+      if (element) {
+        element.scrollIntoView({ behavior: 'smooth', block: 'start' })
+        element.classList.add('ring-2', 'ring-primary-500', 'ring-offset-2')
+        setTimeout(() => {
+          element.classList.remove('ring-2', 'ring-primary-500', 'ring-offset-2')
+        }, 2000)
+      }
+    }
+  }, [])
+
+  useHashNavigation()
 
   useEffect(() => {
     const container = containerRef.current
     if (!container) return
 
-    const cleanup = injectCopyButtons(container)
-    return cleanup
-  }, [html])
+    const cleanupCopyBtns = injectCopyButtons(container)
+    const cleanupAnchors = injectHeadingAnchors(container)
+
+    triggerHashNavigation()
+
+    return () => {
+      cleanupCopyBtns()
+      cleanupAnchors()
+    }
+  }, [html, triggerHashNavigation])
 
   return (
     <div className="readme-content" ref={containerRef}>

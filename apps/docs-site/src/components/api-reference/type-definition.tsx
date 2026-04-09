@@ -1,7 +1,7 @@
 'use client'
 
 import type { TypeDocNode } from './types'
-import { AnchorLink } from './anchor-link'
+import { AnchorLink } from '../anchor-link'
 import { TypeLink } from './type-link'
 import { renderType, getDescription } from './type-utils'
 import { ReflectionKind } from './types'

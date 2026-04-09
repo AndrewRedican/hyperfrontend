@@ -5,7 +5,7 @@ import type { TypeDocOutput, TypeDocNode } from './types'
 import { useState, useMemo, useCallback, useEffect } from 'react'
 import { values } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
 import { createSet } from '@hyperfrontend/immutable-api-utils/built-in-copy/set'
-import { requestAnimationFrame, setTimeout } from '@hyperfrontend/immutable-api-utils/built-in-copy/timers'
+import { useHashNavigation } from '../../hooks/use-hash-navigation'
 import { ApiSearchFilter, defaultFilters } from './api-search-filter'
 import { FunctionSignature } from './function-signature'
 import { ModuleGroupedView, hasModules } from './module-grouped-view'
@@ -19,26 +19,6 @@ interface ApiReferenceProps {
   data: TypeDocOutput
 }
 
-/**
- * Scrolls to an element matching the URL hash, if present.
- * Handles initial page load hash navigation.
- */
-function scrollToHash() {
-  const hash = window.location.hash
-  if (hash) {
-    requestAnimationFrame(() => {
-      const element = document.querySelector(hash)
-      if (element) {
-        element.scrollIntoView({ behavior: 'smooth', block: 'start' })
-        element.classList.add('ring-2', 'ring-primary-500', 'ring-offset-2')
-        setTimeout(() => {
-          element.classList.remove('ring-2', 'ring-primary-500', 'ring-offset-2')
-        }, 2000)
-      }
-    })
-  }
-}
-
 export function ApiReference({ data }: ApiReferenceProps) {
   const [searchQuery, setSearchQuery] = useState('')
   const [filters, setFilters] = useState<ApiFilterState>(defaultFilters)
@@ -47,22 +27,14 @@ export function ApiReference({ data }: ApiReferenceProps) {
   const isMultiModule = useMemo(() => hasModules(data), [data])
   const [viewMode, setViewMode] = useState<ViewMode>(isMultiModule ? 'grouped' : 'flat')
 
+  useHashNavigation({ enabled: viewMode !== 'grouped' })
+
   useEffect(() => {
     const hash = window.location.hash
     if (hash) {
       setInitialHash(hash)
     }
   }, [])
-
-  useEffect(() => {
-    if (viewMode === 'grouped') return
-
-    scrollToHash()
-
-    const handleHashChange = () => scrollToHash()
-    window.addEventListener('hashchange', handleHashChange)
-    return () => window.removeEventListener('hashchange', handleHashChange)
-  }, [viewMode])
 
   const allExports = useMemo(() => {
     if (!data.children) return []

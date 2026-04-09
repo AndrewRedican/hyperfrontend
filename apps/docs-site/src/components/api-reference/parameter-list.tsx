@@ -1,7 +1,7 @@
 'use client'
 
 import type { Parameter } from './types'
-import { AnchorLink } from './anchor-link'
+import { AnchorLink } from '../anchor-link'
 import { TypeLink } from './type-link'
 import { getDescription } from './type-utils'
 

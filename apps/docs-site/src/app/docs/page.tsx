@@ -1,21 +1,23 @@
 import { Breadcrumb } from '@/components/breadcrumb'
 import { CodeBlock } from '@/components/code-block'
+import { DocsContentWrapper } from '@/components/docs-content-wrapper'
+import { H1, H2 } from '@/components/heading-with-anchor'
 import Link from 'next/link'
 
 export default function DocsPage() {
   return (
-    <>
+    <DocsContentWrapper>
       <Breadcrumb />
 
       {/* Page Title */}
-      <h1 className="font-display text-4xl font-bold tracking-tight text-slate-900 dark:text-white">Getting Started</h1>
+      <H1 className="font-display text-4xl font-bold tracking-tight text-slate-900 dark:text-white">Getting Started</H1>
       <p className="mt-4 text-lg text-slate-600 dark:text-slate-400">
         Set up hyperfrontend and create your first micro-frontend feature in minutes.
       </p>
 
       {/* Prerequisites */}
       <section className="mt-12">
-        <h2 className="text-2xl font-bold text-slate-900 dark:text-white">Prerequisites</h2>
+        <H2 className="text-2xl font-bold text-slate-900 dark:text-white">Prerequisites</H2>
         <p className="mt-3 text-slate-600 dark:text-slate-400">Before you begin, ensure you have:</p>
         <ul className="mt-4 space-y-2 text-slate-600 dark:text-slate-400">
           <li className="flex items-start gap-2">
@@ -46,7 +48,7 @@ export default function DocsPage() {
 
       {/* Installation */}
       <section className="mt-12">
-        <h2 className="text-2xl font-bold text-slate-900 dark:text-white">Installation</h2>
+        <H2 className="text-2xl font-bold text-slate-900 dark:text-white">Installation</H2>
         <p className="mt-3 text-slate-600 dark:text-slate-400">Add the hyperfrontend features plugin to your Nx workspace:</p>
         <CodeBlock language="bash" code="npx nx add @hyperfrontend/features" />
         <p className="mt-4 text-sm text-slate-500 dark:text-slate-400">
@@ -57,7 +59,7 @@ export default function DocsPage() {
 
       {/* Creating a Feature */}
       <section className="mt-12">
-        <h2 className="text-2xl font-bold text-slate-900 dark:text-white">Creating a Feature</h2>
+        <H2 className="text-2xl font-bold text-slate-900 dark:text-white">Creating a Feature</H2>
         <p className="mt-3 text-slate-600 dark:text-slate-400">Initialize an existing application as a hyperfrontend feature:</p>
         <CodeBlock language="bash" code="npx nx g @hyperfrontend/features:init" />
         <p className="mt-4 text-slate-600 dark:text-slate-400">The generator will prompt you for:</p>
@@ -75,7 +77,7 @@ export default function DocsPage() {
 
       {/* Consuming a Feature */}
       <section className="mt-12">
-        <h2 className="text-2xl font-bold text-slate-900 dark:text-white">Consuming a Feature</h2>
+        <H2 className="text-2xl font-bold text-slate-900 dark:text-white">Consuming a Feature</H2>
         <p className="mt-3 text-slate-600 dark:text-slate-400">Add a feature to a host application:</p>
         <CodeBlock language="bash" code="npx nx g @hyperfrontend/features:add" />
         <p className="mt-4 text-slate-600 dark:text-slate-400">The generator will prompt you for:</p>
@@ -90,7 +92,7 @@ export default function DocsPage() {
 
       {/* Testing */}
       <section className="mt-12">
-        <h2 className="text-2xl font-bold text-slate-900 dark:text-white">Testing Your Feature</h2>
+        <H2 className="text-2xl font-bold text-slate-900 dark:text-white">Testing Your Feature</H2>
         <p className="mt-3 text-slate-600 dark:text-slate-400">Run the playground host to see how your feature loads:</p>
         <CodeBlock language="bash" code="npx nx serve <your-feature-name>" />
         <p className="mt-4 text-slate-600 dark:text-slate-400">
@@ -100,7 +102,7 @@ export default function DocsPage() {
 
       {/* What's Next */}
       <section className="mt-12 rounded-xl border border-slate-200 bg-slate-50 p-6 dark:border-slate-700 dark:bg-slate-800/50">
-        <h2 className="text-xl font-bold text-slate-900 dark:text-white">What&apos;s Next?</h2>
+        <H2 className="text-xl font-bold text-slate-900 dark:text-white">What&apos;s Next?</H2>
         <div className="mt-4 grid gap-4 sm:grid-cols-2">
           <Link
             href="/architecture"
@@ -122,7 +124,7 @@ export default function DocsPage() {
           </Link>
         </div>
       </section>
-    </>
+    </DocsContentWrapper>
   )
 }
 

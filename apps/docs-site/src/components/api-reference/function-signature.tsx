@@ -1,7 +1,7 @@
 'use client'
 
 import type { TypeDocNode } from './types'
-import { AnchorLink } from './anchor-link'
+import { AnchorLink } from '../anchor-link'
 import { ExampleBlock } from './example-block'
 import { ParameterList } from './parameter-list'
 import { TypeLink } from './type-link'
