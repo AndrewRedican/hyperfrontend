@@ -1,12 +1,15 @@
 import { Breadcrumb } from '@/components/breadcrumb'
+import { CodeBlock } from '@/components/code-block'
+import { DocsContentWrapper } from '@/components/docs-content-wrapper'
+import { H1, H2 } from '@/components/heading-with-anchor'
 import Link from 'next/link'
 
 export default function QuickStartPage() {
   return (
-    <>
+    <DocsContentWrapper>
       <Breadcrumb />
 
-      <h1 className="font-display text-4xl font-bold tracking-tight text-slate-900 dark:text-white">Quick Start</h1>
+      <H1 className="font-display text-4xl font-bold tracking-tight text-slate-900 dark:text-white">Quick Start</H1>
       <p className="mt-4 text-lg text-slate-600 dark:text-slate-400">Get a micro-frontend feature running in under 5 minutes.</p>
 
       {/* Step 1 */}
@@ -15,7 +18,9 @@ export default function QuickStartPage() {
           <span className="flex h-8 w-8 items-center justify-center rounded-full bg-primary-100 font-semibold text-primary-700 dark:bg-primary-900/50 dark:text-primary-300">
             1
           </span>
-          <h2 className="text-2xl font-bold text-slate-900 dark:text-white">Add the plugin</h2>
+          <H2 id="add-the-plugin" className="text-2xl font-bold text-slate-900 dark:text-white">
+            Add the plugin
+          </H2>
         </div>
         <div className="mt-4 pl-11">
           <p className="text-slate-600 dark:text-slate-400">In your Nx workspace, install the HyperFrontend plugin:</p>
@@ -29,7 +34,9 @@ export default function QuickStartPage() {
           <span className="flex h-8 w-8 items-center justify-center rounded-full bg-primary-100 font-semibold text-primary-700 dark:bg-primary-900/50 dark:text-primary-300">
             2
           </span>
-          <h2 className="text-2xl font-bold text-slate-900 dark:text-white">Initialize a feature</h2>
+          <H2 id="initialize-a-feature" className="text-2xl font-bold text-slate-900 dark:text-white">
+            Initialize a feature
+          </H2>
         </div>
         <div className="mt-4 pl-11">
           <p className="text-slate-600 dark:text-slate-400">Convert an existing application into a HyperFrontend feature:</p>
@@ -44,7 +51,9 @@ export default function QuickStartPage() {
           <span className="flex h-8 w-8 items-center justify-center rounded-full bg-primary-100 font-semibold text-primary-700 dark:bg-primary-900/50 dark:text-primary-300">
             3
           </span>
-          <h2 className="text-2xl font-bold text-slate-900 dark:text-white">Add to a host</h2>
+          <H2 id="add-to-a-host" className="text-2xl font-bold text-slate-900 dark:text-white">
+            Add to a host
+          </H2>
         </div>
         <div className="mt-4 pl-11">
           <p className="text-slate-600 dark:text-slate-400">Integrate the feature into your host application:</p>
@@ -58,7 +67,9 @@ export default function QuickStartPage() {
           <span className="flex h-8 w-8 items-center justify-center rounded-full bg-primary-100 font-semibold text-primary-700 dark:bg-primary-900/50 dark:text-primary-300">
             4
           </span>
-          <h2 className="text-2xl font-bold text-slate-900 dark:text-white">Run it</h2>
+          <H2 id="run-it" className="text-2xl font-bold text-slate-900 dark:text-white">
+            Run it
+          </H2>
         </div>
         <div className="mt-4 pl-11">
           <p className="text-slate-600 dark:text-slate-400">Start your host application and see the feature load:</p>
@@ -68,7 +79,7 @@ export default function QuickStartPage() {
 
       {/* Next Steps */}
       <section className="mt-12 rounded-xl border border-slate-200 bg-slate-50 p-6 dark:border-slate-700 dark:bg-slate-800/50">
-        <h2 className="text-xl font-bold text-slate-900 dark:text-white">Next Steps</h2>
+        <H2 className="text-xl font-bold text-slate-900 dark:text-white">Next Steps</H2>
         <div className="mt-4 grid gap-4 sm:grid-cols-2">
           <Link
             href="/docs/core-concepts"
@@ -90,16 +101,6 @@ export default function QuickStartPage() {
           </Link>
         </div>
       </section>
-    </>
-  )
-}
-
-function CodeBlock({ code }: { code: string }) {
-  return (
-    <div className="mt-3 overflow-hidden rounded-lg border border-slate-200 bg-slate-900 dark:border-slate-700">
-      <pre className="overflow-x-auto p-4">
-        <code className="text-sm text-slate-100">{code}</code>
-      </pre>
-    </div>
+    </DocsContentWrapper>
   )
 }

@@ -1,7 +1,7 @@
 'use client'
 
 import type { TypeDocNode } from './types'
-import { CopyButton } from './copy-button'
+import { AnchorLink } from '../anchor-link'
 import { TypeLink } from './type-link'
 import { renderType, getDescription } from './type-utils'
 import { ReflectionKind } from './types'
@@ -23,30 +23,12 @@ export function TypeDefinition({ node }: TypeDefinitionProps) {
       ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/50 dark:text-amber-400'
       : 'bg-teal-100 text-teal-700 dark:bg-teal-900/50 dark:text-teal-400'
 
-  const getCopyableDefinition = () => {
-    if (isTypeAlias && node.type) {
-      return `type ${node.name} = ${renderType(node.type)}`
-    }
-    if (isInterface || isClass) {
-      const props = node.children
-        ?.filter((child) => child.kind === ReflectionKind.Property)
-        .map((p) => {
-          const optional = p.flags?.isOptional ? '?' : ''
-          const readonly = p.flags?.isReadonly ? 'readonly ' : ''
-          return `  ${readonly}${p.name}${optional}: ${renderType(p.type)}`
-        })
-        .join('\n')
-      return `${kindLabel} ${node.name} {\n${props || ''}\n}`
-    }
-    return node.name
-  }
-
   return (
     <div className="py-4 border-b border-slate-200 dark:border-slate-800 last:border-0" id={`api-${node.name}`}>
       <div className="flex items-start gap-2 group">
+        <AnchorLink id={`api-${node.name}`} />
         <span className={`px-2 py-0.5 text-xs font-medium rounded ${kindColor} shrink-0`}>{kindLabel}</span>
         <h3 className="font-mono text-base font-semibold text-slate-900 dark:text-white flex-1">{node.name}</h3>
-        <CopyButton text={getCopyableDefinition()} className="opacity-0 group-hover:opacity-100 transition-opacity shrink-0" />
       </div>
 
       {description && <p className="mt-2 text-sm text-slate-600 dark:text-slate-400">{description}</p>}
@@ -71,9 +53,11 @@ export function TypeDefinition({ node }: TypeDefinitionProps) {
                 const propDescription = getDescription(property.comment)
                 const isOptional = property.flags?.isOptional
                 const isReadonly = property.flags?.isReadonly
+                const propId = `api-${node.name}-prop-${property.name}`
 
                 return (
-                  <div key={property.id} className="flex items-start gap-2 text-sm">
+                  <div key={property.id} id={propId} className="flex items-start gap-2 text-sm group/prop">
+                    <AnchorLink id={propId} className="opacity-0 group-hover/prop:opacity-100" />
                     <code className="font-mono text-slate-900 dark:text-white">
                       {isReadonly && <span className="text-slate-400">readonly </span>}
                       {property.name}
@@ -103,13 +87,17 @@ export function TypeDefinition({ node }: TypeDefinitionProps) {
                 const params = sig.parameters?.map((p) => `${p.name}: ${renderType(p.type)}`).join(', ') || ''
                 const returnType = renderType(sig.type)
                 const methodDescription = getDescription(sig.comment)
+                const methodId = `api-${node.name}-method-${method.name}`
 
                 return (
-                  <div key={method.id} className="text-sm">
-                    <code className="font-mono text-slate-900 dark:text-white">
-                      {method.name}({params}): <span className="text-emerald-600 dark:text-emerald-400">{returnType}</span>
-                    </code>
-                    {methodDescription && <p className="text-slate-500 ml-4 mt-1">{methodDescription}</p>}
+                  <div key={method.id} id={methodId} className="text-sm group/method">
+                    <div className="flex items-start gap-2">
+                      <AnchorLink id={methodId} className="opacity-0 group-hover/method:opacity-100" />
+                      <code className="font-mono text-slate-900 dark:text-white">
+                        {method.name}({params}): <span className="text-emerald-600 dark:text-emerald-400">{returnType}</span>
+                      </code>
+                    </div>
+                    {methodDescription && <p className="text-slate-500 ml-6 mt-1">{methodDescription}</p>}
                   </div>
                 )
               })}
