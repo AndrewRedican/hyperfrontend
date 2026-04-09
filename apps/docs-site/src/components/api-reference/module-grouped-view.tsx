@@ -6,6 +6,7 @@ import { createSet } from '@hyperfrontend/immutable-api-utils/built-in-copy/set'
 import { requestAnimationFrame, setTimeout } from '@hyperfrontend/immutable-api-utils/built-in-copy/timers'
 import { FunctionSignature } from './function-signature'
 import { TypeDefinition } from './type-definition'
+import { buildNodeLookup, resolveReference } from './type-utils'
 import { ReflectionKind } from './types'
 
 interface ModuleGroupedViewProps {
@@ -31,6 +32,8 @@ interface ModuleGroup {
 export function ModuleGroupedView({ data, searchQuery = '', initialHash }: ModuleGroupedViewProps) {
   const [expandedModules, setExpandedModules] = useState<Set<string>>(createSet())
 
+  const nodeLookup = useMemo(() => buildNodeLookup(data), [data])
+
   const modules = useMemo(() => {
     if (!data.children) return []
 
@@ -38,12 +41,14 @@ export function ModuleGroupedView({ data, searchQuery = '', initialHash }: Modul
 
     for (const child of data.children) {
       if (child.kind === ReflectionKind.Module && child.children) {
-        const exports = child.children.filter((c) => {
-          if (searchQuery) {
-            return c.name.toLowerCase().includes(searchQuery.toLowerCase())
-          }
-          return true
-        })
+        const exports = child.children
+          .map((c) => resolveReference(c, nodeLookup))
+          .filter((c) => {
+            if (searchQuery) {
+              return c.name.toLowerCase().includes(searchQuery.toLowerCase())
+            }
+            return true
+          })
 
         if (exports.length > 0) {
           groups.push({
@@ -56,7 +61,7 @@ export function ModuleGroupedView({ data, searchQuery = '', initialHash }: Modul
     }
 
     return groups.sort((a, b) => a.name.localeCompare(b.name))
-  }, [data, searchQuery])
+  }, [data, searchQuery, nodeLookup])
 
   const toggleModule = (moduleName: string) => {
     setExpandedModules((prev) => {
@@ -207,6 +212,7 @@ export function ModuleGroupedView({ data, searchQuery = '', initialHash }: Modul
           const interfaces = module.exports.filter((e) => e.kind === ReflectionKind.Interface)
           const types = module.exports.filter((e) => e.kind === ReflectionKind.TypeAlias)
           const variables = module.exports.filter((e) => e.kind === ReflectionKind.Variable)
+          const namespaces = module.exports.filter((e) => e.kind === ReflectionKind.Namespace)
 
           return (
             <div
@@ -233,6 +239,7 @@ export function ModuleGroupedView({ data, searchQuery = '', initialHash }: Modul
                     interfaces={interfaces.length}
                     types={types.length}
                     variables={variables.length}
+                    namespaces={namespaces.length}
                   />
                 </div>
               </button>
@@ -304,6 +311,19 @@ export function ModuleGroupedView({ data, searchQuery = '', initialHash }: Modul
                       </div>
                     </div>
                   )}
+
+                  {namespaces.length > 0 && (
+                    <div className="mb-6 last:mb-0">
+                      <h5 className="text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2 flex items-center gap-2">
+                        <span className="text-orange-500">⧫</span> Namespaces
+                      </h5>
+                      <div className="divide-y divide-slate-200 dark:divide-slate-800">
+                        {namespaces.map((ns) => (
+                          <NamespaceSection key={ns.id} node={ns} />
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
             </div>
@@ -351,9 +371,10 @@ interface ExportBadgesProps {
   interfaces: number
   types: number
   variables: number
+  namespaces: number
 }
 
-function ExportBadges({ functions, classes, interfaces, types, variables }: ExportBadgesProps) {
+function ExportBadges({ functions, classes, interfaces, types, variables, namespaces }: ExportBadgesProps) {
   return (
     <div className="flex flex-wrap gap-1">
       {functions > 0 && (
@@ -378,6 +399,50 @@ function ExportBadges({ functions, classes, interfaces, types, variables }: Expo
         <span className="px-1.5 py-0.5 text-xs rounded bg-green-100 text-green-700 dark:bg-green-900/50 dark:text-green-400">
           {variables} var
         </span>
+      )}
+      {namespaces > 0 && (
+        <span className="px-1.5 py-0.5 text-xs rounded bg-orange-100 text-orange-700 dark:bg-orange-900/50 dark:text-orange-400">
+          {namespaces} ns
+        </span>
+      )}
+    </div>
+  )
+}
+
+interface NamespaceSectionProps {
+  node: TypeDocNode
+}
+
+/**
+ * Renders a namespace with its children collapsed by default.
+ * Namespaces are created by `export * as name from './module'` patterns.
+ * @param root0
+ * @param root0.node
+ */
+function NamespaceSection({ node }: NamespaceSectionProps) {
+  const [isExpanded, setIsExpanded] = useState(false)
+
+  const childCount = node.children?.length ?? 0
+
+  return (
+    <div className="py-3 first:pt-0" id={`api-${node.name}`}>
+      <button onClick={() => setIsExpanded(!isExpanded)} className="w-full flex items-center justify-between text-left group">
+        <div className="flex items-center gap-2">
+          <ChevronIcon expanded={isExpanded} />
+          <code className="text-sm font-semibold text-slate-900 dark:text-white font-mono">{node.name}</code>
+          <span className="text-xs text-slate-500 dark:text-slate-400">({childCount} exports)</span>
+        </div>
+      </button>
+
+      {isExpanded && node.children && (
+        <div className="mt-3 ml-6 pl-4 border-l-2 border-slate-200 dark:border-slate-700">
+          {node.children.map((child) => {
+            if (child.kind === ReflectionKind.Function) {
+              return <FunctionSignature key={child.id} node={child} />
+            }
+            return <TypeDefinition key={child.id} node={child} />
+          })}
+        </div>
       )}
     </div>
   )
