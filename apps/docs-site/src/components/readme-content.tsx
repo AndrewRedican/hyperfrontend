@@ -22,8 +22,10 @@ export function ReadmeContent({ html, mermaidDiagrams }: ReadmeContentProps) {
           prose-code:rounded prose-code:bg-slate-100 prose-code:px-1.5 prose-code:py-0.5
           prose-code:font-normal prose-code:text-slate-700 prose-code:before:content-none prose-code:after:content-none
           dark:prose-code:bg-slate-800 dark:prose-code:text-slate-300
-          prose-pre:bg-slate-900 prose-pre:border prose-pre:border-slate-200 dark:prose-pre:border-slate-700
+          prose-pre:relative prose-pre:bg-slate-900 prose-pre:border prose-pre:border-slate-200 dark:prose-pre:border-slate-700
           prose-pre:rounded-lg prose-pre:overflow-x-auto
+          [&_pre_code]:bg-transparent [&_pre_code]:p-0 [&_pre_code]:text-slate-100
+          [&_pre_code]:text-sm [&_pre_code]:leading-relaxed
           prose-table:border prose-table:border-slate-200 dark:prose-table:border-slate-700
           prose-th:bg-slate-50 dark:prose-th:bg-slate-800 prose-th:px-4 prose-th:py-3 prose-th:text-left prose-th:font-semibold
           prose-td:px-4 prose-td:py-3 prose-td:border-t prose-td:border-slate-200 dark:prose-td:border-slate-700
