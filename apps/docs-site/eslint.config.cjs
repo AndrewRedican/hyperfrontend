@@ -26,6 +26,7 @@ module.exports = [
     },
     rules: {
       'workspace/docs-site-routes': 'error',
+      'workspace/docs-site-library-docs': 'error',
     },
   },
   {
