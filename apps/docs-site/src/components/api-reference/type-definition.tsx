@@ -2,15 +2,17 @@
 
 import type { TypeDocNode } from './types'
 import { AnchorLink } from '../anchor-link'
+import { HighlightMatch } from './highlight-match'
 import { TypeLink } from './type-link'
 import { renderType, getDescription } from './type-utils'
 import { ReflectionKind } from './types'
 
 interface TypeDefinitionProps {
   node: TypeDocNode
+  searchQuery?: string
 }
 
-export function TypeDefinition({ node }: TypeDefinitionProps) {
+export function TypeDefinition({ node, searchQuery = '' }: TypeDefinitionProps) {
   const description = getDescription(node.comment)
   const isInterface = node.kind === ReflectionKind.Interface
   const isTypeAlias = node.kind === ReflectionKind.TypeAlias
@@ -28,7 +30,9 @@ export function TypeDefinition({ node }: TypeDefinitionProps) {
       <div className="flex items-start gap-2 group">
         <AnchorLink id={`api-${node.name}`} />
         <span className={`px-2 py-0.5 text-xs font-medium rounded ${kindColor} shrink-0`}>{kindLabel}</span>
-        <h3 className="font-mono text-base font-semibold text-slate-900 dark:text-white flex-1">{node.name}</h3>
+        <h3 className="font-mono text-base font-semibold text-slate-900 dark:text-white flex-1">
+          <HighlightMatch text={node.name} query={searchQuery} />
+        </h3>
       </div>
 
       {description && <p className="mt-2 text-sm text-slate-600 dark:text-slate-400">{description}</p>}
