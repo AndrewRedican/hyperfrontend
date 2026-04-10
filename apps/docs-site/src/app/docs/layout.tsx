@@ -8,7 +8,7 @@ export default function DocsLayout({ children }: { children: React.ReactNode }) 
       <Header />
       <div className="mx-auto flex max-w-7xl px-4 sm:px-6 lg:px-8">
         {/* Sidebar - hidden on mobile */}
-        <aside className="hidden border-r border-slate-200 pr-8 pt-10 dark:border-slate-700 lg:block">
+        <aside className="hidden self-start border-r border-slate-200 pr-8 dark:border-slate-700 lg:block">
           <Sidebar />
         </aside>
 

@@ -1,10 +1,11 @@
 'use client'
 
 import type { TypeDocOutput, TypeDocNode } from './types'
-import { useState, useMemo, useEffect, useCallback } from 'react'
+import { useState, useMemo, useEffect, useCallback, useRef } from 'react'
 import { createSet } from '@hyperfrontend/immutable-api-utils/built-in-copy/set'
 import { requestAnimationFrame, setTimeout } from '@hyperfrontend/immutable-api-utils/built-in-copy/timers'
 import { FunctionSignature } from './function-signature'
+import { HighlightMatch } from './highlight-match'
 import { TypeDefinition } from './type-definition'
 import { buildNodeLookup, resolveReference } from './type-utils'
 import { ReflectionKind } from './types'
@@ -125,6 +126,16 @@ export function ModuleGroupedView({ data, searchQuery = '', initialHash }: Modul
       }
     }
   }, [initialHash, modules, scrollToElement])
+
+  const prevSearchQuery = useRef(searchQuery)
+
+  useEffect(() => {
+    if (searchQuery && searchQuery !== prevSearchQuery.current) {
+      const matchingModules = modules.filter((m) => m.exports.length > 0).map((m) => m.name)
+      setExpandedModules(createSet(matchingModules))
+    }
+    prevSearchQuery.current = searchQuery
+  }, [searchQuery, modules])
 
   useEffect(() => {
     const handleHashChange = () => {
@@ -254,7 +265,7 @@ export function ModuleGroupedView({ data, searchQuery = '', initialHash }: Modul
                       </h5>
                       <div className="divide-y divide-slate-200 dark:divide-slate-800">
                         {functions.map((fn) => (
-                          <FunctionSignature key={fn.id} node={fn} />
+                          <FunctionSignature key={fn.id} node={fn} searchQuery={searchQuery} />
                         ))}
                       </div>
                     </div>
@@ -267,7 +278,7 @@ export function ModuleGroupedView({ data, searchQuery = '', initialHash }: Modul
                       </h5>
                       <div className="divide-y divide-slate-200 dark:divide-slate-800">
                         {classes.map((cls) => (
-                          <TypeDefinition key={cls.id} node={cls} />
+                          <TypeDefinition key={cls.id} node={cls} searchQuery={searchQuery} />
                         ))}
                       </div>
                     </div>
@@ -280,7 +291,7 @@ export function ModuleGroupedView({ data, searchQuery = '', initialHash }: Modul
                       </h5>
                       <div className="divide-y divide-slate-200 dark:divide-slate-800">
                         {interfaces.map((iface) => (
-                          <TypeDefinition key={iface.id} node={iface} />
+                          <TypeDefinition key={iface.id} node={iface} searchQuery={searchQuery} />
                         ))}
                       </div>
                     </div>
@@ -293,7 +304,7 @@ export function ModuleGroupedView({ data, searchQuery = '', initialHash }: Modul
                       </h5>
                       <div className="divide-y divide-slate-200 dark:divide-slate-800">
                         {types.map((type) => (
-                          <TypeDefinition key={type.id} node={type} />
+                          <TypeDefinition key={type.id} node={type} searchQuery={searchQuery} />
                         ))}
                       </div>
                     </div>
@@ -306,7 +317,7 @@ export function ModuleGroupedView({ data, searchQuery = '', initialHash }: Modul
                       </h5>
                       <div className="divide-y divide-slate-200 dark:divide-slate-800">
                         {variables.map((v) => (
-                          <TypeDefinition key={v.id} node={v} />
+                          <TypeDefinition key={v.id} node={v} searchQuery={searchQuery} />
                         ))}
                       </div>
                     </div>
@@ -319,7 +330,7 @@ export function ModuleGroupedView({ data, searchQuery = '', initialHash }: Modul
                       </h5>
                       <div className="divide-y divide-slate-200 dark:divide-slate-800">
                         {namespaces.map((ns) => (
-                          <NamespaceSection key={ns.id} node={ns} />
+                          <NamespaceSection key={ns.id} node={ns} searchQuery={searchQuery} />
                         ))}
                       </div>
                     </div>
@@ -411,6 +422,7 @@ function ExportBadges({ functions, classes, interfaces, types, variables, namesp
 
 interface NamespaceSectionProps {
   node: TypeDocNode
+  searchQuery?: string
 }
 
 /**
@@ -418,8 +430,9 @@ interface NamespaceSectionProps {
  * Namespaces are created by `export * as name from './module'` patterns.
  * @param root0
  * @param root0.node
+ * @param root0.searchQuery
  */
-function NamespaceSection({ node }: NamespaceSectionProps) {
+function NamespaceSection({ node, searchQuery = '' }: NamespaceSectionProps) {
   const [isExpanded, setIsExpanded] = useState(false)
 
   const childCount = node.children?.length ?? 0
@@ -429,7 +442,9 @@ function NamespaceSection({ node }: NamespaceSectionProps) {
       <button onClick={() => setIsExpanded(!isExpanded)} className="w-full flex items-center justify-between text-left group">
         <div className="flex items-center gap-2">
           <ChevronIcon expanded={isExpanded} />
-          <code className="text-sm font-semibold text-slate-900 dark:text-white font-mono">{node.name}</code>
+          <code className="text-sm font-semibold text-slate-900 dark:text-white font-mono">
+            <HighlightMatch text={node.name} query={searchQuery} />
+          </code>
           <span className="text-xs text-slate-500 dark:text-slate-400">({childCount} exports)</span>
         </div>
       </button>
@@ -438,9 +453,9 @@ function NamespaceSection({ node }: NamespaceSectionProps) {
         <div className="mt-3 ml-6 pl-4 border-l-2 border-slate-200 dark:border-slate-700">
           {node.children.map((child) => {
             if (child.kind === ReflectionKind.Function) {
-              return <FunctionSignature key={child.id} node={child} />
+              return <FunctionSignature key={child.id} node={child} searchQuery={searchQuery} />
             }
-            return <TypeDefinition key={child.id} node={child} />
+            return <TypeDefinition key={child.id} node={child} searchQuery={searchQuery} />
           })}
         </div>
       )}

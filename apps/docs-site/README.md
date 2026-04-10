@@ -20,6 +20,18 @@ npx nx serve docs-site
 npx nx build docs-site
 ```
 
+### Troubleshooting Local Development
+
+If `npx nx serve docs-site` fails or behaves unexpectedly:
+
+```bash
+# 1. Build first
+npx nx build docs-site
+
+# 2. Start from the app directory
+cd apps/docs-site && npm start
+```
+
 ---
 
 ## Architecture Overview

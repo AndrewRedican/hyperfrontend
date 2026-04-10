@@ -110,6 +110,33 @@ export function getLibraryReadme(slug: string): string | null {
 }
 
 /**
+ * Load README content for a library submodule
+ *
+ * @param librarySlug - The library URL slug (e.g., 'network-protocol')
+ * @param submodulePath - The submodule path (e.g., 'channel', 'commits/classify')
+ * @returns The README content or null if not found
+ */
+export function getSubmoduleReadme(librarySlug: string, submodulePath: string): string | null {
+  const generatedPath = join(DOCS_DIR, librarySlug, submodulePath, 'readme.md')
+  if (existsSync(generatedPath)) {
+    return readFileSync(generatedPath, 'utf-8')
+  }
+
+  const sourcePaths = [
+    join(WORKSPACE_ROOT, 'libs', librarySlug, 'src', 'lib', submodulePath, 'README.md'),
+    join(WORKSPACE_ROOT, 'libs', librarySlug, 'src', submodulePath, 'README.md'),
+  ]
+
+  for (const p of sourcePaths) {
+    if (existsSync(p)) {
+      return readFileSync(p, 'utf-8')
+    }
+  }
+
+  return null
+}
+
+/**
  * Load architecture documentation for a library from generated or source files
  *
  * @param slug - The URL slug identifier for the library

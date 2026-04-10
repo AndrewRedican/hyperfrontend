@@ -38,8 +38,10 @@
     },
     "serve": {
       "executor": "@hyperfrontend/app:serve",
-      "dependsOn": ["install"],
-      "options": {}
+      "dependsOn": ["build"],
+      "options": {
+        "command": "npm run start"
+      }
     }
   }
 }
