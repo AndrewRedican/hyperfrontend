@@ -11,10 +11,9 @@ interface SubmoduleDocPageProps {
   librarySlug: string
   packageName: string
   submodulePath: string
-  submoduleName: string
 }
 
-export async function SubmoduleDocPage({ librarySlug, packageName, submodulePath, submoduleName }: SubmoduleDocPageProps) {
+export async function SubmoduleDocPage({ librarySlug, packageName, submodulePath }: SubmoduleDocPageProps) {
   const content = getSubmoduleReadme(librarySlug, submodulePath)
 
   if (!content) {
@@ -36,8 +35,6 @@ export async function SubmoduleDocPage({ librarySlug, packageName, submodulePath
           ← Back to {packageName}
         </Link>
       </div>
-
-      <h1 className="font-display mb-6 text-3xl font-bold tracking-tight text-slate-900 dark:text-white">{submoduleName}</h1>
 
       <ReadmeContent html={html} mermaidDiagrams={diagrams} />
     </>
