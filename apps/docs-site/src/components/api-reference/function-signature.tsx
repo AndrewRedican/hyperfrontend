@@ -3,15 +3,17 @@
 import type { TypeDocNode } from './types'
 import { AnchorLink } from '../anchor-link'
 import { ExampleBlock } from './example-block'
+import { HighlightMatch } from './highlight-match'
 import { ParameterList } from './parameter-list'
 import { TypeLink } from './type-link'
 import { renderType, getDescription, getReturnsDescription, getExamples, getParamDescriptions } from './type-utils'
 
 interface FunctionSignatureProps {
   node: TypeDocNode
+  searchQuery?: string
 }
 
-export function FunctionSignature({ node }: FunctionSignatureProps) {
+export function FunctionSignature({ node, searchQuery = '' }: FunctionSignatureProps) {
   const signature = node.signatures?.[0]
   if (!signature) return null
 
@@ -28,7 +30,7 @@ export function FunctionSignature({ node }: FunctionSignatureProps) {
   })
   const returnType = renderType(signature.type)
 
-  const signatureString = `${node.name}${typeParams ? `<${typeParams}>` : ''}(${params?.join(', ') || ''}): ${returnType}`
+  const signatureString = `${typeParams ? `<${typeParams}>` : ''}(${params?.join(', ') || ''}): ${returnType}`
 
   return (
     <div className="py-4 border-b border-slate-200 dark:border-slate-800 last:border-0" id={`api-${node.name}`}>
@@ -37,7 +39,10 @@ export function FunctionSignature({ node }: FunctionSignatureProps) {
         <span className="px-2 py-0.5 text-xs font-medium rounded bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-400 shrink-0">
           function
         </span>
-        <h3 className="font-mono text-base font-semibold text-slate-900 dark:text-white break-all flex-1">{signatureString}</h3>
+        <h3 className="font-mono text-base font-semibold text-slate-900 dark:text-white break-all flex-1">
+          <HighlightMatch text={node.name} query={searchQuery} />
+          {signatureString}
+        </h3>
       </div>
 
       {description && <p className="mt-2 text-sm text-slate-600 dark:text-slate-400">{description}</p>}

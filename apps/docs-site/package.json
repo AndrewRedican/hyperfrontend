@@ -4,8 +4,7 @@
   "private": true,
   "scripts": {
     "build": "npm run generate && npm run validate-links && NODE_OPTIONS='--max-old-space-size=4096' next build",
-    "dev": "npm run build && next start --port 3000",
-    "start": "next start",
+    "start": "next start --port 3000",
     "generate": "npx tsx scripts/generate-docs.ts",
     "validate-links": "npx tsx scripts/validate-links.ts"
   },
