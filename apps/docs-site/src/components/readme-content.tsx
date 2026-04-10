@@ -1,6 +1,7 @@
 'use client'
 
-import { useEffect, useRef, useCallback } from 'react'
+import { useEffect, useRef, useCallback, useMemo } from 'react'
+import { createMap } from '@hyperfrontend/immutable-api-utils/built-in-copy/map'
 import { createSet } from '@hyperfrontend/immutable-api-utils/built-in-copy/set'
 import { setTimeout, clearTimeout } from '@hyperfrontend/immutable-api-utils/built-in-copy/timers'
 import { useHashNavigation } from '../hooks/use-hash-navigation'
@@ -199,6 +200,36 @@ function injectHeadingAnchors(container: HTMLElement): () => void {
 export function ReadmeContent({ html, mermaidDiagrams }: ReadmeContentProps) {
   const containerRef = useRef<HTMLDivElement>(null)
 
+  // why: Build diagram lookup map for efficient access during rendering
+  const diagramMap = useMemo(() => createMap(mermaidDiagrams.map((d) => [d.id, d.chart])), [mermaidDiagrams])
+
+  // why: Split HTML on mermaid placeholders to enable inline rendering
+  const parts = useMemo(() => {
+    // note: Regex captures the ID from: <div data-mermaid-id="mermaid-block-0"></div>
+    const placeholderPattern = /<div data-mermaid-id="([^"]+)"><\/div>/g
+    const result: Array<{ type: 'html'; content: string } | { type: 'mermaid'; id: string }> = []
+
+    let lastIndex = 0
+    let match: RegExpExecArray | null
+
+    while ((match = placeholderPattern.exec(html)) !== null) {
+      // why: Add HTML before placeholder
+      if (match.index > lastIndex) {
+        result.push({ type: 'html', content: html.slice(lastIndex, match.index) })
+      }
+      // why: Add mermaid placeholder reference
+      result.push({ type: 'mermaid', id: match[1] })
+      lastIndex = match.index + match[0].length
+    }
+
+    // why: Add remaining HTML after last placeholder
+    if (lastIndex < html.length) {
+      result.push({ type: 'html', content: html.slice(lastIndex) })
+    }
+
+    return result
+  }, [html])
+
   const triggerHashNavigation = useCallback(() => {
     const hash = window.location.hash
     if (hash) {
@@ -215,57 +246,58 @@ export function ReadmeContent({ html, mermaidDiagrams }: ReadmeContentProps) {
 
   useHashNavigation()
 
+  // why: Apply effects to all prose containers for copy buttons and anchors
   useEffect(() => {
     const container = containerRef.current
     if (!container) return
 
-    const cleanupCopyBtns = injectCopyButtons(container)
-    const cleanupAnchors = injectHeadingAnchors(container)
+    // why: Find all prose containers within the readme content
+    const proseContainers = container.querySelectorAll('.prose')
+    const cleanupFunctions: (() => void)[] = []
+
+    proseContainers.forEach((proseContainer) => {
+      cleanupFunctions.push(injectCopyButtons(proseContainer as HTMLElement))
+      cleanupFunctions.push(injectHeadingAnchors(proseContainer as HTMLElement))
+    })
 
     triggerHashNavigation()
 
     return () => {
-      cleanupCopyBtns()
-      cleanupAnchors()
+      cleanupFunctions.forEach((fn) => fn())
     }
   }, [html, triggerHashNavigation])
 
+  const proseClasses = `prose prose-slate max-w-none dark:prose-invert
+    prose-headings:scroll-mt-20 prose-headings:font-display
+    prose-h1:text-4xl prose-h1:font-bold prose-h1:tracking-tight
+    prose-h2:text-2xl prose-h2:font-bold prose-h2:mt-10 prose-h2:mb-4
+    prose-h3:text-xl prose-h3:font-semibold prose-h3:mt-8 prose-h3:mb-3
+    prose-p:text-slate-600 dark:prose-p:text-slate-400 prose-p:leading-7
+    prose-a:text-primary-600 dark:prose-a:text-primary-400 prose-a:no-underline hover:prose-a:underline
+    prose-code:rounded prose-code:bg-slate-100 prose-code:px-1.5 prose-code:py-0.5
+    prose-code:font-normal prose-code:text-slate-700 prose-code:before:content-none prose-code:after:content-none
+    dark:prose-code:bg-slate-800 dark:prose-code:text-slate-300
+    prose-pre:relative prose-pre:bg-slate-900 prose-pre:border prose-pre:border-slate-200 dark:prose-pre:border-slate-700
+    prose-pre:rounded-lg prose-pre:overflow-x-auto
+    [&_pre_code]:bg-transparent [&_pre_code]:p-0 [&_pre_code]:text-slate-100
+    [&_pre_code]:text-sm [&_pre_code]:leading-relaxed
+    prose-table:border prose-table:border-slate-200 dark:prose-table:border-slate-700
+    prose-th:bg-slate-50 dark:prose-th:bg-slate-800 prose-th:px-4 prose-th:py-3 prose-th:text-left prose-th:font-semibold
+    prose-td:px-4 prose-td:py-3 prose-td:border-t prose-td:border-slate-200 dark:prose-td:border-slate-700
+    prose-ul:my-4 prose-li:my-1
+    prose-strong:text-slate-900 dark:prose-strong:text-white`
+
   return (
     <div className="readme-content" ref={containerRef}>
-      {/* Main HTML content */}
-      <div
-        className="prose prose-slate max-w-none dark:prose-invert
-          prose-headings:scroll-mt-20 prose-headings:font-display
-          prose-h1:text-4xl prose-h1:font-bold prose-h1:tracking-tight
-          prose-h2:text-2xl prose-h2:font-bold prose-h2:mt-10 prose-h2:mb-4
-          prose-h3:text-xl prose-h3:font-semibold prose-h3:mt-8 prose-h3:mb-3
-          prose-p:text-slate-600 dark:prose-p:text-slate-400 prose-p:leading-7
-          prose-a:text-primary-600 dark:prose-a:text-primary-400 prose-a:no-underline hover:prose-a:underline
-          prose-code:rounded prose-code:bg-slate-100 prose-code:px-1.5 prose-code:py-0.5
-          prose-code:font-normal prose-code:text-slate-700 prose-code:before:content-none prose-code:after:content-none
-          dark:prose-code:bg-slate-800 dark:prose-code:text-slate-300
-          prose-pre:relative prose-pre:bg-slate-900 prose-pre:border prose-pre:border-slate-200 dark:prose-pre:border-slate-700
-          prose-pre:rounded-lg prose-pre:overflow-x-auto
-          [&_pre_code]:bg-transparent [&_pre_code]:p-0 [&_pre_code]:text-slate-100
-          [&_pre_code]:text-sm [&_pre_code]:leading-relaxed
-          prose-table:border prose-table:border-slate-200 dark:prose-table:border-slate-700
-          prose-th:bg-slate-50 dark:prose-th:bg-slate-800 prose-th:px-4 prose-th:py-3 prose-th:text-left prose-th:font-semibold
-          prose-td:px-4 prose-td:py-3 prose-td:border-t prose-td:border-slate-200 dark:prose-td:border-slate-700
-          prose-ul:my-4 prose-li:my-1
-          prose-strong:text-slate-900 dark:prose-strong:text-white"
-        dangerouslySetInnerHTML={{ __html: html }}
-      />
+      {parts.map((part, index) => {
+        if (part.type === 'html') {
+          return <div key={`html-${index}`} className={proseClasses} dangerouslySetInnerHTML={{ __html: part.content }} />
+        }
 
-      {/* Render Mermaid diagrams */}
-      {mermaidDiagrams.length > 0 && (
-        <div className="mt-8 space-y-6">
-          {mermaidDiagrams.map(({ id, chart }) => (
-            <div key={id}>
-              <MermaidDiagram chart={chart} className="my-6" />
-            </div>
-          ))}
-        </div>
-      )}
+        // why: Render mermaid diagram inline at its original position
+        const chart = diagramMap.get(part.id)
+        return chart ? <MermaidDiagram key={part.id} chart={chart} className="my-6" /> : null
+      })}
     </div>
   )
 }
