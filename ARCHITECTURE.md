@@ -339,7 +339,7 @@ All security-related packages work identically in browser and Node.js environmen
 
 Entry points follow a consistent pattern:
 
-```
+```text
 @hyperfrontend/cryptography
 ├── /browser     # Web Crypto API implementation
 ├── /node        # Node crypto implementation
