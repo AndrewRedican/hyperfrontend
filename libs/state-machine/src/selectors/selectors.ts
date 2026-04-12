@@ -6,7 +6,7 @@ import type { StateStatusDeriver, StateDeriver } from '../models'
  * @param state - The state object to check
  * @returns True if operation has not started
  *
- * @example
+ * @example Checking if not started
  * ```typescript
  * notStarted({ inProgress: false, success: false, fail: false, halt: false })
  * // => true
@@ -20,7 +20,7 @@ export const notStarted: StateStatusDeriver = (state) => !state.inProgress && !s
  * @param state - The state object to check
  * @returns True if operation is in progress
  *
- * @example
+ * @example Checking if in progress
  * ```typescript
  * inProgress({ inProgress: true, success: false, fail: false, halt: false })
  * // => true
@@ -34,7 +34,7 @@ export const inProgress: StateStatusDeriver = (state) => state.inProgress
  * @param state - The state object to check
  * @returns True if operation is done
  *
- * @example
+ * @example Checking if done
  * ```typescript
  * done({ inProgress: false, success: true, fail: false, halt: false })
  * // => true
@@ -48,7 +48,7 @@ export const done: StateStatusDeriver = (state) => !state.inProgress && (state.s
  * @param state - The state object to check
  * @returns True if operation completed successfully
  *
- * @example
+ * @example Checking if successful
  * ```typescript
  * successful({ inProgress: false, success: true, fail: false, halt: false })
  * // => true
@@ -62,7 +62,7 @@ export const successful: StateStatusDeriver = (state) => !state.inProgress && st
  * @param state - The state object to check
  * @returns True if operation failed
  *
- * @example
+ * @example Checking if failed
  * ```typescript
  * failed({ inProgress: false, success: false, fail: true, halt: false })
  * // => true
@@ -76,7 +76,7 @@ export const failed: StateStatusDeriver = (state) => !state.inProgress && !state
  * @param state - The state object to check
  * @returns True if operation is retrying
  *
- * @example
+ * @example Checking if retrying
  * ```typescript
  * retrying({ inProgress: true, success: false, fail: true, halt: false })
  * // => true
@@ -90,7 +90,7 @@ export const retrying: StateStatusDeriver = (state) => state.inProgress && !stat
  * @param state - The state object to check
  * @returns True if operation is restarting
  *
- * @example
+ * @example Checking if restarting
  * ```typescript
  * restarting({ inProgress: true, success: true, fail: false, halt: false })
  * // => true
@@ -104,7 +104,7 @@ export const restarting: StateStatusDeriver = (state) => state.inProgress && sta
  * @param state - The state object to check
  * @returns True if operation is halted
  *
- * @example
+ * @example Checking if halted
  * ```typescript
  * halted({ inProgress: false, success: false, fail: false, halt: true })
  * // => true
@@ -118,7 +118,7 @@ export const halted: StateStatusDeriver = (state) => state.halt
  * @param state - The state object to check
  * @returns True if operation is paused
  *
- * @example
+ * @example Checking if paused
  * ```typescript
  * paused({ inProgress: true, success: false, fail: false, halt: true })
  * // => true
@@ -132,7 +132,7 @@ export const paused: StateStatusDeriver = (state) => state.inProgress && state.h
  * @param state - The state object to check
  * @returns True if operation was cancelled
  *
- * @example
+ * @example Checking if cancelled
  * ```typescript
  * cancelled({ inProgress: false, success: false, fail: false, halt: true })
  * // => true
@@ -146,7 +146,7 @@ export const cancelled: StateStatusDeriver = (state) => !state.inProgress && sta
  * @param state - The base state to derive from
  * @returns Object with all derived state properties
  *
- * @example
+ * @example Deriving complete state
  * ```typescript
  * const state = { inProgress: true, success: false, fail: false, halt: false }
  * derivedState(state)

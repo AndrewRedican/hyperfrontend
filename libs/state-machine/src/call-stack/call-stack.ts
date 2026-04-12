@@ -8,7 +8,7 @@ import { createSet } from '@hyperfrontend/immutable-api-utils/built-in-copy/set'
  *
  * @returns A Callstack instance for adding, calling, and clearing callbacks
  *
- * @example
+ * @example Managing callbacks with a call stack
  * ```typescript
  * const stack = callStack<(value: number) => void>()
  * const unsubscribe = stack.add((v) => console.log(v))
