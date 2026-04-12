@@ -1,5 +1,6 @@
 import { existsSync, readFileSync, readdirSync, statSync } from 'node:fs'
 import { resolve, join } from 'node:path'
+import { isArray } from '@hyperfrontend/immutable-api-utils/built-in-copy/array'
 import { parse } from '@hyperfrontend/immutable-api-utils/built-in-copy/json'
 
 const GENERATED_DIR = resolve(process.cwd(), '.generated')
@@ -218,6 +219,150 @@ export function getContributingGuide(): string | null {
   }
 
   return null
+}
+
+/**
+ * Transform relative markdown links to docs site URLs.
+ *
+ * @param content - The markdown content with relative links
+ * @returns The content with transformed links
+ */
+function transformRootDocLinks(content: string): string {
+  const linkMappings: Array<[string, string]> = [
+    ['ARCHITECTURE.md', '/architecture'],
+    ['CONTRIBUTING.md', '/docs/contributing'],
+    ['MANIFESTO.md', '/docs/manifesto'],
+    ['ACKNOWLEDGMENTS.md', '/docs/acknowledgments'],
+    ['REGARDING_AI.md', '/docs/regarding-ai'],
+  ]
+
+  let transformed = content
+
+  for (const [source, target] of linkMappings) {
+    // why: Replace ](SOURCE.md) and ](SOURCE.md#anchor) patterns with target URL
+    const linkPrefix = `](${source}`
+    let searchStart = 0
+
+    while (true) {
+      const linkStart = transformed.indexOf(linkPrefix, searchStart)
+      if (linkStart === -1) break
+
+      const afterSource = linkStart + linkPrefix.length
+      const char = transformed[afterSource]
+
+      if (char === ')') {
+        // why: Simple case: ](SOURCE.md)
+        transformed = transformed.slice(0, linkStart) + `](${target})` + transformed.slice(afterSource + 1)
+        searchStart = linkStart + target.length + 3
+      } else if (char === '#') {
+        // why: Anchor case: ](SOURCE.md#section)
+        const closeIndex = transformed.indexOf(')', afterSource)
+        if (closeIndex !== -1) {
+          const anchor = transformed.slice(afterSource, closeIndex)
+          transformed = transformed.slice(0, linkStart) + `](${target}${anchor})` + transformed.slice(closeIndex + 1)
+          searchStart = linkStart + target.length + anchor.length + 3
+        } else {
+          searchStart = afterSource
+        }
+      } else {
+        searchStart = afterSource
+      }
+    }
+  }
+
+  return transformed
+}
+
+/**
+ * Load the MANIFESTO.md from generated or source files
+ *
+ * @returns The manifesto content or null if not found
+ */
+export function getManifesto(): string | null {
+  const generatedPath = join(DOCS_DIR, 'manifesto.md')
+  if (existsSync(generatedPath)) {
+    return transformRootDocLinks(readFileSync(generatedPath, 'utf-8'))
+  }
+
+  const directPath = join(WORKSPACE_ROOT, 'MANIFESTO.md')
+  if (existsSync(directPath)) {
+    return transformRootDocLinks(readFileSync(directPath, 'utf-8'))
+  }
+
+  return null
+}
+
+/**
+ * Load the ACKNOWLEDGMENTS.md from generated or source files
+ *
+ * @returns The acknowledgments content or null if not found
+ */
+export function getAcknowledgments(): string | null {
+  const generatedPath = join(DOCS_DIR, 'acknowledgments.md')
+  if (existsSync(generatedPath)) {
+    return transformRootDocLinks(readFileSync(generatedPath, 'utf-8'))
+  }
+
+  const directPath = join(WORKSPACE_ROOT, 'ACKNOWLEDGMENTS.md')
+  if (existsSync(directPath)) {
+    return transformRootDocLinks(readFileSync(directPath, 'utf-8'))
+  }
+
+  return null
+}
+
+/**
+ * Load the REGARDING_AI.md from generated or source files
+ *
+ * @returns The regarding AI content or null if not found
+ */
+export function getRegardingAi(): string | null {
+  const generatedPath = join(DOCS_DIR, 'regarding-ai.md')
+  if (existsSync(generatedPath)) {
+    return transformRootDocLinks(readFileSync(generatedPath, 'utf-8'))
+  }
+
+  const directPath = join(WORKSPACE_ROOT, 'REGARDING_AI.md')
+  if (existsSync(directPath)) {
+    return transformRootDocLinks(readFileSync(directPath, 'utf-8'))
+  }
+
+  return null
+}
+
+/**
+ * Contributor entry from .all-contributorsrc
+ */
+export interface Contributor {
+  /** GitHub login */
+  login: string
+  /** Display name */
+  name: string
+  /** Avatar URL */
+  avatar_url: string
+  /** Profile URL */
+  profile: string
+  /** Contribution types */
+  contributions: string[]
+}
+
+/**
+ * Load the contributors list from .all-contributorsrc
+ *
+ * @returns Array of contributors or empty array if not found
+ */
+export function getContributors(): Contributor[] {
+  const contributorsPath = join(WORKSPACE_ROOT, '.all-contributorsrc')
+  if (!existsSync(contributorsPath)) {
+    return []
+  }
+
+  const data = parse(readFileSync(contributorsPath, 'utf-8'))
+  if (data && typeof data === 'object' && 'contributors' in data && isArray(data.contributors)) {
+    return <Contributor[]>data.contributors
+  }
+
+  return []
 }
 
 /**
