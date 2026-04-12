@@ -87,29 +87,16 @@ flowchart TB
     StateChange --> Events
 ```
 
-## Module Dependencies
+## Module Layers
 
-```
-actions/              → (standalone, no deps)
-state/                → (standalone, no deps)
-reducer/              → actions, state, models
-store/                → reducer, models
-selectors/            → models
-state-change/         → models
-events/               → store, state-change, selectors, models
-async-operation/      → events, actions, models
-coordinated-async-op/ → async-operation, models
-call-stack/           → @hyperfrontend/data-utils
-lifecycle-aware-comp/ → call-stack, models
-models/               → actions (types only)
-```
+The library is organized into logical layers:
 
-Clean separation exists between:
-
-- **Core primitives**: Store, Actions, Reducer
-- **Derived computation**: Selectors
-- **Reactive system**: Events
-- **High-level abstractions**: AsyncOperation, LifecycleAwareComponent
+| Layer                       | Components                              |
+| --------------------------- | --------------------------------------- |
+| **Core Primitives**         | Store, Actions, Reducer                 |
+| **Derived Computation**     | Selectors, StateChange                  |
+| **Reactive System**         | Events                                  |
+| **High-level Abstractions** | AsyncOperation, LifecycleAwareComponent |
 
 ## Core Components
 
