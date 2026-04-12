@@ -1,49 +1,32 @@
-# Network Protocol - Library Core (`src/lib/`)
+# Network Protocol - Core Modules
 
-> This is the **primary documentation hub** for `@hyperfrontend/network-protocol`.
+This documentation covers the core modules of `@hyperfrontend/network-protocol`.
 
-## Overview
+## Module Overview
 
-The `lib/` directory contains all platform-agnostic code including:
+| Module       | Purpose                                   |
+| ------------ | ----------------------------------------- |
+| **Channel**  | Bidirectional communication channels      |
+| **Data**     | Message payload with schema generation    |
+| **Packet**   | Packet types and transformations          |
+| **Protocol** | Protocol coordination (v1 implementation) |
+| **Queue**    | FIFO message processing queues            |
+| **Receiver** | Inbound message pipeline                  |
+| **Routing**  | Topic-based message routing               |
+| **Security** | Security suite interfaces                 |
+| **Sender**   | Outbound message pipeline                 |
+| **Topic**    | Topic store management                    |
 
-- Interface definitions (`model.ts` files)
-- Factory creators (dependency injection patterns)
-- Validations and utilities
-- Core business logic
+## Platform Support
 
-Platform-specific implementations (`browser/` and `node/`) import from here and inject platform dependencies (crypto, transport).
+The library provides platform-specific implementations with identical APIs:
 
-## Module Index
+| Platform | Import Path                                  |
+| -------- | -------------------------------------------- |
+| Browser  | `@hyperfrontend/network-protocol/browser/v1` |
+| Node.js  | `@hyperfrontend/network-protocol/node/v1`    |
 
-| Module                 | Purpose                                   | README                                   |
-| ---------------------- | ----------------------------------------- | ---------------------------------------- |
-| [channel/](channel/)   | Bidirectional communication channels      | [channel/README.md](channel/README.md)   |
-| [data/](data/)         | Message payload with schema generation    | [data/README.md](data/README.md)         |
-| [packet/](packet/)     | Packet types and transformations          | [packet/README.md](packet/README.md)     |
-| [protocol/](protocol/) | Protocol coordination (v1 implementation) | [protocol/README.md](protocol/README.md) |
-| [queue/](queue/)       | FIFO message processing queues            | [queue/README.md](queue/README.md)       |
-| [receiver/](receiver/) | Inbound message pipeline                  | [receiver/README.md](receiver/README.md) |
-| [routing/](routing/)   | Topic-based message routing               | [routing/README.md](routing/README.md)   |
-| [security/](security/) | Security suite interfaces                 | [security/README.md](security/README.md) |
-| [sender/](sender/)     | Outbound message pipeline                 | [sender/README.md](sender/README.md)     |
-| [topic/](topic/)       | Topic store management                    | [topic/README.md](topic/README.md)       |
+## Further Reading
 
-## Architecture
-
-For the complete architecture guide including composition diagrams and factory patterns, see:
-
-- **[ARCHITECTURE.md](../../ARCHITECTURE.md)** - Comprehensive architecture documentation
-
-## Platform Entry Points
-
-This shared library is consumed by platform-specific entry points:
-
-| Platform | Entry Point                   | README                                    |
-| -------- | ----------------------------- | ----------------------------------------- |
-| Browser  | [`src/browser/`](../browser/) | [browser/README.md](../browser/README.md) |
-| Node.js  | [`src/node/`](../node/)       | [node/README.md](../node/README.md)       |
-
-## Quick Links
-
-- [Root README](../../README.md) - Package overview and installation
-- [ARCHITECTURE.md](../../ARCHITECTURE.md) - Architecture guide
+- [Architecture Guide](../../ARCHITECTURE.md) - Complete architecture documentation
+- [Main README](../../README.md) - Package overview and installation

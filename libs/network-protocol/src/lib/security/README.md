@@ -265,12 +265,6 @@ flowchart LR
         PREV -.-> CURR
         CURR -.-> NEXT
     end
-
-    classDef currentStyle fill:#c8e6c9,stroke:#2e7d32,stroke-width:3px
-    classDef otherStyle fill:#e3f2fd,stroke:#1976d2,stroke-width:2px
-
-    class CURR currentStyle
-    class PREV,NEXT otherStyle
 ```
 
 ---
@@ -296,10 +290,6 @@ flowchart TB
     UEP -->|"serialize (base64 encode)"| SEP
     SEP -->|"packetObfuscation (time-based password)"| OP
     OP --> WIRE
-
-    classDef packetStyle fill:#e3f2fd,stroke:#1976d2,stroke-width:2px
-
-    class UP,UEP,SEP,OP,WIRE packetStyle
 ```
 
 ### Inbound (Receiving)
@@ -321,10 +311,6 @@ flowchart TB
     OP -->|"packetDeobfuscation (tries 3 time windows)"| SEP
     SEP -->|"deserialize (base64 decode)"| UEP
     UEP -->|"packetDecryption (captured key)"| UP
-
-    classDef packetStyle fill:#e3f2fd,stroke:#1976d2,stroke-width:2px
-
-    class WIRE,OP,SEP,UEP,UP packetStyle
 ```
 
 ---
@@ -364,28 +350,6 @@ flowchart TB
 
 - **Depends on**: [`packet/`](../packet/README.md) (for packet transformation types), `@hyperfrontend/cryptography`
 - **Used by**: [`protocol/`](../protocol/README.md) (composes the security suite)
-
----
-
-## Directory Structure
-
-```
-security/
-├── README.md           ← You are here
-├── index.ts            ← Public exports
-└── model.ts            ← Security suite interface definitions
-
-# Related implementation files:
-packet/security/
-├── encryption/
-│   ├── create-encrypter.ts
-│   ├── create-decrypter.ts
-│   └── dynamic-encryption-key.ts
-└── obfuscation/
-    ├── create-obfuscator.ts
-    ├── create-deobfuscator.ts
-    └── time-interval-obfuscation-factory.ts
-```
 
 ---
 

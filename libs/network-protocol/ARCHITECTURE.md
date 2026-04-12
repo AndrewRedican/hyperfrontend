@@ -306,11 +306,6 @@ flowchart TB
     A -->|encrypt| B
     B -->|serialize| C
     C -->|obfuscate| D
-
-    style A fill:#e8f5e9,stroke:#4caf50,stroke-width:2px
-    style B fill:#fff3e0,stroke:#ff9800,stroke-width:2px
-    style C fill:#e3f2fd,stroke:#2196f3,stroke-width:2px
-    style D fill:#fce4ec,stroke:#e91e63,stroke-width:2px
 ```
 
 ### Interface Definitions
@@ -492,13 +487,6 @@ flowchart TB
     C --> D
     D --> E
     E --> F
-
-    style A fill:#e8f5e9,stroke:#4caf50,stroke-width:2px
-    style B fill:#fff9c4,stroke:#fbc02d,stroke-width:2px
-    style C fill:#fff3e0,stroke:#ff9800,stroke-width:2px
-    style D fill:#e3f2fd,stroke:#2196f3,stroke-width:2px
-    style E fill:#f3e5f5,stroke:#9c27b0,stroke-width:2px
-    style F fill:#ffebee,stroke:#f44336,stroke-width:2px
 ```
 
 **Receiver Pipeline:**
@@ -521,12 +509,6 @@ flowchart TB
     B --> C
     C --> D
     D --> E
-
-    style A fill:#ffebee,stroke:#f44336,stroke-width:2px
-    style B fill:#f3e5f5,stroke:#9c27b0,stroke-width:2px
-    style C fill:#e3f2fd,stroke:#2196f3,stroke-width:2px
-    style D fill:#fff3e0,stroke:#ff9800,stroke-width:2px
-    style E fill:#e8f5e9,stroke:#4caf50,stroke-width:2px
 ```
 
 ### Example
@@ -887,22 +869,6 @@ flowchart TB
 
     A6 --> Wire
     Wire --> B7
-
-    style Sender fill:#e8f5e9,stroke:#4caf50,stroke-width:3px
-    style Receiver fill:#e3f2fd,stroke:#2196f3,stroke-width:3px
-    style Wire fill:#fff3e0,stroke:#ff9800,stroke-width:2px
-    style A1 fill:#c8e6c9,stroke:#4caf50
-    style A2 fill:#c8e6c9,stroke:#4caf50
-    style A3 fill:#c8e6c9,stroke:#4caf50
-    style A4 fill:#c8e6c9,stroke:#4caf50
-    style A5 fill:#c8e6c9,stroke:#4caf50
-    style A6 fill:#c8e6c9,stroke:#4caf50
-    style B7 fill:#bbdefb,stroke:#2196f3
-    style B8 fill:#bbdefb,stroke:#2196f3
-    style B9 fill:#bbdefb,stroke:#2196f3
-    style B10 fill:#bbdefb,stroke:#2196f3
-    style B11 fill:#bbdefb,stroke:#2196f3
-    style B12 fill:#bbdefb,stroke:#2196f3
 ```
 
 ### Practical Example
