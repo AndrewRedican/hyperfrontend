@@ -10,10 +10,8 @@ import { addError, createValidationContext, shouldContinue } from '../context'
  * @param schema - Schema containing the allOf constraint
  * @param ctx - Validation context
  * @returns true if validation passes, false otherwise
- * @example
+ * @example Validating allOf composition
  * ```typescript
- * const schema = {
- *   allOf: [
  *     { type: 'object', required: ['name'] },
  *     { type: 'object', required: ['email'] }
  *   ]
@@ -49,7 +47,7 @@ export function validateAllOf(instance: unknown, schema: Schema, ctx: Validation
  * @param schema - Schema containing the anyOf constraint
  * @param ctx - Validation context
  * @returns true if validation passes, false otherwise
- * @example
+ * @example Validating anyOf composition
  * ```typescript
  * const schema = {
  *   anyOf: [
@@ -87,7 +85,7 @@ export function validateAnyOf(instance: unknown, schema: Schema, ctx: Validation
  * @param schema - Schema containing the oneOf constraint
  * @param ctx - Validation context
  * @returns true if validation passes, false otherwise
- * @example
+ * @example Validating oneOf composition
  * ```typescript
  * const schema = {
  *   oneOf: [
@@ -139,7 +137,7 @@ export function validateOneOf(instance: unknown, schema: Schema, ctx: Validation
  * @param schema - Schema containing the not constraint
  * @param ctx - Validation context
  * @returns true if validation passes, false otherwise
- * @example
+ * @example Validating not constraint
  * ```typescript
  * const schema = { not: { type: 'string' } }
  * validateNot(42, schema, ctx)      // => true (not a string)

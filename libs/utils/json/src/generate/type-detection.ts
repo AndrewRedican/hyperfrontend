@@ -7,7 +7,7 @@ import { isInteger } from '@hyperfrontend/immutable-api-utils/built-in-copy/numb
  *
  * @param value - The value to determine the type of
  * @returns The JSON Schema type
- * @example
+ * @example Detecting JSON types
  * ```typescript
  * getJsonType('hello')    // => 'string'
  * getJsonType(42)         // => 'integer'

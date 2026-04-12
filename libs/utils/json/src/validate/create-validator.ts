@@ -9,7 +9,7 @@ import { validate } from './validate'
  * @param options - Validation options
  * @returns A function that validates data against the schema
  *
- * @example
+ * @example Creating reusable validator
  * ```typescript
  * const schema = {
  *   type: 'object',

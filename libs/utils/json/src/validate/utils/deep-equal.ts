@@ -9,7 +9,7 @@ import { keys, hasOwn } from '@hyperfrontend/immutable-api-utils/built-in-copy/o
  * @param a - First value to compare
  * @param b - Second value to compare
  * @returns true if values are deeply equal, false otherwise
- * @example
+ * @example Comparing values for equality
  * ```typescript
  * isEqual({ name: 'Alice' }, { name: 'Alice' }) // => true
  * isEqual([1, 2, 3], [1, 2, 3])                 // => true

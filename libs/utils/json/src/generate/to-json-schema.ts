@@ -38,7 +38,7 @@ const defaultOptions: Required<GenerateOptions> = {
  * @param options - Generation options
  * @returns A JSON Schema describing the value
  *
- * @example
+ * @example Generating schema from data
  * ```typescript
  * const data = {
  *   name: 'Alice',

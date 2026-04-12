@@ -11,7 +11,7 @@ import { addError, shouldContinue } from '../context'
  * @param schema - Schema containing the dependencies constraint
  * @param ctx - Validation context
  * @returns true if validation passes, false otherwise
- * @example
+ * @example Validating dependent properties
  * ```typescript
  * const schema = {
  *   dependencies: {
