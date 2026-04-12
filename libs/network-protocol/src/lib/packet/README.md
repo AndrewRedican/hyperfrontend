@@ -376,44 +376,6 @@ console.log(packet)
 
 ---
 
-## Directory Structure
-
-```
-packet/
-├── README.md                              ← You are here
-├── index.ts                               ← Public exports
-├── model.ts                               ← Packet interface definitions
-├── packet-transformations.integration.spec.ts
-├── creators/
-│   ├── index.ts
-│   ├── create-packet-base.ts
-│   ├── create-unencrypted-packet.ts
-│   ├── create-serialized-encrypted-packet-creator.ts
-│   ├── create-deserialized-encrypted-packet-creator.ts
-│   └── mocks.ts
-├── security/
-│   ├── index.ts
-│   ├── encryption/
-│   │   ├── index.ts
-│   │   ├── create-encrypter.ts
-│   │   └── create-decrypter.ts
-│   └── obfuscation/
-│       ├── index.ts
-│       ├── create-obfuscator.ts
-│       └── create-deobfuscator.ts
-├── utils/
-│   └── without-valid-error-message.ts
-└── validations/
-    ├── index.ts
-    ├── is-valid-packet-base.ts
-    ├── is-valid-unencrypted-packet.ts
-    ├── is-valid-unserialized-encrypted-packet.ts
-    ├── is-valid-serialized-encrypted-packet.ts
-    └── is-valid-obfuscated-packet.ts
-```
-
----
-
 ## See Also
 
 - **[Library Index](../README.md)** - All modules

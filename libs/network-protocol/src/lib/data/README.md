@@ -284,32 +284,6 @@ await createData('pid', 1, undefined)
 
 ---
 
-## Directory Structure
-
-```
-data/
-├── README.md           ← You are here
-├── index.ts            ← Public exports
-├── model.ts            ← Data interface definitions
-├── data.integration.spec.ts
-├── creators/
-│   ├── index.ts
-│   ├── create-data-factory.ts
-│   └── get-schema.ts
-├── security/
-│   ├── index.ts
-│   ├── create-encrypter.ts
-│   └── create-decrypter.ts
-└── validations/
-    ├── index.ts
-    ├── is-valid-pid.ts
-    ├── is-valid-sequence.ts
-    ├── is-valid-message.ts
-    └── is-valid-unencrypted-data.ts
-```
-
----
-
 ## See Also
 
 - **[Library Index](../README.md)** - All modules

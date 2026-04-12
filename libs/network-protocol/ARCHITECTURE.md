@@ -335,13 +335,13 @@ type ObfuscatedPacket = Uint8Array // Fully opaque binary
 
 1. **Outbound Transformation**:
 
-   ```
+   ```text
    UnencryptedPacket → encrypt → UnserializedEncrypted → serialize → SerializedEncrypted → obfuscate → ObfuscatedPacket
    ```
 
 2. **Inbound Transformation** (reverse):
 
-   ```
+   ```text
    ObfuscatedPacket → deobfuscate → SerializedEncrypted → deserialize → UnserializedEncrypted → decrypt → UnencryptedPacket
    ```
 

@@ -181,22 +181,6 @@ const routingOptions = router(
 
 ---
 
-## Directory Structure
-
-```
-topic/
-├── README.md           ← You are here
-├── index.ts            ← Public exports
-├── model.ts            ← Topic interface definitions
-├── topic.integration.spec.ts
-├── creators/
-│   └── ...
-└── validations/
-    └── ...
-```
-
----
-
 ## See Also
 
 - **[Library Index](../README.md)** - All modules

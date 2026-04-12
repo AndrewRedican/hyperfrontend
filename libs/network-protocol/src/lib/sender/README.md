@@ -274,20 +274,6 @@ sender.send('https://app.example.com', 'https://widget.example.com', createData(
 
 ---
 
-## Directory Structure
-
-```
-sender/
-├── README.md           ← You are here
-├── index.ts            ← Public exports
-├── model.ts            ← Sender interface definitions
-└── creators/
-    ├── index.ts
-    └── create-sender-factory.ts
-```
-
----
-
 ## See Also
 
 - **[Library Index](../README.md)** - All modules

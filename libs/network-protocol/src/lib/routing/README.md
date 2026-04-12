@@ -207,21 +207,6 @@ const routingOptions = router(
 
 ---
 
-## Directory Structure
-
-```
-routing/
-├── README.md           ← You are here
-├── index.ts            ← Public exports
-├── model.ts            ← Routing interface definitions
-├── creators/
-│   └── ...
-└── validations/
-    └── ...
-```
-
----
-
 ## See Also
 
 - **[Library Index](../README.md)** - All modules

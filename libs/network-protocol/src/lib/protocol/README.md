@@ -594,34 +594,6 @@ try {
 
 ---
 
-## Directory Structure
-
-```
-protocol/
-├── README.md                  ← You are here
-├── v1/                        ← Dynamic Key Protocol
-│   ├── index.ts               ← Public exports
-│   ├── model.ts               ← v1-specific interfaces
-│   ├── creators/
-│   │   ├── index.ts
-│   │   ├── create-protocol-factory.ts
-│   │   └── create-provider-protocol-store.ts
-│   └── validations/
-│       ├── index.ts
-│       ├── is-valid-send-fn.ts
-│       └── is-valid-receive-fn.ts
-└── v2/                        ← Pre-Shared Key Protocol
-    ├── index.ts               ← Public exports
-    ├── model.ts               ← v2-specific interfaces (same as v1)
-    ├── creators/
-    │   ├── index.ts
-    │   └── create-static-key-protocol-factory.ts
-    └── validations/
-        └── index.ts           ← Re-exports v1 validations
-```
-
----
-
 ## See Also
 
 - **[Library Index](../README.md)** - All modules

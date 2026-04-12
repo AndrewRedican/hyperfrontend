@@ -305,20 +305,6 @@ transport.on('message', (data) => {
 
 ---
 
-## Directory Structure
-
-```
-receiver/
-├── README.md           ← You are here
-├── index.ts            ← Public exports
-├── model.ts            ← Receiver interface definitions
-└── creators/
-    ├── index.ts
-    └── create-receiver-factory.ts
-```
-
----
-
 ## See Also
 
 - **[Library Index](../README.md)** - All modules

@@ -436,32 +436,6 @@ setInterval(() => {
 
 ---
 
-## Directory Structure
-
-```
-channel/
-├── README.md           ← You are here
-├── index.ts            ← Public exports
-├── model.ts            ← Interface definitions
-├── mocks.ts            ← Mock implementations for testing
-├── channel.integration.spec.ts  ← Integration tests
-├── creators/
-│   ├── index.ts
-│   ├── create-channel.ts
-│   ├── create-channel-store.ts
-│   └── mocks.ts
-├── utils/
-│   └── without-valid-error-message.ts
-└── validations/
-    ├── is-valid-label.ts
-    ├── is-valid-sender.ts
-    ├── is-valid-receiver.ts
-    ├── is-valid-channel.ts
-    └── get-first-invalid-protocol-property.ts
-```
-
----
-
 ## See Also
 
 - **[Library Index](../README.md)** - All modules

@@ -442,31 +442,6 @@ createEncryptionQueue(label, op, null, ...) // Missing logger
 
 ---
 
-## Directory Structure
-
-```
-queue/
-├── README.md           ← You are here
-├── index.ts            ← Public exports
-├── model.ts            ← Queue interface definitions
-├── queue.integration.spec.ts  ← Integration tests
-├── creators/
-│   ├── index.ts
-│   ├── create-queue.ts
-│   ├── create-encryption-queue.ts
-│   ├── create-serialization-queue.ts
-│   ├── create-obfuscation-queue.ts
-│   ├── create-deobfuscation-queue.ts
-│   ├── create-deserialization-queue.ts
-│   └── create-decryption-queue.ts
-├── utils/
-│   └── get-validation-error.ts
-└── validations/
-    └── is-valid-queue-creater-arguments.ts
-```
-
----
-
 ## See Also
 
 - **[Library Index](../README.md)** - All modules
