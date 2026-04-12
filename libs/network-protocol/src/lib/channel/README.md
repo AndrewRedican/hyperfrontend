@@ -1,9 +1,5 @@
 # Channel
 
-**Navigation**: [↑ lib/](../README.md) · [← sender](../sender/README.md) · [→ receiver](../receiver/README.md) · [protocol](../protocol/README.md) · [routing](../routing/README.md)
-
----
-
 ## Purpose
 
 The Channel module provides a named, bidirectional communication pipe that combines a Sender and Receiver with coordinated lifecycle controls. Channels provide a high-level abstraction for managing message flow between two endpoints.

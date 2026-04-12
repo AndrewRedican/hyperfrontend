@@ -1,9 +1,5 @@
 # Sender
 
-**Navigation**: [↑ lib/](../README.md) · [↔ receiver](../receiver/README.md) · [channel](../channel/README.md) · [queue](../queue/README.md)
-
----
-
 ## Purpose
 
 The Sender module provides the outbound message pipeline, orchestrating the flow of messages through encryption, serialization, and obfuscation queues before transmission.

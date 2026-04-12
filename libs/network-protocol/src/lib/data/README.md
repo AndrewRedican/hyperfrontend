@@ -1,9 +1,5 @@
 # Data
 
-**Navigation**: [↑ lib/](../README.md) · [packet](../packet/README.md) · [sender](../sender/README.md) · [receiver](../receiver/README.md)
-
----
-
 ## Purpose
 
 The Data module defines the message payload structure with automatic schema generation, unique identification, and encryption key management. Data objects are the content carried within packets.

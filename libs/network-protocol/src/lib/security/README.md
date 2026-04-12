@@ -1,9 +1,5 @@
 # Security
 
-**Navigation**: [↑ lib/](../README.md) · [protocol](../protocol/README.md) · [packet](../packet/README.md)
-
----
-
 ## Purpose
 
 The Security module defines the security suite interfaces that combine encryption and obfuscation capabilities. It provides a unified interface for the complete security pipeline used by the protocol.

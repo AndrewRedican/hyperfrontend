@@ -1,9 +1,5 @@
 # Topic
 
-**Navigation**: [↑ lib/](../README.md) · [routing](../routing/README.md)
-
----
-
 ## Purpose
 
 The Topic module provides a store for managing named topics used in message routing. Topics are identifiers that channels can subscribe to for receiving relevant messages in a publish-subscribe pattern.

@@ -1,9 +1,5 @@
 # Queue
 
-**Navigation**: [↑ lib/](../README.md) · [sender](../sender/README.md) · [receiver](../receiver/README.md) · [packet](../packet/README.md)
-
----
-
 ## Purpose
 
 The Queue module provides FIFO (First-In-First-Out) message processing queues with async operation support, backpressure management, and stop/resume lifecycle controls. Queues are the fundamental building blocks for the sender and receiver pipelines.

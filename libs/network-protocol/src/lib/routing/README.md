@@ -1,9 +1,5 @@
 # Routing
 
-**Navigation**: [↑ lib/](../README.md) · [topic](../topic/README.md) · [channel](../channel/README.md)
-
----
-
 ## Purpose
 
 The Routing module provides topic-based message routing across channels, enabling publish-subscribe patterns where channels subscribe to topics and receive messages routed to those topics.

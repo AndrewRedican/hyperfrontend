@@ -1,9 +1,5 @@
 # Packet
 
-**Navigation**: [↑ lib/](../README.md) · [data](../data/README.md) · [security](../security/README.md) · [queue](../queue/README.md)
-
----
-
 ## Purpose
 
 The Packet module defines the core data structures and transformations for message packaging in the network protocol. It provides a type hierarchy representing packets at different stages of the security pipeline (unencrypted, encrypted, serialized, obfuscated).

@@ -1,9 +1,5 @@
 # Protocol
 
-**Navigation**: [↑ lib/](../README.md) · [channel](../channel/README.md) · [security](../security/README.md) · [packet](../packet/README.md)
-
----
-
 ## Purpose
 
 The Protocol module provides the central coordination object that encapsulates all cryptographic operations (encryption, decryption, obfuscation, deobfuscation) along with send/receive transport functions. It serves as a unified interface for secure message passing between endpoints.

@@ -1,9 +1,5 @@
 # Receiver
 
-**Navigation**: [↑ lib/](../README.md) · [↔ sender](../sender/README.md) · [channel](../channel/README.md) · [queue](../queue/README.md)
-
----
-
 ## Purpose
 
 The Receiver module provides the inbound message pipeline, orchestrating the flow of packets through deobfuscation, deserialization, and decryption queues after reception.
