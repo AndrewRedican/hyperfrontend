@@ -3,7 +3,7 @@
  *
  * @param values - The array of strings to filter
  * @returns A new array containing only non-empty strings with content
- * @example
+ * @example Filtering empty strings
  * ```typescript
  * nonEmptyStrings(['hello', '', '  ', 'world', null as unknown as string])
  * // => ['hello', 'world']

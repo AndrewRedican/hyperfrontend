@@ -31,7 +31,7 @@ export interface FifoList<T extends object> {
  *
  * @template T The type of elements in the list, must be an object.
  * @returns {FifoList<T>} A FIFO list with methods to manipulate and query the list.
- * @example
+ * @example Creating and using FIFO queue
  * ```typescript
  * interface Task { id: number; name: string }
  * const queue = createFifoList<Task>()
