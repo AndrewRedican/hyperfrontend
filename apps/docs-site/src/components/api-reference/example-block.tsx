@@ -6,9 +6,11 @@ import { logger } from '@hyperfrontend/logging'
 
 interface ExampleBlockProps {
   code: string
+  /** Optional label for the example */
+  label?: string
 }
 
-export function ExampleBlock({ code }: ExampleBlockProps) {
+export function ExampleBlock({ code, label }: ExampleBlockProps) {
   const [copied, setCopied] = useState(false)
 
   const cleanCode = code
@@ -35,18 +37,21 @@ export function ExampleBlock({ code }: ExampleBlockProps) {
 
   return (
     <div className="mt-3 relative group">
-      <div className="absolute right-2 top-2 opacity-0 group-hover:opacity-100 transition-opacity">
-        <button
-          onClick={handleCopy}
-          className="px-2 py-1 text-xs bg-slate-700 hover:bg-slate-600 text-slate-200 rounded transition-colors"
-          aria-label="Copy code"
-        >
-          {copied ? 'Copied!' : 'Copy'}
-        </button>
+      {label && <p className="text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">{label}</p>}
+      <div className="relative">
+        <div className="absolute right-2 top-2 opacity-0 group-hover:opacity-100 transition-opacity">
+          <button
+            onClick={handleCopy}
+            className="px-2 py-1 text-xs bg-slate-700 hover:bg-slate-600 text-slate-200 rounded transition-colors"
+            aria-label="Copy code"
+          >
+            {copied ? 'Copied!' : 'Copy'}
+          </button>
+        </div>
+        <pre className="p-4 bg-slate-900 text-slate-100 rounded-lg overflow-x-auto text-sm">
+          <code>{cleanCode}</code>
+        </pre>
       </div>
-      <pre className="p-4 bg-slate-900 text-slate-100 rounded-lg overflow-x-auto text-sm">
-        <code>{cleanCode}</code>
-      </pre>
     </div>
   )
 }

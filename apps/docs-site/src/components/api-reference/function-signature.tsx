@@ -63,9 +63,11 @@ export function FunctionSignature({ node, searchQuery = '' }: FunctionSignatureP
 
       {examples.length > 0 && (
         <div className="mt-4">
-          <h4 className="text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1">Example</h4>
+          <h4 className="text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1">
+            {examples.length === 1 ? 'Example' : 'Examples'}
+          </h4>
           {examples.map((example, index) => (
-            <ExampleBlock key={index} code={example} />
+            <ExampleBlock key={index} code={example.code} label={example.label} />
           ))}
         </div>
       )}
