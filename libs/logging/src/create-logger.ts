@@ -61,7 +61,7 @@ export type LogFunction = Logger[LogFnName]
  * @returns A frozen logger object with log methods and level control
  * @throws {ErrorLevelFn} When any provided log function is invalid
  *
- * @example
+ * @example Creating a logger with log level filtering
  * ```typescript
  * const logger = createLogger(console.error, console.warn, console.log)
  * logger.setLogLevel('warn')
