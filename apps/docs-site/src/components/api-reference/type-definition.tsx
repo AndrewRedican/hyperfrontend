@@ -2,6 +2,7 @@
 
 import type { TypeDocNode } from './types'
 import { AnchorLink } from '../anchor-link'
+import { DescriptionMarkdown } from './description-markdown'
 import { HighlightMatch } from './highlight-match'
 import { TypeLink } from './type-link'
 import { renderType, getDescription } from './type-utils'
@@ -35,7 +36,7 @@ export function TypeDefinition({ node, searchQuery = '' }: TypeDefinitionProps) 
         </h3>
       </div>
 
-      {description && <p className="mt-2 text-sm text-slate-600 dark:text-slate-400">{description}</p>}
+      {description && <DescriptionMarkdown text={description} className="mt-2 text-sm text-slate-600 dark:text-slate-400" />}
 
       {/* For type aliases, show the type definition */}
       {isTypeAlias && node.type && (
@@ -69,7 +70,11 @@ export function TypeDefinition({ node, searchQuery = '' }: TypeDefinitionProps) 
                     </code>
                     <span className="text-slate-400">:</span>
                     <TypeLink type={property.type} />
-                    {propDescription && <span className="text-slate-500 ml-2">— {propDescription}</span>}
+                    {propDescription && (
+                      <span className="text-slate-500 ml-2">
+                        — <DescriptionMarkdown text={propDescription} className="inline" />
+                      </span>
+                    )}
                   </div>
                 )
               })}
@@ -101,7 +106,7 @@ export function TypeDefinition({ node, searchQuery = '' }: TypeDefinitionProps) 
                         {method.name}({params}): <span className="text-emerald-600 dark:text-emerald-400">{returnType}</span>
                       </code>
                     </div>
-                    {methodDescription && <p className="text-slate-500 ml-6 mt-1">{methodDescription}</p>}
+                    {methodDescription && <DescriptionMarkdown text={methodDescription} className="text-slate-500 ml-6 mt-1" />}
                   </div>
                 )
               })}
