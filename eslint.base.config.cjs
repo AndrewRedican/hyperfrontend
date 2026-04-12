@@ -252,6 +252,18 @@ module.exports = [
     language: 'markdown/gfm',
     rules: {
       'workspace/lib-readme-structure': 'error',
+      'workspace/no-ascii-art-diagrams': 'error',
+    },
+  },
+  {
+    files: ['**/*.md'],
+    ignores: ['**/README.md'],
+    plugins: {
+      markdown: require('@eslint/markdown').default,
+    },
+    language: 'markdown/gfm',
+    rules: {
+      'workspace/no-ascii-art-diagrams': 'error',
     },
   },
   {

@@ -21,6 +21,7 @@ import libReadmeStructure, { RULE_NAME as LIB_README_STRUCTURE } from './rules/l
 import libRequireJsdocExample, { RULE_NAME as LIB_REQUIRE_JSDOC_EXAMPLE } from './rules/lib-require-jsdoc-example'
 import libTsconfigPaths, { RULE_NAME as LIB_TSCONFIG_PATHS } from './rules/lib-tsconfig-paths'
 import maxFileLines, { RULE_NAME as MAX_FILE_LINES } from './rules/max-file-lines'
+import noAsciiArtDiagrams, { RULE_NAME as NO_ASCII_ART_DIAGRAMS } from './rules/no-ascii-art-diagrams'
 import noAsyncFsApi, { RULE_NAME as NO_ASYNC_FS_API } from './rules/no-async-fs-api'
 import noDecorativeHeaderComments, { RULE_NAME as NO_DECORATIVE_HEADER_COMMENTS } from './rules/no-decorative-header-comments'
 import noDeprecatedTag, { RULE_NAME as NO_DEPRECATED_TAG } from './rules/no-deprecated-tag'
@@ -70,6 +71,7 @@ export const rules: ESLint.Plugin['rules'] = {
   [LIB_REQUIRE_JSDOC_EXAMPLE]: libRequireJsdocExample as unknown as Rule.RuleModule,
   [LIB_TSCONFIG_PATHS]: libTsconfigPaths as unknown as Rule.RuleModule,
   [MAX_FILE_LINES]: maxFileLines as unknown as Rule.RuleModule,
+  [NO_ASCII_ART_DIAGRAMS]: noAsciiArtDiagrams as unknown as Rule.RuleModule,
   [NO_ASYNC_FS_API]: noAsyncFsApi as unknown as Rule.RuleModule,
   [NO_DECORATIVE_HEADER_COMMENTS]: noDecorativeHeaderComments as unknown as Rule.RuleModule,
   [NO_DEPRECATED_TAG]: noDeprecatedTag as unknown as Rule.RuleModule,
