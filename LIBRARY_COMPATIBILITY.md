@@ -163,31 +163,37 @@ import type { Message } from '@hyperfrontend/network-protocol/lib/types'
 
 ### Zero Dependencies (Leaf Nodes)
 
-These libraries have no external dependencies:
+These libraries have no internal dependencies:
 
-- `data-utils`
 - `function-utils`
-- `string-utils`
-- `time-utils`
 - `immutable-api-utils`
 
-### Internal Dependencies Only
+### Core Utilities (Depend Only on immutable-api-utils)
 
-| Library                  | Depends On                                                     |
-| ------------------------ | -------------------------------------------------------------- |
-| `json-utils`             | immutable-api-utils                                            |
-| `list-utils`             | data-utils                                                     |
-| `random-generator-utils` | data-utils                                                     |
-| `logging`                | data-utils, function-utils                                     |
-| `state-machine`          | data-utils                                                     |
-| `ui-utils`               | data-utils, function-utils, list-utils, random-generator-utils |
-| `cryptography`           | data-utils, random-generator-utils, string-utils, time-utils   |
+| Library        | Depends On          |
+| -------------- | ------------------- |
+| `data-utils`   | immutable-api-utils |
+| `string-utils` | immutable-api-utils |
+| `time-utils`   | immutable-api-utils |
+| `json-utils`   | immutable-api-utils |
 
-### Peer Dependencies
+### Internal Dependencies
 
-| Library | Peer Deps                         | Required? |
-| ------- | --------------------------------- | :-------: |
-| `nexus` | `@hyperfrontend/network-protocol` | Optional  |
+| Library                  | Depends On                                                                                   |
+| ------------------------ | -------------------------------------------------------------------------------------------- |
+| `list-utils`             | data-utils, immutable-api-utils                                                              |
+| `random-generator-utils` | data-utils, immutable-api-utils                                                              |
+| `logging`                | data-utils, function-utils, immutable-api-utils                                              |
+| `state-machine`          | data-utils, immutable-api-utils                                                              |
+| `ui-utils`               | data-utils, function-utils, list-utils, logging, random-generator-utils, immutable-api-utils |
+| `cryptography`           | data-utils, random-generator-utils, string-utils, time-utils, immutable-api-utils            |
+
+### High-Level Libraries
+
+| Library            | Key Dependencies                                                                                |
+| ------------------ | ----------------------------------------------------------------------------------------------- |
+| `network-protocol` | cryptography, logging, json-utils, list-utils, random-generator-utils, string-utils, time-utils |
+| `nexus`            | network-protocol, logging, json-utils, random-generator-utils                                   |
 
 ---
 
@@ -290,11 +296,16 @@ All libraries ship with TypeScript declarations (`.d.ts` files) alongside JavaSc
 flowchart TB
     subgraph ZERO["🌱 Zero Dependencies"]
         direction LR
-        data-utils
         function-utils
+        immutable-api-utils
+    end
+
+    subgraph CORE["📦 Core Utilities"]
+        direction LR
+        data-utils
         string-utils
         time-utils
-        immutable-api-utils
+        json-utils
     end
 
     subgraph UTILS["🔧 Utilities"]
@@ -319,39 +330,43 @@ flowchart TB
         nexus
     end
 
-    data-utils --> list-utils
-    data-utils --> random-generator-utils
-    data-utils --> logging
-    data-utils --> state-machine
-    data-utils --> ui-utils
-    data-utils --> cryptography
+    %% Core utilities depend on immutable-api-utils
+    data-utils --> immutable-api-utils
+    string-utils --> immutable-api-utils
+    time-utils --> immutable-api-utils
+    json-utils --> immutable-api-utils
 
-    function-utils --> logging
-    function-utils --> ui-utils
-    function-utils --> nexus
+    %% Utilities layer
+    list-utils --> data-utils
+    random-generator-utils --> data-utils
+    logging --> data-utils
+    logging --> function-utils
+    state-machine --> data-utils
+    ui-utils --> data-utils
+    ui-utils --> function-utils
+    ui-utils --> list-utils
+    ui-utils --> logging
+    ui-utils --> random-generator-utils
 
-    string-utils --> cryptography
-    time-utils --> cryptography
+    %% Crypto layer
+    cryptography --> data-utils
+    cryptography --> random-generator-utils
+    cryptography --> string-utils
+    cryptography --> time-utils
 
-    random-generator-utils --> ui-utils
-    random-generator-utils --> cryptography
-    random-generator-utils --> nexus
+    %% Network layer
+    network-protocol --> cryptography
+    network-protocol --> logging
+    network-protocol --> json-utils
+    network-protocol --> list-utils
+    network-protocol --> random-generator-utils
+    network-protocol --> string-utils
+    network-protocol --> time-utils
 
-    list-utils --> ui-utils
-    list-utils --> network-protocol
-
-    logging --> network-protocol
-    logging --> nexus
-
-    cryptography --> network-protocol
-
-    network-protocol -.->|optional peer| nexus
-
-    style ZERO fill:#e8f5e9,stroke:#2e7d32
-    style UTILS fill:#e3f2fd,stroke:#1565c0
-    style STATE fill:#fff3e0,stroke:#ef6c00
-    style CRYPTO fill:#fce4ec,stroke:#c2185b
-    style NET fill:#f3e5f5,stroke:#7b1fa2
+    nexus --> network-protocol
+    nexus --> logging
+    nexus --> json-utils
+    nexus --> random-generator-utils
 ```
 
 ### Platform & Format Support
@@ -381,8 +396,4 @@ flowchart LR
 
     PLATFORMS --> FORMATS
     FORMATS --> CDN
-
-    style PLATFORMS fill:#e1f5fe,stroke:#01579b
-    style FORMATS fill:#fff8e1,stroke:#ff8f00
-    style CDN fill:#f1f8e9,stroke:#558b2f
 ```
