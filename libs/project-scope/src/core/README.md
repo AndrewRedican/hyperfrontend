@@ -189,30 +189,6 @@ matchGlobPattern('src/index.ts', 'src/*.ts') // true
 | `?`       | Match exactly one character        |
 | `{a,b,c}` | Match any alternative              |
 
-## Architecture
-
-```
-core/
-├── fs/                    # File system operations
-│   ├── read.ts           # Reading files and JSON
-│   ├── write.ts          # Writing files and JSON
-│   ├── stat.ts           # File statistics
-│   ├── directory.ts      # Directory operations
-│   └── traversal.ts      # File search utilities
-├── path/                  # Path manipulation
-│   ├── join.ts           # Path joining
-│   ├── normalize.ts      # Path normalization
-│   ├── resolve.ts        # Path resolution
-│   └── segments.ts       # Path segment utilities
-├── encoding/             # Encoding detection/conversion
-├── platform/             # OS detection
-├── errors/               # Structured error creation
-├── patterns/             # Glob pattern matching
-├── logger.ts             # Scoped logging
-├── cache.ts              # In-memory caching
-└── index.ts              # Public exports
-```
-
 ## Design Principles
 
 1. **Safe by default**: All operations handle errors gracefully with typed error objects

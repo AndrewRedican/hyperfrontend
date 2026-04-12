@@ -118,20 +118,6 @@ if (result.exitCode === 0) {
 }
 ```
 
-## Architecture
-
-```
-cli/
-├── commands/              # Individual commands
-│   ├── analyze.ts        # Analyze command implementation
-│   ├── config.ts         # Config command implementation
-│   ├── deps.ts           # Dependencies command
-│   └── tree.ts           # Tree visualization command
-├── run.ts                 # CLI entry point and argument parsing
-├── types.ts               # CLI types and interfaces
-└── index.ts               # Public exports
-```
-
 ## Adding Custom Commands
 
 Commands implement the `Command` interface:

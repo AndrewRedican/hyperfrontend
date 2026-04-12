@@ -144,25 +144,6 @@ walkTree(tree, tree.root, (entry) => {
 })
 ```
 
-## Architecture
-
-```
-project/
-├── config/                # Configuration detection
-│   ├── detect.ts         # Config file detection
-│   ├── patterns.ts       # Config file patterns
-│   └── parse.ts          # Config parsing
-├── package/               # package.json utilities
-│   ├── read.ts           # Read and parse package.json
-│   └── dependencies.ts   # Dependency analysis
-├── root/                  # Root detection
-│   └── detect.ts         # Project/workspace root finding
-├── traversal/             # File traversal
-│   ├── search.ts         # Glob-based file search
-│   └── walk.ts           # Directory walking
-└── index.ts              # Public exports
-```
-
 ## Interfaces
 
 ### PackageJson

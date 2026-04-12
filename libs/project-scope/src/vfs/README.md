@@ -249,18 +249,6 @@ const Mode = {
 }
 ```
 
-## Architecture
-
-```
-vfs/
-├── factory.ts             # Tree creation (createTree)
-├── fs-tree.ts             # File system-backed tree implementation
-├── commit.ts              # Commit changes to disk
-├── diff.ts                # Generate unified diffs
-├── types.ts               # Tree interface and types
-└── index.ts               # Public exports
-```
-
 ## Security Features
 
 ### Path Traversal Protection

@@ -151,16 +151,6 @@ interface NxJson {
 }
 ```
 
-## Architecture
-
-```
-nx/
-├── detect.ts              # Workspace and project detection
-├── devkit-loader.ts       # @nx/devkit dynamic loading
-├── project-config.ts      # Project configuration reading
-└── index.ts              # Public exports
-```
-
 ## Design Principles
 
 1. **Optional devkit**: Works without `@nx/devkit` installed
