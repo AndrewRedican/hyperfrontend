@@ -7,7 +7,7 @@ import { setInterval, clearInterval } from '@hyperfrontend/immutable-api-utils/b
  * @param interval - Time in milliseconds between each callback invocation
  * @returns A cleanup function that stops the interval when called
  *
- * @example
+ * @example Setting interval with cleanup
  * ```typescript
  * const stopPolling = setIntervalCallback(() => {
  *   fetchLatestData()

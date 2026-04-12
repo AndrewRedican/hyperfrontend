@@ -20,7 +20,7 @@ export interface Timer {
  * @param delay - Time in milliseconds to wait until callback is invoked
  * @returns A Timer instance with pause, resume, and reset methods
  *
- * @example
+ * @example Creating pausable timer
  * ```typescript
  * const timer = createTimer(() => {
  *   console.log('Session expired')

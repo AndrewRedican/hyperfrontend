@@ -28,7 +28,7 @@ export interface Clock {
  * @param interval - Time in milliseconds between each callback invocation (default: 1000ms)
  * @returns A Clock instance with start, stop, subscribe, and unsubscribe methods
  *
- * @example
+ * @example Creating interval clock
  * ```typescript
  * const clock = createClock(1000)
  *
