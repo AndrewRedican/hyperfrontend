@@ -274,10 +274,15 @@ export function ValueProposition() {
           <CheckIcon className="h-3 w-3 text-green-500" />
           TypeScript
         </span>
-        <span className="flex items-center gap-1.5">
+        <a
+          href="https://github.com/AndrewRedican/hyperfrontend/blob/main/LICENSE.md"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex items-center gap-1.5 hover:text-slate-900 dark:hover:text-white"
+        >
           <CheckIcon className="h-3 w-3 text-green-500" />
           MIT License
-        </span>
+        </a>
         <span className="flex items-center gap-1.5">
           <CheckIcon className="h-3 w-3 text-green-500" />
           Zero runtime deps
