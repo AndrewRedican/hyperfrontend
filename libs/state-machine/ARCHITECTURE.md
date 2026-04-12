@@ -472,34 +472,3 @@ const event = {
 } as const
 type Event = (typeof event)[keyof typeof event]
 ```
-
-## File Structure
-
-```
-src/
-├── actions/
-│   ├── actions.ts          # Action creators
-│   └── actions.types.ts    # Action type constants
-├── async-operation/
-│   └── async-operation.ts  # AsyncOperation class
-├── call-stack/
-│   └── call-stack.ts       # CallStack utility
-├── coordinated-async-operation/
-│   └── coordinated-async-operation.ts
-├── events/
-│   └── events.ts           # Events class
-├── lifecycle-aware-component/
-│   └── lifecycle-aware-component.ts
-├── models/
-│   └── models.ts           # TypeScript interfaces
-├── reducer/
-│   └── reducer.ts          # rootReducer
-├── selectors/
-│   └── selectors.ts        # Derived state selectors
-├── state/
-│   └── state.ts            # createInitialState
-├── state-change/
-│   └── state-change.ts     # StateChange tracker
-└── store/
-    └── store.ts            # Store class
-```
