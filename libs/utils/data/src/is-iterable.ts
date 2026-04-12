@@ -7,7 +7,7 @@ import { isIterableType } from './is-iterable-type'
  * @param target - The target to check.
  * @returns `true` if the target is iterable, `false` otherwise.
  *
- * @example
+ * @example Checking if value is iterable
  * ```typescript
  * isIterable([1, 2]) // true
  * isIterable({ a: 1 }) // true

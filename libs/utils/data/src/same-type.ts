@@ -8,7 +8,7 @@ import { getType } from './get-type'
  * @param targetB The second target to compare
  * @returns The common data type if both targets are of the same type; otherwise, false.
  *
- * @example
+ * @example Comparing data types
  * ```typescript
  * sameType([1], [2]) // 'array'
  * sameType({}, []) // false

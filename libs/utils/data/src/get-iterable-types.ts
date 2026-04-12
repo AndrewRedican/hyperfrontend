@@ -7,7 +7,7 @@ import { registeredIterableClasses } from './shared/consts'
  *
  * @returns Array of iterable data types.
  *
- * @example
+ * @example Listing registered iterable types
  * ```typescript
  * getIterableTypes() // ['array', 'object', ...registered types]
  * ```

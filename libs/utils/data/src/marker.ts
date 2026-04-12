@@ -6,7 +6,7 @@ import { random, round } from '@hyperfrontend/immutable-api-utils/built-in-copy/
  *
  * @returns A unique marker string prefixed with __$
  *
- * @example
+ * @example Generating unique marker
  * ```typescript
  * const tag = marker() // '__$16789012345001234567890'
  * ```

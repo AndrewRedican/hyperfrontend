@@ -7,7 +7,7 @@ import { registeredClasses } from './shared/consts'
  * @param classRefs - One or more class references to register.
  * @returns The result of the forEach operation (void)
  *
- * @example
+ * @example Registering custom class types
  * ```typescript
  * registerClassTypes(MyCustomClass, AnotherClass)
  * getType(new MyCustomClass()) // 'MyCustomClass'

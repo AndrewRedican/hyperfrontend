@@ -10,7 +10,7 @@ import { registeredClasses } from './shared/consts'
  * @param target - The target to get the data type of.
  * @returns The data type of the target.
  *
- * @example
+ * @example Determining data types
  * ```typescript
  * getType([1, 2]) // 'array'
  * getType({ a: 1 }) // 'object'

@@ -7,7 +7,7 @@ import { registeredIterableClasses } from './shared/consts'
  * @param dataType - The type of data to get operators for
  * @returns Object containing getKeys, read, write, remove, and instantiate operators
  *
- * @example
+ * @example Retrieving operators for array type
  * ```typescript
  * const ops = getIterableOperators('array')
  * const keys = ops.getKeys([1, 2, 3]) // ['0', '1', '2']

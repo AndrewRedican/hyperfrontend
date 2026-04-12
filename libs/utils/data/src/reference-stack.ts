@@ -11,7 +11,7 @@ import { marker } from './marker'
  * This is particularly useful for handling circular references in data structures.
  * @returns A new ReferenceStack instance.
  *
- * @example
+ * @example Tracking object references
  * ```typescript
  * const stack = referenceStack()
  * stack.add(myObject)

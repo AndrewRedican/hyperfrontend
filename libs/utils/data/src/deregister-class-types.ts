@@ -6,7 +6,7 @@ import { registeredClasses } from './shared/consts'
  *
  * @param classRefs - One or more class references to deregister. If none provided, all registered classes will be deregistered.
  *
- * @example
+ * @example Deregistering class types
  * ```typescript
  * deregisterClassTypes(MyCustomClass)
  * deregisterClassTypes() // clears all

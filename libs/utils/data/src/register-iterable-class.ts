@@ -17,7 +17,7 @@ import { getConfig } from './shared/consts'
  * @remarks
  * If the class is already registered, its entry will be updated with the new handlers.
  *
- * @example
+ * @example Registering custom iterable class
  * ```typescript
  * registerIterableClass(
  *   MyMap,

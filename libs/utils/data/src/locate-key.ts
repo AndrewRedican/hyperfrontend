@@ -15,7 +15,7 @@ import { traverse } from './traverse'
  * @param options - Optional configuration to control traversal depth
  * @returns An array of paths to locations where the key pattern was found
  *
- * @example
+ * @example Locating keys in nested structure
  * ```typescript
  * locateKey({ a: { b: 1 }, c: { b: 2 } }, 'b') // [['a', 'b'], ['c', 'b']]
  * ```

@@ -13,7 +13,7 @@ import { traverse } from './traverse'
  * @param options - Optional configuration to control traversal depth
  * @returns An array of paths to locations where the text pattern was found
  *
- * @example
+ * @example Locating text values in structure
  * ```typescript
  * locateText({ a: 'hello', b: { c: 'hello' } }, 'hello') // [['a'], ['b', 'c']]
  * ```

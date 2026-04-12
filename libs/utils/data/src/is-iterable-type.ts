@@ -7,7 +7,7 @@ import { getIterableTypes } from './get-iterable-types'
  * @param dataType - The data type to check
  * @returns `true` if the data type is iterable, otherwise `false`
  *
- * @example
+ * @example Checking iterable types
  * ```typescript
  * isIterableType('array') // true
  * isIterableType('object') // true

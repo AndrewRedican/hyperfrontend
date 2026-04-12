@@ -24,7 +24,7 @@ const hasCircularReferenceRecursive = (target: unknown, stack: ReferenceStack, r
  * @param target - The value to check for circular references
  * @returns True if the value contains circular references, false otherwise
  *
- * @example
+ * @example Detecting circular references
  * ```typescript
  * const obj = { a: {} }
  * obj.a.self = obj

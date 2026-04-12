@@ -16,7 +16,7 @@ import { getConfig } from './shared/consts'
  * @param targetB data to compare
  * @returns The data type if both targets have the same structure, otherwise `false`.
  *
- * @example
+ * @example Comparing structures
  * ```typescript
  * sameStructure({ a: 1, b: 2 }, { a: 'x', b: 'y' }) // 'object'
  * sameStructure({ a: 1 }, { b: 1 }) // false

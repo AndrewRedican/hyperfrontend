@@ -16,7 +16,7 @@ import { traverse } from './traverse'
  * @param options - Optional configuration to control traversal depth
  * @returns An array of paths to locations where keys were removed
  *
- * @example
+ * @example Removing keys by pattern
  * ```typescript
  * const obj = { a: 1, temp: 2, b: { temp: 3 } }
  * removeKey(obj, 'temp') // [['temp'], ['b', 'temp']]
