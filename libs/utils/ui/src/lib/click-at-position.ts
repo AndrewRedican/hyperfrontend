@@ -16,7 +16,7 @@ export type TMouseEvent = MouseEvent & ClickPageCoordinates
  * @param x - The x-coordinate for the click position
  * @param y - The y-coordinate for the click position
  *
- * @example
+ * @example Simulating click at coordinates
  * ```typescript
  * // Test that a click outside a modal closes it
  * document.addEventListener('mousedown', (event) => {

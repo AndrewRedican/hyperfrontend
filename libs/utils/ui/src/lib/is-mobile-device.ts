@@ -3,7 +3,7 @@
  *
  * @returns True if the device is mobile, false otherwise
  *
- * @example
+ * @example Detecting mobile device
  * ```typescript
  * if (isMobileDevice()) {
  *   showMobileLayout()

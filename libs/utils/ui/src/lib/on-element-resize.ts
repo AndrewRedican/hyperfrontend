@@ -8,7 +8,7 @@ export type ElementResizeCallback = (rect: DOMRectReadOnly) => void
  * @param callback - The function to call when the element is resized
  * @returns A cleanup function to stop observing the element
  *
- * @example
+ * @example Observing element resize
  * ```typescript
  * const container = document.getElementById('resizable-panel')
  * const stopObserving = onElementResize(container, (rect) => {

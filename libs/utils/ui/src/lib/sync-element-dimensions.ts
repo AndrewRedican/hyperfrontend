@@ -11,7 +11,7 @@ import { onElementResize } from './on-element-resize'
  * @param options - Optional configuration for element retrieval and callbacks
  * @returns A cleanup function to stop synchronization
  *
- * @example
+ * @example Syncing overlay to video dimensions
  * ```typescript
  * // Sync an overlay to match a video player's dimensions
  * const stopSync = syncElementDimensions('#video-player', '#overlay', {

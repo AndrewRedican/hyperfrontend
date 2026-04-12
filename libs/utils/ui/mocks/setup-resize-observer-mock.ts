@@ -16,7 +16,7 @@ export interface ResizeObserverMock {
  *
  * @returns An object containing the mocked ResizeObserver and a disconnect function
  *
- * @example
+ * @example Mocking ResizeObserver in tests
  * ```typescript
  * const mock = setupResizeObserverMock()
  *

@@ -10,7 +10,7 @@ import { addStylesheet } from './stylesheets'
  * @param style - Style object to apply
  * @returns A function that applies the style when called
  *
- * @example
+ * @example Applying single style rule
  * ```typescript
  * const applyTooltipStyle = createApplyStyle('.tooltip', {
  *   position: 'absolute',

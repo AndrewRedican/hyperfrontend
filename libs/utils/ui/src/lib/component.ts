@@ -16,7 +16,7 @@ export type CreateFn<T extends HTMLElement, Args extends any[]> = (...args: Args
  * @param style - Optional style function to apply component styles
  * @returns A run-once function that creates the component
  *
- * @example
+ * @example Creating styled component
  * ```typescript
  * const createButton = (label: string) => createElement('button', { className: 'btn' })
  * const buttonStyles = () => addStylesheet({ '.btn': { padding: '8px 16px' } }, 'btn-styles')
