@@ -216,6 +216,7 @@ module.exports = [
     ignores: ['**/*.spec.ts', '**/jest.config.ts', '**/jest.setup.ts', '**/*.types.ts'],
     rules: {
       'workspace/lib-require-jsdoc-example': 'error',
+      'workspace/lib-require-jsdoc-example-label': 'error',
     },
   },
   {
