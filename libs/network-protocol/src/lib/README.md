@@ -1,4 +1,4 @@
-# Network Protocol - Core Modules
+# Core Modules
 
 This documentation covers the core modules of `@hyperfrontend/network-protocol`.
 
