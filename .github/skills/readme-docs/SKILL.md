@@ -72,8 +72,6 @@ Create README.md files—library root for consumers, sub-module for maintainers.
 
 Brief one-sentence purpose.
 
-**Navigation**: [↑ parent/](../README.md) · [← sibling](../sibling/README.md) · [→ other](../other/README.md)
-
 ## Overview
 
 [Optional Mermaid diagram for complex modules]
