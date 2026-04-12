@@ -21,7 +21,7 @@ export async function SubmoduleDocPage({ librarySlug, packageName, submodulePath
   }
 
   let processed = removeBadges(content)
-  processed = transformLinks(processed)
+  processed = transformLinks(processed, { librarySlug, submodulePath })
 
   const { processedContent, diagrams } = extractMermaidBlocks(processed)
   const html = await markdownToHtml(processedContent)
