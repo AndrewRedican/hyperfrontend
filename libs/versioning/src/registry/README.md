@@ -180,23 +180,6 @@ Responses are cached in memory to reduce registry load:
 - Expired entries are cleaned up on access
 - Cache can be configured per-client
 
-## File Structure
-
-```
-registry/
-├── index.ts           # Module exports
-├── factory.ts         # createRegistry factory
-├── models/
-│   ├── index.ts       # Model exports
-│   ├── registry.ts    # Registry interface
-│   ├── package-info.ts # PackageInfo type
-│   └── version-info.ts # VersionInfo type
-└── npm/
-    ├── index.ts       # npm client exports
-    ├── client.ts      # npm registry implementation
-    └── cache.ts       # In-memory cache
-```
-
 ## See Also
 
 - [semver/](../semver/README.md) — Version parsing for registry queries

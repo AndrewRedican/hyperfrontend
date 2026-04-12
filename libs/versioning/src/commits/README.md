@@ -208,29 +208,6 @@ Fixes #456
 BREAKING CHANGE: API signature changed
 ```
 
-## Directory Structure
-
-```
-commits/
-├── index.ts              # Public exports
-├── parse/                # Message parsing
-│   ├── header.ts         # Header line parsing
-│   ├── body.ts           # Body section parsing
-│   ├── footer.ts         # Footer trailer parsing
-│   └── message.ts        # Full message orchestration
-├── models/               # Data structures
-│   ├── conventional.ts   # ConventionalCommit type & factories
-│   ├── commit-type.ts    # CommitType, bump mappings
-│   └── breaking.ts       # BreakingChange type & factories
-├── classify/             # Commit classification for changelogs
-│   ├── classifier.ts     # Main classification engine
-│   ├── project-scopes.ts # Project scope derivation
-│   ├── infrastructure.ts # Infrastructure matcher system
-│   └── models.ts         # Classification types
-└── utils/                # Utilities
-    └── replace-char.ts   # Character replacement helpers
-```
-
 ## Security
 
 - **No regex**: All parsing uses character-by-character iteration
