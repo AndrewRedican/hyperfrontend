@@ -21,7 +21,7 @@ const _freeze = globalThis.Object.freeze
  * @param base - Optional base URL for relative URLs.
  * @returns A new URL instance.
  *
- * @example
+ * @example Creating URL instances
  * ```typescript
  * const absolute = createURL('https://example.com/path?query=1')
  * const relative = createURL('/api/users', 'https://example.com')
@@ -83,7 +83,7 @@ export const parseURL = _URL.parse
  * @param init - Optional initialization value (string, object, or iterable).
  * @returns A new URLSearchParams instance.
  *
- * @example
+ * @example Creating URLSearchParams
  * ```typescript
  * const fromString = createURLSearchParams('page=1&limit=10')
  * const fromObject = createURLSearchParams({ page: '1', limit: '10' })

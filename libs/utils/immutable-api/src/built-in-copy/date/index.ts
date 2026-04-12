@@ -32,7 +32,7 @@ export function createDate(
  *
  * @returns A new Date instance.
  *
- * @example
+ * @example Creating Date instances
  * ```typescript
  * const now = createDate()
  * const fromTimestamp = createDate(1704067200000)

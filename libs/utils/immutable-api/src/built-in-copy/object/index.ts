@@ -130,7 +130,7 @@ export const getOwnPropertyDescriptors = _Object.getOwnPropertyDescriptors
  * @param key - The property key to check.
  * @returns True if the object has the property as its own property.
  *
- * @example
+ * @example Checking own properties
  * ```typescript
  * const user = { name: 'Alice' }
  * hasOwn(user, 'name') // => true
@@ -146,7 +146,7 @@ export const hasOwn = (obj: object, key: PropertyKey): boolean => <boolean>_Refl
  * @param value - The value to get the type tag from.
  * @returns The type tag string (e.g., "[object Array]").
  *
- * @example
+ * @example Getting type tags
  * ```typescript
  * typeTag([1, 2, 3]) // => '[object Array]'
  * typeTag(null) // => '[object Null]'

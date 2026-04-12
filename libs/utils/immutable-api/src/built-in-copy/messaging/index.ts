@@ -73,7 +73,7 @@ export interface PostMessageToWindowOptions {
  * @param message - The data payload to send, must be structured-cloneable.
  * @param options - Target origin and optional transferables.
  *
- * @example
+ * @example Posting message to Window
  * ```typescript
  * const iframe = document.querySelector('iframe')
  * postMessageToWindow(iframe.contentWindow, { action: 'refresh' }, {
@@ -92,7 +92,7 @@ export const postMessageToWindow = (target: Window, message: unknown, options: P
  * @param message - The data payload to send, must be structured-cloneable.
  * @param transfer - Optional array of Transferable objects.
  *
- * @example
+ * @example Posting message to Worker
  * ```typescript
  * const worker = new Worker('worker.js')
  * postMessageToWorker(worker, { task: 'process', data: [1, 2, 3] })
@@ -113,7 +113,7 @@ export const postMessageToWorker = (target: Worker, message: unknown, transfer?:
  * @param message - The data payload to send, must be structured-cloneable.
  * @param transfer - Optional array of Transferable objects.
  *
- * @example
+ * @example Posting message to MessagePort
  * ```typescript
  * const channel = new MessageChannel()
  * postMessageToPort(channel.port1, { status: 'ready' })
@@ -133,7 +133,7 @@ export const postMessageToPort = (port: MessagePort, message: unknown, transfer?
  * @param channel - Named broadcast channel for same-origin contexts.
  * @param message - The data payload to send, must be structured-cloneable.
  *
- * @example
+ * @example Broadcasting to channel
  * ```typescript
  * const channel = new BroadcastChannel('app-updates')
  * postMessageToBroadcast(channel, { type: 'cache-invalidate' })

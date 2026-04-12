@@ -24,7 +24,7 @@ const _freeze = globalThis.Object.freeze
  * @param args - Additional arguments to pass to the callback.
  * @returns A numeric ID for the timer.
  *
- * @example
+ * @example Setting a timeout
  * ```typescript
  * const timerId = setTimeout(() => console.log('Executed'), 1000)
  * // Pass arguments to callback
@@ -45,7 +45,7 @@ export const setTimeout = <TArgs extends unknown[]>(
  * @param args - Additional arguments to pass to the callback.
  * @returns A numeric ID for the interval.
  *
- * @example
+ * @example Setting an interval
  * ```typescript
  * let count = 0
  * const intervalId = setInterval(() => {
@@ -65,7 +65,7 @@ export const setInterval = <TArgs extends unknown[]>(
  *
  * @param id - The identifier of the timeout to cancel.
  *
- * @example
+ * @example Canceling a timeout
  * ```typescript
  * const timerId = setTimeout(() => console.log('Never runs'), 5000)
  * clearTimeout(timerId)
@@ -80,7 +80,7 @@ export const clearTimeout = (id: ReturnType<typeof globalThis.setTimeout> | unde
  *
  * @param id - The identifier of the interval to cancel.
  *
- * @example
+ * @example Canceling an interval
  * ```typescript
  * const intervalId = setInterval(() => console.log('tick'), 1000)
  * // Stop after some condition
@@ -96,7 +96,7 @@ export const clearInterval = (id: ReturnType<typeof globalThis.setInterval> | un
  *
  * @param callback - Function to execute.
  *
- * @example
+ * @example Queuing a microtask
  * ```typescript
  * console.log('Start')
  * queueMicrotask(() => console.log('Microtask'))
