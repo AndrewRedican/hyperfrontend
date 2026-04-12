@@ -9,7 +9,7 @@ import type { RoutingContext } from './types'
  * @param context - Routing context with state, registry, actions, and logger
  * @param message - Message event containing the CLOSE_CONNECTION_ACKNOWLEDGED action
  *
- * @example
+ * @example Handling close acknowledgment
  * ```typescript
  * handleCloseAcknowledged(routingContext, closeAcknowledgedEvent)
  * ```

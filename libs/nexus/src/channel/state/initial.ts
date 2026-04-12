@@ -11,7 +11,7 @@ import { uuidV4 } from '@hyperfrontend/random-generator-utils'
  * @param settings - Channel settings (queueMessages, debug, logger, etc.)
  * @returns Fresh channel state object
  *
- * @example
+ * @example Creating initial channel state
  * ```typescript
  * const state = createInitialState('my-channel', targetWindow, { queueMessages: true })
  * // => { id: '...', name: 'my-channel', active: false, queuedMessages: [], ... }

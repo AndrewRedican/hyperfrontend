@@ -9,7 +9,7 @@ import { ACTION_TYPES } from '../../types/action'
  * @param deps - Action dependencies containing broker ID
  * @returns A function that creates a cancel connection action for a process
  *
- * @example
+ * @example Creating cancel connection actions
  * ```typescript
  * const createCancelAction = cancelConnection({ getBrokerId: () => 'broker-1' })
  * const action = createCancelAction('process-123')

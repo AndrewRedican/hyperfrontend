@@ -13,7 +13,7 @@ import { createError } from '@hyperfrontend/immutable-api-utils/built-in-copy/er
  *
  * @throws {Error} If message type is not provided in channel contract
  *
- * @example
+ * @example Processing an incoming message
  * ```typescript
  * receive(channel, { type: 'USER_ACTION', data: { userId: 123 } })
  * ```

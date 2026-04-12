@@ -22,7 +22,7 @@ import { applyPolicy } from '../security/apply-policy'
  * - Terminates process after activation
  * - Fires 'open' lifecycle event
  *
- * @example
+ * @example Three-way handshake acceptance
  * Second step of three-way handshake:
  * Initiator <- ACCEPT (this handler) <- Responder
  * Initiator -> OPEN -> Responder

@@ -34,7 +34,7 @@ const PLAINTEXT_ACTION_TYPES: Set<string> = createSet([
  * @param channel - Channel internals with state and dependencies
  * @param action - Action to send
  *
- * @example
+ * @example Sending an action to the target window
  * ```typescript
  * const action = channel.actions.requestConnection(processId)
  * sendAction(channel, action)

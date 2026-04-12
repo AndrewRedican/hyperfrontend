@@ -6,7 +6,7 @@ import type { ChannelHandle } from './factory'
  * @param processes - Map storing process to channel mappings
  * @returns Function that takes processId and removes it
  *
- * @example
+ * @example Removing a process
  * ```typescript
  * const remove = removeProcess(processMap)
  * remove('some-process-id')

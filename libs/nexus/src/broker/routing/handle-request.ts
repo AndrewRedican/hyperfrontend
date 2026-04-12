@@ -30,7 +30,7 @@ const DEFAULT_RESPONDER_SUPPORTED: readonly SecurityProtocolVersion[] = ['none']
  * - Sends ACCEPT_CONNECTION if validation passes
  * - Sends DENY_CONNECTION if contract or security policy fails
  *
- * @example
+ * @example Processing connection requests
  * Incoming action triggers:
  * 1. Channel lookup/creation
  * 2. Contract validation

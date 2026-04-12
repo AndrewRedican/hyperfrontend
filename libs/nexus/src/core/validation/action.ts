@@ -8,7 +8,7 @@ import { isObject } from './_utils'
  * @param action - The action to validate
  * @throws {Error} Error if action is invalid
  *
- * @example
+ * @example Validating action structure
  * ```typescript
  * validateAction({
  *   type: 'MESSAGE',

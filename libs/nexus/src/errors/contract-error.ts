@@ -4,7 +4,7 @@ import { setPrototypeOf } from '@hyperfrontend/immutable-api-utils/built-in-copy
 /**
  * Custom error class for contract-related failures
  *
- * @example
+ * @example Throwing contract error
  * ```typescript
  * throw new ContractError('Invalid action type', { emitted: [], accepted: [] })
  * ```

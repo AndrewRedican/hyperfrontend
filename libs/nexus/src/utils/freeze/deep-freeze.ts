@@ -24,7 +24,7 @@ import { collectNodesToFreeze } from './collect-nodes-to-freeze'
  * - Nodes that fail to freeze are logged but don't halt the operation
  * - Has a default depth limit of 100 to prevent stack overflow on pathological structures
  *
- * @example
+ * @example Deep freezing configuration
  * ```typescript
  * const config = {
  *   name: 'app',

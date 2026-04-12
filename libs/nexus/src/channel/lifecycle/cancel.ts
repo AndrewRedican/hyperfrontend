@@ -11,7 +11,7 @@ import { disconnect } from './disconnect'
  * @param channel - Channel internals with state and dependencies
  * @param notify - Whether to notify target window (default: true)
  *
- * @example
+ * @example Canceling a pending connection
  * ```typescript
  * cancel(channel, true) // Cancel and notify target
  * cancel(channel, false) // Cancel silently

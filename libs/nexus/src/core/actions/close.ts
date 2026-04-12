@@ -9,7 +9,7 @@ import { ACTION_TYPES } from '../../types/action'
  * @param deps - Action dependencies containing broker ID
  * @returns A function that creates a close connection action for a process
  *
- * @example
+ * @example Creating close connection actions
  * ```typescript
  * const createCloseAction = closeConnection({ getBrokerId: () => 'broker-1' })
  * const action = createCloseAction('process-123')

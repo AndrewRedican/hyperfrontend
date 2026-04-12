@@ -13,7 +13,7 @@ import { logEvent } from '../../utils/logging/log-event'
  * @param event - Event type that occurred
  * @param data - Optional event data
  *
- * @example
+ * @example Notifying subscribers of an event
  * ```typescript
  * notifyEvent(channel, 'open', { timestamp: Date.now() })
  * ```

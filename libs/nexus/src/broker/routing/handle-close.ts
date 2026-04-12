@@ -17,7 +17,7 @@ import { getById } from '../../core/registry/get-by-id'
  * - Terminates process
  * - Fires 'close' lifecycle event
  *
- * @example
+ * @example Graceful disconnect flow
  * Disconnect flow:
  * Side A -> CLOSE_CONNECTION (initiates)
  * Side B <- CLOSE_CONNECTION (this handler)

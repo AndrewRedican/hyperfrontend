@@ -10,7 +10,7 @@ import type { ChannelInternals } from '../types'
  * @param channel - Channel internals with state and dependencies
  * @param message - Message that was received
  *
- * @example
+ * @example Notifying subscribers of a message
  * ```typescript
  * notifyMessage(channel, { type: 'USER_ACTION', data: { userId: 123 } })
  * ```

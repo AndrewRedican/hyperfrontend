@@ -13,7 +13,7 @@ export type MessageFilter<T extends IMessage = IMessage> = (handler: MessageHand
  * @param filters - Variable number of filter functions to compose
  * @returns A single composed filter
  *
- * @example
+ * @example Composing message filters
  * ```typescript
  * const combinedFilter = compose(
  *   byType('notification'),

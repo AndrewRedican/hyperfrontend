@@ -26,7 +26,7 @@ const DEFAULT_PREFIX = '[nexus]'
  * @param options - Logger configuration options
  * @returns Logger instance
  *
- * @example
+ * @example Configuring logger options
  * ```typescript
  * const logger = createLogger({ level: 'debug', prefix: '[my-channel]' })
  * logger.debug('Channel initialized')

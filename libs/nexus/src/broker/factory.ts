@@ -48,7 +48,7 @@ import { validatePolicy } from './security/validate-policy'
  * @param config.settings - Optional configuration overrides for broker behavior
  * @returns Broker handle with public API
  *
- * @example
+ * @example Creating a message broker
  * ```typescript
  * const broker = createBroker({
  *   name: 'app-broker',

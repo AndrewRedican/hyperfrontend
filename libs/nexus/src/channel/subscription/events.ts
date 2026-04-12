@@ -15,7 +15,7 @@ import { createError } from '@hyperfrontend/immutable-api-utils/built-in-copy/er
  *
  * @throws {Error} If handler is not a function
  *
- * @example Generic handler
+ * @example Generic event handler
  * ```typescript
  * const unsubscribe = subscribeToEvents(channel, (event, data) => {
  *   console.log('Event:', event, data)
@@ -39,7 +39,7 @@ export function subscribeToEvents<E extends ChannelEvent>(channel: ChannelIntern
  * @param handler - Handler function when event name is provided
  * @returns Unsubscribe function to remove the handler
  *
- * @example
+ * @example Subscribing to all events with cleanup
  * ```typescript
  * const unsubscribe = subscribeToEvents(channel, (event, data) => {
  *   if (event === 'open') {

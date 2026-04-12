@@ -16,7 +16,7 @@ export type ChannelHandle = object
  *
  * @returns Object with process management methods
  *
- * @example
+ * @example Managing channel processes
  * ```typescript
  * const processManager = createProcessManager()
  * const processId = processManager.create(channel)

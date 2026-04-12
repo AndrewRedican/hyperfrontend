@@ -7,7 +7,7 @@ import { isObject } from './_utils'
  * @param settings - The settings object to validate
  * @throws {Error} Error if settings are invalid
  *
- * @example
+ * @example Validating settings object
  * ```typescript
  * validateSettings({ debug: true, queueMessages: false })
  * validateSettings(null) // valid (optional)

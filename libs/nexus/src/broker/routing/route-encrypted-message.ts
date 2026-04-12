@@ -42,7 +42,7 @@ interface SecurityTransportWithReceive {
  * @param router - Message router for handling decrypted actions
  * @param event - Message event containing the encrypted Uint8Array payload
  *
- * @example
+ * @example Routing encrypted payloads
  * ```typescript
  * // In broker's onMessage handler:
  * if (event.data instanceof Uint8Array) {

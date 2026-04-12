@@ -17,7 +17,7 @@ export type MessagePredicate<T extends IMessage = IMessage> = (message: T) => bo
  * @param predicate - Function that tests if message should be handled
  * @returns A higher-order function that wraps a handler
  *
- * @example
+ * @example Creating custom message filters
  * ```typescript
  * const highPriorityFilter = create((msg) => msg.priority === 'high')
  * const filteredHandler = highPriorityFilter((msg, channel) => {

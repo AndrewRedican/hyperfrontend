@@ -26,7 +26,7 @@ export interface ActionDependencies {
  * @param deps - Action dependencies (getBrokerId, getContract)
  * @returns Frozen object containing all action creator functions
  *
- * @example
+ * @example Creating action creators
  * ```typescript
  * const actions = createActionCreators({
  *   getBrokerId: () => 'broker-123',

@@ -13,7 +13,7 @@ import { createError } from '@hyperfrontend/immutable-api-utils/built-in-copy/er
  *
  * @throws {Error} If handler is not a function
  *
- * @example
+ * @example Subscribing to channel messages
  * ```typescript
  * const unsubscribe = subscribeToMessages(channel, (message) => {
  *   console.log('Message:', message.type, message.data)

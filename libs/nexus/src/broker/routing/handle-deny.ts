@@ -14,7 +14,7 @@ import type { RoutingContext } from './types'
  * - Terminates the connection process
  * - Fires 'deny' lifecycle event with error details
  *
- * @example
+ * @example Connection denial during handshake
  * Denial flow (during handshake):
  * Initiator -> REQUEST_CONNECTION
  * Responder validates and rejects

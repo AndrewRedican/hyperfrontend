@@ -8,7 +8,7 @@ import { freeze } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
  * @param state - Current channel state
  * @returns New state with channel deactivated
  *
- * @example
+ * @example Deactivating a channel
  * ```typescript
  * const inactiveState = deactivate(channelState)
  * // => { ...channelState, active: false }

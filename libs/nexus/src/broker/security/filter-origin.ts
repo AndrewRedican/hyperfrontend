@@ -6,11 +6,14 @@
  * @param blacklist - List of blocked origins
  * @returns true if origin is allowed, false otherwise
  *
- * @example
+ * @example Filtering with a whitelist
  * ```typescript
  * filterOrigin('https://app.example.com', ['https://app.example.com'])
  * // => true
+ * ```
  *
+ * @example Filtering with a blacklist
+ * ```typescript
  * filterOrigin('https://untrusted.com', [], ['https://untrusted.com'])
  * // => false
  * ```

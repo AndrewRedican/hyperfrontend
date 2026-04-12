@@ -75,7 +75,7 @@ interface DecryptedPacket {
  * @param config.origin - Allowed origin for messages (defaults to '*')
  * @returns A security transport that encrypts/decrypts actions
  *
- * @example
+ * @example Using encrypted transport
  * ```typescript
  * import { createProtocol } from '@hyperfrontend/network-protocol/browser/v2'
  *

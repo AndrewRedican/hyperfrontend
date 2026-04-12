@@ -105,7 +105,7 @@ export type IAction = IActionWithContract | IActionWithError | IActionWithData |
  * @param action - The action to check
  * @returns True if action contains a contract property
  *
- * @example
+ * @example Checking for contract property
  * ```typescript
  * if (isActionWithContract(action)) {
  *   console.log(action.contract)
@@ -120,7 +120,7 @@ export const isActionWithContract = (action: IAction): action is IActionWithCont
  * @param action - The action to check
  * @returns True if action contains an error property
  *
- * @example
+ * @example Checking for error property
  * ```typescript
  * if (isActionWithError(action)) {
  *   console.error(action.error)
@@ -135,7 +135,7 @@ export const isActionWithError = (action: IAction): action is IActionWithError =
  * @param action - The action to check
  * @returns True if action contains a data property
  *
- * @example
+ * @example Checking for data property
  * ```typescript
  * if (isActionWithData(action)) {
  *   processData(action.data)
@@ -150,7 +150,7 @@ export const isActionWithData = (action: IAction): action is IActionWithData => 
  * @param action - The action to check
  * @returns True if action contains a processId property
  *
- * @example
+ * @example Checking for processId property
  * ```typescript
  * if (isActionWithProcess(action)) {
  *   trackProcess(action.processId)

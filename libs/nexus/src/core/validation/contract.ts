@@ -8,7 +8,7 @@ import { isObject } from './_utils'
  * @param contract - The contract to validate
  * @throws {Error} Error if contract is invalid
  *
- * @example
+ * @example Validating contract structure
  * ```typescript
  * validateContract({
  *   emitted: [{ type: 'ping' }],

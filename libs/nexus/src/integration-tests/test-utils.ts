@@ -33,7 +33,7 @@ export interface MockWindow extends Partial<Window> {
  *
  * @returns A mock window object with jest mock functions
  *
- * @example
+ * @example Linking mock windows for bidirectional communication
  * ```typescript
  * const windowA = createMockWindow()
  * const windowB = createMockWindow()
@@ -84,7 +84,7 @@ export function createMockWindow(): MockWindow {
  * @param originA - Origin URL for window A (e.g., 'http://host-a.com')
  * @param originB - Origin URL for window B (e.g., 'http://host-b.com')
  *
- * @example
+ * @example Setting up bidirectional window communication
  * ```typescript
  * const windowA = createMockWindow()
  * const windowB = createMockWindow()
@@ -122,7 +122,7 @@ export function linkMockWindows(windowA: MockWindow, windowB: MockWindow, origin
  * @param origin - The origin URL of the sender
  * @param source - Optional source window reference
  *
- * @example
+ * @example Dispatching a message to a mock window
  * ```typescript
  * simulateMessage(mockWindow, { type: 'PING' }, 'http://origin.com')
  * ```
@@ -146,7 +146,7 @@ export function simulateMessage(targetWindow: MockWindow, message: IAction, orig
  * @param source - Optional source window
  * @returns A MessageEvent object
  *
- * @example
+ * @example Creating an event for direct handler testing
  * ```typescript
  * const event = createMessageEvent({ type: 'PING' }, 'http://origin.com')
  * handler(event)
@@ -168,7 +168,7 @@ export function createMessageEvent<T = IAction>(data: T, origin: string, source?
  * @param ms - Number of milliseconds to wait
  * @returns A promise that resolves after the specified time
  *
- * @example
+ * @example Waiting for async message delivery
  * ```typescript
  * await wait(100)
  * // 100ms have passed
@@ -184,7 +184,7 @@ export function wait(ms: number): Promise<void> {
  * Call this after operations that use setTimeout to ensure all
  * async operations complete.
  *
- * @example
+ * @example Flushing pending timers after postMessage
  * ```typescript
  * windowA.postMessage({ type: 'PING' })
  * await flushAsync()
@@ -204,7 +204,7 @@ export async function flushAsync(): Promise<void> {
  * @param accepted - Array of message types this side accepts
  * @returns A channel contract object
  *
- * @example
+ * @example Creating a contract with emitted and accepted message types
  * ```typescript
  * const contract = createTestContract(['PING'], ['PONG'])
  * // => { emitted: [{ type: 'PING' }], accepted: [{ type: 'PONG' }] }
@@ -226,7 +226,7 @@ export function createTestContract(emitted: string[] = [], accepted: string[] = 
  * @param bEmits - Message types that side B emits (A accepts)
  * @returns Object with contractA and contractB
  *
- * @example
+ * @example Creating complementary contracts for two sides
  * ```typescript
  * const { contractA, contractB } = createContractPair(['PING'], ['PONG'])
  * // contractA emits PING, accepts PONG

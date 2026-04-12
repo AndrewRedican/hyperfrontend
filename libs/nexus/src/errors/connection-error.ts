@@ -3,7 +3,7 @@ import { setPrototypeOf } from '@hyperfrontend/immutable-api-utils/built-in-copy
 /**
  * Custom error class for connection-related failures.
  *
- * @example
+ * @example Throwing connection error
  * ```typescript
  * throw new ConnectionError('Connection timeout', 'ch-123', 'https://example.com')
  * ```

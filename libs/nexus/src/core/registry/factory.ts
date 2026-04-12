@@ -64,7 +64,7 @@ export type Registry = ChannelRegistry
  *
  * @returns Registry functions for managing channels
  *
- * @example
+ * @example Creating and using a registry
  * ```typescript
  * const registry = createRegistry()
  * registry.add({ id: 'ch-1', name: 'main', target: iframe.contentWindow })

@@ -9,7 +9,7 @@ import { logAction } from '../../utils/logging/log-action'
  * @param context - Routing context with state, registry, actions, and logger
  * @param message - Incoming message event containing the action to route
  *
- * @example
+ * @example Routing actions to handlers
  * ```typescript
  * const router = createRouter({ 'MESSAGE': handleMessage })
  * routeMessage(router, routingContext, incomingEvent)

@@ -9,7 +9,7 @@ import type { SecurityPolicy } from '../types'
  * @param logger - Logger instance for error reporting
  * @returns true if policy allows connection, false otherwise
  *
- * @example
+ * @example Validating connection requests with security policy
  * ```typescript
  * const policy = (event) => event.origin === 'https://trusted.example.com'
  * const allowed = applyPolicy(policy, messageEvent, logger)

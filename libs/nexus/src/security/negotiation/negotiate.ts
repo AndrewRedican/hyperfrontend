@@ -22,7 +22,7 @@ import { freeze } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
  * @param responderSupported - Protocols supported by the responder
  * @returns The negotiation result with the selected protocol
  *
- * @example
+ * @example Negotiating security protocol
  * ```typescript
  * const request = { supported: ['v2', 'v1', 'none'], preferred: 'v2' }
  * const responderSupported = ['v1', 'none']
@@ -59,7 +59,7 @@ export function negotiateProtocol(
  * @param preferred - The initiator's preferred protocol (defaults to first in list)
  * @returns A security negotiation request object
  *
- * @example
+ * @example Creating initiator request
  * ```typescript
  * const request = createSecurityRequest(['v2', 'v1', 'none'])
  * // { supported: ['v2', 'v1', 'none'], preferred: 'v2' }
@@ -88,7 +88,7 @@ export function createSecurityRequest(
  * @param publicParams - Optional public parameters (e.g., key exchange hints)
  * @returns A security negotiation response object
  *
- * @example
+ * @example Creating responder response
  * ```typescript
  * const response = createSecurityResponse('v2', { hint: 'value' })
  * // { negotiated: 'v2', publicParams: { hint: 'value' } }
