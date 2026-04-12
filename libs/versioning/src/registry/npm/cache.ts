@@ -56,7 +56,7 @@ export interface Cache {
  * @param ttl - Time-to-live in milliseconds (default: 60000 = 1 minute)
  * @returns A new Cache instance
  *
- * @example
+ * @example Using a cache with custom TTL
  * ```typescript
  * const cache = createCache(30000) // 30 second TTL
  * cache.set('key', { data: 'value' })

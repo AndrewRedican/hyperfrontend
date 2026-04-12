@@ -9,7 +9,7 @@ import { parseInt } from '@hyperfrontend/immutable-api-utils/built-in-copy/numbe
  * @param heading - The heading string to parse
  * @returns An object containing the parsed version, date, and optional compareUrl
  *
- * @example
+ * @example Parsing version headings
  * ```typescript
  * parseVersionFromHeading('[1.2.3] - 2024-01-15')
  * // => { version: '1.2.3', date: '2024-01-15', compareUrl: undefined }
@@ -248,7 +248,7 @@ function extractLink(str: string): {
  * @param baseUrl - Optional base URL for constructing commit links
  * @returns An array of parsed CommitRef objects
  *
- * @example
+ * @example Parsing commit references from text
  * ```typescript
  * parseCommitRefs('Fixed bug (abc1234)', 'https://github.com/org/repo')
  * // => [{ hash: 'abc1234', shortHash: 'abc1234', url: 'https://github.com/org/repo/commit/abc1234' }]
@@ -296,7 +296,7 @@ export function parseCommitRefs(text: string, baseUrl?: string): CommitRef[] {
  * @param baseUrl - Optional base URL for constructing issue links
  * @returns An array of parsed IssueRef objects
  *
- * @example
+ * @example Parsing issue references from text
  * ```typescript
  * parseIssueRefs('Closes #42 and PR #123', 'https://github.com/org/repo')
  * // => [{ number: 42, type: 'issue', url: '...' }, { number: 123, type: 'pull-request', url: '...' }]
@@ -345,7 +345,7 @@ export function parseIssueRefs(text: string, baseUrl?: string): IssueRef[] {
  * @param text - The text to parse for scope
  * @returns An object with optional scope and the description
  *
- * @example
+ * @example Parsing scope from changelog items
  * ```typescript
  * parseScopeFromItem('**api:** Add new endpoint')
  * // => { scope: 'api', description: 'Add new endpoint' }

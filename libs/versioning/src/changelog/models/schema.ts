@@ -214,7 +214,7 @@ export const changelogSchema: Schema = {
  * @param changelog - The changelog object to validate
  * @returns Validation result with any errors
  *
- * @example
+ * @example Validating a changelog object
  * ```ts
  * const result = validateChangelog(myChangelog)
  * if (!result.valid) {
@@ -234,7 +234,7 @@ export function validateChangelog(changelog: unknown): ValidationResult {
  * @param target - The target changelog
  * @returns Compatibility result with any differences found
  *
- * @example
+ * @example Checking schema compatibility before merge
  * ```ts
  * const result = checkSchemaCompatibility(mainChangelog, branchChangelog)
  * if (!result.compatible) {

@@ -26,7 +26,7 @@ export interface AddEntryOptions {
  * @param options - Optional add options
  * @returns A new changelog with the entry added
  *
- * @example
+ * @example Adding a new entry to a changelog
  * ```ts
  * const newChangelog = addEntry(changelog, {
  *   version: '1.2.0',
@@ -75,7 +75,7 @@ export function addEntry(changelog: Changelog, entry: ChangelogEntry, options?: 
  * @param sections - Sections to include in the unreleased entry
  * @returns A new changelog with unreleased entry added/updated
  *
- * @example
+ * @example Adding an unreleased entry with sections
  * ```typescript
  * const sections = [createChangelogSection('features', 'Added', [item])]
  * const updated = addUnreleasedEntry(changelog, sections)
@@ -96,7 +96,7 @@ export function addUnreleasedEntry(changelog: Changelog, sections: readonly Chan
  * @param compareUrl - Optional comparison URL
  * @returns A new changelog with the unreleased entry converted to a release
  *
- * @example
+ * @example Releasing unreleased changes as a new version
  * ```typescript
  * const released = releaseUnreleased(changelog, '2.0.0', '2024-03-01')
  * // Unreleased entry becomes version 2.0.0 with the specified date

@@ -81,7 +81,7 @@ export const DEFAULT_WORKSPACE_CONFIG: WorkspaceConfig = {
  * @param options - Partial configuration options
  * @returns Complete workspace configuration
  *
- * @example
+ * @example Create a workspace configuration with defaults
  * ```typescript
  * import { createWorkspaceConfig } from '@hyperfrontend/versioning'
  *
@@ -112,7 +112,7 @@ export function createWorkspaceConfig(options?: Partial<WorkspaceConfig>): Works
  * @param options.reverseDependencyGraph - Map of package names to their dependencies
  * @returns A new Workspace object
  *
- * @example
+ * @example Create a new workspace object
  * ```typescript
  * import { createWorkspace, createWorkspaceConfig, createProject } from '@hyperfrontend/versioning'
  *
@@ -161,7 +161,7 @@ export function createWorkspace(options: {
  * @param projectName - Identifier of the project to retrieve
  * @returns The project or undefined if not found
  *
- * @example
+ * @example Get a project by name from the workspace
  * ```typescript
  * import { discoverWorkspace, getProject } from '@hyperfrontend/versioning'
  *
@@ -183,7 +183,7 @@ export function getProject(workspace: Workspace, projectName: string): Project |
  * @param projectName - Identifier of the project to check
  * @returns True if the project exists
  *
- * @example
+ * @example Check if a project exists in the workspace
  * ```typescript
  * import { discoverWorkspace, hasProject } from '@hyperfrontend/versioning'
  *
@@ -203,7 +203,7 @@ export function hasProject(workspace: Workspace, projectName: string): boolean {
  * @param workspace - Workspace to retrieve project names from
  * @returns Array of project names
  *
- * @example
+ * @example Get all project names in the workspace
  * ```typescript
  * import { discoverWorkspace, getProjectNames } from '@hyperfrontend/versioning'
  *
@@ -222,7 +222,7 @@ export function getProjectNames(workspace: Workspace): readonly string[] {
  * @param workspace - Workspace to count projects in
  * @returns Number of projects
  *
- * @example
+ * @example Get the count of projects in the workspace
  * ```typescript
  * import { discoverWorkspace, getProjectCount } from '@hyperfrontend/versioning'
  *
@@ -241,7 +241,7 @@ export function getProjectCount(workspace: Workspace): number {
  * @param projectName - Name of the dependency
  * @returns Array of dependent project names
  *
- * @example
+ * @example Get projects that depend on a given project
  * ```typescript
  * import { discoverWorkspace, getDependents } from '@hyperfrontend/versioning'
  *
@@ -261,7 +261,7 @@ export function getDependents(workspace: Workspace, projectName: string): readon
  * @param projectName - Identifier of the project to look up
  * @returns Array of dependency project names
  *
- * @example
+ * @example Get projects that the given project depends on
  * ```typescript
  * import { discoverWorkspace, getDependencies } from '@hyperfrontend/versioning'
  *
@@ -282,7 +282,7 @@ export function getDependencies(workspace: Workspace, projectName: string): read
  * @param projectB - Name of the potential dependency
  * @returns True if projectA depends on projectB
  *
- * @example
+ * @example Check if one project depends on another
  * ```typescript
  * import { discoverWorkspace, dependsOn } from '@hyperfrontend/versioning'
  *

@@ -32,7 +32,7 @@ export const SYNCED_FLOW_CONFIG: FlowConfig = {
  *
  * @returns A FlowStep that syncs all package versions
  *
- * @example
+ * @example Syncing all packages to the same version
  * ```typescript
  * import { createSyncAllPackagesStep, executeStep } from '@hyperfrontend/versioning'
  *
@@ -90,7 +90,7 @@ export function createSyncAllPackagesStep(): FlowStep {
  *
  * @returns A FlowStep that creates a combined changelog
  *
- * @example
+ * @example Generating a combined changelog for all packages
  * ```typescript
  * import { createCombinedChangelogStep, executeStep } from '@hyperfrontend/versioning'
  *
@@ -147,7 +147,7 @@ export function createCombinedChangelogStep(): FlowStep {
  * @param config - Optional configuration overrides
  * @returns A VersionFlow configured for synced versioning
  *
- * @example
+ * @example Creating a synced versioning flow
  * ```typescript
  * import { createSyncedFlow, executeFlow } from '@hyperfrontend/versioning'
  *
@@ -195,7 +195,7 @@ export function createSyncedFlow(config?: Partial<FlowConfig>): VersionFlow {
  * @param config - Optional configuration overrides
  * @returns A VersionFlow with a fixed version
  *
- * @example
+ * @example Creating a fixed version release flow
  * ```typescript
  * import { createFixedVersionFlow, executeFlow } from '@hyperfrontend/versioning'
  *

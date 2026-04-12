@@ -47,7 +47,7 @@ export interface ConventionalCommit {
  * @param separator - Delimiter between key and value (':' or ' #')
  * @returns A new CommitFooter object
  *
- * @example
+ * @example Creating commit footers
  * ```typescript
  * createCommitFooter('Refs', '#123')
  * // => { key: 'Refs', value: '#123', separator: ':' }
@@ -72,7 +72,7 @@ export function createCommitFooter(key: string, value: string, separator: ':' | 
  * @param options - Optional configuration for scope, body, footers, etc.
  * @returns A new ConventionalCommit object
  *
- * @example
+ * @example Creating conventional commits
  * ```typescript
  * createConventionalCommit('feat', 'add user authentication')
  * // => { type: 'feat', subject: 'add user authentication', footers: [], breaking: false, raw: 'feat: add user authentication' }

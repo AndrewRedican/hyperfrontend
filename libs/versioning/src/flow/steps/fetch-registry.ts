@@ -25,7 +25,7 @@ export const FETCH_REGISTRY_STEP_ID = 'fetch-registry'
  *
  * @returns A FlowStep that fetches registry information
  *
- * @example
+ * @example Fetching published version from registry
  * ```typescript
  * import { createFetchRegistryStep, executeStep } from '@hyperfrontend/versioning'
  *

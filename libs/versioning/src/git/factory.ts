@@ -421,7 +421,7 @@ export const DEFAULT_GIT_CLIENT_CONFIG: Required<Omit<GitClientConfig, 'cwd'>> &
  * @param config - Client configuration
  * @returns GitClient instance
  *
- * @example
+ * @example Create a git client for a repository
  * const git = createGitClient({ cwd: '/path/to/repo' })
  * const status = git.getStatus()
  * const commits = git.getCommitsSince('v1.0.0')

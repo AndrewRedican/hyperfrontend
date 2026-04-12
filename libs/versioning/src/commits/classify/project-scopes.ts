@@ -32,11 +32,11 @@ export interface DeriveProjectScopesOptions {
  * @param options - Project identification options
  * @returns Array of scope strings that match this project
  *
- * @example
+ * @example Deriving scopes for a library project
  * deriveProjectScopes({ projectName: 'lib-versioning', packageName: '@hyperfrontend/versioning' })
  * // Returns: ['lib-versioning', 'versioning']
  *
- * @example
+ * @example Deriving scopes for an app project
  * deriveProjectScopes({ projectName: 'app-demo', packageName: 'demo-app' })
  * // Returns: ['app-demo', 'demo']
  */
@@ -126,7 +126,7 @@ function extractPackageNameVariations(packageName: string): readonly string[] {
  * @param projectScopes - Array of scopes that match the project
  * @returns True if the commit scope matches the project
  *
- * @example
+ * @example Matching scope to project
  * scopeMatchesProject('versioning', ['lib-versioning', 'versioning']) // true
  * scopeMatchesProject('logging', ['lib-versioning', 'versioning']) // false
  */
@@ -146,7 +146,7 @@ export function scopeMatchesProject(commitScope: string | undefined, projectScop
  * @param excludeScopes - Array of scopes to exclude
  * @returns True if the scope should be excluded
  *
- * @example
+ * @example Checking if a scope should be excluded
  * ```typescript
  * scopeIsExcluded('release', ['release', 'deps'])
  * // => true

@@ -75,7 +75,7 @@ function calculateBumpFromCommits(
  *
  * @returns A FlowStep that calculates version bump
  *
- * @example
+ * @example Running the calculate-bump step
  * ```typescript
  * import { createCalculateBumpStep, executeStep } from '@hyperfrontend/versioning'
  *
@@ -214,7 +214,7 @@ export function createCalculateBumpStep(): FlowStep {
  *
  * @returns A FlowStep that checks idempotency
  *
- * @example
+ * @example Preventing duplicate releases
  * ```typescript
  * import { createCheckIdempotencyStep, executeStep } from '@hyperfrontend/versioning'
  *

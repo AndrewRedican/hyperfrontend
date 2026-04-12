@@ -47,7 +47,7 @@ interface RequiredVersionComponents {
  * @param options - Version components
  * @returns A new SemVer object
  *
- * @example
+ * @example Create a SemVer object from components
  * ```typescript
  * createSemVer({ major: 1, minor: 2, patch: 3 })
  * // => { major: 1, minor: 2, patch: 3, prerelease: [], build: [] }
@@ -71,7 +71,7 @@ export function createSemVer(options: Partial<SemVer> & RequiredVersionComponent
  *
  * @returns A SemVer at version 0.0.0
  *
- * @example
+ * @example Create initial 0.0.0 version
  * ```typescript
  * const initial = createInitialVersion()
  * format(initial) // => '0.0.0'
@@ -86,7 +86,7 @@ export function createInitialVersion(): SemVer {
  *
  * @returns A SemVer at version 1.0.0
  *
- * @example
+ * @example Create first 1.0.0 release version
  * ```typescript
  * const first = createFirstRelease()
  * format(first) // => '1.0.0'
@@ -102,7 +102,7 @@ export function createFirstRelease(): SemVer {
  * @param version - The version to check
  * @returns True if version has prerelease identifiers
  *
- * @example
+ * @example Check if version has prerelease identifiers
  * ```typescript
  * isPrerelease(parseVersionStrict('1.0.0-beta.1')) // => true
  * isPrerelease(parseVersionStrict('1.0.0')) // => false
@@ -118,7 +118,7 @@ export function isPrerelease(version: SemVer): boolean {
  * @param version - The version to check
  * @returns True if version is stable
  *
- * @example
+ * @example Check if version is a stable release
  * ```typescript
  * isStable(parseVersionStrict('1.0.0')) // => true
  * isStable(parseVersionStrict('0.9.0')) // => false (< 1.0.0)
@@ -135,7 +135,7 @@ export function isStable(version: SemVer): boolean {
  * @param version - The version to strip
  * @returns A new SemVer without build metadata
  *
- * @example
+ * @example Strip build metadata from version
  * ```typescript
  * const v = parseVersionStrict('1.0.0+build.123')
  * format(stripBuild(v)) // => '1.0.0'
@@ -157,7 +157,7 @@ export function stripBuild(version: SemVer): SemVer {
  * @param version - The version to strip
  * @returns A new SemVer without prerelease identifiers
  *
- * @example
+ * @example Strip prerelease identifiers from version
  * ```typescript
  * const v = parseVersionStrict('1.0.0-beta.1')
  * format(stripPrerelease(v)) // => '1.0.0'

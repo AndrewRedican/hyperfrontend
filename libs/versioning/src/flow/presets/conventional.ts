@@ -50,7 +50,7 @@ export const CONVENTIONAL_FLOW_CONFIG: FlowConfig = {
  * @param config - Optional configuration overrides
  * @returns A VersionFlow configured for conventional commits
  *
- * @example
+ * @example Creating a conventional versioning flow
  * ```typescript
  * import { createConventionalFlow, executeFlow } from '@hyperfrontend/versioning'
  *
@@ -99,7 +99,7 @@ export function createConventionalFlow(config?: Partial<FlowConfig>): VersionFlo
  * @param config - Optional configuration overrides
  * @returns A minimal VersionFlow
  *
- * @example
+ * @example Creating a minimal release flow
  * ```typescript
  * import { createMinimalFlow, executeFlow } from '@hyperfrontend/versioning'
  *
@@ -126,7 +126,7 @@ export function createMinimalFlow(config?: Partial<FlowConfig>): VersionFlow {
  * @param config - Optional configuration overrides
  * @returns A VersionFlow that only updates changelog
  *
- * @example
+ * @example Creating a changelog-only flow
  * ```typescript
  * import { createChangelogOnlyFlow, executeFlow } from '@hyperfrontend/versioning'
  *

@@ -101,7 +101,7 @@ export const SECTION_HEADINGS: Record<ChangelogSectionType, string> = {
  * @param heading - The heading string to parse
  * @returns The corresponding ChangelogSectionType
  *
- * @example
+ * @example Mapping heading strings to section types
  * ```typescript
  * getSectionType('Added')
  * // => 'features'

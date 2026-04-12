@@ -59,12 +59,12 @@ function resolveJsonOptions(options?: JsonSerializeOptions): Required<JsonSerial
  * @param options - Optional JSON serialization options
  * @returns The JSON string representation
  *
- * @example
+ * @example Basic JSON serialization
  * ```ts
  * const json = serializeChangelogToJson(changelog)
  * ```
  *
- * @example
+ * @example Pretty-printing with custom indentation
  * ```ts
  * const json = serializeChangelogToJson(changelog, {
  *   pretty: true,
@@ -91,7 +91,7 @@ export function serializeChangelogToJson(changelog: Changelog, options?: JsonSer
  * @param options - Optional JSON serialization options
  * @returns A plain object suitable for JSON serialization
  *
- * @example
+ * @example Converting changelog to plain object
  * ```typescript
  * const obj = toJsonObject(changelog, { includeSource: true })
  * // => { source: 'CHANGELOG.md', header: { title: '...', ... }, entries: [...] }

@@ -58,7 +58,7 @@ export const DEFAULT_COMMIT_OPTIONS: Required<Omit<GitCommitOptions, 'cwd'>> = {
  * @param options - Create options
  * @returns Created GitCommit
  *
- * @example
+ * @example Create a new commit
  * const commit = createCommit('feat: add new feature')
  * const commit = createCommit('fix: resolve bug', { body: 'Detailed description' })
  */
@@ -144,7 +144,7 @@ export function commit(message: string, options: CreateCommitOptions = {}): GitC
  * @param options - Configuration for the commit operation
  * @returns GitCommit object representing the amended commit
  *
- * @example
+ * @example Amend the last commit with a new message
  * const commit = amendCommit('feat: improved feature')
  */
 export function amendCommit(message: string, options: Omit<CreateCommitOptions, 'amend'> = {}): GitCommit {
@@ -158,7 +158,7 @@ export function amendCommit(message: string, options: Omit<CreateCommitOptions, 
  * @param options - Configuration for the commit operation
  * @returns GitCommit object representing the amended commit
  *
- * @example
+ * @example Add staged changes to last commit without changing message
  * stage(['extra-file.ts'])
  * amendCommitNoEdit() // adds staged files to last commit
  */
@@ -173,7 +173,7 @@ export function amendCommitNoEdit(options: Omit<CreateCommitOptions, 'amend' | '
  * @param options - Configuration for the commit operation
  * @returns GitCommit object representing the new empty commit
  *
- * @example
+ * @example Create an empty commit for CI triggers
  * const commit = createEmptyCommit('chore: trigger CI')
  */
 export function createEmptyCommit(message: string, options: Omit<CreateCommitOptions, 'allowEmpty'> = {}): GitCommit {
@@ -191,7 +191,7 @@ const MAX_PATH_LENGTH = 4096
  * @param path - Path to escape
  * @returns Safe path string
  *
- * @example
+ * @example Escape a file path for git commands
  * ```typescript
  * const safePath = escapeFilePath('src/utils/helper.ts')
  * // => 'src/utils/helper.ts'
@@ -245,7 +245,7 @@ const MAX_AUTHOR_LENGTH = 500
  * @param author - Author to escape
  * @returns Safe author string
  *
- * @example
+ * @example Escape an author string for git commit
  * ```typescript
  * const safeAuthor = escapeAuthor('John Doe <john@example.com>')
  * // => 'John Doe <john@example.com>'

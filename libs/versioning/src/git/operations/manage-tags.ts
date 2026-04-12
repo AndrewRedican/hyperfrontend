@@ -26,7 +26,7 @@ export interface CreateTagOptions extends GitTagOptions {
  * @param options - Configuration including optional message for annotated tags
  * @returns Created GitTag
  *
- * @example
+ * @example Create lightweight and annotated tags
  * // Create lightweight tag
  * const tag = createTag('v1.0.0')
  *
@@ -84,7 +84,7 @@ export function createTag(name: string, options: CreateTagOptions = {}): GitTag 
  * @param options - Configuration for the tag operation
  * @returns True if deleted
  *
- * @example
+ * @example Delete a tag by name
  * const deleted = deleteTag('v1.0.0')
  */
 export function deleteTag(name: string, options: GitTagOptions = {}): boolean {
@@ -112,7 +112,7 @@ export function deleteTag(name: string, options: GitTagOptions = {}): boolean {
  * @param options - Configuration for the tag operation
  * @returns True if pushed successfully
  *
- * @example
+ * @example Push a tag to remote
  * pushTag('v1.0.0')
  * pushTag('v1.0.0', 'upstream')
  */
@@ -148,7 +148,7 @@ const MAX_MESSAGE_LENGTH = 10000
  * @param message - Message to escape
  * @returns Safe message string
  *
- * @example
+ * @example Escape a git commit message
  * ```typescript
  * const safeMessage = escapeGitMessage('Release v1.0.0 "stable"')
  * // => 'Release v1.0.0 \"stable\"'

@@ -18,7 +18,7 @@ const MAX_MESSAGE_LENGTH = 10 * 1024
  * @returns Parsed ConventionalCommit object
  * @throws {Error} If message exceeds maximum length
  *
- * @example
+ * @example Parsing a complete conventional commit message
  * ```typescript
  * parseConventionalCommit('feat(auth): add login\n\nImplements OAuth.\n\nRefs: #123')
  * // => {
@@ -141,7 +141,7 @@ function splitLines(message: string): string[] {
  * @param message - The commit message to check
  * @returns true if the message appears to be a conventional commit
  *
- * @example
+ * @example Checking if a message is a conventional commit
  * ```typescript
  * isConventionalCommit('feat(auth): add OAuth login')
  * // => true

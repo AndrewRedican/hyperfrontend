@@ -16,7 +16,7 @@ export interface ParsedFooters {
  * @param startIndex - Index where footers start
  * @returns Parsed footers
  *
- * @example
+ * @example Parsing commit footers
  * ```typescript
  * const lines = ['feat: add feature', '', 'Refs: #123', 'Fixes #456']
  * const result = parseFooters(lines, 2)

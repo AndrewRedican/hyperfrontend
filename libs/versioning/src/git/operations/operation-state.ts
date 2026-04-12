@@ -66,7 +66,7 @@ export const DEFAULT_OPERATION_STATE_OPTIONS: Required<Omit<GitOperationStateOpt
  * @param options - Configuration for the state check
  * @returns Operation state with reason if in progress
  *
- * @example
+ * @example Detect if git is mid-operation
  * const state = getOperationState()
  * if (state.inProgress) {
  *   console.warn(`Cannot proceed: git ${state.reason} in progress`)
@@ -117,7 +117,7 @@ export function getOperationState(options: GitOperationStateOptions = {}): GitOp
  * @param options - Configuration for the state check
  * @returns True if rebase, merge, or other operation is incomplete
  *
- * @example
+ * @example Check for incomplete operations
  * if (isOperationInProgress()) {
  *   throw new Error('Complete or abort the current git operation first')
  * }

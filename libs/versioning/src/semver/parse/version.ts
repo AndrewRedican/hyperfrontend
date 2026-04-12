@@ -30,7 +30,7 @@ const MAX_VERSION_LENGTH = 256
  * @param input - The version string to parse
  * @returns A ParseVersionResult with the parsed version or error
  *
- * @example
+ * @example Parse a semantic version string
  * parseVersion('1.2.3') // { success: true, version: { major: 1, minor: 2, patch: 3, ... } }
  * parseVersion('v1.0.0-alpha.1+build.123') // { success: true, ... }
  * parseVersion('invalid') // { success: false, error: '...' }
@@ -137,7 +137,7 @@ export function parseVersion(input: string): ParseVersionResult {
  * @returns The parsed SemVer
  * @throws {Error} If the input is not a valid version
  *
- * @example
+ * @example Parse version with strict validation
  * ```typescript
  * const v = parseVersionStrict('1.2.3')
  * // => { major: 1, minor: 2, patch: 3, prerelease: [], build: [] }
@@ -159,7 +159,7 @@ export function parseVersionStrict(input: string): SemVer {
  * @param input - The string to coerce
  * @returns The parsed SemVer or null if coercion failed
  *
- * @example
+ * @example Coerce partial versions to valid semver
  * coerceVersion('1') // { major: 1, minor: 0, patch: 0, ... }
  * coerceVersion('1.2') // { major: 1, minor: 2, patch: 0, ... }
  * coerceVersion('v2.0') // { major: 2, minor: 0, patch: 0, ... }

@@ -90,7 +90,7 @@ export const DEFAULT_STATUS_OPTIONS: Required<Omit<GitStatusOptions, 'cwd'>> = {
  * @param options - Configuration for the status query
  * @returns Comprehensive repository status information
  *
- * @example
+ * @example Get the full repository status
  * const status = getStatus()
  * if (!status.clean) {
  *   console.log('Working tree has changes')
@@ -339,7 +339,7 @@ function startsWithPrefix(str: string, prefix: string): boolean {
  * @param options - Configuration for the status check
  * @returns True if working tree is clean with no uncommitted changes
  *
- * @example
+ * @example Check if working tree is clean
  * if (!isClean()) {
  *   throw new Error('Working tree has changes')
  * }
@@ -355,7 +355,7 @@ export function isClean(options: GitStatusOptions = {}): boolean {
  * @param options - Status options
  * @returns True if in a git repository
  *
- * @example
+ * @example Check if directory is a git repository
  * if (!isGitRepository()) {
  *   throw new Error('Not a git repository')
  * }
@@ -382,7 +382,7 @@ export function isGitRepository(options: GitStatusOptions = {}): boolean {
  * @param options - Status options
  * @returns Root directory path or null
  *
- * @example
+ * @example Get the repository root directory
  * const root = getRepositoryRoot()
  */
 export function getRepositoryRoot(options: GitStatusOptions = {}): string | null {
@@ -406,7 +406,7 @@ export function getRepositoryRoot(options: GitStatusOptions = {}): string | null
  * @param options - Status options
  * @returns Commit hash or null
  *
- * @example
+ * @example Get the current HEAD commit hash
  * ```typescript
  * const hash = getHeadHash()
  * // => 'abc123def456789012345678901234567890abcd'
@@ -433,7 +433,7 @@ export function getHeadHash(options: GitStatusOptions = {}): string | null {
  * @param options - Status options
  * @returns Short hash or null
  *
- * @example
+ * @example Get the short HEAD commit hash
  * ```typescript
  * const shortHash = getHeadShortHash()
  * // => 'abc123d'
@@ -460,7 +460,7 @@ export function getHeadShortHash(options: GitStatusOptions = {}): string | null 
  * @param options - Status options
  * @returns True if there are conflicts
  *
- * @example
+ * @example Check for merge conflicts
  * ```typescript
  * if (hasConflicts()) {
  *   console.log('Resolve merge conflicts before continuing')
@@ -478,7 +478,7 @@ export function hasConflicts(options: GitStatusOptions = {}): boolean {
  * @param options - Status options
  * @returns Number of commits ahead
  *
- * @example
+ * @example Get commits ahead of upstream
  * ```typescript
  * const ahead = getAheadCount()
  * console.log(`${ahead} commits to push`)
@@ -495,7 +495,7 @@ export function getAheadCount(options: GitStatusOptions = {}): number {
  * @param options - Status options
  * @returns Number of commits behind
  *
- * @example
+ * @example Get commits behind upstream
  * ```typescript
  * const behind = getBehindCount()
  * console.log(`${behind} commits to pull`)
@@ -512,7 +512,7 @@ export function getBehindCount(options: GitStatusOptions = {}): number {
  * @param options - Status options
  * @returns True if there are unpushed commits
  *
- * @example
+ * @example Check if repository needs to be pushed
  * ```typescript
  * if (needsPush()) {
  *   console.log('Local commits need to be pushed')
@@ -529,7 +529,7 @@ export function needsPush(options: GitStatusOptions = {}): boolean {
  * @param options - Status options
  * @returns True if there are commits to pull
  *
- * @example
+ * @example Check if repository needs to be pulled
  * ```typescript
  * if (needsPull()) {
  *   console.log('Remote commits need to be pulled')
@@ -546,7 +546,7 @@ export function needsPull(options: GitStatusOptions = {}): boolean {
  * @param options - Status options
  * @returns Array of staged file paths
  *
- * @example
+ * @example Get list of staged files
  * ```typescript
  * const staged = getStagedFiles()
  * // => ['src/index.ts', 'package.json']
@@ -563,7 +563,7 @@ export function getStagedFiles(options: GitStatusOptions = {}): readonly string[
  * @param options - Status options
  * @returns Array of modified file paths
  *
- * @example
+ * @example Get list of modified files
  * ```typescript
  * const modified = getModifiedFiles()
  * // => ['src/utils.ts', 'README.md']
@@ -580,7 +580,7 @@ export function getModifiedFiles(options: GitStatusOptions = {}): readonly strin
  * @param options - Status options
  * @returns Array of untracked file paths
  *
- * @example
+ * @example Get list of untracked files
  * ```typescript
  * const untracked = getUntrackedFiles()
  * // => ['new-file.ts', 'temp.log']

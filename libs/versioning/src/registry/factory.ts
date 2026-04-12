@@ -14,7 +14,7 @@ export type RegistryType = 'npm'
  * @param config - Registry configuration
  * @returns A Registry instance
  *
- * @example
+ * @example Creating an npm registry client
  * const registry = createRegistry('npm')
  * const version = await registry.getLatestVersion('lodash')
  */

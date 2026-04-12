@@ -62,7 +62,7 @@ export interface ValidationCheckResult {
  * @param workspace - The workspace to validate
  * @returns Validation report
  *
- * @example
+ * @example Validate a workspace for common issues
  * ```typescript
  * import { validateWorkspace } from '@hyperfrontend/versioning'
  *
@@ -363,7 +363,7 @@ function isWorkspaceVersion(versionRange: string): boolean {
  * @param project - The project to validate
  * @returns Validation result
  *
- * @example
+ * @example Validate a single project
  * ```typescript
  * import { discoverProject, validateProject } from '@hyperfrontend/versioning'
  *
@@ -396,7 +396,7 @@ export function validateProject(project: Project): ValidationResult {
  * @param report - Report object from workspace validation
  * @returns Human-readable summary
  *
- * @example
+ * @example Create a summary of the validation report
  * ```typescript
  * import { validateWorkspace, summarizeValidation } from '@hyperfrontend/versioning'
  *

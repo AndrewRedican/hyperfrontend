@@ -39,7 +39,7 @@ export interface CreateCompareUrlOptions {
  * @param options - Compare URL options including repository, fromCommit, and toCommit
  * @returns The compare URL string, or null if URL cannot be generated
  *
- * @example
+ * @example Creating platform-specific compare URLs
  * ```typescript
  * // GitHub
  * createCompareUrl({

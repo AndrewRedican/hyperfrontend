@@ -10,7 +10,7 @@ import { createSet } from '@hyperfrontend/immutable-api-utils/built-in-copy/set'
  * @param b - Second changelog
  * @returns True if changelogs are identical
  *
- * @example
+ * @example Checking changelog equality
  * ```ts
  * if (isChangelogEqual(mainChangelog, branchChangelog)) {
  *   console.log('Changelogs are identical')
@@ -41,7 +41,7 @@ export function isChangelogEqual(a: Changelog, b: Changelog): boolean {
  * @param b - Second header
  * @returns True if headers are equal
  *
- * @example
+ * @example Comparing changelog headers
  * ```typescript
  * isHeaderEqual(changelog1.header, changelog2.header)
  * // => true if titles, descriptions, and links match
@@ -72,7 +72,7 @@ export function isHeaderEqual(a: ChangelogHeader, b: ChangelogHeader): boolean {
  * @param b - Second link
  * @returns True if links are equal
  *
- * @example
+ * @example Comparing changelog links
  * ```typescript
  * isLinkEqual({ label: '1.0.0', url: '...' }, { label: '1.0.0', url: '...' })
  * // => true
@@ -89,7 +89,7 @@ export function isLinkEqual(a: ChangelogLink, b: ChangelogLink): boolean {
  * @param b - Second entry
  * @returns True if entries are equal
  *
- * @example
+ * @example Comparing changelog entries
  * ```typescript
  * isEntryEqual(entryA, entryB)
  * // => true if version, date, sections, and all nested data match
@@ -119,7 +119,7 @@ export function isEntryEqual(a: ChangelogEntry, b: ChangelogEntry): boolean {
  * @param b - Second section
  * @returns True if sections are equal
  *
- * @example
+ * @example Comparing changelog sections
  * ```typescript
  * isSectionEqual(featuresA, featuresB)
  * // => true if type, heading, and all items match
@@ -146,7 +146,7 @@ export function isSectionEqual(a: ChangelogSection, b: ChangelogSection): boolea
  * @param b - Second item
  * @returns True if items are equal
  *
- * @example
+ * @example Comparing changelog items
  * ```typescript
  * isItemEqual(itemA, itemB)
  * // => true if description, scope, breaking, commits, and references match
@@ -181,7 +181,7 @@ export function isItemEqual(a: ChangelogItem, b: ChangelogItem): boolean {
  * @param b - Second commit ref
  * @returns True if commit refs are equal
  *
- * @example
+ * @example Comparing commit references
  * ```typescript
  * isCommitRefEqual(commitA, commitB)
  * // => true if hash, shortHash, and url match
@@ -198,7 +198,7 @@ export function isCommitRefEqual(a: CommitRef, b: CommitRef): boolean {
  * @param b - Second issue ref
  * @returns True if issue refs are equal
  *
- * @example
+ * @example Comparing issue references
  * ```typescript
  * isIssueRefEqual({ number: 42, type: 'issue' }, { number: 42, type: 'issue' })
  * // => true
@@ -215,7 +215,7 @@ export function isIssueRefEqual(a: IssueRef, b: IssueRef): boolean {
  * @param b - Second metadata
  * @returns True if metadata are equal
  *
- * @example
+ * @example Comparing changelog metadata
  * ```typescript
  * isMetadataEqual(changelog1.metadata, changelog2.metadata)
  * // => true if format, isConventional, repositoryUrl, and warnings match
@@ -243,7 +243,7 @@ export function isMetadataEqual(a: ChangelogMetadata, b: ChangelogMetadata): boo
  * @param b - Second changelog
  * @returns True if both changelogs have the same versions
  *
- * @example
+ * @example Checking if changelogs have the same versions
  * ```typescript
  * haveSameVersions(changelog1, changelog2)
  * // => true if both have entries for the same version strings
@@ -271,7 +271,7 @@ export function haveSameVersions(a: Changelog, b: Changelog): boolean {
  * @param version - The version to look for
  * @returns True if the version exists in the changelog
  *
- * @example
+ * @example Checking if a changelog contains a version
  * ```typescript
  * hasVersion(changelog, '2.0.0')
  * // => true if an entry for version 2.0.0 exists
@@ -288,7 +288,7 @@ export function hasVersion(changelog: Changelog, version: string): boolean {
  * @param version - The version to find
  * @returns The entry if found, undefined otherwise
  *
- * @example
+ * @example Getting an entry by version
  * ```typescript
  * const entry = getEntryByVersion(changelog, '1.0.0')
  * // => ChangelogEntry for 1.0.0 or undefined

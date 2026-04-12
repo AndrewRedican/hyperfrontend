@@ -8,7 +8,7 @@ import { findProjectChangelog } from './discover-changelogs'
  * @param projectPath - Directory containing the project to check
  * @returns True if changelog exists
  *
- * @example
+ * @example Check if a project has a changelog
  * ```typescript
  * import { hasChangelog } from '@hyperfrontend/versioning'
  *
@@ -29,7 +29,7 @@ export function hasChangelog(projectPath: string): boolean {
  * @param fileName - Changelog filename to use (default: 'CHANGELOG.md')
  * @returns Absolute path to changelog file in the project directory
  *
- * @example
+ * @example Get expected changelog path for a project
  * ```typescript
  * import { getExpectedChangelogPath } from '@hyperfrontend/versioning'
  *

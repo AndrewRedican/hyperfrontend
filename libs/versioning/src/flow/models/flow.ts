@@ -46,7 +46,7 @@ export interface CreateFlowOptions {
  * @param options - Optional flow configuration
  * @returns A VersionFlow object
  *
- * @example
+ * @example Creating a custom flow
  * ```typescript
  * const myFlow = createFlow(
  *   'custom',
@@ -74,7 +74,7 @@ export function createFlow(id: string, name: string, steps: readonly FlowStep[],
  * @param step - The step to add
  * @returns A new VersionFlow with the step added
  *
- * @example
+ * @example Adding a custom step to a flow
  * ```typescript
  * import { addStep, createConventionalFlow, createNoopStep } from '@hyperfrontend/versioning'
  *
@@ -100,7 +100,7 @@ export function addStep(flow: VersionFlow, step: FlowStep): VersionFlow {
  * @param stepId - The ID of the step to remove
  * @returns A new VersionFlow without the step
  *
- * @example
+ * @example Removing a step from a flow
  * ```typescript
  * import { removeStep, createConventionalFlow } from '@hyperfrontend/versioning'
  *
@@ -127,7 +127,7 @@ export function removeStep(flow: VersionFlow, stepId: string): VersionFlow {
  * @param index - Position to insert at (0-based)
  * @returns A new VersionFlow with the step inserted
  *
- * @example
+ * @example Inserting a step at a specific position
  * ```typescript
  * import { insertStep, createConventionalFlow, createNoopStep } from '@hyperfrontend/versioning'
  *
@@ -155,12 +155,12 @@ export function insertStep(flow: VersionFlow, step: FlowStep, index: number): Ve
  * @param afterStepId - ID of the step to insert after
  * @returns A new VersionFlow with the step inserted
  *
- * @example
+ * @example Inserting a step after another step
  * ```typescript
  * import { insertStepAfter, createConventionalFlow, createNoopStep } from '@hyperfrontend/versioning'
  *
  * const flow = createConventionalFlow()
- * const modified = insertStepAfter(flow, createNoopStep('validate', 'Validate'), 'analyze-commits')
+ * const modified = insertStepAfter(flow, createNoopStep('validate', 'Validate'), 'analyze-commits'))
  *
  * // 'validate' step now follows 'analyze-commits'
  * ```
@@ -181,12 +181,12 @@ export function insertStepAfter(flow: VersionFlow, step: FlowStep, afterStepId: 
  * @param beforeStepId - ID of the step to insert before
  * @returns A new VersionFlow with the step inserted
  *
- * @example
+ * @example Inserting a step before another step
  * ```typescript
  * import { insertStepBefore, createConventionalFlow, createNoopStep } from '@hyperfrontend/versioning'
  *
  * const flow = createConventionalFlow()
- * const modified = insertStepBefore(flow, createNoopStep('prep', 'Prepare'), 'create-commit')
+ * const modified = insertStepBefore(flow, createNoopStep('prep', 'Prepare'), 'create-commit'))
  *
  * // 'prep' step now runs before 'create-commit'
  * ```
@@ -207,7 +207,7 @@ export function insertStepBefore(flow: VersionFlow, step: FlowStep, beforeStepId
  * @param newStep - The replacement step
  * @returns A new VersionFlow with the step replaced
  *
- * @example
+ * @example Replacing a step with a custom implementation
  * ```typescript
  * import { replaceStep, createConventionalFlow, createNoopStep } from '@hyperfrontend/versioning'
  *
@@ -231,7 +231,7 @@ export function replaceStep(flow: VersionFlow, stepId: string, newStep: FlowStep
  * @param config - Configuration updates to merge
  * @returns A new VersionFlow with updated config
  *
- * @example
+ * @example Updating flow configuration
  * ```typescript
  * import { withConfig, createConventionalFlow } from '@hyperfrontend/versioning'
  *
@@ -255,7 +255,7 @@ export function withConfig(flow: VersionFlow, config: Partial<FlowConfig>): Vers
  * @param stepId - The step ID to find
  * @returns The step if found, undefined otherwise
  *
- * @example
+ * @example Getting a step by ID
  * ```typescript
  * import { getStep, createConventionalFlow } from '@hyperfrontend/versioning'
  *
@@ -277,7 +277,7 @@ export function getStep(flow: VersionFlow, stepId: string): FlowStep | undefined
  * @param stepId - The step ID to look for
  * @returns True if the flow contains the step
  *
- * @example
+ * @example Checking if a flow has a step
  * ```typescript
  * import { hasStep, createConventionalFlow } from '@hyperfrontend/versioning'
  *

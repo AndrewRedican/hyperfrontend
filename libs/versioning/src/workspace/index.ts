@@ -88,7 +88,7 @@ function detectWorkspaceType(workspaceRoot: string): WorkspaceType {
  * @param options - Discovery configuration options
  * @returns Complete workspace object with projects and dependency graph
  *
- * @example
+ * @example Create a complete workspace object from disk
  * ```typescript
  * import { createWorkspaceFromDisk } from '@hyperfrontend/versioning'
  *

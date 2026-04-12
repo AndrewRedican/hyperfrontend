@@ -62,7 +62,7 @@ type CommitFilesOptions = Required<Omit<DiffOptions, 'cwd'>> & Pick<DiffOptions,
  * @param options - Additional options
  * @returns Deduplicated list of changed file paths (relative to repo root)
  *
- * @example
+ * @example Get changed files between refs
  * // Files changed since diverging from main
  * const files = getChangedFilesBetween('origin/main')
  *
@@ -97,7 +97,7 @@ export function getChangedFilesBetween(base: string, head = 'HEAD', options: Dif
  * @param options - Additional options
  * @returns Array of file changes with status
  *
- * @example
+ * @example Get file changes with status information
  * const changes = getChangedFilesBetweenWithStatus('v1.0.0', 'v2.0.0')
  * const added = changes.filter(c => c.status === 'added')
  */
@@ -132,7 +132,7 @@ export function getChangedFilesBetweenWithStatus(base: string, head = 'HEAD', op
  * @param options - Additional options
  * @returns Commit with files, or null if not found
  *
- * @example
+ * @example Get commit with its changed files
  * const commit = getCommitWithFiles('abc123')
  * if (commit) {
  *   console.log(`${commit.subject} touched ${commit.files.length} files`)

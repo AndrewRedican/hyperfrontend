@@ -65,7 +65,7 @@ export interface CreateAnnotatedTagOptions extends CreateLightweightTagOptions {
  * @param options - Tag creation options
  * @returns A new GitTag object
  *
- * @example
+ * @example Create a lightweight git tag
  * const tag = createLightweightTag({
  *   name: 'v1.0.0',
  *   commitHash: 'abc123...',
@@ -85,7 +85,7 @@ export function createLightweightTag(options: CreateLightweightTagOptions): GitT
  * @param options - Tag creation options
  * @returns A new GitTag object
  *
- * @example
+ * @example Create an annotated git tag with metadata
  * const tag = createAnnotatedTag({
  *   name: 'v1.0.0',
  *   commitHash: 'abc123...',
@@ -113,7 +113,7 @@ export function createAnnotatedTag(options: CreateAnnotatedTagOptions): GitTag {
  * @param tag - Tag to check
  * @returns True if tag is annotated
  *
- * @example
+ * @example Check if a tag is annotated
  * ```typescript
  * const tag = createAnnotatedTag({ name: 'v1.0.0', commitHash: 'abc123', message: 'Release' })
  * isAnnotatedTag(tag) // => true
@@ -129,7 +129,7 @@ export function isAnnotatedTag(tag: GitTag): boolean {
  * @param tag - Tag to check
  * @returns True if tag is lightweight
  *
- * @example
+ * @example Check if a tag is lightweight
  * ```typescript
  * const tag = createLightweightTag({ name: 'v1.0.0', commitHash: 'abc123' })
  * isLightweightTag(tag) // => true
@@ -147,7 +147,7 @@ export function isLightweightTag(tag: GitTag): boolean {
  * @param tagName - Tag name to parse
  * @returns The extracted version string or undefined if no version found
  *
- * @example
+ * @example Extract version from various tag formats
  * extractVersionFromTag('v1.2.3') // '1.2.3'
  * extractVersionFromTag('@scope/pkg@1.2.3') // '1.2.3'
  * extractVersionFromTag('release-1.2.3') // '1.2.3'
@@ -258,7 +258,7 @@ function parseVersionPart(input: string): string | undefined {
  * @param tagName - Tag name to parse
  * @returns The extracted package name or undefined if not found
  *
- * @example
+ * @example Extract package name from tag
  * extractPackageFromTag('@scope/pkg@1.2.3') // '@scope/pkg'
  * extractPackageFromTag('lib-utils@1.2.3') // 'lib-utils'
  * extractPackageFromTag('v1.2.3') // undefined
@@ -311,7 +311,7 @@ export function extractPackageFromTag(tagName: string): string | undefined {
  * @param format - Tag format template, uses ${package} and ${version} placeholders
  * @returns Formatted tag name
  *
- * @example
+ * @example Build tag names with different formats
  * buildTagName('@scope/pkg', '1.2.3') // '@scope/pkg@1.2.3'
  * buildTagName('utils', '1.0.0', 'v${version}') // 'v1.0.0'
  * buildTagName('pkg', '2.0.0', '${package}-v${version}') // 'pkg-v2.0.0'
@@ -344,7 +344,7 @@ export function buildTagName(packageName: string, version: string, format = '${p
  * @param b - Second tag
  * @returns Comparison result (-1, 0, or 1)
  *
- * @example
+ * @example Sort tags by version (newest first)
  * ```typescript
  * const tags = [tagV1, tagV2, tagV3]
  * tags.sort(compareTagsByVersion) // => [tagV3, tagV2, tagV1]

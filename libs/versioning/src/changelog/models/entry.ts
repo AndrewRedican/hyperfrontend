@@ -78,7 +78,7 @@ export interface ChangelogEntry {
  * @param options - Optional configuration for scope, commits, references, and breaking flag
  * @returns A new ChangelogItem object
  *
- * @example
+ * @example Creating a changelog item with options
  * ```typescript
  * const item = createChangelogItem('Add user authentication', {
  *   scope: 'auth',
@@ -107,7 +107,7 @@ export function createChangelogItem(description: string, options?: Partial<Omit<
  * @param items - Optional array of changelog items in this section
  * @returns A new ChangelogSection object
  *
- * @example
+ * @example Creating a features section with items
  * ```typescript
  * const section = createChangelogSection('features', 'Added', [
  *   createChangelogItem('New dashboard widget'),
@@ -133,7 +133,7 @@ export function createChangelogSection(
  * @param options - Optional configuration for date, sections, and other properties
  * @returns A new ChangelogEntry object
  *
- * @example
+ * @example Creating a changelog entry with date and sections
  * ```typescript
  * const entry = createChangelogEntry('1.0.0', {
  *   date: '2024-01-15',
@@ -158,7 +158,7 @@ export function createChangelogEntry(version: string, options?: Partial<Omit<Cha
  * @param sections - Optional array of changelog sections
  * @returns A new ChangelogEntry object marked as unreleased
  *
- * @example
+ * @example Creating an unreleased entry
  * ```typescript
  * const unreleased = createUnreleasedEntry([
  *   createChangelogSection('features', 'Added', [item]),

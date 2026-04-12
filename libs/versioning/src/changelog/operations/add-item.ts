@@ -11,7 +11,7 @@ import { createError } from '@hyperfrontend/immutable-api-utils/built-in-copy/er
  * @param item - Description of the change with optional scope and metadata
  * @returns A new changelog with the item added
  *
- * @example
+ * @example Adding a feature item to an entry
  * ```typescript
  * const item = { description: 'Add dark mode support', scope: 'ui' }
  * const updated = addItemToEntry(changelog, '1.2.0', 'features', item)

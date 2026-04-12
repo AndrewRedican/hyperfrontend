@@ -20,7 +20,7 @@ export interface ParsedHeader {
  * @param line - The first line of the commit message
  * @returns Parsed header with type, scope, subject, and breaking flag
  *
- * @example
+ * @example Parsing conventional commit headers
  * ```typescript
  * parseHeader('feat(auth): add OAuth login')
  * // => { type: 'feat', scope: 'auth', subject: 'add OAuth login', breaking: false }

@@ -10,7 +10,7 @@ import { createSemVer } from '../models/version'
  * @param prereleaseId - Optional prerelease identifier for prerelease bumps
  * @returns A new incremented SemVer
  *
- * @example
+ * @example Increment version by bump type
  * increment(parseVersion('1.2.3'), 'minor') // 1.3.0
  * increment(parseVersion('1.2.3'), 'major') // 2.0.0
  * increment(parseVersion('1.2.3'), 'prerelease', 'alpha') // 1.2.4-alpha.0
@@ -96,7 +96,7 @@ export function increment(version: SemVer, type: BumpType, prereleaseId?: string
  * @param id - Optional prerelease identifier
  * @returns A new version with incremented prerelease
  *
- * @example
+ * @example Increment the prerelease portion of a version
  * ```typescript
  * incrementPrerelease(parseVersionStrict('1.0.0')) // => 1.0.1-alpha.0
  * incrementPrerelease(parseVersionStrict('1.0.0-alpha.0')) // => 1.0.0-alpha.1
@@ -149,7 +149,7 @@ export function incrementPrerelease(version: SemVer, id?: string): SemVer {
  * @param newer - The newer version
  * @returns The type of difference, or null if versions are equal
  *
- * @example
+ * @example Calculate the difference type between two versions
  * diff(parseVersion('1.0.0'), parseVersion('2.0.0')) // 'major'
  * diff(parseVersion('1.0.0'), parseVersion('1.1.0')) // 'minor'
  * diff(parseVersion('1.0.0'), parseVersion('1.0.1')) // 'patch'

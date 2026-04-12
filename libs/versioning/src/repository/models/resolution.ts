@@ -75,7 +75,7 @@ export interface RepositoryResolution {
  *
  * @returns A RepositoryResolution with mode 'disabled'
  *
- * @example
+ * @example Disabling repository resolution
  * ```typescript
  * const config = createDisabledResolution()
  * // { mode: 'disabled' }
@@ -91,7 +91,7 @@ export function createDisabledResolution(): RepositoryResolution {
  * @param repository - The repository config to use
  * @returns A RepositoryResolution with mode 'explicit'
  *
- * @example
+ * @example Using an explicit repository configuration
  * ```typescript
  * const config = createExplicitResolution({
  *   platform: 'github',
@@ -112,7 +112,7 @@ export function createExplicitResolution(repository: RepositoryConfig): Reposito
  * @param inferenceOrder - Order to try inference sources (default: package-json first)
  * @returns A RepositoryResolution with mode 'inferred'
  *
- * @example
+ * @example Configuring inference order
  * ```typescript
  * // Default order: package.json → git remote
  * const config = createInferredResolution()
@@ -136,7 +136,7 @@ export function createInferredResolution(
  * @param value - Value to check
  * @returns True if the value is a RepositoryResolution
  *
- * @example
+ * @example Type-checking resolution configurations
  * ```typescript
  * import { isRepositoryResolution } from '@hyperfrontend/versioning'
  *

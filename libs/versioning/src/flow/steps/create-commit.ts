@@ -17,7 +17,7 @@ export const CREATE_COMMIT_STEP_ID = 'create-commit'
  *
  * @returns A FlowStep that creates a git commit
  *
- * @example
+ * @example Creating and staging a release commit
  * ```typescript
  * import { createGitCommitStep, executeStep } from '@hyperfrontend/versioning'
  *

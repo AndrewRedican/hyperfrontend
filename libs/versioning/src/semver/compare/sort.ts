@@ -7,7 +7,7 @@ import { compare } from './compare'
  * @param versions - Array of versions to sort
  * @returns A new sorted array
  *
- * @example
+ * @example Sort versions in ascending order
  * sort([v2, v1, v3]) // [v1, v2, v3]
  */
 export function sort(versions: readonly SemVer[]): SemVer[] {
@@ -20,7 +20,7 @@ export function sort(versions: readonly SemVer[]): SemVer[] {
  * @param versions - Array of versions to sort
  * @returns A new sorted array
  *
- * @example
+ * @example Sort versions in descending order
  * sortDescending([v1, v3, v2]) // [v3, v2, v1]
  */
 export function sortDescending(versions: readonly SemVer[]): SemVer[] {
@@ -33,7 +33,7 @@ export function sortDescending(versions: readonly SemVer[]): SemVer[] {
  * @param versions - Array of versions
  * @returns The maximum version, or null if array is empty
  *
- * @example
+ * @example Get the maximum version from an array
  * ```typescript
  * const versions = [parseVersionStrict('1.0.0'), parseVersionStrict('2.0.0')]
  * max(versions) // => { major: 2, minor: 0, patch: 0, ... }
@@ -59,7 +59,7 @@ export function max(versions: readonly SemVer[]): SemVer | null {
  * @param versions - Array of versions
  * @returns The minimum version, or null if array is empty
  *
- * @example
+ * @example Get the minimum version from an array
  * ```typescript
  * const versions = [parseVersionStrict('1.0.0'), parseVersionStrict('2.0.0')]
  * min(versions) // => { major: 1, minor: 0, patch: 0, ... }

@@ -8,7 +8,7 @@ import { DEFAULT_COMMIT_OPTIONS } from './commit'
  * @param options - Git operation configuration
  * @returns HEAD commit hash or null
  *
- * @example
+ * @example Get the current HEAD commit
  * const head = getHead()
  */
 export function getHead(options: GitCommitOptions = {}): string | null {
@@ -32,7 +32,7 @@ export function getHead(options: GitCommitOptions = {}): string | null {
  * @param options - Configuration for the operation
  * @returns Branch name or null if detached
  *
- * @example
+ * @example Get the current branch name
  * const branch = getCurrentBranch()
  */
 export function getCurrentBranch(options: GitCommitOptions = {}): string | null {
@@ -57,7 +57,7 @@ export function getCurrentBranch(options: GitCommitOptions = {}): string | null 
  * @param options - Configuration for the operation
  * @returns True if there are untracked files in the working directory
  *
- * @example
+ * @example Check for untracked files
  * ```typescript
  * if (hasUntrackedFiles()) {
  *   console.log('New files detected that are not tracked by git')

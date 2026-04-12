@@ -25,7 +25,7 @@ export const PATCH_TYPES = <const>['fix', 'perf', 'revert']
  * @param type - The commit type to check
  * @returns True if the type is a standard conventional commit type
  *
- * @example
+ * @example Checking for standard commit types
  * ```typescript
  * isStandardType('feat')
  * // => true
@@ -44,7 +44,7 @@ export function isStandardType(type: string): type is CommitType {
  * @param type - The commit type to check
  * @returns True if the type triggers a release
  *
- * @example
+ * @example Checking for release-triggering types
  * ```typescript
  * isReleaseType('feat')
  * // => true
@@ -65,7 +65,7 @@ export function isReleaseType(type: string): boolean {
  * @param breaking - Whether this is a breaking change
  * @returns The semver bump level ('major', 'minor', 'patch', or 'none')
  *
- * @example
+ * @example Determining semver bump level
  * ```typescript
  * getSemverBump('feat', false)
  * // => 'minor'

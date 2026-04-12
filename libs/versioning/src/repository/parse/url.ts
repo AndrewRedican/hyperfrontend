@@ -46,7 +46,7 @@ export interface ParsedRepository {
  * @param gitUrl - Git repository URL in any supported format
  * @returns Parsed repository info with platform and base URL, or null if parsing fails
  *
- * @example
+ * @example Parsing various git URL formats
  * ```typescript
  * // GitHub HTTPS
  * parseRepositoryUrl('https://github.com/owner/repo')
@@ -282,9 +282,9 @@ function constructAzureDevOpsBaseUrl(hostname: string, pathPart: string): string
  * @param gitUrl - Git repository URL in any supported format
  * @returns RepositoryConfig or null if URL cannot be parsed
  *
- * @example
+ * @example Creating config from git URLs
  * ```typescript
- * const config = createRepositoryConfigFromUrl('https://github.com/owner/repo')
+ * const config = createRepositoryConfigFromUrl('https://github.com/owner/repo'))
  * // → { platform: 'github', baseUrl: 'https://github.com/owner/repo' }
  *
  * const config = createRepositoryConfigFromUrl('git@gitlab.com:group/project.git')

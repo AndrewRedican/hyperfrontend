@@ -114,7 +114,7 @@ export interface DirectBumpInput {
  * @param options - Configuration for cascade bump calculation
  * @returns Cascade bump result
  *
- * @example
+ * @example Calculate cascade bumps for a workspace
  * ```typescript
  * import { calculateCascadeBumps } from '@hyperfrontend/versioning'
  *
@@ -297,7 +297,7 @@ function computeNextVersion(current: SemVer, bumpType: BumpType, prereleaseId?: 
  * @param options - Configuration for cascade behavior
  * @returns Cascade bump result
  *
- * @example
+ * @example Calculate cascade bumps from a single package
  * ```typescript
  * import { discoverWorkspace, calculateCascadeBumpsFromPackage } from '@hyperfrontend/versioning'
  *
@@ -325,7 +325,7 @@ export function calculateCascadeBumpsFromPackage(
  * @param result - Result object from cascade bump calculation
  * @returns Human-readable summary
  *
- * @example
+ * @example Get a summary of cascade bump results
  * ```typescript
  * import { calculateCascadeBumps, summarizeCascadeBumps } from '@hyperfrontend/versioning'
  *
