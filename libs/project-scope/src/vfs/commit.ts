@@ -14,7 +14,7 @@ const vfsLogger = createScopedLogger('project-scope:vfs')
  * @param options - Configuration for dry-run and verbosity
  * @returns Result of the commit operation
  *
- * @example
+ * @example Committing changes to disk
  * ```typescript
  * import { createTree, commitChanges } from '@hyperfrontend/project-scope'
  *
@@ -137,7 +137,7 @@ export function commitChanges(tree: Tree, options?: CommitOptions): CommitResult
  *
  * @param tree - Virtual file system tree
  *
- * @example
+ * @example Rolling back pending changes
  * ```typescript
  * import { createTree, rollbackChanges } from '@hyperfrontend/project-scope'
  *

@@ -21,7 +21,7 @@ export const WEBPACK_CONFIG_PATTERNS = [
  * @param packageJson - Optional pre-loaded package.json
  * @returns Detection result or null if not detected
  *
- * @example
+ * @example Detecting Webpack bundler
  * ```typescript
  * const result = webpackDetector('/path/to/project', {
  *   name: 'my-app',

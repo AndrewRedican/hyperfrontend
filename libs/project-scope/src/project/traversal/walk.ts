@@ -125,7 +125,7 @@ function matchPattern(path: string, pattern: string): boolean {
  * @param visitor - Callback function invoked for each file system entry
  * @param options - Configuration for traversal behavior
  *
- * @example
+ * @example Walking a directory tree
  * ```typescript
  * import { walkDirectory } from '@hyperfrontend/project-scope'
  *
@@ -234,7 +234,7 @@ export function walkDirectory(startPath: string, visitor: WalkVisitor, options?:
  * @param visitor - Callback function invoked for each tree entry
  * @param options - Configuration for traversal behavior
  *
- * @example
+ * @example Walking a virtual tree
  * ```typescript
  * import { createTree, walkTree } from '@hyperfrontend/project-scope'
  *

@@ -12,7 +12,7 @@ import { collectAllDependencies, parseVersionString } from '../shared-utils/dete
  * @param packageJson - Optional pre-loaded package.json
  * @returns Detection result or null if not detected
  *
- * @example
+ * @example Detecting Backbone.js framework
  * ```typescript
  * const result = backboneDetector('/path/to/project', {
  *   dependencies: { backbone: '^1.4.0', underscore: '^1.13.0' },

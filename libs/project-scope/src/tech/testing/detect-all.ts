@@ -23,7 +23,7 @@ export const testingDetectors: TestingFrameworkDetector[] = [
  * @param packageJson - Optional pre-loaded package.json
  * @returns Array of detected testing frameworks, sorted by confidence
  *
- * @example
+ * @example Detecting multiple testing frameworks
  * ```typescript
  * import { detectTestingFrameworks } from '@hyperfrontend/project-scope'
  *

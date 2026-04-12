@@ -24,7 +24,7 @@ export const STYLELINT_CONFIG_PATTERNS = [
  * @param packageJson - Optional pre-loaded package.json
  * @returns Detection result or null if not detected
  *
- * @example
+ * @example Detecting Stylelint linter
  * ```typescript
  * const result = stylelintDetector('/path/to/project', {
  *   devDependencies: { stylelint: '^15.0.0', 'stylelint-config-standard': '^30.0.0' },

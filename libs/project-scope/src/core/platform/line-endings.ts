@@ -21,7 +21,7 @@ export type DetectedLineEnding = 'lf' | 'crlf' | 'mixed' | 'none'
  *
  * @returns Line ending for current platform
  *
- * @example
+ * @example Getting platform line ending
  * ```typescript
  * const eol = getLineEnding()
  * const lines = ['line1', 'line2', 'line3']
@@ -37,7 +37,7 @@ export function getLineEnding(): '\n' | '\r\n' {
  *
  * @returns Path separator for current platform
  *
- * @example
+ * @example Getting platform path separator
  * ```typescript
  * const sep = getPathSeparator()
  * const fullPath = ['src', 'utils', 'helpers.ts'].join(sep)
@@ -54,7 +54,7 @@ export function getPathSeparator(): '/' | '\\' {
  * @param style - Target line ending style ('lf', 'crlf', or 'auto' for platform default)
  * @returns Content with normalized line endings
  *
- * @example
+ * @example Normalizing line endings
  * ```typescript
  * // Normalize to Unix line endings
  * const normalized = normalizeLineEndings('line1\r\nline2\r\n', 'lf')
@@ -88,7 +88,7 @@ export function normalizeLineEndings(content: string, style: LineEndingStyle = '
  * @param content - Content to analyze
  * @returns Detected line ending style
  *
- * @example
+ * @example Detecting line ending style
  * ```typescript
  * const ending = detectLineEnding('line1\nline2\n')
  * // => 'lf'
@@ -114,7 +114,7 @@ export function detectLineEnding(content: string): DetectedLineEnding {
  * @param path2 - Second path
  * @returns True if paths are equal (respecting case sensitivity)
  *
- * @example
+ * @example Comparing paths
  * ```typescript
  * // On case-insensitive filesystem (Windows/macOS)
  * pathsEqual('src/App.tsx', 'src/app.tsx')

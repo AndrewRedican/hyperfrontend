@@ -12,7 +12,7 @@
  * @param pattern - The glob pattern to match against
  * @returns True if path matches pattern
  *
- * @example
+ * @example Matching paths against glob patterns
  * ```typescript
  * import { matchGlobPattern } from '@hyperfrontend/project-scope'
  *
@@ -208,7 +208,7 @@ function extractAlternatives(content: string): string[] {
  * @param patterns - Array of glob patterns
  * @returns True if path matches any pattern
  *
- * @example
+ * @example Checking path against multiple patterns
  * ```typescript
  * const ignorePatterns = ['*.log', 'node_modules/**', '*.tmp']
  * const shouldIgnore = matchesAnyPattern('debug.log', ignorePatterns)
@@ -226,7 +226,7 @@ export function matchesAnyPattern(path: string, patterns: readonly string[]): bo
  * @param pattern - Exact pattern to match
  * @returns True if path equals pattern
  *
- * @example
+ * @example Exact path matching
  * ```typescript
  * matchesExact('package.json', 'package.json')
  * // => true

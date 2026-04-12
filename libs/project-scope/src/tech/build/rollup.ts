@@ -16,7 +16,7 @@ export const ROLLUP_CONFIG_PATTERNS = ['rollup.config.js', 'rollup.config.ts', '
  * @param packageJson - Optional pre-loaded package.json
  * @returns Detection result or null if not detected
  *
- * @example
+ * @example Detecting Rollup bundler
  * ```typescript
  * const result = rollupDetector('/path/to/project', {
  *   name: 'my-lib',

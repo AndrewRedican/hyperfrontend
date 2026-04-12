@@ -55,7 +55,7 @@ export type EncodingInfo =
  * @param buffer - Buffer to analyze
  * @returns Encoding information
  *
- * @example
+ * @example Detecting encoding and BOM info
  * ```typescript
  * const buffer = readFileSync('./document.txt')
  * const info = detectEncodingInfo(buffer)
@@ -119,7 +119,7 @@ export function detectEncodingInfo(buffer: Buffer): EncodingInfo {
  * @param buffer - Buffer to analyze
  * @returns Detected encoding, defaults to 'utf-8'
  *
- * @example
+ * @example Detecting encoding from buffer
  * ```typescript
  * const buffer = readFileSync('./data.txt')
  * const encoding = detectEncoding(buffer)
@@ -152,7 +152,7 @@ export function detectEncoding(buffer: Buffer): BufferEncoding {
  * @param buffer - Buffer to check
  * @returns True if buffer has a BOM
  *
- * @example
+ * @example Checking if buffer has BOM
  * ```typescript
  * const buffer = readFileSync('./file.txt')
  * if (hasBom(buffer)) {
@@ -185,7 +185,7 @@ export function hasBom(buffer: Buffer): boolean {
  * @param buffer - Buffer to check
  * @returns True if the buffer appears to be text
  *
- * @example
+ * @example Checking if content is text
  * ```typescript
  * const buffer = readFileSync('./unknown-file')
  * if (isTextFile(buffer)) {
@@ -203,7 +203,7 @@ export function isTextFile(buffer: Buffer): boolean {
  * @param buffer - Buffer to check
  * @returns True if the buffer appears to be binary
  *
- * @example
+ * @example Checking if content is binary
  * ```typescript
  * const buffer = readFileSync('./file.png')
  * if (isBinaryFile(buffer)) {

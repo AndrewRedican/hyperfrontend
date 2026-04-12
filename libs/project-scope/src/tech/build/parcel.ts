@@ -15,7 +15,7 @@ export const PARCEL_CONFIG_PATTERNS = ['.parcelrc']
  * @param packageJson - Optional pre-loaded package.json
  * @returns Detection result or null if not detected
  *
- * @example
+ * @example Detecting Parcel bundler
  * ```typescript
  * const result = parcelDetector('/path/to/project', {
  *   name: 'my-app',

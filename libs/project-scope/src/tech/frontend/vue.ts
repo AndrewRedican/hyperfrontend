@@ -14,7 +14,7 @@ import { collectAllDependencies, parseVersionString } from '../shared-utils/dete
  * @param packageJson - Optional pre-loaded package.json
  * @returns Detection result or null if not detected
  *
- * @example
+ * @example Detecting Vue.js framework
  * ```typescript
  * const result = vueDetector('/path/to/vue-app', {
  *   dependencies: { 'vue': '^3.0.0', '@vue/cli-service': '^5.0.0' }

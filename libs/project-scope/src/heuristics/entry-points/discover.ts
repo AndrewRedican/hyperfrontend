@@ -187,7 +187,7 @@ function discoverFromExports(exports: Record<string, unknown>, entryPoints: Exte
  * @param options - Discovery options
  * @returns Array of discovered entry points sorted by confidence
  *
- * @example
+ * @example Discovering project entry points
  * ```typescript
  * import { discoverEntryPoints } from '@hyperfrontend/project-scope'
  *
@@ -382,7 +382,7 @@ export function discoverEntryPoints(projectPath: string, options?: DiscoverEntry
  *
  * Useful for testing or when the project files have changed.
  *
- * @example
+ * @example Clearing the entry point cache
  * ```typescript
  * import { clearEntryPointCache } from '@hyperfrontend/project-scope'
  *

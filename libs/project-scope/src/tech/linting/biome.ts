@@ -14,7 +14,7 @@ import { collectAllDependencies, parseVersionString } from '../shared-utils/dete
  * @param packageJson - Optional pre-loaded package.json
  * @returns Detection result or null if not detected
  *
- * @example
+ * @example Detecting Biome linter
  * ```typescript
  * const result = biomeDetector('/path/to/project', {
  *   devDependencies: { '@biomejs/biome': '^1.5.0' },

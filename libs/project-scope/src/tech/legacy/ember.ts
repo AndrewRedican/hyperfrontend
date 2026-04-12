@@ -12,7 +12,7 @@ import { collectAllDependencies, parseVersionString } from '../shared-utils/dete
  * @param packageJson - Optional pre-loaded package.json
  * @returns Detection result or null if not detected
  *
- * @example
+ * @example Detecting Ember.js framework
  * ```typescript
  * const result = emberDetector('/path/to/project', {
  *   dependencies: { 'ember-source': '^4.0.0' },

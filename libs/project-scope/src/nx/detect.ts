@@ -74,7 +74,7 @@ export interface NxWorkspaceInfo {
  * @param path - Directory path to check
  * @returns True if the directory contains nx.json or workspace.json
  *
- * @example
+ * @example Checking for NX workspace
  * ```typescript
  * import { isNxWorkspace } from '@hyperfrontend/project-scope'
  *
@@ -100,7 +100,7 @@ export function isNxWorkspace(path: string): boolean {
  * @param path - Directory path to check
  * @returns True if the directory contains project.json
  *
- * @example
+ * @example Checking for NX project
  * ```typescript
  * import { isNxProject } from '@hyperfrontend/project-scope'
  *
@@ -121,7 +121,7 @@ export function isNxProject(path: string): boolean {
  * @param startPath - Starting path to search from
  * @returns Workspace root path or null if not found
  *
- * @example
+ * @example Finding NX workspace root
  * ```typescript
  * import { findNxWorkspaceRoot } from '@hyperfrontend/project-scope'
  *
@@ -179,7 +179,7 @@ function isIntegratedRepo(nxJson: NxJson): boolean {
  * @param workspacePath - Workspace root path
  * @returns Workspace info or null if not an NX workspace
  *
- * @example
+ * @example Getting NX workspace information
  * ```typescript
  * import { getNxWorkspaceInfo } from '@hyperfrontend/project-scope'
  *

@@ -13,7 +13,7 @@ const fsTraversalLogger = createScopedLogger('project-scope:fs:traversal')
  * @param predicate - Function to test each directory
  * @returns First matching directory or null
  *
- * @example
+ * @example Finding directory containing README
  * ```typescript
  * // Find first directory containing a README
  * const readmeDir = traverseUpward('./src/utils', (dir) =>
@@ -51,7 +51,7 @@ export function traverseUpward(startPath: string, predicate: (dirPath: string) =
  * @param markers - Array of marker file names to search for
  * @returns First directory containing any marker, or null
  *
- * @example
+ * @example Finding project root by marker files
  * ```typescript
  * // Find project root by looking for common marker files
  * const projectRoot = locateByMarkers('./src/components', [
@@ -78,7 +78,7 @@ export function locateByMarkers(startPath: string, markers: readonly string[]): 
  * @param test - Function to test if directory matches criteria
  * @returns Matching directory path or null
  *
- * @example
+ * @example Finding directory with specific config
  * ```typescript
  * // Find directory with a specific config
  * const configDir = findUpwardWhere('./deep/nested/path', (dir) =>

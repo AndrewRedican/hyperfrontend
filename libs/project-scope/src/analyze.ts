@@ -138,7 +138,7 @@ function normalizeConfigFormat(format: string): 'json' | 'yaml' | 'js' | 'ts' | 
  * @param options - Analysis options
  * @returns Complete analysis result
  *
- * @example
+ * @example Basic project analysis
  * ```typescript
  * const result = analyzeProject('./my-project')
  * console.log(result.projectType) // 'application' | 'library' | ...

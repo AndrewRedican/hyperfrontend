@@ -14,7 +14,7 @@ import { collectAllDependencies, parseVersionString } from '../shared-utils/dete
  * @param packageJson - Optional pre-loaded package.json
  * @returns Detection result or null if not detected
  *
- * @example
+ * @example Detecting Rush monorepo
  * ```typescript
  * // Project with rush.json config file
  * const result = rushDetector('/path/to/rush-project')

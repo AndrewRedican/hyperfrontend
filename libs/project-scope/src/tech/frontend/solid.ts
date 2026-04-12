@@ -12,7 +12,7 @@ import { collectAllDependencies, parseVersionString } from '../shared-utils/dete
  * @param packageJson - Optional pre-loaded package.json
  * @returns Detection result or null if not detected
  *
- * @example
+ * @example Detecting Solid.js framework
  * ```typescript
  * const result = solidDetector('/path/to/solid-app', {
  *   dependencies: { 'solid-js': '^1.8.0', 'vite-plugin-solid': '^2.0.0' }

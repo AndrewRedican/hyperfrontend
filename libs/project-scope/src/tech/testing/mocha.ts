@@ -15,7 +15,7 @@ export const MOCHA_CONFIG_PATTERNS = ['.mocharc.js', '.mocharc.json', '.mocharc.
  * @param packageJson - Optional pre-loaded package.json
  * @returns Detection result or null if not detected
  *
- * @example
+ * @example Detecting Mocha testing framework
  * ```typescript
  * import { mochaDetector } from '@hyperfrontend/project-scope'
  *

@@ -35,7 +35,7 @@ interface ChangeRecord {
  * @param options - Configuration for verbose logging
  * @returns A Tree instance
  *
- * @example
+ * @example Creating and using a file system tree
  * ```typescript
  * import { createFsTree, commitChanges } from '@hyperfrontend/project-scope'
  *

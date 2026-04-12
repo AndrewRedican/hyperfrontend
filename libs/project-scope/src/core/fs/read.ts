@@ -31,7 +31,7 @@ export interface FileSystemErrorContext {
  * @param context - Additional context including path, operation, and cause
  * @returns A configured Error object with code and context properties
  *
- * @example
+ * @example Creating a file system error
  * ```typescript
  * throw createFileSystemError(
  *   'Cannot read file',
@@ -57,7 +57,7 @@ export function createFileSystemError(message: string, code: FileSystemErrorCode
  * @returns File contents as string
  * @throws {Error} If file doesn't exist or can't be read
  *
- * @example
+ * @example Reading file contents
  * ```typescript
  * import { readFileContent } from '@hyperfrontend/project-scope'
  *
@@ -86,7 +86,7 @@ export function readFileContent(filePath: string, encoding: BufferEncoding = 'ut
  * @returns File contents as Buffer
  * @throws {Error} If file doesn't exist or can't be read
  *
- * @example
+ * @example Reading file as buffer
  * ```typescript
  * const buffer = readFileBuffer('./image.png')
  * console.log(buffer.length) // File size in bytes
@@ -111,7 +111,7 @@ export function readFileBuffer(filePath: string): Buffer {
  * @param encoding - File encoding (default: utf-8)
  * @returns File contents or null if file doesn't exist
  *
- * @example
+ * @example Reading file if it exists
  * ```typescript
  * const content = readFileIfExists('./optional-config.json')
  * if (content) {
@@ -155,7 +155,7 @@ export interface ReadJsonFileOptions<T> {
  * @returns Parsed JSON object
  * @throws {Error} If file doesn't exist (when no default provided) or contains invalid JSON
  *
- * @example
+ * @example Reading JSON file
  * ```typescript
  * import { readJsonFile } from '@hyperfrontend/project-scope'
  *
@@ -200,7 +200,7 @@ export function readJsonFile<T>(filePath: string, options?: ReadJsonFileOptions<
  * @param filePath - Path to JSON file
  * @returns Parsed JSON object or null if file doesn't exist or is invalid
  *
- * @example
+ * @example Reading JSON file if it exists
  * ```typescript
  * interface UserSettings { theme: string }
  * const settings = readJsonFileIfExists<UserSettings>('./user-settings.json')

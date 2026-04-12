@@ -176,7 +176,7 @@ function collectSourceFiles(dir: string, extensions: string[], maxDepth: number,
  * @param options - Configuration for graph building
  * @returns Dependency graph with nodes, roots, and leaves
  *
- * @example
+ * @example Building a dependency graph
  * ```typescript
  * import { buildDependencyGraph } from '@hyperfrontend/project-scope'
  *
@@ -290,7 +290,7 @@ export function buildDependencyGraph(projectPath: string, options?: BuildGraphOp
  * @param graph - Dependency graph
  * @returns Array of circular dependencies found
  *
- * @example
+ * @example Finding circular dependencies
  * ```typescript
  * import { buildDependencyGraph, findCircularDependencies } from '@hyperfrontend/project-scope'
  *
@@ -370,7 +370,7 @@ export function findCircularDependencies(graph: DependencyGraph): CircularDepend
  * @param projectPath - Project directory
  * @returns Dependencies grouped by runtime, dev, peer, and optional
  *
- * @example
+ * @example Getting project dependencies
  * ```typescript
  * import { getProjectDependencies } from '@hyperfrontend/project-scope'
  *

@@ -48,7 +48,7 @@ function looksLikeProjectDir(dirPath: string): boolean {
  * @param startPath - Starting path
  * @returns Project root path or null
  *
- * @example
+ * @example Finding project root
  * ```typescript
  * import { findProjectRoot } from '@hyperfrontend/project-scope'
  *
@@ -91,7 +91,7 @@ export function findProjectRoot(startPath: string): string | null {
  * @param startPath - Starting path
  * @returns Workspace root path or null
  *
- * @example
+ * @example Finding workspace root
  * ```typescript
  * import { findWorkspaceRoot } from '@hyperfrontend/project-scope'
  *
@@ -136,7 +136,7 @@ export function findWorkspaceRoot(startPath: string): string | null {
  * @param markers - Files to search for
  * @returns Root directory path or null
  *
- * @example
+ * @example Finding root by marker files
  * ```typescript
  * import { findRootDirectory } from '@hyperfrontend/project-scope'
  *
@@ -155,7 +155,7 @@ export function findRootDirectory(startPath: string, markers: readonly string[] 
  * @param startPath - Starting path
  * @returns Git root path or null
  *
- * @example
+ * @example Finding Git repository root
  * ```typescript
  * import { findGitRoot } from '@hyperfrontend/project-scope'
  *

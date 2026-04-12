@@ -37,7 +37,7 @@ export const frameworkDetectors: FrameworkDetector[] = [
  * @param packageJson - Optional pre-loaded package.json
  * @returns Array of detected frameworks, sorted by confidence
  *
- * @example
+ * @example Detecting multiple frontend frameworks
  * ```typescript
  * const frameworks = detectFrontendFrameworks('/path/to/nextjs-app', {
  *   dependencies: { 'react': '^18.0.0', 'next': '^14.0.0' }

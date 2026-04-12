@@ -27,7 +27,7 @@ let globalLogLevel: LogLevel | null = null
  *
  * @param level - The log level to set globally
  *
- * @example
+ * @example Enabling debug logging globally
  * ```typescript
  * import { setGlobalLogLevel } from '@hyperfrontend/project-scope/core'
  *
@@ -47,7 +47,7 @@ export function setGlobalLogLevel(level: LogLevel): void {
  *
  * @returns The global log level, or null if not set
  *
- * @example
+ * @example Getting current log level
  * ```typescript
  * setGlobalLogLevel('debug')
  * const level = getGlobalLogLevel()
@@ -62,7 +62,7 @@ export function getGlobalLogLevel(): LogLevel | null {
  * Reset the global log level override.
  * Each logger will retain its current level but new loggers will use their default.
  *
- * @example
+ * @example Resetting the global log level
  * ```typescript
  * setGlobalLogLevel('debug')
  * // ... perform debugging ...
@@ -111,7 +111,7 @@ function isSensitiveKey(key: string): boolean {
  * @param obj - Object to sanitize
  * @returns New object with sensitive values redacted
  *
- * @example
+ * @example Sanitizing sensitive data
  * ```typescript
  * const config = { apiKey: 'secret123', endpoint: 'https://api.example.com' }
  * const safe = sanitize(config)
@@ -209,7 +209,7 @@ export interface ScopedLogger {
  * @param options - Logger configuration options
  * @returns A configured scoped logger instance
  *
- * @example
+ * @example Creating a scoped logger
  * ```typescript
  * const logger = createScopedLogger('project-scope')
  * logger.setLogLevel('debug')
@@ -261,7 +261,7 @@ export function createScopedLogger(namespace: string, options: ScopedLoggerOptio
  * Default logger instance for the project-scope library.
  * Use this for general logging within the library.
  *
- * @example
+ * @example Using the default logger
  * ```typescript
  * import { logger } from '@hyperfrontend/project-scope/core'
  *

@@ -12,7 +12,7 @@ import { collectAllDependencies, parseVersionString } from '../shared-utils/dete
  * @param packageJson - Optional pre-loaded package.json
  * @returns Detection result or null if not detected
  *
- * @example
+ * @example Detecting jQuery library
  * ```typescript
  * const result = jqueryDetector('/path/to/project', {
  *   dependencies: { jquery: '^3.6.0', 'jquery-ui': '^1.13.0' },

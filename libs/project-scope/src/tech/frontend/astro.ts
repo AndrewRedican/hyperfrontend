@@ -14,7 +14,7 @@ import { collectAllDependencies, parseVersionString } from '../shared-utils/dete
  * @param packageJson - Optional pre-loaded package.json
  * @returns Detection result or null if not detected
  *
- * @example
+ * @example Detecting Astro framework
  * ```typescript
  * const result = astroDetector('/path/to/astro-project', {
  *   dependencies: { 'astro': '^4.0.0' }

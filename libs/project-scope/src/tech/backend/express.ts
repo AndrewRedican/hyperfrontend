@@ -12,7 +12,7 @@ import { collectAllDependencies, parseVersionString } from '../shared-utils/dete
  * @param projectPath - Project directory path
  * @param packageJson - Optional pre-loaded package.json
  * @returns Detection result or null if not detected
- * @example
+ * @example Detecting Express framework
  * ```typescript
  * const pkg = {
  *   dependencies: { express: '^4.18.2', cors: '^2.8.5' },

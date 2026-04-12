@@ -9,7 +9,7 @@ import { normalizePath } from './normalize'
  * @param segments - Path segments to resolve
  * @returns Resolved absolute path with normalized separators
  *
- * @example
+ * @example Resolving to absolute path
  * ```typescript
  * const absPath = resolvePath('src', 'components', 'Button.tsx')
  * // => '/workspace/project/src/components/Button.tsx'
@@ -26,7 +26,7 @@ export function resolvePath(...segments: string[]): string {
  * @param segments - Path segments relative to workspace
  * @returns Resolved absolute path with normalized separators
  *
- * @example
+ * @example Resolving from workspace root
  * ```typescript
  * const configPath = resolveFromWorkspace('/workspace', 'config', 'app.json')
  * // => '/workspace/config/app.json'
@@ -42,7 +42,7 @@ export function resolveFromWorkspace(workspaceRoot: string, ...segments: string[
  * @param filePath - Path to resolve
  * @returns Real path or null if path doesn't exist
  *
- * @example
+ * @example Resolving symlinks
  * ```typescript
  * const realPath = resolveRealPath('./node_modules/.bin/tsc')
  * // => '/workspace/node_modules/typescript/bin/tsc'
@@ -66,7 +66,7 @@ export function resolveRealPath(filePath: string): string | null {
  * @param to - Target path to reach
  * @returns Relative path from source to target with forward slashes
  *
- * @example
+ * @example Computing relative path
  * ```typescript
  * relativePath('/workspace/src/utils', '/workspace/lib/helpers')
  * // => '../../lib/helpers'
@@ -82,7 +82,7 @@ export function relativePath(from: string, to: string): string {
  * @param segments - Path segments to join
  * @returns Joined path with normalized separators
  *
- * @example
+ * @example Joining path segments
  * ```typescript
  * joinPath('src', 'components', 'Button.tsx')
  * // => 'src/components/Button.tsx'
@@ -98,7 +98,7 @@ export function joinPath(...segments: string[]): string {
  * @param filePath - Path to check
  * @returns True if path is absolute
  *
- * @example
+ * @example Checking absolute path
  * ```typescript
  * isAbsolute('/workspace/src/index.ts')
  * // => true
@@ -117,7 +117,7 @@ export function isAbsolute(filePath: string): boolean {
  * @param filePath - Path to calculate offset for
  * @returns Relative offset path (e.g., "../../")
  *
- * @example
+ * @example Calculating offset from root
  * ```typescript
  * offsetFromRoot('libs/utils/src')
  * // => '../../../'

@@ -10,7 +10,7 @@ import { join } from '../../core/path'
  * @param packageJson - The package.json object to extract dependencies from
  * @returns Combined dependencies as a single record
  *
- * @example
+ * @example Collecting all dependencies
  * ```typescript
  * import { collectAllDependencies } from '@hyperfrontend/project-scope'
  *
@@ -35,7 +35,7 @@ export function collectAllDependencies(packageJson?: PackageJson): Record<string
  * @param versionString - The version string with optional prefix characters
  * @returns The cleaned version string without prefix characters
  *
- * @example
+ * @example Parsing version strings
  * ```typescript
  * import { parseVersionString } from '@hyperfrontend/project-scope'
  *
@@ -67,7 +67,7 @@ export function parseVersionString(versionString?: string): string | undefined {
  * @param patterns - Array of config file patterns to search for
  * @returns The first matching config file path or undefined
  *
- * @example
+ * @example Finding a config file
  * ```typescript
  * import { locateConfigFile } from '@hyperfrontend/project-scope'
  *
@@ -92,7 +92,7 @@ export function locateConfigFile(projectPath: string, patterns: readonly string[
  * @param command - The command string to search for
  * @returns Array of script names that contain the command
  *
- * @example
+ * @example Filtering scripts by command
  * ```typescript
  * import { filterScriptsByCommand } from '@hyperfrontend/project-scope'
  *
@@ -114,7 +114,7 @@ export function filterScriptsByCommand(scripts: Record<string, string> | undefin
  * @param packageName - The package name to check
  * @returns True if the package is found in any dependency type
  *
- * @example
+ * @example Checking for a dependency
  * ```typescript
  * import { hasDependency } from '@hyperfrontend/project-scope'
  *
@@ -135,7 +135,7 @@ export function hasDependency(packageJson: PackageJson | undefined, packageName:
  * @param packageName - The package name to get the version for
  * @returns The version string without prefix characters, or undefined if not found
  *
- * @example
+ * @example Getting dependency version
  * ```typescript
  * import { getDependencyVersion } from '@hyperfrontend/project-scope'
  *

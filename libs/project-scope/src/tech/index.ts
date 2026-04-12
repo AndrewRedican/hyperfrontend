@@ -103,7 +103,7 @@ function isDetectAllOptions(value: unknown): value is DetectAllOptions {
  * @param packageJsonOrOptions - Optional pre-loaded package.json or options object
  * @returns All detection results organized by category
  *
- * @example
+ * @example Running all tech detectors
  * ```typescript
  * import { detectAll } from '@hyperfrontend/project-scope'
  *
@@ -189,7 +189,7 @@ export function detectAll(projectPath: string, packageJsonOrOptions?: PackageJso
  *
  * Useful for testing or when the project files have changed.
  *
- * @example
+ * @example Clearing the tech detection cache
  * ```typescript
  * import { detectAll, clearTechDetectionCache } from '@hyperfrontend/project-scope'
  *

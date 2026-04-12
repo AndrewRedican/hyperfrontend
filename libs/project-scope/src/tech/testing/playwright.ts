@@ -17,7 +17,7 @@ export const PLAYWRIGHT_CONFIG_PATTERNS = ['playwright.config.js', 'playwright.c
  * @param packageJson - Optional pre-loaded package.json
  * @returns Detection result or null if not detected
  *
- * @example
+ * @example Detecting Playwright testing framework
  * ```typescript
  * import { playwrightDetector } from '@hyperfrontend/project-scope'
  *

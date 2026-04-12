@@ -15,7 +15,7 @@ import { collectAllDependencies, parseVersionString } from '../shared-utils/dete
  * @param packageJson - Optional pre-loaded package.json
  * @returns Detection result or null if not detected
  *
- * @example
+ * @example Detecting NX workspace
  * ```typescript
  * // Project with nx.json and apps/libs directories
  * const result = nxDetector('/path/to/nx-workspace')

@@ -28,7 +28,7 @@ export interface AllDependencies {
  * @param packageJson - Parsed package.json
  * @returns All dependencies categorized
  *
- * @example
+ * @example Extracting all dependencies
  * ```typescript
  * import { getDependencies } from '@hyperfrontend/project-scope'
  *
@@ -52,7 +52,7 @@ export function getDependencies(packageJson: PackageJson): AllDependencies {
  * @param packageJson - Parsed package.json
  * @returns Map of dependency name to version for runtime dependencies
  *
- * @example
+ * @example Getting production dependencies
  * ```typescript
  * import { getProductionDependencies } from '@hyperfrontend/project-scope'
  *
@@ -70,7 +70,7 @@ export function getProductionDependencies(packageJson: PackageJson): DependencyM
  * @param packageJson - Parsed package.json
  * @returns Map of dependency name to version for dev-time dependencies
  *
- * @example
+ * @example Getting development dependencies
  * ```typescript
  * import { getDevDependencies } from '@hyperfrontend/project-scope'
  *
@@ -88,7 +88,7 @@ export function getDevDependencies(packageJson: PackageJson): DependencyMap {
  * @param packageJson - Parsed package.json
  * @returns Map of dependency name to version for peer requirements
  *
- * @example
+ * @example Getting peer dependencies
  * ```typescript
  * import { getPeerDependencies } from '@hyperfrontend/project-scope'
  *
@@ -106,7 +106,7 @@ export function getPeerDependencies(packageJson: PackageJson): DependencyMap {
  * @param packageJson - Parsed package.json
  * @returns All dependencies merged
  *
- * @example
+ * @example Getting all merged dependencies
  * ```typescript
  * import { getAllDependencies } from '@hyperfrontend/project-scope'
  *
@@ -133,7 +133,7 @@ export function getAllDependencies(packageJson: PackageJson): DependencyMap {
  * @param depTypes - Optional array of dependency types to check (defaults to all)
  * @returns True if dependency exists in specified categories
  *
- * @example
+ * @example Checking for a dependency
  * ```typescript
  * import { hasDependency } from '@hyperfrontend/project-scope'
  *
@@ -167,7 +167,7 @@ export function hasDependency(
  * @param name - Name of the dependency to look up
  * @returns Version string or null if not found
  *
- * @example
+ * @example Getting dependency version
  * ```typescript
  * import { getDependencyVersion } from '@hyperfrontend/project-scope'
  *
@@ -186,7 +186,7 @@ export function getDependencyVersion(packageJson: PackageJson, name: string): st
  * @param packageJson - Parsed package.json
  * @returns Array of workspace patterns or empty array
  *
- * @example
+ * @example Getting workspace patterns
  * ```typescript
  * import { getWorkspaces } from '@hyperfrontend/project-scope'
  *
@@ -214,7 +214,7 @@ export function getWorkspaces(packageJson: PackageJson): string[] {
  * @param packageJson - Parsed package.json
  * @returns True if workspaces are defined
  *
- * @example
+ * @example Checking for workspaces
  * ```typescript
  * import { hasWorkspaces } from '@hyperfrontend/project-scope'
  *
@@ -234,7 +234,7 @@ export function hasWorkspaces(packageJson: PackageJson): boolean {
  * @param packageName - Package name to check
  * @returns Boolean indicating whether the package exists in node_modules
  *
- * @example
+ * @example Checking installed packages
  * ```typescript
  * import { hasInstalledPackage } from '@hyperfrontend/project-scope'
  *
@@ -255,7 +255,7 @@ export function hasInstalledPackage(projectPath: string, packageName: string): b
  * @param packageName - Name of the npm package to look up
  * @returns Installed version or null if not found
  *
- * @example
+ * @example Getting installed package version
  * ```typescript
  * import { getInstalledVersion } from '@hyperfrontend/project-scope'
  *

@@ -16,7 +16,7 @@ export const VITE_CONFIG_PATTERNS = ['vite.config.js', 'vite.config.ts', 'vite.c
  * @param packageJson - Optional pre-loaded package.json
  * @returns Detection result or null if not detected
  *
- * @example
+ * @example Detecting Vite build tool
  * ```typescript
  * const result = viteDetector('/path/to/project', {
  *   name: 'my-app',

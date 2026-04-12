@@ -14,7 +14,7 @@ import { collectAllDependencies, parseVersionString } from '../shared-utils/dete
  * @param packageJson - Optional pre-loaded package.json
  * @returns Detection result or null if not detected
  *
- * @example
+ * @example Detecting Lerna monorepo
  * ```typescript
  * // Project with lerna.json config file
  * const result = lernaDetector('/path/to/lerna-project')

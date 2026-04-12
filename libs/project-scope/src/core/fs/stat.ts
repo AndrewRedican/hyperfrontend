@@ -29,7 +29,7 @@ export interface FileStats {
  * @param followSymlinks - Whether to follow symlinks (default: true)
  * @returns File stats or null if path doesn't exist
  *
- * @example
+ * @example Getting file statistics
  * ```typescript
  * const stats = getFileStat('./package.json')
  * if (stats) {
@@ -66,7 +66,7 @@ export function getFileStat(filePath: string, followSymlinks = true): FileStats 
  * @param filePath - Path to check
  * @returns True if path is a file
  *
- * @example
+ * @example Checking if path is a file
  * ```typescript
  * if (isFile('./package.json')) {
  *   // Path exists and is a regular file
@@ -84,7 +84,7 @@ export function isFile(filePath: string): boolean {
  * @param dirPath - Path to check
  * @returns True if path is a directory
  *
- * @example
+ * @example Checking if path is a directory
  * ```typescript
  * if (isDirectory('./src')) {
  *   // Path exists and is a directory
@@ -102,7 +102,7 @@ export function isDirectory(dirPath: string): boolean {
  * @param linkPath - Path to check
  * @returns True if path is a symlink
  *
- * @example
+ * @example Checking if path is a symlink
  * ```typescript
  * if (isSymlink('./node_modules/.bin/tsc')) {
  *   // Path is a symbolic link
@@ -120,7 +120,7 @@ export function isSymlink(linkPath: string): boolean {
  * @param filePath - Path to check
  * @returns True if path exists
  *
- * @example
+ * @example Checking if path exists
  * ```typescript
  * if (exists('./config.json')) {
  *   const config = readJsonFile('./config.json')

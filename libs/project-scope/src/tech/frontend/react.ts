@@ -14,7 +14,7 @@ import { collectAllDependencies, parseVersionString } from '../shared-utils/dete
  * @param packageJson - Optional pre-loaded package.json
  * @returns Detection result or null if not detected
  *
- * @example
+ * @example Detecting React library
  * ```typescript
  * const result = reactDetector('/path/to/react-app', {
  *   dependencies: { 'react': '^18.0.0', 'react-dom': '^18.0.0' }

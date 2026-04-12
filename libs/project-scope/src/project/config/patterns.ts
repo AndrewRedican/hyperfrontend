@@ -232,7 +232,7 @@ export const CONFIG_PATTERNS: Record<ConfigType, ConfigPatternInfo> = {
  * @param types - Array of config types to get patterns for
  * @returns Array of file patterns
  *
- * @example
+ * @example Retrieving config patterns by type
  * ```typescript
  * import { getConfigPatternsByType } from '@hyperfrontend/project-scope'
  *

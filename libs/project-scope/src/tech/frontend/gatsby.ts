@@ -15,7 +15,7 @@ import { collectAllDependencies, parseVersionString } from '../shared-utils/dete
  * @param packageJson - Optional pre-loaded package.json
  * @returns Detection result or null if not detected
  *
- * @example
+ * @example Detecting Gatsby framework
  * ```typescript
  * const result = gatsbyDetector('/path/to/gatsby-blog', {
  *   dependencies: {

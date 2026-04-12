@@ -61,7 +61,7 @@ export interface DetectProjectTypeOptions {
  * @param options - Detection options
  * @returns Project type detection result with confidence score
  *
- * @example
+ * @example Detecting project type
  * ```typescript
  * import { detectProjectType } from '@hyperfrontend/project-scope'
  *
