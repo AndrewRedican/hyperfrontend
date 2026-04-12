@@ -254,6 +254,7 @@ module.exports = [
     rules: {
       'workspace/lib-readme-structure': 'error',
       'workspace/no-ascii-art-diagrams': 'error',
+      'workspace/require-codeblock-language': 'error',
     },
   },
   {
@@ -265,6 +266,7 @@ module.exports = [
     language: 'markdown/gfm',
     rules: {
       'workspace/no-ascii-art-diagrams': 'error',
+      'workspace/require-codeblock-language': 'error',
     },
   },
   {
