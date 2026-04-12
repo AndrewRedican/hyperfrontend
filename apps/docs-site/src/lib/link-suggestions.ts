@@ -20,33 +20,24 @@ export interface LinkSuggestion {
 }
 
 /**
+ * A flattened route extracted from navigation.
+ */
+interface FlatRoute {
+  /** The route's display slug */
+  slug: string
+  /** The route's URL path */
+  href: string
+}
+
+/**
  * Flattens the navigation tree into an array of all valid routes.
  *
  * @param items - Array of navigation items to flatten
  * @param _parentPath - Parent path context for nested items (unused but reserved)
  * @returns Flattened array of route objects with slug and href
  */
-function flattenNavigation(
-  items: NavItem[],
-  _parentPath = ''
-): Array<{
-  /**
-   *
-   */
-  slug: string /**
-   *
-   */
-  href: string
-}> {
-  const result: Array<{
-    /**
-     *
-     */
-    slug: string /**
-     *
-     */
-    href: string
-  }> = []
+function flattenNavigation(items: NavItem[], _parentPath = ''): FlatRoute[] {
+  const result: FlatRoute[] = []
 
   for (const item of items) {
     if (item.href) {
@@ -147,25 +138,11 @@ function containsWord(text: string, word: string): boolean {
  * Scores a route against the requested path based on various matching criteria.
  *
  * @param route - The route object containing slug and href
- * @param route.slug - The route's display slug
- * @param route.href - The route's URL path
  * @param requestedPath - The original requested path
  * @param requestedSegments - Pre-extracted segments from the requested path
  * @returns Relevance score (higher is more relevant)
  */
-function scoreRoute(
-  route: {
-    /**
-     *
-     */
-    slug: string /**
-     *
-     */
-    href: string
-  },
-  requestedPath: string,
-  requestedSegments: string[]
-): number {
+function scoreRoute(route: FlatRoute, requestedPath: string, requestedSegments: string[]): number {
   let score = 0
   const routeSegments = extractSegments(route.href)
   const routeSlugLower = route.slug.toLowerCase()
