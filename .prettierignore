@@ -31,6 +31,7 @@ pnpm-lock.yaml
 # Generated files
 coverage/
 .nyc_output/
+apps/docs-site/.generated/
 
 # Test fixtures
 **/__fixtures__/
