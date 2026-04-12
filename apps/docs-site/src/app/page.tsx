@@ -69,9 +69,56 @@ export default function HomePage() {
             </div>
           </div>
         </section>
+
+        {/* Standalone Packages Strip */}
+        <section className="border-t border-slate-200 bg-slate-50 py-8 dark:border-slate-800 dark:bg-slate-900/50">
+          <div className="mx-auto max-w-7xl px-6 sm:px-8 lg:px-12">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+              <div className="flex items-center gap-3">
+                <NpmIcon className="h-6 w-6 text-red-500 dark:text-red-400 shrink-0" />
+                <div>
+                  <span className="text-sm font-medium text-slate-900 dark:text-white">Also on npm</span>
+                  <span className="ml-2 text-sm text-slate-500 dark:text-slate-400">16+ standalone utility packages for any project</span>
+                </div>
+              </div>
+              <a
+                href="/docs/libraries"
+                className="inline-flex items-center gap-1.5 text-sm font-medium text-primary-600 hover:text-primary-500 dark:text-primary-400 dark:hover:text-primary-300 whitespace-nowrap"
+              >
+                Browse packages
+                <ArrowRightIcon className="h-3.5 w-3.5" />
+              </a>
+            </div>
+            <div className="mt-4 flex flex-wrap gap-2">
+              <PackageTag name="@hyperfrontend/data-utils" />
+              <PackageTag name="@hyperfrontend/string-utils" />
+              <PackageTag name="@hyperfrontend/list-utils" />
+              <PackageTag name="@hyperfrontend/time-utils" />
+              <PackageTag name="@hyperfrontend/json-utils" />
+              <PackageTag name="@hyperfrontend/function-utils" />
+              <span className="text-xs text-slate-400 dark:text-slate-500 self-center">+10 more</span>
+            </div>
+          </div>
+        </section>
       </main>
       <Footer />
     </div>
+  )
+}
+
+function PackageTag({ name }: { name: string }) {
+  return (
+    <span className="inline-flex items-center rounded-full bg-white px-2.5 py-1 text-xs font-medium text-slate-600 ring-1 ring-inset ring-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:ring-slate-700">
+      {name}
+    </span>
+  )
+}
+
+function NpmIcon({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="currentColor">
+      <path d="M0 7.334v8h6.666v1.332H12v-1.332h12v-8H0zm6.666 6.664H5.334v-4H3.999v4H1.335V8.667h5.331v5.331zm4 0v1.336H8.001V8.667h5.334v5.332h-2.669v-.001zm12.001 0h-1.33v-4h-1.336v4h-1.335v-4h-1.33v4h-2.671V8.667h8.002v5.331zM10.665 10H12v2.667h-1.335V10z" />
+    </svg>
   )
 }
 

@@ -2,6 +2,7 @@ import type { TypeDocOutput } from '@/components/api-reference'
 import { ApiReference } from '@/components/api-reference'
 import { Breadcrumb } from '@/components/breadcrumb'
 import { CodeBlock } from '@/components/code-block'
+import { H2 } from '@/components/heading-with-anchor'
 import { removeBadges, transformLinks } from '@/lib/content'
 import { getLibraryReadme, getLibraryArchitecture, getLibraryApi } from '@/lib/docs-loader'
 import { markdownToHtml } from '@/lib/markdown'
@@ -52,6 +53,11 @@ export async function LibraryDocPage({ title, packageName, slug, fallbackDescrip
               Architecture →
             </Link>
           )}
+          {apiData && (
+            <a href="#api-reference" className="text-sm text-primary-600 hover:underline dark:text-primary-400">
+              API Reference →
+            </a>
+          )}
         </div>
 
         <ReadmeContent html={html} mermaidDiagrams={diagrams} />
@@ -59,7 +65,9 @@ export async function LibraryDocPage({ title, packageName, slug, fallbackDescrip
         {/* API Reference */}
         {apiData && (
           <section className="mt-12 border-t border-slate-200 pt-8 dark:border-slate-700">
-            <h2 className="text-2xl font-bold text-slate-900 dark:text-white mb-6">API Reference</h2>
+            <H2 id="api-reference" className="text-2xl font-bold text-slate-900 dark:text-white mb-6">
+              API Reference
+            </H2>
             <ApiReference data={apiData} />
           </section>
         )}

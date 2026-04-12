@@ -55,6 +55,10 @@ interface Manifest {
     architecture: string | null
     /** Whether API docs exist */
     hasApi: boolean
+    /** Keywords from package.json */
+    keywords: string[]
+    /** Description from package.json */
+    description: string
   }[]
   /** Root documentation availability */
   rootDocs: {
@@ -260,4 +264,66 @@ export function getAllLibrarySlugs(): string[] {
   }
 
   return libs
+}
+
+/**
+ * Library data for the packages index page.
+ */
+export interface LibraryData {
+  /** Library display name */
+  name: string
+  /** npm package name */
+  packageName: string
+  /** URL slug */
+  slug: string
+  /** Library category */
+  category: string
+  /** Whether API docs exist */
+  hasApi: boolean
+  /** Keywords from package.json */
+  keywords: string[]
+  /** Description from package.json */
+  description: string
+  /** Full href path for the library */
+  href: string
+}
+
+/**
+ * Get all library data for the packages index page.
+ * Returns data from manifest if available, otherwise constructs from filesystem.
+ *
+ * @returns Array of library data with keywords and descriptions
+ */
+export function getAllLibraryData(): LibraryData[] {
+  const manifest = getManifest()
+
+  if (manifest) {
+    return manifest.libraries.map((lib) => {
+      const isUtils = lib.category === 'utils'
+      const isPlugin = lib.category === 'plugin'
+      let href: string
+
+      if (isPlugin) {
+        href = `/docs/plugins/${lib.slug}`
+      } else if (isUtils) {
+        const shortSlug = lib.slug.replace('-utils', '')
+        href = `/docs/libraries/utils/${shortSlug}`
+      } else {
+        href = `/docs/libraries/${lib.slug}`
+      }
+
+      return {
+        name: lib.name,
+        packageName: lib.packageName,
+        slug: lib.slug,
+        category: lib.category,
+        hasApi: lib.hasApi,
+        keywords: lib.keywords || [],
+        description: lib.description || '',
+        href,
+      }
+    })
+  }
+
+  return []
 }

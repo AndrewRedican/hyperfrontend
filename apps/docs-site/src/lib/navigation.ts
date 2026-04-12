@@ -144,7 +144,7 @@ export const docsNavigation: NavItem[] = [
   },
   {
     slug: 'API Reference',
-    href: '/docs/api',
+    href: '/docs/libraries',
   },
   {
     slug: 'Contributing',
