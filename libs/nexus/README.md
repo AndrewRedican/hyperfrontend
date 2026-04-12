@@ -165,7 +165,7 @@ Nexus implements a **three-way handshake protocol** for establishing secure conn
 
 ### Connection Handshake
 
-```
+```text
 Initiator                    Responder
     |                            |
     |--- REQUEST_CONNECTION ---->|
@@ -185,7 +185,7 @@ Initiator                    Responder
 
 ### Disconnection Flow
 
-```
+```text
 Initiator                    Responder
     |                            |
     |--- CLOSE_CONNECTION ------>|
@@ -199,7 +199,7 @@ Initiator                    Responder
 
 Either party can cancel before connection completes:
 
-```
+```text
 Initiator                    Responder
     |                            |
     |--- CANCEL_CONNECTION ----->|
