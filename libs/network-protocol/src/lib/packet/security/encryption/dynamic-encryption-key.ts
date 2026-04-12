@@ -21,7 +21,7 @@ import { freeze } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
  * @param {FirstMessageHandler<T>} firstMessageHandler - Handler for first message (no key) scenarios
  * @returns {(provider: () => string) => EncryptionSuite<T>} A factory function that accepts a key provider and returns an encryption suite
  *
- * @example
+ * @example Creating a dynamic key encryption suite
  * ```typescript
  * const factory = createDynamicKeyEncryptionFactory(encryptPacket, decryptPacket, firstMessageHandler)
  * let sessionKey: string | undefined

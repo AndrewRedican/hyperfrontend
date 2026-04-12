@@ -17,7 +17,7 @@ import { createQueue } from './create-queue'
  * @param onFail - Callback invoked when serialization fails
  * @returns A queue instance for processing unserialized packets
  *
- * @example
+ * @example Creating a serialization queue
  * ```typescript
  * const queue = createSerializationQueue(
  *   'message-encoder',

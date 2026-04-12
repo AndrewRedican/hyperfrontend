@@ -17,7 +17,7 @@ import { createQueue } from './create-queue'
  * @param onFail - Callback invoked when obfuscation fails
  * @returns A queue instance for processing serialized packets
  *
- * @example
+ * @example Creating an obfuscation queue
  * ```typescript
  * const queue = createObfuscationQueue(
  *   'sender',

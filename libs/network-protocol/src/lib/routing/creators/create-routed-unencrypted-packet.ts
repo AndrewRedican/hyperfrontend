@@ -17,7 +17,7 @@ import { isValidTopicId } from '../../topic/validations/is-valid-topic-id'
  * @returns A frozen RoutedUnencryptedPacket
  * @throws {Error} When topic ID validation fails
  *
- * @example
+ * @example Creating a routed unencrypted packet
  * ```typescript
  * const routedPacket = createRoutedUnencryptedPacket(
  *   '550e8400-e29b-41d4-a716-446655440000',

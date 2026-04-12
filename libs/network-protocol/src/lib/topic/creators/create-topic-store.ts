@@ -13,7 +13,7 @@ import { isValidName } from '../validations/is-valid-name'
  *
  * @returns A TopicStore with methods for managing topics
  *
- * @example
+ * @example Creating and using a topic store
  * ```typescript
  * const store = createTopicStore()
  * store.create('notifications')

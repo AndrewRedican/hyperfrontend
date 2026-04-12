@@ -17,7 +17,7 @@ import { createPacketBase } from './create-packet-base'
  * @returns A frozen UnencryptedPacket containing the origin, target, and data
  * @throws {Error} When origin, target, or data validation fails
  *
- * @example
+ * @example Creating an unencrypted packet
  * ```typescript
  * const packet = createUnencryptedPacket(
  *   '550e8400-e29b-41d4-a716-446655440000',

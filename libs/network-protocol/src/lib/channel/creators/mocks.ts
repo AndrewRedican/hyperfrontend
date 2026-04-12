@@ -24,7 +24,7 @@ export const label = 'channel-label'
  *
  * @returns void
  *
- * @example
+ * @example Calling mock stop
  * ```typescript
  * stop() // no-op for testing
  * ```
@@ -36,7 +36,7 @@ export const stop = () => void 0
  *
  * @returns void
  *
- * @example
+ * @example Calling mock resume
  * ```typescript
  * resume() // no-op for testing
  * ```
@@ -48,7 +48,7 @@ export const resume = () => void 0
  *
  * @returns void
  *
- * @example
+ * @example Calling mock send
  * ```typescript
  * send() // no-op for testing
  * ```
@@ -60,7 +60,7 @@ export const send = () => void 0
  *
  * @returns void
  *
- * @example
+ * @example Calling mock receive
  * ```typescript
  * receive() // no-op for testing
  * ```

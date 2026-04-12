@@ -10,7 +10,7 @@ import { freeze } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
  * @param decrypt - Function that decrypts encrypted bytes with a password, returning the original string
  * @returns A DataDecrypter function
  *
- * @example
+ * @example Creating a decrypter with custom implementation
  * ```typescript
  * const decrypter = createDataDecrypter(async (bytes, password) => decryptBytes(bytes, password))
  * const data = await decrypter(encryptedBytes, 'secretPassword')

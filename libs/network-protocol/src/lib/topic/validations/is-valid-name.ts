@@ -7,7 +7,7 @@ import { getType } from '@hyperfrontend/data-utils'
  * @param name - The name to validate
  * @returns True if the name is a non-empty string, false otherwise
  *
- * @example
+ * @example Validating topic names
  * ```typescript
  * isValidName('notifications')
  * // => true

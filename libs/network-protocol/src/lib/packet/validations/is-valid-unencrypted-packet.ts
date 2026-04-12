@@ -8,7 +8,7 @@ import { isValidUnobfuscatedPacketBase } from './is-valid-unobfuscated-packet-ba
  * @param packet - The value to validate as an unencrypted packet
  * @returns True if the value is a valid unencrypted packet, false otherwise
  *
- * @example
+ * @example Validating unencrypted packets
  * ```typescript
  * isValidUnencryptedPacket({
  *   origin: '550e8400-e29b-41d4-a716-446655440000',

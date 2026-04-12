@@ -10,7 +10,7 @@ import { isValidTopicId } from './is-valid-topic-id'
  * @param topic - The value to validate as a topic
  * @returns True if the value is a valid topic object, false otherwise
  *
- * @example
+ * @example Validating a topic object
  * ```typescript
  * isValidTopic({ name: 'notifications', id: '550e8400-e29b-41d4-a716-446655440000' })
  * // => true

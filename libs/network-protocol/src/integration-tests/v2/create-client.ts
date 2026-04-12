@@ -19,7 +19,7 @@ import { initChannel, INTEGRATION_TEST_PSK } from './init-channel'
  * @param sharedKey - Pre-shared key for handshake encryption (defaults to test key)
  * @returns Client instance with connection and messaging capabilities
  *
- * @example
+ * @example Creating connected V2 test clients with PSK
  * ```typescript
  * const alice = createClient('alice', 'secret-psk')
  * const bob = createClient('bob', 'secret-psk')

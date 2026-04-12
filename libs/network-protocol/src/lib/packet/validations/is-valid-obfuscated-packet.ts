@@ -5,7 +5,7 @@
  * @param packet - The value to validate as an obfuscated packet
  * @returns True if the value is a Uint8Array, false otherwise
  *
- * @example
+ * @example Validating obfuscated packets
  * ```typescript
  * isValidObfuscatedPacket(new Uint8Array([1, 2, 3]))
  * // => true

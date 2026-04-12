@@ -9,7 +9,7 @@ import { isValidSerializedEncryptedPacket } from '../../validations/is-valid-ser
  * @param encrypt - Function that encrypts a string with a password, returning encrypted bytes
  * @returns A PacketObfuscater function that obfuscates serialized encrypted packets
  *
- * @example
+ * @example Creating a packet obfuscator
  * ```typescript
  * import { encrypt } from '@hyperfrontend/cryptography/browser'
  * import { createPacketObfuscator } from '@hyperfrontend/network-protocol/lib/packet/security/obfuscation/create-packet-obfuscator'

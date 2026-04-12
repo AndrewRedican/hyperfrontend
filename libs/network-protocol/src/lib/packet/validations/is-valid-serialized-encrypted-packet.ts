@@ -8,7 +8,7 @@ import { isValidUnobfuscatedPacketBase } from './is-valid-unobfuscated-packet-ba
  * @param packet - The value to validate as a serialized encrypted packet
  * @returns True if the packet has valid structure and serialized data, false otherwise
  *
- * @example
+ * @example Validating serialized encrypted packets
  * ```typescript
  * isValidSerializedEncryptedPacket({
  *   origin: '550e8400-e29b-41d4-a716-446655440000',

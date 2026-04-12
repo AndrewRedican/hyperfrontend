@@ -5,7 +5,7 @@
  * @param subscriptions - The value to validate as a subscriptions collection
  * @returns True if the value is a WeakMap, false otherwise
  *
- * @example
+ * @example Validating a subscriptions collection
  * ```typescript
  * isValidSubscriptions(new WeakMap())
  * // => true

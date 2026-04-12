@@ -7,7 +7,7 @@ import { getType } from '@hyperfrontend/data-utils'
  * @param receive - The value to validate as a receive function
  * @returns True if the value is a function, false otherwise
  *
- * @example
+ * @example Validating a receive function
  * ```typescript
  * isValidReceiveFn((packet) => console.log(packet))
  * // => true

@@ -9,7 +9,7 @@ import { entries } from '@hyperfrontend/immutable-api-utils/built-in-copy/object
  * @param validity - The validation results indicating which fields are invalid
  * @returns A formatted error message describing the validation failure
  *
- * @example
+ * @example Getting a validation error message
  * ```typescript
  * const validity = { label: true, operation: false, logger: true, onSuccess: true, onFail: true }
  * getValidationError('encryption', validity)

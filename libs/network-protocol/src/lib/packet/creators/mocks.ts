@@ -24,7 +24,7 @@ import { unencryptedData, encryptedData, password as passw0rd } from '../../data
  * @param _password - The encryption password
  * @returns Promise resolving to encrypted data
  *
- * @example
+ * @example Encrypting a packet
  * ```typescript
  * const encrypted = await encryptPacket(unencryptedPacket, 'secret')
  * // => Uint8Array (mock encrypted data)
@@ -39,7 +39,7 @@ export const encryptPacket = async (_packet: UnencryptedPacket, _password: strin
  * @param _password - The decryption password
  * @returns Promise resolving to decrypted data
  *
- * @example
+ * @example Decrypting a packet
  * ```typescript
  * const decrypted = await decryptPacket(encryptedData, 'secret')
  * // => { message: 'hello' } (mock decrypted data)
@@ -54,7 +54,7 @@ export const decryptPacket = async (_encrypted: Uint8Array, _password: string): 
  * @param _password - The obfuscation password
  * @returns Promise resolving to obfuscated data
  *
- * @example
+ * @example Obfuscating a packet
  * ```typescript
  * const obfuscated = await obfuscatePacket(serializedData, 'secret')
  * // => Uint8Array([1, 2, 3, 4, 5])
@@ -69,7 +69,7 @@ export const obfuscatePacket = async (_packet: Uint8Array, _password: string): P
  * @param _password - The deobfuscation password
  * @returns Promise resolving to deobfuscated data
  *
- * @example
+ * @example Deobfuscating a packet
  * ```typescript
  * const deobfuscated = await deobfuscatePacket(obfuscatedData, 'secret')
  * // => Uint8Array (mock encrypted data)
@@ -84,7 +84,7 @@ export const deobfuscatePacket = async (_obfuscated: Uint8Array, _password: stri
  * @param packet - The unserialized encrypted packet
  * @returns A serialized encrypted packet
  *
- * @example
+ * @example Serializing an encrypted packet
  * ```typescript
  * const serialized = createSerializedEncryptedPacket({
  *   origin: 'uuid-a',
@@ -106,7 +106,7 @@ export const createSerializedEncryptedPacket = (packet: UnserializedEncryptedPac
  * @param packet - The serialized encrypted packet
  * @returns An unserialized encrypted packet
  *
- * @example
+ * @example Deserializing an encrypted packet
  * ```typescript
  * const deserialized = createDeserializedEncryptedPacket({
  *   origin: 'uuid-a',
@@ -130,7 +130,7 @@ export const password = passw0rd
  *
  * @returns The password used for encryption
  *
- * @example
+ * @example Getting the encryption key
  * ```typescript
  * const key = keyProvider()
  * // => 'test-password' (mock password)
@@ -239,7 +239,7 @@ export const serializedEncryptedPacket: SerializedEncryptedPacket = {
  * @param packet - The unencrypted packet to process
  * @returns Promise resolving to an unserialized encrypted packet
  *
- * @example
+ * @example Using packet encryption
  * ```typescript
  * const encrypted = await packetEncryption(unencryptedPacket)
  * // => { origin, target, data: Uint8Array }
@@ -260,7 +260,7 @@ export const packetSerialization: PacketSerialization = createSerializedEncrypte
  * @param packet - The serialized encrypted packet to obfuscate
  * @returns Promise resolving to obfuscated packet data
  *
- * @example
+ * @example Using packet obfuscation
  * ```typescript
  * const obfuscated = await packetObfuscation(serializedPacket)
  * // => Uint8Array (obfuscated bytes)
@@ -277,7 +277,7 @@ export const packetObfuscation: PacketObfuscation = async (packet) => {
  * @param packet - The unserialized encrypted packet to decrypt
  * @returns Promise resolving to an unencrypted packet
  *
- * @example
+ * @example Using packet decryption
  * ```typescript
  * const decrypted = await packetDecryption(encryptedPacket)
  * // => { origin, target, data: { message: 'hello' } }
@@ -298,7 +298,7 @@ export const packetDeserialization: PacketDeserialization = createDeserializedEn
  * @param packet - The obfuscated packet data to deobfuscate
  * @returns Promise resolving to a serialized encrypted packet
  *
- * @example
+ * @example Using packet deobfuscation
  * ```typescript
  * const deobfuscated = await packetDeobfuscation(obfuscatedPacket)
  * // => { origin, target, data: 'base64...' }

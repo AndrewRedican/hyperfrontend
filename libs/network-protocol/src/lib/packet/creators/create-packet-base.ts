@@ -14,7 +14,7 @@ import { isValidTarget } from '../validations/is-valid-target'
  * @returns A frozen PacketBase object with validated origin and target
  * @throws {Error} When origin or target validation fails
  *
- * @example
+ * @example Creating a packet base
  * ```typescript
  * const base = createPacketBase(
  *   '550e8400-e29b-41d4-a716-446655440000',

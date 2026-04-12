@@ -11,7 +11,7 @@ import { isValidName } from '../validations/is-valid-name'
  *
  * @returns A ProtocolProviderStore with methods for managing protocol providers
  *
- * @example
+ * @example Creating and using a protocol provider store
  * ```typescript
  * const store = createProtocolProviderStore()
  * store.add('websocket', myProtocolProvider)

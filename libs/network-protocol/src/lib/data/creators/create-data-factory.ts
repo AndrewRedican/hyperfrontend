@@ -16,7 +16,7 @@ import { getSchema } from './get-schema'
  * @param createHash - Function that creates a hash from a string using a specified algorithm
  * @returns A DataCreater function that creates Data objects with encrypted schema hashes
  *
- * @example
+ * @example Creating data with automatic schema hashing
  * ```typescript
  * import { createHash } from '@hyperfrontend/cryptography/browser'
  * import { createDataFactory } from '@hyperfrontend/network-protocol/lib/data/creators/create-data-factory'

@@ -7,7 +7,7 @@ import { getType } from '@hyperfrontend/data-utils'
  * @param refreshRate - The refresh rate value to validate
  * @returns True if the refresh rate is a valid number >= 1, false otherwise
  *
- * @example
+ * @example Validating refresh rates
  * ```typescript
  * isValidRefreshRate(5)
  * // => true

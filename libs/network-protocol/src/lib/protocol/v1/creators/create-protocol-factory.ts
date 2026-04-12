@@ -35,7 +35,7 @@ import { isValidSendFn } from '../../validations/is-valid-send-fn'
  * @param {(refreshRate: number) => ObfuscationSuite} createTimeIntervalObfuscation - Factory for time-based obfuscation
  * @returns {(logger: Logger, refreshRate?: number) => ProtocolProvider<T>} A function that creates protocol providers
  *
- * @example
+ * @example Creating a protocol provider with obfuscated handshake
  * ```typescript
  * const createProvider = createObfuscatedHandshakeProtocolFactory(
  *   createDynamicKeyEncryption,

@@ -7,7 +7,7 @@ import { getType } from '@hyperfrontend/data-utils'
  * @param channel - The channel object to validate
  * @returns True if the channel is valid, false otherwise
  *
- * @example
+ * @example Validating channel structure
  * ```typescript
  * isValidChannel(channel) // => true
  * isValidChannel({}) // => false

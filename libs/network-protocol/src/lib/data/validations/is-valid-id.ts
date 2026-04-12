@@ -8,7 +8,7 @@ import { isUuidV4 } from '@hyperfrontend/random-generator-utils'
  * @param id - The value to validate as a data message ID
  * @returns True if the value is a valid UUID v4 string, false otherwise
  *
- * @example
+ * @example Validating data message IDs
  * ```typescript
  * isValidId('550e8400-e29b-41d4-a716-446655440000')
  * // => true

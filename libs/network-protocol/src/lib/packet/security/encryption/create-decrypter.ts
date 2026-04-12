@@ -10,7 +10,7 @@ import { isValidUnserializedEncryptedPacket } from '../../validations/is-valid-u
  * @param decryptData - Function that decrypts encrypted bytes with a password, returning Data objects
  * @returns A PacketDecrypter function that decrypts encrypted packets
  *
- * @example
+ * @example Creating a packet decrypter
  * ```typescript
  * import { createDataDecrypter } from '@hyperfrontend/network-protocol/lib/data/security/create-data-decrypter'
  * import { decrypt } from '@hyperfrontend/cryptography/browser'

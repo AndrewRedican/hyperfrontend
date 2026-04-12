@@ -14,7 +14,7 @@ import { initChannel } from './init-channel'
  * @param label - Human-readable label for the client
  * @returns Client instance with connection and messaging capabilities
  *
- * @example
+ * @example Creating connected test clients
  * ```typescript
  * const alice = createClient('alice')
  * const bob = createClient('bob')

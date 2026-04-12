@@ -15,7 +15,7 @@ import { isValidSequence } from './is-valid-schema-sequence'
  * @param data - The value to validate as unencrypted data
  * @returns True if the value is a valid unencrypted data object, false otherwise
  *
- * @example
+ * @example Validating complete unencrypted data objects
  * ```typescript
  * isValidUnencryptedData({
  *   pid: '550e8400-e29b-41d4-a716-446655440000',

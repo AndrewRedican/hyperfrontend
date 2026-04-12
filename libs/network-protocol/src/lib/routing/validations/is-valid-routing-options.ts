@@ -9,7 +9,7 @@ import { isValidSubscriptions } from './is-valid-subscriptions'
  * @param options - The value to validate as routing options
  * @returns True if the value is a valid routing options object, false otherwise
  *
- * @example
+ * @example Validating routing options
  * ```typescript
  * isValidRoutingOptions({ isDynamic: false, subscriptions: new WeakMap() })
  * // => true

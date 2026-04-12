@@ -99,7 +99,7 @@ export type DataDecrypter = <T = unknown>(data: Uint8Array, password: string) =>
  * @param value - The value to check
  * @returns True if the value is a string type, false otherwise
  *
- * @example
+ * @example Checking JSON string types
  * ```typescript
  * isJSONString('{"key":"value"}')
  * // => true
@@ -119,7 +119,7 @@ export function isJSONString<T = unknown>(value: unknown): value is JSONString<T
  * @param value - The string value to cast as JSONString
  * @returns The value cast as a JSONString type
  *
- * @example
+ * @example Casting a validated string
  * ```typescript
  * const jsonStr = asJSONString<User>('{"name":"Alice"}')
  * ```
@@ -134,7 +134,7 @@ export function asJSONString<T = unknown>(value: string): JSONString<T> {
  * @param jsonString - The JSON string to parse
  * @returns The parsed object of type T
  *
- * @example
+ * @example Parsing a JSON string to typed object
  * ```typescript
  * const user = parseJSONString<User>('{"name":"Alice"}')
  * // => { name: 'Alice' }
@@ -150,7 +150,7 @@ export function parseJSONString<T>(jsonString: JSONString<T>): T {
  * @param serialized - The serialized data to deserialize
  * @returns The deserialized data with parsed message
  *
- * @example
+ * @example Deserializing data with JSON message
  * ```typescript
  * const data = deserializeData({ ...metadata, message: '{"action":"update"}' })
  * // => { ...metadata, message: { action: 'update' } }
@@ -169,7 +169,7 @@ export function deserializeData<T>(serialized: SerializedData<T>): Data<T> {
  * @param data - The data to serialize
  * @returns The serialized data with stringified message
  *
- * @example
+ * @example Serializing data for transmission
  * ```typescript
  * const serialized = serializeData({ ...metadata, message: { action: 'update' } })
  * // => { ...metadata, message: '{"action":"update"}' }

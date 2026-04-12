@@ -17,7 +17,7 @@ import { createQueue } from './create-queue'
  * @param onFail - Callback invoked when deserialization fails
  * @returns A queue instance for processing serialized packets
  *
- * @example
+ * @example Creating a deserialization queue
  * ```typescript
  * const queue = createDeserializationQueue(
  *   'message-parser',

@@ -10,7 +10,7 @@ import { isValidTopicId } from '../../topic/validations/is-valid-topic-id'
  * @param routedPacket - The value to validate as a routed unencrypted packet
  * @returns True if the value is a valid routed unencrypted packet, false otherwise
  *
- * @example
+ * @example Validating a routed unencrypted packet
  * ```typescript
  * isValidRoutedUnencryptedPacket({ topicId: '550e8400-e29b-41d4-a716-446655440000', packet: unencryptedPacket })
  * // => true

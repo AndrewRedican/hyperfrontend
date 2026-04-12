@@ -32,7 +32,7 @@ export const testMessages = {
  *
  * @returns A mock logger with no-op implementations for all log methods
  *
- * @example
+ * @example Creating a mock logger for testing
  * ```typescript
  * const logger = createMockLogger()
  * logger.info('test') // does nothing

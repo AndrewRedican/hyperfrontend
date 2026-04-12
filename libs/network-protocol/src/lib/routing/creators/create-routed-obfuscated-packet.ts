@@ -14,7 +14,7 @@ import { isValidTopicId } from '../../topic/validations/is-valid-topic-id'
  * @returns A frozen RoutedObfuscatedPacket
  * @throws {Error} When topic ID or packet validation fails
  *
- * @example
+ * @example Creating a routed obfuscated packet
  * ```typescript
  * const routedPacket = createRoutedObfuscatedPacket(
  *   '550e8400-e29b-41d4-a716-446655440000',

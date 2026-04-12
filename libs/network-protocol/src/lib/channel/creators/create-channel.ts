@@ -17,7 +17,7 @@ import { isValidSender } from '../validations/is-valid-sender'
  * @param createReceiver - Factory function to create receivers
  * @returns A channel creator function
  *
- * @example
+ * @example Creating a channel with send capability
  * ```typescript
  * const createChannel = createChannelFactory(senderFactory, receiverFactory)
  * const channel = createChannel('comms', sendFn, receiveFn, protocolProvider)

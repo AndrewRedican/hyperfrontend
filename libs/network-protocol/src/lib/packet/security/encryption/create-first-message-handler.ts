@@ -17,7 +17,7 @@ import { deserializeData } from '../../../data/model'
  * @param textDecoder - Function to decode Uint8Array to string
  * @returns FirstMessageHandler for handling unencrypted first messages
  *
- * @example
+ * @example Creating a first message handler
  * ```typescript
  * const handler = createFirstMessageHandler(
  *   (text) => new TextEncoder().encode(text),

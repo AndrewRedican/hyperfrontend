@@ -17,7 +17,7 @@ import { createQueue } from './create-queue'
  * @param onFail - Callback invoked when decryption fails
  * @returns A queue instance for processing encrypted packets
  *
- * @example
+ * @example Creating a decryption queue
  * ```typescript
  * const queue = createDecryptionQueue(
  *   'incoming-messages',

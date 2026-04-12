@@ -10,7 +10,7 @@ import { isValidObfuscatedPacket } from '../../validations/is-valid-obfuscated-p
  * @param decrypt - Function that decrypts encrypted bytes with a password, returning the original string
  * @returns A PacketDeobfuscater function that deobfuscates obfuscated packets
  *
- * @example
+ * @example Creating a packet deobfuscator
  * ```typescript
  * import { decrypt } from '@hyperfrontend/cryptography/browser'
  * import { createPacketDeobfuscator } from '@hyperfrontend/network-protocol/lib/packet/security/obfuscation/create-packet-deobfuscator'

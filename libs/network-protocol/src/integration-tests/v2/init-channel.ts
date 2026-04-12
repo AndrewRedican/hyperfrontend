@@ -27,7 +27,7 @@ export const INTEGRATION_TEST_PSK = 'integration-test-shared-secret-key-2024'
  * @param sharedKey - Pre-shared key for handshake encryption (defaults to test key)
  * @returns Channel instance
  *
- * @example
+ * @example Initializing a V2 channel with PSK
  * ```typescript
  * const channel = initChannel('secure-channel', sendFn, receiveFn, 'psk-secret')
  * channel.send(packetData)

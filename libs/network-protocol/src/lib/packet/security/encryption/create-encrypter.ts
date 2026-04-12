@@ -10,7 +10,7 @@ import { isValidUnencryptedPacket } from '../../validations/is-valid-unencrypted
  * @param encryptData - Function that encrypts Data objects with a password, returning encrypted bytes
  * @returns A PacketEncrypter function that encrypts unencrypted packets
  *
- * @example
+ * @example Creating a packet encrypter
  * ```typescript
  * import { createDataEncrypter } from '@hyperfrontend/network-protocol/lib/data/security/create-data-encrypter'
  * import { encrypt } from '@hyperfrontend/cryptography/browser'
