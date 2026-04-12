@@ -11,7 +11,7 @@ import { createPromise } from '@hyperfrontend/immutable-api-utils/built-in-copy/
  * @returns A promise that resolves to the hexadecimal hash string
  * @throws {Error} When hash creation fails
  *
- * @example
+ * @example Creating a hash
  * ```typescript
  * const hash = await createHash('secret-message')
  * // => '64-character hexadecimal string'

@@ -12,7 +12,7 @@ import { encryptionConfig } from '../encryption-config'
  * @param subtle - The SubtleCrypto interface for cryptographic operations
  * @returns A function that encrypts messages with passwords
  *
- * @example
+ * @example Encrypting sensitive data
  * ```typescript
  * const encrypt = createEncrypt(utf8StringToUint8Array, getRandomValues, generateKey, crypto.subtle)
  * const encrypted = await encrypt('sensitive-data', 'user-password')
