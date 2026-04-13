@@ -1,4 +1,3 @@
-/* eslint-disable workspace/lib-require-jsdoc-example */
 /**
  * Result of a pattern safety check.
  */
