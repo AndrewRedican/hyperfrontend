@@ -26,6 +26,7 @@ import libTsconfigPaths, { RULE_NAME as LIB_TSCONFIG_PATHS } from './rules/lib-t
 import maxFileLines, { RULE_NAME as MAX_FILE_LINES } from './rules/max-file-lines'
 import noAsciiArtDiagrams, { RULE_NAME as NO_ASCII_ART_DIAGRAMS } from './rules/no-ascii-art-diagrams'
 import noAsyncFsApi, { RULE_NAME as NO_ASYNC_FS_API } from './rules/no-async-fs-api'
+import noBarrelStarExport, { RULE_NAME as NO_BARREL_STAR_EXPORT } from './rules/no-barrel-star-export'
 import noDecorativeHeaderComments, { RULE_NAME as NO_DECORATIVE_HEADER_COMMENTS } from './rules/no-decorative-header-comments'
 import noDeprecatedTag, { RULE_NAME as NO_DEPRECATED_TAG } from './rules/no-deprecated-tag'
 import noDirectConsole, { RULE_NAME as NO_DIRECT_CONSOLE } from './rules/no-direct-console'
@@ -80,6 +81,7 @@ export const rules: ESLint.Plugin['rules'] = {
   [MAX_FILE_LINES]: maxFileLines as unknown as Rule.RuleModule,
   [NO_ASCII_ART_DIAGRAMS]: noAsciiArtDiagrams as unknown as Rule.RuleModule,
   [NO_ASYNC_FS_API]: noAsyncFsApi as unknown as Rule.RuleModule,
+  [NO_BARREL_STAR_EXPORT]: noBarrelStarExport as unknown as Rule.RuleModule,
   [NO_DECORATIVE_HEADER_COMMENTS]: noDecorativeHeaderComments as unknown as Rule.RuleModule,
   [NO_DEPRECATED_TAG]: noDeprecatedTag as unknown as Rule.RuleModule,
   [NO_DIRECT_CONSOLE]: noDirectConsole as unknown as Rule.RuleModule,

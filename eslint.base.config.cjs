@@ -148,6 +148,7 @@ module.exports = [
     files: ['**/index.ts'],
     rules: {
       'workspace/no-unwanted-barrel-files': 'error',
+      'workspace/no-barrel-star-export': 'error',
     },
   },
   {
