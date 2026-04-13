@@ -12,6 +12,7 @@ import libPkgBundleEntry, { RULE_NAME as LIB_PKG_BUNDLE_ENTRY } from './rules/li
 import libPkgExportsExist, { RULE_NAME as LIB_PKG_EXPORTS_EXIST } from './rules/lib-pkg-exports-exist'
 import libPkgExportsJsOnly, { RULE_NAME as LIB_PKG_EXPORTS_JS_ONLY } from './rules/lib-pkg-exports-js-only'
 import libPkgFields, { RULE_NAME as LIB_PKG_FIELDS } from './rules/lib-pkg-fields'
+import libPkgMainReexports, { RULE_NAME as LIB_PKG_MAIN_REEXPORTS } from './rules/lib-pkg-main-reexports'
 import libPkgNoMain, { RULE_NAME as LIB_PKG_NO_MAIN } from './rules/lib-pkg-no-main'
 import libPkgPackageJsonExport, { RULE_NAME as LIB_PKG_PACKAGE_JSON_EXPORT } from './rules/lib-pkg-package-json-export'
 import libProjectBundleConfig, { RULE_NAME as LIB_PROJECT_BUNDLE_CONFIG } from './rules/lib-project-bundle-config'
@@ -64,6 +65,7 @@ export const rules: ESLint.Plugin['rules'] = {
   [LIB_PKG_EXPORTS_EXIST]: libPkgExportsExist as unknown as Rule.RuleModule,
   [LIB_PKG_EXPORTS_JS_ONLY]: libPkgExportsJsOnly as unknown as Rule.RuleModule,
   [LIB_PKG_FIELDS]: libPkgFields as unknown as Rule.RuleModule,
+  [LIB_PKG_MAIN_REEXPORTS]: libPkgMainReexports as unknown as Rule.RuleModule,
   [LIB_PKG_NO_MAIN]: libPkgNoMain as unknown as Rule.RuleModule,
   [LIB_PKG_PACKAGE_JSON_EXPORT]: libPkgPackageJsonExport as unknown as Rule.RuleModule,
   [LIB_PROJECT_BUNDLE_CONFIG]: libProjectBundleConfig as unknown as Rule.RuleModule,
