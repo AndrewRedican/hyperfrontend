@@ -11,7 +11,7 @@
     "@hyperfrontend/random-generator-utils": "0.0.4"
   },
   "peerDependencies": {
-    "@hyperfrontend/network-protocol": "0.1.0"
+    "@hyperfrontend/network-protocol": "0.2.0"
   },
   "exports": {
     ".": "./src/index.js",

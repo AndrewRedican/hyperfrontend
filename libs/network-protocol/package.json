@@ -1,15 +1,15 @@
 {
   "name": "@hyperfrontend/network-protocol",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Production-grade network protocol for secure, real-time cross-window and cross-process communication with built-in encryption, obfuscation, routing, and message queueing.",
   "dependencies": {
-    "@hyperfrontend/cryptography": "0.1.0",
+    "@hyperfrontend/cryptography": "0.2.0",
     "@hyperfrontend/data-utils": "0.0.4",
     "@hyperfrontend/json-utils": "0.1.0",
     "@hyperfrontend/list-utils": "0.0.4",
     "@hyperfrontend/logging": "0.1.0",
     "@hyperfrontend/random-generator-utils": "0.0.4",
-    "@hyperfrontend/string-utils": "0.0.4",
+    "@hyperfrontend/string-utils": "0.1.0",
     "@hyperfrontend/time-utils": "0.0.4",
     "@hyperfrontend/immutable-api-utils": "0.1.2"
   },
