@@ -48,7 +48,7 @@ interface RawRepository {
  * @param config - Registry configuration
  * @returns A Registry implementation for npm
  *
- * @example
+ * @example Creating an npm registry client
  * const registry = createNpmRegistry()
  * const version = await registry.getLatestVersion('@hyperfrontend/utils')
  */
@@ -275,7 +275,7 @@ const MAX_PACKAGE_NAME_LENGTH = 214
  * @returns Safe package name
  * @throws {Error} If package name contains invalid characters
  *
- * @example
+ * @example Validating package names for shell safety
  * ```typescript
  * escapePackageName('@scope/package') // => '@scope/package'
  * escapePackageName('simple-pkg') // => 'simple-pkg'
@@ -327,7 +327,7 @@ const MAX_VERSION_LENGTH = 256
  * @returns Safe version string
  * @throws {Error} If version contains invalid characters
  *
- * @example
+ * @example Validating version strings for shell safety
  * ```typescript
  * escapeVersion('1.2.3') // => '1.2.3'
  * escapeVersion('1.0.0-beta.1') // => '1.0.0-beta.1'

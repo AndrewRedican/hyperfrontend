@@ -14,7 +14,7 @@ import { collectAllDependencies, parseVersionString } from '../shared-utils/dete
  * @param packageJson - Optional pre-loaded package.json
  * @returns Detection result or null if not detected
  *
- * @example
+ * @example Detecting Next.js framework
  * ```typescript
  * const result = nextjsDetector('/path/to/nextjs-app', {
  *   dependencies: { 'next': '^14.0.0', 'react': '^18.0.0' }

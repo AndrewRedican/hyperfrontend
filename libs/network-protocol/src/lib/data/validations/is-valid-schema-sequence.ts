@@ -7,7 +7,7 @@ import { getType } from '@hyperfrontend/data-utils'
  * @param sequence - The value to validate as a sequence number
  * @returns True if the value is a positive number, false otherwise
  *
- * @example
+ * @example Validating sequence numbers
  * ```typescript
  * isValidSequence(1)
  * // => true

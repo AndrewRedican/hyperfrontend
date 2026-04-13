@@ -63,7 +63,7 @@ export interface CreateProjectOptions {
  * @param options - Project properties
  * @returns A new Project object
  *
- * @example
+ * @example Create a new Project object
  * ```typescript
  * import { createProject, readPackageJson } from '@hyperfrontend/versioning'
  *
@@ -102,7 +102,7 @@ export function createProject(options: CreateProjectOptions): Project {
  * @param project - The project to check
  * @returns True if the project can be published
  *
- * @example
+ * @example Check if a project is publishable
  * ```typescript
  * import { discoverProject, isPublishable } from '@hyperfrontend/versioning'
  *
@@ -122,7 +122,7 @@ export function isPublishable(project: Project): boolean {
  * @param project - The project to check
  * @returns True if the project is marked as private
  *
- * @example
+ * @example Check if a project is private
  * ```typescript
  * import { discoverProject, isPrivate } from '@hyperfrontend/versioning'
  *
@@ -142,7 +142,7 @@ export function isPrivate(project: Project): boolean {
  * @param project - The project to check
  * @returns True if changelog exists
  *
- * @example
+ * @example Check if a project has a changelog
  * ```typescript
  * import { discoverProject, hasChangelog } from '@hyperfrontend/versioning'
  *
@@ -162,7 +162,7 @@ export function hasChangelog(project: Project): boolean {
  * @param project - The project to check
  * @returns True if project depends on other workspace packages
  *
- * @example
+ * @example Check if a project has internal dependencies
  * ```typescript
  * import { discoverProject, hasInternalDependencies } from '@hyperfrontend/versioning'
  *
@@ -182,7 +182,7 @@ export function hasInternalDependencies(project: Project): boolean {
  * @param project - The project to check
  * @returns True if other workspace packages depend on this project
  *
- * @example
+ * @example Check if a project has internal dependents
  * ```typescript
  * import { discoverProject, hasInternalDependents } from '@hyperfrontend/versioning'
  *
@@ -202,7 +202,7 @@ export function hasInternalDependents(project: Project): boolean {
  * @param project - Project instance to analyze
  * @returns Number of internal dependencies
  *
- * @example
+ * @example Get the dependency count for a project
  * ```typescript
  * import { discoverProject, getDependencyCount } from '@hyperfrontend/versioning'
  *
@@ -222,7 +222,7 @@ export function getDependencyCount(project: Project): number {
  * @param project - Project instance to analyze
  * @returns Number of internal dependents
  *
- * @example
+ * @example Get the dependent count for a project
  * ```typescript
  * import { discoverProject, getDependentCount } from '@hyperfrontend/versioning'
  *
@@ -243,7 +243,7 @@ export function getDependentCount(project: Project): number {
  * @param dependents - New list of internal dependents
  * @returns A new Project with updated dependents
  *
- * @example
+ * @example Create a project copy with updated dependents
  * ```typescript
  * import { discoverProject, withDependents } from '@hyperfrontend/versioning'
  *
@@ -268,7 +268,7 @@ export function withDependents(project: Project, dependents: readonly string[]):
  * @param dependent - Name of the dependent to add
  * @returns A new Project with the added dependent
  *
- * @example
+ * @example Add an internal dependent to a project
  * ```typescript
  * import { discoverProject, addDependent } from '@hyperfrontend/versioning'
  *

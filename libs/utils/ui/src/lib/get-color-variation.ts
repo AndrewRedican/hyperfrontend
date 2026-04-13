@@ -12,7 +12,7 @@ import { rgbToString } from './rgb-to-string'
  * @param intensity - The intensity of the variation (-1 to 1, where negative darkens and positive lightens)
  * @returns A hexadecimal color string representing the variation
  *
- * @example
+ * @example Generating color variations
  * ```typescript
  * // Generate a lighter shade for hover states
  * const primaryColor = '#3b82f6'

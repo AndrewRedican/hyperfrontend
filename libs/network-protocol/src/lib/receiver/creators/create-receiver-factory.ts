@@ -9,7 +9,7 @@ import { createDecryptionQueue, createDeobfuscationQueue, createDeserializationQ
  * @param createDeserializedEncryptedPacket - Function that deserializes encrypted packets
  * @returns A CreateReceiver function that creates receiver instances
  *
- * @example
+ * @example Creating a receiver factory
  * ```typescript
  * import { createDeserializedEncryptedPacketCreator } from '@hyperfrontend/network-protocol/lib/packet/creators/create-deserialized-encrypted-packet-creator'
  * import { base64ToUint8Array } from '@hyperfrontend/string-utils/browser'

@@ -14,7 +14,7 @@ export type PropertyLock = (
  * @param object - The object to lock properties on
  * @param propertyValuePairs - Array of [key, value] pairs to lock
  *
- * @example
+ * @example Locking multiple properties
  * ```typescript
  * const config = {}
  * lockedProps(config, [

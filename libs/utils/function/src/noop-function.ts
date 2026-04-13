@@ -5,7 +5,7 @@
  *
  * @param args - Any arguments passed to the function (ignored)
  *
- * @example
+ * @example Using noop as fallback callback
  * ```typescript
  * const callback = condition ? handleEvent : noop
  * callback() // safely does nothing if condition is false

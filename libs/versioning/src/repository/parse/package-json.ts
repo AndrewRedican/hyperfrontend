@@ -64,7 +64,7 @@ const SHORTHAND_PLATFORMS: ReadonlyMap<string, string> = createMap([
  * @param packageJsonContent - Raw JSON string content of package.json
  * @returns RepositoryConfig or null if repository cannot be inferred
  *
- * @example
+ * @example Inferring repository from package.json content
  * ```typescript
  * // Shorthand format
  * inferRepositoryFromPackageJson('{"repository": "github:owner/repo"}')
@@ -106,7 +106,7 @@ export function inferRepositoryFromPackageJson(packageJsonContent: string): Repo
  * @param packageJson - Parsed package.json object
  * @returns RepositoryConfig or null if repository cannot be inferred
  *
- * @example
+ * @example Inferring repository from parsed object
  * ```typescript
  * const pkg = { repository: 'github:owner/repo' }
  * inferRepositoryFromPackageJsonObject(pkg)
@@ -220,7 +220,7 @@ function isBareShorthand(str: string): boolean {
  * @param packageJsonContent - Raw JSON string content of package.json
  * @returns Repository URL string or null if not found
  *
- * @example
+ * @example Extracting raw repository URL
  * ```typescript
  * extractRepositoryUrl('{"repository": {"url": "https://github.com/owner/repo"}}')
  * // → 'https://github.com/owner/repo'

@@ -1,9 +1,5 @@
 # Receiver
 
-**Navigation**: [↑ lib/](../README.md) · [↔ sender](../sender/README.md) · [channel](../channel/README.md) · [queue](../queue/README.md)
-
----
-
 ## Purpose
 
 The Receiver module provides the inbound message pipeline, orchestrating the flow of packets through deobfuscation, deserialization, and decryption queues after reception.
@@ -306,20 +302,6 @@ transport.on('message', (data) => {
 
 - **Depends on**: [`queue/`](../queue/README.md), [`packet/`](../packet/README.md), `@hyperfrontend/logging`
 - **Used by**: [`channel/`](../channel/README.md)
-
----
-
-## Directory Structure
-
-```
-receiver/
-├── README.md           ← You are here
-├── index.ts            ← Public exports
-├── model.ts            ← Receiver interface definitions
-└── creators/
-    ├── index.ts
-    └── create-receiver-factory.ts
-```
 
 ---
 

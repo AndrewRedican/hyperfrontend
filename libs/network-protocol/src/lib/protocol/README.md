@@ -1,9 +1,5 @@
 # Protocol
 
-**Navigation**: [↑ lib/](../README.md) · [channel](../channel/README.md) · [security](../security/README.md) · [packet](../packet/README.md)
-
----
-
 ## Purpose
 
 The Protocol module provides the central coordination object that encapsulates all cryptographic operations (encryption, decryption, obfuscation, deobfuscation) along with send/receive transport functions. It serves as a unified interface for secure message passing between endpoints.
@@ -595,34 +591,6 @@ try {
 
 - **Depends on**: [`security/`](../security/README.md), [`packet/`](../packet/README.md), `@hyperfrontend/logging`
 - **Used by**: [`channel/`](../channel/README.md) (creates channels with a protocol provider)
-
----
-
-## Directory Structure
-
-```
-protocol/
-├── README.md                  ← You are here
-├── v1/                        ← Dynamic Key Protocol
-│   ├── index.ts               ← Public exports
-│   ├── model.ts               ← v1-specific interfaces
-│   ├── creators/
-│   │   ├── index.ts
-│   │   ├── create-protocol-factory.ts
-│   │   └── create-provider-protocol-store.ts
-│   └── validations/
-│       ├── index.ts
-│       ├── is-valid-send-fn.ts
-│       └── is-valid-receive-fn.ts
-└── v2/                        ← Pre-Shared Key Protocol
-    ├── index.ts               ← Public exports
-    ├── model.ts               ← v2-specific interfaces (same as v1)
-    ├── creators/
-    │   ├── index.ts
-    │   └── create-static-key-protocol-factory.ts
-    └── validations/
-        └── index.ts           ← Re-exports v1 validations
-```
 
 ---
 

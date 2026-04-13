@@ -19,7 +19,7 @@ interface MinimalChannel {
  * @param registry - The channel registry instance
  * @returns Array of all registered channels
  *
- * @example
+ * @example Listing registered channels
  * ```typescript
  * const registry = createRegistry()
  * const channels = getAll(registry)

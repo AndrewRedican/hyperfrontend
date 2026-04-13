@@ -29,7 +29,7 @@ const _freeze = globalThis.Object.freeze
  * @param options - Optional error options.
  * @returns A new Error instance.
  *
- * @example
+ * @example Creating Error instances
  * ```typescript
  * const error = createError('Operation failed')
  * // With cause for error chaining
@@ -46,7 +46,7 @@ export const createError = (message?: string, options?: ErrorOptions): Error => 
  * @param options - Optional error options.
  * @returns A new TypeError instance.
  *
- * @example
+ * @example Creating TypeError instance
  * ```typescript
  * if (typeof value !== 'string') {
  *   throw createTypeError('Expected a string')
@@ -64,7 +64,7 @@ export const createTypeError = (message?: string, options?: ErrorOptions): TypeE
  * @param options - Optional error options.
  * @returns A new RangeError instance.
  *
- * @example
+ * @example Creating RangeError instance
  * ```typescript
  * if (index < 0 || index >= array.length) {
  *   throw createRangeError(`Index ${index} out of bounds`)
@@ -82,7 +82,7 @@ export const createRangeError = (message?: string, options?: ErrorOptions): Rang
  * @param options - Optional error options.
  * @returns A new ReferenceError instance.
  *
- * @example
+ * @example Creating ReferenceError instance
  * ```typescript
  * if (!(key in registry)) {
  *   throw createReferenceError(`Unknown key: ${key}`)
@@ -100,7 +100,7 @@ export const createReferenceError = (message?: string, options?: ErrorOptions): 
  * @param options - Optional error options.
  * @returns A new SyntaxError instance.
  *
- * @example
+ * @example Creating SyntaxError instance
  * ```typescript
  * if (!isValidJson(input)) {
  *   throw createSyntaxError('Invalid JSON format')
@@ -118,7 +118,7 @@ export const createSyntaxError = (message?: string, options?: ErrorOptions): Syn
  * @param options - Optional error options.
  * @returns A new URIError instance.
  *
- * @example
+ * @example Creating URIError instance
  * ```typescript
  * if (!isValidUtf8(encoded)) {
  *   throw createURIError('Malformed URI sequence')
@@ -136,7 +136,7 @@ export const createURIError = (message?: string, options?: ErrorOptions): URIErr
  * @param options - Optional error options.
  * @returns A new EvalError instance.
  *
- * @example
+ * @example Creating EvalError instance
  * ```typescript
  * throw createEvalError('Dynamic code execution is not allowed')
  * ```
@@ -153,7 +153,7 @@ export const createEvalError = (message?: string, options?: ErrorOptions): EvalE
  * @param options - Optional error options.
  * @returns A new AggregateError instance.
  *
- * @example
+ * @example Creating AggregateError instance
  * ```typescript
  * const results = await Promise.allSettled(promises)
  * const failures = results.filter(r => r.status === 'rejected').map(r => r.reason)

@@ -35,7 +35,7 @@ export const INDEPENDENT_FLOW_CONFIG: FlowConfig = {
  *
  * @returns A FlowStep that checks dependent bumps
  *
- * @example
+ * @example Checking if dependent packages need bumps
  * ```typescript
  * import { createCheckDependentBumpsStep, executeStep } from '@hyperfrontend/versioning'
  *
@@ -96,7 +96,7 @@ export function createCheckDependentBumpsStep(): FlowStep {
  * @param config - Optional configuration overrides
  * @returns A VersionFlow configured for independent versioning
  *
- * @example
+ * @example Creating an independent versioning flow
  * ```typescript
  * import { createIndependentFlow, executeFlow } from '@hyperfrontend/versioning'
  *
@@ -144,7 +144,7 @@ export function createIndependentFlow(config?: Partial<FlowConfig>): VersionFlow
  * @param config - Optional configuration overrides
  * @returns A VersionFlow for batch independent releases
  *
- * @example
+ * @example Releasing multiple packages in batch
  * ```typescript
  * import { createBatchReleaseFlow, executeFlow } from '@hyperfrontend/versioning'
  *

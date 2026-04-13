@@ -10,7 +10,7 @@ import { isValidLogger } from '@hyperfrontend/logging'
  * @param args - The queue creator arguments to validate
  * @returns A QueueCreatorValidity object indicating which fields are valid
  *
- * @example
+ * @example Validating queue creator arguments
  * ```typescript
  * const validity = isValidQueueCreaterArguments({
  *   label: 'processor',

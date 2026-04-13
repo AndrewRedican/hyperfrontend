@@ -16,7 +16,7 @@ import { getById } from '../../core/registry/get-by-id'
  * - Removes channel from registry
  * - No lifecycle event fired (forceful termination)
  *
- * @example
+ * @example Forceful connection termination
  * Forceful termination (e.g., window unload):
  * channel.destroy()
  * -> DESTROY_CONNECTION sent

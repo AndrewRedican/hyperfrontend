@@ -16,7 +16,7 @@ export type EventHandler = (
  * @param eventType - The event type to filter for
  * @returns A higher-order function that wraps a handler
  *
- * @example
+ * @example Filtering channel events
  * ```typescript
  * const openFilter = create('open')
  * const filteredHandler = openFilter((event, data, channel) => {

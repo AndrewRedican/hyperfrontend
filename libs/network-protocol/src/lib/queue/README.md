@@ -1,9 +1,5 @@
 # Queue
 
-**Navigation**: [↑ lib/](../README.md) · [sender](../sender/README.md) · [receiver](../receiver/README.md) · [packet](../packet/README.md)
-
----
-
 ## Purpose
 
 The Queue module provides FIFO (First-In-First-Out) message processing queues with async operation support, backpressure management, and stop/resume lifecycle controls. Queues are the fundamental building blocks for the sender and receiver pipelines.
@@ -443,31 +439,6 @@ createEncryptionQueue(label, op, null, ...) // Missing logger
 
 - **Depends on**: [`packet/`](../packet/README.md) (for packet types and validations)
 - **Used by**: [`sender/`](../sender/README.md), [`receiver/`](../receiver/README.md)
-
----
-
-## Directory Structure
-
-```
-queue/
-├── README.md           ← You are here
-├── index.ts            ← Public exports
-├── model.ts            ← Queue interface definitions
-├── queue.integration.spec.ts  ← Integration tests
-├── creators/
-│   ├── index.ts
-│   ├── create-queue.ts
-│   ├── create-encryption-queue.ts
-│   ├── create-serialization-queue.ts
-│   ├── create-obfuscation-queue.ts
-│   ├── create-deobfuscation-queue.ts
-│   ├── create-deserialization-queue.ts
-│   └── create-decryption-queue.ts
-├── utils/
-│   └── get-validation-error.ts
-└── validations/
-    └── is-valid-queue-creater-arguments.ts
-```
 
 ---
 

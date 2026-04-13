@@ -24,8 +24,12 @@
       "cache": false,
       "inputs": [
         "default",
+        "{workspaceRoot}/ACKNOWLEDGMENTS.md",
         "{workspaceRoot}/ARCHITECTURE.md",
         "{workspaceRoot}/CONTRIBUTING.md",
+        "{workspaceRoot}/MANIFESTO.md",
+        "{workspaceRoot}/REGARDING_AI.md",
+        "{workspaceRoot}/.all-contributorsrc",
         "{workspaceRoot}/libs/**/*.md",
         "{workspaceRoot}/libs/**/src/**/*.ts",
         "{workspaceRoot}/plugins/**/*.md",

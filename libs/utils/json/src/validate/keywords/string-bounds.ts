@@ -10,7 +10,7 @@ import { addError, shouldContinue } from '../context'
  * @param schema - Schema containing string constraints
  * @param ctx - Validation context
  * @returns true if validation passes, false otherwise
- * @example
+ * @example Validating string constraints
  * ```typescript
  * const schema = { minLength: 3, maxLength: 10, pattern: '^[a-z]+$' }
  * validateStringBounds('hello', schema, ctx) // => true

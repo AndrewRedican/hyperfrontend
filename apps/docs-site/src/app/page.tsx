@@ -3,6 +3,21 @@ import { Footer } from '@/components/footer'
 import { Header } from '@/components/header'
 import { ValueProposition } from '@/components/value-proposition'
 
+/**
+ * High-value packages to display on the landing page, sorted by priority.
+ * Lower priority numbers appear first.
+ */
+const FEATURED_PACKAGES: Array<{ name: string; href: string; priority: number }> = [
+  { name: '@hyperfrontend/nexus', href: '/docs/libraries/nexus', priority: 1 },
+  { name: '@hyperfrontend/state-machine', href: '/docs/libraries/state-machine', priority: 2 },
+  { name: '@hyperfrontend/data-utils', href: '/docs/libraries/utils/data', priority: 3 },
+  { name: '@hyperfrontend/string-utils', href: '/docs/libraries/utils/string', priority: 4 },
+  { name: '@hyperfrontend/list-utils', href: '/docs/libraries/utils/list', priority: 5 },
+  { name: '@hyperfrontend/time-utils', href: '/docs/libraries/utils/time', priority: 6 },
+  { name: '@hyperfrontend/json-utils', href: '/docs/libraries/utils/json', priority: 7 },
+  { name: '@hyperfrontend/function-utils', href: '/docs/libraries/utils/function', priority: 8 },
+].sort((a, b) => a.priority - b.priority)
+
 export default function HomePage() {
   return (
     <div className="flex min-h-screen flex-col">
@@ -23,6 +38,12 @@ export default function HomePage() {
             <div className="flex w-full items-center justify-center border-t border-slate-200 bg-slate-100/50 px-6 py-12 dark:border-slate-700 dark:bg-slate-800/30 sm:px-8 lg:w-1/2 lg:border-l lg:border-t-0 lg:px-12 lg:py-8">
               <DemoShowcase cycleDuration={20000} />
             </div>
+          </div>
+
+          {/* Scroll Indicator */}
+          <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 animate-bounce">
+            <span className="text-xs font-medium text-slate-500 dark:text-slate-400">Scroll to explore</span>
+            <ChevronDownIcon className="h-5 w-5 text-slate-400 dark:text-slate-500" />
           </div>
         </section>
 
@@ -69,9 +90,61 @@ export default function HomePage() {
             </div>
           </div>
         </section>
+
+        {/* Standalone Packages Strip */}
+        <section className="border-t border-slate-200 bg-slate-50 py-8 dark:border-slate-800 dark:bg-slate-900/50">
+          <div className="mx-auto max-w-7xl px-6 sm:px-8 lg:px-12">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+              <a
+                href="https://www.npmjs.com/search?q=%40hyperfrontend"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-3 hover:opacity-80 transition-opacity"
+              >
+                <NpmIcon className="h-6 w-6 text-red-500 dark:text-red-400 shrink-0" />
+                <div>
+                  <span className="text-sm font-medium text-slate-900 dark:text-white">Also on npm</span>
+                  <span className="ml-2 text-sm text-slate-500 dark:text-slate-400">16+ standalone utility packages for any project</span>
+                </div>
+              </a>
+              <a
+                href="/docs/libraries"
+                className="inline-flex items-center gap-1.5 text-sm font-medium text-primary-600 hover:text-primary-500 dark:text-primary-400 dark:hover:text-primary-300 whitespace-nowrap"
+              >
+                Browse all packages
+                <ArrowRightIcon className="h-3.5 w-3.5" />
+              </a>
+            </div>
+            <div className="mt-4 flex flex-wrap gap-2">
+              {FEATURED_PACKAGES.map((pkg) => (
+                <PackageTag key={pkg.name} name={pkg.name} href={pkg.href} />
+              ))}
+              <span className="text-xs text-slate-400 dark:text-slate-500 self-center">+8 more</span>
+            </div>
+          </div>
+        </section>
       </main>
       <Footer />
     </div>
+  )
+}
+
+function PackageTag({ name, href }: { name: string; href: string }) {
+  return (
+    <a
+      href={href}
+      className="inline-flex items-center rounded-full bg-white px-2.5 py-1 text-xs font-medium text-slate-600 ring-1 ring-inset ring-slate-200 hover:bg-slate-50 hover:text-primary-600 hover:ring-primary-200 transition-colors dark:bg-slate-800 dark:text-slate-300 dark:ring-slate-700 dark:hover:bg-slate-700 dark:hover:text-primary-400 dark:hover:ring-primary-500/50"
+    >
+      {name}
+    </a>
+  )
+}
+
+function NpmIcon({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="currentColor">
+      <path d="M0 7.334v8h6.666v1.332H12v-1.332h12v-8H0zm6.666 6.664H5.334v-4H3.999v4H1.335V8.667h5.331v5.331zm4 0v1.336H8.001V8.667h5.334v5.332h-2.669v-.001zm12.001 0h-1.33v-4h-1.336v4h-1.335v-4h-1.33v4h-2.671V8.667h8.002v5.331zM10.665 10H12v2.667h-1.335V10z" />
+    </svg>
   )
 }
 
@@ -123,6 +196,14 @@ function ArrowRightIcon({ className }: { className?: string }) {
   return (
     <svg className={className} fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
       <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
+    </svg>
+  )
+}
+
+function ChevronDownIcon({ className }: { className?: string }) {
+  return (
+    <svg className={className} fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+      <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
     </svg>
   )
 }

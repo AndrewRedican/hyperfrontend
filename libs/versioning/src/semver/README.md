@@ -175,26 +175,6 @@ format(max(versions)!) // '2.0.0'
 format(min(versions)!) // '1.0.0'
 ```
 
-## Directory Structure
-
-```
-semver/
-├── models/           # Data structures
-│   ├── version.ts    # SemVer type and factories
-│   └── range.ts      # Range, ComparatorSet, Comparator
-├── parse/            # String → Model
-│   ├── version.ts    # Version parsing
-│   └── range.ts      # Range parsing
-├── compare/          # Comparison operations
-│   ├── compare.ts    # Ordering and equality
-│   └── sort.ts       # Array sorting, min, max
-├── format/           # Model → String
-│   └── to-string.ts  # Formatting functions
-├── increment/        # Version mutations
-│   └── bump.ts       # Bump operations
-└── index.ts          # Public exports
-```
-
 ## Design Principles
 
 1. **Immutable** — All operations return new objects

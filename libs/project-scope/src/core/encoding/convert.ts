@@ -11,7 +11,7 @@ const convertLogger = createScopedLogger('project-scope:encoding:convert')
  * @param sourceEncoding - Source encoding (auto-detected if not provided)
  * @returns UTF-8 string
  *
- * @example
+ * @example Converting a buffer to UTF-8 string
  * ```typescript
  * const buffer = Buffer.from('Hello', 'utf-8')
  * const text = toUtf8(buffer)
@@ -33,7 +33,7 @@ export function toUtf8(content: Buffer | string, sourceEncoding: BufferEncoding 
  * @returns Converted string
  * @throws {Error} If content is binary and cannot be converted
  *
- * @example
+ * @example Converting file buffer to string with auto-detection
  * ```typescript
  * const fileBuffer = readFileSync('./config.json')
  * const content = bufferToString(fileBuffer)
@@ -68,7 +68,7 @@ export function bufferToString(content: Buffer, encoding?: BufferEncoding): stri
  * @param content - String that may have BOM
  * @returns String without BOM
  *
- * @example
+ * @example Stripping BOM from a string
  * ```typescript
  * const withBom = '\ufeffHello World'
  * const clean = stripBom(withBom)
@@ -88,7 +88,7 @@ export function stripBom(content: string): string {
  * @param content - String to add BOM to
  * @returns String with BOM
  *
- * @example
+ * @example Adding UTF-8 BOM to content
  * ```typescript
  * const content = 'Hello World'
  * const withBom = addBom(content)

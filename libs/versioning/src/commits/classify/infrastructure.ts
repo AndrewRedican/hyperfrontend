@@ -80,7 +80,7 @@ export interface InfrastructureConfig {
  * @param scopes - Scopes to match against (case-insensitive)
  * @returns Matcher that returns true if scope matches
  *
- * @example
+ * @example Matching against specific scopes
  * const matcher = scopeMatcher(['ci', 'build', 'tooling'])
  * matcher({ scope: 'CI', ... }) // true
  * matcher({ scope: 'feat', ... }) // false
@@ -99,7 +99,7 @@ export function scopeMatcher(scopes: readonly string[]): InfrastructureMatcher {
  * @param prefixes - Scope prefixes to match (case-insensitive)
  * @returns Matcher that returns true if scope starts with any prefix
  *
- * @example
+ * @example Matching prefixed scopes
  * const matcher = scopePrefixMatcher(['tool-', 'infra-'])
  * matcher({ scope: 'tool-package', ... }) // true
  * matcher({ scope: 'lib-utils', ... }) // false
@@ -119,7 +119,7 @@ export function scopePrefixMatcher(prefixes: readonly string[]): InfrastructureM
  * @param patterns - Patterns to search for in commit message (case-insensitive)
  * @returns Matcher that returns true if message contains any pattern
  *
- * @example
+ * @example Matching message patterns
  * const matcher = messageMatcher(['[infra]', '[ci skip]'])
  */
 export function messageMatcher(patterns: readonly string[]): InfrastructureMatcher {
@@ -136,7 +136,7 @@ export function messageMatcher(patterns: readonly string[]): InfrastructureMatch
  * @param pattern - Regex pattern to test against scope
  * @returns Matcher that returns true if scope matches regex
  *
- * @example
+ * @example Matching with regex pattern
  * const matcher = scopeRegexMatcher(/^(ci|build|tool)-.+/)
  */
 export function scopeRegexMatcher(pattern: RegExp): InfrastructureMatcher {
@@ -152,7 +152,7 @@ export function scopeRegexMatcher(pattern: RegExp): InfrastructureMatcher {
  * @param matchers - Matchers to combine
  * @returns Combined matcher
  *
- * @example
+ * @example Combining matchers with OR logic
  * const combined = anyOf(
  *   scopeMatcher(['ci', 'build']),
  *   messageMatcher(['[infra]']),
@@ -169,7 +169,7 @@ export function anyOf(...matchers: readonly InfrastructureMatcher[]): Infrastruc
  * @param matchers - Matchers to combine
  * @returns Combined matcher
  *
- * @example
+ * @example Combining matchers with AND logic
  * const combined = allOf(
  *   scopeMatcher(['deps']),
  *   messageMatcher(['security'])
@@ -185,7 +185,7 @@ export function allOf(...matchers: readonly InfrastructureMatcher[]): Infrastruc
  * @param matcher - Matcher to negate
  * @returns Negated matcher
  *
- * @example
+ * @example Negating a matcher
  * const notRelease = not(scopeMatcher(['release']))
  */
 export function not(matcher: InfrastructureMatcher): InfrastructureMatcher {
@@ -227,7 +227,7 @@ export const DEFAULT_INFRA_SCOPE_MATCHER: InfrastructureMatcher = anyOf(CI_SCOPE
  * @param config - Infrastructure configuration
  * @returns Combined matcher, or null if no matchers configured
  *
- * @example
+ * @example Building an infrastructure matcher
  * const matcher = buildInfrastructureMatcher({
  *   scopes: ['ci', 'build'],
  *   matcher: (ctx) => ctx.scope?.startsWith('tool-')
@@ -262,7 +262,7 @@ export function buildInfrastructureMatcher(config: InfrastructureConfig): Infras
  * @param scope - Pre-parsed scope (optional, saves re-parsing)
  * @returns Match context for use with matchers
  *
- * @example
+ * @example Creating match context from a git commit
  * ```typescript
  * const commit = { hash: 'abc123', subject: 'chore(ci): update workflow', message: 'chore(ci): update workflow' }
  * createMatchContext(commit, 'ci')
@@ -286,7 +286,7 @@ export function createMatchContext(commit: GitCommit, scope?: string): Infrastru
  * @param scope - Pre-parsed scope (optional)
  * @returns True if commit matches infrastructure criteria
  *
- * @example
+ * @example Evaluating a commit against infrastructure matcher
  * ```typescript
  * const commit = { hash: 'abc123', subject: 'chore(ci): update workflow', message: '...' }
  * const ciMatcher = (ctx) => ctx.scope === 'ci'

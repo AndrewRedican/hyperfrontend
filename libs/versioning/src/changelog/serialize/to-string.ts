@@ -13,12 +13,12 @@ import { resolveOptions, getSectionHeading, formatLink, getListMarker, createSpa
  * @param options - Optional serialization options
  * @returns The markdown string representation
  *
- * @example
+ * @example Basic serialization
  * ```ts
  * const markdown = serializeChangelog(changelog)
  * ```
  *
- * @example
+ * @example Serializing with custom options
  * ```ts
  * const markdown = serializeChangelog(changelog, {
  *   includeCommits: false,

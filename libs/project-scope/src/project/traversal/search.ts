@@ -39,7 +39,7 @@ function matchesPatterns(path: string, patterns: string[]): boolean {
  * @param options - Configuration for search behavior
  * @returns List of relative file paths that match the patterns
  *
- * @example
+ * @example Finding files by pattern
  * ```typescript
  * import { findFiles } from '@hyperfrontend/project-scope'
  *
@@ -96,7 +96,7 @@ export function findFiles(startPath: string, patterns: string | string[], option
  * @param options - Configuration for search behavior
  * @returns List of virtual file paths that match the patterns
  *
- * @example
+ * @example Finding files in a virtual tree
  * ```typescript
  * import { createTree, findFilesInTree } from '@hyperfrontend/project-scope'
  *
@@ -143,7 +143,7 @@ export function findFilesInTree(tree: Tree, patterns: string | string[], options
  * @param options - Configuration for search behavior
  * @returns List of relative directory paths that match the patterns
  *
- * @example
+ * @example Finding directories by pattern
  * ```typescript
  * import { findDirectories } from '@hyperfrontend/project-scope'
  *

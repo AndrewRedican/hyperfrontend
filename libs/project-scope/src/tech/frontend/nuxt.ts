@@ -14,7 +14,7 @@ import { collectAllDependencies, parseVersionString } from '../shared-utils/dete
  * @param packageJson - Optional pre-loaded package.json
  * @returns Detection result or null if not detected
  *
- * @example
+ * @example Detecting Nuxt framework
  * ```typescript
  * const result = nuxtDetector('/path/to/nuxt-app', {
  *   dependencies: { 'nuxt': '^3.0.0', 'vue': '^3.0.0' }

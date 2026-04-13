@@ -28,7 +28,7 @@ import { freeze } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
  * @param config.origin - Allowed origin for messages (defaults to '*')
  * @returns A security transport that passes through actions unchanged
  *
- * @example
+ * @example Using passthrough transport
  * ```typescript
  * const transport = createNoneTransport({ target: iframe.contentWindow })
  *

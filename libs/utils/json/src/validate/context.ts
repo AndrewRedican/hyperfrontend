@@ -40,7 +40,7 @@ export interface ValidationContext {
  * @param strictPatterns - Whether to report errors for invalid regex patterns (default: false)
  * @param patternSafetyChecker - Optional pattern safety checker for ReDoS detection
  * @returns A new validation context
- * @example
+ * @example Creating validation context
  * ```typescript
  * const schema = { type: 'string' }
  * const ctx = createValidationContext(schema, validateSchema)
@@ -82,7 +82,7 @@ export function createValidationContext(
  * @param ctx - Parent context
  * @param segment - Path segment to append
  * @returns New context with updated path
- * @example
+ * @example Creating child context with path
  * ```typescript
  * const ctx = createValidationContext(schema, validate)
  * const childCtx = pushPath(ctx, 'items')
@@ -107,7 +107,7 @@ export function pushPath(ctx: ValidationContext, segment: string | number): Vali
  * @param instance - The failing value
  * @param code - Optional error code for programmatic handling
  * @param params - Optional additional parameters
- * @example
+ * @example Adding validation error
  * ```typescript
  * const ctx = createValidationContext(schema, validate)
  * addError(ctx, 'Value must be a string', 42, 'type', { expected: 'string' })
@@ -136,7 +136,7 @@ export function addError(
  *
  * @param ctx - Validation context
  * @returns true if we should continue, false if we should stop
- * @example
+ * @example Checking error collection mode
  * ```typescript
  * const ctx = createValidationContext(schema, validate, true) // collectAllErrors: true
  * addError(ctx, 'First error', 'value', 'error')

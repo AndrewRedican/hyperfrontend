@@ -69,7 +69,7 @@ export interface CreateStepOptions {
  * @param options - Optional step configuration
  * @returns A FlowStep object
  *
- * @example
+ * @example Creating a custom fetch step
  * ```typescript
  * const fetchStep = createStep(
  *   'fetch-registry',
@@ -106,7 +106,7 @@ export function createStep(id: string, name: string, execute: StepExecutor, opti
  * @param message - Success message
  * @returns A FlowStep that always succeeds
  *
- * @example
+ * @example Creating a placeholder step
  * ```typescript
  * import { createNoopStep, executeStep } from '@hyperfrontend/versioning'
  *
@@ -130,7 +130,7 @@ export function createNoopStep(id: string, name: string, message = 'Step complet
  * @param message - Explanation for why the step was skipped
  * @returns A FlowStepResult with 'skipped' status
  *
- * @example
+ * @example Skipping a step conditionally
  * ```typescript
  * import { createSkippedResult } from '@hyperfrontend/versioning'
  *
@@ -154,7 +154,7 @@ export function createSkippedResult(message: string): FlowStepResult {
  * @param stateUpdates - Optional state updates to apply after step completion
  * @returns A FlowStepResult with 'success' status
  *
- * @example
+ * @example Returning a success result with state updates
  * ```typescript
  * import { createSuccessResult } from '@hyperfrontend/versioning'
  *
@@ -179,7 +179,7 @@ export function createSuccessResult(message: string, stateUpdates?: FlowStepResu
  * @param message - Optional message (defaults to error.message)
  * @returns A FlowStepResult with 'failed' status
  *
- * @example
+ * @example Handling step execution errors
  * ```typescript
  * import { createFailedResult } from '@hyperfrontend/versioning'
  *

@@ -58,7 +58,7 @@ const RECORD_SEPARATOR = '\x1e'
  * @param options - Configuration for retrieving the commit log
  * @returns Array of GitCommit objects
  *
- * @example
+ * @example Get commit log with options
  * const commits = getCommitLog({ maxCount: 10 })
  * const recentChanges = getCommitLog({ from: 'v1.0.0', to: 'HEAD' })
  */
@@ -123,7 +123,7 @@ export function getCommitLog(options: GitLogOptions = {}): readonly GitCommit[] 
  * @param options - Additional options
  * @returns Array of GitCommit objects
  *
- * @example
+ * @example Get commits between two references
  * const commits = getCommitsBetween('v1.0.0', 'v1.1.0')
  */
 export function getCommitsBetween(from: string, to = 'HEAD', options: Omit<GitLogOptions, 'from' | 'to'> = {}): readonly GitCommit[] {
@@ -137,7 +137,7 @@ export function getCommitsBetween(from: string, to = 'HEAD', options: Omit<GitLo
  * @param options - Additional options
  * @returns Array of GitCommit objects
  *
- * @example
+ * @example Get commits since a tag
  * const commits = getCommitsSince('v1.0.0')
  */
 export function getCommitsSince(since: string, options: Omit<GitLogOptions, 'from'> = {}): readonly GitCommit[] {
@@ -151,7 +151,7 @@ export function getCommitsSince(since: string, options: Omit<GitLogOptions, 'fro
  * @param options - Additional options
  * @returns GitCommit or null if not found
  *
- * @example
+ * @example Get a single commit by hash
  * const commit = getCommit('abc1234')
  */
 export function getCommit(hash: string, options: Pick<GitLogOptions, 'cwd' | 'timeout'> = {}): GitCommit | null {
@@ -176,7 +176,7 @@ export function getCommit(hash: string, options: Pick<GitLogOptions, 'cwd' | 'ti
  * @param options - Additional options
  * @returns True if commit exists
  *
- * @example
+ * @example Check if a commit exists in the repository
  * ```typescript
  * if (commitExists('abc123def')) {
  *   console.log('Commit found in repository')
@@ -213,7 +213,7 @@ export function commitExists(hash: string, options: Pick<GitLogOptions, 'cwd' | 
  * @param options - Additional options
  * @returns True if the commit is an ancestor of HEAD
  *
- * @example
+ * @example Check if commit is reachable from HEAD
  * if (commitReachableFromHead(baseCommit)) {
  *   // Safe to use for commit range queries
  *   const commits = getCommitsSince(baseCommit)
@@ -405,7 +405,7 @@ const MAX_REF_LENGTH = 256
  * @returns Safe reference string
  * @throws {Error} If reference contains invalid characters
  *
- * @example
+ * @example Escape a git reference for shell commands
  * ```typescript
  * escapeGitRef('refs/heads/main') // => 'refs/heads/main'
  * escapeGitRef('feature/test') // => 'feature/test'
@@ -461,7 +461,7 @@ const MAX_PATH_LENGTH = 4096
  * @returns Safe path string
  * @throws {Error} If path contains invalid characters
  *
- * @example
+ * @example Escape a file path for git commands
  * ```typescript
  * escapeGitPath('src/utils/helper.ts') // => 'src/utils/helper.ts'
  * escapeGitPath('path with spaces/file.ts') // => 'path with spaces/file.ts'
@@ -513,7 +513,7 @@ const MAX_ARG_LENGTH = 1000
  * @returns Safe argument string
  * @throws {Error} If argument contains invalid characters
  *
- * @example
+ * @example Escape a git argument for shell commands
  * ```typescript
  * escapeGitArg('John Doe <john@example.com>') // => 'John Doe <john@example.com>'
  * ```

@@ -15,7 +15,7 @@ import { filterEntries } from './filter-by-predicate'
  * @param range - Semver range string (e.g., '>=1.0.0 <2.0.0')
  * @returns A new changelog with entries matching the range
  *
- * @example
+ * @example Filtering by semver range
  * ```ts
  * const majors = filterByVersionRange(changelog, '>=1.0.0 <2.0.0')
  * ```
@@ -46,7 +46,7 @@ export function filterByVersionRange(changelog: Changelog, range: string): Chang
  * @param startVersion - The minimum version (inclusive)
  * @returns A new changelog with entries >= startVersion
  *
- * @example
+ * @example Filtering from a start version
  * ```typescript
  * const recent = filterFromVersion(changelog, '2.0.0')
  * // Only entries for version 2.0.0 and later
@@ -77,7 +77,7 @@ export function filterFromVersion(changelog: Changelog, startVersion: string): C
  * @param endVersion - The maximum version (inclusive)
  * @returns A new changelog with entries <= endVersion
  *
- * @example
+ * @example Filtering to an end version
  * ```typescript
  * const legacy = filterToVersion(changelog, '1.9.9')
  * // Only entries for versions up to 1.9.9
@@ -109,7 +109,7 @@ export function filterToVersion(changelog: Changelog, endVersion: string): Chang
  * @param endVersion - The maximum version (inclusive)
  * @returns A new changelog with entries in the range
  *
- * @example
+ * @example Filtering entries within a version range
  * ```typescript
  * const range = filterVersionRange(changelog, '1.5.0', '2.0.0')
  * // Entries from 1.5.0 through 2.0.0
@@ -150,7 +150,7 @@ export function filterVersionRange(changelog: Changelog, startVersion: string, e
  * @param includeUnreleased - Whether to include unreleased in count (default: false)
  * @returns A new changelog with only the most recent entries
  *
- * @example
+ * @example Getting the most recent entries
  * ```typescript
  * const latest = filterRecentEntries(changelog, 5)
  * // Last 5 released versions (plus unreleased if present)
@@ -192,7 +192,7 @@ export function filterRecentEntries(changelog: Changelog, count: number, include
  * @param endDate - End date (inclusive, ISO format)
  * @returns A new changelog with entries in the date range
  *
- * @example
+ * @example Filtering entries by date range
  * ```typescript
  * const q1 = filterByDateRange(changelog, '2024-01-01', '2024-03-31')
  * // Entries released in Q1 2024

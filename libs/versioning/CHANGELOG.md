@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.5.3](https://github.com/AndrewRedican/hyperfrontend/compare/d96fee4d4d3a70178c8a01e5f2e2ae675fa23f37...8a05c80832de91cd61f8af064b417870ea1e3b01) - 2026-04-13
+
+### Bug Fixes
+
+- add missing re-export in main entrypoint
+
 ## [0.5.2](https://github.com/AndrewRedican/hyperfrontend/compare/bf1304e36ce20eb196dae60d2b311ab10461860e...61a93d778d6b84915c51120f315e81b3a16fd67c) - 2026-04-06
 
 ### Bug Fixes

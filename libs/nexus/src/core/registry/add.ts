@@ -20,7 +20,7 @@ interface MinimalChannel {
  * @param channel - Channel to register (must have id, name, target)
  * @throws {Error} Error if channel is invalid
  *
- * @example
+ * @example Registering a channel
  * ```typescript
  * const registry = createRegistry()
  * add(registry, { id: 'ch-1', name: 'main', target: iframe.contentWindow })

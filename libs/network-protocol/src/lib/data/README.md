@@ -1,9 +1,5 @@
 # Data
 
-**Navigation**: [↑ lib/](../README.md) · [packet](../packet/README.md) · [sender](../sender/README.md) · [receiver](../receiver/README.md)
-
----
-
 ## Purpose
 
 The Data module defines the message payload structure with automatic schema generation, unique identification, and encryption key management. Data objects are the content carried within packets.
@@ -285,32 +281,6 @@ await createData('pid', 1, undefined)
 
 - **Depends on**: `@hyperfrontend/cryptography`, `jsonschema`
 - **Used by**: [`packet/`](../packet/README.md), [`sender/`](../sender/README.md), [`receiver/`](../receiver/README.md)
-
----
-
-## Directory Structure
-
-```
-data/
-├── README.md           ← You are here
-├── index.ts            ← Public exports
-├── model.ts            ← Data interface definitions
-├── data.integration.spec.ts
-├── creators/
-│   ├── index.ts
-│   ├── create-data-factory.ts
-│   └── get-schema.ts
-├── security/
-│   ├── index.ts
-│   ├── create-encrypter.ts
-│   └── create-decrypter.ts
-└── validations/
-    ├── index.ts
-    ├── is-valid-pid.ts
-    ├── is-valid-sequence.ts
-    ├── is-valid-message.ts
-    └── is-valid-unencrypted-data.ts
-```
 
 ---
 

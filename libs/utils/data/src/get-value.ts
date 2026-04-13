@@ -18,7 +18,7 @@ import { isIterableType } from './is-iterable-type'
  * - If `defaultValue.onMissingKey` is provided, it will be returned when a key in the path is missing.
  * - If `defaultValue.onError` is provided, it will be returned when any error occurs during the retrieval process.
  *
- * @example
+ * @example Retrieving nested values
  * ```typescript
  * getValue({ a: { b: 1 } }, ['a', 'b']) // 1
  * getValue({ a: 1 }, ['x'], { onMissingKey: 0 }) // 0

@@ -144,11 +144,23 @@ export const docsNavigation: NavItem[] = [
   },
   {
     slug: 'API Reference',
-    href: '/docs/api',
+    href: '/docs/libraries',
+  },
+  {
+    slug: 'Manifesto',
+    href: '/docs/manifesto',
   },
   {
     slug: 'Contributing',
     href: '/docs/contributing',
+  },
+  {
+    slug: 'Acknowledgments',
+    href: '/docs/acknowledgments',
+  },
+  {
+    slug: 'Regarding AI',
+    href: '/docs/regarding-ai',
   },
 ]
 

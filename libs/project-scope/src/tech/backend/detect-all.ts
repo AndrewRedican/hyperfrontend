@@ -22,7 +22,7 @@ export const backendDetectors: BackendDetector[] = [
  * @param projectPath - Project directory path
  * @param packageJson - Optional pre-loaded package.json
  * @returns Array of detected frameworks, sorted by confidence
- * @example
+ * @example Detecting multiple backend frameworks
  * ```typescript
  * const pkg = {
  *   dependencies: { '@nestjs/core': '^10.0.0', '@nestjs/common': '^10.0.0' },

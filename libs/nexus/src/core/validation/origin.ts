@@ -8,7 +8,7 @@ import { isEmpty } from './_utils'
  * @param origin - The origin to validate
  * @throws {Error} Error if origin is invalid
  *
- * @example
+ * @example Validating allowed origins
  * ```typescript
  * validateOrigin('https://example.com') // valid
  * validateOrigin('*') // valid (wildcard)

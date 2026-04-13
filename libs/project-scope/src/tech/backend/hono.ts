@@ -12,7 +12,7 @@ import { collectAllDependencies, parseVersionString } from '../shared-utils/dete
  * @param projectPath - Project directory path
  * @param packageJson - Optional pre-loaded package.json
  * @returns Detection result or null if not detected
- * @example
+ * @example Detecting Hono framework
  * ```typescript
  * const pkg = {
  *   dependencies: { hono: '^3.11.0', '@hono/node-server': '^1.3.0' },

@@ -17,7 +17,7 @@ export const CREATE_TAG_STEP_ID = 'create-tag'
  *
  * @returns A FlowStep that creates a git tag
  *
- * @example
+ * @example Creating an annotated version tag
  * ```typescript
  * import { createTagStep, executeStep } from '@hyperfrontend/versioning'
  *
@@ -105,7 +105,7 @@ export function createTagStep(): FlowStep {
  *
  * @returns A FlowStep that pushes the git tag
  *
- * @example
+ * @example Pushing the tag to remote
  * ```typescript
  * import { createPushTagStep, executeStep } from '@hyperfrontend/versioning'
  *

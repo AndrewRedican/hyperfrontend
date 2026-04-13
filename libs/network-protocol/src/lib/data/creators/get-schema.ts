@@ -8,7 +8,7 @@ import { toJsonSchema } from '@hyperfrontend/json-utils'
  * @param data - The data to analyze and generate a schema from
  * @returns A JSON schema representing the structure of the input data
  *
- * @example
+ * @example Generating a schema from an object
  * ```typescript
  * const schema = getSchema({ name: 'Alice', age: 30 })
  * // => { type: 'object', properties: { name: { type: 'string' }, age: { type: 'integer' } } }

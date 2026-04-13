@@ -27,7 +27,7 @@ export interface SetupBrokerConfig {
  * @param config - Broker configuration
  * @returns Broker handle
  *
- * @example
+ * @example Setting up a broker
  * ```typescript
  * const broker = setupBroker({
  *   name: 'main',

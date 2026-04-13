@@ -2,6 +2,7 @@
 
 import type { Parameter } from './types'
 import { AnchorLink } from '../anchor-link'
+import { DescriptionMarkdown } from './description-markdown'
 import { TypeLink } from './type-link'
 import { getDescription } from './type-utils'
 
@@ -47,7 +48,7 @@ export function ParameterList({ parameters, paramDescriptions = {}, parentName }
                     <TypeLink type={param.type} />
                   </td>
                   <td className="py-2 text-slate-600 dark:text-slate-400 align-top">
-                    {description}
+                    {description && <DescriptionMarkdown text={description} className="inline" />}
                     {param.defaultValue && (
                       <span className="ml-2 text-xs text-slate-500">
                         (default: <code className="font-mono">{param.defaultValue}</code>)

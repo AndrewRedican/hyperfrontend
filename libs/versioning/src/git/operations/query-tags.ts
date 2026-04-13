@@ -48,7 +48,7 @@ export const DEFAULT_TAG_OPTIONS: Required<Omit<GitTagOptions, 'cwd'>> = {
  * @param options - Tag listing options
  * @returns Array of GitTag objects
  *
- * @example
+ * @example Get all tags from the repository
  * const tags = getTags()
  * const versionTags = getTags({ pattern: 'v' })
  */
@@ -98,7 +98,7 @@ export function getTags(options: ListTagsOptions = {}): readonly GitTag[] {
  * @param options - Configuration for the tag operation
  * @returns GitTag or null if not found
  *
- * @example
+ * @example Get detailed information about a specific tag
  * const tag = getTag('v1.0.0')
  */
 export function getTag(name: string, options: GitTagOptions = {}): GitTag | null {
@@ -266,7 +266,7 @@ function parseTaggerLine(line: string): ParsedTaggerInfo {
  * @param options - Configuration for the tag operation
  * @returns True if tag exists
  *
- * @example
+ * @example Check if a tag exists
  * if (tagExists('v1.0.0')) { ... }
  */
 export function tagExists(name: string, options: GitTagOptions = {}): boolean {
@@ -292,7 +292,7 @@ export function tagExists(name: string, options: GitTagOptions = {}): boolean {
  * @param options - Tag options with optional pattern
  * @returns Latest GitTag or null
  *
- * @example
+ * @example Get the latest tag by creation date
  * const latest = getLatestTag()
  * const latestVersion = getLatestTag({ pattern: 'v' })
  */
@@ -308,7 +308,7 @@ export function getLatestTag(options: ListTagsOptions = {}): GitTag | null {
  * @param options - Tag options
  * @returns Array of matching tags
  *
- * @example
+ * @example Get tags matching a package name
  * const tags = getTagsForPackage('@scope/pkg')
  */
 export function getTagsForPackage(packageName: string, options: ListTagsOptions = {}): readonly GitTag[] {
@@ -355,7 +355,7 @@ const MAX_PATTERN_LENGTH = 256
  * @param pattern - Pattern to escape
  * @returns Safe pattern string
  *
- * @example
+ * @example Escape a tag pattern for git commands
  * ```typescript
  * const safePattern = escapeGitTagPattern('@scope/package@')
  * // => '@scope/package@'

@@ -33,7 +33,7 @@ const handlers: Handlers = {
  * @param action - Action to process
  * @returns Updated state after applying the action
  *
- * @example
+ * @example Processing an action
  * ```typescript
  * const state = rootReducer(undefined, start())
  * // => { inProgress: true, success: false, fail: false, halt: false }

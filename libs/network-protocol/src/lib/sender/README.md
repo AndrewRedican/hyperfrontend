@@ -1,9 +1,5 @@
 # Sender
 
-**Navigation**: [↑ lib/](../README.md) · [↔ receiver](../receiver/README.md) · [channel](../channel/README.md) · [queue](../queue/README.md)
-
----
-
 ## Purpose
 
 The Sender module provides the outbound message pipeline, orchestrating the flow of messages through encryption, serialization, and obfuscation queues before transmission.
@@ -275,20 +271,6 @@ sender.send('https://app.example.com', 'https://widget.example.com', createData(
 
 - **Depends on**: [`queue/`](../queue/README.md), [`packet/`](../packet/README.md), `@hyperfrontend/logging`
 - **Used by**: [`channel/`](../channel/README.md)
-
----
-
-## Directory Structure
-
-```
-sender/
-├── README.md           ← You are here
-├── index.ts            ← Public exports
-├── model.ts            ← Sender interface definitions
-└── creators/
-    ├── index.ts
-    └── create-sender-factory.ts
-```
 
 ---
 

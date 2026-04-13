@@ -2,6 +2,7 @@
 
 import type { TypeDocNode } from './types'
 import { AnchorLink } from '../anchor-link'
+import { DescriptionMarkdown } from './description-markdown'
 import { ExampleBlock } from './example-block'
 import { HighlightMatch } from './highlight-match'
 import { ParameterList } from './parameter-list'
@@ -45,7 +46,7 @@ export function FunctionSignature({ node, searchQuery = '' }: FunctionSignatureP
         </h3>
       </div>
 
-      {description && <p className="mt-2 text-sm text-slate-600 dark:text-slate-400">{description}</p>}
+      {description && <DescriptionMarkdown text={description} className="mt-2 text-sm text-slate-600 dark:text-slate-400" />}
 
       {signature.parameters && signature.parameters.length > 0 && (
         <ParameterList parameters={signature.parameters} paramDescriptions={paramDescriptions} parentName={node.name} />
@@ -56,16 +57,18 @@ export function FunctionSignature({ node, searchQuery = '' }: FunctionSignatureP
           <h4 className="text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1">Returns</h4>
           <div className="flex items-start gap-2">
             <TypeLink type={signature.type} />
-            <span className="text-sm text-slate-600 dark:text-slate-400">{returnsDescription}</span>
+            <DescriptionMarkdown text={returnsDescription} className="text-sm text-slate-600 dark:text-slate-400" />
           </div>
         </div>
       )}
 
       {examples.length > 0 && (
         <div className="mt-4">
-          <h4 className="text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1">Example</h4>
+          <h4 className="text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1">
+            {examples.length === 1 ? 'Example' : 'Examples'}
+          </h4>
           {examples.map((example, index) => (
-            <ExampleBlock key={index} code={example} />
+            <ExampleBlock key={index} code={example.code} label={example.label} />
           ))}
         </div>
       )}

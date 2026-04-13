@@ -20,7 +20,7 @@ export type LockedMethod = (
  * - Any attempt to assign to the method throws an error.
  * - It does not support class fields / arrow functions.
  *
- * @example
+ * @example Locking a class method
  * ```ts
  * class Counter {
  *   private count = 0

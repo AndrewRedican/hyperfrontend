@@ -6,7 +6,7 @@ import { normalize, sep } from 'node:path'
  * @param filePath - Path to normalize
  * @returns Normalized path with forward slashes
  *
- * @example
+ * @example Normalizing path separators
  * ```typescript
  * const path = normalizePath('src\\components\\Button.tsx')
  * // => 'src/components/Button.tsx'
@@ -25,7 +25,7 @@ export function normalizePath(filePath: string): string {
  * @param filePath - The input path to convert
  * @returns Path with forward slashes and resolved segments
  *
- * @example
+ * @example Converting to forward slashes
  * ```typescript
  * const path = normalizeToForwardSlashes('./src/../lib/utils')
  * // => 'lib/utils'
@@ -42,7 +42,7 @@ export function normalizeToForwardSlashes(filePath: string): string {
  * @param filePath - The input path to convert
  * @returns Path with native separators (backslash on Windows, forward slash elsewhere)
  *
- * @example
+ * @example Converting to native separators
  * ```typescript
  * const path = normalizeToNative('src/components/Button.tsx')
  * // => 'src\\components\\Button.tsx' on Windows
@@ -60,7 +60,7 @@ export function normalizeToNative(filePath: string): string {
  * @param filePath - Path that may have trailing slashes
  * @returns Path with trailing slashes removed
  *
- * @example
+ * @example Removing trailing slashes
  * ```typescript
  * removeTrailingSlash('src/components/')
  * // => 'src/components'
@@ -83,7 +83,7 @@ export function removeTrailingSlash(filePath: string): string {
  * @param filePath - Path to process
  * @returns Path with trailing forward slash
  *
- * @example
+ * @example Ensuring trailing slash
  * ```typescript
  * ensureTrailingSlash('src/components')
  * // => 'src/components/'

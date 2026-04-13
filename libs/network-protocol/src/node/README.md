@@ -1,4 +1,4 @@
-# Network Protocol - Node.js Platform (`src/node/`)
+# Node.js Platform (`src/node/`)
 
 > **This is a platform-specific entry point.** Primary documentation is in [`src/lib/`](../lib/README.md).
 

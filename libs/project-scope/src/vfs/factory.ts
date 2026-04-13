@@ -15,7 +15,7 @@ const factoryLogger = createScopedLogger('project-scope:vfs:factory')
  * @returns A new Tree instance
  * @throws {Error} If root doesn't exist or isn't a directory
  *
- * @example
+ * @example Creating a virtual tree
  * ```typescript
  * import { createTree } from '@hyperfrontend/project-scope'
  *
@@ -57,7 +57,7 @@ export function createTree(root: string, options?: CreateTreeOptions): Tree {
  * @param options - Tree creation options
  * @returns A new Tree instance backed by disk
  *
- * @example
+ * @example Creating a tree from disk
  * ```typescript
  * import { createTreeFromDisk } from '@hyperfrontend/project-scope'
  *

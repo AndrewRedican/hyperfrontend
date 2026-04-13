@@ -22,7 +22,7 @@ import { sendAction } from './send-action'
  * @throws {Error} If channel is closed and queueing is disabled
  * @throws {Error} If message type is not accepted in channel contract
  *
- * @example
+ * @example Sending a typed message
  * ```typescript
  * send(channel, { type: 'USER_ACTION', data: { userId: 123 } })
  * ```

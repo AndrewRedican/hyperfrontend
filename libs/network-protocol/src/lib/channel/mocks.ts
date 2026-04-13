@@ -23,7 +23,7 @@ export const protocol: Protocol = {
  *
  * @returns A mock Protocol instance
  *
- * @example
+ * @example Getting a mock protocol
  * ```typescript
  * const protocol = protocolProvider(sendFn, receiveFn)
  * // => { packetEncryption, packetDecryption, send, receive, ... }

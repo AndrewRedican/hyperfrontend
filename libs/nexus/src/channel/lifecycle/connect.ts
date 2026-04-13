@@ -11,7 +11,7 @@ import { flush } from '../messaging/flush'
  *
  * @param channel - Channel internals with state and dependencies
  *
- * @example
+ * @example Initiating a connection
  * ```typescript
  * connect(channel) // Sends REQUEST_CONNECTION or accepts pending
  * ```

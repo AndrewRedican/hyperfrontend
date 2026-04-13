@@ -12,7 +12,7 @@ import { isIterableType } from './is-iterable-type'
  * Works with objects, arrays, and registered iterable classes.
  * An empty keys array will always return `false`.
  *
- * @example
+ * @example Checking if object contains specific keys
  * ```typescript
  * containsKeys({ a: 1, b: 2 }, ['a', 'b']) // true
  * containsKeys({ a: 1 }, ['a', 'b']) // false

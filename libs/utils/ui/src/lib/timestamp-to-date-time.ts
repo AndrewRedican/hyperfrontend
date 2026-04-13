@@ -10,7 +10,7 @@ const D2 = '2-digit'
  * @param timestamp - The Unix timestamp in milliseconds
  * @returns A formatted date-time string in the user's locale with UTC timezone
  *
- * @example
+ * @example Formatting timestamp
  * ```typescript
  * timestampToDateTime(1704067200000)
  * // => 'Mon, 01/01/2024, 00:00:00 UTC' (varies by locale)

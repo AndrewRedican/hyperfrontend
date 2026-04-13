@@ -31,7 +31,7 @@ import { notifyMessage } from './subscription/notify-message'
  * @param deps - Dependencies (action creators, process manager, cleanup)
  * @returns Channel handle with public API
  *
- * @example
+ * @example Creating and using a channel
  * ```typescript
  * const channel = createChannel(
  *   { name: 'my-channel', target: childWindow },

@@ -5,7 +5,7 @@ import type { ReceivePacketFn } from '../../receiver/model'
  *
  * @returns void
  *
- * @example
+ * @example Using the mock receiver
  * ```typescript
  * const handlePacket = receiver
  * handlePacket(packet) // does nothing

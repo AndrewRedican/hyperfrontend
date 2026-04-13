@@ -87,7 +87,7 @@ export interface MergeStats {
  * @param options - Optional merge options
  * @returns The merge result with merged changelog and stats
  *
- * @example
+ * @example Merging two changelogs
  * ```ts
  * const result = mergeChangelogs(mainChangelog, branchChangelog)
  * console.log(`Merged ${result.stats.merged} entries`)
@@ -354,7 +354,7 @@ function sortEntriesByVersion(entries: readonly ChangelogEntry[]): ChangelogEntr
  * @param position - Where to insert ('start' or 'end')
  * @returns A new changelog with combined entries
  *
- * @example
+ * @example Appending entries to a changelog
  * ```typescript
  * const combined = appendChangelog(mainChangelog, newChangelog, 'start')
  * // newChangelog entries appear before mainChangelog entries
@@ -376,7 +376,7 @@ export function appendChangelog(source: Changelog, target: Changelog, position: 
  * @param options - Optional merge options
  * @returns The combined changelog
  *
- * @example
+ * @example Combining multiple changelogs
  * ```typescript
  * const unified = combineChangelogs([pkg1Changelog, pkg2Changelog], {
  *   strategy: 'merge-sections',

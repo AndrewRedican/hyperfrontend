@@ -9,7 +9,7 @@ import { addStylesheet } from './stylesheets'
  * @param styles - StyleMap object containing selector-style pairs
  * @returns A function that applies all styles when called
  *
- * @example
+ * @example Applying multiple style rules
  * ```typescript
  * const applyModalStyles = createApplyStyles({
  *   '.modal-overlay': {

@@ -173,7 +173,7 @@ function commitToItem(commit: ConventionalCommit): ChangelogItem {
  *
  * @returns A FlowStep that generates changelog
  *
- * @example
+ * @example Generating a changelog entry from commits
  * ```typescript
  * import { createGenerateChangelogStep, executeStep } from '@hyperfrontend/versioning'
  *
@@ -378,7 +378,7 @@ export function createGenerateChangelogStep(): FlowStep {
  *
  * @returns A FlowStep that writes changelog to file
  *
- * @example
+ * @example Writing the changelog entry to CHANGELOG.md
  * ```typescript
  * import { createWriteChangelogStep, executeStep } from '@hyperfrontend/versioning'
  *

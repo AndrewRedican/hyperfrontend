@@ -9,7 +9,7 @@ import { isValidUnserializedEncryptedPacket } from '../validations/is-valid-unse
  * @param uint8ArrayToBase64 - Function that converts Uint8Array to base64 string
  * @returns A PacketSerialization function that serializes encrypted packet data
  *
- * @example
+ * @example Creating a serialized encrypted packet
  * ```typescript
  * import { uint8ArrayToBase64 } from '@hyperfrontend/string-utils/browser'
  * import { createSerializedEncryptedPacketCreator } from '@hyperfrontend/network-protocol/lib/packet/creators/create-serialized-encrypted-packet-creator'

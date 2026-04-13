@@ -18,7 +18,7 @@ import { getConfig } from './shared/consts'
  * @param recordSkip - Callback to record skipped data points
  * @returns Partial copy of the target based on predicate
  *
- * @example
+ * @example Basic recursive copy
  * ```typescript
  * selectiveCopyRecursive(obj, [], () => true, false, () => {})
  * ```
@@ -68,7 +68,7 @@ export const selectiveCopyRecursive = <T extends Record<string, unknown>>(
  * @param root - Whether this is the root call
  * @returns A partial clone of the target object
  *
- * @example
+ * @example Copying with circular reference handling
  * ```typescript
  * selectiveCopyForCircularReferencesRecursive(obj, [], () => true, false, () => {}, referenceStack(), [], true)
  * ```
@@ -164,7 +164,7 @@ export const selectiveCopyForCircularReferencesRecursive = <T extends Record<str
  * @param options - Configuration options for selective copying
  * @returns An object containing the cloned value and array of skipped data points
  *
- * @example
+ * @example Selective copying with options
  * ```typescript
  * const { clone, skipped } = selectiveCopy({ a: 1, b: 2 }, { includeKeys: ['a'] })
  * // clone = { a: 1 }, skipped = [{ path: ['b'], ... }]

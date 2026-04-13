@@ -211,47 +211,6 @@ interface DetectionSource {
 }
 ```
 
-## Architecture
-
-```
-tech/
-├── frontend/              # Frontend framework detectors
-│   ├── react.ts          # React + Next.js/Gatsby/Remix
-│   ├── vue.ts            # Vue + Nuxt
-│   ├── angular.ts        # Angular
-│   ├── svelte.ts         # Svelte + SvelteKit
-│   ├── solid.ts          # SolidJS
-│   ├── qwik.ts           # Qwik
-│   ├── astro.ts          # Astro
-│   └── types.ts          # Shared types
-├── backend/               # Backend framework detectors
-│   ├── express.ts
-│   ├── nestjs.ts
-│   ├── fastify.ts
-│   ├── koa.ts
-│   └── hono.ts
-├── build/                 # Build tool detectors
-│   ├── webpack.ts
-│   ├── vite.ts
-│   ├── esbuild.ts
-│   ├── rollup.ts
-│   ├── parcel.ts
-│   ├── swc.ts
-│   └── babel.ts
-├── testing/               # Testing framework detectors
-│   ├── jest.ts
-│   ├── vitest.ts
-│   ├── mocha.ts
-│   ├── cypress.ts
-│   └── playwright.ts
-├── monorepo/              # Monorepo tool detectors
-├── types/                 # Type system detectors
-├── linting/               # Linting tool detectors
-├── legacy/                # Legacy framework detectors
-├── shared-utils/          # Shared detection utilities
-└── index.ts              # Main exports and detectAll
-```
-
 ## Caching
 
 Detection results are cached for 60 seconds:

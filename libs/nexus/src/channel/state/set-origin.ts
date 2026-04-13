@@ -9,7 +9,7 @@ import { freeze } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
  * @param origin - Origin to set
  * @returns New state with origin updated
  *
- * @example
+ * @example Setting the channel origin
  * ```typescript
  * const updatedState = setOrigin(channelState, 'https://example.com')
  * // => { ...channelState, origin: 'https://example.com' }

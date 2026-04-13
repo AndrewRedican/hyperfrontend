@@ -121,21 +121,6 @@ console.log('Peer:', deps.peer) // ['react']
 console.log('Total:', deps.total) // 25
 ```
 
-## Architecture
-
-```
-heuristics/
-├── project-type/          # Project type detection
-│   └── detect.ts         # Multi-factor type detection
-├── framework/             # Framework identification
-│   └── identify.ts       # Aggregated framework detection
-├── entry-points/          # Entry point discovery
-│   └── discover.ts       # Convention and config-based discovery
-├── dependencies/          # Dependency analysis
-│   └── analyze.ts        # Source code graph building
-└── index.ts              # Public exports
-```
-
 ## Caching
 
 All detection functions use intelligent caching:

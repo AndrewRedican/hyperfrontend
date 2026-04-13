@@ -10,7 +10,7 @@ import { ACTION_TYPES } from '../../types/action'
  * @param deps - Action dependencies (getBrokerId, getContract)
  * @returns Function that takes processId and optional security request, returns frozen action
  *
- * @example
+ * @example Creating request connection actions
  * ```typescript
  * // Without security
  * const action = requestConnection(deps)('process-123')

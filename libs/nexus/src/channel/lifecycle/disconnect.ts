@@ -11,7 +11,7 @@ import type { ChannelInternals } from '../types'
  * @param channel - Channel internals with state and dependencies
  * @param notify - Whether to notify target window (default: true)
  *
- * @example
+ * @example Gracefully closing a connection
  * ```typescript
  * disconnect(channel, true) // Close and notify target
  * disconnect(channel, false) // Close silently

@@ -46,7 +46,7 @@ export type ElementMethods<T extends HTMLElement> = {
  * @param config - Optional configuration for the element including styles and class names
  * @returns An ElementMethods object with helper methods and a reference to the created element
  *
- * @example
+ * @example Creating element with configuration
  * ```typescript
  * const card = createElement('div', {
  *   className: 'card',

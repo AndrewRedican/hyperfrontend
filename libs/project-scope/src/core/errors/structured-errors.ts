@@ -18,7 +18,7 @@ export interface StructuredError extends Error {
  * @param context - Additional contextual information about the error
  * @returns Structured error instance with code and context properties
  *
- * @example
+ * @example Creating a structured error with context
  * ```typescript
  * import { createStructuredError } from '@hyperfrontend/project-scope'
  *
@@ -44,7 +44,7 @@ export function createStructuredError(message: string, code: string, context?: R
  * @param context - Additional contextual information (e.g., file path, config key)
  * @returns Structured error instance tagged with type 'config'
  *
- * @example
+ * @example Creating a configuration error
  * ```typescript
  * throw createConfigError(
  *   'Invalid port number',
@@ -65,7 +65,7 @@ export function createConfigError(message: string, code: string, context?: Recor
  * @param context - Additional contextual information (e.g., file path, operation attempted)
  * @returns Structured error instance tagged with type 'fs'
  *
- * @example
+ * @example Creating a filesystem error
  * ```typescript
  * throw createFsError(
  *   'Configuration file not found',
@@ -86,7 +86,7 @@ export function createFsError(message: string, code: string, context?: Record<st
  * @param context - Additional contextual information (e.g., file path, line/column numbers, expected format)
  * @returns Structured error instance tagged with type 'parse'
  *
- * @example
+ * @example Creating a parse error
  * ```typescript
  * throw createParseError(
  *   'Invalid JSON syntax',
@@ -107,7 +107,7 @@ export function createParseError(message: string, code: string, context?: Record
  * @param context - Additional contextual information (e.g., field name, actual vs expected values)
  * @returns Structured error instance tagged with type 'validation'
  *
- * @example
+ * @example Creating a validation error
  * ```typescript
  * throw createValidationError(
  *   'Email format is invalid',

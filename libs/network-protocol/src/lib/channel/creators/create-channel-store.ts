@@ -10,7 +10,7 @@ import { isValidLabel } from '../validations/is-valid-label'
  * @param createChannel - The channel creator function
  * @returns A function that creates channel stores
  *
- * @example
+ * @example Creating a channel store and adding a channel
  * ```typescript
  * const createStore = createChannelStoreFactory(channelCreator)
  * const store = createStore()

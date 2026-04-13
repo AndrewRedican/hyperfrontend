@@ -5,7 +5,7 @@
  *
  * @param map - The Map to extract the last key from
  * @returns The key that was inserted last, or undefined if map is empty
- * @example
+ * @example Getting last key from Map
  * ```typescript
  * const userRoles = new Map<string, string>()
  * userRoles.set('alice', 'admin')

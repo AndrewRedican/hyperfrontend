@@ -14,7 +14,7 @@ import { isActionWithProcess } from '../../types/action'
  * Side Effects:
  * - Fires 'invalid' lifecycle event with error details
  *
- * @example
+ * @example Handling protocol violations
  * Protocol violation detected:
  * Initiator sends malformed action
  * Responder detects violation

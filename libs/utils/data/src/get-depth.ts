@@ -9,7 +9,7 @@ import { traverse } from './traverse'
  * @param target - The target value to analyze for depth
  * @returns A tuple containing the maximum depth and an array of paths to the deepest locations
  *
- * @example
+ * @example Getting depth of nested object
  * ```typescript
  * getDepth({ a: { b: { c: 1 } } }) // [3, [['a', 'b', 'c']]]
  * ```

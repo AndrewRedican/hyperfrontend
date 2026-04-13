@@ -17,7 +17,7 @@ import { traverse } from './traverse'
  * @param options - Optional configuration to control traversal depth
  * @returns An array of paths to locations where keys were renamed
  *
- * @example
+ * @example Renaming keys in structure
  * ```typescript
  * const obj = { old: 1, nested: { old: 2 } }
  * renameKey(obj, 'old', 'new') // [['new'], ['nested', 'new']]

@@ -16,7 +16,7 @@ export const SWC_CONFIG_PATTERNS = ['.swcrc', 'swc.config.js']
  * @param packageJson - Optional pre-loaded package.json
  * @returns Detection result or null if not detected
  *
- * @example
+ * @example Detecting SWC compiler
  * ```typescript
  * const result = swcDetector('/path/to/project', {
  *   name: 'my-app',

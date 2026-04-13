@@ -4,7 +4,7 @@
  * @param start - The starting number of the range
  * @param end - The ending number of the range (inclusive)
  * @returns An array containing all numbers from start to end
- * @example
+ * @example Generating number ranges
  * ```typescript
  * createRange(1, 5)
  * // => [1, 2, 3, 4, 5]

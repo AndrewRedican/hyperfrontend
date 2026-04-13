@@ -21,7 +21,7 @@ export type FlowPreset = 'conventional' | 'independent' | 'synced'
  * @param config - Optional configuration overrides
  * @returns A VersionFlow configured for the preset
  *
- * @example
+ * @example Creating flows from presets
  * ```typescript
  * import { createVersionFlow, executeFlow } from '@hyperfrontend/versioning'
  *
@@ -59,7 +59,7 @@ export function createVersionFlow(preset: FlowPreset = 'conventional', config?: 
  * @param config - Optional configuration overrides
  * @returns A VersionFlow configured for dry run
  *
- * @example
+ * @example Creating a dry-run flow for preview
  * ```typescript
  * import { createDryRunFlow, executeFlow } from '@hyperfrontend/versioning'
  *
@@ -82,7 +82,7 @@ export function createDryRunFlow(preset: FlowPreset = 'conventional', config?: P
  *
  * @returns Array of preset names
  *
- * @example
+ * @example Listing available presets
  * ```typescript
  * import { getAvailablePresets } from '@hyperfrontend/versioning'
  *
@@ -100,7 +100,7 @@ export function getAvailablePresets(): readonly FlowPreset[] {
  * @param preset - The preset name
  * @returns Human-readable description
  *
- * @example
+ * @example Getting a preset description
  * ```typescript
  * import { getPresetDescription } from '@hyperfrontend/versioning'
  *

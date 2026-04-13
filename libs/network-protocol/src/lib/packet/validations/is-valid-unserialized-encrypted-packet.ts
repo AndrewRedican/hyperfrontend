@@ -8,7 +8,7 @@ import { isValidUnobfuscatedPacketBase } from './is-valid-unobfuscated-packet-ba
  * @param packet - The value to validate as an unserialized encrypted packet
  * @returns True if the packet has valid structure and unserialized data, false otherwise
  *
- * @example
+ * @example Validating unserialized encrypted packets
  * ```typescript
  * isValidUnserializedEncryptedPacket({
  *   origin: '550e8400-e29b-41d4-a716-446655440000',

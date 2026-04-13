@@ -13,7 +13,7 @@ import { readPackageJsonIfExists } from '../../project/package'
  * @param packageJson - Optional pre-loaded package.json
  * @returns Detection result or null if not detected
  *
- * @example
+ * @example Detecting yarn workspaces
  * ```typescript
  * // Project with workspaces in package.json and yarn.lock
  * const result = yarnWorkspacesDetector('/path/to/yarn-project')

@@ -15,7 +15,7 @@ export const JEST_CONFIG_PATTERNS = ['jest.config.js', 'jest.config.ts', 'jest.c
  * @param packageJson - Optional pre-loaded package.json
  * @returns Detection result or null if not detected
  *
- * @example
+ * @example Detecting Jest testing framework
  * ```typescript
  * import { jestDetector } from '@hyperfrontend/project-scope'
  *

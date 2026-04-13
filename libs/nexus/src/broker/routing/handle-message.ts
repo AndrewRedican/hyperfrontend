@@ -19,7 +19,7 @@ import { isActionWithData } from '../../types/action'
  * - Invokes channel message handlers if validation passes
  * - Logs and ignores invalid messages
  *
- * @example
+ * @example Routing user messages
  * User message flow:
  * channel.send('USER_LOGIN', {userId: 123})
  * -> NEW_MESSAGE action sent

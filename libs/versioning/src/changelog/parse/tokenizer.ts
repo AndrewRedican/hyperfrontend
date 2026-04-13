@@ -60,7 +60,7 @@ const MAX_INPUT_LENGTH = 1024 * 1024
  * @returns Array of tokens
  * @throws {Error} If input exceeds maximum length
  *
- * @example
+ * @example Tokenizing changelog markdown
  * ```typescript
  * const tokens = tokenize('# Changelog\n\n## [1.0.0]\n- Added feature')
  * // => [{ type: 'heading-1', value: 'Changelog', ... }, { type: 'heading-2', ... }, ...]
@@ -467,7 +467,7 @@ function isWhitespace(char: string | undefined): boolean {
  * @param char - The character to check
  * @returns True if the character is a letter
  *
- * @example
+ * @example Checking for letter characters
  * ```typescript
  * isLetter('a') // => true
  * isLetter('Z') // => true
@@ -486,7 +486,7 @@ export function isLetter(char: string | undefined): boolean {
  * @param char - The character to check
  * @returns True if the character is a digit
  *
- * @example
+ * @example Checking for digit characters
  * ```typescript
  * isDigit('5') // => true
  * isDigit('a') // => false
@@ -504,7 +504,7 @@ export function isDigit(char: string | undefined): boolean {
  * @param char - The character to check
  * @returns True if the character is alphanumeric
  *
- * @example
+ * @example Checking for alphanumeric characters
  * ```typescript
  * isAlphanumeric('a') // => true
  * isAlphanumeric('5') // => true

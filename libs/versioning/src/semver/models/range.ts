@@ -52,7 +52,7 @@ export interface Range {
  * @param version - The version to compare against
  * @returns A new Comparator
  *
- * @example
+ * @example Create a comparator for version comparison
  * ```typescript
  * createComparator('>=', parseVersionStrict('1.0.0'))
  * // => { operator: '>=', version: { major: 1, minor: 0, patch: 0, ... } }
@@ -68,7 +68,7 @@ export function createComparator(operator: RangeOperator, version: SemVer): Comp
  * @param comparators - Array of comparators (AND logic)
  * @returns A new ComparatorSet
  *
- * @example
+ * @example Create a comparator set with AND logic
  * ```typescript
  * createComparatorSet([gte100, lt200]) // AND: >=1.0.0 AND <2.0.0
  * ```
@@ -84,7 +84,7 @@ export function createComparatorSet(comparators: readonly Comparator[]): Compara
  * @param raw - Original raw string
  * @returns A new Range
  *
- * @example
+ * @example Create a range with OR logic between sets
  * ```typescript
  * createRange([set1, set2], '>=1.0.0 || >=2.0.0 <3.0.0')
  * ```
@@ -98,7 +98,7 @@ export function createRange(sets: readonly ComparatorSet[], raw?: string): Range
  *
  * @returns A Range matching any version (*)
  *
- * @example
+ * @example Create a range that matches any version
  * ```typescript
  * const anyRange = createAnyRange()
  * satisfies(parseVersionStrict('999.999.999'), anyRange) // => true
@@ -114,7 +114,7 @@ export function createAnyRange(): Range {
  * @param version - The exact version to match
  * @returns A Range matching exactly the specified version
  *
- * @example
+ * @example Create a range that matches exactly one version
  * ```typescript
  * const exact = createExactRange(parseVersionStrict('1.2.3'))
  * satisfies(parseVersionStrict('1.2.3'), exact) // => true
@@ -131,7 +131,7 @@ export function createExactRange(version: SemVer): Range {
  * @param range - The range to check
  * @returns True if the range matches any version
  *
- * @example
+ * @example Check if a range represents a wildcard
  * ```typescript
  * isWildcard(parseRangeStrict('*')) // => true
  * isWildcard(parseRangeStrict('^1.0.0')) // => false

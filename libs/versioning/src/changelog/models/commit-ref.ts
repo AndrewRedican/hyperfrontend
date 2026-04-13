@@ -37,7 +37,7 @@ export interface IssueRef {
  * @param url - Optional URL to the commit
  * @returns A new CommitRef object with both full and short hash
  *
- * @example
+ * @example Creating a commit reference
  * ```typescript
  * const ref = createCommitRef('abc1234def5678', 'https://github.com/org/repo/commit/abc1234def5678')
  * // => { hash: 'abc1234def5678', shortHash: 'abc1234', url: 'https://...' }
@@ -59,7 +59,7 @@ export function createCommitRef(hash: string, url?: string): CommitRef {
  * @param url - Optional URL to the issue or PR
  * @returns A new IssueRef object
  *
- * @example
+ * @example Creating issue and PR references
  * ```typescript
  * const issueRef = createIssueRef(42, 'issue', 'https://github.com/org/repo/issues/42')
  * // => { number: 42, type: 'issue', url: 'https://...' }
@@ -82,7 +82,7 @@ export function createIssueRef(number: number, type: 'issue' | 'pull-request' = 
  * @param hash - The full commit hash
  * @returns The first 7 characters of the hash
  *
- * @example
+ * @example Extracting short hash from full hash
  * ```typescript
  * getShortHash('abc1234def5678901234567890')
  * // => 'abc1234'

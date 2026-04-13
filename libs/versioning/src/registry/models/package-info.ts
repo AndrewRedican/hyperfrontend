@@ -51,7 +51,7 @@ export interface PackageInfo {
  * @param options.lastModified - Time of last modification
  * @returns A new PackageInfo object
  *
- * @example
+ * @example Creating package info from registry data
  * ```typescript
  * const info = createPackageInfo({
  *   name: '@scope/my-package',

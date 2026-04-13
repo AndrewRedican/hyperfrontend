@@ -7,7 +7,7 @@ import { setTimeout } from '@hyperfrontend/immutable-api-utils/built-in-copy/tim
  * @param timeMS - The delay in milliseconds
  * @returns A promise that resolves after the specified time
  *
- * @example
+ * @example Implementing retry with backoff
  * ```typescript
  * async function fetchWithRetry(url: string, maxRetries: number) {
  *   for (let attempt = 0; attempt < maxRetries; attempt++) {

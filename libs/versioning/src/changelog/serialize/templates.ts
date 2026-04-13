@@ -83,7 +83,7 @@ export const DEFAULT_SERIALIZE_OPTIONS: Required<SerializeOptions> = {
  * @param options - User-provided options
  * @returns Complete options with defaults applied
  *
- * @example
+ * @example Resolving serialize options with defaults
  * ```typescript
  * const opts = resolveOptions({ includeCommits: true })
  * // => { includeCommits: true, includeScope: true, lineEnding: '\n', ... }
@@ -118,7 +118,7 @@ export function resolveOptions(options?: SerializeOptions): Required<SerializeOp
  * @param customHeadings - Optional map of custom section type to heading overrides
  * @returns The heading string to use
  *
- * @example
+ * @example Getting section headings
  * ```typescript
  * getSectionHeading('features')
  * // => 'Added'
@@ -138,7 +138,7 @@ export function getSectionHeading(type: ChangelogSectionType, customHeadings?: P
  * @param url - The destination URL for the link
  * @returns Formatted markdown link
  *
- * @example
+ * @example Formatting a markdown link
  * ```typescript
  * formatLink('1.0.0', 'https://github.com/org/repo/releases/tag/v1.0.0')
  * // => '[1.0.0](https://github.com/org/repo/releases/tag/v1.0.0)'
@@ -154,7 +154,7 @@ export function formatLink(text: string, url: string): string {
  * @param useAsterisks - Whether to use * instead of -
  * @returns The list item marker ('- ' or '* ')
  *
- * @example
+ * @example Getting list markers
  * ```typescript
  * getListMarker(false) // => '- '
  * getListMarker(true)  // => '* '
@@ -171,7 +171,7 @@ export function getListMarker(useAsterisks: boolean): string {
  * @param lineEnding - Line ending style
  * @returns String with specified number of blank lines
  *
- * @example
+ * @example Creating blank line spacing
  * ```typescript
  * createSpacing(2, '\n')
  * // => '\n\n'

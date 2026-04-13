@@ -105,7 +105,7 @@ function parseGlobalOptions(args: string[]): GlobalOptions {
  * @param args - Command line arguments (typically process.argv.slice(2))
  * @returns Command result with exit code and optional output/error
  *
- * @example
+ * @example Running analysis via CLI
  * ```typescript
  * import { run } from '@hyperfrontend/project-scope'
  *

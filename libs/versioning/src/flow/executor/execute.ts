@@ -233,7 +233,7 @@ function mergeConfig(flowConfig: FlowConfig, overrides?: Partial<FlowConfig>): F
  * @param options - Execution options
  * @returns Flow execution result
  *
- * @example
+ * @example Executing a conventional version flow
  * ```typescript
  * import { createConventionalFlow, executeFlow } from '@hyperfrontend/versioning'
  *
@@ -490,7 +490,7 @@ export async function executeFlow(
  * @param options - Execution options (dryRun forced to true)
  * @returns Flow execution result (no actual changes made)
  *
- * @example
+ * @example Previewing version changes without modifying files
  * ```typescript
  * import { dryRun, createConventionalFlow } from '@hyperfrontend/versioning'
  *
@@ -525,7 +525,7 @@ export async function dryRun(
  * @param flow - The flow to validate
  * @returns Array of validation errors (empty if valid)
  *
- * @example
+ * @example Validating a flow before execution
  * ```typescript
  * import { validateFlow, createConventionalFlow } from '@hyperfrontend/versioning'
  *

@@ -65,6 +65,10 @@ interface PackageJson {
   main?: string
   /** Export map */
   exports?: Record<string, string | Record<string, string>>
+  /** Keywords for npm */
+  keywords?: string[]
+  /** Package description */
+  description?: string
 }
 
 /**
@@ -289,9 +293,10 @@ function transformLinkUrl(url: string, sourceContext: 'root' | 'library'): Trans
     'README.md': '/',
     'ARCHITECTURE.md': '/architecture',
     'CONTRIBUTING.md': '/docs/contributing',
+    'MANIFESTO.md': '/docs/manifesto',
+    'ACKNOWLEDGMENTS.md': '/docs/acknowledgments',
+    'REGARDING_AI.md': '/docs/regarding-ai',
     'CODE_OF_CONDUCT.md': 'https://github.com/AndrewRedican/hyperfrontend/blob/main/CODE_OF_CONDUCT.md',
-    'REGARDING_AI.md': 'https://github.com/AndrewRedican/hyperfrontend/blob/main/REGARDING_AI.md',
-    'MANIFESTO.md': 'https://github.com/AndrewRedican/hyperfrontend/blob/main/MANIFESTO.md',
     'LICENSE.md': 'https://github.com/AndrewRedican/hyperfrontend/blob/main/LICENSE.md',
     'SECURITY.md': 'https://github.com/AndrewRedican/hyperfrontend/blob/main/SECURITY.md',
     'FUNDING.md': 'https://github.com/AndrewRedican/hyperfrontend/blob/main/FUNDING.md',
@@ -483,6 +488,38 @@ interface LibraryDoc {
   architecture: string | null
   /** Whether API docs were generated */
   hasApi: boolean
+  /** Keywords from package.json */
+  keywords: string[]
+  /** Description from package.json */
+  description: string
+}
+
+/** Metadata extracted from a package.json */
+interface PackageMetadata {
+  /** Keywords from package.json */
+  keywords: string[]
+  /** Description from package.json */
+  description: string
+}
+
+/**
+ * Load keywords and description from a library's package.json.
+ *
+ * @param lib - The library configuration
+ * @returns Object with keywords array and description
+ */
+function extractPackageMetadata(lib: LibraryConfig): PackageMetadata {
+  const packageJsonPath = join(WORKSPACE_ROOT, lib.srcPath, 'package.json')
+
+  if (!existsSync(packageJsonPath)) {
+    return { keywords: [], description: '' }
+  }
+
+  const packageJson: PackageJson = parse(readFileSync(packageJsonPath, 'utf-8'))
+  return {
+    keywords: packageJson.keywords ?? [],
+    description: packageJson.description ?? '',
+  }
 }
 
 /**
@@ -506,6 +543,8 @@ function generateDocs() {
 
     const hasApi = generateTypeDoc(lib)
 
+    const { keywords, description } = extractPackageMetadata(lib)
+
     if (readme.exists) {
       const readmeOutput = join(DOCS_OUTPUT, lib.slug, 'readme.md')
       ensureDir(dirname(readmeOutput))
@@ -526,6 +565,8 @@ function generateDocs() {
       readme: readme.exists ? `${lib.slug}/readme.md` : null,
       architecture: architecture.exists ? `${lib.slug}/architecture.md` : null,
       hasApi,
+      keywords,
+      description,
     })
 
     logger.log('')

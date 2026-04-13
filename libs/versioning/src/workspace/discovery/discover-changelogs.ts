@@ -45,7 +45,7 @@ interface PackageInfo {
  * @param packages - List of packages to find changelogs for
  * @returns Map of project path to changelog path
  *
- * @example
+ * @example Find changelog files for all packages
  * ```typescript
  * import { findChangelogs, discoverPackages } from '@hyperfrontend/versioning'
  *
@@ -77,7 +77,7 @@ export function findChangelogs(workspaceRoot: string, packages: readonly Package
  * @param projectPath - Path to project directory
  * @returns Absolute path to changelog or null if not found
  *
- * @example
+ * @example Find the changelog for a single project
  * ```typescript
  * import { findProjectChangelog } from '@hyperfrontend/versioning'
  *
@@ -105,7 +105,7 @@ export function findProjectChangelog(projectPath: string): string | null {
  * @param packages - List of packages to find changelogs for
  * @returns Map of project path to changelog path
  *
- * @example
+ * @example Find changelogs using VFS tree
  * ```typescript
  * import { findChangelogsInTree, discoverPackages } from '@hyperfrontend/versioning'
  *
@@ -141,7 +141,7 @@ export function findChangelogsInTree(tree: Tree, packages: readonly PackageInfo[
  * @param projectPath - Path to project directory
  * @returns Absolute path to changelog or null if not found
  *
- * @example
+ * @example Find project changelog using VFS tree
  * ```typescript
  * import { findProjectChangelogInTree } from '@hyperfrontend/versioning'
  *
@@ -175,7 +175,7 @@ export function findProjectChangelogInTree(tree: Tree, projectPath: string): str
  * @param patterns - Glob patterns for finding changelogs (default: all CHANGELOGs)
  * @returns Array of discovered changelog information
  *
- * @example
+ * @example Discover all changelog files within a workspace
  * ```typescript
  * import { discoverAllChangelogs } from '@hyperfrontend/versioning'
  *

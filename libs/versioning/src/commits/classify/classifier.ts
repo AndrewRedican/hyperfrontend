@@ -16,7 +16,7 @@ import { scopeIsExcluded, scopeMatchesProject, DEFAULT_EXCLUDE_SCOPES } from './
  * @param context - Classification context with project info
  * @returns Classified commit with source attribution
  *
- * @example
+ * @example Classifying a single commit
  * const classified = classifyCommit(
  *   { commit: parsedCommit, raw: gitCommit },
  *   { projectScopes: ['versioning'], fileCommitHashes: new Set(['abc123']) }
@@ -77,7 +77,7 @@ export function classifyCommit(input: CommitWithRaw, context: ClassificationCont
  * @param context - Classification context with project info
  * @returns Classification result with all commits and summary
  *
- * @example
+ * @example Classifying multiple commits
  * ```typescript
  * const commits = [{ commit: parsedCommit, raw: gitCommit }]
  * const context = createClassificationContext(['auth'], fileHashes)
@@ -186,7 +186,7 @@ function getDependencyVariations(depName: string): readonly string[] {
  * @param options.includeScopes - Additional scopes to include as direct matches
  * @returns A ClassificationContext object
  *
- * @example
+ * @example Creating a classification context
  * ```typescript
  * const context = createClassificationContext(
  *   ['auth', 'lib-auth'],
@@ -225,7 +225,7 @@ export function createClassificationContext(
  * @param commits - Array of classified commits
  * @returns Only commits marked for inclusion
  *
- * @example
+ * @example Filtering for included commits
  * ```typescript
  * const classified = classifyCommits(commits, context)
  * const included = filterIncluded(classified.commits)
@@ -242,7 +242,7 @@ export function filterIncluded(commits: readonly ClassifiedCommit[]): readonly C
  * @param commits - Array of classified commits
  * @returns Array of conventional commits
  *
- * @example
+ * @example Extracting conventional commits
  * ```typescript
  * const classified = classifyCommits(commits, context)
  * const conventional = extractConventionalCommits(classified.included)
@@ -262,7 +262,7 @@ export function extractConventionalCommits(commits: readonly ClassifiedCommit[])
  * @param classified - Commit with classification metadata determining scope display
  * @returns A conventional commit with appropriate scope handling
  *
- * @example
+ * @example Converting classified commit for changelog
  * ```typescript
  * const classified = { commit: { type: 'feat', scope: 'auth', subject: 'add login', ... }, source: 'direct-scope', preserveScope: false, ... }
  * toChangelogCommit(classified)

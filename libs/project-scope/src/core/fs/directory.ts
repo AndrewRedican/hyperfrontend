@@ -43,7 +43,7 @@ export interface RecursiveOptions {
  * @returns Array of entries with metadata for each file/directory
  * @throws {Error} If directory doesn't exist or isn't a directory
  *
- * @example
+ * @example Listing directory contents
  * ```typescript
  * import { readDirectory } from '@hyperfrontend/project-scope'
  *
@@ -93,7 +93,7 @@ export function readDirectory(dirPath: string): DirectoryEntry[] {
  * @param options - Configuration for depth limit, hidden files, and symlinks
  * @returns Flat array of all entries found during traversal
  *
- * @example
+ * @example Recursive directory listing with options
  * ```typescript
  * import { readDirectoryRecursive } from '@hyperfrontend/project-scope'
  *
@@ -163,7 +163,7 @@ export function readDirectoryRecursive(dirPath: string, options?: RecursiveOptio
  * @param options - Creation options
  * @param options.recursive - Create parent directories if missing (default: true)
  *
- * @example
+ * @example Creating directories
  * ```typescript
  * // Create nested directories
  * createDirectory('./output/reports/2024')
@@ -192,7 +192,7 @@ export function createDirectory(
  * @param options.recursive - Delete directory contents recursively
  * @param options.force - Ignore errors if directory doesn't exist
  *
- * @example
+ * @example Removing directories
  * ```typescript
  * // Remove directory and all contents
  * removeDirectory('./temp', { recursive: true })

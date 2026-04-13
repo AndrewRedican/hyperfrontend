@@ -15,7 +15,7 @@ export interface HandlerMap {
  * @param handlers - Map of action types to handler functions
  * @returns Router map
  *
- * @example
+ * @example Creating a router for action handlers
  * ```typescript
  * const router = createRouter({
  *   'OPEN': handleOpen,

@@ -85,7 +85,7 @@ interface RawPackageInfo {
  * @returns Discovery result with all found packages
  * @throws {Error} If workspace root cannot be found
  *
- * @example
+ * @example Discover all packages within a workspace
  * ```typescript
  * import { discoverPackages } from '@hyperfrontend/versioning'
  *
@@ -315,7 +315,7 @@ function buildProjectsWithDependencies(rawPackages: RawPackageInfo[], packageNam
  * @param projectPath - Path to project directory or package.json
  * @returns The discovered project or null if not found
  *
- * @example
+ * @example Discover a single project by path
  * ```typescript
  * import { discoverProject } from '@hyperfrontend/versioning'
  *
@@ -359,7 +359,7 @@ export function discoverProject(projectPath: string): Project | null {
  * @param options - Discovery options
  * @returns The project or null if not found
  *
- * @example
+ * @example Discover a project by name within a workspace
  * ```typescript
  * import { discoverProjectByName } from '@hyperfrontend/versioning'
  *

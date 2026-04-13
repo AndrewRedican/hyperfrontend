@@ -121,16 +121,6 @@ classDiagram
     ChangelogItem --> IssueRef
 ```
 
-## Module Structure
-
-| Directory     | Purpose                                                    |
-| ------------- | ---------------------------------------------------------- |
-| `models/`     | Type definitions, factory functions, and schema validation |
-| `parse/`      | Tokenization and parsing of markdown changelog files       |
-| `serialize/`  | Serialization to markdown and JSON formats                 |
-| `compare/`    | Equality checks and diff computation                       |
-| `operations/` | Add, remove, filter, merge, and transform operations       |
-
 ## Parse Pipeline
 
 ```mermaid
@@ -287,40 +277,6 @@ flowchart TB
 3. **Functional**: Pure functions without class-based state
 4. **Lossless**: Round-trip parsing preserves original formatting where possible
 5. **Type-Safe**: Full TypeScript support with strict typing
-
-## Directory Structure
-
-```
-changelog/
-├── index.ts              # Public exports
-├── models/               # Data structures
-│   ├── changelog.ts      # Changelog type & factory
-│   ├── entry.ts          # ChangelogEntry type & factory
-│   ├── section.ts        # ChangelogSection type & factory
-│   ├── commit-ref.ts     # CommitRef, IssueRef types
-│   └── schema.ts         # Validation schemas
-├── parse/                # Markdown → Model
-│   ├── tokenizer.ts      # Changelog tokenization
-│   ├── parser.ts         # Token stream → Changelog
-│   └── line.ts           # Line-level parsing utilities
-├── serialize/            # Model → Output
-│   ├── to-string.ts      # Changelog → Markdown
-│   ├── to-json.ts        # Changelog → JSON
-│   └── templates.ts      # Section heading templates
-├── compare/              # Comparison operations
-│   ├── is-equal.ts       # Structural equality
-│   └── diff.ts           # Change detection
-└── operations/           # Transformations
-    ├── add-entry.ts      # Add version entry
-    ├── add-item.ts       # Add item to section
-    ├── remove-entry.ts   # Remove version entry
-    ├── remove-section.ts # Remove section
-    ├── filter-entries.ts # Filter by version
-    ├── filter-by-range.ts # Filter by version range
-    ├── filter-by-predicate.ts # Filter by custom predicate
-    ├── merge.ts          # Merge changelogs
-    └── transform.ts      # General transformations
-```
 
 ## See Also
 

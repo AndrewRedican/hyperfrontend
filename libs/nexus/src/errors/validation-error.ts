@@ -4,7 +4,7 @@ import { setPrototypeOf } from '@hyperfrontend/immutable-api-utils/built-in-copy
 /**
  * Custom error class for validation failures
  *
- * @example
+ * @example Throwing validation error
  * ```typescript
  * throw new ValidationError('Schema mismatch', [{ path: 'data.id', message: 'Required' }])
  * ```

@@ -9,7 +9,7 @@ import { ACTION_TYPES } from '../../types/action'
  * @param deps - Action dependencies containing broker ID
  * @returns A function that creates a deny connection action for a process
  *
- * @example
+ * @example Creating deny connection actions
  * ```typescript
  * const createDenyAction = denyConnection({ getBrokerId: () => 'broker-1' })
  * const action = createDenyAction('process-123', 'Origin not allowed')

@@ -7,11 +7,14 @@ import { createError } from '@hyperfrontend/immutable-api-utils/built-in-copy/er
  * @param policy - The policy to validate
  * @throws {Error} If policy is not a function
  *
- * @example
+ * @example Valid policy function
  * ```typescript
  * validatePolicy((event) => event.origin === 'https://trusted.com')
  * // No error thrown
+ * ```
  *
+ * @example Invalid policy throws
+ * ```typescript
  * validatePolicy('not-a-function')
  * // Throws: Security policy must be a function...
  * ```

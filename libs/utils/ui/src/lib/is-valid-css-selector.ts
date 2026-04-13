@@ -4,7 +4,7 @@
  * @param selector - The CSS selector string to validate
  * @returns True if the selector is valid, false otherwise
  *
- * @example
+ * @example Validating CSS selectors
  * ```typescript
  * isValidCssSelector('.my-class')
  * // => true

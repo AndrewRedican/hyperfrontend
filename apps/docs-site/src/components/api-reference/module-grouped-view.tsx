@@ -4,6 +4,7 @@ import type { TypeDocOutput, TypeDocNode } from './types'
 import { useState, useMemo, useEffect, useCallback, useRef } from 'react'
 import { createSet } from '@hyperfrontend/immutable-api-utils/built-in-copy/set'
 import { requestAnimationFrame, setTimeout } from '@hyperfrontend/immutable-api-utils/built-in-copy/timers'
+import { CopyButton } from './copy-button'
 import { FunctionSignature } from './function-signature'
 import { HighlightMatch } from './highlight-match'
 import { TypeDefinition } from './type-definition'
@@ -20,6 +21,19 @@ interface ModuleGroup {
   name: string
   displayName: string
   exports: TypeDocNode[]
+}
+
+/**
+ * Computes the full import path for a module
+ * @param packageName - The root package name (e.g., '@hyperfrontend/ui-utils')
+ * @param moduleName - The module subpath (e.g., 'color' or 'index')
+ * @returns The full import path (omits '/index' suffix)
+ */
+function getFullImportPath(packageName: string, moduleName: string): string {
+  if (moduleName === 'index') {
+    return packageName
+  }
+  return `${packageName}/${moduleName}`
 }
 
 /**
@@ -232,15 +246,32 @@ export function ModuleGroupedView({ data, searchQuery = '', initialHash }: Modul
               id={`module-${module.name.replace(/\//g, '-')}`}
             >
               {/* Module header (clickable) */}
-              <button
+              <div
+                role="button"
+                tabIndex={0}
                 onClick={() => toggleModule(module.name)}
-                className="w-full px-4 py-3 flex items-center justify-between bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors"
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault()
+                    toggleModule(module.name)
+                  }
+                }}
+                className="w-full px-4 py-3 flex items-center justify-between bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors cursor-pointer"
               >
                 <div className="flex items-center gap-3">
                   <ChevronIcon expanded={isExpanded} />
                   <div className="text-left">
                     <h4 className="font-mono text-sm font-semibold text-slate-900 dark:text-white">{module.displayName}</h4>
-                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">import from &quot;{module.name}&quot;</p>
+                    <div
+                      className="flex items-center gap-2 mt-0.5"
+                      onClick={(e) => e.stopPropagation()}
+                      onKeyDown={(e) => e.stopPropagation()}
+                    >
+                      <code className="text-xs text-slate-500 dark:text-slate-400 bg-slate-200 dark:bg-slate-700 px-1.5 py-0.5 rounded font-mono">
+                        {getFullImportPath(data.name, module.name)}
+                      </code>
+                      <CopyButton text={getFullImportPath(data.name, module.name)} size="sm" />
+                    </div>
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
@@ -253,7 +284,7 @@ export function ModuleGroupedView({ data, searchQuery = '', initialHash }: Modul
                     namespaces={namespaces.length}
                   />
                 </div>
-              </button>
+              </div>
 
               {/* Module contents (collapsible) */}
               {isExpanded && (

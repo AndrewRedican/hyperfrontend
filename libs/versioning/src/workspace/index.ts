@@ -57,10 +57,45 @@ export {
   addDependent,
 } from './models'
 export type { Workspace, WorkspaceConfig, WorkspaceType, Project, CreateProjectOptions } from './models'
-
-export * from './discovery'
-
-export * from './operations'
+export type { DependencyEdge, DependencyGraph, DependencyGraphAnalysis, DependencyType } from './discovery'
+export type { DiscoveredChangelog, DiscoveryOptions, DiscoveryResult } from './discovery'
+export {
+  buildDependencyGraph,
+  CHANGELOG_NAMES,
+  discoverAllChangelogs,
+  discoverPackages,
+  discoverProject,
+  discoverProjectByName,
+  findChangelogs,
+  findChangelogsInTree,
+  findInternalDependencies,
+  findInternalDependenciesWithTypes,
+  findProjectChangelog,
+  findProjectChangelogInTree,
+  getExpectedChangelogPath,
+  getTopologicalOrder,
+  getTransitiveDependencies,
+  getTransitiveDependents,
+  hasChangelog,
+  transitivelyDependsOn,
+} from './discovery'
+export type { BatchUpdateOptions, BatchUpdateResult, FailedUpdate, UpdatedPackage } from './operations'
+export type { BumpReason, CascadeBumpOptions, CascadeBumpResult, DirectBumpInput, PlannedBump } from './operations'
+export type { ValidationCheckResult, ValidationReport, ValidationResult } from './operations'
+export {
+  applyBumps,
+  calculateCascadeBumps,
+  calculateCascadeBumpsFromPackage,
+  DEFAULT_BATCH_UPDATE_OPTIONS,
+  DEFAULT_CASCADE_OPTIONS,
+  summarizeBatchUpdate,
+  summarizeCascadeBumps,
+  summarizeValidation,
+  updateDependencyReferencesInTree,
+  updatePackageVersionInTree,
+  validateProject,
+  validateWorkspace,
+} from './operations'
 
 /**
  * Detects the workspace type based on configuration markers.
@@ -88,7 +123,7 @@ function detectWorkspaceType(workspaceRoot: string): WorkspaceType {
  * @param options - Discovery configuration options
  * @returns Complete workspace object with projects and dependency graph
  *
- * @example
+ * @example Create a complete workspace object from disk
  * ```typescript
  * import { createWorkspaceFromDisk } from '@hyperfrontend/versioning'
  *

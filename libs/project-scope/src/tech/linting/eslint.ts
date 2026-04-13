@@ -27,7 +27,7 @@ export const ESLINT_CONFIG_PATTERNS = [
  * @param packageJson - Optional pre-loaded package.json
  * @returns Detection result or null if not detected
  *
- * @example
+ * @example Detecting ESLint linter
  * ```typescript
  * const result = eslintDetector('/path/to/project', {
  *   devDependencies: { eslint: '^8.50.0', '@typescript-eslint/parser': '^6.0.0' },

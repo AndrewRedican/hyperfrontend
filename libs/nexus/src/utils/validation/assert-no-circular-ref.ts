@@ -40,7 +40,7 @@ function hasCircular(value: unknown, seen: WeakSet<object>): boolean {
  * @param paramName - Name of the parameter for error messaging
  * @throws {Error} if circular reference is detected
  *
- * @example
+ * @example Checking for circular references
  * ```typescript
  * const config = { a: 1, b: 2 }
  * assertNoCircularRef(config, 'config') // OK

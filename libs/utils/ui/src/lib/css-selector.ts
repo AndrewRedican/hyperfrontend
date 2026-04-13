@@ -9,7 +9,7 @@ import { createError } from '@hyperfrontend/immutable-api-utils/built-in-copy/er
  * @param argName - The name of the argument (used in error messages)
  * @throws {Error} When the CSS name format is invalid
  *
- * @example
+ * @example Validating CSS name format
  * ```typescript
  * validateCssName('my-class', 'className') // passes
  * validateCssName('123invalid', 'className') // throws Error
@@ -29,7 +29,7 @@ export function validateCssName(arg: string, argName: string): void {
  * @param argName - The name of the argument (used in error messages)
  * @throws {Error} When the string is undefined, null, or empty
  *
- * @example
+ * @example Validating string arguments
  * ```typescript
  * validateStringArgument('valid', 'name') // passes
  * validateStringArgument('', 'name') // throws Error
@@ -48,7 +48,7 @@ export function validateStringArgument(arg: string, argName: string): void {
  * @param id - The ID to validate
  * @throws {Error} When the ID format is invalid or empty
  *
- * @example
+ * @example Validating ID selector
  * ```typescript
  * validateIdSelector('main-header') // passes
  * validateIdSelector('') // throws Error
@@ -66,7 +66,7 @@ export function validateIdSelector(id: string): void {
  * @param className - The class name to validate
  * @throws {Error} When the class name format is invalid or empty
  *
- * @example
+ * @example Validating class selector
  * ```typescript
  * validateClassSelector('btn-primary') // passes
  * validateClassSelector('1invalid') // throws Error
@@ -85,7 +85,7 @@ export function validateClassSelector(className: string): void {
  * @param attribute - The attribute name to validate
  * @throws {Error} When the attribute name format is invalid or empty
  *
- * @example
+ * @example Validating attribute selector
  * ```typescript
  * validateAttributeSelector('data-testid') // passes
  * validateAttributeSelector('attr=value') // throws Error
@@ -103,7 +103,7 @@ export function validateAttributeSelector(attribute: string): void {
 /**
  * Builder class for constructing CSS selectors with a fluent API.
  *
- * @example
+ * @example Building CSS selector with fluent API
  * ```typescript
  * const selector = new CssSelector('div')
  *   .class('container')
@@ -298,7 +298,7 @@ export class CssSelector {
  *
  * @returns A new CssSelector instance
  *
- * @example
+ * @example Creating empty selector
  * ```typescript
  * const selector = select().class('active').id('panel')
  * selector.toString() // => '.active#panel'
@@ -314,7 +314,7 @@ export function select(): CssSelector {
  * @param selector - The initial CSS selector string
  * @returns A new CssSelector instance
  *
- * @example
+ * @example Creating selector from string
  * ```typescript
  * const selector = selectBy('article').class('featured')
  * selector.toString() // => 'article.featured'
@@ -330,7 +330,7 @@ export function selectBy(selector: string): CssSelector {
  * @param tagName - The HTML tag name to select
  * @returns A new CssSelector instance
  *
- * @example
+ * @example Selecting by element tag
  * ```typescript
  * const selector = selectByElement('button').class('primary')
  * selector.toString() // => 'button.primary'
@@ -345,7 +345,7 @@ export function selectByElement(tagName: HtmlTagName): CssSelector {
  *
  * @returns A new CssSelector instance that matches all elements
  *
- * @example
+ * @example Selecting all elements
  * ```typescript
  * const selector = selectAllElements().class('visible')
  * selector.toString() // => '*.visible'
@@ -362,7 +362,7 @@ export function selectAllElements(): CssSelector {
  * @returns A new CssSelector instance
  * @throws {Error} When the ID format is invalid
  *
- * @example
+ * @example Selecting by ID
  * ```typescript
  * const selector = selectById('main-content')
  * selector.toString() // => '#main-content'
@@ -379,7 +379,7 @@ export function selectById(id: string): CssSelector {
  * @returns A new CssSelector instance
  * @throws {Error} When the class name format is invalid
  *
- * @example
+ * @example Selecting by class
  * ```typescript
  * const selector = selectByClass('highlighted')
  * selector.toString() // => '.highlighted'
@@ -397,7 +397,7 @@ export function selectByClass(className: string): CssSelector {
  * @returns A new CssSelector instance
  * @throws {Error} When the attribute name format is invalid
  *
- * @example
+ * @example Selecting by attribute
  * ```typescript
  * selectByAttribute('disabled').toString() // => '[disabled]'
  * selectByAttribute('data-role', 'button').toString() // => '[data-role="button"]'

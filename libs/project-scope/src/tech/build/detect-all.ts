@@ -27,7 +27,7 @@ export const buildToolDetectors: BuildToolDetector[] = [
  * @param packageJson - Optional pre-loaded package.json
  * @returns Array of detected build tools, sorted by confidence
  *
- * @example
+ * @example Detecting multiple build tools
  * ```typescript
  * const tools = detectBuildTools('/path/to/project', {
  *   name: 'my-app',

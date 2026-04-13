@@ -10,7 +10,7 @@ import { exists } from '../../core/fs'
  * @param workspacePath - Workspace directory path
  * @returns Detection result or null if not detected
  *
- * @example
+ * @example Detecting pnpm workspaces
  * ```typescript
  * // Project with pnpm-workspace.yaml
  * const result = pnpmWorkspacesDetector('/path/to/pnpm-project')

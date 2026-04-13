@@ -6,7 +6,7 @@ import type { ChannelRegistry } from './factory'
  *
  * @param registry - The channel registry instance
  *
- * @example
+ * @example Clearing the registry
  * ```typescript
  * const registry = createRegistry()
  * // ... add channels

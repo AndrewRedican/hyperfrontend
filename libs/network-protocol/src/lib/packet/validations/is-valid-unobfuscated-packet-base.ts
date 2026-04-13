@@ -11,7 +11,7 @@ import { isValidTarget } from './is-valid-target'
  * @param packet - The value to validate as an unobfuscated packet base
  * @returns An object containing the validation result and the packet cast to UnobfuscatedPacket
  *
- * @example
+ * @example Validating packet base structure
  * ```typescript
  * const { isValid, pkt } = isValidUnobfuscatedPacketBase({
  *   origin: '550e8400-e29b-41d4-a716-446655440000',

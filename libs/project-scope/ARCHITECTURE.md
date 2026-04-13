@@ -46,21 +46,19 @@ graph LR
     HEUR --> MODELS
 ```
 
-## Module Structure
+## Module Organization
 
-```
-libs/project-scope/src/
-├── analyze.ts           # Main entry point (analyzeProject)
-├── index.ts             # Public exports
-├── cli/                 # Command-line interface
-├── core/                # Foundation utilities
-├── heuristics/          # Intelligent detection algorithms
-├── models/              # TypeScript types and interfaces
-├── nx/                  # NX workspace integration
-├── project/             # Project structure analysis
-├── tech/                # Technology stack detection
-└── vfs/                 # Virtual file system
-```
+| Module         | Responsibility                           |
+| -------------- | ---------------------------------------- |
+| **analyze**    | Main entry point (`analyzeProject`)      |
+| **cli**        | Command-line interface                   |
+| **core**       | Foundation utilities (file system, etc.) |
+| **heuristics** | Intelligent detection algorithms         |
+| **models**     | TypeScript types and interfaces          |
+| **nx**         | NX workspace integration                 |
+| **project**    | Project structure analysis               |
+| **tech**       | Technology stack detection               |
+| **vfs**        | Virtual file system (transactional ops)  |
 
 ## Data Flow
 

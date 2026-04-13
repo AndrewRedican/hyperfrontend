@@ -11,7 +11,7 @@ import { addError, pushPath, shouldContinue } from '../context'
  * @param schema - Schema containing the patternProperties constraint
  * @param ctx - Validation context
  * @returns true if validation passes, false otherwise
- * @example
+ * @example Validating pattern properties
  * ```typescript
  * const schema = {
  *   patternProperties: {

@@ -9,7 +9,7 @@ import { fromCharCode } from '@hyperfrontend/immutable-api-utils/built-in-copy/s
  * @param bytes - The Uint8Array to convert
  * @returns A Latin-1 binary string representation
  *
- * @example
+ * @example Converting bytes to binary string
  * ```typescript
  * const bytes = new Uint8Array([72, 101, 108, 108, 111])
  * const binaryStr = bytesToBinaryString(bytes)

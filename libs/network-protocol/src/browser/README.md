@@ -1,4 +1,4 @@
-# Network Protocol - Browser Platform (`src/browser/`)
+# Browser Platform (`src/browser/`)
 
 > **This is a platform-specific entry point.** Primary documentation is in [`src/lib/`](../lib/README.md).
 

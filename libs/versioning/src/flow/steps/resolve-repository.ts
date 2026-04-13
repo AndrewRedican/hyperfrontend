@@ -26,7 +26,7 @@ export const RESOLVE_REPOSITORY_STEP_ID = 'resolve-repository'
  *
  * @returns A FlowStep that resolves repository configuration
  *
- * @example
+ * @example Configuring repository resolution modes
  * ```typescript
  * // Auto-detect repository
  * const flow = createFlow({

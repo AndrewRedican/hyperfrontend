@@ -32,7 +32,7 @@ export const DEFAULT_CHANGE_JSON_FILE_OPTIONS: Required<ChangeJsonFileOptions> =
  * @param options - Optional formatting options
  * @throws {Error} If the file doesn't exist (propagated from tree.changeFile)
  *
- * @example
+ * @example Transform a JSON file using the VFS Tree
  * ```typescript
  * // Update package.json version
  * changeJsonFile<{ version: string }>(tree, 'package.json', (pkg) => {

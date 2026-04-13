@@ -10,7 +10,7 @@ import { send } from './send'
  *
  * @param channel - Channel internals with state and dependencies
  *
- * @example
+ * @example Flushing queued messages
  * ```typescript
  * flush(channel) // Sends all queued messages
  * ```

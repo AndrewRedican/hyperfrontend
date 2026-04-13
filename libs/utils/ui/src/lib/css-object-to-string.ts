@@ -10,7 +10,7 @@ import { logger } from '@hyperfrontend/logging'
  * @param cssObj - The CSS object with property-value pairs
  * @returns A CSS string representation
  *
- * @example
+ * @example Converting style object to CSS
  * ```typescript
  * const styles = {
  *   backgroundColor: '#f0f0f0',

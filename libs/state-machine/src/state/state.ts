@@ -5,7 +5,7 @@ import type { State } from '../models'
  *
  * @returns Initial state with all flags set to false
  *
- * @example
+ * @example Creating initial state
  * ```typescript
  * const state = createInitialState()
  * // => { inProgress: false, success: false, fail: false, halt: false }

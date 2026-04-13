@@ -34,13 +34,12 @@ const createTimeIntervalObfuscation = createTimeIntervalObfuscationFactory(
  * When received, the key is extracted and used for subsequent encrypted messages.
  */
 export const createProtocol = createProtocolFactory(createDynamicKeyEncryption, createTimeIntervalObfuscation)
-
-export type * from '../../lib/protocol/model'
-export type * from '../../lib/protocol/validations/is-valid-protocol.model'
-export * from '../../lib/protocol/validations/is-valid-name'
-export * from '../../lib/protocol/validations/is-valid-protocol-provider'
-export * from '../../lib/protocol/validations/is-valid-protocol'
-export * from '../../lib/protocol/validations/is-valid-receive-fn'
-export * from '../../lib/protocol/validations/is-valid-send-fn'
-export * from '../../lib/protocol/creators/create-provider-protocol-store'
-export * from '../../lib/protocol/v1/creators/create-protocol-factory'
+export type { ProtocolProviderEntry, ProtocolProviderStore } from '../../lib/protocol/model'
+export type { ValidProtocolResult } from '../../lib/protocol/validations/is-valid-protocol.model'
+export { isValidName } from '../../lib/protocol/validations/is-valid-name'
+export { isValidProtocolProvider } from '../../lib/protocol/validations/is-valid-protocol-provider'
+export { isValidProtocol } from '../../lib/protocol/validations/is-valid-protocol'
+export { isValidReceiveFn } from '../../lib/protocol/validations/is-valid-receive-fn'
+export { isValidSendFn } from '../../lib/protocol/validations/is-valid-send-fn'
+export { createProtocolProviderStore } from '../../lib/protocol/creators/create-provider-protocol-store'
+export { createObfuscatedHandshakeProtocolFactory, createProtocolFactory } from '../../lib/protocol/v1/creators/create-protocol-factory'

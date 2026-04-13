@@ -16,7 +16,7 @@ export interface ParsedBody {
  * @param startIndex - Index to start looking for body (after header)
  * @returns Parsed body or undefined if no body
  *
- * @example
+ * @example Parsing commit body
  * ```typescript
  * const lines = [
  *   'feat: add login',

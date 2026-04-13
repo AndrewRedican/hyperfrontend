@@ -29,7 +29,7 @@ import { createSecureTransport } from './secure-transport'
  * @returns A security transport appropriate for the configured protocol
  * @throws {Error} If protocol is v1/v2 and provider is missing
  *
- * @example
+ * @example Creating security transports
  * ```typescript
  * // No security
  * const plainTransport = createSecurityTransport({

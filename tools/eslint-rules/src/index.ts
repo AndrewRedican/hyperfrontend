@@ -8,10 +8,12 @@ import importOrder, { RULE_NAME as IMPORT_ORDER } from './rules/import-order'
 import libCiWorkflows, { RULE_NAME as LIB_CI_WORKFLOWS } from './rules/lib-ci-workflows'
 import libCompatibilityDocs, { RULE_NAME as LIB_COMPATIBILITY_DOCS } from './rules/lib-compatibility-docs'
 import libE2eProjectRequired, { RULE_NAME as LIB_E2E_PROJECT_REQUIRED } from './rules/lib-e2e-project-required'
+import libEntryExportSpacing, { RULE_NAME as LIB_ENTRY_EXPORT_SPACING } from './rules/lib-entry-export-spacing'
 import libPkgBundleEntry, { RULE_NAME as LIB_PKG_BUNDLE_ENTRY } from './rules/lib-pkg-bundle-entry'
 import libPkgExportsExist, { RULE_NAME as LIB_PKG_EXPORTS_EXIST } from './rules/lib-pkg-exports-exist'
 import libPkgExportsJsOnly, { RULE_NAME as LIB_PKG_EXPORTS_JS_ONLY } from './rules/lib-pkg-exports-js-only'
 import libPkgFields, { RULE_NAME as LIB_PKG_FIELDS } from './rules/lib-pkg-fields'
+import libPkgMainReexports, { RULE_NAME as LIB_PKG_MAIN_REEXPORTS } from './rules/lib-pkg-main-reexports'
 import libPkgNoMain, { RULE_NAME as LIB_PKG_NO_MAIN } from './rules/lib-pkg-no-main'
 import libPkgPackageJsonExport, { RULE_NAME as LIB_PKG_PACKAGE_JSON_EXPORT } from './rules/lib-pkg-package-json-export'
 import libProjectBundleConfig, { RULE_NAME as LIB_PROJECT_BUNDLE_CONFIG } from './rules/lib-project-bundle-config'
@@ -19,9 +21,13 @@ import libProjectMetadata, { RULE_NAME as LIB_PROJECT_METADATA } from './rules/l
 import libProjectVersionTargets, { RULE_NAME as LIB_PROJECT_VERSION_TARGETS } from './rules/lib-project-version-targets'
 import libReadmeStructure, { RULE_NAME as LIB_README_STRUCTURE } from './rules/lib-readme-structure'
 import libRequireJsdocExample, { RULE_NAME as LIB_REQUIRE_JSDOC_EXAMPLE } from './rules/lib-require-jsdoc-example'
+import libRequireJsdocExampleLabel, { RULE_NAME as LIB_REQUIRE_JSDOC_EXAMPLE_LABEL } from './rules/lib-require-jsdoc-example-label'
+import libRequireModuleHeader, { RULE_NAME as LIB_REQUIRE_MODULE_HEADER } from './rules/lib-require-module-header'
 import libTsconfigPaths, { RULE_NAME as LIB_TSCONFIG_PATHS } from './rules/lib-tsconfig-paths'
 import maxFileLines, { RULE_NAME as MAX_FILE_LINES } from './rules/max-file-lines'
+import noAsciiArtDiagrams, { RULE_NAME as NO_ASCII_ART_DIAGRAMS } from './rules/no-ascii-art-diagrams'
 import noAsyncFsApi, { RULE_NAME as NO_ASYNC_FS_API } from './rules/no-async-fs-api'
+import noBarrelStarExport, { RULE_NAME as NO_BARREL_STAR_EXPORT } from './rules/no-barrel-star-export'
 import noDecorativeHeaderComments, { RULE_NAME as NO_DECORATIVE_HEADER_COMMENTS } from './rules/no-decorative-header-comments'
 import noDeprecatedTag, { RULE_NAME as NO_DEPRECATED_TAG } from './rules/no-deprecated-tag'
 import noDirectConsole, { RULE_NAME as NO_DIRECT_CONSOLE } from './rules/no-direct-console'
@@ -40,6 +46,7 @@ import preferInlineSingleUse, { RULE_NAME as PREFER_INLINE_SINGLE_USE } from './
 import preferJsDocOverTrailingComments, {
   RULE_NAME as PREFER_JSDOC_OVER_TRAILING_COMMENTS,
 } from './rules/prefer-jsdoc-over-trailing-comments'
+import requireCodeblockLanguage, { RULE_NAME as REQUIRE_CODEBLOCK_LANGUAGE } from './rules/require-codeblock-language'
 import requireNodeProtocol, { RULE_NAME as REQUIRE_NODE_PROTOCOL } from './rules/require-node-protocol'
 import rootReadmePackages, { RULE_NAME as ROOT_README_PACKAGES } from './rules/root-readme-packages'
 
@@ -54,6 +61,7 @@ export const rules: ESLint.Plugin['rules'] = {
   [DOCS_SITE_LIBRARY_DOCS]: docsSiteLibraryDocs as unknown as Rule.RuleModule,
   [DOCS_SITE_ROUTES]: docsSiteRoutes as unknown as Rule.RuleModule,
   [LIB_COMPATIBILITY_DOCS]: libCompatibilityDocs as unknown as Rule.RuleModule,
+  [LIB_ENTRY_EXPORT_SPACING]: libEntryExportSpacing as unknown as Rule.RuleModule,
   [IMPORT_ORDER]: importOrder as unknown as Rule.RuleModule,
   [LIB_CI_WORKFLOWS]: libCiWorkflows as unknown as Rule.RuleModule,
   [LIB_E2E_PROJECT_REQUIRED]: libE2eProjectRequired as unknown as Rule.RuleModule,
@@ -61,6 +69,7 @@ export const rules: ESLint.Plugin['rules'] = {
   [LIB_PKG_EXPORTS_EXIST]: libPkgExportsExist as unknown as Rule.RuleModule,
   [LIB_PKG_EXPORTS_JS_ONLY]: libPkgExportsJsOnly as unknown as Rule.RuleModule,
   [LIB_PKG_FIELDS]: libPkgFields as unknown as Rule.RuleModule,
+  [LIB_PKG_MAIN_REEXPORTS]: libPkgMainReexports as unknown as Rule.RuleModule,
   [LIB_PKG_NO_MAIN]: libPkgNoMain as unknown as Rule.RuleModule,
   [LIB_PKG_PACKAGE_JSON_EXPORT]: libPkgPackageJsonExport as unknown as Rule.RuleModule,
   [LIB_PROJECT_BUNDLE_CONFIG]: libProjectBundleConfig as unknown as Rule.RuleModule,
@@ -68,9 +77,13 @@ export const rules: ESLint.Plugin['rules'] = {
   [LIB_PROJECT_VERSION_TARGETS]: libProjectVersionTargets as unknown as Rule.RuleModule,
   [LIB_README_STRUCTURE]: libReadmeStructure as unknown as Rule.RuleModule,
   [LIB_REQUIRE_JSDOC_EXAMPLE]: libRequireJsdocExample as unknown as Rule.RuleModule,
+  [LIB_REQUIRE_JSDOC_EXAMPLE_LABEL]: libRequireJsdocExampleLabel as unknown as Rule.RuleModule,
+  [LIB_REQUIRE_MODULE_HEADER]: libRequireModuleHeader as unknown as Rule.RuleModule,
   [LIB_TSCONFIG_PATHS]: libTsconfigPaths as unknown as Rule.RuleModule,
   [MAX_FILE_LINES]: maxFileLines as unknown as Rule.RuleModule,
+  [NO_ASCII_ART_DIAGRAMS]: noAsciiArtDiagrams as unknown as Rule.RuleModule,
   [NO_ASYNC_FS_API]: noAsyncFsApi as unknown as Rule.RuleModule,
+  [NO_BARREL_STAR_EXPORT]: noBarrelStarExport as unknown as Rule.RuleModule,
   [NO_DECORATIVE_HEADER_COMMENTS]: noDecorativeHeaderComments as unknown as Rule.RuleModule,
   [NO_DEPRECATED_TAG]: noDeprecatedTag as unknown as Rule.RuleModule,
   [NO_DIRECT_CONSOLE]: noDirectConsole as unknown as Rule.RuleModule,
@@ -87,6 +100,7 @@ export const rules: ESLint.Plugin['rules'] = {
   [PREFER_EXEC_FILE_SYNC]: preferExecFileSync as unknown as Rule.RuleModule,
   [PREFER_INLINE_SINGLE_USE]: preferInlineSingleUse as unknown as Rule.RuleModule,
   [PREFER_JSDOC_OVER_TRAILING_COMMENTS]: preferJsDocOverTrailingComments as unknown as Rule.RuleModule,
+  [REQUIRE_CODEBLOCK_LANGUAGE]: requireCodeblockLanguage as unknown as Rule.RuleModule,
   [REQUIRE_NODE_PROTOCOL]: requireNodeProtocol as unknown as Rule.RuleModule,
   [ROOT_README_PACKAGES]: rootReadmePackages as unknown as Rule.RuleModule,
 }

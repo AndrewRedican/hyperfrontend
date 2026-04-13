@@ -6,7 +6,7 @@
  * @param conditionFunc - A function that returns a boolean, determining if `func` should be executed.
  * @returns A wrapped version of `func` that executes conditionally.
  *
- * @example
+ * @example Conditional logging based on flag
  * ```typescript
  * let enabled = false
  * const conditionalLog = createConditionalExecutionFunction(console.log, () => enabled)

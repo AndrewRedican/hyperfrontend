@@ -20,7 +20,7 @@ import { assertNoCircularRef } from '../../utils/validation/assert-no-circular-r
  * @param settings - Optional configuration settings for the channel
  * @returns The created or existing channel
  *
- * @example
+ * @example Registering a channel with the broker
  * ```typescript
  * const channel = addChannel(
  *   brokerState,

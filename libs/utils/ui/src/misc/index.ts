@@ -1,1 +1,1 @@
-export * from '../lib/simple-hash'
+export { simpleHash } from '../lib/simple-hash'

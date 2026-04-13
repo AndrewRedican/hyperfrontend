@@ -5,7 +5,7 @@ import type { SendPacketFn } from '../../sender/model'
  *
  * @returns void
  *
- * @example
+ * @example Using the mock sender
  * ```typescript
  * const sendPacket = sender
  * sendPacket(packet) // does nothing

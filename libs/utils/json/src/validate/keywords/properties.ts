@@ -12,7 +12,7 @@ import { addError, pushPath, shouldContinue } from '../context'
  * @param schema - Schema containing the properties constraint
  * @param ctx - Validation context
  * @returns true if validation passes, false otherwise
- * @example
+ * @example Validating object properties
  * ```typescript
  * const schema = {
  *   properties: {
@@ -50,7 +50,7 @@ export function validateProperties(instance: Record<string, unknown>, schema: Sc
  * @param schema - Schema containing the required constraint
  * @param ctx - Validation context
  * @returns true if validation passes, false otherwise
- * @example
+ * @example Validating required properties
  * ```typescript
  * const schema = { required: ['name', 'email'] }
  * validateRequired({ name: 'Alice', email: 'alice@example.com' }, schema, ctx) // => true
@@ -81,7 +81,7 @@ export function validateRequired(instance: Record<string, unknown>, schema: Sche
  * @param schema - Schema containing the additionalProperties constraint
  * @param ctx - Validation context
  * @returns true if validation passes, false otherwise
- * @example
+ * @example Validating additional properties
  * ```typescript
  * const schema = {
  *   properties: { name: { type: 'string' } },

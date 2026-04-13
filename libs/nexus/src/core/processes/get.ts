@@ -6,7 +6,7 @@ import type { ChannelHandle } from './factory'
  * @param processes - Map storing process to channel mappings
  * @returns Function that takes processId and returns channel or undefined
  *
- * @example
+ * @example Looking up channel by process ID
  * ```typescript
  * const processes = new Map([['proc-1', channelHandle]])
  * const findChannel = getChannel(processes)

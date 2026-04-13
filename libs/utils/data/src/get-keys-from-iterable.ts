@@ -8,7 +8,7 @@ import { registeredIterableClasses } from './shared/consts'
  * @param dataType - The data type of the target.
  * @returns The keys from the iterable target.
  *
- * @example
+ * @example Extracting keys from object
  * ```typescript
  * getKeysFromIterable({ a: 1, b: 2 }, 'object') // ['a', 'b']
  * ```

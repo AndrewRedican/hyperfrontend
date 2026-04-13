@@ -17,7 +17,7 @@ export const VITEST_CONFIG_PATTERNS = ['vitest.config.js', 'vitest.config.ts', '
  * @param packageJson - Optional pre-loaded package.json
  * @returns Detection result or null if not detected
  *
- * @example
+ * @example Detecting Vitest testing framework
  * ```typescript
  * import { vitestDetector } from '@hyperfrontend/project-scope'
  *

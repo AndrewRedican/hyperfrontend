@@ -148,6 +148,7 @@ module.exports = [
     files: ['**/index.ts'],
     rules: {
       'workspace/no-unwanted-barrel-files': 'error',
+      'workspace/no-barrel-star-export': 'error',
     },
   },
   {
@@ -216,6 +217,10 @@ module.exports = [
     ignores: ['**/*.spec.ts', '**/jest.config.ts', '**/jest.setup.ts', '**/*.types.ts'],
     rules: {
       'workspace/lib-require-jsdoc-example': 'error',
+      'workspace/lib-require-jsdoc-example-label': 'error',
+      'workspace/lib-require-module-header': 'off',
+      'workspace/lib-pkg-main-reexports': 'error',
+      'workspace/lib-entry-export-spacing': 'error',
     },
   },
   {
@@ -252,6 +257,20 @@ module.exports = [
     language: 'markdown/gfm',
     rules: {
       'workspace/lib-readme-structure': 'error',
+      'workspace/no-ascii-art-diagrams': 'error',
+      'workspace/require-codeblock-language': 'error',
+    },
+  },
+  {
+    files: ['**/*.md'],
+    ignores: ['**/README.md'],
+    plugins: {
+      markdown: require('@eslint/markdown').default,
+    },
+    language: 'markdown/gfm',
+    rules: {
+      'workspace/no-ascii-art-diagrams': 'error',
+      'workspace/require-codeblock-language': 'error',
     },
   },
   {

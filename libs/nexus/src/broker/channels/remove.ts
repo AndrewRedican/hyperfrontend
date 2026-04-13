@@ -8,7 +8,7 @@ import { remove as removeFromRegistry } from '../../core/registry/remove'
  * @param registry - Channel registry from which to remove the channel
  * @param channel - The channel instance to cleanup and remove
  *
- * @example
+ * @example Removing a channel from the broker
  * ```typescript
  * const channel = getChannel(registry, 'widget-channel')
  * if (channel) {

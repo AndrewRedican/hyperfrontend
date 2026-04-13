@@ -18,7 +18,7 @@ import type { RoutingContext } from './types'
  * - Fires 'open' lifecycle event on responder's side
  * - Fires 'security-ready' event if security transport is active
  *
- * @example
+ * @example Completing the three-way handshake
  * Final step of three-way handshake:
  * Responder receives OPEN (this handler) from Initiator
  * Both sides now have active connection

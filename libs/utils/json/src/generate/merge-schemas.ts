@@ -10,7 +10,7 @@ import { createSet } from '@hyperfrontend/immutable-api-utils/built-in-copy/set'
  *
  * @param schemas - Array of schemas to merge
  * @returns A single merged schema, possibly using anyOf
- * @example
+ * @example Merging object schemas
  * ```typescript
  * const schemas = [
  *   { type: 'object', properties: { name: { type: 'string' } } },

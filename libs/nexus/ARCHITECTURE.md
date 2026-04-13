@@ -93,80 +93,17 @@ The library follows **functional programming principles** with factory-based arc
 
 ---
 
-## Module Structure
+## Module Organization
 
-### Directory Layout
+The library is organized into logical modules by responsibility:
 
-```
-libs/nexus/src/
-├── index.ts                    # Public API exports
-├── singleton.ts                # Default broker instance
-│
-├── broker/                     # Message broker implementation
-│   ├── factory.ts              # createBroker() factory
-│   ├── types.ts                # Broker interfaces
-│   ├── defaults.ts             # Default settings
-│   ├── channels/               # Channel management (add, get, list, remove)
-│   ├── routing/                # Protocol action handlers (11 handlers)
-│   └── security/               # Origin filtering, policy application
-│
-├── channel/                    # Channel implementation
-│   ├── factory.ts              # createChannel() factory
-│   ├── types.ts                # Channel internals
-│   ├── defaults.ts             # Default channel settings
-│   ├── lifecycle/              # connect, disconnect, cancel, destroy
-│   ├── messaging/              # send, receive, queue, flush
-│   ├── state/                  # State management (activate, deactivate, etc.)
-│   └── subscription/           # Event and message subscriptions
-│
-├── core/                       # Core utilities
-│   ├── actions/                # Protocol action creators (11 actions)
-│   ├── registry/               # Channel registry (WeakMap/Map based)
-│   ├── processes/              # Process manager for connection tracking
-│   └── validation/             # Input validation (name, contract, origin)
-│
-├── types/                      # TypeScript type definitions
-│   ├── action.ts               # Protocol action types
-│   ├── channel.ts              # Channel handle interface
-│   ├── contract.ts             # Channel contract interface
-│   ├── events.ts               # Lifecycle event types
-│   ├── message.ts              # User message interface
-│   ├── security.ts             # Security types (transport, negotiation)
-│   └── validation.ts           # Validation result types
-│
-├── filters/                    # Utility filters
-│   ├── events/                 # Event filters (open, close, cancel, deny, invalid)
-│   └── messages/               # Message filters (byType, compose)
-│
-├── schema/                     # JSON Schema validation
-│   ├── definitions/            # Schema definitions
-│   └── validate/               # Validation functions
-│
-├── security/                   # Security integration
-│   ├── negotiation/            # Protocol negotiation logic
-│   ├── registry/               # Protocol provider registry
-│   └── transport/              # Security transport adapters
-│
-├── setup/                      # Initialization utilities
-│   └── merge-contracts.ts      # Contract merging
-│
-├── errors/                     # Custom error classes
-│   ├── validation-error.ts
-│   ├── connection-error.ts
-│   └── contract-error.ts
-│
-├── constants/                  # Protocol constants
-│   ├── action-types.ts         # Protocol action type strings
-│   └── event-types.ts          # Lifecycle event constants
-│
-├── utils/                      # Helper utilities
-│
-└── integration-tests/          # Browser integration tests
-    ├── connection-flow.browser.spec.ts
-    ├── multi-channel.browser.spec.ts
-    ├── security.browser.spec.ts
-    └── ...
-```
+| Module       | Responsibility                                     |
+| ------------ | -------------------------------------------------- |
+| **Broker**   | Central message coordinator, channel management    |
+| **Channel**  | Bidirectional communication endpoints, lifecycle   |
+| **Security** | Origin filtering, protocol negotiation, encryption |
+| **Filters**  | Event and message filtering utilities              |
+| **Schema**   | JSON Schema validation for contracts               |
 
 ---
 
@@ -389,19 +326,19 @@ stateDiagram-v2
 
 Each protocol action is processed by a dedicated handler. All handlers receive the broker state, channel registry, process manager, and incoming message.
 
-| Handler                    | File                                                                                                                                      | Responsibilities                                                    |
-| -------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------- |
-| `handleRequest`            | [handle-request](https://github.com/AndrewRedican/hyperfrontend/blob/main/libs/nexus/src/broker/routing/handle-request.ts)                | Validate contract, apply policy, activate channel, send ACCEPT      |
-| `handleAccept`             | [handle-accept](https://github.com/AndrewRedican/hyperfrontend/blob/main/libs/nexus/src/broker/routing/handle-accept.ts)                  | Validate contract, apply policy, activate, send OPEN, notify 'open' |
-| `handleOpen`               | [handle-open](https://github.com/AndrewRedican/hyperfrontend/blob/main/libs/nexus/src/broker/routing/handle-open.ts)                      | Terminate process, notify 'open' (responder side)                   |
-| `handleDeny`               | [handle-deny](https://github.com/AndrewRedican/hyperfrontend/blob/main/libs/nexus/src/broker/routing/handle-deny.ts)                      | Terminate process, notify 'deny' with error context                 |
-| `handleCancel`             | [handle-cancel](https://github.com/AndrewRedican/hyperfrontend/blob/main/libs/nexus/src/broker/routing/handle-cancel.ts)                  | Cancel channel, send CANCEL_ACK, notify 'cancel'                    |
-| `handleCancelAcknowledged` | [handle-cancel-ack](https://github.com/AndrewRedican/hyperfrontend/blob/main/libs/nexus/src/broker/routing/handle-cancel-acknowledged.ts) | Terminate process, notify 'cancel' (initiator side)                 |
-| `handleClose`              | [handle-close](https://github.com/AndrewRedican/hyperfrontend/blob/main/libs/nexus/src/broker/routing/handle-close.ts)                    | Disconnect channel, send CLOSE_ACK, notify 'close'                  |
-| `handleCloseAcknowledged`  | [handle-close-ack](https://github.com/AndrewRedican/hyperfrontend/blob/main/libs/nexus/src/broker/routing/handle-close-acknowledged.ts)   | Terminate process, notify 'close' (initiator side)                  |
-| `handleMessage`            | [handle-message](https://github.com/AndrewRedican/hyperfrontend/blob/main/libs/nexus/src/broker/routing/handle-message.ts)                | Validate payload, forward to subscribers via `notifyMessage()`      |
-| `handleDestroy`            | [handle-destroy](https://github.com/AndrewRedican/hyperfrontend/blob/main/libs/nexus/src/broker/routing/handle-destroy.ts)                | Force-destroy connection, clean up resources                        |
-| `handleInvalid`            | [handle-invalid](https://github.com/AndrewRedican/hyperfrontend/blob/main/libs/nexus/src/broker/routing/handle-invalid.ts)                | Log invalid requests, optionally notify sender                      |
+| Handler                    | Responsibilities                                                                                                                                                                   |
+| -------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `handleRequest`            | Validate contract, apply policy, activate channel, send ACCEPT                                                                                                                     |
+| `handleAccept`             | Validate contract, apply policy, activate, send OPEN, notify 'open'                                                                                                                |
+| `handleOpen`               | Terminate process, notify 'open' (responder side)                                                                                                                                  |
+| `handleDeny`               | Terminate process, notify 'deny' with error context                                                                                                                                |
+| `handleCancel`             | Cancel channel, send CANCEL_ACK, notify 'cancel'                                                                                                                                   |
+| `handleCancelAcknowledged` | Terminate process, notify 'cancel' (initiator side)                                                                                                                                |
+| `handleClose`              | Disconnect channel, send CLOSE_ACK, notify 'close'                                                                                                                                 |
+| `handleCloseAcknowledged`  | Terminate process, notify 'close' (initiator side)                                                                                                                                 |
+| `handleMessage`            | Validate payload, forward to subscribers via `notifyMessage()`                                                                                                                     |
+| `handleDestroy`            | Force-destroy connection, clean up resources                                                                                                                                       |
+| `handleInvalid`            | Log invalid requests, optionally notify sender — see [handle-invalid.ts](https://github.com/AndrewRedican/hyperfrontend/blob/main/libs/nexus/src/broker/routing/handle-invalid.ts) |
 
 ---
 

@@ -68,7 +68,7 @@ export interface DependencyGraphAnalysis {
  * @param workspacePackageNames - Set of all package names in the workspace
  * @returns Array of internal dependency names
  *
- * @example
+ * @example Find internal dependencies in a package
  * ```typescript
  * const internalDeps = findInternalDependencies(packageJson, allPackageNames)
  * // ['@scope/lib-a', '@scope/lib-b']
@@ -101,7 +101,7 @@ export function findInternalDependencies(packageJson: PackageJson, workspacePack
  * @param workspacePackageNames - Set of all package names in the workspace
  * @returns Array of dependency edges with type information
  *
- * @example
+ * @example Find internal dependencies with type information
  * ```typescript
  * import { findInternalDependenciesWithTypes, readPackageJson } from '@hyperfrontend/versioning'
  *
@@ -148,7 +148,7 @@ export function findInternalDependenciesWithTypes(
  * @param projects - List of projects to analyze
  * @returns Dependency graph analysis result
  *
- * @example
+ * @example Build a complete dependency graph
  * ```typescript
  * import { buildDependencyGraph, discoverPackages } from '@hyperfrontend/versioning'
  *
@@ -297,7 +297,7 @@ function detectCircularDependencies(reverseDependencyGraph: Map<string, string[]
  * @returns Array of package names in build order
  * @throws {Error} If circular dependencies exist
  *
- * @example
+ * @example Get packages in topological order for building
  * ```typescript
  * const buildOrder = getTopologicalOrder(analysis)
  * for (const pkg of buildOrder) {
@@ -357,7 +357,7 @@ export function getTopologicalOrder(analysis: DependencyGraphAnalysis): readonly
  * @param packageName - Name of the package to analyze
  * @returns Set of all packages that depend on this package
  *
- * @example
+ * @example Get all transitive dependents of a package
  * ```typescript
  * // If lib-a depends on lib-utils and app-main depends on lib-a
  * // Then getTransitiveDependents('lib-utils') returns ['lib-a', 'app-main']
@@ -392,7 +392,7 @@ export function getTransitiveDependents(workspace: Workspace, packageName: strin
  * @param packageName - Name of the package to analyze
  * @returns Set of all packages this package depends on
  *
- * @example
+ * @example Get all transitive dependencies of a package
  * ```typescript
  * import { discoverWorkspace, getTransitiveDependencies } from '@hyperfrontend/versioning'
  *
@@ -435,7 +435,7 @@ export function getTransitiveDependencies(workspace: Workspace, packageName: str
  * @param packageB - Name of the potential dependency
  * @returns True if packageA transitively depends on packageB
  *
- * @example
+ * @example Check if one package transitively depends on another
  * ```typescript
  * import { discoverWorkspace, transitivelyDependsOn } from '@hyperfrontend/versioning'
  *

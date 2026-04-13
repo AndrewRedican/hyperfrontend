@@ -12,7 +12,7 @@ import { freeze } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
  * @param contract - Negotiated channel contract
  * @returns New state with channel activated
  *
- * @example
+ * @example Activating a channel with contract
  * ```typescript
  * const contract = { accepted: [{ type: 'message' }] }
  * const activeState = activate(channelState, 'https://example.com', contract)

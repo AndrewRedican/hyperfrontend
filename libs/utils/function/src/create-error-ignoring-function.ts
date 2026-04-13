@@ -7,7 +7,7 @@
  * @param func - The void function to be wrapped.
  * @returns A wrapped version of the input function that ignores errors.
  *
- * @example
+ * @example Safely parsing invalid JSON
  * ```typescript
  * const safeParse = createErrorIgnoringFunction(() => JSON.parse('invalid'))
  * safeParse() // silently fails without throwing

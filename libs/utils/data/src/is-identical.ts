@@ -108,7 +108,7 @@ const isIdenticalForCircularReferencesRecursive = (
  * @param targetB - The second value to compare
  * @returns True if the values are identical, false otherwise
  *
- * @example
+ * @example Comparing values for identity
  * ```typescript
  * isIdentical({ a: 1 }, { a: 1 }) // true
  * isIdentical([1, 2], [1, 2]) // true

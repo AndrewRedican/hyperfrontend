@@ -29,7 +29,7 @@ export const PRETTIER_CONFIG_PATTERNS = [
  * @param packageJson - Optional pre-loaded package.json
  * @returns Detection result or null if not detected
  *
- * @example
+ * @example Detecting Prettier formatter
  * ```typescript
  * const result = prettierDetector('/path/to/project', {
  *   devDependencies: { prettier: '^3.0.0' },

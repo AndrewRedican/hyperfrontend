@@ -25,7 +25,7 @@ export type ItemPredicate = (item: ChangelogItem, section: ChangelogSection, ent
  * @param predicate - Function that returns true for entries to keep
  * @returns A new changelog with filtered entries
  *
- * @example
+ * @example Filtering out unreleased entries
  * ```ts
  * const filtered = filterEntries(changelog, (entry) => !entry.unreleased)
  * ```
@@ -45,7 +45,7 @@ export function filterEntries(changelog: Changelog, predicate: EntryPredicate): 
  * @param changelog - The changelog to filter
  * @returns A new changelog with only entries containing breaking changes
  *
- * @example
+ * @example Filtering for breaking changes
  * ```typescript
  * const breaking = filterBreakingChanges(changelog)
  * // Only entries containing breaking changes or items marked as breaking
@@ -67,7 +67,7 @@ export function filterBreakingChanges(changelog: Changelog): Changelog {
  * @param predicate - Function that returns true for sections to keep
  * @returns A new changelog with filtered sections
  *
- * @example
+ * @example Filtering for user-facing sections
  * ```typescript
  * const userFacing = filterSections(changelog, (section) =>
  *   ['features', 'fixes', 'breaking'].includes(section.type)
@@ -90,7 +90,7 @@ export function filterSections(changelog: Changelog, predicate: SectionPredicate
  * @param types - Section types to keep
  * @returns A new changelog with only specified section types
  *
- * @example
+ * @example Filtering to specific section types
  * ```typescript
  * const userChanges = filterSectionTypes(changelog, ['features', 'fixes'])
  * // Only features and fixes sections remain
@@ -109,7 +109,7 @@ export function filterSectionTypes(changelog: Changelog, types: readonly Changel
  * @param predicate - Function that returns true for items to keep
  * @returns A new changelog with filtered items
  *
- * @example
+ * @example Filtering items with references
  * ```typescript
  * const withRefs = filterItems(changelog, (item) => item.references.length > 0)
  * // Only items with issue/PR references
@@ -134,7 +134,7 @@ export function filterItems(changelog: Changelog, predicate: ItemPredicate): Cha
  * @param scopes - Scopes to include
  * @returns A new changelog with only items matching the scopes
  *
- * @example
+ * @example Filtering items by scope
  * ```typescript
  * const apiChanges = filterByScope(changelog, ['api', 'core'])
  * // Only items scoped to 'api' or 'core'
@@ -156,7 +156,7 @@ export function filterByScope(changelog: Changelog, scopes: readonly string[]): 
  * @param scopes - Scopes to exclude
  * @returns A new changelog without items matching the scopes
  *
- * @example
+ * @example Excluding items by scope
  * ```typescript
  * const publicChanges = excludeByScope(changelog, ['internal', 'test'])
  * // Items scoped to 'internal' or 'test' are removed

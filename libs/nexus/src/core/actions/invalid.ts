@@ -9,7 +9,7 @@ import { ACTION_TYPES } from '../../types/action'
  * @param deps - Action dependencies containing broker ID
  * @returns A function that creates an invalid request action for a process
  *
- * @example
+ * @example Creating invalid request actions
  * ```typescript
  * const createInvalidAction = invalidRequest({ getBrokerId: () => 'broker-1' })
  * const action = createInvalidAction('process-123', 'Malformed payload')

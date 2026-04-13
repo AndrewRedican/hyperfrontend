@@ -21,7 +21,7 @@ export const lintingDetectors: LintingToolDetector[] = [
  * @param packageJson - Optional pre-loaded package.json
  * @returns Array of detected linting tools, sorted by confidence
  *
- * @example
+ * @example Detecting multiple linting tools
  * ```typescript
  * const results = detectLintingTools('/path/to/project', {
  *   devDependencies: { eslint: '^8.0.0', prettier: '^3.0.0' },

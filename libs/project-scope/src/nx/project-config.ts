@@ -100,7 +100,7 @@ export interface NxProjectGraph {
  * @param projectPath - Project directory path
  * @returns Parsed project.json or null if not found
  *
- * @example
+ * @example Reading NX project.json
  * ```typescript
  * import { readProjectJson } from '@hyperfrontend/project-scope'
  *
@@ -129,7 +129,7 @@ export function readProjectJson(projectPath: string): NxProjectConfig | null {
  * @param workspacePath - Workspace root path (for relative path calculation)
  * @returns Project configuration or null if not found
  *
- * @example
+ * @example Getting project configuration
  * ```typescript
  * import { getProjectConfig } from '@hyperfrontend/project-scope'
  *
@@ -222,7 +222,7 @@ function scanForProjects(
  * @param workspacePath - Workspace root path
  * @returns Map of project name to configuration
  *
- * @example
+ * @example Discovering all NX projects
  * ```typescript
  * import { discoverNxProjects } from '@hyperfrontend/project-scope'
  *
@@ -301,7 +301,7 @@ export function discoverNxProjects(workspacePath: string): Map<string, NxProject
  * @param projects - Existing configuration map to skip auto-discovery
  * @returns NxProjectGraph with nodes and dependencies
  *
- * @example
+ * @example Building a simple project graph
  * ```typescript
  * import { buildSimpleProjectGraph } from '@hyperfrontend/project-scope'
  *

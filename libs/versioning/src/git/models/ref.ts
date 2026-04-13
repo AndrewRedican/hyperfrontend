@@ -47,7 +47,7 @@ export interface CreateGitRefOptions {
  * @param options - Reference creation options
  * @returns A new GitRef object
  *
- * @example
+ * @example Create a git reference from full name
  * const ref = createGitRef({
  *   fullName: 'refs/heads/main',
  *   commitHash: 'abc123...',
@@ -162,7 +162,7 @@ function splitByChar(str: string, char: string): string[] {
  * @param ref - Reference to check
  * @returns True if reference is a branch
  *
- * @example
+ * @example Check if reference is a branch
  * ```typescript
  * isBranchRef({ type: 'branch', name: 'main' }) // => true
  * ```
@@ -177,7 +177,7 @@ export function isBranchRef(ref: GitRef): boolean {
  * @param ref - Reference to check
  * @returns True if reference is a tag
  *
- * @example
+ * @example Check if reference is a tag
  * ```typescript
  * isTagRef({ type: 'tag', name: 'v1.0.0' }) // => true
  * ```
@@ -192,7 +192,7 @@ export function isTagRef(ref: GitRef): boolean {
  * @param ref - Reference to check
  * @returns True if reference is a remote
  *
- * @example
+ * @example Check if reference is a remote tracking branch
  * ```typescript
  * isRemoteRef({ type: 'remote', name: 'main', remote: 'origin' }) // => true
  * ```
@@ -207,7 +207,7 @@ export function isRemoteRef(ref: GitRef): boolean {
  * @param ref - Reference to check
  * @returns True if reference is HEAD
  *
- * @example
+ * @example Check if reference points to HEAD
  * ```typescript
  * isHeadRef({ type: 'head', name: 'HEAD' }) // => true
  * isHeadRef({ type: 'branch', name: 'main', isHead: true }) // => true
@@ -223,7 +223,7 @@ export function isHeadRef(ref: GitRef): boolean {
  * @param ref - Reference to check
  * @returns Remote name or undefined
  *
- * @example
+ * @example Get the remote for a reference
  * ```typescript
  * getRemote({ type: 'remote', name: 'main', remote: 'origin' }) // => 'origin'
  * getRemote({ type: 'branch', name: 'main' }) // => undefined
@@ -241,7 +241,7 @@ export function getRemote(ref: GitRef): string | undefined {
  * @param remote - Remote name (for remote type)
  * @returns Full reference name
  *
- * @example
+ * @example Build full reference names from type and name
  * buildRefName('branch', 'main') // 'refs/heads/main'
  * buildRefName('tag', 'v1.0.0') // 'refs/tags/v1.0.0'
  * buildRefName('remote', 'main', 'origin') // 'refs/remotes/origin/main'
@@ -270,7 +270,7 @@ export function buildRefName(type: GitRefType, name: string, remote?: string): s
  * @param b - Second reference
  * @returns Comparison result (-1, 0, or 1)
  *
- * @example
+ * @example Sort references alphabetically by name
  * ```typescript
  * const refs = [refB, refA, refC]
  * refs.sort(compareRefsByName) // => [refA, refB, refC]
@@ -289,7 +289,7 @@ export function compareRefsByName(a: GitRef, b: GitRef): number {
  * @param type - Type to filter by
  * @returns Filtered references
  *
- * @example
+ * @example Filter references by type
  * ```typescript
  * const branches = filterRefsByType(allRefs, 'branch')
  * const tags = filterRefsByType(allRefs, 'tag')
@@ -312,7 +312,7 @@ export function filterRefsByType(refs: readonly GitRef[], type: GitRefType): rea
  * @param remote - Remote name to filter by
  * @returns Filtered references
  *
- * @example
+ * @example Filter references by remote
  * ```typescript
  * const originRefs = filterRefsByRemote(remoteRefs, 'origin')
  * const upstreamRefs = filterRefsByRemote(remoteRefs, 'upstream')

@@ -44,7 +44,7 @@ let detectCircularReferences = false
  *
  * @param config - Partial configuration object to merge with current settings
  *
- * @example
+ * @example Configuring settings
  * ```typescript
  * setConfig({ detectCircularReferences: true })
  * ```
@@ -61,7 +61,7 @@ export const setConfig = (config: Partial<Config>): void => {
  *
  * @returns The current global configuration object
  *
- * @example
+ * @example Retrieving configuration
  * ```typescript
  * const { detectCircularReferences } = getConfig()
  * ```

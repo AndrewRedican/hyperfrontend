@@ -26,7 +26,7 @@ export type RepositoryPlatform = KnownPlatform | 'custom' | 'unknown'
  * @param platform - Platform identifier to check
  * @returns True if the platform is a known platform
  *
- * @example
+ * @example Checking if platform has built-in support
  * ```typescript
  * isKnownPlatform('github')     // true
  * isKnownPlatform('gitlab')     // true
@@ -64,7 +64,7 @@ export const PLATFORM_HOSTNAMES: ReadonlyMap<string, KnownPlatform> = createMap<
  * @param hostname - Hostname to detect platform from (e.g., "github.com")
  * @returns Detected platform or 'unknown' if not recognized
  *
- * @example
+ * @example Detecting platform from hostname
  * ```typescript
  * detectPlatformFromHostname('github.com')           // 'github'
  * detectPlatformFromHostname('gitlab.mycompany.com') // 'gitlab'

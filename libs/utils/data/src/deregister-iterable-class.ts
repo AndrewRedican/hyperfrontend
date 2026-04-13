@@ -8,7 +8,7 @@ import { registeredIterableClasses } from './shared/consts'
  *
  * @param classRefs - The class constructors to deregister
  *
- * @example
+ * @example Deregistering iterable classes
  * ```typescript
  * deregisterIterableClass(MyCollection)
  * deregisterIterableClass() // clears all except Array/Object

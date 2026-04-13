@@ -136,7 +136,7 @@ const formatValidators: Record<string, (value: string) => boolean> = {
  * @param schema - Schema containing the format constraint
  * @param ctx - Validation context
  * @returns true if validation passes, false otherwise
- * @example
+ * @example Validating string formats
  * ```typescript
  * validateFormat('user@example.com', { format: 'email' }, ctx) // => true
  * validateFormat('invalid-email', { format: 'email' }, ctx)    // => false

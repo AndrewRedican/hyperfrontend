@@ -5,7 +5,7 @@
  * @param input - The string to hash
  * @returns A 6-character alphanumeric hash string
  *
- * @example
+ * @example Generating simple hash
  * ```typescript
  * simpleHash('user@example.com')
  * // => 'a1b2c3'

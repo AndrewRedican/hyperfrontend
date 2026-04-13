@@ -53,7 +53,7 @@ export interface DetectConfigOptions {
  * @param options - Detection options
  * @returns Array of detected configuration files
  *
- * @example
+ * @example Detecting configuration files
  * ```typescript
  * import { detectConfigs } from '@hyperfrontend/project-scope'
  *
@@ -143,7 +143,7 @@ export function detectConfigs(rootPath: string, types?: ConfigType[], options?: 
  *
  * Useful for testing or when the project files have changed.
  *
- * @example
+ * @example Clearing the config detection cache
  * ```typescript
  * import { clearConfigDetectionCache } from '@hyperfrontend/project-scope'
  *
@@ -162,7 +162,7 @@ export function clearConfigDetectionCache(): void {
  * @param type - Config type to find
  * @returns Full path to config file or null if not found
  *
- * @example
+ * @example Finding a specific config file
  * ```typescript
  * import { findConfigFile } from '@hyperfrontend/project-scope'
  *
@@ -204,7 +204,7 @@ export function findConfigFile(rootPath: string, type: ConfigType): string | nul
  * @param type - Configuration type identifier
  * @returns Array of glob patterns for matching config files
  *
- * @example
+ * @example Getting config file patterns
  * ```typescript
  * import { getConfigPaths } from '@hyperfrontend/project-scope'
  *

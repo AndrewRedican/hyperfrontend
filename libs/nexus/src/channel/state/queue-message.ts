@@ -10,7 +10,7 @@ import { freeze } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
  * @param message - Message to queue
  * @returns New state with message added to queue
  *
- * @example
+ * @example Adding a message to the queue
  * ```typescript
  * const message = { type: 'data', payload: { userId: 123 } }
  * const updatedState = queueMessage(channelState, message)

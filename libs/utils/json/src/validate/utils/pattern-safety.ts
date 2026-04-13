@@ -1,4 +1,3 @@
-/* eslint-disable workspace/lib-require-jsdoc-example */
 /**
  * Result of a pattern safety check.
  */
@@ -67,7 +66,7 @@ function extractQuantifierUpperBound(pattern: string): number | null {
  *
  * @param pattern - The regex pattern string to check
  * @returns Result indicating if the pattern is safe
- * @example
+ * @example Checking pattern safety
  * ```typescript
  * checkPatternSafety('^[a-z]+$')  // => { safe: true }
  * checkPatternSafety('(a+)+')     // => { safe: false, reason: 'Nested quantifiers...' }

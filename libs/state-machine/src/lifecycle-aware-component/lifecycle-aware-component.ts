@@ -13,7 +13,7 @@ import { callStack } from '../call-stack/call-stack'
  * Abstract base class for components that need lifecycle state management.
  * Tracks initializing, ready, starting, stopping, and active states.
  *
- * @example
+ * @example Extending LifecycleAwareComponent
  * ```typescript
  * class MyService extends LifecycleAwareComponent {
  *   async doInit() { this.setInitializing(true) }

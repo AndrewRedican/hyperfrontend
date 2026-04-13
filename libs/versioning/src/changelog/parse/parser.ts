@@ -44,7 +44,7 @@ interface ParserState {
  * @param source - Optional source file path
  * @returns Parsed Changelog object
  *
- * @example
+ * @example Parsing a changelog markdown string
  * ```typescript
  * const markdown = `# Changelog
  *

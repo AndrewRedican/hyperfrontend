@@ -17,7 +17,7 @@ export const CYPRESS_CONFIG_PATTERNS = ['cypress.config.js', 'cypress.config.ts'
  * @param packageJson - Optional pre-loaded package.json
  * @returns Detection result or null if not detected
  *
- * @example
+ * @example Detecting Cypress testing framework
  * ```typescript
  * import { cypressDetector } from '@hyperfrontend/project-scope'
  *

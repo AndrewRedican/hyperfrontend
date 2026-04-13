@@ -7,7 +7,7 @@
  * @param replacement - The replacement character
  * @returns String with all occurrences replaced
  *
- * @example
+ * @example Replacing characters in strings
  * ```typescript
  * replaceChar('hello-world', '-', '_')
  * // => 'hello_world'
@@ -34,7 +34,7 @@ export function replaceChar(input: string, target: string, replacement: string):
  * @param input - The input string
  * @returns String with hyphens replaced by spaces
  *
- * @example
+ * @example Normalizing footer keys
  * ```typescript
  * hyphenToSpace('BREAKING-CHANGE')
  * // => 'BREAKING CHANGE'

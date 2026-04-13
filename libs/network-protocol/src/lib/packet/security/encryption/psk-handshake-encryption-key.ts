@@ -28,7 +28,7 @@ import { freeze } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
  * @param {PacketDecrypter} decryptPacket - Function to decrypt a packet with a password
  * @returns {(psk: string, keyProvider: () => string | undefined) => EncryptionSuite<T>} A factory that creates hybrid PSK/dynamic encryption
  *
- * @example
+ * @example Creating a PSK handshake encryption suite
  * ```typescript
  * const factory = createPSKHandshakeEncryptionFactory(encryptPacket, decryptPacket)
  * let sessionKey: string | undefined

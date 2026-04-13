@@ -10,7 +10,7 @@ import { isEqual } from '../utils/deep-equal'
  * @param schema - Schema containing array bounds
  * @param ctx - Validation context
  * @returns true if validation passes, false otherwise
- * @example
+ * @example Validating array constraints
  * ```typescript
  * const schema = { minItems: 2, maxItems: 5, uniqueItems: true }
  * validateArrayBounds([1, 2, 3], schema, ctx) // => true

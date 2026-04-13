@@ -14,7 +14,7 @@ import { create, freeze } from '@hyperfrontend/immutable-api-utils/built-in-copy
  * @param decrypt - Function to decrypt data with a password
  * @returns A function that creates new vault instances
  *
- * @example
+ * @example Creating and using a vault
  * ```typescript
  * const createVault = createValueCreator(getRandomValues, encrypt, decrypt)
  * const vault = createVault()

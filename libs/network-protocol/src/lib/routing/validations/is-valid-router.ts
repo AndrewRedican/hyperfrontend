@@ -9,7 +9,7 @@ import { isValidRoutingOptions } from './is-valid-routing-options'
  * @param router - The value to validate as a router
  * @returns True if the value is a valid router function, false otherwise
  *
- * @example
+ * @example Validating a router function
  * ```typescript
  * const routerFn = () => ({ isDynamic: false, subscriptions: new WeakMap() })
  * isValidRouter(routerFn)

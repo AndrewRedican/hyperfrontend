@@ -6,7 +6,7 @@ import { getType } from '@hyperfrontend/data-utils'
  * @param sender - The sender to validate
  * @returns True if the sender is valid, false otherwise
  *
- * @example
+ * @example Validating sender functions
  * ```typescript
  * isValidSender((packet) => transmit(packet)) // => true
  * isValidSender(null) // => false

@@ -121,7 +121,7 @@ export interface ClassificationSummary {
  *
  * @returns A new ClassificationSummary with all counts at zero
  *
- * @example
+ * @example Creating an empty classification summary
  * ```typescript
  * const summary = createEmptyClassificationSummary()
  * // => { total: 0, included: 0, excluded: 0, bySource: { 'direct-scope': 0, ... } }
@@ -155,7 +155,7 @@ export function createEmptyClassificationSummary(): ClassificationSummary {
  * @param options.dependencyPath - Chain of dependencies leading to indirect inclusion
  * @returns A new ClassifiedCommit object
  *
- * @example
+ * @example Creating a classified commit
  * ```typescript
  * const commit = { type: 'feat', subject: 'add feature', footers: [], breaking: false, raw: '...' }
  * const raw = { hash: 'abc123', subject: 'feat: add feature', message: '...' }

@@ -14,7 +14,7 @@ import { collectAllDependencies, parseVersionString } from '../shared-utils/dete
  * @param packageJson - Optional pre-loaded package.json
  * @returns Detection result or null if not detected
  *
- * @example
+ * @example Detecting Angular framework
  * ```typescript
  * const result = angularDetector('/path/to/angular-app', {
  *   dependencies: { '@angular/core': '^17.0.0', '@angular/cli': '^17.0.0' }

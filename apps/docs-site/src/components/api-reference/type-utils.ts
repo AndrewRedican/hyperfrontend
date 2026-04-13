@@ -129,15 +129,28 @@ export function getReturnsDescription(comment: Comment | undefined): string {
   return renderTextBlocks(returnsTag.content)
 }
 
+/** An example block with optional label */
+export interface Example {
+  /** Optional label for the example (e.g., "6-digit hex") */
+  label?: string
+  /** The example code */
+  code: string
+}
+
 /**
  * Extract example blocks from a comment
  *
  * @param comment - The comment to extract examples from
- * @returns Array of example code strings
+ * @returns Array of example objects with label and code
  */
-export function getExamples(comment: Comment | undefined): string[] {
+export function getExamples(comment: Comment | undefined): Example[] {
   if (!comment?.blockTags) return []
-  return comment.blockTags.filter((tag) => tag.tag === '@example').map((tag) => renderTextBlocks(tag.content))
+  return comment.blockTags
+    .filter((tag) => tag.tag === '@example')
+    .map((tag) => ({
+      label: tag.name,
+      code: renderTextBlocks(tag.content),
+    }))
 }
 
 /**

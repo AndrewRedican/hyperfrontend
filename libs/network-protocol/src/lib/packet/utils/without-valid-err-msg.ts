@@ -5,7 +5,7 @@
  * @param label - The name of the invalid configuration parameter
  * @returns A formatted error message string
  *
- * @example
+ * @example Generating validation error message
  * ```typescript
  * withoutValidErrorMessage('origin')
  * // => 'Cannot create a packet without a valid origin value'

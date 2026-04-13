@@ -18,7 +18,7 @@ export interface RemoveEntryOptions {
  * @param options - Optional removal options
  * @returns A new changelog without the specified entry
  *
- * @example
+ * @example Removing an entry by version
  * ```ts
  * const newChangelog = removeEntry(changelog, '1.0.0')
  * ```
@@ -51,7 +51,7 @@ export function removeEntry(changelog: Changelog, version: string, options?: Rem
  * @param options - Optional removal options
  * @returns A new changelog without the specified entries
  *
- * @example
+ * @example Removing multiple entries
  * ```typescript
  * const cleaned = removeEntries(changelog, ['0.1.0', '0.2.0'])
  * // Pre-release versions removed from changelog
@@ -83,7 +83,7 @@ export function removeEntries(changelog: Changelog, versions: readonly string[],
  * @param options - Optional removal options
  * @returns A new changelog without the unreleased entry
  *
- * @example
+ * @example Removing the unreleased entry
  * ```typescript
  * const released = removeUnreleased(changelog)
  * // Changelog without the unreleased entry

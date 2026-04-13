@@ -323,4 +323,4 @@ This library is part of the [hyperfrontend](https://github.com/AndrewRedican/hyp
 
 ## License
 
-MIT
+[MIT](https://github.com/AndrewRedican/hyperfrontend/blob/main/LICENSE.md)

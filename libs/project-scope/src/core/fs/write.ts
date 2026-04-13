@@ -29,7 +29,7 @@ export interface WriteJsonOptions extends WriteFileOptions {
  *
  * @param dirPath - Directory path to ensure exists
  *
- * @example
+ * @example Ensuring directory exists
  * ```typescript
  * ensureDir('./output/reports')
  * // Directory now exists (created if missing)
@@ -51,7 +51,7 @@ export function ensureDir(dirPath: string): void {
  * @param options - Optional write configuration (encoding, mode)
  * @throws {Error} If write fails
  *
- * @example
+ * @example Writing text content to file
  * ```typescript
  * import { writeFileContent } from '@hyperfrontend/project-scope'
  *
@@ -86,7 +86,7 @@ export function writeFileContent(filePath: string, content: string, options?: Wr
  * @param options - Optional write configuration (mode)
  * @throws {Error} If write fails
  *
- * @example
+ * @example Writing binary buffer to file
  * ```typescript
  * const imageBuffer = Buffer.from([0x89, 0x50, 0x4e, 0x47])
  * writeFileBuffer('./output/image.png', imageBuffer)
@@ -113,7 +113,7 @@ export function writeFileBuffer(filePath: string, content: Buffer, options?: Wri
  * @param options - Optional write configuration (indent, encoding, mode)
  * @throws {Error} If write fails
  *
- * @example
+ * @example Writing JSON data to file
  * ```typescript
  * import { writeJsonFile } from '@hyperfrontend/project-scope'
  *

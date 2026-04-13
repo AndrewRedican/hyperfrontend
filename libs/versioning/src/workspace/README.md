@@ -51,32 +51,6 @@ flowchart TB
     BUMPS --> BU
 ```
 
-## Module Structure
-
-```mermaid
-flowchart LR
-    subgraph Workspace["workspace/"]
-        direction TB
-        subgraph disc["discovery/"]
-            packages["packages.ts"]
-            dependencies["dependencies.ts"]
-            changelogs["changelogs.ts"]
-        end
-        subgraph mod["models/"]
-            project["project.ts"]
-            workspace["workspace.ts"]
-        end
-        subgraph ops["operations/"]
-            cascade["cascade-bump.ts"]
-            batch["batch-update.ts"]
-            validate["validate.ts"]
-        end
-    end
-
-    disc --> mod
-    mod --> ops
-```
-
 ## API
 
 ### Models
@@ -228,36 +202,6 @@ const updateResult = applyBumps(workspace, result.bumps, {
   updateChangelogs: true,
 })
 console.log(formatBatchResult(updateResult))
-```
-
-## File Structure
-
-```
-workspace/
-├── index.ts                 # Re-exports all public API
-├── README.md                # This file
-├── discovery/
-│   ├── index.ts             # Discovery exports
-│   ├── packages.ts          # Package discovery
-│   ├── packages.spec.ts
-│   ├── dependencies.ts      # Dependency graph building
-│   ├── dependencies.spec.ts
-│   ├── changelogs.ts        # Changelog discovery
-│   └── changelogs.spec.ts
-├── models/
-│   ├── index.ts             # Model exports
-│   ├── project.ts           # Project model & factories
-│   ├── project.spec.ts
-│   ├── workspace.ts         # Workspace model & factories
-│   └── workspace.spec.ts
-└── operations/
-    ├── index.ts             # Operation exports
-    ├── cascade-bump.ts      # Cascade bump calculation
-    ├── cascade-bump.spec.ts
-    ├── batch-update.ts      # Batch update operations
-    ├── batch-update.spec.ts
-    ├── validate.ts          # Workspace validation
-    └── validate.spec.ts
 ```
 
 ## Dependencies

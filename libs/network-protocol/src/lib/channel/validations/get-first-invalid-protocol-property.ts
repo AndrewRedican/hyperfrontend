@@ -41,7 +41,7 @@ function isValidProtocol(protocol: unknown): ValidProtocolResult {
  * @param protocol - The protocol object to validate
  * @returns The name of the first invalid protocol property, or an empty string if all properties are valid
  *
- * @example
+ * @example Detecting invalid protocol properties
  * ```typescript
  * getFirstInvalidProtocolProperty({ send: () => {}, receive: null })
  * // => 'receive'

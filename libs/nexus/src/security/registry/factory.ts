@@ -24,7 +24,7 @@ import { freeze } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
  *
  * @returns A new protocol registry instance
  *
- * @example
+ * @example Managing protocol providers
  * ```typescript
  * const registry = createProtocolRegistry()
  *

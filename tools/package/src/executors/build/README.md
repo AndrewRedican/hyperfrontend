@@ -142,25 +142,6 @@ Build **fails** if `external` has entries without corresponding `globals`.
 }
 ```
 
-## File Structure
-
-```
-lib/
-├── assets.ts            # Asset copying utilities
-├── config-cjs.ts        # CJS Rollup config generator
-├── config-esm.ts        # ESM Rollup config generator
-├── config-iife.ts       # IIFE Rollup config generator
-├── config-umd.ts        # UMD Rollup config generator
-├── declarations.ts      # TypeScript declaration generation
-├── entry-resolver.ts    # Glob/exact path entry resolution
-├── externals.ts         # External dependency detection & validation
-├── index.ts             # Re-exports all lib modules
-├── package-json.ts      # Exports field generation
-├── paths.ts             # Path resolution utilities
-├── rollup-plugins.ts    # Shared Rollup plugin factories
-└── types.ts             # TypeScript types
-```
-
 ## Build Output
 
 Output is written to `dist/{projectRoot}/` with structure:

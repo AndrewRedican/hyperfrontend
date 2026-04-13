@@ -20,7 +20,7 @@ export type SecurityErrorCode = 'decryption_failed' | 'deobfuscation_failed' | '
 /**
  * Security error class with additional metadata for programmatic handling.
  *
- * @example
+ * @example Creating security error
  * ```typescript
  * throw new SecurityError('Decryption failed', 'decryption_failed', originalError)
  * ```
@@ -47,7 +47,7 @@ export class SecurityError extends Error {
  * @param error - The error to convert
  * @returns Standardized security error event data
  *
- * @example
+ * @example Converting errors to event data
  * ```typescript
  * try {
  *   decrypt(payload)
@@ -146,7 +146,7 @@ export const DEFAULT_RETRY_CONFIG: RetryConfig = {
  * @param config - Retry configuration
  * @returns A wrapped function that retries on failure
  *
- * @example
+ * @example Handling clock skew with retries
  * ```typescript
  * const robustDeobfuscate = createDeobfuscationRetry(
  *   (data, offset) => deobfuscate(data, offset),
@@ -191,7 +191,7 @@ export function createDeobfuscationRetry<T>(
  * @param channelName - Name of the channel where error occurred
  * @param error - The security error event data containing message, code, and optional cause
  *
- * @example
+ * @example Logging security errors
  * ```typescript
  * logSecurityError(logger, 'my-channel', errorData)
  * ```

@@ -44,6 +44,20 @@ module.exports = {
           950: '#172554',
         },
       },
+      keyframes: {
+        'flash-left': {
+          '0%': { transform: 'translateX(-100%)' },
+          '100%': { transform: 'translateX(100%)' },
+        },
+        'flash-right': {
+          '0%': { transform: 'translateX(100%)' },
+          '100%': { transform: 'translateX(-100%)' },
+        },
+      },
+      animation: {
+        'flash-left': 'flash-left 0.6s ease-out forwards',
+        'flash-right': 'flash-right 0.6s ease-out forwards',
+      },
     },
   },
   plugins: [require('@tailwindcss/typography')],

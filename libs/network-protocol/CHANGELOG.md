@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.2.0](https://github.com/AndrewRedican/hyperfrontend/compare/a9185d9b783d7d8d51cc4ad91eb3178eba3e3930...8a05c80832de91cd61f8af064b417870ea1e3b01) - 2026-04-13
+
+### Features
+
+- **eslint-rules:** add lib-pkg-main-reexports
+
 ## [0.1.0](https://github.com/AndrewRedican/hyperfrontend/compare/lib-network-protocol@0.0.4...lib-network-protocol@0.1.0) - 2026-03-16
 
 ### Other

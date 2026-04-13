@@ -16,7 +16,7 @@ export const BABEL_CONFIG_PATTERNS = ['babel.config.js', 'babel.config.cjs', 'ba
  * @param packageJson - Optional pre-loaded package.json
  * @returns Detection result or null if not detected
  *
- * @example
+ * @example Detecting Babel compiler
  * ```typescript
  * const result = babelDetector('/path/to/project', {
  *   name: 'my-app',

@@ -134,7 +134,7 @@ function validatePackageJson(data: unknown): PackageJson {
  * @returns Parsed package.json
  * @throws {Error} Error if file doesn't exist or is invalid
  *
- * @example
+ * @example Reading package.json
  * ```typescript
  * import { readPackageJson } from '@hyperfrontend/project-scope'
  *
@@ -172,7 +172,7 @@ export function readPackageJson(projectPath: string): PackageJson {
  * @param projectPath - Project directory path or path to package.json
  * @returns Parsed package.json or null if not found
  *
- * @example
+ * @example Reading package.json if it exists
  * ```typescript
  * import { readPackageJsonIfExists } from '@hyperfrontend/project-scope'
  *
@@ -207,7 +207,7 @@ export function readPackageJsonIfExists(projectPath: string): PackageJson | null
  * @param startPath - Starting path
  * @returns Path to directory containing package.json, or null if not found
  *
- * @example
+ * @example Finding nearest package.json
  * ```typescript
  * import { findNearestPackageJson } from '@hyperfrontend/project-scope'
  *

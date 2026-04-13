@@ -1,1 +1,1 @@
-export * from '../lib/setup-audio'
+export { setupAudio } from '../lib/setup-audio'

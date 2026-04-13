@@ -26,7 +26,7 @@ import { checkPatternSafety } from './utils/pattern-safety'
  * @param options - Validation options
  * @returns Validation result with valid flag and any errors
  *
- * @example
+ * @example Basic validation
  * ```typescript
  * const schema = { type: 'string', minLength: 1 }
  * const result = validate('hello', schema)
@@ -62,7 +62,7 @@ export function validate(instance: unknown, schema: Schema, options?: ValidateOp
  * @param schema - Schema to validate against
  * @param ctx - Validation context
  * @returns true if validation passes, false otherwise
- * @example
+ * @example Internal recursive validation
  * ```typescript
  * const schema = { type: 'object', properties: { count: { type: 'integer' } } }
  * const ctx = createValidationContext(schema, validateSchema)

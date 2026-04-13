@@ -106,7 +106,7 @@ export interface CreateRepositoryConfigOptions {
  * @returns A new RepositoryConfig object
  * @throws {Error} if platform is 'custom' but no formatCompareUrl is provided
  *
- * @example
+ * @example Creating repository configurations
  * ```typescript
  * // GitHub repository
  * const config = createRepositoryConfig({
@@ -144,7 +144,7 @@ export function createRepositoryConfig(options: CreateRepositoryConfigOptions): 
  * @param value - Value to check
  * @returns True if the value is a RepositoryConfig
  *
- * @example
+ * @example Type-checking repository config values
  * ```typescript
  * const config = { platform: 'github', baseUrl: 'https://...' }
  * if (isRepositoryConfig(config)) {

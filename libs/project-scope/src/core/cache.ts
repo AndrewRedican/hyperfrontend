@@ -100,7 +100,7 @@ const cacheRegistry: Set<Cache<unknown, unknown>> = createSet()
  * @param options - Cache configuration options
  * @returns Cache instance
  *
- * @example
+ * @example Creating caches with different options
  * ```typescript
  * // Basic cache
  * const cache = createCache<string, number>()
@@ -231,7 +231,7 @@ export function createCache<K, V>(options?: CacheOptions): Cache<K, V> {
  * Useful for testing or when a global state reset is needed.
  * This clears all caches created via `createCache()`.
  *
- * @example
+ * @example Clearing caches in tests
  * ```typescript
  * // In tests
  * afterEach(() => {
@@ -252,7 +252,7 @@ export function clearAllCaches(): void {
  *
  * @returns Number of registered caches
  *
- * @example
+ * @example Getting the number of active caches
  * ```typescript
  * const count = getCacheCount()
  * // => 3 (number of active caches)
@@ -270,7 +270,7 @@ export function getCacheCount(): number {
  * @param cache - Cache to unregister
  * @returns True if cache was unregistered
  *
- * @example
+ * @example Unregistering a cache from the registry
  * ```typescript
  * const myCache = createCache<string, number>({ name: 'temp-cache' })
  * const wasRemoved = unregisterCache(myCache)
@@ -291,7 +291,7 @@ export function unregisterCache<K, V>(cache: Cache<K, V>): boolean {
  * @param options - Cache options for the underlying cache
  * @returns Memoized function with cache control methods
  *
- * @example
+ * @example Memoizing an expensive function
  * ```typescript
  * // Memoize a detection function
  * const detectTechStackMemo = memoize(

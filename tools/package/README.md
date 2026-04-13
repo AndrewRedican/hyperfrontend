@@ -141,38 +141,6 @@ The version executor uses a custom conventional commits preset:
 
 ---
 
-## Directory Structure
-
-```
-src/executors/
-├── build/           # Library build executor
-│   ├── executor.ts
-│   ├── schema.json
-│   ├── README.md
-│   └── lib/         # Build utilities
-├── e2e/             # E2E package testing executor
-├── typecheck/       # Type checking executor
-├── publish/         # npm publish executor
-│   ├── executor.ts
-│   ├── schema.json
-│   └── README.md
-├── version/         # Semver version executor
-│   ├── executor.ts
-│   ├── schema.json
-│   ├── README.md
-│   ├── ARCHITECTURE.md
-│   └── lib/         # Version utilities
-├── version-batch/   # Batch versioning executor
-│   ├── executor.ts
-│   ├── schema.json
-│   └── lib/         # Batch utilities
-└── version-check/   # Version validation executor
-    ├── executor.ts
-    └── schema.json
-```
-
----
-
 ## Development
 
 ```bash

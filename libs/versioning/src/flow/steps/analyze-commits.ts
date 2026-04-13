@@ -40,7 +40,7 @@ export const ANALYZE_COMMITS_STEP_ID = 'analyze-commits'
  *
  * @returns A FlowStep that analyzes commits
  *
- * @example
+ * @example Analyzing commits since last release
  * ```typescript
  * import { createAnalyzeCommitsStep, executeStep } from '@hyperfrontend/versioning'
  *

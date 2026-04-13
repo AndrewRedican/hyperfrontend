@@ -12,7 +12,7 @@ import { collectAllDependencies, parseVersionString } from '../shared-utils/dete
  * @param projectPath - Project directory path
  * @param packageJson - Optional pre-loaded package.json
  * @returns Detection result or null if not detected
- * @example
+ * @example Detecting Koa framework
  * ```typescript
  * const pkg = {
  *   dependencies: { koa: '^2.14.2', 'koa-router': '^12.0.0' },

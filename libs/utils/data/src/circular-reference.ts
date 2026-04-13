@@ -33,7 +33,7 @@ export interface ICircularReference {
  * Represents a detected circular reference in an object graph.
  * Tracks the location where the reference was found and its target.
  *
- * @example
+ * @example Creating a circular reference instance
  * ```typescript
  * const ref = new CircularReference(['root', 'child'], ['root'])
  * console.log(ref.depth) // 1

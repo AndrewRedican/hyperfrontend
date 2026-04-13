@@ -11,7 +11,7 @@ import { getByWindow } from '../../core/registry/get-by-window'
  * @param reference - Channel identifier (id, name, or window object)
  * @returns The channel if found, null otherwise
  *
- * @example
+ * @example Retrieving channels by name or window
  * ```typescript
  * const channelByName = getChannel(registry, 'widget-channel')
  * const channelByWindow = getChannel(registry, iframe.contentWindow)

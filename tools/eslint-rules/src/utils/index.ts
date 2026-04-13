@@ -23,6 +23,21 @@ export {
   readPackageJson,
   readProjectJson,
 } from './nx-project'
-export * from './import-analysis'
-export * from './node-builtins'
-export * from './comment-analysis'
+export { ImportCategory, getImportCategory, getRelativeDepth, compareImportSources } from './import-analysis'
+export type { ImportCategoryType } from './import-analysis'
+export { NODE_BUILTIN_MODULES, isNodeBuiltinWithoutPrefix, addNodePrefix } from './node-builtins'
+export {
+  JSDOC_TAGS,
+  TOOLING_DIRECTIVE_PATTERNS,
+  ALLOWED_HINT_PREFIXES,
+  containsJsDocTag,
+  isToolingDirective,
+  hasAllowedHintPrefix,
+  containsSectionDivider,
+  isDecorativeHeaderComment,
+  getLineCommentContent,
+  isTrailingComment,
+  findSectionDividerBlocks,
+  isConfigFile,
+} from './comment-analysis'
+export type { SectionDividerBlock } from './comment-analysis'

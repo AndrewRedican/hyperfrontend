@@ -67,7 +67,7 @@ function checkTsConfigStrict(projectPath: string): boolean | undefined {
  * @param packageJson - Optional pre-loaded package.json
  * @returns Detection result or null if not detected
  *
- * @example
+ * @example Detecting TypeScript
  * ```typescript
  * import { typescriptDetector } from '@hyperfrontend/project-scope'
  *
@@ -140,7 +140,7 @@ export function typescriptDetector(projectPath: string, packageJson?: PackageJso
  * @param packageJson - Optional pre-loaded package.json
  * @returns Detection result or null if not detected
  *
- * @example
+ * @example Detecting Flow type system
  * ```typescript
  * import { flowDetector } from '@hyperfrontend/project-scope'
  *
@@ -219,7 +219,7 @@ function hasJsDocTypes(content: string): boolean {
  * @param packageJson - Optional pre-loaded package.json
  * @returns Detection result or null if not detected
  *
- * @example
+ * @example Detecting JSDoc type annotations
  * ```typescript
  * import { jsdocDetector } from '@hyperfrontend/project-scope'
  *
@@ -309,7 +309,7 @@ export const typeSystemDetectors: TypeSystemDetector[] = [
  * @param packageJson - Optional pre-loaded package.json
  * @returns Array of detected type systems, sorted by confidence
  *
- * @example
+ * @example Detecting all type systems
  * ```typescript
  * import { detectTypeSystems } from '@hyperfrontend/project-scope'
  *

@@ -10,7 +10,7 @@ import { createObfuscationQueue, createSerializationQueue, createEncryptionQueue
  * @param createSerializedEncryptedPacket - Function that serializes encrypted packets
  * @returns A CreateSender function that creates sender instances
  *
- * @example
+ * @example Creating a sender factory
  * ```typescript
  * import { createSerializedEncryptedPacketCreator } from '@hyperfrontend/network-protocol/lib/packet/creators/create-serialized-encrypted-packet-creator'
  * import { uint8ArrayToBase64 } from '@hyperfrontend/string-utils/browser'

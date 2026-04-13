@@ -87,29 +87,16 @@ flowchart TB
     StateChange --> Events
 ```
 
-## Module Dependencies
+## Module Layers
 
-```
-actions/              → (standalone, no deps)
-state/                → (standalone, no deps)
-reducer/              → actions, state, models
-store/                → reducer, models
-selectors/            → models
-state-change/         → models
-events/               → store, state-change, selectors, models
-async-operation/      → events, actions, models
-coordinated-async-op/ → async-operation, models
-call-stack/           → @hyperfrontend/data-utils
-lifecycle-aware-comp/ → call-stack, models
-models/               → actions (types only)
-```
+The library is organized into logical layers:
 
-Clean separation exists between:
-
-- **Core primitives**: Store, Actions, Reducer
-- **Derived computation**: Selectors
-- **Reactive system**: Events
-- **High-level abstractions**: AsyncOperation, LifecycleAwareComponent
+| Layer                       | Components                              |
+| --------------------------- | --------------------------------------- |
+| **Core Primitives**         | Store, Actions, Reducer                 |
+| **Derived Computation**     | Selectors, StateChange                  |
+| **Reactive System**         | Events                                  |
+| **High-level Abstractions** | AsyncOperation, LifecycleAwareComponent |
 
 ## Core Components
 
@@ -484,35 +471,4 @@ const event = {
   Cancelled: 'cancelled',
 } as const
 type Event = (typeof event)[keyof typeof event]
-```
-
-## File Structure
-
-```
-src/
-├── actions/
-│   ├── actions.ts          # Action creators
-│   └── actions.types.ts    # Action type constants
-├── async-operation/
-│   └── async-operation.ts  # AsyncOperation class
-├── call-stack/
-│   └── call-stack.ts       # CallStack utility
-├── coordinated-async-operation/
-│   └── coordinated-async-operation.ts
-├── events/
-│   └── events.ts           # Events class
-├── lifecycle-aware-component/
-│   └── lifecycle-aware-component.ts
-├── models/
-│   └── models.ts           # TypeScript interfaces
-├── reducer/
-│   └── reducer.ts          # rootReducer
-├── selectors/
-│   └── selectors.ts        # Derived state selectors
-├── state/
-│   └── state.ts            # createInitialState
-├── state-change/
-│   └── state-change.ts     # StateChange tracker
-└── store/
-    └── store.ts            # Store class
 ```

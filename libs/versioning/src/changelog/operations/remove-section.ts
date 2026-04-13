@@ -19,7 +19,7 @@ export interface RemoveSectionOptions {
  * @param options - Optional removal options
  * @returns A new changelog without the specified section
  *
- * @example
+ * @example Removing a deprecated section
  * ```typescript
  * const updated = removeSection(changelog, '1.0.0', 'deprecated')
  * // Version 1.0.0 no longer has a deprecated section
@@ -73,7 +73,7 @@ export function removeSection(changelog: Changelog, version: string, sectionType
  * @param options - Optional removal options
  * @returns A new changelog without the specified item
  *
- * @example
+ * @example Removing a specific item from a section
  * ```typescript
  * const updated = removeItem(changelog, '1.0.0', 'features', 'Add dark mode')
  * // The 'Add dark mode' item is removed from features in 1.0.0
@@ -147,7 +147,7 @@ export function removeItem(
  * @param changelog - The changelog to remove empty sections from
  * @returns A new changelog with empty sections removed
  *
- * @example
+ * @example Removing empty sections from all entries
  * ```typescript
  * const cleaned = removeEmptySections(changelog)
  * // Sections with no items are removed from all entries
@@ -180,7 +180,7 @@ export function removeEmptySections(changelog: Changelog): Changelog {
  * @param keepUnreleased - Whether to keep an empty unreleased entry (default: true)
  * @returns A new changelog with empty entries removed
  *
- * @example
+ * @example Removing empty entries
  * ```typescript
  * const cleaned = removeEmptyEntries(changelog)
  * // Entries with no content are removed (unreleased kept by default)

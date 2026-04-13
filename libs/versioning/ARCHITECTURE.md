@@ -96,14 +96,6 @@ graph TB
     commits --> changelog
     registry --> semver
     git --> workspace
-
-    style flow fill:#e1f5fe
-    style changelog fill:#fff3e0
-    style commits fill:#fff3e0
-    style semver fill:#fff3e0
-    style registry fill:#fff3e0
-    style git fill:#f3e5f5
-    style workspace fill:#f3e5f5
 ```
 
 ### Module Hierarchy
@@ -256,11 +248,6 @@ flowchart TB
 
     direct --> changelog["Project CHANGELOG"]
     indirect --> changelog
-
-    style direct fill:#c8e6c9
-    style indirect fill:#fff3e0
-    style excluded fill:#ffcdd2
-    style engine fill:#e3f2fd
 ```
 
 ---

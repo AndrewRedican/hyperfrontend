@@ -5,7 +5,7 @@ import { AsyncOperation } from '../async-operation/async-operation'
 /**
  * Coordinates multiple async operations, allowing them to be started, cancelled, or paused together.
  *
- * @example
+ * @example Coordinating multiple async operations
  * ```typescript
  * const coordinator = new CoordinatedAsyncProcess()
  *   .registerProcess(fetchUsers)

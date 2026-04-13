@@ -8,7 +8,7 @@ import { create } from './create'
  * @param messageType - The message type to filter for
  * @returns A higher-order function that wraps a handler
  *
- * @example
+ * @example Filtering by message type
  * ```typescript
  * const pingFilter = byType('ping')
  * const handler = pingFilter((msg, channel) => {

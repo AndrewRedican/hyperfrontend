@@ -165,7 +165,7 @@ Nexus implements a **three-way handshake protocol** for establishing secure conn
 
 ### Connection Handshake
 
-```
+```text
 Initiator                    Responder
     |                            |
     |--- REQUEST_CONNECTION ---->|
@@ -185,7 +185,7 @@ Initiator                    Responder
 
 ### Disconnection Flow
 
-```
+```text
 Initiator                    Responder
     |                            |
     |--- CLOSE_CONNECTION ------>|
@@ -199,7 +199,7 @@ Initiator                    Responder
 
 Either party can cancel before connection completes:
 
-```
+```text
 Initiator                    Responder
     |                            |
     |--- CANCEL_CONNECTION ----->|
@@ -471,4 +471,4 @@ This library is part of the [hyperfrontend](https://github.com/AndrewRedican/hyp
 
 ## License
 
-MIT
+[MIT](https://github.com/AndrewRedican/hyperfrontend/blob/main/LICENSE.md)

@@ -12,7 +12,7 @@ import { getElementAsync } from './get-element-async'
  * @returns A promise that resolves to an AudioContext once the user interacts with the element
  * @throws {Error} When the target element is not found
  *
- * @example
+ * @example Setting up AudioContext on user interaction
  * ```typescript
  * const playButton = document.getElementById('play-button')
  * const audioContext = await setupAudio(playButton)

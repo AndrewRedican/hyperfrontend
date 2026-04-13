@@ -131,7 +131,7 @@ export interface PropertyDiff {
  * @param target - The target/modified changelog
  * @returns Detailed diff of changes
  *
- * @example
+ * @example Comparing two changelogs
  * ```ts
  * const diff = diffChangelogs(mainChangelog, branchChangelog)
  * console.log(`Added: ${diff.added.length}, Removed: ${diff.removed.length}`)
@@ -206,7 +206,7 @@ export function diffChangelogs(source: Changelog, target: Changelog): ChangelogD
  * @param target - The target entry
  * @returns Detailed entry diff
  *
- * @example
+ * @example Computing diff between two entries
  * ```typescript
  * const diff = diffEntries(entryV1, entryV2)
  * // => { version: '1.0.0', changes: [{ path: ['date'], type: 'changed', ... }], sectionsChanged: true }
@@ -467,7 +467,7 @@ function areIssueRefsEqual(a: readonly IssueRef[], b: readonly IssueRef[]): bool
  * @param diff - The diff to summarize
  * @returns A string summary of the changes
  *
- * @example
+ * @example Creating human-readable diff summary
  * ```typescript
  * const diff = diffChangelogs(oldChangelog, newChangelog)
  * summarizeDiff(diff)

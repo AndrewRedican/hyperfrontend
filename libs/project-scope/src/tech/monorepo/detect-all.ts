@@ -27,7 +27,7 @@ export const monorepoDetectors: MonorepoDetector[] = [
  * @param packageJson - Optional pre-loaded package.json
  * @returns Array of detected monorepo tools, sorted by confidence
  *
- * @example
+ * @example Detecting monorepo tools
  * ```typescript
  * const detections = detectMonorepoTools('/path/to/project')
  * // => [

@@ -14,7 +14,7 @@ import { collectAllDependencies, parseVersionString } from '../shared-utils/dete
  * @param projectPath - Project directory path
  * @param packageJson - Optional pre-loaded package.json
  * @returns Detection result or null if not detected
- * @example
+ * @example Detecting NestJS framework
  * ```typescript
  * // Project with nest-cli.json and NestJS packages
  * const pkg = {

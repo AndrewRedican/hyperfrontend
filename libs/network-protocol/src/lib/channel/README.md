@@ -1,9 +1,5 @@
 # Channel
 
-**Navigation**: [↑ lib/](../README.md) · [← sender](../sender/README.md) · [→ receiver](../receiver/README.md) · [protocol](../protocol/README.md) · [routing](../routing/README.md)
-
----
-
 ## Purpose
 
 The Channel module provides a named, bidirectional communication pipe that combines a Sender and Receiver with coordinated lifecycle controls. Channels provide a high-level abstraction for managing message flow between two endpoints.
@@ -437,32 +433,6 @@ setInterval(() => {
 
 - **Depends on**: [`sender/`](../sender/README.md), [`receiver/`](../receiver/README.md), [`protocol/`](../protocol/README.md), [`packet/`](../packet/README.md)
 - **Used by**: [`routing/`](../routing/README.md) (for topic-based message routing)
-
----
-
-## Directory Structure
-
-```
-channel/
-├── README.md           ← You are here
-├── index.ts            ← Public exports
-├── model.ts            ← Interface definitions
-├── mocks.ts            ← Mock implementations for testing
-├── channel.integration.spec.ts  ← Integration tests
-├── creators/
-│   ├── index.ts
-│   ├── create-channel.ts
-│   ├── create-channel-store.ts
-│   └── mocks.ts
-├── utils/
-│   └── without-valid-error-message.ts
-└── validations/
-    ├── is-valid-label.ts
-    ├── is-valid-sender.ts
-    ├── is-valid-receiver.ts
-    ├── is-valid-channel.ts
-    └── get-first-invalid-protocol-property.ts
-```
 
 ---
 

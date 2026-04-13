@@ -179,7 +179,7 @@ function bufferToLines(content: Buffer | undefined): string[] {
 /**
  * Generate a diff for a single file change.
  *
- * @example
+ * @example Generating a diff for a file change
  * ```typescript
  * const change: FileChange = {
  *   path: 'src/app.ts',
@@ -256,7 +256,7 @@ export function generateDiff(change: FileChange, options: DiffOptions = {}): Fil
 /**
  * Format a FileDiff as a unified diff string.
  *
- * @example
+ * @example Formatting a unified diff
  * ```typescript
  * const formatted = formatUnifiedDiff(diff)
  * console.log(formatted)
@@ -317,7 +317,7 @@ export function formatUnifiedDiff(diff: FileDiff): string {
 /**
  * Generate diffs for all changes in a tree.
  *
- * @example
+ * @example Generating diffs for all changes
  * ```typescript
  * const tree = createTree('/workspace')
  * tree.write('new.txt', 'hello')

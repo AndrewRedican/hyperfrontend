@@ -102,7 +102,7 @@ function buildSummary(frontend: string[], backend: string[], testing: string[]):
  * @param options - Identification options
  * @returns Framework identification result
  *
- * @example
+ * @example Identifying all frameworks in project
  * ```typescript
  * import { identifyFrameworks } from '@hyperfrontend/project-scope'
  *
@@ -240,7 +240,7 @@ export function identifyFrameworks(projectPath: string, options?: IdentifyFramew
  *
  * Useful for testing or when the project files have changed.
  *
- * @example
+ * @example Clearing the framework cache
  * ```typescript
  * import { clearFrameworkIdentificationCache } from '@hyperfrontend/project-scope'
  *
@@ -260,7 +260,7 @@ export function clearFrameworkIdentificationCache(): void {
  * @param minConfidence - Minimum confidence threshold (default: 50)
  * @returns True if the framework is detected with sufficient confidence
  *
- * @example
+ * @example Checking for a specific framework
  * ```typescript
  * import { usesFramework } from '@hyperfrontend/project-scope'
  *

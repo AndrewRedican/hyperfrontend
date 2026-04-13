@@ -6,7 +6,7 @@ import { UTF8_DECODER } from '../shared-consts'
  * @param uint8Array - The Uint8Array to convert
  * @returns The decoded UTF-8 string
  *
- * @example
+ * @example Converting Uint8Array to string
  * ```typescript
  * const bytes = new Uint8Array([72, 101, 108, 108, 111])
  * const text = uint8ArrayToUtf8String(bytes)

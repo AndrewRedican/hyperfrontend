@@ -41,7 +41,7 @@ let cachedCaseSensitive: boolean | null = null
  *
  * @returns True if file system is case-sensitive
  *
- * @example
+ * @example Detecting case sensitivity
  * ```typescript
  * if (detectCaseSensitivity()) {
  *   // Linux: 'File.ts' and 'file.ts' are different files
@@ -94,7 +94,7 @@ export function detectCaseSensitivity(): boolean {
  *
  * @returns True if file system is case-sensitive
  *
- * @example
+ * @example Checking case sensitivity
  * ```typescript
  * const caseSensitive = isCaseSensitiveFs()
  * // => true on Linux, false on Windows/macOS
@@ -109,7 +109,7 @@ export function isCaseSensitiveFs(): boolean {
  *
  * @returns Platform information object (cached after first call)
  *
- * @example
+ * @example Getting platform information
  * ```typescript
  * const info = getPlatformInfo()
  * console.log(info.os)           // => 'linux'
@@ -169,7 +169,7 @@ export function getPlatformInfo(): PlatformInfo {
  *
  * @returns Platform information object
  *
- * @example
+ * @example Detecting current platform
  * ```typescript
  * const platform = detectPlatform()
  * if (platform.isWindows) {
@@ -186,7 +186,7 @@ export function detectPlatform(): PlatformInfo {
  *
  * @returns True if running on Windows
  *
- * @example
+ * @example Checking for Windows
  * ```typescript
  * if (isWindows()) {
  *   // Use Windows-specific paths or commands
@@ -202,7 +202,7 @@ export function isWindows(): boolean {
  *
  * @returns True if running on macOS
  *
- * @example
+ * @example Checking for macOS
  * ```typescript
  * if (isMac()) {
  *   // Use macOS-specific behavior
@@ -218,7 +218,7 @@ export function isMac(): boolean {
  *
  * @returns True if running on Linux
  *
- * @example
+ * @example Checking for Linux
  * ```typescript
  * if (isLinux()) {
  *   // Use Linux-specific behavior

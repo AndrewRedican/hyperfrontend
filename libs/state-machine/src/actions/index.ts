@@ -1,2 +1,2 @@
-export * from './actions'
-export * as types from './actions.types'
+export { start, cancel, pause, success, fail } from './actions'
+export { START, SUCCESS, FAIL, PAUSE, CANCEL } from './actions.types'

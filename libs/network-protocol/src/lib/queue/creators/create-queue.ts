@@ -14,7 +14,7 @@ import { createFifoList } from '@hyperfrontend/list-utils'
  * @returns A Queue instance with methods to manage message processing
  * @throws {Error} When processMessage is not a function or autoStart is not a boolean
  *
- * @example
+ * @example Creating a message processing queue
  * ```typescript
  * const queue = createQueue(async (message) => {
  *   await processMessage(message)

@@ -17,7 +17,7 @@ import { getById } from '../../core/registry/get-by-id'
  * - Terminates process
  * - Fires 'cancel' lifecycle event
  *
- * @example
+ * @example Cancellation flow during connection
  * Cancel flow (before connection completes):
  * Side A -> CANCEL_CONNECTION
  * Side B <- CANCEL (this handler)

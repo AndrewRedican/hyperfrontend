@@ -9,7 +9,7 @@ import { stringify } from '@hyperfrontend/immutable-api-utils/built-in-copy/json
  * @param encrypt - Function that encrypts a string with a password, returning encrypted bytes
  * @returns A DataEncrypter function
  *
- * @example
+ * @example Creating an encrypter with custom implementation
  * ```typescript
  * const encrypter = createDataEncrypter(async (message, password) => encryptString(message, password))
  * const encrypted = await encrypter({ userId: 123 }, 'secretPassword')

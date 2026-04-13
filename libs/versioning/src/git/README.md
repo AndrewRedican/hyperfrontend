@@ -356,28 +356,6 @@ All user input undergoes character-by-character validation before being used in 
 | Commit message | 10000      |
 | Tag pattern    | 256        |
 
-## Directory Structure
-
-```
-git/
-├── index.ts              # Public exports
-├── factory.ts            # GitClient factory
-├── models/               # Data structures
-│   ├── commit.ts         # GitCommit type & factories
-│   ├── tag.ts            # GitTag type & factories
-│   └── ref.ts            # GitRef type & factories
-└── operations/           # Git command wrappers
-    ├── log.ts            # Commit log queries
-    ├── diff.ts           # File change detection
-    ├── query-tags.ts     # Tag listing & queries
-    ├── manage-tags.ts    # Tag create/delete/push
-    ├── commit.ts         # Commit creation
-    ├── stage.ts          # File staging
-    ├── status.ts         # Repository status
-    ├── operation-state.ts # Git operation state
-    └── head-info.ts      # HEAD information
-```
-
 ## See Also
 
 - [workspace/](../workspace/README.md) — Uses git for version coordination

@@ -9,7 +9,7 @@ import { entries } from '@hyperfrontend/immutable-api-utils/built-in-copy/object
  * @param vars - Variable values
  * @returns Interpolated string
  *
- * @example
+ * @example Interpolating version placeholders
  * ```typescript
  * import { interpolate } from '@hyperfrontend/versioning'
  *

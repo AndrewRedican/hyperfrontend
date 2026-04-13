@@ -32,7 +32,7 @@ export const dynamicRouting: RoutingOptions = {
  *
  * @returns Static routing configuration
  *
- * @example
+ * @example Using the mock router
  * ```typescript
  * const options = router([], [])
  * // => { isDynamic: false, subscriptions: WeakMap }

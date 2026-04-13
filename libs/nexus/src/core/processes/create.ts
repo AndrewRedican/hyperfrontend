@@ -7,7 +7,7 @@ import { uuidV4 } from '@hyperfrontend/random-generator-utils'
  * @param processes - Map storing process to channel mappings
  * @returns Function that takes a channel and returns new process ID
  *
- * @example
+ * @example Registering a channel process
  * ```typescript
  * const create = createProcess(processMap)
  * const processId = create(myChannel)

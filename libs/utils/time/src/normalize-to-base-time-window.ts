@@ -10,7 +10,7 @@ import { globalIsNaN } from '@hyperfrontend/immutable-api-utils/built-in-copy/nu
  * @param baseTimeWindow - The size of the time window in minutes for normalization
  * @returns A new Date object normalized to the start of the time window
  *
- * @example
+ * @example Normalizing to 15-minute buckets
  * ```typescript
  * // Round timestamps to 15-minute intervals for analytics bucketing
  * const eventTime = new Date('2024-03-15T14:23:45Z')

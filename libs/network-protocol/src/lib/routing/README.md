@@ -1,9 +1,5 @@
 # Routing
 
-**Navigation**: [↑ lib/](../README.md) · [topic](../topic/README.md) · [channel](../channel/README.md)
-
----
-
 ## Purpose
 
 The Routing module provides topic-based message routing across channels, enabling publish-subscribe patterns where channels subscribe to topics and receive messages routed to those topics.
@@ -208,21 +204,6 @@ const routingOptions = router(
 
 - **Depends on**: [`channel/`](../channel/README.md), [`topic/`](../topic/README.md), [`packet/`](../packet/README.md)
 - **Used by**: Application layer (pub-sub patterns)
-
----
-
-## Directory Structure
-
-```
-routing/
-├── README.md           ← You are here
-├── index.ts            ← Public exports
-├── model.ts            ← Routing interface definitions
-├── creators/
-│   └── ...
-└── validations/
-    └── ...
-```
 
 ---
 

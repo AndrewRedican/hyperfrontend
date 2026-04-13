@@ -7,7 +7,7 @@ import { getType } from '@hyperfrontend/data-utils'
  * @param data - The value to validate as serialized data
  * @returns True if the value is a non-empty string, false otherwise
  *
- * @example
+ * @example Validating serialized data
  * ```typescript
  * isValidSerializedData('{"key":"value"}')
  * // => true

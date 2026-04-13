@@ -17,7 +17,7 @@ import { createQueue } from './create-queue'
  * @param onFail - Callback invoked when deobfuscation fails
  * @returns A queue instance for processing obfuscated packets
  *
- * @example
+ * @example Creating a deobfuscation queue
  * ```typescript
  * const queue = createDeobfuscationQueue(
  *   'receiver',

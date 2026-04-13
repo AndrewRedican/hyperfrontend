@@ -86,7 +86,7 @@ export interface CreateGitCommitOptions {
  * @param options - Commit creation options
  * @returns A new GitCommit object
  *
- * @example
+ * @example Create a git commit model
  * const commit = createGitCommit({
  *   hash: 'abc123...',
  *   authorName: 'John Doe',
@@ -122,7 +122,7 @@ export function createGitCommit(options: CreateGitCommitOptions): GitCommit {
  * @param hash - Full commit hash
  * @returns Short hash (7 characters)
  *
- * @example
+ * @example Get short hash from full commit hash
  * ```typescript
  * getShortHash('abc123def456789') // => 'abc123d'
  * ```
@@ -138,7 +138,7 @@ export function getShortHash(hash: string): string {
  * @param b - Second commit
  * @returns True if commits have the same hash
  *
- * @example
+ * @example Compare two commits by hash
  * ```typescript
  * isSameCommit(commitA, commitB) // => true if commitA.hash === commitB.hash
  * ```
@@ -153,7 +153,7 @@ export function isSameCommit(a: GitCommit, b: GitCommit): boolean {
  * @param commit - Commit to check
  * @returns True if commit has more than one parent
  *
- * @example
+ * @example Check if commit is a merge commit
  * ```typescript
  * if (isMergeCommit(commit)) {
  *   console.log('Commit has parents:', commit.parents)
@@ -170,7 +170,7 @@ export function isMergeCommit(commit: GitCommit): boolean {
  * @param commit - Commit to check
  * @returns True if commit has no parents
  *
- * @example
+ * @example Check if commit is the initial commit
  * ```typescript
  * if (isRootCommit(commit)) {
  *   console.log('This is the initial commit')
@@ -188,7 +188,7 @@ export function isRootCommit(commit: GitCommit): boolean {
  * @param subject - Commit subject line
  * @returns Scope string or undefined if no scope found
  *
- * @example
+ * @example Extract scope from conventional commit
  * extractScope('feat(lib-versioning): add git support') // 'lib-versioning'
  * extractScope('fix: resolve issue') // undefined
  */
@@ -230,7 +230,7 @@ export function extractScope(subject: string): string | undefined {
  * @param subject - Commit subject line
  * @returns Type string or undefined if no valid type found
  *
- * @example
+ * @example Extract type from conventional commit
  * extractType('feat(lib-versioning): add git support') // 'feat'
  * extractType('fix: resolve issue') // 'fix'
  * extractType('random message') // undefined

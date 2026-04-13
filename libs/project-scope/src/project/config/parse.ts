@@ -267,7 +267,7 @@ function parseDotenv(content: string): Record<string, unknown> {
  * @param format - Whether to strip comments (jsonc) or parse strictly (json)
  * @returns Configuration object with parsed data and extends references
  *
- * @example
+ * @example Parsing JSON configuration
  * ```typescript
  * import { parseJsonConfig } from '@hyperfrontend/project-scope'
  *
@@ -316,7 +316,7 @@ export function parseJsonConfig(filePath: string, content: string, type?: Config
  * @param type - Category of configuration (e.g., github-actions, docker-compose)
  * @returns Configuration object with parsed YAML data
  *
- * @example
+ * @example Parsing YAML configuration
  * ```typescript
  * import { parseYamlConfig } from '@hyperfrontend/project-scope'
  *
@@ -342,7 +342,7 @@ export function parseYamlConfig(filePath: string, content: string, type?: Config
  * @param type - Optional config type (auto-detected if not provided)
  * @returns Parsed configuration
  *
- * @example
+ * @example Parsing a configuration file
  * ```typescript
  * import { parseConfig } from '@hyperfrontend/project-scope'
  *
@@ -407,7 +407,7 @@ export function parseConfig(filePath: string, type?: ConfigType): ParsedConfig {
  * @param configPath - Path to config file
  * @returns Parsed config or null if file doesn't exist
  *
- * @example
+ * @example Reading config if it exists
  * ```typescript
  * import { readConfigIfExists } from '@hyperfrontend/project-scope'
  *

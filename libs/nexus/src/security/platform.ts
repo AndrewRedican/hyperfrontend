@@ -25,7 +25,7 @@ export type Platform = 'browser' | 'node'
  *
  * @returns `'browser'` if running in a browser, `'node'` if running in Node.js
  *
- * @example
+ * @example Detecting runtime platform
  * ```typescript
  * const platform = detectPlatform()
  *

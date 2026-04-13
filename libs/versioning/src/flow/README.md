@@ -379,35 +379,6 @@ for (const step of result.steps) {
 }
 ```
 
-## Directory Structure
-
-```
-flow/
-├── index.ts              # Public exports
-├── factory.ts            # Flow factory functions
-├── flow.spec.ts          # Flow integration tests
-├── models/               # Data structures
-│   ├── flow.ts           # VersionFlow type & factory
-│   ├── step.ts           # FlowStep type & factory
-│   └── types.ts          # FlowConfig, FlowContext, FlowState
-├── executor/             # Flow execution
-│   └── execute.ts        # executeFlow, dryRun, validateFlow
-├── presets/              # Built-in flow presets
-│   ├── conventional.ts   # Standard conventional commits flow
-│   ├── independent.ts    # Independent versioning flow
-│   └── synced.ts         # Synchronized versioning flow
-├── steps/                # Step implementations
-│   ├── fetch-registry.ts # Query package registry
-│   ├── analyze-commits.ts # Parse commit history
-│   ├── calculate-bump.ts  # Determine version bump
-│   ├── generate-changelog.ts # Create changelog entry
-│   ├── update-packages.ts   # Update package.json
-│   ├── create-commit.ts     # Create git commit
-│   └── create-tag.ts        # Create git tag
-└── utils/                # Flow utilities
-    └── interpolate.ts    # Template string interpolation
-```
-
 ## See Also
 
 - [commits/](../commits/README.md) — Commit parsing for analyze-commits step

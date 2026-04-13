@@ -96,7 +96,7 @@ const traversal: Traversal = (target, condition, callback, options, state) => {
  * @param condition - Predicate function to determine whether to traverse a data point
  * @returns A traversal function configured with the condition
  *
- * @example
+ * @example Creating custom traversal
  * ```typescript
  * const customTraverse = createTraversal((config, key, value) => value !== null)
  * customTraverse(data, callback, options)
@@ -119,7 +119,7 @@ const traverseBetweenDepthRange = createTraversal(condition)
  * @param state - Optional state object to maintain across traversal callbacks
  * @returns The state object after traversal completes
  *
- * @example
+ * @example Traversing data structure
  * ```typescript
  * traverse({ a: { b: 1 } }, (key, value, path) => {
  *   console.log(path.join('.'), '=', value)

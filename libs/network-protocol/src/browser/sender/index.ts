@@ -2,5 +2,4 @@ import { createSenderFactory } from '../../lib/sender/creators/create-sender-fac
 import { createSerializedEncryptedPacket } from '../packet'
 
 export const createSender = createSenderFactory(createSerializedEncryptedPacket)
-
-export type * from '../../lib/sender/model'
+export type { SendPacketFn, SendFn, OutboundQueue, OutboundQueues, Sender, CreateSender, SenderFactory } from '../../lib/sender/model'

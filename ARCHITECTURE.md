@@ -1,11 +1,5 @@
 # Hyperfrontend Architecture
 
-**How the pieces fit together**
-
----
-
-## Overview
-
 Hyperfrontend is a layered architecture designed for runtime micro-frontend integration. At its core, it enables independently deployed frontend applications ("features") to communicate through secure, contract-validated messaging—regardless of what framework they use.
 
 ```mermaid
@@ -171,26 +165,24 @@ const contract = {
 
 Messages pass through staged queues for transformation:
 
+**Outbound Pipeline**
+
+```mermaid
+flowchart LR
+    A1["Plaintext Message"] --> B1["Encryption Queue"]
+    B1 --> C1["Serialization Queue"]
+    C1 --> D1["Obfuscation Queue"]
+    D1 --> E1["Wire Format"]
 ```
-┌─────────────────────────────────────────────────────────────────────────────────┐
-│                              OUTBOUND PIPELINE                                   │
-├─────────────────────────────────────────────────────────────────────────────────┤
-│                                                                                  │
-│   Plaintext    ┌─────────────┐    ┌─────────────┐    ┌─────────────┐   Wire    │
-│   Message  ──▶ │ Encryption  │ ──▶│ Serialization│ ──▶│ Obfuscation │ ──▶ Format │
-│                │    Queue    │    │    Queue    │    │    Queue    │            │
-│                └─────────────┘    └─────────────┘    └─────────────┘            │
-│                                                                                  │
-├─────────────────────────────────────────────────────────────────────────────────┤
-│                               INBOUND PIPELINE                                   │
-├─────────────────────────────────────────────────────────────────────────────────┤
-│                                                                                  │
-│    Wire       ┌─────────────┐    ┌─────────────┐    ┌─────────────┐  Plaintext │
-│   Format  ──▶ │Deobfuscation│ ──▶│Deserialization│ ──▶│ Decryption  │ ──▶ Message │
-│               │    Queue    │    │    Queue    │    │    Queue    │            │
-│               └─────────────┘    └─────────────┘    └─────────────┘            │
-│                                                                                  │
-└─────────────────────────────────────────────────────────────────────────────────┘
+
+**Inbound Pipeline**
+
+```mermaid
+flowchart LR
+    A2["Wire Format"] --> B2["Deobfuscation Queue"]
+    B2 --> C2["Deserialization Queue"]
+    C2 --> D2["Decryption Queue"]
+    D2 --> E2["Plaintext Message"]
 ```
 
 ### Security Features
@@ -240,44 +232,29 @@ A **shell** is a self-contained package that knows how to load and communicate w
 
 ### What the Shell Contains
 
+```mermaid
+flowchart LR
+    subgraph shell["FEATURE SHELL"]
+        direction LR
+        subgraph connection["Connection Setup"]
+            conn1["Broker config"]
+            conn2["Channel init"]
+            conn3["Contracts"]
+        end
+        subgraph visual["Visual Coordination"]
+            vis1["Styling"]
+            vis2["Sizing"]
+            vis3["Loading"]
+        end
+        subgraph api["Fluent API"]
+            api1[".mount()"]
+            api2[".send()"]
+            api3[".on()"]
+        end
+    end
 ```
-┌────────────────────────────────────────────────────────────┐
-│                     FEATURE SHELL                           │
-├────────────────────────────────────────────────────────────┤
-│                                                             │
-│   ┌─────────────────────────────────────────────────────┐  │
-│   │  Connection Setup                                    │  │
-│   │  • Broker configuration                             │  │
-│   │  • Channel initialization                            │  │
-│   │  • Contract definition                               │  │
-│   └─────────────────────────────────────────────────────┘  │
-│                                                             │
-│   ┌─────────────────────────────────────────────────────┐  │
-│   │  Visual Coordination                                 │  │
-│   │  • iframe/container styling                         │  │
-│   │  • Responsive sizing                                 │  │
-│   │  • Loading states                                    │  │
-│   └─────────────────────────────────────────────────────┘  │
-│                                                             │
-│   ┌─────────────────────────────────────────────────────┐  │
-│   │  Framework Adapters (optional)                       │  │
-│   │  • React component wrapper                          │  │
-│   │  • Vue component wrapper                             │  │
-│   │  • Angular service                                   │  │
-│   └─────────────────────────────────────────────────────┘  │
-│                                                             │
-│   ┌─────────────────────────────────────────────────────┐  │
-│   │  Fluent API                                          │  │
-│   │  • .mount(), .unmount()                             │  │
-│   │  • .send(), .on()                                    │  │
-│   │  • .configure()                                      │  │
-│   └─────────────────────────────────────────────────────┘  │
-│                                                             │
-├────────────────────────────────────────────────────────────┤
-│  ⚠️  Does NOT contain the feature app code itself          │
-│      Feature is loaded at runtime from its deployment URL   │
-└────────────────────────────────────────────────────────────┘
-```
+
+> ⚠️ The shell does **not** contain the feature app code. Features load at runtime from their deployment URL.
 
 ### Distribution Options
 
@@ -311,45 +288,19 @@ feature.mount()
 
 Here's how the components work together when a host application loads a feature:
 
-```
-┌──────────────────────────────────────────────────────────────────────────────────┐
-│                              RUNTIME SEQUENCE                                     │
-├──────────────────────────────────────────────────────────────────────────────────┤
-│                                                                                   │
-│  1. HOST INITIALIZATION                                                          │
-│     ┌──────────────────────────────────────────────────────────────────────────┐ │
-│     │  const broker = createBroker({ name: 'host', contracts, policies })      │ │
-│     └──────────────────────────────────────────────────────────────────────────┘ │
-│                                                                                   │
-│  2. SHELL MOUNT                                                                  │
-│     ┌──────────────────────────────────────────────────────────────────────────┐ │
-│     │  <FeatureShell />  →  Creates iframe  →  Loads feature URL               │ │
-│     └──────────────────────────────────────────────────────────────────────────┘ │
-│                                                                                   │
-│  3. CHANNEL CREATION                                                             │
-│     ┌──────────────────────────────────────────────────────────────────────────┐ │
-│     │  const channel = broker.addChannel('feature-a', iframe.contentWindow)    │ │
-│     └──────────────────────────────────────────────────────────────────────────┘ │
-│                                                                                   │
-│  4. CONNECTION HANDSHAKE                                                         │
-│     ┌──────────────────────────────────────────────────────────────────────────┐ │
-│     │  channel.connect()  →  SYN  →  SYN-ACK  →  ACK  →  ACTIVE                │ │
-│     └──────────────────────────────────────────────────────────────────────────┘ │
-│                                                                                   │
-│  5. MESSAGE EXCHANGE                                                             │
-│     ┌──────────────────────────────────────────────────────────────────────────┐ │
-│     │  channel.send('CONFIG', { theme: 'dark' })                               │ │
-│     │  channel.onMessage((msg) => { /* handle feature messages */ })           │ │
-│     └──────────────────────────────────────────────────────────────────────────┘ │
-│                                                                                   │
-│  6. LIFECYCLE EVENTS                                                             │
-│     ┌──────────────────────────────────────────────────────────────────────────┐ │
-│     │  channel.on('open', ...)   // Connection established                     │ │
-│     │  channel.on('close', ...)  // Graceful disconnect                        │ │
-│     │  channel.on('deny', ...)   // Connection refused                         │ │
-│     └──────────────────────────────────────────────────────────────────────────┘ │
-│                                                                                   │
-└──────────────────────────────────────────────────────────────────────────────────┘
+```mermaid
+flowchart TB
+    subgraph runtime["RUNTIME SEQUENCE"]
+        direction TB
+        step1["1. HOST INITIALIZATION<br/><code>const broker = createBroker({ name: 'host', contracts, policies })</code>"]
+        step2["2. SHELL MOUNT<br/><code>&lt;FeatureShell /&gt; → Creates iframe → Loads feature URL</code>"]
+        step3["3. CHANNEL CREATION<br/><code>const channel = broker.addChannel('feature-a', iframe.contentWindow)</code>"]
+        step4["4. CONNECTION HANDSHAKE<br/><code>channel.connect() → SYN → SYN-ACK → ACK → ACTIVE</code>"]
+        step5["5. MESSAGE EXCHANGE<br/><code>channel.send('CONFIG', { theme: 'dark' })</code><br/><code>channel.onMessage((msg) => { ... })</code>"]
+        step6["6. LIFECYCLE EVENTS<br/><code>channel.on('open', ...)</code> Connection established<br/><code>channel.on('close', ...)</code> Graceful disconnect<br/><code>channel.on('deny', ...)</code> Connection refused"]
+
+        step1 --> step2 --> step3 --> step4 --> step5 --> step6
+    end
 ```
 
 ---
@@ -358,71 +309,21 @@ Here's how the components work together when a host application loads a feature:
 
 When security is enabled, the communication flow adds encryption layers:
 
-```
-┌──────────────────────────────────────────────────────────────────────────────────┐
-│                          SECURE MESSAGE FLOW                                      │
-├──────────────────────────────────────────────────────────────────────────────────┤
-│                                                                                   │
-│  HOST                                                 FEATURE                     │
-│    │                                                    │                         │
-│    │  channel.send('DATA', payload)                     │                         │
-│    │         │                                          │                         │
-│    │         ▼                                          │                         │
-│    │  ┌─────────────────────┐                           │                         │
-│    │  │ Security Transport  │                           │                         │
-│    │  │ • Encrypt payload   │                           │                         │
-│    │  │ • Obfuscate packet  │                           │                         │
-│    │  └─────────────────────┘                           │                         │
-│    │         │                                          │                         │
-│    │         │   postMessage (obfuscated ciphertext)    │                         │
-│    │         └─────────────────────────────────────────▶│                         │
-│    │                                                    │                         │
-│    │                                          ┌─────────────────────┐             │
-│    │                                          │ Security Transport  │             │
-│    │                                          │ • Deobfuscate packet│             │
-│    │                                          │ • Decrypt payload   │             │
-│    │                                          └─────────────────────┘             │
-│    │                                                    │                         │
-│    │                                          onMessage('DATA', payload)          │
-│    │                                                    │                         │
-│                                                                                   │
-└──────────────────────────────────────────────────────────────────────────────────┘
-```
+```mermaid
+sequenceDiagram
+    box SECURE MESSAGE FLOW
+    participant Host as HOST
+    participant HostSec as Security Transport<br/>(Host)
+    participant FeatureSec as Security Transport<br/>(Feature)
+    participant Feature as FEATURE
+    end
 
----
-
-## Project Structure
-
-```
-hyperfrontend/
-├── plugins/
-│   └── features/              # Nx plugin for shell generation
-│       └── src/generators/
-│           ├── init/          # Transform app → feature
-│           └── add/           # Consume feature in host
-│
-├── libs/
-│   ├── nexus/                 # Core messaging (broker, channel, contracts)
-│   ├── network-protocol/      # Security layer (encryption, obfuscation)
-│   ├── cryptography/          # Crypto primitives (AES-GCM, PBKDF2)
-│   ├── state-machine/         # State management patterns
-│   ├── logging/               # Structured logging
-│   ├── web-worker/            # Web Worker utilities
-│   └── utils/                 # Utility libraries
-│       ├── data/              # Data manipulation
-│       ├── string/            # String utilities
-│       ├── list/              # Array utilities
-│       ├── time/              # Date/time utilities
-│       ├── function/          # Function composition
-│       ├── random-generator/  # Random value generation
-│       └── immutable-api/     # Immutable APIs
-│
-├── apps/
-│   ├── frontend/              # Demo frontends (React, Vue, Angular, Svelte, JS)
-│   ├── backend/               # Demo backends (Express, Nest, HTTP)
-│   └── demos/                 # Feature demonstrations
-│
-└── docs/                      # (Deprecated) Legacy Hugo site - see apps/docs-site/
+    Host->>Host: channel.send('DATA', payload)
+    Host->>HostSec: Send payload
+    Note over HostSec: Encrypt payload<br/>Obfuscate packet
+    HostSec->>FeatureSec: postMessage (obfuscated ciphertext)
+    Note over FeatureSec: Deobfuscate packet<br/>Decrypt payload
+    FeatureSec->>Feature: onMessage('DATA', payload)
 ```
 
 ---
@@ -438,7 +339,7 @@ All security-related packages work identically in browser and Node.js environmen
 
 Entry points follow a consistent pattern:
 
-```
+```text
 @hyperfrontend/cryptography
 ├── /browser     # Web Crypto API implementation
 ├── /node        # Node crypto implementation

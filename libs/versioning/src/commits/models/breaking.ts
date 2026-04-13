@@ -20,7 +20,7 @@ export interface BreakingChange {
  * @param description - Optional description of the breaking change
  * @returns A BreakingChange object with source 'subject'
  *
- * @example
+ * @example Creating a breaking change from subject
  * ```typescript
  * createBreakingFromSubject('remove deprecated API')
  * // => { isBreaking: true, description: 'remove deprecated API', source: 'subject' }
@@ -40,7 +40,7 @@ export function createBreakingFromSubject(description?: string): BreakingChange 
  * @param description - The description of the breaking change
  * @returns A BreakingChange object with source 'footer'
  *
- * @example
+ * @example Creating a breaking change from footer
  * ```typescript
  * createBreakingFromFooter('The config format has changed')
  * // => { isBreaking: true, description: 'The config format has changed', source: 'footer' }
@@ -59,7 +59,7 @@ export function createBreakingFromFooter(description: string): BreakingChange {
  *
  * @returns A BreakingChange object indicating no breaking change
  *
- * @example
+ * @example Creating a non-breaking change
  * ```typescript
  * createNonBreaking()
  * // => { isBreaking: false, source: 'none' }
@@ -78,7 +78,7 @@ export function createNonBreaking(): BreakingChange {
  * @param key - The footer key to check
  * @returns True if the key indicates a breaking change
  *
- * @example
+ * @example Checking if a footer key indicates breaking change
  * ```typescript
  * isBreakingFooterKey('BREAKING CHANGE')
  * // => true

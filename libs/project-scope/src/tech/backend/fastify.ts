@@ -12,7 +12,7 @@ import { collectAllDependencies, parseVersionString } from '../shared-utils/dete
  * @param projectPath - Project directory path
  * @param packageJson - Optional pre-loaded package.json
  * @returns Detection result or null if not detected
- * @example
+ * @example Detecting Fastify framework
  * ```typescript
  * const pkg = {
  *   dependencies: { fastify: '^4.24.0', '@fastify/cors': '^8.4.0' },

@@ -10,7 +10,7 @@ import { encryptionConfig } from '../encryption-config'
  * @param subtle - The SubtleCrypto interface for cryptographic operations
  * @returns A function that decrypts encrypted messages with passwords
  *
- * @example
+ * @example Decrypting encrypted data
  * ```typescript
  * const decrypt = createDecrypt(arrayBufferToUtf8String, generateKey, crypto.subtle)
  * const plaintext = await decrypt(encryptedData, 'user-password')

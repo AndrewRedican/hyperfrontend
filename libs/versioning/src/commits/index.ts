@@ -1,3 +1,59 @@
-export * from './classify'
-export * from './models'
-export * from './parse'
+export type {
+  ClassificationContext,
+  ClassificationResult,
+  ClassificationSummary,
+  ClassifiedCommit,
+  CommitSource,
+  CommitWithRaw,
+  DeriveProjectScopesOptions,
+  InfrastructureConfig,
+  InfrastructureMatchContext,
+  InfrastructureMatcher,
+} from './classify'
+export {
+  allOf,
+  anyOf,
+  buildInfrastructureMatcher,
+  CI_SCOPE_MATCHER,
+  classifyCommit,
+  classifyCommits,
+  createClassificationContext,
+  createClassifiedCommit,
+  createEmptyClassificationSummary,
+  createMatchContext,
+  DEFAULT_EXCLUDE_SCOPES,
+  DEFAULT_INFRA_SCOPE_MATCHER,
+  DEFAULT_PROJECT_PREFIXES,
+  deriveProjectScopes,
+  evaluateInfrastructure,
+  extractConventionalCommits,
+  filterIncluded,
+  messageMatcher,
+  not,
+  scopeIsExcluded,
+  scopeMatcher,
+  scopeMatchesProject,
+  scopePrefixMatcher,
+  scopeRegexMatcher,
+  toChangelogCommit,
+  TOOL_PREFIX_MATCHER,
+  TOOLING_SCOPE_MATCHER,
+} from './classify'
+export type { BreakingChange, CommitFooter, CommitType, ConventionalCommit } from './models'
+export {
+  COMMIT_TYPES,
+  createBreakingFromFooter,
+  createBreakingFromSubject,
+  createCommitFooter,
+  createConventionalCommit,
+  createNonBreaking,
+  getSemverBump,
+  isBreakingFooterKey,
+  isReleaseType,
+  isStandardType,
+  MINOR_TYPES,
+  PATCH_TYPES,
+  RELEASE_TYPES,
+} from './models'
+export type { ParsedBody, ParsedFooters, ParsedHeader } from './parse'
+export { isConventionalCommit, parseBody, parseConventionalCommit, parseFooters, parseHeader } from './parse'

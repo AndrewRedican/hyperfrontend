@@ -74,7 +74,7 @@ export interface VersionInfo {
  * @param options.gitHead - Git commit hash at publish time
  * @returns A new VersionInfo object
  *
- * @example
+ * @example Creating version info from registry data
  * ```typescript
  * const release = createVersionInfo({
  *   version: '1.2.3',

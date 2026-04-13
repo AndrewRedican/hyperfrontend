@@ -296,12 +296,23 @@ export function removeBadges(content: string): string {
 }
 
 /**
+ * Context for transforming relative links in submodule content
+ */
+export interface TransformLinksContext {
+  /** The library slug (e.g., 'network-protocol') */
+  librarySlug?: string
+  /** The current submodule path (e.g., 'browser') */
+  submodulePath?: string
+}
+
+/**
  * Transform links from GitHub URLs to docs site URLs
  *
  * @param content - The markdown content with GitHub links
+ * @param context - Optional context for resolving relative links in submodules
  * @returns The content with transformed links
  */
-export function transformLinks(content: string): string {
+export function transformLinks(content: string, context?: TransformLinksContext): string {
   let transformed = content
 
   transformed = transformed.replace(
@@ -332,6 +343,17 @@ export function transformLinks(content: string): string {
   transformed = transformed.replace(/\[([^\]]+)\]\(\.\/ARCHITECTURE\.md\)/g, '[$1](/architecture)')
 
   transformed = transformed.replace(/\[([^\]]+)\]\(\.\.\/\.\.\/libs\/([^/]+)\/README\.md\)/g, '[$1](/docs/libraries/$2)')
+
+  if (context?.librarySlug) {
+    transformed = transformed.replace(/\[([^\]]+)\]\(\.\.\/([^/]+)\/README\.md\)/g, `[$1](/docs/libraries/${context.librarySlug}/$2)`)
+
+    transformed = transformed.replace(/\[([^\]]+)\]\(\.\.\/\.\.\/README\.md\)/g, `[$1](/docs/libraries/${context.librarySlug})`)
+
+    transformed = transformed.replace(
+      /\[([^\]]+)\]\(\.\.\/\.\.\/ARCHITECTURE\.md\)/g,
+      `[$1](/docs/libraries/${context.librarySlug}/architecture)`
+    )
+  }
 
   return transformed
 }

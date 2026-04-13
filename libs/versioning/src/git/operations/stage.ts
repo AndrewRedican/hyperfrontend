@@ -34,7 +34,7 @@ export interface StageOptions extends GitCommitOptions {
  * @param options - Configuration for the staging operation
  * @returns True if staging succeeded
  *
- * @example
+ * @example Stage files for commit
  * stage(['package.json', 'CHANGELOG.md'])
  * stage(['.'], { all: true })
  */
@@ -76,7 +76,7 @@ export function stage(files: readonly string[], options: StageOptions = {}): boo
  * @param options - Configuration for the unstage operation
  * @returns True if unstaging succeeded
  *
- * @example
+ * @example Unstage files from the index
  * unstage(['package.json'])
  */
 export function unstage(files: readonly string[], options: GitCommitOptions = {}): boolean {
@@ -106,7 +106,7 @@ export function unstage(files: readonly string[], options: GitCommitOptions = {}
  * @param options - Configuration for the staging operation
  * @returns True if all changes were successfully added to the index
  *
- * @example
+ * @example Stage all tracked and untracked changes
  * stageAll() // stages all tracked and untracked changes
  */
 export function stageAll(options: GitCommitOptions = {}): boolean {
@@ -119,7 +119,7 @@ export function stageAll(options: GitCommitOptions = {}): boolean {
  * @param options - Configuration for the operation
  * @returns True if there are staged changes ready to commit
  *
- * @example
+ * @example Check for staged changes before committing
  * if (hasStagedChanges()) { createCommit('...') }
  */
 export function hasStagedChanges(options: GitCommitOptions = {}): boolean {
@@ -144,7 +144,7 @@ export function hasStagedChanges(options: GitCommitOptions = {}): boolean {
  * @param options - Configuration for the operation
  * @returns True if there are unstaged changes in the working tree
  *
- * @example
+ * @example Check for unstaged changes before staging
  * if (hasUnstagedChanges()) { stage(['.']) }
  */
 export function hasUnstagedChanges(options: GitCommitOptions = {}): boolean {
@@ -174,14 +174,14 @@ export function hasUnstagedChanges(options: GitCommitOptions = {}): boolean {
  * @param options - Configuration including optional file list
  * @returns True if discard succeeded
  *
- * @example
+ * @example Discard changes in tracked files
  * // Discard all changes
  * discardChanges()
  *
  * // Discard specific files
  * discardChanges({ files: ['package.json', 'CHANGELOG.md'] })
  *
- * @example
+ * @example Typical rollback pattern
  * // Typical rollback pattern
  * if (hasUnstagedChanges()) {
  *   discardChanges()
@@ -226,7 +226,7 @@ export function discardChanges(options: DiscardChangesOptions = {}): boolean {
  * @param options - Configuration for the operation
  * @returns True if both operations succeeded
  *
- * @example
+ * @example Reset working directory to match HEAD
  * ```typescript
  * // Reset working directory to match HEAD
  * if (discardAllChanges()) {

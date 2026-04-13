@@ -11,7 +11,7 @@ import { queueMessage } from '../state/queue-message'
  * @param channel - Channel internals with state and dependencies
  * @param message - Message to queue
  *
- * @example
+ * @example Queueing a message
  * ```typescript
  * queue(channel, { type: 'GREETING', data: 'Hello' })
  * ```

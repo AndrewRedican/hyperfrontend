@@ -7,7 +7,7 @@ import { freeze } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
  * @param contracts - The contracts to merge
  * @returns A single merged contract containing all accepted and provided actions
  *
- * @example
+ * @example Merging channel contracts
  * ```typescript
  * const contract1 = { accepted: [{ type: 'a' }], provided: [{ type: 'b' }] }
  * const contract2 = { accepted: [{ type: 'c' }], provided: [{ type: 'd' }] }

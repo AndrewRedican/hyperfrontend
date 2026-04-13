@@ -81,7 +81,7 @@ export const DEFAULT_BATCH_UPDATE_OPTIONS: Required<BatchUpdateOptions> = {
  * @param options - Update options
  * @returns Batch update result
  *
- * @example
+ * @example Apply planned bumps to workspace using VFS Tree
  * ```typescript
  * import { createTree, commitChanges } from '@hyperfrontend/project-scope'
  * import { applyBumps, calculateCascadeBumps } from '@hyperfrontend/versioning'
@@ -186,7 +186,7 @@ function extractVersionPrefix(versionRange: string): string {
  * @param newVersion - New version string
  * @throws {Error} If the file doesn't exist
  *
- * @example
+ * @example Update a package.json version using VFS Tree
  * ```typescript
  * import { updatePackageVersionInTree } from '@hyperfrontend/versioning'
  *
@@ -216,7 +216,7 @@ export function updatePackageVersionInTree(tree: Tree, packageJsonPath: string, 
  * @param packageJsonPath - Relative path to package.json
  * @param versionUpdates - Map of package name to new version
  *
- * @example
+ * @example Update dependency version references using VFS Tree
  * ```typescript
  * import { updateDependencyReferencesInTree } from '@hyperfrontend/versioning'
  *
@@ -292,7 +292,7 @@ export function updateDependencyReferencesInTree(tree: Tree, packageJsonPath: st
  * @param result - Result object from batch update operation
  * @returns Human-readable summary
  *
- * @example
+ * @example Create a summary of the batch update result
  * ```typescript
  * import { batchUpdateVersions, summarizeBatchUpdate } from '@hyperfrontend/versioning'
  *

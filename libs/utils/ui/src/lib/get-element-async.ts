@@ -35,7 +35,7 @@ export interface GetElementAsyncOptions {
  * @param options - Configuration options including duration, interval, and callbacks
  * @returns A cleanup function to cancel the polling
  *
- * @example
+ * @example Waiting for dynamic element
  * ```typescript
  * const cancel = getElementAsync('#dynamic-content', {
  *   duration: 5000,

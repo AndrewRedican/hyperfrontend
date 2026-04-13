@@ -14,7 +14,7 @@ import type { RoutingContext } from './types'
  * - Terminates the connection process
  * - Fires 'cancel' lifecycle event on initiator's side
  *
- * @example
+ * @example Initiator-side cancellation acknowledgment
  * Cancellation acknowledgment (initiator side):
  * Initiator -> CANCEL_CONNECTION
  * Initiator <- CANCEL_ACKNOWLEDGED (this handler)

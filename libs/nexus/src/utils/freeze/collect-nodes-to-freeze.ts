@@ -16,7 +16,7 @@ const DEFAULT_MAX_DEPTH = 100
  * @param config - Optional configuration for traversal behavior
  * @returns Array of unfrozen nodes sorted by depth (deepest first)
  *
- * @example
+ * @example Collecting nodes to freeze
  * ```typescript
  * const obj = { a: { b: { c: 1 } } }
  * const nodes = collectNodesToFreeze(obj)

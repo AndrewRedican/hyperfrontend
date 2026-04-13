@@ -6,7 +6,7 @@ import type { ChannelHandle } from './factory'
  * @param processes - Map storing process to channel mappings
  * @returns Function that clears all processes
  *
- * @example
+ * @example Clearing all processes
  * ```typescript
  * const clear = clearProcesses(processMap)
  * clear() // All processes removed

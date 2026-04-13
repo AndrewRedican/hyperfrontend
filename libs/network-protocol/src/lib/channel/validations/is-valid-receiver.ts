@@ -6,7 +6,7 @@ import { getType } from '@hyperfrontend/data-utils'
  * @param receiver - The receiver to validate
  * @returns True if the receiver is valid, false otherwise
  *
- * @example
+ * @example Validating receiver functions
  * ```typescript
  * isValidReceiver((packet) => handlePacket(packet)) // => true
  * isValidReceiver('not-a-function') // => false

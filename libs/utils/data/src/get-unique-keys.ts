@@ -17,7 +17,7 @@ import { traverse } from './traverse'
  * @param options - Optional configuration to control traversal depth
  * @returns An array of unique key names that match the pattern
  *
- * @example
+ * @example Finding unique keys by pattern
  * ```typescript
  * getUniqueKeys({ a: { b: 1 }, c: { b: 2 } }, 'b') // ['b']
  * getUniqueKeys(data, /^user/) // keys starting with 'user'

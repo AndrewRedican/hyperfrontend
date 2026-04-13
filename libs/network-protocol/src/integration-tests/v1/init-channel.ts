@@ -23,7 +23,7 @@ import { createSenderFactory } from '../../lib/sender/creators/create-sender-fac
  * @param receivePacket - Callback to receive packets
  * @returns Channel instance
  *
- * @example
+ * @example Initializing a V1 channel
  * ```typescript
  * const channel = initChannel('test-channel', sendFn, receiveFn)
  * channel.send(packetData)

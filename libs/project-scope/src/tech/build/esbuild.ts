@@ -13,7 +13,7 @@ import { collectAllDependencies, parseVersionString, filterScriptsByCommand } fr
  * @param packageJson - Optional pre-loaded package.json
  * @returns Detection result or null if not detected
  *
- * @example
+ * @example Detecting esbuild bundler
  * ```typescript
  * const result = esbuildDetector('/path/to/project', {
  *   name: 'my-lib',

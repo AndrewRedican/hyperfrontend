@@ -6,7 +6,7 @@ import { createUint8Array } from '@hyperfrontend/immutable-api-utils/built-in-co
  * @param text - The UTF-8 string to convert
  * @returns The encoded Uint8Array
  *
- * @example
+ * @example Encoding string to bytes (Node.js)
  * ```typescript
  * const bytes = utf8StringToUint8Array('Hello')
  * // => Uint8Array([72, 101, 108, 108, 111])

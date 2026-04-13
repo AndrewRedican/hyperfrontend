@@ -17,7 +17,7 @@ import { traverse } from './traverse'
  * @param options - Optional configuration to control traversal depth
  * @returns An array of paths to locations where text was replaced
  *
- * @example
+ * @example Replacing text in structure
  * ```typescript
  * const obj = { a: 'hello world', b: { c: 'hello' } }
  * replaceText(obj, 'hello', 'hi') // [['a'], ['b', 'c']]

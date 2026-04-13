@@ -6,7 +6,7 @@ import { UTF8_DECODER } from '../shared-consts'
  * @param uint8Array - The ArrayBuffer to convert
  * @returns The decoded UTF-8 string
  *
- * @example
+ * @example Converting ArrayBuffer to string
  * ```typescript
  * const encoder = new TextEncoder()
  * const buffer = encoder.encode('Hello, World!').buffer

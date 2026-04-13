@@ -1,9 +1,5 @@
 # Topic
 
-**Navigation**: [↑ lib/](../README.md) · [routing](../routing/README.md)
-
----
-
 ## Purpose
 
 The Topic module provides a store for managing named topics used in message routing. Topics are identifiers that channels can subscribe to for receiving relevant messages in a publish-subscribe pattern.
@@ -182,22 +178,6 @@ const routingOptions = router(
 
 - **Depends on**: None (leaf module)
 - **Used by**: [`routing/`](../routing/README.md)
-
----
-
-## Directory Structure
-
-```
-topic/
-├── README.md           ← You are here
-├── index.ts            ← Public exports
-├── model.ts            ← Topic interface definitions
-├── topic.integration.spec.ts
-├── creators/
-│   └── ...
-└── validations/
-    └── ...
-```
 
 ---
 

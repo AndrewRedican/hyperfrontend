@@ -1,9 +1,5 @@
 # Packet
 
-**Navigation**: [↑ lib/](../README.md) · [data](../data/README.md) · [security](../security/README.md) · [queue](../queue/README.md)
-
----
-
 ## Purpose
 
 The Packet module defines the core data structures and transformations for message packaging in the network protocol. It provides a type hierarchy representing packets at different stages of the security pipeline (unencrypted, encrypted, serialized, obfuscated).
@@ -377,44 +373,6 @@ console.log(packet)
 
 - **Depends on**: [`data/`](../data/README.md) (for the Data interface)
 - **Used by**: [`sender/`](../sender/README.md), [`receiver/`](../receiver/README.md), [`queue/`](../queue/README.md), [`security/`](../security/README.md)
-
----
-
-## Directory Structure
-
-```
-packet/
-├── README.md                              ← You are here
-├── index.ts                               ← Public exports
-├── model.ts                               ← Packet interface definitions
-├── packet-transformations.integration.spec.ts
-├── creators/
-│   ├── index.ts
-│   ├── create-packet-base.ts
-│   ├── create-unencrypted-packet.ts
-│   ├── create-serialized-encrypted-packet-creator.ts
-│   ├── create-deserialized-encrypted-packet-creator.ts
-│   └── mocks.ts
-├── security/
-│   ├── index.ts
-│   ├── encryption/
-│   │   ├── index.ts
-│   │   ├── create-encrypter.ts
-│   │   └── create-decrypter.ts
-│   └── obfuscation/
-│       ├── index.ts
-│       ├── create-obfuscator.ts
-│       └── create-deobfuscator.ts
-├── utils/
-│   └── without-valid-error-message.ts
-└── validations/
-    ├── index.ts
-    ├── is-valid-packet-base.ts
-    ├── is-valid-unencrypted-packet.ts
-    ├── is-valid-unserialized-encrypted-packet.ts
-    ├── is-valid-serialized-encrypted-packet.ts
-    └── is-valid-obfuscated-packet.ts
-```
 
 ---
 
