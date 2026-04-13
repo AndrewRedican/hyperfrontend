@@ -1,2 +1,2 @@
-export type * from './model'
-export * from './creators/create-topic-store'
+export type { Topic, TopicStore } from './model'
+export { createTopicStore } from './creators/create-topic-store'
