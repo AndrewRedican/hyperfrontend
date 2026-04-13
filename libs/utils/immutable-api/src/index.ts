@@ -28,7 +28,6 @@ export { Symbol } from './built-in-copy/symbol'
 export { Timers } from './built-in-copy/timers'
 export { WeakMap } from './built-in-copy/weak-map'
 export { WeakSet } from './built-in-copy/weak-set'
-
 export * from './locked'
 export * from './locked-props'
 export * from './locked-prop-descriptors'
