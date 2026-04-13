@@ -6,7 +6,6 @@ import { createDataEncrypter } from '../../lib/data/security/create-encrypter'
 export const encryptData = createDataEncrypter(encrypt)
 export const decryptData = createDataDecrypter(decrypt)
 export const createData = createDataFactory(createHash)
-
 export type * from '../../lib/data/model'
 export * from '../../lib/data/validations/is-valid-id'
 export * from '../../lib/data/validations/is-valid-message'

@@ -31,7 +31,6 @@ const createTimeIntervalObfuscation = createTimeIntervalObfuscationFactory(
  * All messages also use time-based obfuscation for an additional security layer.
  */
 export const createProtocol = createPSKHandshakeProtocolFactory(encryptPacket, decryptPacket, createTimeIntervalObfuscation)
-
 export type * from '../../lib/protocol/model'
 export type * from '../../lib/protocol/validations/is-valid-protocol.model'
 export * from '../../lib/protocol/validations/is-valid-name'

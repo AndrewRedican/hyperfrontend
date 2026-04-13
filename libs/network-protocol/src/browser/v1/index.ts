@@ -34,7 +34,6 @@ const createTimeIntervalObfuscation = createTimeIntervalObfuscationFactory(
  * When received, the key is extracted and used for subsequent encrypted messages.
  */
 export const createProtocol = createProtocolFactory(createDynamicKeyEncryption, createTimeIntervalObfuscation)
-
 export type * from '../../lib/protocol/model'
 export type * from '../../lib/protocol/validations/is-valid-protocol.model'
 export * from '../../lib/protocol/validations/is-valid-name'

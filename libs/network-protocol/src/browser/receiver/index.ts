@@ -2,5 +2,4 @@ import { createReceiverFactory } from '../../lib/receiver/creators/create-receiv
 import { createDeserializedEncryptedPacket } from '../packet'
 
 export const createReceiver = createReceiverFactory(createDeserializedEncryptedPacket)
-
 export type * from '../../lib/receiver/model'

@@ -10,13 +10,10 @@ import { encryptData, decryptData } from '../data'
 
 export const createSerializedEncryptedPacket = createSerializedEncryptedPacketCreator(uint8ArrayToBase64)
 export const createDeserializedEncryptedPacket = createDeserializedEncryptedPacketCreator(base64ToUint8Array)
-
 export const encryptPacket = createPacketEncrypter(encryptData)
 export const decryptPacket = createPacketDecrypter(decryptData)
-
 export const obfuscatePacket = createPacketObfuscator(encrypt)
 export const deobfuscatePacket = createPacketDeobfuscator(decrypt)
-
 export type * from '../../lib/packet/model'
 export type * from '../../lib/packet/validations/is-valid-unobfuscated-packet-base.model'
 export * from '../../lib/packet/validations/is-valid-obfuscated-packet'

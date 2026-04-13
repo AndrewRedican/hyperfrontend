@@ -5,7 +5,6 @@ import { createSender } from '../sender'
 
 export const createChannel = createChannelFactory(createSender, createReceiver)
 export const createChannelStore = createChannelStoreFactory(createChannel)
-
 export type * from '../../lib/channel/model'
 export * from '../../lib/channel/validations/get-first-invalid-protocol-property'
 export * from '../../lib/channel/validations/is-valid-channel'
