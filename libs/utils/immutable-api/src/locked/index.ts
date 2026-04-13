@@ -1,1 +1,2 @@
-export * from '../lib/locked'
+export type { LockedMethod } from '../lib/locked'
+export { locked } from '../lib/locked'
