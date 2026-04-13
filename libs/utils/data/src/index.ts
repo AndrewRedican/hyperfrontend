@@ -1,29 +1,23 @@
 export type * from './models'
 export type * from './get-value.model'
 export type * from './selective-copy.model'
-
 export * from './shared/consts'
-
 export * from './register-class-types'
 export * from './register-iterable-class'
 export * from './deregister-class-types'
 export * from './deregister-iterable-class'
-
 export * from './get-type'
 export * from './same-type'
 export * from './same-structure'
 export * from './is-iterable'
 export * from './is-iterable-type'
 export * from './is-marker'
-
 export * from './circular-reference'
 export * from './has-circular-reference'
 export * from './locate-circular-reference'
 export * from './reference-stack'
-
 export * from './is-identical'
 export * from './contains-keys'
-
 export * from './selective-copy'
 export * from './traverse'
 export * from './get-value'
@@ -34,9 +28,7 @@ export * from './locate-text'
 export * from './rename-key'
 export * from './remove-key'
 export * from './replace-text'
-
 export * from './get-iterable-operators'
 export * from './get-iterable-types'
 export * from './get-keys-from-iterable'
-
 export * from './marker'
