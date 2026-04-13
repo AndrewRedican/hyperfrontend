@@ -1,1 +1,1 @@
-export * from '../lib/is-mobile-device'
+export { isMobileDevice } from '../lib/is-mobile-device'
