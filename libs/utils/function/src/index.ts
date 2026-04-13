@@ -1,4 +1,4 @@
-export * from './create-conditional-execution-function'
-export * from './create-error-ignoring-function'
-export * from './create-run-once-function'
-export * from './noop-function'
+export { createConditionalExecutionFunction } from './create-conditional-execution-function'
+export { createErrorIgnoringFunction } from './create-error-ignoring-function'
+export { createRunOnceFunction } from './create-run-once-function'
+export { noop } from './noop-function'
