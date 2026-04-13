@@ -27,14 +27,94 @@ const techLogger = createScopedLogger('project-scope:tech')
  */
 const detectAllCache = createCache<string, AllDetections>({ ttl: 60000, maxSize: 50 })
 
-export * from './build'
-export * from './monorepo'
-export * from './frontend'
-export * from './backend'
-export * from './legacy'
-export * from './testing'
-export * from './types'
-export * from './linting'
+export type { BuildToolDetection, BuildToolDetector } from './build'
+export {
+  BABEL_CONFIG_PATTERNS,
+  babelDetector,
+  buildToolDetectors,
+  detectBuildTools,
+  esbuildDetector,
+  PARCEL_CONFIG_PATTERNS,
+  parcelDetector,
+  ROLLUP_CONFIG_PATTERNS,
+  rollupDetector,
+  SWC_CONFIG_PATTERNS,
+  swcDetector,
+  VITE_CONFIG_PATTERNS,
+  viteDetector,
+  WEBPACK_CONFIG_PATTERNS,
+  webpackDetector,
+} from './build'
+export type { DetectionSource, MonorepoDetection, MonorepoDetector } from './monorepo'
+export {
+  detectMonorepoTools,
+  lernaDetector,
+  monorepoDetectors,
+  npmWorkspacesDetector,
+  nxDetector,
+  pnpmWorkspacesDetector,
+  rushDetector,
+  turborepoDetector,
+  yarnWorkspacesDetector,
+} from './monorepo'
+export type { FrameworkDetection, FrameworkDetector } from './frontend'
+export {
+  angularDetector,
+  astroDetector,
+  detectFrontendFrameworks,
+  frameworkDetectors,
+  gatsbyDetector,
+  nextjsDetector,
+  nuxtDetector,
+  qwikDetector,
+  reactDetector,
+  remixDetector,
+  solidDetector,
+  svelteDetector,
+  sveltekitDetector,
+  vueDetector,
+} from './frontend'
+export type { BackendDetection, BackendDetector } from './backend'
+export {
+  backendDetectors,
+  detectBackendFrameworks,
+  expressDetector,
+  fastifyDetector,
+  honoDetector,
+  koaDetector,
+  nestDetector,
+} from './backend'
+export type { LegacyFrameworkDetection, LegacyFrameworkDetector } from './legacy'
+export { angularJSDetector, backboneDetector, detectLegacyFrameworks, emberDetector, jqueryDetector, legacyDetectors } from './legacy'
+export type { TestingFrameworkDetection, TestingFrameworkDetector } from './testing'
+export {
+  CYPRESS_CONFIG_PATTERNS,
+  cypressDetector,
+  detectTestingFrameworks,
+  JEST_CONFIG_PATTERNS,
+  jestDetector,
+  MOCHA_CONFIG_PATTERNS,
+  mochaDetector,
+  PLAYWRIGHT_CONFIG_PATTERNS,
+  playwrightDetector,
+  testingDetectors,
+  VITEST_CONFIG_PATTERNS,
+  vitestDetector,
+} from './testing'
+export type { TypeSystemDetection, TypeSystemDetector } from './types'
+export { detectTypeSystems, flowDetector, jsdocDetector, typescriptDetector, typeSystemDetectors } from './types'
+export type { LintingToolDetection, LintingToolDetector } from './linting'
+export {
+  biomeDetector,
+  detectLintingTools,
+  ESLINT_CONFIG_PATTERNS,
+  eslintDetector,
+  lintingDetectors,
+  PRETTIER_CONFIG_PATTERNS,
+  prettierDetector,
+  STYLELINT_CONFIG_PATTERNS,
+  stylelintDetector,
+} from './linting'
 
 /**
  * All detection results from running all detectors.
