@@ -22,6 +22,7 @@ import libProjectVersionTargets, { RULE_NAME as LIB_PROJECT_VERSION_TARGETS } fr
 import libReadmeStructure, { RULE_NAME as LIB_README_STRUCTURE } from './rules/lib-readme-structure'
 import libRequireJsdocExample, { RULE_NAME as LIB_REQUIRE_JSDOC_EXAMPLE } from './rules/lib-require-jsdoc-example'
 import libRequireJsdocExampleLabel, { RULE_NAME as LIB_REQUIRE_JSDOC_EXAMPLE_LABEL } from './rules/lib-require-jsdoc-example-label'
+import libRequireModuleHeader, { RULE_NAME as LIB_REQUIRE_MODULE_HEADER } from './rules/lib-require-module-header'
 import libTsconfigPaths, { RULE_NAME as LIB_TSCONFIG_PATHS } from './rules/lib-tsconfig-paths'
 import maxFileLines, { RULE_NAME as MAX_FILE_LINES } from './rules/max-file-lines'
 import noAsciiArtDiagrams, { RULE_NAME as NO_ASCII_ART_DIAGRAMS } from './rules/no-ascii-art-diagrams'
@@ -77,6 +78,7 @@ export const rules: ESLint.Plugin['rules'] = {
   [LIB_README_STRUCTURE]: libReadmeStructure as unknown as Rule.RuleModule,
   [LIB_REQUIRE_JSDOC_EXAMPLE]: libRequireJsdocExample as unknown as Rule.RuleModule,
   [LIB_REQUIRE_JSDOC_EXAMPLE_LABEL]: libRequireJsdocExampleLabel as unknown as Rule.RuleModule,
+  [LIB_REQUIRE_MODULE_HEADER]: libRequireModuleHeader as unknown as Rule.RuleModule,
   [LIB_TSCONFIG_PATHS]: libTsconfigPaths as unknown as Rule.RuleModule,
   [MAX_FILE_LINES]: maxFileLines as unknown as Rule.RuleModule,
   [NO_ASCII_ART_DIAGRAMS]: noAsciiArtDiagrams as unknown as Rule.RuleModule,
