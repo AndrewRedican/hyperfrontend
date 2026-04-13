@@ -57,9 +57,7 @@ export {
   addDependent,
 } from './models'
 export type { Workspace, WorkspaceConfig, WorkspaceType, Project, CreateProjectOptions } from './models'
-
 export * from './discovery'
-
 export * from './operations'
 
 /**
