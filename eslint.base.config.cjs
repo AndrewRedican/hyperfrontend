@@ -218,6 +218,7 @@ module.exports = [
       'workspace/lib-require-jsdoc-example': 'error',
       'workspace/lib-require-jsdoc-example-label': 'error',
       'workspace/lib-pkg-main-reexports': 'error',
+      'workspace/lib-entry-export-spacing': 'error',
     },
   },
   {
