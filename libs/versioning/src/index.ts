@@ -1,4 +1,35 @@
-export * from './repository'
+export type {
+  CompareUrlFormatter,
+  CreateCompareUrlOptions,
+  CreateRepositoryConfigOptions,
+  KnownPlatform,
+  PackageJsonForRepository,
+  PackageJsonRepository,
+  ParsedRepository,
+  RepositoryConfig,
+  RepositoryInferenceSource,
+  RepositoryPlatform,
+  RepositoryResolution,
+  RepositoryResolutionMode,
+} from './repository'
+export {
+  createCompareUrl,
+  createDisabledResolution,
+  createExplicitResolution,
+  createInferredResolution,
+  createRepositoryConfig,
+  createRepositoryConfigFromUrl,
+  DEFAULT_INFERENCE_ORDER,
+  detectPlatformFromHostname,
+  extractRepositoryUrl,
+  inferRepositoryFromPackageJson,
+  inferRepositoryFromPackageJsonObject,
+  isKnownPlatform,
+  isRepositoryConfig,
+  isRepositoryResolution,
+  parseRepositoryUrl,
+  PLATFORM_HOSTNAMES,
+} from './repository'
 export type { Changelog, ChangelogFormat, ChangelogHeader, ChangelogLink, ChangelogMetadata } from './changelog/models/changelog'
 export type { ChangelogEntry, ChangelogItem, ChangelogSection } from './changelog/models/entry'
 export type { ChangelogSectionType } from './changelog/models/section'
