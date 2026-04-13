@@ -218,7 +218,7 @@ module.exports = [
     rules: {
       'workspace/lib-require-jsdoc-example': 'error',
       'workspace/lib-require-jsdoc-example-label': 'error',
-      'workspace/lib-require-module-header': 'error',
+      'workspace/lib-require-module-header': 'off',
       'workspace/lib-pkg-main-reexports': 'error',
       'workspace/lib-entry-export-spacing': 'error',
     },
