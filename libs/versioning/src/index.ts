@@ -1,3 +1,5 @@
+export * from './repository'
+
 export type { Changelog, ChangelogFormat, ChangelogHeader, ChangelogLink, ChangelogMetadata } from './changelog/models/changelog'
 export type { ChangelogEntry, ChangelogItem, ChangelogSection } from './changelog/models/entry'
 export type { ChangelogSectionType } from './changelog/models/section'
