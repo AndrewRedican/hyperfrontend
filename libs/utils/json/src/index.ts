@@ -3,12 +3,12 @@
  *
  * @module @hyperfrontend/json-utils
  */
+export type { GenerateOptions } from './generate/to-json-schema'
 export type { Schema, JsonType } from './types/schema'
 export type { ValidationError, ValidationResult, ValidateOptions, PatternSafetyResult, PatternSafetyChecker } from './types/validation'
-export { validate } from './validate/validate'
-export { createValidator } from './validate/create-validator'
 export { toJsonSchema } from './generate/to-json-schema'
-export type { GenerateOptions } from './generate/to-json-schema'
 export { getJsonType } from './generate/type-detection'
+export { createValidator } from './validate/create-validator'
 export { isEqual } from './validate/utils/deep-equal'
 export { checkPatternSafety } from './validate/utils/pattern-safety'
+export { validate } from './validate/validate'
