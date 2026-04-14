@@ -3,6 +3,8 @@
  *
  * @module @hyperfrontend/versioning/flow
  */
+export type { ExecuteOptions } from './executor'
+export type { FlowPreset } from './factory'
 export type {
   CreateFlowOptions,
   CreateStepOptions,
@@ -19,6 +21,8 @@ export type {
   StepExecutor,
   VersionFlow,
 } from './models'
+export { dryRun, executeFlow, validateFlow } from './executor'
+export { createVersionFlow, createDryRunFlow, getAvailablePresets, getPresetDescription } from './factory'
 export {
   addStep,
   createFailedResult,
@@ -38,8 +42,21 @@ export {
   replaceStep,
   withConfig,
 } from './models'
-export type { ExecuteOptions } from './executor'
-export { dryRun, executeFlow, validateFlow } from './executor'
+export {
+  CONVENTIONAL_FLOW_CONFIG,
+  createBatchReleaseFlow,
+  createChangelogOnlyFlow,
+  createCheckDependentBumpsStep,
+  createCombinedChangelogStep,
+  createConventionalFlow,
+  createFixedVersionFlow,
+  createIndependentFlow,
+  createMinimalFlow,
+  createSyncAllPackagesStep,
+  createSyncedFlow,
+  INDEPENDENT_FLOW_CONFIG,
+  SYNCED_FLOW_CONFIG,
+} from './presets'
 export {
   ANALYZE_COMMITS_STEP_ID,
   CALCULATE_BUMP_STEP_ID,
@@ -63,20 +80,3 @@ export {
   RESOLVE_REPOSITORY_STEP_ID,
   UPDATE_PACKAGES_STEP_ID,
 } from './steps'
-export {
-  CONVENTIONAL_FLOW_CONFIG,
-  createBatchReleaseFlow,
-  createChangelogOnlyFlow,
-  createCheckDependentBumpsStep,
-  createCombinedChangelogStep,
-  createConventionalFlow,
-  createFixedVersionFlow,
-  createIndependentFlow,
-  createMinimalFlow,
-  createSyncAllPackagesStep,
-  createSyncedFlow,
-  INDEPENDENT_FLOW_CONFIG,
-  SYNCED_FLOW_CONFIG,
-} from './presets'
-export { createVersionFlow, createDryRunFlow, getAvailablePresets, getPresetDescription } from './factory'
-export type { FlowPreset } from './factory'

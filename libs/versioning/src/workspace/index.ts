@@ -31,6 +31,50 @@ import { buildDependencyGraph } from './discovery/dependencies'
 import { discoverPackages } from './discovery/packages'
 import { createWorkspace } from './models/workspace'
 
+export type {
+  DependencyEdge,
+  DependencyGraph,
+  DependencyGraphAnalysis,
+  DependencyType,
+  DiscoveredChangelog,
+  DiscoveryOptions,
+  DiscoveryResult,
+} from './discovery'
+export type { Workspace, WorkspaceConfig, WorkspaceType, Project, CreateProjectOptions } from './models'
+export type {
+  BatchUpdateOptions,
+  BatchUpdateResult,
+  FailedUpdate,
+  UpdatedPackage,
+  BumpReason,
+  CascadeBumpOptions,
+  CascadeBumpResult,
+  DirectBumpInput,
+  PlannedBump,
+  ValidationCheckResult,
+  ValidationReport,
+  ValidationResult,
+} from './operations'
+export {
+  buildDependencyGraph,
+  CHANGELOG_NAMES,
+  discoverAllChangelogs,
+  discoverPackages,
+  discoverProject,
+  discoverProjectByName,
+  findChangelogs,
+  findChangelogsInTree,
+  findInternalDependencies,
+  findInternalDependenciesWithTypes,
+  findProjectChangelog,
+  findProjectChangelogInTree,
+  getExpectedChangelogPath,
+  getTopologicalOrder,
+  getTransitiveDependencies,
+  getTransitiveDependents,
+  hasChangelog,
+  transitivelyDependsOn,
+} from './discovery'
 export {
   DEFAULT_PATTERNS,
   DEFAULT_EXCLUDE,
@@ -55,50 +99,6 @@ export {
   withDependents,
   addDependent,
 } from './models'
-export type { Workspace, WorkspaceConfig, WorkspaceType, Project, CreateProjectOptions } from './models'
-export type {
-  DependencyEdge,
-  DependencyGraph,
-  DependencyGraphAnalysis,
-  DependencyType,
-  DiscoveredChangelog,
-  DiscoveryOptions,
-  DiscoveryResult,
-} from './discovery'
-export {
-  buildDependencyGraph,
-  CHANGELOG_NAMES,
-  discoverAllChangelogs,
-  discoverPackages,
-  discoverProject,
-  discoverProjectByName,
-  findChangelogs,
-  findChangelogsInTree,
-  findInternalDependencies,
-  findInternalDependenciesWithTypes,
-  findProjectChangelog,
-  findProjectChangelogInTree,
-  getExpectedChangelogPath,
-  getTopologicalOrder,
-  getTransitiveDependencies,
-  getTransitiveDependents,
-  hasChangelog,
-  transitivelyDependsOn,
-} from './discovery'
-export type {
-  BatchUpdateOptions,
-  BatchUpdateResult,
-  FailedUpdate,
-  UpdatedPackage,
-  BumpReason,
-  CascadeBumpOptions,
-  CascadeBumpResult,
-  DirectBumpInput,
-  PlannedBump,
-  ValidationCheckResult,
-  ValidationReport,
-  ValidationResult,
-} from './operations'
 export {
   applyBumps,
   calculateCascadeBumps,

@@ -3,6 +3,7 @@
  *
  * @module @hyperfrontend/versioning/commits/classify
  */
+export type { InfrastructureConfig, InfrastructureMatchContext, InfrastructureMatcher } from './infrastructure'
 export type {
   ClassificationContext,
   ClassificationResult,
@@ -12,8 +13,6 @@ export type {
   CommitWithRaw,
 } from './models'
 export type { DeriveProjectScopesOptions } from './project-scopes'
-export type { InfrastructureConfig, InfrastructureMatchContext, InfrastructureMatcher } from './infrastructure'
-export { createClassifiedCommit, createEmptyClassificationSummary } from './models'
 export {
   classifyCommit,
   classifyCommits,
@@ -22,13 +21,6 @@ export {
   filterIncluded,
   toChangelogCommit,
 } from './classifier'
-export {
-  DEFAULT_EXCLUDE_SCOPES,
-  DEFAULT_PROJECT_PREFIXES,
-  deriveProjectScopes,
-  scopeIsExcluded,
-  scopeMatchesProject,
-} from './project-scopes'
 export {
   scopeMatcher,
   scopePrefixMatcher,
@@ -45,3 +37,11 @@ export {
   createMatchContext,
   evaluateInfrastructure,
 } from './infrastructure'
+export { createClassifiedCommit, createEmptyClassificationSummary } from './models'
+export {
+  DEFAULT_EXCLUDE_SCOPES,
+  DEFAULT_PROJECT_PREFIXES,
+  deriveProjectScopes,
+  scopeIsExcluded,
+  scopeMatchesProject,
+} from './project-scopes'

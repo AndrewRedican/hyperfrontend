@@ -13,6 +13,8 @@ export type {
   CreateRepositoryConfigOptions,
   RepositoryConfig,
 } from './models'
+export type { PackageJsonForRepository, PackageJsonRepository, ParsedRepository } from './parse'
+export type { CreateCompareUrlOptions } from './url'
 export {
   createDisabledResolution,
   createExplicitResolution,
@@ -25,7 +27,6 @@ export {
   isRepositoryResolution,
   PLATFORM_HOSTNAMES,
 } from './models'
-export type { PackageJsonForRepository, PackageJsonRepository, ParsedRepository } from './parse'
 export {
   createRepositoryConfigFromUrl,
   extractRepositoryUrl,
@@ -33,5 +34,4 @@ export {
   inferRepositoryFromPackageJsonObject,
   parseRepositoryUrl,
 } from './parse'
-export type { CreateCompareUrlOptions } from './url'
 export { createCompareUrl } from './url'
