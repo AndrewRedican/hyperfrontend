@@ -1,3 +1,8 @@
+/**
+ * Cross-window communication library for micro-frontends with broker/channel patterns and contract validation.
+ *
+ * @module @hyperfrontend/nexus
+ */
 export { createBroker } from './broker/factory'
 export { createChannel } from './channel/factory'
 export { mergeContracts } from './setup/merge-contracts'
