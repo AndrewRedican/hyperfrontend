@@ -1,3 +1,8 @@
+/**
+ * Collection utilities for FIFO/LIFO lists, ranges, value pickers, and string array helpers.
+ *
+ * @module @hyperfrontend/list-utils
+ */
 export type { FifoList } from './create-fifo-list'
 export { createFifoList } from './create-fifo-list'
 export type { LifoList } from './create-lifo-list'
