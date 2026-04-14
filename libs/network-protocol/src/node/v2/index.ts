@@ -1,3 +1,8 @@
+/**
+ * V2 protocol for Node.js with pre-shared key handshake encryption.
+ *
+ * @module @hyperfrontend/network-protocol/node/v2
+ */
 import { getTimeBasedPassword, getTimeBasedPasswords } from '@hyperfrontend/cryptography/node'
 import { encrypt, decrypt } from '@hyperfrontend/cryptography/node'
 import { createPacketDeobfuscator } from '../../lib/packet/security/obfuscation/create-deobfuscator'

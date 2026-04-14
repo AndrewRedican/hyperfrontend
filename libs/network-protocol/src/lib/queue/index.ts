@@ -1,3 +1,8 @@
+/**
+ * Message queue factories for encryption, serialization, and obfuscation pipelines.
+ *
+ * @module @hyperfrontend/network-protocol/queue
+ */
 export type {
   Queue,
   MessageHandler,

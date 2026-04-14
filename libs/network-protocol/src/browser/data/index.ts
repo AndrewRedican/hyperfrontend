@@ -1,3 +1,8 @@
+/**
+ * Browser-side data encryption, serialization, and schema validation utilities.
+ *
+ * @module @hyperfrontend/network-protocol/browser/data
+ */
 import { encrypt, decrypt, createHash } from '@hyperfrontend/cryptography/browser'
 import { createDataFactory } from '../../lib/data/creators/create-data-factory'
 import { createDataDecrypter } from '../../lib/data/security/create-decrypter'

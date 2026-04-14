@@ -1,3 +1,8 @@
+/**
+ * Security type definitions for encryption and obfuscation suites.
+ *
+ * @module @hyperfrontend/network-protocol/security
+ */
 export type {
   PacketObfuscation,
   PacketDeobfuscation,

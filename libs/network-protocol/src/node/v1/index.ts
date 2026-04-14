@@ -1,3 +1,8 @@
+/**
+ * V1 protocol for Node.js with dynamic key exchange and time-based obfuscation.
+ *
+ * @module @hyperfrontend/network-protocol/node/v1
+ */
 import { getTimeBasedPassword, getTimeBasedPasswords } from '@hyperfrontend/cryptography/node'
 import { encrypt, decrypt } from '@hyperfrontend/cryptography/node'
 import { createFirstMessageHandler } from '../../lib/packet/security/encryption/create-first-message-handler'

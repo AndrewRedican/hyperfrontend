@@ -1,3 +1,8 @@
+/**
+ * Node.js-side data encryption, serialization, and schema validation utilities.
+ *
+ * @module @hyperfrontend/network-protocol/node/data
+ */
 import { encrypt, decrypt, createHash } from '@hyperfrontend/cryptography/node'
 import { createDataFactory } from '../../lib/data/creators/create-data-factory'
 import { createDataDecrypter } from '../../lib/data/security/create-decrypter'

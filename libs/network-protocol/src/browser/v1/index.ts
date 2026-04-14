@@ -1,3 +1,8 @@
+/**
+ * V1 protocol for browser with dynamic key exchange and time-based obfuscation.
+ *
+ * @module @hyperfrontend/network-protocol/browser/v1
+ */
 import { getTimeBasedPassword, getTimeBasedPasswords } from '@hyperfrontend/cryptography/browser'
 import { encrypt, decrypt } from '@hyperfrontend/cryptography/browser'
 import { createTextDecoder, createTextEncoder } from '@hyperfrontend/immutable-api-utils/built-in-copy/encoding'

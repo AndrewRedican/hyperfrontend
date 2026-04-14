@@ -1,3 +1,8 @@
+/**
+ * Browser-side packet encryption, serialization, and obfuscation with dynamic key support.
+ *
+ * @module @hyperfrontend/network-protocol/browser/packet
+ */
 import { encrypt, decrypt } from '@hyperfrontend/cryptography/browser'
 import { uint8ArrayToBase64, base64ToUint8Array } from '@hyperfrontend/string-utils/browser'
 import { createDeserializedEncryptedPacketCreator } from '../../lib/packet/creators/create-deserialized-encrypted-packet-creator'

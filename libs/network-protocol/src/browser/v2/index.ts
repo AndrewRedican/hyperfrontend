@@ -1,3 +1,8 @@
+/**
+ * V2 protocol for browser with pre-shared key handshake encryption.
+ *
+ * @module @hyperfrontend/network-protocol/browser/v2
+ */
 import { getTimeBasedPassword, getTimeBasedPasswords } from '@hyperfrontend/cryptography/browser'
 import { encrypt, decrypt } from '@hyperfrontend/cryptography/browser'
 import { createPacketDeobfuscator } from '../../lib/packet/security/obfuscation/create-deobfuscator'
