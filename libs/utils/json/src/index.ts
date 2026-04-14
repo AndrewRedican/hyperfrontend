@@ -1,3 +1,8 @@
+/**
+ * JSON Schema Draft v4 utilities for validation, schema generation, and pattern safety checking.
+ *
+ * @module @hyperfrontend/json-utils
+ */
 export type { Schema, JsonType } from './types/schema'
 export type { ValidationError, ValidationResult, ValidateOptions, PatternSafetyResult, PatternSafetyChecker } from './types/validation'
 export { validate } from './validate/validate'
