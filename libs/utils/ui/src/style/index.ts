@@ -1,3 +1,8 @@
+/**
+ * Dynamic styling utilities for CSS rules and stylesheet management.
+ *
+ * @module @hyperfrontend/ui-utils/style
+ */
 export type { Style, StyleMap } from '../lib/style.model'
 export { createApplyStyle } from '../lib/create-apply-style'
 export { createApplyStyles } from '../lib/create-apply-styles'

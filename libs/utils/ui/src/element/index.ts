@@ -1,3 +1,8 @@
+/**
+ * DOM element creation, retrieval, and dimension synchronization utilities.
+ *
+ * @module @hyperfrontend/ui-utils/element
+ */
 export type { HtmlTagName } from '../lib/html.model'
 export type { ElementConfig, ElementMethods } from '../lib/create-element'
 export { createElement } from '../lib/create-element'

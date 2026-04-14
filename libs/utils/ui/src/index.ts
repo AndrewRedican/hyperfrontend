@@ -1,3 +1,8 @@
+/**
+ * UI utilities for audio, color, components, elements, events, selectors, and styling.
+ *
+ * @module @hyperfrontend/ui-utils
+ */
 export { setupAudio } from './audio'
 export type { Rgb } from './color'
 export { getColorVariation, hexToRgb, rgbToHex, rgbToString, rgbStringToHex } from './color'

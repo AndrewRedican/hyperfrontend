@@ -1,3 +1,8 @@
+/**
+ * Color manipulation utilities for RGB/hex conversions and color variations.
+ *
+ * @module @hyperfrontend/ui-utils/color
+ */
 export { getColorVariation } from '../lib/get-color-variation'
 export type { Rgb } from '../lib/hex-to-rgb'
 export { hexToRgb } from '../lib/hex-to-rgb'
