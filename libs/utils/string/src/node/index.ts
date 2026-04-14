@@ -1,3 +1,8 @@
+/**
+ * Node.js-side string encoding utilities for base64 and UTF-8 conversions.
+ *
+ * @module @hyperfrontend/string-utils/node
+ */
 export { arrayBufferToUtf8String } from '../lib/array-buffer-to-utf8-string/array-buffer-to-utf8-string'
 export { base64ToUint8Array } from '../lib/base64-to-uint8-array/node/base64-to-uint8-array'
 export { fromBase64 } from '../lib/from-base64/node/from-base64'
