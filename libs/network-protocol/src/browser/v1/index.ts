@@ -3,8 +3,7 @@
  *
  * @module @hyperfrontend/network-protocol/browser/v1
  */
-import { getTimeBasedPassword, getTimeBasedPasswords } from '@hyperfrontend/cryptography/browser'
-import { encrypt, decrypt } from '@hyperfrontend/cryptography/browser'
+import { getTimeBasedPassword, getTimeBasedPasswords, encrypt, decrypt } from '@hyperfrontend/cryptography/browser'
 import { createTextDecoder, createTextEncoder } from '@hyperfrontend/immutable-api-utils/built-in-copy/encoding'
 import { createFirstMessageHandler } from '../../lib/packet/security/encryption/create-first-message-handler'
 import { createDynamicKeyEncryptionFactory } from '../../lib/packet/security/encryption/dynamic-encryption-key'

@@ -1,8 +1,7 @@
 import type { ChannelStore } from '../model'
 import { isUuidV4 } from '@hyperfrontend/random-generator-utils'
 import { protocolProvider, send, receive } from '../mocks'
-import { mockCreateChannelStore as createChannelStore } from './mocks'
-import { label } from './mocks'
+import { mockCreateChannelStore as createChannelStore, label } from './mocks'
 
 describe('createChannelStore', () => {
   let store: ChannelStore

@@ -1,7 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import type { Callback, DepthConfig } from '@hyperfrontend/data-utils'
-import { getType } from '@hyperfrontend/data-utils'
-import { traverse } from '@hyperfrontend/data-utils'
+import { getType, traverse } from '@hyperfrontend/data-utils'
 
 /** Traversal state for message validation. */
 export interface State extends Record<string, unknown> {

@@ -3,8 +3,7 @@
  *
  * @module @hyperfrontend/network-protocol/node/v2
  */
-import { getTimeBasedPassword, getTimeBasedPasswords } from '@hyperfrontend/cryptography/node'
-import { encrypt, decrypt } from '@hyperfrontend/cryptography/node'
+import { getTimeBasedPassword, getTimeBasedPasswords, encrypt, decrypt } from '@hyperfrontend/cryptography/node'
 import { createPacketDeobfuscator } from '../../lib/packet/security/obfuscation/create-deobfuscator'
 import { createPacketObfuscator } from '../../lib/packet/security/obfuscation/create-obfuscator'
 import { createTimeIntervalObfuscationFactory } from '../../lib/packet/security/obfuscation/time-interval-obfuscation-factory'
