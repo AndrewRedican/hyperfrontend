@@ -31,18 +31,21 @@ import { baz } from './module-c'
     `.trim(),
   },
   {
-    name: 'single export from a path',
+    name: 'single export from a path in barrel file',
+    filename: '/project/src/index.ts',
     code: `export { foo } from './module'`,
   },
   {
-    name: 'two exports from same path (type + value)',
+    name: 'two exports from same path (type + value) in barrel file',
+    filename: '/project/src/index.ts',
     code: `
 export type { User } from './types'
 export { createUser } from './types'
     `.trim(),
   },
   {
-    name: 'exports from different paths',
+    name: 'exports from different paths in barrel file',
+    filename: '/project/src/index.ts',
     code: `
 export { foo } from './module-a'
 export { bar } from './module-b'
@@ -50,7 +53,8 @@ export { baz } from './module-c'
     `.trim(),
   },
   {
-    name: 'mixed imports and exports within limits',
+    name: 'mixed imports and exports within limits in barrel file',
+    filename: '/project/src/index.ts',
     code: `
 import type { Config } from './config'
 import { loadConfig } from './config'
@@ -60,6 +64,7 @@ export { createUser } from './types'
   },
   {
     name: 'export without source (local export) does not count',
+    filename: '/project/src/index.ts',
     code: `
 const foo = 1
 export { foo }
@@ -88,6 +93,30 @@ import type { UtilType } from './utils'
   {
     name: 'single value import with multiple specifiers',
     code: `import { a, b, c, d } from './module'`,
+  },
+  {
+    name: 'multiple value exports from same path allowed in non-barrel files',
+    filename: '/project/src/utils.ts',
+    code: `
+export { foo } from './module'
+export { bar } from './module'
+    `.trim(),
+  },
+  {
+    name: 'multiple type exports from same path allowed in non-barrel files',
+    filename: '/project/src/types.ts',
+    code: `
+export type { User } from './models'
+export type { Config } from './models'
+    `.trim(),
+  },
+  {
+    name: 'export all from same path allowed in non-barrel files',
+    filename: '/project/src/re-export.ts',
+    code: `
+export * from './utils'
+export * as namedUtils from './utils'
+    `.trim(),
   },
 ]
 
@@ -118,7 +147,8 @@ import { bar } from './module'
     ],
   },
   {
-    name: 'two type exports from same path',
+    name: 'two type exports from same path in barrel file',
+    filename: '/project/src/index.ts',
     code: `
 export type { User } from './types'
 export type { Config } from './types'
@@ -129,7 +159,8 @@ export type { Config } from './types'
     ],
   },
   {
-    name: 'two value exports from same path',
+    name: 'two value exports from same path in barrel file',
+    filename: '/project/src/index.ts',
     code: `
 export { foo } from './module'
 export { bar } from './module'
@@ -153,7 +184,8 @@ import type { C } from './types'
     ],
   },
   {
-    name: 'export all declarations count as value exports',
+    name: 'export all declarations count as value exports in barrel file',
+    filename: '/project/src/index.ts',
     code: `
 export * from './utils'
 export * as utils from './utils'
@@ -179,7 +211,8 @@ import { y } from './module-b'
     ],
   },
   {
-    name: 'mixed import and export violations (same kind)',
+    name: 'mixed import and export violations (same kind) in barrel file',
+    filename: '/project/src/index.ts',
     code: `
 import { a } from './shared'
 import { b } from './shared'
@@ -228,6 +261,42 @@ import { y } from './values'
       { messageId: 'tooManyImports', data: { path: './types', kind: 'type', count: '2' } },
       { messageId: 'tooManyImports', data: { path: './values', kind: 'value', count: '2' } },
       { messageId: 'tooManyImports', data: { path: './values', kind: 'value', count: '2' } },
+    ],
+  },
+  {
+    name: 'export violations in index.tsx barrel file',
+    filename: '/project/src/index.tsx',
+    code: `
+export { Component } from './component'
+export { OtherComponent } from './component'
+    `.trim(),
+    errors: [
+      { messageId: 'tooManyExports', data: { path: './component', kind: 'value', count: '2' } },
+      { messageId: 'tooManyExports', data: { path: './component', kind: 'value', count: '2' } },
+    ],
+  },
+  {
+    name: 'export violations in index.js barrel file',
+    filename: '/project/src/index.js',
+    code: `
+export { helper } from './helpers'
+export { util } from './helpers'
+    `.trim(),
+    errors: [
+      { messageId: 'tooManyExports', data: { path: './helpers', kind: 'value', count: '2' } },
+      { messageId: 'tooManyExports', data: { path: './helpers', kind: 'value', count: '2' } },
+    ],
+  },
+  {
+    name: 'export violations in index.jsx barrel file',
+    filename: '/project/src/index.jsx',
+    code: `
+export { Button } from './buttons'
+export { Icon } from './buttons'
+    `.trim(),
+    errors: [
+      { messageId: 'tooManyExports', data: { path: './buttons', kind: 'value', count: '2' } },
+      { messageId: 'tooManyExports', data: { path: './buttons', kind: 'value', count: '2' } },
     ],
   },
 ]

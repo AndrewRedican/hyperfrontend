@@ -1,4 +1,5 @@
 import type { TSESTree } from '@typescript-eslint/utils'
+import { basename } from 'node:path'
 import { ESLintUtils } from '@typescript-eslint/utils'
 import { createMap } from '@hyperfrontend/immutable-api-utils/built-in-copy/map'
 
@@ -26,6 +27,17 @@ interface PathOccurrence {
   valueNodes: TSESTree.Node[]
 }
 
+/**
+ * Checks if the file is a barrel file (index.ts, index.tsx, index.js, index.jsx).
+ *
+ * @param filename - The filename to check.
+ * @returns True if this is a barrel file.
+ */
+function isBarrelFile(filename: string): boolean {
+  const base = basename(filename)
+  return base.startsWith('index.') && (base.endsWith('.ts') || base.endsWith('.tsx') || base.endsWith('.js') || base.endsWith('.jsx'))
+}
+
 export default createRule<[], MessageIds>({
   name: RULE_NAME,
   meta: {
@@ -43,6 +55,7 @@ export default createRule<[], MessageIds>({
   create(context) {
     const importPaths = createMap<string, PathOccurrence>()
     const exportPaths = createMap<string, PathOccurrence>()
+    const isBarrel = isBarrelFile(context.filename)
 
     /**
      * Records a path occurrence by kind.
@@ -92,7 +105,7 @@ export default createRule<[], MessageIds>({
       },
 
       ExportNamedDeclaration(node) {
-        if (!node.source) {
+        if (!isBarrel || !node.source) {
           return
         }
         const path = getSourcePath(node.source)
@@ -103,6 +116,9 @@ export default createRule<[], MessageIds>({
       },
 
       ExportAllDeclaration(node) {
+        if (!isBarrel) {
+          return
+        }
         const path = getSourcePath(node.source)
         /* istanbul ignore else -- getSourcePath only returns null for malformed ASTs */
         if (path) {
