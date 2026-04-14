@@ -3,9 +3,16 @@
  *
  * @module @hyperfrontend/versioning/repository
  */
-export type { KnownPlatform, RepositoryPlatform } from './models'
-export type { RepositoryInferenceSource, RepositoryResolution, RepositoryResolutionMode } from './models'
-export type { CompareUrlFormatter, CreateRepositoryConfigOptions, RepositoryConfig } from './models'
+export type {
+  KnownPlatform,
+  RepositoryPlatform,
+  RepositoryInferenceSource,
+  RepositoryResolution,
+  RepositoryResolutionMode,
+  CompareUrlFormatter,
+  CreateRepositoryConfigOptions,
+  RepositoryConfig,
+} from './models'
 export {
   createDisabledResolution,
   createExplicitResolution,

@@ -56,8 +56,15 @@ export {
   addDependent,
 } from './models'
 export type { Workspace, WorkspaceConfig, WorkspaceType, Project, CreateProjectOptions } from './models'
-export type { DependencyEdge, DependencyGraph, DependencyGraphAnalysis, DependencyType } from './discovery'
-export type { DiscoveredChangelog, DiscoveryOptions, DiscoveryResult } from './discovery'
+export type {
+  DependencyEdge,
+  DependencyGraph,
+  DependencyGraphAnalysis,
+  DependencyType,
+  DiscoveredChangelog,
+  DiscoveryOptions,
+  DiscoveryResult,
+} from './discovery'
 export {
   buildDependencyGraph,
   CHANGELOG_NAMES,
@@ -78,9 +85,20 @@ export {
   hasChangelog,
   transitivelyDependsOn,
 } from './discovery'
-export type { BatchUpdateOptions, BatchUpdateResult, FailedUpdate, UpdatedPackage } from './operations'
-export type { BumpReason, CascadeBumpOptions, CascadeBumpResult, DirectBumpInput, PlannedBump } from './operations'
-export type { ValidationCheckResult, ValidationReport, ValidationResult } from './operations'
+export type {
+  BatchUpdateOptions,
+  BatchUpdateResult,
+  FailedUpdate,
+  UpdatedPackage,
+  BumpReason,
+  CascadeBumpOptions,
+  CascadeBumpResult,
+  DirectBumpInput,
+  PlannedBump,
+  ValidationCheckResult,
+  ValidationReport,
+  ValidationResult,
+} from './operations'
 export {
   applyBumps,
   calculateCascadeBumps,

@@ -3,8 +3,7 @@
  *
  * @module @hyperfrontend/versioning/semver
  */
-export type { BumpType, SemVer } from './models'
-export type { Comparator, ComparatorSet, Range, RangeOperator } from './models'
+export type { BumpType, SemVer, Comparator, ComparatorSet, Range, RangeOperator } from './models'
 export {
   createAnyRange,
   createComparator,
