@@ -29,6 +29,8 @@ const validCases: ValidTestCase<TestOptions>[] = [
   { code: `import { type User, type Config } from './types'` },
 
   { code: `import { createUser, updateUser } from './users'` },
+
+  { code: `import {} from './module'` },
 ]
 
 /**

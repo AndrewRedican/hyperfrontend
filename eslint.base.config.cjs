@@ -164,6 +164,7 @@ module.exports = [
     rules: {
       'workspace/require-node-protocol': 'error',
       'workspace/no-mixed-type-import': 'error',
+      'workspace/no-mixed-type-export': 'error',
       'workspace/max-path-occurrences': 'error',
       'workspace/import-order': 'error',
       'workspace/no-enum': 'error',
