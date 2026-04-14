@@ -1,13 +1,9 @@
-/* eslint-disable workspace/lib-require-jsdoc-example */
 /**
- * Safe copies of TypedArray and ArrayBuffer built-ins via factory functions.
- *
- * Provides safe references to Uint8Array, Int8Array, ArrayBuffer, DataView, etc.
- * These references are captured at module initialization time to protect against
- * prototype pollution attacks. Import only what you need for tree-shaking.
+ * Safe TypedArray and ArrayBuffer factories for protected array construction.
  *
  * @module @hyperfrontend/immutable-api-utils/built-in-copy/typed-arrays
  */
+/* eslint-disable workspace/lib-require-jsdoc-example */
 
 const _ArrayBuffer = globalThis.ArrayBuffer
 const _SharedArrayBuffer = globalThis.SharedArrayBuffer

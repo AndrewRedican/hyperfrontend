@@ -1,12 +1,9 @@
-/* eslint-disable workspace/lib-require-jsdoc-example */
 /**
- * Safe copies of Function built-in and utilities.
- *
- * These references are captured at module initialization time to protect against
- * prototype pollution attacks. Import only what you need for tree-shaking.
+ * Safe copies of Function constructor and prototype methods.
  *
  * @module @hyperfrontend/immutable-api-utils/built-in-copy/function
  */
+/* eslint-disable workspace/lib-require-jsdoc-example */
 
 const _Function = globalThis.Function
 const _FunctionPrototype = _Function.prototype

@@ -1,15 +1,9 @@
-/* eslint-disable workspace/lib-require-jsdoc-example */
 /**
- * Safe copies of WeakSet built-in via factory function.
- *
- * Since constructors cannot be safely captured via Object.assign, this module
- * provides a factory function that uses Reflect.construct internally.
- *
- * These references are captured at module initialization time to protect against
- * prototype pollution attacks. Import only what you need for tree-shaking.
+ * Safe WeakSet factory for protected weak set construction.
  *
  * @module @hyperfrontend/immutable-api-utils/built-in-copy/weak-set
  */
+/* eslint-disable workspace/lib-require-jsdoc-example */
 
 const _WeakSet = globalThis.WeakSet
 const _Reflect = globalThis.Reflect

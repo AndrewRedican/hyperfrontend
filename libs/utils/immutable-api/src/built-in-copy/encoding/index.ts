@@ -1,13 +1,9 @@
-/* eslint-disable workspace/lib-require-jsdoc-example */
 /**
- * Safe copies of encoding built-ins via factory functions.
- *
- * Provides safe references to TextEncoder, TextDecoder, atob, and btoa.
- * These references are captured at module initialization time to protect against
- * prototype pollution attacks. Import only what you need for tree-shaking.
+ * Safe copies of encoding built-ins for TextEncoder, TextDecoder, atob, and btoa.
  *
  * @module @hyperfrontend/immutable-api-utils/built-in-copy/encoding
  */
+/* eslint-disable workspace/lib-require-jsdoc-example */
 
 const _TextEncoder = globalThis.TextEncoder
 const _TextDecoder = globalThis.TextDecoder
