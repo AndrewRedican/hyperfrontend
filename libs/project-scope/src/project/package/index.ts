@@ -3,9 +3,8 @@
  *
  * @module @hyperfrontend/project-scope/project/package
  */
-export type { PackageJson } from './read'
-export { findNearestPackageJson, readPackageJson, readPackageJsonIfExists } from './read'
 export type { AllDependencies, DependencyMap } from './dependencies'
+export type { PackageJson } from './read'
 export {
   getAllDependencies,
   getDependencies,
@@ -18,3 +17,4 @@ export {
   hasInstalledPackage,
   hasWorkspaces,
 } from './dependencies'
+export { findNearestPackageJson, readPackageJson, readPackageJsonIfExists } from './read'

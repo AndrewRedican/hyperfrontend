@@ -3,7 +3,7 @@
  *
  * @module @hyperfrontend/project-scope/project/traversal
  */
-export type { WalkEntry, WalkOptions, WalkVisitor, WalkVisitorResult } from './walk'
-export { walkDirectory, walkTree } from './walk'
 export type { FindOptions } from './search'
+export type { WalkEntry, WalkOptions, WalkVisitor, WalkVisitorResult } from './walk'
 export { findDirectories, findFiles, findFilesInTree } from './search'
+export { walkDirectory, walkTree } from './walk'

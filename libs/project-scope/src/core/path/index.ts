@@ -3,8 +3,8 @@
  *
  * @module @hyperfrontend/project-scope/core/path
  */
+export type { ParsedPath } from './segments'
 export { join, joinPosix } from './join'
 export { ensureTrailingSlash, normalizePath, normalizeToForwardSlashes, normalizeToNative, removeTrailingSlash } from './normalize'
 export { isAbsolute, joinPath, offsetFromRoot, relativePath, resolveFromWorkspace, resolvePath, resolveRealPath } from './resolve'
-export type { ParsedPath } from './segments'
 export { getBasename, getDirname, getExtension, getFileNameWithoutExtension, parsePath, pathSegments } from './segments'

@@ -3,9 +3,9 @@
  *
  * @module @hyperfrontend/project-scope/project
  */
-export type { FindOptions, WalkEntry, WalkOptions, WalkVisitor, WalkVisitorResult } from './traversal'
-export { findDirectories, findFiles, findFilesInTree, walkDirectory, walkTree } from './traversal'
 export type { ConfigPatternInfo, ConfigType, DetectedConfig, DetectConfigOptions, ParsedConfig } from './config'
+export type { AllDependencies, DependencyMap, PackageJson } from './package'
+export type { FindOptions, WalkEntry, WalkOptions, WalkVisitor, WalkVisitorResult } from './traversal'
 export {
   clearConfigDetectionCache,
   CONFIG_PATTERNS,
@@ -16,7 +16,6 @@ export {
   parseJsonConfig,
   parseYamlConfig,
 } from './config'
-export type { AllDependencies, DependencyMap, PackageJson } from './package'
 export {
   findNearestPackageJson,
   getAllDependencies,
@@ -33,3 +32,4 @@ export {
   readPackageJsonIfExists,
 } from './package'
 export { findGitRoot, findProjectRoot, findRootDirectory, findWorkspaceRoot, ROOT_MARKERS, WORKSPACE_MARKERS } from './root'
+export { findDirectories, findFiles, findFilesInTree, walkDirectory, walkTree } from './traversal'
