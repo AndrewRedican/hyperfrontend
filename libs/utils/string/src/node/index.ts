@@ -6,7 +6,7 @@
 export { arrayBufferToUtf8String } from '../lib/array-buffer-to-utf8-string/array-buffer-to-utf8-string'
 export { base64ToUint8Array } from '../lib/base64-to-uint8-array/node/base64-to-uint8-array'
 export { fromBase64 } from '../lib/from-base64/node/from-base64'
-export { utf8StringToUint8Array } from '../lib/utf8-string-to-uint8-array/node/utf8-string-to-uint8-array'
 export { toBase64 } from '../lib/to-base64/node/to-base64'
 export { uint8ArrayToBase64 } from '../lib/uint8-array-to-base64/node/uint8-array-to-base64'
 export { uint8ArrayToUtf8String } from '../lib/uint8-array-to-utf8-string/uint8-array-to-utf8-string'
+export { utf8StringToUint8Array } from '../lib/utf8-string-to-uint8-array/node/utf8-string-to-uint8-array'
