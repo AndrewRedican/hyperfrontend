@@ -230,3 +230,24 @@ export function resolveReference(node: TypeDocNode, lookup: Map<number, TypeDocN
   }
   return node
 }
+
+/**
+ * Extract the module description from a comment.
+ * First checks for `@module` block tag content, then falls back to summary.
+ *
+ * @param comment - The comment to extract module description from
+ * @returns Description text from the `@module` tag or summary
+ */
+export function getModuleDescription(comment: Comment | undefined): string {
+  if (!comment) return ''
+
+  if (comment.blockTags) {
+    const moduleTag = comment.blockTags.find((tag) => tag.tag === '@module')
+    if (moduleTag) {
+      const content = renderTextBlocks(moduleTag.content).trim()
+      if (content) return content
+    }
+  }
+
+  return renderTextBlocks(comment.summary)
+}

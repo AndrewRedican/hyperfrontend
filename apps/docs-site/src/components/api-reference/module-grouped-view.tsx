@@ -8,7 +8,7 @@ import { CopyButton } from './copy-button'
 import { FunctionSignature } from './function-signature'
 import { HighlightMatch } from './highlight-match'
 import { TypeDefinition } from './type-definition'
-import { buildNodeLookup, resolveReference } from './type-utils'
+import { buildNodeLookup, getModuleDescription, resolveReference } from './type-utils'
 import { ReflectionKind } from './types'
 
 interface ModuleGroupedViewProps {
@@ -20,6 +20,7 @@ interface ModuleGroupedViewProps {
 interface ModuleGroup {
   name: string
   displayName: string
+  description: string
   exports: TypeDocNode[]
 }
 
@@ -69,6 +70,7 @@ export function ModuleGroupedView({ data, searchQuery = '', initialHash }: Modul
           groups.push({
             name: child.name,
             displayName: formatModuleName(child.name),
+            description: getModuleDescription(child.comment),
             exports,
           })
         }
@@ -238,6 +240,8 @@ export function ModuleGroupedView({ data, searchQuery = '', initialHash }: Modul
           const types = module.exports.filter((e) => e.kind === ReflectionKind.TypeAlias)
           const variables = module.exports.filter((e) => e.kind === ReflectionKind.Variable)
           const namespaces = module.exports.filter((e) => e.kind === ReflectionKind.Namespace)
+          const fullImportPath = getFullImportPath(data.name, module.name)
+          const importStatement = `import {} from '${fullImportPath}'`
 
           return (
             <div
@@ -261,20 +265,13 @@ export function ModuleGroupedView({ data, searchQuery = '', initialHash }: Modul
                 <div className="flex items-center gap-3">
                   <ChevronIcon expanded={isExpanded} />
                   <div className="text-left">
-                    <h4 className="font-mono text-sm font-semibold text-slate-900 dark:text-white">{module.displayName}</h4>
-                    <div
-                      className="flex items-center gap-2 mt-0.5"
-                      onClick={(e) => e.stopPropagation()}
-                      onKeyDown={(e) => e.stopPropagation()}
-                    >
-                      <code className="text-xs text-slate-500 dark:text-slate-400 bg-slate-200 dark:bg-slate-700 px-1.5 py-0.5 rounded font-mono">
-                        {getFullImportPath(data.name, module.name)}
-                      </code>
-                      <CopyButton text={getFullImportPath(data.name, module.name)} size="sm" />
-                    </div>
+                    <h4 className="font-mono text-sm font-semibold text-slate-900 dark:text-white">{fullImportPath}</h4>
+                    {module.description && (
+                      <p className="text-xs text-slate-600 dark:text-slate-400 mt-0.5 max-w-lg">{module.description}</p>
+                    )}
                   </div>
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex flex-col items-end gap-2">
                   <ExportBadges
                     functions={functions.length}
                     classes={classes.length}
@@ -283,6 +280,9 @@ export function ModuleGroupedView({ data, searchQuery = '', initialHash }: Modul
                     variables={variables.length}
                     namespaces={namespaces.length}
                   />
+                  <div onClick={(e) => e.stopPropagation()} onKeyDown={(e) => e.stopPropagation()}>
+                    <CopyButton text={importStatement} size="sm" />
+                  </div>
                 </div>
               </div>
 
