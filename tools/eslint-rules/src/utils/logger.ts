@@ -1,8 +1,7 @@
 import type { Logger, LogLevel } from '@hyperfrontend/logging'
 import { logger as nxLogger } from '@nx/devkit'
 import { stringify } from '@hyperfrontend/immutable-api-utils/built-in-copy/json'
-import { freeze } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
-import { keys } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
+import { freeze, keys } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
 import { createLogger } from '@hyperfrontend/logging'
 import { sanitize } from '@hyperfrontend/project-scope/core/logger'
 

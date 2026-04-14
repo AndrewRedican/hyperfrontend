@@ -25,6 +25,7 @@ import libRequireJsdocExampleLabel, { RULE_NAME as LIB_REQUIRE_JSDOC_EXAMPLE_LAB
 import libRequireModuleHeader, { RULE_NAME as LIB_REQUIRE_MODULE_HEADER } from './rules/lib-require-module-header'
 import libTsconfigPaths, { RULE_NAME as LIB_TSCONFIG_PATHS } from './rules/lib-tsconfig-paths'
 import maxFileLines, { RULE_NAME as MAX_FILE_LINES } from './rules/max-file-lines'
+import maxPathOccurrences, { RULE_NAME as MAX_PATH_OCCURRENCES } from './rules/max-path-occurrences'
 import noAsciiArtDiagrams, { RULE_NAME as NO_ASCII_ART_DIAGRAMS } from './rules/no-ascii-art-diagrams'
 import noAsyncFsApi, { RULE_NAME as NO_ASYNC_FS_API } from './rules/no-async-fs-api'
 import noBarrelStarExport, { RULE_NAME as NO_BARREL_STAR_EXPORT } from './rules/no-barrel-star-export'
@@ -81,6 +82,7 @@ export const rules: ESLint.Plugin['rules'] = {
   [LIB_REQUIRE_MODULE_HEADER]: libRequireModuleHeader as unknown as Rule.RuleModule,
   [LIB_TSCONFIG_PATHS]: libTsconfigPaths as unknown as Rule.RuleModule,
   [MAX_FILE_LINES]: maxFileLines as unknown as Rule.RuleModule,
+  [MAX_PATH_OCCURRENCES]: maxPathOccurrences as unknown as Rule.RuleModule,
   [NO_ASCII_ART_DIAGRAMS]: noAsciiArtDiagrams as unknown as Rule.RuleModule,
   [NO_ASYNC_FS_API]: noAsyncFsApi as unknown as Rule.RuleModule,
   [NO_BARREL_STAR_EXPORT]: noBarrelStarExport as unknown as Rule.RuleModule,
