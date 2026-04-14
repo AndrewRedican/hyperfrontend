@@ -1,3 +1,8 @@
+/**
+ * Data manipulation utilities for type detection, deep equality, traversal, and key/value operations.
+ *
+ * @module @hyperfrontend/data-utils
+ */
 export type {
   Predicate,
   DataType,
