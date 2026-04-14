@@ -1,3 +1,8 @@
+/**
+ * Serializers for converting Changelog objects to markdown strings or JSON.
+ *
+ * @module @hyperfrontend/versioning/changelog/serialize
+ */
 export type { JsonSerializeOptions } from './to-json'
 export type { SerializeOptions } from './templates'
 export { serializeChangelog } from './to-string'

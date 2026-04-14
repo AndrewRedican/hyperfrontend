@@ -1,3 +1,8 @@
+/**
+ * Immutable changelog operations for adding, removing, filtering, merging, and transforming.
+ *
+ * @module @hyperfrontend/versioning/changelog/operations
+ */
 export type { RemoveEntryOptions } from './remove-entry'
 export type { RemoveSectionOptions } from './remove-section'
 export type { AddEntryOptions } from './add-entry'

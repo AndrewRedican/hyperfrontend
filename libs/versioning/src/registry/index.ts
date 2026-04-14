@@ -1,3 +1,8 @@
+/**
+ * Package registry abstraction with NPM client, caching, and version/package info models.
+ *
+ * @module @hyperfrontend/versioning/registry
+ */
 export type { RegistryType } from './factory'
 export type { Registry, RegistryConfig } from './models'
 export type { PackageInfo } from './models'

@@ -1,3 +1,8 @@
+/**
+ * Registry types and factories for registries, packages, versions, and maintainers.
+ *
+ * @module @hyperfrontend/versioning/registry/models
+ */
 export type { Registry, RegistryConfig } from './registry'
 export type { PackageInfo } from './package-info'
 export type { VersionInfo, Maintainer } from './version-info'

@@ -1,3 +1,8 @@
+/**
+ * Version flow orchestration with step management, presets, and execution for release workflows.
+ *
+ * @module @hyperfrontend/versioning/flow
+ */
 export type {
   CreateFlowOptions,
   CreateStepOptions,

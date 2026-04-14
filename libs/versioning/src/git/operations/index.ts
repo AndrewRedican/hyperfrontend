@@ -1,3 +1,8 @@
+/**
+ * Git shell command wrappers for log, tag, commit, staging, status, and diff operations.
+ *
+ * @module @hyperfrontend/versioning/git/operations
+ */
 export type { GitLogOptions } from './log'
 export type { GitTagOptions, ListTagsOptions } from './query-tags'
 export type { CreateTagOptions } from './manage-tags'

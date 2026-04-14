@@ -1,3 +1,8 @@
+/**
+ * Repository configuration with platform detection, URL parsing, and compare URL generation.
+ *
+ * @module @hyperfrontend/versioning/repository
+ */
 export type { KnownPlatform, RepositoryPlatform } from './models'
 export type { RepositoryInferenceSource, RepositoryResolution, RepositoryResolutionMode } from './models'
 export type { CompareUrlFormatter, CreateRepositoryConfigOptions, RepositoryConfig } from './models'

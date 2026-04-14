@@ -1,3 +1,8 @@
+/**
+ * Git operations and models for commits, tags, refs, logging, staging, and diff operations.
+ *
+ * @module @hyperfrontend/versioning/git
+ */
 export type { GitClient, GitClientConfig } from './factory'
 export type {
   CreateGitCommitOptions,

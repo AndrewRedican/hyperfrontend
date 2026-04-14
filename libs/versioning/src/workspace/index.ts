@@ -1,8 +1,7 @@
 /**
- * Workspace Module
+ * Workspace management with package discovery, dependency graphs, and versioning coordination.
  *
- * Package discovery, dependency management, and versioning coordination
- * for monorepo workspaces. Integrates with project-scope for file operations.
+ * @module @hyperfrontend/versioning/workspace
  *
  * @example
  * ```typescript

@@ -1,3 +1,8 @@
+/**
+ * Flow and step type definitions with factory functions and configuration builders.
+ *
+ * @module @hyperfrontend/versioning/flow/models
+ */
 export type { FlowConfig, FlowContext, FlowResult, FlowState, FlowStatus, FlowStepResult, FlowStepResultWithId, Logger } from './types'
 export type { FlowStep, StepCondition, StepExecutor, CreateStepOptions } from './step'
 export { DEFAULT_FLOW_CONFIG, DEFAULT_CHANGELOG_FILENAME } from './types'

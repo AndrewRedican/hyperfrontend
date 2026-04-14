@@ -1,3 +1,8 @@
+/**
+ * Changelog data structures and factory functions for entries, sections, and items.
+ *
+ * @module @hyperfrontend/versioning/changelog/models
+ */
 export type { Changelog, ChangelogFormat, ChangelogHeader, ChangelogLink, ChangelogMetadata } from './changelog'
 export type { ChangelogEntry, ChangelogItem, ChangelogSection } from './entry'
 export type { ChangelogSectionType } from './section'

@@ -1,3 +1,8 @@
+/**
+ * Commit classification logic for matching commits to project scopes and infrastructure changes.
+ *
+ * @module @hyperfrontend/versioning/commits/classify
+ */
 export type {
   ClassificationContext,
   ClassificationResult,

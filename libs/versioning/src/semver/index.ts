@@ -1,3 +1,8 @@
+/**
+ * Full semver implementation with parsing, comparison, incrementing, and formatting.
+ *
+ * @module @hyperfrontend/versioning/semver
+ */
 export type { BumpType, SemVer } from './models'
 export type { Comparator, ComparatorSet, Range, RangeOperator } from './models'
 export {

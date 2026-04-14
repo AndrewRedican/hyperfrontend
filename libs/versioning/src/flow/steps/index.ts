@@ -1,3 +1,8 @@
+/**
+ * Individual flow step implementations for registry fetch, commit analysis, and changelog generation.
+ *
+ * @module @hyperfrontend/versioning/flow/steps
+ */
 export { FETCH_REGISTRY_STEP_ID, createFetchRegistryStep } from './fetch-registry'
 export { RESOLVE_REPOSITORY_STEP_ID, createResolveRepositoryStep } from './resolve-repository'
 export { ANALYZE_COMMITS_STEP_ID, createAnalyzeCommitsStep } from './analyze-commits'

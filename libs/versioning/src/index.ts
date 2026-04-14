@@ -1,3 +1,8 @@
+/**
+ * Version management toolkit with semver, changelog, git operations, and workspace coordination.
+ *
+ * @module @hyperfrontend/versioning
+ */
 export type {
   CompareUrlFormatter,
   CreateCompareUrlOptions,

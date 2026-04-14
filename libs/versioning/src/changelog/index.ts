@@ -1,3 +1,8 @@
+/**
+ * Comprehensive Keep-a-Changelog module with parsing, serialization, comparison, and operations.
+ *
+ * @module @hyperfrontend/versioning/changelog
+ */
 export type {
   Changelog,
   ChangelogEntry,

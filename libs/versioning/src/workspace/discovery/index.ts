@@ -1,3 +1,8 @@
+/**
+ * Package discovery, changelog finding, and dependency graph construction for monorepos.
+ *
+ * @module @hyperfrontend/versioning/workspace/discovery
+ */
 export type { DiscoveryOptions, DiscoveryResult } from './packages'
 export { discoverPackages, discoverProject, discoverProjectByName } from './packages'
 export type { DiscoveredChangelog } from './discover-changelogs'

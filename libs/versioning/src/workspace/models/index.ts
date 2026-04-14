@@ -1,3 +1,8 @@
+/**
+ * Workspace types for configuration, projects, and query utilities.
+ *
+ * @module @hyperfrontend/versioning/workspace/models
+ */
 export type { Workspace, WorkspaceConfig, WorkspaceType } from './workspace'
 export {
   DEFAULT_PATTERNS,

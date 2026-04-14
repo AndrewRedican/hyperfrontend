@@ -1,3 +1,8 @@
+/**
+ * Conventional commit types, factories, and semver bump derivation.
+ *
+ * @module @hyperfrontend/versioning/commits/models
+ */
 export type { ConventionalCommit, CommitFooter } from './conventional'
 export type { CommitType } from './commit-type'
 export type { BreakingChange } from './breaking'

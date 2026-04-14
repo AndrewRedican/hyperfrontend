@@ -1,3 +1,8 @@
+/**
+ * Conventional commit parsing and classification with scope derivation and infrastructure matching.
+ *
+ * @module @hyperfrontend/versioning/commits
+ */
 export type {
   ClassificationContext,
   ClassificationResult,
