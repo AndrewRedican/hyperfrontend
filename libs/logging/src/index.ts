@@ -3,9 +3,9 @@
  *
  * @module @hyperfrontend/logging
  */
-export type { LogLevelFn, WarnLevelFn, ErrorLevelFn, InfoLevelFn, DebugLevelFn, Logger, LogFnName, LogFunction } from './create-logger'
-export { createLogger } from './create-logger'
 export type { LogLevel, LogLevelState, SetLogLevel, GetLogLevel, ShouldLog, LogLevelConfig } from './create-log-level-config'
+export type { LogLevelFn, WarnLevelFn, ErrorLevelFn, InfoLevelFn, DebugLevelFn, Logger, LogFnName, LogFunction } from './create-logger'
 export { isValidLogLevel, createLogLevelConfig } from './create-log-level-config'
+export { createLogger } from './create-logger'
 export { isValidLogger } from './is-valid-logger'
 export { logger } from './logger'
