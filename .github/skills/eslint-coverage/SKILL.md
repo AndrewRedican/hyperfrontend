@@ -12,6 +12,8 @@ allowed-tools:
 
 # ESLint Rule Coverage Analysis
 
+> **DO NOT RUN COMMANDS.** Never execute test coverage commands, Jest, or any terminal commands. This skill relies entirely on reading source files. Analyze code paths by inspection only.
+
 Read implementation and tests in full. Map every branch to a test case. Add tests or istanbul ignores for gaps.
 
 ## Reference Locations
@@ -27,6 +29,8 @@ Read implementation and tests in full. Map every branch to a test case. Add test
 ---
 
 ## Workflow
+
+**All analysis is done by reading files — no commands.**
 
 1. Read implementation — note every `if`, `?:`, `&&`, `||`, loop, map operation
 2. Read test file — list what each case exercises
