@@ -1,3 +1,8 @@
+/**
+ * Time utilities for clocks, timers, async delays, and time window normalization.
+ *
+ * @module @hyperfrontend/time-utils
+ */
 export type { Clock } from './create-clock'
 export { createClock } from './create-clock'
 export type { Timer } from './create-timer'
