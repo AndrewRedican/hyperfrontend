@@ -1,3 +1,5 @@
+export type { ThirdPartyLicenseEntry } from './assets'
+export type { LogLevel, Logger } from './logger'
 export type {
   AssetConfig,
   FormatEntryConfig,
@@ -32,7 +34,26 @@ export {
   generateThirdPartyLicensesContent,
   copyThirdPartyLicensesAsset,
 } from './assets'
-export type { ThirdPartyLicenseEntry } from './assets'
+export { createCJSEntryConfig, createCJSConfig } from './config-cjs'
+export { createESMEntryConfig, createESMConfig } from './config-esm'
+export { createIIFEEntryConfig, createIIFEConfig } from './config-iife'
+export { createUMDEntryConfig, createUMDConfig } from './config-umd'
+export { generateDeclarations, flattenDeclarationPaths } from './declarations'
+export {
+  discoverEntryPoints,
+  resolveEntries,
+  getEntryPointsByPlatform,
+  getSharedEntryPoints,
+} from './entry-resolver'
+export { getLogger } from './logger'
+export {
+  readProjectPackageJson,
+  readRootPackageJson,
+  writeOutputPackageJson,
+  generateExportsFromFormats,
+  generatePackageJson,
+  hasFunding,
+} from './package-json'
 export {
   resolveOutputPath,
   resolveTsConfigPath,
@@ -43,12 +64,6 @@ export {
   getStandardEntryPath,
 } from './paths'
 export {
-  discoverEntryPoints,
-  resolveEntries,
-  getEntryPointsByPlatform,
-  getSharedEntryPoints,
-} from './entry-resolver'
-export {
   createNodeResolvePlugin,
   createBrowserNodeResolvePlugin,
   createCommonJsPlugin,
@@ -57,18 +72,3 @@ export {
   createJsonPlugin,
   createTerserPlugin,
 } from './rollup-plugins'
-export { createESMEntryConfig, createESMConfig } from './config-esm'
-export { createCJSEntryConfig, createCJSConfig } from './config-cjs'
-export { createIIFEEntryConfig, createIIFEConfig } from './config-iife'
-export { createUMDEntryConfig, createUMDConfig } from './config-umd'
-export { generateDeclarations, flattenDeclarationPaths } from './declarations'
-export {
-  readProjectPackageJson,
-  readRootPackageJson,
-  writeOutputPackageJson,
-  generateExportsFromFormats,
-  generatePackageJson,
-  hasFunding,
-} from './package-json'
-export type { LogLevel, Logger } from './logger'
-export { getLogger } from './logger'
