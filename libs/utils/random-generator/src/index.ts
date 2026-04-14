@@ -1,3 +1,8 @@
+/**
+ * Statistical random distributions and UUID generation utilities.
+ *
+ * @module @hyperfrontend/random-generator-utils
+ */
 export { randomExponential } from './random-exponential'
 export { randomGaussian } from './random-gaussian'
 export { randomLogarithmic } from './random-logarithmic'
