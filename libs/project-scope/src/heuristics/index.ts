@@ -1,3 +1,8 @@
+/**
+ * Project heuristics for type detection, framework identification, entry points, and dependency analysis.
+ *
+ * @module @hyperfrontend/project-scope/heuristics
+ */
 export type { DetectProjectTypeOptions, ProjectTypeDetection, TypeEvidence } from './project-type'
 export { detectProjectType } from './project-type'
 export type { FrameworkIdentification, IdentifyFrameworksOptions, StackSummary } from './framework'

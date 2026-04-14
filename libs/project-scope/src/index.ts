@@ -1,3 +1,8 @@
+/**
+ * Project analysis toolkit with CLI commands, tech stack detection, and workspace utilities.
+ *
+ * @module @hyperfrontend/project-scope
+ */
 export type {
   AnalyzeCommandOptions,
   CliConfig,

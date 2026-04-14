@@ -1,3 +1,8 @@
+/**
+ * CLI commands for project analysis including analyze, config, deps, and tree commands.
+ *
+ * @module @hyperfrontend/project-scope/cli
+ */
 export type { CliConfig, Command, CommandResult, GlobalOptions, OutputFormat } from './types'
 export { run } from './run'
 export type { AnalyzeCommandOptions } from './commands/analyze'

@@ -1,3 +1,8 @@
+/**
+ * Tech stack detection for frontend, backend, build tools, testing, linting, and monorepo tools.
+ *
+ * @module @hyperfrontend/project-scope/tech
+ */
 import type { PackageJson } from '../project/package'
 import type { BackendDetection } from './backend'
 import type { BuildToolDetection } from './build'

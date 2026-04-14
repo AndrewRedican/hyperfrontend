@@ -1,3 +1,8 @@
+/**
+ * File encoding detection with BOM handling, binary detection, and UTF-8 conversion.
+ *
+ * @module @hyperfrontend/project-scope/core/encoding
+ */
 export type { EncodingInfo } from './detect'
 export {
   BINARY_SIGNATURES,

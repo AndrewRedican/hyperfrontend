@@ -1,3 +1,8 @@
+/**
+ * Build tool detection for Webpack, Vite, Rollup, esbuild, Babel, SWC, and Parcel.
+ *
+ * @module @hyperfrontend/project-scope/tech/build
+ */
 export type { BuildToolDetection, BuildToolDetector } from './types'
 export { WEBPACK_CONFIG_PATTERNS, webpackDetector } from './webpack'
 export { VITE_CONFIG_PATTERNS, viteDetector } from './vite'

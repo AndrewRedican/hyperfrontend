@@ -1,3 +1,8 @@
+/**
+ * Monorepo tool detection for Nx, Turborepo, Lerna, Rush, and pnpm/npm/yarn workspaces.
+ *
+ * @module @hyperfrontend/project-scope/tech/monorepo
+ */
 export type { DetectionSource, MonorepoDetection, MonorepoDetector } from './types'
 export { nxDetector } from './nx'
 export { turborepoDetector } from './turborepo'

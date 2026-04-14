@@ -1,3 +1,8 @@
+/**
+ * Filesystem operations for reading/writing files, directory traversal, and stat checks.
+ *
+ * @module @hyperfrontend/project-scope/core/fs
+ */
 export type { FileSystemErrorCode, FileSystemErrorContext, ReadJsonFileOptions } from './read'
 export { createFileSystemError, readFileBuffer, readFileContent, readFileIfExists, readJsonFile, readJsonFileIfExists } from './read'
 export type { WriteFileOptions, WriteJsonOptions } from './write'

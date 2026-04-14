@@ -1,3 +1,8 @@
+/**
+ * Core utilities for filesystem, path manipulation, platform detection, and encoding.
+ *
+ * @module @hyperfrontend/project-scope/core
+ */
 export type {
   DirectoryEntry,
   FileStats,

@@ -1,4 +1,9 @@
 /**
+ * Type definitions for project analysis including ProjectType, WorkspaceType, and AnalysisResult.
+ *
+ * @module @hyperfrontend/project-scope/models
+ */
+/**
  * Project type classification.
  */
 export type ProjectType = 'application' | 'library' | 'e2e' | 'tool' | 'plugin' | 'unknown'

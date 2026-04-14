@@ -1,3 +1,8 @@
+/**
+ * Frontend framework detection for React, Next.js, Vue, Angular, Svelte, Solid, Qwik, and more.
+ *
+ * @module @hyperfrontend/project-scope/tech/frontend
+ */
 export type { FrameworkDetection, FrameworkDetector } from './types'
 export { reactDetector } from './react'
 export { nextjsDetector } from './nextjs'

@@ -1,3 +1,8 @@
+/**
+ * Testing framework detection for Jest, Vitest, Mocha, Cypress, and Playwright.
+ *
+ * @module @hyperfrontend/project-scope/tech/testing
+ */
 export type { TestingFrameworkDetection, TestingFrameworkDetector } from './types'
 export { JEST_CONFIG_PATTERNS, jestDetector } from './jest'
 export { VITEST_CONFIG_PATTERNS, vitestDetector } from './vitest'

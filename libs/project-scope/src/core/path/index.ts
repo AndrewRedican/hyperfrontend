@@ -1,3 +1,8 @@
+/**
+ * Path manipulation utilities for joining, normalization, resolution, and segment extraction.
+ *
+ * @module @hyperfrontend/project-scope/core/path
+ */
 export { join, joinPosix } from './join'
 export { ensureTrailingSlash, normalizePath, normalizeToForwardSlashes, normalizeToNative, removeTrailingSlash } from './normalize'
 export { isAbsolute, joinPath, offsetFromRoot, relativePath, resolveFromWorkspace, resolvePath, resolveRealPath } from './resolve'

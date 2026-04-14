@@ -1,3 +1,8 @@
+/**
+ * Virtual filesystem with transactional tree operations, diff generation, and commit/rollback support.
+ *
+ * @module @hyperfrontend/project-scope/vfs
+ */
 export { createTree, createTreeFromDisk } from './factory'
 export { createFsTree } from './fs-tree'
 export { commitChanges, rollbackChanges } from './commit'

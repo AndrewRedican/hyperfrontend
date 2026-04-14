@@ -1,3 +1,8 @@
+/**
+ * Project utilities for file traversal, config detection, package.json operations, and root finding.
+ *
+ * @module @hyperfrontend/project-scope/project
+ */
 export type { FindOptions, WalkEntry, WalkOptions, WalkVisitor, WalkVisitorResult } from './traversal'
 export { findDirectories, findFiles, findFilesInTree, walkDirectory, walkTree } from './traversal'
 export type { ConfigPatternInfo, ConfigType, DetectedConfig, DetectConfigOptions, ParsedConfig } from './config'
