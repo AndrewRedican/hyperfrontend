@@ -1,3 +1,8 @@
+/**
+ * State machine library with async operations, events, lifecycle components, and state management.
+ *
+ * @module @hyperfrontend/state-machine
+ */
 export { start, cancel, pause, success, fail, START, SUCCESS, FAIL, PAUSE, CANCEL } from './actions'
 export type { AsyncProcess } from './async-operation'
 export { AsyncOperation } from './async-operation'
