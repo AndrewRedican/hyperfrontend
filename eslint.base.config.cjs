@@ -167,6 +167,7 @@ module.exports = [
       'workspace/no-mixed-type-export': 'error',
       'workspace/max-path-occurrences': 'error',
       'workspace/import-order': 'error',
+      'workspace/export-order': 'error',
       'workspace/no-enum': 'error',
       'workspace/no-async-fs-api': 'error',
       'workspace/no-deprecated-tag': 'error',

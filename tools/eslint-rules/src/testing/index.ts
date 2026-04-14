@@ -1,11 +1,6 @@
-export {
-  createTempWorkspace,
-  createTempWorkspaceManager,
-  type TempWorkspace,
-  type TempWorkspaceConfig,
-  type TempWorkspaceManager,
-} from './temp-workspace'
-
+export type { ProjectJsonFixture, PackageJsonFixture } from './fixtures'
+export type { JsonRuleTesterConfig, TypeScriptRuleTesterConfig, ESLintRuleTester } from './rule-tester'
+export type { TempWorkspace, TempWorkspaceConfig, TempWorkspaceManager } from './temp-workspace'
 export {
   PUBLISHABLE_LIBRARY_PROJECT_JSON,
   NON_PUBLISHABLE_LIBRARY_PROJECT_JSON,
@@ -30,17 +25,12 @@ export {
   createPublishableProjectJson,
   createPackageJson,
   createNamedPackageJson,
-  type ProjectJsonFixture,
-  type PackageJsonFixture,
 } from './fixtures'
-
 export {
   createJsonRuleTester,
   createTypeScriptRuleTester,
   createPackageJsonRuleTester,
   createProjectJsonRuleTester,
-  type JsonRuleTesterConfig,
-  type TypeScriptRuleTesterConfig,
-  type ESLintRuleTester,
   TypeScriptRuleTester,
 } from './rule-tester'
+export { createTempWorkspace, createTempWorkspaceManager } from './temp-workspace'
