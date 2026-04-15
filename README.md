@@ -294,7 +294,7 @@ A comprehensive documentation site is under active development at [hyperfrontend
 - [Architecture Guide](ARCHITECTURE.md) explains how the libraries compose together
 - [Manifesto](MANIFESTO.md) explains the project's philosophy and scope
 
-For the documentation roadmap, see [roadmap/documentation-roadmap.md](roadmap/documentation-roadmap.md).
+For the documentation roadmap, see [roadmap/docs-site-action-plan.md](roadmap/docs-site-action-plan.md).
 
 ## Contributing
 

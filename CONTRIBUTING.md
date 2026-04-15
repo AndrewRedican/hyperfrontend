@@ -145,7 +145,7 @@ The output will be in `apps/docs-site/out/` (this directory is gitignored).
 
 #### Documentation Structure
 
-See the [Documentation Roadmap](./roadmap/documentation-roadmap.md) for the full documentation plan and structure.
+See the [Documentation Roadmap](./roadmap/docs-site-action-plan.md) for the full documentation plan and structure.
 
 ## Contributor License Agreement (CLA)
 
