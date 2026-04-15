@@ -4,6 +4,8 @@ import { docsNavigation, mainNavLinks } from '@/lib/navigation'
 import { createDate } from '@hyperfrontend/immutable-api-utils/built-in-copy/date'
 import { createSet } from '@hyperfrontend/immutable-api-utils/built-in-copy/set'
 
+export const dynamic = 'force-static'
+
 const BASE_URL = 'https://hyperfrontend.dev'
 
 /**
