@@ -1,9 +1,15 @@
 import type { Contributor } from '@/lib/docs-loader'
+import type { Metadata } from 'next'
 import { Breadcrumb } from '@/components/breadcrumb'
 import { ReadmeContent } from '@/components/readme-content'
 import { getAcknowledgments, getContributors } from '@/lib/docs-loader'
 import { markdownToHtml } from '@/lib/markdown'
 import { extractMermaidBlocks } from '@/lib/mermaid-utils'
+
+export const metadata: Metadata = {
+  title: 'Acknowledgments',
+  description: 'Credits and gratitude to supporters, contributors, and sources of inspiration for hyperfrontend.',
+}
 
 /** Map contribution types to emoji and label */
 const CONTRIBUTION_EMOJI: Record<string, { emoji: string; label: string }> = {

@@ -4,9 +4,7 @@ Improve docs-site SEO, branding, and engagement using Next.js built-in features.
 
 ---
 
-## Phase 1: SEO (Foundation)
-
-**Detailed plan:** [seo-implementation-plan.md](./seo-implementation-plan.md)
+## Phase 1: SEO (Foundation) ✅
 
 - Root layout metadata (metadataBase, twitter, alternates)
 - sitemap.ts and robots.ts

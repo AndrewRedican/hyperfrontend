@@ -1,7 +1,13 @@
+import type { Metadata } from 'next'
 import { Breadcrumb } from '@/components/breadcrumb'
 import { DocsContentWrapper } from '@/components/docs-content-wrapper'
 import { H1, H2 } from '@/components/heading-with-anchor'
 import Link from 'next/link'
+
+export const metadata: Metadata = {
+  title: 'Core Concepts',
+  description: 'Understand hyperfrontend fundamentals: features, host applications, communication patterns, and iframe-based isolation.',
+}
 
 export default function CoreConceptsPage() {
   return (

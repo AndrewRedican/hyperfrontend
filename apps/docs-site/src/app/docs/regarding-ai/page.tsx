@@ -1,8 +1,14 @@
+import type { Metadata } from 'next'
 import { Breadcrumb } from '@/components/breadcrumb'
 import { ReadmeContent } from '@/components/readme-content'
 import { getRegardingAi } from '@/lib/docs-loader'
 import { markdownToHtml } from '@/lib/markdown'
 import { extractMermaidBlocks } from '@/lib/mermaid-utils'
+
+export const metadata: Metadata = {
+  title: 'Regarding AI',
+  description: 'How AI and LLMs are used in hyperfrontend development with a human-in-the-loop verification process.',
+}
 
 export default async function RegardingAiPage() {
   const content = getRegardingAi()

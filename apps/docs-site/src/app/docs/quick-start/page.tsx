@@ -1,8 +1,14 @@
+import type { Metadata } from 'next'
 import { Breadcrumb } from '@/components/breadcrumb'
 import { CodeBlock } from '@/components/code-block'
 import { DocsContentWrapper } from '@/components/docs-content-wrapper'
 import { H1, H2 } from '@/components/heading-with-anchor'
 import Link from 'next/link'
+
+export const metadata: Metadata = {
+  title: 'Quick Start',
+  description: 'Get a micro-frontend feature running in under 5 minutes with step-by-step setup guide.',
+}
 
 export default function QuickStartPage() {
   return (
