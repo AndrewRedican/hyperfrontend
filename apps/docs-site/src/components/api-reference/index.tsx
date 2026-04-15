@@ -384,12 +384,12 @@ function ViewModeToggle({ mode, onModeChange }: ViewModeToggleProps) {
   )
 }
 
-export { FunctionSignature } from './function-signature'
-export { TypeDefinition } from './type-definition'
-export { ParameterList } from './parameter-list'
-export { ExampleBlock } from './example-block'
-export { TypeLink } from './type-link'
-export { ModuleGroupedView, hasModules } from './module-grouped-view'
-export { CopyButton } from './copy-button'
-export { ApiSearchFilter, defaultFilters } from './api-search-filter'
 export type { TypeDocOutput, TypeDocNode } from './types'
+export { ApiSearchFilter, defaultFilters } from './api-search-filter'
+export { CopyButton } from './copy-button'
+export { ExampleBlock } from './example-block'
+export { FunctionSignature } from './function-signature'
+export { ModuleGroupedView, hasModules } from './module-grouped-view'
+export { ParameterList } from './parameter-list'
+export { TypeDefinition } from './type-definition'
+export { TypeLink } from './type-link'

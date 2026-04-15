@@ -1,7 +1,12 @@
+/**
+ * Browser-side string encoding utilities for base64 and UTF-8 conversions.
+ *
+ * @module @hyperfrontend/string-utils/browser
+ */
 export { arrayBufferToUtf8String } from '../lib/array-buffer-to-utf8-string/array-buffer-to-utf8-string'
 export { base64ToUint8Array } from '../lib/base64-to-uint8-array/browser/base64-to-uint8-array'
 export { fromBase64 } from '../lib/from-base64/browser/from-base64'
-export { utf8StringToUint8Array } from '../lib/utf8-string-to-uint8-array/browser/utf8-string-to-uint8-array'
 export { toBase64 } from '../lib/to-base64/browser/to-base64'
 export { uint8ArrayToBase64 } from '../lib/uint8-array-to-base64/browser/uint8-array-to-base64'
 export { uint8ArrayToUtf8String } from '../lib/uint8-array-to-utf8-string/uint8-array-to-utf8-string'
+export { utf8StringToUint8Array } from '../lib/utf8-string-to-uint8-array/browser/utf8-string-to-uint8-array'

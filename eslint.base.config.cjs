@@ -114,7 +114,7 @@ module.exports = [
       'jsdoc/require-returns': 'error',
       'jsdoc/require-returns-check': 'error',
       'jsdoc/check-param-names': 'error',
-      'jsdoc/check-tag-names': ['error', { typed: true, definedTags: ['locked'] }],
+      'jsdoc/check-tag-names': ['error', { typed: false, definedTags: ['locked', 'module'] }],
       'jsdoc/check-alignment': 'error',
       'jsdoc/multiline-blocks': 'error',
       'jsdoc/tag-lines': ['error', 'any', { startLines: 1 }],
@@ -164,7 +164,10 @@ module.exports = [
     rules: {
       'workspace/require-node-protocol': 'error',
       'workspace/no-mixed-type-import': 'error',
+      'workspace/no-mixed-type-export': 'error',
+      'workspace/max-path-occurrences': 'error',
       'workspace/import-order': 'error',
+      'workspace/export-order': 'error',
       'workspace/no-enum': 'error',
       'workspace/no-async-fs-api': 'error',
       'workspace/no-deprecated-tag': 'error',
@@ -218,7 +221,7 @@ module.exports = [
     rules: {
       'workspace/lib-require-jsdoc-example': 'error',
       'workspace/lib-require-jsdoc-example-label': 'error',
-      'workspace/lib-require-module-header': 'off',
+      'workspace/lib-require-module-header': 'error',
       'workspace/lib-pkg-main-reexports': 'error',
       'workspace/lib-entry-export-spacing': 'error',
     },

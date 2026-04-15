@@ -1,3 +1,8 @@
+/**
+ * Browser-side inbound packet receiver with deserialization and decryption.
+ *
+ * @module @hyperfrontend/network-protocol/browser/receiver
+ */
 import { createReceiverFactory } from '../../lib/receiver/creators/create-receiver-factory'
 import { createDeserializedEncryptedPacket } from '../packet'
 

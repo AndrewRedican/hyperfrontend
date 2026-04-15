@@ -11,6 +11,9 @@
  * @module \@hyperfrontend/immutable-api-utils
  */
 
+export type { LockedMethod } from './locked'
+export type { LockedPropDescriptorsCreator } from './locked-prop-descriptors'
+export type { PropertyLock } from './locked-props'
 export { Array } from './built-in-copy/array'
 export { Console } from './built-in-copy/console'
 export { Date } from './built-in-copy/date'
@@ -28,9 +31,6 @@ export { Symbol } from './built-in-copy/symbol'
 export { Timers } from './built-in-copy/timers'
 export { WeakMap } from './built-in-copy/weak-map'
 export { WeakSet } from './built-in-copy/weak-set'
-export type { LockedMethod } from './locked'
 export { locked } from './locked'
-export type { PropertyLock } from './locked-props'
-export { lockedProps } from './locked-props'
-export type { LockedPropDescriptorsCreator } from './locked-prop-descriptors'
 export { lockedPropertyDescriptors } from './locked-prop-descriptors'
+export { lockedProps } from './locked-props'

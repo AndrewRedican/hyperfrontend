@@ -1,3 +1,8 @@
+/**
+ * Browser-side packet encryption, serialization, and obfuscation with dynamic key support.
+ *
+ * @module @hyperfrontend/network-protocol/browser/packet
+ */
 import { encrypt, decrypt } from '@hyperfrontend/cryptography/browser'
 import { uint8ArrayToBase64, base64ToUint8Array } from '@hyperfrontend/string-utils/browser'
 import { createDeserializedEncryptedPacketCreator } from '../../lib/packet/creators/create-deserialized-encrypted-packet-creator'
@@ -34,6 +39,9 @@ export type {
   PacketDeobfuscation,
 } from '../../lib/packet/model'
 export type { ValidUnobfuscatedPacketBaseResult } from '../../lib/packet/validations/is-valid-unobfuscated-packet-base.model'
+export { createDynamicKeyEncryptionFactory } from '../../lib/packet/security/encryption/dynamic-encryption-key'
+export { createDynamicKeyObfuscationFactory } from '../../lib/packet/security/obfuscation/dynamic-obfuscation-key'
+export { isValidRefreshRate } from '../../lib/packet/security/obfuscation/is-valid-refresh-rate'
 export { isValidObfuscatedPacket } from '../../lib/packet/validations/is-valid-obfuscated-packet'
 export { isValidOrigin } from '../../lib/packet/validations/is-valid-origin'
 export { isValidSerializedEncryptedPacket } from '../../lib/packet/validations/is-valid-serialized-encrypted-packet'
@@ -41,6 +49,3 @@ export { isValidTarget } from '../../lib/packet/validations/is-valid-target'
 export { isValidUnencryptedPacket } from '../../lib/packet/validations/is-valid-unencrypted-packet'
 export { isValidUnobfuscatedPacketBase } from '../../lib/packet/validations/is-valid-unobfuscated-packet-base'
 export { isValidUnserializedEncryptedPacket } from '../../lib/packet/validations/is-valid-unserialized-encrypted-packet'
-export { createDynamicKeyEncryptionFactory } from '../../lib/packet/security/encryption/dynamic-encryption-key'
-export { createDynamicKeyObfuscationFactory } from '../../lib/packet/security/obfuscation/dynamic-obfuscation-key'
-export { isValidRefreshRate } from '../../lib/packet/security/obfuscation/is-valid-refresh-rate'

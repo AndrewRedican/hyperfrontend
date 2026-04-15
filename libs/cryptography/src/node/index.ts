@@ -1,3 +1,8 @@
+/**
+ * Node.js cryptography utilities for encryption, hashing, and secure key management using native crypto module.
+ *
+ * @module @hyperfrontend/cryptography/node
+ */
 export type { HashAlgorithm } from '../lib/create-hash/model'
 export type { Vault } from '../lib/create-vault/model'
 export type { EncryptionConfig } from '../lib/encryption-config.model'

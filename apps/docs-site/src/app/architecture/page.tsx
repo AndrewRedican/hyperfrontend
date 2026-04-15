@@ -1,9 +1,16 @@
+import type { Metadata } from 'next'
 import { Footer } from '@/components/footer'
 import { Header } from '@/components/header'
 import { ReadmeContent } from '@/components/readme-content'
 import { getRootArchitecture } from '@/lib/docs-loader'
 import { markdownToHtml } from '@/lib/markdown'
 import { extractMermaidBlocks } from '@/lib/mermaid-utils'
+
+export const metadata: Metadata = {
+  title: 'Architecture',
+  description:
+    'Layered architecture for runtime micro-frontend integration enabling frameworks to communicate through secure, contract-validated messaging.',
+}
 
 export default async function ArchitecturePage() {
   const content = getRootArchitecture()

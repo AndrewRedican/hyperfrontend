@@ -1,3 +1,8 @@
+/**
+ * CSS selector builder and validation utilities.
+ *
+ * @module @hyperfrontend/ui-utils/selector
+ */
 export {
   validateCssName,
   validateStringArgument,

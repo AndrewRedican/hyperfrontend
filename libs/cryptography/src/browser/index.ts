@@ -1,3 +1,8 @@
+/**
+ * Browser cryptography utilities for encryption, hashing, and secure key management using Web Crypto APIs.
+ *
+ * @module @hyperfrontend/cryptography/browser
+ */
 export type { HashAlgorithm } from '../lib/create-hash/model'
 export type { Vault } from '../lib/create-vault/model'
 export type { EncryptionConfig } from '../lib/encryption-config.model'
@@ -11,5 +16,5 @@ export { generateKey } from '../lib/generate-key/browser'
 export { getRandomValues } from '../lib/get-random-values/browser'
 export { getTimeBasedPassword } from '../lib/get-time-based-password/browser'
 export { getTimeBasedPasswords } from '../lib/get-time-based-passwords/browser'
-export { subtle } from '../lib/subtle/browser'
 export { isSHA256Hash } from '../lib/is-sha-256-hash'
+export { subtle } from '../lib/subtle/browser'

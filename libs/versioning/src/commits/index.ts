@@ -1,3 +1,8 @@
+/**
+ * Conventional commit parsing and classification with scope derivation and infrastructure matching.
+ *
+ * @module @hyperfrontend/versioning/commits
+ */
 export type {
   ClassificationContext,
   ClassificationResult,
@@ -10,6 +15,8 @@ export type {
   InfrastructureMatchContext,
   InfrastructureMatcher,
 } from './classify'
+export type { BreakingChange, CommitFooter, CommitType, ConventionalCommit } from './models'
+export type { ParsedBody, ParsedFooters, ParsedHeader } from './parse'
 export {
   allOf,
   anyOf,
@@ -39,7 +46,6 @@ export {
   TOOL_PREFIX_MATCHER,
   TOOLING_SCOPE_MATCHER,
 } from './classify'
-export type { BreakingChange, CommitFooter, CommitType, ConventionalCommit } from './models'
 export {
   COMMIT_TYPES,
   createBreakingFromFooter,
@@ -55,5 +61,4 @@ export {
   PATCH_TYPES,
   RELEASE_TYPES,
 } from './models'
-export type { ParsedBody, ParsedFooters, ParsedHeader } from './parse'
 export { isConventionalCommit, parseBody, parseConventionalCommit, parseFooters, parseHeader } from './parse'

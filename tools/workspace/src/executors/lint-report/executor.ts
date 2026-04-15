@@ -55,7 +55,7 @@ export default async function lintReportExecutor(options: LintReportExecutorOpti
   logger.info('Running lint...')
 
   const target = affected ? 'affected' : 'run-many'
-  const args = ['nx', target, '-t=lint']
+  const args = ['nx', target, '-t=lint', '--fix']
 
   let raw: string
   try {

@@ -753,9 +753,7 @@ export const clockContract: IChannelContract = {
 
 ## Related Documentation
 
-- [Documentation Strategy](./documentation-strategy.md) — Overall documentation vision
-- [Documentation Phase 4](./documentation-phase-4-polish.md) — Demo showcase requirements (section 4.9)
-- [Documentation Roadmap](./documentation-roadmap.md) — Where demos fit in the larger plan
+- [Documentation Roadmap](./docs-site-action-plan.md) — Where demos fit in the larger plan
 
 ---
 

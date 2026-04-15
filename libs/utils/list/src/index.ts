@@ -1,9 +1,14 @@
+/**
+ * Collection utilities for FIFO/LIFO lists, ranges, value pickers, and string array helpers.
+ *
+ * @module @hyperfrontend/list-utils
+ */
 export type { FifoList } from './create-fifo-list'
-export { createFifoList } from './create-fifo-list'
 export type { LifoList } from './create-lifo-list'
+export type { ValuePicker } from './create-value-picker'
+export { createFifoList } from './create-fifo-list'
 export { createLifoList } from './create-lifo-list'
 export { createRange } from './create-range'
-export type { ValuePicker } from './create-value-picker'
 export { createValuePicker } from './create-value-picker'
 export { getLastKeyInMap } from './get-last-key-in-map'
 export { nonEmptyStrings } from './non-empty-strings'

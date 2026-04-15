@@ -1,3 +1,8 @@
+/**
+ * Browser-side channel management for secure bidirectional communication.
+ *
+ * @module @hyperfrontend/network-protocol/browser/channel
+ */
 import { createChannelFactory } from '../../lib/channel/creators/create-channel'
 import { createChannelStoreFactory } from '../../lib/channel/creators/create-channel-store'
 import { createReceiver } from '../receiver'

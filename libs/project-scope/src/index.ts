@@ -1,3 +1,9 @@
+/**
+ * Project analysis toolkit with CLI commands, tech stack detection, and workspace utilities.
+ *
+ * @module @hyperfrontend/project-scope
+ */
+export type { AnalyzeOptions } from './analyze'
 export type {
   AnalyzeCommandOptions,
   CliConfig,
@@ -8,17 +14,6 @@ export type {
   GlobalOptions,
   OutputFormat,
   TreeCommandOptions,
-} from './cli'
-export {
-  analyzeCommand,
-  analyzeCommandDef,
-  configCommand,
-  configCommandDef,
-  depsCommand,
-  depsCommandDef,
-  run,
-  treeCommand,
-  treeCommandDef,
 } from './cli'
 export type {
   Cache,
@@ -41,6 +36,108 @@ export type {
   WriteFileOptions,
   WriteJsonOptions,
 } from './core'
+export type {
+  BuildGraphOptions,
+  CircularDependency,
+  DetectProjectTypeOptions,
+  DiscoverEntryPointsOptions,
+  EntryPointSource,
+  EntryPointType,
+  ExtendedEntryPointInfo,
+  FrameworkIdentification,
+  IdentifyFrameworksOptions,
+  ProjectDependencies,
+  ProjectTypeDetection,
+  StackSummary,
+  TypeEvidence,
+} from './heuristics'
+export type {
+  AnalysisMetadata,
+  AnalysisResult,
+  BuildToolInfo,
+  ConfigFileInfo,
+  DependencyGraph,
+  DependencyNode,
+  DependencySummary,
+  EntryPointInfo,
+  FrameworkInfo,
+  ProjectConfig,
+  ProjectType,
+  TestingInfo,
+  WorkspaceType,
+} from './models'
+export type {
+  DevkitLoadResult,
+  NxDevkit,
+  NxJson,
+  NxProjectConfig,
+  NxProjectDependency,
+  NxProjectGraph,
+  NxProjectGraphNode,
+  NxTargetConfig,
+  NxWorkspaceInfo,
+  NxWorkspaceLayout,
+} from './nx'
+export type {
+  AllDependencies,
+  ConfigPatternInfo,
+  ConfigType,
+  DependencyMap,
+  DetectedConfig,
+  DetectConfigOptions,
+  FindOptions,
+  PackageJson,
+  ParsedConfig,
+  WalkEntry,
+  WalkOptions,
+  WalkVisitor,
+  WalkVisitorResult,
+} from './project'
+export type {
+  AllDetections,
+  BackendDetection,
+  BackendDetector,
+  BuildToolDetection,
+  BuildToolDetector,
+  DetectAllOptions,
+  DetectionSource,
+  FrameworkDetection,
+  FrameworkDetector,
+  LegacyFrameworkDetection,
+  LegacyFrameworkDetector,
+  LintingToolDetection,
+  LintingToolDetector,
+  MonorepoDetection,
+  MonorepoDetector,
+  TestingFrameworkDetection,
+  TestingFrameworkDetector,
+  TypeSystemDetection,
+  TypeSystemDetector,
+} from './tech'
+export type {
+  CommitOptions,
+  CommitResult,
+  CreateTreeOptions,
+  DiffLine,
+  DiffOptions,
+  FileChange,
+  FileDiff,
+  ModeType,
+  Tree,
+  WriteOptions,
+} from './vfs'
+export { analyzeProject } from './analyze'
+export {
+  analyzeCommand,
+  analyzeCommandDef,
+  configCommand,
+  configCommandDef,
+  depsCommand,
+  depsCommandDef,
+  run,
+  treeCommand,
+  treeCommandDef,
+} from './cli'
 export {
   addBom,
   BINARY_SIGNATURES,
@@ -129,21 +226,6 @@ export {
   writeFileContent,
   writeJsonFile,
 } from './core'
-export type {
-  BuildGraphOptions,
-  CircularDependency,
-  DetectProjectTypeOptions,
-  DiscoverEntryPointsOptions,
-  EntryPointSource,
-  EntryPointType,
-  ExtendedEntryPointInfo,
-  FrameworkIdentification,
-  IdentifyFrameworksOptions,
-  ProjectDependencies,
-  ProjectTypeDetection,
-  StackSummary,
-  TypeEvidence,
-} from './heuristics'
 export {
   buildDependencyGraph,
   clearEntryPointCache,
@@ -156,36 +238,23 @@ export {
   identifyFrameworks,
   usesFramework,
 } from './heuristics'
-export type {
-  AnalysisMetadata,
-  AnalysisResult,
-  BuildToolInfo,
-  ConfigFileInfo,
-  DependencyGraph,
-  DependencyNode,
-  DependencySummary,
-  EntryPointInfo,
-  FrameworkInfo,
-  ProjectConfig,
-  ProjectType,
-  TestingInfo,
-  WorkspaceType,
-} from './models'
-export type {
-  AllDependencies,
-  ConfigPatternInfo,
-  ConfigType,
-  DependencyMap,
-  DetectedConfig,
-  DetectConfigOptions,
-  FindOptions,
-  PackageJson,
-  ParsedConfig,
-  WalkEntry,
-  WalkOptions,
-  WalkVisitor,
-  WalkVisitorResult,
-} from './project'
+export {
+  buildSimpleProjectGraph,
+  discoverNxProjects,
+  findNxWorkspaceRoot,
+  getDevkit,
+  getNxWorkspaceInfo,
+  getProjectConfig,
+  isDevkitAvailable,
+  isNxProject,
+  isNxWorkspace,
+  NX_CONFIG_FILES,
+  NX_PROJECT_FILE,
+  readProjectJson,
+  resetDevkitCache,
+  tryLoadDevkit,
+  withDevkit,
+} from './nx'
 export {
   clearConfigDetectionCache,
   CONFIG_PATTERNS,
@@ -220,56 +289,6 @@ export {
   walkTree,
   WORKSPACE_MARKERS,
 } from './project'
-export type {
-  DevkitLoadResult,
-  NxDevkit,
-  NxJson,
-  NxProjectConfig,
-  NxProjectDependency,
-  NxProjectGraph,
-  NxProjectGraphNode,
-  NxTargetConfig,
-  NxWorkspaceInfo,
-  NxWorkspaceLayout,
-} from './nx'
-export {
-  buildSimpleProjectGraph,
-  discoverNxProjects,
-  findNxWorkspaceRoot,
-  getDevkit,
-  getNxWorkspaceInfo,
-  getProjectConfig,
-  isDevkitAvailable,
-  isNxProject,
-  isNxWorkspace,
-  NX_CONFIG_FILES,
-  NX_PROJECT_FILE,
-  readProjectJson,
-  resetDevkitCache,
-  tryLoadDevkit,
-  withDevkit,
-} from './nx'
-export type {
-  AllDetections,
-  BackendDetection,
-  BackendDetector,
-  BuildToolDetection,
-  BuildToolDetector,
-  DetectAllOptions,
-  DetectionSource,
-  FrameworkDetection,
-  FrameworkDetector,
-  LegacyFrameworkDetection,
-  LegacyFrameworkDetector,
-  LintingToolDetection,
-  LintingToolDetector,
-  MonorepoDetection,
-  MonorepoDetector,
-  TestingFrameworkDetection,
-  TestingFrameworkDetector,
-  TypeSystemDetection,
-  TypeSystemDetector,
-} from './tech'
 export {
   allDetectors,
   angularDetector,
@@ -351,18 +370,6 @@ export {
   webpackDetector,
   yarnWorkspacesDetector,
 } from './tech'
-export type {
-  CommitOptions,
-  CommitResult,
-  CreateTreeOptions,
-  DiffLine,
-  DiffOptions,
-  FileChange,
-  FileDiff,
-  ModeType,
-  Tree,
-  WriteOptions,
-} from './vfs'
 export {
   commitChanges,
   createFsTree,
@@ -374,5 +381,3 @@ export {
   Mode,
   rollbackChanges,
 } from './vfs'
-export type { AnalyzeOptions } from './analyze'
-export { analyzeProject } from './analyze'

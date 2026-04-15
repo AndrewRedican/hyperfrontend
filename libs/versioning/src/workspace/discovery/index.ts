@@ -1,16 +1,12 @@
-export type { DiscoveryOptions, DiscoveryResult } from './packages'
-export { discoverPackages, discoverProject, discoverProjectByName } from './packages'
-export type { DiscoveredChangelog } from './discover-changelogs'
-export {
-  CHANGELOG_NAMES,
-  findChangelogs,
-  findChangelogsInTree,
-  findProjectChangelog,
-  findProjectChangelogInTree,
-  discoverAllChangelogs,
-} from './discover-changelogs'
-export { hasChangelog, getExpectedChangelogPath } from './changelog-path'
+/**
+ * Package discovery, changelog finding, and dependency graph construction for monorepos.
+ *
+ * @module @hyperfrontend/versioning/workspace/discovery
+ */
 export type { DependencyGraph, DependencyType, DependencyEdge, DependencyGraphAnalysis } from './dependencies'
+export type { DiscoveredChangelog } from './discover-changelogs'
+export type { DiscoveryOptions, DiscoveryResult } from './packages'
+export { hasChangelog, getExpectedChangelogPath } from './changelog-path'
 export {
   findInternalDependencies,
   findInternalDependenciesWithTypes,
@@ -20,3 +16,12 @@ export {
   getTransitiveDependencies,
   transitivelyDependsOn,
 } from './dependencies'
+export {
+  CHANGELOG_NAMES,
+  findChangelogs,
+  findChangelogsInTree,
+  findProjectChangelog,
+  findProjectChangelogInTree,
+  discoverAllChangelogs,
+} from './discover-changelogs'
+export { discoverPackages, discoverProject, discoverProjectByName } from './packages'

@@ -1,8 +1,7 @@
 import type { RegisteredIterableClassEntry, UnknownClass } from './models'
 import { isMarker } from './is-marker'
 import { registerClassTypes } from './register-class-types'
-import { registeredIterableClasses } from './shared/consts'
-import { getConfig } from './shared/consts'
+import { registeredIterableClasses, getConfig } from './shared/consts'
 
 /**
  * Registers a custom class as iterable, allowing the data utilities API to treat instances

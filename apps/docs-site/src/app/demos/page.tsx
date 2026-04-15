@@ -1,5 +1,11 @@
+import type { Metadata } from 'next'
 import { Footer } from '@/components/footer'
 import { Header } from '@/components/header'
+
+export const metadata: Metadata = {
+  title: 'Live Demos',
+  description: 'Interactive demonstrations of hyperfrontend micro-frontend architecture across frameworks.',
+}
 
 export default function DemosPage() {
   return (

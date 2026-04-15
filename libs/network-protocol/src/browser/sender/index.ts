@@ -1,3 +1,8 @@
+/**
+ * Browser-side outbound packet sender with serialization and encryption.
+ *
+ * @module @hyperfrontend/network-protocol/browser/sender
+ */
 import { createSenderFactory } from '../../lib/sender/creators/create-sender-factory'
 import { createSerializedEncryptedPacket } from '../packet'
 

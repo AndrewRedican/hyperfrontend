@@ -1,4 +1,10 @@
+import type { Metadata } from 'next'
 import { LibraryDocPage } from '@/components/library-doc-page'
+import { getLibraryMetadata } from '@/lib/metadata'
+
+export function generateMetadata(): Metadata {
+  return getLibraryMetadata('state-machine')
+}
 
 export default function StateMachinePage() {
   return (

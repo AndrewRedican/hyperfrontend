@@ -1,3 +1,9 @@
+/**
+ * Comprehensive Keep-a-Changelog module with parsing, serialization, comparison, and operations.
+ *
+ * @module @hyperfrontend/versioning/changelog
+ */
+export type { ChangelogDiff, DiffStats, EntryDiff, ItemDiff, PropertyDiff, SectionDiff } from './compare'
 export type {
   Changelog,
   ChangelogEntry,
@@ -13,6 +19,40 @@ export type {
   IssueRef,
   SchemaDifference,
 } from './models'
+export type {
+  AddEntryOptions,
+  EntryPredicate,
+  EntryTransformer,
+  ItemPredicate,
+  ItemTransformer,
+  MergeOptions,
+  MergeResult,
+  MergeStats,
+  MergeStrategy,
+  RemoveEntryOptions,
+  RemoveSectionOptions,
+  SectionPredicate,
+  SectionTransformer,
+} from './operations'
+export type { Token, TokenType } from './parse'
+export type { JsonSerializeOptions, SerializeOptions } from './serialize'
+export {
+  diffChangelogs,
+  diffEntries,
+  getEntryByVersion,
+  hasVersion,
+  haveSameVersions,
+  isChangelogEqual,
+  isCommitRefEqual,
+  isEntryEqual,
+  isHeaderEqual,
+  isIssueRefEqual,
+  isItemEqual,
+  isLinkEqual,
+  isMetadataEqual,
+  isSectionEqual,
+  summarizeDiff,
+} from './compare'
 export {
   changelogSchema,
   checkSchemaCompatibility,
@@ -31,53 +71,6 @@ export {
   SECTION_TYPE_MAP,
   validateChangelog,
 } from './models'
-export type { Token, TokenType } from './parse'
-export { parseChangelog, parseCommitRefs, parseIssueRefs, parseScopeFromItem, parseVersionFromHeading, tokenize } from './parse'
-export type { JsonSerializeOptions, SerializeOptions } from './serialize'
-export {
-  createSpacing,
-  DEFAULT_SERIALIZE_OPTIONS,
-  formatLink,
-  getListMarker,
-  getSectionHeading,
-  resolveOptions,
-  serializeChangelog,
-  serializeChangelogToJson,
-  toJsonObject,
-} from './serialize'
-export type { ChangelogDiff, DiffStats, EntryDiff, ItemDiff, PropertyDiff, SectionDiff } from './compare'
-export {
-  diffChangelogs,
-  diffEntries,
-  getEntryByVersion,
-  hasVersion,
-  haveSameVersions,
-  isChangelogEqual,
-  isCommitRefEqual,
-  isEntryEqual,
-  isHeaderEqual,
-  isIssueRefEqual,
-  isItemEqual,
-  isLinkEqual,
-  isMetadataEqual,
-  isSectionEqual,
-  summarizeDiff,
-} from './compare'
-export type {
-  AddEntryOptions,
-  EntryPredicate,
-  EntryTransformer,
-  ItemPredicate,
-  ItemTransformer,
-  MergeOptions,
-  MergeResult,
-  MergeStats,
-  MergeStrategy,
-  RemoveEntryOptions,
-  RemoveSectionOptions,
-  SectionPredicate,
-  SectionTransformer,
-} from './operations'
 export {
   addEntry,
   addItemToEntry,
@@ -123,3 +116,15 @@ export {
   updateHeader,
   updateMetadata,
 } from './operations'
+export { parseChangelog, parseCommitRefs, parseIssueRefs, parseScopeFromItem, parseVersionFromHeading, tokenize } from './parse'
+export {
+  createSpacing,
+  DEFAULT_SERIALIZE_OPTIONS,
+  formatLink,
+  getListMarker,
+  getSectionHeading,
+  resolveOptions,
+  serializeChangelog,
+  serializeChangelogToJson,
+  toJsonObject,
+} from './serialize'

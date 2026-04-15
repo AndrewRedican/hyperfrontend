@@ -1,5 +1,4 @@
-import { relative } from 'node:path'
-import { join } from 'node:path'
+import { relative, join } from 'node:path'
 import { getProductionDependencies, getPeerDependencies, readPackageJsonIfExists } from '@hyperfrontend/project-scope/project/package'
 import { findFiles } from '@hyperfrontend/project-scope/project/traversal'
 import { getLogger } from './logger'

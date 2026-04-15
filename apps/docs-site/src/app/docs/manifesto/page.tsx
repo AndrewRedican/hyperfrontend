@@ -1,8 +1,14 @@
+import type { Metadata } from 'next'
 import { Breadcrumb } from '@/components/breadcrumb'
 import { ReadmeContent } from '@/components/readme-content'
 import { getManifesto } from '@/lib/docs-loader'
 import { markdownToHtml } from '@/lib/markdown'
 import { extractMermaidBlocks } from '@/lib/mermaid-utils'
+
+export const metadata: Metadata = {
+  title: 'Manifesto',
+  description: "The vision behind hyperfrontend: why it exists, where it's going, and what it won't build.",
+}
 
 export default async function ManifestoPage() {
   const content = getManifesto()

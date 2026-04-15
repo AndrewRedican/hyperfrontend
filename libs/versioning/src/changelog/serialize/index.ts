@@ -1,5 +1,10 @@
-export type { JsonSerializeOptions } from './to-json'
+/**
+ * Serializers for converting Changelog objects to markdown strings or JSON.
+ *
+ * @module @hyperfrontend/versioning/changelog/serialize
+ */
 export type { SerializeOptions } from './templates'
-export { serializeChangelog } from './to-string'
-export { serializeChangelogToJson, toJsonObject } from './to-json'
+export type { JsonSerializeOptions } from './to-json'
 export { DEFAULT_SERIALIZE_OPTIONS, resolveOptions, getSectionHeading, formatLink, getListMarker, createSpacing } from './templates'
+export { serializeChangelogToJson, toJsonObject } from './to-json'
+export { serializeChangelog } from './to-string'

@@ -1,12 +1,9 @@
-/* eslint-disable workspace/lib-require-jsdoc-example */
 /**
- * Safe copies of Symbol built-in and well-known symbols.
- *
- * These references are captured at module initialization time to protect against
- * prototype pollution attacks. Import only what you need for tree-shaking.
+ * Safe Symbol factory and well-known symbols.
  *
  * @module @hyperfrontend/immutable-api-utils/built-in-copy/symbol
  */
+/* eslint-disable workspace/lib-require-jsdoc-example */
 
 const _Symbol = globalThis.Symbol
 const _freeze = globalThis.Object.freeze

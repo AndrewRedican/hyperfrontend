@@ -1,5 +1,11 @@
+import type { Metadata } from 'next'
 import { Breadcrumb } from '@/components/breadcrumb'
 import { CodeBlock } from '@/components/code-block'
+
+export const metadata: Metadata = {
+  title: 'Contributing',
+  description: 'Guide to contributing to hyperfrontend: development setup, coding standards, and pull request guidelines.',
+}
 
 export default function ContributingPage() {
   return (

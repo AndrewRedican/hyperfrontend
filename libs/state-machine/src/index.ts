@@ -1,8 +1,9 @@
-export { start, cancel, pause, success, fail, START, SUCCESS, FAIL, PAUSE, CANCEL } from './actions'
+/**
+ * State machine library with async operations, events, lifecycle components, and state management.
+ *
+ * @module @hyperfrontend/state-machine
+ */
 export type { AsyncProcess } from './async-operation'
-export { AsyncOperation } from './async-operation'
-export { CoordinatedAsyncProcess } from './coordinated-async-operation'
-export { Events } from './events'
 export type {
   InitializingChangeCallback,
   ReadyChangeCallback,
@@ -10,8 +11,13 @@ export type {
   StoppingChangeCallback,
   ActiveChangeCallback,
 } from './lifecycle-aware-component'
-export { LifecycleAwareComponent } from './lifecycle-aware-component'
 export type { Action, Handlers, State, DerivedState, StateStatusDeriver, StateDeriver, Event } from './models'
+export type { Listener } from './store/store.model'
+export { start, cancel, pause, success, fail, START, SUCCESS, FAIL, PAUSE, CANCEL } from './actions'
+export { AsyncOperation } from './async-operation'
+export { CoordinatedAsyncProcess } from './coordinated-async-operation'
+export { Events } from './events'
+export { LifecycleAwareComponent } from './lifecycle-aware-component'
 export { event } from './models'
 export { rootReducer } from './reducer'
 export {
@@ -30,4 +36,3 @@ export {
 export { createInitialState } from './state'
 export { StateChange } from './state-change'
 export { Store } from './store/store'
-export type { Listener } from './store/store.model'

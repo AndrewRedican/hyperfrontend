@@ -1,3 +1,8 @@
+/**
+ * Message queue factories for encryption, serialization, and obfuscation pipelines.
+ *
+ * @module @hyperfrontend/network-protocol/queue
+ */
 export type {
   Queue,
   MessageHandler,
@@ -16,5 +21,5 @@ export { createDeobfuscationQueue } from './creators/create-deobfuscation-queue'
 export { createDeserializationQueue } from './creators/create-deserialization-queue'
 export { createEncryptionQueue } from './creators/create-encryption-queue'
 export { createObfuscationQueue } from './creators/create-obfuscation-queue'
-export { createSerializationQueue } from './creators/create-serialization-queue'
 export { createQueue } from './creators/create-queue'
+export { createSerializationQueue } from './creators/create-serialization-queue'

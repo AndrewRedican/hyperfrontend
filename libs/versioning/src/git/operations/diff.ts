@@ -1,7 +1,6 @@
 import type { GitCommit } from '../models/commit'
 import { execFileSync } from 'node:child_process'
-import { escapeGitRef } from './log'
-import { getCommit } from './log'
+import { escapeGitRef, getCommit } from './log'
 
 /**
  * File change status codes matching git conventions.

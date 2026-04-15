@@ -3,8 +3,10 @@
 import type { NavItem as SharedNavItem } from '../lib/navigation'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { useEffect, useState } from 'react'
+import { createContext, useContext, useEffect, useMemo, useState } from 'react'
 import { createPortal } from 'react-dom'
+import { createError } from '@hyperfrontend/immutable-api-utils/built-in-copy/error'
+import { createSet } from '@hyperfrontend/immutable-api-utils/built-in-copy/set'
 import { docsNavigation, mainNavLinks as sharedMainNavLinks } from '../lib/navigation'
 import { ThemeToggle } from './theme-toggle'
 
@@ -35,10 +37,168 @@ const mainNavLinks = sharedMainNavLinks.map((item) => ({
   href: item.href ?? '',
 }))
 
+/** Context for managing expanded sections in mobile menu */
+interface MobileNavContextValue {
+  expandedSections: Set<string>
+  toggleSection: (path: string) => void
+}
+
+const MobileNavContext = createContext<MobileNavContextValue | null>(null)
+
+function useMobileNavContext() {
+  const ctx = useContext(MobileNavContext)
+  if (!ctx) throw createError('MobileNavSection must be used within MobileMenu')
+  return ctx
+}
+
+/**
+ * Finds all potential matches for the current pathname.
+ * @param items
+ * @param pathname
+ * @param currentPath
+ */
+function findAllMatches(
+  items: NavItem[],
+  pathname: string,
+  currentPath: string[] = []
+): Array<{ itemPath: string[]; hrefLength: number; exact: boolean }> {
+  const normalizedPathname = normalizePath(pathname)
+  const matches: Array<{ itemPath: string[]; hrefLength: number; exact: boolean }> = []
+
+  for (const item of items) {
+    const itemPath = [...currentPath, item.title]
+    const normalizedHref = item.href ? normalizePath(item.href) : ''
+
+    // how: check exact match
+    if (normalizedHref === normalizedPathname) {
+      matches.push({ itemPath, hrefLength: normalizedHref.length, exact: true })
+    }
+    // how: check prefix match
+    else if (normalizedHref && normalizedPathname.startsWith(normalizedHref + '/')) {
+      matches.push({ itemPath, hrefLength: normalizedHref.length, exact: false })
+    }
+
+    // how: always search children too
+    if (item.children) {
+      matches.push(...findAllMatches(item.children, pathname, itemPath))
+    }
+  }
+
+  return matches
+}
+
+/**
+ * Returns all paths that should be expanded to show the active item.
+ * Finds the most specific (longest href) match across all items.
+ * @param items
+ * @param pathname
+ */
+function getExpandedPaths(items: NavItem[], pathname: string): Set<string> {
+  const matches = findAllMatches(items, pathname)
+
+  if (matches.length === 0) return createSet<string>()
+
+  // how: prioritize exact matches, then longest href (most specific prefix)
+  matches.sort((a, b) => {
+    if (a.exact !== b.exact) return a.exact ? -1 : 1
+    return b.hrefLength - a.hrefLength
+  })
+
+  const bestMatch = matches[0]
+  const paths = createSet<string>()
+
+  // how: add all parent paths leading to the match
+  for (let i = 1; i <= bestMatch.itemPath.length; i++) {
+    paths.add(bestMatch.itemPath.slice(0, i).join('/'))
+  }
+
+  return paths
+}
+
+/**
+ * Normalizes a pathname by removing trailing slashes for comparison.
+ * @param path - The path to normalize
+ */
+function normalizePath(path: string): string {
+  return path.replace(/\/$/, '')
+}
+
 export function MobileMenu() {
   const [isOpen, setIsOpen] = useState(false)
   const [mounted, setMounted] = useState(false)
   const pathname = usePathname()
+
+  const initialExpanded = useMemo(() => getExpandedPaths(navigation, pathname), [pathname])
+  const [expandedSections, setExpandedSections] = useState<Set<string>>(initialExpanded)
+
+  useEffect(() => {
+    const newExpanded = getExpandedPaths(navigation, pathname)
+    setExpandedSections((prev) => {
+      const merged = createSet(prev)
+      newExpanded.forEach((p) => merged.add(p))
+      return merged
+    })
+  }, [pathname])
+
+  const toggleSection = useMemo(
+    () => (pathKey: string) => {
+      setExpandedSections((prev) => {
+        const segments = pathKey.split('/')
+        // context: parentPath is "" for top-level items, "Libraries" for "Libraries/versioning"
+        const parentPath = segments.slice(0, -1).join('/')
+
+        if (prev.has(pathKey)) {
+          // how: collapsing removes this path and all its descendants
+          const next = createSet<string>()
+          prev.forEach((p) => {
+            if (p !== pathKey && !p.startsWith(pathKey + '/')) {
+              next.add(p)
+            }
+          })
+          return next
+        }
+
+        /**
+         * how: Accordion behavior when expanding:
+         * - Keep ancestors of the new path
+         * - Remove siblings (same parent, different name) and their descendants
+         * - Keep paths from unrelated branches
+         */
+        const next = createSet<string>()
+
+        prev.forEach((p) => {
+          // how: keep ancestors (new path starts with this path)
+          if (pathKey.startsWith(p + '/')) {
+            next.add(p)
+            return
+          }
+
+          // how: collapse siblings and their descendants
+          if (parentPath !== '' && p.startsWith(parentPath + '/')) {
+            return
+          }
+
+          // how: top-level accordion collapses other top-level items in same branch
+          if (parentPath === '') {
+            const pTopLevel = p.split('/')[0]
+            const pathTopLevel = segments[0]
+            if (pTopLevel === pathTopLevel && p !== pathKey) {
+              return
+            }
+          }
+
+          next.add(p)
+        })
+
+        next.add(pathKey)
+
+        return next
+      })
+    },
+    []
+  )
+
+  const contextValue = useMemo(() => ({ expandedSections, toggleSection }), [expandedSections, toggleSection])
 
   useEffect(() => {
     setMounted(true)
@@ -99,11 +259,19 @@ export function MobileMenu() {
               </div>
 
               {/* Documentation Navigation */}
-              <div className="space-y-4">
-                {navigation.map((section) => (
-                  <MobileNavSection key={section.title} section={section} pathname={pathname} onClose={() => setIsOpen(false)} />
-                ))}
-              </div>
+              <MobileNavContext.Provider value={contextValue}>
+                <div className="space-y-4">
+                  {navigation.map((section) => (
+                    <MobileNavSection
+                      key={section.title}
+                      section={section}
+                      pathname={pathname}
+                      onClose={() => setIsOpen(false)}
+                      path={[section.title]}
+                    />
+                  ))}
+                </div>
+              </MobileNavContext.Provider>
 
               {/* Footer Actions */}
               <div className="mt-8 flex items-center justify-between border-t border-slate-200 pt-6 dark:border-slate-700">
@@ -122,15 +290,21 @@ function MobileNavSection({
   section,
   pathname,
   onClose,
+  path,
   depth = 0,
 }: {
   section: NavItem
   pathname: string
   onClose: () => void
+  path: string[]
   depth?: number
 }) {
-  const [isOpen, setIsOpen] = useState(false)
+  const { expandedSections, toggleSection } = useMobileNavContext()
+  const pathKey = path.join('/')
+  const isOpen = expandedSections.has(pathKey)
   const hasChildren = section.children && section.children.length > 0
+  const hasHref = Boolean(section.href)
+  const isActive = section.href ? normalizePath(section.href) === normalizePath(pathname) : false
 
   const isChildActive = hasChildren && checkIfChildActive(section.children || [], pathname)
 
@@ -140,48 +314,68 @@ function MobileNavSection({
         href={section.href || '#'}
         onClick={onClose}
         className={`block rounded-lg px-3 py-2 text-sm ${depth === 0 ? 'font-semibold' : ''} ${
-          pathname === section.href
-            ? 'bg-primary-50 text-primary-600 dark:bg-primary-950/50 dark:text-primary-400'
+          isActive
+            ? 'border-l-[3px] border-primary-600 bg-primary-100/80 font-medium text-primary-700 dark:border-primary-400 dark:bg-primary-900/50 dark:text-primary-200'
             : depth === 0
               ? 'text-slate-900 hover:bg-slate-100 dark:text-white dark:hover:bg-slate-800'
               : 'text-slate-600 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800'
         }`}
+        aria-current={isActive ? 'page' : undefined}
       >
         {section.title}
       </Link>
     )
   }
 
+  const handleToggle = () => toggleSection(pathKey)
+
   return (
     <div>
-      <button
-        onClick={() => setIsOpen(!isOpen)}
-        className={`flex w-full items-center justify-between rounded-lg px-3 py-2 text-sm ${depth === 0 ? 'font-semibold' : ''} ${
-          isChildActive
-            ? 'text-primary-600 dark:text-primary-400'
-            : depth === 0
-              ? 'text-slate-900 dark:text-white'
-              : 'text-slate-600 dark:text-slate-400'
+      <div
+        className={`flex w-full items-center justify-between rounded-lg text-sm ${depth === 0 ? 'font-semibold' : ''} ${
+          isActive
+            ? 'border-l-[3px] border-primary-600 bg-primary-100/80 font-medium text-primary-700 dark:border-primary-400 dark:bg-primary-900/50 dark:text-primary-200'
+            : isChildActive
+              ? 'text-primary-600 dark:text-primary-400'
+              : depth === 0
+                ? 'text-slate-900 dark:text-white'
+                : 'text-slate-600 dark:text-slate-400'
         }`}
       >
-        {section.title}
-        <ChevronIcon className={`h-4 w-4 transition-transform ${isOpen ? 'rotate-90' : ''}`} />
-      </button>
+        {hasHref && section.href ? (
+          <Link href={section.href} onClick={onClose} className="flex-1 px-3 py-2">
+            {section.title}
+          </Link>
+        ) : (
+          <button onClick={handleToggle} className="flex-1 px-3 py-2 text-left">
+            {section.title}
+          </button>
+        )}
+        <button
+          onClick={handleToggle}
+          className="px-3 py-2"
+          aria-expanded={isOpen}
+          aria-label={isOpen ? `Collapse ${section.title}` : `Expand ${section.title}`}
+        >
+          <ChevronIcon className={`h-4 w-4 transition-transform ${isOpen ? 'rotate-90' : ''}`} />
+        </button>
+      </div>
       {isOpen && (
-        <ul className="mt-1 space-y-1 pl-4">
+        <ul className="mt-1 space-y-1 border-l border-slate-200 pl-4 dark:border-slate-700">
           {section.children?.map((child) => (
             <li key={child.title}>
               {child.children && child.children.length > 0 ? (
-                <MobileNavSection section={child} pathname={pathname} onClose={onClose} depth={depth + 1} />
+                <MobileNavSection section={child} pathname={pathname} onClose={onClose} path={[...path, child.title]} depth={depth + 1} />
               ) : (
                 <Link
                   href={child.href || '#'}
                   onClick={onClose}
                   className={`block rounded-lg px-3 py-2 text-sm ${
-                    pathname === child.href
-                      ? 'bg-primary-50 font-medium text-primary-600 dark:bg-primary-950/50 dark:text-primary-400'
+                    child.href && normalizePath(pathname) === normalizePath(child.href)
+                      ? 'border-l-[3px] border-primary-600 bg-primary-100/80 font-medium text-primary-700 dark:border-primary-400 dark:bg-primary-900/50 dark:text-primary-200'
                       : 'text-slate-600 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800'
                   }`}
+                  aria-current={child.href && normalizePath(pathname) === normalizePath(child.href) ? 'page' : undefined}
                 >
                   {child.title}
                 </Link>
@@ -195,8 +389,9 @@ function MobileNavSection({
 }
 
 function checkIfChildActive(children: NavItem[], pathname: string): boolean {
+  const normalizedPathname = normalizePath(pathname)
   return children.some((child) => {
-    if (child.href === pathname) return true
+    if (child.href && normalizePath(child.href) === normalizedPathname) return true
     if (child.children) return checkIfChildActive(child.children, pathname)
     return false
   })

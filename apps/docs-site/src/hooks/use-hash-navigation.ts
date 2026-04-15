@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useCallback } from 'react'
-import { requestAnimationFrame, setTimeout } from '@hyperfrontend/immutable-api-utils/built-in-copy/timers'
+import { setTimeout } from '@hyperfrontend/immutable-api-utils/built-in-copy/timers'
 
 /**
  * Options for the useHashNavigation hook.
@@ -26,11 +26,19 @@ interface UseHashNavigationOptions {
    * @default 'ring-2 ring-primary-500 ring-offset-2'
    */
   highlightClass?: string
+  /**
+   * Delay in milliseconds before scrolling.
+   * Allows DOM to settle after dynamic content injection.
+   *
+   * @default 100
+   */
+  scrollDelay?: number
 }
 
 /**
  * Scrolls to an element matching the URL hash with a visual highlight effect.
  * Handles initial page load and hash change events.
+ * Positions the element at the top of the viewport.
  *
  * @param options - Configuration options
  * @returns scrollToHash function that can be called manually
@@ -54,25 +62,30 @@ interface UseHashNavigationOptions {
  * ```
  */
 export function useHashNavigation(options: UseHashNavigationOptions = {}) {
-  const { enabled = true, highlightDuration = 2000, highlightClass = 'ring-2 ring-primary-500 ring-offset-2' } = options
+  const { enabled = true, highlightDuration = 2000, highlightClass = 'ring-2 ring-primary-500 ring-offset-2', scrollDelay = 100 } = options
 
   const highlightClasses = highlightClass.split(' ').filter(Boolean)
 
-  const scrollToHash = useCallback(() => {
-    const hash = window.location.hash
-    if (hash) {
-      requestAnimationFrame(() => {
-        const element = document.querySelector(hash)
+  const scrollToHash = useCallback(
+    (hash?: string) => {
+      const targetHash = hash ?? window.location.hash
+      if (!targetHash) return
+
+      // why: Delay allows DOM to settle after dynamic ID injection
+      setTimeout(() => {
+        const element = document.querySelector(targetHash)
         if (element) {
+          // why: block: 'start' ensures element appears at top of viewport
           element.scrollIntoView({ behavior: 'smooth', block: 'start' })
           element.classList.add(...highlightClasses)
           setTimeout(() => {
             element.classList.remove(...highlightClasses)
           }, highlightDuration)
         }
-      })
-    }
-  }, [highlightClasses, highlightDuration])
+      }, scrollDelay)
+    },
+    [highlightClasses, highlightDuration, scrollDelay]
+  )
 
   useEffect(() => {
     if (!enabled) return

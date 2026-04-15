@@ -251,4 +251,4 @@ Static export to `out/` directory for Vercel deployment.
 
 ## Roadmap
 
-For planned features and pending work, see the [documentation roadmap](../../roadmap/documentation-roadmap.md).
+For planned features and pending work, see the [documentation roadmap](../../roadmap/docs-site-action-plan.md).

@@ -1,3 +1,8 @@
+/**
+ * Git operations and models for commits, tags, refs, logging, staging, and diff operations.
+ *
+ * @module @hyperfrontend/versioning/git
+ */
 export type { GitClient, GitClientConfig } from './factory'
 export type {
   CreateGitCommitOptions,
@@ -10,6 +15,28 @@ export type {
   GitTag,
   GitTagType,
 } from './models'
+export type {
+  GitLogOptions,
+  GitTagOptions,
+  ListTagsOptions,
+  CreateTagOptions,
+  GitCommitOptions,
+  CreateCommitOptions,
+  StageOptions,
+  DiscardChangesOptions,
+  GitStatusOptions,
+  FileStatus,
+  FileStatusEntry,
+  RepositoryStatus,
+  GitOperationStateReason,
+  GitOperationState,
+  GitOperationStateOptions,
+  FileChangeStatus,
+  FileChange,
+  DiffOptions,
+  GitCommitWithFiles,
+} from './operations'
+export { createGitClient, DEFAULT_GIT_CLIENT_CONFIG } from './factory'
 export {
   buildTagName,
   compareTagsByVersion,
@@ -37,27 +64,6 @@ export {
   buildRefName,
   compareRefsByName,
 } from './models'
-export type {
-  GitLogOptions,
-  GitTagOptions,
-  ListTagsOptions,
-  CreateTagOptions,
-  GitCommitOptions,
-  CreateCommitOptions,
-  StageOptions,
-  DiscardChangesOptions,
-  GitStatusOptions,
-  FileStatus,
-  FileStatusEntry,
-  RepositoryStatus,
-  GitOperationStateReason,
-  GitOperationState,
-  GitOperationStateOptions,
-  FileChangeStatus,
-  FileChange,
-  DiffOptions,
-  GitCommitWithFiles,
-} from './operations'
 export {
   amendCommit,
   amendCommitNoEdit,
@@ -120,4 +126,3 @@ export {
   tagExists,
   unstage,
 } from './operations'
-export { createGitClient, DEFAULT_GIT_CLIENT_CONFIG } from './factory'

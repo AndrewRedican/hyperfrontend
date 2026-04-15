@@ -1,54 +1,156 @@
-# Docs-Site Action Plan
+# Documentation Site Action Plan
 
-Comprehensive action plan addressing all identified issues on the documentation site.
-Items are ordered for incremental implementation — later items build on earlier ones.
-
-**Reference deployment:** https://docs-site-alvsmlqvr-hyperfrontend.vercel.app
+Improve docs-site SEO, branding, and engagement using Next.js built-in features. No external npm packages required.
 
 ---
 
-## Table of Contents
+## Phase 1: SEO (Foundation) ✅
 
-- [Docs-Site Action Plan](#docs-site-action-plan)
-  - [Table of Contents](#table-of-contents)
-  - [10. Add `@module` header comments and render module descriptions](#10-add-module-header-comments-and-render-module-descriptions)
-    - [A. Add `@module` comments to entry-point files](#a-add-module-comments-to-entry-point-files)
-    - [B. Render module descriptions in grouped view](#b-render-module-descriptions-in-grouped-view)
+- Root layout metadata (metadataBase, twitter, alternates)
+- sitemap.ts and robots.ts
+- Per-page metadata for 20+ pages
+- Library metadata utility using manifest
 
----
+### Verification
 
-## 10. Add `@module` header comments and render module descriptions
-
-**Problem:** Module entry points (e.g., `libs/state-machine/src/actions/index.ts`) have no `@module` JSDoc comment, so TypeDoc generates no description for the module itself. The grouped view shows module name + import path but no summary of what the module provides.
-
-### A. Add `@module` comments to entry-point files
-
-**Example** `libs/state-machine/src/actions/index.ts`:
-
-```typescript
-/**
- * @module actions
- *
- * Action creators for async operation state transitions.
- * Provides start, cancel, pause, success, and fail action factories.
- */
-export * from './actions'
-export * as types from './actions.types'
+```bash
+npx nx build docs-site
+npx nx lint docs-site --fix
+npx nx typecheck docs-site
 ```
 
-Apply to all sub-module `index.ts` files across libraries with multiple entry points.
+---
 
-### B. Render module descriptions in grouped view
+## Phase 2: Branding (Isolated)
 
-**File:** `apps/docs-site/src/components/api-reference/module-grouped-view.tsx`
-**Change:** Check `module.comment?.summary` from the TypeDoc Module node and display it below the module name:
+Favicon and social card assets.
 
-```tsx
-{
-  module.comment && <p className="text-sm text-slate-600 dark:text-slate-400 mt-1">{renderTextBlocks(module.comment.summary)}</p>
-}
+### 2.1 Favicon Setup
+
+Convert from `assets/logo/hyperfrontend.png`.
+
+**Files:**
+
+- `apps/docs-site/src/app/favicon.ico` — Create (32x32)
+- `apps/docs-site/src/app/icon.png` — Create (192x192)
+- `apps/docs-site/src/app/apple-icon.png` — Create (180x180)
+
+### 2.2 Open Graph Images
+
+**Files:**
+
+- `apps/docs-site/src/app/opengraph-image.png` — Create (1200x630)
+- `apps/docs-site/src/app/twitter-image.png` — Create (1200x600)
+
+### 2.3 SVG Logo
+
+**Files:**
+
+- `assets/logo/hyperfrontend.svg` — Create
+
+### Verification
+
+```bash
+npx nx build docs-site
+# Test with https://opengraph.xyz
 ```
 
-The `ModuleGroup` interface needs to carry the optional `comment` from the TypeDoc node.
+---
+
+## Phase 3: Structured Data (Isolated)
+
+JSON-LD for rich search results.
+
+### 3.1 SoftwareApplication Schema
+
+Add JSON-LD script to root layout.
+
+**Files:**
+
+- `apps/docs-site/src/app/layout.tsx` — Edit
+
+### 3.2 BreadcrumbList Schema
+
+Add breadcrumb JSON-LD to documentation pages.
+
+**Files:**
+
+- `apps/docs-site/src/components/breadcrumbs.tsx` — Edit or create
+
+### Verification
+
+```bash
+npx nx build docs-site
+npx nx lint docs-site --fix
+# Test with https://search.google.com/test/rich-results
+```
 
 ---
+
+## Phase 4: Engagement (Integration)
+
+User interaction features.
+
+### 4.1 Issue Reporting Link
+
+Add "Report an issue" link to footer with pre-filled GitHub issue URL.
+
+**Files:**
+
+- `apps/docs-site/src/components/footer.tsx` — Edit
+
+### 4.2 Social Sharing Links
+
+Add Twitter/LinkedIn share links (URL-based, no package).
+
+**Files:**
+
+- `apps/docs-site/src/components/share-buttons.tsx` — Create
+- `apps/docs-site/src/components/footer.tsx` — Import and use
+
+### Verification
+
+```bash
+npx nx build docs-site
+npx nx lint docs-site --fix
+npx nx typecheck docs-site
+```
+
+---
+
+## Phase 5: Accessibility (Integration)
+
+WCAG AA compliance.
+
+### 5.1 Accessibility Audit
+
+- Run Lighthouse accessibility audit
+- Fix color contrast issues
+- Verify alt text on images
+- Test keyboard navigation
+- Verify focus indicators
+
+**Files:**
+
+- Various component files as needed
+
+### Verification
+
+```bash
+npx nx build docs-site
+npx lighthouse https://hyperfrontend.dev --only-categories=accessibility
+```
+
+---
+
+## Deferred
+
+| Item              | Reason                          |
+| ----------------- | ------------------------------- |
+| Algolia Search    | Not using Algolia               |
+| Monaco Editor     | Requires `@monaco-editor/react` |
+| Usefulness Voting | Requires `@vercel/kv`           |
+| RSS Feed          | Requires `feed` package         |
+| Demo Showcase     | Demos not yet implemented       |
+| Version Selector  | Lower priority                  |
+| Versioned URLs    | Lower priority                  |

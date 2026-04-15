@@ -3,7 +3,7 @@
 import type { NavItem as SharedNavItem } from '../lib/navigation'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { createContext, useCallback, useContext, useMemo, useState } from 'react'
+import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react'
 import { createError } from '@hyperfrontend/immutable-api-utils/built-in-copy/error'
 import { docsNavigation } from '../lib/navigation'
 
@@ -44,50 +44,140 @@ function useSidebarContext() {
 }
 
 /**
- * Returns the path to the currently active navigation item, allowing auto-expansion
- * of the section containing the current page.
+ * Finds all potential matches for the current pathname and returns the most specific one.
  * @param items
  * @param pathname
  * @param currentPath
  */
-function getActivePath(items: NavItem[], pathname: string, currentPath: string[] = []): string[] | null {
+function findAllMatches(
+  items: NavItem[],
+  pathname: string,
+  currentPath: string[] = []
+): Array<{ path: string[]; hrefLength: number; exact: boolean }> {
+  const normalizedPathname = pathname.replace(/\/$/, '')
+  const matches: Array<{ path: string[]; hrefLength: number; exact: boolean }> = []
+
   for (const item of items) {
     const itemPath = [...currentPath, item.title]
-    if (item.href === pathname) return itemPath
-    if (item.href && pathname.startsWith(item.href + '/')) return itemPath
+    const normalizedHref = item.href?.replace(/\/$/, '') ?? ''
+
+    // how: check exact match
+    if (normalizedHref === normalizedPathname) {
+      matches.push({ path: itemPath, hrefLength: normalizedHref.length, exact: true })
+    }
+    // how: check prefix match
+    else if (normalizedHref && normalizedPathname.startsWith(normalizedHref + '/')) {
+      matches.push({ path: itemPath, hrefLength: normalizedHref.length, exact: false })
+    }
+
+    // how: always search children too
     if (item.children) {
-      const childPath = getActivePath(item.children, pathname, itemPath)
-      if (childPath) return childPath
+      matches.push(...findAllMatches(item.children, pathname, itemPath))
     }
   }
-  return null
+
+  return matches
 }
+
+/**
+ * Returns the path to the currently active navigation item, allowing auto-expansion
+ * of the section containing the current page.
+ * Finds the most specific (longest href) match across all items.
+ * @param items
+ * @param pathname
+ */
+function getActivePath(items: NavItem[], pathname: string): string[] | null {
+  const matches = findAllMatches(items, pathname)
+
+  if (matches.length === 0) return null
+
+  // how: prioritize exact matches, then longest href (most specific prefix)
+  matches.sort((a, b) => {
+    if (a.exact !== b.exact) return a.exact ? -1 : 1
+    return b.hrefLength - a.hrefLength
+  })
+
+  return matches[0].path
+}
+
+/**
+ * Normalizes a pathname by removing trailing slashes for comparison.
+ * @param path - The path to normalize
+ */
+function normalizePath(path: string): string {
+  return path.replace(/\/$/, '')
+}
+
+/** Local storage key for sidebar collapsed state */
+const SIDEBAR_COLLAPSED_KEY = 'docs-sidebar-collapsed'
 
 export function Sidebar() {
   const pathname = usePathname()
+  const [isCollapsed, setIsCollapsed] = useState(false)
+
+  useEffect(() => {
+    const stored = localStorage.getItem(SIDEBAR_COLLAPSED_KEY)
+    if (stored === 'true') setIsCollapsed(true)
+  }, [])
+
+  const toggleCollapsed = useCallback(() => {
+    setIsCollapsed((prev) => {
+      const next = !prev
+      localStorage.setItem(SIDEBAR_COLLAPSED_KEY, String(next))
+      return next
+    })
+  }, [])
 
   const initialPath = useMemo(() => getActivePath(navigation, pathname) ?? [], [pathname])
   const [expandedPath, setExpandedPath] = useState<string[]>(initialPath)
 
+  useEffect(() => {
+    const newPath = getActivePath(navigation, pathname)
+    if (newPath) {
+      setExpandedPath(newPath)
+    }
+  }, [pathname])
+
   const contextValue = useMemo(() => ({ expandedPath, setExpandedPath }), [expandedPath])
 
   return (
-    <SidebarContext.Provider value={contextValue}>
-      <nav className="sticky top-20 h-[calc(100vh-5rem)] w-64 shrink-0 overflow-y-auto py-10" aria-label="Documentation navigation">
-        <ul className="space-y-2" role="list">
-          {navigation.map((item) => (
-            <SidebarItem key={item.title} item={item} pathname={pathname} path={[item.title]} />
-          ))}
-        </ul>
-      </nav>
-    </SidebarContext.Provider>
+    <div className="relative flex">
+      {/* Sidebar content */}
+      <div
+        className={`border-r border-slate-200 pr-8 transition-all duration-300 ease-in-out dark:border-slate-700 ${isCollapsed ? 'w-0 overflow-hidden border-r-0 pr-0 opacity-0' : 'w-64 opacity-100'}`}
+      >
+        <SidebarContext.Provider value={contextValue}>
+          <nav
+            className="h-[calc(100vh-5rem)] w-64 shrink-0 overflow-y-auto py-10"
+            aria-label="Documentation navigation"
+            aria-hidden={isCollapsed}
+          >
+            <ul className="mr-3 space-y-2" role="list">
+              {navigation.map((item) => (
+                <SidebarItem key={item.title} item={item} pathname={pathname} path={[item.title]} />
+              ))}
+            </ul>
+          </nav>
+        </SidebarContext.Provider>
+      </div>
+
+      {/* Collapse/Expand toggle tab - positioned to the right of the border */}
+      <button
+        onClick={toggleCollapsed}
+        className="sticky top-28 z-10 -ml-px flex h-16 w-5 items-center justify-center rounded-r-md border border-l-0 border-slate-200 bg-white text-slate-400 transition-all hover:bg-slate-50 hover:text-slate-600 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-500 dark:hover:bg-slate-800 dark:hover:text-slate-300"
+        aria-label={isCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+        title={isCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+      >
+        <CollapseIcon className={`h-4 w-4 transition-transform ${isCollapsed ? 'rotate-180' : ''}`} />
+      </button>
+    </div>
   )
 }
 
 function SidebarItem({ item, pathname, path }: { item: NavItem; pathname: string; path: string[] }) {
   const { expandedPath, setExpandedPath } = useSidebarContext()
   const hasChildren = item.children && item.children.length > 0
-  const isActive = item.href === pathname
+  const isActive = item.href ? normalizePath(item.href) === normalizePath(pathname) : false
   const depth = path.length - 1
 
   const isExpanded = expandedPath.length >= path.length && path.every((seg, i) => expandedPath[i] === seg)
@@ -95,12 +185,21 @@ function SidebarItem({ item, pathname, path }: { item: NavItem; pathname: string
   const sectionId = `sidebar-section-${item.title.toLowerCase().replace(/\s+/g, '-')}`
 
   const handleToggle = useCallback(() => {
-    if (isExpanded) {
+    // how: check if this exact item is the deepest expanded (not just an ancestor)
+    const isExactMatch = expandedPath.length === path.length && path.every((seg, i) => expandedPath[i] === seg)
+    const isAncestorOfExpanded = expandedPath.length > path.length && path.every((seg, i) => expandedPath[i] === seg)
+
+    if (isExactMatch) {
+      // how: clicking the currently deepest expanded item collapses it
       setExpandedPath(path.slice(0, -1))
+    } else if (isAncestorOfExpanded) {
+      // how: clicking an ancestor collapses children but keeps this level expanded
+      setExpandedPath(path)
     } else {
+      // how: expanding a new path (sibling or nested) auto-collapses siblings via prefix check
       setExpandedPath(path)
     }
-  }, [isExpanded, path, setExpandedPath])
+  }, [expandedPath, path, setExpandedPath])
 
   if (hasChildren) {
     const hasHref = Boolean(item.href)
@@ -110,7 +209,7 @@ function SidebarItem({ item, pathname, path }: { item: NavItem; pathname: string
         <div
           className={`flex w-full items-center justify-between rounded-lg text-sm transition-colors ${
             isActive
-              ? 'bg-primary-50 font-medium text-primary-600 dark:bg-primary-950/50 dark:text-primary-400'
+              ? 'border-l-[3px] border-primary-600 bg-primary-100/80 font-medium text-primary-700 dark:border-primary-400 dark:bg-primary-900/50 dark:text-primary-200'
               : isExpanded
                 ? 'font-semibold text-primary-600 dark:text-primary-400'
                 : depth === 0
@@ -154,9 +253,10 @@ function SidebarItem({ item, pathname, path }: { item: NavItem; pathname: string
         href={item.href || '#'}
         className={`block rounded-lg px-3 py-2 text-sm transition-colors ${
           isActive
-            ? 'bg-primary-50 font-medium text-primary-600 dark:bg-primary-950/50 dark:text-primary-400'
+            ? 'border-l-[3px] border-primary-600 bg-primary-100/80 font-medium text-primary-700 dark:border-primary-400 dark:bg-primary-900/50 dark:text-primary-200'
             : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-white'
         }`}
+        aria-current={isActive ? 'page' : undefined}
       >
         {item.title}
       </Link>
@@ -168,6 +268,14 @@ function ChevronIcon({ className }: { className?: string }) {
   return (
     <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
       <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+    </svg>
+  )
+}
+
+function CollapseIcon({ className }: { className?: string }) {
+  return (
+    <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
     </svg>
   )
 }

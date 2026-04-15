@@ -4,6 +4,7 @@ import deepestImportPath, { RULE_NAME as DEEPEST_IMPORT_PATH } from './rules/dee
 import docsSiteLibraries, { RULE_NAME as DOCS_SITE_LIBRARIES } from './rules/docs-site-libraries'
 import docsSiteLibraryDocs, { RULE_NAME as DOCS_SITE_LIBRARY_DOCS } from './rules/docs-site-library-docs'
 import docsSiteRoutes, { RULE_NAME as DOCS_SITE_ROUTES } from './rules/docs-site-routes'
+import exportOrder, { RULE_NAME as EXPORT_ORDER } from './rules/export-order'
 import importOrder, { RULE_NAME as IMPORT_ORDER } from './rules/import-order'
 import libCiWorkflows, { RULE_NAME as LIB_CI_WORKFLOWS } from './rules/lib-ci-workflows'
 import libCompatibilityDocs, { RULE_NAME as LIB_COMPATIBILITY_DOCS } from './rules/lib-compatibility-docs'
@@ -25,6 +26,7 @@ import libRequireJsdocExampleLabel, { RULE_NAME as LIB_REQUIRE_JSDOC_EXAMPLE_LAB
 import libRequireModuleHeader, { RULE_NAME as LIB_REQUIRE_MODULE_HEADER } from './rules/lib-require-module-header'
 import libTsconfigPaths, { RULE_NAME as LIB_TSCONFIG_PATHS } from './rules/lib-tsconfig-paths'
 import maxFileLines, { RULE_NAME as MAX_FILE_LINES } from './rules/max-file-lines'
+import maxPathOccurrences, { RULE_NAME as MAX_PATH_OCCURRENCES } from './rules/max-path-occurrences'
 import noAsciiArtDiagrams, { RULE_NAME as NO_ASCII_ART_DIAGRAMS } from './rules/no-ascii-art-diagrams'
 import noAsyncFsApi, { RULE_NAME as NO_ASYNC_FS_API } from './rules/no-async-fs-api'
 import noBarrelStarExport, { RULE_NAME as NO_BARREL_STAR_EXPORT } from './rules/no-barrel-star-export'
@@ -32,6 +34,7 @@ import noDecorativeHeaderComments, { RULE_NAME as NO_DECORATIVE_HEADER_COMMENTS 
 import noDeprecatedTag, { RULE_NAME as NO_DEPRECATED_TAG } from './rules/no-deprecated-tag'
 import noDirectConsole, { RULE_NAME as NO_DIRECT_CONSOLE } from './rules/no-direct-console'
 import noEnum, { RULE_NAME as NO_ENUM } from './rules/no-enum'
+import noMixedTypeExport, { RULE_NAME as NO_MIXED_TYPE_EXPORT } from './rules/no-mixed-type-export'
 import noMixedTypeImport, { RULE_NAME as NO_MIXED_TYPE_IMPORT } from './rules/no-mixed-type-import'
 import noNamespaceImport, { RULE_NAME as NO_NAMESPACE_IMPORT } from './rules/no-namespace-import'
 import noPlainInlineComments, { RULE_NAME as NO_PLAIN_INLINE_COMMENTS } from './rules/no-plain-inline-comments'
@@ -60,6 +63,7 @@ export const rules: ESLint.Plugin['rules'] = {
   [DOCS_SITE_LIBRARIES]: docsSiteLibraries as unknown as Rule.RuleModule,
   [DOCS_SITE_LIBRARY_DOCS]: docsSiteLibraryDocs as unknown as Rule.RuleModule,
   [DOCS_SITE_ROUTES]: docsSiteRoutes as unknown as Rule.RuleModule,
+  [EXPORT_ORDER]: exportOrder as unknown as Rule.RuleModule,
   [LIB_COMPATIBILITY_DOCS]: libCompatibilityDocs as unknown as Rule.RuleModule,
   [LIB_ENTRY_EXPORT_SPACING]: libEntryExportSpacing as unknown as Rule.RuleModule,
   [IMPORT_ORDER]: importOrder as unknown as Rule.RuleModule,
@@ -81,6 +85,7 @@ export const rules: ESLint.Plugin['rules'] = {
   [LIB_REQUIRE_MODULE_HEADER]: libRequireModuleHeader as unknown as Rule.RuleModule,
   [LIB_TSCONFIG_PATHS]: libTsconfigPaths as unknown as Rule.RuleModule,
   [MAX_FILE_LINES]: maxFileLines as unknown as Rule.RuleModule,
+  [MAX_PATH_OCCURRENCES]: maxPathOccurrences as unknown as Rule.RuleModule,
   [NO_ASCII_ART_DIAGRAMS]: noAsciiArtDiagrams as unknown as Rule.RuleModule,
   [NO_ASYNC_FS_API]: noAsyncFsApi as unknown as Rule.RuleModule,
   [NO_BARREL_STAR_EXPORT]: noBarrelStarExport as unknown as Rule.RuleModule,
@@ -88,6 +93,7 @@ export const rules: ESLint.Plugin['rules'] = {
   [NO_DEPRECATED_TAG]: noDeprecatedTag as unknown as Rule.RuleModule,
   [NO_DIRECT_CONSOLE]: noDirectConsole as unknown as Rule.RuleModule,
   [NO_ENUM]: noEnum as unknown as Rule.RuleModule,
+  [NO_MIXED_TYPE_EXPORT]: noMixedTypeExport as unknown as Rule.RuleModule,
   [NO_MIXED_TYPE_IMPORT]: noMixedTypeImport as unknown as Rule.RuleModule,
   [NO_NAMESPACE_IMPORT]: noNamespaceImport as unknown as Rule.RuleModule,
   [NO_PLAIN_INLINE_COMMENTS]: noPlainInlineComments as unknown as Rule.RuleModule,

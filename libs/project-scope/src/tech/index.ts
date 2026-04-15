@@ -1,3 +1,8 @@
+/**
+ * Tech stack detection for frontend, backend, build tools, testing, linting, and monorepo tools.
+ *
+ * @module @hyperfrontend/project-scope/tech
+ */
 import type { PackageJson } from '../project/package'
 import type { BackendDetection } from './backend'
 import type { BuildToolDetection } from './build'
@@ -27,7 +32,23 @@ const techLogger = createScopedLogger('project-scope:tech')
  */
 const detectAllCache = createCache<string, AllDetections>({ ttl: 60000, maxSize: 50 })
 
+export type { BackendDetection, BackendDetector } from './backend'
 export type { BuildToolDetection, BuildToolDetector } from './build'
+export type { FrameworkDetection, FrameworkDetector } from './frontend'
+export type { LegacyFrameworkDetection, LegacyFrameworkDetector } from './legacy'
+export type { LintingToolDetection, LintingToolDetector } from './linting'
+export type { DetectionSource, MonorepoDetection, MonorepoDetector } from './monorepo'
+export type { TestingFrameworkDetection, TestingFrameworkDetector } from './testing'
+export type { TypeSystemDetection, TypeSystemDetector } from './types'
+export {
+  backendDetectors,
+  detectBackendFrameworks,
+  expressDetector,
+  fastifyDetector,
+  honoDetector,
+  koaDetector,
+  nestDetector,
+} from './backend'
 export {
   BABEL_CONFIG_PATTERNS,
   babelDetector,
@@ -45,19 +66,6 @@ export {
   WEBPACK_CONFIG_PATTERNS,
   webpackDetector,
 } from './build'
-export type { DetectionSource, MonorepoDetection, MonorepoDetector } from './monorepo'
-export {
-  detectMonorepoTools,
-  lernaDetector,
-  monorepoDetectors,
-  npmWorkspacesDetector,
-  nxDetector,
-  pnpmWorkspacesDetector,
-  rushDetector,
-  turborepoDetector,
-  yarnWorkspacesDetector,
-} from './monorepo'
-export type { FrameworkDetection, FrameworkDetector } from './frontend'
 export {
   angularDetector,
   astroDetector,
@@ -74,19 +82,29 @@ export {
   sveltekitDetector,
   vueDetector,
 } from './frontend'
-export type { BackendDetection, BackendDetector } from './backend'
-export {
-  backendDetectors,
-  detectBackendFrameworks,
-  expressDetector,
-  fastifyDetector,
-  honoDetector,
-  koaDetector,
-  nestDetector,
-} from './backend'
-export type { LegacyFrameworkDetection, LegacyFrameworkDetector } from './legacy'
 export { angularJSDetector, backboneDetector, detectLegacyFrameworks, emberDetector, jqueryDetector, legacyDetectors } from './legacy'
-export type { TestingFrameworkDetection, TestingFrameworkDetector } from './testing'
+export {
+  biomeDetector,
+  detectLintingTools,
+  ESLINT_CONFIG_PATTERNS,
+  eslintDetector,
+  lintingDetectors,
+  PRETTIER_CONFIG_PATTERNS,
+  prettierDetector,
+  STYLELINT_CONFIG_PATTERNS,
+  stylelintDetector,
+} from './linting'
+export {
+  detectMonorepoTools,
+  lernaDetector,
+  monorepoDetectors,
+  npmWorkspacesDetector,
+  nxDetector,
+  pnpmWorkspacesDetector,
+  rushDetector,
+  turborepoDetector,
+  yarnWorkspacesDetector,
+} from './monorepo'
 export {
   CYPRESS_CONFIG_PATTERNS,
   cypressDetector,
@@ -101,20 +119,7 @@ export {
   VITEST_CONFIG_PATTERNS,
   vitestDetector,
 } from './testing'
-export type { TypeSystemDetection, TypeSystemDetector } from './types'
 export { detectTypeSystems, flowDetector, jsdocDetector, typescriptDetector, typeSystemDetectors } from './types'
-export type { LintingToolDetection, LintingToolDetector } from './linting'
-export {
-  biomeDetector,
-  detectLintingTools,
-  ESLINT_CONFIG_PATTERNS,
-  eslintDetector,
-  lintingDetectors,
-  PRETTIER_CONFIG_PATTERNS,
-  prettierDetector,
-  STYLELINT_CONFIG_PATTERNS,
-  stylelintDetector,
-} from './linting'
 
 /**
  * All detection results from running all detectors.

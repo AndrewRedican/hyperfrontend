@@ -1,7 +1,7 @@
 ---
 name: skill-creator
-version: 1.1.0
-description: Create high-quality SKILL.md files for agent customization. Use when building domain skills, packaging workflows, or codifying team conventions. Produces terse, scannable, copy-paste-ready skills.
+version: 2.0.0
+description: Create SKILL.md files. Use when building domain skills, packaging workflows, or codifying conventions.
 allowed-tools:
   - Read
   - Write
@@ -14,100 +14,72 @@ allowed-tools:
 
 # Skill Creator
 
-Skills encode operational workflows, not prose. **Interview the human first.**
+**Maximum information compression.** Every word earns its place. What readers infer, omit.
 
-**Location:** `.github/skills/<name>/SKILL.md` (folder name = `name` field)
+Interview first: domain, triggers, pain points, paths, validation, done-criteria → maps directly to skill sections.
+
+**Location:** `.github/skills/<name>/SKILL.md`
 
 ---
 
-## Skill Anatomy
+## Anatomy
 
 ```
-┌─ YAML Frontmatter          name, description (with "Use when" triggers)
-├─ Title + Summary           One-line purpose
-├─ Reference Locations       WHERE things live (table, not prose)
-├─ Pre-action Gate           "Before X: Check Y" (error prevention)
-├─ Taxonomy                  Categories, prefixes, naming conventions
-├─ Critical Patterns         Copy-paste code blocks (no placeholders)
-├─ Shared Utilities          MUST REUSE functions
-├─ Testing                   How to validate
-└─ Checklist                 Definition of done
+YAML Frontmatter   name, description ("Use when" triggers)
+Title              One line
+Paths              Table: role → glob
+Gate               "Before X: Check Y"
+Patterns           Copy-paste blocks (no placeholders)
+Checklist          Done = all checked
 ```
 
-Omit sections that don't apply.
+Omit what doesn't apply.
 
 ---
 
-## Discovery Interview
+## Compression Principles
 
-Use `vscode_askQuestions` before writing:
+| Principle        | ✗ Verbose                         | ✓ Compressed                    |
+| ---------------- | --------------------------------- | ------------------------------- |
+| Imperative       | "You should use..."               | "Use"                           |
+| Show don't tell  | "The function should report"      | "Reports"                       |
+| Examples > prose | "Format paths as tables because…" | `\| Rules \| src/rules/*.ts \|` |
+| Inference        | "Since TypeScript compiles to…"   | (omit—reader knows)             |
+| Signpost         | Re-explain AST traversal here     | See `eslint-rules` skill        |
+| Bold = mandatory | "Consider reusing"                | **MUST REUSE**                  |
+| Code = exact     | `doThing(<your-value>)`           | `doThing('actual-value')`       |
 
-| Question                   | Maps To             |
-| -------------------------- | ------------------- |
-| Domain/task?               | Title, description  |
-| Trigger keywords?          | Description         |
-| User's existing knowledge? | What to omit        |
-| Repeated pain points?      | Critical Patterns   |
-| File paths?                | Reference Locations |
-| Categories/prefixes?       | Taxonomy            |
-| Required shared utilities? | Shared Utilities    |
-| Validation method?         | Testing             |
-| Definition of done?        | Checklist           |
+**Test:** Delete a word. Meaning lost? Keep it. Otherwise, cut.
 
 ---
 
-## Writing Rules
+## Description Field
 
-| Rule             | Example                                            |
-| ---------------- | -------------------------------------------------- |
-| Tables for paths | `\| Rules \| tools/eslint-rules/src/rules/*.ts \|` |
-| Imperative mood  | "Use", "Add" — not "You should..."                 |
-| Code = exact     | No `...` or `<placeholder>`                        |
-| Bold = mandatory | **MUST REUSE** — not "consider using"              |
-| Show don't tell  | ✗ "should report" → ✓ "reports"                    |
+Agent sees **only** description when choosing. ≤1024 chars · Third person · "Use when [triggers]."
+
+✓ `Extract/fill/merge PDFs. Use when working with PDF files or forms.`
+✗ `Helps with documents.`
 
 ---
 
-## Description
+## Boundaries
 
-Agent sees **only** the description when choosing skills.
-
-**Format:** ≤1024 chars · Third person · "Use when [triggers]" in second sentence.
-
-| Quality | Example                                                                                    |
-| ------- | ------------------------------------------------------------------------------------------ |
-| ✓ Good  | `Extract/fill/merge PDFs. Use when working with PDF files, forms, or document extraction.` |
-| ✗ Bad   | `Helps with documents.`                                                                    |
+**Include:** this repo's paths, conventions, gotchas.
+**Exclude:** domain fundamentals, language syntax, tool installation—reader knows or finds elsewhere.
 
 ---
 
-## Scripts & Splitting
+## Split & Script
 
-**Add script when:** deterministic operation, repeated codegen, explicit error handling needed.
-
-**Split to `REFERENCE.md` when:** SKILL.md > 100 lines or distinct sub-domains.
-
----
-
-## Knowledge Boundaries
-
-Codify repo-specific; omit what's in official docs elsewhere.
-
-| Include                 | Exclude             |
-| ----------------------- | ------------------- |
-| THIS repo's paths       | Domain fundamentals |
-| THIS repo's conventions | Language syntax     |
-| THIS repo's gotchas     | Tool installation   |
-| THIS repo's fixtures    | General concepts    |
+Split to `REFERENCE.md` at ~100 lines or distinct sub-domains.
+Add script when: deterministic, repeated, needs explicit error handling.
 
 ---
 
 ## Checklist
 
-- [ ] `name` matches folder name
-- [ ] `description` ≤1024 chars, third-person, "Use when" triggers
+- [ ] `name` = folder name
+- [ ] Description: ≤1024 chars, third-person, "Use when"
 - [ ] Paths as table
-- [ ] Pre-action gate if checks needed
 - [ ] Code blocks copy-paste ready
-- [ ] Checklist defines done
-- [ ] <500 lines; split if >100
+- [ ] <500 lines

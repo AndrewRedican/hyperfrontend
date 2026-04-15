@@ -1,5 +1,9 @@
-import { getTimeBasedPassword, getTimeBasedPasswords } from '@hyperfrontend/cryptography/browser'
-import { encrypt, decrypt } from '@hyperfrontend/cryptography/browser'
+/**
+ * V2 protocol for browser with pre-shared key handshake encryption.
+ *
+ * @module @hyperfrontend/network-protocol/browser/v2
+ */
+import { getTimeBasedPassword, getTimeBasedPasswords, encrypt, decrypt } from '@hyperfrontend/cryptography/browser'
 import { createPacketDeobfuscator } from '../../lib/packet/security/obfuscation/create-deobfuscator'
 import { createPacketObfuscator } from '../../lib/packet/security/obfuscation/create-obfuscator'
 import { createTimeIntervalObfuscationFactory } from '../../lib/packet/security/obfuscation/time-interval-obfuscation-factory'
@@ -33,10 +37,10 @@ const createTimeIntervalObfuscation = createTimeIntervalObfuscationFactory(
 export const createProtocol = createPSKHandshakeProtocolFactory(encryptPacket, decryptPacket, createTimeIntervalObfuscation)
 export type { ProtocolProviderEntry, ProtocolProviderStore } from '../../lib/protocol/model'
 export type { ValidProtocolResult } from '../../lib/protocol/validations/is-valid-protocol.model'
-export { isValidName } from '../../lib/protocol/validations/is-valid-name'
-export { isValidProtocolProvider } from '../../lib/protocol/validations/is-valid-protocol-provider'
-export { isValidProtocol } from '../../lib/protocol/validations/is-valid-protocol'
-export { isValidReceiveFn } from '../../lib/protocol/validations/is-valid-receive-fn'
-export { isValidSendFn } from '../../lib/protocol/validations/is-valid-send-fn'
 export { createProtocolProviderStore } from '../../lib/protocol/creators/create-provider-protocol-store'
 export { createPSKHandshakeProtocolFactory } from '../../lib/protocol/v2/creators/create-static-key-protocol-factory'
+export { isValidName } from '../../lib/protocol/validations/is-valid-name'
+export { isValidProtocol } from '../../lib/protocol/validations/is-valid-protocol'
+export { isValidProtocolProvider } from '../../lib/protocol/validations/is-valid-protocol-provider'
+export { isValidReceiveFn } from '../../lib/protocol/validations/is-valid-receive-fn'
+export { isValidSendFn } from '../../lib/protocol/validations/is-valid-send-fn'
