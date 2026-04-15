@@ -1,6 +1,7 @@
 import { DemoShowcase } from '@/components/demo-showcase'
 import { Footer } from '@/components/footer'
 import { Header } from '@/components/header'
+import { ScrollToExplore } from '@/components/scroll-to-explore'
 import { ValueProposition } from '@/components/value-proposition'
 
 /**
@@ -40,15 +41,12 @@ export default function HomePage() {
             </div>
           </div>
 
-          {/* Scroll Indicator */}
-          <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 animate-bounce">
-            <span className="text-xs font-medium text-slate-500 dark:text-slate-400">Scroll to explore</span>
-            <ChevronDownIcon className="h-5 w-5 text-slate-400 dark:text-slate-500" />
-          </div>
+          {/* Scroll Indicator - hidden on mobile where content is stacked */}
+          <ScrollToExplore />
         </section>
 
         {/* Secondary Content - Collapsed for Landing */}
-        <section className="border-t border-slate-200 bg-white py-16 dark:border-slate-800 dark:bg-slate-900 lg:py-24">
+        <section id="how-it-works" className="border-t border-slate-200 bg-white py-16 dark:border-slate-800 dark:bg-slate-900 lg:py-24">
           <div className="mx-auto max-w-7xl px-6 sm:px-8 lg:px-12">
             <div className="mx-auto max-w-3xl text-center">
               <h2 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white sm:text-3xl">How it works</h2>
@@ -65,16 +63,19 @@ export default function HomePage() {
                 title="Host Application"
                 description="Your main app loads features dynamically and manages their lifecycle. No build-time dependencies."
                 icon={<HostIcon />}
+                href="/architecture#runtime-flow"
               />
               <ArchitectureCard
                 title="Feature Shell"
                 description="A lightweight loader that bootstraps your micro-frontend and establishes the communication channel."
                 icon={<ShellIcon />}
+                href="/architecture#the-shell-pattern"
               />
               <ArchitectureCard
                 title="Message Broker"
                 description="Routes typed messages between contexts with validation. Supports encryption for sensitive data."
                 icon={<BrokerIcon />}
+                href="/architecture#broker-channel-model"
               />
             </div>
 
@@ -148,15 +149,18 @@ function NpmIcon({ className }: { className?: string }) {
   )
 }
 
-function ArchitectureCard({ title, description, icon }: { title: string; description: string; icon: React.ReactNode }) {
+function ArchitectureCard({ title, description, icon, href }: { title: string; description: string; icon: React.ReactNode; href: string }) {
   return (
-    <div className="rounded-xl border border-slate-200 bg-slate-50 p-6 dark:border-slate-700 dark:bg-slate-800/50">
+    <a
+      href={href}
+      className="block rounded-xl border border-slate-200 bg-slate-50 p-6 transition-colors hover:border-primary-300 hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-800/50 dark:hover:border-primary-600 dark:hover:bg-slate-800"
+    >
       <div className="mb-4 inline-flex rounded-lg bg-primary-50 p-2.5 text-primary-600 dark:bg-primary-900/30 dark:text-primary-400">
         {icon}
       </div>
       <h3 className="text-lg font-semibold text-slate-900 dark:text-white">{title}</h3>
       <p className="mt-2 text-sm text-slate-600 dark:text-slate-400">{description}</p>
-    </div>
+    </a>
   )
 }
 
@@ -196,14 +200,6 @@ function ArrowRightIcon({ className }: { className?: string }) {
   return (
     <svg className={className} fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
       <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
-    </svg>
-  )
-}
-
-function ChevronDownIcon({ className }: { className?: string }) {
-  return (
-    <svg className={className} fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
-      <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
     </svg>
   )
 }

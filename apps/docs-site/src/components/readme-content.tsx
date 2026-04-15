@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef, useCallback, useMemo } from 'react'
+import { useEffect, useMemo, useRef } from 'react'
 import { createMap } from '@hyperfrontend/immutable-api-utils/built-in-copy/map'
 import { createSet } from '@hyperfrontend/immutable-api-utils/built-in-copy/set'
 import { setTimeout, clearTimeout } from '@hyperfrontend/immutable-api-utils/built-in-copy/timers'
@@ -230,21 +230,8 @@ export function ReadmeContent({ html, mermaidDiagrams }: ReadmeContentProps) {
     return result
   }, [html])
 
-  const triggerHashNavigation = useCallback(() => {
-    const hash = window.location.hash
-    if (hash) {
-      const element = document.querySelector(hash)
-      if (element) {
-        element.scrollIntoView({ behavior: 'smooth', block: 'start' })
-        element.classList.add('ring-2', 'ring-primary-500', 'ring-offset-2')
-        setTimeout(() => {
-          element.classList.remove('ring-2', 'ring-primary-500', 'ring-offset-2')
-        }, 2000)
-      }
-    }
-  }, [])
-
-  useHashNavigation()
+  // why: Disable auto-scroll on mount since IDs are injected dynamically; we call scrollToHash manually after injection
+  const { scrollToHash } = useHashNavigation({ enabled: false })
 
   // why: Apply effects to all prose containers for copy buttons and anchors
   useEffect(() => {
@@ -260,12 +247,18 @@ export function ReadmeContent({ html, mermaidDiagrams }: ReadmeContentProps) {
       cleanupFunctions.push(injectHeadingAnchors(proseContainer as HTMLElement))
     })
 
-    triggerHashNavigation()
+    // why: Scroll after IDs are injected; hook handles delay internally
+    scrollToHash()
+
+    // why: Listen for hash changes while component is mounted
+    const handleHashChange = () => scrollToHash()
+    window.addEventListener('hashchange', handleHashChange)
 
     return () => {
       cleanupFunctions.forEach((fn) => fn())
+      window.removeEventListener('hashchange', handleHashChange)
     }
-  }, [html, triggerHashNavigation])
+  }, [html, scrollToHash])
 
   const proseClasses = `prose prose-slate max-w-none dark:prose-invert
     prose-headings:scroll-mt-20 prose-headings:font-display

@@ -12,6 +12,7 @@
     "@hyperfrontend/function-utils": "0.0.4",
     "@hyperfrontend/immutable-api-utils": "0.1.2",
     "@hyperfrontend/logging": "0.1.0",
+    "@hyperfrontend/time-utils": "0.0.4",
     "clsx": "2.1.1",
     "glob": "10.5.0",
     "mermaid": "11.12.3",

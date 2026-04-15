@@ -1,9 +1,15 @@
 'use client'
 
-import type { ReactNode } from 'react'
+import type { ReactNode, TouchEvent as ReactTouchEvent } from 'react'
+import type { Timer } from '@hyperfrontend/time-utils'
+
 import Link from 'next/link'
-import { Fragment, useEffect, useState } from 'react'
-import { setTimeout, setInterval, clearInterval } from '@hyperfrontend/immutable-api-utils/built-in-copy/timers'
+import { Fragment, useCallback, useEffect, useRef, useState } from 'react'
+
+import { dateNow } from '@hyperfrontend/immutable-api-utils/built-in-copy/date'
+import { abs, min } from '@hyperfrontend/immutable-api-utils/built-in-copy/math'
+import { cancelAnimationFrame, requestAnimationFrame, setTimeout } from '@hyperfrontend/immutable-api-utils/built-in-copy/timers'
+import { createTimer } from '@hyperfrontend/time-utils'
 
 type TextSegment = string | { bold: string } | { italic: string }
 
@@ -190,21 +196,137 @@ function renderNarrative(narrative: Narrative): ReactNode {
   })
 }
 
+const CYCLE_DURATION = 12000
+const TRANSITION_DURATION = 300
+/** context: Minimum px distance to register as a swipe gesture */
+const SWIPE_THRESHOLD = 50
+
 export function ValueProposition() {
   const [currentSet, setCurrentSet] = useState(0)
   const [isTransitioning, setIsTransitioning] = useState(false)
+  const [isPaused, setIsPaused] = useState(false)
+  const [progress, setProgress] = useState(0)
 
-  useEffect(() => {
-    const interval = setInterval(() => {
+  const touchStartXRef = useRef<number | null>(null)
+  const timerRef = useRef<Timer | null>(null)
+  const progressStartTimeRef = useRef<number>(dateNow())
+  const accumulatedProgressRef = useRef<number>(0)
+
+  const advanceToNext = useCallback(() => {
+    setIsTransitioning(true)
+    setTimeout(() => {
+      setCurrentSet((prev) => (prev + 1) % narratives.length)
+      setIsTransitioning(false)
+      setProgress(0)
+      accumulatedProgressRef.current = 0
+      progressStartTimeRef.current = dateNow()
+      timerRef.current?.reset()
+    }, TRANSITION_DURATION)
+  }, [])
+
+  const goToSlide = useCallback(
+    (index: number) => {
+      if (index === currentSet || isTransitioning) return
       setIsTransitioning(true)
       setTimeout(() => {
-        setCurrentSet((prev) => (prev + 1) % narratives.length)
+        setCurrentSet(index)
         setIsTransitioning(false)
-      }, 300)
-    }, 12000)
+        setProgress(0)
+        accumulatedProgressRef.current = 0
+        progressStartTimeRef.current = dateNow()
+        timerRef.current?.reset()
+      }, TRANSITION_DURATION)
+    },
+    [currentSet, isTransitioning]
+  )
 
-    return () => clearInterval(interval)
+  const goToPrevious = useCallback(() => {
+    const newIndex = currentSet === 0 ? narratives.length - 1 : currentSet - 1
+    goToSlide(newIndex)
+  }, [currentSet, goToSlide])
+
+  const goToNext = useCallback(() => {
+    const newIndex = (currentSet + 1) % narratives.length
+    goToSlide(newIndex)
+  }, [currentSet, goToSlide])
+
+  const handleTouchStart = useCallback((e: ReactTouchEvent) => {
+    touchStartXRef.current = e.touches[0].clientX
+    setIsPaused(true)
   }, [])
+
+  const handleTouchMove = useCallback((e: ReactTouchEvent) => {
+    if (touchStartXRef.current === null) return
+    const deltaX = e.touches[0].clientX - touchStartXRef.current
+    // why: Prevent page scroll when user intends to swipe the carousel
+    if (abs(deltaX) > 10) {
+      e.preventDefault()
+    }
+  }, [])
+
+  const handleTouchEnd = useCallback(
+    (e: ReactTouchEvent) => {
+      if (touchStartXRef.current === null) return
+      const deltaX = e.changedTouches[0].clientX - touchStartXRef.current
+      if (deltaX > SWIPE_THRESHOLD) {
+        goToPrevious()
+      } else if (deltaX < -SWIPE_THRESHOLD) {
+        goToNext()
+      }
+      touchStartXRef.current = null
+      setIsPaused(false)
+    },
+    [goToNext, goToPrevious]
+  )
+
+  // how: createTimer handles pause/resume internally while we manage the auto-advance
+  useEffect(() => {
+    const timer = createTimer(advanceToNext, CYCLE_DURATION)
+    timerRef.current = timer
+    timer.resume()
+
+    return () => {
+      timer.pause()
+    }
+  }, [advanceToNext])
+
+  // how: Pause/resume the timer based on user interaction
+  useEffect(() => {
+    if (isPaused) {
+      timerRef.current?.pause()
+      accumulatedProgressRef.current += dateNow() - progressStartTimeRef.current
+    } else {
+      timerRef.current?.resume()
+      progressStartTimeRef.current = dateNow()
+    }
+  }, [isPaused])
+
+  // how: requestAnimationFrame for smooth progress bar visual updates
+  useEffect(() => {
+    let frameId: number | null = null
+
+    const updateProgress = () => {
+      if (isPaused || isTransitioning) {
+        frameId = requestAnimationFrame(updateProgress)
+        return
+      }
+
+      const elapsed = dateNow() - progressStartTimeRef.current
+      const totalProgress = accumulatedProgressRef.current + elapsed
+      const progressPercent = min((totalProgress / CYCLE_DURATION) * 100, 100)
+      setProgress(progressPercent)
+
+      frameId = requestAnimationFrame(updateProgress)
+    }
+
+    frameId = requestAnimationFrame(updateProgress)
+
+    return () => {
+      if (frameId !== null) {
+        cancelAnimationFrame(frameId)
+      }
+    }
+  }, [isPaused, isTransitioning])
 
   const current = narratives[currentSet]
 
@@ -222,28 +344,65 @@ export function ValueProposition() {
         </h1>
       </div>
 
-      {/* Rotating Value Narrative */}
-      <div className={`mb-6 min-h-[100px] transition-opacity duration-300 lg:mb-8 ${isTransitioning ? 'opacity-0' : 'opacity-100'}`}>
-        <p className="text-base leading-relaxed text-slate-600 dark:text-slate-400">{renderNarrative(current)}</p>
-        {/* Progress dots */}
-        <div className="mt-4 flex gap-1.5">
+      {/* Rotating Value Narrative with carousel controls */}
+      <div
+        className="relative mb-6 lg:mb-8"
+        onMouseEnter={() => setIsPaused(true)}
+        onMouseLeave={() => setIsPaused(false)}
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
+      >
+        {/* Left arrow - visible only on larger screens */}
+        <button
+          onClick={goToPrevious}
+          className="absolute -left-10 top-1/2 hidden -translate-y-1/2 rounded-full p-1.5 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 dark:hover:bg-slate-800 dark:hover:text-slate-300 lg:block"
+          aria-label="Previous benefit"
+        >
+          <ChevronLeftIcon className="h-5 w-5" />
+        </button>
+
+        {/* Right arrow - visible only on larger screens */}
+        <button
+          onClick={goToNext}
+          className="absolute -right-10 top-1/2 hidden -translate-y-1/2 rounded-full p-1.5 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 dark:hover:bg-slate-800 dark:hover:text-slate-300 lg:block"
+          aria-label="Next benefit"
+        >
+          <ChevronRightIcon className="h-5 w-5" />
+        </button>
+
+        {/* Top divider line - 25% width, thinner, centered */}
+        <div className="mx-auto mb-6 h-0.5 w-1/4 rounded-full bg-slate-200/60 dark:bg-slate-700/60" />
+
+        {/* Narrative content with fixed height to prevent layout shift */}
+        <div
+          className={`flex h-[6.5rem] items-center transition-opacity duration-300 sm:h-[5rem] lg:h-[4.5rem] ${isTransitioning ? 'opacity-0' : 'opacity-100'}`}
+        >
+          <p className="line-clamp-4 text-base leading-relaxed text-slate-600 dark:text-slate-400">{renderNarrative(current)}</p>
+        </div>
+
+        {/* Progress bar - 50% width, centered */}
+        <div className="mx-auto mt-6 h-1 w-1/2 overflow-hidden rounded-full bg-slate-200/60 dark:bg-slate-700/60">
+          <div className="h-full rounded-full bg-primary-500/15" style={{ width: `${progress}%` }} />
+        </div>
+
+        {/* Progress dots - 50% width container, centered */}
+        <div className="mx-auto mt-3 flex w-1/2 justify-center gap-1.5">
           {narratives.map((_, i) => (
             <button
               key={i}
-              onClick={() => {
-                setIsTransitioning(true)
-                setTimeout(() => {
-                  setCurrentSet(i)
-                  setIsTransitioning(false)
-                }, 300)
-              }}
-              className={`h-1.5 rounded-full transition-all ${
+              onClick={() => goToSlide(i)}
+              className={`h-1.5 rounded-full transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 ${
                 i === currentSet ? 'w-4 bg-primary-500' : 'w-1.5 bg-slate-300 hover:bg-slate-400 dark:bg-slate-600 dark:hover:bg-slate-500'
               }`}
               aria-label={`View benefit ${i + 1}`}
+              aria-current={i === currentSet ? 'true' : 'false'}
             />
           ))}
         </div>
+
+        {/* Mobile swipe hint */}
+        <p className="mt-2 text-xs text-slate-400 dark:text-slate-500 lg:hidden">Swipe to navigate</p>
       </div>
 
       {/* Install Snippet */}
@@ -389,6 +548,22 @@ function HeartIcon({ className }: { className?: string }) {
   return (
     <svg className={className} viewBox="0 0 20 20" fill="currentColor">
       <path d="M9.653 16.915l-.005-.003-.019-.01a20.759 20.759 0 01-1.162-.682 22.045 22.045 0 01-2.582-1.9C4.045 12.733 2 10.352 2 7.5a4.5 4.5 0 018-2.828A4.5 4.5 0 0118 7.5c0 2.852-2.044 5.233-3.885 6.82a22.049 22.049 0 01-3.744 2.582l-.019.01-.005.003h-.002a.739.739 0 01-.69.001l-.002-.001z" />
+    </svg>
+  )
+}
+
+function ChevronLeftIcon({ className }: { className?: string }) {
+  return (
+    <svg className={className} fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+      <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
+    </svg>
+  )
+}
+
+function ChevronRightIcon({ className }: { className?: string }) {
+  return (
+    <svg className={className} fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+      <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
     </svg>
   )
 }
