@@ -53,7 +53,7 @@ export default createRule<[], MessageIds>({
           return
         }
 
-        const specifiers = node.specifiers.filter((s): s is TSESTree.ExportSpecifier => s.type === AST_NODE_TYPES.ExportSpecifier)
+        const specifiers = node.specifiers.filter((s) => s.type === AST_NODE_TYPES.ExportSpecifier) as TSESTree.ExportSpecifier[]
 
         if (specifiers.length === 0) {
           return
