@@ -1,0 +1,11 @@
+{
+  "$schema": "<%= offsetFromRoot %>node_modules/nx/schemas/project-schema.json",
+  "name": "<%= projectName %>",
+  "description": "<%= description %>",
+  "sourceRoot": "{projectRoot}/src",
+  "projectType": "library",
+  "tags": ["type:<%= type %>", "scope:internal"],
+  "targets": {
+    "typecheck": {}
+  }
+}

@@ -1,0 +1,23 @@
+# <%= packageName %>
+
+<%= description %>
+
+## Installation
+
+```bash
+npm install <%= packageName %>
+```
+
+## Usage
+
+```typescript
+import { } from '<%= packageName %>'
+```
+
+## API
+
+TODO: Document the API.
+
+## License
+
+[MIT](https://github.com/AndrewRedican/hyperfrontend/blob/main/LICENSE.md)

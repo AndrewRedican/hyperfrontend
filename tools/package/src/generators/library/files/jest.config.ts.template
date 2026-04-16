@@ -1,0 +1,19 @@
+import type { Config } from 'jest'
+
+export default <Config>{
+  preset: '<%= offsetFromRoot %>jest.preset.cjs',
+  collectCoverageFrom: [
+    '**/*.{ts,tsx}',
+    '!jest.config.{ts,tsx}',
+    '!**/index.{ts,tsx}',
+    '!**/*.d.{ts,tsx}',
+    '!**/*.spec.ts',
+    '!**/jest.setup*.ts',
+  ],
+  coverageDirectory: '<%= offsetFromRoot %>coverage/<%= coveragePath %>',
+  displayName: '<%= displayName %>',
+  moduleFileExtensions: ['ts', 'js', 'html'],
+  testEnvironment: 'node',
+  testMatch: ['**/*.spec.ts'],
+  setupFilesAfterEnv: ['<rootDir>/jest.setup.ts'],
+}
