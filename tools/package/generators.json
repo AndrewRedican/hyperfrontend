@@ -1,3 +1,25 @@
 {
-  "generators": {}
+  "$schema": "https://raw.githubusercontent.com/nrwl/nx/master/packages/nx/schemas/generators.schema.json",
+  "generators": {
+    "library": {
+      "factory": "./src/generators/library/generator",
+      "schema": "./src/generators/library/schema.json",
+      "description": "Create a new hyperfrontend library with standardized configuration"
+    },
+    "make-publishable": {
+      "factory": "./src/generators/make-publishable/generator",
+      "schema": "./src/generators/make-publishable/schema.json",
+      "description": "Convert an internal library to a publishable package"
+    },
+    "rename": {
+      "factory": "./src/generators/rename/generator",
+      "schema": "./src/generators/rename/schema.json",
+      "description": "Rename a project and update all references"
+    },
+    "move": {
+      "factory": "./src/generators/move/generator",
+      "schema": "./src/generators/move/schema.json",
+      "description": "Move a project to a new location and update all references"
+    }
+  }
 }

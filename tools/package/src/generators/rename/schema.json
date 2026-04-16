@@ -1,0 +1,28 @@
+{
+  "$schema": "http://json-schema.org/schema",
+  "type": "object",
+  "properties": {
+    "project": {
+      "type": "string",
+      "description": "The current project name (e.g., 'lib-my-utils')",
+      "$default": {
+        "$source": "argv",
+        "index": 0
+      }
+    },
+    "newName": {
+      "type": "string",
+      "description": "New name for the project (e.g., 'better-utils'). Will be prefixed appropriately.",
+      "$default": {
+        "$source": "argv",
+        "index": 1
+      }
+    },
+    "skipFormat": {
+      "type": "boolean",
+      "description": "Skip formatting the generated files",
+      "default": false
+    }
+  },
+  "required": ["project", "newName"]
+}

@@ -1,0 +1,37 @@
+{
+  "$schema": "http://json-schema.org/schema",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "The name of the library (without 'lib-' prefix)"
+    },
+    "directory": {
+      "type": "string",
+      "description": "The directory where the library will be created (e.g., 'libs' or 'libs/utils')",
+      "default": "libs"
+    },
+    "description": {
+      "type": "string",
+      "description": "A description of the library",
+      "default": ""
+    },
+    "type": {
+      "type": "string",
+      "enum": ["core", "util", "feature", "protocol"],
+      "description": "The type tag for module boundary enforcement",
+      "default": "util"
+    },
+    "publishable": {
+      "type": "boolean",
+      "description": "Whether the library should be publishable to npm (if true, runs make-publishable generator)",
+      "default": false
+    },
+    "skipFormat": {
+      "type": "boolean",
+      "description": "Skip formatting the generated files",
+      "default": false
+    }
+  },
+  "required": ["name"]
+}

@@ -1,0 +1,45 @@
+{
+  "$schema": "http://json-schema.org/schema",
+  "type": "object",
+  "properties": {
+    "project": {
+      "type": "string",
+      "description": "The name of the project to make publishable (e.g., 'lib-my-utils')",
+      "$default": {
+        "$source": "argv",
+        "index": 0
+      }
+    },
+    "globalName": {
+      "type": "string",
+      "description": "Global variable name for IIFE/UMD builds (e.g., 'HyperfrontendMyUtils')"
+    },
+    "bundleEntry": {
+      "type": "string",
+      "description": "Entry point for IIFE/UMD bundles (e.g., '.' or './browser')",
+      "default": "."
+    },
+    "keywords": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "npm keywords for the package",
+      "x-prompt": "Enter npm keywords for this package (comma-separated)"
+    },
+    "skipE2E": {
+      "type": "boolean",
+      "description": "Skip creating E2E project",
+      "default": false
+    },
+    "skipCI": {
+      "type": "boolean",
+      "description": "Skip creating CI workflow files",
+      "default": false
+    },
+    "skipFormat": {
+      "type": "boolean",
+      "description": "Skip formatting the generated files",
+      "default": false
+    }
+  },
+  "required": ["project"]
+}

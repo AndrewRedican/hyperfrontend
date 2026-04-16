@@ -1,0 +1,34 @@
+/**
+ * IIFE bundle E2E tests for <%= packageName %>
+ * Tests that the browser bundle loads correctly and attaches to window.
+ */
+
+import { getBundlePath, loadBundleCode, executeBundleInWindow } from '../../shared/helpers'
+
+describe('<%= packageName %> IIFE bundle', () => {
+  const bundlePath = getBundlePath('<%= projectRoot.replace("libs/", "") %>', 'iife')
+  const minBundlePath = getBundlePath('<%= projectRoot.replace("libs/", "") %>', 'iife', true)
+
+  it('bundle file should exist', () => {
+    expect(() => loadBundleCode(bundlePath)).not.toThrow()
+  })
+
+  it('minified bundle file should exist', () => {
+    expect(() => loadBundleCode(minBundlePath)).not.toThrow()
+  })
+
+  it('should attach <%= globalName %> to window global', () => {
+    const bundleCode = loadBundleCode(bundlePath)
+    const global = executeBundleInWindow(bundleCode, '<%= globalName %>')
+
+    expect(global).toBeDefined()
+  })
+
+  it('should have exports on the global', () => {
+    const bundleCode = loadBundleCode(bundlePath)
+    const global = executeBundleInWindow(bundleCode, '<%= globalName %>') as Record<string, unknown>
+
+    const exportedKeys = Object.keys(global)
+    expect(exportedKeys.length).toBeGreaterThan(0)
+  })
+})
