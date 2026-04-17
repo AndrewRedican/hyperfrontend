@@ -1,0 +1,18 @@
+{
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "name": "e2e-lib-questions",
+  "description": "E2E tests for @hyperfrontend/questions package outputs",
+  "sourceRoot": "{projectRoot}/src",
+  "projectType": "application",
+  "tags": ["type:e2e", "scope:internal"],
+  "targets": {
+    "e2e": {
+      "executor": "@hyperfrontend/package:e2e",
+      "dependsOn": ["^build"],
+      "options": {
+        "formats": ["cjs", "esm", "browser"]
+      }
+    }
+  },
+  "implicitDependencies": ["lib-questions"]
+}

@@ -1,0 +1,23 @@
+{
+  "name": "@hyperfrontend/e2e-questions",
+  "version": "0.0.0",
+  "private": true,
+  "description": "E2E tests for @hyperfrontend/questions package outputs",
+  "scripts": {
+    "pack-install": "cd ../../../dist/libs/questions && npm pack && cd - && npm install ../../../dist/libs/questions/*.tgz"
+  },
+  "dependencies": {
+    "@hyperfrontend/questions": "file:../../../tmp/e2e-packs/hyperfrontend-questions-0.0.0.tgz"
+  },
+  "devDependencies": {
+    "@types/jest": "29.5.14",
+    "@types/node": "25.3.3",
+    "jest": "29.7.0",
+    "jest-environment-jsdom": "29.7.0",
+    "ts-jest": "29.2.6",
+    "typescript": "5.7.3"
+  },
+  "overrides": {
+    "picomatch": "4.0.4"
+  }
+}

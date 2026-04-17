@@ -1,0 +1,38 @@
+{
+  "name": "@hyperfrontend/questions",
+  "version": "0.0.1",
+  "description": "Terminal prompting library with composable, functional API for text, select, confirm, and multiselect prompts",
+  "license": "MIT",
+  "exports": {
+    ".": "./src/index.js",
+    "./package.json": "./package.json"
+  },
+  "sideEffects": false,
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=8.0.0"
+  },
+  "keywords": [
+    "prompts",
+    "terminal",
+    "cli",
+    "interactive",
+    "questions",
+    "input",
+    "select",
+    "multiselect",
+    "confirm",
+    "functional",
+    "composable",
+    "zero-dependencies",
+    "typescript",
+    "type-safe"
+  ],
+  "funding": {
+    "type": "github",
+    "url": "https://github.com/sponsors/AndrewRedican"
+  },
+  "dependencies": {
+    "@hyperfrontend/immutable-api-utils": "0.1.2"
+  }
+}

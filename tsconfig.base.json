@@ -115,6 +115,7 @@
       "@hyperfrontend/project-scope/tech/testing": ["libs/project-scope/src/tech/testing/index.ts"],
       "@hyperfrontend/project-scope/tech/types": ["libs/project-scope/src/tech/types/index.ts"],
       "@hyperfrontend/project-scope/vfs": ["libs/project-scope/src/vfs/index.ts"],
+      "@hyperfrontend/questions": ["libs/questions/src/index.ts"],
       "@hyperfrontend/random-generator-utils": ["libs/utils/random-generator/src/index.ts"],
       "@hyperfrontend/state-machine": ["libs/state-machine/src/index.ts"],
       "@hyperfrontend/state-machine/actions": ["libs/state-machine/src/actions/index.ts"],
@@ -131,7 +132,6 @@
       "@hyperfrontend/string-utils/browser": ["libs/utils/string/src/browser/index.ts"],
       "@hyperfrontend/string-utils/node": ["libs/utils/string/src/node/index.ts"],
       "@hyperfrontend/time-utils": ["libs/utils/time/src/index.ts"],
-      "@hyperfrontend/workspace": ["tools/workspace/src/index.ts"],
       "@hyperfrontend/ui-utils": ["libs/utils/ui/src/index.ts"],
       "@hyperfrontend/ui-utils/audio": ["libs/utils/ui/src/audio/index.ts"],
       "@hyperfrontend/ui-utils/color": ["libs/utils/ui/src/color/index.ts"],
@@ -179,7 +179,8 @@
       "@hyperfrontend/versioning/workspace/discovery": ["libs/versioning/src/workspace/discovery/index.ts"],
       "@hyperfrontend/versioning/workspace/models": ["libs/versioning/src/workspace/models/index.ts"],
       "@hyperfrontend/versioning/workspace/operations": ["libs/versioning/src/workspace/operations/index.ts"],
-      "@hyperfrontend/web-worker": ["libs/web-worker/src/index.ts"]
+      "@hyperfrontend/web-worker": ["libs/web-worker/src/index.ts"],
+      "@hyperfrontend/workspace": ["tools/workspace/src/index.ts"]
     }
   },
   "exclude": ["node_modules", "tmp"]
