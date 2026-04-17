@@ -1,6 +1,6 @@
 ---
 name: library-generators
-version: 1.0.0
+version: 1.1.0
 description: Use @hyperfrontend/package generators to create, promote, rename, or move libraries. Use when scaffolding a new library, promoting internal to publishable, renaming a project, or relocating a library directory.
 allowed-tools:
   - Read
@@ -41,10 +41,57 @@ nx generate @hyperfrontend/package:move --project=lib-my-utils --destination=lib
 
 ## make-publishable Manual Steps
 
-Generator creates E2E project + CI status workflow. Still requires:
+Generator creates E2E project + CI status workflow. **6 manual entries required:**
 
-1. Add path filter + matrix entry → `.github/workflows/ci-libraries.yml`
-2. Add row → root `README.md` packages table
-3. Add entry → `apps/docs-site/scripts/generate-docs.ts`
+| Step | File                                                    | Entry                        |
+| ---- | ------------------------------------------------------- | ---------------------------- |
+| 1    | `.github/workflows/ci-libraries.yml`                    | Path filter + matrix entry   |
+| 2    | `.github/workflows/ci-main.yml`                         | Coverage entry in LIBS array |
+| 3    | `README.md`                                             | Row in packages table        |
+| 4    | `apps/docs-site/scripts/generate-docs.ts`               | LIBRARIES array entry        |
+| 5    | `apps/docs-site/src/lib/content.ts`                     | LIBRARIES array entry        |
+| 6    | `apps/docs-site/src/app/docs/libraries/{slug}/page.tsx` | Page route file              |
 
-See `library-ci-workflows` skill for CI patterns.
+See `library-ci-workflows` skill for steps 1–2.
+
+---
+
+## Docs-Site Page Template
+
+```tsx
+import type { Metadata } from 'next'
+import { LibraryDocPage } from '@/components/library-doc-page'
+import { getLibraryMetadata } from '@/lib/metadata'
+
+export function generateMetadata(): Metadata {
+  return getLibraryMetadata('my-lib')
+}
+
+export default function MyLibPage() {
+  return (
+    <LibraryDocPage
+      title="My Lib"
+      packageName="@hyperfrontend/my-lib"
+      slug="my-lib"
+      category="core"
+      fallbackDescription="One-line description."
+      fallbackFeatures={['Feature 1', 'Feature 2']}
+    />
+  )
+}
+```
+
+---
+
+## content.ts Entry Template
+
+```typescript
+{
+  name: 'My Lib',
+  packageName: '@hyperfrontend/my-lib',
+  slug: 'my-lib',
+  readmePath: 'libs/my-lib/README.md',
+  entryPoints: ['libs/my-lib/src/index.ts'],
+  category: 'core',
+},
+```
