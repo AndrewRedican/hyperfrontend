@@ -170,7 +170,7 @@ export const LIBRARIES: LibraryInfo[] = [
     slug: 'questions',
     readmePath: 'libs/questions/README.md',
     entryPoints: ['libs/questions/src/index.ts'],
-    category: 'utils',
+    category: 'supporting',
   },
   {
     name: 'Features Plugin',

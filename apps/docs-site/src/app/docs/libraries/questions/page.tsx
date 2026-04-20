@@ -12,7 +12,7 @@ export default function QuestionsPage() {
       title="Questions"
       packageName="@hyperfrontend/questions"
       slug="questions"
-      category="core"
+      category="supporting"
       fallbackDescription="Terminal prompting library with composable, functional API for text, select, confirm, and multiselect prompts."
       fallbackFeatures={[
         'Pure function prompts returning Promise<PromptOutcome<T>> for predictable, testable results',
