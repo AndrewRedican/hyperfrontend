@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.5.4](https://github.com/AndrewRedican/hyperfrontend/compare/a0ce00788db9fe1c2b1acf06dd59b2622cb1ed3f...94b2ccd5f3cd20a7f3c7a503899c6746eaded17e) - 2026-04-20
+
+### Bug Fixes
+
+- make first-release idempotent on re-run
+
 ## [0.5.3](https://github.com/AndrewRedican/hyperfrontend/compare/d96fee4d4d3a70178c8a01e5f2e2ae675fa23f37...8a05c80832de91cd61f8af064b417870ea1e3b01) - 2026-04-13
 
 ### Bug Fixes
