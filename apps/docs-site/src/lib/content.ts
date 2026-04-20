@@ -165,6 +165,14 @@ export const LIBRARIES: LibraryInfo[] = [
     category: 'utils',
   },
   {
+    name: 'Questions',
+    packageName: '@hyperfrontend/questions',
+    slug: 'questions',
+    readmePath: 'libs/questions/README.md',
+    entryPoints: ['libs/questions/src/index.ts'],
+    category: 'supporting',
+  },
+  {
     name: 'Features Plugin',
     packageName: '@hyperfrontend/features',
     slug: 'features',

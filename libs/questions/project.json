@@ -1,0 +1,25 @@
+{
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "name": "lib-questions",
+  "description": "Terminal prompting library with composable, functional API for text, select, confirm, and multiselect prompts",
+  "sourceRoot": "{projectRoot}/src",
+  "projectType": "library",
+  "tags": ["type:util", "scope:public"],
+  "targets": {
+    "version": {},
+    "version-check": {},
+    "build": {
+      "executor": "@hyperfrontend/package:build",
+      "options": {
+        "esm": {
+          "bundleWorkspaceDeps": true
+        },
+        "cjs": {
+          "bundleWorkspaceDeps": true
+        }
+      }
+    },
+    "publish": {},
+    "typecheck": {}
+  }
+}

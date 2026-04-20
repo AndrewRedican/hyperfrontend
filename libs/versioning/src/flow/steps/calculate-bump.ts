@@ -101,11 +101,14 @@ export function createCalculateBumpStep(): FlowStep {
         const firstVersion = config.firstReleaseVersion ?? '0.1.0'
         logger.info(`First release: using version ${firstVersion}`)
 
+        const isPendingPublication = currentVersion === firstVersion
+
         return {
           status: 'success',
           stateUpdates: {
             bumpType: <BumpType>'minor',
             nextVersion: firstVersion,
+            isPendingPublication,
           },
           message: `First release: ${firstVersion}`,
         }
@@ -196,6 +199,7 @@ export function createCalculateBumpStep(): FlowStep {
         stateUpdates: {
           bumpType,
           nextVersion,
+          isPendingPublication: false,
         },
         message: `${bumpType} bump: ${currentVersion} → ${nextVersion}`,
       }

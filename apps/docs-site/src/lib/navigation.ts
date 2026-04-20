@@ -61,6 +61,7 @@ const coreLibraries: NavItem[] = [
  */
 const supportingLibraries: NavItem[] = [
   { slug: 'logging', packageName: '@hyperfrontend/logging', href: '/docs/libraries/logging' },
+  { slug: 'questions', packageName: '@hyperfrontend/questions', href: '/docs/libraries/questions' },
   { slug: 'state-machine', packageName: '@hyperfrontend/state-machine', href: '/docs/libraries/state-machine' },
   {
     slug: 'versioning',

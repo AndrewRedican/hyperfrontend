@@ -4,23 +4,6 @@ Improve docs-site SEO, branding, and engagement using Next.js built-in features.
 
 ---
 
-## Phase 1: SEO (Foundation) ✅
-
-- Root layout metadata (metadataBase, twitter, alternates)
-- sitemap.ts and robots.ts
-- Per-page metadata for 20+ pages
-- Library metadata utility using manifest
-
-### Verification
-
-```bash
-npx nx build docs-site
-npx nx lint docs-site --fix
-npx nx typecheck docs-site
-```
-
----
-
 ## Phase 2: Branding (Isolated)
 
 Favicon and social card assets.

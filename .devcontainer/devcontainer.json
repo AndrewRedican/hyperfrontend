@@ -22,7 +22,8 @@
         "shd101wyy.markdown-preview-enhanced",
         "github.vscode-github-actions",
         "yzhang.markdown-all-in-one",
-        "ritwickdey.liveserver"
+        "ritwickdey.liveserver",
+        "anthropic.claude-code"
       ],
       "settings": {
         "editor.formatOnSave": true,
