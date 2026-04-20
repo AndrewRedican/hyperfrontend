@@ -350,28 +350,7 @@ npx nx test project-scope
 
 ### Phase 1: Foundation — New Prerequisite Packages
 
-#### 1.1 Create @hyperfrontend/questions
-
-Terminal prompting library (enquirer-inspired).
-
-**Files to create:**
-
-- `libs/questions/package.json`
-- `libs/questions/project.json`
-- `libs/questions/src/index.ts`
-- `libs/questions/src/prompts/text.ts`
-- `libs/questions/src/prompts/select.ts`
-- `libs/questions/src/prompts/confirm.ts`
-- `libs/questions/src/prompts/multiselect.ts`
-- `libs/questions/README.md`
-
-**Verification:**
-
-```bash
-npx nx test questions
-npx nx lint questions --fix
-npx nx typecheck questions
-```
+#### 1.1 Create @hyperfrontend/question - DONE
 
 #### 1.2 Create @hyperfrontend/builder
 
