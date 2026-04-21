@@ -42,23 +42,39 @@ function createMockCommit(overrides: Partial<GitCommit> = {}): GitCommit {
   }
 }
 
+type MockContextOverrides = Omit<Partial<InfrastructureMatchContext>, 'scope'> & {
+  scope?: string | readonly string[] | undefined
+}
+
 /**
  * Creates a minimal match context for testing.
+ *
+ * Accepts scope as either a string (wrapped into a single-element array) or a
+ * readonly array for multi-scope cases.
  *
  * @param overrides - Partial context properties to override defaults
  * @returns A complete InfrastructureMatchContext with defaults and overrides applied
  */
-function createMockContext(overrides: Partial<InfrastructureMatchContext> = {}): InfrastructureMatchContext {
+function createMockContext(overrides: MockContextOverrides = {}): InfrastructureMatchContext {
   const commit = createMockCommit({
     message: overrides.message ?? 'test commit',
     subject: overrides.subject ?? 'test commit',
   })
+  const { scope: scopeOverride, ...rest } = overrides
+  let scope: readonly string[]
+  if (scopeOverride === undefined) {
+    scope = []
+  } else if (typeof scopeOverride === 'string') {
+    scope = [scopeOverride]
+  } else {
+    scope = scopeOverride
+  }
   return {
     commit,
-    scope: undefined,
+    scope,
     subject: commit.subject,
     message: commit.message,
-    ...overrides,
+    ...rest,
   }
 }
 
@@ -319,7 +335,7 @@ describe('buildInfrastructureMatcher', () => {
   })
 
   it('uses custom matcher when provided', () => {
-    const customMatcher: InfrastructureMatcher = (ctx) => ctx.scope === 'custom'
+    const customMatcher: InfrastructureMatcher = (ctx) => ctx.scope.includes('custom')
     const matcher = buildInfrastructureMatcher({ matcher: customMatcher })
     if (matcher === null) {
       throw new Error('Expected matcher to be defined')
@@ -351,7 +367,7 @@ describe('buildInfrastructureMatcher', () => {
   })
 
   it('returns single matcher directly when only one configured', () => {
-    const customMatcher: InfrastructureMatcher = (ctx) => ctx.scope === 'custom'
+    const customMatcher: InfrastructureMatcher = (ctx) => ctx.scope.includes('custom')
     const matcher = buildInfrastructureMatcher({ matcher: customMatcher })
     if (matcher === null) {
       throw new Error('Expected matcher to be defined')
@@ -372,14 +388,14 @@ describe('createMatchContext', () => {
     expect(context.commit).toBe(commit)
     expect(context.subject).toBe('feat(scope): add feature')
     expect(context.message).toBe('feat(scope): add feature\n\nBody text')
-    expect(context.scope).toBeUndefined()
+    expect(context.scope).toEqual([])
   })
 
   it('uses provided scope', () => {
     const commit = createMockCommit()
-    const context = createMatchContext(commit, 'my-scope')
+    const context = createMatchContext(commit, ['my-scope'])
 
-    expect(context.scope).toBe('my-scope')
+    expect(context.scope).toEqual(['my-scope'])
   })
 })
 
@@ -388,14 +404,14 @@ describe('evaluateInfrastructure', () => {
     const commit = createMockCommit({ message: 'ci: update pipeline' })
     const matcher = scopeMatcher(['ci'])
 
-    expect(evaluateInfrastructure(commit, matcher, 'ci')).toBe(true)
+    expect(evaluateInfrastructure(commit, matcher, ['ci'])).toBe(true)
   })
 
   it('returns false when commit does not match', () => {
     const commit = createMockCommit({ message: 'feat: new feature' })
     const matcher = scopeMatcher(['ci'])
 
-    expect(evaluateInfrastructure(commit, matcher, 'feat')).toBe(false)
+    expect(evaluateInfrastructure(commit, matcher, ['feat'])).toBe(false)
   })
 
   it('works without pre-parsed scope', () => {

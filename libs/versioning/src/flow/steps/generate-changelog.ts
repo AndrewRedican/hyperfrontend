@@ -125,8 +125,9 @@ function classifiedCommitToItem(classified: ClassifiedCommit): ChangelogItem {
 
   let text = commit.subject
 
-  if (commit.scope) {
-    text = `**${commit.scope}:** ${text}`
+  const scopePrefix = formatScopePrefix(commit.scope)
+  if (scopePrefix) {
+    text = `${scopePrefix}${text}`
   }
 
   if (commit.breaking) {
@@ -149,8 +150,9 @@ function classifiedCommitToItem(classified: ClassifiedCommit): ChangelogItem {
 function commitToItem(commit: ConventionalCommit): ChangelogItem {
   let text = commit.subject
 
-  if (commit.scope) {
-    text = `**${commit.scope}:** ${text}`
+  const scopePrefix = formatScopePrefix(commit.scope)
+  if (scopePrefix) {
+    text = `${scopePrefix}${text}`
   }
 
   if (commit.breaking) {
@@ -158,6 +160,20 @@ function commitToItem(commit: ConventionalCommit): ChangelogItem {
   }
 
   return createChangelogItem(text)
+}
+
+/**
+ * Renders a scope array into the changelog markdown prefix (e.g. `**a, b:** `).
+ * Empty scope arrays produce an empty string.
+ *
+ * @param scope - The scope array from a conventional commit
+ * @returns A prefix string to prepend to the item text (possibly empty)
+ */
+function formatScopePrefix(scope: readonly string[]): string {
+  if (scope.length === 0) {
+    return ''
+  }
+  return `**${scope.join(', ')}:** `
 }
 
 /**
@@ -250,7 +266,8 @@ export function createGenerateChangelogStep(): FlowStep {
                 const commit = toChangelogCommit(c)
                 const text = commit.breakingDescription ?? commit.subject
                 const indirect = isIndirectSource(c.source)
-                return createChangelogItem(commit.scope ? `**${commit.scope}:** ${text}` : text, {
+                const prefix = formatScopePrefix(commit.scope)
+                return createChangelogItem(prefix ? `${prefix}${text}` : text, {
                   source: c.source,
                   indirect,
                   breaking: true,
@@ -307,7 +324,8 @@ export function createGenerateChangelogStep(): FlowStep {
               'Breaking Changes',
               breakingCommits.map((c) => {
                 const text = c.breakingDescription ?? c.subject
-                return createChangelogItem(c.scope ? `**${c.scope}:** ${text}` : text)
+                const prefix = formatScopePrefix(c.scope)
+                return createChangelogItem(prefix ? `${prefix}${text}` : text)
               })
             )
           )

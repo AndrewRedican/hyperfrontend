@@ -100,48 +100,58 @@ describe('scopeMatchesProject', () => {
   const projectScopes = ['lib-versioning', 'versioning']
 
   it('matches exact scope', () => {
-    expect(scopeMatchesProject('versioning', projectScopes)).toBe(true)
-    expect(scopeMatchesProject('lib-versioning', projectScopes)).toBe(true)
+    expect(scopeMatchesProject(['versioning'], projectScopes)).toBe(true)
+    expect(scopeMatchesProject(['lib-versioning'], projectScopes)).toBe(true)
   })
 
   it('matches case-insensitively', () => {
-    expect(scopeMatchesProject('Versioning', projectScopes)).toBe(true)
-    expect(scopeMatchesProject('VERSIONING', projectScopes)).toBe(true)
+    expect(scopeMatchesProject(['Versioning'], projectScopes)).toBe(true)
+    expect(scopeMatchesProject(['VERSIONING'], projectScopes)).toBe(true)
+  })
+
+  it('matches when any scope in a multi-scope list matches', () => {
+    expect(scopeMatchesProject(['logging', 'versioning'], projectScopes)).toBe(true)
+    expect(scopeMatchesProject(['questions', 'cryptography'], projectScopes)).toBe(false)
   })
 
   it('returns false for non-matching scope', () => {
-    expect(scopeMatchesProject('logging', projectScopes)).toBe(false)
-    expect(scopeMatchesProject('cryptography', projectScopes)).toBe(false)
+    expect(scopeMatchesProject(['logging'], projectScopes)).toBe(false)
+    expect(scopeMatchesProject(['cryptography'], projectScopes)).toBe(false)
   })
 
-  it('returns false for undefined scope', () => {
-    expect(scopeMatchesProject(undefined, projectScopes)).toBe(false)
+  it('returns false for empty scope array', () => {
+    expect(scopeMatchesProject([], projectScopes)).toBe(false)
   })
 
-  it('returns false for empty scope', () => {
-    expect(scopeMatchesProject('', projectScopes)).toBe(false)
+  it('returns false for array containing an empty string', () => {
+    expect(scopeMatchesProject([''], projectScopes)).toBe(false)
   })
 })
 
 describe('scopeIsExcluded', () => {
   const excludeScopes = ['release', 'deps']
 
-  it('returns true for excluded scope', () => {
-    expect(scopeIsExcluded('release', excludeScopes)).toBe(true)
-    expect(scopeIsExcluded('deps', excludeScopes)).toBe(true)
+  it('returns true when all scopes are excluded', () => {
+    expect(scopeIsExcluded(['release'], excludeScopes)).toBe(true)
+    expect(scopeIsExcluded(['deps'], excludeScopes)).toBe(true)
+    expect(scopeIsExcluded(['release', 'deps'], excludeScopes)).toBe(true)
   })
 
   it('matches case-insensitively', () => {
-    expect(scopeIsExcluded('Release', excludeScopes)).toBe(true)
-    expect(scopeIsExcluded('DEPS', excludeScopes)).toBe(true)
+    expect(scopeIsExcluded(['Release'], excludeScopes)).toBe(true)
+    expect(scopeIsExcluded(['DEPS'], excludeScopes)).toBe(true)
   })
 
   it('returns false for non-excluded scope', () => {
-    expect(scopeIsExcluded('versioning', excludeScopes)).toBe(false)
+    expect(scopeIsExcluded(['versioning'], excludeScopes)).toBe(false)
   })
 
-  it('returns false for undefined scope', () => {
-    expect(scopeIsExcluded(undefined, excludeScopes)).toBe(false)
+  it('returns false for mixed scopes (not every scope excluded)', () => {
+    expect(scopeIsExcluded(['release', 'versioning'], excludeScopes)).toBe(false)
+  })
+
+  it('returns false for empty scope array', () => {
+    expect(scopeIsExcluded([], excludeScopes)).toBe(false)
   })
 })
 

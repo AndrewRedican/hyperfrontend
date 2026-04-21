@@ -120,51 +120,62 @@ function extractPackageNameVariations(packageName: string): readonly string[] {
 }
 
 /**
- * Checks if a commit scope matches any of the project scopes.
+ * Checks if any element of a commit's scope list matches any of the project scopes.
  *
- * @param commitScope - The scope from a conventional commit
+ * A commit matches the project when **any** of its scope entries matches a
+ * project scope. Empty commit scopes never match.
+ *
+ * @param commitScopes - Scopes from a conventional commit
  * @param projectScopes - Array of scopes that match the project
- * @returns True if the commit scope matches the project
+ * @returns True if at least one commit scope matches the project
  *
  * @example Matching scope to project
- * scopeMatchesProject('versioning', ['lib-versioning', 'versioning']) // true
- * scopeMatchesProject('logging', ['lib-versioning', 'versioning']) // false
+ * scopeMatchesProject(['versioning'], ['lib-versioning', 'versioning']) // true
+ * scopeMatchesProject(['logging'], ['lib-versioning', 'versioning']) // false
+ * scopeMatchesProject(['versioning', 'questions'], ['lib-questions']) // true
+ * scopeMatchesProject([], ['lib-versioning']) // false
  */
-export function scopeMatchesProject(commitScope: string | undefined, projectScopes: readonly string[]): boolean {
-  if (!commitScope) {
+export function scopeMatchesProject(commitScopes: readonly string[], projectScopes: readonly string[]): boolean {
+  if (commitScopes.length === 0) {
     return false
   }
 
-  const normalizedScope = commitScope.toLowerCase()
-  return projectScopes.some((scope) => scope.toLowerCase() === normalizedScope)
+  const normalizedProjectScopes = projectScopes.map((scope) => scope.toLowerCase())
+  return commitScopes.some((commitScope) => normalizedProjectScopes.includes(commitScope.toLowerCase()))
 }
 
 /**
- * Checks if a commit scope should be explicitly excluded.
+ * Checks if all scopes of a commit are in the exclude list.
  *
- * @param commitScope - The scope from a conventional commit
+ * A commit is excluded only when **every** scope entry matches an exclude
+ * scope. Commits with no scope entries are never considered excluded here.
+ *
+ * @param commitScopes - Scopes from a conventional commit
  * @param excludeScopes - Array of scopes to exclude
- * @returns True if the scope should be excluded
+ * @returns True if every commit scope is in the exclude list
  *
  * @example Checking if a scope should be excluded
  * ```typescript
- * scopeIsExcluded('release', ['release', 'deps'])
+ * scopeIsExcluded(['release'], ['release', 'deps'])
  * // => true
  *
- * scopeIsExcluded('auth', ['release', 'deps'])
+ * scopeIsExcluded(['auth'], ['release', 'deps'])
  * // => false
  *
- * scopeIsExcluded(undefined, ['release'])
+ * scopeIsExcluded([], ['release'])
  * // => false
+ *
+ * scopeIsExcluded(['release', 'auth'], ['release'])
+ * // => false (not every scope is excluded)
  * ```
  */
-export function scopeIsExcluded(commitScope: string | undefined, excludeScopes: readonly string[]): boolean {
-  if (!commitScope) {
+export function scopeIsExcluded(commitScopes: readonly string[], excludeScopes: readonly string[]): boolean {
+  if (commitScopes.length === 0) {
     return false
   }
 
-  const normalizedScope = commitScope.toLowerCase()
-  return excludeScopes.some((scope) => scope.toLowerCase() === normalizedScope)
+  const normalizedExcludes = excludeScopes.map((scope) => scope.toLowerCase())
+  return commitScopes.every((commitScope) => normalizedExcludes.includes(commitScope.toLowerCase()))
 }
 
 /**

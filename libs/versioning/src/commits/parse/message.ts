@@ -23,7 +23,7 @@ const MAX_MESSAGE_LENGTH = 10 * 1024
  * parseConventionalCommit('feat(auth): add login\n\nImplements OAuth.\n\nRefs: #123')
  * // => {
  * //   type: 'feat',
- * //   scope: 'auth',
+ * //   scope: ['auth'],
  * //   subject: 'add login',
  * //   body: 'Implements OAuth.',
  * //   footers: [{ key: 'Refs', value: '#123', separator: ':' }],
@@ -42,6 +42,7 @@ export function parseConventionalCommit(message: string): ConventionalCommit {
   if (lines.length === 0) {
     return {
       type: '',
+      scope: [],
       subject: '',
       footers: [],
       breaking: false,
@@ -53,6 +54,7 @@ export function parseConventionalCommit(message: string): ConventionalCommit {
   if (firstLine === undefined) {
     return {
       type: '',
+      scope: [],
       subject: '',
       footers: [],
       breaking: false,

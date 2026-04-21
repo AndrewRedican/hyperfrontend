@@ -108,7 +108,7 @@ function createMockGitClient(): GitClient {
 function createMockCommit(overrides: Partial<ConventionalCommit> = {}): ConventionalCommit {
   return {
     type: 'feat',
-    scope: undefined,
+    scope: [],
     subject: 'test commit',
     breaking: false,
     breakingDescription: undefined,

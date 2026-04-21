@@ -17,8 +17,8 @@ export interface ConventionalCommit {
   /** Commit type (feat, fix, docs, etc.) */
   readonly type: CommitType
 
-  /** Optional scope in parentheses */
-  readonly scope?: string
+  /** Scopes in parentheses (empty array when header has no scope) */
+  readonly scope: readonly string[]
 
   /** Subject line (after colon) */
   readonly subject: string
@@ -75,10 +75,13 @@ export function createCommitFooter(key: string, value: string, separator: ':' | 
  * @example Creating conventional commits
  * ```typescript
  * createConventionalCommit('feat', 'add user authentication')
- * // => { type: 'feat', subject: 'add user authentication', footers: [], breaking: false, raw: 'feat: add user authentication' }
+ * // => { type: 'feat', subject: 'add user authentication', scope: [], footers: [], breaking: false, raw: 'feat: add user authentication' }
  *
- * createConventionalCommit('fix', 'resolve memory leak', { scope: 'core', breaking: true })
- * // => { type: 'fix', subject: 'resolve memory leak', scope: 'core', breaking: true, ... }
+ * createConventionalCommit('fix', 'resolve memory leak', { scope: ['core'], breaking: true })
+ * // => { type: 'fix', subject: 'resolve memory leak', scope: ['core'], breaking: true, ... }
+ *
+ * createConventionalCommit('feat', 'add x', { scope: ['versioning', 'questions'] })
+ * // => { ..., scope: ['versioning', 'questions'], raw: 'feat(versioning,questions): add x' }
  * ```
  */
 export function createConventionalCommit(
@@ -94,7 +97,7 @@ export function createConventionalCommit(
   return {
     type,
     subject,
-    scope: options?.scope,
+    scope: options?.scope ?? [],
     body: options?.body,
     footers: options?.footers ?? [],
     breaking: options?.breaking ?? false,
@@ -114,8 +117,8 @@ export function createConventionalCommit(
 function buildRaw(type: CommitType, subject: string, options?: Partial<Omit<ConventionalCommit, 'type' | 'subject' | 'raw'>>): string {
   let header = type
 
-  if (options?.scope) {
-    header += `(${options.scope})`
+  if (options?.scope && options.scope.length > 0) {
+    header += `(${options.scope.join(',')})`
   }
 
   if (options?.breaking) {
