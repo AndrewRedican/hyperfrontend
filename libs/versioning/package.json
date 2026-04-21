@@ -20,6 +20,7 @@
     "./commits/classify": "./src/commits/classify/index.js",
     "./commits/models": "./src/commits/models/index.js",
     "./commits/parse": "./src/commits/parse/index.js",
+    "./commits/validate": "./src/commits/validate/index.js",
     "./flow": "./src/flow/index.js",
     "./flow/executor": "./src/flow/executor/index.js",
     "./flow/models": "./src/flow/models/index.js",

@@ -31,6 +31,22 @@ export type { ConventionalCommit, CommitFooter } from './commits/models/conventi
 export type { ParsedBody } from './commits/parse/body'
 export type { ParsedFooters } from './commits/parse/footer'
 export type { ParsedHeader } from './commits/parse/header'
+export type {
+  HeaderMaxLengthOptions,
+  ImperativeMoodOptions,
+  Rule,
+  RuleConfig,
+  RuleContext,
+  RuleLevel,
+  RuleMessage,
+  RuleResult,
+  Ruleset,
+  ScopeEnumOptions,
+  SubjectCase,
+  SubjectCaseOptions,
+  TypeEnumOptions,
+  ValidationResult as CommitValidationResult,
+} from './commits/validate'
 export type { ExecuteOptions } from './flow/executor'
 export type { FlowPreset } from './flow/factory'
 export type {
@@ -193,6 +209,21 @@ export { parseBody } from './commits/parse/body'
 export { parseFooters } from './commits/parse/footer'
 export { parseHeader } from './commits/parse/header'
 export { parseConventionalCommit, isConventionalCommit } from './commits/parse/message'
+export {
+  BUILT_IN_RULES,
+  CONVENTIONAL_TYPES,
+  conventionalPreset,
+  DEFAULT_IMPERATIVE_WORDLIST,
+  headerMaxLengthRule,
+  imperativeMoodRule,
+  scopeEnumRule,
+  subjectCaseRule,
+  subjectEmptyRule,
+  typeEnumRule,
+  validateCommit,
+  validateCommitMessage,
+  validateCommitWithRules,
+} from './commits/validate'
 export { executeFlow, dryRun, validateFlow } from './flow/executor'
 export { createVersionFlow, createDryRunFlow, getAvailablePresets, getPresetDescription } from './flow/factory'
 export {

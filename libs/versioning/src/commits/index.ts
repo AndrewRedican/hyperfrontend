@@ -17,6 +17,22 @@ export type {
 } from './classify'
 export type { BreakingChange, CommitFooter, CommitType, ConventionalCommit } from './models'
 export type { ParsedBody, ParsedFooters, ParsedHeader } from './parse'
+export type {
+  HeaderMaxLengthOptions,
+  ImperativeMoodOptions,
+  Rule,
+  RuleConfig,
+  RuleContext,
+  RuleLevel,
+  RuleMessage,
+  RuleResult,
+  Ruleset,
+  ScopeEnumOptions,
+  SubjectCase,
+  SubjectCaseOptions,
+  TypeEnumOptions,
+  ValidationResult,
+} from './validate'
 export {
   allOf,
   anyOf,
@@ -62,3 +78,18 @@ export {
   RELEASE_TYPES,
 } from './models'
 export { isConventionalCommit, parseBody, parseConventionalCommit, parseFooters, parseHeader } from './parse'
+export {
+  BUILT_IN_RULES,
+  CONVENTIONAL_TYPES,
+  conventionalPreset,
+  DEFAULT_IMPERATIVE_WORDLIST,
+  headerMaxLengthRule,
+  imperativeMoodRule,
+  scopeEnumRule,
+  subjectCaseRule,
+  subjectEmptyRule,
+  typeEnumRule,
+  validateCommit,
+  validateCommitMessage,
+  validateCommitWithRules,
+} from './validate'

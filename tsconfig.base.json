@@ -154,6 +154,7 @@
       "@hyperfrontend/versioning/commits/classify": ["libs/versioning/src/commits/classify/index.ts"],
       "@hyperfrontend/versioning/commits/models": ["libs/versioning/src/commits/models/index.ts"],
       "@hyperfrontend/versioning/commits/parse": ["libs/versioning/src/commits/parse/index.ts"],
+      "@hyperfrontend/versioning/commits/validate": ["libs/versioning/src/commits/validate/index.ts"],
       "@hyperfrontend/versioning/flow": ["libs/versioning/src/flow/index.ts"],
       "@hyperfrontend/versioning/flow/executor": ["libs/versioning/src/flow/executor/index.ts"],
       "@hyperfrontend/versioning/flow/models": ["libs/versioning/src/flow/models/index.ts"],
