@@ -25,6 +25,7 @@ export type {
 } from './changelog/operations'
 export type { Token, TokenType } from './changelog/parse/tokenizer'
 export type { SerializeOptions, JsonSerializeOptions } from './changelog/serialize'
+export type { CommitDraft } from './commits/format/models/draft'
 export type { BreakingChange } from './commits/models/breaking'
 export type { CommitType } from './commits/models/commit-type'
 export type { ConventionalCommit, CommitFooter } from './commits/models/conventional'
@@ -194,6 +195,10 @@ export {
   createSpacing,
 } from './changelog/serialize'
 export { DEFAULT_EXCLUDE_SCOPES, DEFAULT_PROJECT_PREFIXES } from './commits/classify'
+export { countHeaderLength } from './commits/format/count-header'
+export { formatHeader } from './commits/format/format-header'
+export { formatCommitMessage } from './commits/format/format-message'
+export { toDraft } from './commits/format/models/draft'
 export { createBreakingFromFooter, createBreakingFromSubject, createNonBreaking, isBreakingFooterKey } from './commits/models/breaking'
 export {
   COMMIT_TYPES,

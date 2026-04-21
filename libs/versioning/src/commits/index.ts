@@ -15,6 +15,7 @@ export type {
   InfrastructureMatchContext,
   InfrastructureMatcher,
 } from './classify'
+export type { CommitDraft } from './format'
 export type { BreakingChange, CommitFooter, CommitType, ConventionalCommit } from './models'
 export type { ParsedBody, ParsedFooters, ParsedHeader } from './parse'
 export type {
@@ -62,6 +63,7 @@ export {
   TOOL_PREFIX_MATCHER,
   TOOLING_SCOPE_MATCHER,
 } from './classify'
+export { countHeaderLength, formatCommitMessage, formatHeader, toDraft } from './format'
 export {
   COMMIT_TYPES,
   createBreakingFromFooter,

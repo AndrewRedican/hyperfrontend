@@ -18,6 +18,7 @@
     "./changelog/serialize": "./src/changelog/serialize/index.js",
     "./commits": "./src/commits/index.js",
     "./commits/classify": "./src/commits/classify/index.js",
+    "./commits/format": "./src/commits/format/index.js",
     "./commits/models": "./src/commits/models/index.js",
     "./commits/parse": "./src/commits/parse/index.js",
     "./commits/validate": "./src/commits/validate/index.js",
