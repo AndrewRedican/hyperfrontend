@@ -104,6 +104,8 @@ export interface SelectConfig<T = string> extends PromptConfig {
   readonly initial?: number
   /** Maximum number of visible choices (enables scrolling) */
   readonly maxVisible?: number
+  /** Enable type-to-filter */
+  readonly searchable?: boolean
 }
 
 /**
