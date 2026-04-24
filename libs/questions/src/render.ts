@@ -61,6 +61,13 @@ export const style = freeze({
    */
   yellow: (text: string): string => `${Ansi.Yellow}${text}${Ansi.Reset}`,
   /**
+   * Applies red color to text.
+   *
+   * @param text - Text to style
+   * @returns Text wrapped in red ANSI codes
+   */
+  red: (text: string): string => `${Ansi.Red}${text}${Ansi.Reset}`,
+  /**
    * Applies gray color to text.
    *
    * @param text - Text to style

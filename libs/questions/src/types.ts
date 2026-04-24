@@ -84,6 +84,8 @@ export interface TextConfig extends PromptConfig {
   readonly validate?: (value: string) => string | undefined
   /** Transform display of input (e.g., for password masking) */
   readonly format?: (value: string) => string
+  /** Dynamic message recomputed on every keystroke; overrides `message` when present */
+  readonly renderMessage?: (value: string) => string
 }
 
 /**

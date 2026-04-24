@@ -49,6 +49,13 @@ export const Ansi = freeze(<const>{
    * @returns ANSI escape sequence string
    */
   cursorDown: (n: number): string => `\x1B[${n}B`,
+  /**
+   * Generates ANSI escape code to move cursor left by specified columns.
+   *
+   * @param n - Number of columns to move left
+   * @returns ANSI escape sequence string
+   */
+  cursorLeft: (n: number): string => `\x1B[${n}D`,
   /** Escape code to hide cursor */
   HideCursor: '\x1B[?25l',
   /** Escape code to show cursor */
@@ -71,6 +78,8 @@ export const Ansi = freeze(<const>{
   Green: '\x1B[32m',
   /** Escape code for yellow foreground */
   Yellow: '\x1B[33m',
+  /** Escape code for red foreground */
+  Red: '\x1B[31m',
   /** Escape code for gray foreground */
   Gray: '\x1B[90m',
 })

@@ -52,15 +52,19 @@ function createInitialState(config: TextConfig): TextState {
  */
 function render(term: Terminal, config: TextConfig, state: TextState, submitted: boolean): number {
   const displayValue = config.format ? config.format(state.value) : state.value
+  const messageText = config.renderMessage ? config.renderMessage(state.value) : config.message
 
-  let output = renderMessage(config.message)
+  let output = renderMessage(messageText)
+  let trailingChars = 0
 
   if (submitted) {
     output += renderSubmitted(displayValue || config.initial || '')
   } else {
     output += displayValue
+    trailingChars = displayValue.length - state.cursorPos
     if (config.initial && !state.value) {
       output += style.dim(config.initial)
+      trailingChars += config.initial.length
     }
   }
 
@@ -69,6 +73,10 @@ function render(term: Terminal, config: TextConfig, state: TextState, submitted:
   if (state.error) {
     term.write('\n' + style.yellow(`  ${state.error}`))
     return 2
+  }
+
+  if (!submitted && trailingChars > 0) {
+    term.write(Ansi.cursorLeft(trailingChars))
   }
 
   return 1
@@ -164,8 +172,6 @@ export async function text(config: TextConfig): Promise<PromptOutcome<string>> {
   const term = createTerminal({ input: config.input, output: config.output })
   let state = createInitialState(config)
   let lineCount = 0
-
-  term.write(Ansi.HideCursor)
 
   const redraw = (submitted = false): void => {
     if (lineCount > 0) {

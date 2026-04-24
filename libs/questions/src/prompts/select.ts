@@ -117,7 +117,6 @@ function getVisibleChoices<T>(state: SelectState<T>, maxVisible: number): Visibl
  */
 function renderChoice<T>(choice: Choice<T>, isFocused: boolean): string {
   const pointer = isFocused ? style.cyan(Symbol.Pointer) : ' '
-  const radio = isFocused ? style.green(Symbol.RadioSelected) : style.dim(Symbol.Radio)
 
   let label = choice.label
   if (choice.disabled) {
@@ -128,7 +127,7 @@ function renderChoice<T>(choice: Choice<T>, isFocused: boolean): string {
 
   const hint = choice.hint ? style.dim(` — ${choice.hint}`) : ''
 
-  return `${pointer} ${radio} ${label}${hint}`
+  return `${pointer} ${label}${hint}`
 }
 
 /**
@@ -331,7 +330,7 @@ export async function select<T = string>(config: SelectConfig<T>): Promise<Promp
 
   const redraw = (submitted = false): void => {
     if (lineCount > 0) {
-      term.write(Ansi.cursorUp(lineCount - 1) + Ansi.CursorStart)
+      term.write(Ansi.cursorUp(lineCount) + Ansi.CursorStart)
     }
     term.write(Ansi.ClearToEnd)
     lineCount = render(term, config, state, submitted)
@@ -344,7 +343,7 @@ export async function select<T = string>(config: SelectConfig<T>): Promise<Promp
 
     if (term.isCancelled()) {
       if (lineCount > 0) {
-        term.write(Ansi.cursorUp(lineCount - 1) + Ansi.CursorStart)
+        term.write(Ansi.cursorUp(lineCount) + Ansi.CursorStart)
       }
       term.write(Ansi.ClearToEnd)
       term.write(renderMessage(config.message) + renderCancelled() + '\n')
@@ -364,7 +363,7 @@ export async function select<T = string>(config: SelectConfig<T>): Promise<Promp
       }
 
       if (lineCount > 0) {
-        term.write(Ansi.cursorUp(lineCount - 1) + Ansi.CursorStart)
+        term.write(Ansi.cursorUp(lineCount) + Ansi.CursorStart)
       }
       term.write(Ansi.ClearToEnd)
       render(term, config, state, true)
