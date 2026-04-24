@@ -25,6 +25,27 @@ export type {
 } from './changelog/operations'
 export type { Token, TokenType } from './changelog/parse/tokenizer'
 export type { SerializeOptions, JsonSerializeOptions } from './changelog/serialize'
+export type {
+  AuthorSession,
+  CommitExecutor,
+  CreateAuthorSessionOptions,
+  DiscoverScopesOptions,
+  DiscoveredScope,
+  LoadCommitConfigOptions,
+  LoadedCommitConfig,
+  PartialSessionConfig,
+  ScopeFilterContext,
+  SessionConfig,
+  SessionContext,
+  SessionOutcome,
+  SessionStatus,
+  SessionType,
+  StagedPathsOptions,
+  StagedPathsProvider,
+  Step,
+  StepResult,
+  StepStatus,
+} from './commits/author'
 export type { CommitDraft } from './commits/format/models/draft'
 export type { BreakingChange } from './commits/models/breaking'
 export type { CommitType } from './commits/models/commit-type'
@@ -194,6 +215,39 @@ export {
   getListMarker,
   createSpacing,
 } from './changelog/serialize'
+export {
+  CONFIG_FILE_NAMES,
+  DEFAULT_SESSION_TYPES,
+  EMPTY_STAGING_MESSAGE,
+  NO_SCOPE_CANDIDATES_MESSAGE,
+  PREVIEW_RESTART_STEP_ID,
+  SessionStatusValues,
+  StepStatusValues,
+  bodyStep,
+  breakingStep,
+  cancelled,
+  commitStep,
+  conventionalStepPreset,
+  createAuthorSession,
+  createSessionContext,
+  defaultScope,
+  discoverScopes,
+  done,
+  getStagedPaths,
+  goto,
+  issuesStep,
+  loadCommitConfig,
+  normalizeSubject,
+  parseReferences,
+  previewStep,
+  resolveScopeStep,
+  resolveSessionConfig,
+  runAuthorSession,
+  scopeStep,
+  subjectStep,
+  typeStep,
+  typeToChoice,
+} from './commits'
 export { DEFAULT_EXCLUDE_SCOPES, DEFAULT_PROJECT_PREFIXES } from './commits/classify'
 export { countHeaderLength } from './commits/format/count-header'
 export { formatHeader } from './commits/format/format-header'
