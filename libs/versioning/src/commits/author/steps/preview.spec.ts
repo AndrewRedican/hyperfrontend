@@ -69,4 +69,22 @@ describe('previewStep', () => {
     expect(result).toEqual({ status: StepStatus.Done })
     term.destroy()
   })
+
+  it('writes the preview message and warnings directly to the output stream', async () => {
+    const term = createMockTerminal()
+    const ctx = createSessionContext(createTestConfig({ input: term.input, output: term.output }))
+    ctx.draft = { type: 'feat', subject: 'added login' }
+
+    const pending = previewStep.run(ctx)
+    term.input.enqueueKeys(['y'])
+    await pending
+
+    const data = term.output.getWrittenData()
+
+    // why: preview must reach stdout regardless of logger level so the user sees what's being committed
+    expect(data).toContain('feat: added login')
+    expect(data).toContain('warn(imperative-mood):')
+
+    term.destroy()
+  })
 })

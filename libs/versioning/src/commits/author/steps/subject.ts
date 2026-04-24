@@ -1,21 +1,22 @@
 import type { CommitDraft } from '../../format/models/draft'
 import type { SessionContext } from '../models/session-context'
 import type { Step, StepResult } from '../models/step'
-import { text, PromptResult } from '@hyperfrontend/questions'
+import { style, text, PromptResult } from '@hyperfrontend/questions'
 import { countHeaderLength } from '../../format/count-header'
 import { cancelled, done } from '../models/step'
 
 /**
  * Step that prompts for the commit subject. Strips the trailing period, trims
- * edges, and enforces a non-empty subject. Header-length warnings are surfaced
- * by the preview step's validation pass (the text prompt lacks per-keystroke
- * display hooks).
+ * edges, and enforces a non-empty subject. When `headerMaxLength` is set, a
+ * live countdown re-renders on every keystroke (green → yellow → red as the
+ * remaining budget shrinks).
  */
 export const subjectStep: Step = {
   id: 'subject',
   async run(ctx: SessionContext): Promise<StepResult> {
     const outcome = await text({
-      message: renderSubjectMessage(ctx),
+      message: renderSubjectMessage(ctx, ''),
+      renderMessage: (value: string) => renderSubjectMessage(ctx, value),
       ...(ctx.draft.subject && { initial: ctx.draft.subject }),
       validate: (value: string) => {
         const normalized = normalizeSubject(value)
@@ -54,18 +55,35 @@ export function normalizeSubject(raw: string): string {
 }
 
 /**
- * Builds the prompt label, including a header countdown when the config
- * defines a `headerMaxLength` budget. The countdown reflects the characters
- * already consumed by `type(scope)!: `, so the user can see how much budget
- * remains before typing.
+ * Builds the prompt label, including a live header countdown when the config
+ * defines a `headerMaxLength` budget. The countdown reflects the prefix
+ * (`type(scope)!: `) plus the subject being typed, colored by remaining
+ * budget (decision D11): green when comfortable, yellow within the last 10
+ * characters, red when over budget.
  *
  * @param ctx - Session context (used to inspect the draft so far)
+ * @param subject - Subject string as currently entered (may be empty)
  * @returns Prompt label
  */
-function renderSubjectMessage(ctx: SessionContext): string {
+function renderSubjectMessage(ctx: SessionContext, subject: string): string {
   const budget = ctx.config.headerMaxLength
   if (budget === null) return 'Subject:'
-  const used = countHeaderLength(<CommitDraft>{ type: ctx.draft.type, scope: ctx.draft.scope }, '')
+  const used = countHeaderLength(<CommitDraft>{ type: ctx.draft.type, scope: ctx.draft.scope }, subject)
   const remaining = budget - used
-  return `Subject (${remaining} chars left in ${budget}-char header):`
+  const countText = remaining < 0 ? `${-remaining} over ${budget}-char header` : `${remaining} chars left in ${budget}-char header`
+  return `Subject (${colorize(remaining, countText)}):`
+}
+
+/**
+ * Colors the countdown string according to remaining header budget
+ * (decision D11: green → yellow → red).
+ *
+ * @param remaining - Characters remaining in the header budget
+ * @param text - Pre-formatted countdown label to color
+ * @returns Styled countdown string
+ */
+function colorize(remaining: number, text: string): string {
+  if (remaining < 0) return style.red(text)
+  if (remaining <= 10) return style.yellow(text)
+  return style.green(text)
 }

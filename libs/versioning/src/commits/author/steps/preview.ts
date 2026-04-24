@@ -1,6 +1,5 @@
 import type { SessionContext } from '../models/session-context'
 import type { Step, StepResult } from '../models/step'
-import { logger } from '@hyperfrontend/logging'
 import { confirm, PromptResult } from '@hyperfrontend/questions'
 import { formatCommitMessage } from '../../format/format-message'
 import { parseConventionalCommit } from '../../parse/message'
@@ -43,20 +42,23 @@ export const previewStep: Step = {
 
 /**
  * Prints the preview block (message + any validation warnings) to the session
- * output so the user can review before confirming.
+ * output so the user can review before confirming. Writes directly to the
+ * output stream rather than through the logger: the preview is primary user
+ * output, not a diagnostic log, and the default log level is `error`.
  *
  * @param ctx - Session context holding the resolved config and draft
  * @param message - Fully formatted commit message to display
  */
 function writePreview(ctx: SessionContext, message: string): void {
-  logger.log('')
-  logger.log(message)
+  const out: NodeJS.WritableStream = ctx.config.output ?? process.stdout
+  const lines: string[] = ['', message]
   const validation = validateCommit(parseConventionalCommit(message), ctx.config.validateRuleset)
   for (const warning of validation.warnings) {
-    logger.log(`warn(${warning.ruleName}): ${warning.message}`)
+    lines.push(`warn(${warning.ruleName}): ${warning.message}`)
   }
   for (const error of validation.errors) {
-    logger.log(`error(${error.ruleName}): ${error.message}`)
+    lines.push(`error(${error.ruleName}): ${error.message}`)
   }
-  logger.log('')
+  lines.push('')
+  out.write(lines.join('\n') + '\n')
 }
