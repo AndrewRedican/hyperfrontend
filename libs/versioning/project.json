@@ -9,6 +9,15 @@
     "version": {},
     "version-check": {},
     "build": {
+      "executor": "nx:run-commands",
+      "outputs": ["{workspaceRoot}/dist/libs/versioning"],
+      "options": {
+        "cwd": "{workspaceRoot}",
+        "parallel": false,
+        "commands": ["npx nx run lib-versioning:build-package", "node libs/versioning/scripts/build-bins.mjs"]
+      }
+    },
+    "build-package": {
       "executor": "@hyperfrontend/package:build",
       "options": {
         "esm": { "bundleWorkspaceDeps": true },

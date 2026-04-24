@@ -9,6 +9,10 @@
     "@hyperfrontend/project-scope": "0.2.1",
     "@hyperfrontend/questions": "0.1.0"
   },
+  "bin": {
+    "cz": "./bin/cz.js",
+    "cl": "./bin/cl.js"
+  },
   "exports": {
     ".": "./src/index.js",
     "./changelog": "./src/changelog/index.js",
