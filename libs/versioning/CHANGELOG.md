@@ -2,6 +2,19 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.6.0](https://github.com/AndrewRedican/hyperfrontend/compare/587d0dc108d5bb7f48c44a5a0065e349c774e4cf...67a22dd91c9e232145571c0070ed048d1965ae69) - 2026-04-25
+
+### Features
+
+- add cz/cl bin entries with config-driven authoring and validation
+- add commits/author session runner with config loader and step preset
+- add commits/format pure preview formatter with draft model
+- add commits/validate pure rule engine with conventional preset
+
+### Bug Fixes
+
+- commit preview and live subject countdown
+
 ## [0.5.4](https://github.com/AndrewRedican/hyperfrontend/compare/a0ce00788db9fe1c2b1acf06dd59b2622cb1ed3f...94b2ccd5f3cd20a7f3c7a503899c6746eaded17e) - 2026-04-20
 
 ### Bug Fixes
