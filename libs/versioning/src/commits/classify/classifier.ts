@@ -33,15 +33,15 @@ export function classifyCommit(input: CommitWithRaw, context: ClassificationCont
     includeScopes = [],
   } = context
 
-  const scope = commit.scope
-  const hasScope = !!scope
+  const scopes = commit.scope
+  const hasScope = scopes.length > 0
   const allProjectScopes = [...projectScopes, ...includeScopes]
 
-  if (hasScope && scopeIsExcluded(scope, excludeScopes)) {
+  if (hasScope && scopeIsExcluded(scopes, excludeScopes)) {
     return createClassifiedCommit(commit, raw, 'excluded')
   }
 
-  if (hasScope && scopeMatchesProject(scope, allProjectScopes)) {
+  if (hasScope && scopeMatchesProject(scopes, allProjectScopes)) {
     return createClassifiedCommit(commit, raw, 'direct-scope')
   }
 
@@ -53,7 +53,7 @@ export function classifyCommit(input: CommitWithRaw, context: ClassificationCont
   }
 
   if (hasScope && dependencyCommitMap) {
-    const dependencyPath = findDependencyPath(scope, raw.hash, dependencyCommitMap)
+    const dependencyPath = findDependencyPath(scopes, raw.hash, dependencyCommitMap)
     if (dependencyPath) {
       return createClassifiedCommit(commit, raw, 'indirect-dependency', { dependencyPath })
     }
@@ -119,29 +119,32 @@ export function classifyCommits(commits: readonly CommitWithRaw[], context: Clas
 }
 
 /**
- * Finds a dependency path for a given scope and commit hash.
+ * Finds a dependency path for a given scope list and commit hash.
  *
  * Verifies both:
- * 1. The scope matches a dependency name (or variation)
+ * 1. Any scope element matches a dependency name (or variation)
  * 2. The commit hash is in that dependency's commit set
  *
  * This prevents false positives from mislabeled commits.
  *
- * @param scope - The commit scope
+ * @param scopes - The commit scope array
  * @param hash - The commit hash to verify
  * @param dependencyCommitMap - Map of dependencies to their commit hashes
  * @returns Dependency path if found and hash verified, undefined otherwise
  */
 function findDependencyPath(
-  scope: string,
+  scopes: readonly string[],
   hash: string,
   dependencyCommitMap: ReadonlyMap<string, ReadonlySet<string>>
 ): readonly string[] | undefined {
-  const normalizedScope = scope.toLowerCase()
+  const normalizedScopes = scopes.map((s) => s.toLowerCase()).filter((s) => s.length > 0)
+  if (normalizedScopes.length === 0) {
+    return undefined
+  }
 
   for (const [depName, depHashes] of dependencyCommitMap) {
-    const depVariations = getDependencyVariations(depName)
-    if (depVariations.some((v) => v.toLowerCase() === normalizedScope)) {
+    const depVariations = getDependencyVariations(depName).map((v) => v.toLowerCase())
+    if (normalizedScopes.some((ns) => depVariations.includes(ns))) {
       if (depHashes.has(hash)) {
         return [depName]
       }
@@ -264,18 +267,18 @@ export function extractConventionalCommits(commits: readonly ClassifiedCommit[])
  *
  * @example Converting classified commit for changelog
  * ```typescript
- * const classified = { commit: { type: 'feat', scope: 'auth', subject: 'add login', ... }, source: 'direct-scope', preserveScope: false, ... }
+ * const classified = { commit: { type: 'feat', scope: ['auth'], subject: 'add login', ... }, source: 'direct-scope', preserveScope: false, ... }
  * toChangelogCommit(classified)
- * // => { type: 'feat', scope: undefined, subject: 'add login', ... }
+ * // => { type: 'feat', scope: [], subject: 'add login', ... }
  * ```
  */
 export function toChangelogCommit(classified: ClassifiedCommit): ConventionalCommit {
   const { commit, preserveScope } = classified
 
-  if (!preserveScope && commit.scope) {
+  if (!preserveScope && commit.scope.length > 0) {
     return {
       ...commit,
-      scope: undefined,
+      scope: [],
       raw: rebuildRawWithoutScope(commit),
     }
   }

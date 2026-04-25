@@ -4,6 +4,27 @@
  * @module @hyperfrontend/versioning/commits
  */
 export type {
+  AuthorSession,
+  CommitExecutor,
+  CreateAuthorSessionOptions,
+  DiscoverScopesOptions,
+  DiscoveredScope,
+  LoadCommitConfigOptions,
+  LoadedCommitConfig,
+  PartialSessionConfig,
+  ScopeFilterContext,
+  SessionConfig,
+  SessionContext,
+  SessionOutcome,
+  SessionStatus,
+  SessionType,
+  StagedPathsOptions,
+  StagedPathsProvider,
+  Step,
+  StepResult,
+  StepStatus,
+} from './author'
+export type {
   ClassificationContext,
   ClassificationResult,
   ClassificationSummary,
@@ -15,8 +36,58 @@ export type {
   InfrastructureMatchContext,
   InfrastructureMatcher,
 } from './classify'
+export type { CommitDraft } from './format'
 export type { BreakingChange, CommitFooter, CommitType, ConventionalCommit } from './models'
 export type { ParsedBody, ParsedFooters, ParsedHeader } from './parse'
+export type {
+  HeaderMaxLengthOptions,
+  ImperativeMoodOptions,
+  Rule,
+  RuleConfig,
+  RuleContext,
+  RuleLevel,
+  RuleMessage,
+  RuleResult,
+  Ruleset,
+  ScopeEnumOptions,
+  SubjectCase,
+  SubjectCaseOptions,
+  TypeEnumOptions,
+  ValidationResult,
+} from './validate'
+export {
+  CONFIG_FILE_NAMES,
+  DEFAULT_SESSION_TYPES,
+  EMPTY_STAGING_MESSAGE,
+  NO_SCOPE_CANDIDATES_MESSAGE,
+  PREVIEW_RESTART_STEP_ID,
+  SessionStatusValues,
+  StepStatusValues,
+  bodyStep,
+  breakingStep,
+  cancelled,
+  commitStep,
+  conventionalPreset as conventionalStepPreset,
+  createAuthorSession,
+  createSessionContext,
+  defaultScope,
+  discoverScopes,
+  done,
+  getStagedPaths,
+  goto,
+  issuesStep,
+  loadCommitConfig,
+  normalizeSubject,
+  parseReferences,
+  previewStep,
+  resolveScopeStep,
+  resolveSessionConfig,
+  runAuthorSession,
+  scopeStep,
+  subjectStep,
+  typeStep,
+  typeToChoice,
+} from './author'
 export {
   allOf,
   anyOf,
@@ -46,6 +117,7 @@ export {
   TOOL_PREFIX_MATCHER,
   TOOLING_SCOPE_MATCHER,
 } from './classify'
+export { countHeaderLength, formatCommitMessage, formatHeader, toDraft } from './format'
 export {
   COMMIT_TYPES,
   createBreakingFromFooter,
@@ -62,3 +134,18 @@ export {
   RELEASE_TYPES,
 } from './models'
 export { isConventionalCommit, parseBody, parseConventionalCommit, parseFooters, parseHeader } from './parse'
+export {
+  BUILT_IN_RULES,
+  CONVENTIONAL_TYPES,
+  conventionalPreset,
+  DEFAULT_IMPERATIVE_WORDLIST,
+  headerMaxLengthRule,
+  imperativeMoodRule,
+  scopeEnumRule,
+  subjectCaseRule,
+  subjectEmptyRule,
+  typeEnumRule,
+  validateCommit,
+  validateCommitMessage,
+  validateCommitWithRules,
+} from './validate'

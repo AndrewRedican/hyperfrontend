@@ -7,7 +7,7 @@ describe('parseConventionalCommit', () => {
 
       expect(commit.type).toBe('feat')
       expect(commit.subject).toBe('add new feature')
-      expect(commit.scope).toBeUndefined()
+      expect(commit.scope).toEqual([])
       expect(commit.breaking).toBe(false)
       expect(commit.body).toBeUndefined()
       expect(commit.footers).toHaveLength(0)
@@ -17,8 +17,16 @@ describe('parseConventionalCommit', () => {
       const commit = parseConventionalCommit('feat(api): add new endpoint')
 
       expect(commit.type).toBe('feat')
-      expect(commit.scope).toBe('api')
+      expect(commit.scope).toEqual(['api'])
       expect(commit.subject).toBe('add new endpoint')
+    })
+
+    it('parses commit with multi-scope header', () => {
+      const commit = parseConventionalCommit('feat(versioning,questions): add searchable select')
+
+      expect(commit.type).toBe('feat')
+      expect(commit.scope).toEqual(['versioning', 'questions'])
+      expect(commit.subject).toBe('add searchable select')
     })
 
     it('parses all standard types', () => {
@@ -43,7 +51,7 @@ describe('parseConventionalCommit', () => {
 
       expect(commit.breaking).toBe(true)
       expect(commit.type).toBe('feat')
-      expect(commit.scope).toBe('api')
+      expect(commit.scope).toEqual(['api'])
       expect(commit.subject).toBe('remove deprecated endpoint')
     })
 
@@ -207,7 +215,7 @@ Refs: DOC-123`)
     it('handles scope with missing closing parenthesis', () => {
       const commit = parseConventionalCommit('feat(api: subject')
       expect(commit.type).toBe('feat')
-      expect(commit.scope).toBe('api: subject')
+      expect(commit.scope).toEqual(['api: subject'])
       expect(commit.subject).toBe('')
     })
 

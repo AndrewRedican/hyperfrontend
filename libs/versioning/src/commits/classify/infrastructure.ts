@@ -11,8 +11,8 @@ export interface InfrastructureMatchContext {
   /** The git commit being evaluated */
   readonly commit: GitCommit
 
-  /** Parsed conventional scope (convenience, may be undefined) */
-  readonly scope?: string
+  /** Parsed conventional scopes (empty array when the commit has no scope) */
+  readonly scope: readonly string[]
 
   /** Commit message subject */
   readonly subject: string
@@ -29,7 +29,7 @@ export interface InfrastructureMatchContext {
  *
  * @example
  * // Simple scope matcher
- * const ciMatcher: InfrastructureMatcher = (ctx) => ctx.scope === 'ci'
+ * const ciMatcher: InfrastructureMatcher = (ctx) => ctx.scope.includes('ci')
  *
  * @example
  * // Using factory functions
@@ -75,41 +75,44 @@ export interface InfrastructureConfig {
 }
 
 /**
- * Creates a matcher that checks if commit scope matches any of the given scopes.
+ * Creates a matcher that checks if any commit scope matches any of the given scopes.
  *
  * @param scopes - Scopes to match against (case-insensitive)
- * @returns Matcher that returns true if scope matches
+ * @returns Matcher that returns true if any scope element matches
  *
  * @example Matching against specific scopes
  * const matcher = scopeMatcher(['ci', 'build', 'tooling'])
- * matcher({ scope: 'CI', ... }) // true
- * matcher({ scope: 'feat', ... }) // false
+ * matcher({ scope: ['CI'], ... }) // true
+ * matcher({ scope: ['feat'], ... }) // false
+ * matcher({ scope: ['feat', 'ci'], ... }) // true (any element matches)
  */
 export function scopeMatcher(scopes: readonly string[]): InfrastructureMatcher {
   const normalizedScopes = createSet(scopes.map((s) => s.toLowerCase()))
   return (ctx) => {
-    if (!ctx.scope) return false
-    return normalizedScopes.has(ctx.scope.toLowerCase())
+    if (ctx.scope.length === 0) return false
+    return ctx.scope.some((s) => normalizedScopes.has(s.toLowerCase()))
   }
 }
 
 /**
- * Creates a matcher that checks if commit scope starts with any of the given prefixes.
+ * Creates a matcher that checks if any commit scope starts with any of the given prefixes.
  *
  * @param prefixes - Scope prefixes to match (case-insensitive)
- * @returns Matcher that returns true if scope starts with any prefix
+ * @returns Matcher that returns true if any scope element starts with any prefix
  *
  * @example Matching prefixed scopes
  * const matcher = scopePrefixMatcher(['tool-', 'infra-'])
- * matcher({ scope: 'tool-package', ... }) // true
- * matcher({ scope: 'lib-utils', ... }) // false
+ * matcher({ scope: ['tool-package'], ... }) // true
+ * matcher({ scope: ['lib-utils'], ... }) // false
  */
 export function scopePrefixMatcher(prefixes: readonly string[]): InfrastructureMatcher {
   const normalizedPrefixes = prefixes.map((p) => p.toLowerCase())
   return (ctx) => {
-    if (!ctx.scope) return false
-    const normalizedScope = ctx.scope.toLowerCase()
-    return normalizedPrefixes.some((prefix) => normalizedScope.startsWith(prefix))
+    if (ctx.scope.length === 0) return false
+    return ctx.scope.some((s) => {
+      const normalized = s.toLowerCase()
+      return normalizedPrefixes.some((prefix) => normalized.startsWith(prefix))
+    })
   }
 }
 
@@ -131,18 +134,18 @@ export function messageMatcher(patterns: readonly string[]): InfrastructureMatch
 }
 
 /**
- * Creates a matcher from a regex pattern tested against the scope.
+ * Creates a matcher from a regex pattern tested against each scope element.
  *
- * @param pattern - Regex pattern to test against scope
- * @returns Matcher that returns true if scope matches regex
+ * @param pattern - Regex pattern to test against scopes
+ * @returns Matcher that returns true if any scope element matches the regex
  *
  * @example Matching with regex pattern
  * const matcher = scopeRegexMatcher(/^(ci|build|tool)-.+/)
  */
 export function scopeRegexMatcher(pattern: RegExp): InfrastructureMatcher {
   return (ctx) => {
-    if (!ctx.scope) return false
-    return pattern.test(ctx.scope)
+    if (ctx.scope.length === 0) return false
+    return ctx.scope.some((s) => pattern.test(s))
   }
 }
 
@@ -156,7 +159,7 @@ export function scopeRegexMatcher(pattern: RegExp): InfrastructureMatcher {
  * const combined = anyOf(
  *   scopeMatcher(['ci', 'build']),
  *   messageMatcher(['[infra]']),
- *   custom((ctx) => ctx.scope?.startsWith('tool-'))
+ *   custom((ctx) => ctx.scope.some((s) => s.startsWith('tool-')))
  * )
  */
 export function anyOf(...matchers: readonly InfrastructureMatcher[]): InfrastructureMatcher {
@@ -230,7 +233,7 @@ export const DEFAULT_INFRA_SCOPE_MATCHER: InfrastructureMatcher = anyOf(CI_SCOPE
  * @example Building an infrastructure matcher
  * const matcher = buildInfrastructureMatcher({
  *   scopes: ['ci', 'build'],
- *   matcher: (ctx) => ctx.scope?.startsWith('tool-')
+ *   matcher: (ctx) => ctx.scope.some((s) => s.startsWith('tool-'))
  * })
  */
 export function buildInfrastructureMatcher(config: InfrastructureConfig): InfrastructureMatcher | null {
@@ -259,20 +262,20 @@ export function buildInfrastructureMatcher(config: InfrastructureConfig): Infras
  * Extracts scope from conventional commit message if present.
  *
  * @param commit - Git commit to create context for
- * @param scope - Pre-parsed scope (optional, saves re-parsing)
+ * @param scope - Pre-parsed scope array (optional, saves re-parsing)
  * @returns Match context for use with matchers
  *
  * @example Creating match context from a git commit
  * ```typescript
  * const commit = { hash: 'abc123', subject: 'chore(ci): update workflow', message: 'chore(ci): update workflow' }
- * createMatchContext(commit, 'ci')
- * // => { commit, scope: 'ci', subject: 'chore(ci): update workflow', message: 'chore(ci): update workflow' }
+ * createMatchContext(commit, ['ci'])
+ * // => { commit, scope: ['ci'], subject: 'chore(ci): update workflow', message: 'chore(ci): update workflow' }
  * ```
  */
-export function createMatchContext(commit: GitCommit, scope?: string): InfrastructureMatchContext {
+export function createMatchContext(commit: GitCommit, scope?: readonly string[]): InfrastructureMatchContext {
   return {
     commit,
-    scope,
+    scope: scope ?? [],
     subject: commit.subject,
     message: commit.message,
   }
@@ -289,12 +292,12 @@ export function createMatchContext(commit: GitCommit, scope?: string): Infrastru
  * @example Evaluating a commit against infrastructure matcher
  * ```typescript
  * const commit = { hash: 'abc123', subject: 'chore(ci): update workflow', message: '...' }
- * const ciMatcher = (ctx) => ctx.scope === 'ci'
- * evaluateInfrastructure(commit, ciMatcher, 'ci')
+ * const ciMatcher = (ctx) => ctx.scope.includes('ci')
+ * evaluateInfrastructure(commit, ciMatcher, ['ci'])
  * // => true
  * ```
  */
-export function evaluateInfrastructure(commit: GitCommit, matcher: InfrastructureMatcher, scope?: string): boolean {
+export function evaluateInfrastructure(commit: GitCommit, matcher: InfrastructureMatcher, scope?: readonly string[]): boolean {
   const context = createMatchContext(commit, scope)
   return matcher(context)
 }

@@ -6,7 +6,7 @@ describe('parseHeader', () => {
 
     expect(result.type).toBe('feat')
     expect(result.subject).toBe('add new feature')
-    expect(result.scope).toBeUndefined()
+    expect(result.scope).toEqual([])
     expect(result.breaking).toBe(false)
   })
 
@@ -14,7 +14,7 @@ describe('parseHeader', () => {
     const result = parseHeader('feat(api): add new endpoint')
 
     expect(result.type).toBe('feat')
-    expect(result.scope).toBe('api')
+    expect(result.scope).toEqual(['api'])
     expect(result.subject).toBe('add new endpoint')
   })
 
@@ -22,7 +22,7 @@ describe('parseHeader', () => {
     const result = parseHeader('feat(api)!: remove deprecated endpoint')
 
     expect(result.type).toBe('feat')
-    expect(result.scope).toBe('api')
+    expect(result.scope).toEqual(['api'])
     expect(result.subject).toBe('remove deprecated endpoint')
     expect(result.breaking).toBe(true)
   })
@@ -31,8 +31,29 @@ describe('parseHeader', () => {
     const result = parseHeader('feat!: breaking change')
 
     expect(result.type).toBe('feat')
-    expect(result.scope).toBeUndefined()
+    expect(result.scope).toEqual([])
     expect(result.breaking).toBe(true)
+  })
+
+  it('parses comma-separated multi-scope header', () => {
+    const result = parseHeader('feat(versioning,questions): add searchable select')
+
+    expect(result.type).toBe('feat')
+    expect(result.scope).toEqual(['versioning', 'questions'])
+    expect(result.subject).toBe('add searchable select')
+    expect(result.breaking).toBe(false)
+  })
+
+  it('trims whitespace from comma-separated scopes', () => {
+    const result = parseHeader('fix(a, b , c): x')
+    expect(result.scope).toEqual(['a', 'b', 'c'])
+  })
+
+  it('parses multi-scope breaking header', () => {
+    const result = parseHeader('feat(a,b)!: breaking multi')
+    expect(result.scope).toEqual(['a', 'b'])
+    expect(result.breaking).toBe(true)
+    expect(result.subject).toBe('breaking multi')
   })
 
   it('handles all standard types', () => {
@@ -53,18 +74,21 @@ describe('parseHeader', () => {
     const result = parseHeader('')
     expect(result.type).toBe('')
     expect(result.subject).toBe('')
+    expect(result.scope).toEqual([])
   })
 
   it('handles type only', () => {
     const result = parseHeader('feat')
     expect(result.type).toBe('feat')
     expect(result.subject).toBe('')
+    expect(result.scope).toEqual([])
   })
 
   it('handles type with colon only', () => {
     const result = parseHeader('feat:')
     expect(result.type).toBe('feat')
     expect(result.subject).toBe('')
+    expect(result.scope).toEqual([])
   })
 
   it('trims whitespace from subject', () => {
@@ -79,20 +103,20 @@ describe('parseHeader', () => {
 
   it('handles scope with special characters', () => {
     const result = parseHeader('feat(api-v2): add endpoint')
-    expect(result.scope).toBe('api-v2')
+    expect(result.scope).toEqual(['api-v2'])
   })
 
   it('handles missing closing parenthesis', () => {
     const result = parseHeader('feat(api: subject')
     expect(result.type).toBe('feat')
-    expect(result.scope).toBe('api: subject')
+    expect(result.scope).toEqual(['api: subject'])
     expect(result.subject).toBe('')
   })
 
-  it('handles empty scope', () => {
+  it('handles empty scope parens as a single empty-string entry', () => {
     const result = parseHeader('feat(): empty scope')
     expect(result.type).toBe('feat')
-    expect(result.scope).toBe('')
+    expect(result.scope).toEqual([''])
     expect(result.subject).toBe('empty scope')
   })
 

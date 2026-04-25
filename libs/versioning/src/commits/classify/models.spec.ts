@@ -20,7 +20,7 @@ describe('createEmptyClassificationSummary', () => {
 })
 
 describe('createClassifiedCommit', () => {
-  const commit = createConventionalCommit('feat', 'add feature', { scope: 'versioning' })
+  const commit = createConventionalCommit('feat', 'add feature', { scope: ['versioning'] })
   const raw = createGitCommit({
     hash: 'abc123def456789012345678901234567890abcd',
     authorName: 'Test Author',

@@ -19,8 +19,9 @@ import {
  * @returns A CommitWithRaw object for testing
  */
 function createCommitInput(scope: string | undefined, hash: string, subject = 'test commit'): CommitWithRaw {
+  const scopes = scope === undefined ? [] : [scope]
   return {
-    commit: createConventionalCommit('feat', subject, { scope }),
+    commit: createConventionalCommit('feat', subject, { scope: scopes }),
     raw: createGitCommit({
       hash,
       authorName: 'Test',
@@ -289,7 +290,7 @@ describe('toChangelogCommit', () => {
 
     const changelogCommit = toChangelogCommit(classified)
 
-    expect(changelogCommit.scope).toBeUndefined()
+    expect(changelogCommit.scope).toEqual([])
     expect(changelogCommit.subject).toBe('add feature')
   })
 
@@ -302,7 +303,7 @@ describe('toChangelogCommit', () => {
 
     const changelogCommit = toChangelogCommit(classified)
 
-    expect(changelogCommit.scope).toBe('other')
+    expect(changelogCommit.scope).toEqual(['other'])
   })
 
   it('preserves scope from indirect-dependency commits', () => {
@@ -315,7 +316,7 @@ describe('toChangelogCommit', () => {
 
     const changelogCommit = toChangelogCommit(classified)
 
-    expect(changelogCommit.scope).toBe('lib-utils')
+    expect(changelogCommit.scope).toEqual(['lib-utils'])
   })
 
   it('rebuilds raw message without scope when removing scope', () => {
@@ -332,7 +333,7 @@ describe('toChangelogCommit', () => {
 
   it('rebuilds raw message with body when removing scope', () => {
     const commit = createConventionalCommit('feat', 'add feature', {
-      scope: 'versioning',
+      scope: ['versioning'],
       body: 'This is the commit body.\n\nWith multiple paragraphs.',
     })
     const raw = createGitCommit({
@@ -358,7 +359,7 @@ describe('toChangelogCommit', () => {
 
   it('rebuilds raw message with footers when removing scope', () => {
     const commit = createConventionalCommit('feat', 'add feature', {
-      scope: 'versioning',
+      scope: ['versioning'],
       footers: [{ key: 'Reviewed-by', separator: ':', value: ' Team' }],
     })
     const raw = createGitCommit({
@@ -383,7 +384,7 @@ describe('toChangelogCommit', () => {
 
   it('includes breaking indicator when commit is breaking without description', () => {
     const commit = createConventionalCommit('feat', 'breaking change', {
-      scope: 'versioning',
+      scope: ['versioning'],
       breaking: true,
       breakingDescription: undefined,
     })
@@ -409,7 +410,7 @@ describe('toChangelogCommit', () => {
 
   it('does not include breaking indicator when breakingDescription exists', () => {
     const commit = createConventionalCommit('feat', 'breaking change', {
-      scope: 'versioning',
+      scope: ['versioning'],
       breaking: true,
       breakingDescription: 'API changed',
     })

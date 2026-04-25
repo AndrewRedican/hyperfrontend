@@ -1,5 +1,5 @@
 /**
- * Single-select prompt.
+ * Single-select prompt with optional search/filter.
  *
  * @module @hyperfrontend/questions/prompts/select
  */
@@ -16,12 +16,39 @@ import { PromptResult } from '../types'
  * @internal
  */
 interface SelectState<T> {
-  /** Current cursor position */
+  /** Current cursor position within filtered choices */
   readonly cursor: number
-  /** Available choices */
+  /** All available choices */
   readonly choices: ReadonlyArray<Choice<T>>
+  /** Filtered indices based on search query */
+  readonly filteredIndices: ReadonlyArray<number>
+  /** Current search query */
+  readonly searchQuery: string
   /** Scroll offset for long lists */
   readonly scrollOffset: number
+}
+
+/**
+ * Filters choices based on search query.
+ *
+ * @internal
+ * @param choices - All available choices
+ * @param query - Search query string
+ * @returns Array of indices matching the query
+ */
+function filterChoices<T>(choices: ReadonlyArray<Choice<T>>, query: string): ReadonlyArray<number> {
+  if (!query) {
+    return choices.map((_, i) => i)
+  }
+
+  const lowerQuery = query.toLowerCase()
+  const indices: number[] = []
+  choices.forEach((choice, i) => {
+    if (choice.label.toLowerCase().includes(lowerQuery)) {
+      indices.push(i)
+    }
+  })
+  return freeze(indices)
 }
 
 /**
@@ -35,6 +62,8 @@ function createInitialState<T>(config: SelectConfig<T>): SelectState<T> {
   return freeze({
     cursor: config.initial ?? 0,
     choices: config.choices,
+    filteredIndices: config.choices.map((_, i) => i),
+    searchQuery: '',
     scrollOffset: 0,
   })
 }
@@ -44,9 +73,9 @@ function createInitialState<T>(config: SelectConfig<T>): SelectState<T> {
  *
  * @internal
  */
-interface VisibleChoicesResult<T> {
-  /** Visible choices in current scroll window */
-  readonly choices: ReadonlyArray<Choice<T>>
+interface VisibleIndicesResult {
+  /** Indices of visible choices in current scroll window */
+  readonly indices: ReadonlyArray<number>
   /** Index of first visible choice */
   readonly startIndex: number
 }
@@ -57,12 +86,12 @@ interface VisibleChoicesResult<T> {
  * @internal
  * @param state - Current prompt state
  * @param maxVisible - Maximum number of visible choices
- * @returns Visible choices and their start index
+ * @returns Object containing visible indices and start index
  */
-function getVisibleChoices<T>(state: SelectState<T>, maxVisible: number): VisibleChoicesResult<T> {
-  const total = state.choices.length
+function getVisibleChoices<T>(state: SelectState<T>, maxVisible: number): VisibleIndicesResult {
+  const total = state.filteredIndices.length
   if (total <= maxVisible) {
-    return { choices: state.choices, startIndex: 0 }
+    return { indices: state.filteredIndices, startIndex: 0 }
   }
 
   let startIndex = state.scrollOffset
@@ -73,7 +102,7 @@ function getVisibleChoices<T>(state: SelectState<T>, maxVisible: number): Visibl
   }
 
   return {
-    choices: state.choices.slice(startIndex, startIndex + maxVisible),
+    indices: state.filteredIndices.slice(startIndex, startIndex + maxVisible),
     startIndex,
   }
 }
@@ -83,13 +112,11 @@ function getVisibleChoices<T>(state: SelectState<T>, maxVisible: number): Visibl
  *
  * @internal
  * @param choice - The choice to render
- * @param isSelected - Whether this choice is selected
  * @param isFocused - Whether cursor is on this choice
  * @returns Formatted choice string
  */
-function renderChoice<T>(choice: Choice<T>, isSelected: boolean, isFocused: boolean): string {
+function renderChoice<T>(choice: Choice<T>, isFocused: boolean): string {
   const pointer = isFocused ? style.cyan(Symbol.Pointer) : ' '
-  const radio = isSelected ? style.green(Symbol.RadioSelected) : style.dim(Symbol.Radio)
 
   let label = choice.label
   if (choice.disabled) {
@@ -100,7 +127,7 @@ function renderChoice<T>(choice: Choice<T>, isSelected: boolean, isFocused: bool
 
   const hint = choice.hint ? style.dim(` — ${choice.hint}`) : ''
 
-  return `${pointer} ${radio} ${label}${hint}`
+  return `${pointer} ${label}${hint}`
 }
 
 /**
@@ -115,41 +142,57 @@ function renderChoice<T>(choice: Choice<T>, isSelected: boolean, isFocused: bool
  */
 function render<T>(term: Terminal, config: SelectConfig<T>, state: SelectState<T>, submitted: boolean): number {
   const maxVisible = config.maxVisible ?? 10
-  const { choices: visibleChoices, startIndex } = getVisibleChoices(state, maxVisible)
+  const { indices: visibleIndices, startIndex } = getVisibleChoices(state, maxVisible)
 
   let output = Ansi.CursorStart + Ansi.ClearLine + renderMessage(config.message)
 
   if (submitted) {
-    const selectedChoice = state.choices[state.cursor]
+    const actualIndex = state.filteredIndices[state.cursor]
+    const selectedChoice = actualIndex !== undefined ? state.choices[actualIndex] : undefined
     /* istanbul ignore next -- @preserve defensive: cursor always within bounds */
     output += renderSubmitted(selectedChoice?.label ?? '')
     term.write(output)
     return 1
   }
 
-  output += style.dim('(use arrows, enter to select)')
+  if (config.searchable && state.searchQuery) {
+    output += style.cyan(state.searchQuery) + style.dim(' (type to filter)')
+  } else if (config.searchable) {
+    output += style.dim('(type to filter, enter to select)')
+  } else {
+    output += style.dim('(use arrows, enter to select)')
+  }
   term.write(output + '\n')
 
   let lineCount = 1
   const showScrollUp = startIndex > 0
-  const showScrollDown = startIndex + maxVisible < state.choices.length
+  const showScrollDown = startIndex + maxVisible < state.filteredIndices.length
 
   if (showScrollUp) {
     term.write(Ansi.ClearLine + style.dim(`  ${Symbol.Ellipsis} (${startIndex} more above)`) + '\n')
     lineCount++
   }
 
-  visibleChoices.forEach((choice, i) => {
-    const actualIndex = startIndex + i
-    const isFocused = actualIndex === state.cursor
-    const line = renderChoice(choice, isFocused, isFocused)
+  visibleIndices.forEach((actualIndex, i) => {
+    const choice = state.choices[actualIndex]
+    /* istanbul ignore if -- @preserve defensive: actualIndex always valid from filteredIndices */
+    if (!choice) return
+
+    const viewIndex = startIndex + i
+    const isFocused = viewIndex === state.cursor
+    const line = renderChoice(choice, isFocused)
     term.write(Ansi.ClearLine + line + '\n')
     lineCount++
   })
 
   if (showScrollDown) {
-    const remaining = state.choices.length - (startIndex + maxVisible)
+    const remaining = state.filteredIndices.length - (startIndex + maxVisible)
     term.write(Ansi.ClearLine + style.dim(`  ${Symbol.Ellipsis} (${remaining} more below)`) + '\n')
+    lineCount++
+  }
+
+  if (state.filteredIndices.length === 0 && config.searchable) {
+    term.write(Ansi.ClearLine + style.dim('  No matches found') + '\n')
     lineCount++
   }
 
@@ -162,16 +205,17 @@ function render<T>(term: Terminal, config: SelectConfig<T>, state: SelectState<T
  * @internal
  * @param key - The key that was pressed
  * @param state - Current prompt state
- * @param maxVisible - Maximum visible choices for scroll calculation
+ * @param config - Prompt configuration
  * @returns Updated state after processing the key
  */
-function processKey<T>(key: string, state: SelectState<T>, maxVisible: number): SelectState<T> {
-  const total = state.choices.length
-  if (total === 0) return state
+function processKey<T>(key: string, state: SelectState<T>, config: SelectConfig<T>): SelectState<T> {
+  const maxVisible = config.maxVisible ?? 10
+  const total = state.filteredIndices.length
+  if (total === 0 && key !== Key.Backspace && key !== '\b') return state
 
   if (key === Key.Up) {
     let newCursor = state.cursor - 1
-    while (newCursor >= 0 && state.choices[newCursor]?.disabled) {
+    while (newCursor >= 0 && state.choices[state.filteredIndices[newCursor] ?? -1]?.disabled) {
       newCursor--
     }
     if (newCursor < 0) return state
@@ -186,7 +230,7 @@ function processKey<T>(key: string, state: SelectState<T>, maxVisible: number): 
 
   if (key === Key.Down) {
     let newCursor = state.cursor + 1
-    while (newCursor < total && state.choices[newCursor]?.disabled) {
+    while (newCursor < total && state.choices[state.filteredIndices[newCursor] ?? -1]?.disabled) {
       newCursor++
     }
     if (newCursor >= total) return state
@@ -199,6 +243,35 @@ function processKey<T>(key: string, state: SelectState<T>, maxVisible: number): 
     return freeze({ ...state, cursor: newCursor, scrollOffset: newScrollOffset })
   }
 
+  if (config.searchable) {
+    if (key === Key.Backspace || key === '\b') {
+      if (state.searchQuery.length > 0) {
+        const newQuery = state.searchQuery.slice(0, -1)
+        const newFiltered = filterChoices(state.choices, newQuery)
+        return freeze({
+          ...state,
+          searchQuery: newQuery,
+          filteredIndices: newFiltered,
+          cursor: 0,
+          scrollOffset: 0,
+        })
+      }
+      return state
+    }
+
+    if (key.length === 1 && key >= ' ') {
+      const newQuery = state.searchQuery + key
+      const newFiltered = filterChoices(state.choices, newQuery)
+      return freeze({
+        ...state,
+        searchQuery: newQuery,
+        filteredIndices: newFiltered,
+        cursor: 0,
+        scrollOffset: 0,
+      })
+    }
+  }
+
   return state
 }
 
@@ -206,7 +279,7 @@ function processKey<T>(key: string, state: SelectState<T>, maxVisible: number): 
  * Prompts for single selection from a list of choices.
  *
  * Pure functional prompt with arrow key navigation, scrolling support,
- * and optional disabled choices.
+ * optional disabled choices, and optional type-to-filter search.
  *
  * @param config - Select prompt configuration
  * @returns Promise resolving to selected value or cancellation
@@ -238,10 +311,18 @@ function processKey<T>(key: string, state: SelectState<T>, maxVisible: number): 
  *   initial: 1, // Start on Pro
  * })
  * ```
+ *
+ * @example With search
+ * ```typescript
+ * const outcome = await select({
+ *   message: 'Pick a project:',
+ *   choices: projects.map((p) => ({ label: p.name, value: p.id })),
+ *   searchable: true,
+ * })
+ * ```
  */
 export async function select<T = string>(config: SelectConfig<T>): Promise<PromptOutcome<T>> {
   const term = createTerminal({ input: config.input, output: config.output })
-  const maxVisible = config.maxVisible ?? 10
   let state = createInitialState(config)
   let lineCount = 0
 
@@ -249,8 +330,9 @@ export async function select<T = string>(config: SelectConfig<T>): Promise<Promp
 
   const redraw = (submitted = false): void => {
     if (lineCount > 0) {
-      term.write(Ansi.cursorUp(lineCount - 1) + Ansi.CursorStart)
+      term.write(Ansi.cursorUp(lineCount) + Ansi.CursorStart)
     }
+    term.write(Ansi.ClearToEnd)
     lineCount = render(term, config, state, submitted)
   }
 
@@ -261,7 +343,7 @@ export async function select<T = string>(config: SelectConfig<T>): Promise<Promp
 
     if (term.isCancelled()) {
       if (lineCount > 0) {
-        term.write(Ansi.cursorUp(lineCount - 1) + Ansi.CursorStart)
+        term.write(Ansi.cursorUp(lineCount) + Ansi.CursorStart)
       }
       term.write(Ansi.ClearToEnd)
       term.write(renderMessage(config.message) + renderCancelled() + '\n')
@@ -271,13 +353,17 @@ export async function select<T = string>(config: SelectConfig<T>): Promise<Promp
     }
 
     if (key === Key.Enter) {
-      const selectedChoice = state.choices[state.cursor]
+      const actualIndex = state.filteredIndices[state.cursor]
+      if (actualIndex === undefined) {
+        continue
+      }
+      const selectedChoice = state.choices[actualIndex]
       if (!selectedChoice || selectedChoice.disabled) {
         continue
       }
 
       if (lineCount > 0) {
-        term.write(Ansi.cursorUp(lineCount - 1) + Ansi.CursorStart)
+        term.write(Ansi.cursorUp(lineCount) + Ansi.CursorStart)
       }
       term.write(Ansi.ClearToEnd)
       render(term, config, state, true)
@@ -287,7 +373,7 @@ export async function select<T = string>(config: SelectConfig<T>): Promise<Promp
       return freeze({ result: PromptResult.Submitted, value: selectedChoice.value })
     }
 
-    state = processKey(key, state, maxVisible)
+    state = processKey(key, state, config)
     redraw()
   }
 }

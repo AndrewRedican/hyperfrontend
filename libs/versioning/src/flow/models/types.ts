@@ -181,9 +181,9 @@ export interface ScopeFilteringConfig {
    * @example
    * infrastructureMatcher: (ctx) => {
    *   // Match CI scopes
-   *   if (ctx.scope === 'ci' || ctx.scope === 'build') return true
+   *   if (ctx.scope.includes('ci') || ctx.scope.includes('build')) return true
    *   // Match tool-prefixed scopes
-   *   if (ctx.scope?.startsWith('tool-')) return true
+   *   if (ctx.scope.some((s) => s.startsWith('tool-'))) return true
    *   // Match workspace commits during major refactors
    *   if (ctx.message.includes('[infra]')) return true
    *   return false

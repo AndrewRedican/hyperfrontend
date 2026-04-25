@@ -84,6 +84,8 @@ export interface TextConfig extends PromptConfig {
   readonly validate?: (value: string) => string | undefined
   /** Transform display of input (e.g., for password masking) */
   readonly format?: (value: string) => string
+  /** Dynamic message recomputed on every keystroke; overrides `message` when present */
+  readonly renderMessage?: (value: string) => string
 }
 
 /**
@@ -104,6 +106,8 @@ export interface SelectConfig<T = string> extends PromptConfig {
   readonly initial?: number
   /** Maximum number of visible choices (enables scrolling) */
   readonly maxVisible?: number
+  /** Enable type-to-filter */
+  readonly searchable?: boolean
 }
 
 /**

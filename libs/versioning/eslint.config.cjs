@@ -3,6 +3,9 @@ const baseConfig = require('../../eslint.base.config.cjs')
 module.exports = [
   ...baseConfig,
   {
+    ignores: ['__fixtures__/**'],
+  },
+  {
     files: ['**/*.ts', '**/*.tsx'],
     rules: {
       'workspace/max-file-lines': [
@@ -21,7 +24,7 @@ module.exports = [
         'error',
         {
           ignoredDependencies: ['jest'],
-          ignoredFiles: ['{projectRoot}/eslint.config.{js,cjs,mjs}'],
+          ignoredFiles: ['{projectRoot}/eslint.config.{js,cjs,mjs}', '{projectRoot}/scripts/**'],
         },
       ],
     },

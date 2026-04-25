@@ -113,7 +113,7 @@ function createMockRegistry(publishedVersion: string | null = null): Registry {
 function createMockGitClient(commits: readonly Partial<ConventionalCommit>[] = []): GitClient {
   const mockCommits = commits.map((c, i) => ({
     hash: `abc${i}`,
-    message: `${c.type ?? 'feat'}${c.scope ? `(${c.scope})` : ''}: ${c.subject ?? 'test commit'}`,
+    message: `${c.type ?? 'feat'}${c.scope && c.scope.length > 0 ? `(${c.scope.join(',')})` : ''}: ${c.subject ?? 'test commit'}`,
     author: 'Test User',
     email: 'test@example.com',
     date: new Date().toISOString(),

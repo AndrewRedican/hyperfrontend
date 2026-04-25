@@ -209,7 +209,7 @@ function resolveStrategy(
   let scopedCount = 0
   for (const commit of commits) {
     const parsed = parseConventionalCommit(commit.message)
-    if (parsed.scope) {
+    if (parsed.scope.length > 0) {
       scopedCount++
     }
   }

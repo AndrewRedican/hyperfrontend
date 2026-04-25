@@ -7,7 +7,7 @@
     "pack-install": "cd ../../../dist/libs/questions && npm pack && cd - && npm install ../../../dist/libs/questions/*.tgz"
   },
   "dependencies": {
-    "@hyperfrontend/questions": "file:../../../tmp/e2e-packs/hyperfrontend-questions-0.1.0.tgz"
+    "@hyperfrontend/questions": "file:../../../tmp/e2e-packs/hyperfrontend-questions-0.2.0.tgz"
   },
   "devDependencies": {
     "@types/jest": "29.5.14",

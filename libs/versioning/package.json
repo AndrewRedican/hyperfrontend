@@ -1,12 +1,17 @@
 {
   "name": "@hyperfrontend/versioning",
-  "version": "0.5.4",
+  "version": "0.6.0",
   "description": "Versioning library with changelog parsing, conventional commits, and semver flow orchestration.",
   "dependencies": {
     "@hyperfrontend/immutable-api-utils": "0.1.2",
     "@hyperfrontend/json-utils": "0.1.0",
     "@hyperfrontend/logging": "0.1.0",
-    "@hyperfrontend/project-scope": "0.2.1"
+    "@hyperfrontend/project-scope": "0.2.1",
+    "@hyperfrontend/questions": "0.2.0"
+  },
+  "bin": {
+    "cz": "./bin/cz.js",
+    "cl": "./bin/cl.js"
   },
   "exports": {
     ".": "./src/index.js",
@@ -17,9 +22,12 @@
     "./changelog/parse": "./src/changelog/parse/index.js",
     "./changelog/serialize": "./src/changelog/serialize/index.js",
     "./commits": "./src/commits/index.js",
+    "./commits/author": "./src/commits/author/index.js",
     "./commits/classify": "./src/commits/classify/index.js",
+    "./commits/format": "./src/commits/format/index.js",
     "./commits/models": "./src/commits/models/index.js",
     "./commits/parse": "./src/commits/parse/index.js",
+    "./commits/validate": "./src/commits/validate/index.js",
     "./flow": "./src/flow/index.js",
     "./flow/executor": "./src/flow/executor/index.js",
     "./flow/models": "./src/flow/models/index.js",

@@ -5,12 +5,19 @@ describe('createConventionalCommit', () => {
     const commit = createConventionalCommit('feat', 'add new feature')
     expect(commit.type).toBe('feat')
     expect(commit.subject).toBe('add new feature')
+    expect(commit.scope).toEqual([])
     expect(commit.breaking).toBe(false)
   })
 
   it('creates a commit with scope', () => {
-    const commit = createConventionalCommit('fix', 'fix bug', { scope: 'api' })
-    expect(commit.scope).toBe('api')
+    const commit = createConventionalCommit('fix', 'fix bug', { scope: ['api'] })
+    expect(commit.scope).toEqual(['api'])
+  })
+
+  it('creates a commit with multi-scope', () => {
+    const commit = createConventionalCommit('feat', 'add feature', { scope: ['versioning', 'questions'] })
+    expect(commit.scope).toEqual(['versioning', 'questions'])
+    expect(commit.raw).toBe('feat(versioning,questions): add feature')
   })
 
   it('creates a breaking change commit', () => {
@@ -23,7 +30,7 @@ describe('createConventionalCommit', () => {
   })
 
   it('generates raw message', () => {
-    const commit = createConventionalCommit('feat', 'add feature', { scope: 'api' })
+    const commit = createConventionalCommit('feat', 'add feature', { scope: ['api'] })
     expect(commit.raw).toBe('feat(api): add feature')
   })
 
@@ -43,7 +50,7 @@ describe('createConventionalCommit', () => {
 
   it('generates raw message with body and footers', () => {
     const commit = createConventionalCommit('feat', 'add feature', {
-      scope: 'core',
+      scope: ['core'],
       body: 'Description here',
       footers: [createCommitFooter('Closes', '789', ' #')],
     })

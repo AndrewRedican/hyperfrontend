@@ -126,6 +126,20 @@ describe('style', () => {
       expect(result).toBe(`${Ansi.Gray}${Ansi.Reset}`)
     })
   })
+
+  describe('red', () => {
+    it('wraps text in red ANSI codes', () => {
+      const result = style.red('error')
+
+      expect(result).toBe(`${Ansi.Red}error${Ansi.Reset}`)
+    })
+
+    it('handles empty string', () => {
+      const result = style.red('')
+
+      expect(result).toBe(`${Ansi.Red}${Ansi.Reset}`)
+    })
+  })
 })
 
 describe('renderMessage', () => {

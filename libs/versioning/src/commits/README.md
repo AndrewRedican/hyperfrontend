@@ -98,8 +98,16 @@ import { parseConventionalCommit, isConventionalCommit } from '@hyperfrontend/ve
 // Parse a commit message
 const commit = parseConventionalCommit('feat(api): add user endpoint')
 console.log(commit.type) // 'feat'
-console.log(commit.scope) // 'api'
+console.log(commit.scope) // ['api']
 console.log(commit.subject) // 'add user endpoint'
+
+// Multi-scope headers produce multi-element arrays
+const multi = parseConventionalCommit('feat(versioning,questions): add filter')
+console.log(multi.scope) // ['versioning', 'questions']
+
+// Scopeless commits produce an empty array
+const scopeless = parseConventionalCommit('docs: update README')
+console.log(scopeless.scope) // []
 
 // Check format before parsing
 if (isConventionalCommit(message)) {
@@ -153,7 +161,7 @@ console.log(commit.footers)
 import { createConventionalCommit, createCommitFooter } from '@hyperfrontend/versioning'
 
 const commit = createConventionalCommit('feat', 'add feature', {
-  scope: 'api',
+  scope: ['api'],
   body: 'Detailed description',
   footers: [createCommitFooter('Refs', 'ABC-123'), createCommitFooter('Closes', '456', ' #')],
   breaking: true,
@@ -161,6 +169,10 @@ const commit = createConventionalCommit('feat', 'add feature', {
 
 console.log(commit.raw)
 // 'feat(api)!: add feature\n\nDetailed description\n\nRefs: ABC-123\nCloses #456'
+
+// Multi-scope headers
+const multi = createConventionalCommit('feat', 'shared change', { scope: ['versioning', 'questions'] })
+console.log(multi.raw) // 'feat(versioning,questions): shared change'
 ```
 
 ### Semver Integration
@@ -190,7 +202,7 @@ console.log(breakingBump) // 'major'
 ### Header
 
 - **type**: Describes the category of change (feat, fix, docs, etc.)
-- **scope**: Optional context in parentheses (api, core, cli)
+- **scope**: Optional context in parentheses. Supports multi-scope headers such as `feat(versioning,questions): ...`; parsed into a `readonly string[]` (empty when no scope is present).
 - **!**: Optional breaking change indicator
 - **description**: Short summary of the change
 

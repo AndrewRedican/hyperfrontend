@@ -42,8 +42,10 @@ Versioning library with changelog parsing, conventional commits, and semver flow
 
 ### Key Features
 
+- **Interactive Commit Author (`cz`)** - `npx cz` launches a keystroke-live conventional-commit session (type, scope, subject countdown, body, breaking marker, issues, preview, commit)
+- **Commit Validator (`cl`)** - `npx cl <path>` plugs into any `commit-msg` git hook to enforce your ruleset
 - **Changelog Parsing** - Parse CHANGELOG.md files into structured objects with lossless round-tripping
-- **Conventional Commits** - Parse commit messages following the [Conventional Commits](https://www.conventionalcommits.org/) specification
+- **Conventional Commits** - Parse, validate, format, and classify messages following the [Conventional Commits](https://www.conventionalcommits.org/) specification
 - **Semver Utilities** - Parse, compare, increment, and validate [semantic versions](https://semver.org/)
 - **Registry Client** - Query [npm](https://www.npmjs.com/) registry for published versions and package metadata
 - **Compare URLs** - Generate platform-specific compare URLs for changelog entries ([GitHub](https://github.com/), [GitLab](https://about.gitlab.com/), [Bitbucket](https://bitbucket.org/), [Azure DevOps](https://azure.microsoft.com/en-us/products/devops))
@@ -70,6 +72,10 @@ Version management requires coordinating [semver](https://semver.org/) parsing, 
 ### Zero-Dependency CI Integration
 
 Designed for automated pipelines where minimal attack surface matters. Zero external runtime dependencies and state-machine parsing ensure predictable performance on any input. All parsers enforce input length limits to prevent resource exhaustion.
+
+### One-Stop Commit Toolchain
+
+The interactive `cz` and validator `cl` bins cover the same ground as [commitizen](https://github.com/commitizen/cz-cli) + [cz-conventional-changelog](https://github.com/commitizen/cz-conventional-changelog) + [@commitlint/cli](https://github.com/conventional-changelog/commitlint) — in one package, without patch-package workarounds, with a config-driven session (`commit.config.{js,mjs,cjs}`), a live 72-char header countdown, and scope choices derived from staged files. Acknowledgment to those projects: they shaped the conventions this library now implements natively.
 
 ## Installation
 
@@ -192,6 +198,7 @@ This library is part of the [hyperfrontend](https://github.com/AndrewRedican/hyp
 
 **📖 [Full documentation](https://www.hyperfrontend.dev/docs/libraries/versioning)**
 
+- Uses [@hyperfrontend/questions](https://github.com/AndrewRedican/hyperfrontend/tree/main/libs/questions) to power the interactive `cz` authoring session
 - Works seamlessly with [@hyperfrontend/project-scope](https://github.com/AndrewRedican/hyperfrontend/tree/main/libs/project-scope) for virtual file system operations
 - Looking for cryptographic utilities? See [@hyperfrontend/cryptography](https://github.com/AndrewRedican/hyperfrontend/tree/main/libs/cryptography)
 

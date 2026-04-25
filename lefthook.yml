@@ -20,7 +20,7 @@ pre-commit:
 commit-msg:
   commands:
     commitlint:
-      run: npx commitlint --edit $1
+      run: npx cl {1}
       fail_text: 'Your commit message does not follow the standard conventional commit format. See https://www.conventionalcommits.org/en/v1.0.0/'
 
 pre-push:

@@ -398,7 +398,7 @@ export async function multiselect<T = string>(config: MultiselectConfig<T>): Pro
 
   const redraw = (submitted = false): void => {
     if (lineCount > 0) {
-      term.write(Ansi.cursorUp(lineCount - 1) + Ansi.CursorStart)
+      term.write(Ansi.cursorUp(lineCount) + Ansi.CursorStart)
     }
     term.write(Ansi.ClearToEnd)
     lineCount = render(term, config, state, submitted)
@@ -416,7 +416,7 @@ export async function multiselect<T = string>(config: MultiselectConfig<T>): Pro
 
     if (term.isCancelled()) {
       if (lineCount > 0) {
-        term.write(Ansi.cursorUp(lineCount - 1) + Ansi.CursorStart)
+        term.write(Ansi.cursorUp(lineCount) + Ansi.CursorStart)
       }
       term.write(Ansi.ClearToEnd)
       term.write(renderMessage(config.message) + renderCancelled() + '\n')
@@ -436,7 +436,7 @@ export async function multiselect<T = string>(config: MultiselectConfig<T>): Pro
       const selectedValues = state.selected.map((i) => state.choices[i]?.value).filter((v): v is T => v !== undefined)
 
       if (lineCount > 0) {
-        term.write(Ansi.cursorUp(lineCount - 1) + Ansi.CursorStart)
+        term.write(Ansi.cursorUp(lineCount) + Ansi.CursorStart)
       }
       term.write(Ansi.ClearToEnd)
       render(term, config, state, true)

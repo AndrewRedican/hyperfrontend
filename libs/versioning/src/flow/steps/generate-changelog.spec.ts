@@ -117,7 +117,7 @@ function createMockGitClient(): GitClient {
 function createMockCommit(overrides: Partial<ConventionalCommit> = {}): ConventionalCommit {
   return {
     type: 'feat',
-    scope: undefined,
+    scope: [],
     subject: 'test commit',
     breaking: false,
     breakingDescription: undefined,
@@ -273,7 +273,7 @@ describe('Generate Changelog Step', () => {
       const ctx = createMockContext({
         nextVersion: '1.0.0',
         bumpType: 'minor',
-        commits: [createMockCommit({ type: 'feat', scope: 'api', subject: 'new endpoint' })],
+        commits: [createMockCommit({ type: 'feat', scope: ['api'], subject: 'new endpoint' })],
       })
 
       const result = await step.execute(ctx)
@@ -333,7 +333,7 @@ describe('Generate Changelog Step', () => {
         commits: [
           createMockCommit({
             type: 'feat',
-            scope: 'core',
+            scope: ['core'],
             subject: 'breaking change',
             breaking: true,
           }),
@@ -1127,7 +1127,7 @@ describe('Write Changelog Step', () => {
     function createClassifiedCommit(
       overrides: Partial<{
         type: string
-        scope: string
+        scope: readonly string[]
         subject: string
         breaking: boolean
         breakingDescription: string
@@ -1138,7 +1138,7 @@ describe('Write Changelog Step', () => {
     ) {
       const {
         type = 'feat',
-        scope,
+        scope = [],
         subject = 'test feature',
         breaking = false,
         breakingDescription,
@@ -1156,7 +1156,7 @@ describe('Write Changelog Step', () => {
           breakingDescription,
           body: undefined,
           footers: [],
-          raw: `${type}${scope ? `(${scope})` : ''}: ${subject}`,
+          raw: `${type}${scope.length > 0 ? `(${scope.join(',')})` : ''}: ${subject}`,
         },
         raw: createMockRawCommit(),
         source,
@@ -1169,7 +1169,7 @@ describe('Write Changelog Step', () => {
       const step = createGenerateChangelogStep()
       const directCommit = createClassifiedCommit({
         type: 'feat',
-        scope: 'lib-test',
+        scope: ['lib-test'],
         subject: 'add new feature',
         source: 'direct-scope',
       })
@@ -1177,7 +1177,7 @@ describe('Write Changelog Step', () => {
       const ctx = createMockContext({
         nextVersion: '1.0.0',
         bumpType: 'minor',
-        commits: [createMockCommit({ type: 'feat', scope: 'lib-test', subject: 'add new feature' })],
+        commits: [createMockCommit({ type: 'feat', scope: ['lib-test'], subject: 'add new feature' })],
         classificationResult: {
           commits: [directCommit],
           included: [directCommit],
@@ -1197,7 +1197,7 @@ describe('Write Changelog Step', () => {
       const step = createGenerateChangelogStep()
       const directCommit = createClassifiedCommit({
         type: 'feat',
-        scope: 'lib-test',
+        scope: ['lib-test'],
         subject: 'add feature',
         source: 'direct-scope',
         preserveScope: false,
@@ -1206,7 +1206,7 @@ describe('Write Changelog Step', () => {
       const ctx = createMockContext({
         nextVersion: '1.0.0',
         bumpType: 'minor',
-        commits: [createMockCommit({ type: 'feat', scope: 'lib-test', subject: 'add feature' })],
+        commits: [createMockCommit({ type: 'feat', scope: ['lib-test'], subject: 'add feature' })],
         classificationResult: {
           commits: [directCommit],
           included: [directCommit],
@@ -1228,7 +1228,7 @@ describe('Write Changelog Step', () => {
       const step = createGenerateChangelogStep()
       const directFileCommit = createClassifiedCommit({
         type: 'feat',
-        scope: 'lib-other',
+        scope: ['lib-other'],
         subject: 'cross-project feature',
         source: 'direct-file',
         preserveScope: true,
@@ -1237,7 +1237,7 @@ describe('Write Changelog Step', () => {
       const ctx = createMockContext({
         nextVersion: '1.0.0',
         bumpType: 'minor',
-        commits: [createMockCommit({ type: 'feat', scope: 'lib-other', subject: 'cross-project feature' })],
+        commits: [createMockCommit({ type: 'feat', scope: ['lib-other'], subject: 'cross-project feature' })],
         classificationResult: {
           commits: [directFileCommit],
           included: [directFileCommit],
@@ -1258,7 +1258,7 @@ describe('Write Changelog Step', () => {
       const step = createGenerateChangelogStep()
       const indirectCommit = createClassifiedCommit({
         type: 'feat',
-        scope: 'lib-utils',
+        scope: ['lib-utils'],
         subject: 'utility improvement',
         source: 'indirect-dependency',
         preserveScope: true,
@@ -1267,7 +1267,7 @@ describe('Write Changelog Step', () => {
       const ctx = createMockContext({
         nextVersion: '1.0.0',
         bumpType: 'minor',
-        commits: [createMockCommit({ type: 'feat', scope: 'lib-utils', subject: 'utility improvement' })],
+        commits: [createMockCommit({ type: 'feat', scope: ['lib-utils'], subject: 'utility improvement' })],
         classificationResult: {
           commits: [indirectCommit],
           included: [indirectCommit],
@@ -1293,7 +1293,7 @@ describe('Write Changelog Step', () => {
       })
       const indirectCommit = createClassifiedCommit({
         type: 'fix',
-        scope: 'lib-dep',
+        scope: ['lib-dep'],
         subject: 'dependency fix',
         source: 'indirect-dependency',
         preserveScope: true,
@@ -1304,7 +1304,7 @@ describe('Write Changelog Step', () => {
         bumpType: 'minor',
         commits: [
           createMockCommit({ type: 'feat', subject: 'direct feature' }),
-          createMockCommit({ type: 'fix', scope: 'lib-dep', subject: 'dependency fix' }),
+          createMockCommit({ type: 'fix', scope: ['lib-dep'], subject: 'dependency fix' }),
         ],
         classificationResult: {
           commits: [directCommit, indirectCommit],
@@ -1329,7 +1329,7 @@ describe('Write Changelog Step', () => {
       const step = createGenerateChangelogStep()
       const indirectCommit = createClassifiedCommit({
         type: 'feat',
-        scope: 'lib-infra',
+        scope: ['lib-infra'],
         subject: 'infra update',
         source: 'indirect-infra',
         preserveScope: true,
@@ -1338,7 +1338,7 @@ describe('Write Changelog Step', () => {
       const ctx = createMockContext({
         nextVersion: '1.0.0',
         bumpType: 'minor',
-        commits: [createMockCommit({ type: 'feat', scope: 'lib-infra', subject: 'infra update' })],
+        commits: [createMockCommit({ type: 'feat', scope: ['lib-infra'], subject: 'infra update' })],
         classificationResult: {
           commits: [indirectCommit],
           included: [indirectCommit],
@@ -1360,7 +1360,7 @@ describe('Write Changelog Step', () => {
       const step = createGenerateChangelogStep()
       const breakingCommit = createClassifiedCommit({
         type: 'feat',
-        scope: 'lib-test',
+        scope: ['lib-test'],
         subject: 'major API change',
         breaking: true,
         breakingDescription: 'Removed deprecated method',
@@ -1373,7 +1373,7 @@ describe('Write Changelog Step', () => {
         commits: [
           createMockCommit({
             type: 'feat',
-            scope: 'lib-test',
+            scope: ['lib-test'],
             subject: 'major API change',
             breaking: true,
             breakingDescription: 'Removed deprecated method',
@@ -1401,7 +1401,7 @@ describe('Write Changelog Step', () => {
       const ctx = createMockContext({
         nextVersion: '1.0.0',
         bumpType: 'minor',
-        commits: [createMockCommit({ type: 'feat', scope: 'other', subject: 'fallback feature' })],
+        commits: [createMockCommit({ type: 'feat', scope: ['other'], subject: 'fallback feature' })],
       })
 
       const result = await step.execute(ctx)

@@ -691,7 +691,7 @@ describe('analyze-commits step', () => {
 
           expect(result.status).toBe('success')
           const commits = result.stateUpdates?.commits ?? []
-          expect(commits.every((c) => c.scope !== 'deps')).toBe(true)
+          expect(commits.every((c) => !c.scope.includes('deps'))).toBe(true)
         })
 
         it('applies includeScopes from config', async () => {
@@ -979,7 +979,7 @@ describe('analyze-commits step', () => {
           ]
           const git = createMockGitClient({ commits })
           const logger = createMockLogger()
-          const customMatcher = jest.fn((ctx: { scope?: string }) => ctx.scope === 'tooling')
+          const customMatcher = jest.fn((ctx: { scope: readonly string[] }) => ctx.scope.includes('tooling'))
           const context = createMockContext({
             git,
             logger,
@@ -1006,7 +1006,7 @@ describe('analyze-commits step', () => {
           ]
           const git = createMockGitClient({ commits })
           const logger = createMockLogger()
-          const customMatcher = jest.fn((ctx: { scope?: string }) => ctx.scope === 'custom')
+          const customMatcher = jest.fn((ctx: { scope: readonly string[] }) => ctx.scope.includes('custom'))
           const context = createMockContext({
             git,
             logger,
@@ -1047,7 +1047,7 @@ describe('analyze-commits step', () => {
           expect(result.status).toBe('success')
           const commits = result.stateUpdates?.commits ?? []
           expect(commits).toHaveLength(1)
-          expect(commits[0].scope).toBeUndefined()
+          expect(commits[0].scope).toEqual([])
         })
 
         it('preserves scope for file-based commits with different scope', async () => {
@@ -1078,7 +1078,7 @@ describe('analyze-commits step', () => {
           expect(result.status).toBe('success')
           const resultCommits = result.stateUpdates?.commits ?? []
           expect(resultCommits).toHaveLength(1)
-          expect(resultCommits[0].scope).toBe('other-project')
+          expect(resultCommits[0].scope).toEqual(['other-project'])
         })
       })
 

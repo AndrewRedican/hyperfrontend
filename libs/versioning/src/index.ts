@@ -25,12 +25,50 @@ export type {
 } from './changelog/operations'
 export type { Token, TokenType } from './changelog/parse/tokenizer'
 export type { SerializeOptions, JsonSerializeOptions } from './changelog/serialize'
+export type {
+  AuthorSession,
+  CommitExecutor,
+  CreateAuthorSessionOptions,
+  DiscoverScopesOptions,
+  DiscoveredScope,
+  LoadCommitConfigOptions,
+  LoadedCommitConfig,
+  PartialSessionConfig,
+  ScopeFilterContext,
+  SessionConfig,
+  SessionContext,
+  SessionOutcome,
+  SessionStatus,
+  SessionType,
+  StagedPathsOptions,
+  StagedPathsProvider,
+  Step,
+  StepResult,
+  StepStatus,
+} from './commits/author'
+export type { CommitDraft } from './commits/format/models/draft'
 export type { BreakingChange } from './commits/models/breaking'
 export type { CommitType } from './commits/models/commit-type'
 export type { ConventionalCommit, CommitFooter } from './commits/models/conventional'
 export type { ParsedBody } from './commits/parse/body'
 export type { ParsedFooters } from './commits/parse/footer'
 export type { ParsedHeader } from './commits/parse/header'
+export type {
+  HeaderMaxLengthOptions,
+  ImperativeMoodOptions,
+  Rule,
+  RuleConfig,
+  RuleContext,
+  RuleLevel,
+  RuleMessage,
+  RuleResult,
+  Ruleset,
+  ScopeEnumOptions,
+  SubjectCase,
+  SubjectCaseOptions,
+  TypeEnumOptions,
+  ValidationResult as CommitValidationResult,
+} from './commits/validate'
 export type { ExecuteOptions } from './flow/executor'
 export type { FlowPreset } from './flow/factory'
 export type {
@@ -177,7 +215,44 @@ export {
   getListMarker,
   createSpacing,
 } from './changelog/serialize'
+export {
+  CONFIG_FILE_NAMES,
+  DEFAULT_SESSION_TYPES,
+  EMPTY_STAGING_MESSAGE,
+  NO_SCOPE_CANDIDATES_MESSAGE,
+  PREVIEW_RESTART_STEP_ID,
+  SessionStatusValues,
+  StepStatusValues,
+  bodyStep,
+  breakingStep,
+  cancelled,
+  commitStep,
+  conventionalStepPreset,
+  createAuthorSession,
+  createSessionContext,
+  defaultScope,
+  discoverScopes,
+  done,
+  getStagedPaths,
+  goto,
+  issuesStep,
+  loadCommitConfig,
+  normalizeSubject,
+  parseReferences,
+  previewStep,
+  resolveScopeStep,
+  resolveSessionConfig,
+  runAuthorSession,
+  scopeStep,
+  subjectStep,
+  typeStep,
+  typeToChoice,
+} from './commits'
 export { DEFAULT_EXCLUDE_SCOPES, DEFAULT_PROJECT_PREFIXES } from './commits/classify'
+export { countHeaderLength } from './commits/format/count-header'
+export { formatHeader } from './commits/format/format-header'
+export { formatCommitMessage } from './commits/format/format-message'
+export { toDraft } from './commits/format/models/draft'
 export { createBreakingFromFooter, createBreakingFromSubject, createNonBreaking, isBreakingFooterKey } from './commits/models/breaking'
 export {
   COMMIT_TYPES,
@@ -193,6 +268,21 @@ export { parseBody } from './commits/parse/body'
 export { parseFooters } from './commits/parse/footer'
 export { parseHeader } from './commits/parse/header'
 export { parseConventionalCommit, isConventionalCommit } from './commits/parse/message'
+export {
+  BUILT_IN_RULES,
+  CONVENTIONAL_TYPES,
+  conventionalPreset,
+  DEFAULT_IMPERATIVE_WORDLIST,
+  headerMaxLengthRule,
+  imperativeMoodRule,
+  scopeEnumRule,
+  subjectCaseRule,
+  subjectEmptyRule,
+  typeEnumRule,
+  validateCommit,
+  validateCommitMessage,
+  validateCommitWithRules,
+} from './commits/validate'
 export { executeFlow, dryRun, validateFlow } from './flow/executor'
 export { createVersionFlow, createDryRunFlow, getAvailablePresets, getPresetDescription } from './flow/factory'
 export {

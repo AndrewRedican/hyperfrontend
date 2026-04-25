@@ -292,6 +292,66 @@ describe('text', () => {
     })
   })
 
+  describe('cursor positioning', () => {
+    it('emits cursorLeft after render when caret is mid-value', async () => {
+      const config = createConfig()
+      const promise = text(config)
+
+      input.enqueueKeys(['a', 'b', 'c', Key.Left, Key.Left, Key.Enter])
+      await promise
+
+      // why: after 'abc', two Left presses put cursor at 1; render seeks 3-1=2 cols left
+      expect(output.getWrittenData()).toContain('\x1B[2D')
+    })
+
+    it('shows the initial-value hint when the value is cleared', async () => {
+      const config = createConfig({ initial: 'abc' })
+      const promise = text(config)
+
+      input.enqueueKeys([Key.Backspace, Key.Backspace, Key.Backspace, Key.Enter])
+      await promise
+
+      // why: clearing the value repaints the dim hint and seeks the cursor over its length
+      const data = output.getWrittenData()
+
+      expect(data).toContain('\x1B[2m') // why: dim ANSI for the hint
+      expect(data).toContain('\x1B[3D') // why: cursorLeft(3) over the hint
+    })
+  })
+
+  describe('renderMessage', () => {
+    it('recomputes the message on every keystroke using current value', async () => {
+      const snapshots: string[] = []
+      const config = createConfig({
+        renderMessage: (value) => {
+          snapshots.push(value)
+          return `Length: ${value.length}`
+        },
+      })
+      const promise = text(config)
+
+      input.enqueueKeys(['a', 'b', 'c', Key.Enter])
+      await promise
+
+      // why: initial render plus one per keystroke
+      expect(snapshots).toEqual(['', 'a', 'ab', 'abc', 'abc'])
+
+      const data = output.getWrittenData()
+
+      expect(data).toContain('Length: 3')
+    })
+
+    it('falls back to static message when renderMessage is absent', async () => {
+      const config = createConfig({ message: 'Static:' })
+      const promise = text(config)
+
+      input.enqueueKeys([Key.Enter])
+      await promise
+
+      expect(output.getWrittenData()).toContain('Static:')
+    })
+  })
+
   describe('format', () => {
     it('applies format function for display', async () => {
       const config = createConfig({
