@@ -89,6 +89,17 @@ if (nameResult.result === PromptResult.Submitted) {
   console.log(`Hello, ${nameResult.value}!`)
 }
 
+// Text input with a live label — `renderMessage` is recomputed on every keystroke
+import { style } from '@hyperfrontend/questions'
+
+await text({
+  message: 'Title:',
+  renderMessage: (value) => {
+    const left = 72 - value.length
+    return `Title (${left >= 0 ? style.green(`${left} left`) : style.red(`${-left} over`)}):`
+  },
+})
+
 // Confirmation
 const continueResult = await confirm({
   message: 'Continue?',
@@ -120,13 +131,14 @@ const featuresResult = await multiselect({
 
 ## API Overview
 
-| Function       | Description                                       |
-| -------------- | ------------------------------------------------- |
-| `text`         | Free-form text input with optional validation     |
-| `confirm`      | Yes/no confirmation prompt                        |
-| `select`       | Single selection from a list of choices           |
-| `multiselect`  | Multiple selections with optional search          |
-| `PromptResult` | Discriminated union: `'submitted' \| 'cancelled'` |
+| Function       | Description                                                                   |
+| -------------- | ----------------------------------------------------------------------------- |
+| `text`         | Free-form text input with optional validation and live-updating labels        |
+| `confirm`      | Yes/no confirmation prompt                                                    |
+| `select`       | Single selection from a list of choices                                       |
+| `multiselect`  | Multiple selections with optional search                                      |
+| `style`        | ANSI colour helpers (`green`, `yellow`, `red`, `cyan`, `bold`, `dim`, `gray`) |
+| `PromptResult` | Discriminated union: `'submitted' \| 'cancelled'`                             |
 
 All prompts return `Promise<PromptOutcome<T>>` where:
 
