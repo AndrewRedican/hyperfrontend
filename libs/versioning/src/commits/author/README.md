@@ -77,10 +77,30 @@ module.exports = {
   ],
   scopeMulti: false,
   scopeOptional: false,
+  // Filter discovered projects; receives { path, name } per candidate
+  scopeFilter: ({ path }) => !path.includes('/__fixtures__/'),
   headerMaxLength: 72,
+  // Ruleset reused by the `cl` validator bin and the preview step
+  validateRuleset: {
+    'type-enum': ['error', { types: ['feat', 'fix', 'docs', 'chore'] }],
+    'subject-empty': ['error'],
+    'header-max-length': ['warn', { maxLength: 72 }],
+    'imperative-mood': ['warn'],
+  },
   skipCommit: false,
 }
 ```
+
+Key fields:
+
+| Field             | Behaviour                                                                                  |
+| ----------------- | ------------------------------------------------------------------------------------------ |
+| `types`           | Conventional types shown in the `type` step (falls back to the 11-entry Conventional list) |
+| `scopeFilter`     | Exclude discovered projects from the scope picker by `path`/`name`                         |
+| `headerMaxLength` | Drives the live countdown in the `subject` step (green → yellow → red); `null` disables    |
+| `validateRuleset` | Shared with `cl` and the preview step; see `commits/validate` presets                      |
+| `skipCommit`      | When true, the session returns the formatted message without touching the git index        |
+| `commitExecutor`  | Inject a custom executor (e.g. signed commits, alternate cwd) instead of the default       |
 
 Resolution:
 
