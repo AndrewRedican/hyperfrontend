@@ -496,7 +496,7 @@ Code formatting is enforced through ESLint configuration. The project follows co
 
 ## Commit Message Guidelines
 
-We use [Conventional Commits](https://www.conventionalcommits.org/) with Commitizen to enforce consistent commit messages.
+We use [Conventional Commits](https://www.conventionalcommits.org/), authored and validated by the `cz` / `cl` bins shipped in [`@hyperfrontend/versioning`](libs/versioning). Configuration lives in the workspace-root [`commit.config.js`](commit.config.js).
 
 ### Commit Message Format
 
@@ -508,15 +508,16 @@ We use [Conventional Commits](https://www.conventionalcommits.org/) with Commiti
 <footer>
 ```
 
-### Using Commitizen
+### Authoring a commit
 
-Instead of `git commit`, use:
+Stage your changes with `git add`, then run one of:
 
 ```bash
-npm run commit
+npm run commit   # equivalent
+npx cz           # same bin
 ```
 
-This will launch an interactive prompt to guide you through creating a properly formatted commit message.
+This walks you through `type → scope → subject → body → breaking → issues → preview`, then runs `git commit` with the formatted message. Cancel at any step with `Ctrl-C`.
 
 ### Commit Types
 
