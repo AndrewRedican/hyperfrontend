@@ -138,4 +138,3 @@ The engine is intentionally dumb about rule semantics — rules own both the che
 ## See Also
 
 - [../README.md](../README.md) — Parsing primitives this engine consumes
-- [../../../commit-authoring-consolidation-plan.md](../../../../../roadmap/commit-authoring-consolidation-plan.md) — The migration plan this module is part of
