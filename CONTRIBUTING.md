@@ -496,7 +496,7 @@ Code formatting is enforced through ESLint configuration. The project follows co
 
 ## Commit Message Guidelines
 
-We use [Conventional Commits](https://www.conventionalcommits.org/), authored and validated by the `cz` / `cl` bins shipped in [`@hyperfrontend/versioning`](libs/versioning). Configuration lives in the workspace-root [`commit.config.js`](commit.config.js).
+We use [Conventional Commits](https://www.conventionalcommits.org/), authored and validated by the `cz` / `cl` bins shipped in [`@hyperfrontend/versioning`](https://github.com/AndrewRedican/hyperfrontend/blob/main/libs/versioning). Configuration lives in the workspace-root [`commit.config.js`](https://github.com/AndrewRedican/hyperfrontend/blob/main/commit.config.js).
 
 ### Commit Message Format
 
