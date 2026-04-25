@@ -5,9 +5,6 @@ import { confirm, text, PromptResult } from '@hyperfrontend/questions'
 import { cancelled, done } from '../models/step'
 import { omitKeys } from './utils/omit'
 
-/** Regex matching a single `keyword #123` reference inside the issues input. */
-const REFERENCE_PATTERN = /([A-Za-z][A-Za-z-]*)\s*#(\d+)/g
-
 /**
  * Step that optionally collects issue references (e.g. `fixes #123, re #456`)
  * and appends them to `draft.footers` using the ` #` separator form.
@@ -68,16 +65,68 @@ export const issuesStep: Step = {
  * ```
  */
 export function parseReferences(raw: string): readonly CommitFooter[] {
-  const matches = raw.matchAll(REFERENCE_PATTERN)
   const footers: CommitFooter[] = []
-  for (const match of matches) {
-    const keyword = match[1]
-    const number = match[2]
-    if (keyword && number) {
-      footers.push({ key: capitalize(keyword), value: number, separator: ' #' })
+  const length = raw.length
+  let pos = 0
+  while (pos < length) {
+    const code = raw.charCodeAt(pos)
+    if (!isLetter(code)) {
+      pos++
+      continue
     }
+    const keywordStart = pos
+    pos++
+    while (pos < length && (isLetter(raw.charCodeAt(pos)) || raw.charCodeAt(pos) === HYPHEN)) {
+      pos++
+    }
+    const keyword = raw.slice(keywordStart, pos)
+    while (pos < length && isWhitespace(raw.charCodeAt(pos))) {
+      pos++
+    }
+    if (pos >= length || raw.charCodeAt(pos) !== HASH) continue
+    pos++
+    const numberStart = pos
+    while (pos < length && isDigit(raw.charCodeAt(pos))) {
+      pos++
+    }
+    if (pos === numberStart) continue
+    footers.push({ key: capitalize(keyword), value: raw.slice(numberStart, pos), separator: ' #' })
   }
   return footers
+}
+
+const HASH = 35
+const HYPHEN = 45
+
+/**
+ * Returns true when `code` is an ASCII digit (`0`-`9`).
+ *
+ * @param code - Character code under test
+ * @returns Whether the code falls within the digit range
+ */
+function isDigit(code: number): boolean {
+  return code >= 48 && code <= 57
+}
+
+/**
+ * Returns true when `code` is an ASCII letter (`A`-`Z` or `a`-`z`).
+ *
+ * @param code - Character code under test
+ * @returns Whether the code falls within the letter ranges
+ */
+function isLetter(code: number): boolean {
+  return (code >= 65 && code <= 90) || (code >= 97 && code <= 122)
+}
+
+/**
+ * Returns true when `code` is ASCII whitespace recognised by the input
+ * tolerance window: space, tab, newline, or carriage return.
+ *
+ * @param code - Character code under test
+ * @returns Whether the code is whitespace
+ */
+function isWhitespace(code: number): boolean {
+  return code === 32 || code === 9 || code === 10 || code === 13
 }
 
 /**

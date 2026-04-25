@@ -15,6 +15,25 @@ describe('parseReferences', () => {
   it('returns an empty array when no references are found', () => {
     expect(parseReferences('nothing here')).toEqual([])
   })
+
+  it('handles long letter-only input in linear time without backtracking', () => {
+    // why: guards against polynomial-time backtracking on long letter-only inputs
+    const huge = 'A'.repeat(200_000)
+    const start = Date.now()
+    const footers = parseReferences(huge)
+    const elapsedMs = Date.now() - start
+
+    expect(footers).toEqual([])
+    expect(elapsedMs).toBeLessThan(200)
+  })
+
+  it('extracts hyphenated keywords and ignores junk between references', () => {
+    expect(parseReferences('co-fixes #1 ;; ?? closes#2 garbage123 resolves   #3')).toEqual([
+      { key: 'Co-fixes', value: '1', separator: ' #' },
+      { key: 'Closes', value: '2', separator: ' #' },
+      { key: 'Resolves', value: '3', separator: ' #' },
+    ])
+  })
 })
 
 describe('issuesStep', () => {
