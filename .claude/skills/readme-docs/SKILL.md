@@ -18,6 +18,7 @@ Create README.md files—library root for consumers, sub-module for maintainers.
 | Sub-module README | `libs/<name>/src/<module>/README.md` |
 | Library ESLint    | `lib-readme-structure`               |
 | Submodule ESLint  | `docs-site-secondary-entries`        |
+| Submodule README  | `lib-pkg-secondary-entry-readme`     |
 
 ---
 
@@ -103,11 +104,12 @@ One-sentence statement of what this module does and why it exists.
 npx nx lint <project>
 ```
 
-| Rule                          | Enforces                                                  |
-| ----------------------------- | --------------------------------------------------------- |
-| `lib-readme-structure`        | Library-root README sections, badges, links               |
-| `docs-site-secondary-entries` | Every secondary entrypoint has a `page.tsx` + sidebar nav |
-| `docs-site-library-docs`      | Every library README has a corresponding docs-site page   |
+| Rule                             | Enforces                                                                          |
+| -------------------------------- | --------------------------------------------------------------------------------- |
+| `lib-readme-structure`           | Library-root README sections, badges, links                                       |
+| `docs-site-secondary-entries`    | Every secondary entrypoint has a `page.tsx` + sidebar nav                         |
+| `lib-pkg-secondary-entry-readme` | Every secondary entrypoint has a README with H1 (matching basename) + description |
+| `docs-site-library-docs`         | Every library README has a corresponding docs-site page                           |
 
 ---
 
