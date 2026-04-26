@@ -238,6 +238,7 @@ module.exports = [
       'workspace/lib-pkg-exports-exist': 'error',
       'workspace/lib-pkg-exports-js-only': 'error',
       'workspace/lib-pkg-no-main': 'error',
+      'workspace/lib-pkg-secondary-entry-readme': 'error',
     },
   },
   {
