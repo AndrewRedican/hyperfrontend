@@ -35,59 +35,6 @@ flowchart LR
     CC --> BC
 ```
 
-## API
-
-### Models
-
-| Export               | Description                                            | Implementation                              |
-| -------------------- | ------------------------------------------------------ | ------------------------------------------- |
-| `ConventionalCommit` | Parsed commit with type, scope, subject, body, footers | [conventional.ts](./models/conventional.ts) |
-| `CommitFooter`       | Footer trailer with key, value, and separator          | [conventional.ts](./models/conventional.ts) |
-| `CommitType`         | Standard types: feat, fix, docs, style, refactor, etc. | [commit-type.ts](./models/commit-type.ts)   |
-| `BreakingChange`     | Breaking change info with source and description       | [breaking.ts](./models/breaking.ts)         |
-
-### Factories
-
-| Function                      | Description                           | Implementation                              |
-| ----------------------------- | ------------------------------------- | ------------------------------------------- |
-| `createConventionalCommit()`  | Create a commit from type and subject | [conventional.ts](./models/conventional.ts) |
-| `createCommitFooter()`        | Create a footer trailer               | [conventional.ts](./models/conventional.ts) |
-| `createBreakingFromSubject()` | Create breaking change from `!`       | [breaking.ts](./models/breaking.ts)         |
-| `createBreakingFromFooter()`  | Create breaking change from footer    | [breaking.ts](./models/breaking.ts)         |
-| `createNonBreaking()`         | Create non-breaking indicator         | [breaking.ts](./models/breaking.ts)         |
-
-### Parsing
-
-| Function                    | Description                                  | Implementation                   |
-| --------------------------- | -------------------------------------------- | -------------------------------- |
-| `parseConventionalCommit()` | Parse complete commit message                | [message.ts](./parse/message.ts) |
-| `isConventionalCommit()`    | Check if message follows conventional format | [message.ts](./parse/message.ts) |
-| `parseHeader()`             | Parse header line (type, scope, subject)     | [header.ts](./parse/header.ts)   |
-| `parseBody()`               | Parse body section                           | [body.ts](./parse/body.ts)       |
-| `parseFooters()`            | Parse footer trailers                        | [footer.ts](./parse/footer.ts)   |
-
-### Commit Types
-
-| Function           | Description                      | Implementation                            |
-| ------------------ | -------------------------------- | ----------------------------------------- |
-| `isStandardType()` | Check if type is standard        | [commit-type.ts](./models/commit-type.ts) |
-| `isReleaseType()`  | Check if type triggers a release | [commit-type.ts](./models/commit-type.ts) |
-| `getSemverBump()`  | Get semver bump level for type   | [commit-type.ts](./models/commit-type.ts) |
-
-| Constant        | Description                             | Implementation                            |
-| --------------- | --------------------------------------- | ----------------------------------------- |
-| `COMMIT_TYPES`  | Map of standard types with descriptions | [commit-type.ts](./models/commit-type.ts) |
-| `RELEASE_TYPES` | Types that trigger releases             | [commit-type.ts](./models/commit-type.ts) |
-| `MINOR_TYPES`   | Types that trigger minor bumps          | [commit-type.ts](./models/commit-type.ts) |
-| `PATCH_TYPES`   | Types that trigger patch bumps          | [commit-type.ts](./models/commit-type.ts) |
-
-### Utilities
-
-| Function          | Description                            | Implementation                             |
-| ----------------- | -------------------------------------- | ------------------------------------------ |
-| `replaceChar()`   | Replace all occurrences of a character | [replace-char.ts](./utils/replace-char.ts) |
-| `hyphenToSpace()` | Normalize hyphenated keys to spaces    | [replace-char.ts](./utils/replace-char.ts) |
-
 ## Usage Examples
 
 ### Parsing Commits

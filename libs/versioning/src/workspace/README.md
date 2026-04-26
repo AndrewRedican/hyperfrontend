@@ -51,57 +51,9 @@ flowchart TB
     BUMPS --> BU
 ```
 
-## API
-
-### Models
-
-| Export            | Description                                             | Implementation                        |
-| ----------------- | ------------------------------------------------------- | ------------------------------------- |
-| `Project`         | Single project/package within a workspace               | [project.ts](./models/project.ts)     |
-| `Workspace`       | Monorepo workspace with multiple projects               | [workspace.ts](./models/workspace.ts) |
-| `WorkspaceConfig` | Configuration for workspace operations                  | [workspace.ts](./models/workspace.ts) |
-| `WorkspaceType`   | Type of workspace: `nx`, `turbo`, `lerna`, `pnpm`, etc. | [workspace.ts](./models/workspace.ts) |
-
-### Factories
-
-| Function                   | Description                     | Implementation                        |
-| -------------------------- | ------------------------------- | ------------------------------------- |
-| `createProject(opts)`      | Create a Project from options   | [project.ts](./models/project.ts)     |
-| `createWorkspace(opts)`    | Create a Workspace from options | [workspace.ts](./models/workspace.ts) |
-| `DEFAULT_WORKSPACE_CONFIG` | Default workspace configuration | [workspace.ts](./models/workspace.ts) |
-
-### Discovery
-
-| Function                              | Description                                      | Implementation                                               |
-| ------------------------------------- | ------------------------------------------------ | ------------------------------------------------------------ |
-| `discoverPackages(root, opts?)`       | Discover all packages in workspace               | [packages.ts](./discovery/packages.ts)                       |
-| `discoverProject(dir)`                | Discover single project from directory           | [packages.ts](./discovery/packages.ts)                       |
-| `buildDependencyGraph(projects)`      | Build dependency graph from projects             | [dependencies.ts](./discovery/dependencies.ts)               |
-| `getTopologicalOrder(workspace)`      | Get packages in topological build order          | [dependencies.ts](./discovery/dependencies.ts)               |
-| `getTransitiveDependents(ws, pkg)`    | Get all packages depending on pkg (transitively) | [dependencies.ts](./discovery/dependencies.ts)               |
-| `discoverAllChangelogs(root)`         | Find all changelog files in workspace            | [discover-changelogs.ts](./discovery/discover-changelogs.ts) |
-| `findProjectChangelog(projectPath)`   | Find changelog for specific project              | [changelog-path.ts](./discovery/changelog-path.ts)           |
-| `findProjectChangelogInTree(tree, p)` | VFS-aware: find changelog in virtual tree        | [discover-changelogs.ts](./discovery/discover-changelogs.ts) |
-| `findChangelogsInTree(tree, root)`    | VFS-aware: find all changelogs in virtual tree   | [discover-changelogs.ts](./discovery/discover-changelogs.ts) |
-
-### Workspace Queries
-
-| Function                         | Description                                     | Implementation                        |
-| -------------------------------- | ----------------------------------------------- | ------------------------------------- |
-| `getProject(workspace, name)`    | Get project by name                             | [workspace.ts](./models/workspace.ts) |
-| `getDependents(workspace, name)` | Get direct dependents of a package              | [workspace.ts](./models/workspace.ts) |
-| `dependsOn(workspace, pkg, dep)` | Check if pkg depends on dep                     | [workspace.ts](./models/workspace.ts) |
-| `isPublishable(project)`         | Check if project can be published (not private) | [project.ts](./models/project.ts)     |
-| `hasChangelog(project)`          | Check if project has changelog                  | [project.ts](./models/project.ts)     |
+## Configuration
 
 ### Cascade Bumps
-
-| Function                                          | Description                                    | Implementation                                  |
-| ------------------------------------------------- | ---------------------------------------------- | ----------------------------------------------- |
-| `calculateCascadeBumps(ws, bumps, opts?)`         | Calculate all bumps including cascades         | [cascade-bump.ts](./operations/cascade-bump.ts) |
-| `calculateCascadeBumpsFromPackage(ws, pkg, type)` | Convenience: cascade from single package       | [cascade-bump.ts](./operations/cascade-bump.ts) |
-| `summarizeCascadeBumps(result)`                   | Format cascade result as human-readable string | [cascade-bump.ts](./operations/cascade-bump.ts) |
-| `DEFAULT_CASCADE_OPTIONS`                         | Default cascade bump options                   | [cascade-bump.ts](./operations/cascade-bump.ts) |
 
 **CascadeOptions:**
 
@@ -114,12 +66,6 @@ flowchart TB
 
 ### Batch Updates
 
-| Function                       | Description                            | Implementation                                  |
-| ------------------------------ | -------------------------------------- | ----------------------------------------------- |
-| `applyBumps(ws, bumps, opts?)` | Apply planned bumps to packages        | [batch-update.ts](./operations/batch-update.ts) |
-| `formatBatchResult(result)`    | Format result as human-readable string | [batch-update.ts](./operations/batch-update.ts) |
-| `DEFAULT_BATCH_OPTIONS`        | Default batch update options           | [batch-update.ts](./operations/batch-update.ts) |
-
 **BatchOptions:**
 
 | Option                     | Default | Description                              |
@@ -131,12 +77,6 @@ flowchart TB
 | `createGitTag`             | `false` | Create git tags for each updated package |
 
 ### Validation
-
-| Function                         | Description                        | Implementation                          |
-| -------------------------------- | ---------------------------------- | --------------------------------------- |
-| `validateWorkspace(ws, opts?)`   | Validate entire workspace          | [validate.ts](./operations/validate.ts) |
-| `validateProject(project)`       | Validate single project            | [validate.ts](./operations/validate.ts) |
-| `formatValidationReport(report)` | Format validation report as string | [validate.ts](./operations/validate.ts) |
 
 **ValidationOptions:**
 

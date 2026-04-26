@@ -41,55 +41,6 @@ flowchart LR
     REG --> NPM
 ```
 
-## API
-
-### Models
-
-| Export           | Description                                           | Implementation                              |
-| ---------------- | ----------------------------------------------------- | ------------------------------------------- |
-| `Registry`       | Abstract interface for package registries             | [registry.ts](./models/registry.ts)         |
-| `RegistryConfig` | Configuration options: url, timeout, cache TTL, token | [registry.ts](./models/registry.ts)         |
-| `PackageInfo`    | Package metadata: name, versions, maintainers, etc.   | [package-info.ts](./models/package-info.ts) |
-| `VersionInfo`    | Version-specific info: dependencies, publish time     | [version-info.ts](./models/version-info.ts) |
-| `Maintainer`     | Package maintainer with name and email                | [package-info.ts](./models/package-info.ts) |
-
-### Factories
-
-| Function               | Description                      | Implementation                              |
-| ---------------------- | -------------------------------- | ------------------------------------------- |
-| `createRegistry(type)` | Create a registry client by type | [factory.ts](./factory.ts)                  |
-| `createNpmRegistry()`  | Create npm registry client       | [client.ts](./npm/client.ts)                |
-| `createCache(ttl)`     | Create in-memory cache with TTL  | [cache.ts](./npm/cache.ts)                  |
-| `createPackageInfo()`  | Create a PackageInfo object      | [package-info.ts](./models/package-info.ts) |
-| `createVersionInfo()`  | Create a VersionInfo object      | [version-info.ts](./models/version-info.ts) |
-
-### Registry Operations
-
-| Method               | Description                            | Implementation               |
-| -------------------- | -------------------------------------- | ---------------------------- |
-| `getLatestVersion`   | Get latest published version           | [client.ts](./npm/client.ts) |
-| `isVersionPublished` | Check if specific version is published | [client.ts](./npm/client.ts) |
-| `getPackageInfo`     | Get full package metadata              | [client.ts](./npm/client.ts) |
-| `getVersionInfo`     | Get version-specific metadata          | [client.ts](./npm/client.ts) |
-| `listVersions`       | List all published versions            | [client.ts](./npm/client.ts) |
-
-### Security Utilities
-
-| Function            | Description                                | Implementation               |
-| ------------------- | ------------------------------------------ | ---------------------------- |
-| `escapePackageName` | Validate and escape package name for shell | [client.ts](./npm/client.ts) |
-| `escapeVersion`     | Validate and escape version for shell      | [client.ts](./npm/client.ts) |
-
-### Cache Interface
-
-| Method   | Description                  | Implementation             |
-| -------- | ---------------------------- | -------------------------- |
-| `get`    | Retrieve cached value        | [cache.ts](./npm/cache.ts) |
-| `set`    | Store value with TTL         | [cache.ts](./npm/cache.ts) |
-| `delete` | Remove cached value          | [cache.ts](./npm/cache.ts) |
-| `clear`  | Clear all cached values      | [cache.ts](./npm/cache.ts) |
-| `size`   | Get number of cached entries | [cache.ts](./npm/cache.ts) |
-
 ## Usage Examples
 
 ### Querying npm Registry

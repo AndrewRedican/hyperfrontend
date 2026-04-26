@@ -78,34 +78,9 @@ flowchart LR
     Models --> EXE
 ```
 
-## API
+## Execution Options
 
-### Factory
-
-| Function                          | Description                           | Implementation             |
-| --------------------------------- | ------------------------------------- | -------------------------- |
-| `createVersionFlow(preset, cfg?)` | Create a flow from a preset           | [factory.ts](./factory.ts) |
-| `createDryRunFlow(preset, cfg?)`  | Create a dry-run flow                 | [factory.ts](./factory.ts) |
-| `getAvailablePresets()`           | List available presets                | [factory.ts](./factory.ts) |
-| `getPresetDescription(preset)`    | Get human-readable preset description | [factory.ts](./factory.ts) |
-
-### Presets
-
-| Preset         | Description                                     | Implementation                               |
-| -------------- | ----------------------------------------------- | -------------------------------------------- |
-| `conventional` | Standard conventional commits workflow          | [conventional.ts](./presets/conventional.ts) |
-| `independent`  | Independent versioning with dependency tracking | [independent.ts](./presets/independent.ts)   |
-| `synced`       | All packages share the same version             | [synced.ts](./presets/synced.ts)             |
-
-### Executor
-
-| Function                                 | Description                    | Implementation                      |
-| ---------------------------------------- | ------------------------------ | ----------------------------------- |
-| `executeFlow(flow, project, root, opts)` | Execute a flow                 | [execute.ts](./executor/execute.ts) |
-| `dryRun(flow, project, root, opts)`      | Execute without making changes | [execute.ts](./executor/execute.ts) |
-| `validateFlow(flow)`                     | Validate flow structure        | [execute.ts](./executor/execute.ts) |
-
-**FlowExecutionOptions:**
+### FlowExecutionOptions
 
 | Option              | Default     | Description                               |
 | ------------------- | ----------- | ----------------------------------------- |
@@ -113,56 +88,11 @@ flowchart LR
 | `diffFormat`        | `'unified'` | Diff format: `'unified'` or `'simple'`    |
 | `rollbackOnFailure` | `false`     | Discard all VFS changes if any step fails |
 
-### Models
+### WriteChangelogStepOptions
 
-| Type             | Description                                      | Implementation                |
-| ---------------- | ------------------------------------------------ | ----------------------------- |
-| `VersionFlow`    | Complete flow definition with steps and config   | [flow.ts](./models/flow.ts)   |
-| `FlowStep`       | Single step with execute function and conditions | [step.ts](./models/step.ts)   |
-| `FlowConfig`     | Flow configuration options                       | [types.ts](./models/types.ts) |
-| `FlowContext`    | Execution context with services and state        | [types.ts](./models/types.ts) |
-| `FlowState`      | Accumulated state during execution               | [types.ts](./models/types.ts) |
-| `FlowResult`     | Execution result with status and step results    | [types.ts](./models/types.ts) |
-| `FlowStepResult` | Individual step execution result                 | [types.ts](./models/types.ts) |
-
-### Step Factories
-
-| Function                          | Description                           | Implementation                                         |
-| --------------------------------- | ------------------------------------- | ------------------------------------------------------ |
-| `createFetchRegistryStep()`       | Fetch published version from registry | [fetch-registry.ts](./steps/fetch-registry.ts)         |
-| `createResolveRepositoryStep()`   | Resolve repository for compare URLs   | [resolve-repository.ts](./steps/resolve-repository.ts) |
-| `createAnalyzeCommitsStep()`      | Parse commits since last release      | [analyze-commits.ts](./steps/analyze-commits.ts)       |
-| `createCalculateBumpStep()`       | Calculate version bump type           | [calculate-bump.ts](./steps/calculate-bump.ts)         |
-| `createCheckIdempotencyStep()`    | Skip if version already published     | [fetch-registry.ts](./steps/fetch-registry.ts)         |
-| `createGenerateChangelogStep()`   | Generate changelog entry              | [generate-changelog.ts](./steps/generate-changelog.ts) |
-| `createWriteChangelogStep(opts?)` | Write changelog to file               | [generate-changelog.ts](./steps/generate-changelog.ts) |
-
-**WriteChangelogStepOptions:**
-
-| Option                            | Default                           | Description                                                     |
-| --------------------------------- | --------------------------------- | --------------------------------------------------------------- |
-| `backupChangelog`                 | `false`                           | Backup existing changelog before writing (uses `tree.rename()`) |
-| `createUpdatePackageStep()`       | Update package.json version       | [update-packages.ts](./steps/update-packages.ts)                |
-| `createCascadeDependenciesStep()` | Update dependent package versions | [update-packages.ts](./steps/update-packages.ts)                |
-| `createGitCommitStep()`           | Create version commit             | [create-commit.ts](./steps/create-commit.ts)                    |
-| `createTagStep()`                 | Create git tag                    | [create-tag.ts](./steps/create-tag.ts)                          |
-| `createPushTagStep()`             | Push tag to remote                | [create-tag.ts](./steps/create-tag.ts)                          |
-
-### Flow Manipulation
-
-| Function                                 | Description                 | Implementation              |
-| ---------------------------------------- | --------------------------- | --------------------------- |
-| `createFlow(id, name, steps, opts?)`     | Create custom flow          | [flow.ts](./models/flow.ts) |
-| `createStep(id, name, execute, opts?)`   | Create custom step          | [step.ts](./models/step.ts) |
-| `addStep(flow, step)`                    | Append step to flow         | [flow.ts](./models/flow.ts) |
-| `removeStep(flow, stepId)`               | Remove step by ID           | [flow.ts](./models/flow.ts) |
-| `insertStep(flow, step, index)`          | Insert step at position     | [flow.ts](./models/flow.ts) |
-| `insertStepAfter(flow, step, afterId)`   | Insert after specific step  | [flow.ts](./models/flow.ts) |
-| `insertStepBefore(flow, step, beforeId)` | Insert before specific step | [flow.ts](./models/flow.ts) |
-| `replaceStep(flow, stepId, newStep)`     | Replace step by ID          | [flow.ts](./models/flow.ts) |
-| `withConfig(flow, config)`               | Update flow configuration   | [flow.ts](./models/flow.ts) |
-| `getStep(flow, stepId)`                  | Get step by ID              | [flow.ts](./models/flow.ts) |
-| `hasStep(flow, stepId)`                  | Check if step exists        | [flow.ts](./models/flow.ts) |
+| Option            | Default | Description                                                     |
+| ----------------- | ------- | --------------------------------------------------------------- |
+| `backupChangelog` | `false` | Backup existing changelog before writing (uses `tree.rename()`) |
 
 ## Usage
 

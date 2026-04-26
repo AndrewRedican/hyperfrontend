@@ -34,16 +34,6 @@ flowchart LR
     CH -.uses.-> FH
 ```
 
-## API
-
-| Export                              | Description                                                 | Implementation                           |
-| ----------------------------------- | ----------------------------------------------------------- | ---------------------------------------- |
-| `CommitDraft`                       | Partial shape of `ConventionalCommit` used while authoring  | [models/draft.ts](./models/draft.ts)     |
-| `toDraft(commit)`                   | Promotes a parsed `ConventionalCommit` to an editable draft | [models/draft.ts](./models/draft.ts)     |
-| `formatHeader(draft)`               | Builds the `type(scope)!: subject` header                   | [format-header.ts](./format-header.ts)   |
-| `countHeaderLength(draft, subject)` | Counts the header length using an explicit subject override | [count-header.ts](./count-header.ts)     |
-| `formatCommitMessage(draft)`        | Renders the full message (header + body + footers)          | [format-message.ts](./format-message.ts) |
-
 ## Behavior
 
 - **Missing fields render empty.** Drafts accumulate field-by-field, so the
