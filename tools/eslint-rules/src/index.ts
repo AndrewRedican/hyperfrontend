@@ -4,6 +4,7 @@ import deepestImportPath, { RULE_NAME as DEEPEST_IMPORT_PATH } from './rules/dee
 import docsSiteLibraries, { RULE_NAME as DOCS_SITE_LIBRARIES } from './rules/docs-site-libraries'
 import docsSiteLibraryDocs, { RULE_NAME as DOCS_SITE_LIBRARY_DOCS } from './rules/docs-site-library-docs'
 import docsSiteRoutes, { RULE_NAME as DOCS_SITE_ROUTES } from './rules/docs-site-routes'
+import docsSiteSecondaryEntries, { RULE_NAME as DOCS_SITE_SECONDARY_ENTRIES } from './rules/docs-site-secondary-entries'
 import exportOrder, { RULE_NAME as EXPORT_ORDER } from './rules/export-order'
 import importOrder, { RULE_NAME as IMPORT_ORDER } from './rules/import-order'
 import libCiWorkflows, { RULE_NAME as LIB_CI_WORKFLOWS } from './rules/lib-ci-workflows'
@@ -63,6 +64,7 @@ export const rules: ESLint.Plugin['rules'] = {
   [DOCS_SITE_LIBRARIES]: docsSiteLibraries as unknown as Rule.RuleModule,
   [DOCS_SITE_LIBRARY_DOCS]: docsSiteLibraryDocs as unknown as Rule.RuleModule,
   [DOCS_SITE_ROUTES]: docsSiteRoutes as unknown as Rule.RuleModule,
+  [DOCS_SITE_SECONDARY_ENTRIES]: docsSiteSecondaryEntries as unknown as Rule.RuleModule,
   [EXPORT_ORDER]: exportOrder as unknown as Rule.RuleModule,
   [LIB_COMPATIBILITY_DOCS]: libCompatibilityDocs as unknown as Rule.RuleModule,
   [LIB_ENTRY_EXPORT_SPACING]: libEntryExportSpacing as unknown as Rule.RuleModule,
