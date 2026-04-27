@@ -6,19 +6,24 @@ import { mergeSchemas } from './merge-schemas'
 import { getJsonType } from './type-detection'
 
 /**
+ * Configuration controlling how arrays are inspected when generating a schema.
+ */
+export interface ArrayGenerateOptions {
+  /**
+   * Array handling mode:
+   * - 'all': Merge all item schemas (default)
+   * - 'first': Use only the first item's schema
+   * - 'uniform': Assume all items have the same schema
+   */
+  mode?: 'all' | 'first' | 'uniform'
+}
+
+/**
  * Options for schema generation.
  */
 export interface GenerateOptions {
   /** Array handling mode */
-  arrays?: {
-    /**
-     * Array handling mode:
-     * - 'all': Merge all item schemas (default)
-     * - 'first': Use only the first item's schema
-     * - 'uniform': Assume all items have the same schema
-     */
-    mode?: 'all' | 'first' | 'uniform'
-  }
+  arrays?: ArrayGenerateOptions
   /** Whether to include required fields (default: true) */
   includeRequired?: boolean
   /** Whether to allow additional properties (default: true) */

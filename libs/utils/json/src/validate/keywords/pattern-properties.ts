@@ -5,6 +5,17 @@ import { createRegExp } from '@hyperfrontend/immutable-api-utils/built-in-copy/r
 import { addError, pushPath, shouldContinue } from '../context'
 
 /**
+ * Compiled `patternProperties` entry: a regex paired with the schema to apply
+ * to keys it matches.
+ */
+type CompiledPatternProperty = {
+  /** Compiled regex pattern */
+  regex: RegExp
+  /** Schema to validate against */
+  schema: Schema
+}
+
+/**
  * Validates object 'patternProperties' keyword.
  *
  * @param instance - Object being validated
@@ -29,7 +40,7 @@ export function validatePatternProperties(instance: Record<string, unknown>, sch
   }
 
   let valid = true
-  const patterns: Array<{ /** Compiled regex pattern */ regex: RegExp; /** Schema to validate against */ schema: Schema }> = []
+  const patterns: Array<CompiledPatternProperty> = []
 
   for (const [pattern, patternSchema] of entries(schema.patternProperties)) {
     /* istanbul ignore if -- patternSafetyChecker branch tested in validate.spec.ts */
