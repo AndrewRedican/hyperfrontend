@@ -5,7 +5,14 @@ import { getType } from './get-type'
 import { isIterableType } from './is-iterable-type'
 import { ReferenceStack } from './models'
 import { referenceStack } from './reference-stack'
-import { SelectiveCopyOptions, SelectiveCopyPredicate, DataPointOperation, DataPoint, ReferenceLoop } from './selective-copy.model'
+import {
+  SelectiveCopyOptions,
+  SelectiveCopyPredicate,
+  DataPointOperation,
+  DataPoint,
+  ReferenceLoop,
+  SelectiveCopyResult,
+} from './selective-copy.model'
 import { getConfig } from './shared/consts'
 
 /**
@@ -170,10 +177,7 @@ export const selectiveCopyForCircularReferencesRecursive = <T extends Record<str
  * // clone = { a: 1 }, skipped = [{ path: ['b'], ... }]
  * ```
  */
-export const selectiveCopy = <T = unknown>(
-  target: T,
-  options?: SelectiveCopyOptions
-): { /** Cloned value */ clone: Partial<T>; /** Skipped data points */ skipped: DataPoint[] } => {
+export const selectiveCopy = <T = unknown>(target: T, options?: SelectiveCopyOptions): SelectiveCopyResult<T> => {
   if (options !== void 0 && getType(options) !== 'object') throw createError('Invalid options argument.')
   if (!options) options = {}
   if (!options.skipFunctions) options.skipFunctions = false
