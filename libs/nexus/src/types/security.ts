@@ -58,6 +58,18 @@ export interface SecurityConfirmation {
 }
 
 /**
+ * Error payload delivered to a security transport's `onError` handler.
+ */
+export interface SecurityTransportError {
+  /** Human-readable error message */
+  message: string
+  /** Machine-readable error code */
+  code: string
+  /** Optional underlying cause */
+  cause?: Error
+}
+
+/**
  * Configuration for creating a security transport adapter.
  */
 export interface SecurityTransportConfig {
@@ -80,14 +92,7 @@ export interface SecurityTransportConfig {
   readonly origin?: string
 
   /** Optional error handler for security failures */
-  readonly onError?: (error: {
-    /** Human-readable error message */
-    message: string
-    /** Machine-readable error code */
-    code: string
-    /** Optional underlying cause */
-    cause?: Error
-  }) => void
+  readonly onError?: (error: SecurityTransportError) => void
 }
 
 /**
@@ -152,6 +157,16 @@ export interface SecurityTransport {
 export type ProtocolLoader = (version: 'v1' | 'v2', platform: 'browser' | 'node') => Promise<unknown>
 
 /**
+ * Bag of pre-registered security protocol providers indexed by protocol version.
+ */
+export interface SecurityProtocolProviders {
+  /** Protocol v1 provider */
+  v1?: unknown
+  /** Protocol v2 provider */
+  v2?: unknown
+}
+
+/**
  * Broker-level security configuration.
  *
  * Configures security defaults and protocol availability for all
@@ -159,12 +174,7 @@ export type ProtocolLoader = (version: 'v1' | 'v2', platform: 'browser' | 'node'
  */
 export interface BrokerSecurityConfig {
   /** Pre-registered protocol providers keyed by version */
-  readonly protocols?: Readonly<{
-    /** Protocol v1 provider */
-    v1?: unknown
-    /** Protocol v2 provider */
-    v2?: unknown
-  }>
+  readonly protocols?: Readonly<SecurityProtocolProviders>
 
   /** Protocol loader for lazy loading */
   readonly protocolLoader?: ProtocolLoader
