@@ -3,6 +3,18 @@ import { parse, stringify } from '@hyperfrontend/immutable-api-utils/built-in-co
 import { freeze } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
 
 /**
+ * Brand attached to {@link JSONString} to enforce nominal typing.
+ *
+ * @template T - The logical type the JSON string represents when parsed
+ */
+type JSONStringBrand<T> = {
+  /** Brand symbol ensuring type safety for JSON strings */
+  readonly __jsonBrand: unique symbol
+  /** Phantom type parameter for the serialized type */
+  readonly __type: T
+}
+
+/**
  * Branded type representing a JSON-serialized string of type T.
  * This is a nominal type that carries information about what type
  * the string represents when parsed, while remaining a string at runtime.
@@ -15,12 +27,7 @@ import { freeze } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
  * const parsed: { name: string } = JSON.parse(jsonStr)
  * ```
  */
-export type JSONString<T = unknown> = string & {
-  /** Brand symbol ensuring type safety for JSON strings */
-  readonly __jsonBrand: unique symbol
-  /** Phantom type parameter for the serialized type */
-  readonly __type: T
-}
+export type JSONString<T = unknown> = string & JSONStringBrand<T>
 
 /**
  * Serialized wire format for Data.
