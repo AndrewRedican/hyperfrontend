@@ -69,7 +69,7 @@ export async function SubmoduleDocPage({ librarySlug, packageName, submodulePath
         <p className="text-sm italic text-slate-500 dark:text-slate-400 mb-6">This submodule does not yet have a written description.</p>
       )}
 
-      {apiData && <ScopedApiReference data={apiData} subpath={submodulePath} />}
+      {apiData && <ScopedApiReference data={apiData} packageName={packageName} subpath={submodulePath} />}
     </>
   )
 }

@@ -7,6 +7,8 @@ import { ReflectionKind } from './types'
 interface ScopedApiReferenceProps {
   /** Parsed TypeDoc output for the library */
   data: TypeDocOutput
+  /** Full npm package name (e.g., '@hyperfrontend/versioning'). */
+  packageName: string
   /** Subpath identifying the secondary entrypoint (e.g., 'commits/parse'). */
   subpath: string
 }
@@ -28,14 +30,22 @@ interface ScopedExports {
 
 /**
  * Locates the TypeDoc Module node for a given subpath and groups its exports.
+ *
+ * TypeDoc names secondary-entrypoint modules using the full package-qualified path
+ * (e.g., `@hyperfrontend/versioning/commits/parse`). We match either that fully-qualified
+ * form or the bare subpath, so the function works against both naming conventions.
  * @param data - The TypeDoc output for the library.
+ * @param packageName - The library's npm package name.
  * @param subpath - The secondary entrypoint subpath to resolve.
  * @returns The grouped exports, or null when the module is not present.
  */
-function getScopedExports(data: TypeDocOutput, subpath: string): ScopedExports | null {
+function getScopedExports(data: TypeDocOutput, packageName: string, subpath: string): ScopedExports | null {
   if (!data.children) return null
 
-  const moduleNode = data.children.find((child) => child.kind === ReflectionKind.Module && child.name === subpath)
+  const qualified = `${packageName}/${subpath}`
+  const moduleNode = data.children.find(
+    (child) => child.kind === ReflectionKind.Module && (child.name === qualified || child.name === subpath)
+  )
   if (!moduleNode || !moduleNode.children) return null
 
   const lookup = buildNodeLookup(data)
@@ -123,13 +133,14 @@ function Section({ heading, iconClass, icon, anchor, children }: SectionProps) {
  * or the entrypoint was just added).
  * @param props - Component props.
  * @param props.data - The TypeDoc output for the parent library.
+ * @param props.packageName - The library's npm package name (used to qualify module names).
  * @param props.subpath - The secondary entrypoint subpath to render.
  * @returns The scoped API reference, or null when the module isn't found.
  * @example
- * <ScopedApiReference data={apiData} subpath="commits/parse" />
+ * <ScopedApiReference data={apiData} packageName="@hyperfrontend/versioning" subpath="commits/parse" />
  */
-export function ScopedApiReference({ data, subpath }: ScopedApiReferenceProps) {
-  const exports = getScopedExports(data, subpath)
+export function ScopedApiReference({ data, packageName, subpath }: ScopedApiReferenceProps) {
+  const exports = getScopedExports(data, packageName, subpath)
 
   if (!exports) {
     return (

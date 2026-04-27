@@ -27,11 +27,20 @@ const UTILS_SLUG_MAP: Record<string, string> = {
 /**
  * Convert a URL slug to the corresponding generated content slug.
  *
- * @param slug - The URL slug (e.g., 'data' or 'nexus')
+ * Accepts both the short form used by library landing pages (e.g., `string`) and
+ * the full URL slug carried in `LibraryInfo` (e.g., `utils/string`). Either yields
+ * the canonical generated-content directory name (`string-utils`).
+ *
+ * @param slug - The URL slug (e.g., 'data', 'utils/data', or 'nexus')
  * @returns The generated content slug (e.g., 'data-utils' or 'nexus')
  */
 function resolveGeneratedSlug(slug: string): string {
-  return UTILS_SLUG_MAP[slug] || slug
+  if (UTILS_SLUG_MAP[slug]) return UTILS_SLUG_MAP[slug]
+  if (slug.startsWith('utils/')) {
+    const short = slug.slice('utils/'.length)
+    if (UTILS_SLUG_MAP[short]) return UTILS_SLUG_MAP[short]
+  }
+  return slug
 }
 
 /**
