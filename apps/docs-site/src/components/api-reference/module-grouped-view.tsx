@@ -392,7 +392,9 @@ function formatModuleName(name: string): string {
     .join(' / ')
 }
 
-function ChevronIcon({ expanded }: { expanded: boolean }) {
+type ChevronIconProps = { expanded: boolean }
+
+function ChevronIcon({ expanded }: ChevronIconProps) {
   return (
     <svg
       xmlns="http://www.w3.org/2000/svg"

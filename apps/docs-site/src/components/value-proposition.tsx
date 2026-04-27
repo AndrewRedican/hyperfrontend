@@ -11,7 +11,13 @@ import { abs, min } from '@hyperfrontend/immutable-api-utils/built-in-copy/math'
 import { cancelAnimationFrame, requestAnimationFrame, setTimeout } from '@hyperfrontend/immutable-api-utils/built-in-copy/timers'
 import { createTimer } from '@hyperfrontend/time-utils'
 
-type TextSegment = string | { bold: string } | { italic: string }
+/** Bold-emphasized inline segment within a narrative line */
+type BoldSegment = { bold: string }
+
+/** Italic-emphasized inline segment within a narrative line */
+type ItalicSegment = { italic: string }
+
+type TextSegment = string | BoldSegment | ItalicSegment
 
 interface Narrative {
   segments: TextSegment[]
@@ -499,7 +505,10 @@ function InstallCommand() {
   )
 }
 
-function CheckIcon({ className }: { className?: string }) {
+/** Common props for value-proposition icons */
+type IconProps = { className?: string }
+
+function CheckIcon({ className }: IconProps) {
   return (
     <svg className={className} viewBox="0 0 20 20" fill="currentColor">
       <path
@@ -511,7 +520,7 @@ function CheckIcon({ className }: { className?: string }) {
   )
 }
 
-function CopyIcon({ className }: { className?: string }) {
+function CopyIcon({ className }: IconProps) {
   return (
     <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
       <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
@@ -520,7 +529,7 @@ function CopyIcon({ className }: { className?: string }) {
   )
 }
 
-function GitHubIcon({ className }: { className?: string }) {
+function GitHubIcon({ className }: IconProps) {
   return (
     <svg className={className} fill="currentColor" viewBox="0 0 24 24">
       <path
@@ -532,7 +541,7 @@ function GitHubIcon({ className }: { className?: string }) {
   )
 }
 
-function StarIcon({ className }: { className?: string }) {
+function StarIcon({ className }: IconProps) {
   return (
     <svg className={className} viewBox="0 0 20 20" fill="currentColor">
       <path
@@ -544,7 +553,7 @@ function StarIcon({ className }: { className?: string }) {
   )
 }
 
-function HeartIcon({ className }: { className?: string }) {
+function HeartIcon({ className }: IconProps) {
   return (
     <svg className={className} viewBox="0 0 20 20" fill="currentColor">
       <path d="M9.653 16.915l-.005-.003-.019-.01a20.759 20.759 0 01-1.162-.682 22.045 22.045 0 01-2.582-1.9C4.045 12.733 2 10.352 2 7.5a4.5 4.5 0 018-2.828A4.5 4.5 0 0118 7.5c0 2.852-2.044 5.233-3.885 6.82a22.049 22.049 0 01-3.744 2.582l-.019.01-.005.003h-.002a.739.739 0 01-.69.001l-.002-.001z" />
@@ -552,7 +561,7 @@ function HeartIcon({ className }: { className?: string }) {
   )
 }
 
-function ChevronLeftIcon({ className }: { className?: string }) {
+function ChevronLeftIcon({ className }: IconProps) {
   return (
     <svg className={className} fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
       <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
@@ -560,7 +569,7 @@ function ChevronLeftIcon({ className }: { className?: string }) {
   )
 }
 
-function ChevronRightIcon({ className }: { className?: string }) {
+function ChevronRightIcon({ className }: IconProps) {
   return (
     <svg className={className} fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
       <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />

@@ -313,6 +313,11 @@ export function LibrariesPageContent() {
   )
 }
 
+/** Props for {@link ApiCard}: a library card extended with its position in the grid */
+interface ApiCardProps extends LibraryCardData {
+  index: number
+}
+
 /**
  * API Card component with flash animation
  * @param root0
@@ -322,7 +327,7 @@ export function LibrariesPageContent() {
  * @param root0.keywords
  * @param root0.index
  */
-function ApiCard({ title, description, href, keywords, index }: LibraryCardData & { index: number }) {
+function ApiCard({ title, description, href, keywords, index }: ApiCardProps) {
   const cardRef = useRef<HTMLAnchorElement>(null)
   const [flashColor, setFlashColor] = useState<string | null>(null)
   const [flashDirection, setFlashDirection] = useState<'left' | 'right'>('left')
@@ -398,7 +403,9 @@ function ApiCard({ title, description, href, keywords, index }: LibraryCardData 
   )
 }
 
-function SearchIcon({ className }: { className?: string }) {
+type IconProps = { className?: string }
+
+function SearchIcon({ className }: IconProps) {
   return (
     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className={className}>
       <path
@@ -410,7 +417,7 @@ function SearchIcon({ className }: { className?: string }) {
   )
 }
 
-function CloseIcon({ className }: { className?: string }) {
+function CloseIcon({ className }: IconProps) {
   return (
     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className={className}>
       <path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" />
@@ -418,7 +425,7 @@ function CloseIcon({ className }: { className?: string }) {
   )
 }
 
-function ArrowRightIcon({ className }: { className?: string }) {
+function ArrowRightIcon({ className }: IconProps) {
   return (
     <svg className={className} fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
       <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />

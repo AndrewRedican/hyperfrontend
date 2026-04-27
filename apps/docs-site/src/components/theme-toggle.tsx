@@ -37,7 +37,9 @@ export function ThemeToggle() {
   )
 }
 
-function SunIcon({ className }: { className?: string }) {
+type IconProps = { className?: string }
+
+function SunIcon({ className }: IconProps) {
   return (
     <svg className={className} fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
       <path
@@ -49,7 +51,7 @@ function SunIcon({ className }: { className?: string }) {
   )
 }
 
-function MoonIcon({ className }: { className?: string }) {
+function MoonIcon({ className }: IconProps) {
   return (
     <svg className={className} fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
       <path
@@ -61,7 +63,7 @@ function MoonIcon({ className }: { className?: string }) {
   )
 }
 
-function SystemIcon({ className }: { className?: string }) {
+function SystemIcon({ className }: IconProps) {
   return (
     <svg className={className} fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
       <path

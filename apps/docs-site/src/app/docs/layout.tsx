@@ -2,7 +2,9 @@ import { Footer } from '@/components/footer'
 import { Header } from '@/components/header'
 import { Sidebar } from '@/components/sidebar'
 
-export default function DocsLayout({ children }: { children: React.ReactNode }) {
+type DocsLayoutProps = { children: React.ReactNode }
+
+export default function DocsLayout({ children }: DocsLayoutProps) {
   return (
     <>
       <Header />

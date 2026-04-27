@@ -111,13 +111,16 @@ export default function NotFound() {
   )
 }
 
+/** Props for {@link GlitchNumber} */
+type GlitchNumberProps = { digit: string; delay: number }
+
 /**
  * A glitchy animated number for the 404 display.
  * @param root0
  * @param root0.digit
  * @param root0.delay
  */
-function GlitchNumber({ digit, delay }: { digit: string; delay: number }) {
+function GlitchNumber({ digit, delay }: GlitchNumberProps) {
   return (
     <span
       className="relative inline-block font-display text-7xl font-black text-primary-600 dark:text-primary-400 sm:text-8xl md:text-9xl animate-pulse"
@@ -171,6 +174,9 @@ function FloatingZero() {
   )
 }
 
+/** Props for {@link Particle} */
+type ParticleProps = { className: string; size: 'sm' | 'md' | 'lg'; delay: number }
+
 /**
  * Floating decorative particle.
  * @param root0
@@ -178,7 +184,7 @@ function FloatingZero() {
  * @param root0.size
  * @param root0.delay
  */
-function Particle({ className, size, delay }: { className: string; size: 'sm' | 'md' | 'lg'; delay: number }) {
+function Particle({ className, size, delay }: ParticleProps) {
   const sizeClasses = {
     sm: 'h-1.5 w-1.5',
     md: 'h-2 w-2',
@@ -197,12 +203,15 @@ function Particle({ className, size, delay }: { className: string; size: 'sm' | 
   )
 }
 
+/** Props for {@link SuggestionCard} */
+type SuggestionCardProps = { suggestion: LinkSuggestion }
+
 /**
  * A card displaying a link suggestion.
  * @param root0
  * @param root0.suggestion
  */
-function SuggestionCard({ suggestion }: { suggestion: LinkSuggestion }) {
+function SuggestionCard({ suggestion }: SuggestionCardProps) {
   return (
     <Link
       href={suggestion.href}
@@ -219,7 +228,10 @@ function SuggestionCard({ suggestion }: { suggestion: LinkSuggestion }) {
   )
 }
 
-function HomeIcon({ className }: { className?: string }) {
+/** Common props for not-found icons */
+type IconProps = { className?: string }
+
+function HomeIcon({ className }: IconProps) {
   return (
     <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
       <path
@@ -232,7 +244,7 @@ function HomeIcon({ className }: { className?: string }) {
   )
 }
 
-function BugIcon({ className }: { className?: string }) {
+function BugIcon({ className }: IconProps) {
   return (
     <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
@@ -240,7 +252,7 @@ function BugIcon({ className }: { className?: string }) {
   )
 }
 
-function ArrowRightIcon({ className }: { className?: string }) {
+function ArrowRightIcon({ className }: IconProps) {
   return (
     <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />

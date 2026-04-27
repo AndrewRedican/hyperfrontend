@@ -13,6 +13,17 @@ import { TypeDefinition } from './type-definition'
 import { buildNodeLookup, resolveReference } from './type-utils'
 import { ReflectionKind } from './types'
 
+/** Marker added to a flattened export pointing at the module it came from */
+interface SourceModuleAttribution {
+  sourceModule?: string
+}
+
+/**
+ * A TypeDoc node decorated with the module that originally exported it.
+ * Used while flattening per-module exports into a single deduplicated list.
+ */
+type ExportWithSourceModule = TypeDocNode & SourceModuleAttribution
+
 type ViewMode = 'flat' | 'grouped'
 
 interface ApiReferenceProps {
@@ -43,7 +54,7 @@ export function ApiReference({ data }: ApiReferenceProps) {
 
     if (hasModules) {
       const lookup = buildNodeLookup(data)
-      const exports: Array<TypeDocNode & { sourceModule?: string }> = []
+      const exports: Array<ExportWithSourceModule> = []
       const seenIds = createSet<number>()
 
       for (const module of data.children) {
@@ -307,7 +318,12 @@ export function ApiReference({ data }: ApiReferenceProps) {
   )
 }
 
-function VariableItem({ node }: { node: TypeDocNode }) {
+/**
+ * Props for the inline {@link VariableItem} renderer used in the API reference list.
+ */
+type VariableItemProps = { node: TypeDocNode }
+
+function VariableItem({ node }: VariableItemProps) {
   return (
     <div className="py-4" id={`api-${node.name}`}>
       <div className="flex items-start gap-2">

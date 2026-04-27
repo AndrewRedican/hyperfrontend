@@ -134,7 +134,9 @@ export default function DocsPage() {
   )
 }
 
-function CheckIcon({ className }: { className?: string }) {
+type CheckIconProps = { className?: string }
+
+function CheckIcon({ className }: CheckIconProps) {
   return (
     <svg className={className} viewBox="0 0 20 20" fill="currentColor">
       <path

@@ -83,7 +83,9 @@ export function CopyButton({ text, className = '', size = 'sm' }: CopyButtonProp
   )
 }
 
-function CopyIcon({ className = '' }: { className?: string }) {
+type CopyIconProps = { className?: string }
+
+function CopyIcon({ className = '' }: CopyIconProps) {
   return (
     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className={className}>
       <path
@@ -95,7 +97,9 @@ function CopyIcon({ className = '' }: { className?: string }) {
   )
 }
 
-function CheckIcon({ className = '' }: { className?: string }) {
+type CheckIconProps = { className?: string }
+
+function CheckIcon({ className = '' }: CheckIconProps) {
   return (
     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className={className}>
       <path strokeLinecap="round" strokeLinejoin="round" d="m4.5 12.75 6 6 9-13.5" />

@@ -8,9 +8,18 @@ import { useHashNavigation } from '../hooks/use-hash-navigation'
 import { generateSlug } from '../lib/markdown'
 import { MermaidDiagram } from './mermaid-diagram'
 
+/**
+ * Inline mermaid diagram payload referenced from rendered README markdown:
+ * a stable id used to swap a placeholder, paired with the raw chart text.
+ */
+interface MermaidDiagramEntry {
+  id: string
+  chart: string
+}
+
 interface ReadmeContentProps {
   html: string
-  mermaidDiagrams: { id: string; chart: string }[]
+  mermaidDiagrams: MermaidDiagramEntry[]
 }
 
 /**
@@ -197,6 +206,24 @@ function injectHeadingAnchors(container: HTMLElement): () => void {
   }
 }
 
+/** Raw HTML chunk in the README split sequence */
+interface ReadmeHtmlPart {
+  type: 'html'
+  content: string
+}
+
+/** Mermaid placeholder reference in the README split sequence */
+interface ReadmeMermaidPart {
+  type: 'mermaid'
+  id: string
+}
+
+/**
+ * Discriminated chunk emitted while splitting README HTML around mermaid
+ * placeholders so each chunk can be rendered inline in document order.
+ */
+type ReadmePart = ReadmeHtmlPart | ReadmeMermaidPart
+
 export function ReadmeContent({ html, mermaidDiagrams }: ReadmeContentProps) {
   const containerRef = useRef<HTMLDivElement>(null)
 
@@ -207,7 +234,7 @@ export function ReadmeContent({ html, mermaidDiagrams }: ReadmeContentProps) {
   const parts = useMemo(() => {
     // note: Regex captures the ID from: <div data-mermaid-id="mermaid-block-0"></div>
     const placeholderPattern = /<div data-mermaid-id="([^"]+)"><\/div>/g
-    const result: Array<{ type: 'html'; content: string } | { type: 'mermaid'; id: string }> = []
+    const result: ReadmePart[] = []
 
     let lastIndex = 0
     let match: RegExpExecArray | null
