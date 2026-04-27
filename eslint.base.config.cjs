@@ -210,6 +210,13 @@ module.exports = [
     },
   },
   {
+    files: ['**/*.ts', '**/*.tsx'],
+    ignores: ['**/jest.config.ts', '**/jest.setup.ts', '**/jest.setup.browser.ts', '**/*.spec.ts', '**/*.spec.tsx'],
+    rules: {
+      'workspace/no-inline-type-literal': 'error',
+    },
+  },
+  {
     files: ['**/*.spec.ts'],
     rules: {
       'workspace/assertive-test-names': 'error',
