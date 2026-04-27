@@ -8,6 +8,22 @@ import { isPublishableLibrary } from '../utils/nx-project'
  */
 export const RULE_NAME = 'lib-pkg-no-main'
 
+/**
+ * Minimal token shape exposing the optional `value` string ESLint attaches to tokens.
+ */
+type TokenWithValue = {
+  /** Token string value */
+  value?: string
+}
+
+/**
+ * Minimal node shape exposing the `[start, end]` source range used by ESLint fixers.
+ */
+type NodeWithRange = {
+  /** Source range as [start, end] positions */
+  range: [number, number]
+}
+
 const rule: Rule.RuleModule = {
   meta: {
     type: 'problem',
@@ -82,12 +98,7 @@ const rule: Rule.RuleModule = {
               const text = sourceCode.getText()
               const range = <[number, number]>mainNodeCast.range
 
-              if (tokenAfter && (<
-                  {
-                    /** Token string value */
-                    value?: string
-                  }
-                >tokenAfter).value === ',') {
+              if (tokenAfter && (<TokenWithValue>tokenAfter).value === ',') {
                 let startPos = range[0]
                 while (startPos > 0 && text[startPos - 1] !== '\n') {
                   startPos--
@@ -98,12 +109,7 @@ const rule: Rule.RuleModule = {
                 return fixer.removeRange([startPos, tokenAfter.range[1]])
               }
 
-              if (tokenBefore && (<
-                  {
-                    /** Token string value */
-                    value?: string
-                  }
-                >tokenBefore).value === ',') {
+              if (tokenBefore && (<TokenWithValue>tokenBefore).value === ',') {
                 return fixer.removeRange([tokenBefore.range[0], range[1]])
               }
 
@@ -116,12 +122,7 @@ const rule: Rule.RuleModule = {
             messageId: 'noMainField',
             fix(fixer) {
               if (mainValue) {
-                const mainNodeTyped = <
-                  {
-                    /** Source range as [start, end] positions */
-                    range: [number, number]
-                  }
-                >(<unknown>mainNode)
+                const mainNodeTyped = <NodeWithRange>(<unknown>mainNode)
                 const replacement = `"exports": {\n    ".": "${mainValue}"\n  }`
                 return fixer.replaceTextRange(mainNodeTyped.range, replacement)
               }

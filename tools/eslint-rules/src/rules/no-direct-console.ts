@@ -62,6 +62,17 @@ const LOGGING_LIBRARY = '@hyperfrontend/logging'
 type MessageIds = 'noGlobalConsole' | 'noNxDevkitLogger' | 'noImmutableConsole' | 'noDisallowedLoggerUsage'
 
 /**
+ * Pending Nx devkit import discovered during traversal — paired with the local
+ * binding name that aliases it in the source file.
+ */
+type PendingNxDevkitImport = {
+  /** The import specifier node */
+  specifier: TSESTree.ImportSpecifier
+  /** The local binding name */
+  bindingName: string
+}
+
+/**
  * Checks if an import source is the approved logging library or its subpaths.
  *
  * @param source - The import source string.
@@ -114,12 +125,7 @@ export default createRule<[], MessageIds>({
     const nxDevkitLoggerBindings = createSet<string>()
     const immutableConsoleBindings = createSet<string>()
     const loggingLibraryBindings = createSet<string>()
-    const pendingNxDevkitImports: {
-      /** The import specifier node */
-      specifier: TSESTree.ImportSpecifier
-      /** The local binding name */
-      bindingName: string
-    }[] = []
+    const pendingNxDevkitImports: PendingNxDevkitImport[] = []
     const nxDevkitBindingsWithDisallowedUsage = createSet<string>()
     let importsCreateLogger = false
 

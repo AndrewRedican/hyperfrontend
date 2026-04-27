@@ -27,6 +27,23 @@ export interface PublishableLibrary {
 }
 
 /**
+ * Slice of `package.json` we read when extracting the published package name.
+ */
+type PackageJsonName = {
+  /** Package name field */
+  name?: string
+}
+
+/**
+ * Minimal AST helper exposing the optional `parent` reference attached to nodes
+ * by ESLint at traversal time.
+ */
+type NodeWithParent = {
+  /** Parent AST node */
+  parent?: Node
+}
+
+/**
  * Gets the package name from a library's package.json.
  *
  * @param projectDir - The absolute path to the project directory.
@@ -34,10 +51,7 @@ export interface PublishableLibrary {
  */
 function getPackageName(projectDir: string): string | null {
   const packageJsonPath = join(projectDir, 'package.json')
-  const packageJson = readJsonFileIfExists<{
-    /** Package name field */
-    name?: string
-  }>(packageJsonPath)
+  const packageJson = readJsonFileIfExists<PackageJsonName>(packageJsonPath)
   return packageJson?.name ?? null
 }
 
@@ -189,12 +203,7 @@ const rule: Rule.RuleModule = {
           return
         }
 
-        const parent = (<
-          {
-            /** Parent AST node */
-            parent?: Node
-          }
-        >node).parent
+        const parent = (<NodeWithParent>node).parent
         const isExported = parent?.type === 'ExportNamedDeclaration'
 
         if (isContentTs && !isExported) {

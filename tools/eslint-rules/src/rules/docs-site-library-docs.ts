@@ -51,6 +51,15 @@ export interface LibraryEntry {
 }
 
 /**
+ * Minimal AST helper exposing the optional `parent` reference attached to nodes
+ * by ESLint at traversal time.
+ */
+type NodeWithParent = {
+  /** Parent AST node, if present. */
+  parent?: Node
+}
+
+/**
  * Extracts the string value from a property value node.
  *
  * @param node - The AST node representing the property value.
@@ -335,12 +344,7 @@ const rule: Rule.RuleModule = {
           return
         }
 
-        const parent = (
-          node as {
-            /** Parent AST node, if present. */
-            parent?: Node
-          }
-        ).parent
+        const parent = (node as NodeWithParent).parent
         const isExported = parent?.type === 'ExportNamedDeclaration'
 
         if (!isExported) {

@@ -19,16 +19,41 @@ const createRule = ESLintUtils.RuleCreator(
 type MessageIds = 'useDeeperImport'
 
 /**
+ * Slice of `compilerOptions` we read for path-alias lookups.
+ */
+interface TsConfigCompilerOptions {
+  /** Base URL for module resolution */
+  baseUrl?: string
+  /** Path alias mappings */
+  paths?: Record<string, string[]>
+}
+
+/**
  * Represents a parsed tsconfig.json structure.
  */
 interface TsConfig {
   /** Compiler options from tsconfig.json */
-  compilerOptions?: {
-    /** Base URL for module resolution */
-    baseUrl?: string
-    /** Path alias mappings */
-    paths?: Record<string, string[]>
-  }
+  compilerOptions?: TsConfigCompilerOptions
+}
+
+/**
+ * Public-facing subpath entry for a package alias: the alias and the file path
+ * it ultimately points at.
+ */
+type PackageSubpath = {
+  /** The path alias (e.g., '@hyperfrontend/project-scope/cli') */
+  alias: string
+  /** The resolved source file path */
+  sourcePath: string
+}
+
+/**
+ * Internal subpath entry — adds segment depth so we can sort deepest-first
+ * before returning the public {@link PackageSubpath} shape.
+ */
+interface RankedPackageSubpath extends PackageSubpath {
+  /** Depth of the path (number of segments) */
+  depth: number
 }
 
 /**
@@ -212,23 +237,8 @@ function parseExports(filePath: string, visited: Set<string> = createSet()): Set
  * @param tsconfigPaths - Map of all available path aliases.
  * @returns Array of subpath entries sorted by depth (deepest first).
  */
-function getPackageSubpaths(
-  packageName: string,
-  tsconfigPaths: Map<string, string>
-): Array<{
-  /** The path alias (e.g., '@hyperfrontend/project-scope/cli') */
-  alias: string
-  /** The resolved source file path */
-  sourcePath: string
-}> {
-  const subpaths: Array<{
-    /** The path alias */
-    alias: string
-    /** The resolved source file path */
-    sourcePath: string
-    /** Depth of the path (number of segments) */
-    depth: number
-  }> = []
+function getPackageSubpaths(packageName: string, tsconfigPaths: Map<string, string>): Array<PackageSubpath> {
+  const subpaths: Array<RankedPackageSubpath> = []
 
   for (const [alias, sourcePath] of tsconfigPaths) {
     if (alias === packageName || alias.startsWith(`${packageName}/`)) {

@@ -18,6 +18,16 @@ type MessageIds = 'noTodoComment'
 const TODO_PATTERNS = ['todo', 'to-do', 'to do']
 
 /**
+ * Location of a single task-reminder marker matched in a piece of text.
+ */
+type TodoMatch = {
+  /** Starting index of the match */
+  index: number
+  /** Length of the matched pattern */
+  length: number
+}
+
+/**
  * Checks if a character is a word character (letter, digit, or underscore).
  *
  * @param ch - The character to check.
@@ -38,19 +48,9 @@ function isWordChar(ch: string | undefined): boolean {
  * @param text - The text to search.
  * @returns Array of index and length for each match.
  */
-function findTodoOccurrences(text: string): Array<{
-  /** Starting index of the match */
-  index: number
-  /** Length of the matched pattern */
-  length: number
-}> {
+function findTodoOccurrences(text: string): Array<TodoMatch> {
   const lower = text.toLowerCase()
-  const results: Array<{
-    /** Starting index of the match */
-    index: number
-    /** Length of the matched pattern */
-    length: number
-  }> = []
+  const results: Array<TodoMatch> = []
 
   for (const pattern of TODO_PATTERNS) {
     let searchStart = 0

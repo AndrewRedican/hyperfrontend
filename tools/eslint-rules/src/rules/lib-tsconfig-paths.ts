@@ -28,12 +28,17 @@ interface EntryPointMapping {
 }
 
 /**
- * Extended JSONNode with optional parent reference.
+ * Adds the optional `parent` reference attached by the JSONC parser to a {@link JSONNode}.
  */
-type JSONNodeWithParent = JSONNode & {
+type ParentRef = {
   /** Reference to parent node in AST */
   parent?: JSONNode
 }
+
+/**
+ * Extended JSONNode with optional parent reference.
+ */
+type JSONNodeWithParent = JSONNode & ParentRef
 
 /**
  * Information about an orphan path that should be removed.
