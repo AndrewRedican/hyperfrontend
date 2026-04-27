@@ -16,16 +16,20 @@ Create README.md files—library root for consumers, sub-module for maintainers.
 | ----------------- | ------------------------------------ |
 | Library README    | `libs/<name>/README.md`              |
 | Sub-module README | `libs/<name>/src/<module>/README.md` |
-| ESLint rule       | `lib-readme-structure`               |
+| Library ESLint    | `lib-readme-structure`               |
+| Submodule ESLint  | `docs-site-secondary-entries`        |
+| Submodule README  | `lib-pkg-secondary-entry-readme`     |
 
 ---
 
 ## Document Types
 
-| Type              | Location                          | Audience    | Focus                            |
-| ----------------- | --------------------------------- | ----------- | -------------------------------- |
-| Library README    | `libs/<name>/README.md`           | Consumers   | Value prop, install, quick start |
-| Sub-module README | `libs/<name>/src/<mod>/README.md` | Maintainers | API tables, implementation links |
+| Type              | Location                          | Audience  | Focus                                  |
+| ----------------- | --------------------------------- | --------- | -------------------------------------- |
+| Library README    | `libs/<name>/README.md`           | Consumers | Value prop, install, quick start       |
+| Sub-module README | `libs/<name>/src/<mod>/README.md` | Consumers | Intent, design, examples — NO API list |
+
+The sub-module page renders this README plus an auto-generated scoped API reference. Manual API tables would duplicate the rendered ref.
 
 ---
 
@@ -67,41 +71,30 @@ Create README.md files—library root for consumers, sub-module for maintainers.
 
 ## Sub-Module README Structure
 
-````markdown
-# ModuleName
+**Required (the floor):**
 
-Brief one-sentence purpose.
+```markdown
+# moduleName
 
-## Overview
-
-[Optional Mermaid diagram for complex modules]
-
-## API
-
-| Export        | Description   | Implementation         |
-| ------------- | ------------- | ---------------------- |
-| `createFoo()` | Creates a Foo | [foo.ts](./foo.ts)     |
-| `parseFoo()`  | Parses Foo    | [parse.ts](./parse.ts) |
-
-## Key Interfaces
-
-```typescript
-interface FooConfig {
-  option: string
-}
+One-sentence statement of what this module does and why it exists.
 ```
-````
 
-````
+**Optional sections** — add when the module's complexity warrants them:
 
-**Navigation arrows:**
+| Section            | When to add                                     |
+| ------------------ | ----------------------------------------------- |
+| `## Overview`      | Multi-step pipelines, mermaid diagrams          |
+| `## Usage`         | Composition examples beyond a single signature  |
+| `## Configuration` | User-facing config knobs that need explanation  |
+| Semantic tables    | Taxonomies, decision rules, behavior contracts  |
+| Mermaid diagram    | Data flow, state machines, dependency relations |
+| `## Design`        | Trade-offs, invariants, "why this and not that" |
 
-| Arrow | Meaning            | Example                             |
-| ----- | ------------------ | ----------------------------------- |
-| `↑`   | Parent directory   | `[↑ lib/](../README.md)`           |
-| `←`   | Previous sibling   | `[← sender](../sender/README.md)`  |
-| `→`   | Next sibling       | `[→ receiver](../receiver/README.md)` |
-| `↔`   | Bidirectional      | `[↔ protocol](../protocol/README.md)` |
+**Do NOT include:**
+
+- `## API` table listing exports (the page renders this automatically below your README).
+- "Key Interfaces" code blocks duplicating typedoc-extractable types.
+- Installation, npm install commands (consumer-facing — belongs in library README).
 
 ---
 
@@ -109,9 +102,14 @@ interface FooConfig {
 
 ```bash
 npx nx lint <project>
-````
+```
 
-ESLint rule `lib-readme-structure` enforces library README structure.
+| Rule                             | Enforces                                                                          |
+| -------------------------------- | --------------------------------------------------------------------------------- |
+| `lib-readme-structure`           | Library-root README sections, badges, links                                       |
+| `docs-site-secondary-entries`    | Every secondary entrypoint has a `page.tsx` + sidebar nav                         |
+| `lib-pkg-secondary-entry-readme` | Every secondary entrypoint has a README with H1 (matching basename) + description |
+| `docs-site-library-docs`         | Every library README has a corresponding docs-site page                           |
 
 ---
 
@@ -127,8 +125,8 @@ ESLint rule `lib-readme-structure` enforces library README structure.
 
 **Sub-module README:**
 
-- [ ] One-line purpose statement
-- [ ] Navigation links with arrows
-- [ ] API table linking to implementation files
-- [ ] Key interfaces documented
-- [ ] No installation/external examples
+- [ ] H1 matches the module folder name
+- [ ] One-sentence purpose under the H1
+- [ ] No manual API table — page renders the scoped API ref automatically
+- [ ] No installation / npm commands
+- [ ] Optional sections only when complexity warrants them

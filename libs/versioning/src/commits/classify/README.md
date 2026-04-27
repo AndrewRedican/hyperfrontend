@@ -54,63 +54,6 @@ flowchart TB
 | `unscoped-global`     | No scope, no project files touched     | ❌       | N/A           |
 | `excluded`            | Does not relate to project             | ❌       | N/A           |
 
-## API
-
-### Models
-
-| Export                  | Description                                 | Implementation           |
-| ----------------------- | ------------------------------------------- | ------------------------ |
-| `CommitSource`          | Classification source type                  | [models.ts](./models.ts) |
-| `ClassifiedCommit`      | Commit with classification metadata         | [models.ts](./models.ts) |
-| `ClassificationContext` | Context for classification (scopes, hashes) | [models.ts](./models.ts) |
-| `ClassificationResult`  | Result with included/excluded commits       | [models.ts](./models.ts) |
-| `ClassificationSummary` | Statistics about classification             | [models.ts](./models.ts) |
-
-### Classification Functions
-
-| Function                        | Description                              | Implementation                   |
-| ------------------------------- | ---------------------------------------- | -------------------------------- |
-| `classifyCommit(commit, ctx)`   | Classify a single commit                 | [classifier.ts](./classifier.ts) |
-| `classifyCommits(commits, ctx)` | Classify multiple commits                | [classifier.ts](./classifier.ts) |
-| `createClassificationContext()` | Create classification context            | [classifier.ts](./classifier.ts) |
-| `toChangelogCommit(classified)` | Convert to changelog format              | [classifier.ts](./classifier.ts) |
-| `filterIncluded(result)`        | Filter to only included commits          | [classifier.ts](./classifier.ts) |
-| `extractConventionalCommits()`  | Extract conventional commits from result | [classifier.ts](./classifier.ts) |
-
-### Project Scopes
-
-| Function                | Description                            | Implementation                           |
-| ----------------------- | -------------------------------------- | ---------------------------------------- |
-| `deriveProjectScopes()` | Generate scope variations for matching | [project-scopes.ts](./project-scopes.ts) |
-| `scopeMatchesProject()` | Check if scope matches project         | [project-scopes.ts](./project-scopes.ts) |
-| `scopeIsExcluded()`     | Check if scope is excluded             | [project-scopes.ts](./project-scopes.ts) |
-
-| Constant                   | Description                                     | Implementation                           |
-| -------------------------- | ----------------------------------------------- | ---------------------------------------- |
-| `DEFAULT_EXCLUDE_SCOPES`   | Default scopes to exclude (`release`, `deps`)   | [project-scopes.ts](./project-scopes.ts) |
-| `DEFAULT_PROJECT_PREFIXES` | Default project prefixes (`lib-`, `app-`, etc.) | [project-scopes.ts](./project-scopes.ts) |
-
-### Infrastructure Matchers
-
-| Function                       | Description                           | Implementation                           |
-| ------------------------------ | ------------------------------------- | ---------------------------------------- |
-| `scopeMatcher(scopes)`         | Match exact scopes                    | [infrastructure.ts](./infrastructure.ts) |
-| `scopePrefixMatcher(prefixes)` | Match scope prefixes (e.g., `tool-*`) | [infrastructure.ts](./infrastructure.ts) |
-| `scopeRegexMatcher(pattern)`   | Regex-based scope matching            | [infrastructure.ts](./infrastructure.ts) |
-| `messageMatcher(patterns)`     | Match commit message content          | [infrastructure.ts](./infrastructure.ts) |
-| `anyOf(...matchers)`           | OR composition                        | [infrastructure.ts](./infrastructure.ts) |
-| `allOf(...matchers)`           | AND composition                       | [infrastructure.ts](./infrastructure.ts) |
-| `not(matcher)`                 | Negation                              | [infrastructure.ts](./infrastructure.ts) |
-| `buildInfrastructureMatcher()` | Build matcher from config             | [infrastructure.ts](./infrastructure.ts) |
-| `evaluateInfrastructure()`     | Evaluate if commit is infrastructure  | [infrastructure.ts](./infrastructure.ts) |
-
-| Constant                      | Description                              | Implementation                           |
-| ----------------------------- | ---------------------------------------- | ---------------------------------------- |
-| `CI_SCOPE_MATCHER`            | Matches ci, cd, build, pipeline, etc.    | [infrastructure.ts](./infrastructure.ts) |
-| `TOOLING_SCOPE_MATCHER`       | Matches tooling, workspace, monorepo, nx | [infrastructure.ts](./infrastructure.ts) |
-| `TOOL_PREFIX_MATCHER`         | Matches tool-\* prefixed scopes          | [infrastructure.ts](./infrastructure.ts) |
-| `DEFAULT_INFRA_SCOPE_MATCHER` | Combined CI + tooling + tool-prefix      | [infrastructure.ts](./infrastructure.ts) |
-
 ## Usage Examples
 
 ### Basic Classification

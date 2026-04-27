@@ -1,0 +1,14 @@
+{
+  "permissions": {
+    "allow": [
+      "Skill(*)",
+      "Edit(.claude/skills/readme-docs/**)",
+      "Bash(git mv *)",
+      "Bash(npx nx test *)",
+      "Bash(npx nx lint *)",
+      "Bash(npx nx typecheck *)",
+      "Bash(npx nx format *)",
+      "Bash(npx eslint *)"
+    ]
+  }
+}

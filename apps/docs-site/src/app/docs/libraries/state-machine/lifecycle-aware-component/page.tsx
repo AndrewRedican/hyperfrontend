@@ -1,0 +1,7 @@
+import { SubmoduleDocPage } from '@/components/submodule-doc-page'
+
+export default function LifecycleAwareComponentPage() {
+  return (
+    <SubmoduleDocPage librarySlug="state-machine" packageName="@hyperfrontend/state-machine" submodulePath="lifecycle-aware-component" />
+  )
+}

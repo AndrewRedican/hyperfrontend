@@ -37,53 +37,6 @@ flowchart TB
     RES --> CONFIG
 ```
 
-## API
-
-### Models
-
-| Export                      | Description                                     | Implementation                                        |
-| --------------------------- | ----------------------------------------------- | ----------------------------------------------------- |
-| `RepositoryPlatform`        | Platform type: github, gitlab, bitbucket, etc.  | [platform.ts](./models/platform.ts)                   |
-| `KnownPlatform`             | Platforms with built-in compare URL formatters  | [platform.ts](./models/platform.ts)                   |
-| `RepositoryConfig`          | Repository configuration with platform and URL  | [repository-config.ts](./models/repository-config.ts) |
-| `CompareUrlFormatter`       | Custom function to format compare URLs          | [repository-config.ts](./models/repository-config.ts) |
-| `RepositoryResolution`      | Resolution config: disabled, inferred, explicit | [resolution.ts](./models/resolution.ts)               |
-| `RepositoryResolutionMode`  | `'disabled' \| 'inferred' \| 'explicit'`        | [resolution.ts](./models/resolution.ts)               |
-| `RepositoryInferenceSource` | `'package-json' \| 'git-remote'`                | [resolution.ts](./models/resolution.ts)               |
-
-### Model Factories
-
-| Function                     | Description                            | Implementation                                        |
-| ---------------------------- | -------------------------------------- | ----------------------------------------------------- |
-| `createRepositoryConfig()`   | Create a RepositoryConfig              | [repository-config.ts](./models/repository-config.ts) |
-| `createDisabledResolution()` | Create disabled resolution (no URLs)   | [resolution.ts](./models/resolution.ts)               |
-| `createExplicitResolution()` | Create explicit resolution with config | [resolution.ts](./models/resolution.ts)               |
-| `createInferredResolution()` | Create inferred resolution             | [resolution.ts](./models/resolution.ts)               |
-
-### Model Utilities
-
-| Function                       | Description                              | Implementation                                        |
-| ------------------------------ | ---------------------------------------- | ----------------------------------------------------- |
-| `isKnownPlatform(platform)`    | Check if platform has built-in formatter | [platform.ts](./models/platform.ts)                   |
-| `detectPlatformFromHostname()` | Detect platform from hostname            | [platform.ts](./models/platform.ts)                   |
-| `isRepositoryConfig(value)`    | Type guard for RepositoryConfig          | [repository-config.ts](./models/repository-config.ts) |
-| `isRepositoryResolution()`     | Type guard for RepositoryResolution      | [resolution.ts](./models/resolution.ts)               |
-
-### Parse Functions
-
-| Function                           | Description                              | Implementation                             |
-| ---------------------------------- | ---------------------------------------- | ------------------------------------------ |
-| `parseRepositoryUrl(url)`          | Parse git URL to platform and base URL   | [url.ts](./parse/url.ts)                   |
-| `createRepositoryConfigFromUrl()`  | Create config directly from URL          | [url.ts](./parse/url.ts)                   |
-| `inferRepositoryFromPackageJson()` | Infer config from package.json path      | [package-json.ts](./parse/package-json.ts) |
-| `extractRepositoryUrl(pkg)`        | Extract URL from package.json repository | [package-json.ts](./parse/package-json.ts) |
-
-### URL Functions
-
-| Function             | Description                          | Implementation                 |
-| -------------------- | ------------------------------------ | ------------------------------ |
-| `createCompareUrl()` | Generate compare URL for two commits | [compare.ts](./url/compare.ts) |
-
 ## Supported Platforms
 
 | Platform     | Compare URL Format                                       |

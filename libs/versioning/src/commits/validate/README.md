@@ -46,47 +46,6 @@ flowchart LR
     EN --> IM --> VR
 ```
 
-## API
-
-### Core
-
-| Export                          | Description                                | Implementation                               |
-| ------------------------------- | ------------------------------------------ | -------------------------------------------- |
-| `validateCommit(commit, rs)`    | Runs a ruleset against a parsed commit     | [engine.ts](./engine.ts)                     |
-| `validateCommitWithRules()`     | Same, with a caller-supplied rule registry | [engine.ts](./engine.ts)                     |
-| `validateCommitMessage(raw,rs)` | Parses a raw message then runs the engine  | [validate-message.ts](./validate-message.ts) |
-| `BUILT_IN_RULES`                | Registry of built-in rules by name         | [engine.ts](./engine.ts)                     |
-
-### Models
-
-| Export             | Description                                          | Implementation                           |
-| ------------------ | ---------------------------------------------------- | ---------------------------------------- |
-| `Rule<TOptions>`   | Rule definition — inspects a commit, returns strings | [models/rule.ts](./models/rule.ts)       |
-| `RuleContext`      | Level + resolved options passed to each rule         | [models/rule.ts](./models/rule.ts)       |
-| `RuleLevel`        | `'off' \| 'warn' \| 'error'`                         | [models/rule.ts](./models/rule.ts)       |
-| `RuleMessage`      | Severity-tagged violation                            | [models/rule.ts](./models/rule.ts)       |
-| `RuleResult`       | Aggregate of `RuleMessage[]`                         | [models/rule.ts](./models/rule.ts)       |
-| `Ruleset`          | Map of rule name → `[level, options?]`               | [models/ruleset.ts](./models/ruleset.ts) |
-| `ValidationResult` | Aggregated outcome with warnings and errors          | [models/ruleset.ts](./models/ruleset.ts) |
-
-### Built-in Rules
-
-| Rule                | Default | Options shape                           | Implementation                                             |
-| ------------------- | ------- | --------------------------------------- | ---------------------------------------------------------- |
-| `type-enum`         | error   | `{ types: readonly string[] }`          | [rules/type-enum.ts](./rules/type-enum.ts)                 |
-| `scope-enum`        | off     | `{ scopes: readonly string[] }`         | [rules/scope-enum.ts](./rules/scope-enum.ts)               |
-| `subject-empty`     | error   | —                                       | [rules/subject-empty.ts](./rules/subject-empty.ts)         |
-| `subject-case`      | off     | `{ cases: readonly SubjectCase[] }`     | [rules/subject-case.ts](./rules/subject-case.ts)           |
-| `header-max-length` | warn    | `{ maxLength: number \| null }`         | [rules/header-max-length.ts](./rules/header-max-length.ts) |
-| `imperative-mood`   | warn    | `{ wordlist?: Record<string, string> }` | [rules/imperative-mood.ts](./rules/imperative-mood.ts)     |
-
-### Presets
-
-| Export               | Description                                                    | Implementation                                       |
-| -------------------- | -------------------------------------------------------------- | ---------------------------------------------------- |
-| `conventionalPreset` | Commitlint-equivalent baseline ruleset                         | [presets/conventional.ts](./presets/conventional.ts) |
-| `CONVENTIONAL_TYPES` | Default list of Conventional Commit types (`feat`, `fix`, ...) | [presets/conventional.ts](./presets/conventional.ts) |
-
 ## Usage
 
 ### Validate a parsed commit

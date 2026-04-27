@@ -4,6 +4,7 @@ import deepestImportPath, { RULE_NAME as DEEPEST_IMPORT_PATH } from './rules/dee
 import docsSiteLibraries, { RULE_NAME as DOCS_SITE_LIBRARIES } from './rules/docs-site-libraries'
 import docsSiteLibraryDocs, { RULE_NAME as DOCS_SITE_LIBRARY_DOCS } from './rules/docs-site-library-docs'
 import docsSiteRoutes, { RULE_NAME as DOCS_SITE_ROUTES } from './rules/docs-site-routes'
+import docsSiteSecondaryEntries, { RULE_NAME as DOCS_SITE_SECONDARY_ENTRIES } from './rules/docs-site-secondary-entries'
 import exportOrder, { RULE_NAME as EXPORT_ORDER } from './rules/export-order'
 import importOrder, { RULE_NAME as IMPORT_ORDER } from './rules/import-order'
 import libCiWorkflows, { RULE_NAME as LIB_CI_WORKFLOWS } from './rules/lib-ci-workflows'
@@ -17,6 +18,7 @@ import libPkgFields, { RULE_NAME as LIB_PKG_FIELDS } from './rules/lib-pkg-field
 import libPkgMainReexports, { RULE_NAME as LIB_PKG_MAIN_REEXPORTS } from './rules/lib-pkg-main-reexports'
 import libPkgNoMain, { RULE_NAME as LIB_PKG_NO_MAIN } from './rules/lib-pkg-no-main'
 import libPkgPackageJsonExport, { RULE_NAME as LIB_PKG_PACKAGE_JSON_EXPORT } from './rules/lib-pkg-package-json-export'
+import libPkgSecondaryEntryReadme, { RULE_NAME as LIB_PKG_SECONDARY_ENTRY_README } from './rules/lib-pkg-secondary-entry-readme'
 import libProjectBundleConfig, { RULE_NAME as LIB_PROJECT_BUNDLE_CONFIG } from './rules/lib-project-bundle-config'
 import libProjectMetadata, { RULE_NAME as LIB_PROJECT_METADATA } from './rules/lib-project-metadata'
 import libProjectVersionTargets, { RULE_NAME as LIB_PROJECT_VERSION_TARGETS } from './rules/lib-project-version-targets'
@@ -63,6 +65,7 @@ export const rules: ESLint.Plugin['rules'] = {
   [DOCS_SITE_LIBRARIES]: docsSiteLibraries as unknown as Rule.RuleModule,
   [DOCS_SITE_LIBRARY_DOCS]: docsSiteLibraryDocs as unknown as Rule.RuleModule,
   [DOCS_SITE_ROUTES]: docsSiteRoutes as unknown as Rule.RuleModule,
+  [DOCS_SITE_SECONDARY_ENTRIES]: docsSiteSecondaryEntries as unknown as Rule.RuleModule,
   [EXPORT_ORDER]: exportOrder as unknown as Rule.RuleModule,
   [LIB_COMPATIBILITY_DOCS]: libCompatibilityDocs as unknown as Rule.RuleModule,
   [LIB_ENTRY_EXPORT_SPACING]: libEntryExportSpacing as unknown as Rule.RuleModule,
@@ -76,6 +79,7 @@ export const rules: ESLint.Plugin['rules'] = {
   [LIB_PKG_MAIN_REEXPORTS]: libPkgMainReexports as unknown as Rule.RuleModule,
   [LIB_PKG_NO_MAIN]: libPkgNoMain as unknown as Rule.RuleModule,
   [LIB_PKG_PACKAGE_JSON_EXPORT]: libPkgPackageJsonExport as unknown as Rule.RuleModule,
+  [LIB_PKG_SECONDARY_ENTRY_README]: libPkgSecondaryEntryReadme as unknown as Rule.RuleModule,
   [LIB_PROJECT_BUNDLE_CONFIG]: libProjectBundleConfig as unknown as Rule.RuleModule,
   [LIB_PROJECT_METADATA]: libProjectMetadata as unknown as Rule.RuleModule,
   [LIB_PROJECT_VERSION_TARGETS]: libProjectVersionTargets as unknown as Rule.RuleModule,
