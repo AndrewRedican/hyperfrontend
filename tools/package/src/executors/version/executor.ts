@@ -1,4 +1,4 @@
-import type { ExecutorContext } from '@nx/devkit'
+import type { ExecutorContext, PromiseExecutor } from '@nx/devkit'
 import { getLogger } from './lib/logger'
 import { runVersionForProject } from './lib/run-version-for-project'
 import { VersionExecutorSchema } from './schema'
@@ -19,13 +19,7 @@ import { VersionExecutorSchema } from './schema'
  * @param context - Nx executor context
  * @returns Success status
  */
-export default async function versionExecutor(
-  options: VersionExecutorSchema,
-  context: ExecutorContext
-): Promise<{
-  /** Whether the version operation completed successfully. */
-  success: boolean
-}> {
+export default async function versionExecutor(options: VersionExecutorSchema, context: ExecutorContext): ReturnType<PromiseExecutor> {
   const { projectName, root: workspaceRoot, projectGraph } = context
   const logger = getLogger()
   logger.setLogLevel(options)

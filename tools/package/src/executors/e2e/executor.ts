@@ -1,4 +1,4 @@
-import type { ExecutorContext } from '@nx/devkit'
+import type { ExecutorContext, PromiseExecutor } from '@nx/devkit'
 import type { E2eExecutorOptions } from './schema'
 import { execFileSync } from 'node:child_process'
 import { existsSync, readFileSync, unlinkSync, mkdirSync, renameSync } from 'node:fs'
@@ -8,17 +8,22 @@ import { parse } from '@hyperfrontend/immutable-api-utils/built-in-copy/json'
 import { logger } from '../../lib/logger'
 
 /**
+ * Slice of `package.json` we need when locating a built artifact's tarball.
+ */
+type PackageInfo = {
+  /** The package name from package.json */
+  name: string
+  /** The package version from package.json */
+  version: string
+}
+
+/**
  * Reads package info from dist package.json.
  *
  * @param distPath - The path to the dist directory containing package.json
  * @returns An object containing the package name and version
  */
-function getPackageInfo(distPath: string): {
-  /** The package name from package.json */
-  name: string
-  /** The package version from package.json */
-  version: string
-} {
+function getPackageInfo(distPath: string): PackageInfo {
   const pkgPath = join(distPath, 'package.json')
   if (!existsSync(pkgPath)) {
     throw createError(`Package.json not found at ${pkgPath}. Has the library been built?`)
@@ -124,13 +129,7 @@ function runJestTests(testDir: string, format: string, workspaceRoot: string): b
  * @param context - The Nx executor context
  * @returns A promise resolving to an object indicating success or failure
  */
-export default async function e2eExecutor(
-  options: E2eExecutorOptions,
-  context: ExecutorContext
-): Promise<{
-  /** Whether the E2E tests passed */
-  success: boolean
-}> {
+export default async function e2eExecutor(options: E2eExecutorOptions, context: ExecutorContext): ReturnType<PromiseExecutor> {
   const { projectName, root: workspaceRoot, projectGraph } = context
 
   if (!projectName) {

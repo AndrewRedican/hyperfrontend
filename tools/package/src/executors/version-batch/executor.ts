@@ -40,10 +40,7 @@ export interface VersionBatchResult {
 export default async function versionBatchExecutor(
   options: VersionBatchExecutorSchema,
   context: ExecutorContext
-): Promise<{
-  /** Whether the batch versioning operation succeeded */
-  success: boolean
-}> {
+): Promise<Pick<VersionBatchResult, 'success'>> {
   const workspaceRoot = context.root
   const { base = 'origin/main', head = 'HEAD', dryRun = false, verbose = false } = options
 

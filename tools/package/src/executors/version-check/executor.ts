@@ -1,4 +1,4 @@
-import type { ExecutorContext } from '@nx/devkit'
+import type { ExecutorContext, PromiseExecutor } from '@nx/devkit'
 import type { VersionCheckExecutorSchema } from './schema'
 import { isInUnstableGitState } from '../version/lib/is-in-unstable-git-state'
 import { isVersionCommit } from '../version/lib/is-version-commit'
@@ -28,10 +28,7 @@ import { validateVersionState, formatValidationResult } from '../version/lib/val
 export default async function versionCheckExecutor(
   options: VersionCheckExecutorSchema,
   context: ExecutorContext
-): Promise<{
-  /** Whether the version check completed successfully. */
-  success: boolean
-}> {
+): ReturnType<PromiseExecutor> {
   const { projectName, root: workspaceRoot, projectGraph } = context
   const logger = getLogger()
   logger.setLogLevel(options)

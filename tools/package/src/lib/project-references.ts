@@ -4,6 +4,22 @@ import { isArray } from '@hyperfrontend/immutable-api-utils/built-in-copy/array'
 import { values } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
 
 /**
+ * Slice of an Nx target config we mutate while updating project references.
+ */
+type TargetWithDependsOn = {
+  /** Target dependencies */
+  dependsOn?: unknown[]
+}
+
+/**
+ * Object form of an entry in `dependsOn` (the alternative to a plain target name).
+ */
+type DependsOnObject = {
+  /** Projects this target depends on */
+  projects?: string | string[]
+}
+
+/**
  * Options for updating project references.
  */
 export interface UpdateReferencesOptions {
@@ -62,24 +78,14 @@ export function updateProjectReferences(tree: Tree, options: UpdateReferencesOpt
 
       if (json.targets) {
         for (const target of values(json.targets)) {
-          const targetConfig = <
-            {
-              /** Target dependencies */
-              dependsOn?: unknown[]
-            }
-          >target
+          const targetConfig = <TargetWithDependsOn>target
           if (isArray(targetConfig.dependsOn)) {
             targetConfig.dependsOn = targetConfig.dependsOn.map((dep) => {
               if (typeof dep === 'string' && dep === options.currentProjectName) {
                 return options.newProjectName
               }
               if (typeof dep === 'object' && dep !== null) {
-                const depObj = <
-                  {
-                    /** Projects this target depends on */
-                    projects?: string | string[]
-                  }
-                >dep
+                const depObj = <DependsOnObject>dep
                 if (depObj.projects === options.currentProjectName) {
                   depObj.projects = options.newProjectName
                 } else if (isArray(depObj.projects)) {
