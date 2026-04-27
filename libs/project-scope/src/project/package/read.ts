@@ -10,6 +10,15 @@ import { createScopedLogger } from '../../core/logger'
 const packageLogger = createScopedLogger('project-scope:project:package')
 
 /**
+ * Object form of the `workspaces` field in package.json
+ * (the alternative to an array of glob patterns).
+ */
+export interface WorkspacesObject {
+  /** Array of workspace glob patterns */
+  packages: string[]
+}
+
+/**
  * Package.json structure.
  */
 export interface PackageJson {
@@ -40,12 +49,7 @@ export interface PackageJson {
   /** Optional dependencies */
   optionalDependencies?: Record<string, string>
   /** Workspaces configuration */
-  workspaces?:
-    | string[]
-    | {
-        /** Array of workspace glob patterns */
-        packages: string[]
-      }
+  workspaces?: string[] | WorkspacesObject
   /** Exports map */
   exports?: Record<string, unknown>
   /** Engines */
@@ -73,13 +77,7 @@ function isStringRecord(value: unknown): value is Record<string, string> {
  * @param value - Raw workspaces value from package.json
  * @returns Normalized workspace patterns or undefined if invalid
  */
-function parseWorkspaces(value: unknown):
-  | string[]
-  | {
-      /** Array of workspace glob patterns */
-      packages: string[]
-    }
-  | undefined {
+function parseWorkspaces(value: unknown): string[] | WorkspacesObject | undefined {
   if (isArray(value) && value.every((v) => typeof v === 'string')) {
     return <string[]>value
   }

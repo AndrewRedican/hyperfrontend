@@ -9,6 +9,26 @@ import { getNxWorkspaceInfo, isNxProject, NX_PROJECT_FILE } from './detect'
 const nxConfigLogger = createScopedLogger('project-scope:nx:config')
 
 /**
+ * Object form of an entry in `targets[*].dependsOn`: a target name plus the
+ * project(s) it should be looked up in.
+ */
+export interface NxTargetDependency {
+  /** Target name to depend on */
+  target: string
+  /** Project(s) containing the target */
+  projects: string | string[]
+}
+
+/**
+ * Top-level shape of `workspace.json` consumed by {@link discoverNxProjects}.
+ * Only the `projects` map is required; values may be paths or inline configs.
+ */
+interface NxWorkspaceJson {
+  /** Map of project name to configuration path or inline config */
+  projects?: Record<string, unknown>
+}
+
+/**
  * NX target configuration.
  */
 export interface NxTargetConfig {
@@ -23,15 +43,7 @@ export interface NxTargetConfig {
   /** Default configuration */
   defaultConfiguration?: string
   /** Depends on other targets */
-  dependsOn?: Array<
-    | string
-    | {
-        /** Target name to depend on */
-        target: string
-        /** Project(s) containing the target */
-        projects: string | string[]
-      }
-  >
+  dependsOn?: Array<string | NxTargetDependency>
   /** Target inputs for caching */
   inputs?: unknown[]
 }
@@ -235,10 +247,7 @@ function scanForProjects(
 export function discoverNxProjects(workspacePath: string): Map<string, NxProjectConfig> {
   const projects = createMap<string, NxProjectConfig>()
 
-  const workspaceJson = readJsonFileIfExists<{
-    /** Map of project name to configuration path or inline config */
-    projects?: Record<string, unknown>
-  }>(join(workspacePath, 'workspace.json'))
+  const workspaceJson = readJsonFileIfExists<NxWorkspaceJson>(join(workspacePath, 'workspace.json'))
 
   if (workspaceJson?.projects) {
     for (const [name, config] of entries(workspaceJson.projects)) {

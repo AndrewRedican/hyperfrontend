@@ -7,6 +7,21 @@ import { createScopedLogger } from '../core/logger'
 const diffLogger = createScopedLogger('project-scope:vfs:diff')
 
 /**
+ * Single LCS-backtrack operation produced while diffing two arrays of lines.
+ * Used as the intermediate representation before being filtered into a {@link DiffLine}.
+ */
+type LcsOperation = {
+  /** Operation type: same, add, or remove */
+  type: 'same' | 'add' | 'remove'
+  /** Index in the old lines array */
+  oldIdx: number
+  /** Index in the new lines array */
+  newIdx: number
+  /** Line content */
+  content: string
+}
+
+/**
  * Options for diff generation.
  */
 export interface DiffOptions {
@@ -54,30 +69,8 @@ function computeLcsTable(oldLines: string[], newLines: string[]): number[][] {
  * @param newLines - Lines from the new file version
  * @returns Array of diff operations (unfiltered, includes all lines)
  */
-function backtrackLcs(
-  table: number[][],
-  oldLines: string[],
-  newLines: string[]
-): {
-  /** Operation type: same, add, or remove */
-  type: 'same' | 'add' | 'remove'
-  /** Index in the old lines array */
-  oldIdx: number
-  /** Index in the new lines array */
-  newIdx: number
-  /** Line content */
-  content: string
-}[] {
-  const result: {
-    /** Operation type: same, add, or remove */
-    type: 'same' | 'add' | 'remove'
-    /** Index in the old lines array */
-    oldIdx: number
-    /** Index in the new lines array */
-    newIdx: number
-    /** Line content */
-    content: string
-  }[] = []
+function backtrackLcs(table: number[][], oldLines: string[], newLines: string[]): LcsOperation[] {
+  const result: LcsOperation[] = []
   let i = oldLines.length
   let j = newLines.length
 
@@ -105,19 +98,7 @@ function backtrackLcs(
  * @param contextLines - Number of context lines to include
  * @returns Filtered DiffLine array
  */
-function operationsToDiffLines(
-  operations: {
-    /** Operation type: same, add, or remove */
-    type: 'same' | 'add' | 'remove'
-    /** Index in the old lines array */
-    oldIdx: number
-    /** Index in the new lines array */
-    newIdx: number
-    /** Line content */
-    content: string
-  }[],
-  contextLines: number
-): DiffLine[] {
+function operationsToDiffLines(operations: LcsOperation[], contextLines: number): DiffLine[] {
   const include = new Array<boolean>(operations.length).fill(false)
 
   for (let i = 0; i < operations.length; i++) {

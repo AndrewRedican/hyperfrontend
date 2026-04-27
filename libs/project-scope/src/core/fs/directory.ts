@@ -157,6 +157,14 @@ export function readDirectoryRecursive(dirPath: string, options?: RecursiveOptio
 }
 
 /**
+ * Options for {@link createDirectory}.
+ */
+export interface CreateDirectoryOptions {
+  /** Create parent directories if missing (default: true) */
+  recursive?: boolean
+}
+
+/**
  * Create a directory, optionally creating parent directories.
  *
  * @param dirPath - Path where the directory should be created
@@ -172,16 +180,20 @@ export function readDirectoryRecursive(dirPath: string, options?: RecursiveOptio
  * createDirectory('./logs', { recursive: false })
  * ```
  */
-export function createDirectory(
-  dirPath: string,
-  options?: {
-    /** Create parent directories if missing (default: true) */
-    recursive?: boolean
-  }
-): void {
+export function createDirectory(dirPath: string, options?: CreateDirectoryOptions): void {
   const recursive = options?.recursive ?? true
   fsDirLogger.debug('Creating directory', { path: dirPath, recursive })
   mkdirSync(dirPath, { recursive })
+}
+
+/**
+ * Options for {@link removeDirectory}.
+ */
+export interface RemoveDirectoryOptions {
+  /** Delete directory contents recursively */
+  recursive?: boolean
+  /** Ignore errors if directory doesn't exist */
+  force?: boolean
 }
 
 /**
@@ -201,15 +213,7 @@ export function createDirectory(
  * removeDirectory('./cache', { recursive: true, force: true })
  * ```
  */
-export function removeDirectory(
-  dirPath: string,
-  options?: {
-    /** Delete directory contents recursively */
-    recursive?: boolean
-    /** Ignore errors if directory doesn't exist */
-    force?: boolean
-  }
-): void {
+export function removeDirectory(dirPath: string, options?: RemoveDirectoryOptions): void {
   fsDirLogger.debug('Removing directory', { path: dirPath, recursive: options?.recursive, force: options?.force })
   rmSync(dirPath, {
     recursive: options?.recursive ?? false,

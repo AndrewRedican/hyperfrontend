@@ -282,6 +282,27 @@ export function unregisterCache<K, V>(cache: Cache<K, V>): boolean {
 }
 
 /**
+ * Adds a `cache` accessor to a memoized function, exposing the underlying cache
+ * for direct inspection or invalidation.
+ *
+ * @template K - Cache key type
+ * @template V - Cached value type
+ */
+export type WithCache<K, V> = {
+  /** Underlying cache instance for direct access and control */
+  cache: Cache<K, V>
+}
+
+/**
+ * Function returned by {@link memoize}: behaves like the original function but
+ * exposes a `cache` for direct manipulation.
+ *
+ * @template K - Cache key type
+ * @template V - Cached value type
+ */
+export type MemoizedFunction<K, V> = ((key: K) => V) & WithCache<K, V>
+
+/**
  * Create a memoized version of a function with caching.
  *
  * The memoized function caches results based on the first argument (key).
@@ -306,13 +327,7 @@ export function unregisterCache<K, V>(cache: Cache<K, V>): boolean {
  * detectTechStackMemo.cache.clear()
  * ```
  */
-export function memoize<K, V>(
-  fn: (key: K) => V,
-  options?: CacheOptions
-): ((key: K) => V) & {
-  /** Underlying cache instance for direct access and control */
-  cache: Cache<K, V>
-} {
+export function memoize<K, V>(fn: (key: K) => V, options?: CacheOptions): MemoizedFunction<K, V> {
   const cache = createCache<K, V>(options)
 
   const memoized = (key: K): V => {
@@ -332,10 +347,5 @@ export function memoize<K, V>(
     enumerable: true,
   })
 
-  return <
-    ((key: K) => V) & {
-      /** Underlying cache instance for direct access and control */
-      cache: Cache<K, V>
-    }
-  >memoized
+  return <MemoizedFunction<K, V>>memoized
 }
