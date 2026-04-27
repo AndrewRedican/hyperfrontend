@@ -178,6 +178,20 @@ function getDependencyVariations(depName: string): readonly string[] {
 }
 
 /**
+ * Optional inputs for {@link createClassificationContext}.
+ */
+export type ClassificationContextOptions = {
+  /** Map of dependency names to commit hashes touching them */
+  readonly dependencyCommitMap?: ReadonlyMap<string, ReadonlySet<string>>
+  /** Set of commit hashes touching infrastructure paths */
+  readonly infrastructureCommitHashes?: ReadonlySet<string>
+  /** Scopes to explicitly exclude from classification */
+  readonly excludeScopes?: readonly string[]
+  /** Additional scopes to include as direct matches */
+  readonly includeScopes?: readonly string[]
+}
+
+/**
  * Creates a classification context from common inputs.
  *
  * @param projectScopes - Scopes that match the project
@@ -201,16 +215,7 @@ function getDependencyVariations(depName: string): readonly string[] {
 export function createClassificationContext(
   projectScopes: readonly string[],
   fileCommitHashes: ReadonlySet<string>,
-  options?: {
-    /** Map of dependency names to commit hashes touching them */
-    readonly dependencyCommitMap?: ReadonlyMap<string, ReadonlySet<string>>
-    /** Set of commit hashes touching infrastructure paths */
-    readonly infrastructureCommitHashes?: ReadonlySet<string>
-    /** Scopes to explicitly exclude from classification */
-    readonly excludeScopes?: readonly string[]
-    /** Additional scopes to include as direct matches */
-    readonly includeScopes?: readonly string[]
-  }
+  options?: ClassificationContextOptions
 ): ClassificationContext {
   return {
     projectScopes,

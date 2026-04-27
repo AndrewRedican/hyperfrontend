@@ -193,17 +193,31 @@ export interface ScopeFilteringConfig {
 }
 
 /**
+ * Explicit `undefined` placeholders for the infrastructure-related extensions
+ * of the default config — they exist so the default object can be assigned to
+ * a strictly-required type while still leaving infra unconfigured.
+ */
+type DefaultInfrastructureFields = {
+  /** Infrastructure projects configuration (unused in default) */
+  infrastructure: undefined
+  /** Infrastructure matcher function (unused in default) */
+  infrastructureMatcher: undefined
+}
+
+/**
+ * Shape of the default scope filtering configuration: every required field plus
+ * explicit `undefined` placeholders for the infrastructure-related extensions.
+ */
+export type DefaultScopeFilteringConfig = Required<Omit<ScopeFilteringConfig, 'infrastructure' | 'infrastructureMatcher'>> &
+  DefaultInfrastructureFields
+
+/**
  * Default scope filtering configuration.
  *
  * Uses DEFAULT_EXCLUDE_SCOPES from commits/classify to ensure consistency
  * between flow-level filtering and commit classification.
  */
-export const DEFAULT_SCOPE_FILTERING_CONFIG: Required<Omit<ScopeFilteringConfig, 'infrastructure' | 'infrastructureMatcher'>> & {
-  /** Infrastructure projects configuration (unused in default) */
-  infrastructure: undefined
-  /** Infrastructure matcher function (unused in default) */
-  infrastructureMatcher: undefined
-} = {
+export const DEFAULT_SCOPE_FILTERING_CONFIG: DefaultScopeFilteringConfig = {
   strategy: 'hybrid',
   includeScopes: [],
   excludeScopes: DEFAULT_EXCLUDE_SCOPES,

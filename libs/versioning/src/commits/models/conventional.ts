@@ -65,6 +65,20 @@ export function createCommitFooter(key: string, value: string, separator: ':' | 
 }
 
 /**
+ * Allows callers to bypass the `type`/`subject`/`scope` formatter and pass a
+ * pre-built raw commit string.
+ */
+type RawCommitOverride = {
+  /** Raw commit message string override */
+  raw?: string
+}
+
+/**
+ * Optional inputs accepted by {@link createConventionalCommit} on top of `type` and `subject`.
+ */
+export type CreateConventionalCommitOptions = Partial<Omit<ConventionalCommit, 'type' | 'subject' | 'raw'>> & RawCommitOverride
+
+/**
  * Creates a conventional commit.
  *
  * @param type - The commit type (e.g., 'feat', 'fix')
@@ -84,14 +98,7 @@ export function createCommitFooter(key: string, value: string, separator: ':' | 
  * // => { ..., scope: ['versioning', 'questions'], raw: 'feat(versioning,questions): add x' }
  * ```
  */
-export function createConventionalCommit(
-  type: CommitType,
-  subject: string,
-  options?: Partial<Omit<ConventionalCommit, 'type' | 'subject' | 'raw'>> & {
-    /** Raw commit message string override */
-    raw?: string
-  }
-): ConventionalCommit {
+export function createConventionalCommit(type: CommitType, subject: string, options?: CreateConventionalCommitOptions): ConventionalCommit {
   const raw = options?.raw ?? buildRaw(type, subject, options)
 
   return {

@@ -265,23 +265,26 @@ export function diffEntries(source: ChangelogEntry, target: ChangelogEntry): Ent
 }
 
 /**
- * Diffs two section arrays.
- *
- * @param sourceSections - Array of sections from the source changelog
- * @param targetSections - Array of sections from the target changelog
- * @returns Diff result with added, removed, and modified sections
+ * Result of {@link diffSections}: sections grouped by how they differ between
+ * the source and target changelogs.
  */
-function diffSections(
-  sourceSections: readonly ChangelogSection[],
-  targetSections: readonly ChangelogSection[]
-): {
+type SectionsDiffResult = {
   /** Sections present in target but not in source */
   added: ChangelogSection[]
   /** Sections present in source but not in target */
   removed: ChangelogSection[]
   /** Sections present in both with differences */
   modified: SectionDiff[]
-} {
+}
+
+/**
+ * Diffs two section arrays.
+ *
+ * @param sourceSections - Array of sections from the source changelog
+ * @param targetSections - Array of sections from the target changelog
+ * @returns Diff result with added, removed, and modified sections
+ */
+function diffSections(sourceSections: readonly ChangelogSection[], targetSections: readonly ChangelogSection[]): SectionsDiffResult {
   const sourceByType = createMap<string, ChangelogSection>()
   const targetByType = createMap<string, ChangelogSection>()
 

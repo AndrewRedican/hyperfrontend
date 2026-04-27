@@ -300,16 +300,22 @@ function validateDependencyVersions(workspace: Workspace, project: Project): Val
 }
 
 /**
+ * Result of {@link validatePackageNameFormat}: a single `valid` flag indicating
+ * whether the supplied package name conforms to npm's name rules.
+ */
+type PackageNameFormatValidation = {
+  /** Whether the package name format is valid. */
+  valid: boolean
+}
+
+/**
  * Validates npm package name format without using complex regex.
  * This avoids ReDoS vulnerabilities from backtracking regex patterns.
  *
  * @param name - Package name to validate
  * @returns Validation result
  */
-function validatePackageNameFormat(name: string): {
-  /** Whether the package name format is valid. */
-  valid: boolean
-} {
+function validatePackageNameFormat(name: string): PackageNameFormatValidation {
   const isValidChar = (char: string): boolean => {
     const code = char.charCodeAt(0)
     return (code >= 97 && code <= 122) || (code >= 48 && code <= 57) || code === 45 || code === 95 || code === 46

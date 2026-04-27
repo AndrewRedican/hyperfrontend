@@ -189,19 +189,22 @@ export function createAnalyzeCommitsStep(): FlowStep {
 }
 
 /**
+ * Minimal commit shape consumed by {@link resolveStrategy} when inferring the
+ * filtering strategy from existing commit messages.
+ */
+type CommitMessage = {
+  /** Commit message to analyze */
+  message: string
+}
+
+/**
  * Resolves the filtering strategy, handling 'inferred' by analyzing commits.
  *
  * @param strategy - The configured scope filtering strategy
  * @param commits - The commits to analyze for strategy inference
  * @returns The resolved strategy (never 'inferred')
  */
-function resolveStrategy(
-  strategy: ScopeFilteringStrategy,
-  commits: readonly {
-    /** Commit message to analyze */
-    message: string
-  }[]
-): Exclude<ScopeFilteringStrategy, 'inferred'> {
+function resolveStrategy(strategy: ScopeFilteringStrategy, commits: readonly CommitMessage[]): Exclude<ScopeFilteringStrategy, 'inferred'> {
   if (strategy !== 'inferred') {
     return strategy
   }
@@ -263,6 +266,14 @@ function getRelativePath(workspaceRoot: string, projectRoot: string): string {
 }
 
 /**
+ * Slice of a classification summary needed by {@link buildSummaryMessage}.
+ */
+type ClassificationSummary = {
+  /** Count of commits by source type */
+  bySource: Record<string, number>
+}
+
+/**
  * Builds a summary message for the step result.
  *
  * @param includedCount - Number of commits included in the release
@@ -272,15 +283,7 @@ function getRelativePath(workspaceRoot: string, projectRoot: string): string {
  * @param strategy - The filtering strategy used
  * @returns A human-readable summary message
  */
-function buildSummaryMessage(
-  includedCount: number,
-  totalCount: number,
-  summary: {
-    /** Count of commits by source type */
-    bySource: Record<string, number>
-  },
-  strategy: string
-): string {
+function buildSummaryMessage(includedCount: number, totalCount: number, summary: ClassificationSummary, strategy: string): string {
   if (includedCount === 0) {
     return `No releasable commits found for this project (${totalCount} total, strategy: ${strategy})`
   }
@@ -288,6 +291,15 @@ function buildSummaryMessage(
   const parts = [`Found ${includedCount} releasable commits`, `(${totalCount} total`, `strategy: ${strategy})`]
 
   return parts.join(' ')
+}
+
+/**
+ * Minimal logger interface accepted by analyze-commits helpers.
+ * Only `debug` is required; consumers may pass a richer logger.
+ */
+type DebugLogger = {
+  /** Debug logging function */
+  debug: (msg: string) => void
 }
 
 /**
@@ -314,10 +326,7 @@ function buildInfrastructureCommitHashes(
   rawCommits: readonly GitCommit[],
   parsedCommits: readonly CommitWithRaw[],
   config: ScopeFilteringConfig,
-  logger: {
-    /** Debug logging function */
-    debug: (msg: string) => void
-  },
+  logger: DebugLogger,
   maxFallback: number
 ): ReadonlySet<string> | undefined {
   let infraHashes = createSet<string>()
@@ -404,10 +413,7 @@ function buildDependencyCommitMap(
   workspaceRoot: string,
   projectName: string,
   baseCommit: string | null,
-  logger: {
-    /** Debug logging function */
-    debug: (msg: string) => void
-  },
+  logger: DebugLogger,
   maxFallback: number
 ): ReadonlyMap<string, ReadonlySet<string>> {
   let dependencyMap = createMap<string, ReadonlySet<string>>()

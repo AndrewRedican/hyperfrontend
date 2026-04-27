@@ -231,17 +231,23 @@ export function buildDependencyGraph(projects: readonly Project[]): DependencyGr
 }
 
 /**
+ * Result of {@link detectCircularDependencies}: whether any cycle was found
+ * and the list of cycles for diagnostic output.
+ */
+type CircularDependencyDetection = {
+  /** Whether any circular dependency was detected */
+  hasCircular: boolean
+  /** List of detected dependency cycles */
+  cycles: string[][]
+}
+
+/**
  * Detects circular dependencies in the graph using DFS.
  *
  * @param reverseDependencyGraph - Map of package to its dependencies
  * @returns Detection result with cycle information
  */
-function detectCircularDependencies(reverseDependencyGraph: Map<string, string[]>): {
-  /** Whether any circular dependency was detected */
-  hasCircular: boolean
-  /** List of detected dependency cycles */
-  cycles: string[][]
-} {
+function detectCircularDependencies(reverseDependencyGraph: Map<string, string[]>): CircularDependencyDetection {
   const cycles: string[][] = []
   const visited = createSet<string>()
   const recursionStack = createSet<string>()

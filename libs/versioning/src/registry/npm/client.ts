@@ -10,14 +10,24 @@ import { parse } from '@hyperfrontend/immutable-api-utils/built-in-copy/json'
 import { createCache } from './cache'
 
 /**
+ * Optional authentication token used when accessing private registries.
+ */
+type RegistryAuthToken = {
+  /** Optional authentication token for private registries */
+  authToken?: string
+}
+
+/**
+ * Resolved configuration: every required field plus the optional auth token.
+ */
+type ResolvedRegistryConfig = Required<Omit<RegistryConfig, 'authToken'>> & RegistryAuthToken
+
+/**
  * Internal state for the npm registry client.
  */
 interface NpmRegistryState {
   /** Resolved configuration settings */
-  readonly config: Required<Omit<RegistryConfig, 'authToken'>> & {
-    /** Optional authentication token for private registries */
-    authToken?: string
-  }
+  readonly config: ResolvedRegistryConfig
   /** Cache instance for storing results */
   readonly cache: Cache
 }

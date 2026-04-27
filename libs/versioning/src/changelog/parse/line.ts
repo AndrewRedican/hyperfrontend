@@ -3,6 +3,18 @@ import { max } from '@hyperfrontend/immutable-api-utils/built-in-copy/math'
 import { parseInt } from '@hyperfrontend/immutable-api-utils/built-in-copy/number'
 
 /**
+ * Parsed version-line metadata extracted from a CHANGELOG section heading.
+ */
+export type ParsedVersionHeading = {
+  /** The parsed version string */
+  version: string
+  /** The parsed date in YYYY-MM-DD format, or null if not found */
+  date: string | null
+  /** Optional URL for comparing versions */
+  compareUrl?: string
+}
+
+/**
  * Parses a version string from a heading.
  * Examples: "1.2.3", "v1.2.3", "[1.2.3]", "1.2.3 - 2024-01-01"
  *
@@ -18,14 +30,7 @@ import { parseInt } from '@hyperfrontend/immutable-api-utils/built-in-copy/numbe
  * // => { version: '2.0.0', date: null, compareUrl: undefined }
  * ```
  */
-export function parseVersionFromHeading(heading: string): {
-  /** The parsed version string */
-  version: string
-  /** The parsed date in YYYY-MM-DD format, or null if not found */
-  date: string | null
-  /** Optional URL for comparing versions */
-  compareUrl?: string
-} {
+export function parseVersionFromHeading(heading: string): ParsedVersionHeading {
   const trimmed = heading.trim()
 
   const lowerHeading = trimmed.toLowerCase()
@@ -113,17 +118,23 @@ export function parseVersionFromHeading(heading: string): {
 }
 
 /**
+ * Result of {@link extractDate}: the extracted date plus how many characters
+ * of the source were consumed.
+ */
+type DateExtraction = {
+  /** The extracted date string in YYYY-MM-DD format */
+  date: string
+  /** Number of characters consumed from the input */
+  length: number
+}
+
+/**
  * Extracts a date in YYYY-MM-DD format from a string.
  *
  * @param str - The string to extract a date from
  * @returns The extracted date and its length, or null if no date found
  */
-function extractDate(str: string): {
-  /** The extracted date string in YYYY-MM-DD format */
-  date: string
-  /** Number of characters consumed from the input */
-  length: number
-} | null {
+function extractDate(str: string): DateExtraction | null {
   let pos = 0
 
   if (str[pos] === '(') pos++
@@ -194,19 +205,25 @@ function slashToHyphen(input: string): string {
 }
 
 /**
- * Extracts a markdown link from a string.
- *
- * @param str - The string to extract a link from
- * @returns The extracted link text, url, and length, or null if no link found
+ * Result of {@link extractLink}: the link text/url plus how many characters of
+ * the source were consumed.
  */
-function extractLink(str: string): {
+type LinkExtraction = {
   /** The link text content */
   text: string
   /** The link URL */
   url: string
   /** Number of characters consumed from the input */
   length: number
-} | null {
+}
+
+/**
+ * Extracts a markdown link from a string.
+ *
+ * @param str - The string to extract a link from
+ * @returns The extracted link text, url, and length, or null if no link found
+ */
+function extractLink(str: string): LinkExtraction | null {
   if (str[0] !== '[') return null
 
   let pos = 1
@@ -339,6 +356,17 @@ export function parseIssueRefs(text: string, baseUrl?: string): IssueRef[] {
 }
 
 /**
+ * Result of {@link parseScopeFromItem}: optional scope plus the description
+ * that follows it.
+ */
+export type ScopeFromItem = {
+  /** Optional scope extracted from the text */
+  scope?: string
+  /** The description text after the scope */
+  description: string
+}
+
+/**
  * Parses the scope from a changelog item.
  * Example: "**scope:** description" -> { scope: "scope", description: "description" }
  *
@@ -354,12 +382,7 @@ export function parseIssueRefs(text: string, baseUrl?: string): IssueRef[] {
  * // => { scope: undefined, description: 'Simple change without scope' }
  * ```
  */
-export function parseScopeFromItem(text: string): {
-  /** Optional scope extracted from the text */
-  scope?: string
-  /** The description text after the scope */
-  description: string
-} {
+export function parseScopeFromItem(text: string): ScopeFromItem {
   const trimmed = text.trim()
 
   if (trimmed.startsWith('**')) {

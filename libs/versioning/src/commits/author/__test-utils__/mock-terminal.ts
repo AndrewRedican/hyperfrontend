@@ -19,17 +19,23 @@ export const TestKey = freeze(<const>{
   Tab: '\t',
 })
 
-/** Mock readable stream with a raw-mode flag and a key enqueue helper. */
-export type MockInput = NodeJS.ReadStream & {
+/** Test-only extensions added to the readable mock stream. */
+export interface MockInputExtensions {
   /** Enqueues key strokes to be emitted on the `data` event asynchronously */
   enqueueKeys: (keys: readonly string[]) => void
 }
 
-/** Mock writable stream that captures written output for assertions. */
-export type MockOutput = NodeJS.WriteStream & {
+/** Mock readable stream with a raw-mode flag and a key enqueue helper. */
+export type MockInput = NodeJS.ReadStream & MockInputExtensions
+
+/** Test-only extensions added to the writable mock stream. */
+export interface MockOutputExtensions {
   /** Returns everything written so far as a single string */
   getWrittenData: () => string
 }
+
+/** Mock writable stream that captures written output for assertions. */
+export type MockOutput = NodeJS.WriteStream & MockOutputExtensions
 
 /** Paired mock streams usable as `input`/`output` for any lib-questions prompt. */
 export interface MockTerminal {

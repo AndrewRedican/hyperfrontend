@@ -179,6 +179,14 @@ function extractVersionPrefix(versionRange: string): string {
 }
 
 /**
+ * Minimal slice of a `package.json` whose `version` field can be mutated.
+ */
+type PackageJsonVersion = {
+  /** Package version string */
+  version: string
+}
+
+/**
  * Updates a package.json file using a VFS Tree.
  *
  * @param tree - Virtual file system tree
@@ -197,10 +205,7 @@ function extractVersionPrefix(versionRange: string): string {
  * ```
  */
 export function updatePackageVersionInTree(tree: Tree, packageJsonPath: string, newVersion: string): void {
-  changeJsonFile<{
-    /** Package version string */
-    version: string
-  }>(tree, packageJsonPath, (pkg) => {
+  changeJsonFile<PackageJsonVersion>(tree, packageJsonPath, (pkg) => {
     pkg.version = newVersion
     return pkg
   })

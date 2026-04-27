@@ -16,6 +16,22 @@ import { DEFAULT_COMMIT_OPTIONS } from './commit'
 export type GitOperationStateReason = 'rebase-interactive' | 'rebase-apply' | 'merge-in-progress'
 
 /**
+ * Per-check details captured while inspecting git's operation state.
+ *
+ * Each flag corresponds to one of the `.git/` state files probed by
+ * {@link getOperationState}; useful for diagnostics or when multiple
+ * states could theoretically overlap.
+ */
+export interface GitOperationStateDetails {
+  /** True if an interactive/merge rebase is in progress */
+  readonly rebaseMerge: boolean
+  /** True if a non-interactive rebase is in progress */
+  readonly rebaseApply: boolean
+  /** True if a merge is in progress */
+  readonly mergeHead: boolean
+}
+
+/**
  * Result of checking git's operation state.
  */
 export interface GitOperationState {
@@ -32,14 +48,7 @@ export interface GitOperationState {
    * Detailed state for each check performed.
    * Useful for diagnostics or when multiple states could theoretically overlap.
    */
-  readonly details: {
-    /** True if an interactive/merge rebase is in progress */
-    readonly rebaseMerge: boolean
-    /** True if a non-interactive rebase is in progress */
-    readonly rebaseApply: boolean
-    /** True if a merge is in progress */
-    readonly mergeHead: boolean
-  }
+  readonly details: GitOperationStateDetails
 }
 
 /**
