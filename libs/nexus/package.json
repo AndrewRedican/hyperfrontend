@@ -7,7 +7,7 @@
     "@hyperfrontend/data-utils": "0.0.4",
     "@hyperfrontend/immutable-api-utils": "0.1.2",
     "@hyperfrontend/json-utils": "0.1.0",
-    "@hyperfrontend/logging": "0.1.0",
+    "@hyperfrontend/logging": "0.2.0",
     "@hyperfrontend/random-generator-utils": "0.0.4"
   },
   "peerDependencies": {
