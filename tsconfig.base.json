@@ -30,6 +30,11 @@
     "paths": {
       "@hyperfrontend/app": ["tools/app/src/index.ts"],
       "@hyperfrontend/builder": ["libs/builder/src/index.ts"],
+      "@hyperfrontend/builder/bundle": ["libs/builder/src/bundle/index.ts"],
+      "@hyperfrontend/builder/bundle/declarations": ["libs/builder/src/bundle/declarations/index.ts"],
+      "@hyperfrontend/builder/bundle/entries": ["libs/builder/src/bundle/entries/index.ts"],
+      "@hyperfrontend/builder/bundle/externals": ["libs/builder/src/bundle/externals/index.ts"],
+      "@hyperfrontend/builder/bundle/rollup": ["libs/builder/src/bundle/rollup/index.ts"],
       "@hyperfrontend/builder/memory": ["libs/builder/src/memory/index.ts"],
       "@hyperfrontend/builder/models": ["libs/builder/src/models/index.ts"],
       "@hyperfrontend/cryptography/browser": ["libs/cryptography/src/browser/index.ts"],

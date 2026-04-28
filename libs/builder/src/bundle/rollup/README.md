@@ -1,0 +1,5 @@
+# rollup
+
+Rollup driver: plugin factories, per-format configuration builders, and the sequential `executeRollup` runner.
+
+The plugin factories (`createNodeResolvePlugin`, `createBrowserNodeResolvePlugin`, `createCommonJsPlugin`, `createTypescriptPlugin`, `createBundleTypescriptPlugin`, `createJsonPlugin`, `createTerserPlugin`) wrap the `@rollup/plugin-*` packages with the conventions builder enforces — namely no declaration emission from Rollup (the dedicated `generateDeclarations` primitive owns that) and `compilerOptions.paths = {}` when workspace dependencies should remain external. The per-format builders (`createEsmEntryConfig`, `createEsmConfig`, `createCjsEntryConfig`, `createCjsConfig`, `createIifeEntryConfig`, `createIifeConfig`, `createUmdEntryConfig`, `createUmdConfig`) compose those plugins into ready-to-run `RollupOptions` objects per entry point. `executeRollup(config, label)` drives a single Rollup pass: creates the bundle, writes every output, closes it, and clears references on the supplied config to keep memory pressure low when iterating across many entries.

@@ -5,10 +5,22 @@
   "license": "MIT",
   "dependencies": {
     "@hyperfrontend/logging": "0.2.0",
-    "@hyperfrontend/immutable-api-utils": "0.1.2"
+    "@hyperfrontend/immutable-api-utils": "0.1.2",
+    "@hyperfrontend/project-scope": "0.2.1",
+    "@rollup/plugin-commonjs": "29.0.0",
+    "@rollup/plugin-json": "6.1.0",
+    "@rollup/plugin-node-resolve": "16.0.3",
+    "@rollup/plugin-terser": "0.4.4",
+    "@rollup/plugin-typescript": "12.3.0",
+    "rollup": "4.59.0"
   },
   "exports": {
     ".": "./src/index.js",
+    "./bundle": "./src/bundle/index.js",
+    "./bundle/declarations": "./src/bundle/declarations/index.js",
+    "./bundle/entries": "./src/bundle/entries/index.js",
+    "./bundle/externals": "./src/bundle/externals/index.js",
+    "./bundle/rollup": "./src/bundle/rollup/index.js",
     "./memory": "./src/memory/index.js",
     "./models": "./src/models/index.js",
     "./package.json": "./package.json"
