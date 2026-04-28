@@ -175,6 +175,29 @@ test('logs only errors at error level', () => {
 })
 ```
 
+### Channels and Timing
+
+```typescript
+import { createLogger } from '@hyperfrontend/logging'
+
+const logger = createLogger(console.error, console.warn, console.log, console.info, console.debug)
+logger.setLogLevel('debug')
+
+// channel() returns a sub-logger that prepends `[prefix]` to every emission.
+// Nested channels chain with `:` — channel('build').channel('rollup') emits `[build:rollup]`.
+const build = logger.channel('build')
+build.info('starting') // [build] starting
+build.channel('rollup').warn(':') // [build:rollup] :
+
+// timed() wraps a sync call: success -> debug "<label> completed in Nms",
+// failure -> error "<label> failed after Nms: <message>" then rethrows.
+const value = build.timed('compute', () => expensiveSync())
+
+// timedAsync() does the same for promise-returning calls and additionally
+// dumps the stack trace to debug on rejection.
+await build.timedAsync('bundle', async () => bundleAsync())
+```
+
 ## API Overview
 
 ### Logger Factory
@@ -192,6 +215,9 @@ test('logs only errors at error level', () => {
 - **`logger.debug(...data: any[]): void`** - Log debug messages (lowest priority)
 - **`logger.setLogLevel(level: LogLevel): void`** - Set minimum log level at runtime
 - **`logger.getLogLevel(): LogLevel`** - Get current log level
+- **`logger.channel(prefix: string): Logger`** - Sub-logger that prepends `[prefix]` to every emission; nested channels chain with `:` (e.g. `[build:rollup]`)
+- **`logger.timed<T>(label: string, fn: () => T): T`** - Wraps a sync call with timing; logs completion at debug, failure at error, then rethrows
+- **`logger.timedAsync<T>(label: string, fn: () => Promise<T>): Promise<T>`** - Async timing variant; on rejection also dumps the stack trace to debug
 
 ### Log Levels (Priority Order)
 
