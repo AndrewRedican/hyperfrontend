@@ -1,0 +1,26 @@
+{
+  "name": "@hyperfrontend/builder",
+  "version": "0.0.1",
+  "description": "Composable, vendor-neutral build toolkit for TypeScript libraries, JS bins, and Node SEA native binaries.",
+  "license": "MIT",
+  "dependencies": {},
+  "exports": {
+    ".": "./src/index.js",
+    "./package.json": "./package.json"
+  },
+  "sideEffects": false,
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=8.0.0"
+  },
+  "keywords": [
+    "builder",
+    "hyperfrontend",
+    "typescript",
+    "isomorphic"
+  ],
+  "funding": {
+    "type": "github",
+    "url": "https://github.com/sponsors/AndrewRedican"
+  }
+}
