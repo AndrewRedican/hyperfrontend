@@ -3,6 +3,15 @@ import type { ChannelJSON } from '../../types/channel'
 import { getAll } from '../../core/registry/get-all'
 
 /**
+ * Minimal shape exposing the {@link ChannelJSON} serializer on a channel instance.
+ * Used to safely cast registry entries before serialization.
+ */
+type ChannelWithToJSON = {
+  /** Serializes channel to JSON */
+  toJSON: () => ChannelJSON
+}
+
+/**
  * Lists all channels in JSON format
  *
  * @param registry - Channel registry containing all registered channels
@@ -16,5 +25,5 @@ import { getAll } from '../../core/registry/get-all'
  */
 export function listChannels(registry: Registry): ChannelJSON[] {
   const channels = getAll(registry)
-  return channels.map((channel) => (<{ /** Serializes channel to JSON */ toJSON: () => ChannelJSON }>(<unknown>channel)).toJSON())
+  return channels.map((channel) => (<ChannelWithToJSON>(<unknown>channel)).toJSON())
 }

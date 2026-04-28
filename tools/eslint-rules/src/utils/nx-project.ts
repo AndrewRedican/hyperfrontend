@@ -5,20 +5,25 @@ import { createRuleLogger } from './logger'
 const logger = createRuleLogger('nx-project')
 
 /**
+ * Map of Nx target names to their configurations within a project.json file.
+ */
+export interface ProjectTargets {
+  /** Build target configuration */
+  build?: unknown
+  /** Publish target configuration */
+  publish?: unknown
+  /** Additional target configurations */
+  [key: string]: unknown
+}
+
+/**
  * Represents the structure of a project.json file.
  */
 export interface ProjectJson {
   /** The type of project - library or application */
   projectType?: 'library' | 'application'
   /** Build targets configuration */
-  targets?: {
-    /** Build target configuration */
-    build?: unknown
-    /** Publish target configuration */
-    publish?: unknown
-    /** Additional target configurations */
-    [key: string]: unknown
-  }
+  targets?: ProjectTargets
   /** Tags associated with the project */
   tags?: string[]
   [key: string]: unknown

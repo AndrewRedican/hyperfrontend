@@ -5,6 +5,42 @@ import type { IMessage } from '../types/message'
 import type { SecurityNegotiationRequest, SecurityNegotiationResponse, SecurityConfirmation } from '../types/security'
 
 /**
+ * Action creators a channel uses to talk to its broker. Each method returns the
+ * `IAction` that the broker would otherwise hand-build, with arguments threaded
+ * through to keep call sites readable.
+ */
+export interface ChannelActionCreators {
+  /** Requests a connection with optional security negotiation */
+  requestConnection(processId: string, security?: SecurityNegotiationRequest): IAction
+  /** Accepts a pending connection request */
+  acceptConnection(processId: string, security?: SecurityNegotiationResponse): IAction
+  /** Denies a connection request with a reason */
+  denyConnection(processId: string, reason: string): IAction
+  /** Cancels an ongoing connection attempt */
+  cancelConnection(processId: string): IAction
+  /** Opens an established connection */
+  openConnection(processId: string, security?: SecurityConfirmation): IAction
+  /** Closes an active connection */
+  closeConnection(processId: string): IAction
+  /** Destroys the connection entirely */
+  destroyConnection(): IAction
+  /** Sends a new message through the channel */
+  newMessage(data: unknown): IAction
+  /** Reports an invalid request error */
+  invalidRequest(processId: string, error: string): IAction
+}
+
+/**
+ * Minimal process-tracking interface a channel needs from its host broker.
+ */
+export interface ChannelProcessManager {
+  /** Creates a new process and returns its ID */
+  create(channel: unknown): string
+  /** Removes a process by ID */
+  remove(processId: string): void
+}
+
+/**
  * Internal channel API used by lifecycle, messaging, and subscription functions.
  * This interface provides access to channel state and dependencies without exposing
  * the public API surface.
@@ -32,26 +68,7 @@ export interface ChannelInternals {
   notifyMessage(message: IMessage): void
 
   /** Action creators bound to broker */
-  actions: {
-    /** Requests a connection with optional security negotiation */
-    requestConnection(processId: string, security?: SecurityNegotiationRequest): IAction
-    /** Accepts a pending connection request */
-    acceptConnection(processId: string, security?: SecurityNegotiationResponse): IAction
-    /** Denies a connection request with a reason */
-    denyConnection(processId: string, reason: string): IAction
-    /** Cancels an ongoing connection attempt */
-    cancelConnection(processId: string): IAction
-    /** Opens an established connection */
-    openConnection(processId: string, security?: SecurityConfirmation): IAction
-    /** Closes an active connection */
-    closeConnection(processId: string): IAction
-    /** Destroys the connection entirely */
-    destroyConnection(): IAction
-    /** Sends a new message through the channel */
-    newMessage(data: unknown): IAction
-    /** Reports an invalid request error */
-    invalidRequest(processId: string, error: string): IAction
-  }
+  actions: ChannelActionCreators
 
   /** Optional cleanup callback to remove channel from broker */
   cleanup?: () => void
@@ -65,12 +82,7 @@ export interface ChannelDependencies {
   actions: ChannelInternals['actions']
 
   /** Process manager for tracking connection processes */
-  processManager: {
-    /** Creates a new process and returns its ID */
-    create(channel: unknown): string
-    /** Removes a process by ID */
-    remove(processId: string): void
-  }
+  processManager: ChannelProcessManager
 
   /** Optional cleanup callback */
   cleanup?: () => void

@@ -5,10 +5,20 @@ import { ScrollToExplore } from '@/components/scroll-to-explore'
 import { ValueProposition } from '@/components/value-proposition'
 
 /**
+ * Featured package tile shown on the landing page: display name, link target,
+ * and a priority used to sort the list ascending.
+ */
+type FeaturedPackage = {
+  name: string
+  href: string
+  priority: number
+}
+
+/**
  * High-value packages to display on the landing page, sorted by priority.
  * Lower priority numbers appear first.
  */
-const FEATURED_PACKAGES: Array<{ name: string; href: string; priority: number }> = [
+const FEATURED_PACKAGES: Array<FeaturedPackage> = [
   { name: '@hyperfrontend/nexus', href: '/docs/libraries/nexus', priority: 1 },
   { name: '@hyperfrontend/state-machine', href: '/docs/libraries/state-machine', priority: 2 },
   { name: '@hyperfrontend/data-utils', href: '/docs/libraries/utils/data', priority: 3 },
@@ -130,7 +140,10 @@ export default function HomePage() {
   )
 }
 
-function PackageTag({ name, href }: { name: string; href: string }) {
+/** Props for {@link PackageTag} */
+type PackageTagProps = { name: string; href: string }
+
+function PackageTag({ name, href }: PackageTagProps) {
   return (
     <a
       href={href}
@@ -141,7 +154,10 @@ function PackageTag({ name, href }: { name: string; href: string }) {
   )
 }
 
-function NpmIcon({ className }: { className?: string }) {
+/** Common props for landing-page icons */
+type IconProps = { className?: string }
+
+function NpmIcon({ className }: IconProps) {
   return (
     <svg className={className} viewBox="0 0 24 24" fill="currentColor">
       <path d="M0 7.334v8h6.666v1.332H12v-1.332h12v-8H0zm6.666 6.664H5.334v-4H3.999v4H1.335V8.667h5.331v5.331zm4 0v1.336H8.001V8.667h5.334v5.332h-2.669v-.001zm12.001 0h-1.33v-4h-1.336v4h-1.335v-4h-1.33v4h-2.671V8.667h8.002v5.331zM10.665 10H12v2.667h-1.335V10z" />
@@ -149,7 +165,15 @@ function NpmIcon({ className }: { className?: string }) {
   )
 }
 
-function ArchitectureCard({ title, description, icon, href }: { title: string; description: string; icon: React.ReactNode; href: string }) {
+/** Props for {@link ArchitectureCard} */
+type ArchitectureCardProps = {
+  title: string
+  description: string
+  icon: React.ReactNode
+  href: string
+}
+
+function ArchitectureCard({ title, description, icon, href }: ArchitectureCardProps) {
   return (
     <a
       href={href}
@@ -196,7 +220,7 @@ function BrokerIcon() {
   )
 }
 
-function ArrowRightIcon({ className }: { className?: string }) {
+function ArrowRightIcon({ className }: IconProps) {
   return (
     <svg className={className} fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
       <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />

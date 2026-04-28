@@ -105,6 +105,15 @@ export function writeFileBuffer(filePath: string, content: Buffer, options?: Wri
 }
 
 /**
+ * Minimal shape used to inspect the Node.js `code` property on filesystem errors
+ * without importing the full `NodeJS.ErrnoException` type.
+ */
+type ErrorWithCode = {
+  /** Error code */
+  code?: string
+}
+
+/**
  * Write JSON data to file with formatting.
  * Creates parent directories if needed.
  *
@@ -132,7 +141,7 @@ export function writeJsonFile<T>(filePath: string, data: T, options?: WriteJsonO
     writeFileContent(filePath, content, options)
     fsWriteLogger.debug('JSON file written successfully', { path: filePath })
   } catch (error) {
-    if ((<{ /** Error code */ code?: string }>error)?.code === 'FS_WRITE_ERROR') {
+    if ((<ErrorWithCode>error)?.code === 'FS_WRITE_ERROR') {
       throw error
     }
     fsWriteLogger.warn('Failed to write JSON file', { path: filePath, error: error instanceof Error ? error.message : String(error) })

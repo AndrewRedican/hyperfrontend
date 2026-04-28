@@ -40,6 +40,27 @@ import { filterOrigin } from './security/filter-origin'
 import { validatePolicy } from './security/validate-policy'
 
 /**
+ * Inputs for {@link createBroker}.
+ */
+type CreateBrokerConfig = {
+  /** Unique name for the broker instance */
+  name: string
+  /** Channel contract defining message protocols */
+  contract: IChannelContract
+  /** Optional configuration overrides for broker behavior */
+  settings?: Partial<BrokerConfig['settings']>
+}
+
+/**
+ * Mutable view of the broker state used to swap the contract during
+ * {@link BrokerHandle.extendContract}.
+ */
+type BrokerStateContractRef = {
+  /** The channel contract */
+  contract: unknown
+}
+
+/**
  * Creates a message broker instance
  *
  * @param config - Broker configuration
@@ -57,14 +78,7 @@ import { validatePolicy } from './security/validate-policy'
  * })
  * ```
  */
-export function createBroker(config: {
-  /** Unique name for the broker instance */
-  name: string
-  /** Channel contract defining message protocols */
-  contract: IChannelContract
-  /** Optional configuration overrides for broker behavior */
-  settings?: Partial<BrokerConfig['settings']>
-}): BrokerHandle {
+export function createBroker(config: CreateBrokerConfig): BrokerHandle {
   assertNoCircularRef(config.contract, 'config.contract')
   assertNoCircularRef(config.settings, 'config.settings')
   validateName(config.name)
@@ -198,12 +212,7 @@ export function createBroker(config: {
         throw createError('Original contract cannot be extended.')
       }
       validateContract(contract)
-      ;(<
-        {
-          /** The channel contract */
-          contract: unknown
-        }
-      >state).contract = mergeContracts(state.contract, contract)
+      ;(<BrokerStateContractRef>state).contract = mergeContracts(state.contract, contract)
       return broker
     },
 

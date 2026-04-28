@@ -11,8 +11,14 @@ export const metadata: Metadata = {
   description: 'Credits and gratitude to supporters, contributors, and sources of inspiration for hyperfrontend.',
 }
 
+/** Display metadata (icon + label) for a contribution type */
+type ContributionEmoji = {
+  emoji: string
+  label: string
+}
+
 /** Map contribution types to emoji and label */
-const CONTRIBUTION_EMOJI: Record<string, { emoji: string; label: string }> = {
+const CONTRIBUTION_EMOJI: Record<string, ContributionEmoji> = {
   code: { emoji: '💻', label: 'Code' },
   doc: { emoji: '📖', label: 'Documentation' },
   infra: { emoji: '🚇', label: 'Infrastructure' },
@@ -47,7 +53,10 @@ const CONTRIBUTION_EMOJI: Record<string, { emoji: string; label: string }> = {
   research: { emoji: '🔬', label: 'Research' },
 }
 
-function ContributorCard({ contributor }: { contributor: Contributor }) {
+/** Props for the inline {@link ContributorCard} component */
+type ContributorCardProps = { contributor: Contributor }
+
+function ContributorCard({ contributor }: ContributorCardProps) {
   return (
     <a
       href={contributor.profile}
@@ -78,7 +87,10 @@ function ContributorCard({ contributor }: { contributor: Contributor }) {
   )
 }
 
-function ContributorsSection({ contributors }: { contributors: Contributor[] }) {
+/** Props for the inline {@link ContributorsSection} component */
+type ContributorsSectionProps = { contributors: Contributor[] }
+
+function ContributorsSection({ contributors }: ContributorsSectionProps) {
   if (contributors.length === 0) {
     return null
   }

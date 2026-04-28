@@ -38,7 +38,9 @@ export function Header() {
   )
 }
 
-function NavLink({ href, children }: { href: string; children: React.ReactNode }) {
+type NavLinkProps = { href: string; children: React.ReactNode }
+
+function NavLink({ href, children }: NavLinkProps) {
   return (
     <Link href={href} className="text-sm font-medium text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white">
       {children}
@@ -46,7 +48,9 @@ function NavLink({ href, children }: { href: string; children: React.ReactNode }
   )
 }
 
-function Logo({ className }: { className?: string }) {
+type IconProps = { className?: string }
+
+function Logo({ className }: IconProps) {
   return (
     <svg className={className} viewBox="0 0 32 32" fill="none">
       <rect width="32" height="32" rx="8" className="fill-primary-600 dark:fill-primary-500" />
@@ -56,7 +60,7 @@ function Logo({ className }: { className?: string }) {
   )
 }
 
-function GitHubIcon({ className }: { className?: string }) {
+function GitHubIcon({ className }: IconProps) {
   return (
     <svg className={className} fill="currentColor" viewBox="0 0 24 24">
       <path

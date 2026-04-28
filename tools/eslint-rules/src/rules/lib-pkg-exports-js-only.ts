@@ -16,6 +16,15 @@ export const RULE_NAME = 'lib-pkg-exports-js-only'
 const VALID_EXTENSIONS = createSet<string>(['.js', '.mjs', '.cjs', '.json'])
 
 /**
+ * JSONC AST nodes carry a verbatim source slice on `raw` that includes quotes;
+ * this helper exposes that field without committing to the broader node type.
+ */
+type JSONNodeWithRaw = {
+  /** Raw string representation of the node value. */
+  raw?: string
+}
+
+/**
  * Checks if a path represents a package.json self-reference export.
  *
  * @param exportPath - The export path to check.
@@ -103,12 +112,7 @@ const rule: Rule.RuleModule = {
           },
           fix(fixer) {
             if (/\.(ts|tsx|mts|cts)$/.test(exportPath)) {
-              const raw = (
-                valueNode as unknown as {
-                  /** Raw string representation of the node value. */
-                  raw?: string
-                }
-              ).raw
+              const raw = (valueNode as unknown as JSONNodeWithRaw).raw
               if (raw) {
                 const quote = raw[0]
                 return fixer.replaceText(valueNode as unknown as Rule.Node, `${quote}${suggested}${quote}`)

@@ -28,12 +28,18 @@ export interface PublishableLibrary {
 }
 
 /**
- * Extended project JSON with optional name field.
+ * Adds the optional `name` field that is occasionally written into project.json
+ * but isn't typed on Nx's `ProjectJson`.
  */
-type ProjectJsonWithName = ProjectJson & {
+type WithProjectName = {
   /** Project name */
   name?: string
 }
+
+/**
+ * Extended project JSON with optional name field.
+ */
+type ProjectJsonWithName = ProjectJson & WithProjectName
 
 /**
  * Package JSON subset with name field.

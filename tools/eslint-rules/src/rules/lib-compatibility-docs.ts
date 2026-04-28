@@ -29,35 +29,68 @@ export interface PublishableLibrary {
 }
 
 /**
+ * Configuration for a single browser bundle format (IIFE or UMD).
+ */
+interface BrowserBundleFormatConfig {
+  /** Entry point for the bundle */
+  entry?: string
+  /** Global variable name for the bundle */
+  globalName?: string
+}
+
+/**
+ * Build options block of project.json that this rule reads when deciding whether
+ * a library exposes browser bundles.
+ */
+interface BuildOptionsWithBrowserBundles {
+  /** IIFE bundle configuration */
+  iife?: BrowserBundleFormatConfig
+  /** UMD bundle configuration */
+  umd?: BrowserBundleFormatConfig
+  [key: string]: unknown
+}
+
+/**
+ * Build target shape inspected by this rule.
+ */
+interface BuildTargetWithBundles {
+  /** Build configuration options */
+  options?: BuildOptionsWithBrowserBundles
+  [key: string]: unknown
+}
+
+/**
+ * `targets` map of project.json restricted to the `build` entry this rule reads.
+ */
+interface BuildTargets {
+  /** Build target with bundle options */
+  build?: BuildTargetWithBundles
+  [key: string]: unknown
+}
+
+/**
  * Extended project.json structure with build options.
  */
 interface ProjectJsonWithBuildOptions extends ProjectJson {
   /** Build targets configuration */
-  targets?: {
-    /** Build target with bundle options */
-    build?: {
-      /** Build configuration options */
-      options?: {
-        /** IIFE bundle configuration */
-        iife?: {
-          /** Entry point for the bundle */
-          entry?: string
-          /** Global variable name for the bundle */
-          globalName?: string
-        }
-        /** UMD bundle configuration */
-        umd?: {
-          /** Entry point for the bundle */
-          entry?: string
-          /** Global variable name for the bundle */
-          globalName?: string
-        }
-        [key: string]: unknown
-      }
-      [key: string]: unknown
-    }
-    [key: string]: unknown
-  }
+  targets?: BuildTargets
+}
+
+/**
+ * Slice of `package.json` we read when extracting the published package name.
+ */
+type PackageJsonName = {
+  /** Package name from package.json */
+  name?: string
+}
+
+/**
+ * Adds the optional `name` field that can appear on `project.json` even when
+ * the upstream interface omits it.
+ */
+type WithProjectName = {
+  /** Project name from project.json */
+  name?: string
 }
 
 /**
@@ -86,10 +119,7 @@ function hasBrowserBundles(projectDir: string): boolean {
  */
 function getPackageName(projectDir: string): string | null {
   const packageJsonPath = join(projectDir, 'package.json')
-  const packageJson = readJsonFileIfExists<{
-    /** Package name from package.json */
-    name?: string
-  }>(packageJsonPath)
+  const packageJson = readJsonFileIfExists<PackageJsonName>(packageJsonPath)
   return packageJson?.name ?? null
 }
 
@@ -109,12 +139,7 @@ function findPublishableLibraries(baseDir: string, workspaceRoot: string, result
     const relativePath = baseDir.slice(workspaceRoot.length + 1)
     const projectJsonPath = join(baseDir, 'project.json')
     const packageName = getPackageName(baseDir)
-    const projectJson = readJsonFileIfExists<
-      ProjectJson & {
-        /** Project name from project.json */
-        name?: string
-      }
-    >(projectJsonPath)
+    const projectJson = readJsonFileIfExists<ProjectJson & WithProjectName>(projectJsonPath)
 
     if (packageName) {
       results.push({

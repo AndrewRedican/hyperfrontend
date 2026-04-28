@@ -1,6 +1,6 @@
 import type { PackageJson } from '../../project/package'
 import type { DetectionSource } from '../shared-utils/types'
-import type { MonorepoDetection } from './types'
+import type { MonorepoDetection, WorkspaceLayout } from './types'
 import { join } from 'node:path'
 import { min } from '@hyperfrontend/immutable-api-utils/built-in-copy/math'
 import { keys } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
@@ -39,7 +39,7 @@ export function nxDetector(workspacePath: string, packageJson?: PackageJson): Mo
   const sources: DetectionSource[] = []
   let confidence = 0
   let version: string | undefined
-  let workspaceLayout: { /** Applications directory */ appsDir: string; /** Libraries directory */ libsDir: string } | undefined
+  let workspaceLayout: WorkspaceLayout | undefined
 
   const nxJsonPath = join(workspacePath, 'nx.json')
   if (exists(nxJsonPath)) {

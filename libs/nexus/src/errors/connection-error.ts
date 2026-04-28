@@ -1,6 +1,20 @@
 import { setPrototypeOf } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
 
 /**
+ * JSON representation of a {@link ConnectionError}.
+ */
+export type ConnectionErrorJSON = {
+  /** Error name */
+  name: string
+  /** Error message */
+  message: string
+  /** Channel ID if available */
+  channelId?: string
+  /** Origin if available */
+  origin?: string
+}
+
+/**
  * Custom error class for connection-related failures.
  *
  * @example Throwing connection error
@@ -25,16 +39,7 @@ export class ConnectionError extends Error {
    *
    * @returns JSON object with error details
    */
-  toJSON(): {
-    /** Error name */
-    name: string
-    /** Error message */
-    message: string
-    /** Channel ID if available */
-    channelId?: string
-    /** Origin if available */
-    origin?: string
-  } {
+  toJSON(): ConnectionErrorJSON {
     return {
       name: this.name,
       message: this.message,

@@ -177,6 +177,16 @@ function formatScopePrefix(scope: readonly string[]): string {
 }
 
 /**
+ * Section type/heading pair driving the order of changelog sections.
+ */
+type ChangelogSectionOrderEntry = {
+  /** Changelog section type identifier */
+  type: ChangelogSectionType
+  /** Display heading for the section */
+  heading: string
+}
+
+/**
  * Creates the generate-changelog step.
  *
  * This step:
@@ -279,12 +289,7 @@ export function createGenerateChangelogStep(): FlowStep {
 
         const groupedDirect = groupClassifiedCommitsBySection(directCommits, commitTypeMapping)
 
-        const sectionOrder: readonly {
-          /** Changelog section type identifier */
-          type: ChangelogSectionType
-          /** Display heading for the section */
-          heading: string
-        }[] = [
+        const sectionOrder: readonly ChangelogSectionOrderEntry[] = [
           { type: 'features', heading: 'Features' },
           { type: 'fixes', heading: 'Bug Fixes' },
           { type: 'performance', heading: 'Performance' },
@@ -331,12 +336,7 @@ export function createGenerateChangelogStep(): FlowStep {
           )
         }
 
-        const sectionOrder: readonly {
-          /** Changelog section type identifier */
-          type: ChangelogSectionType
-          /** Display heading for the section */
-          heading: string
-        }[] = [
+        const sectionOrder: readonly ChangelogSectionOrderEntry[] = [
           { type: 'features', heading: 'Features' },
           { type: 'fixes', heading: 'Bug Fixes' },
           { type: 'performance', heading: 'Performance' },

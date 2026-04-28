@@ -1,4 +1,4 @@
-import type { ExecutorContext } from '@nx/devkit'
+import type { ExecutorContext, PromiseExecutor } from '@nx/devkit'
 import type { BuildExecutorOptions } from './schema'
 import { execFileSync } from 'node:child_process'
 import { existsSync } from 'node:fs'
@@ -19,10 +19,7 @@ import { logger } from '../../lib/logger'
 export default async function buildExecutor(
   options: BuildExecutorOptions,
   context: ExecutorContext
-): Promise<{
-  /** Indicates whether the build succeeded. */
-  success: boolean
-}> {
+): ReturnType<PromiseExecutor> {
   const projectName = context.projectName
   if (!projectName) {
     logger.error('No project name provided')

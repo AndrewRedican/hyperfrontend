@@ -7,6 +7,26 @@ import {keys} from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
 import { parseRepositoryUrl } from '@hyperfrontend/versioning/repository/parse'
 import { logger } from '../../../lib/logger'
 
+/**
+ * Object form of `package.json` `repository` (the alternative to a plain URL string).
+ */
+type RepositoryDescriptor = {
+  /** Repository provider type */
+  type: string
+  /** Repository URL */
+  url: string
+}
+
+/**
+ * Pattern entry used to detect known SPDX licenses inside LICENSE file text.
+ */
+type LicensePattern = {
+  /** Regular expression to match license text */
+  pattern: RegExp
+  /** SPDX license type identifier */
+  type: string
+}
+
 /** License information for a third-party dependency */
 export interface ThirdPartyLicenseEntry {
   /** Package name */
@@ -173,12 +193,7 @@ function findLicenseFile(packageDir: string): string | null {
  * @param licenseFileName - Name of the license file (e.g., 'LICENSE', 'LICENSE.md')
  * @returns URL to the license file or null if URL cannot be constructed
  */
-function constructLicenseUrl(repositoryUrl: string | {
-    /** Repository provider type */
-    type: string
-    /** Repository URL */
-    url: string
-  } | undefined, licenseFileName: string): string | null {
+function constructLicenseUrl(repositoryUrl: string | RepositoryDescriptor | undefined, licenseFileName: string): string | null {
   if (!repositoryUrl) {
     return null
   }
@@ -210,12 +225,7 @@ function constructLicenseUrl(repositoryUrl: string | {
  * @returns Detected license type or 'Unknown'
  */
 function detectLicenseFromContent(licenseContent: string): string | null {
-  const patterns: Array<{
-    /** Regular expression to match license text */
-    pattern: RegExp
-    /** SPDX license type identifier */
-    type: string
-  }> = [
+  const patterns: Array<LicensePattern> = [
     { pattern: /MIT License/i, type: 'MIT' },
     { pattern: /The MIT License/i, type: 'MIT' },
     { pattern: /Apache License.*Version 2\.0/i, type: 'Apache-2.0' },

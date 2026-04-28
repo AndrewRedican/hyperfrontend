@@ -7,6 +7,19 @@ import { isValidSerializedEncryptedPacket } from '../../validations/is-valid-ser
 import { isValidRefreshRate } from './is-valid-refresh-rate'
 
 /**
+ * Bundle of password producers for the current, previous, and next time windows.
+ * Used by the time-interval obfuscation factory to align password rotation with clock boundaries.
+ */
+type TimeWindowPasswords = {
+  /** Gets password for current time window */
+  current: () => Promise<string>
+  /** Gets password for previous time window */
+  previous: () => Promise<string>
+  /** Gets password for next time window */
+  next: () => Promise<string>
+}
+
+/**
  * Creates a factory for time-interval based obfuscation suites.
  *
  * This factory accepts packet obfuscation/deobfuscation functions and time-based password generators,
@@ -17,7 +30,7 @@ import { isValidRefreshRate } from './is-valid-refresh-rate'
  * @param {PacketObfuscater} obfuscatePacket - Function to obfuscate a packet with a password
  * @param {PacketDeobfuscater} deobfuscatePacket - Function to deobfuscate data with a password
  * @param {(date: Date, refreshRate: number, offset: number) => Promise<string>} getTimeBasedPassword - Function to get a time-based password
- * @param {(date: Date, refreshRate: number) => {current: () => Promise<string>, previous: () => Promise<string>, next: () => Promise<string>}} getTimeBasedPasswords - Function to get multiple time-based passwords
+ * @param {(date: Date, refreshRate: number) => TimeWindowPasswords} getTimeBasedPasswords - Function to get multiple time-based passwords
  * @returns {(refreshRate: number) => ObfuscationSuite} A factory function that accepts a refresh rate and returns an obfuscation suite
  *
  * @example Creating a time-interval obfuscation suite
@@ -36,17 +49,7 @@ export function createTimeIntervalObfuscationFactory(
   obfuscatePacket: PacketObfuscater,
   deobfuscatePacket: PacketDeobfuscater,
   getTimeBasedPassword: (date: Date, refreshRate: number, offset: number) => Promise<string>,
-  getTimeBasedPasswords: (
-    date: Date,
-    refreshRate: number
-  ) => {
-    /** Gets password for current time window */
-    current: () => Promise<string>
-    /** Gets password for previous time window */
-    previous: () => Promise<string>
-    /** Gets password for next time window */
-    next: () => Promise<string>
-  }
+  getTimeBasedPasswords: (date: Date, refreshRate: number) => TimeWindowPasswords
 ) {
   return (refreshRate = 1): ObfuscationSuite => {
     if (!isValidRefreshRate(refreshRate)) {

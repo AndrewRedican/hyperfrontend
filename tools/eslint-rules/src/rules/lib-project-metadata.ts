@@ -8,6 +8,31 @@ import { isPublishableLibrary } from '../utils/nx-project'
  */
 export const RULE_NAME = 'lib-project-metadata'
 
+/**
+ * Recorded metadata field: the parsed value plus the AST node it came from
+ * so the rule can attach reports/fixes to the original source location.
+ *
+ * @template TValue - Concrete value type for the field
+ */
+type MetadataFieldRecord<TValue> = {
+  /** Field value or null if not set */
+  value: TValue | null
+  /** AST node reference */
+  node: JSONProperty
+}
+
+/**
+ * Bag of project.json metadata fields the rule tracks while traversing the AST.
+ */
+type ProjectMetadataFields = {
+  /** Project name field data */
+  name?: MetadataFieldRecord<string>
+  /** Project tags field data */
+  tags?: MetadataFieldRecord<unknown[]>
+  /** Project description field data */
+  description?: MetadataFieldRecord<string>
+}
+
 const rule: Rule.RuleModule = {
   meta: {
     type: 'problem',
@@ -36,29 +61,7 @@ const rule: Rule.RuleModule = {
     }
 
     // istanbul ignore next -- fields initialization
-    const fields: {
-      /** Project name field data */
-      name?: {
-        /** Field value or null if not set */
-        value: string | null
-        /** AST node reference */
-        node: JSONProperty
-      }
-      /** Project tags field data */
-      tags?: {
-        /** Field value or null if not set */
-        value: unknown[] | null
-        /** AST node reference */
-        node: JSONProperty
-      }
-      /** Project description field data */
-      description?: {
-        /** Field value or null if not set */
-        value: string | null
-        /** AST node reference */
-        node: JSONProperty
-      }
-    } = {}
+    const fields: ProjectMetadataFields = {}
 
     return {
       JSONProperty(node: JSONNode) {

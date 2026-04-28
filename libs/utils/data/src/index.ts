@@ -26,7 +26,14 @@ export type {
   TraversalCreator,
   Traverse,
 } from './models'
-export type { SelectiveCopyPredicate, DataPointOperation, SelectiveCopyOptions, DataPoint, ReferenceLoop } from './selective-copy.model'
+export type {
+  SelectiveCopyPredicate,
+  DataPointOperation,
+  SelectiveCopyOptions,
+  DataPoint,
+  ReferenceLoop,
+  SelectiveCopyResult,
+} from './selective-copy.model'
 export { CircularReference } from './circular-reference'
 export { containsKeys } from './contains-keys'
 export { deregisterClassTypes } from './deregister-class-types'

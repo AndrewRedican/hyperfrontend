@@ -34,6 +34,16 @@ export interface PublishableLibrary {
 }
 
 /**
+ * Map of Nx target names this rule cares about within a project.json file.
+ */
+interface ProjectTargets {
+  /** Build target configuration */
+  build?: unknown
+  /** Publish target configuration */
+  publish?: unknown
+}
+
+/**
  * Interface for project.json structure.
  */
 interface ProjectJson {
@@ -42,12 +52,16 @@ interface ProjectJson {
   /** Type of project (library, application, etc.) */
   projectType?: string
   /** Build targets configuration */
-  targets?: {
-    /** Build target configuration */
-    build?: unknown
-    /** Publish target configuration */
-    publish?: unknown
-  }
+  targets?: ProjectTargets
+}
+
+/**
+ * Adds the optional `name` field that may appear on `project.json` even when
+ * the upstream interface omits it.
+ */
+type WithProjectName = {
+  /** Project name from project.json */
+  name?: string
 }
 
 /**
@@ -88,12 +102,7 @@ function findPublishableLibraries(baseDir: string, workspaceRoot: string, result
   if (isPublishableLibraryDir(baseDir)) {
     const relativePath = baseDir.slice(workspaceRoot.length + 1)
     const projectJsonPath = join(baseDir, 'project.json')
-    const projectJson = readJsonFileIfExists<
-      ProjectJson & {
-        /** Project name from project.json */
-        name?: string
-      }
-    >(projectJsonPath)
+    const projectJson = readJsonFileIfExists<ProjectJson & WithProjectName>(projectJsonPath)
 
     results.push({
       name: projectJson?.name ?? `lib-${basename(baseDir)}`,

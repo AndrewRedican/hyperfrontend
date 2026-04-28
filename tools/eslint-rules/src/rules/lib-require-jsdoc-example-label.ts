@@ -24,20 +24,22 @@ type MessageIds = 'missingLabel'
 const EXAMPLE_TAG = '@example'
 
 /**
+ * Result of inspecting a single `@example` tag in a JSDoc comment.
+ */
+type ExampleLabelInfo = {
+  /** Whether the `@example` tag has a descriptive label. */
+  hasLabel: boolean
+}
+
+/**
  * Extracts all `@example` occurrences from a JSDoc comment and checks if they have labels.
  * A label is non-whitespace text on the same line as `@example`.
  *
  * @param comment - The JSDoc comment text to analyze.
  * @returns Array of objects indicating whether each `@example` has a label.
  */
-function analyzeExampleLabels(comment: string): Array<{
-  /** Whether the `@example` tag has a descriptive label. */
-  hasLabel: boolean
-}> {
-  const results: Array<{
-    /** Whether the `@example` tag has a descriptive label. */
-    hasLabel: boolean
-  }> = []
+function analyzeExampleLabels(comment: string): Array<ExampleLabelInfo> {
+  const results: Array<ExampleLabelInfo> = []
   const lines = comment.split('\n')
 
   for (let i = 0; i < lines.length; i++) {

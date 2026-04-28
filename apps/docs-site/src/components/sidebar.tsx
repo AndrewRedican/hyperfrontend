@@ -44,18 +44,24 @@ function useSidebarContext() {
 }
 
 /**
+ * Match descriptor used while resolving the current sidebar path: the chain of
+ * titles, the matched href length, and whether it was an exact-path hit.
+ */
+type SidebarMatch = {
+  path: string[]
+  hrefLength: number
+  exact: boolean
+}
+
+/**
  * Finds all potential matches for the current pathname and returns the most specific one.
  * @param items
  * @param pathname
  * @param currentPath
  */
-function findAllMatches(
-  items: NavItem[],
-  pathname: string,
-  currentPath: string[] = []
-): Array<{ path: string[]; hrefLength: number; exact: boolean }> {
+function findAllMatches(items: NavItem[], pathname: string, currentPath: string[] = []): Array<SidebarMatch> {
   const normalizedPathname = pathname.replace(/\/$/, '')
-  const matches: Array<{ path: string[]; hrefLength: number; exact: boolean }> = []
+  const matches: Array<SidebarMatch> = []
 
   for (const item of items) {
     const itemPath = [...currentPath, item.title]
@@ -174,7 +180,10 @@ export function Sidebar() {
   )
 }
 
-function SidebarItem({ item, pathname, path }: { item: NavItem; pathname: string; path: string[] }) {
+/** Props for the inline {@link SidebarItem} renderer */
+type SidebarItemProps = { item: NavItem; pathname: string; path: string[] }
+
+function SidebarItem({ item, pathname, path }: SidebarItemProps) {
   const { expandedPath, setExpandedPath } = useSidebarContext()
   const hasChildren = item.children && item.children.length > 0
   const isActive = item.href ? normalizePath(item.href) === normalizePath(pathname) : false
@@ -264,7 +273,10 @@ function SidebarItem({ item, pathname, path }: { item: NavItem; pathname: string
   )
 }
 
-function ChevronIcon({ className }: { className?: string }) {
+/** Common props for sidebar icons */
+type IconProps = { className?: string }
+
+function ChevronIcon({ className }: IconProps) {
   return (
     <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
       <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
@@ -272,7 +284,7 @@ function ChevronIcon({ className }: { className?: string }) {
   )
 }
 
-function CollapseIcon({ className }: { className?: string }) {
+function CollapseIcon({ className }: IconProps) {
   return (
     <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
       <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />

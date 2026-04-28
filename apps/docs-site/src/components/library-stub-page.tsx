@@ -86,7 +86,9 @@ export function LibraryStubPage({ title, packageName, description, features }: S
   )
 }
 
-function DocumentationIcon({ className }: { className?: string }) {
+type IconProps = { className?: string }
+
+function DocumentationIcon({ className }: IconProps) {
   return (
     <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
       <path
@@ -98,7 +100,7 @@ function DocumentationIcon({ className }: { className?: string }) {
   )
 }
 
-function CheckIcon({ className }: { className?: string }) {
+function CheckIcon({ className }: IconProps) {
   return (
     <svg className={className} viewBox="0 0 20 20" fill="currentColor">
       <path

@@ -1,4 +1,14 @@
 /**
+ * Options controlling how {@link base64ToUrlSafeBase64} rewrites the input.
+ */
+export type Base64ToUrlSafeBase64Options = {
+  /** Whether to apply URL-safe transformations */
+  urlSafe: boolean
+  /** Whether to preserve padding characters */
+  keepPadding: boolean
+}
+
+/**
  * Converts standard base64 encoding to URL-safe base64 encoding.
  * Optionally removes padding characters for more compact representation.
  *
@@ -20,16 +30,7 @@
  * // => 'SGVsbG8'
  * ```
  */
-export function base64ToUrlSafeBase64(
-  base64: string,
-  {
-    urlSafe,
-    keepPadding,
-  }: {
-    /** Whether to apply URL-safe transformations */ urlSafe: boolean
-    /** Whether to preserve padding characters */ keepPadding: boolean
-  }
-): string {
+export function base64ToUrlSafeBase64(base64: string, { urlSafe, keepPadding }: Base64ToUrlSafeBase64Options): string {
   if (urlSafe) {
     base64 = base64.replaceAll('+', '-').replaceAll('/', '_')
     if (keepPadding === false) {

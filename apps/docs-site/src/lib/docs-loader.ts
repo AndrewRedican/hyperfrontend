@@ -44,39 +44,49 @@ function resolveGeneratedSlug(slug: string): string {
 }
 
 /**
+ * Single library entry in the documentation manifest.
+ */
+interface ManifestLibrary {
+  /** Library display name */
+  name: string
+  /** npm package name */
+  packageName: string
+  /** URL slug */
+  slug: string
+  /** Library category */
+  category: string
+  /** Path to README file (null if missing) */
+  readme: string | null
+  /** Path to architecture doc (null if missing) */
+  architecture: string | null
+  /** Whether API docs exist */
+  hasApi: boolean
+  /** Keywords from package.json */
+  keywords: string[]
+  /** Description from package.json */
+  description: string
+}
+
+/**
+ * Availability flags for top-level (non-library) documentation pages.
+ */
+interface ManifestRootDocs {
+  /** Whether architecture doc exists */
+  architecture: boolean
+  /** Whether contributing doc exists */
+  contributing: boolean
+}
+
+/**
  * Documentation manifest containing library metadata and generation info.
  */
 interface Manifest {
   /** Timestamp when docs were generated */
   generatedAt: string
   /** Library metadata entries */
-  libraries: {
-    /** Library display name */
-    name: string
-    /** npm package name */
-    packageName: string
-    /** URL slug */
-    slug: string
-    /** Library category */
-    category: string
-    /** Path to README file (null if missing) */
-    readme: string | null
-    /** Path to architecture doc (null if missing) */
-    architecture: string | null
-    /** Whether API docs exist */
-    hasApi: boolean
-    /** Keywords from package.json */
-    keywords: string[]
-    /** Description from package.json */
-    description: string
-  }[]
+  libraries: ManifestLibrary[]
   /** Root documentation availability */
-  rootDocs: {
-    /** Whether architecture doc exists */
-    architecture: boolean
-    /** Whether contributing doc exists */
-    contributing: boolean
-  }
+  rootDocs: ManifestRootDocs
 }
 
 /**

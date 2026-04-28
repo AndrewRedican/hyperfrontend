@@ -1,4 +1,4 @@
-import type { ExecutorContext } from '@nx/devkit'
+import type { ExecutorContext, PromiseExecutor } from '@nx/devkit'
 import type { InstallExecutorOptions } from './schema'
 import { execFileSync } from 'node:child_process'
 import { existsSync } from 'node:fs'
@@ -16,13 +16,7 @@ import { logger } from '../../lib/logger'
  * @param context - Executor context providing project information
  * @returns An object indicating success or failure of the install
  */
-export default async function installExecutor(
-  options: InstallExecutorOptions,
-  context: ExecutorContext
-): Promise<{
-  /** Indicates whether the install succeeded. */
-  success: boolean
-}> {
+export default async function installExecutor(options: InstallExecutorOptions, context: ExecutorContext): ReturnType<PromiseExecutor> {
   const projectName = context.projectName
   if (!projectName) {
     logger.error('No project name provided')

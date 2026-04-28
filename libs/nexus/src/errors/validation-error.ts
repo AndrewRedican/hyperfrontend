@@ -2,6 +2,18 @@ import type { ValidationError as IValidationError } from '../types/validation'
 import { setPrototypeOf } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
 
 /**
+ * JSON representation of a {@link ValidationError}.
+ */
+export type ValidationErrorJSON = {
+  /** Error name */
+  name: string
+  /** Error message */
+  message: string
+  /** Validation errors */
+  errors: IValidationError[]
+}
+
+/**
  * Custom error class for validation failures
  *
  * @example Throwing validation error
@@ -25,14 +37,7 @@ export class ValidationError extends Error {
    *
    * @returns JSON object with error details
    */
-  toJSON(): {
-    /** Error name */
-    name: string
-    /** Error message */
-    message: string
-    /** Validation errors */
-    errors: IValidationError[]
-  } {
+  toJSON(): ValidationErrorJSON {
     return {
       name: this.name,
       message: this.message,

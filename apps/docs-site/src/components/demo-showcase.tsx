@@ -4,6 +4,15 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { min, pow } from '@hyperfrontend/immutable-api-utils/built-in-copy/math'
 import { requestAnimationFrame, cancelAnimationFrame } from '@hyperfrontend/immutable-api-utils/built-in-copy/timers'
 
+/**
+ * Snapshot taken when fast-forward begins so the animation can interpolate from
+ * the time and progress at that moment.
+ */
+type FastForwardStart = {
+  time: number
+  progress: number
+}
+
 interface DemoShowcaseProps {
   /** Duration in milliseconds for full cycle (default: 60000ms = 1 minute) */
   cycleDuration?: number
@@ -31,7 +40,7 @@ export function DemoShowcase({
   const [isFastForwarding, setIsFastForwarding] = useState(false)
   const animationRef = useRef<number | null>(null)
   const startTimeRef = useRef<number>(0)
-  const fastForwardStartRef = useRef<{ time: number; progress: number } | null>(null)
+  const fastForwardStartRef = useRef<FastForwardStart | null>(null)
 
   const currentDemoIndex = controlledDemo ?? internalDemo
 
@@ -126,7 +135,10 @@ export function DemoShowcase({
   )
 }
 
-function ProgressBorder({ progress }: { progress: number }) {
+/** Props for {@link ProgressBorder} */
+type ProgressBorderProps = { progress: number }
+
+function ProgressBorder({ progress }: ProgressBorderProps) {
   if (progress <= 0) return null
 
   const angle = (progress / 100) * 360
@@ -152,7 +164,10 @@ function ProgressBorder({ progress }: { progress: number }) {
   )
 }
 
-function DemoPlaceholder({ index }: { index: number }) {
+/** Props for {@link DemoPlaceholder} */
+type DemoPlaceholderProps = { index: number }
+
+function DemoPlaceholder({ index }: DemoPlaceholderProps) {
   const demos = [
     { name: 'Chess', description: 'Multiplayer chess with real-time sync' },
     { name: 'Clock', description: 'Synchronized time across contexts' },
@@ -176,7 +191,10 @@ function DemoPlaceholder({ index }: { index: number }) {
   )
 }
 
-function SkipIcon({ className }: { className?: string }) {
+/** Common props for showcase icons */
+type IconProps = { className?: string }
+
+function SkipIcon({ className }: IconProps) {
   return (
     <svg className={className} viewBox="0 0 24 24" fill="currentColor">
       <path d="M5.055 7.06C3.805 6.347 2.25 7.25 2.25 8.69v6.62c0 1.44 1.555 2.343 2.805 1.628L12 13.471v3.839c0 1.44 1.555 2.343 2.805 1.628l7.108-4.061c1.26-.72 1.26-2.536 0-3.256l-7.108-4.061C13.555 6.347 12 7.25 12 8.69v3.839L5.055 7.06z" />
@@ -184,7 +202,7 @@ function SkipIcon({ className }: { className?: string }) {
   )
 }
 
-function DemoIcon({ className }: { className?: string }) {
+function DemoIcon({ className }: IconProps) {
   return (
     <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5}>
       <path

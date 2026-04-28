@@ -121,7 +121,9 @@ export function MermaidDiagram({ chart, className = '' }: MermaidDiagramProps) {
   )
 }
 
-function ExpandIcon({ className }: { className?: string }) {
+type ExpandIconProps = { className?: string }
+
+function ExpandIcon({ className }: ExpandIconProps) {
   return (
     <svg className={className} fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
       <path

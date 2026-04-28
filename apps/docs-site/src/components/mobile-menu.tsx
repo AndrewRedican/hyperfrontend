@@ -52,18 +52,25 @@ function useMobileNavContext() {
 }
 
 /**
+ * Match descriptor used while resolving the active mobile nav path: the
+ * matched item path, the href length (for tie-breaking), and whether the path
+ * was an exact hit.
+ */
+type MobileNavMatch = {
+  itemPath: string[]
+  hrefLength: number
+  exact: boolean
+}
+
+/**
  * Finds all potential matches for the current pathname.
  * @param items
  * @param pathname
  * @param currentPath
  */
-function findAllMatches(
-  items: NavItem[],
-  pathname: string,
-  currentPath: string[] = []
-): Array<{ itemPath: string[]; hrefLength: number; exact: boolean }> {
+function findAllMatches(items: NavItem[], pathname: string, currentPath: string[] = []): Array<MobileNavMatch> {
   const normalizedPathname = normalizePath(pathname)
-  const matches: Array<{ itemPath: string[]; hrefLength: number; exact: boolean }> = []
+  const matches: Array<MobileNavMatch> = []
 
   for (const item of items) {
     const itemPath = [...currentPath, item.title]
@@ -286,19 +293,16 @@ export function MobileMenu() {
   )
 }
 
-function MobileNavSection({
-  section,
-  pathname,
-  onClose,
-  path,
-  depth = 0,
-}: {
+/** Props for the inline {@link MobileNavSection} renderer */
+type MobileNavSectionProps = {
   section: NavItem
   pathname: string
   onClose: () => void
   path: string[]
   depth?: number
-}) {
+}
+
+function MobileNavSection({ section, pathname, onClose, path, depth = 0 }: MobileNavSectionProps) {
   const { expandedSections, toggleSection } = useMobileNavContext()
   const pathKey = path.join('/')
   const isOpen = expandedSections.has(pathKey)
@@ -397,7 +401,10 @@ function checkIfChildActive(children: NavItem[], pathname: string): boolean {
   })
 }
 
-function MenuIcon({ className }: { className?: string }) {
+/** Common props for mobile-menu icons */
+type IconProps = { className?: string }
+
+function MenuIcon({ className }: IconProps) {
   return (
     <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
       <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" />
@@ -405,7 +412,7 @@ function MenuIcon({ className }: { className?: string }) {
   )
 }
 
-function CloseIcon({ className }: { className?: string }) {
+function CloseIcon({ className }: IconProps) {
   return (
     <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
       <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
@@ -413,7 +420,7 @@ function CloseIcon({ className }: { className?: string }) {
   )
 }
 
-function ChevronIcon({ className }: { className?: string }) {
+function ChevronIcon({ className }: IconProps) {
   return (
     <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
       <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />

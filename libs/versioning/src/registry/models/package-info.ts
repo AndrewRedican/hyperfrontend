@@ -36,6 +36,32 @@ export interface PackageInfo {
 }
 
 /**
+ * Inputs for {@link createPackageInfo}.
+ */
+export interface CreatePackageInfoOptions {
+  /** Package name, e.g., 'lodash' or '@scope/pkg' */
+  name: string
+  /** The most recently published semver string */
+  latestVersion: string
+  /** All published semver strings in chronological order */
+  versions: readonly string[]
+  /** Brief summary of package functionality */
+  description?: string
+  /** SPDX license identifier */
+  license?: string
+  /** URL to source code repository */
+  repository?: string
+  /** URL to project homepage or documentation site */
+  homepage?: string
+  /** List of maintainers with name and email */
+  maintainers?: readonly Maintainer[]
+  /** Search terms for npm registry discovery */
+  keywords?: readonly string[]
+  /** Time of last modification */
+  lastModified?: string
+}
+
+/**
  * Creates a new PackageInfo object.
  *
  * @param options - Configuration for the package info
@@ -61,28 +87,7 @@ export interface PackageInfo {
  * })
  * ```
  */
-export function createPackageInfo(options: {
-  /** Package name, e.g., 'lodash' or '@scope/pkg' */
-  name: string
-  /** The most recently published semver string */
-  latestVersion: string
-  /** All published semver strings in chronological order */
-  versions: readonly string[]
-  /** Brief summary of package functionality */
-  description?: string
-  /** SPDX license identifier */
-  license?: string
-  /** URL to source code repository */
-  repository?: string
-  /** URL to project homepage or documentation site */
-  homepage?: string
-  /** List of maintainers with name and email */
-  maintainers?: readonly Maintainer[]
-  /** Search terms for npm registry discovery */
-  keywords?: readonly string[]
-  /** Time of last modification */
-  lastModified?: string
-}): PackageInfo {
+export function createPackageInfo(options: CreatePackageInfoOptions): PackageInfo {
   return {
     name: options.name,
     description: options.description,

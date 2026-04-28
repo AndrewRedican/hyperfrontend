@@ -1,4 +1,4 @@
-import type { ExecutorContext } from '@nx/devkit'
+import type { ExecutorContext, PromiseExecutor } from '@nx/devkit'
 import type { RollupOptions } from 'rollup'
 import type { BuildExecutorOptions, BuildContext, FormatOutputs, EntryPoint, ESMConfig, CJSConfig } from './lib'
 import { existsSync, mkdirSync, rmSync } from 'node:fs'
@@ -293,10 +293,7 @@ async function buildSingleEntry(
 export default async function runExecutor(
   options: BuildExecutorOptions,
   context: ExecutorContext
-): Promise<{
-  /** Whether the build succeeded */
-  success: boolean
-}> {
+): ReturnType<PromiseExecutor> {
   const { projectName, root: workspaceRoot } = context
   const logger = getLogger()
   logger.setLogLevel(options.verbose ?? false)

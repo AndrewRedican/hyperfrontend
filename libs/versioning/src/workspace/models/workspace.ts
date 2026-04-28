@@ -101,6 +101,24 @@ export function createWorkspaceConfig(options?: Partial<WorkspaceConfig>): Works
 }
 
 /**
+ * Inputs for {@link createWorkspace}.
+ */
+export interface CreateWorkspaceOptions {
+  /** Absolute path to workspace root directory */
+  root: string
+  /** Type of workspace (nx, turbo, etc.) */
+  type: WorkspaceType
+  /** Map of project names to project objects */
+  projects: ReadonlyMap<string, Project>
+  /** Configuration used for workspace discovery */
+  config: WorkspaceConfig
+  /** Map of package names to their dependents */
+  dependencyGraph: ReadonlyMap<string, readonly string[]>
+  /** Map of package names to their dependencies */
+  reverseDependencyGraph: ReadonlyMap<string, readonly string[]>
+}
+
+/**
  * Creates a new workspace object.
  *
  * @param options - Workspace properties
@@ -127,20 +145,7 @@ export function createWorkspaceConfig(options?: Partial<WorkspaceConfig>): Works
  * })
  * ```
  */
-export function createWorkspace(options: {
-  /** Absolute path to workspace root directory */
-  root: string
-  /** Type of workspace (nx, turbo, etc.) */
-  type: WorkspaceType
-  /** Map of project names to project objects */
-  projects: ReadonlyMap<string, Project>
-  /** Configuration used for workspace discovery */
-  config: WorkspaceConfig
-  /** Map of package names to their dependents */
-  dependencyGraph: ReadonlyMap<string, readonly string[]>
-  /** Map of package names to their dependencies */
-  reverseDependencyGraph: ReadonlyMap<string, readonly string[]>
-}): Workspace {
+export function createWorkspace(options: CreateWorkspaceOptions): Workspace {
   const projectList = [...options.projects.values()].sort((a, b) => a.name.localeCompare(b.name))
 
   return {

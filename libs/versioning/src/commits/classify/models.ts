@@ -145,6 +145,16 @@ export function createEmptyClassificationSummary(): ClassificationSummary {
 }
 
 /**
+ * Optional metadata that can be attached when constructing a {@link ClassifiedCommit}.
+ */
+export type CreateClassifiedCommitOptions = {
+  /** Files in the project modified by this commit */
+  readonly touchedFiles?: readonly string[]
+  /** Chain of dependencies leading to indirect inclusion */
+  readonly dependencyPath?: readonly string[]
+}
+
+/**
  * Creates a classified commit.
  *
  * @param commit - The parsed conventional commit
@@ -167,12 +177,7 @@ export function createClassifiedCommit(
   commit: ConventionalCommit,
   raw: GitCommit,
   source: CommitSource,
-  options?: {
-    /** Files in the project modified by this commit */
-    readonly touchedFiles?: readonly string[]
-    /** Chain of dependencies leading to indirect inclusion */
-    readonly dependencyPath?: readonly string[]
-  }
+  options?: CreateClassifiedCommitOptions
 ): ClassifiedCommit {
   const include = isIncludedSource(source)
   const preserveScope = shouldPreserveScope(source)

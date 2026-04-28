@@ -1,4 +1,4 @@
-import type { ExecutorContext } from '@nx/devkit'
+import type { ExecutorContext, PromiseExecutor } from '@nx/devkit'
 import type { PublishExecutorOptions } from './schema'
 import { execFileSync } from 'node:child_process'
 import { existsSync, readFileSync } from 'node:fs'
@@ -7,16 +7,31 @@ import { parse } from '@hyperfrontend/immutable-api-utils/built-in-copy/json'
 import { logger } from '../../lib/logger'
 
 /**
+ * Slice of an Nx project configuration relevant to {@link isLibraryProject}.
+ */
+type LibraryProjectConfig = {
+  /** Type of the project (e.g., 'library', 'application') */
+  projectType?: string
+}
+
+/**
+ * Errors thrown by `child_process` may carry a `stderr` field beyond the
+ * standard `Error` shape; this captures it without committing to the full
+ * Node.js error type.
+ */
+type ErrorWithStderr = {
+  /** Standard error output */
+  stderr: unknown
+}
+
+/**
  * Verifies the project is a publishable library.
  *
  * @param projectConfig - Project configuration from Nx
  * @param projectConfig.projectType - Type of the project (e.g., 'library', 'application')
  * @returns True if the project is a library
  */
-function isLibraryProject(projectConfig: {
-  /** Type of the project (e.g., 'library', 'application') */
-  projectType?: string
-}): boolean {
+function isLibraryProject(projectConfig: LibraryProjectConfig): boolean {
   return projectConfig.projectType === 'library'
 }
 
@@ -101,13 +116,7 @@ function buildPublishArgs(options: PublishExecutorOptions): string[] {
  * @param context - Nx executor context
  * @returns Success status
  */
-export default async function publishExecutor(
-  options: PublishExecutorOptions,
-  context: ExecutorContext
-): Promise<{
-  /** Whether the publish operation succeeded */
-  success: boolean
-}> {
+export default async function publishExecutor(options: PublishExecutorOptions, context: ExecutorContext): ReturnType<PromiseExecutor> {
   const { projectName, root: workspaceRoot } = context
 
   if (!projectName) {
@@ -200,16 +209,7 @@ export default async function publishExecutor(
     if (error instanceof Error) {
       logger.error(error.message)
       if ('stderr' in error) {
-        logger.error(
-          String(
-            (<
-              {
-                /** Standard error output */
-                stderr: unknown
-              }
-            >error).stderr
-          )
-        )
+        logger.error(String((<ErrorWithStderr>error).stderr))
       }
     }
     return { success: false }

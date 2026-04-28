@@ -3,17 +3,22 @@
 import { useState, useCallback } from 'react'
 import { values } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
 
+/**
+ * Per-category counts displayed alongside the API search filter buttons.
+ */
+interface ApiCategoryCounts {
+  functions: number
+  classes: number
+  interfaces: number
+  types: number
+  variables: number
+  enums: number
+}
+
 interface ApiSearchFilterProps {
   onSearch: (query: string) => void
   onFilterChange: (filters: ApiFilterState) => void
-  counts: {
-    functions: number
-    classes: number
-    interfaces: number
-    types: number
-    variables: number
-    enums: number
-  }
+  counts: ApiCategoryCounts
 }
 
 export interface ApiFilterState {
@@ -177,7 +182,9 @@ function FilterButton({ active, onClick, color, children }: FilterButtonProps) {
   )
 }
 
-function SearchIcon({ className = '' }: { className?: string }) {
+type IconProps = { className?: string }
+
+function SearchIcon({ className = '' }: IconProps) {
   return (
     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className={className}>
       <path
@@ -189,7 +196,7 @@ function SearchIcon({ className = '' }: { className?: string }) {
   )
 }
 
-function CloseIcon({ className = '' }: { className?: string }) {
+function CloseIcon({ className = '' }: IconProps) {
   return (
     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className={className}>
       <path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" />

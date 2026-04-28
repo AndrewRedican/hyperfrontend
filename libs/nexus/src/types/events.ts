@@ -85,17 +85,31 @@ export interface SecurityErrorEventData {
 }
 
 /**
+ * Carrier shape for a single broker event: a discriminator (`event`) plus its
+ * typed payload (`data`). Reused by every variant in {@link EventData}.
+ *
+ * @template TEvent - String literal naming the event
+ * @template TData - Concrete payload type for that event
+ */
+type EventEnvelope<TEvent extends string, TData> = {
+  /** Event type */
+  event: TEvent
+  /** Event payload */
+  data: TData
+}
+
+/**
  * Discriminated union of all event data types
  */
 export type EventData =
-  | { /** Event type */ event: 'open'; /** Event payload */ data: OpenEventData }
-  | { /** Event type */ event: 'close'; /** Event payload */ data: CloseEventData }
-  | { /** Event type */ event: 'cancel'; /** Event payload */ data: CancelEventData }
-  | { /** Event type */ event: 'deny'; /** Event payload */ data: DenyEventData }
-  | { /** Event type */ event: 'invalid'; /** Event payload */ data: InvalidEventData }
-  | { /** Event type */ event: 'security-negotiated'; /** Event payload */ data: SecurityNegotiatedEventData }
-  | { /** Event type */ event: 'security-ready'; /** Event payload */ data: SecurityReadyEventData }
-  | { /** Event type */ event: 'security-error'; /** Event payload */ data: SecurityErrorEventData }
+  | EventEnvelope<'open', OpenEventData>
+  | EventEnvelope<'close', CloseEventData>
+  | EventEnvelope<'cancel', CancelEventData>
+  | EventEnvelope<'deny', DenyEventData>
+  | EventEnvelope<'invalid', InvalidEventData>
+  | EventEnvelope<'security-negotiated', SecurityNegotiatedEventData>
+  | EventEnvelope<'security-ready', SecurityReadyEventData>
+  | EventEnvelope<'security-error', SecurityErrorEventData>
 
 /**
  * Type-safe event handler for OPEN events

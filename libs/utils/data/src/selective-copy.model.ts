@@ -45,3 +45,15 @@ export interface ReferenceLoop {
   /** Path where the loop leads to */
   destinationPath: string[]
 }
+
+/**
+ * Result of {@link selectiveCopy}: the partial clone and any skipped data points.
+ *
+ * @template T - Original target type
+ */
+export interface SelectiveCopyResult<T> {
+  /** Cloned value */
+  clone: Partial<T>
+  /** Skipped data points */
+  skipped: DataPoint[]
+}

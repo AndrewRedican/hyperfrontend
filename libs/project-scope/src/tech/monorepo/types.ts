@@ -2,6 +2,16 @@ import type { PackageJson } from '../../project/package'
 import type { DetectionSource } from '../shared-utils/types'
 
 /**
+ * Filesystem layout describing where applications and libraries live in a monorepo.
+ */
+export interface WorkspaceLayout {
+  /** Applications directory */
+  appsDir: string
+  /** Libraries directory */
+  libsDir: string
+}
+
+/**
  * Monorepo detection result.
  */
 export interface MonorepoDetection {
@@ -18,7 +28,7 @@ export interface MonorepoDetection {
   /** Detection sources */
   detectedFrom: DetectionSource[]
   /** Workspace layout */
-  workspaceLayout?: { /** Applications directory */ appsDir: string; /** Libraries directory */ libsDir: string }
+  workspaceLayout?: WorkspaceLayout
   /** Detected project paths */
   projects?: string[]
 }

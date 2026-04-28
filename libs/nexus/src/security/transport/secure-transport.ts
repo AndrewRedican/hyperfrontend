@@ -18,6 +18,15 @@ import { freeze } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
 import { createSecurityErrorEventData } from '../errors'
 
 /**
+ * Internal test hook exposed on the secure-transport instance.
+ * Lets tests deliver a raw inbound packet without traversing postMessage.
+ */
+type SecureTransportInternals = {
+  /** @internal */
+  handleReceive: (packet: Uint8Array) => void
+}
+
+/**
  * Protocol interface from network-protocol.
  *
  * This is a minimal subset of the network-protocol Protocol interface
@@ -248,7 +257,7 @@ export function createSecureTransport(config: SecureTransportConfig): SecurityTr
     return protocol
   }
 
-  return freeze(<SecurityTransport & { /** @internal */ handleReceive: (packet: Uint8Array) => void }>{
+  return freeze(<SecurityTransport & SecureTransportInternals>{
     send,
     onReceive,
     stop,

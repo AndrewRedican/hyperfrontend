@@ -269,6 +269,21 @@ function parsePackageJsonFilesFromTree(tree: Tree, workspaceRoot: string, packag
 }
 
 /**
+ * Internal-dependency annotation attached to project drafts so the dependency
+ * graph can be wired up after all projects are discovered.
+ */
+type InternalDependencyAnnotation = {
+  /** List of internal package dependencies */
+  internalDependencies: string[]
+}
+
+/**
+ * Project draft used by {@link buildProjectsWithDependencies}: the standard
+ * create-project options with internal dependencies attached for later wiring.
+ */
+type ProjectWithInternalDependencies = CreateProjectOptions & InternalDependencyAnnotation
+
+/**
  * Builds projects with internal dependency information.
  *
  * @param rawPackages - Raw package info objects
@@ -276,12 +291,7 @@ function parsePackageJsonFilesFromTree(tree: Tree, workspaceRoot: string, packag
  * @returns Array of Project objects with dependencies populated
  */
 function buildProjectsWithDependencies(rawPackages: RawPackageInfo[], packageNames: Set<string>): Project[] {
-  const projectsWithDeps: Array<
-    CreateProjectOptions & {
-      /** List of internal package dependencies */
-      internalDependencies: string[]
-    }
-  > = []
+  const projectsWithDeps: Array<ProjectWithInternalDependencies> = []
 
   for (const pkg of rawPackages) {
     const internalDeps = findInternalDependencies(pkg.packageJson, packageNames)

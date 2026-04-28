@@ -1,4 +1,4 @@
-import type { ExecutorContext } from '@nx/devkit'
+import type { ExecutorContext, PromiseExecutor } from '@nx/devkit'
 import type { ServeExecutorOptions } from './schema'
 import { spawn } from 'node:child_process'
 import { existsSync } from 'node:fs'
@@ -17,13 +17,7 @@ import { logger } from '../../lib/logger'
  * @param context - Executor context providing project information
  * @returns An object indicating success or failure of the serve command
  */
-export default async function serveExecutor(
-  options: ServeExecutorOptions,
-  context: ExecutorContext
-): Promise<{
-  /** Whether the serve operation completed successfully */
-  success: boolean
-}> {
+export default async function serveExecutor(options: ServeExecutorOptions, context: ExecutorContext): ReturnType<PromiseExecutor> {
   const projectName = context.projectName
   if (!projectName) {
     logger.error('No project name provided')
@@ -54,10 +48,7 @@ export default async function serveExecutor(
   logger.info(`  Running: ${command}`)
   logger.info(`  In: ${cwd}`)
 
-  return createPromise<{
-    /** Whether the serve operation completed successfully */
-    success: boolean
-  }>((resolve) => {
+  return createPromise<Awaited<ReturnType<PromiseExecutor>>>((resolve) => {
     const child = spawn(command, {
       cwd,
       stdio: 'inherit',

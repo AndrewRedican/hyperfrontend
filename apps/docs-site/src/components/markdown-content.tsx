@@ -3,9 +3,18 @@
 import { useEffect, useState } from 'react'
 import { MermaidDiagram } from './mermaid-diagram'
 
+/**
+ * Inline mermaid diagram payload extracted from a markdown source: a stable id
+ * for placeholder lookup paired with the raw chart text.
+ */
+interface MermaidDiagramEntry {
+  id: string
+  chart: string
+}
+
 interface MarkdownContentProps {
   html: string
-  mermaidDiagrams?: { id: string; chart: string }[]
+  mermaidDiagrams?: MermaidDiagramEntry[]
   className?: string
 }
 
@@ -31,7 +40,7 @@ export function MarkdownContent({ html, mermaidDiagrams = [], className = '' }: 
 }
 
 interface MermaidRendererProps {
-  diagrams: { id: string; chart: string }[]
+  diagrams: MermaidDiagramEntry[]
 }
 
 function MermaidRenderer({ diagrams }: MermaidRendererProps) {

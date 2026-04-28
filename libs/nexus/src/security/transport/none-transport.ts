@@ -17,6 +17,15 @@ import type { NoneTransportConfig, ReceiveHandler, TransportState } from './type
 import { freeze } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
 
 /**
+ * Internal test hook exposed on the none-transport instance.
+ * Lets tests deliver an inbound action without involving postMessage.
+ */
+type NoneTransportInternals = {
+  /** Processes incoming actions (for testing) */
+  handleReceive: (action: unknown) => void
+}
+
+/**
  * Creates a passthrough (no security) transport adapter.
  *
  * The none transport provides the same interface as secure transports
@@ -128,7 +137,7 @@ export function createNoneTransport(config: NoneTransportConfig): SecurityTransp
     return 'none'
   }
 
-  return freeze(<SecurityTransport & { /** Processes incoming actions (for testing) */ handleReceive: (action: unknown) => void }>{
+  return freeze(<SecurityTransport & NoneTransportInternals>{
     send,
     onReceive,
     stop,

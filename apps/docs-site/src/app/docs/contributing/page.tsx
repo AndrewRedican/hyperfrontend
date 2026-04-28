@@ -203,7 +203,9 @@ export default function ContributingPage() {
   )
 }
 
-function CheckIcon({ className }: { className?: string }) {
+type IconProps = { className?: string }
+
+function CheckIcon({ className }: IconProps) {
   return (
     <svg className={className} viewBox="0 0 20 20" fill="currentColor">
       <path
@@ -215,7 +217,7 @@ function CheckIcon({ className }: { className?: string }) {
   )
 }
 
-function GitHubIcon({ className }: { className?: string }) {
+function GitHubIcon({ className }: IconProps) {
   return (
     <svg className={className} fill="currentColor" viewBox="0 0 24 24">
       <path
@@ -227,7 +229,7 @@ function GitHubIcon({ className }: { className?: string }) {
   )
 }
 
-function DocumentIcon({ className }: { className?: string }) {
+function DocumentIcon({ className }: IconProps) {
   return (
     <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
       <path

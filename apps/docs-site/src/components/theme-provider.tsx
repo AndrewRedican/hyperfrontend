@@ -24,7 +24,9 @@ export function useTheme(): ThemeContextValue {
   return context ?? defaultContext
 }
 
-export function ThemeProvider({ children }: { children: React.ReactNode }) {
+type ThemeProviderProps = { children: React.ReactNode }
+
+export function ThemeProvider({ children }: ThemeProviderProps) {
   const [theme, setTheme] = useState<Theme>('system')
   const [resolvedTheme, setResolvedTheme] = useState<'light' | 'dark'>('light')
   const [mounted, setMounted] = useState(false)
