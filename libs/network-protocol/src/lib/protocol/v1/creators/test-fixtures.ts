@@ -42,12 +42,18 @@ export const testPasswords = {
  * // => 'info'
  * ```
  */
-export const createMockLogger = (): Logger => ({
-  debug: () => void 0,
-  info: () => void 0,
-  warn: () => void 0,
-  error: () => void 0,
-  log: () => void 0,
-  setLogLevel: () => void 0,
-  getLogLevel: () => <const>'info',
-})
+export const createMockLogger = (): Logger => {
+  const logger: Logger = {
+    debug: () => void 0,
+    info: () => void 0,
+    warn: () => void 0,
+    error: () => void 0,
+    log: () => void 0,
+    setLogLevel: () => void 0,
+    getLogLevel: () => <const>'info',
+    channel: () => logger,
+    timed: <T>(_label: string, fn: () => T): T => fn(),
+    timedAsync: <T>(_label: string, fn: () => Promise<T>): Promise<T> => fn(),
+  }
+  return logger
+}

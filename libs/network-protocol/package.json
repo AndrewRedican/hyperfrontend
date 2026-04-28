@@ -7,7 +7,7 @@
     "@hyperfrontend/data-utils": "0.0.4",
     "@hyperfrontend/json-utils": "0.1.0",
     "@hyperfrontend/list-utils": "0.0.4",
-    "@hyperfrontend/logging": "0.1.0",
+    "@hyperfrontend/logging": "0.2.0",
     "@hyperfrontend/random-generator-utils": "0.0.4",
     "@hyperfrontend/string-utils": "0.1.0",
     "@hyperfrontend/time-utils": "0.0.4",
