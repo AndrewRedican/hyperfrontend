@@ -3,9 +3,14 @@
   "version": "0.0.1",
   "description": "Composable, vendor-neutral build toolkit for TypeScript libraries, JS bins, and Node SEA native binaries.",
   "license": "MIT",
-  "dependencies": {},
+  "dependencies": {
+    "@hyperfrontend/logging": "0.2.0",
+    "@hyperfrontend/immutable-api-utils": "0.1.2"
+  },
   "exports": {
     ".": "./src/index.js",
+    "./memory": "./src/memory/index.js",
+    "./models": "./src/models/index.js",
     "./package.json": "./package.json"
   },
   "sideEffects": false,

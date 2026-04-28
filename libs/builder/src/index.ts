@@ -3,3 +3,41 @@
  *
  * @module @hyperfrontend/builder
  */
+export type { MemoryMonitor, MemorySnapshot } from './memory'
+export type {
+  AssetConditionPredicate,
+  AssetSpec,
+  AuthorField,
+  BinConfig,
+  BinFormatSpec,
+  BinOutput,
+  BinScriptFormat,
+  BugsField,
+  BuildConfig,
+  BuildContext,
+  BuildResult,
+  CjsConfig,
+  ConditionalExport,
+  EntryPoint,
+  EntryPointCategory,
+  EntryPointDiscovery,
+  EntryPointPlatform,
+  EsmConfig,
+  ExportValue,
+  FormatCounts,
+  FormatEntryConfig,
+  FormatOutputs,
+  FundingField,
+  IifeConfig,
+  IifeOutput,
+  InheritFromSpec,
+  IsWorkspacePackagePredicate,
+  MemoryMonitorOptions,
+  PackageJson,
+  RepositoryField,
+  SeaConfig,
+  SeaPlatform,
+  UmdConfig,
+  UmdOutput,
+} from './models'
+export { createMemoryMonitor, recover } from './memory'
