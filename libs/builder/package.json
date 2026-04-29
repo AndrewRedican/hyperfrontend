@@ -7,6 +7,7 @@
     "@hyperfrontend/logging": "0.2.0",
     "@hyperfrontend/immutable-api-utils": "0.1.2",
     "@hyperfrontend/project-scope": "0.2.1",
+    "@hyperfrontend/versioning": "0.6.0",
     "@rollup/plugin-commonjs": "29.0.0",
     "@rollup/plugin-json": "6.1.0",
     "@rollup/plugin-node-resolve": "16.0.3",
@@ -23,6 +24,10 @@
     "./bundle/rollup": "./src/bundle/rollup/index.js",
     "./memory": "./src/memory/index.js",
     "./models": "./src/models/index.js",
+    "./package": "./src/package/index.js",
+    "./package/assets": "./src/package/assets/index.js",
+    "./package/json": "./src/package/json/index.js",
+    "./package/licenses": "./src/package/licenses/index.js",
     "./package.json": "./package.json"
   },
   "sideEffects": false,

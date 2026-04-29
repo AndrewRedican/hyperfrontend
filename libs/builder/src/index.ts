@@ -42,3 +42,4 @@ export type {
 } from './models'
 export { runBundlePhase } from './bundle'
 export { createMemoryMonitor, recover } from './memory'
+export { runPackagePhase } from './package'

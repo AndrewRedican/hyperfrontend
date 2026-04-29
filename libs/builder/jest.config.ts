@@ -11,7 +11,7 @@ export default <Config>{
     '!**/jest.setup*.ts',
   ],
   coverageDirectory: '../../coverage/libs/builder',
-  coveragePathIgnorePatterns: ['/node_modules/', 'src/models/'],
+  coveragePathIgnorePatterns: ['/node_modules/', 'src/models/', '\\.types\\.ts$', 'src/package/licenses/types\\.ts$'],
   displayName: 'builder',
   moduleFileExtensions: ['ts', 'js', 'html'],
   testEnvironment: 'node',

@@ -22,8 +22,8 @@ export type AssetConditionPredicate = (pkg: PackageJson) => boolean
 export interface AssetSpec {
   /** Absolute source directory. */
   from: string
-  /** Output subdirectory relative to the build's outputPath; use `.` for the dist root. */
-  to: string
+  /** Output subdirectory relative to the build's outputPath; defaults to `.` (the dist root). */
+  to?: string
   /** Explicit relative file names to copy. */
   files?: string[]
   /** POSIX-style glob pattern, evaluated relative to `from`. */
