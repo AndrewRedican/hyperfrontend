@@ -32,6 +32,7 @@
     "./package/assets": "./src/package/assets/index.js",
     "./package/json": "./src/package/json/index.js",
     "./package/licenses": "./src/package/licenses/index.js",
+    "./presets": "./src/presets/index.js",
     "./package.json": "./package.json"
   },
   "sideEffects": false,

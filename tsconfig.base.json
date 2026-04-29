@@ -44,6 +44,7 @@
       "@hyperfrontend/builder/package/assets": ["libs/builder/src/package/assets/index.ts"],
       "@hyperfrontend/builder/package/json": ["libs/builder/src/package/json/index.ts"],
       "@hyperfrontend/builder/package/licenses": ["libs/builder/src/package/licenses/index.ts"],
+      "@hyperfrontend/builder/presets": ["libs/builder/src/presets/index.ts"],
       "@hyperfrontend/cryptography/browser": ["libs/cryptography/src/browser/index.ts"],
       "@hyperfrontend/cryptography/common": ["libs/cryptography/src/common/index.ts"],
       "@hyperfrontend/cryptography/node": ["libs/cryptography/src/node/index.ts"],

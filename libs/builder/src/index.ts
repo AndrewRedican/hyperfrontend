@@ -41,6 +41,8 @@ export type {
   UmdOutput,
 } from './models'
 export { runBinPhase } from './bin'
+export { build, createBuildContext } from './build'
 export { runBundlePhase } from './bundle'
 export { createMemoryMonitor, recover } from './memory'
 export { runPackagePhase } from './package'
+export { byNames, byPrefix } from './presets'
