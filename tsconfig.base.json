@@ -31,6 +31,7 @@
       "@hyperfrontend/app": ["tools/app/src/index.ts"],
       "@hyperfrontend/builder": ["libs/builder/src/index.ts"],
       "@hyperfrontend/builder/bin": ["libs/builder/src/bin/index.ts"],
+      "@hyperfrontend/builder/bin/native": ["libs/builder/src/bin/native/index.ts"],
       "@hyperfrontend/builder/bin/script": ["libs/builder/src/bin/script/index.ts"],
       "@hyperfrontend/builder/bundle": ["libs/builder/src/bundle/index.ts"],
       "@hyperfrontend/builder/bundle/declarations": ["libs/builder/src/bundle/declarations/index.ts"],
