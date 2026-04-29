@@ -1,7 +1,7 @@
 # `@hyperfrontend/builder` Implementation Plan
 
-**Status:** Approved (Grill Session Complete)
-**Date:** 2026-04-27
+**Status:** In Progress — Phases 1–9 complete; Phase 10 next (with carry-over from Phase 9)
+**Date:** 2026-04-27 (last updated: 2026-04-29)
 **Parent:** [features-implementation-plan.md](./features-implementation-plan.md), Phase 1.2
 
 ---
@@ -54,7 +54,7 @@ Create `@hyperfrontend/builder`, the publishable vendor-neutral spiritual succes
 | 36  | Plan format                 | Per implementation-plans skill                                                                                                                                                                                              |
 | 37  | Doc deliverables            | README + JSDoc per skills up-front. ARCHITECTURE.md deferred to release-time on user request                                                                                                                                |
 
-### Minor scaffolding choices (proposed; revisit during PR review)
+### Minor scaffolding choices
 
 - **Builder CLI bin name:** single bin `hf-build` declared at `src/bin/hf-build.ts`.
 - **Initial preset list:** `byPrefix(scope)`, `byNames(names[])` only. Future presets (`standardLibrary`, `shellPackage`) added when their consumers exist.
@@ -110,436 +110,49 @@ Allowed runtime/dev dependencies (hard constraint):
 
 ---
 
-## Phase 1 — Foundation: extend `@hyperfrontend/logging`
+## Completed Phases
 
-Promote `channel`, `timed`, `timedAsync` from the executor's local `BuildLogger` into lib-logging itself. Builder primitives (and any other consumer) get them natively.
-
-**Files to modify:**
-
-- `libs/logging/src/create-logger.ts` — extend `Logger` type with `channel`, `timed`, `timedAsync`; implement them in the factory
-- `libs/logging/src/create-logger.spec.ts` — add 100% coverage for the three new methods
-- `libs/logging/src/index.ts` — re-export updated types
-- `libs/logging/package.json` — bump version (minor: feature addition)
-- `libs/logging/README.md` — document new methods per readme-docs skill
-
-**Method signatures:**
-
-```typescript
-interface Logger {
-  // ... existing methods
-  /** Returns a sub-logger that prepends `[prefix]` to every message. */
-  channel(prefix: string): Logger
-  /** Wraps a sync call with timing. Logs completion or failure with elapsed ms. */
-  timed<T>(label: string, fn: () => T): T
-  /** Wraps a promise-returning call with timing. Dumps stack trace on error to debug log. */
-  timedAsync<T>(label: string, fn: () => Promise<T>): Promise<T>
-}
-```
-
-**Verification:**
-
-```bash
-npx nx test lib-logging
-npx nx lint lib-logging --fix
-npx nx typecheck lib-logging
-npx nx format:write --projects=lib-logging
-```
+| Phase | Title                                       | Status                                | Notes                                                                                                                                                            |
+| ----- | ------------------------------------------- | ------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1     | Foundation: extend `@hyperfrontend/logging` | ✅ done                               | `channel` / `timed` / `timedAsync` shipped on `Logger`. 100% coverage on the new methods.                                                                        |
+| 2     | Scaffold `libs/builder`                     | ✅ done                               | Publishable shell at `libs/builder/` with `tsconfig.base.json` path mapping and the dep set above.                                                               |
+| 3     | Models and Memory                           | ✅ done                               | All type definitions in `src/models/`. `recover()` always-on; `createMemoryMonitor()` opt-in with `warningMB` / `criticalMB` / `growthMB`.                       |
+| 4     | Bundle subdomain                            | ✅ done                               | Entries / externals / rollup driver / declarations under `src/bundle/`. Uses project-scope's `matchGlobPattern` and `walkDirectory`; no minimatch/glob.          |
+| 5     | Package subdomain                           | ✅ done                               | `synthesizePackageJson`, `inheritFields`, `filterWorkspaceDepsFromOutput`, `copyAssets`, third-party license collector. Adds dep on `@hyperfrontend/versioning`. |
+| 6     | Bin subdomain (JS)                          | ✅ done                               | `buildJsBin`, `defaultBootstrap`, `wireBinFieldInPackageJson`. CJS preferred over ESM when both formats produced for the same bin name.                          |
+| 7     | Bin subdomain (Node SEA)                    | ✅ done                               | `buildNativeBin` + `sea-config` / `sea-blob` / `host-binary` / `inject` / `codesign` / `platform-check`. SEA requires a CJS bin output.                          |
+| 8     | Presets and `build()` Facade                | ✅ done                               | `byPrefix(scope)` / `byNames(names)` predicates. `build(config)` orchestrates bundle → package → bin and threads the optional memory monitor.                    |
+| 9     | Builder's own CLI bin                       | ✅ done (with carry-over — see below) | `src/bin/hf-build.ts` + spec (100% coverage). `project.json` declares `hf-build` bin with all five SEA platforms.                                                |
 
 ---
 
-## Phase 2 — Scaffold `libs/builder`
+## Carry-over from Phase 9 — resolve before / during Phase 10
 
-Generate the publishable library shell.
+Two items surfaced when adding the bin block to `libs/builder/project.json` and could not land cleanly inside Phase 9. Pick these up at the start of Phase 10:
 
-**Generator command:**
+### 1. Custom workspace ESLint rules misread nested `name` keys
 
-```bash
-nx generate @hyperfrontend/package:library \
-  --name=builder \
-  --type=util \
-  --description="Composable, vendor-neutral build toolkit for TypeScript libraries, JS bins, and Node SEA native binaries." \
-  --publishable
-```
+`workspace/lib-e2e-project-required` ([tools/eslint-rules/src/rules/lib-e2e-project-required.ts](../tools/eslint-rules/src/rules/lib-e2e-project-required.ts)) and `workspace/lib-project-metadata` ([tools/eslint-rules/src/rules/lib-project-metadata.ts](../tools/eslint-rules/src/rules/lib-project-metadata.ts)) both walk every `JSONProperty` and overwrite the tracked top-level `name` whenever they see a key called `name`. The new `"name": "hf-build"` nested inside `targets.build.options.bin[0]` makes them think the project is named `hf-build`, producing:
 
-**Files to verify after generation:**
+- `Publishable library 'hf-build' is missing a corresponding e2e project. Expected: apps/package-e2e/hf-build/project.json`
+- `Publishable library project.json 'name' must start with 'lib-' prefix`
 
-- `libs/builder/package.json` — name `@hyperfrontend/builder`, version `0.0.0`, license MIT, sideEffects false, engines, keywords, exports map (placeholder)
-- `libs/builder/project.json` — name `lib-builder`, tags `['type:util','scope:public']`, build target uses `@hyperfrontend/package:build`, version + version-check + publish targets
-- `libs/builder/tsconfig.json`, `tsconfig.lib.json`, `tsconfig.spec.json` — standard
-- `libs/builder/eslint.config.cjs`, `jest.config.ts` — standard
-- `libs/builder/README.md` — standard sections per readme-docs skill
-- `libs/builder/src/index.ts` — `@module` JSDoc header, empty re-exports
+**Fix:** narrow each rule's visitor to top-level properties (e.g., guard on `node.parent?.parent?.type === 'JSONExpressionStatement'` before reading the value as the project name). Add regression tests with a nested `name` to both spec files. Verify with `npx nx test tool-eslint-rules` and `npx nx lint lib-builder`.
 
-**Files to create:**
+### 2. Wrapper executor schema does not yet accept `bin`
 
-- `libs/builder/CHANGELOG.md` — initial Keep-a-Changelog skeleton
-
-**Files to modify:**
-
-- `tsconfig.base.json` — add `"@hyperfrontend/builder": ["libs/builder/src/index.ts"]` path
-
-**Add deps to `libs/builder/package.json`:**
-
-```json
-{
-  "dependencies": {
-    "@hyperfrontend/logging": "<current>",
-    "@hyperfrontend/project-scope": "<current>",
-    "@hyperfrontend/immutable-api-utils": "<current>",
-    "rollup": "<current>",
-    "@rollup/plugin-commonjs": "<current>",
-    "@rollup/plugin-json": "<current>",
-    "@rollup/plugin-node-resolve": "<current>",
-    "@rollup/plugin-terser": "<current>",
-    "@rollup/plugin-typescript": "<current>",
-    "typescript": "<current>",
-    "postject": "<current>"
-  }
-}
-```
-
-**Verification:**
-
-```bash
-npx nx lint lib-builder --fix
-npx nx typecheck lib-builder
-npx nx format:write --projects=lib-builder
-```
-
----
-
-## Phase 3 — Models and Memory
-
-Type definitions (no implementation logic) plus the opt-in memory monitor with always-on `recover()` utility.
-
-**Files to create:**
-
-- `libs/builder/src/models/index.ts` — `@module` header, re-exports
-- `libs/builder/src/models/build-config.ts` — `BuildConfig`, `EsmConfig`, `CjsConfig`, `IifeConfig`, `UmdConfig`, `BinConfig`, `SeaConfig`, `AssetSpec`, `InheritFromSpec`
-- `libs/builder/src/models/entry-point.ts` — `EntryPoint`, `EntryPointDiscovery`, `EntryPointCategory`
-- `libs/builder/src/models/format-output.ts` — `FormatOutputs`, `IifeOutput`, `UmdOutput`
-- `libs/builder/src/models/package-json.ts` — `PackageJson`, `ConditionalExport`, `ExportValue`, `RepositoryField`, `BugsField`, `AuthorField`, `FundingField`
-- `libs/builder/src/models/build-context.ts` — `BuildContext` (computed paths + resolved settings, no Nx context)
-- `libs/builder/src/models/build-result.ts` — `BuildResult` (success + per-format counts + timing)
-- `libs/builder/src/memory/index.ts` — `@module` header
-- `libs/builder/src/memory/recover.ts` — always-on `recover()` (yield to event loop, optional GC if `--expose-gc`)
-- `libs/builder/src/memory/recover.spec.ts` — 100% coverage
-- `libs/builder/src/memory/monitor.ts` — `createMemoryMonitor(opts?)` factory; `MemorySnapshot`, `MemoryMonitorOptions` (warningMB, criticalMB, growthMB)
-- `libs/builder/src/memory/monitor.spec.ts` — 100% coverage
-
-**Files to modify:**
-
-- `libs/builder/src/index.ts` — re-export models
-- `libs/builder/package.json` — add `./models` and `./memory` exports
-- `tsconfig.base.json` — add path mappings for both subpaths
-
-**Verification:**
-
-```bash
-npx nx test lib-builder
-npx nx lint lib-builder --fix
-npx nx typecheck lib-builder
-```
-
----
-
-## Phase 4 — Bundle subdomain
-
-Entry-point discovery, externals resolution (predicate-based), per-format Rollup configuration factories, and tsc-driven declaration generation. Replaces `minimatch` with `matchGlobPattern` from project-scope and `glob` with `walkDirectory`/`findFilesInTree`.
-
-**Files to create:**
-
-- `libs/builder/src/bundle/index.ts` — `@module` header; re-exports a `runBundlePhase(ctx, config)` orchestrator
-- `libs/builder/src/bundle/entries/index.ts` — `@module` header
-- `libs/builder/src/bundle/entries/discover-entries.ts` — `discoverEntries(projectRoot)` (current `discoverEntryPoints` ported, `node:fs` via project-scope where possible)
-- `libs/builder/src/bundle/entries/resolve-entries.ts` — `resolveEntries(config, discovered)` using `matchGlobPattern`
-- `libs/builder/src/bundle/entries/by-platform.ts` — `getEntriesByPlatform`, `getSharedEntries`
-- `libs/builder/src/bundle/entries/*.spec.ts` — 100% coverage
-- `libs/builder/src/bundle/externals/index.ts` — `@module` header
-- `libs/builder/src/bundle/externals/resolve-externals.ts` — `resolveExternals({ packageJsonPath, additional, isWorkspacePackage, bundleWorkspaceDeps })`. Returns `string[]`
-- `libs/builder/src/bundle/externals/external-fn.ts` — `createExternalFn(externals)`, `createBundleExternalFn(externals?)`
-- `libs/builder/src/bundle/externals/validate-globals.ts` — `validateExternalsConfig(externals, globals)` (throws on missing globals)
-- `libs/builder/src/bundle/externals/*.spec.ts` — 100% coverage
-- `libs/builder/src/bundle/rollup/index.ts` — `@module` header
-- `libs/builder/src/bundle/rollup/plugins.ts` — `createNodeResolvePlugin(opts)`, `createBrowserNodeResolvePlugin()`, `createCommonJsPlugin()`, `createTypescriptPlugin(opts)`, `createBundleTypescriptPlugin(opts)`, `createJsonPlugin()`, `createTerserPlugin()`
-- `libs/builder/src/bundle/rollup/config-esm.ts` — `createEsmEntryConfig(entry, config, ctx)` + `createEsmConfig(...)`
-- `libs/builder/src/bundle/rollup/config-cjs.ts` — same shape for CJS
-- `libs/builder/src/bundle/rollup/config-iife.ts` — same shape for IIFE
-- `libs/builder/src/bundle/rollup/config-umd.ts` — same shape for UMD
-- `libs/builder/src/bundle/rollup/execute.ts` — `executeRollup(config, label)` (creates bundle, writes outputs, closes, clears refs)
-- `libs/builder/src/bundle/rollup/*.spec.ts` — 100% coverage
-- `libs/builder/src/bundle/declarations/index.ts` — `@module` header
-- `libs/builder/src/bundle/declarations/generate-declarations.ts` — `generateDeclarations(ctx, discovery)` (spawns `tsc`)
-- `libs/builder/src/bundle/declarations/flatten-paths.ts` — `flattenDeclarationPaths(ctx, discovery)`
-- `libs/builder/src/bundle/declarations/*.spec.ts` — 100% coverage
-
-**Files to modify:**
-
-- `libs/builder/src/index.ts` — re-export bundle facade
-- `libs/builder/package.json` — add `./bundle`, `./bundle/entries`, `./bundle/externals`, `./bundle/rollup`, `./bundle/declarations` exports
-- `tsconfig.base.json` — add path mappings for each subpath
-
-**Project-scope usage notes:**
-
-- Pattern matching: `matchGlobPattern` for entry-pattern matching; verify behavior matches minimatch for the patterns we use (`./browser/*`, `./browser/v1`)
-- File walks: `walkDirectory` / `findFilesInTree` for asset glob (used by Phase 5)
-- Path ops: `join`, `joinPosix`, `relativePath`, `parsePath` everywhere — never `node:path` directly when project-scope has the equivalent
-
-**Verification:**
-
-```bash
-npx nx test lib-builder
-npx nx lint lib-builder --fix
-npx nx typecheck lib-builder
-```
-
----
-
-## Phase 5 — Package subdomain
-
-`package.json` synthesis (with configurable inheritance + opt-in workspace-dep filter), generic asset copy, and opt-in third-party license collection.
-
-**Files to create:**
-
-- `libs/builder/src/package/index.ts` — `@module` header; orchestrator `runPackagePhase(ctx, config, formatOutputs)`
-- `libs/builder/src/package/json/index.ts` — `@module` header
-- `libs/builder/src/package/json/read-package-json.ts` — `readProjectPackageJson(projectRoot)` via project-scope's `readJsonFile`
-- `libs/builder/src/package/json/inherit-fields.ts` — `inheritFields(target, { from, fields })` (no-op if `from` not provided)
-- `libs/builder/src/package/json/filter-deps.ts` — `filterWorkspaceDepsFromOutput(pkg, isWorkspacePackage)` (opt-in caller)
-- `libs/builder/src/package/json/generate-exports.ts` — `generateExportsFromFormats(discovery, formatOutputs, srcPkg)` (existing logic, source-exports-first strategy preserved)
-- `libs/builder/src/package/json/cdn-paths.ts` — `getCdnPaths(formatOutputs, opts)` (unpkg/jsdelivr resolution)
-- `libs/builder/src/package/json/synthesize.ts` — `synthesizePackageJson(srcPkg, ctx, formatOutputs, opts)` — main facade combining all of the above
-- `libs/builder/src/package/json/write.ts` — `writeOutputPackageJson(outputPath, packageJson)` via project-scope's `writeJsonFile`
-- `libs/builder/src/package/json/*.spec.ts` — 100% coverage
-- `libs/builder/src/package/assets/index.ts` — `@module` header
-- `libs/builder/src/package/assets/copy-assets.ts` — `copyAssets(specs)` accepting `AssetSpec[]` where `AssetSpec = { from: string, to: string, files?: string[], glob?: string, condition?: (pkg) => boolean }`. Uses project-scope's `walkDirectory`/`findFilesInTree` for glob, `copyFileSync` from `node:fs` for the actual copy
-- `libs/builder/src/package/assets/*.spec.ts` — 100% coverage
-- `libs/builder/src/package/licenses/index.ts` — `@module` header
-- `libs/builder/src/package/licenses/collect.ts` — `collectThirdPartyLicenses(projectRoot, workspaceRoot, externals)` returning `ThirdPartyLicenseEntry[]`. Uses `parseRepositoryUrl` from `@hyperfrontend/versioning/repository/parse` (existing dep, OK)
-- `libs/builder/src/package/licenses/generate-content.ts` — `generateThirdPartyLicensesContent(entries)` returning markdown string
-- `libs/builder/src/package/licenses/write.ts` — `writeThirdPartyLicensesFile(outputPath, content)`
-- `libs/builder/src/package/licenses/*.spec.ts` — 100% coverage
-
-**Note on `@hyperfrontend/versioning`:** the license collector imports `parseRepositoryUrl` from versioning. This becomes a new runtime dep of builder. Add to `libs/builder/package.json`. Versioning currently depends on logging + project-scope + immutable-api-utils + json-utils + questions — no circular import risk.
-
-**Files to modify:**
-
-- `libs/builder/src/index.ts` — re-export package facade
-- `libs/builder/package.json` — add subpath exports + new dep on `@hyperfrontend/versioning`
-- `tsconfig.base.json` — add path mappings
-
-**Verification:**
-
-```bash
-npx nx test lib-builder
-npx nx lint lib-builder --fix
-npx nx typecheck lib-builder
-```
-
----
-
-## Phase 6 — Bin subdomain (JS)
-
-JS bin synthesis: rollup-bundle the source, prepend shebang, append the bootstrap footer (default or per-bin override), chmod 0o755. Per-bin format `cjs`/`esm`/array supported.
-
-**Files to create:**
-
-- `libs/builder/src/bin/index.ts` — `@module` header; orchestrator `runBinPhase(ctx, bins)`
-- `libs/builder/src/bin/script/index.ts` — `@module` header
-- `libs/builder/src/bin/script/build-bin.ts` — `buildJsBin(bin, ctx)` — rollup-bundles `src/bin/<name>.ts`, applies shebang + bootstrap footer per format, chmods. Returns `{ name, format, outputPath }[]`
-- `libs/builder/src/bin/script/bootstrap-footer.ts` — `defaultBootstrap({ runner, format })` returning the standard footer string
-- `libs/builder/src/bin/script/wire-package-bin.ts` — `wireBinFieldInPackageJson(pkg, binOutputs)` mutates `pkg.bin` to map name → relative path
-- `libs/builder/src/bin/script/*.spec.ts` — 100% coverage
-
-**Bootstrap footer template (default):**
-
-```javascript
-__RUNNER__({ argv: process.argv.slice(2), cwd: process.cwd(), stderr: process.stderr, stdout: process.stdout }).then(
-  (code) => {
-    process.exit(code)
-  },
-  (error) => {
-    process.stderr.write((error instanceof Error ? error.message : String(error)) + '\n')
-    process.exit(1)
-  }
-)
-```
-
-`__RUNNER__` substituted with the runner export name (default: `(await import('...')).default`; if `runner: 'name'` provided, that name).
-
-**Output naming convention:**
-
-- CJS: `dist/.../bin/<name>.cjs.js` (or `<name>.js` if only CJS declared)
-- ESM: `dist/.../bin/<name>.mjs`
-- `package.json#bin` maps `<name>` → first available output (CJS preferred for compat)
-
-**Files to modify:**
-
-- `libs/builder/src/index.ts` — re-export bin facade
-- `libs/builder/package.json` — add `./bin`, `./bin/script` exports
-- `tsconfig.base.json` — add path mappings
-
-**Verification:**
-
-```bash
-npx nx test lib-builder
-npx nx lint lib-builder --fix
-npx nx typecheck lib-builder
-```
-
----
-
-## Phase 7 — Bin subdomain (Node SEA)
-
-Node SEA wrapping. Bundles to single CJS, generates SEA config, runs `node --experimental-sea-config`, copies the current-platform Node host binary, injects the blob via postject, signs as needed. Skips silently with info log if `process.platform`/`arch` doesn't match declared targets.
-
-**Files to create:**
-
-- `libs/builder/src/bin/native/index.ts` — `@module` header
-- `libs/builder/src/bin/native/build-native.ts` — `buildNativeBin(bin, ctx)` orchestrator
-- `libs/builder/src/bin/native/sea-config.ts` — `generateSeaConfig({ mainPath, outputPath })` returns the SEA config JSON
-- `libs/builder/src/bin/native/sea-blob.ts` — `generateSeaBlob(seaConfigPath)` — spawns `node --experimental-sea-config <path>`, returns blob path
-- `libs/builder/src/bin/native/host-binary.ts` — `resolveHostBinary(platform, arch)` returns path to a usable Node host (default: `process.execPath`; future: per-target downloads)
-- `libs/builder/src/bin/native/inject.ts` — `injectBlob(hostBinary, outputBinary, blobPath)` calls postject's JS API
-- `libs/builder/src/bin/native/codesign.ts` — `removeCodesign(binary)` (macOS) and `applyCodesign(binary, opts?)` (macOS/Windows). MVP: removes existing macOS signature; re-signing left to release tooling
-- `libs/builder/src/bin/native/platform-check.ts` — `currentPlatformMatches(declaredPlatforms)` — returns true if `<process.platform>-<process.arch>` is in the list
-- `libs/builder/src/bin/native/*.spec.ts` — 100% coverage. Tests stub postject and node-spawn — actual binary production validated through CI matrix in Phase 12
-
-**SEA config shape produced (per Node docs):**
-
-```json
-{
-  "main": "<path>/<bin>.cjs.js",
-  "output": "<path>/sea-prep.blob",
-  "disableExperimentalSEAWarning": true
-}
-```
-
-**Output naming convention:**
-
-- `dist/.../bin/<name>.<platform>-<arch>` (e.g., `hf-build.linux-x64`, `hf-build.darwin-arm64`)
-- Windows: `<name>.<platform>-<arch>.exe`
-
-**Constraint enforcement:**
-
-- If a bin declares `sea` but is not built in CJS, `buildNativeBin` errors with: "SEA requires a CJS bin output; declare format: ['cjs'] or format: 'cjs' on bin <name>".
-
-**Files to modify:**
-
-- `libs/builder/src/index.ts` — re-export native facade
-- `libs/builder/package.json` — add `./bin/native` export, add `postject` dep
-- `tsconfig.base.json` — add path mapping
-
-**Verification:**
-
-```bash
-npx nx test lib-builder
-npx nx lint lib-builder --fix
-npx nx typecheck lib-builder
-```
-
----
-
-## Phase 8 — Presets and the `build()` Facade
-
-Predicate factories (`byPrefix`, `byNames`) and the single `build(config)` runner that orchestrates bundle → package → bin phases.
-
-**Files to create:**
-
-- `libs/builder/src/presets/index.ts` — `@module` header
-- `libs/builder/src/presets/by-prefix.ts` — `byPrefix(scope: string): (name: string) => boolean`
-- `libs/builder/src/presets/by-names.ts` — `byNames(names: string[]): (name: string) => boolean`
-- `libs/builder/src/presets/*.spec.ts` — 100% coverage
-- `libs/builder/src/build.ts` — `build(config: BuildConfig): Promise<BuildResult>` — the facade. Resolves context, optionally creates memory monitor, runs bundle phase, runs package phase, runs bin phase, returns result
-- `libs/builder/src/build.spec.ts` — 100% coverage (mock subdomain orchestrators; verify call order, context propagation, error handling, monitor lifecycle)
-
-**Facade orchestration outline:**
-
-```typescript
-export async function build(config: BuildConfig): Promise<BuildResult> {
-  const ctx = createBuildContext(config)
-  const monitor = config.memoryMonitor
-    ? createMemoryMonitor(typeof config.memoryMonitor === 'object' ? config.memoryMonitor : undefined)
-    : undefined
-  monitor?.logDebug('build:start')
-  try {
-    const formatOutputs = await runBundlePhase(ctx, config, monitor)
-    await runPackagePhase(ctx, config, formatOutputs)
-    const binOutputs = await runBinPhase(ctx, config.bin ?? [], monitor)
-    monitor?.logSummary()
-    return { success: true, formatOutputs, binOutputs, durationMs: ctx.elapsed() }
-  } catch (error) {
-    monitor?.logSummary()
-    throw error
-  }
-}
-```
-
-**Files to modify:**
-
-- `libs/builder/src/index.ts` — re-export `build`, key types, and presets
-- `libs/builder/package.json` — add `./presets` export; ensure `.` exports `build`
-- `tsconfig.base.json` — add path mapping for `./presets`
-
-**Verification:**
-
-```bash
-npx nx test lib-builder
-npx nx lint lib-builder --fix
-npx nx typecheck lib-builder
-npx nx build lib-builder    # first dogfood: lib-builder builds itself via the existing wrapper
-```
-
-The `nx build lib-builder` step exercises the facade via the wrapper. At this point the wrapper still uses its old inline pipeline; this just confirms `lib-builder`'s own source produces a valid dist. The wrapper retrofit happens in Phase 10.
-
----
-
-## Phase 9 — Builder's own CLI bin
-
-The `hf-build` CLI: a runner that reads a config file (`builder.config.json` or similar) or accepts CLI flags, and calls `build()`.
-
-**Files to create:**
-
-- `libs/builder/src/bin/hf-build.ts` — exports `runHfBuild(io: { argv, cwd, stderr, stdout? }): Promise<number>`. Parses argv, loads config from `cwd/builder.config.json` (or `--config <path>`), calls `build(config)`, returns 0 on success / 1 on failure
-- `libs/builder/src/bin/hf-build.spec.ts` — 100% coverage (mock `build`, verify argv parsing, config loading, exit code mapping, error formatting)
-
-**Files to modify:**
-
-- `libs/builder/project.json` — add bin block to the build target options:
-
-  ```json
-  "bin": [
-    {
-      "name": "hf-build",
-      "format": ["cjs"],
-      "sea": {
-        "platforms": ["linux-x64", "linux-arm64", "darwin-x64", "darwin-arm64", "win32-x64"]
-      }
-    }
-  ]
-  ```
-
-  Builder source is the runner export; default-export the function from `src/bin/hf-build.ts`.
-
-- `libs/builder/package.json` — `bin` field will be auto-wired by builder during build to `{ "hf-build": "./bin/hf-build.cjs.js" }`. Source package.json can declare a placeholder; the build overwrites it for the published package.
-
-**Note:** at this point `nx build lib-builder` exercises both the library output and the bin pipeline. The `hf-build.cjs.js` artifact lands at `dist/libs/builder/bin/hf-build.cjs.js` with shebang + chmod. Native binaries only emit on the appropriate CI runner per Phase 12.
-
-**Verification:**
-
-```bash
-npx nx test lib-builder
-npx nx lint lib-builder --fix
-npx nx typecheck lib-builder
-npx nx build lib-builder
-node dist/libs/builder/bin/hf-build.cjs.js --help    # smoke test
-```
+[tools/package/src/executors/build/schema.json](../tools/package/src/executors/build/schema.json) has no `bin` property and the executor itself ([tools/package/src/executors/build/executor.ts](../tools/package/src/executors/build/executor.ts)) does not call into `runBinPhase`. So even with the lint fixed, `npx nx build lib-builder` will not produce `dist/libs/builder/bin/hf-build.cjs.js` until Phase 10 lands. Phase 9's plan acknowledged this — the wrapper retrofit in Phase 10 is what closes the gap. The smoke test from Phase 9 (`node dist/libs/builder/bin/hf-build.cjs.js --help`) becomes runnable then.
 
 ---
 
 ## Phase 10 — Wrapper retrofit
 
 Replace `tools/package/src/executors/build/executor.ts` and supporting `lib/` with a thin facade caller. The schema mirrors builder's `BuildConfig` minus the monorepo-specific knobs (which are hardcoded in the wrapper).
+
+**Pre-work (carry-over from Phase 9):**
+
+1. Fix the two ESLint rules described above so they only trigger on the top-level `name` property.
+2. (Reminder) The `bin` property must be added to `tools/package/src/executors/build/schema.json` as part of this phase — see "Files to modify" below.
 
 **Files to delete:**
 
@@ -569,8 +182,8 @@ Replace `tools/package/src/executors/build/executor.ts` and supporting `lib/` wi
      - `memoryMonitor: MEMORY_THRESHOLDS`
   3. `await build(config)`, return `{ success: true }` or log + `{ success: false }`
 
-- `tools/package/src/executors/build/schema.json` — update to mirror builder's `BuildConfig` minus the monorepo knobs. Add `bin` property (array of bin descriptors per Q12).
-- `tools/package/package.json` — replace dev deps: drop `@nx/devkit`, `@hyperfrontend/logging` (still indirect), `@hyperfrontend/versioning` (still indirect), rollup family. Add runtime dep on `@hyperfrontend/builder`. Keep `@nx/devkit` only if Nx executor entry signature requires it (it does for `ExecutorContext` type — keep in devDependencies).
+- `tools/package/src/executors/build/schema.json` — update to mirror builder's `BuildConfig` minus the monorepo knobs. **Add `bin` property** (array of bin descriptors per Decision #14–22). Without this the lint+build pipeline cannot validate the bin block already present in `libs/builder/project.json`.
+- `tools/package/package.json` — replace dev deps: drop `@nx/devkit` (keep in devDependencies for `ExecutorContext` type), `@hyperfrontend/logging` (still indirect), `@hyperfrontend/versioning` (still indirect), rollup family. Add runtime dep on `@hyperfrontend/builder`.
 - `tools/package/src/executors/build/README.md` — update to reflect new schema (additions: `bin`; removals: none — the format-centric API is preserved 1:1)
 
 **Behavioral parity check (manual, during PR):**
@@ -584,11 +197,14 @@ For each currently-publishable lib (`lib-cryptography`, `lib-data-utils`, `lib-f
 **Verification:**
 
 ```bash
+npx nx test tool-eslint-rules     # confirm the nested-name regression test added
 npx nx test tool-package
 npx nx lint tool-package --fix
+npx nx lint lib-builder --fix     # should now pass with the rules fixed
 npx nx typecheck tool-package
-npx nx build lib-builder       # builder rebuilds via the new wrapper
-npx nx build lib-logging       # representative dependent lib still builds correctly
+npx nx build lib-builder          # builder rebuilds via the new wrapper, emits hf-build.cjs.js
+node dist/libs/builder/bin/hf-build.cjs.js --help    # deferred Phase 9 smoke test
+npx nx build lib-logging          # representative dependent lib still builds correctly
 ```
 
 ---
