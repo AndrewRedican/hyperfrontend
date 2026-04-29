@@ -17,6 +17,8 @@
   },
   "exports": {
     ".": "./src/index.js",
+    "./bin": "./src/bin/index.js",
+    "./bin/script": "./src/bin/script/index.js",
     "./bundle": "./src/bundle/index.js",
     "./bundle/declarations": "./src/bundle/declarations/index.js",
     "./bundle/entries": "./src/bundle/entries/index.js",

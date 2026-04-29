@@ -40,6 +40,7 @@ export type {
   UmdConfig,
   UmdOutput,
 } from './models'
+export { runBinPhase } from './bin'
 export { runBundlePhase } from './bundle'
 export { createMemoryMonitor, recover } from './memory'
 export { runPackagePhase } from './package'
