@@ -9,18 +9,31 @@ describe('@hyperfrontend/builder ESM', () => {
     expect(pkg).toBeDefined()
   })
 
-  it('should have exports', async () => {
+  it('should expose the documented public API', async () => {
     const pkg = await import('@hyperfrontend/builder')
-    const exportedKeys = Object.keys(pkg)
-    expect(exportedKeys.length).toBeGreaterThan(0)
+    const expected = [
+      'build',
+      'createBuildContext',
+      'runBinPhase',
+      'runBundlePhase',
+      'runPackagePhase',
+      'createMemoryMonitor',
+      'recover',
+      'byNames',
+      'byPrefix',
+    ] as const
+    for (const name of expected) {
+      expect(typeof pkg[name]).toBe('function')
+    }
   })
 
-  it('should export functions or objects', async () => {
-    const pkg = await import('@hyperfrontend/builder')
-
-    // At least one export should be a function, object, or class
-    const exportTypes = Object.values(pkg).map((v) => typeof v)
-    const hasValidExport = exportTypes.some((t) => ['function', 'object'].includes(t))
-    expect(hasValidExport).toBe(true)
+  it('should expose preset factories that produce working predicates', async () => {
+    const { byNames, byPrefix } = await import('@hyperfrontend/builder')
+    const isNamed = byNames(['internal-utils'])
+    expect(isNamed('internal-utils')).toBe(true)
+    expect(isNamed('rollup')).toBe(false)
+    const isScoped = byPrefix('@hyperfrontend/')
+    expect(isScoped('@hyperfrontend/logging')).toBe(true)
+    expect(isScoped('rollup')).toBe(false)
   })
 })

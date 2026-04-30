@@ -10,20 +10,33 @@ describe('@hyperfrontend/builder CJS', () => {
     expect(pkg).toBeDefined()
   })
 
-  it('should have exports', () => {
+  it('should expose the documented public API', () => {
     // eslint-disable-next-line @typescript-eslint/no-require-imports
     const pkg = require('@hyperfrontend/builder')
-    const exportedKeys = Object.keys(pkg)
-    expect(exportedKeys.length).toBeGreaterThan(0)
+    const expected = [
+      'build',
+      'createBuildContext',
+      'runBinPhase',
+      'runBundlePhase',
+      'runPackagePhase',
+      'createMemoryMonitor',
+      'recover',
+      'byNames',
+      'byPrefix',
+    ]
+    for (const name of expected) {
+      expect(typeof pkg[name]).toBe('function')
+    }
   })
 
-  it('should export functions or objects', () => {
+  it('should expose preset factories that produce working predicates', () => {
     // eslint-disable-next-line @typescript-eslint/no-require-imports
-    const pkg = require('@hyperfrontend/builder')
-
-    // At least one export should be a function, object, or class
-    const exportTypes = Object.values(pkg).map((v) => typeof v)
-    const hasValidExport = exportTypes.some((t) => ['function', 'object'].includes(t))
-    expect(hasValidExport).toBe(true)
+    const { byNames, byPrefix } = require('@hyperfrontend/builder')
+    const isNamed = byNames(['internal-utils'])
+    expect(isNamed('internal-utils')).toBe(true)
+    expect(isNamed('rollup')).toBe(false)
+    const isScoped = byPrefix('@hyperfrontend/')
+    expect(isScoped('@hyperfrontend/logging')).toBe(true)
+    expect(isScoped('rollup')).toBe(false)
   })
 })
