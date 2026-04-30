@@ -52,6 +52,8 @@ const substituteProjectRoot = (template: string, projectRelativePath: string): s
 const runExecutor: PromiseExecutor<BuildExecutorOptions> = async (options, context: ExecutorContext) => {
   const { projectName, root: workspaceRoot } = context
 
+  logger.setLogLevel(options.verbose ? 'debug' : 'log')
+
   if (!projectName) {
     logger.error('Project name is required')
     return { success: false }
