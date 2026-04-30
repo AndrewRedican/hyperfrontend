@@ -17,14 +17,6 @@
         "cjs": {
           "bundleWorkspaceDeps": true
         },
-        "iife": {
-          "entry": ".",
-          "globalName": "HyperfrontendBuilder"
-        },
-        "umd": {
-          "entry": ".",
-          "globalName": "HyperfrontendBuilder"
-        },
         "bin": [
           {
             "name": "hf-build",
