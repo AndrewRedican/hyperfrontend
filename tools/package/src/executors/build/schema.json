@@ -1,34 +1,21 @@
 {
   "$schema": "http://json-schema.org/schema",
   "type": "object",
-  "title": "Build V2 executor schema",
-  "description": "Format-centric build executor for hyperfrontend library packages. All output formats are opt-in.",
+  "title": "Build executor schema",
+  "description": "Format-centric build executor for hyperfrontend library packages. Thin wrapper over @hyperfrontend/builder. All output formats are opt-in.",
   "properties": {
     "outputPath": {
       "type": "string",
-      "description": "Output directory. Defaults to dist/{projectRoot}."
+      "description": "Output directory. Supports {projectRoot} placeholder. Defaults to dist/{projectRoot}."
     },
     "tsConfig": {
       "type": "string",
-      "description": "Path to tsconfig. Defaults to {projectRoot}/tsconfig.lib.json."
+      "description": "Path to tsconfig. Supports {projectRoot} placeholder. Defaults to {projectRoot}/tsconfig.lib.json."
     },
     "assets": {
       "type": "array",
-      "description": "Additional assets to copy.",
-      "items": {
-        "oneOf": [
-          { "type": "string" },
-          {
-            "type": "object",
-            "properties": {
-              "input": { "type": "string" },
-              "glob": { "type": "string" },
-              "output": { "type": "string" }
-            },
-            "required": ["input", "glob", "output"]
-          }
-        ]
-      }
+      "description": "Additional asset specs to copy into the build output (in addition to the wrapper's defaults).",
+      "items": { "$ref": "#/definitions/assetSpec" }
     },
     "external": {
       "type": "array",
@@ -59,6 +46,11 @@
       "type": "string",
       "description": "Custom path for the jsdelivr field in package.json. Defaults to first UMD bundle's index.umd.min.js path."
     },
+    "bin": {
+      "type": "array",
+      "description": "Bin declarations to synthesize alongside the library. Each declaration produces a JS bin (CJS and/or ESM) and optionally a Node SEA native binary per platform.",
+      "items": { "$ref": "#/definitions/binConfig" }
+    },
     "verbose": {
       "type": "boolean",
       "default": false,
@@ -66,6 +58,20 @@
     }
   },
   "definitions": {
+    "assetSpec": {
+      "type": "object",
+      "properties": {
+        "from": { "type": "string", "description": "Absolute source directory." },
+        "to": { "type": "string", "description": "Output subdirectory relative to outputPath. Defaults to '.'." },
+        "files": {
+          "type": "array",
+          "description": "Explicit relative file names to copy.",
+          "items": { "type": "string" }
+        },
+        "glob": { "type": "string", "description": "POSIX-style glob pattern, evaluated relative to 'from'." }
+      },
+      "required": ["from"]
+    },
     "entryConfig": {
       "type": "object",
       "properties": {
@@ -86,7 +92,11 @@
           "type": "object",
           "properties": {
             "sourcemap": { "type": "boolean", "default": true },
-            "external": { "type": "array", "items": { "type": "string" } }
+            "external": { "type": "array", "items": { "type": "string" } },
+            "bundleWorkspaceDeps": {
+              "type": "boolean",
+              "description": "Inline workspace dependencies (true) or keep them external (false)."
+            }
           }
         }
       ]
@@ -98,7 +108,11 @@
           "type": "object",
           "properties": {
             "sourcemap": { "type": "boolean", "default": true },
-            "external": { "type": "array", "items": { "type": "string" } }
+            "external": { "type": "array", "items": { "type": "string" } },
+            "bundleWorkspaceDeps": {
+              "type": "boolean",
+              "description": "Inline workspace dependencies (true) or keep them external (false)."
+            }
           }
         }
       ]
@@ -137,6 +151,39 @@
           "required": ["globalName"]
         }
       ]
+    },
+    "binConfig": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Bin name (also the package.json#bin key and the source file basename at src/bin/<name>.ts)."
+        },
+        "format": {
+          "oneOf": [
+            { "type": "string", "enum": ["cjs", "esm"] },
+            { "type": "array", "items": { "type": "string", "enum": ["cjs", "esm"] } }
+          ],
+          "description": "Required output format(s) for the bin."
+        },
+        "runner": {
+          "type": "string",
+          "description": "Named runner export to bootstrap. Defaults to the file's default export."
+        },
+        "bootstrap": { "type": "string", "description": "Override the bootstrap footer template." },
+        "sea": {
+          "type": "object",
+          "properties": {
+            "platforms": {
+              "type": "array",
+              "items": { "type": "string", "enum": ["linux-x64", "linux-arm64", "darwin-x64", "darwin-arm64", "win32-x64"] },
+              "description": "Platforms for which a native binary should be produced."
+            }
+          },
+          "required": ["platforms"]
+        }
+      },
+      "required": ["name", "format"]
     }
   }
 }
