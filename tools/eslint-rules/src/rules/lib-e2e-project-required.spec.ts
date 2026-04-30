@@ -131,6 +131,42 @@ describe('lib-e2e-project-required', () => {
           return join(workspace.root, 'packages', 'test-lib', 'project.json')
         })(),
       },
+      {
+        name: 'ignores nested name keys (e.g., bin[0].name) when picking the project name',
+        code: JSON.stringify(
+          {
+            ...publishableProjectJson,
+            targets: {
+              build: {
+                options: {
+                  bin: [{ name: 'hf-build', format: ['cjs'] }],
+                },
+              },
+              publish: {},
+            },
+          },
+          null,
+          2
+        ),
+        filename: (() => {
+          const projectJsonWithNestedName = {
+            ...publishableProjectJson,
+            targets: {
+              build: {
+                options: {
+                  bin: [{ name: 'hf-build', format: ['cjs'] }],
+                },
+              },
+              publish: {},
+            },
+          }
+          const { libProjectRoot } = createTempWorkspace({
+            projectJson: projectJsonWithNestedName,
+            hasE2eProject: true,
+          })
+          return join(libProjectRoot, 'project.json')
+        })(),
+      },
     ],
     invalid: [
       {
