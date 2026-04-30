@@ -28,7 +28,7 @@
   },
   "devDependencies": {
     "@eslint/markdown": "7.5.1",
-    "@hyperfrontend/versioning": "file:./dist/libs/versioning",
+    "@hyperfrontend/versioning": "0.6.0",
     "@nx/devkit": "22.3.3",
     "@nx/eslint": "22.3.3",
     "@nx/eslint-plugin": "22.3.3",
