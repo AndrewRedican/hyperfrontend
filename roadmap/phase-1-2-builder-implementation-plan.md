@@ -1,7 +1,7 @@
 # `@hyperfrontend/builder` Implementation Plan
 
-**Status:** In Progress — Phases 1–9 complete; Phase 10 next (with carry-over from Phase 9)
-**Date:** 2026-04-27 (last updated: 2026-04-29)
+**Status:** In Progress — Phases 1–10 complete; Phase 11.5 (self-containment) active; Phase 11 (lib-versioning bin migration) deferred until 11.5 lands
+**Date:** 2026-04-27 (last updated: 2026-05-03)
 **Parent:** [features-implementation-plan.md](./features-implementation-plan.md), Phase 1.2
 
 ---
@@ -14,45 +14,45 @@ Create `@hyperfrontend/builder`, the publishable vendor-neutral spiritual succes
 
 ## Decisions Locked
 
-| #   | Topic                       | Decision                                                                                                                                                                                                                    |
-| --- | --------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 1   | Scope                       | Library + bin (JS) + Node SEA cross-platform native binaries + features-style shell packages — all in scope                                                                                                                 |
-| 2   | API model                   | No separate "library mode" vs "CLI mode" — bins are standard `package.json#bin`. Composable primitives + facades + CLI + native binary                                                                                      |
-| 3   | Shell packages              | Treated as libraries with extra inlining + pre-build code-gen seam (generator lives in `@hyperfrontend/features`, not builder)                                                                                              |
-| 4   | Opinionation principle      | Composable primitives + opt-in presets, single big-config `build()` runner, presets replaceable                                                                                                                             |
-| 5   | Sub-path layout             | Domain-grouped (~12 subpaths), lib-versioning style                                                                                                                                                                         |
-| 6   | Workspace dep awareness     | `isWorkspacePackage?: (name: string) => boolean` predicate canonical; `byPrefix(scope)` and `byNames(names[])` factories in `./presets`                                                                                     |
-| 7   | Logger source               | Primitives use `logger` from `@hyperfrontend/logging` directly; no DI                                                                                                                                                       |
-| 8   | Logger extensions           | `channel`/`timed`/`timedAsync` promoted upstream into `@hyperfrontend/logging` itself                                                                                                                                       |
-| 9   | I/O delegation              | Strict `@hyperfrontend/project-scope` delegation; raw `node:fs` only for genuine gaps. **No** `@nx/devkit`, **no** `glob`, **no** `minimatch`. Allowed externals: `rollup` + `@rollup/plugin-*` + `typescript` + `postject` |
-| 10  | Memory monitor              | Subpath `@hyperfrontend/builder/memory`, opt-in via config; `recover()` (event-loop yield) is always-on free utility independent of monitoring                                                                              |
-| 11  | Default assets              | Builder ships zero default-asset knowledge — generic `copyAssets({ from, to, files[], condition? })` primitive. Wrapper supplies its own asset spec lists                                                                   |
-| 12  | Field inheritance           | Configurable: `inheritFieldsFrom?: { from: string; fields: string[] }`. Wrapper passes `{ from: workspaceRoot/package.json, fields: ['repository','bugs','homepage','author'] }`                                            |
-| 13  | Output workspace-dep filter | Opt-in flag (`filterWorkspaceDepsFromOutput: boolean`), explicit                                                                                                                                                            |
-| 14  | Bin source convention       | Enforced: `src/bin/<name>.ts`. Config supplies `name` only                                                                                                                                                                  |
-| 15  | Bin runner export           | Default: `default` export. Override via `runner: 'name'` (preserves lib-versioning's `runCz`/`runCl`)                                                                                                                       |
-| 16  | Bin runner contract         | `(io: { argv: string[], cwd: string, stderr: NodeJS.WritableStream, stdout?: NodeJS.WritableStream }) => number \| Promise<number>`                                                                                         |
-| 17  | Bin format                  | Per-bin `format: 'cjs' \| 'esm' \| ('cjs' \| 'esm')[]` (required). Both supported per declaration                                                                                                                           |
-| 18  | Bin bootstrap footer        | Built-in default footer + per-bin string override (`bootstrap?: string`)                                                                                                                                                    |
-| 19  | Bin mechanics               | Always: chmod 0o755 + shebang `#!/usr/bin/env node`. Auto-wire JS bins to `package.json#bin`                                                                                                                                |
-| 20  | Node SEA injection          | `postject` is the third allowed external dep (alongside rollup + typescript). Builder calls postject's JS API directly                                                                                                      |
-| 21  | Node SEA platform model     | Current-platform-only build. Per-bin `sea?: { platforms: [...] }`. Builder skips with info log if `process.platform`/`arch` not in declared targets. CI matrix orchestrates per-platform runners                            |
-| 22  | Native binary wiring        | Native binaries do **not** auto-wire to `package.json#bin` — output to `dist/.../bin/<name>.<platform>-<arch>`; CI/release tooling distributes as separate artifacts                                                        |
-| 23  | Wrapper invocation          | Facade-only. ~50 lines. No primitive composition                                                                                                                                                                            |
-| 24  | Wrapper lib/                | Delete entire `tools/package/src/executors/build/lib/`. Tiny `wrapper-config.ts` for monorepo constants only                                                                                                                |
-| 25  | Wrapper schema              | Minimal/opinionated, mirrors builder's facade config. Monorepo opinions hardcoded                                                                                                                                           |
-| 26  | Migration timing            | Atomic in one PR: builder land + wrapper retrofit + lib-versioning migration                                                                                                                                                |
-| 27  | Bootstrap                   | Builder dogfoods via wrapper. Phased commits inside the PR                                                                                                                                                                  |
-| 28  | Self-build smoke test       | None. Regular CI is sufficient                                                                                                                                                                                              |
-| 29  | CI native platforms         | Full common set (per GitHub Actions runner availability): `linux-x64`, `linux-arm64`, `darwin-x64`, `darwin-arm64`, `win32-x64`                                                                                             |
-| 30  | CI native trigger           | Main branch only. PR pipeline validates JS bin builds only                                                                                                                                                                  |
-| 31  | Native artifact destination | GitHub Releases attached to the auto-tagged versions from the existing ci-main.yml publish flow                                                                                                                             |
-| 32  | CI workflow shape           | Reusable `_lib-native.yml` template + per-lib `ci-lib-<name>-native.yml` caller                                                                                                                                             |
-| 33  | Test depth                  | 100% coverage on every primitive                                                                                                                                                                                            |
-| 34  | Integration tests           | None at builder level. Wrapper's libs continuing to build successfully is the integration coverage                                                                                                                          |
-| 35  | Behavioral parity           | Manual diff during the migration PR. No permanent CI parity assertion                                                                                                                                                       |
-| 36  | Plan format                 | Per implementation-plans skill                                                                                                                                                                                              |
-| 37  | Doc deliverables            | README + JSDoc per skills up-front. ARCHITECTURE.md deferred to release-time on user request                                                                                                                                |
+| #   | Topic                       | Decision                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
+| --- | --------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1   | Scope                       | Library + bin (JS) + Node SEA cross-platform native binaries + features-style shell packages — all in scope                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
+| 2   | API model                   | No separate "library mode" vs "CLI mode" — bins are standard `package.json#bin`. Composable primitives + facades + CLI + native binary                                                                                                                                                                                                                                                                                                                                                                                                                          |
+| 3   | Shell packages              | Treated as libraries with extra inlining + pre-build code-gen seam (generator lives in `@hyperfrontend/features`, not builder)                                                                                                                                                                                                                                                                                                                                                                                                                                  |
+| 4   | Opinionation principle      | Composable primitives + opt-in presets, single big-config `build()` runner, presets replaceable                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
+| 5   | Sub-path layout             | Domain-grouped (~12 subpaths), lib-versioning style                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
+| 6   | Workspace dep awareness     | `isWorkspacePackage?: (name: string) => boolean` predicate canonical; `byPrefix(scope)` and `byNames(names[])` factories in `./presets`                                                                                                                                                                                                                                                                                                                                                                                                                         |
+| 7   | Logger source               | Primitives use `logger` from `@hyperfrontend/logging` directly; no DI                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
+| 8   | Logger extensions           | `channel`/`timed`/`timedAsync` promoted upstream into `@hyperfrontend/logging` itself                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
+| 9   | I/O delegation              | Strict `@hyperfrontend/project-scope` delegation; raw `node:fs` only for genuine gaps. **No** `@nx/devkit`, **no** `glob`, **no** `minimatch` — these stay banned (we use Node APIs / our own packages instead). The tools we _do_ leverage rather than reimplement — `rollup` + `@rollup/plugin-*` + `typescript` + `postject` + `rollup-plugin-dts` — are listed in `dependencies` like any normal package the source uses; the build pipeline (JS bundling + d.ts inlining + output dep filter) makes the published artifact self-contained at install time. |
+| 10  | Memory monitor              | Subpath `@hyperfrontend/builder/memory`, opt-in via config; `recover()` (event-loop yield) is always-on free utility independent of monitoring                                                                                                                                                                                                                                                                                                                                                                                                                  |
+| 11  | Default assets              | Builder ships zero default-asset knowledge — generic `copyAssets({ from, to, files[], condition? })` primitive. Wrapper supplies its own asset spec lists                                                                                                                                                                                                                                                                                                                                                                                                       |
+| 12  | Field inheritance           | Configurable: `inheritFieldsFrom?: { from: string; fields: string[] }`. Wrapper passes `{ from: workspaceRoot/package.json, fields: ['repository','bugs','homepage','author'] }`                                                                                                                                                                                                                                                                                                                                                                                |
+| 13  | Output workspace-dep filter | Opt-in flag (`filterWorkspaceDepsFromOutput: boolean`), explicit                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
+| 14  | Bin source convention       | Enforced: `src/bin/<name>.ts`. Config supplies `name` only                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
+| 15  | Bin runner export           | Default: `default` export. Override via `runner: 'name'` (preserves lib-versioning's `runCz`/`runCl`)                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
+| 16  | Bin runner contract         | `(io: { argv: string[], cwd: string, stderr: NodeJS.WritableStream, stdout?: NodeJS.WritableStream }) => number \| Promise<number>`                                                                                                                                                                                                                                                                                                                                                                                                                             |
+| 17  | Bin format                  | Per-bin `format: 'cjs' \| 'esm' \| ('cjs' \| 'esm')[]` (required). Both supported per declaration                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
+| 18  | Bin bootstrap footer        | Built-in default footer + per-bin string override (`bootstrap?: string`)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
+| 19  | Bin mechanics               | Always: chmod 0o755 + shebang `#!/usr/bin/env node`. Auto-wire JS bins to `package.json#bin`                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
+| 20  | Node SEA injection          | `postject` is one of the bundled-tool deps (alongside rollup + typescript). Builder calls postject's JS API directly                                                                                                                                                                                                                                                                                                                                                                                                                                            |
+| 21  | Node SEA platform model     | Current-platform-only build. Per-bin `sea?: { platforms: [...] }`. Builder skips with info log if `process.platform`/`arch` not in declared targets. CI matrix orchestrates per-platform runners                                                                                                                                                                                                                                                                                                                                                                |
+| 22  | Native binary wiring        | Native binaries do **not** auto-wire to `package.json#bin` — output to `dist/.../bin/<name>.<platform>-<arch>`; CI/release tooling distributes as separate artifacts                                                                                                                                                                                                                                                                                                                                                                                            |
+| 23  | Wrapper invocation          | Facade-only. ~50 lines. No primitive composition                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
+| 24  | Wrapper lib/                | Delete entire `tools/package/src/executors/build/lib/`. Tiny `wrapper-config.ts` for monorepo constants only                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
+| 25  | Wrapper schema              | Minimal/opinionated, mirrors builder's facade config. Monorepo opinions hardcoded                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
+| 26  | Migration timing            | Atomic in one PR: builder land + wrapper retrofit + lib-versioning migration                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
+| 27  | Bootstrap                   | Builder dogfoods via wrapper. Phased commits inside the PR                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
+| 28  | Self-build smoke test       | None. Regular CI is sufficient                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
+| 29  | CI native platforms         | Full common set (per GitHub Actions runner availability): `linux-x64`, `linux-arm64`, `darwin-x64`, `darwin-arm64`, `win32-x64`                                                                                                                                                                                                                                                                                                                                                                                                                                 |
+| 30  | CI native trigger           | Main branch only. PR pipeline validates JS bin builds only                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
+| 31  | Native artifact destination | GitHub Releases attached to the auto-tagged versions from the existing ci-main.yml publish flow                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
+| 32  | CI workflow shape           | Reusable `_lib-native.yml` template + per-lib `ci-lib-<name>-native.yml` caller                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
+| 33  | Test depth                  | 100% coverage on every primitive                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
+| 34  | Integration tests           | None at builder level. Wrapper's libs continuing to build successfully is the integration coverage                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| 35  | Behavioral parity           | Manual diff during the migration PR. No permanent CI parity assertion                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
+| 36  | Plan format                 | Per implementation-plans skill                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
+| 37  | Doc deliverables            | README + JSDoc per skills up-front. ARCHITECTURE.md deferred to release-time on user request                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
 
 ### Minor scaffolding choices
 
@@ -88,124 +88,45 @@ Create `@hyperfrontend/builder`, the publishable vendor-neutral spiritual succes
 
 ## Dependency Surface
 
-Allowed runtime/dev dependencies (hard constraint):
+The builder ships **self-contained**: everything it leverages is inlined into the published artifact (both JS and `.d.ts`). The source `package.json` is honest — every package the source code imports lives in `dependencies`. The build pipeline does the work: it inlines all of them into the JS output, runs a d.ts bundling pass that inlines their type references, then strips them from the output `package.json`. Consumers see `dependencies: {}` and install nothing transitively.
 
-| Dependency                           | Role                                                 |
-| ------------------------------------ | ---------------------------------------------------- |
-| `@hyperfrontend/logging`             | Logging substrate (extended in Phase 1)              |
-| `@hyperfrontend/project-scope`       | File/path/glob/walk substrate                        |
-| `@hyperfrontend/immutable-api-utils` | Safe builtins per coding skill                       |
-| `@hyperfrontend/json-utils`          | (Optional, only if a future config-validation lands) |
-| `rollup`                             | Bundler                                              |
-| `@rollup/plugin-commonjs`            | CJS interop for rollup                               |
-| `@rollup/plugin-json`                | JSON imports for rollup                              |
-| `@rollup/plugin-node-resolve`        | Node resolution for rollup                           |
-| `@rollup/plugin-terser`              | Minification for IIFE/UMD                            |
-| `@rollup/plugin-typescript`          | TypeScript transpilation in rollup                   |
-| `typescript`                         | `tsc` invocation for declaration emission            |
-| `postject`                           | Node SEA blob injection (third allowed external)     |
-| `node:*` builtins                    | I/O ops not covered by project-scope                 |
+| Dependency                           | Section in `libs/builder/package.json` | Role                                                            |
+| ------------------------------------ | -------------------------------------- | --------------------------------------------------------------- |
+| `@hyperfrontend/logging`             | `dependencies` (bundled, stripped)     | Logging substrate (extended in Phase 1)                         |
+| `@hyperfrontend/project-scope`       | `dependencies` (bundled, stripped)     | File/path/glob/walk substrate                                   |
+| `@hyperfrontend/immutable-api-utils` | `dependencies` (bundled, stripped)     | Safe builtins per coding skill                                  |
+| `@hyperfrontend/versioning`          | `dependencies` (bundled, stripped)     | Used by package-phase license collection                        |
+| `rollup`                             | `dependencies` (bundled, stripped)     | Bundler                                                         |
+| `@rollup/plugin-commonjs`            | `dependencies` (bundled, stripped)     | CJS interop for rollup                                          |
+| `@rollup/plugin-json`                | `dependencies` (bundled, stripped)     | JSON imports for rollup                                         |
+| `@rollup/plugin-node-resolve`        | `dependencies` (bundled, stripped)     | Node resolution for rollup                                      |
+| `@rollup/plugin-terser`              | `dependencies` (bundled, stripped)     | Minification for IIFE/UMD                                       |
+| `@rollup/plugin-typescript`          | `dependencies` (bundled, stripped)     | TypeScript transpilation in rollup                              |
+| `rollup-plugin-dts`                  | `dependencies` (bundled, stripped)     | d.ts bundling pass that inlines external type refs (Phase 11.5) |
+| `postject`                           | `dependencies` (bundled, stripped)     | Node SEA blob injection                                         |
+| `typescript`                         | workspace root `devDependencies`       | `tsc` invocation for declaration emission                       |
+| `node:*` builtins                    | n/a                                    | I/O ops not covered by project-scope                            |
 
-**Banned:** `@nx/devkit`, `glob`, `minimatch`, any other external runtime dep.
+**Banned:** `@nx/devkit`, `glob`, `minimatch`, any other external runtime dep — these we do not use, period.
+
+**`@nx/dependency-checks` lint rule:** passes naturally because every imported package is declared in `dependencies`. No `ignoredDependencies` workaround needed.
 
 ---
 
 ## Completed Phases
 
-| Phase | Title                                       | Status                                | Notes                                                                                                                                                            |
-| ----- | ------------------------------------------- | ------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 1     | Foundation: extend `@hyperfrontend/logging` | ✅ done                               | `channel` / `timed` / `timedAsync` shipped on `Logger`. 100% coverage on the new methods.                                                                        |
-| 2     | Scaffold `libs/builder`                     | ✅ done                               | Publishable shell at `libs/builder/` with `tsconfig.base.json` path mapping and the dep set above.                                                               |
-| 3     | Models and Memory                           | ✅ done                               | All type definitions in `src/models/`. `recover()` always-on; `createMemoryMonitor()` opt-in with `warningMB` / `criticalMB` / `growthMB`.                       |
-| 4     | Bundle subdomain                            | ✅ done                               | Entries / externals / rollup driver / declarations under `src/bundle/`. Uses project-scope's `matchGlobPattern` and `walkDirectory`; no minimatch/glob.          |
-| 5     | Package subdomain                           | ✅ done                               | `synthesizePackageJson`, `inheritFields`, `filterWorkspaceDepsFromOutput`, `copyAssets`, third-party license collector. Adds dep on `@hyperfrontend/versioning`. |
-| 6     | Bin subdomain (JS)                          | ✅ done                               | `buildJsBin`, `defaultBootstrap`, `wireBinFieldInPackageJson`. CJS preferred over ESM when both formats produced for the same bin name.                          |
-| 7     | Bin subdomain (Node SEA)                    | ✅ done                               | `buildNativeBin` + `sea-config` / `sea-blob` / `host-binary` / `inject` / `codesign` / `platform-check`. SEA requires a CJS bin output.                          |
-| 8     | Presets and `build()` Facade                | ✅ done                               | `byPrefix(scope)` / `byNames(names)` predicates. `build(config)` orchestrates bundle → package → bin and threads the optional memory monitor.                    |
-| 9     | Builder's own CLI bin                       | ✅ done (with carry-over — see below) | `src/bin/hf-build.ts` + spec (100% coverage). `project.json` declares `hf-build` bin with all five SEA platforms.                                                |
-
----
-
-## Carry-over from Phase 9 — resolve before / during Phase 10
-
-Two items surfaced when adding the bin block to `libs/builder/project.json` and could not land cleanly inside Phase 9. Pick these up at the start of Phase 10:
-
-### 1. Custom workspace ESLint rules misread nested `name` keys
-
-`workspace/lib-e2e-project-required` ([tools/eslint-rules/src/rules/lib-e2e-project-required.ts](../tools/eslint-rules/src/rules/lib-e2e-project-required.ts)) and `workspace/lib-project-metadata` ([tools/eslint-rules/src/rules/lib-project-metadata.ts](../tools/eslint-rules/src/rules/lib-project-metadata.ts)) both walk every `JSONProperty` and overwrite the tracked top-level `name` whenever they see a key called `name`. The new `"name": "hf-build"` nested inside `targets.build.options.bin[0]` makes them think the project is named `hf-build`, producing:
-
-- `Publishable library 'hf-build' is missing a corresponding e2e project. Expected: apps/package-e2e/hf-build/project.json`
-- `Publishable library project.json 'name' must start with 'lib-' prefix`
-
-**Fix:** narrow each rule's visitor to top-level properties (e.g., guard on `node.parent?.parent?.type === 'JSONExpressionStatement'` before reading the value as the project name). Add regression tests with a nested `name` to both spec files. Verify with `npx nx test tool-eslint-rules` and `npx nx lint lib-builder`.
-
-### 2. Wrapper executor schema does not yet accept `bin`
-
-[tools/package/src/executors/build/schema.json](../tools/package/src/executors/build/schema.json) has no `bin` property and the executor itself ([tools/package/src/executors/build/executor.ts](../tools/package/src/executors/build/executor.ts)) does not call into `runBinPhase`. So even with the lint fixed, `npx nx build lib-builder` will not produce `dist/libs/builder/bin/hf-build.cjs.js` until Phase 10 lands. Phase 9's plan acknowledged this — the wrapper retrofit in Phase 10 is what closes the gap. The smoke test from Phase 9 (`node dist/libs/builder/bin/hf-build.cjs.js --help`) becomes runnable then.
-
----
-
-## Phase 10 — Wrapper retrofit
-
-Replace `tools/package/src/executors/build/executor.ts` and supporting `lib/` with a thin facade caller. The schema mirrors builder's `BuildConfig` minus the monorepo-specific knobs (which are hardcoded in the wrapper).
-
-**Pre-work (carry-over from Phase 9):**
-
-1. Fix the two ESLint rules described above so they only trigger on the top-level `name` property.
-2. (Reminder) The `bin` property must be added to `tools/package/src/executors/build/schema.json` as part of this phase — see "Files to modify" below.
-
-**Files to delete:**
-
-- `tools/package/src/executors/build/lib/` (entire directory: `assets.ts`, `config-cjs.ts`, `config-esm.ts`, `config-iife.ts`, `config-umd.ts`, `declarations.ts`, `entry-resolver.ts`, `externals.ts`, `index.ts`, `logger.ts`, `package-json.ts`, `paths.ts`, `rollup-plugins.ts`, `types.ts`)
-
-**Files to create:**
-
-- `tools/package/src/executors/build/wrapper-config.ts` — exports the monorepo constants:
-  - `WORKSPACE_SCOPE = '@hyperfrontend/'`
-  - `INHERITABLE_FIELDS = ['repository', 'bugs', 'homepage', 'author']`
-  - `DEFAULT_PROJECT_ASSETS = ['README.md', 'CHANGELOG.md', 'ARCHITECTURE.md']`
-  - `DEFAULT_WORKSPACE_ASSETS = ['LICENSE.md', 'SECURITY.md']`
-  - `FUNDING_ASSET = 'FUNDING.md'` (conditional on `pkg.funding`)
-  - `MEMORY_THRESHOLDS = { warningMB: 512, criticalMB: 768, growthMB: 50 }`
-
-**Files to modify:**
-
-- `tools/package/src/executors/build/executor.ts` — rewrite to ~50 lines:
-  1. Resolve `projectRoot`, `workspaceRoot` from Nx `ExecutorContext`
-  2. Build a `BuildConfig` object: spread the schema-validated executor options + inject:
-     - `isWorkspacePackage: byPrefix(WORKSPACE_SCOPE)`
-     - `bundleWorkspaceDeps: per-format from options`
-     - `filterWorkspaceDepsFromOutput: true`
-     - `inheritFieldsFrom: { from: <workspaceRoot>/package.json, fields: INHERITABLE_FIELDS }`
-     - `assets: [{ from: projectRoot, files: DEFAULT_PROJECT_ASSETS }, { from: workspaceRoot, files: DEFAULT_WORKSPACE_ASSETS }, { from: workspaceRoot, files: [FUNDING_ASSET], condition: pkg => Boolean(pkg.funding) }, ...options.assets]`
-     - `thirdPartyLicenses: true`
-     - `memoryMonitor: MEMORY_THRESHOLDS`
-  3. `await build(config)`, return `{ success: true }` or log + `{ success: false }`
-
-- `tools/package/src/executors/build/schema.json` — update to mirror builder's `BuildConfig` minus the monorepo knobs. **Add `bin` property** (array of bin descriptors per Decision #14–22). Without this the lint+build pipeline cannot validate the bin block already present in `libs/builder/project.json`.
-- `tools/package/package.json` — replace dev deps: drop `@nx/devkit` (keep in devDependencies for `ExecutorContext` type), `@hyperfrontend/logging` (still indirect), `@hyperfrontend/versioning` (still indirect), rollup family. Add runtime dep on `@hyperfrontend/builder`.
-- `tools/package/src/executors/build/README.md` — update to reflect new schema (additions: `bin`; removals: none — the format-centric API is preserved 1:1)
-
-**Behavioral parity check (manual, during PR):**
-
-For each currently-publishable lib (`lib-cryptography`, `lib-data-utils`, `lib-function-utils`, `lib-immutable-api-utils`, `lib-json-utils`, `lib-list-utils`, `lib-logging`, `lib-network-protocol`, `lib-nexus`, `lib-project-scope`, `lib-questions`, `lib-random-generator-utils`, `lib-state-machine`, `lib-string-utils`, `lib-time-utils`, `lib-ui-utils`, `lib-versioning`, `lib-web-worker`):
-
-1. On `main` (pre-PR) baseline: `nx build <project>` → snapshot `dist/libs/<lib>/` tree
-2. On the PR branch: `nx build <project>` → diff against snapshot
-3. Acceptable differences: ordering of keys in `package.json`, comment whitespace in generated files. Anything else investigated and either fixed or documented.
-
-**Verification:**
-
-```bash
-npx nx test tool-eslint-rules     # confirm the nested-name regression test added
-npx nx test tool-package
-npx nx lint tool-package --fix
-npx nx lint lib-builder --fix     # should now pass with the rules fixed
-npx nx typecheck tool-package
-npx nx build lib-builder          # builder rebuilds via the new wrapper, emits hf-build.cjs.js
-node dist/libs/builder/bin/hf-build.cjs.js --help    # deferred Phase 9 smoke test
-npx nx build lib-logging          # representative dependent lib still builds correctly
-```
+| Phase | Title                                       | Status  | Notes                                                                                                                                                            |
+| ----- | ------------------------------------------- | ------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1     | Foundation: extend `@hyperfrontend/logging` | ✅ done | `channel` / `timed` / `timedAsync` shipped on `Logger`. 100% coverage on the new methods.                                                                        |
+| 2     | Scaffold `libs/builder`                     | ✅ done | Publishable shell at `libs/builder/` with `tsconfig.base.json` path mapping and the dep set above.                                                               |
+| 3     | Models and Memory                           | ✅ done | All type definitions in `src/models/`. `recover()` always-on; `createMemoryMonitor()` opt-in with `warningMB` / `criticalMB` / `growthMB`.                       |
+| 4     | Bundle subdomain                            | ✅ done | Entries / externals / rollup driver / declarations under `src/bundle/`. Uses project-scope's `matchGlobPattern` and `walkDirectory`; no minimatch/glob.          |
+| 5     | Package subdomain                           | ✅ done | `synthesizePackageJson`, `inheritFields`, `filterWorkspaceDepsFromOutput`, `copyAssets`, third-party license collector. Adds dep on `@hyperfrontend/versioning`. |
+| 6     | Bin subdomain (JS)                          | ✅ done | `buildJsBin`, `defaultBootstrap`, `wireBinFieldInPackageJson`. CJS preferred over ESM when both formats produced for the same bin name.                          |
+| 7     | Bin subdomain (Node SEA)                    | ✅ done | `buildNativeBin` + `sea-config` / `sea-blob` / `host-binary` / `inject` / `codesign` / `platform-check`. SEA requires a CJS bin output.                          |
+| 8     | Presets and `build()` Facade                | ✅ done | `byPrefix(scope)` / `byNames(names)` predicates. `build(config)` orchestrates bundle → package → bin and threads the optional memory monitor.                    |
+| 9     | Builder's own CLI bin                       | ✅ done | `src/bin/hf-build.ts` + spec (100% coverage). `project.json` declares `hf-build` bin with all five SEA platforms.                                                |
+| 10    | Wrapper retrofit                            | ✅ done | `tools/package/src/executors/build/` reduced to `executor.ts` + `schema.json` + `wrapper-config.ts`. Wrapper now thin-calls `build()` and accepts `bin`.         |
 
 ---
 
@@ -247,6 +168,60 @@ node dist/libs/versioning/bin/cl.js --help
 ```
 
 The bin smoke tests confirm the cz/cl behavior matches the prior hand-rolled output.
+
+---
+
+## Phase 11.5 — Self-containment as a builder feature (`bundleAllDeps` + d.ts inlining)
+
+Today the builder bundles JS for matched packages but emits `.d.ts` files that still contain `import type { … } from '<bundled-pkg>'`. Consumers consuming any subpath whose types reference a bundled package would need to install the bundled package themselves to resolve the type — breaking the self-containment promise. This phase fixes that **as a generalized builder behavior**: any package that gets inlined in JS gets inlined in `.d.ts` too, automatically. No project-level toggle for d.ts behavior; the existing inline predicate is the single source of truth.
+
+**Decisions locked here (extending the table at the top):**
+
+| #   | Topic                                | Decision                                                                                                                                                                                                                                      |
+| --- | ------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 38  | Bundle-all knob                      | New per-format `bundleAllDeps?: boolean`. When `true`, the externals predicate matches every dep; when `false` (default), behavior is unchanged from today (`bundleWorkspaceDeps` only)                                                       |
+| 39  | d.ts self-containment trigger        | Automatic. Whenever any deps are being inlined for JS, the declarations phase runs a d.ts bundling pass with the same external list. Not a separate toggle                                                                                    |
+| 40  | d.ts bundler tool                    | `rollup-plugin-dts`. Slots into the existing rollup driver, reuses `tsconfig`, collapses external type imports into local type aliases                                                                                                        |
+| 41  | Source/output dependency disposition | Source `package.json` lists every imported package in `dependencies`. The package-phase output filter strips all bundled packages from `dependencies`, regardless of workspace status                                                         |
+| 42  | Curated public types module          | New `@hyperfrontend/builder/types` subpath re-exports the rollup / postject types builder surfaces publicly. Internal builder code consumes these re-exports rather than `'rollup'` directly so the d.ts bundler has a single inlining target |
+
+**Outcome:** `dist/libs/builder/` contains zero `from 'rollup'` / `from '@rollup/*'` / `from 'postject'` / `from 'typescript'` references in any `.d.ts`, and zero `dependencies` field in the published `package.json`.
+
+**Files modified:**
+
+- `libs/builder/src/models/build-config.ts` — add `bundleAllDeps?: boolean` to `EsmConfig` and `CjsConfig`. Not added to `IifeConfig` / `UmdConfig`: those formats already default to bundling everything (browsers can't resolve Node-style modules), with `external?: string[]` as the opt-out. d.ts inlining still observes the iife/umd inlined sets when computing the union
+- `libs/builder/src/bundle/externals/resolve-externals.ts` — accept `bundleAllDeps`. When `true`, the resulting external list is `peerDependencies` + `additional` only (no `dependencies`); workspace predicate becomes irrelevant
+- `libs/builder/src/package/json/filter-deps.ts` — accept the same predicate set as `resolveExternals`. Strip every dep that was bundled (workspace + non-workspace) from output `dependencies`. If the field empties, delete it
+- `libs/builder/src/package/json/synthesize.ts` — thread the `bundleAllDeps` decision into `filterWorkspaceDepsFromOutput`'s call
+- `libs/builder/src/bundle/declarations/` — after the existing `tsc` pass, run a `rollup-plugin-dts` pass over each entry's emitted `.d.ts`. External list = same list `resolveExternals` produced for the JS phase
+- `libs/builder/src/types/` (new) — `index.ts` re-exporting the public-facing rollup / postject types: `RollupOptions`, `OutputOptions`, `RollupLog`, `Plugin`, postject's `inject` signature
+- `libs/builder/src/bundle/rollup/*.ts`, `libs/builder/src/bin/script/build-bin.ts`, `libs/builder/src/bin/native/inject.ts` — switch source-side `import type { … } from 'rollup' | 'postject'` to `from '../../types'`. Internal calls to runtime APIs still come from the third-party packages directly; only types route through the curated module
+- `libs/builder/package.json` — add `rollup-plugin-dts` to `dependencies` (it's a package builder uses; the pipeline strips it from output for consumers)
+- `libs/builder/src/bundle/externals/resolve-externals.spec.ts`, `libs/builder/src/package/json/filter-deps.spec.ts`, plus a new declarations-phase d.ts inlining spec — full coverage on the new branch (Decision #33)
+
+**Wrapper retrofit (continuation of Phase 10):**
+
+- `tools/package/src/executors/build/schema.json` — add `bundleAllDeps` to each format config
+- `tools/package/src/executors/build/executor.ts` — passes `bundleAllDeps` straight through, no transformation
+
+**Builder dogfood:**
+
+- `libs/builder/project.json` — `esm.bundleAllDeps: true`, `cjs.bundleAllDeps: true`. The existing `bundleWorkspaceDeps: true` becomes redundant and is removed. `iife` / `umd` are intentionally **not** configured for `lib-builder` itself — the builder is a Node-only tool (uses `node:fs`, `node:path`, child processes, etc.) and is never targeted at browsers
+
+**Verification:**
+
+```bash
+npx nx test lib-builder
+npx nx lint lib-builder
+npx nx typecheck lib-builder
+npx nx build lib-builder
+grep -rn "from 'rollup'\|from '@rollup\|from 'postject'\|from 'typescript'" dist/libs/builder/ --include="*.d.ts"
+# expected output: nothing
+node -e "console.log(JSON.stringify(require('./dist/libs/builder/package.json').dependencies))"
+# expected output: undefined  (or {})
+```
+
+When the grep returns nothing and `dependencies` is absent from the dist `package.json`, builder is self-contained at install time. Any other workspace lib that opts into `bundleAllDeps: true` (or even just `bundleWorkspaceDeps: true` with public type re-exports) gets the same behavior automatically — no project-specific code paths.
 
 ---
 
