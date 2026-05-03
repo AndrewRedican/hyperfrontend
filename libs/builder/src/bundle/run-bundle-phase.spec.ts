@@ -155,4 +155,65 @@ describe('runBundlePhase', () => {
     })
     expect(executeRollup).toHaveBeenCalledTimes(2)
   })
+
+  it('drives the optional monitor with start/end check labels for every rollup invocation and the declarations phase', async () => {
+    const labels: string[] = []
+    const monitor = { check: (label: string) => void labels.push(label) } as unknown as Parameters<typeof runBundlePhase>[2]
+    await runBundlePhase(
+      makeContext(),
+      <BuildConfig>{
+        projectRoot: '',
+        workspaceRoot: '',
+        esm: { bundleWorkspaceDeps: false },
+        cjs: { bundleWorkspaceDeps: false, entry: '.' },
+      },
+      monitor
+    )
+    expect(labels).toEqual([
+      'bundle:esm:0/2:.:start',
+      'bundle:esm:0/2:.:end',
+      'bundle:esm:1/2:./browser:start',
+      'bundle:esm:1/2:./browser:end',
+      'bundle:cjs:0/1:.:start',
+      'bundle:cjs:0/1:.:end',
+      'bundle:declarations:start',
+      'bundle:declarations:end',
+    ])
+  })
+
+  it('emits monitor labels for IIFE and UMD entries when configured', async () => {
+    const labels: string[] = []
+    const monitor = { check: (label: string) => void labels.push(label) } as unknown as Parameters<typeof runBundlePhase>[2]
+    await runBundlePhase(
+      makeContext(),
+      <BuildConfig>{
+        projectRoot: '',
+        workspaceRoot: '',
+        iife: { globalName: 'MyLib', entry: '.' },
+        umd: { globalName: 'MyLib', entry: '.' },
+      },
+      monitor
+    )
+    expect(labels).toEqual([
+      'bundle:iife:0/1:.:start',
+      'bundle:iife:0/1:.:end',
+      'bundle:umd:0/1:.:start',
+      'bundle:umd:0/1:.:end',
+      'bundle:declarations:start',
+      'bundle:declarations:end',
+    ])
+  })
+
+  it('produces identical outputs whether or not a monitor is supplied', async () => {
+    const config = <BuildConfig>{
+      projectRoot: '',
+      workspaceRoot: '',
+      esm: { bundleWorkspaceDeps: false },
+      cjs: { bundleWorkspaceDeps: false },
+    }
+    const withoutMonitor = await runBundlePhase(makeContext(), config)
+    const monitor = { check: jest.fn() } as unknown as Parameters<typeof runBundlePhase>[2]
+    const withMonitor = await runBundlePhase(makeContext(), config, monitor)
+    expect(withMonitor).toEqual(withoutMonitor)
+  })
 })

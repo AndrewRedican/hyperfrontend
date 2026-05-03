@@ -95,7 +95,7 @@ export const build = async (config: BuildConfig): Promise<BuildResult> => {
   const monitor = resolveMonitor(config)
   monitor?.logDebug('build:start')
   try {
-    const formatOutputs = await runBundlePhase(ctx, config)
+    const formatOutputs = await runBundlePhase(ctx, config, monitor)
     monitor?.check('bundle:end')
     await runPackagePhase(ctx, config, formatOutputs)
     monitor?.check('package:end')

@@ -1,3 +1,4 @@
+import type { MemoryMonitor } from '../memory/monitor'
 import type { BuildConfig, BuildContext, FormatOutputs, IifeConfig, UmdConfig } from '../models'
 import { isArray } from '@hyperfrontend/immutable-api-utils/built-in-copy/array'
 import { ensureDir, join } from '@hyperfrontend/project-scope/core'
@@ -23,6 +24,9 @@ const toArray = <T>(value: T | T[] | undefined): T[] => (value === undefined ? [
  * @param context - Resolved build context.
  * @param config - Top-level builder configuration. Only the format and `tsConfig`
  * fields are consulted by this phase.
+ * @param monitor - Optional memory monitor; when provided, `check()` is invoked
+ * before and after every rollup invocation and the declarations phase so peak
+ * heap inside the bundle phase is observable rather than silent.
  * @returns Aggregated outputs grouped by format.
  *
  * @example Driving the bundle phase from a custom orchestrator
@@ -30,21 +34,25 @@ const toArray = <T>(value: T | T[] | undefined): T[] => (value === undefined ? [
  * const formatOutputs = await runBundlePhase(context, config)
  * ```
  */
-export const runBundlePhase = async (context: BuildContext, config: BuildConfig): Promise<FormatOutputs> => {
+export const runBundlePhase = async (context: BuildContext, config: BuildConfig, monitor?: MemoryMonitor): Promise<FormatOutputs> => {
   const outputs: FormatOutputs = { esm: [], cjs: [], iife: [], umd: [] }
 
   for (const esmConfig of toArray(config.esm)) {
     const entries = resolveEntries(esmConfig, context.entryPointDiscovery.entryPoints)
-    for (const entry of entries) {
+    for (const [i, entry] of entries.entries()) {
+      monitor?.check(`bundle:esm:${i}/${entries.length}:${entry.exportPath}:start`)
       await executeRollup(createEsmEntryConfig(entry, esmConfig, context), `esm:${entry.exportPath}`)
+      monitor?.check(`bundle:esm:${i}/${entries.length}:${entry.exportPath}:end`)
     }
     outputs.esm.push(...entries)
   }
 
   for (const cjsConfig of toArray(config.cjs)) {
     const entries = resolveEntries(cjsConfig, context.entryPointDiscovery.entryPoints)
-    for (const entry of entries) {
+    for (const [i, entry] of entries.entries()) {
+      monitor?.check(`bundle:cjs:${i}/${entries.length}:${entry.exportPath}:start`)
       await executeRollup(createCjsEntryConfig(entry, cjsConfig, context), `cjs:${entry.exportPath}`)
+      monitor?.check(`bundle:cjs:${i}/${entries.length}:${entry.exportPath}:end`)
     }
     outputs.cjs.push(...entries)
   }
@@ -54,8 +62,10 @@ export const runBundlePhase = async (context: BuildContext, config: BuildConfig)
     if (entries.length > 0) {
       ensureDir(join(context.outputPath, iifeConfig.output ?? 'bundle'))
     }
-    for (const entry of entries) {
+    for (const [i, entry] of entries.entries()) {
+      monitor?.check(`bundle:iife:${i}/${entries.length}:${entry.exportPath}:start`)
       await executeRollup(createIifeEntryConfig(entry, iifeConfig, context), `iife:${entry.exportPath}`)
+      monitor?.check(`bundle:iife:${i}/${entries.length}:${entry.exportPath}:end`)
     }
     if (entries.length > 0) outputs.iife.push({ config: iifeConfig, entries })
   }
@@ -65,12 +75,16 @@ export const runBundlePhase = async (context: BuildContext, config: BuildConfig)
     if (entries.length > 0) {
       ensureDir(join(context.outputPath, umdConfig.output ?? 'bundle'))
     }
-    for (const entry of entries) {
+    for (const [i, entry] of entries.entries()) {
+      monitor?.check(`bundle:umd:${i}/${entries.length}:${entry.exportPath}:start`)
       await executeRollup(createUmdEntryConfig(entry, umdConfig, context), `umd:${entry.exportPath}`)
+      monitor?.check(`bundle:umd:${i}/${entries.length}:${entry.exportPath}:end`)
     }
     if (entries.length > 0) outputs.umd.push({ config: umdConfig, entries })
   }
 
+  monitor?.check('bundle:declarations:start')
   generateDeclarations(context)
+  monitor?.check('bundle:declarations:end')
   return outputs
 }

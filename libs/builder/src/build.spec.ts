@@ -134,7 +134,7 @@ describe('build', () => {
   it('forwards the BuildConfig to bundle and package phases', async () => {
     const config = baseConfig()
     await build(config)
-    expect(runBundlePhase).toHaveBeenCalledWith(expect.any(Object), config)
+    expect(runBundlePhase).toHaveBeenCalledWith(expect.any(Object), config, undefined)
     expect(runPackagePhase).toHaveBeenCalledWith(expect.any(Object), config, EMPTY_FORMATS)
   })
 
@@ -207,6 +207,14 @@ describe('build', () => {
     const opts = { warningMB: 100, criticalMB: 200, growthMB: 25 }
     await build({ ...baseConfig(), memoryMonitor: opts })
     expect(createMemoryMonitor).toHaveBeenCalledWith(opts)
+  })
+
+  it('threads the resolved monitor into runBundlePhase so per-rollup checkpoints fire', async () => {
+    const monitor = makeMonitor()
+    ;(<jest.Mock>createMemoryMonitor).mockReturnValueOnce(monitor)
+    const config = { ...baseConfig(), memoryMonitor: true }
+    await build(config)
+    expect(runBundlePhase).toHaveBeenCalledWith(expect.any(Object), config, monitor)
   })
 
   it('flushes the monitor summary and rethrows when a phase fails', async () => {
