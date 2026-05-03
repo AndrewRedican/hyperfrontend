@@ -6,7 +6,7 @@ jest.mock('@rollup/plugin-typescript', () => jest.fn(() => ({ name: 'typescript'
 
 jest.mock('./rollup/execute', () => ({ executeRollup: jest.fn().mockResolvedValue(undefined) }))
 jest.mock('./declarations/generate-declarations', () => ({
-  generateDeclarations: jest.fn().mockReturnValue({ success: true, stdout: '', stderr: '' }),
+  generateDeclarations: jest.fn().mockResolvedValue({ success: true, stdout: '', stderr: '' }),
 }))
 jest.mock('@hyperfrontend/project-scope/core', () => {
   const actual = jest.requireActual('@hyperfrontend/project-scope/core')

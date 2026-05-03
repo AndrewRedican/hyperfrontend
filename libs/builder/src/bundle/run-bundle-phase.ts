@@ -84,7 +84,7 @@ export const runBundlePhase = async (context: BuildContext, config: BuildConfig,
   }
 
   monitor?.check('bundle:declarations:start')
-  generateDeclarations(context)
+  await generateDeclarations(context)
   monitor?.check('bundle:declarations:end')
   return outputs
 }
