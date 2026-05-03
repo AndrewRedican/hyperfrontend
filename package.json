@@ -23,9 +23,6 @@
     "type": "github",
     "url": "https://github.com/sponsors/AndrewRedican"
   },
-  "scripts": {
-    "commit": "npx cz"
-  },
   "devDependencies": {
     "@eslint/markdown": "7.5.1",
     "@hyperfrontend/versioning": "0.6.0",
