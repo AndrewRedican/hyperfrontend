@@ -36,5 +36,5 @@
   },
   "forwardPorts": [3000, 4200],
   "remoteUser": "vscode",
-  "postCreateCommand": "npm ci && npm i -g commitizen@4.3.1"
+  "postCreateCommand": "npm ci"
 }
