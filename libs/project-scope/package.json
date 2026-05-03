@@ -6,9 +6,6 @@
     "@hyperfrontend/immutable-api-utils": "0.1.2",
     "@hyperfrontend/logging": "0.2.0"
   },
-  "peerDependencies": {
-    "@nx/devkit": ">=18.0.0"
-  },
   "exports": {
     ".": "./src/index.js",
     "./cli": "./src/cli/index.js",
@@ -66,7 +63,6 @@
     "node",
     "code-generation",
     "scaffolding",
-    "devkit",
     "workspace-analysis",
     "tech-stack",
     "entry-point-discovery",
@@ -75,11 +71,6 @@
     "static-analysis",
     "ast"
   ],
-  "peerDependenciesMeta": {
-    "@nx/devkit": {
-      "optional": true
-    }
-  },
   "funding": {
     "type": "github",
     "url": "https://github.com/sponsors/AndrewRedican"

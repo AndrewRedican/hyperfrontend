@@ -41,13 +41,13 @@ Comprehensive project analysis, technology stack detection, and transactional vi
 
 @hyperfrontend/project-scope provides intelligent codebase analysis for JavaScript/TypeScript projects. It uses multi-signal heuristics to classify project types, detect frameworks and build tools, discover entry points, and map dependency graphs - all with confidence scoring and explainable evidence. The library also includes a virtual file system (VFS) for safe, atomic file modifications.
 
-Designed for tooling authors building code generators, IDE extensions, CI/CD pipelines, and monorepo tooling. Optional `@nx/devkit` integration enables seamless operation within NX workspaces with graceful fallback for standalone projects.
+Designed for tooling authors building code generators, IDE extensions, CI/CD pipelines, and monorepo tooling. Built-in NX workspace detection reads `nx.json`, `workspace.json`, and `project.json` so tooling can adapt to NX-shaped repos with zero runtime peer dependencies.
 
 ### Key Features
 
 - **Project Classification** - Detect application, library, e2e, tool, or plugin with confidence scoring and evidence tracking
 - **Technology Detection** - Identify 20+ frameworks (React, Vue, Angular, Svelte), build tools (Vite, Webpack, esbuild), and testing frameworks (Jest, Vitest, Cypress)
-- **Virtual File System** - Transaction-aware file operations with atomic commit/rollback, following NX devkit's Tree interface
+- **Virtual File System** - Transaction-aware file operations with atomic commit/rollback
 - **Monorepo Intelligence** - Detect NX, Turborepo, Lerna, pnpm/npm/Yarn workspaces; read project configurations
 - **Dependency Graph** - Build internal import graphs from source code with root/leaf node identification
 - **Entry Point Discovery** - Find application entries from package.json exports, bin fields, and convention patterns
@@ -179,7 +179,6 @@ project-scope tree ./my-project --depth 3
 - **`isNxWorkspace(path): boolean`** - Check if directory is NX workspace
 - **`getNxWorkspaceInfo(path): NxWorkspaceInfo`** - Get workspace details
 - **`findNxProjects(path): NxProjectConfig[]`** - Find all projects
-- **`isDevkitAvailable(): boolean`** - Check if `@nx/devkit` is available
 
 ### Core Utilities
 

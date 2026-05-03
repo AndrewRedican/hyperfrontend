@@ -67,8 +67,6 @@ export type {
   WorkspaceType,
 } from './models'
 export type {
-  DevkitLoadResult,
-  NxDevkit,
   NxJson,
   NxProjectConfig,
   NxProjectDependency,
@@ -242,18 +240,13 @@ export {
   buildSimpleProjectGraph,
   discoverNxProjects,
   findNxWorkspaceRoot,
-  getDevkit,
   getNxWorkspaceInfo,
   getProjectConfig,
-  isDevkitAvailable,
   isNxProject,
   isNxWorkspace,
   NX_CONFIG_FILES,
   NX_PROJECT_FILE,
   readProjectJson,
-  resetDevkitCache,
-  tryLoadDevkit,
-  withDevkit,
 } from './nx'
 export {
   clearConfigDetectionCache,
