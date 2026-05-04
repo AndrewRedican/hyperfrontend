@@ -85,6 +85,20 @@
         }
       }
     },
+    "bundleAllDeps": {
+      "oneOf": [
+        { "type": "boolean" },
+        {
+          "type": "object",
+          "properties": {
+            "include": { "type": "array", "items": { "type": "string" } },
+            "exclude": { "type": "array", "items": { "type": "string" } }
+          },
+          "additionalProperties": false
+        }
+      ],
+      "description": "Bundle every third-party dep into _dependencies/<dep>/ so the published artifact is fully self-contained. Pass an object with include/exclude to override the auto-derived dep set."
+    },
     "esmConfig": {
       "allOf": [
         { "$ref": "#/definitions/entryConfig" },
@@ -96,7 +110,8 @@
             "bundleWorkspaceDeps": {
               "type": "boolean",
               "description": "Inline workspace dependencies (true) or keep them external (false)."
-            }
+            },
+            "bundleAllDeps": { "$ref": "#/definitions/bundleAllDeps" }
           }
         }
       ]
@@ -112,7 +127,8 @@
             "bundleWorkspaceDeps": {
               "type": "boolean",
               "description": "Inline workspace dependencies (true) or keep them external (false)."
-            }
+            },
+            "bundleAllDeps": { "$ref": "#/definitions/bundleAllDeps" }
           }
         }
       ]

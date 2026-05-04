@@ -16,6 +16,7 @@ export type {
   BuildConfig,
   BuildContext,
   BuildResult,
+  BundleAllDepsOptions,
   CjsConfig,
   ConditionalExport,
   EntryPoint,

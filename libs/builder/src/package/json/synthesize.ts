@@ -1,6 +1,6 @@
 import type { BuildContext, FormatOutputs, InheritFromSpec, IsWorkspacePackagePredicate, PackageJson } from '../../models'
 import { getCdnPaths } from './cdn-paths'
-import { filterWorkspaceDepsFromOutput } from './filter-deps'
+import { filterBundledDepsFromOutput, filterWorkspaceDepsFromOutput } from './filter-deps'
 import { generateExportsFromFormats } from './generate-exports'
 import { inheritFields } from './inherit-fields'
 
@@ -53,8 +53,10 @@ export const synthesizePackageJson = (
   formatOutputs: FormatOutputs,
   opts?: SynthesizePackageJsonOptions
 ): PackageJson => {
-  const filtered =
+  const workspaceFiltered =
     opts?.filterWorkspaceDepsFromOutput && opts.isWorkspacePackage ? filterWorkspaceDepsFromOutput(srcPkg, opts.isWorkspacePackage) : srcPkg
+
+  const filtered = filterBundledDepsFromOutput(workspaceFiltered, ctx.bundledDeps)
 
   const inherited = inheritFields(filtered, opts?.inheritFieldsFrom)
   const exportsMap = generateExportsFromFormats(ctx.entryPointDiscovery, formatOutputs, srcPkg)

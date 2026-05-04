@@ -34,6 +34,7 @@ const makeContext = (discovery: EntryPointDiscovery = baseDiscovery()): BuildCon
   assets: [],
   isWorkspacePackage: () => false,
   entryPointDiscovery: discovery,
+  bundledDeps: [],
   startedAt: 0,
 })
 
@@ -154,5 +155,31 @@ describe('synthesizePackageJson', () => {
     expect(result.version).toBe('1.0.0')
     expect(result.license).toBe('MIT')
     expect(result.keywords).toEqual(['x'])
+  })
+
+  it('strips bundled deps from output dependencies when ctx.bundledDeps is non-empty', () => {
+    const formats: FormatOutputs = { esm: [], cjs: [], iife: [], umd: [] }
+    const ctx = { ...makeContext(), bundledDeps: ['rollup', 'postject'] }
+    const result = synthesizePackageJson({ name: 'foo', dependencies: { rollup: '*', postject: '*', lodash: '*' } }, ctx, formats)
+    expect(result.dependencies).toEqual({ lodash: '*' })
+  })
+
+  it('drops the dependencies field entirely when only bundled deps remain', () => {
+    const formats: FormatOutputs = { esm: [], cjs: [], iife: [], umd: [] }
+    const ctx = { ...makeContext(), bundledDeps: ['rollup'] }
+    const result = synthesizePackageJson({ name: 'foo', dependencies: { rollup: '*' } }, ctx, formats)
+    expect(result.dependencies).toBeUndefined()
+  })
+
+  it('combines workspace and bundled-dep filtering when both are active', () => {
+    const formats: FormatOutputs = { esm: [], cjs: [], iife: [], umd: [] }
+    const ctx = { ...makeContext(), bundledDeps: ['rollup'] }
+    const result = synthesizePackageJson(
+      { name: 'foo', dependencies: { rollup: '*', '@hyperfrontend/logging': '*', lodash: '*' } },
+      ctx,
+      formats,
+      { filterWorkspaceDepsFromOutput: true, isWorkspacePackage: isHyperfrontend }
+    )
+    expect(result.dependencies).toEqual({ lodash: '*' })
   })
 })

@@ -18,6 +18,7 @@ const makeContext = (): BuildContext => ({
   assets: [],
   isWorkspacePackage: () => false,
   entryPointDiscovery: { category: 'root', entryPoints: [], hasRootEntry: false, platformEntries: [], featureEntries: [] },
+  bundledDeps: [],
   startedAt: 0,
 })
 

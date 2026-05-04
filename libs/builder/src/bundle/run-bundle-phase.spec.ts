@@ -12,10 +12,22 @@ jest.mock('@hyperfrontend/project-scope/core', () => {
   const actual = jest.requireActual('@hyperfrontend/project-scope/core')
   return { ...actual, ensureDir: jest.fn() }
 })
+jest.mock('./dependencies/pre-pass', () => ({
+  runPrePass: jest.fn().mockResolvedValue([]),
+  resolveDefaultWorkerPath: jest.fn(),
+}))
+jest.mock('./dependencies/resolve-dep-entry', () => ({
+  resolveDepEntry: jest.fn().mockReturnValue('/abs/repo/node_modules/<dep>/index.js'),
+}))
+jest.mock('./declarations/dts-pre-pass', () => ({ runDtsPrePass: jest.fn().mockResolvedValue(undefined) }))
+jest.mock('./declarations/dts-per-entry', () => ({ runDtsPerEntry: jest.fn().mockResolvedValue(undefined) }))
 
 import type { BuildConfig, BuildContext, EntryPoint, EntryPointDiscovery } from '../models'
 import { ensureDir } from '@hyperfrontend/project-scope/core'
+import { runDtsPerEntry } from './declarations/dts-per-entry'
+import { runDtsPrePass } from './declarations/dts-pre-pass'
 import { generateDeclarations } from './declarations/generate-declarations'
+import { resolveDefaultWorkerPath, runPrePass } from './dependencies/pre-pass'
 import { executeRollup } from './rollup/execute'
 import { runBundlePhase } from './run-bundle-phase'
 
@@ -46,6 +58,7 @@ const makeContext = (): BuildContext => ({
   assets: [],
   isWorkspacePackage: () => false,
   entryPointDiscovery: DISCOVERY,
+  bundledDeps: [],
   startedAt: 0,
 })
 
@@ -53,6 +66,12 @@ beforeEach(() => {
   ;(<jest.Mock>executeRollup).mockClear()
   ;(<jest.Mock>generateDeclarations).mockClear()
   ;(<jest.Mock>ensureDir).mockClear()
+  ;(<jest.Mock>runPrePass).mockClear()
+  ;(<jest.Mock>runDtsPrePass).mockClear()
+  ;(<jest.Mock>runDtsPerEntry).mockClear()
+  ;(<jest.Mock>resolveDefaultWorkerPath)
+    .mockReset()
+    .mockReturnValue({ path: '/abs/dist/libs/builder/bundle/dependencies/worker/index.cjs.js', execArgv: [] })
 })
 
 describe('runBundlePhase', () => {
@@ -215,5 +234,95 @@ describe('runBundlePhase', () => {
     const monitor = { check: jest.fn() } as unknown as Parameters<typeof runBundlePhase>[2]
     const withMonitor = await runBundlePhase(makeContext(), config, monitor)
     expect(withMonitor).toEqual(withoutMonitor)
+  })
+
+  it('skips the dependencies pre-pass when bundledDeps is empty', async () => {
+    const config = <BuildConfig>{
+      projectRoot: '',
+      workspaceRoot: '',
+      esm: { bundleWorkspaceDeps: false, bundleAllDeps: true },
+    }
+    await runBundlePhase(makeContext(), config)
+    expect(runPrePass).not.toHaveBeenCalled()
+  })
+
+  it('skips the dependencies pre-pass when no format opts in', async () => {
+    const config = <BuildConfig>{
+      projectRoot: '',
+      workspaceRoot: '',
+      esm: { bundleWorkspaceDeps: false },
+    }
+    const ctx = makeContext()
+    ctx.bundledDeps = ['rollup']
+    await runBundlePhase(ctx, config)
+    expect(runPrePass).not.toHaveBeenCalled()
+  })
+
+  it('runs the dependencies pre-pass when bundledDeps is non-empty and at least one format opts in', async () => {
+    const config = <BuildConfig>{
+      projectRoot: '',
+      workspaceRoot: '',
+      esm: { bundleWorkspaceDeps: false, bundleAllDeps: true },
+      cjs: { bundleWorkspaceDeps: false, bundleAllDeps: true },
+    }
+    const ctx = makeContext()
+    ctx.bundledDeps = ['rollup', 'postject']
+    await runBundlePhase(ctx, config)
+    expect(runPrePass).toHaveBeenCalledTimes(1)
+    const [jobs, options] = (<jest.Mock>runPrePass).mock.calls[0]
+    expect(jobs).toHaveLength(4)
+    expect(jobs.every((j: { kind: string }) => j.kind === 'js')).toBe(true)
+    expect(options.workerPath).toBe('/abs/dist/libs/builder/bundle/dependencies/worker/index.cjs.js')
+  })
+
+  it('throws a context-rich error when the worker cannot be located', async () => {
+    ;(<jest.Mock>resolveDefaultWorkerPath).mockReturnValueOnce(undefined)
+    const config = <BuildConfig>{
+      projectRoot: '',
+      workspaceRoot: '',
+      esm: { bundleWorkspaceDeps: false, bundleAllDeps: true },
+    }
+    const ctx = makeContext()
+    ctx.bundledDeps = ['rollup']
+    await expect(runBundlePhase(ctx, config)).rejects.toThrow(/pre-pass worker could not be resolved/)
+  })
+
+  it('emits monitor checkpoints around the pre-pass when active', async () => {
+    const checks: string[] = []
+    const monitor = { check: (label: string) => checks.push(label) } as unknown as Parameters<typeof runBundlePhase>[2]
+    const config = <BuildConfig>{
+      projectRoot: '',
+      workspaceRoot: '',
+      esm: { bundleWorkspaceDeps: false, bundleAllDeps: true },
+    }
+    const ctx = makeContext()
+    ctx.bundledDeps = ['rollup']
+    await runBundlePhase(ctx, config, monitor)
+    expect(checks[0]).toBe('bundle:dependencies:prepass:start')
+    expect(checks).toContain('bundle:dependencies:prepass:end')
+  })
+
+  it('runs the d.ts pre-pass and per-entry d.ts pass after declarations when bundledDeps is non-empty', async () => {
+    const config = <BuildConfig>{
+      projectRoot: '',
+      workspaceRoot: '',
+      esm: { bundleWorkspaceDeps: false, bundleAllDeps: true },
+    }
+    const ctx = makeContext()
+    ctx.bundledDeps = ['rollup']
+    await runBundlePhase(ctx, config)
+    expect(runDtsPrePass).toHaveBeenCalledTimes(1)
+    expect(runDtsPerEntry).toHaveBeenCalledTimes(1)
+  })
+
+  it('skips the d.ts pre-pass and per-entry pass when no bundled deps', async () => {
+    const config = <BuildConfig>{
+      projectRoot: '',
+      workspaceRoot: '',
+      esm: { bundleWorkspaceDeps: false },
+    }
+    await runBundlePhase(makeContext(), config)
+    expect(runDtsPrePass).not.toHaveBeenCalled()
+    expect(runDtsPerEntry).not.toHaveBeenCalled()
   })
 })

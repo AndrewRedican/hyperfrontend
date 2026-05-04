@@ -16,6 +16,11 @@ export interface ResolveExternalsOptions {
   isWorkspacePackage?: IsWorkspacePackagePredicate
   /** When `true`, workspace packages are inlined and stripped from the resolved external list. */
   bundleWorkspaceDeps?: boolean
+  /**
+   * Pre-pass dep set. When non-empty, these are removed from the external list so the
+   * externalize plugin can route their imports to `_dependencies/<dep>/` instead.
+   */
+  bundledDeps?: string[]
 }
 
 const readPkg = (packageJsonPath: string): PackageJson => (exists(packageJsonPath) ? readJsonFile<PackageJson>(packageJsonPath) : {})
@@ -49,10 +54,14 @@ export const resolveExternals = (options: ResolveExternalsOptions): string[] => 
   const deps = keys(pkg.dependencies ?? {})
   const peerDeps = keys(pkg.peerDependencies ?? {})
   const additional = options.additional ?? []
+  const bundledSet = createSet(options.bundledDeps ?? [])
   const inlineWorkspace = options.bundleWorkspaceDeps === true && options.isWorkspacePackage !== undefined
 
   const filterWorkspace = (names: string[]): string[] =>
     inlineWorkspace ? names.filter((n) => !(<IsWorkspacePackagePredicate>options.isWorkspacePackage)(n)) : names
+  const filterBundled = (names: string[]): string[] => (bundledSet.size === 0 ? names : names.filter((n) => !bundledSet.has(n)))
 
-  return from(createSet([...filterWorkspace(deps), ...peerDeps, ...filterWorkspace(additional)]))
+  return from(
+    createSet([...filterBundled(filterWorkspace(deps)), ...filterBundled(peerDeps), ...filterBundled(filterWorkspace(additional))])
+  )
 }

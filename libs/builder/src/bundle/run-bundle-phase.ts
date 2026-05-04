@@ -1,8 +1,15 @@
 import type { MemoryMonitor } from '../memory/monitor'
-import type { BuildConfig, BuildContext, FormatOutputs, IifeConfig, UmdConfig } from '../models'
+import type { BuildConfig, BuildContext, CjsConfig, EsmConfig, FormatOutputs, IifeConfig, UmdConfig } from '../models'
+import type { PrePassJob } from './dependencies/pre-pass'
 import { isArray } from '@hyperfrontend/immutable-api-utils/built-in-copy/array'
+import { createError } from '@hyperfrontend/immutable-api-utils/built-in-copy/error'
+import { logger } from '@hyperfrontend/logging'
 import { ensureDir, join } from '@hyperfrontend/project-scope/core'
+import { runDtsPerEntry } from './declarations/dts-per-entry'
+import { runDtsPrePass } from './declarations/dts-pre-pass'
 import { generateDeclarations } from './declarations/generate-declarations'
+import { resolveDefaultWorkerPath, runPrePass } from './dependencies/pre-pass'
+import { resolveDepEntry } from './dependencies/resolve-dep-entry'
 import { resolveEntries } from './entries/resolve-entries'
 import { createCjsEntryConfig } from './rollup/config-cjs'
 import { createEsmEntryConfig } from './rollup/config-esm'
@@ -10,7 +17,45 @@ import { createIifeEntryConfig } from './rollup/config-iife'
 import { createUmdEntryConfig } from './rollup/config-umd'
 import { executeRollup } from './rollup/execute'
 
+const log = logger.channel('builder:bundle')
+
 const toArray = <T>(value: T | T[] | undefined): T[] => (value === undefined ? [] : isArray(value) ? value : [value])
+
+const collectFormatsRequestingPrePass = (config: BuildConfig): Array<'esm' | 'cjs'> => {
+  const formats = new Set<'esm' | 'cjs'>()
+  for (const c of toArray<EsmConfig>(config.esm)) if (c.bundleAllDeps) formats.add('esm')
+  for (const c of toArray<CjsConfig>(config.cjs)) if (c.bundleAllDeps) formats.add('cjs')
+  return Array.from(formats)
+}
+
+const buildJsPrePassJobs = (deps: string[], formats: Array<'esm' | 'cjs'>, context: BuildContext): PrePassJob[] => {
+  const jobs: PrePassJob[] = []
+  const depsRoot = join(context.outputPath, '_dependencies')
+  for (const dep of deps) {
+    const entry = resolveDepEntry({ dep, projectRoot: context.projectRoot, workspaceRoot: context.workspaceRoot, kind: 'js' })
+    for (const format of formats) {
+      jobs.push({
+        kind: 'js',
+        dep,
+        inputPath: entry,
+        format,
+        outputPath: join(depsRoot, dep, format === 'esm' ? 'index.esm.js' : 'index.cjs.js'),
+        otherDeps: deps.filter((d) => d !== dep),
+      })
+    }
+  }
+  return jobs
+}
+
+const resolveWorkerInvocationOrThrow = (workspaceRoot: string): { path: string; execArgv: string[] } => {
+  const invocation = resolveDefaultWorkerPath(workspaceRoot)
+  if (!invocation) {
+    throw createError(
+      'bundleAllDeps is enabled but the pre-pass worker could not be resolved. Build @hyperfrontend/builder once with bundleAllDeps disabled, or ensure @swc-node/register is installed for source-mode bootstrap.'
+    )
+  }
+  return invocation
+}
 
 /**
  * Runs the entire bundle phase: ESM, CJS, IIFE, UMD outputs followed by declaration emission.
@@ -36,6 +81,18 @@ const toArray = <T>(value: T | T[] | undefined): T[] => (value === undefined ? [
  */
 export const runBundlePhase = async (context: BuildContext, config: BuildConfig, monitor?: MemoryMonitor): Promise<FormatOutputs> => {
   const outputs: FormatOutputs = { esm: [], cjs: [], iife: [], umd: [] }
+
+  const requestedPrePassFormats = collectFormatsRequestingPrePass(config)
+  if (context.bundledDeps.length > 0 && requestedPrePassFormats.length > 0) {
+    const invocation = resolveWorkerInvocationOrThrow(context.workspaceRoot)
+    const jobs = buildJsPrePassJobs(context.bundledDeps, requestedPrePassFormats, context)
+    log.info(
+      `bundle dependencies pre-pass: ${context.bundledDeps.length} deps × ${requestedPrePassFormats.length} formats = ${jobs.length} jobs`
+    )
+    monitor?.check('bundle:dependencies:prepass:start')
+    await runPrePass(jobs, { workerPath: invocation.path, execArgv: invocation.execArgv, monitor })
+    monitor?.check('bundle:dependencies:prepass:end')
+  }
 
   for (const esmConfig of toArray(config.esm)) {
     const entries = resolveEntries(esmConfig, context.entryPointDiscovery.entryPoints)
@@ -86,5 +143,11 @@ export const runBundlePhase = async (context: BuildContext, config: BuildConfig,
   monitor?.check('bundle:declarations:start')
   await generateDeclarations(context)
   monitor?.check('bundle:declarations:end')
+
+  if (context.bundledDeps.length > 0) {
+    await runDtsPrePass(context, monitor)
+    await runDtsPerEntry(context, monitor)
+  }
+
   return outputs
 }

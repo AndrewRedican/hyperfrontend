@@ -10,6 +10,7 @@ export type {
   BinFormatSpec,
   BinScriptFormat,
   BuildConfig,
+  BundleAllDepsOptions,
   CjsConfig,
   EsmConfig,
   FormatEntryConfig,

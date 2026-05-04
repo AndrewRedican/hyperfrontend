@@ -14,7 +14,8 @@
     "@rollup/plugin-terser": "0.4.4",
     "@rollup/plugin-typescript": "12.3.0",
     "postject": "1.0.0-alpha.6",
-    "rollup": "4.59.0"
+    "rollup": "4.59.0",
+    "rollup-plugin-dts": "6.4.1"
   },
   "exports": {
     ".": "./src/index.js",
@@ -23,6 +24,8 @@
     "./bin/script": "./src/bin/script/index.js",
     "./bundle": "./src/bundle/index.js",
     "./bundle/declarations": "./src/bundle/declarations/index.js",
+    "./bundle/dependencies": "./src/bundle/dependencies/index.js",
+    "./bundle/dependencies/worker": "./src/bundle/dependencies/worker/index.js",
     "./bundle/entries": "./src/bundle/entries/index.js",
     "./bundle/externals": "./src/bundle/externals/index.js",
     "./bundle/rollup": "./src/bundle/rollup/index.js",

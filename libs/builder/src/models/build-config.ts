@@ -54,6 +54,21 @@ export interface FormatEntryConfig {
 }
 
 /**
+ * Caller overrides to the auto-derived bundled-dep set (Decision #40).
+ *
+ * The default set is `package.json#dependencies` minus `peerDependencies` minus
+ * any package matching `isWorkspacePackage`. `include` adds packages absent
+ * from `dependencies`; `exclude` skips ones that would otherwise be picked up.
+ * Neither override can resurrect a peer or workspace package.
+ */
+export interface BundleAllDepsOptions {
+  /** Force-include packages even if absent from `package.json#dependencies`. */
+  include?: string[]
+  /** Skip these packages even if otherwise selected. */
+  exclude?: string[]
+}
+
+/**
  * ESM output configuration.
  */
 export interface EsmConfig extends FormatEntryConfig {
@@ -63,6 +78,12 @@ export interface EsmConfig extends FormatEntryConfig {
   external?: string[]
   /** Inline workspace dependencies (`true`) or keep them external (`false`). */
   bundleWorkspaceDeps: boolean
+  /**
+   * Bundle every third-party dep into `_dependencies/<dep>/` and route entry imports
+   * through that directory at install-relative paths. When `true`, builder produces
+   * a fully self-contained dist with no `dependencies` field on the published package.
+   */
+  bundleAllDeps?: boolean | BundleAllDepsOptions
 }
 
 /**
@@ -75,6 +96,12 @@ export interface CjsConfig extends FormatEntryConfig {
   external?: string[]
   /** Inline workspace dependencies (`true`) or keep them external (`false`). */
   bundleWorkspaceDeps: boolean
+  /**
+   * Bundle every third-party dep into `_dependencies/<dep>/` and route entry imports
+   * through that directory at install-relative paths. When `true`, builder produces
+   * a fully self-contained dist with no `dependencies` field on the published package.
+   */
+  bundleAllDeps?: boolean | BundleAllDepsOptions
 }
 
 /**

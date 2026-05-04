@@ -27,6 +27,14 @@ export interface BuildContext {
   isWorkspacePackage: IsWorkspacePackagePredicate
   /** Result of the entry-point discovery scan. */
   entryPointDiscovery: EntryPointDiscovery
+  /**
+   * Third-party deps slated for the per-format pre-pass into `_dependencies/<dep>/`.
+   *
+   * Empty unless at least one format declares `bundleAllDeps`. Threaded through
+   * to the bundle, package, and bin phases so each can apply the externalize
+   * plugin and strip the deps from the output `package.json`.
+   */
+  bundledDeps: string[]
   /** Wall-clock timestamp captured at context creation, used for `BuildResult.durationMs`. */
   startedAt: number
 }

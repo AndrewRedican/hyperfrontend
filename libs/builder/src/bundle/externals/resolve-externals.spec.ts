@@ -74,4 +74,17 @@ describe('resolveExternals', () => {
     const result = resolveExternals({ packageJsonPath: path, additional: ['react'] })
     expect(result.filter((name) => name === 'react')).toHaveLength(1)
   })
+
+  it('strips bundled deps from the resolved external list', () => {
+    const path = writePkg(root, { dependencies: { rollup: '*', lodash: '*' } })
+    const result = resolveExternals({ packageJsonPath: path, bundledDeps: ['rollup'] })
+    expect(result).toContain('lodash')
+    expect(result).not.toContain('rollup')
+  })
+
+  it('strips bundled deps even when also listed in additional', () => {
+    const path = writePkg(root, {})
+    const result = resolveExternals({ packageJsonPath: path, additional: ['rollup', 'lodash'], bundledDeps: ['rollup'] })
+    expect(result).toEqual(['lodash'])
+  })
 })

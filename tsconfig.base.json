@@ -35,6 +35,8 @@
       "@hyperfrontend/builder/bin/script": ["libs/builder/src/bin/script/index.ts"],
       "@hyperfrontend/builder/bundle": ["libs/builder/src/bundle/index.ts"],
       "@hyperfrontend/builder/bundle/declarations": ["libs/builder/src/bundle/declarations/index.ts"],
+      "@hyperfrontend/builder/bundle/dependencies": ["libs/builder/src/bundle/dependencies/index.ts"],
+      "@hyperfrontend/builder/bundle/dependencies/worker": ["libs/builder/src/bundle/dependencies/worker/index.ts"],
       "@hyperfrontend/builder/bundle/entries": ["libs/builder/src/bundle/entries/index.ts"],
       "@hyperfrontend/builder/bundle/externals": ["libs/builder/src/bundle/externals/index.ts"],
       "@hyperfrontend/builder/bundle/rollup": ["libs/builder/src/bundle/rollup/index.ts"],

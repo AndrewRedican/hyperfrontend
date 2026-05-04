@@ -1,14 +1,56 @@
 import type { MemoryMonitor } from './memory/monitor'
-import type { BuildConfig, BuildContext, BuildResult, FormatCounts, FormatOutputs, IsWorkspacePackagePredicate } from './models'
+import type {
+  BuildConfig,
+  BuildContext,
+  BuildResult,
+  BundleAllDepsOptions,
+  CjsConfig,
+  EsmConfig,
+  FormatCounts,
+  FormatOutputs,
+  IsWorkspacePackagePredicate,
+} from './models'
+import { from, isArray } from '@hyperfrontend/immutable-api-utils/built-in-copy/array'
 import { dateNow } from '@hyperfrontend/immutable-api-utils/built-in-copy/date'
+import { createSet } from '@hyperfrontend/immutable-api-utils/built-in-copy/set'
 import { join, relativePath } from '@hyperfrontend/project-scope/core'
 import { runBinPhase } from './bin/run-bin-phase'
+import { resolveBundledDeps } from './bundle/dependencies/resolve-bundled-deps'
 import { discoverEntries } from './bundle/entries/discover-entries'
 import { runBundlePhase } from './bundle/run-bundle-phase'
 import { createMemoryMonitor } from './memory/monitor'
 import { runPackagePhase } from './package/run-package-phase'
 
 const NEVER_WORKSPACE: IsWorkspacePackagePredicate = () => false
+
+const collectFormatBundleAllDeps = (configs: Array<EsmConfig | CjsConfig>): { active: boolean; options: BundleAllDepsOptions } => {
+  let active = false
+  const include: string[] = []
+  const exclude: string[] = []
+  for (const cfg of configs) {
+    const flag = cfg.bundleAllDeps
+    if (!flag) continue
+    active = true
+    if (typeof flag === 'object') {
+      if (flag.include) include.push(...flag.include)
+      if (flag.exclude) exclude.push(...flag.exclude)
+    }
+  }
+  return { active, options: { include: from(createSet(include)), exclude: from(createSet(exclude)) } }
+}
+
+const toFormatArray = <T>(value: T | T[] | undefined): T[] => (value === undefined ? [] : isArray(value) ? value : [value])
+
+const computeBundledDeps = (config: BuildConfig, isWorkspacePackage: IsWorkspacePackagePredicate): string[] => {
+  const formats = [...toFormatArray<EsmConfig>(config.esm), ...toFormatArray<CjsConfig>(config.cjs)]
+  const { active, options } = collectFormatBundleAllDeps(formats)
+  if (!active) return []
+  return resolveBundledDeps(join(config.projectRoot, 'package.json'), {
+    isWorkspacePackage,
+    include: options.include,
+    exclude: options.exclude,
+  })
+}
 
 /**
  * Resolves a {@link BuildContext} from a top-level {@link BuildConfig}.
@@ -34,6 +76,7 @@ const NEVER_WORKSPACE: IsWorkspacePackagePredicate = () => false
  */
 export const createBuildContext = (config: BuildConfig): BuildContext => {
   const projectRelativePath = relativePath(config.workspaceRoot, config.projectRoot)
+  const isWorkspacePackage = config.isWorkspacePackage ?? NEVER_WORKSPACE
   return {
     projectRoot: config.projectRoot,
     workspaceRoot: config.workspaceRoot,
@@ -42,8 +85,9 @@ export const createBuildContext = (config: BuildConfig): BuildContext => {
     tsConfigPath: config.tsConfig ?? join(config.projectRoot, 'tsconfig.lib.json'),
     external: config.external ?? [],
     assets: config.assets ?? [],
-    isWorkspacePackage: config.isWorkspacePackage ?? NEVER_WORKSPACE,
+    isWorkspacePackage,
     entryPointDiscovery: discoverEntries(config.projectRoot),
+    bundledDeps: computeBundledDeps(config, isWorkspacePackage),
     startedAt: dateNow(),
   }
 }

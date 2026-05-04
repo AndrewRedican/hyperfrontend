@@ -5,6 +5,9 @@ jest.mock('./bundle/entries/discover-entries', () => ({ discoverEntries: jest.fn
 jest.mock('./memory/monitor', () => ({ createMemoryMonitor: jest.fn() }))
 
 import type { BinConfig, BinOutput, BuildConfig, EntryPoint, EntryPointDiscovery, FormatOutputs, MemoryMonitor } from './models'
+import { mkdtempSync, rmSync, writeFileSync } from 'node:fs'
+import { tmpdir } from 'node:os'
+import { join as nodeJoin } from 'node:path'
 import { runBinPhase } from './bin/run-bin-phase'
 import { build, createBuildContext } from './build'
 import { discoverEntries } from './bundle/entries/discover-entries'
@@ -102,6 +105,71 @@ describe('createBuildContext', () => {
     const after = Date.now()
     expect(ctx.startedAt).toBeGreaterThanOrEqual(before)
     expect(ctx.startedAt).toBeLessThanOrEqual(after)
+  })
+
+  describe('bundleAllDeps integration', () => {
+    let fxRoot: string
+    const seedPkg = (deps: Record<string, string>, peer?: Record<string, string>): string => {
+      writeFileSync(nodeJoin(fxRoot, 'package.json'), JSON.stringify({ dependencies: deps, peerDependencies: peer ?? {} }))
+      return fxRoot
+    }
+    beforeEach(() => {
+      fxRoot = mkdtempSync(nodeJoin(tmpdir(), 'builder-build-bundle-all-'))
+    })
+    afterEach(() => {
+      rmSync(fxRoot, { recursive: true, force: true })
+    })
+
+    it('defaults bundledDeps to an empty list when no format opts in', () => {
+      const projectRoot = seedPkg({ rollup: '*' })
+      const ctx = createBuildContext({ projectRoot, workspaceRoot: '/abs/repo' })
+      expect(ctx.bundledDeps).toEqual([])
+    })
+
+    it('populates bundledDeps when ESM opts in via boolean', () => {
+      const projectRoot = seedPkg({ rollup: '*', postject: '*' })
+      const ctx = createBuildContext({
+        projectRoot,
+        workspaceRoot: '/abs/repo',
+        esm: { bundleWorkspaceDeps: false, bundleAllDeps: true },
+      })
+      expect(ctx.bundledDeps).toEqual(['postject', 'rollup'])
+    })
+
+    it('honours object override include / exclude across CJS and ESM configs', () => {
+      const projectRoot = seedPkg({ rollup: '*', postject: '*' })
+      const ctx = createBuildContext({
+        projectRoot,
+        workspaceRoot: '/abs/repo',
+        esm: { bundleWorkspaceDeps: false, bundleAllDeps: { include: ['lodash'], exclude: ['postject'] } },
+        cjs: { bundleWorkspaceDeps: false, bundleAllDeps: { include: ['lodash'] } },
+      })
+      expect(ctx.bundledDeps).toEqual(['lodash', 'rollup'])
+    })
+
+    it('passes the workspace predicate through so workspace deps are subtracted', () => {
+      const projectRoot = seedPkg({ rollup: '*', '@hyperfrontend/logging': '*' })
+      const ctx = createBuildContext({
+        projectRoot,
+        workspaceRoot: '/abs/repo',
+        isWorkspacePackage: (n) => n.startsWith('@hyperfrontend/'),
+        esm: { bundleWorkspaceDeps: true, bundleAllDeps: true },
+      })
+      expect(ctx.bundledDeps).toEqual(['rollup'])
+    })
+
+    it('handles array-of-config formats when collecting bundleAllDeps options', () => {
+      const projectRoot = seedPkg({ a: '*', b: '*' })
+      const ctx = createBuildContext({
+        projectRoot,
+        workspaceRoot: '/abs/repo',
+        esm: [
+          { bundleWorkspaceDeps: false, bundleAllDeps: { include: ['a'] } },
+          { bundleWorkspaceDeps: false, bundleAllDeps: { exclude: ['b'] } },
+        ],
+      })
+      expect(ctx.bundledDeps).toEqual(['a'])
+    })
   })
 })
 
