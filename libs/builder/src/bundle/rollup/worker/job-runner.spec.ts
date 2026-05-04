@@ -1,0 +1,208 @@
+import type { RollupBuildDescriptor } from './types'
+import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
+import { tmpdir } from 'node:os'
+import { join } from 'node:path'
+import { runRollupWorkerJob } from './job-runner'
+
+describe('runRollupWorkerJob', () => {
+  let root: string
+
+  beforeEach(() => {
+    root = mkdtempSync(join(tmpdir(), 'builder-rollup-worker-'))
+  })
+
+  afterEach(() => {
+    rmSync(root, { recursive: true, force: true })
+  })
+
+  const writeSrc = (relative: string, contents: string): string => {
+    const path = join(root, relative)
+    writeFileSync(path, contents)
+    return path
+  }
+
+  const writeTsconfig = (): string => {
+    const tsConfigPath = join(root, 'tsconfig.json')
+    writeFileSync(
+      tsConfigPath,
+      JSON.stringify({
+        compilerOptions: {
+          target: 'ES2022',
+          module: 'ESNext',
+          moduleResolution: 'Bundler',
+          esModuleInterop: true,
+          allowJs: true,
+          isolatedModules: true,
+          skipLibCheck: true,
+        },
+      })
+    )
+    return tsConfigPath
+  }
+
+  const baseDescriptor = (overrides: Partial<RollupBuildDescriptor>): RollupBuildDescriptor => ({
+    format: 'esm',
+    inputFile: '',
+    outputDir: '',
+    external: [],
+    sourcemap: false,
+    bundledDepsPlugin: null,
+    tsConfigPath: '',
+    projectRoot: root,
+    workspaceRoot: root,
+    bundleWorkspaceDeps: false,
+    bundle: null,
+    reportPath: '',
+    ...overrides,
+  })
+
+  it('writes an ESM bundle and a JSON report when given an ESM descriptor', async () => {
+    const inputFile = writeSrc('input.ts', 'export const value = 42\n')
+    const tsConfigPath = writeTsconfig()
+    const outputDir = join(root, 'out')
+    const reportPath = join(root, 'report.json')
+    const report = await runRollupWorkerJob(
+      baseDescriptor({ format: 'esm', inputFile, outputDir, sourcemap: false, tsConfigPath, reportPath })
+    )
+    expect(report.outputSize).toBeGreaterThan(0)
+    expect(report.peakHeapMB).toBeGreaterThan(0)
+    expect(report.peakRssMB).toBeGreaterThan(0)
+    expect(report.durationMs).toBeGreaterThanOrEqual(0)
+    const persisted = JSON.parse(readFileSync(reportPath, 'utf8'))
+    expect(persisted.outputSize).toBe(report.outputSize)
+    expect(readFileSync(join(outputDir, 'index.esm.js'), 'utf8')).toContain('42')
+  })
+
+  it('writes a CJS bundle when format is cjs', async () => {
+    const inputFile = writeSrc('input.ts', 'export const value = 7\n')
+    const tsConfigPath = writeTsconfig()
+    const outputDir = join(root, 'out')
+    const reportPath = join(root, 'report.json')
+    await runRollupWorkerJob(baseDescriptor({ format: 'cjs', inputFile, outputDir, sourcemap: false, tsConfigPath, reportPath }))
+    const contents = readFileSync(join(outputDir, 'index.cjs.js'), 'utf8')
+    expect(contents).toContain("'use strict'")
+  })
+
+  it('marks externals as external in the rollup config', async () => {
+    const inputFile = writeSrc('input.ts', "import other from 'other-dep'\nexport default other\n")
+    const tsConfigPath = writeTsconfig()
+    const outputDir = join(root, 'out')
+    const reportPath = join(root, 'report.json')
+    await runRollupWorkerJob(
+      baseDescriptor({
+        format: 'esm',
+        inputFile,
+        outputDir,
+        sourcemap: false,
+        tsConfigPath,
+        reportPath,
+        external: ['other-dep'],
+      })
+    )
+    const contents = readFileSync(join(outputDir, 'index.esm.js'), 'utf8')
+    expect(contents).toMatch(/from\s+["']other-dep["']/)
+  })
+
+  it('routes bundled-dep imports through the externalize plugin when configured', async () => {
+    const inputFile = writeSrc('input.ts', "import x from 'rollup'\nexport default x\n")
+    const tsConfigPath = writeTsconfig()
+    const outputDir = join(root, 'out')
+    const reportPath = join(root, 'report.json')
+    const depsRoot = join(root, '_dependencies')
+    await runRollupWorkerJob(
+      baseDescriptor({
+        format: 'esm',
+        inputFile,
+        outputDir,
+        sourcemap: false,
+        tsConfigPath,
+        reportPath,
+        bundledDepsPlugin: { deps: ['rollup'], depsRoot },
+      })
+    )
+    const contents = readFileSync(join(outputDir, 'index.esm.js'), 'utf8')
+    expect(contents).toMatch(/_dependencies\/rollup\/index\.esm\.js/)
+  })
+
+  it('writes an unminified-only IIFE bundle when minify is disabled', async () => {
+    const inputFile = writeSrc('input.ts', 'export const value = 1\n')
+    const tsConfigPath = writeTsconfig()
+    const outputDir = join(root, 'iife-out')
+    const reportPath = join(root, 'report.json')
+    await runRollupWorkerJob(
+      baseDescriptor({
+        format: 'iife',
+        inputFile,
+        outputDir,
+        sourcemap: false,
+        tsConfigPath,
+        reportPath,
+        bundle: { globalName: 'MyLib', minify: false },
+      })
+    )
+    const contents = readFileSync(join(outputDir, 'index.iife.js'), 'utf8')
+    expect(contents).toContain('MyLib')
+    expect(() => readFileSync(join(outputDir, 'index.iife.min.js'), 'utf8')).toThrow()
+  })
+
+  it('writes both unminified and minified IIFE bundles when minify is enabled', async () => {
+    const inputFile = writeSrc('input.ts', 'export const value = 1\n')
+    const tsConfigPath = writeTsconfig()
+    const outputDir = join(root, 'iife-out')
+    const reportPath = join(root, 'report.json')
+    await runRollupWorkerJob(
+      baseDescriptor({
+        format: 'iife',
+        inputFile,
+        outputDir,
+        sourcemap: false,
+        tsConfigPath,
+        reportPath,
+        bundle: { globalName: 'MyLib', minify: true },
+      })
+    )
+    expect(readFileSync(join(outputDir, 'index.iife.js'), 'utf8')).toContain('MyLib')
+    expect(readFileSync(join(outputDir, 'index.iife.min.js'), 'utf8')).toContain('MyLib')
+  })
+
+  it('writes a UMD bundle with amdId when supplied', async () => {
+    const inputFile = writeSrc('input.ts', 'export const value = 1\n')
+    const tsConfigPath = writeTsconfig()
+    const outputDir = join(root, 'umd-out')
+    const reportPath = join(root, 'report.json')
+    await runRollupWorkerJob(
+      baseDescriptor({
+        format: 'umd',
+        inputFile,
+        outputDir,
+        sourcemap: false,
+        tsConfigPath,
+        reportPath,
+        bundle: { globalName: 'MyLib', minify: true, amdId: 'mylib' },
+      })
+    )
+    const contents = readFileSync(join(outputDir, 'index.umd.js'), 'utf8')
+    expect(contents).toContain('MyLib')
+    expect(contents).toContain('mylib')
+    expect(readFileSync(join(outputDir, 'index.umd.min.js'), 'utf8')).toContain('MyLib')
+  })
+
+  it('writes only the unminified UMD output when minify is disabled', async () => {
+    const inputFile = writeSrc('input.ts', 'export const value = 1\n')
+    const tsConfigPath = writeTsconfig()
+    const outputDir = join(root, 'umd-out')
+    const reportPath = join(root, 'report.json')
+    await runRollupWorkerJob(
+      baseDescriptor({
+        format: 'umd',
+        inputFile,
+        outputDir,
+        sourcemap: false,
+        tsConfigPath,
+        reportPath,
+        bundle: { globalName: 'MyLib', minify: false },
+      })
+    )
+    expect(() => readFileSync(join(outputDir, 'index.umd.min.js'), 'utf8')).toThrow()
+  })
+})

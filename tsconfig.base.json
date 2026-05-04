@@ -40,6 +40,7 @@
       "@hyperfrontend/builder/bundle/entries": ["libs/builder/src/bundle/entries/index.ts"],
       "@hyperfrontend/builder/bundle/externals": ["libs/builder/src/bundle/externals/index.ts"],
       "@hyperfrontend/builder/bundle/rollup": ["libs/builder/src/bundle/rollup/index.ts"],
+      "@hyperfrontend/builder/bundle/rollup/worker": ["libs/builder/src/bundle/rollup/worker/index.ts"],
       "@hyperfrontend/builder/memory": ["libs/builder/src/memory/index.ts"],
       "@hyperfrontend/builder/models": ["libs/builder/src/models/index.ts"],
       "@hyperfrontend/builder/package": ["libs/builder/src/package/index.ts"],

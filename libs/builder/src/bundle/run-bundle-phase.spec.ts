@@ -4,7 +4,10 @@ jest.mock('@rollup/plugin-node-resolve', () => jest.fn(() => ({ name: 'node-reso
 jest.mock('@rollup/plugin-terser', () => jest.fn(() => ({ name: 'terser' })))
 jest.mock('@rollup/plugin-typescript', () => jest.fn(() => ({ name: 'typescript' })))
 
-jest.mock('./rollup/execute', () => ({ executeRollup: jest.fn().mockResolvedValue(undefined) }))
+jest.mock('./rollup/dispatch', () => ({
+  dispatchRollupWorker: jest.fn().mockResolvedValue({ outputSize: 0, peakHeapMB: 0, peakRssMB: 0, durationMs: 0 }),
+  resolveDefaultRollupWorkerPath: jest.fn(),
+}))
 jest.mock('./declarations/generate-declarations', () => ({
   generateDeclarations: jest.fn().mockResolvedValue({ success: true, stdout: '', stderr: '' }),
 }))
@@ -28,7 +31,7 @@ import { runDtsPerEntry } from './declarations/dts-per-entry'
 import { runDtsPrePass } from './declarations/dts-pre-pass'
 import { generateDeclarations } from './declarations/generate-declarations'
 import { resolveDefaultWorkerPath, runPrePass } from './dependencies/pre-pass'
-import { executeRollup } from './rollup/execute'
+import { dispatchRollupWorker, resolveDefaultRollupWorkerPath } from './rollup/dispatch'
 import { runBundlePhase } from './run-bundle-phase'
 
 const ROOT_ENTRY: EntryPoint = { exportPath: '.', srcPath: '', inputFile: '/abs/libs/foo/src/index.ts', isRoot: true }
@@ -48,6 +51,8 @@ const DISCOVERY: EntryPointDiscovery = {
   featureEntries: [],
 }
 
+const ROLLUP_WORKER_PATH = '/abs/dist/libs/builder/bundle/rollup/worker/index.cjs.js'
+
 const makeContext = (): BuildContext => ({
   projectRoot: '/abs/libs/foo',
   workspaceRoot: '/abs/repo',
@@ -63,7 +68,7 @@ const makeContext = (): BuildContext => ({
 })
 
 beforeEach(() => {
-  ;(<jest.Mock>executeRollup).mockClear()
+  ;(<jest.Mock>dispatchRollupWorker).mockClear()
   ;(<jest.Mock>generateDeclarations).mockClear()
   ;(<jest.Mock>ensureDir).mockClear()
   ;(<jest.Mock>runPrePass).mockClear()
@@ -72,6 +77,7 @@ beforeEach(() => {
   ;(<jest.Mock>resolveDefaultWorkerPath)
     .mockReset()
     .mockReturnValue({ path: '/abs/dist/libs/builder/bundle/dependencies/worker/index.cjs.js', execArgv: [] })
+  ;(<jest.Mock>resolveDefaultRollupWorkerPath).mockReset().mockReturnValue({ path: ROLLUP_WORKER_PATH, execArgv: [] })
 })
 
 describe('runBundlePhase', () => {
@@ -80,13 +86,16 @@ describe('runBundlePhase', () => {
     expect(result).toEqual({ esm: [], cjs: [], iife: [], umd: [] })
   })
 
-  it('invokes rollup once per resolved ESM entry', async () => {
+  it('forks one rollup worker per resolved ESM entry', async () => {
     await runBundlePhase(makeContext(), <BuildConfig>{
       projectRoot: '',
       workspaceRoot: '',
       esm: { bundleWorkspaceDeps: false },
     })
-    expect(executeRollup).toHaveBeenCalledTimes(2)
+    expect(dispatchRollupWorker).toHaveBeenCalledTimes(2)
+    const [descriptor, options] = (<jest.Mock>dispatchRollupWorker).mock.calls[0]
+    expect(descriptor.format).toBe('esm')
+    expect(options.workerPath).toBe(ROLLUP_WORKER_PATH)
   })
 
   it('respects per-format entry filters when resolving entries', async () => {
@@ -98,13 +107,15 @@ describe('runBundlePhase', () => {
     expect(result.esm).toEqual([expect.objectContaining({ exportPath: '.' })])
   })
 
-  it('invokes rollup for every CJS entry when configured', async () => {
+  it('forks one rollup worker per resolved CJS entry', async () => {
     await runBundlePhase(makeContext(), <BuildConfig>{
       projectRoot: '',
       workspaceRoot: '',
       cjs: { bundleWorkspaceDeps: false },
     })
-    expect(executeRollup).toHaveBeenCalledTimes(2)
+    expect(dispatchRollupWorker).toHaveBeenCalledTimes(2)
+    const [descriptor] = (<jest.Mock>dispatchRollupWorker).mock.calls[0]
+    expect(descriptor.format).toBe('cjs')
   })
 
   it('records IIFE outputs and ensures the bundle directory exists when at least one entry resolves', async () => {
@@ -172,7 +183,7 @@ describe('runBundlePhase', () => {
         { bundleWorkspaceDeps: false, entry: './browser' },
       ],
     })
-    expect(executeRollup).toHaveBeenCalledTimes(2)
+    expect(dispatchRollupWorker).toHaveBeenCalledTimes(2)
   })
 
   it('drives the optional monitor with start/end check labels for every rollup invocation and the declarations phase', async () => {
@@ -279,7 +290,7 @@ describe('runBundlePhase', () => {
     expect(options.workerPath).toBe('/abs/dist/libs/builder/bundle/dependencies/worker/index.cjs.js')
   })
 
-  it('throws a context-rich error when the worker cannot be located', async () => {
+  it('throws a context-rich error when the pre-pass worker cannot be located', async () => {
     ;(<jest.Mock>resolveDefaultWorkerPath).mockReturnValueOnce(undefined)
     const config = <BuildConfig>{
       projectRoot: '',
@@ -289,6 +300,22 @@ describe('runBundlePhase', () => {
     const ctx = makeContext()
     ctx.bundledDeps = ['rollup']
     await expect(runBundlePhase(ctx, config)).rejects.toThrow(/pre-pass worker could not be resolved/)
+  })
+
+  it('throws a context-rich error when the rollup worker cannot be located', async () => {
+    ;(<jest.Mock>resolveDefaultRollupWorkerPath).mockReturnValueOnce(undefined)
+    const config = <BuildConfig>{
+      projectRoot: '',
+      workspaceRoot: '',
+      esm: { bundleWorkspaceDeps: false },
+    }
+    await expect(runBundlePhase(makeContext(), config)).rejects.toThrow(/rollup worker could not be resolved/)
+  })
+
+  it('does not require the rollup worker when no format resolves any entry', async () => {
+    ;(<jest.Mock>resolveDefaultRollupWorkerPath).mockReturnValueOnce(undefined)
+    await runBundlePhase(makeContext(), <BuildConfig>{ projectRoot: '', workspaceRoot: '' })
+    expect(dispatchRollupWorker).not.toHaveBeenCalled()
   })
 
   it('emits monitor checkpoints around the pre-pass when active', async () => {

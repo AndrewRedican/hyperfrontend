@@ -29,6 +29,7 @@
     "./bundle/entries": "./src/bundle/entries/index.js",
     "./bundle/externals": "./src/bundle/externals/index.js",
     "./bundle/rollup": "./src/bundle/rollup/index.js",
+    "./bundle/rollup/worker": "./src/bundle/rollup/worker/index.js",
     "./memory": "./src/memory/index.js",
     "./models": "./src/models/index.js",
     "./package": "./src/package/index.js",

@@ -100,6 +100,13 @@ describe('createCjsEntryConfig', () => {
     ;(<(w: unknown, h: typeof handler) => void>result.onwarn)(warning, handler)
     expect(handler).toHaveBeenCalledWith(warning)
   })
+
+  it('installs the externalize-bundled-deps plugin when bundleAllDeps is on and bundledDeps is non-empty', () => {
+    const ctx = { ...makeContext(projectRoot, workspaceRoot), bundledDeps: ['rollup'] }
+    const result = createCjsEntryConfig(ROOT_ENTRY, <CjsConfig>{ bundleWorkspaceDeps: false, bundleAllDeps: true }, ctx)
+    const pluginNames = (<Array<{ name: string }>>result.plugins).map((p) => p.name)
+    expect(pluginNames).toContain('externalize-bundled-deps')
+  })
 })
 
 describe('createCjsConfig', () => {

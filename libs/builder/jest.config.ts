@@ -18,6 +18,9 @@ export default <Config>{
     'src/package/licenses/types\\.ts$',
     'src/bundle/dependencies/worker/index\\.ts$',
     'src/bundle/dependencies/worker/job-runner\\.ts$',
+    'src/bundle/rollup/worker/index\\.ts$',
+    'src/bundle/rollup/worker/job-runner\\.ts$',
+    'src/bundle/rollup/worker/types\\.ts$',
   ],
   coverageThreshold: {
     global: {
