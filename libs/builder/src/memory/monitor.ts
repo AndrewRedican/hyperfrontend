@@ -1,4 +1,5 @@
 import type { MemoryMonitorOptions } from '../models'
+import { freemem, totalmem } from 'node:os'
 import { dateNow } from '@hyperfrontend/immutable-api-utils/built-in-copy/date'
 import { max } from '@hyperfrontend/immutable-api-utils/built-in-copy/math'
 import { freeze } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
@@ -92,16 +93,21 @@ export const createMemoryMonitor = (options: MemoryMonitorOptions = {}): MemoryM
     return snapshot
   }
 
+  const systemSuffix = (current: MemorySnapshot): string =>
+    `rss=${formatMB(current.rssMB)}MB free=${formatMB(toMB(freemem()))}MB total=${formatMB(toMB(totalmem()))}MB`
+
   const evaluateThresholds = (current: MemorySnapshot): void => {
     if (current.heapUsedMB >= criticalMB) {
-      log.error(`${current.label}: critical heap usage ${formatMB(current.heapUsedMB)}MB >= threshold ${criticalMB}MB`)
+      log.error(
+        `${current.label}: critical heap usage ${formatMB(current.heapUsedMB)}MB >= threshold ${criticalMB}MB ${systemSuffix(current)}`
+      )
     } else if (current.heapUsedMB >= warningMB) {
-      log.warn(`${current.label}: high heap usage ${formatMB(current.heapUsedMB)}MB >= threshold ${warningMB}MB`)
+      log.warn(`${current.label}: high heap usage ${formatMB(current.heapUsedMB)}MB >= threshold ${warningMB}MB ${systemSuffix(current)}`)
     }
     const previous = history[history.length - 2]
     if (previous && current.heapUsedMB - previous.heapUsedMB >= growthMB) {
       log.warn(
-        `${current.label}: heap grew ${formatMB(current.heapUsedMB - previous.heapUsedMB)}MB since '${previous.label}' (threshold ${growthMB}MB)`
+        `${current.label}: heap grew ${formatMB(current.heapUsedMB - previous.heapUsedMB)}MB since '${previous.label}' (threshold ${growthMB}MB) ${systemSuffix(current)}`
       )
     }
   }

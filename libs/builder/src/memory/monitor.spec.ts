@@ -162,4 +162,23 @@ describe('createMemoryMonitor', () => {
     monitor.logSummary()
     expect(channelLogger.info).toHaveBeenCalledWith(expect.stringContaining('peak heap=80.0MB peak rss=160.0MB across 3 snapshots'))
   })
+
+  it('appends rss / free / total system memory to threshold violation lines', () => {
+    memoryUsageSpy.mockReturnValue(memoryStub(800, 1500))
+    const monitor = createMemoryMonitor()
+    monitor.check('phase')
+    expect(channelLogger.error).toHaveBeenCalledWith(
+      expect.stringMatching(/critical heap usage 800.0MB >= threshold 768MB rss=1500\.0MB free=[\d.]+MB total=[\d.]+MB/)
+    )
+  })
+
+  it('appends rss / free / total system memory to growth violation lines', () => {
+    memoryUsageSpy.mockReturnValueOnce(memoryStub(100, 200)).mockReturnValueOnce(memoryStub(200, 400))
+    const monitor = createMemoryMonitor({ warningMB: 1024, criticalMB: 2048, growthMB: 50 })
+    monitor.check('first')
+    monitor.check('second')
+    expect(channelLogger.warn).toHaveBeenCalledWith(
+      expect.stringMatching(/heap grew 100.0MB since 'first' \(threshold 50MB\) rss=400\.0MB free=[\d.]+MB total=[\d.]+MB/)
+    )
+  })
 })

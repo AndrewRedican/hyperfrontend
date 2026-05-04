@@ -1,3 +1,12 @@
+jest.mock('@hyperfrontend/logging', () => {
+  const actual = jest.requireActual('@hyperfrontend/logging')
+  const mockChannel = { error: jest.fn(), warn: jest.fn(), info: jest.fn(), debug: jest.fn(), log: jest.fn() }
+  return {
+    ...actual,
+    logger: { channel: jest.fn(() => mockChannel) },
+    __mockChannel: mockChannel,
+  }
+})
 jest.mock('@hyperfrontend/project-scope/core', () => {
   const actual = jest.requireActual('@hyperfrontend/project-scope/core')
   return { ...actual, ensureDir: jest.fn(), writeJsonFile: jest.fn() }
@@ -38,6 +47,14 @@ const makeContext = (): BuildContext => ({
 
 const seaBin: BinConfig = { name: 'hf-build', format: 'cjs', sea: { platforms: ['linux-x64'] } }
 
+const mockChannel = jest.requireMock('@hyperfrontend/logging').__mockChannel as {
+  error: jest.Mock
+  warn: jest.Mock
+  info: jest.Mock
+  debug: jest.Mock
+  log: jest.Mock
+}
+
 beforeEach(() => {
   ;(<jest.Mock>ensureDir).mockReset()
   ;(<jest.Mock>writeJsonFile).mockReset()
@@ -48,6 +65,11 @@ beforeEach(() => {
   ;(<jest.Mock>currentPlatformTarget).mockReset().mockReturnValue('linux-x64')
   ;(<jest.Mock>generateSeaBlob).mockReset().mockReturnValue({ blobPath: '', status: 0 })
   ;(<jest.Mock>generateSeaConfig).mockReset().mockReturnValue({ main: '', output: '', disableExperimentalSEAWarning: true })
+  mockChannel.error.mockReset()
+  mockChannel.warn.mockReset()
+  mockChannel.info.mockReset()
+  mockChannel.debug.mockReset()
+  mockChannel.log.mockReset()
 })
 
 describe('buildNativeBin', () => {
@@ -148,5 +170,47 @@ describe('buildNativeBin', () => {
         platform: 'linux-x64',
       },
     ])
+  })
+
+  it('emits a memory snapshot before each pipeline step', async () => {
+    await buildNativeBin({ bin: seaBin, ctx: makeContext(), cjsOutputPath: '/abs/dist/libs/builder/bin/hf-build.js' })
+    expect(mockChannel.info).toHaveBeenCalledWith(
+      expect.stringMatching(/^hf-build: pre-sea-config: heap=[\d.]+MB rss=[\d.]+MB free=[\d.]+MB$/)
+    )
+    expect(mockChannel.info).toHaveBeenCalledWith(
+      expect.stringMatching(/^hf-build: pre-sea-blob: heap=[\d.]+MB rss=[\d.]+MB free=[\d.]+MB$/)
+    )
+    expect(mockChannel.info).toHaveBeenCalledWith(
+      expect.stringMatching(/^hf-build: pre-inject \(host=\/opt\/node\): heap=[\d.]+MB rss=[\d.]+MB free=[\d.]+MB$/)
+    )
+    expect(mockChannel.info).toHaveBeenCalledWith(
+      expect.stringMatching(/^hf-build: post-inject: heap=[\d.]+MB rss=[\d.]+MB free=[\d.]+MB$/)
+    )
+    expect(mockChannel.info).toHaveBeenCalledWith(
+      expect.stringMatching(/^hf-build: native build complete: heap=[\d.]+MB rss=[\d.]+MB free=[\d.]+MB$/)
+    )
+  })
+
+  it('logs sea blob and inject durations at info level', async () => {
+    await buildNativeBin({ bin: seaBin, ctx: makeContext(), cjsOutputPath: '/abs/dist/libs/builder/bin/hf-build.js' })
+    expect(mockChannel.info).toHaveBeenCalledWith(expect.stringMatching(/^hf-build: sea blob generated in \d+ms$/))
+    expect(mockChannel.info).toHaveBeenCalledWith(expect.stringMatching(/^hf-build: inject completed in \d+ms$/))
+  })
+
+  it('logs an error and re-throws when injectBlob rejects', async () => {
+    const failure = new Error('postject boom')
+    ;(<jest.Mock>injectBlob).mockRejectedValueOnce(failure)
+    await expect(buildNativeBin({ bin: seaBin, ctx: makeContext(), cjsOutputPath: '/abs/dist/libs/builder/bin/hf-build.js' })).rejects.toBe(
+      failure
+    )
+    expect(mockChannel.error).toHaveBeenCalledWith(expect.stringMatching(/^hf-build: postject inject failed after \d+ms: postject boom$/))
+  })
+
+  it('formats non-Error injectBlob rejections via String()', async () => {
+    ;(<jest.Mock>injectBlob).mockRejectedValueOnce('not-an-error')
+    await expect(buildNativeBin({ bin: seaBin, ctx: makeContext(), cjsOutputPath: '/abs/dist/libs/builder/bin/hf-build.js' })).rejects.toBe(
+      'not-an-error'
+    )
+    expect(mockChannel.error).toHaveBeenCalledWith(expect.stringMatching(/^hf-build: postject inject failed after \d+ms: not-an-error$/))
   })
 })

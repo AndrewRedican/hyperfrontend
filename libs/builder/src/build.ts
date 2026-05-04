@@ -19,6 +19,7 @@ import { resolveBundledDeps } from './bundle/dependencies/resolve-bundled-deps'
 import { discoverEntries } from './bundle/entries/discover-entries'
 import { runBundlePhase } from './bundle/run-bundle-phase'
 import { createMemoryMonitor } from './memory/monitor'
+import { recover } from './memory/recover'
 import { runPackagePhase } from './package/run-package-phase'
 
 const NEVER_WORKSPACE: IsWorkspacePackagePredicate = () => false
@@ -141,8 +142,12 @@ export const build = async (config: BuildConfig): Promise<BuildResult> => {
   try {
     const formatOutputs = await runBundlePhase(ctx, config, monitor)
     monitor?.check('bundle:end')
+    await recover()
+    monitor?.check('bundle:end:post-recover')
     await runPackagePhase(ctx, config, formatOutputs)
     monitor?.check('package:end')
+    await recover()
+    monitor?.check('package:end:post-recover')
     const binOutputs = await runBinPhase(ctx, config.bin ?? [])
     monitor?.check('bin:end')
     monitor?.logSummary()

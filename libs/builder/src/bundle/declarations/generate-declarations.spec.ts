@@ -8,6 +8,11 @@ jest.mock('@hyperfrontend/logging', () => {
   }
 })
 
+jest.mock('@hyperfrontend/immutable-api-utils/built-in-copy/timers', () => ({
+  setInterval: jest.fn(() => 'fake-interval-id'),
+  clearInterval: jest.fn(),
+}))
+
 jest.mock('node:child_process', () => ({ spawn: jest.fn() }))
 
 jest.mock('./flatten-paths', () => ({ flattenDeclarationPaths: jest.fn() }))
@@ -15,18 +20,21 @@ jest.mock('./flatten-paths', () => ({ flattenDeclarationPaths: jest.fn() }))
 import type { BuildContext } from '../../models'
 import { spawn } from 'node:child_process'
 import { EventEmitter } from 'node:events'
+import { clearInterval, setInterval } from '@hyperfrontend/immutable-api-utils/built-in-copy/timers'
 import { flattenDeclarationPaths } from './flatten-paths'
 import { generateDeclarations } from './generate-declarations'
 
 interface FakeChild extends EventEmitter {
   stdout: EventEmitter
   stderr: EventEmitter
+  pid?: number
 }
 
-const makeFakeChild = (): FakeChild => {
+const makeFakeChild = (pid: number = 12345): FakeChild => {
   const child = <FakeChild>new EventEmitter()
   child.stdout = new EventEmitter()
   child.stderr = new EventEmitter()
+  child.pid = pid
   return child
 }
 
@@ -57,6 +65,8 @@ const mockChannel = jest.requireMock('@hyperfrontend/logging').__mockChannel as 
 beforeEach(() => {
   ;(<jest.Mock>spawn).mockReset()
   ;(<jest.Mock>flattenDeclarationPaths).mockReset()
+  ;(<jest.Mock>setInterval).mockReset().mockReturnValue('fake-interval-id')
+  ;(<jest.Mock>clearInterval).mockReset()
   mockChannel.error.mockReset()
   mockChannel.warn.mockReset()
   mockChannel.info.mockReset()
@@ -152,6 +162,7 @@ describe('generateDeclarations', () => {
     child.emit('close', 2)
     await expect(promise).rejects.toThrow(/tsc failed with exit code 2/)
     expect(flattenDeclarationPaths).not.toHaveBeenCalled()
+    expect(mockChannel.error).toHaveBeenCalledWith(expect.stringMatching(/^tsc failed with exit code 2 after \d+ms$/))
   })
 
   it('resolves with empty stdout and stderr when tsc emits no output', async () => {
@@ -161,5 +172,102 @@ describe('generateDeclarations', () => {
     await tick()
     child.emit('close', 0)
     expect(await promise).toEqual({ success: true, stdout: '', stderr: '' })
+  })
+
+  it('logs a pre-tsc memory snapshot before spawning', async () => {
+    const child = makeFakeChild()
+    ;(<jest.Mock>spawn).mockReturnValue(child)
+    const promise = generateDeclarations(makeContext())
+    await tick()
+    child.emit('close', 0)
+    await promise
+    expect(mockChannel.info).toHaveBeenCalledWith(expect.stringMatching(/^pre-tsc memory: parent heap=[\d.]+MB rss=[\d.]+MB$/))
+  })
+
+  it('logs the tsc pid at info level after spawning', async () => {
+    const child = makeFakeChild(54321)
+    ;(<jest.Mock>spawn).mockReturnValue(child)
+    const promise = generateDeclarations(makeContext())
+    await tick()
+    child.emit('close', 0)
+    await promise
+    expect(mockChannel.info).toHaveBeenCalledWith('tsc spawned: pid=54321')
+  })
+
+  it('falls back to "unknown" when the child has no pid', async () => {
+    const child = makeFakeChild()
+    delete child.pid
+    ;(<jest.Mock>spawn).mockReturnValue(child)
+    const promise = generateDeclarations(makeContext())
+    await tick()
+    child.emit('close', 0)
+    await promise
+    expect(mockChannel.info).toHaveBeenCalledWith('tsc spawned: pid=unknown')
+  })
+
+  it('logs the full tsc args at debug level', async () => {
+    const child = makeFakeChild()
+    ;(<jest.Mock>spawn).mockReturnValue(child)
+    const promise = generateDeclarations(makeContext())
+    await tick()
+    child.emit('close', 0)
+    await promise
+    expect(mockChannel.debug).toHaveBeenCalledWith(expect.stringMatching(/^tsc args: .*--emitDeclarationOnly/))
+  })
+
+  it('starts a heartbeat interval on spawn and clears it on close', async () => {
+    const child = makeFakeChild()
+    ;(<jest.Mock>spawn).mockReturnValue(child)
+    const promise = generateDeclarations(makeContext())
+    await tick()
+    expect(setInterval).toHaveBeenCalledWith(expect.any(Function), 5000)
+    child.emit('close', 0)
+    await promise
+    expect(clearInterval).toHaveBeenCalledWith('fake-interval-id')
+  })
+
+  it('clears the heartbeat interval on tsc spawn error', async () => {
+    const child = makeFakeChild()
+    ;(<jest.Mock>spawn).mockReturnValue(child)
+    const promise = generateDeclarations(makeContext())
+    await tick()
+    child.emit('error', new Error('boom'))
+    await expect(promise).rejects.toThrow('boom')
+    expect(clearInterval).toHaveBeenCalledWith('fake-interval-id')
+  })
+
+  it('emits a heartbeat info line with parent heap and rss when the interval fires', async () => {
+    const child = makeFakeChild()
+    ;(<jest.Mock>spawn).mockReturnValue(child)
+    const promise = generateDeclarations(makeContext())
+    await tick()
+    const heartbeatFn = (<jest.Mock>setInterval).mock.calls[0]?.[0] as () => void
+    heartbeatFn()
+    expect(mockChannel.info).toHaveBeenCalledWith(
+      expect.stringMatching(/^tsc still running: elapsed=[\d.]+s parent heap=[\d.]+MB rss=[\d.]+MB$/)
+    )
+    child.emit('close', 0)
+    await promise
+  })
+
+  it('logs the tsc duration at info level on success', async () => {
+    const child = makeFakeChild()
+    ;(<jest.Mock>spawn).mockReturnValue(child)
+    const promise = generateDeclarations(makeContext())
+    await tick()
+    child.emit('close', 0)
+    await promise
+    expect(mockChannel.info).toHaveBeenCalledWith(expect.stringMatching(/^tsc exited 0 in \d+ms$/))
+  })
+
+  it('logs the flatten phase boundaries at info level', async () => {
+    const child = makeFakeChild()
+    ;(<jest.Mock>spawn).mockReturnValue(child)
+    const promise = generateDeclarations(makeContext())
+    await tick()
+    child.emit('close', 0)
+    await promise
+    expect(mockChannel.info).toHaveBeenCalledWith('flattening declaration paths')
+    expect(mockChannel.info).toHaveBeenCalledWith(expect.stringMatching(/^flatten complete in \d+ms$/))
   })
 })

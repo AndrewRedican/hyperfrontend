@@ -72,4 +72,16 @@ describe('executeRollup', () => {
     await executeRollup(config, 'esm')
     expect(config.input).toBeUndefined()
   })
+
+  it('emits an info-level pre-rollup snapshot with parent heap, rss, and free memory', async () => {
+    const { __mockChannel: mockChannel } = jest.requireMock('@hyperfrontend/logging') as {
+      __mockChannel: { info: jest.Mock; debug: jest.Mock }
+    }
+    mockChannel.info.mockClear()
+    const config: RollupOptions = { input: '/abs/src/index.ts', output: { file: '/abs/out/x.js', format: 'esm' } }
+    await executeRollup(config, 'esm:./foo')
+    expect(mockChannel.info).toHaveBeenCalledWith(
+      expect.stringMatching(/^pre-rollup esm:\.\/foo: heap=[\d.]+MB rss=[\d.]+MB free=[\d.]+MB$/)
+    )
+  })
 })

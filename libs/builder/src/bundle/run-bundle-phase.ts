@@ -5,6 +5,7 @@ import { isArray } from '@hyperfrontend/immutable-api-utils/built-in-copy/array'
 import { createError } from '@hyperfrontend/immutable-api-utils/built-in-copy/error'
 import { logger } from '@hyperfrontend/logging'
 import { ensureDir, join } from '@hyperfrontend/project-scope/core'
+import { recover } from '../memory/recover'
 import { runDtsPerEntry } from './declarations/dts-per-entry'
 import { runDtsPrePass } from './declarations/dts-pre-pass'
 import { generateDeclarations } from './declarations/generate-declarations'
@@ -100,9 +101,13 @@ export const runBundlePhase = async (context: BuildContext, config: BuildConfig,
       monitor?.check(`bundle:esm:${i}/${entries.length}:${entry.exportPath}:start`)
       await executeRollup(createEsmEntryConfig(entry, esmConfig, context), `esm:${entry.exportPath}`)
       monitor?.check(`bundle:esm:${i}/${entries.length}:${entry.exportPath}:end`)
+      await recover()
     }
     outputs.esm.push(...entries)
   }
+
+  await recover()
+  monitor?.check('bundle:esm:end:post-recover')
 
   for (const cjsConfig of toArray(config.cjs)) {
     const entries = resolveEntries(cjsConfig, context.entryPointDiscovery.entryPoints)
@@ -110,9 +115,13 @@ export const runBundlePhase = async (context: BuildContext, config: BuildConfig,
       monitor?.check(`bundle:cjs:${i}/${entries.length}:${entry.exportPath}:start`)
       await executeRollup(createCjsEntryConfig(entry, cjsConfig, context), `cjs:${entry.exportPath}`)
       monitor?.check(`bundle:cjs:${i}/${entries.length}:${entry.exportPath}:end`)
+      await recover()
     }
     outputs.cjs.push(...entries)
   }
+
+  await recover()
+  monitor?.check('bundle:cjs:end:post-recover')
 
   for (const iifeConfig of <IifeConfig[]>toArray(config.iife)) {
     const entries = resolveEntries(iifeConfig, context.entryPointDiscovery.entryPoints)
@@ -123,6 +132,7 @@ export const runBundlePhase = async (context: BuildContext, config: BuildConfig,
       monitor?.check(`bundle:iife:${i}/${entries.length}:${entry.exportPath}:start`)
       await executeRollup(createIifeEntryConfig(entry, iifeConfig, context), `iife:${entry.exportPath}`)
       monitor?.check(`bundle:iife:${i}/${entries.length}:${entry.exportPath}:end`)
+      await recover()
     }
     if (entries.length > 0) outputs.iife.push({ config: iifeConfig, entries })
   }
@@ -136,10 +146,12 @@ export const runBundlePhase = async (context: BuildContext, config: BuildConfig,
       monitor?.check(`bundle:umd:${i}/${entries.length}:${entry.exportPath}:start`)
       await executeRollup(createUmdEntryConfig(entry, umdConfig, context), `umd:${entry.exportPath}`)
       monitor?.check(`bundle:umd:${i}/${entries.length}:${entry.exportPath}:end`)
+      await recover()
     }
     if (entries.length > 0) outputs.umd.push({ config: umdConfig, entries })
   }
 
+  await recover()
   monitor?.check('bundle:declarations:start')
   await generateDeclarations(context)
   monitor?.check('bundle:declarations:end')

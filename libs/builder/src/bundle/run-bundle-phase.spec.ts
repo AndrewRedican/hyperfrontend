@@ -193,8 +193,10 @@ describe('runBundlePhase', () => {
       'bundle:esm:0/2:.:end',
       'bundle:esm:1/2:./browser:start',
       'bundle:esm:1/2:./browser:end',
+      'bundle:esm:end:post-recover',
       'bundle:cjs:0/1:.:start',
       'bundle:cjs:0/1:.:end',
+      'bundle:cjs:end:post-recover',
       'bundle:declarations:start',
       'bundle:declarations:end',
     ])
@@ -214,6 +216,8 @@ describe('runBundlePhase', () => {
       monitor
     )
     expect(labels).toEqual([
+      'bundle:esm:end:post-recover',
+      'bundle:cjs:end:post-recover',
       'bundle:iife:0/1:.:start',
       'bundle:iife:0/1:.:end',
       'bundle:umd:0/1:.:start',

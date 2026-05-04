@@ -1,5 +1,6 @@
 import type { BinConfig, BinOutput, BuildContext } from '../models'
 import { createError } from '@hyperfrontend/immutable-api-utils/built-in-copy/error'
+import { recover } from '../memory/recover'
 import { buildNativeBin } from './native/build-native'
 import { buildJsBin } from './script/build-bin'
 
@@ -40,6 +41,7 @@ export const runBinPhase = async (ctx: BuildContext, bins: BinConfig[]): Promise
     if (!cjsOutputPath) {
       throw createError(`SEA requires a CJS bin output; declare format: ['cjs'] or format: 'cjs' on bin ${bin.name}`)
     }
+    await recover()
     const nativeOutputs = await buildNativeBin({ bin, ctx, cjsOutputPath })
     outputs.push(...nativeOutputs)
   }
