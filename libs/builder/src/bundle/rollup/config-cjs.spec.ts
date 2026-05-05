@@ -57,6 +57,12 @@ describe('createCjsEntryConfig', () => {
     expect(result.output).toEqual(expect.objectContaining({ file: join(ctx.outputPath, 'index.cjs.js'), format: 'cjs' }))
   })
 
+  it('configures CJS output with `interop: compat` so default imports of named-form CJS deps are wrapped at runtime', () => {
+    const ctx = makeContext(projectRoot, workspaceRoot)
+    const result = createCjsEntryConfig(ROOT_ENTRY, <CjsConfig>{ bundleWorkspaceDeps: false }, ctx)
+    expect(result.output).toEqual(expect.objectContaining({ interop: 'compat' }))
+  })
+
   it('places the output under a subdirectory matching the entry srcPath', () => {
     const ctx = makeContext(projectRoot, workspaceRoot)
     const result = createCjsEntryConfig(SUB_ENTRY, <CjsConfig>{ bundleWorkspaceDeps: false }, ctx)

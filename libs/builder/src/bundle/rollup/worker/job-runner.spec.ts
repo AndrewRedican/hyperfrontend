@@ -1,5 +1,5 @@
 import type { RollupBuildDescriptor } from './types'
-import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
+import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { runRollupWorkerJob } from './job-runner'
@@ -122,6 +122,38 @@ describe('runRollupWorkerJob', () => {
     )
     const contents = readFileSync(join(outputDir, 'index.esm.js'), 'utf8')
     expect(contents).toMatch(/_dependencies\/rollup\/index\.esm\.js/)
+  })
+
+  it('emits a runnable CJS bundle when an externalized dep uses pre-pass named-form exports (default + named with __esModule)', async () => {
+    const depsRoot = join(root, '_dependencies')
+    const depDir = join(depsRoot, 'fake-dep')
+    mkdirSync(depDir, { recursive: true })
+    writeFileSync(
+      join(depDir, 'index.cjs.js'),
+      [
+        "'use strict';",
+        "Object.defineProperty(exports, '__esModule', { value: true });",
+        'function fakeDep() { return 42 }',
+        'exports.default = fakeDep;',
+        'exports.fakeDep = fakeDep;',
+      ].join('\n')
+    )
+    const inputFile = writeSrc('input.ts', "import x from 'fake-dep'\nmodule.exports = x()\n")
+    const tsConfigPath = writeTsconfig()
+    const outputDir = join(root, 'out')
+    const reportPath = join(root, 'report.json')
+    await runRollupWorkerJob(
+      baseDescriptor({
+        format: 'cjs',
+        inputFile,
+        outputDir,
+        sourcemap: false,
+        tsConfigPath,
+        reportPath,
+        bundledDepsPlugin: { deps: ['fake-dep'], depsRoot },
+      })
+    )
+    expect(require(join(outputDir, 'index.cjs.js'))).toBe(42)
   })
 
   it('writes an unminified-only IIFE bundle when minify is disabled', async () => {

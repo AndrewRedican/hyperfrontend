@@ -10,6 +10,7 @@ const createCjsOutput = (outputPath: string, sourcemap: boolean): OutputOptions 
   file: join(outputPath, 'index.cjs.js'),
   format: 'cjs',
   sourcemap,
+  interop: 'compat',
 })
 
 const onWarn = (warning: RollupLog, defaultHandler: (warning: RollupLog) => void): void => {

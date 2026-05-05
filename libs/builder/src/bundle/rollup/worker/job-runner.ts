@@ -140,7 +140,7 @@ const buildCjsJob = (job: RollupBuildDescriptor): PreparedRollupJob => ({
     onwarn: onWarnEntry,
     plugins: buildEntryPlugins(job, 'cjs'),
   },
-  outputs: [{ file: join(job.outputDir, 'index.cjs.js'), format: 'cjs', sourcemap: job.sourcemap }],
+  outputs: [{ file: join(job.outputDir, 'index.cjs.js'), format: 'cjs', sourcemap: job.sourcemap, interop: 'compat' }],
 })
 
 const buildIifeJob = (job: RollupBuildDescriptor): PreparedRollupJob => {
