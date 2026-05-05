@@ -1,5 +1,5 @@
 import type { RollupBuildDescriptor } from './types'
-import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
+import { mkdirSync, mkdtempSync, readFileSync, rmSync, statSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { runRollupWorkerJob } from './job-runner'
@@ -52,6 +52,7 @@ describe('runRollupWorkerJob', () => {
     workspaceRoot: root,
     bundleWorkspaceDeps: false,
     bundle: null,
+    bin: null,
     reportPath: '',
     ...overrides,
   })
@@ -217,6 +218,68 @@ describe('runRollupWorkerJob', () => {
     expect(contents).toContain('MyLib')
     expect(contents).toContain('mylib')
     expect(readFileSync(join(outputDir, 'index.umd.min.js'), 'utf8')).toContain('MyLib')
+  })
+
+  it('writes a bin CJS bundle to bin.outputFile with shebang banner, footer, and chmod applied', async () => {
+    const inputFile = writeSrc('hf-build.ts', 'export const runCz = async () => 0\n')
+    const tsConfigPath = writeTsconfig()
+    const outputDir = join(root, 'bin-out')
+    const outputFile = join(outputDir, 'hf-build.js')
+    const reportPath = join(root, 'report.json')
+    await runRollupWorkerJob(
+      baseDescriptor({
+        format: 'cjs',
+        inputFile,
+        outputDir,
+        sourcemap: false,
+        tsConfigPath,
+        reportPath,
+        bundleWorkspaceDeps: true,
+        bin: {
+          outputFile,
+          banner: '#!/usr/bin/env node',
+          footer: '// bootstrap-footer',
+          exports: 'named',
+          inlineDynamicImports: true,
+          chmod: 0o755,
+        },
+      })
+    )
+    const contents = readFileSync(outputFile, 'utf8')
+    expect(contents.startsWith('#!/usr/bin/env node')).toBe(true)
+    expect(contents).toContain('// bootstrap-footer')
+    const mode = statSync(outputFile).mode & 0o777
+    expect(mode).toBe(0o755)
+  })
+
+  it('writes a bin ESM bundle to bin.outputFile when format is esm', async () => {
+    const inputFile = writeSrc('hf-build.ts', 'export default async () => 0\n')
+    const tsConfigPath = writeTsconfig()
+    const outputDir = join(root, 'bin-out')
+    const outputFile = join(outputDir, 'hf-build.mjs')
+    const reportPath = join(root, 'report.json')
+    await runRollupWorkerJob(
+      baseDescriptor({
+        format: 'esm',
+        inputFile,
+        outputDir,
+        sourcemap: false,
+        tsConfigPath,
+        reportPath,
+        bundleWorkspaceDeps: true,
+        bin: {
+          outputFile,
+          banner: '#!/usr/bin/env node',
+          footer: '// esm-bootstrap',
+          exports: 'named',
+          inlineDynamicImports: true,
+          chmod: 0o755,
+        },
+      })
+    )
+    const contents = readFileSync(outputFile, 'utf8')
+    expect(contents.startsWith('#!/usr/bin/env node')).toBe(true)
+    expect(contents).toContain('// esm-bootstrap')
   })
 
   it('writes only the unminified UMD output when minify is disabled', async () => {

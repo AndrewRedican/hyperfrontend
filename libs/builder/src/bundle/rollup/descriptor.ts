@@ -1,6 +1,7 @@
-import type { BuildContext, CjsConfig, EntryPoint, EsmConfig, IifeConfig, UmdConfig } from '../../models'
+import type { BinConfig, BinScriptFormat, BuildContext, CjsConfig, EntryPoint, EsmConfig, IifeConfig, UmdConfig } from '../../models'
 import type { RollupBuildDescriptor } from './worker/types'
-import { join } from '@hyperfrontend/project-scope/core/path'
+import { getDirname, join } from '@hyperfrontend/project-scope/core/path'
+import { defaultBootstrap } from '../../bin/script/bootstrap-footer'
 import { resolveExternals } from '../externals/resolve-externals'
 import { validateExternalsConfig } from '../externals/validate-globals'
 
@@ -57,6 +58,7 @@ export const toEsmBuildDescriptor = (
     workspaceRoot: context.workspaceRoot,
     bundleWorkspaceDeps: config.bundleWorkspaceDeps,
     bundle: null,
+    bin: null,
     reportPath,
   }
 }
@@ -104,6 +106,7 @@ export const toCjsBuildDescriptor = (
     workspaceRoot: context.workspaceRoot,
     bundleWorkspaceDeps: config.bundleWorkspaceDeps,
     bundle: null,
+    bin: null,
     reportPath,
   }
 }
@@ -148,6 +151,80 @@ export const toIifeBuildDescriptor = (
     workspaceRoot: context.workspaceRoot,
     bundleWorkspaceDeps: false,
     bundle: { globalName: config.globalName, minify, globals: config.globals },
+    bin: null,
+    reportPath,
+  }
+}
+
+const SHEBANG = '#!/usr/bin/env node'
+const BIN_FILE_MODE = 0o755
+
+const resolveBinOutputFile = (binDir: string, name: string, format: BinScriptFormat, formats: BinScriptFormat[]): string => {
+  if (format === 'esm') return join(binDir, `${name}.mjs`)
+  return formats.length === 1 ? join(binDir, `${name}.js`) : join(binDir, `${name}.cjs.js`)
+}
+
+const resolveBinFooter = (bin: BinConfig, format: BinScriptFormat): string =>
+  bin.bootstrap ?? defaultBootstrap({ runner: bin.runner ?? 'default', format })
+
+/**
+ * Builds the worker descriptor for a single bin output (one (bin, format) pair).
+ *
+ * Bins are self-contained executable scripts: workspace deps are always inlined,
+ * the rollup `external` set is empty (the externalize-bundled-deps plugin
+ * intercepts pre-built deps when `bundleAllDeps` is on), and the worker writes
+ * directly to `<outputPath>/bin/<name>.<ext>` with the shebang banner, the
+ * resolved bootstrap footer, and `chmod 0o755` applied.
+ *
+ * Output naming follows the existing convention:
+ * - ESM: `<name>.mjs`
+ * - CJS only: `<name>.js`
+ * - CJS alongside ESM: `<name>.cjs.js`
+ *
+ * @param bin - Bin declaration including name, runner, and per-bin bootstrap override.
+ * @param context - Resolved build context.
+ * @param format - Format being built (one of `bin.format`'s entries).
+ * @param formats - Full list of formats requested for this bin (drives the CJS filename).
+ * @param reportPath - Absolute path the worker will write its JSON report to.
+ * @returns Descriptor ready to be JSON-serialized for the worker.
+ *
+ * @example Producing the descriptor for an `hf-build` CJS bin alongside an ESM twin
+ * ```typescript
+ * const descriptor = toBinBuildDescriptor(bin, context, 'cjs', ['cjs', 'esm'], '/tmp/r.json')
+ * ```
+ */
+export const toBinBuildDescriptor = (
+  bin: BinConfig,
+  context: BuildContext,
+  format: BinScriptFormat,
+  formats: BinScriptFormat[],
+  reportPath: string
+): RollupBuildDescriptor => {
+  const inputFile = join(context.projectRoot, 'src', 'bin', `${bin.name}.ts`)
+  const binDir = join(context.outputPath, 'bin')
+  const outputFile = resolveBinOutputFile(binDir, bin.name, format, formats)
+  const bundledDepsRoot = join(context.outputPath, '_dependencies')
+  const useBundledDeps = context.bundledDeps.length > 0
+  return {
+    format,
+    inputFile,
+    outputDir: getDirname(outputFile),
+    external: [],
+    sourcemap: false,
+    bundledDepsPlugin: useBundledDeps ? { deps: context.bundledDeps, depsRoot: bundledDepsRoot } : null,
+    tsConfigPath: context.tsConfigPath,
+    projectRoot: context.projectRoot,
+    workspaceRoot: context.workspaceRoot,
+    bundleWorkspaceDeps: true,
+    bundle: null,
+    bin: {
+      outputFile,
+      banner: SHEBANG,
+      footer: resolveBinFooter(bin, format),
+      exports: 'named',
+      inlineDynamicImports: true,
+      chmod: BIN_FILE_MODE,
+    },
     reportPath,
   }
 }
@@ -192,6 +269,7 @@ export const toUmdBuildDescriptor = (
     workspaceRoot: context.workspaceRoot,
     bundleWorkspaceDeps: false,
     bundle: { globalName: config.globalName, minify, globals: config.globals, amdId: config.amdId },
+    bin: null,
     reportPath,
   }
 }

@@ -56,6 +56,16 @@ export interface ExternalizeBundledDepsPluginOptions {
 }
 
 /**
+ * Resolution shape returned by the externalize-bundled-deps plugin's `resolveId` hook.
+ */
+interface ExternalResolution {
+  /** Resolved import id — relative path under `_dependencies/` or original specifier for builtins. */
+  id: string
+  /** Always `true` — the plugin only emits external resolutions. */
+  external: true
+}
+
+/**
  * Returns a rollup plugin whose `resolveId` hook maps any import of a bundled
  * dep (or its subpath) to a relative import that points at the pre-passed
  * artifact under `_dependencies/<dep>/`.
@@ -81,7 +91,7 @@ export const createExternalizeBundledDepsPlugin = (options: ExternalizeBundledDe
   const { deps, entryOutDir, format, depsRoot } = options
   return {
     name: 'externalize-bundled-deps',
-    resolveId(source: string): { id: string; external: true } | null {
+    resolveId(source: string): ExternalResolution | null {
       if (source.startsWith('node:') || isBuiltin(source)) {
         return { id: source, external: true }
       }

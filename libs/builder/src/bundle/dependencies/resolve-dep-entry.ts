@@ -4,11 +4,29 @@ import { createError } from '@hyperfrontend/immutable-api-utils/built-in-copy/er
 import { exists, readJsonFileIfExists } from '@hyperfrontend/project-scope/core/fs'
 import { join, normalizeToForwardSlashes } from '@hyperfrontend/project-scope/core/path'
 
+/**
+ *
+ */
 interface DepPackageJson {
+  /**
+   *
+   */
   module?: string
+  /**
+   *
+   */
   main?: string
+  /**
+   *
+   */
   types?: string
+  /**
+   *
+   */
   typings?: string
+  /**
+   *
+   */
   exports?: unknown
 }
 

@@ -1,10 +1,11 @@
+/* eslint-disable workspace/no-unsafe-builtin-methods -- worker bootstraps before workspace packages are built */
 import type { OutputOptions, Plugin, RollupLog, RollupOptions } from 'rollup'
-import commonjs from '@rollup/plugin-commonjs'
-import json from '@rollup/plugin-json'
-import nodeResolve from '@rollup/plugin-node-resolve'
 import { mkdirSync, statSync, writeFileSync } from 'node:fs'
 import { isBuiltin } from 'node:module'
 import { dirname } from 'node:path'
+import commonjs from '@rollup/plugin-commonjs'
+import json from '@rollup/plugin-json'
+import nodeResolve from '@rollup/plugin-node-resolve'
 import { rollup } from 'rollup'
 
 /**
@@ -46,7 +47,7 @@ export interface PrePassWorkerReport {
 
 const BYTES_PER_MB = 1024 * 1024
 
-const SUPPRESSED_WARNING_CODES = new Set([
+const SUPPRESSED_WARNING_CODES = new Set<string>([
   'CIRCULAR_DEPENDENCY',
   'UNRESOLVED_IMPORT',
   'EMPTY_BUNDLE',
@@ -98,13 +99,39 @@ const buildJsOutput = (job: PrePassWorkerJob): OutputOptions => ({
  * TypeScript project. Emitted `.d.ts` keeps `import type ... from 'typescript'`
  * intact so the consumer's own install satisfies the type imports.
  */
-const ALWAYS_EXTERNAL_TYPE_DEPS = new Set(['typescript'])
+const ALWAYS_EXTERNAL_TYPE_DEPS = new Set<string>(['typescript'])
+
+/**
+ * Options accepted by `rollup-plugin-dts`'s default factory. Mirrored locally
+ * because the package's published types vary between CJS / ESM module shapes
+ * and we only need this one option at the call site.
+ */
+interface DtsPluginOptions {
+  /** Apply the plugin's transformations to externalized imports as well. */
+  respectExternal?: boolean
+}
+
+/**
+ * Default factory exported by `rollup-plugin-dts`. The runtime module's CJS
+ * shape sometimes lacks a `.default`, so we fall back to the module object
+ * itself (cast as the factory type) to handle both layouts.
+ */
+type DtsFactory = (options?: DtsPluginOptions) => Plugin
+
+/**
+ * Module-shape projection of `rollup-plugin-dts` covering the dynamic-import
+ * result we read.
+ */
+interface DtsModule {
+  /** Default export — present in the published ESM form, sometimes missing in the CJS form. */
+  default?: DtsFactory
+}
 
 const buildDtsConfig = async (job: PrePassWorkerJob): Promise<RollupOptions> => {
-  const dtsModule: { default?: (options?: { respectExternal?: boolean }) => Plugin } = await import('rollup-plugin-dts')
+  const dtsModule: DtsModule = await import('rollup-plugin-dts')
   /* istanbul ignore next -- @preserve fallback path for CJS-style rollup-plugin-dts module shapes */
-  const dtsFactory = dtsModule.default ?? (dtsModule as unknown as (options?: { respectExternal?: boolean }) => Plugin)
-  const plugins: Plugin[] = [(<(options?: { respectExternal?: boolean }) => Plugin>dtsFactory)({ respectExternal: true })]
+  const dtsFactory = dtsModule.default ?? <DtsFactory>(<unknown>dtsModule)
+  const plugins: Plugin[] = [dtsFactory({ respectExternal: true })]
   const isExternalTypeDep = (id: string): boolean => {
     for (const name of ALWAYS_EXTERNAL_TYPE_DEPS) {
       if (id === name || id.startsWith(`${name}/`)) return true

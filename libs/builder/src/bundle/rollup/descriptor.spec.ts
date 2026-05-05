@@ -2,9 +2,9 @@ jest.mock('../externals/resolve-externals', () => ({
   resolveExternals: jest.fn(),
 }))
 
-import type { BuildContext, CjsConfig, EntryPoint, EsmConfig, IifeConfig, UmdConfig } from '../../models'
+import type { BinConfig, BuildContext, CjsConfig, EntryPoint, EsmConfig, IifeConfig, UmdConfig } from '../../models'
 import { resolveExternals } from '../externals/resolve-externals'
-import { toCjsBuildDescriptor, toEsmBuildDescriptor, toIifeBuildDescriptor, toUmdBuildDescriptor } from './descriptor'
+import { toBinBuildDescriptor, toCjsBuildDescriptor, toEsmBuildDescriptor, toIifeBuildDescriptor, toUmdBuildDescriptor } from './descriptor'
 
 const ROOT_ENTRY: EntryPoint = { exportPath: '.', srcPath: '', inputFile: '/abs/libs/foo/src/index.ts', isRoot: true }
 const SUB_ENTRY: EntryPoint = {
@@ -49,6 +49,7 @@ describe('toEsmBuildDescriptor', () => {
       workspaceRoot: '/abs/repo',
       bundleWorkspaceDeps: false,
       bundle: null,
+      bin: null,
       reportPath: '/tmp/report.json',
     })
   })
@@ -170,5 +171,63 @@ describe('toUmdBuildDescriptor', () => {
   it('throws when external is declared without a matching globals entry', () => {
     const config: UmdConfig = { globalName: 'MyLib', external: ['react'] }
     expect(() => toUmdBuildDescriptor(ROOT_ENTRY, config, makeContext(), '/tmp/r.json')).toThrow(/Missing globals mapping/)
+  })
+})
+
+describe('toBinBuildDescriptor', () => {
+  it('produces a CJS bin descriptor with shebang banner, bootstrap footer, and 0o755 chmod', () => {
+    const bin: BinConfig = { name: 'cz', format: 'cjs', runner: 'runCz' }
+    const descriptor = toBinBuildDescriptor(bin, makeContext(), 'cjs', ['cjs'], '/tmp/r.json')
+    expect(descriptor.format).toBe('cjs')
+    expect(descriptor.inputFile).toBe('/abs/libs/foo/src/bin/cz.ts')
+    expect(descriptor.outputDir).toBe('/abs/dist/libs/foo/bin')
+    expect(descriptor.external).toEqual([])
+    expect(descriptor.sourcemap).toBe(false)
+    expect(descriptor.bundleWorkspaceDeps).toBe(true)
+    expect(descriptor.bundle).toBeNull()
+    expect(descriptor.bin).toEqual({
+      outputFile: '/abs/dist/libs/foo/bin/cz.js',
+      banner: '#!/usr/bin/env node',
+      footer: expect.stringContaining('runCz('),
+      exports: 'named',
+      inlineDynamicImports: true,
+      chmod: 0o755,
+    })
+  })
+
+  it('emits an ESM bin output as `<name>.mjs` with the ESM-flavored bootstrap footer', () => {
+    const bin: BinConfig = { name: 'cz', format: 'esm' }
+    const descriptor = toBinBuildDescriptor(bin, makeContext(), 'esm', ['esm'], '/tmp/r.json')
+    expect(descriptor.format).toBe('esm')
+    expect(descriptor.bin?.outputFile).toBe('/abs/dist/libs/foo/bin/cz.mjs')
+    expect(descriptor.bin?.footer).toContain('await import(import.meta.url)')
+  })
+
+  it('uses `<name>.cjs.js` for the CJS output when ESM is also requested', () => {
+    const bin: BinConfig = { name: 'hf-build', format: ['cjs', 'esm'] }
+    const descriptor = toBinBuildDescriptor(bin, makeContext(), 'cjs', ['cjs', 'esm'], '/tmp/r.json')
+    expect(descriptor.bin?.outputFile).toBe('/abs/dist/libs/foo/bin/hf-build.cjs.js')
+  })
+
+  it('honors a per-bin bootstrap override on the descriptor footer', () => {
+    const bin: BinConfig = { name: 'cz', format: 'cjs', bootstrap: '// custom-footer' }
+    const descriptor = toBinBuildDescriptor(bin, makeContext(), 'cjs', ['cjs'], '/tmp/r.json')
+    expect(descriptor.bin?.footer).toBe('// custom-footer')
+  })
+
+  it('installs the externalize-bundled-deps plugin when context.bundledDeps is non-empty', () => {
+    const bin: BinConfig = { name: 'hf-build', format: 'cjs' }
+    const ctx = makeContext({ bundledDeps: ['rollup', 'terser'] })
+    const descriptor = toBinBuildDescriptor(bin, ctx, 'cjs', ['cjs'], '/tmp/r.json')
+    expect(descriptor.bundledDepsPlugin).toEqual({
+      deps: ['rollup', 'terser'],
+      depsRoot: '/abs/dist/libs/foo/_dependencies',
+    })
+  })
+
+  it('omits the externalize-bundled-deps plugin when context.bundledDeps is empty', () => {
+    const bin: BinConfig = { name: 'cz', format: 'cjs' }
+    const descriptor = toBinBuildDescriptor(bin, makeContext(), 'cjs', ['cjs'], '/tmp/r.json')
+    expect(descriptor.bundledDepsPlugin).toBeNull()
   })
 })

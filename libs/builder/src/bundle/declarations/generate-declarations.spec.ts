@@ -30,7 +30,7 @@ interface FakeChild extends EventEmitter {
   pid?: number
 }
 
-const makeFakeChild = (pid: number = 12345): FakeChild => {
+const makeFakeChild = (pid = 12345): FakeChild => {
   const child = <FakeChild>new EventEmitter()
   child.stdout = new EventEmitter()
   child.stderr = new EventEmitter()

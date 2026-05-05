@@ -1,7 +1,7 @@
 /* eslint-disable workspace/no-unsafe-builtin-methods -- worker bootstraps before workspace packages are built */
 import type { OutputOptions, Plugin, RollupLog, RollupOptions } from 'rollup'
 import type { RollupBuildDescriptor, RollupWorkerReport } from './types'
-import { mkdirSync, statSync, writeFileSync } from 'node:fs'
+import { chmodSync, mkdirSync, statSync, writeFileSync } from 'node:fs'
 import { isBuiltin } from 'node:module'
 import { dirname, join, relative } from 'node:path'
 import commonjs from '@rollup/plugin-commonjs'
@@ -123,6 +123,28 @@ const buildBundlePlugins = (job: RollupBuildDescriptor): Plugin[] => [
   }),
 ]
 
+const buildEntryOutput = (job: RollupBuildDescriptor, format: 'esm' | 'cjs'): OutputOptions => {
+  if (job.bin) {
+    return {
+      file: job.bin.outputFile,
+      format,
+      sourcemap: job.sourcemap,
+      banner: job.bin.banner,
+      footer: job.bin.footer,
+      exports: job.bin.exports,
+      inlineDynamicImports: job.bin.inlineDynamicImports,
+      ...(format === 'cjs' && { interop: <const>'compat' }),
+    }
+  }
+  const filename = format === 'esm' ? 'index.esm.js' : 'index.cjs.js'
+  return {
+    file: join(job.outputDir, filename),
+    format,
+    sourcemap: job.sourcemap,
+    ...(format === 'cjs' && { interop: <const>'compat' }),
+  }
+}
+
 const buildEsmJob = (job: RollupBuildDescriptor): PreparedRollupJob => ({
   config: {
     input: job.inputFile,
@@ -130,7 +152,7 @@ const buildEsmJob = (job: RollupBuildDescriptor): PreparedRollupJob => ({
     onwarn: onWarnEntry,
     plugins: buildEntryPlugins(job, 'esm'),
   },
-  outputs: [{ file: join(job.outputDir, 'index.esm.js'), format: 'esm', sourcemap: job.sourcemap }],
+  outputs: [buildEntryOutput(job, 'esm')],
 })
 
 const buildCjsJob = (job: RollupBuildDescriptor): PreparedRollupJob => ({
@@ -140,7 +162,7 @@ const buildCjsJob = (job: RollupBuildDescriptor): PreparedRollupJob => ({
     onwarn: onWarnEntry,
     plugins: buildEntryPlugins(job, 'cjs'),
   },
-  outputs: [{ file: join(job.outputDir, 'index.cjs.js'), format: 'cjs', sourcemap: job.sourcemap, interop: 'compat' }],
+  outputs: [buildEntryOutput(job, 'cjs')],
 })
 
 const buildIifeJob = (job: RollupBuildDescriptor): PreparedRollupJob => {
@@ -250,6 +272,9 @@ export const runRollupWorkerJob = async (job: RollupBuildDescriptor): Promise<Ro
     }
   } finally {
     await bundle.close()
+  }
+  if (job.bin) {
+    chmodSync(job.bin.outputFile, job.bin.chmod)
   }
   const memory = process.memoryUsage()
   const report: RollupWorkerReport = {

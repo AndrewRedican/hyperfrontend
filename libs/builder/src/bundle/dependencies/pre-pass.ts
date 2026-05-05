@@ -3,6 +3,7 @@ import { spawn } from 'node:child_process'
 import { existsSync, mkdtempSync, readFileSync, rmSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { createError } from '@hyperfrontend/immutable-api-utils/built-in-copy/error'
+import { parse, stringify } from '@hyperfrontend/immutable-api-utils/built-in-copy/json'
 import { createPromise } from '@hyperfrontend/immutable-api-utils/built-in-copy/promise'
 import { logger } from '@hyperfrontend/logging'
 import { join } from '@hyperfrontend/project-scope/core'
@@ -62,12 +63,12 @@ const REPORT_DIR_PREFIX = 'hf-builder-prepass-'
 const createReportDir = (): string => mkdtempSync(join(tmpdir(), REPORT_DIR_PREFIX))
 
 const reportPathFor = (reportDir: string, job: PrePassJob, index: number): string =>
-  join(reportDir, `${index}-${job.dep.replace(/[\/]/g, '__')}-${job.kind}-${job.format}.json`)
+  join(reportDir, `${index}-${job.dep.replace(/\//g, '__')}-${job.kind}-${job.format}.json`)
 
 const runOne = (job: PrePassJob, reportPath: string, options: RunPrePassOptions): Promise<void> =>
   createPromise<void>((resolve, reject) => {
     const execPath = options.execPath ?? process.execPath
-    const argv = [...(options.execArgv ?? []), options.workerPath, JSON.stringify({ ...job, reportPath })]
+    const argv = [...(options.execArgv ?? []), options.workerPath, stringify({ ...job, reportPath })]
     const child = spawn(execPath, argv, { stdio: ['ignore', 'pipe', 'pipe'] })
     let capturedStderr = ''
     child.stdout?.on('data', (chunk: Buffer | string) => {
@@ -91,18 +92,34 @@ const runOne = (job: PrePassJob, reportPath: string, options: RunPrePassOptions)
     })
   })
 
+/**
+ * On-disk shape of the JSON report each pre-pass worker writes before exiting.
+ *
+ * Mirrors the `PrePassWorkerReport` produced by `bundle/dependencies/worker/job-runner.ts`,
+ * duplicated here so the parent can consume reports without importing worker-side types
+ * across the process boundary.
+ */
+interface PrePassReportFile {
+  /** Final on-disk size of the rollup output, in bytes. */
+  outputSize: number
+  /** Peak `process.memoryUsage().heapUsed` reported by the child, in MB. */
+  peakHeapMB: number
+  /** Peak `process.memoryUsage().rss` reported by the child, in MB. */
+  peakRssMB: number
+  /** Worker wall-clock duration, in ms. */
+  durationMs: number
+}
+
 const readReport = (reportPath: string, job: PrePassJob): PrePassResult => {
   if (!existsSync(reportPath)) {
     throw createError(`pre-pass worker for ${job.dep} (${job.kind}/${job.format}) did not write a report at ${reportPath}`)
   }
-  const data = <{ outputSize: number; peakHeapMB: number; peakRssMB: number; durationMs: number }>(
-    JSON.parse(readFileSync(reportPath, 'utf8'))
-  )
+  const data = <PrePassReportFile>parse(readFileSync(reportPath, 'utf8'))
   return { job, outputSize: data.outputSize, peakHeapMB: data.peakHeapMB, peakRssMB: data.peakRssMB, durationMs: data.durationMs }
 }
 
 /**
- * Resolved worker invocation: absolute path + any extra Node args (e.g. `--require @swc-node/register`
+ * Resolved worker invocation: absolute path + any extra Node args (e.g. `--require \@swc-node/register`
  * when the worker is loaded from TypeScript source during a bootstrap build).
  */
 export interface WorkerInvocation {
@@ -126,7 +143,7 @@ const swcNodeAvailable = (workspaceRoot: string): boolean =>
  * Looks at, in order:
  * 1. `<workspaceRoot>/dist/libs/builder/bundle/dependencies/worker/index.cjs.js`
  * 2. `<workspaceRoot>/node_modules/@hyperfrontend/builder/bundle/dependencies/worker/index.cjs.js`
- * 3. `<workspaceRoot>/libs/builder/src/bundle/dependencies/worker/index.ts` (with `--require @swc-node/register`)
+ * 3. `<workspaceRoot>/libs/builder/src/bundle/dependencies/worker/index.ts` (with `--require \@swc-node/register`)
  *
  * @param workspaceRoot - Absolute workspace root.
  * @returns Worker invocation descriptor, or `undefined` if no candidate exists.

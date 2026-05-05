@@ -24,7 +24,17 @@ import { runPackagePhase } from './package/run-package-phase'
 
 const NEVER_WORKSPACE: IsWorkspacePackagePredicate = () => false
 
-const collectFormatBundleAllDeps = (configs: Array<EsmConfig | CjsConfig>): { active: boolean; options: BundleAllDepsOptions } => {
+/**
+ * Reduced view of the format-level `bundleAllDeps` settings collected across every ESM/CJS config.
+ */
+interface CollectedBundleAllDeps {
+  /** `true` when at least one format opts into `bundleAllDeps`. */
+  active: boolean
+  /** Merged include/exclude lists feeding `resolveBundledDeps`. */
+  options: BundleAllDepsOptions
+}
+
+const collectFormatBundleAllDeps = (configs: Array<EsmConfig | CjsConfig>): CollectedBundleAllDeps => {
   let active = false
   const include: string[] = []
   const exclude: string[] = []

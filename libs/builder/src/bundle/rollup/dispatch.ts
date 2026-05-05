@@ -28,7 +28,7 @@ export interface DispatchRollupWorkerOptions {
 }
 
 /**
- * Resolved worker invocation: absolute path + any extra Node args (e.g. `--require @swc-node/register`
+ * Resolved worker invocation: absolute path + any extra Node args (e.g. `--require \@swc-node/register`
  * when the worker is loaded from TypeScript source during a bootstrap build).
  */
 export interface RollupWorkerInvocation {
@@ -53,7 +53,7 @@ const swcNodeAvailable = (workspaceRoot: string): boolean =>
  * Looks at, in order:
  * 1. `<workspaceRoot>/dist/libs/builder/bundle/rollup/worker/index.cjs.js`
  * 2. `<workspaceRoot>/node_modules/@hyperfrontend/builder/bundle/rollup/worker/index.cjs.js`
- * 3. `<workspaceRoot>/libs/builder/src/bundle/rollup/worker/index.ts` (with `--require @swc-node/register`)
+ * 3. `<workspaceRoot>/libs/builder/src/bundle/rollup/worker/index.ts` (with `--require \@swc-node/register`)
  *
  * @param workspaceRoot - Absolute workspace root.
  * @returns Worker invocation descriptor, or `undefined` if no candidate exists.

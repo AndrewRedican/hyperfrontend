@@ -32,6 +32,30 @@ export interface RollupWorkerBundleOutput {
 }
 
 /**
+ * Bin-output configuration carried by ESM / CJS descriptors when the entry is a
+ * `package.json#bin` executable script.
+ *
+ * When set, the worker writes the bundle to {@link outputFile} (instead of the
+ * format's default `index.<fmt>.js` filename), prepends the {@link banner} and
+ * appends the {@link footer}, and applies {@link chmod} to the produced file so
+ * the npm bin symlink is invokable.
+ */
+export interface RollupWorkerBin {
+  /** Absolute path the worker writes the bin output to. */
+  outputFile: string
+  /** Banner string prepended to the output (typically the `#!/usr/bin/env node` shebang). */
+  banner: string
+  /** Footer string appended to the output (the bootstrap that wires the runner to `process.argv`). */
+  footer: string
+  /** Rollup `output.exports` mode passed through to `bundle.write`. */
+  exports: 'named' | 'default' | 'auto' | 'none'
+  /** When `true`, dynamic imports are inlined so the bin remains a single self-contained file. */
+  inlineDynamicImports: boolean
+  /** File mode applied via `chmodSync` after the output is written (e.g. `0o755`). */
+  chmod: number
+}
+
+/**
  * Serializable rollup-build descriptor: the contract between the parent
  * orchestrator and a forked worker. Every field must round-trip through
  * `JSON.stringify` / `JSON.parse` — no functions, no class instances.
@@ -62,6 +86,8 @@ export interface RollupBuildDescriptor {
   bundleWorkspaceDeps: boolean
   /** Bundle-output config carried by IIFE / UMD descriptors. `null` for esm/cjs. */
   bundle: RollupWorkerBundleOutput | null
+  /** Bin-output config carried by ESM / CJS descriptors that emit an executable bin. `null` for non-bin entries. */
+  bin: RollupWorkerBin | null
   /** Absolute path the worker writes its JSON report to. */
   reportPath: string
 }

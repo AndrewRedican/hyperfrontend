@@ -1,6 +1,7 @@
 import type { MemoryMonitor } from '../../memory/monitor'
 import type { BuildContext } from '../../models'
 import type { PrePassJob } from '../dependencies/pre-pass'
+import { createError } from '@hyperfrontend/immutable-api-utils/built-in-copy/error'
 import { logger } from '@hyperfrontend/logging'
 import { join } from '@hyperfrontend/project-scope/core'
 import { resolveDefaultWorkerPath, runPrePass } from '../dependencies/pre-pass'
@@ -52,7 +53,7 @@ export const runDtsPrePass = async (context: BuildContext, monitor?: MemoryMonit
   if (context.bundledDeps.length === 0) return
   const invocation = resolveDefaultWorkerPath(context.workspaceRoot)
   if (!invocation) {
-    throw new Error('bundleAllDeps is enabled but the pre-pass worker artifact was not found for the d.ts pre-pass.')
+    throw createError('bundleAllDeps is enabled but the pre-pass worker artifact was not found for the d.ts pre-pass.')
   }
   const jobs = buildJobs(context.bundledDeps, context)
   if (jobs.length === 0) {

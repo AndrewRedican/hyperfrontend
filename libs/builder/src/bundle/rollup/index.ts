@@ -6,12 +6,18 @@
  */
 export type { DispatchRollupWorkerOptions, RollupWorkerInvocation } from './dispatch'
 export type { BundleTypescriptPluginOptions, TypescriptPluginOptions } from './plugins'
-export type { RollupBuildDescriptor, RollupWorkerBundleOutput, RollupWorkerFormat, RollupWorkerReport } from './worker/types'
+export type {
+  RollupBuildDescriptor,
+  RollupWorkerBin,
+  RollupWorkerBundleOutput,
+  RollupWorkerFormat,
+  RollupWorkerReport,
+} from './worker/types'
 export { createCjsConfig, createCjsEntryConfig } from './config-cjs'
 export { createEsmConfig, createEsmEntryConfig } from './config-esm'
 export { createIifeConfig, createIifeEntryConfig } from './config-iife'
 export { createUmdConfig, createUmdEntryConfig } from './config-umd'
-export { toCjsBuildDescriptor, toEsmBuildDescriptor, toIifeBuildDescriptor, toUmdBuildDescriptor } from './descriptor'
+export { toBinBuildDescriptor, toCjsBuildDescriptor, toEsmBuildDescriptor, toIifeBuildDescriptor, toUmdBuildDescriptor } from './descriptor'
 export { dispatchRollupWorker, resolveDefaultRollupWorkerPath } from './dispatch'
 export { executeRollup } from './execute'
 export {
