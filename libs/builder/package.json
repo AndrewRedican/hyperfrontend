@@ -21,6 +21,7 @@
     ".": "./src/index.js",
     "./bin": "./src/bin/index.js",
     "./bin/native": "./src/bin/native/index.js",
+    "./bin/native/worker": "./src/bin/native/worker/index.js",
     "./bin/script": "./src/bin/script/index.js",
     "./bundle": "./src/bundle/index.js",
     "./bundle/declarations": "./src/bundle/declarations/index.js",

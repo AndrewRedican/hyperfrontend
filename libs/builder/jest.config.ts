@@ -21,6 +21,9 @@ export default <Config>{
     'src/bundle/rollup/worker/index\\.ts$',
     'src/bundle/rollup/worker/job-runner\\.ts$',
     'src/bundle/rollup/worker/types\\.ts$',
+    'src/bin/native/worker/index\\.ts$',
+    'src/bin/native/worker/job-runner\\.ts$',
+    'src/bin/native/worker/types\\.ts$',
   ],
   coverageThreshold: {
     global: {

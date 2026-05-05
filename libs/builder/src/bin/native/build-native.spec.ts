@@ -13,7 +13,10 @@ jest.mock('@hyperfrontend/project-scope/core', () => {
 })
 jest.mock('./codesign', () => ({ removeCodesign: jest.fn() }))
 jest.mock('./host-binary', () => ({ resolveHostBinary: jest.fn() }))
-jest.mock('./inject', () => ({ injectBlob: jest.fn().mockResolvedValue(undefined) }))
+jest.mock('./dispatch', () => ({
+  dispatchInjectWorker: jest.fn().mockResolvedValue({ outputSize: 138_000_000, peakHeapMB: 220, peakRssMB: 480, durationMs: 1234 }),
+  resolveDefaultInjectWorkerPath: jest.fn(() => ({ path: '/abs/repo/dist/libs/builder/bin/native/worker/index.cjs.js', execArgv: [] })),
+}))
 jest.mock('./platform-check', () => ({
   currentPlatformMatches: jest.fn(),
   currentPlatformTarget: jest.fn(),
@@ -25,8 +28,9 @@ import type { BinConfig, BuildContext } from '../../models'
 import { ensureDir, writeJsonFile } from '@hyperfrontend/project-scope/core'
 import { buildNativeBin } from './build-native'
 import { removeCodesign } from './codesign'
+import { dispatchInjectWorker, resolveDefaultInjectWorkerPath } from './dispatch'
 import { resolveHostBinary } from './host-binary'
-import { injectBlob } from './inject'
+import { NODE_SEA_FUSE, NODE_SEA_MACHO_SEGMENT, NODE_SEA_RESOURCE_NAME } from './inject'
 import { currentPlatformMatches, currentPlatformTarget } from './platform-check'
 import { generateSeaBlob } from './sea-blob'
 import { generateSeaConfig } from './sea-config'
@@ -60,7 +64,13 @@ beforeEach(() => {
   ;(<jest.Mock>writeJsonFile).mockReset()
   ;(<jest.Mock>removeCodesign).mockReset()
   ;(<jest.Mock>resolveHostBinary).mockReset().mockReturnValue('/opt/node')
-  ;(<jest.Mock>injectBlob).mockReset().mockResolvedValue(undefined)
+  ;(<jest.Mock>dispatchInjectWorker)
+    .mockReset()
+    .mockResolvedValue({ outputSize: 138_000_000, peakHeapMB: 220, peakRssMB: 480, durationMs: 1234 })
+  ;(<jest.Mock>resolveDefaultInjectWorkerPath).mockReset().mockReturnValue({
+    path: '/abs/repo/dist/libs/builder/bin/native/worker/index.cjs.js',
+    execArgv: [],
+  })
   ;(<jest.Mock>currentPlatformMatches).mockReset().mockReturnValue(true)
   ;(<jest.Mock>currentPlatformTarget).mockReset().mockReturnValue('linux-x64')
   ;(<jest.Mock>generateSeaBlob).mockReset().mockReturnValue({ blobPath: '', status: 0 })
@@ -105,7 +115,7 @@ describe('buildNativeBin', () => {
     const result = await buildNativeBin({ bin: seaBin, ctx: makeContext(), cjsOutputPath: '/abs/dist/libs/builder/bin/hf-build.js' })
     expect(result).toEqual([])
     expect(ensureDir).not.toHaveBeenCalled()
-    expect(injectBlob).not.toHaveBeenCalled()
+    expect(dispatchInjectWorker).not.toHaveBeenCalled()
   })
 
   it('ensures the bin directory exists before generating the SEA config', async () => {
@@ -135,13 +145,52 @@ describe('buildNativeBin', () => {
     expect(resolveHostBinary).toHaveBeenCalledWith({ platform: 'linux-x64' })
   })
 
-  it('injects the blob into a cloned host binary at the per-target output path', async () => {
+  it('resolves the inject worker against the workspace root before dispatching', async () => {
     await buildNativeBin({ bin: seaBin, ctx: makeContext(), cjsOutputPath: '/abs/dist/libs/builder/bin/hf-build.js' })
-    expect(injectBlob).toHaveBeenCalledWith({
-      hostBinary: '/opt/node',
-      outputBinary: '/abs/dist/libs/builder/bin/hf-build.linux-x64',
-      blobPath: '/abs/dist/libs/builder/bin/hf-build.sea-prep.blob',
+    expect(resolveDefaultInjectWorkerPath).toHaveBeenCalledWith('/abs/repo')
+  })
+
+  it('throws when the inject worker cannot be resolved', async () => {
+    ;(<jest.Mock>resolveDefaultInjectWorkerPath).mockReturnValueOnce(undefined)
+    await expect(
+      buildNativeBin({ bin: seaBin, ctx: makeContext(), cjsOutputPath: '/abs/dist/libs/builder/bin/hf-build.js' })
+    ).rejects.toThrow(/inject worker could not be resolved/)
+    expect(dispatchInjectWorker).not.toHaveBeenCalled()
+  })
+
+  it('dispatches the inject worker with the resolved SEA constants and host/output paths', async () => {
+    await buildNativeBin({ bin: seaBin, ctx: makeContext(), cjsOutputPath: '/abs/dist/libs/builder/bin/hf-build.js' })
+    expect(dispatchInjectWorker).toHaveBeenCalledWith(
+      {
+        hostBinary: '/opt/node',
+        outputBinary: '/abs/dist/libs/builder/bin/hf-build.linux-x64',
+        blobPath: '/abs/dist/libs/builder/bin/hf-build.sea-prep.blob',
+        resourceName: NODE_SEA_RESOURCE_NAME,
+        machoSegmentName: NODE_SEA_MACHO_SEGMENT,
+        sentinelFuse: NODE_SEA_FUSE,
+        reportPath: '',
+      },
+      expect.objectContaining({
+        workerPath: '/abs/repo/dist/libs/builder/bin/native/worker/index.cjs.js',
+        execArgv: [],
+        label: 'hf-build',
+      })
+    )
+  })
+
+  it('threads execArgv from the source-mode resolution into the dispatch options', async () => {
+    ;(<jest.Mock>resolveDefaultInjectWorkerPath).mockReturnValueOnce({
+      path: '/abs/repo/libs/builder/src/bin/native/worker/index.ts',
+      execArgv: ['--require', '@swc-node/register'],
     })
+    await buildNativeBin({ bin: seaBin, ctx: makeContext(), cjsOutputPath: '/abs/dist/libs/builder/bin/hf-build.js' })
+    expect(dispatchInjectWorker).toHaveBeenCalledWith(
+      expect.any(Object),
+      expect.objectContaining({
+        workerPath: '/abs/repo/libs/builder/src/bin/native/worker/index.ts',
+        execArgv: ['--require', '@swc-node/register'],
+      })
+    )
   })
 
   it('appends `.exe` for win32 platforms', async () => {
@@ -151,7 +200,7 @@ describe('buildNativeBin', () => {
       ctx: makeContext(),
       cjsOutputPath: '/abs/dist/libs/builder/bin/hf-build.js',
     })
-    const call = (<jest.Mock>injectBlob).mock.calls[0][0]
+    const call = (<jest.Mock>dispatchInjectWorker).mock.calls[0][0]
     expect(call.outputBinary).toBe('/abs/dist/libs/builder/bin/hf-build.win32-x64.exe')
   })
 
@@ -191,26 +240,26 @@ describe('buildNativeBin', () => {
     )
   })
 
-  it('logs sea blob and inject durations at info level', async () => {
+  it('logs the sea blob duration and the inject duration with worker peak metrics at info level', async () => {
     await buildNativeBin({ bin: seaBin, ctx: makeContext(), cjsOutputPath: '/abs/dist/libs/builder/bin/hf-build.js' })
     expect(mockChannel.info).toHaveBeenCalledWith(expect.stringMatching(/^hf-build: sea blob generated in \d+ms$/))
-    expect(mockChannel.info).toHaveBeenCalledWith(expect.stringMatching(/^hf-build: inject completed in \d+ms$/))
+    expect(mockChannel.info).toHaveBeenCalledWith('hf-build: inject completed in 1234ms (worker peak heap=220.0MB rss=480.0MB)')
   })
 
-  it('logs an error and re-throws when injectBlob rejects', async () => {
-    const failure = new Error('postject boom')
-    ;(<jest.Mock>injectBlob).mockRejectedValueOnce(failure)
+  it('logs an error and re-throws when dispatchInjectWorker rejects with an Error', async () => {
+    const failure = new Error('worker boom')
+    ;(<jest.Mock>dispatchInjectWorker).mockRejectedValueOnce(failure)
     await expect(buildNativeBin({ bin: seaBin, ctx: makeContext(), cjsOutputPath: '/abs/dist/libs/builder/bin/hf-build.js' })).rejects.toBe(
       failure
     )
-    expect(mockChannel.error).toHaveBeenCalledWith(expect.stringMatching(/^hf-build: postject inject failed after \d+ms: postject boom$/))
+    expect(mockChannel.error).toHaveBeenCalledWith('hf-build: postject inject failed: worker boom')
   })
 
-  it('formats non-Error injectBlob rejections via String()', async () => {
-    ;(<jest.Mock>injectBlob).mockRejectedValueOnce('not-an-error')
+  it('formats non-Error dispatchInjectWorker rejections via String()', async () => {
+    ;(<jest.Mock>dispatchInjectWorker).mockRejectedValueOnce('not-an-error')
     await expect(buildNativeBin({ bin: seaBin, ctx: makeContext(), cjsOutputPath: '/abs/dist/libs/builder/bin/hf-build.js' })).rejects.toBe(
       'not-an-error'
     )
-    expect(mockChannel.error).toHaveBeenCalledWith(expect.stringMatching(/^hf-build: postject inject failed after \d+ms: not-an-error$/))
+    expect(mockChannel.error).toHaveBeenCalledWith('hf-build: postject inject failed: not-an-error')
   })
 })

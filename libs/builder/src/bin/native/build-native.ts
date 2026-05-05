@@ -6,8 +6,9 @@ import { createError } from '@hyperfrontend/immutable-api-utils/built-in-copy/er
 import { logger } from '@hyperfrontend/logging'
 import { ensureDir, join, writeJsonFile } from '@hyperfrontend/project-scope/core'
 import { removeCodesign } from './codesign'
+import { dispatchInjectWorker, resolveDefaultInjectWorkerPath } from './dispatch'
 import { resolveHostBinary } from './host-binary'
-import { injectBlob } from './inject'
+import { NODE_SEA_FUSE, NODE_SEA_MACHO_SEGMENT, NODE_SEA_RESOURCE_NAME } from './inject'
 import { currentPlatformMatches, currentPlatformTarget } from './platform-check'
 import { generateSeaBlob } from './sea-blob'
 import { generateSeaConfig } from './sea-config'
@@ -60,13 +61,13 @@ const resolveOutputBinaryPath = (binDir: string, name: string, target: string): 
  * 3. Generate the SEA config JSON and write it to disk.
  * 4. Spawn `node --experimental-sea-config <path>` to emit the SEA preparation blob.
  * 5. Resolve the Node host binary for the current platform (defaults to `process.execPath`).
- * 6. Clone the host to the output path and run postject's `inject` to embed the blob.
+ * 6. Dispatch a forked inject worker that clones the host, calls postject's `inject` to
+ *    embed the blob, and writes the output binary. The ~138 MB Buffer postject allocates
+ *    lives and dies in the child — the parent's RSS stays flat across this step.
  * 7. On macOS, strip the cloned signature so the injection doesn't invalidate it.
  *
  * Each step emits an info-level memory snapshot (parent heap, RSS, OS free) and a
- * duration log so the pipeline is observable end-to-end. The high-RSS step is `injectBlob`
- * — postject loads the entire host binary into memory and writes the cloned + injected
- * copy back to disk; on memory-constrained hosts this is the most likely SIGKILL site.
+ * duration log so the pipeline is observable end-to-end.
  *
  * Native binaries are not auto-wired into `package.json#bin` — they are shipped
  * as separate release artifacts (see Q22 in the implementation plan).
@@ -114,16 +115,32 @@ export const buildNativeBin = async (inputs: BuildNativeBinInputs): Promise<BinO
   const hostBinary = resolveHostBinary({ platform: <SeaPlatform>target })
 
   memorySnapshot(`${bin.name}: pre-inject (host=${hostBinary})`)
-  const injectStart = dateNow()
-  try {
-    await injectBlob({ hostBinary, outputBinary, blobPath })
-  } catch (error) {
-    log.error(
-      `${bin.name}: postject inject failed after ${dateNow() - injectStart}ms: ${error instanceof Error ? error.message : String(error)}`
+  const invocation = resolveDefaultInjectWorkerPath(ctx.workspaceRoot)
+  if (!invocation) {
+    throw createError(
+      'inject worker could not be resolved for native bin build. Build @hyperfrontend/builder at least once before invoking the bin phase, or ensure @swc-node/register is installed for source-mode bootstrap.'
     )
+  }
+  try {
+    const report = await dispatchInjectWorker(
+      {
+        hostBinary,
+        outputBinary,
+        blobPath,
+        resourceName: NODE_SEA_RESOURCE_NAME,
+        machoSegmentName: NODE_SEA_MACHO_SEGMENT,
+        sentinelFuse: NODE_SEA_FUSE,
+        reportPath: '',
+      },
+      { workerPath: invocation.path, execArgv: invocation.execArgv, label: bin.name }
+    )
+    log.info(
+      `${bin.name}: inject completed in ${report.durationMs}ms (worker peak heap=${report.peakHeapMB.toFixed(1)}MB rss=${report.peakRssMB.toFixed(1)}MB)`
+    )
+  } catch (error) {
+    log.error(`${bin.name}: postject inject failed: ${error instanceof Error ? error.message : String(error)}`)
     throw error
   }
-  log.info(`${bin.name}: inject completed in ${dateNow() - injectStart}ms`)
   memorySnapshot(`${bin.name}: post-inject`)
 
   removeCodesign({ binary: outputBinary })
