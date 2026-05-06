@@ -12,7 +12,11 @@
       "executor": "@hyperfrontend/package:build",
       "options": {
         "esm": { "bundleWorkspaceDeps": true },
-        "cjs": { "bundleWorkspaceDeps": true }
+        "cjs": { "bundleWorkspaceDeps": true },
+        "bin": [
+          { "name": "cz", "runner": "runCz", "format": "cjs" },
+          { "name": "cl", "runner": "runCl", "format": "cjs" }
+        ]
       }
     },
     "publish": {},
