@@ -332,4 +332,94 @@ describe('runPrePassWorkerJob', () => {
     expect(contents).toContain('Hello')
     expect(contents).toContain('value')
   })
+
+  it('rewrites cross-bundled-dep imports to relative paths under depsRoot when npmDeps is non-empty (js kind)', async () => {
+    const inputPath = writeSrc('input.mjs', "import other from 'other-dep'\nexport default other\n")
+    const depsRoot = join(root, '_dependencies')
+    const outputPath = join(depsRoot, 'fixture', 'index.esm.js')
+    const reportPath = join(root, 'report.json')
+    await runPrePassWorkerJob({
+      kind: 'js',
+      dep: 'fixture',
+      inputPath,
+      format: 'esm',
+      outputPath,
+      otherDeps: ['other-dep'],
+      reportPath,
+      npmDeps: ['other-dep'],
+      workspaceRoutes: [],
+      depsRoot,
+    })
+    const contents = readFileSync(outputPath, 'utf8')
+    expect(contents).toMatch(/from\s+["']\.\.\/other-dep\/index\.esm\.js["']/)
+  })
+
+  it('rewrites whole-surface workspace specifiers to relative chunk paths in workspace-js jobs', async () => {
+    const inputPath = writeSrc('input.ts', "import { logger } from '@hyperfrontend/logging'\nexport default logger\n")
+    const tsConfigPath = join(root, 'tsconfig.json')
+    writeFileSync(
+      tsConfigPath,
+      JSON.stringify({
+        compilerOptions: { target: 'es2022', module: 'esnext', moduleResolution: 'bundler', isolatedModules: true, skipLibCheck: true },
+      })
+    )
+    const depsRoot = join(root, '_dependencies')
+    const outputPath = join(depsRoot, '@hyperfrontend', 'logging', 'index.cjs.js')
+    const reportPath = join(root, 'report.json')
+    await runPrePassWorkerJob({
+      kind: 'workspace-js',
+      dep: '@hyperfrontend/logging',
+      inputPath,
+      format: 'cjs',
+      outputPath,
+      otherDeps: [],
+      reportPath,
+      tsConfigPath,
+      workspaceRoot: root,
+      npmDeps: [],
+      workspaceRoutes: [{ packageName: '@hyperfrontend/logging', policy: 'whole-surface' }],
+      depsRoot,
+    })
+    const contents = readFileSync(outputPath, 'utf8')
+    expect(contents).toMatch(/require\(["']\.\/index\.cjs\.js["']\)/)
+  })
+
+  it('rewrites sub-path workspace specifiers to relative sibling chunks (workspace-js, sub-path policy)', async () => {
+    const inputPath = writeSrc(
+      'input.ts',
+      "import { dateNow } from '@hyperfrontend/immutable-api-utils/built-in-copy/date'\nexport default dateNow\n"
+    )
+    const tsConfigPath = join(root, 'tsconfig.json')
+    writeFileSync(
+      tsConfigPath,
+      JSON.stringify({
+        compilerOptions: { target: 'es2022', module: 'esnext', moduleResolution: 'bundler', isolatedModules: true, skipLibCheck: true },
+      })
+    )
+    const depsRoot = join(root, '_dependencies')
+    const outputPath = join(depsRoot, '@hyperfrontend', 'immutable-api-utils', 'built-in-copy', 'array', 'index.cjs.js')
+    const reportPath = join(root, 'report.json')
+    await runPrePassWorkerJob({
+      kind: 'workspace-js',
+      dep: '@hyperfrontend/immutable-api-utils/built-in-copy/array',
+      inputPath,
+      format: 'cjs',
+      outputPath,
+      otherDeps: [],
+      reportPath,
+      tsConfigPath,
+      workspaceRoot: root,
+      npmDeps: [],
+      workspaceRoutes: [
+        {
+          packageName: '@hyperfrontend/immutable-api-utils',
+          policy: 'sub-path',
+          specifiers: ['@hyperfrontend/immutable-api-utils/built-in-copy/date'],
+        },
+      ],
+      depsRoot,
+    })
+    const contents = readFileSync(outputPath, 'utf8')
+    expect(contents).toMatch(/require\(["']\.\.\/date\/index\.cjs\.js["']\)/)
+  })
 })

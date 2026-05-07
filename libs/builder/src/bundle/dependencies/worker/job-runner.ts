@@ -1,6 +1,7 @@
 /* eslint-disable workspace/no-unsafe-builtin-methods -- worker bootstraps before workspace packages are built */
 import type { OutputOptions, Plugin, RollupLog, RollupOptions } from 'rollup'
 import type { SiblingEntry } from '../../declarations/sibling-resolver'
+import type { ExternalizeFormat, WorkspaceBundledDepRoute } from '../externalize-plugin'
 import { mkdirSync, statSync, writeFileSync } from 'node:fs'
 import { isBuiltin } from 'node:module'
 import { dirname } from 'node:path'
@@ -10,6 +11,7 @@ import nodeResolve from '@rollup/plugin-node-resolve'
 import typescript from '@rollup/plugin-typescript'
 import { rollup } from 'rollup'
 import { createSiblingExternalizePlugin } from '../../declarations/sibling-resolver'
+import { createExternalizeBundledDepsPlugin } from '../externalize-plugin'
 
 /**
  * Pre-pass kinds. `js` and `dts` cover npm bundled deps with pre-built JS and
@@ -63,6 +65,20 @@ export interface PrePassWorkerJob {
   selfDtsPath?: string
   /** Owning entry's `srcPath` (used for diagnostics). Empty string for the package root. */
   selfSrcPath?: string
+  /**
+   * NPM bundled-dep names consumed by the canonical externalize plugin to rewrite
+   * cross-dep imports to relative paths under {@link depsRoot}. Mirrors the
+   * `RollupBuildDescriptor.bundledDepsPlugin.deps` field on the per-entry side.
+   */
+  npmDeps?: string[]
+  /**
+   * Workspace bundled-dep routes consumed by the canonical externalize plugin.
+   * For self-pre-pass jobs (`workspace-js` / `workspace-dts`) this excludes the
+   * specifier or package being built so the chunk inlines its own internals.
+   */
+  workspaceRoutes?: WorkspaceBundledDepRoute[]
+  /** Absolute path to the project's `_dependencies/` root. Required when {@link npmDeps} or {@link workspaceRoutes} is non-empty. */
+  depsRoot?: string
   /** Absolute path where the worker writes its JSON report. */
   reportPath: string
 }
@@ -128,15 +144,46 @@ const isExternalJsDep = (id: string): boolean => {
   return false
 }
 
+/**
+ * Builds the canonical externalize plugin for a pre-pass job when the parent
+ * supplied npm deps or workspace routes. Mirrors the plugin install on the
+ * per-entry rollup side so chunk-internal cross-bundled-dep specifiers get
+ * rewritten to relative paths under `_dependencies/` instead of leaking as bare
+ * `require('@hyperfrontend/...')` calls into the published artifact.
+ *
+ * @param job - Pre-pass job spec; only `npmDeps`, `workspaceRoutes`, `depsRoot`, and `outputPath` are read here.
+ * @param format - Output format the plugin should rewrite specifiers for (`'esm'`, `'cjs'`, or `'dts'`).
+ * @returns The plugin when routing data is supplied, or `undefined` to opt out of rewriting.
+ */
+const maybeExternalizePlugin = (job: PrePassWorkerJob, format: ExternalizeFormat): Plugin | undefined => {
+  const npmDeps = job.npmDeps ?? []
+  const workspaceRoutes = job.workspaceRoutes ?? []
+  if (npmDeps.length === 0 && workspaceRoutes.length === 0) return undefined
+  if (!job.depsRoot) return undefined
+  return createExternalizeBundledDepsPlugin({
+    deps: npmDeps,
+    entryOutDir: dirname(job.outputPath),
+    format,
+    depsRoot: job.depsRoot,
+    workspaceRoutes,
+  })
+}
+
 const buildJsConfig = (job: PrePassWorkerJob): RollupOptions => {
-  const plugins = <Plugin[]>[
+  const plugins: Plugin[] = []
+  const externalizePlugin = maybeExternalizePlugin(job, job.format)
+  const hasExternalize = externalizePlugin !== undefined
+  if (externalizePlugin) plugins.push(externalizePlugin)
+  plugins.push(
     <Plugin>json(),
     <Plugin>nodeResolve({ preferBuiltins: true, extensions: ['.mjs', '.js', '.cjs', '.json'] }),
-    <Plugin>commonjs({ ignoreDynamicRequires: true }),
-  ]
+    <Plugin>commonjs({ ignoreDynamicRequires: true })
+  )
   return {
     input: job.inputPath,
-    external: (id: string): boolean => isBuiltin(id) || id.startsWith('node:') || matchesAnyDep(id, job.otherDeps) || isExternalJsDep(id),
+    // why: when the externalize plugin is active, it owns rewriting of bundled-dep specifiers to relative paths under depsRoot. The `external` callback must not short-circuit those — rollup consults `external` before plugin resolveId can run, so any matchesAnyDep hit there leaks bare specifiers into the chunk.
+    external: (id: string): boolean =>
+      isBuiltin(id) || id.startsWith('node:') || (!hasExternalize && matchesAnyDep(id, job.otherDeps)) || isExternalJsDep(id),
     onwarn: onWarn,
     plugins,
   }
@@ -179,19 +226,23 @@ const buildWorkspaceJsConfig = (job: PrePassWorkerJob): RollupOptions => {
       module: 'esnext',
     },
   })
-  const plugins = <Plugin[]>[
+  const plugins: Plugin[] = []
+  const externalizePlugin = maybeExternalizePlugin(job, job.format)
+  const hasExternalize = externalizePlugin !== undefined
+  if (externalizePlugin) plugins.push(externalizePlugin)
+  plugins.push(
     <Plugin>json(),
     <Plugin>nodeResolve({ preferBuiltins: true, extensions: ['.ts', '.mjs', '.js', '.cjs', '.json'] }),
     <Plugin>commonjs({ ignoreDynamicRequires: true }),
-    tsPlugin,
-  ]
+    tsPlugin
+  )
   return {
     input: job.inputPath,
     external: (id: string): boolean =>
       isBuiltin(id) ||
       id.startsWith('node:') ||
-      matchesAnyDep(id, job.otherDeps) ||
-      matchesAnyExactSpecifier(id, job.otherWorkspaceSpecifiers) ||
+      (!hasExternalize && matchesAnyDep(id, job.otherDeps)) ||
+      (!hasExternalize && matchesAnyExactSpecifier(id, job.otherWorkspaceSpecifiers)) ||
       isExternalJsDep(id),
     onwarn: onWarn,
     plugins,
@@ -285,10 +336,14 @@ const buildDtsConfig = async (job: PrePassWorkerJob): Promise<RollupOptions> => 
   const plugins: Plugin[] = []
   const siblingPlugin = maybeSiblingPlugin(job)
   if (siblingPlugin) plugins.push(siblingPlugin)
+  const externalizePlugin = maybeExternalizePlugin(job, 'dts')
+  const hasExternalize = externalizePlugin !== undefined
+  if (externalizePlugin) plugins.push(externalizePlugin)
   plugins.push(dtsFactory({ respectExternal: true }))
   return {
     input: job.inputPath,
-    external: (id: string): boolean => isBuiltin(id) || id.startsWith('node:') || matchesAnyDep(id, job.otherDeps) || isExternalTypeDep(id),
+    external: (id: string): boolean =>
+      isBuiltin(id) || id.startsWith('node:') || (!hasExternalize && matchesAnyDep(id, job.otherDeps)) || isExternalTypeDep(id),
     onwarn: onWarn,
     plugins,
   }
@@ -307,14 +362,18 @@ const buildWorkspaceDtsConfig = async (job: PrePassWorkerJob): Promise<RollupOpt
   const tsConfigPath = requireWorkspaceField(job, 'tsConfigPath')
   const workspaceRoot = requireWorkspaceField(job, 'workspaceRoot')
   const dtsFactory = await loadDtsFactory()
-  const plugins: Plugin[] = [dtsFactory({ respectExternal: true, tsconfig: tsConfigPath, compilerOptions: { baseUrl: workspaceRoot } })]
+  const plugins: Plugin[] = []
+  const externalizePlugin = maybeExternalizePlugin(job, 'dts')
+  const hasExternalize = externalizePlugin !== undefined
+  if (externalizePlugin) plugins.push(externalizePlugin)
+  plugins.push(dtsFactory({ respectExternal: true, tsconfig: tsConfigPath, compilerOptions: { baseUrl: workspaceRoot } }))
   return {
     input: job.inputPath,
     external: (id: string): boolean =>
       isBuiltin(id) ||
       id.startsWith('node:') ||
-      matchesAnyDep(id, job.otherDeps) ||
-      matchesAnyExactSpecifier(id, job.otherWorkspaceSpecifiers) ||
+      (!hasExternalize && matchesAnyDep(id, job.otherDeps)) ||
+      (!hasExternalize && matchesAnyExactSpecifier(id, job.otherWorkspaceSpecifiers)) ||
       isExternalTypeDep(id),
     onwarn: onWarn,
     plugins,

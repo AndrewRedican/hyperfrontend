@@ -5,7 +5,8 @@ import { from } from '@hyperfrontend/immutable-api-utils/built-in-copy/array'
 import { createError } from '@hyperfrontend/immutable-api-utils/built-in-copy/error'
 import { createSet } from '@hyperfrontend/immutable-api-utils/built-in-copy/set'
 import { logger } from '@hyperfrontend/logging'
-import { exists } from '@hyperfrontend/project-scope/core/fs'
+import { exists, join } from '@hyperfrontend/project-scope/core'
+import { buildWorkspaceRoutes } from '../dependencies/externalize-plugin'
 import { resolveDefaultWorkerPath, runPrePass } from '../dependencies/pre-pass'
 import { dtsPathFor } from './sibling-resolver'
 
@@ -42,6 +43,8 @@ const buildJobs = (entries: EntryPoint[], context: BuildContext): PrePassJob[] =
   const jobs: PrePassJob[] = []
   const workspacePrefixDeps = collectWorkspacePrefixDeps(context)
   const workspaceExactSpecifiers = collectWorkspaceExactSpecifiers(context)
+  const workspaceRoutes = buildWorkspaceRoutes(context.workspaceBundledDeps)
+  const depsRoot = join(context.outputPath, '_dependencies')
   for (const entry of entries) {
     const inputPath = dtsPathFor(context.outputPath, entry.srcPath)
     if (!exists(inputPath)) continue
@@ -57,6 +60,9 @@ const buildJobs = (entries: EntryPoint[], context: BuildContext): PrePassJob[] =
       siblingEntries,
       selfDtsPath: inputPath,
       selfSrcPath: entry.srcPath,
+      npmDeps: context.bundledDeps,
+      workspaceRoutes,
+      depsRoot,
     })
   }
   return jobs

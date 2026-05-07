@@ -1,4 +1,5 @@
 import type { MemoryMonitor } from '../../memory/monitor'
+import type { WorkspaceBundledDepRoute } from './externalize-plugin'
 import { spawn } from 'node:child_process'
 import { existsSync, mkdtempSync, readFileSync, rmSync } from 'node:fs'
 import { tmpdir } from 'node:os'
@@ -55,6 +56,20 @@ export interface PrePassJob {
   selfDtsPath?: string
   /** Owning entry's `srcPath`. Empty string for the package root. */
   selfSrcPath?: string
+  /**
+   * NPM bundled-dep names consumed by the worker's externalize plugin to rewrite
+   * cross-dep imports to relative paths under {@link depsRoot}. Disjoint from
+   * {@link workspaceRoutes}.
+   */
+  npmDeps?: string[]
+  /**
+   * Workspace bundled-dep routes consumed by the worker's externalize plugin.
+   * For self-pre-pass jobs (`workspace-js` / `workspace-dts`) this excludes the
+   * specifier or package being built so the chunk inlines its own internals.
+   */
+  workspaceRoutes?: WorkspaceBundledDepRoute[]
+  /** Absolute path to the project's `_dependencies/` root. Required when {@link npmDeps} or {@link workspaceRoutes} is non-empty. */
+  depsRoot?: string
 }
 
 /**
