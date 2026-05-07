@@ -1,0 +1,49 @@
+# `lib-builder` Native Binary CI
+#
+# Calls `_lib-native.yml` for `lib-builder`'s `hf-build` Node SEA native binary
+# across all five declared platforms (Decision #29).
+#
+# Trigger model (Decision #30):
+# - Push to `main` touching `libs/builder/**`: build all five platforms and
+#   upload as workflow artifacts (no Release attachment).
+# - `workflow_dispatch` with `release-tag`: same matrix, but additionally
+#   attaches each binary to the named GitHub Release. Invoked from
+#   `ci-main.yml`'s post-publish flow when a `lib-builder@*` tag is created.
+#
+# Native binaries are NOT built on PR — PR pipeline validates JS bin builds only.
+
+name: lib-builder native
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'libs/builder/**'
+      - '.github/workflows/_lib-native.yml'
+      - '.github/workflows/ci-lib-builder-native.yml'
+  workflow_dispatch:
+    inputs:
+      release-tag:
+        description: 'Release tag (e.g., lib-builder@1.2.3) to attach binaries to. Leave empty to only upload artifacts.'
+        required: false
+        type: string
+        default: ''
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-lib-builder-native-${{ github.ref }}-${{ inputs.release-tag || 'main' }}
+  cancel-in-progress: false
+
+jobs:
+  native:
+    uses: ./.github/workflows/_lib-native.yml
+    permissions:
+      contents: write
+    with:
+      project-name: lib-builder
+      library-path: libs/builder
+      bin-name: hf-build
+      platforms: '["linux-x64","linux-arm64","darwin-x64","darwin-arm64","win32-x64"]'
+      release-tag: ${{ inputs.release-tag || '' }}

@@ -1,0 +1,95 @@
+# Reusable Native Binary Build Template
+#
+# Builds Node SEA cross-platform native binaries for a publishable library
+# that ships a `bin` declaration with `sea: { platforms: [...] }`. Each declared
+# platform runs on its native GitHub-hosted runner, builds the binary, uploads
+# it as a workflow artifact, and (when invoked with a non-empty `release-tag`)
+# attaches it to the matching GitHub Release.
+#
+# Per-platform sub-package publishing (esbuild/swc-style optionalDependencies)
+# is layered on top of this workflow in Phase 16. This template owns the
+# binary-production matrix only.
+#
+# Decisions ref: #29 (platform set), #30 (main-only trigger), #32 (reusable
+# template + per-lib caller), #60 (npm sub-packages = primary, releases = audit).
+
+name: _lib-native
+
+on:
+  workflow_call:
+    inputs:
+      project-name:
+        description: 'Nx project name (e.g., lib-builder)'
+        required: true
+        type: string
+      library-path:
+        description: 'Path to library relative to repo root (e.g., libs/builder). Used to locate dist output.'
+        required: true
+        type: string
+      bin-name:
+        description: 'Bin name as declared in package.json#bin (e.g., hf-build)'
+        required: true
+        type: string
+      platforms:
+        description: 'JSON array of declared platforms (e.g., [\"linux-x64\",\"darwin-arm64\"])'
+        required: true
+        type: string
+      release-tag:
+        description: 'When non-empty, attach built binaries to the GitHub Release for this tag.'
+        required: false
+        type: string
+        default: ''
+
+permissions:
+  contents: read
+
+jobs:
+  build-native:
+    name: build-native (${{ matrix.platform }})
+    permissions:
+      contents: write # required when attaching binaries to a Release
+    strategy:
+      fail-fast: false
+      matrix:
+        platform: ${{ fromJSON(inputs.platforms) }}
+        include:
+          - platform: linux-x64
+            runner: ubuntu-latest
+          - platform: linux-arm64
+            runner: ubuntu-24.04-arm
+          - platform: darwin-x64
+            runner: macos-13
+          - platform: darwin-arm64
+            runner: macos-latest
+          - platform: win32-x64
+            runner: windows-latest
+    runs-on: ${{ matrix.runner }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Setup monorepo
+        uses: ./.github/actions/setup-monorepo
+
+      # `--skip-nx-cache` is mandatory: a cached green from another runner would
+      # short-circuit the per-platform build and leave the artifact missing.
+      # Decision #45 codifies this for builder verification runs.
+      - name: Build native binary
+        shell: bash
+        run: CI=1 npx nx build ${{ inputs.project-name }} --skip-nx-cache
+
+      - name: Upload binary artifact
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: ${{ inputs.bin-name }}-${{ matrix.platform }}
+          path: dist/${{ inputs.library-path }}/bin/${{ inputs.bin-name }}.${{ matrix.platform }}*
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: Attach binary to GitHub Release
+        if: inputs.release-tag != ''
+        uses: softprops/action-gh-release@72f2c25fcb47643c292f7107632f7a47c1df5cd8 # v2.3.2
+        with:
+          tag_name: ${{ inputs.release-tag }}
+          files: dist/${{ inputs.library-path }}/bin/${{ inputs.bin-name }}.${{ matrix.platform }}*
+          fail_on_unmatched_files: true
