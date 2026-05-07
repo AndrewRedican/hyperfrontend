@@ -45,6 +45,7 @@ describe('toEsmBuildDescriptor', () => {
       external: ['react'],
       sourcemap: true,
       bundledDepsPlugin: null,
+      workspaceRoutes: [],
       tsConfigPath: '/abs/libs/foo/tsconfig.lib.json',
       projectRoot: '/abs/libs/foo',
       workspaceRoot: '/abs/repo',

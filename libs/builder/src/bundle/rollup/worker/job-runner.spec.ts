@@ -47,6 +47,7 @@ describe('runRollupWorkerJob', () => {
     external: [],
     sourcemap: false,
     bundledDepsPlugin: null,
+    workspaceRoutes: [],
     tsConfigPath: '',
     projectRoot: root,
     workspaceRoot: root,

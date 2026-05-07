@@ -1,9 +1,12 @@
+/* eslint-disable workspace/no-unsafe-builtin-methods -- worker bootstraps via @swc-node/register before workspace packages are loadable */
 import type { Plugin } from 'rollup'
 import type { WorkspaceBundledDep } from '../../models'
 import { isBuiltin } from 'node:module'
-import { relative } from 'node:path'
-import { createMap } from '@hyperfrontend/immutable-api-utils/built-in-copy/map'
-import { join, normalizeToForwardSlashes } from '@hyperfrontend/project-scope/core/path'
+import { join as nodeJoin, relative } from 'node:path'
+
+// why: pre-pass / per-entry rollup workers bootstrap from source via @swc-node/register on first build; workspace deps are not yet loadable. Mirrors the precedent in bundle/declarations/sibling-resolver.ts.
+const normalizeToForwardSlashes = (value: string): string => value.replace(/\\/g, '/')
+const join = (...segments: string[]): string => normalizeToForwardSlashes(nodeJoin(...segments))
 
 /**
  * Format produced by the rollup invocation that uses the plugin.
@@ -141,7 +144,7 @@ const resolveWorkspaceMatch = (
  * ```
  */
 export const buildWorkspaceRoutes = (entries: WorkspaceBundledDep[]): WorkspaceBundledDepRoute[] => {
-  const byPackage = createMap<string, WorkspaceBundledDepRoute>([])
+  const byPackage = new Map<string, WorkspaceBundledDepRoute>()
   for (const entry of entries) {
     const existing = byPackage.get(entry.packageName)
     if (entry.policy === 'whole-surface') {

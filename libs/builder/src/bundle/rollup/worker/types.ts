@@ -1,3 +1,5 @@
+import type { WorkspaceBundledDepRoute } from '../../dependencies/externalize-plugin'
+
 /**
  * Output format the rollup worker produces.
  */
@@ -76,6 +78,13 @@ export interface RollupBuildDescriptor {
   sourcemap: boolean
   /** When set: install the externalize-bundled-deps plugin (esm/cjs only). */
   bundledDepsPlugin: RollupWorkerBundledDepsPlugin | null
+  /**
+   * Workspace bundled-dep routes consumed by the externalize plugin. When non-empty,
+   * imports of these workspace packages (and matching sub-paths) are rerouted to
+   * the corresponding `_dependencies/<packageName>(/<sub>)?/index.<ext>` chunk.
+   * Empty array for descriptors that do not opt into workspace-dep hoisting.
+   */
+  workspaceRoutes: WorkspaceBundledDepRoute[]
   /** Absolute tsconfig path threaded into the typescript plugin. */
   tsConfigPath: string
   /** Absolute project root threaded into the typescript plugin. */
