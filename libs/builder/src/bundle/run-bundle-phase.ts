@@ -11,6 +11,7 @@ import { recover } from '../memory/recover'
 import { runDtsPerEntry } from './declarations/dts-per-entry'
 import { runDtsPrePass } from './declarations/dts-pre-pass'
 import { generateDeclarations } from './declarations/generate-declarations'
+import { pruneOrphanDeclarations } from './declarations/prune-orphan-dts'
 import { resolveDefaultWorkerPath, runPrePass } from './dependencies/pre-pass'
 import { resolveDepEntry } from './dependencies/resolve-dep-entry'
 import { resolveEntries } from './entries/resolve-entries'
@@ -258,6 +259,9 @@ export const runBundlePhase = async (context: BuildContext, config: BuildConfig,
     await runDtsPrePass(context, monitor)
     await runDtsPerEntry(context, monitor)
   }
+
+  pruneOrphanDeclarations(context)
+  monitor?.check('bundle:declarations:prune-orphans:end')
 
   return outputs
 }

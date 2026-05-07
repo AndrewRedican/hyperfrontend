@@ -232,6 +232,14 @@ export interface BuildConfig {
   jsdelivr?: string
   /** Bin declarations to synthesize alongside the library. */
   bin?: BinConfig[]
+  /**
+   * Override the published `package.json#files` allowlist.
+   *
+   * When omitted, the allowlist is derived programmatically from the entry-point
+   * discovery + bin declarations. Provide an explicit array to take full control
+   * of what `npm publish` ships.
+   */
+  files?: string[]
   /** Emit a third-party-licenses file. */
   thirdPartyLicenses?: boolean
   /** Enable the memory monitor; pass `true` for defaults or an options object for custom thresholds. */

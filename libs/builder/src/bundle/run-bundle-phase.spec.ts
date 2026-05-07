@@ -24,12 +24,14 @@ jest.mock('./dependencies/resolve-dep-entry', () => ({
 }))
 jest.mock('./declarations/dts-pre-pass', () => ({ runDtsPrePass: jest.fn().mockResolvedValue(undefined) }))
 jest.mock('./declarations/dts-per-entry', () => ({ runDtsPerEntry: jest.fn().mockResolvedValue(undefined) }))
+jest.mock('./declarations/prune-orphan-dts', () => ({ pruneOrphanDeclarations: jest.fn().mockReturnValue(0) }))
 
 import type { BuildConfig, BuildContext, EntryPoint, EntryPointDiscovery } from '../models'
 import { ensureDir } from '@hyperfrontend/project-scope/core'
 import { runDtsPerEntry } from './declarations/dts-per-entry'
 import { runDtsPrePass } from './declarations/dts-pre-pass'
 import { generateDeclarations } from './declarations/generate-declarations'
+import { pruneOrphanDeclarations } from './declarations/prune-orphan-dts'
 import { resolveDefaultWorkerPath, runPrePass } from './dependencies/pre-pass'
 import { dispatchRollupWorker, resolveDefaultRollupWorkerPath } from './rollup/dispatch'
 import { runBundlePhase } from './run-bundle-phase'
@@ -74,6 +76,7 @@ beforeEach(() => {
   ;(<jest.Mock>runPrePass).mockClear()
   ;(<jest.Mock>runDtsPrePass).mockClear()
   ;(<jest.Mock>runDtsPerEntry).mockClear()
+  ;(<jest.Mock>pruneOrphanDeclarations).mockClear()
   ;(<jest.Mock>resolveDefaultWorkerPath)
     .mockReset()
     .mockReturnValue({ path: '/abs/dist/libs/builder/bundle/dependencies/worker/index.cjs.js', execArgv: [] })
@@ -210,6 +213,7 @@ describe('runBundlePhase', () => {
       'bundle:cjs:end:post-recover',
       'bundle:declarations:start',
       'bundle:declarations:end',
+      'bundle:declarations:prune-orphans:end',
     ])
   })
 
@@ -235,6 +239,7 @@ describe('runBundlePhase', () => {
       'bundle:umd:0/1:.:end',
       'bundle:declarations:start',
       'bundle:declarations:end',
+      'bundle:declarations:prune-orphans:end',
     ])
   })
 
@@ -344,6 +349,11 @@ describe('runBundlePhase', () => {
     await runBundlePhase(ctx, config)
     expect(runDtsPrePass).toHaveBeenCalledTimes(1)
     expect(runDtsPerEntry).toHaveBeenCalledTimes(1)
+  })
+
+  it('always prunes orphan .d.ts files after declarations, regardless of bundleAllDeps', async () => {
+    await runBundlePhase(makeContext(), <BuildConfig>{ projectRoot: '', workspaceRoot: '' })
+    expect(pruneOrphanDeclarations).toHaveBeenCalledTimes(1)
   })
 
   it('skips the d.ts pre-pass and per-entry pass when no bundled deps', async () => {

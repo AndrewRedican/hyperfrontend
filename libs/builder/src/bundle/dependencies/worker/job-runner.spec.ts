@@ -132,6 +132,40 @@ describe('runPrePassWorkerJob', () => {
     expect(report.outputSize).toBeGreaterThan(0)
   })
 
+  it('externalizes "typescript" from the JS pre-pass even when not in otherDeps', async () => {
+    const inputPath = writeSrc('input.mjs', "import ts from 'typescript'\nexport default ts\n")
+    const outputPath = join(root, 'out.esm.js')
+    const reportPath = join(root, 'report.json')
+    await runPrePassWorkerJob({
+      kind: 'js',
+      dep: 'fixture',
+      inputPath,
+      format: 'esm',
+      otherDeps: [],
+      outputPath,
+      reportPath,
+    })
+    const contents = readFileSync(outputPath, 'utf8')
+    expect(contents).toMatch(/from\s+["']typescript["']/)
+  })
+
+  it('externalizes "typescript/lib/foo" subpath imports from the JS pre-pass', async () => {
+    const inputPath = writeSrc('input.mjs', "import ts from 'typescript/lib/typescript'\nexport default ts\n")
+    const outputPath = join(root, 'out.cjs.js')
+    const reportPath = join(root, 'report.json')
+    await runPrePassWorkerJob({
+      kind: 'js',
+      dep: 'fixture',
+      inputPath,
+      format: 'cjs',
+      otherDeps: [],
+      outputPath,
+      reportPath,
+    })
+    const contents = readFileSync(outputPath, 'utf8')
+    expect(contents).toMatch(/require\(["']typescript\/lib\/typescript["']\)/)
+  })
+
   it('runs a dts job and writes a .d.ts output', async () => {
     const inputPath = writeSrc('types.d.ts', 'export interface Hello { value: number }\n')
     const outputPath = join(root, 'out.d.ts')

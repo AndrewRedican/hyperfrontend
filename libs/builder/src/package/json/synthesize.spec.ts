@@ -171,6 +171,50 @@ describe('synthesizePackageJson', () => {
     expect(result.dependencies).toBeUndefined()
   })
 
+  it('synthesizes a bin field from a CJS-only bin declaration', () => {
+    const formats: FormatOutputs = { esm: [], cjs: [], iife: [], umd: [] }
+    const result = synthesizePackageJson({ name: 'foo' }, makeContext(), formats, {
+      bins: [{ name: 'hf-build', format: 'cjs' }],
+    })
+    expect(result.bin).toEqual({ 'hf-build': './bin/hf-build.js' })
+  })
+
+  it('uses the .cjs.js suffix when both CJS and ESM are requested', () => {
+    const formats: FormatOutputs = { esm: [], cjs: [], iife: [], umd: [] }
+    const result = synthesizePackageJson({ name: 'foo' }, makeContext(), formats, {
+      bins: [{ name: 'hf-build', format: ['cjs', 'esm'] }],
+    })
+    expect(result.bin).toEqual({ 'hf-build': './bin/hf-build.cjs.js' })
+  })
+
+  it('points an ESM-only bin at the .mjs output', () => {
+    const formats: FormatOutputs = { esm: [], cjs: [], iife: [], umd: [] }
+    const result = synthesizePackageJson({ name: 'foo' }, makeContext(), formats, {
+      bins: [{ name: 'esm-only', format: ['esm'] }],
+    })
+    expect(result.bin).toEqual({ 'esm-only': './bin/esm-only.mjs' })
+  })
+
+  it('strips the bin field from the source pkg when no bin declarations are passed', () => {
+    const formats: FormatOutputs = { esm: [], cjs: [], iife: [], umd: [] }
+    const result = synthesizePackageJson({ name: 'foo', bin: { stale: './x.js' } }, makeContext(), formats)
+    expect(result.bin).toBeUndefined()
+  })
+
+  it('emits the supplied files allowlist verbatim', () => {
+    const formats: FormatOutputs = { esm: [], cjs: [], iife: [], umd: [] }
+    const result = synthesizePackageJson({ name: 'foo' }, makeContext(), formats, {
+      files: ['_dependencies/', 'bin/hf-build.js', 'index.*'],
+    })
+    expect(result.files).toEqual(['_dependencies/', 'bin/hf-build.js', 'index.*'])
+  })
+
+  it('omits the files field when the allowlist is empty', () => {
+    const formats: FormatOutputs = { esm: [], cjs: [], iife: [], umd: [] }
+    const result = synthesizePackageJson({ name: 'foo' }, makeContext(), formats, { files: [] })
+    expect(result.files).toBeUndefined()
+  })
+
   it('combines workspace and bundled-dep filtering when both are active', () => {
     const formats: FormatOutputs = { esm: [], cjs: [], iife: [], umd: [] }
     const ctx = { ...makeContext(), bundledDeps: ['rollup'] }

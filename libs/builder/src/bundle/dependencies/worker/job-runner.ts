@@ -67,6 +67,23 @@ const matchesAnyDep = (id: string, deps: string[]): boolean => {
   return false
 }
 
+/**
+ * Packages whose JS implementation is intentionally NOT inlined during the JS pre-pass.
+ *
+ * Mirrors `ALWAYS_EXTERNAL_TYPE_DEPS` for the JS half. `typescript` is permanent
+ * consumer-supplied — both `@rollup/plugin-typescript` and `rollup-plugin-dts`
+ * follow `require('typescript')` into the compiler; without this gate, ~30 MB
+ * of typescript bytecode ends up inlined into `_dependencies/<plugin>/index.<fmt>.js`.
+ */
+const ALWAYS_EXTERNAL_JS_DEPS = new Set<string>(['typescript'])
+
+const isExternalJsDep = (id: string): boolean => {
+  for (const name of ALWAYS_EXTERNAL_JS_DEPS) {
+    if (id === name || id.startsWith(`${name}/`)) return true
+  }
+  return false
+}
+
 const buildJsConfig = (job: PrePassWorkerJob): RollupOptions => {
   const plugins = <Plugin[]>[
     <Plugin>json(),
@@ -75,7 +92,7 @@ const buildJsConfig = (job: PrePassWorkerJob): RollupOptions => {
   ]
   return {
     input: job.inputPath,
-    external: (id: string): boolean => isBuiltin(id) || id.startsWith('node:') || matchesAnyDep(id, job.otherDeps),
+    external: (id: string): boolean => isBuiltin(id) || id.startsWith('node:') || matchesAnyDep(id, job.otherDeps) || isExternalJsDep(id),
     onwarn: onWarn,
     plugins,
   }

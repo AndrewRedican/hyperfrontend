@@ -28,6 +28,7 @@ const makeContext = (overrides?: Partial<BuildContext>): BuildContext => ({
   assets: [{ from: '/abs/libs/foo', files: ['README.md'] }],
   isWorkspacePackage: isHyperfrontend,
   entryPointDiscovery: { category: 'root', entryPoints: [], hasRootEntry: false, platformEntries: [], featureEntries: [] },
+  bundledDeps: [],
   startedAt: 0,
   ...overrides,
 })
@@ -115,5 +116,51 @@ describe('runPackagePhase', () => {
     ;(<jest.Mock>synthesizePackageJson).mockReturnValue(<PackageJson>{ name: 'foo' })
     await runPackagePhase(makeContext(), { ...baseConfig, thirdPartyLicenses: true }, formats)
     expect(collectThirdPartyLicenses).toHaveBeenCalledWith('/abs/libs/foo', '/abs/repo', [])
+  })
+
+  it('forwards config.bin and a derived files allowlist to synthesize', async () => {
+    const ctx = makeContext({
+      bundledDeps: ['rollup'],
+      entryPointDiscovery: {
+        category: 'root',
+        entryPoints: [{ exportPath: '.', srcPath: '', inputFile: '/abs/src/index.ts', isRoot: true }],
+        hasRootEntry: true,
+        platformEntries: [],
+        featureEntries: [],
+      },
+    })
+    await runPackagePhase(ctx, { ...baseConfig, bin: [{ name: 'hf-build', format: ['cjs'] }] }, formats)
+    const passed = (<jest.Mock>synthesizePackageJson).mock.calls[0][3]
+    expect(passed.bins).toEqual([{ name: 'hf-build', format: ['cjs'] }])
+    expect(passed.files).toContain('_dependencies/')
+    expect(passed.files).toContain('bin/hf-build.js')
+    expect(passed.files).toContain('index.*')
+  })
+
+  it('honors config.files as an explicit allowlist override', async () => {
+    await runPackagePhase(makeContext(), { ...baseConfig, files: ['only-this/'] }, formats)
+    const passed = (<jest.Mock>synthesizePackageJson).mock.calls[0][3]
+    expect(passed.files).toEqual(['only-this/'])
+  })
+
+  it('defaults thirdPartyLicenses to true when bundled deps are present', async () => {
+    ;(<jest.Mock>synthesizePackageJson).mockReturnValue(<PackageJson>{ name: 'foo' })
+    ;(<jest.Mock>collectThirdPartyLicenses).mockReturnValue([{ name: 'rollup', licenseType: 'MIT', licenseUrl: null }])
+    await runPackagePhase(makeContext({ bundledDeps: ['rollup', 'postject'] }), baseConfig, formats)
+    expect(collectThirdPartyLicenses).toHaveBeenCalledWith('/abs/libs/foo', '/abs/repo', ['rollup', 'postject'])
+    expect(writeThirdPartyLicensesFile).toHaveBeenCalled()
+  })
+
+  it('respects an explicit thirdPartyLicenses=false override even when bundled deps are present', async () => {
+    await runPackagePhase(makeContext({ bundledDeps: ['rollup'] }), { ...baseConfig, thirdPartyLicenses: false }, formats)
+    expect(collectThirdPartyLicenses).not.toHaveBeenCalled()
+  })
+
+  it('merges bundledDeps with the dist dependencies for license collection', async () => {
+    ;(<jest.Mock>synthesizePackageJson).mockReturnValue(<PackageJson>{ name: 'foo', dependencies: { tslib: '*' } })
+    ;(<jest.Mock>collectThirdPartyLicenses).mockReturnValue([{ name: 'rollup', licenseType: 'MIT', licenseUrl: null }])
+    await runPackagePhase(makeContext({ bundledDeps: ['rollup', 'postject'] }), baseConfig, formats)
+    const externals = (<jest.Mock>collectThirdPartyLicenses).mock.calls[0][2]
+    expect(externals).toEqual(['rollup', 'postject', 'tslib'])
   })
 })

@@ -7,6 +7,7 @@
 export type { CdnPathOverrides, CdnPaths } from './cdn-paths'
 export type { SynthesizePackageJsonOptions } from './synthesize'
 export { getCdnPaths } from './cdn-paths'
+export { computeDefaultFilesAllowlist } from './files-allowlist'
 export { filterBundledDepsFromOutput, filterWorkspaceDepsFromOutput } from './filter-deps'
 export { generateExportsFromFormats } from './generate-exports'
 export { inheritFields } from './inherit-fields'
