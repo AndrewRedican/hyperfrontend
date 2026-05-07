@@ -11,12 +11,21 @@ import { join } from '@hyperfrontend/project-scope/core'
 const log = logger.channel('builder:bundle:dependencies:pre-pass')
 
 /**
+ * Pre-pass kind. Mirrors `PrePassWorkerJobKind` on the worker side.
+ */
+export type PrePassJobKind = 'js' | 'dts' | 'workspace-js' | 'workspace-dts'
+
+/**
  * Single-rollup-invocation job description fed to a forked worker.
  */
 export interface PrePassJob {
-  /** Pre-pass kind: `'js'` for JS rollup, `'dts'` for `rollup-plugin-dts`. */
-  kind: 'js' | 'dts'
-  /** Dep package name, e.g. `"rollup"` or `"@rollup/plugin-typescript"`. */
+  /**
+   * Pre-pass kind. `js` and `dts` cover npm bundled deps; `workspace-js` and
+   * `workspace-dts` cover workspace `@hyperfrontend/*` deps whose entries are
+   * TypeScript source.
+   */
+  kind: PrePassJobKind
+  /** Dep package name (or workspace specifier), e.g. `"rollup"` or `"@hyperfrontend/logging"`. */
   dep: string
   /** Absolute path to the dep's input entry. */
   inputPath: string
@@ -24,8 +33,41 @@ export interface PrePassJob {
   format: 'esm' | 'cjs'
   /** Absolute path to the worker's output file. */
   outputPath: string
-  /** Other deps in the pre-pass set; marked external so cross-dep imports stay link-time. */
+  /** Other deps in the pre-pass set; prefix-matched and marked external so cross-dep imports stay link-time. */
   otherDeps: string[]
+  /**
+   * Sub-path-mode workspace specifiers in the pre-pass set; matched as exact
+   * specifier only. Used by `workspace-*` jobs so sibling sub-paths externalize
+   * cleanly (e.g., one `built-in-copy/<x>` chunk does not pull in another).
+   */
+  otherWorkspaceSpecifiers?: string[]
+  /** Absolute path to the project's tsconfig (workspace-* jobs only). */
+  tsConfigPath?: string
+  /** Absolute workspace root used as `baseUrl` for path-mapping resolution (workspace-* jobs only). */
+  workspaceRoot?: string
+  /**
+   * Sibling-entry descriptors used by the per-entry `dts` pass to externalize
+   * imports that resolve into another entry's directory. See {@link
+   * SiblingEntryDescriptor}. Empty / omitted for dep pre-pass jobs.
+   */
+  siblingEntries?: SiblingEntryDescriptor[]
+  /** Absolute path to the input file's owning entry directory (used to compute sibling specifiers). */
+  selfDtsPath?: string
+  /** Owning entry's `srcPath`. Empty string for the package root. */
+  selfSrcPath?: string
+}
+
+/**
+ * Sibling-entry descriptor threaded through to the worker for the per-entry
+ * d.ts pass. Mirrors `SiblingEntry` from `bundle/declarations/sibling-resolver`,
+ * declared here so the orchestrator can build job specs without importing the
+ * resolver across the worker boundary.
+ */
+export interface SiblingEntryDescriptor {
+  /** Sibling entry's `srcPath` (subpath under `<outputPath>`). `''` for the package root. */
+  srcPath: string
+  /** Absolute path to the sibling's bundled `index.d.ts`. */
+  indexDtsPath: string
 }
 
 /**

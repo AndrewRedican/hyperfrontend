@@ -1,12 +1,23 @@
 /* eslint-disable workspace/no-unsafe-builtin-methods -- worker bootstraps before workspace packages are built */
 import type { OutputOptions, Plugin, RollupLog, RollupOptions } from 'rollup'
+import type { SiblingEntry } from '../../declarations/sibling-resolver'
 import { mkdirSync, statSync, writeFileSync } from 'node:fs'
 import { isBuiltin } from 'node:module'
 import { dirname } from 'node:path'
 import commonjs from '@rollup/plugin-commonjs'
 import json from '@rollup/plugin-json'
 import nodeResolve from '@rollup/plugin-node-resolve'
+import typescript from '@rollup/plugin-typescript'
 import { rollup } from 'rollup'
+import { createSiblingExternalizePlugin } from '../../declarations/sibling-resolver'
+
+/**
+ * Pre-pass kinds. `js` and `dts` cover npm bundled deps with pre-built JS and
+ * `.d.ts` entries; `workspace-js` and `workspace-dts` cover workspace
+ * `@hyperfrontend/*` deps whose entries are TypeScript source and require
+ * type-aware transformation against the workspace tsconfig.
+ */
+export type PrePassWorkerJobKind = 'js' | 'dts' | 'workspace-js' | 'workspace-dts'
 
 /**
  * Job spec consumed by the pre-pass worker via `process.argv[2]`.
@@ -15,18 +26,43 @@ import { rollup } from 'rollup'
  * `reportPath` so the parent orchestrator can collect per-job statistics.
  */
 export interface PrePassWorkerJob {
-  /** Pre-pass kind: `'js'` runs the standard JS rollup pipeline; `'dts'` runs `rollup-plugin-dts`. */
-  kind: 'js' | 'dts'
-  /** Dep package name being pre-passed. */
+  /**
+   * Pre-pass kind. `js` and `dts` run the npm-dep pipeline; `workspace-js` and
+   * `workspace-dts` add `@rollup/plugin-typescript` (or `rollup-plugin-dts`'s
+   * tsconfig integration) so TypeScript source workspace deps can be hoisted.
+   */
+  kind: PrePassWorkerJobKind
+  /** Dep package name (or workspace specifier) being pre-passed. */
   dep: string
-  /** Absolute path to the dep's entry (main / module for JS, types for dts). */
+  /** Absolute path to the dep's entry (main / module for JS, types for dts, source `.ts` for workspace-*). */
   inputPath: string
   /** Output format. JS jobs must use `'esm'` or `'cjs'`. dts jobs always use `'es'` internally. */
   format: 'esm' | 'cjs'
   /** Absolute path to the output file. */
   outputPath: string
-  /** Other deps in the pre-pass set; marked external so cross-dep imports stay link-time. */
+  /** Other deps in the pre-pass set; marked external so cross-dep imports stay link-time. Prefix-matched. */
   otherDeps: string[]
+  /**
+   * Sub-path-mode workspace specifiers in the pre-pass set; matched as exact
+   * specifier only (e.g. `@hyperfrontend/immutable-api-utils/built-in-copy/array`).
+   * Used by `workspace-*` jobs so sibling sub-paths externalize cleanly without
+   * also externalizing every other sub-path on the same package.
+   */
+  otherWorkspaceSpecifiers?: string[]
+  /** Absolute path to the project's tsconfig (workspace-* jobs only). */
+  tsConfigPath?: string
+  /** Absolute workspace root used as `baseUrl` for path-mapping resolution (workspace-* jobs only). */
+  workspaceRoot?: string
+  /**
+   * Sibling-entry descriptors used by the per-entry `dts` pass to externalize
+   * imports that resolve into another entry's directory. Empty / omitted for
+   * dep pre-pass jobs.
+   */
+  siblingEntries?: SiblingEntry[]
+  /** Absolute path to the input file's owning entry directory (used to compute sibling specifiers). */
+  selfDtsPath?: string
+  /** Owning entry's `srcPath` (used for diagnostics). Empty string for the package root. */
+  selfSrcPath?: string
   /** Absolute path where the worker writes its JSON report. */
   reportPath: string
 }
@@ -67,6 +103,14 @@ const matchesAnyDep = (id: string, deps: string[]): boolean => {
   return false
 }
 
+const matchesAnyExactSpecifier = (id: string, specifiers: string[] | undefined): boolean => {
+  if (!specifiers || specifiers.length === 0) return false
+  for (const s of specifiers) {
+    if (id === s) return true
+  }
+  return false
+}
+
 /**
  * Packages whose JS implementation is intentionally NOT inlined during the JS pre-pass.
  *
@@ -93,6 +137,62 @@ const buildJsConfig = (job: PrePassWorkerJob): RollupOptions => {
   return {
     input: job.inputPath,
     external: (id: string): boolean => isBuiltin(id) || id.startsWith('node:') || matchesAnyDep(id, job.otherDeps) || isExternalJsDep(id),
+    onwarn: onWarn,
+    plugins,
+  }
+}
+
+const requireWorkspaceField = (job: PrePassWorkerJob, field: 'tsConfigPath' | 'workspaceRoot'): string => {
+  const value = job[field]
+  if (!value) {
+    throw new Error(`workspace pre-pass job for ${job.dep} (${job.kind}/${job.format}) missing ${field}`)
+  }
+  return value
+}
+
+/**
+ * Builds a JS rollup config for a workspace-source pre-pass. The input is a
+ * `.ts` source file; `@rollup/plugin-typescript` transpiles it (and any
+ * transitive workspace files reached via tsconfig path-mapping) while sibling
+ * pre-passed specifiers stay external so each chunk is self-contained.
+ *
+ * The plugin is driven by the dep's own tsconfig (resolved by the parent and
+ * passed through `job.tsConfigPath`), keeping the workspace pre-pass agnostic
+ * of any workspace-root tsconfig.
+ *
+ * @param job - Pre-pass job spec with `tsConfigPath` and `workspaceRoot` populated.
+ * @returns Rollup options ready for the worker to invoke.
+ */
+const buildWorkspaceJsConfig = (job: PrePassWorkerJob): RollupOptions => {
+  const tsConfigPath = requireWorkspaceField(job, 'tsConfigPath')
+  const workspaceRoot = requireWorkspaceField(job, 'workspaceRoot')
+  const tsPlugin = <Plugin>typescript({
+    tsconfig: tsConfigPath,
+    declaration: false,
+    declarationMap: false,
+    sourceMap: false,
+    compilerOptions: {
+      baseUrl: workspaceRoot,
+      outDir: dirname(job.outputPath),
+      noEmitOnError: false,
+      noEmit: false,
+      module: 'esnext',
+    },
+  })
+  const plugins = <Plugin[]>[
+    <Plugin>json(),
+    <Plugin>nodeResolve({ preferBuiltins: true, extensions: ['.ts', '.mjs', '.js', '.cjs', '.json'] }),
+    <Plugin>commonjs({ ignoreDynamicRequires: true }),
+    tsPlugin,
+  ]
+  return {
+    input: job.inputPath,
+    external: (id: string): boolean =>
+      isBuiltin(id) ||
+      id.startsWith('node:') ||
+      matchesAnyDep(id, job.otherDeps) ||
+      matchesAnyExactSpecifier(id, job.otherWorkspaceSpecifiers) ||
+      isExternalJsDep(id),
     onwarn: onWarn,
     plugins,
   }
@@ -144,20 +244,78 @@ interface DtsModule {
   default?: DtsFactory
 }
 
-const buildDtsConfig = async (job: PrePassWorkerJob): Promise<RollupOptions> => {
+const isExternalTypeDep = (id: string): boolean => {
+  for (const name of ALWAYS_EXTERNAL_TYPE_DEPS) {
+    if (id === name || id.startsWith(`${name}/`)) return true
+  }
+  return false
+}
+
+/**
+ * Options accepted by `rollup-plugin-dts`'s default factory that we actually
+ * configure. The package's published types vary between ESM / CJS module
+ * shapes; mirror only the fields we need.
+ */
+interface DtsPluginInvocationOptions {
+  /** Apply the plugin's transformations to externalized imports as well. */
+  respectExternal?: boolean
+  /** Path to the tsconfig the plugin should drive TypeScript with. Required when input is `.ts` source. */
+  tsconfig?: string
+  /** Inline compilerOptions override merged onto the tsconfig. */
+  compilerOptions?: Record<string, unknown>
+}
+
+const loadDtsFactory = async (): Promise<(options?: DtsPluginInvocationOptions) => Plugin> => {
   const dtsModule: DtsModule = await import('rollup-plugin-dts')
   /* istanbul ignore next -- @preserve fallback path for CJS-style rollup-plugin-dts module shapes */
-  const dtsFactory = dtsModule.default ?? <DtsFactory>(<unknown>dtsModule)
-  const plugins: Plugin[] = [dtsFactory({ respectExternal: true })]
-  const isExternalTypeDep = (id: string): boolean => {
-    for (const name of ALWAYS_EXTERNAL_TYPE_DEPS) {
-      if (id === name || id.startsWith(`${name}/`)) return true
-    }
-    return false
-  }
+  return <(options?: DtsPluginInvocationOptions) => Plugin>(dtsModule.default ?? <DtsFactory>(<unknown>dtsModule))
+}
+
+const maybeSiblingPlugin = (job: PrePassWorkerJob): Plugin | undefined => {
+  if (!job.siblingEntries || job.siblingEntries.length === 0 || !job.selfDtsPath) return undefined
+  return createSiblingExternalizePlugin({
+    selfSrcPath: job.selfSrcPath ?? '',
+    selfDtsPath: job.selfDtsPath,
+    siblings: job.siblingEntries,
+  })
+}
+
+const buildDtsConfig = async (job: PrePassWorkerJob): Promise<RollupOptions> => {
+  const dtsFactory = await loadDtsFactory()
+  const plugins: Plugin[] = []
+  const siblingPlugin = maybeSiblingPlugin(job)
+  if (siblingPlugin) plugins.push(siblingPlugin)
+  plugins.push(dtsFactory({ respectExternal: true }))
   return {
     input: job.inputPath,
     external: (id: string): boolean => isBuiltin(id) || id.startsWith('node:') || matchesAnyDep(id, job.otherDeps) || isExternalTypeDep(id),
+    onwarn: onWarn,
+    plugins,
+  }
+}
+
+/**
+ * Builds a d.ts rollup config for a workspace-source pre-pass. The input is a
+ * `.ts` source file; `rollup-plugin-dts` drives TypeScript using the project's
+ * tsconfig so workspace path-mappings resolve and transitive type imports are
+ * properly inlined or externalized.
+ *
+ * @param job - Pre-pass job spec with `tsConfigPath` and `workspaceRoot` populated.
+ * @returns Rollup options ready for the worker to invoke.
+ */
+const buildWorkspaceDtsConfig = async (job: PrePassWorkerJob): Promise<RollupOptions> => {
+  const tsConfigPath = requireWorkspaceField(job, 'tsConfigPath')
+  const workspaceRoot = requireWorkspaceField(job, 'workspaceRoot')
+  const dtsFactory = await loadDtsFactory()
+  const plugins: Plugin[] = [dtsFactory({ respectExternal: true, tsconfig: tsConfigPath, compilerOptions: { baseUrl: workspaceRoot } })]
+  return {
+    input: job.inputPath,
+    external: (id: string): boolean =>
+      isBuiltin(id) ||
+      id.startsWith('node:') ||
+      matchesAnyDep(id, job.otherDeps) ||
+      matchesAnyExactSpecifier(id, job.otherWorkspaceSpecifiers) ||
+      isExternalTypeDep(id),
     onwarn: onWarn,
     plugins,
   }
@@ -172,6 +330,19 @@ const buildDtsOutput = (job: PrePassWorkerJob): OutputOptions => ({
 
 const ensureParentDir = (filePath: string): void => {
   mkdirSync(dirname(filePath), { recursive: true })
+}
+
+const buildConfigForJob = async (job: PrePassWorkerJob): Promise<RollupOptions> => {
+  switch (job.kind) {
+    case 'dts':
+      return buildDtsConfig(job)
+    case 'workspace-js':
+      return buildWorkspaceJsConfig(job)
+    case 'workspace-dts':
+      return buildWorkspaceDtsConfig(job)
+    default:
+      return buildJsConfig(job)
+  }
 }
 
 /**
@@ -193,8 +364,8 @@ export const runPrePassWorkerJob = async (job: PrePassWorkerJob): Promise<PrePas
   const startedAt = Date.now()
   ensureParentDir(job.outputPath)
   ensureParentDir(job.reportPath)
-  const config = job.kind === 'dts' ? await buildDtsConfig(job) : buildJsConfig(job)
-  const output = job.kind === 'dts' ? buildDtsOutput(job) : buildJsOutput(job)
+  const config = await buildConfigForJob(job)
+  const output = job.kind === 'dts' || job.kind === 'workspace-dts' ? buildDtsOutput(job) : buildJsOutput(job)
   const bundle = await rollup(config)
   try {
     await bundle.write(output)

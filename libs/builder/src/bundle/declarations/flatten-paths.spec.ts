@@ -45,6 +45,7 @@ describe('flattenDeclarationPaths', () => {
     isWorkspacePackage: () => false,
     entryPointDiscovery: discovery,
     bundledDeps: [],
+    workspaceBundledDeps: [],
     startedAt: 0,
   })
 

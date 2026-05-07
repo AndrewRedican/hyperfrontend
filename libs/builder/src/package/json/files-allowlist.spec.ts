@@ -27,6 +27,7 @@ const makeContext = (srcPaths: string[], bundledDeps: string[] = []): BuildConte
   isWorkspacePackage: () => false,
   entryPointDiscovery: makeDiscovery(srcPaths),
   bundledDeps,
+  workspaceBundledDeps: [],
   startedAt: 0,
 })
 

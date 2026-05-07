@@ -30,7 +30,7 @@ const resolveWorkerOrThrow = (workspaceRoot: string): RollupWorkerInvocation => 
  * the output to `<outputPath>/bin/<name>.<ext>`, and chmods it to `0o755` so
  * the npm bin symlink is invokable. The worker isolates the heavy bin bundle
  * (rollup + plugins + transitive deps loaded into the child) from the parent
- * process — see Phase 11.7.
+ * process.
  *
  * Output naming follows the convention:
  * - ESM: `<name>.mjs`

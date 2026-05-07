@@ -9,6 +9,7 @@ import type {
   FormatCounts,
   FormatOutputs,
   IsWorkspacePackagePredicate,
+  WorkspaceBundledDep,
 } from './models'
 import { from, isArray } from '@hyperfrontend/immutable-api-utils/built-in-copy/array'
 import { dateNow } from '@hyperfrontend/immutable-api-utils/built-in-copy/date'
@@ -16,6 +17,7 @@ import { createSet } from '@hyperfrontend/immutable-api-utils/built-in-copy/set'
 import { join, relativePath } from '@hyperfrontend/project-scope/core'
 import { runBinPhase } from './bin/run-bin-phase'
 import { resolveBundledDeps } from './bundle/dependencies/resolve-bundled-deps'
+import { resolveWorkspaceBundledDeps, WORKSPACE_DEP_POLICY } from './bundle/dependencies/resolve-workspace-bundled-deps'
 import { discoverEntries } from './bundle/entries/discover-entries'
 import { runBundlePhase } from './bundle/run-bundle-phase'
 import { createMemoryMonitor } from './memory/monitor'
@@ -63,6 +65,25 @@ const computeBundledDeps = (config: BuildConfig, isWorkspacePackage: IsWorkspace
   })
 }
 
+const computeWorkspaceBundledDeps = (config: BuildConfig, isWorkspacePackage: IsWorkspacePackagePredicate): WorkspaceBundledDep[] => {
+  const formats = [...toFormatArray<EsmConfig>(config.esm), ...toFormatArray<CjsConfig>(config.cjs)]
+  const { active, options } = collectFormatBundleAllDeps(formats)
+  if (!active) return []
+  const resolved = resolveWorkspaceBundledDeps(join(config.projectRoot, 'package.json'), config.workspaceRoot, {
+    isWorkspacePackage,
+    include: options.include,
+    exclude: options.exclude,
+  })
+  return resolved.map((entry) => ({
+    packageName: entry.packageName,
+    subPath: entry.subPath,
+    specifier: entry.specifier,
+    inputPath: entry.inputPath,
+    tsConfigPath: entry.tsConfigPath,
+    policy: WORKSPACE_DEP_POLICY[entry.packageName] ?? 'whole-surface',
+  }))
+}
+
 /**
  * Resolves a {@link BuildContext} from a top-level {@link BuildConfig}.
  *
@@ -99,6 +120,7 @@ export const createBuildContext = (config: BuildConfig): BuildContext => {
     isWorkspacePackage,
     entryPointDiscovery: discoverEntries(config.projectRoot),
     bundledDeps: computeBundledDeps(config, isWorkspacePackage),
+    workspaceBundledDeps: computeWorkspaceBundledDeps(config, isWorkspacePackage),
     startedAt: dateNow(),
   }
 }

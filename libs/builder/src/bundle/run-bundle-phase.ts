@@ -59,6 +59,8 @@ const collectFormatsRequestingPrePass = (config: BuildConfig): Array<'esm' | 'cj
 const buildJsPrePassJobs = (deps: string[], formats: Array<'esm' | 'cjs'>, context: BuildContext): PrePassJob[] => {
   const jobs: PrePassJob[] = []
   const depsRoot = join(context.outputPath, '_dependencies')
+  const workspacePrefixDeps = collectWorkspacePrefixDeps(context)
+  const workspaceExactSpecifiers = collectWorkspaceExactSpecifiers(context)
   for (const dep of deps) {
     const entry = resolveDepEntry({ dep, projectRoot: context.projectRoot, workspaceRoot: context.workspaceRoot, kind: 'js' })
     for (const format of formats) {
@@ -68,7 +70,55 @@ const buildJsPrePassJobs = (deps: string[], formats: Array<'esm' | 'cjs'>, conte
         inputPath: entry,
         format,
         outputPath: join(depsRoot, dep, format === 'esm' ? 'index.esm.js' : 'index.cjs.js'),
-        otherDeps: deps.filter((d) => d !== dep),
+        otherDeps: [...deps.filter((d) => d !== dep), ...workspacePrefixDeps],
+        otherWorkspaceSpecifiers: workspaceExactSpecifiers,
+      })
+    }
+  }
+  return jobs
+}
+
+const collectWorkspacePrefixDeps = (context: BuildContext): string[] => {
+  const set = createSet<string>([])
+  for (const entry of context.workspaceBundledDeps) {
+    if (entry.policy === 'whole-surface') set.add(entry.packageName)
+  }
+  return from(set)
+}
+
+const collectWorkspaceExactSpecifiers = (context: BuildContext): string[] => {
+  const set = createSet<string>([])
+  for (const entry of context.workspaceBundledDeps) {
+    if (entry.policy === 'sub-path') set.add(entry.specifier)
+  }
+  return from(set)
+}
+
+const workspaceOutputFile = (entry: BuildContext['workspaceBundledDeps'][number], format: 'esm' | 'cjs'): string => {
+  const fileName = format === 'esm' ? 'index.esm.js' : 'index.cjs.js'
+  return entry.subPath ? `${entry.specifier}/${fileName}` : `${entry.packageName}/${fileName}`
+}
+
+const buildWorkspaceJsPrePassJobs = (npmDeps: string[], formats: Array<'esm' | 'cjs'>, context: BuildContext): PrePassJob[] => {
+  if (context.workspaceBundledDeps.length === 0) return []
+  const jobs: PrePassJob[] = []
+  const depsRoot = join(context.outputPath, '_dependencies')
+  const wholeSurface = collectWorkspacePrefixDeps(context)
+  const subPathSpecifiers = collectWorkspaceExactSpecifiers(context)
+  for (const entry of context.workspaceBundledDeps) {
+    const otherWorkspacePackages = wholeSurface.filter((name) => name !== entry.packageName || entry.policy === 'sub-path')
+    const otherSubPathSpecifiers = subPathSpecifiers.filter((spec) => spec !== entry.specifier)
+    for (const format of formats) {
+      jobs.push({
+        kind: 'workspace-js',
+        dep: entry.specifier,
+        inputPath: entry.inputPath,
+        format,
+        outputPath: join(depsRoot, workspaceOutputFile(entry, format)),
+        otherDeps: [...npmDeps, ...otherWorkspacePackages],
+        otherWorkspaceSpecifiers: otherSubPathSpecifiers,
+        tsConfigPath: entry.tsConfigPath,
+        workspaceRoot: context.workspaceRoot,
       })
     }
   }
@@ -226,11 +276,13 @@ export const runBundlePhase = async (context: BuildContext, config: BuildConfig,
   const outputs: FormatOutputs = { esm: [], cjs: [], iife: [], umd: [] }
 
   const requestedPrePassFormats = collectFormatsRequestingPrePass(config)
-  if (context.bundledDeps.length > 0 && requestedPrePassFormats.length > 0) {
+  if (requestedPrePassFormats.length > 0 && (context.bundledDeps.length > 0 || context.workspaceBundledDeps.length > 0)) {
     const invocation = resolvePrePassWorkerOrThrow(context.workspaceRoot)
-    const jobs = buildJsPrePassJobs(context.bundledDeps, requestedPrePassFormats, context)
+    const npmJobs = buildJsPrePassJobs(context.bundledDeps, requestedPrePassFormats, context)
+    const workspaceJobs = buildWorkspaceJsPrePassJobs(context.bundledDeps, requestedPrePassFormats, context)
+    const jobs = [...npmJobs, ...workspaceJobs]
     log.info(
-      `bundle dependencies pre-pass: ${context.bundledDeps.length} deps × ${requestedPrePassFormats.length} formats = ${jobs.length} jobs`
+      `bundle dependencies pre-pass: ${context.bundledDeps.length} npm + ${context.workspaceBundledDeps.length} workspace × ${requestedPrePassFormats.length} formats = ${jobs.length} jobs`
     )
     monitor?.check('bundle:dependencies:prepass:start')
     await runPrePass(jobs, { workerPath: invocation.path, execArgv: invocation.execArgv, monitor })
@@ -255,7 +307,7 @@ export const runBundlePhase = async (context: BuildContext, config: BuildConfig,
   await generateDeclarations(context)
   monitor?.check('bundle:declarations:end')
 
-  if (context.bundledDeps.length > 0) {
+  if (context.bundledDeps.length > 0 || context.workspaceBundledDeps.length > 0) {
     await runDtsPrePass(context, monitor)
     await runDtsPerEntry(context, monitor)
   }

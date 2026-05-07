@@ -17,9 +17,9 @@ export interface ResolveHostBinaryInputs {
  * Resolves the path of the Node host binary that will be cloned and have the
  * SEA blob injected into it.
  *
- * Phase 7 ships a current-platform-only resolver: the host binary is always
- * `process.execPath`. Cross-platform builds are orchestrated by the CI matrix
- * (see Phase 12), where each runner produces the binary for its own platform.
+ * The resolver is current-platform-only: the host binary is always
+ * `process.execPath`. Cross-platform builds are orchestrated by an external
+ * CI matrix where each runner produces the binary for its own platform.
  *
  * Calling this function with a target platform that doesn't match the current
  * host throws — the caller is expected to gate via {@link currentPlatformMatches}

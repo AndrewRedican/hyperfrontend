@@ -33,7 +33,7 @@ const readPkg = (packageJsonPath: string): PackageJson => (exists(packageJsonPat
  * Resolves the list of third-party dependencies that should be pre-passed
  * (bundled once into `_dependencies/<dep>/`) for the build.
  *
- * Algorithm (per Decision #40):
+ * Algorithm:
  * 1. Read `dependencies` from the project's `package.json`.
  * 2. Subtract `peerDependencies` — those stay external.
  * 3. Subtract anything matching `isWorkspacePackage` — workspace deps are inlined per the existing flow.

@@ -35,7 +35,7 @@ const pruneOrphansInDir = (dirPath: string): number => {
  * orphan per-source files (e.g., `build-native.d.ts`, `synthesize.d.ts`) are
  * left behind. They are not exposed via `package.json#exports` but bloat the
  * tarball and mis-route IDE go-to-definition into files that are not the
- * actual public types surface (Phase 14 §3 / Decision #59).
+ * actual public types surface.
  *
  * Safety rails:
  * - Only walks directories that correspond to a discovered entry point.

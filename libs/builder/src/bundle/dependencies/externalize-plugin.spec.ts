@@ -109,4 +109,73 @@ describe('createExternalizeBundledDepsPlugin', () => {
       external: true,
     })
   })
+
+  it('rewrites whole-surface workspace imports of the package root', () => {
+    const plugin = createExternalizeBundledDepsPlugin({
+      ...baseOptions,
+      format: 'esm',
+      workspaceRoutes: [{ packageName: '@hyperfrontend/logging', policy: 'whole-surface' }],
+    })
+    expect(callResolveId(plugin, '@hyperfrontend/logging')).toEqual({
+      id: '../../_dependencies/@hyperfrontend/logging/index.esm.js',
+      external: true,
+    })
+  })
+
+  it('rewrites whole-surface workspace sub-path imports onto the same root chunk', () => {
+    const plugin = createExternalizeBundledDepsPlugin({
+      ...baseOptions,
+      format: 'cjs',
+      workspaceRoutes: [{ packageName: '@hyperfrontend/project-scope', policy: 'whole-surface' }],
+    })
+    expect(callResolveId(plugin, '@hyperfrontend/project-scope/core/fs')).toEqual({
+      id: '../../_dependencies/@hyperfrontend/project-scope/index.cjs.js',
+      external: true,
+    })
+  })
+
+  it('rewrites sub-path-mode workspace imports only when the specifier matches exactly', () => {
+    const plugin = createExternalizeBundledDepsPlugin({
+      ...baseOptions,
+      format: 'esm',
+      workspaceRoutes: [
+        {
+          packageName: '@hyperfrontend/immutable-api-utils',
+          policy: 'sub-path',
+          specifiers: ['@hyperfrontend/immutable-api-utils/built-in-copy/array'],
+        },
+      ],
+    })
+    expect(callResolveId(plugin, '@hyperfrontend/immutable-api-utils/built-in-copy/array')).toEqual({
+      id: '../../_dependencies/@hyperfrontend/immutable-api-utils/built-in-copy/array/index.esm.js',
+      external: true,
+    })
+  })
+
+  it('returns null for sub-path-mode imports whose specifier is not in the pre-passed list', () => {
+    const plugin = createExternalizeBundledDepsPlugin({
+      ...baseOptions,
+      format: 'esm',
+      workspaceRoutes: [
+        {
+          packageName: '@hyperfrontend/immutable-api-utils',
+          policy: 'sub-path',
+          specifiers: ['@hyperfrontend/immutable-api-utils/built-in-copy/array'],
+        },
+      ],
+    })
+    expect(callResolveId(plugin, '@hyperfrontend/immutable-api-utils/built-in-copy/error')).toBeNull()
+  })
+
+  it('rewrites workspace d.ts imports when format is "dts"', () => {
+    const plugin = createExternalizeBundledDepsPlugin({
+      ...baseOptions,
+      format: 'dts',
+      workspaceRoutes: [{ packageName: '@hyperfrontend/logging', policy: 'whole-surface' }],
+    })
+    expect(callResolveId(plugin, '@hyperfrontend/logging')).toEqual({
+      id: '../../_dependencies/@hyperfrontend/logging/index.d.ts',
+      external: true,
+    })
+  })
 })

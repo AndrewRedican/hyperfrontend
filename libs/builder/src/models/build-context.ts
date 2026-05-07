@@ -2,6 +2,34 @@ import type { AssetSpec, IsWorkspacePackagePredicate } from './build-config'
 import type { EntryPointDiscovery } from './entry-point'
 
 /**
+ * Per-package workspace pre-pass plan element.
+ *
+ * Resolved by the build phase from `package.json#dependencies` ∩ workspace
+ * predicate. The presence of this entry in `BuildContext.workspaceBundledDeps`
+ * means the dep gets a hoisted chunk under `_dependencies/<packageName>(/<sub>)?`
+ * and consumers route imports through the externalize plugin to that chunk.
+ */
+export interface WorkspaceBundledDep {
+  /** Workspace package name (e.g. `@hyperfrontend/logging`). */
+  packageName: string
+  /** Sub-path under the package; `''` for the package root. */
+  subPath: string
+  /** Public import specifier the entry resolves: `<packageName>` or `<packageName>/<subPath>`. */
+  specifier: string
+  /** Absolute path to the source `.ts` file resolved via tsconfig path mappings. */
+  inputPath: string
+  /**
+   * Absolute path to the dep's own tsconfig (e.g. `tsconfig.lib.json`). The
+   * pre-pass worker uses it to drive `@rollup/plugin-typescript` for this dep,
+   * keeping each dep's compiler options self-contained instead of inheriting
+   * the consumer project's settings.
+   */
+  tsConfigPath: string
+  /** Hoist policy — `'whole-surface'` collapses sub-paths onto the root chunk, `'sub-path'` keeps them separate. */
+  policy: 'whole-surface' | 'sub-path'
+}
+
+/**
  * Resolved, fully-computed runtime context derived from a `BuildConfig`.
  *
  * Unlike `BuildConfig`, every path and option here has been resolved to an absolute
@@ -35,6 +63,16 @@ export interface BuildContext {
    * plugin and strip the deps from the output `package.json`.
    */
   bundledDeps: string[]
+  /**
+   * Workspace `@hyperfrontend/*` deps slated for the per-format pre-pass into
+   * `_dependencies/<packageName>(/<sub>)?/`.
+   *
+   * Empty unless at least one format declares `bundleAllDeps` and the project
+   * declares workspace deps. Threaded through to the bundle phase so workspace
+   * pre-pass jobs can be scheduled and the externalize plugin can route
+   * workspace imports through the hoisted chunks.
+   */
+  workspaceBundledDeps: WorkspaceBundledDep[]
   /** Wall-clock timestamp captured at context creation, used for `BuildResult.durationMs`. */
   startedAt: number
 }

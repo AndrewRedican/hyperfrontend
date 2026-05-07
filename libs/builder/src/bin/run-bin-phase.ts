@@ -19,7 +19,7 @@ const findCjsOutputPath = (jsOutputs: BinOutput[]): string | undefined => {
  * passed to {@link buildNativeBin} as the SEA `main` script. Native emission is
  * skipped silently with an info log when the current host doesn't match any
  * declared platform — CI orchestrates the matrix so each declared platform is
- * built on the matching runner (see Phase 12).
+ * built on the matching runner.
  *
  * @param ctx - Resolved build context.
  * @param bins - Bin declarations to synthesize. Pass an empty array (or omit

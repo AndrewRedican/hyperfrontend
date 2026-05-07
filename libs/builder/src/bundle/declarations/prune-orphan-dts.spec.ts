@@ -32,6 +32,7 @@ const makeContext = (outputPath: string, entries: EntryPoint[]): BuildContext =>
   isWorkspacePackage: () => false,
   entryPointDiscovery: makeDiscovery(entries),
   bundledDeps: [],
+  workspaceBundledDeps: [],
   startedAt: 0,
 })
 

@@ -55,7 +55,7 @@ const resolveOutputBinaryPath = (binDir: string, name: string, target: string): 
 /**
  * Builds the Node SEA native binary for a single bin declaration.
  *
- * Pipeline (current-platform-only — see Phase 12 for the cross-platform CI matrix):
+ * Pipeline (current-platform-only — cross-platform matrices are orchestrated externally):
  * 1. Validate the bin declares CJS — SEA requires a CJS bundle as the embedded script.
  * 2. Skip silently with an info log if the current host doesn't match any declared platform.
  * 3. Generate the SEA config JSON and write it to disk.

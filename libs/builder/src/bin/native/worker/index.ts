@@ -4,8 +4,7 @@
  * Reads an {@link InjectWorkerJob} from `process.argv[2]`, runs a single
  * inject pass through {@link runInjectWorkerJob}, and exits with code 0 on
  * success or 1 on failure. The worker exists so the ~138 MB postject buffer
- * load is reclaimed at child exit and never enters the parent's RSS — see
- * Phase 11.8 in the roadmap.
+ * load is reclaimed at child exit and never enters the parent's RSS.
  *
  * @module @hyperfrontend/builder/bin/native/worker
  */

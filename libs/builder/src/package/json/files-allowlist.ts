@@ -37,7 +37,7 @@ const collectBinScriptFiles = (bins: BinConfig[]): string[] => {
  *
  * Derived programmatically from `ctx.entryPointDiscovery` plus the bin
  * declarations so the allowlist tracks new top-level entry directories
- * without hand-editing the project config (Phase 14 §5 / Decision #61).
+ * without hand-editing the project config.
  *
  * Behavior:
  * - Top-level entry directories surface as `<dir>/` patterns.

@@ -1,29 +1,62 @@
 import type { MemoryMonitor } from '../../memory/monitor'
 import type { BuildContext, EntryPoint } from '../../models'
-import type { PrePassJob } from '../dependencies/pre-pass'
+import type { PrePassJob, SiblingEntryDescriptor } from '../dependencies/pre-pass'
+import { from } from '@hyperfrontend/immutable-api-utils/built-in-copy/array'
 import { createError } from '@hyperfrontend/immutable-api-utils/built-in-copy/error'
+import { createSet } from '@hyperfrontend/immutable-api-utils/built-in-copy/set'
 import { logger } from '@hyperfrontend/logging'
 import { exists } from '@hyperfrontend/project-scope/core/fs'
-import { join } from '@hyperfrontend/project-scope/core/path'
 import { resolveDefaultWorkerPath, runPrePass } from '../dependencies/pre-pass'
+import { dtsPathFor } from './sibling-resolver'
 
 const log = logger.channel('builder:bundle:declarations:dts-per-entry')
 
-const dtsEntryFor = (entry: EntryPoint, context: BuildContext): string =>
-  entry.srcPath ? join(context.outputPath, entry.srcPath, 'index.d.ts') : join(context.outputPath, 'index.d.ts')
+const collectWorkspacePrefixDeps = (context: BuildContext): string[] => {
+  const set = createSet<string>([])
+  for (const entry of context.workspaceBundledDeps) {
+    if (entry.policy === 'whole-surface') set.add(entry.packageName)
+  }
+  return from(set)
+}
+
+const collectWorkspaceExactSpecifiers = (context: BuildContext): string[] => {
+  const set = createSet<string>([])
+  for (const entry of context.workspaceBundledDeps) {
+    if (entry.policy === 'sub-path') set.add(entry.specifier)
+  }
+  return from(set)
+}
+
+const buildSiblingDescriptors = (entries: EntryPoint[], context: BuildContext, currentSrcPath: string): SiblingEntryDescriptor[] => {
+  const descriptors: SiblingEntryDescriptor[] = []
+  for (const entry of entries) {
+    if (entry.srcPath === currentSrcPath) continue
+    const indexDtsPath = dtsPathFor(context.outputPath, entry.srcPath)
+    if (!exists(indexDtsPath)) continue
+    descriptors.push({ srcPath: entry.srcPath, indexDtsPath })
+  }
+  return descriptors
+}
 
 const buildJobs = (entries: EntryPoint[], context: BuildContext): PrePassJob[] => {
   const jobs: PrePassJob[] = []
+  const workspacePrefixDeps = collectWorkspacePrefixDeps(context)
+  const workspaceExactSpecifiers = collectWorkspaceExactSpecifiers(context)
   for (const entry of entries) {
-    const inputPath = dtsEntryFor(entry, context)
+    const inputPath = dtsPathFor(context.outputPath, entry.srcPath)
     if (!exists(inputPath)) continue
+    const siblingEntries = buildSiblingDescriptors(entries, context, entry.srcPath)
     jobs.push({
       kind: 'dts',
       dep: entry.exportPath,
       inputPath,
       format: 'esm',
       outputPath: inputPath,
-      otherDeps: context.bundledDeps,
+      otherDeps: [...context.bundledDeps, ...workspacePrefixDeps],
+      otherWorkspaceSpecifiers: workspaceExactSpecifiers,
+      siblingEntries,
+      selfDtsPath: inputPath,
+      selfSrcPath: entry.srcPath,
     })
   }
   return jobs

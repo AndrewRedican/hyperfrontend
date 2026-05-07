@@ -22,7 +22,7 @@ export type {
   SeaPlatform,
   UmdConfig,
 } from './build-config'
-export type { BuildContext } from './build-context'
+export type { BuildContext, WorkspaceBundledDep } from './build-context'
 export type { BinOutput, BuildResult, FormatCounts } from './build-result'
 export type { EntryPoint, EntryPointCategory, EntryPointDiscovery, EntryPointPlatform } from './entry-point'
 export type { FormatOutputs, IifeOutput, UmdOutput } from './format-output'

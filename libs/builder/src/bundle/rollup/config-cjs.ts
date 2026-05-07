@@ -1,7 +1,7 @@
 import type { OutputOptions, Plugin, RollupLog, RollupOptions } from 'rollup'
 import type { BuildContext, CjsConfig, EntryPoint } from '../../models'
 import { join } from '@hyperfrontend/project-scope/core/path'
-import { createExternalizeBundledDepsPlugin } from '../dependencies/externalize-plugin'
+import { buildWorkspaceRoutes, createExternalizeBundledDepsPlugin } from '../dependencies/externalize-plugin'
 import { createExternalFn } from '../externals/external-fn'
 import { resolveExternals } from '../externals/resolve-externals'
 import { createCommonJsPlugin, createJsonPlugin, createNodeResolvePlugin, createTypescriptPlugin } from './plugins'
@@ -35,24 +35,29 @@ const onWarn = (warning: RollupLog, defaultHandler: (warning: RollupLog) => void
 export const createCjsEntryConfig = (entry: EntryPoint, config: CjsConfig, context: BuildContext): RollupOptions => {
   const entryOutputPath = entry.srcPath ? join(context.outputPath, entry.srcPath) : context.outputPath
   const sourcemap = config.sourcemap ?? true
-  const useBundleAllDeps = Boolean(config.bundleAllDeps) && context.bundledDeps.length > 0
+  const bundleAllRequested = Boolean(config.bundleAllDeps)
+  const useBundleAllDeps = bundleAllRequested && context.bundledDeps.length > 0
   const bundledDeps = useBundleAllDeps ? context.bundledDeps : []
+  const workspaceRoutes = bundleAllRequested ? buildWorkspaceRoutes(context.workspaceBundledDeps) : []
+  const workspaceBundledDepNames = bundleAllRequested ? workspaceRoutes.map((r) => r.packageName) : []
   const external = resolveExternals({
     packageJsonPath: join(context.projectRoot, 'package.json'),
     additional: [...context.external, ...(config.external ?? [])],
     isWorkspacePackage: context.isWorkspacePackage,
     bundleWorkspaceDeps: config.bundleWorkspaceDeps,
     bundledDeps,
+    workspaceBundledDepNames,
   })
 
   const plugins: Plugin[] = []
-  if (useBundleAllDeps) {
+  if (useBundleAllDeps || workspaceRoutes.length > 0) {
     plugins.push(
       createExternalizeBundledDepsPlugin({
         deps: bundledDeps,
         entryOutDir: entryOutputPath,
         format: 'cjs',
         depsRoot: join(context.outputPath, '_dependencies'),
+        workspaceRoutes,
       })
     )
   }

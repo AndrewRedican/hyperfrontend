@@ -66,6 +66,7 @@ const makeContext = (): BuildContext => ({
   isWorkspacePackage: () => false,
   entryPointDiscovery: DISCOVERY,
   bundledDeps: [],
+  workspaceBundledDeps: [],
   startedAt: 0,
 })
 

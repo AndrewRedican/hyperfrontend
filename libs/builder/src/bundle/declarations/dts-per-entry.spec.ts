@@ -39,6 +39,7 @@ const makeContext = (bundledDeps: string[], entries: EntryPoint[]): BuildContext
   isWorkspacePackage: () => false,
   entryPointDiscovery: makeDiscovery(entries),
   bundledDeps,
+  workspaceBundledDeps: [],
   startedAt: 0,
 })
 
@@ -71,6 +72,16 @@ describe('runDtsPerEntry', () => {
     expect(jobs.every((j: { kind: string; otherDeps: string[] }) => j.kind === 'dts' && j.otherDeps.includes('rollup'))).toBe(true)
   })
 
+  it('threads sibling-entry descriptors and selfDtsPath into each job', async () => {
+    await runDtsPerEntry(makeContext(['rollup'], [ROOT_ENTRY, SUB_ENTRY]))
+    const jobs = (<jest.Mock>runPrePass).mock.calls[0][0]
+    expect(jobs[0].selfDtsPath).toBe('/abs/dist/libs/foo/index.d.ts')
+    expect(jobs[0].selfSrcPath).toBe('')
+    expect(jobs[0].siblingEntries).toEqual([{ srcPath: 'sub', indexDtsPath: '/abs/dist/libs/foo/sub/index.d.ts' }])
+    expect(jobs[1].selfDtsPath).toBe('/abs/dist/libs/foo/sub/index.d.ts')
+    expect(jobs[1].siblingEntries).toEqual([{ srcPath: '', indexDtsPath: '/abs/dist/libs/foo/index.d.ts' }])
+  })
+
   it('skips entries whose tsc output is missing', async () => {
     ;(<jest.Mock>exists).mockImplementation((path: string) => path.endsWith('index.d.ts') && !path.includes('sub'))
     await runDtsPerEntry(makeContext(['rollup'], [ROOT_ENTRY, SUB_ENTRY]))
@@ -87,7 +98,7 @@ describe('runDtsPerEntry', () => {
 
   it('threads the optional memory monitor through to runPrePass', async () => {
     const monitor = { check: jest.fn() }
-    await runDtsPerEntry(makeContext(['rollup'], [ROOT_ENTRY]), monitor as Parameters<typeof runDtsPerEntry>[1])
+    await runDtsPerEntry(makeContext(['rollup'], [ROOT_ENTRY]), monitor as unknown as Parameters<typeof runDtsPerEntry>[1])
     expect((<jest.Mock>runPrePass).mock.calls[0][1].monitor).toBe(monitor)
     expect(monitor.check).toHaveBeenCalledWith('bundle:declarations:dts-perentry:start')
     expect(monitor.check).toHaveBeenCalledWith('bundle:declarations:dts-perentry:end')

@@ -54,7 +54,7 @@ export interface FormatEntryConfig {
 }
 
 /**
- * Caller overrides to the auto-derived bundled-dep set (Decision #40).
+ * Caller overrides to the auto-derived bundled-dep set.
  *
  * The default set is `package.json#dependencies` minus `peerDependencies` minus
  * any package matching `isWorkspacePackage`. `include` adds packages absent

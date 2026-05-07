@@ -35,6 +35,7 @@ const makeContext = (discovery: EntryPointDiscovery = baseDiscovery()): BuildCon
   isWorkspacePackage: () => false,
   entryPointDiscovery: discovery,
   bundledDeps: [],
+  workspaceBundledDeps: [],
   startedAt: 0,
 })
 

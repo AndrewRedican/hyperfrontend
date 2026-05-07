@@ -87,4 +87,26 @@ describe('resolveExternals', () => {
     const result = resolveExternals({ packageJsonPath: path, additional: ['rollup', 'lodash'], bundledDeps: ['rollup'] })
     expect(result).toEqual(['lodash'])
   })
+
+  it('strips workspace bundled deps from the resolved external list', () => {
+    const path = writePkg(root, { dependencies: { '@hyperfrontend/logging': '*', rollup: '*' } })
+    const result = resolveExternals({
+      packageJsonPath: path,
+      isWorkspacePackage: (n) => n.startsWith('@hyperfrontend/'),
+      workspaceBundledDepNames: ['@hyperfrontend/logging'],
+    })
+    expect(result).toContain('rollup')
+    expect(result).not.toContain('@hyperfrontend/logging')
+  })
+
+  it('strips workspace bundled deps even when also listed in additional', () => {
+    const path = writePkg(root, {})
+    const result = resolveExternals({
+      packageJsonPath: path,
+      additional: ['@hyperfrontend/logging', 'lodash'],
+      isWorkspacePackage: (n) => n.startsWith('@hyperfrontend/'),
+      workspaceBundledDepNames: ['@hyperfrontend/logging'],
+    })
+    expect(result).toEqual(['lodash'])
+  })
 })
