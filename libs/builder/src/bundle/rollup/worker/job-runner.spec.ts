@@ -283,6 +283,59 @@ describe('runRollupWorkerJob', () => {
     expect(contents).toContain('// esm-bootstrap')
   })
 
+  it('routes workspace-dep imports through _dependencies/<packageName>/ when workspaceRoutes is populated', async () => {
+    const inputFile = writeSrc('input.ts', "import { logger } from '@hyperfrontend/logging'\nexport default logger\n")
+    const tsConfigPath = writeTsconfig()
+    const outputDir = join(root, 'out')
+    const reportPath = join(root, 'report.json')
+    const depsRoot = join(root, '_dependencies')
+    await runRollupWorkerJob(
+      baseDescriptor({
+        format: 'esm',
+        inputFile,
+        outputDir,
+        sourcemap: false,
+        tsConfigPath,
+        reportPath,
+        bundledDepsPlugin: { deps: [], depsRoot },
+        workspaceRoutes: [{ packageName: '@hyperfrontend/logging', policy: 'whole-surface' }],
+      })
+    )
+    const contents = readFileSync(join(outputDir, 'index.esm.js'), 'utf8')
+    expect(contents).toMatch(/_dependencies\/@hyperfrontend\/logging\/index\.esm\.js/)
+  })
+
+  it('routes sub-path workspace specifiers exactly when policy is sub-path', async () => {
+    const inputFile = writeSrc(
+      'input.ts',
+      "import { dateNow } from '@hyperfrontend/immutable-api-utils/built-in-copy/date'\nexport default dateNow\n"
+    )
+    const tsConfigPath = writeTsconfig()
+    const outputDir = join(root, 'out')
+    const reportPath = join(root, 'report.json')
+    const depsRoot = join(root, '_dependencies')
+    await runRollupWorkerJob(
+      baseDescriptor({
+        format: 'esm',
+        inputFile,
+        outputDir,
+        sourcemap: false,
+        tsConfigPath,
+        reportPath,
+        bundledDepsPlugin: { deps: [], depsRoot },
+        workspaceRoutes: [
+          {
+            packageName: '@hyperfrontend/immutable-api-utils',
+            policy: 'sub-path',
+            specifiers: ['@hyperfrontend/immutable-api-utils/built-in-copy/date'],
+          },
+        ],
+      })
+    )
+    const contents = readFileSync(join(outputDir, 'index.esm.js'), 'utf8')
+    expect(contents).toMatch(/_dependencies\/@hyperfrontend\/immutable-api-utils\/built-in-copy\/date\/index\.esm\.js/)
+  })
+
   it('writes only the unminified UMD output when minify is disabled', async () => {
     const inputFile = writeSrc('input.ts', 'export const value = 1\n')
     const tsConfigPath = writeTsconfig()

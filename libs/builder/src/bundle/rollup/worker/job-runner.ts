@@ -2,14 +2,14 @@
 import type { OutputOptions, Plugin, RollupLog, RollupOptions } from 'rollup'
 import type { RollupBuildDescriptor, RollupWorkerReport } from './types'
 import { chmodSync, mkdirSync, statSync, writeFileSync } from 'node:fs'
-import { isBuiltin } from 'node:module'
-import { dirname, join, relative } from 'node:path'
+import { dirname, join } from 'node:path'
 import commonjs from '@rollup/plugin-commonjs'
 import json from '@rollup/plugin-json'
 import nodeResolve from '@rollup/plugin-node-resolve'
 import terser from '@rollup/plugin-terser'
 import typescript from '@rollup/plugin-typescript'
 import { rollup } from 'rollup'
+import { createExternalizeBundledDepsPlugin } from '../../dependencies/externalize-plugin'
 
 const BYTES_PER_MB = 1024 * 1024
 
@@ -37,55 +37,32 @@ const onWarnBundle = (warning: RollupLog, defaultHandler: (w: RollupLog) => void
   defaultHandler(warning)
 }
 
-const toForwardSlashes = (path: string): string => path.split('\\').join('/')
-
 const buildExternalPredicate = (externals: string[]): ((id: string) => boolean) => {
   const set = new Set<string>(externals)
   return (id: string): boolean => set.has(id)
 }
 
-const matchesDep = (source: string, dep: string): boolean => source === dep || source.startsWith(`${dep}/`)
-
-const indexFileNameForFormat = (format: 'esm' | 'cjs'): string => (format === 'esm' ? 'index.esm.js' : 'index.cjs.js')
-
-/**
- * Result returned by the externalize-bundled-deps plugin's `resolveId` hook.
- */
-interface ExternalResolution {
-  /** Resolved import id (relative path or original specifier). */
-  id: string
-  /** Always `true` — the plugin only emits external resolutions. */
-  external: true
-}
-
-const buildExternalizeBundledDepsPlugin = (deps: string[], entryOutDir: string, depsRoot: string, format: 'esm' | 'cjs'): Plugin => ({
-  name: 'externalize-bundled-deps',
-  resolveId(source: string): ExternalResolution | null {
-    if (source.startsWith('node:') || isBuiltin(source)) {
-      return { id: source, external: true }
-    }
-    for (const dep of deps) {
-      if (!matchesDep(source, dep)) continue
-      const target = join(depsRoot, dep, indexFileNameForFormat(format))
-      const raw = relative(entryOutDir, target)
-      const normalized = toForwardSlashes(raw)
-      const id = normalized.startsWith('.') ? normalized : `./${normalized}`
-      return { id, external: true }
-    }
-    return null
-  },
-})
-
 const buildEntryPlugins = (job: RollupBuildDescriptor, format: 'esm' | 'cjs'): Plugin[] => {
   const plugins: Plugin[] = []
+  const hasWorkspaceRoutes = job.workspaceRoutes.length > 0
   if (job.bundledDepsPlugin) {
-    plugins.push(buildExternalizeBundledDepsPlugin(job.bundledDepsPlugin.deps, job.outputDir, job.bundledDepsPlugin.depsRoot, format))
+    plugins.push(
+      <Plugin>createExternalizeBundledDepsPlugin({
+        deps: job.bundledDepsPlugin.deps,
+        entryOutDir: job.outputDir,
+        format,
+        depsRoot: job.bundledDepsPlugin.depsRoot,
+        workspaceRoutes: job.workspaceRoutes,
+      })
+    )
   }
+  // why: when workspaceRoutes is populated, the externalize plugin owns @hyperfrontend/* resolution; the typescript plugin's baseUrl path-mapping must not preempt it. Falling through to the paths:{} branch lets externalize win.
+  const useBaseUrlMapping = job.bundleWorkspaceDeps && !hasWorkspaceRoutes
   plugins.push(
     <Plugin>json(),
     <Plugin>nodeResolve({ extensions: ['.ts', '.js'] }),
     <Plugin>commonjs(),
-    job.bundleWorkspaceDeps ? <Plugin>typescript({
+    useBaseUrlMapping ? <Plugin>typescript({
           tsconfig: job.tsConfigPath,
           declaration: false,
           declarationMap: false,

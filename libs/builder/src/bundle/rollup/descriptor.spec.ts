@@ -92,7 +92,80 @@ describe('toEsmBuildDescriptor', () => {
       isWorkspacePackage,
       bundleWorkspaceDeps: true,
       bundledDeps: [],
+      workspaceBundledDepNames: [],
     })
+  })
+
+  it('emits buildWorkspaceRoutes(workspaceBundledDeps) when bundleAllDeps is on and workspace deps exist', () => {
+    const config: EsmConfig = { bundleWorkspaceDeps: false, bundleAllDeps: true }
+    const ctx = makeContext({
+      workspaceBundledDeps: [
+        {
+          packageName: '@hyperfrontend/logging',
+          subPath: undefined,
+          specifier: '@hyperfrontend/logging',
+          inputPath: '/abs/libs/logging/src/index.ts',
+          tsConfigPath: '/abs/libs/logging/tsconfig.lib.json',
+          policy: 'whole-surface',
+        },
+      ],
+    })
+    const descriptor = toEsmBuildDescriptor(ROOT_ENTRY, config, ctx, '/tmp/r.json')
+    expect(descriptor.workspaceRoutes).toEqual([{ packageName: '@hyperfrontend/logging', policy: 'whole-surface' }])
+  })
+
+  it('passes workspaceBundledDepNames into resolveExternals so workspace deps are stripped from external', () => {
+    const config: EsmConfig = { bundleWorkspaceDeps: false, bundleAllDeps: true }
+    const ctx = makeContext({
+      workspaceBundledDeps: [
+        {
+          packageName: '@hyperfrontend/logging',
+          subPath: undefined,
+          specifier: '@hyperfrontend/logging',
+          inputPath: '/abs/libs/logging/src/index.ts',
+          tsConfigPath: '/abs/libs/logging/tsconfig.lib.json',
+          policy: 'whole-surface',
+        },
+      ],
+    })
+    toEsmBuildDescriptor(ROOT_ENTRY, config, ctx, '/tmp/r.json')
+    expect(resolveExternals).toHaveBeenCalledWith(expect.objectContaining({ workspaceBundledDepNames: ['@hyperfrontend/logging'] }))
+  })
+
+  it('keeps workspaceRoutes empty when bundleAllDeps is off even if workspace deps are present', () => {
+    const config: EsmConfig = { bundleWorkspaceDeps: false }
+    const ctx = makeContext({
+      workspaceBundledDeps: [
+        {
+          packageName: '@hyperfrontend/logging',
+          subPath: undefined,
+          specifier: '@hyperfrontend/logging',
+          inputPath: '/abs/libs/logging/src/index.ts',
+          tsConfigPath: '/abs/libs/logging/tsconfig.lib.json',
+          policy: 'whole-surface',
+        },
+      ],
+    })
+    const descriptor = toEsmBuildDescriptor(ROOT_ENTRY, config, ctx, '/tmp/r.json')
+    expect(descriptor.workspaceRoutes).toEqual([])
+  })
+
+  it('installs the externalize plugin when workspaceRoutes are non-empty even with no npm bundled deps', () => {
+    const config: EsmConfig = { bundleWorkspaceDeps: false, bundleAllDeps: true }
+    const ctx = makeContext({
+      workspaceBundledDeps: [
+        {
+          packageName: '@hyperfrontend/logging',
+          subPath: undefined,
+          specifier: '@hyperfrontend/logging',
+          inputPath: '/abs/libs/logging/src/index.ts',
+          tsConfigPath: '/abs/libs/logging/tsconfig.lib.json',
+          policy: 'whole-surface',
+        },
+      ],
+    })
+    const descriptor = toEsmBuildDescriptor(ROOT_ENTRY, config, ctx, '/tmp/r.json')
+    expect(descriptor.bundledDepsPlugin).toEqual({ deps: [], depsRoot: '/abs/dist/libs/foo/_dependencies' })
   })
 })
 
@@ -231,5 +304,41 @@ describe('toBinBuildDescriptor', () => {
     const bin: BinConfig = { name: 'cz', format: 'cjs' }
     const descriptor = toBinBuildDescriptor(bin, makeContext(), 'cjs', ['cjs'], '/tmp/r.json')
     expect(descriptor.bundledDepsPlugin).toBeNull()
+  })
+
+  it('emits buildWorkspaceRoutes(workspaceBundledDeps) on bin descriptors so workspace deps are routed via _dependencies/', () => {
+    const bin: BinConfig = { name: 'hf-build', format: 'cjs' }
+    const ctx = makeContext({
+      workspaceBundledDeps: [
+        {
+          packageName: '@hyperfrontend/logging',
+          subPath: undefined,
+          specifier: '@hyperfrontend/logging',
+          inputPath: '/abs/libs/logging/src/index.ts',
+          tsConfigPath: '/abs/libs/logging/tsconfig.lib.json',
+          policy: 'whole-surface',
+        },
+      ],
+    })
+    const descriptor = toBinBuildDescriptor(bin, ctx, 'cjs', ['cjs'], '/tmp/r.json')
+    expect(descriptor.workspaceRoutes).toEqual([{ packageName: '@hyperfrontend/logging', policy: 'whole-surface' }])
+  })
+
+  it('installs the externalize plugin on bins with workspaceRoutes only (no npm bundled deps)', () => {
+    const bin: BinConfig = { name: 'hf-build', format: 'cjs' }
+    const ctx = makeContext({
+      workspaceBundledDeps: [
+        {
+          packageName: '@hyperfrontend/logging',
+          subPath: undefined,
+          specifier: '@hyperfrontend/logging',
+          inputPath: '/abs/libs/logging/src/index.ts',
+          tsConfigPath: '/abs/libs/logging/tsconfig.lib.json',
+          policy: 'whole-surface',
+        },
+      ],
+    })
+    const descriptor = toBinBuildDescriptor(bin, ctx, 'cjs', ['cjs'], '/tmp/r.json')
+    expect(descriptor.bundledDepsPlugin).toEqual({ deps: [], depsRoot: '/abs/dist/libs/foo/_dependencies' })
   })
 })

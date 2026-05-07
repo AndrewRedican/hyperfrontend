@@ -2,6 +2,7 @@ import type { BinConfig, BinScriptFormat, BuildContext, CjsConfig, EntryPoint, E
 import type { RollupBuildDescriptor } from './worker/types'
 import { getDirname, join } from '@hyperfrontend/project-scope/core/path'
 import { defaultBootstrap } from '../../bin/script/bootstrap-footer'
+import { buildWorkspaceRoutes } from '../dependencies/externalize-plugin'
 import { resolveExternals } from '../externals/resolve-externals'
 import { validateExternalsConfig } from '../externals/validate-globals'
 
@@ -37,14 +38,17 @@ export const toEsmBuildDescriptor = (
 ): RollupBuildDescriptor => {
   const outputDir = computeEntryOutputDir(entry, context)
   const sourcemap = config.sourcemap ?? true
-  const useBundleAllDeps = Boolean(config.bundleAllDeps) && context.bundledDeps.length > 0
-  const bundledDeps = useBundleAllDeps ? context.bundledDeps : []
+  const bundleAllRequested = Boolean(config.bundleAllDeps)
+  const bundledDeps = bundleAllRequested ? context.bundledDeps : []
+  const workspaceRoutes = bundleAllRequested ? buildWorkspaceRoutes(context.workspaceBundledDeps) : []
+  const useExternalizePlugin = bundledDeps.length > 0 || workspaceRoutes.length > 0
   const external = resolveExternals({
     packageJsonPath: join(context.projectRoot, 'package.json'),
     additional: [...context.external, ...(config.external ?? [])],
     isWorkspacePackage: context.isWorkspacePackage,
     bundleWorkspaceDeps: config.bundleWorkspaceDeps,
     bundledDeps,
+    workspaceBundledDepNames: workspaceRoutes.map((r) => r.packageName),
   })
   return {
     format: 'esm',
@@ -52,8 +56,8 @@ export const toEsmBuildDescriptor = (
     outputDir,
     external,
     sourcemap,
-    bundledDepsPlugin: useBundleAllDeps ? { deps: bundledDeps, depsRoot: join(context.outputPath, '_dependencies') } : null,
-    workspaceRoutes: [],
+    bundledDepsPlugin: useExternalizePlugin ? { deps: bundledDeps, depsRoot: join(context.outputPath, '_dependencies') } : null,
+    workspaceRoutes,
     tsConfigPath: context.tsConfigPath,
     projectRoot: context.projectRoot,
     workspaceRoot: context.workspaceRoot,
@@ -86,14 +90,17 @@ export const toCjsBuildDescriptor = (
 ): RollupBuildDescriptor => {
   const outputDir = computeEntryOutputDir(entry, context)
   const sourcemap = config.sourcemap ?? true
-  const useBundleAllDeps = Boolean(config.bundleAllDeps) && context.bundledDeps.length > 0
-  const bundledDeps = useBundleAllDeps ? context.bundledDeps : []
+  const bundleAllRequested = Boolean(config.bundleAllDeps)
+  const bundledDeps = bundleAllRequested ? context.bundledDeps : []
+  const workspaceRoutes = bundleAllRequested ? buildWorkspaceRoutes(context.workspaceBundledDeps) : []
+  const useExternalizePlugin = bundledDeps.length > 0 || workspaceRoutes.length > 0
   const external = resolveExternals({
     packageJsonPath: join(context.projectRoot, 'package.json'),
     additional: [...context.external, ...(config.external ?? [])],
     isWorkspacePackage: context.isWorkspacePackage,
     bundleWorkspaceDeps: config.bundleWorkspaceDeps,
     bundledDeps,
+    workspaceBundledDepNames: workspaceRoutes.map((r) => r.packageName),
   })
   return {
     format: 'cjs',
@@ -101,8 +108,8 @@ export const toCjsBuildDescriptor = (
     outputDir,
     external,
     sourcemap,
-    bundledDepsPlugin: useBundleAllDeps ? { deps: bundledDeps, depsRoot: join(context.outputPath, '_dependencies') } : null,
-    workspaceRoutes: [],
+    bundledDepsPlugin: useExternalizePlugin ? { deps: bundledDeps, depsRoot: join(context.outputPath, '_dependencies') } : null,
+    workspaceRoutes,
     tsConfigPath: context.tsConfigPath,
     projectRoot: context.projectRoot,
     workspaceRoot: context.workspaceRoot,
@@ -207,15 +214,16 @@ export const toBinBuildDescriptor = (
   const binDir = join(context.outputPath, 'bin')
   const outputFile = resolveBinOutputFile(binDir, bin.name, format, formats)
   const bundledDepsRoot = join(context.outputPath, '_dependencies')
-  const useBundledDeps = context.bundledDeps.length > 0
+  const workspaceRoutes = buildWorkspaceRoutes(context.workspaceBundledDeps)
+  const useExternalizePlugin = context.bundledDeps.length > 0 || workspaceRoutes.length > 0
   return {
     format,
     inputFile,
     outputDir: getDirname(outputFile),
     external: [],
     sourcemap: false,
-    bundledDepsPlugin: useBundledDeps ? { deps: context.bundledDeps, depsRoot: bundledDepsRoot } : null,
-    workspaceRoutes: [],
+    bundledDepsPlugin: useExternalizePlugin ? { deps: context.bundledDeps, depsRoot: bundledDepsRoot } : null,
+    workspaceRoutes,
     tsConfigPath: context.tsConfigPath,
     projectRoot: context.projectRoot,
     workspaceRoot: context.workspaceRoot,
