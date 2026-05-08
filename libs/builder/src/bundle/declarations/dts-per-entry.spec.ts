@@ -103,4 +103,37 @@ describe('runDtsPerEntry', () => {
     expect(monitor.check).toHaveBeenCalledWith('bundle:declarations:dts-perentry:start')
     expect(monitor.check).toHaveBeenCalledWith('bundle:declarations:dts-perentry:end')
   })
+
+  it('threads npmDeps, workspaceRoutes, and depsRoot into every per-entry job', async () => {
+    const ctx = makeContext(['rollup', 'postject'], [ROOT_ENTRY, SUB_ENTRY])
+    ctx.workspaceBundledDeps = [
+      {
+        packageName: '@hyperfrontend/logging',
+        specifier: '@hyperfrontend/logging',
+        subPath: '',
+        policy: 'whole-surface',
+        inputPath: '/abs/repo/libs/logging/src/index.ts',
+        tsConfigPath: '/abs/repo/libs/logging/tsconfig.lib.json',
+      },
+      {
+        packageName: '@hyperfrontend/iau',
+        specifier: '@hyperfrontend/iau/a',
+        subPath: 'a',
+        policy: 'sub-path',
+        inputPath: '/abs/repo/libs/iau/src/a/index.ts',
+        tsConfigPath: '/abs/repo/libs/iau/tsconfig.lib.json',
+      },
+    ]
+    await runDtsPerEntry(ctx)
+    const jobs = (<jest.Mock>runPrePass).mock.calls[0][0]
+    expect(jobs).toHaveLength(2)
+    for (const job of jobs) {
+      expect(job.depsRoot).toBe('/abs/dist/libs/foo/_dependencies')
+      expect(job.npmDeps).toEqual(['rollup', 'postject'])
+      expect(job.workspaceRoutes).toEqual([
+        { packageName: '@hyperfrontend/logging', policy: 'whole-surface' },
+        { packageName: '@hyperfrontend/iau', policy: 'sub-path', specifiers: ['@hyperfrontend/iau/a'] },
+      ])
+    }
+  })
 })

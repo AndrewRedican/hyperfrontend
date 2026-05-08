@@ -70,4 +70,88 @@ describe('runDtsPrePass', () => {
     expect(monitor.check).toHaveBeenCalledWith('bundle:declarations:dts-prepass:start')
     expect(monitor.check).toHaveBeenCalledWith('bundle:declarations:dts-prepass:end')
   })
+
+  it('threads npmDeps, workspaceRoutes, and depsRoot through to npm dts jobs', async () => {
+    const ctx = makeContext(['rollup', 'postject'])
+    ctx.workspaceBundledDeps = [
+      {
+        packageName: '@hyperfrontend/logging',
+        specifier: '@hyperfrontend/logging',
+        subPath: '',
+        policy: 'whole-surface',
+        inputPath: '/abs/repo/libs/logging/src/index.ts',
+        tsConfigPath: '/abs/repo/libs/logging/tsconfig.lib.json',
+      },
+    ]
+    await runDtsPrePass(ctx)
+    const jobs = (<jest.Mock>runPrePass).mock.calls[0][0]
+    expect(jobs[0].depsRoot).toBe('/abs/dist/libs/foo/_dependencies')
+    expect(jobs[0].npmDeps).toEqual(['postject'])
+    expect(jobs[0].workspaceRoutes).toEqual([{ packageName: '@hyperfrontend/logging', policy: 'whole-surface' }])
+    expect(jobs[1].npmDeps).toEqual(['rollup'])
+  })
+
+  it('threads workspace-dts jobs with self-package excluded from workspaceRoutes', async () => {
+    const ctx = makeContext([])
+    ctx.workspaceBundledDeps = [
+      {
+        packageName: '@hyperfrontend/logging',
+        specifier: '@hyperfrontend/logging',
+        subPath: '',
+        policy: 'whole-surface',
+        inputPath: '/abs/repo/libs/logging/src/index.ts',
+        tsConfigPath: '/abs/repo/libs/logging/tsconfig.lib.json',
+      },
+      {
+        packageName: '@hyperfrontend/project-scope',
+        specifier: '@hyperfrontend/project-scope',
+        subPath: '',
+        policy: 'whole-surface',
+        inputPath: '/abs/repo/libs/project-scope/src/index.ts',
+        tsConfigPath: '/abs/repo/libs/project-scope/tsconfig.lib.json',
+      },
+    ]
+    await runDtsPrePass(ctx)
+    const jobs = (<jest.Mock>runPrePass).mock.calls[0][0]
+    expect(jobs).toHaveLength(2)
+    expect(jobs[0].kind).toBe('workspace-dts')
+    expect(jobs[0].dep).toBe('@hyperfrontend/logging')
+    expect(jobs[0].depsRoot).toBe('/abs/dist/libs/foo/_dependencies')
+    expect(jobs[0].npmDeps).toEqual([])
+    expect(jobs[0].workspaceRoutes).toEqual([{ packageName: '@hyperfrontend/project-scope', policy: 'whole-surface' }])
+    expect(jobs[1].dep).toBe('@hyperfrontend/project-scope')
+    expect(jobs[1].workspaceRoutes).toEqual([{ packageName: '@hyperfrontend/logging', policy: 'whole-surface' }])
+  })
+
+  it('excludes only the self specifier (not the whole package) when workspace dep policy is sub-path', async () => {
+    const ctx = makeContext([])
+    ctx.workspaceBundledDeps = [
+      {
+        packageName: '@hyperfrontend/iau',
+        specifier: '@hyperfrontend/iau/a',
+        subPath: 'a',
+        policy: 'sub-path',
+        inputPath: '/abs/repo/libs/iau/src/a/index.ts',
+        tsConfigPath: '/abs/repo/libs/iau/tsconfig.lib.json',
+      },
+      {
+        packageName: '@hyperfrontend/iau',
+        specifier: '@hyperfrontend/iau/b',
+        subPath: 'b',
+        policy: 'sub-path',
+        inputPath: '/abs/repo/libs/iau/src/b/index.ts',
+        tsConfigPath: '/abs/repo/libs/iau/tsconfig.lib.json',
+      },
+    ]
+    await runDtsPrePass(ctx)
+    const jobs = (<jest.Mock>runPrePass).mock.calls[0][0]
+    expect(jobs).toHaveLength(2)
+    expect(jobs[0].dep).toBe('@hyperfrontend/iau/a')
+    expect(jobs[0].workspaceRoutes).toEqual([
+      { packageName: '@hyperfrontend/iau', policy: 'sub-path', specifiers: ['@hyperfrontend/iau/b'] },
+    ])
+    expect(jobs[1].workspaceRoutes).toEqual([
+      { packageName: '@hyperfrontend/iau', policy: 'sub-path', specifiers: ['@hyperfrontend/iau/a'] },
+    ])
+  })
 })

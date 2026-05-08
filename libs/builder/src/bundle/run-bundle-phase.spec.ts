@@ -367,4 +367,72 @@ describe('runBundlePhase', () => {
     expect(runDtsPrePass).not.toHaveBeenCalled()
     expect(runDtsPerEntry).not.toHaveBeenCalled()
   })
+
+  it('threads npmDeps, workspaceRoutes, and depsRoot into js pre-pass jobs', async () => {
+    const config = <BuildConfig>{
+      projectRoot: '',
+      workspaceRoot: '',
+      esm: { bundleWorkspaceDeps: false, bundleAllDeps: true },
+    }
+    const ctx = makeContext()
+    ctx.bundledDeps = ['rollup', 'postject']
+    ctx.workspaceBundledDeps = [
+      {
+        packageName: '@hyperfrontend/logging',
+        specifier: '@hyperfrontend/logging',
+        subPath: '',
+        policy: 'whole-surface',
+        inputPath: '/abs/repo/libs/logging/src/index.ts',
+        tsConfigPath: '/abs/repo/libs/logging/tsconfig.lib.json',
+      },
+    ]
+    await runBundlePhase(ctx, config)
+    const jobs = (<jest.Mock>runPrePass).mock.calls[0][0]
+    const npmJobs = jobs.filter((j: { kind: string }) => j.kind === 'js')
+    expect(npmJobs).toHaveLength(2)
+    expect(npmJobs[0].depsRoot).toBe('/abs/dist/libs/foo/_dependencies')
+    expect(npmJobs[0].dep).toBe('rollup')
+    expect(npmJobs[0].npmDeps).toEqual(['postject'])
+    expect(npmJobs[0].workspaceRoutes).toEqual([{ packageName: '@hyperfrontend/logging', policy: 'whole-surface' }])
+    expect(npmJobs[1].dep).toBe('postject')
+    expect(npmJobs[1].npmDeps).toEqual(['rollup'])
+  })
+
+  it('threads npmDeps and self-excluded workspaceRoutes into workspace-js pre-pass jobs', async () => {
+    const config = <BuildConfig>{
+      projectRoot: '',
+      workspaceRoot: '',
+      esm: { bundleWorkspaceDeps: true, bundleAllDeps: true },
+    }
+    const ctx = makeContext()
+    ctx.bundledDeps = ['rollup']
+    ctx.workspaceBundledDeps = [
+      {
+        packageName: '@hyperfrontend/logging',
+        specifier: '@hyperfrontend/logging',
+        subPath: '',
+        policy: 'whole-surface',
+        inputPath: '/abs/repo/libs/logging/src/index.ts',
+        tsConfigPath: '/abs/repo/libs/logging/tsconfig.lib.json',
+      },
+      {
+        packageName: '@hyperfrontend/project-scope',
+        specifier: '@hyperfrontend/project-scope',
+        subPath: '',
+        policy: 'whole-surface',
+        inputPath: '/abs/repo/libs/project-scope/src/index.ts',
+        tsConfigPath: '/abs/repo/libs/project-scope/tsconfig.lib.json',
+      },
+    ]
+    await runBundlePhase(ctx, config)
+    const jobs = (<jest.Mock>runPrePass).mock.calls[0][0]
+    const workspaceJobs = jobs.filter((j: { kind: string }) => j.kind === 'workspace-js')
+    expect(workspaceJobs).toHaveLength(2)
+    expect(workspaceJobs[0].dep).toBe('@hyperfrontend/logging')
+    expect(workspaceJobs[0].depsRoot).toBe('/abs/dist/libs/foo/_dependencies')
+    expect(workspaceJobs[0].npmDeps).toEqual(['rollup'])
+    expect(workspaceJobs[0].workspaceRoutes).toEqual([{ packageName: '@hyperfrontend/project-scope', policy: 'whole-surface' }])
+    expect(workspaceJobs[1].dep).toBe('@hyperfrontend/project-scope')
+    expect(workspaceJobs[1].workspaceRoutes).toEqual([{ packageName: '@hyperfrontend/logging', policy: 'whole-surface' }])
+  })
 })
