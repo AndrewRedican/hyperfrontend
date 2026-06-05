@@ -11,8 +11,8 @@
     "build": {
       "executor": "@hyperfrontend/package:build",
       "options": {
-        "esm": { "bundleWorkspaceDeps": true },
-        "cjs": { "bundleWorkspaceDeps": true },
+        "esm": { "bundleWorkspaceDeps": true, "bundleAllDeps": true },
+        "cjs": { "bundleWorkspaceDeps": true, "bundleAllDeps": true },
         "iife": {
           "entry": ".",
           "globalName": "HyperfrontendImmutableApiUtils"
