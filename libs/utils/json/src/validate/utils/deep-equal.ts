@@ -24,9 +24,9 @@ export function isEqual(a: unknown, b: unknown): boolean {
 
   if (typeof a === 'object') {
     if (isArray(a) && isArray(b)) {
-      if (a.length !== b.length) return false
-      for (let i = 0; i < a.length; i++) {
-        if (!isEqual(a[i], b[i])) return false
+      if ((<unknown[]>a).length !== (<unknown[]>b).length) return false
+      for (let i = 0; i < (<unknown[]>a).length; i++) {
+        if (!isEqual((<unknown[]>a)[i], (<unknown[]>b)[i])) return false
       }
       return true
     }
