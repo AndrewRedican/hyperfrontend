@@ -105,6 +105,57 @@ describe('runRollupWorkerJob', () => {
     expect(contents).toMatch(/from\s+["']other-dep["']/)
   })
 
+  it('throws when a workspace-routed package import escapes routing in an entry build', async () => {
+    const inputFile = writeSrc('input.ts', "import x from '@scope/pkg'\nexport default x\n")
+    const tsConfigPath = writeTsconfig()
+    await expect(
+      runRollupWorkerJob(
+        baseDescriptor({
+          format: 'esm',
+          inputFile,
+          outputDir: join(root, 'out'),
+          tsConfigPath,
+          reportPath: join(root, 'report.json'),
+          workspaceRoutes: [{ packageName: '@scope/pkg', policy: 'whole-surface' }],
+        })
+      )
+    ).rejects.toThrow(/was not routed into _dependencies\//)
+  })
+
+  it('throws when a sub-path import of a workspace-routed package escapes routing', async () => {
+    const inputFile = writeSrc('input.ts', "import x from '@scope/pkg/sub'\nexport default x\n")
+    const tsConfigPath = writeTsconfig()
+    await expect(
+      runRollupWorkerJob(
+        baseDescriptor({
+          format: 'esm',
+          inputFile,
+          outputDir: join(root, 'out'),
+          tsConfigPath,
+          reportPath: join(root, 'report.json'),
+          workspaceRoutes: [{ packageName: '@scope/pkg', policy: 'whole-surface' }],
+        })
+      )
+    ).rejects.toThrow(/"@scope\/pkg\/sub"/)
+  })
+
+  it('lets a non-routed unresolved import externalize without throwing', async () => {
+    const inputFile = writeSrc('input.ts', "import x from '@other/pkg'\nexport default x\n")
+    const tsConfigPath = writeTsconfig()
+    const outputDir = join(root, 'out')
+    await runRollupWorkerJob(
+      baseDescriptor({
+        format: 'esm',
+        inputFile,
+        outputDir,
+        tsConfigPath,
+        reportPath: join(root, 'report.json'),
+        workspaceRoutes: [{ packageName: '@scope/pkg', policy: 'whole-surface' }],
+      })
+    )
+    expect(readFileSync(join(outputDir, 'index.esm.js'), 'utf8')).toMatch(/from\s+["']@other\/pkg["']/)
+  })
+
   it('routes bundled-dep imports through the externalize plugin when configured', async () => {
     const inputFile = writeSrc('input.ts', "import x from 'rollup'\nexport default x\n")
     const tsConfigPath = writeTsconfig()

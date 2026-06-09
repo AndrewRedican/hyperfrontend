@@ -17,7 +17,7 @@ import { createSet } from '@hyperfrontend/immutable-api-utils/built-in-copy/set'
 import { join, relativePath } from '@hyperfrontend/project-scope/core'
 import { runBinPhase } from './bin/run-bin-phase'
 import { resolveBundledDeps } from './bundle/dependencies/resolve-bundled-deps'
-import { resolveWorkspaceBundledDeps, WORKSPACE_DEP_POLICY } from './bundle/dependencies/resolve-workspace-bundled-deps'
+import { resolveWorkspaceBundledDeps } from './bundle/dependencies/resolve-workspace-bundled-deps'
 import { discoverEntries } from './bundle/entries/discover-entries'
 import { runBundlePhase } from './bundle/run-bundle-phase'
 import { createMemoryMonitor } from './memory/monitor'
@@ -73,6 +73,7 @@ const computeWorkspaceBundledDeps = (config: BuildConfig, isWorkspacePackage: Is
     isWorkspacePackage,
     include: options.include,
     exclude: options.exclude,
+    policy: config.workspaceDepPolicy,
   })
   return resolved.map((entry) => ({
     packageName: entry.packageName,
@@ -80,7 +81,7 @@ const computeWorkspaceBundledDeps = (config: BuildConfig, isWorkspacePackage: Is
     specifier: entry.specifier,
     inputPath: entry.inputPath,
     tsConfigPath: entry.tsConfigPath,
-    policy: WORKSPACE_DEP_POLICY[entry.packageName] ?? 'whole-surface',
+    policy: entry.policy,
   }))
 }
 

@@ -1,5 +1,6 @@
 /* eslint-disable workspace/no-unsafe-builtin-methods -- worker bootstraps before workspace packages are built */
 import type { OutputOptions, Plugin, RollupLog, RollupOptions } from 'rollup'
+import type { WorkspaceBundledDepRoute } from '../../dependencies/externalize-plugin'
 import type { RollupBuildDescriptor, RollupWorkerReport } from './types'
 import { chmodSync, mkdirSync, statSync, writeFileSync } from 'node:fs'
 import { dirname, join } from 'node:path'
@@ -24,7 +25,22 @@ interface PreparedRollupJob {
   outputs: OutputOptions[]
 }
 
-const onWarnEntry = (warning: RollupLog, defaultHandler: (w: RollupLog) => void): void => {
+const importMatchesWorkspaceRoute = (id: string | undefined, routes: WorkspaceBundledDepRoute[]): boolean => {
+  /* istanbul ignore if -- @preserve defensive: rollup always populates `exporter` on UNRESOLVED_IMPORT warnings */
+  if (id === undefined) return false
+  for (const route of routes) {
+    if (id === route.packageName || id.startsWith(`${route.packageName}/`)) return true
+  }
+  return false
+}
+
+const onWarnEntry = (warning: RollupLog, defaultHandler: (w: RollupLog) => void, workspaceRoutes: WorkspaceBundledDepRoute[]): void => {
+  // why: under bundleAllDeps the externalize plugin is the sole owner of workspace-dep resolution; an unresolved import of a routed package means it slipped past routing and would ship as a bare external specifier — fail loud rather than emit a broken artifact.
+  if (warning.code === 'UNRESOLVED_IMPORT' && importMatchesWorkspaceRoute(warning.exporter, workspaceRoutes)) {
+    throw new Error(
+      `bundle: workspace import "${warning.exporter}" was not routed into _dependencies/ and would leak as an external import. Confirm it is declared in package.json#dependencies and mapped in tsconfig paths; subpath-only packages require a 'sub-path' workspaceDepPolicy entry.`
+    )
+  }
   if (warning.plugin === 'typescript' && warning.message?.includes('TS2307')) return
   if (warning.code === 'EMPTY_BUNDLE') return
   defaultHandler(warning)
@@ -126,7 +142,7 @@ const buildEsmJob = (job: RollupBuildDescriptor): PreparedRollupJob => ({
   config: {
     input: job.inputFile,
     external: buildExternalPredicate(job.external),
-    onwarn: onWarnEntry,
+    onwarn: (warning, defaultHandler) => onWarnEntry(warning, defaultHandler, job.workspaceRoutes),
     plugins: buildEntryPlugins(job, 'esm'),
   },
   outputs: [buildEntryOutput(job, 'esm')],
@@ -136,7 +152,7 @@ const buildCjsJob = (job: RollupBuildDescriptor): PreparedRollupJob => ({
   config: {
     input: job.inputFile,
     external: buildExternalPredicate(job.external),
-    onwarn: onWarnEntry,
+    onwarn: (warning, defaultHandler) => onWarnEntry(warning, defaultHandler, job.workspaceRoutes),
     plugins: buildEntryPlugins(job, 'cjs'),
   },
   outputs: [buildEntryOutput(job, 'cjs')],

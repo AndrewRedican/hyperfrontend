@@ -21,6 +21,7 @@ export type {
   SeaConfig,
   SeaPlatform,
   UmdConfig,
+  WorkspaceDepHoistPolicy,
 } from './build-config'
 export type { BuildContext, WorkspaceBundledDep } from './build-context'
 export type { BinOutput, BuildResult, FormatCounts } from './build-result'

@@ -1,7 +1,7 @@
 import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
-import { loadWorkspacePathMappings, resolveWorkspaceBundledDeps, WORKSPACE_DEP_POLICY } from './resolve-workspace-bundled-deps'
+import { loadWorkspacePathMappings, resolveWorkspaceBundledDeps } from './resolve-workspace-bundled-deps'
 
 const writeFile = (p: string, contents: string): void => {
   mkdirSync(join(p, '..'), { recursive: true })
@@ -52,7 +52,7 @@ describe('resolveWorkspaceBundledDeps', () => {
     expect(resolveWorkspaceBundledDeps(pkgPath, workspaceRoot, { isWorkspacePackage: isHyperfrontend })).toEqual([])
   })
 
-  it('returns a single root entry for whole-surface deps with the dep tsconfig attached', () => {
+  it('enumerates the root for a root-only dep under the default sub-path policy', () => {
     const pkgPath = join(workspaceRoot, 'libs/foo/package.json')
     writeJson(pkgPath, { dependencies: { '@hyperfrontend/logging': '*' } })
     const [sourcePath] = seedDep({ workspaceRoot, projectDir: 'libs/logging', sources: ['src/index.ts'] })
@@ -73,11 +73,55 @@ describe('resolveWorkspaceBundledDeps', () => {
         specifier: '@hyperfrontend/logging',
         inputPath: sourcePath,
         tsConfigPath: join(workspaceRoot, 'libs/logging/tsconfig.lib.json'),
+        policy: 'sub-path',
       },
     ])
   })
 
-  it('returns one entry per resolvable sub-path for sub-path-mode deps', () => {
+  it('collapses sub-paths onto the root when a dep is explicitly opted into whole-surface', () => {
+    const pkgPath = join(workspaceRoot, 'libs/foo/package.json')
+    writeJson(pkgPath, { dependencies: { '@hyperfrontend/logging': '*' } })
+    const [rootPath] = seedDep({ workspaceRoot, projectDir: 'libs/logging', sources: ['src/index.ts', 'src/internal/index.ts'] })
+    writeJson(join(workspaceRoot, 'tsconfig.base.json'), {
+      compilerOptions: {
+        baseUrl: '.',
+        paths: {
+          '@hyperfrontend/logging': ['libs/logging/src/index.ts'],
+          '@hyperfrontend/logging/internal': ['libs/logging/src/internal/index.ts'],
+        },
+      },
+    })
+    const result = resolveWorkspaceBundledDeps(pkgPath, workspaceRoot, {
+      isWorkspacePackage: isHyperfrontend,
+      policy: { '@hyperfrontend/logging': 'whole-surface' },
+    })
+    expect(result).toEqual([
+      {
+        packageName: '@hyperfrontend/logging',
+        subPath: '',
+        specifier: '@hyperfrontend/logging',
+        inputPath: rootPath,
+        tsConfigPath: join(workspaceRoot, 'libs/logging/tsconfig.lib.json'),
+        policy: 'whole-surface',
+      },
+    ])
+  })
+
+  it('resolves a non-scoped workspace package and its sub-path under the default policy', () => {
+    const pkgPath = join(workspaceRoot, 'libs/foo/package.json')
+    writeJson(pkgPath, { dependencies: { mylib: '*' } })
+    seedDep({ workspaceRoot, projectDir: 'libs/mylib', sources: ['src/index.ts', 'src/sub/index.ts'] })
+    writeJson(join(workspaceRoot, 'tsconfig.base.json'), {
+      compilerOptions: {
+        baseUrl: '.',
+        paths: { mylib: ['libs/mylib/src/index.ts'], 'mylib/sub': ['libs/mylib/src/sub/index.ts'] },
+      },
+    })
+    const result = resolveWorkspaceBundledDeps(pkgPath, workspaceRoot, { isWorkspacePackage: (n) => n === 'mylib' })
+    expect(result.map((r) => r.specifier)).toEqual(['mylib', 'mylib/sub'])
+  })
+
+  it('returns one entry per resolvable sub-path under the default sub-path policy', () => {
     const pkgPath = join(workspaceRoot, 'libs/foo/package.json')
     writeJson(pkgPath, { dependencies: { '@hyperfrontend/immutable-api-utils': '*' } })
     const [arrayPath, errorPath] = seedDep({
@@ -106,6 +150,7 @@ describe('resolveWorkspaceBundledDeps', () => {
       subPath: 'built-in-copy/array',
       inputPath: arrayPath,
       tsConfigPath: join(workspaceRoot, 'libs/utils/immutable-api/tsconfig.lib.json'),
+      policy: 'sub-path',
     })
     expect(result[2]?.inputPath).toBe(errorPath)
   })
@@ -123,7 +168,7 @@ describe('resolveWorkspaceBundledDeps', () => {
     expect(entry?.tsConfigPath).toBe(join(workspaceRoot, 'libs/logging/tsconfig.json'))
   })
 
-  it('skips a dep whose package.json cannot be located by walking up from the source file', () => {
+  it('throws when a dep source has no owning project (no package.json up the tree)', () => {
     const pkgPath = join(workspaceRoot, 'libs/foo/package.json')
     writeJson(pkgPath, { dependencies: { '@hyperfrontend/logging': '*' } })
     // context: no package.json or tsconfig anywhere up the dep's source tree
@@ -131,10 +176,12 @@ describe('resolveWorkspaceBundledDeps', () => {
     writeJson(join(workspaceRoot, 'tsconfig.base.json'), {
       compilerOptions: { baseUrl: '.', paths: { '@hyperfrontend/logging': ['orphan/src/index.ts'] } },
     })
-    expect(resolveWorkspaceBundledDeps(pkgPath, workspaceRoot, { isWorkspacePackage: isHyperfrontend })).toEqual([])
+    expect(() => resolveWorkspaceBundledDeps(pkgPath, workspaceRoot, { isWorkspacePackage: isHyperfrontend })).toThrow(
+      /no tsconfig.+was found in its project root/
+    )
   })
 
-  it('skips a dep when its project root has no tsconfig.lib.json or tsconfig.json', () => {
+  it('throws when a dep project root has no tsconfig.lib.json or tsconfig.json', () => {
     const pkgPath = join(workspaceRoot, 'libs/foo/package.json')
     writeJson(pkgPath, { dependencies: { '@hyperfrontend/logging': '*' } })
     writeJson(join(workspaceRoot, 'libs/logging/package.json'), { name: 'logging' })
@@ -142,10 +189,12 @@ describe('resolveWorkspaceBundledDeps', () => {
     writeJson(join(workspaceRoot, 'tsconfig.base.json'), {
       compilerOptions: { baseUrl: '.', paths: { '@hyperfrontend/logging': ['libs/logging/src/index.ts'] } },
     })
-    expect(resolveWorkspaceBundledDeps(pkgPath, workspaceRoot, { isWorkspacePackage: isHyperfrontend })).toEqual([])
+    expect(() => resolveWorkspaceBundledDeps(pkgPath, workspaceRoot, { isWorkspacePackage: isHyperfrontend })).toThrow(
+      /"@hyperfrontend\/logging"/
+    )
   })
 
-  it('skips sub-paths whose source file is missing on disk', () => {
+  it('skips sub-paths whose source file is missing on disk while keeping resolvable ones', () => {
     const pkgPath = join(workspaceRoot, 'libs/foo/package.json')
     writeJson(pkgPath, { dependencies: { '@hyperfrontend/immutable-api-utils': '*' } })
     seedDep({ workspaceRoot, projectDir: 'libs/utils/immutable-api', sources: ['src/built-in-copy/array/index.ts'] })
@@ -222,44 +271,72 @@ describe('resolveWorkspaceBundledDeps', () => {
     expect(result.map((r) => r.specifier)).toEqual(['@hyperfrontend/versioning'])
   })
 
-  it('returns an empty list when no path-mapping table is found', () => {
+  it('throws when an eligible dep has no path-mapping table at all', () => {
     const pkgPath = join(workspaceRoot, 'libs/foo/package.json')
     writeJson(pkgPath, { dependencies: { '@hyperfrontend/logging': '*' } })
-    expect(resolveWorkspaceBundledDeps(pkgPath, workspaceRoot, { isWorkspacePackage: isHyperfrontend })).toEqual([])
+    expect(() => resolveWorkspaceBundledDeps(pkgPath, workspaceRoot, { isWorkspacePackage: isHyperfrontend })).toThrow(
+      /has no.+tsconfig path mapping/
+    )
   })
 
-  it('skips deps whose package name has no matching path entries', () => {
+  it('throws when a declared dep name has no matching path entries', () => {
     const pkgPath = join(workspaceRoot, 'libs/foo/package.json')
     writeJson(pkgPath, { dependencies: { '@hyperfrontend/missing': '*' } })
     writeJson(join(workspaceRoot, 'tsconfig.base.json'), {
       compilerOptions: { baseUrl: '.', paths: { '@hyperfrontend/other': ['libs/other/src/index.ts'] } },
     })
-    expect(resolveWorkspaceBundledDeps(pkgPath, workspaceRoot, { isWorkspacePackage: isHyperfrontend })).toEqual([])
+    expect(() => resolveWorkspaceBundledDeps(pkgPath, workspaceRoot, { isWorkspacePackage: isHyperfrontend })).toThrow(
+      /"@hyperfrontend\/missing"/
+    )
   })
 
-  it('falls back to whole-surface mode when a sub-path-mode dep has no resolvable root', () => {
+  it('resolves a subpath-only dep with zero configuration', () => {
     const pkgPath = join(workspaceRoot, 'libs/foo/package.json')
-    writeJson(pkgPath, { dependencies: { '@hyperfrontend/immutable-api-utils': '*' } })
-    seedDep({ workspaceRoot, projectDir: 'libs/utils/immutable-api', sources: ['src/built-in-copy/array/index.ts'] })
+    writeJson(pkgPath, { dependencies: { '@hyperfrontend/string-utils': '*' } })
+    seedDep({ workspaceRoot, projectDir: 'libs/utils/string', sources: ['src/browser/index.ts', 'src/node/index.ts'] })
     writeJson(join(workspaceRoot, 'tsconfig.base.json'), {
       compilerOptions: {
         baseUrl: '.',
         paths: {
-          '@hyperfrontend/immutable-api-utils/built-in-copy/array': ['libs/utils/immutable-api/src/built-in-copy/array/index.ts'],
+          '@hyperfrontend/string-utils/browser': ['libs/utils/string/src/browser/index.ts'],
+          '@hyperfrontend/string-utils/node': ['libs/utils/string/src/node/index.ts'],
         },
       },
     })
     const result = resolveWorkspaceBundledDeps(pkgPath, workspaceRoot, { isWorkspacePackage: isHyperfrontend })
-    expect(result.map((r) => r.specifier)).toEqual(['@hyperfrontend/immutable-api-utils/built-in-copy/array'])
+    expect(result.map((r) => r.specifier)).toEqual(['@hyperfrontend/string-utils/browser', '@hyperfrontend/string-utils/node'])
   })
 
-  it('skips whole-surface deps whose root entry is not on disk', () => {
+  it('throws when a subpath-only dep is explicitly forced to whole-surface', () => {
+    const pkgPath = join(workspaceRoot, 'libs/foo/package.json')
+    writeJson(pkgPath, { dependencies: { '@hyperfrontend/string-utils': '*' } })
+    seedDep({ workspaceRoot, projectDir: 'libs/utils/string', sources: ['src/browser/index.ts', 'src/node/index.ts'] })
+    writeJson(join(workspaceRoot, 'tsconfig.base.json'), {
+      compilerOptions: {
+        baseUrl: '.',
+        paths: {
+          '@hyperfrontend/string-utils/browser': ['libs/utils/string/src/browser/index.ts'],
+          '@hyperfrontend/string-utils/node': ['libs/utils/string/src/node/index.ts'],
+        },
+      },
+    })
+    expect(() =>
+      resolveWorkspaceBundledDeps(pkgPath, workspaceRoot, {
+        isWorkspacePackage: isHyperfrontend,
+        policy: { '@hyperfrontend/string-utils': 'whole-surface' },
+      })
+    ).toThrow(/explicitly set to the 'whole-surface' hoist policy but is subpath-only/)
+  })
+
+  it("throws when a dep's only mapped source is missing on disk", () => {
     const pkgPath = join(workspaceRoot, 'libs/foo/package.json')
     writeJson(pkgPath, { dependencies: { '@hyperfrontend/logging': '*' } })
     writeJson(join(workspaceRoot, 'tsconfig.base.json'), {
       compilerOptions: { baseUrl: '.', paths: { '@hyperfrontend/logging': ['libs/logging/src/index.ts'] } },
     })
-    expect(resolveWorkspaceBundledDeps(pkgPath, workspaceRoot, { isWorkspacePackage: isHyperfrontend })).toEqual([])
+    expect(() => resolveWorkspaceBundledDeps(pkgPath, workspaceRoot, { isWorkspacePackage: isHyperfrontend })).toThrow(
+      /"@hyperfrontend\/logging"/
+    )
   })
 })
 
@@ -336,11 +413,5 @@ describe('loadWorkspacePathMappings', () => {
       compilerOptions: { baseUrl: '.', paths: { '@a/b': [absSrc] } },
     })
     expect(loadWorkspacePathMappings(workspaceRoot).get('@a/b')).toEqual([absSrc])
-  })
-})
-
-describe('WORKSPACE_DEP_POLICY', () => {
-  it('declares immutable-api-utils as the canonical sub-path mode dep', () => {
-    expect(WORKSPACE_DEP_POLICY['@hyperfrontend/immutable-api-utils']).toBe('sub-path')
   })
 })

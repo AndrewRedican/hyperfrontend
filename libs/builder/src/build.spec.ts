@@ -5,7 +5,7 @@ jest.mock('./bundle/entries/discover-entries', () => ({ discoverEntries: jest.fn
 jest.mock('./memory/monitor', () => ({ createMemoryMonitor: jest.fn() }))
 
 import type { BinConfig, BinOutput, BuildConfig, EntryPoint, EntryPointDiscovery, FormatOutputs, MemoryMonitor } from './models'
-import { mkdtempSync, rmSync, writeFileSync } from 'node:fs'
+import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join as nodeJoin } from 'node:path'
 import { runBinPhase } from './bin/run-bin-phase'
@@ -148,10 +148,23 @@ describe('createBuildContext', () => {
     })
 
     it('passes the workspace predicate through so workspace deps are subtracted', () => {
-      const projectRoot = seedPkg({ rollup: '*', '@hyperfrontend/logging': '*' })
+      // context: the workspace dep must be resolvable (mapped + seeded) so bundleAllDeps resolution succeeds rather than failing loud
+      const write = (rel: string, contents: string): void => {
+        const abs = nodeJoin(fxRoot, rel)
+        mkdirSync(nodeJoin(abs, '..'), { recursive: true })
+        writeFileSync(abs, contents)
+      }
+      write('libs/foo/package.json', JSON.stringify({ dependencies: { rollup: '*', '@hyperfrontend/logging': '*' } }))
+      write('libs/logging/package.json', JSON.stringify({ name: 'logging' }))
+      write('libs/logging/tsconfig.lib.json', JSON.stringify({ compilerOptions: {} }))
+      write('libs/logging/src/index.ts', 'export {}')
+      write(
+        'tsconfig.base.json',
+        JSON.stringify({ compilerOptions: { baseUrl: '.', paths: { '@hyperfrontend/logging': ['libs/logging/src/index.ts'] } } })
+      )
       const ctx = createBuildContext({
-        projectRoot,
-        workspaceRoot: '/abs/repo',
+        projectRoot: nodeJoin(fxRoot, 'libs/foo'),
+        workspaceRoot: fxRoot,
         isWorkspacePackage: (n) => n.startsWith('@hyperfrontend/'),
         esm: { bundleWorkspaceDeps: true, bundleAllDeps: true },
       })

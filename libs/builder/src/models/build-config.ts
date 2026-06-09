@@ -185,6 +185,19 @@ export interface BinConfig {
 }
 
 /**
+ * Per-package hoist policy for a bundled workspace dependency.
+ *
+ * `'sub-path'` (the zero-config default) pre-passes every public tsconfig
+ * specifier of the dep — root and each sub-path — into its own
+ * `_dependencies/<name>(/<sub>)?/index.<ext>` chunk, preserving sub-module
+ * tree-shaking and reuse, and supporting subpath-only packages that expose no
+ * root export. `'whole-surface'` is an explicit opt-in collapse: it pre-passes
+ * only the root entry, routing every import of the dep onto a single root chunk,
+ * and therefore requires the dep to expose a root export.
+ */
+export type WorkspaceDepHoistPolicy = 'sub-path' | 'whole-surface'
+
+/**
  * Memory-monitor configuration thresholds (in MB).
  */
 export interface MemoryMonitorOptions {
@@ -210,6 +223,14 @@ export interface BuildConfig {
   tsConfig?: string
   /** Workspace-package predicate; when omitted the bundler treats every dep as external. */
   isWorkspacePackage?: IsWorkspacePackagePredicate
+  /**
+   * Per-package override of the workspace-dependency hoist policy, keyed by
+   * package name. Packages absent from the map default to `'sub-path'` (granular,
+   * zero-config); set a package to `'whole-surface'` to opt into collapsing its
+   * sub-paths onto the root chunk. Builder ships no built-in entries; consumers
+   * inject their own opinions here, mirroring {@link isWorkspacePackage}.
+   */
+  workspaceDepPolicy?: Record<string, WorkspaceDepHoistPolicy>
   /** Drop workspace-internal entries from the output package.json's `dependencies`. */
   filterWorkspaceDepsFromOutput?: boolean
   /** Selectively copy fields from another package.json onto the output package.json. */

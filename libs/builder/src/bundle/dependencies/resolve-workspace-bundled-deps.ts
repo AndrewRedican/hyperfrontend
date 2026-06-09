@@ -1,34 +1,12 @@
-import type { IsWorkspacePackagePredicate, PackageJson } from '../../models'
+import type { IsWorkspacePackagePredicate, PackageJson, WorkspaceDepHoistPolicy } from '../../models'
 import { isAbsolute as nodeIsAbsolute, resolve as nodeResolve } from 'node:path'
 import { from } from '@hyperfrontend/immutable-api-utils/built-in-copy/array'
+import { createError } from '@hyperfrontend/immutable-api-utils/built-in-copy/error'
 import { createMap } from '@hyperfrontend/immutable-api-utils/built-in-copy/map'
 import { keys } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
 import { createSet } from '@hyperfrontend/immutable-api-utils/built-in-copy/set'
 import { exists, readJsonFile, readJsonFileIfExists } from '@hyperfrontend/project-scope/core/fs'
 import { join, normalizeToForwardSlashes } from '@hyperfrontend/project-scope/core/path'
-
-/**
- * Per-dep hoisting policy. `'sub-path'` pre-passes every tsconfig sub-path for the
- * dep into its own `_dependencies/<name>/<sub>/index.<ext>.js` chunk so per-entry
- * tree-shaking remains sub-module granular. `'whole-surface'` pre-passes only the
- * root entry — every import of the dep, sub-path or otherwise, routes through the
- * single root chunk at runtime.
- *
- * `'sub-path'` is reserved for workspace deps whose root re-exports differ in
- * shape from their sub-path exports; `@hyperfrontend/immutable-api-utils` is the
- * canonical example (root exports namespace objects, sub-paths export named
- * helpers).
- */
-export type WorkspaceDepHoistPolicy = 'sub-path' | 'whole-surface'
-
-/**
- * Per-dep policy override map. Workspace packages absent from the table default to `'whole-surface'`.
- */
-export const WORKSPACE_DEP_POLICY: Record<string, WorkspaceDepHoistPolicy> = {
-  '@hyperfrontend/immutable-api-utils': 'sub-path',
-}
-
-const policyFor = (name: string): WorkspaceDepHoistPolicy => WORKSPACE_DEP_POLICY[name] ?? 'whole-surface'
 
 /**
  * Resolved workspace-dep pre-pass entry.
@@ -44,6 +22,8 @@ export interface ResolvedWorkspaceDepEntry {
   inputPath: string
   /** Absolute path to the dep's own tsconfig used by `@rollup/plugin-typescript` during pre-pass. */
   tsConfigPath: string
+  /** Hoist policy applied to this entry's package; carried through so callers need not re-derive it. */
+  policy: WorkspaceDepHoistPolicy
 }
 
 /**
@@ -56,6 +36,13 @@ export interface ResolveWorkspaceBundledDepsOptions {
   include?: string[]
   /** Skip these packages even if otherwise selected. */
   exclude?: string[]
+  /**
+   * Per-package hoist-policy override, keyed by package name. Packages absent
+   * from the map default to `'sub-path'` (granular, zero-config). Set a package
+   * to `'whole-surface'` to opt into collapsing its sub-paths onto the root
+   * chunk. No built-in entries; callers supply their own opinions.
+   */
+  policy?: Record<string, WorkspaceDepHoistPolicy>
 }
 
 /**
@@ -259,16 +246,28 @@ const collectMatchingSpecifiers = (packageName: string, mappings: Map<string, st
  *    Peer deps and excluded packages are skipped; `include` cannot resurrect a
  *    peer dep.
  * 2. Load workspace path-mappings (tsconfig `paths`).
- * 3. For each workspace dep, apply the per-dep hoist policy:
- *    - `'sub-path'` deps emit one entry per tsconfig sub-path (root + sub-paths
- *      that resolve to a real source file).
- *    - `'whole-surface'` deps emit a single entry for the package root.
+ * 3. For each eligible workspace dep, apply the per-dep hoist policy
+ *    (`options.policy`, defaulting to `'sub-path'`):
+ *    - `'sub-path'` (the zero-config default) emits one entry per resolvable
+ *      tsconfig specifier (root + every sub-path with a real source file),
+ *      preserving sub-module granularity and supporting subpath-only packages
+ *      that expose no root export.
+ *    - `'whole-surface'` is an explicit opt-in collapse: it emits a single entry
+ *      for the package root, so it requires the dep to expose a root export.
  * 4. The returned list is sorted by `specifier` for stable downstream ordering.
+ *
+ * Because the caller requested `bundleAllDeps`, an eligible dep that cannot be
+ * fully resolved is a contract violation, not a soft skip. The function throws
+ * (rather than silently externalising) when an eligible dep has no resolvable
+ * tsconfig mapping, when a mapped source has no owning tsconfig, or when a dep
+ * is explicitly opted into `'whole-surface'` yet exposes no root export — each
+ * with a message naming the dep and the remedy.
  *
  * @param packageJsonPath - Absolute path to the project's `package.json`.
  * @param workspaceRoot - Absolute workspace root used to load `tsconfig.base.json` paths.
- * @param options - Caller overrides + workspace-package predicate.
+ * @param options - Caller overrides + workspace-package predicate + per-package policy map.
  * @returns Resolved workspace-dep pre-pass entries sorted by specifier.
+ * @throws {Error} When an eligible workspace dep cannot be bundled (no mapping, no root export under `'whole-surface'`, or no owning tsconfig).
  *
  * @example Resolving workspace pre-pass entries for builder
  * ```typescript
@@ -291,6 +290,10 @@ export const resolveWorkspaceBundledDeps = (
   const excludeSet = createSet(options.exclude ?? [])
   const isWorkspace = options.isWorkspacePackage
 
+  const policyMap = options.policy ?? {}
+  // why: granularity is the zero-config default — every public sub-path becomes its own chunk so consumers reuse/tree-shake at sub-module resolution, and subpath-only packages resolve with no configuration. `'whole-surface'` is an explicit opt-in collapse.
+  const policyFor = (name: string): WorkspaceDepHoistPolicy => policyMap[name] ?? 'sub-path'
+
   const eligible = declared.filter((name) => isWorkspace(name) && !peerDeps.has(name))
   const merged = createSet([...eligible, ...from(includeSet).filter((name) => isWorkspace(name) && !peerDeps.has(name))])
   const filtered = from(merged).filter((name) => !excludeSet.has(name))
@@ -310,17 +313,29 @@ export const resolveWorkspaceBundledDeps = (
   }
   for (const packageName of filtered) {
     const matches = collectMatchingSpecifiers(packageName, mappings)
-    if (matches.length === 0) continue
+    if (matches.length === 0) {
+      throw createError(
+        `bundleAllDeps: workspace dependency "${packageName}" has no resolvable tsconfig path mapping under ${workspaceRoot} (no matching paths entry, or its mapped source files are missing), so it cannot be bundled. Add a "${packageName}" (or "${packageName}/<sub-path>") entry to tsconfig.base.json paths pointing at an existing source file, or exclude it via bundleAllDeps.exclude.`
+      )
+    }
     const policy = policyFor(packageName)
     const pushEntry = (specifier: string, inputPath: string): void => {
       const tsConfigPath = resolveTsConfigForPackage(inputPath)
-      if (!tsConfigPath) return
+      if (!tsConfigPath) {
+        throw createError(
+          `bundleAllDeps: workspace dependency "${specifier}" resolves to ${inputPath}, but no tsconfig (tsconfig.lib.json / tsconfig.json) was found in its project root, so it cannot be transformed during bundling.`
+        )
+      }
       const split = splitSpecifier(specifier)
-      results.push({ packageName, subPath: split.subPath, specifier, inputPath, tsConfigPath })
+      results.push({ packageName, subPath: split.subPath, specifier, inputPath, tsConfigPath, policy })
     }
     if (policy === 'whole-surface') {
       const root = matches.find((m) => m.specifier === packageName)
-      if (!root) continue
+      if (!root) {
+        throw createError(
+          `bundleAllDeps: workspace dependency "${packageName}" is explicitly set to the 'whole-surface' hoist policy but is subpath-only (no root export; tsconfig exposes only ${matches.map((m) => `"${m.specifier}"`).join(', ')}). Remove the 'whole-surface' override for it (sub-path is the default), or add a root export.`
+        )
+      }
       pushEntry(root.specifier, root.inputPath)
       continue
     }
