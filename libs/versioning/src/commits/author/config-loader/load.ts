@@ -157,7 +157,7 @@ function validateConfigShape(config: PartialSessionConfig, sourcePath: string): 
  */
 function isTypeArray(value: unknown): value is readonly TypeArrayEntry[] {
   if (!isArray(value)) return false
-  return value.every(
+  return (<unknown[]>value).every(
     (entry) => typeof entry === 'object' && entry !== null && 'name' in entry && typeof (<TypeArrayEntry>entry).name === 'string'
   )
 }
