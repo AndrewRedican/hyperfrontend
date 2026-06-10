@@ -11,8 +11,8 @@
     "build": {
       "executor": "@hyperfrontend/package:build",
       "options": {
-        "esm": { "bundleWorkspaceDeps": true },
-        "cjs": { "bundleWorkspaceDeps": true },
+        "esm": { "bundleWorkspaceDeps": true, "bundleAllDeps": true },
+        "cjs": { "bundleWorkspaceDeps": true, "bundleAllDeps": true },
         "bin": [
           { "name": "cz", "runner": "runCz", "format": "cjs" },
           { "name": "cl", "runner": "runCl", "format": "cjs" }
