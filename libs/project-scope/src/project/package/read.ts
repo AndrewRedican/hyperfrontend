@@ -78,7 +78,7 @@ function isStringRecord(value: unknown): value is Record<string, string> {
  * @returns Normalized workspace patterns or undefined if invalid
  */
 function parseWorkspaces(value: unknown): string[] | WorkspacesObject | undefined {
-  if (isArray(value) && value.every((v) => typeof v === 'string')) {
+  if (isArray(value) && (<unknown[]>value).every((v) => typeof v === 'string')) {
     return <string[]>value
   }
   if (typeof value === 'object' && value !== null) {

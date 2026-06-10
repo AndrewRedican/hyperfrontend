@@ -124,7 +124,7 @@ export function sanitize(obj: unknown): unknown {
   }
 
   if (isArray(obj)) {
-    return obj.map((item) => sanitize(item))
+    return (<unknown[]>obj).map((item) => sanitize(item))
   }
 
   if (typeof obj === 'object') {

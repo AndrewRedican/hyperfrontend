@@ -198,7 +198,7 @@ export function getWorkspaces(packageJson: PackageJson): string[] {
   if (!packageJson.workspaces) return []
 
   if (isArray(packageJson.workspaces)) {
-    return packageJson.workspaces
+    return <string[]>packageJson.workspaces
   }
 
   if (typeof packageJson.workspaces === 'object' && 'packages' in packageJson.workspaces) {
