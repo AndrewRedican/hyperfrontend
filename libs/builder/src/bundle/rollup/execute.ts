@@ -27,7 +27,11 @@ const formatMB = (bytes: number): string => (bytes / BYTES_PER_MB).toFixed(1)
  *
  * @example Running a single rollup pass
  * ```typescript
- * await executeRollup(createEsmEntryConfig(entry, esmConfig, context), entry.exportPath)
+ * const config: RollupOptions = {
+ *   input: entry.inputFile,
+ *   output: { file: entry.outputFile, format: 'es' },
+ * }
+ * await executeRollup(config, entry.exportPath)
  * ```
  */
 export const executeRollup = async (config: RollupOptions, label: string): Promise<void> => {

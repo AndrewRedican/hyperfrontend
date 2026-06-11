@@ -13,8 +13,6 @@ export type {
   RollupWorkerFormat,
   RollupWorkerReport,
 } from './worker/types'
-export { createCjsConfig, createCjsEntryConfig } from './config-cjs'
-export { createEsmConfig, createEsmEntryConfig } from './config-esm'
 export { createIifeConfig, createIifeEntryConfig } from './config-iife'
 export { createUmdConfig, createUmdEntryConfig } from './config-umd'
 export { toBinBuildDescriptor, toCjsBuildDescriptor, toEsmBuildDescriptor, toIifeBuildDescriptor, toUmdBuildDescriptor } from './descriptor'
