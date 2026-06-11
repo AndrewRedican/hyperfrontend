@@ -14,6 +14,7 @@ import { generateDeclarations } from './declarations/generate-declarations'
 import { pruneOrphanDeclarations } from './declarations/prune-orphan-dts'
 import { buildWorkspaceRoutes } from './dependencies/externalize-plugin'
 import { resolveDefaultWorkerPath, runPrePass } from './dependencies/pre-pass'
+import { pruneDependencies } from './dependencies/prune/prune-dependencies'
 import { resolveDepEntry } from './dependencies/resolve-dep-entry'
 import { resolveEntries } from './entries/resolve-entries'
 import { toCjsBuildDescriptor, toEsmBuildDescriptor, toIifeBuildDescriptor, toUmdBuildDescriptor } from './rollup/descriptor'
@@ -327,6 +328,11 @@ export const runBundlePhase = async (context: BuildContext, config: BuildConfig,
 
   pruneOrphanDeclarations(context)
   monitor?.check('bundle:declarations:prune-orphans:end')
+
+  if (context.bundledDeps.length > 0 || context.workspaceBundledDeps.length > 0) {
+    pruneDependencies(context, monitor)
+    monitor?.check('bundle:dependencies:prune:end')
+  }
 
   return outputs
 }

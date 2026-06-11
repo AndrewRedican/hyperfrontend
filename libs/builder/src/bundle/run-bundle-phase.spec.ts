@@ -25,6 +25,9 @@ jest.mock('./dependencies/resolve-dep-entry', () => ({
 jest.mock('./declarations/dts-pre-pass', () => ({ runDtsPrePass: jest.fn().mockResolvedValue(undefined) }))
 jest.mock('./declarations/dts-per-entry', () => ({ runDtsPerEntry: jest.fn().mockResolvedValue(undefined) }))
 jest.mock('./declarations/prune-orphan-dts', () => ({ pruneOrphanDeclarations: jest.fn().mockReturnValue(0) }))
+jest.mock('./dependencies/prune/prune-dependencies', () => ({
+  pruneDependencies: jest.fn().mockReturnValue({ orphanFilesRemoved: 0, deadExportsRemoved: 0, bytesRemoved: 0 }),
+}))
 
 import type { BuildConfig, BuildContext, EntryPoint, EntryPointDiscovery } from '../models'
 import { ensureDir } from '@hyperfrontend/project-scope/core'
@@ -33,6 +36,7 @@ import { runDtsPrePass } from './declarations/dts-pre-pass'
 import { generateDeclarations } from './declarations/generate-declarations'
 import { pruneOrphanDeclarations } from './declarations/prune-orphan-dts'
 import { resolveDefaultWorkerPath, runPrePass } from './dependencies/pre-pass'
+import { pruneDependencies } from './dependencies/prune/prune-dependencies'
 import { dispatchRollupWorker, resolveDefaultRollupWorkerPath } from './rollup/dispatch'
 import { runBundlePhase } from './run-bundle-phase'
 
@@ -78,6 +82,7 @@ beforeEach(() => {
   ;(<jest.Mock>runDtsPrePass).mockClear()
   ;(<jest.Mock>runDtsPerEntry).mockClear()
   ;(<jest.Mock>pruneOrphanDeclarations).mockClear()
+  ;(<jest.Mock>pruneDependencies).mockClear()
   ;(<jest.Mock>resolveDefaultWorkerPath)
     .mockReset()
     .mockReturnValue({ path: '/abs/dist/libs/builder/bundle/dependencies/worker/index.cjs.js', execArgv: [] })
@@ -355,6 +360,43 @@ describe('runBundlePhase', () => {
   it('always prunes orphan .d.ts files after declarations, regardless of bundleAllDeps', async () => {
     await runBundlePhase(makeContext(), <BuildConfig>{ projectRoot: '', workspaceRoot: '' })
     expect(pruneOrphanDeclarations).toHaveBeenCalledTimes(1)
+  })
+
+  it('prunes dependency orphans when bundledDeps is non-empty', async () => {
+    const ctx = makeContext()
+    ctx.bundledDeps = ['rollup']
+    await runBundlePhase(ctx, <BuildConfig>{ projectRoot: '', workspaceRoot: '' })
+    expect(pruneDependencies).toHaveBeenCalledWith(ctx, undefined)
+  })
+
+  it('prunes dependency orphans when workspaceBundledDeps is non-empty', async () => {
+    const ctx = makeContext()
+    ctx.workspaceBundledDeps = [
+      {
+        packageName: '@hyperfrontend/logging',
+        specifier: '@hyperfrontend/logging',
+        subPath: '',
+        policy: 'whole-surface',
+        inputPath: '/abs/repo/libs/logging/src/index.ts',
+        tsConfigPath: '/abs/repo/libs/logging/tsconfig.lib.json',
+      },
+    ]
+    await runBundlePhase(ctx, <BuildConfig>{ projectRoot: '', workspaceRoot: '' })
+    expect(pruneDependencies).toHaveBeenCalledTimes(1)
+  })
+
+  it('skips dependency orphan pruning when no deps are bundled', async () => {
+    await runBundlePhase(makeContext(), <BuildConfig>{ projectRoot: '', workspaceRoot: '' })
+    expect(pruneDependencies).not.toHaveBeenCalled()
+  })
+
+  it('emits the dependency-prune checkpoint after pruning when deps are bundled', async () => {
+    const checks: string[] = []
+    const monitor = { check: (label: string) => checks.push(label) } as unknown as Parameters<typeof runBundlePhase>[2]
+    const ctx = makeContext()
+    ctx.bundledDeps = ['rollup']
+    await runBundlePhase(ctx, <BuildConfig>{ projectRoot: '', workspaceRoot: '' }, monitor)
+    expect(checks).toContain('bundle:dependencies:prune:end')
   })
 
   it('skips the d.ts pre-pass and per-entry pass when no bundled deps', async () => {
