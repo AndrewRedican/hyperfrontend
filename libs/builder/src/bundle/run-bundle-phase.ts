@@ -48,7 +48,7 @@ interface DispatchOptions {
  */
 type ResolveDispatch = () => DispatchOptions
 
-const toArray = <T>(value: T | T[] | undefined): T[] => (value === undefined ? [] : isArray(value) ? value : [value])
+const toArray = <T>(value: T | T[] | undefined): T[] => (value === undefined ? [] : isArray(value) ? <T[]>value : [<T>value])
 
 const collectFormatsRequestingPrePass = (config: BuildConfig): Array<'esm' | 'cjs'> => {
   const formats = createSet<'esm' | 'cjs'>([])

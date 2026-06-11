@@ -107,8 +107,42 @@ const SUPPRESSED_WARNING_CODES = new Set<string>([
   'MIXED_EXPORTS',
 ])
 
-const onWarn = (warning: RollupLog, defaultHandler: (w: RollupLog) => void): void => {
+/**
+ * Suppresses `MISSING_EXPORT` warnings caused by a package augmenting a
+ * DefinitelyTyped (`@types/*`) module to add members absent from the published
+ * stub. `rollup-plugin-dts` resolves e.g. `import * as estree from 'estree'` to
+ * `@types/estree` but cannot follow the `declare module 'estree'` augmentation
+ * (rollup's own `rollup.d.ts` adds `Decorator` this way) across the external
+ * boundary, so it reports the augmented members as not exported. The
+ * augmentation still resolves correctly in the emitted d.ts, so the warning is
+ * noise during the d.ts pre-pass.
+ *
+ * @param warning - The rollup log entry.
+ * @returns `true` when the warning is a `@types/*` augmentation false positive.
+ */
+const isTypesAugmentationMiss = (warning: RollupLog): boolean =>
+  warning.code === 'MISSING_EXPORT' && typeof warning.exporter === 'string' && warning.exporter.includes('/@types/')
+
+/**
+ * Shared rollup `onwarn` handler for every pre-pass job. Drops the known-benign
+ * warning classes that bundling third-party / workspace deps routinely emits
+ * (see {@link SUPPRESSED_WARNING_CODES} and {@link isTypesAugmentationMiss}) and
+ * forwards everything else to rollup's default handler.
+ *
+ * Exported so the suppression branches can be unit-tested without constructing
+ * a full rollup invocation.
+ *
+ * @param warning - The rollup log entry.
+ * @param defaultHandler - Rollup's default warning handler.
+ *
+ * @example Wiring the handler into a rollup config
+ * ```typescript
+ * const config: RollupOptions = { input, plugins, onwarn: onWarn }
+ * ```
+ */
+export const onWarn = (warning: RollupLog, defaultHandler: (w: RollupLog) => void): void => {
   if (warning.code && SUPPRESSED_WARNING_CODES.has(warning.code)) return
+  if (isTypesAugmentationMiss(warning)) return
   defaultHandler(warning)
 }
 

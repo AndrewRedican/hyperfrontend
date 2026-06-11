@@ -10,7 +10,8 @@ import { createSet } from '@hyperfrontend/immutable-api-utils/built-in-copy/set'
  */
 const STANDARD_METADATA_FILES = ['FUNDING.md', 'LICENSE.md', 'README.md', 'SECURITY.md', 'THIRD_PARTY_LICENSES.md']
 
-const normalizeFormats = (format: BinConfig['format']): BinScriptFormat[] => (isArray(format) ? format : [format])
+const normalizeFormats = (format: BinConfig['format']): BinScriptFormat[] =>
+  isArray(format) ? <BinScriptFormat[]>format : [<BinScriptFormat>format]
 
 const topLevelSegmentOf = (srcPath: string): string => <string>srcPath.split('/')[0]
 const secondSegmentOf = (srcPath: string): string | undefined => srcPath.split('/')[1]

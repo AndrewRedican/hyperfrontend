@@ -9,7 +9,8 @@ import { dispatchRollupWorker, resolveDefaultRollupWorkerPath } from '../../bund
 
 const log = logger.channel('builder:bin:script')
 
-const normalizeFormats = (format: BinConfig['format']): BinScriptFormat[] => (isArray(format) ? format : [format])
+const normalizeFormats = (format: BinConfig['format']): BinScriptFormat[] =>
+  isArray(format) ? <BinScriptFormat[]>format : [<BinScriptFormat>format]
 
 const resolveWorkerOrThrow = (workspaceRoot: string): RollupWorkerInvocation => {
   const invocation = resolveDefaultRollupWorkerPath(workspaceRoot)

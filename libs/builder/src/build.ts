@@ -52,7 +52,7 @@ const collectFormatBundleAllDeps = (configs: Array<EsmConfig | CjsConfig>): Coll
   return { active, options: { include: from(createSet(include)), exclude: from(createSet(exclude)) } }
 }
 
-const toFormatArray = <T>(value: T | T[] | undefined): T[] => (value === undefined ? [] : isArray(value) ? value : [value])
+const toFormatArray = <T>(value: T | T[] | undefined): T[] => (value === undefined ? [] : isArray(value) ? <T[]>value : [<T>value])
 
 const computeBundledDeps = (config: BuildConfig, isWorkspacePackage: IsWorkspacePackagePredicate): string[] => {
   const formats = [...toFormatArray<EsmConfig>(config.esm), ...toFormatArray<CjsConfig>(config.cjs)]

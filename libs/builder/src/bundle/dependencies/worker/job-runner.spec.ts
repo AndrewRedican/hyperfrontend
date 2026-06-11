@@ -1,7 +1,8 @@
+import type { RollupLog } from 'rollup'
 import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
-import { runPrePassWorkerJob } from './job-runner'
+import { onWarn, runPrePassWorkerJob } from './job-runner'
 
 describe('runPrePassWorkerJob', () => {
   let root: string
@@ -421,5 +422,51 @@ describe('runPrePassWorkerJob', () => {
     })
     const contents = readFileSync(outputPath, 'utf8')
     expect(contents).toMatch(/require\(["']\.\.\/date\/index\.cjs\.js["']\)/)
+  })
+})
+
+describe('onWarn', () => {
+  it('suppresses warnings whose code is in the benign set', () => {
+    const handler = jest.fn()
+    onWarn({ code: 'CIRCULAR_DEPENDENCY', message: 'cycle' }, handler)
+    expect(handler).not.toHaveBeenCalled()
+  })
+
+  it('suppresses MISSING_EXPORT from @types module augmentations', () => {
+    const handler = jest.fn()
+    const warning: RollupLog = {
+      code: 'MISSING_EXPORT',
+      binding: 'Decorator',
+      exporter: '/repo/node_modules/@types/estree/index.d.ts',
+      message: '"Decorator" is not exported by "node_modules/@types/estree/index.d.ts"',
+    }
+    onWarn(warning, handler)
+    expect(handler).not.toHaveBeenCalled()
+  })
+
+  it('forwards a genuine MISSING_EXPORT from a non-@types module', () => {
+    const handler = jest.fn()
+    const warning: RollupLog = {
+      code: 'MISSING_EXPORT',
+      binding: 'typo',
+      exporter: '/repo/libs/foo/src/index.d.ts',
+      message: '"typo" is not exported by "libs/foo/src/index.d.ts"',
+    }
+    onWarn(warning, handler)
+    expect(handler).toHaveBeenCalledWith(warning)
+  })
+
+  it('forwards a MISSING_EXPORT with no exporter (cannot be an augmentation miss)', () => {
+    const handler = jest.fn()
+    const warning: RollupLog = { code: 'MISSING_EXPORT', binding: 'thing', message: 'no exporter' }
+    onWarn(warning, handler)
+    expect(handler).toHaveBeenCalledWith(warning)
+  })
+
+  it('forwards warnings that carry no code', () => {
+    const handler = jest.fn()
+    const warning: RollupLog = { message: 'heads up' }
+    onWarn(warning, handler)
+    expect(handler).toHaveBeenCalledWith(warning)
   })
 })

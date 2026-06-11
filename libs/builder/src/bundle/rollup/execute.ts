@@ -1,4 +1,4 @@
-import type { RollupOptions } from 'rollup'
+import type { OutputOptions, RollupOptions } from 'rollup'
 import { freemem } from 'node:os'
 import { rollup } from 'rollup'
 import { isArray } from '@hyperfrontend/immutable-api-utils/built-in-copy/array'
@@ -40,7 +40,7 @@ export const executeRollup = async (config: RollupOptions, label: string): Promi
   log.debug(`starting rollup for ${label}`)
   const bundle = await rollup(config)
   try {
-    const outputs = isArray(config.output) ? config.output : config.output ? [config.output] : []
+    const outputs = isArray(config.output) ? <OutputOptions[]>config.output : config.output ? [<OutputOptions>config.output] : []
     for (const output of outputs) {
       log.debug(`writing output for ${label}`)
       await bundle.write(output)

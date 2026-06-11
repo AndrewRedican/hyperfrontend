@@ -15,7 +15,7 @@ const matchesPattern = (entry: EntryPoint, pattern: string): boolean => {
   return false
 }
 
-const toPatternList = (patterns: string | string[]): string[] => (isArray(patterns) ? patterns : [patterns])
+const toPatternList = (patterns: string | string[]): string[] => (isArray(patterns) ? <string[]>patterns : [<string>patterns])
 
 /**
  * Filters discovered entry points using a `FormatEntryConfig`'s
