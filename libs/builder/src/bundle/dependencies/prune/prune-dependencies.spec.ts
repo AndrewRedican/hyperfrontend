@@ -1,5 +1,5 @@
 import type { BuildContext, EntryPoint, EntryPointDiscovery } from '../../../models'
-import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs'
+import { existsSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { pruneDependencies } from './prune-dependencies'
@@ -61,11 +61,28 @@ describe('pruneDependencies', () => {
     expect(pruneDependencies(makeContext(outputPath))).toEqual({ orphanFilesRemoved: 0, deadExportsRemoved: 0, bytesRemoved: 0 })
   })
 
-  it('captures the orphan-sweep checkpoint on the supplied monitor', () => {
+  it('captures the orphan-sweep and dead-export checkpoints on the supplied monitor', () => {
     write('index.esm.js', 'export const a = 1')
     const labels: string[] = []
     const monitor = { check: (label: string) => void labels.push(label) } as unknown as Parameters<typeof pruneDependencies>[1]
     pruneDependencies(makeContext(outputPath), monitor)
-    expect(labels).toEqual(['bundle:dependencies:prune:orphans:end'])
+    expect(labels).toEqual(['bundle:dependencies:prune:orphans:end', 'bundle:dependencies:prune:dead-exports:end'])
+  })
+
+  it('counts dead exports stripped from a surviving chunk', () => {
+    write('index.esm.js', "import { getType } from './_dependencies/d/index.esm.js'")
+    write('_dependencies/d/index.esm.js', 'const getType = 1;\nconst unused = 2;\nexport { getType, unused };')
+    expect(pruneDependencies(makeContext(outputPath)).deadExportsRemoved).toBe(1)
+  })
+
+  it('reclaims a chunk left orphaned once stripping drops its last importing edge', () => {
+    write('index.esm.js', "import { used } from './_dependencies/a/index.esm.js'")
+    write(
+      '_dependencies/a/index.esm.js',
+      "import { x } from '../b/index.esm.js';\nconst used = 1;\nconst dead = x;\nexport { used, dead };"
+    )
+    write('_dependencies/b/index.esm.js', 'const x = 1;\nexport { x };')
+    pruneDependencies(makeContext(outputPath))
+    expect(existsSync(join(outputPath, '_dependencies/b/index.esm.js'))).toBe(false)
   })
 })

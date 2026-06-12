@@ -2,6 +2,7 @@ import type { MemoryMonitor } from '../../../memory/monitor'
 import type { BuildContext } from '../../../models'
 import { logger } from '@hyperfrontend/logging'
 import { join } from '@hyperfrontend/project-scope/core'
+import { stripDeadExportsPass } from './dead-export-pass'
 import { pruneOrphanChunks } from './orphan-chunks'
 
 const log = logger.channel('builder:bundle:dependencies:prune')
@@ -28,13 +29,15 @@ export interface PruneReport {
  * The pre-pass emits every hoisted dep at its full public-API surface; this
  * step trims what the consuming package provably never reaches. Tier 1 deletes
  * whole orphan chunk files (JS + co-located d.ts) whose runtime is unreachable
- * from the package's entry chunks. Removal is conservative: anything whose
- * removal cannot be proven safe — including the entire run when a dynamic
- * specifier is present — is left untouched.
+ * from the package's entry chunks. Tier 2 then strips dead exported declarations
+ * out of the surviving chunks and re-runs the orphan sweep, since narrowing a
+ * chunk's imports can leave a sibling chunk with no importer at all. Removal is
+ * conservative: anything whose removal cannot be proven safe — including the
+ * entire run when a dynamic specifier is present — is left untouched.
  *
  * @param context - Resolved build context. `outputPath` locates `_dependencies/`.
- * @param monitor - Optional memory monitor; a checkpoint is captured after the
- * orphan sweep so the step is observable.
+ * @param monitor - Optional memory monitor; checkpoints are captured after the
+ * orphan sweep and after the dead-export pass so the step is observable.
  * @returns Counts of files removed, dead exports removed, and bytes reclaimed.
  *
  * @example Pruning after the per-entry d.ts pass
@@ -46,13 +49,19 @@ export const pruneDependencies = (context: BuildContext, monitor?: MemoryMonitor
   const depsRoot = join(context.outputPath, '_dependencies')
   const orphans = pruneOrphanChunks(context, depsRoot)
   monitor?.check('bundle:dependencies:prune:orphans:end')
+  const deadExports = stripDeadExportsPass(context, depsRoot)
+  monitor?.check('bundle:dependencies:prune:dead-exports:end')
+  // why: a chunk whose last importing symbol was just stripped is now an orphan; reclaim it (and any d.ts left behind).
+  const resweep = pruneOrphanChunks(context, depsRoot)
   const report: PruneReport = {
-    orphanFilesRemoved: orphans.orphanFilesRemoved,
-    deadExportsRemoved: 0,
-    bytesRemoved: orphans.bytesRemoved,
+    orphanFilesRemoved: orphans.orphanFilesRemoved + resweep.orphanFilesRemoved,
+    deadExportsRemoved: deadExports.deadExportsRemoved,
+    bytesRemoved: orphans.bytesRemoved + deadExports.bytesRemoved + resweep.bytesRemoved,
   }
-  if (report.orphanFilesRemoved > 0) {
-    log.info(`pruned ${report.orphanFilesRemoved} orphan dependency file(s), reclaimed ${report.bytesRemoved} byte(s)`)
+  if (report.orphanFilesRemoved > 0 || report.deadExportsRemoved > 0) {
+    log.info(
+      `pruned ${report.orphanFilesRemoved} orphan dependency file(s) and ${report.deadExportsRemoved} dead export(s), reclaimed ${report.bytesRemoved} byte(s)`
+    )
   }
   return report
 }

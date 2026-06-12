@@ -19,7 +19,25 @@ const entryDirOf = (entry: EntryPoint, context: BuildContext): string =>
 
 const isUnderRoot = (path: string, depsRoot: string): boolean => path === depsRoot || path.startsWith(`${depsRoot}/`)
 
-const collectEntryFiles = (context: BuildContext, depsRoot: string, fileNames: string[]): string[] => {
+/**
+ * Resolves the package's own entry output files for the given file names,
+ * skipping any entry directory that resolves at or under `_dependencies/`.
+ *
+ * These are the reachability/usage roots: the chunks a consumer's package entry
+ * points actually load, from which dependency code is reached.
+ *
+ * @param context - Resolved build context supplying the entry points.
+ * @param depsRoot - Absolute path to the `_dependencies/` directory.
+ * @param fileNames - Output file names to look for in each entry directory
+ * (e.g. `['index.esm.js']`).
+ * @returns Absolute paths of every entry file that exists on disk.
+ *
+ * @example Collecting ESM entry roots
+ * ```typescript
+ * const roots = collectEntryFiles(context, depsRoot, ['index.esm.js'])
+ * ```
+ */
+export const collectEntryFiles = (context: BuildContext, depsRoot: string, fileNames: string[]): string[] => {
   const files: string[] = []
   for (const entry of context.entryPointDiscovery.entryPoints) {
     const dir = entryDirOf(entry, context)
@@ -32,8 +50,23 @@ const collectEntryFiles = (context: BuildContext, depsRoot: string, fileNames: s
   return files
 }
 
-// why: only ever called on the validated `_dependencies/` root or a directory from `readDirectory`, so the target always exists — no existence guard needed.
-const walkFiles = (dir: string, matches: (name: string) => boolean, acc: string[]): void => {
+/**
+ * Recursively collects file paths under `dir` whose base name satisfies
+ * `matches`, appending them to `acc`.
+ *
+ * @param dir - Directory to walk; assumed to exist (the `_dependencies/` root or
+ * a directory yielded by `readDirectory`).
+ * @param matches - Predicate over a file's base name.
+ * @param acc - Accumulator that receives every matching absolute path.
+ *
+ * @example Gathering every ESM chunk
+ * ```typescript
+ * const chunks: string[] = []
+ * walkFiles(depsRoot, (name) => name === 'index.esm.js', chunks)
+ * ```
+ */
+export const walkFiles = (dir: string, matches: (name: string) => boolean, acc: string[]): void => {
+  // why: only ever called on the validated `_dependencies/` root or a directory from `readDirectory`, so the target always exists — no existence guard needed.
   for (const entry of readDirectory(dir)) {
     if (entry.isDirectory) walkFiles(entry.path, matches, acc)
     else if (matches(entry.name)) acc.push(entry.path)
