@@ -26,6 +26,11 @@ const isUnderRoot = (path: string, depsRoot: string): boolean => path === depsRo
  * @param roots - Absolute paths to the root files reachability starts from.
  * @param depsRoot - Absolute path to the `_dependencies/` directory; traversal
  * never leaves it.
+ * @param resolveTarget - Maps each resolved specifier target before it is
+ * visited; defaults to identity. The d.ts pass passes a mapper that rewrites a
+ * runtime specifier (`'.../index.js'`) to its declaration sibling
+ * (`'.../index.d.ts'`) so traversal follows the type graph, never the runtime
+ * graph.
  * @returns The set of reachable absolute file paths, or `null` when a dynamic
  * specifier forces a safety bail.
  *
@@ -35,7 +40,11 @@ const isUnderRoot = (path: string, depsRoot: string): boolean => path === depsRo
  * if (live && !live.has(orphanChunk)) unlinkSync(orphanChunk)
  * ```
  */
-export const computeReachable = (roots: string[], depsRoot: string): Set<string> | null => {
+export const computeReachable = (
+  roots: string[],
+  depsRoot: string,
+  resolveTarget: (target: string) => string = (target) => target
+): Set<string> | null => {
   const reachable = createSet<string>([])
   const queue: string[] = []
   for (const root of roots) {
@@ -55,7 +64,7 @@ export const computeReachable = (roots: string[], depsRoot: string): Set<string>
     }
     const dir = getDirname(file)
     for (const spec of collectChunkSpecifiers(source)) {
-      const target = join(dir, spec)
+      const target = resolveTarget(join(dir, spec))
       if (isUnderRoot(target, depsRoot) && exists(target) && !reachable.has(target)) {
         reachable.add(target)
         queue.push(target)

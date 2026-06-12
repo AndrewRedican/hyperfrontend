@@ -1,9 +1,6 @@
 import type { ChunkFormat } from './used-exports'
-import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs'
-import { tmpdir } from 'node:os'
-import { join as nodeJoin } from 'node:path'
 import { join } from '@hyperfrontend/project-scope/core'
-import { collectImportEdges, collectUsedExports } from './used-exports'
+import { collectImportEdges } from './used-exports'
 
 const IMPORTER_DIR = '/imp'
 const target = (specifier: string): string => join(IMPORTER_DIR, specifier)
@@ -111,47 +108,5 @@ describe('collectImportEdges (cjs)', () => {
 
   it('ignores a non-relative require specifier', () => {
     expect(edgesObj("var ns = require('rollup'); ns.x", 'cjs')).toEqual({})
-  })
-})
-
-describe('collectUsedExports', () => {
-  let root: string
-  let chunkPath: string
-
-  beforeEach(() => {
-    root = mkdtempSync(nodeJoin(tmpdir(), 'builder-used-exports-'))
-    chunkPath = join(root, 'dep.esm.js')
-  })
-
-  afterEach(() => {
-    rmSync(root, { recursive: true, force: true })
-  })
-
-  const writeImporter = (name: string, content: string): string => {
-    const abs = nodeJoin(root, name)
-    mkdirSync(nodeJoin(abs, '..'), { recursive: true })
-    writeFileSync(abs, content)
-    return abs
-  }
-
-  it('unions the named demand across multiple importers', () => {
-    const a = writeImporter('a.esm.js', "import { foo } from './dep.esm.js'")
-    const b = writeImporter('b.esm.js', "import { bar } from './dep.esm.js'")
-    expect([...(<Set<string>>collectUsedExports([a, b], chunkPath, 'esm'))].sort()).toEqual(['bar', 'foo'])
-  })
-
-  it('returns all the moment any importer consumes the chunk wholesale', () => {
-    const a = writeImporter('a.esm.js', "import { foo } from './dep.esm.js'")
-    const b = writeImporter('b.esm.js', "import * as ns from './dep.esm.js'")
-    expect(collectUsedExports([a, b], chunkPath, 'esm')).toBe('all')
-  })
-
-  it('returns an empty set when no importer references the chunk', () => {
-    const a = writeImporter('a.esm.js', "import { x } from './other.esm.js'")
-    expect([...(<Set<string>>collectUsedExports([a], chunkPath, 'esm'))]).toEqual([])
-  })
-
-  it('skips importer files that do not exist on disk', () => {
-    expect([...(<Set<string>>collectUsedExports([nodeJoin(root, 'missing.esm.js')], chunkPath, 'esm'))]).toEqual([])
   })
 })

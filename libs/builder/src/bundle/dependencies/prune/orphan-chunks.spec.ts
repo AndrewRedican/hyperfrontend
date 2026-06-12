@@ -121,13 +121,13 @@ describe('pruneOrphanChunks', () => {
     expect(listDeps('index.d.ts')).toEqual([])
   })
 
-  it('keeps a d.ts whose runtime sibling survived the js sweep', () => {
+  it('deletes a dep d.ts the entry d.ts never references even when its runtime sibling survived the js sweep', () => {
     write('index.esm.js', "import {a} from './_dependencies/live/index.esm.js'")
     write('index.d.ts', 'export declare const a: number')
     write('_dependencies/live/index.esm.js', 'export const a = 1')
     write('_dependencies/live/index.d.ts', 'export declare const a: number')
     pruneOrphanChunks(makeContext(outputPath), depsRoot)
-    expect(listDeps('index.d.ts')).toEqual(['live/index.d.ts'])
+    expect(listDeps('index.d.ts')).toEqual([])
   })
 
   it('keeps a d.ts reachable from the entry d.ts even without a runtime sibling', () => {
@@ -135,6 +135,24 @@ describe('pruneOrphanChunks', () => {
     write('_dependencies/types/index.d.ts', 'export type T = string')
     pruneOrphanChunks(makeContext(outputPath), depsRoot)
     expect(listDeps('index.d.ts')).toEqual(['types/index.d.ts'])
+  })
+
+  it('keeps a d.ts the entry d.ts reaches through a runtime (.js) specifier', () => {
+    write('index.d.ts', "import {Plugin} from './_dependencies/dep/index.js'")
+    write('_dependencies/dep/index.js', 'export const p = 1')
+    write('_dependencies/dep/index.d.ts', 'export declare const Plugin: number')
+    pruneOrphanChunks(makeContext(outputPath), depsRoot)
+    expect(listDeps('index.d.ts')).toEqual(['dep/index.d.ts'])
+  })
+
+  it('keeps a d.ts reached transitively through the type graph', () => {
+    write('index.d.ts', "import {A} from './_dependencies/a/index.js'")
+    write('_dependencies/a/index.js', 'export const a = 1')
+    write('_dependencies/a/index.d.ts', "export {B} from '../b/index.js'\nexport declare const A: number")
+    write('_dependencies/b/index.d.ts', 'export declare const B: number')
+    write('_dependencies/orphan/index.d.ts', 'export declare const z: number')
+    pruneOrphanChunks(makeContext(outputPath), depsRoot)
+    expect(listDeps('index.d.ts')).toEqual(['a/index.d.ts', 'b/index.d.ts'])
   })
 
   it('removes the .d.ts.map sibling alongside an orphan d.ts', () => {
@@ -145,12 +163,12 @@ describe('pruneOrphanChunks', () => {
     expect(existsSync(join(depsRoot, 'orphan/index.d.ts.map'))).toBe(false)
   })
 
-  it('falls back to runtime-sibling survival when the entry d.ts itself bails on a dynamic specifier', () => {
+  it('keeps every dep d.ts when the entry d.ts bails on a dynamic specifier', () => {
     write('index.esm.js', 'export const a = 1')
     write('index.d.ts', 'const lazy = import(typeName)')
     write('_dependencies/orphan/index.d.ts', 'export declare const b: number')
     pruneOrphanChunks(makeContext(outputPath), depsRoot)
-    expect(listDeps('index.d.ts')).toEqual([])
+    expect(listDeps('index.d.ts')).toEqual(['orphan/index.d.ts'])
   })
 
   it('removes directories left empty after pruning', () => {

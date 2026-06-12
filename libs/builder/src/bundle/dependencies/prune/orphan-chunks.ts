@@ -1,7 +1,6 @@
 import type { BuildContext, EntryPoint } from '../../../models'
 import { rmdirSync, statSync, unlinkSync } from 'node:fs'
-import { createSet } from '@hyperfrontend/immutable-api-utils/built-in-copy/set'
-import { exists, getDirname, isDirectory, join, readDirectory } from '@hyperfrontend/project-scope/core'
+import { exists, isDirectory, join, readDirectory } from '@hyperfrontend/project-scope/core'
 import { computeReachable } from './reachability'
 
 /**
@@ -101,52 +100,39 @@ const cleanupEmptyDirs = (depsRoot: string): void => {
   }
 }
 
-/**
- * Outcome of the Tier-1 JS orphan-chunk sweep.
- */
-interface JsSweep {
-  /** Files removed and bytes reclaimed by the JS sweep. */
-  result: OrphanPruneResult
-  /** Directories whose `index.esm.js` or `index.cjs.js` sibling survived the sweep. */
-  survivedDirs: Set<string>
-}
-
-const pruneJsOrphans = (context: BuildContext, depsRoot: string): JsSweep => {
+const pruneJsOrphans = (context: BuildContext, depsRoot: string): OrphanPruneResult => {
   const roots = collectEntryFiles(context, depsRoot, ['index.esm.js', 'index.cjs.js'])
   const reachable = computeReachable(roots, depsRoot)
   const chunks: string[] = []
   walkFiles(depsRoot, (name) => name === 'index.esm.js' || name === 'index.cjs.js', chunks)
-  const survivedDirs = createSet<string>([])
-  // why: a dynamic-specifier bail keeps every chunk; mark all dirs survived so d.ts retention keeps its co-located types too.
-  if (reachable === null) {
-    for (const chunk of chunks) survivedDirs.add(getDirname(chunk))
-    return { result: { orphanFilesRemoved: 0, bytesRemoved: 0 }, survivedDirs }
-  }
+  // why: a dynamic-specifier bail keeps every chunk.
+  if (reachable === null) return { orphanFilesRemoved: 0, bytesRemoved: 0 }
   let orphanFilesRemoved = 0
   let bytesRemoved = 0
   for (const chunk of chunks) {
-    if (reachable.has(chunk)) {
-      survivedDirs.add(getDirname(chunk))
-      continue
-    }
+    if (reachable.has(chunk)) continue
     const removed = unlinkWithMap(chunk)
     orphanFilesRemoved += removed.orphanFilesRemoved
     bytesRemoved += removed.bytesRemoved
   }
-  return { result: { orphanFilesRemoved, bytesRemoved }, survivedDirs }
+  return { orphanFilesRemoved, bytesRemoved }
 }
 
-const pruneDtsOrphans = (context: BuildContext, depsRoot: string, survivedDirs: Set<string>): OrphanPruneResult => {
+// why: declaration specifiers carry the runtime extension (`'.../index.js'`, also `.esm.js`/`.cjs.js`); a d.ts type-reference resolves to the sibling `index.d.ts`, so the type-graph walk must rewrite the target before visiting it.
+const toDtsTarget = (target: string): string => target.replace(/(?:\.esm|\.cjs)?\.[mc]?js$/, '.d.ts')
+
+const pruneDtsOrphans = (context: BuildContext, depsRoot: string): OrphanPruneResult => {
   const roots = collectEntryFiles(context, depsRoot, ['index.d.ts'])
-  const reachable = computeReachable(roots, depsRoot)
+  const reachable = computeReachable(roots, depsRoot, toDtsTarget)
   const chunks: string[] = []
   walkFiles(depsRoot, (name) => name === 'index.d.ts', chunks)
+  // why: a dynamic specifier in the type graph cannot be resolved — keep every dep d.ts (guaranteed-safe fallback), mirroring the JS sweep.
+  if (reachable === null) return { orphanFilesRemoved: 0, bytesRemoved: 0 }
   let orphanFilesRemoved = 0
   let bytesRemoved = 0
   for (const chunk of chunks) {
-    const reachableFromDts = reachable !== null && reachable.has(chunk)
-    // why: retention OR-rule — keep a dep's types when its own d.ts graph reaches them OR its runtime sibling survived.
-    if (reachableFromDts || survivedDirs.has(getDirname(chunk))) continue
+    // why: keep a dep's types only when an entry's own d.ts type-graph reaches them — the dts-per-entry pass makes each entry `index.d.ts` self-contained, so any dep d.ts no entry type-graph references is dead.
+    if (reachable.has(chunk)) continue
     const removed = unlinkWithMap(chunk)
     orphanFilesRemoved += removed.orphanFilesRemoved
     bytesRemoved += removed.bytesRemoved
@@ -161,8 +147,9 @@ const pruneDtsOrphans = (context: BuildContext, depsRoot: string, survivedDirs: 
  * Runs reachability from the package's own entry output chunks over the
  * `_dependencies/` JS graph, unlinks every `index.{esm,cjs}.js` (and `.map`
  * sibling) that is unreachable, then applies the d.ts retention rule — a dep's
- * `index.d.ts` is kept when it is reachable from an entry's `.d.ts` graph or its
- * runtime sibling survived the JS sweep. Empty directories left behind are
+ * `index.d.ts` is kept only when it is reachable from an entry's `.d.ts` graph.
+ * Entry `index.d.ts` are self-contained (dts-per-entry), so dep types no entry
+ * type-graph references are dead and removed. Empty directories left behind are
  * removed. A dynamic, non-literal `import(`/`require(` anywhere in the reachable
  * graph disables deletion entirely (guaranteed-safe fallback).
  *
@@ -178,10 +165,10 @@ const pruneDtsOrphans = (context: BuildContext, depsRoot: string, survivedDirs: 
 export const pruneOrphanChunks = (context: BuildContext, depsRoot: string): OrphanPruneResult => {
   if (!exists(depsRoot) || !isDirectory(depsRoot)) return { orphanFilesRemoved: 0, bytesRemoved: 0 }
   const js = pruneJsOrphans(context, depsRoot)
-  const dts = pruneDtsOrphans(context, depsRoot, js.survivedDirs)
+  const dts = pruneDtsOrphans(context, depsRoot)
   cleanupEmptyDirs(depsRoot)
   return {
-    orphanFilesRemoved: js.result.orphanFilesRemoved + dts.orphanFilesRemoved,
-    bytesRemoved: js.result.bytesRemoved + dts.bytesRemoved,
+    orphanFilesRemoved: js.orphanFilesRemoved + dts.orphanFilesRemoved,
+    bytesRemoved: js.bytesRemoved + dts.bytesRemoved,
   }
 }

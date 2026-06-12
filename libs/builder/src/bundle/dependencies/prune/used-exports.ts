@@ -1,7 +1,6 @@
 import ts from 'typescript'
 import { createMap } from '@hyperfrontend/immutable-api-utils/built-in-copy/map'
 import { createSet } from '@hyperfrontend/immutable-api-utils/built-in-copy/set'
-import { exists, getDirname, readFileContent } from '@hyperfrontend/project-scope/core'
 import { getRequireSpecifier, parseChunk, resolveRelativeTarget } from './ast-utils'
 
 /**
@@ -173,37 +172,4 @@ export const collectImportEdges = (source: string, importerDir: string, format: 
   if (format === 'esm') collectEsmEdges(sourceFile, importerDir, edges)
   else collectCjsEdges(sourceFile, importerDir, edges)
   return edges
-}
-
-/**
- * Computes the exported names a chunk must retain, given every file that may
- * import it.
- *
- * Unions the demand each importer places on `chunkPath`: a concrete set of
- * names, or `'all'` the moment any importer consumes the chunk wholesale. An
- * empty set means no importer names any export (the chunk survives only via a
- * side-effect import or has become orphaned). Missing importer files are
- * skipped; each present importer is parsed once.
- *
- * @param importerFiles - Absolute paths of every potential importer (entry
- * chunks plus surviving sibling chunks).
- * @param chunkPath - Absolute path of the chunk whose demand is computed.
- * @param format - Module format of the importers and the chunk.
- * @returns The set of names to keep, or `'all'` to keep the whole surface.
- *
- * @example Keep-set for a chunk imported by one entry
- * ```typescript
- * collectUsedExports(['/dist/libs/foo/index.esm.js'], '/dist/libs/foo/_dependencies/x/index.esm.js', 'esm')
- * ```
- */
-export const collectUsedExports = (importerFiles: string[], chunkPath: string, format: ChunkFormat): ImportUsage => {
-  const keep = createSet<string>([])
-  for (const file of importerFiles) {
-    if (!exists(file)) continue
-    const usage = collectImportEdges(readFileContent(file), getDirname(file), format).get(chunkPath)
-    if (usage === undefined) continue
-    if (usage === 'all') return 'all'
-    for (const name of usage) keep.add(name)
-  }
-  return keep
 }
