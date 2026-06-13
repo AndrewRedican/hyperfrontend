@@ -1,29 +1,28 @@
 import type { BuildContext } from '../../models'
 import { cpSync, statSync } from 'node:fs'
-import { ensureDir, exists, getDirname, join, readDirectory, relativePath, removeDirectory } from '@hyperfrontend/project-scope/core'
+import { ensureDir, exists, getDirname, join, relativePath, removeDirectory } from '@hyperfrontend/project-scope/core'
 
 const NESTED_WORKSPACE_DIRS = ['libs', 'plugins', 'apps']
 
-const copyRootDeclarations = (nestedSrc: string, outputPath: string): void => {
-  for (const entry of readDirectory(nestedSrc)) {
-    if (!entry.isFile) continue
-    if (entry.name.endsWith('.d.ts') || entry.name.endsWith('.d.ts.map')) {
-      cpSync(entry.path, join(outputPath, entry.name), { force: true })
-    }
-  }
-}
+const isDeclarationFile = (path: string): boolean => path.endsWith('.d.ts') || path.endsWith('.d.ts.map')
 
-const copyLibDeclarations = (nestedSrc: string, outputPath: string): void => {
-  const libSrc = join(nestedSrc, 'lib')
-  if (!exists(libSrc)) return
-  cpSync(libSrc, join(outputPath, 'lib'), {
+/**
+ * Recursively copies every `.d.ts` / `.d.ts.map` under the project's nested tsc
+ * `src` tree into the flat output root, preserving internal subdirectory
+ * structure. The root entry's public `index.d.ts` may re-export from any
+ * internal non-entry subdirectory (e.g. `./shared/consts`, `./lib/*`), so a
+ * top-level-files-only copy would leave those references dangling; a later
+ * `rollup-plugin-dts` flatten then fails to resolve them. Directories are always
+ * traversed; tsc emits declarations only, so the file filter is a safety net.
+ *
+ * @param nestedSrc - Absolute path to the project's nested tsc `src` declaration tree.
+ * @param outputPath - Absolute path to the flat per-library output root.
+ */
+const copyRootDeclarations = (nestedSrc: string, outputPath: string): void => {
+  cpSync(nestedSrc, outputPath, {
     recursive: true,
     force: true,
-    filter: (src) => {
-      const stat = statSync(src)
-      if (stat.isDirectory()) return true
-      return src.endsWith('.d.ts') || src.endsWith('.d.ts.map')
-    },
+    filter: (src) => statSync(src).isDirectory() || isDeclarationFile(src),
   })
 }
 
@@ -44,9 +43,10 @@ const cleanupNestedDirs = (outputPath: string): void => {
  *   `dist/libs/<lib>/index.d.ts`
  * while preserving any nested platform / feature subdirectories.
  *
- * Also copies declarations from a `lib/` folder when present (used by libraries whose
- * platform entries re-export from `../lib/*`) and removes the leftover `libs/`,
- * `plugins/`, and `apps/` folders tsc created at the output root.
+ * The root copy is recursive, so internal non-entry subdirectories the public
+ * `index.d.ts` re-exports from (e.g. `shared/`, `lib/`) are preserved rather
+ * than dropped. Finally removes the leftover `libs/`, `plugins/`, and `apps/`
+ * folders tsc created at the output root.
  *
  * @param context - Resolved build context. Uses `projectRoot`, `outputPath`,
  * `workspaceRoot`, and `entryPointDiscovery`.
@@ -73,6 +73,5 @@ export const flattenDeclarationPaths = (context: BuildContext): void => {
     }
   }
 
-  copyLibDeclarations(nestedDeclarations, context.outputPath)
   cleanupNestedDirs(context.outputPath)
 }

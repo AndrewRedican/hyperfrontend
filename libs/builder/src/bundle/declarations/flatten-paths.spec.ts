@@ -122,14 +122,17 @@ describe('flattenDeclarationPaths', () => {
     expect(existsSync(join(outputPath, 'index.js'))).toBe(false)
   })
 
-  it('skips directory entries at the nested src root when flattening root declarations', () => {
+  it('preserves declarations in internal non-entry subdirectories the root re-exports from', () => {
     const nested = join(outputPath, 'libs', 'foo', 'src')
-    writeFile(join(nested, 'index.d.ts'), 'export {}')
-    mkdirSync(join(nested, 'browser'), { recursive: true })
+    writeFile(join(nested, 'index.d.ts'), "export { x } from './shared/consts'")
+    writeFile(join(nested, 'shared', 'consts.d.ts'), 'export declare const x: number;')
+    writeFile(join(nested, 'shared', 'consts.js'), 'noop')
     flattenDeclarationPaths(
       makeContext(makeDiscovery([{ exportPath: '.', srcPath: '', inputFile: join(projectRoot, 'src/index.ts'), isRoot: true }]))
     )
     expect(existsSync(join(outputPath, 'index.d.ts'))).toBe(true)
+    expect(existsSync(join(outputPath, 'shared', 'consts.d.ts'))).toBe(true)
+    expect(existsSync(join(outputPath, 'shared', 'consts.js'))).toBe(false)
   })
 
   it('removes the leftover libs / plugins / apps directories at the output root', () => {
