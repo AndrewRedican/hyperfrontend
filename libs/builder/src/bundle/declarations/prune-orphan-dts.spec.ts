@@ -119,6 +119,42 @@ describe('pruneOrphanDeclarations', () => {
     expect(pruneOrphanDeclarations(makeContext(outputPath, [BUNDLE_ENTRY]))).toBe(0)
   })
 
+  it('keeps siblings the surviving index.d.ts still re-exports from (skipped flatten)', () => {
+    writeFileSync(
+      join(outputPath, 'index.d.ts'),
+      [
+        "export { createLogger } from './create-logger'",
+        "export type { Logger } from './create-logger'",
+        "export { logger } from './logger'",
+      ].join('\n')
+    )
+    writeFileSync(join(outputPath, 'create-logger.d.ts'), '')
+    writeFileSync(join(outputPath, 'create-logger.d.ts.map'), '')
+    writeFileSync(join(outputPath, 'logger.d.ts'), '')
+    writeFileSync(join(outputPath, 'orphan.d.ts'), '')
+    const removed = pruneOrphanDeclarations(makeContext(outputPath, [ROOT_ENTRY]))
+    expect(removed).toBe(1)
+    expect(namesIn(outputPath)).toEqual(['create-logger.d.ts', 'create-logger.d.ts.map', 'index.d.ts', 'logger.d.ts'])
+  })
+
+  it('prunes every sibling once the flatten has made index.d.ts self-contained', () => {
+    writeFileSync(join(outputPath, 'index.d.ts'), 'export declare const createLogger: () => void;\n')
+    writeFileSync(join(outputPath, 'create-logger.d.ts'), '')
+    writeFileSync(join(outputPath, 'logger.d.ts'), '')
+    const removed = pruneOrphanDeclarations(makeContext(outputPath, [ROOT_ENTRY]))
+    expect(removed).toBe(2)
+    expect(namesIn(outputPath)).toEqual(['index.d.ts'])
+  })
+
+  it('keeps a sibling referenced via a dynamic type import', () => {
+    writeFileSync(join(outputPath, 'index.d.ts'), 'export type Cfg = typeof import("./config");\n')
+    writeFileSync(join(outputPath, 'config.d.ts'), '')
+    writeFileSync(join(outputPath, 'orphan.d.ts'), '')
+    const removed = pruneOrphanDeclarations(makeContext(outputPath, [ROOT_ENTRY]))
+    expect(removed).toBe(1)
+    expect(namesIn(outputPath)).toEqual(['config.d.ts', 'index.d.ts'])
+  })
+
   it('processes every entry directory in a multi-entry build', () => {
     const dirA = join(outputPath, 'bundle')
     const dirB = join(outputPath, 'bin', 'native')

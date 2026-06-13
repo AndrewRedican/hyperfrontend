@@ -70,12 +70,19 @@ const buildJobs = (entries: EntryPoint[], context: BuildContext): PrePassJob[] =
 
 /**
  * Runs the per-entry d.ts inlining pass: re-runs `rollup-plugin-dts` over every
- * tsc-emitted entry `.d.ts` so bundled-dep type imports are routed through
- * `_dependencies/<dep>/index.d.ts` rather than left as bare specifiers.
+ * tsc-emitted entry `.d.ts` so (a) local per-source sibling re-exports
+ * (`export … from './create-logger'`) are flattened into the entry's
+ * `index.d.ts`, and (b) bundled-dep type imports are routed through
+ * `_dependencies/<dep>/index.d.ts` rather than left as bare specifiers. This
+ * self-containment is what lets `pruneOrphanDeclarations` delete the orphaned
+ * per-source `.d.ts` afterwards without orphaning a still-referenced sibling.
  *
- * Each rollup invocation runs in a forked Node child to bound peak heap.
- * Entries whose tsc output is missing are skipped silently — the bundle phase
- * may have skipped them deliberately (e.g., empty bundles).
+ * Runs whenever the build bundles any dep — npm (`bundledDeps`) **or** workspace
+ * (`workspaceBundledDeps`); a package whose deps are all `@hyperfrontend/*` still
+ * needs the flatten, so the gate mirrors `runDtsPrePass`. Each rollup invocation
+ * runs in a forked Node child to bound peak heap. Entries whose tsc output is
+ * missing are skipped silently — the bundle phase may have skipped them
+ * deliberately (e.g., empty bundles).
  *
  * @param context - Resolved build context.
  * @param monitor - Optional memory monitor invoked between jobs.
@@ -87,7 +94,7 @@ const buildJobs = (entries: EntryPoint[], context: BuildContext): PrePassJob[] =
  * ```
  */
 export const runDtsPerEntry = async (context: BuildContext, monitor?: MemoryMonitor): Promise<void> => {
-  if (context.bundledDeps.length === 0) return
+  if (context.bundledDeps.length === 0 && context.workspaceBundledDeps.length === 0) return
   const invocation = resolveDefaultWorkerPath(context.workspaceRoot)
   if (!invocation) {
     throw createError('bundleAllDeps is enabled but the pre-pass worker artifact was not found for the per-entry d.ts pass.')

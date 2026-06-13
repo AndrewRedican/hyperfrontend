@@ -52,9 +52,28 @@ beforeEach(() => {
 })
 
 describe('runDtsPerEntry', () => {
-  it('is a no-op when no bundled deps are configured', async () => {
+  it('is a no-op when neither npm nor workspace deps are configured', async () => {
     await runDtsPerEntry(makeContext([], [ROOT_ENTRY]))
     expect(runPrePass).not.toHaveBeenCalled()
+  })
+
+  it('runs the flatten when only workspace deps are bundled (no npm deps)', async () => {
+    const ctx = makeContext([], [ROOT_ENTRY])
+    ctx.workspaceBundledDeps = [
+      {
+        packageName: '@hyperfrontend/logging',
+        specifier: '@hyperfrontend/logging',
+        subPath: '',
+        policy: 'whole-surface',
+        inputPath: '/abs/repo/libs/logging/src/index.ts',
+        tsConfigPath: '/abs/repo/libs/logging/tsconfig.lib.json',
+      },
+    ]
+    await runDtsPerEntry(ctx)
+    expect(runPrePass).toHaveBeenCalledTimes(1)
+    const jobs = (<jest.Mock>runPrePass).mock.calls[0][0]
+    expect(jobs).toHaveLength(1)
+    expect(jobs[0].inputPath).toBe('/abs/dist/libs/foo/index.d.ts')
   })
 
   it('throws a context-rich error when the worker artifact is missing', async () => {
