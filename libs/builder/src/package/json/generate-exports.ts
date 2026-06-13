@@ -48,9 +48,8 @@ const extractOutputDirFromSourcePath = (srcPath: ExportValue): string => {
  * If `srcPkg` has no `exports` field, falls back to a single root-entry export
  * synthesized from `discovery.hasRootEntry`.
  *
- * IIFE / UMD bundles always materialize as `./<bundle-dir>` exports pointing
- * at the minified twin (UMD takes precedence when both are configured for the
- * same output directory).
+ * IIFE / UMD CDN bundles are **not** advertised in `exports`; they are reached
+ * solely through the `unpkg`/`jsdelivr` fields (see {@link getCdnPaths}).
  *
  * @param discovery - Entry-point discovery result produced earlier in the pipeline.
  * @param formatOutputs - Aggregated outputs collected by the bundle phase.
@@ -91,24 +90,6 @@ export const generateExportsFromFormats = (
     const hasCjs = cjsPaths.has('.')
     if (hasEsm || hasCjs) {
       exportsMap['.'] = createExportEntry('', hasEsm, hasCjs)
-    }
-  }
-
-  for (const iife of formatOutputs.iife) {
-    const bundleDir = iife.config.output ?? 'bundle'
-    exportsMap[`./${bundleDir}`] = {
-      import: `./${bundleDir}/index.iife.min.js`,
-      require: `./${bundleDir}/index.iife.min.js`,
-    }
-  }
-
-  for (const umd of formatOutputs.umd) {
-    const bundleDir = umd.config.output ?? 'bundle'
-    if (!exportsMap[`./${bundleDir}`]) {
-      exportsMap[`./${bundleDir}`] = {
-        import: `./${bundleDir}/index.umd.min.js`,
-        require: `./${bundleDir}/index.umd.min.js`,
-      }
     }
   }
 

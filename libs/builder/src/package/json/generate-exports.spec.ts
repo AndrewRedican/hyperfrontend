@@ -115,44 +115,15 @@ describe('generateExportsFromFormats', () => {
     expect(Object.keys(result).filter((k) => k === './package.json')).toHaveLength(1)
   })
 
-  it('emits an IIFE export pointing at the minified twin', () => {
+  it('does not advertise an IIFE CDN bundle in the exports map', () => {
     const iifeConfig: IifeConfig = { globalName: 'X' }
     const formats: FormatOutputs = { esm: [], cjs: [], iife: [{ config: iifeConfig, entries: [ROOT] }], umd: [] }
-    const result = generateExportsFromFormats(discovery, formats)
-    expect(result['./bundle']).toEqual({ import: './bundle/index.iife.min.js', require: './bundle/index.iife.min.js' })
+    expect(generateExportsFromFormats(discovery, formats)).not.toHaveProperty('./bundle')
   })
 
-  it('respects a custom IIFE output directory', () => {
-    const iifeConfig: IifeConfig = { globalName: 'X', output: 'dist-iife' }
-    const formats: FormatOutputs = { esm: [], cjs: [], iife: [{ config: iifeConfig, entries: [ROOT] }], umd: [] }
-    const result = generateExportsFromFormats(discovery, formats)
-    expect(result['./dist-iife']).toBeDefined()
-  })
-
-  it('emits a UMD export when no IIFE shadows the same bundle directory', () => {
-    const umdConfig: UmdConfig = { globalName: 'X' }
-    const formats: FormatOutputs = { esm: [], cjs: [], iife: [], umd: [{ config: umdConfig, entries: [ROOT] }] }
-    const result = generateExportsFromFormats(discovery, formats)
-    expect(result['./bundle']).toEqual({ import: './bundle/index.umd.min.js', require: './bundle/index.umd.min.js' })
-  })
-
-  it('keeps the IIFE entry when a UMD bundle would otherwise overwrite it', () => {
-    const iifeConfig: IifeConfig = { globalName: 'X' }
-    const umdConfig: UmdConfig = { globalName: 'X' }
-    const formats: FormatOutputs = {
-      esm: [],
-      cjs: [],
-      iife: [{ config: iifeConfig, entries: [ROOT] }],
-      umd: [{ config: umdConfig, entries: [ROOT] }],
-    }
-    const result = generateExportsFromFormats(discovery, formats)
-    expect(result['./bundle']).toEqual({ import: './bundle/index.iife.min.js', require: './bundle/index.iife.min.js' })
-  })
-
-  it('respects a custom UMD output directory', () => {
+  it('does not advertise a UMD CDN bundle in the exports map', () => {
     const umdConfig: UmdConfig = { globalName: 'X', output: 'dist-umd' }
     const formats: FormatOutputs = { esm: [], cjs: [], iife: [], umd: [{ config: umdConfig, entries: [ROOT] }] }
-    const result = generateExportsFromFormats(discovery, formats)
-    expect(result['./dist-umd']).toBeDefined()
+    expect(generateExportsFromFormats(discovery, formats)).not.toHaveProperty('./dist-umd')
   })
 })
