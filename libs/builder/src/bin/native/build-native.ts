@@ -1,10 +1,11 @@
 import type { BinConfig, BinOutput, BuildContext, SeaPlatform } from '../../models'
+import { unlinkSync } from 'node:fs'
 import { freemem } from 'node:os'
 import { isArray } from '@hyperfrontend/immutable-api-utils/built-in-copy/array'
 import { dateNow } from '@hyperfrontend/immutable-api-utils/built-in-copy/date'
 import { createError } from '@hyperfrontend/immutable-api-utils/built-in-copy/error'
 import { logger } from '@hyperfrontend/logging'
-import { ensureDir, join, writeJsonFile } from '@hyperfrontend/project-scope/core'
+import { ensureDir, exists, join, writeJsonFile } from '@hyperfrontend/project-scope/core'
 import { removeCodesign } from './codesign'
 import { dispatchInjectWorker, resolveDefaultInjectWorkerPath } from './dispatch'
 import { resolveHostBinary } from './host-binary'
@@ -52,6 +53,13 @@ const resolveOutputBinaryPath = (binDir: string, name: string, target: string): 
   return join(binDir, isWindows ? `${name}.${target}.exe` : `${name}.${target}`)
 }
 
+// why: the SEA config JSON and prep blob are build scaffolding consumed by the inject step; once the binary exists they are useless to consumers and must not remain in the publishable output.
+const cleanupSeaIntermediates = (seaConfigPath: string, blobPath: string): void => {
+  for (const file of [seaConfigPath, blobPath]) {
+    if (exists(file)) unlinkSync(file)
+  }
+}
+
 /**
  * Builds the Node SEA native binary for a single bin declaration.
  *
@@ -65,6 +73,8 @@ const resolveOutputBinaryPath = (binDir: string, name: string, target: string): 
  *    embed the blob, and writes the output binary. The ~138 MB Buffer postject allocates
  *    lives and dies in the child — the parent's RSS stays flat across this step.
  * 7. On macOS, strip the cloned signature so the injection doesn't invalidate it.
+ * 8. Delete the SEA build intermediates (config JSON + prep blob) so only the
+ *    runtime binary remains in the publishable output.
  *
  * Each step emits an info-level memory snapshot (parent heap, RSS, OS free) and a
  * duration log so the pipeline is observable end-to-end.
@@ -144,6 +154,7 @@ export const buildNativeBin = async (inputs: BuildNativeBinInputs): Promise<BinO
   memorySnapshot(`${bin.name}: post-inject`)
 
   removeCodesign({ binary: outputBinary })
+  cleanupSeaIntermediates(seaConfigPath, blobPath)
   memorySnapshot(`${bin.name}: native build complete`)
 
   return [{ name: bin.name, kind: 'native', outputPath: outputBinary, platform: target }]

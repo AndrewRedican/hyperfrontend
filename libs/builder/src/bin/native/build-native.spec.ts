@@ -7,9 +7,10 @@ jest.mock('@hyperfrontend/logging', () => {
     __mockChannel: mockChannel,
   }
 })
+jest.mock('node:fs', () => ({ ...jest.requireActual('node:fs'), unlinkSync: jest.fn() }))
 jest.mock('@hyperfrontend/project-scope/core', () => {
   const actual = jest.requireActual('@hyperfrontend/project-scope/core')
-  return { ...actual, ensureDir: jest.fn(), writeJsonFile: jest.fn() }
+  return { ...actual, ensureDir: jest.fn(), writeJsonFile: jest.fn(), exists: jest.fn() }
 })
 jest.mock('./codesign', () => ({ removeCodesign: jest.fn() }))
 jest.mock('./host-binary', () => ({ resolveHostBinary: jest.fn() }))
@@ -25,7 +26,8 @@ jest.mock('./sea-blob', () => ({ generateSeaBlob: jest.fn() }))
 jest.mock('./sea-config', () => ({ generateSeaConfig: jest.fn() }))
 
 import type { BinConfig, BuildContext } from '../../models'
-import { ensureDir, writeJsonFile } from '@hyperfrontend/project-scope/core'
+import { unlinkSync } from 'node:fs'
+import { ensureDir, exists, writeJsonFile } from '@hyperfrontend/project-scope/core'
 import { buildNativeBin } from './build-native'
 import { removeCodesign } from './codesign'
 import { dispatchInjectWorker, resolveDefaultInjectWorkerPath } from './dispatch'
@@ -63,6 +65,8 @@ const mockChannel = jest.requireMock('@hyperfrontend/logging').__mockChannel as 
 beforeEach(() => {
   ;(<jest.Mock>ensureDir).mockReset()
   ;(<jest.Mock>writeJsonFile).mockReset()
+  ;(<jest.Mock>exists).mockReset().mockReturnValue(true)
+  ;(<jest.Mock>unlinkSync).mockReset()
   ;(<jest.Mock>removeCodesign).mockReset()
   ;(<jest.Mock>resolveHostBinary).mockReset().mockReturnValue('/opt/node')
   ;(<jest.Mock>dispatchInjectWorker)
@@ -208,6 +212,20 @@ describe('buildNativeBin', () => {
   it('strips the macOS code signature after injection', async () => {
     await buildNativeBin({ bin: seaBin, ctx: makeContext(), cjsOutputPath: '/abs/dist/libs/builder/bin/hf-build.js' })
     expect(removeCodesign).toHaveBeenCalledWith({ binary: '/abs/dist/libs/builder/bin/hf-build.linux-x64' })
+  })
+
+  it('deletes the SEA config JSON and prep blob intermediates after the binary is produced', async () => {
+    await buildNativeBin({ bin: seaBin, ctx: makeContext(), cjsOutputPath: '/abs/dist/libs/builder/bin/hf-build.js' })
+    expect((<jest.Mock>unlinkSync).mock.calls).toEqual([
+      ['/abs/dist/libs/builder/bin/hf-build.sea-config.json'],
+      ['/abs/dist/libs/builder/bin/hf-build.sea-prep.blob'],
+    ])
+  })
+
+  it('skips deleting SEA intermediates that are absent from disk', async () => {
+    ;(<jest.Mock>exists).mockReturnValue(false)
+    await buildNativeBin({ bin: seaBin, ctx: makeContext(), cjsOutputPath: '/abs/dist/libs/builder/bin/hf-build.js' })
+    expect(unlinkSync).not.toHaveBeenCalled()
   })
 
   it('returns a single native BinOutput for the current target', async () => {
