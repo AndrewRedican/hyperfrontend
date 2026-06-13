@@ -3,7 +3,6 @@ import { from } from '@hyperfrontend/immutable-api-utils/built-in-copy/array'
 import { keys } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
 import { createSet } from '@hyperfrontend/immutable-api-utils/built-in-copy/set'
 import { copyAssets } from './assets/copy-assets'
-import { computeDefaultFilesAllowlist } from './json/files-allowlist'
 import { readProjectPackageJson } from './json/read-package-json'
 import { synthesizePackageJson } from './json/synthesize'
 import { writeOutputPackageJson } from './json/write'
@@ -36,7 +35,8 @@ const collectLicenseDeps = (ctx: BuildContext, distDeps: string[]): string[] => 
  *
  * @param ctx - Resolved build context.
  * @param config - Top-level builder configuration. Reads `inheritFieldsFrom`,
- * `filterWorkspaceDepsFromOutput`, `unpkg`, `jsdelivr`, `bin`, `files`, and `thirdPartyLicenses`.
+ * `filterWorkspaceDepsFromOutput`, `unpkg`, `jsdelivr`, `bin`, and `thirdPartyLicenses`.
+ * The `files` allowlist is owned by {@link finalizeFilesAllowlist}, not this phase.
  * @param formatOutputs - Outputs collected during the bundle phase.
  *
  * @example Driving the package phase from a custom orchestrator
@@ -48,7 +48,6 @@ export const runPackagePhase = async (ctx: BuildContext, config: BuildConfig, fo
   const srcPkg = readProjectPackageJson(ctx.projectRoot)
 
   const bins = config.bin ?? []
-  const files = config.files ?? computeDefaultFilesAllowlist(ctx, bins)
 
   const distPkg = synthesizePackageJson(srcPkg, ctx, formatOutputs, {
     inheritFieldsFrom: config.inheritFieldsFrom,
@@ -57,7 +56,6 @@ export const runPackagePhase = async (ctx: BuildContext, config: BuildConfig, fo
     unpkg: config.unpkg,
     jsdelivr: config.jsdelivr,
     bins,
-    files,
   })
 
   writeOutputPackageJson(ctx.outputPath, distPkg)

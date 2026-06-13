@@ -256,9 +256,9 @@ export interface BuildConfig {
   /**
    * Override the published `package.json#files` allowlist.
    *
-   * When omitted, the allowlist is derived programmatically from the entry-point
-   * discovery + bin declarations. Provide an explicit array to take full control
-   * of what `npm publish` ships.
+   * When omitted, the allowlist is reflected from the materialized output tree
+   * after every emit phase — it names exactly what shipped. Provide an explicit
+   * array to take full control of what `npm publish` ships.
    */
   files?: string[]
   /** Emit a third-party-licenses file. */

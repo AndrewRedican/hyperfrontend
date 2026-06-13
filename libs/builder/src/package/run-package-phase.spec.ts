@@ -119,29 +119,16 @@ describe('runPackagePhase', () => {
     expect(collectThirdPartyLicenses).toHaveBeenCalledWith('/abs/libs/foo', '/abs/repo', [])
   })
 
-  it('forwards config.bin and a derived files allowlist to synthesize', async () => {
-    const ctx = makeContext({
-      bundledDeps: ['rollup'],
-      entryPointDiscovery: {
-        category: 'root',
-        entryPoints: [{ exportPath: '.', srcPath: '', inputFile: '/abs/src/index.ts', isRoot: true }],
-        hasRootEntry: true,
-        platformEntries: [],
-        featureEntries: [],
-      },
-    })
-    await runPackagePhase(ctx, { ...baseConfig, bin: [{ name: 'hf-build', format: ['cjs'] }] }, formats)
+  it('forwards config.bin to synthesize', async () => {
+    await runPackagePhase(makeContext(), { ...baseConfig, bin: [{ name: 'hf-build', format: ['cjs'] }] }, formats)
     const passed = (<jest.Mock>synthesizePackageJson).mock.calls[0][3]
     expect(passed.bins).toEqual([{ name: 'hf-build', format: ['cjs'] }])
-    expect(passed.files).toContain('_dependencies/')
-    expect(passed.files).toContain('bin/hf-build.js')
-    expect(passed.files).toContain('index.*')
   })
 
-  it('honors config.files as an explicit allowlist override', async () => {
+  it('no longer computes the files allowlist — finalizeFilesAllowlist owns the field', async () => {
     await runPackagePhase(makeContext(), { ...baseConfig, files: ['only-this/'] }, formats)
     const passed = (<jest.Mock>synthesizePackageJson).mock.calls[0][3]
-    expect(passed.files).toEqual(['only-this/'])
+    expect(passed.files).toBeUndefined()
   })
 
   it('defaults thirdPartyLicenses to true when bundled deps are present', async () => {

@@ -1,5 +1,6 @@
 jest.mock('./bundle/run-bundle-phase', () => ({ runBundlePhase: jest.fn() }))
 jest.mock('./package/run-package-phase', () => ({ runPackagePhase: jest.fn() }))
+jest.mock('./package/finalize-files', () => ({ finalizeFilesAllowlist: jest.fn() }))
 jest.mock('./bin/run-bin-phase', () => ({ runBinPhase: jest.fn() }))
 jest.mock('./bundle/entries/discover-entries', () => ({ discoverEntries: jest.fn() }))
 jest.mock('./memory/monitor', () => ({ createMemoryMonitor: jest.fn() }))
@@ -13,6 +14,7 @@ import { build, createBuildContext } from './build'
 import { discoverEntries } from './bundle/entries/discover-entries'
 import { runBundlePhase } from './bundle/run-bundle-phase'
 import { createMemoryMonitor } from './memory/monitor'
+import { finalizeFilesAllowlist } from './package/finalize-files'
 import { runPackagePhase } from './package/run-package-phase'
 
 const ROOT_ENTRY: EntryPoint = { exportPath: '.', srcPath: '', inputFile: '/abs/repo/libs/foo/src/index.ts', isRoot: true }
@@ -39,6 +41,7 @@ beforeEach(() => {
   ;(<jest.Mock>discoverEntries).mockReset().mockReturnValue(DISCOVERY)
   ;(<jest.Mock>runBundlePhase).mockReset().mockResolvedValue(EMPTY_FORMATS)
   ;(<jest.Mock>runPackagePhase).mockReset().mockResolvedValue(undefined)
+  ;(<jest.Mock>finalizeFilesAllowlist).mockReset()
   ;(<jest.Mock>runBinPhase).mockReset().mockResolvedValue([])
   ;(<jest.Mock>createMemoryMonitor).mockReset()
 })
@@ -187,7 +190,7 @@ describe('createBuildContext', () => {
 })
 
 describe('build', () => {
-  it('runs bundle, package, and bin phases in order with the resolved context', async () => {
+  it('runs bundle, package, bin, then files-finalize in order with the resolved context', async () => {
     const callOrder: string[] = []
     ;(<jest.Mock>runBundlePhase).mockImplementationOnce(async () => {
       callOrder.push('bundle')
@@ -200,8 +203,18 @@ describe('build', () => {
       callOrder.push('bin')
       return []
     })
+    ;(<jest.Mock>finalizeFilesAllowlist).mockImplementationOnce(() => {
+      callOrder.push('finalize')
+    })
     await build(baseConfig())
-    expect(callOrder).toEqual(['bundle', 'package', 'bin'])
+    expect(callOrder).toEqual(['bundle', 'package', 'bin', 'finalize'])
+  })
+
+  it('finalizes the files allowlist with the resolved context and config', async () => {
+    const config = baseConfig()
+    await build(config)
+    const ctxArg = (<jest.Mock>runBinPhase).mock.calls[0][0]
+    expect(finalizeFilesAllowlist).toHaveBeenCalledWith(ctxArg, config)
   })
 
   it('forwards the resolved BuildContext to every phase', async () => {

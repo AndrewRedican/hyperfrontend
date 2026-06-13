@@ -22,6 +22,7 @@ import { discoverEntries } from './bundle/entries/discover-entries'
 import { runBundlePhase } from './bundle/run-bundle-phase'
 import { createMemoryMonitor } from './memory/monitor'
 import { recover } from './memory/recover'
+import { finalizeFilesAllowlist } from './package/finalize-files'
 import { runPackagePhase } from './package/run-package-phase'
 
 const NEVER_WORKSPACE: IsWorkspacePackagePredicate = () => false
@@ -141,8 +142,9 @@ const resolveMonitor = (config: BuildConfig): MemoryMonitor | undefined => {
 /**
  * The single facade that orchestrates a complete build: resolves the context,
  * optionally enables the memory monitor, then runs the bundle, package, and bin
- * phases in order. Returns a {@link BuildResult} summarizing what was emitted
- * and how long it took.
+ * phases in order before reflecting `package.json#files` from the materialized
+ * output tree. Returns a {@link BuildResult} summarizing what was emitted and
+ * how long it took.
  *
  * The memory monitor (when enabled) snapshots before each phase, between
  * phases, and at completion. A failure in any phase still flushes the monitor
@@ -183,6 +185,8 @@ export const build = async (config: BuildConfig): Promise<BuildResult> => {
     monitor?.check('package:end:post-recover')
     const binOutputs = await runBinPhase(ctx, config.bin ?? [])
     monitor?.check('bin:end')
+    finalizeFilesAllowlist(ctx, config)
+    monitor?.check('finalize:end')
     monitor?.logSummary()
     return {
       success: true,
