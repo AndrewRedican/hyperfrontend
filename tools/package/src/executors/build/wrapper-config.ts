@@ -4,7 +4,7 @@ export const WORKSPACE_SCOPE = '@hyperfrontend/'
 
 export const INHERITABLE_FIELDS: readonly string[] = ['repository', 'bugs', 'homepage', 'author']
 
-export const DEFAULT_PROJECT_ASSETS: readonly string[] = ['README.md', 'CHANGELOG.md', 'ARCHITECTURE.md']
+export const DEFAULT_PROJECT_ASSETS: readonly string[] = ['README.md', 'CHANGELOG.md']
 
 export const DEFAULT_WORKSPACE_ASSETS: readonly string[] = ['LICENSE.md', 'SECURITY.md']
 
