@@ -37,7 +37,7 @@ export const toEsmBuildDescriptor = (
   reportPath: string
 ): RollupBuildDescriptor => {
   const outputDir = computeEntryOutputDir(entry, context)
-  const sourcemap = config.sourcemap ?? true
+  const sourcemap = config.sourcemap ?? false
   const bundleAllRequested = Boolean(config.bundleAllDeps)
   const bundledDeps = bundleAllRequested ? context.bundledDeps : []
   const workspaceRoutes = bundleAllRequested ? buildWorkspaceRoutes(context.workspaceBundledDeps) : []
@@ -89,7 +89,7 @@ export const toCjsBuildDescriptor = (
   reportPath: string
 ): RollupBuildDescriptor => {
   const outputDir = computeEntryOutputDir(entry, context)
-  const sourcemap = config.sourcemap ?? true
+  const sourcemap = config.sourcemap ?? false
   const bundleAllRequested = Boolean(config.bundleAllDeps)
   const bundledDeps = bundleAllRequested ? context.bundledDeps : []
   const workspaceRoutes = bundleAllRequested ? buildWorkspaceRoutes(context.workspaceBundledDeps) : []
@@ -146,7 +146,7 @@ export const toIifeBuildDescriptor = (
 ): RollupBuildDescriptor => {
   validateExternalsConfig(config.external, config.globals)
   const outputDir = computeBundleOutputDir(config.output, context)
-  const sourcemap = config.sourcemap ?? true
+  const sourcemap = config.sourcemap ?? false
   const minify = config.minify ?? true
   return {
     format: 'iife',
@@ -267,7 +267,7 @@ export const toUmdBuildDescriptor = (
 ): RollupBuildDescriptor => {
   validateExternalsConfig(config.external, config.globals)
   const outputDir = computeBundleOutputDir(config.output, context)
-  const sourcemap = config.sourcemap ?? true
+  const sourcemap = config.sourcemap ?? false
   const minify = config.minify ?? true
   return {
     format: 'umd',

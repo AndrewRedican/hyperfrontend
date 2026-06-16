@@ -72,7 +72,7 @@ export interface BundleAllDepsOptions {
  * ESM output configuration.
  */
 export interface EsmConfig extends FormatEntryConfig {
-  /** Generate sourcemaps. Defaults to `true`. */
+  /** Generate sourcemaps. Defaults to `false`. */
   sourcemap?: boolean
   /** Additional package names to mark external. */
   external?: string[]
@@ -90,7 +90,7 @@ export interface EsmConfig extends FormatEntryConfig {
  * CommonJS output configuration.
  */
 export interface CjsConfig extends FormatEntryConfig {
-  /** Generate sourcemaps. Defaults to `true`. */
+  /** Generate sourcemaps. Defaults to `false`. */
   sourcemap?: boolean
   /** Additional package names to mark external. */
   external?: string[]
@@ -114,7 +114,7 @@ export interface IifeConfig extends FormatEntryConfig {
   minify?: boolean
   /** Output subdirectory relative to outputPath. Defaults to `bundle`. */
   output?: string
-  /** Generate sourcemaps. Defaults to `true`. */
+  /** Generate sourcemaps. Defaults to `false`. */
   sourcemap?: boolean
   /** Package names to keep external; if omitted, every dependency is inlined. */
   external?: string[]
@@ -134,7 +134,7 @@ export interface UmdConfig extends FormatEntryConfig {
   amdId?: string
   /** Output subdirectory relative to outputPath. Defaults to `bundle`. */
   output?: string
-  /** Generate sourcemaps. Defaults to `true`. */
+  /** Generate sourcemaps. Defaults to `false`. */
   sourcemap?: boolean
   /** Package names to keep external; if omitted, every dependency is inlined. */
   external?: string[]

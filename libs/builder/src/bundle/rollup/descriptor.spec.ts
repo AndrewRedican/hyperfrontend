@@ -43,7 +43,7 @@ describe('toEsmBuildDescriptor', () => {
       inputFile: '/abs/libs/foo/src/index.ts',
       outputDir: '/abs/dist/libs/foo',
       external: ['react'],
-      sourcemap: true,
+      sourcemap: false,
       bundledDepsPlugin: null,
       workspaceRoutes: [],
       tsConfigPath: '/abs/libs/foo/tsconfig.lib.json',
@@ -62,10 +62,11 @@ describe('toEsmBuildDescriptor', () => {
     expect(descriptor.outputDir).toBe('/abs/dist/libs/foo/sub')
   })
 
-  it('opts out of sourcemap when config.sourcemap is false', () => {
-    const config: EsmConfig = { bundleWorkspaceDeps: false, sourcemap: false }
-    const descriptor = toEsmBuildDescriptor(ROOT_ENTRY, config, makeContext(), '/tmp/r.json')
-    expect(descriptor.sourcemap).toBe(false)
+  it('defaults sourcemap off and opts in only when config.sourcemap is true', () => {
+    const off = toEsmBuildDescriptor(ROOT_ENTRY, { bundleWorkspaceDeps: false }, makeContext(), '/tmp/r.json')
+    expect(off.sourcemap).toBe(false)
+    const on = toEsmBuildDescriptor(ROOT_ENTRY, { bundleWorkspaceDeps: false, sourcemap: true }, makeContext(), '/tmp/r.json')
+    expect(on.sourcemap).toBe(true)
   })
 
   it('emits a bundledDepsPlugin entry when bundleAllDeps is on and bundledDeps is non-empty', () => {
@@ -185,6 +186,13 @@ describe('toCjsBuildDescriptor', () => {
     const descriptor = toCjsBuildDescriptor(ROOT_ENTRY, config, ctx, '/tmp/r.json')
     expect(descriptor.bundledDepsPlugin).toEqual({ deps: ['rollup'], depsRoot: '/abs/dist/libs/foo/_dependencies' })
   })
+
+  it('defaults sourcemap off and opts in only when config.sourcemap is true', () => {
+    const off = toCjsBuildDescriptor(ROOT_ENTRY, { bundleWorkspaceDeps: false }, makeContext(), '/tmp/r.json')
+    expect(off.sourcemap).toBe(false)
+    const on = toCjsBuildDescriptor(ROOT_ENTRY, { bundleWorkspaceDeps: false, sourcemap: true }, makeContext(), '/tmp/r.json')
+    expect(on.sourcemap).toBe(true)
+  })
 })
 
 describe('toIifeBuildDescriptor', () => {
@@ -216,6 +224,13 @@ describe('toIifeBuildDescriptor', () => {
     expect(descriptor.bundle?.minify).toBe(false)
   })
 
+  it('defaults sourcemap off and opts in only when config.sourcemap is true', () => {
+    const off = toIifeBuildDescriptor(ROOT_ENTRY, { globalName: 'MyLib' }, makeContext(), '/tmp/r.json')
+    expect(off.sourcemap).toBe(false)
+    const on = toIifeBuildDescriptor(ROOT_ENTRY, { globalName: 'MyLib', sourcemap: true }, makeContext(), '/tmp/r.json')
+    expect(on.sourcemap).toBe(true)
+  })
+
   it('throws when external is declared without a matching globals entry', () => {
     const config: IifeConfig = { globalName: 'MyLib', external: ['react'] }
     expect(() => toIifeBuildDescriptor(ROOT_ENTRY, config, makeContext(), '/tmp/r.json')).toThrow(/Missing globals mapping/)
@@ -237,10 +252,11 @@ describe('toUmdBuildDescriptor', () => {
     expect(descriptor.bundle?.amdId).toBeUndefined()
   })
 
-  it('opts out of sourcemap when config.sourcemap is false', () => {
-    const config: UmdConfig = { globalName: 'MyLib', sourcemap: false }
-    const descriptor = toUmdBuildDescriptor(ROOT_ENTRY, config, makeContext(), '/tmp/r.json')
-    expect(descriptor.sourcemap).toBe(false)
+  it('defaults sourcemap off and opts in only when config.sourcemap is true', () => {
+    const off = toUmdBuildDescriptor(ROOT_ENTRY, { globalName: 'MyLib' }, makeContext(), '/tmp/r.json')
+    expect(off.sourcemap).toBe(false)
+    const on = toUmdBuildDescriptor(ROOT_ENTRY, { globalName: 'MyLib', sourcemap: true }, makeContext(), '/tmp/r.json')
+    expect(on.sourcemap).toBe(true)
   })
 
   it('throws when external is declared without a matching globals entry', () => {

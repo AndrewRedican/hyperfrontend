@@ -52,17 +52,25 @@ describe('reflectFilesAllowlist', () => {
       'bin/hf-build.js',
       'models.d.ts',
       'models.d.ts.map',
+      '!**/*.js.map',
     ])
   })
 
   it('covers index files at any depth with the glob rather than naming them', () => {
     writeTree(outputPath, ['index.esm.js', 'sub/index.d.ts', '_dependencies/@scope/pkg/index.d.ts', 'bundle/index.umd.min.js'])
-    expect(reflectFilesAllowlist(outputPath)).toEqual(['**/index.*', '**/index.d.ts'])
+    expect(reflectFilesAllowlist(outputPath)).toEqual(['**/index.*', '**/index.d.ts', '!**/*.js.map'])
   })
 
-  it("covers an index file's sourcemap sibling with the glob", () => {
+  it("never names an index file's JS sourcemap sibling and subtracts it via the trailing negation", () => {
     writeTree(outputPath, ['index.esm.js', 'index.esm.js.map'])
-    expect(reflectFilesAllowlist(outputPath)).not.toContain('index.esm.js.map')
+    const files = reflectFilesAllowlist(outputPath)
+    expect(files).not.toContain('index.esm.js.map')
+    expect(files.at(-1)).toBe('!**/*.js.map')
+  })
+
+  it('leaves a d.ts.map (declarationMap) untouched — JS-only exclusion does not subtract it', () => {
+    writeTree(outputPath, ['index.d.ts', 'models.d.ts.map'])
+    expect(reflectFilesAllowlist(outputPath)).toContain('models.d.ts.map')
   })
 
   it('names a root-level non-index survivor explicitly', () => {
@@ -80,11 +88,11 @@ describe('reflectFilesAllowlist', () => {
     expect(reflectFilesAllowlist(outputPath)).not.toContain('package.json')
   })
 
-  it('emits only the index globs for an empty output tree', () => {
-    expect(reflectFilesAllowlist(outputPath)).toEqual(['**/index.*', '**/index.d.ts'])
+  it('emits only the index globs and the JS-map exclusion for an empty output tree', () => {
+    expect(reflectFilesAllowlist(outputPath)).toEqual(['**/index.*', '**/index.d.ts', '!**/*.js.map'])
   })
 
-  it('emits only the index globs when the output path does not exist', () => {
-    expect(reflectFilesAllowlist(join(outputPath, 'missing'))).toEqual(['**/index.*', '**/index.d.ts'])
+  it('emits only the index globs and the JS-map exclusion when the output path does not exist', () => {
+    expect(reflectFilesAllowlist(join(outputPath, 'missing'))).toEqual(['**/index.*', '**/index.d.ts', '!**/*.js.map'])
   })
 })

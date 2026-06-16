@@ -70,7 +70,7 @@ Format-centric build executor for hyperfrontend library packages. A thin wrapper
 | --------------------- | -------------------- | ------------ | -------------------------------------------------------------------------------------- |
 | `entry`               | `string \| string[]` | All detected | Entry point pattern(s).                                                                |
 | `exclude`             | `string \| string[]` | —            | Entry points to exclude.                                                               |
-| `sourcemap`           | `boolean`            | `true`       | Generate sourcemaps.                                                                   |
+| `sourcemap`           | `boolean`            | `false`      | Generate sourcemaps.                                                                   |
 | `external`            | `string[]`           | —            | Additional externals for this format.                                                  |
 | `bundleWorkspaceDeps` | `boolean`            | —            | Inline workspace (`@hyperfrontend/*`) packages instead of keeping them external.       |
 
@@ -82,7 +82,7 @@ Format-centric build executor for hyperfrontend library packages. A thin wrapper
 | `globalName` | `string`                 | (required)   | Global variable name for browser.                            |
 | `minify`     | `boolean`                | `true`       | Generate minified version.                                   |
 | `output`     | `string`                 | `bundle`     | Output subdirectory.                                         |
-| `sourcemap`  | `boolean`                | `true`       | Generate sourcemaps.                                         |
+| `sourcemap`  | `boolean`                | `false`      | Generate sourcemaps.                                         |
 | `external`   | `string[]`               | —            | Dependencies to keep external (inline by default).           |
 | `globals`    | `Record<string, string>` | —            | Global names for each external (required if external is set). |
 | `amdId`      | `string` (UMD only)      | package name | AMD module ID.                                               |
