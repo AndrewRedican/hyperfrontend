@@ -44,6 +44,7 @@ Format-centric build executor for hyperfrontend library packages. A thin wrapper
 | `assets`     | `AssetSpec[]`    | (wrapper-supplied defaults)          | Additional asset specs to copy in addition to the wrapper's defaults (README/CHANGELOG/ARCHITECTURE from project, LICENSE/SECURITY from workspace, FUNDING from workspace when configured). |
 | `external`   | `string[]`       | Auto-detected from package.json      | Global externals for all formats.                                                                                 |
 | `bin`        | `BinConfig[]`    | —                                    | Bin declarations to synthesize. Source convention: `src/bin/<name>.ts`.                                            |
+| `dedupeSharedInternals` | `boolean` | `true`                          | Hoist first-party modules inlined into multiple entry bundles into shared `_shared/<srcPath>/` chunks and rewrite entries to import them. Safe additive post-emit pass over `esm`/`cjs` outputs; set `false` to keep entries fully self-contained. |
 
 ### `AssetSpec`
 

@@ -261,6 +261,14 @@ export interface BuildConfig {
    * array to take full control of what `npm publish` ships.
    */
   files?: string[]
+  /**
+   * Hoist first-party modules that are inlined into multiple entry bundles into
+   * shared `_shared/<srcPath>/` chunks and rewrite the entries to import them,
+   * removing the duplicated copies. Runs as a safe, additive post-emit pass over
+   * the `esm`/`cjs` outputs only. Defaults to enabled; set `false` to keep every
+   * entry fully self-contained.
+   */
+  dedupeSharedInternals?: boolean
   /** Emit a third-party-licenses file. */
   thirdPartyLicenses?: boolean
   /** Enable the memory monitor; pass `true` for defaults or an options object for custom thresholds. */

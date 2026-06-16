@@ -220,7 +220,19 @@ describe('runBundlePhase', () => {
       'bundle:declarations:start',
       'bundle:declarations:end',
       'bundle:declarations:prune-orphans:end',
+      'bundle:dedupe:shared-first-party:end',
     ])
+  })
+
+  it('skips the shared-first-party dedupe checkpoint when dedupeSharedInternals is false', async () => {
+    const labels: string[] = []
+    const monitor = { check: (label: string) => void labels.push(label) } as unknown as Parameters<typeof runBundlePhase>[2]
+    await runBundlePhase(
+      makeContext(),
+      <BuildConfig>{ projectRoot: '', workspaceRoot: '', esm: { bundleWorkspaceDeps: false }, dedupeSharedInternals: false },
+      monitor
+    )
+    expect(labels).not.toContain('bundle:dedupe:shared-first-party:end')
   })
 
   it('emits monitor labels for IIFE and UMD entries when configured', async () => {
@@ -246,6 +258,7 @@ describe('runBundlePhase', () => {
       'bundle:declarations:start',
       'bundle:declarations:end',
       'bundle:declarations:prune-orphans:end',
+      'bundle:dedupe:shared-first-party:end',
     ])
   })
 

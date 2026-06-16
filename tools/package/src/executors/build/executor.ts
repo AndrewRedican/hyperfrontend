@@ -42,6 +42,8 @@ export interface BuildExecutorOptions {
   jsdelivr?: string
   /** Bin declarations to synthesize alongside the library. */
   bin?: BinConfig[]
+  /** Hoist first-party modules shared across entry bundles into `_shared/` chunks. Defaults to enabled. */
+  dedupeSharedInternals?: boolean
   /** Enable verbose / debug logging. */
   verbose?: boolean
 }
@@ -96,6 +98,7 @@ const runExecutor: PromiseExecutor<BuildExecutorOptions> = async (options, conte
     unpkg: options.unpkg,
     jsdelivr: options.jsdelivr,
     bin: options.bin,
+    dedupeSharedInternals: options.dedupeSharedInternals,
     thirdPartyLicenses: true,
     memoryMonitor: MEMORY_THRESHOLDS,
     verbose: options.verbose,

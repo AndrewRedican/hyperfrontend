@@ -12,6 +12,7 @@ import { runDtsPerEntry } from './declarations/dts-per-entry'
 import { runDtsPrePass } from './declarations/dts-pre-pass'
 import { generateDeclarations } from './declarations/generate-declarations'
 import { pruneOrphanDeclarations } from './declarations/prune-orphan-dts'
+import { hoistSharedFirstParty } from './dedupe/hoist-shared'
 import { buildWorkspaceRoutes } from './dependencies/externalize-plugin'
 import { resolveDefaultWorkerPath, runPrePass } from './dependencies/pre-pass'
 import { pruneDependencies } from './dependencies/prune/prune-dependencies'
@@ -332,6 +333,12 @@ export const runBundlePhase = async (context: BuildContext, config: BuildConfig,
   if (context.bundledDeps.length > 0 || context.workspaceBundledDeps.length > 0) {
     pruneDependencies(context, monitor)
     monitor?.check('bundle:dependencies:prune:end')
+  }
+
+  // why: dedup runs after prune so the lifted `_shared/` files are still present when `finalizeFilesAllowlist` reflects the published output tree.
+  if (config.dedupeSharedInternals !== false) {
+    hoistSharedFirstParty(context, monitor)
+    monitor?.check('bundle:dedupe:shared-first-party:end')
   }
 
   return outputs
