@@ -1,6 +1,6 @@
 import type { BuildContext } from '../../models'
 import { cpSync, statSync } from 'node:fs'
-import { ensureDir, exists, getDirname, join, relativePath, removeDirectory } from '@hyperfrontend/project-scope/core'
+import { exists, join, relativePath, removeDirectory } from '@hyperfrontend/project-scope/core'
 
 const NESTED_WORKSPACE_DIRS = ['libs', 'plugins', 'apps']
 
@@ -9,16 +9,17 @@ const isDeclarationFile = (path: string): boolean => path.endsWith('.d.ts') || p
 /**
  * Recursively copies every `.d.ts` / `.d.ts.map` under the project's nested tsc
  * `src` tree into the flat output root, preserving internal subdirectory
- * structure. The root entry's public `index.d.ts` may re-export from any
- * internal non-entry subdirectory (e.g. `./shared/consts`, `./lib/*`), so a
- * top-level-files-only copy would leave those references dangling; a later
- * `rollup-plugin-dts` flatten then fails to resolve them. Directories are always
- * traversed; tsc emits declarations only, so the file filter is a safety net.
+ * structure. Any entry's public `index.d.ts` — root, platform (`./browser`,
+ * `./node`), or feature — may re-export from a shared internal non-entry
+ * subdirectory (e.g. `./shared/consts`, `./lib/*`), so copying only each entry's
+ * own subtree would leave those references dangling; a later `rollup-plugin-dts`
+ * flatten then fails to resolve them. Directories are always traversed; tsc
+ * emits declarations only, so the file filter is a safety net.
  *
  * @param nestedSrc - Absolute path to the project's nested tsc `src` declaration tree.
  * @param outputPath - Absolute path to the flat per-library output root.
  */
-const copyRootDeclarations = (nestedSrc: string, outputPath: string): void => {
+const copyDeclarations = (nestedSrc: string, outputPath: string): void => {
   cpSync(nestedSrc, outputPath, {
     recursive: true,
     force: true,
@@ -43,13 +44,17 @@ const cleanupNestedDirs = (outputPath: string): void => {
  *   `dist/libs/<lib>/index.d.ts`
  * while preserving any nested platform / feature subdirectories.
  *
- * The root copy is recursive, so internal non-entry subdirectories the public
- * `index.d.ts` re-exports from (e.g. `shared/`, `lib/`) are preserved rather
- * than dropped. Finally removes the leftover `libs/`, `plugins/`, and `apps/`
- * folders tsc created at the output root.
+ * The copy is recursive and unconditional, so internal non-entry subdirectories
+ * that any entry's `index.d.ts` re-exports from (e.g. `shared/`, `lib/`) are
+ * preserved rather than dropped — including for platform / feature libraries
+ * with no root (`.`) entry, whose `./browser` and `./node` entries share a
+ * common `lib/`. Per-source declarations left unreachable once the per-entry
+ * pass inlines each `index.d.ts` are removed afterwards by
+ * `pruneOrphanDeclarations`. Finally removes the leftover `libs/`, `plugins/`,
+ * and `apps/` folders tsc created at the output root.
  *
  * @param context - Resolved build context. Uses `projectRoot`, `outputPath`,
- * `workspaceRoot`, and `entryPointDiscovery`.
+ * and `workspaceRoot`.
  *
  * @example Flattening declarations after a manual tsc invocation
  * ```typescript
@@ -60,18 +65,6 @@ export const flattenDeclarationPaths = (context: BuildContext): void => {
   const nestedDeclarations = join(context.outputPath, relativePath(context.workspaceRoot, join(context.projectRoot, 'src')))
   if (!exists(nestedDeclarations)) return
 
-  for (const entry of context.entryPointDiscovery.entryPoints) {
-    if (entry.isRoot) {
-      copyRootDeclarations(nestedDeclarations, context.outputPath)
-      continue
-    }
-    const declSrc = join(nestedDeclarations, entry.srcPath)
-    const declDest = join(context.outputPath, entry.srcPath)
-    if (exists(declSrc)) {
-      ensureDir(getDirname(declDest))
-      cpSync(declSrc, declDest, { recursive: true, force: true })
-    }
-  }
-
+  copyDeclarations(nestedDeclarations, context.outputPath)
   cleanupNestedDirs(context.outputPath)
 }

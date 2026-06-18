@@ -84,13 +84,37 @@ describe('flattenDeclarationPaths', () => {
     expect(existsSync(join(outputPath, 'browser', 'index.d.ts'))).toBe(true)
   })
 
-  it('skips non-root entries whose declaration source directory is missing', () => {
+  it('creates no entry directory when the nested src tree is empty', () => {
     const nested = join(outputPath, 'libs', 'foo', 'src')
     mkdirSync(nested, { recursive: true })
     flattenDeclarationPaths(
       makeContext(makeDiscovery([{ exportPath: './browser', srcPath: 'browser', inputFile: '', isRoot: false, platform: 'browser' }]))
     )
     expect(existsSync(join(outputPath, 'browser'))).toBe(false)
+  })
+
+  it('preserves a shared internal lib/ for a platform library with no root entry', () => {
+    const nested = join(outputPath, 'libs', 'foo', 'src')
+    writeFile(join(nested, 'browser', 'index.d.ts'), "export { f } from '../lib/f/f'")
+    writeFile(join(nested, 'node', 'index.d.ts'), "export { f } from '../lib/f/f'")
+    writeFile(join(nested, 'lib', 'f', 'f.d.ts'), 'export declare const f: () => void;')
+    flattenDeclarationPaths(
+      makeContext(
+        makeDiscovery([
+          {
+            exportPath: './browser',
+            srcPath: 'browser',
+            inputFile: join(projectRoot, 'src/browser/index.ts'),
+            isRoot: false,
+            platform: 'browser',
+          },
+          { exportPath: './node', srcPath: 'node', inputFile: join(projectRoot, 'src/node/index.ts'), isRoot: false, platform: 'node' },
+        ])
+      )
+    )
+    expect(existsSync(join(outputPath, 'browser', 'index.d.ts'))).toBe(true)
+    expect(existsSync(join(outputPath, 'node', 'index.d.ts'))).toBe(true)
+    expect(existsSync(join(outputPath, 'lib', 'f', 'f.d.ts'))).toBe(true)
   })
 
   it('copies declaration files from the lib/ folder when present', () => {
