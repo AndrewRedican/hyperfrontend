@@ -1,3 +1,4 @@
+import type { Statement } from 'typescript'
 import type { ChunkFormat } from './used-exports'
 import { createSet } from '@hyperfrontend/immutable-api-utils/built-in-copy/set'
 import { parseChunk } from './ast-utils'
@@ -29,23 +30,23 @@ describe('collectRefs', () => {
 
 describe('requireBindingLocals', () => {
   it('returns the identifier binding of a namespace require', () => {
-    expect(requireBindingLocals(parseChunk("var a = require('x')").statements[0])).toEqual(['a'])
+    expect(requireBindingLocals(<Statement>parseChunk("var a = require('x')").statements[0])).toEqual(['a'])
   })
 
   it('returns every name of a destructured require', () => {
-    expect(requireBindingLocals(parseChunk("var { a, b } = require('x')").statements[0])).toEqual(['a', 'b'])
+    expect(requireBindingLocals(<Statement>parseChunk("var { a, b } = require('x')").statements[0])).toEqual(['a', 'b'])
   })
 
   it('returns an empty list for a non-variable statement', () => {
-    expect(requireBindingLocals(parseChunk('function f() {}').statements[0])).toEqual([])
+    expect(requireBindingLocals(<Statement>parseChunk('function f() {}').statements[0])).toEqual([])
   })
 
   it('skips a nested binding pattern element', () => {
-    expect(requireBindingLocals(parseChunk("var { a: { b } } = require('x')").statements[0])).toEqual([])
+    expect(requireBindingLocals(<Statement>parseChunk("var { a: { b } } = require('x')").statements[0])).toEqual([])
   })
 
   it('skips an array-destructured require binding', () => {
-    expect(requireBindingLocals(parseChunk("var [a] = require('x')").statements[0])).toEqual([])
+    expect(requireBindingLocals(<Statement>parseChunk("var [a] = require('x')").statements[0])).toEqual([])
   })
 })
 
@@ -98,10 +99,97 @@ describe('analyzeChunk export surface', () => {
   })
 })
 
+const freeOf = (source: string, name: string): boolean => {
+  const decl = analyzeChunk(parseChunk(source), 'esm').nameToDecl.get(name)
+  if (!decl) throw new Error(`no declaration for ${name}`)
+  return decl.sideEffectFree
+}
+
+describe('analyzeChunk pure-freeze recognition', () => {
+  it('treats an aliased freeze of a fresh object literal as side-effect-free', () => {
+    expect(freeOf('const _freeze = globalThis.Object.freeze;\nconst X = _freeze({ a: fn });', 'X')).toBe(true)
+  })
+
+  it('treats a direct unaliased Object.freeze of a fresh object literal as side-effect-free', () => {
+    expect(freeOf('const X = Object.freeze({ a: fn });', 'X')).toBe(true)
+  })
+
+  it('treats a direct globalThis.Object.freeze as side-effect-free', () => {
+    expect(freeOf('const X = globalThis.Object.freeze({ a: fn });', 'X')).toBe(true)
+  })
+
+  it('treats a freeze of a fresh array literal as side-effect-free', () => {
+    expect(freeOf('const _freeze = globalThis.Object.freeze;\nconst X = _freeze([a, b]);', 'X')).toBe(true)
+  })
+
+  it('treats a freeze of a shared identifier binding as side-effecting', () => {
+    expect(freeOf('const _freeze = globalThis.Object.freeze;\nconst X = _freeze(shared);', 'X')).toBe(false)
+  })
+
+  it('keeps a freeze of an object literal spreading an identifier side-effect-free', () => {
+    expect(freeOf('const _freeze = globalThis.Object.freeze;\nconst X = _freeze({ ...spread });', 'X')).toBe(true)
+  })
+
+  it('descends into freeze arguments so a nested call trips the side-effect check', () => {
+    expect(freeOf('const _freeze = globalThis.Object.freeze;\nconst X = _freeze({ x: mk() });', 'X')).toBe(false)
+  })
+
+  it('treats a freeze with no arguments as side-effecting', () => {
+    expect(freeOf('const _freeze = globalThis.Object.freeze;\nconst X = _freeze();', 'X')).toBe(false)
+  })
+
+  it('treats a non-pure callee over a fresh literal as side-effecting', () => {
+    expect(freeOf('const X = register({ a: fn });', 'X')).toBe(false)
+  })
+
+  it('does not add an alias bound to a call to the pure set', () => {
+    const source = 'const f = mk();\nconst Y = f({ a: 1 });'
+    expect(freeOf(source, 'f')).toBe(false)
+    expect(freeOf(source, 'Y')).toBe(false)
+  })
+
+  it('drops the direct Object.freeze seed when Object is shadowed by a top-level binding', () => {
+    expect(freeOf('const Object = {};\nconst X = Object.freeze({ a: 1 });', 'X')).toBe(false)
+  })
+
+  it('drops the direct Object.freeze seed when Object is shadowed by a function declaration', () => {
+    expect(freeOf('function Object() {}\nconst X = Object.freeze({ a: 1 });', 'X')).toBe(false)
+  })
+
+  it('does not follow an identifier-aliased alias of a freeze', () => {
+    expect(freeOf('const _freeze = globalThis.Object.freeze;\nconst ff = _freeze;\nconst X = ff({ a: 1 });', 'X')).toBe(false)
+  })
+})
+
+const errorChunk = `const _freeze = globalThis.Object.freeze;
+const _TypeError = globalThis.TypeError;
+const _RangeError = globalThis.RangeError;
+const createError = (msg) => new _TypeError(msg);
+const createRangeError = (msg) => new _RangeError(msg);
+const Error = _freeze({ createError, createRangeError });
+export { createError, createRangeError, Error };`
+
 describe('computeKeepClosure', () => {
   it('keeps every name of a kept multi-declarator statement', () => {
     const sourceFile = parseChunk('const a = 1, b = a;\nexport { a, b };')
     const model = analyzeChunk(sourceFile, 'esm')
     expect([...computeKeepClosure(sourceFile, model, createSet(['a', 'b']))].sort()).toEqual(['a', 'b'])
+  })
+
+  it('drops a dead frozen namespace and the factories and captures it names', () => {
+    const sourceFile = parseChunk(errorChunk)
+    const model = analyzeChunk(sourceFile, 'esm')
+    expect([...computeKeepClosure(sourceFile, model, createSet<string>([]))]).toEqual([])
+  })
+
+  it('cascades a single-factory demand without dragging in the namespace or its siblings', () => {
+    const sourceFile = parseChunk(errorChunk)
+    const model = analyzeChunk(sourceFile, 'esm')
+    const closure = computeKeepClosure(sourceFile, model, createSet(['createError']))
+    expect(closure.has('createError')).toBe(true)
+    expect(closure.has('_TypeError')).toBe(true)
+    expect(closure.has('Error')).toBe(false)
+    expect(closure.has('createRangeError')).toBe(false)
+    expect(closure.has('_RangeError')).toBe(false)
   })
 })

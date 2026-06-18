@@ -148,3 +148,94 @@ describe('stripDeadExports', () => {
     expect(stripDeadExports('const a = cond ? f() : g();\nexport { a };', 'esm', keepOf())).toBeNull()
   })
 })
+
+// context: models the real `error` chunk shape — a `_freeze` alias, distinct `_TypeError`-style global captures, eight factory arrows that close over them, one frozen `Error` namespace aggregating all eight, and a single `export { … }` list.
+const errorChunkDecls = [
+  'const _freeze = globalThis.Object.freeze;',
+  'const _Error = globalThis.Error;',
+  'const _TypeError = globalThis.TypeError;',
+  'const _RangeError = globalThis.RangeError;',
+  'const _SyntaxError = globalThis.SyntaxError;',
+  'const _ReferenceError = globalThis.ReferenceError;',
+  'const _EvalError = globalThis.EvalError;',
+  'const _URIError = globalThis.URIError;',
+  'const _AggregateError = globalThis.AggregateError;',
+  'const createError = (msg) => new _Error(msg);',
+  'const createTypeError = (msg) => new _TypeError(msg);',
+  'const createRangeError = (msg) => new _RangeError(msg);',
+  'const createSyntaxError = (msg) => new _SyntaxError(msg);',
+  'const createReferenceError = (msg) => new _ReferenceError(msg);',
+  'const createEvalError = (msg) => new _EvalError(msg);',
+  'const createUriError = (msg) => new _URIError(msg);',
+  'const createAggregateError = (msg) => new _AggregateError(msg);',
+  'const Error = _freeze({ createError, createTypeError, createRangeError, createSyntaxError, createReferenceError, createEvalError, createUriError, createAggregateError });',
+]
+const errorFactoryNames = [
+  'createError',
+  'createTypeError',
+  'createRangeError',
+  'createSyntaxError',
+  'createReferenceError',
+  'createEvalError',
+  'createUriError',
+  'createAggregateError',
+]
+const errorChunkEsm = [...errorChunkDecls, `export { ${errorFactoryNames.join(', ')}, Error };`].join('\n')
+const errorChunkCjs = [
+  "'use strict';",
+  ...errorChunkDecls,
+  ...errorFactoryNames.map((name) => `exports.${name} = ${name};`),
+  'exports.Error = Error;',
+].join('\n')
+
+// context: models the real `math` chunk shape — a `_freeze` alias, a `_Math` global capture, member consts read off it, and a frozen `Math` namespace aggregating them.
+const mathChunkDecls = [
+  'const _freeze = globalThis.Object.freeze;',
+  'const _Math = globalThis.Math;',
+  'const abs = _Math.abs;',
+  'const random = _Math.random;',
+  'const round = _Math.round;',
+  'const floor = _Math.floor;',
+  'const ceil = _Math.ceil;',
+  'const Math = _freeze({ abs, random, round, floor, ceil });',
+]
+const mathChunkEsm = [...mathChunkDecls, 'export { abs, random, round, floor, ceil, Math };'].join('\n')
+
+describe('stripDeadExports namespace collapse', () => {
+  it('collapses the error namespace to the single demanded factory (esm)', () => {
+    const result = stripDeadExports(errorChunkEsm, 'esm', keepOf('createError'))
+    expect(result?.code).toContain('export { createError };')
+    expect(result?.code).toContain('const createError = (msg) => new _Error(msg);')
+    // why: the freeze call is the only consumer of the namespace; its disappearance proves the aggregator and `_freeze` cascaded out.
+    expect(result?.code).not.toContain('_freeze')
+    expect(result?.code).not.toContain('createTypeError')
+    expect(result?.code).not.toContain('_TypeError')
+    expect(result?.removedNames.sort()).toEqual(['Error', ...errorFactoryNames.slice(1)].sort())
+  })
+
+  it('collapses the error namespace to the single demanded factory (cjs)', () => {
+    const result = stripDeadExports(errorChunkCjs, 'cjs', keepOf('createError'))
+    expect(result?.code).toContain('exports.createError = createError;')
+    expect(result?.code).not.toContain('exports.Error')
+    expect(result?.code).not.toContain('exports.createTypeError')
+    expect(result?.code).not.toContain('_freeze')
+    expect(result?.removedNames.sort()).toEqual(['Error', ...errorFactoryNames.slice(1)].sort())
+  })
+
+  it('keeps the whole namespace and every factory it names when an importer demands it', () => {
+    // why: a hypothetical namespace importer (`keep` includes `Error`) must never over-strip — the frozen object reaches every factory and capture.
+    expect(stripDeadExports(errorChunkEsm, 'esm', keepOf('createError', 'Error'))).toBeNull()
+  })
+
+  it('collapses the math namespace to the demanded members and drops the now-dead freeze (esm)', () => {
+    const result = stripDeadExports(mathChunkEsm, 'esm', keepOf('abs', 'random', 'round'))
+    expect(result?.code).toContain('export { abs, random, round };')
+    // why: `_Math` is still read by the three surviving members, so the shared capture must stay.
+    expect(result?.code).toContain('const _Math = globalThis.Math;')
+    expect(result?.code).not.toContain('const floor')
+    expect(result?.code).not.toContain('const ceil')
+    // why: the last freeze call vanishes with the namespace, so `_freeze` is unreferenced and removed.
+    expect(result?.code).not.toContain('_freeze')
+    expect(result?.removedNames.sort()).toEqual(['Math', 'ceil', 'floor'])
+  })
+})

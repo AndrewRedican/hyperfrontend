@@ -58,11 +58,66 @@ const EVAL_SIDE_EFFECT_KINDS = createSet<ts.SyntaxKind>([
   ts.SyntaxKind.TaggedTemplateExpression,
 ])
 
-// why: a call/new/await reached while evaluating the initializer is a real side effect; one nested inside a function/arrow body runs later, so traversal must not descend into those bodies.
-const containsEvalSideEffect = (node: ts.Node): boolean => {
+/** Globals whose call is observably pure when frozen over a fresh literal. */
+const PURE_GLOBAL_CALLEES = ['Object.freeze']
+
+// context: canonicalizes a call target to a dotted name (`_freeze`, `Object.freeze`), normalizing a leading `globalThis.` away, or returns null when the base is not a plain identifier/property chain (e.g. a call or element access).
+const canonicalCallee = (expr: ts.Expression): string | null => {
+  if (ts.isIdentifier(expr)) return expr.text
+  if (ts.isPropertyAccessExpression(expr)) {
+    const base = canonicalCallee(expr.expression)
+    if (base === null) return null
+    const dotted = `${base}.${expr.name.text}`
+    return dotted.startsWith('globalThis.') ? dotted.slice('globalThis.'.length) : dotted
+  }
+  return null
+}
+
+// context: scans top-level statements for callees that name a provably-pure freeze: the `Object.freeze` global plus any const/var bound directly to it (e.g. `const _freeze = globalThis.Object.freeze`). An identifier-aliased alias (`const ff = _freeze`) is deliberately not followed — it stays side-effecting.
+const collectPureCallees = (sourceFile: ts.SourceFile): Set<string> => {
+  const pureCallees = createSet<string>(PURE_GLOBAL_CALLEES)
+  let objectShadowed = false
+  for (const statement of sourceFile.statements) {
+    if ((ts.isFunctionDeclaration(statement) || ts.isClassDeclaration(statement)) && statement.name?.text === 'Object')
+      objectShadowed = true
+    if (!ts.isVariableStatement(statement)) continue
+    for (const decl of statement.declarationList.declarations) {
+      if (!ts.isIdentifier(decl.name)) continue
+      if (decl.name.text === 'Object') objectShadowed = true
+      // why: a property-access initializer (never a call) bound to the pure global aliases it; a call initializer is opaque and ignored.
+      if (decl.initializer && ts.isPropertyAccessExpression(decl.initializer)) {
+        const callee = canonicalCallee(decl.initializer)
+        if (callee !== null && PURE_GLOBAL_CALLEES.includes(callee)) pureCallees.add(decl.name.text)
+      }
+    }
+  }
+  // why: a top-level `Object` binding means a bare `Object.freeze(...)` no longer names the global; bundled dep output never shadows Object, so this guard is belt-and-suspenders.
+  if (objectShadowed) pureCallees.delete('Object.freeze')
+  return pureCallees
+}
+
+// context: true when `call` is a recognized pure freeze of a fresh object/array literal. The argument must be a same-expression literal — `Object.freeze(x)` mutates a shared binding observably, so an identifier argument is rejected. Argument purity itself is enforced by the descent in containsEvalSideEffect.
+const isPureFreezeCall = (call: ts.CallExpression, pureCallees: Set<string>): boolean => {
+  const callee = canonicalCallee(call.expression)
+  if (callee === null || !pureCallees.has(callee)) return false
+  if (call.arguments.length < 1) return false
+  const first = call.arguments[0]
+  return ts.isObjectLiteralExpression(<ts.Node>first) || ts.isArrayLiteralExpression(<ts.Node>first)
+}
+
+// why: a call/new/await reached while evaluating the initializer is a real side effect; one nested inside a function/arrow body runs later, so traversal must not descend into those bodies. A provably-pure freeze of a fresh literal is exempt, but we still descend so a nested arg effect (`_freeze({ x: f() })`) still trips.
+const containsEvalSideEffect = (node: ts.Node, pureCallees: Set<string>): boolean => {
   let found = false
   const visit = (current: ts.Node): void => {
     if (found || ts.isFunctionLike(current)) return
+    if (ts.isCallExpression(current)) {
+      if (isPureFreezeCall(current, pureCallees)) {
+        ts.forEachChild(current, visit)
+        return
+      }
+      found = true
+      return
+    }
     if (EVAL_SIDE_EFFECT_KINDS.has(current.kind)) {
       found = true
       return
@@ -73,8 +128,8 @@ const containsEvalSideEffect = (node: ts.Node): boolean => {
   return found
 }
 
-const isSideEffectFreeInitializer = (initializer: ts.Expression | undefined): boolean =>
-  initializer === undefined || !containsEvalSideEffect(initializer)
+const isSideEffectFreeInitializer = (initializer: ts.Expression | undefined, pureCallees: Set<string>): boolean =>
+  initializer === undefined || !containsEvalSideEffect(initializer, pureCallees)
 
 /**
  * Collects the identifier names referenced within a node, excluding identifiers
@@ -142,7 +197,7 @@ export const requireBindingLocals = (statement: ts.Statement): string[] => {
   return locals
 }
 
-const tryDecl = (statement: ts.Statement): DeclInfo | null => {
+const tryDecl = (statement: ts.Statement, pureCallees: Set<string>): DeclInfo | null => {
   if ((ts.isFunctionDeclaration(statement) || ts.isClassDeclaration(statement)) && statement.name) {
     return { statement, names: [statement.name.text], sideEffectFree: true }
   }
@@ -153,7 +208,7 @@ const tryDecl = (statement: ts.Statement): DeclInfo | null => {
     // why: a destructured top-level binding is not a simple named export and its initializer is typically a call — never treat it as a removable declaration.
     if (!ts.isIdentifier(decl.name)) return null
     names.push(decl.name.text)
-    if (!isSideEffectFreeInitializer(decl.initializer)) sideEffectFree = false
+    if (!isSideEffectFreeInitializer(decl.initializer, pureCallees)) sideEffectFree = false
   }
   return { statement, names, sideEffectFree }
 }
@@ -214,12 +269,13 @@ export const analyzeChunk = (sourceFile: ts.SourceFile, format: ChunkFormat): Ch
   const importStatements: ts.Statement[] = []
   const exports: ExportEntry[] = []
   const exportSurfaceStatements = createSet<ts.Statement>([])
+  const pureCallees = collectPureCallees(sourceFile)
   for (const statement of sourceFile.statements) {
     if (format === 'esm' ? ts.isImportDeclaration(statement) : isRequireVarStatement(statement)) {
       importStatements.push(statement)
       continue
     }
-    const decl = tryDecl(statement)
+    const decl = tryDecl(statement, pureCallees)
     if (decl) {
       decls.push(decl)
       for (const name of decl.names) nameToDecl.set(name, decl)
