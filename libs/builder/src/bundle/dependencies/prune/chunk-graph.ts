@@ -58,14 +58,34 @@ const EVAL_SIDE_EFFECT_KINDS = createSet<ts.SyntaxKind>([
   ts.SyntaxKind.TaggedTemplateExpression,
 ])
 
-/** Globals whose call is observably pure when frozen over a fresh literal. */
-const PURE_GLOBAL_CALLEES = ['Object.freeze']
+/**
+ * Globals whose call observably only mutates-then-returns its (fresh-literal)
+ * argument and is therefore side-effect-free — `freeze`/`seal`/`preventExtensions`
+ * all behave this way on a freshly-built object/array literal.
+ */
+const PURE_GLOBAL_CALLEES = createSet<string>(['Object.freeze', 'Object.seal', 'Object.preventExtensions'])
 
-// context: dotted name for a call target, with a leading `globalThis.` stripped; null when the base is not a plain identifier/property chain (e.g. a call or element access).
-const canonicalCallee = (expr: ts.Expression): string | null => {
-  if (ts.isIdentifier(expr)) return expr.text
+/**
+ * Resolution of a chunk's top-level bindings, used to recognize a pure callee
+ * regardless of how the global was aliased.
+ */
+interface BindingResolution {
+  /** Every name bound at top level (const/var/function/class) — used to detect a global shadowed by a local. */
+  bindings: Set<string>
+  /** Bindings whose initializer is an identifier/property chain rooted in a global, mapped to that global-rooted dotted form. */
+  canonical: Map<string, string>
+}
+
+// context: dotted global-rooted name for a call target, with a leading `globalThis.` stripped and each top-level binding resolved through `resolution`. Null when the base is a local binding that does not resolve to a global (a shadow) or is not a plain identifier/property chain (a call, element access, …).
+const canonicalCallee = (expr: ts.Expression, resolution: BindingResolution): string | null => {
+  if (ts.isIdentifier(expr)) {
+    const mapped = resolution.canonical.get(expr.text)
+    if (mapped !== undefined) return mapped
+    // why: a top-level binding that did not resolve to a global alias shadows that global; treat as opaque so e.g. `const Object = {}` disables bare `Object.freeze`.
+    return resolution.bindings.has(expr.text) ? null : expr.text
+  }
   if (ts.isPropertyAccessExpression(expr)) {
-    const base = canonicalCallee(expr.expression)
+    const base = canonicalCallee(expr.expression, resolution)
     if (base === null) return null
     const dotted = `${base}.${expr.name.text}`
     return dotted.startsWith('globalThis.') ? dotted.slice('globalThis.'.length) : dotted
@@ -73,45 +93,49 @@ const canonicalCallee = (expr: ts.Expression): string | null => {
   return null
 }
 
-// context: the pure-freeze callees in scope — the `Object.freeze` global plus any const/var bound directly to it (`const _freeze = globalThis.Object.freeze`). An alias of an alias (`const ff = _freeze`) is deliberately not followed; it stays side-effecting.
-const collectPureCallees = (sourceFile: ts.SourceFile): Set<string> => {
-  const pureCallees = createSet<string>(PURE_GLOBAL_CALLEES)
-  let objectShadowed = false
+// context: maps each top-level binding to its canonical global-rooted callee form, in source order so a later alias resolves through an earlier one (`const _O = globalThis.Object; const freeze = _O.freeze` → `freeze ↦ "Object.freeze"`). Both `const` and `var` are resolved; bundled dep chunks never reassign these interop bindings. A call/literal initializer is opaque and only contributes a shadowing entry in `bindings`.
+const collectBindingCanonical = (sourceFile: ts.SourceFile): BindingResolution => {
+  const resolution: BindingResolution = { bindings: createSet<string>([]), canonical: createMap<string, string>() }
   for (const statement of sourceFile.statements) {
-    if ((ts.isFunctionDeclaration(statement) || ts.isClassDeclaration(statement)) && statement.name?.text === 'Object')
-      objectShadowed = true
+    if ((ts.isFunctionDeclaration(statement) || ts.isClassDeclaration(statement)) && statement.name)
+      resolution.bindings.add(statement.name.text)
     if (!ts.isVariableStatement(statement)) continue
     for (const decl of statement.declarationList.declarations) {
       if (!ts.isIdentifier(decl.name)) continue
-      if (decl.name.text === 'Object') objectShadowed = true
-      // why: a property-access initializer (never a call) bound to the pure global aliases it; a call initializer is opaque and ignored.
-      if (decl.initializer && ts.isPropertyAccessExpression(decl.initializer)) {
-        const callee = canonicalCallee(decl.initializer)
-        if (callee !== null && PURE_GLOBAL_CALLEES.includes(callee)) pureCallees.add(decl.name.text)
+      resolution.bindings.add(decl.name.text)
+      // why: only an identifier/property-access initializer can alias a global; resolve it through the bindings collected so far (leftmost identifier only).
+      if (decl.initializer && (ts.isIdentifier(decl.initializer) || ts.isPropertyAccessExpression(decl.initializer))) {
+        const resolved = canonicalCallee(decl.initializer, resolution)
+        if (resolved !== null) resolution.canonical.set(decl.name.text, resolved)
       }
     }
   }
-  // why: a top-level `Object` binding means a bare `Object.freeze(...)` no longer names the global; bundled dep output never shadows Object, so this guard is belt-and-suspenders.
-  if (objectShadowed) pureCallees.delete('Object.freeze')
-  return pureCallees
+  return resolution
 }
 
-// context: true when `call` is a recognized pure freeze of a fresh object/array literal. The argument must be a same-expression literal — `Object.freeze(x)` mutates a shared binding observably, so an identifier argument is rejected. Argument purity itself is enforced by the descent in containsEvalSideEffect.
-const isPureFreezeCall = (call: ts.CallExpression, pureCallees: Set<string>): boolean => {
-  const callee = canonicalCallee(call.expression)
-  if (callee === null || !pureCallees.has(callee)) return false
+// context: true when `call` is a recognized pure callee (`Object.freeze`/`seal`/`preventExtensions`, however aliased) over a fresh object/array literal. The argument must be a same-expression literal — freezing a shared binding mutates it observably, so an identifier argument is rejected. Argument purity itself is enforced by the descent in containsEvalSideEffect.
+const isPureFreezeCall = (call: ts.CallExpression, resolution: BindingResolution): boolean => {
+  const callee = canonicalCallee(call.expression, resolution)
+  if (callee === null || !PURE_GLOBAL_CALLEES.has(callee)) return false
   if (call.arguments.length < 1) return false
   const first = call.arguments[0]
   return ts.isObjectLiteralExpression(<ts.Node>first) || ts.isArrayLiteralExpression(<ts.Node>first)
 }
 
-// why: a call/new/await reached while evaluating the initializer is a real side effect; one nested inside a function/arrow body runs later, so traversal must not descend into those bodies. A provably-pure freeze of a fresh literal is exempt, but we still descend so a nested arg effect (`_freeze({ x: f() })`) still trips.
-const containsEvalSideEffect = (node: ts.Node, pureCallees: Set<string>): boolean => {
+/** The ecosystem-standard token (`@__PURE__`/`#__PURE__`) asserting that the annotated call has no side effect. Token form, not prose, to avoid matching comment text. */
+const PURE_ANNOTATION = /[@#]__PURE__/
+
+// context: true when `node`'s leading trivia carries a `/*@__PURE__*/` (or `#`) annotation — the tool-agnostic assertion (emitted by rollup/terser et al.) that this call/new is side-effect-free. The region from getFullStart to getStart is exactly the node's own leading trivia (whitespace + comments), so a token match there is confined to a comment immediately preceding this node; the inline `= /*#__PURE__*/Object.freeze(` shape rollup emits is classified as a *trailing* comment by getLeadingCommentRanges and would be missed by it, so we scan the trivia text directly.
+const isAnnotatedPure = (node: ts.Node): boolean =>
+  PURE_ANNOTATION.test(node.getSourceFile().text.slice(node.getFullStart(), node.getStart()))
+
+// why: a call/new/await reached while evaluating the initializer is a real side effect; one nested inside a function/arrow body runs later, so traversal must not descend into those bodies. A provably-pure freeze of a fresh literal or an author/tool `@__PURE__`-annotated call/new is exempt, but we still descend so a nested arg effect (`_freeze({ x: f() })`, `/*@__PURE__*/ f(g())`) still trips.
+const containsEvalSideEffect = (node: ts.Node, resolution: BindingResolution): boolean => {
   let found = false
   const visit = (current: ts.Node): void => {
     if (found || ts.isFunctionLike(current)) return
-    if (ts.isCallExpression(current)) {
-      if (isPureFreezeCall(current, pureCallees)) {
+    if (ts.isCallExpression(current) || ts.isNewExpression(current)) {
+      if ((ts.isCallExpression(current) && isPureFreezeCall(current, resolution)) || isAnnotatedPure(current)) {
         ts.forEachChild(current, visit)
         return
       }
@@ -128,8 +152,8 @@ const containsEvalSideEffect = (node: ts.Node, pureCallees: Set<string>): boolea
   return found
 }
 
-const isSideEffectFreeInitializer = (initializer: ts.Expression | undefined, pureCallees: Set<string>): boolean =>
-  initializer === undefined || !containsEvalSideEffect(initializer, pureCallees)
+const isSideEffectFreeInitializer = (initializer: ts.Expression | undefined, resolution: BindingResolution): boolean =>
+  initializer === undefined || !containsEvalSideEffect(initializer, resolution)
 
 /**
  * Collects the identifier names referenced within a node, excluding identifiers
@@ -197,7 +221,7 @@ export const requireBindingLocals = (statement: ts.Statement): string[] => {
   return locals
 }
 
-const tryDecl = (statement: ts.Statement, pureCallees: Set<string>): DeclInfo | null => {
+const tryDecl = (statement: ts.Statement, resolution: BindingResolution): DeclInfo | null => {
   if ((ts.isFunctionDeclaration(statement) || ts.isClassDeclaration(statement)) && statement.name) {
     return { statement, names: [statement.name.text], sideEffectFree: true }
   }
@@ -208,7 +232,7 @@ const tryDecl = (statement: ts.Statement, pureCallees: Set<string>): DeclInfo | 
     // why: a destructured top-level binding is not a simple named export and its initializer is typically a call — never treat it as a removable declaration.
     if (!ts.isIdentifier(decl.name)) return null
     names.push(decl.name.text)
-    if (!isSideEffectFreeInitializer(decl.initializer, pureCallees)) sideEffectFree = false
+    if (!isSideEffectFreeInitializer(decl.initializer, resolution)) sideEffectFree = false
   }
   return { statement, names, sideEffectFree }
 }
@@ -269,13 +293,13 @@ export const analyzeChunk = (sourceFile: ts.SourceFile, format: ChunkFormat): Ch
   const importStatements: ts.Statement[] = []
   const exports: ExportEntry[] = []
   const exportSurfaceStatements = createSet<ts.Statement>([])
-  const pureCallees = collectPureCallees(sourceFile)
+  const resolution = collectBindingCanonical(sourceFile)
   for (const statement of sourceFile.statements) {
     if (format === 'esm' ? ts.isImportDeclaration(statement) : isRequireVarStatement(statement)) {
       importStatements.push(statement)
       continue
     }
-    const decl = tryDecl(statement, pureCallees)
+    const decl = tryDecl(statement, resolution)
     if (decl) {
       decls.push(decl)
       for (const name of decl.names) nameToDecl.set(name, decl)

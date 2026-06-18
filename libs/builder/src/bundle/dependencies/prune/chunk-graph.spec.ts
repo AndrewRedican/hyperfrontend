@@ -156,8 +156,58 @@ describe('analyzeChunk pure-freeze recognition', () => {
     expect(freeOf('function Object() {}\nconst X = Object.freeze({ a: 1 });', 'X')).toBe(false)
   })
 
-  it('does not follow an identifier-aliased alias of a freeze', () => {
-    expect(freeOf('const _freeze = globalThis.Object.freeze;\nconst ff = _freeze;\nconst X = ff({ a: 1 });', 'X')).toBe(false)
+  it('follows a const-aliased alias of a freeze to its canonical callee', () => {
+    expect(freeOf('const _freeze = globalThis.Object.freeze;\nconst ff = _freeze;\nconst X = ff({ a: 1 });', 'X')).toBe(true)
+  })
+
+  it('treats an alias-of-global freeze (`_Object.freeze`) of a fresh object literal as side-effect-free', () => {
+    expect(freeOf('const _Object = globalThis.Object;\nconst X = _Object.freeze({ a: fn });', 'X')).toBe(true)
+  })
+
+  it('treats a bare-global alias seal of a fresh object literal as side-effect-free', () => {
+    expect(freeOf('const _Object = Object;\nconst X = _Object.seal({ a: 1 });', 'X')).toBe(true)
+  })
+
+  it('treats an alias-of-global preventExtensions of a fresh array literal as side-effect-free', () => {
+    expect(freeOf('const _Object = globalThis.Object;\nconst X = _Object.preventExtensions([a]);', 'X')).toBe(true)
+  })
+
+  it('treats an alias-of-global freeze of a shared identifier binding as side-effecting', () => {
+    expect(freeOf('const _Object = globalThis.Object;\nconst X = _Object.freeze(shared);', 'X')).toBe(false)
+  })
+
+  it('treats a call whose callee is neither an identifier nor a property access as side-effecting', () => {
+    expect(freeOf('const X = handlers[0]({ a: 1 });', 'X')).toBe(false)
+  })
+
+  it('treats a call whose callee chain is rooted in a non-identifier base as side-effecting', () => {
+    expect(freeOf('const X = handlers[0].freeze({ a: 1 });', 'X')).toBe(false)
+  })
+})
+
+describe('analyzeChunk @__PURE__ annotation recognition', () => {
+  it('treats an @__PURE__-annotated call of an opaque callee as side-effect-free', () => {
+    expect(freeOf('const X = /*@__PURE__*/ register({ a: 1 });', 'X')).toBe(true)
+  })
+
+  it('honors the #__PURE__ spelling', () => {
+    expect(freeOf('const X = /*#__PURE__*/ register({ a: 1 });', 'X')).toBe(true)
+  })
+
+  it('treats an @__PURE__-annotated new expression as side-effect-free', () => {
+    expect(freeOf('const X = /*@__PURE__*/ new Thing(1);', 'X')).toBe(true)
+  })
+
+  it('still trips on a side-effecting argument of an annotated call', () => {
+    expect(freeOf('const X = /*@__PURE__*/ register({ a: mk() });', 'X')).toBe(false)
+  })
+
+  it('ignores a leading comment that is not a purity annotation', () => {
+    expect(freeOf('const X = /* keep me */ register({ a: 1 });', 'X')).toBe(false)
+  })
+
+  it('treats an unannotated new expression as side-effecting', () => {
+    expect(freeOf('const X = new Thing(1);', 'X')).toBe(false)
   })
 })
 
