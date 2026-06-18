@@ -10,13 +10,13 @@ const log = logger.channel('builder:bundle:dependencies:prune')
 /**
  * Aggregate result of pruning dead dependency code from `_dependencies/`.
  *
- * `deadExportsRemoved` is always `0` in the Tier-1 (orphan-file) pass; Phase 2
- * (dead-export stripping) populates it.
+ * `deadExportsRemoved` is always `0` in the Orphan Sweep; the Export Strip
+ * populates it.
  */
 export interface PruneReport {
   /** Whole chunk files (and `.map`/`.d.ts.map` siblings) unlinked as orphans. */
   orphanFilesRemoved: number
-  /** Exported declarations spliced out of surviving chunks (Phase 2). */
+  /** Exported declarations spliced out of surviving chunks by the Export Strip. */
   deadExportsRemoved: number
   /** Total bytes reclaimed across all removals. */
   bytesRemoved: number
@@ -27,10 +27,10 @@ export interface PruneReport {
  * from `dist/libs/<pkg>/_dependencies/`.
  *
  * The pre-pass emits every hoisted dep at its full public-API surface; this
- * step trims what the consuming package provably never reaches. Tier 1 deletes
- * whole orphan chunk files (JS + co-located d.ts) whose runtime is unreachable
- * from the package's entry chunks. Tier 2 then strips dead exported declarations
- * out of the surviving chunks and re-runs the orphan sweep, since narrowing a
+ * step trims what the consuming package provably never reaches. The Orphan
+ * Sweep deletes whole orphan chunk files (JS + co-located d.ts) whose runtime is
+ * unreachable from the package's entry chunks. The Export Strip then strips dead
+ * exported declarations out of the surviving chunks and re-runs the sweep, since narrowing a
  * chunk's imports can leave a sibling chunk with no importer at all. Removal is
  * conservative: anything whose removal cannot be proven safe — including the
  * entire run when a dynamic specifier is present — is left untouched.

@@ -46,7 +46,7 @@ describe('pruneDependencies', () => {
     writeFileSync(abs, content)
   }
 
-  it('reports orphan removals from the Tier-1 sweep with deadExportsRemoved zero', () => {
+  it('reports orphan removals from the Orphan Sweep with deadExportsRemoved zero', () => {
     write('index.esm.js', 'export const a = 1')
     write('_dependencies/orphan/index.esm.js', 'export const b = 1')
     expect(pruneDependencies(makeContext(outputPath))).toEqual({

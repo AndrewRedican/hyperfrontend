@@ -61,7 +61,7 @@ const EVAL_SIDE_EFFECT_KINDS = createSet<ts.SyntaxKind>([
 /** Globals whose call is observably pure when frozen over a fresh literal. */
 const PURE_GLOBAL_CALLEES = ['Object.freeze']
 
-// context: canonicalizes a call target to a dotted name (`_freeze`, `Object.freeze`), normalizing a leading `globalThis.` away, or returns null when the base is not a plain identifier/property chain (e.g. a call or element access).
+// context: dotted name for a call target, with a leading `globalThis.` stripped; null when the base is not a plain identifier/property chain (e.g. a call or element access).
 const canonicalCallee = (expr: ts.Expression): string | null => {
   if (ts.isIdentifier(expr)) return expr.text
   if (ts.isPropertyAccessExpression(expr)) {
@@ -73,7 +73,7 @@ const canonicalCallee = (expr: ts.Expression): string | null => {
   return null
 }
 
-// context: scans top-level statements for callees that name a provably-pure freeze: the `Object.freeze` global plus any const/var bound directly to it (e.g. `const _freeze = globalThis.Object.freeze`). An identifier-aliased alias (`const ff = _freeze`) is deliberately not followed — it stays side-effecting.
+// context: the pure-freeze callees in scope — the `Object.freeze` global plus any const/var bound directly to it (`const _freeze = globalThis.Object.freeze`). An alias of an alias (`const ff = _freeze`) is deliberately not followed; it stays side-effecting.
 const collectPureCallees = (sourceFile: ts.SourceFile): Set<string> => {
   const pureCallees = createSet<string>(PURE_GLOBAL_CALLEES)
   let objectShadowed = false

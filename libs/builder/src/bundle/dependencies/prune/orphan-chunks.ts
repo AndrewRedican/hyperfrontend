@@ -4,7 +4,7 @@ import { exists, isDirectory, join, readDirectory } from '@hyperfrontend/project
 import { computeReachable } from './reachability'
 
 /**
- * Outcome of the Tier-1 orphan-chunk sweep.
+ * Outcome of the Orphan Sweep.
  */
 export interface OrphanPruneResult {
   /** Number of files unlinked (chunks plus their `.map` siblings). */
@@ -141,8 +141,8 @@ const pruneDtsOrphans = (context: BuildContext, depsRoot: string): OrphanPruneRe
 }
 
 /**
- * Tier-1 orphan-chunk sweep: deletes `_dependencies/**` chunk files that no
- * package entry reaches.
+ * Orphan Sweep: deletes `_dependencies/**` chunk files that no package entry
+ * reaches.
  *
  * Runs reachability from the package's own entry output chunks over the
  * `_dependencies/` JS graph, unlinks every `index.{esm,cjs}.js` (and `.map`

@@ -69,7 +69,7 @@ const isDynamicArg = (source: string, start: number): boolean => {
  *
  * Used as a safety bail: a dynamic specifier cannot be statically resolved, so
  * reachability over the chunk graph would be incomplete and orphan deletion
- * unsafe. When this returns `true` the caller disables Tier-1 deletion for the
+ * unsafe. When this returns `true` the caller disables Orphan Sweep deletion for the
  * run. A concatenated argument such as `'@rollup/rollup-' + platform` counts as
  * dynamic even though it begins with a string literal.
  *
