@@ -6,7 +6,7 @@ import { from, isArray } from '@hyperfrontend/immutable-api-utils/built-in-copy/
 import { createError } from '@hyperfrontend/immutable-api-utils/built-in-copy/error'
 import { createSet } from '@hyperfrontend/immutable-api-utils/built-in-copy/set'
 import { logger } from '@hyperfrontend/logging'
-import { ensureDir, join } from '@hyperfrontend/project-scope/core'
+import { ensureDir, exists, join } from '@hyperfrontend/project-scope/core'
 import { recover } from '../memory/recover'
 import { runDtsPerEntry } from './declarations/dts-per-entry'
 import { runDtsPrePass } from './declarations/dts-pre-pass'
@@ -18,6 +18,7 @@ import { resolveDefaultWorkerPath, runPrePass } from './dependencies/pre-pass'
 import { pruneDependencies } from './dependencies/prune/prune-dependencies'
 import { resolveDepEntry } from './dependencies/resolve-dep-entry'
 import { resolveEntries } from './entries/resolve-entries'
+import { removeEmptyDirs } from './fs/empty-dirs'
 import { toCjsBuildDescriptor, toEsmBuildDescriptor, toIifeBuildDescriptor, toUmdBuildDescriptor } from './rollup/descriptor'
 import { dispatchRollupWorker, resolveDefaultRollupWorkerPath } from './rollup/dispatch'
 
@@ -340,6 +341,13 @@ export const runBundlePhase = async (context: BuildContext, config: BuildConfig,
     hoistSharedFirstParty(context, monitor)
     monitor?.check('bundle:dedupe:shared-first-party:end')
   }
+
+  // why: runs last (after the final file-producing pass) so no later pass re-creates a file under a removed directory; sweeps the per-source dirs left empty by the orphan-d.ts prune across the whole package, not just `_dependencies/`. Guarded for the degenerate case where no format produced an output tree.
+  if (exists(context.outputPath)) {
+    const emptyDirsRemoved = removeEmptyDirs(context.outputPath)
+    if (emptyDirsRemoved > 0) log.info(`removed ${emptyDirsRemoved} empty director${emptyDirsRemoved === 1 ? 'y' : 'ies'}`)
+  }
+  monitor?.check('bundle:empty-dirs:end')
 
   return outputs
 }

@@ -1,6 +1,7 @@
 import type { BuildContext, EntryPoint } from '../../../models'
-import { rmdirSync, statSync, unlinkSync } from 'node:fs'
+import { statSync, unlinkSync } from 'node:fs'
 import { exists, isDirectory, join, readDirectory } from '@hyperfrontend/project-scope/core'
+import { removeEmptyDirs } from '../../fs/empty-dirs'
 import { computeReachable } from './reachability'
 
 /**
@@ -86,20 +87,6 @@ const unlinkWithMap = (path: string): OrphanPruneResult => {
   return { orphanFilesRemoved, bytesRemoved }
 }
 
-const removeEmptyDirsRecursive = (dir: string): void => {
-  for (const entry of readDirectory(dir)) {
-    if (entry.isDirectory) removeEmptyDirsRecursive(entry.path)
-  }
-  if (readDirectory(dir).length === 0) rmdirSync(dir)
-}
-
-// why: invoked only after `pruneOrphanChunks` has validated `depsRoot`, so it always exists.
-const cleanupEmptyDirs = (depsRoot: string): void => {
-  for (const entry of readDirectory(depsRoot)) {
-    if (entry.isDirectory) removeEmptyDirsRecursive(entry.path)
-  }
-}
-
 const pruneJsOrphans = (context: BuildContext, depsRoot: string): OrphanPruneResult => {
   const roots = collectEntryFiles(context, depsRoot, ['index.esm.js', 'index.cjs.js'])
   const reachable = computeReachable(roots, depsRoot)
@@ -166,7 +153,8 @@ export const pruneOrphanChunks = (context: BuildContext, depsRoot: string): Orph
   if (!exists(depsRoot) || !isDirectory(depsRoot)) return { orphanFilesRemoved: 0, bytesRemoved: 0 }
   const js = pruneJsOrphans(context, depsRoot)
   const dts = pruneDtsOrphans(context, depsRoot)
-  cleanupEmptyDirs(depsRoot)
+  // why: shares the package-wide empty-dir helper; `depsRoot` itself is left intact, matching the prior `cleanupEmptyDirs` behavior.
+  removeEmptyDirs(depsRoot)
   return {
     orphanFilesRemoved: js.orphanFilesRemoved + dts.orphanFilesRemoved,
     bytesRemoved: js.bytesRemoved + dts.bytesRemoved,

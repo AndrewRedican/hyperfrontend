@@ -221,6 +221,7 @@ describe('runBundlePhase', () => {
       'bundle:declarations:end',
       'bundle:declarations:prune-orphans:end',
       'bundle:dedupe:shared-first-party:end',
+      'bundle:empty-dirs:end',
     ])
   })
 
@@ -259,6 +260,7 @@ describe('runBundlePhase', () => {
       'bundle:declarations:end',
       'bundle:declarations:prune-orphans:end',
       'bundle:dedupe:shared-first-party:end',
+      'bundle:empty-dirs:end',
     ])
   })
 
