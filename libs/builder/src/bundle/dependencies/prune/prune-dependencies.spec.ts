@@ -53,6 +53,7 @@ describe('pruneDependencies', () => {
       orphanFilesRemoved: 1,
       deadExportsRemoved: 0,
       deadPropertiesRemoved: 0,
+      commentBytesRemoved: 0,
       bytesRemoved: expect.any(Number),
     })
   })
@@ -63,11 +64,12 @@ describe('pruneDependencies', () => {
       orphanFilesRemoved: 0,
       deadExportsRemoved: 0,
       deadPropertiesRemoved: 0,
+      commentBytesRemoved: 0,
       bytesRemoved: 0,
     })
   })
 
-  it('captures the orphan-sweep, dead-export, and property-strip checkpoints on the supplied monitor', () => {
+  it('captures the orphan-sweep, dead-export, property-strip, and comment-strip checkpoints on the supplied monitor', () => {
     write('index.esm.js', 'export const a = 1')
     const labels: string[] = []
     const monitor = { check: (label: string) => void labels.push(label) } as unknown as Parameters<typeof pruneDependencies>[1]
@@ -76,6 +78,7 @@ describe('pruneDependencies', () => {
       'bundle:dependencies:prune:orphans:end',
       'bundle:dependencies:prune:dead-exports:end',
       'bundle:dependencies:prune:property-strip:end',
+      'bundle:dependencies:prune:comment-strip:end',
     ])
   })
 

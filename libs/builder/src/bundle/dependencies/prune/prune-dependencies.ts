@@ -5,6 +5,7 @@ import { join } from '@hyperfrontend/project-scope/core'
 import { stripDeadExportsPass } from './dead-export-pass'
 import { pruneOrphanChunks } from './orphan-chunks'
 import { stripDeadPropertiesPass } from './property-strip-pass'
+import { stripCommentsPass } from './strip-comments'
 
 const log = logger.channel('builder:bundle:dependencies:prune')
 
@@ -21,6 +22,8 @@ export interface PruneReport {
   deadExportsRemoved: number
   /** Namespace slots spliced out of kept frozen-namespace literals by the Property Strip. */
   deadPropertiesRemoved: number
+  /** Bytes reclaimed by the Comment Strip removing ordinary comments from surviving chunks. */
+  commentBytesRemoved: number
   /** Total bytes reclaimed across all removals. */
   bytesRemoved: number
 }
@@ -37,9 +40,11 @@ export interface PruneReport {
  * drops the unread slots of any kept, live frozen-namespace object and a second
  * Export Strip collapses the factories those slots held alive. A final sweep
  * reclaims chunks left with no importer, since narrowing a chunk's imports can
- * leave a sibling chunk unreferenced. Removal is conservative: anything whose
- * removal cannot be proven safe — including the entire run when a dynamic
- * specifier is present — is left untouched.
+ * leave a sibling chunk unreferenced. A final Comment Strip removes ordinary
+ * comments from the surviving chunks while preserving `@__PURE__` /
+ * `@__NO_SIDE_EFFECTS__` annotations and legal comments. Removal is conservative:
+ * anything whose removal cannot be proven safe — including the entire run when a
+ * dynamic specifier is present — is left untouched.
  *
  * @param context - Resolved build context. `outputPath` locates `_dependencies/`.
  * @param monitor - Optional memory monitor; checkpoints are captured after the
@@ -64,15 +69,30 @@ export const pruneDependencies = (context: BuildContext, monitor?: MemoryMonitor
     properties.deadPropertiesRemoved > 0 ? stripDeadExportsPass(context, depsRoot) : { deadExportsRemoved: 0, bytesRemoved: 0 }
   // why: a chunk whose last importing symbol was just stripped is now an orphan; reclaim it (and any d.ts left behind).
   const resweep = pruneOrphanChunks(context, depsRoot)
+  // why: pure text and order-independent, but run last so it stays clear of the AST passes that read getFullStart()->getStart() trivia for @__PURE__ detection.
+  const comments = stripCommentsPass(depsRoot)
+  monitor?.check('bundle:dependencies:prune:comment-strip:end')
   const report: PruneReport = {
     orphanFilesRemoved: orphans.orphanFilesRemoved + resweep.orphanFilesRemoved,
     deadExportsRemoved: deadExports.deadExportsRemoved + cascade.deadExportsRemoved,
     deadPropertiesRemoved: properties.deadPropertiesRemoved,
-    bytesRemoved: orphans.bytesRemoved + deadExports.bytesRemoved + properties.bytesRemoved + cascade.bytesRemoved + resweep.bytesRemoved,
+    commentBytesRemoved: comments.commentBytesRemoved,
+    bytesRemoved:
+      orphans.bytesRemoved +
+      deadExports.bytesRemoved +
+      properties.bytesRemoved +
+      cascade.bytesRemoved +
+      resweep.bytesRemoved +
+      comments.commentBytesRemoved,
   }
-  if (report.orphanFilesRemoved > 0 || report.deadExportsRemoved > 0 || report.deadPropertiesRemoved > 0) {
+  if (
+    report.orphanFilesRemoved > 0 ||
+    report.deadExportsRemoved > 0 ||
+    report.deadPropertiesRemoved > 0 ||
+    report.commentBytesRemoved > 0
+  ) {
     log.info(
-      `pruned ${report.orphanFilesRemoved} orphan dependency file(s), ${report.deadExportsRemoved} dead export(s), and ${report.deadPropertiesRemoved} dead namespace slot(s), reclaimed ${report.bytesRemoved} byte(s)`
+      `pruned ${report.orphanFilesRemoved} orphan dependency file(s), ${report.deadExportsRemoved} dead export(s), and ${report.deadPropertiesRemoved} dead namespace slot(s), stripped ${report.commentBytesRemoved} comment byte(s), reclaimed ${report.bytesRemoved} byte(s)`
     )
   }
   return report
