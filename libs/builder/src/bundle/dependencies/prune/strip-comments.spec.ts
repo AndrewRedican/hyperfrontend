@@ -54,6 +54,27 @@ describe('stripComments', () => {
     expect(stripComments(source)).toBe('export const t = `x /* y */ z`;\n')
   })
 
+  it('leaves a // inside a substitution template untouched and still strips the real comment after it', () => {
+    // why: ts.Scanner needs reScanTemplateToken to resume a template across `${...}`; without it the `}` flips backtick polarity and the `//` in `https://` is mis-scanned as a comment (the bug that truncated the bundled rollup chunk).
+    const source = 'const link = `https://aka.ms/${name}.exe`;\n// strip me'
+    expect(stripComments(source)).toBe('const link = `https://aka.ms/${name}.exe`;\n')
+  })
+
+  it('keeps backtick polarity across two substitution templates in a row', () => {
+    const source = ['const a = `x.${p}.y`;', 'const b = `https://h/${q}.z`;', '// gone'].join('\n')
+    expect(stripComments(source)).toBe(['const a = `x.${p}.y`;', 'const b = `https://h/${q}.z`;', ''].join('\n'))
+  })
+
+  it('resumes a template after a brace-bearing substitution expression', () => {
+    const source = 'const t = `a${ {k: 1} }b`; // tail'
+    expect(stripComments(source)).toBe('const t = `a${ {k: 1} }b`; ')
+  })
+
+  it('handles a nested substitution template', () => {
+    const source = 'const t = `a${ `b${c}d` }e`; /* gone */'
+    expect(stripComments(source)).toBe('const t = `a${ `b${c}d` }e`; ')
+  })
+
   it('does not mistake a regex body with escaped slashes for a comment', () => {
     const source = 'export const p = /https?:\\/\\//;\n// strip me'
     expect(stripComments(source)).toBe('export const p = /https?:\\/\\//;\n')

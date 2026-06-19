@@ -67,11 +67,17 @@ const collectComments = (text: string): CommentRange[] => {
   const ranges: CommentRange[] = []
   // why: start-of-input is an expression position, so a leading `/` opens a regex.
   let prevSignificant: ts.SyntaxKind = ts.SyntaxKind.Unknown
+  // why: ts.Scanner.scan() does not resume a template literal across its `${...}` substitution on its own — it returns the substitution's closing `}` as a bare CloseBraceToken, so the next backtick is mis-lexed as *opening* a string instead of closing the template. That flips backtick polarity for the rest of the file and exposes `//`/`/*` inside later templates as phantom comments. Track each open substitution's brace depth so the `}` that closes one is re-lexed as the template's continuation (TemplateMiddle when another `${` follows, TemplateTail when the backtick closes); a depth>0 brace is an ordinary block/object brace inside the expression and is left alone.
+  const templateBraceDepths: number[] = []
   let token = scanner.scan()
   while (token !== ts.SyntaxKind.EndOfFileToken) {
+    const inSubstitution = templateBraceDepths.length > 0
     if ((token === ts.SyntaxKind.SlashToken || token === ts.SyntaxKind.SlashEqualsToken) && !VALUE_END_TOKENS.has(prevSignificant)) {
       // why: a `/` in expression position is a regex; re-lex the whole literal so its body is never tokenized into stray comments. reScanSlashToken returns the original SlashToken when no valid regex closes on the line, which leaves a true division untouched.
       token = scanner.reScanSlashToken()
+    } else if (token === ts.SyntaxKind.CloseBraceToken && inSubstitution && templateBraceDepths[templateBraceDepths.length - 1] === 0) {
+      // why: this `}` closes the innermost `${...}`; re-lex it as the template's continuation so the trailing backtick is scanned as template text, not a fresh string opener.
+      token = scanner.reScanTemplateToken(/*isTaggedTemplate*/ false)
     }
     if (token === ts.SyntaxKind.SingleLineCommentTrivia || token === ts.SyntaxKind.MultiLineCommentTrivia) {
       ranges.push({ start: scanner.getTokenStart(), end: scanner.getTextPos() })
@@ -79,6 +85,11 @@ const collectComments = (text: string): CommentRange[] => {
       // why: comments and whitespace don't change whether the next `/` is division or regex; only real tokens do.
       prevSignificant = token
     }
+    // why: maintain the substitution-depth stack after re-lexing so each token's effect (open a substitution, descend/ascend a nested brace, or close the template) is counted once.
+    if (token === ts.SyntaxKind.TemplateHead) templateBraceDepths.push(0)
+    else if (token === ts.SyntaxKind.TemplateTail) templateBraceDepths.pop()
+    else if (inSubstitution && token === ts.SyntaxKind.OpenBraceToken) templateBraceDepths[templateBraceDepths.length - 1]++
+    else if (inSubstitution && token === ts.SyntaxKind.CloseBraceToken) templateBraceDepths[templateBraceDepths.length - 1]--
     token = scanner.scan()
   }
   return ranges
