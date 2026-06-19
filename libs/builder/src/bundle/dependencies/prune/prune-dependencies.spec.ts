@@ -1,5 +1,5 @@
 import type { BuildContext, EntryPoint, EntryPointDiscovery } from '../../../models'
-import { existsSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs'
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { pruneDependencies } from './prune-dependencies'
@@ -52,27 +52,73 @@ describe('pruneDependencies', () => {
     expect(pruneDependencies(makeContext(outputPath))).toEqual({
       orphanFilesRemoved: 1,
       deadExportsRemoved: 0,
+      deadPropertiesRemoved: 0,
       bytesRemoved: expect.any(Number),
     })
   })
 
   it('returns all-zero counts when there is no _dependencies directory', () => {
     write('index.esm.js', 'export const a = 1')
-    expect(pruneDependencies(makeContext(outputPath))).toEqual({ orphanFilesRemoved: 0, deadExportsRemoved: 0, bytesRemoved: 0 })
+    expect(pruneDependencies(makeContext(outputPath))).toEqual({
+      orphanFilesRemoved: 0,
+      deadExportsRemoved: 0,
+      deadPropertiesRemoved: 0,
+      bytesRemoved: 0,
+    })
   })
 
-  it('captures the orphan-sweep and dead-export checkpoints on the supplied monitor', () => {
+  it('captures the orphan-sweep, dead-export, and property-strip checkpoints on the supplied monitor', () => {
     write('index.esm.js', 'export const a = 1')
     const labels: string[] = []
     const monitor = { check: (label: string) => void labels.push(label) } as unknown as Parameters<typeof pruneDependencies>[1]
     pruneDependencies(makeContext(outputPath), monitor)
-    expect(labels).toEqual(['bundle:dependencies:prune:orphans:end', 'bundle:dependencies:prune:dead-exports:end'])
+    expect(labels).toEqual([
+      'bundle:dependencies:prune:orphans:end',
+      'bundle:dependencies:prune:dead-exports:end',
+      'bundle:dependencies:prune:property-strip:end',
+    ])
   })
 
   it('counts dead exports stripped from a surviving chunk', () => {
     write('index.esm.js', "import { getType } from './_dependencies/d/index.esm.js'")
     write('_dependencies/d/index.esm.js', 'const getType = 1;\nconst unused = 2;\nexport { getType, unused };')
     expect(pruneDependencies(makeContext(outputPath)).deadExportsRemoved).toBe(1)
+  })
+
+  it('drops an unread slot of a wholesale-imported namespace and cascades its factory away', () => {
+    write('index.esm.js', "import { SafeObject } from './_dependencies/d/index.esm.js';\nexport const use = SafeObject.freeze;")
+    write(
+      '_dependencies/d/index.esm.js',
+      'const freeze = 1;\nconst keys = 2;\nconst SafeObject = Object.freeze({ freeze, keys });\nexport { freeze, keys, SafeObject };'
+    )
+    const report = pruneDependencies(makeContext(outputPath))
+    expect(report.deadPropertiesRemoved).toBe(1)
+    const chunk = readFileSync(join(outputPath, '_dependencies/d/index.esm.js'), 'utf8')
+    expect(chunk).toContain('Object.freeze({ freeze })')
+    expect(chunk).not.toContain('keys')
+  })
+
+  it('drops an unread slot of a CJS require namespace and cascades its factory away', () => {
+    write('index.cjs.js', "var d = require('./_dependencies/d/index.cjs.js');\nexports.use = d.SafeObject.freeze;")
+    write(
+      '_dependencies/d/index.cjs.js',
+      'var freeze = 1;\nvar keys = 2;\nvar SafeObject = Object.freeze({ freeze, keys });\nexports.freeze = freeze;\nexports.keys = keys;\nexports.SafeObject = SafeObject;'
+    )
+    const report = pruneDependencies(makeContext(outputPath))
+    expect(report.deadPropertiesRemoved).toBe(1)
+    const chunk = readFileSync(join(outputPath, '_dependencies/d/index.cjs.js'), 'utf8')
+    expect(chunk).toContain('Object.freeze({ freeze })')
+    expect(chunk).not.toContain('keys')
+  })
+
+  it('keeps a namespace whole when a consumer reads it wholesale', () => {
+    write('index.esm.js', "import { SafeObject } from './_dependencies/d/index.esm.js';\nexport const all = { ...SafeObject };")
+    write(
+      '_dependencies/d/index.esm.js',
+      'const freeze = 1;\nconst keys = 2;\nconst SafeObject = Object.freeze({ freeze, keys });\nexport { SafeObject };'
+    )
+    expect(pruneDependencies(makeContext(outputPath)).deadPropertiesRemoved).toBe(0)
+    expect(readFileSync(join(outputPath, '_dependencies/d/index.esm.js'), 'utf8')).toContain('{ freeze, keys }')
   })
 
   it('reclaims a chunk left orphaned once stripping drops its last importing edge', () => {

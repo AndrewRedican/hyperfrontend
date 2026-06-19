@@ -69,7 +69,7 @@ const PURE_GLOBAL_CALLEES = createSet<string>(['Object.freeze', 'Object.seal', '
  * Resolution of a chunk's top-level bindings, used to recognize a pure callee
  * regardless of how the global was aliased.
  */
-interface BindingResolution {
+export interface BindingResolution {
   /** Every name bound at top level (const/var/function/class) — used to detect a global shadowed by a local. */
   bindings: Set<string>
   /** Bindings whose initializer is an identifier/property chain rooted in a global, mapped to that global-rooted dotted form. */
@@ -93,8 +93,24 @@ const canonicalCallee = (expr: ts.Expression, resolution: BindingResolution): st
   return null
 }
 
-// context: maps each top-level binding to its canonical global-rooted callee form, in source order so a later alias resolves through an earlier one (`const _O = globalThis.Object; const freeze = _O.freeze` → `freeze ↦ "Object.freeze"`). Both `const` and `var` are resolved; bundled dep chunks never reassign these interop bindings. A call/literal initializer is opaque and only contributes a shadowing entry in `bindings`.
-const collectBindingCanonical = (sourceFile: ts.SourceFile): BindingResolution => {
+/**
+ * Maps each top-level binding to its canonical global-rooted callee form, in
+ * source order so a later alias resolves through an earlier one. Both `const`
+ * and `var` are resolved; bundled dep chunks never reassign these interop
+ * bindings. A call/literal initializer is opaque and only contributes a
+ * shadowing entry in `bindings`.
+ *
+ * @param sourceFile - The parsed chunk whose top-level bindings are resolved.
+ * @returns The binding resolution: every top-level name plus the global-rooted
+ * canonical form of each identifier/property-chain alias.
+ *
+ * @example Resolving an alias-of-global freeze
+ * ```typescript
+ * const { canonical } = collectBindingCanonical(parseChunk('const _O = globalThis.Object;\nconst freeze = _O.freeze;'))
+ * canonical.get('freeze') // => 'Object.freeze'
+ * ```
+ */
+export const collectBindingCanonical = (sourceFile: ts.SourceFile): BindingResolution => {
   const resolution: BindingResolution = { bindings: createSet<string>([]), canonical: createMap<string, string>() }
   for (const statement of sourceFile.statements) {
     if ((ts.isFunctionDeclaration(statement) || ts.isClassDeclaration(statement)) && statement.name)
@@ -113,8 +129,26 @@ const collectBindingCanonical = (sourceFile: ts.SourceFile): BindingResolution =
   return resolution
 }
 
-// context: true when `call` is a recognized pure callee (`Object.freeze`/`seal`/`preventExtensions`, however aliased) over a fresh object/array literal. The argument must be a same-expression literal — freezing a shared binding mutates it observably, so an identifier argument is rejected. Argument purity itself is enforced by the descent in containsEvalSideEffect.
-const isPureFreezeCall = (call: ts.CallExpression, resolution: BindingResolution): boolean => {
+/**
+ * Reports whether a call is a recognized pure callee
+ * (`Object.freeze`/`seal`/`preventExtensions`, however aliased) over a fresh
+ * object/array literal. The argument must be a same-expression literal —
+ * freezing a shared binding mutates it observably, so an identifier argument is
+ * rejected. Argument purity itself is enforced by the descent in
+ * {@link containsEvalSideEffect}.
+ *
+ * @param call - The call expression to classify.
+ * @param resolution - The chunk's binding resolution, used to canonicalize the callee.
+ * @returns `true` when the call is an observably pure freeze of a fresh literal.
+ *
+ * @example Recognizing an aliased freeze of a fresh literal
+ * ```typescript
+ * const sourceFile = parseChunk('const _O = globalThis.Object;\nconst X = _O.freeze({ a: 1 });')
+ * // for the `_O.freeze({ a: 1 })` call node
+ * isPureFreezeCall(call, collectBindingCanonical(sourceFile)) // => true
+ * ```
+ */
+export const isPureFreezeCall = (call: ts.CallExpression, resolution: BindingResolution): boolean => {
   const callee = canonicalCallee(call.expression, resolution)
   if (callee === null || !PURE_GLOBAL_CALLEES.has(callee)) return false
   if (call.arguments.length < 1) return false
@@ -291,7 +325,8 @@ export const analyzeChunk = (sourceFile: ts.SourceFile, format: ChunkFormat): Ch
   const nameToDecl = createMap<string, DeclInfo>()
   const decls: DeclInfo[] = []
   const importStatements: ts.Statement[] = []
-  const exports: ExportEntry[] = []
+  // why: not named `exports` — a local `exports` shadows the module object, breaking the transpiled `(0, exports.collectBindingCanonical)` reference under isolatedModules CJS.
+  const exportEntries: ExportEntry[] = []
   const exportSurfaceStatements = createSet<ts.Statement>([])
   const resolution = collectBindingCanonical(sourceFile)
   for (const statement of sourceFile.statements) {
@@ -304,10 +339,10 @@ export const analyzeChunk = (sourceFile: ts.SourceFile, format: ChunkFormat): Ch
       decls.push(decl)
       for (const name of decl.names) nameToDecl.set(name, decl)
     }
-    if (format === 'esm') collectEsmExports(statement, exports, exportSurfaceStatements)
-    else collectCjsExports(statement, exports, exportSurfaceStatements)
+    if (format === 'esm') collectEsmExports(statement, exportEntries, exportSurfaceStatements)
+    else collectCjsExports(statement, exportEntries, exportSurfaceStatements)
   }
-  return { nameToDecl, decls, importStatements, exports, exportSurfaceStatements }
+  return { nameToDecl, decls, importStatements, exports: exportEntries, exportSurfaceStatements }
 }
 
 const collectRoots = (sourceFile: ts.SourceFile, model: ChunkModel, keep: Set<string>, declStatements: Set<ts.Statement>): Set<string> => {
