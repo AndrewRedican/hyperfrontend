@@ -156,6 +156,33 @@ export const isPureFreezeCall = (call: ts.CallExpression, resolution: BindingRes
   return ts.isObjectLiteralExpression(<ts.Node>first) || ts.isArrayLiteralExpression(<ts.Node>first)
 }
 
+/**
+ * Reports whether a call is `<global-rooted chain>.bind(…)`.
+ * `Function.prototype.bind` only builds and returns a new bound function — no
+ * observable side effect; reading the receiver chain (`Promise.resolve`) is a
+ * property read on a captured global, not a call. The receiver must canonicalize
+ * to a global ({@link canonicalCallee} non-null) so an arbitrary user object's
+ * `.bind` — potentially a redefined, side-effecting method — is never assumed
+ * pure. Argument purity is enforced by the descent in
+ * {@link containsEvalSideEffect}, exactly as for {@link isPureFreezeCall}.
+ *
+ * @param call - The call expression to classify.
+ * @param resolution - The chunk's binding resolution, used to canonicalize the receiver.
+ * @returns `true` when the call binds a method off a global-rooted receiver chain.
+ *
+ * @example Recognizing a bind of a global-rooted receiver
+ * ```typescript
+ * const sourceFile = parseChunk('const _P = globalThis.Promise;\nconst X = _P.resolve.bind(_P);')
+ * // for the `_P.resolve.bind(_P)` call node
+ * isPureBindCall(call, collectBindingCanonical(sourceFile)) // => true
+ * ```
+ */
+export const isPureBindCall = (call: ts.CallExpression, resolution: BindingResolution): boolean => {
+  const callee = call.expression
+  if (!ts.isPropertyAccessExpression(callee) || callee.name.text !== 'bind') return false
+  return canonicalCallee(callee.expression, resolution) !== null
+}
+
 /** The ecosystem-standard token (`@__PURE__`/`#__PURE__`) asserting that the annotated call has no side effect. Token form, not prose, to avoid matching comment text. */
 const PURE_ANNOTATION = /[@#]__PURE__/
 
@@ -169,7 +196,10 @@ const containsEvalSideEffect = (node: ts.Node, resolution: BindingResolution): b
   const visit = (current: ts.Node): void => {
     if (found || ts.isFunctionLike(current)) return
     if (ts.isCallExpression(current) || ts.isNewExpression(current)) {
-      if ((ts.isCallExpression(current) && isPureFreezeCall(current, resolution)) || isAnnotatedPure(current)) {
+      if (
+        (ts.isCallExpression(current) && (isPureFreezeCall(current, resolution) || isPureBindCall(current, resolution))) ||
+        isAnnotatedPure(current)
+      ) {
         ts.forEachChild(current, visit)
         return
       }

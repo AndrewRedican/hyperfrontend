@@ -185,6 +185,28 @@ describe('analyzeChunk pure-freeze recognition', () => {
   })
 })
 
+describe('analyzeChunk pure-bind recognition', () => {
+  it('treats a bind off a global-rooted receiver as side-effect-free', () => {
+    expect(freeOf('const _P = globalThis.Promise;\nconst X = _P.resolve.bind(_P);', 'X')).toBe(true)
+  })
+
+  it('treats a bind off an optional-chain global-rooted receiver as side-effect-free', () => {
+    expect(freeOf('const _P = globalThis.Promise;\nconst X = _P.withResolvers?.bind(_P);', 'X')).toBe(true)
+  })
+
+  it('treats a bind whose argument is a call as side-effecting', () => {
+    expect(freeOf('const _P = globalThis.Promise;\nconst X = _P.all.bind(f());', 'X')).toBe(false)
+  })
+
+  it('treats a bind off a call-bound local receiver as side-effecting', () => {
+    expect(freeOf('const obj = makeThing();\nconst X = obj.method.bind(obj);', 'X')).toBe(false)
+  })
+
+  it('treats a bind with a side-effecting later argument as side-effecting', () => {
+    expect(freeOf('const _P = globalThis.Promise;\nconst X = _P.resolve.bind(_P, g());', 'X')).toBe(false)
+  })
+})
+
 describe('analyzeChunk @__PURE__ annotation recognition', () => {
   it('treats an @__PURE__-annotated call of an opaque callee as side-effect-free', () => {
     expect(freeOf('const X = /*@__PURE__*/ register({ a: 1 });', 'X')).toBe(true)
