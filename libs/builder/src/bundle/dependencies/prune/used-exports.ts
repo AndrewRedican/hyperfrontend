@@ -77,6 +77,11 @@ const collectCjsBindingEdges = (
     mergeName(edges, target, parent.name.text)
     return
   }
+  // why: a bare `require('./x')` statement pulls the chunk only for its side effects, naming no export; record it reached with empty demand — mirroring an ESM side-effect import — so the orphan re-sweep, not the export stripper, decides its fate. Without this it falls through to the wholesale escape below and poisons the chunk's union demand to 'all'.
+  if (ts.isExpressionStatement(parent)) {
+    markReached(edges, target)
+    return
+  }
   if (!ts.isVariableDeclaration(parent) || parent.initializer !== node) {
     // why: a `require` used as a call argument, spread, or any non-binding position escapes member tracking — keep the whole chunk.
     mergeAll(edges, target)

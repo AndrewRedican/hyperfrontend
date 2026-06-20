@@ -58,6 +58,10 @@ describe('collectImportEdges (esm)', () => {
 })
 
 describe('collectImportEdges (cjs)', () => {
+  it('records a side-effect-only require with an empty demand', () => {
+    expect(edgesObj("require('./x.cjs.js')", 'cjs')).toEqual({ [target('./x.cjs.js')]: [] })
+  })
+
   it('collects member accesses on a namespace require binding', () => {
     expect(edgesObj("var ns = require('./x.cjs.js'); ns.foo(); ns.bar", 'cjs')).toEqual({ [target('./x.cjs.js')]: ['bar', 'foo'] })
   })

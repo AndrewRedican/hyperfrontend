@@ -53,6 +53,7 @@ describe('pruneDependencies', () => {
       orphanFilesRemoved: 1,
       deadExportsRemoved: 0,
       deadPropertiesRemoved: 0,
+      requireBindingsDestructured: 0,
       commentBytesRemoved: 0,
       bytesRemoved: expect.any(Number),
     })
@@ -64,12 +65,13 @@ describe('pruneDependencies', () => {
       orphanFilesRemoved: 0,
       deadExportsRemoved: 0,
       deadPropertiesRemoved: 0,
+      requireBindingsDestructured: 0,
       commentBytesRemoved: 0,
       bytesRemoved: 0,
     })
   })
 
-  it('captures the orphan-sweep, dead-export, property-strip, and comment-strip checkpoints on the supplied monitor', () => {
+  it('captures the orphan-sweep, dead-export, property-strip, destructure, and comment-strip checkpoints on the supplied monitor', () => {
     write('index.esm.js', 'export const a = 1')
     const labels: string[] = []
     const monitor = { check: (label: string) => void labels.push(label) } as unknown as Parameters<typeof pruneDependencies>[1]
@@ -78,6 +80,7 @@ describe('pruneDependencies', () => {
       'bundle:dependencies:prune:orphans:end',
       'bundle:dependencies:prune:dead-exports:end',
       'bundle:dependencies:prune:property-strip:end',
+      'bundle:dependencies:prune:destructure-requires:end',
       'bundle:dependencies:prune:comment-strip:end',
     ])
   })
@@ -122,6 +125,26 @@ describe('pruneDependencies', () => {
     )
     expect(pruneDependencies(makeContext(outputPath)).deadPropertiesRemoved).toBe(0)
     expect(readFileSync(join(outputPath, '_dependencies/d/index.esm.js'), 'utf8')).toContain('{ freeze, keys }')
+  })
+
+  it('destructures a whole-module CJS require binding read only as static members', () => {
+    write('index.cjs.js', "const a = require('./_dependencies/a/index.cjs.js');\nexports.use = a.abs;")
+    write('_dependencies/a/index.cjs.js', "const b = require('../b/index.cjs.js');\nconst abs = b.abs;\nexports.abs = abs;")
+    write('_dependencies/b/index.cjs.js', 'const abs = Math.abs;\nexports.abs = abs;')
+    const report = pruneDependencies(makeContext(outputPath))
+    expect(report.requireBindingsDestructured).toBe(1)
+    const chunk = readFileSync(join(outputPath, '_dependencies/a/index.cjs.js'), 'utf8')
+    expect(chunk).toContain("const { abs: abs$1 } = require('../b/index.cjs.js')")
+    expect(chunk).toContain('const abs = abs$1;')
+  })
+
+  it('leaves a require binding alone when the edge is part of a require cycle', () => {
+    write('index.cjs.js', "const a = require('./_dependencies/a/index.cjs.js');\nexports.use = a.fa;")
+    write('_dependencies/a/index.cjs.js', "const b = require('../b/index.cjs.js');\nconst fa = () => b.fb();\nexports.fa = fa;")
+    write('_dependencies/b/index.cjs.js', "const a = require('../a/index.cjs.js');\nconst fb = () => a.fa();\nexports.fb = fb;")
+    const report = pruneDependencies(makeContext(outputPath))
+    expect(report.requireBindingsDestructured).toBe(0)
+    expect(readFileSync(join(outputPath, '_dependencies/a/index.cjs.js'), 'utf8')).toContain("const b = require('../b/index.cjs.js')")
   })
 
   it('reclaims a chunk left orphaned once stripping drops its last importing edge', () => {

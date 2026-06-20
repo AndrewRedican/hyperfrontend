@@ -114,6 +114,10 @@ const usageOfCjs = (source: string): 'absent' | 'bailAll' | Record<string, 'all'
 const requireNs = (use: string): string => `var dep = require('./d/index.cjs.js');\n${use}`
 
 describe('collectNamespaceUsage (CJS)', () => {
+  it('records a side-effect-only require as reached with no property demand', () => {
+    expect(usageOfCjs("require('./d/index.cjs.js');")).toEqual({})
+  })
+
   it('records a two-level property read off a whole-module require binding', () => {
     expect(usageOfCjs(requireNs('dep.SafeObject.freeze(x);'))).toEqual({ SafeObject: ['freeze'] })
   })

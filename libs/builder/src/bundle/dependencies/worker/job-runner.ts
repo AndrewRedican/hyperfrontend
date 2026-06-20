@@ -289,6 +289,7 @@ const buildJsOutput = (job: PrePassWorkerJob): OutputOptions => ({
   sourcemap: false,
   inlineDynamicImports: true,
   exports: 'auto',
+  generatedCode: { constBindings: true },
 })
 
 /**

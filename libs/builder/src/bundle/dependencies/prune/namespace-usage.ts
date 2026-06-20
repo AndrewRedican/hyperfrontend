@@ -214,6 +214,8 @@ const bindRequire = (
     else usage.bailAll = true
     return
   }
+  // why: a bare `require('./x')` statement binds nothing and reads no property — a side-effect-only import (mirrored from ESM, which skips clause-less imports) that forbids no slot; without this it falls through to the wholesale escape below and marks the whole target bailAll.
+  if (ts.isExpressionStatement(parent)) return
   // why: a `require` not bound to a variable (call argument, spread, …) escapes member tracking — keep the whole target.
   if (!ts.isVariableDeclaration(parent) || parent.initializer !== call) {
     usage.bailAll = true
