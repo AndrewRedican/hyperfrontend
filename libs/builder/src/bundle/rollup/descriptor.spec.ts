@@ -23,7 +23,7 @@ const makeContext = (overrides: Partial<BuildContext> = {}): BuildContext => ({
   external: [],
   assets: [],
   isWorkspacePackage: () => false,
-  entryPointDiscovery: { category: 'simple', entryPoints: [], hasRootEntry: false, platformEntries: [], featureEntries: [] },
+  entryPointDiscovery: { category: 'hybrid', entryPoints: [], hasRootEntry: false, platformEntries: [], featureEntries: [] },
   bundledDeps: [],
   workspaceBundledDeps: [],
   startedAt: 0,

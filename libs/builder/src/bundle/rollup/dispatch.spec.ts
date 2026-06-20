@@ -62,6 +62,7 @@ const baseDescriptor = (overrides: Partial<RollupBuildDescriptor> = {}): RollupB
   workspaceRoot: '/abs/repo',
   bundleWorkspaceDeps: false,
   bundle: null,
+  bin: null,
   reportPath: '/abs/will-be-overwritten',
   ...overrides,
 })

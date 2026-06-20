@@ -8,9 +8,9 @@ const extractRepositoryUrl = (repository: PackageJson['repository']): string | n
 }
 
 const formatLicenseUrl = (platform: string, baseUrl: string, fileName: string): string | null => {
-  if (platform === 'github') return `${baseUrl}/blob/master/${fileName}`
-  if (platform === 'gitlab') return `${baseUrl}/-/blob/main/${fileName}`
-  if (platform === 'bitbucket') return `${baseUrl}/src/master/${fileName}`
+  if (platform === 'github') return `${baseUrl}/blob/HEAD/${fileName}`
+  if (platform === 'gitlab') return `${baseUrl}/-/blob/HEAD/${fileName}`
+  if (platform === 'bitbucket') return `${baseUrl}/src/HEAD/${fileName}`
   return null
 }
 
@@ -28,7 +28,7 @@ const formatLicenseUrl = (platform: string, baseUrl: string, fileName: string): 
  * @example Resolving a GitHub LICENSE URL from a string-form repository field
  * ```typescript
  * const url = constructLicenseUrl('https://github.com/x/y.git', 'LICENSE')
- * // → 'https://github.com/x/y/blob/master/LICENSE'
+ * // → 'https://github.com/x/y/blob/HEAD/LICENSE'
  * ```
  */
 export const constructLicenseUrl = (repository: PackageJson['repository'], licenseFileName: string): string | null => {

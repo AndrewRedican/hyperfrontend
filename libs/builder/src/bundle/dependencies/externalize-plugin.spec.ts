@@ -30,7 +30,7 @@ describe('createExternalizeBundledDepsPlugin', () => {
     deps: ['rollup', '@rollup/plugin-typescript', 'postject'],
     entryOutDir: '/abs/dist/libs/builder/bundle/rollup',
     depsRoot: '/abs/dist/libs/builder/_dependencies',
-  } as const
+  }
 
   it('exposes the expected plugin name', () => {
     const plugin = createExternalizeBundledDepsPlugin({ ...baseOptions, format: 'esm' })

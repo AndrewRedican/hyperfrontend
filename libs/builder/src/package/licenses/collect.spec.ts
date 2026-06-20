@@ -109,7 +109,7 @@ describe('collectThirdPartyLicenses', () => {
     writePkg(dep, { name: 'foo', license: 'MIT', repository: { type: 'git', url: 'https://github.com/x/y.git' } })
     writeFileSync(join(dep, 'LICENSE'), 'MIT License')
     const url = collectThirdPartyLicenses('/p', workspaceRoot, ['foo'])[0].licenseUrl
-    expect(url).toBe('https://github.com/x/y/blob/master/LICENSE')
+    expect(url).toBe('https://github.com/x/y/blob/HEAD/LICENSE')
   })
 
   it('returns null licenseUrl when no LICENSE file is present', () => {
@@ -136,14 +136,14 @@ describe('collectThirdPartyLicenses', () => {
     const dep = join(nodeModules, 'foo')
     writePkg(dep, { name: 'foo', license: 'MIT', repository: 'https://gitlab.com/x/y.git' })
     writeFileSync(join(dep, 'LICENSE'), 'MIT License')
-    expect(collectThirdPartyLicenses('/p', workspaceRoot, ['foo'])[0].licenseUrl).toBe('https://gitlab.com/x/y/-/blob/main/LICENSE')
+    expect(collectThirdPartyLicenses('/p', workspaceRoot, ['foo'])[0].licenseUrl).toBe('https://gitlab.com/x/y/-/blob/HEAD/LICENSE')
   })
 
   it('builds a Bitbucket license URL when the repository points at bitbucket', () => {
     const dep = join(nodeModules, 'foo')
     writePkg(dep, { name: 'foo', license: 'MIT', repository: 'https://bitbucket.org/x/y.git' })
     writeFileSync(join(dep, 'LICENSE'), 'MIT License')
-    expect(collectThirdPartyLicenses('/p', workspaceRoot, ['foo'])[0].licenseUrl).toBe('https://bitbucket.org/x/y/src/master/LICENSE')
+    expect(collectThirdPartyLicenses('/p', workspaceRoot, ['foo'])[0].licenseUrl).toBe('https://bitbucket.org/x/y/src/HEAD/LICENSE')
   })
 
   it('returns entries sorted alphabetically by package name', () => {

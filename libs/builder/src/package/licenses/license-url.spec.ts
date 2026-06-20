@@ -11,16 +11,16 @@ describe('constructLicenseUrl', () => {
 
   it('extracts the URL from an object-form repository field', () => {
     expect(constructLicenseUrl({ type: 'git', url: 'https://github.com/x/y.git' }, 'LICENSE')).toBe(
-      'https://github.com/x/y/blob/master/LICENSE'
+      'https://github.com/x/y/blob/HEAD/LICENSE'
     )
   })
 
   it('uses a string-form repository field directly', () => {
-    expect(constructLicenseUrl('https://gitlab.com/x/y.git', 'LICENSE')).toBe('https://gitlab.com/x/y/-/blob/main/LICENSE')
+    expect(constructLicenseUrl('https://gitlab.com/x/y.git', 'LICENSE')).toBe('https://gitlab.com/x/y/-/blob/HEAD/LICENSE')
   })
 
   it('builds a Bitbucket URL when the repository is hosted on bitbucket', () => {
-    expect(constructLicenseUrl('https://bitbucket.org/x/y.git', 'LICENSE')).toBe('https://bitbucket.org/x/y/src/master/LICENSE')
+    expect(constructLicenseUrl('https://bitbucket.org/x/y.git', 'LICENSE')).toBe('https://bitbucket.org/x/y/src/HEAD/LICENSE')
   })
 
   it('returns null when the URL cannot be parsed', () => {

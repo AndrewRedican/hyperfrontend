@@ -65,7 +65,7 @@ describe('runDtsPrePass', () => {
 
   it('threads the optional memory monitor through to runPrePass', async () => {
     const monitor = { check: jest.fn() }
-    await runDtsPrePass(makeContext(['rollup']), monitor as Parameters<typeof runDtsPrePass>[1])
+    await runDtsPrePass(makeContext(['rollup']), <Parameters<typeof runDtsPrePass>[1]>(<unknown>monitor))
     expect((<jest.Mock>runPrePass).mock.calls[0][1].monitor).toBe(monitor)
     expect(monitor.check).toHaveBeenCalledWith('bundle:declarations:dts-prepass:start')
     expect(monitor.check).toHaveBeenCalledWith('bundle:declarations:dts-prepass:end')

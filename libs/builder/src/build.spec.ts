@@ -5,7 +5,8 @@ jest.mock('./bin/run-bin-phase', () => ({ runBinPhase: jest.fn() }))
 jest.mock('./bundle/entries/discover-entries', () => ({ discoverEntries: jest.fn() }))
 jest.mock('./memory/monitor', () => ({ createMemoryMonitor: jest.fn() }))
 
-import type { BinConfig, BinOutput, BuildConfig, EntryPoint, EntryPointDiscovery, FormatOutputs, MemoryMonitor } from './models'
+import type { MemoryMonitor } from './memory/monitor'
+import type { BinConfig, BinOutput, BuildConfig, EntryPoint, EntryPointDiscovery, FormatOutputs } from './models'
 import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join as nodeJoin } from 'node:path'
