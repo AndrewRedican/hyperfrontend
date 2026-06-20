@@ -96,13 +96,21 @@ const collectCandidates = (
   return candidates
 }
 
+// why: a destructure shorthand `const { name } = require(...)` is legal only when `name` is a real BindingIdentifier — so lex `name` whole. A single `Identifier` followed by end-of-input proves it: a keyword (`default`, and strict-reserved `let`/`yield`/`static`/`await`, illegal in rollup's strict CJS) lexes to its own keyword token, not `Identifier`; a non-identifier key (`foo-bar` from `NS["foo-bar"]`) lexes to `Identifier` + more tokens, so the EOF check fails. Over-bailing a rare contextual export name (`as`/`type`) is safe: it keeps the namespace form, which is valid.
+const isValidBindingName = (name: string): boolean => {
+  const scanner = ts.createScanner(ts.ScriptTarget.ESNext, /*skipTrivia*/ true, ts.LanguageVariant.Standard, name)
+  return scanner.scan() === ts.SyntaxKind.Identifier && scanner.scan() === ts.SyntaxKind.EndOfFileToken
+}
+
 const scanUses = (sourceFile: ts.SourceFile, candidates: Map<string, Candidate>, bindingNodes: Set<ts.Node>): void => {
   const visit = (node: ts.Node): void => {
     if (ts.isIdentifier(node) && !bindingNodes.has(node)) {
       const candidate = candidates.get(node.text)
       if (candidate && !candidate.bail) {
         const classification = classifyNamespaceUse(node)
-        if (classification.kind === 'bail') candidate.bail = true
+        // why: a member named by a non-identifier (`m['foo-bar']`) or a keyword (`m.default`) cannot be destructured to a legal `const { … }` binding — bail the whole candidate to its namespace form rather than emit invalid JS.
+        if (classification.kind === 'bail' || (classification.kind === 'read' && !isValidBindingName(classification.prop)))
+          candidate.bail = true
         else if (classification.kind === 'read') {
           const nodes = candidate.members.get(classification.prop) ?? []
           nodes.push(node.parent)

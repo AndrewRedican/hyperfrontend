@@ -69,6 +69,18 @@ describe('destructureRequires', () => {
     expect(result?.code).toBe("const { abs } = require('./x.cjs.js');\nobj.m;\nabs;")
   })
 
+  it('leaves a binding alone when a member name is not a valid identifier', () => {
+    expect(run("const m = require('./x.cjs.js');\nm['foo-bar'](a);")).toBeNull()
+  })
+
+  it('leaves a binding alone when a member name is a reserved word', () => {
+    expect(run("const m = require('./x.cjs.js');\nm.default(a);")).toBeNull()
+  })
+
+  it('bails the whole binding when one unsafe member sits beside valid ones', () => {
+    expect(run("const m = require('./x.cjs.js');\nm.abs(a);\nm.default(b);")).toBeNull()
+  })
+
   it('skips a non-relative require specifier', () => {
     expect(run("const m = require('rollup');\nm.x;")).toBeNull()
   })
