@@ -14,6 +14,7 @@ import type {
 import { from, isArray } from '@hyperfrontend/immutable-api-utils/built-in-copy/array'
 import { dateNow } from '@hyperfrontend/immutable-api-utils/built-in-copy/date'
 import { createSet } from '@hyperfrontend/immutable-api-utils/built-in-copy/set'
+import { logger } from '@hyperfrontend/logging'
 import { join, relativePath } from '@hyperfrontend/project-scope/core'
 import { runBinPhase } from './bin/run-bin-phase'
 import { resolveBundledDeps } from './bundle/dependencies/resolve-bundled-deps'
@@ -171,6 +172,7 @@ const resolveMonitor = (config: BuildConfig): MemoryMonitor | undefined => {
  * ```
  */
 export const build = async (config: BuildConfig): Promise<BuildResult> => {
+  logger.setLogLevel(config.verbose ? 'debug' : 'error')
   const ctx = createBuildContext(config)
   const monitor = resolveMonitor(config)
   monitor?.logDebug('build:start')

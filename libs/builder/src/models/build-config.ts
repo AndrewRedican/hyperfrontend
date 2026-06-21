@@ -273,6 +273,11 @@ export interface BuildConfig {
   thirdPartyLicenses?: boolean
   /** Enable the memory monitor; pass `true` for defaults or an options object for custom thresholds. */
   memoryMonitor?: boolean | MemoryMonitorOptions
-  /** Enable verbose / debug logging. */
+  /**
+   * Raise the build's log level. When `true`, the shared logger emits at `debug`
+   * (surfacing every phase's progress, timing, and memory diagnostics); when
+   * omitted or `false`, the build stays quiet at `error`. Also settable via the
+   * `hf-build --verbose` flag.
+   */
   verbose?: boolean
 }

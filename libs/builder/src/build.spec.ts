@@ -10,6 +10,7 @@ import type { BinConfig, BinOutput, BuildConfig, EntryPoint, EntryPointDiscovery
 import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join as nodeJoin } from 'node:path'
+import { logger } from '@hyperfrontend/logging'
 import { runBinPhase } from './bin/run-bin-phase'
 import { build, createBuildContext } from './build'
 import { discoverEntries } from './bundle/entries/discover-entries'
@@ -327,5 +328,28 @@ describe('build', () => {
     const boom = new Error('package failed')
     ;(<jest.Mock>runPackagePhase).mockRejectedValueOnce(boom)
     await expect(build(baseConfig())).rejects.toBe(boom)
+  })
+
+  describe('verbose log level wiring', () => {
+    afterEach(() => {
+      logger.setLogLevel('error')
+    })
+
+    it('raises the shared logger to debug when verbose is true', async () => {
+      await build({ ...baseConfig(), verbose: true })
+      expect(logger.getLogLevel()).toBe('debug')
+    })
+
+    it('resets the shared logger to error when verbose is false', async () => {
+      logger.setLogLevel('debug')
+      await build({ ...baseConfig(), verbose: false })
+      expect(logger.getLogLevel()).toBe('error')
+    })
+
+    it('keeps the shared logger at error when verbose is omitted', async () => {
+      logger.setLogLevel('debug')
+      await build(baseConfig())
+      expect(logger.getLogLevel()).toBe('error')
+    })
   })
 })
