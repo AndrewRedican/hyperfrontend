@@ -7,8 +7,8 @@ import type {
   IsWorkspacePackagePredicate,
   PackageJson,
 } from '../../models'
-import { isArray } from '@hyperfrontend/immutable-api-utils/built-in-copy/array'
 import { keys } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
+import { normalizeFormats } from '../../bin/format'
 import { getCdnPaths } from './cdn-paths'
 import { filterBundledDepsFromOutput, filterWorkspaceDepsFromOutput } from './filter-deps'
 import { generateExportsFromFormats } from './generate-exports'
@@ -33,9 +33,6 @@ export interface SynthesizePackageJsonOptions {
   /** Allowlist for `package.json#files`; emitted verbatim when non-empty. */
   files?: string[]
 }
-
-const normalizeFormats = (format: BinConfig['format']): BinScriptFormat[] =>
-  isArray(format) ? <BinScriptFormat[]>format : [<BinScriptFormat>format]
 
 const resolveBinRelativePath = (name: string, formats: BinScriptFormat[]): string => {
   if (formats.includes('cjs')) {

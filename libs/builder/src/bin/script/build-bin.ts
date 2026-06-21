@@ -1,16 +1,13 @@
 import type { RollupWorkerInvocation } from '../../bundle/rollup/dispatch'
-import type { BinConfig, BinOutput, BinScriptFormat, BuildContext } from '../../models'
-import { isArray } from '@hyperfrontend/immutable-api-utils/built-in-copy/array'
+import type { BinConfig, BinOutput, BuildContext } from '../../models'
 import { createError } from '@hyperfrontend/immutable-api-utils/built-in-copy/error'
 import { logger } from '@hyperfrontend/logging'
 import { ensureDir, join } from '@hyperfrontend/project-scope/core'
 import { toBinBuildDescriptor } from '../../bundle/rollup/descriptor'
 import { dispatchRollupWorker, resolveDefaultRollupWorkerPath } from '../../bundle/rollup/dispatch'
+import { normalizeFormats } from '../format'
 
 const log = logger.channel('builder:bin:script')
-
-const normalizeFormats = (format: BinConfig['format']): BinScriptFormat[] =>
-  isArray(format) ? <BinScriptFormat[]>format : [<BinScriptFormat>format]
 
 const resolveWorkerOrThrow = (workspaceRoot: string): RollupWorkerInvocation => {
   const invocation = resolveDefaultRollupWorkerPath(workspaceRoot)

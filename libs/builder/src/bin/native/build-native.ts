@@ -1,11 +1,11 @@
 import type { BinConfig, BinOutput, BuildContext, SeaPlatform } from '../../models'
 import { unlinkSync } from 'node:fs'
 import { freemem } from 'node:os'
-import { isArray } from '@hyperfrontend/immutable-api-utils/built-in-copy/array'
 import { dateNow } from '@hyperfrontend/immutable-api-utils/built-in-copy/date'
 import { createError } from '@hyperfrontend/immutable-api-utils/built-in-copy/error'
 import { logger } from '@hyperfrontend/logging'
 import { ensureDir, exists, join, writeJsonFile } from '@hyperfrontend/project-scope/core'
+import { normalizeFormats } from '../format'
 import { removeCodesign } from './codesign'
 import { dispatchInjectWorker, resolveDefaultInjectWorkerPath } from './dispatch'
 import { resolveHostBinary } from './host-binary'
@@ -42,8 +42,7 @@ const requireSeaConfig = (bin: BinConfig): readonly SeaPlatform[] => {
 }
 
 const requireCjsFormat = (bin: BinConfig): void => {
-  const formats = isArray(bin.format) ? bin.format : [bin.format]
-  if (!formats.includes('cjs')) {
+  if (!normalizeFormats(bin.format).includes('cjs')) {
     throw createError(`SEA requires a CJS bin output; declare format: ['cjs'] or format: 'cjs' on bin ${bin.name}`)
   }
 }
