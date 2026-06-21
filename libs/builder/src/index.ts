@@ -40,6 +40,8 @@ export type {
   SeaPlatform,
   UmdConfig,
   UmdOutput,
+  WorkspaceBundledDep,
+  WorkspaceDepHoistPolicy,
 } from './models'
 export { runBinPhase } from './bin'
 export { build, createBuildContext } from './build'
