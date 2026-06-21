@@ -217,7 +217,7 @@ export interface BuildConfig {
   projectRoot: string
   /** Absolute path to the workspace root. */
   workspaceRoot: string
-  /** Output directory (absolute, or a template string with `{projectRoot}`). */
+  /** Absolute output directory. Defaults to `<workspaceRoot>/dist/<projectRelativePath>`. */
   outputPath?: string
   /** Path to the project's tsconfig used for declarations. Defaults to `<projectRoot>/tsconfig.lib.json`. */
   tsConfig?: string
