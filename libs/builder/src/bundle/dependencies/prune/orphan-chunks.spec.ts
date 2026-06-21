@@ -163,12 +163,22 @@ describe('pruneOrphanChunks', () => {
     expect(existsSync(join(depsRoot, 'orphan/index.d.ts.map'))).toBe(false)
   })
 
-  it('keeps every dep d.ts when the entry d.ts bails on a dynamic specifier', () => {
+  it('keeps every dep d.ts when a reached dep d.ts chunk bails on a dynamic specifier', () => {
+    write('index.esm.js', 'export const a = 1')
+    write('index.d.ts', "import {A} from './_dependencies/a/index.js'")
+    write('_dependencies/a/index.d.ts', 'const lazy = import(typeName)\nexport declare const A: number')
+    write('_dependencies/orphan/index.d.ts', 'export declare const b: number')
+    pruneOrphanChunks(makeContext(outputPath), depsRoot)
+    expect(listDeps('index.d.ts').sort()).toEqual(['a/index.d.ts', 'orphan/index.d.ts'])
+  })
+
+  it('does not bail on a dynamic specifier in a first-party root d.ts and still prunes orphan dep d.ts', () => {
+    // why: the bail guards intra-`_dependencies/` edges only; a dynamic specifier in a first-party root must not strand orphan dep d.ts files.
     write('index.esm.js', 'export const a = 1')
     write('index.d.ts', 'const lazy = import(typeName)')
     write('_dependencies/orphan/index.d.ts', 'export declare const b: number')
     pruneOrphanChunks(makeContext(outputPath), depsRoot)
-    expect(listDeps('index.d.ts')).toEqual(['orphan/index.d.ts'])
+    expect(listDeps('index.d.ts')).toEqual([])
   })
 
   it('removes directories left empty after pruning', () => {

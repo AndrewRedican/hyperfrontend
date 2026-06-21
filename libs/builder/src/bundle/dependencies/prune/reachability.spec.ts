@@ -41,10 +41,19 @@ describe('computeReachable', () => {
     expect(reachableRel(<Set<string>>result)).toEqual(['index.esm.js'])
   })
 
-  it('returns null when a reached file contains a dynamic specifier', () => {
+  it('returns null when a reached _dependencies/ chunk contains a dynamic specifier', () => {
     const entry = write(root, 'index.esm.js', "import {a} from './_dependencies/a/index.esm.js'")
     write(root, '_dependencies/a/index.esm.js', 'const m = require(name)')
     expect(computeReachable([entry], depsRoot)).toBeNull()
+  })
+
+  it('does not bail on a dynamic specifier in a first-party root and still skips unreferenced chunks', () => {
+    // why: a runtime `import(<expr>)` in first-party entry code targets external/user paths, never a bundled dep chunk, so it must not disable the sweep — otherwise emptied, unreferenced dep chunks are stranded.
+    const entry = write(root, 'index.esm.js', "import {a} from './_dependencies/a/index.esm.js'\nconst c = await import(userUrl)")
+    write(root, '_dependencies/a/index.esm.js', 'export const a = 1')
+    write(root, '_dependencies/dead/index.esm.js', 'export const dead = 1')
+    const result = computeReachable([entry], depsRoot)
+    expect(reachableRel(<Set<string>>result)).toEqual(['_dependencies/a/index.esm.js', 'index.esm.js'])
   })
 
   it('skips root files that do not exist on disk', () => {

@@ -17,10 +17,14 @@ const log = logger.channel('builder:bundle:dependencies:prune')
  * roots themselves are always included so callers can use the returned set as a
  * single live-membership oracle.
  *
- * If any reached file contains a dynamic (non-literal) `import(`/`require(`,
- * the chunk graph cannot be fully resolved, so the function logs and returns
- * `null` — the guaranteed-safe sentinel that disables orphan deletion for the
- * run.
+ * If a reached file **under `depsRoot`** contains a dynamic (non-literal)
+ * `import(`/`require(`, the dependency chunk graph cannot be fully resolved, so
+ * the function logs and returns `null` — the guaranteed-safe sentinel that
+ * disables orphan deletion for the run. A dynamic specifier in a first-party
+ * **root** (which is never under `depsRoot`) is ignored: its target is always an
+ * external/user path, never a bundled dep chunk, so it cannot hide a
+ * `_dependencies/` edge — bailing on it would needlessly strand emptied dep
+ * chunks the sweep should reclaim.
  *
  * @param roots - Absolute paths to the root files reachability starts from.
  * @param depsRoot - Absolute path to the `_dependencies/` directory; traversal
@@ -57,7 +61,8 @@ export const computeReachable = (
     const file = <string>queue[head]
     head += 1
     const source = readFileContent(file)
-    if (hasDynamicSpecifier(source)) {
+    // why: a dynamic specifier only threatens the sweep when it sits in a `_dependencies/` chunk, where it can hide an intra-deps edge to a sibling chunk we'd otherwise delete. First-party entry roots legitimately carry dynamic `import(<expr>)` (e.g. runtime config loading) whose targets are always external user paths — never bundled dep chunks — so bailing on those needlessly disables the entire sweep and strands emptied dep chunks. Roots are never under `depsRoot` (collectEntryFiles excludes them), so this scopes the bail to dep chunks only.
+    if (isUnderDir(file, depsRoot) && hasDynamicSpecifier(source)) {
       log.warn(`dynamic import/require in ${file}; skipping dependency orphan prune for safety`)
       return null
     }
