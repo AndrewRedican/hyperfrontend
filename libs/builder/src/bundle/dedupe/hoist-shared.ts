@@ -1,5 +1,5 @@
 import type { MemoryMonitor } from '../../memory/monitor'
-import type { BuildContext, EntryPoint } from '../../models'
+import type { BuildContext } from '../../models'
 import type { ChunkFormat } from '../dependencies/prune/used-exports'
 import type { OwnerIndex } from './attribute-modules'
 import type { ChunkPlan, CrossImport, DepImport } from './extract-chunk'
@@ -7,6 +7,7 @@ import type { EntryInput, PlannedModule } from './plan-hoists'
 import type { EntryHoist } from './rewrite-entry'
 import { logger } from '@hyperfrontend/logging'
 import { ensureDir, exists, join, readFileContent, relativePath, writeFileContent } from '@hyperfrontend/project-scope/core'
+import { entryDirOf } from '../fs/entry-dir'
 import { attribute, chunkFileName, indexOwners, parseEntry, sharedDirFor } from './attribute-modules'
 import { renderChunk } from './extract-chunk'
 import { planHoists } from './plan-hoists'
@@ -33,9 +34,6 @@ interface EntryLocation {
   /** Absolute entry bundle file. */
   file: string
 }
-
-const entryDirOf = (entry: EntryPoint, context: BuildContext): string =>
-  entry.isRoot ? context.outputPath : join(context.outputPath, entry.srcPath)
 
 const toSpecifier = (relative: string): string => (relative.startsWith('.') ? relative : `./${relative}`)
 

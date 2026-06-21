@@ -1,17 +1,15 @@
-import type { BuildContext, EntryPoint } from '../../models'
+import type { BuildContext } from '../../models'
 import { unlinkSync } from 'node:fs'
 import { createSet } from '@hyperfrontend/immutable-api-utils/built-in-copy/set'
 import { logger } from '@hyperfrontend/logging'
 import { exists, getDirname, join, readDirectory, readFileContent } from '@hyperfrontend/project-scope/core'
 import { collectChunkSpecifiers, hasDynamicSpecifier } from '../dependencies/prune/specifiers'
+import { entryDirOf } from '../fs/entry-dir'
 
 const log = logger.channel('builder:bundle:declarations:prune-orphans')
 
 const ORPHAN_DTS_RE = /\.d\.ts$|\.d\.ts\.map$/
 const INDEX_DTS_NAME = 'index.d.ts'
-
-const entryDirOf = (entry: EntryPoint, context: BuildContext): string =>
-  entry.isRoot ? context.outputPath : join(context.outputPath, entry.srcPath)
 
 const isInDependenciesRoot = (path: string, depsRoot: string): boolean => path === depsRoot || path.startsWith(`${depsRoot}/`)
 

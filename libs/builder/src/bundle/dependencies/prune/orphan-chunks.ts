@@ -1,7 +1,8 @@
-import type { BuildContext, EntryPoint } from '../../../models'
+import type { BuildContext } from '../../../models'
 import { statSync, unlinkSync } from 'node:fs'
 import { exists, isDirectory, join, readDirectory } from '@hyperfrontend/project-scope/core'
 import { removeEmptyDirs } from '../../fs/empty-dirs'
+import { entryDirOf } from '../../fs/entry-dir'
 import { computeReachable } from './reachability'
 
 /**
@@ -13,9 +14,6 @@ export interface OrphanPruneResult {
   /** Total bytes reclaimed by the unlinked files. */
   bytesRemoved: number
 }
-
-const entryDirOf = (entry: EntryPoint, context: BuildContext): string =>
-  entry.isRoot ? context.outputPath : join(context.outputPath, entry.srcPath)
 
 const isUnderRoot = (path: string, depsRoot: string): boolean => path === depsRoot || path.startsWith(`${depsRoot}/`)
 
