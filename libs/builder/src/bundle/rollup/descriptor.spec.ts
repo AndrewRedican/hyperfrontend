@@ -168,6 +168,12 @@ describe('toEsmBuildDescriptor', () => {
     const descriptor = toEsmBuildDescriptor(ROOT_ENTRY, config, ctx, '/tmp/r.json')
     expect(descriptor.bundledDepsPlugin).toEqual({ deps: [], depsRoot: '/abs/dist/libs/foo/_dependencies' })
   })
+
+  it('defaults bundleWorkspaceDeps to true when omitted, on both the descriptor and the resolveExternals input', () => {
+    const descriptor = toEsmBuildDescriptor(ROOT_ENTRY, {}, makeContext(), '/tmp/r.json')
+    expect(descriptor.bundleWorkspaceDeps).toBe(true)
+    expect(resolveExternals).toHaveBeenCalledWith(expect.objectContaining({ bundleWorkspaceDeps: true }))
+  })
 })
 
 describe('toCjsBuildDescriptor', () => {
@@ -192,6 +198,12 @@ describe('toCjsBuildDescriptor', () => {
     expect(off.sourcemap).toBe(false)
     const on = toCjsBuildDescriptor(ROOT_ENTRY, { bundleWorkspaceDeps: false, sourcemap: true }, makeContext(), '/tmp/r.json')
     expect(on.sourcemap).toBe(true)
+  })
+
+  it('defaults bundleWorkspaceDeps to true when omitted, on both the descriptor and the resolveExternals input', () => {
+    const descriptor = toCjsBuildDescriptor(ROOT_ENTRY, {}, makeContext(), '/tmp/r.json')
+    expect(descriptor.bundleWorkspaceDeps).toBe(true)
+    expect(resolveExternals).toHaveBeenCalledWith(expect.objectContaining({ bundleWorkspaceDeps: true }))
   })
 })
 

@@ -38,6 +38,7 @@ export const toEsmBuildDescriptor = (
 ): RollupBuildDescriptor => {
   const outputDir = computeEntryOutputDir(entry, context)
   const sourcemap = config.sourcemap ?? false
+  const bundleWorkspaceDeps = config.bundleWorkspaceDeps ?? true
   const bundleAllRequested = Boolean(config.bundleAllDeps)
   const bundledDeps = bundleAllRequested ? context.bundledDeps : []
   const workspaceRoutes = bundleAllRequested ? buildWorkspaceRoutes(context.workspaceBundledDeps) : []
@@ -46,7 +47,7 @@ export const toEsmBuildDescriptor = (
     packageJsonPath: join(context.projectRoot, 'package.json'),
     additional: [...context.external, ...(config.external ?? [])],
     isWorkspacePackage: context.isWorkspacePackage,
-    bundleWorkspaceDeps: config.bundleWorkspaceDeps,
+    bundleWorkspaceDeps,
     bundledDeps,
     workspaceBundledDepNames: workspaceRoutes.map((r) => r.packageName),
   })
@@ -61,7 +62,7 @@ export const toEsmBuildDescriptor = (
     tsConfigPath: context.tsConfigPath,
     projectRoot: context.projectRoot,
     workspaceRoot: context.workspaceRoot,
-    bundleWorkspaceDeps: config.bundleWorkspaceDeps,
+    bundleWorkspaceDeps,
     bundle: null,
     bin: null,
     reportPath,
@@ -90,6 +91,7 @@ export const toCjsBuildDescriptor = (
 ): RollupBuildDescriptor => {
   const outputDir = computeEntryOutputDir(entry, context)
   const sourcemap = config.sourcemap ?? false
+  const bundleWorkspaceDeps = config.bundleWorkspaceDeps ?? true
   const bundleAllRequested = Boolean(config.bundleAllDeps)
   const bundledDeps = bundleAllRequested ? context.bundledDeps : []
   const workspaceRoutes = bundleAllRequested ? buildWorkspaceRoutes(context.workspaceBundledDeps) : []
@@ -98,7 +100,7 @@ export const toCjsBuildDescriptor = (
     packageJsonPath: join(context.projectRoot, 'package.json'),
     additional: [...context.external, ...(config.external ?? [])],
     isWorkspacePackage: context.isWorkspacePackage,
-    bundleWorkspaceDeps: config.bundleWorkspaceDeps,
+    bundleWorkspaceDeps,
     bundledDeps,
     workspaceBundledDepNames: workspaceRoutes.map((r) => r.packageName),
   })
@@ -113,7 +115,7 @@ export const toCjsBuildDescriptor = (
     tsConfigPath: context.tsConfigPath,
     projectRoot: context.projectRoot,
     workspaceRoot: context.workspaceRoot,
-    bundleWorkspaceDeps: config.bundleWorkspaceDeps,
+    bundleWorkspaceDeps,
     bundle: null,
     bin: null,
     reportPath,

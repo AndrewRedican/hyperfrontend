@@ -76,8 +76,8 @@ export interface EsmConfig extends FormatEntryConfig {
   sourcemap?: boolean
   /** Additional package names to mark external. */
   external?: string[]
-  /** Inline workspace dependencies (`true`) or keep them external (`false`). */
-  bundleWorkspaceDeps: boolean
+  /** Inline workspace dependencies (`true`) or keep them external (`false`). Defaults to `true`. */
+  bundleWorkspaceDeps?: boolean
   /**
    * Bundle every third-party dep into `_dependencies/<dep>/` and route entry imports
    * through that directory at install-relative paths. When `true`, builder produces
@@ -94,8 +94,8 @@ export interface CjsConfig extends FormatEntryConfig {
   sourcemap?: boolean
   /** Additional package names to mark external. */
   external?: string[]
-  /** Inline workspace dependencies (`true`) or keep them external (`false`). */
-  bundleWorkspaceDeps: boolean
+  /** Inline workspace dependencies (`true`) or keep them external (`false`). Defaults to `true`. */
+  bundleWorkspaceDeps?: boolean
   /**
    * Bundle every third-party dep into `_dependencies/<dep>/` and route entry imports
    * through that directory at install-relative paths. When `true`, builder produces
