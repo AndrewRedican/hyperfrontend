@@ -1,7 +1,9 @@
+import type { Edit } from './edits'
 import ts from 'typescript'
 import { createMap } from '@hyperfrontend/immutable-api-utils/built-in-copy/map'
 import { createSet } from '@hyperfrontend/immutable-api-utils/built-in-copy/set'
 import { getRequireSpecifier, parseChunk, resolveRelativeTarget } from './ast-utils'
+import { applyEdits } from './edits'
 import { classifyNamespaceUse } from './namespace-usage'
 
 /**
@@ -20,16 +22,6 @@ interface BindingAssignment {
   exported: string
   /** Local identifier the export is bound to (equal to `exported` unless aliased). */
   local: string
-}
-
-/** A single text replacement over the original source. */
-interface Edit {
-  /** Inclusive start offset. */
-  start: number
-  /** Exclusive end offset. */
-  end: number
-  /** Replacement text. */
-  text: string
 }
 
 /**
@@ -131,12 +123,6 @@ const allocateLocal = (exported: string, taken: Set<string>): string => {
   let suffix = 1
   while (taken.has(`${exported}$${suffix}`)) suffix += 1
   return `${exported}$${suffix}`
-}
-
-const applyEdits = (source: string, edits: Edit[]): string => {
-  let code = source
-  for (const edit of [...edits].sort((a, b) => b.start - a.start)) code = `${code.slice(0, edit.start)}${edit.text}${code.slice(edit.end)}`
-  return code
 }
 
 /**

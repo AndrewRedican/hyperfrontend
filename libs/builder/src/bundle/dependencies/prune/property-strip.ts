@@ -1,3 +1,4 @@
+import type { Edit } from './edits'
 import type { PropDemand } from './namespace-usage'
 import type { ChunkFormat } from './used-exports'
 import ts from 'typescript'
@@ -5,6 +6,7 @@ import { createMap } from '@hyperfrontend/immutable-api-utils/built-in-copy/map'
 import { createSet } from '@hyperfrontend/immutable-api-utils/built-in-copy/set'
 import { parseChunk } from './ast-utils'
 import { analyzeChunk, collectBindingCanonical, isPureFreezeCall } from './chunk-graph'
+import { applyEdits } from './edits'
 import { classifyNamespaceUse, mergeDemand } from './namespace-usage'
 
 /** One property slot of a frozen namespace literal, paired with the element node that materializes it. */
@@ -142,22 +144,6 @@ export const analyzeChunkNamespaces = (source: string, format: ChunkFormat): Chu
   }
   for (const statement of sourceFile.statements) if (!skip.has(statement)) visit(statement)
   return { namespaces, selfDemand }
-}
-
-/** A single text replacement over the original source. */
-interface Edit {
-  /** Inclusive start offset. */
-  start: number
-  /** Exclusive end offset. */
-  end: number
-  /** Replacement text. */
-  text: string
-}
-
-const applyEdits = (source: string, edits: Edit[]): string => {
-  let code = source
-  for (const edit of [...edits].sort((a, b) => b.start - a.start)) code = `${code.slice(0, edit.start)}${edit.text}${code.slice(edit.end)}`
-  return code
 }
 
 /**

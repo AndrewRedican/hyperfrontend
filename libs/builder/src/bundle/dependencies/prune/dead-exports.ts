@@ -1,4 +1,5 @@
 import type { ExportEntry } from './chunk-graph'
+import type { Edit } from './edits'
 import type { ChunkFormat, ImportUsage } from './used-exports'
 import ts from 'typescript'
 import { from } from '@hyperfrontend/immutable-api-utils/built-in-copy/array'
@@ -6,6 +7,7 @@ import { createMap } from '@hyperfrontend/immutable-api-utils/built-in-copy/map'
 import { createSet } from '@hyperfrontend/immutable-api-utils/built-in-copy/set'
 import { parseChunk } from './ast-utils'
 import { analyzeChunk, collectRefs, computeKeepClosure, requireBindingLocals } from './chunk-graph'
+import { applyEdits } from './edits'
 
 /**
  * Outcome of stripping a single chunk.
@@ -15,16 +17,6 @@ export interface StripResult {
   code: string
   /** Exported names that were spliced out. */
   removedNames: string[]
-}
-
-/** A single text replacement over the original source. */
-interface Edit {
-  /** Inclusive start offset. */
-  start: number
-  /** Exclusive end offset. */
-  end: number
-  /** Replacement text (empty string deletes the span). */
-  text: string
 }
 
 const renderEsmExportList = (entries: ExportEntry[]): string =>
@@ -77,13 +69,6 @@ const collectExportEdits = (exports: ExportEntry[], removedLocals: Set<string>, 
   }
 }
 
-const applyEdits = (source: string, edits: Edit[]): string => {
-  let code = source
-  for (const edit of [...edits].sort((a, b) => b.start - a.start)) code = `${code.slice(0, edit.start)}${edit.text}${code.slice(edit.end)}`
-  // why: splicing whole statements leaves runs of blank lines; collapse them so the trimmed chunk stays readable.
-  return code.replace(/\n{3,}/g, '\n\n')
-}
-
 /**
  * Removes guaranteed-dead exported declarations (and the now-dead private code
  * and imports they pulled in) from a single chunk's source.
@@ -134,5 +119,5 @@ export const stripDeadExports = (source: string, format: ChunkFormat, keep: Impo
     if (format === 'esm') narrowEsmImport(<ts.ImportDeclaration>statement, usedNames, sourceFile, edits)
     else narrowCjsRequire(statement, usedNames, edits)
   }
-  return { code: applyEdits(source, edits), removedNames: from(removedNames) }
+  return { code: applyEdits(source, edits, true), removedNames: from(removedNames) }
 }
