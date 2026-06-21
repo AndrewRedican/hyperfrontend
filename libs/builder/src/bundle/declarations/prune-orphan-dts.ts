@@ -5,13 +5,12 @@ import { logger } from '@hyperfrontend/logging'
 import { exists, getDirname, join, readDirectory, readFileContent } from '@hyperfrontend/project-scope/core'
 import { collectChunkSpecifiers, hasDynamicSpecifier } from '../dependencies/prune/specifiers'
 import { entryDirOf } from '../fs/entry-dir'
+import { isUnderDir } from '../fs/under-dir'
 
 const log = logger.channel('builder:bundle:declarations:prune-orphans')
 
 const ORPHAN_DTS_RE = /\.d\.ts$|\.d\.ts\.map$/
 const INDEX_DTS_NAME = 'index.d.ts'
-
-const isInDependenciesRoot = (path: string, depsRoot: string): boolean => path === depsRoot || path.startsWith(`${depsRoot}/`)
 
 /**
  * Resolves a relative specifier found in a `.d.ts` to the absolute `.d.ts` file
@@ -35,7 +34,7 @@ const toDtsTarget = (dir: string, spec: string, depsRoot: string): string | null
   // why: a `.js` specifier is the bundled-dep routing shape; map it onto its declaration sibling.
   const candidates = spec.endsWith('.js') ? [`${abs.slice(0, -3)}.d.ts`] : [`${abs}.d.ts`, join(abs, INDEX_DTS_NAME)]
   for (const candidate of candidates) {
-    if (isInDependenciesRoot(candidate, depsRoot)) return null
+    if (isUnderDir(candidate, depsRoot)) return null
     if (exists(candidate)) return candidate
   }
   return null
@@ -106,7 +105,7 @@ const collectDeclarationFiles = (root: string, depsRoot: string): string[] => {
   const visit = (dir: string): void => {
     for (const entry of readDirectory(dir)) {
       if (entry.isDirectory) {
-        if (isInDependenciesRoot(entry.path, depsRoot)) continue
+        if (isUnderDir(entry.path, depsRoot)) continue
         visit(entry.path)
       } else if (entry.isFile && ORPHAN_DTS_RE.test(entry.name)) {
         files.push(entry.path)
@@ -152,7 +151,7 @@ export const pruneOrphanDeclarations = (context: BuildContext): number => {
   const roots: string[] = []
   for (const entry of context.entryPointDiscovery.entryPoints) {
     const dir = entryDirOf(entry, context)
-    if (isInDependenciesRoot(dir, depsRoot)) continue
+    if (isUnderDir(dir, depsRoot)) continue
     roots.push(join(dir, INDEX_DTS_NAME))
   }
   const reachable = computeReachableDeclarations(roots, depsRoot)

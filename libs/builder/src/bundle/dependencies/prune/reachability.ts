@@ -1,11 +1,10 @@
 import { createSet } from '@hyperfrontend/immutable-api-utils/built-in-copy/set'
 import { logger } from '@hyperfrontend/logging'
 import { exists, getDirname, join, readFileContent } from '@hyperfrontend/project-scope/core'
+import { isUnderDir } from '../../fs/under-dir'
 import { collectChunkSpecifiers, hasDynamicSpecifier } from './specifiers'
 
 const log = logger.channel('builder:bundle:dependencies:prune')
-
-const isUnderRoot = (path: string, depsRoot: string): boolean => path === depsRoot || path.startsWith(`${depsRoot}/`)
 
 /**
  * Computes the set of files reachable from a set of root files by following
@@ -65,7 +64,7 @@ export const computeReachable = (
     const dir = getDirname(file)
     for (const spec of collectChunkSpecifiers(source)) {
       const target = resolveTarget(join(dir, spec))
-      if (isUnderRoot(target, depsRoot) && exists(target) && !reachable.has(target)) {
+      if (isUnderDir(target, depsRoot) && exists(target) && !reachable.has(target)) {
         reachable.add(target)
         queue.push(target)
       }

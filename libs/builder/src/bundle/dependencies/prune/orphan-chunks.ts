@@ -3,6 +3,7 @@ import { statSync, unlinkSync } from 'node:fs'
 import { exists, isDirectory, join, readDirectory } from '@hyperfrontend/project-scope/core'
 import { removeEmptyDirs } from '../../fs/empty-dirs'
 import { entryDirOf } from '../../fs/entry-dir'
+import { isUnderDir } from '../../fs/under-dir'
 import { computeReachable } from './reachability'
 
 /**
@@ -14,8 +15,6 @@ export interface OrphanPruneResult {
   /** Total bytes reclaimed by the unlinked files. */
   bytesRemoved: number
 }
-
-const isUnderRoot = (path: string, depsRoot: string): boolean => path === depsRoot || path.startsWith(`${depsRoot}/`)
 
 /**
  * Resolves the package's own entry output files for the given file names,
@@ -39,7 +38,7 @@ export const collectEntryFiles = (context: BuildContext, depsRoot: string, fileN
   const files: string[] = []
   for (const entry of context.entryPointDiscovery.entryPoints) {
     const dir = entryDirOf(entry, context)
-    if (isUnderRoot(dir, depsRoot)) continue
+    if (isUnderDir(dir, depsRoot)) continue
     for (const name of fileNames) {
       const candidate = join(dir, name)
       if (exists(candidate)) files.push(candidate)
