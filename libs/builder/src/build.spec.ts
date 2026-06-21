@@ -7,7 +7,7 @@ jest.mock('./memory/monitor', () => ({ createMemoryMonitor: jest.fn() }))
 
 import type { MemoryMonitor } from './memory/monitor'
 import type { BinConfig, BinOutput, BuildConfig, EntryPoint, EntryPointDiscovery, FormatOutputs } from './models'
-import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs'
+import { existsSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join as nodeJoin } from 'node:path'
 import { logger } from '@hyperfrontend/logging'
@@ -350,6 +350,41 @@ describe('build', () => {
       logger.setLogLevel('debug')
       await build(baseConfig())
       expect(logger.getLogLevel()).toBe('error')
+    })
+  })
+
+  describe('output cleaning', () => {
+    let workspaceRoot: string
+    let outDir: string
+
+    beforeEach(() => {
+      workspaceRoot = mkdtempSync(nodeJoin(tmpdir(), 'builder-build-clean-'))
+      outDir = nodeJoin(workspaceRoot, 'dist', 'libs', 'foo')
+      mkdirSync(outDir, { recursive: true })
+    })
+
+    afterEach(() => {
+      rmSync(workspaceRoot, { recursive: true, force: true })
+    })
+
+    it('empties the project output directory before any phase runs, so stale artifacts do not survive', async () => {
+      const stale = nodeJoin(outDir, 'index.cjs.js.map')
+      writeFileSync(stale, '{}')
+      ;(<jest.Mock>runBundlePhase).mockImplementationOnce(async () => {
+        // why: clean must run before the first emitting phase, so by the time the bundle phase starts the stale file is already gone.
+        expect(existsSync(stale)).toBe(false)
+        return EMPTY_FORMATS
+      })
+      await build({ projectRoot: nodeJoin(workspaceRoot, 'libs', 'foo'), workspaceRoot, outputPath: outDir })
+      expect(existsSync(stale)).toBe(false)
+    })
+
+    it('leaves a sibling project output under the shared dist/ untouched', async () => {
+      const sibling = nodeJoin(workspaceRoot, 'dist', 'libs', 'bar', 'index.cjs.js')
+      mkdirSync(nodeJoin(sibling, '..'), { recursive: true })
+      writeFileSync(sibling, 'x')
+      await build({ projectRoot: nodeJoin(workspaceRoot, 'libs', 'foo'), workspaceRoot, outputPath: outDir })
+      expect(existsSync(sibling)).toBe(true)
     })
   })
 })
