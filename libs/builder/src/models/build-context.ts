@@ -1,4 +1,4 @@
-import type { AssetSpec, IsWorkspacePackagePredicate } from './build-config'
+import type { AssetSpec, IsWorkspacePackagePredicate, WorkspaceDepHoistPolicy } from './build-config'
 import type { EntryPointDiscovery } from './entry-point'
 
 /**
@@ -25,8 +25,8 @@ export interface WorkspaceBundledDep {
    * the consumer project's settings.
    */
   tsConfigPath: string
-  /** Hoist policy — `'whole-surface'` collapses sub-paths onto the root chunk, `'sub-path'` keeps them separate. */
-  policy: 'whole-surface' | 'sub-path'
+  /** Hoist policy for this dep's chunk(s); see {@link WorkspaceDepHoistPolicy}. */
+  policy: WorkspaceDepHoistPolicy
 }
 
 /**
