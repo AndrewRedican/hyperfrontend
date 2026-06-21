@@ -1,32 +1,15 @@
 import type { MemoryMonitor } from '../../memory/monitor'
 import type { BuildContext, WorkspaceBundledDep } from '../../models'
 import type { PrePassJob } from '../dependencies/pre-pass'
-import { from } from '@hyperfrontend/immutable-api-utils/built-in-copy/array'
 import { createError } from '@hyperfrontend/immutable-api-utils/built-in-copy/error'
-import { createSet } from '@hyperfrontend/immutable-api-utils/built-in-copy/set'
 import { logger } from '@hyperfrontend/logging'
 import { join } from '@hyperfrontend/project-scope/core'
+import { collectWorkspaceExactSpecifiers, collectWorkspacePrefixDeps } from '../dependencies/collect-workspace-deps'
 import { buildWorkspaceRoutes } from '../dependencies/externalize-plugin'
 import { resolveDefaultWorkerPath, runPrePass } from '../dependencies/pre-pass'
 import { resolveDepEntry } from '../dependencies/resolve-dep-entry'
 
 const log = logger.channel('builder:bundle:declarations:dts-pre-pass')
-
-const collectWorkspacePrefixDeps = (context: BuildContext): string[] => {
-  const set = createSet<string>([])
-  for (const entry of context.workspaceBundledDeps) {
-    if (entry.policy === 'whole-surface') set.add(entry.packageName)
-  }
-  return from(set)
-}
-
-const collectWorkspaceExactSpecifiers = (context: BuildContext): string[] => {
-  const set = createSet<string>([])
-  for (const entry of context.workspaceBundledDeps) {
-    if (entry.policy === 'sub-path') set.add(entry.specifier)
-  }
-  return from(set)
-}
 
 const workspaceDtsOutputFile = (entry: BuildContext['workspaceBundledDeps'][number]): string =>
   entry.subPath ? `${entry.specifier}/index.d.ts` : `${entry.packageName}/index.d.ts`

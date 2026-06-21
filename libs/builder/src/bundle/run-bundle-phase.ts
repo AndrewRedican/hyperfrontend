@@ -13,6 +13,7 @@ import { runDtsPrePass } from './declarations/dts-pre-pass'
 import { generateDeclarations } from './declarations/generate-declarations'
 import { pruneOrphanDeclarations } from './declarations/prune-orphan-dts'
 import { hoistSharedFirstParty } from './dedupe/hoist-shared'
+import { collectWorkspaceExactSpecifiers, collectWorkspacePrefixDeps } from './dependencies/collect-workspace-deps'
 import { buildWorkspaceRoutes } from './dependencies/externalize-plugin'
 import { resolveDefaultWorkerPath, runPrePass } from './dependencies/pre-pass'
 import { pruneDependencies } from './dependencies/prune/prune-dependencies'
@@ -85,22 +86,6 @@ const buildJsPrePassJobs = (deps: string[], formats: Array<'esm' | 'cjs'>, conte
     }
   }
   return jobs
-}
-
-const collectWorkspacePrefixDeps = (context: BuildContext): string[] => {
-  const set = createSet<string>([])
-  for (const entry of context.workspaceBundledDeps) {
-    if (entry.policy === 'whole-surface') set.add(entry.packageName)
-  }
-  return from(set)
-}
-
-const collectWorkspaceExactSpecifiers = (context: BuildContext): string[] => {
-  const set = createSet<string>([])
-  for (const entry of context.workspaceBundledDeps) {
-    if (entry.policy === 'sub-path') set.add(entry.specifier)
-  }
-  return from(set)
 }
 
 const workspaceOutputFile = (entry: BuildContext['workspaceBundledDeps'][number], format: 'esm' | 'cjs'): string => {
