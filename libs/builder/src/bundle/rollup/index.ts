@@ -1,11 +1,10 @@
 /**
- * Rollup driver: plugin factories, per-format configuration builders, and the
- * per-entry forked-worker dispatcher.
+ * Rollup driver: per-format descriptor builders and the per-entry forked-worker
+ * dispatcher.
  *
  * @module @hyperfrontend/builder/bundle/rollup
  */
 export type { DispatchRollupWorkerOptions, RollupWorkerInvocation } from './dispatch'
-export type { BundleTypescriptPluginOptions, TypescriptPluginOptions } from './plugins'
 export type {
   RollupBuildDescriptor,
   RollupWorkerBin,
@@ -13,17 +12,6 @@ export type {
   RollupWorkerFormat,
   RollupWorkerReport,
 } from './worker/types'
-export { createIifeConfig, createIifeEntryConfig } from './config-iife'
-export { createUmdConfig, createUmdEntryConfig } from './config-umd'
 export { toBinBuildDescriptor, toCjsBuildDescriptor, toEsmBuildDescriptor, toIifeBuildDescriptor, toUmdBuildDescriptor } from './descriptor'
 export { dispatchRollupWorker, resolveDefaultRollupWorkerPath } from './dispatch'
-export {
-  createBrowserNodeResolvePlugin,
-  createBundleTypescriptPlugin,
-  createCommonJsPlugin,
-  createJsonPlugin,
-  createNodeResolvePlugin,
-  createTerserPlugin,
-  createTypescriptPlugin,
-} from './plugins'
 export { runRollupWorkerJob } from './worker'
