@@ -1,23 +1,6 @@
 import type { Plugin } from 'rollup'
-import { isAbsolute as nodeIsAbsolute, join as nodeJoin, resolve as nodeResolve } from 'node:path'
-
-/**
- * POSIX-normalises a path so all separators are `/`.
- *
- * @param value - Raw path that may contain backslashes (Windows) or forward slashes.
- * @returns Path with all separators normalized to `/`.
- */
-const normalizeToForwardSlashes = (value: string): string => value.replace(/\\/g, '/')
-
-/**
- * POSIX-style path joiner. Avoids importing from `@hyperfrontend/project-scope`
- * because this module is consumed by the pre-pass worker, which bootstraps
- * before workspace packages are guaranteed loadable from source.
- *
- * @param segments - Path segments to join.
- * @returns Joined path with `/` separators.
- */
-const join = (...segments: string[]): string => normalizeToForwardSlashes(nodeJoin(...segments))
+import { isAbsolute as nodeIsAbsolute, resolve as nodeResolve } from 'node:path'
+import { join, normalizeToForwardSlashes } from '../fs/posix-path'
 
 /**
  * Sibling entry record consumed by {@link createSiblingExternalizePlugin}.

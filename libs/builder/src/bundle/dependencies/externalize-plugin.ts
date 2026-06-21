@@ -2,11 +2,8 @@
 import type { Plugin } from 'rollup'
 import type { WorkspaceBundledDep } from '../../models'
 import { isBuiltin } from 'node:module'
-import { join as nodeJoin, relative } from 'node:path'
-
-// why: pre-pass / per-entry rollup workers bootstrap from source via @swc-node/register on first build; workspace deps are not yet loadable. Mirrors the precedent in bundle/declarations/sibling-resolver.ts.
-const normalizeToForwardSlashes = (value: string): string => value.replace(/\\/g, '/')
-const join = (...segments: string[]): string => normalizeToForwardSlashes(nodeJoin(...segments))
+import { relative } from 'node:path'
+import { join, normalizeToForwardSlashes } from '../fs/posix-path'
 
 /**
  * Format produced by the rollup invocation that uses the plugin.
