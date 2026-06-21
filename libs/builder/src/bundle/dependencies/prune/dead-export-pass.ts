@@ -112,7 +112,7 @@ const processFormat = (
  *
  * @example Running the strip pass after the orphan sweep
  * ```typescript
- * const { deadExportsRemoved } = stripDeadExportsPass(context, join(context.outputPath, '_dependencies'))
+ * const { deadExportsRemoved } = stripDeadExportsPass(context, depsRootOf(context))
  * ```
  */
 export const stripDeadExportsPass = (context: BuildContext, depsRoot: string): DeadExportPassResult => {

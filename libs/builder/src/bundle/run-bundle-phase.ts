@@ -12,6 +12,7 @@ import { runDtsPerEntry } from './declarations/dts-per-entry'
 import { runDtsPrePass } from './declarations/dts-pre-pass'
 import { generateDeclarations } from './declarations/generate-declarations'
 import { pruneOrphanDeclarations } from './declarations/prune-orphan-dts'
+import { chunkFileName } from './dedupe/attribute-modules'
 import { hoistSharedFirstParty } from './dedupe/hoist-shared'
 import { collectWorkspaceExactSpecifiers, collectWorkspacePrefixDeps } from './dependencies/collect-workspace-deps'
 import { buildWorkspaceRoutes } from './dependencies/externalize-plugin'
@@ -19,6 +20,7 @@ import { resolveDefaultWorkerPath, runPrePass } from './dependencies/pre-pass'
 import { pruneDependencies } from './dependencies/prune/prune-dependencies'
 import { resolveDepEntry } from './dependencies/resolve-dep-entry'
 import { resolveEntries } from './entries/resolve-entries'
+import { depsRootOf } from './fs/deps-root'
 import { removeEmptyDirs } from './fs/empty-dirs'
 import { toCjsBuildDescriptor, toEsmBuildDescriptor, toIifeBuildDescriptor, toUmdBuildDescriptor } from './rollup/descriptor'
 import { dispatchRollupWorker, resolveDefaultRollupWorkerPath } from './rollup/dispatch'
@@ -63,7 +65,7 @@ const collectFormatsRequestingPrePass = (config: BuildConfig): Array<'esm' | 'cj
 
 const buildJsPrePassJobs = (deps: string[], formats: Array<'esm' | 'cjs'>, context: BuildContext): PrePassJob[] => {
   const jobs: PrePassJob[] = []
-  const depsRoot = join(context.outputPath, '_dependencies')
+  const depsRoot = depsRootOf(context)
   const workspacePrefixDeps = collectWorkspacePrefixDeps(context)
   const workspaceExactSpecifiers = collectWorkspaceExactSpecifiers(context)
   const workspaceRoutes = buildWorkspaceRoutes(context.workspaceBundledDeps)
@@ -76,7 +78,7 @@ const buildJsPrePassJobs = (deps: string[], formats: Array<'esm' | 'cjs'>, conte
         dep,
         inputPath: entry,
         format,
-        outputPath: join(depsRoot, dep, format === 'esm' ? 'index.esm.js' : 'index.cjs.js'),
+        outputPath: join(depsRoot, dep, chunkFileName(format)),
         otherDeps: [...otherNpmDeps, ...workspacePrefixDeps],
         otherWorkspaceSpecifiers: workspaceExactSpecifiers,
         npmDeps: otherNpmDeps,
@@ -89,7 +91,7 @@ const buildJsPrePassJobs = (deps: string[], formats: Array<'esm' | 'cjs'>, conte
 }
 
 const workspaceOutputFile = (entry: BuildContext['workspaceBundledDeps'][number], format: 'esm' | 'cjs'): string => {
-  const fileName = format === 'esm' ? 'index.esm.js' : 'index.cjs.js'
+  const fileName = chunkFileName(format)
   return entry.subPath ? `${entry.specifier}/${fileName}` : `${entry.packageName}/${fileName}`
 }
 
@@ -99,7 +101,7 @@ const filterRouteEntries = (entry: WorkspaceBundledDep, all: WorkspaceBundledDep
 const buildWorkspaceJsPrePassJobs = (npmDeps: string[], formats: Array<'esm' | 'cjs'>, context: BuildContext): PrePassJob[] => {
   if (context.workspaceBundledDeps.length === 0) return []
   const jobs: PrePassJob[] = []
-  const depsRoot = join(context.outputPath, '_dependencies')
+  const depsRoot = depsRootOf(context)
   const wholeSurface = collectWorkspacePrefixDeps(context)
   const subPathSpecifiers = collectWorkspaceExactSpecifiers(context)
   for (const entry of context.workspaceBundledDeps) {

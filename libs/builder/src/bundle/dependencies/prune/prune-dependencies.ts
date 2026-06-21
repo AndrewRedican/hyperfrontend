@@ -1,7 +1,7 @@
 import type { MemoryMonitor } from '../../../memory/monitor'
 import type { BuildContext } from '../../../models'
 import { logger } from '@hyperfrontend/logging'
-import { join } from '@hyperfrontend/project-scope/core'
+import { depsRootOf } from '../../fs/deps-root'
 import { stripDeadExportsPass } from './dead-export-pass'
 import { destructureRequiresPass } from './destructure-requires-pass'
 import { pruneOrphanChunks } from './orphan-chunks'
@@ -63,7 +63,7 @@ export interface PruneReport {
  * ```
  */
 export const pruneDependencies = (context: BuildContext, monitor?: MemoryMonitor): PruneReport => {
-  const depsRoot = join(context.outputPath, '_dependencies')
+  const depsRoot = depsRootOf(context)
   const orphans = pruneOrphanChunks(context, depsRoot)
   monitor?.check('bundle:dependencies:prune:orphans:end')
   const deadExports = stripDeadExportsPass(context, depsRoot)

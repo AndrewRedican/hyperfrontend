@@ -178,7 +178,7 @@ export const stripComments = (source: string): string | null => {
  *
  * @example Stripping comments after the prune passes
  * ```typescript
- * const { commentBytesRemoved } = stripCommentsPass(join(context.outputPath, '_dependencies'))
+ * const { commentBytesRemoved } = stripCommentsPass(depsRootOf(context))
  * ```
  */
 export const stripCommentsPass = (depsRoot: string): CommentStripResult => {

@@ -160,7 +160,7 @@ const processFormat = (
  *
  * @example Running the property strip before the dead-export re-pass
  * ```typescript
- * const { deadPropertiesRemoved } = stripDeadPropertiesPass(context, join(context.outputPath, '_dependencies'))
+ * const { deadPropertiesRemoved } = stripDeadPropertiesPass(context, depsRootOf(context))
  * ```
  */
 export const stripDeadPropertiesPass = (context: BuildContext, depsRoot: string): PropertyStripPassResult => {

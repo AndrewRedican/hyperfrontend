@@ -134,7 +134,7 @@ const computeSccIds = (nodes: string[], graph: Map<string, Set<string>>): Map<st
  *
  * @example Running the pass after the strip/orphan passes
  * ```typescript
- * const { requireBindingsDestructured } = destructureRequiresPass(join(context.outputPath, '_dependencies'))
+ * const { requireBindingsDestructured } = destructureRequiresPass(depsRootOf(context))
  * ```
  */
 export const destructureRequiresPass = (depsRoot: string): DestructureRequiresResult => {

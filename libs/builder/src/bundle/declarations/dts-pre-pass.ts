@@ -8,6 +8,7 @@ import { collectWorkspaceExactSpecifiers, collectWorkspacePrefixDeps } from '../
 import { buildWorkspaceRoutes } from '../dependencies/externalize-plugin'
 import { resolveDefaultWorkerPath, runPrePass } from '../dependencies/pre-pass'
 import { resolveDepEntry } from '../dependencies/resolve-dep-entry'
+import { depsRootOf } from '../fs/deps-root'
 
 const log = logger.channel('builder:bundle:declarations:dts-pre-pass')
 
@@ -18,7 +19,7 @@ const filterRouteEntries = (entry: WorkspaceBundledDep, all: WorkspaceBundledDep
   all.filter((other) => (entry.policy === 'sub-path' ? other.specifier !== entry.specifier : other.packageName !== entry.packageName))
 
 const buildJobs = (deps: string[], context: BuildContext): PrePassJob[] => {
-  const depsRoot = join(context.outputPath, '_dependencies')
+  const depsRoot = depsRootOf(context)
   const jobs: PrePassJob[] = []
   const workspacePrefixDeps = collectWorkspacePrefixDeps(context)
   const workspaceExactSpecifiers = collectWorkspaceExactSpecifiers(context)
@@ -50,7 +51,7 @@ const buildJobs = (deps: string[], context: BuildContext): PrePassJob[] => {
 
 const buildWorkspaceJobs = (context: BuildContext, npmDeps: string[]): PrePassJob[] => {
   if (context.workspaceBundledDeps.length === 0) return []
-  const depsRoot = join(context.outputPath, '_dependencies')
+  const depsRoot = depsRootOf(context)
   const wholeSurface = collectWorkspacePrefixDeps(context)
   const subPathSpecifiers = collectWorkspaceExactSpecifiers(context)
   const jobs: PrePassJob[] = []

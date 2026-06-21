@@ -143,7 +143,7 @@ const pruneDtsOrphans = (context: BuildContext, depsRoot: string): OrphanPruneRe
  *
  * @example Sweeping orphans after the per-entry d.ts pass
  * ```typescript
- * const { orphanFilesRemoved } = pruneOrphanChunks(context, join(context.outputPath, '_dependencies'))
+ * const { orphanFilesRemoved } = pruneOrphanChunks(context, depsRootOf(context))
  * ```
  */
 export const pruneOrphanChunks = (context: BuildContext, depsRoot: string): OrphanPruneResult => {

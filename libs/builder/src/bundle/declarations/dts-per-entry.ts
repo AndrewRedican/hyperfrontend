@@ -3,10 +3,11 @@ import type { BuildContext, EntryPoint } from '../../models'
 import type { PrePassJob, SiblingEntryDescriptor } from '../dependencies/pre-pass'
 import { createError } from '@hyperfrontend/immutable-api-utils/built-in-copy/error'
 import { logger } from '@hyperfrontend/logging'
-import { exists, join } from '@hyperfrontend/project-scope/core'
+import { exists } from '@hyperfrontend/project-scope/core'
 import { collectWorkspaceExactSpecifiers, collectWorkspacePrefixDeps } from '../dependencies/collect-workspace-deps'
 import { buildWorkspaceRoutes } from '../dependencies/externalize-plugin'
 import { resolveDefaultWorkerPath, runPrePass } from '../dependencies/pre-pass'
+import { depsRootOf } from '../fs/deps-root'
 import { dtsPathFor } from './sibling-resolver'
 
 const log = logger.channel('builder:bundle:declarations:dts-per-entry')
@@ -27,7 +28,7 @@ const buildJobs = (entries: EntryPoint[], context: BuildContext): PrePassJob[] =
   const workspacePrefixDeps = collectWorkspacePrefixDeps(context)
   const workspaceExactSpecifiers = collectWorkspaceExactSpecifiers(context)
   const workspaceRoutes = buildWorkspaceRoutes(context.workspaceBundledDeps)
-  const depsRoot = join(context.outputPath, '_dependencies')
+  const depsRoot = depsRootOf(context)
   for (const entry of entries) {
     const inputPath = dtsPathFor(context.outputPath, entry.srcPath)
     if (!exists(inputPath)) continue

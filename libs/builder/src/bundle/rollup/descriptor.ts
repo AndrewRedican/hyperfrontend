@@ -5,6 +5,7 @@ import { defaultBootstrap } from '../../bin/script/bootstrap-footer'
 import { buildWorkspaceRoutes } from '../dependencies/externalize-plugin'
 import { resolveExternals } from '../externals/resolve-externals'
 import { validateExternalsConfig } from '../externals/validate-globals'
+import { depsRootOf } from '../fs/deps-root'
 
 const computeEntryOutputDir = (entry: EntryPoint, context: BuildContext): string =>
   entry.srcPath ? join(context.outputPath, entry.srcPath) : context.outputPath
@@ -57,7 +58,7 @@ export const toEsmBuildDescriptor = (
     outputDir,
     external,
     sourcemap,
-    bundledDepsPlugin: useExternalizePlugin ? { deps: bundledDeps, depsRoot: join(context.outputPath, '_dependencies') } : null,
+    bundledDepsPlugin: useExternalizePlugin ? { deps: bundledDeps, depsRoot: depsRootOf(context) } : null,
     workspaceRoutes,
     tsConfigPath: context.tsConfigPath,
     projectRoot: context.projectRoot,
@@ -110,7 +111,7 @@ export const toCjsBuildDescriptor = (
     outputDir,
     external,
     sourcemap,
-    bundledDepsPlugin: useExternalizePlugin ? { deps: bundledDeps, depsRoot: join(context.outputPath, '_dependencies') } : null,
+    bundledDepsPlugin: useExternalizePlugin ? { deps: bundledDeps, depsRoot: depsRootOf(context) } : null,
     workspaceRoutes,
     tsConfigPath: context.tsConfigPath,
     projectRoot: context.projectRoot,
@@ -215,7 +216,7 @@ export const toBinBuildDescriptor = (
   const inputFile = join(context.projectRoot, 'src', 'bin', `${bin.name}.ts`)
   const binDir = join(context.outputPath, 'bin')
   const outputFile = resolveBinOutputFile(binDir, bin.name, format, formats)
-  const bundledDepsRoot = join(context.outputPath, '_dependencies')
+  const bundledDepsRoot = depsRootOf(context)
   const workspaceRoutes = buildWorkspaceRoutes(context.workspaceBundledDeps)
   const useExternalizePlugin = context.bundledDeps.length > 0 || workspaceRoutes.length > 0
   return {

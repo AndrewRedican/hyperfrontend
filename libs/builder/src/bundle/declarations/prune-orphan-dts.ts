@@ -4,6 +4,7 @@ import { createSet } from '@hyperfrontend/immutable-api-utils/built-in-copy/set'
 import { logger } from '@hyperfrontend/logging'
 import { exists, getDirname, join, readDirectory, readFileContent } from '@hyperfrontend/project-scope/core'
 import { collectChunkSpecifiers, hasDynamicSpecifier } from '../dependencies/prune/specifiers'
+import { depsRootOf } from '../fs/deps-root'
 import { entryDirOf } from '../fs/entry-dir'
 import { isUnderDir } from '../fs/under-dir'
 
@@ -147,7 +148,7 @@ const collectDeclarationFiles = (root: string, depsRoot: string): string[] => {
  * ```
  */
 export const pruneOrphanDeclarations = (context: BuildContext): number => {
-  const depsRoot = join(context.outputPath, '_dependencies')
+  const depsRoot = depsRootOf(context)
   const roots: string[] = []
   for (const entry of context.entryPointDiscovery.entryPoints) {
     const dir = entryDirOf(entry, context)
