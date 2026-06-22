@@ -21,7 +21,7 @@ const formatMB = (bytes: number): string => (bytes / BYTES_PER_MB).toFixed(1)
 
 const memorySnapshot = (label: string): void => {
   const usage = process.memoryUsage()
-  log.info(`${label}: heap=${formatMB(usage.heapUsed)}MB rss=${formatMB(usage.rss)}MB free=${formatMB(freemem())}MB`)
+  log.debug(`${label}: heap=${formatMB(usage.heapUsed)}MB rss=${formatMB(usage.rss)}MB free=${formatMB(freemem())}MB`)
 }
 
 /**
@@ -75,8 +75,8 @@ const cleanupSeaIntermediates = (seaConfigPath: string, blobPath: string): void 
  * 8. Delete the SEA build intermediates (config JSON + prep blob) so only the
  *    runtime binary remains in the publishable output.
  *
- * Each step emits an info-level memory snapshot (parent heap, RSS, OS free) and a
- * duration log so the pipeline is observable end-to-end.
+ * Each step emits a debug-level memory snapshot (parent heap, RSS, OS free) and a
+ * duration log so the pipeline is observable end-to-end without noising default output.
  *
  * Native binaries are not auto-wired into `package.json#bin` — they are shipped
  * as separate release artifacts (see Q22 in the implementation plan).
@@ -119,7 +119,7 @@ export const buildNativeBin = async (inputs: BuildNativeBinInputs): Promise<BinO
   memorySnapshot(`${bin.name}: pre-sea-blob`)
   const blobStart = dateNow()
   generateSeaBlob({ seaConfigPath, outputBlobPath: blobPath })
-  log.info(`${bin.name}: sea blob generated in ${dateNow() - blobStart}ms`)
+  log.debug(`${bin.name}: sea blob generated in ${dateNow() - blobStart}ms`)
 
   const hostBinary = resolveHostBinary({ platform: <SeaPlatform>target })
 
@@ -143,7 +143,7 @@ export const buildNativeBin = async (inputs: BuildNativeBinInputs): Promise<BinO
       },
       { workerPath: invocation.path, execArgv: invocation.execArgv, label: bin.name }
     )
-    log.info(
+    log.debug(
       `${bin.name}: inject completed in ${report.durationMs}ms (worker peak heap=${report.peakHeapMB.toFixed(1)}MB rss=${report.peakRssMB.toFixed(1)}MB)`
     )
   } catch (error) {

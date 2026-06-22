@@ -242,27 +242,27 @@ describe('buildNativeBin', () => {
 
   it('emits a memory snapshot before each pipeline step', async () => {
     await buildNativeBin({ bin: seaBin, ctx: makeContext(), cjsOutputPath: '/abs/dist/libs/builder/bin/hf-build.js' })
-    expect(mockChannel.info).toHaveBeenCalledWith(
+    expect(mockChannel.debug).toHaveBeenCalledWith(
       expect.stringMatching(/^hf-build: pre-sea-config: heap=[\d.]+MB rss=[\d.]+MB free=[\d.]+MB$/)
     )
-    expect(mockChannel.info).toHaveBeenCalledWith(
+    expect(mockChannel.debug).toHaveBeenCalledWith(
       expect.stringMatching(/^hf-build: pre-sea-blob: heap=[\d.]+MB rss=[\d.]+MB free=[\d.]+MB$/)
     )
-    expect(mockChannel.info).toHaveBeenCalledWith(
+    expect(mockChannel.debug).toHaveBeenCalledWith(
       expect.stringMatching(/^hf-build: pre-inject \(host=\/opt\/node\): heap=[\d.]+MB rss=[\d.]+MB free=[\d.]+MB$/)
     )
-    expect(mockChannel.info).toHaveBeenCalledWith(
+    expect(mockChannel.debug).toHaveBeenCalledWith(
       expect.stringMatching(/^hf-build: post-inject: heap=[\d.]+MB rss=[\d.]+MB free=[\d.]+MB$/)
     )
-    expect(mockChannel.info).toHaveBeenCalledWith(
+    expect(mockChannel.debug).toHaveBeenCalledWith(
       expect.stringMatching(/^hf-build: native build complete: heap=[\d.]+MB rss=[\d.]+MB free=[\d.]+MB$/)
     )
   })
 
-  it('logs the sea blob duration and the inject duration with worker peak metrics at info level', async () => {
+  it('logs the sea blob duration and the inject duration with worker peak metrics at debug level', async () => {
     await buildNativeBin({ bin: seaBin, ctx: makeContext(), cjsOutputPath: '/abs/dist/libs/builder/bin/hf-build.js' })
-    expect(mockChannel.info).toHaveBeenCalledWith(expect.stringMatching(/^hf-build: sea blob generated in \d+ms$/))
-    expect(mockChannel.info).toHaveBeenCalledWith('hf-build: inject completed in 1234ms (worker peak heap=220.0MB rss=480.0MB)')
+    expect(mockChannel.debug).toHaveBeenCalledWith(expect.stringMatching(/^hf-build: sea blob generated in \d+ms$/))
+    expect(mockChannel.debug).toHaveBeenCalledWith('hf-build: inject completed in 1234ms (worker peak heap=220.0MB rss=480.0MB)')
   })
 
   it('logs an error and re-throws when dispatchInjectWorker rejects with an Error', async () => {
