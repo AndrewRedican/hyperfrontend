@@ -38,3 +38,5 @@ apps/docs-site/.generated/
 
 # Changelogs
 **/CHANGELOG.md
+
+.nx/self-healing
