@@ -7,29 +7,30 @@ Next.js documentation site for the HyperFrontend framework, deployed at [hyperfr
 ## Quick Start
 
 ```bash
-# Install dependencies
-npx nx install docs-site
+# Run all commands from the app directory (scripts resolve against its package.json)
+cd apps/docs-site
+
+# Install dependencies (self-contained node_modules; required once)
+npm install
 
 # Generate documentation content
-npm run generate --prefix apps/docs-site
-
-# Start development server
-npx nx serve docs-site
+npm run generate
 
 # Build for production
-npx nx build docs-site
+npm run build
+
+# Start the production server (http://localhost:3000)
+npm run start
 ```
 
 ### Troubleshooting Local Development
 
-If `npx nx serve docs-site` fails or behaves unexpectedly:
+Run the commands from `apps/docs-site`, not the repo root — `npm run` resolves
+scripts against the current directory's `package.json`. If the server behaves
+unexpectedly, rebuild before starting:
 
 ```bash
-# 1. Build first
-npx nx build docs-site
-
-# 2. Start from the app directory
-cd apps/docs-site && npm start
+npm run build && npm run start
 ```
 
 ---
