@@ -60,8 +60,8 @@ export const runInjectWorkerJob = async (job: InjectWorkerJob): Promise<InjectWo
   const memory = process.memoryUsage()
   const report: InjectWorkerReport = {
     outputSize: safeStatSize(job.outputBinary),
-    peakHeapMB: memory.heapUsed / BYTES_PER_MB,
-    peakRssMB: memory.rss / BYTES_PER_MB,
+    endHeapMB: memory.heapUsed / BYTES_PER_MB,
+    endRssMB: memory.rss / BYTES_PER_MB,
     durationMs: Date.now() - startedAt,
   }
   writeFileSync(job.reportPath, JSON.stringify(report))

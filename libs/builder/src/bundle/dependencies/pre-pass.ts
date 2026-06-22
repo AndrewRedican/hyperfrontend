@@ -93,10 +93,10 @@ export interface PrePassResult {
   job: PrePassJob
   /** Output file size in bytes. */
   outputSize: number
-  /** Peak heap reported by the child at exit, in MB. */
-  peakHeapMB: number
-  /** Peak RSS reported by the child at exit, in MB. */
-  peakRssMB: number
+  /** Heap reported by the child at exit, in MB. */
+  endHeapMB: number
+  /** RSS reported by the child at exit, in MB. */
+  endRssMB: number
   /** Wall-clock duration the worker reported, in ms. */
   durationMs: number
 }
@@ -159,10 +159,10 @@ const runOne = (job: PrePassJob, reportPath: string, options: RunPrePassOptions)
 interface PrePassReportFile {
   /** Final on-disk size of the rollup output, in bytes. */
   outputSize: number
-  /** Peak `process.memoryUsage().heapUsed` reported by the child, in MB. */
-  peakHeapMB: number
-  /** Peak `process.memoryUsage().rss` reported by the child, in MB. */
-  peakRssMB: number
+  /** `process.memoryUsage().heapUsed` reported by the child at exit, in MB. */
+  endHeapMB: number
+  /** `process.memoryUsage().rss` reported by the child at exit, in MB. */
+  endRssMB: number
   /** Worker wall-clock duration, in ms. */
   durationMs: number
 }
@@ -172,7 +172,7 @@ const readReport = (reportPath: string, job: PrePassJob): PrePassResult => {
     throw createError(`pre-pass worker for ${job.dep} (${job.kind}/${job.format}) did not write a report at ${reportPath}`)
   }
   const data = <PrePassReportFile>parse(readFileSync(reportPath, 'utf8'))
-  return { job, outputSize: data.outputSize, peakHeapMB: data.peakHeapMB, peakRssMB: data.peakRssMB, durationMs: data.durationMs }
+  return { job, outputSize: data.outputSize, endHeapMB: data.endHeapMB, endRssMB: data.endRssMB, durationMs: data.durationMs }
 }
 
 /**
@@ -261,7 +261,7 @@ export const runPrePass = async (jobs: PrePassJob[], options: RunPrePassOptions)
       await runOne(job, reportPath, options)
       const result = readReport(reportPath, job)
       log.debug(
-        `pre-pass ${index + 1}/${jobs.length} done: ${job.dep} size=${result.outputSize}B heap=${result.peakHeapMB.toFixed(1)}MB rss=${result.peakRssMB.toFixed(1)}MB t=${result.durationMs}ms`
+        `pre-pass ${index + 1}/${jobs.length} done: ${job.dep} size=${result.outputSize}B heap=${result.endHeapMB.toFixed(1)}MB rss=${result.endRssMB.toFixed(1)}MB t=${result.durationMs}ms`
       )
       options.monitor?.check(`bundle:dependencies:prepass:${index + 1}/${jobs.length}:${job.dep}:${job.kind}:${job.format}:end`)
       results.push(result)

@@ -157,7 +157,7 @@ export const dispatchRollupWorker = async (
     await runOne(job, options, label)
     const report = readReport(reportPath, label)
     log.debug(
-      `rollup dispatch done: ${label} size=${report.outputSize}B heap=${report.peakHeapMB.toFixed(1)}MB rss=${report.peakRssMB.toFixed(1)}MB t=${report.durationMs}ms`
+      `rollup dispatch done: ${label} size=${report.outputSize}B heap=${report.endHeapMB.toFixed(1)}MB rss=${report.endRssMB.toFixed(1)}MB t=${report.durationMs}ms`
     )
     options.monitor?.check(`bundle:rollup:dispatch:${label}:end`)
     return report

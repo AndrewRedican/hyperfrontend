@@ -108,9 +108,9 @@ export interface RollupWorkerReport {
   /** Total on-disk size of every emitted output, in bytes. */
   outputSize: number
   /** `process.memoryUsage().heapUsed` in MB at end of bundle. */
-  peakHeapMB: number
+  endHeapMB: number
   /** `process.memoryUsage().rss` in MB at end of bundle. */
-  peakRssMB: number
+  endRssMB: number
   /** Worker wall-clock duration in ms. */
   durationMs: number
 }

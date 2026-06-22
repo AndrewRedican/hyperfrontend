@@ -71,10 +71,10 @@ describe('dispatchInjectWorker', () => {
     const promise = dispatchInjectWorker(baseJob(), { workerPath: '/abs/worker.cjs.js' })
     await tick()
     expect(records).toHaveLength(1)
-    writeReport((<SpawnRecord>records[0]).reportPath, { outputSize: 138_000_000, peakHeapMB: 220, peakRssMB: 480, durationMs: 1200 })
+    writeReport((<SpawnRecord>records[0]).reportPath, { outputSize: 138_000_000, endHeapMB: 220, endRssMB: 480, durationMs: 1200 })
     ;(<SpawnRecord>records[0]).child.emit('exit', 0)
     const result = await promise
-    expect(result).toEqual({ outputSize: 138_000_000, peakHeapMB: 220, peakRssMB: 480, durationMs: 1200 })
+    expect(result).toEqual({ outputSize: 138_000_000, endHeapMB: 220, endRssMB: 480, durationMs: 1200 })
   })
 
   it('overwrites the job reportPath with a temp-dir path before forking', async () => {
@@ -84,7 +84,7 @@ describe('dispatchInjectWorker', () => {
     await tick()
     expect((<SpawnRecord>records[0]).job.reportPath).not.toBe('/abs/orig.json')
     expect((<SpawnRecord>records[0]).job.reportPath).toContain('hf-builder-inject-')
-    writeReport((<SpawnRecord>records[0]).reportPath, { outputSize: 1, peakHeapMB: 1, peakRssMB: 1, durationMs: 1 })
+    writeReport((<SpawnRecord>records[0]).reportPath, { outputSize: 1, endHeapMB: 1, endRssMB: 1, durationMs: 1 })
     ;(<SpawnRecord>records[0]).child.emit('exit', 0)
     await promise
   })
@@ -128,7 +128,7 @@ describe('dispatchInjectWorker', () => {
     await tick()
     expect((<SpawnRecord>records[0]).execPath).toBe('/usr/bin/custom-node')
     expect((<SpawnRecord>records[0]).args.slice(0, 3)).toEqual(['--require', '@swc-node/register', '/abs/worker.cjs.js'])
-    writeReport((<SpawnRecord>records[0]).reportPath, { outputSize: 1, peakHeapMB: 1, peakRssMB: 1, durationMs: 1 })
+    writeReport((<SpawnRecord>records[0]).reportPath, { outputSize: 1, endHeapMB: 1, endRssMB: 1, durationMs: 1 })
     ;(<SpawnRecord>records[0]).child.emit('exit', 0)
     await promise
   })
@@ -153,7 +153,7 @@ describe('dispatchInjectWorker', () => {
       label: 'hf-build',
     })
     await tick()
-    writeReport((<SpawnRecord>records[0]).reportPath, { outputSize: 1, peakHeapMB: 1, peakRssMB: 1, durationMs: 1 })
+    writeReport((<SpawnRecord>records[0]).reportPath, { outputSize: 1, endHeapMB: 1, endRssMB: 1, durationMs: 1 })
     ;(<SpawnRecord>records[0]).child.emit('exit', 0)
     await promise
     expect(checks).toEqual(['bin:native:dispatch:hf-build:start', 'bin:native:dispatch:hf-build:end'])
@@ -186,7 +186,7 @@ describe('dispatchInjectWorker', () => {
     const promise = dispatchInjectWorker(baseJob(), { workerPath: '/abs/worker.cjs.js' })
     await tick()
     ;(<SpawnRecord>records[0]).child.stdout.emit('data', Buffer.from('child output\n'))
-    writeReport((<SpawnRecord>records[0]).reportPath, { outputSize: 1, peakHeapMB: 1, peakRssMB: 1, durationMs: 1 })
+    writeReport((<SpawnRecord>records[0]).reportPath, { outputSize: 1, endHeapMB: 1, endRssMB: 1, durationMs: 1 })
     ;(<SpawnRecord>records[0]).child.emit('exit', 0)
     await promise
     expect(writeSpy).toHaveBeenCalledWith(expect.anything())
@@ -200,7 +200,7 @@ describe('dispatchInjectWorker', () => {
     const promise = dispatchInjectWorker(baseJob(), { workerPath: '/abs/worker.cjs.js' })
     await tick()
     ;(<SpawnRecord>records[0]).child.stderr.emit('data', 'string chunk\n')
-    writeReport((<SpawnRecord>records[0]).reportPath, { outputSize: 1, peakHeapMB: 1, peakRssMB: 1, durationMs: 1 })
+    writeReport((<SpawnRecord>records[0]).reportPath, { outputSize: 1, endHeapMB: 1, endRssMB: 1, durationMs: 1 })
     ;(<SpawnRecord>records[0]).child.emit('exit', 0)
     await promise
     expect(writeSpy).toHaveBeenCalledWith(expect.stringContaining('string chunk'))

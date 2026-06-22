@@ -157,7 +157,7 @@ export const dispatchInjectWorker = async (job: InjectWorkerJob, options: Dispat
     await runOne(dispatched, options, label)
     const report = readReport(reportPath, label)
     log.debug(
-      `inject dispatch done: ${label} size=${report.outputSize}B heap=${report.peakHeapMB.toFixed(1)}MB rss=${report.peakRssMB.toFixed(1)}MB t=${report.durationMs}ms`
+      `inject dispatch done: ${label} size=${report.outputSize}B heap=${report.endHeapMB.toFixed(1)}MB rss=${report.endRssMB.toFixed(1)}MB t=${report.durationMs}ms`
     )
     options.monitor?.check(`bin:native:dispatch:${label}:end`)
     return report

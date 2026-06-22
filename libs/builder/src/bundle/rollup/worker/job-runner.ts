@@ -272,8 +272,8 @@ export const runRollupWorkerJob = async (job: RollupBuildDescriptor): Promise<Ro
   const memory = process.memoryUsage()
   const report: RollupWorkerReport = {
     outputSize: totalSize,
-    peakHeapMB: memory.heapUsed / BYTES_PER_MB,
-    peakRssMB: memory.rss / BYTES_PER_MB,
+    endHeapMB: memory.heapUsed / BYTES_PER_MB,
+    endRssMB: memory.rss / BYTES_PER_MB,
     durationMs: Date.now() - startedAt,
   }
   writeFileSync(job.reportPath, JSON.stringify(report))

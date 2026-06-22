@@ -15,7 +15,7 @@ jest.mock('@hyperfrontend/project-scope/core', () => {
 jest.mock('./codesign', () => ({ removeCodesign: jest.fn() }))
 jest.mock('./host-binary', () => ({ resolveHostBinary: jest.fn() }))
 jest.mock('./dispatch', () => ({
-  dispatchInjectWorker: jest.fn().mockResolvedValue({ outputSize: 138_000_000, peakHeapMB: 220, peakRssMB: 480, durationMs: 1234 }),
+  dispatchInjectWorker: jest.fn().mockResolvedValue({ outputSize: 138_000_000, endHeapMB: 220, endRssMB: 480, durationMs: 1234 }),
   resolveDefaultInjectWorkerPath: jest.fn(() => ({ path: '/abs/repo/dist/libs/builder/bin/native/worker/index.cjs.js', execArgv: [] })),
 }))
 jest.mock('./platform-check', () => ({
@@ -71,7 +71,7 @@ beforeEach(() => {
   ;(<jest.Mock>resolveHostBinary).mockReset().mockReturnValue('/opt/node')
   ;(<jest.Mock>dispatchInjectWorker)
     .mockReset()
-    .mockResolvedValue({ outputSize: 138_000_000, peakHeapMB: 220, peakRssMB: 480, durationMs: 1234 })
+    .mockResolvedValue({ outputSize: 138_000_000, endHeapMB: 220, endRssMB: 480, durationMs: 1234 })
   ;(<jest.Mock>resolveDefaultInjectWorkerPath).mockReset().mockReturnValue({
     path: '/abs/repo/dist/libs/builder/bin/native/worker/index.cjs.js',
     execArgv: [],
@@ -259,10 +259,10 @@ describe('buildNativeBin', () => {
     )
   })
 
-  it('logs the sea blob duration and the inject duration with worker peak metrics at debug level', async () => {
+  it('logs the sea blob duration and the inject duration with worker end metrics at debug level', async () => {
     await buildNativeBin({ bin: seaBin, ctx: makeContext(), cjsOutputPath: '/abs/dist/libs/builder/bin/hf-build.js' })
     expect(mockChannel.debug).toHaveBeenCalledWith(expect.stringMatching(/^hf-build: sea blob generated in \d+ms$/))
-    expect(mockChannel.debug).toHaveBeenCalledWith('hf-build: inject completed in 1234ms (worker peak heap=220.0MB rss=480.0MB)')
+    expect(mockChannel.debug).toHaveBeenCalledWith('hf-build: inject completed in 1234ms (worker end heap=220.0MB rss=480.0MB)')
   })
 
   it('logs an error and re-throws when dispatchInjectWorker rejects with an Error', async () => {

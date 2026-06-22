@@ -35,8 +35,8 @@ describe('runPrePassWorkerJob', () => {
       reportPath,
     })
     expect(report.outputSize).toBeGreaterThan(0)
-    expect(report.peakHeapMB).toBeGreaterThan(0)
-    expect(report.peakRssMB).toBeGreaterThan(0)
+    expect(report.endHeapMB).toBeGreaterThan(0)
+    expect(report.endRssMB).toBeGreaterThan(0)
     expect(report.durationMs).toBeGreaterThanOrEqual(0)
     const persisted = JSON.parse(readFileSync(reportPath, 'utf8'))
     expect(persisted.outputSize).toBe(report.outputSize)

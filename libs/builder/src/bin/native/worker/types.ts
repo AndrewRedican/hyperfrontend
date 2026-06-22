@@ -30,9 +30,9 @@ export interface InjectWorkerReport {
   /** On-disk size of `outputBinary` after injection, in bytes. */
   outputSize: number
   /** Worker `process.memoryUsage().heapUsed` in MB at end of inject. */
-  peakHeapMB: number
+  endHeapMB: number
   /** Worker `process.memoryUsage().rss` in MB at end of inject. */
-  peakRssMB: number
+  endRssMB: number
   /** Worker wall-clock duration in ms. */
   durationMs: number
 }

@@ -5,7 +5,7 @@ jest.mock('@rollup/plugin-terser', () => jest.fn(() => ({ name: 'terser' })))
 jest.mock('@rollup/plugin-typescript', () => jest.fn(() => ({ name: 'typescript' })))
 
 jest.mock('./rollup/dispatch', () => ({
-  dispatchRollupWorker: jest.fn().mockResolvedValue({ outputSize: 0, peakHeapMB: 0, peakRssMB: 0, durationMs: 0 }),
+  dispatchRollupWorker: jest.fn().mockResolvedValue({ outputSize: 0, endHeapMB: 0, endRssMB: 0, durationMs: 0 }),
   resolveDefaultRollupWorkerPath: jest.fn(),
 }))
 jest.mock('./declarations/generate-declarations', () => ({

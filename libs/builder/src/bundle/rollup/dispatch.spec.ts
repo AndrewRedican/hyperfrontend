@@ -79,10 +79,10 @@ describe('dispatchRollupWorker', () => {
     const promise = dispatchRollupWorker(descriptor, { workerPath: '/abs/worker.cjs.js' })
     await tick()
     expect(records).toHaveLength(1)
-    writeReport((<SpawnRecord>records[0]).reportPath, { outputSize: 100, peakHeapMB: 1.5, peakRssMB: 50, durationMs: 25 })
+    writeReport((<SpawnRecord>records[0]).reportPath, { outputSize: 100, endHeapMB: 1.5, endRssMB: 50, durationMs: 25 })
     ;(<SpawnRecord>records[0]).child.emit('exit', 0)
     const result = await promise
-    expect(result).toEqual({ outputSize: 100, peakHeapMB: 1.5, peakRssMB: 50, durationMs: 25 })
+    expect(result).toEqual({ outputSize: 100, endHeapMB: 1.5, endRssMB: 50, durationMs: 25 })
   })
 
   it('overwrites the descriptor reportPath with a temp-dir path before forking', async () => {
@@ -93,7 +93,7 @@ describe('dispatchRollupWorker', () => {
     await tick()
     expect((<SpawnRecord>records[0]).descriptor.reportPath).not.toBe('/abs/orig.json')
     expect((<SpawnRecord>records[0]).descriptor.reportPath).toContain('hf-builder-rollup-')
-    writeReport((<SpawnRecord>records[0]).reportPath, { outputSize: 1, peakHeapMB: 1, peakRssMB: 1, durationMs: 1 })
+    writeReport((<SpawnRecord>records[0]).reportPath, { outputSize: 1, endHeapMB: 1, endRssMB: 1, durationMs: 1 })
     ;(<SpawnRecord>records[0]).child.emit('exit', 0)
     await promise
   })
@@ -137,7 +137,7 @@ describe('dispatchRollupWorker', () => {
     await tick()
     expect((<SpawnRecord>records[0]).execPath).toBe('/usr/bin/custom-node')
     expect((<SpawnRecord>records[0]).args.slice(0, 3)).toEqual(['--require', '@swc-node/register', '/abs/worker.cjs.js'])
-    writeReport((<SpawnRecord>records[0]).reportPath, { outputSize: 1, peakHeapMB: 1, peakRssMB: 1, durationMs: 1 })
+    writeReport((<SpawnRecord>records[0]).reportPath, { outputSize: 1, endHeapMB: 1, endRssMB: 1, durationMs: 1 })
     ;(<SpawnRecord>records[0]).child.emit('exit', 0)
     await promise
   })
@@ -162,7 +162,7 @@ describe('dispatchRollupWorker', () => {
       label: 'esm:0/1:.',
     })
     await tick()
-    writeReport((<SpawnRecord>records[0]).reportPath, { outputSize: 1, peakHeapMB: 1, peakRssMB: 1, durationMs: 1 })
+    writeReport((<SpawnRecord>records[0]).reportPath, { outputSize: 1, endHeapMB: 1, endRssMB: 1, durationMs: 1 })
     ;(<SpawnRecord>records[0]).child.emit('exit', 0)
     await promise
     expect(checks).toEqual(['bundle:rollup:dispatch:esm:0/1:.:start', 'bundle:rollup:dispatch:esm:0/1:.:end'])
@@ -195,7 +195,7 @@ describe('dispatchRollupWorker', () => {
     const promise = dispatchRollupWorker(baseDescriptor(), { workerPath: '/abs/worker.cjs.js' })
     await tick()
     ;(<SpawnRecord>records[0]).child.stdout.emit('data', Buffer.from('child output\n'))
-    writeReport((<SpawnRecord>records[0]).reportPath, { outputSize: 1, peakHeapMB: 1, peakRssMB: 1, durationMs: 1 })
+    writeReport((<SpawnRecord>records[0]).reportPath, { outputSize: 1, endHeapMB: 1, endRssMB: 1, durationMs: 1 })
     ;(<SpawnRecord>records[0]).child.emit('exit', 0)
     await promise
     expect(writeSpy).toHaveBeenCalledWith(expect.anything())
@@ -209,7 +209,7 @@ describe('dispatchRollupWorker', () => {
     const promise = dispatchRollupWorker(baseDescriptor(), { workerPath: '/abs/worker.cjs.js' })
     await tick()
     ;(<SpawnRecord>records[0]).child.stderr.emit('data', 'string chunk\n')
-    writeReport((<SpawnRecord>records[0]).reportPath, { outputSize: 1, peakHeapMB: 1, peakRssMB: 1, durationMs: 1 })
+    writeReport((<SpawnRecord>records[0]).reportPath, { outputSize: 1, endHeapMB: 1, endRssMB: 1, durationMs: 1 })
     ;(<SpawnRecord>records[0]).child.emit('exit', 0)
     await promise
     expect(writeSpy).toHaveBeenCalledWith(expect.stringContaining('string chunk'))

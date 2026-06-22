@@ -90,9 +90,9 @@ export interface PrePassWorkerReport {
   /** Final on-disk size of the rollup output, in bytes. */
   outputSize: number
   /** `process.memoryUsage().heapUsed` in MB at end of bundle. */
-  peakHeapMB: number
+  endHeapMB: number
   /** `process.memoryUsage().rss` in MB at end of bundle. */
-  peakRssMB: number
+  endRssMB: number
   /** Worker wall-clock duration in ms. */
   durationMs: number
 }
@@ -469,8 +469,8 @@ export const runPrePassWorkerJob = async (job: PrePassWorkerJob): Promise<PrePas
   const memory = process.memoryUsage()
   const report: PrePassWorkerReport = {
     outputSize: statSync(job.outputPath).size,
-    peakHeapMB: memory.heapUsed / BYTES_PER_MB,
-    peakRssMB: memory.rss / BYTES_PER_MB,
+    endHeapMB: memory.heapUsed / BYTES_PER_MB,
+    endRssMB: memory.rss / BYTES_PER_MB,
     durationMs: Date.now() - startedAt,
   }
   writeFileSync(job.reportPath, JSON.stringify(report))
