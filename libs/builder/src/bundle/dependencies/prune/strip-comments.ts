@@ -95,7 +95,8 @@ const collectComments = (text: string): CommentRange[] => {
   return ranges
 }
 
-const isBlankSlice = (text: string, from: number, to: number): boolean => /^[ \t]*$/.test(text.slice(from, to))
+// why: include `\r` so a CRLF whole-line comment (trailing `\r` before the `\n`) still takes the line-collapse path. Rollup emits LF today, but a CRLF chunk would otherwise leave the `\r\n` residue behind.
+const isBlankSlice = (text: string, from: number, to: number): boolean => /^[ \t\r]*$/.test(text.slice(from, to))
 
 const lineStartOf = (text: string, pos: number): number => text.lastIndexOf('\n', pos - 1) + 1
 

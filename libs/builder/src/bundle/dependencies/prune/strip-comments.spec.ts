@@ -95,6 +95,11 @@ describe('stripComments', () => {
     expect(stripComments(source)).toBe('export const a = 1;')
   })
 
+  it('collapses a CRLF whole-line comment the same as the LF case', () => {
+    const source = ['/* banner */', '', '', 'export const a = 1;'].join('\r\n')
+    expect(stripComments(source)).toBe('export const a = 1;')
+  })
+
   it('removes a whole-line comment that ends the file without a trailing newline', () => {
     expect(stripComments('export const a = 1;\n/* trailing */')).toBe('export const a = 1;\n')
   })
