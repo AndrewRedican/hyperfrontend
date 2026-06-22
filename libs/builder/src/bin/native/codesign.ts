@@ -33,9 +33,10 @@ export interface CodesignResult {
 const isMacOs = (): boolean => process.platform === 'darwin'
 
 /**
- * Strips the existing macOS code signature from `inputs.binary` (via
- * `codesign --remove-signature`) so postject's blob injection doesn't
- * invalidate it. No-op on non-macOS hosts.
+ * Strips the macOS code signature from `inputs.binary` (via
+ * `codesign --remove-signature`) after postject's blob injection has
+ * invalidated it, leaving an unsigned binary that runs locally. No-op on
+ * non-macOS hosts.
  *
  * Re-signing the produced binary (with a real Apple Developer ID) is left to
  * release tooling; this step only produces an unsigned executable that runs

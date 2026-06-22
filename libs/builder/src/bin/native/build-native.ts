@@ -70,7 +70,7 @@ const cleanupSeaIntermediates = (seaConfigPath: string, blobPath: string): void 
  * 5. Resolve the Node host binary for the current platform (defaults to `process.execPath`).
  * 6. Dispatch a forked inject worker that clones the host, embeds the blob via
  *    postject, and writes the output binary.
- * 7. On macOS, strip the cloned signature so the injection doesn't invalidate it.
+ * 7. On macOS, strip the signature the injection invalidated so the unsigned binary still runs.
  * 8. Delete the SEA build intermediates (config JSON + prep blob) so only the
  *    runtime binary remains in the publishable output.
  *
