@@ -57,25 +57,29 @@ const collectFormatBundleAllDeps = (configs: Array<EsmConfig | CjsConfig>): Coll
 
 const toFormatArray = <T>(value: T | T[] | undefined): T[] => (value === undefined ? [] : isArray(value) ? <T[]>value : [<T>value])
 
-const computeBundledDeps = (config: BuildConfig, isWorkspacePackage: IsWorkspacePackagePredicate): string[] => {
-  const formats = [...toFormatArray<EsmConfig>(config.esm), ...toFormatArray<CjsConfig>(config.cjs)]
-  const { active, options } = collectFormatBundleAllDeps(formats)
-  if (!active) return []
+const computeBundledDeps = (
+  config: BuildConfig,
+  isWorkspacePackage: IsWorkspacePackagePredicate,
+  bundleAllDeps: CollectedBundleAllDeps
+): string[] => {
+  if (!bundleAllDeps.active) return []
   return resolveBundledDeps(join(config.projectRoot, 'package.json'), {
     isWorkspacePackage,
-    include: options.include,
-    exclude: options.exclude,
+    include: bundleAllDeps.options.include,
+    exclude: bundleAllDeps.options.exclude,
   })
 }
 
-const computeWorkspaceBundledDeps = (config: BuildConfig, isWorkspacePackage: IsWorkspacePackagePredicate): WorkspaceBundledDep[] => {
-  const formats = [...toFormatArray<EsmConfig>(config.esm), ...toFormatArray<CjsConfig>(config.cjs)]
-  const { active, options } = collectFormatBundleAllDeps(formats)
-  if (!active) return []
+const computeWorkspaceBundledDeps = (
+  config: BuildConfig,
+  isWorkspacePackage: IsWorkspacePackagePredicate,
+  bundleAllDeps: CollectedBundleAllDeps
+): WorkspaceBundledDep[] => {
+  if (!bundleAllDeps.active) return []
   const resolved = resolveWorkspaceBundledDeps(join(config.projectRoot, 'package.json'), config.workspaceRoot, {
     isWorkspacePackage,
-    include: options.include,
-    exclude: options.exclude,
+    include: bundleAllDeps.options.include,
+    exclude: bundleAllDeps.options.exclude,
     policy: config.workspaceDepPolicy,
   })
   return resolved.map((entry) => ({
@@ -113,6 +117,8 @@ const computeWorkspaceBundledDeps = (config: BuildConfig, isWorkspacePackage: Is
 export const createBuildContext = (config: BuildConfig): BuildContext => {
   const projectRelativePath = relativePath(config.workspaceRoot, config.projectRoot)
   const isWorkspacePackage = config.isWorkspacePackage ?? NEVER_WORKSPACE
+  const formats = [...toFormatArray<EsmConfig>(config.esm), ...toFormatArray<CjsConfig>(config.cjs)]
+  const bundleAllDeps = collectFormatBundleAllDeps(formats)
   return {
     projectRoot: config.projectRoot,
     workspaceRoot: config.workspaceRoot,
@@ -123,8 +129,8 @@ export const createBuildContext = (config: BuildConfig): BuildContext => {
     assets: config.assets ?? [],
     isWorkspacePackage,
     entryPointDiscovery: discoverEntries(config.projectRoot),
-    bundledDeps: computeBundledDeps(config, isWorkspacePackage),
-    workspaceBundledDeps: computeWorkspaceBundledDeps(config, isWorkspacePackage),
+    bundledDeps: computeBundledDeps(config, isWorkspacePackage, bundleAllDeps),
+    workspaceBundledDeps: computeWorkspaceBundledDeps(config, isWorkspacePackage, bundleAllDeps),
     startedAt: dateNow(),
   }
 }

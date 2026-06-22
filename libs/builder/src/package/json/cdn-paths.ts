@@ -42,12 +42,11 @@ export interface CdnPathOverrides {
  */
 export const getCdnPaths = (formatOutputs: FormatOutputs, opts?: CdnPathOverrides): CdnPaths | undefined => {
   const umd = formatOutputs.umd[0]
-  const iife = formatOutputs.iife[0]
-  if (!umd && !iife) return undefined
+  const bundle = umd ?? formatOutputs.iife[0]
+  if (!bundle) return undefined
 
-  const defaultPath = umd
-    ? `./${umd.config.output ?? 'bundle'}/index.umd.min.js`
-    : `./${(<NonNullable<typeof iife>>iife).config.output ?? 'bundle'}/index.iife.min.js`
+  const format = umd ? 'umd' : 'iife'
+  const defaultPath = `./${bundle.config.output ?? 'bundle'}/index.${format}.min.js`
 
   return { unpkg: opts?.unpkg ?? defaultPath, jsdelivr: opts?.jsdelivr ?? defaultPath }
 }
