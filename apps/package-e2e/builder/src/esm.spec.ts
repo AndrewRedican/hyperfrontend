@@ -27,8 +27,10 @@ describe('@hyperfrontend/builder ESM', () => {
     }
   })
 
-  it('should expose preset factories that produce working predicates', async () => {
-    const { byNames, byPrefix } = await import('@hyperfrontend/builder')
+  it('should resolve the /presets subpath export with working predicates', async () => {
+    const { byNames, byPrefix } = await import('@hyperfrontend/builder/presets')
+    expect(typeof byNames).toBe('function')
+    expect(typeof byPrefix).toBe('function')
     const isNamed = byNames(['internal-utils'])
     expect(isNamed('internal-utils')).toBe(true)
     expect(isNamed('rollup')).toBe(false)
