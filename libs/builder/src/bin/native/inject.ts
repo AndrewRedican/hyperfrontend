@@ -37,12 +37,11 @@ const NODE_SEA_FUSE_HASH = 'fce680ab2cc467b6e072b8b5df1996b2'
 /**
  * Sentinel fuse string Node's runtime flips from `0` → `1` to mark a SEA-injected binary.
  *
- * Constructed at runtime from two parts so the bundled output of any bin that
- * transitively imports this module (e.g. `hf-build`) never contains the
- * contiguous sentinel literal. A bin's compiled JS becomes embedded in the
- * SEA blob, and a contiguous sentinel there would collide with the host
- * Node binary's own copy — causing postject to reject the inject with
- * "Multiple occurences of sentinel".
+ * Built at runtime from two parts so the contiguous sentinel literal never appears
+ * in the bundled JS of a bin that imports this module: that JS is embedded in the
+ * SEA blob, and a contiguous copy there collides with the host binary's own sentinel,
+ * making postject reject the inject with "Multiple occurences of sentinel". Keep it
+ * split — do not inline into a single string literal.
  */
 export const NODE_SEA_FUSE = NODE_SEA_FUSE_PREFIX + NODE_SEA_FUSE_HASH
 

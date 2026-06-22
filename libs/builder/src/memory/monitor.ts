@@ -32,7 +32,7 @@ export interface MemorySnapshot {
 }
 
 /**
- * Frozen monitor instance returned by `createMemoryMonitor`.
+ * Monitor instance returned by `createMemoryMonitor`.
  */
 export interface MemoryMonitor {
   /** Capture a snapshot, append it to the history, and return it. */

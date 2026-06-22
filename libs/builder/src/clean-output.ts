@@ -5,17 +5,15 @@ import { exists, join, relativePath, removeDirectory } from '@hyperfrontend/proj
 /**
  * Empties a build's own output directory before emission so a build never
  * inherits stale artifacts from a previous run — e.g. a `*.js.map` left behind
- * after sourcemaps were turned off, or a chunk for a since-renamed entry. Keeps
- * the output tree an exact mirror of the current build instead of an accreting
- * pile that makes "real artifact or leftover junk?" impossible to answer.
+ * after sourcemaps were turned off, or a chunk for a since-renamed entry.
  *
  * Scoped and guarded: only the *target project's own* directory is removed
  * (e.g. `dist/libs/<project>`), never the shared `dist/` root or anything above
  * it. The path is refused unless it lies strictly inside the workspace and is
  * not the bare `dist/` root, so a misconfigured `outputPath` that collapsed to
  * the workspace root, an ancestor, `/`, or `<workspaceRoot>/dist` can never
- * `rm -rf` the repository or every library's output at once. A non-existent
- * directory is a no-op (first build, or fake paths in unit tests).
+ * remove the repository or every library's output at once. A non-existent
+ * directory is a no-op.
  *
  * @param context - Resolved build context supplying `outputPath` and `workspaceRoot`.
  * @throws {Error} When `outputPath` is the workspace root, an ancestor of it,

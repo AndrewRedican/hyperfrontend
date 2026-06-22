@@ -96,14 +96,10 @@ export const baseName = (name: string): string => name.replace(/\$\d+$/, '')
 /**
  * Computes a rename-insensitive identity key for a top-level statement.
  *
- * Rollup numbers CJS dep-namespace locals (`index_cjs_js$2`) and
- * collision-renamed refs (`Store$1`) per-entry, so two byte-divergent copies of
- * the same source differ only in their `$N` suffixes. Stripping `$N` from
- * identifier nodes only — string literals, comments, and numeric tokens are left
- * intact — yields a stable key so such copies compare equal while genuinely
- * different code never collides. Property accesses keep their discriminating
- * member name (`index_cjs_js$2.getType` → `index_cjs_js.getType`), so two
- * different deps never alias.
+ * Two copies of the same source that differ only in rollup's per-entry `$N`
+ * collision suffixes compare equal, while genuinely different code never
+ * collides: `$N` is stripped from identifier nodes only, so string literals,
+ * comments, numeric tokens, and discriminating member names stay intact.
  *
  * @param statement - The top-level statement to fingerprint.
  * @param sourceFile - The source file the statement belongs to.

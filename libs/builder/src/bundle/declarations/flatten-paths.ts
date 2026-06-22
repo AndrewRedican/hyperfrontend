@@ -46,10 +46,8 @@ const cleanupNestedDirs = (outputPath: string): void => {
  *
  * The copy is recursive and unconditional, so internal non-entry subdirectories
  * that any entry's `index.d.ts` re-exports from (e.g. `shared/`, `lib/`) are
- * preserved rather than dropped — including for platform / feature libraries
- * with no root (`.`) entry, whose `./browser` and `./node` entries share a
- * common `lib/`. Per-source declarations left unreachable once the per-entry
- * pass inlines each `index.d.ts` are removed afterwards by
+ * preserved rather than dropped. Per-source declarations left unreachable once
+ * the per-entry pass inlines each `index.d.ts` are removed afterwards by
  * `pruneOrphanDeclarations`. Finally removes the leftover `libs/`, `plugins/`,
  * and `apps/` folders tsc created at the output root.
  *

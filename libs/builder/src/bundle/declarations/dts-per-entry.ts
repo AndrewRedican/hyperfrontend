@@ -63,10 +63,8 @@ const buildJobs = (entries: EntryPoint[], context: BuildContext): PrePassJob[] =
  *
  * Runs whenever the build bundles any dep — npm (`bundledDeps`) **or** workspace
  * (`workspaceBundledDeps`); a package whose deps are all `@hyperfrontend/*` still
- * needs the flatten, so the gate mirrors `runDtsPrePass`. Each rollup invocation
- * runs in a forked Node child to bound peak heap. Entries whose tsc output is
- * missing are skipped silently — the bundle phase may have skipped them
- * deliberately (e.g., empty bundles).
+ * needs the flatten. Entries whose tsc output is missing are skipped silently —
+ * the bundle phase may have skipped them deliberately (e.g., empty bundles).
  *
  * @param context - Resolved build context.
  * @param monitor - Optional memory monitor invoked between jobs.

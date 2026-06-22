@@ -4,9 +4,7 @@
  * A pure lexical check: `path` is contained when it equals `dir` or starts with
  * `dir/`. The trailing-slash guard keeps a sibling like `_dependencies-old` from
  * matching `_dependencies`. Post-emit passes use it to enforce the
- * `_dependencies/` "never touch" invariant — bundled-dep chunks and declarations
- * are managed by the dependency prunes and must never be mutated by the
- * package-tree passes.
+ * `_dependencies/` "never touch" invariant.
  *
  * @param path - Absolute path to test.
  * @param dir - Absolute directory path that may contain `path`.

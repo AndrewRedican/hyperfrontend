@@ -12,9 +12,6 @@ const log = logger.channel('builder:bundle:dependencies:prune')
 
 /**
  * Aggregate result of pruning dead dependency code from `_dependencies/`.
- *
- * `deadExportsRemoved` is always `0` in the Orphan Sweep; the Export Strip
- * populates it.
  */
 export interface PruneReport {
   /** Whole chunk files (and `.map`/`.d.ts.map` siblings) unlinked as orphans. */

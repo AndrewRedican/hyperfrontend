@@ -27,11 +27,8 @@ export interface GenerateSeaBlobResult {
  * Spawns `node --experimental-sea-config <seaConfigPath>` to produce the SEA
  * preparation blob declared by the config's `output` field.
  *
- * Errors from the spawn (`error`) and non-zero exit codes are surfaced as
- * thrown `Error`s with the captured stderr included; callers in the bin/native
- * orchestrator do not retry. The function is synchronous because Node's SEA
- * config invocation is short-lived and pipelines downstream (postject inject)
- * are also synchronous-leaning around it.
+ * Spawn errors and non-zero exit codes are surfaced as thrown `Error`s with the
+ * captured stderr included; this function does not retry.
  *
  * @param inputs - Resolved SEA config path + the blob path declared in that config.
  * @returns The blob path (for chaining) and the spawn status.

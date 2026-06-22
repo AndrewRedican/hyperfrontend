@@ -82,9 +82,6 @@ const buildWorkspaceJobs = (context: BuildContext, npmDeps: string[]): PrePassJo
  * by running `rollup-plugin-dts` over the dep's types entry. Cross-dep type imports are
  * marked external so the per-entry d.ts pass can route them through `_dependencies/`.
  *
- * Mirrors the JS pre-pass model — each rollup invocation runs in a forked Node child
- * process to keep peak heap bounded (~1.5 GB ceiling per worker).
- *
  * @param context - Resolved build context.
  * @param monitor - Optional memory monitor invoked between jobs.
  * @throws {Error} When the worker artifact cannot be located, or when any d.ts job fails.

@@ -255,19 +255,14 @@ const runUmdFormats = async (
  * Runs the entire bundle phase: ESM, CJS, IIFE, UMD outputs followed by declaration emission.
  *
  * Iterates the format-specific configurations in `config`, resolves the matching
- * entry points via `resolveEntries`, and feeds each one through a forked rollup
- * worker. Workerization is mandatory: V8 retains freed pages even after explicit
- * GC, so an in-process loop walks parent RSS up to the kernel SIGKILL ceiling on
- * non-trivial libraries (per-entry rollup invocations accumulate ~150-225MB heap
- * each). After every bundle has been written, calls `generateDeclarations`
- * exactly once to emit `.d.ts` files for the project.
+ * entry points for each format, and bundles every one. After all bundles are
+ * written, emits `.d.ts` declarations for the project exactly once.
  *
  * @param context - Resolved build context.
  * @param config - Top-level builder configuration. Only the format and `tsConfig`
  * fields are consulted by this phase.
- * @param monitor - Optional memory monitor; when provided, `check()` is invoked
- * before and after every rollup invocation and the declarations phase so peak
- * heap inside the bundle phase is observable rather than silent.
+ * @param monitor - Optional memory monitor; when provided, peak heap inside the
+ * bundle phase is sampled at each format and declaration step.
  * @returns Aggregated outputs grouped by format.
  *
  * @example Driving the bundle phase from a custom orchestrator

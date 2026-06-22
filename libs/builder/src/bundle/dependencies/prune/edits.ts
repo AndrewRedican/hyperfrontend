@@ -10,14 +10,10 @@ export interface Edit {
 
 /**
  * Applies text-range edits to a chunk source by splicing each span in
- * descending start order.
- *
- * Sorting descending before splicing is correctness-critical: editing from the
- * back forward keeps every remaining edit's offsets valid against the original
- * source, because an earlier (higher-offset) splice never shifts a later
- * (lower-offset) one. An off-by-one here re-introduces the chunk-corruption
- * class the prune passes exist to avoid. The input `edits` array is copied
- * before sorting, so the caller's order is left untouched.
+ * descending start order, so every edit's offsets stay valid against the
+ * original source regardless of the order they are passed in. All offsets must
+ * refer to the original `source`, and spans must not overlap. The input `edits`
+ * array is copied before sorting, so the caller's order is left untouched.
  *
  * @param source - Original chunk source text.
  * @param edits - Edits to apply; their relative order does not matter.

@@ -7,9 +7,7 @@ import { createSet } from '@hyperfrontend/immutable-api-utils/built-in-copy/set'
  * context — the packages whose entire import surface is hoisted into
  * `_dependencies/<packageName>/`.
  *
- * Drives the `otherDeps` prefix list every pre-pass / per-entry job passes to
- * the externalize plugin, so the JS pre-pass, the d.ts pre-pass, and the
- * per-entry d.ts pass all agree on the same workspace prefix set.
+ * Supplies the `otherDeps` prefix list a job passes to the externalize plugin.
  *
  * @param context - Build context supplying `workspaceBundledDeps`.
  * @returns De-duplicated `whole-surface` package names.
@@ -32,9 +30,7 @@ export const collectWorkspacePrefixDeps = (context: BuildContext): string[] => {
  * the exact `@scope/pkg/sub` imports that are hoisted individually rather than
  * across the whole package surface.
  *
- * Feeds the `otherWorkspaceSpecifiers` list each job hands the externalize
- * plugin, keeping the three job-building sites in agreement on the exact-match
- * specifier set.
+ * Supplies the `otherWorkspaceSpecifiers` list a job hands the externalize plugin.
  *
  * @param context - Build context supplying `workspaceBundledDeps`.
  * @returns De-duplicated `sub-path` specifiers.

@@ -74,9 +74,7 @@ export interface PrePassJob {
 
 /**
  * Sibling-entry descriptor threaded through to the worker for the per-entry
- * d.ts pass. Mirrors `SiblingEntry` from `bundle/declarations/sibling-resolver`,
- * declared here so the orchestrator can build job specs without importing the
- * resolver across the worker boundary.
+ * d.ts pass.
  */
 export interface SiblingEntryDescriptor {
   /** Sibling entry's `srcPath` (subpath under `<outputPath>`). `''` for the package root. */
@@ -229,8 +227,7 @@ export const resolveDefaultWorkerPath = (workspaceRoot: string): WorkerInvocatio
 /**
  * Sequentially runs the supplied pre-pass jobs by forking a fresh Node child
  * per invocation. Strict sequential execution is mandatory — concurrent
- * children would simultaneously pressure RAM and OOM the container (Decision
- * #39, [overview G3]).
+ * children would simultaneously pressure RAM and OOM the container.
  *
  * Each child writes a JSON report to a parent-supplied path; this function
  * reads the report after the child exits and accumulates per-job statistics.

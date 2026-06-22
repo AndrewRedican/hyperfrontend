@@ -137,8 +137,8 @@ const processFormat = (context: BuildContext, owners: OwnerIndex, format: ChunkF
  * Runs as an additive post-emit pass over the already-bundled `esm` and `cjs`
  * outputs, each processed independently; `iife`/`umd`/`bin` and `.d.ts` outputs
  * are never read. Per-entry isolated bundling is untouched. Every hoist is
- * proven safe by {@link planHoists} before it happens — byte-identical copies,
- * resolvable references, and cycle-free module-initialization — so any module
+ * proven safe by {@link planHoists} before it happens — structurally identical
+ * copies, resolvable references, and cycle-free module-initialization — so any module
  * that cannot be proven safe is left inlined and the output is, worst case,
  * identical to the input.
  *

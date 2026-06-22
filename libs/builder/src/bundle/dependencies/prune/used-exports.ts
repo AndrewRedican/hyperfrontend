@@ -159,7 +159,7 @@ const collectCjsEdges = (sourceFile: ts.SourceFile, importerDir: string, edges: 
  * of exported names it pulls from that chunk, or `'all'` when the reference is
  * wholesale (namespace/default import, `export *`, or a `require` binding that
  * escapes member access). A side-effect-only `import './x'` records the target
- * with an empty set. The importer is parsed exactly once.
+ * with an empty set.
  *
  * @param source - Raw importer source text.
  * @param importerDir - Absolute directory of the importer file.

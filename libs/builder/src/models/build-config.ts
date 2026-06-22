@@ -187,13 +187,13 @@ export interface BinConfig {
 /**
  * Per-package hoist policy for a bundled workspace dependency.
  *
- * `'sub-path'` (the zero-config default) pre-passes every public tsconfig
- * specifier of the dep — root and each sub-path — into its own
+ * `'sub-path'` (the zero-config default) gives every public tsconfig specifier
+ * of the dep — root and each sub-path — its own
  * `_dependencies/<name>(/<sub>)?/index.<ext>` chunk, preserving sub-module
  * tree-shaking and reuse, and supporting subpath-only packages that expose no
- * root export. `'whole-surface'` is an explicit opt-in collapse: it pre-passes
- * only the root entry, routing every import of the dep onto a single root chunk,
- * and therefore requires the dep to expose a root export.
+ * root export. `'whole-surface'` is an explicit opt-in collapse: it routes every
+ * import of the dep onto a single root chunk, and therefore requires the dep to
+ * expose a root export.
  */
 export type WorkspaceDepHoistPolicy = 'sub-path' | 'whole-surface'
 

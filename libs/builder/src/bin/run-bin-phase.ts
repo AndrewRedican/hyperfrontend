@@ -14,12 +14,11 @@ const findCjsOutputPath = (jsOutputs: BinOutput[]): string | undefined => {
  * binary for any bin that opts in via `bin.sea`. Returns the flattened list of
  * every output produced.
  *
- * For each bin, JS outputs are built first via {@link buildJsBin}. When the bin
- * also declares a `sea` block, the resulting CJS artifact (already on disk) is
- * passed to {@link buildNativeBin} as the SEA `main` script. Native emission is
- * skipped silently with an info log when the current host doesn't match any
- * declared platform — CI orchestrates the matrix so each declared platform is
- * built on the matching runner.
+ * A bin that declares a `sea` block must also produce a CJS output (`format: 'cjs'`
+ * or include `'cjs'` in the list); the CJS artifact becomes the SEA `main` script,
+ * and a bin without one throws. Native emission is skipped silently with an info
+ * log when the current host doesn't match any declared platform — CI orchestrates
+ * the matrix so each declared platform is built on the matching runner.
  *
  * @param ctx - Resolved build context.
  * @param bins - Bin declarations to synthesize. Pass an empty array (or omit

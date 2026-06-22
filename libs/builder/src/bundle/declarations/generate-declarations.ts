@@ -74,12 +74,6 @@ const runTsc = (tscPath: string, args: string[], cwd: string): Promise<GenerateD
  * Generates `.d.ts` and `.d.ts.map` files for every entry point in the project
  * by spawning the workspace-local TypeScript compiler.
  *
- * Streams tsc's stdout to `log.debug` and stderr to `log.warn` as the child
- * runs so the parent event loop stays free for memory-monitor checkpoints and
- * progress is observable in real time. Logs the parent process's heap and RSS
- * before the spawn, emits a heartbeat every 5 s while tsc is alive, and reports
- * the exit code with elapsed duration on completion.
- *
  * After tsc finishes, calls `flattenDeclarationPaths` to relocate the nested
  * `dist/<lib>/libs/<lib>/src/...` structure that tsc emits with `baseUrl=workspaceRoot`
  * back into the flat per-library shape consumers expect.

@@ -17,14 +17,15 @@ export interface ResolveExternalsOptions {
   /** When `true`, workspace packages are inlined and stripped from the resolved external list. */
   bundleWorkspaceDeps?: boolean
   /**
-   * Pre-pass dep set. When non-empty, these are removed from the external list so the
-   * externalize plugin can route their imports to `_dependencies/<dep>/` instead.
+   * Third-party package names being bundled into `_dependencies/`. When non-empty,
+   * these are removed from the resolved external list so their imports are routed
+   * to the bundled copies instead of left external.
    */
   bundledDeps?: string[]
   /**
-   * Workspace bundled-dep package names. When non-empty, these are removed from the
-   * external list so the workspace-aware externalize plugin can route their imports
-   * to `_dependencies/<packageName>(/<sub>)?/` instead.
+   * Workspace package names being bundled into `_dependencies/`. When non-empty,
+   * these are removed from the resolved external list so their imports are routed
+   * to the bundled copies instead of left external.
    */
   workspaceBundledDepNames?: string[]
 }

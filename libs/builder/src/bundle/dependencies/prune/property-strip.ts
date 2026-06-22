@@ -39,7 +39,7 @@ export interface NamespaceInfo {
   properties: string[]
 }
 
-/** Phase-A analysis of one chunk: its namespace exports plus the demand its own body places on them. */
+/** Analysis of one chunk: its namespace exports plus the demand its own body places on them. */
 export interface ChunkNamespaceAnalysis {
   /** Frozen namespace exports found in the chunk. */
   namespaces: NamespaceInfo[]
@@ -165,7 +165,7 @@ export interface PropertyStripResult {
  * namespace absent from the map, or whose kept set is empty or covers every
  * slot, is left untouched. Dropping a slot removes the only reference its factory
  * binding had, so the subsequent dead-export pass collapses the now-dead
- * factories — this pass only edits the literal. The source is parsed once.
+ * factories — this pass only edits the literal.
  *
  * @param source - Raw chunk source text.
  * @param format - Module format selecting the export shape.

@@ -23,13 +23,11 @@ const safeStatSize = (filePath: string): number => {
  * Runs the postject inject for `job` in the current process and writes the
  * resulting report to `job.reportPath`.
  *
- * Public so callers (and tests) can drive the worker logic without spawning a
- * new Node process. The implementation is intentionally minimal: clone host →
- * read blob → call `postject.inject` → write report. The whole point of running
- * this in a forked child is that `postject.inject` loads the entire ~121 MB
- * host binary into a Node `Buffer` and rewrites the buffer with the embedded
- * blob — a single ~138 MB allocation that needs to be reclaimed on process exit
- * rather than retained in the parent's RSS.
+ * Call this to drive the worker logic without spawning a new Node process. The
+ * inject normally runs in a forked child because `postject.inject` loads the
+ * entire ~121 MB host binary into a Node `Buffer` and rewrites it with the
+ * embedded blob — a single ~138 MB allocation that needs to be reclaimed on
+ * process exit rather than retained in the parent's RSS.
  *
  * @param job - Descriptor describing the inject invocation.
  * @returns The on-disk report data the worker would have persisted.

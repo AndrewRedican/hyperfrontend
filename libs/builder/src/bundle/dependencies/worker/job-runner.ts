@@ -67,8 +67,7 @@ export interface PrePassWorkerJob {
   selfSrcPath?: string
   /**
    * NPM bundled-dep names consumed by the canonical externalize plugin to rewrite
-   * cross-dep imports to relative paths under {@link depsRoot}. Mirrors the
-   * `RollupBuildDescriptor.bundledDepsPlugin.deps` field on the per-entry side.
+   * cross-dep imports to relative paths under {@link depsRoot}.
    */
   npmDeps?: string[]
   /**
@@ -128,9 +127,6 @@ const isTypesAugmentationMiss = (warning: RollupLog): boolean =>
  * warning classes that bundling third-party / workspace deps routinely emits
  * (see {@link SUPPRESSED_WARNING_CODES} and {@link isTypesAugmentationMiss}) and
  * forwards everything else to rollup's default handler.
- *
- * Exported so the suppression branches can be unit-tested without constructing
- * a full rollup invocation.
  *
  * @param warning - The rollup log entry.
  * @param defaultHandler - Rollup's default warning handler.

@@ -6,9 +6,7 @@ import { readDirectory } from '@hyperfrontend/project-scope/core'
  * left intact).
  *
  * Children are visited before their parent so a directory whose only contents
- * are now-empty subdirectories is itself removed in the same pass. The sweep
- * only ever re-reads directories it just enumerated, so `readDirectory` (which
- * throws on a missing path) is always safe here.
+ * are now-empty subdirectories is itself removed in the same pass.
  *
  * @param root - Absolute path to the directory whose empty descendants should be
  * pruned. Assumed to exist; only its descendants are candidates for removal.

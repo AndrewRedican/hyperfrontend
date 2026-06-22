@@ -154,9 +154,8 @@ const resolveMonitor = (config: BuildConfig): MemoryMonitor | undefined => {
  * output tree. Returns a {@link BuildResult} summarizing what was emitted and
  * how long it took.
  *
- * The memory monitor (when enabled) snapshots before each phase, between
- * phases, and at completion. A failure in any phase still flushes the monitor
- * summary before re-throwing the original error.
+ * A failure in any phase still flushes the memory-monitor summary (when
+ * enabled) before re-throwing the original error.
  *
  * @param config - Top-level builder configuration.
  * @returns A `BuildResult` with per-format counts, raw format outputs, bin

@@ -68,18 +68,14 @@ const cleanupSeaIntermediates = (seaConfigPath: string, blobPath: string): void 
  * 3. Generate the SEA config JSON and write it to disk.
  * 4. Spawn `node --experimental-sea-config <path>` to emit the SEA preparation blob.
  * 5. Resolve the Node host binary for the current platform (defaults to `process.execPath`).
- * 6. Dispatch a forked inject worker that clones the host, calls postject's `inject` to
- *    embed the blob, and writes the output binary. The ~138 MB Buffer postject allocates
- *    lives and dies in the child — the parent's RSS stays flat across this step.
+ * 6. Dispatch a forked inject worker that clones the host, embeds the blob via
+ *    postject, and writes the output binary.
  * 7. On macOS, strip the cloned signature so the injection doesn't invalidate it.
  * 8. Delete the SEA build intermediates (config JSON + prep blob) so only the
  *    runtime binary remains in the publishable output.
  *
- * Each step emits a debug-level memory snapshot (parent heap, RSS, OS free) and a
- * duration log so the pipeline is observable end-to-end without noising default output.
- *
  * Native binaries are not auto-wired into `package.json#bin` — they are shipped
- * as separate release artifacts (see Q22 in the implementation plan).
+ * as separate release artifacts.
  *
  * @param inputs - Bin declaration, resolved context, and the path to the already-built CJS bundle.
  * @returns A single {@link BinOutput} of kind `native` for the current platform, or `[]` if skipped.

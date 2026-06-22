@@ -240,10 +240,8 @@ const safeStatSize = (filePath: string): number => {
  * Runs a single rollup invocation as described by `job` and writes the
  * resulting report to `job.reportPath`.
  *
- * Public so callers (and tests) can drive the worker logic without spawning a
- * new Node process. The implementation is fully self-contained: it depends only
- * on `rollup`, the `@rollup/plugin-*` packages, and Node built-ins so the
- * worker can bootstrap before any workspace package is built.
+ * Use this to drive the worker logic in-process; use {@link dispatchRollupWorker}
+ * to run the same job in a forked Node process.
  *
  * @param job - Descriptor describing the rollup invocation.
  * @returns The on-disk report data the worker would have persisted.

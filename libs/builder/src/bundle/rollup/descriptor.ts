@@ -16,9 +16,8 @@ const computeBundleOutputDir = (bundleSubDir: string | undefined, context: Build
 /**
  * Builds the worker descriptor for the ESM output of a single entry point.
  *
- * Produces a fully serializable shape: every function-valued field on the
- * format config (e.g., `isWorkspacePackage`) is pre-evaluated by the parent
- * before assembling the descriptor.
+ * The returned descriptor is fully serializable (no functions), ready to be
+ * passed to {@link dispatchRollupWorker}.
  *
  * @param entry - Entry point to compile.
  * @param config - ESM-format configuration.
@@ -126,8 +125,8 @@ export const toCjsBuildDescriptor = (
 /**
  * Builds the worker descriptor for an IIFE bundle of a single entry point.
  *
- * Validates the externals/globals pairing eagerly so the parent fails before
- * any worker is forked.
+ * Validates the externals/globals pairing eagerly, throwing before the
+ * descriptor is returned.
  *
  * @param entry - Entry point to bundle.
  * @param config - IIFE-format configuration.
@@ -183,13 +182,11 @@ const resolveBinFooter = (bin: BinConfig, format: BinScriptFormat): string =>
 /**
  * Builds the worker descriptor for a single bin output (one (bin, format) pair).
  *
- * Bins are self-contained executable scripts: workspace deps are always inlined,
- * the rollup `external` set is empty (the externalize-bundled-deps plugin
- * intercepts pre-built deps when `bundleAllDeps` is on), and the worker writes
- * directly to `<outputPath>/bin/<name>.<ext>` with the shebang banner, the
+ * Bins are self-contained executable scripts: workspace deps are inlined and the
+ * worker writes to `<outputPath>/bin/<name>.<ext>` with the shebang banner, the
  * resolved bootstrap footer, and `chmod 0o755` applied.
  *
- * Output naming follows the existing convention:
+ * Output naming convention:
  * - ESM: `<name>.mjs`
  * - CJS only: `<name>.js`
  * - CJS alongside ESM: `<name>.cjs.js`
@@ -247,8 +244,8 @@ export const toBinBuildDescriptor = (
 /**
  * Builds the worker descriptor for a UMD bundle of a single entry point.
  *
- * Validates the externals/globals pairing eagerly so the parent fails before
- * any worker is forked.
+ * Validates the externals/globals pairing eagerly, throwing before the
+ * descriptor is returned.
  *
  * @param entry - Entry point to bundle.
  * @param config - UMD-format configuration.

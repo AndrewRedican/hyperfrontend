@@ -171,8 +171,7 @@ export const stripComments = (source: string): string | null => {
  * really do ship inside the chunks, so the strip is a comment-aware text splice
  * (no minify, no reformat), not a blanket removal. A `ts.Scanner` enumerates
  * genuine comment trivia, keeping comment-looking text inside strings, templates,
- * and regex literals untouched. One chunk is resident at a time — no second
- * `ts.SourceFile`, no `ts.Program`, no rollup re-run.
+ * and regex literals untouched.
  *
  * @param depsRoot - Absolute path to the `_dependencies/` directory.
  * @returns Bytes reclaimed across all chunks.

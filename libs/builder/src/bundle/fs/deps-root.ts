@@ -3,12 +3,8 @@ import { join } from '@hyperfrontend/project-scope/core'
 
 /**
  * Resolves the absolute `_dependencies/` root for a build — the bundled-dep
- * "never touch" zone every prune pass guards.
- *
- * Centralising the `join(outputPath, '_dependencies')` computation keeps the
- * write paths (where pre-pass jobs emit hoisted chunks and declarations) and the
- * {@link isUnderDir} guard derived from the exact same string, so a stray edit to
- * one can't drift the two apart and let a package-tree pass mutate bundled deps.
+ * "never touch" zone every prune pass guards. Pair it with {@link isUnderDir} to
+ * derive both the bundled-dep write paths and the guard from one source string.
  *
  * @param context - Build context supplying the absolute output root.
  * @returns Absolute path to `<outputPath>/_dependencies`.

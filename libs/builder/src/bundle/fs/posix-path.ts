@@ -14,13 +14,12 @@ import { join as nodeJoin } from 'node:path'
 export const normalizeToForwardSlashes = (value: string): string => value.replace(/\\/g, '/')
 
 /**
- * POSIX-style path joiner. Lives off `@hyperfrontend/project-scope` on purpose:
- * the pre-pass / per-entry rollup workers bootstrap from source via
- * `@swc-node/register` on the first build, before workspace packages are
- * guaranteed loadable, so this module must depend on nothing but `node:path`.
+ * POSIX-style path joiner: joins segments via `node:path` then normalizes all
+ * separators to `/`, so output is stable across Windows and POSIX hosts.
  *
- * Shared by the worker-reachable d.ts sibling resolver and the bundled-dep
- * externalize plugin.
+ * Depends on nothing but `node:path` by design: worker-reachable callers bootstrap
+ * from source before workspace packages are guaranteed loadable, so this module must
+ * not import `@hyperfrontend/*`.
  *
  * @param segments - Path segments to join.
  * @returns Joined path with `/` separators.

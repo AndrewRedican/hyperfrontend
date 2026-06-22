@@ -13,8 +13,7 @@ const INDEX_GLOB = '**/index.*'
 
 /**
  * Redundant with {@link INDEX_GLOB} (every `index.d.ts` already matches
- * `index.*`) but emitted explicitly to state the declaration intent and match
- * house convention from the superseded predictive allowlist.
+ * `index.*`) but emitted explicitly to state the declaration intent.
  */
 const INDEX_DTS_GLOB = '**/index.d.ts'
 
@@ -37,14 +36,12 @@ const ROOT_PACKAGE_JSON = 'package.json'
  * Reflects a materialized publishable output tree into a `package.json#files`
  * allowlist.
  *
- * Unlike the predictive approach it replaces, this derives `files` from what the
- * build actually emitted: the two index globs ({@link INDEX_GLOB} +
- * {@link INDEX_DTS_GLOB}) cover every entrypoint `index.*`/`index.d.ts` at any
- * depth, and every surviving non-index file is named explicitly by its
- * package-root-relative POSIX path (no `<dir>/` buckets). Run after every emit
- * phase and the orphan-prune so the walk sees exactly the tree that ships — the
- * invariant being that the publishable output dir contains exactly what ships,
- * so the allowlist is correct by construction.
+ * Derives `files` from what the build actually emitted: the two index globs
+ * cover every entrypoint `index.*`/`index.d.ts` at any depth, and every
+ * surviving non-index file is named explicitly by its package-root-relative
+ * POSIX path (no `<dir>/` buckets). Run after every emit phase and the
+ * orphan-prune so the walk sees exactly the tree that ships; the allowlist is
+ * then correct by construction.
  *
  * The root `package.json` is skipped (npm always includes it) and `index.*`
  * files are skipped (covered by the glob); metadata files (README, LICENSE,

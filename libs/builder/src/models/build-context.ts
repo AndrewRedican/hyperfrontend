@@ -2,12 +2,11 @@ import type { AssetSpec, IsWorkspacePackagePredicate, WorkspaceDepHoistPolicy } 
 import type { EntryPointDiscovery } from './entry-point'
 
 /**
- * Per-package workspace pre-pass plan element.
+ * Per-package workspace dependency to bundle into a hoisted chunk under
+ * `_dependencies/<packageName>(/<sub>)?`.
  *
- * Resolved by the build phase from `package.json#dependencies` ∩ workspace
- * predicate. The presence of this entry in `BuildContext.workspaceBundledDeps`
- * means the dep gets a hoisted chunk under `_dependencies/<packageName>(/<sub>)?`
- * and consumers route imports through the externalize plugin to that chunk.
+ * The default set is `package.json#dependencies` intersected with the workspace
+ * predicate.
  */
 export interface WorkspaceBundledDep {
   /** Workspace package name (e.g. `@hyperfrontend/logging`). */
@@ -19,10 +18,8 @@ export interface WorkspaceBundledDep {
   /** Absolute path to the source `.ts` file resolved via tsconfig path mappings. */
   inputPath: string
   /**
-   * Absolute path to the dep's own tsconfig (e.g. `tsconfig.lib.json`). The
-   * pre-pass worker uses it to drive `@rollup/plugin-typescript` for this dep,
-   * keeping each dep's compiler options self-contained instead of inheriting
-   * the consumer project's settings.
+   * Absolute path to the dep's own tsconfig (e.g. `tsconfig.lib.json`), so the
+   * dep is compiled with its own options rather than the consumer project's.
    */
   tsConfigPath: string
   /** Hoist policy for this dep's chunk(s); see {@link WorkspaceDepHoistPolicy}. */
@@ -56,21 +53,15 @@ export interface BuildContext {
   /** Result of the entry-point discovery scan. */
   entryPointDiscovery: EntryPointDiscovery
   /**
-   * Third-party deps slated for the per-format pre-pass into `_dependencies/<dep>/`.
-   *
-   * Empty unless at least one format declares `bundleAllDeps`. Threaded through
-   * to the bundle, package, and bin phases so each can apply the externalize
-   * plugin and strip the deps from the output `package.json`.
+   * Third-party deps bundled into `_dependencies/<dep>/` and stripped from the
+   * output `package.json`. Empty unless at least one format declares
+   * `bundleAllDeps`.
    */
   bundledDeps: string[]
   /**
-   * Workspace `@hyperfrontend/*` deps slated for the per-format pre-pass into
-   * `_dependencies/<packageName>(/<sub>)?/`.
-   *
-   * Empty unless at least one format declares `bundleAllDeps` and the project
-   * declares workspace deps. Threaded through to the bundle phase so workspace
-   * pre-pass jobs can be scheduled and the externalize plugin can route
-   * workspace imports through the hoisted chunks.
+   * Workspace deps bundled into `_dependencies/<packageName>(/<sub>)?/`. Empty
+   * unless at least one format declares `bundleAllDeps` and the project declares
+   * workspace deps.
    */
   workspaceBundledDeps: WorkspaceBundledDep[]
   /** Wall-clock timestamp captured at context creation, used for `BuildResult.durationMs`. */

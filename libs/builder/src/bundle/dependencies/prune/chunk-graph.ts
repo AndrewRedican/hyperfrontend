@@ -134,8 +134,8 @@ export const collectBindingCanonical = (sourceFile: ts.SourceFile): BindingResol
  * (`Object.freeze`/`seal`/`preventExtensions`, however aliased) over a fresh
  * object/array literal. The argument must be a same-expression literal —
  * freezing a shared binding mutates it observably, so an identifier argument is
- * rejected. Argument purity itself is enforced by the descent in
- * {@link containsEvalSideEffect}.
+ * rejected. This checks only the callee and argument shape, not the purity of
+ * the argument's own subexpressions.
  *
  * @param call - The call expression to classify.
  * @param resolution - The chunk's binding resolution, used to canonicalize the callee.
@@ -159,12 +159,10 @@ export const isPureFreezeCall = (call: ts.CallExpression, resolution: BindingRes
 /**
  * Reports whether a call is `<global-rooted chain>.bind(…)`.
  * `Function.prototype.bind` only builds and returns a new bound function — no
- * observable side effect; reading the receiver chain (`Promise.resolve`) is a
- * property read on a captured global, not a call. The receiver must canonicalize
- * to a global ({@link canonicalCallee} non-null) so an arbitrary user object's
- * `.bind` — potentially a redefined, side-effecting method — is never assumed
- * pure. Argument purity is enforced by the descent in
- * {@link containsEvalSideEffect}, exactly as for {@link isPureFreezeCall}.
+ * observable side effect. The receiver must canonicalize to a global so an
+ * arbitrary user object's `.bind` — potentially a redefined, side-effecting
+ * method — is never assumed pure. As with {@link isPureFreezeCall}, this checks
+ * only the call shape, not the purity of the argument's own subexpressions.
  *
  * @param call - The call expression to classify.
  * @param resolution - The chunk's binding resolution, used to canonicalize the receiver.
@@ -344,7 +342,7 @@ const collectCjsExports = (statement: ts.Statement, entries: ExportEntry[], surf
  *
  * @param sourceFile - The parsed chunk.
  * @param format - Module format selecting ESM vs CJS export/import shapes.
- * @returns The chunk model consumed by {@link computeKeepClosure} and the stripper.
+ * @returns The chunk model consumed by {@link computeKeepClosure}.
  *
  * @example Modeling an ESM chunk
  * ```typescript

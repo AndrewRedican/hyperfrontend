@@ -6,9 +6,7 @@ import { join } from '@hyperfrontend/project-scope/core'
  *
  * Always parses as plain JavaScript with parent pointers set, so callers can
  * inspect each node's lexical context (member-access position, declaration
- * names) during the dead-export analysis. One source file is materialized per
- * call and released by the caller before the next, keeping the memory profile
- * flat across a whole `_dependencies/` tree.
+ * names) during the dead-export analysis.
  *
  * @param source - Raw chunk source text.
  * @returns The parsed source file with parent nodes populated.
@@ -133,13 +131,9 @@ export type RequireBindingShape =
  * Classifies how a `require('…')` call's result is consumed, by inspecting the
  * call's parent node.
  *
- * Both CJS prune passes — used-export edge collection and namespace-usage
- * collection — share this single parent-shape dispatch; each then applies its
- * own demand actions to the returned shape. The branch order is significant: a
- * bare `require('F');` statement must be recognized as side-effect-only *before*
- * the non-binding-position escape, or it would poison the chunk's demand to
- * wholesale. A `require('F').#priv` (not valid JS) does not match `prop` and
- * falls through to `escape`.
+ * A bare `require('F');` statement is classified as `side-effect`, not `escape`.
+ * A `require('F').#priv` (not valid JS) does not match `prop` and falls through
+ * to `escape`.
  *
  * @param call - The `require('…')` call expression to classify.
  * @returns The discriminated shape of the call's binding position.

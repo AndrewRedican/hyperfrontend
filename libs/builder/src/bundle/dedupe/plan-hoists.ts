@@ -141,8 +141,9 @@ const keepAcyclic = (candidates: Map<ModuleKey, PlannedModule>): Map<ModuleKey, 
  * Plans which first-party modules can be hoisted into shared chunks.
  *
  * A module qualifies only when it is inlined into at least two entries, is not
- * entangled with a bare statement, presents byte-identical declarations in a
- * consistent order across every copy, references nothing unresolvable, and —
+ * entangled with a bare statement, presents structurally identical declarations
+ * (rename-insensitive) in a consistent order across every copy, references
+ * nothing unresolvable, and —
  * after closure and acyclic peeling — depends only on other hoisted modules
  * through a cycle-free graph. Anything failing these is left inlined, so the
  * worst case equals the unmodified output.

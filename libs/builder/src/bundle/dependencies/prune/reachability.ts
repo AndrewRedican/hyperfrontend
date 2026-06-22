@@ -10,12 +10,9 @@ const log = logger.channel('builder:bundle:dependencies:prune')
  * Computes the set of files reachable from a set of root files by following
  * literal relative specifiers, restricted to targets under `depsRoot`.
  *
- * Breadth-first traversal: each visited file's text is read, scanned once for
- * specifiers, then released before the next file — so only one chunk's source
- * is resident at a time and the memory profile stays flat. Targets that resolve
- * outside `depsRoot` (the package's own non-dependency code) are ignored; the
- * roots themselves are always included so callers can use the returned set as a
- * single live-membership oracle.
+ * Targets that resolve outside `depsRoot` (the package's own non-dependency
+ * code) are ignored; the roots themselves are always included so callers can use
+ * the returned set as a single live-membership oracle.
  *
  * If a reached file **under `depsRoot`** contains a dynamic (non-literal)
  * `import(`/`require(`, the dependency chunk graph cannot be fully resolved, so

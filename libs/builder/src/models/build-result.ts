@@ -36,7 +36,7 @@ export interface BuildResult {
   success: true
   /** Per-format counts of emitted artifacts. */
   formatCounts: FormatCounts
-  /** Aggregated per-format outputs as collected by the bundle phase. */
+  /** Aggregated per-format outputs. */
   formatOutputs: FormatOutputs
   /** Bins emitted (JS scripts and / or native binaries). */
   binOutputs: BinOutput[]
