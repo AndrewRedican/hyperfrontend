@@ -126,6 +126,7 @@ const buildEntryOutput = (job: RollupBuildDescriptor, format: 'esm' | 'cjs'): Ou
       footer: job.bin.footer,
       exports: job.bin.exports,
       inlineDynamicImports: job.bin.inlineDynamicImports,
+      generatedCode: { constBindings: true },
       ...(format === 'cjs' && { interop: <const>'compat' }),
     }
   }
@@ -134,6 +135,7 @@ const buildEntryOutput = (job: RollupBuildDescriptor, format: 'esm' | 'cjs'): Ou
     file: join(job.outputDir, filename),
     format,
     sourcemap: job.sourcemap,
+    generatedCode: { constBindings: true },
     ...(format === 'cjs' && { interop: <const>'compat' }),
   }
 }

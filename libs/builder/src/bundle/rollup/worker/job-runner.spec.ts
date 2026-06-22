@@ -209,6 +209,34 @@ describe('runRollupWorkerJob', () => {
     expect(require(join(outputDir, 'index.cjs.js'))).toBe(42)
   })
 
+  it('emits const (not var) require bindings for externalized deps in CJS output', async () => {
+    const depsRoot = join(root, '_dependencies')
+    const depDir = join(depsRoot, 'fake-dep')
+    mkdirSync(depDir, { recursive: true })
+    writeFileSync(
+      join(depDir, 'index.cjs.js'),
+      ["'use strict';", 'function fakeDep() { return 5 }', 'exports.fakeDep = fakeDep;'].join('\n')
+    )
+    const inputFile = writeSrc('input.ts', "import { fakeDep } from 'fake-dep'\nexport const value = fakeDep()\n")
+    const tsConfigPath = writeTsconfig()
+    const outputDir = join(root, 'out')
+    const reportPath = join(root, 'report.json')
+    await runRollupWorkerJob(
+      baseDescriptor({
+        format: 'cjs',
+        inputFile,
+        outputDir,
+        sourcemap: false,
+        tsConfigPath,
+        reportPath,
+        bundledDepsPlugin: { deps: ['fake-dep'], depsRoot },
+      })
+    )
+    const contents = readFileSync(join(outputDir, 'index.cjs.js'), 'utf8')
+    expect(contents).toMatch(/const \w+ = require\(/)
+    expect(contents).not.toMatch(/^var \w+ = require\(/m)
+  })
+
   it('writes an unminified-only IIFE bundle when minify is disabled', async () => {
     const inputFile = writeSrc('input.ts', 'export const value = 1\n')
     const tsConfigPath = writeTsconfig()
