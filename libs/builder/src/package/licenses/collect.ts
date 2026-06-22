@@ -65,8 +65,6 @@ const collectDependencyLicense = (depName: string, workspaceRoot: string): Third
  * repository field. Missing dependencies are logged at warn level and dropped
  * from the result.
  *
- * @param projectRoot - Absolute path to the project being built (currently
- * unused; reserved for future per-project lookup overrides).
  * @param workspaceRoot - Absolute path to the workspace root containing
  * `node_modules`.
  * @param externals - List of external (non-workspace) dependency names to inspect.
@@ -74,15 +72,10 @@ const collectDependencyLicense = (depName: string, workspaceRoot: string): Third
  *
  * @example Collecting licenses for a built library's bundle phase externals
  * ```typescript
- * const entries = collectThirdPartyLicenses(
- *   '/abs/libs/foo',
- *   '/abs/repo',
- *   ['rollup', 'typescript']
- * )
+ * const entries = collectThirdPartyLicenses('/abs/repo', ['rollup', 'typescript'])
  * ```
  */
-export const collectThirdPartyLicenses = (projectRoot: string, workspaceRoot: string, externals: string[]): ThirdPartyLicenseEntry[] => {
-  void projectRoot
+export const collectThirdPartyLicenses = (workspaceRoot: string, externals: string[]): ThirdPartyLicenseEntry[] => {
   if (externals.length === 0) return []
   const entries: ThirdPartyLicenseEntry[] = []
   for (const dep of externals) {

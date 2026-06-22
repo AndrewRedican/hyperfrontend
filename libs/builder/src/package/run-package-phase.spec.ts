@@ -98,7 +98,7 @@ describe('runPackagePhase', () => {
     ;(<jest.Mock>synthesizePackageJson).mockReturnValue(<PackageJson>{ name: 'foo', dependencies: { rollup: '*', typescript: '*' } })
     ;(<jest.Mock>collectThirdPartyLicenses).mockReturnValue([{ name: 'rollup', licenseType: 'MIT', licenseUrl: null }])
     await runPackagePhase(makeContext(), { ...baseConfig, thirdPartyLicenses: true }, formats)
-    expect(collectThirdPartyLicenses).toHaveBeenCalledWith('/abs/libs/foo', '/abs/repo', ['rollup', 'typescript'])
+    expect(collectThirdPartyLicenses).toHaveBeenCalledWith('/abs/repo', ['rollup', 'typescript'])
   })
 
   it('writes THIRD_PARTY_LICENSES.md only when there are entries to render', async () => {
@@ -116,7 +116,7 @@ describe('runPackagePhase', () => {
   it('passes an empty externals list when the dist package has no dependencies', async () => {
     ;(<jest.Mock>synthesizePackageJson).mockReturnValue(<PackageJson>{ name: 'foo' })
     await runPackagePhase(makeContext(), { ...baseConfig, thirdPartyLicenses: true }, formats)
-    expect(collectThirdPartyLicenses).toHaveBeenCalledWith('/abs/libs/foo', '/abs/repo', [])
+    expect(collectThirdPartyLicenses).toHaveBeenCalledWith('/abs/repo', [])
   })
 
   it('forwards config.bin to synthesize', async () => {
@@ -135,7 +135,7 @@ describe('runPackagePhase', () => {
     ;(<jest.Mock>synthesizePackageJson).mockReturnValue(<PackageJson>{ name: 'foo' })
     ;(<jest.Mock>collectThirdPartyLicenses).mockReturnValue([{ name: 'rollup', licenseType: 'MIT', licenseUrl: null }])
     await runPackagePhase(makeContext({ bundledDeps: ['rollup', 'postject'] }), baseConfig, formats)
-    expect(collectThirdPartyLicenses).toHaveBeenCalledWith('/abs/libs/foo', '/abs/repo', ['rollup', 'postject'])
+    expect(collectThirdPartyLicenses).toHaveBeenCalledWith('/abs/repo', ['rollup', 'postject'])
     expect(writeThirdPartyLicensesFile).toHaveBeenCalled()
   })
 
@@ -148,7 +148,7 @@ describe('runPackagePhase', () => {
     ;(<jest.Mock>synthesizePackageJson).mockReturnValue(<PackageJson>{ name: 'foo', dependencies: { tslib: '*' } })
     ;(<jest.Mock>collectThirdPartyLicenses).mockReturnValue([{ name: 'rollup', licenseType: 'MIT', licenseUrl: null }])
     await runPackagePhase(makeContext({ bundledDeps: ['rollup', 'postject'] }), baseConfig, formats)
-    const externals = (<jest.Mock>collectThirdPartyLicenses).mock.calls[0][2]
+    const externals = (<jest.Mock>collectThirdPartyLicenses).mock.calls[0][1]
     expect(externals).toEqual(['rollup', 'postject', 'tslib'])
   })
 })

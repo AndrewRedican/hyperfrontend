@@ -64,7 +64,7 @@ export const runPackagePhase = async (ctx: BuildContext, config: BuildConfig, fo
   if (resolveThirdPartyLicensesFlag(config, ctx)) {
     const distDeps = keys(distPkg.dependencies ?? {})
     const externals = collectLicenseDeps(ctx, distDeps)
-    const entries = collectThirdPartyLicenses(ctx.projectRoot, ctx.workspaceRoot, externals)
+    const entries = collectThirdPartyLicenses(ctx.workspaceRoot, externals)
     if (entries.length > 0) {
       writeThirdPartyLicensesFile(ctx.outputPath, generateThirdPartyLicensesContent(entries))
     }
