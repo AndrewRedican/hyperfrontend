@@ -59,7 +59,7 @@
     "rollup": "4.59.0",
     "rollup-plugin-dts": "6.4.1",
     "safe-regex2": "5.0.0",
-    "ts-jest": "29.4.6",
+    "ts-jest": "29.4.11",
     "ts-node": "10.9.2",
     "typescript": "5.9.3",
     "typescript-eslint": "8.53.1",
