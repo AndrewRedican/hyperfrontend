@@ -106,6 +106,14 @@ describe('collectImportEdges (cjs)', () => {
     expect(edgesObj("var x = require('./x.cjs.js').foo", 'cjs')).toEqual({ [target('./x.cjs.js')]: ['foo'] })
   })
 
+  it('bails to all for a string-literal element access on the require call', () => {
+    expect(edgesObj("var x = require('./x.cjs.js')['foo']", 'cjs')).toEqual({ [target('./x.cjs.js')]: 'all' })
+  })
+
+  it('bails to all for a computed element access on the require call', () => {
+    expect(edgesObj("var x = require('./x.cjs.js')[k]", 'cjs')).toEqual({ [target('./x.cjs.js')]: 'all' })
+  })
+
   it('bails to all when require is used as a call argument', () => {
     expect(edgesObj("register(require('./x.cjs.js'))", 'cjs')).toEqual({ [target('./x.cjs.js')]: 'all' })
   })

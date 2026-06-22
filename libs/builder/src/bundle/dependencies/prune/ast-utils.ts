@@ -61,3 +61,106 @@ export const getRequireSpecifier = (node: ts.Node): string | null => {
   const arg = <ts.Expression>node.arguments[0]
   return ts.isStringLiteralLike(arg) ? arg.text : null
 }
+
+/** `require('F').Export` — a single export selected by static property access. */
+export interface RequirePropShape {
+  /** Discriminant. */
+  kind: 'prop'
+  /** The member node, for classifying how the selected export is then used. */
+  member: ts.PropertyAccessExpression
+  /** The selected export name. */
+  name: string
+}
+
+/** `require('F')['Export']` — a single export selected by string-literal element access. */
+export interface RequireElemStaticShape {
+  /** Discriminant. */
+  kind: 'elem-static'
+  /** The member node, for classifying how the selected export is then used. */
+  member: ts.ElementAccessExpression
+  /** The selected export name. */
+  name: string
+}
+
+/** `require('F')[k]` — a computed element access that could select any export. */
+export interface RequireElemDynamicShape {
+  /** Discriminant. */
+  kind: 'elem-dynamic'
+}
+
+/** A bare `require('F');` expression statement that binds nothing — side-effect only. */
+export interface RequireSideEffectShape {
+  /** Discriminant. */
+  kind: 'side-effect'
+}
+
+/** `var dep = require('F')` — the whole module bound to a local identifier. */
+export interface RequireNsBindingShape {
+  /** Discriminant. */
+  kind: 'ns-binding'
+  /** The bound local identifier. */
+  name: ts.Identifier
+}
+
+/** `var { … } = require('F')` — the module destructured into named locals. */
+export interface RequireDestructureShape {
+  /** Discriminant. */
+  kind: 'destructure'
+  /** The binding pattern destructured from the require result. */
+  pattern: ts.ObjectBindingPattern
+}
+
+/** Any other position (call argument, spread, reassignment, …) — consumes the module wholesale. */
+export interface RequireEscapeShape {
+  /** Discriminant. */
+  kind: 'escape'
+}
+
+/**
+ * The syntactic shape of how a `require('…')` call's result is consumed,
+ * derived from the call's parent node.
+ */
+export type RequireBindingShape =
+  | RequirePropShape
+  | RequireElemStaticShape
+  | RequireElemDynamicShape
+  | RequireSideEffectShape
+  | RequireNsBindingShape
+  | RequireDestructureShape
+  | RequireEscapeShape
+
+/**
+ * Classifies how a `require('…')` call's result is consumed, by inspecting the
+ * call's parent node.
+ *
+ * Both CJS prune passes — used-export edge collection and namespace-usage
+ * collection — share this single parent-shape dispatch; each then applies its
+ * own demand actions to the returned shape. The branch order is significant: a
+ * bare `require('F');` statement must be recognized as side-effect-only *before*
+ * the non-binding-position escape, or it would poison the chunk's demand to
+ * wholesale. A `require('F').#priv` (not valid JS) does not match `prop` and
+ * falls through to `escape`.
+ *
+ * @param call - The `require('…')` call expression to classify.
+ * @returns The discriminated shape of the call's binding position.
+ *
+ * @example A destructured require
+ * ```typescript
+ * // for the call in `var { a, b } = require('./x.cjs.js')`
+ * classifyRequireBinding(call) // => { kind: 'destructure', pattern: … }
+ * ```
+ */
+export const classifyRequireBinding = (call: ts.CallExpression): RequireBindingShape => {
+  const parent = call.parent
+  if (ts.isPropertyAccessExpression(parent) && parent.expression === call && ts.isIdentifier(parent.name))
+    return { kind: 'prop', member: parent, name: parent.name.text }
+  if (ts.isElementAccessExpression(parent) && parent.expression === call)
+    return ts.isStringLiteralLike(parent.argumentExpression)
+      ? { kind: 'elem-static', member: parent, name: parent.argumentExpression.text }
+      : { kind: 'elem-dynamic' }
+  if (ts.isExpressionStatement(parent)) return { kind: 'side-effect' }
+  if (!ts.isVariableDeclaration(parent) || parent.initializer !== call) return { kind: 'escape' }
+  if (ts.isIdentifier(parent.name)) return { kind: 'ns-binding', name: parent.name }
+  if (ts.isObjectBindingPattern(parent.name)) return { kind: 'destructure', pattern: parent.name }
+  return { kind: 'escape' }
+}

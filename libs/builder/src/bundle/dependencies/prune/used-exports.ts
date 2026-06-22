@@ -1,7 +1,7 @@
 import ts from 'typescript'
 import { createMap } from '@hyperfrontend/immutable-api-utils/built-in-copy/map'
 import { createSet } from '@hyperfrontend/immutable-api-utils/built-in-copy/set'
-import { getRequireSpecifier, parseChunk, resolveRelativeTarget } from './ast-utils'
+import { classifyRequireBinding, getRequireSpecifier, parseChunk, resolveRelativeTarget } from './ast-utils'
 
 /**
  * Per-chunk usage demand from a single importer set: either the concrete set of
@@ -72,40 +72,41 @@ const collectCjsBindingEdges = (
   namespaceBindings: Map<string, string>,
   declNames: Set<ts.Node>
 ): void => {
-  const parent = node.parent
-  if (ts.isPropertyAccessExpression(parent) && parent.expression === node && ts.isIdentifier(parent.name)) {
-    mergeName(edges, target, parent.name.text)
-    return
-  }
-  // why: a bare `require('./x')` statement pulls the chunk only for its side effects, naming no export; record it reached with empty demand — mirroring an ESM side-effect import — so the orphan re-sweep, not the export stripper, decides its fate. Without this it falls through to the wholesale escape below and poisons the chunk's union demand to 'all'.
-  if (ts.isExpressionStatement(parent)) {
-    markReached(edges, target)
-    return
-  }
-  if (!ts.isVariableDeclaration(parent) || parent.initializer !== node) {
-    // why: a `require` used as a call argument, spread, or any non-binding position escapes member tracking — keep the whole chunk.
-    mergeAll(edges, target)
-    return
-  }
-  if (ts.isIdentifier(parent.name)) {
-    namespaceBindings.set(parent.name.text, target)
-    declNames.add(parent.name)
-    return
-  }
-  if (ts.isObjectBindingPattern(parent.name)) {
-    for (const element of parent.name.elements) {
-      // why: a rest element (`...rest`) captures every remaining export, so the surface must be kept whole.
-      if (element.dotDotDotToken) {
-        mergeAll(edges, target)
-        continue
+  const shape = classifyRequireBinding(node)
+  switch (shape.kind) {
+    case 'prop':
+      mergeName(edges, target, shape.name)
+      return
+    // why: inline element access (`require('./x')['foo']`, static or computed) keeps the whole chunk — this pass never narrowed it, and preserving that is safe (the namespace-usage pass narrows the static case). Narrowing here would be a separate enhancement.
+    case 'elem-static':
+    case 'elem-dynamic':
+      mergeAll(edges, target)
+      return
+    // why: a bare `require('./x')` statement pulls the chunk only for its side effects, naming no export; record it reached with empty demand — mirroring an ESM side-effect import — so the orphan re-sweep, not the export stripper, decides its fate.
+    case 'side-effect':
+      markReached(edges, target)
+      return
+    case 'ns-binding':
+      namespaceBindings.set(shape.name.text, target)
+      declNames.add(shape.name)
+      return
+    case 'destructure':
+      for (const element of shape.pattern.elements) {
+        // why: a rest element (`...rest`) captures every remaining export, so the surface must be kept whole.
+        if (element.dotDotDotToken) {
+          mergeAll(edges, target)
+          continue
+        }
+        const key = element.propertyName ?? element.name
+        if (ts.isIdentifier(key) || ts.isStringLiteralLike(key)) mergeName(edges, target, key.text)
+        else mergeAll(edges, target)
       }
-      const key = element.propertyName ?? element.name
-      if (ts.isIdentifier(key) || ts.isStringLiteralLike(key)) mergeName(edges, target, key.text)
-      else mergeAll(edges, target)
-    }
-    return
+      return
+    // why: a `require` used as a call argument, spread, or any non-binding position escapes member tracking — keep the whole chunk.
+    case 'escape':
+      mergeAll(edges, target)
+      return
   }
-  mergeAll(edges, target)
 }
 
 const scanNamespaceUse = (

@@ -2,7 +2,7 @@ import type { ChunkFormat } from './used-exports'
 import ts from 'typescript'
 import { createMap } from '@hyperfrontend/immutable-api-utils/built-in-copy/map'
 import { createSet } from '@hyperfrontend/immutable-api-utils/built-in-copy/set'
-import { getRequireSpecifier, parseChunk, resolveRelativeTarget } from './ast-utils'
+import { classifyRequireBinding, getRequireSpecifier, parseChunk, resolveRelativeTarget } from './ast-utils'
 
 /**
  * Property-level demand on a single namespace export: either the concrete set of
@@ -203,43 +203,41 @@ const bindRequire = (
   bindingNodes: Set<ts.Node>
 ): void => {
   const usage = ensureUsage(edges, target)
-  const parent = call.parent
-  // why: `require('F').Export …` — inline member access selecting one export; classify the member's own use.
-  if (ts.isPropertyAccessExpression(parent) && parent.expression === call) {
-    recordMemberUse(parent, parent.name.text, usage)
-    return
-  }
-  if (ts.isElementAccessExpression(parent) && parent.expression === call) {
-    if (ts.isStringLiteralLike(parent.argumentExpression)) recordMemberUse(parent, parent.argumentExpression.text, usage)
-    else usage.bailAll = true
-    return
-  }
-  // why: a bare `require('./x')` statement binds nothing and reads no property — a side-effect-only import (mirrored from ESM, which skips clause-less imports) that forbids no slot; without this it falls through to the wholesale escape below and marks the whole target bailAll.
-  if (ts.isExpressionStatement(parent)) return
-  // why: a `require` not bound to a variable (call argument, spread, …) escapes member tracking — keep the whole target.
-  if (!ts.isVariableDeclaration(parent) || parent.initializer !== call) {
-    usage.bailAll = true
-    return
-  }
-  if (ts.isIdentifier(parent.name)) {
-    namespaceBindings.set(parent.name.text, target)
-    bindingNodes.add(parent.name)
-    return
-  }
-  if (ts.isObjectBindingPattern(parent.name)) {
-    for (const element of parent.name.elements) {
-      const key = element.propertyName ?? element.name
-      // why: a rest element or a nested/computed binding captures more than one named export — keep the whole target.
-      if (element.dotDotDotToken || !ts.isIdentifier(element.name) || !(ts.isIdentifier(key) || ts.isStringLiteralLike(key))) {
-        usage.bailAll = true
-        continue
+  const shape = classifyRequireBinding(call)
+  switch (shape.kind) {
+    // why: `require('F').Export` / `require('F')['Export']` — inline member access selecting one export; classify the member's own use.
+    case 'prop':
+    case 'elem-static':
+      recordMemberUse(shape.member, shape.name, usage)
+      return
+    // why: `require('F')[k]` could select any export — keep the whole target.
+    case 'elem-dynamic':
+      usage.bailAll = true
+      return
+    // why: a bare `require('./x')` statement binds nothing and reads no property — a side-effect-only import (mirrored from ESM, which skips clause-less imports) that forbids no slot.
+    case 'side-effect':
+      return
+    case 'ns-binding':
+      namespaceBindings.set(shape.name.text, target)
+      bindingNodes.add(shape.name)
+      return
+    case 'destructure':
+      for (const element of shape.pattern.elements) {
+        const key = element.propertyName ?? element.name
+        // why: a rest element or a nested/computed binding captures more than one named export — keep the whole target.
+        if (element.dotDotDotToken || !ts.isIdentifier(element.name) || !(ts.isIdentifier(key) || ts.isStringLiteralLike(key))) {
+          usage.bailAll = true
+          continue
+        }
+        locals.set(element.name.text, { target, exportName: key.text })
+        bindingNodes.add(element.name)
       }
-      locals.set(element.name.text, { target, exportName: key.text })
-      bindingNodes.add(element.name)
-    }
-    return
+      return
+    // why: a `require` not bound to a variable (call argument, spread, …) escapes member tracking — keep the whole target.
+    case 'escape':
+      usage.bailAll = true
+      return
   }
-  usage.bailAll = true
 }
 
 const collectRequires = (
