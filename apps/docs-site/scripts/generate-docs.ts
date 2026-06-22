@@ -168,6 +168,7 @@ const LIBRARIES: LibraryConfig[] = [
     srcPath: 'libs/project-scope',
     category: 'core',
   },
+  { name: 'Builder', packageName: '@hyperfrontend/builder', slug: 'builder', srcPath: 'libs/builder', category: 'core' },
   {
     name: 'State Machine',
     packageName: '@hyperfrontend/state-machine',
@@ -234,6 +235,7 @@ const LIBRARY_SLUGS: Record<string, string> = {
   'network-protocol': 'network-protocol',
   cryptography: 'cryptography',
   'project-scope': 'project-scope',
+  builder: 'builder',
   'state-machine': 'state-machine',
   logging: 'logging',
   questions: 'questions',
