@@ -53,9 +53,7 @@ type IconProps = { className?: string }
 function Logo({ className }: IconProps) {
   return (
     <>
-      {/* eslint-disable-next-line @next/next/no-img-element */}
       <img src="/hf-light.svg" alt="HyperFrontend logo" className={`${className ?? ''} block dark:hidden`} />
-      {/* eslint-disable-next-line @next/next/no-img-element */}
       <img src="/hf-dark.svg" alt="" aria-hidden="true" className={`${className ?? ''} hidden dark:block`} />
     </>
   )
