@@ -18,5 +18,6 @@
     },
     "publish": {},
     "typecheck": {}
-  }
+  },
+  "implicitDependencies": ["lib-builder", "tool-package"]
 }
