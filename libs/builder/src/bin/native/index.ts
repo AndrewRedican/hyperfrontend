@@ -1,7 +1,6 @@
 /**
- * Node SEA native binary primitives: SEA config generation, blob preparation
- * via `node --experimental-sea-config`, host resolution, postject blob
- * injection, and macOS code-sign cleanup.
+ * Node SEA native binary primitives: config generation, blob prep, host
+ * resolution, postject injection, and macOS code-sign cleanup.
  *
  * @module @hyperfrontend/builder/bin/native
  */

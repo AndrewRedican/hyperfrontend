@@ -1,6 +1,6 @@
 /**
- * Bundle subdomain facade: entry-point discovery, externals resolution, Rollup driver,
- * declaration emission, and the orchestrator that runs them in order.
+ * Bundle phase orchestrator: entry discovery, externals, Rollup, and
+ * declaration emission, run in order via {@link runBundlePhase}.
  *
  * @module @hyperfrontend/builder/bundle
  */

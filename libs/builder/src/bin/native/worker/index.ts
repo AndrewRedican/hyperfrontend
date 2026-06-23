@@ -1,10 +1,6 @@
 /**
- * Forked-worker entry script for postject inject.
- *
- * Reads an {@link InjectWorkerJob} from `process.argv[2]`, runs a single
- * inject pass through {@link runInjectWorkerJob}, and exits with code 0 on
- * success or 1 on failure. The worker exists so the ~138 MB postject buffer
- * load is reclaimed at child exit and never enters the parent's RSS.
+ * Forked-worker entry script that runs a single postject inject via
+ * {@link runInjectWorkerJob}, isolating its ~138 MB buffer from the parent RSS.
  *
  * @module @hyperfrontend/builder/bin/native/worker
  */

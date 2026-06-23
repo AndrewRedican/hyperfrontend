@@ -1,7 +1,6 @@
 /**
- * Package subdomain facade: package.json synthesis + write, generic asset copy,
- * and opt-in third-party license collection composed via {@link runPackagePhase},
- * plus the post-emit `files` allowlist reflection ({@link finalizeFilesAllowlist}).
+ * Package phase: package.json synthesis, asset copy, and license collection
+ * composed via {@link runPackagePhase}.
  *
  * @module @hyperfrontend/builder/package
  */

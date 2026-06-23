@@ -1,9 +1,6 @@
 /**
- * Forked-worker entry script for dependency pre-pass invocations.
- *
- * Reads a {@link PrePassWorkerJob} from `process.argv[2]`, runs a single
- * rollup pass through {@link runPrePassWorkerJob}, and exits with code 0 on
- * success or 1 on failure.
+ * Forked-worker entry script that runs a single dependency pre-pass via
+ * {@link runPrePassWorkerJob}.
  *
  * @module @hyperfrontend/builder/bundle/dependencies/worker
  */

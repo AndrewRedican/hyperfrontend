@@ -1,9 +1,6 @@
 /**
- * Forked-worker entry script for per-entry rollup invocations.
- *
- * Reads a {@link RollupBuildDescriptor} from `process.argv[2]`, runs a single
- * rollup pass through {@link runRollupWorkerJob}, and exits with code 0 on
- * success or 1 on failure.
+ * Forked-worker entry script that runs a single per-entry rollup pass via
+ * {@link runRollupWorkerJob}.
  *
  * @module @hyperfrontend/builder/bundle/rollup/worker
  */

@@ -1,7 +1,6 @@
 /**
  * Predicate factories for the {@link IsWorkspacePackagePredicate} slot on
- * {@link BuildConfig}. Use these to opt a build into workspace-aware behavior
- * (inlining, dependency filtering) without hand-rolling the predicate.
+ * {@link BuildConfig}, opting a build into workspace-aware behavior.
  *
  * @module @hyperfrontend/builder/presets
  */

@@ -1,8 +1,6 @@
 /**
- * Per-format pre-pass + externalize plugin that bundle each third-party dep once
- * into `_dependencies/<dep>/`, then route every entry's import of that dep at a
- * relative path. The pattern is extended to workspace `@hyperfrontend/*` deps
- * via `resolveWorkspaceBundledDeps` and the workspace-aware externalize routes.
+ * Per-format pre-pass and externalize plugin that bundle each third-party (and
+ * workspace) dep once, then reroute every entry's import to it.
  *
  * @module @hyperfrontend/builder/bundle/dependencies
  */

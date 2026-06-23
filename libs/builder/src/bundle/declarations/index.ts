@@ -1,8 +1,6 @@
 /**
  * tsc-driven `.d.ts` emission, path flattening, the bundled-dep d.ts pre-pass,
- * and per-entry d.ts inlining. The sibling-subpath dedup pass via
- * {@link createSiblingExternalizePlugin} keeps each entry's `.d.ts` referencing
- * the canonical declaration in its sibling entry rather than redeclaring it.
+ * per-entry inlining, and sibling-subpath dedup.
  *
  * @module @hyperfrontend/builder/bundle/declarations
  */

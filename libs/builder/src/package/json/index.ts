@@ -1,6 +1,6 @@
 /**
- * package.json synthesis primitives — read, inherit, filter, generate exports,
- * resolve CDN paths, synthesize the dist manifest, and write it to disk.
+ * package.json synthesis primitives: read, inherit, filter, generate
+ * exports/CDN paths, and write the dist manifest.
  *
  * @module @hyperfrontend/builder/package/json
  */
