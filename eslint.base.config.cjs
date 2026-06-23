@@ -220,6 +220,7 @@ module.exports = [
     files: ['**/*.spec.ts'],
     rules: {
       'workspace/assertive-test-names': 'error',
+      'workspace/jest-mock-after-imports': 'error',
     },
   },
   {
