@@ -1,3 +1,8 @@
+import type { RollupBuildDescriptor } from '../../bundle/rollup/worker/types'
+import type { BinConfig, BuildContext } from '../../models'
+import { ensureDir } from '@hyperfrontend/project-scope/core'
+import { dispatchRollupWorker, resolveDefaultRollupWorkerPath } from '../../bundle/rollup/dispatch'
+import { buildJsBin } from './build-bin'
 jest.mock('../../bundle/rollup/dispatch', () => ({
   dispatchRollupWorker: jest.fn().mockResolvedValue(undefined),
   resolveDefaultRollupWorkerPath: jest.fn(() => ({ path: '/abs/repo/dist/libs/builder/bundle/rollup/worker/index.cjs.js', execArgv: [] })),
@@ -6,12 +11,6 @@ jest.mock('@hyperfrontend/project-scope/core', () => {
   const actual = jest.requireActual('@hyperfrontend/project-scope/core')
   return { ...actual, ensureDir: jest.fn() }
 })
-
-import type { RollupBuildDescriptor } from '../../bundle/rollup/worker/types'
-import type { BinConfig, BuildContext } from '../../models'
-import { ensureDir } from '@hyperfrontend/project-scope/core'
-import { dispatchRollupWorker, resolveDefaultRollupWorkerPath } from '../../bundle/rollup/dispatch'
-import { buildJsBin } from './build-bin'
 
 const makeContext = (overrides: Partial<BuildContext> = {}): BuildContext => ({
   projectRoot: '/abs/libs/foo',

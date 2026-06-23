@@ -1,9 +1,3 @@
-jest.mock('../build', () => ({ build: jest.fn() }))
-jest.mock('@hyperfrontend/project-scope/core', () => {
-  const actual = jest.requireActual('@hyperfrontend/project-scope/core')
-  return { ...actual, readJsonFile: jest.fn() }
-})
-
 import type { BuildConfig, BuildResult, FormatOutputs } from '../models'
 import { PassThrough } from 'node:stream'
 import { readJsonFile } from '@hyperfrontend/project-scope/core'
@@ -15,6 +9,11 @@ import runHfBuildDefault, {
   parseHfBuildArgs,
   runHfBuild,
 } from './hf-build'
+jest.mock('../build', () => ({ build: jest.fn() }))
+jest.mock('@hyperfrontend/project-scope/core', () => {
+  const actual = jest.requireActual('@hyperfrontend/project-scope/core')
+  return { ...actual, readJsonFile: jest.fn() }
+})
 
 const drain = (stream: PassThrough): string => {
   const chunks: Buffer[] = []

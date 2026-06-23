@@ -1,9 +1,8 @@
-jest.mock('node:fs', () => ({ copyFileSync: jest.fn(), readFileSync: jest.fn() }))
-jest.mock('postject', () => ({ inject: jest.fn().mockResolvedValue(undefined) }))
-
 import { copyFileSync, readFileSync } from 'node:fs'
 import { inject } from 'postject'
 import { injectBlob, NODE_SEA_FUSE, NODE_SEA_MACHO_SEGMENT, NODE_SEA_RESOURCE_NAME } from './inject'
+jest.mock('node:fs', () => ({ copyFileSync: jest.fn(), readFileSync: jest.fn() }))
+jest.mock('postject', () => ({ inject: jest.fn().mockResolvedValue(undefined) }))
 
 const mockCopy = copyFileSync as jest.Mock
 const mockRead = readFileSync as jest.Mock

@@ -1,3 +1,14 @@
+import type { BinConfig, BuildContext } from '../../models'
+import { unlinkSync } from 'node:fs'
+import { ensureDir, exists, writeJsonFile } from '@hyperfrontend/project-scope/core'
+import { buildNativeBin } from './build-native'
+import { removeCodesign } from './codesign'
+import { dispatchInjectWorker, resolveDefaultInjectWorkerPath } from './dispatch'
+import { resolveHostBinary } from './host-binary'
+import { NODE_SEA_FUSE, NODE_SEA_MACHO_SEGMENT, NODE_SEA_RESOURCE_NAME } from './inject'
+import { currentPlatformMatches, currentPlatformTarget } from './platform-check'
+import { generateSeaBlob } from './sea-blob'
+import { generateSeaConfig } from './sea-config'
 jest.mock('@hyperfrontend/logging', () => {
   const actual = jest.requireActual('@hyperfrontend/logging')
   const mockChannel = { error: jest.fn(), warn: jest.fn(), info: jest.fn(), debug: jest.fn(), log: jest.fn() }
@@ -24,18 +35,6 @@ jest.mock('./platform-check', () => ({
 }))
 jest.mock('./sea-blob', () => ({ generateSeaBlob: jest.fn() }))
 jest.mock('./sea-config', () => ({ generateSeaConfig: jest.fn() }))
-
-import type { BinConfig, BuildContext } from '../../models'
-import { unlinkSync } from 'node:fs'
-import { ensureDir, exists, writeJsonFile } from '@hyperfrontend/project-scope/core'
-import { buildNativeBin } from './build-native'
-import { removeCodesign } from './codesign'
-import { dispatchInjectWorker, resolveDefaultInjectWorkerPath } from './dispatch'
-import { resolveHostBinary } from './host-binary'
-import { NODE_SEA_FUSE, NODE_SEA_MACHO_SEGMENT, NODE_SEA_RESOURCE_NAME } from './inject'
-import { currentPlatformMatches, currentPlatformTarget } from './platform-check'
-import { generateSeaBlob } from './sea-blob'
-import { generateSeaConfig } from './sea-config'
 
 const makeContext = (): BuildContext => ({
   projectRoot: '/abs/libs/builder',

@@ -1,3 +1,6 @@
+import type { BuildContext, EntryPointDiscovery } from '../../models'
+import { resolveDefaultWorkerPath, runPrePass } from '../dependencies/pre-pass'
+import { runDtsPrePass } from './dts-pre-pass'
 jest.mock('../dependencies/pre-pass', () => ({
   runPrePass: jest.fn().mockResolvedValue([]),
   resolveDefaultWorkerPath: jest.fn(),
@@ -10,10 +13,6 @@ jest.mock('@hyperfrontend/logging', () => {
   const mockChannel = { error: jest.fn(), warn: jest.fn(), info: jest.fn(), debug: jest.fn(), log: jest.fn() }
   return { ...actual, logger: { channel: jest.fn(() => mockChannel) } }
 })
-
-import type { BuildContext, EntryPointDiscovery } from '../../models'
-import { resolveDefaultWorkerPath, runPrePass } from '../dependencies/pre-pass'
-import { runDtsPrePass } from './dts-pre-pass'
 
 const DISCOVERY: EntryPointDiscovery = { category: 'root', entryPoints: [], hasRootEntry: false, platformEntries: [], featureEntries: [] }
 

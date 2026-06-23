@@ -1,10 +1,9 @@
-jest.mock('./script/build-bin', () => ({ buildJsBin: jest.fn() }))
-jest.mock('./native/build-native', () => ({ buildNativeBin: jest.fn() }))
-
 import type { BinConfig, BinOutput, BuildContext } from '../models'
 import { buildNativeBin } from './native/build-native'
 import { runBinPhase } from './run-bin-phase'
 import { buildJsBin } from './script/build-bin'
+jest.mock('./script/build-bin', () => ({ buildJsBin: jest.fn() }))
+jest.mock('./native/build-native', () => ({ buildNativeBin: jest.fn() }))
 
 const makeContext = (): BuildContext => ({
   projectRoot: '/abs/libs/foo',

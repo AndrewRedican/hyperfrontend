@@ -1,11 +1,3 @@
-jest.mock('./json/read-package-json', () => ({ readProjectPackageJson: jest.fn() }))
-jest.mock('./json/synthesize', () => ({ synthesizePackageJson: jest.fn() }))
-jest.mock('./json/write', () => ({ writeOutputPackageJson: jest.fn() }))
-jest.mock('./assets/copy-assets', () => ({ copyAssets: jest.fn() }))
-jest.mock('./licenses/collect', () => ({ collectThirdPartyLicenses: jest.fn() }))
-jest.mock('./licenses/generate-content', () => ({ generateThirdPartyLicensesContent: jest.fn() }))
-jest.mock('./licenses/write', () => ({ writeThirdPartyLicensesFile: jest.fn() }))
-
 import type { BuildConfig, BuildContext, FormatOutputs, PackageJson } from '../models'
 import { copyAssets } from './assets/copy-assets'
 import { readProjectPackageJson } from './json/read-package-json'
@@ -15,6 +7,13 @@ import { collectThirdPartyLicenses } from './licenses/collect'
 import { generateThirdPartyLicensesContent } from './licenses/generate-content'
 import { writeThirdPartyLicensesFile } from './licenses/write'
 import { runPackagePhase } from './run-package-phase'
+jest.mock('./json/read-package-json', () => ({ readProjectPackageJson: jest.fn() }))
+jest.mock('./json/synthesize', () => ({ synthesizePackageJson: jest.fn() }))
+jest.mock('./json/write', () => ({ writeOutputPackageJson: jest.fn() }))
+jest.mock('./assets/copy-assets', () => ({ copyAssets: jest.fn() }))
+jest.mock('./licenses/collect', () => ({ collectThirdPartyLicenses: jest.fn() }))
+jest.mock('./licenses/generate-content', () => ({ generateThirdPartyLicensesContent: jest.fn() }))
+jest.mock('./licenses/write', () => ({ writeThirdPartyLicensesFile: jest.fn() }))
 
 const isHyperfrontend = (name: string): boolean => name.startsWith('@hyperfrontend/')
 

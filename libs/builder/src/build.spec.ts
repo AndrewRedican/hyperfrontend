@@ -1,10 +1,3 @@
-jest.mock('./bundle/run-bundle-phase', () => ({ runBundlePhase: jest.fn() }))
-jest.mock('./package/run-package-phase', () => ({ runPackagePhase: jest.fn() }))
-jest.mock('./package/finalize-files', () => ({ finalizeFilesAllowlist: jest.fn() }))
-jest.mock('./bin/run-bin-phase', () => ({ runBinPhase: jest.fn() }))
-jest.mock('./bundle/entries/discover-entries', () => ({ discoverEntries: jest.fn() }))
-jest.mock('./memory/monitor', () => ({ createMemoryMonitor: jest.fn() }))
-
 import type { MemoryMonitor } from './memory/monitor'
 import type { BinConfig, BinOutput, BuildConfig, EntryPoint, EntryPointDiscovery, FormatOutputs } from './models'
 import { existsSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs'
@@ -18,6 +11,12 @@ import { runBundlePhase } from './bundle/run-bundle-phase'
 import { createMemoryMonitor } from './memory/monitor'
 import { finalizeFilesAllowlist } from './package/finalize-files'
 import { runPackagePhase } from './package/run-package-phase'
+jest.mock('./bundle/run-bundle-phase', () => ({ runBundlePhase: jest.fn() }))
+jest.mock('./package/run-package-phase', () => ({ runPackagePhase: jest.fn() }))
+jest.mock('./package/finalize-files', () => ({ finalizeFilesAllowlist: jest.fn() }))
+jest.mock('./bin/run-bin-phase', () => ({ runBinPhase: jest.fn() }))
+jest.mock('./bundle/entries/discover-entries', () => ({ discoverEntries: jest.fn() }))
+jest.mock('./memory/monitor', () => ({ createMemoryMonitor: jest.fn() }))
 
 const ROOT_ENTRY: EntryPoint = { exportPath: '.', srcPath: '', inputFile: '/abs/repo/libs/foo/src/index.ts', isRoot: true }
 const DISCOVERY: EntryPointDiscovery = {

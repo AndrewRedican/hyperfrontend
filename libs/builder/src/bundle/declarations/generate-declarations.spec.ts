@@ -1,3 +1,9 @@
+import type { BuildContext } from '../../models'
+import { spawn } from 'node:child_process'
+import { EventEmitter } from 'node:events'
+import { clearInterval, setInterval } from '@hyperfrontend/immutable-api-utils/built-in-copy/timers'
+import { flattenDeclarationPaths } from './flatten-paths'
+import { generateDeclarations } from './generate-declarations'
 jest.mock('@hyperfrontend/logging', () => {
   const actual = jest.requireActual('@hyperfrontend/logging')
   const mockChannel = { error: jest.fn(), warn: jest.fn(), info: jest.fn(), debug: jest.fn(), log: jest.fn() }
@@ -7,22 +13,12 @@ jest.mock('@hyperfrontend/logging', () => {
     __mockChannel: mockChannel,
   }
 })
-
 jest.mock('@hyperfrontend/immutable-api-utils/built-in-copy/timers', () => ({
   setInterval: jest.fn(() => 'fake-interval-id'),
   clearInterval: jest.fn(),
 }))
-
 jest.mock('node:child_process', () => ({ spawn: jest.fn() }))
-
 jest.mock('./flatten-paths', () => ({ flattenDeclarationPaths: jest.fn() }))
-
-import type { BuildContext } from '../../models'
-import { spawn } from 'node:child_process'
-import { EventEmitter } from 'node:events'
-import { clearInterval, setInterval } from '@hyperfrontend/immutable-api-utils/built-in-copy/timers'
-import { flattenDeclarationPaths } from './flatten-paths'
-import { generateDeclarations } from './generate-declarations'
 
 interface FakeChild extends EventEmitter {
   stdout: EventEmitter

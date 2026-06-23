@@ -1,15 +1,14 @@
+import type { BuildConfig, BuildContext, PackageJson } from '../models'
+import { readJsonFile } from '@hyperfrontend/project-scope/core'
+import { finalizeFilesAllowlist } from './finalize-files'
+import { reflectFilesAllowlist } from './json/reflect-files-allowlist'
+import { writeOutputPackageJson } from './json/write'
 jest.mock('./json/reflect-files-allowlist', () => ({ reflectFilesAllowlist: jest.fn() }))
 jest.mock('./json/write', () => ({ writeOutputPackageJson: jest.fn() }))
 jest.mock('@hyperfrontend/project-scope/core', () => ({
   ...jest.requireActual('@hyperfrontend/project-scope/core'),
   readJsonFile: jest.fn(),
 }))
-
-import type { BuildConfig, BuildContext, PackageJson } from '../models'
-import { readJsonFile } from '@hyperfrontend/project-scope/core'
-import { finalizeFilesAllowlist } from './finalize-files'
-import { reflectFilesAllowlist } from './json/reflect-files-allowlist'
-import { writeOutputPackageJson } from './json/write'
 
 const makeContext = (overrides?: Partial<BuildContext>): BuildContext => ({
   projectRoot: '/abs/libs/foo',

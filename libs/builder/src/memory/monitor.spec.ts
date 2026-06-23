@@ -1,3 +1,5 @@
+import * as loggingModule from '@hyperfrontend/logging'
+import { createMemoryMonitor } from './monitor'
 jest.mock('@hyperfrontend/logging', () => {
   const mockChannel = {
     error: jest.fn(),
@@ -13,9 +15,6 @@ jest.mock('@hyperfrontend/logging', () => {
     __mockChannel: mockChannel,
   }
 })
-
-import * as loggingModule from '@hyperfrontend/logging'
-import { createMemoryMonitor } from './monitor'
 
 interface MemoryUsageStub {
   rss: number

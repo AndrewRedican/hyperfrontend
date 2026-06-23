@@ -1,9 +1,18 @@
+import type { BuildConfig, BuildContext, EntryPoint, EntryPointDiscovery } from '../models'
+import { ensureDir } from '@hyperfrontend/project-scope/core'
+import { runDtsPerEntry } from './declarations/dts-per-entry'
+import { runDtsPrePass } from './declarations/dts-pre-pass'
+import { generateDeclarations } from './declarations/generate-declarations'
+import { pruneOrphanDeclarations } from './declarations/prune-orphan-dts'
+import { resolveDefaultWorkerPath, runPrePass } from './dependencies/pre-pass'
+import { pruneDependencies } from './dependencies/prune/prune-dependencies'
+import { dispatchRollupWorker, resolveDefaultRollupWorkerPath } from './rollup/dispatch'
+import { runBundlePhase } from './run-bundle-phase'
 jest.mock('@rollup/plugin-commonjs', () => jest.fn(() => ({ name: 'commonjs' })))
 jest.mock('@rollup/plugin-json', () => jest.fn(() => ({ name: 'json' })))
 jest.mock('@rollup/plugin-node-resolve', () => jest.fn(() => ({ name: 'node-resolve' })))
 jest.mock('@rollup/plugin-terser', () => jest.fn(() => ({ name: 'terser' })))
 jest.mock('@rollup/plugin-typescript', () => jest.fn(() => ({ name: 'typescript' })))
-
 jest.mock('./rollup/dispatch', () => ({
   dispatchRollupWorker: jest.fn().mockResolvedValue({ outputSize: 0, endHeapMB: 0, endRssMB: 0, durationMs: 0 }),
   resolveDefaultRollupWorkerPath: jest.fn(),
@@ -28,17 +37,6 @@ jest.mock('./declarations/prune-orphan-dts', () => ({ pruneOrphanDeclarations: j
 jest.mock('./dependencies/prune/prune-dependencies', () => ({
   pruneDependencies: jest.fn().mockReturnValue({ orphanFilesRemoved: 0, deadExportsRemoved: 0, bytesRemoved: 0 }),
 }))
-
-import type { BuildConfig, BuildContext, EntryPoint, EntryPointDiscovery } from '../models'
-import { ensureDir } from '@hyperfrontend/project-scope/core'
-import { runDtsPerEntry } from './declarations/dts-per-entry'
-import { runDtsPrePass } from './declarations/dts-pre-pass'
-import { generateDeclarations } from './declarations/generate-declarations'
-import { pruneOrphanDeclarations } from './declarations/prune-orphan-dts'
-import { resolveDefaultWorkerPath, runPrePass } from './dependencies/pre-pass'
-import { pruneDependencies } from './dependencies/prune/prune-dependencies'
-import { dispatchRollupWorker, resolveDefaultRollupWorkerPath } from './rollup/dispatch'
-import { runBundlePhase } from './run-bundle-phase'
 
 const ROOT_ENTRY: EntryPoint = { exportPath: '.', srcPath: '', inputFile: '/abs/libs/foo/src/index.ts', isRoot: true }
 const BROWSER_ENTRY: EntryPoint = {

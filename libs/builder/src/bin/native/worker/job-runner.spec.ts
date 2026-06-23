@@ -1,11 +1,10 @@
-jest.mock('postject', () => ({ inject: jest.fn().mockResolvedValue(undefined) }))
-
 import type { InjectWorkerJob } from './types'
 import { mkdtempSync, readFileSync, rmSync, statSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { inject } from 'postject'
 import { runInjectWorkerJob } from './job-runner'
+jest.mock('postject', () => ({ inject: jest.fn().mockResolvedValue(undefined) }))
 
 const mockInject = inject as jest.Mock
 

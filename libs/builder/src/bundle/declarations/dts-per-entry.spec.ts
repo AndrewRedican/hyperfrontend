@@ -1,3 +1,7 @@
+import type { BuildContext, EntryPoint, EntryPointDiscovery } from '../../models'
+import { exists } from '@hyperfrontend/project-scope/core/fs'
+import { resolveDefaultWorkerPath, runPrePass } from '../dependencies/pre-pass'
+import { runDtsPerEntry } from './dts-per-entry'
 jest.mock('../dependencies/pre-pass', () => ({
   runPrePass: jest.fn().mockResolvedValue([]),
   resolveDefaultWorkerPath: jest.fn(),
@@ -11,11 +15,6 @@ jest.mock('@hyperfrontend/logging', () => {
   const mockChannel = { error: jest.fn(), warn: jest.fn(), info: jest.fn(), debug: jest.fn(), log: jest.fn() }
   return { ...actual, logger: { channel: jest.fn(() => mockChannel) } }
 })
-
-import type { BuildContext, EntryPoint, EntryPointDiscovery } from '../../models'
-import { exists } from '@hyperfrontend/project-scope/core/fs'
-import { resolveDefaultWorkerPath, runPrePass } from '../dependencies/pre-pass'
-import { runDtsPerEntry } from './dts-per-entry'
 
 const ROOT_ENTRY: EntryPoint = { exportPath: '.', srcPath: '', inputFile: '/abs/libs/foo/src/index.ts', isRoot: true }
 const SUB_ENTRY: EntryPoint = { exportPath: './sub', srcPath: 'sub', inputFile: '/abs/libs/foo/src/sub/index.ts', isRoot: false }

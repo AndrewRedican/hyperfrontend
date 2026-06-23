@@ -1,3 +1,11 @@
+import type { MemoryMonitor, MemorySnapshot } from '../../memory/monitor'
+import type { InjectWorkerJob } from './worker/types'
+import { spawn } from 'node:child_process'
+import { EventEmitter } from 'node:events'
+import { existsSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs'
+import { tmpdir } from 'node:os'
+import { join } from 'node:path'
+import { dispatchInjectWorker, resolveDefaultInjectWorkerPath } from './dispatch'
 jest.mock('@hyperfrontend/logging', () => {
   const actual = jest.requireActual('@hyperfrontend/logging')
   const mockChannel = { error: jest.fn(), warn: jest.fn(), info: jest.fn(), debug: jest.fn(), log: jest.fn() }
@@ -7,17 +15,7 @@ jest.mock('@hyperfrontend/logging', () => {
     __mockChannel: mockChannel,
   }
 })
-
 jest.mock('node:child_process', () => ({ spawn: jest.fn() }))
-
-import type { MemoryMonitor, MemorySnapshot } from '../../memory/monitor'
-import type { InjectWorkerJob } from './worker/types'
-import { spawn } from 'node:child_process'
-import { EventEmitter } from 'node:events'
-import { existsSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs'
-import { tmpdir } from 'node:os'
-import { join } from 'node:path'
-import { dispatchInjectWorker, resolveDefaultInjectWorkerPath } from './dispatch'
 
 const tick = (): Promise<void> => new Promise<void>((resolve) => setImmediate(resolve))
 

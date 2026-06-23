@@ -1,3 +1,8 @@
+import type { AssetSpec, PackageJson } from '../../models'
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
+import { tmpdir } from 'node:os'
+import { join } from 'node:path'
+import { copyAssets } from './copy-assets'
 jest.mock('@hyperfrontend/logging', () => {
   const actual = jest.requireActual('@hyperfrontend/logging')
   return {
@@ -5,12 +10,6 @@ jest.mock('@hyperfrontend/logging', () => {
     logger: { channel: jest.fn(() => ({ error: jest.fn(), warn: jest.fn(), info: jest.fn(), debug: jest.fn(), log: jest.fn() })) },
   }
 })
-
-import type { AssetSpec, PackageJson } from '../../models'
-import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
-import { tmpdir } from 'node:os'
-import { join } from 'node:path'
-import { copyAssets } from './copy-assets'
 
 const PKG: PackageJson = { name: 'foo' }
 

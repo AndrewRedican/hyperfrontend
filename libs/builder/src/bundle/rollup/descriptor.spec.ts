@@ -1,10 +1,9 @@
-jest.mock('../externals/resolve-externals', () => ({
-  resolveExternals: jest.fn(),
-}))
-
 import type { BinConfig, BuildContext, CjsConfig, EntryPoint, EsmConfig, IifeConfig, UmdConfig } from '../../models'
 import { resolveExternals } from '../externals/resolve-externals'
 import { toBinBuildDescriptor, toCjsBuildDescriptor, toEsmBuildDescriptor, toIifeBuildDescriptor, toUmdBuildDescriptor } from './descriptor'
+jest.mock('../externals/resolve-externals', () => ({
+  resolveExternals: jest.fn(),
+}))
 
 const ROOT_ENTRY: EntryPoint = { exportPath: '.', srcPath: '', inputFile: '/abs/libs/foo/src/index.ts', isRoot: true }
 const SUB_ENTRY: EntryPoint = {

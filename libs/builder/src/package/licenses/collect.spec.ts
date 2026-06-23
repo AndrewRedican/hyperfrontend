@@ -1,3 +1,7 @@
+import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs'
+import { tmpdir } from 'node:os'
+import { join } from 'node:path'
+import { collectThirdPartyLicenses } from './collect'
 jest.mock('@hyperfrontend/logging', () => {
   const actual = jest.requireActual('@hyperfrontend/logging')
   return {
@@ -5,11 +9,6 @@ jest.mock('@hyperfrontend/logging', () => {
     logger: { channel: jest.fn(() => ({ error: jest.fn(), warn: jest.fn(), info: jest.fn(), debug: jest.fn(), log: jest.fn() })) },
   }
 })
-
-import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs'
-import { tmpdir } from 'node:os'
-import { join } from 'node:path'
-import { collectThirdPartyLicenses } from './collect'
 
 const writePkg = (dir: string, contents: object): void => {
   mkdirSync(dir, { recursive: true })

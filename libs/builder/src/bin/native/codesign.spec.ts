@@ -1,8 +1,7 @@
-jest.mock('node:child_process', () => ({ spawnSync: jest.fn() }))
-
 import type { SpawnSyncReturns } from 'node:child_process'
 import { spawnSync } from 'node:child_process'
 import { applyCodesign, removeCodesign } from './codesign'
+jest.mock('node:child_process', () => ({ spawnSync: jest.fn() }))
 
 const mockSpawn = spawnSync as jest.Mock
 
