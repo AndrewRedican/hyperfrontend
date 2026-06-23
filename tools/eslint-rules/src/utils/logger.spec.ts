@@ -1,3 +1,5 @@
+import { logger, createRuleLogger, createNxScopedLogger } from './logger'
+
 jest.mock('@nx/devkit', () => ({
   logger: {
     error: jest.fn(),
@@ -9,8 +11,6 @@ jest.mock('@nx/devkit', () => ({
 }))
 
 const { logger: mockNxLogger } = require('@nx/devkit')
-
-import { logger, createRuleLogger, createNxScopedLogger } from './logger'
 
 describe('logger', () => {
   beforeEach(() => {
