@@ -2,6 +2,7 @@ import { DemoShowcase } from '@/components/demo-showcase'
 import { Footer } from '@/components/footer'
 import { Header } from '@/components/header'
 import { ScrollToExplore } from '@/components/scroll-to-explore'
+import { TesseractBackground } from '@/components/tesseract-background'
 import { ValueProposition } from '@/components/value-proposition'
 
 /**
@@ -38,6 +39,9 @@ export default function HomePage() {
         <section className="relative min-h-[calc(100vh-4rem)] overflow-hidden bg-gradient-to-br from-slate-50 via-white to-slate-100 dark:from-slate-900 dark:via-slate-900 dark:to-slate-800">
           {/* Subtle background pattern */}
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_1px_1px,rgba(0,0,0,0.03)_1px,transparent_0)] bg-[length:24px_24px] dark:bg-[radial-gradient(circle_at_1px_1px,rgba(255,255,255,0.03)_1px,transparent_0)]" />
+
+          {/* Composability matrix — a 4D micro-frontend lattice diving through nested layers */}
+          <TesseractBackground dive />
 
           <div className="relative mx-auto flex h-full max-w-8xl flex-col lg:flex-row lg:items-stretch">
             {/* Left Side - Value Proposition */}
