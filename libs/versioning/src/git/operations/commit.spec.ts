@@ -1,13 +1,10 @@
 import { execFileSync } from 'node:child_process'
 import { commit, amendCommit, amendCommitNoEdit, createEmptyCommit, DEFAULT_COMMIT_OPTIONS } from './commit'
-
+import { getCommit } from './log'
 jest.mock('./log', () => ({
   ...jest.requireActual('./log'),
   getCommit: jest.fn(),
 }))
-
-import { getCommit } from './log'
-
 jest.mock('node:child_process')
 
 const mockExecFileSync = execFileSync as jest.MockedFunction<typeof execFileSync>
