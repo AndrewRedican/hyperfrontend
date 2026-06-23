@@ -1,6 +1,5 @@
-jest.unmock('@hyperfrontend/immutable-api-utils/built-in-copy/object')
-
 import { createProcessManager } from './factory'
+jest.unmock('@hyperfrontend/immutable-api-utils/built-in-copy/object')
 
 describe('createProcessManager', () => {
   let processManager: ReturnType<typeof createProcessManager>
