@@ -74,7 +74,7 @@ export function findFiles(startPath: string, patterns: string | string[], option
         return undefined
       }
 
-      if (matchesPatterns(entry.relativePath, normalizedPatterns)) {
+      if (matchesPatterns(entry.relativePath, <string[]>normalizedPatterns)) {
         results.push(options?.absolutePaths ? entry.path : entry.relativePath)
       }
 
@@ -122,7 +122,7 @@ export function findFilesInTree(tree: Tree, patterns: string | string[], options
         return undefined
       }
 
-      if (matchesPatterns(entry.relativePath, normalizedPatterns)) {
+      if (matchesPatterns(entry.relativePath, <string[]>normalizedPatterns)) {
         results.push(entry.relativePath)
       }
 
@@ -167,7 +167,7 @@ export function findDirectories(startPath: string, patterns: string | string[], 
         return undefined
       }
 
-      if (matchesPatterns(entry.relativePath, normalizedPatterns)) {
+      if (matchesPatterns(entry.relativePath, <string[]>normalizedPatterns)) {
         results.push(options?.absolutePaths ? entry.path : entry.relativePath)
       }
 

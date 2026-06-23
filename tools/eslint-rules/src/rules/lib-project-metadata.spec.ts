@@ -50,6 +50,40 @@ describe('lib-project-metadata', () => {
           return workspace.getPath('project.json')
         })(),
       },
+      {
+        name: 'ignores nested name keys (e.g., bin[0].name) when validating the project name prefix',
+        code: JSON.stringify(
+          {
+            ...validProjectJson,
+            targets: {
+              build: {
+                options: {
+                  bin: [{ name: 'hf-build', format: ['cjs'] }],
+                },
+              },
+              publish: {},
+            },
+          },
+          null,
+          2
+        ),
+        filename: (() => {
+          const workspace = manager.create({
+            projectJson: {
+              ...validProjectJson,
+              targets: {
+                build: {
+                  options: {
+                    bin: [{ name: 'hf-build', format: ['cjs'] }],
+                  },
+                },
+                publish: {},
+              },
+            },
+          })
+          return workspace.getPath('project.json')
+        })(),
+      },
     ],
     invalid: [
       {

@@ -2,7 +2,7 @@
 
 > **Can I Use** style reference for @hyperfrontend libraries
 
-Last updated: February 15, 2026
+Last updated: June 22, 2026
 
 ---
 
@@ -24,10 +24,12 @@ Last updated: February 15, 2026
 | `@hyperfrontend/cryptography`           |   ✅    |   ✅    |     ✅     |     ✅     |
 | `@hyperfrontend/network-protocol`       |   ✅    |   ✅    |     ✅     |     ✅     |
 | `@hyperfrontend/nexus`                  |   ✅    |   ✅    |     ✅     |     ✅     |
+| `@hyperfrontend/builder`                |   ❌²   |   ✅    |    ❌²     |    ❌²     |
 
 **Notes:**
 
 1. `ui-utils` — Some DOM utilities require browser APIs; check individual exports
+2. `builder` — Build-time Node.js toolkit (CLI + programmatic API); not intended for browser, Web Worker, or CDN runtimes
 
 ---
 
@@ -194,6 +196,7 @@ These libraries have no internal dependencies:
 | ------------------ | ----------------------------------------------------------------------------------------------- |
 | `network-protocol` | cryptography, logging, json-utils, list-utils, random-generator-utils, string-utils, time-utils |
 | `nexus`            | network-protocol, logging, json-utils, random-generator-utils                                   |
+| `builder`          | logging, project-scope, immutable-api-utils, versioning                                         |
 
 ---
 
@@ -219,6 +222,7 @@ All libraries specify minimum Node.js and npm versions in their `package.json` `
 | `@hyperfrontend/cryptography`           | `>=18.0.0` | `>=8.0.0` | Node 19+ recommended for `/node` entry ¹     |
 | `@hyperfrontend/network-protocol`       | `>=18.0.0` | `>=8.0.0` | Node 19+ recommended for `/node/*` entries ¹ |
 | `@hyperfrontend/nexus`                  | `>=18.0.0` | `>=8.0.0` | Browser runtime, Node for dev/test           |
+| `@hyperfrontend/builder`                | `>=18.0.0` | `>=8.0.0` | Node build tool (CLI + library)              |
 
 ¹ The `/node` entry points use `webcrypto.subtle` which was experimental in Node 18.x and became stable in Node 19.0.0. For production use with Node.js, version 19+ is recommended.
 

@@ -111,11 +111,11 @@ export function validateSchema(instance: unknown, schema: Schema, ctx: Validatio
   }
 
   if (isArray(instance)) {
-    if (!validateItems(instance, schema, ctx)) {
+    if (!validateItems(<unknown[]>instance, schema, ctx)) {
       valid = false
       if (!shouldContinue(ctx)) return false
     }
-    if (!validateArrayBounds(instance, schema, ctx)) {
+    if (!validateArrayBounds(<unknown[]>instance, schema, ctx)) {
       valid = false
       if (!shouldContinue(ctx)) return false
     }

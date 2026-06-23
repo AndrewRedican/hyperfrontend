@@ -3,6 +3,8 @@
  * Tests that the package is importable and exports work correctly.
  */
 
+import type { Schema } from '@hyperfrontend/json-utils'
+
 describe('@hyperfrontend/json-utils ESM', () => {
   it('should be importable', async () => {
     const jsonUtils = await import('@hyperfrontend/json-utils')
@@ -17,7 +19,7 @@ describe('@hyperfrontend/json-utils ESM', () => {
   it('should validate data against a schema', async () => {
     const { validate } = await import('@hyperfrontend/json-utils')
 
-    const schema = {
+    const schema: Schema = {
       type: 'object',
       properties: {
         name: { type: 'string' },
@@ -44,7 +46,7 @@ describe('@hyperfrontend/json-utils ESM', () => {
   it('should create a reusable validator', async () => {
     const { createValidator } = await import('@hyperfrontend/json-utils')
 
-    const schema = {
+    const schema: Schema = {
       type: 'string',
     }
 

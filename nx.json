@@ -98,5 +98,6 @@
     }
   ],
   "nxCloudId": "6991685ccc04119366337805",
-  "neverConnectToCloud": false
+  "neverConnectToCloud": false,
+  "analytics": false
 }

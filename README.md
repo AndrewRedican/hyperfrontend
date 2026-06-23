@@ -1,7 +1,10 @@
 # hyperfrontend
 
 <p align="center">
-  <img  width="300" src="https://github.com/AndrewRedican/hyperfrontend/blob/main/assets/logo/hyperfrontend.png?raw=true" alt="Coverage">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="https://github.com/AndrewRedican/hyperfrontend/blob/main/assets/logo/hf-dark.svg?raw=true">
+    <img width="220" src="https://github.com/AndrewRedican/hyperfrontend/blob/main/assets/logo/hf-light.svg?raw=true" alt="HyperFrontend">
+  </picture>
 </p>
 <p align="center">
   A hybrid <a href="https://en.wikipedia.org/wiki/Micro_frontend">micro-frontend</a> pattern to embed live web applications with communication protocols, lifecycle, and contract standards
@@ -248,10 +251,11 @@ This launches a development environment where you can debug and interact with yo
 
 ## Main Packages
 
-| Package                                                                                              | Description                                                                                                                                    |
-| ---------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
-| [@hyperfrontend/features](https://github.com/AndrewRedican/hyperfrontend/blob/main/plugins/features) | Nx plugin for hyperfrontend micro-frontend features · [📖 docs](https://www.hyperfrontend.dev/docs/plugins/features/)                          |
-| [@hyperfrontend/nexus](https://github.com/AndrewRedican/hyperfrontend/blob/main/libs/nexus)          | Cross-window communication with contracts, lifecycle management, and security · [📖 docs](https://www.hyperfrontend.dev/docs/libraries/nexus/) |
+| Package                                                                                              | Description                                                                                                                                                                 |
+| ---------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [@hyperfrontend/builder](https://github.com/AndrewRedican/hyperfrontend/blob/main/libs/builder)      | Composable, vendor-neutral build toolkit for TypeScript libraries, JS bins, and Node SEA native binaries · [📖 docs](https://www.hyperfrontend.dev/docs/libraries/builder/) |
+| [@hyperfrontend/features](https://github.com/AndrewRedican/hyperfrontend/blob/main/plugins/features) | Nx plugin for hyperfrontend micro-frontend features · [📖 docs](https://www.hyperfrontend.dev/docs/plugins/features/)                                                       |
+| [@hyperfrontend/nexus](https://github.com/AndrewRedican/hyperfrontend/blob/main/libs/nexus)          | Cross-window communication with contracts, lifecycle management, and security · [📖 docs](https://www.hyperfrontend.dev/docs/libraries/nexus/)                              |
 
 ## Internal Packages
 

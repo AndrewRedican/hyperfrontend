@@ -26,15 +26,15 @@ export function validateContract(contract: unknown): void {
   }
 
   const c = <Record<string, unknown>>contract
-  const emittedCount = isArray(c['emitted']) ? c['emitted'].length : 0
-  const acceptedCount = isArray(c['accepted']) ? c['accepted'].length : 0
+  const emittedCount = isArray(c['emitted']) ? (<Record<string, unknown>[]>c['emitted']).length : 0
+  const acceptedCount = isArray(c['accepted']) ? (<Record<string, unknown>[]>c['accepted']).length : 0
 
   if (emittedCount + acceptedCount === 0) {
     throw createError('Contract must contain at least one accepted or emitted action')
   }
 
   if (isArray(c['emitted'])) {
-    for (const action of c['emitted']) {
+    for (const action of <Record<string, unknown>[]>c['emitted']) {
       if (
         !action ||
         typeof (<Record<string, unknown>>action)['type'] !== 'string' ||
@@ -46,7 +46,7 @@ export function validateContract(contract: unknown): void {
   }
 
   if (isArray(c['accepted'])) {
-    for (const action of c['accepted']) {
+    for (const action of <Record<string, unknown>[]>c['accepted']) {
       if (
         !action ||
         typeof (<Record<string, unknown>>action)['type'] !== 'string' ||

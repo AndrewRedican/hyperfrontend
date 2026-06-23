@@ -51,6 +51,14 @@ export const LIBRARIES: LibraryInfo[] = [
     category: 'core',
   },
   {
+    name: 'Builder',
+    packageName: '@hyperfrontend/builder',
+    slug: 'builder',
+    readmePath: 'libs/builder/README.md',
+    entryPoints: ['libs/builder/src/index.ts'],
+    category: 'core',
+  },
+  {
     name: 'State Machine',
     packageName: '@hyperfrontend/state-machine',
     slug: 'state-machine',

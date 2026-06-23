@@ -6,14 +6,14 @@
     "pack-install": "cd ../../../dist/libs/cryptography && npm pack && cd - && npm install ../../../dist/libs/cryptography/*.tgz"
   },
   "dependencies": {
-    "@hyperfrontend/cryptography": "file:../../../tmp/e2e-packs/hyperfrontend-cryptography-0.2.0.tgz"
+    "@hyperfrontend/cryptography": "file:../../../tmp/e2e-packs/hyperfrontend-cryptography-0.2.1.tgz"
   },
   "devDependencies": {
     "@types/jest": "29.5.14",
     "@types/node": "25.3.3",
     "jest": "29.7.0",
-    "jest-environment-jsdom": "29.7.0",
-    "ts-jest": "29.2.6",
+    "jest-environment-jsdom": "30.4.1",
+    "ts-jest": "29.4.11",
     "typescript": "5.7.3"
   },
   "overrides": {

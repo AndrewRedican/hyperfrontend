@@ -3,6 +3,8 @@
  * Uses Jest mocks to ensure specific branches are covered.
  */
 import { resolve } from 'node:path'
+import * as analyzeModule from '../../analyze'
+import { analyzeCommand } from './analyze'
 
 const FIXTURES_DIR = resolve(__dirname, '../../../__fixtures__')
 const MINIMAL_PROJECT = resolve(FIXTURES_DIR, 'minimal-project')
@@ -14,9 +16,6 @@ jest.mock('../../analyze', () => {
     analyzeProject: jest.fn().mockImplementation(actual.analyzeProject),
   }
 })
-
-import * as analyzeModule from '../../analyze'
-import { analyzeCommand } from './analyze'
 
 const mockAnalyzeProject = analyzeModule.analyzeProject as jest.MockedFunction<typeof analyzeModule.analyzeProject>
 

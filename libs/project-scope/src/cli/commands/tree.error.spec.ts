@@ -4,6 +4,9 @@
  */
 import type { FileStats } from '../../core/fs'
 import { resolve } from 'node:path'
+import * as fsModule from '../../core/fs'
+import * as traversalModule from '../../project/traversal'
+import { treeCommand } from './tree'
 
 const FIXTURES_DIR = resolve(__dirname, '../../../__fixtures__')
 const MINIMAL_PROJECT = resolve(FIXTURES_DIR, 'minimal-project')
@@ -23,10 +26,6 @@ jest.mock('../../core/fs', () => {
     getFileStat: jest.fn().mockImplementation(actual.getFileStat),
   }
 })
-
-import * as fsModule from '../../core/fs'
-import * as traversalModule from '../../project/traversal'
-import { treeCommand } from './tree'
 
 const mockWalkDirectory = traversalModule.walkDirectory as jest.MockedFunction<typeof traversalModule.walkDirectory>
 const mockGetFileStat = fsModule.getFileStat as jest.MockedFunction<typeof fsModule.getFileStat>

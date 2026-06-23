@@ -56,7 +56,7 @@ export function mergeSchemas(schemas: Schema[]): Schema {
     if (schema.type) {
       /* istanbul ignore next -- array types are rare */
       if (isArray(schema.type)) {
-        schema.type.forEach((t) => uniqueTypes.add(t))
+        ;(<JsonType[]>schema.type).forEach((t) => uniqueTypes.add(t))
       } else {
         uniqueTypes.add(schema.type)
       }
@@ -157,9 +157,9 @@ function mergeArraySchemas(schemas: Schema[]): Schema {
   for (const schema of schemas) {
     if (schema.items) {
       if (isArray(schema.items)) {
-        itemSchemas.push(...schema.items)
+        itemSchemas.push(...(<Schema[]>schema.items))
       } else {
-        itemSchemas.push(schema.items)
+        itemSchemas.push(<Schema>schema.items)
       }
     }
   }

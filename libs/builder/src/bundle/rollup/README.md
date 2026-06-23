@@ -1,0 +1,5 @@
+# rollup
+
+Rollup driver: per-format descriptor builders and the per-entry forked-worker dispatcher.
+
+Every format is bundled the same way: build a serializable descriptor and hand it to the worker. The descriptor builders (`toEsmBuildDescriptor`, `toCjsBuildDescriptor`, `toIifeBuildDescriptor`, `toUmdBuildDescriptor`, `toBinBuildDescriptor`) translate an entry point plus its format config into a `RollupBuildDescriptor`, validating externals/globals eagerly so the caller fails before a worker is spawned. `dispatchRollupWorker` forks a child Node process per entry to run that descriptor in isolation (the per-entry boundary that keeps peak memory bounded), or `runRollupWorkerJob` runs the same descriptor in-process for tests. The actual Rollup configuration — plugin wiring (`json`, `node-resolve`, `commonjs`, `typescript`, `terser`), output options, and `onwarn` suppression — lives entirely inside the worker's `job-runner.ts`, which depends only on `rollup` and the `@rollup/plugin-*` packages so it can bootstrap before any workspace package is built.

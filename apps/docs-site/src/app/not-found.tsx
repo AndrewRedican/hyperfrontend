@@ -3,6 +3,7 @@
 import type { LinkSuggestion } from '@/lib/link-suggestions'
 import { Footer } from '@/components/footer'
 import { Header } from '@/components/header'
+import { TesseractBackground } from '@/components/tesseract-background'
 import { suggestRelatedLinks, generateBugReportUrl } from '@/lib/link-suggestions'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
@@ -52,8 +53,10 @@ export default function NotFound() {
   return (
     <div className="flex min-h-screen flex-col bg-white dark:bg-slate-900">
       <Header />
-      <main id="main-content" className="flex flex-1 items-center justify-center px-4 py-12 sm:px-6 lg:px-8">
-        <div className="w-full max-w-lg text-center">
+      <main id="main-content" className="relative flex flex-1 items-center justify-center overflow-hidden px-4 py-12 sm:px-6 lg:px-8">
+        {/* Lost in hyperspace — the composability matrix dives behind the 404 */}
+        <TesseractBackground dive intensity="subtle" />
+        <div className="relative w-full max-w-lg text-center">
           {/* Animated 404 Display */}
           <div className="relative mb-8">
             <div className="flex items-center justify-center gap-2 sm:gap-4">

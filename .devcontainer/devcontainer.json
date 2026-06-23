@@ -7,8 +7,7 @@
     "ghcr.io/devcontainers/features/github-cli:1": {},
     "ghcr.io/devcontainers/features/node:1": {
       "version": "24.13.0"
-    },
-    "ghcr.io/devcontainers/features/copilot-cli:1": {}
+    }
   },
   "customizations": {
     "vscode": {
@@ -30,11 +29,12 @@
         "editor.formatOnPaste": true,
         "editor.tabSize": 2,
         "files.trimTrailingWhitespace": true,
-        "git.useEditorAsCommitInput": false
+        "git.useEditorAsCommitInput": false,
+        "telemetry.telemetryLevel": "off",
+        "gitlens.telemetry.enabled": false
       }
     }
   },
-  "forwardPorts": [3000, 4200],
   "remoteUser": "vscode",
-  "postCreateCommand": "npm ci && npm i -g commitizen@4.3.1"
+  "postCreateCommand": "npm ci"
 }

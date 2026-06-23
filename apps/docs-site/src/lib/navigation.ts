@@ -18,6 +18,57 @@ export interface NavItem {
  */
 const coreLibraries: NavItem[] = [
   {
+    slug: 'builder',
+    packageName: '@hyperfrontend/builder',
+    href: '/docs/libraries/builder',
+    children: [
+      {
+        slug: 'bin',
+        href: '/docs/libraries/builder/bin',
+        children: [
+          {
+            slug: 'native',
+            href: '/docs/libraries/builder/bin/native',
+            children: [{ slug: 'worker', href: '/docs/libraries/builder/bin/native/worker' }],
+          },
+          { slug: 'script', href: '/docs/libraries/builder/bin/script' },
+        ],
+      },
+      {
+        slug: 'bundle',
+        href: '/docs/libraries/builder/bundle',
+        children: [
+          { slug: 'declarations', href: '/docs/libraries/builder/bundle/declarations' },
+          { slug: 'dedupe', href: '/docs/libraries/builder/bundle/dedupe' },
+          {
+            slug: 'dependencies',
+            href: '/docs/libraries/builder/bundle/dependencies',
+            children: [{ slug: 'worker', href: '/docs/libraries/builder/bundle/dependencies/worker' }],
+          },
+          { slug: 'entries', href: '/docs/libraries/builder/bundle/entries' },
+          { slug: 'externals', href: '/docs/libraries/builder/bundle/externals' },
+          {
+            slug: 'rollup',
+            href: '/docs/libraries/builder/bundle/rollup',
+            children: [{ slug: 'worker', href: '/docs/libraries/builder/bundle/rollup/worker' }],
+          },
+        ],
+      },
+      { slug: 'memory', href: '/docs/libraries/builder/memory' },
+      { slug: 'models', href: '/docs/libraries/builder/models' },
+      {
+        slug: 'package',
+        href: '/docs/libraries/builder/package',
+        children: [
+          { slug: 'assets', href: '/docs/libraries/builder/package/assets' },
+          { slug: 'json', href: '/docs/libraries/builder/package/json' },
+          { slug: 'licenses', href: '/docs/libraries/builder/package/licenses' },
+        ],
+      },
+      { slug: 'presets', href: '/docs/libraries/builder/presets' },
+    ],
+  },
+  {
     slug: 'cryptography',
     packageName: '@hyperfrontend/cryptography',
     href: '/docs/libraries/cryptography',

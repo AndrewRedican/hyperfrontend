@@ -1,0 +1,283 @@
+import type { PackageJson } from './package-json'
+
+/**
+ * Predicate identifying packages that are local to the workspace.
+ *
+ * Returning `true` opts the package into workspace-aware behavior such as inlining
+ * during bundling or stripping from the published `dependencies` map.
+ */
+export type IsWorkspacePackagePredicate = (name: string) => boolean
+
+/**
+ * Predicate gating whether an asset spec materializes for a given package.
+ */
+export type AssetConditionPredicate = (pkg: PackageJson) => boolean
+
+/**
+ * Generic asset-copy specification consumed by the package phase.
+ *
+ * Either `files` or `glob` selects the inputs under `from`. When neither is provided,
+ * every file directly under `from` is copied.
+ */
+export interface AssetSpec {
+  /** Absolute source directory. */
+  from: string
+  /** Output subdirectory relative to the build's outputPath; defaults to `.` (the dist root). */
+  to?: string
+  /** Explicit relative file names to copy. */
+  files?: string[]
+  /** POSIX-style glob pattern, evaluated relative to `from`. */
+  glob?: string
+  /** Predicate gating whether the spec is materialized. */
+  condition?: AssetConditionPredicate
+}
+
+/**
+ * Inheritance specification: copy the listed top-level fields from another package.json
+ * onto the synthesized output package.json, leaving existing fields intact.
+ */
+export interface InheritFromSpec {
+  /** Absolute path to the source package.json. */
+  from: string
+  /** Top-level field names to copy if present on the source. */
+  fields: string[]
+}
+
+/**
+ * Entry-point selection shared by every per-format configuration.
+ */
+export interface FormatEntryConfig {
+  /** Entry pattern(s) — exact path, glob, or list. Omit to include all detected entries. */
+  entry?: string | string[]
+  /** Pattern(s) to exclude from the resolved entry set. */
+  exclude?: string | string[]
+}
+
+/**
+ * Caller overrides to the auto-derived bundled-dep set.
+ *
+ * The default set is `package.json#dependencies` minus `peerDependencies` minus
+ * any package matching `isWorkspacePackage`. `include` adds packages absent
+ * from `dependencies`; `exclude` skips ones that would otherwise be picked up.
+ * Neither override can resurrect a peer or workspace package.
+ */
+export interface BundleAllDepsOptions {
+  /** Force-include packages even if absent from `package.json#dependencies`. */
+  include?: string[]
+  /** Skip these packages even if otherwise selected. */
+  exclude?: string[]
+}
+
+/**
+ * ESM output configuration.
+ */
+export interface EsmConfig extends FormatEntryConfig {
+  /** Generate sourcemaps. Defaults to `false`. */
+  sourcemap?: boolean
+  /** Additional package names to mark external. */
+  external?: string[]
+  /** Inline workspace dependencies (`true`) or keep them external (`false`). Defaults to `true`. */
+  bundleWorkspaceDeps?: boolean
+  /**
+   * Bundle every third-party dep into `_dependencies/<dep>/` and route entry imports
+   * through that directory at install-relative paths. When `true`, builder produces
+   * a fully self-contained dist with no `dependencies` field on the published package.
+   */
+  bundleAllDeps?: boolean | BundleAllDepsOptions
+}
+
+/**
+ * CommonJS output configuration.
+ */
+export interface CjsConfig extends FormatEntryConfig {
+  /** Generate sourcemaps. Defaults to `false`. */
+  sourcemap?: boolean
+  /** Additional package names to mark external. */
+  external?: string[]
+  /** Inline workspace dependencies (`true`) or keep them external (`false`). Defaults to `true`. */
+  bundleWorkspaceDeps?: boolean
+  /**
+   * Bundle every third-party dep into `_dependencies/<dep>/` and route entry imports
+   * through that directory at install-relative paths. When `true`, builder produces
+   * a fully self-contained dist with no `dependencies` field on the published package.
+   */
+  bundleAllDeps?: boolean | BundleAllDepsOptions
+}
+
+/**
+ * IIFE (browser self-executing) output configuration.
+ */
+export interface IifeConfig extends FormatEntryConfig {
+  /** Global variable name exposed by the bundle. */
+  globalName: string
+  /** Emit a minified twin alongside the unminified bundle. Defaults to `true`. */
+  minify?: boolean
+  /** Output subdirectory relative to outputPath. Defaults to `bundle`. */
+  output?: string
+  /** Generate sourcemaps. Defaults to `false`. */
+  sourcemap?: boolean
+  /** Package names to keep external; if omitted, every dependency is inlined. */
+  external?: string[]
+  /** Global names for each external dependency. Required when `external` is set. */
+  globals?: Record<string, string>
+}
+
+/**
+ * UMD (universal module definition) output configuration.
+ */
+export interface UmdConfig extends FormatEntryConfig {
+  /** Global variable name exposed by the bundle. */
+  globalName: string
+  /** Emit a minified twin alongside the unminified bundle. Defaults to `true`. */
+  minify?: boolean
+  /** AMD module identifier. Defaults to the package name. */
+  amdId?: string
+  /** Output subdirectory relative to outputPath. Defaults to `bundle`. */
+  output?: string
+  /** Generate sourcemaps. Defaults to `false`. */
+  sourcemap?: boolean
+  /** Package names to keep external; if omitted, every dependency is inlined. */
+  external?: string[]
+  /** Global names for each external dependency. Required when `external` is set. */
+  globals?: Record<string, string>
+}
+
+/**
+ * Output formats permitted for a JS bin.
+ */
+export type BinScriptFormat = 'cjs' | 'esm'
+
+/**
+ * Per-bin format declaration: a single format or an explicit list.
+ */
+export type BinFormatSpec = BinScriptFormat | BinScriptFormat[]
+
+/**
+ * Native binary platform identifier in the form `<process.platform>-<process.arch>`.
+ */
+export type SeaPlatform = 'linux-x64' | 'linux-arm64' | 'darwin-x64' | 'darwin-arm64' | 'win32-x64'
+
+/**
+ * Node SEA (single-executable application) configuration for a bin.
+ */
+export interface SeaConfig {
+  /** Platforms for which a native binary should be produced. */
+  platforms: SeaPlatform[]
+}
+
+/**
+ * Bin synthesis configuration.
+ *
+ * The source file is fixed at `src/bin/<name>.ts`. The runner export defaults to the
+ * file's `default` export; override with `runner` to target a named export instead.
+ */
+export interface BinConfig {
+  /** Bin name (also the package.json#bin key and the source file basename). */
+  name: string
+  /** Required output format(s) for the bin. */
+  format: BinFormatSpec
+  /** Named runner export to bootstrap. Defaults to the file's `default` export. */
+  runner?: string
+  /** Override the bootstrap footer template. */
+  bootstrap?: string
+  /** Opt into Node SEA native binary emission. */
+  sea?: SeaConfig
+}
+
+/**
+ * Per-package hoist policy for a bundled workspace dependency.
+ *
+ * `'sub-path'` (the zero-config default) gives every public tsconfig specifier
+ * of the dep — root and each sub-path — its own
+ * `_dependencies/<name>(/<sub>)?/index.<ext>` chunk, preserving sub-module
+ * tree-shaking and reuse, and supporting subpath-only packages that expose no
+ * root export. `'whole-surface'` is an explicit opt-in collapse: it routes every
+ * import of the dep onto a single root chunk, and therefore requires the dep to
+ * expose a root export.
+ */
+export type WorkspaceDepHoistPolicy = 'sub-path' | 'whole-surface'
+
+/**
+ * Memory-monitor configuration thresholds (in MB).
+ */
+export interface MemoryMonitorOptions {
+  /** Heap-used threshold above which a warning is logged. */
+  warningMB?: number
+  /** Heap-used threshold above which a critical-level message is logged. */
+  criticalMB?: number
+  /** Step-over-step heap growth threshold above which a growth warning is logged. */
+  growthMB?: number
+}
+
+/**
+ * Top-level builder configuration consumed by the `build()` facade.
+ */
+export interface BuildConfig {
+  /** Absolute path to the project being built. */
+  projectRoot: string
+  /** Absolute path to the workspace root. */
+  workspaceRoot: string
+  /** Absolute output directory. Defaults to `<workspaceRoot>/dist/<projectRelativePath>`. */
+  outputPath?: string
+  /** Path to the project's tsconfig used for declarations. Defaults to `<projectRoot>/tsconfig.lib.json`. */
+  tsConfig?: string
+  /** Workspace-package predicate; when omitted the bundler treats every dep as external. */
+  isWorkspacePackage?: IsWorkspacePackagePredicate
+  /**
+   * Per-package override of the workspace-dependency hoist policy, keyed by
+   * package name. Packages absent from the map default to `'sub-path'` (granular,
+   * zero-config); set a package to `'whole-surface'` to opt into collapsing its
+   * sub-paths onto the root chunk. Builder ships no built-in entries; consumers
+   * inject their own opinions here, mirroring {@link isWorkspacePackage}.
+   */
+  workspaceDepPolicy?: Record<string, WorkspaceDepHoistPolicy>
+  /** Drop workspace-internal entries from the output package.json's `dependencies`. */
+  filterWorkspaceDepsFromOutput?: boolean
+  /** Selectively copy fields from another package.json onto the output package.json. */
+  inheritFieldsFrom?: InheritFromSpec
+  /** Asset specs to materialize alongside the bundle. */
+  assets?: AssetSpec[]
+  /** Global externals applied to every format. */
+  external?: string[]
+  /** ESM configuration; omit to skip ESM output. */
+  esm?: EsmConfig | EsmConfig[]
+  /** CommonJS configuration; omit to skip CJS output. */
+  cjs?: CjsConfig | CjsConfig[]
+  /** IIFE bundle configuration; omit to skip IIFE output. */
+  iife?: IifeConfig | IifeConfig[]
+  /** UMD bundle configuration; omit to skip UMD output. */
+  umd?: UmdConfig | UmdConfig[]
+  /** Override path for the unpkg field. Defaults to the first UMD bundle path. */
+  unpkg?: string
+  /** Override path for the jsdelivr field. Defaults to the first UMD bundle path. */
+  jsdelivr?: string
+  /** Bin declarations to synthesize alongside the library. */
+  bin?: BinConfig[]
+  /**
+   * Override the published `package.json#files` allowlist.
+   *
+   * When omitted, the allowlist is reflected from the materialized output tree
+   * after every emit phase — it names exactly what shipped. Provide an explicit
+   * array to take full control of what `npm publish` ships.
+   */
+  files?: string[]
+  /**
+   * Hoist first-party modules that are inlined into multiple entry bundles into
+   * shared `_shared/<srcPath>/` chunks and rewrite the entries to import them,
+   * removing the duplicated copies. Runs as a safe, additive post-emit pass over
+   * the `esm`/`cjs` outputs only. Defaults to enabled; set `false` to keep every
+   * entry fully self-contained.
+   */
+  dedupeSharedInternals?: boolean
+  /** Emit a third-party-licenses file. */
+  thirdPartyLicenses?: boolean
+  /** Enable the memory monitor; pass `true` for defaults or an options object for custom thresholds. */
+  memoryMonitor?: boolean | MemoryMonitorOptions
+  /**
+   * Raise the build's log level. When `true`, the shared logger emits at `debug`
+   * (surfacing every phase's progress, timing, and memory diagnostics); when
+   * omitted or `false`, the build stays quiet at `error`. Also settable via the
+   * `hf-build --verbose` flag.
+   */
+  verbose?: boolean
+}

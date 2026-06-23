@@ -9,19 +9,14 @@
     "version": {},
     "version-check": {},
     "build": {
-      "executor": "nx:run-commands",
-      "outputs": ["{workspaceRoot}/dist/libs/versioning"],
-      "options": {
-        "cwd": "{workspaceRoot}",
-        "parallel": false,
-        "commands": ["npx nx run lib-versioning:build-package", "node libs/versioning/scripts/build-bins.mjs"]
-      }
-    },
-    "build-package": {
       "executor": "@hyperfrontend/package:build",
       "options": {
-        "esm": { "bundleWorkspaceDeps": true },
-        "cjs": { "bundleWorkspaceDeps": true }
+        "esm": { "bundleWorkspaceDeps": true, "bundleAllDeps": true },
+        "cjs": { "bundleWorkspaceDeps": true, "bundleAllDeps": true },
+        "bin": [
+          { "name": "cz", "runner": "runCz", "format": "cjs" },
+          { "name": "cl", "runner": "runCl", "format": "cjs" }
+        ]
       }
     },
     "publish": {},

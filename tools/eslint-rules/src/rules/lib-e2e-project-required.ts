@@ -85,6 +85,11 @@ const rule: Rule.RuleModule = {
           return
         }
 
+        const parent = node.parent
+        if (parent?.type !== 'JSONObjectExpression' || parent.parent?.type !== 'JSONExpressionStatement') {
+          return
+        }
+
         const key = node.key
         let keyName: string | null = null
 

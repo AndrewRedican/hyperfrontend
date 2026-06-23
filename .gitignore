@@ -48,3 +48,6 @@ lint-output.txt
 .verdaccio/storage
 
 _
+.claude/worktrees
+.nx/polygraph
+.nx/self-healing

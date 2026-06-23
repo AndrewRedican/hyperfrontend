@@ -304,7 +304,6 @@ export function discoverNxProjects(workspacePath: string): Map<string, NxProject
 
 /**
  * Build a simple project graph from discovered projects.
- * For full graph capabilities, use `@nx/devkit`.
  *
  * @param workspacePath - Workspace root path
  * @param projects - Existing configuration map to skip auto-discovery

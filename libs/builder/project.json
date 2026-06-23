@@ -1,0 +1,36 @@
+{
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "name": "lib-builder",
+  "description": "Composable, vendor-neutral build toolkit for TypeScript libraries, JS bins, and Node SEA native binaries.",
+  "sourceRoot": "{projectRoot}/src",
+  "projectType": "library",
+  "tags": ["type:util", "scope:public"],
+  "targets": {
+    "version": {},
+    "version-check": {},
+    "build": {
+      "executor": "@hyperfrontend/package:build",
+      "options": {
+        "esm": {
+          "bundleWorkspaceDeps": true,
+          "bundleAllDeps": true
+        },
+        "cjs": {
+          "bundleWorkspaceDeps": true,
+          "bundleAllDeps": true
+        },
+        "bin": [
+          {
+            "name": "hf-build",
+            "format": ["cjs"],
+            "sea": {
+              "platforms": ["linux-x64", "linux-arm64", "darwin-x64", "darwin-arm64", "win32-x64"]
+            }
+          }
+        ]
+      }
+    },
+    "publish": {},
+    "typecheck": {}
+  }
+}

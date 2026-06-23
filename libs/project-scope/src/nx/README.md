@@ -1,6 +1,6 @@
 # NX Module
 
-The `nx` module provides utilities for detecting and working with NX workspaces. It supports NX monorepo detection, workspace configuration reading, project enumeration, and optional `@nx/devkit` integration.
+The `nx` module provides utilities for detecting and working with NX workspaces. It supports NX monorepo detection, workspace configuration reading, and project enumeration.
 
 ## Capabilities
 
@@ -65,34 +65,6 @@ for (const project of projects) {
 }
 ```
 
-### @nx/devkit Integration
-
-Optional integration with `@nx/devkit` for enhanced functionality.
-
-```typescript
-import { isDevkitAvailable, getDevkit, tryLoadDevkit, withDevkit } from '@hyperfrontend/project-scope'
-
-// Check availability
-if (isDevkitAvailable()) {
-  const devkit = getDevkit()
-  // Use devkit APIs directly
-}
-
-// Graceful fallback pattern
-const tree = withDevkit(
-  (devkit) => devkit.createTreeWithEmptyWorkspace(),
-  () => createTree(process.cwd())
-)
-
-// Detailed load result
-const result = tryLoadDevkit()
-if (result.available) {
-  console.log('Devkit loaded:', result.devkit)
-} else {
-  console.log('Devkit error:', result.error)
-}
-```
-
 ## NX Configuration Files
 
 The module detects these NX configuration files:
@@ -153,8 +125,7 @@ interface NxJson {
 
 ## Design Principles
 
-1. **Optional devkit**: Works without `@nx/devkit` installed
-2. **Caching**: Results are cached appropriately
-3. **Version agnostic**: Supports multiple NX versions
-4. **Standalone support**: Detects both integrated and standalone repos
-5. **Type safety**: Full TypeScript types for all configurations
+1. **Caching**: Results are cached appropriately
+2. **Version agnostic**: Supports multiple NX versions
+3. **Standalone support**: Detects both integrated and standalone repos
+4. **Type safety**: Full TypeScript types for all configurations

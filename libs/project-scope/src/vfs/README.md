@@ -1,6 +1,6 @@
 # VFS Module
 
-The `vfs` (Virtual File System) module provides a transactional file system abstraction for safely creating, updating, and deleting files. Changes are buffered in memory and can be committed atomically or rolled back, following the same patterns as NX devkit's Tree interface.
+The `vfs` (Virtual File System) module provides a transactional file system abstraction for safely creating, updating, and deleting files. Changes are buffered in memory and can be committed atomically or rolled back.
 
 ## Capabilities
 
@@ -182,7 +182,7 @@ for (const diff of allDiffs) {
 
 ## Tree Interface
 
-The Tree interface mirrors NX devkit's Tree for compatibility:
+The Tree interface:
 
 ```typescript
 interface Tree {
@@ -279,6 +279,5 @@ Symlinks pointing outside the tree root are always rejected.
 
 1. **Transactional**: All changes are buffered until commit
 2. **Safe**: Path traversal and symlink escapes are prevented
-3. **Compatible**: Mirrors NX devkit Tree interface
-4. **Atomic**: Commit applies all changes or fails completely
-5. **Reversible**: Changes can be rolled back before commit
+3. **Atomic**: Commit applies all changes or fails completely
+4. **Reversible**: Changes can be rolled back before commit

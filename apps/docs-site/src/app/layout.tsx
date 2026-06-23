@@ -31,6 +31,14 @@ export const metadata: Metadata = {
   alternates: {
     canonical: './',
   },
+  icons: {
+    icon: [
+      { url: '/hf-light.svg', media: '(prefers-color-scheme: light)', type: 'image/svg+xml' },
+      { url: '/hf-dark.svg', media: '(prefers-color-scheme: dark)', type: 'image/svg+xml' },
+    ],
+    shortcut: '/hf-light.svg',
+    apple: '/hf-light.svg',
+  },
 }
 
 type RootLayoutProps = { children: React.ReactNode }

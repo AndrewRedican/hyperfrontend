@@ -52,11 +52,10 @@ type IconProps = { className?: string }
 
 function Logo({ className }: IconProps) {
   return (
-    <svg className={className} viewBox="0 0 32 32" fill="none">
-      <rect width="32" height="32" rx="8" className="fill-primary-600 dark:fill-primary-500" />
-      <path d="M8 12h6v8H8v-8zm10 0h6v8h-6v-8z" className="fill-white" />
-      <path d="M14 15h4v2h-4v-2z" className="fill-white" />
-    </svg>
+    <>
+      <img src="/hf-light.svg" alt="HyperFrontend logo" className={`${className ?? ''} block dark:hidden`} />
+      <img src="/hf-dark.svg" alt="" aria-hidden="true" className={`${className ?? ''} hidden dark:block`} />
+    </>
   )
 }
 

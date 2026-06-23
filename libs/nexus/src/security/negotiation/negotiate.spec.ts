@@ -1,14 +1,6 @@
-jest.unmock('@hyperfrontend/immutable-api-utils/built-in-copy/object')
-
-/**
- * Unit Tests: Protocol Negotiation
- *
- * Tests the negotiation algorithm that determines the best security
- * protocol to use between two communicating parties.
- */
-
 import type { SecurityProtocolVersion, SecurityNegotiationRequest } from '../../types/security'
 import { negotiateProtocol, createSecurityRequest, createSecurityResponse } from './negotiate'
+jest.unmock('@hyperfrontend/immutable-api-utils/built-in-copy/object')
 
 describe('Protocol Negotiation', () => {
   describe('negotiateProtocol', () => {

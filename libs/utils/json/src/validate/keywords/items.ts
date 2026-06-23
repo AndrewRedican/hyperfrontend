@@ -33,8 +33,8 @@ export function validateItems(instance: unknown[], schema: Schema, ctx: Validati
   let valid = true
 
   if (isArray(items)) {
-    for (let i = 0; i < items.length && i < instance.length; i++) {
-      const itemSchema = items[i]
+    for (let i = 0; i < (<Schema[]>items).length && i < instance.length; i++) {
+      const itemSchema = (<Schema[]>items)[i]
       /* istanbul ignore if -- defensive null check for sparse arrays */
       if (!itemSchema) continue
       const itemCtx = pushPath(ctx, i)
@@ -45,15 +45,15 @@ export function validateItems(instance: unknown[], schema: Schema, ctx: Validati
       }
     }
 
-    if (instance.length > items.length) {
-      if (!validateAdditionalItems(instance, schema, ctx, items.length)) {
+    if (instance.length > (<Schema[]>items).length) {
+      if (!validateAdditionalItems(instance, schema, ctx, (<Schema[]>items).length)) {
         valid = false
       }
     }
   } else {
     for (let i = 0; i < instance.length; i++) {
       const itemCtx = pushPath(ctx, i)
-      if (!ctx.validate(instance[i], items, itemCtx)) {
+      if (!ctx.validate(instance[i], <Schema>items, itemCtx)) {
         valid = false
         if (!shouldContinue(ctx)) return false
       }

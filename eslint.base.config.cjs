@@ -220,6 +220,7 @@ module.exports = [
     files: ['**/*.spec.ts'],
     rules: {
       'workspace/assertive-test-names': 'error',
+      'workspace/jest-mock-after-imports': 'error',
     },
   },
   {
@@ -258,6 +259,7 @@ module.exports = [
       'workspace/lib-project-bundle-config': 'error',
       'workspace/lib-project-version-targets': 'error',
       'workspace/lib-e2e-project-required': 'error',
+      'workspace/lib-builder-implicit-dependency': 'off', // disabled for now, as it cause cyclic project dependency in NX graph
     },
   },
   {

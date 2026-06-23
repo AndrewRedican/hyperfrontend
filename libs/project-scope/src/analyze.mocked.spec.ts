@@ -1,11 +1,9 @@
 import { resolve } from 'node:path'
-
+import { analyzeProject } from './analyze'
 jest.mock('./nx', () => ({
   isNxWorkspace: jest.fn(() => false),
   findNxWorkspaceRoot: jest.fn(() => null),
 }))
-
-import { analyzeProject } from './analyze'
 
 const FIXTURES_DIR = resolve(__dirname, '../__fixtures__')
 

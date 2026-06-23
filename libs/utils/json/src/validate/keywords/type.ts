@@ -1,4 +1,4 @@
-import type { Schema } from '../../types/schema'
+import type { JsonType, Schema } from '../../types/schema'
 import type { ValidationContext } from '../context'
 import { isArray } from '@hyperfrontend/immutable-api-utils/built-in-copy/array'
 import { globalIsFinite, isInteger } from '@hyperfrontend/immutable-api-utils/built-in-copy/number'
@@ -60,7 +60,7 @@ export function validateType(instance: unknown, schema: Schema, ctx: ValidationC
   const types = isArray(schemaType) ? schemaType : [schemaType]
 
   for (const type of types) {
-    const checker = typeCheckers[type]
+    const checker = typeCheckers[<JsonType>type]
     /* istanbul ignore if -- defensive check for unknown type */
     if (checker && checker(instance)) {
       return true
@@ -72,7 +72,7 @@ export function validateType(instance: unknown, schema: Schema, ctx: ValidationC
   }
 
   const actualType = getActualType(instance)
-  const expectedTypes = types.join(' or ')
+  const expectedTypes = (<JsonType[]>types).join(' or ')
   addError(ctx, `Expected type ${expectedTypes} but got ${actualType}`, instance, 'type', {
     expected: types,
     actual: actualType,

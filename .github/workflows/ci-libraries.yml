@@ -42,6 +42,8 @@ jobs:
             # - web-worker: Excluded - experimental/unstable
 
             # ACTIVE LIBRARIES:
+            builder:
+              - 'libs/builder/**'
             cryptography:
               - 'libs/cryptography/**'
             logging:
@@ -108,6 +110,7 @@ jobs:
           # add_if_changed "${{ steps.filter.outputs.web-worker }}" "lib-web-worker" "libs/web-worker" "web-worker"
 
           # ACTIVE LIBRARIES:
+          add_if_changed "${{ steps.filter.outputs.builder }}" "lib-builder" "libs/builder" "builder"
           add_if_changed "${{ steps.filter.outputs.cryptography }}" "lib-cryptography" "libs/cryptography" "cryptography"
           add_if_changed "${{ steps.filter.outputs.logging }}" "lib-logging" "libs/logging" "logging"
           add_if_changed "${{ steps.filter.outputs.network-protocol }}" "lib-network-protocol" "libs/network-protocol" "network-protocol"

@@ -150,6 +150,7 @@ jobs:
 
           # Define library coverage mappings: flag:path
           LIBS=(
+            "builder:libs/builder"
             "cryptography:libs/cryptography"
             "logging:libs/logging"
             "network-protocol:libs/network-protocol"
@@ -516,3 +517,55 @@ jobs:
                 console.log(`⚠ Failed to create release for ${tag}: ${error.message}`)
               }
             }
+
+  dispatch-native-builds:
+    name: dispatch-native-builds
+    runs-on: ubuntu-latest
+    needs: [publish, push-tags, create-github-release]
+    if: always() && needs.publish.result == 'success'
+    permissions:
+      contents: read
+      actions: write # required to dispatch the per-lib native workflow
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          fetch-depth: 0
+
+      # Each entry: "<lib-tag-prefix>:<workflow-file>"
+      # When a tag matching the prefix points at HEAD, dispatch the matching
+      # workflow with the tag as `release-tag` so it builds per-platform native
+      # binaries and attaches them to the GitHub Release. Per Decision #60 the
+      # binaries are also published as per-platform npm sub-packages (Phase 16);
+      # the release attach is the audit-trail redundancy path.
+      - name: Dispatch per-lib native workflows for new tags
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+
+          NATIVE_LIBS=(
+            "lib-builder:ci-lib-builder-native.yml"
+          )
+
+          HEAD_SHA=$(git rev-parse HEAD)
+
+          for entry in "${NATIVE_LIBS[@]}"; do
+            prefix="${entry%%:*}"
+            workflow="${entry#*:}"
+
+            # All tags pointing at HEAD that match this lib's prefix.
+            mapfile -t TAGS < <(git tag --points-at "$HEAD_SHA" | grep -E "^${prefix}@" || true)
+
+            if [ ${#TAGS[@]} -eq 0 ]; then
+              echo "No fresh ${prefix}@* tags at HEAD — skipping native dispatch."
+              continue
+            fi
+
+            for tag in "${TAGS[@]}"; do
+              echo "Dispatching ${workflow} for tag ${tag}"
+              gh workflow run "${workflow}" \
+                --ref main \
+                -f release-tag="${tag}"
+            done
+          done

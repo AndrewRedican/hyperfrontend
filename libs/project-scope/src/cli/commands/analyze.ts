@@ -182,8 +182,8 @@ function formatAnalysisYaml(result: AnalysisResult): string {
       return obj.toISOString()
     }
     if (isArray(obj)) {
-      if (obj.length === 0) return '[]'
-      return obj.map((item) => `${prefix}- ${toYaml(item, indent + 1).trimStart()}`).join('\n')
+      if ((<unknown[]>obj).length === 0) return '[]'
+      return (<unknown[]>obj).map((item) => `${prefix}- ${toYaml(item, indent + 1).trimStart()}`).join('\n')
     }
     if (typeof obj === 'object') {
       const objEntries = entries(<Record<string, unknown>>obj)

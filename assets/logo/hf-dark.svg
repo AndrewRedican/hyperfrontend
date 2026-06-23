@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 800" width="100%" height="100%">
+  <defs>
+    <linearGradient id="dm-core-cyan" x1="0%" y1="100%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#0052D4"/>
+      <stop offset="50%" stop-color="#4364F7"/>
+      <stop offset="100%" stop-color="#6FB1FC"/>
+    </linearGradient>
+    <linearGradient id="dm-hyper-magenta" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#00F2FE"/>
+      <stop offset="100%" stop-color="#4FACFE"/>
+    </linearGradient>
+    <linearGradient id="dm-top-silver" x1="50%" y1="0%" x2="50%" y2="100%">
+      <stop offset="0%" stop-color="#FFFFFF"/>
+      <stop offset="100%" stop-color="#8A9BA8"/>
+    </linearGradient>
+    <filter id="dm-cyber-glow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="20" result="blur" />
+      <feComposite in="SourceGraphic" in2="blur" operator="over" />
+    </filter>
+  </defs>
+  <g filter="url(#dm-cyber-glow)" opacity="0.4">
+    <polygon points="400,180 620,307 400,434 180,307" fill="url(#dm-top-silver)" />
+    <polygon points="180,307 400,434 400,690 180,563" fill="url(#dm-core-cyan)" />
+    <polygon points="400,434 620,307 620,563 400,690" fill="url(#dm-hyper-magenta)" />
+  </g>
+  <g stroke="#030305" stroke-width="12" stroke-linejoin="round" stroke-linecap="round">
+    <polygon points="400,210 570,308 400,406 230,308" fill="url(#dm-top-silver)"/>
+    <polygon points="210,330 380,428 380,630 210,532" fill="url(#dm-core-cyan)"/>
+    <polygon points="420,428 590,330 590,532 420,630" fill="url(#dm-hyper-magenta)"/>
+    <polygon points="400,345 455,377 400,409 345,377" fill="#030305" opacity="0.9"/>
+    <polygon points="400,355 440,378 400,401 360,378" fill="url(#dm-hyper-magenta)"/>
+  </g>
+  <circle cx="400" cy="210" r="4" fill="#FFFFFF" opacity="0.8"/>
+  <circle cx="570" cy="308" r="4" fill="#FFFFFF" opacity="0.8"/>
+  <circle cx="230" cy="308" r="4" fill="#FFFFFF" opacity="0.8"/>
+  <circle cx="380" cy="630" r="4" fill="#00F2FE" opacity="0.8"/>
+  <circle cx="420" cy="630" r="4" fill="#4FACFE" opacity="0.8"/>
+</svg>

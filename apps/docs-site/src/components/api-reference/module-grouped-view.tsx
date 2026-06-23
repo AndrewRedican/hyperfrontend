@@ -25,14 +25,23 @@ interface ModuleGroup {
 }
 
 /**
- * Computes the full import path for a module
+ * Computes the full import path for a module.
+ *
+ * TypeDoc names each module by its `@module` tag, which is the fully-qualified
+ * import specifier (e.g. '@hyperfrontend/ui-utils/color'). Such names are
+ * returned as-is to avoid duplicating the package prefix. Bare subpaths (e.g.
+ * 'color') are joined onto the package name, and the root module ('index' or a
+ * name equal to the package) resolves to the package name alone.
  * @param packageName - The root package name (e.g., '@hyperfrontend/ui-utils')
- * @param moduleName - The module subpath (e.g., 'color' or 'index')
+ * @param moduleName - The module name from TypeDoc (full specifier or subpath)
  * @returns The full import path (omits '/index' suffix)
  */
 function getFullImportPath(packageName: string, moduleName: string): string {
-  if (moduleName === 'index') {
+  if (moduleName === 'index' || moduleName === packageName) {
     return packageName
+  }
+  if (moduleName.startsWith(`${packageName}/`)) {
+    return moduleName
   }
   return `${packageName}/${moduleName}`
 }

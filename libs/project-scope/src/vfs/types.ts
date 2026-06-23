@@ -86,7 +86,7 @@ export interface CommitResult {
 
 /**
  * Virtual file system tree interface.
- * Mirrors NX devkit Tree interface for compatibility.
+ * Transactional in-memory tree of pending file operations.
  */
 export interface Tree {
   /** Workspace root path */
