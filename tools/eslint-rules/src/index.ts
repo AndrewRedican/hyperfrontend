@@ -8,6 +8,7 @@ import docsSiteSecondaryEntries, { RULE_NAME as DOCS_SITE_SECONDARY_ENTRIES } fr
 import exportOrder, { RULE_NAME as EXPORT_ORDER } from './rules/export-order'
 import importOrder, { RULE_NAME as IMPORT_ORDER } from './rules/import-order'
 import jestMockAfterImports, { RULE_NAME as JEST_MOCK_AFTER_IMPORTS } from './rules/jest-mock-after-imports'
+import libBuilderImplicitDependency, { RULE_NAME as LIB_BUILDER_IMPLICIT_DEPENDENCY } from './rules/lib-builder-implicit-dependency'
 import libCiWorkflows, { RULE_NAME as LIB_CI_WORKFLOWS } from './rules/lib-ci-workflows'
 import libCompatibilityDocs, { RULE_NAME as LIB_COMPATIBILITY_DOCS } from './rules/lib-compatibility-docs'
 import libE2eProjectRequired, { RULE_NAME as LIB_E2E_PROJECT_REQUIRED } from './rules/lib-e2e-project-required'
@@ -73,6 +74,7 @@ export const rules: ESLint.Plugin['rules'] = {
   [LIB_ENTRY_EXPORT_SPACING]: libEntryExportSpacing as unknown as Rule.RuleModule,
   [IMPORT_ORDER]: importOrder as unknown as Rule.RuleModule,
   [JEST_MOCK_AFTER_IMPORTS]: jestMockAfterImports as unknown as Rule.RuleModule,
+  [LIB_BUILDER_IMPLICIT_DEPENDENCY]: libBuilderImplicitDependency as unknown as Rule.RuleModule,
   [LIB_CI_WORKFLOWS]: libCiWorkflows as unknown as Rule.RuleModule,
   [LIB_E2E_PROJECT_REQUIRED]: libE2eProjectRequired as unknown as Rule.RuleModule,
   [LIB_PKG_BUNDLE_ENTRY]: libPkgBundleEntry as unknown as Rule.RuleModule,
