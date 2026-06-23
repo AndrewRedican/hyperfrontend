@@ -30,7 +30,7 @@ export interface ChannelLogger {
 /**
  * Extended logger interface for version executor operations.
  */
-interface ExecutorLogger extends Omit<Logger, 'setLogLevel'> {
+interface ExecutorLogger extends Omit<Logger, 'setLogLevel' | 'channel'> {
   /** Sets log level based on verbose/quiet flags */
   setLogLevel: (level: Pick<VersionExecutorSchema, 'verbose' | 'quiet'>) => void
   /** Creates a prefixed sub-logger channel */
