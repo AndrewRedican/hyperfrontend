@@ -1,7 +1,10 @@
 # hyperfrontend
 
 <p align="center">
-  <img  width="300" src="https://github.com/AndrewRedican/hyperfrontend/blob/main/assets/logo/hyperfrontend.png?raw=true" alt="Coverage">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="https://github.com/AndrewRedican/hyperfrontend/blob/main/assets/logo/hf-dark.svg?raw=true">
+    <img width="220" src="https://github.com/AndrewRedican/hyperfrontend/blob/main/assets/logo/hf-light.svg?raw=true" alt="HyperFrontend">
+  </picture>
 </p>
 <p align="center">
   A hybrid <a href="https://en.wikipedia.org/wiki/Micro_frontend">micro-frontend</a> pattern to embed live web applications with communication protocols, lifecycle, and contract standards

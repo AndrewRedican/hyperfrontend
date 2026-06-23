@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 800" width="100%" height="100%">
+  <defs>
+    <linearGradient id="lm-core-blue" x1="0%" y1="100%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#0A2540"/>
+      <stop offset="100%" stop-color="#0063F7"/>
+    </linearGradient>
+    <linearGradient id="lm-hyper-indigo" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#4F46E5"/>
+      <stop offset="100%" stop-color="#06B6D4"/>
+    </linearGradient>
+    <linearGradient id="lm-top-charcoal" x1="50%" y1="0%" x2="50%" y2="100%">
+      <stop offset="0%" stop-color="#4A5568"/>
+      <stop offset="100%" stop-color="#1A202C"/>
+    </linearGradient>
+    <filter id="lm-soft-shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="16" stdDeviation="20" flood-color="#0A2540" flood-opacity="0.12"/>
+    </filter>
+  </defs>
+  <g filter="url(#lm-soft-shadow)">
+    <g stroke="#FFFFFF" stroke-width="12" stroke-linejoin="round" stroke-linecap="round">
+      <polygon points="400,210 570,308 400,406 230,308" fill="url(#lm-top-charcoal)"/>
+      <polygon points="210,330 380,428 380,630 210,532" fill="url(#lm-core-blue)"/>
+      <polygon points="420,428 590,330 590,532 420,630" fill="url(#lm-hyper-indigo)"/>
+      <polygon points="400,345 455,377 400,409 345,377" fill="#FFFFFF" opacity="0.95"/>
+      <polygon points="400,355 440,378 400,401 360,378" fill="url(#lm-hyper-indigo)"/>
+    </g>
+  </g>
+  <circle cx="400" cy="210" r="4" fill="#FFFFFF" opacity="0.5"/>
+  <circle cx="570" cy="308" r="4" fill="#FFFFFF" opacity="0.5"/>
+  <circle cx="230" cy="308" r="4" fill="#FFFFFF" opacity="0.5"/>
+  <circle cx="380" cy="630" r="4" fill="#06B6D4" opacity="0.8"/>
+  <circle cx="420" cy="630" r="4" fill="#4F46E5" opacity="0.8"/>
+</svg>
