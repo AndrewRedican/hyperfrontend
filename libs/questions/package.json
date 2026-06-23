@@ -1,6 +1,6 @@
 {
   "name": "@hyperfrontend/questions",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "Terminal prompting library with composable, functional API for text, select, confirm, and multiselect prompts",
   "license": "MIT",
   "exports": {
@@ -33,6 +33,6 @@
     "url": "https://github.com/sponsors/AndrewRedican"
   },
   "dependencies": {
-    "@hyperfrontend/immutable-api-utils": "0.1.2"
+    "@hyperfrontend/immutable-api-utils": "0.1.3"
   }
 }

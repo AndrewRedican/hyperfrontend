@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.1.1](https://github.com/AndrewRedican/hyperfrontend/compare/a9185d9b783d7d8d51cc4ad91eb3178eba3e3930...466c0388c4cd516b9c704214140b4df1004098e6) - 2026-06-23
+
+### Other
+
+- **@hyperfrontend/workspace:** remove lib-builder and tool-package as implicit dependencies for all lib projects
+
 ## [0.1.0](https://github.com/AndrewRedican/hyperfrontend/compare/lib-state-machine@0.0.4...lib-state-machine@0.1.0) - 2026-03-16
 
 ### Other
