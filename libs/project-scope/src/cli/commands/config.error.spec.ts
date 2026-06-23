@@ -3,6 +3,8 @@
  * Uses Jest mocks to ensure error branches are covered.
  */
 import { resolve } from 'node:path'
+import * as configModule from '../../project/config'
+import { configCommand } from './config'
 
 const FIXTURES_DIR = resolve(__dirname, '../../../__fixtures__')
 const MINIMAL_PROJECT = resolve(FIXTURES_DIR, 'minimal-project')
@@ -15,9 +17,6 @@ jest.mock('../../project/config', () => {
     detectConfigs: jest.fn().mockImplementation(actual.detectConfigs),
   }
 })
-
-import * as configModule from '../../project/config'
-import { configCommand } from './config'
 
 const mockParseConfig = configModule.parseConfig as jest.MockedFunction<typeof configModule.parseConfig>
 const mockDetectConfigs = configModule.detectConfigs as jest.MockedFunction<typeof configModule.detectConfigs>
