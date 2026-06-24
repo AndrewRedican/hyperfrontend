@@ -2,8 +2,7 @@
 
 Comprehensive implementation plan for the `@hyperfrontend/features` package — the SDK, CLI, dev server, and shell generation system that enables the hyperfrontend microfrontend framework.
 
-**Date**: April 16, 2026
-**Status**: Approved (Grill Session Complete)
+**Status**: Active — all prerequisite packages are published; core `@hyperfrontend/features` SDK is the next deliverable.
 
 ---
 
@@ -13,11 +12,13 @@ Comprehensive implementation plan for the `@hyperfrontend/features` package — 
 2. [Architecture Overview](#architecture-overview)
 3. [Decisions Summary](#decisions-summary)
 4. [Package Structure](#package-structure)
-5. [Dependencies](#dependencies)
-6. [Implementation Phases](#implementation-phases)
-7. [Demo Implementation](#demo-implementation)
-8. [Deployment Architecture](#deployment-architecture)
-9. [Deferred Items](#deferred-items)
+5. [Available Building Blocks](#available-building-blocks)
+6. [Scaffolding & Automation](#scaffolding--automation)
+7. [Implementation Phases](#implementation-phases)
+8. [Demo Implementation](#demo-implementation)
+9. [Deployment Architecture](#deployment-architecture)
+10. [Deferred Items](#deferred-items)
+11. [Documentation Cleanup](#documentation-cleanup-deferred)
 
 ---
 
@@ -97,14 +98,14 @@ The hyperfrontend project provides a microfrontend framework centered on `@hyper
 
 ### Core Decisions
 
-| #   | Topic              | Decision                                                  |
-| --- | ------------------ | --------------------------------------------------------- |
-| 1   | Location           | `libs/features/` (publishable library, not plugin)        |
-| 2   | Entry points       | Sub-path exports: `/host`, `/hostee`, `/cli`, `/server`   |
-| 3   | CLI invocation     | `npx @hyperfrontend/features <command>`                   |
-| 4   | Bundling           | Direct deps (nexus, network-protocol, versioning) bundled |
-| 5   | Framework adapters | None for now (leave room for future)                      |
-| 6   | Nx exclusivity     | NOT Nx-exclusive; use `@hyperfrontend/scope` for I/O      |
+| #   | Topic              | Decision                                                                                                            |
+| --- | ------------------ | ------------------------------------------------------------------------------------------------------------------- |
+| 1   | Location           | `libs/features/` (publishable library, not plugin)                                                                  |
+| 2   | Entry points       | Sub-path exports: `/host`, `/hostee`, `/cli`, `/server`                                                             |
+| 3   | CLI invocation     | `npx @hyperfrontend/features <command>`                                                                             |
+| 4   | Bundling           | Direct deps (nexus, network-protocol, versioning) bundled                                                           |
+| 5   | Framework adapters | None for now (leave room for future)                                                                                |
+| 6   | Nx exclusivity     | Consumers do NOT need Nx; Nx stays an internal/optional-adapter concern. Use `@hyperfrontend/project-scope` for I/O |
 
 ### SDK Decisions
 
@@ -207,7 +208,7 @@ libs/features/
 │       "@hyperfrontend/nexus": "...",
 │       "@hyperfrontend/network-protocol": "...",
 │       "@hyperfrontend/versioning": "...",
-│       "@hyperfrontend/scope": "...",
+│       "@hyperfrontend/project-scope": "...",
 │       "@hyperfrontend/json-utils": "..."
 │     }
 │   }
@@ -272,18 +273,11 @@ libs/features/
 │   │   ├── metadata/
 │   │   │   └── generate-metadata.ts # Generate metadata.json
 │   │   └── index.ts
-│   │
-│   └── nx/                          # Nx-specific adapters (optional)
-│       ├── generators/
-│       │   ├── init/
-│       │   └── add/
-│       ├── executors/
-│       │   ├── build/
-│       │   └── dev/
-│       └── index.ts
+│   │                                # NOTE: no @nx/devkit, no generators.json /
+│   │                                # executors.json here — the core package is
+│   │                                # vendor-agnostic. Nx support is a separate
+│   │                                # opt-in package (see Phase 6).
 │
-├── generators.json                  # Nx generator manifest
-├── executors.json                   # Nx executor manifest
 ├── README.md
 ├── ARCHITECTURE.md
 └── CHANGELOG.md
@@ -291,104 +285,100 @@ libs/features/
 
 ---
 
-## Dependencies
+## Available Building Blocks
 
-### Build Order (Blocking Dependencies)
+Every runtime and tooling dependency `@hyperfrontend/features` needs is already published and consumable today. Build the SDK directly on top of them.
 
-```
-Phase 0 (Existing - may need enhancements):
-├── @hyperfrontend/scope            # Project I/O abstraction
-├── @hyperfrontend/nexus            # Messaging protocol
-├── @hyperfrontend/network-protocol # Security layer
-├── @hyperfrontend/versioning       # Version management
-└── @hyperfrontend/json-utils       # JSON utilities
+| Dependency                        | Used By          | Purpose             | What to consume                                                                                                                 |
+| --------------------------------- | ---------------- | ------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
+| `@hyperfrontend/nexus`            | SDK              | Messaging layer     | For host/hostee messaging, consume the broker API from `@hyperfrontend/nexus` rather than reimplementing channels.              |
+| `@hyperfrontend/network-protocol` | SDK              | Security/encryption | For the `none`/`v1`/`v2` security envelope, consume `@hyperfrontend/network-protocol`.                                          |
+| `@hyperfrontend/versioning`       | Shell generation | Version management  | For shell/contract version stamping and compatibility, prefer `@hyperfrontend/versioning`.                                      |
+| `@hyperfrontend/project-scope`    | CLI/generators   | Project file I/O    | For all filesystem and workspace I/O, consume `@hyperfrontend/project-scope`; never touch `node:fs` directly.                   |
+| `@hyperfrontend/json-utils`       | Config parsing   | JSON utilities      | For reading/validating `*.config.json` and contracts, prefer `@hyperfrontend/json-utils` (`libs/utils/json`).                   |
+| `@hyperfrontend/questions`        | CLI              | Interactive prompts | For interactive CLI prompts, consume `@hyperfrontend/questions` rather than adding a third-party prompt lib.                    |
+| `@hyperfrontend/builder`          | Build/bin        | Bundling + JS bins  | For building the package and synthesizing the CLI bin, consume `@hyperfrontend/builder` (`/bundle`, `/bin/script`, `/package`). |
 
-Phase 1 (New - blocks features):
-├── @hyperfrontend/questions        # Terminal prompts (blocks CLI)
-└── @hyperfrontend/builder          # Build tooling (blocks CLI binary)
+> All of the above are published, non-private packages — declare them in `dependencies` and let the builder's dedupe/prune pass handle bundling. See `LIBRARY_COMPATIBILITY.md` for current versions.
 
-Phase 2 (Core):
-└── @hyperfrontend/features         # This package
-```
+---
 
-### Internal Dependencies of @hyperfrontend/features
+## Scaffolding & Automation
 
-| Dependency                        | Used By          | Purpose             |
-| --------------------------------- | ---------------- | ------------------- |
-| `@hyperfrontend/nexus`            | SDK              | Messaging layer     |
-| `@hyperfrontend/network-protocol` | SDK              | Security/encryption |
-| `@hyperfrontend/versioning`       | Shell generation | Version management  |
-| `@hyperfrontend/scope`            | CLI/generators   | Project file I/O    |
-| `@hyperfrontend/json-utils`       | Config parsing   | JSON utilities      |
-| `@hyperfrontend/questions`        | CLI              | Interactive prompts |
+Do not hand-roll project files that an existing generator or skill already produces. The repo's `@hyperfrontend/package` generators (all support `--dry-run`) and the matching Claude skills cover most of the structural work.
+
+| Need                                               | Use this                                                                                             |
+| -------------------------------------------------- | ---------------------------------------------------------------------------------------------------- |
+| Relocate the project `plugins/` -> `libs/`         | `nx generate @hyperfrontend/package:move` (updates all references)                                   |
+| Rename project `plugin-features` -> `features`     | `nx generate @hyperfrontend/package:rename`                                                          |
+| Promote the relocated project to publishable       | `nx generate @hyperfrontend/package:make-publishable` (creates the E2E project + CI status workflow) |
+| Scaffold a brand-new lib (opt-in adapter)          | `nx generate @hyperfrontend/package:library --publishable` (see the `library-generators` skill)      |
+| package.json / project.json fields & entry points  | `library-package-config` skill                                                                       |
+| Public exports, subpath exports, build targets     | `library-package-config` skill                                                                       |
+| ESM/CJS/IIFE/UMD output verification + E2E project | `library-e2e-setup` skill                                                                            |
+| CI path filters + library workflow                 | `library-ci-workflows` skill                                                                         |
+| README / sub-module docs                           | `readme-docs` skill                                                                                  |
+| ARCHITECTURE.md                                    | `architecture-docs` skill                                                                            |
+| Coding conventions for any new source              | `coding` skill                                                                                       |
+
+> `make-publishable` leaves **6 manual entries** (root README table, `ci-libraries.yml`, `ci-main.yml`, and three docs-site files). Budget for those — they are listed in the `library-generators` skill and are easy to miss.
+
+### Parallel prerequisite — CLI/bin execution across package managers
+
+This can proceed in parallel with Phase 2 and does **not** block the Phase 2.0 repositioning, but it **does** gate shipping a working `npx @hyperfrontend/features` CLI.
+
+`@hyperfrontend/builder` already produces JS bin CLIs end-to-end: `buildJsBin` (`@hyperfrontend/builder/bin/script`) bundles per declared format, prepends the `#!/usr/bin/env node` shebang, appends the runner bootstrap footer, names outputs `.mjs`/`.js`/`.cjs.js`, and `chmod`s them to `0o755`; the package-json synthesizer emits the `bin` field with correct relative paths and adds the bin to the `files` allowlist. So shebang, file permissions, and bin metadata are covered in principle.
+
+**Research goal:** confirm the produced package actually runs as a CLI under every target package manager:
+
+- `npx @hyperfrontend/builder` / `npx @hyperfrontend/features`
+- `pnpm dlx @hyperfrontend/builder` / `pnpm dlx @hyperfrontend/features`
+- `yarn dlx ...` and Nx's own task/bin resolution
+
+Verify, against a real packed tarball (`npm pack`) of `@hyperfrontend/builder`, that for npm, pnpm, Yarn, and Nx: the `bin` map, `files`/exports allowlist, shebang line, executable bit, and on-disk layout are all sufficient for `dlx`/`npx` resolution. If any package manager exposes a gap (e.g. missing executable bit after extraction, wrong `bin` key, ESM-shebang interop), fold the fix into `@hyperfrontend/builder` **before** `@hyperfrontend/features` depends on it for its CLI.
 
 ---
 
 ## Implementation Phases
 
-### Phase 0: Prerequisites
-
-Ensure existing packages are ready:
-
-**Files to verify:**
-
-- [libs/nexus/src/index.ts](libs/nexus/src/index.ts) — Messaging API stable
-- [libs/network-protocol/src/index.ts](libs/network-protocol/src/index.ts) — Security API stable
-- [libs/versioning/src/index.ts](libs/versioning/src/index.ts) — Version utilities available
-- [libs/project-scope/src/index.ts](libs/project-scope/src/index.ts) — File I/O abstraction
-
-**Verification:**
-
-```bash
-npx nx test nexus
-npx nx test network-protocol
-npx nx test versioning
-npx nx test project-scope
-```
-
----
-
-### Phase 1: Foundation — New Prerequisite Packages
-
-#### 1.1 Create @hyperfrontend/question - DONE
-
-#### 1.2 Create @hyperfrontend/builder
-
-Build tooling with Node SEA compilation.
-
-**Files to create:**
-
-- `libs/builder/package.json`
-- `libs/builder/project.json`
-- `libs/builder/src/index.ts`
-- `libs/builder/src/bundle/rollup.ts`
-- `libs/builder/src/cli/node-sea.ts`
-- `libs/builder/README.md`
-
-**Verification:**
-
-```bash
-npx nx test builder
-npx nx lint builder --fix
-npx nx typecheck builder
-```
-
----
-
 ### Phase 2: Core — @hyperfrontend/features SDK
 
-#### 2.1 Create Package Scaffold
+#### 2.0 Reposition the existing project (out of `plugins/`, into a vendor-agnostic package)
 
-**Files to create:**
+The project we are building **already exists**: it is the `@hyperfrontend/features` project at `plugins/features/` (Nx project `plugin-features`, `private: true`, `0.0.0`). This is the same package — we are **not** creating a second one and we are **not** changing its name. What changes is its identity: today it is positioned as an `@nx/devkit` plugin (init/add generators, serve executor — still implementation-stub comments); going forward it is a **vendor-agnostic, publishable package** (host/hostee SDK + shell generator + CLI + dev server) that consumers can use with no Nx and no Nx workspace. Requiring Nx would defeat the purpose of a micro-frontend solution that must stay vendor-neutral.
 
-- `libs/features/package.json`
-- `libs/features/project.json`
-- `libs/features/tsconfig.json`
-- `libs/features/tsconfig.lib.json`
-- `libs/features/tsconfig.spec.json`
-- `libs/features/eslint.config.cjs`
-- `libs/features/jest.config.ts`
-- `libs/features/README.md`
+> **Terminology change.** "Plugin(s)" no longer means "Nx plugin" here. From now on, **plugins are opt-in extensions that consumers of `@hyperfrontend/features` choose to add** (experience plugins, display-mode plugins, framework/Nx adapters). `@hyperfrontend/features` itself is a package, not a plugin, and must move out of the `plugins/` tree and out of every "Plugins" menu (see [Documentation Cleanup](#documentation-cleanup-deferred)).
+
+**Chosen approach — relocate and reframe the same project, don't greenfield:**
+
+1. **Move it into `libs/` and drop the Nx-plugin identity.** Use `nx generate @hyperfrontend/package:move --project=plugin-features --destination=libs/features` to relocate `plugins/features/` → `libs/features/` (the generator updates all references), then rename the Nx project to `features` with `nx generate @hyperfrontend/package:rename --project=plugin-features --newName=features`. Remove the `@nx/devkit` dependency, `generators.json`/`executors.json`, and the `generators`/`executors` package.json keys from the core package — the package no longer registers itself as an Nx plugin. This preserves the project's git history and its publish-ready README instead of discarding it.
+2. **Promote to publishable** with `nx generate @hyperfrontend/package:make-publishable --project=features`, then complete the publishability checklist (Phase 2.1).
+3. **Salvage the design intent** captured in the old init/add/serve stub comments (feature.config.json shape, contracts layout, dev playground) by folding it into the SDK's CLI (Phase 4) and dev server (Phase 5) — these are now plain APIs/commands, not Nx generators.
+4. **Optional Nx adapter is opt-in only.** If Nx generators/executors are still wanted, they live as a separate, optional opt-in package — one of the new-sense "plugins" — that delegates to this SDK (Phase 6). The core package never depends on it.
+
+This keeps the same package and name, preserves history, and converts identity rather than rewriting — while making vendor-agnostic the default and Nx strictly optional.
+
+#### 2.1 Promote to a publishable package
+
+The project already has its config files (moved in Phase 2.0). Promote it rather than re-authoring by hand:
+
+```bash
+nx generate @hyperfrontend/package:make-publishable --project=features
+```
+
+This adds the E2E project + CI status workflow and the publishable build target (plus the 6 manual entries noted in [Scaffolding & Automation](#scaffolding--automation)). Then apply the **publishability checklist** below before writing SDK code.
+
+**Publishability checklist (repo conventions):**
+
+- **Name & metadata:** package name `@hyperfrontend/features`, non-private, `license`, `description`, `funding`, `keywords`, `engines` — match the shape of `libs/builder/package.json`.
+- **Exports & subpaths:** declare `.`, `./host`, `./hostee`, `./cli`, `./server` subpath exports; configure them via the `library-package-config` skill (do not hand-edit blindly — it has ESLint rules that enforce required fields).
+- **CLI/bin:** declare the bin in the build config so `@hyperfrontend/builder` synthesizes the `bin` field, shebang, and `0o755` output. Gate on the CLI/bin research item above.
+- **TypeScript declarations:** ensure `.d.ts` emission per entry point; bundled-dep declarations must be self-contained (no transitive install burden pushed onto consumers).
+- **ESM/CJS output:** emit both ESM and CJS via the builder; declare formats per entry point and verify with the `library-e2e-setup` skill (ESM, CJS, IIFE/UMD where relevant).
+- **Docs:** README via `readme-docs`, ARCHITECTURE.md via `architecture-docs`, `@example` blocks via `jsdoc-examples`.
+- **Tests & E2E:** unit coverage meets the lib coverage gate; the generated E2E project asserts the packed package imports cleanly in every declared format and that the CLI bin executes under `npx`/`pnpm dlx`.
+- **Build & boundary checks:** `nx build features` clean; verify Nx project boundaries/tags (no consumer-facing dep on `@hyperfrontend/features-nx`); run the dependency review so only intended packages land in `dependencies`.
+- **Publish inspection:** `npm pack --dry-run` (or `nx run features:build` + inspect the output `package.json`/tarball) to confirm `files`, `exports`, `bin`, and bundled deps are exactly as intended before any real publish.
 
 #### 2.2 Shared Types & Utilities
 
@@ -666,28 +656,18 @@ npx nx typecheck features
 
 ---
 
-### Phase 6: Nx Adapters (Optional)
+### Phase 6: Nx Adapter (Optional, opt-in plugin)
 
-#### 6.1 Nx Generators
+This is an **opt-in plugin** in the new sense (see [Phase 2.0](#20-reposition-the-existing-project-out-of-plugins-into-a-vendor-agnostic-package)) — a convenience for teams that happen to use Nx, never a requirement. The core SDK and CLI work in any workspace without Nx, and `@hyperfrontend/features` must not depend on this package.
 
-**Files to create:**
-
-- `libs/features/src/nx/generators/init/generator.ts`
-- `libs/features/src/nx/generators/init/schema.json`
-- `libs/features/src/nx/generators/init/schema.d.ts`
-- `libs/features/src/nx/executors/build/executor.ts`
-- `libs/features/src/nx/executors/build/schema.json`
-- `libs/features/src/nx/executors/dev/executor.ts`
-- `libs/features/src/nx/executors/dev/schema.json`
-- `libs/features/generators.json`
-- `libs/features/executors.json`
+It lives as a **separate, new package** (e.g. `@hyperfrontend/features-nx`, scaffolded with `@hyperfrontend/package:library`) that wraps the published SDK. Port the design from the old `init`/`add` generators and `serve` executor (salvaged in Phase 2.0) into thin Nx generators/executors that delegate to the SDK (Phase 2) and CLI (Phase 4) — `build`/`dev` executors call the SDK build + dev server; `generators.json` / `executors.json` register the wrappers.
 
 **Verification:**
 
 ```bash
-npx nx test features
-npx nx lint features --fix
-npx nx typecheck features
+npx nx test features-nx
+npx nx lint features-nx --fix
+npx nx typecheck features-nx
 ```
 
 ---
@@ -900,12 +880,31 @@ The following items are explicitly deferred to future work:
 | ------------------------------------ | ----------------------------- | -------- |
 | Version negotiation at runtime       | Need more design              | Medium   |
 | Auto-retry on errors                 | Keep v1 simple                | Low      |
-| `@hyperfrontend/builder` full scope  | Start with narrow MVP         | High     |
-| `@hyperfrontend/questions`           | Blocking, but well-scoped     | High     |
 | Experience plugins                   | Future extensibility          | Low      |
-| `plugins/` directory rename          | Cosmetic                      | Low      |
 | Framework-specific adapters          | Leave room, don't build       | Low      |
 | Web Component alternative to iframes | Experimental (55% confidence) | Low      |
+
+---
+
+## Documentation Cleanup (deferred)
+
+Repositioning `@hyperfrontend/features` from "Nx plugin" to "vendor-agnostic package" (Phase 2.0) leaves stale "plugin" framing across user-facing docs. **Do this as a follow-up pass once the package has moved to `libs/features/`** — it is captured here so it is not lost, not done now. Two intertwined edits everywhere:
+
+1. **Reclassify the package:** `@hyperfrontend/features` is a **package**, not an Nx plugin. Move it out of every "Plugins" menu/section and out of `/docs/plugins/*` routes into the normal package listing. Replace `npx nx add @hyperfrontend/features` / `npx nx g @hyperfrontend/features:*` install-and-usage copy with the vendor-agnostic install + `npx @hyperfrontend/features <command>` CLI flow.
+2. **Redefine "plugins":** wherever docs describe "plugins" generically, they should now mean **opt-in extensions consumers add** (experience plugins, display-mode plugins, the optional Nx adapter) — not "Nx plugins shipped by the framework."
+
+Known touch-points (verify before editing; line numbers drift):
+
+| File                                                               | What to change                                                                                                                                                                   |
+| ------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `README.md`                                                        | "Nx plugin helps you…" intro, the `npx nx add` / `npx nx g` quick-start, and the packages-table row (currently links to `plugins/features` + `/docs/plugins/features/`)          |
+| `apps/docs-site/src/lib/content.ts`                                | Entry `name: 'Features Plugin'`, `category: 'plugin'`, `readmePath: 'plugins/features/README.md'`, `entryPoints` → reclassify to a package category + new `libs/features/` paths |
+| `apps/docs-site/src/app/docs/libraries/libraries-page-content.tsx` | The `category: 'plugin'`, "Nx Plugin" section heading, `/docs/plugins/features` href, and "Nx plugin with generators and executors" description                                  |
+| `apps/docs-site/src/app/docs/quick-start/page.tsx`                 | "Add the plugin" step and `npx nx add` / `npx nx g @hyperfrontend/features:*` snippets                                                                                           |
+| `apps/docs-site/src/components/value-proposition.tsx`              | Copy-to-clipboard `npx nx add @hyperfrontend/features`                                                                                                                           |
+| `apps/docs-site/src/components/breadcrumb.tsx`                     | `plugins: 'Plugins'` / `features:` breadcrumb labels                                                                                                                             |
+| `apps/docs-site/src/lib/navigation.ts`                             | "Plugin navigation items" — drop `features` from plugin nav, add to package nav                                                                                                  |
+| `apps/docs-site/src/lib/docs-loader.ts`                            | `plugins/<slug>/README.md` + `/docs/plugins/${slug}` resolution for `features`                                                                                                   |
 
 ---
 
@@ -1065,14 +1064,14 @@ feature.on('setFormat', (data) => {
 
 ---
 
-## Summary
+## Next Implementation Path
 
-This implementation plan captures all decisions from the grill session and provides a clear path forward:
+All prerequisites are published and consumable (see [Available Building Blocks](#available-building-blocks)). Remaining work, starting from the current state:
 
-1. **Phase 0-1**: Ensure prerequisites, create blocking packages (questions, builder)
-2. **Phase 2-5**: Build core `@hyperfrontend/features` (SDK, generators, CLI, server)
-3. **Phase 6**: Optional Nx adapters
-4. **Phase 7-9**: Demo apps (Clock, Heartbeat, Views)
-5. **Phase 10**: Docs site integration
-
-The first demo (Clock) will prove the entire architecture end-to-end. Subsequent demos validate framework-agnostic claims.
+1. **Phase 2.0 — Reposition the existing project**: move `@hyperfrontend/features` from `plugins/features/` to `libs/features/`, drop the `@nx/devkit` plugin identity, and keep the same name. Same package, converted to vendor-agnostic.
+2. **Phase 2 — Core SDK**: promote it to publishable via `@hyperfrontend/package:make-publishable`, then build host/hostee SDKs against `@hyperfrontend/nexus` + `@hyperfrontend/network-protocol`. Apply the publishability checklist.
+3. **Phases 3–5 — Shell generation, CLI, dev server**: CLI bin built with `@hyperfrontend/builder`; gate the published CLI on the [CLI/bin research](#parallel-prerequisite--clibin-execution-across-package-managers).
+4. **Phase 6 — Optional Nx adapter (opt-in plugin)**: a separate package that wraps the SDK for Nx users. Consumers never need Nx.
+5. **Phases 7–9 — Demos**: Clock (Vue) proves the architecture end-to-end; Heartbeat (React) and Views (Vanilla JS) validate the framework-agnostic claim.
+6. **Phase 10 — Docs site integration**: embed the demo shells.
+7. **Documentation cleanup**: reclassify `@hyperfrontend/features` from plugin to package across the root README and docs-site — see [Documentation Cleanup](#documentation-cleanup-deferred).
