@@ -79,6 +79,17 @@ const coreLibraries: NavItem[] = [
     ],
   },
   {
+    slug: 'features',
+    packageName: '@hyperfrontend/features',
+    href: '/docs/libraries/features',
+    children: [
+      { slug: 'host', href: '/docs/libraries/features/host' },
+      { slug: 'hostee', href: '/docs/libraries/features/hostee' },
+      { slug: 'cli', href: '/docs/libraries/features/cli' },
+      { slug: 'server', href: '/docs/libraries/features/server' },
+    ],
+  },
+  {
     slug: 'network-protocol',
     packageName: '@hyperfrontend/network-protocol',
     href: '/docs/libraries/network-protocol',
@@ -367,11 +378,6 @@ const utilsLibraries: NavItem[] = [
 ]
 
 /**
- * Plugin navigation items.
- */
-const plugins: NavItem[] = [{ slug: 'features', packageName: '@hyperfrontend/features', href: '/docs/plugins/features' }]
-
-/**
  * Getting started section navigation.
  */
 const gettingStarted: NavItem[] = [
@@ -403,10 +409,6 @@ export const docsNavigation: NavItem[] = [
   {
     slug: 'Libraries',
     children: [...coreLibraries, ...supportingLibraries, { slug: 'Utils', children: utilsLibraries }],
-  },
-  {
-    slug: 'Plugins',
-    children: plugins,
   },
   {
     slug: 'API Reference',

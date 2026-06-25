@@ -181,12 +181,18 @@ export const LIBRARIES: LibraryInfo[] = [
     category: 'supporting',
   },
   {
-    name: 'Features Plugin',
+    name: 'Features',
     packageName: '@hyperfrontend/features',
     slug: 'features',
-    readmePath: 'plugins/features/README.md',
-    entryPoints: ['plugins/features/src/index.ts'],
-    category: 'plugin',
+    readmePath: 'libs/features/README.md',
+    entryPoints: [
+      'libs/features/src/index.ts',
+      'libs/features/src/host/index.ts',
+      'libs/features/src/hostee/index.ts',
+      'libs/features/src/cli/index.ts',
+      'libs/features/src/server/index.ts',
+    ],
+    category: 'core',
   },
 ]
 

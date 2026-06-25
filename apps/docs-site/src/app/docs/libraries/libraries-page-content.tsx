@@ -143,10 +143,11 @@ const LIBRARY_DATA: LibraryCardData[] = [
   },
   {
     title: '@hyperfrontend/features',
-    description: 'Nx plugin with generators and executors for hyperfrontend workspaces',
-    href: '/docs/plugins/features',
-    keywords: ['nx', 'plugin', 'generator', 'executor', 'workspace'],
-    category: 'plugin',
+    description:
+      'Vendor-agnostic SDK, CLI, and dev server for building, embedding, and orchestrating hyperfrontend micro-frontend features',
+    href: '/docs/libraries/features',
+    keywords: ['micro-frontend', 'microfrontend', 'iframe', 'sdk', 'host', 'hostee', 'vendor-agnostic'],
+    category: 'core',
   },
 ]
 
