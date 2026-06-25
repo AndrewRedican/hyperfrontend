@@ -1,9 +1,10 @@
 /**
  * Host-side SDK for embedding hyperfrontend features (shell factory, display modes, lifecycle).
  *
- * The host surface is implemented in a later phase (see roadmap plan 03 — Core SDK);
- * this entry point reserves the `@hyperfrontend/features/host` subpath.
- *
  * @module @hyperfrontend/features/host
  */
-export {}
+export type { EmbedSizing, ShellOptions, UnresponsiveInfo, UnresponsivePolicy } from '../shared/types'
+export type { ExperiencePlugin, ExperiencePluginContext } from './plugins'
+export type { ShellHandle } from './types'
+export { DisplayMode } from '../shared/types'
+export { createShell } from './create-shell'

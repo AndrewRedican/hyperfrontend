@@ -1,4 +1,4 @@
-// note: Shared package identity for the host, hostee, CLI, and server surfaces (built in roadmap plans 03–06).
+// note: Shared package identity for the host, hostee, CLI, and server surfaces.
 
 /**
  * Package identity for the hyperfrontend features SDK.
