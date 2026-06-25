@@ -31,6 +31,7 @@ The host imports a generated shell package (see [04 — Shell Generation](04-she
 │  • Init/handshake protocol                                          │
 │  • Display mode logic (embedded, dialog, popup, standalone)         │
 │  • Lifecycle management                                             │
+│  • Internal control plane (reserved __hf:* types on the channel)    │
 └─────────────────────────────────────────────────────────────────────┘
 ```
 
@@ -38,14 +39,14 @@ The host imports a generated shell package (see [04 — Shell Generation](04-she
 
 ## SDK decisions
 
-| #   | Topic                | Decision                                              |
-| --- | -------------------- | ----------------------------------------------------- |
-| 7   | Shell pattern        | Singleton (nexus caches broker instances)             |
-| 8   | API typing           | Typed overloads generated from contract               |
-| 9   | Display modes        | All 4 baked in (embedded, dialog, popup, standalone)  |
-| 10  | Display mode plugins | Reserved for future (loading animations, etc.)        |
-| 11  | Dialog defaults      | SDK provides overlay + close button, customizable     |
-| 12  | Escape key           | Configurable (`closeOnEscape: boolean`, default true) |
+| #   | Topic                | Decision                                                                             |
+| --- | -------------------- | ------------------------------------------------------------------------------------ |
+| 7   | Shell pattern        | Singleton (nexus caches broker instances)                                            |
+| 8   | API typing           | Typed overloads generated from contract                                              |
+| 9   | Display modes        | All 4 baked in (embedded, dialog, popup, standalone)                                 |
+| 10  | Display mode plugins | Reserved for future (loading animations, etc.)                                       |
+| 11  | Dialog defaults      | SDK provides overlay + close button; size is dynamic (decision 48), all customizable |
+| 12  | Escape key           | Configurable (`closeOnEscape: boolean`, default true)                                |
 
 ## Security decisions (affect SDK + dev server)
 
@@ -65,6 +66,18 @@ The build-time enforcement of decision 28 lands in [05 — CLI](05-cli.md) (`bui
 | 35  | Customization    | Allow configuration (override error display) |
 | 36  | Auto-retry       | No (emit error, let host decide)             |
 
+## Liveness, sizing & API decisions
+
+| #   | Topic                 | Decision                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
+| --- | --------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 44  | Liveness heartbeat    | Baked-in and hidden: the feature auto-emits beats, the host monitors. Consumers never implement it. A consumer wanting their own heartbeat does so over the public contract (e.g. the Heartbeat demo's `ping`/`pong`) as a separate instance — distinct wire types from the baked-in beats.                                                                                                                                                                                                                 |
+| 45  | Control transport     | nexus permits only one channel per window and forces the broker contract onto it, so a separate control channel is not possible. Internal traffic (beats, size announcements) rides the single secured channel as reserved `__hf:*` message types, merged into the contract by `withControlContract` and filtered out before reaching consumer handlers via `isControlType`. Diagnostics flow through `broker.logger` at `debug` level (seam for the plan-06 debug UI).                                     |
+| 46  | Unresponsive handling | `onUnresponsive: 'emit' \| 'unmount' \| (info) => void`, default `'emit'` (extends decision 36 — emit `error`, host decides). The callback receives `{ shell, missedBeats, lastBeatAt, displayMode, close }`. Defaults: 1000 ms beat interval, 3 missed (~3 s) before unresponsive.                                                                                                                                                                                                                         |
+| 47  | Embedded sizing       | Default `embedSizing: 'fill'` — the iframe fills its container via CSS `100%`, so no observation is needed. Opt-in `embedSizing: 'content'` makes the host apply the feature's announced content height to the iframe; the feature measures and announces its own size via `@hyperfrontend/ui-utils` `onElementResize`. Body reset is a **hostee** concern (the host cannot touch the cross-origin body): `FeatureOptions.resetBody` (default `true`) injects `margin/padding: 0` + transparent background. |
+| 48  | Dynamic dialog size   | Dialog/popup size is derived from the viewport: a frozen config object exposed via getters with `coverage` (fraction of viewport height), `aspectRatio` (width = height × ratio), `maxCoverage`, and `fallbackWidth`/`fallbackHeight` used only when no viewport is measurable. Per-open `dialogWidth`/`dialogHeight` still override. Defaults: `coverage 0.6`, `aspectRatio 530/550`, `maxCoverage 0.9`, fallback `530×550`.                                                                               |
+| 49  | Predicate getters     | No-argument predicates are exposed as `readonly` getter properties, not methods (e.g. `shell.isOpen`).                                                                                                                                                                                                                                                                                                                                                                                                      |
+| 50  | Experience plugins    | Display-mode / experience plugins (animations, transitions) remain reserved (decision 10): the seam is the exported `ExperiencePlugin` / `ExperiencePluginContext` types; the SDK ships zero plugins and wires no `plugins` option yet.                                                                                                                                                                                                                                                                     |
+
 ---
 
 ## Phase 2.2 — Shared Types & Utilities
@@ -74,7 +87,7 @@ The build-time enforcement of decision 28 lands in [05 — CLI](05-cli.md) (`bui
 - `libs/features/src/index.ts`
 - `libs/features/src/shared/types.ts`
 - `libs/features/src/shared/contract.ts`
-- `libs/features/src/shared/index.ts`
+- `libs/features/src/shared/control.ts` — reserved `__hf:*` control types + `withControlContract` merge (decision 45)
 
 **Types to define:**
 
@@ -90,10 +103,17 @@ export enum DisplayMode {
 // Shell options interface
 export interface ShellOptions {
   container: string | HTMLElement
+  name?: string // feeds the broker-name heuristic + debug logs
+  contract?: FeatureContract // replaces DEFAULT_CONTRACT for typed messaging
   displayMode?: DisplayMode
   url?: string
   closeOnEscape?: boolean
-  // Dialog-specific
+  // Embedded sizing (decision 47)
+  embedSizing?: 'fill' | 'content' // default 'fill'
+  resetBody?: boolean // hostee body reset, default true
+  // Liveness (decision 46)
+  onUnresponsive?: 'emit' | 'unmount' | ((info: UnresponsiveInfo) => void)
+  // Dialog-specific — size is dynamic by default (decision 48); these override
   dialogWidth?: number
   dialogHeight?: number
   dialogOverlay?: boolean
@@ -153,11 +173,14 @@ npx nx typecheck lib-features
 - `libs/features/src/host/create-shell.ts`
 - `libs/features/src/host/iframe.ts`
 - `libs/features/src/host/lifecycle.ts`
-- `libs/features/src/host/display-modes/index.ts`
+- `libs/features/src/host/heartbeat.ts` — host-side beat watchdog (decision 46; unresponsive policy + `__hf:*` filtering live in `host/lifecycle.ts`)
+- `libs/features/src/host/sizing.ts` — applies the feature-announced content height in `content` mode (decision 47)
+- `libs/features/src/host/plugins.ts` — reserved experience-plugin seam types (decision 50)
 - `libs/features/src/host/display-modes/embedded.ts`
 - `libs/features/src/host/display-modes/dialog.ts`
 - `libs/features/src/host/display-modes/popup.ts`
 - `libs/features/src/host/display-modes/standalone.ts`
+- `libs/features/src/host/display-modes/defaults.ts` — dynamic viewport-derived dialog/popup sizing (decision 48)
 
 **Core API:**
 
@@ -174,7 +197,7 @@ export interface ShellHandle {
   destroy(): void
   send(type: string, data?: unknown): void
   on(event: string, handler: (data: unknown) => void): () => void
-  isOpen(): boolean
+  readonly isOpen: boolean // getter (decision 49)
 }
 ```
 
@@ -196,6 +219,8 @@ npx nx typecheck lib-features
 - `libs/features/src/hostee/types.ts`
 - `libs/features/src/hostee/create-feature.ts`
 - `libs/features/src/hostee/lifecycle.ts`
+- `libs/features/src/hostee/heartbeat.ts` — emits liveness beats (decision 44)
+- `libs/features/src/hostee/sizing.ts` — body reset + content-size announcer (decision 47)
 
 **Core API:**
 
@@ -203,6 +228,8 @@ npx nx typecheck lib-features
 // libs/features/src/hostee/create-feature.ts
 export function createFeature(options: FeatureOptions): FeatureHandle {
   // Creates broker via nexus (hostee side)
+  // Opens the hidden control channel: starts the heartbeat, applies the body
+  //   reset, and begins announcing content size (decisions 44–47)
   // Waits for connection from host
   // Returns handle with: send, on, ready, close
 }
@@ -214,6 +241,8 @@ export interface FeatureHandle {
   close(): void
 }
 ```
+
+> The heartbeat and body reset are **baked in and hidden** — they are not part of `FeatureHandle`. A consumer that wants its own heartbeat builds one over the public contract (the Heartbeat demo's `ping`/`pong`), which is a separate instance from the SDK's internal liveness (decision 44).
 
 **Verification:**
 
@@ -323,5 +352,6 @@ npx nx build lib-features --skip-nx-cache --exclude-task-dependencies
 
 ## Open questions / follow-ups
 
-- Decision 10 (display-mode plugins) and the experience-plugin extensibility hook are reserved; the SDK should leave a seam for them without building them now.
+- Decisions 10 / 50 (display-mode & experience plugins) are reserved; the SDK leaves a seam for them without building them now.
+- The control-channel diagnostics (decision 45) surface in the dev server's debug UI as a dedicated liveness/control panel — that panel is a [06 — Dev Server](06-dev-server.md) follow-up; this plan only emits the structured `broker.logger` debug output it consumes.
 - The exact mechanism for generating typed overloads from the contract (decision 8) is shared with [04 — Shell Generation](04-shell-generation.md)'s `generate-types.ts` — keep the two in sync.

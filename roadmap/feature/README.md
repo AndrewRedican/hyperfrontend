@@ -53,19 +53,19 @@ This index is intentionally compact. Each linked document is a focused, independ
 
 ## Recommended reading / execution order
 
-| #   | Plan                                                     | Scope                                                             | Notes                                                                   |
-| --- | -------------------------------------------------------- | ----------------------------------------------------------------- | ----------------------------------------------------------------------- |
-| 01  | ✅ ~~Reposition & Publishability~~ — **Done**            | Move `plugins/features` → `libs/features`; promote to publishable | **Done.** Same package, converted identity. Plan file removed.          |
-| 02  | ✅ [CLI/bin Execution Research](02-cli-bin-execution.md) | Confirm `@hyperfrontend/builder` bins run under every PM          | **Done.** All PMs pass; no builder fix needed. Gate for CLI (05) clear. |
-| 03  | [Core SDK](03-core-sdk.md)                               | Shared types, Host SDK, Hostee SDK                                | Core. Depends on 01.                                                    |
-| 04  | [Shell Generation](04-shell-generation.md)               | Templates + generators (shell, contract types, metadata)          | Depends on 03.                                                          |
-| 05  | [CLI](05-cli.md)                                         | `init` / `build` / `dev` commands + `feature.config.json`         | Depends on 03, 04; gated by 02 for publish.                             |
-| 06  | [Dev Server](06-dev-server.md)                           | Static server + debug UI + `hf-dev.config.json`                   | Depends on 03.                                                          |
-| 07  | [Nx Adapter (optional)](07-nx-adapter.md)                | Separate opt-in `@hyperfrontend/features-nx` package              | Optional. Never a dependency of the core package.                       |
-| 08  | [Demos](08-demos.md)                                     | Clock (Vue) → Heartbeat (React) → Views (Vanilla JS)              | Proves the architecture + framework-agnostic claim.                     |
-| 09  | [Docs-Site Integration](09-docs-site-integration.md)     | Demo pages + landing carousel with live embeds                    | Depends on 08.                                                          |
-| 10  | [Deployment](10-deployment.md)                           | Vercel (docs) + Railway (features) + CI/CD workflows              | Depends on 08, 09.                                                      |
-| 11  | [Documentation Cleanup](11-docs-cleanup.md)              | Reclassify "plugin" → "package" across README + docs-site         | **Deferred follow-up.** Do after 01 lands.                              |
+| #   | Plan                                                 | Scope                                                             | Notes                                                                   |
+| --- | ---------------------------------------------------- | ----------------------------------------------------------------- | ----------------------------------------------------------------------- |
+| 01  | ✅ ~~Reposition & Publishability~~ — **Done**        | Move `plugins/features` → `libs/features`; promote to publishable | **Done.** Same package, converted identity. Plan file removed.          |
+| 02  | ✅ ~~[CLI/bin Execution Research]~~ — **Done**       | Confirm `@hyperfrontend/builder` bins run under every PM          | **Done.** All PMs pass; no builder fix needed. Gate for CLI (05) clear. |
+| 03  | ✅ [Core SDK](03-core-sdk.md) — **Done**             | Shared types, Host SDK, Hostee SDK                                | Core. Depends on 01.                                                    |
+| 04  | [Shell Generation](04-shell-generation.md)           | Templates + generators (shell, contract types, metadata)          | Depends on 03.                                                          |
+| 05  | [CLI](05-cli.md)                                     | `init` / `build` / `dev` commands + `feature.config.json`         | Depends on 03, 04; gated by 02 for publish.                             |
+| 06  | [Dev Server](06-dev-server.md)                       | Static server + debug UI + `hf-dev.config.json`                   | Depends on 03.                                                          |
+| 07  | [Nx Adapter (optional)](07-nx-adapter.md)            | Separate opt-in `@hyperfrontend/features-nx` package              | Optional. Never a dependency of the core package.                       |
+| 08  | [Demos](08-demos.md)                                 | Clock (Vue) → Heartbeat (React) → Views (Vanilla JS)              | Proves the architecture + framework-agnostic claim.                     |
+| 09  | [Docs-Site Integration](09-docs-site-integration.md) | Demo pages + landing carousel with live embeds                    | Depends on 08.                                                          |
+| 10  | [Deployment](10-deployment.md)                       | Vercel (docs) + Railway (features) + CI/CD workflows              | Depends on 08, 09.                                                      |
+| 11  | [Documentation Cleanup](11-docs-cleanup.md)          | Reclassify "plugin" → "package" across README + docs-site         | **Deferred follow-up.** Do after 01 lands.                              |
 
 ---
 
