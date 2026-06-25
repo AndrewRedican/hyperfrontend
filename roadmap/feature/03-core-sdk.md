@@ -72,9 +72,9 @@ The build-time enforcement of decision 28 lands in [05 — CLI](05-cli.md) (`bui
 **Files to create:**
 
 - `libs/features/src/index.ts`
-- `libs/features/src/sdk/shared/types.ts`
-- `libs/features/src/sdk/shared/contract.ts`
-- `libs/features/src/sdk/shared/index.ts`
+- `libs/features/src/shared/types.ts`
+- `libs/features/src/shared/contract.ts`
+- `libs/features/src/shared/index.ts`
 
 **Types to define:**
 
@@ -148,21 +148,21 @@ npx nx typecheck lib-features
 
 **Files to create:**
 
-- `libs/features/src/sdk/host/index.ts`
-- `libs/features/src/sdk/host/types.ts`
-- `libs/features/src/sdk/host/create-shell.ts`
-- `libs/features/src/sdk/host/iframe.ts`
-- `libs/features/src/sdk/host/lifecycle.ts`
-- `libs/features/src/sdk/host/display-modes/index.ts`
-- `libs/features/src/sdk/host/display-modes/embedded.ts`
-- `libs/features/src/sdk/host/display-modes/dialog.ts`
-- `libs/features/src/sdk/host/display-modes/popup.ts`
-- `libs/features/src/sdk/host/display-modes/standalone.ts`
+- `libs/features/src/host/index.ts`
+- `libs/features/src/host/types.ts`
+- `libs/features/src/host/create-shell.ts`
+- `libs/features/src/host/iframe.ts`
+- `libs/features/src/host/lifecycle.ts`
+- `libs/features/src/host/display-modes/index.ts`
+- `libs/features/src/host/display-modes/embedded.ts`
+- `libs/features/src/host/display-modes/dialog.ts`
+- `libs/features/src/host/display-modes/popup.ts`
+- `libs/features/src/host/display-modes/standalone.ts`
 
 **Core API:**
 
 ```typescript
-// libs/features/src/sdk/host/create-shell.ts
+// libs/features/src/host/create-shell.ts
 export function createShell(options: ShellOptions): ShellHandle {
   // Creates broker via nexus
   // Returns handle with: open, close, destroy, send, on, isOpen
@@ -192,15 +192,15 @@ npx nx typecheck lib-features
 
 **Files to create:**
 
-- `libs/features/src/sdk/hostee/index.ts`
-- `libs/features/src/sdk/hostee/types.ts`
-- `libs/features/src/sdk/hostee/create-feature.ts`
-- `libs/features/src/sdk/hostee/lifecycle.ts`
+- `libs/features/src/hostee/index.ts`
+- `libs/features/src/hostee/types.ts`
+- `libs/features/src/hostee/create-feature.ts`
+- `libs/features/src/hostee/lifecycle.ts`
 
 **Core API:**
 
 ```typescript
-// libs/features/src/sdk/hostee/create-feature.ts
+// libs/features/src/hostee/create-feature.ts
 export function createFeature(options: FeatureOptions): FeatureHandle {
   // Creates broker via nexus (hostee side)
   // Waits for connection from host

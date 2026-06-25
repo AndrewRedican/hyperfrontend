@@ -26,6 +26,8 @@ The project we are building **already exists**: it is the `@hyperfrontend/featur
 
 This is the shape the relocated package builds toward. Downstream plans (03–06) populate the `src/` subtrees.
 
+> **Layout note:** each public subpath export maps to a top-level `src/<subpath>/` directory (`src/host`, `src/hostee`, `src/cli`, `src/server`) — there is **no `src/sdk/` wrapper**. The `lib-pkg-secondary-entry-readme` ESLint rule requires every secondary entry's README at `src/<subpath>/README.md`, so nesting host/hostee under an extra `sdk/` segment would fail CI unless the public subpath itself changed (it must not — see decision 2). `shared/` is internal (not exported) and lives at `src/shared/` for consistency.
+
 ```
 libs/features/
 ├── package.json
@@ -34,8 +36,8 @@ libs/features/
 │     "version": "0.1.0",
 │     "exports": {
 │       ".": "./dist/index.js",
-│       "./host": "./dist/sdk/host/index.js",
-│       "./hostee": "./dist/sdk/hostee/index.js",
+│       "./host": "./dist/host/index.js",
+│       "./hostee": "./dist/hostee/index.js",
 │       "./cli": "./dist/cli/index.js",
 │       "./server": "./dist/server/index.js"
 │     },
@@ -54,30 +56,29 @@ libs/features/
 ├── src/
 │   ├── index.ts                     # Main entry (re-exports)
 │   │
-│   ├── sdk/
-│   │   ├── host/                    # Host-side SDK            → see 03
-│   │   │   ├── create-shell.ts      # Factory for shell instances
-│   │   │   ├── display-modes/
-│   │   │   │   ├── embedded.ts      # Inline in container
-│   │   │   │   ├── dialog.ts        # Modal with overlay
-│   │   │   │   ├── popup.ts         # New browser window
-│   │   │   │   ├── standalone.ts    # Full page
-│   │   │   │   └── index.ts
-│   │   │   ├── lifecycle.ts         # Open/close/destroy state machine
-│   │   │   ├── iframe.ts            # Iframe creation utilities
-│   │   │   ├── types.ts
+│   ├── host/                         # Host-side SDK           → see 03
+│   │   ├── create-shell.ts          # Factory for shell instances
+│   │   ├── display-modes/
+│   │   │   ├── embedded.ts          # Inline in container
+│   │   │   ├── dialog.ts            # Modal with overlay
+│   │   │   ├── popup.ts             # New browser window
+│   │   │   ├── standalone.ts        # Full page
 │   │   │   └── index.ts
-│   │   │
-│   │   ├── hostee/                  # Hostee-side SDK          → see 03
-│   │   │   ├── create-feature.ts    # Feature initialization
-│   │   │   ├── lifecycle.ts         # Feature lifecycle
-│   │   │   ├── types.ts
-│   │   │   └── index.ts
-│   │   │
-│   │   └── shared/                  # Shared types, utilities  → see 03
-│   │       ├── types.ts             # Common interfaces
-│   │       ├── contract.ts          # Contract utilities
-│   │       └── index.ts
+│   │   ├── lifecycle.ts             # Open/close/destroy state machine
+│   │   ├── iframe.ts                # Iframe creation utilities
+│   │   ├── types.ts
+│   │   └── index.ts
+│   │
+│   ├── hostee/                       # Hostee-side SDK         → see 03
+│   │   ├── create-feature.ts        # Feature initialization
+│   │   ├── lifecycle.ts             # Feature lifecycle
+│   │   ├── types.ts
+│   │   └── index.ts
+│   │
+│   ├── shared/                       # Shared types, utilities → see 03
+│   │   ├── types.ts                 # Common interfaces
+│   │   ├── contract.ts              # Contract utilities
+│   │   └── index.ts
 │   │
 │   ├── cli/                          # → see 05
 │   │   ├── bin.ts                   # CLI entry point
