@@ -57,4 +57,37 @@ describe('@hyperfrontend/builder CJS', () => {
     const output = execFileSync('node', [binPath, '--help'], { encoding: 'utf8' })
     expect(output).toContain('Usage: hf-build')
   })
+
+  it('should ship the bin with the `#!/usr/bin/env node` shebang', () => {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const { readFileSync } = require('node:fs')
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const { dirname, join } = require('node:path')
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const pkg = require('@hyperfrontend/builder/package.json')
+    const packageDir = dirname(require.resolve('@hyperfrontend/builder/package.json'))
+    const binPath = join(packageDir, pkg.bin['hf-build'])
+    const firstLine = readFileSync(binPath, 'utf8').split('\n', 1)[0]
+    expect(firstLine).toBe('#!/usr/bin/env node')
+  })
+
+  it('should ship the bin with the executable bit set after extraction', () => {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const { statSync } = require('node:fs')
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const { dirname, join } = require('node:path')
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const pkg = require('@hyperfrontend/builder/package.json')
+    const packageDir = dirname(require.resolve('@hyperfrontend/builder/package.json'))
+    const binPath = join(packageDir, pkg.bin['hf-build'])
+    // 0o111 = any execute bit (owner/group/other); npm preserves tar mode on install.
+    expect(statSync(binPath).mode & 0o111).not.toBe(0)
+  })
+
+  it('should include the bin file in the published `files` allowlist', () => {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const pkg = require('@hyperfrontend/builder/package.json')
+    const binRelative = pkg.bin['hf-build'].replace(/^\.\//, '')
+    expect(pkg.files).toContain(binRelative)
+  })
 })
