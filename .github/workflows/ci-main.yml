@@ -152,6 +152,7 @@ jobs:
           LIBS=(
             "builder:libs/builder"
             "cryptography:libs/cryptography"
+            "features:libs/features"
             "logging:libs/logging"
             "network-protocol:libs/network-protocol"
             "nexus:libs/nexus"

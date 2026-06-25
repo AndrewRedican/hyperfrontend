@@ -1,0 +1,33 @@
+{
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "name": "lib-features",
+  "description": "Vendor-agnostic SDK, CLI, and dev server for building, embedding, and orchestrating hyperfrontend micro-frontend features.",
+  "sourceRoot": "{projectRoot}/src",
+  "projectType": "library",
+  "tags": ["type:util", "scope:public"],
+  "targets": {
+    "version": {},
+    "version-check": {},
+    "build": {
+      "executor": "@hyperfrontend/package:build",
+      "options": {
+        "esm": {
+          "bundleWorkspaceDeps": true
+        },
+        "cjs": {
+          "bundleWorkspaceDeps": true
+        },
+        "iife": {
+          "entry": ".",
+          "globalName": "HyperfrontendFeatures"
+        },
+        "umd": {
+          "entry": ".",
+          "globalName": "HyperfrontendFeatures"
+        }
+      }
+    },
+    "publish": {},
+    "typecheck": {}
+  }
+}

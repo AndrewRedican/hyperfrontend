@@ -1,0 +1,33 @@
+{
+  "name": "@hyperfrontend/features",
+  "version": "0.1.0",
+  "description": "Vendor-agnostic SDK, CLI, and dev server for building, embedding, and orchestrating hyperfrontend micro-frontend features.",
+  "license": "MIT",
+  "sideEffects": false,
+  "exports": {
+    ".": "./src/index.js",
+    "./host": "./src/host/index.js",
+    "./hostee": "./src/hostee/index.js",
+    "./cli": "./src/cli/index.js",
+    "./server": "./src/server/index.js",
+    "./package.json": "./package.json"
+  },
+  "funding": {
+    "type": "github",
+    "url": "https://github.com/sponsors/AndrewRedican"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=8.0.0"
+  },
+  "keywords": [
+    "micro-frontend",
+    "microfrontend",
+    "iframe",
+    "sdk",
+    "host",
+    "vendor-agnostic",
+    "hyperfrontend",
+    "typescript"
+  ]
+}
