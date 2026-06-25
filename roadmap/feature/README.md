@@ -53,19 +53,19 @@ This index is intentionally compact. Each linked document is a focused, independ
 
 ## Recommended reading / execution order
 
-| #   | Plan                                                 | Scope                                                             | Notes                                                                   |
-| --- | ---------------------------------------------------- | ----------------------------------------------------------------- | ----------------------------------------------------------------------- |
-| 01  | ✅ ~~Reposition & Publishability~~ — **Done**        | Move `plugins/features` → `libs/features`; promote to publishable | **Done.** Same package, converted identity. Plan file removed.          |
-| 02  | ✅ ~~[CLI/bin Execution Research]~~ — **Done**       | Confirm `@hyperfrontend/builder` bins run under every PM          | **Done.** All PMs pass; no builder fix needed. Gate for CLI (05) clear. |
-| 03  | ✅ [Core SDK](03-core-sdk.md) — **Done**             | Shared types, Host SDK, Hostee SDK                                | Core. Depends on 01.                                                    |
-| 04  | [Shell Generation](04-shell-generation.md)           | Templates + generators (shell, contract types, metadata)          | Depends on 03.                                                          |
-| 05  | [CLI](05-cli.md)                                     | `init` / `build` / `dev` commands + `feature.config.json`         | Depends on 03, 04; gated by 02 for publish.                             |
-| 06  | [Dev Server](06-dev-server.md)                       | Static server + debug UI + `hf-dev.config.json`                   | Depends on 03.                                                          |
-| 07  | [Nx Adapter (optional)](07-nx-adapter.md)            | Separate opt-in `@hyperfrontend/features-nx` package              | Optional. Never a dependency of the core package.                       |
-| 08  | [Demos](08-demos.md)                                 | Clock (Vue) → Heartbeat (React) → Views (Vanilla JS)              | Proves the architecture + framework-agnostic claim.                     |
-| 09  | [Docs-Site Integration](09-docs-site-integration.md) | Demo pages + landing carousel with live embeds                    | Depends on 08.                                                          |
-| 10  | [Deployment](10-deployment.md)                       | Vercel (docs) + Railway (features) + CI/CD workflows              | Depends on 08, 09.                                                      |
-| 11  | [Documentation Cleanup](11-docs-cleanup.md)          | Reclassify "plugin" → "package" across README + docs-site         | **Deferred follow-up.** Do after 01 lands.                              |
+| #   | Plan                                                 | Scope                                                                               | Notes                                                                   |
+| --- | ---------------------------------------------------- | ----------------------------------------------------------------------------------- | ----------------------------------------------------------------------- |
+| 01  | ✅ ~~Reposition & Publishability~~ — **Done**        | Move `plugins/features` → `libs/features`; promote to publishable                   | **Done.** Same package, converted identity. Plan file removed.          |
+| 02  | ✅ ~~[CLI/bin Execution Research]~~ — **Done**       | Confirm `@hyperfrontend/builder` bins run under every PM                            | **Done.** All PMs pass; no builder fix needed. Gate for CLI (05) clear. |
+| 03  | ✅ [Core SDK](03-core-sdk.md) — **Done**             | Shared types, Host SDK, Hostee SDK                                                  | Core. Depends on 01.                                                    |
+| 04  | [Shell Generation](04-shell-generation.md)           | Pure generators (ephemeral shell connector + hostee glue, contract types, metadata) | Depends on 03.                                                          |
+| 05  | [CLI](05-cli.md)                                     | `init` / `build` / `dev` commands + `feature.config.json`                           | Depends on 03, 04; gated by 02 for publish.                             |
+| 06  | [Dev Server](06-dev-server.md)                       | Static server + debug UI + `hf-dev.config.json`                                     | Depends on 03.                                                          |
+| 07  | [Nx Adapter (optional)](07-nx-adapter.md)            | Separate opt-in `@hyperfrontend/features-nx` package                                | Optional. Never a dependency of the core package.                       |
+| 08  | [Demos](08-demos.md)                                 | Clock (Vue) → Heartbeat (React) → Views (Vanilla JS)                                | Proves the architecture + framework-agnostic claim.                     |
+| 09  | [Docs-Site Integration](09-docs-site-integration.md) | Demo pages + landing carousel with live embeds                                      | Depends on 08.                                                          |
+| 10  | [Deployment](10-deployment.md)                       | Vercel (docs) + Railway (features) + CI/CD workflows                                | Depends on 08, 09.                                                      |
+| 11  | [Documentation Cleanup](11-docs-cleanup.md)          | Reclassify "plugin" → "package" across README + docs-site                           | **Deferred follow-up.** Do after 01 lands.                              |
 
 ---
 
@@ -73,22 +73,22 @@ This index is intentionally compact. Each linked document is a focused, independ
 
 The full, topic-grouped decision tables live in the relevant plan files (cross-referenced below). This is the at-a-glance summary.
 
-| Topic              | Decision                                                                                                                                                                                                                | Detailed in |
-| ------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------- |
-| Location           | `libs/features/` (publishable library, **not** an Nx plugin)                                                                                                                                                            | 01          |
-| Existing project   | Relocate + reframe `plugins/features`; do **not** greenfield                                                                                                                                                            | 01          |
-| Entry points       | Sub-path exports: `/host`, `/hostee`, `/cli`, `/server`                                                                                                                                                                 | 01, 03      |
-| CLI invocation     | `npx @hyperfrontend/features <command>` (bin `hf`)                                                                                                                                                                      | 02, 05      |
-| Bundling           | Direct deps (nexus, network-protocol, versioning…) bundled by builder                                                                                                                                                   | 01, 03      |
-| Nx exclusivity     | Consumers do **not** need Nx; Nx is internal/optional-adapter only                                                                                                                                                      | 01, 07      |
-| Shell pattern      | Singleton (nexus caches broker instances); typed overloads from contract                                                                                                                                                | 03          |
-| Display modes      | All 4 baked in (embedded, dialog, popup, standalone)                                                                                                                                                                    | 03          |
-| Security default   | `protocol: 'none'` locally (opt-in); production must pick v1/v2                                                                                                                                                         | 03          |
-| Config format      | Multi-format `feature.config.*` / `hf-dev.config.*`: `.json` (`$schema`), `.ts/.cts/.mts` (native Node type-strip), `.js/.mjs/.cjs` (native `import()`); typed via exported types + `defineConfig`. No inline-in-entry. | 05, 06      |
-| CLI/config parity  | Every config key has a flag — scalars inline (`--name`), objects as path strings (`--contract ./x.ts`, `--config` = whole-object path). `defaults < file < flags`; flag replaces key; full non-interactive `--ci`.      | 05          |
-| Contract           | Separate `contracts/*.contract.json`; bundled/inlined at build time                                                                                                                                                     | 04          |
-| Shell source       | Generated TypeScript; protected core + user-editable config files                                                                                                                                                       | 04          |
-| Demo host & deploy | Docs-site embeds shells; features on Railway, docs on Vercel                                                                                                                                                            | 08, 10      |
+| Topic              | Decision                                                                                                                                                                                                                         | Detailed in |
+| ------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------- |
+| Location           | `libs/features/` (publishable library, **not** an Nx plugin)                                                                                                                                                                     | 01          |
+| Existing project   | Relocate + reframe `plugins/features`; do **not** greenfield                                                                                                                                                                     | 01          |
+| Entry points       | Sub-path exports: `/host`, `/hostee`, `/cli`, `/server`                                                                                                                                                                          | 01, 03      |
+| CLI invocation     | `npx @hyperfrontend/features <command>` (bin `hf`)                                                                                                                                                                               | 02, 05      |
+| Bundling           | Direct deps (nexus, network-protocol, versioning…) bundled by builder                                                                                                                                                            | 01, 03      |
+| Nx exclusivity     | Consumers do **not** need Nx; Nx is internal/optional-adapter only                                                                                                                                                               | 01, 07      |
+| Shell pattern      | Singleton (nexus caches broker instances); typed overloads from contract                                                                                                                                                         | 03          |
+| Display modes      | All 4 baked in (embedded, dialog, popup, standalone)                                                                                                                                                                             | 03          |
+| Security default   | `protocol: 'none'` locally (opt-in); production must pick v1/v2                                                                                                                                                                  | 03          |
+| Config format      | Multi-format `feature.config.*` / `hf-dev.config.*`: `.json` (`$schema`), `.ts/.cts/.mts` (native Node type-strip), `.js/.mjs/.cjs` (native `import()`); typed via exported types + `defineConfig`. No inline-in-entry.          | 05, 06      |
+| CLI/config parity  | Every config key has a flag — scalars inline (`--name`), objects as path strings (`--contract ./x.ts`, `--config` = whole-object path). `defaults < file < flags`; flag replaces key; full non-interactive `--ci`.               | 05          |
+| Contract           | Separate `contracts/*.contract.json`; bundled/inlined at build time                                                                                                                                                              | 04          |
+| Shell source       | Generated + **ephemeral** host connector (data-driven from config; never committed/editable). A sibling generator scaffolds the **hostee glue** module into the feature app. Consumer commits only config + contract + app code. | 04          |
+| Demo host & deploy | Docs-site embeds shells; features on Railway, docs on Vercel                                                                                                                                                                     | 08, 10      |
 
 ---
 
@@ -119,15 +119,15 @@ These must remain true regardless of which file you are executing. Each plan res
 
 Every runtime and tooling dependency `@hyperfrontend/features` needs is already published and consumable today. Build directly on top of them — declare in `dependencies` and let the builder's dedupe/prune pass bundle them. See `LIBRARY_COMPATIBILITY.md` for current versions.
 
-| Dependency                        | Used By          | Purpose             | What to consume                                                                                       |
-| --------------------------------- | ---------------- | ------------------- | ----------------------------------------------------------------------------------------------------- |
-| `@hyperfrontend/nexus`            | SDK              | Messaging layer     | Consume the broker API rather than reimplementing channels.                                           |
-| `@hyperfrontend/network-protocol` | SDK              | Security/encryption | Consume for the `none`/`v1`/`v2` security envelope.                                                   |
-| `@hyperfrontend/versioning`       | Shell generation | Version management  | Prefer for shell/contract version stamping and compatibility.                                         |
-| `@hyperfrontend/project-scope`    | CLI/generators   | Project file I/O    | Consume for **all** filesystem/workspace I/O; never touch `node:fs` directly.                         |
-| `@hyperfrontend/json-utils`       | Config parsing   | JSON utilities      | Prefer for reading/validating `*.config.json` and contracts (`libs/utils/json`).                      |
-| `@hyperfrontend/questions`        | CLI              | Interactive prompts | Consume rather than adding a third-party prompt lib.                                                  |
-| `@hyperfrontend/builder`          | Build/bin        | Bundling + JS bins  | Consume for building the package and synthesizing the CLI bin (`/bundle`, `/bin/script`, `/package`). |
+| Dependency                        | Used By          | Purpose                | What to consume                                                                                                                                                                                                       |
+| --------------------------------- | ---------------- | ---------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `@hyperfrontend/nexus`            | SDK              | Messaging layer        | Consume the broker API rather than reimplementing channels.                                                                                                                                                           |
+| `@hyperfrontend/network-protocol` | SDK              | Security/encryption    | Consume for the `none`/`v1`/`v2` security envelope.                                                                                                                                                                   |
+| `@hyperfrontend/versioning`       | Shell generation | Version management     | Prefer for shell/contract version stamping and compatibility.                                                                                                                                                         |
+| `@hyperfrontend/project-scope`    | CLI/generators   | Project file I/O       | Consume for **all** filesystem/workspace I/O; never touch `node:fs` directly.                                                                                                                                         |
+| `@hyperfrontend/json-utils`       | Config parsing   | JSON Schema validation | Validation-only (Draft-4 `validate`/`createValidator`); it has **no** parse/stringify or schema→type. **Reading** JSON is `project-scope` `readJsonFile`; **stringify** is `immutable-api-utils` (`libs/utils/json`). |
+| `@hyperfrontend/questions`        | CLI              | Interactive prompts    | Consume rather than adding a third-party prompt lib.                                                                                                                                                                  |
+| `@hyperfrontend/builder`          | Build/bin        | Bundling + JS bins     | Consume for building the package and synthesizing the CLI bin (`/bundle`, `/bin/script`, `/package`).                                                                                                                 |
 
 ---
 

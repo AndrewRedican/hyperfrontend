@@ -6,7 +6,7 @@ The `npx @hyperfrontend/features <command>` interface: `init`, `build`, `dev`.
 
 **Gated by** [02 — CLI/bin Execution](02-cli-bin-execution.md): the published CLI bin cannot ship until the builder-produced bin is confirmed to resolve under npm, pnpm, Yarn, and Nx.
 
-**Consumes** `@hyperfrontend/questions` for interactive prompts (do not add a third-party prompt lib), `@hyperfrontend/project-scope` for all file I/O, `@hyperfrontend/json-utils` for reading/validating config, and `@hyperfrontend/builder` for the bin. See the [index](README.md) for shared invariants.
+**Consumes** `@hyperfrontend/questions` for interactive prompts (do not add a third-party prompt lib), `@hyperfrontend/project-scope` for all file I/O — including reading config/contract JSON via `readJsonFile`, `@hyperfrontend/json-utils` for schema **validation** of the resolved config/contract (validation-only; it does not parse or stringify), and `@hyperfrontend/builder` for the bin. See the [index](README.md) for shared invariants.
 
 > This is where the design intent salvaged from the old Nx `init`/`add` generator stubs (see [01 — Reposition & Publishability](01-reposition-and-publishability.md), Phase 2.0 step 3) lands — as plain commands, not Nx generators.
 
@@ -114,6 +114,30 @@ npx nx typecheck lib-features
 ```
 
 ---
+
+## Feature-glue scaffolding & insertion (drives [04](04-shell-generation.md)'s feature generator)
+
+`init` scaffolds the hostee glue module (plan 04, decision 26a) and wires it into the app. The **generation** is plan 04's pure generator; the **discovery, prompting, and insertion** are the CLI's job (this is the only place project-scope heuristics and `questions` are used for this flow — they must never leak into the generator):
+
+1. **Resolve the target entry file.**
+   - If the config names it (e.g. `entry: './src/main.ts'`), use it.
+   - Otherwise discover candidates with `@hyperfrontend/project-scope` heuristics (`discoverEntryPoints` / `detectProjectType`) and present them with `questions` `select` mode.
+   - If the user picks "none of these," fall back to a `questions` `text` prompt for a manual path.
+   - `--ci`/`--yes`: the target **must** come from config (`entry`); error if unresolved (decision 16c — every prompt has a matching flag/key).
+2. **Emit the glue module** via plan 04's `generateFeatureModule` into the VFS `Tree`, write-once (`Mode.SkipIfExists`) so re-runs never clobber handlers the author has filled in.
+3. **Insert a single marker-guarded import line** into the resolved entry file:
+
+   ```ts
+   // <hf:feature> — managed by @hyperfrontend/features; safe to keep
+   import './hyperfrontend.feature'
+   // </hf:feature>
+   ```
+
+   The marker makes insertion idempotent: if it is already present, skip (do not duplicate). This is the CLI's only mutation of hand-written app code, and it is reversible by deleting the block.
+
+4. **`commitChanges`** the tree (honoring `--dry-run`).
+
+> The connector (host side) is generated and **ephemeral** — `build`, not `init`, produces it into a temp working dir, bundles it, and packs/publishes the tarball; the temp dir is created/removed here via project-scope `core/fs` (`node:os.tmpdir()` is permitted; `node:fs` is not). The consumer commits only the config, the contract, and their app code (including the scaffolded glue module).
 
 ## Config schema — `feature.config.json`
 
