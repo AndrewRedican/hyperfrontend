@@ -1,6 +1,8 @@
+import type { Schema, ValidationResult } from '@hyperfrontend/json-utils'
 import type { ActionDescription, FeatureConfig, FeatureContract } from './types'
 import { isArray } from '@hyperfrontend/immutable-api-utils/built-in-copy/array'
 import { createError } from '@hyperfrontend/immutable-api-utils/built-in-copy/error'
+import { validate } from '@hyperfrontend/json-utils'
 
 // note: Runtime validation shared by the host/hostee factories and the config loader.
 
@@ -15,29 +17,56 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 }
 
 /**
- * Validates a single action list (`emitted` or `accepted`) from a contract.
+ * Collects every problem with a single action list (`emitted` or `accepted`).
+ *
+ * Each malformed entry contributes its own message, distinguishing a non-object
+ * entry from one missing a usable `type`, so the caller can report them all at once.
  *
  * @param actions - The candidate action list.
- * @param field - The field name, used in error messages.
- * @returns The validated, typed action list.
+ * @param field - The field name, used to locate problems in messages.
+ * @param issues - The running list of human-readable problems, appended to in place.
  */
-function validateActionList(actions: unknown, field: string): ActionDescription[] {
+function collectActionListIssues(actions: unknown, field: string, issues: string[]): void {
   if (!isArray(actions)) {
-    throw createError(`Invalid contract: "${field}" must be an array.`)
+    issues.push(`"${field}" must be an array.`)
+    return
   }
   actions.forEach((action, index) => {
-    if (!isRecord(action) || typeof action['type'] !== 'string' || action['type'].length === 0) {
-      throw createError(`Invalid contract: "${field}[${index}]" must have a non-empty string "type".`)
+    if (!isRecord(action)) {
+      issues.push(`"${field}[${index}]" must be an object, but got ${describeType(action)}.`)
+      return
+    }
+    if (typeof action['type'] !== 'string' || action['type'].length === 0) {
+      issues.push(`"${field}[${index}]" must have a non-empty string "type".`)
     }
   })
-  return <ActionDescription[]>actions
+}
+
+/**
+ * Names the kind of an unexpected value for an error message.
+ *
+ * @param value - The value to describe.
+ * @returns A short label such as `null`, `an array`, or `a number`.
+ */
+function describeType(value: unknown): string {
+  if (value === null) {
+    return 'null'
+  }
+  if (isArray(value)) {
+    return 'an array'
+  }
+  return `a ${typeof value}`
 }
 
 /**
  * Validates an unknown value as a {@link FeatureContract}.
  *
+ * Reports every malformed action at once rather than stopping at the first, so a
+ * single error message lists all the problems to fix.
+ *
  * @param contract - The candidate contract, typically parsed from disk.
  * @returns The validated contract, typed.
+ * @throws {Error} When the value is not an object, or any action is malformed.
  *
  * @example Validating a parsed contract file
  * ```typescript
@@ -47,11 +76,17 @@ function validateActionList(actions: unknown, field: string): ActionDescription[
  */
 export function validateContract(contract: unknown): FeatureContract {
   if (!isRecord(contract)) {
-    throw createError('Invalid contract: expected an object with "emitted" and "accepted" arrays.')
+    throw createError(`Invalid contract: expected an object with "emitted" and "accepted" arrays, but got ${describeType(contract)}.`)
+  }
+  const issues: string[] = []
+  collectActionListIssues(contract['emitted'], 'emitted', issues)
+  collectActionListIssues(contract['accepted'], 'accepted', issues)
+  if (issues.length > 0) {
+    throw createError(`Invalid contract:\n${issues.map((issue) => `  - ${issue}`).join('\n')}`)
   }
   return {
-    emitted: validateActionList(contract['emitted'], 'emitted'),
-    accepted: validateActionList(contract['accepted'], 'accepted'),
+    emitted: <ActionDescription[]>contract['emitted'],
+    accepted: <ActionDescription[]>contract['accepted'],
   }
 }
 
@@ -78,4 +113,27 @@ export function validateFeatureConfig(config: unknown): FeatureConfig {
     }
   })
   return <FeatureConfig>(<unknown>config)
+}
+
+/**
+ * Validates a message payload against an action's optional schema at runtime.
+ *
+ * Bundled into the generated connector and used on both the host and hostee
+ * sides. Type-only actions (those without a `schema`) always pass.
+ *
+ * @param action - The contract action whose schema the payload must satisfy.
+ * @param payload - The candidate message payload.
+ * @returns A validation result with `valid` and any schema `errors`.
+ *
+ * @example Validating a `setTimezone` payload
+ * ```typescript
+ * const result = validatePayload({ type: 'setTimezone', schema: { type: 'object' } }, { tz: 'UTC' })
+ * if (!result.valid) throw createError(result.errors[0].message)
+ * ```
+ */
+export function validatePayload(action: ActionDescription, payload: unknown): ValidationResult {
+  if (action.schema === undefined) {
+    return { valid: true, errors: [] }
+  }
+  return validate(payload, <Schema>action.schema)
 }

@@ -6,15 +6,17 @@
 export type {
   ActionDescription,
   DevConfig,
+  DisplayDefaults,
   EmbedSizing,
   FeatureConfig,
   FeatureContract,
   FeatureOptions,
+  ResolvedFeatureConfig,
   SecurityProtocol,
   ShellOptions,
   UnresponsiveInfo,
   UnresponsivePolicy,
 } from './shared/types'
-export { validateContract, validateFeatureConfig } from './shared/contract'
+export { validateContract, validateFeatureConfig, validatePayload } from './shared/contract'
 export { sdkInfo } from './shared/sdk-info'
 export { DisplayMode, defineConfig, defineDevConfig } from './shared/types'

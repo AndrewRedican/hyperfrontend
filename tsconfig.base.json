@@ -56,6 +56,7 @@
       "@hyperfrontend/data-utils": ["libs/utils/data/src/index.ts"],
       "@hyperfrontend/features": ["libs/features/src/index.ts"],
       "@hyperfrontend/features/cli": ["libs/features/src/cli/index.ts"],
+      "@hyperfrontend/features/generators": ["libs/features/src/generators/index.ts"],
       "@hyperfrontend/features/host": ["libs/features/src/host/index.ts"],
       "@hyperfrontend/features/hostee": ["libs/features/src/hostee/index.ts"],
       "@hyperfrontend/features/server": ["libs/features/src/server/index.ts"],

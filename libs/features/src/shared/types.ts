@@ -148,6 +148,37 @@ export interface FeatureConfig {
 }
 
 /**
+ * Display defaults baked into a generated connector as the feature's default
+ * {@link ShellOptions}. The host still overrides these at runtime.
+ */
+export interface DisplayDefaults {
+  /** Dialog width in pixels (dialog mode only). */
+  dialogWidth?: number
+  /** Dialog height in pixels (dialog mode only). */
+  dialogHeight?: number
+  /** Whether the dialog renders a dimmed backdrop; defaults to `true`. */
+  dialogOverlay?: boolean
+  /** Whether pressing Escape closes the shell; defaults to `true`. */
+  closeOnEscape?: boolean
+  /** How an embedded feature is sized; defaults to `fill`. */
+  embedSizing?: EmbedSizing
+}
+
+/**
+ * A fully-resolved feature configuration: the parsed config plus the values the
+ * shell and feature-integration generators bake into their output.
+ *
+ * The CLI resolves this from the config file and flags; the generators receive
+ * it ready to use and never read it from disk.
+ */
+export interface ResolvedFeatureConfig extends FeatureConfig {
+  /** URL of the feature app the generated connector loads. */
+  url: string
+  /** Default display options baked into the connector as the feature's defaults. */
+  display?: DisplayDefaults
+}
+
+/**
  * A single feature app entry served by the dev server.
  */
 export interface DevAppConfig {
