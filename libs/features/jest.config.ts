@@ -11,6 +11,10 @@ export default <Config>{
     '!**/*.d.{ts,tsx}',
     '!**/*.spec.ts',
     '!**/jest.setup*.ts',
+    // why: Bin entry is a thin re-export wired to the builder bootstrap; the runner it exposes is covered by bin.spec.ts.
+    '!**/bin/**',
+    // why: The tiered loader's native `await import()` compiles to __importStar/__awaiter helper branches ts-jest cannot exercise; behaviour is covered by load-module.spec.ts.
+    '!**/cli/config/load-module.ts',
   ],
   coveragePathIgnorePatterns: ['/node_modules/', 'src/shared/types.ts', 'src/host/types.ts', 'src/hostee/types.ts'],
   projects: [

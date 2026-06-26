@@ -12,10 +12,12 @@
       "executor": "@hyperfrontend/package:build",
       "options": {
         "esm": {
-          "bundleWorkspaceDeps": true
+          "bundleWorkspaceDeps": true,
+          "bundleAllDeps": true
         },
         "cjs": {
-          "bundleWorkspaceDeps": true
+          "bundleWorkspaceDeps": true,
+          "bundleAllDeps": true
         },
         "iife": {
           "entry": ".",
@@ -24,7 +26,8 @@
         "umd": {
           "entry": ".",
           "globalName": "HyperfrontendFeatures"
-        }
+        },
+        "bin": [{ "name": "hf", "runner": "runFeaturesCli", "format": "cjs" }]
       }
     },
     "publish": {},
