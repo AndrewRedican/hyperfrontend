@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="100%" height="100%">
+  <defs>
+    <style>
+      .stroke-main { stroke: #0F172A; stroke-width: 6; stroke-linejoin: round; stroke-linecap: round; }
+      .stroke-tape-top { stroke: #0F172A; stroke-width: 6; stroke-linejoin: round; stroke-linecap: butt; }
+      .stroke-tape-side { stroke: #0F172A; stroke-width: 6; stroke-linejoin: round; stroke-linecap: butt; }
+    </style>
+  </defs>
+
+  <!-- Ground Shadow -->
+  <path d="M 128 225 L 64 188 L 128 151 L 192 188 Z" fill="#E2E8F0" />
+
+  <!-- Main Box Structure -->
+  <!-- Left Face (Bright Electric Blue) -->
+  <path d="M 128 145 L 64 108 L 64 188 L 128 225 Z" fill="#3B82F6" class="stroke-main" />
+
+  <!-- Right Face (Deep Cobalt Blue) -->
+  <path d="M 128 145 L 192 108 L 192 188 L 128 225 Z" fill="#1D4ED8" class="stroke-main" />
+
+  <!-- Top Face (Vibrant Purple Accent) -->
+  <path d="M 128 145 L 64 108 L 128 71 L 192 108 Z" fill="#A855F7" class="stroke-main" />
+
+  <!-- Central Seam / Packing Tape -->
+  <!-- Tape Top Left to Bottom Right (Aligned to edges, no outline) -->
+  <path d="M 96 89.5 L 160 126.5" fill="none" class="stroke-tape-top" />
+
+  <!-- Tape Seam Running Down the Left Side -->
+  <path d="M 96 126.5 L 96 206.5" fill="none" class="stroke-tape-side" opacity="0.25" />
+
+  <!-- Tape Seam Running Down the Right Side -->
+  <path d="M 160 126.5 L 160 206.5" fill="none" class="stroke-tape-side" opacity="0.25" />
+</svg>

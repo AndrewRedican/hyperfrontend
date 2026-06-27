@@ -1,29 +1,34 @@
 'use client'
 
-import type { NavItem as SharedNavItem } from '../lib/navigation'
+import type { NavIconKind, NavItem as SharedNavItem } from '../lib/navigation'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react'
 import { createError } from '@hyperfrontend/immutable-api-utils/built-in-copy/error'
-import { docsNavigation } from '../lib/navigation'
+import { docsNavigation, getNavIconKind } from '../lib/navigation'
+import { NavItemIcon } from './nav-item-icon'
 
 interface NavItem {
   title: string
   href?: string
   children?: NavItem[]
+  iconKind?: NavIconKind | null
 }
 
 /**
  * Converts shared navigation items to sidebar-specific format.
- * Uses the slug as the display title (without `@hyperfrontend/` prefix).
+ * Uses the slug as the display title (without `@hyperfrontend/` prefix) and
+ * bakes in the package/submodule icon kind for each entry.
  * @param items - The shared navigation items to convert
+ * @param insidePackage - Whether the items live inside a package subtree
  * @returns The converted navigation items for sidebar
  */
-function convertToSidebarNav(items: SharedNavItem[]): NavItem[] {
+function convertToSidebarNav(items: SharedNavItem[], insidePackage = false): NavItem[] {
   return items.map((item) => ({
     title: item.slug,
     href: item.href,
-    children: item.children ? convertToSidebarNav(item.children) : undefined,
+    iconKind: getNavIconKind(item, insidePackage),
+    children: item.children ? convertToSidebarNav(item.children, insidePackage || Boolean(item.packageName)) : undefined,
   }))
 }
 
@@ -227,11 +232,13 @@ function SidebarItem({ item, pathname, path }: SidebarItemProps) {
           }`}
         >
           {hasHref && item.href ? (
-            <Link href={item.href} className="flex-1 px-3 py-2">
+            <Link href={item.href} className="flex flex-1 items-center gap-2 px-3 py-2">
+              {item.iconKind && <NavItemIcon kind={item.iconKind} />}
               {item.title}
             </Link>
           ) : (
-            <button onClick={handleToggle} className="flex-1 px-3 py-2 text-left">
+            <button onClick={handleToggle} className="flex flex-1 items-center gap-2 px-3 py-2 text-left">
+              {item.iconKind && <NavItemIcon kind={item.iconKind} />}
               {item.title}
             </button>
           )}
@@ -260,13 +267,14 @@ function SidebarItem({ item, pathname, path }: SidebarItemProps) {
     <li>
       <Link
         href={item.href || '#'}
-        className={`block rounded-lg px-3 py-2 text-sm transition-colors ${
+        className={`flex items-center gap-2 rounded-lg px-3 py-2 text-sm transition-colors ${
           isActive
             ? 'border-l-[3px] border-primary-600 bg-primary-100/80 font-medium text-primary-700 dark:border-primary-400 dark:bg-primary-900/50 dark:text-primary-200'
             : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-white'
         }`}
         aria-current={isActive ? 'page' : undefined}
       >
+        {item.iconKind && <NavItemIcon kind={item.iconKind} />}
         {item.title}
       </Link>
     </li>

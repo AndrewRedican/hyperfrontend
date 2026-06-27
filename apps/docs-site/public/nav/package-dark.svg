@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="100%" height="100%">
+  <defs>
+    <style>
+      .fill-left { fill: #64748B; }
+      .fill-right { fill: #475569; }
+      .fill-top { fill: #94A3B8; }
+      .stroke-dark { stroke: #0F172A; stroke-width: 6; stroke-linejoin: round; stroke-linecap: round; fill: none; }
+      .stroke-cyan-top { stroke: #22D3EE; stroke-width: 6; stroke-linecap: butt; fill: none; }
+      .stroke-cyan-side { stroke: #22D3EE; stroke-width: 6; stroke-linecap: butt; fill: none; }
+    </style>
+  </defs>
+
+  <!-- Ambient Under-Glow Shadow -->
+  <path d="M 128 225 L 64 188 L 128 151 L 192 188 Z" fill="#06B6D4" opacity="0.2" filter="blur(4px)" />
+
+  <!-- LAYER 1: Solid Base Fills (No Outlines Yet) -->
+  <path d="M 128 145 L 64 108 L 64 188 L 128 225 Z" class="fill-left" />
+  <path d="M 128 145 L 192 108 L 192 188 L 128 225 Z" class="fill-right" />
+  <path d="M 128 145 L 64 108 L 128 71 L 192 108 Z" class="fill-top" />
+
+  <!-- LAYER 2: Colored Tape Lines (Sits on top of fills, but borders will cover them) -->
+  <!-- Tape Top Left to Bottom Right -->
+  <path d="M 96 89.5 L 160 126.5" class="stroke-cyan-top" />
+  <!-- Tape Down Left Side -->
+  <path d="M 96 126.5 L 96 206.5" class="stroke-cyan-side" opacity="0.4" />
+  <!-- Tape Down Right Side -->
+  <path d="M 160 126.5 L 160 206.5" class="stroke-cyan-side" opacity="0.4" />
+
+  <!-- LAYER 3: Structural Dark Outline Borders (Brought to the front to clean up edges) -->
+  <path d="M 128 145 L 64 108 L 64 188 L 128 225 Z" class="stroke-dark" />
+  <path d="M 128 145 L 192 108 L 192 188 L 128 225 Z" class="stroke-dark" />
+  <path d="M 128 145 L 64 108 L 128 71 L 192 108 Z" class="stroke-dark" />
+</svg>

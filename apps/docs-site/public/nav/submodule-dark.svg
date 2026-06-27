@@ -1,0 +1,34 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="100%" height="100%">
+  <defs>
+    <style>
+      .bg-parent { fill: #64748B; }
+      .bg-child { fill: #475569; }
+      .bg-child-glow { fill: #22D3EE; }
+      .stroke-dark { stroke: #0F172A; stroke-width: 6; stroke-linejoin: round; fill: none; }
+      .stroke-cyan-line { stroke: #22D3EE; stroke-width: 6; stroke-linecap: round; stroke-linejoin: round; fill: none; }
+    </style>
+  </defs>
+
+  <!-- Ambient Under-Glow for Dark Theme -->
+  <circle cx="80" cy="128" r="28" fill="#06B6D4" opacity="0.12" filter="blur(4px)" />
+  <circle cx="176" cy="168" r="22" fill="#06B6D4" opacity="0.12" filter="blur(4px)" />
+
+  <!-- Glowing Cyan Connection Path -->
+  <path d="M 90 128 L 136 128 L 160 152" class="stroke-cyan-line" />
+
+  <!-- Outer Scope Dotted Ring -->
+  <circle cx="176" cy="168" r="28" stroke="#64748B" stroke-width="4" stroke-dasharray="2 6" fill="none" />
+
+  <!-- Submodule / Child Node Structure -->
+  <circle cx="176" cy="168" r="18" class="bg-child" />
+  <circle cx="176" cy="168" r="18" class="stroke-dark" />
+  <circle cx="176" cy="168" r="8" class="bg-child-glow" />
+  <circle cx="176" cy="168" r="8" class="stroke-dark" />
+
+  <!-- Master / Parent Node Structure -->
+  <circle cx="80" cy="128" r="24" class="bg-parent" />
+  <circle cx="80" cy="128" r="24" class="stroke-dark" />
+  <!-- Nested Hub Core -->
+  <circle cx="80" cy="128" r="10" fill="#E2E8F0" />
+  <circle cx="80" cy="128" r="10" class="stroke-dark" />
+</svg>
