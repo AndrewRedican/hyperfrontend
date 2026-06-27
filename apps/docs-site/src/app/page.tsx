@@ -21,13 +21,15 @@ type FeaturedPackage = {
  */
 const FEATURED_PACKAGES: Array<FeaturedPackage> = [
   { name: '@hyperfrontend/nexus', href: '/docs/libraries/nexus', priority: 1 },
-  { name: '@hyperfrontend/state-machine', href: '/docs/libraries/state-machine', priority: 2 },
-  { name: '@hyperfrontend/data-utils', href: '/docs/libraries/utils/data', priority: 3 },
-  { name: '@hyperfrontend/string-utils', href: '/docs/libraries/utils/string', priority: 4 },
-  { name: '@hyperfrontend/list-utils', href: '/docs/libraries/utils/list', priority: 5 },
-  { name: '@hyperfrontend/time-utils', href: '/docs/libraries/utils/time', priority: 6 },
-  { name: '@hyperfrontend/json-utils', href: '/docs/libraries/utils/json', priority: 7 },
-  { name: '@hyperfrontend/function-utils', href: '/docs/libraries/utils/function', priority: 8 },
+  { name: '@hyperfrontend/features', href: '/docs/libraries/features', priority: 2 },
+  { name: '@hyperfrontend/builder', href: '/docs/libraries/builder', priority: 3 },
+  { name: '@hyperfrontend/state-machine', href: '/docs/libraries/state-machine', priority: 4 },
+  { name: '@hyperfrontend/data-utils', href: '/docs/libraries/utils/data', priority: 5 },
+  { name: '@hyperfrontend/string-utils', href: '/docs/libraries/utils/string', priority: 6 },
+  { name: '@hyperfrontend/list-utils', href: '/docs/libraries/utils/list', priority: 7 },
+  { name: '@hyperfrontend/time-utils', href: '/docs/libraries/utils/time', priority: 8 },
+  { name: '@hyperfrontend/json-utils', href: '/docs/libraries/utils/json', priority: 9 },
+  { name: '@hyperfrontend/function-utils', href: '/docs/libraries/utils/function', priority: 10 },
 ].sort((a, b) => a.priority - b.priority)
 
 export default function HomePage() {
@@ -119,7 +121,7 @@ export default function HomePage() {
                 <NpmIcon className="h-6 w-6 text-red-500 dark:text-red-400 shrink-0" />
                 <div>
                   <span className="text-sm font-medium text-slate-900 dark:text-white">Also on npm</span>
-                  <span className="ml-2 text-sm text-slate-500 dark:text-slate-400">16+ standalone utility packages for any project</span>
+                  <span className="ml-2 text-sm text-slate-500 dark:text-slate-400">18+ standalone utility packages for any project</span>
                 </div>
               </a>
               <a

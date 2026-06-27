@@ -148,6 +148,20 @@ const LIBRARY_DATA: LibraryCardData[] = [
     keywords: ['micro-frontend', 'microfrontend', 'iframe', 'sdk', 'host', 'hostee', 'framework-agnostic'],
     category: 'core',
   },
+  {
+    title: '@hyperfrontend/builder',
+    description: 'Composable, vendor-neutral build toolkit for TypeScript libraries, JS bins, and Node SEA native binaries',
+    href: '/docs/libraries/builder',
+    keywords: ['build', 'build-toolkit', 'bundler', 'esm', 'cjs', 'umd', 'dts', 'sea', 'native-binary'],
+    category: 'core',
+  },
+  {
+    title: '@hyperfrontend/questions',
+    description: 'Terminal prompting library with a composable, functional API for text, select, confirm, and multiselect prompts',
+    href: '/docs/libraries/questions',
+    keywords: ['prompts', 'terminal', 'cli', 'interactive', 'select', 'multiselect', 'confirm'],
+    category: 'utils',
+  },
 ]
 
 /**

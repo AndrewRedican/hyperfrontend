@@ -57,18 +57,41 @@
 }
 
 @layer components {
-  /* Override prose inline code styles for code blocks inside <pre> */
-  .prose pre code {
-    background-color: transparent !important;
-    padding: 0 !important;
-    border-radius: 0 !important;
-    color: theme('colors.slate.100') !important;
-    font-size: theme('fontSize.sm') !important;
-    line-height: 1.625 !important;
+  /* Shiki dual-theme code blocks (github-light / github-dark). With
+     `defaultColor: false` Shiki emits only CSS variables, so we select the
+     active palette from the `.dark` class the theme provider toggles. */
+  pre.shiki {
+    margin: 0;
+    padding: 1rem;
+    border-radius: 0.5rem;
+    overflow-x: auto;
+    font-size: theme('fontSize.sm');
+    line-height: 1.625;
+    background-color: var(--shiki-light-bg);
   }
 
-  .dark .prose pre code {
-    color: theme('colors.slate.100') !important;
+  pre.shiki,
+  pre.shiki span {
+    color: var(--shiki-light);
+  }
+
+  .dark pre.shiki {
+    background-color: var(--shiki-dark-bg);
+  }
+
+  .dark pre.shiki,
+  .dark pre.shiki span {
+    color: var(--shiki-dark);
+  }
+
+  /* Keep the <code> wrapper inside a highlighted <pre> visually flush so the
+     Shiki background and token colors are the only thing painting the block. */
+  .prose pre.shiki code {
+    background-color: transparent;
+    padding: 0;
+    border-radius: 0;
+    font-size: inherit;
+    line-height: inherit;
   }
 }
 
