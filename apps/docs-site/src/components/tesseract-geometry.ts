@@ -128,8 +128,10 @@ export const lightPalette: Palette = { line: '37, 99, 235', lineHi: '29, 78, 216
 // why: shared camera distances for the static (non-dive) tesseract's 4D→3D and 3D→2D perspective divides.
 export const CAMERA_4D = 2.2
 export const CAMERA_3D = 2.4
+// why: the dive zooms through self-similar copies of the whole tesseract spaced by this scale factor — each copy is DIVE_RATIO× the next. As diveProgress advances by 1 the structure recycles seamlessly onto the next-deeper copy, so the descent reads as an endless fall *into* the hypercube rather than a finite zoom.
+export const DIVE_RATIO = 3.5
 
-// why: the dive is an *exact* infinite tunnel — a chain of cubes where each cell's inner cube IS the next cell's outer cube. Only one representation of each shared boundary exists, so consecutive cells can never drift apart however the structure rotates. This replaces the old "overlapping scaled copies" model, which could only approximate the seam: the inner and outer cells of a rotating tesseract shear differently under perspective, so no single scale or rotation aligns them.
+// why: the tunnel flavour is an *exact* infinite tunnel — a chain of cubes where each cell's inner cube IS the next cell's outer cube. Only one representation of each shared boundary exists, so consecutive cells can never drift apart however the structure rotates, unlike the nested-copy flavour which only approximates the seam.
 // why: two adjacent cubes differing in scale by TUNNEL_RATIO are exactly the outer and inner cells of one genuine tesseract under a 4D perspective camera at CAMERA_4D, so the tunnel is a true Schlegel chain rather than a stylised stack.
 export const TUNNEL_RATIO = (CAMERA_4D + 1) / (CAMERA_4D - 1)
 // why: per-level twist (radians) between consecutive cubes reproduces the way a 4D rotation shears a tesseract's inner cell relative to its outer cell — the characteristic hypercube morph, expressed as a continuous spiral down the tunnel.

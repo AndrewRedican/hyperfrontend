@@ -26,6 +26,7 @@ import {
   cubeFaces,
   cubeVertices3D,
   darkPalette,
+  DIVE_RATIO,
   edges,
   faces,
   lightPalette,
@@ -43,6 +44,13 @@ import {
 /** Visual intensity of the backdrop — how much it competes for attention. */
 type Intensity = 'subtle' | 'normal'
 
+/**
+ * Which dive renderer is on screen. `dive` is the nested self-similar tesseract
+ * zoom (copies fall inward, turning inside-out); `tunnel` is the exact
+ * shared-boundary cube chain. A background click swaps between them.
+ */
+type Flavour = 'dive' | 'tunnel'
+
 /** Props for {@link TesseractBackground} */
 type TesseractBackgroundProps = {
   /** Extra classes for the positioning wrapper. Defaults to filling the parent. */
@@ -50,9 +58,13 @@ type TesseractBackgroundProps = {
   /** Overall opacity weighting; `subtle` recedes further into the page. */
   intensity?: Intensity
   /**
-   * When true the structure slowly zooms through its nested layers, evoking the
-   * Russian-doll lazy-loading metaphor. When false the layers hold a static
-   * depth while still rotating gently.
+   * When true the structure zooms endlessly *into* the hypercube. Two flavours
+   * exist: a nested self-similar tesseract zoom (copies falling inward, turning
+   * inside-out) and an exact shared-boundary cube tunnel. Clicking inert
+   * background reconfigures between them — the current flavour collapses to a
+   * point as the other blooms back out (the rain and ambiance keep running).
+   * Evokes the Russian-doll lazy-loading metaphor. When false a single tesseract
+   * holds a static depth while still rotating gently.
    */
   dive?: boolean
   /** When true the surfaces track the cursor for parallax and hover highlight. */
@@ -85,6 +97,8 @@ export function TesseractBackground({
   rain = true,
 }: TesseractBackgroundProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
+  // why: the active flavour lives in a ref so a theme/prop change that restarts the effect doesn't snap the backdrop back to the default renderer mid-view.
+  const flavourRef = useRef<Flavour>('dive')
   const { resolvedTheme } = useTheme()
 
   useEffect(() => {
@@ -131,6 +145,16 @@ export function TesseractBackground({
     let angleY = 0
     let angleW = 0
     let diveProgress = 1
+
+    // how: flavour-swap state — while `swapping`, `swapProgress` eases 0→1 as the outgoing flavour collapses to a point and the incoming one blooms back out; only the hypercube lattice is scaled, so rain and ambiance keep running untouched.
+    let flavour: Flavour = flavourRef.current
+    let swapping = false
+    let swapProgress = 0
+    let swapFrom: Flavour = flavour
+    let swapTo: Flavour = flavour
+    // why: per-frame step sets the swap duration (~1.3s at 60fps); cubic smoothstep gives the ease-in/ease-out.
+    const SWAP_STEP = 1 / 80
+    const smoothstep = (t: number) => t * t * (3 - 2 * t)
 
     const onMouseMove = (event: MouseEvent) => {
       localMouseX = event.clientX - rectLeft
@@ -484,7 +508,26 @@ export function TesseractBackground({
       for (const p of projected) drawNodeDot(p, opacityMultiplier)
     }
 
-    // why: one cube level of the dive tunnel, projected orthographically at a geometric scale set by its depth `f`. A 3D tumble (angleX/angleY) is shared by every level; the per-level z-twist reproduces the 4D shear between a tesseract's nested cells.
+    // why: the dive flavour is a zoom through self-similar copies of the whole rotating tesseract — four copies, each DIVE_RATIO× the next, cross-fade so a deeper copy materialises at the centre as the outer one swells past the viewport. Every copy carries the full 4D fold (via drawInstance's `rotate`), so the structure visibly turns inside-out as you fall through it.
+    // how: gScale/gOpacity are the flavour-swap envelope — 1/1 at rest, driving the whole lattice toward a point (and out again) during a swap without touching rain.
+    const drawDive = (collectTop: boolean, gScale: number, gOpacity: number) => {
+      const loopFraction = diveProgress - floor(diveProgress)
+      // why: walk from the outermost (largest) copy inward so each deeper copy layers over the one enclosing it as it emerges at the centre.
+      for (let layerOffset = -1; layerOffset <= 2; layerOffset++) {
+        const scaleFactor = pow(DIVE_RATIO, loopFraction - layerOffset) * gScale
+        let layerOpacity = max(0, min(1, (3 - (layerOffset - loopFraction)) / 3))
+        // why: ease the newest (deepest) copy in from near-zero and fade the oldest (outermost) out, so copies never pop as the zoom recycles each unit of diveProgress.
+        if (layerOffset === -1) layerOpacity *= pow(1 - loopFraction, 2)
+        if (layerOffset === 2) layerOpacity *= pow(loopFraction, 2.5)
+        layerOpacity *= 0.85 * gOpacity
+        if (layerOpacity > 0 && scaleFactor > 0.01 && scaleFactor < 10) {
+          // why: only the resting-scale copy (offset 0) offers rain landing surfaces.
+          drawInstance(scaleFactor, layerOpacity, collectTop && layerOffset === 0)
+        }
+      }
+    }
+
+    // why: one cube level of the tunnel flavour, projected orthographically at a geometric scale set by its depth `f`. A 3D tumble (angleX/angleY) is shared by every level; the per-level z-twist reproduces the 4D shear between a tesseract's nested cells.
     const rotate3D = (v: Point3D, twist: number, ax: number, ay: number) => {
       let x = v.x
       let y = v.y
@@ -503,9 +546,10 @@ export function TesseractBackground({
 
     type TunnelCube = { f: number; op: number; verts: Array<ProjectedVertex> }
 
-    const projectTunnelCube = (level: number): TunnelCube => {
+    const projectTunnelCube = (level: number, gScale: number, gOpacity: number): TunnelCube => {
       const f = diveProgress - level
-      const scale = max(width, height) * 0.11 * pow(TUNNEL_RATIO, f)
+      // why: gScale folds the swap collapse/expand into the geometric recession so the whole tunnel scales toward centre as one.
+      const scale = max(width, height) * 0.11 * pow(TUNNEL_RATIO, f) * gScale
       const twist = f * TUNNEL_TWIST
       const verts: Array<ProjectedVertex> = []
       for (const v of cubeVertices3D) {
@@ -519,15 +563,15 @@ export function TesseractBackground({
       const fadeIn = max(0, min(1, (f - TUNNEL_F_MIN) / TUNNEL_FADE_SPAN))
       const fadeOut = max(0, min(1, (TUNNEL_F_MAX - f) / TUNNEL_FADE_SPAN))
       const depthDim = 0.4 + ((f - TUNNEL_F_MIN) / (TUNNEL_F_MAX - TUNNEL_F_MIN)) * 0.6
-      const op = fadeIn * fadeOut * depthDim
+      const op = fadeIn * fadeOut * depthDim * gOpacity
       return { f, op, verts }
     }
 
-    const drawTunnel = (collectTop: boolean) => {
+    const drawTunnel = (collectTop: boolean, gScale: number, gOpacity: number) => {
       const nLo = ceil(diveProgress - TUNNEL_F_MAX)
       const nHi = floor(diveProgress - TUNNEL_F_MIN)
       const cubes: Array<TunnelCube> = []
-      for (let n = nLo; n <= nHi; n++) cubes.push(projectTunnelCube(n))
+      for (let n = nLo; n <= nHi; n++) cubes.push(projectTunnelCube(n, gScale, gOpacity))
       // why: paint deepest (last, smallest) first so nearer cubes layer over them; only the nearest cubes offer rain surfaces, so far levels skip top-face collection.
       for (let i = cubes.length - 1; i >= 0; i--) {
         const cube = cubes[i]
@@ -560,14 +604,31 @@ export function TesseractBackground({
       }
     }
 
+    // how: dispatch to whichever flavour renderer is named, passing the swap scale/opacity envelope through.
+    const drawFlavour = (which: Flavour, collectTop: boolean, gScale: number, gOpacity: number) => {
+      if (which === 'tunnel') drawTunnel(collectTop, gScale, gOpacity)
+      else drawDive(collectTop, gScale, gOpacity)
+    }
+
     const renderFrame = () => {
       ctx.clearRect(0, 0, width, height)
       topFaces.length = 0
       // why: back rain falls first so the lattice paints over it; front rain and splashes follow.
       if (rainEnabled) drawRain(false)
-      // why: the dive is an exact infinite tunnel of cubes sharing boundaries; without it a single static tesseract holds depth while rotating gently.
-      if (dive) drawTunnel(rainEnabled)
-      else drawInstance(1, 1, rainEnabled)
+      if (dive) {
+        if (swapping) {
+          // why: outgoing flavour collapses to a point over the first ~55% while the incoming one blooms back out over the last ~55%; the small overlap keeps a clean singularity at the swap's midpoint, selling the "reconfiguration".
+          const outScale = 1 - smoothstep(min(1, swapProgress / 0.55))
+          const inScale = smoothstep(max(0, (swapProgress - 0.45) / 0.55))
+          // why: hold each lattice fully opaque while it is still a visible size and fade only in the last sliver, so it truly shrinks to a pixel rather than dissolving early. Top-face collection is paused mid-swap — rain keeps falling, just no new splashes on the collapsing lattice.
+          drawFlavour(swapFrom, false, outScale, min(1, outScale * 4))
+          drawFlavour(swapTo, false, inScale, min(1, inScale * 4))
+        } else {
+          drawFlavour(flavour, rainEnabled, 1, 1)
+        }
+      } else {
+        drawInstance(1, 1, rainEnabled)
+      }
       if (rainEnabled) {
         processHits()
         drawSplashes()
@@ -590,21 +651,49 @@ export function TesseractBackground({
       angleY += 0.001275
       angleW += 0.001105
       if (dive) diveProgress += 0.001035
+      if (swapping) {
+        swapProgress += SWAP_STEP
+        if (swapProgress >= 1) {
+          // why: the incoming flavour is now at full scale — adopt it as the resting renderer and persist it across effect restarts.
+          swapping = false
+          swapProgress = 0
+          flavour = swapTo
+          flavourRef.current = flavour
+        }
+      }
       if (rainEnabled) updateRain()
       renderFrame()
       frameId = requestAnimationFrame(animate)
     }
     frameId = requestAnimationFrame(animate)
 
+    // why: a click on inert background reconfigures the hypercube — the current flavour collapses and the other blooms out. Clicks on anything interactive (or while a swap is mid-flight) are ignored so they pass straight through to the UI.
+    const onBackgroundClick = (event: MouseEvent) => {
+      if (!dive || swapping) return
+      const target = event.target as Element | null
+      if (
+        target?.closest(
+          'a, button, input, select, textarea, label, summary, [role="button"], [role="link"], [tabindex], [contenteditable=""], [contenteditable="true"]'
+        )
+      )
+        return
+      swapping = true
+      swapProgress = 0
+      swapFrom = flavour
+      swapTo = flavour === 'dive' ? 'tunnel' : 'dive'
+    }
+
     window.addEventListener('resize', measure)
     window.addEventListener('scroll', measure, { passive: true })
     if (interactive) window.addEventListener('mousemove', onMouseMove)
+    if (dive) window.addEventListener('click', onBackgroundClick)
 
     return () => {
       cancelAnimationFrame(frameId)
       window.removeEventListener('resize', measure)
       window.removeEventListener('scroll', measure)
       window.removeEventListener('mousemove', onMouseMove)
+      window.removeEventListener('click', onBackgroundClick)
     }
   }, [resolvedTheme, intensity, dive, interactive, rain])
 
