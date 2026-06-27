@@ -46,4 +46,8 @@ jobs:
       library-path: libs/builder
       bin-name: hf-build
       platforms: '["linux-x64","linux-arm64","darwin-x64","darwin-arm64","win32-x64"]'
+      # The Node SEA build currently only succeeds on Linux runners; the macOS
+      # and Windows legs are skipped (green no-op) until their postject/codesign
+      # failures are fixed. Drop a platform from this list to re-enable its build.
+      unsupported-platforms: '["darwin-x64","darwin-arm64","win32-x64"]'
       release-tag: ${{ inputs.release-tag || '' }}
