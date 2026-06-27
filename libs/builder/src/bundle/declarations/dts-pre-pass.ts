@@ -93,9 +93,11 @@ const buildWorkspaceJobs = (context: BuildContext, npmDeps: string[]): PrePassJo
  */
 export const runDtsPrePass = async (context: BuildContext, monitor?: MemoryMonitor): Promise<void> => {
   if (context.bundledDeps.length === 0 && context.workspaceBundledDeps.length === 0) return
-  const invocation = resolveDefaultWorkerPath(context.workspaceRoot)
+  const invocation = resolveDefaultWorkerPath()
   if (!invocation) {
-    throw createError('bundleAllDeps is enabled but the pre-pass worker artifact was not found for the d.ts pre-pass.')
+    throw createError(
+      'bundleAllDeps is enabled but the pre-pass worker could not be located beside the builder module for the d.ts pre-pass.'
+    )
   }
   const npmJobs = buildJobs(context.bundledDeps, context)
   const workspaceJobs = buildWorkspaceJobs(context, context.bundledDeps)

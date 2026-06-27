@@ -1,4 +1,5 @@
 import type { MemoryMonitor } from '../../memory/monitor'
+import type { WorkerInvocation } from '../worker-locator'
 import type { WorkspaceBundledDepRoute } from './externalize-plugin'
 import { spawn } from 'node:child_process'
 import { existsSync, mkdtempSync, readFileSync, rmSync } from 'node:fs'
@@ -8,6 +9,7 @@ import { parse, stringify } from '@hyperfrontend/immutable-api-utils/built-in-co
 import { createPromise } from '@hyperfrontend/immutable-api-utils/built-in-copy/promise'
 import { logger } from '@hyperfrontend/logging'
 import { join } from '@hyperfrontend/project-scope/core'
+import { ascendForWorker } from '../worker-locator'
 
 const log = logger.channel('builder:bundle:dependencies:pre-pass')
 
@@ -174,55 +176,25 @@ const readReport = (reportPath: string, job: PrePassJob): PrePassResult => {
 }
 
 /**
- * Resolved worker invocation: absolute path + any extra Node args (e.g. `--require \@swc-node/register`
- * when the worker is loaded from TypeScript source during a bootstrap build).
- */
-export interface WorkerInvocation {
-  /** Absolute path to the worker entry script. */
-  path: string
-  /** Extra args prepended to the spawned child's argv. */
-  execArgv: string[]
-}
-
-const SWC_NODE_REGISTER = '@swc-node/register'
-
-const swcNodeAvailable = (workspaceRoot: string): boolean =>
-  existsSync(join(workspaceRoot, 'node_modules', '@swc-node', 'register', 'index.js'))
-
-/**
- * Default worker-path resolution: prefers the built-and-published artifact, falls
- * back to the workspace dist path, and finally to the in-source TypeScript file
- * via `@swc-node/register` (bootstrap case where builder is building itself for
- * the first time and the dist worker doesn't exist yet).
+ * Resolves the dependency pre-pass worker by self-locating it beside the running
+ * builder module: ascends from the module's own directory to the builder package
+ * root and returns the worker at `bundle/dependencies/worker`. This works whether
+ * the builder runs from its built dist, an installed `node_modules` copy, or
+ * melded into a host bundle under `_dependencies/`. The compiled `index.cjs.js`
+ * is preferred; an `index.ts` sibling resolves with the `@swc-node/register`
+ * loader for source-mode bootstrap.
  *
- * Looks at, in order:
- * 1. `<workspaceRoot>/dist/libs/builder/bundle/dependencies/worker/index.cjs.js`
- * 2. `<workspaceRoot>/node_modules/@hyperfrontend/builder/bundle/dependencies/worker/index.cjs.js`
- * 3. `<workspaceRoot>/libs/builder/src/bundle/dependencies/worker/index.ts` (with `--require \@swc-node/register`)
+ * @param startDir - Directory to begin the ascent from. Defaults to the running module's directory; pass an explicit value to resolve from another anchor or under test.
+ * @returns Worker invocation descriptor, or `undefined` if no worker is found under any ancestor.
  *
- * @param workspaceRoot - Absolute workspace root.
- * @returns Worker invocation descriptor, or `undefined` if no candidate exists.
- *
- * @example Locating the worker for an in-workspace consumer
+ * @example Locating the worker beside the builder
  * ```typescript
- * const invocation = resolveDefaultWorkerPath('/abs/repo')
+ * const invocation = resolveDefaultWorkerPath()
  * if (!invocation) throw new Error('builder worker artifact not found')
  * ```
  */
-export const resolveDefaultWorkerPath = (workspaceRoot: string): WorkerInvocation | undefined => {
-  const distCandidates = [
-    join(workspaceRoot, 'dist', 'libs', 'builder', 'bundle', 'dependencies', 'worker', 'index.cjs.js'),
-    join(workspaceRoot, 'node_modules', '@hyperfrontend', 'builder', 'bundle', 'dependencies', 'worker', 'index.cjs.js'),
-  ]
-  for (const path of distCandidates) {
-    if (existsSync(path)) return { path, execArgv: [] }
-  }
-  const sourcePath = join(workspaceRoot, 'libs', 'builder', 'src', 'bundle', 'dependencies', 'worker', 'index.ts')
-  if (existsSync(sourcePath) && swcNodeAvailable(workspaceRoot)) {
-    return { path: sourcePath, execArgv: ['--require', SWC_NODE_REGISTER] }
-  }
-  return undefined
-}
+export const resolveDefaultWorkerPath = (startDir?: string): WorkerInvocation | undefined =>
+  ascendForWorker(['bundle', 'dependencies', 'worker'], startDir)
 
 /**
  * Sequentially runs the supplied pre-pass jobs by forking a fresh Node child

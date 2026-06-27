@@ -9,11 +9,11 @@ import { normalizeFormats } from '../format'
 
 const log = logger.channel('builder:bin:script')
 
-const resolveWorkerOrThrow = (workspaceRoot: string): RollupWorkerInvocation => {
-  const invocation = resolveDefaultRollupWorkerPath(workspaceRoot)
+const resolveWorkerOrThrow = (): RollupWorkerInvocation => {
+  const invocation = resolveDefaultRollupWorkerPath()
   if (!invocation) {
     throw createError(
-      'rollup worker could not be resolved for bin script bundling. Build @hyperfrontend/builder at least once before invoking the bin phase, or ensure @swc-node/register is installed for source-mode bootstrap.'
+      'rollup worker could not be located beside the builder module for bin script bundling. The @hyperfrontend/builder package appears incomplete, or @swc-node/register is missing for source-mode bootstrap.'
     )
   }
   return invocation
@@ -56,7 +56,7 @@ export const buildJsBin = async (bin: BinConfig, ctx: BuildContext): Promise<Bin
   const formats = normalizeFormats(bin.format)
   const binDir = join(ctx.outputPath, 'bin')
   ensureDir(binDir)
-  const worker = resolveWorkerOrThrow(ctx.workspaceRoot)
+  const worker = resolveWorkerOrThrow()
 
   const outputs: BinOutput[] = []
   for (const format of formats) {

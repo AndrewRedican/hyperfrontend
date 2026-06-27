@@ -128,31 +128,31 @@ const buildWorkspaceJsPrePassJobs = (npmDeps: string[], formats: Array<'esm' | '
   return jobs
 }
 
-const resolvePrePassWorkerOrThrow = (workspaceRoot: string): ResolvedWorkerInvocation => {
-  const invocation = resolveDefaultWorkerPath(workspaceRoot)
+const resolvePrePassWorkerOrThrow = (): ResolvedWorkerInvocation => {
+  const invocation = resolveDefaultWorkerPath()
   if (!invocation) {
     throw createError(
-      'bundleAllDeps is enabled but the pre-pass worker could not be resolved. Build @hyperfrontend/builder once with bundleAllDeps disabled, or ensure @swc-node/register is installed for source-mode bootstrap.'
+      'bundleAllDeps is enabled but the pre-pass worker could not be located beside the builder module. The @hyperfrontend/builder package appears incomplete, or @swc-node/register is missing for source-mode bootstrap.'
     )
   }
   return invocation
 }
 
-const resolveRollupWorkerOrThrow = (workspaceRoot: string): ResolvedWorkerInvocation => {
-  const invocation = resolveDefaultRollupWorkerPath(workspaceRoot)
+const resolveRollupWorkerOrThrow = (): ResolvedWorkerInvocation => {
+  const invocation = resolveDefaultRollupWorkerPath()
   if (!invocation) {
     throw createError(
-      'rollup worker could not be resolved. Build @hyperfrontend/builder at least once before invoking the bundle phase, or ensure @swc-node/register is installed for source-mode bootstrap.'
+      'rollup worker could not be located beside the builder module. The @hyperfrontend/builder package appears incomplete, or @swc-node/register is missing for source-mode bootstrap.'
     )
   }
   return invocation
 }
 
-const createLazyDispatchResolver = (workspaceRoot: string): ResolveDispatch => {
+const createLazyDispatchResolver = (): ResolveDispatch => {
   let cached: DispatchOptions | null = null
   return () => {
     if (!cached) {
-      const invocation = resolveRollupWorkerOrThrow(workspaceRoot)
+      const invocation = resolveRollupWorkerOrThrow()
       cached = { workerPath: invocation.path, execArgv: invocation.execArgv }
     }
     return cached
@@ -275,7 +275,7 @@ export const runBundlePhase = async (context: BuildContext, config: BuildConfig,
 
   const requestedPrePassFormats = collectFormatsRequestingPrePass(config)
   if (requestedPrePassFormats.length > 0 && (context.bundledDeps.length > 0 || context.workspaceBundledDeps.length > 0)) {
-    const invocation = resolvePrePassWorkerOrThrow(context.workspaceRoot)
+    const invocation = resolvePrePassWorkerOrThrow()
     const npmJobs = buildJsPrePassJobs(context.bundledDeps, requestedPrePassFormats, context)
     const workspaceJobs = buildWorkspaceJsPrePassJobs(context.bundledDeps, requestedPrePassFormats, context)
     const jobs = [...npmJobs, ...workspaceJobs]
@@ -287,7 +287,7 @@ export const runBundlePhase = async (context: BuildContext, config: BuildConfig,
     monitor?.check('bundle:dependencies:prepass:end')
   }
 
-  const resolveDispatch = createLazyDispatchResolver(context.workspaceRoot)
+  const resolveDispatch = createLazyDispatchResolver()
 
   await runEsmFormats(config, context, outputs, resolveDispatch, monitor)
   await recover()

@@ -2,7 +2,7 @@ import type { MemoryMonitor, MemorySnapshot } from '../../memory/monitor'
 import type { RollupBuildDescriptor } from './worker/types'
 import { spawn } from 'node:child_process'
 import { EventEmitter } from 'node:events'
-import { existsSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs'
+import { existsSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { dispatchRollupWorker, resolveDefaultRollupWorkerPath } from './dispatch'
@@ -226,54 +226,15 @@ describe('resolveDefaultRollupWorkerPath', () => {
     rmSync(root, { recursive: true, force: true })
   })
 
-  const writeWorkerAt = (relative: string): string => {
-    const path = join(root, relative)
+  it('resolves the worker at the bundle/rollup/worker offset beside the builder', () => {
+    const targetDir = join(root, 'bundle', 'rollup', 'worker')
+    mkdirSync(targetDir, { recursive: true })
+    const path = join(targetDir, 'index.cjs.js')
     writeFileSync(path, '/* fake worker */', { flag: 'w' })
-    return path
-  }
-
-  it('returns undefined when neither dist, node_modules, nor source has the worker', () => {
-    expect(resolveDefaultRollupWorkerPath(root)).toBeUndefined()
-  })
-
-  it('returns the dist path when the dist worker exists', () => {
-    const targetDir = join(root, 'dist', 'libs', 'builder', 'bundle', 'rollup', 'worker')
-    require('node:fs').mkdirSync(targetDir, { recursive: true })
-    const path = writeWorkerAt('dist/libs/builder/bundle/rollup/worker/index.cjs.js')
     expect(resolveDefaultRollupWorkerPath(root)).toEqual({ path, execArgv: [] })
   })
 
-  it('falls back to node_modules when the dist worker is missing', () => {
-    const targetDir = join(root, 'node_modules', '@hyperfrontend', 'builder', 'bundle', 'rollup', 'worker')
-    require('node:fs').mkdirSync(targetDir, { recursive: true })
-    const path = writeWorkerAt('node_modules/@hyperfrontend/builder/bundle/rollup/worker/index.cjs.js')
-    expect(resolveDefaultRollupWorkerPath(root)).toEqual({ path, execArgv: [] })
-  })
-
-  it('prefers the dist worker when both are present', () => {
-    const distDir = join(root, 'dist', 'libs', 'builder', 'bundle', 'rollup', 'worker')
-    const nmDir = join(root, 'node_modules', '@hyperfrontend', 'builder', 'bundle', 'rollup', 'worker')
-    require('node:fs').mkdirSync(distDir, { recursive: true })
-    require('node:fs').mkdirSync(nmDir, { recursive: true })
-    const distPath = writeWorkerAt('dist/libs/builder/bundle/rollup/worker/index.cjs.js')
-    writeWorkerAt('node_modules/@hyperfrontend/builder/bundle/rollup/worker/index.cjs.js')
-    expect(resolveDefaultRollupWorkerPath(root)).toEqual({ path: distPath, execArgv: [] })
-  })
-
-  it('falls back to the in-source worker.ts via @swc-node/register when dist+node_modules are missing', () => {
-    const sourceDir = join(root, 'libs', 'builder', 'src', 'bundle', 'rollup', 'worker')
-    const swcDir = join(root, 'node_modules', '@swc-node', 'register')
-    require('node:fs').mkdirSync(sourceDir, { recursive: true })
-    require('node:fs').mkdirSync(swcDir, { recursive: true })
-    const sourcePath = writeWorkerAt('libs/builder/src/bundle/rollup/worker/index.ts')
-    writeWorkerAt('node_modules/@swc-node/register/index.js')
-    expect(resolveDefaultRollupWorkerPath(root)).toEqual({ path: sourcePath, execArgv: ['--require', '@swc-node/register'] })
-  })
-
-  it('returns undefined when only the source worker.ts is present but @swc-node/register is missing', () => {
-    const sourceDir = join(root, 'libs', 'builder', 'src', 'bundle', 'rollup', 'worker')
-    require('node:fs').mkdirSync(sourceDir, { recursive: true })
-    writeWorkerAt('libs/builder/src/bundle/rollup/worker/index.ts')
+  it('returns undefined when no rollup worker exists under any ancestor', () => {
     expect(resolveDefaultRollupWorkerPath(root)).toBeUndefined()
   })
 })

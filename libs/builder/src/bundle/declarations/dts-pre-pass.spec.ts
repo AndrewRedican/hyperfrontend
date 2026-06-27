@@ -46,7 +46,7 @@ describe('runDtsPrePass', () => {
 
   it('throws a context-rich error when the worker artifact is missing', async () => {
     ;(<jest.Mock>resolveDefaultWorkerPath).mockReturnValueOnce(undefined)
-    await expect(runDtsPrePass(makeContext(['rollup']))).rejects.toThrow(/worker artifact was not found/)
+    await expect(runDtsPrePass(makeContext(['rollup']))).rejects.toThrow(/worker could not be located beside the builder module/)
   })
 
   it('builds one dts job per bundled dep and forwards them to runPrePass', async () => {
