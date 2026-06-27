@@ -1,6 +1,6 @@
 # CLI
 
-Programmatic entry point for the hyperfrontend features CLI — the `init`, `build`, and `dev` commands plus `feature.config.*` handling, exposed for the `hf` bin and for in-process use.
+Programmatic entry point for the hyperfrontend features CLI — the `init`, `build`, and `dev` commands behind the `hf` bin.
 
 ```ts
 import { runFeaturesCli } from '@hyperfrontend/features/cli'

@@ -1,6 +1,6 @@
 # Hostee
 
-Hostee-side SDK for feature apps — feature initialization, contract declaration, and the feature lifecycle. A feature app stays a normal app; it knows nothing about any particular host.
+Hostee-side SDK for feature apps — feature initialization, contract declaration, and lifecycle.
 
 ```ts
 import { createFeature } from '@hyperfrontend/features/hostee'

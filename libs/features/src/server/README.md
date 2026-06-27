@@ -1,6 +1,6 @@
 # Server
 
-Dev server and debug UI for testing host/hostee interactions — static file serving for each app on its own port, plus an in-browser debug UI with display-mode, resize, message-log, and security controls.
+Dev server and debug UI for testing host/hostee interactions — per-app static hosting plus display-mode, resize, message-log, and security controls.
 
 ## Quick start
 

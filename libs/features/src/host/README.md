@@ -1,6 +1,6 @@
 # Host
 
-Host-side SDK for embedding hyperfrontend features — a shell factory, the four built-in display modes (embedded, dialog, popup, standalone), iframe utilities, and the open/close lifecycle.
+Host-side SDK for embedding hyperfrontend features — shell factory, display modes, iframe utilities, and lifecycle.
 
 ```ts
 import { createShell, DisplayMode } from '@hyperfrontend/features/host'

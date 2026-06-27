@@ -1,6 +1,6 @@
 # generators
 
-Pure code generators that turn a resolved feature config and its parsed contract into staged output files. Each generator is a pure `(config, contract, tree) => void` that writes into a `@hyperfrontend/project-scope` VFS `Tree` and does no I/O of its own — all discovery, prompting, temp-dir lifecycle, and `commitChanges` belong to the CLI.
+Pure code generators that turn a resolved feature config and parsed contract into staged output files.
 
 ## API
 
