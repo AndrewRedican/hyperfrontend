@@ -33,13 +33,13 @@
   <img src="https://img.shields.io/badge/tree%20shakeable-%E2%9C%93-success?style=flat-square" alt="Tree Shakeable">
 </p>
 
-Vendor-agnostic SDK, CLI, and dev server for building, embedding, and orchestrating hyperfrontend micro-frontend features.
+SDK, CLI, and dev server for building, embedding, and orchestrating hyperfrontend micro-frontend features.
 
 • 👉 See [**documentation**](https://www.hyperfrontend.dev/docs/libraries/features/)
 
 ## What is @hyperfrontend/features?
 
-`@hyperfrontend/features` is the batteries-included, **vendor-agnostic** layer on top of [`@hyperfrontend/nexus`](https://www.hyperfrontend.dev/docs/libraries/nexus/) (cross-window messaging). Nexus handles the communication protocol; this package formalizes the frontend glue — iframe management, display modes, and lifecycle orchestration — needed to embed micro-frontend features in any host application, with **no Nx and no Nx workspace required**.
+`@hyperfrontend/features` is the batteries-included layer on top of [`@hyperfrontend/nexus`](https://www.hyperfrontend.dev/docs/libraries/nexus/) (cross-window messaging). Nexus handles the communication protocol; this package formalizes the frontend glue — iframe management, display modes, and lifecycle orchestration — needed to embed micro-frontend features in any host application.
 
 It is organized into independent subpath entry points so consumers import only the surface they need.
 
@@ -53,11 +53,11 @@ It is organized into independent subpath entry points so consumers import only t
 
 ### Architecture Highlights
 
-The package separates the host and hostee surfaces behind independent subpath exports and builds them on top of the Nexus messaging layer. A full architectural overview (with diagrams) is published in `ARCHITECTURE.md` as each surface lands — see the status note below.
+The package separates the host and hostee surfaces behind independent subpath exports and builds them on top of the Nexus messaging layer. For a full architectural overview — with diagrams of the host/hostee handshake, display modes, and shell generation — see [`ARCHITECTURE.md`](./ARCHITECTURE.md).
 
 ## Why Use @hyperfrontend/features?
 
-Micro-frontend solutions must stay vendor-neutral — requiring a specific build tool or monorepo would defeat the purpose. `@hyperfrontend/features` is publishable and usable from any toolchain: consumers get typed host/hostee SDKs, a CLI, and a dev server without taking on Nx or any transitive install burden.
+You get typed host and hostee SDKs, a CLI, and a dev server for composing micro-frontend features — and it works with any framework (React, Vue, Angular, vanilla JS) and build tool. Features build into self-contained shell packages with their dependencies bundled in, so a host installs one package and inherits no transitive install burden.
 
 ## Installation
 
@@ -67,22 +67,56 @@ npm install @hyperfrontend/features
 
 ## Quick Start
 
-> **Status:** the public APIs for each subpath are being published progressively (see the roadmap status below). The entry points exist and the package imports cleanly today; usage examples are added as each surface ships.
+**In a feature app** (the hostee), declare a contract and connect to whatever host embeds it:
 
 ```typescript
-import {} from '@hyperfrontend/features/host' // host-side SDK
-import {} from '@hyperfrontend/features/hostee' // hostee-side SDK
+import { createFeature } from '@hyperfrontend/features/hostee'
+
+const feature = createFeature({
+  name: 'clock',
+  contract: { emitted: [{ type: 'tick' }], accepted: [{ type: 'set-timezone' }] },
+})
+
+await feature.ready()
+feature.on('set-timezone', ({ tz }) => render(tz))
+setInterval(() => feature.send('tick', Date.now()), 1000)
+```
+
+**In a host app**, build a shell and surface the feature in any display mode:
+
+```typescript
+import { createShell, DisplayMode } from '@hyperfrontend/features/host'
+
+const shell = createShell({
+  url: 'https://features.example.com/clock',
+  container: '#clock-slot',
+  displayMode: DisplayMode.Embedded,
+})
+
+shell.on('tick', (time) => console.log('feature said', time))
+shell.open()
+shell.send('set-timezone', { tz: 'UTC' })
+```
+
+**From the command line**, scaffold, build, and serve features with the bundled `hf` CLI:
+
+```bash
+npx @hyperfrontend/features init   # scaffold the hostee glue into an app
+npx @hyperfrontend/features build  # generate + bundle a publishable shell package
+npx @hyperfrontend/features dev     # serve apps with the debug UI
 ```
 
 ## API Overview
 
-| Entry point                      | Purpose                                         | Status                            |
-| -------------------------------- | ----------------------------------------------- | --------------------------------- |
-| `@hyperfrontend/features`        | Package identity and shared surface             | Available                         |
-| `@hyperfrontend/features/host`   | Host-side SDK (shell, display modes, lifecycle) | Reserved — lands in a 0.x release |
-| `@hyperfrontend/features/hostee` | Hostee-side SDK (feature init, lifecycle)       | Reserved — lands in a 0.x release |
-| `@hyperfrontend/features/cli`    | CLI (`init`, `build`, `dev`)                    | Reserved — lands in a 0.x release |
-| `@hyperfrontend/features/server` | Dev server and debug UI                         | Reserved — lands in a 0.x release |
+| Entry point                      | Purpose                                           | Status    |
+| -------------------------------- | ------------------------------------------------- | --------- |
+| `@hyperfrontend/features`        | Shared types, contract validation, `defineConfig` | Available |
+| `@hyperfrontend/features/host`   | Host-side SDK (shell, display modes, lifecycle)   | Available |
+| `@hyperfrontend/features/hostee` | Hostee-side SDK (feature init, lifecycle)         | Available |
+| `@hyperfrontend/features/cli`    | CLI (`init`, `build`, `dev`) and `hf` bin         | Available |
+| `@hyperfrontend/features/server` | Dev server and debug UI                           | Available |
+
+> Using Nx? The package also ships a `feature` generator and `build`/`serve` executors at `@hyperfrontend/features/nx/*` to streamline integration in an Nx workspace.
 
 ## Compatibility
 
