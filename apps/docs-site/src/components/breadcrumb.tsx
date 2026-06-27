@@ -6,7 +6,6 @@ import { usePathname } from 'next/navigation'
 const pathLabels: Record<string, string> = {
   docs: 'Documentation',
   libraries: 'Libraries',
-  plugins: 'Plugins',
   api: 'API Reference',
   contributing: 'Contributing',
   'quick-start': 'Quick Start',
