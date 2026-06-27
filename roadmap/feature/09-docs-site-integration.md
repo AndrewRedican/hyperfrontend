@@ -71,4 +71,4 @@ npx nx build docs-site --skip-nx-cache --exclude-task-dependencies
 
 ## Open questions / follow-ups
 
-- This integration overlaps the broader docs reclassification in [11 — Documentation Cleanup](11-docs-cleanup.md) (which moves `@hyperfrontend/features` out of the "Plugins" sections). Coordinate so the demo pages land under the package — not plugin — navigation.
+- The broader docs reclassification (was plan 11 — moving `@hyperfrontend/features` out of the "Plugins" sections) is **complete**: features now lives under the package/`libraries` navigation. Ensure the demo pages land under that same package navigation, not a reintroduced plugin section.

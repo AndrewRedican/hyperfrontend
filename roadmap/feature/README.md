@@ -53,19 +53,19 @@ This index is intentionally compact. Each linked document is a focused, independ
 
 ## Recommended reading / execution order
 
-| #   | Plan                                                 | Scope                                                                               | Notes                                                                   |
-| --- | ---------------------------------------------------- | ----------------------------------------------------------------------------------- | ----------------------------------------------------------------------- |
-| 01  | ✅ ~~Reposition & Publishability~~ — **Done**        | Move `plugins/features` → `libs/features`; promote to publishable                   | **Done.** Same package, converted identity. Plan file removed.          |
-| 02  | ✅ ~~[CLI/bin Execution Research]~~ — **Done**       | Confirm `@hyperfrontend/builder` bins run under every PM                            | **Done.** All PMs pass; no builder fix needed. Gate for CLI (05) clear. |
-| 03  | ✅ [Core SDK](03-core-sdk.md) — **Done**             | Shared types, Host SDK, Hostee SDK                                                  | Core. Depends on 01.                                                    |
-| 04  | [Shell Generation](04-shell-generation.md)           | Pure generators (ephemeral shell connector + hostee glue, contract types, metadata) | Depends on 03.                                                          |
-| 05  | [CLI](05-cli.md)                                     | `init` / `build` / `dev` commands + `feature.config.json`                           | Depends on 03, 04; gated by 02 for publish.                             |
-| 06  | [Dev Server](06-dev-server.md)                       | Static server + debug UI + `hf-dev.config.json`                                     | Depends on 03.                                                          |
-| 07  | [Nx Adapter (optional)](07-nx-adapter.md)            | Separate opt-in `@hyperfrontend/features-nx` package                                | Optional. Never a dependency of the core package.                       |
-| 08  | [Demos](08-demos.md)                                 | Clock (Vue) → Heartbeat (React) → Views (Vanilla JS)                                | Proves the architecture + framework-agnostic claim.                     |
-| 09  | [Docs-Site Integration](09-docs-site-integration.md) | Demo pages + landing carousel with live embeds                                      | Depends on 08.                                                          |
-| 10  | [Deployment](10-deployment.md)                       | Vercel (docs) + Railway (features) + CI/CD workflows                                | Depends on 08, 09.                                                      |
-| 11  | [Documentation Cleanup](11-docs-cleanup.md)          | Reclassify "plugin" → "package" across README + docs-site                           | **Deferred follow-up.** Do after 01 lands.                              |
+| #   | Plan                                                 | Scope                                                                                | Notes                                                                      |
+| --- | ---------------------------------------------------- | ------------------------------------------------------------------------------------ | -------------------------------------------------------------------------- |
+| 01  | ✅ ~~Reposition & Publishability~~ — **Done**        | Move `plugins/features` → `libs/features`; promote to publishable                    | **Done.** Same package, converted identity. Plan file removed.             |
+| 02  | ✅ ~~[CLI/bin Execution Research]~~ — **Done**       | Confirm `@hyperfrontend/builder` bins run under every PM                             | **Done.** All PMs pass; no builder fix needed. Gate for CLI (05) clear.    |
+| 03  | ✅ ~~Core SDK~~ — **Done**                           | Shared types, Host SDK, Hostee SDK                                                   | **Done.** Plan file removed.                                               |
+| 04  | ✅ ~~Shell Generation~~ — **Done**                   | Pure generators (ephemeral shell connector + hostee glue, contract types, metadata)  | **Done.** Plan file removed.                                               |
+| 05  | ✅ ~~CLI~~ — **Done**                                | `init` / `build` / `dev` commands + `feature.config.*`                               | **Done.** Plan file removed.                                               |
+| 06  | ✅ ~~Dev Server~~ — **Done**                         | Static server + debug UI + `hf-dev.config.*`                                         | **Done.** Plan file removed. One follow-up — see Deferred items.           |
+| 07  | ✅ ~~Nx Adapter (optional)~~ — **Done**              | Opt-in Nx generators/executors, shipped inside `@hyperfrontend/features` (`src/nx/`) | **Done.** Plan file removed. (Built into the package, not a separate one.) |
+| 08  | [Demos](08-demos.md)                                 | Clock (Vue) → Heartbeat (React) → Views (Vanilla JS)                                 | Proves the architecture + framework-agnostic claim.                        |
+| 09  | [Docs-Site Integration](09-docs-site-integration.md) | Demo pages + landing carousel with live embeds                                       | Depends on 08.                                                             |
+| 10  | [Deployment](10-deployment.md)                       | Vercel (docs) + Railway (features) + CI/CD workflows                                 | Depends on 08, 09.                                                         |
+| 11  | ✅ ~~Documentation Cleanup~~ — **Done**              | Reclassified "plugin" → "package" across README + docs-site                          | **Done.** Plan file removed.                                               |
 
 ---
 
@@ -139,7 +139,7 @@ Every runtime and tooling dependency `@hyperfrontend/features` needs is already 
 - **Migration of the existing `plugin` project** — [01](01-reposition-and-publishability.md) is the single source of truth; salvaged design intent flows into [05](05-cli.md) (CLI) and [06](06-dev-server.md) (dev server).
 - **Builder/package conventions** — bundled deps, subpath exports, ESM/CJS output, `bin` synthesis; see [01](01-reposition-and-publishability.md) and the building-blocks table above.
 - **Testing & E2E** — unit coverage meets the lib coverage gate; the generated E2E project asserts the packed package imports cleanly in every declared format and that the CLI bin executes under `npx`/`pnpm dlx`.
-- **Docs-site / API documentation** — new `libs/features/` paths replace stale `plugins/features` references; see [09](09-docs-site-integration.md) and [11](11-docs-cleanup.md).
+- **Docs-site / API documentation** — new `libs/features/` paths replace stale `plugins/features` references; the package/CLI reclassification landed (was plan 11, now done). Remaining docs-site work is demo integration — see [09](09-docs-site-integration.md).
 
 ---
 
@@ -147,12 +147,13 @@ Every runtime and tooling dependency `@hyperfrontend/features` needs is already 
 
 Explicitly deferred to future work — captured here so they stay visible, not scheduled now:
 
-| Item                                 | Reason                        | Priority |
-| ------------------------------------ | ----------------------------- | -------- |
-| Version negotiation at runtime       | Need more design              | Medium   |
-| Auto-retry on errors                 | Keep v1 simple                | Low      |
-| Experience plugins                   | Future extensibility          | Low      |
-| Framework-specific adapters          | Leave room, don't build       | Low      |
-| Web Component alternative to iframes | Experimental (55% confidence) | Low      |
+| Item                                 | Reason                                                                                                                                                                                                                                                                             | Priority |
+| ------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- |
+| Emit debug-UI assets in the build    | The `./server` build does not bundle `src/server/debug-ui/{index.html,bootstrap.ts,…}` beside the compiled server, so a published `dev` server cannot serve the debug UI without an injected `assetRoot`. Needs an assets/iife build pass (carried over from the removed 06 plan). | Medium   |
+| Version negotiation at runtime       | Need more design                                                                                                                                                                                                                                                                   | Medium   |
+| Auto-retry on errors                 | Keep v1 simple                                                                                                                                                                                                                                                                     | Low      |
+| Experience plugins                   | Future extensibility                                                                                                                                                                                                                                                               | Low      |
+| Framework-specific adapters          | Leave room, don't build                                                                                                                                                                                                                                                            | Low      |
+| Web Component alternative to iframes | Experimental (55% confidence)                                                                                                                                                                                                                                                      | Low      |
 
-The Nx adapter ([07](07-nx-adapter.md)) and Documentation Cleanup ([11](11-docs-cleanup.md)) are also deferrable follow-ups rather than blockers for the core SDK.
+The Nx adapter (was plan 07) and Documentation Cleanup (was plan 11) have both landed; their plan files are removed. The remaining active plans are demos (08), docs-site integration (09), and deployment (10).

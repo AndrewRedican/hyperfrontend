@@ -72,4 +72,4 @@ npx nx build lib-features --skip-nx-cache --exclude-task-dependencies
 
 ## Open questions / follow-ups
 
-- The Railway feature URLs are referenced as `process.env.*_FEATURE_URL` by the host SDK ([03 — Core SDK](03-core-sdk.md)); wire those env vars into both the Vercel build and local dev.
+- The Railway feature URLs are referenced as `process.env.*_FEATURE_URL` by the host SDK (the now-complete Core SDK); wire those env vars into both the Vercel build and local dev.

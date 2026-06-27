@@ -2,7 +2,7 @@
 
 Three feature apps that prove the architecture end-to-end and validate the framework-agnostic claim, in order: **Clock (Vue) → Heartbeat (React) → Views (Vanilla JS)**.
 
-**Depends on** [03 — Core SDK](03-core-sdk.md), [04 — Shell Generation](04-shell-generation.md), and [05 — CLI](05-cli.md) (each demo is built into a shell via `features build`). Embedded into the docs site in [09 — Docs-Site Integration](09-docs-site-integration.md); deployed per [10 — Deployment](10-deployment.md).
+**Depends on** the Core SDK, Shell Generation, and CLI — **all complete** (each demo is built into a shell via `features build`). Embedded into the docs site in [09 — Docs-Site Integration](09-docs-site-integration.md); deployed per [10 — Deployment](10-deployment.md).
 
 See the [index](README.md) for shared invariants.
 
@@ -12,7 +12,7 @@ See the [index](README.md) for shared invariants.
 
 Read the `coding` skill and skim the custom ESLint rule docs in [`tools/eslint-rules/docs/`](../../tools/eslint-rules/docs/) **first** — the hand-written demo app source obeys the same lint-enforced conventions (shared invariant 9). Fix violations preemptively.
 
-> **Don't build the demos before their prerequisites exist, and don't hand-author generated files (shared invariant 10).** Each demo can only be built once the SDK ([03](03-core-sdk.md)), shell generator ([04](04-shell-generation.md)), and CLI ([05](05-cli.md)) ship. The `shell/*` files listed under each demo are **generated output of `features build`**, not files to write by hand — don't fill them in manually or edit the protected core. Defer each demo's docs until its feature app actually runs.
+> **Don't hand-author generated files (shared invariant 10).** The SDK, shell generator, and CLI have all shipped, so the prerequisites are in place. The `shell/*` files listed under each demo are **generated output of `features build`**, not files to write by hand — don't fill them in manually or edit the protected core. Defer each demo's docs until its feature app actually runs.
 
 ---
 
