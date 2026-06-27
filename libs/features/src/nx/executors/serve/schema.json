@@ -1,0 +1,22 @@
+{
+  "$schema": "http://json-schema.org/schema",
+  "$id": "FeaturesNxServe",
+  "type": "object",
+  "title": "Serve a hyperfrontend feature dev server",
+  "description": "Start the dev server by delegating to the @hyperfrontend/features SDK (hf dev). Long-running.",
+  "properties": {
+    "config": {
+      "type": "string",
+      "description": "Path to the dev-server config object."
+    },
+    "apps": {
+      "type": "string",
+      "description": "Path to the dev-server apps array."
+    },
+    "port": {
+      "type": "string",
+      "description": "Port the dev server's debug UI listens on."
+    }
+  },
+  "required": []
+}

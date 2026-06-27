@@ -18,7 +18,7 @@ export default <Config>{
     // why: The debug-UI page entry is a thin DOM bootstrap (root lookup + manifest read) that runs only in a served browser; its rendering is covered by app.browser.spec.ts.
     '!**/server/debug-ui/bootstrap.ts',
   ],
-  coveragePathIgnorePatterns: ['/node_modules/', 'src/shared/types.ts', 'src/host/types.ts', 'src/hostee/types.ts'],
+  coveragePathIgnorePatterns: ['/node_modules/', 'src/shared/types.ts', 'src/host/types.ts', 'src/hostee/types.ts', 'src/nx/model.ts'],
   projects: [
     {
       displayName: 'features/node',

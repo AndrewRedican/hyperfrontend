@@ -19,6 +19,8 @@
   "bin": {
     "hf": "./bin/hf.js"
   },
+  "generators": "./generators.json",
+  "executors": "./executors.json",
   "exports": {
     ".": "./src/index.js",
     "./host": "./src/host/index.js",
@@ -26,6 +28,9 @@
     "./cli": "./src/cli/index.js",
     "./server": "./src/server/index.js",
     "./generators": "./src/generators/index.js",
+    "./nx/generators/feature": "./src/nx/generators/feature/index.js",
+    "./nx/executors/build": "./src/nx/executors/build/index.js",
+    "./nx/executors/serve": "./src/nx/executors/serve/index.js",
     "./package.json": "./package.json"
   },
   "funding": {

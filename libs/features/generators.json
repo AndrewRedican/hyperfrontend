@@ -1,0 +1,10 @@
+{
+  "$schema": "https://raw.githubusercontent.com/nrwl/nx/master/packages/nx/schemas/generators.schema.json",
+  "generators": {
+    "feature": {
+      "factory": "./nx/generators/feature/index.cjs.js",
+      "schema": "./nx/generators/feature/schema.json",
+      "description": "Scaffold a hyperfrontend feature via the SDK."
+    }
+  }
+}

@@ -1,34 +1,30 @@
 /**
  * UMD bundle E2E tests for @hyperfrontend/features
- * Tests that the UMD bundle loads correctly in browser context.
+ * Tests that the host/hostee UMD bundles load and attach their globals.
  */
 
-import { getBundlePath, loadBundleCode, executeBundleInWindow } from '../../shared/helpers'
+import { resolve } from 'node:path'
+import { executeBundleInWindow, loadBundleCode } from '../../shared/helpers'
 
-describe('@hyperfrontend/features UMD bundle', () => {
-  const bundlePath = getBundlePath('features', 'umd')
-  const minBundlePath = getBundlePath('features', 'umd', true)
+const umdBundle = (dir: string, minified = false): string =>
+  resolve(__dirname, `../../../../dist/libs/features/bundle/${dir}/index.umd${minified ? '.min' : ''}.js`)
 
-  it('bundle file should exist', () => {
-    expect(() => loadBundleCode(bundlePath)).not.toThrow()
+const bundles: ReadonlyArray<readonly [string, string, string]> = [
+  ['host', 'HyperfrontendFeaturesHost', 'createShell'],
+  ['hostee', 'HyperfrontendFeaturesHostee', 'createFeature'],
+]
+
+describe('@hyperfrontend/features UMD bundles', () => {
+  it.each(bundles)('%s bundle file exists', (dir) => {
+    expect(() => loadBundleCode(umdBundle(dir))).not.toThrow()
   })
 
-  it('minified bundle file should exist', () => {
-    expect(() => loadBundleCode(minBundlePath)).not.toThrow()
+  it.each(bundles)('%s minified bundle file exists', (dir) => {
+    expect(() => loadBundleCode(umdBundle(dir, true))).not.toThrow()
   })
 
-  it('should attach HyperfrontendFeatures to window global', () => {
-    const bundleCode = loadBundleCode(bundlePath)
-    const global = executeBundleInWindow(bundleCode, 'HyperfrontendFeatures')
-
-    expect(global).toBeDefined()
-  })
-
-  it('should have exports on the global', () => {
-    const bundleCode = loadBundleCode(bundlePath)
-    const global = executeBundleInWindow(bundleCode, 'HyperfrontendFeatures') as Record<string, unknown>
-
-    const exportedKeys = Object.keys(global)
-    expect(exportedKeys.length).toBeGreaterThan(0)
+  it.each(bundles)('%s bundle attaches its API to the window global', (dir, globalName, api) => {
+    const global = executeBundleInWindow(loadBundleCode(umdBundle(dir)), globalName) as Record<string, unknown>
+    expect(global[api]).toBeDefined()
   })
 })

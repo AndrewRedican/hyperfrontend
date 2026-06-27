@@ -11,22 +11,42 @@
     "build": {
       "executor": "@hyperfrontend/package:build",
       "options": {
-        "esm": {
-          "bundleWorkspaceDeps": true,
-          "bundleAllDeps": true
-        },
-        "cjs": {
-          "bundleWorkspaceDeps": true,
-          "bundleAllDeps": true
-        },
-        "iife": {
-          "entry": ".",
-          "globalName": "HyperfrontendFeatures"
-        },
-        "umd": {
-          "entry": ".",
-          "globalName": "HyperfrontendFeatures"
-        },
+        "esm": [
+          {
+            "exclude": ["./nx/generators/feature", "./nx/executors/build", "./nx/executors/serve"],
+            "bundleWorkspaceDeps": true,
+            "bundleAllDeps": true
+          },
+          {
+            "entry": ["./nx/generators/feature", "./nx/executors/build", "./nx/executors/serve"],
+            "bundleWorkspaceDeps": false,
+            "bundleAllDeps": false
+          }
+        ],
+        "cjs": [
+          {
+            "exclude": ["./nx/generators/feature", "./nx/executors/build", "./nx/executors/serve"],
+            "bundleWorkspaceDeps": true,
+            "bundleAllDeps": true
+          },
+          {
+            "entry": ["./nx/generators/feature", "./nx/executors/build", "./nx/executors/serve"],
+            "bundleWorkspaceDeps": false,
+            "bundleAllDeps": false
+          }
+        ],
+        "iife": [
+          { "entry": "./host", "globalName": "HyperfrontendFeaturesHost", "output": "bundle/host" },
+          { "entry": "./hostee", "globalName": "HyperfrontendFeaturesHostee", "output": "bundle/hostee" }
+        ],
+        "umd": [
+          { "entry": "./host", "globalName": "HyperfrontendFeaturesHost", "output": "bundle/host" },
+          { "entry": "./hostee", "globalName": "HyperfrontendFeaturesHostee", "output": "bundle/hostee" }
+        ],
+        "assets": [
+          { "from": "libs/features", "files": ["generators.json", "executors.json"] },
+          { "from": "libs/features/src/nx", "glob": "**/schema.json", "to": "nx" }
+        ],
         "bin": [{ "name": "hf", "runner": "runFeaturesCli", "format": "cjs" }]
       }
     },

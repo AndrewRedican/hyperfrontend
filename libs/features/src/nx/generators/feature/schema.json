@@ -1,0 +1,38 @@
+{
+  "$schema": "http://json-schema.org/schema",
+  "$id": "FeaturesNxFeature",
+  "type": "object",
+  "title": "Scaffold a hyperfrontend feature",
+  "description": "Scaffold a feature by delegating to the @hyperfrontend/features SDK (hf init) headlessly.",
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "Feature name.",
+      "x-prompt": "What is the feature name?"
+    },
+    "contract": {
+      "type": "string",
+      "description": "Path to the feature contract file, relative to the target directory.",
+      "x-prompt": "Where is the feature contract file?"
+    },
+    "entry": {
+      "type": "string",
+      "description": "Entry file the generated glue import is wired into.",
+      "x-prompt": "Which entry file should the glue import be wired into?"
+    },
+    "directory": {
+      "type": "string",
+      "description": "Directory to scaffold into, relative to the workspace root. Defaults to the root.",
+      "default": "."
+    },
+    "version": {
+      "type": "string",
+      "description": "Feature version string."
+    },
+    "url": {
+      "type": "string",
+      "description": "URL the generated connector loads the feature from."
+    }
+  },
+  "required": ["name", "contract", "entry"]
+}
