@@ -1,6 +1,6 @@
 import type { DisplayMode } from '../shared/types'
 
-// note: Reserved extension seam only — the SDK ships no experience plugins; these types are the contract a future release (or a consumer) implements to layer transitions/animations onto the built-in display modes, and nothing in the SDK consumes them yet.
+// note: Opt-in extension seam — implement ExperiencePlugin to layer transitions/animations onto the built-in display modes. The SDK ships no built-in experience plugins; these types are the contract a consumer implements to provide one.
 
 /**
  * Context handed to an {@link ExperiencePlugin} around a feature's mount lifecycle.
@@ -15,8 +15,8 @@ export interface ExperiencePluginContext {
 /**
  * Opt-in extension that decorates a feature's mount lifecycle (e.g. transitions, animations).
  *
- * This is a reserved seam: the SDK ships no plugins. Consumers — or a future SDK release —
- * implement this interface to layer experiences onto the built-in display modes.
+ * Implement this interface to layer experiences onto the built-in display modes,
+ * then pass the plugin to the host shell. The SDK ships no built-in plugins.
  */
 export interface ExperiencePlugin {
   /** Unique plugin name, surfaced in debug logs. */
