@@ -3,8 +3,7 @@ import { freeze } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
 /**
  * Supported ways a host can surface an embedded feature.
  *
- * All four modes are built into the SDK; display-mode plugins are reserved for
- * future work.
+ * All four modes are built into the SDK.
  */
 export const DisplayMode = freeze(<const>{
   /** Inline inside a host-provided container element. */
