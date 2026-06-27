@@ -27,6 +27,10 @@ describe('parseCliArgs', () => {
         '/w',
         '--entry',
         'e.ts',
+        '--apps',
+        'apps.json',
+        '--port',
+        '4280',
       ]).flags
     ).toEqual(
       expect.objectContaining({
@@ -39,6 +43,8 @@ describe('parseCliArgs', () => {
         config: 'f.ts',
         cwd: '/w',
         entry: 'e.ts',
+        apps: 'apps.json',
+        port: '4280',
       })
     )
   })

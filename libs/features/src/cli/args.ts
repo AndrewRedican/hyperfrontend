@@ -18,6 +18,10 @@ export interface CliFlags {
   readonly url?: string
   /** Path to the contract file (`--contract`); an object key passed as a path. */
   readonly contract?: string
+  /** Path to the dev-server apps array (`--apps`); the object key passed as a path. */
+  readonly apps?: string
+  /** Port the dev server's debug UI listens on (`--port`). */
+  readonly port?: string
   /** Path to the whole config object (`--config`); the path-flag for the config itself. */
   readonly config?: string
   /** Working-directory override (`--cwd`). */
@@ -50,6 +54,8 @@ const STRING_FLAGS: Record<string, keyof CliFlags> = {
   '--out': 'out',
   '--url': 'url',
   '--contract': 'contract',
+  '--apps': 'apps',
+  '--port': 'port',
   '--config': 'config',
   '--cwd': 'cwd',
   '--entry': 'entry',

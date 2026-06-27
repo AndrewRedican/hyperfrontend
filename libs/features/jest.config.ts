@@ -15,6 +15,8 @@ export default <Config>{
     '!**/bin/**',
     // why: The tiered loader's native `await import()` compiles to __importStar/__awaiter helper branches ts-jest cannot exercise; behaviour is covered by load-module.spec.ts.
     '!**/cli/config/load-module.ts',
+    // why: The debug-UI page entry is a thin DOM bootstrap (root lookup + manifest read) that runs only in a served browser; its rendering is covered by app.browser.spec.ts.
+    '!**/server/debug-ui/bootstrap.ts',
   ],
   coveragePathIgnorePatterns: ['/node_modules/', 'src/shared/types.ts', 'src/host/types.ts', 'src/hostee/types.ts'],
   projects: [
