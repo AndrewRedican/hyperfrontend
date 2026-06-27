@@ -108,13 +108,13 @@ npx @hyperfrontend/features dev     # serve apps with the debug UI
 
 ## API Overview
 
-| Entry point                      | Purpose                                           | Status    |
-| -------------------------------- | ------------------------------------------------- | --------- |
-| `@hyperfrontend/features`        | Shared types, contract validation, `defineConfig` | Available |
-| `@hyperfrontend/features/host`   | Host-side SDK (shell, display modes, lifecycle)   | Available |
-| `@hyperfrontend/features/hostee` | Hostee-side SDK (feature init, lifecycle)         | Available |
-| `@hyperfrontend/features/cli`    | CLI (`init`, `build`, `dev`) and `hf` bin         | Available |
-| `@hyperfrontend/features/server` | Dev server and debug UI                           | Available |
+| Entry point                      | Purpose                                           |
+| -------------------------------- | ------------------------------------------------- |
+| `@hyperfrontend/features`        | Shared types, contract validation, `defineConfig` |
+| `@hyperfrontend/features/host`   | Host-side SDK (shell, display modes, lifecycle)   |
+| `@hyperfrontend/features/hostee` | Hostee-side SDK (feature init, lifecycle)         |
+| `@hyperfrontend/features/cli`    | CLI (`init`, `build`, `dev`) and `hf` bin         |
+| `@hyperfrontend/features/server` | Dev server and debug UI                           |
 
 > Using Nx? The package also ships a `feature` generator and `build`/`serve` executors at `@hyperfrontend/features/nx/*` to streamline integration in an Nx workspace.
 
