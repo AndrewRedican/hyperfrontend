@@ -114,7 +114,7 @@ Each hyperfrontend feature uses the standard communication protocol provided by 
 
 For a deep dive into how the libraries compose together, see the **[Architecture Guide](ARCHITECTURE.md)**.
 
-The **[@hyperfrontend/features](https://github.com/AndrewRedican/hyperfrontend/blob/main/plugins/features)** Nx plugin helps you:
+The **[@hyperfrontend/features](https://github.com/AndrewRedican/hyperfrontend/blob/main/libs/features)** package — an SDK, CLI, and dev server — helps you:
 
 1. **Transform existing web apps** into hyperfrontend features by adding the necessary configuration
 2. **Generate shell applications** that know how to load your frontend app at runtime
@@ -172,7 +172,7 @@ Despite its flexibility, hyperfrontend caters to modern frontend setups:
 - Full TypeScript support with type-safe contracts
 - Works with all modern build tools (Vite, Webpack, Rollup, etc.)
 - Compatible with SSR and static site generation
-- Nx plugin for streamlined development workflows
+- CLI to scaffold, build, and serve features, with optional Nx generators and executors
 - Standard npm packages or CDN distribution
 
 ## Key Capabilities
@@ -188,55 +188,47 @@ Despite its flexibility, hyperfrontend caters to modern frontend setups:
 
 ## Installation
 
-First, ensure you have an [Nx workspace](https://nx.dev/getting-started/intro) set up.
-
-Then add the hyperfrontend features plugin:
+Install the package:
 
 ```bash
-npx nx add @hyperfrontend/features
+npm install @hyperfrontend/features
 ```
 
-This will automatically install the `@hyperfrontend/nexus` library and configure your workspace.
-
 ## Quick Start
+
+The bundled `hf` CLI drives the workflow. Run it with `npx @hyperfrontend/features <command>`.
 
 ### Creating a Feature
 
 Initialize an existing application as a hyperfrontend feature:
 
 ```bash
-npx nx g @hyperfrontend/features:init
+npx @hyperfrontend/features init
 ```
 
-The generator will prompt you for:
+This scaffolds the hostee glue module into your app and wires it into the entry file. You declare the feature's contract (the actions it emits and accepts) alongside it.
 
-- Which project to target
-- Where to store the feature configuration and contracts
+### Building a Feature
 
-### Consuming a Feature
-
-Add a feature to a host application:
+Generate and bundle a self-contained shell package that any host can install:
 
 ```bash
-npx nx g @hyperfrontend/features:add
+npx @hyperfrontend/features build
 ```
 
-The generator will prompt you for:
-
-- The feature name
-- Which host project to add it to
-
-The plugin generates typed bindings from the feature's contracts and vanilla JavaScript integration code.
+The CLI generates the host connector, inlines the contract, bundles direct dependencies, and packs a publishable tarball with typed bindings.
 
 ### Testing Your Feature
 
-Run the playground host to see how your feature loads:
+Serve your apps with the debug UI to interact with your feature in isolation:
 
 ```bash
-npx nx serve <your-feature-name>
+npx @hyperfrontend/features dev
 ```
 
-This launches a development environment where you can debug and interact with your feature in isolation.
+This starts one static server per app plus an in-browser debug UI for inspecting host/hostee message traffic, display modes, resizing, and the security envelope.
+
+> **Using Nx?** The package also ships a `feature` generator and `build`/`serve` executors (`npx nx add @hyperfrontend/features`) to streamline integration in an Nx workspace.
 
 ## Live Demos
 
@@ -251,11 +243,11 @@ This launches a development environment where you can debug and interact with yo
 
 ## Main Packages
 
-| Package                                                                                           | Description                                                                                                                                                                                   |
-| ------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| [@hyperfrontend/builder](https://github.com/AndrewRedican/hyperfrontend/blob/main/libs/builder)   | Composable, vendor-neutral build toolkit for TypeScript libraries, JS bins, and Node SEA native binaries · [📖 docs](https://www.hyperfrontend.dev/docs/libraries/builder/)                   |
-| [@hyperfrontend/features](https://github.com/AndrewRedican/hyperfrontend/blob/main/libs/features) | Vendor-agnostic SDK, CLI, and dev server for building, embedding, and orchestrating hyperfrontend micro-frontend features · [📖 docs](https://www.hyperfrontend.dev/docs/libraries/features/) |
-| [@hyperfrontend/nexus](https://github.com/AndrewRedican/hyperfrontend/blob/main/libs/nexus)       | Cross-window communication with contracts, lifecycle management, and security · [📖 docs](https://www.hyperfrontend.dev/docs/libraries/nexus/)                                                |
+| Package                                                                                           | Description                                                                                                                                                                   |
+| ------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [@hyperfrontend/builder](https://github.com/AndrewRedican/hyperfrontend/blob/main/libs/builder)   | Composable, vendor-neutral build toolkit for TypeScript libraries, JS bins, and Node SEA native binaries · [📖 docs](https://www.hyperfrontend.dev/docs/libraries/builder/)   |
+| [@hyperfrontend/features](https://github.com/AndrewRedican/hyperfrontend/blob/main/libs/features) | SDK, CLI, and dev server for building, embedding, and orchestrating hyperfrontend micro-frontend features · [📖 docs](https://www.hyperfrontend.dev/docs/libraries/features/) |
+| [@hyperfrontend/nexus](https://github.com/AndrewRedican/hyperfrontend/blob/main/libs/nexus)       | Cross-window communication with contracts, lifecycle management, and security · [📖 docs](https://www.hyperfrontend.dev/docs/libraries/nexus/)                                |
 
 ## Internal Packages
 
