@@ -7,7 +7,7 @@ import Link from 'next/link'
 
 export const metadata: Metadata = {
   title: 'Getting Started',
-  description: 'Set up hyperfrontend and create your first micro-frontend feature in minutes with Nx workspace integration.',
+  description: 'Set up hyperfrontend and create your first micro-frontend feature in minutes.',
 }
 
 export default function DocsPage() {
@@ -28,21 +28,6 @@ export default function DocsPage() {
         <ul className="mt-4 space-y-2 text-slate-600 dark:text-slate-400">
           <li className="flex items-start gap-2">
             <CheckIcon className="mt-1 h-4 w-4 shrink-0 text-green-500" />
-            <span>
-              An{' '}
-              <a
-                href="https://nx.dev/getting-started/intro"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="font-medium text-primary-600 hover:underline dark:text-primary-400"
-              >
-                Nx workspace
-              </a>{' '}
-              set up (v17 or later recommended)
-            </span>
-          </li>
-          <li className="flex items-start gap-2">
-            <CheckIcon className="mt-1 h-4 w-4 shrink-0 text-green-500" />
             <span>Node.js 18+ and npm/yarn/pnpm</span>
           </li>
           <li className="flex items-start gap-2">
@@ -55,11 +40,11 @@ export default function DocsPage() {
       {/* Installation */}
       <section className="mt-12">
         <H2 className="text-2xl font-bold text-slate-900 dark:text-white">Installation</H2>
-        <p className="mt-3 text-slate-600 dark:text-slate-400">Add the hyperfrontend features plugin to your Nx workspace:</p>
-        <CodeBlock language="bash" code="npx nx add @hyperfrontend/features" />
+        <p className="mt-3 text-slate-600 dark:text-slate-400">Install the package:</p>
+        <CodeBlock language="bash" code="npm install @hyperfrontend/features" />
         <p className="mt-4 text-sm text-slate-500 dark:text-slate-400">
-          This automatically installs <code className="rounded bg-slate-100 px-1 py-0.5 dark:bg-slate-800">@hyperfrontend/nexus</code> and
-          configures your workspace.
+          It bundles <code className="rounded bg-slate-100 px-1 py-0.5 dark:bg-slate-800">@hyperfrontend/nexus</code> and its other direct
+          dependencies, so your app takes on no transitive install burden.
         </p>
       </section>
 
@@ -67,42 +52,34 @@ export default function DocsPage() {
       <section className="mt-12">
         <H2 className="text-2xl font-bold text-slate-900 dark:text-white">Creating a Feature</H2>
         <p className="mt-3 text-slate-600 dark:text-slate-400">Initialize an existing application as a hyperfrontend feature:</p>
-        <CodeBlock language="bash" code="npx nx g @hyperfrontend/features:init" />
-        <p className="mt-4 text-slate-600 dark:text-slate-400">The generator will prompt you for:</p>
-        <ul className="mt-3 list-inside list-disc space-y-1 text-slate-600 dark:text-slate-400">
-          <li>Which project to target</li>
-          <li>Where to store the feature configuration and contracts</li>
-        </ul>
+        <CodeBlock language="bash" code="npx @hyperfrontend/features init" />
         <div className="mt-6 rounded-lg border border-blue-200 bg-blue-50 p-4 dark:border-blue-900 dark:bg-blue-950/50">
           <p className="text-sm text-blue-800 dark:text-blue-200">
-            <strong>What happens:</strong> The generator adds a <code>hyperfrontend.config.ts</code> file to your project and creates
-            contract schemas that define the messages your feature can send and receive.
+            <strong>What happens:</strong> The CLI scaffolds the hostee glue module into your app and wires it into the entry file,
+            alongside a <code>feature.config.*</code> file and a contract that defines the messages your feature can send and receive.
           </p>
         </div>
       </section>
 
-      {/* Consuming a Feature */}
+      {/* Building a Shell */}
       <section className="mt-12">
-        <H2 className="text-2xl font-bold text-slate-900 dark:text-white">Consuming a Feature</H2>
-        <p className="mt-3 text-slate-600 dark:text-slate-400">Add a feature to a host application:</p>
-        <CodeBlock language="bash" code="npx nx g @hyperfrontend/features:add" />
-        <p className="mt-4 text-slate-600 dark:text-slate-400">The generator will prompt you for:</p>
-        <ul className="mt-3 list-inside list-disc space-y-1 text-slate-600 dark:text-slate-400">
-          <li>The feature name</li>
-          <li>Which host project to add it to</li>
-        </ul>
+        <H2 className="text-2xl font-bold text-slate-900 dark:text-white">Building a Shell</H2>
+        <p className="mt-3 text-slate-600 dark:text-slate-400">Generate a self-contained shell package that any host can install:</p>
+        <CodeBlock language="bash" code="npx @hyperfrontend/features build" />
         <p className="mt-4 text-slate-600 dark:text-slate-400">
-          The plugin generates typed bindings from the feature&apos;s contracts and vanilla JavaScript integration code.
+          The CLI generates the host connector, inlines the contract, bundles direct dependencies, and packs a publishable tarball with
+          typed bindings. The host installs one package and takes on no transitive deps.
         </p>
       </section>
 
       {/* Testing */}
       <section className="mt-12">
         <H2 className="text-2xl font-bold text-slate-900 dark:text-white">Testing Your Feature</H2>
-        <p className="mt-3 text-slate-600 dark:text-slate-400">Run the playground host to see how your feature loads:</p>
-        <CodeBlock language="bash" code="npx nx serve <your-feature-name>" />
+        <p className="mt-3 text-slate-600 dark:text-slate-400">Serve your apps with the debug UI to see how your feature loads:</p>
+        <CodeBlock language="bash" code="npx @hyperfrontend/features dev" />
         <p className="mt-4 text-slate-600 dark:text-slate-400">
-          This launches a development environment where you can debug and interact with your feature in isolation.
+          This starts one static server per app plus an in-browser debug UI for inspecting host/hostee message traffic, display modes, and
+          the security envelope.
         </p>
       </section>
 

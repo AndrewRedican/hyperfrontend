@@ -87,6 +87,10 @@ const coreLibraries: NavItem[] = [
       { slug: 'hostee', href: '/docs/libraries/features/hostee' },
       { slug: 'cli', href: '/docs/libraries/features/cli' },
       { slug: 'server', href: '/docs/libraries/features/server' },
+      { slug: 'generators', href: '/docs/libraries/features/generators' },
+      { slug: 'nx/generators/feature', href: '/docs/libraries/features/nx/generators/feature' },
+      { slug: 'nx/executors/build', href: '/docs/libraries/features/nx/executors/build' },
+      { slug: 'nx/executors/serve', href: '/docs/libraries/features/nx/executors/serve' },
     ],
   },
   {

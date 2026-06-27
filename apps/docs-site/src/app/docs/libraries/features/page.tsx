@@ -13,14 +13,14 @@ export default function FeaturesPage() {
       packageName="@hyperfrontend/features"
       slug="features"
       category="core"
-      fallbackDescription="Vendor-agnostic SDK, CLI, and dev server for building, embedding, and orchestrating hyperfrontend micro-frontend features."
+      fallbackDescription="SDK, CLI, and dev server for building, embedding, and orchestrating hyperfrontend micro-frontend features."
       fallbackFeatures={[
         'Host-side SDK for embedding features with display modes and lifecycle',
         'Hostee-side SDK for feature apps, including contract declaration',
         'CLI for initializing, building, and serving features',
         'Dev server with a debug UI for inspecting host/hostee message traffic',
         'Zero-config dependency bundling so generated shells stay self-contained',
-        'Usable with no Nx and no Nx workspace',
+        'Works with any framework and build tool, plus optional Nx generators and executors',
       ]}
     />
   )

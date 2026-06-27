@@ -143,10 +143,9 @@ const LIBRARY_DATA: LibraryCardData[] = [
   },
   {
     title: '@hyperfrontend/features',
-    description:
-      'Vendor-agnostic SDK, CLI, and dev server for building, embedding, and orchestrating hyperfrontend micro-frontend features',
+    description: 'SDK, CLI, and dev server for building, embedding, and orchestrating hyperfrontend micro-frontend features',
     href: '/docs/libraries/features',
-    keywords: ['micro-frontend', 'microfrontend', 'iframe', 'sdk', 'host', 'hostee', 'vendor-agnostic'],
+    keywords: ['micro-frontend', 'microfrontend', 'iframe', 'sdk', 'host', 'hostee', 'framework-agnostic'],
     category: 'core',
   },
 ]
@@ -189,7 +188,6 @@ export function LibrariesPageContent() {
   const coreLibraries = useMemo(() => filteredLibraries.filter((lib) => lib.category === 'core'), [filteredLibraries])
   const supportingLibraries = useMemo(() => filteredLibraries.filter((lib) => lib.category === 'supporting'), [filteredLibraries])
   const utilsLibraries = useMemo(() => filteredLibraries.filter((lib) => lib.category === 'utils'), [filteredLibraries])
-  const plugins = useMemo(() => filteredLibraries.filter((lib) => lib.category === 'plugin'), [filteredLibraries])
 
   const handleSearchChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchQuery(e.target.value)
@@ -265,18 +263,6 @@ export function LibrariesPageContent() {
           <H2 className="text-2xl font-bold text-slate-900 dark:text-white">Utility Libraries</H2>
           <div className="mt-6 grid gap-4">
             {utilsLibraries.map((lib, index) => (
-              <ApiCard key={lib.title} {...lib} index={index} />
-            ))}
-          </div>
-        </section>
-      )}
-
-      {/* Nx Plugin */}
-      {plugins.length > 0 && (
-        <section className="mt-12">
-          <H2 className="text-2xl font-bold text-slate-900 dark:text-white">Nx Plugin</H2>
-          <div className="mt-6 grid gap-4">
-            {plugins.map((lib, index) => (
               <ApiCard key={lib.title} {...lib} index={index} />
             ))}
           </div>

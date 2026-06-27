@@ -185,6 +185,7 @@ export const LIBRARIES: LibraryInfo[] = [
     packageName: '@hyperfrontend/features',
     slug: 'features',
     readmePath: 'libs/features/README.md',
+    architecturePath: 'libs/features/ARCHITECTURE.md',
     entryPoints: [
       'libs/features/src/index.ts',
       'libs/features/src/host/index.ts',
@@ -345,11 +346,6 @@ export function transformLinks(content: string, context?: TransformLinksContext)
   transformed = transformed.replace(
     /\]\(https:\/\/github\.com\/AndrewRedican\/hyperfrontend\/blob\/main\/libs\/utils\/([^/)]+)\/README\.md\)/g,
     '](/docs/libraries/utils/$1)'
-  )
-
-  transformed = transformed.replace(
-    /\]\(https:\/\/github\.com\/AndrewRedican\/hyperfrontend\/blob\/main\/plugins\/([^/)]+)\/README\.md\)/g,
-    '](/docs/plugins/$1)'
   )
 
   transformed = transformed.replace(
