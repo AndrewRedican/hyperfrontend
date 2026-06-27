@@ -1,6 +1,6 @@
 {
   "name": "@hyperfrontend/builder",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Composable, vendor-neutral build toolkit for TypeScript libraries, JS bins, and Node SEA native binaries.",
   "license": "MIT",
   "dependencies": {
