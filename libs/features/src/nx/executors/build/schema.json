@@ -1,0 +1,39 @@
+{
+  "$schema": "http://json-schema.org/schema",
+  "$id": "FeaturesNxBuild",
+  "type": "object",
+  "title": "Build a hyperfrontend feature",
+  "description": "Build the feature connector by delegating to the @hyperfrontend/features SDK (hf build).",
+  "properties": {
+    "config": {
+      "type": "string",
+      "description": "Path to the feature config object."
+    },
+    "out": {
+      "type": "string",
+      "description": "Output directory for the built connector."
+    },
+    "protocol": {
+      "type": "string",
+      "description": "Security envelope to enforce at build time.",
+      "enum": ["none", "v1", "v2"]
+    },
+    "name": {
+      "type": "string",
+      "description": "Feature name override."
+    },
+    "version": {
+      "type": "string",
+      "description": "Feature version override."
+    },
+    "url": {
+      "type": "string",
+      "description": "URL the generated connector loads the feature from."
+    },
+    "contract": {
+      "type": "string",
+      "description": "Path to the contract file."
+    }
+  },
+  "required": []
+}

@@ -77,9 +77,11 @@ const buildJobs = (entries: EntryPoint[], context: BuildContext): PrePassJob[] =
  */
 export const runDtsPerEntry = async (context: BuildContext, monitor?: MemoryMonitor): Promise<void> => {
   if (context.bundledDeps.length === 0 && context.workspaceBundledDeps.length === 0) return
-  const invocation = resolveDefaultWorkerPath(context.workspaceRoot)
+  const invocation = resolveDefaultWorkerPath()
   if (!invocation) {
-    throw createError('bundleAllDeps is enabled but the pre-pass worker artifact was not found for the per-entry d.ts pass.')
+    throw createError(
+      'bundleAllDeps is enabled but the pre-pass worker could not be located beside the builder module for the per-entry d.ts pass.'
+    )
   }
   const jobs = buildJobs(context.entryPointDiscovery.entryPoints, context)
   if (jobs.length === 0) {

@@ -12,6 +12,27 @@ export interface NavItem {
   children?: NavItem[]
 }
 
+/** Kind of icon a navigation entry shows: a published package or a submodule. */
+export type NavIconKind = 'package' | 'submodule'
+
+/**
+ * Classify a navigation entry for icon display. A node is a `package` when it
+ * carries a `packageName`, a `submodule` when it lives anywhere inside a
+ * package's subtree, and otherwise a grouping/section entry (no icon).
+ *
+ * Depth alone is not enough: top-level entries include sections like
+ * `Getting Started` and `Libraries`, and utility packages sit two levels deep.
+ *
+ * @param item - The navigation item to classify.
+ * @param insidePackage - Whether an ancestor of this item is a package.
+ * @returns The icon kind, or `null` for grouping/section entries.
+ */
+export function getNavIconKind(item: NavItem, insidePackage: boolean): NavIconKind | null {
+  if (item.packageName) return 'package'
+  if (insidePackage) return 'submodule'
+  return null
+}
+
 /**
  * Core library navigation items.
  * Listed alphabetically for consistency.
@@ -76,6 +97,21 @@ const coreLibraries: NavItem[] = [
       { slug: 'browser', href: '/docs/libraries/cryptography/browser' },
       { slug: 'common', href: '/docs/libraries/cryptography/common' },
       { slug: 'node', href: '/docs/libraries/cryptography/node' },
+    ],
+  },
+  {
+    slug: 'features',
+    packageName: '@hyperfrontend/features',
+    href: '/docs/libraries/features',
+    children: [
+      { slug: 'host', href: '/docs/libraries/features/host' },
+      { slug: 'hostee', href: '/docs/libraries/features/hostee' },
+      { slug: 'cli', href: '/docs/libraries/features/cli' },
+      { slug: 'server', href: '/docs/libraries/features/server' },
+      { slug: 'generators', href: '/docs/libraries/features/generators' },
+      { slug: 'nx/generators/feature', href: '/docs/libraries/features/nx/generators/feature' },
+      { slug: 'nx/executors/build', href: '/docs/libraries/features/nx/executors/build' },
+      { slug: 'nx/executors/serve', href: '/docs/libraries/features/nx/executors/serve' },
     ],
   },
   {
@@ -367,11 +403,6 @@ const utilsLibraries: NavItem[] = [
 ]
 
 /**
- * Plugin navigation items.
- */
-const plugins: NavItem[] = [{ slug: 'features', packageName: '@hyperfrontend/features', href: '/docs/plugins/features' }]
-
-/**
  * Getting started section navigation.
  */
 const gettingStarted: NavItem[] = [
@@ -403,10 +434,6 @@ export const docsNavigation: NavItem[] = [
   {
     slug: 'Libraries',
     children: [...coreLibraries, ...supportingLibraries, { slug: 'Utils', children: utilsLibraries }],
-  },
-  {
-    slug: 'Plugins',
-    children: plugins,
   },
   {
     slug: 'API Reference',

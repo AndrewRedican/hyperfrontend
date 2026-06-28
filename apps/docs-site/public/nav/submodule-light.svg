@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="100%" height="100%">
+  <defs>
+    <style>
+      .bg-parent { fill: #A855F7; }
+      .bg-child { fill: #3B82F6; fill-opacity: 0.15; }
+      .bg-child-core { fill: #1D4ED8; }
+      .stroke-line { stroke: #0F172A; stroke-width: 6; stroke-linecap: round; stroke-linejoin: round; fill: none; }
+      .stroke-outline { stroke: #0F172A; stroke-width: 6; stroke-linejoin: round; fill: none; }
+    </style>
+  </defs>
+
+  <!-- Connection Graph Line (Parent to Child Node) -->
+  <path d="M 90 128 L 136 128 L 160 152" class="stroke-line" />
+
+  <!-- Outer Wrapper Rings (Indicates Scope Boundary) -->
+  <circle cx="176" cy="168" r="28" class="stroke-line" stroke-dasharray="1 6" opacity="0.5" />
+
+  <!-- Submodule / Child Node (Slightly Smaller, Positioned Lower/Subordinate) -->
+  <circle cx="176" cy="168" r="18" class="bg-child" />
+  <circle cx="176" cy="168" r="18" class="stroke-outline" />
+  <circle cx="176" cy="168" r="8" class="bg-child-core" />
+  <circle cx="176" cy="168" r="8" class="stroke-outline" />
+
+  <!-- Master / Parent Node (Main Entrypoint) -->
+  <circle cx="80" cy="128" r="24" class="bg-parent" />
+  <circle cx="80" cy="128" r="24" class="stroke-outline" />
+  <!-- Nested Parent Hub Core -->
+  <circle cx="80" cy="128" r="10" fill="#EFF6FF" />
+  <circle cx="80" cy="128" r="10" class="stroke-outline" />
+</svg>

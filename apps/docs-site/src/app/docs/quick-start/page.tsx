@@ -24,13 +24,13 @@ export default function QuickStartPage() {
           <span className="flex h-8 w-8 items-center justify-center rounded-full bg-primary-100 font-semibold text-primary-700 dark:bg-primary-900/50 dark:text-primary-300">
             1
           </span>
-          <H2 id="add-the-plugin" className="text-2xl font-bold text-slate-900 dark:text-white">
-            Add the plugin
+          <H2 id="install-the-package" className="text-2xl font-bold text-slate-900 dark:text-white">
+            Install the package
           </H2>
         </div>
         <div className="mt-4 pl-11">
-          <p className="text-slate-600 dark:text-slate-400">In your Nx workspace, install the HyperFrontend plugin:</p>
-          <CodeBlock code="npx nx add @hyperfrontend/features" />
+          <p className="text-slate-600 dark:text-slate-400">Add the package to your project:</p>
+          <CodeBlock code="npm install @hyperfrontend/features" />
         </div>
       </section>
 
@@ -46,8 +46,10 @@ export default function QuickStartPage() {
         </div>
         <div className="mt-4 pl-11">
           <p className="text-slate-600 dark:text-slate-400">Convert an existing application into a HyperFrontend feature:</p>
-          <CodeBlock code="npx nx g @hyperfrontend/features:init --project=my-app" />
-          <p className="mt-4 text-sm text-slate-500 dark:text-slate-400">This creates your feature configuration and contract schemas.</p>
+          <CodeBlock code="npx @hyperfrontend/features init" />
+          <p className="mt-4 text-sm text-slate-500 dark:text-slate-400">
+            This scaffolds the hostee glue module into your app and wires it into the entry file, alongside your feature contract.
+          </p>
         </div>
       </section>
 
@@ -57,13 +59,16 @@ export default function QuickStartPage() {
           <span className="flex h-8 w-8 items-center justify-center rounded-full bg-primary-100 font-semibold text-primary-700 dark:bg-primary-900/50 dark:text-primary-300">
             3
           </span>
-          <H2 id="add-to-a-host" className="text-2xl font-bold text-slate-900 dark:text-white">
-            Add to a host
+          <H2 id="build-a-shell" className="text-2xl font-bold text-slate-900 dark:text-white">
+            Build a shell
           </H2>
         </div>
         <div className="mt-4 pl-11">
-          <p className="text-slate-600 dark:text-slate-400">Integrate the feature into your host application:</p>
-          <CodeBlock code="npx nx g @hyperfrontend/features:add --feature=my-app --host=my-shell" />
+          <p className="text-slate-600 dark:text-slate-400">Generate a self-contained shell package that any host can install:</p>
+          <CodeBlock code="npx @hyperfrontend/features build" />
+          <p className="mt-4 text-sm text-slate-500 dark:text-slate-400">
+            The shell inlines the contract and bundles its dependencies, so the host installs one package and takes on no transitive deps.
+          </p>
         </div>
       </section>
 
@@ -78,8 +83,8 @@ export default function QuickStartPage() {
           </H2>
         </div>
         <div className="mt-4 pl-11">
-          <p className="text-slate-600 dark:text-slate-400">Start your host application and see the feature load:</p>
-          <CodeBlock code="npx nx serve my-shell" />
+          <p className="text-slate-600 dark:text-slate-400">Serve your apps with the debug UI and watch the feature load:</p>
+          <CodeBlock code="npx @hyperfrontend/features dev" />
         </div>
       </section>
 

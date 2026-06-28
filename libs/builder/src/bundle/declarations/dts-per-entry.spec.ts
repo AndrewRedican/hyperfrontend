@@ -77,7 +77,9 @@ describe('runDtsPerEntry', () => {
 
   it('throws a context-rich error when the worker artifact is missing', async () => {
     ;(<jest.Mock>resolveDefaultWorkerPath).mockReturnValueOnce(undefined)
-    await expect(runDtsPerEntry(makeContext(['rollup'], [ROOT_ENTRY]))).rejects.toThrow(/worker artifact was not found/)
+    await expect(runDtsPerEntry(makeContext(['rollup'], [ROOT_ENTRY]))).rejects.toThrow(
+      /worker could not be located beside the builder module/
+    )
   })
 
   it('builds one dts job per entry whose tsc-emitted .d.ts exists', async () => {

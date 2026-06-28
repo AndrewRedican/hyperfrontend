@@ -1,32 +1,37 @@
 'use client'
 
-import type { NavItem as SharedNavItem } from '../lib/navigation'
+import type { NavIconKind, NavItem as SharedNavItem } from '../lib/navigation'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { createContext, useContext, useEffect, useMemo, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { createError } from '@hyperfrontend/immutable-api-utils/built-in-copy/error'
 import { createSet } from '@hyperfrontend/immutable-api-utils/built-in-copy/set'
-import { docsNavigation, mainNavLinks as sharedMainNavLinks } from '../lib/navigation'
+import { docsNavigation, getNavIconKind, mainNavLinks as sharedMainNavLinks } from '../lib/navigation'
+import { NavItemIcon } from './nav-item-icon'
 import { ThemeToggle } from './theme-toggle'
 
 interface NavItem {
   title: string
   href?: string
   children?: NavItem[]
+  iconKind?: NavIconKind | null
 }
 
 /**
  * Converts shared navigation items to mobile menu-specific format.
- * Uses the slug as the display title (without `@hyperfrontend/` prefix).
+ * Uses the slug as the display title (without `@hyperfrontend/` prefix) and
+ * bakes in the package/submodule icon kind for each entry.
  * @param items - The shared navigation items to convert
+ * @param insidePackage - Whether the items live inside a package subtree
  * @returns The converted navigation items for mobile menu
  */
-function convertToMobileNav(items: SharedNavItem[]): NavItem[] {
+function convertToMobileNav(items: SharedNavItem[], insidePackage = false): NavItem[] {
   return items.map((item) => ({
     title: item.slug,
     href: item.href,
-    children: item.children ? convertToMobileNav(item.children) : undefined,
+    iconKind: getNavIconKind(item, insidePackage),
+    children: item.children ? convertToMobileNav(item.children, insidePackage || Boolean(item.packageName)) : undefined,
   }))
 }
 
@@ -317,7 +322,7 @@ function MobileNavSection({ section, pathname, onClose, path, depth = 0 }: Mobil
       <Link
         href={section.href || '#'}
         onClick={onClose}
-        className={`block rounded-lg px-3 py-2 text-sm ${depth === 0 ? 'font-semibold' : ''} ${
+        className={`flex items-center gap-2 rounded-lg px-3 py-2 text-sm ${depth === 0 ? 'font-semibold' : ''} ${
           isActive
             ? 'border-l-[3px] border-primary-600 bg-primary-100/80 font-medium text-primary-700 dark:border-primary-400 dark:bg-primary-900/50 dark:text-primary-200'
             : depth === 0
@@ -326,6 +331,7 @@ function MobileNavSection({ section, pathname, onClose, path, depth = 0 }: Mobil
         }`}
         aria-current={isActive ? 'page' : undefined}
       >
+        {section.iconKind && <NavItemIcon kind={section.iconKind} />}
         {section.title}
       </Link>
     )
@@ -347,11 +353,13 @@ function MobileNavSection({ section, pathname, onClose, path, depth = 0 }: Mobil
         }`}
       >
         {hasHref && section.href ? (
-          <Link href={section.href} onClick={onClose} className="flex-1 px-3 py-2">
+          <Link href={section.href} onClick={onClose} className="flex flex-1 items-center gap-2 px-3 py-2">
+            {section.iconKind && <NavItemIcon kind={section.iconKind} />}
             {section.title}
           </Link>
         ) : (
-          <button onClick={handleToggle} className="flex-1 px-3 py-2 text-left">
+          <button onClick={handleToggle} className="flex flex-1 items-center gap-2 px-3 py-2 text-left">
+            {section.iconKind && <NavItemIcon kind={section.iconKind} />}
             {section.title}
           </button>
         )}
@@ -374,13 +382,14 @@ function MobileNavSection({ section, pathname, onClose, path, depth = 0 }: Mobil
                 <Link
                   href={child.href || '#'}
                   onClick={onClose}
-                  className={`block rounded-lg px-3 py-2 text-sm ${
+                  className={`flex items-center gap-2 rounded-lg px-3 py-2 text-sm ${
                     child.href && normalizePath(pathname) === normalizePath(child.href)
                       ? 'border-l-[3px] border-primary-600 bg-primary-100/80 font-medium text-primary-700 dark:border-primary-400 dark:bg-primary-900/50 dark:text-primary-200'
                       : 'text-slate-600 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800'
                   }`}
                   aria-current={child.href && normalizePath(pathname) === normalizePath(child.href) ? 'page' : undefined}
                 >
+                  {child.iconKind && <NavItemIcon kind={child.iconKind} />}
                   {child.title}
                 </Link>
               )}

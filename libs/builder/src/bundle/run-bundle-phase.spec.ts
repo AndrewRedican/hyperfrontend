@@ -323,7 +323,7 @@ describe('runBundlePhase', () => {
     }
     const ctx = makeContext()
     ctx.bundledDeps = ['rollup']
-    await expect(runBundlePhase(ctx, config)).rejects.toThrow(/pre-pass worker could not be resolved/)
+    await expect(runBundlePhase(ctx, config)).rejects.toThrow(/pre-pass worker could not be located beside the builder module/)
   })
 
   it('throws a context-rich error when the rollup worker cannot be located', async () => {
@@ -333,7 +333,7 @@ describe('runBundlePhase', () => {
       workspaceRoot: '',
       esm: { bundleWorkspaceDeps: false },
     }
-    await expect(runBundlePhase(makeContext(), config)).rejects.toThrow(/rollup worker could not be resolved/)
+    await expect(runBundlePhase(makeContext(), config)).rejects.toThrow(/rollup worker could not be located beside the builder module/)
   })
 
   it('does not require the rollup worker when no format resolves any entry', async () => {

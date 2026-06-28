@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.1.1](https://github.com/AndrewRedican/hyperfrontend/compare/5f116abb8ba6355dfb283fa03b7481e5eb029480...7fb26b6a30c007cd0392f1fc973265c3d25e16dd) - 2026-06-28
+
+### Bug Fixes
+
+- self-locate workers beside the running module to make the builder embeddable
+
 ## 0.1.0 - 2026-06-23
 
 ### Features

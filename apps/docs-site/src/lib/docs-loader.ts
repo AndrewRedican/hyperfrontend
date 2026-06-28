@@ -118,11 +118,7 @@ export function getLibraryReadme(slug: string): string | null {
     return readFileSync(generatedPath, 'utf-8')
   }
 
-  const directPaths = [
-    join(WORKSPACE_ROOT, 'libs', slug, 'README.md'),
-    join(WORKSPACE_ROOT, 'libs/utils', slug, 'README.md'),
-    join(WORKSPACE_ROOT, 'plugins', slug, 'README.md'),
-  ]
+  const directPaths = [join(WORKSPACE_ROOT, 'libs', slug, 'README.md'), join(WORKSPACE_ROOT, 'libs/utils', slug, 'README.md')]
 
   for (const p of directPaths) {
     if (existsSync(p)) {
@@ -417,16 +413,6 @@ export function getAllLibrarySlugs(): string[] {
     })
   }
 
-  const pluginsDir = join(WORKSPACE_ROOT, 'plugins')
-  if (existsSync(pluginsDir)) {
-    readdirSync(pluginsDir).forEach((item) => {
-      const itemPath = join(pluginsDir, item)
-      if (statSync(itemPath).isDirectory()) {
-        libs.push(item)
-      }
-    })
-  }
-
   return libs
 }
 
@@ -464,12 +450,9 @@ export function getAllLibraryData(): LibraryData[] {
   if (manifest) {
     return manifest.libraries.map((lib) => {
       const isUtils = lib.category === 'utils'
-      const isPlugin = lib.category === 'plugin'
       let href: string
 
-      if (isPlugin) {
-        href = `/docs/plugins/${lib.slug}`
-      } else if (isUtils) {
+      if (isUtils) {
         const shortSlug = lib.slug.replace('-utils', '')
         href = `/docs/libraries/utils/${shortSlug}`
       } else {

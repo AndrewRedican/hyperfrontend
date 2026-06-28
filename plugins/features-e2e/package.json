@@ -1,8 +1,0 @@
-{
-  "name": "@hyperfrontend/features-e2e",
-  "version": "0.0.0",
-  "description": "End-to-end tests for the hyperfrontend features plugin.",
-  "main": "./src/index.js",
-  "private": true,
-  "dependencies": {}
-}

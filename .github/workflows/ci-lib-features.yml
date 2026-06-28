@@ -1,0 +1,17 @@
+name: lib-features
+
+on:
+  workflow_run:
+    workflows: [libraries]
+    types: [completed]
+    branches: [main]
+
+permissions:
+  actions: read
+
+jobs:
+  status:
+    uses: ./.github/workflows/_lib-status.yml
+    with:
+      project-name: lib-features
+      library-path: libs/features

@@ -1,0 +1,15 @@
+{
+  "$schema": "https://raw.githubusercontent.com/nrwl/nx/master/packages/nx/schemas/executors.schema.json",
+  "executors": {
+    "build": {
+      "implementation": "./nx/executors/build/index.cjs.js",
+      "schema": "./nx/executors/build/schema.json",
+      "description": "Build a hyperfrontend feature connector via the SDK."
+    },
+    "serve": {
+      "implementation": "./nx/executors/serve/index.cjs.js",
+      "schema": "./nx/executors/serve/schema.json",
+      "description": "Serve a hyperfrontend feature dev server via the SDK."
+    }
+  }
+}

@@ -24,6 +24,7 @@ Last updated: June 22, 2026
 | `@hyperfrontend/cryptography`           |   ✅    |   ✅    |     ✅     |     ✅     |
 | `@hyperfrontend/network-protocol`       |   ✅    |   ✅    |     ✅     |     ✅     |
 | `@hyperfrontend/nexus`                  |   ✅    |   ✅    |     ✅     |     ✅     |
+| `@hyperfrontend/features`               |   ✅    |   ✅    |     ✅     |     ✅     |
 | `@hyperfrontend/builder`                |   ❌²   |   ✅    |    ❌²     |    ❌²     |
 
 **Notes:**

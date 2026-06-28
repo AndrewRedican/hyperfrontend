@@ -3,6 +3,8 @@ import { join } from 'node:path'
 import { readFileContent, readFileBuffer, readFileIfExists, readJsonFile, readJsonFileIfExists } from './read'
 
 const TEST_DIR = join(__dirname, '__test_fixtures__')
+// how: A NUL byte is the one universally-illegal path character the guard rejects.
+const POISONED = `poisoned ${'\u0000'} .txt`
 
 describe('core/fs/read', () => {
   beforeAll(() => {
@@ -145,6 +147,28 @@ describe('core/fs/read', () => {
       expect(result).toBeNull()
 
       jest.restoreAllMocks()
+    })
+  })
+
+  describe('unsafe path rejection', () => {
+    it('throws when readFileContent receives a NUL-poisoned path', () => {
+      expect(() => readFileContent(POISONED)).toThrow(/Unsafe file path/)
+    })
+
+    it('throws when readFileBuffer receives a NUL-poisoned path', () => {
+      expect(() => readFileBuffer(POISONED)).toThrow(/Unsafe file path/)
+    })
+
+    it('throws when readJsonFile receives a NUL-poisoned path even with a default', () => {
+      expect(() => readJsonFile(POISONED, { default: {} })).toThrow(/Unsafe file path/)
+    })
+
+    it('returns null when readFileIfExists receives a NUL-poisoned path', () => {
+      expect(readFileIfExists(POISONED)).toBeNull()
+    })
+
+    it('returns null when readJsonFileIfExists receives a NUL-poisoned path', () => {
+      expect(readJsonFileIfExists(POISONED)).toBeNull()
     })
   })
 })

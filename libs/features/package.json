@@ -1,0 +1,75 @@
+{
+  "name": "@hyperfrontend/features",
+  "version": "0.1.0",
+  "description": "SDK, CLI, and dev server for building, embedding, and orchestrating hyperfrontend micro-frontend features.",
+  "license": "MIT",
+  "sideEffects": false,
+  "dependencies": {
+    "@hyperfrontend/builder": "0.1.1",
+    "@hyperfrontend/immutable-api-utils": "0.1.3",
+    "@hyperfrontend/json-utils": "0.1.1",
+    "@hyperfrontend/network-protocol": "0.2.1",
+    "@hyperfrontend/nexus": "1.1.2",
+    "@hyperfrontend/project-scope": "0.2.3",
+    "@hyperfrontend/questions": "0.2.1",
+    "@hyperfrontend/ui-utils": "0.0.6",
+    "@hyperfrontend/versioning": "0.6.1",
+    "typescript": "5.9.3"
+  },
+  "bin": {
+    "hf": "./bin/hf.js"
+  },
+  "generators": "./generators.json",
+  "executors": "./executors.json",
+  "exports": {
+    ".": "./src/index.js",
+    "./host": "./src/host/index.js",
+    "./hostee": "./src/hostee/index.js",
+    "./cli": "./src/cli/index.js",
+    "./server": "./src/server/index.js",
+    "./generators": "./src/generators/index.js",
+    "./nx/generators/feature": "./src/nx/generators/feature/index.js",
+    "./nx/executors/build": "./src/nx/executors/build/index.js",
+    "./nx/executors/serve": "./src/nx/executors/serve/index.js",
+    "./package.json": "./package.json"
+  },
+  "funding": {
+    "type": "github",
+    "url": "https://github.com/sponsors/AndrewRedican"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=8.0.0"
+  },
+  "keywords": [
+    "micro-frontend",
+    "microfrontend",
+    "micro-frontends",
+    "mfe",
+    "iframe",
+    "iframes",
+    "postmessage",
+    "cross-window",
+    "cross-origin",
+    "messaging",
+    "sdk",
+    "host",
+    "hostee",
+    "shell",
+    "embed",
+    "embedding",
+    "display-modes",
+    "dialog",
+    "popup",
+    "lifecycle",
+    "contract",
+    "contract-validation",
+    "vendor-agnostic",
+    "framework-agnostic",
+    "cli",
+    "dev-server",
+    "nexus",
+    "hyperfrontend",
+    "typescript"
+  ]
+}

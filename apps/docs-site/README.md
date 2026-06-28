@@ -129,7 +129,7 @@ All 16 library packages generate TypeDoc API documentation:
 | String Utils           | `@hyperfrontend/string-utils`           | 2            | utils      |
 | Time Utils             | `@hyperfrontend/time-utils`             | 1            | utils      |
 | UI Utils               | `@hyperfrontend/ui-utils`               | 10           | utils      |
-| Features Plugin        | `@hyperfrontend/features`               | 1            | plugin     |
+| Features               | `@hyperfrontend/features`               | 5            | core       |
 
 ---
 
@@ -218,18 +218,17 @@ The `validate-links.ts` script checks all internal links during build and report
 
 ## URL Structure
 
-| URL Pattern                    | Content                       |
-| ------------------------------ | ----------------------------- |
-| `/`                            | Landing page                  |
-| `/docs`                        | Getting Started               |
-| `/docs/quick-start`            | Quick Start guide             |
-| `/docs/core-concepts`          | Core Concepts                 |
-| `/docs/libraries/{slug}`       | Library documentation         |
-| `/docs/libraries/utils/{slug}` | Utils package documentation   |
-| `/docs/plugins/features`       | Features plugin documentation |
-| `/docs/contributing`           | Contribution guide            |
-| `/docs/api`                    | API Reference index           |
-| `/architecture`                | Architecture overview         |
+| URL Pattern                    | Content                     |
+| ------------------------------ | --------------------------- |
+| `/`                            | Landing page                |
+| `/docs`                        | Getting Started             |
+| `/docs/quick-start`            | Quick Start guide           |
+| `/docs/core-concepts`          | Core Concepts               |
+| `/docs/libraries/{slug}`       | Library documentation       |
+| `/docs/libraries/utils/{slug}` | Utils package documentation |
+| `/docs/contributing`           | Contribution guide          |
+| `/docs/api`                    | API Reference index         |
+| `/architecture`                | Architecture overview       |
 
 ---
 

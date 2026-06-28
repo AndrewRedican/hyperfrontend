@@ -483,7 +483,7 @@ function InstallCommand() {
   const [copied, setCopied] = useState(false)
 
   const handleCopy = () => {
-    navigator.clipboard.writeText('npx nx add @hyperfrontend/features')
+    navigator.clipboard.writeText('npm install @hyperfrontend/features')
     setCopied(true)
     setTimeout(() => setCopied(false), 2000)
   }
@@ -492,7 +492,7 @@ function InstallCommand() {
     <div className="group relative inline-block">
       <div className="flex items-center gap-2 rounded-lg border border-slate-200 bg-slate-50 px-4 py-2.5 font-mono text-sm dark:border-slate-700 dark:bg-slate-800/50">
         <span className="text-slate-500 dark:text-slate-400">$</span>
-        <code className="text-slate-700 dark:text-slate-300">npx nx add @hyperfrontend/features</code>
+        <code className="text-slate-700 dark:text-slate-300">npm install @hyperfrontend/features</code>
         <button
           onClick={handleCopy}
           className="ml-2 rounded p-1 text-slate-400 transition-colors hover:bg-slate-200 hover:text-slate-600 dark:hover:bg-slate-700 dark:hover:text-slate-300"

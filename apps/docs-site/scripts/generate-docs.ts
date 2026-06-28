@@ -212,7 +212,7 @@ const LIBRARIES: LibraryConfig[] = [
   },
   { name: 'Time Utils', packageName: '@hyperfrontend/time-utils', slug: 'time-utils', srcPath: 'libs/utils/time', category: 'utils' },
   { name: 'UI Utils', packageName: '@hyperfrontend/ui-utils', slug: 'ui-utils', srcPath: 'libs/utils/ui', category: 'utils' },
-  { name: 'Features Plugin', packageName: '@hyperfrontend/features', slug: 'features', srcPath: 'plugins/features', category: 'plugin' },
+  { name: 'Features', packageName: '@hyperfrontend/features', slug: 'features', srcPath: 'libs/features', category: 'core' },
   { name: 'Questions', packageName: '@hyperfrontend/questions', slug: 'questions', srcPath: 'libs/questions', category: 'supporting' },
 ]
 
@@ -234,6 +234,7 @@ const LIBRARY_SLUGS: Record<string, string> = {
   nexus: 'nexus',
   'network-protocol': 'network-protocol',
   cryptography: 'cryptography',
+  features: 'features',
   'project-scope': 'project-scope',
   builder: 'builder',
   'state-machine': 'state-machine',

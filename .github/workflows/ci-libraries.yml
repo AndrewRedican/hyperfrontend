@@ -46,6 +46,8 @@ jobs:
               - 'libs/builder/**'
             cryptography:
               - 'libs/cryptography/**'
+            features:
+              - 'libs/features/**'
             logging:
               - 'libs/logging/**'
             network-protocol:
@@ -112,6 +114,7 @@ jobs:
           # ACTIVE LIBRARIES:
           add_if_changed "${{ steps.filter.outputs.builder }}" "lib-builder" "libs/builder" "builder"
           add_if_changed "${{ steps.filter.outputs.cryptography }}" "lib-cryptography" "libs/cryptography" "cryptography"
+          add_if_changed "${{ steps.filter.outputs.features }}" "lib-features" "libs/features" "features"
           add_if_changed "${{ steps.filter.outputs.logging }}" "lib-logging" "libs/logging" "logging"
           add_if_changed "${{ steps.filter.outputs.network-protocol }}" "lib-network-protocol" "libs/network-protocol" "network-protocol"
           add_if_changed "${{ steps.filter.outputs.nexus }}" "lib-nexus" "libs/nexus" "nexus"

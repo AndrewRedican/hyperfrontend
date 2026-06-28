@@ -1,0 +1,242 @@
+import type { BrokerHandle, ChannelHandle } from '@hyperfrontend/nexus'
+import { clearInterval, setInterval } from '@hyperfrontend/immutable-api-utils/built-in-copy/timers'
+import { ControlType } from '../shared/control'
+import { createEventEmitter } from '../shared/event-emitter'
+import { createFeatureHandle, resolveHostWindow } from './lifecycle'
+
+jest.mock('@hyperfrontend/immutable-api-utils/built-in-copy/timers', () => ({
+  setInterval: jest.fn((callback: () => void) => {
+    callback()
+    return 1
+  }),
+  clearInterval: jest.fn(),
+}))
+
+class ResizeObserverStub {
+  observe() {
+    return undefined
+  }
+  unobserve() {
+    return undefined
+  }
+  disconnect() {
+    return undefined
+  }
+}
+
+beforeEach(() => {
+  jest.clearAllMocks()
+  Object.defineProperty(globalThis, 'ResizeObserver', { value: ResizeObserverStub, configurable: true, writable: true })
+})
+
+interface MockChannel {
+  channel: ChannelHandle
+  trigger(event: string, data?: unknown): void
+  triggerMessage(type: string, data?: unknown): void
+  send: jest.Mock
+  disconnect: jest.Mock
+  connect: jest.Mock
+}
+
+function createMockChannel(): MockChannel {
+  const listeners: Record<string, Array<(data?: unknown) => void>> = {}
+  const messageHandlers: Array<(message: { type: string; data?: unknown }) => void> = []
+  const send = jest.fn()
+  const disconnect = jest.fn()
+  const connect = jest.fn()
+  const channel = <ChannelHandle>(<unknown>{
+    on: (event: string, handler: (data?: unknown) => void) => {
+      ;(listeners[event] ?? (listeners[event] = [])).push(handler)
+      return () => undefined
+    },
+    onMessage: (handler: (message: { type: string; data?: unknown }) => void) => {
+      messageHandlers.push(handler)
+      return () => undefined
+    },
+    send,
+    disconnect,
+    connect,
+  })
+  return {
+    channel,
+    trigger: (event, data) => listeners[event]?.forEach((handler) => handler(data)),
+    triggerMessage: (type, data) => messageHandlers.forEach((handler) => handler({ type, data })),
+    send,
+    disconnect,
+    connect,
+  }
+}
+
+function createMockBroker(channel: ChannelHandle): { broker: BrokerHandle; addChannel: jest.Mock } {
+  const addChannel = jest.fn(() => channel)
+  return { broker: <BrokerHandle>(<unknown>{ addChannel }), addChannel }
+}
+
+describe('resolveHostWindow', () => {
+  it('returns the parent window when embedded in an iframe', () => {
+    const parent = <Window>(<unknown>{ name: 'parent' })
+    expect(resolveHostWindow(<Window>(<unknown>{ parent, opener: null }))).toBe(parent)
+  })
+
+  it('returns the opener window when launched as a popup', () => {
+    const opener = <Window>(<unknown>{ name: 'opener' })
+    const win = <Window>(<unknown>{ opener })
+    Object.assign(win, { parent: win })
+    expect(resolveHostWindow(win)).toBe(opener)
+  })
+
+  it('returns null when running at the top level', () => {
+    const win = <Window>(<unknown>{ opener: null })
+    Object.assign(win, { parent: win })
+    expect(resolveHostWindow(win)).toBeNull()
+  })
+})
+
+describe('createFeatureHandle', () => {
+  const hostWindow = <Window>(<unknown>{ name: 'host' })
+
+  it('adds a host channel against the resolved host window', () => {
+    const mock = createMockChannel()
+    const { broker, addChannel } = createMockBroker(mock.channel)
+    createFeatureHandle(broker, hostWindow, createEventEmitter())
+    expect(addChannel).toHaveBeenCalledWith('host', hostWindow)
+  })
+
+  it('connects the channel during assembly', () => {
+    const mock = createMockChannel()
+    createFeatureHandle(createMockBroker(mock.channel).broker, hostWindow, createEventEmitter())
+    expect(mock.connect).toHaveBeenCalledTimes(1)
+  })
+
+  it('emits open when the channel opens', () => {
+    const mock = createMockChannel()
+    const emitter = createEventEmitter()
+    const handler = jest.fn()
+    emitter.on('open', handler)
+    createFeatureHandle(createMockBroker(mock.channel).broker, hostWindow, emitter)
+    mock.trigger('open')
+    expect(handler).toHaveBeenCalledTimes(1)
+  })
+
+  it('emits close when the channel closes', () => {
+    const mock = createMockChannel()
+    const emitter = createEventEmitter()
+    const handler = jest.fn()
+    emitter.on('close', handler)
+    createFeatureHandle(createMockBroker(mock.channel).broker, hostWindow, emitter)
+    mock.trigger('close')
+    expect(handler).toHaveBeenCalledTimes(1)
+  })
+
+  it('emits error when the channel denies the connection', () => {
+    const mock = createMockChannel()
+    const emitter = createEventEmitter()
+    const handler = jest.fn()
+    emitter.on('error', handler)
+    createFeatureHandle(createMockBroker(mock.channel).broker, hostWindow, emitter)
+    mock.trigger('deny', { reason: 'origin' })
+    expect(handler).toHaveBeenCalledWith({ reason: 'origin' })
+  })
+
+  it('emits error when the channel reports an invalid message', () => {
+    const mock = createMockChannel()
+    const emitter = createEventEmitter()
+    const handler = jest.fn()
+    emitter.on('error', handler)
+    createFeatureHandle(createMockBroker(mock.channel).broker, hostWindow, emitter)
+    mock.trigger('invalid', { reason: 'schema' })
+    expect(handler).toHaveBeenCalledWith({ reason: 'schema' })
+  })
+
+  it('re-emits host messages keyed by action type', () => {
+    const mock = createMockChannel()
+    const emitter = createEventEmitter()
+    const handler = jest.fn()
+    emitter.on('setTimezone', handler)
+    createFeatureHandle(createMockBroker(mock.channel).broker, hostWindow, emitter)
+    mock.triggerMessage('setTimezone', { tz: 'UTC' })
+    expect(handler).toHaveBeenCalledWith({ tz: 'UTC' })
+  })
+
+  it('sends messages through the channel', () => {
+    const mock = createMockChannel()
+    createFeatureHandle(createMockBroker(mock.channel).broker, hostWindow, createEventEmitter()).send('ping', { n: 1 })
+    expect(mock.send).toHaveBeenCalledWith('ping', { n: 1 })
+  })
+
+  it('disconnects the channel on close', () => {
+    const mock = createMockChannel()
+    createFeatureHandle(createMockBroker(mock.channel).broker, hostWindow, createEventEmitter()).close()
+    expect(mock.disconnect).toHaveBeenCalledTimes(1)
+  })
+
+  it('subscribes via the shared emitter', () => {
+    const mock = createMockChannel()
+    const handler = jest.fn()
+    const handle = createFeatureHandle(createMockBroker(mock.channel).broker, hostWindow, createEventEmitter())
+    handle.on('timeUpdated', handler)
+    mock.triggerMessage('timeUpdated', { time: 1 })
+    expect(handler).toHaveBeenCalledWith({ time: 1 })
+  })
+
+  it('resolves ready immediately when already open', async () => {
+    const mock = createMockChannel()
+    const handle = createFeatureHandle(createMockBroker(mock.channel).broker, hostWindow, createEventEmitter())
+    mock.trigger('open')
+    await expect(handle.ready()).resolves.toBeUndefined()
+  })
+
+  it('resolves ready once the channel opens later', async () => {
+    const mock = createMockChannel()
+    const handle = createFeatureHandle(createMockBroker(mock.channel).broker, hostWindow, createEventEmitter())
+    const pending = handle.ready()
+    mock.trigger('open')
+    await expect(pending).resolves.toBeUndefined()
+  })
+
+  it('does not add a channel when no host window is resolved', () => {
+    const mock = createMockChannel()
+    const { broker, addChannel } = createMockBroker(mock.channel)
+    createFeatureHandle(broker, null, createEventEmitter())
+    expect(addChannel).not.toHaveBeenCalled()
+  })
+
+  it('treats send as a no-op when unembedded', () => {
+    const handle = createFeatureHandle(createMockBroker(createMockChannel().channel).broker, null, createEventEmitter())
+    expect(() => handle.send('ping')).not.toThrow()
+  })
+
+  it('treats close as a no-op when unembedded', () => {
+    const handle = createFeatureHandle(createMockBroker(createMockChannel().channel).broker, null, createEventEmitter())
+    expect(() => handle.close()).not.toThrow()
+  })
+
+  it('starts the heartbeat when the host channel opens', () => {
+    const mock = createMockChannel()
+    createFeatureHandle(createMockBroker(mock.channel).broker, hostWindow, createEventEmitter())
+    mock.trigger('open')
+    expect(setInterval).toHaveBeenCalledTimes(1)
+  })
+
+  it('stops the heartbeat when the host channel closes', () => {
+    const mock = createMockChannel()
+    createFeatureHandle(createMockBroker(mock.channel).broker, hostWindow, createEventEmitter())
+    mock.trigger('open')
+    mock.trigger('close')
+    expect(clearInterval).toHaveBeenCalledTimes(1)
+  })
+
+  it('sends a beat through the channel once running', () => {
+    const mock = createMockChannel()
+    createFeatureHandle(createMockBroker(mock.channel).broker, hostWindow, createEventEmitter())
+    mock.trigger('open')
+    expect(mock.send).toHaveBeenCalledWith(ControlType.Beat)
+  })
+
+  it('announces its content size when the host channel opens', () => {
+    const mock = createMockChannel()
+    createFeatureHandle(createMockBroker(mock.channel).broker, hostWindow, createEventEmitter())
+    mock.trigger('open')
+    expect(mock.send).toHaveBeenCalledWith(ControlType.Size, expect.objectContaining({ height: expect.any(Number) }))
+  })
+})

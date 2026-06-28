@@ -114,4 +114,17 @@ describe('core/fs/stat', () => {
       expect(exists(join(TEST_DIR, 'missing'))).toBe(false)
     })
   })
+
+  describe('unsafe path rejection', () => {
+    // how: A NUL byte is the one universally-illegal path character the guard rejects.
+    const POISONED = `poisoned ${'\u0000'} .txt`
+
+    it('returns null from getFileStat for a NUL-poisoned path', () => {
+      expect(getFileStat(POISONED)).toBeNull()
+    })
+
+    it('returns false from exists for a NUL-poisoned path', () => {
+      expect(exists(POISONED)).toBe(false)
+    })
+  })
 })

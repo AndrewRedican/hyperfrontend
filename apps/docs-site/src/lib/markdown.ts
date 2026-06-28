@@ -1,15 +1,36 @@
+import rehypeShiki from '@shikijs/rehype'
+import rehypeRaw from 'rehype-raw'
+import rehypeStringify from 'rehype-stringify'
 import { remark } from 'remark'
 import remarkGfm from 'remark-gfm'
-import remarkHtml from 'remark-html'
+import remarkRehype from 'remark-rehype'
 
 /**
- * Convert markdown to HTML with GitHub Flavored Markdown support
+ * Convert markdown to HTML with GitHub Flavored Markdown support and Shiki
+ * syntax highlighting.
+ *
+ * Fenced code blocks are highlighted with dual light/dark themes
+ * (`defaultColor: false`); the active palette is chosen by the `.dark` class
+ * via the `pre.shiki` rules in `globals.css`. Raw HTML embedded in the markdown
+ * (mermaid placeholders, badges, alignment wrappers) is preserved through
+ * `rehype-raw`.
  *
  * @param markdown - The markdown string to convert
  * @returns A promise that resolves to the HTML string
  */
 export async function markdownToHtml(markdown: string): Promise<string> {
-  const result = await remark().use(remarkGfm).use(remarkHtml, { sanitize: false }).process(markdown)
+  const result = await remark()
+    .use(remarkGfm)
+    .use(remarkRehype, { allowDangerousHtml: true })
+    .use(rehypeRaw)
+    .use(rehypeShiki, {
+      themes: { light: 'github-light', dark: 'github-dark' },
+      defaultColor: false,
+      fallbackLanguage: 'text',
+      lazy: true,
+    })
+    .use(rehypeStringify, { allowDangerousHtml: true })
+    .process(markdown)
 
   return result.toString()
 }

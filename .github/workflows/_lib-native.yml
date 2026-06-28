@@ -34,6 +34,11 @@ on:
         description: 'JSON array of declared platforms (e.g., [\"linux-x64\",\"darwin-arm64\"])'
         required: true
         type: string
+      unsupported-platforms:
+        description: 'JSON array of platforms whose runner environment cannot build the binary yet. Matching matrix legs short-circuit to a green no-op instead of failing.'
+        required: false
+        type: string
+        default: '[]'
       release-tag:
         description: 'When non-empty, attach built binaries to the GitHub Release for this tag.'
         required: false
@@ -65,20 +70,39 @@ jobs:
             runner: windows-latest
     runs-on: ${{ matrix.runner }}
     steps:
+      # Decide up front whether this runner's environment can build the binary.
+      # Platforms listed in `unsupported-platforms` short-circuit to a green
+      # no-op so a known-broken runner (e.g. macOS/Windows SEA) never fails the
+      # pipeline — re-enable a platform by dropping it from the caller's list.
+      - name: Check platform support
+        id: support
+        shell: bash
+        run: |
+          if printf '%s' '${{ inputs.unsupported-platforms }}' | grep -q "\"${{ matrix.platform }}\""; then
+            echo "supported=false" >> "$GITHUB_OUTPUT"
+            echo "::notice title=Skipped::Native build skipped for ${{ matrix.platform }}: runner environment not supported yet."
+          else
+            echo "supported=true" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Checkout repository
+        if: steps.support.outputs.supported == 'true'
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 
       - name: Setup monorepo
+        if: steps.support.outputs.supported == 'true'
         uses: ./.github/actions/setup-monorepo
 
       # `--skip-nx-cache` is mandatory: a cached green from another runner would
       # short-circuit the per-platform build and leave the artifact missing.
       # Decision #45 codifies this for builder verification runs.
       - name: Build native binary
+        if: steps.support.outputs.supported == 'true'
         shell: bash
         run: CI=1 npx nx build ${{ inputs.project-name }} --skip-nx-cache
 
       - name: Upload binary artifact
+        if: steps.support.outputs.supported == 'true'
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: ${{ inputs.bin-name }}-${{ matrix.platform }}
@@ -87,7 +111,7 @@ jobs:
           retention-days: 30
 
       - name: Attach binary to GitHub Release
-        if: inputs.release-tag != ''
+        if: steps.support.outputs.supported == 'true' && inputs.release-tag != ''
         uses: softprops/action-gh-release@72f2c25fcb47643c292f7107632f7a47c1df5cd8 # v2.3.2
         with:
           tag_name: ${{ inputs.release-tag }}

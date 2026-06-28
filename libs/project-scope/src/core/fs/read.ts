@@ -3,6 +3,7 @@ import { createError } from '@hyperfrontend/immutable-api-utils/built-in-copy/er
 import { parse } from '@hyperfrontend/immutable-api-utils/built-in-copy/json'
 import { defineProperties } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
 import { createScopedLogger } from '../logger'
+import { isSafePath } from './guard'
 
 const fsLogger = createScopedLogger('project-scope:fs')
 
@@ -66,6 +67,9 @@ export function createFileSystemError(message: string, code: FileSystemErrorCode
  * ```
  */
 export function readFileContent(filePath: string, encoding: BufferEncoding = 'utf-8'): string {
+  if (!isSafePath(filePath)) {
+    throw createFileSystemError(`Unsafe file path: ${filePath}`, 'FS_READ_ERROR', { path: filePath, operation: 'read' })
+  }
   if (!existsSync(filePath)) {
     fsLogger.debug('File not found', { path: filePath })
     throw createFileSystemError(`File not found: ${filePath}`, 'FS_NOT_FOUND', { path: filePath, operation: 'read' })
@@ -93,6 +97,9 @@ export function readFileContent(filePath: string, encoding: BufferEncoding = 'ut
  * ```
  */
 export function readFileBuffer(filePath: string): Buffer {
+  if (!isSafePath(filePath)) {
+    throw createFileSystemError(`Unsafe file path: ${filePath}`, 'FS_READ_ERROR', { path: filePath, operation: 'read' })
+  }
   if (!existsSync(filePath)) {
     throw createFileSystemError(`File not found: ${filePath}`, 'FS_NOT_FOUND', { path: filePath, operation: 'read' })
   }
@@ -120,7 +127,7 @@ export function readFileBuffer(filePath: string): Buffer {
  * ```
  */
 export function readFileIfExists(filePath: string, encoding: BufferEncoding = 'utf-8'): string | null {
-  if (!existsSync(filePath)) {
+  if (!isSafePath(filePath) || !existsSync(filePath)) {
     return null
   }
   try {
@@ -168,6 +175,9 @@ export interface ReadJsonFileOptions<T> {
  * ```
  */
 export function readJsonFile<T>(filePath: string, options?: ReadJsonFileOptions<T>): T {
+  if (!isSafePath(filePath)) {
+    throw createFileSystemError(`Unsafe file path: ${filePath}`, 'FS_READ_ERROR', { path: filePath, operation: 'read' })
+  }
   if (!existsSync(filePath)) {
     if (options && 'default' in options) {
       fsLogger.debug('JSON file not found, using default', { path: filePath })
@@ -208,7 +218,7 @@ export function readJsonFile<T>(filePath: string, options?: ReadJsonFileOptions<
  * ```
  */
 export function readJsonFileIfExists<T>(filePath: string): T | null {
-  if (!existsSync(filePath)) {
+  if (!isSafePath(filePath) || !existsSync(filePath)) {
     return null
   }
   try {
