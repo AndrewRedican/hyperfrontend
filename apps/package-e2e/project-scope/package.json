@@ -6,7 +6,7 @@
     "pack-install": "cd ../../../dist/libs/project-scope && npm pack && cd - && npm install ../../../dist/libs/project-scope/*.tgz"
   },
   "dependencies": {
-    "@hyperfrontend/project-scope": "file:../../../tmp/e2e-packs/hyperfrontend-project-scope-0.2.2.tgz"
+    "@hyperfrontend/project-scope": "file:../../../tmp/e2e-packs/hyperfrontend-project-scope-0.2.3.tgz"
   },
   "devDependencies": {
     "@types/jest": "29.5.14",

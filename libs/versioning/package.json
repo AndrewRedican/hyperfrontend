@@ -6,7 +6,7 @@
     "@hyperfrontend/immutable-api-utils": "0.1.3",
     "@hyperfrontend/json-utils": "0.1.1",
     "@hyperfrontend/logging": "0.1.1",
-    "@hyperfrontend/project-scope": "0.2.2",
+    "@hyperfrontend/project-scope": "0.2.3",
     "@hyperfrontend/questions": "0.2.1"
   },
   "bin": {

@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.2.3](https://github.com/AndrewRedican/hyperfrontend/compare/5f116abb8ba6355dfb283fa03b7481e5eb029480...7fb26b6a30c007cd0392f1fc973265c3d25e16dd) - 2026-06-28
+
+### Bug Fixes
+
+- confine import resolution to the project root
+- reject NUL-byte paths in fs primitives
+
 ## [0.2.2](https://github.com/AndrewRedican/hyperfrontend/compare/d96fee4d4d3a70178c8a01e5f2e2ae675fa23f37...466c0388c4cd516b9c704214140b4df1004098e6) - 2026-06-23
 
 ### Other
