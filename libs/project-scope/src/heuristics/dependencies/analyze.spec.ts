@@ -1,4 +1,5 @@
-import { resolve } from 'node:path'
+import { mkdirSync, writeFileSync, rmSync } from 'node:fs'
+import { join, resolve } from 'node:path'
 import { buildDependencyGraph, findCircularDependencies, getProjectDependencies } from './analyze'
 
 const FIXTURES_DIR = resolve(__dirname, '../../../__fixtures__')
@@ -453,5 +454,34 @@ describe('resolveImportPath edge cases', () => {
         expect(dep.includes('node_modules')).toBe(false)
       }
     }
+  })
+})
+
+describe('buildDependencyGraph path confinement', () => {
+  const ESCAPE_PROJECT = resolve(__dirname, '__escape_fixtures__')
+
+  beforeAll(() => {
+    rmSync(ESCAPE_PROJECT, { recursive: true, force: true })
+    mkdirSync(join(ESCAPE_PROJECT, 'src'), { recursive: true })
+    // how: A hostile source file whose imports escape the project via absolute and parent-traversal paths.
+    writeFileSync(
+      join(ESCAPE_PROJECT, 'src', 'index.ts'),
+      "import '/totally/outside/secret'\nimport x from '../../escape/up'\nexport const a = 1\n"
+    )
+  })
+
+  afterAll(() => {
+    rmSync(ESCAPE_PROJECT, { recursive: true, force: true })
+  })
+
+  it('never stats a path outside the project root when an import escapes it', () => {
+    const fsModule = require('../../core/fs')
+    const spy = jest.spyOn(fsModule, 'exists')
+
+    buildDependencyGraph(ESCAPE_PROJECT)
+    const outOfRoot = spy.mock.calls.map((call) => resolve(String(call[0]))).filter((path) => !path.startsWith(ESCAPE_PROJECT))
+
+    spy.mockRestore()
+    expect(outOfRoot).toEqual([])
   })
 })

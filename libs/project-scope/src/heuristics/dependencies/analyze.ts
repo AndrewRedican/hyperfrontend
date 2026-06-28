@@ -5,6 +5,7 @@ import { keys } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
 import { createSet } from '@hyperfrontend/immutable-api-utils/built-in-copy/set'
 import { exists, isFile, isDirectory, readDirectory, readFileContent } from '../../core/fs'
 import { createScopedLogger } from '../../core/logger'
+import { isWithinRoot } from '../../core/path'
 import { readPackageJsonIfExists } from '../../project/package'
 
 const depsLogger = createScopedLogger('project-scope:heuristics:deps')
@@ -101,6 +102,11 @@ function resolveImportPath(importPath: string, fromFile: string, projectPath: st
 
   const fromDir = dirname(fromFile)
   const absolutePath = resolve(fromDir, importPath)
+
+  // why: An import string comes from untrusted source code; reject targets that escape the project root before any stat, so a hostile `../../etc/passwd` can't probe the filesystem.
+  if (!isWithinRoot(projectPath, absolutePath)) {
+    return null
+  }
 
   if (exists(absolutePath)) {
     if (isFile(absolutePath)) {
