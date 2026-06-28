@@ -20,6 +20,10 @@ describe('deriveShellName', () => {
   it('uses a bare counter when no identifying option slugs to anything', () => {
     expect(deriveShellName({ container: '###', url: '' }, 4)).toBe('shell-4')
   })
+
+  it('keeps a non-alphabetic scheme prefix in the slug', () => {
+    expect(deriveShellName({ url: 'view-source://app.example.com' }, 7)).toBe('shell-view-source-app-example-com-7')
+  })
 })
 
 describe('createShell', () => {
