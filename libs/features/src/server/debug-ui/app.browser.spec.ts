@@ -86,34 +86,46 @@ describe('mountDebugUi', () => {
     expect(root.textContent).not.toEqual(expect.stringContaining('protocol:'))
   })
 
-  it('logs an incoming window message', () => {
+  it('logs an incoming window message from a served origin', () => {
     handle = mountDebugUi(root, manifest())
-    window.dispatchEvent(new MessageEvent('message', { data: { ping: 1 } }))
+    window.dispatchEvent(new MessageEvent('message', { data: { ping: 1 }, origin: 'http://localhost:3000' }))
     expect(root.textContent).toEqual(expect.stringContaining('"ping"'))
+  })
+
+  it('ignores a message from an untrusted origin', () => {
+    handle = mountDebugUi(root, manifest())
+    window.dispatchEvent(new MessageEvent('message', { data: { ping: 1 }, origin: 'http://evil.example.com' }))
+    expect(root.textContent).not.toEqual(expect.stringContaining('"ping"'))
+  })
+
+  it('trusts no origin when an app url is unparseable', () => {
+    handle = mountDebugUi(root, manifest({ apps: [{ name: 'broken', url: 'not-a-url' }] }))
+    window.dispatchEvent(new MessageEvent('message', { data: { ping: 1 }, origin: 'http://localhost:3000' }))
+    expect(root.textContent).not.toEqual(expect.stringContaining('"ping"'))
   })
 
   it('marks the feature connected on the first message', () => {
     handle = mountDebugUi(root, manifest())
-    window.dispatchEvent(new MessageEvent('message', { data: {} }))
+    window.dispatchEvent(new MessageEvent('message', { data: {}, origin: 'http://localhost:3000' }))
     expect(root.textContent).not.toEqual(expect.stringContaining('disconnected'))
   })
 
   it('attaches the listener to an injected window', () => {
     handle = mountDebugUi(root, manifest(), { window })
-    window.dispatchEvent(new MessageEvent('message', { data: { ping: 1 } }))
+    window.dispatchEvent(new MessageEvent('message', { data: { ping: 1 }, origin: 'http://localhost:3000' }))
     expect(root.textContent).toEqual(expect.stringContaining('"ping"'))
   })
 
   it('connects without logging when the message log is disabled', () => {
     handle = mountDebugUi(root, manifest({ debug: { enabled: true, messageLog: false, securityView: true } }))
-    window.dispatchEvent(new MessageEvent('message', { data: {} }))
+    window.dispatchEvent(new MessageEvent('message', { data: {}, origin: 'http://localhost:3000' }))
     expect(root.textContent).not.toEqual(expect.stringContaining('disconnected'))
   })
 
   it('detaches the message listener and clears the root on cleanup', () => {
     handle = mountDebugUi(root, manifest())
     handle.cleanup()
-    window.dispatchEvent(new MessageEvent('message', { data: { ping: 1 } }))
+    window.dispatchEvent(new MessageEvent('message', { data: { ping: 1 }, origin: 'http://localhost:3000' }))
     expect(root.textContent).toBe('')
   })
 })

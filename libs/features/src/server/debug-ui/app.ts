@@ -2,6 +2,7 @@ import type { SecurityProtocol } from '../../shared/types'
 import type { DevManifest } from '../dev-server'
 import type { MessageLogHandle } from './message-log'
 import { assign } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
+import { createURL } from '@hyperfrontend/immutable-api-utils/built-in-copy/url'
 import { createElement, div, span } from '@hyperfrontend/ui-utils/element'
 import { DisplayMode } from '../../shared/types'
 import { createControls } from './controls'
@@ -11,6 +12,20 @@ import { labelStyle, panelStyle, rootStyle } from './styles'
 // note: Starting iframe footprint; the resize controls drive it live from here.
 const DEFAULT_WIDTH = 480
 const DEFAULT_HEIGHT = 360
+
+/**
+ * Extracts the origin of a served app's url, used as a trusted message sender.
+ *
+ * @param url - The app url from the manifest.
+ * @returns The url's origin, or null when the url cannot be parsed.
+ */
+function originOf(url: string): string | null {
+  try {
+    return createURL(url).origin
+  } catch {
+    return null
+  }
+}
 
 /** Injectable boundaries for {@link mountDebugUi}, defaulted to the page globals. */
 export interface MountDebugUiDeps {
@@ -91,7 +106,13 @@ export function mountDebugUi(root: HTMLElement, manifest: DevManifest, deps: Mou
     root.appendChild(log.element)
   }
 
+  const allowedOrigins = manifest.apps.map((app) => originOf(app.url)).filter((origin): origin is string => origin !== null)
+
   const onMessage = (event: MessageEvent) => {
+    // why: Verify the message comes from a served app's origin; an untrusted window may post here too.
+    if (!allowedOrigins.includes(event.origin)) {
+      return
+    }
     controls.setConnected(true)
     log?.append({ direction: 'incoming', raw: event.data })
   }
