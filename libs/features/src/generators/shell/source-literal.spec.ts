@@ -53,8 +53,20 @@ describe('toSourceLiteral', () => {
     expect(toSourceLiteral({ name: 'clock' })).toBe("{\n  name: 'clock',\n}")
   })
 
+  it('leaves a key with trailing digits unquoted', () => {
+    expect(toSourceLiteral({ a1: 2 })).toBe('{\n  a1: 2,\n}')
+  })
+
   it('quotes keys that are not valid identifiers', () => {
     expect(toSourceLiteral({ 'data-id': 1 })).toBe("{\n  'data-id': 1,\n}")
+  })
+
+  it('quotes an empty key', () => {
+    expect(toSourceLiteral({ '': 1 })).toBe("{\n  '': 1,\n}")
+  })
+
+  it('quotes a key that starts with a non-identifier character', () => {
+    expect(toSourceLiteral({ '1a': 2 })).toBe("{\n  '1a': 2,\n}")
   })
 
   it('drops undefined object members like JSON', () => {

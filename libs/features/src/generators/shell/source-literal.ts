@@ -2,8 +2,43 @@ import { isArray } from '@hyperfrontend/immutable-api-utils/built-in-copy/array'
 import { stringify } from '@hyperfrontend/immutable-api-utils/built-in-copy/json'
 import { entries } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
 
-// how: A JSON double-quoted string and a single-quoted JS string differ only in which quote is escaped, so quoteString reuses JSON escaping (correct \n, \\, \uXXXX) and swaps the convention rather than re-implementing it.
-const IDENTIFIER = /^[A-Za-z_$][A-Za-z0-9_$]*$/
+/**
+ * Reports whether a char code may legally begin an identifier (`A-Za-z_$`).
+ *
+ * @param code - The UTF-16 code unit to test.
+ * @returns True for an identifier-start character.
+ */
+function isIdentifierStart(code: number): boolean {
+  return (code >= 65 && code <= 90) || (code >= 97 && code <= 122) || code === 95 || code === 36
+}
+
+/**
+ * Reports whether a char code may follow the first identifier character.
+ *
+ * @param code - The UTF-16 code unit to test.
+ * @returns True for an identifier-start character or a decimal digit.
+ */
+function isIdentifierPart(code: number): boolean {
+  return isIdentifierStart(code) || (code >= 48 && code <= 57)
+}
+
+/**
+ * Reports whether a key is a bare-usable identifier (no quoting needed).
+ *
+ * @param key - The property name to test.
+ * @returns True when every character is a legal identifier character.
+ */
+function isIdentifier(key: string): boolean {
+  if (key.length === 0 || !isIdentifierStart(key.charCodeAt(0))) {
+    return false
+  }
+  for (let index = 1; index < key.length; index += 1) {
+    if (!isIdentifierPart(key.charCodeAt(index))) {
+      return false
+    }
+  }
+  return true
+}
 
 /**
  * Renders a string as a single-quoted TypeScript string literal.
@@ -15,7 +50,21 @@ const IDENTIFIER = /^[A-Za-z_$][A-Za-z0-9_$]*$/
  * @returns A single-quoted, safely escaped string literal.
  */
 function quoteString(value: string): string {
-  const inner = stringify(value).slice(1, -1).replace(/\\"/g, '"').replace(/'/g, "\\'")
+  // how: JSON encoding already escapes backslashes and control chars; we scan it to swap quote conventions (unescape \" to ", escape ' to \') while copying every other escape verbatim, so an input backslash stays intact.
+  const body = stringify(value).slice(1, -1)
+  let inner = ''
+  for (let index = 0; index < body.length; index += 1) {
+    const char = body[index]
+    if (char === '\\') {
+      const next = body[index + 1]
+      inner += next === '"' ? '"' : char + next
+      index += 1
+    } else if (char === "'") {
+      inner += "\\'"
+    } else {
+      inner += char
+    }
+  }
   return `'${inner}'`
 }
 
@@ -26,7 +75,7 @@ function quoteString(value: string): string {
  * @returns The key as written in an object literal.
  */
 function formatKey(key: string): string {
-  return IDENTIFIER.test(key) ? key : quoteString(key)
+  return isIdentifier(key) ? key : quoteString(key)
 }
 
 /**
