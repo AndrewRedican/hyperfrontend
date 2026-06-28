@@ -1,4 +1,5 @@
 import { statSync, lstatSync, existsSync } from 'node:fs'
+import { isSafePath } from './guard'
 
 /**
  * File statistics.
@@ -39,7 +40,7 @@ export interface FileStats {
  * ```
  */
 export function getFileStat(filePath: string, followSymlinks = true): FileStats | null {
-  if (!existsSync(filePath)) {
+  if (!isSafePath(filePath) || !existsSync(filePath)) {
     return null
   }
 
@@ -128,5 +129,5 @@ export function isSymlink(linkPath: string): boolean {
  * ```
  */
 export function exists(filePath: string): boolean {
-  return existsSync(filePath)
+  return isSafePath(filePath) && existsSync(filePath)
 }
