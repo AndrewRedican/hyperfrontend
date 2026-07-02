@@ -49,8 +49,13 @@ export default async function installExecutor(options: InstallExecutorOptions, c
   logger.info(`  Running: ${fullCommand}`)
   logger.info(`  In: ${cwd}`)
 
+  // why: npx exports the workspace root .npmrc (e.g. engine-strict) as npm_config_* env
+  // why: vars, which would override the self-contained app's own npm configuration.
+  const env = { ...process.env }
+  delete env['npm_config_engine_strict']
+
   try {
-    execFileSync('npm', args, { cwd, stdio: 'inherit' })
+    execFileSync('npm', args, { cwd, stdio: 'inherit', env })
     logger.info(`Dependencies installed for ${projectName}`)
     return { success: true }
   } catch {
