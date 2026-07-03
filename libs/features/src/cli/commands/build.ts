@@ -1,11 +1,18 @@
 import type { BuildConfig } from '@hyperfrontend/builder/models'
 import type { CliFlags } from '../args'
 import { execFileSync } from 'node:child_process'
-import { tmpdir } from 'node:os'
 import { isAbsolute, join, resolve } from 'node:path'
 import { build } from '@hyperfrontend/builder'
+import { isArray } from '@hyperfrontend/immutable-api-utils/built-in-copy/array'
 import { stringify } from '@hyperfrontend/immutable-api-utils/built-in-copy/json'
-import { createDirectory, removeDirectory } from '@hyperfrontend/project-scope/core/fs'
+import {
+  createDirectory,
+  readFileContent,
+  readJsonFileIfExists,
+  removeDirectory,
+  writeFileContent,
+  writeJsonFile,
+} from '@hyperfrontend/project-scope/core/fs'
 import { commitChanges, createTree } from '@hyperfrontend/project-scope/vfs'
 import { generateShell } from '../../generators/shell/generate-shell'
 import { resolveBuildConfig } from '../config/resolve'
@@ -15,9 +22,9 @@ const DEFAULT_OUT = 'dist'
 
 /** Inputs handed to the builder for a single connector build. */
 export interface BuildRunnerInput {
-  /** Temp directory holding the generated connector sources. */
+  /** Staging directory (inside the consumer project) holding the generated connector sources. */
   readonly projectRoot: string
-  /** Workspace root the builder resolves against. */
+  /** The consumer project root, supplying `node_modules` and the TypeScript toolchain. */
   readonly workspaceRoot: string
   /** Directory the bundled package is emitted into. */
   readonly outputPath: string
@@ -87,9 +94,12 @@ function defaultPackTarball(packageDir: string): string {
 }
 
 /**
- * Builds the connector: resolve config → generate the host connector into a temp
- * dir → bundle via the builder → pack a tarball into `--out`. A `v1`/`v2` security
- * protocol is required for production output, and the temp dir is always removed.
+ * Builds the connector: resolve config → generate the host connector into a
+ * hidden staging dir inside the project → bundle via the builder → pack a
+ * tarball into `--out`. A `v1`/`v2` security protocol is required for production
+ * output; an explicit `--protocol none` builds only when paired with
+ * `--allow-open`, acknowledging the open channel. The staging dir is always
+ * removed.
  *
  * @param options - Flags, working directory, output sinks, and injectable deps.
  * @returns The process exit code.
@@ -108,26 +118,39 @@ export async function runBuild(options: RunBuildOptions): Promise<number> {
 
   let tempDir: string | null = null
   try {
-    const { config, contract, protocol } = await resolveConfig({ cwd, flags })
+    const { config, contract, protocol, protocolExplicit } = await resolveConfig({ cwd, flags })
     if (protocol === 'none') {
-      stderr.write('Build requires a security protocol: pass --protocol v1 or --protocol v2.\n')
-      return EXIT_ERROR
+      if (!protocolExplicit) {
+        stderr.write('Build requires a security protocol: pass --protocol v1 or --protocol v2.\n')
+        return EXIT_ERROR
+      }
+      if (flags.allowOpen !== true) {
+        stderr.write(
+          "Building with an explicit protocol 'none' produces an open connector: the channel is unauthenticated and any page can embed and message the feature. Pass --allow-open to acknowledge the risk, or pick --protocol v1 / --protocol v2.\n"
+        )
+        return EXIT_ERROR
+      }
+      stderr.write("Warning: building an open connector (protocol 'none'); the channel carries no security envelope.\n")
     }
 
-    const out = toAbsolute(cwd, flags.out ?? DEFAULT_OUT)
+    // why: The default output nests per connector so the builder's clean step only ever empties this connector's own directory, never a shared dist/ root.
+    const out = toAbsolute(cwd, flags.out ?? join(DEFAULT_OUT, `${config.name}-shell`))
     if (flags.dryRun) {
       stdout.write(`Would build "${config.name}" → ${out} [dry run]\n`)
       return EXIT_OK
     }
 
-    tempDir = join(tmpdir(), `hf-shell-${config.name.replace(/[^a-z0-9-]/gi, '-')}-${process.pid}`)
+    // why: The staging dir lives inside the consumer project (not the OS temp dir) so module resolution can ascend into the consumer's node_modules and bundle the SDK into a self-contained connector.
+    tempDir = join(cwd, `.hf-shell-${config.name.replace(/[^a-z0-9-]/gi, '-')}-${process.pid}`)
     createDirectory(tempDir, { recursive: true })
     const tree = createTree(tempDir)
     generateShell(config, contract, tree)
     tree.write('tsconfig.lib.json', buildTsConfig())
     commitChanges(tree)
 
-    await runBuilder({ projectRoot: tempDir, workspaceRoot: tempDir, outputPath: out })
+    // why: The consumer project is the workspace — it holds node_modules (so the SDK bundles in) and the TypeScript binary the declaration pass spawns.
+    await runBuilder({ projectRoot: tempDir, workspaceRoot: cwd, outputPath: out })
+    publishSidecars(tempDir, out)
     const tarball = packTarball(out)
     stdout.write(`Built "${config.name}" → ${out}\n${tarball ? `Packed ${tarball}\n` : ''}`)
     return EXIT_OK
@@ -136,6 +159,24 @@ export async function runBuild(options: RunBuildOptions): Promise<number> {
     return EXIT_ERROR
   } finally {
     if (tempDir !== null) removeDirectory(tempDir, { recursive: true, force: true })
+  }
+}
+
+/**
+ * Copies the staged consumer-facing sidecars (`README.md`, `metadata.json`)
+ * into the built package and lists the metadata file in the manifest's `files`
+ * array so `npm pack` ships them with the connector.
+ *
+ * @param tempDir - The staging directory holding the generated sidecars.
+ * @param out - The built package directory the tarball is packed from.
+ */
+function publishSidecars(tempDir: string, out: string): void {
+  writeFileContent(join(out, 'README.md'), readFileContent(join(tempDir, 'README.md')))
+  writeFileContent(join(out, 'metadata.json'), readFileContent(join(tempDir, 'metadata.json')))
+  const manifestPath = join(out, 'package.json')
+  const manifest = readJsonFileIfExists<Record<string, unknown>>(manifestPath)
+  if (manifest !== null && isArray(manifest['files'])) {
+    writeJsonFile(manifestPath, { ...manifest, files: [...(<unknown[]>manifest['files']), 'metadata.json'] })
   }
 }
 
@@ -150,6 +191,8 @@ function buildTsConfig(): string {
       target: 'ES2022',
       module: 'ESNext',
       moduleResolution: 'Bundler',
+      // why: An explicit rootDir anchors the compiler's file matching to the staged sources, keeping the build correct no matter which directory the CLI is invoked from.
+      rootDir: 'src',
       declaration: true,
       strict: true,
       skipLibCheck: true,

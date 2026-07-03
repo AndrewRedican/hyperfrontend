@@ -26,6 +26,8 @@ export interface ResolvedBuildBundle {
   readonly contract: FeatureContract
   /** The resolved security envelope (`none` unless overridden). */
   readonly protocol: SecurityProtocol
+  /** Whether the protocol came from a flag or the config file rather than the default. */
+  readonly protocolExplicit: boolean
   /** Absolute path of the config file that was loaded, when one was found. */
   readonly sourcePath?: string
 }
@@ -57,7 +59,7 @@ function toAbsolute(base: string, path: string): string {
  * replaces its whole top-level key (no deep merge).
  *
  * @param options - The working directory and parsed flags.
- * @returns The resolved config, loaded contract, protocol, and source path.
+ * @returns The resolved config, loaded contract, protocol (with its explicitness), and source path.
  * @throws {Error} When the config or contract is missing required keys or malformed.
  *
  * @example Resolving from a discovered config plus a flag override
@@ -80,7 +82,9 @@ export async function resolveBuildConfig(options: ResolveBuildConfigOptions): Pr
   }
   const config = validateFeatureConfig(merged)
 
-  const protocol = flags.protocol ?? loaded['protocol'] ?? 'none'
+  // why: An explicitly chosen protocol (flag or config) is distinguished from the fallback so the build gate can require a deliberate acknowledgment for an open build instead of ever defaulting into one.
+  const chosenProtocol = flags.protocol ?? loaded['protocol']
+  const protocol = chosenProtocol ?? 'none'
   if (typeof protocol !== 'string' || !VALID_PROTOCOLS.includes(protocol)) {
     throw createError(`Invalid protocol: "${String(protocol)}" (expected none, v1, or v2).`)
   }
@@ -93,6 +97,13 @@ export async function resolveBuildConfig(options: ResolveBuildConfigOptions): Pr
     ...config,
     url: flags.url ?? (typeof loaded['url'] === 'string' ? loaded['url'] : '/'),
     ...(display !== undefined && { display }),
+    protocol: <SecurityProtocol>protocol,
   }
-  return { config: resolved, contract, protocol: <SecurityProtocol>protocol, ...(sourcePath !== null && { sourcePath }) }
+  return {
+    config: resolved,
+    contract,
+    protocol: <SecurityProtocol>protocol,
+    protocolExplicit: chosenProtocol !== undefined,
+    ...(sourcePath !== null && { sourcePath }),
+  }
 }

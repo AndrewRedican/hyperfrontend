@@ -71,6 +71,8 @@ export interface ActionDescription {
   description?: string
   /** Optional JSON-schema-like shape describing the action payload. */
   schema?: object
+  /** When this action is used as a request, the type of the action in the other direction that answers it. */
+  respondsWith?: string
 }
 
 /**
@@ -157,7 +159,12 @@ export interface ShellOptions {
   container: string | HTMLElement
   /** Stable identifier for the feature; seeds the broker name surfaced in debug logs. */
   name?: string
-  /** Contract describing the feature's actions; replaces the generic default when provided. */
+  /**
+   * The feature's contract exactly as the feature authored it (`emitted` = what
+   * the feature sends, `accepted` = what the feature handles). The shell
+   * derives the host-side orientation itself — hand it the feature's contract,
+   * never a pre-swapped copy. Replaces the generic default when provided.
+   */
   contract?: FeatureContract
   /** How the feature should be surfaced; defaults to {@link DisplayMode.Embedded}. */
   displayMode?: DisplayMode
@@ -239,6 +246,8 @@ export interface ResolvedFeatureConfig extends FeatureConfig {
   url: string
   /** Default display options baked into the connector as the feature's defaults. */
   display?: DisplayDefaults
+  /** Security envelope the build resolved; baked into the generated connector as its default. */
+  protocol?: SecurityProtocol
 }
 
 /**

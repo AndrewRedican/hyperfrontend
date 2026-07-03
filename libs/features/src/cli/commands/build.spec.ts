@@ -2,10 +2,11 @@ import type { CliFlags } from '../args'
 import type { ResolvedBuildBundle } from '../config/resolve'
 import type { RunBuildOptions } from './build'
 import { execFileSync } from 'node:child_process'
-import { mkdtempSync, rmSync, writeFileSync } from 'node:fs'
+import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { build } from '@hyperfrontend/builder'
+import { parse } from '@hyperfrontend/immutable-api-utils/built-in-copy/json'
 import { runBuild } from './build'
 
 jest.mock('node:child_process')
@@ -16,10 +17,11 @@ const mockBuild = jest.mocked(build)
 
 const mkFlags = (over: Partial<CliFlags>): CliFlags => ({ ci: false, yes: false, dryRun: false, help: false, ...over })
 
-const bundle = (protocol: 'none' | 'v1' | 'v2'): ResolvedBuildBundle => ({
-  config: { name: 'clock', version: '1.0.0', contract: './c.json', url: '/' },
+const bundle = (protocol: 'none' | 'v1' | 'v2', protocolExplicit = false): ResolvedBuildBundle => ({
+  config: { name: 'clock', version: '1.0.0', contract: './c.json', url: '/', protocol },
   contract: { emitted: [], accepted: [] },
   protocol,
+  protocolExplicit,
 })
 
 const sink = (): { stream: NodeJS.WritableStream; text: () => string } => {
@@ -64,13 +66,13 @@ describe('runBuild', () => {
     expect(code).toBe(0)
   })
 
-  it('invokes the builder with the resolved temp and output paths', async () => {
+  it('invokes the builder with the consumer project as the workspace root', async () => {
     const runBuilder = jest.fn()
     await runBuild(deps({ runBuilder }))
     expect(runBuilder).toHaveBeenCalledWith(
       expect.objectContaining({
         projectRoot: expect.any(String),
-        workspaceRoot: expect.any(String),
+        workspaceRoot: dir,
         outputPath: expect.stringContaining('dist'),
       })
     )
@@ -112,10 +114,92 @@ describe('runBuild', () => {
     expect(err.text()).toEqual(expect.stringContaining('security protocol'))
   })
 
+  it('rejects an explicit protocol none without the acknowledgment flag', async () => {
+    const code = await runBuild(deps({ resolveConfig: () => Promise.resolve(bundle('none', true)) }))
+    expect(code).toBe(1)
+  })
+
+  it('names --allow-open and the risk when an explicit none is unacknowledged', async () => {
+    const err = sink()
+    await runBuild(deps({ resolveConfig: () => Promise.resolve(bundle('none', true)), stderr: err.stream }))
+    expect(err.text()).toEqual(expect.stringContaining('--allow-open'))
+  })
+
+  it('builds an explicit protocol none when --allow-open acknowledges it', async () => {
+    const code = await runBuild(deps({ flags: mkFlags({ allowOpen: true }), resolveConfig: () => Promise.resolve(bundle('none', true)) }))
+    expect(code).toBe(0)
+  })
+
+  it('warns on stderr when building an acknowledged open connector', async () => {
+    const err = sink()
+    await runBuild(
+      deps({ flags: mkFlags({ allowOpen: true }), resolveConfig: () => Promise.resolve(bundle('none', true)), stderr: err.stream })
+    )
+    expect(err.text()).toEqual(expect.stringContaining('Warning: building an open connector'))
+  })
+
+  it('stages the connector in a hidden dir inside the working directory', async () => {
+    const runBuilder = jest.fn()
+    await runBuild(deps({ runBuilder }))
+    expect(runBuilder).toHaveBeenCalledWith(
+      expect.objectContaining({ projectRoot: expect.stringContaining(join(dir, '.hf-shell-clock-')) })
+    )
+  })
+
+  it('stages a tsconfig anchored to the src root dir', async () => {
+    let staged = ''
+    const runBuilder = jest.fn((input: { projectRoot: string }) => {
+      staged = readFileSync(join(input.projectRoot, 'tsconfig.lib.json'), 'utf-8')
+      return Promise.resolve()
+    })
+    await runBuild(deps({ runBuilder }))
+    expect(staged).toEqual(expect.stringContaining('"rootDir": "src"'))
+  })
+
   it('honors an explicit --out and a relative --cwd', async () => {
     const runBuilder = jest.fn()
     await runBuild(deps({ flags: mkFlags({ out: 'out', cwd: '.' }), runBuilder }))
     expect(runBuilder).toHaveBeenCalledWith(expect.objectContaining({ outputPath: join(dir, 'out') }))
+  })
+
+  it('publishes the staged README beside the built package', async () => {
+    await runBuild(deps({}))
+    expect(readFileSync(join(dir, 'dist', 'clock-shell', 'README.md'), 'utf-8')).toContain('# clock-shell')
+  })
+
+  it('publishes the staged metadata beside the built package', async () => {
+    await runBuild(deps({}))
+    expect(readFileSync(join(dir, 'dist', 'clock-shell', 'metadata.json'), 'utf-8')).toContain('"protocol": "v2"')
+  })
+
+  it('lists metadata.json in the built manifest files array so npm pack ships it', async () => {
+    const runBuilder = jest.fn((input: { outputPath: string }) => {
+      writeFileSync(join(input.outputPath, 'package.json'), '{ "name": "clock-shell", "files": ["**/index.*"] }')
+      return Promise.resolve()
+    })
+    const out = join(dir, 'dist', 'clock-shell')
+    mkdirSync(out, { recursive: true })
+    await runBuild(deps({ runBuilder }))
+    expect(parse(readFileSync(join(out, 'package.json'), 'utf-8'))).toEqual(
+      expect.objectContaining({ files: ['**/index.*', 'metadata.json'] })
+    )
+  })
+
+  it('leaves a built manifest without a files array untouched', async () => {
+    const runBuilder = jest.fn((input: { outputPath: string }) => {
+      writeFileSync(join(input.outputPath, 'package.json'), '{ "name": "clock-shell" }')
+      return Promise.resolve()
+    })
+    const out = join(dir, 'dist', 'clock-shell')
+    mkdirSync(out, { recursive: true })
+    await runBuild(deps({ runBuilder }))
+    expect(parse(readFileSync(join(out, 'package.json'), 'utf-8'))).not.toHaveProperty('files')
+  })
+
+  it('defaults the output to a per-connector directory under dist', async () => {
+    const runBuilder = jest.fn()
+    await runBuild(deps({ runBuilder }))
+    expect(runBuilder).toHaveBeenCalledWith(expect.objectContaining({ outputPath: join(dir, 'dist', 'clock-shell') }))
   })
 
   it('accepts an absolute --out path', async () => {

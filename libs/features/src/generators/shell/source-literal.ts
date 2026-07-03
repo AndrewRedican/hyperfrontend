@@ -48,8 +48,13 @@ function isIdentifier(key: string): boolean {
  *
  * @param value - The string to render.
  * @returns A single-quoted, safely escaped string literal.
+ *
+ * @example Quoting a string containing a single quote
+ * ```typescript
+ * quoteString("it's") // => "'it\\'s'"
+ * ```
  */
-function quoteString(value: string): string {
+export function quoteString(value: string): string {
   // how: JSON encoding already escapes backslashes and control chars; we scan it to swap quote conventions (unescape \" to ", escape ' to \') while copying every other escape verbatim, so an input backslash stays intact.
   const body = stringify(value).slice(1, -1)
   let inner = ''
@@ -73,8 +78,14 @@ function quoteString(value: string): string {
  *
  * @param key - The property name.
  * @returns The key as written in an object literal.
+ *
+ * @example Formatting identifier and non-identifier keys
+ * ```typescript
+ * formatKey('url') // => 'url'
+ * formatKey('time-zone') // => "'time-zone'"
+ * ```
  */
-function formatKey(key: string): string {
+export function formatKey(key: string): string {
   return isIdentifier(key) ? key : quoteString(key)
 }
 

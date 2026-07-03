@@ -28,6 +28,8 @@ export interface CliFlags {
   readonly cwd?: string
   /** Target entry file `init` wires the glue import into (`--entry`). */
   readonly entry?: string
+  /** Acknowledge an explicit `--protocol none` build and produce an open connector (`--allow-open`). */
+  readonly allowOpen?: boolean
   /** Suppress prompts and fail on any unresolved required key (`--ci`). */
   readonly ci: boolean
   /** Suppress prompts, accepting defaults (`--yes`). */
@@ -63,6 +65,7 @@ const STRING_FLAGS: Record<string, keyof CliFlags> = {
 
 /** Boolean flags mapped to their {@link CliFlags} key. */
 const BOOLEAN_FLAGS: Record<string, keyof CliFlags> = {
+  '--allow-open': 'allowOpen',
   '--ci': 'ci',
   '--yes': 'yes',
   '--dry-run': 'dryRun',
@@ -112,6 +115,7 @@ export function parseCliArgs(argv: readonly string[]): ParsedArgs {
 
   const flags: CliFlags = {
     ...(<Partial<CliFlags>>strings),
+    allowOpen: booleans['allowOpen'] ?? false,
     ci: booleans['ci'] ?? false,
     yes: booleans['yes'] ?? false,
     dryRun: booleans['dryRun'] ?? false,

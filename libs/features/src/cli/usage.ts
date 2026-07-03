@@ -20,6 +20,7 @@ Options:
   --entry <path>        Entry file to wire the glue import into (init)
   --url <url>           URL the connector loads the feature from (build)
   --protocol <none|v1|v2>  Security envelope enforced at build time
+  --allow-open          Acknowledge an explicit '--protocol none' and build an open, unauthenticated connector (build)
   --out <dir>           Output directory for the built connector (build)
   --apps <path>         Path to the dev-server apps array (dev)
   --port <number>       Port the dev-server debug UI listens on (dev)
