@@ -11,7 +11,7 @@ import { dialogDefaults } from './defaults'
  * @param context - Inputs the shell passes to this display mode.
  * @param context.options - The merged shell options.
  * @param context.requestClose - Requests the shell close itself.
- * @returns The iframe content window and a teardown that unmounts the dialog.
+ * @returns The iframe content window, the dialog container as the mounted element, and a teardown that unmounts the dialog.
  *
  * @example Mounting a dialog
  * ```typescript
@@ -61,6 +61,7 @@ export const mountDialog: DisplayModeMount = ({ options, requestClose }) => {
 
   return {
     target: iframe.contentWindow,
+    element: container.ref,
     cleanup: () => {
       document.removeEventListener('keydown', onKeydown)
       container.ref.remove()

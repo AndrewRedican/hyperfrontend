@@ -6,7 +6,7 @@ import { createFeatureIframe, resolveContainer } from '../iframe'
  *
  * @param context - Inputs the shell passes to this display mode.
  * @param context.options - The merged shell options.
- * @returns The iframe content window and a teardown that removes the iframe.
+ * @returns The iframe content window, the iframe as the mounted element, and a teardown that removes the iframe.
  *
  * @example Mounting embedded
  * ```typescript
@@ -19,6 +19,7 @@ export const mountEmbedded: DisplayModeMount = ({ options }) => {
   container.appendChild(iframe)
   return {
     target: iframe.contentWindow,
+    element: iframe,
     frame: iframe,
     cleanup: () => iframe.remove(),
   }

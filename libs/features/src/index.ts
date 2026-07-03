@@ -8,6 +8,8 @@ export type {
   DevConfig,
   DisplayDefaults,
   EmbedSizing,
+  ExperiencePlugin,
+  ExperiencePluginContext,
   FeatureConfig,
   FeatureContract,
   FeatureOptions,

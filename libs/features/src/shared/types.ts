@@ -87,6 +87,68 @@ export interface FeatureContract {
 }
 
 /**
+ * Context handed to an {@link ExperiencePlugin} around a feature's mount lifecycle.
+ */
+export interface ExperiencePluginContext {
+  /**
+   * The in-document root the display mode mounted: the iframe for `embedded`,
+   * the dialog container for `dialog`, and `null` for `popup` and
+   * `standalone`, which open a separate window with no in-document element.
+   */
+  element: HTMLElement | null
+  /** The display mode the feature was surfaced in. */
+  displayMode: DisplayMode
+}
+
+/**
+ * Opt-in extension that decorates a feature's mount lifecycle (e.g. transitions, animations).
+ *
+ * Register plugins through {@link ShellOptions.plugins}. After each successful
+ * mount the shell calls `onMount` on every plugin in registration order; before
+ * each unmount it calls `onUnmount` one plugin at a time in reverse
+ * registration order, awaiting any returned promise, then runs the teardowns
+ * returned by `onMount` (also in reverse registration order) and finally
+ * removes the feature. The SDK ships no built-in plugins.
+ *
+ * @example Registering a fade-out plugin on a shell
+ * ```typescript
+ * const shell = createShell({
+ *   container: '#shell',
+ *   plugins: [
+ *     {
+ *       name: 'fade',
+ *       onUnmount: ({ element }) => (element ? animateFadeOut(element) : undefined),
+ *     },
+ *   ],
+ * })
+ * ```
+ */
+export interface ExperiencePlugin {
+  /** Unique plugin name, surfaced in debug logs. */
+  name: string
+  /**
+   * Runs after the feature mounts; may animate it in and return a teardown.
+   *
+   * A thrown error surfaces as an `error` event on the shell and does not
+   * stop the remaining plugins from mounting.
+   *
+   * @param context - The mounted element and its display mode.
+   * @returns An optional teardown invoked on unmount, after every `onUnmount` has settled.
+   */
+  onMount?(context: ExperiencePluginContext): void | (() => void)
+  /**
+   * Runs before the feature unmounts; may return a promise to defer teardown until an exit animation finishes.
+   *
+   * A rejected promise (or thrown error) surfaces as an `error` event on the
+   * shell and teardown continues with the remaining plugins.
+   *
+   * @param context - The mounted element and its display mode.
+   * @returns Optionally a promise the shell awaits before tearing down.
+   */
+  onUnmount?(context: ExperiencePluginContext): void | Promise<void>
+}
+
+/**
  * Options accepted by the host-side {@link FeatureContract} consumer when
  * creating or opening a shell.
  */
@@ -117,6 +179,8 @@ export interface ShellOptions {
   protocol?: SecurityProtocol
   /** Pre-shared key used by the `v2` protocol. */
   sharedKey?: string
+  /** Experience plugins wrapped around each mount/unmount; `onMount` runs in registration order, `onUnmount` in reverse. */
+  plugins?: readonly ExperiencePlugin[]
 }
 
 /**

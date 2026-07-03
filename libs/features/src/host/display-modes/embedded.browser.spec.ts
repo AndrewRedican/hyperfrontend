@@ -26,6 +26,11 @@ describe('mountEmbedded', () => {
     expect(result.target).toBe(container.querySelector('iframe')?.contentWindow)
   })
 
+  it('exposes the iframe as the mounted element', () => {
+    const { container, result } = mount({})
+    expect(result.element).toBe(container.querySelector('iframe'))
+  })
+
   it('removes the iframe on cleanup', () => {
     const { container, result } = mount({})
     result.cleanup()

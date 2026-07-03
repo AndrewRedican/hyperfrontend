@@ -8,6 +8,9 @@ export interface ShellHandle {
   /**
    * Mounts the feature using the merged create-time and call-time options.
    *
+   * When a plugin teardown from the previous mount is still in flight, the
+   * remount is queued until it settles; the latest `open` call wins.
+   *
    * @param options - Per-open overrides layered over the create-time options.
    */
   open(options?: Partial<ShellOptions>): void
@@ -17,6 +20,10 @@ export interface ShellHandle {
   close(): void
   /**
    * Closes the feature and releases all resources (channel and DOM).
+   *
+   * When experience plugins are registered, their `onUnmount` hooks are
+   * awaited before the channel and DOM are released; calling `destroy` again
+   * while that teardown is in flight is a no-op.
    */
   destroy(): void
   /**
@@ -46,6 +53,8 @@ export interface ShellHandle {
 export interface MountResult {
   /** Window the host messages, or `null` when a popup/standalone was blocked. */
   target: Window | null
+  /** In-document root the mode mounted (embedded iframe or dialog container); unset when the feature opens in a separate window. */
+  element?: HTMLElement
   /** Resizable element for content-driven sizing, when the mode embeds an iframe inline. */
   frame?: HTMLElement
   /** Removes any DOM or closes any window created by the mount. */
