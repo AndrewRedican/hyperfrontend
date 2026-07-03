@@ -1,4 +1,6 @@
 import type { BrokerHandle, ChannelHandle } from '@hyperfrontend/nexus'
+import { createError } from '@hyperfrontend/immutable-api-utils/built-in-copy/error'
+import { createPromise } from '@hyperfrontend/immutable-api-utils/built-in-copy/promise'
 import { clearInterval, setInterval } from '@hyperfrontend/immutable-api-utils/built-in-copy/timers'
 import { ControlType } from '../shared/control'
 import { createEventEmitter } from '../shared/event-emitter'
@@ -10,6 +12,9 @@ jest.mock('@hyperfrontend/immutable-api-utils/built-in-copy/timers', () => ({
     return 1
   }),
   clearInterval: jest.fn(),
+  // note: Request timeouts never fire here — timeout behaviour is covered by the shared request peer spec.
+  setTimeout: jest.fn(() => 1),
+  clearTimeout: jest.fn(),
 }))
 
 class ResizeObserverStub {
@@ -238,5 +243,132 @@ describe('createFeatureHandle', () => {
     createFeatureHandle(createMockBroker(mock.channel).broker, hostWindow, createEventEmitter())
     mock.trigger('open')
     expect(mock.send).toHaveBeenCalledWith(ControlType.Size, expect.objectContaining({ height: expect.any(Number) }))
+  })
+
+  describe('request/response', () => {
+    function flush() {
+      return createPromise<void>((resolve) => {
+        setTimeout(resolve, 0)
+      })
+    }
+
+    function sentEnvelope(send: jest.Mock, index = 0): Record<string, unknown> {
+      const call = send.mock.calls[index]
+      if (!call) {
+        throw createError(`expected a sent envelope at index ${index}`)
+      }
+      return <Record<string, unknown>>call[1]
+    }
+
+    it('sends a correlated request envelope to the host', async () => {
+      const mock = createMockChannel()
+      const handle = createFeatureHandle(createMockBroker(mock.channel).broker, hostWindow, createEventEmitter())
+      const pending = handle.request('getSettings', { keys: ['locale'] })
+      expect(mock.send).toHaveBeenCalledWith(
+        ControlType.Request,
+        expect.objectContaining({
+          correlationId: expect.any(String),
+          from: 'feature',
+          innerType: 'getSettings',
+          payload: { keys: ['locale'] },
+        })
+      )
+      mock.triggerMessage(ControlType.Response, { correlationId: sentEnvelope(mock.send)['correlationId'], from: 'host', ok: true })
+      await pending
+    })
+
+    it('resolves a request when the host responds', async () => {
+      const mock = createMockChannel()
+      const handle = createFeatureHandle(createMockBroker(mock.channel).broker, hostWindow, createEventEmitter())
+      const pending = handle.request('getSettings')
+      mock.triggerMessage(ControlType.Response, {
+        correlationId: sentEnvelope(mock.send)['correlationId'],
+        from: 'host',
+        ok: true,
+        payload: { locale: 'en-US' },
+      })
+      await expect(pending).resolves.toEqual({ locale: 'en-US' })
+    })
+
+    it('rejects a request when the host responds with an error', async () => {
+      const mock = createMockChannel()
+      const handle = createFeatureHandle(createMockBroker(mock.channel).broker, hostWindow, createEventEmitter())
+      const pending = handle.request('getSettings')
+      mock.triggerMessage(ControlType.Response, {
+        correlationId: sentEnvelope(mock.send)['correlationId'],
+        from: 'host',
+        ok: false,
+        error: 'settings unavailable',
+      })
+      await expect(pending).rejects.toThrow('settings unavailable')
+    })
+
+    it('rejects a request immediately when unembedded', async () => {
+      const handle = createFeatureHandle(createMockBroker(createMockChannel().channel).broker, null, createEventEmitter())
+      await expect(handle.request('getSettings')).rejects.toThrow(
+        "Cannot send request 'getSettings': the feature is not connected to a host."
+      )
+    })
+
+    it('rejects pending requests when the host channel closes', async () => {
+      const mock = createMockChannel()
+      const handle = createFeatureHandle(createMockBroker(mock.channel).broker, hostWindow, createEventEmitter())
+      const pending = handle.request('getSettings')
+      mock.trigger('close')
+      await expect(pending).rejects.toThrow('The host channel closed before the host responded.')
+    })
+
+    it('answers host requests through a registered handler', async () => {
+      const mock = createMockChannel()
+      const handle = createFeatureHandle(createMockBroker(mock.channel).broker, hostWindow, createEventEmitter())
+      handle.handle('getTime', () => '12:00')
+      mock.triggerMessage(ControlType.Request, { correlationId: 'host-1', from: 'host', innerType: 'getTime' })
+      await flush()
+      expect(mock.send).toHaveBeenCalledWith(
+        ControlType.Response,
+        expect.objectContaining({ correlationId: 'host-1', from: 'feature', innerType: 'getTime', ok: true, payload: '12:00' })
+      )
+    })
+
+    it('responds with an error when the feature has no handler', async () => {
+      const mock = createMockChannel()
+      createFeatureHandle(createMockBroker(mock.channel).broker, hostWindow, createEventEmitter())
+      mock.triggerMessage(ControlType.Request, { correlationId: 'host-1', from: 'host', innerType: 'missing' })
+      await flush()
+      expect(mock.send).toHaveBeenCalledWith(
+        ControlType.Response,
+        expect.objectContaining({ ok: false, error: "No handler is registered for 'missing'." })
+      )
+    })
+
+    it('ignores the echo of its own request envelope', async () => {
+      const mock = createMockChannel()
+      const handle = createFeatureHandle(createMockBroker(mock.channel).broker, hostWindow, createEventEmitter())
+      const pending = handle.request('getSettings')
+      const envelope = sentEnvelope(mock.send)
+      mock.triggerMessage(ControlType.Request, envelope)
+      await flush()
+      expect(mock.send).toHaveBeenCalledTimes(1)
+      mock.triggerMessage(ControlType.Response, { correlationId: envelope['correlationId'], from: 'host', ok: true })
+      await pending
+    })
+
+    it('hides response envelopes from consumer handlers', () => {
+      const mock = createMockChannel()
+      const handler = jest.fn()
+      const handle = createFeatureHandle(createMockBroker(mock.channel).broker, hostWindow, createEventEmitter())
+      handle.on(ControlType.Response, handler)
+      mock.triggerMessage(ControlType.Response, { correlationId: 'nope', from: 'host', ok: true })
+      expect(handler).not.toHaveBeenCalled()
+    })
+
+    it('hides heartbeat control echoes from consumer handlers', () => {
+      const mock = createMockChannel()
+      const handler = jest.fn()
+      const handle = createFeatureHandle(createMockBroker(mock.channel).broker, hostWindow, createEventEmitter())
+      handle.on(ControlType.Beat, handler)
+      mock.triggerMessage(ControlType.Beat)
+      expect(handler).not.toHaveBeenCalled()
+    })
   })
 })

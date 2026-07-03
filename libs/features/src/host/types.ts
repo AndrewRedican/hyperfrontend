@@ -1,4 +1,5 @@
 import type { EventHandler } from '../shared/event-emitter'
+import type { RequestHandler, RequestOptions } from '../shared/request'
 import type { ShellOptions } from '../shared/types'
 
 /**
@@ -33,6 +34,45 @@ export interface ShellHandle {
    * @param data - Optional payload for the action.
    */
   send(type: string, data?: unknown): void
+  /**
+   * Sends a request to the feature and resolves with its response.
+   *
+   * The feature answers through a handler it registered with its own
+   * `handle(type, handler)`. The promise rejects when the feature's handler
+   * throws, when the feature has no handler for the type, when no response
+   * arrives within the timeout (30 seconds by default), when the shell is not
+   * open, or when the channel closes or the shell is destroyed while the
+   * request is pending.
+   *
+   * @param type - Request action type, drawn from the feature contract.
+   * @param data - Optional payload for the request.
+   * @param options - Per-request settings such as `timeoutMs`.
+   * @returns A promise settling with the feature's response payload.
+   *
+   * @example Querying the feature for its current state
+   * ```typescript
+   * const time = await shell.request('getTime', { timezone: 'UTC' }, { timeoutMs: 5000 })
+   * ```
+   */
+  request(type: string, data?: unknown, options?: RequestOptions): Promise<unknown>
+  /**
+   * Registers the handler that answers feature requests of a given type.
+   *
+   * One handler per type: registering a second handler for a type that already
+   * has one throws. The handler may return the response value directly or a
+   * promise of it; a thrown error or rejected promise reaches the feature as a
+   * failed response carrying the error's message.
+   *
+   * @param type - Request type to answer.
+   * @param handler - Receives the request payload and returns the response.
+   * @returns A function that unregisters this handler.
+   *
+   * @example Answering a feature's request for host settings
+   * ```typescript
+   * shell.handle('getSettings', () => ({ locale: 'en-US' }))
+   * ```
+   */
+  handle(type: string, handler: RequestHandler): () => void
   /**
    * Subscribes to feature messages or lifecycle events (`open`, `close`, `error`).
    *

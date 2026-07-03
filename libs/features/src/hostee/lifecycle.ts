@@ -1,8 +1,12 @@
 import type { BrokerHandle, ChannelHandle, IMessage } from '@hyperfrontend/nexus'
 import type { EventEmitter } from '../shared/event-emitter'
+import type { RequestOptions } from '../shared/request'
 import type { FeatureHandle } from './types'
+import { createError } from '@hyperfrontend/immutable-api-utils/built-in-copy/error'
 import { freeze } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
-import { createPromise } from '@hyperfrontend/immutable-api-utils/built-in-copy/promise'
+import { createPromise, promiseReject } from '@hyperfrontend/immutable-api-utils/built-in-copy/promise'
+import { isControlType } from '../shared/control'
+import { createRequestPeer } from '../shared/request'
 import { createHeartbeatEmitter } from './heartbeat'
 import { createSizeAnnouncer } from './sizing'
 
@@ -46,6 +50,7 @@ export function resolveHostWindow(win: Window): Window | null {
 export function createFeatureHandle(broker: BrokerHandle, hostWindow: Window | null, emitter: EventEmitter): FeatureHandle {
   let channel: ChannelHandle | null = null
   let opened = false
+  const requests = createRequestPeer('feature', (type, data) => channel?.send(type, data))
 
   if (hostWindow) {
     const activeChannel = broker.addChannel('host', hostWindow)
@@ -63,15 +68,28 @@ export function createFeatureHandle(broker: BrokerHandle, hostWindow: Window | n
       emitter.emit('close')
       heartbeat.stop()
       announcer.stop()
+      requests.rejectAll('The host channel closed before the host responded.')
     })
     activeChannel.on('deny', (data) => emitter.emit('error', data))
     activeChannel.on('invalid', (data) => emitter.emit('error', data))
-    activeChannel.onMessage((message: IMessage) => emitter.emit(message.type, message.data))
+    activeChannel.onMessage((message: IMessage) => {
+      // why: Control traffic (heartbeat/size echoes, request/response envelopes) is SDK-internal; forwarding it would leak reserved __hf: types into consumer handlers.
+      if (isControlType(message.type)) {
+        requests.dispatch(message.type, message.data)
+        return
+      }
+      emitter.emit(message.type, message.data)
+    })
     activeChannel.connect()
   }
 
   return freeze(<FeatureHandle>{
     send: (type: string, data?: unknown) => channel?.send(type, data),
+    request: (type: string, data?: unknown, options?: RequestOptions) =>
+      channel
+        ? requests.request(type, data, options)
+        : promiseReject(createError(`Cannot send request '${type}': the feature is not connected to a host.`)),
+    handle: requests.handle,
     on: emitter.on,
     ready: () =>
       createPromise<void>((resolve) => {

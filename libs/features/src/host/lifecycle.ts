@@ -1,12 +1,14 @@
 import type { BrokerHandle, ChannelHandle, IMessage } from '@hyperfrontend/nexus'
 import type { EventEmitter } from '../shared/event-emitter'
+import type { RequestOptions } from '../shared/request'
 import type { ExperiencePlugin, ExperiencePluginContext, SecurityProtocol, ShellOptions } from '../shared/types'
 import type { HeartbeatMonitor } from './heartbeat'
 import type { DisplayModeMount, ShellHandle } from './types'
 import { createError } from '@hyperfrontend/immutable-api-utils/built-in-copy/error'
 import { freeze } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
-import { promiseResolve } from '@hyperfrontend/immutable-api-utils/built-in-copy/promise'
+import { promiseReject, promiseResolve } from '@hyperfrontend/immutable-api-utils/built-in-copy/promise'
 import { ControlType, isControlType } from '../shared/control'
+import { createRequestPeer } from '../shared/request'
 import { DisplayMode } from '../shared/types'
 import { applyContentSize } from './sizing'
 
@@ -88,6 +90,8 @@ export function createShellHandle(
   let plugins: ActivePlugins | null = null
   let pendingUnmount: Promise<void> | null = null
   let queuedOpen: (() => void) | null = null
+  // why: One peer outlives every open/close cycle so handlers registered before the first open (or across reopens) keep answering feature requests.
+  const requests = createRequestPeer('host', (type, data) => channel?.send(type, data))
 
   const emitError = (error: unknown) => emitter.emit('error', error)
 
@@ -153,6 +157,7 @@ export function createShellHandle(
   }
 
   const destroy = () => {
+    requests.rejectAll('The shell was destroyed before the feature responded.')
     queuedOpen = null
     if (pendingUnmount) {
       return
@@ -220,6 +225,7 @@ export function createShellHandle(
       opened = false
       emitter.emit('close')
       stopMonitor()
+      requests.rejectAll('The feature channel closed before the feature responded.')
       if (pendingUnmount) {
         return
       }
@@ -238,6 +244,8 @@ export function createShellHandle(
           activeMonitor.beat()
         } else if (message.type === ControlType.Size && sizeFrame) {
           applyContentSize(sizeFrame, message.data)
+        } else {
+          requests.dispatch(message.type, message.data)
         }
         return
       }
@@ -251,6 +259,9 @@ export function createShellHandle(
     close,
     destroy,
     send: (type: string, data?: unknown) => channel?.send(type, data),
+    request: (type: string, data?: unknown, options?: RequestOptions) =>
+      channel ? requests.request(type, data, options) : promiseReject(createError(`Cannot send request '${type}': the shell is not open.`)),
+    handle: requests.handle,
     on: emitter.on,
     get isOpen() {
       return opened

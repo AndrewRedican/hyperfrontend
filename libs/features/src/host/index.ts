@@ -3,6 +3,7 @@
  *
  * @module @hyperfrontend/features/host
  */
+export type { RequestHandler, RequestOptions } from '../shared/request'
 export type {
   ActionDescription,
   EmbedSizing,

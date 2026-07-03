@@ -39,6 +39,38 @@ function collectActionListIssues(actions: unknown, field: string, issues: string
     if (typeof action['type'] !== 'string' || action['type'].length === 0) {
       issues.push(`"${field}[${index}]" must have a non-empty string "type".`)
     }
+    if (action['respondsWith'] !== undefined && (typeof action['respondsWith'] !== 'string' || action['respondsWith'].length === 0)) {
+      issues.push(`"${field}[${index}]" has a "respondsWith" that must be a non-empty string.`)
+    }
+  })
+}
+
+/**
+ * Collects every `respondsWith` reference that does not name an action in the other direction.
+ *
+ * A request emitted by one side is answered by an action the same side accepts (and
+ * vice versa), so each `respondsWith` must resolve across the contract's directions.
+ *
+ * @param actions - The already well-formed action list to check.
+ * @param field - The field name of `actions`, used to locate problems in messages.
+ * @param other - The action list of the opposite direction.
+ * @param otherField - The field name of `other`, used in messages.
+ * @param issues - The running list of human-readable problems, appended to in place.
+ */
+function collectRespondsWithIssues(
+  actions: ActionDescription[],
+  field: string,
+  other: ActionDescription[],
+  otherField: string,
+  issues: string[]
+): void {
+  actions.forEach((action, index) => {
+    if (action.respondsWith === undefined) {
+      return
+    }
+    if (!other.some((candidate) => candidate.type === action.respondsWith)) {
+      issues.push(`"${field}[${index}]" responds with "${action.respondsWith}", but "${otherField}" has no action of that type.`)
+    }
   })
 }
 
@@ -66,7 +98,7 @@ function describeType(value: unknown): string {
  *
  * @param contract - The candidate contract, typically parsed from disk.
  * @returns The validated contract, typed.
- * @throws {Error} When the value is not an object, or any action is malformed.
+ * @throws {Error} When the value is not an object, any action is malformed, or a `respondsWith` names no action in the other direction.
  *
  * @example Validating a parsed contract file
  * ```typescript
@@ -81,6 +113,12 @@ export function validateContract(contract: unknown): FeatureContract {
   const issues: string[] = []
   collectActionListIssues(contract['emitted'], 'emitted', issues)
   collectActionListIssues(contract['accepted'], 'accepted', issues)
+  if (issues.length === 0) {
+    const emitted = <ActionDescription[]>contract['emitted']
+    const accepted = <ActionDescription[]>contract['accepted']
+    collectRespondsWithIssues(emitted, 'emitted', accepted, 'accepted', issues)
+    collectRespondsWithIssues(accepted, 'accepted', emitted, 'emitted', issues)
+  }
   if (issues.length > 0) {
     throw createError(`Invalid contract:\n${issues.map((issue) => `  - ${issue}`).join('\n')}`)
   }

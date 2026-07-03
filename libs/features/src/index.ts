@@ -3,6 +3,7 @@
  *
  * @module @hyperfrontend/features
  */
+export type { RequestHandler, RequestOptions } from './shared/request'
 export type {
   ActionDescription,
   DevConfig,

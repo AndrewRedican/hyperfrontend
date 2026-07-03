@@ -16,6 +16,8 @@ describe('withControlContract', () => {
       { type: 'a' },
       { type: ControlType.Beat },
       { type: ControlType.Size },
+      { type: ControlType.Request },
+      { type: ControlType.Response },
     ])
   })
 
@@ -24,6 +26,8 @@ describe('withControlContract', () => {
       { type: 'b' },
       { type: ControlType.Beat },
       { type: ControlType.Size },
+      { type: ControlType.Request },
+      { type: ControlType.Response },
     ])
   })
 })
