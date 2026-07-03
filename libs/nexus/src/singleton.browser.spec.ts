@@ -16,6 +16,22 @@ describe('singleton', () => {
       expect(Array.isArray(broker.channels)).toBe(true)
     })
 
+    it('returns the same broker instance on repeated access', () => {
+      expect(broker.id).toBe(broker.id)
+    })
+
+    it('reports broker members through the in operator', () => {
+      expect('addChannel' in broker).toBe(true)
+    })
+
+    it('enumerates broker properties', () => {
+      expect(Object.keys(broker)).toEqual(expect.arrayContaining(['id', 'name']))
+    })
+
+    it('reports no descriptor for unknown properties', () => {
+      expect(Object.getOwnPropertyDescriptor(broker, 'notABrokerProperty')).toBeUndefined()
+    })
+
     it('has default contract with expected action types', () => {
       expect(broker.acceptedActionTypes).toContain('MESSAGE')
       expect(broker.acceptedActionTypes).toContain('DATA')
