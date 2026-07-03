@@ -8,6 +8,7 @@ import { resolveDefaultWorkerPath, runPrePass } from './dependencies/pre-pass'
 import { pruneDependencies } from './dependencies/prune/prune-dependencies'
 import { dispatchRollupWorker, resolveDefaultRollupWorkerPath } from './rollup/dispatch'
 import { runBundlePhase } from './run-bundle-phase'
+import { stripBundleCommentsPass } from './strip-bundle-comments'
 jest.mock('@rollup/plugin-commonjs', () => jest.fn(() => ({ name: 'commonjs' })))
 jest.mock('@rollup/plugin-json', () => jest.fn(() => ({ name: 'json' })))
 jest.mock('@rollup/plugin-node-resolve', () => jest.fn(() => ({ name: 'node-resolve' })))
@@ -36,6 +37,9 @@ jest.mock('./declarations/dts-per-entry', () => ({ runDtsPerEntry: jest.fn().moc
 jest.mock('./declarations/prune-orphan-dts', () => ({ pruneOrphanDeclarations: jest.fn().mockReturnValue(0) }))
 jest.mock('./dependencies/prune/prune-dependencies', () => ({
   pruneDependencies: jest.fn().mockReturnValue({ orphanFilesRemoved: 0, deadExportsRemoved: 0, bytesRemoved: 0 }),
+}))
+jest.mock('./strip-bundle-comments', () => ({
+  stripBundleCommentsPass: jest.fn().mockReturnValue({ commentBytesRemoved: 0 }),
 }))
 
 const ROOT_ENTRY: EntryPoint = { exportPath: '.', srcPath: '', inputFile: '/abs/libs/foo/src/index.ts', isRoot: true }
@@ -81,6 +85,7 @@ beforeEach(() => {
   ;(<jest.Mock>runDtsPerEntry).mockClear()
   ;(<jest.Mock>pruneOrphanDeclarations).mockClear()
   ;(<jest.Mock>pruneDependencies).mockClear()
+  ;(<jest.Mock>stripBundleCommentsPass).mockClear()
   ;(<jest.Mock>resolveDefaultWorkerPath)
     .mockReset()
     .mockReturnValue({ path: '/abs/dist/libs/builder/bundle/dependencies/worker/index.cjs.js', execArgv: [] })
@@ -171,6 +176,16 @@ describe('runBundlePhase', () => {
     expect(ensureDir).toHaveBeenCalledWith('/abs/dist/libs/foo/iife-bundle')
   })
 
+  it('runs the bundle comment strip once with the output path and the recorded format outputs', async () => {
+    const result = await runBundlePhase(makeContext(), <BuildConfig>{
+      projectRoot: '',
+      workspaceRoot: '',
+      iife: { globalName: 'MyLib', entry: '.' },
+      umd: { globalName: 'MyLib', entry: '.' },
+    })
+    expect(stripBundleCommentsPass).toHaveBeenCalledWith('/abs/dist/libs/foo', result)
+  })
+
   it('runs declaration emission exactly once after every format is built', async () => {
     await runBundlePhase(makeContext(), <BuildConfig>{
       projectRoot: '',
@@ -215,6 +230,7 @@ describe('runBundlePhase', () => {
       'bundle:cjs:0/1:.:start',
       'bundle:cjs:0/1:.:end',
       'bundle:cjs:end:post-recover',
+      'bundle:strip-comments:end',
       'bundle:declarations:start',
       'bundle:declarations:end',
       'bundle:declarations:prune-orphans:end',
@@ -254,6 +270,7 @@ describe('runBundlePhase', () => {
       'bundle:iife:0/1:.:end',
       'bundle:umd:0/1:.:start',
       'bundle:umd:0/1:.:end',
+      'bundle:strip-comments:end',
       'bundle:declarations:start',
       'bundle:declarations:end',
       'bundle:declarations:prune-orphans:end',

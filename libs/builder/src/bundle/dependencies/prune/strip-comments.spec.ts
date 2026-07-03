@@ -39,6 +39,16 @@ describe('stripComments', () => {
     expect(stripComments('/*! (c) Acme — MIT */\nexport const a = 1;')).toBe(null)
   })
 
+  it('strips a block eslint pragma even when its text contains @preserve', () => {
+    const source = ['/* eslint-disable workspace/no-unsafe-builtin-methods -- @preserve: bootstrap */', 'export const a = 1;'].join('\n')
+    expect(stripComments(source)).toBe('export const a = 1;')
+  })
+
+  it('strips a line eslint pragma even when its text contains @preserve', () => {
+    const source = ['// eslint-disable-next-line workspace/no-plain-inline-comments -- @preserve: reason', 'export const a = 1;'].join('\n')
+    expect(stripComments(source)).toBe('export const a = 1;')
+  })
+
   it('keeps an @license comment while stripping an ordinary one beside it', () => {
     const source = ['/** @license MIT */', '/** ordinary */', 'export const a = 1;'].join('\n')
     expect(stripComments(source)).toBe('/** @license MIT */\nexport const a = 1;')
