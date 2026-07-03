@@ -6,7 +6,8 @@
 /* eslint-disable workspace/lib-require-jsdoc-example */
 
 const _ArrayBuffer = globalThis.ArrayBuffer
-const _SharedArrayBuffer = globalThis.SharedArrayBuffer
+// why: SharedArrayBuffer is hidden on pages without cross-origin isolation, so capture it guarded to keep this module import-safe everywhere
+const _SharedArrayBuffer = typeof globalThis.SharedArrayBuffer === 'function' ? globalThis.SharedArrayBuffer : undefined
 const _DataView = globalThis.DataView
 const _Uint8Array = globalThis.Uint8Array
 const _Uint8ClampedArray = globalThis.Uint8ClampedArray
@@ -21,6 +22,7 @@ const _BigInt64Array = globalThis.BigInt64Array
 const _BigUint64Array = globalThis.BigUint64Array
 const _Reflect = globalThis.Reflect
 const _freeze = globalThis.Object.freeze
+const _TypeError = globalThis.TypeError
 
 /**
  * (Safe copy) Creates a new ArrayBuffer using the captured ArrayBuffer constructor.
@@ -48,6 +50,7 @@ export const isView = _ArrayBuffer.isView
  *
  * @param byteLength - The size, in bytes, of the shared array buffer to create.
  * @returns A new SharedArrayBuffer instance.
+ * @throws TypeError when the SharedArrayBuffer constructor is unavailable (for example on pages without cross-origin isolation).
  *
  * @example Creating SharedArrayBuffer for workers
  * ```typescript
@@ -55,8 +58,12 @@ export const isView = _ArrayBuffer.isView
  * // Can be shared between workers via postMessage
  * ```
  */
-export const createSharedArrayBuffer = (byteLength: number): SharedArrayBuffer =>
-  <SharedArrayBuffer>_Reflect.construct(_SharedArrayBuffer, [byteLength])
+export const createSharedArrayBuffer = (byteLength: number): SharedArrayBuffer => {
+  if (_SharedArrayBuffer === undefined) {
+    throw new _TypeError('SharedArrayBuffer is not available in this environment')
+  }
+  return <SharedArrayBuffer>_Reflect.construct(_SharedArrayBuffer, [byteLength])
+}
 
 /**
  * (Safe copy) Creates a new DataView using the captured DataView constructor.
@@ -109,7 +116,7 @@ export function createUint8Array(
   if (typeof arg === 'number') {
     return <Uint8Array>_Reflect.construct(_Uint8Array, [arg])
   }
-  if (arg instanceof _ArrayBuffer || arg instanceof _SharedArrayBuffer) {
+  if (arg instanceof _ArrayBuffer || (_SharedArrayBuffer !== undefined && arg instanceof _SharedArrayBuffer)) {
     return <Uint8Array>_Reflect.construct(_Uint8Array, [arg, byteOffset, length])
   }
   return <Uint8Array>_Reflect.construct(_Uint8Array, [arg])
