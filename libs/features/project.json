@@ -13,7 +13,7 @@
       "options": {
         "esm": [
           {
-            "exclude": ["./nx/generators/feature", "./nx/executors/build", "./nx/executors/serve"],
+            "exclude": ["./nx/generators/feature", "./nx/executors/build", "./nx/executors/serve", "./server/debug-ui"],
             "bundleWorkspaceDeps": true,
             "bundleAllDeps": true
           },
@@ -25,7 +25,7 @@
         ],
         "cjs": [
           {
-            "exclude": ["./nx/generators/feature", "./nx/executors/build", "./nx/executors/serve"],
+            "exclude": ["./nx/generators/feature", "./nx/executors/build", "./nx/executors/serve", "./server/debug-ui"],
             "bundleWorkspaceDeps": true,
             "bundleAllDeps": true
           },
@@ -37,7 +37,8 @@
         ],
         "iife": [
           { "entry": "./host", "globalName": "HyperfrontendFeaturesHost", "output": "bundle/host" },
-          { "entry": "./hostee", "globalName": "HyperfrontendFeaturesHostee", "output": "bundle/hostee" }
+          { "entry": "./hostee", "globalName": "HyperfrontendFeaturesHostee", "output": "bundle/hostee" },
+          { "entry": "./server/debug-ui", "globalName": "HyperfrontendFeaturesDebugUi", "output": "server/debug-ui" }
         ],
         "umd": [
           { "entry": "./host", "globalName": "HyperfrontendFeaturesHost", "output": "bundle/host" },
@@ -45,7 +46,8 @@
         ],
         "assets": [
           { "from": "libs/features", "files": ["generators.json", "executors.json"] },
-          { "from": "libs/features/src/nx", "glob": "**/schema.json", "to": "nx" }
+          { "from": "libs/features/src/nx", "glob": "**/schema.json", "to": "nx" },
+          { "from": "libs/features/src/server/debug-ui", "files": ["index.html"], "to": "server/debug-ui" }
         ],
         "bin": [{ "name": "hf", "runner": "runFeaturesCli", "format": "cjs" }]
       }

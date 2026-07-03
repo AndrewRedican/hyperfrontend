@@ -3,8 +3,9 @@ import { createPromise } from '@hyperfrontend/immutable-api-utils/built-in-copy/
 /**
  * Resolve once the process receives an interrupt or terminate signal.
  *
- * Used by long-running executors to stay alive after startup and tear down
- * gracefully when Nx (or the user) stops the target.
+ * Used by the dev command and long-running executors to stay alive after
+ * startup and tear down gracefully when the user (or the task runner) stops
+ * them.
  *
  * @returns A promise that settles when `SIGINT` or `SIGTERM` is received.
  *

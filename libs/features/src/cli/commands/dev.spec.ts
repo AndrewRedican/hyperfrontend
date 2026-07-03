@@ -42,12 +42,17 @@ const deps = (over: Partial<RunDevOptions>): RunDevOptions => {
     stderr: stderr.stream,
     resolveConfig: () => Promise.resolve(config),
     startServer: () => Promise.resolve(handle()),
+    waitForClose: () => Promise.resolve(),
     ...over,
   }
 }
 
 describe('runDev', () => {
-  it('exits with the success code once the server is listening', async () => {
+  afterEach(() => {
+    jest.restoreAllMocks()
+  })
+
+  it('exits with the success code after the shutdown wait resolves', async () => {
     expect(await runDev(deps({}))).toBe(0)
   })
 
@@ -73,6 +78,35 @@ describe('runDev', () => {
     const startServer = jest.fn(() => Promise.resolve(handle()))
     await runDev(deps({ startServer }))
     expect(startServer).toHaveBeenCalledWith(config)
+  })
+
+  it('passes the running handle to the shutdown wait', async () => {
+    const waitForClose = jest.fn(() => Promise.resolve())
+    const running = handle()
+    await runDev(deps({ startServer: () => Promise.resolve(running), waitForClose }))
+    expect(waitForClose).toHaveBeenCalledWith(running)
+  })
+
+  it('stays pending until the shutdown wait resolves', async () => {
+    let release: () => void = () => undefined
+    const gate = new Promise<void>((resolveGate) => {
+      release = resolveGate
+    })
+    const pending = runDev(deps({ waitForClose: () => gate }))
+    const early = await Promise.race([pending.then(() => 'settled'), Promise.resolve('pending')])
+    release()
+    await pending
+    expect(early).toBe('pending')
+  })
+
+  it('closes every server after a termination signal by default', async () => {
+    jest.spyOn(process, 'once').mockImplementation(<typeof process.once>((_event: string, listener: () => void) => {
+      listener()
+      return process
+    }))
+    const close = jest.fn(() => Promise.resolve())
+    const code = await runDev(deps({ waitForClose: undefined, startServer: () => Promise.resolve(handle({ close })) }))
+    expect({ code, closed: close.mock.calls.length }).toEqual({ code: 0, closed: 1 })
   })
 
   it('resolves a relative --cwd against the working directory', async () => {

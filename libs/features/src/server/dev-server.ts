@@ -2,14 +2,15 @@ import type { IncomingMessage, Server, ServerResponse } from 'node:http'
 import type { ResolvedDevConfig, ResolvedDevDebug } from './config'
 import type { StaticHandlerDeps } from './static-handler'
 import { createServer as createHttpServer } from 'node:http'
-import { join } from 'node:path'
+import { dirname, join } from 'node:path'
 import { createError } from '@hyperfrontend/immutable-api-utils/built-in-copy/error'
 import { stringify } from '@hyperfrontend/immutable-api-utils/built-in-copy/json'
 import { createPromise, promiseAll } from '@hyperfrontend/immutable-api-utils/built-in-copy/promise'
 import { isFile as isFileOnDisk, readFileBuffer } from '@hyperfrontend/project-scope/core/fs'
+import { currentModuleDir } from './module-dir'
 import { createStaticHandler, requestPath, serveFile } from './static-handler'
 
-// note: Path prefix the control server serves the compiled debug-UI assets under; the page loads `/__debug/bootstrap.js`.
+// note: Path prefix the control server serves the compiled debug-UI assets under; the page loads `/__debug/index.iife.min.js`.
 const DEBUG_PREFIX = '/__debug'
 
 // note: Placeholder the debug-UI HTML embeds; the control server swaps it for the live JSON manifest at request time.
@@ -62,18 +63,58 @@ export interface DevServerDeps extends StaticHandlerDeps {
 }
 
 /**
- * Resolves the directory the compiled debug-UI assets ship in, located beside
- * this module via `__dirname` so the server finds them wherever the package is
- * installed.
+ * Probes a single directory for the shipped debug-UI assets.
  *
+ * @param dir - Candidate directory expected to contain a `debug-ui` folder.
+ * @param isFile - File probe used to confirm the assets exist.
+ * @returns The `debug-ui` asset directory, or `undefined` when it is not here.
+ */
+function probeAssetDir(dir: string, isFile: (path: string) => boolean): string | undefined {
+  const assetDir = join(dir, 'debug-ui')
+  return isFile(join(assetDir, 'index.html')) ? assetDir : undefined
+}
+
+/**
+ * Locates the debug-UI assets by ascending from a start directory toward the
+ * filesystem root, returning the first ancestor holding a `debug-ui` folder.
+ *
+ * @param startDir - Directory the ascent begins from.
+ * @param isFile - File probe used to confirm the assets exist.
+ * @returns The `debug-ui` asset directory, or `undefined` when no ancestor holds one.
+ */
+function ascendForAssets(startDir: string, isFile: (path: string) => boolean): string | undefined {
+  let dir = startDir
+  let parent = dirname(dir)
+  // how: probe each level then step up; the final probe covers the filesystem root, where parent === dir
+  while (parent !== dir) {
+    const found = probeAssetDir(dir, isFile)
+    if (found !== undefined) {
+      return found
+    }
+    dir = parent
+    parent = dirname(dir)
+  }
+  return probeAssetDir(dir, isFile)
+}
+
+/**
+ * Resolves the directory the compiled debug-UI assets ship in by ascending
+ * from the running module (located via `__dirname` in CommonJS or
+ * `import.meta.url` in ESM). The ascent finds the assets wherever the package
+ * lives — the built dist, an installed `node_modules` copy, or embedded
+ * inside a consumer's bundle output.
+ *
+ * @param isFile - File probe used to confirm the assets exist.
  * @returns The absolute debug-UI asset directory.
  */
-function defaultAssetRoot(): string {
-  /* istanbul ignore if -- @preserve the ESM build has no __dirname; the shipped CommonJS build and the test runner always define it */
-  if (typeof __dirname === 'undefined') {
-    throw createError('@hyperfrontend/features dev server self-location requires the CommonJS build; inject `assetRoot` otherwise.')
+function defaultAssetRoot(isFile: (path: string) => boolean): string {
+  const located = ascendForAssets(currentModuleDir(), isFile)
+  if (located === undefined) {
+    throw createError(
+      '@hyperfrontend/features dev server could not locate the bundled debug-UI assets beside the running module; inject `assetRoot` to point at a directory containing the debug-UI `index.html`.'
+    )
   }
-  return join(__dirname, 'debug-ui')
+  return located
 }
 
 /**
@@ -194,7 +235,6 @@ function controlHandler(
  */
 export async function startDevServer(config: ResolvedDevConfig, deps: DevServerDeps = {}): Promise<DevServerHandle> {
   const createServer = deps.createServer ?? createHttpServer
-  const assetRoot = deps.assetRoot ?? defaultAssetRoot()
 
   const servers: Server[] = []
   const apps: DevServerApp[] = []
@@ -209,6 +249,8 @@ export async function startDevServer(config: ResolvedDevConfig, deps: DevServerD
 
   let debugUrl: string | undefined
   if (config.debug.enabled) {
+    // why: resolved only when the debug UI is enabled so consumers with it disabled never pay for (or fail on) asset self-location.
+    const assetRoot = deps.assetRoot ?? defaultAssetRoot(deps.isFile ?? isFileOnDisk)
     const control = createServer(controlHandler(manifest, assetRoot, deps))
     const port = await listen(control, config.debugPort)
     servers.push(control)

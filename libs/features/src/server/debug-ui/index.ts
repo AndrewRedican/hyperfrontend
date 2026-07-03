@@ -1,3 +1,4 @@
+/* eslint-disable workspace/no-unwanted-barrel-files -- build entry discovery requires an index.ts; this debug-UI page entry is compiled to an IIFE served by the dev server, not a package export */
 import type { DevManifest } from '../dev-server'
 import { mountDebugUi } from './app'
 

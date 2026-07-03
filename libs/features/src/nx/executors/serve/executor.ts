@@ -1,10 +1,9 @@
 import type { DevServerHandle } from '../../../server'
 import type { AsyncIteratorExecutor, ExecutorContext } from '../../model'
 import { EXIT_OK, runDev } from '../../../cli'
-import { startDevServer } from '../../../server'
+import { waitForShutdown } from '../../../shared/shutdown'
 import { resolveProjectCwd } from '../../shared/context'
 import { headlessFlags } from '../../shared/flags'
-import { waitForShutdown } from '../../shared/shutdown'
 
 /** Options for the `serve` executor; mirrors `schema.json`. */
 interface ServeExecutorSchema {
@@ -25,7 +24,12 @@ interface ServeStartup {
 }
 
 /**
- * Start the dev server, capturing its handle via an injected `startServer`.
+ * Start the dev server, capturing its handle via an injected `waitForClose`.
+ *
+ * `runDev` owns the server lifetime by default (it stays pending until a
+ * shutdown signal, then closes). The executor must yield a startup result
+ * while the servers keep running, so its injected wait resolves immediately
+ * after capturing the handle and the executor drives shutdown itself.
  *
  * @param options - Schema-validated serve options.
  * @param context - The Nx executor context for the running target.
@@ -38,9 +42,8 @@ async function startServe(options: ServeExecutorSchema, context: ExecutorContext
     cwd: resolveProjectCwd(context),
     stdout: process.stdout,
     stderr: process.stderr,
-    startServer: async (config, deps) => {
-      handle = await startDevServer(config, deps)
-      return handle
+    waitForClose: async (running) => {
+      handle = running
     },
   })
   return { ok: code === EXIT_OK, handle }

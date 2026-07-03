@@ -11,7 +11,7 @@ Usage: hf <command> [options]
 Commands:
   init     Scaffold the feature glue module and wire it into your app
   build    Generate the host connector, bundle it, and pack a tarball
-  dev      Resolve the dev-server config and start the debug UI
+  dev      Start the app servers and debug UI, serving until Ctrl-C
 
 Options:
   --name <name>         Feature name
