@@ -1,9 +1,8 @@
-import { createTextDecoder, createTextEncoder } from '@hyperfrontend/immutable-api-utils/built-in-copy/encoding'
 import { createUint8Array } from '@hyperfrontend/immutable-api-utils/built-in-copy/typed-arrays'
 
-export const ENCODER = createTextEncoder()
-export const UTF8_DECODER = createTextDecoder('utf8')
-
+/**
+ * Sample base64 strings paired with their decoded values for testing encoding round-trips.
+ */
 export const BASE_64_ENCODING_SAMPLES = <const>{
   SIMPLE: {
     DECODED: 'Hello, World!',
@@ -20,6 +19,9 @@ export const BASE_64_ENCODING_SAMPLES = <const>{
   },
 }
 
+/**
+ * Sample strings paired with their UTF-8 byte representations for testing Uint8Array conversions.
+ */
 export const UINT8_CONVERTION_SAMPLES = <const>{
   SIMPLE: {
     STRING: 'hello',

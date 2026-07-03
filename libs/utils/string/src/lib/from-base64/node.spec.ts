@@ -1,5 +1,5 @@
 /** @jest-environment node */
-import { BASE_64_ENCODING_SAMPLES } from '../shared-consts'
+import { BASE_64_ENCODING_SAMPLES } from '../test-fixtures'
 import { fromBase64 } from './node/from-base64'
 
 describe('fromBase64 (node)', () => {

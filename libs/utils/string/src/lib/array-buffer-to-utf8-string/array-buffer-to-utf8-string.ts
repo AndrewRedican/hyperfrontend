@@ -1,4 +1,4 @@
-import { UTF8_DECODER } from '../shared-consts'
+import { getUtf8Decoder } from '../utf8-decoder'
 
 /**
  * Converts an ArrayBuffer to a UTF-8 encoded string.
@@ -15,5 +15,5 @@ import { UTF8_DECODER } from '../shared-consts'
  * ```
  */
 export function arrayBufferToUtf8String(uint8Array: ArrayBuffer): string {
-  return UTF8_DECODER.decode(uint8Array)
+  return getUtf8Decoder().decode(uint8Array)
 }
