@@ -49,6 +49,8 @@ type CreateBrokerConfig = {
   contract: IChannelContract
   /** Optional configuration overrides for broker behavior */
   settings?: Partial<BrokerConfig['settings']>
+  /** Window the broker listens on (defaults to the global window when available) */
+  window?: Window
 }
 
 /**
@@ -84,6 +86,13 @@ export function createBroker(config: CreateBrokerConfig): BrokerHandle {
   validateName(config.name)
   validateContract(config.contract)
 
+  const brokerWindow = config.window ?? (typeof window !== 'undefined' ? window : undefined)
+  if (!brokerWindow) {
+    throw createError(
+      'Cannot create broker: no window is available. Pass an explicit `window` in the broker config when running outside a browser environment.'
+    )
+  }
+
   const mergedSettings = {
     ...defaultBrokerSettings,
     ...config.settings,
@@ -99,7 +108,7 @@ export function createBroker(config: CreateBrokerConfig): BrokerHandle {
   const state: BrokerState = {
     id: uuidV4(),
     name: config.name,
-    window: window,
+    window: brokerWindow,
     contract: config.contract,
     settings: mergedSettings,
     logger,
@@ -164,10 +173,7 @@ export function createBroker(config: CreateBrokerConfig): BrokerHandle {
     routeMessage(router, routingContext, <MessageEvent<IAction>>event)
   }
 
-  /* istanbul ignore next -- environment detection for non-browser contexts */
-  if (typeof window !== 'undefined') {
-    window.addEventListener('message', <EventListener>onMessage)
-  }
+  brokerWindow.addEventListener('message', <EventListener>onMessage)
 
   const broker: BrokerHandle = {
     id: state.id,

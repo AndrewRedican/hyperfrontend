@@ -108,16 +108,16 @@ describe('Connection Flow Integration', () => {
     it('allows message exchange after handshake', async () => {
       const { contractA, contractB } = createContractPair(['PING'], ['PONG'])
 
-      global.window = <Window & typeof globalThis>(<unknown>windowA)
       const brokerA = createBroker({
         name: 'broker-a',
         contract: contractA,
+        window: <Window>(<unknown>windowA),
       })
 
-      global.window = <Window & typeof globalThis>(<unknown>windowB)
       const brokerB = createBroker({
         name: 'broker-b',
         contract: contractB,
+        window: <Window>(<unknown>windowB),
       })
 
       const channelA = brokerA.addChannel('to-b', <Window>(<unknown>windowB))
@@ -131,10 +131,7 @@ describe('Connection Flow Integration', () => {
 
       channelA.send('PING', { timestamp: 123 })
 
-      expect(windowB.postMessage).toHaveBeenCalled()
-
-      const lastCall = windowB.postMessage.mock.calls.find((call) => call[0]?.type === '[nexus] new-message')
-      expect(lastCall).toBeDefined()
+      expect(messagesB).toEqual([expect.objectContaining({ type: 'PING', data: { timestamp: 123 } })])
     })
   })
 

@@ -76,38 +76,46 @@ export function createMockWindow(): MockWindow {
 /**
  * Links two mock windows for bidirectional communication.
  *
- * When windowA calls postMessage, windowB receives the message and vice versa.
- * This simulates the real browser behavior of cross-frame communication.
+ * Mirrors real browser postMessage semantics: calling `postMessage` on a
+ * window dispatches the event to that window's own listeners, with `source`
+ * set to the counterpart window and `origin` set to the counterpart's origin.
  *
  * @param windowA - First mock window
  * @param windowB - Second mock window
  * @param originA - Origin URL for window A (e.g., 'http://host-a.com')
  * @param originB - Origin URL for window B (e.g., 'http://host-b.com')
  *
+ * Delivery is synchronous so tests stay deterministic regardless of the
+ * jest timer mode in use.
+ *
  * @example Setting up bidirectional window communication
  * ```typescript
  * const windowA = createMockWindow()
  * const windowB = createMockWindow()
  * linkMockWindows(windowA, windowB, 'http://host-a.com', 'http://host-b.com')
+ * // code running in windowA sends to windowB:
+ * // windowB.postMessage(data) -> windowB listeners get { data, source: windowA, origin: originA }
  * ```
  */
 export function linkMockWindows(windowA: MockWindow, windowB: MockWindow, originA: string, originB: string): void {
   windowA.postMessage.mockImplementation((data: unknown) => {
-    const event = new MessageEvent('message', {
-      data,
-      origin: originA,
-      source: <Window>(<unknown>windowA),
-    })
-    setTimeout(() => windowB._dispatchMessage(event), 0)
+    windowA._dispatchMessage(
+      new MessageEvent('message', {
+        data,
+        origin: originB,
+        source: <Window>(<unknown>windowB),
+      })
+    )
   })
 
   windowB.postMessage.mockImplementation((data: unknown) => {
-    const event = new MessageEvent('message', {
-      data,
-      origin: originB,
-      source: <Window>(<unknown>windowB),
-    })
-    setTimeout(() => windowA._dispatchMessage(event), 0)
+    windowB._dispatchMessage(
+      new MessageEvent('message', {
+        data,
+        origin: originA,
+        source: <Window>(<unknown>windowA),
+      })
+    )
   })
 }
 

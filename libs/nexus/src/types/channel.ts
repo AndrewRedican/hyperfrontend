@@ -142,6 +142,8 @@ export interface ChannelHandle {
   getTarget(): Window
   /** Check if channel is active */
   isActive(): boolean
+  /** Get the message types this channel accepts from its counterpart (empty before activation) */
+  getAcceptedTypes(): readonly string[]
   /** Get channel as serializable JSON */
   toJSON(): ChannelJSON
 

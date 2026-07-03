@@ -24,8 +24,8 @@ export interface ChannelActionCreators {
   closeConnection(processId: string): IAction
   /** Destroys the connection entirely */
   destroyConnection(): IAction
-  /** Sends a new message through the channel */
-  newMessage(data: unknown): IAction
+  /** Sends a new message through the channel; carries the full message as the action payload */
+  newMessage(message: IMessage): IAction
   /** Reports an invalid request error */
   invalidRequest(processId: string, error: string): IAction
 }

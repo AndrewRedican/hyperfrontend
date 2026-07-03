@@ -20,7 +20,7 @@ import { sendAction } from './send-action'
  * @param message - Message to send with type and data
  *
  * @throws {Error} If channel is closed and queueing is disabled
- * @throws {Error} If message type is not accepted in channel contract
+ * @throws {Error} If message type is not in the emitted actions of the channel contract
  *
  * @example Sending a typed message
  * ```typescript
@@ -56,7 +56,7 @@ export function send(channel: ChannelInternals, message: IMessage): void {
     )
   }
 
-  const action = channel.actions.newMessage(message.data)
+  const action = channel.actions.newMessage(message)
   sendAction(channel, action)
 
   channel.notifyMessage(message)

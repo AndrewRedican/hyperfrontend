@@ -89,6 +89,7 @@ export function createChannel(config: IChannelConfig, deps: ChannelDependencies)
     getName: () => state.name,
     getTarget: () => state.target,
     isActive: () => state.active,
+    getAcceptedTypes: () => state.acceptedActions,
     toJSON: (): ChannelJSON => ({
       id: state.id,
       name: state.name,

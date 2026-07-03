@@ -1,7 +1,7 @@
 import type { IAction } from '../../types/action'
 import type { ChannelHandle } from '../../types/channel'
 import type { RoutingContext } from './types'
-import { getById } from '../../core/registry/get-by-id'
+import { resolveChannel } from './resolve-channel'
 
 /**
  * Handles CANCEL_CONNECTION action.
@@ -27,10 +27,9 @@ import { getById } from '../../core/registry/get-by-id'
 export function handleCancel(context: RoutingContext, message: MessageEvent<IAction>): void {
   const { state, registry, processManager } = context
   const action = message.data
-  const senderId = <string>(<Record<string, unknown>>(<unknown>action))['senderId']
   const processId = <string>(<Record<string, unknown>>(<unknown>action))['processId']
 
-  const channel = <ChannelHandle | undefined>(getById(registry, senderId) || processManager.get(processId))
+  const channel = <ChannelHandle | undefined>(resolveChannel(registry, message) || processManager.get(processId))
 
   if (!channel) {
     return

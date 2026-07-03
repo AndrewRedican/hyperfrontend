@@ -2,22 +2,22 @@ import type { IAction } from '../../types/action'
 import type { ChannelHandle } from '../../types/channel'
 import type { IMessage } from '../../types/message'
 import type { RoutingContext } from './types'
-import { getById } from '../../core/registry/get-by-id'
 import { validateMessage } from '../../schema/validate/message'
 import { isActionWithData } from '../../types/action'
+import { resolveChannel } from './resolve-channel'
 
 /**
  * Handles NEW_MESSAGE action.
- * Routes messages to appropriate channel.
+ * Routes messages to the channel registered for the sending window.
  *
  * @param context - Routing context with state, registry, actions, and logger
  * @param message - Message event containing the NEW_MESSAGE action
  *
  * @remarks
  * Side Effects:
- * - Validates message type against contract
+ * - Validates the message shape against the message schema
+ * - Drops and logs messages whose type is not accepted by the channel contract
  * - Invokes channel message handlers if validation passes
- * - Logs and ignores invalid messages
  *
  * @example Routing user messages
  * User message flow:
@@ -29,7 +29,6 @@ import { isActionWithData } from '../../types/action'
 export function handleMessage(context: RoutingContext, message: MessageEvent<IAction>): void {
   const { state, registry, logger } = context
   const action = message.data
-  const senderId = <string>action.senderId
 
   if (!isActionWithData(action)) {
     return
@@ -37,7 +36,7 @@ export function handleMessage(context: RoutingContext, message: MessageEvent<IAc
 
   const messageData = <IMessage>action.data
 
-  const channel = <ChannelHandle | undefined>getById(registry, senderId)
+  const channel = <ChannelHandle | undefined>resolveChannel(registry, message)
 
   if (!channel || !channel.isActive()) {
     return
@@ -46,6 +45,11 @@ export function handleMessage(context: RoutingContext, message: MessageEvent<IAc
   const validationResult = validateMessage(messageData)
   if (!validationResult.valid) {
     logger.info(`${state.name} ignored message from ${channel.getName()}`)
+    return
+  }
+
+  if (!channel.getAcceptedTypes().includes(messageData.type)) {
+    logger.info(`${state.name} dropped message type '${messageData.type}' not accepted by the ${channel.getName()} channel contract`)
     return
   }
 
