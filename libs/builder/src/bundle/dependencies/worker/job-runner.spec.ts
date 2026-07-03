@@ -221,6 +221,40 @@ describe('runPrePassWorkerJob', () => {
     expect(readFileSync(outputPath, 'utf8')).toContain('99')
   })
 
+  it('compiles TS-only syntax in a workspace-js job whose tsconfig declares no rootDir and whose sources live outside the process cwd', async () => {
+    const inputPath = writeSrc('input.ts', 'export const value: number = 77\n')
+    const tsConfigPath = join(root, 'tsconfig.json')
+    writeFileSync(
+      tsConfigPath,
+      JSON.stringify({
+        compilerOptions: {
+          module: 'es2022',
+          moduleResolution: 'bundler',
+          target: 'es2022',
+          esModuleInterop: true,
+          allowJs: true,
+          strict: false,
+          declaration: false,
+          isolatedModules: true,
+        },
+        files: [inputPath],
+      })
+    )
+    const outputPath = join(root, 'dist', 'out.esm.js')
+    await runPrePassWorkerJob({
+      kind: 'workspace-js',
+      dep: '@fixture/sample',
+      inputPath,
+      format: 'esm',
+      otherDeps: [],
+      outputPath,
+      reportPath: join(root, 'report.json'),
+      tsConfigPath,
+      workspaceRoot: root,
+    })
+    expect(readFileSync(outputPath, 'utf8')).toContain('77')
+  })
+
   it('marks otherWorkspaceSpecifiers as external in workspace-js jobs (exact match only)', async () => {
     const inputPath = writeSrc(
       'input.ts',

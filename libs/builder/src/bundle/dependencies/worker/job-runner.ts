@@ -248,6 +248,8 @@ const buildWorkspaceJsConfig = (job: PrePassWorkerJob): RollupOptions => {
     declaration: false,
     declarationMap: false,
     sourceMap: false,
+    // why: without an explicit anchor the plugin resolves its include filter against process.cwd(); the worker inherits the caller's cwd, so sources outside it would silently skip the TS transform and reach rollup as raw TypeScript.
+    filterRoot: workspaceRoot,
     compilerOptions: {
       baseUrl: workspaceRoot,
       outDir: dirname(job.outputPath),
