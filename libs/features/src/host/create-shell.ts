@@ -3,6 +3,7 @@ import type { ShellHandle } from './types'
 import { DEFAULT_CONTRACT, createBroker } from '@hyperfrontend/nexus'
 import { withControlContract } from '../shared/control'
 import { createEventEmitter } from '../shared/event-emitter'
+import { invertFeatureContract } from '../shared/invert-contract'
 import { selectMount } from './display-modes/registry'
 import { createHeartbeatMonitor } from './heartbeat'
 import { createShellHandle } from './lifecycle'
@@ -102,7 +103,10 @@ export function deriveShellName(options: ShellOptions, sequence: number): string
  * Creates a host-side shell for embedding a feature.
  *
  * Provisions a nexus broker and returns a handle whose `open` mounts the feature
- * in the requested display mode.
+ * in the requested display mode. The `contract` option takes the feature's
+ * contract exactly as the feature authored it; the shell derives the host-side
+ * orientation itself, so the handle sends what the feature accepts and receives
+ * what the feature emits.
  *
  * @param options - Create-time shell options, overridable per `open` call.
  * @returns A handle exposing `open`, `close`, `destroy`, `send`, `on`, and `isOpen`.
@@ -116,7 +120,8 @@ export function deriveShellName(options: ShellOptions, sequence: number): string
  */
 export function createShell(options: ShellOptions): ShellHandle {
   const emitter = createEventEmitter()
-  const contract = withControlContract(<FeatureContract>(options.contract ?? DEFAULT_CONTRACT))
+  // how: A feature-authored contract is inverted into the host's perspective; the generic default contract is already channel-oriented and is used as-is.
+  const contract = withControlContract(options.contract ? invertFeatureContract(options.contract) : <FeatureContract>DEFAULT_CONTRACT)
   const broker = createBroker({ name: deriveShellName(options, (shellCount += 1)), contract })
   return createShellHandle(broker, options, emitter, { selectMount, registerSecurity, createHeartbeatMonitor })
 }
