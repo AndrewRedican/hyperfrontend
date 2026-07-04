@@ -32,13 +32,30 @@ ruleTester.run('assertive-test-names', assertiveTestNames, {
 
     { code: `obj.it('should work', () => {})` },
     { code: `suite.describe('should run', () => {})` },
-    { code: `test.only('should execute', () => {})` },
+
+    { code: `describe.each([1])('should handle %s', () => {})` },
+    { code: `describe.only('should run the suite', () => {})` },
+    { code: `foo.only('should run', () => {})` },
+    { code: `it['only']('should run', () => {})` },
+
+    { code: `getFn()('should run', () => {})` },
+    { code: `it['each']([1])('should handle %s', () => {})` },
+    { code: `obj.method(1)('should run', () => {})` },
+    { code: `foo.each([1])('should handle %s', () => {})` },
+
+    { code: "tag`table`('should run', () => {})" },
+    { code: "describe.each`a`('should handle %s', () => {})" },
+
+    { code: `(0, it)('should run', () => {})` },
+
+    { code: `it.each([['should x', 1]])('handles %s', () => {})` },
 
     { code: `it(testName, () => {})` },
     { code: `describe(suiteName, () => {})` },
 
     { code: `it(123, () => {})` },
     { code: `test(456, () => {})` },
+    { code: `test.only()` },
 
     { code: 'it(`should ${verb} the data`, () => {})' },
     { code: 'test(`value is ${expected}`, () => {})' },
@@ -91,6 +108,49 @@ ruleTester.run('assertive-test-names', assertiveTestNames, {
 
     {
       code: 'it(`should work with template literals`, () => {})',
+      errors: [{ messageId: 'noShouldInTestName' }],
+    },
+
+    {
+      code: `xtest('should be skipped', () => {})`,
+      errors: [{ messageId: 'noShouldInTestName' }],
+    },
+
+    {
+      code: `test.only('should execute', () => {})`,
+      errors: [{ messageId: 'noShouldInTestName' }],
+    },
+    {
+      code: `it.skip('should be skipped', () => {})`,
+      errors: [{ messageId: 'noShouldInTestName' }],
+    },
+    {
+      code: `test.todo('should implement later')`,
+      errors: [{ messageId: 'noShouldInTestName' }],
+    },
+    {
+      code: `it.concurrent('should run concurrently', () => {})`,
+      errors: [{ messageId: 'noShouldInTestName' }],
+    },
+    {
+      code: `it.failing('should fail for now', () => {})`,
+      errors: [{ messageId: 'noShouldInTestName' }],
+    },
+
+    {
+      code: `it.each([1, 2])('should handle %s', () => {})`,
+      errors: [{ messageId: 'noShouldInTestName' }],
+    },
+    {
+      code: `test.each([['a']])('should parse %s', () => {})`,
+      errors: [{ messageId: 'noShouldInTestName' }],
+    },
+    {
+      code: `it.only.each([1])('should handle %s', () => {})`,
+      errors: [{ messageId: 'noShouldInTestName' }],
+    },
+    {
+      code: "it.each`\n  a\n  ${1}\n`('should handle $a', () => {})",
       errors: [{ messageId: 'noShouldInTestName' }],
     },
   ],
