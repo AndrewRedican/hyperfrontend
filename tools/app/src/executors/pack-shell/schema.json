@@ -1,0 +1,13 @@
+{
+  "$schema": "http://json-schema.org/schema",
+  "type": "object",
+  "title": "Pack-shell executor schema",
+  "description": "Generate, compile, and pack a feature app's shell connector package.",
+  "properties": {
+    "outputPath": {
+      "type": "string",
+      "description": "Directory the packed shell tarball is emitted into. Defaults to dist/{projectRoot}/shell."
+    }
+  },
+  "additionalProperties": false
+}
