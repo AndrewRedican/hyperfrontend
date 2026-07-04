@@ -1,0 +1,138 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>demo-clock · dev host</title>
+    <style>
+      :root {
+        color-scheme: dark;
+      }
+      body {
+        margin: 0;
+        display: grid;
+        grid-template-columns: 1fr 380px;
+        grid-template-rows: auto 1fr;
+        gap: 12px;
+        height: 100vh;
+        box-sizing: border-box;
+        padding: 12px;
+        background: #1e1e1e;
+        color: #ddd;
+        font:
+          13px/1.45 system-ui,
+          sans-serif;
+      }
+      h1 {
+        grid-column: 1 / -1;
+        margin: 0;
+        font-size: 14px;
+        font-weight: 600;
+        color: #fd7014;
+      }
+      h1 small {
+        color: #888;
+        font-weight: 400;
+      }
+      #stage {
+        border: 1px solid #333;
+        border-radius: 8px;
+        min-height: 320px;
+        position: relative;
+        overflow: hidden;
+      }
+      #panel {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        min-height: 0;
+      }
+      fieldset {
+        border: 1px solid #333;
+        border-radius: 8px;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+        align-items: center;
+      }
+      legend {
+        color: #888;
+        padding: 0 4px;
+      }
+      button {
+        background: #2d2d2d;
+        color: #ddd;
+        border: 1px solid #444;
+        border-radius: 5px;
+        padding: 4px 10px;
+        cursor: pointer;
+      }
+      button:hover {
+        border-color: #fd7014;
+      }
+      input {
+        background: #171717;
+        color: #ddd;
+        border: 1px solid #444;
+        border-radius: 5px;
+        padding: 4px 6px;
+        width: 110px;
+      }
+      #log {
+        flex: 1;
+        overflow-y: auto;
+        border: 1px solid #333;
+        border-radius: 8px;
+        padding: 8px;
+        font-family: ui-monospace, monospace;
+        font-size: 12px;
+      }
+      #log div {
+        white-space: pre-wrap;
+        word-break: break-all;
+        border-bottom: 1px solid #262626;
+        padding: 2px 0;
+      }
+      .in {
+        color: #7fd77f;
+      }
+      .out {
+        color: #7fb3ff;
+      }
+      .life {
+        color: #d7b47f;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>demo-clock dev host <small>— hand-rolled stand-in for the missing debug UI</small></h1>
+    <div id="stage"></div>
+    <div id="panel">
+      <fieldset>
+        <legend>commands (host → feature)</legend>
+        <button data-send="get-time">get-time</button>
+        <button data-send="set-format" data-payload='{"format":"analog"}'>set-format analog</button>
+        <button data-send="set-format" data-payload='{"format":"digital"}'>set-format digital</button>
+        <input id="tz" placeholder="Europe/Madrid" />
+        <button id="send-tz">set-timezone</button>
+        <input id="locale" placeholder="es-CR" />
+        <button id="send-locale">set-locale</button>
+        <input id="alarm-at" placeholder="HH:mm" />
+        <button id="send-alarm">set-alarm</button>
+        <input id="alarm-id" placeholder="alarm id" />
+        <button id="send-clear">clear-alarm</button>
+      </fieldset>
+      <div id="log"></div>
+    </div>
+    <script>
+      window.__HF_DEBUG_MANIFEST__ = HF_MANIFEST_PLACEHOLDER
+      // Shim: the host SDK evaluates `instanceof SharedArrayBuffer`
+      // at load, and browsers hide that global on non-cross-origin-isolated pages.
+      if (!('SharedArrayBuffer' in globalThis)) {
+        globalThis.SharedArrayBuffer = class SharedArrayBuffer {}
+      }
+    </script>
+    <script src="/__debug/host-bundle.js"></script>
+    <script type="module" src="/__debug/bootstrap.js"></script>
+  </body>
+</html>
