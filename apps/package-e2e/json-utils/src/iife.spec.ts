@@ -9,29 +9,29 @@ describe('@hyperfrontend/json-utils IIFE bundle', () => {
   const bundlePath = getBundlePath('utils/json', 'iife')
   const minBundlePath = getBundlePath('utils/json', 'iife', true)
 
-  it('bundle file should exist', () => {
+  it('bundle file exists', () => {
     expect(() => loadBundleCode(bundlePath)).not.toThrow()
   })
 
-  it('minified bundle file should exist', () => {
+  it('minified bundle file exists', () => {
     expect(() => loadBundleCode(minBundlePath)).not.toThrow()
   })
 
-  it('should attach HyperfrontendJsonUtils to window global', () => {
+  it('attaches HyperfrontendJsonUtils to window global', () => {
     const bundleCode = loadBundleCode(bundlePath)
     const global = executeBundleInWindow(bundleCode, 'HyperfrontendJsonUtils')
 
     expect(global).toBeDefined()
   })
 
-  it('should export validate on the global', () => {
+  it('exports validate on the global', () => {
     const bundleCode = loadBundleCode(bundlePath)
     const global = executeBundleInWindow(bundleCode, 'HyperfrontendJsonUtils') as Record<string, unknown>
 
     expect(typeof global.validate).toBe('function')
   })
 
-  it('should validate data against schema from IIFE bundle', () => {
+  it('validates data against schema from IIFE bundle', () => {
     const bundleCode = loadBundleCode(bundlePath)
     const global = executeBundleInWindow(bundleCode, 'HyperfrontendJsonUtils') as {
       validate: (data: unknown, schema: object) => { valid: boolean }
@@ -48,14 +48,14 @@ describe('@hyperfrontend/json-utils IIFE bundle', () => {
     expect(invalidResult.valid).toBe(false)
   })
 
-  it('should export toJsonSchema on the global', () => {
+  it('exports toJsonSchema on the global', () => {
     const bundleCode = loadBundleCode(bundlePath)
     const global = executeBundleInWindow(bundleCode, 'HyperfrontendJsonUtils') as Record<string, unknown>
 
     expect(typeof global.toJsonSchema).toBe('function')
   })
 
-  it('should generate JSON schema from data via IIFE bundle', () => {
+  it('generates JSON schema from data via IIFE bundle', () => {
     const bundleCode = loadBundleCode(bundlePath)
     const global = executeBundleInWindow(bundleCode, 'HyperfrontendJsonUtils') as {
       toJsonSchema: (data: unknown) => { type: string; properties?: object }

@@ -4,17 +4,17 @@
  */
 
 describe('@hyperfrontend/function-utils ESM', () => {
-  it('should be importable', async () => {
+  it('is importable', async () => {
     const functionUtils = await import('@hyperfrontend/function-utils')
     expect(functionUtils).toBeDefined()
   })
 
-  it('should export createRunOnceFunction', async () => {
+  it('exports createRunOnceFunction', async () => {
     const { createRunOnceFunction } = await import('@hyperfrontend/function-utils')
     expect(typeof createRunOnceFunction).toBe('function')
   })
 
-  it('should create a run-once function that executes only once', async () => {
+  it('creates a run-once function that executes only once', async () => {
     const { createRunOnceFunction } = await import('@hyperfrontend/function-utils')
 
     let callCount = 0
@@ -28,13 +28,13 @@ describe('@hyperfrontend/function-utils ESM', () => {
     expect(callCount).toBe(1)
   })
 
-  it('should export noop', async () => {
+  it('exports noop', async () => {
     const { noop } = await import('@hyperfrontend/function-utils')
     expect(typeof noop).toBe('function')
     expect(noop()).toBeUndefined()
   })
 
-  it('should export createErrorIgnoringFunction', async () => {
+  it('exports createErrorIgnoringFunction', async () => {
     const { createErrorIgnoringFunction } = await import('@hyperfrontend/function-utils')
     expect(typeof createErrorIgnoringFunction).toBe('function')
 
@@ -44,7 +44,7 @@ describe('@hyperfrontend/function-utils ESM', () => {
     expect(() => safeFn()).not.toThrow()
   })
 
-  it('should export createConditionalExecutionFunction', async () => {
+  it('exports createConditionalExecutionFunction', async () => {
     const { createConditionalExecutionFunction } = await import('@hyperfrontend/function-utils')
     expect(typeof createConditionalExecutionFunction).toBe('function')
 

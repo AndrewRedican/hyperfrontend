@@ -7,64 +7,64 @@
 
 describe('@hyperfrontend/cryptography ESM', () => {
   describe('node sub-entry', () => {
-    it('should be importable', async () => {
+    it('is importable', async () => {
       const nodeEntry = await import('@hyperfrontend/cryptography/node')
       expect(nodeEntry).toBeDefined()
     })
 
-    it('should export createHash function', async () => {
+    it('exports createHash function', async () => {
       const { createHash } = await import('@hyperfrontend/cryptography/node')
       expect(typeof createHash).toBe('function')
     })
 
-    it('should export encrypt function', async () => {
+    it('exports encrypt function', async () => {
       const { encrypt } = await import('@hyperfrontend/cryptography/node')
       expect(typeof encrypt).toBe('function')
     })
 
-    it('should export decrypt function', async () => {
+    it('exports decrypt function', async () => {
       const { decrypt } = await import('@hyperfrontend/cryptography/node')
       expect(typeof decrypt).toBe('function')
     })
 
-    it('should export createVault function', async () => {
+    it('exports createVault function', async () => {
       const { createVault } = await import('@hyperfrontend/cryptography/node')
       expect(typeof createVault).toBe('function')
     })
 
-    it('should export generateKey function', async () => {
+    it('exports generateKey function', async () => {
       const { generateKey } = await import('@hyperfrontend/cryptography/node')
       expect(typeof generateKey).toBe('function')
     })
 
-    it('should export getRandomValues function', async () => {
+    it('exports getRandomValues function', async () => {
       const { getRandomValues } = await import('@hyperfrontend/cryptography/node')
       expect(typeof getRandomValues).toBe('function')
     })
 
-    it('should export getTimeBasedPassword function', async () => {
+    it('exports getTimeBasedPassword function', async () => {
       const { getTimeBasedPassword } = await import('@hyperfrontend/cryptography/node')
       expect(typeof getTimeBasedPassword).toBe('function')
     })
 
-    it('should export isSHA256Hash function', async () => {
+    it('exports isSHA256Hash function', async () => {
       const { isSHA256Hash } = await import('@hyperfrontend/cryptography/node')
       expect(typeof isSHA256Hash).toBe('function')
     })
   })
 
   describe('common sub-entry', () => {
-    it('should be importable', async () => {
+    it('is importable', async () => {
       const commonEntry = await import('@hyperfrontend/cryptography/common')
       expect(commonEntry).toBeDefined()
     })
 
-    it('should export isSHA256Hash function', async () => {
+    it('exports isSHA256Hash function', async () => {
       const { isSHA256Hash } = await import('@hyperfrontend/cryptography/common')
       expect(typeof isSHA256Hash).toBe('function')
     })
 
-    it('isSHA256Hash should validate hash format', async () => {
+    it('isSHA256Hash validates hash format', async () => {
       const { isSHA256Hash } = await import('@hyperfrontend/cryptography/common')
 
       // Valid SHA256 hashes are 64 hex characters

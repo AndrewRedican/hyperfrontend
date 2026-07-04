@@ -9,29 +9,29 @@ describe('@hyperfrontend/state-machine UMD bundle', () => {
   const bundlePath = getBundlePath('state-machine', 'umd')
   const minBundlePath = getBundlePath('state-machine', 'umd', true)
 
-  it('bundle file should exist', () => {
+  it('bundle file exists', () => {
     expect(() => loadBundleCode(bundlePath)).not.toThrow()
   })
 
-  it('minified bundle file should exist', () => {
+  it('minified bundle file exists', () => {
     expect(() => loadBundleCode(minBundlePath)).not.toThrow()
   })
 
-  it('should attach HyperfrontendStateMachine to window global (browser mode)', () => {
+  it('attaches HyperfrontendStateMachine to window global (browser mode)', () => {
     const bundleCode = loadBundleCode(bundlePath)
     const global = executeBundleInWindow(bundleCode, 'HyperfrontendStateMachine')
 
     expect(global).toBeDefined()
   })
 
-  it('should export Store class on the global', () => {
+  it('exports Store class on the global', () => {
     const bundleCode = loadBundleCode(bundlePath)
     const global = executeBundleInWindow(bundleCode, 'HyperfrontendStateMachine') as Record<string, unknown>
 
     expect(global.Store).toBeDefined()
   })
 
-  it('should work when required as CJS module', () => {
+  it('works when required as CJS module', () => {
     const bundleCode = loadBundleCode(bundlePath)
     const exports = requireUmdBundle(bundleCode) as Record<string, unknown>
 

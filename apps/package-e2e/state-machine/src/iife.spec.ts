@@ -9,22 +9,22 @@ describe('@hyperfrontend/state-machine IIFE bundle', () => {
   const bundlePath = getBundlePath('state-machine', 'iife')
   const minBundlePath = getBundlePath('state-machine', 'iife', true)
 
-  it('bundle file should exist', () => {
+  it('bundle file exists', () => {
     expect(() => loadBundleCode(bundlePath)).not.toThrow()
   })
 
-  it('minified bundle file should exist', () => {
+  it('minified bundle file exists', () => {
     expect(() => loadBundleCode(minBundlePath)).not.toThrow()
   })
 
-  it('should attach HyperfrontendStateMachine to window global', () => {
+  it('attaches HyperfrontendStateMachine to window global', () => {
     const bundleCode = loadBundleCode(bundlePath)
     const global = executeBundleInWindow(bundleCode, 'HyperfrontendStateMachine')
 
     expect(global).toBeDefined()
   })
 
-  it('should export action creators on the global', () => {
+  it('exports action creators on the global', () => {
     const bundleCode = loadBundleCode(bundlePath)
     const global = executeBundleInWindow(bundleCode, 'HyperfrontendStateMachine') as Record<string, unknown>
 
@@ -33,7 +33,7 @@ describe('@hyperfrontend/state-machine IIFE bundle', () => {
     expect(global).toBeDefined()
   })
 
-  it('should export Store class on the global', () => {
+  it('exports Store class on the global', () => {
     const bundleCode = loadBundleCode(bundlePath)
     const global = executeBundleInWindow(bundleCode, 'HyperfrontendStateMachine') as Record<string, unknown>
 

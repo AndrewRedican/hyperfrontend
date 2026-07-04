@@ -17,57 +17,57 @@ describe('@hyperfrontend/string-utils IIFE bundle', () => {
   const bundlePath = getBundlePath('iife')
   const minBundlePath = getBundlePath('iife', true)
 
-  it('bundle file should exist', () => {
+  it('bundle file exists', () => {
     expect(() => loadBundleCode(bundlePath)).not.toThrow()
   })
 
-  it('minified bundle file should exist', () => {
+  it('minified bundle file exists', () => {
     expect(() => loadBundleCode(minBundlePath)).not.toThrow()
   })
 
-  it('should attach HyperfrontendStringUtils to window global', () => {
+  it('attaches HyperfrontendStringUtils to window global', () => {
     const bundleCode = loadBundleCode(bundlePath)
     const global = executeBundleInWindow(bundleCode, 'HyperfrontendStringUtils')
 
     expect(global).toBeDefined()
   })
 
-  it('should export utf8StringToUint8Array function', () => {
+  it('exports utf8StringToUint8Array function', () => {
     const bundleCode = loadBundleCode(bundlePath)
     const global = executeBundleInWindow(bundleCode, 'HyperfrontendStringUtils') as Record<string, unknown>
 
     expect(typeof global.utf8StringToUint8Array).toBe('function')
   })
 
-  it('should export uint8ArrayToUtf8String function', () => {
+  it('exports uint8ArrayToUtf8String function', () => {
     const bundleCode = loadBundleCode(bundlePath)
     const global = executeBundleInWindow(bundleCode, 'HyperfrontendStringUtils') as Record<string, unknown>
 
     expect(typeof global.uint8ArrayToUtf8String).toBe('function')
   })
 
-  it('should export uint8ArrayToBase64 function', () => {
+  it('exports uint8ArrayToBase64 function', () => {
     const bundleCode = loadBundleCode(bundlePath)
     const global = executeBundleInWindow(bundleCode, 'HyperfrontendStringUtils') as Record<string, unknown>
 
     expect(typeof global.uint8ArrayToBase64).toBe('function')
   })
 
-  it('should export base64ToUint8Array function', () => {
+  it('exports base64ToUint8Array function', () => {
     const bundleCode = loadBundleCode(bundlePath)
     const global = executeBundleInWindow(bundleCode, 'HyperfrontendStringUtils') as Record<string, unknown>
 
     expect(typeof global.base64ToUint8Array).toBe('function')
   })
 
-  it('should export toBase64 function', () => {
+  it('exports toBase64 function', () => {
     const bundleCode = loadBundleCode(bundlePath)
     const global = executeBundleInWindow(bundleCode, 'HyperfrontendStringUtils') as Record<string, unknown>
 
     expect(typeof global.toBase64).toBe('function')
   })
 
-  it('should export fromBase64 function', () => {
+  it('exports fromBase64 function', () => {
     const bundleCode = loadBundleCode(bundlePath)
     const global = executeBundleInWindow(bundleCode, 'HyperfrontendStringUtils') as Record<string, unknown>
 

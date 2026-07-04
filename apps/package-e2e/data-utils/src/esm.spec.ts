@@ -4,17 +4,17 @@
  */
 
 describe('@hyperfrontend/data-utils ESM', () => {
-  it('should be importable', async () => {
+  it('is importable', async () => {
     const dataUtils = await import('@hyperfrontend/data-utils')
     expect(dataUtils).toBeDefined()
   })
 
-  it('should export getType function', async () => {
+  it('exports getType function', async () => {
     const { getType } = await import('@hyperfrontend/data-utils')
     expect(typeof getType).toBe('function')
   })
 
-  it('should correctly detect types', async () => {
+  it('correctly detects types', async () => {
     const { getType } = await import('@hyperfrontend/data-utils')
 
     expect(getType('hello')).toBe('string')
@@ -26,12 +26,12 @@ describe('@hyperfrontend/data-utils ESM', () => {
     expect(getType({})).toBe('object')
   })
 
-  it('should export isIdentical function', async () => {
+  it('exports isIdentical function', async () => {
     const { isIdentical } = await import('@hyperfrontend/data-utils')
     expect(typeof isIdentical).toBe('function')
   })
 
-  it('should detect identical values', async () => {
+  it('detects identical values', async () => {
     const { isIdentical } = await import('@hyperfrontend/data-utils')
 
     expect(isIdentical({ a: 1 }, { a: 1 })).toBe(true)
@@ -39,7 +39,7 @@ describe('@hyperfrontend/data-utils ESM', () => {
     expect(isIdentical([1, 2, 3], [1, 2, 3])).toBe(true)
   })
 
-  it('should export sameType function', async () => {
+  it('exports sameType function', async () => {
     const { sameType } = await import('@hyperfrontend/data-utils')
     expect(typeof sameType).toBe('function')
 
@@ -47,17 +47,17 @@ describe('@hyperfrontend/data-utils ESM', () => {
     expect(sameType('hello', 123)).toBe(false)
   })
 
-  it('should export traverse function', async () => {
+  it('exports traverse function', async () => {
     const { traverse } = await import('@hyperfrontend/data-utils')
     expect(typeof traverse).toBe('function')
   })
 
-  it('should export selectiveCopy function', async () => {
+  it('exports selectiveCopy function', async () => {
     const { selectiveCopy } = await import('@hyperfrontend/data-utils')
     expect(typeof selectiveCopy).toBe('function')
   })
 
-  it('should export hasCircularReference function', async () => {
+  it('exports hasCircularReference function', async () => {
     const { hasCircularReference } = await import('@hyperfrontend/data-utils')
     expect(typeof hasCircularReference).toBe('function')
 
@@ -68,12 +68,12 @@ describe('@hyperfrontend/data-utils ESM', () => {
     expect(hasCircularReference(obj)).toBe(true)
   })
 
-  it('should export getDepth function', async () => {
+  it('exports getDepth function', async () => {
     const { getDepth } = await import('@hyperfrontend/data-utils')
     expect(typeof getDepth).toBe('function')
   })
 
-  it('should export locateKey function', async () => {
+  it('exports locateKey function', async () => {
     const { locateKey } = await import('@hyperfrontend/data-utils')
     expect(typeof locateKey).toBe('function')
   })

@@ -4,17 +4,17 @@
  */
 
 describe('@hyperfrontend/list-utils CJS', () => {
-  it('should be requireable', () => {
+  it('is requireable', () => {
     const listUtils = require('@hyperfrontend/list-utils')
     expect(listUtils).toBeDefined()
   })
 
-  it('should export createFifoList function', () => {
+  it('exports createFifoList function', () => {
     const { createFifoList } = require('@hyperfrontend/list-utils')
     expect(typeof createFifoList).toBe('function')
   })
 
-  it('should create a FIFO list that works correctly', () => {
+  it('creates a FIFO list that works correctly', () => {
     const { createFifoList } = require('@hyperfrontend/list-utils')
 
     const list = createFifoList()
@@ -29,12 +29,12 @@ describe('@hyperfrontend/list-utils CJS', () => {
     expect(list.size()).toBe(1)
   })
 
-  it('should export createLifoList function', () => {
+  it('exports createLifoList function', () => {
     const { createLifoList } = require('@hyperfrontend/list-utils')
     expect(typeof createLifoList).toBe('function')
   })
 
-  it('should create a LIFO list that works correctly', () => {
+  it('creates a LIFO list that works correctly', () => {
     const { createLifoList } = require('@hyperfrontend/list-utils')
 
     const list = createLifoList()
@@ -49,22 +49,22 @@ describe('@hyperfrontend/list-utils CJS', () => {
     expect(list.size()).toBe(1)
   })
 
-  it('should export createRange function', () => {
+  it('exports createRange function', () => {
     const { createRange } = require('@hyperfrontend/list-utils')
     expect(typeof createRange).toBe('function')
   })
 
-  it('should export createValuePicker function', () => {
+  it('exports createValuePicker function', () => {
     const { createValuePicker } = require('@hyperfrontend/list-utils')
     expect(typeof createValuePicker).toBe('function')
   })
 
-  it('should export nonEmptyStrings function', () => {
+  it('exports nonEmptyStrings function', () => {
     const { nonEmptyStrings } = require('@hyperfrontend/list-utils')
     expect(typeof nonEmptyStrings).toBe('function')
   })
 
-  it('should export uniqueStrings function', () => {
+  it('exports uniqueStrings function', () => {
     const { uniqueStrings } = require('@hyperfrontend/list-utils')
     expect(typeof uniqueStrings).toBe('function')
   })

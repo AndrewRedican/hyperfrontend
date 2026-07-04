@@ -7,64 +7,64 @@
 
 describe('@hyperfrontend/cryptography CJS', () => {
   describe('node sub-entry', () => {
-    it('should be requireable', () => {
+    it('is requireable', () => {
       const nodeEntry = require('@hyperfrontend/cryptography/node')
       expect(nodeEntry).toBeDefined()
     })
 
-    it('should export createHash function', () => {
+    it('exports createHash function', () => {
       const { createHash } = require('@hyperfrontend/cryptography/node')
       expect(typeof createHash).toBe('function')
     })
 
-    it('should export encrypt function', () => {
+    it('exports encrypt function', () => {
       const { encrypt } = require('@hyperfrontend/cryptography/node')
       expect(typeof encrypt).toBe('function')
     })
 
-    it('should export decrypt function', () => {
+    it('exports decrypt function', () => {
       const { decrypt } = require('@hyperfrontend/cryptography/node')
       expect(typeof decrypt).toBe('function')
     })
 
-    it('should export createVault function', () => {
+    it('exports createVault function', () => {
       const { createVault } = require('@hyperfrontend/cryptography/node')
       expect(typeof createVault).toBe('function')
     })
 
-    it('should export generateKey function', () => {
+    it('exports generateKey function', () => {
       const { generateKey } = require('@hyperfrontend/cryptography/node')
       expect(typeof generateKey).toBe('function')
     })
 
-    it('should export getRandomValues function', () => {
+    it('exports getRandomValues function', () => {
       const { getRandomValues } = require('@hyperfrontend/cryptography/node')
       expect(typeof getRandomValues).toBe('function')
     })
 
-    it('should export getTimeBasedPassword function', () => {
+    it('exports getTimeBasedPassword function', () => {
       const { getTimeBasedPassword } = require('@hyperfrontend/cryptography/node')
       expect(typeof getTimeBasedPassword).toBe('function')
     })
 
-    it('should export isSHA256Hash function', () => {
+    it('exports isSHA256Hash function', () => {
       const { isSHA256Hash } = require('@hyperfrontend/cryptography/node')
       expect(typeof isSHA256Hash).toBe('function')
     })
   })
 
   describe('common sub-entry', () => {
-    it('should be requireable', () => {
+    it('is requireable', () => {
       const commonEntry = require('@hyperfrontend/cryptography/common')
       expect(commonEntry).toBeDefined()
     })
 
-    it('should export isSHA256Hash function', () => {
+    it('exports isSHA256Hash function', () => {
       const { isSHA256Hash } = require('@hyperfrontend/cryptography/common')
       expect(typeof isSHA256Hash).toBe('function')
     })
 
-    it('isSHA256Hash should validate hash format', () => {
+    it('isSHA256Hash validates hash format', () => {
       const { isSHA256Hash } = require('@hyperfrontend/cryptography/common')
 
       // Valid SHA256 hashes are 64 hex characters

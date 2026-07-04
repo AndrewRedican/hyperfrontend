@@ -4,17 +4,17 @@
  */
 
 describe('@hyperfrontend/time-utils CJS', () => {
-  it('should be requireable', () => {
+  it('is requireable', () => {
     const timeUtils = require('@hyperfrontend/time-utils')
     expect(timeUtils).toBeDefined()
   })
 
-  it('should export sleep function', () => {
+  it('exports sleep function', () => {
     const { sleep } = require('@hyperfrontend/time-utils')
     expect(typeof sleep).toBe('function')
   })
 
-  it('should sleep returns a promise that resolves', async () => {
+  it('sleep returns a promise that resolves', async () => {
     const { sleep } = require('@hyperfrontend/time-utils')
 
     const start = Date.now()
@@ -25,12 +25,12 @@ describe('@hyperfrontend/time-utils CJS', () => {
     expect(elapsed).toBeGreaterThanOrEqual(9)
   })
 
-  it('should export createTimer function', () => {
+  it('exports createTimer function', () => {
     const { createTimer } = require('@hyperfrontend/time-utils')
     expect(typeof createTimer).toBe('function')
   })
 
-  it('should create a timer with pause, resume, reset methods', () => {
+  it('creates a timer with pause, resume, reset methods', () => {
     const { createTimer } = require('@hyperfrontend/time-utils')
 
     const timer = createTimer(() => {}, 1000)
@@ -44,17 +44,17 @@ describe('@hyperfrontend/time-utils CJS', () => {
     timer.pause()
   })
 
-  it('should export createClock function', () => {
+  it('exports createClock function', () => {
     const { createClock } = require('@hyperfrontend/time-utils')
     expect(typeof createClock).toBe('function')
   })
 
-  it('should export normalizeToBaseTimeWindow function', () => {
+  it('exports normalizeToBaseTimeWindow function', () => {
     const { normalizeToBaseTimeWindow } = require('@hyperfrontend/time-utils')
     expect(typeof normalizeToBaseTimeWindow).toBe('function')
   })
 
-  it('should export setIntervalCallback function', () => {
+  it('exports setIntervalCallback function', () => {
     const { setIntervalCallback } = require('@hyperfrontend/time-utils')
     expect(typeof setIntervalCallback).toBe('function')
   })

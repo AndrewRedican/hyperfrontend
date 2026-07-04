@@ -9,29 +9,29 @@ describe('@hyperfrontend/data-utils IIFE bundle', () => {
   const bundlePath = getBundlePath('utils/data', 'iife')
   const minBundlePath = getBundlePath('utils/data', 'iife', true)
 
-  it('bundle file should exist', () => {
+  it('bundle file exists', () => {
     expect(() => loadBundleCode(bundlePath)).not.toThrow()
   })
 
-  it('minified bundle file should exist', () => {
+  it('minified bundle file exists', () => {
     expect(() => loadBundleCode(minBundlePath)).not.toThrow()
   })
 
-  it('should attach HyperfrontendDataUtils to window global', () => {
+  it('attaches HyperfrontendDataUtils to window global', () => {
     const bundleCode = loadBundleCode(bundlePath)
     const global = executeBundleInWindow(bundleCode, 'HyperfrontendDataUtils')
 
     expect(global).toBeDefined()
   })
 
-  it('should export getType on the global', () => {
+  it('exports getType on the global', () => {
     const bundleCode = loadBundleCode(bundlePath)
     const global = executeBundleInWindow(bundleCode, 'HyperfrontendDataUtils') as Record<string, unknown>
 
     expect(typeof global.getType).toBe('function')
   })
 
-  it('should correctly detect types from IIFE bundle', () => {
+  it('correctly detects types from IIFE bundle', () => {
     const bundleCode = loadBundleCode(bundlePath)
     const global = executeBundleInWindow(bundleCode, 'HyperfrontendDataUtils') as {
       getType: (value: unknown) => string
@@ -43,7 +43,7 @@ describe('@hyperfrontend/data-utils IIFE bundle', () => {
     expect(global.getType({})).toBe('object')
   })
 
-  it('should export isIdentical on the global', () => {
+  it('exports isIdentical on the global', () => {
     const bundleCode = loadBundleCode(bundlePath)
     const global = executeBundleInWindow(bundleCode, 'HyperfrontendDataUtils') as {
       isIdentical: (a: unknown, b: unknown) => boolean
@@ -53,7 +53,7 @@ describe('@hyperfrontend/data-utils IIFE bundle', () => {
     expect(global.isIdentical({ a: 1 }, { a: 1 })).toBe(true)
   })
 
-  it('should export hasCircularReference on the global', () => {
+  it('exports hasCircularReference on the global', () => {
     const bundleCode = loadBundleCode(bundlePath)
     const global = executeBundleInWindow(bundleCode, 'HyperfrontendDataUtils') as {
       hasCircularReference: (value: unknown) => boolean

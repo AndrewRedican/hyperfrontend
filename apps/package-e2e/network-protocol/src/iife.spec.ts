@@ -22,22 +22,22 @@ describe('@hyperfrontend/network-protocol IIFE bundle', () => {
     const bundlePath = getBundlePath('v1', 'iife')
     const minBundlePath = getBundlePath('v1', 'iife', true)
 
-    it('bundle file should exist', () => {
+    it('bundle file exists', () => {
       expect(() => loadBundleCode(bundlePath)).not.toThrow()
     })
 
-    it('minified bundle file should exist', () => {
+    it('minified bundle file exists', () => {
       expect(() => loadBundleCode(minBundlePath)).not.toThrow()
     })
 
-    it('should attach HyperfrontendNetworkProtocolV1 to window global', () => {
+    it('attaches HyperfrontendNetworkProtocolV1 to window global', () => {
       const bundleCode = loadBundleCode(bundlePath)
       const global = executeBundleInWindow(bundleCode, 'HyperfrontendNetworkProtocolV1')
 
       expect(global).toBeDefined()
     })
 
-    it('should export createProtocol function on V1 global', () => {
+    it('exports createProtocol function on V1 global', () => {
       const bundleCode = loadBundleCode(bundlePath)
       const global = executeBundleInWindow(bundleCode, 'HyperfrontendNetworkProtocolV1') as Record<string, unknown>
 
@@ -49,22 +49,22 @@ describe('@hyperfrontend/network-protocol IIFE bundle', () => {
     const bundlePath = getBundlePath('v2', 'iife')
     const minBundlePath = getBundlePath('v2', 'iife', true)
 
-    it('bundle file should exist', () => {
+    it('bundle file exists', () => {
       expect(() => loadBundleCode(bundlePath)).not.toThrow()
     })
 
-    it('minified bundle file should exist', () => {
+    it('minified bundle file exists', () => {
       expect(() => loadBundleCode(minBundlePath)).not.toThrow()
     })
 
-    it('should attach HyperfrontendNetworkProtocolV2 to window global', () => {
+    it('attaches HyperfrontendNetworkProtocolV2 to window global', () => {
       const bundleCode = loadBundleCode(bundlePath)
       const global = executeBundleInWindow(bundleCode, 'HyperfrontendNetworkProtocolV2')
 
       expect(global).toBeDefined()
     })
 
-    it('should export createProtocol function on V2 global', () => {
+    it('exports createProtocol function on V2 global', () => {
       const bundleCode = loadBundleCode(bundlePath)
       const global = executeBundleInWindow(bundleCode, 'HyperfrontendNetworkProtocolV2') as Record<string, unknown>
 

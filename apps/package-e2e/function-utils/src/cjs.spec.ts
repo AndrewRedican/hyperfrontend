@@ -4,17 +4,17 @@
  */
 
 describe('@hyperfrontend/function-utils CJS', () => {
-  it('should be requireable', () => {
+  it('is requireable', () => {
     const functionUtils = require('@hyperfrontend/function-utils')
     expect(functionUtils).toBeDefined()
   })
 
-  it('should export createRunOnceFunction', () => {
+  it('exports createRunOnceFunction', () => {
     const { createRunOnceFunction } = require('@hyperfrontend/function-utils')
     expect(typeof createRunOnceFunction).toBe('function')
   })
 
-  it('should create a run-once function that executes only once', () => {
+  it('creates a run-once function that executes only once', () => {
     const { createRunOnceFunction } = require('@hyperfrontend/function-utils')
 
     let callCount = 0
@@ -28,13 +28,13 @@ describe('@hyperfrontend/function-utils CJS', () => {
     expect(callCount).toBe(1)
   })
 
-  it('should export noop', () => {
+  it('exports noop', () => {
     const { noop } = require('@hyperfrontend/function-utils')
     expect(typeof noop).toBe('function')
     expect(noop()).toBeUndefined()
   })
 
-  it('should export createErrorIgnoringFunction', () => {
+  it('exports createErrorIgnoringFunction', () => {
     const { createErrorIgnoringFunction } = require('@hyperfrontend/function-utils')
     expect(typeof createErrorIgnoringFunction).toBe('function')
 
@@ -44,7 +44,7 @@ describe('@hyperfrontend/function-utils CJS', () => {
     expect(() => safeFn()).not.toThrow()
   })
 
-  it('should export createConditionalExecutionFunction', () => {
+  it('exports createConditionalExecutionFunction', () => {
     const { createConditionalExecutionFunction } = require('@hyperfrontend/function-utils')
     expect(typeof createConditionalExecutionFunction).toBe('function')
 

@@ -4,18 +4,18 @@
  */
 
 describe('@hyperfrontend/questions CJS', () => {
-  it('should be requireable', () => {
+  it('is requireable', () => {
     const pkg = require('@hyperfrontend/questions')
     expect(pkg).toBeDefined()
   })
 
-  it('should have exports', () => {
+  it('has exports', () => {
     const pkg = require('@hyperfrontend/questions')
     const exportedKeys = Object.keys(pkg)
     expect(exportedKeys.length).toBeGreaterThan(0)
   })
 
-  it('should export functions or objects', () => {
+  it('exports functions or objects', () => {
     const pkg = require('@hyperfrontend/questions')
 
     // At least one export should be a function, object, or class

@@ -4,17 +4,17 @@
  */
 
 describe('@hyperfrontend/logging CJS', () => {
-  it('should be requireable', () => {
+  it('is requireable', () => {
     const logging = require('@hyperfrontend/logging')
     expect(logging).toBeDefined()
   })
 
-  it('should export createLogger function', () => {
+  it('exports createLogger function', () => {
     const { createLogger } = require('@hyperfrontend/logging')
     expect(typeof createLogger).toBe('function')
   })
 
-  it('should create a logger with info method', () => {
+  it('creates a logger with info method', () => {
     const { createLogger } = require('@hyperfrontend/logging')
 
     const mockError = jest.fn()
@@ -31,7 +31,7 @@ describe('@hyperfrontend/logging CJS', () => {
     expect(typeof logger.log).toBe('function')
   })
 
-  it('should export isValidLogger function', () => {
+  it('exports isValidLogger function', () => {
     const { isValidLogger, createLogger } = require('@hyperfrontend/logging')
     expect(typeof isValidLogger).toBe('function')
 

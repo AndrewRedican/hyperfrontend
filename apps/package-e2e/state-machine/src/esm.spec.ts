@@ -7,12 +7,12 @@
 
 describe('@hyperfrontend/state-machine ESM', () => {
   describe('actions sub-entry', () => {
-    it('should be importable', async () => {
+    it('is importable', async () => {
       const actions = await import('@hyperfrontend/state-machine/actions')
       expect(actions).toBeDefined()
     })
 
-    it('should export action creators', async () => {
+    it('exports action creators', async () => {
       const { start, cancel, pause, success, fail } = await import('@hyperfrontend/state-machine/actions')
       expect(typeof start).toBe('function')
       expect(typeof cancel).toBe('function')
@@ -21,7 +21,7 @@ describe('@hyperfrontend/state-machine ESM', () => {
       expect(typeof fail).toBe('function')
     })
 
-    it('should create valid action objects', async () => {
+    it('creates valid action objects', async () => {
       const { start, success } = await import('@hyperfrontend/state-machine/actions')
 
       const startAction = start()
@@ -34,7 +34,7 @@ describe('@hyperfrontend/state-machine ESM', () => {
   })
 
   describe('store sub-entry', () => {
-    it('should be importable', async () => {
+    it('is importable', async () => {
       const store = await import('@hyperfrontend/state-machine/store')
       expect(store).toBeDefined()
     })
@@ -43,42 +43,42 @@ describe('@hyperfrontend/state-machine ESM', () => {
   })
 
   describe('reducer sub-entry', () => {
-    it('should be importable', async () => {
+    it('is importable', async () => {
       const reducer = await import('@hyperfrontend/state-machine/reducer')
       expect(reducer).toBeDefined()
     })
   })
 
   describe('selectors sub-entry', () => {
-    it('should be importable', async () => {
+    it('is importable', async () => {
       const selectors = await import('@hyperfrontend/state-machine/selectors')
       expect(selectors).toBeDefined()
     })
   })
 
   describe('state sub-entry', () => {
-    it('should be importable', async () => {
+    it('is importable', async () => {
       const state = await import('@hyperfrontend/state-machine/state')
       expect(state).toBeDefined()
     })
   })
 
   describe('async-operation sub-entry', () => {
-    it('should be importable', async () => {
+    it('is importable', async () => {
       const asyncOp = await import('@hyperfrontend/state-machine/async-operation')
       expect(asyncOp).toBeDefined()
     })
   })
 
   describe('events sub-entry', () => {
-    it('should be importable', async () => {
+    it('is importable', async () => {
       const events = await import('@hyperfrontend/state-machine/events')
       expect(events).toBeDefined()
     })
   })
 
   describe('models sub-entry', () => {
-    it('should be importable', async () => {
+    it('is importable', async () => {
       const models = await import('@hyperfrontend/state-machine/models')
       expect(models).toBeDefined()
     })

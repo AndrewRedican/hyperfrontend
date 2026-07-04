@@ -7,47 +7,47 @@
 
 describe('@hyperfrontend/string-utils ESM', () => {
   describe('node sub-entry', () => {
-    it('should be importable', async () => {
+    it('is importable', async () => {
       const nodeEntry = await import('@hyperfrontend/string-utils/node')
       expect(nodeEntry).toBeDefined()
     })
 
-    it('should export utf8StringToUint8Array function', async () => {
+    it('exports utf8StringToUint8Array function', async () => {
       const { utf8StringToUint8Array } = await import('@hyperfrontend/string-utils/node')
       expect(typeof utf8StringToUint8Array).toBe('function')
     })
 
-    it('should export uint8ArrayToUtf8String function', async () => {
+    it('exports uint8ArrayToUtf8String function', async () => {
       const { uint8ArrayToUtf8String } = await import('@hyperfrontend/string-utils/node')
       expect(typeof uint8ArrayToUtf8String).toBe('function')
     })
 
-    it('should export uint8ArrayToBase64 function', async () => {
+    it('exports uint8ArrayToBase64 function', async () => {
       const { uint8ArrayToBase64 } = await import('@hyperfrontend/string-utils/node')
       expect(typeof uint8ArrayToBase64).toBe('function')
     })
 
-    it('should export base64ToUint8Array function', async () => {
+    it('exports base64ToUint8Array function', async () => {
       const { base64ToUint8Array } = await import('@hyperfrontend/string-utils/node')
       expect(typeof base64ToUint8Array).toBe('function')
     })
 
-    it('should export arrayBufferToUtf8String function', async () => {
+    it('exports arrayBufferToUtf8String function', async () => {
       const { arrayBufferToUtf8String } = await import('@hyperfrontend/string-utils/node')
       expect(typeof arrayBufferToUtf8String).toBe('function')
     })
 
-    it('should export toBase64 function', async () => {
+    it('exports toBase64 function', async () => {
       const { toBase64 } = await import('@hyperfrontend/string-utils/node')
       expect(typeof toBase64).toBe('function')
     })
 
-    it('should export fromBase64 function', async () => {
+    it('exports fromBase64 function', async () => {
       const { fromBase64 } = await import('@hyperfrontend/string-utils/node')
       expect(typeof fromBase64).toBe('function')
     })
 
-    it('should correctly convert string to Uint8Array and back', async () => {
+    it('correctly converts string to Uint8Array and back', async () => {
       const { utf8StringToUint8Array, uint8ArrayToUtf8String } = await import('@hyperfrontend/string-utils/node')
 
       const original = 'Hello, World! 👋'
@@ -57,7 +57,7 @@ describe('@hyperfrontend/string-utils ESM', () => {
       expect(result).toBe(original)
     })
 
-    it('should correctly convert to base64 and back', async () => {
+    it('correctly converts to base64 and back', async () => {
       const { toBase64, fromBase64 } = await import('@hyperfrontend/string-utils/node')
 
       const original = 'Hello, World!'

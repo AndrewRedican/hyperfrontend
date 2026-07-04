@@ -4,12 +4,12 @@
  */
 
 describe('@hyperfrontend/builder ESM', () => {
-  it('should be importable', async () => {
+  it('is importable', async () => {
     const pkg = await import('@hyperfrontend/builder')
     expect(pkg).toBeDefined()
   })
 
-  it('should expose the documented public API', async () => {
+  it('exposes the documented public API', async () => {
     const pkg = await import('@hyperfrontend/builder')
     const expected = [
       'build',
@@ -27,7 +27,7 @@ describe('@hyperfrontend/builder ESM', () => {
     }
   })
 
-  it('should resolve the /presets subpath export with working predicates', async () => {
+  it('resolves the /presets subpath export with working predicates', async () => {
     const { byNames, byPrefix } = await import('@hyperfrontend/builder/presets')
     expect(typeof byNames).toBe('function')
     expect(typeof byPrefix).toBe('function')

@@ -6,17 +6,17 @@
 import type { Schema } from '@hyperfrontend/json-utils'
 
 describe('@hyperfrontend/json-utils ESM', () => {
-  it('should be importable', async () => {
+  it('is importable', async () => {
     const jsonUtils = await import('@hyperfrontend/json-utils')
     expect(jsonUtils).toBeDefined()
   })
 
-  it('should export validate function', async () => {
+  it('exports validate function', async () => {
     const { validate } = await import('@hyperfrontend/json-utils')
     expect(typeof validate).toBe('function')
   })
 
-  it('should validate data against a schema', async () => {
+  it('validates data against a schema', async () => {
     const { validate } = await import('@hyperfrontend/json-utils')
 
     const schema: Schema = {
@@ -38,12 +38,12 @@ describe('@hyperfrontend/json-utils ESM', () => {
     expect(invalidResult.valid).toBe(false)
   })
 
-  it('should export createValidator function', async () => {
+  it('exports createValidator function', async () => {
     const { createValidator } = await import('@hyperfrontend/json-utils')
     expect(typeof createValidator).toBe('function')
   })
 
-  it('should create a reusable validator', async () => {
+  it('creates a reusable validator', async () => {
     const { createValidator } = await import('@hyperfrontend/json-utils')
 
     const schema: Schema = {
@@ -57,12 +57,12 @@ describe('@hyperfrontend/json-utils ESM', () => {
     expect(result.valid).toBe(true)
   })
 
-  it('should export toJsonSchema function', async () => {
+  it('exports toJsonSchema function', async () => {
     const { toJsonSchema } = await import('@hyperfrontend/json-utils')
     expect(typeof toJsonSchema).toBe('function')
   })
 
-  it('should generate JSON schema from data', async () => {
+  it('generates JSON schema from data', async () => {
     const { toJsonSchema } = await import('@hyperfrontend/json-utils')
 
     const data = { name: 'John', age: 30 }

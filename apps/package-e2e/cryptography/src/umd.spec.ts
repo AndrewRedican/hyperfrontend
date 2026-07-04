@@ -9,29 +9,29 @@ describe('@hyperfrontend/cryptography UMD bundle', () => {
   const bundlePath = getBundlePath('cryptography', 'umd')
   const minBundlePath = getBundlePath('cryptography', 'umd', true)
 
-  it('bundle file should exist', () => {
+  it('bundle file exists', () => {
     expect(() => loadBundleCode(bundlePath)).not.toThrow()
   })
 
-  it('minified bundle file should exist', () => {
+  it('minified bundle file exists', () => {
     expect(() => loadBundleCode(minBundlePath)).not.toThrow()
   })
 
-  it('should attach HyperfrontendCryptography to window global (browser mode)', () => {
+  it('attaches HyperfrontendCryptography to window global (browser mode)', () => {
     const bundleCode = loadBundleCode(bundlePath)
     const global = executeBundleInWindow(bundleCode, 'HyperfrontendCryptography')
 
     expect(global).toBeDefined()
   })
 
-  it('should export createHash function', () => {
+  it('exports createHash function', () => {
     const bundleCode = loadBundleCode(bundlePath)
     const global = executeBundleInWindow(bundleCode, 'HyperfrontendCryptography') as Record<string, unknown>
 
     expect(typeof global.createHash).toBe('function')
   })
 
-  it('should work when required as CJS module', () => {
+  it('works when required as CJS module', () => {
     const bundleCode = loadBundleCode(bundlePath)
     const exports = requireUmdBundle(bundleCode) as Record<string, unknown>
 

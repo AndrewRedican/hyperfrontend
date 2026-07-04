@@ -9,29 +9,29 @@ describe('@hyperfrontend/random-generator-utils UMD bundle', () => {
   const bundlePath = getBundlePath('utils/random-generator', 'umd')
   const minBundlePath = getBundlePath('utils/random-generator', 'umd', true)
 
-  it('bundle file should exist', () => {
+  it('bundle file exists', () => {
     expect(() => loadBundleCode(bundlePath)).not.toThrow()
   })
 
-  it('minified bundle file should exist', () => {
+  it('minified bundle file exists', () => {
     expect(() => loadBundleCode(minBundlePath)).not.toThrow()
   })
 
-  it('should attach HyperfrontendRandomGenerator to window global (browser mode)', () => {
+  it('attaches HyperfrontendRandomGenerator to window global (browser mode)', () => {
     const bundleCode = loadBundleCode(bundlePath)
     const global = executeBundleInWindow(bundleCode, 'HyperfrontendRandomGenerator')
 
     expect(global).toBeDefined()
   })
 
-  it('should export uuidV4 on the global', () => {
+  it('exports uuidV4 on the global', () => {
     const bundleCode = loadBundleCode(bundlePath)
     const global = executeBundleInWindow(bundleCode, 'HyperfrontendRandomGenerator') as Record<string, unknown>
 
     expect(typeof global.uuidV4).toBe('function')
   })
 
-  it('should generate valid UUIDv4 from UMD bundle', () => {
+  it('generates valid UUIDv4 from UMD bundle', () => {
     const bundleCode = loadBundleCode(bundlePath)
     const global = executeBundleInWindow(bundleCode, 'HyperfrontendRandomGenerator') as {
       uuidV4: () => string
@@ -43,7 +43,7 @@ describe('@hyperfrontend/random-generator-utils UMD bundle', () => {
     expect(global.isUuidV4(uuid)).toBe(true)
   })
 
-  it('should work when required as CJS module', () => {
+  it('works when required as CJS module', () => {
     const bundleCode = loadBundleCode(bundlePath)
     const exports = requireUmdBundle(bundleCode) as Record<string, unknown>
 

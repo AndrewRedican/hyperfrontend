@@ -5,34 +5,34 @@
 
 describe('@hyperfrontend/versioning ESM', () => {
   describe('main entry', () => {
-    it('should be importable', async () => {
+    it('is importable', async () => {
       const versioning = await import('@hyperfrontend/versioning')
       expect(versioning).toBeDefined()
     })
   })
 
   describe('changelog module', () => {
-    it('should export parseChangelog function', async () => {
+    it('exports parseChangelog function', async () => {
       const { parseChangelog } = await import('@hyperfrontend/versioning')
       expect(typeof parseChangelog).toBe('function')
     })
 
-    it('should export serializeChangelog function', async () => {
+    it('exports serializeChangelog function', async () => {
       const { serializeChangelog } = await import('@hyperfrontend/versioning')
       expect(typeof serializeChangelog).toBe('function')
     })
 
-    it('should export createChangelog function', async () => {
+    it('exports createChangelog function', async () => {
       const { createChangelog } = await import('@hyperfrontend/versioning')
       expect(typeof createChangelog).toBe('function')
     })
 
-    it('should export createEmptyChangelog function', async () => {
+    it('exports createEmptyChangelog function', async () => {
       const { createEmptyChangelog } = await import('@hyperfrontend/versioning')
       expect(typeof createEmptyChangelog).toBe('function')
     })
 
-    it('should parse a simple changelog', async () => {
+    it('parses a simple changelog', async () => {
       const { parseChangelog } = await import('@hyperfrontend/versioning')
 
       const changelogContent = `# Changelog
@@ -49,17 +49,17 @@ describe('@hyperfrontend/versioning ESM', () => {
   })
 
   describe('commits module', () => {
-    it('should export parseConventionalCommit function', async () => {
+    it('exports parseConventionalCommit function', async () => {
       const { parseConventionalCommit } = await import('@hyperfrontend/versioning')
       expect(typeof parseConventionalCommit).toBe('function')
     })
 
-    it('should export isConventionalCommit function', async () => {
+    it('exports isConventionalCommit function', async () => {
       const { isConventionalCommit } = await import('@hyperfrontend/versioning')
       expect(typeof isConventionalCommit).toBe('function')
     })
 
-    it('should parse a conventional commit message', async () => {
+    it('parses a conventional commit message', async () => {
       const { parseConventionalCommit } = await import('@hyperfrontend/versioning')
 
       const commit = parseConventionalCommit('feat: add new feature')
@@ -69,32 +69,32 @@ describe('@hyperfrontend/versioning ESM', () => {
   })
 
   describe('semver module', () => {
-    it('should export parseVersion function', async () => {
+    it('exports parseVersion function', async () => {
       const { parseVersion } = await import('@hyperfrontend/versioning')
       expect(typeof parseVersion).toBe('function')
     })
 
-    it('should export increment function', async () => {
+    it('exports increment function', async () => {
       const { increment } = await import('@hyperfrontend/versioning')
       expect(typeof increment).toBe('function')
     })
 
-    it('should export compare function', async () => {
+    it('exports compare function', async () => {
       const { compare } = await import('@hyperfrontend/versioning')
       expect(typeof compare).toBe('function')
     })
 
-    it('should export satisfies function', async () => {
+    it('exports satisfies function', async () => {
       const { satisfies } = await import('@hyperfrontend/versioning')
       expect(typeof satisfies).toBe('function')
     })
 
-    it('should export format function', async () => {
+    it('exports format function', async () => {
       const { format } = await import('@hyperfrontend/versioning')
       expect(typeof format).toBe('function')
     })
 
-    it('should parse and format a version string', async () => {
+    it('parses and formats a version string', async () => {
       const { parseVersion, format } = await import('@hyperfrontend/versioning')
 
       const result = parseVersion('1.2.3')
@@ -104,7 +104,7 @@ describe('@hyperfrontend/versioning ESM', () => {
       }
     })
 
-    it('should increment a version', async () => {
+    it('increments a version', async () => {
       const { parseVersion, increment, format } = await import('@hyperfrontend/versioning')
 
       const result = parseVersion('1.0.0')
@@ -117,63 +117,63 @@ describe('@hyperfrontend/versioning ESM', () => {
   })
 
   describe('flow module', () => {
-    it('should export createConventionalFlow function', async () => {
+    it('exports createConventionalFlow function', async () => {
       const { createConventionalFlow } = await import('@hyperfrontend/versioning')
       expect(typeof createConventionalFlow).toBe('function')
     })
 
-    it('should export createMinimalFlow function', async () => {
+    it('exports createMinimalFlow function', async () => {
       const { createMinimalFlow } = await import('@hyperfrontend/versioning')
       expect(typeof createMinimalFlow).toBe('function')
     })
 
-    it('should export executeFlow function', async () => {
+    it('exports executeFlow function', async () => {
       const { executeFlow } = await import('@hyperfrontend/versioning')
       expect(typeof executeFlow).toBe('function')
     })
 
-    it('should export createStep function', async () => {
+    it('exports createStep function', async () => {
       const { createStep } = await import('@hyperfrontend/versioning')
       expect(typeof createStep).toBe('function')
     })
   })
 
   describe('workspace module', () => {
-    it('should export createWorkspaceConfig function', async () => {
+    it('exports createWorkspaceConfig function', async () => {
       const { createWorkspaceConfig } = await import('@hyperfrontend/versioning')
       expect(typeof createWorkspaceConfig).toBe('function')
     })
 
-    it('should export createWorkspace function', async () => {
+    it('exports createWorkspace function', async () => {
       const { createWorkspace } = await import('@hyperfrontend/versioning')
       expect(typeof createWorkspace).toBe('function')
     })
 
-    it('should export createProject function', async () => {
+    it('exports createProject function', async () => {
       const { createProject } = await import('@hyperfrontend/versioning')
       expect(typeof createProject).toBe('function')
     })
   })
 
   describe('git module', () => {
-    it('should export createGitClient function', async () => {
+    it('exports createGitClient function', async () => {
       const { createGitClient } = await import('@hyperfrontend/versioning')
       expect(typeof createGitClient).toBe('function')
     })
 
-    it('should export DEFAULT_GIT_CLIENT_CONFIG constant', async () => {
+    it('exports DEFAULT_GIT_CLIENT_CONFIG constant', async () => {
       const { DEFAULT_GIT_CLIENT_CONFIG } = await import('@hyperfrontend/versioning')
       expect(DEFAULT_GIT_CLIENT_CONFIG).toBeDefined()
     })
   })
 
   describe('registry module', () => {
-    it('should export createNpmRegistry function', async () => {
+    it('exports createNpmRegistry function', async () => {
       const { createNpmRegistry } = await import('@hyperfrontend/versioning')
       expect(typeof createNpmRegistry).toBe('function')
     })
 
-    it('should export createRegistry function', async () => {
+    it('exports createRegistry function', async () => {
       const { createRegistry } = await import('@hyperfrontend/versioning')
       expect(typeof createRegistry).toBe('function')
     })

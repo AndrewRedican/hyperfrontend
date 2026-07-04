@@ -4,18 +4,18 @@
  */
 
 describe('@hyperfrontend/questions ESM', () => {
-  it('should be importable', async () => {
+  it('is importable', async () => {
     const pkg = await import('@hyperfrontend/questions')
     expect(pkg).toBeDefined()
   })
 
-  it('should have exports', async () => {
+  it('has exports', async () => {
     const pkg = await import('@hyperfrontend/questions')
     const exportedKeys = Object.keys(pkg)
     expect(exportedKeys.length).toBeGreaterThan(0)
   })
 
-  it('should export functions or objects', async () => {
+  it('exports functions or objects', async () => {
     const pkg = await import('@hyperfrontend/questions')
 
     // At least one export should be a function, object, or class

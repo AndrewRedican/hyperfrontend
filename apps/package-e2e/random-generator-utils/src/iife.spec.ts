@@ -9,29 +9,29 @@ describe('@hyperfrontend/random-generator-utils IIFE bundle', () => {
   const bundlePath = getBundlePath('utils/random-generator', 'iife')
   const minBundlePath = getBundlePath('utils/random-generator', 'iife', true)
 
-  it('bundle file should exist', () => {
+  it('bundle file exists', () => {
     expect(() => loadBundleCode(bundlePath)).not.toThrow()
   })
 
-  it('minified bundle file should exist', () => {
+  it('minified bundle file exists', () => {
     expect(() => loadBundleCode(minBundlePath)).not.toThrow()
   })
 
-  it('should attach HyperfrontendRandomGenerator to window global', () => {
+  it('attaches HyperfrontendRandomGenerator to window global', () => {
     const bundleCode = loadBundleCode(bundlePath)
     const global = executeBundleInWindow(bundleCode, 'HyperfrontendRandomGenerator')
 
     expect(global).toBeDefined()
   })
 
-  it('should export uuidV4 on the global', () => {
+  it('exports uuidV4 on the global', () => {
     const bundleCode = loadBundleCode(bundlePath)
     const global = executeBundleInWindow(bundleCode, 'HyperfrontendRandomGenerator') as Record<string, unknown>
 
     expect(typeof global.uuidV4).toBe('function')
   })
 
-  it('should generate valid UUIDv4 from IIFE bundle', () => {
+  it('generates valid UUIDv4 from IIFE bundle', () => {
     const bundleCode = loadBundleCode(bundlePath)
     const global = executeBundleInWindow(bundleCode, 'HyperfrontendRandomGenerator') as {
       uuidV4: () => string
@@ -43,7 +43,7 @@ describe('@hyperfrontend/random-generator-utils IIFE bundle', () => {
     expect(global.isUuidV4(uuid)).toBe(true)
   })
 
-  it('should export randomUniform on the global', () => {
+  it('exports randomUniform on the global', () => {
     const bundleCode = loadBundleCode(bundlePath)
     const global = executeBundleInWindow(bundleCode, 'HyperfrontendRandomGenerator') as {
       randomUniform: (min: number, max: number) => number
