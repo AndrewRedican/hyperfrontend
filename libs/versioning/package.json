@@ -3,7 +3,7 @@
   "version": "0.6.1",
   "description": "Versioning library with changelog parsing, conventional commits, and semver flow orchestration.",
   "dependencies": {
-    "@hyperfrontend/immutable-api-utils": "0.1.3",
+    "@hyperfrontend/immutable-api-utils": "0.1.4",
     "@hyperfrontend/json-utils": "0.1.1",
     "@hyperfrontend/logging": "0.1.1",
     "@hyperfrontend/project-scope": "0.2.3",

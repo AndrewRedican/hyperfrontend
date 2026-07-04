@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.1.2](https://github.com/AndrewRedican/hyperfrontend/compare/6b5a02be62850b0509b9fd71ad9232655cf5fbbf...fa865ea9e5f2078f535be2c830a1f130b3fc9a26) - 2026-07-04
+
+### Bug Fixes
+
+- strip lint pragmas from non-minified bundle outputs
+- anchor the TypeScript include filter to the workspace root
+
 ## [0.1.1](https://github.com/AndrewRedican/hyperfrontend/compare/5f116abb8ba6355dfb283fa03b7481e5eb029480...7fb26b6a30c007cd0392f1fc973265c3d25e16dd) - 2026-06-28
 
 ### Bug Fixes

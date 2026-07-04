@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.1.2](https://github.com/AndrewRedican/hyperfrontend/compare/5f116abb8ba6355dfb283fa03b7481e5eb029480...fa865ea9e5f2078f535be2c830a1f130b3fc9a26) - 2026-07-04
+
+### Bug Fixes
+
+- drop import-time fixture side effects from the prod graph
+
 ## [0.1.1](https://github.com/AndrewRedican/hyperfrontend/compare/a0ce00788db9fe1c2b1acf06dd59b2622cb1ed3f...466c0388c4cd516b9c704214140b4df1004098e6) - 2026-06-23
 
 ### Other

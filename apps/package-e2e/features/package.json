@@ -7,7 +7,7 @@
     "pack-install": "cd ../../../dist/libs/features && npm pack && cd - && npm install ../../../dist/libs/features/*.tgz"
   },
   "dependencies": {
-    "@hyperfrontend/features": "file:../../../tmp/e2e-packs/hyperfrontend-features-0.1.0.tgz"
+    "@hyperfrontend/features": "file:../../../tmp/e2e-packs/hyperfrontend-features-0.2.0.tgz"
   },
   "devDependencies": {
     "@types/jest": "29.5.14",

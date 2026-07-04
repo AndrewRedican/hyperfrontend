@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.1.4](https://github.com/AndrewRedican/hyperfrontend/compare/5f116abb8ba6355dfb283fa03b7481e5eb029480...fa865ea9e5f2078f535be2c830a1f130b3fc9a26) - 2026-07-04
+
+### Bug Fixes
+
+- guard SharedArrayBuffer copies on non-isolated pages
+
 ## [0.1.3](https://github.com/AndrewRedican/hyperfrontend/compare/31943a4b39484dba86b358e4f361abe76edc4fe1...466c0388c4cd516b9c704214140b4df1004098e6) - 2026-06-23
 
 ### Other
