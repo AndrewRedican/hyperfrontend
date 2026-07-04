@@ -121,6 +121,10 @@ module.exports = [
             '@hyperfrontend/time-utils',
             '@hyperfrontend/ui-utils',
             '@hyperfrontend/web-worker',
+            // Vendored demo shell tarballs are file: deps outside the Nx project graph,
+            // so dependency-checks would auto-remove them; exact names required — list
+            // each vendored demo shell here
+            '@hyperfrontend/demo-clock-shell',
             // Third-party dependencies used by docs-site
             'clsx',
             'mermaid',

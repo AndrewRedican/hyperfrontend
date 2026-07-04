@@ -5,6 +5,7 @@
   "sourceRoot": "apps/docs-site/src",
   "projectType": "application",
   "tags": ["type:app", "scope:standalone"],
+  "implicitDependencies": ["demo-clock"],
   "targets": {
     "typecheck": {
       "executor": "nx:run-commands",
@@ -17,6 +18,15 @@
     "install": {
       "executor": "@hyperfrontend/app:install",
       "options": {}
+    },
+    "refresh-shell": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["demo-clock:pack-shell"],
+      "options": {
+        "commands": ["cp ../../dist/apps/demos/clock/shell/hyperfrontend-demo-clock-shell-*.tgz vendor/", "npm install"],
+        "cwd": "apps/docs-site",
+        "parallel": false
+      }
     },
     "build": {
       "executor": "@hyperfrontend/app:build",

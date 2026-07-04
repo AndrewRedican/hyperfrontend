@@ -27,3 +27,6 @@ yarn-error.log*
 
 # Vercel
 .vercel
+
+# Vendored demo shell tarballs are committed on purpose (docs-site installs them via file:)
+!vendor/*.tgz
