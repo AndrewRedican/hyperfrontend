@@ -63,15 +63,22 @@ export interface DevServerDeps extends StaticHandlerDeps {
 }
 
 /**
- * Probes a single directory for the shipped debug-UI assets.
+ * Probes a single directory for the shipped debug-UI assets, checking both a
+ * sibling `debug-ui` folder (running from the `server/` output) and a nested
+ * `server/debug-ui` folder (running from another package entry, such as the
+ * CLI bin at the package root).
  *
- * @param dir - Candidate directory expected to contain a `debug-ui` folder.
+ * @param dir - Candidate directory expected to hold the assets.
  * @param isFile - File probe used to confirm the assets exist.
  * @returns The `debug-ui` asset directory, or `undefined` when it is not here.
  */
 function probeAssetDir(dir: string, isFile: (path: string) => boolean): string | undefined {
-  const assetDir = join(dir, 'debug-ui')
-  return isFile(join(assetDir, 'index.html')) ? assetDir : undefined
+  const sibling = join(dir, 'debug-ui')
+  if (isFile(join(sibling, 'index.html'))) {
+    return sibling
+  }
+  const nested = join(dir, 'server', 'debug-ui')
+  return isFile(join(nested, 'index.html')) ? nested : undefined
 }
 
 /**

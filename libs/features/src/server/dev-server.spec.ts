@@ -101,6 +101,14 @@ describe('startDevServer', () => {
     await expect(startDevServer(config({ apps: [] }), { isFile: () => false })).rejects.toThrow('inject `assetRoot`')
   })
 
+  it('locates assets nested under a server directory when no sibling folder exists', async () => {
+    handle = await startDevServer(config({ apps: [] }), {
+      isFile: (path) => path.endsWith(join('server', 'debug-ui', 'index.html')) && !path.includes(join('src', 'server', 'debug-ui')),
+      readFile: () => Buffer.from('<debug>HF_MANIFEST_PLACEHOLDER</debug>'),
+    })
+    await expect(fetchUrl(handle.debugUrl ?? '')).resolves.toEqual(expect.objectContaining({ status: 200 }))
+  })
+
   it('uses injected server-creation and file-system overrides', async () => {
     handle = await startDevServer(config(), {
       createServer: (handler) => createServer(handler),
