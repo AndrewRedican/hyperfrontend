@@ -24,7 +24,6 @@ const BUILD_SUITE_TIMEOUT = 600000
  * @returns The absolute bin path.
  */
 function resolveHfBin(): string {
-  // eslint-disable-next-line @typescript-eslint/no-require-imports
   const pkg = require('@hyperfrontend/features/package.json')
   const packageDir = dirname(require.resolve('@hyperfrontend/features/package.json'))
   return join(packageDir, <string>pkg.bin['hf'])

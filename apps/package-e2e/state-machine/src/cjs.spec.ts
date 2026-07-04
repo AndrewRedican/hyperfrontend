@@ -8,13 +8,11 @@
 describe('@hyperfrontend/state-machine CJS', () => {
   describe('actions sub-entry', () => {
     it('should be requireable', () => {
-      // eslint-disable-next-line @typescript-eslint/no-require-imports
       const actions = require('@hyperfrontend/state-machine/actions')
       expect(actions).toBeDefined()
     })
 
     it('should export action creators', () => {
-      // eslint-disable-next-line @typescript-eslint/no-require-imports
       const { start, cancel, pause, success, fail } = require('@hyperfrontend/state-machine/actions')
       expect(typeof start).toBe('function')
       expect(typeof cancel).toBe('function')
@@ -24,7 +22,6 @@ describe('@hyperfrontend/state-machine CJS', () => {
     })
 
     it('should create valid action objects', () => {
-      // eslint-disable-next-line @typescript-eslint/no-require-imports
       const { start, success } = require('@hyperfrontend/state-machine/actions')
 
       const startAction = start()
@@ -38,7 +35,6 @@ describe('@hyperfrontend/state-machine CJS', () => {
 
   describe('store sub-entry', () => {
     it('should be requireable', () => {
-      // eslint-disable-next-line @typescript-eslint/no-require-imports
       const store = require('@hyperfrontend/state-machine/store')
       expect(store).toBeDefined()
     })
@@ -48,7 +44,6 @@ describe('@hyperfrontend/state-machine CJS', () => {
 
   describe('reducer sub-entry', () => {
     it('should be requireable', () => {
-      // eslint-disable-next-line @typescript-eslint/no-require-imports
       const reducer = require('@hyperfrontend/state-machine/reducer')
       expect(reducer).toBeDefined()
     })
@@ -56,7 +51,6 @@ describe('@hyperfrontend/state-machine CJS', () => {
 
   describe('selectors sub-entry', () => {
     it('should be requireable', () => {
-      // eslint-disable-next-line @typescript-eslint/no-require-imports
       const selectors = require('@hyperfrontend/state-machine/selectors')
       expect(selectors).toBeDefined()
     })
@@ -64,7 +58,6 @@ describe('@hyperfrontend/state-machine CJS', () => {
 
   describe('state sub-entry', () => {
     it('should be requireable', () => {
-      // eslint-disable-next-line @typescript-eslint/no-require-imports
       const state = require('@hyperfrontend/state-machine/state')
       expect(state).toBeDefined()
     })
@@ -72,7 +65,6 @@ describe('@hyperfrontend/state-machine CJS', () => {
 
   describe('async-operation sub-entry', () => {
     it('should be requireable', () => {
-      // eslint-disable-next-line @typescript-eslint/no-require-imports
       const asyncOp = require('@hyperfrontend/state-machine/async-operation')
       expect(asyncOp).toBeDefined()
     })
@@ -80,7 +72,6 @@ describe('@hyperfrontend/state-machine CJS', () => {
 
   describe('events sub-entry', () => {
     it('should be requireable', () => {
-      // eslint-disable-next-line @typescript-eslint/no-require-imports
       const events = require('@hyperfrontend/state-machine/events')
       expect(events).toBeDefined()
     })
@@ -88,7 +79,6 @@ describe('@hyperfrontend/state-machine CJS', () => {
 
   describe('models sub-entry', () => {
     it('should be requireable', () => {
-      // eslint-disable-next-line @typescript-eslint/no-require-imports
       const models = require('@hyperfrontend/state-machine/models')
       expect(models).toBeDefined()
     })

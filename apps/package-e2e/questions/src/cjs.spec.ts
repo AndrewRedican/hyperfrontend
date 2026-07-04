@@ -5,20 +5,17 @@
 
 describe('@hyperfrontend/questions CJS', () => {
   it('should be requireable', () => {
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
     const pkg = require('@hyperfrontend/questions')
     expect(pkg).toBeDefined()
   })
 
   it('should have exports', () => {
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
     const pkg = require('@hyperfrontend/questions')
     const exportedKeys = Object.keys(pkg)
     expect(exportedKeys.length).toBeGreaterThan(0)
   })
 
   it('should export functions or objects', () => {
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
     const pkg = require('@hyperfrontend/questions')
 
     // At least one export should be a function, object, or class

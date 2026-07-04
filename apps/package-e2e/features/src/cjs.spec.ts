@@ -27,13 +27,11 @@ describe('@hyperfrontend/features CJS', () => {
   })
 
   it('is requireable', () => {
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
     const pkg = require('@hyperfrontend/features')
     expect(pkg).toBeDefined()
   })
 
   it('has exports', () => {
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
     const pkg = require('@hyperfrontend/features')
     const exportedKeys = Object.keys(pkg)
     expect(exportedKeys.length).toBeGreaterThan(0)
@@ -41,13 +39,11 @@ describe('@hyperfrontend/features CJS', () => {
 
   describe('server-side require of every exports subpath', () => {
     it.each(NAMED_SUBPATH_SYMBOLS)('requires %s without a window and exposes %s', (specifier, symbol) => {
-      // eslint-disable-next-line @typescript-eslint/no-require-imports
       const mod = <Record<string, unknown>>require(specifier)
       expect(typeof mod[symbol]).toBe('function')
     })
 
     it.each(DEFAULT_EXPORT_SUBPATHS)('requires %s without a window and yields a callable default', (specifier) => {
-      // eslint-disable-next-line @typescript-eslint/no-require-imports
       const mod = <unknown>require(specifier)
       expect(typeof mod).toBe('function')
     })
