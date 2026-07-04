@@ -6,7 +6,7 @@ const config: Config = {
   transform: {
     '^.+\\.tsx?$': ['ts-jest', { tsconfig: '<rootDir>/tsconfig.json' }],
   },
-  testMatch: ['<rootDir>/src/cjs.spec.ts'],
+  testMatch: ['<rootDir>/src/cjs.spec.ts', '<rootDir>/src/cli.spec.ts'],
   moduleNameMapper: {},
 }
 
