@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.6.2](https://github.com/AndrewRedican/hyperfrontend/compare/5f116abb8ba6355dfb283fa03b7481e5eb029480...4084db19f1de72e3859e4eecac8a2b55c957565b) - 2026-07-04
+
+### Bug Fixes
+
+- anchor staged paths to the repo root for scope discovery
+
 ## [0.6.1](https://github.com/AndrewRedican/hyperfrontend/compare/926d40cab470e589fc30a1ef3a61ca764ff047bd...466c0388c4cd516b9c704214140b4df1004098e6) - 2026-06-23
 
 ### Other

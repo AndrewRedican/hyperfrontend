@@ -1,6 +1,6 @@
 {
   "name": "@hyperfrontend/versioning",
-  "version": "0.6.1",
+  "version": "0.6.2",
   "description": "Versioning library with changelog parsing, conventional commits, and semver flow orchestration.",
   "dependencies": {
     "@hyperfrontend/immutable-api-utils": "0.1.4",

@@ -13,7 +13,7 @@
     "@hyperfrontend/project-scope": "0.2.3",
     "@hyperfrontend/questions": "0.2.1",
     "@hyperfrontend/ui-utils": "0.0.6",
-    "@hyperfrontend/versioning": "0.6.1",
+    "@hyperfrontend/versioning": "0.6.2",
     "typescript": "5.9.3"
   },
   "bin": {
