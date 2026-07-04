@@ -19,7 +19,7 @@
           },
           {
             "entry": ["./nx/generators/feature", "./nx/executors/build", "./nx/executors/serve"],
-            "bundleWorkspaceDeps": false,
+            "bundleWorkspaceDeps": true,
             "bundleAllDeps": false
           }
         ],
@@ -31,7 +31,7 @@
           },
           {
             "entry": ["./nx/generators/feature", "./nx/executors/build", "./nx/executors/serve"],
-            "bundleWorkspaceDeps": false,
+            "bundleWorkspaceDeps": true,
             "bundleAllDeps": false
           }
         ],
