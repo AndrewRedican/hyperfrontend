@@ -26,7 +26,7 @@ export interface DemoManifestEntry {
  * @returns The URL the clock feature app is embedded from.
  */
 function clockFeatureUrl(): string {
-  return process.env['NEXT_PUBLIC_CLOCK_FEATURE_URL'] ?? 'https://hyperfrontend-demo-clock.up.railway.app/'
+  return process.env['NEXT_PUBLIC_CLOCK_FEATURE_URL'] ?? 'https://demo-clock-production.up.railway.app/'
 }
 
 /** Every demo album, in carousel order — live demos first. */
