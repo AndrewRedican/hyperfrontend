@@ -214,9 +214,11 @@ const shadowStyle = computed(() => {
   }
 })
 
+const analogFace = ref<InstanceType<typeof AnalogFace> | null>(null)
+
 const label = computed(() => {
   const minuteEpoch = props.epochMs - (props.epochMs % 60_000)
-  return `Clock coin showing its ${restingFace.value} face — ${formatTime(minuteEpoch, props.timezone, props.locale, 'analog')}. Press Enter to flip.`
+  return `Clock coin showing its ${restingFace.value} face — ${formatTime(minuteEpoch, props.timezone, props.locale, 'analog')}. Press Enter to flip; arrow keys turn the bezel.`
 })
 </script>
 
@@ -232,6 +234,8 @@ const label = computed(() => {
       @pointercancel="onPointerUp"
       @keydown.enter="onKeyFlip"
       @keydown.space="onKeyFlip"
+      @keydown.left.prevent="analogFace?.nudgeBezel(-1)"
+      @keydown.right.prevent="analogFace?.nudgeBezel(1)"
     >
       <div class="coin" :class="{ 'coin--alarm': firing !== null }" :style="coinStyle">
         <div
@@ -241,7 +245,7 @@ const label = computed(() => {
           :style="{ transform: `translateZ(${(layer - (EDGE_LAYERS + 1) / 2) * 1.6}px)` }"
         ></div>
         <div class="coin-face coin-face--front" :class="{ 'coin-face--hidden': reducedMotion && restingFace !== 'analog' }">
-          <AnalogFace :epoch-ms="epochMs" :timezone="timezone" :smooth="!reducedMotion" />
+          <AnalogFace ref="analogFace" :epoch-ms="epochMs" :timezone="timezone" :smooth="!reducedMotion" />
           <div class="shine" :style="{ opacity: shine.opacity, backgroundPosition: `${shine.offset}% 0` }"></div>
         </div>
         <div class="coin-face coin-face--back" :class="{ 'coin-face--hidden': reducedMotion && restingFace !== 'digital' }">
@@ -281,7 +285,7 @@ const label = computed(() => {
 
 .coin-button:focus-visible {
   outline: none;
-  filter: drop-shadow(0 0 14px rgba(253, 112, 20, 0.8));
+  filter: drop-shadow(0 0 14px rgba(102, 196, 255, 0.85));
 }
 
 .coin {
@@ -302,9 +306,8 @@ const label = computed(() => {
   border-radius: 50%;
   backface-visibility: hidden;
   overflow: hidden;
-  box-shadow:
-    inset 0 0 0 5px #57503f,
-    inset 0 0 0 7px #2c2823;
+  /* note: The faces draw their own steel case — only a hairline keeps the silhouette crisp on pale hosts. */
+  box-shadow: inset 0 0 0 1px rgba(15, 20, 28, 0.65);
 }
 
 .coin-face--front {
@@ -319,8 +322,8 @@ const label = computed(() => {
   position: absolute;
   inset: 0;
   border-radius: 50%;
-  background: #38332b;
-  box-shadow: inset 0 0 6px #14120f;
+  background: linear-gradient(180deg, #d6dbe2, #99a3af 45%, #6d7683);
+  box-shadow: inset 0 0 5px rgba(16, 22, 32, 0.55);
 }
 
 .shine {
@@ -328,7 +331,7 @@ const label = computed(() => {
   inset: 0;
   border-radius: 50%;
   pointer-events: none;
-  background: linear-gradient(115deg, transparent 30%, rgba(255, 244, 224, 0.85) 50%, transparent 70%);
+  background: linear-gradient(115deg, transparent 30%, rgba(235, 245, 255, 0.85) 50%, transparent 70%);
   background-size: 300% 100%;
   mix-blend-mode: screen;
 }
@@ -337,10 +340,10 @@ const label = computed(() => {
   position: absolute;
   left: 50%;
   bottom: -9%;
-  width: 62%;
+  width: 66%;
   height: 7%;
   border-radius: 50%;
-  background: radial-gradient(ellipse, rgba(0, 0, 0, 0.75), transparent 70%);
+  background: radial-gradient(ellipse, rgba(1, 6, 16, 0.78), transparent 70%);
   filter: blur(4px);
   pointer-events: none;
 }

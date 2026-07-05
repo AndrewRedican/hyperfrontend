@@ -16,7 +16,7 @@ See [00-strategy.md](00-strategy.md) (journey J1, "Special handling") and the [i
 
 A **clock coin**: a minted-metal coin floating on a transparent background, an analog clock face on one side and a digital face on the other. Visitors press, drag, or swipe to spin it with physics-like momentum; it decelerates and snaps onto a face. **The resting face _is_ the clock's format** — every flip a visitor makes is contract traffic (`format-changed`), and every `set-format` the host sends is a physics flip they can watch. The demo's hero interaction and its messaging thesis are the same gesture.
 
-Visual heritage: the analog dial, orange accent (`#fd7014`), and BenchNine numerals continue the legacy analog clock from this codebase's lineage; the implementation shares nothing with it.
+Visual heritage: the analog dial, orange accent (`#fd7014`), and BenchNine continue the legacy analog clock from this codebase's lineage; the implementation shares nothing with it. **Update (2026-07-05)**: the coin's visual identity is superseded by the luxury refit in [14-clock-luxury-refit.md](14-clock-luxury-refit.md) — navy sunburst dial, rotating ceramic bezel, applied lume indices, steel oyster-style case; the orange accent survives in the second hand and alarm surfaces, BenchNine in the date/bezel/brand/digital text.
 
 ## Composition model (locked — this is the blank prototype's shape)
 
@@ -47,6 +47,8 @@ The feature owns all state; the host commands, the feature confirms with echo ev
 Semantics: timezone = IANA id, locale = BCP-47, both applied via `Intl` (no hand-rolled i18n). Alarms: multiple, one-shot at the next occurrence of `HH:mm` in the feature's current timezone, in-memory only. `get-time` is single-in-flight (no correlation ids — the 1 Hz `tick` makes pulls rare; the gap is a filed finding). The raw generated shell is consumed as-is — stringly `send`/`on` is the current ergonomic ceiling, likewise filed as a finding.
 
 ## The coin (locked)
+
+> **Superseded in part (2026-07-05):** the visual specifics below (Identity, the faces' dial furniture) are superseded by the luxury refit — see [14-clock-luxury-refit.md](14-clock-luxury-refit.md) for the current locked design. Rendering approach, motion, alarm behavior, and a11y remain locked as written here.
 
 - **Rendering**: CSS 3D transforms — `perspective` wrapper, `preserve-3d` coin, two DOM faces with `backface-visibility: hidden` (back pre-rotated 180°), edge faked with stacked discs, physics writes one `rotateY` per frame. SVG dial + CSS-rotated hands; real text everywhere.
 - **Motion**: Y-axis spin with a few degrees of springy pointer-driven X-tilt. Hand-rolled physics (~150 lines, zero deps): drag = 1:1 manipulation (grabbing mid-spin catches it), release = momentum with exponential friction, spring-snap to the momentum-biased nearest face, tap = impulse flip. Landing on a face emits `format-changed {cause:'user'}`.

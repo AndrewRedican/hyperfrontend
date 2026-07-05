@@ -26,7 +26,7 @@ export interface DemoManifestEntry {
  * @returns The URL the clock feature app is embedded from.
  */
 function clockFeatureUrl(): string {
-  return process.env['NEXT_PUBLIC_CLOCK_FEATURE_URL'] ?? 'https://hyperfrontend-demo-clock.up.railway.app/'
+  return process.env['NEXT_PUBLIC_CLOCK_FEATURE_URL'] ?? 'https://demo-clock-production.up.railway.app/'
 }
 
 /** Every demo album, in carousel order — live demos first. */
@@ -35,8 +35,8 @@ export const DEMO_MANIFEST: readonly DemoManifestEntry[] = [
     slug: 'clock',
     title: 'Clock',
     description:
-      'A minted coin with an analog and a digital face. Spin it — the resting face is the clock’s format, and every flip is contract traffic.',
-    poster: '/demos/clock-poster.png',
+      'A luxury timepiece coin — navy sunburst dial on one face, a steel case-back LCD on the other. Spin it: the resting face is the clock’s format, and every flip is contract traffic.',
+    poster: '/demos/clock-poster.svg',
     boundary: 'cross-site',
     featureUrl: clockFeatureUrl(),
     stack: 'Vue 3 feature · React host',
