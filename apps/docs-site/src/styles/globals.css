@@ -96,20 +96,6 @@
 }
 
 @layer utilities {
-  /* Smooth animation for demo showcase */
-  .animate-progress-border {
-    animation: progress-border linear infinite;
-  }
-
-  @keyframes progress-border {
-    from {
-      stroke-dashoffset: 100%;
-    }
-    to {
-      stroke-dashoffset: 0%;
-    }
-  }
-
   /* Subtle glow effect */
   .glow-primary {
     box-shadow: 0 0 40px -10px theme('colors.primary.500 / 30%');

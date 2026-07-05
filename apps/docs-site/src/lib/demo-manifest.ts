@@ -35,8 +35,8 @@ export const DEMO_MANIFEST: readonly DemoManifestEntry[] = [
     slug: 'clock',
     title: 'Clock',
     description:
-      'A minted coin with an analog and a digital face. Spin it — the resting face is the clock’s format, and every flip is contract traffic.',
-    poster: '/demos/clock-poster.png',
+      'A luxury timepiece coin — navy sunburst dial on one face, a steel case-back LCD on the other. Spin it: the resting face is the clock’s format, and every flip is contract traffic.',
+    poster: '/demos/clock-poster.svg',
     boundary: 'cross-site',
     featureUrl: clockFeatureUrl(),
     stack: 'Vue 3 feature · React host',
