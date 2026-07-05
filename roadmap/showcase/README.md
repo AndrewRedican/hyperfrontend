@@ -46,6 +46,7 @@ D = discovery-heavy · E = execution-heavy · ⭐ = special, prominent handling
 | 11  | [Flagship composed app](11-flagship-composed-app.md)                     | E    | 08–10      | The composed centerpiece (e.g. fake desktop/OS)                                                                      |
 | 12  | [Gallery / docs-site integration](12-gallery-docs-integration.md)        | E    | 04, 08–11  | Self-hosting gallery in the docs site; live embeds, per-demo pages                                                   |
 | 13  | [v2 release](13-v2-release.md)                                           | D+E  | all        | Triage registry → v2 changes → publish → docs refresh                                                                |
+| 14  | [Clock luxury refit + showcase surfaces](14-clock-luxury-refit.md)       | E    | 04         | Haute-horlogerie clock redesign, poster/showcase reinstatement, Railway publish pattern                              |
 
 > **03 is vacant.** Deployment/CI is no longer a standalone plan — it's folded into [00-strategy.md](00-strategy.md#deployment-and-the-origin-boundary-layer) (decisions settled; only per-demo execution remains). The slot is left empty rather than renumbering 04–13.
 
