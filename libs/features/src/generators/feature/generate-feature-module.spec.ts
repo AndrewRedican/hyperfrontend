@@ -1,4 +1,5 @@
 import type { FeatureContract, ResolvedFeatureConfig } from '../../shared/types'
+import { join } from 'node:path'
 import { createTree } from '@hyperfrontend/project-scope/vfs'
 import { generateFeatureModule } from './generate-feature-module'
 
@@ -13,10 +14,10 @@ describe('generateFeatureModule', () => {
     expect(tree.read(MODULE_PATH, 'utf-8')).toContain("createFeature({ name: 'clock', contract })")
   })
 
-  it('scaffolds an on-handler stub per accepted action', () => {
+  it('scaffolds a typed on-handler stub per accepted action', () => {
     const tree = createTree(__dirname)
     generateFeatureModule(config, contract, tree)
-    expect(tree.read(MODULE_PATH, 'utf-8')).toContain("feature.on('setTimezone', (data) => {")
+    expect(tree.read(MODULE_PATH, 'utf-8')).toContain("feature.on('setTimezone', (_data: unknown) => {")
   })
 
   it('scaffolds a commented send example per emitted action', () => {
@@ -25,16 +26,34 @@ describe('generateFeatureModule', () => {
     expect(tree.read(MODULE_PATH, 'utf-8')).toContain("// feature.send('timeUpdated', undefined)")
   })
 
-  it('imports the contract by its extensionless relative path', () => {
+  it('imports a contract in a non-src sibling directory relative to the module directory', () => {
     const tree = createTree(__dirname)
     generateFeatureModule(config, contract, tree)
+    expect(tree.read(MODULE_PATH, 'utf-8')).toContain("import contract from '../contracts/clock.contract'")
+  })
+
+  it('re-relativizes a root-level contract path from the module directory', () => {
+    const tree = createTree(__dirname)
+    generateFeatureModule({ ...config, contract: './clock.contract.json' }, contract, tree)
+    expect(tree.read(MODULE_PATH, 'utf-8')).toContain("import contract from '../clock.contract'")
+  })
+
+  it('imports a contract inside src by a same-directory specifier', () => {
+    const tree = createTree(__dirname)
+    generateFeatureModule({ ...config, contract: 'src/contracts/clock.contract.json' }, contract, tree)
     expect(tree.read(MODULE_PATH, 'utf-8')).toContain("import contract from './contracts/clock.contract'")
   })
 
-  it('leaves an already-relative contract path untouched', () => {
+  it('relativizes an absolute contract path against the tree root', () => {
     const tree = createTree(__dirname)
-    generateFeatureModule({ ...config, contract: './clock.contract.json' }, contract, tree)
-    expect(tree.read(MODULE_PATH, 'utf-8')).toContain("import contract from './clock.contract'")
+    generateFeatureModule({ ...config, contract: join(__dirname, 'clock.contract.ts') }, contract, tree)
+    expect(tree.read(MODULE_PATH, 'utf-8')).toContain("import contract from '../clock.contract'")
+  })
+
+  it('emits POSIX separators for backslashed contract paths', () => {
+    const tree = createTree(__dirname)
+    generateFeatureModule({ ...config, contract: 'contracts\\clock.contract.json' }, contract, tree)
+    expect(tree.read(MODULE_PATH, 'utf-8')).toContain("import contract from '../contracts/clock.contract'")
   })
 
   it('never clobbers an existing module on re-run', () => {

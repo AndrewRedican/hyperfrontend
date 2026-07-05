@@ -17,29 +17,29 @@ describe('@hyperfrontend/ui-utils UMD bundle', () => {
   const bundlePath = getBundlePath('umd')
   const minBundlePath = getBundlePath('umd', true)
 
-  it('bundle file should exist', () => {
+  it('bundle file exists', () => {
     expect(() => loadBundleCode(bundlePath)).not.toThrow()
   })
 
-  it('minified bundle file should exist', () => {
+  it('minified bundle file exists', () => {
     expect(() => loadBundleCode(minBundlePath)).not.toThrow()
   })
 
-  it('should attach HyperfrontendUIUtils to window global (browser mode)', () => {
+  it('attaches HyperfrontendUIUtils to window global (browser mode)', () => {
     const bundleCode = loadBundleCode(bundlePath)
     const global = executeBundleInWindow(bundleCode, 'HyperfrontendUIUtils')
 
     expect(global).toBeDefined()
   })
 
-  it('should export hexToRgb function', () => {
+  it('exports hexToRgb function', () => {
     const bundleCode = loadBundleCode(bundlePath)
     const global = executeBundleInWindow(bundleCode, 'HyperfrontendUIUtils') as Record<string, unknown>
 
     expect(typeof global.hexToRgb).toBe('function')
   })
 
-  it('should work when required as CJS module', () => {
+  it('works when required as CJS module', () => {
     const bundleCode = loadBundleCode(bundlePath)
     const exports = requireUmdBundle(bundleCode) as Record<string, unknown>
 

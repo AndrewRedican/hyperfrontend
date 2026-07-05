@@ -31,11 +31,30 @@ describe('resolveBuildConfig', () => {
     )
   })
 
+  it('marks a defaulted protocol as not explicit', async () => {
+    writeConfig('{ "name": "clock", "version": "1.0.0", "contract": "./clock.contract.json" }')
+    await expect(resolveBuildConfig({ cwd: dir, flags: baseFlags })).resolves.toEqual(expect.objectContaining({ protocolExplicit: false }))
+  })
+
+  it('threads the resolved protocol into the config for the generators', async () => {
+    writeConfig('{ "name": "clock", "version": "1.0.0", "contract": "./clock.contract.json", "protocol": "v2" }')
+    await expect(resolveBuildConfig({ cwd: dir, flags: baseFlags })).resolves.toEqual(
+      expect.objectContaining({ config: expect.objectContaining({ protocol: 'v2' }) })
+    )
+  })
+
   it('lets flags replace config keys', async () => {
     writeConfig('{ "name": "a", "version": "1.0.0", "contract": "./clock.contract.json" }')
     const flags: CliFlags = { ...baseFlags, name: 'b', url: '/x', protocol: 'v2' }
     await expect(resolveBuildConfig({ cwd: dir, flags })).resolves.toEqual(
       expect.objectContaining({ config: expect.objectContaining({ name: 'b', url: '/x' }), protocol: 'v2' })
+    )
+  })
+
+  it('marks a flag-supplied protocol as explicit', async () => {
+    writeConfig('{ "name": "a", "version": "1.0.0", "contract": "./clock.contract.json" }')
+    await expect(resolveBuildConfig({ cwd: dir, flags: { ...baseFlags, protocol: 'none' } })).resolves.toEqual(
+      expect.objectContaining({ protocol: 'none', protocolExplicit: true })
     )
   })
 
@@ -57,7 +76,11 @@ describe('resolveBuildConfig', () => {
       '{ "name": "clock", "version": "1.0.0", "contract": "./clock.contract.json", "protocol": "v1", "display": { "dialogWidth": 1 }, "url": "/u" }'
     )
     await expect(resolveBuildConfig({ cwd: dir, flags: baseFlags })).resolves.toEqual(
-      expect.objectContaining({ protocol: 'v1', config: expect.objectContaining({ url: '/u', display: { dialogWidth: 1 } }) })
+      expect.objectContaining({
+        protocol: 'v1',
+        protocolExplicit: true,
+        config: expect.objectContaining({ url: '/u', display: { dialogWidth: 1 } }),
+      })
     )
   })
 

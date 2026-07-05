@@ -32,7 +32,7 @@ describe('startDevServer', () => {
     assetRoot = mkdtempSync(join(tmpdir(), 'hf-assets-'))
     appDir = mkdtempSync(join(tmpdir(), 'hf-app-'))
     writeFileSync(join(assetRoot, 'index.html'), '<debug>HF_MANIFEST_PLACEHOLDER</debug>')
-    writeFileSync(join(assetRoot, 'bootstrap.js'), 'export const boot = true')
+    writeFileSync(join(assetRoot, 'index.iife.min.js'), 'var HyperfrontendFeaturesDebugUi = {}')
     writeFileSync(join(appDir, 'index.html'), 'APP_INDEX')
   })
 
@@ -63,8 +63,8 @@ describe('startDevServer', () => {
 
   it('serves the compiled debug-UI assets under /__debug/', async () => {
     handle = await startDevServer(config(), { assetRoot })
-    await expect(fetchUrl(`${handle.debugUrl}__debug/bootstrap.js`)).resolves.toEqual(
-      expect.objectContaining({ status: 200, body: 'export const boot = true' })
+    await expect(fetchUrl(`${handle.debugUrl}__debug/index.iife.min.js`)).resolves.toEqual(
+      expect.objectContaining({ status: 200, body: 'var HyperfrontendFeaturesDebugUi = {}' })
     )
   })
 
@@ -81,8 +81,9 @@ describe('startDevServer', () => {
     expect(response).toEqual({ status: 404, body: 'Debug UI assets not found.' })
   })
 
-  it('omits the debug server when the debug UI is disabled', async () => {
-    handle = await startDevServer(config({ debug: { enabled: false, messageLog: false, securityView: false } }), { assetRoot })
+  it('omits the debug server and skips asset location when the debug UI is disabled', async () => {
+    // why: `isFile: () => false` would make asset self-location throw, proving the disabled path never attempts it.
+    handle = await startDevServer(config({ debug: { enabled: false, messageLog: false, securityView: false } }), { isFile: () => false })
     expect(handle.debugUrl).toBeUndefined()
   })
 
@@ -93,6 +94,18 @@ describe('startDevServer', () => {
 
   it('locates the bundled debug-UI assets when no assetRoot is given', async () => {
     handle = await startDevServer(config())
+    await expect(fetchUrl(handle.debugUrl ?? '')).resolves.toEqual(expect.objectContaining({ status: 200 }))
+  })
+
+  it('rejects when the debug-UI assets cannot be located beside the module', async () => {
+    await expect(startDevServer(config({ apps: [] }), { isFile: () => false })).rejects.toThrow('inject `assetRoot`')
+  })
+
+  it('locates assets nested under a server directory when no sibling folder exists', async () => {
+    handle = await startDevServer(config({ apps: [] }), {
+      isFile: (path) => path.endsWith(join('server', 'debug-ui', 'index.html')) && !path.includes(join('src', 'server', 'debug-ui')),
+      readFile: () => Buffer.from('<debug>HF_MANIFEST_PLACEHOLDER</debug>'),
+    })
     await expect(fetchUrl(handle.debugUrl ?? '')).resolves.toEqual(expect.objectContaining({ status: 200 }))
   })
 

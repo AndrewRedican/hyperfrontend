@@ -79,6 +79,11 @@ describe('mountDialog', () => {
     expect(result.target).toBe(container.querySelector('iframe')?.contentWindow)
   })
 
+  it('exposes the dialog container as the mounted element', () => {
+    const { result, container } = mount({})
+    expect(result.element).toBe(container)
+  })
+
   it('removes the dialog container on cleanup', () => {
     const { result, container } = mount({})
     result.cleanup()

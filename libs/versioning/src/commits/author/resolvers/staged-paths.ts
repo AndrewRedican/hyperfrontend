@@ -1,4 +1,5 @@
 import { execFileSync } from 'node:child_process'
+import { join } from 'node:path'
 import { createError } from '@hyperfrontend/immutable-api-utils/built-in-copy/error'
 
 /** Options accepted by the default staged-paths provider. */
@@ -13,35 +14,50 @@ export interface StagedPathsOptions {
 const DEFAULT_TIMEOUT = 30000
 
 /**
- * Default staged-paths provider. Shells out to
- * `git diff --cached --name-only -z`, splits on NUL, and filters out the
- * trailing empty entry. Returns paths relative to the git repository root
- * (same as git's own output).
+ * Default staged-paths provider. Resolves the repository root via
+ * `git rev-parse --show-toplevel`, reads `git diff --cached --name-only -z`,
+ * and returns each staged path as an absolute path anchored at that root.
+ *
+ * Git emits staged paths relative to the repository root no matter which
+ * directory the command runs from, so anchoring here keeps downstream
+ * project-root discovery correct when the session cwd is a subdirectory.
  *
  * @param options - Resolver options (cwd, optional timeout)
- * @returns Staged file paths as emitted by git
+ * @returns Absolute staged file paths
  *
- * @example Reading the current staging area
+ * @example Reading the current staging area from a subdirectory
  * ```typescript
- * getStagedPaths({ cwd: '/repo' })
- * // => ['libs/versioning/src/commits/author/index.ts']
+ * getStagedPaths({ cwd: '/repo/apps/demo' })
+ * // => ['/repo/libs/versioning/src/commits/author/index.ts']
  * ```
  */
 export function getStagedPaths(options: StagedPathsOptions): readonly string[] {
   try {
-    const stdout = execFileSync('git', ['diff', '--cached', '--name-only', '-z'], {
-      encoding: 'utf-8',
-      cwd: options.cwd,
-      timeout: options.timeout ?? DEFAULT_TIMEOUT,
-      stdio: ['pipe', 'pipe', 'pipe'],
-    })
-    return splitOnNull(stdout)
+    const repoRoot = runGit(['rev-parse', '--show-toplevel'], options).trim()
+    const stdout = runGit(['diff', '--cached', '--name-only', '-z'], options)
+    return splitOnNull(stdout).map((path) => join(repoRoot, path))
   } catch (error) {
     if (error instanceof Error) {
       throw createError(`Failed to read staged paths: ${error.message}`)
     }
     throw error
   }
+}
+
+/**
+ * Runs a git subcommand with the provider's cwd and timeout applied.
+ *
+ * @param args - Git arguments after the binary name
+ * @param options - Resolver options supplying cwd and timeout
+ * @returns Raw stdout of the git invocation
+ */
+function runGit(args: readonly string[], options: StagedPathsOptions): string {
+  return execFileSync('git', <string[]>args, {
+    encoding: 'utf-8',
+    cwd: options.cwd,
+    timeout: options.timeout ?? DEFAULT_TIMEOUT,
+    stdio: ['pipe', 'pipe', 'pipe'],
+  })
 }
 
 /**

@@ -4,20 +4,17 @@
  */
 
 describe('@hyperfrontend/data-utils CJS', () => {
-  it('should be requireable', () => {
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
+  it('is requireable', () => {
     const dataUtils = require('@hyperfrontend/data-utils')
     expect(dataUtils).toBeDefined()
   })
 
-  it('should export getType function', () => {
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
+  it('exports getType function', () => {
     const { getType } = require('@hyperfrontend/data-utils')
     expect(typeof getType).toBe('function')
   })
 
-  it('should correctly detect types', () => {
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
+  it('correctly detects types', () => {
     const { getType } = require('@hyperfrontend/data-utils')
 
     expect(getType('hello')).toBe('string')
@@ -29,14 +26,12 @@ describe('@hyperfrontend/data-utils CJS', () => {
     expect(getType({})).toBe('object')
   })
 
-  it('should export isIdentical function', () => {
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
+  it('exports isIdentical function', () => {
     const { isIdentical } = require('@hyperfrontend/data-utils')
     expect(typeof isIdentical).toBe('function')
   })
 
-  it('should detect identical values', () => {
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
+  it('detects identical values', () => {
     const { isIdentical } = require('@hyperfrontend/data-utils')
 
     expect(isIdentical({ a: 1 }, { a: 1 })).toBe(true)
@@ -44,8 +39,7 @@ describe('@hyperfrontend/data-utils CJS', () => {
     expect(isIdentical([1, 2, 3], [1, 2, 3])).toBe(true)
   })
 
-  it('should export sameType function', () => {
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
+  it('exports sameType function', () => {
     const { sameType } = require('@hyperfrontend/data-utils')
     expect(typeof sameType).toBe('function')
 
@@ -53,20 +47,17 @@ describe('@hyperfrontend/data-utils CJS', () => {
     expect(sameType('hello', 123)).toBe(false)
   })
 
-  it('should export traverse function', () => {
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
+  it('exports traverse function', () => {
     const { traverse } = require('@hyperfrontend/data-utils')
     expect(typeof traverse).toBe('function')
   })
 
-  it('should export selectiveCopy function', () => {
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
+  it('exports selectiveCopy function', () => {
     const { selectiveCopy } = require('@hyperfrontend/data-utils')
     expect(typeof selectiveCopy).toBe('function')
   })
 
-  it('should export hasCircularReference function', () => {
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
+  it('exports hasCircularReference function', () => {
     const { hasCircularReference } = require('@hyperfrontend/data-utils')
     expect(typeof hasCircularReference).toBe('function')
 
@@ -77,14 +68,12 @@ describe('@hyperfrontend/data-utils CJS', () => {
     expect(hasCircularReference(obj)).toBe(true)
   })
 
-  it('should export getDepth function', () => {
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
+  it('exports getDepth function', () => {
     const { getDepth } = require('@hyperfrontend/data-utils')
     expect(typeof getDepth).toBe('function')
   })
 
-  it('should export locateKey function', () => {
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
+  it('exports locateKey function', () => {
     const { locateKey } = require('@hyperfrontend/data-utils')
     expect(typeof locateKey).toBe('function')
   })

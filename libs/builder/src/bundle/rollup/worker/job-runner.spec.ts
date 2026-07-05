@@ -237,6 +237,42 @@ describe('runRollupWorkerJob', () => {
     expect(contents).not.toMatch(/^var \w+ = require\(/m)
   })
 
+  it('compiles TS-only syntax through the baseUrl branch when sources live outside the process cwd', async () => {
+    writeSrc('types.ts', 'export interface Box { value: number }\n')
+    const inputFile = writeSrc('input.ts', "import type { Box } from './types'\nexport const box: Box = { value: 41 }\n")
+    const tsConfigPath = writeTsconfig()
+    const outputDir = join(root, 'out')
+    await runRollupWorkerJob(
+      baseDescriptor({
+        format: 'esm',
+        inputFile,
+        outputDir,
+        tsConfigPath,
+        reportPath: join(root, 'report.json'),
+        bundleWorkspaceDeps: true,
+      })
+    )
+    expect(readFileSync(join(outputDir, 'index.esm.js'), 'utf8')).toContain('41')
+  })
+
+  it('compiles TS-only syntax into an IIFE bundle when sources live outside the process cwd', async () => {
+    writeSrc('types.ts', 'export interface Box { value: number }\n')
+    const inputFile = writeSrc('input.ts', "import type { Box } from './types'\nexport const box: Box = { value: 43 }\n")
+    const tsConfigPath = writeTsconfig()
+    const outputDir = join(root, 'iife-out')
+    await runRollupWorkerJob(
+      baseDescriptor({
+        format: 'iife',
+        inputFile,
+        outputDir,
+        tsConfigPath,
+        reportPath: join(root, 'report.json'),
+        bundle: { globalName: 'MyLib', minify: false },
+      })
+    )
+    expect(readFileSync(join(outputDir, 'index.iife.js'), 'utf8')).toContain('43')
+  })
+
   it('writes an unminified-only IIFE bundle when minify is disabled', async () => {
     const inputFile = writeSrc('input.ts', 'export const value = 1\n')
     const tsConfigPath = writeTsconfig()

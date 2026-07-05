@@ -4,17 +4,17 @@
  */
 
 describe('@hyperfrontend/time-utils ESM', () => {
-  it('should be importable', async () => {
+  it('is importable', async () => {
     const timeUtils = await import('@hyperfrontend/time-utils')
     expect(timeUtils).toBeDefined()
   })
 
-  it('should export sleep function', async () => {
+  it('exports sleep function', async () => {
     const { sleep } = await import('@hyperfrontend/time-utils')
     expect(typeof sleep).toBe('function')
   })
 
-  it('should sleep returns a promise that resolves', async () => {
+  it('sleep returns a promise that resolves', async () => {
     const { sleep } = await import('@hyperfrontend/time-utils')
 
     const start = Date.now()
@@ -25,12 +25,12 @@ describe('@hyperfrontend/time-utils ESM', () => {
     expect(elapsed).toBeGreaterThanOrEqual(9)
   })
 
-  it('should export createTimer function', async () => {
+  it('exports createTimer function', async () => {
     const { createTimer } = await import('@hyperfrontend/time-utils')
     expect(typeof createTimer).toBe('function')
   })
 
-  it('should create a timer with pause, resume, reset methods', async () => {
+  it('creates a timer with pause, resume, reset methods', async () => {
     const { createTimer } = await import('@hyperfrontend/time-utils')
 
     const timer = createTimer(() => {}, 1000)
@@ -44,17 +44,17 @@ describe('@hyperfrontend/time-utils ESM', () => {
     timer.pause()
   })
 
-  it('should export createClock function', async () => {
+  it('exports createClock function', async () => {
     const { createClock } = await import('@hyperfrontend/time-utils')
     expect(typeof createClock).toBe('function')
   })
 
-  it('should export normalizeToBaseTimeWindow function', async () => {
+  it('exports normalizeToBaseTimeWindow function', async () => {
     const { normalizeToBaseTimeWindow } = await import('@hyperfrontend/time-utils')
     expect(typeof normalizeToBaseTimeWindow).toBe('function')
   })
 
-  it('should export setIntervalCallback function', async () => {
+  it('exports setIntervalCallback function', async () => {
     const { setIntervalCallback } = await import('@hyperfrontend/time-utils')
     expect(typeof setIntervalCallback).toBe('function')
   })

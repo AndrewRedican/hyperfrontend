@@ -4,20 +4,17 @@
  */
 
 describe('@hyperfrontend/immutable-api-utils CJS', () => {
-  it('should be requireable', () => {
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
+  it('is requireable', () => {
     const immutableApiUtils = require('@hyperfrontend/immutable-api-utils')
     expect(immutableApiUtils).toBeDefined()
   })
 
-  it('should export lockedPropertyDescriptors', () => {
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
+  it('exports lockedPropertyDescriptors', () => {
     const { lockedPropertyDescriptors } = require('@hyperfrontend/immutable-api-utils')
     expect(typeof lockedPropertyDescriptors).toBe('function')
   })
 
-  it('should create locked property descriptors', () => {
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
+  it('creates locked property descriptors', () => {
     const { lockedPropertyDescriptors } = require('@hyperfrontend/immutable-api-utils')
 
     const descriptor = lockedPropertyDescriptors('test-value')
@@ -29,14 +26,12 @@ describe('@hyperfrontend/immutable-api-utils CJS', () => {
     })
   })
 
-  it('should export lockedProps', () => {
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
+  it('exports lockedProps', () => {
     const { lockedProps } = require('@hyperfrontend/immutable-api-utils')
     expect(typeof lockedProps).toBe('function')
   })
 
-  it('should lock properties on an object', () => {
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
+  it('locks properties on an object', () => {
     const { lockedProps } = require('@hyperfrontend/immutable-api-utils')
 
     const obj: Record<string, unknown> = {}
@@ -54,8 +49,7 @@ describe('@hyperfrontend/immutable-api-utils CJS', () => {
     }).toThrow()
   })
 
-  it('should export locked decorator', () => {
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
+  it('exports locked decorator', () => {
     const { locked } = require('@hyperfrontend/immutable-api-utils')
     expect(typeof locked).toBe('function')
   })

@@ -62,8 +62,12 @@ jobs:
             runner: ubuntu-latest
           - platform: linux-arm64
             runner: ubuntu-24.04-arm
+          # macos-13 (the previous darwin-x64 runner) was retired by GitHub;
+          # a retired label never acquires a runner, so the in-job skip below
+          # can never execute and the leg hangs in queue until the 24h timeout
+          # cancels the whole run. macos-15-intel is the supported x64 image.
           - platform: darwin-x64
-            runner: macos-13
+            runner: macos-15-intel
           - platform: darwin-arm64
             runner: macos-latest
           - platform: win32-x64

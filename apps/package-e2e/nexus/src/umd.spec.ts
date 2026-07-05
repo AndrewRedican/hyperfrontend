@@ -9,36 +9,36 @@ describe('@hyperfrontend/nexus UMD bundle', () => {
   const bundlePath = getBundlePath('nexus', 'umd')
   const minBundlePath = getBundlePath('nexus', 'umd', true)
 
-  it('bundle file should exist', () => {
+  it('bundle file exists', () => {
     expect(() => loadBundleCode(bundlePath)).not.toThrow()
   })
 
-  it('minified bundle file should exist', () => {
+  it('minified bundle file exists', () => {
     expect(() => loadBundleCode(minBundlePath)).not.toThrow()
   })
 
-  it('should attach HyperfrontendNexus to window global (browser mode)', () => {
+  it('attaches HyperfrontendNexus to window global (browser mode)', () => {
     const bundleCode = loadBundleCode(bundlePath)
     const global = executeBundleInWindow(bundleCode, 'HyperfrontendNexus')
 
     expect(global).toBeDefined()
   })
 
-  it('should export createBroker on the global', () => {
+  it('exports createBroker on the global', () => {
     const bundleCode = loadBundleCode(bundlePath)
     const global = executeBundleInWindow(bundleCode, 'HyperfrontendNexus') as Record<string, unknown>
 
     expect(typeof global.createBroker).toBe('function')
   })
 
-  it('should export createChannel on the global', () => {
+  it('exports createChannel on the global', () => {
     const bundleCode = loadBundleCode(bundlePath)
     const global = executeBundleInWindow(bundleCode, 'HyperfrontendNexus') as Record<string, unknown>
 
     expect(typeof global.createChannel).toBe('function')
   })
 
-  it('should work when required as CJS module', () => {
+  it('works when required as CJS module', () => {
     const bundleCode = loadBundleCode(bundlePath)
     const exports = requireUmdBundle(bundleCode) as Record<string, unknown>
 

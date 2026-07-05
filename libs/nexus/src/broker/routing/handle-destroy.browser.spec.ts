@@ -68,10 +68,6 @@ describe('handleDestroy', () => {
   it('destroy channel immediately', () => {
     const channel = addChannel(mockBrokerState, registry, processManager, actions, 'test-channel', mockWindow)
 
-    Object.defineProperty(channel, 'id', { value: 'remote-broker-1', writable: true })
-
-    registry.add(channel)
-
     const destroySpy = jest.spyOn(channel, 'destroy')
 
     const action: IAction = {
@@ -106,11 +102,7 @@ describe('handleDestroy', () => {
   })
 
   it('destroy channel without sending acknowledgement', () => {
-    const channel = addChannel(mockBrokerState, registry, processManager, actions, 'test-channel', mockWindow)
-
-    Object.defineProperty(channel, 'id', { value: 'remote-broker-1', writable: true })
-
-    registry.add(channel)
+    addChannel(mockBrokerState, registry, processManager, actions, 'test-channel', mockWindow)
 
     const action: IAction = {
       type: ACTION_TYPES.DESTROY_CONNECTION,
@@ -132,9 +124,6 @@ describe('handleDestroy', () => {
   it('destroy open channels', () => {
     const channel = addChannel(mockBrokerState, registry, processManager, actions, 'test-channel', mockWindow)
 
-    Object.defineProperty(channel, 'id', { value: 'remote-broker-1', writable: true })
-
-    registry.add(channel)
     Object.defineProperty(channel, 'isActive', { value: () => true, writable: true })
 
     const destroySpy = jest.spyOn(channel, 'destroy')
@@ -157,9 +146,6 @@ describe('handleDestroy', () => {
   it('destroy closed channels', () => {
     const channel = addChannel(mockBrokerState, registry, processManager, actions, 'test-channel', mockWindow)
 
-    Object.defineProperty(channel, 'id', { value: 'remote-broker-1', writable: true })
-
-    registry.add(channel)
     Object.defineProperty(channel, 'isActive', { value: () => false, writable: true })
 
     const destroySpy = jest.spyOn(channel, 'destroy')
@@ -181,15 +167,9 @@ describe('handleDestroy', () => {
 
   it('handles multiple destroy requests independently', () => {
     const channel1 = addChannel(mockBrokerState, registry, processManager, actions, 'channel-1', mockWindow)
-    Object.defineProperty(channel1, 'id', { value: 'remote-1', writable: true })
-
-    registry.add(channel1)
 
     const window2 = <Window>(<unknown>{ postMessage: jest.fn() })
     const channel2 = addChannel(mockBrokerState, registry, processManager, actions, 'channel-2', window2)
-    Object.defineProperty(channel2, 'id', { value: 'remote-2', writable: true })
-
-    registry.add(channel2)
 
     const destroy1Spy = jest.spyOn(channel1, 'destroy')
     const destroy2Spy = jest.spyOn(channel2, 'destroy')
@@ -216,10 +196,6 @@ describe('handleDestroy', () => {
 
   it('passs notify=false to destroy method', () => {
     const channel = addChannel(mockBrokerState, registry, processManager, actions, 'test-channel', mockWindow)
-
-    Object.defineProperty(channel, 'id', { value: 'remote-broker-1', writable: true })
-
-    registry.add(channel)
 
     const destroySpy = jest.spyOn(channel, 'destroy')
 

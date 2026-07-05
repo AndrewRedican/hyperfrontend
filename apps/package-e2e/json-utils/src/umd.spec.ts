@@ -9,29 +9,29 @@ describe('@hyperfrontend/json-utils UMD bundle', () => {
   const bundlePath = getBundlePath('utils/json', 'umd')
   const minBundlePath = getBundlePath('utils/json', 'umd', true)
 
-  it('bundle file should exist', () => {
+  it('bundle file exists', () => {
     expect(() => loadBundleCode(bundlePath)).not.toThrow()
   })
 
-  it('minified bundle file should exist', () => {
+  it('minified bundle file exists', () => {
     expect(() => loadBundleCode(minBundlePath)).not.toThrow()
   })
 
-  it('should attach HyperfrontendJsonUtils to window global (browser mode)', () => {
+  it('attaches HyperfrontendJsonUtils to window global (browser mode)', () => {
     const bundleCode = loadBundleCode(bundlePath)
     const global = executeBundleInWindow(bundleCode, 'HyperfrontendJsonUtils')
 
     expect(global).toBeDefined()
   })
 
-  it('should export validate on the global', () => {
+  it('exports validate on the global', () => {
     const bundleCode = loadBundleCode(bundlePath)
     const global = executeBundleInWindow(bundleCode, 'HyperfrontendJsonUtils') as Record<string, unknown>
 
     expect(typeof global.validate).toBe('function')
   })
 
-  it('should validate data against schema from UMD bundle', () => {
+  it('validates data against schema from UMD bundle', () => {
     const bundleCode = loadBundleCode(bundlePath)
     const global = executeBundleInWindow(bundleCode, 'HyperfrontendJsonUtils') as {
       validate: (data: unknown, schema: object) => { valid: boolean }
@@ -45,7 +45,7 @@ describe('@hyperfrontend/json-utils UMD bundle', () => {
     expect(result.valid).toBe(true)
   })
 
-  it('should work when required as CJS module', () => {
+  it('works when required as CJS module', () => {
     const bundleCode = loadBundleCode(bundlePath)
     const exports = requireUmdBundle(bundleCode) as Record<string, unknown>
 

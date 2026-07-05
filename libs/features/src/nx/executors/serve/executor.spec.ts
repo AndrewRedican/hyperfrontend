@@ -1,15 +1,12 @@
 import type { ExecutorContext } from '../../model'
 import { runDev } from '../../../cli'
-import { startDevServer } from '../../../server'
-import { waitForShutdown } from '../../shared/shutdown'
+import { waitForShutdown } from '../../../shared/shutdown'
 import serveExecutor from './executor'
 
 jest.mock('../../../cli', () => ({ runDev: jest.fn(), EXIT_OK: 0 }))
-jest.mock('../../../server', () => ({ startDevServer: jest.fn() }))
-jest.mock('../../shared/shutdown', () => ({ waitForShutdown: jest.fn() }))
+jest.mock('../../../shared/shutdown', () => ({ waitForShutdown: jest.fn() }))
 
 const runDevMock = jest.mocked(runDev)
-const startDevServerMock = jest.mocked(startDevServer)
 const waitForShutdownMock = jest.mocked(waitForShutdown)
 const context: ExecutorContext = {
   root: '/ws',
@@ -18,14 +15,14 @@ const context: ExecutorContext = {
 }
 
 /**
- * Wire runDev to invoke its injected startServer with the given handle.
+ * Wire runDev to hand the given handle to its injected `waitForClose` and
+ * resolve successfully, mirroring a clean startup.
  *
- * @param handle - The dev-server handle the mocked startServer resolves with.
+ * @param handle - The dev-server handle passed to the injected wait.
  */
 function startsWith(handle: unknown): void {
-  startDevServerMock.mockResolvedValue(<never>handle)
   runDevMock.mockImplementation(async (options) => {
-    await options.startServer?.(<never>{}, undefined)
+    await options.waitForClose?.(<never>handle)
     return 0
   })
   waitForShutdownMock.mockResolvedValue(undefined)
@@ -34,7 +31,6 @@ function startsWith(handle: unknown): void {
 describe('serveExecutor', () => {
   beforeEach(() => {
     runDevMock.mockReset()
-    startDevServerMock.mockReset()
     waitForShutdownMock.mockReset()
   })
 

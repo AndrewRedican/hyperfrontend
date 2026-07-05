@@ -9,29 +9,29 @@ describe('@hyperfrontend/time-utils IIFE bundle', () => {
   const bundlePath = getBundlePath('utils/time', 'iife')
   const minBundlePath = getBundlePath('utils/time', 'iife', true)
 
-  it('bundle file should exist', () => {
+  it('bundle file exists', () => {
     expect(() => loadBundleCode(bundlePath)).not.toThrow()
   })
 
-  it('minified bundle file should exist', () => {
+  it('minified bundle file exists', () => {
     expect(() => loadBundleCode(minBundlePath)).not.toThrow()
   })
 
-  it('should attach HyperfrontendTimeUtils to window global', () => {
+  it('attaches HyperfrontendTimeUtils to window global', () => {
     const bundleCode = loadBundleCode(bundlePath)
     const global = executeBundleInWindow(bundleCode, 'HyperfrontendTimeUtils')
 
     expect(global).toBeDefined()
   })
 
-  it('should export sleep on the global', () => {
+  it('exports sleep on the global', () => {
     const bundleCode = loadBundleCode(bundlePath)
     const global = executeBundleInWindow(bundleCode, 'HyperfrontendTimeUtils') as Record<string, unknown>
 
     expect(typeof global.sleep).toBe('function')
   })
 
-  it('should sleep returns a promise that resolves', async () => {
+  it('sleep returns a promise that resolves', async () => {
     const bundleCode = loadBundleCode(bundlePath)
     const global = executeBundleInWindow(bundleCode, 'HyperfrontendTimeUtils') as {
       sleep: (ms: number) => Promise<void>
@@ -44,14 +44,14 @@ describe('@hyperfrontend/time-utils IIFE bundle', () => {
     expect(elapsed).toBeGreaterThanOrEqual(9)
   })
 
-  it('should export createTimer on the global', () => {
+  it('exports createTimer on the global', () => {
     const bundleCode = loadBundleCode(bundlePath)
     const global = executeBundleInWindow(bundleCode, 'HyperfrontendTimeUtils') as Record<string, unknown>
 
     expect(typeof global.createTimer).toBe('function')
   })
 
-  it('should create a timer with pause, resume, reset methods', () => {
+  it('creates a timer with pause, resume, reset methods', () => {
     const bundleCode = loadBundleCode(bundlePath)
     const global = executeBundleInWindow(bundleCode, 'HyperfrontendTimeUtils') as {
       createTimer: (callback: () => void, delay: number) => { pause: () => void; resume: () => void; reset: () => void }

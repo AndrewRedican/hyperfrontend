@@ -4,17 +4,17 @@
  */
 
 describe('@hyperfrontend/random-generator-utils ESM', () => {
-  it('should be importable', async () => {
+  it('is importable', async () => {
     const randomGenerator = await import('@hyperfrontend/random-generator-utils')
     expect(randomGenerator).toBeDefined()
   })
 
-  it('should export uuidV4 function', async () => {
+  it('exports uuidV4 function', async () => {
     const { uuidV4 } = await import('@hyperfrontend/random-generator-utils')
     expect(typeof uuidV4).toBe('function')
   })
 
-  it('should generate valid UUIDv4', async () => {
+  it('generates valid UUIDv4', async () => {
     const { uuidV4, isUuidV4 } = await import('@hyperfrontend/random-generator-utils')
 
     const uuid = uuidV4()
@@ -22,7 +22,7 @@ describe('@hyperfrontend/random-generator-utils ESM', () => {
     expect(isUuidV4(uuid)).toBe(true)
   })
 
-  it('should export isUuidV4 function', async () => {
+  it('exports isUuidV4 function', async () => {
     const { isUuidV4 } = await import('@hyperfrontend/random-generator-utils')
     expect(typeof isUuidV4).toBe('function')
 
@@ -30,7 +30,7 @@ describe('@hyperfrontend/random-generator-utils ESM', () => {
     expect(isUuidV4('550e8400-e29b-41d4-a716-446655440000')).toBe(true)
   })
 
-  it('should export randomUniform function', async () => {
+  it('exports randomUniform function', async () => {
     const { randomUniform } = await import('@hyperfrontend/random-generator-utils')
     expect(typeof randomUniform).toBe('function')
 
@@ -39,22 +39,22 @@ describe('@hyperfrontend/random-generator-utils ESM', () => {
     expect(value).toBeLessThan(10)
   })
 
-  it('should export randomGaussian function', async () => {
+  it('exports randomGaussian function', async () => {
     const { randomGaussian } = await import('@hyperfrontend/random-generator-utils')
     expect(typeof randomGaussian).toBe('function')
   })
 
-  it('should export randomPseudo function', async () => {
+  it('exports randomPseudo function', async () => {
     const { randomPseudo } = await import('@hyperfrontend/random-generator-utils')
     expect(typeof randomPseudo).toBe('function')
   })
 
-  it('should export randomExponential function', async () => {
+  it('exports randomExponential function', async () => {
     const { randomExponential } = await import('@hyperfrontend/random-generator-utils')
     expect(typeof randomExponential).toBe('function')
   })
 
-  it('should export randomPowerLaw function', async () => {
+  it('exports randomPowerLaw function', async () => {
     const { randomPowerLaw } = await import('@hyperfrontend/random-generator-utils')
     expect(typeof randomPowerLaw).toBe('function')
   })

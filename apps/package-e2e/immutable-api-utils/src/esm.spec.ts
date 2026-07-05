@@ -4,17 +4,17 @@
  */
 
 describe('@hyperfrontend/immutable-api-utils ESM', () => {
-  it('should be importable', async () => {
+  it('is importable', async () => {
     const immutableApiUtils = await import('@hyperfrontend/immutable-api-utils')
     expect(immutableApiUtils).toBeDefined()
   })
 
-  it('should export lockedPropertyDescriptors', async () => {
+  it('exports lockedPropertyDescriptors', async () => {
     const { lockedPropertyDescriptors } = await import('@hyperfrontend/immutable-api-utils')
     expect(typeof lockedPropertyDescriptors).toBe('function')
   })
 
-  it('should create locked property descriptors', async () => {
+  it('creates locked property descriptors', async () => {
     const { lockedPropertyDescriptors } = await import('@hyperfrontend/immutable-api-utils')
 
     const descriptor = lockedPropertyDescriptors('test-value')
@@ -26,12 +26,12 @@ describe('@hyperfrontend/immutable-api-utils ESM', () => {
     })
   })
 
-  it('should export lockedProps', async () => {
+  it('exports lockedProps', async () => {
     const { lockedProps } = await import('@hyperfrontend/immutable-api-utils')
     expect(typeof lockedProps).toBe('function')
   })
 
-  it('should lock properties on an object', async () => {
+  it('locks properties on an object', async () => {
     const { lockedProps } = await import('@hyperfrontend/immutable-api-utils')
 
     const obj: Record<string, unknown> = {}
@@ -49,7 +49,7 @@ describe('@hyperfrontend/immutable-api-utils ESM', () => {
     }).toThrow()
   })
 
-  it('should export locked decorator', async () => {
+  it('exports locked decorator', async () => {
     const { locked } = await import('@hyperfrontend/immutable-api-utils')
     expect(typeof locked).toBe('function')
   })

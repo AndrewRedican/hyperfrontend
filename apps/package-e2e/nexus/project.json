@@ -10,7 +10,7 @@
       "executor": "@hyperfrontend/package:e2e",
       "dependsOn": ["^build"],
       "options": {
-        "formats": ["browser"]
+        "formats": ["cjs", "esm", "browser"]
       }
     }
   },

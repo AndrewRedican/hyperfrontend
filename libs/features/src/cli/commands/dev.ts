@@ -1,7 +1,9 @@
+import type { DevServerHandle } from '../../server/dev-server'
 import type { CliFlags } from '../args'
 import { resolve } from 'node:path'
 import { resolveDevConfig } from '../../server/config'
 import { startDevServer } from '../../server/dev-server'
+import { waitForShutdown } from '../../shared/shutdown'
 import { EXIT_ERROR, EXIT_OK } from '../exit-codes'
 
 /** Injectable boundaries for `runDev`, defaulted for production and overridden in tests. */
@@ -10,6 +12,8 @@ export interface DevDeps {
   readonly resolveConfig?: typeof resolveDevConfig
   /** Starts the resolved dev server. */
   readonly startServer?: typeof startDevServer
+  /** Holds the command open while the servers run; receives the running handle and resolves once serving should end. Defaults to waiting for `SIGINT`/`SIGTERM`, then closing every server. */
+  readonly waitForClose?: (handle: DevServerHandle) => Promise<void>
 }
 
 /** Inputs for a single `dev` invocation. */
@@ -25,9 +29,23 @@ export interface RunDevOptions extends DevDeps {
 }
 
 /**
+ * Keeps the dev server running until a termination signal arrives, then closes
+ * every server so the command can exit cleanly.
+ *
+ * @param handle - The running dev server to close once a signal is received.
+ * @returns A promise that resolves after all servers have closed.
+ */
+async function holdUntilShutdown(handle: DevServerHandle): Promise<void> {
+  await waitForShutdown()
+  await handle.close()
+}
+
+/**
  * Resolves the `hf-dev.config.*` through the shared tiered loader and starts the
- * dev server: one static server per app plus the debug UI. The returned promise
- * resolves once the servers are listening; the process stays alive serving them.
+ * dev server: one static server per app plus the debug UI. After printing the
+ * server URLs the returned promise stays pending while the servers run; it
+ * resolves with the success code once a shutdown signal (`SIGINT`/`SIGTERM`,
+ * e.g. Ctrl-C) arrives and every server has closed cleanly.
  *
  * @param options - Flags, working directory, output sinks, and injectable deps.
  * @returns The process exit code.
@@ -42,6 +60,7 @@ export async function runDev(options: RunDevOptions): Promise<number> {
   const cwd = flags.cwd ? resolve(options.cwd, flags.cwd) : options.cwd
   const resolveConfig = options.resolveConfig ?? resolveDevConfig
   const startServer = options.startServer ?? startDevServer
+  const waitForClose = options.waitForClose ?? holdUntilShutdown
 
   try {
     const config = await resolveConfig({ cwd, flags })
@@ -50,6 +69,7 @@ export async function runDev(options: RunDevOptions): Promise<number> {
     if (handle.debugUrl !== undefined) {
       stdout.write(`Debug UI: ${handle.debugUrl}\n`)
     }
+    await waitForClose(handle)
     return EXIT_OK
   } catch (error) {
     stderr.write(`${error instanceof Error ? error.message : String(error)}\n`)

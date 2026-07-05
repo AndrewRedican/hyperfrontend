@@ -24,6 +24,7 @@ import { depsRootOf } from './fs/deps-root'
 import { removeEmptyDirs } from './fs/empty-dirs'
 import { toCjsBuildDescriptor, toEsmBuildDescriptor, toIifeBuildDescriptor, toUmdBuildDescriptor } from './rollup/descriptor'
 import { dispatchRollupWorker, resolveDefaultRollupWorkerPath } from './rollup/dispatch'
+import { stripBundleCommentsPass } from './strip-bundle-comments'
 
 const log = logger.channel('builder:bundle')
 
@@ -299,6 +300,10 @@ export const runBundlePhase = async (context: BuildContext, config: BuildConfig,
 
   await runIifeFormats(config, context, outputs, resolveDispatch, monitor)
   await runUmdFormats(config, context, outputs, resolveDispatch, monitor)
+
+  // why: the non-minified iife/umd files keep source comments verbatim (only the .min twins pass through terser); strip internal pragmas/JSDoc post-emit so published bundles carry no tooling residue.
+  stripBundleCommentsPass(context.outputPath, outputs)
+  monitor?.check('bundle:strip-comments:end')
 
   await recover()
   monitor?.check('bundle:declarations:start')

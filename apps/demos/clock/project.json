@@ -1,9 +1,70 @@
 {
   "$schema": "../../../node_modules/nx/schemas/project-schema.json",
   "name": "demo-clock",
-  "description": "Clock demonstration.",
-  "sourceRoot": "{projectRoot}/src",
+  "description": "Clock demonstration — a spinnable clock coin built as a self-contained hyperfrontend feature (Vue 3).",
+  "sourceRoot": "apps/demos/clock/src",
   "projectType": "application",
-  "tags": ["type:demo", "scope:standalone"],
-  "targets": {}
+  "tags": ["type:demo", "role:feature", "scope:standalone"],
+  "metadata": {
+    "deploy": {
+      "provider": "railway",
+      "service": "hyperfrontend-demo-clock",
+      "origin": "https://hyperfrontend-demo-clock.up.railway.app",
+      "boundary": "cross-site",
+      "kind": "static",
+      "publishDir": "dist/apps/demos/clock/app"
+    }
+  },
+  "targets": {
+    "install": {
+      "executor": "@hyperfrontend/app:install",
+      "options": {}
+    },
+    "dev": {
+      "executor": "@hyperfrontend/app:serve",
+      "dependsOn": ["install"],
+      "options": {
+        "command": "npm run dev:hosted"
+      }
+    },
+    "build": {
+      "executor": "@hyperfrontend/app:build",
+      "dependsOn": ["install"],
+      "cache": false,
+      "outputs": ["{workspaceRoot}/dist/apps/demos/clock/app"],
+      "options": {
+        "command": "npm run build"
+      }
+    },
+    "test": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["install"],
+      "options": {
+        "command": "npm run test:unit -- --run",
+        "cwd": "apps/demos/clock"
+      }
+    },
+    "lint": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["install"],
+      "options": {
+        "command": "npm run lint",
+        "cwd": "apps/demos/clock"
+      }
+    },
+    "typecheck": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["install"],
+      "options": {
+        "command": "npm run type-check",
+        "cwd": "apps/demos/clock"
+      }
+    },
+    "pack-shell": {
+      "executor": "@hyperfrontend/app:pack-shell",
+      "dependsOn": ["install"],
+      "outputs": ["{workspaceRoot}/dist/apps/demos/clock/shell"],
+      "options": {}
+    }
+  }
 }

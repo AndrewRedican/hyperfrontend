@@ -1,5 +1,5 @@
 /** @jest-environment node */
-import { UINT8_CONVERTION_SAMPLES } from '../shared-consts'
+import { UINT8_CONVERTION_SAMPLES } from '../test-fixtures'
 import { utf8StringToUint8Array } from './node/utf8-string-to-uint8-array'
 
 describe('utf8StringToUint8Array (node)', () => {

@@ -7,76 +7,64 @@
 
 describe('@hyperfrontend/cryptography CJS', () => {
   describe('node sub-entry', () => {
-    it('should be requireable', () => {
-      // eslint-disable-next-line @typescript-eslint/no-require-imports
+    it('is requireable', () => {
       const nodeEntry = require('@hyperfrontend/cryptography/node')
       expect(nodeEntry).toBeDefined()
     })
 
-    it('should export createHash function', () => {
-      // eslint-disable-next-line @typescript-eslint/no-require-imports
+    it('exports createHash function', () => {
       const { createHash } = require('@hyperfrontend/cryptography/node')
       expect(typeof createHash).toBe('function')
     })
 
-    it('should export encrypt function', () => {
-      // eslint-disable-next-line @typescript-eslint/no-require-imports
+    it('exports encrypt function', () => {
       const { encrypt } = require('@hyperfrontend/cryptography/node')
       expect(typeof encrypt).toBe('function')
     })
 
-    it('should export decrypt function', () => {
-      // eslint-disable-next-line @typescript-eslint/no-require-imports
+    it('exports decrypt function', () => {
       const { decrypt } = require('@hyperfrontend/cryptography/node')
       expect(typeof decrypt).toBe('function')
     })
 
-    it('should export createVault function', () => {
-      // eslint-disable-next-line @typescript-eslint/no-require-imports
+    it('exports createVault function', () => {
       const { createVault } = require('@hyperfrontend/cryptography/node')
       expect(typeof createVault).toBe('function')
     })
 
-    it('should export generateKey function', () => {
-      // eslint-disable-next-line @typescript-eslint/no-require-imports
+    it('exports generateKey function', () => {
       const { generateKey } = require('@hyperfrontend/cryptography/node')
       expect(typeof generateKey).toBe('function')
     })
 
-    it('should export getRandomValues function', () => {
-      // eslint-disable-next-line @typescript-eslint/no-require-imports
+    it('exports getRandomValues function', () => {
       const { getRandomValues } = require('@hyperfrontend/cryptography/node')
       expect(typeof getRandomValues).toBe('function')
     })
 
-    it('should export getTimeBasedPassword function', () => {
-      // eslint-disable-next-line @typescript-eslint/no-require-imports
+    it('exports getTimeBasedPassword function', () => {
       const { getTimeBasedPassword } = require('@hyperfrontend/cryptography/node')
       expect(typeof getTimeBasedPassword).toBe('function')
     })
 
-    it('should export isSHA256Hash function', () => {
-      // eslint-disable-next-line @typescript-eslint/no-require-imports
+    it('exports isSHA256Hash function', () => {
       const { isSHA256Hash } = require('@hyperfrontend/cryptography/node')
       expect(typeof isSHA256Hash).toBe('function')
     })
   })
 
   describe('common sub-entry', () => {
-    it('should be requireable', () => {
-      // eslint-disable-next-line @typescript-eslint/no-require-imports
+    it('is requireable', () => {
       const commonEntry = require('@hyperfrontend/cryptography/common')
       expect(commonEntry).toBeDefined()
     })
 
-    it('should export isSHA256Hash function', () => {
-      // eslint-disable-next-line @typescript-eslint/no-require-imports
+    it('exports isSHA256Hash function', () => {
       const { isSHA256Hash } = require('@hyperfrontend/cryptography/common')
       expect(typeof isSHA256Hash).toBe('function')
     })
 
-    it('isSHA256Hash should validate hash format', () => {
-      // eslint-disable-next-line @typescript-eslint/no-require-imports
+    it('isSHA256Hash validates hash format', () => {
       const { isSHA256Hash } = require('@hyperfrontend/cryptography/common')
 
       // Valid SHA256 hashes are 64 hex characters

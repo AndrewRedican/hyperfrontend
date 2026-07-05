@@ -17,43 +17,43 @@ describe('@hyperfrontend/ui-utils IIFE bundle', () => {
   const bundlePath = getBundlePath('iife')
   const minBundlePath = getBundlePath('iife', true)
 
-  it('bundle file should exist', () => {
+  it('bundle file exists', () => {
     expect(() => loadBundleCode(bundlePath)).not.toThrow()
   })
 
-  it('minified bundle file should exist', () => {
+  it('minified bundle file exists', () => {
     expect(() => loadBundleCode(minBundlePath)).not.toThrow()
   })
 
-  it('should attach HyperfrontendUIUtils to window global', () => {
+  it('attaches HyperfrontendUIUtils to window global', () => {
     const bundleCode = loadBundleCode(bundlePath)
     const global = executeBundleInWindow(bundleCode, 'HyperfrontendUIUtils')
 
     expect(global).toBeDefined()
   })
 
-  it('should export hexToRgb function', () => {
+  it('exports hexToRgb function', () => {
     const bundleCode = loadBundleCode(bundlePath)
     const global = executeBundleInWindow(bundleCode, 'HyperfrontendUIUtils') as Record<string, unknown>
 
     expect(typeof global.hexToRgb).toBe('function')
   })
 
-  it('should export rgbToHex function', () => {
+  it('exports rgbToHex function', () => {
     const bundleCode = loadBundleCode(bundlePath)
     const global = executeBundleInWindow(bundleCode, 'HyperfrontendUIUtils') as Record<string, unknown>
 
     expect(typeof global.rgbToHex).toBe('function')
   })
 
-  it('should export select function', () => {
+  it('exports select function', () => {
     const bundleCode = loadBundleCode(bundlePath)
     const global = executeBundleInWindow(bundleCode, 'HyperfrontendUIUtils') as Record<string, unknown>
 
     expect(typeof global.select).toBe('function')
   })
 
-  it('hexToRgb should work correctly', () => {
+  it('hexToRgb works correctly', () => {
     const bundleCode = loadBundleCode(bundlePath)
     const global = executeBundleInWindow(bundleCode, 'HyperfrontendUIUtils') as Record<
       string,

@@ -41,6 +41,44 @@ describe('validateContract', () => {
       /"emitted\[0\]".*\n.*"accepted\[0\]"/
     )
   })
+
+  it('accepts an emitted request answered by an accepted action', () => {
+    expect(validateContract({ emitted: [{ type: 'getTime', respondsWith: 'time' }], accepted: [{ type: 'time' }] })).toEqual({
+      emitted: [{ type: 'getTime', respondsWith: 'time' }],
+      accepted: [{ type: 'time' }],
+    })
+  })
+
+  it('accepts an accepted request answered by an emitted action', () => {
+    expect(validateContract({ emitted: [{ type: 'settings' }], accepted: [{ type: 'getSettings', respondsWith: 'settings' }] })).toEqual({
+      emitted: [{ type: 'settings' }],
+      accepted: [{ type: 'getSettings', respondsWith: 'settings' }],
+    })
+  })
+
+  it('rejects an emitted respondsWith that names no accepted action', () => {
+    expect(() => validateContract({ emitted: [{ type: 'getTime', respondsWith: 'time' }], accepted: [] })).toThrow(
+      '"emitted[0]" responds with "time", but "accepted" has no action of that type.'
+    )
+  })
+
+  it('rejects an accepted respondsWith that names no emitted action', () => {
+    expect(() => validateContract({ emitted: [], accepted: [{ type: 'getSettings', respondsWith: 'settings' }] })).toThrow(
+      '"accepted[0]" responds with "settings", but "emitted" has no action of that type.'
+    )
+  })
+
+  it('rejects a non-string respondsWith', () => {
+    expect(() => validateContract({ emitted: [{ type: 'getTime', respondsWith: 42 }], accepted: [] })).toThrow(
+      '"emitted[0]" has a "respondsWith" that must be a non-empty string.'
+    )
+  })
+
+  it('rejects an empty respondsWith', () => {
+    expect(() => validateContract({ emitted: [], accepted: [{ type: 'getTime', respondsWith: '' }] })).toThrow(
+      '"accepted[0]" has a "respondsWith" that must be a non-empty string.'
+    )
+  })
 })
 
 describe('validateFeatureConfig', () => {

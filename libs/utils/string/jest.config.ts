@@ -9,6 +9,7 @@ export default <Config>{
     '!**/*.d.{ts,tsx}',
     '!**/*.spec.ts',
     '!**/jest.setup*.ts',
+    '!**/test-fixtures.ts',
   ],
   coverageDirectory: '../../../coverage/libs/utils/string',
   projects: [

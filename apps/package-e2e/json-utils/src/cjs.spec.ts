@@ -4,20 +4,17 @@
  */
 
 describe('@hyperfrontend/json-utils CJS', () => {
-  it('should be requireable', () => {
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
+  it('is requireable', () => {
     const jsonUtils = require('@hyperfrontend/json-utils')
     expect(jsonUtils).toBeDefined()
   })
 
-  it('should export validate function', () => {
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
+  it('exports validate function', () => {
     const { validate } = require('@hyperfrontend/json-utils')
     expect(typeof validate).toBe('function')
   })
 
-  it('should validate data against a schema', () => {
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
+  it('validates data against a schema', () => {
     const { validate } = require('@hyperfrontend/json-utils')
 
     const schema = {
@@ -39,14 +36,12 @@ describe('@hyperfrontend/json-utils CJS', () => {
     expect(invalidResult.valid).toBe(false)
   })
 
-  it('should export createValidator function', () => {
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
+  it('exports createValidator function', () => {
     const { createValidator } = require('@hyperfrontend/json-utils')
     expect(typeof createValidator).toBe('function')
   })
 
-  it('should create a reusable validator', () => {
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
+  it('creates a reusable validator', () => {
     const { createValidator } = require('@hyperfrontend/json-utils')
 
     const schema = {
@@ -60,14 +55,12 @@ describe('@hyperfrontend/json-utils CJS', () => {
     expect(result.valid).toBe(true)
   })
 
-  it('should export toJsonSchema function', () => {
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
+  it('exports toJsonSchema function', () => {
     const { toJsonSchema } = require('@hyperfrontend/json-utils')
     expect(typeof toJsonSchema).toBe('function')
   })
 
-  it('should generate JSON schema from data', () => {
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
+  it('generates JSON schema from data', () => {
     const { toJsonSchema } = require('@hyperfrontend/json-utils')
 
     const data = { name: 'John', age: 30 }

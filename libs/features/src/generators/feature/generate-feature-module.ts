@@ -1,19 +1,26 @@
 import type { Tree } from '@hyperfrontend/project-scope/vfs'
 import type { FeatureContract, ResolvedFeatureConfig } from '../../shared/types'
+import { dirname, isAbsolute, join, relative } from 'node:path'
 import { Mode } from '@hyperfrontend/project-scope/vfs'
 
 // note: Write-once target; re-runs never clobber handlers the author has filled in.
 const MODULE_PATH = 'src/hyperfrontend.feature.ts'
 
 /**
- * Derives the extensionless, relative import specifier for the contract module.
+ * Derives the extensionless import specifier for the contract module, computed
+ * relative to the directory the integration module is written into.
  *
- * @param contractPath - The config's contract path (e.g. `contracts/clock.contract.json`).
- * @returns A relative specifier suitable for an `import` statement.
+ * @param contractPath - The config's contract path, tree-root-relative or absolute.
+ * @param treeRoot - Absolute root of the tree the integration module is staged into.
+ * @returns A POSIX-style relative specifier suitable for an `import` statement.
  */
-function toContractImportPath(contractPath: string): string {
+function toContractImportPath(contractPath: string, treeRoot: string): string {
   const withoutExtension = contractPath.replace(/\.(json|ts|js)$/, '')
-  return /^[./]/.test(withoutExtension) ? withoutExtension : `./${withoutExtension}`
+  const target = isAbsolute(withoutExtension) ? withoutExtension : join(treeRoot, withoutExtension)
+  const specifier = relative(join(treeRoot, dirname(MODULE_PATH)), target)
+    .split('\\')
+    .join('/')
+  return specifier.startsWith('.') ? specifier : `./${specifier}`
 }
 
 /**
@@ -21,11 +28,12 @@ function toContractImportPath(contractPath: string): string {
  *
  * @param config - The resolved feature config naming the feature and contract path.
  * @param contract - The validated contract whose actions drive the scaffolded stubs.
+ * @param treeRoot - Absolute root the config's contract path is relative to.
  * @returns The integration module source as a string.
  */
-function buildFeatureModule(config: ResolvedFeatureConfig, contract: FeatureContract): string {
+function buildFeatureModule(config: ResolvedFeatureConfig, contract: FeatureContract, treeRoot: string): string {
   const handlers = contract.accepted
-    .map((action) => `feature.on('${action.type}', (data) => {\n  // todo: handle ${action.type}\n})`)
+    .map((action) => `feature.on('${action.type}', (_data: unknown) => {\n  // todo: handle ${action.type}\n})`)
     .join('\n\n')
   const emits = contract.emitted.map((action) => `// feature.send('${action.type}', undefined)`).join('\n')
   return `/**
@@ -38,7 +46,7 @@ function buildFeatureModule(config: ResolvedFeatureConfig, contract: FeatureCont
  * @module ${config.name}.feature
  */
 import { createFeature } from '@hyperfrontend/features/hostee'
-import contract from '${toContractImportPath(config.contract)}'
+import contract from '${toContractImportPath(config.contract, treeRoot)}'
 
 /** The ${config.name} feature handle; use it to send and receive contract actions. */
 export const feature = createFeature({ name: '${config.name}', contract })
@@ -68,5 +76,5 @@ ${emits}
  * ```
  */
 export function generateFeatureModule(config: ResolvedFeatureConfig, contract: FeatureContract, tree: Tree): void {
-  tree.write(MODULE_PATH, buildFeatureModule(config, contract), { mode: Mode.SkipIfExists })
+  tree.write(MODULE_PATH, buildFeatureModule(config, contract, tree.root), { mode: Mode.SkipIfExists })
 }

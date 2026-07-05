@@ -22,22 +22,22 @@ describe('@hyperfrontend/network-protocol UMD bundle', () => {
     const bundlePath = getBundlePath('v1', 'umd')
     const minBundlePath = getBundlePath('v1', 'umd', true)
 
-    it('bundle file should exist', () => {
+    it('bundle file exists', () => {
       expect(() => loadBundleCode(bundlePath)).not.toThrow()
     })
 
-    it('minified bundle file should exist', () => {
+    it('minified bundle file exists', () => {
       expect(() => loadBundleCode(minBundlePath)).not.toThrow()
     })
 
-    it('should attach HyperfrontendNetworkProtocolV1 to window global (browser mode)', () => {
+    it('attaches HyperfrontendNetworkProtocolV1 to window global (browser mode)', () => {
       const bundleCode = loadBundleCode(bundlePath)
       const global = executeBundleInWindow(bundleCode, 'HyperfrontendNetworkProtocolV1')
 
       expect(global).toBeDefined()
     })
 
-    it('should work when required as CJS module', () => {
+    it('works when required as CJS module', () => {
       const bundleCode = loadBundleCode(bundlePath)
       const exports = requireUmdBundle(bundleCode) as Record<string, unknown>
 
@@ -50,22 +50,22 @@ describe('@hyperfrontend/network-protocol UMD bundle', () => {
     const bundlePath = getBundlePath('v2', 'umd')
     const minBundlePath = getBundlePath('v2', 'umd', true)
 
-    it('bundle file should exist', () => {
+    it('bundle file exists', () => {
       expect(() => loadBundleCode(bundlePath)).not.toThrow()
     })
 
-    it('minified bundle file should exist', () => {
+    it('minified bundle file exists', () => {
       expect(() => loadBundleCode(minBundlePath)).not.toThrow()
     })
 
-    it('should attach HyperfrontendNetworkProtocolV2 to window global (browser mode)', () => {
+    it('attaches HyperfrontendNetworkProtocolV2 to window global (browser mode)', () => {
       const bundleCode = loadBundleCode(bundlePath)
       const global = executeBundleInWindow(bundleCode, 'HyperfrontendNetworkProtocolV2')
 
       expect(global).toBeDefined()
     })
 
-    it('should work when required as CJS module', () => {
+    it('works when required as CJS module', () => {
       const bundleCode = loadBundleCode(bundlePath)
       const exports = requireUmdBundle(bundleCode) as Record<string, unknown>
 

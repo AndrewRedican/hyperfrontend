@@ -241,29 +241,24 @@ describe('createActionCreators', () => {
   })
 
   describe('newMessage', () => {
-    it('creates NEW_MESSAGE action with senderId and data', () => {
-      const data = { message: 'hello', count: 42 }
-      const action = actions.newMessage(data)
+    it('creates NEW_MESSAGE action carrying the full message as data', () => {
+      const message = { type: 'greeting', data: { message: 'hello', count: 42 } }
+      const action = actions.newMessage(message)
 
       expect(action).toEqual({
         type: ACTION_TYPES.NEW_MESSAGE,
         senderId: 'test-broker-id',
-        data,
+        data: message,
       })
     })
 
-    it('handles null data', () => {
-      const action = actions.newMessage(null)
-      expect(action.data).toBeNull()
-    })
-
-    it('handles undefined data', () => {
-      const action = actions.newMessage(undefined)
-      expect(action.data).toBeUndefined()
+    it('preserves messages without a payload', () => {
+      const action = actions.newMessage({ type: 'heartbeat' })
+      expect(action.data).toEqual({ type: 'heartbeat' })
     })
 
     it('creates frozen action object', () => {
-      const action = actions.newMessage({ test: 'data' })
+      const action = actions.newMessage({ type: 'greeting', data: 'hi' })
       expect(Object.isFrozen(action)).toBe(true)
     })
   })
@@ -328,7 +323,7 @@ describe('createActionCreators', () => {
       customActions.openConnection('p3')
       customActions.closeConnection('p4')
       customActions.destroyConnection()
-      customActions.newMessage('data')
+      customActions.newMessage({ type: 'greeting', data: 'hi' })
       customActions.invalidRequest('p5', 'error')
 
       expect(getContract).not.toHaveBeenCalled()
@@ -373,7 +368,7 @@ describe('createActionCreators', () => {
       expect(denyAction.type).toBe(ACTION_TYPES.DENY_CONNECTION)
       expect('error' in denyAction).toBe(true)
 
-      const msgAction = actions.newMessage('data')
+      const msgAction = actions.newMessage({ type: 'greeting', data: 'hi' })
       expect(msgAction.type).toBe(ACTION_TYPES.NEW_MESSAGE)
       expect('data' in msgAction).toBe(true)
 

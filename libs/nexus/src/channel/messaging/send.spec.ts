@@ -89,12 +89,13 @@ describe('channel/messaging/send', () => {
 
       send(mockChannel, message)
 
-      expect(mockChannel.actions.newMessage).toHaveBeenCalledWith(message.data)
+      expect(mockChannel.actions.newMessage).toHaveBeenCalledWith(message)
       expect(sendActionModule.sendAction).toHaveBeenCalledWith(
         mockChannel,
         expect.objectContaining({
           type: '[nexus] new-message',
           senderId: 'broker-id',
+          data: message,
         })
       )
       expect(mockChannel.notifyMessage).toHaveBeenCalledWith(message)

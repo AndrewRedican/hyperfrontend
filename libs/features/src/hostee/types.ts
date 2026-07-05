@@ -1,4 +1,5 @@
 import type { EventHandler } from '../shared/event-emitter'
+import type { RequestHandler, RequestOptions } from '../shared/request'
 
 /**
  * Public handle returned by the hostee-side feature factory.
@@ -11,6 +12,45 @@ export interface FeatureHandle {
    * @param data - Optional payload for the action.
    */
   send(type: string, data?: unknown): void
+  /**
+   * Sends a request to the host and resolves with its response.
+   *
+   * The host answers through a handler it registered with its own
+   * `handle(type, handler)`. The promise rejects when the host's handler
+   * throws, when the host has no handler for the type, when no response
+   * arrives within the timeout (30 seconds by default), when the feature is
+   * not connected to a host, or when the host channel closes while the
+   * request is pending.
+   *
+   * @param type - Request action type, drawn from the feature contract.
+   * @param data - Optional payload for the request.
+   * @param options - Per-request settings such as `timeoutMs`.
+   * @returns A promise settling with the host's response payload.
+   *
+   * @example Asking the host for its settings
+   * ```typescript
+   * const settings = await feature.request('getSettings', undefined, { timeoutMs: 5000 })
+   * ```
+   */
+  request(type: string, data?: unknown, options?: RequestOptions): Promise<unknown>
+  /**
+   * Registers the handler that answers host requests of a given type.
+   *
+   * One handler per type: registering a second handler for a type that already
+   * has one throws. The handler may return the response value directly or a
+   * promise of it; a thrown error or rejected promise reaches the host as a
+   * failed response carrying the error's message.
+   *
+   * @param type - Request type to answer.
+   * @param handler - Receives the request payload and returns the response.
+   * @returns A function that unregisters this handler.
+   *
+   * @example Answering the host's request for the feature's state
+   * ```typescript
+   * feature.handle('getTime', (data) => formatTime(data))
+   * ```
+   */
+  handle(type: string, handler: RequestHandler): () => void
   /**
    * Subscribes to host messages or lifecycle events (`open`, `close`, `error`).
    *

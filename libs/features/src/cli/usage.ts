@@ -11,7 +11,7 @@ Usage: hf <command> [options]
 Commands:
   init     Scaffold the feature glue module and wire it into your app
   build    Generate the host connector, bundle it, and pack a tarball
-  dev      Resolve the dev-server config and start the debug UI
+  dev      Start the app servers and debug UI, serving until Ctrl-C
 
 Options:
   --name <name>         Feature name
@@ -20,6 +20,7 @@ Options:
   --entry <path>        Entry file to wire the glue import into (init)
   --url <url>           URL the connector loads the feature from (build)
   --protocol <none|v1|v2>  Security envelope enforced at build time
+  --allow-open          Acknowledge an explicit '--protocol none' and build an open, unauthenticated connector (build)
   --out <dir>           Output directory for the built connector (build)
   --apps <path>         Path to the dev-server apps array (dev)
   --port <number>       Port the dev-server debug UI listens on (dev)

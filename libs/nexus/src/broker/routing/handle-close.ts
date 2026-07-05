@@ -1,7 +1,7 @@
 import type { IAction } from '../../types/action'
 import type { ChannelHandle } from '../../types/channel'
 import type { RoutingContext } from './types'
-import { getById } from '../../core/registry/get-by-id'
+import { resolveChannel } from './resolve-channel'
 
 /**
  * Handles CLOSE_CONNECTION action.
@@ -27,14 +27,13 @@ import { getById } from '../../core/registry/get-by-id'
 export function handleClose(context: RoutingContext, message: MessageEvent<IAction>): void {
   const { state, registry, processManager } = context
   const action = message.data
-  const senderId = <string>action.senderId
 
   if (!('processId' in action)) {
     return
   }
   const processId = <string>action.processId
 
-  const channel = <ChannelHandle | undefined>getById(registry, senderId)
+  const channel = <ChannelHandle | undefined>resolveChannel(registry, message)
 
   if (!channel || !channel.isActive()) {
     return

@@ -8,10 +8,18 @@ export interface IActionDescription {
   schema?: object
 }
 
-/** Contract defining the actions a channel can emit and accept */
+/**
+ * Contract defining the actions a broker or channel exchanges with its counterpart.
+ *
+ * A contract is self-oriented: it always describes the side that owns it.
+ * `emitted` lists the message types this side sends, and `accepted` lists
+ * the message types this side is willing to receive. Outgoing messages are
+ * validated against `emitted`; incoming messages are validated against
+ * `accepted` and silently dropped (with a log entry) when not listed.
+ */
 export interface IChannelContract {
-  /** Actions that can be emitted by this channel */
+  /** Message types this side sends to its counterpart */
   emitted: IActionDescription[]
-  /** Actions that can be accepted by this channel */
+  /** Message types this side accepts from its counterpart */
   accepted: IActionDescription[]
 }

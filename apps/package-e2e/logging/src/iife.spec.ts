@@ -9,29 +9,29 @@ describe('@hyperfrontend/logging IIFE bundle', () => {
   const bundlePath = getBundlePath('logging', 'iife')
   const minBundlePath = getBundlePath('logging', 'iife', true)
 
-  it('bundle file should exist', () => {
+  it('bundle file exists', () => {
     expect(() => loadBundleCode(bundlePath)).not.toThrow()
   })
 
-  it('minified bundle file should exist', () => {
+  it('minified bundle file exists', () => {
     expect(() => loadBundleCode(minBundlePath)).not.toThrow()
   })
 
-  it('should attach HyperfrontendLogging to window global', () => {
+  it('attaches HyperfrontendLogging to window global', () => {
     const bundleCode = loadBundleCode(bundlePath)
     const global = executeBundleInWindow(bundleCode, 'HyperfrontendLogging')
 
     expect(global).toBeDefined()
   })
 
-  it('should export createLogger on the global', () => {
+  it('exports createLogger on the global', () => {
     const bundleCode = loadBundleCode(bundlePath)
     const global = executeBundleInWindow(bundleCode, 'HyperfrontendLogging') as Record<string, unknown>
 
     expect(typeof global.createLogger).toBe('function')
   })
 
-  it('should create a working logger from IIFE bundle', () => {
+  it('creates a working logger from IIFE bundle', () => {
     const bundleCode = loadBundleCode(bundlePath)
     const global = executeBundleInWindow(bundleCode, 'HyperfrontendLogging') as {
       createLogger: (

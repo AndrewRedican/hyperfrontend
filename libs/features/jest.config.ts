@@ -15,8 +15,9 @@ export default <Config>{
     '!**/bin/**',
     // why: The tiered loader's native `await import()` compiles to __importStar/__awaiter helper branches ts-jest cannot exercise; behaviour is covered by load-module.spec.ts.
     '!**/cli/config/load-module.ts',
-    // why: The debug-UI page entry is a thin DOM bootstrap (root lookup + manifest read) that runs only in a served browser; its rendering is covered by app.browser.spec.ts.
-    '!**/server/debug-ui/bootstrap.ts',
+    // why: Module self-location reads `import.meta.url` on its ESM branch, which the CommonJS test runtime cannot parse; jest maps the module to the `__dirname` stub, so both files sit outside coverage while dev-server.spec.ts covers the locating behaviour.
+    '!**/server/module-dir.ts',
+    '!**/server/module-dir.stub.ts',
   ],
   coveragePathIgnorePatterns: ['/node_modules/', 'src/shared/types.ts', 'src/host/types.ts', 'src/hostee/types.ts', 'src/nx/model.ts'],
   projects: [
@@ -27,6 +28,8 @@ export default <Config>{
       testEnvironment: 'node',
       testMatch: ['**/*.spec.ts'],
       testPathIgnorePatterns: ['^.*browser\\.spec\\.ts$'],
+      // why: The real module-dir.ts carries an `import.meta` token on its ESM branch; the CommonJS test runtime cannot parse it, so requests resolve to a `__dirname` stub with identical behaviour.
+      moduleNameMapper: { '^\\./module-dir$': '<rootDir>/src/server/module-dir.stub.ts' },
       setupFilesAfterEnv: ['<rootDir>/jest.setup.ts'],
     },
     {

@@ -12,45 +12,45 @@ import {
 } from '@hyperfrontend/project-scope'
 
 describe('@hyperfrontend/project-scope ESM', () => {
-  it('should export createTree function', () => {
+  it('exports createTree function', () => {
     expect(typeof createTree).toBe('function')
   })
 
-  it('should export createTreeFromDisk function', () => {
+  it('exports createTreeFromDisk function', () => {
     expect(typeof createTreeFromDisk).toBe('function')
   })
 
-  it('should export analyzeProject function', () => {
+  it('exports analyzeProject function', () => {
     expect(typeof analyzeProject).toBe('function')
   })
 })
 
 describe('NX heuristics (ESM)', () => {
-  it('should export isNxWorkspace function', () => {
+  it('exports isNxWorkspace function', () => {
     expect(typeof isNxWorkspace).toBe('function')
   })
 
-  it('should export findNxWorkspaceRoot function', () => {
+  it('exports findNxWorkspaceRoot function', () => {
     expect(typeof findNxWorkspaceRoot).toBe('function')
   })
 
-  it('should export isNxProject function', () => {
+  it('exports isNxProject function', () => {
     expect(typeof isNxProject).toBe('function')
   })
 
-  it('should export getNxWorkspaceInfo function', () => {
+  it('exports getNxWorkspaceInfo function', () => {
     expect(typeof getNxWorkspaceInfo).toBe('function')
   })
 
-  it('should export discoverNxProjects function', () => {
+  it('exports discoverNxProjects function', () => {
     expect(typeof discoverNxProjects).toBe('function')
   })
 
-  it('should export buildSimpleProjectGraph function', () => {
+  it('exports buildSimpleProjectGraph function', () => {
     expect(typeof buildSimpleProjectGraph).toBe('function')
   })
 
-  it('should export nxDetector function', () => {
+  it('exports nxDetector function', () => {
     expect(typeof nxDetector).toBe('function')
   })
 })

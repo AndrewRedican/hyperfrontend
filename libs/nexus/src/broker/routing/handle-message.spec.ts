@@ -65,31 +65,52 @@ describe('handleMessage', () => {
     }
   })
 
-  it('routes message to open channel', () => {
-    const channel = addChannel(mockBrokerState, registry, processManager, actions, 'test-channel', mockWindow)
+  function addConnectedChannel(name: string, target: Window) {
+    const channel = addChannel(mockBrokerState, registry, processManager, actions, name, target)
+    channel.connect()
+    return channel
+  }
 
-    Object.defineProperty(channel, 'id', { value: 'remote-broker-1', writable: true })
-
-    registry.add(channel)
-    Object.defineProperty(channel, 'isActive', { value: () => true, writable: true })
+  it('routes message to the channel registered for the source window', () => {
+    const channel = addConnectedChannel('test-channel', mockWindow)
+    const notifySpy = jest.spyOn(channel, 'notifyMessage')
 
     const action: IAction = {
       type: '[nexus] new-message',
       senderId: 'remote-broker-1',
       data: {
         type: 'test-message',
-        payload: 'Hello',
+        data: 'Hello',
       },
     }
 
-    const message = <MessageEvent<IAction>>{
+    handleMessage(routingContext, <MessageEvent<IAction>>{
       data: action,
       source: mockWindow,
+    })
+
+    expect(notifySpy).toHaveBeenCalledWith({ type: 'test-message', data: 'Hello' })
+  })
+
+  it('falls back to sender id lookup when the event has no source window', () => {
+    const channel = addConnectedChannel('test-channel', mockWindow)
+    const notifySpy = jest.spyOn(channel, 'notifyMessage')
+
+    const action: IAction = {
+      type: '[nexus] new-message',
+      senderId: channel.id,
+      data: {
+        type: 'test-message',
+        data: 'Hello',
+      },
     }
 
-    expect(() => {
-      handleMessage(routingContext, message)
-    }).not.toThrow()
+    handleMessage(routingContext, <MessageEvent<IAction>>{
+      data: action,
+      source: null,
+    })
+
+    expect(notifySpy).toHaveBeenCalledWith({ type: 'test-message', data: 'Hello' })
   })
 
   it('ignore if channel not found', () => {
@@ -98,45 +119,37 @@ describe('handleMessage', () => {
       senderId: 'non-existent-sender',
       data: {
         type: 'test-message',
-        payload: 'Hello',
+        data: 'Hello',
       },
     }
 
-    const message = <MessageEvent<IAction>>{
-      data: action,
-      source: mockWindow,
-    }
-
     expect(() => {
-      handleMessage(routingContext, message)
+      handleMessage(routingContext, <MessageEvent<IAction>>{
+        data: action,
+        source: mockWindow,
+      })
     }).not.toThrow()
   })
 
   it('ignore if channel is not open', () => {
     const channel = addChannel(mockBrokerState, registry, processManager, actions, 'test-channel', mockWindow)
-
-    Object.defineProperty(channel, 'id', { value: 'remote-broker-1', writable: true })
-
-    registry.add(channel)
-    Object.defineProperty(channel, 'isActive', { value: () => false, writable: true })
+    const notifySpy = jest.spyOn(channel, 'notifyMessage')
 
     const action: IAction = {
       type: '[nexus] new-message',
       senderId: 'remote-broker-1',
       data: {
         type: 'test-message',
-        payload: 'Hello',
+        data: 'Hello',
       },
     }
 
-    const message = <MessageEvent<IAction>>{
+    handleMessage(routingContext, <MessageEvent<IAction>>{
       data: action,
       source: mockWindow,
-    }
+    })
 
-    handleMessage(routingContext, message)
-
-    expect(mockLogger.info).not.toHaveBeenCalled()
+    expect(notifySpy).not.toHaveBeenCalled()
   })
 
   it('logs and ignore invalid messages in debug mode', () => {
@@ -150,13 +163,7 @@ describe('handleMessage', () => {
       state: debugState,
     }
 
-    const channel = addChannel(debugState, registry, processManager, actions, 'test-channel', mockWindow)
-
-    Object.defineProperty(channel, 'id', { value: 'remote-broker-1', writable: true })
-
-    registry.add(channel)
-    Object.defineProperty(channel, 'isActive', { value: () => true, writable: true })
-    Object.defineProperty(channel, 'name', { value: 'test-channel', writable: true })
+    addConnectedChannel('test-channel', mockWindow)
 
     const action: IAction = {
       type: '[nexus] new-message',
@@ -164,12 +171,10 @@ describe('handleMessage', () => {
       data: <unknown>null,
     }
 
-    const message = <MessageEvent<IAction>>{
+    handleMessage(debugContext, <MessageEvent<IAction>>{
       data: action,
       source: mockWindow,
-    }
-
-    handleMessage(debugContext, message)
+    })
 
     expect(mockLogger.info).toHaveBeenCalledWith(expect.stringContaining('ignored message from'))
   })
@@ -185,12 +190,7 @@ describe('handleMessage', () => {
       logger: realLogger,
     }
 
-    const channel = addChannel(mockBrokerState, registry, processManager, actions, 'test-channel', mockWindow)
-
-    Object.defineProperty(channel, 'id', { value: 'remote-broker-1', writable: true })
-
-    registry.add(channel)
-    Object.defineProperty(channel, 'isActive', { value: () => true, writable: true })
+    addConnectedChannel('test-channel', mockWindow)
 
     const action: IAction = {
       type: '[nexus] new-message',
@@ -198,89 +198,97 @@ describe('handleMessage', () => {
       data: <unknown>null,
     }
 
-    const message = <MessageEvent<IAction>>{
+    handleMessage(errorLevelContext, <MessageEvent<IAction>>{
       data: action,
       source: mockWindow,
-    }
-
-    handleMessage(errorLevelContext, message)
+    })
 
     expect(infoSpy).not.toHaveBeenCalled()
     infoSpy.mockRestore()
   })
 
-  it('handles messages with different data types', () => {
-    const channel = addChannel(mockBrokerState, registry, processManager, actions, 'test-channel', mockWindow)
+  it('drops and logs messages whose type is not accepted by the channel contract', () => {
+    const channel = addConnectedChannel('test-channel', mockWindow)
+    const notifySpy = jest.spyOn(channel, 'notifyMessage')
 
-    Object.defineProperty(channel, 'id', { value: 'remote-broker-1', writable: true })
-
-    registry.add(channel)
-    Object.defineProperty(channel, 'isActive', { value: () => true, writable: true })
-
-    const testCases = [
-      { type: 'text', payload: 'Hello' },
-      { type: 'number', payload: 42 },
-      { type: 'object', payload: { nested: true } },
-      { type: 'array', payload: [1, 2, 3] },
-    ]
-
-    testCases.forEach((data) => {
-      const action: IAction = {
-        type: '[nexus] new-message',
-        senderId: 'remote-broker-1',
-        data,
-      }
-
-      const message = <MessageEvent<IAction>>{
-        data: action,
-        source: mockWindow,
-      }
-
-      expect(() => {
-        handleMessage(routingContext, message)
-      }).not.toThrow()
-    })
-  })
-
-  it('routes messages to correct channel among multiple channels', () => {
-    const channel1 = addChannel(mockBrokerState, registry, processManager, actions, 'channel-1', mockWindow)
-    Object.defineProperty(channel1, 'id', { value: 'remote-1', writable: true })
-
-    registry.add(channel1)
-    Object.defineProperty(channel1, 'isActive', { value: () => true, writable: true })
-
-    const window2 = <Window>(<unknown>{ postMessage: jest.fn() })
-    const channel2 = addChannel(mockBrokerState, registry, processManager, actions, 'channel-2', window2)
-    Object.defineProperty(channel2, 'id', { value: 'remote-2', writable: true })
-
-    registry.add(channel2)
-    Object.defineProperty(channel2, 'isActive', { value: () => true, writable: true })
-
-    const action1: IAction = {
+    const action: IAction = {
       type: '[nexus] new-message',
-      senderId: 'remote-1',
-      data: { type: 'test-message', payload: 'for channel 1' },
-    }
-
-    const action2: IAction = {
-      type: '[nexus] new-message',
-      senderId: 'remote-2',
-      data: { type: 'test-message', payload: 'for channel 2' },
+      senderId: 'remote-broker-1',
+      data: {
+        type: 'unexpected-type',
+        data: 'Hello',
+      },
     }
 
     handleMessage(routingContext, <MessageEvent<IAction>>{
-      data: action1,
+      data: action,
       source: mockWindow,
     })
 
-    expect(() => {
-      handleMessage(routingContext, <MessageEvent<IAction>>{
-        data: action2,
-        source: window2,
-      })
-    }).not.toThrow()
+    expect(notifySpy).not.toHaveBeenCalled()
+  })
 
-    expect(mockLogger.info).not.toHaveBeenCalled()
+  it('logs the dropped message type when it is not accepted by the channel contract', () => {
+    addConnectedChannel('test-channel', mockWindow)
+
+    const action: IAction = {
+      type: '[nexus] new-message',
+      senderId: 'remote-broker-1',
+      data: {
+        type: 'unexpected-type',
+        data: 'Hello',
+      },
+    }
+
+    handleMessage(routingContext, <MessageEvent<IAction>>{
+      data: action,
+      source: mockWindow,
+    })
+
+    expect(mockLogger.info).toHaveBeenCalledWith(expect.stringContaining("dropped message type 'unexpected-type'"))
+  })
+
+  it('handles accepted messages with different payload shapes', () => {
+    const channel = addConnectedChannel('test-channel', mockWindow)
+    const notifySpy = jest.spyOn(channel, 'notifyMessage')
+
+    const payloads = ['Hello', 42, { nested: true }, [1, 2, 3]]
+
+    payloads.forEach((payload) => {
+      const action: IAction = {
+        type: '[nexus] new-message',
+        senderId: 'remote-broker-1',
+        data: { type: 'test-message', data: payload },
+      }
+
+      handleMessage(routingContext, <MessageEvent<IAction>>{
+        data: action,
+        source: mockWindow,
+      })
+    })
+
+    expect(notifySpy).toHaveBeenCalledTimes(4)
+  })
+
+  it('routes messages to correct channel among multiple channels', () => {
+    const channel1 = addConnectedChannel('channel-1', mockWindow)
+    const notify1Spy = jest.spyOn(channel1, 'notifyMessage')
+
+    const window2 = <Window>(<unknown>{ postMessage: jest.fn() })
+    const channel2 = addConnectedChannel('channel-2', window2)
+    const notify2Spy = jest.spyOn(channel2, 'notifyMessage')
+
+    handleMessage(routingContext, <MessageEvent<IAction>>{
+      data: <IAction>{
+        type: '[nexus] new-message',
+        senderId: 'remote-2',
+        data: { type: 'test-message', data: 'for channel 2' },
+      },
+      source: window2,
+    })
+
+    expect(notify2Spy).toHaveBeenCalledWith({ type: 'test-message', data: 'for channel 2' })
+    expect(notify1Spy).not.toHaveBeenCalled()
   })
 
   it('returns early when action does not have data property', () => {
@@ -289,15 +297,11 @@ describe('handleMessage', () => {
       senderId: 'remote-broker-1',
     }
 
-    const message = <MessageEvent<IAction>>{
-      data: <IAction>action,
-      source: mockWindow,
-    }
-
     expect(() => {
-      handleMessage(routingContext, message)
+      handleMessage(routingContext, <MessageEvent<IAction>>{
+        data: <IAction>action,
+        source: mockWindow,
+      })
     }).not.toThrow()
-
-    expect(mockLogger.info).not.toHaveBeenCalled()
   })
 })

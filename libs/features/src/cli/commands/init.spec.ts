@@ -14,6 +14,7 @@ const mkFlags = (over: Partial<CliFlags>): CliFlags => ({ ci: false, yes: false,
 const fakeTree = (initial: Record<string, string> = {}): { tree: Tree; files: Record<string, string> } => {
   const files: Record<string, string> = { ...initial }
   const tree = <Tree>(<unknown>{
+    root: '/project',
     read: (path: string): string | null => (path in files ? <string>files[path] : null),
     write: (path: string, content: string): void => {
       files[path] = content

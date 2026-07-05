@@ -1,4 +1,4 @@
-import { UINT8_CONVERTION_SAMPLES } from '../shared-consts'
+import { UINT8_CONVERTION_SAMPLES } from '../test-fixtures'
 import { arrayBufferToUtf8String } from './array-buffer-to-utf8-string'
 
 describe('arrayBufferToUtf8String', () => {

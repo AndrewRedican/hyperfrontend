@@ -9,29 +9,29 @@ describe('@hyperfrontend/list-utils IIFE bundle', () => {
   const bundlePath = getBundlePath('utils/list', 'iife')
   const minBundlePath = getBundlePath('utils/list', 'iife', true)
 
-  it('bundle file should exist', () => {
+  it('bundle file exists', () => {
     expect(() => loadBundleCode(bundlePath)).not.toThrow()
   })
 
-  it('minified bundle file should exist', () => {
+  it('minified bundle file exists', () => {
     expect(() => loadBundleCode(minBundlePath)).not.toThrow()
   })
 
-  it('should attach HyperfrontendListUtils to window global', () => {
+  it('attaches HyperfrontendListUtils to window global', () => {
     const bundleCode = loadBundleCode(bundlePath)
     const global = executeBundleInWindow(bundleCode, 'HyperfrontendListUtils')
 
     expect(global).toBeDefined()
   })
 
-  it('should export createFifoList on the global', () => {
+  it('exports createFifoList on the global', () => {
     const bundleCode = loadBundleCode(bundlePath)
     const global = executeBundleInWindow(bundleCode, 'HyperfrontendListUtils') as Record<string, unknown>
 
     expect(typeof global.createFifoList).toBe('function')
   })
 
-  it('should create a working FIFO list from IIFE bundle', () => {
+  it('creates a working FIFO list from IIFE bundle', () => {
     const bundleCode = loadBundleCode(bundlePath)
     const global = executeBundleInWindow(bundleCode, 'HyperfrontendListUtils') as {
       createFifoList: <T extends object>() => {
@@ -52,7 +52,7 @@ describe('@hyperfrontend/list-utils IIFE bundle', () => {
     expect(list.pull()).toBe(item1)
   })
 
-  it('should export createLifoList on the global', () => {
+  it('exports createLifoList on the global', () => {
     const bundleCode = loadBundleCode(bundlePath)
     const global = executeBundleInWindow(bundleCode, 'HyperfrontendListUtils') as Record<string, unknown>
 

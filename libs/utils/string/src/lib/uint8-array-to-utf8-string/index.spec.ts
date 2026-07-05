@@ -1,4 +1,4 @@
-import { UINT8_CONVERTION_SAMPLES } from '../shared-consts'
+import { UINT8_CONVERTION_SAMPLES } from '../test-fixtures'
 import { uint8ArrayToUtf8String } from './uint8-array-to-utf8-string'
 
 describe('uint8ArrayToUtf8String', () => {

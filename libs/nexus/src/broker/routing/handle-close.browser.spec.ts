@@ -70,11 +70,6 @@ describe('handleClose', () => {
     const processId = processManager.create(channel)
 
     Object.defineProperty(channel, 'isActive', { value: () => true, writable: true })
-    Object.defineProperty(channel, 'id', { value: 'remote-broker-1', writable: true })
-
-    registry.add(channel)
-
-    registry.add(channel)
 
     const action: IAction = {
       type: '[nexus] connection-closed',
@@ -119,10 +114,6 @@ describe('handleClose', () => {
     const channel = addChannel(mockBrokerState, registry, processManager, actions, 'test-channel', mockWindow)
     const processId = processManager.create(channel)
 
-    Object.defineProperty(channel, 'id', { value: 'remote-broker-1', writable: true })
-
-    registry.add(channel)
-
     const action: IAction = {
       type: '[nexus] connection-closed',
       processId,
@@ -146,9 +137,6 @@ describe('handleClose', () => {
     const processId = processManager.create(channel)
 
     Object.defineProperty(channel, 'isActive', { value: () => true, writable: true })
-    Object.defineProperty(channel, 'id', { value: 'remote-broker-1', writable: true })
-
-    registry.add(channel)
 
     const closeSpy = jest.spyOn(channel, 'disconnect')
 
@@ -171,17 +159,11 @@ describe('handleClose', () => {
   it('handles close for multiple channels independently', () => {
     const channel1 = addChannel(mockBrokerState, registry, processManager, actions, 'channel-1', mockWindow)
     Object.defineProperty(channel1, 'isActive', { value: () => true, writable: true })
-    Object.defineProperty(channel1, 'id', { value: 'remote-1', writable: true })
-
-    registry.add(channel1)
     const processId1 = processManager.create(channel1)
 
     const window2 = <Window>(<unknown>{ postMessage: jest.fn() })
     const channel2 = addChannel(mockBrokerState, registry, processManager, actions, 'channel-2', window2)
     Object.defineProperty(channel2, 'isActive', { value: () => true, writable: true })
-    Object.defineProperty(channel2, 'id', { value: 'remote-2', writable: true })
-
-    registry.add(channel2)
     const processId2 = processManager.create(channel2)
 
     handleClose(routingContext, <MessageEvent<IAction>>{
@@ -211,9 +193,6 @@ describe('handleClose', () => {
     const processId = processManager.create(channel)
 
     Object.defineProperty(channel, 'isActive', { value: () => true, writable: true })
-    Object.defineProperty(channel, 'id', { value: 'remote-broker-1', writable: true })
-
-    registry.add(channel)
 
     const action: IAction = {
       type: '[nexus] connection-closed',

@@ -50,13 +50,15 @@ describe('parseCliArgs', () => {
   })
 
   it('sets every boolean flag when present', () => {
-    expect(parseCliArgs(['init', '--ci', '--yes', '--dry-run', '--help']).flags).toEqual(
-      expect.objectContaining({ ci: true, yes: true, dryRun: true, help: true })
+    expect(parseCliArgs(['init', '--allow-open', '--ci', '--yes', '--dry-run', '--help']).flags).toEqual(
+      expect.objectContaining({ allowOpen: true, ci: true, yes: true, dryRun: true, help: true })
     )
   })
 
   it('defaults every boolean flag to false when absent', () => {
-    expect(parseCliArgs(['init']).flags).toEqual(expect.objectContaining({ ci: false, yes: false, dryRun: false, help: false }))
+    expect(parseCliArgs(['init']).flags).toEqual(
+      expect.objectContaining({ allowOpen: false, ci: false, yes: false, dryRun: false, help: false })
+    )
   })
 
   it('treats -h as the help flag', () => {

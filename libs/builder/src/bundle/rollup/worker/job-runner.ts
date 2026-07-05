@@ -83,6 +83,8 @@ const buildEntryPlugins = (job: RollupBuildDescriptor, format: 'esm' | 'cjs'): P
           declaration: false,
           declarationMap: false,
           sourceMap: job.sourcemap,
+          // why: without an explicit anchor the plugin resolves its include filter against process.cwd(); the worker inherits the caller's cwd, so sources outside it would silently skip the TS transform and reach rollup as raw TypeScript.
+          filterRoot: job.workspaceRoot,
           compilerOptions: {
             baseUrl: job.workspaceRoot,
             outDir: job.outputDir,
@@ -109,6 +111,8 @@ const buildBundlePlugins = (job: RollupBuildDescriptor): Plugin[] => [
     declaration: false,
     declarationMap: false,
     sourceMap: true,
+    // why: without an explicit anchor the plugin resolves its include filter against process.cwd(); the worker inherits the caller's cwd, so sources outside it would silently skip the TS transform and reach rollup as raw TypeScript.
+    filterRoot: job.workspaceRoot,
     compilerOptions: {
       baseUrl: job.workspaceRoot,
       outDir: job.outputDir,

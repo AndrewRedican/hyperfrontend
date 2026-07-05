@@ -224,6 +224,21 @@ describe('channel/factory', () => {
 
       expect(channel.isActive()).toBe(true)
     })
+
+    it('getAcceptedTypes returns an empty list before activation', () => {
+      const channel = createChannel(config, deps)
+
+      expect(channel.getAcceptedTypes()).toEqual([])
+    })
+
+    it('getAcceptedTypes returns the accepted types after activation', () => {
+      const channel = createChannel(config, deps)
+      const contract = { accepted: [{ type: 'msg1' }, { type: 'msg2' }], emitted: [] }
+
+      channel.activate('https://example.com', contract)
+
+      expect(channel.getAcceptedTypes()).toEqual(['msg1', 'msg2'])
+    })
   })
 
   describe('integration: subscription', () => {

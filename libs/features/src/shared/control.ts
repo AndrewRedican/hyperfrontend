@@ -12,6 +12,10 @@ export const ControlType = freeze(<const>{
   Beat: '__hf:beat',
   /** Hostee-to-host content-size announcement. */
   Size: '__hf:size',
+  /** Correlated request envelope carrying a consumer request in either direction. */
+  Request: '__hf:request',
+  /** Correlated response envelope answering a request. */
+  Response: '__hf:response',
 })
 
 /**
@@ -48,8 +52,14 @@ export function isControlType(type: string): boolean {
  */
 export function withControlContract(contract: FeatureContract): FeatureContract {
   // note: Fresh action literals per direction — sharing references across emitted/accepted trips nexus's circular-reference guard, which flags any repeated object.
+  const controlActions = () => [
+    { type: ControlType.Beat },
+    { type: ControlType.Size },
+    { type: ControlType.Request },
+    { type: ControlType.Response },
+  ]
   return {
-    emitted: [...contract.emitted, { type: ControlType.Beat }, { type: ControlType.Size }],
-    accepted: [...contract.accepted, { type: ControlType.Beat }, { type: ControlType.Size }],
+    emitted: [...contract.emitted, ...controlActions()],
+    accepted: [...contract.accepted, ...controlActions()],
   }
 }

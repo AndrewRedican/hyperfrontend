@@ -12,6 +12,31 @@ module.exports = [
 
   ...baseConfig,
   {
+    // context: package-e2e projects consume @hyperfrontend packages installed from built tarballs, not workspace sources.
+    // context: their specs also import shared helpers that live one level above each project root.
+    files: ['apps/package-e2e/**/*.ts'],
+    rules: {
+      '@nx/enforce-module-boundaries': [
+        'error',
+        {
+          allow: ['^@hyperfrontend/', '^\\.\\./\\.\\./shared/'],
+        },
+      ],
+    },
+  },
+  {
+    // context: spec files in this directory were excluded from linting entirely until test-name enforcement was added.
+    // todo: onboard the package-e2e specs to the remaining workspace style rules, then delete this override.
+    files: ['apps/package-e2e/**/*.spec.ts'],
+    rules: {
+      'workspace/no-decorative-header-comments': 'off',
+      'workspace/no-plain-inline-comments': 'off',
+      'workspace/import-order': 'off',
+      '@typescript-eslint/no-empty-function': 'off',
+      'jest/no-conditional-expect': 'off',
+    },
+  },
+  {
     files: ['README.md'],
     plugins: {
       markdown: require('@eslint/markdown').default,
@@ -46,6 +71,6 @@ module.exports = [
     },
   },
   {
-    ignores: ['docs/', '.nx/', 'dist/', 'coverage/', 'tmp/', '**/*.spec.{ts,tsx,js,jsx}'],
+    ignores: ['docs/', '.nx/', 'dist/', 'coverage/', 'tmp/'],
   },
 ]

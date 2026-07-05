@@ -4,14 +4,12 @@
  */
 
 describe('@hyperfrontend/builder CJS', () => {
-  it('should be requireable', () => {
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
+  it('is requireable', () => {
     const pkg = require('@hyperfrontend/builder')
     expect(pkg).toBeDefined()
   })
 
-  it('should expose the documented public API', () => {
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
+  it('exposes the documented public API', () => {
     const pkg = require('@hyperfrontend/builder')
     const expected = [
       'build',
@@ -29,8 +27,7 @@ describe('@hyperfrontend/builder CJS', () => {
     }
   })
 
-  it('should resolve the /presets subpath export with working predicates', () => {
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
+  it('resolves the /presets subpath export with working predicates', () => {
     const { byNames, byPrefix } = require('@hyperfrontend/builder/presets')
     expect(typeof byNames).toBe('function')
     expect(typeof byPrefix).toBe('function')
@@ -42,12 +39,9 @@ describe('@hyperfrontend/builder CJS', () => {
     expect(isScoped('rollup')).toBe(false)
   })
 
-  it('should expose a runnable hf-build bin (`--help` exits 0)', () => {
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
+  it('exposes a runnable hf-build bin (`--help` exits 0)', () => {
     const { execFileSync } = require('node:child_process')
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
     const { dirname, join } = require('node:path')
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
     const pkg = require('@hyperfrontend/builder/package.json')
     const binRelative = pkg.bin['hf-build']
     expect(typeof binRelative).toBe('string')
@@ -58,12 +52,9 @@ describe('@hyperfrontend/builder CJS', () => {
     expect(output).toContain('Usage: hf-build')
   })
 
-  it('should ship the bin with the `#!/usr/bin/env node` shebang', () => {
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
+  it('ships the bin with the `#!/usr/bin/env node` shebang', () => {
     const { readFileSync } = require('node:fs')
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
     const { dirname, join } = require('node:path')
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
     const pkg = require('@hyperfrontend/builder/package.json')
     const packageDir = dirname(require.resolve('@hyperfrontend/builder/package.json'))
     const binPath = join(packageDir, pkg.bin['hf-build'])
@@ -71,12 +62,9 @@ describe('@hyperfrontend/builder CJS', () => {
     expect(firstLine).toBe('#!/usr/bin/env node')
   })
 
-  it('should ship the bin with the executable bit set after extraction', () => {
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
+  it('ships the bin with the executable bit set after extraction', () => {
     const { statSync } = require('node:fs')
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
     const { dirname, join } = require('node:path')
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
     const pkg = require('@hyperfrontend/builder/package.json')
     const packageDir = dirname(require.resolve('@hyperfrontend/builder/package.json'))
     const binPath = join(packageDir, pkg.bin['hf-build'])
@@ -84,8 +72,7 @@ describe('@hyperfrontend/builder CJS', () => {
     expect(statSync(binPath).mode & 0o111).not.toBe(0)
   })
 
-  it('should include the bin file in the published `files` allowlist', () => {
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
+  it('includes the bin file in the published `files` allowlist', () => {
     const pkg = require('@hyperfrontend/builder/package.json')
     const binRelative = pkg.bin['hf-build'].replace(/^\.\//, '')
     expect(pkg.files).toContain(binRelative)

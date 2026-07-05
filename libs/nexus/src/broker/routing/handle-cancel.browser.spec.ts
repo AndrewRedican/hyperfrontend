@@ -91,23 +91,19 @@ describe('handleCancel', () => {
     )
   })
 
-  it('find channel by sender ID', () => {
+  it('find channel by sender ID when the event has no source window', () => {
     const channel = addChannel(mockBrokerState, registry, processManager, actions, 'test-channel', mockWindow)
     const processId = processManager.create(channel)
-
-    Object.defineProperty(channel, 'id', { value: 'remote-broker-1', writable: true })
-
-    registry.add(channel)
 
     const action: IAction = {
       type: '[nexus] connection-request-cancelled',
       processId,
-      senderId: 'remote-broker-1',
+      senderId: channel.id,
     }
 
     const message = <MessageEvent<IAction>>{
       data: action,
-      source: mockWindow,
+      source: null,
     }
 
     handleCancel(routingContext, message)
@@ -115,7 +111,7 @@ describe('handleCancel', () => {
     expect(mockWindow.postMessage).toHaveBeenCalled()
   })
 
-  it('find channel by process ID if sender ID lookup fails', () => {
+  it('find channel by process ID if channel lookup fails', () => {
     const channel = addChannel(mockBrokerState, registry, processManager, actions, 'test-channel', mockWindow)
     const processId = processManager.create(channel)
 
@@ -127,7 +123,7 @@ describe('handleCancel', () => {
 
     const message = <MessageEvent<IAction>>{
       data: action,
-      source: mockWindow,
+      source: null,
     }
 
     handleCancel(routingContext, message)

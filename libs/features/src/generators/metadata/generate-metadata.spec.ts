@@ -14,4 +14,16 @@ describe('generateMetadata', () => {
       expect.objectContaining({ name: 'clock', version: '1.0.0', url: '/clock', contract })
     )
   })
+
+  it('stamps the baked security protocol when the config carries one', () => {
+    const tree = createTree(__dirname)
+    generateMetadata({ ...config, protocol: 'v2' }, contract, tree)
+    expect(parse(tree.read('metadata.json', 'utf-8') ?? '')).toEqual(expect.objectContaining({ protocol: 'v2' }))
+  })
+
+  it('omits the protocol field when the config carries none', () => {
+    const tree = createTree(__dirname)
+    generateMetadata(config, contract, tree)
+    expect(parse(tree.read('metadata.json', 'utf-8') ?? '')).not.toHaveProperty('protocol')
+  })
 })

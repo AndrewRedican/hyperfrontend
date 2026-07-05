@@ -5,24 +5,41 @@ jest.mock('node:child_process')
 
 const execFileSync = <jest.MockedFunction<typeof childProcess.execFileSync>>childProcess.execFileSync
 
+/**
+ * Configures the execFileSync mock to answer `rev-parse --show-toplevel` with
+ * the given root and every other git invocation with the given diff output.
+ *
+ * @param repoRoot - Toplevel path git should report (raw, may carry a newline)
+ * @param diffOutput - NUL-separated staged-paths output
+ */
+function mockGit(repoRoot: string, diffOutput: string): void {
+  execFileSync.mockImplementation((_command, args) => ((<readonly string[]>args)[0] === 'rev-parse' ? repoRoot : diffOutput))
+}
+
 describe('getStagedPaths', () => {
   beforeEach(() => {
     execFileSync.mockReset()
   })
 
-  it('splits the NUL-terminated git output into entries', () => {
-    execFileSync.mockReturnValue('libs/a/index.ts\0libs/b/index.ts\0')
-    expect(getStagedPaths({ cwd: '/repo' })).toEqual(['libs/a/index.ts', 'libs/b/index.ts'])
+  it('anchors each NUL-terminated entry at the repository root', () => {
+    mockGit('/repo\n', 'libs/a/index.ts\0libs/b/index.ts\0')
+    expect(getStagedPaths({ cwd: '/repo' })).toEqual(['/repo/libs/a/index.ts', '/repo/libs/b/index.ts'])
+  })
+
+  it('returns root-anchored paths when invoked from a subdirectory', () => {
+    mockGit('/repo\n', 'libs/a/index.ts\0')
+    expect(getStagedPaths({ cwd: '/repo/apps/demo' })).toEqual(['/repo/libs/a/index.ts'])
+    expect(execFileSync).toHaveBeenCalledWith('git', ['rev-parse', '--show-toplevel'], expect.objectContaining({ cwd: '/repo/apps/demo' }))
   })
 
   it('returns an empty list when nothing is staged', () => {
-    execFileSync.mockReturnValue('')
+    mockGit('/repo\n', '')
     expect(getStagedPaths({ cwd: '/repo' })).toEqual([])
   })
 
   it('handles trailing content with no terminator', () => {
-    execFileSync.mockReturnValue('libs/a/index.ts')
-    expect(getStagedPaths({ cwd: '/repo' })).toEqual(['libs/a/index.ts'])
+    mockGit('/repo\n', 'libs/a/index.ts')
+    expect(getStagedPaths({ cwd: '/repo' })).toEqual(['/repo/libs/a/index.ts'])
   })
 
   it('wraps git errors with a descriptive message', () => {

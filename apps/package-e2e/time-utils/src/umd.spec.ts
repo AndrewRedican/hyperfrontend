@@ -9,29 +9,29 @@ describe('@hyperfrontend/time-utils UMD bundle', () => {
   const bundlePath = getBundlePath('utils/time', 'umd')
   const minBundlePath = getBundlePath('utils/time', 'umd', true)
 
-  it('bundle file should exist', () => {
+  it('bundle file exists', () => {
     expect(() => loadBundleCode(bundlePath)).not.toThrow()
   })
 
-  it('minified bundle file should exist', () => {
+  it('minified bundle file exists', () => {
     expect(() => loadBundleCode(minBundlePath)).not.toThrow()
   })
 
-  it('should attach HyperfrontendTimeUtils to window global (browser mode)', () => {
+  it('attaches HyperfrontendTimeUtils to window global (browser mode)', () => {
     const bundleCode = loadBundleCode(bundlePath)
     const global = executeBundleInWindow(bundleCode, 'HyperfrontendTimeUtils')
 
     expect(global).toBeDefined()
   })
 
-  it('should export sleep on the global', () => {
+  it('exports sleep on the global', () => {
     const bundleCode = loadBundleCode(bundlePath)
     const global = executeBundleInWindow(bundleCode, 'HyperfrontendTimeUtils') as Record<string, unknown>
 
     expect(typeof global.sleep).toBe('function')
   })
 
-  it('should create a timer from UMD bundle', () => {
+  it('creates a timer from UMD bundle', () => {
     const bundleCode = loadBundleCode(bundlePath)
     const global = executeBundleInWindow(bundleCode, 'HyperfrontendTimeUtils') as {
       createTimer: (callback: () => void, delay: number) => { pause: () => void; resume: () => void; reset: () => void }
@@ -45,7 +45,7 @@ describe('@hyperfrontend/time-utils UMD bundle', () => {
     timer.pause()
   })
 
-  it('should work when required as CJS module', () => {
+  it('works when required as CJS module', () => {
     const bundleCode = loadBundleCode(bundlePath)
     const exports = requireUmdBundle(bundleCode) as Record<string, unknown>
 

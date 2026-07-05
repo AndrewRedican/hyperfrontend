@@ -9,29 +9,29 @@ describe('@hyperfrontend/data-utils UMD bundle', () => {
   const bundlePath = getBundlePath('utils/data', 'umd')
   const minBundlePath = getBundlePath('utils/data', 'umd', true)
 
-  it('bundle file should exist', () => {
+  it('bundle file exists', () => {
     expect(() => loadBundleCode(bundlePath)).not.toThrow()
   })
 
-  it('minified bundle file should exist', () => {
+  it('minified bundle file exists', () => {
     expect(() => loadBundleCode(minBundlePath)).not.toThrow()
   })
 
-  it('should attach HyperfrontendDataUtils to window global (browser mode)', () => {
+  it('attaches HyperfrontendDataUtils to window global (browser mode)', () => {
     const bundleCode = loadBundleCode(bundlePath)
     const global = executeBundleInWindow(bundleCode, 'HyperfrontendDataUtils')
 
     expect(global).toBeDefined()
   })
 
-  it('should export getType on the global', () => {
+  it('exports getType on the global', () => {
     const bundleCode = loadBundleCode(bundlePath)
     const global = executeBundleInWindow(bundleCode, 'HyperfrontendDataUtils') as Record<string, unknown>
 
     expect(typeof global.getType).toBe('function')
   })
 
-  it('should correctly detect types from UMD bundle', () => {
+  it('correctly detects types from UMD bundle', () => {
     const bundleCode = loadBundleCode(bundlePath)
     const global = executeBundleInWindow(bundleCode, 'HyperfrontendDataUtils') as {
       getType: (value: unknown) => string
@@ -42,7 +42,7 @@ describe('@hyperfrontend/data-utils UMD bundle', () => {
     expect(global.getType([])).toBe('array')
   })
 
-  it('should work when required as CJS module', () => {
+  it('works when required as CJS module', () => {
     const bundleCode = loadBundleCode(bundlePath)
     const exports = requireUmdBundle(bundleCode) as Record<string, unknown>
 

@@ -4,20 +4,17 @@
  */
 
 describe('@hyperfrontend/logging CJS', () => {
-  it('should be requireable', () => {
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
+  it('is requireable', () => {
     const logging = require('@hyperfrontend/logging')
     expect(logging).toBeDefined()
   })
 
-  it('should export createLogger function', () => {
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
+  it('exports createLogger function', () => {
     const { createLogger } = require('@hyperfrontend/logging')
     expect(typeof createLogger).toBe('function')
   })
 
-  it('should create a logger with info method', () => {
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
+  it('creates a logger with info method', () => {
     const { createLogger } = require('@hyperfrontend/logging')
 
     const mockError = jest.fn()
@@ -34,8 +31,7 @@ describe('@hyperfrontend/logging CJS', () => {
     expect(typeof logger.log).toBe('function')
   })
 
-  it('should export isValidLogger function', () => {
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
+  it('exports isValidLogger function', () => {
     const { isValidLogger, createLogger } = require('@hyperfrontend/logging')
     expect(typeof isValidLogger).toBe('function')
 

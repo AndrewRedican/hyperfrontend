@@ -6,17 +6,17 @@
 import { jest } from '@jest/globals'
 
 describe('@hyperfrontend/logging ESM', () => {
-  it('should be importable', async () => {
+  it('is importable', async () => {
     const logging = await import('@hyperfrontend/logging')
     expect(logging).toBeDefined()
   })
 
-  it('should export createLogger function', async () => {
+  it('exports createLogger function', async () => {
     const { createLogger } = await import('@hyperfrontend/logging')
     expect(typeof createLogger).toBe('function')
   })
 
-  it('should create a logger with info method', async () => {
+  it('creates a logger with info method', async () => {
     const { createLogger } = await import('@hyperfrontend/logging')
 
     const mockError = jest.fn()
@@ -33,7 +33,7 @@ describe('@hyperfrontend/logging ESM', () => {
     expect(typeof logger.log).toBe('function')
   })
 
-  it('should export isValidLogger function', async () => {
+  it('exports isValidLogger function', async () => {
     const { isValidLogger, createLogger } = await import('@hyperfrontend/logging')
     expect(typeof isValidLogger).toBe('function')
 

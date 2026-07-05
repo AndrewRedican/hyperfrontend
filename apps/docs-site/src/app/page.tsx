@@ -1,4 +1,4 @@
-import { DemoShowcase } from '@/components/demo-showcase'
+import { ClockHero } from '@/components/demos/clock-hero'
 import { Footer } from '@/components/footer'
 import { Header } from '@/components/header'
 import { ScrollToExplore } from '@/components/scroll-to-explore'
@@ -51,9 +51,9 @@ export default function HomePage() {
               <ValueProposition />
             </div>
 
-            {/* Right Side - Demo Showcase */}
+            {/* Right Side - Live Clock Demo */}
             <div className="flex w-full items-center justify-center border-t border-slate-200 bg-slate-100/50 px-6 py-12 dark:border-slate-700 dark:bg-slate-800/30 sm:px-8 lg:w-1/2 lg:border-l lg:border-t-0 lg:px-12 lg:py-8">
-              <DemoShowcase cycleDuration={20000} />
+              <ClockHero />
             </div>
           </div>
 

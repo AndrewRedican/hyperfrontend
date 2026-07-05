@@ -1,11 +1,14 @@
 import type { BrokerHandle, ChannelHandle, IMessage } from '@hyperfrontend/nexus'
 import type { EventEmitter } from '../shared/event-emitter'
-import type { SecurityProtocol, ShellOptions } from '../shared/types'
+import type { RequestOptions } from '../shared/request'
+import type { ExperiencePlugin, ExperiencePluginContext, SecurityProtocol, ShellOptions } from '../shared/types'
 import type { HeartbeatMonitor } from './heartbeat'
 import type { DisplayModeMount, ShellHandle } from './types'
 import { createError } from '@hyperfrontend/immutable-api-utils/built-in-copy/error'
 import { freeze } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
+import { promiseReject, promiseResolve } from '@hyperfrontend/immutable-api-utils/built-in-copy/promise'
 import { ControlType, isControlType } from '../shared/control'
+import { createRequestPeer } from '../shared/request'
 import { DisplayMode } from '../shared/types'
 import { applyContentSize } from './sizing'
 
@@ -47,6 +50,18 @@ export interface ShellWiring {
 }
 
 /**
+ * Plugin bookkeeping for the currently mounted feature.
+ */
+interface ActivePlugins {
+  /** Plugins registered for the current mount, in registration order. */
+  registered: readonly ExperiencePlugin[]
+  /** The frozen context handed to every hook of this mount. */
+  context: ExperiencePluginContext
+  /** Teardowns returned by `onMount`, in registration order. */
+  teardowns: Array<() => void>
+}
+
+/**
  * Assembles a host {@link ShellHandle} around a broker and injected collaborators.
  *
  * @param broker - The nexus broker dedicated to this shell.
@@ -72,6 +87,13 @@ export function createShellHandle(
   let opened = false
   let openCount = 0
   let monitor: HeartbeatMonitor | null = null
+  let plugins: ActivePlugins | null = null
+  let pendingUnmount: Promise<void> | null = null
+  let queuedOpen: (() => void) | null = null
+  // why: One peer outlives every open/close cycle so handlers registered before the first open (or across reopens) keep answering feature requests.
+  const requests = createRequestPeer('host', (type, data) => channel?.send(type, data))
+
+  const emitError = (error: unknown) => emitter.emit('error', error)
 
   const runCleanup = () => {
     if (cleanup) {
@@ -87,14 +109,66 @@ export function createShellHandle(
     }
   }
 
-  const destroy = () => {
-    stopMonitor()
+  const mountPlugins = (registered: readonly ExperiencePlugin[], element: HTMLElement | null, displayMode: DisplayMode) => {
+    const context = freeze(<ExperiencePluginContext>{ element, displayMode })
+    const teardowns: Array<() => void> = []
+    for (const plugin of registered) {
+      try {
+        const teardown = plugin.onMount?.(context)
+        if (teardown) {
+          teardowns.push(teardown)
+        }
+      } catch (error) {
+        emitError(error)
+      }
+    }
+    plugins = { registered, context, teardowns }
+  }
+
+  const startUnmount = (state: ActivePlugins, finish: () => void) => {
+    plugins = null
+    let chain = promiseResolve()
+    for (const plugin of [...state.registered].reverse()) {
+      chain = chain.then(() => plugin.onUnmount?.(state.context)).catch(emitError)
+    }
+    pendingUnmount = chain.then(() => {
+      for (const teardown of [...state.teardowns].reverse()) {
+        try {
+          teardown()
+        } catch (error) {
+          emitError(error)
+        }
+      }
+      finish()
+      pendingUnmount = null
+      const reopen = queuedOpen
+      queuedOpen = null
+      reopen?.()
+    })
+  }
+
+  const releaseChannelAndCleanup = () => {
     if (channel) {
       channel.destroy()
       channel = null
     }
     opened = false
     runCleanup()
+  }
+
+  const destroy = () => {
+    requests.rejectAll('The shell was destroyed before the feature responded.')
+    queuedOpen = null
+    if (pendingUnmount) {
+      return
+    }
+    stopMonitor()
+    const state = plugins
+    if (state) {
+      startUnmount(state, releaseChannelAndCleanup)
+      return
+    }
+    releaseChannelAndCleanup()
   }
 
   const close = () => {
@@ -119,12 +193,20 @@ export function createShellHandle(
 
   const open = (overrides?: Partial<ShellOptions>) => {
     destroy()
+    if (pendingUnmount) {
+      queuedOpen = () => open(overrides)
+      return
+    }
     const options = <ShellOptions>{ ...baseOptions, ...overrides }
-    const result = wiring.selectMount(options.displayMode ?? DisplayMode.Embedded)({ options, requestClose: close })
+    const displayMode = options.displayMode ?? DisplayMode.Embedded
+    const result = wiring.selectMount(displayMode)({ options, requestClose: close })
     cleanup = result.cleanup
     if (result.target === null) {
       emitter.emit('error', createError('Feature window could not be opened.'))
       return
+    }
+    if (options.plugins && options.plugins.length > 0) {
+      mountPlugins(options.plugins, result.element ?? null, displayMode)
     }
     channel = broker.addChannel(
       `feature-${(openCount += 1)}`,
@@ -143,6 +225,15 @@ export function createShellHandle(
       opened = false
       emitter.emit('close')
       stopMonitor()
+      requests.rejectAll('The feature channel closed before the feature responded.')
+      if (pendingUnmount) {
+        return
+      }
+      const state = plugins
+      if (state) {
+        startUnmount(state, runCleanup)
+        return
+      }
       runCleanup()
     })
     channel.on('deny', (data) => emitter.emit('error', data))
@@ -153,6 +244,8 @@ export function createShellHandle(
           activeMonitor.beat()
         } else if (message.type === ControlType.Size && sizeFrame) {
           applyContentSize(sizeFrame, message.data)
+        } else {
+          requests.dispatch(message.type, message.data)
         }
         return
       }
@@ -166,6 +259,9 @@ export function createShellHandle(
     close,
     destroy,
     send: (type: string, data?: unknown) => channel?.send(type, data),
+    request: (type: string, data?: unknown, options?: RequestOptions) =>
+      channel ? requests.request(type, data, options) : promiseReject(createError(`Cannot send request '${type}': the shell is not open.`)),
+    handle: requests.handle,
     on: emitter.on,
     get isOpen() {
       return opened

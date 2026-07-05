@@ -9,29 +9,29 @@ describe('@hyperfrontend/function-utils IIFE bundle', () => {
   const bundlePath = getBundlePath('utils/function', 'iife')
   const minBundlePath = getBundlePath('utils/function', 'iife', true)
 
-  it('bundle file should exist', () => {
+  it('bundle file exists', () => {
     expect(() => loadBundleCode(bundlePath)).not.toThrow()
   })
 
-  it('minified bundle file should exist', () => {
+  it('minified bundle file exists', () => {
     expect(() => loadBundleCode(minBundlePath)).not.toThrow()
   })
 
-  it('should attach HyperfrontendFunctionUtils to window global', () => {
+  it('attaches HyperfrontendFunctionUtils to window global', () => {
     const bundleCode = loadBundleCode(bundlePath)
     const global = executeBundleInWindow(bundleCode, 'HyperfrontendFunctionUtils')
 
     expect(global).toBeDefined()
   })
 
-  it('should export createRunOnceFunction on the global', () => {
+  it('exports createRunOnceFunction on the global', () => {
     const bundleCode = loadBundleCode(bundlePath)
     const global = executeBundleInWindow(bundleCode, 'HyperfrontendFunctionUtils') as Record<string, unknown>
 
     expect(typeof global.createRunOnceFunction).toBe('function')
   })
 
-  it('should create a working run-once function from IIFE bundle', () => {
+  it('creates a working run-once function from IIFE bundle', () => {
     const bundleCode = loadBundleCode(bundlePath)
     const global = executeBundleInWindow(bundleCode, 'HyperfrontendFunctionUtils') as {
       createRunOnceFunction: <T>(fn: () => T) => () => T
@@ -48,7 +48,7 @@ describe('@hyperfrontend/function-utils IIFE bundle', () => {
     expect(callCount).toBe(1)
   })
 
-  it('should export noop on the global', () => {
+  it('exports noop on the global', () => {
     const bundleCode = loadBundleCode(bundlePath)
     const global = executeBundleInWindow(bundleCode, 'HyperfrontendFunctionUtils') as {
       noop: () => void

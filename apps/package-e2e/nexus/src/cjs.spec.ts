@@ -1,41 +1,39 @@
 /**
  * CJS (CommonJS) E2E tests for @hyperfrontend/nexus
- * Tests that the package is requireable and exports work correctly.
+ * Tests that the package is requireable under plain Node (no window) and exports work correctly.
  */
 
 describe('@hyperfrontend/nexus CJS', () => {
-  it('should be requireable', () => {
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
+  it('runs under plain Node with no window global', () => {
+    expect(typeof window).toBe('undefined')
+  })
+
+  it('is requireable without a window', () => {
     const nexus = require('@hyperfrontend/nexus')
     expect(nexus).toBeDefined()
   })
 
-  it('should export createBroker function', () => {
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
+  it('exports the createBroker function', () => {
     const { createBroker } = require('@hyperfrontend/nexus')
     expect(typeof createBroker).toBe('function')
   })
 
-  it('should export createChannel function', () => {
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
+  it('exports the createChannel function', () => {
     const { createChannel } = require('@hyperfrontend/nexus')
     expect(typeof createChannel).toBe('function')
   })
 
-  it('should export mergeContracts function', () => {
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
+  it('exports the mergeContracts function', () => {
     const { mergeContracts } = require('@hyperfrontend/nexus')
     expect(typeof mergeContracts).toBe('function')
   })
 
-  it('should export defaultBroker singleton', () => {
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
+  it('exports the defaultBroker singleton', () => {
     const { defaultBroker } = require('@hyperfrontend/nexus')
     expect(defaultBroker).toBeDefined()
   })
 
-  it('should export DEFAULT_CONTRACT', () => {
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
+  it('exports DEFAULT_CONTRACT', () => {
     const { DEFAULT_CONTRACT } = require('@hyperfrontend/nexus')
     expect(DEFAULT_CONTRACT).toBeDefined()
   })

@@ -1,0 +1,70 @@
+# 13 — v2 Release
+
+Close the proof loop: triage the accumulated findings into concrete v2 changes, publish, and refresh the docs. The demos that exposed the rough edges become the demos that show them sanded down.
+
+**Depends on** all prior plans · **Type** D+E · **Status**: **Fix cut implemented** (2026-07-03) — all seventeen findings fixed and committed on `week-2026-06-29` as atomic per-library commits, with the six v0.1.0 blockers verified at the artifact level (rebuilt bundles, packed-tarball E2Es, a real `hf build` in a scratch consumer). Publishing and the [post-publish execution](#after-publishing-the-execution-checklist) remain.
+
+See [00-strategy.md](00-strategy.md) (journey J7) and the [index](README.md).
+
+## The cut (what ships)
+
+| Package                              | Change                                                                                                                                                                                                                                                                                                                                                                                |
+| ------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `@hyperfrontend/immutable-api-utils` | Typed-array copies guard the hidden `SharedArrayBuffer` global; clear `TypeError` when the constructor is absent                                                                                                                                                                                                                                                                      |
+| `@hyperfrontend/string-utils`        | Import-time fixture side effects removed from the prod graph; lazy UTF-8 decoder; `sideEffects: false` now truthful                                                                                                                                                                                                                                                                   |
+| `@hyperfrontend/builder`             | TS include filter anchored to the job's workspace root — the transform no longer silently no-ops for projects outside the worker's cwd; post-emit comment strip on non-minified iife/umd outputs, eslint pragmas removed even when `@preserve`-styled                                                                                                                                 |
+| `@hyperfrontend/nexus`               | Messages actually deliver: full `{type, data}` envelope on the wire, inbound routing by source window, out-of-contract inbound drops logged; self-oriented contract semantics documented; lazy default broker + guarded window capture + explicit `window` option make imports SSR-safe                                                                                               |
+| `@hyperfrontend/features`            | Plugin seam · typed generated connectors · `request`/`handle` primitive · init codegen fixes · entry-type exports · `hf dev` keepalive · dual-format asset self-location · debug UI ships in the box · host-side contract inversion in `createShell` · `--allow-open` escape hatch · protocol baked into the artifact · self-contained `hf build` staging inside the consumer project |
+
+Guardrails added at the published-artifact boundary (`apps/package-e2e`): SSR import smoke over every exports subpath, non-isolated-page execution smoke (no `SharedArrayBuffer`), and real `hf --help` / `hf dev` liveness / `hf build` tarball E2Es — the tests whose absence let v0.1.0 ship in this state. They paid for themselves immediately, surfacing two more packaging defects fixed in the same cut: the `nx/*` subpaths shipped with their workspace imports neither bundled nor declared (unresolvable on install; now bundled per entry), and the CLI bin could not self-locate the debug-UI assets from the package root layout (the ascend now probes `server/debug-ui` at each ancestor).
+
+## Consumer-visible behavior changes
+
+- `hf build` default output moved from `<cwd>/dist` to `<cwd>/dist/<name>-shell`, and the tarball now includes `README.md` + `metadata.json`; the connector is genuinely self-contained (SDK bundled, zero dependencies).
+- `hf dev` now serves until Ctrl-C (previously it exited immediately).
+- Hosts hand `createShell` the feature's contract exactly as authored — hosts that hand-built a mirror-image contract must remove the swap when upgrading.
+- Hostee consumer `on` handlers no longer receive internal `__hf:*` control traffic.
+- Generated connectors expose a typed surface (`FeatureShellOptions` / `FeatureShellHandle`); the untyped shape remains assignable, so existing call sites keep compiling.
+- nexus wire format changed (full message envelope): a new-SDK host cannot exchange messages with an old-SDK feature or vice versa. Nothing interoperated before — v0.1.0 delivered no messages at all — so no working pairing regresses.
+
+## Publish mechanics
+
+No manual version edits: versions are conventional-commit driven (`nx version:all` at pre-push; breaking→minor while major is 0), and publish is push-to-main (`ci-main.yml` runs all gates, then idempotent `nx run-many -t=publish` + tags + GitHub releases). Expected movements from the commits as written: `immutable-api-utils` 0.1.3→0.1.4, `string-utils` 0.1.1→0.1.2, `builder` patch bump, `nexus` 1.1.2→1.1.3, `features` 0.1.0→**0.2.0** (the roadmap's "v2" is the release-cut label, not a semver major — the versioning discipline decides the number).
+
+Release-PR checklist:
+
+- [ ] Verify the version executor updates dependent exact pins across the cascade (features → nexus/builder/immutable-api-utils; nexus/network-protocol/cryptography → utils); bump any it misses in the same PR.
+- [ ] Recommended hygiene: also republish `network-protocol` and `cryptography` (no source change, but their published bundles embed the pre-fix `string-utils`) via a rebuild-only patch.
+- [ ] Commit package-e2e lockfile churn as `chore(package-e2e)` per precedent.
+- [ ] Pre-push gates run affected typecheck/lint/test/build/e2e — the RAM-bound builds need the canonical `NODE_OPTIONS="--expose-gc --max-old-space-size=4096"` and serial execution.
+
+## After publishing (the execution checklist)
+
+Everything below runs against **published npm bits** — that is the registry's consumer-lens standard of proof.
+
+1. **Verify the published artifacts cold.** In a scratch project outside the workspace: `npm i @hyperfrontend/features@0.2.0`; import every exports subpath under plain Node; load `bundle/host/index.iife.js` in a non-isolated page; `npx hf init` + `type-check` on a stock create-vue scaffold; `npx hf dev` stays serving with the shipped debug UI at `/__debug/`; `npx hf build --protocol v1` produces the self-contained tarball.
+2. **Re-consume in demo-clock** (`apps/demos/clock`): bump `@hyperfrontend/features` to `^0.2.0`, `nx run demo-clock:install` (serialized npm installs, per devcontainer constraint).
+3. **Delete the demo's workarounds** — each gated on its fix verified in step 1/2:
+   - `scripts/hf-dev.ts` (27-line programmatic dev-server launcher + host-bundle copy) → plain `hf dev` in the npm script; drop the now-empty `scripts/` include from `tsconfig.node.json`; update the demo README rows.
+   - `dev-host/` entirely (hand-rolled debug UI, `SharedArrayBuffer` shim, hand-swapped contract) — safe only once the shipped debug UI, the isolation guard, and host-side contract inversion are all verified.
+   - `eslint.config.ts` ignore for `dev-host/host-bundle.js` — dies with `dev-host/`.
+   - The hand-fixed contract-import note in `src/hyperfrontend.feature.ts` and the root-import note in `clock.contract.ts` (switch the type import to `/hostee`).
+4. **Regenerate the shell as the real artifact**: repoint `demo-clock:pack-shell` from the `tool-app` pack-shell executor to `npx hf build` (decide clock's protocol: `none` + `--allow-open`, labeled deliberate per the demo's scope, or step up to `v1`); retire the executor if nothing else uses it. The tarball becomes self-contained (bundled SDK, new default path `dist/<name>-shell`), so update `docs-site:refresh-shell`'s `dependsOn`/glob, the vendored-tarball filename pinned in `apps/docs-site/package.json`, and remove the stale 0.1.0 tarball from `vendor/`.
+5. **Docs-site embed cleanup** (`clock-embed.tsx`): remove the `SharedArrayBuffer` stub; stop swallowing the shell `error` event; re-seat liveness on shell events (`open`/first `tick`) instead of the raw `postMessage` listener — keep the 6 s poster-crossfade fallback (the Railway origin may still be unprovisioned); flip the dynamic import to a static one only after step 1's Node-import check passes (Next prerenders both embedding pages); delete any hand-swapped contract in host-side send paths (`createShell` now inverts — a double swap breaks sends). Lint docs-site changes with targeted file lists only.
+6. **Re-verify the demo phases** ([04](04-demo-1-clock.md)): Phase 1 (dev loop with the shipped debug UI), Phase 3 (drive every accepted action, observe every emitted action — the messaging thesis, live for the first time), Phase 4 (tarball proof, now with typed `createFeatureShell`), Phase 5 (docs-site build + both embeds). Phase 6 stays user-side: create the Railway static service, attach the domain, set `NEXT_PUBLIC_CLOCK_FEATURE_URL`, verify the live cross-site embed with a clean message log.
+7. **Final registry sync**: the 17 findings are marked fixed against the workspace cut; after step 1 confirms each on npm bits, this plan's status flips to **Shipped** and the registry outcome notes gain the published version. File fresh findings for anything the re-consumption surfaces (the capture loop continues).
+8. **Docs refresh** (this plan's original scope): features README/ARCHITECTURE/`@example` blocks for plugins, request/response, typed connectors, protocol-in-artifact, dev-server usage; nexus README for delivery semantics, self-oriented contracts, and the SSR-safe default broker; how-to guides against 0.2.0 reality.
+
+## Deliberately not in this cut (tracked follow-ups)
+
+- **Real broker handshake for brokerManaged channels** — identity/origin exchange, contract exchange, and security negotiation over the wire. Known sub-problems documented during the fix work: glare (both sides initiate), registry re-keying on learned identity, and re-homing the queued-message flush. Until then origin stays `'*'` on the managed path and `postMessage` target-origin is unbound — required groundwork for the origin-boundary demos ([00-strategy](00-strategy.md#deployment-and-the-origin-boundary-layer)).
+- **v1/v2 protocol negotiation under brokerManaged channels** — negotiation lives in the handshake handlers the managed path skips; baked protocols work because both sides declare them, but nothing negotiates.
+- Same-class module-scope hazards left untouched (currently unreachable): `immutable-api-utils` websocket statics, `cryptography` subtle capture.
+- Code-first-only feature configs (dropping `*.json` support) — direction noted during the connector grill; typed projection landed without it.
+
+## Open questions
+
+- ~~v2 scope cut line~~ — resolved: all 17 findings made the cut.
+- ~~0.2.0 vs 2.0.0~~ — resolved: versioning discipline (breaking-at-major-0 → minor) decides; "v2" stays the narrative label.
+- Whether docs/how-tos (step 8) ship with the publish PR or trail it.
+- Whether findings graduate to public GitHub issues for portfolio-visible rigor (unchanged from the original scope).
