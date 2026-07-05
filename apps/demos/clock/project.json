@@ -9,7 +9,7 @@
     "deploy": {
       "provider": "railway",
       "service": "hyperfrontend-demo-clock",
-      "origin": "https://hyperfrontend-demo-clock.up.railway.app",
+      "origin": "https://demo-clock-production.up.railway.app",
       "boundary": "cross-site",
       "kind": "static",
       "publishDir": "dist/apps/demos/clock/app"
