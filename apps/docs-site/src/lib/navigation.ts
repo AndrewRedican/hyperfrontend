@@ -417,6 +417,7 @@ const gettingStarted: NavItem[] = [
 export const mainNavLinks = [
   { slug: 'Docs', href: '/docs' },
   { slug: 'Demos', href: '/demos' },
+  { slug: 'Articles', href: '/articles' },
   { slug: 'Architecture', href: '/architecture' },
 ]
 
