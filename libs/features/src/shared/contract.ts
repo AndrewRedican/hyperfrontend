@@ -42,6 +42,9 @@ function collectActionListIssues(actions: unknown, field: string, issues: string
     if (action['respondsWith'] !== undefined && (typeof action['respondsWith'] !== 'string' || action['respondsWith'].length === 0)) {
       issues.push(`"${field}[${index}]" has a "respondsWith" that must be a non-empty string.`)
     }
+    if (action['required'] !== undefined && typeof action['required'] !== 'boolean') {
+      issues.push(`"${field}[${index}]" has a "required" that must be a boolean.`)
+    }
   })
 }
 

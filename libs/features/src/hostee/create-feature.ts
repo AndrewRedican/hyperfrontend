@@ -30,5 +30,5 @@ export function createFeature(options: FeatureOptions): FeatureHandle {
   if (options.resetBody !== false) {
     applyBodyReset()
   }
-  return createFeatureHandle(broker, resolveHostWindow(window), emitter)
+  return createFeatureHandle(broker, resolveHostWindow(window), emitter, { readyTimeoutMs: options.readyTimeoutMs })
 }

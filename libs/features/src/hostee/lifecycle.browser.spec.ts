@@ -104,13 +104,38 @@ describe('createFeatureHandle', () => {
     const mock = createMockChannel()
     const { broker, addChannel } = createMockBroker(mock.channel)
     createFeatureHandle(broker, hostWindow, createEventEmitter())
-    expect(addChannel).toHaveBeenCalledWith('host', hostWindow)
+    expect(addChannel).toHaveBeenCalledWith('host', hostWindow, {})
   })
 
   it('connects the channel during assembly', () => {
     const mock = createMockChannel()
     createFeatureHandle(createMockBroker(mock.channel).broker, hostWindow, createEventEmitter())
     expect(mock.connect).toHaveBeenCalledTimes(1)
+  })
+
+  it('passes the ready timeout to the channel as the connect deadline', () => {
+    const mock = createMockChannel()
+    const { broker, addChannel } = createMockBroker(mock.channel)
+    createFeatureHandle(broker, hostWindow, createEventEmitter(), { readyTimeoutMs: 4000 })
+    expect(addChannel).toHaveBeenCalledWith('host', hostWindow, { connectTimeoutMs: 4000 })
+  })
+
+  it('rejects pending ready() promises when the channel times out', async () => {
+    const mock = createMockChannel()
+    const handle = createFeatureHandle(createMockBroker(mock.channel).broker, hostWindow, createEventEmitter())
+    const pending = handle.ready()
+    mock.trigger('connect-timeout', { elapsedMs: 10_000 })
+    await expect(pending).rejects.toThrow('did not open the connection within 10000ms')
+  })
+
+  it('emits a distinguishable error when the channel times out', () => {
+    const mock = createMockChannel()
+    const emitter = createEventEmitter()
+    const errors: unknown[] = []
+    emitter.on('error', (data) => errors.push(data))
+    createFeatureHandle(createMockBroker(mock.channel).broker, hostWindow, emitter)
+    mock.trigger('connect-timeout', { elapsedMs: 10_000 })
+    expect(errors).toEqual([{ reason: 'ready-timeout', elapsedMs: 10_000 }])
   })
 
   it('emits open when the channel opens', () => {

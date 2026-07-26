@@ -63,7 +63,7 @@ The host never needs `@hyperfrontend/features` as a direct dependency: it instal
    // ❌ never re-export the host/CLI/server surface from the hostee barrel
    ```
 
-3. **Contract-validated messaging.** Every action a side emits or accepts is declared in a `FeatureContract`; the contract drives validation, the shell type generator, and the debug UI. The contract is the only coupling between host and feature.
+3. **Contract-validated messaging.** Every action a side emits or accepts is declared in a `FeatureContract`; the contract drives validation, the shell type generator, and the debug UI. The contract is the only coupling between host and feature. Unknown inbound types are dropped and logged, and only `accepted` entries flagged `required: true` gate the connection (the counterpart must emit them), so adding actions to a contract stays backward compatible.
 
 4. **Self-contained generated shells.** `build` emits a shell package with **zero runtime dependencies** — the contract is inlined and direct deps are bundled — so a host installs one package and inherits no transitive install burden.
 
@@ -125,6 +125,8 @@ sequenceDiagram
     Note over H: missed beats → UnresponsivePolicy<br/>(emit / unmount / callback)
     H->>F: close() / destroy() → channel disconnect + teardown
 ```
+
+Opening is asynchronous and deadline-bounded: the channel activates only when the Nexus wire handshake completes, and sends issued before then queue and flush on open. If the counterpart never completes the handshake within the deadline (`openTimeoutMs` / `readyTimeoutMs`, default 10 s), the shell tears the mount down and emits `error` with `reason: 'open-timeout'`, and the feature's `ready()` rejects after emitting `error` with `reason: 'ready-timeout'`.
 
 ---
 

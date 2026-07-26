@@ -7,12 +7,32 @@ import type { DisplayModeMount, ShellHandle } from './types'
 import { createError } from '@hyperfrontend/immutable-api-utils/built-in-copy/error'
 import { freeze } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
 import { promiseReject, promiseResolve } from '@hyperfrontend/immutable-api-utils/built-in-copy/promise'
+import { createURL } from '@hyperfrontend/immutable-api-utils/built-in-copy/url'
 import { ControlType, isControlType } from '../shared/control'
 import { createRequestPeer } from '../shared/request'
 import { DisplayMode } from '../shared/types'
 import { applyContentSize } from './sizing'
 
 // note: All DOM/window work lives in the injected mount functions, so this wiring stays DOM-free and exercisable with mock collaborators.
+
+/**
+ * Derives the origin the shell pins its channel sends to.
+ *
+ * @param url - The feature URL from the merged options, if any.
+ * @returns The URL's origin, or `undefined` when no URL is configured or it
+ * cannot be parsed (e.g. caller-provided targets with relative paths outside
+ * a document context).
+ */
+function deriveFeatureOrigin(url: string | undefined): string | undefined {
+  if (!url) {
+    return undefined
+  }
+  try {
+    return createURL(url, typeof document === 'undefined' ? undefined : document.baseURI).origin
+  } catch {
+    return undefined
+  }
+}
 
 // why: ShellWiring lives here, not in the public types module, so the nexus type import never leaks into the consumer-facing host entry's .d.ts (self-contained rule).
 
@@ -208,11 +228,13 @@ export function createShellHandle(
     if (options.plugins && options.plugins.length > 0) {
       mountPlugins(options.plugins, result.element ?? null, displayMode)
     }
-    channel = broker.addChannel(
-      `feature-${(openCount += 1)}`,
-      result.target,
-      wiring.registerSecurity(broker, options.protocol, options.sharedKey)
-    )
+    const featureOrigin = deriveFeatureOrigin(options.url)
+    // why: The origin pin restricts every send to the feature's origin before the first frame leaves; the timeout bounds the wire handshake.
+    channel = broker.addChannel(`feature-${(openCount += 1)}`, result.target, {
+      ...wiring.registerSecurity(broker, options.protocol, options.sharedKey),
+      ...(featureOrigin ? { origin: featureOrigin } : {}),
+      ...(options.openTimeoutMs !== undefined ? { connectTimeoutMs: options.openTimeoutMs } : {}),
+    })
     const sizeFrame = options.embedSizing === 'content' ? result.frame : undefined
     const activeMonitor = wiring.createHeartbeatMonitor((missedBeats, lastBeatAt) => applyUnresponsive(options, missedBeats, lastBeatAt))
     monitor = activeMonitor
@@ -238,6 +260,11 @@ export function createShellHandle(
     })
     channel.on('deny', (data) => emitter.emit('error', data))
     channel.on('invalid', (data) => emitter.emit('error', data))
+    channel.on('connect-timeout', (data) => {
+      // why: The feature never completed the handshake — tear the mount down and surface a distinguishable payload for fallback/retry UI.
+      destroy()
+      emitter.emit('error', { reason: 'open-timeout', elapsedMs: data.elapsedMs, displayMode })
+    })
     channel.onMessage((message: IMessage) => {
       if (isControlType(message.type)) {
         if (message.type === ControlType.Beat) {

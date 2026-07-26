@@ -29,3 +29,5 @@ shell.send('set-timezone', { tz: 'UTC' })
 | `ExperiencePlugin` | Opt-in extension point for layering transitions/animations onto display modes.   |
 
 The shell wraps a `@hyperfrontend/nexus` broker: `send` emits a contract action to the feature, and `on` subscribes to feature messages and the `open`/`close`/`error` lifecycle events. `close` disconnects the channel; `destroy` also releases the DOM.
+
+Opening is asynchronous: `isOpen` stays `false` and sends queue until the wire handshake with the feature completes, flushing on the `open` event. If the feature never completes the handshake within `openTimeoutMs` (default 10 s), the shell tears the mount down and emits `error` with `reason: 'open-timeout'`.

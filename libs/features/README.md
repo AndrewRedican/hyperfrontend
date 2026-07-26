@@ -98,6 +98,8 @@ shell.open()
 shell.send('set-timezone', { tz: 'UTC' })
 ```
 
+Contract actions may carry a `required: true` flag on `accepted` entries — the connection is denied unless the counterpart emits that type. Unflagged actions never gate the connection, so adding actions to a contract stays backward compatible.
+
 **From the command line**, scaffold, build, and serve features with the bundled `hf` CLI:
 
 ```bash

@@ -162,11 +162,11 @@ const shell = createFeatureShell({
 })
 
 // Lifecycle events ('open', 'close', 'error'); on() returns an unsubscribe fn.
-const unsubscribe = shell.on('open', () => console.log('connected'))
+// Opening is asynchronous — isOpen stays false until 'open' fires.
+const unsubscribe = shell.on('open', () => console.log('connected', shell.isOpen))
 
 shell.open()               // mount the feature in its display mode
-${buildReadmeMessaging(contract)}console.log(shell.isOpen)  // current connection state
-
+${buildReadmeMessaging(contract)}
 unsubscribe()
 shell.close()              // disconnect gracefully
 shell.destroy()            // disconnect and release all resources

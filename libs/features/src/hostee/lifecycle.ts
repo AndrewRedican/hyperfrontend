@@ -34,11 +34,20 @@ export function resolveHostWindow(win: Window): Window | null {
 }
 
 /**
+ * Timing settings for the hostee handshake.
+ */
+export interface FeatureHandleSettings {
+  /** Milliseconds the feature waits for the host before `ready()` rejects. */
+  readyTimeoutMs?: number
+}
+
+/**
  * Wires a hostee channel into the emitter and assembles the public handle.
  *
  * @param broker - The nexus broker for this feature.
  * @param hostWindow - The resolved host window, or `null` when unembedded.
  * @param emitter - The subscription registry backing `handle.on`.
+ * @param settings - Optional handshake timing settings.
  * @returns The frozen {@link FeatureHandle}.
  *
  * @example Assembling a feature handle around a broker
@@ -47,18 +56,28 @@ export function resolveHostWindow(win: Window): Window | null {
  * await handle.ready()
  * ```
  */
-export function createFeatureHandle(broker: BrokerHandle, hostWindow: Window | null, emitter: EventEmitter): FeatureHandle {
+export function createFeatureHandle(
+  broker: BrokerHandle,
+  hostWindow: Window | null,
+  emitter: EventEmitter,
+  settings: FeatureHandleSettings = {}
+): FeatureHandle {
   let channel: ChannelHandle | null = null
   let opened = false
+  const readyRejects: Array<(error: Error) => void> = []
   const requests = createRequestPeer('feature', (type, data) => channel?.send(type, data))
 
   if (hostWindow) {
-    const activeChannel = broker.addChannel('host', hostWindow)
+    const activeChannel = broker.addChannel('host', hostWindow, {
+      ...(settings.readyTimeoutMs !== undefined ? { connectTimeoutMs: settings.readyTimeoutMs } : {}),
+    })
     channel = activeChannel
     const heartbeat = createHeartbeatEmitter((type) => activeChannel.send(type))
     const announcer = createSizeAnnouncer((type, data) => activeChannel.send(type, data))
     activeChannel.on('open', () => {
       opened = true
+      // why: Settled ready() promises hold dead reject refs once open fires.
+      readyRejects.splice(0)
       emitter.emit('open')
       heartbeat.start()
       announcer.start()
@@ -72,6 +91,13 @@ export function createFeatureHandle(broker: BrokerHandle, hostWindow: Window | n
     })
     activeChannel.on('deny', (data) => emitter.emit('error', data))
     activeChannel.on('invalid', (data) => emitter.emit('error', data))
+    activeChannel.on('connect-timeout', (data) => {
+      emitter.emit('error', { reason: 'ready-timeout', elapsedMs: data.elapsedMs })
+      const error = createError(`The host did not open the connection within ${data.elapsedMs}ms.`)
+      for (const reject of readyRejects.splice(0)) {
+        reject(error)
+      }
+    })
     activeChannel.onMessage((message: IMessage) => {
       // why: Control traffic (heartbeat/size echoes, request/response envelopes) is SDK-internal; forwarding it would leak reserved __hf: types into consumer handlers.
       if (isControlType(message.type)) {
@@ -92,12 +118,13 @@ export function createFeatureHandle(broker: BrokerHandle, hostWindow: Window | n
     handle: requests.handle,
     on: emitter.on,
     ready: () =>
-      createPromise<void>((resolve) => {
+      createPromise<void>((resolve, reject) => {
         if (opened) {
           resolve()
           return
         }
         emitter.on('open', () => resolve())
+        readyRejects.push(reject)
       }),
     close: () => channel?.disconnect(),
   })

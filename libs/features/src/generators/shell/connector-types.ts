@@ -82,6 +82,26 @@ export interface FeatureShellOptions {
   sharedKey?: string
   /** Experience plugins wrapped around each mount/unmount. */
   plugins?: readonly FeatureExperiencePlugin[]
+  /**
+   * Milliseconds the shell waits for the feature to complete the connection
+   * handshake before emitting an \`error\` with \`reason: 'open-timeout'\` and
+   * tearing the mount down; defaults to 10000.
+   *
+   * Opening is asynchronous: \`isOpen\` stays \`false\` and the \`open\` event
+   * fires only once the wire handshake completes. \`send\` calls issued in
+   * between queue and flush on open.
+   */
+  openTimeoutMs?: number
+}
+
+/** Error payload emitted when the feature never completes the connection handshake. */
+export interface FeatureOpenTimeoutError {
+  /** Discriminates the open-timeout error from other \`error\` payloads. */
+  reason: 'open-timeout'
+  /** Milliseconds the shell waited before giving up. */
+  elapsedMs: number
+  /** The display mode the feature was being surfaced in. */
+  displayMode: FeatureDisplayMode
 }
 
 /** Handle returned by \`createFeatureShell\`, narrowed to the feature's contract. */

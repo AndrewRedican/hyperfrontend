@@ -51,6 +51,18 @@ import contract from '${toContractImportPath(config.contract, treeRoot)}'
 /** The ${config.name} feature handle; use it to send and receive contract actions. */
 export const feature = createFeature({ name: '${config.name}', contract })
 
+// note: The host connection opens asynchronously — sends issued before ready()
+// resolves are queued and flushed once the handshake completes.
+feature.ready().then(
+  () => {
+    // todo: run host-dependent startup here
+  },
+  (error: unknown) => {
+    // todo: render a fallback — the host never opened the connection
+    console.error(error)
+  }
+)
+
 ${handlers}
 
 // note: Example emits — uncomment and supply a payload to send.

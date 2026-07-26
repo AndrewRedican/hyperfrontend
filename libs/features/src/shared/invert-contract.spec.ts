@@ -26,6 +26,14 @@ describe('invertFeatureContract', () => {
     expect(invertFeatureContract(contract).accepted[0].schema).not.toBe(contract.emitted[0].schema)
   })
 
+  it('carries a required flag on a feature-emitted action into the host accepted list', () => {
+    const flagged: FeatureContract = {
+      emitted: [{ type: 'timeUpdated', required: true }],
+      accepted: [{ type: 'setTimezone' }],
+    }
+    expect(invertFeatureContract(flagged).accepted).toEqual([{ type: 'timeUpdated', required: true }])
+  })
+
   it('keeps control types in both directions when composed with the control contract', () => {
     const composed = withControlContract(invertFeatureContract(contract))
     expect({

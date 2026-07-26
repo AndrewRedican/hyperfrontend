@@ -73,6 +73,13 @@ export interface ActionDescription {
   schema?: object
   /** When this action is used as a request, the type of the action in the other direction that answers it. */
   respondsWith?: string
+  /**
+   * Marks an accepted action as essential for correct operation: the
+   * connection is denied at handshake time unless the counterpart emits this
+   * type. Only meaningful on `accepted` entries. Unflagged actions never gate
+   * the connection, so additive contract evolution stays non-breaking.
+   */
+  required?: boolean
 }
 
 /**
@@ -188,6 +195,16 @@ export interface ShellOptions {
   sharedKey?: string
   /** Experience plugins wrapped around each mount/unmount; `onMount` runs in registration order, `onUnmount` in reverse. */
   plugins?: readonly ExperiencePlugin[]
+  /**
+   * Milliseconds the shell waits for the feature to complete the connection
+   * handshake before emitting an `error` with `reason: 'open-timeout'` and
+   * tearing the mount down; defaults to 10000.
+   *
+   * Opening is asynchronous: `isOpen` stays `false` and the `open` event fires
+   * only once the wire handshake completes. `send`/`request` calls issued in
+   * between queue on the channel and flush on open.
+   */
+  openTimeoutMs?: number
 }
 
 /**
@@ -200,6 +217,12 @@ export interface FeatureOptions {
   contract: FeatureContract
   /** Whether to neutralize the feature page's body margins/padding; defaults to `true`. */
   resetBody?: boolean
+  /**
+   * Milliseconds the feature waits for the host to complete the connection
+   * handshake before `ready()` rejects and an `error` with
+   * `reason: 'ready-timeout'` is emitted; defaults to 10000.
+   */
+  readyTimeoutMs?: number
 }
 
 /**

@@ -79,6 +79,19 @@ describe('validateContract', () => {
       '"accepted[0]" has a "respondsWith" that must be a non-empty string.'
     )
   })
+
+  it('accepts a boolean required flag', () => {
+    expect(validateContract({ emitted: [{ type: 'tick' }], accepted: [{ type: 'setTimezone', required: true }] })).toEqual({
+      emitted: [{ type: 'tick' }],
+      accepted: [{ type: 'setTimezone', required: true }],
+    })
+  })
+
+  it('rejects a non-boolean required flag', () => {
+    expect(() => validateContract({ emitted: [], accepted: [{ type: 'setTimezone', required: 'yes' }] })).toThrow(
+      '"accepted[0]" has a "required" that must be a boolean.'
+    )
+  })
 })
 
 describe('validateFeatureConfig', () => {

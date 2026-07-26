@@ -25,4 +25,4 @@ setInterval(() => feature.send('tick', Date.now()), 1000)
 | `createFeature` | Connect a feature app to its host; returns `send`/`on`/`ready`/`close`. |
 | `FeatureHandle` | Type of the handle returned by `createFeature`.                         |
 
-`ready()` resolves once the host connection is established. `send` emits a contract action to the host; `on` subscribes to host messages and the `open`/`close`/`error` lifecycle events. `close` disconnects from the host.
+`ready()` resolves once the wire handshake with the host completes, and rejects if the host does not open the connection within `readyTimeoutMs` (default 10 s; an `error` with `reason: 'ready-timeout'` is also emitted). Sends issued before the handshake completes queue and flush on open. `send` emits a contract action to the host; `on` subscribes to host messages and the `open`/`close`/`error` lifecycle events. `close` disconnects from the host.

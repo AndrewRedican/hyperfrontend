@@ -127,7 +127,7 @@ describe('createShellHandle', () => {
   it('adds a channel against the mounted target', () => {
     const ctx = setup()
     ctx.handle.open()
-    expect(ctx.addChannel).toHaveBeenCalledWith('feature-1', TARGET, undefined)
+    expect(ctx.addChannel).toHaveBeenCalledWith('feature-1', TARGET, {})
   })
 
   it('passes registered security settings to the channel', () => {
@@ -291,7 +291,7 @@ describe('createShellHandle', () => {
     const ctx = setup()
     ctx.handle.open()
     ctx.handle.open()
-    expect(ctx.addChannel).toHaveBeenLastCalledWith('feature-2', TARGET, undefined)
+    expect(ctx.addChannel).toHaveBeenLastCalledWith('feature-2', TARGET, {})
   })
 
   it('starts the heartbeat monitor when the channel opens', () => {
