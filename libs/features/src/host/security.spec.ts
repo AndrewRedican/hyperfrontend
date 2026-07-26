@@ -12,10 +12,10 @@ function createMockBroker(): { broker: BrokerHandle; registerProtocol: jest.Mock
 }
 
 describe('registerSecurity', () => {
-  it('registers the v1 provider built from the broker logger', () => {
+  it('registers the v1 provider pairing the wire pipeline with the protocol', () => {
     const { broker, registerProtocol } = createMockBroker()
     registerSecurity(broker, 'v1', undefined)
-    expect(registerProtocol).toHaveBeenCalledWith('v1', 'v1-provider')
+    expect(registerProtocol).toHaveBeenCalledWith('v1', { createChannel: expect.any(Function), protocolProvider: 'v1-provider' })
   })
 
   it('returns v1 channel settings', () => {
@@ -25,6 +25,12 @@ describe('registerSecurity', () => {
   it('registers the v2 provider with the shared key', () => {
     registerSecurity(createMockBroker().broker, 'v2', 'secret')
     expect(createV2Protocol).toHaveBeenCalledWith({ id: 'logger' }, 'secret')
+  })
+
+  it('registers the v2 provider pairing the wire pipeline with the protocol', () => {
+    const { broker, registerProtocol } = createMockBroker()
+    registerSecurity(broker, 'v2', 'secret')
+    expect(registerProtocol).toHaveBeenCalledWith('v2', { createChannel: expect.any(Function), protocolProvider: 'v2-provider' })
   })
 
   it('returns v2 channel settings carrying the shared key', () => {

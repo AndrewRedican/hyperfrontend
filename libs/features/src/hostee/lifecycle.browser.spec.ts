@@ -17,6 +17,9 @@ jest.mock('@hyperfrontend/immutable-api-utils/built-in-copy/timers', () => ({
   clearTimeout: jest.fn(),
 }))
 
+jest.mock('@hyperfrontend/network-protocol/browser/v1', () => ({ createProtocol: jest.fn(() => 'v1-provider') }))
+jest.mock('@hyperfrontend/network-protocol/browser/v2', () => ({ createProtocol: jest.fn(() => 'v2-provider') }))
+
 class ResizeObserverStub {
   observe() {
     return undefined
@@ -72,9 +75,10 @@ function createMockChannel(): MockChannel {
   }
 }
 
-function createMockBroker(channel: ChannelHandle): { broker: BrokerHandle; addChannel: jest.Mock } {
+function createMockBroker(channel: ChannelHandle): { broker: BrokerHandle; addChannel: jest.Mock; registerProtocol: jest.Mock } {
   const addChannel = jest.fn(() => channel)
-  return { broker: <BrokerHandle>(<unknown>{ addChannel }), addChannel }
+  const registerProtocol = jest.fn()
+  return { broker: <BrokerHandle>(<unknown>{ addChannel, registerProtocol, logger: { id: 'logger' } }), addChannel, registerProtocol }
 }
 
 describe('resolveHostWindow', () => {
@@ -118,6 +122,49 @@ describe('createFeatureHandle', () => {
     const { broker, addChannel } = createMockBroker(mock.channel)
     createFeatureHandle(broker, hostWindow, createEventEmitter(), { readyTimeoutMs: 4000 })
     expect(addChannel).toHaveBeenCalledWith('host', hostWindow, { connectTimeoutMs: 4000 })
+  })
+
+  it('passes the v1 security settings into the host channel', () => {
+    const mock = createMockChannel()
+    const { broker, addChannel } = createMockBroker(mock.channel)
+    createFeatureHandle(broker, hostWindow, createEventEmitter(), { protocol: 'v1' })
+    expect(addChannel).toHaveBeenCalledWith('host', hostWindow, { security: { protocol: 'v1' } })
+  })
+
+  it('registers the v2 provider pairing the wire pipeline with the protocol', () => {
+    const mock = createMockChannel()
+    const { broker, registerProtocol } = createMockBroker(mock.channel)
+    createFeatureHandle(broker, hostWindow, createEventEmitter(), { protocol: 'v2', sharedKey: 'secret' })
+    expect(registerProtocol).toHaveBeenCalledWith('v2', { createChannel: expect.any(Function), protocolProvider: 'v2-provider' })
+  })
+
+  it('passes the v2 security settings carrying the shared key into the host channel', () => {
+    const mock = createMockChannel()
+    const { broker, addChannel } = createMockBroker(mock.channel)
+    createFeatureHandle(broker, hostWindow, createEventEmitter(), { protocol: 'v2', sharedKey: 'secret' })
+    expect(addChannel).toHaveBeenCalledWith('host', hostWindow, { security: { protocol: 'v2', sharedKey: 'secret' } })
+  })
+
+  it('combines security settings with the connect deadline', () => {
+    const mock = createMockChannel()
+    const { broker, addChannel } = createMockBroker(mock.channel)
+    createFeatureHandle(broker, hostWindow, createEventEmitter(), { protocol: 'v1', readyTimeoutMs: 4000 })
+    expect(addChannel).toHaveBeenCalledWith('host', hostWindow, { security: { protocol: 'v1' }, connectTimeoutMs: 4000 })
+  })
+
+  it('throws before adding the channel when the v2 protocol has no shared key', () => {
+    const mock = createMockChannel()
+    const { broker } = createMockBroker(mock.channel)
+    expect(() => createFeatureHandle(broker, hostWindow, createEventEmitter(), { protocol: 'v2' })).toThrow(
+      'Security protocol \'v2\' requires a pre-shared key: set the "sharedKey" option to a non-empty string.'
+    )
+  })
+
+  it('registers no protocol when security is not selected', () => {
+    const mock = createMockChannel()
+    const { broker, registerProtocol } = createMockBroker(mock.channel)
+    createFeatureHandle(broker, hostWindow, createEventEmitter())
+    expect(registerProtocol).not.toHaveBeenCalled()
   })
 
   it('rejects pending ready() promises when the channel times out', async () => {

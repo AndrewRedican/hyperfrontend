@@ -1,12 +1,14 @@
 import type { BrokerHandle, ChannelHandle, IMessage } from '@hyperfrontend/nexus'
 import type { EventEmitter } from '../shared/event-emitter'
 import type { RequestOptions } from '../shared/request'
+import type { SecurityProtocol } from '../shared/types'
 import type { FeatureHandle } from './types'
 import { createError } from '@hyperfrontend/immutable-api-utils/built-in-copy/error'
 import { freeze } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
 import { createPromise, promiseReject } from '@hyperfrontend/immutable-api-utils/built-in-copy/promise'
 import { isControlType } from '../shared/control'
 import { createRequestPeer } from '../shared/request'
+import { registerSecurity } from '../shared/security'
 import { createHeartbeatEmitter } from './heartbeat'
 import { createSizeAnnouncer } from './sizing'
 
@@ -34,11 +36,15 @@ export function resolveHostWindow(win: Window): Window | null {
 }
 
 /**
- * Timing settings for the hostee handshake.
+ * Timing and security settings for the hostee handshake.
  */
 export interface FeatureHandleSettings {
   /** Milliseconds the feature waits for the host before `ready()` rejects. */
   readyTimeoutMs?: number
+  /** Security envelope to negotiate with the host; defaults to `none`. */
+  protocol?: SecurityProtocol
+  /** Pre-shared key used by the `v2` protocol. */
+  sharedKey?: string
 }
 
 /**
@@ -47,7 +53,7 @@ export interface FeatureHandleSettings {
  * @param broker - The nexus broker for this feature.
  * @param hostWindow - The resolved host window, or `null` when unembedded.
  * @param emitter - The subscription registry backing `handle.on`.
- * @param settings - Optional handshake timing settings.
+ * @param settings - Optional handshake timing and security settings.
  * @returns The frozen {@link FeatureHandle}.
  *
  * @example Assembling a feature handle around a broker
@@ -69,6 +75,7 @@ export function createFeatureHandle(
 
   if (hostWindow) {
     const activeChannel = broker.addChannel('host', hostWindow, {
+      ...registerSecurity(broker, settings.protocol, settings.sharedKey),
       ...(settings.readyTimeoutMs !== undefined ? { connectTimeoutMs: settings.readyTimeoutMs } : {}),
     })
     channel = activeChannel

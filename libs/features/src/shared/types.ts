@@ -217,6 +217,10 @@ export interface FeatureOptions {
   contract: FeatureContract
   /** Whether to neutralize the feature page's body margins/padding; defaults to `true`. */
   resetBody?: boolean
+  /** Security envelope to negotiate with the host; defaults to `none`. */
+  protocol?: SecurityProtocol
+  /** Pre-shared key used by the `v2` protocol. */
+  sharedKey?: string
   /**
    * Milliseconds the feature waits for the host to complete the connection
    * handshake before `ready()` rejects and an `error` with
