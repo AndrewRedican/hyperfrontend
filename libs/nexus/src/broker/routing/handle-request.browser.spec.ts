@@ -2,6 +2,7 @@ import type { Logger } from '@hyperfrontend/logging'
 import type { IAction } from '../../types/action'
 import type { ChannelHandle } from '../../types/channel'
 import type { IChannelContract } from '../../types/contract'
+import type { SecurityTransport } from '../../types/security'
 import type { BrokerState } from '../types'
 import type { RoutingContext } from './types'
 import { createActionCreators } from '../../core/actions/factory'
@@ -80,6 +81,9 @@ describe('handleRequest', () => {
       processManager,
       actions: mockActions,
       logger: mockLogger,
+      getSupportedProtocols: () => ['none'],
+      getProtocol: () => undefined,
+      routeAction: () => undefined,
     }
   })
 
@@ -325,6 +329,129 @@ describe('handleRequest', () => {
     expect(channel.getPendingSecurityRequest()).toEqual({ supported: ['v1'], preferred: 'v1' })
   })
 
+  describe('registry-sourced negotiation', () => {
+    function contextSupporting(...protocols: string[]): RoutingContext {
+      return { ...routingContext, getSupportedProtocols: () => [...protocols, 'none'] }
+    }
+
+    it('negotiates the protocol offered by the broker protocol registry', () => {
+      addReadyChannel()
+
+      handleRequest(contextSupporting('v2'), requestEvent({ security: { supported: ['v2', 'none'], preferred: 'v2' } }))
+
+      expect(mockWindow.postMessage).toHaveBeenCalledWith(
+        expect.objectContaining({
+          type: '[nexus] connection-request-accepted',
+          security: { negotiated: 'v2' },
+        }),
+        expect.any(String)
+      )
+    })
+
+    it('records the negotiated protocol on the channel', () => {
+      const channel = addReadyChannel()
+
+      handleRequest(contextSupporting('v2'), requestEvent({ security: { supported: ['v2', 'none'], preferred: 'v2' } }))
+
+      expect(channel.getNegotiatedProtocol()).toBe('v2')
+    })
+
+    it('negotiates none when the registry has no protocol in common with the request', () => {
+      addReadyChannel()
+
+      handleRequest(contextSupporting('v2'), requestEvent({ security: { supported: ['v1', 'none'], preferred: 'v1' } }))
+
+      expect(mockWindow.postMessage).toHaveBeenCalledWith(expect.objectContaining({ security: { negotiated: 'none' } }), expect.any(String))
+    })
+
+    it('answers the replayed ACCEPT with a registry-sourced negotiation', () => {
+      const channel = addReadyChannel()
+      channel.activate('https://example.com', peerContract, 'remote-broker-1')
+
+      handleRequest(contextSupporting('v2'), requestEvent({ security: { supported: ['v2', 'none'], preferred: 'v2' } }))
+
+      expect(mockWindow.postMessage).toHaveBeenCalledWith(expect.objectContaining({ security: { negotiated: 'v2' } }), expect.any(String))
+    })
+
+    it('carries the negotiated response through a scheduled activation into the ACCEPT', () => {
+      const channel = addChannel(mockBrokerState, registry, processManager, mockActions, 'local-channel', mockWindow)
+
+      handleRequest(contextSupporting('v2'), requestEvent({ security: { supported: ['v2', 'none'], preferred: 'v2' } }))
+      channel.connect()
+
+      expect(mockWindow.postMessage).toHaveBeenCalledWith(
+        expect.objectContaining({
+          type: '[nexus] connection-request-accepted',
+          security: { negotiated: 'v2' },
+        }),
+        expect.any(String)
+      )
+    })
+  })
+
+  describe('fail-closed responder', () => {
+    const failClosedSettings = { security: { protocol: 'v2', mode: 'fail-closed' } }
+
+    it('denies with reason security-unavailable when the request carries no security slot', () => {
+      addReadyChannel(failClosedSettings)
+
+      handleRequest(routingContext, requestEvent())
+
+      expect(mockWindow.postMessage).toHaveBeenCalledWith(
+        expect.objectContaining({
+          type: '[nexus] connection-request-denied',
+          reason: 'security-unavailable',
+          error: expect.stringContaining('Security is required'),
+        }),
+        expect.any(String)
+      )
+    })
+
+    it('denies with reason security-unavailable when negotiation ends in plaintext', () => {
+      addReadyChannel(failClosedSettings)
+
+      handleRequest(routingContext, requestEvent({ security: { supported: ['v1', 'none'], preferred: 'v1' } }))
+
+      expect(mockWindow.postMessage).toHaveBeenCalledWith(
+        expect.objectContaining({
+          type: '[nexus] connection-request-denied',
+          reason: 'security-unavailable',
+        }),
+        expect.any(String)
+      )
+    })
+
+    it('accepts when the registry satisfies the requested protocol', () => {
+      addReadyChannel(failClosedSettings)
+
+      handleRequest(
+        { ...routingContext, getSupportedProtocols: () => ['v2', 'none'] },
+        requestEvent({ security: { supported: ['v2', 'none'], preferred: 'v2' } })
+      )
+
+      expect(mockWindow.postMessage).toHaveBeenCalledWith(
+        expect.objectContaining({
+          type: '[nexus] connection-request-accepted',
+          security: { negotiated: 'v2' },
+        }),
+        expect.any(String)
+      )
+    })
+  })
+
+  describe('fail-open responder wanting security', () => {
+    it('warns and accepts in plaintext when the request carries no security slot', () => {
+      addReadyChannel({ security: { protocol: 'v2' } })
+
+      handleRequest(routingContext, requestEvent())
+
+      expect({ accept: (<jest.Mock>mockWindow.postMessage).mock.calls[0][0], warns: (<jest.Mock>mockLogger.warn).mock.calls }).toEqual({
+        accept: expect.objectContaining({ type: '[nexus] connection-request-accepted' }),
+        warns: [[expect.stringContaining('continuing without encryption')]],
+      })
+    })
+  })
+
   describe('active channel', () => {
     function addActiveChannel() {
       const channel = addReadyChannel()
@@ -386,6 +513,19 @@ describe('handleRequest', () => {
       handleRequest(routingContext, requestEvent({ senderId: 'remote-broker-2', processId: 'process-2' }))
 
       expect(mockLogger.info).toHaveBeenCalledWith(expect.stringContaining('detected channel'))
+    })
+
+    it('detaches the stale security transport when the counterpart reloaded', () => {
+      const channel = addActiveChannel()
+      channel.setNegotiatedProtocol('v2')
+      channel.setSecurityTransport(<SecurityTransport>(<unknown>{ send: jest.fn(), isReady: () => true }))
+
+      handleRequest(routingContext, requestEvent({ senderId: 'remote-broker-2', processId: 'process-2' }))
+
+      expect({ transport: channel.getSecurityTransport(), negotiated: channel.getNegotiatedProtocol() }).toEqual({
+        transport: null,
+        negotiated: null,
+      })
     })
   })
 

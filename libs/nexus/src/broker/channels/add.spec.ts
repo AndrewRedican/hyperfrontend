@@ -59,6 +59,26 @@ describe('addChannel', () => {
     expect(channel2).toBe(channel1)
   })
 
+  it('applies security settings to an existing channel that has none', () => {
+    addChannel(mockBrokerState, registry, processManager, actions, 'auto-created', mockWindow)
+
+    const channel = addChannel(mockBrokerState, registry, processManager, actions, 'app-channel', mockWindow, {
+      security: { protocol: 'v2', mode: 'fail-closed' },
+    })
+
+    expect(channel.getSecuritySettings()).toEqual({ protocol: 'v2', mode: 'fail-closed' })
+  })
+
+  it('keeps the existing security settings when a later registration passes different ones', () => {
+    addChannel(mockBrokerState, registry, processManager, actions, 'app-channel', mockWindow, { security: { protocol: 'v2' } })
+
+    const channel = addChannel(mockBrokerState, registry, processManager, actions, 'late-channel', mockWindow, {
+      security: { protocol: 'v1' },
+    })
+
+    expect(channel.getSecuritySettings()).toEqual({ protocol: 'v2' })
+  })
+
   it('passs broker contract to new channel', () => {
     const channel = addChannel(mockBrokerState, registry, processManager, actions, 'test-channel', mockWindow)
 

@@ -1,19 +1,14 @@
 import type { IAction, IActionWithContractAndSecurity } from '../../types/action'
 import type { ChannelHandle } from '../../types/channel'
-import type { SecurityNegotiationRequest, SecurityProtocolVersion } from '../../types/security'
+import type { SecurityNegotiationRequest, SecurityNegotiationResponse } from '../../types/security'
 import type { RoutingContext } from './types'
 import { validateContract as validateContractFn } from '../../core/validation/contract'
 import { negotiateProtocol, createSecurityResponse } from '../../security/negotiation/negotiate'
+import { requestsSecurity, requiresSecurity } from '../../security/settings'
 import { isActionWithContract } from '../../types/action'
 import { findMissingRequiredActions } from '../../utils/validation/find-missing-required-actions'
 import { addChannel } from '../channels/add'
 import { applyPolicy } from '../security/apply-policy'
-
-/**
- * Default supported security protocols for the responder.
- * Includes 'none' as fallback for backward compatibility.
- */
-const DEFAULT_RESPONDER_SUPPORTED: readonly SecurityProtocolVersion[] = ['none']
 
 /**
  * Handles REQUEST_CONNECTION action.
@@ -30,14 +25,18 @@ const DEFAULT_RESPONDER_SUPPORTED: readonly SecurityProtocolVersion[] = ['none']
  * - Tears down and re-handshakes when the counterpart window reloaded
  * - Resolves simultaneous requests (glare) via a broker-id tie-break
  * - Denies invalid or incompatible contracts and policy-rejected requests
+ * - Negotiates the security protocol against the broker's protocol registry
+ * - Denies with reason 'security-unavailable' when the channel is
+ *   fail-closed and the negotiation outcome is plaintext
  * - Pins the origin, tracks the process, sends ACCEPT, and starts the
  *   responder deadline/retry timers when the local side is ready
- * - Schedules activation when the local side has not called connect() yet
+ * - Schedules activation (carrying the negotiated security response) when
+ *   the local side has not called connect() yet
  *
  * @example Processing a connection request
  * Incoming REQUEST triggers:
  * 1. Channel lookup by source window (or creation)
- * 2. Origin, contract, compatibility, and policy validation
+ * 2. Origin, contract, compatibility, policy, and security validation
  * 3. ACCEPT response with deadline/retry (or DENY on failure)
  */
 export function handleRequest(context: RoutingContext, message: MessageEvent<IAction>): void {
@@ -68,7 +67,7 @@ export function handleRequest(context: RoutingContext, message: MessageEvent<IAc
   if (channel.isActive()) {
     if (channel.getPeerId() === senderId) {
       const securityResponse = securityRequest
-        ? createSecurityResponse(negotiateProtocol(securityRequest, DEFAULT_RESPONDER_SUPPORTED).negotiated)
+        ? createSecurityResponse(negotiateProtocol(securityRequest, context.getSupportedProtocols()).negotiated)
         : undefined
 
       channel.sendAction({
@@ -131,27 +130,44 @@ export function handleRequest(context: RoutingContext, message: MessageEvent<IAc
     }
   }
 
+  let securityResponse: SecurityNegotiationResponse | undefined = undefined
   if (securityRequest) {
     channel.setPendingSecurityRequest(securityRequest)
+
+    const result = negotiateProtocol(securityRequest, context.getSupportedProtocols())
+    channel.setNegotiatedProtocol(result.negotiated)
+    securityResponse = createSecurityResponse(result.negotiated)
+
+    logger.info(`${state.name} negotiated security protocol: ${result.negotiated}`)
+  }
+
+  if ((securityResponse?.negotiated ?? 'none') === 'none') {
+    const securitySettings = channel.getSecuritySettings()
+    if (requiresSecurity(securitySettings)) {
+      channel.sendAction({
+        type: '[nexus] connection-request-denied',
+        processId,
+        senderId: state.id,
+        error: 'Security is required for this channel but the counterpart cannot negotiate an encrypted protocol.',
+        reason: 'security-unavailable',
+      })
+      return
+    }
+    if (requestsSecurity(securitySettings)) {
+      logger.warn(
+        `${state.name} requested security for channel ${channel.getName()} but negotiation ended in plaintext; continuing without encryption.`
+      )
+    }
   }
 
   // why: The initiator confirms with OPEN carrying this processId, so it is tracked up front for handleOpen to resolve back to this channel.
   processManager.track(processId, channel)
 
   if (!channel.isReadyToConnect()) {
-    channel.scheduleActivation(senderId, message.origin, contract, processId)
+    channel.scheduleActivation(senderId, message.origin, contract, processId, securityResponse)
 
     logger.info(`${state.name} scheduled activation for channel ${channel.getName()}`)
     return
-  }
-
-  let securityResponse = undefined
-  if (securityRequest) {
-    const result = negotiateProtocol(securityRequest, DEFAULT_RESPONDER_SUPPORTED)
-    channel.setNegotiatedProtocol(result.negotiated)
-    securityResponse = createSecurityResponse(result.negotiated)
-
-    logger.info(`${state.name} negotiated security protocol: ${result.negotiated}`)
   }
 
   channel.beginResponse(senderId, message.origin, contract, processId, {

@@ -3,7 +3,13 @@ import type { IAction } from './action'
 import type { IChannelContract } from './contract'
 import type { ChannelEvent, EventCallbackMap } from './events'
 import type { IMessage } from './message'
-import type { SecurityProtocolVersion, SecurityTransport, SecurityNegotiationRequest, ChannelSecuritySettings } from './security'
+import type {
+  SecurityProtocolVersion,
+  SecurityTransport,
+  SecurityNegotiationRequest,
+  SecurityNegotiationResponse,
+  ChannelSecuritySettings,
+} from './security'
 
 /**
  * Configuration for creating a new channel
@@ -43,9 +49,17 @@ export interface IChannelSettings {
 
 /**
  * Scheduled activation data for pending connections.
- * Tuple containing: [senderId, origin, contract, processId]
+ * Tuple containing: [senderId, origin, contract, processId, security]
+ * where `security` is the negotiated response the ACCEPT answers with
+ * (absent when the request carried no security negotiation).
  */
-export type ScheduledActivation = readonly [senderId: string, origin: string, contract: IChannelContract, processId: string]
+export type ScheduledActivation = readonly [
+  senderId: string,
+  origin: string,
+  contract: IChannelContract,
+  processId: string,
+  security?: SecurityNegotiationResponse,
+]
 
 /**
  * Event subscription callback.
@@ -110,6 +124,8 @@ export interface ChannelState {
   readonly logger: Logger | null
   /** Whether channel was created by a broker */
   readonly brokerManaged: boolean
+  /** Security settings configured for this channel (null when none were provided) */
+  readonly security: ChannelSecuritySettings | null
   /** Whether connect() has been called (ready to accept connections) */
   readonly readyToConnect: boolean
   /** Negotiated security protocol (null before negotiation) */
@@ -252,10 +268,37 @@ export interface ChannelHandle {
   isReadyToConnect(): boolean
 
   /**
+   * Checks whether the responder side sent ACCEPT and is waiting for the
+   * counterpart's OPEN to activate.
+   */
+  isAwaitingOpen(): boolean
+
+  /**
+   * Gets the security settings configured for this channel
+   * (null when none were provided).
+   */
+  getSecuritySettings(): ChannelSecuritySettings | null
+
+  /**
+   * Applies security settings to a channel that was created before they
+   * were known (e.g. auto-created by an inbound connection request).
+   * Settings already configured on the channel stay authoritative: the
+   * call is a no-op when the channel has security settings.
+   */
+  applySecuritySettings(settings: ChannelSecuritySettings): void
+
+  /**
    * Schedules activation for later when connect() is called.
    * Used when REQUEST arrives before connect() is called.
+   * The optional security response is answered back in the ACCEPT.
    */
-  scheduleActivation(senderId: string, origin: string, contract: IChannelContract, processId: string): void
+  scheduleActivation(
+    senderId: string,
+    origin: string,
+    contract: IChannelContract,
+    processId: string,
+    security?: SecurityNegotiationResponse
+  ): void
 
   /**
    * Notifies event subscribers of a channel event.

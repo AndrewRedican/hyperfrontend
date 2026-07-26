@@ -47,8 +47,12 @@ export interface CancelEventData {
  * Data payload for DENY event
  */
 export interface DenyEventData {
-  /** Reason for denial */
-  reason: string
+  /** Human-readable error explaining the denial */
+  error?: string
+  /** Machine-readable denial reason (e.g. 'security-unavailable' when a fail-closed channel could not negotiate encryption) */
+  reason?: string
+  /** Origin of the counterpart that denied the connection */
+  origin?: string
 }
 
 /**

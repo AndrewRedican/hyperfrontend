@@ -57,6 +57,9 @@ describe('routeMessage', () => {
       processManager,
       actions: mockActions,
       logger: mockLogger,
+      getSupportedProtocols: () => ['none'],
+      getProtocol: () => undefined,
+      routeAction: () => undefined,
     }
   })
 

@@ -84,6 +84,8 @@ export interface IActionWithSecurity extends IActionBase {
 export interface IActionWithError extends IActionWithProcess {
   /** Error message describing what went wrong */
   readonly error: string
+  /** Machine-readable denial reason (e.g. 'security-unavailable') */
+  readonly reason?: string
 }
 
 /**

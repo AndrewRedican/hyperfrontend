@@ -7,22 +7,23 @@
  * @module broker/routing/route-encrypted-message
  */
 
-import type { Registry } from '../../core/registry/factory'
 import type { ChannelHandle } from '../../types/channel'
 import type { RoutingContext, RouteHandler } from './types'
-import { getAll } from '../../core/registry/get-all'
 import { createSecurityErrorEventData, logSecurityError } from '../../security/errors'
 
 /**
  * Routes an encrypted message to the appropriate channel for decryption.
  *
  * This function handles Uint8Array payloads received via postMessage:
- * 1. Identifies the target channel based on message origin
- * 2. Routes the encrypted payload through the channel's security transport
- * 3. The security transport decrypts and invokes the registered receive handler
+ * 1. Resolves the target channel by the event's source window — the source
+ *    window is the counterpart's identity, exactly as in the handshake
+ * 2. Enforces the channel's pinned origin; mismatching payloads are dropped
+ *    with an 'invalid' event before any decryption runs
+ * 3. Routes the encrypted payload through the channel's security transport
+ * 4. The security transport decrypts and dispatches the transported action
  *
- * If no matching channel is found or the channel has no security transport,
- * the message is silently dropped (with optional debug logging).
+ * If no channel is registered for the source window or the channel has no
+ * ready security transport, the message is dropped with a log entry.
  *
  * @param context - Routing context with state, registry, actions, and logger
  * @param router - Message router for handling decrypted actions
@@ -38,7 +39,6 @@ import { createSecurityErrorEventData, logSecurityError } from '../../security/e
  */
 export function routeEncryptedMessage(context: RoutingContext, router: Map<string, RouteHandler>, event: MessageEvent<Uint8Array>): void {
   const { state, registry, logger } = context
-  const origin = event?.origin
   const payload = event?.data
 
   if (!(payload instanceof Uint8Array)) {
@@ -46,10 +46,17 @@ export function routeEncryptedMessage(context: RoutingContext, router: Map<strin
     return
   }
 
-  const channel = findChannelByOrigin(registry, origin)
+  const source = event.source
+  const channel = source ? <ChannelHandle | undefined>registry.getByWindow(<Window>source) : undefined
 
   if (!channel) {
-    logger.info(`${state.name} ignored encrypted message - no channel for origin ${origin}`)
+    logger.info(`${state.name} ignored encrypted message - no channel for the source window`)
+    return
+  }
+
+  const pinnedOrigin = channel.getOrigin()
+  if (pinnedOrigin !== null && pinnedOrigin !== '*' && pinnedOrigin !== event.origin) {
+    channel.notifyEvent('invalid', { error: `Dropped encrypted message from unexpected origin '${event.origin}'.` })
     return
   }
 
@@ -72,40 +79,4 @@ export function routeEncryptedMessage(context: RoutingContext, router: Map<strin
     logSecurityError(logger, channel.getName(), errorData)
     channel.notifyEvent('security-error', errorData)
   }
-}
-
-/**
- * Finds a channel by origin in the registry.
- *
- * Since encrypted messages don't contain senderId, we must match
- * by origin. This works because each channel has a unique target window
- * and thus a unique origin.
- *
- * @param registry - Channel registry to search
- * @param origin - Origin of the message sender
- * @returns The matching channel handle, or undefined if not found
- *
- * @internal
- */
-function findChannelByOrigin(registry: Registry, origin: string): ChannelHandle | undefined {
-  const allChannels = getAll(registry)
-
-  for (const channel of allChannels) {
-    const channelHandle = <ChannelHandle>channel
-
-    if (!channelHandle.isActive || typeof channelHandle.isActive !== 'function') {
-      continue
-    }
-
-    if (!channelHandle.isActive()) {
-      continue
-    }
-
-    const channelJSON = channelHandle.toJSON()
-    if (channelJSON.origin === origin) {
-      return channelHandle
-    }
-  }
-
-  return undefined
 }

@@ -1,6 +1,7 @@
 import type { Logger } from '@hyperfrontend/logging'
 import type { IAction } from '../../types/action'
 import type { IChannelContract } from '../../types/contract'
+import type { SecurityProvider, SecurityProtocolProvider } from '../../types/security'
 import type { BrokerState } from '../types'
 import type { RoutingContext } from './types'
 import { createActionCreators } from '../../core/actions/factory'
@@ -79,11 +80,19 @@ describe('handleOpen', () => {
       processManager,
       actions,
       logger: mockLogger,
+      getSupportedProtocols: () => ['none'],
+      getProtocol: () => undefined,
+      routeAction: () => undefined,
     }
   })
 
-  function addRespondingChannel(name = 'test-channel', target: Window = mockWindow, processId = 'process-1') {
-    const channel = addChannel(mockBrokerState, registry, processManager, actions, name, target)
+  function addRespondingChannel(
+    name = 'test-channel',
+    target: Window = mockWindow,
+    processId = 'process-1',
+    settings: Record<string, unknown> = {}
+  ) {
+    const channel = addChannel(mockBrokerState, registry, processManager, actions, name, target, settings)
     channel.beginResponse('remote-broker-1', 'http://example.com', peerContract, processId, {
       type: '[nexus] connection-request-accepted',
       processId,
@@ -92,6 +101,24 @@ describe('handleOpen', () => {
     processManager.track(processId, channel)
     ;(<jest.Mock>target.postMessage).mockClear()
     return channel
+  }
+
+  function contextWithProvider() {
+    const sent: unknown[] = []
+    const provider: SecurityProvider = {
+      createChannel: (label) => ({
+        label,
+        send: (origin: string, target: string, data: unknown) => {
+          sent.push({ origin, target, data })
+        },
+        receive: () => undefined,
+        stop: () => undefined,
+        resume: () => undefined,
+      }),
+      protocolProvider: <SecurityProtocolProvider>(<unknown>(() => undefined)),
+    }
+    const context: RoutingContext = { ...routingContext, getProtocol: () => provider }
+    return { context, sent }
   }
 
   function openEvent(processId = 'process-1', security?: unknown) {
@@ -193,7 +220,7 @@ describe('handleOpen', () => {
     const securityReadyHandler = jest.fn()
     channel.on('security-ready', securityReadyHandler)
 
-    handleOpen(routingContext, openEvent('process-1', { protocol: 'v1', active: true }))
+    handleOpen(contextWithProvider().context, openEvent('process-1', { protocol: 'v1', active: true }))
 
     expect({ negotiated: channel.getNegotiatedProtocol(), ready: channel.isSecurityReady() }).toEqual({
       negotiated: 'v1',
@@ -202,13 +229,13 @@ describe('handleOpen', () => {
     expect(securityReadyHandler).toHaveBeenCalledWith({ protocol: 'v1', active: true }, expect.anything())
   })
 
-  it('skips setting protocol if already negotiated', () => {
+  it('overwrites a previously negotiated protocol with the confirmed outcome', () => {
     const channel = addRespondingChannel()
     channel.setNegotiatedProtocol('v2')
 
-    handleOpen(routingContext, openEvent('process-1', { protocol: 'v1', active: true }))
+    handleOpen(routingContext, openEvent('process-1', { protocol: 'none', active: false }))
 
-    expect(channel.getNegotiatedProtocol()).toBe('v2')
+    expect(channel.getNegotiatedProtocol()).toBe('none')
   })
 
   it('logs debug info when security is ready', () => {
@@ -225,6 +252,152 @@ describe('handleOpen', () => {
     handleOpen(routingContext, openEvent())
 
     expect(channel.isSecurityReady()).toBe(true)
+  })
+
+  describe('security transport attachment', () => {
+    it('attaches the transport for the confirmed protocol', () => {
+      const channel = addRespondingChannel()
+
+      handleOpen(contextWithProvider().context, openEvent('process-1', { protocol: 'v2', active: true }))
+
+      expect(channel.getSecurityTransport()?.getProtocol()).toBe('v2')
+    })
+
+    it('flushes queued product messages through the transport, not postMessage', () => {
+      const channel = addRespondingChannel()
+      channel.send('response-message', { seq: 1 })
+      const wire = contextWithProvider()
+
+      handleOpen(wire.context, openEvent('process-1', { protocol: 'v2', active: true }))
+
+      expect({
+        throughTransport: wire.sent,
+        posts: (<jest.Mock>mockWindow.postMessage).mock.calls,
+      }).toEqual({
+        throughTransport: [
+          expect.objectContaining({
+            data: expect.objectContaining({ message: expect.objectContaining({ type: '[nexus] new-message' }) }),
+          }),
+        ],
+        posts: [],
+      })
+    })
+
+    it('warns and stays plaintext when no provider is registered for the confirmed protocol', () => {
+      const channel = addRespondingChannel()
+
+      handleOpen(routingContext, openEvent('process-1', { protocol: 'v2', active: true }))
+
+      expect({
+        negotiated: channel.getNegotiatedProtocol(),
+        transport: channel.getSecurityTransport(),
+        warns: (<jest.Mock>mockLogger.warn).mock.calls,
+      }).toEqual({
+        negotiated: 'none',
+        transport: null,
+        warns: [[expect.stringContaining("no provider registered for the negotiated 'v2' protocol")]],
+      })
+    })
+
+    it('does not attach a transport when the confirmation reports inactive security', () => {
+      const channel = addRespondingChannel()
+
+      handleOpen(contextWithProvider().context, openEvent('process-1', { protocol: 'none', active: false }))
+
+      expect(channel.getSecurityTransport()).toBeNull()
+    })
+
+    it('does not attach a transport on a stale OPEN with no pending accept', () => {
+      const channel = addChannel(mockBrokerState, registry, processManager, actions, 'test-channel', mockWindow)
+      processManager.track('process-1', channel)
+
+      handleOpen(contextWithProvider().context, openEvent('process-1', { protocol: 'v2', active: true }))
+
+      expect(channel.getSecurityTransport()).toBeNull()
+    })
+  })
+
+  describe('fail-closed responder', () => {
+    function addFailClosedChannel() {
+      const channel = addRespondingChannel('test-channel', mockWindow, 'process-1', {
+        security: { protocol: 'v2', mode: 'fail-closed' },
+      })
+      const denyHandler = jest.fn()
+      channel.on('deny', denyHandler)
+      return { channel, denyHandler }
+    }
+
+    it('refuses the open when the confirmation reports inactive security', () => {
+      const { channel, denyHandler } = addFailClosedChannel()
+
+      handleOpen(routingContext, openEvent('process-1', { protocol: 'none', active: false }))
+
+      expect({
+        active: channel.isActive(),
+        cancel: (<jest.Mock>mockWindow.postMessage).mock.calls[0][0],
+        deny: denyHandler.mock.calls[0][0],
+      }).toEqual({
+        active: false,
+        cancel: expect.objectContaining({ type: '[nexus] connection-request-cancelled', processId: 'process-1' }),
+        deny: expect.objectContaining({ reason: 'security-unavailable', origin: 'http://example.com' }),
+      })
+    })
+
+    it('refuses the open when the OPEN carries no security confirmation', () => {
+      const { channel, denyHandler } = addFailClosedChannel()
+
+      handleOpen(routingContext, openEvent())
+
+      expect({ active: channel.isActive(), deny: denyHandler.mock.calls[0][0] }).toEqual({
+        active: false,
+        deny: expect.objectContaining({ reason: 'security-unavailable' }),
+      })
+    })
+
+    it('refuses the open when the confirmed provider is missing locally', () => {
+      const { channel, denyHandler } = addFailClosedChannel()
+
+      handleOpen(routingContext, openEvent('process-1', { protocol: 'v2', active: true }))
+
+      expect({ active: channel.isActive(), deny: denyHandler.mock.calls[0][0] }).toEqual({
+        active: false,
+        deny: expect.objectContaining({ reason: 'security-unavailable' }),
+      })
+    })
+
+    it('stops the ACCEPT replay timers after refusing', () => {
+      addFailClosedChannel()
+
+      handleOpen(routingContext, openEvent('process-1', { protocol: 'none', active: false }))
+      ;(<jest.Mock>mockWindow.postMessage).mockClear()
+      jest.advanceTimersByTime(20_000)
+
+      expect(mockWindow.postMessage).not.toHaveBeenCalled()
+    })
+
+    it('completes the open when the confirmation delivers an encrypted transport', () => {
+      const { channel } = addFailClosedChannel()
+
+      handleOpen(contextWithProvider().context, openEvent('process-1', { protocol: 'v2', active: true }))
+
+      expect({ active: channel.isActive(), transport: channel.getSecurityTransport()?.getProtocol() }).toEqual({
+        active: true,
+        transport: 'v2',
+      })
+    })
+  })
+
+  describe('fail-open responder wanting security', () => {
+    it('warns and opens in plaintext when the initiator confirmed a plaintext outcome', () => {
+      const channel = addRespondingChannel('test-channel', mockWindow, 'process-1', { security: { protocol: 'v2' } })
+
+      handleOpen(routingContext, openEvent('process-1', { protocol: 'none', active: false }))
+
+      expect({ active: channel.isActive(), warns: (<jest.Mock>mockLogger.warn).mock.calls }).toEqual({
+        active: true,
+        warns: [[expect.stringContaining('continuing without encryption')]],
+      })
+    })
   })
 
   it('handles multiple open events for different channels', () => {

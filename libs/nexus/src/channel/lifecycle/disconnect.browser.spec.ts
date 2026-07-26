@@ -1,5 +1,6 @@
 import type { ChannelState } from '../../types'
 import type { IAction } from '../../types/action'
+import type { SecurityTransport } from '../../types/security'
 import type { ChannelInternals } from '../types'
 import { disconnect } from './disconnect'
 
@@ -115,5 +116,23 @@ describe('channel/lifecycle/disconnect', () => {
     disconnect(mockChannel, false)
 
     expect(mockChannel.notifyEvent).toHaveBeenCalledWith('close')
+  })
+
+  it('clears the security state so a later handshake renegotiates from scratch', () => {
+    state.negotiatedProtocol = 'v2'
+    state.securityReady = true
+    state.securityTransport = <SecurityTransport>(<unknown>{ send: jest.fn(), isReady: () => true })
+    state.pendingSecurityRequest = { supported: ['v2', 'none'], preferred: 'v2' }
+
+    disconnect(mockChannel)
+
+    expect(state).toEqual(
+      expect.objectContaining({
+        negotiatedProtocol: null,
+        securityReady: false,
+        securityTransport: null,
+        pendingSecurityRequest: null,
+      })
+    )
   })
 })

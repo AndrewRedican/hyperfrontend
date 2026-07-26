@@ -3,7 +3,7 @@ import type { IChannelConfig, ChannelHandle, ChannelJSON, EventHandler } from '.
 import type { IChannelContract } from '../types/contract'
 import type { ChannelEvent, EventCallbackMap } from '../types/events'
 import type { IMessage } from '../types/message'
-import type { SecurityProtocolVersion, SecurityTransport, SecurityNegotiationRequest } from '../types/security'
+import type { SecurityProtocolVersion, SecurityTransport, SecurityNegotiationRequest, SecurityNegotiationResponse } from '../types/security'
 import type { ChannelInternals, ChannelDependencies } from './types'
 import { freeze } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
 import { assertNoCircularRef } from '../utils/validation/assert-no-circular-ref'
@@ -16,6 +16,7 @@ import { completeScheduledOpen } from './lifecycle/complete-open'
 import { connect } from './lifecycle/connect'
 import { destroy } from './lifecycle/destroy'
 import { disconnect } from './lifecycle/disconnect'
+import { flush } from './messaging/flush'
 import { send } from './messaging/send'
 import { sendAction as sendActionImpl } from './messaging/send-action'
 import { activate as activateState } from './state/activate'
@@ -152,9 +153,30 @@ export function createChannel(config: IChannelConfig, deps: ChannelDependencies)
       return state.readyToConnect
     },
 
-    scheduleActivation: (senderId: string, origin: string, contract: IChannelContract, processId: string) => {
+    isAwaitingOpen: () => {
+      return state.pendingAccept !== null
+    },
+
+    getSecuritySettings: () => {
+      return state.security
+    },
+
+    applySecuritySettings: (securitySettings) => {
+      // why: First write wins — settings supplied at creation (or an earlier registration) stay authoritative over later ones.
+      if (state.security === null) {
+        internals.updateState({ security: securitySettings })
+      }
+    },
+
+    scheduleActivation: (
+      senderId: string,
+      origin: string,
+      contract: IChannelContract,
+      processId: string,
+      security?: SecurityNegotiationResponse
+    ) => {
       internals.updateState({
-        scheduledActivation: <const>[senderId, origin, contract, processId],
+        scheduledActivation: <const>[senderId, origin, contract, processId, security],
       })
     },
 
@@ -192,6 +214,10 @@ export function createChannel(config: IChannelConfig, deps: ChannelDependencies)
 
     setSecurityReady: (ready: boolean) => {
       internals.updateState({ securityReady: ready })
+      // why: Messages queued while an external transport reported not-ready must flush through it as soon as readiness is signalled.
+      if (ready && state.active && state.queuedMessages.length > 0) {
+        flush(internals)
+      }
     },
 
     isSecurityReady: () => {

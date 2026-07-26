@@ -1,6 +1,7 @@
 import type { ActionCreators } from '../../core/actions/factory'
 import type { ProcessManager } from '../../core/processes/factory'
 import type { Registry } from '../../core/registry/factory'
+import type { ChannelSecuritySettings } from '../../types/security'
 import type { BrokerState } from '../types'
 import { createChannel } from '../../channel/factory'
 import { add as addToRegistry } from '../../core/registry/add'
@@ -19,6 +20,11 @@ import { assertNoCircularRef } from '../../utils/validation/assert-no-circular-r
  * @param target - Target window to communicate with
  * @param settings - Optional configuration settings for the channel
  * @returns The created or existing channel
+ *
+ * @remarks
+ * When a channel already exists for the target window (e.g. auto-created by
+ * an inbound connection request), that channel is returned and any security
+ * settings passed here are applied to it unless it already has some.
  *
  * @example Registering a channel with the broker
  * ```typescript
@@ -47,7 +53,13 @@ export function addChannel(
   const existing = getByWindow(registry, target)
 
   if (existing) {
-    return <ReturnType<typeof createChannel>>(<unknown>existing)
+    const existingChannel = <ReturnType<typeof createChannel>>(<unknown>existing)
+    const security = <ChannelSecuritySettings | undefined>settings['security']
+    // why: An inbound request may auto-create the channel before the app registers it; the app's security settings (fail-closed included) must still take effect.
+    if (security) {
+      existingChannel.applySecuritySettings(security)
+    }
+    return existingChannel
   }
 
   const channel = createChannel(

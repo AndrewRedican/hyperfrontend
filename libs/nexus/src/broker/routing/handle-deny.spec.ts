@@ -62,6 +62,9 @@ describe('handleDeny', () => {
       processManager,
       actions,
       logger: mockLogger,
+      getSupportedProtocols: () => ['none'],
+      getProtocol: () => undefined,
+      routeAction: () => undefined,
     }
   })
 
@@ -102,6 +105,50 @@ describe('handleDeny', () => {
     expect(() => {
       handleDeny(routingContext, message)
     }).not.toThrow()
+  })
+
+  it('forwards the machine-readable reason to the deny event', () => {
+    const channel = addChannel(mockBrokerState, registry, processManager, actions, 'test-channel', mockWindow)
+    const processId = processManager.create(channel)
+    const denyHandler = jest.fn()
+    channel.on('deny', denyHandler)
+
+    handleDeny(routingContext, <MessageEvent<IAction>>{
+      data: <IAction>{
+        type: '[nexus] connection-request-denied',
+        processId,
+        senderId: 'remote-broker-1',
+        error: 'Security is required.',
+        reason: 'security-unavailable',
+      },
+      origin: 'http://remote.example',
+      source: mockWindow,
+    })
+
+    expect(denyHandler).toHaveBeenCalledWith(
+      { error: 'Security is required.', reason: 'security-unavailable', origin: 'http://remote.example' },
+      expect.anything()
+    )
+  })
+
+  it('omits the reason from the deny event when the action carries none', () => {
+    const channel = addChannel(mockBrokerState, registry, processManager, actions, 'test-channel', mockWindow)
+    const processId = processManager.create(channel)
+    const denyHandler = jest.fn()
+    channel.on('deny', denyHandler)
+
+    handleDeny(routingContext, <MessageEvent<IAction>>{
+      data: <IAction>{
+        type: '[nexus] connection-request-denied',
+        processId,
+        senderId: 'remote-broker-1',
+        error: 'Connection denied',
+      },
+      origin: 'http://remote.example',
+      source: mockWindow,
+    })
+
+    expect(denyHandler).toHaveBeenCalledWith({ error: 'Connection denied', origin: 'http://remote.example' }, expect.anything())
   })
 
   it('handles denial with error message', () => {

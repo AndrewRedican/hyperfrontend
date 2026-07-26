@@ -49,6 +49,7 @@ describe('channel/lifecycle/connect', () => {
       queueMessages: true,
 
       brokerManaged: false,
+      security: null,
       readyToConnect: false,
       negotiatedProtocol: null,
       securityReady: false,
@@ -155,9 +156,36 @@ describe('channel/lifecycle/connect', () => {
       connect(mockChannel)
 
       expect(mockChannel.createProcess).toHaveBeenCalled()
-      expect(mockChannel.actions.requestConnection).toHaveBeenCalledWith('process-456')
+      expect(mockChannel.actions.requestConnection).toHaveBeenCalledWith('process-456', undefined)
       expect(sentActions).toEqual([expect.objectContaining({ type: '[nexus] connection-request' })])
       expect(state.pendingProcessId).toBe('process-456')
+    })
+
+    it('advertises the configured protocol with plaintext fallback in the security request', () => {
+      state.security = { protocol: 'v2', sharedKey: 'psk' }
+
+      connect(mockChannel)
+
+      expect(mockChannel.actions.requestConnection).toHaveBeenCalledWith('process-456', {
+        supported: ['v2', 'none'],
+        preferred: 'v2',
+      })
+    })
+
+    it('sends no security request when security is disabled', () => {
+      state.security = { protocol: 'v2', disabled: true }
+
+      connect(mockChannel)
+
+      expect(mockChannel.actions.requestConnection).toHaveBeenCalledWith('process-456', undefined)
+    })
+
+    it('sends no security request when the configured protocol is none', () => {
+      state.security = { protocol: 'none' }
+
+      connect(mockChannel)
+
+      expect(mockChannel.actions.requestConnection).toHaveBeenCalledWith('process-456', undefined)
     })
 
     it('re-sends REQUEST_CONNECTION at the retry cadence', () => {
@@ -233,9 +261,17 @@ describe('channel/lifecycle/connect', () => {
     it('answers with ACCEPT and waits for OPEN instead of activating', () => {
       connect(mockChannel)
 
-      expect(mockChannel.actions.acceptConnection).toHaveBeenCalledWith('process-999')
+      expect(mockChannel.actions.acceptConnection).toHaveBeenCalledWith('process-999', undefined)
       expect(sentActions).toEqual([expect.objectContaining({ type: '[nexus] connection-request-accepted' })])
       expect(state.active).toBe(false)
+    })
+
+    it('answers with the negotiated security response recorded at request time', () => {
+      state.scheduledActivation = ['sender-789', 'https://example.com', contract, 'process-999', { negotiated: 'v2' }]
+
+      connect(mockChannel)
+
+      expect(mockChannel.actions.acceptConnection).toHaveBeenCalledWith('process-999', { negotiated: 'v2' })
     })
 
     it('records the pending accept and the peer details', () => {

@@ -3,7 +3,7 @@ import type { BrokerState } from '../../broker/types'
 import type { ActionCreators } from '../../core/actions/factory'
 import type { ChannelHandle } from '../../types/channel'
 import type { IChannelContract } from '../../types/contract'
-import type { SecurityProtocolVersion } from '../../types/security'
+import type { SecurityProtocolVersion, SecurityTransport } from '../../types/security'
 import type { RouteHandler, RoutingContext } from './types'
 import { createActionCreators } from '../../core/actions/factory'
 import { createProcessManager } from '../../core/processes/factory'
@@ -34,6 +34,7 @@ describe('routeEncryptedMessage', () => {
   let router: Map<string, RouteHandler>
   let mockLogger: Logger
   let routingContext: RoutingContext
+  let sourceWindow: Window
 
   beforeEach(() => {
     registry = createRegistry()
@@ -58,62 +59,115 @@ describe('routeEncryptedMessage', () => {
       processManager,
       actions,
       logger: mockLogger,
+      getSupportedProtocols: () => ['none'],
+      getProtocol: () => undefined,
+      routeAction: () => undefined,
     }
+    sourceWindow = <Window>(<unknown>{ postMessage: jest.fn() })
   })
 
-  it('returns early when payload is not Uint8Array', () => {
-    const event = <MessageEvent<Uint8Array>>(<unknown>{
-      data: 'not-uint8array',
-      origin: 'http://example.com',
-    })
+  function createMockTransport(overrides: Partial<SecurityTransport> = {}): SecurityTransport {
+    return {
+      isReady: () => true,
+      receive: jest.fn(),
+      getProtocol: (): SecurityProtocolVersion => 'v1',
+      send: jest.fn(),
+      stop: jest.fn(),
+      resume: jest.fn(),
+      ...overrides,
+    }
+  }
 
-    routeEncryptedMessage(routingContext, router, event)
+  function addMockChannel(
+    overrides: Partial<{ origin: string | null; transport: SecurityTransport | null; notifyEvent: jest.Mock }> = {}
+  ): Partial<ChannelHandle> {
+    const mockChannel: Partial<ChannelHandle> = {
+      id: 'channel-1',
+      name: 'test-channel',
+      target: sourceWindow,
+      isActive: () => true,
+      getName: () => 'test-channel',
+      getOrigin: () => ('origin' in overrides ? <string | null>overrides.origin : 'http://example.com'),
+      getSecurityTransport: () => ('transport' in overrides ? <SecurityTransport | null>overrides.transport : null),
+      notifyEvent: overrides.notifyEvent ?? jest.fn(),
+    }
+    registry.add(<ChannelHandle>mockChannel)
+    return mockChannel
+  }
+
+  function encryptedEvent(overrides: Partial<{ data: unknown; origin: string; source: Window | null }> = {}) {
+    return <MessageEvent<Uint8Array>>(<unknown>{
+      data: 'data' in overrides ? overrides.data : new Uint8Array([1, 2, 3]),
+      origin: overrides.origin ?? 'http://example.com',
+      source: 'source' in overrides ? overrides.source : sourceWindow,
+    })
+  }
+
+  it('returns early when payload is not Uint8Array', () => {
+    routeEncryptedMessage(routingContext, router, encryptedEvent({ data: 'not-uint8array' }))
 
     expect(mockLogger.warn).toHaveBeenCalledWith('routeEncryptedMessage called with non-Uint8Array payload')
   })
 
-  it('logs when no channel found for origin', () => {
-    const payload = new Uint8Array([1, 2, 3])
-    const event = <MessageEvent<Uint8Array>>{
-      data: payload,
-      origin: 'http://unknown.com',
+  it('drops the payload when the event has no source window', () => {
+    routeEncryptedMessage(routingContext, router, encryptedEvent({ source: null }))
+
+    expect(mockLogger.info).toHaveBeenCalledWith(expect.stringContaining('ignored encrypted message - no channel for the source window'))
+  })
+
+  it('drops the payload when no channel is registered for the source window', () => {
+    routeEncryptedMessage(routingContext, router, encryptedEvent())
+
+    expect(mockLogger.info).toHaveBeenCalledWith(expect.stringContaining('ignored encrypted message - no channel for the source window'))
+  })
+
+  it('resolves the channel by source window even when another channel shares the origin', () => {
+    addMockChannel({ transport: null })
+    const otherWindow = <Window>(<unknown>{ postMessage: jest.fn() })
+    const transport = createMockTransport()
+    const otherChannel: Partial<ChannelHandle> = {
+      id: 'channel-2',
+      name: 'other-channel',
+      target: otherWindow,
+      isActive: () => true,
+      getName: () => 'other-channel',
+      getOrigin: () => 'http://example.com',
+      getSecurityTransport: () => transport,
+      notifyEvent: jest.fn(),
     }
+    registry.add(<ChannelHandle>otherChannel)
 
-    routeEncryptedMessage(routingContext, router, event)
+    routeEncryptedMessage(routingContext, router, encryptedEvent({ source: otherWindow }))
 
-    expect(mockLogger.info).toHaveBeenCalledWith(expect.stringContaining('ignored encrypted message - no channel for origin'))
+    expect(transport.receive).toHaveBeenCalledWith(new Uint8Array([1, 2, 3]))
+  })
+
+  it('drops payloads whose origin does not match the pinned origin', () => {
+    const notifyEvent = jest.fn()
+    const transport = createMockTransport()
+    addMockChannel({ transport, notifyEvent })
+
+    routeEncryptedMessage(routingContext, router, encryptedEvent({ origin: 'http://evil.example' }))
+
+    expect({ received: (<jest.Mock>transport.receive).mock.calls, invalid: notifyEvent.mock.calls }).toEqual({
+      received: [],
+      invalid: [['invalid', { error: "Dropped encrypted message from unexpected origin 'http://evil.example'." }]],
+    })
+  })
+
+  it('accepts payloads from any origin while the channel is unpinned', () => {
+    const transport = createMockTransport()
+    addMockChannel({ transport, origin: null })
+
+    routeEncryptedMessage(routingContext, router, encryptedEvent({ origin: 'http://anywhere.example' }))
+
+    expect(transport.receive).toHaveBeenCalledWith(new Uint8Array([1, 2, 3]))
   })
 
   it('warns when channel has no security transport', () => {
-    const payload = new Uint8Array([1, 2, 3])
+    addMockChannel({ transport: null })
 
-    const mockWindow = <Window>(<unknown>{ postMessage: jest.fn() })
-    const mockChannel: Partial<ChannelHandle> = {
-      id: 'channel-1',
-      name: 'test-channel',
-      target: mockWindow,
-      isActive: () => true,
-      getName: () => 'test-channel',
-      getSecurityTransport: () => null,
-      toJSON: () => ({
-        id: 'channel-1',
-        name: 'test-channel',
-        active: true,
-        origin: 'http://example.com',
-        connectTimestamp: null,
-        contract: null,
-        queuedMessagesCount: 0,
-      }),
-    }
-
-    registry.add(<ChannelHandle>mockChannel)
-
-    const event = <MessageEvent<Uint8Array>>{
-      data: payload,
-      origin: 'http://example.com',
-    }
-
-    routeEncryptedMessage(routingContext, router, event)
+    routeEncryptedMessage(routingContext, router, encryptedEvent())
 
     expect(mockLogger.warn).toHaveBeenCalledWith(
       expect.stringContaining('received encrypted message but channel has no security transport')
@@ -121,257 +175,43 @@ describe('routeEncryptedMessage', () => {
   })
 
   it('warns when security transport is not ready', () => {
-    const payload = new Uint8Array([1, 2, 3])
+    const transport = createMockTransport({ isReady: () => false })
+    addMockChannel({ transport })
 
-    const mockTransport = {
-      isReady: () => false,
-      receive: jest.fn(),
-      getProtocol: (): SecurityProtocolVersion => 'v1',
-      send: jest.fn(),
-      stop: jest.fn(),
-      resume: jest.fn(),
-    }
+    routeEncryptedMessage(routingContext, router, encryptedEvent())
 
-    const mockWindow = <Window>(<unknown>{ postMessage: jest.fn() })
-    const mockChannel: Partial<ChannelHandle> = {
-      id: 'channel-1',
-      name: 'test-channel',
-      target: mockWindow,
-      isActive: () => true,
-      getName: () => 'test-channel',
-      getSecurityTransport: () => mockTransport,
-      toJSON: () => ({
-        id: 'channel-1',
-        name: 'test-channel',
-        active: true,
-        origin: 'http://example.com',
-        connectTimestamp: null,
-        contract: null,
-        queuedMessagesCount: 0,
-      }),
-    }
-
-    registry.add(<ChannelHandle>mockChannel)
-
-    const event = <MessageEvent<Uint8Array>>{
-      data: payload,
-      origin: 'http://example.com',
-    }
-
-    routeEncryptedMessage(routingContext, router, event)
-
-    expect(mockLogger.warn).toHaveBeenCalledWith(expect.stringContaining('received encrypted message but security transport not ready'))
-    expect(mockTransport.receive).not.toHaveBeenCalled()
+    expect({ warns: (<jest.Mock>mockLogger.warn).mock.calls, received: (<jest.Mock>transport.receive).mock.calls }).toEqual({
+      warns: [[expect.stringContaining('received encrypted message but security transport not ready')]],
+      received: [],
+    })
   })
 
   it('routes encrypted message through transport when ready', () => {
-    const payload = new Uint8Array([1, 2, 3])
+    const transport = createMockTransport()
+    addMockChannel({ transport })
 
-    const mockTransport = {
-      isReady: () => true,
-      receive: jest.fn(),
-      getProtocol: (): SecurityProtocolVersion => 'v1',
-      send: jest.fn(),
-      stop: jest.fn(),
-      resume: jest.fn(),
-    }
+    routeEncryptedMessage(routingContext, router, encryptedEvent())
 
-    const mockWindow = <Window>(<unknown>{ postMessage: jest.fn() })
-    const mockChannel: Partial<ChannelHandle> = {
-      id: 'channel-1',
-      name: 'test-channel',
-      target: mockWindow,
-      isActive: () => true,
-      getName: () => 'test-channel',
-      getSecurityTransport: () => mockTransport,
-      toJSON: () => ({
-        id: 'channel-1',
-        name: 'test-channel',
-        active: true,
-        origin: 'http://example.com',
-        connectTimestamp: null,
-        contract: null,
-        queuedMessagesCount: 0,
-      }),
-    }
-
-    registry.add(<ChannelHandle>mockChannel)
-
-    const event = <MessageEvent<Uint8Array>>{
-      data: payload,
-      origin: 'http://example.com',
-    }
-
-    routeEncryptedMessage(routingContext, router, event)
-
-    expect(mockTransport.receive).toHaveBeenCalledWith(payload)
+    expect(transport.receive).toHaveBeenCalledWith(new Uint8Array([1, 2, 3]))
   })
 
   it('handles transport errors and emits security-error event', () => {
-    const payload = new Uint8Array([1, 2, 3])
-
-    const mockTransport = {
-      isReady: () => true,
-      receive: jest.fn().mockImplementation(() => {
+    const notifyEvent = jest.fn()
+    const transport = createMockTransport({
+      receive: jest.fn(() => {
         throw new Error('Decryption failed')
       }),
-      getProtocol: (): SecurityProtocolVersion => 'v1',
-      send: jest.fn(),
-      stop: jest.fn(),
-      resume: jest.fn(),
-    }
+    })
+    addMockChannel({ transport, notifyEvent })
 
-    const notifyEventMock = jest.fn()
+    routeEncryptedMessage(routingContext, router, encryptedEvent())
 
-    const mockWindow = <Window>(<unknown>{ postMessage: jest.fn() })
-    const mockChannel: Partial<ChannelHandle> = {
-      id: 'channel-1',
-      name: 'test-channel',
-      target: mockWindow,
-      isActive: () => true,
-      getName: () => 'test-channel',
-      getSecurityTransport: () => mockTransport,
-      notifyEvent: notifyEventMock,
-      toJSON: () => ({
-        id: 'channel-1',
-        name: 'test-channel',
-        active: true,
-        origin: 'http://example.com',
-        connectTimestamp: null,
-        contract: null,
-        queuedMessagesCount: 0,
-      }),
-    }
-
-    registry.add(<ChannelHandle>mockChannel)
-
-    const event = <MessageEvent<Uint8Array>>{
-      data: payload,
-      origin: 'http://example.com',
-    }
-
-    routeEncryptedMessage(routingContext, router, event)
-
-    expect(notifyEventMock).toHaveBeenCalledWith(
+    expect(notifyEvent).toHaveBeenCalledWith(
       'security-error',
       expect.objectContaining({
         message: 'Decryption failed',
         code: 'decryption_failed',
       })
     )
-  })
-
-  it('skips inactive channels when searching by origin', () => {
-    const payload = new Uint8Array([1, 2, 3])
-
-    const mockWindow = <Window>(<unknown>{ postMessage: jest.fn() })
-    const inactiveChannel: Partial<ChannelHandle> = {
-      id: 'channel-inactive',
-      name: 'inactive-channel',
-      target: mockWindow,
-      isActive: () => false,
-      getName: () => 'inactive-channel',
-      getSecurityTransport: () => null,
-      toJSON: () => ({
-        id: 'channel-inactive',
-        name: 'inactive-channel',
-        active: false,
-        origin: 'http://example.com',
-        connectTimestamp: null,
-        contract: null,
-        queuedMessagesCount: 0,
-      }),
-    }
-
-    registry.add(<ChannelHandle>inactiveChannel)
-
-    const event = <MessageEvent<Uint8Array>>{
-      data: payload,
-      origin: 'http://example.com',
-    }
-
-    routeEncryptedMessage(routingContext, router, event)
-
-    expect(mockLogger.info).toHaveBeenCalledWith(expect.stringContaining('ignored encrypted message - no channel for origin'))
-  })
-
-  it('skips channels without isActive method', () => {
-    const payload = new Uint8Array([1, 2, 3])
-
-    const mockWindow = <Window>(<unknown>{ postMessage: jest.fn() })
-    const badChannel = {
-      id: 'channel-bad',
-      name: 'bad-channel',
-      target: mockWindow,
-      getName: () => 'bad-channel',
-      toJSON: () => ({
-        id: 'channel-bad',
-        name: 'bad-channel',
-        active: true,
-        origin: 'http://example.com',
-        connectTimestamp: null,
-        contract: null,
-        queuedMessagesCount: 0,
-      }),
-    }
-
-    registry.add(<ChannelHandle>(<unknown>badChannel))
-
-    const event = <MessageEvent<Uint8Array>>{
-      data: payload,
-      origin: 'http://example.com',
-    }
-
-    routeEncryptedMessage(routingContext, router, event)
-
-    expect(mockLogger.info).toHaveBeenCalledWith(expect.stringContaining('ignored encrypted message - no channel for origin'))
-  })
-
-  it('handles security errors during decryption', () => {
-    const payload = new Uint8Array([1, 2, 3])
-
-    const mockTransport = {
-      isReady: () => true,
-      receive: jest.fn(() => {
-        throw new Error('Decryption failed')
-      }),
-      getProtocol: (): SecurityProtocolVersion => 'v1',
-      send: jest.fn(),
-      stop: jest.fn(),
-      resume: jest.fn(),
-    }
-
-    const mockWindow = <Window>(<unknown>{ postMessage: jest.fn() })
-    const mockNotifyEvent = jest.fn()
-    const mockChannel: Partial<ChannelHandle> = {
-      id: 'channel-1',
-      name: 'test-channel',
-      target: mockWindow,
-      isActive: () => true,
-      getName: () => 'test-channel',
-      getSecurityTransport: () => mockTransport,
-      notifyEvent: mockNotifyEvent,
-      toJSON: () => ({
-        id: 'channel-1',
-        name: 'test-channel',
-        active: true,
-        origin: 'http://example.com',
-        connectTimestamp: null,
-        contract: null,
-        queuedMessagesCount: 0,
-      }),
-    }
-
-    registry.add(<ChannelHandle>mockChannel)
-
-    const event = <MessageEvent<Uint8Array>>{
-      data: payload,
-      origin: 'http://example.com',
-    }
-
-    routeEncryptedMessage(routingContext, router, event)
-
-    expect(mockTransport.receive).toHaveBeenCalledWith(payload)
-    expect(mockNotifyEvent).toHaveBeenCalledWith('security-error', expect.any(Object))
   })
 })

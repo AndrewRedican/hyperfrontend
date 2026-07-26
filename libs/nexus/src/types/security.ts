@@ -373,4 +373,14 @@ export interface ChannelSecuritySettings {
 
   /** Disable security even if broker has a default protocol */
   readonly disabled?: boolean
+
+  /**
+   * How the channel behaves when it selects v1/v2 but the handshake cannot
+   * deliver an encrypted transport (the counterpart predates security,
+   * offers no common protocol, or the negotiated provider is missing).
+   *
+   * - `'fail-open'` (default): fall back to plaintext with a warning
+   * - `'fail-closed'`: refuse the connection with reason `'security-unavailable'`
+   */
+  readonly mode?: 'fail-open' | 'fail-closed'
 }

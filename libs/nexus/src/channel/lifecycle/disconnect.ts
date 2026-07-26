@@ -7,6 +7,8 @@ import { clearHandshakeTimers } from './handshake-timers'
  * - Only works if channel is currently active
  * - Sets channel state to inactive
  * - Optionally notifies the target window
+ * - Detaches the security transport and clears the negotiated protocol so a
+ *   later handshake starts from a clean security state
  * - Fires 'close' event to subscribers
  *
  * @param channel - Channel internals with state and dependencies
@@ -33,6 +35,14 @@ export function disconnect(channel: ChannelInternals, notify = true): void {
     const closeAction = channel.actions.closeConnection(processId)
     channel.sendAction(closeAction)
   }
+
+  // why: The next handshake renegotiates security from scratch; a transport kept across connections would encrypt to a peer that may no longer decrypt.
+  channel.updateState({
+    negotiatedProtocol: null,
+    securityReady: false,
+    securityTransport: null,
+    pendingSecurityRequest: null,
+  })
 
   channel.notifyEvent('close')
 }
