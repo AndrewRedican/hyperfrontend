@@ -3,6 +3,7 @@ import type { CliFlags } from '../args'
 import { dirname, isAbsolute, resolve } from 'node:path'
 import { isArray } from '@hyperfrontend/immutable-api-utils/built-in-copy/array'
 import { createError } from '@hyperfrontend/immutable-api-utils/built-in-copy/error'
+import { canonicalVersion } from '../../generators/shared/canonical-version'
 import { validateContract, validateFeatureConfig } from '../../shared/contract'
 import { discoverConfigFile, FEATURE_CONFIG_BASENAME } from './discover'
 import { loadModuleFile } from './load-module'
@@ -54,6 +55,21 @@ function toAbsolute(base: string, path: string): string {
 }
 
 /**
+ * Canonicalizes the config's `version` for the contract-coherence check.
+ *
+ * @param version - The config's authored version string.
+ * @returns The canonical semver string.
+ * @throws {Error} When the config `version` is not valid semver.
+ */
+function canonicalConfigVersion(version: string): string {
+  try {
+    return canonicalVersion(version)
+  } catch {
+    throw createError(`Invalid config: "version" must be a valid semver version (e.g. "1.2.0"), but got "${version}".`)
+  }
+}
+
+/**
  * Resolves the effective `feature.config.*` into a `ResolvedFeatureConfig` and its
  * contract, applying `defaults < config file < flags` precedence where a flag
  * replaces its whole top-level key (no deep merge).
@@ -91,6 +107,12 @@ export async function resolveBuildConfig(options: ResolveBuildConfigOptions): Pr
 
   const baseDir = sourcePath ? dirname(sourcePath) : cwd
   const contract = validateContract(await loadModuleFile(toAbsolute(baseDir, config.contract)))
+  // why: The build stamps the canonicalized config version into the connector, so a contract authoring a different version would announce a cut the build did not produce; the mismatch fails fast naming both values.
+  if (contract.version !== undefined && canonicalVersion(contract.version) !== canonicalConfigVersion(config.version)) {
+    throw createError(
+      `Contract version "${contract.version}" does not match the feature version "${config.version}". Align the contract's "version" with the config, or remove it to inherit the config version.`
+    )
+  }
   const display = isRecord(loaded['display']) ? <DisplayDefaults>loaded['display'] : undefined
 
   const resolved: ResolvedFeatureConfig = {

@@ -2,6 +2,7 @@ import type { Tree } from '@hyperfrontend/project-scope/vfs'
 import type { FeatureContract, ResolvedFeatureConfig } from '../../shared/types'
 import { dirname, isAbsolute, join, relative } from 'node:path'
 import { Mode } from '@hyperfrontend/project-scope/vfs'
+import { canonicalVersion } from '../shared/canonical-version'
 
 // note: Write-once target; re-runs never clobber handlers the author has filled in.
 const MODULE_PATH = 'src/hyperfrontend.feature.ts'
@@ -49,7 +50,7 @@ import { createFeature } from '@hyperfrontend/features/hostee'
 import contract from '${toContractImportPath(config.contract, treeRoot)}'
 
 /** The ${config.name} feature handle; use it to send and receive contract actions. */
-export const feature = createFeature({ name: '${config.name}', contract })
+export const feature = createFeature({ name: '${config.name}', version: '${canonicalVersion(config.version)}', contract })
 
 // note: The host connection opens asynchronously — sends issued before ready()
 // resolves are queued and flushed once the handshake completes.

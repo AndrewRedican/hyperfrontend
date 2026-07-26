@@ -9,6 +9,7 @@ import { createPromise, promiseReject } from '@hyperfrontend/immutable-api-utils
 import { isControlType } from '../shared/control'
 import { createRequestPeer } from '../shared/request'
 import { registerSecurity } from '../shared/security'
+import { createContractCompat } from '../shared/version-compat'
 import { createHeartbeatEmitter } from './heartbeat'
 import { createSizeAnnouncer } from './sizing'
 
@@ -75,6 +76,7 @@ export function createFeatureHandle(
 
   if (hostWindow) {
     const activeChannel = broker.addChannel('host', hostWindow, {
+      contractCompat: createContractCompat(),
       ...registerSecurity(broker, settings.protocol, settings.sharedKey),
       ...(settings.readyTimeoutMs !== undefined ? { connectTimeoutMs: settings.readyTimeoutMs } : {}),
     })

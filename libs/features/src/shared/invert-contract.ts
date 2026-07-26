@@ -19,7 +19,9 @@ function copyActions(actions: ActionDescription[]): ActionDescription[] {
  * A feature contract is written from the feature's point of view: `emitted` is
  * what the feature sends, `accepted` is what the feature handles. The host
  * channel needs the mirror image — it sends what the feature accepts and
- * accepts what the feature emits — so the two lists are swapped.
+ * accepts what the feature emits — so the two lists are swapped. The contract
+ * `version` is direction-free and carries through unchanged, so the host
+ * announces the contract cut baked into its connector.
  *
  * @param contract - The contract as authored by the feature.
  * @returns A fresh contract oriented to the host side.
@@ -31,5 +33,9 @@ function copyActions(actions: ActionDescription[]): ActionDescription[] {
  * ```
  */
 export function invertFeatureContract(contract: FeatureContract): FeatureContract {
-  return { emitted: copyActions(contract.accepted), accepted: copyActions(contract.emitted) }
+  return {
+    emitted: copyActions(contract.accepted),
+    accepted: copyActions(contract.emitted),
+    ...(contract.version !== undefined && { version: contract.version }),
+  }
 }

@@ -30,4 +30,12 @@ describe('withControlContract', () => {
       { type: ControlType.Response },
     ])
   })
+
+  it('preserves the contract version', () => {
+    expect(withControlContract({ emitted: [], accepted: [{ type: 'b' }], version: '1.2.0' }).version).toBe('1.2.0')
+  })
+
+  it('omits the version key when the contract declares none', () => {
+    expect(withControlContract({ emitted: [], accepted: [{ type: 'b' }] })).not.toHaveProperty('version')
+  })
 })

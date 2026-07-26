@@ -108,7 +108,17 @@ describe('createFeatureHandle', () => {
     const mock = createMockChannel()
     const { broker, addChannel } = createMockBroker(mock.channel)
     createFeatureHandle(broker, hostWindow, createEventEmitter())
-    expect(addChannel).toHaveBeenCalledWith('host', hostWindow, {})
+    expect(addChannel).toHaveBeenCalledWith('host', hostWindow, { contractCompat: expect.any(Function) })
+  })
+
+  it('applies the contract-version compatibility rule to the host channel', () => {
+    const mock = createMockChannel()
+    const { broker, addChannel } = createMockBroker(mock.channel)
+    createFeatureHandle(broker, hostWindow, createEventEmitter())
+    const settings = <{ contractCompat: (own: unknown, peer: unknown) => unknown }>addChannel.mock.calls[0][2]
+    expect(
+      settings.contractCompat({ emitted: [], accepted: [], version: '1.0.0' }, { emitted: [], accepted: [], version: '2.0.0' })
+    ).toEqual({ compatible: false, reason: expect.stringContaining('2.0.0') })
   })
 
   it('connects the channel during assembly', () => {
@@ -121,14 +131,14 @@ describe('createFeatureHandle', () => {
     const mock = createMockChannel()
     const { broker, addChannel } = createMockBroker(mock.channel)
     createFeatureHandle(broker, hostWindow, createEventEmitter(), { readyTimeoutMs: 4000 })
-    expect(addChannel).toHaveBeenCalledWith('host', hostWindow, { connectTimeoutMs: 4000 })
+    expect(addChannel).toHaveBeenCalledWith('host', hostWindow, { contractCompat: expect.any(Function), connectTimeoutMs: 4000 })
   })
 
   it('passes the v1 security settings into the host channel', () => {
     const mock = createMockChannel()
     const { broker, addChannel } = createMockBroker(mock.channel)
     createFeatureHandle(broker, hostWindow, createEventEmitter(), { protocol: 'v1' })
-    expect(addChannel).toHaveBeenCalledWith('host', hostWindow, { security: { protocol: 'v1' } })
+    expect(addChannel).toHaveBeenCalledWith('host', hostWindow, { contractCompat: expect.any(Function), security: { protocol: 'v1' } })
   })
 
   it('registers the v2 provider pairing the wire pipeline with the protocol', () => {
@@ -142,14 +152,21 @@ describe('createFeatureHandle', () => {
     const mock = createMockChannel()
     const { broker, addChannel } = createMockBroker(mock.channel)
     createFeatureHandle(broker, hostWindow, createEventEmitter(), { protocol: 'v2', sharedKey: 'secret' })
-    expect(addChannel).toHaveBeenCalledWith('host', hostWindow, { security: { protocol: 'v2', sharedKey: 'secret' } })
+    expect(addChannel).toHaveBeenCalledWith('host', hostWindow, {
+      contractCompat: expect.any(Function),
+      security: { protocol: 'v2', sharedKey: 'secret' },
+    })
   })
 
   it('combines security settings with the connect deadline', () => {
     const mock = createMockChannel()
     const { broker, addChannel } = createMockBroker(mock.channel)
     createFeatureHandle(broker, hostWindow, createEventEmitter(), { protocol: 'v1', readyTimeoutMs: 4000 })
-    expect(addChannel).toHaveBeenCalledWith('host', hostWindow, { security: { protocol: 'v1' }, connectTimeoutMs: 4000 })
+    expect(addChannel).toHaveBeenCalledWith('host', hostWindow, {
+      contractCompat: expect.any(Function),
+      security: { protocol: 'v1' },
+      connectTimeoutMs: 4000,
+    })
   })
 
   it('throws before adding the channel when the v2 protocol has no shared key', () => {

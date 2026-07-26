@@ -34,6 +34,14 @@ describe('invertFeatureContract', () => {
     expect(invertFeatureContract(flagged).accepted).toEqual([{ type: 'timeUpdated', required: true }])
   })
 
+  it('carries the contract version through the inversion', () => {
+    expect(invertFeatureContract({ ...contract, version: '1.2.0' }).version).toBe('1.2.0')
+  })
+
+  it('omits the version key when the source contract declares none', () => {
+    expect(invertFeatureContract(contract)).not.toHaveProperty('version')
+  })
+
   it('keeps control types in both directions when composed with the control contract', () => {
     const composed = withControlContract(invertFeatureContract(contract))
     expect({

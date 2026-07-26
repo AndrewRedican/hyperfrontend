@@ -2,6 +2,7 @@ import type { Tree } from '@hyperfrontend/project-scope/vfs'
 import type { FeatureContract, ResolvedFeatureConfig } from '../../shared/types'
 import { stringify } from '@hyperfrontend/immutable-api-utils/built-in-copy/json'
 import { generateMetadata } from '../metadata/generate-metadata'
+import { canonicalVersion } from '../shared/canonical-version'
 import { buildConnectorTypes } from './connector-types'
 import { toSourceLiteral } from './source-literal'
 
@@ -35,8 +36,8 @@ function buildConnectorEntry(config: ResolvedFeatureConfig, contract: FeatureCon
   return `import { createShell } from '@hyperfrontend/features/host'
 
 ${buildConnectorTypes(contract)}
-/** Inlined contract describing the ${config.name} feature's actions, exactly as the feature authored it. */
-const contract = ${toSourceLiteral(contract)}
+/** Inlined contract describing the ${config.name} feature's actions as authored, stamped with the contract version this connector was built from. */
+const contract = ${toSourceLiteral({ ...contract, version: canonicalVersion(config.version) })}
 
 /** Default shell options baked in from the feature's build. */
 const defaults = <const>${toSourceLiteral(buildDefaults(config))}

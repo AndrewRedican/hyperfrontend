@@ -93,6 +93,14 @@ export interface FeatureContract {
   emitted: ActionDescription[]
   /** Actions this side handles from the other side. */
   accepted: ActionDescription[]
+  /**
+   * Optional semver version announcing the contract cut this side holds.
+   * Builds canonicalize and bake it into the connector; the two sides compare
+   * their announcements during the connection handshake and incompatible cuts
+   * are denied before the channel opens. Absent on either side, the check
+   * passes, so unversioned peers keep connecting.
+   */
+  version?: string
 }
 
 /**
@@ -215,6 +223,8 @@ export interface FeatureOptions {
   name: string
   /** Contract describing the actions the feature emits and accepts. */
   contract: FeatureContract
+  /** Semver version of the contract cut this feature holds; takes precedence over `contract.version`. */
+  version?: string
   /** Whether to neutralize the feature page's body margins/padding; defaults to `true`. */
   resetBody?: boolean
   /** Security envelope to negotiate with the host; defaults to `none`. */
@@ -275,6 +285,30 @@ export interface ResolvedFeatureConfig extends FeatureConfig {
   display?: DisplayDefaults
   /** Security envelope the build resolved; baked into the generated connector as its default. */
   protocol?: SecurityProtocol
+}
+
+/**
+ * Shape of the `metadata.json` sidecar staged beside every built connector.
+ *
+ * Describes the feature so humans and registries can inspect it without
+ * unpacking the bundle: identity, canonical version, feature URL, the full
+ * contract, the baked security protocol, and the toolchain that produced it.
+ */
+export interface FeatureDescriptor {
+  /** Published feature name. */
+  name: string
+  /** Canonical semver version of the feature the connector was built from. */
+  version: string
+  /** URL of the feature app the connector loads. */
+  url: string
+  /** The feature's contract exactly as the feature authored it. */
+  contract: FeatureContract
+  /** Security envelope baked into the connector, when one was resolved. */
+  protocol?: SecurityProtocol
+  /** Package name of the toolchain that generated the connector. */
+  generatedBy: string
+  /** Version of the `@hyperfrontend/features` SDK that generated the connector. */
+  sdk: string
 }
 
 /**

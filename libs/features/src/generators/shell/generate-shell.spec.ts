@@ -48,6 +48,14 @@ describe('generateShell', () => {
     expect(stage().read('src/index.ts', 'utf-8')).toContain('dialogWidth: 530')
   })
 
+  it('stamps the contract version into the inlined contract literal', () => {
+    expect(stage().read('src/index.ts', 'utf-8')).toContain("version: '1.0.0'")
+  })
+
+  it('canonicalizes the stamped contract version from the config spelling', () => {
+    expect(stage({ version: 'v1.2.0' }).read('src/index.ts', 'utf-8')).toContain("version: '1.2.0'")
+  })
+
   it('bakes the resolved protocol into the connector defaults', () => {
     expect(stage().read('src/index.ts', 'utf-8')).toContain("protocol: 'v2'")
   })

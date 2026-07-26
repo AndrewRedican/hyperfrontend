@@ -58,4 +58,37 @@ describe('createFeature', () => {
     createFeature({ name: 'clock', contract: { emitted: [], accepted: [] } })
     expect(opener.postMessage).toHaveBeenCalledWith(expect.not.objectContaining({ security: expect.anything() }), expect.any(String))
   })
+
+  it('announces the options version in the connection-request contract', () => {
+    const opener = stubHostOpener()
+    createFeature({ name: 'clock', contract: { emitted: [], accepted: [] }, version: '1.2.0' })
+    expect(opener.postMessage).toHaveBeenCalledWith(
+      expect.objectContaining({ contract: expect.objectContaining({ version: '1.2.0' }) }),
+      expect.any(String)
+    )
+  })
+
+  it('gives the options version precedence over the contract version', () => {
+    const opener = stubHostOpener()
+    createFeature({ name: 'clock', contract: { emitted: [], accepted: [], version: '1.0.0' }, version: '1.2.0' })
+    expect(opener.postMessage).toHaveBeenCalledWith(
+      expect.objectContaining({ contract: expect.objectContaining({ version: '1.2.0' }) }),
+      expect.any(String)
+    )
+  })
+
+  it('announces the contract version when no options version is given', () => {
+    const opener = stubHostOpener()
+    createFeature({ name: 'clock', contract: { emitted: [], accepted: [], version: '1.0.0' } })
+    expect(opener.postMessage).toHaveBeenCalledWith(
+      expect.objectContaining({ contract: expect.objectContaining({ version: '1.0.0' }) }),
+      expect.any(String)
+    )
+  })
+
+  it('validates the options version like a contract-authored one', () => {
+    expect(() => createFeature({ name: 'clock', contract: { emitted: [], accepted: [] }, version: 'latest' })).toThrow(
+      '"version" must be a valid semver version (e.g. "1.2.0"), but got "latest".'
+    )
+  })
 })

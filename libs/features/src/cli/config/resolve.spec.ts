@@ -94,6 +94,38 @@ describe('resolveBuildConfig', () => {
     await expect(resolveBuildConfig({ cwd: dir, flags: baseFlags })).rejects.toThrow('Invalid protocol')
   })
 
+  it('retains a contract version matching the config version', async () => {
+    writeFileSync(join(dir, 'clock.contract.json'), '{ "emitted": [], "accepted": [], "version": "1.0.0" }')
+    writeConfig('{ "name": "clock", "version": "1.0.0", "contract": "./clock.contract.json" }')
+    await expect(resolveBuildConfig({ cwd: dir, flags: baseFlags })).resolves.toEqual(
+      expect.objectContaining({ contract: expect.objectContaining({ version: '1.0.0' }) })
+    )
+  })
+
+  it('accepts a contract version that canonicalizes to the config version', async () => {
+    writeFileSync(join(dir, 'clock.contract.json'), '{ "emitted": [], "accepted": [], "version": "v1.0.0" }')
+    writeConfig('{ "name": "clock", "version": "1.0.0", "contract": "./clock.contract.json" }')
+    await expect(resolveBuildConfig({ cwd: dir, flags: baseFlags })).resolves.toEqual(
+      expect.objectContaining({ contract: expect.objectContaining({ version: 'v1.0.0' }) })
+    )
+  })
+
+  it('fails the build naming both values when the contract version differs from the config version', async () => {
+    writeFileSync(join(dir, 'clock.contract.json'), '{ "emitted": [], "accepted": [], "version": "2.0.0" }')
+    writeConfig('{ "name": "clock", "version": "1.0.0", "contract": "./clock.contract.json" }')
+    await expect(resolveBuildConfig({ cwd: dir, flags: baseFlags })).rejects.toThrow(
+      'Contract version "2.0.0" does not match the feature version "1.0.0".'
+    )
+  })
+
+  it('names the config "version" field when it is invalid semver and the contract announces a version', async () => {
+    writeFileSync(join(dir, 'clock.contract.json'), '{ "emitted": [], "accepted": [], "version": "1.0.0" }')
+    writeConfig('{ "name": "clock", "version": "1.0", "contract": "./clock.contract.json" }')
+    await expect(resolveBuildConfig({ cwd: dir, flags: baseFlags })).rejects.toThrow(
+      'Invalid config: "version" must be a valid semver version (e.g. "1.2.0"), but got "1.0".'
+    )
+  })
+
   it('rejects a config that does not resolve to an object', async () => {
     writeConfig('[]')
     await expect(resolveBuildConfig({ cwd: dir, flags: baseFlags })).rejects.toThrow('must resolve to an object')

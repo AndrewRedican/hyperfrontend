@@ -92,6 +92,38 @@ describe('validateContract', () => {
       '"accepted[0]" has a "required" that must be a boolean.'
     )
   })
+
+  it('retains a valid semver version', () => {
+    expect(validateContract({ emitted: [{ type: 'tick' }], accepted: [], version: '1.2.0' })).toEqual({
+      emitted: [{ type: 'tick' }],
+      accepted: [],
+      version: '1.2.0',
+    })
+  })
+
+  it('omits the version key when the contract declares none', () => {
+    expect(validateContract({ emitted: [{ type: 'tick' }], accepted: [] })).not.toHaveProperty('version')
+  })
+
+  it('narrows unknown keys away while retaining the version', () => {
+    expect(validateContract({ emitted: [], accepted: [{ type: 'tick' }], version: '2.0.0', extra: 'dropped' })).toEqual({
+      emitted: [],
+      accepted: [{ type: 'tick' }],
+      version: '2.0.0',
+    })
+  })
+
+  it('rejects a non-string version', () => {
+    expect(() => validateContract({ emitted: [{ type: 'tick' }], accepted: [], version: 2 })).toThrow(
+      '"version" must be a semver string, but got a number.'
+    )
+  })
+
+  it('rejects a version that is not valid semver', () => {
+    expect(() => validateContract({ emitted: [{ type: 'tick' }], accepted: [], version: 'latest' })).toThrow(
+      '"version" must be a valid semver version (e.g. "1.2.0"), but got "latest".'
+    )
+  })
 })
 
 describe('validateFeatureConfig', () => {

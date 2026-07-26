@@ -61,5 +61,6 @@ export function withControlContract(contract: FeatureContract): FeatureContract 
   return {
     emitted: [...contract.emitted, ...controlActions()],
     accepted: [...contract.accepted, ...controlActions()],
+    ...(contract.version !== undefined && { version: contract.version }),
   }
 }

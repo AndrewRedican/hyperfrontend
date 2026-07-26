@@ -29,7 +29,10 @@ export default <Config>{
       testMatch: ['**/*.spec.ts'],
       testPathIgnorePatterns: ['^.*browser\\.spec\\.ts$'],
       // why: The real module-dir.ts carries an `import.meta` token on its ESM branch; the CommonJS test runtime cannot parse it, so requests resolve to a `__dirname` stub with identical behaviour.
-      moduleNameMapper: { '^\\./module-dir$': '<rootDir>/src/server/module-dir.stub.ts' },
+      moduleNameMapper: {
+        '^\\./module-dir$': '<rootDir>/src/server/module-dir.stub.ts',
+        '^\\.\\./\\.\\./server/module-dir$': '<rootDir>/src/server/module-dir.stub.ts',
+      },
       setupFilesAfterEnv: ['<rootDir>/jest.setup.ts'],
     },
     {

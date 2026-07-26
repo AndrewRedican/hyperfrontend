@@ -127,13 +127,13 @@ describe('createShellHandle', () => {
   it('adds a channel against the mounted target', () => {
     const ctx = setup()
     ctx.handle.open()
-    expect(ctx.addChannel).toHaveBeenCalledWith('feature-1', TARGET, {})
+    expect(ctx.addChannel).toHaveBeenCalledWith('feature-1', TARGET, { contractCompat: expect.any(Function) })
   })
 
   it('passes registered security settings to the channel', () => {
     const ctx = setup({ settings: { security: { protocol: 'v2' } } })
     ctx.handle.open({ protocol: 'v2' })
-    expect(ctx.addChannel).toHaveBeenCalledWith('feature-1', TARGET, { security: { protocol: 'v2' } })
+    expect(ctx.addChannel).toHaveBeenCalledWith('feature-1', TARGET, expect.objectContaining({ security: { protocol: 'v2' } }))
   })
 
   it('connects the channel after mounting', () => {
@@ -291,7 +291,7 @@ describe('createShellHandle', () => {
     const ctx = setup()
     ctx.handle.open()
     ctx.handle.open()
-    expect(ctx.addChannel).toHaveBeenLastCalledWith('feature-2', TARGET, {})
+    expect(ctx.addChannel).toHaveBeenLastCalledWith('feature-2', TARGET, { contractCompat: expect.any(Function) })
   })
 
   it('starts the heartbeat monitor when the channel opens', () => {

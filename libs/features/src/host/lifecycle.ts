@@ -11,6 +11,7 @@ import { createURL } from '@hyperfrontend/immutable-api-utils/built-in-copy/url'
 import { ControlType, isControlType } from '../shared/control'
 import { createRequestPeer } from '../shared/request'
 import { DisplayMode } from '../shared/types'
+import { createContractCompat } from '../shared/version-compat'
 import { applyContentSize } from './sizing'
 
 // note: All DOM/window work lives in the injected mount functions, so this wiring stays DOM-free and exercisable with mock collaborators.
@@ -231,6 +232,7 @@ export function createShellHandle(
     const featureOrigin = deriveFeatureOrigin(options.url)
     // why: The origin pin restricts every send to the feature's origin before the first frame leaves; the timeout bounds the wire handshake.
     channel = broker.addChannel(`feature-${(openCount += 1)}`, result.target, {
+      contractCompat: createContractCompat(),
       ...wiring.registerSecurity(broker, options.protocol, options.sharedKey),
       ...(featureOrigin ? { origin: featureOrigin } : {}),
       ...(options.openTimeoutMs !== undefined ? { connectTimeoutMs: options.openTimeoutMs } : {}),

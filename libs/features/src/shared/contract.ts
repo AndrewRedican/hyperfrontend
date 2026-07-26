@@ -3,6 +3,7 @@ import type { ActionDescription, FeatureConfig, FeatureContract } from './types'
 import { isArray } from '@hyperfrontend/immutable-api-utils/built-in-copy/array'
 import { createError } from '@hyperfrontend/immutable-api-utils/built-in-copy/error'
 import { validate } from '@hyperfrontend/json-utils'
+import { parseVersion } from '@hyperfrontend/versioning/semver/parse'
 
 // note: Runtime validation shared by the host/hostee factories and the config loader.
 
@@ -78,6 +79,25 @@ function collectRespondsWithIssues(
 }
 
 /**
+ * Collects any problem with the contract's optional `version` field.
+ *
+ * @param version - The candidate version value.
+ * @param issues - The running list of human-readable problems, appended to in place.
+ */
+function collectVersionIssues(version: unknown, issues: string[]): void {
+  if (version === undefined) {
+    return
+  }
+  if (typeof version !== 'string') {
+    issues.push(`"version" must be a semver string, but got ${describeType(version)}.`)
+    return
+  }
+  if (!parseVersion(version).success) {
+    issues.push(`"version" must be a valid semver version (e.g. "1.2.0"), but got "${version}".`)
+  }
+}
+
+/**
  * Names the kind of an unexpected value for an error message.
  *
  * @param value - The value to describe.
@@ -101,7 +121,7 @@ function describeType(value: unknown): string {
  *
  * @param contract - The candidate contract, typically parsed from disk.
  * @returns The validated contract, typed.
- * @throws {Error} When the value is not an object, any action is malformed, or a `respondsWith` names no action in the other direction.
+ * @throws {Error} When the value is not an object, any action is malformed, a `respondsWith` names no action in the other direction, or a `version` is not valid semver.
  *
  * @example Validating a parsed contract file
  * ```typescript
@@ -116,6 +136,7 @@ export function validateContract(contract: unknown): FeatureContract {
   const issues: string[] = []
   collectActionListIssues(contract['emitted'], 'emitted', issues)
   collectActionListIssues(contract['accepted'], 'accepted', issues)
+  collectVersionIssues(contract['version'], issues)
   if (issues.length === 0) {
     const emitted = <ActionDescription[]>contract['emitted']
     const accepted = <ActionDescription[]>contract['accepted']
@@ -128,6 +149,7 @@ export function validateContract(contract: unknown): FeatureContract {
   return {
     emitted: <ActionDescription[]>contract['emitted'],
     accepted: <ActionDescription[]>contract['accepted'],
+    ...(contract['version'] !== undefined && { version: <string>contract['version'] }),
   }
 }
 

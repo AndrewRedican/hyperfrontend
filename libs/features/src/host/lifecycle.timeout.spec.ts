@@ -4,7 +4,7 @@ import type { MountContext, MountResult } from './types'
 import { createEventEmitter } from '../shared/event-emitter'
 import { createShellHandle } from './lifecycle'
 
-// note: Covers the origin-pin and open-deadline wiring added with the wire handshake; the broader shell lifecycle lives in lifecycle.spec.ts.
+// note: Covers the channel-settings wiring around the wire handshake (origin pin, open deadline, contract compat); the broader shell lifecycle lives in lifecycle.spec.ts.
 
 interface MockChannel {
   channel: ChannelHandle
@@ -54,19 +54,29 @@ describe('createShellHandle origin pin and open deadline', () => {
   it('pins the channel to the origin derived from the feature url', () => {
     const ctx = setup()
     ctx.handle.open({ url: 'https://feature.example/app/index.html' })
-    expect(ctx.addChannel).toHaveBeenCalledWith('feature-1', TARGET, { origin: 'https://feature.example' })
+    expect(ctx.addChannel).toHaveBeenCalledWith('feature-1', TARGET, {
+      contractCompat: expect.any(Function),
+      origin: 'https://feature.example',
+    })
   })
 
   it('omits the origin when the url cannot be parsed', () => {
     const ctx = setup()
     ctx.handle.open({ url: 'https://' })
-    expect(ctx.addChannel).toHaveBeenCalledWith('feature-1', TARGET, {})
+    expect(ctx.addChannel).toHaveBeenCalledWith('feature-1', TARGET, { contractCompat: expect.any(Function) })
   })
 
   it('passes the open timeout to the channel as the connect deadline', () => {
     const ctx = setup()
     ctx.handle.open({ openTimeoutMs: 3000 })
-    expect(ctx.addChannel).toHaveBeenCalledWith('feature-1', TARGET, { connectTimeoutMs: 3000 })
+    expect(ctx.addChannel).toHaveBeenCalledWith('feature-1', TARGET, { contractCompat: expect.any(Function), connectTimeoutMs: 3000 })
+  })
+
+  it('applies the contract-version compatibility rule to the channel', () => {
+    const ctx = setup()
+    ctx.handle.open()
+    const settings = <{ contractCompat: (own: unknown, peer: unknown) => unknown }>ctx.addChannel.mock.calls[0][2]
+    expect(settings.contractCompat({ version: '1.0.0' }, { version: '2.0.0' })).toEqual({ compatible: false, reason: expect.any(String) })
   })
 
   it('emits a distinguishable error when the channel times out', () => {

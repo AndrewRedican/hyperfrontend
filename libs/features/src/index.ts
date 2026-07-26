@@ -13,6 +13,7 @@ export type {
   ExperiencePluginContext,
   FeatureConfig,
   FeatureContract,
+  FeatureDescriptor,
   FeatureOptions,
   ResolvedFeatureConfig,
   SecurityProtocol,
