@@ -232,12 +232,12 @@ export function createBroker(config: CreateBrokerConfig): BrokerHandle {
       }
     },
 
-    registerProtocol(version: 'v1' | 'v2', provider: unknown) {
+    registerProtocol(version: SecurityProtocolVersion, provider: unknown) {
       protocolRegistry.register(version, provider)
       return broker
     },
 
-    unregisterProtocol(version: 'v1' | 'v2') {
+    unregisterProtocol(version: SecurityProtocolVersion) {
       protocolRegistry.unregister(version)
       return broker
     },

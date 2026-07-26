@@ -125,10 +125,9 @@ describe('routeEncryptedMessage', () => {
 
     const mockTransport = {
       isReady: () => false,
-      handleReceive: jest.fn(),
+      receive: jest.fn(),
       getProtocol: (): SecurityProtocolVersion => 'v1',
       send: jest.fn(),
-      onReceive: jest.fn(),
       stop: jest.fn(),
       resume: jest.fn(),
     }
@@ -162,50 +161,7 @@ describe('routeEncryptedMessage', () => {
     routeEncryptedMessage(routingContext, router, event)
 
     expect(mockLogger.warn).toHaveBeenCalledWith(expect.stringContaining('received encrypted message but security transport not ready'))
-    expect(mockTransport.handleReceive).not.toHaveBeenCalled()
-  })
-
-  it('errors when transport lacks handleReceive method', () => {
-    const payload = new Uint8Array([1, 2, 3])
-
-    const mockTransport = {
-      isReady: () => true,
-      getProtocol: (): SecurityProtocolVersion => 'v1',
-      send: jest.fn(),
-      onReceive: jest.fn(),
-      stop: jest.fn(),
-      resume: jest.fn(),
-    }
-
-    const mockWindow = <Window>(<unknown>{ postMessage: jest.fn() })
-    const mockChannel: Partial<ChannelHandle> = {
-      id: 'channel-1',
-      name: 'test-channel',
-      target: mockWindow,
-      isActive: () => true,
-      getName: () => 'test-channel',
-      getSecurityTransport: () => mockTransport,
-      toJSON: () => ({
-        id: 'channel-1',
-        name: 'test-channel',
-        active: true,
-        origin: 'http://example.com',
-        connectTimestamp: null,
-        contract: null,
-        queuedMessagesCount: 0,
-      }),
-    }
-
-    registry.add(<ChannelHandle>mockChannel)
-
-    const event = <MessageEvent<Uint8Array>>{
-      data: payload,
-      origin: 'http://example.com',
-    }
-
-    routeEncryptedMessage(routingContext, router, event)
-
-    expect(mockLogger.error).toHaveBeenCalledWith('Security transport missing handleReceive method')
+    expect(mockTransport.receive).not.toHaveBeenCalled()
   })
 
   it('routes encrypted message through transport when ready', () => {
@@ -213,10 +169,9 @@ describe('routeEncryptedMessage', () => {
 
     const mockTransport = {
       isReady: () => true,
-      handleReceive: jest.fn(),
+      receive: jest.fn(),
       getProtocol: (): SecurityProtocolVersion => 'v1',
       send: jest.fn(),
-      onReceive: jest.fn(),
       stop: jest.fn(),
       resume: jest.fn(),
     }
@@ -249,7 +204,7 @@ describe('routeEncryptedMessage', () => {
 
     routeEncryptedMessage(routingContext, router, event)
 
-    expect(mockTransport.handleReceive).toHaveBeenCalledWith(payload)
+    expect(mockTransport.receive).toHaveBeenCalledWith(payload)
   })
 
   it('handles transport errors and emits security-error event', () => {
@@ -257,12 +212,11 @@ describe('routeEncryptedMessage', () => {
 
     const mockTransport = {
       isReady: () => true,
-      handleReceive: jest.fn().mockImplementation(() => {
+      receive: jest.fn().mockImplementation(() => {
         throw new Error('Decryption failed')
       }),
       getProtocol: (): SecurityProtocolVersion => 'v1',
       send: jest.fn(),
-      onReceive: jest.fn(),
       stop: jest.fn(),
       resume: jest.fn(),
     }
@@ -378,12 +332,11 @@ describe('routeEncryptedMessage', () => {
 
     const mockTransport = {
       isReady: () => true,
-      handleReceive: jest.fn(() => {
+      receive: jest.fn(() => {
         throw new Error('Decryption failed')
       }),
       getProtocol: (): SecurityProtocolVersion => 'v1',
       send: jest.fn(),
-      onReceive: jest.fn(),
       stop: jest.fn(),
       resume: jest.fn(),
     }
@@ -418,7 +371,7 @@ describe('routeEncryptedMessage', () => {
 
     routeEncryptedMessage(routingContext, router, event)
 
-    expect(mockTransport.handleReceive).toHaveBeenCalledWith(payload)
+    expect(mockTransport.receive).toHaveBeenCalledWith(payload)
     expect(mockNotifyEvent).toHaveBeenCalledWith('security-error', expect.any(Object))
   })
 })

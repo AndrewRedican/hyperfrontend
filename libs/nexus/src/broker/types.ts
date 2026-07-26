@@ -124,19 +124,24 @@ export interface BrokerHandle {
   /**
    * Register a security protocol provider.
    *
-   * @param version - The protocol version ('v1' or 'v2')
-   * @param provider - The protocol provider instance from network-protocol
+   * The 'none' protocol requires no provider and cannot be registered.
+   * Providers are expected to satisfy the `SecurityProvider` shape.
+   *
+   * @param version - The protocol version (e.g. 'v1' or 'v2')
+   * @param provider - The protocol provider instance
    * @returns The broker handle for chaining
    */
-  registerProtocol(version: 'v1' | 'v2', provider: unknown): BrokerHandle
+  registerProtocol(version: SecurityProtocolVersion, provider: unknown): BrokerHandle
 
   /**
    * Unregister a security protocol provider.
    *
+   * The 'none' protocol is always available and cannot be unregistered.
+   *
    * @param version - The protocol version to unregister
    * @returns The broker handle for chaining
    */
-  unregisterProtocol(version: 'v1' | 'v2'): BrokerHandle
+  unregisterProtocol(version: SecurityProtocolVersion): BrokerHandle
 
   /**
    * Check if a security protocol provider is registered.

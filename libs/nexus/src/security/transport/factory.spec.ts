@@ -1,155 +1,122 @@
-import type { SecurityTransportConfig } from '../../types/security'
+import type { SecurityProvider, SecurityTransportConfig } from '../../types/security'
+import { logger } from '@hyperfrontend/logging'
+import { createChannel } from '@hyperfrontend/network-protocol/browser/channel'
+import { createProtocol as createV1Protocol } from '@hyperfrontend/network-protocol/browser/v1'
+import { createProtocol as createV2Protocol } from '@hyperfrontend/network-protocol/browser/v2'
+import { uuidV4 } from '@hyperfrontend/random-generator-utils'
 import { createSecurityTransport } from './factory'
 
 describe('Security Transport Factory', () => {
-  let mockTarget: { postMessage: jest.Mock }
-  let mockProvider: jest.Mock
+  const createV1Provider = (): SecurityProvider => ({
+    createChannel,
+    protocolProvider: createV1Protocol(logger, 1),
+  })
 
-  beforeEach(() => {
-    mockTarget = {
-      postMessage: jest.fn(),
-    }
+  const createV2Provider = (): SecurityProvider => ({
+    createChannel,
+    protocolProvider: createV2Protocol(logger, 'factory-spec-shared-key', 1),
+  })
 
-    mockProvider = jest.fn(() => ({
-      send: jest.fn(),
-      receive: jest.fn(),
-    }))
+  const createConfig = (overrides: Partial<SecurityTransportConfig> = {}): SecurityTransportConfig => ({
+    protocol: 'none',
+    label: 'factory-spec',
+    target: <Window>(<unknown>{ postMessage: jest.fn() }),
+    getOrigin: () => null,
+    originId: uuidV4(),
+    targetId: uuidV4(),
+    onAction: jest.fn(),
+    ...overrides,
   })
 
   describe('none protocol', () => {
-    it('creates NoneTransport for "none" protocol', () => {
-      const config: SecurityTransportConfig = {
-        protocol: 'none',
-        target: <Window>(<unknown>mockTarget),
-      }
-
-      const transport = createSecurityTransport(config)
+    it('creates a passthrough transport reporting the none protocol', () => {
+      const transport = createSecurityTransport(createConfig())
 
       expect(transport.getProtocol()).toBe('none')
+    })
+
+    it('is ready without any provider', () => {
+      const transport = createSecurityTransport(createConfig())
+
       expect(transport.isReady()).toBe(true)
     })
 
-    it('does not require provider for "none" protocol', () => {
-      const config: SecurityTransportConfig = {
-        protocol: 'none',
-        target: <Window>(<unknown>mockTarget),
-        provider: undefined,
-      }
+    it('ignores a supplied provider', () => {
+      const postMessage = jest.fn()
+      const transport = createSecurityTransport(
+        createConfig({
+          provider: createV2Provider(),
+          target: <Window>(<unknown>{ postMessage }),
+        })
+      )
 
-      expect(() => createSecurityTransport(config)).not.toThrow()
-    })
-
-    it('ignores provider for "none" protocol', () => {
-      const config: SecurityTransportConfig = {
-        protocol: 'none',
-        target: <Window>(<unknown>mockTarget),
-        provider: mockProvider,
-      }
-
-      const transport = createSecurityTransport(config)
       transport.send({ type: 'TEST' })
 
-      expect(mockProvider).not.toHaveBeenCalled()
+      expect(postMessage).toHaveBeenCalledWith({ type: 'TEST' }, '*')
     })
 
-    it('passes origin to NoneTransport', () => {
-      const config: SecurityTransportConfig = {
-        protocol: 'none',
-        target: <Window>(<unknown>mockTarget),
-        origin: 'https://custom.com',
-      }
+    it('posts to the pinned origin', () => {
+      const postMessage = jest.fn()
+      const transport = createSecurityTransport(
+        createConfig({
+          target: <Window>(<unknown>{ postMessage }),
+          getOrigin: () => 'https://custom.example.com',
+        })
+      )
 
-      const transport = createSecurityTransport(config)
       transport.send({ type: 'TEST' })
 
-      expect(mockTarget.postMessage).toHaveBeenCalledWith({ type: 'TEST' }, 'https://custom.com')
+      expect(postMessage).toHaveBeenCalledWith({ type: 'TEST' }, 'https://custom.example.com')
     })
   })
 
   describe('v1 protocol', () => {
-    it('creates SecureTransport for "v1" protocol', () => {
-      const config: SecurityTransportConfig = {
-        protocol: 'v1',
-        provider: mockProvider,
-        target: <Window>(<unknown>mockTarget),
-      }
-
-      const transport = createSecurityTransport(config)
+    it('creates a secure transport reporting the v1 protocol', () => {
+      const transport = createSecurityTransport(createConfig({ protocol: 'v1', provider: createV1Provider() }))
 
       expect(transport.getProtocol()).toBe('v1')
     })
 
-    it('throws error when provider is missing for v1', () => {
-      const config: SecurityTransportConfig = {
-        protocol: 'v1',
-        provider: undefined,
-        target: <Window>(<unknown>mockTarget),
-      }
+    it('is ready from construction', () => {
+      const transport = createSecurityTransport(createConfig({ protocol: 'v1', provider: createV1Provider() }))
 
-      expect(() => createSecurityTransport(config)).toThrow("Security protocol 'v1' requires a protocol provider")
+      expect(transport.isReady()).toBe(true)
+    })
+
+    it('throws when the provider is missing', () => {
+      expect(() => createSecurityTransport(createConfig({ protocol: 'v1' }))).toThrow("Security protocol 'v1' requires a protocol provider")
     })
   })
 
   describe('v2 protocol', () => {
-    it('creates SecureTransport for "v2" protocol', () => {
-      const config: SecurityTransportConfig = {
-        protocol: 'v2',
-        provider: mockProvider,
-        target: <Window>(<unknown>mockTarget),
-      }
-
-      const transport = createSecurityTransport(config)
+    it('creates a secure transport reporting the v2 protocol', () => {
+      const transport = createSecurityTransport(createConfig({ protocol: 'v2', provider: createV2Provider() }))
 
       expect(transport.getProtocol()).toBe('v2')
     })
 
-    it('throws error when provider is missing for v2', () => {
-      const config: SecurityTransportConfig = {
-        protocol: 'v2',
-        provider: undefined,
-        target: <Window>(<unknown>mockTarget),
-      }
+    it('is ready from construction', () => {
+      const transport = createSecurityTransport(createConfig({ protocol: 'v2', provider: createV2Provider() }))
 
-      expect(() => createSecurityTransport(config)).toThrow("Security protocol 'v2' requires a protocol provider")
+      expect(transport.isReady()).toBe(true)
     })
 
-    it('passes sharedKey to SecureTransport', () => {
-      const config: SecurityTransportConfig = {
-        protocol: 'v2',
-        provider: mockProvider,
-        target: <Window>(<unknown>mockTarget),
-        sharedKey: 'test-shared-key',
-      }
+    it('throws when the provider is missing', () => {
+      expect(() => createSecurityTransport(createConfig({ protocol: 'v2' }))).toThrow("Security protocol 'v2' requires a protocol provider")
+    })
+  })
 
-      const transport = createSecurityTransport(config)
+  describe('external protocols', () => {
+    it('creates a secure transport for a custom protocol identifier', () => {
+      const transport = createSecurityTransport(createConfig({ protocol: 'acme-x25519', provider: createV2Provider() }))
 
-      expect(transport).toBeDefined()
+      expect(transport.getProtocol()).toBe('acme-x25519')
     })
 
-    it('passes refreshRate to SecureTransport', () => {
-      const config: SecurityTransportConfig = {
-        protocol: 'v2',
-        provider: mockProvider,
-        target: <Window>(<unknown>mockTarget),
-        refreshRate: 30,
-      }
-
-      const transport = createSecurityTransport(config)
-
-      expect(transport).toBeDefined()
-    })
-
-    it('passes origin to SecureTransport', () => {
-      const config: SecurityTransportConfig = {
-        protocol: 'v2',
-        provider: mockProvider,
-        target: <Window>(<unknown>mockTarget),
-        origin: 'https://secure.com',
-      }
-
-      const transport = createSecurityTransport(config)
-
-      expect(transport).toBeDefined()
+    it('throws when a custom protocol has no provider', () => {
+      expect(() => createSecurityTransport(createConfig({ protocol: 'acme-x25519' }))).toThrow(
+        "Security protocol 'acme-x25519' requires a protocol provider"
+      )
     })
   })
 })

@@ -14,20 +14,6 @@ import { getAll } from '../../core/registry/get-all'
 import { createSecurityErrorEventData, logSecurityError } from '../../security/errors'
 
 /**
- * Extended security transport interface with handleReceive method.
- *
- * @internal
- */
-interface SecurityTransportWithReceive {
-  /** Handles receiving and processing an encrypted packet */
-  handleReceive: (packet: Uint8Array) => void
-  /** Checks if the transport is ready for communication */
-  isReady: () => boolean
-  /** Returns the active security protocol identifier */
-  getProtocol: () => string
-}
-
-/**
  * Routes an encrypted message to the appropriate channel for decryption.
  *
  * This function handles Uint8Array payloads received via postMessage:
@@ -79,15 +65,8 @@ export function routeEncryptedMessage(context: RoutingContext, router: Map<strin
     return
   }
 
-  const transportWithReceive = <SecurityTransportWithReceive>(<unknown>securityTransport)
-
-  if (typeof transportWithReceive.handleReceive !== 'function') {
-    logger.error('Security transport missing handleReceive method')
-    return
-  }
-
   try {
-    transportWithReceive.handleReceive(payload)
+    securityTransport.receive(payload)
   } catch (error) {
     const errorData = createSecurityErrorEventData(error)
     logSecurityError(logger, channel.getName(), errorData)

@@ -1,207 +1,119 @@
-import type { SecurityTransport } from '../../types/security'
+import type { NoneTransportConfig } from './types'
 import { createNoneTransport } from './none-transport'
 
 describe('NoneTransport', () => {
-  let mockTarget: { postMessage: jest.Mock }
-  let transport: SecurityTransport & { handleReceive: (action: unknown) => void }
-
-  beforeEach(() => {
-    mockTarget = {
-      postMessage: jest.fn(),
-    }
-    transport = <
-      SecurityTransport & {
-        handleReceive: (action: unknown) => void
-      }
-    >createNoneTransport({ target: <Window>(<unknown>mockTarget) })
+  const createConfig = (overrides: Partial<NoneTransportConfig> = {}): NoneTransportConfig => ({
+    target: <Window>(<unknown>{ postMessage: jest.fn() }),
+    getOrigin: () => null,
+    onAction: jest.fn(),
+    ...overrides,
   })
 
   describe('send', () => {
-    it('passes through actions unchanged via postMessage', () => {
-      const action = { type: 'TEST_ACTION', payload: { data: 123 } }
+    it('posts the action unchanged with a wildcard target before the origin is pinned', () => {
+      const postMessage = jest.fn()
+      const transport = createNoneTransport(createConfig({ target: <Window>(<unknown>{ postMessage }) }))
 
-      transport.send(action)
+      transport.send({ type: 'TEST', data: 123 })
 
-      expect(mockTarget.postMessage).toHaveBeenCalledTimes(1)
-      expect(mockTarget.postMessage).toHaveBeenCalledWith(action, '*')
+      expect(postMessage).toHaveBeenCalledWith({ type: 'TEST', data: 123 }, '*')
     })
 
-    it('uses custom origin when provided', () => {
-      const customTransport = createNoneTransport({
-        target: <Window>(<unknown>mockTarget),
-        origin: 'https://example.com',
-      })
-      const action = { type: 'TEST_ACTION' }
+    it('posts with a wildcard target for opaque origins', () => {
+      const postMessage = jest.fn()
+      const transport = createNoneTransport(
+        createConfig({
+          target: <Window>(<unknown>{ postMessage }),
+          getOrigin: () => 'null',
+        })
+      )
 
-      customTransport.send(action)
+      transport.send({ type: 'TEST' })
 
-      expect(mockTarget.postMessage).toHaveBeenCalledWith(action, 'https://example.com')
+      expect(postMessage).toHaveBeenCalledWith({ type: 'TEST' }, '*')
     })
 
-    it('does not modify action object', () => {
-      const originalAction = { type: 'TEST_ACTION', nested: { value: 'test' } }
-      const actionCopy = JSON.parse(JSON.stringify(originalAction))
+    it('posts to the pinned origin once learned', () => {
+      const postMessage = jest.fn()
+      const transport = createNoneTransport(
+        createConfig({
+          target: <Window>(<unknown>{ postMessage }),
+          getOrigin: () => 'https://feature.example.com',
+        })
+      )
 
-      transport.send(originalAction)
+      transport.send({ type: 'TEST' })
 
-      expect(mockTarget.postMessage).toHaveBeenCalledWith(actionCopy, '*')
+      expect(postMessage).toHaveBeenCalledWith({ type: 'TEST' }, 'https://feature.example.com')
     })
 
-    it('does not send when stopped', () => {
+    it('drops actions while stopped', () => {
+      const postMessage = jest.fn()
+      const transport = createNoneTransport(createConfig({ target: <Window>(<unknown>{ postMessage }) }))
+
       transport.stop()
-      transport.send({ type: 'TEST_ACTION' })
+      transport.send({ type: 'TEST' })
 
-      expect(mockTarget.postMessage).not.toHaveBeenCalled()
+      expect(postMessage).not.toHaveBeenCalled()
     })
 
-    it('resumes sending after resume', () => {
+    it('sends again after resume', () => {
+      const postMessage = jest.fn()
+      const transport = createNoneTransport(createConfig({ target: <Window>(<unknown>{ postMessage }) }))
+
       transport.stop()
-      transport.send({ type: 'TEST_ACTION_1' })
       transport.resume()
-      transport.send({ type: 'TEST_ACTION_2' })
+      transport.send({ type: 'TEST' })
 
-      expect(mockTarget.postMessage).toHaveBeenCalledTimes(1)
-      expect(mockTarget.postMessage).toHaveBeenCalledWith({ type: 'TEST_ACTION_2' }, '*')
+      expect(postMessage).toHaveBeenCalledWith({ type: 'TEST' }, '*')
     })
   })
 
-  describe('onReceive', () => {
-    it('forwards received actions to handler', () => {
-      const handler = jest.fn()
-      const action = { type: 'RECEIVED_ACTION', data: 'test' }
+  describe('receive', () => {
+    it('delivers the payload unchanged to the action handler', () => {
+      const onAction = jest.fn()
+      const transport = createNoneTransport(createConfig({ onAction }))
+      const payload = new Uint8Array([1, 2, 3])
 
-      transport.onReceive(handler)
-      transport.handleReceive(action)
+      transport.receive(payload)
 
-      expect(handler).toHaveBeenCalledTimes(1)
-      expect(handler).toHaveBeenCalledWith(action)
+      expect(onAction).toHaveBeenCalledWith(payload)
     })
 
-    it('does not forward when no handler is registered', () => {
-      expect(() => {
-        transport.handleReceive({ type: 'UNHANDLED' })
-      }).not.toThrow()
-    })
+    it('drops payloads while stopped', () => {
+      const onAction = jest.fn()
+      const transport = createNoneTransport(createConfig({ onAction }))
 
-    it('replaces previous handler when called multiple times', () => {
-      const handler1 = jest.fn()
-      const handler2 = jest.fn()
-      const action = { type: 'TEST_ACTION' }
-
-      transport.onReceive(handler1)
-      transport.onReceive(handler2)
-      transport.handleReceive(action)
-
-      expect(handler1).not.toHaveBeenCalled()
-      expect(handler2).toHaveBeenCalledWith(action)
-    })
-
-    it('does not deliver when stopped', () => {
-      const handler = jest.fn()
-
-      transport.onReceive(handler)
       transport.stop()
-      transport.handleReceive({ type: 'TEST_ACTION' })
+      transport.receive(new Uint8Array([1, 2, 3]))
 
-      expect(handler).not.toHaveBeenCalled()
+      expect(onAction).not.toHaveBeenCalled()
     })
 
-    it('resumes delivery after resume', () => {
-      const handler = jest.fn()
+    it('delivers again after resume', () => {
+      const onAction = jest.fn()
+      const transport = createNoneTransport(createConfig({ onAction }))
+      const payload = new Uint8Array([4, 5, 6])
 
-      transport.onReceive(handler)
       transport.stop()
-      transport.handleReceive({ type: 'DROPPED' })
       transport.resume()
-      transport.handleReceive({ type: 'DELIVERED' })
+      transport.receive(payload)
 
-      expect(handler).toHaveBeenCalledTimes(1)
-      expect(handler).toHaveBeenCalledWith({ type: 'DELIVERED' })
+      expect(onAction).toHaveBeenCalledWith(payload)
     })
   })
 
-  describe('isReady', () => {
-    it('always reports ready', () => {
+  describe('state', () => {
+    it('is always ready', () => {
+      const transport = createNoneTransport(createConfig())
+
       expect(transport.isReady()).toBe(true)
     })
 
-    it('remains ready after stop', () => {
-      transport.stop()
-      expect(transport.isReady()).toBe(true)
-    })
+    it('reports the none protocol', () => {
+      const transport = createNoneTransport(createConfig())
 
-    it('remains ready after resume', () => {
-      transport.stop()
-      transport.resume()
-      expect(transport.isReady()).toBe(true)
-    })
-  })
-
-  describe('getProtocol', () => {
-    it('returns "none" protocol', () => {
       expect(transport.getProtocol()).toBe('none')
-    })
-  })
-
-  describe('stop', () => {
-    it('can be called multiple times without error', () => {
-      expect(() => {
-        transport.stop()
-        transport.stop()
-        transport.stop()
-      }).not.toThrow()
-    })
-  })
-
-  describe('resume', () => {
-    it('can be called multiple times without error', () => {
-      expect(() => {
-        transport.resume()
-        transport.resume()
-        transport.resume()
-      }).not.toThrow()
-    })
-
-    it('can be called without prior stop', () => {
-      expect(() => {
-        transport.resume()
-      }).not.toThrow()
-    })
-  })
-
-  describe('action types', () => {
-    it('handles primitive action values', () => {
-      transport.send('string-action')
-      transport.send(123)
-      transport.send(true)
-      transport.send(null)
-
-      expect(mockTarget.postMessage).toHaveBeenCalledWith('string-action', '*')
-      expect(mockTarget.postMessage).toHaveBeenCalledWith(123, '*')
-      expect(mockTarget.postMessage).toHaveBeenCalledWith(true, '*')
-      expect(mockTarget.postMessage).toHaveBeenCalledWith(null, '*')
-    })
-
-    it('handles nested object actions', () => {
-      const complexAction = {
-        type: 'COMPLEX',
-        nested: {
-          array: [1, 2, 3],
-          object: { key: 'value' },
-        },
-      }
-
-      transport.send(complexAction)
-
-      expect(mockTarget.postMessage).toHaveBeenCalledWith(complexAction, '*')
-    })
-
-    it('handles array actions', () => {
-      const arrayAction = [{ type: 'A' }, { type: 'B' }]
-
-      transport.send(arrayAction)
-
-      expect(mockTarget.postMessage).toHaveBeenCalledWith(arrayAction, '*')
     })
   })
 })

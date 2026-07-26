@@ -7,71 +7,68 @@
  * @module security/transport/types
  */
 
-import type { SecurityErrorEventData } from '../../types/events'
-import type { SecurityProtocolVersion, SecurityTransport } from '../../types/security'
+import type { SecurityProtocolVersion, SecurityProvider, SecurityTransportError } from '../../types/security'
 
 /**
- * Internal state for tracking transport initialization.
+ * Internal state for tracking transport processing.
  */
 export interface TransportState {
-  /** Whether the transport has completed initialization */
-  ready: boolean
-
   /** Whether processing is currently stopped (backpressure) */
   stopped: boolean
 }
 
 /**
- * Handler function type for receiving decrypted actions.
+ * Handler function type for actions delivered by a transport.
  */
-export type ReceiveHandler = (action: unknown) => void
+export type ActionHandler = (action: unknown) => void
 
 /**
  * Handler function type for security errors.
  */
-export type ErrorHandler = (error: SecurityErrorEventData) => void
+export type ErrorHandler = (error: SecurityTransportError) => void
 
 /**
  * Configuration for the none transport (passthrough).
  */
 export interface NoneTransportConfig {
-  /** Target window for postMessage */
+  /** Counterpart window that receives outbound traffic */
   readonly target: Window
 
-  /** Allowed origin for messages (defaults to '*') */
-  readonly origin?: string
+  /** Returns the origin currently pinned to the channel, or null before pinning */
+  readonly getOrigin: () => string | null
+
+  /** Receives each action delivered by the transport */
+  readonly onAction: ActionHandler
 }
 
 /**
- * Configuration for secure transport (v1/v2 protocols).
+ * Configuration for secure transport (encrypting protocols).
  */
 export interface SecureTransportConfig {
   /** Security protocol version */
-  readonly protocol: 'v1' | 'v2'
+  readonly protocol: SecurityProtocolVersion
 
-  /** Protocol provider from network-protocol */
-  readonly provider: unknown
+  /** Security implementation building the wire pipeline */
+  readonly provider: SecurityProvider
 
-  /** Pre-shared key (required for v2) */
-  readonly sharedKey?: string
+  /** Human-readable label for the wire pipeline */
+  readonly label: string
 
-  /** Key rotation interval in minutes */
-  readonly refreshRate?: number
-
-  /** Target window for postMessage */
+  /** Counterpart window that receives outbound ciphertext */
   readonly target: Window
 
-  /** Allowed origin for messages (defaults to '*') */
-  readonly origin?: string
+  /** Returns the origin currently pinned to the channel, or null before pinning */
+  readonly getOrigin: () => string | null
+
+  /** UUID identifying the local endpoint, stamped as each packet's origin */
+  readonly originId: string
+
+  /** UUID identifying the counterpart endpoint, stamped as each packet's target */
+  readonly targetId: string
+
+  /** Receives each decrypted action delivered by the transport */
+  readonly onAction: ActionHandler
 
   /** Optional error handler for security failures */
   readonly onError?: ErrorHandler
 }
-
-/**
- * Factory function signature for creating security transports.
- */
-export type SecurityTransportFactory = (
-  protocol: SecurityProtocolVersion,
-  config: NoneTransportConfig | SecureTransportConfig
-) => SecurityTransport

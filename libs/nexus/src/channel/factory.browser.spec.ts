@@ -375,7 +375,7 @@ describe('channel/factory', () => {
       const channel = createChannel(config, deps)
       const mockTransport: SecurityTransport = {
         send: jest.fn(),
-        onReceive: jest.fn(),
+        receive: jest.fn(),
         stop: jest.fn(),
         resume: jest.fn(),
         isReady: jest.fn(() => true),

@@ -26,6 +26,23 @@ export type {
   InvalidEventHandler,
 } from './types/events'
 export type { IMessage, MessageEnvelope } from './types/message'
+export type {
+  SecurityProtocolVersion,
+  SecurityPacket,
+  SecurityPacketData,
+  SecurityEncryptedPacket,
+  SecuritySerializedPacket,
+  SecuritySendPacket,
+  SecurityReceivePacket,
+  SecurityWireProtocol,
+  SecurityProtocolProvider,
+  SecurityWireChannel,
+  SecurityChannelFactory,
+  SecurityProvider,
+  SecurityTransport,
+  SecurityTransportConfig,
+  SecurityTransportError,
+} from './types/security'
 export type { NexusLoggerOptions } from './utils/logging/create-logger'
 export { createBroker } from './broker/factory'
 export { createChannel } from './channel/factory'
@@ -39,6 +56,7 @@ export { open as openFilter } from './filters/events/open'
 export { byType } from './filters/messages/by-type'
 export { compose } from './filters/messages/compose'
 export { create as createMessageFilter } from './filters/messages/create'
+export { createSecurityTransport } from './security/transport/factory'
 export { mergeContracts } from './setup/merge-contracts'
 export { broker as defaultBroker } from './singleton'
 export { createLogger } from './utils/logging/create-logger'

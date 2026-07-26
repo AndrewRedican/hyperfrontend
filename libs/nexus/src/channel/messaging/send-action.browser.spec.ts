@@ -157,7 +157,7 @@ describe('channel/messaging/send-action', () => {
     let mockSecurityTransport: {
       isReady: jest.Mock
       send: jest.Mock
-      onReceive: jest.Mock
+      receive: jest.Mock
       stop: jest.Mock
       resume: jest.Mock
       getProtocol: jest.Mock
@@ -167,7 +167,7 @@ describe('channel/messaging/send-action', () => {
       mockSecurityTransport = {
         isReady: jest.fn(() => true),
         send: jest.fn(),
-        onReceive: jest.fn(),
+        receive: jest.fn(),
         stop: jest.fn(),
         resume: jest.fn(),
         getProtocol: jest.fn(() => 'v2'),

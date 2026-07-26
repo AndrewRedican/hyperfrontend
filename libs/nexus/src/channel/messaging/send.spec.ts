@@ -153,7 +153,7 @@ describe('channel/messaging/send', () => {
         securityTransport: {
           isReady: jest.fn(() => false),
           send: jest.fn(),
-          onReceive: jest.fn(),
+          receive: jest.fn(),
           stop: jest.fn(),
           resume: jest.fn(),
           getProtocol: jest.fn(() => 'v2'),
