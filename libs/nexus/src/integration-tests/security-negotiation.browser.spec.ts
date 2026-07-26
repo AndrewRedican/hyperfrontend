@@ -259,21 +259,29 @@ describe('Integration: Security Negotiation and Attachment', () => {
       })
     })
 
-    it('denies a legacy initiator whose REQUEST carries no security slot', () => {
+    it('denies a legacy initiator whose REQUEST carries no security slot, surfacing the deny on both ends', () => {
       const a = setupParty('a')
       const b = setupParty('b', {
         providers: { v2: createV2Provider() },
         channelSettings: { security: { protocol: 'v2', mode: 'fail-closed' } },
       })
-      const denyHandler = jest.fn()
-      a.channel.on('deny', denyHandler)
+      const denyHandlerA = jest.fn()
+      const denyHandlerB = jest.fn()
+      a.channel.on('deny', denyHandlerA)
+      b.channel.on('deny', denyHandlerB)
 
       a.channel.connect()
 
-      expect({ aActive: a.channel.isActive(), bActive: b.channel.isActive(), deny: denyHandler.mock.calls[0][0] }).toEqual({
+      expect({
+        aActive: a.channel.isActive(),
+        bActive: b.channel.isActive(),
+        aDeny: denyHandlerA.mock.calls[0][0],
+        bDeny: denyHandlerB.mock.calls[0][0],
+      }).toEqual({
         aActive: false,
         bActive: false,
-        deny: expect.objectContaining({ reason: 'security-unavailable', error: expect.stringContaining('Security is required') }),
+        aDeny: expect.objectContaining({ reason: 'security-unavailable', error: expect.stringContaining('Security is required') }),
+        bDeny: expect.objectContaining({ reason: 'security-unavailable', error: expect.stringContaining('Security is required') }),
       })
     })
 

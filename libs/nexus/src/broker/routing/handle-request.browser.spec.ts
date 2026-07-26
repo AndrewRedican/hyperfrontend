@@ -405,6 +405,45 @@ describe('handleRequest', () => {
       )
     })
 
+    it('fires the denial locally as a deny event on the responding channel', () => {
+      const channel = addReadyChannel({ contractCompat: () => ({ compatible: false, reason: 'own 1.0.0 does not match peer 2.0.0' }) })
+      const denyHandler = jest.fn()
+      channel.on('deny', denyHandler)
+
+      handleRequest(routingContext, requestEvent())
+
+      expect(denyHandler.mock.calls[0][0]).toEqual({
+        error: 'own 1.0.0 does not match peer 2.0.0',
+        reason: 'incompatible-contract',
+        origin: 'https://example.com',
+      })
+    })
+
+    it('fires the local deny once when the counterpart retries REQUEST with the same process id', () => {
+      const channel = addReadyChannel({ contractCompat: () => ({ compatible: false, reason: 'own 1.0.0 does not match peer 2.0.0' }) })
+      const denyHandler = jest.fn()
+      channel.on('deny', denyHandler)
+
+      handleRequest(routingContext, requestEvent())
+      handleRequest(routingContext, requestEvent())
+
+      const denyFrames = (<jest.Mock>mockWindow.postMessage).mock.calls.filter(
+        (call) => (<IAction>call[0]).type === '[nexus] connection-request-denied'
+      )
+      expect({ localDenies: denyHandler.mock.calls.length, deniedFrames: denyFrames.length }).toEqual({ localDenies: 1, deniedFrames: 2 })
+    })
+
+    it('fires the local deny again when a new handshake process is denied', () => {
+      const channel = addReadyChannel({ contractCompat: () => ({ compatible: false, reason: 'own 1.0.0 does not match peer 2.0.0' }) })
+      const denyHandler = jest.fn()
+      channel.on('deny', denyHandler)
+
+      handleRequest(routingContext, requestEvent())
+      handleRequest(routingContext, requestEvent({ processId: 'process-2' }))
+
+      expect(denyHandler).toHaveBeenCalledTimes(2)
+    })
+
     it('accepts when the rule reports compatible', () => {
       addReadyChannel({ contractCompat: () => ({ compatible: true }) })
 
@@ -456,6 +495,32 @@ describe('handleRequest', () => {
         }),
         expect.any(String)
       )
+    })
+
+    it('fires the denial locally as a deny event on the responding channel', () => {
+      const channel = addReadyChannel(failClosedSettings)
+      const denyHandler = jest.fn()
+      channel.on('deny', denyHandler)
+
+      handleRequest(routingContext, requestEvent({ security: { supported: ['v1', 'none'], preferred: 'v1' } }))
+
+      expect(denyHandler.mock.calls[0][0]).toEqual(
+        expect.objectContaining({ reason: 'security-unavailable', error: expect.stringContaining('Security is required') })
+      )
+    })
+
+    it('fires the local deny once when the counterpart retries REQUEST with the same process id', () => {
+      const channel = addReadyChannel(failClosedSettings)
+      const denyHandler = jest.fn()
+      channel.on('deny', denyHandler)
+
+      handleRequest(routingContext, requestEvent({ security: { supported: ['v1', 'none'], preferred: 'v1' } }))
+      handleRequest(routingContext, requestEvent({ security: { supported: ['v1', 'none'], preferred: 'v1' } }))
+
+      const denyFrames = (<jest.Mock>mockWindow.postMessage).mock.calls.filter(
+        (call) => (<IAction>call[0]).type === '[nexus] connection-request-denied'
+      )
+      expect({ localDenies: denyHandler.mock.calls.length, deniedFrames: denyFrames.length }).toEqual({ localDenies: 1, deniedFrames: 2 })
     })
 
     it('accepts when the registry satisfies the requested protocol', () => {

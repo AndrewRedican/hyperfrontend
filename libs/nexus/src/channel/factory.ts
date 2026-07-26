@@ -192,6 +192,14 @@ export function createChannel(config: IChannelConfig, deps: ChannelDependencies)
       notifyMessage(internals, message)
     },
 
+    markDenyNotified: (processId: string) => {
+      if (state.notifiedDenyProcessId === processId) {
+        return false
+      }
+      internals.updateState({ notifiedDenyProcessId: processId })
+      return true
+    },
+
     setPendingSecurityRequest: (request: SecurityNegotiationRequest | null) => {
       internals.updateState({ pendingSecurityRequest: request })
     },

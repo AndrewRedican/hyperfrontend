@@ -140,6 +140,8 @@ export interface ChannelState {
   readonly securityTransport: SecurityTransport | null
   /** Pending security negotiation request from initiator (for responder to use) */
   readonly pendingSecurityRequest: SecurityNegotiationRequest | null
+  /** Process id of the handshake whose denial already fired the local 'deny' event (null when none) */
+  readonly notifiedDenyProcessId: string | null
 }
 
 /**
@@ -321,6 +323,14 @@ export interface ChannelHandle {
    * Used by broker handlers to forward messages.
    */
   notifyMessage(message: IMessage): void
+
+  /**
+   * Records that the denial of the given handshake process fired the local
+   * 'deny' event. Returns false when the process is already recorded, so a
+   * retried REQUEST re-using the same process id does not fire a second
+   * local event.
+   */
+  markDenyNotified(processId: string): boolean
 
   /**
    * Stores the pending security request from the initiator.

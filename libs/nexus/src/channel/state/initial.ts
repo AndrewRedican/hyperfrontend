@@ -51,5 +51,6 @@ export function createInitialState(name: string, target: Window, settings: Parti
     securityReady: false,
     securityTransport: null,
     pendingSecurityRequest: null,
+    notifiedDenyProcessId: null,
   })
 }
