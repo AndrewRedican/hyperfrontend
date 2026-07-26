@@ -709,7 +709,9 @@ The silent rename has returned through the deployment door.
 
 That is why **the** **contract** needs a **version**.
 
-When two sides first meet, each announces the version or version range it understands. A mismatch is not automatically fatal; compatibility rules decide whether the pair can proceed. An incompatible pair then fails explicitly at the start of the session instead of going silently deaf three weeks later.
+The sample above already carries one. It is not a separate announcement: the version is baked into the contract artifact each side bundled, so the vintage a side runs is the vintage it presents.
+
+When two sides first meet, each presents the contract it holds — version included — and a compatibility rule evaluated during the opening exchange decides whether the pair may proceed. An incompatible pair fails explicitly, refused before the session opens, instead of going silently deaf three weeks later.
 
 Adding an emitted event can remain compatible when unknown events are ignored and logged rather than treated as fatal.
 
@@ -864,7 +866,7 @@ That instance ID separates one incarnation from the next.
 
 If the iframe reloads halfway through a session, messages left over from the previous instance identify themselves as stale instead of being accepted into the new conversation.
 
-The contract-version exchange belongs in the handshake too. Each side announces the version it holds, allowing incompatibility to fail before product messages begin moving.
+The contract-version comparison belongs in the handshake too. Each side's contract crosses in `@shell/request` or `@shell/accept` with its baked-in version aboard, and a compatibility rule evaluated during that exchange denies an incompatible pair before product messages begin moving.
 
 The exchange is symmetrical. Either side may finish booting first and send the opening request. The other accepts; the first confirms.
 
