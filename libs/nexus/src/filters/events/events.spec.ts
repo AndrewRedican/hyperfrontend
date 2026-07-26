@@ -18,6 +18,8 @@ describe('Event Filters', () => {
       active: true,
       connectTimestamp: Date.now(),
       contract: { accepted: [], emitted: [] },
+      peerContract: null,
+      peerId: null,
       queuedMessagesCount: 0,
     }
   })

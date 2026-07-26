@@ -1,311 +1,278 @@
 import type { IChannelContract } from '../types/contract'
+import type { IMessage } from '../types/message'
 import type { MockWindow } from './test-utils'
 import { createBroker } from '../broker/factory'
-import { createMockWindow } from './test-utils'
+import { createMockWindow, createTestContract, linkMockWindows } from './test-utils'
 
 describe('Integration: Many-to-Many', () => {
-  let windows: MockWindow[]
-
-  beforeEach(() => {
-    windows = Array.from({ length: 5 }, () => createMockWindow())
+  beforeAll(() => {
+    jest.useFakeTimers()
   })
 
-  const networkContract: IChannelContract = {
-    emitted: [
-      { type: 'BROADCAST', description: 'Broadcast to all' },
-      { type: 'DIRECT', description: 'Direct message' },
-      { type: 'REQUEST', description: 'Request data' },
-    ],
-    accepted: [
-      { type: 'BROADCAST', description: 'Receive broadcast' },
-      { type: 'DIRECT', description: 'Receive direct message' },
-      { type: 'RESPONSE', description: 'Response to request' },
-    ],
+  afterAll(() => {
+    jest.useRealTimers()
+  })
+
+  afterEach(() => {
+    jest.clearAllTimers()
+    jest.clearAllMocks()
+  })
+
+  // why: linkMockWindows wires exactly one counterpart per window, which cannot model many senders reaching one broker window.
+  // how: every nexus frame carries the sending broker id, so the network maps it back to the sender's window and origin per frame.
+  // note: the receiving broker resolves channels by event.source and checks event.origin against the origin pinned at handshake.
+  const createNetwork = () => {
+    const peers: { win: MockWindow; origin: string; brokerId: string }[] = []
+
+    return {
+      attach(win: MockWindow, origin: string, brokerId: string): void {
+        peers.push({ win, origin, brokerId })
+        win.postMessage.mockImplementation((data: unknown) => {
+          const sender = peers.find((peer) => peer.brokerId === (<{ senderId?: string }>data)?.senderId)
+          if (!sender) {
+            return
+          }
+          win._dispatchMessage(
+            new MessageEvent('message', {
+              data,
+              origin: sender.origin,
+              source: <Window>(<unknown>sender.win),
+            })
+          )
+        })
+      },
+    }
   }
 
-  describe('Multiple Brokers Communication', () => {
-    it('creates multiple independent brokers', () => {
-      const broker1 = createBroker({
-        name: 'broker-1',
-        contract: networkContract,
-        settings: { logLevel: 'error' },
-      })
+  type Network = ReturnType<typeof createNetwork>
 
-      const broker2 = createBroker({
-        name: 'broker-2',
-        contract: networkContract,
-        settings: { logLevel: 'error' },
-      })
+  const createNode = (network: Network, name: string, origin: string, contract: IChannelContract) => {
+    const win = createMockWindow()
+    const broker = createBroker({ name, contract, window: <Window>(<unknown>win) })
+    network.attach(win, origin, broker.id)
+    return { win, broker }
+  }
 
-      const broker3 = createBroker({
-        name: 'broker-3',
-        contract: networkContract,
-        settings: { logLevel: 'error' },
-      })
+  type TestNode = ReturnType<typeof createNode>
 
-      expect(broker1.id).not.toBe(broker2.id)
-      expect(broker2.id).not.toBe(broker3.id)
-      expect(broker1.name).toBe('broker-1')
-      expect(broker2.name).toBe('broker-2')
-      expect(broker3.name).toBe('broker-3')
+  const connectPair = (nodeA: TestNode, nodeB: TestNode, nameAtA: string, nameAtB: string) => {
+    const channelAtA = nodeA.broker.addChannel(nameAtA, <Window>(<unknown>nodeB.win))
+    const channelAtB = nodeB.broker.addChannel(nameAtB, <Window>(<unknown>nodeA.win))
+    channelAtA.connect()
+    channelAtB.connect()
+    return { channelAtA, channelAtB }
+  }
+
+  // note: a broker has one contract shared by all of its channels, so the hub must accept everything spokes emit and vice versa.
+  const hubContract = createTestContract(['BROADCAST', 'DIRECT'], ['DIRECT'])
+  const spokeContract = createTestContract(['DIRECT'], ['BROADCAST', 'DIRECT'])
+  const peerContract = createTestContract(['BROADCAST', 'DIRECT'], ['BROADCAST', 'DIRECT'])
+
+  const setupStar = (network: Network, domain: string, spokeCount: number) => {
+    const hub = createNode(network, `${domain}-hub`, `http://${domain}-hub.com`, hubContract)
+    const pairs = Array.from({ length: spokeCount }, (_, i) => {
+      const spoke = createNode(network, `${domain}-spoke-${i}`, `http://${domain}-spoke-${i}.com`, spokeContract)
+      const { channelAtA: hubChannel, channelAtB: spokeChannel } = connectPair(hub, spoke, `to-spoke-${i}`, 'to-hub')
+      return { hubChannel, spokeChannel }
+    })
+    return { hub, pairs }
+  }
+
+  const setupMesh = (network: Network, size: number) => {
+    const nodes = Array.from({ length: size }, (_, i) => createNode(network, `node-${i}`, `http://node-${i}.com`, peerContract))
+    const pairs = nodes.flatMap((nodeA, i) =>
+      nodes.slice(i + 1).map((nodeB, offset) => connectPair(nodeA, nodeB, `to-node-${i + 1 + offset}`, `to-node-${i}`))
+    )
+    return { nodes, pairs }
+  }
+
+  const collectSpokeInboxes = (pairs: { spokeChannel: { onMessage: (handler: (message: IMessage) => void) => () => void } }[]) =>
+    pairs.map((pair) => {
+      const inbox: IMessage[] = []
+      pair.spokeChannel.onMessage((message) => inbox.push(message))
+      return inbox
     })
 
-    it('isolates channels between brokers', () => {
-      const broker1 = createBroker({
-        name: 'broker-1',
-        contract: networkContract,
-        settings: { logLevel: 'error' },
+  describe('Multiple Brokers Communication', () => {
+    it('creates independent brokers each listening on its own window', () => {
+      const network = createNetwork()
+      const nodes = [1, 2, 3].map((i) => createNode(network, `broker-${i}`, `http://host-${i}.com`, peerContract))
+
+      expect({
+        distinctIds: [
+          nodes[0].broker.id !== nodes[1].broker.id,
+          nodes[1].broker.id !== nodes[2].broker.id,
+          nodes[0].broker.id !== nodes[2].broker.id,
+        ],
+        names: nodes.map((node) => node.broker.name),
+      }).toEqual({
+        distinctIds: [true, true, true],
+        names: ['broker-1', 'broker-2', 'broker-3'],
       })
+    })
 
-      const broker2 = createBroker({
-        name: 'broker-2',
-        contract: networkContract,
-        settings: { logLevel: 'error' },
-      })
+    it('registers channels only on the broker that created them', () => {
+      const network = createNetwork()
+      const nodeA = createNode(network, 'broker-a', 'http://host-a.com', peerContract)
+      const nodeB = createNode(network, 'broker-b', 'http://host-b.com', peerContract)
 
-      const channel1 = broker1.addChannel('channel-1', <Window>(<unknown>windows[0]))
-      const channel2 = broker2.addChannel('channel-2', <Window>(<unknown>windows[1]))
+      nodeA.broker.addChannel('channel-a', <Window>(<unknown>nodeB.win))
+      nodeB.broker.addChannel('channel-b', <Window>(<unknown>nodeA.win))
 
-      expect(broker1.channels).toHaveLength(1)
-      expect(broker2.channels).toHaveLength(1)
-      expect(channel1.name).toBe('channel-1')
-      expect(channel2.name).toBe('channel-2')
+      expect({
+        aChannels: nodeA.broker.channels.map((channel) => channel.name),
+        bChannels: nodeB.broker.channels.map((channel) => channel.name),
+      }).toEqual({ aChannels: ['channel-a'], bChannels: ['channel-b'] })
     })
   })
 
   describe('Star Network Topology', () => {
-    it('creates hub-and-spoke pattern', () => {
-      const hub = createBroker({
-        name: 'hub-broker',
-        contract: networkContract,
-        settings: { logLevel: 'error' },
-      })
+    it('activates every hub-spoke pair through the wire handshake', () => {
+      const { hub, pairs } = setupStar(createNetwork(), 'star', 3)
 
-      const spokes = windows.map((win, i) => hub.addChannel(`spoke-${i}`, <Window>(<unknown>win)))
-
-      spokes.forEach((spoke) => spoke.connect())
-
-      expect(hub.channels).toHaveLength(5)
-      expect(spokes.every((s) => s.isActive())).toBe(true)
+      expect({
+        hubChannels: hub.broker.channels.length,
+        pairsActive: pairs.map((pair) => pair.hubChannel.isActive() && pair.spokeChannel.isActive()),
+      }).toEqual({ hubChannels: 3, pairsActive: [true, true, true] })
     })
 
-    it('broadcasts from hub to all spokes', () => {
-      const hub = createBroker({
-        name: 'hub-broker',
-        contract: networkContract,
-        settings: { logLevel: 'error' },
-      })
+    it('delivers a hub broadcast to every spoke', () => {
+      const { pairs } = setupStar(createNetwork(), 'star', 3)
+      const inboxes = collectSpokeInboxes(pairs)
 
-      const spokes = windows.map((win, i) => hub.addChannel(`spoke-${i}`, <Window>(<unknown>win)))
-      spokes.forEach((spoke) => spoke.connect())
+      pairs.forEach((pair) => pair.hubChannel.send('BROADCAST', { from: 'hub', message: 'Hello all' }))
 
-      windows.forEach((win) => win.postMessage.mockClear())
-
-      spokes.forEach((spoke) => {
-        spoke.send('BROADCAST', { from: 'hub', message: 'Hello all' })
-      })
-
-      windows.forEach((win) => {
-        expect(win.postMessage).toHaveBeenCalled()
-      })
+      expect(inboxes).toEqual(
+        pairs.map(() => [expect.objectContaining({ type: 'BROADCAST', data: { from: 'hub', message: 'Hello all' } })])
+      )
     })
 
-    it('handles direct messages between spokes via hub', () => {
-      const hub = createBroker({
-        name: 'hub-broker',
-        contract: networkContract,
-        settings: { logLevel: 'error' },
+    it('relays a direct message between spokes through the hub', () => {
+      const { pairs } = setupStar(createNetwork(), 'star', 2)
+
+      const spoke1Inbox: IMessage[] = []
+      pairs[1].spokeChannel.onMessage((message) => spoke1Inbox.push(message))
+
+      // how: relaying is hub application logic, not a broker built-in; the hub forwards spoke 0's DIRECT traffic to spoke 1.
+      pairs[0].hubChannel.onMessage((message) => {
+        if (message.type === 'DIRECT') {
+          pairs[1].hubChannel.send('DIRECT', message.data)
+        }
       })
 
-      const spoke1 = hub.addChannel('spoke-1', <Window>(<unknown>windows[0]))
-      const spoke2 = hub.addChannel('spoke-2', <Window>(<unknown>windows[1]))
+      pairs[0].spokeChannel.send('DIRECT', { to: 'spoke-1', message: 'Private message' })
 
-      spoke1.connect()
-      spoke2.connect()
-
-      windows[0].postMessage.mockClear()
-      windows[1].postMessage.mockClear()
-
-      spoke1.send('DIRECT', { to: 'spoke-2', message: 'Private message' })
-
-      expect(windows[0].postMessage).toHaveBeenCalled()
+      expect(spoke1Inbox).toEqual([expect.objectContaining({ type: 'DIRECT', data: { to: 'spoke-1', message: 'Private message' } })])
     })
   })
 
   describe('Mesh Network Topology', () => {
-    it('creates fully connected mesh', () => {
-      const brokers = windows.map((_, i) =>
-        createBroker({
-          name: `node-${i}`,
-          contract: networkContract,
-          settings: { logLevel: 'error' },
-        })
-      )
+    it('activates every channel pair in a fully connected mesh', () => {
+      const { nodes, pairs } = setupMesh(createNetwork(), 3)
 
-      brokers.forEach((broker, i) => {
-        windows.forEach((win, j) => {
-          if (i !== j) {
-            const channel = broker.addChannel(`peer-${j}`, <Window>(<unknown>win))
-            channel.connect()
-          }
-        })
-      })
-
-      brokers.forEach((broker) => {
-        expect(broker.channels.length).toBe(windows.length - 1)
-      })
+      expect({
+        channelCounts: nodes.map((node) => node.broker.channels.length),
+        pairsActive: pairs.map((pair) => pair.channelAtA.isActive() && pair.channelAtB.isActive()),
+      }).toEqual({ channelCounts: [2, 2, 2], pairsActive: [true, true, true] })
     })
 
-    it('routes messages in mesh network', () => {
-      const broker1 = createBroker({
-        name: 'node-1',
-        contract: networkContract,
-        settings: { logLevel: 'error' },
-      })
+    it('delivers direct messages across handshaken mesh links', () => {
+      const { pairs } = setupMesh(createNetwork(), 3)
 
-      const broker2 = createBroker({
-        name: 'node-2',
-        contract: networkContract,
-        settings: { logLevel: 'error' },
-      })
+      // note: with three nodes the pair order is 0-1, 0-2, 1-2, so index 1 holds the node-0 to node-2 link.
+      const inbox: IMessage[] = []
+      pairs[1].channelAtB.onMessage((message) => inbox.push(message))
 
-      const broker3 = createBroker({
-        name: 'node-3',
-        contract: networkContract,
-        settings: { logLevel: 'error' },
-      })
+      pairs[1].channelAtA.send('DIRECT', { from: 'node-0', to: 'node-2' })
 
-      const ch12 = broker1.addChannel('to-node-2', <Window>(<unknown>windows[1]))
-      const ch13 = broker1.addChannel('to-node-3', <Window>(<unknown>windows[2]))
-      const ch21 = broker2.addChannel('to-node-1', <Window>(<unknown>windows[0]))
-      const ch23 = broker2.addChannel('to-node-3', <Window>(<unknown>windows[2]))
-      const ch31 = broker3.addChannel('to-node-1', <Window>(<unknown>windows[0]))
-      const ch32 = broker3.addChannel('to-node-2', <Window>(<unknown>windows[1]))
-
-      ;[ch12, ch13, ch21, ch23, ch31, ch32].forEach((ch) => ch.connect())
-
-      expect(broker1.channels).toHaveLength(2)
-      expect(broker2.channels).toHaveLength(2)
-      expect(broker3.channels).toHaveLength(2)
+      expect(inbox).toEqual([expect.objectContaining({ type: 'DIRECT', data: { from: 'node-0', to: 'node-2' } })])
     })
   })
 
   describe('Load Balancing Scenarios', () => {
-    it('distributes channels across multiple brokers', () => {
-      const broker1 = createBroker({
-        name: 'load-broker-1',
-        contract: networkContract,
-        settings: { logLevel: 'error' },
+    it('activates channels distributed across multiple brokers', () => {
+      const network = createNetwork()
+      const loadNode1 = createNode(network, 'load-broker-1', 'http://load-1.com', peerContract)
+      const loadNode2 = createNode(network, 'load-broker-2', 'http://load-2.com', peerContract)
+
+      const pairs = Array.from({ length: 5 }, (_, i) => {
+        const peer = createNode(network, `peer-broker-${i}`, `http://peer-${i}.com`, peerContract)
+        const owner = i % 2 === 0 ? loadNode1 : loadNode2
+        return connectPair(owner, peer, `channel-${i}`, 'to-load-broker')
       })
 
-      const broker2 = createBroker({
-        name: 'load-broker-2',
-        contract: networkContract,
-        settings: { logLevel: 'error' },
-      })
-
-      windows.forEach((win, i) => {
-        const broker = i % 2 === 0 ? broker1 : broker2
-        broker.addChannel(`channel-${i}`, <Window>(<unknown>win)).connect()
-      })
-
-      expect(broker1.channels).toHaveLength(3)
-      expect(broker2.channels).toHaveLength(2)
+      expect({
+        broker1Channels: loadNode1.broker.channels.length,
+        broker2Channels: loadNode2.broker.channels.length,
+        allActive: pairs.every((pair) => pair.channelAtA.isActive() && pair.channelAtB.isActive()),
+      }).toEqual({ broker1Channels: 3, broker2Channels: 2, allActive: true })
     })
 
-    it('handles failover between brokers', () => {
-      const primary = createBroker({
-        name: 'primary-broker',
-        contract: networkContract,
-        settings: { logLevel: 'error' },
-      })
+    it('fails over to a backup broker through a fresh handshake', () => {
+      const network = createNetwork()
+      const primary = createNode(network, 'primary-broker', 'http://primary.com', peerContract)
+      const backup = createNode(network, 'backup-broker', 'http://backup.com', peerContract)
+      const peer = createNode(network, 'peer-broker', 'http://peer.com', peerContract)
 
-      const backup = createBroker({
-        name: 'backup-broker',
-        contract: networkContract,
-        settings: { logLevel: 'error' },
-      })
+      const primaryPair = connectPair(primary, peer, 'failover-channel', 'to-primary')
+      primaryPair.channelAtA.disconnect()
 
-      const channel = primary.addChannel('failover-channel', <Window>(<unknown>windows[0]))
-      channel.connect()
+      const backupPair = connectPair(backup, peer, 'failover-channel', 'to-backup')
 
-      expect(channel.isActive()).toBe(true)
-
-      channel.disconnect()
-
-      const backupChannel = backup.addChannel('failover-channel', <Window>(<unknown>windows[0]))
-      backupChannel.connect()
-
-      expect(backupChannel.isActive()).toBe(true)
+      expect({
+        primaryPairActive: [primaryPair.channelAtA.isActive(), primaryPair.channelAtB.isActive()],
+        backupPairActive: [backupPair.channelAtA.isActive(), backupPair.channelAtB.isActive()],
+      }).toEqual({ primaryPairActive: [false, false], backupPairActive: [true, true] })
     })
   })
 
   describe('Peer-to-Peer Communication', () => {
-    it('enables direct peer-to-peer messaging', () => {
-      const peer1Broker = createBroker({
-        name: 'peer-1',
-        contract: networkContract,
-        settings: { logLevel: 'error' },
-      })
+    it('exchanges direct messages in both directions after the handshake', () => {
+      const windowA = createMockWindow()
+      const windowB = createMockWindow()
+      linkMockWindows(windowA, windowB, 'http://peer-1.com', 'http://peer-2.com')
 
-      const peer2Broker = createBroker({
-        name: 'peer-2',
-        contract: networkContract,
-        settings: { logLevel: 'error' },
-      })
-
-      const peer1ToPeer2 = peer1Broker.addChannel('to-peer-2', <Window>(<unknown>windows[1]))
-
-      const peer2ToPeer1 = peer2Broker.addChannel('to-peer-1', <Window>(<unknown>windows[0]))
-
+      const peer1Broker = createBroker({ name: 'peer-1', contract: peerContract, window: <Window>(<unknown>windowA) })
+      const peer2Broker = createBroker({ name: 'peer-2', contract: peerContract, window: <Window>(<unknown>windowB) })
+      const peer1ToPeer2 = peer1Broker.addChannel('to-peer-2', <Window>(<unknown>windowB))
+      const peer2ToPeer1 = peer2Broker.addChannel('to-peer-1', <Window>(<unknown>windowA))
       peer1ToPeer2.connect()
       peer2ToPeer1.connect()
 
-      expect(peer1ToPeer2.isActive()).toBe(true)
-      expect(peer2ToPeer1.isActive()).toBe(true)
-
-      windows[0].postMessage.mockClear()
-      windows[1].postMessage.mockClear()
-
+      // why: send() also notifies the sender's own subscribers, so each inbox only listens while the counterpart is sending.
+      const atPeer2: IMessage[] = []
+      const stopPeer2 = peer2ToPeer1.onMessage((message) => atPeer2.push(message))
       peer1ToPeer2.send('DIRECT', { message: 'Hello from Peer 1' })
+      stopPeer2()
+
+      const atPeer1: IMessage[] = []
+      peer1ToPeer2.onMessage((message) => atPeer1.push(message))
       peer2ToPeer1.send('DIRECT', { message: 'Hello from Peer 2' })
 
-      expect(windows[1].postMessage).toHaveBeenCalled()
-      expect(windows[0].postMessage).toHaveBeenCalled()
+      expect({ atPeer1, atPeer2 }).toEqual({
+        atPeer1: [expect.objectContaining({ type: 'DIRECT', data: { message: 'Hello from Peer 2' } })],
+        atPeer2: [expect.objectContaining({ type: 'DIRECT', data: { message: 'Hello from Peer 1' } })],
+      })
     })
   })
 
   describe('Broadcast Domains', () => {
-    it('creates isolated broadcast domains', () => {
-      const domain1 = createBroker({
-        name: 'domain-1',
-        contract: networkContract,
-        settings: { logLevel: 'error' },
+    it('confines broadcasts to the spokes of their own domain', () => {
+      const network = createNetwork()
+      const domain1 = setupStar(network, 'domain-1', 3)
+      const domain2 = setupStar(network, 'domain-2', 2)
+
+      const domain1Inboxes = collectSpokeInboxes(domain1.pairs)
+      const domain2Inboxes = collectSpokeInboxes(domain2.pairs)
+
+      domain1.pairs.forEach((pair) => pair.hubChannel.send('BROADCAST', { domain: 1, message: 'Domain 1 broadcast' }))
+
+      expect({ domain1Inboxes, domain2Inboxes }).toEqual({
+        domain1Inboxes: domain1.pairs.map(() => [
+          expect.objectContaining({ type: 'BROADCAST', data: { domain: 1, message: 'Domain 1 broadcast' } }),
+        ]),
+        domain2Inboxes: [[], []],
       })
-
-      const domain2 = createBroker({
-        name: 'domain-2',
-        contract: networkContract,
-        settings: { logLevel: 'error' },
-      })
-
-      const domain1Channels = [0, 1, 2].map((i) => domain1.addChannel(`d1-ch${i}`, <Window>(<unknown>windows[i])))
-
-      const domain2Channels = [3, 4].map((i) => domain2.addChannel(`d2-ch${i - 3}`, <Window>(<unknown>windows[i])))
-
-      domain1Channels.forEach((ch) => ch.connect())
-      domain2Channels.forEach((ch) => ch.connect())
-
-      expect(domain1.channels).toHaveLength(3)
-      expect(domain2.channels).toHaveLength(2)
-
-      windows.forEach((win) => win.postMessage.mockClear())
-
-      domain1Channels.forEach((ch) => ch.send('BROADCAST', { domain: 1, message: 'Domain 1 broadcast' }))
-
-      expect(windows[0].postMessage).toHaveBeenCalled()
-      expect(windows[1].postMessage).toHaveBeenCalled()
-      expect(windows[2].postMessage).toHaveBeenCalled()
     })
   })
 })

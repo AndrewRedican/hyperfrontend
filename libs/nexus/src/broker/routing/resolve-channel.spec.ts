@@ -6,10 +6,11 @@ describe('resolveChannel', () => {
   const sourceWindow = <Window>(<unknown>{ postMessage: jest.fn() })
   const otherWindow = <Window>(<unknown>{ postMessage: jest.fn() })
 
-  function createEvent(senderId: string, source: Window | null): MessageEvent<IAction> {
+  function createEvent(senderId: string, source: Window | null, origin = 'http://remote.example'): MessageEvent<IAction> {
     return <MessageEvent<IAction>>{
       data: <IAction>{ type: '[nexus] new-message', senderId },
       source,
+      origin,
     }
   }
 
@@ -26,21 +27,43 @@ describe('resolveChannel', () => {
     expect(resolveChannel(registry, createEvent('unknown-sender', sourceWindow))).toBe(channel)
   })
 
-  it('falls back to sender id lookup when the event has no source', () => {
-    const channel = { id: 'channel-1', name: 'to-remote', target: sourceWindow }
-    registry.add(channel)
+  it('returns undefined when the event has no source, ignoring the declared sender id', () => {
+    registry.add({ id: 'channel-1', name: 'to-remote', target: sourceWindow })
 
-    expect(resolveChannel(registry, createEvent('channel-1', null))).toBe(channel)
+    expect(resolveChannel(registry, createEvent('channel-1', null))).toBeUndefined()
   })
 
-  it('falls back to sender id lookup when the source window is not registered', () => {
-    const channel = { id: 'channel-1', name: 'to-remote', target: sourceWindow }
-    registry.add(channel)
+  it('returns undefined when the source window is not registered, ignoring the declared sender id', () => {
+    registry.add({ id: 'channel-1', name: 'to-remote', target: sourceWindow })
 
-    expect(resolveChannel(registry, createEvent('channel-1', otherWindow))).toBe(channel)
+    expect(resolveChannel(registry, createEvent('channel-1', otherWindow))).toBeUndefined()
   })
 
-  it('returns undefined when neither the source window nor the sender id is registered', () => {
-    expect(resolveChannel(registry, createEvent('unknown-sender', otherWindow))).toBeUndefined()
+  it('returns undefined when the event origin does not match the pinned origin', () => {
+    const channel = { id: 'channel-1', name: 'to-remote', target: sourceWindow, getOrigin: () => 'http://pinned.example' }
+    registry.add(channel)
+
+    expect(resolveChannel(registry, createEvent('channel-1', sourceWindow, 'http://evil.example'))).toBeUndefined()
+  })
+
+  it('resolves the channel when the event origin matches the pinned origin', () => {
+    const channel = { id: 'channel-1', name: 'to-remote', target: sourceWindow, getOrigin: () => 'http://pinned.example' }
+    registry.add(channel)
+
+    expect(resolveChannel(registry, createEvent('channel-1', sourceWindow, 'http://pinned.example'))).toBe(channel)
+  })
+
+  it('resolves the channel from any origin when the pin is the wildcard', () => {
+    const channel = { id: 'channel-1', name: 'to-remote', target: sourceWindow, getOrigin: () => '*' }
+    registry.add(channel)
+
+    expect(resolveChannel(registry, createEvent('channel-1', sourceWindow, 'http://anywhere.example'))).toBe(channel)
+  })
+
+  it('resolves the channel from any origin when no origin is pinned', () => {
+    const channel = { id: 'channel-1', name: 'to-remote', target: sourceWindow, getOrigin: () => null }
+    registry.add(channel)
+
+    expect(resolveChannel(registry, createEvent('channel-1', sourceWindow))).toBe(channel)
   })
 })

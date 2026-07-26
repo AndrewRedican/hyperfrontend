@@ -28,6 +28,14 @@ describe('channel/messaging/send-action', () => {
       eventSubscriptions: [],
       messageSubscriptions: [],
       scheduledActivation: null,
+      peerContract: null,
+      peerId: null,
+      pendingProcessId: null,
+      pendingAccept: null,
+      retryTimer: null,
+      deadlineTimer: null,
+      connectTimeoutMs: 10_000,
+      requestRetryMs: 500,
 
       brokerManaged: false,
       readyToConnect: true,
@@ -60,7 +68,39 @@ describe('channel/messaging/send-action', () => {
     }
   })
 
-  it('sends action via postMessage', () => {
+  it('sends action via postMessage targeting the pinned origin', () => {
+    const action: IAction = {
+      type: '[nexus] connection-request',
+      senderId: 'broker-id',
+      processId: 'process-123',
+      contract: { accepted: [], emitted: [] },
+    }
+
+    sendAction(mockChannel, action)
+
+    expect(mockWindow.postMessage).toHaveBeenCalledWith(action, 'https://example.com')
+  })
+
+  it('targets any origin when no origin is pinned', () => {
+    state = { ...state, origin: null }
+    mockGetState.mockReturnValue(state)
+
+    const action: IAction = {
+      type: '[nexus] connection-request',
+      senderId: 'broker-id',
+      processId: 'process-123',
+      contract: { accepted: [], emitted: [] },
+    }
+
+    sendAction(mockChannel, action)
+
+    expect(mockWindow.postMessage).toHaveBeenCalledWith(action, '*')
+  })
+
+  it('targets any origin when the pinned origin is opaque', () => {
+    state = { ...state, origin: 'null' }
+    mockGetState.mockReturnValue(state)
+
     const action: IAction = {
       type: '[nexus] connection-request',
       senderId: 'broker-id',
@@ -110,7 +150,7 @@ describe('channel/messaging/send-action', () => {
 
     sendAction(mockChannel, action)
 
-    expect(mockWindow.postMessage).toHaveBeenCalledWith(action, '*')
+    expect(mockWindow.postMessage).toHaveBeenCalledWith(action, 'https://example.com')
   })
 
   describe('with security transport', () => {
@@ -162,7 +202,7 @@ describe('channel/messaging/send-action', () => {
 
       sendAction(mockChannel, action)
 
-      expect(mockWindow.postMessage).toHaveBeenCalledWith(action, '*')
+      expect(mockWindow.postMessage).toHaveBeenCalledWith(action, 'https://example.com')
       expect(mockSecurityTransport.send).not.toHaveBeenCalled()
     })
 
@@ -177,7 +217,7 @@ describe('channel/messaging/send-action', () => {
 
       sendAction(mockChannel, action)
 
-      expect(mockWindow.postMessage).toHaveBeenCalledWith(action, '*')
+      expect(mockWindow.postMessage).toHaveBeenCalledWith(action, 'https://example.com')
       expect(mockSecurityTransport.send).not.toHaveBeenCalled()
     })
   })

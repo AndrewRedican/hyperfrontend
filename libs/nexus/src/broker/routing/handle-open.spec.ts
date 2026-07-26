@@ -10,9 +10,14 @@ import { addChannel } from '../channels/add'
 import { handleOpen } from './handle-open'
 
 describe('handleOpen', () => {
-  const validContract: IChannelContract = {
+  const ownContract: IChannelContract = {
     accepted: [{ type: 'test-message', description: 'Test message' }],
     emitted: [{ type: 'response-message', description: 'Response message' }],
+  }
+
+  const peerContract: IChannelContract = {
+    accepted: [{ type: 'response-message' }],
+    emitted: [{ type: 'test-message' }],
   }
 
   let mockLogger: Logger
@@ -23,6 +28,18 @@ describe('handleOpen', () => {
   let actions: ReturnType<typeof createActionCreators>
   let mockWindow: Window
   let routingContext: RoutingContext
+
+  beforeAll(() => {
+    jest.useFakeTimers()
+  })
+
+  afterAll(() => {
+    jest.useRealTimers()
+  })
+
+  afterEach(() => {
+    jest.clearAllTimers()
+  })
 
   beforeEach(() => {
     mockLogger = {
@@ -39,9 +56,9 @@ describe('handleOpen', () => {
       id: 'broker-1',
       name: 'test-broker',
       window: <Window>global.window,
-      contract: validContract,
+      contract: ownContract,
       settings: {
-        contract: validContract,
+        contract: ownContract,
       },
       logger: mockLogger,
     }
@@ -65,237 +82,159 @@ describe('handleOpen', () => {
     }
   })
 
-  it('process open for existing channel', () => {
-    const channel = addChannel(mockBrokerState, registry, processManager, actions, 'test-channel', mockWindow)
-    const processId = processManager.create(channel)
-
-    const action: IAction = {
-      type: '[nexus] connection-opened',
+  function addRespondingChannel(name = 'test-channel', target: Window = mockWindow, processId = 'process-1') {
+    const channel = addChannel(mockBrokerState, registry, processManager, actions, name, target)
+    channel.beginResponse('remote-broker-1', 'http://example.com', peerContract, processId, {
+      type: '[nexus] connection-request-accepted',
       processId,
-      senderId: 'remote-broker-1',
-    }
+      senderId: 'broker-1',
+    })
+    processManager.track(processId, channel)
+    ;(<jest.Mock>target.postMessage).mockClear()
+    return channel
+  }
 
-    const message = <MessageEvent<IAction>>{
-      data: action,
+  function openEvent(processId = 'process-1', security?: unknown) {
+    return <MessageEvent<IAction>>{
+      data: <IAction>{
+        type: '[nexus] connection-opened',
+        processId,
+        senderId: 'remote-broker-1',
+        ...(security ? { security } : {}),
+      },
       origin: 'http://example.com',
       source: mockWindow,
     }
+  }
 
-    expect(() => {
-      handleOpen(routingContext, message)
-    }).not.toThrow()
+  it('activates the responder and removes the process', () => {
+    const channel = addRespondingChannel()
 
-    expect(processManager.get(processId)).toBeUndefined()
+    handleOpen(routingContext, openEvent())
+
+    expect({ active: channel.isActive(), process: processManager.get('process-1') }).toEqual({
+      active: true,
+      process: undefined,
+    })
+  })
+
+  it('keeps the own contract and stores the initiator contract as the peer contract', () => {
+    const channel = addRespondingChannel()
+
+    handleOpen(routingContext, openEvent())
+
+    expect(channel.toJSON()).toEqual(expect.objectContaining({ contract: ownContract, peerContract, peerId: 'remote-broker-1' }))
+  })
+
+  it('fires open with the origin and peer contract', () => {
+    const channel = addRespondingChannel()
+    const openHandler = jest.fn()
+    channel.on('open', openHandler)
+
+    handleOpen(routingContext, openEvent())
+
+    expect(openHandler).toHaveBeenCalledWith(
+      expect.objectContaining({ origin: 'http://example.com', contract: peerContract }),
+      expect.anything()
+    )
+  })
+
+  it('stops the ACCEPT replay timers once OPEN arrives', () => {
+    addRespondingChannel()
+
+    handleOpen(routingContext, openEvent())
+    jest.advanceTimersByTime(20_000)
+
+    expect(mockWindow.postMessage).not.toHaveBeenCalled()
+  })
+
+  it('flushes queued messages on activation', () => {
+    const channel = addRespondingChannel()
+    channel.send('response-message', { seq: 1 })
+
+    handleOpen(routingContext, openEvent())
+
+    expect(mockWindow.postMessage).toHaveBeenCalledWith(
+      expect.objectContaining({ type: '[nexus] new-message', data: expect.objectContaining({ type: 'response-message' }) }),
+      expect.any(String)
+    )
   })
 
   it('ignore if channel not found', () => {
-    const action: IAction = {
-      type: '[nexus] connection-opened',
-      processId: 'non-existent-process',
-      senderId: 'remote-broker-1',
-    }
-
-    const message = <MessageEvent<IAction>>{
-      data: action,
-      origin: 'http://example.com',
-      source: mockWindow,
-    }
-
     expect(() => {
-      handleOpen(routingContext, message)
+      handleOpen(routingContext, openEvent('non-existent-process'))
     }).not.toThrow()
   })
 
-  it('calls notifyEvent when channel has the method', () => {
+  it('ignores OPEN when no accept is pending', () => {
     const channel = addChannel(mockBrokerState, registry, processManager, actions, 'test-channel', mockWindow)
-    const processId = processManager.create(channel)
+    processManager.track('process-1', channel)
+    const openHandler = jest.fn()
+    channel.on('open', openHandler)
 
-    const notifyEventMock = jest.fn()
-    Object.defineProperty(channel, 'notifyEvent', {
-      value: notifyEventMock,
-      writable: true,
-    })
+    handleOpen(routingContext, openEvent())
 
-    const action: IAction = {
-      type: '[nexus] connection-opened',
-      processId,
-      senderId: 'remote-broker-1',
-    }
+    expect({ active: channel.isActive(), opens: openHandler.mock.calls.length }).toEqual({ active: false, opens: 0 })
+  })
 
-    const message = <MessageEvent<IAction>>{
-      data: action,
-      origin: 'http://example.com',
-      source: mockWindow,
-    }
+  it('ignores a duplicate OPEN once the process completed', () => {
+    const channel = addRespondingChannel()
+    const openHandler = jest.fn()
+    channel.on('open', openHandler)
 
-    handleOpen(routingContext, message)
+    handleOpen(routingContext, openEvent())
+    handleOpen(routingContext, openEvent())
 
-    expect(notifyEventMock).toHaveBeenCalledWith('open', { origin: 'http://example.com' })
+    expect(openHandler).toHaveBeenCalledTimes(1)
   })
 
   it('handles security confirmation and sets protocol', () => {
-    const channel = addChannel(mockBrokerState, registry, processManager, actions, 'test-channel', mockWindow)
-    const processId = processManager.create(channel)
+    const channel = addRespondingChannel()
+    const securityReadyHandler = jest.fn()
+    channel.on('security-ready', securityReadyHandler)
 
-    const setNegotiatedProtocolMock = jest.fn()
-    const setSecurityReadyMock = jest.fn()
-    const notifyEventMock = jest.fn()
-    const getNegotiatedProtocolMock = jest.fn().mockReturnValue(null)
-    Object.defineProperty(channel, 'setNegotiatedProtocol', { value: setNegotiatedProtocolMock, writable: true })
-    Object.defineProperty(channel, 'setSecurityReady', { value: setSecurityReadyMock, writable: true })
-    Object.defineProperty(channel, 'notifyEvent', { value: notifyEventMock, writable: true })
-    Object.defineProperty(channel, 'getNegotiatedProtocol', { value: getNegotiatedProtocolMock, writable: true })
+    handleOpen(routingContext, openEvent('process-1', { protocol: 'v1', active: true }))
 
-    const action: IAction = {
-      type: '[nexus] connection-opened',
-      processId,
-      senderId: 'remote-broker-1',
-      security: { protocol: 'v1', active: true },
-    }
-
-    const message = <MessageEvent<IAction>>{
-      data: action,
-      origin: 'http://example.com',
-      source: mockWindow,
-    }
-
-    handleOpen(routingContext, message)
-
-    expect(setNegotiatedProtocolMock).toHaveBeenCalledWith('v1')
-    expect(setSecurityReadyMock).toHaveBeenCalledWith(true)
-    expect(notifyEventMock).toHaveBeenCalledWith('security-ready', { protocol: 'v1', active: true })
-    expect(notifyEventMock).toHaveBeenCalledWith('open', { origin: 'http://example.com' })
+    expect({ negotiated: channel.getNegotiatedProtocol(), ready: channel.isSecurityReady() }).toEqual({
+      negotiated: 'v1',
+      ready: true,
+    })
+    expect(securityReadyHandler).toHaveBeenCalledWith({ protocol: 'v1', active: true }, expect.anything())
   })
 
   it('skips setting protocol if already negotiated', () => {
-    const channel = addChannel(mockBrokerState, registry, processManager, actions, 'test-channel', mockWindow)
-    const processId = processManager.create(channel)
+    const channel = addRespondingChannel()
+    channel.setNegotiatedProtocol('v2')
 
-    const setNegotiatedProtocolMock = jest.fn()
-    const getNegotiatedProtocolMock = jest.fn().mockReturnValue('v1')
-    const notifyEventMock = jest.fn()
-    Object.defineProperty(channel, 'setNegotiatedProtocol', { value: setNegotiatedProtocolMock, writable: true })
-    Object.defineProperty(channel, 'getNegotiatedProtocol', { value: getNegotiatedProtocolMock, writable: true })
-    Object.defineProperty(channel, 'notifyEvent', { value: notifyEventMock, writable: true })
-    Object.defineProperty(channel, 'setSecurityReady', { value: jest.fn(), writable: true })
+    handleOpen(routingContext, openEvent('process-1', { protocol: 'v1', active: true }))
 
-    const action: IAction = {
-      type: '[nexus] connection-opened',
-      processId,
-      senderId: 'remote-broker-1',
-      security: { protocol: 'v1', active: true },
-    }
-
-    const message = <MessageEvent<IAction>>{
-      data: action,
-      origin: 'http://example.com',
-      source: mockWindow,
-    }
-
-    handleOpen(routingContext, message)
-
-    expect(setNegotiatedProtocolMock).not.toHaveBeenCalled()
+    expect(channel.getNegotiatedProtocol()).toBe('v2')
   })
 
   it('logs debug info when security is ready', () => {
-    const debugState: BrokerState = {
-      ...mockBrokerState,
-      settings: { ...mockBrokerState.settings, logLevel: 'debug' },
-    }
+    addRespondingChannel()
 
-    const debugContext: RoutingContext = {
-      ...routingContext,
-      state: debugState,
-    }
-
-    const channel = addChannel(debugState, registry, processManager, actions, 'test-channel', mockWindow)
-    const processId = processManager.create(channel)
-
-    Object.defineProperty(channel, 'getNegotiatedProtocol', { value: () => null, writable: true })
-    Object.defineProperty(channel, 'setNegotiatedProtocol', { value: jest.fn(), writable: true })
-    Object.defineProperty(channel, 'setSecurityReady', { value: jest.fn(), writable: true })
-    Object.defineProperty(channel, 'notifyEvent', { value: jest.fn(), writable: true })
-
-    const action: IAction = {
-      type: '[nexus] connection-opened',
-      processId,
-      senderId: 'remote-broker-1',
-      security: { protocol: 'v2', active: true },
-    }
-
-    const message = <MessageEvent<IAction>>{
-      data: action,
-      origin: 'http://example.com',
-      source: mockWindow,
-    }
-
-    handleOpen(debugContext, message)
+    handleOpen(routingContext, openEvent('process-1', { protocol: 'v2', active: true }))
 
     expect(mockLogger.info).toHaveBeenCalledWith(expect.stringContaining('security ready'))
   })
 
   it('marks security ready for no security confirmation', () => {
-    const channel = addChannel(mockBrokerState, registry, processManager, actions, 'test-channel', mockWindow)
-    const processId = processManager.create(channel)
+    const channel = addRespondingChannel()
 
-    const setSecurityReadyMock = jest.fn()
-    const notifyEventMock = jest.fn()
-    Object.defineProperty(channel, 'setSecurityReady', { value: setSecurityReadyMock, writable: true })
-    Object.defineProperty(channel, 'notifyEvent', { value: notifyEventMock, writable: true })
+    handleOpen(routingContext, openEvent())
 
-    const action: IAction = {
-      type: '[nexus] connection-opened',
-      processId,
-      senderId: 'remote-broker-1',
-    }
-
-    const message = <MessageEvent<IAction>>{
-      data: action,
-      origin: 'http://example.com',
-      source: mockWindow,
-    }
-
-    handleOpen(routingContext, message)
-
-    expect(setSecurityReadyMock).toHaveBeenCalledWith(true)
+    expect(channel.isSecurityReady()).toBe(true)
   })
 
   it('handles multiple open events for different channels', () => {
-    const channel1 = addChannel(mockBrokerState, registry, processManager, actions, 'channel-1', mockWindow)
-    const processId1 = processManager.create(channel1)
+    const channel1 = addRespondingChannel('channel-1', mockWindow, 'process-1')
+    const window2 = <Window>(<unknown>{ postMessage: jest.fn() })
+    const channel2 = addRespondingChannel('channel-2', window2, 'process-2')
 
-    const window2 = <Window>(<unknown>{
-      postMessage: jest.fn(),
-      _uniqueId: 'window-2',
-    })
-    const channel2 = addChannel(mockBrokerState, registry, processManager, actions, 'channel-2', window2)
-    const processId2 = processManager.create(channel2)
+    handleOpen(routingContext, openEvent('process-1'))
+    handleOpen(routingContext, openEvent('process-2'))
 
-    const action1: IAction = {
-      type: '[nexus] connection-opened',
-      processId: processId1,
-      senderId: 'remote-1',
-    }
-
-    const action2: IAction = {
-      type: '[nexus] connection-opened',
-      processId: processId2,
-      senderId: 'remote-2',
-    }
-
-    handleOpen(routingContext, <MessageEvent<IAction>>{
-      data: action1,
-      origin: 'http://example1.com',
-      source: mockWindow,
-    })
-
-    handleOpen(routingContext, <MessageEvent<IAction>>{
-      data: action2,
-      origin: 'http://example2.com',
-      source: window2,
-    })
-
-    expect(processManager.get(processId1)).toBeUndefined()
-    expect(processManager.get(processId2)).toBeUndefined()
+    expect([channel1.isActive(), channel2.isActive()]).toEqual([true, true])
   })
 })

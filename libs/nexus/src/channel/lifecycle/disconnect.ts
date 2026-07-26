@@ -1,4 +1,5 @@
 import type { ChannelInternals } from '../types'
+import { clearHandshakeTimers } from './handshake-timers'
 
 /**
  * Gracefully closes an active channel connection.
@@ -24,7 +25,8 @@ export function disconnect(channel: ChannelInternals, notify = true): void {
     return
   }
 
-  channel.updateState({ active: false })
+  clearHandshakeTimers(channel)
+  channel.updateState({ active: false, pendingProcessId: null, pendingAccept: null })
 
   if (notify) {
     const processId = channel.createProcess()

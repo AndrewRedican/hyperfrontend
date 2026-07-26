@@ -183,6 +183,21 @@ Initiator                    Responder
 2. **ACCEPT_CONNECTION** - Responder validates and replies with own contract
 3. **OPEN_CONNECTION** - Initiator confirms, completing handshake
 
+Initiation is symmetric: either side may call `connect()` first, and both orders converge on the same active channel. Simultaneous requests (glare) resolve deterministically — the broker with the lower id yields and answers as responder. Pending REQUEST/ACCEPT messages are re-sent every `requestRetryMs` (default 500 ms) until answered, and every handshake message is idempotent under replay. If the handshake does not complete within `connectTimeoutMs` (default 10 000 ms), the channel fires `connect-timeout` and stays inactive with its queued messages retained; `connect()` may be called again.
+
+During the handshake each side pins the counterpart's origin: subsequent sends target the pinned origin instead of `'*'`, and inbound messages from any other origin are dropped. A channel can also be pre-pinned via the `origin` setting before the first message leaves.
+
+### Contract Compatibility
+
+Both sides exchange contracts during the handshake. Vocabulary differences never gate the connection — only `accepted` entries flagged `required: true` do, and each must appear in the counterpart's `emitted` list or the connection is denied with `Incompatible contract: missing required actions …`. This keeps additive contract evolution non-breaking in both directions:
+
+| Situation                               | Fatal? | Handling                                              |
+| --------------------------------------- | ------ | ----------------------------------------------------- |
+| Peer emits a type outside my vocabulary | No     | Dropped and logged at receive                         |
+| I accept a type the peer never emits    | No     | Nothing — dormant vocabulary                          |
+| I emit a type the peer does not accept  | No     | Peer drops it; the peer's own `required` flags decide |
+| I require an input the peer never emits | Yes    | Connection denied at handshake time                   |
+
 ### Disconnection Flow
 
 ```text
@@ -213,6 +228,17 @@ Initiator                    Responder
 - **DENY_CONNECTION** - Responder rejects based on contract/origin validation failure
 - **INVALID** - Protocol violation detected (malformed action, unknown type, etc.)
 
+### Connection Outcomes
+
+A connection attempt ends in one of four distinct ways, each with its own event:
+
+| Event             | A session existed? | Deliberate? | Who decided             | Wire evidence of a peer | Natural reaction         |
+| ----------------- | ------------------ | ----------- | ----------------------- | ----------------------- | ------------------------ |
+| `close`           | Yes                | Yes         | Either side             | Yes (CLOSE/ACK)         | Handle disconnect        |
+| `cancel`          | No                 | Yes         | Either side             | Yes (CANCEL verb)       | Accept abandonment       |
+| `deny`            | No                 | Yes         | The peer, with a reason | Yes (DENY + reason)     | Fix the integration      |
+| `connect-timeout` | No                 | No          | Nobody — silence        | None                    | Fallback UI, retry later |
+
 ### Lifecycle Events
 
 Channels emit events at key points in the connection lifecycle:
@@ -222,6 +248,7 @@ Channels emit events at key points in the connection lifecycle:
 - **cancel** - Connection attempt cancelled before completion
 - **deny** - Connection request rejected by responder
 - **invalid** - Protocol violation detected
+- **connect-timeout** - Handshake deadline expired with no answer from a counterpart
 
 **Example**:
 
@@ -412,14 +439,14 @@ channel.send('MESSAGE', { hello: 'world' })
 
 ### Types
 
-| Type                 | Description                                               |
-| -------------------- | --------------------------------------------------------- |
-| `IChannelContract`   | Contract with accepted and emitted action arrays          |
-| `IActionDescription` | Action type definition with optional schema               |
-| `BrokerHandle`       | Broker instance interface                                 |
-| `ChannelHandle`      | Channel instance interface                                |
-| `ChannelEvent`       | Lifecycle event types: open, close, cancel, deny, invalid |
-| `IMessage`           | User message with type and optional data                  |
+| Type                 | Description                                                     |
+| -------------------- | --------------------------------------------------------------- |
+| `IChannelContract`   | Contract with accepted and emitted action arrays                |
+| `IActionDescription` | Action type definition with optional schema and `required` flag |
+| `BrokerHandle`       | Broker instance interface                                       |
+| `ChannelHandle`      | Channel instance interface                                      |
+| `ChannelEvent`       | Lifecycle event types: open, close, cancel, deny, invalid       |
+| `IMessage`           | User message with type and optional data                        |
 
 ## Compatibility
 

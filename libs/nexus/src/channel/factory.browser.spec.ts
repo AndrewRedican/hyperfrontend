@@ -194,14 +194,22 @@ describe('channel/factory', () => {
       expect(channel.isReadyToConnect()).toBe(true)
     })
 
-    it('isReadyToConnect returns true for broker-managed channels', () => {
+    it('isReadyToConnect returns false for broker-managed channels before connect() is called', () => {
       const brokerManagedConfig = {
         ...config,
         settings: { brokerManaged: true },
       }
       const channel = createChannel(brokerManagedConfig, deps)
 
-      expect(channel.isReadyToConnect()).toBe(true)
+      expect(channel.isReadyToConnect()).toBe(false)
+    })
+
+    it('registers the channel handle with the process manager', () => {
+      const channel = createChannel(config, deps)
+
+      channel.connect()
+
+      expect(deps.processManager.create).toHaveBeenCalledWith(channel)
     })
 
     it('scheduleActivation stores activation data', () => {
@@ -231,11 +239,14 @@ describe('channel/factory', () => {
       expect(channel.getAcceptedTypes()).toEqual([])
     })
 
-    it('getAcceptedTypes returns the accepted types after activation', () => {
-      const channel = createChannel(config, deps)
-      const contract = { accepted: [{ type: 'msg1' }, { type: 'msg2' }], emitted: [] }
+    it('getAcceptedTypes returns the own accepted types after activation', () => {
+      const configWithContract = {
+        ...config,
+        settings: { contract: { accepted: [{ type: 'msg1' }, { type: 'msg2' }], emitted: [] } },
+      }
+      const channel = createChannel(configWithContract, deps)
 
-      channel.activate('https://example.com', contract)
+      channel.activate('https://example.com', { accepted: [{ type: 'other' }], emitted: [] }, 'peer-1')
 
       expect(channel.getAcceptedTypes()).toEqual(['msg1', 'msg2'])
     })
@@ -300,6 +311,8 @@ describe('channel/factory', () => {
         origin: null,
         connectTimestamp: null,
         contract: null,
+        peerContract: null,
+        peerId: null,
         queuedMessagesCount: 0,
       })
     })

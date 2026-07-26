@@ -8,6 +8,8 @@ import { sendAction } from './send-action'
  * Sends a typed message through an active channel.
  *
  * Message routing behavior:
+ * - Message types outside the contract's emitted actions throw immediately,
+ *   even while the channel is still opening (enqueue-time validation)
  * - If channel is closed and queueMessages is enabled, queues the message
  * - If channel is closed and queueMessages is disabled, throws error
  * - If security transport exists but is not ready, queues the message
@@ -30,6 +32,13 @@ import { sendAction } from './send-action'
 export function send(channel: ChannelInternals, message: IMessage): void {
   const state = channel.getState()
 
+  // why: Enqueue-time validation keeps send() throwing synchronously for bad types instead of dying silently in flush's per-message catch.
+  if (state.contract && !state.contract.emitted.some((a) => a.type === message.type)) {
+    throw createError(
+      `Cannot send message to ${state.name} channel. Message type '${message.type}' is not in the emitted actions of channel contract.`
+    )
+  }
+
   if (!state.active) {
     if (state.queueMessages) {
       queue(channel, message)
@@ -49,8 +58,7 @@ export function send(channel: ChannelInternals, message: IMessage): void {
     throw createError(`Cannot send message. Security transport for channel ${state.name} is not ready.`)
   }
 
-  const emittedTypes = state.contract?.emitted.map((a) => a.type) ?? []
-  if (!emittedTypes.includes(message.type)) {
+  if (!state.contract) {
     throw createError(
       `Cannot send message to ${state.name} channel. Message type '${message.type}' is not in the emitted actions of channel contract.`
     )

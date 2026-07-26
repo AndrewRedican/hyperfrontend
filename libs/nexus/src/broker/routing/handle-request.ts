@@ -2,10 +2,10 @@ import type { IAction, IActionWithContractAndSecurity } from '../../types/action
 import type { ChannelHandle } from '../../types/channel'
 import type { SecurityNegotiationRequest, SecurityProtocolVersion } from '../../types/security'
 import type { RoutingContext } from './types'
-import { getById } from '../../core/registry/get-by-id'
 import { validateContract as validateContractFn } from '../../core/validation/contract'
 import { negotiateProtocol, createSecurityResponse } from '../../security/negotiation/negotiate'
 import { isActionWithContract } from '../../types/action'
+import { findMissingRequiredActions } from '../../utils/validation/find-missing-required-actions'
 import { addChannel } from '../channels/add'
 import { applyPolicy } from '../security/apply-policy'
 
@@ -17,26 +17,28 @@ const DEFAULT_RESPONDER_SUPPORTED: readonly SecurityProtocolVersion[] = ['none']
 
 /**
  * Handles REQUEST_CONNECTION action.
- * Creates or retrieves channel and initiates connection handshake.
+ * Answers the connection request as the responder side of the handshake.
  *
  * @param context - Routing context with state, registry, actions, and logger
  * @param message - Message event containing the REQUEST_CONNECTION action
  *
  * @remarks
  * Side Effects:
- * - Creates new channel if not found in registry
- * - Tracks process ID for handshake completion
- * - Negotiates security protocol if security data present
- * - Sends ACCEPT_CONNECTION if validation passes
- * - Sends DENY_CONNECTION if contract or security policy fails
+ * - Creates a new channel when the source window is unknown
+ * - Drops requests whose origin does not match an already pinned origin
+ * - Replays ACCEPT for duplicate requests from the connected counterpart
+ * - Tears down and re-handshakes when the counterpart window reloaded
+ * - Resolves simultaneous requests (glare) via a broker-id tie-break
+ * - Denies invalid or incompatible contracts and policy-rejected requests
+ * - Pins the origin, tracks the process, sends ACCEPT, and starts the
+ *   responder deadline/retry timers when the local side is ready
+ * - Schedules activation when the local side has not called connect() yet
  *
- * @example Processing connection requests
- * Incoming action triggers:
- * 1. Channel lookup/creation
- * 2. Contract validation
- * 3. Security policy check
- * 4. Security protocol negotiation (if applicable)
- * 5. ACCEPT_CONNECTION response (or DENY if validation fails)
+ * @example Processing a connection request
+ * Incoming REQUEST triggers:
+ * 1. Channel lookup by source window (or creation)
+ * 2. Origin, contract, compatibility, and policy validation
+ * 3. ACCEPT response with deadline/retry (or DENY on failure)
  */
 export function handleRequest(context: RoutingContext, message: MessageEvent<IAction>): void {
   const { state, registry, processManager, actions, logger } = context
@@ -52,15 +54,19 @@ export function handleRequest(context: RoutingContext, message: MessageEvent<IAc
 
   const securityRequest = <SecurityNegotiationRequest | undefined>(<IActionWithContractAndSecurity>action).security
 
-  let channel = <ChannelHandle | undefined>getById(registry, senderId)
+  let channel = <ChannelHandle | undefined>(message.source ? registry.getByWindow(<Window>message.source) : undefined)
   if (!channel) {
     channel = addChannel(state, registry, processManager, actions, senderId, <Window>message.source, {})
   }
 
-  processManager.create(channel)
+  const pinnedOrigin = channel.getOrigin()
+  if (pinnedOrigin !== null && pinnedOrigin !== '*' && pinnedOrigin !== message.origin) {
+    channel.notifyEvent('invalid', { error: `Dropped connection request from unexpected origin '${message.origin}'.`, action })
+    return
+  }
 
   if (channel.isActive()) {
-    if (senderId === channel.id) {
+    if (channel.getPeerId() === senderId) {
       const securityResponse = securityRequest
         ? createSecurityResponse(negotiateProtocol(securityRequest, DEFAULT_RESPONDER_SUPPORTED).negotiated)
         : undefined
@@ -72,10 +78,21 @@ export function handleRequest(context: RoutingContext, message: MessageEvent<IAc
         contract: state.contract,
         ...(securityResponse && { security: securityResponse }),
       })
-    } else {
-      logger.info(`${state.name} detected channel [${channel.getName()}] reloaded.`)
+      return
     }
-    return
+
+    // why: A different sender id from the same window means the counterpart reloaded; tear down silently and fall through to a fresh handshake.
+    logger.info(`${state.name} detected channel [${channel.getName()}] reloaded.`)
+    channel.disconnect(false)
+  }
+
+  if (channel.getPendingProcessId()) {
+    // why: Glare tie-break — the broker with the lower id yields and answers as responder; the higher id lets its own retried REQUEST win.
+    if (state.id < senderId) {
+      channel.abandonRequest()
+    } else {
+      return
+    }
   }
 
   try {
@@ -87,7 +104,17 @@ export function handleRequest(context: RoutingContext, message: MessageEvent<IAc
       senderId: state.id,
       error: 'Invalid contract.',
     })
-    processManager.remove(processId)
+    return
+  }
+
+  const missingRequired = findMissingRequiredActions(state.contract, contract)
+  if (missingRequired.length > 0) {
+    channel.sendAction({
+      type: '[nexus] connection-request-denied',
+      processId,
+      senderId: state.id,
+      error: `Incompatible contract: missing required actions ${missingRequired.join(', ')}.`,
+    })
     return
   }
 
@@ -100,7 +127,6 @@ export function handleRequest(context: RoutingContext, message: MessageEvent<IAc
         senderId: state.id,
         error: 'Not accepted.',
       })
-      processManager.remove(processId)
       return
     }
   }
@@ -108,6 +134,9 @@ export function handleRequest(context: RoutingContext, message: MessageEvent<IAc
   if (securityRequest) {
     channel.setPendingSecurityRequest(securityRequest)
   }
+
+  // why: The initiator confirms with OPEN carrying this processId, so it is tracked up front for handleOpen to resolve back to this channel.
+  processManager.track(processId, channel)
 
   if (!channel.isReadyToConnect()) {
     channel.scheduleActivation(senderId, message.origin, contract, processId)
@@ -125,9 +154,7 @@ export function handleRequest(context: RoutingContext, message: MessageEvent<IAc
     logger.info(`${state.name} negotiated security protocol: ${result.negotiated}`)
   }
 
-  channel.activate(message.origin, contract)
-
-  channel.sendAction({
+  channel.beginResponse(senderId, message.origin, contract, processId, {
     type: '[nexus] connection-request-accepted',
     processId,
     senderId: state.id,

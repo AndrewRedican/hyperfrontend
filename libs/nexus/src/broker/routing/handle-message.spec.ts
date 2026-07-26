@@ -67,7 +67,7 @@ describe('handleMessage', () => {
 
   function addConnectedChannel(name: string, target: Window) {
     const channel = addChannel(mockBrokerState, registry, processManager, actions, name, target)
-    channel.connect()
+    channel.activate('*', validContract, 'remote-broker-1')
     return channel
   }
 
@@ -92,7 +92,7 @@ describe('handleMessage', () => {
     expect(notifySpy).toHaveBeenCalledWith({ type: 'test-message', data: 'Hello' })
   })
 
-  it('falls back to sender id lookup when the event has no source window', () => {
+  it('ignores messages without a source window even when the sender id matches', () => {
     const channel = addConnectedChannel('test-channel', mockWindow)
     const notifySpy = jest.spyOn(channel, 'notifyMessage')
 
@@ -110,7 +110,7 @@ describe('handleMessage', () => {
       source: null,
     })
 
-    expect(notifySpy).toHaveBeenCalledWith({ type: 'test-message', data: 'Hello' })
+    expect(notifySpy).not.toHaveBeenCalled()
   })
 
   it('ignore if channel not found', () => {

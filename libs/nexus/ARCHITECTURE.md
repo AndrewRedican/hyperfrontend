@@ -183,8 +183,11 @@ interface IActionDescription {
   type: string // Message type identifier
   description?: string // Human-readable description
   schema?: object // Optional JSON Schema for validation
+  required?: boolean // Accepted entries only: deny the connection unless the peer emits this type
 }
 ```
+
+Contracts are exchanged during the handshake. Unknown inbound types are dropped and logged; only `accepted` entries flagged `required` gate the connection (the peer must emit them), so additive contract evolution is non-breaking in both directions.
 
 ### 4. Actions (Protocol Messages)
 
@@ -233,6 +236,8 @@ sequenceDiagram
     Note over HostB: [CHANNEL OPEN]<br/>Event: 'open'
 ```
 
+Initiation is symmetric — either side may `connect()` first, and simultaneous requests (glare) resolve by broker-id tie-break (the lower id yields and answers as responder). Pending REQUEST/ACCEPT frames are re-sent every `requestRetryMs` until answered; all three handshake messages are idempotent under replay. A handshake that stays unanswered past `connectTimeoutMs` fires `connect-timeout` and leaves the channel inactive, reconnectable, with queued messages retained. Each side pins the counterpart's origin during the handshake; subsequent sends target the pin and mismatched inbound origins are dropped.
+
 **Internal Sequence:**
 
 ```mermaid
@@ -247,14 +252,14 @@ sequenceDiagram
     participant HostB as Host B (Responder)
 
     Note over HostA: channel.connect()
-    Note over HostA: [createProcess]
+    Note over HostA: [createProcess]<br/>[start retry + deadline timers]
     HostA->>HostB: [send REQUEST_CONNECTION]
-    Note over HostB: [handleRequest]<br/>[addChannel if new]<br/>[trackProcess]<br/>[validateContract]<br/>[applySecurityPolicy]<br/>[activate]
+    Note over HostB: [handleRequest]<br/>[addChannel if new]<br/>[validateContract]<br/>[requirements gate]<br/>[applySecurityPolicy]<br/>[trackProcess]<br/>[pin origin]<br/>[send ACCEPT + retry/deadline]
     HostB->>HostA: [send ACCEPT_CONNECTION]
-    Note over HostA: [handleAccept]<br/>[validateContract]<br/>[applySecurityPolicy]<br/>[activate]
+    Note over HostA: [handleAccept]<br/>[validateContract]<br/>[applySecurityPolicy]<br/>[requirements gate]<br/>[pin origin]<br/>[activate + flush]
     HostA->>HostB: [send OPEN_CONNECTION]
     Note over HostA: [terminateProcess]<br/>[notifyEvent('open')]<br/>[ACTIVE]
-    Note over HostB: [handleOpen]<br/>[terminateProcess]<br/>[notifyEvent('open')]<br/>[ACTIVE]
+    Note over HostB: [handleOpen]<br/>[activate + flush]<br/>[terminateProcess]<br/>[notifyEvent('open')]<br/>[ACTIVE]
 ```
 
 ### Denial Flow
@@ -274,7 +279,7 @@ sequenceDiagram
 
     Note over HostA: channel.connect()
     HostA->>HostB: [send REQUEST_CONNECTION]
-    Note over HostB: [handleRequest]<br/>[validateContract FAILS]<br/>— or —<br/>[securityPolicy REJECTS]
+    Note over HostB: [handleRequest]<br/>[validateContract FAILS]<br/>— or —<br/>[required action missing]<br/>— or —<br/>[securityPolicy REJECTS]
     HostB->>HostA: [send DENY_CONNECTION]
     Note over HostB: [terminateProcess]
     Note over HostA: [handleDeny]<br/>[terminateProcess]<br/>[notifyEvent('deny')]<br/>[CLOSED - never connected]
@@ -314,6 +319,7 @@ stateDiagram-v2
     [*] --> INITIAL
     INITIAL --> CONNECTING: connect()
     CONNECTING --> DENIED: DENY
+    CONNECTING --> INITIAL: deadline expiry ('connect-timeout')
     CONNECTING --> ACTIVE: ACCEPT + OPEN
     ACTIVE --> CLOSED: disconnect()
     DENIED --> [*]
@@ -328,10 +334,10 @@ Each protocol action is processed by a dedicated handler. All handlers receive t
 
 | Handler                    | Responsibilities                                                                                                                                                                   |
 | -------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `handleRequest`            | Validate contract, apply policy, activate channel, send ACCEPT                                                                                                                     |
-| `handleAccept`             | Validate contract, apply policy, activate, send OPEN, notify 'open'                                                                                                                |
-| `handleOpen`               | Terminate process, notify 'open' (responder side)                                                                                                                                  |
-| `handleDeny`               | Terminate process, notify 'deny' with error context                                                                                                                                |
+| `handleRequest`            | Enforce origin pin, resolve glare/reload, validate contract + requirements, apply policy, track process, pin origin, send ACCEPT with retry/deadline (or schedule until connect()) |
+| `handleAccept`             | Resolve by process or source window, enforce origin pin, validate contract + requirements, apply policy, activate + flush, send OPEN, notify 'open'                                |
+| `handleOpen`               | Activate from the pending accept, flush queue, terminate process, notify 'open' (responder side)                                                                                   |
+| `handleDeny`               | Abandon the pending request (stop retrying), terminate process, notify 'deny' with error context                                                                                   |
 | `handleCancel`             | Cancel channel, send CANCEL_ACK, notify 'cancel'                                                                                                                                   |
 | `handleCancelAcknowledged` | Terminate process, notify 'cancel' (initiator side)                                                                                                                                |
 | `handleClose`              | Disconnect channel, send CLOSE_ACK, notify 'close'                                                                                                                                 |
@@ -348,13 +354,14 @@ Channels emit lifecycle events to subscribers. Each event has a specific trigger
 
 ### Lifecycle Events
 
-| Event       | Trigger                             | Payload                |
-| ----------- | ----------------------------------- | ---------------------- |
-| `'open'`    | Connection successfully established | `{ origin, contract }` |
-| `'close'`   | Connection gracefully closed        | `{ notify: boolean }`  |
-| `'cancel'`  | Pending connection cancelled        | `{ notify: boolean }`  |
-| `'deny'`    | Connection request rejected         | `{ error, origin }`    |
-| `'destroy'` | Connection force-destroyed          | `{}`                   |
+| Event               | Trigger                                   | Payload                |
+| ------------------- | ----------------------------------------- | ---------------------- |
+| `'open'`            | Connection successfully established       | `{ origin, contract }` |
+| `'close'`           | Connection gracefully closed              | `{ notify: boolean }`  |
+| `'cancel'`          | Pending connection cancelled              | `{ notify: boolean }`  |
+| `'deny'`            | Connection request rejected               | `{ error, origin }`    |
+| `'connect-timeout'` | Handshake deadline expired with no answer | `{ elapsedMs }`        |
+| `'destroy'`         | Connection force-destroyed                | `{}`                   |
 
 ### Security Events
 

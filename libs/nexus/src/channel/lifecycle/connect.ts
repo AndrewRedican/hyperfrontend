@@ -1,25 +1,33 @@
 import type { ChannelInternals } from '../types'
 import { dateNow } from '@hyperfrontend/immutable-api-utils/built-in-copy/date'
-import { flush } from '../messaging/flush'
+import { beginResponse } from './begin-response'
+import { expireHandshake, startHandshakeTimers } from './handshake-timers'
 
 /**
  * Initiates the connection handshake for a channel.
  *
- * - If channel is already open, does nothing
- * - If channel has a scheduled activation (pending connection), accepts it
- * - Otherwise, sends REQUEST_CONNECTION to initiate handshake
+ * - If the channel is already open or mid-handshake, does nothing
+ * - If a REQUEST arrived before connect() (scheduled activation), answers it
+ *   as the responder: sends ACCEPT and waits for OPEN
+ * - Otherwise acts as the initiator: sends REQUEST, re-sends it every
+ *   `requestRetryMs`, and fires 'connect-timeout' if no ACCEPT arrives within
+ *   `connectTimeoutMs`
+ *
+ * The channel becomes active only when the wire handshake completes; after
+ * a 'connect-timeout' the channel stays inactive with queued messages retained, and
+ * connect() may be called again.
  *
  * @param channel - Channel internals with state and dependencies
  *
  * @example Initiating a connection
  * ```typescript
- * connect(channel) // Sends REQUEST_CONNECTION or accepts pending
+ * connect(channel) // Sends REQUEST_CONNECTION or answers a pending request
  * ```
  */
 export function connect(channel: ChannelInternals): void {
   const state = channel.getState()
 
-  if (state.active) {
+  if (state.active || state.pendingProcessId || state.pendingAccept) {
     return
   }
 
@@ -32,40 +40,14 @@ export function connect(channel: ChannelInternals): void {
   }
 
   if (state.scheduledActivation) {
-    const [senderId, origin, contract, processId] = state.scheduledActivation
-
-    channel.updateState({
-      id: senderId,
-      origin,
-      contract,
-      acceptedActions: contract.accepted.map((a) => a.type),
-      active: true,
-      scheduledActivation: null,
-    })
-
-    const acceptAction = channel.actions.acceptConnection(processId)
-    channel.sendAction(acceptAction)
-
-    channel.notifyEvent('open', { id: senderId, origin })
-
-    return
-  }
-
-  if (state.brokerManaged && state.contract) {
-    channel.updateState({
-      origin: '*',
-      active: true,
-      acceptedActions: state.contract.accepted.map((a) => a.type),
-    })
-
-    channel.notifyEvent('open', { id: state.id, origin: '*' })
-
-    flush(channel)
-
+    beginResponse(channel, state.scheduledActivation, channel.actions.acceptConnection(state.scheduledActivation[3]))
     return
   }
 
   const processId = channel.createProcess()
+  channel.updateState({ pendingProcessId: processId })
   const requestAction = channel.actions.requestConnection(processId)
+  // why: Timers start before the send so a synchronously delivered ACCEPT finds them registered and clears them.
+  startHandshakeTimers(channel, requestAction, () => expireHandshake(channel, processId))
   channel.sendAction(requestAction)
 }

@@ -1,4 +1,5 @@
 import type { Logger, LogLevel } from '@hyperfrontend/logging'
+import type { IAction } from './action'
 import type { IChannelContract } from './contract'
 import type { ChannelEvent, EventCallbackMap } from './events'
 import type { IMessage } from './message'
@@ -30,10 +31,14 @@ export interface IChannelSettings {
   logLevel?: LogLevel
   /** Custom logger instance to use */
   logger?: Logger
-  /** Whether the channel is managed by a broker (auto-activates on connect) */
+  /** Whether the channel is managed by a broker */
   brokerManaged?: boolean
   /** Security settings for protocol negotiation and encryption */
   security?: ChannelSecuritySettings
+  /** Milliseconds a connection attempt may remain unanswered before firing 'connect-timeout' (default: 10000) */
+  connectTimeoutMs?: number
+  /** Milliseconds between handshake re-sends while a connection attempt is pending (default: 500) */
+  requestRetryMs?: number
 }
 
 /**
@@ -83,11 +88,27 @@ export interface ChannelState {
   readonly messageSubscriptions: readonly MessageHandler[]
   /** Pending connection data (null when no connection pending) */
   readonly scheduledActivation: ScheduledActivation | null
+  /** Contract declared by the connected counterpart (null before handshake completes) */
+  readonly peerContract: IChannelContract | null
+  /** Broker id of the connected counterpart (null before handshake completes) */
+  readonly peerId: string | null
+  /** Process id of our own outstanding connection request (null when not requesting) */
+  readonly pendingProcessId: string | null
+  /** Connection data held while waiting for the counterpart's OPEN (null when not responding) */
+  readonly pendingAccept: ScheduledActivation | null
+  /** Interval handle re-sending the pending handshake message (null when idle) */
+  readonly retryTimer: ReturnType<typeof setInterval> | null
+  /** Timeout handle enforcing the connection deadline (null when idle) */
+  readonly deadlineTimer: ReturnType<typeof setTimeout> | null
+  /** Milliseconds a connection attempt may remain unanswered before firing 'connect-timeout' */
+  readonly connectTimeoutMs: number
+  /** Milliseconds between handshake re-sends while a connection attempt is pending */
+  readonly requestRetryMs: number
   /** Whether to queue messages when channel is closed */
   readonly queueMessages: boolean
   /** Logger instance for this channel (null if not configured) */
   readonly logger: Logger | null
-  /** Whether channel was created by broker (enables auto-activation) */
+  /** Whether channel was created by a broker */
   readonly brokerManaged: boolean
   /** Whether connect() has been called (ready to accept connections) */
   readonly readyToConnect: boolean
@@ -118,6 +139,10 @@ export interface ChannelJSON {
   connectTimestamp: number | null
   /** Channel contract */
   contract: IChannelContract | null
+  /** Contract declared by the connected counterpart */
+  peerContract: IChannelContract | null
+  /** Broker id of the connected counterpart */
+  peerId: string | null
   /** Number of queued messages */
   queuedMessagesCount: number
 }
@@ -142,6 +167,14 @@ export interface ChannelHandle {
   getTarget(): Window
   /** Check if channel is active */
   isActive(): boolean
+  /** Get the currently pinned origin ('*' or null when unpinned) */
+  getOrigin(): string | null
+  /** Get the broker id of the connected counterpart (null before handshake completes) */
+  getPeerId(): string | null
+  /** Get the contract declared by the connected counterpart (null before handshake completes) */
+  getPeerContract(): IChannelContract | null
+  /** Get the process id of our own outstanding connection request (null when not requesting) */
+  getPendingProcessId(): string | null
   /** Get the message types this channel accepts from its counterpart (empty before activation) */
   getAcceptedTypes(): readonly string[]
   /** Get channel as serializable JSON */
@@ -182,7 +215,35 @@ export interface ChannelHandle {
    * Activates the channel with connection details.
    * Called when connection handshake completes.
    */
-  activate(origin: string, contract: IChannelContract): void
+  activate(origin: string, peerContract: IChannelContract, peerId?: string): void
+
+  /**
+   * Answers an inbound connection request: pins the origin, records the
+   * pending activation, sends ACCEPT, and re-sends it until OPEN arrives
+   * or the connection deadline expires.
+   */
+  beginResponse(senderId: string, origin: string, contract: IChannelContract, processId: string, acceptAction: IAction): void
+
+  /**
+   * Abandons our own outstanding connection request: clears the handshake
+   * timers and removes the pending process. Used when yielding a glare
+   * tie-break or when the counterpart denies the connection.
+   */
+  abandonRequest(): void
+
+  /**
+   * Completes the handshake on the initiator side: clears timers, activates
+   * with the counterpart's details, sends the reply action, and flushes the
+   * outbound queue.
+   */
+  completeConnection(origin: string, peerContract: IChannelContract, peerId: string, replyAction: IAction): void
+
+  /**
+   * Completes the handshake on the responder side from the recorded pending
+   * activation: clears timers, activates, and flushes the outbound queue.
+   * Returns false when no activation is pending (stale or duplicate OPEN).
+   */
+  completeScheduledOpen(): boolean
 
   /**
    * Checks if channel is ready to accept connections.

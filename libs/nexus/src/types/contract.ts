@@ -6,6 +6,12 @@ export interface IActionDescription {
   description?: string
   /** JSON schema for validating action payload */
   schema?: object
+  /**
+   * Marks an accepted action as essential for correct operation: the
+   * connection is denied unless the counterpart emits this type. Only
+   * meaningful on `accepted` entries; ignored on `emitted`.
+   */
+  required?: boolean
 }
 
 /**
@@ -16,6 +22,8 @@ export interface IActionDescription {
  * the message types this side is willing to receive. Outgoing messages are
  * validated against `emitted`; incoming messages are validated against
  * `accepted` and silently dropped (with a log entry) when not listed.
+ * Accepted entries flagged `required` additionally gate the connection:
+ * a counterpart that does not emit them is denied at handshake time.
  */
 export interface IChannelContract {
   /** Message types this side sends to its counterpart */

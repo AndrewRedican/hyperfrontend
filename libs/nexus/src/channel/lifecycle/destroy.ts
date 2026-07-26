@@ -1,4 +1,5 @@
 import type { ChannelInternals } from '../types'
+import { clearHandshakeTimers } from './handshake-timers'
 
 /**
  * Immediately destroys a channel and removes it from the broker.
@@ -19,7 +20,8 @@ import type { ChannelInternals } from '../types'
  * ```
  */
 export function destroy(channel: ChannelInternals, notify = true): void {
-  channel.updateState({ active: false })
+  clearHandshakeTimers(channel)
+  channel.updateState({ active: false, pendingProcessId: null, pendingAccept: null, scheduledActivation: null })
 
   if (notify) {
     const destroyAction = channel.actions.destroyConnection()

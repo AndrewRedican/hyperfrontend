@@ -33,6 +33,9 @@ export function handleDeny(context: RoutingContext, message: MessageEvent<IActio
     return
   }
 
+  // why: A denied request must stop retrying, or REQUEST would be re-sent (and re-denied) until the deadline expires.
+  channel.abandonRequest()
+
   processManager.remove(processId)
 
   channel.notifyEvent('deny', { error, origin: message.origin })

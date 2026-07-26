@@ -8,7 +8,11 @@ import type { ChannelInternals, ChannelDependencies } from './types'
 import { freeze } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
 import { assertNoCircularRef } from '../utils/validation/assert-no-circular-ref'
 import { DEFAULT_CHANNEL_SETTINGS } from './defaults'
+import { abandonRequest } from './lifecycle/abandon-request'
+import { beginResponse } from './lifecycle/begin-response'
 import { cancel } from './lifecycle/cancel'
+import { completeConnection } from './lifecycle/complete-connection'
+import { completeScheduledOpen } from './lifecycle/complete-open'
 import { connect } from './lifecycle/connect'
 import { destroy } from './lifecycle/destroy'
 import { disconnect } from './lifecycle/disconnect'
@@ -60,7 +64,8 @@ export function createChannel(config: IChannelConfig, deps: ChannelDependencies)
     },
 
     createProcess: () => {
-      return deps.processManager.create(internals)
+      // why: Routing handlers look processes up and call ChannelHandle methods on the result, so processes must map to the public handle.
+      return deps.processManager.create(handle)
     },
 
     removeProcess: (processId: string) => {
@@ -89,6 +94,10 @@ export function createChannel(config: IChannelConfig, deps: ChannelDependencies)
     getName: () => state.name,
     getTarget: () => state.target,
     isActive: () => state.active,
+    getOrigin: () => state.origin,
+    getPeerId: () => state.peerId,
+    getPeerContract: () => state.peerContract,
+    getPendingProcessId: () => state.pendingProcessId,
     getAcceptedTypes: () => state.acceptedActions,
     toJSON: (): ChannelJSON => ({
       id: state.id,
@@ -97,6 +106,8 @@ export function createChannel(config: IChannelConfig, deps: ChannelDependencies)
       origin: state.origin,
       connectTimestamp: state.connectTimestamp,
       contract: state.contract,
+      peerContract: state.peerContract,
+      peerId: state.peerId,
       queuedMessagesCount: state.queuedMessages.length,
     }),
 
@@ -116,13 +127,29 @@ export function createChannel(config: IChannelConfig, deps: ChannelDependencies)
     },
     onMessage: (handler) => subscribeToMessages(internals, handler),
 
-    activate: (origin: string, contract: IChannelContract) => {
-      const newState = activateState(state, origin, contract)
+    activate: (origin: string, peerContract: IChannelContract, peerId?: string) => {
+      const newState = activateState(state, origin, peerContract, peerId ?? null)
       internals.updateState(newState)
     },
 
+    beginResponse: (senderId: string, origin: string, contract: IChannelContract, processId: string, acceptAction: IAction) => {
+      beginResponse(internals, <const>[senderId, origin, contract, processId], acceptAction)
+    },
+
+    abandonRequest: () => {
+      abandonRequest(internals)
+    },
+
+    completeConnection: (origin: string, peerContract: IChannelContract, peerId: string, replyAction: IAction) => {
+      completeConnection(internals, origin, peerContract, peerId, replyAction)
+    },
+
+    completeScheduledOpen: () => {
+      return completeScheduledOpen(internals)
+    },
+
     isReadyToConnect: () => {
-      return state.readyToConnect || state.brokerManaged
+      return state.readyToConnect
     },
 
     scheduleActivation: (senderId: string, origin: string, contract: IChannelContract, processId: string) => {

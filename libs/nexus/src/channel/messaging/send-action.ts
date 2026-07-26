@@ -55,5 +55,6 @@ export function sendAction(channel: ChannelInternals, action: IAction): void {
     return
   }
 
-  state.target.postMessage(action, '*')
+  // why: Sends target the pinned origin once learned; '*' covers the pre-pin window and opaque ('null') origins, which postMessage cannot target.
+  state.target.postMessage(action, state.origin === null || state.origin === 'null' ? '*' : state.origin)
 }

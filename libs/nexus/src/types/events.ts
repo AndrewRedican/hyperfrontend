@@ -6,7 +6,16 @@ import type { SecurityProtocolVersion } from './security'
 /**
  * Channel lifecycle event types
  */
-export type ChannelEvent = 'open' | 'close' | 'cancel' | 'deny' | 'invalid' | 'security-negotiated' | 'security-ready' | 'security-error'
+export type ChannelEvent =
+  | 'open'
+  | 'close'
+  | 'cancel'
+  | 'deny'
+  | 'invalid'
+  | 'connect-timeout'
+  | 'security-negotiated'
+  | 'security-ready'
+  | 'security-error'
 
 /**
  * Data payload for OPEN event
@@ -50,6 +59,14 @@ export interface InvalidEventData {
   error: string
   /** The invalid action that was received (if available) */
   action?: IAction
+}
+
+/**
+ * Data payload for CONNECT_TIMEOUT event
+ */
+export interface ConnectTimeoutEventData {
+  /** Milliseconds elapsed since the connection attempt started */
+  elapsedMs: number
 }
 
 /**
@@ -107,6 +124,7 @@ export type EventData =
   | EventEnvelope<'cancel', CancelEventData>
   | EventEnvelope<'deny', DenyEventData>
   | EventEnvelope<'invalid', InvalidEventData>
+  | EventEnvelope<'connect-timeout', ConnectTimeoutEventData>
   | EventEnvelope<'security-negotiated', SecurityNegotiatedEventData>
   | EventEnvelope<'security-ready', SecurityReadyEventData>
   | EventEnvelope<'security-error', SecurityErrorEventData>
@@ -137,6 +155,11 @@ export type DenyEventHandler = (event: 'deny', data: DenyEventData, channel: Cha
 export type InvalidEventHandler = (event: 'invalid', data: InvalidEventData, channel: ChannelJSON) => void
 
 /**
+ * Type-safe event handler for CONNECT_TIMEOUT events
+ */
+export type ConnectTimeoutEventHandler = (event: 'connect-timeout', data: ConnectTimeoutEventData, channel: ChannelJSON) => void
+
+/**
  * Type-safe event handler for SECURITY_NEGOTIATED events
  */
 export type SecurityNegotiatedEventHandler = (event: 'security-negotiated', data: SecurityNegotiatedEventData, channel: ChannelJSON) => void
@@ -160,6 +183,7 @@ export type TypedEventHandler =
   | CancelEventHandler
   | DenyEventHandler
   | InvalidEventHandler
+  | ConnectTimeoutEventHandler
   | SecurityNegotiatedEventHandler
   | SecurityReadyEventHandler
   | SecurityErrorEventHandler
@@ -188,6 +212,11 @@ export type DenyCallback = (data: DenyEventData, channel: ChannelJSON) => void
  * Simplified callback for INVALID events (event name omitted)
  */
 export type InvalidCallback = (data: InvalidEventData, channel: ChannelJSON) => void
+
+/**
+ * Simplified callback for CONNECT_TIMEOUT events (event name omitted)
+ */
+export type ConnectTimeoutCallback = (data: ConnectTimeoutEventData, channel: ChannelJSON) => void
 
 /**
  * Simplified callback for SECURITY_NEGOTIATED events (event name omitted)
@@ -219,6 +248,8 @@ export interface EventCallbackMap {
   deny: DenyCallback
   /** Callback for invalid events */
   invalid: InvalidCallback
+  /** Callback for connect-timeout events */
+  'connect-timeout': ConnectTimeoutCallback
   /** Callback for security-negotiated events */
   'security-negotiated': SecurityNegotiatedCallback
   /** Callback for security-ready events */

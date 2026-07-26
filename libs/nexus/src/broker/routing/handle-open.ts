@@ -12,7 +12,9 @@ import type { RoutingContext } from './types'
  *
  * @remarks
  * Side Effects:
- * - Terminates the connection process
+ * - Terminates the connection process (duplicate OPENs no-op on the bail)
+ * - Activates the channel from the pending activation recorded at ACCEPT
+ *   time, clears the handshake timers, and flushes the outbound queue
  * - Extracts security confirmation (if present)
  * - Marks security as ready if security is active
  * - Fires 'open' lifecycle event on responder's side
@@ -38,6 +40,10 @@ export function handleOpen(context: RoutingContext, message: MessageEvent<IActio
 
   processManager.remove(processId)
 
+  if (!channel.completeScheduledOpen()) {
+    return
+  }
+
   if (securityConfirmation) {
     if (!channel.getNegotiatedProtocol()) {
       channel.setNegotiatedProtocol(securityConfirmation.protocol)
@@ -55,5 +61,5 @@ export function handleOpen(context: RoutingContext, message: MessageEvent<IActio
     channel.setSecurityReady(true)
   }
 
-  channel.notifyEvent('open', { origin: message.origin })
+  channel.notifyEvent('open', { origin: message.origin, contract: channel.getPeerContract() })
 }
