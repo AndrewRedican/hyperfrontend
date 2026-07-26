@@ -31,9 +31,21 @@ describe('registerSecurity', () => {
     expect(registerSecurity(createMockBroker().broker, 'v2', 'secret')).toEqual({ security: { protocol: 'v2', sharedKey: 'secret' } })
   })
 
-  it('defaults the v2 shared key to an empty string when omitted', () => {
-    registerSecurity(createMockBroker().broker, 'v2', undefined)
-    expect(createV2Protocol).toHaveBeenCalledWith({ id: 'logger' }, '')
+  it('throws for the v2 protocol when the shared key is omitted', () => {
+    expect(() => registerSecurity(createMockBroker().broker, 'v2', undefined)).toThrow(
+      'Security protocol \'v2\' requires a pre-shared key: set the "sharedKey" option to a non-empty string.'
+    )
+  })
+
+  it('throws for the v2 protocol when the shared key is an empty string', () => {
+    expect(() => registerSecurity(createMockBroker().broker, 'v2', '')).toThrow(
+      'Security protocol \'v2\' requires a pre-shared key: set the "sharedKey" option to a non-empty string.'
+    )
+  })
+
+  it('never constructs the v2 provider from a missing key', () => {
+    expect(() => registerSecurity(createMockBroker().broker, 'v2', undefined)).toThrow()
+    expect(createV2Protocol).not.toHaveBeenCalledWith(expect.anything(), '')
   })
 
   it('passes the broker logger to the v1 provider factory', () => {
