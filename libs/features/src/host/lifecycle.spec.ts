@@ -85,7 +85,13 @@ function setup(config: { target?: Window | null; settings?: Record<string, unkno
   })
   const emitter = createEventEmitter()
   const base = <ShellOptions>{ container: '#shell' }
-  const handle = createShellHandle(broker, base, emitter, { selectMount, registerSecurity, createHeartbeatMonitor })
+  // note: A schema-free contract keeps payload validation inert here; that path is covered by lifecycle.validation.spec.ts.
+  const handle = createShellHandle(broker, base, emitter, {
+    contract: { emitted: [], accepted: [] },
+    selectMount,
+    registerSecurity,
+    createHeartbeatMonitor,
+  })
   return {
     handle,
     mock,

@@ -52,6 +52,18 @@ function setup() {
   const broker = <BrokerHandle>(<unknown>{ addChannel: jest.fn(() => mock.channel) })
   const mount = jest.fn((): MountResult => ({ target: TARGET, cleanup: jest.fn() }))
   const handle = createShellHandle(broker, <ShellOptions>{ container: '#shell' }, createEventEmitter(), {
+    // why: The '__hf:' envelope types carry schemas no envelope object satisfies, so every flow below fails if request/response traffic is ever routed through send or receive payload validation.
+    contract: {
+      emitted: [
+        { type: 'setTimezone', schema: { type: 'object', required: ['tz'] } },
+        { type: '__hf:request', schema: { type: 'string' } },
+        { type: '__hf:response', schema: { type: 'string' } },
+      ],
+      accepted: [
+        { type: '__hf:request', schema: { type: 'string' } },
+        { type: '__hf:response', schema: { type: 'string' } },
+      ],
+    },
     selectMount: jest.fn(() => mount),
     registerSecurity: jest.fn(() => undefined),
     createHeartbeatMonitor: jest.fn(() => ({ beat: jest.fn(), start: jest.fn(), stop: jest.fn() })),
@@ -78,6 +90,19 @@ describe('createShellHandle request/response', () => {
     )
     ctx.mock.triggerMessage('__hf:response', { correlationId: sentEnvelope(ctx.mock.send)['correlationId'], from: 'feature', ok: true })
     await pending
+  })
+
+  it('completes a request whose inner payload violates the emitted schema for its inner type', async () => {
+    const ctx = setup()
+    ctx.handle.open()
+    const pending = ctx.handle.request('setTimezone', { timezone: 'UTC' })
+    ctx.mock.triggerMessage('__hf:response', {
+      correlationId: sentEnvelope(ctx.mock.send)['correlationId'],
+      from: 'feature',
+      ok: true,
+      payload: 'applied',
+    })
+    await expect(pending).resolves.toBe('applied')
   })
 
   it('resolves a request when the feature responds', async () => {

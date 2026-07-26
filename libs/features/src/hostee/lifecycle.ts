@@ -1,12 +1,13 @@
 import type { BrokerHandle, ChannelHandle, IMessage } from '@hyperfrontend/nexus'
 import type { EventEmitter } from '../shared/event-emitter'
 import type { RequestOptions } from '../shared/request'
-import type { SecurityProtocol } from '../shared/types'
+import type { FeatureContract, SecurityProtocol } from '../shared/types'
 import type { FeatureHandle } from './types'
 import { createError } from '@hyperfrontend/immutable-api-utils/built-in-copy/error'
 import { freeze } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
 import { createPromise, promiseReject } from '@hyperfrontend/immutable-api-utils/built-in-copy/promise'
 import { isControlType } from '../shared/control'
+import { assertSendPayload, buildActionIndex, checkReceivePayload } from '../shared/payload-validation'
 import { createRequestPeer } from '../shared/request'
 import { registerSecurity } from '../shared/security'
 import { createContractCompat } from '../shared/version-compat'
@@ -37,7 +38,7 @@ export function resolveHostWindow(win: Window): Window | null {
 }
 
 /**
- * Timing and security settings for the hostee handshake.
+ * Contract, timing, and security settings for the hostee handshake.
  */
 export interface FeatureHandleSettings {
   /** Milliseconds the feature waits for the host before `ready()` rejects. */
@@ -46,6 +47,13 @@ export interface FeatureHandleSettings {
   protocol?: SecurityProtocol
   /** Pre-shared key used by the `v2` protocol. */
   sharedKey?: string
+  /**
+   * The feature's own combined contract. Its `emitted` schemas validate every
+   * outgoing payload (an invalid send throws in the feature's frame) and its
+   * `accepted` schemas validate every incoming payload (an invalid message is
+   * dropped and surfaced as an `error` event).
+   */
+  contract: FeatureContract
 }
 
 /**
@@ -54,12 +62,12 @@ export interface FeatureHandleSettings {
  * @param broker - The nexus broker for this feature.
  * @param hostWindow - The resolved host window, or `null` when unembedded.
  * @param emitter - The subscription registry backing `handle.on`.
- * @param settings - Optional handshake timing and security settings.
+ * @param settings - Contract, handshake timing, and security settings.
  * @returns The frozen {@link FeatureHandle}.
  *
  * @example Assembling a feature handle around a broker
  * ```typescript
- * const handle = createFeatureHandle(broker, resolveHostWindow(window), emitter)
+ * const handle = createFeatureHandle(broker, resolveHostWindow(window), emitter, { contract })
  * await handle.ready()
  * ```
  */
@@ -67,12 +75,14 @@ export function createFeatureHandle(
   broker: BrokerHandle,
   hostWindow: Window | null,
   emitter: EventEmitter,
-  settings: FeatureHandleSettings = {}
+  settings: FeatureHandleSettings
 ): FeatureHandle {
   let channel: ChannelHandle | null = null
   let opened = false
   const readyRejects: Array<(error: Error) => void> = []
   const requests = createRequestPeer('feature', (type, data) => channel?.send(type, data))
+  // why: Indexed once per handle so every send/receive validates with a map lookup instead of rescanning the contract.
+  const actions = buildActionIndex(settings.contract)
 
   if (hostWindow) {
     const activeChannel = broker.addChannel('host', hostWindow, {
@@ -113,13 +123,23 @@ export function createFeatureHandle(
         requests.dispatch(message.type, message.data)
         return
       }
+      // why: Invalid payloads are dropped before consumer handlers run; the error event carries the schema errors so the feature can diagnose the misbehaving host.
+      const result = checkReceivePayload(actions, message.type, message.data)
+      if (!result.valid) {
+        emitter.emit('error', { reason: 'invalid-payload', type: message.type, errors: result.errors })
+        return
+      }
       emitter.emit(message.type, message.data)
     })
     activeChannel.connect()
   }
 
   return freeze(<FeatureHandle>{
-    send: (type: string, data?: unknown) => channel?.send(type, data),
+    send: (type: string, data?: unknown) => {
+      // why: Validated before the channel touches it so a schema violation throws in the sender's frame instead of surfacing on the host side.
+      assertSendPayload(actions, type, data)
+      channel?.send(type, data)
+    },
     request: (type: string, data?: unknown, options?: RequestOptions) =>
       channel
         ? requests.request(type, data, options)

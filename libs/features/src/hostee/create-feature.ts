@@ -40,5 +40,6 @@ export function createFeature(options: FeatureOptions): FeatureHandle {
     readyTimeoutMs: options.readyTimeoutMs,
     protocol: options.protocol,
     sharedKey: options.sharedKey,
+    contract,
   })
 }

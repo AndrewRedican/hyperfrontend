@@ -1,7 +1,7 @@
 import type { BrokerHandle, ChannelHandle, IMessage } from '@hyperfrontend/nexus'
 import type { EventEmitter } from '../shared/event-emitter'
 import type { RequestOptions } from '../shared/request'
-import type { ExperiencePlugin, ExperiencePluginContext, SecurityProtocol, ShellOptions } from '../shared/types'
+import type { ExperiencePlugin, ExperiencePluginContext, FeatureContract, SecurityProtocol, ShellOptions } from '../shared/types'
 import type { HeartbeatMonitor } from './heartbeat'
 import type { DisplayModeMount, ShellHandle } from './types'
 import { createError } from '@hyperfrontend/immutable-api-utils/built-in-copy/error'
@@ -9,6 +9,7 @@ import { freeze } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
 import { promiseReject, promiseResolve } from '@hyperfrontend/immutable-api-utils/built-in-copy/promise'
 import { createURL } from '@hyperfrontend/immutable-api-utils/built-in-copy/url'
 import { ControlType, isControlType } from '../shared/control'
+import { assertSendPayload, buildActionIndex, checkReceivePayload } from '../shared/payload-validation'
 import { createRequestPeer } from '../shared/request'
 import { DisplayMode } from '../shared/types'
 import { createContractCompat } from '../shared/version-compat'
@@ -41,6 +42,13 @@ function deriveFeatureOrigin(url: string | undefined): string | undefined {
  * Injected collaborators for {@link createShellHandle}, kept swappable for tests.
  */
 export interface ShellWiring {
+  /**
+   * The shell's own combined contract. Its `emitted` schemas validate every
+   * outgoing payload (an invalid send throws in the host's frame) and its
+   * `accepted` schemas validate every incoming payload (an invalid message is
+   * dropped and surfaced as an `error` event).
+   */
+  contract: FeatureContract
   /**
    * Resolves the mount function for a display mode.
    *
@@ -93,7 +101,7 @@ interface ActivePlugins {
  *
  * @example Assembling a shell handle
  * ```typescript
- * const shell = createShellHandle(broker, options, emitter, { selectMount, registerSecurity })
+ * const shell = createShellHandle(broker, options, emitter, { contract, selectMount, registerSecurity, createHeartbeatMonitor })
  * shell.open({ displayMode: 'dialog' })
  * ```
  */
@@ -113,6 +121,8 @@ export function createShellHandle(
   let queuedOpen: (() => void) | null = null
   // why: One peer outlives every open/close cycle so handlers registered before the first open (or across reopens) keep answering feature requests.
   const requests = createRequestPeer('host', (type, data) => channel?.send(type, data))
+  // why: Indexed once per handle so every send/receive validates with a map lookup instead of rescanning the contract.
+  const actions = buildActionIndex(wiring.contract)
 
   const emitError = (error: unknown) => emitter.emit('error', error)
 
@@ -278,6 +288,12 @@ export function createShellHandle(
         }
         return
       }
+      // why: Invalid payloads are dropped before consumer handlers run; the error event carries the schema errors so the host can diagnose the misbehaving feature.
+      const result = checkReceivePayload(actions, message.type, message.data)
+      if (!result.valid) {
+        emitter.emit('error', { reason: 'invalid-payload', type: message.type, errors: result.errors })
+        return
+      }
       emitter.emit(message.type, message.data)
     })
     channel.connect()
@@ -287,7 +303,11 @@ export function createShellHandle(
     open,
     close,
     destroy,
-    send: (type: string, data?: unknown) => channel?.send(type, data),
+    send: (type: string, data?: unknown) => {
+      // why: Validated before the channel touches it so a schema violation throws in the sender's frame instead of surfacing on the feature side.
+      assertSendPayload(actions, type, data)
+      channel?.send(type, data)
+    },
     request: (type: string, data?: unknown, options?: RequestOptions) =>
       channel ? requests.request(type, data, options) : promiseReject(createError(`Cannot send request '${type}': the shell is not open.`)),
     handle: requests.handle,

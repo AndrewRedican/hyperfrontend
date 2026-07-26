@@ -44,6 +44,10 @@ describe('generateShell', () => {
     expect(stage().read('src/index.ts', 'utf-8')).toContain("emitted: [\n    {\n      type: 'timeUpdated'")
   })
 
+  it('inlines the action schemas into the contract literal', () => {
+    expect(stage().read('src/index.ts', 'utf-8')).toContain("required: [\n          'tz',\n        ]")
+  })
+
   it('bakes the resolved display defaults into the entry', () => {
     expect(stage().read('src/index.ts', 'utf-8')).toContain('dialogWidth: 530')
   })

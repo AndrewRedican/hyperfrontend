@@ -1,4 +1,5 @@
 import type { BrokerHandle, ChannelHandle } from '@hyperfrontend/nexus'
+import type { FeatureContract } from '../shared/types'
 import { createError } from '@hyperfrontend/immutable-api-utils/built-in-copy/error'
 import { createPromise } from '@hyperfrontend/immutable-api-utils/built-in-copy/promise'
 import { clearInterval, setInterval } from '@hyperfrontend/immutable-api-utils/built-in-copy/timers'
@@ -103,18 +104,20 @@ describe('resolveHostWindow', () => {
 
 describe('createFeatureHandle', () => {
   const hostWindow = <Window>(<unknown>{ name: 'host' })
+  // note: A schema-free contract keeps payload validation inert here; the schema paths are covered by the payload validation block below.
+  const emptyContract: FeatureContract = { emitted: [], accepted: [] }
 
   it('adds a host channel against the resolved host window', () => {
     const mock = createMockChannel()
     const { broker, addChannel } = createMockBroker(mock.channel)
-    createFeatureHandle(broker, hostWindow, createEventEmitter())
+    createFeatureHandle(broker, hostWindow, createEventEmitter(), { contract: emptyContract })
     expect(addChannel).toHaveBeenCalledWith('host', hostWindow, { contractCompat: expect.any(Function) })
   })
 
   it('applies the contract-version compatibility rule to the host channel', () => {
     const mock = createMockChannel()
     const { broker, addChannel } = createMockBroker(mock.channel)
-    createFeatureHandle(broker, hostWindow, createEventEmitter())
+    createFeatureHandle(broker, hostWindow, createEventEmitter(), { contract: emptyContract })
     const settings = <{ contractCompat: (own: unknown, peer: unknown) => unknown }>addChannel.mock.calls[0][2]
     expect(
       settings.contractCompat({ emitted: [], accepted: [], version: '1.0.0' }, { emitted: [], accepted: [], version: '2.0.0' })
@@ -123,35 +126,35 @@ describe('createFeatureHandle', () => {
 
   it('connects the channel during assembly', () => {
     const mock = createMockChannel()
-    createFeatureHandle(createMockBroker(mock.channel).broker, hostWindow, createEventEmitter())
+    createFeatureHandle(createMockBroker(mock.channel).broker, hostWindow, createEventEmitter(), { contract: emptyContract })
     expect(mock.connect).toHaveBeenCalledTimes(1)
   })
 
   it('passes the ready timeout to the channel as the connect deadline', () => {
     const mock = createMockChannel()
     const { broker, addChannel } = createMockBroker(mock.channel)
-    createFeatureHandle(broker, hostWindow, createEventEmitter(), { readyTimeoutMs: 4000 })
+    createFeatureHandle(broker, hostWindow, createEventEmitter(), { contract: emptyContract, readyTimeoutMs: 4000 })
     expect(addChannel).toHaveBeenCalledWith('host', hostWindow, { contractCompat: expect.any(Function), connectTimeoutMs: 4000 })
   })
 
   it('passes the v1 security settings into the host channel', () => {
     const mock = createMockChannel()
     const { broker, addChannel } = createMockBroker(mock.channel)
-    createFeatureHandle(broker, hostWindow, createEventEmitter(), { protocol: 'v1' })
+    createFeatureHandle(broker, hostWindow, createEventEmitter(), { contract: emptyContract, protocol: 'v1' })
     expect(addChannel).toHaveBeenCalledWith('host', hostWindow, { contractCompat: expect.any(Function), security: { protocol: 'v1' } })
   })
 
   it('registers the v2 provider pairing the wire pipeline with the protocol', () => {
     const mock = createMockChannel()
     const { broker, registerProtocol } = createMockBroker(mock.channel)
-    createFeatureHandle(broker, hostWindow, createEventEmitter(), { protocol: 'v2', sharedKey: 'secret' })
+    createFeatureHandle(broker, hostWindow, createEventEmitter(), { contract: emptyContract, protocol: 'v2', sharedKey: 'secret' })
     expect(registerProtocol).toHaveBeenCalledWith('v2', { createChannel: expect.any(Function), protocolProvider: 'v2-provider' })
   })
 
   it('passes the v2 security settings carrying the shared key into the host channel', () => {
     const mock = createMockChannel()
     const { broker, addChannel } = createMockBroker(mock.channel)
-    createFeatureHandle(broker, hostWindow, createEventEmitter(), { protocol: 'v2', sharedKey: 'secret' })
+    createFeatureHandle(broker, hostWindow, createEventEmitter(), { contract: emptyContract, protocol: 'v2', sharedKey: 'secret' })
     expect(addChannel).toHaveBeenCalledWith('host', hostWindow, {
       contractCompat: expect.any(Function),
       security: { protocol: 'v2', sharedKey: 'secret' },
@@ -161,7 +164,7 @@ describe('createFeatureHandle', () => {
   it('combines security settings with the connect deadline', () => {
     const mock = createMockChannel()
     const { broker, addChannel } = createMockBroker(mock.channel)
-    createFeatureHandle(broker, hostWindow, createEventEmitter(), { protocol: 'v1', readyTimeoutMs: 4000 })
+    createFeatureHandle(broker, hostWindow, createEventEmitter(), { contract: emptyContract, protocol: 'v1', readyTimeoutMs: 4000 })
     expect(addChannel).toHaveBeenCalledWith('host', hostWindow, {
       contractCompat: expect.any(Function),
       security: { protocol: 'v1' },
@@ -172,7 +175,7 @@ describe('createFeatureHandle', () => {
   it('throws before adding the channel when the v2 protocol has no shared key', () => {
     const mock = createMockChannel()
     const { broker } = createMockBroker(mock.channel)
-    expect(() => createFeatureHandle(broker, hostWindow, createEventEmitter(), { protocol: 'v2' })).toThrow(
+    expect(() => createFeatureHandle(broker, hostWindow, createEventEmitter(), { contract: emptyContract, protocol: 'v2' })).toThrow(
       'Security protocol \'v2\' requires a pre-shared key: set the "sharedKey" option to a non-empty string.'
     )
   })
@@ -180,13 +183,13 @@ describe('createFeatureHandle', () => {
   it('registers no protocol when security is not selected', () => {
     const mock = createMockChannel()
     const { broker, registerProtocol } = createMockBroker(mock.channel)
-    createFeatureHandle(broker, hostWindow, createEventEmitter())
+    createFeatureHandle(broker, hostWindow, createEventEmitter(), { contract: emptyContract })
     expect(registerProtocol).not.toHaveBeenCalled()
   })
 
   it('rejects pending ready() promises when the channel times out', async () => {
     const mock = createMockChannel()
-    const handle = createFeatureHandle(createMockBroker(mock.channel).broker, hostWindow, createEventEmitter())
+    const handle = createFeatureHandle(createMockBroker(mock.channel).broker, hostWindow, createEventEmitter(), { contract: emptyContract })
     const pending = handle.ready()
     mock.trigger('connect-timeout', { elapsedMs: 10_000 })
     await expect(pending).rejects.toThrow('did not open the connection within 10000ms')
@@ -197,7 +200,7 @@ describe('createFeatureHandle', () => {
     const emitter = createEventEmitter()
     const errors: unknown[] = []
     emitter.on('error', (data) => errors.push(data))
-    createFeatureHandle(createMockBroker(mock.channel).broker, hostWindow, emitter)
+    createFeatureHandle(createMockBroker(mock.channel).broker, hostWindow, emitter, { contract: emptyContract })
     mock.trigger('connect-timeout', { elapsedMs: 10_000 })
     expect(errors).toEqual([{ reason: 'ready-timeout', elapsedMs: 10_000 }])
   })
@@ -207,7 +210,7 @@ describe('createFeatureHandle', () => {
     const emitter = createEventEmitter()
     const handler = jest.fn()
     emitter.on('open', handler)
-    createFeatureHandle(createMockBroker(mock.channel).broker, hostWindow, emitter)
+    createFeatureHandle(createMockBroker(mock.channel).broker, hostWindow, emitter, { contract: emptyContract })
     mock.trigger('open')
     expect(handler).toHaveBeenCalledTimes(1)
   })
@@ -217,7 +220,7 @@ describe('createFeatureHandle', () => {
     const emitter = createEventEmitter()
     const handler = jest.fn()
     emitter.on('close', handler)
-    createFeatureHandle(createMockBroker(mock.channel).broker, hostWindow, emitter)
+    createFeatureHandle(createMockBroker(mock.channel).broker, hostWindow, emitter, { contract: emptyContract })
     mock.trigger('close')
     expect(handler).toHaveBeenCalledTimes(1)
   })
@@ -227,7 +230,7 @@ describe('createFeatureHandle', () => {
     const emitter = createEventEmitter()
     const handler = jest.fn()
     emitter.on('error', handler)
-    createFeatureHandle(createMockBroker(mock.channel).broker, hostWindow, emitter)
+    createFeatureHandle(createMockBroker(mock.channel).broker, hostWindow, emitter, { contract: emptyContract })
     mock.trigger('deny', { reason: 'origin' })
     expect(handler).toHaveBeenCalledWith({ reason: 'origin' })
   })
@@ -237,7 +240,7 @@ describe('createFeatureHandle', () => {
     const emitter = createEventEmitter()
     const handler = jest.fn()
     emitter.on('error', handler)
-    createFeatureHandle(createMockBroker(mock.channel).broker, hostWindow, emitter)
+    createFeatureHandle(createMockBroker(mock.channel).broker, hostWindow, emitter, { contract: emptyContract })
     mock.trigger('invalid', { reason: 'schema' })
     expect(handler).toHaveBeenCalledWith({ reason: 'schema' })
   })
@@ -247,27 +250,29 @@ describe('createFeatureHandle', () => {
     const emitter = createEventEmitter()
     const handler = jest.fn()
     emitter.on('setTimezone', handler)
-    createFeatureHandle(createMockBroker(mock.channel).broker, hostWindow, emitter)
+    createFeatureHandle(createMockBroker(mock.channel).broker, hostWindow, emitter, { contract: emptyContract })
     mock.triggerMessage('setTimezone', { tz: 'UTC' })
     expect(handler).toHaveBeenCalledWith({ tz: 'UTC' })
   })
 
   it('sends messages through the channel', () => {
     const mock = createMockChannel()
-    createFeatureHandle(createMockBroker(mock.channel).broker, hostWindow, createEventEmitter()).send('ping', { n: 1 })
+    createFeatureHandle(createMockBroker(mock.channel).broker, hostWindow, createEventEmitter(), { contract: emptyContract }).send('ping', {
+      n: 1,
+    })
     expect(mock.send).toHaveBeenCalledWith('ping', { n: 1 })
   })
 
   it('disconnects the channel on close', () => {
     const mock = createMockChannel()
-    createFeatureHandle(createMockBroker(mock.channel).broker, hostWindow, createEventEmitter()).close()
+    createFeatureHandle(createMockBroker(mock.channel).broker, hostWindow, createEventEmitter(), { contract: emptyContract }).close()
     expect(mock.disconnect).toHaveBeenCalledTimes(1)
   })
 
   it('subscribes via the shared emitter', () => {
     const mock = createMockChannel()
     const handler = jest.fn()
-    const handle = createFeatureHandle(createMockBroker(mock.channel).broker, hostWindow, createEventEmitter())
+    const handle = createFeatureHandle(createMockBroker(mock.channel).broker, hostWindow, createEventEmitter(), { contract: emptyContract })
     handle.on('timeUpdated', handler)
     mock.triggerMessage('timeUpdated', { time: 1 })
     expect(handler).toHaveBeenCalledWith({ time: 1 })
@@ -275,14 +280,14 @@ describe('createFeatureHandle', () => {
 
   it('resolves ready immediately when already open', async () => {
     const mock = createMockChannel()
-    const handle = createFeatureHandle(createMockBroker(mock.channel).broker, hostWindow, createEventEmitter())
+    const handle = createFeatureHandle(createMockBroker(mock.channel).broker, hostWindow, createEventEmitter(), { contract: emptyContract })
     mock.trigger('open')
     await expect(handle.ready()).resolves.toBeUndefined()
   })
 
   it('resolves ready once the channel opens later', async () => {
     const mock = createMockChannel()
-    const handle = createFeatureHandle(createMockBroker(mock.channel).broker, hostWindow, createEventEmitter())
+    const handle = createFeatureHandle(createMockBroker(mock.channel).broker, hostWindow, createEventEmitter(), { contract: emptyContract })
     const pending = handle.ready()
     mock.trigger('open')
     await expect(pending).resolves.toBeUndefined()
@@ -291,30 +296,34 @@ describe('createFeatureHandle', () => {
   it('does not add a channel when no host window is resolved', () => {
     const mock = createMockChannel()
     const { broker, addChannel } = createMockBroker(mock.channel)
-    createFeatureHandle(broker, null, createEventEmitter())
+    createFeatureHandle(broker, null, createEventEmitter(), { contract: emptyContract })
     expect(addChannel).not.toHaveBeenCalled()
   })
 
   it('treats send as a no-op when unembedded', () => {
-    const handle = createFeatureHandle(createMockBroker(createMockChannel().channel).broker, null, createEventEmitter())
+    const handle = createFeatureHandle(createMockBroker(createMockChannel().channel).broker, null, createEventEmitter(), {
+      contract: emptyContract,
+    })
     expect(() => handle.send('ping')).not.toThrow()
   })
 
   it('treats close as a no-op when unembedded', () => {
-    const handle = createFeatureHandle(createMockBroker(createMockChannel().channel).broker, null, createEventEmitter())
+    const handle = createFeatureHandle(createMockBroker(createMockChannel().channel).broker, null, createEventEmitter(), {
+      contract: emptyContract,
+    })
     expect(() => handle.close()).not.toThrow()
   })
 
   it('starts the heartbeat when the host channel opens', () => {
     const mock = createMockChannel()
-    createFeatureHandle(createMockBroker(mock.channel).broker, hostWindow, createEventEmitter())
+    createFeatureHandle(createMockBroker(mock.channel).broker, hostWindow, createEventEmitter(), { contract: emptyContract })
     mock.trigger('open')
     expect(setInterval).toHaveBeenCalledTimes(1)
   })
 
   it('stops the heartbeat when the host channel closes', () => {
     const mock = createMockChannel()
-    createFeatureHandle(createMockBroker(mock.channel).broker, hostWindow, createEventEmitter())
+    createFeatureHandle(createMockBroker(mock.channel).broker, hostWindow, createEventEmitter(), { contract: emptyContract })
     mock.trigger('open')
     mock.trigger('close')
     expect(clearInterval).toHaveBeenCalledTimes(1)
@@ -322,16 +331,98 @@ describe('createFeatureHandle', () => {
 
   it('sends a beat through the channel once running', () => {
     const mock = createMockChannel()
-    createFeatureHandle(createMockBroker(mock.channel).broker, hostWindow, createEventEmitter())
+    createFeatureHandle(createMockBroker(mock.channel).broker, hostWindow, createEventEmitter(), { contract: emptyContract })
     mock.trigger('open')
     expect(mock.send).toHaveBeenCalledWith(ControlType.Beat)
   })
 
   it('announces its content size when the host channel opens', () => {
     const mock = createMockChannel()
-    createFeatureHandle(createMockBroker(mock.channel).broker, hostWindow, createEventEmitter())
+    createFeatureHandle(createMockBroker(mock.channel).broker, hostWindow, createEventEmitter(), { contract: emptyContract })
     mock.trigger('open')
     expect(mock.send).toHaveBeenCalledWith(ControlType.Size, expect.objectContaining({ height: expect.any(Number) }))
+  })
+
+  describe('payload validation', () => {
+    // note: Feature-oriented contract — emitted is what the feature sends; the schemas exercise both validation directions.
+    const contract = {
+      emitted: [
+        { type: 'timeUpdated', schema: { type: 'object', properties: { iso: { type: 'string' } }, required: ['iso'] } },
+        { type: 'reset' },
+      ],
+      accepted: [{ type: 'setTimezone', schema: { type: 'object', properties: { tz: { type: 'string' } }, required: ['tz'] } }],
+    }
+
+    it('throws in the feature frame when a send payload violates the emitted schema', () => {
+      const mock = createMockChannel()
+      const handle = createFeatureHandle(createMockBroker(mock.channel).broker, hostWindow, createEventEmitter(), { contract })
+      expect(() => handle.send('timeUpdated', {})).toThrow("Invalid payload for action 'timeUpdated'")
+    })
+
+    it('keeps a schema-violating payload off the channel', () => {
+      const mock = createMockChannel()
+      const handle = createFeatureHandle(createMockBroker(mock.channel).broker, hostWindow, createEventEmitter(), { contract })
+      expect(() => handle.send('timeUpdated', {})).toThrow()
+      expect(mock.send).not.toHaveBeenCalled()
+    })
+
+    it('sends a schema-valid payload through the channel', () => {
+      const mock = createMockChannel()
+      const handle = createFeatureHandle(createMockBroker(mock.channel).broker, hostWindow, createEventEmitter(), { contract })
+      handle.send('timeUpdated', { iso: '2026-07-26T00:00:00Z' })
+      expect(mock.send).toHaveBeenCalledWith('timeUpdated', { iso: '2026-07-26T00:00:00Z' })
+    })
+
+    it('sends a schema-less action payload through unchanged', () => {
+      const mock = createMockChannel()
+      const handle = createFeatureHandle(createMockBroker(mock.channel).broker, hostWindow, createEventEmitter(), { contract })
+      handle.send('reset', { anything: true })
+      expect(mock.send).toHaveBeenCalledWith('reset', { anything: true })
+    })
+
+    it('drops an incoming payload that violates the accepted schema', () => {
+      const mock = createMockChannel()
+      const emitter = createEventEmitter()
+      const handler = jest.fn()
+      emitter.on('setTimezone', handler)
+      createFeatureHandle(createMockBroker(mock.channel).broker, hostWindow, emitter, { contract })
+      mock.triggerMessage('setTimezone', { tz: 42 })
+      expect(handler).not.toHaveBeenCalled()
+    })
+
+    it('surfaces a dropped incoming payload as an invalid-payload error', () => {
+      const mock = createMockChannel()
+      const emitter = createEventEmitter()
+      const handler = jest.fn()
+      emitter.on('error', handler)
+      createFeatureHandle(createMockBroker(mock.channel).broker, hostWindow, emitter, { contract })
+      mock.triggerMessage('setTimezone', {})
+      expect(handler).toHaveBeenCalledWith({
+        reason: 'invalid-payload',
+        type: 'setTimezone',
+        errors: [expect.objectContaining({ message: 'Missing required property: tz' })],
+      })
+    })
+
+    it('delivers a schema-valid incoming payload to subscribers', () => {
+      const mock = createMockChannel()
+      const emitter = createEventEmitter()
+      const handler = jest.fn()
+      emitter.on('setTimezone', handler)
+      createFeatureHandle(createMockBroker(mock.channel).broker, hostWindow, emitter, { contract })
+      mock.triggerMessage('setTimezone', { tz: 'UTC' })
+      expect(handler).toHaveBeenCalledWith({ tz: 'UTC' })
+    })
+
+    it('leaves control traffic outside payload validation', () => {
+      const mock = createMockChannel()
+      const emitter = createEventEmitter()
+      const handler = jest.fn()
+      emitter.on('error', handler)
+      createFeatureHandle(createMockBroker(mock.channel).broker, hostWindow, emitter, { contract })
+      mock.triggerMessage(ControlType.Response, { correlationId: 'nope', from: 'host', ok: true })
+      expect(handler).not.toHaveBeenCalled()
+    })
   })
 
   describe('request/response', () => {
@@ -351,7 +442,9 @@ describe('createFeatureHandle', () => {
 
     it('sends a correlated request envelope to the host', async () => {
       const mock = createMockChannel()
-      const handle = createFeatureHandle(createMockBroker(mock.channel).broker, hostWindow, createEventEmitter())
+      const handle = createFeatureHandle(createMockBroker(mock.channel).broker, hostWindow, createEventEmitter(), {
+        contract: emptyContract,
+      })
       const pending = handle.request('getSettings', { keys: ['locale'] })
       expect(mock.send).toHaveBeenCalledWith(
         ControlType.Request,
@@ -368,7 +461,9 @@ describe('createFeatureHandle', () => {
 
     it('resolves a request when the host responds', async () => {
       const mock = createMockChannel()
-      const handle = createFeatureHandle(createMockBroker(mock.channel).broker, hostWindow, createEventEmitter())
+      const handle = createFeatureHandle(createMockBroker(mock.channel).broker, hostWindow, createEventEmitter(), {
+        contract: emptyContract,
+      })
       const pending = handle.request('getSettings')
       mock.triggerMessage(ControlType.Response, {
         correlationId: sentEnvelope(mock.send)['correlationId'],
@@ -381,7 +476,9 @@ describe('createFeatureHandle', () => {
 
     it('rejects a request when the host responds with an error', async () => {
       const mock = createMockChannel()
-      const handle = createFeatureHandle(createMockBroker(mock.channel).broker, hostWindow, createEventEmitter())
+      const handle = createFeatureHandle(createMockBroker(mock.channel).broker, hostWindow, createEventEmitter(), {
+        contract: emptyContract,
+      })
       const pending = handle.request('getSettings')
       mock.triggerMessage(ControlType.Response, {
         correlationId: sentEnvelope(mock.send)['correlationId'],
@@ -393,7 +490,9 @@ describe('createFeatureHandle', () => {
     })
 
     it('rejects a request immediately when unembedded', async () => {
-      const handle = createFeatureHandle(createMockBroker(createMockChannel().channel).broker, null, createEventEmitter())
+      const handle = createFeatureHandle(createMockBroker(createMockChannel().channel).broker, null, createEventEmitter(), {
+        contract: emptyContract,
+      })
       await expect(handle.request('getSettings')).rejects.toThrow(
         "Cannot send request 'getSettings': the feature is not connected to a host."
       )
@@ -401,7 +500,9 @@ describe('createFeatureHandle', () => {
 
     it('rejects pending requests when the host channel closes', async () => {
       const mock = createMockChannel()
-      const handle = createFeatureHandle(createMockBroker(mock.channel).broker, hostWindow, createEventEmitter())
+      const handle = createFeatureHandle(createMockBroker(mock.channel).broker, hostWindow, createEventEmitter(), {
+        contract: emptyContract,
+      })
       const pending = handle.request('getSettings')
       mock.trigger('close')
       await expect(pending).rejects.toThrow('The host channel closed before the host responded.')
@@ -409,7 +510,9 @@ describe('createFeatureHandle', () => {
 
     it('answers host requests through a registered handler', async () => {
       const mock = createMockChannel()
-      const handle = createFeatureHandle(createMockBroker(mock.channel).broker, hostWindow, createEventEmitter())
+      const handle = createFeatureHandle(createMockBroker(mock.channel).broker, hostWindow, createEventEmitter(), {
+        contract: emptyContract,
+      })
       handle.handle('getTime', () => '12:00')
       mock.triggerMessage(ControlType.Request, { correlationId: 'host-1', from: 'host', innerType: 'getTime' })
       await flush()
@@ -421,7 +524,7 @@ describe('createFeatureHandle', () => {
 
     it('responds with an error when the feature has no handler', async () => {
       const mock = createMockChannel()
-      createFeatureHandle(createMockBroker(mock.channel).broker, hostWindow, createEventEmitter())
+      createFeatureHandle(createMockBroker(mock.channel).broker, hostWindow, createEventEmitter(), { contract: emptyContract })
       mock.triggerMessage(ControlType.Request, { correlationId: 'host-1', from: 'host', innerType: 'missing' })
       await flush()
       expect(mock.send).toHaveBeenCalledWith(
@@ -432,7 +535,9 @@ describe('createFeatureHandle', () => {
 
     it('ignores the echo of its own request envelope', async () => {
       const mock = createMockChannel()
-      const handle = createFeatureHandle(createMockBroker(mock.channel).broker, hostWindow, createEventEmitter())
+      const handle = createFeatureHandle(createMockBroker(mock.channel).broker, hostWindow, createEventEmitter(), {
+        contract: emptyContract,
+      })
       const pending = handle.request('getSettings')
       const envelope = sentEnvelope(mock.send)
       mock.triggerMessage(ControlType.Request, envelope)
@@ -445,7 +550,9 @@ describe('createFeatureHandle', () => {
     it('hides response envelopes from consumer handlers', () => {
       const mock = createMockChannel()
       const handler = jest.fn()
-      const handle = createFeatureHandle(createMockBroker(mock.channel).broker, hostWindow, createEventEmitter())
+      const handle = createFeatureHandle(createMockBroker(mock.channel).broker, hostWindow, createEventEmitter(), {
+        contract: emptyContract,
+      })
       handle.on(ControlType.Response, handler)
       mock.triggerMessage(ControlType.Response, { correlationId: 'nope', from: 'host', ok: true })
       expect(handler).not.toHaveBeenCalled()
@@ -454,7 +561,9 @@ describe('createFeatureHandle', () => {
     it('hides heartbeat control echoes from consumer handlers', () => {
       const mock = createMockChannel()
       const handler = jest.fn()
-      const handle = createFeatureHandle(createMockBroker(mock.channel).broker, hostWindow, createEventEmitter())
+      const handle = createFeatureHandle(createMockBroker(mock.channel).broker, hostWindow, createEventEmitter(), {
+        contract: emptyContract,
+      })
       handle.on(ControlType.Beat, handler)
       mock.triggerMessage(ControlType.Beat)
       expect(handler).not.toHaveBeenCalled()

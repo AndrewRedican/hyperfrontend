@@ -109,9 +109,10 @@ describe('Integration: host and hostee negotiate the v2 envelope', () => {
   }
 
   function openHostShell(): Party<ShellHandle> {
+    const contract = withControlContract(invertFeatureContract(featureContract))
     const broker = createBroker({
       name: 'shell-host',
-      contract: withControlContract(invertFeatureContract(featureContract)),
+      contract,
       window: <Window>(<unknown>hostWindow),
     })
     const emitter = createEventEmitter()
@@ -122,6 +123,7 @@ describe('Integration: host and hostee negotiate the v2 envelope', () => {
       <ShellOptions>{ container: '#shell', url: `${FEATURE_ORIGIN}/`, protocol: 'v2', sharedKey: PSK },
       emitter,
       {
+        contract,
         selectMount: () => () => ({ target: <Window>(<unknown>featureWindow), cleanup: () => undefined }),
         registerSecurity,
         createHeartbeatMonitor,
@@ -134,15 +136,16 @@ describe('Integration: host and hostee negotiate the v2 envelope', () => {
 
   // why: The feature broker comes alive only here, after the host is already retrying its REQUEST — the same ordering as a real feature page loading inside the shell's iframe.
   function connectFeature(): Party<FeatureHandle> {
+    const contract = withControlContract(featureContract)
     const broker = createBroker({
       name: 'clock-feature',
-      contract: withControlContract(featureContract),
+      contract,
       window: <Window>(<unknown>featureWindow),
     })
     const emitter = createEventEmitter()
     const received: unknown[] = []
     emitter.on('setTimezone', (data) => received.push(data))
-    const handle = createFeatureHandle(broker, <Window>(<unknown>hostWindow), emitter, { protocol: 'v2', sharedKey: PSK })
+    const handle = createFeatureHandle(broker, <Window>(<unknown>hostWindow), emitter, { contract, protocol: 'v2', sharedKey: PSK })
     feature = handle
     return { handle, received }
   }

@@ -7,9 +7,10 @@ const REQUEST_CONNECTION = '[nexus] connection-request'
 const ACCEPT_CONNECTION = '[nexus] connection-request-accepted'
 const FEATURE_ORIGIN = 'https://feature.example'
 
+// note: Schemas mirror the generator spec fixture, so the exact shapes a built connector inlines are exercised end-to-end through createShell.
 const contract: FeatureContract = {
-  emitted: [{ type: 'timeUpdated' }],
-  accepted: [{ type: 'setTimezone' }],
+  emitted: [{ type: 'timeUpdated', schema: { type: 'object', properties: { iso: { type: 'string' } }, required: ['iso'] } }],
+  accepted: [{ type: 'setTimezone', schema: { type: 'object', properties: { tz: { type: 'string' } }, required: ['tz'] } }],
 }
 
 const mountFeature = (): {
@@ -24,6 +25,12 @@ const mountFeature = (): {
   shell.open()
   const frame = <HTMLIFrameElement>container.querySelector('iframe')
   return { send: shell.send, on: shell.on, frame }
+}
+
+const collectErrors = (on: (event: string, handler: (data?: unknown) => void) => void): unknown[] => {
+  const errors: unknown[] = []
+  on('error', (data) => errors.push(data))
+  return errors
 }
 
 // how: Plays the hostee side of the wire handshake: captures the shell's
@@ -127,6 +134,34 @@ describe('createShell contract orientation', () => {
       })
     )
     expect(handler).not.toHaveBeenCalled()
+  })
+
+  it('throws in the host frame when a send payload violates the inlined schema', () => {
+    const { send } = mountFeature()
+    expect(() => send('setTimezone', {})).toThrow("Invalid payload for action 'setTimezone'")
+  })
+
+  it('drops an incoming feature event whose payload violates the inlined schema', () => {
+    const { on, frame } = mountFeature()
+    openViaWire(frame)
+    const handler = jest.fn()
+    on('timeUpdated', handler)
+    dispatchFeatureMessage(frame, 'timeUpdated', { iso: 42 })
+    expect(handler).not.toHaveBeenCalled()
+  })
+
+  it('surfaces the dropped feature event as an invalid-payload error', () => {
+    const { on, frame } = mountFeature()
+    openViaWire(frame)
+    const errors = collectErrors(on)
+    dispatchFeatureMessage(frame, 'timeUpdated', {})
+    expect(errors).toEqual([
+      {
+        reason: 'invalid-payload',
+        type: 'timeUpdated',
+        errors: [expect.objectContaining({ message: 'Missing required property: iso' })],
+      },
+    ])
   })
 
   it('keeps the generic default contract uninverted when no contract is given', () => {

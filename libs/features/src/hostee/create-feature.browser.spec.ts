@@ -91,4 +91,16 @@ describe('createFeature', () => {
       '"version" must be a valid semver version (e.g. "1.2.0"), but got "latest".'
     )
   })
+
+  it('enforces the contract schemas on send in the feature frame', () => {
+    stubHostOpener()
+    const feature = createFeature({
+      name: 'clock',
+      contract: {
+        emitted: [{ type: 'timeUpdated', schema: { type: 'object', properties: { iso: { type: 'string' } }, required: ['iso'] } }],
+        accepted: [],
+      },
+    })
+    expect(() => feature.send('timeUpdated', {})).toThrow("Invalid payload for action 'timeUpdated'")
+  })
 })

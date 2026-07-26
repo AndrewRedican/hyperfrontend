@@ -181,8 +181,15 @@ export function validateFeatureConfig(config: unknown): FeatureConfig {
 /**
  * Validates a message payload against an action's optional schema at runtime.
  *
- * Bundled into the generated connector and used on both the host and hostee
- * sides. Type-only actions (those without a `schema`) always pass.
+ * This check runs on both ends of the feature channel — in the host shell (and
+ * therefore in every generated connector, which bundles it) and in the hostee
+ * feature handle — with each side judging by its own contract: an outgoing
+ * payload is validated against the sender's `emitted` schemas and an invalid
+ * send throws in the sender's frame before anything crosses the wire; an
+ * incoming payload is validated against the receiver's `accepted` schemas and
+ * an invalid message is dropped and surfaced as an `error` event with reason
+ * `'invalid-payload'`. Type-only actions (those without a `schema`) always
+ * pass.
  *
  * @param action - The contract action whose schema the payload must satisfy.
  * @param payload - The candidate message payload.

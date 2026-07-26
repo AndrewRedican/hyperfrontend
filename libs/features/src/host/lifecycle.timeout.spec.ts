@@ -43,6 +43,7 @@ function setup() {
   const mount = jest.fn((_ctx: MountContext): MountResult => ({ target: TARGET, cleanup }))
   const emitter = createEventEmitter()
   const handle = createShellHandle(broker, <ShellOptions>{ container: '#shell' }, emitter, {
+    contract: { emitted: [], accepted: [] },
     selectMount: jest.fn(() => mount),
     registerSecurity: jest.fn(() => undefined),
     createHeartbeatMonitor: jest.fn(() => ({ beat: jest.fn(), start: jest.fn(), stop: jest.fn() })),
