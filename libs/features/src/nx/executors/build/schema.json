@@ -33,6 +33,10 @@
     "contract": {
       "type": "string",
       "description": "Path to the contract file."
+    },
+    "allowOpen": {
+      "type": "boolean",
+      "description": "Acknowledge an explicit 'none' protocol and build an open, unauthenticated connector."
     }
   },
   "required": []

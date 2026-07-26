@@ -31,4 +31,18 @@ describe('runBuildExecutor', () => {
     await runBuildExecutor({}, context)
     expect(runBuildMock).toHaveBeenCalledWith(expect.objectContaining({ cwd: '/ws/libs/a' }))
   })
+
+  it('forwards the allow-open acknowledgement to the SDK build', async () => {
+    runBuildMock.mockResolvedValue(0)
+    await runBuildExecutor({ protocol: 'none', allowOpen: true }, context)
+    expect(runBuildMock).toHaveBeenCalledWith(
+      expect.objectContaining({ flags: expect.objectContaining({ protocol: 'none', allowOpen: true }) })
+    )
+  })
+
+  it('leaves the allow-open flag unset when the option is omitted', async () => {
+    runBuildMock.mockResolvedValue(0)
+    await runBuildExecutor({}, context)
+    expect(runBuildMock).toHaveBeenCalledWith(expect.objectContaining({ flags: expect.objectContaining({ allowOpen: undefined }) }))
+  })
 })

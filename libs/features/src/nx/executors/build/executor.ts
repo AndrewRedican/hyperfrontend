@@ -19,6 +19,8 @@ interface BuildExecutorSchema {
   url?: string
   /** Path to the contract file. */
   contract?: string
+  /** Acknowledge an explicit `none` protocol and build an open, unauthenticated connector. */
+  allowOpen?: boolean
 }
 
 /**
@@ -41,6 +43,7 @@ const runBuildExecutor: PromiseExecutor<BuildExecutorSchema> = async (options, c
       version: options.version,
       url: options.url,
       contract: options.contract,
+      allowOpen: options.allowOpen,
     }),
     cwd: resolveProjectCwd(context),
     stdout: process.stdout,
