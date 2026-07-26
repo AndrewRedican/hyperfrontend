@@ -10,19 +10,30 @@ import { applyPolicy } from '../security/apply-policy'
 import { attachSecurityTransport } from './attach-security-transport'
 import { resolveChannel } from './resolve-channel'
 
+/** Why a pending connection attempt is aborted, surfaced on the deny event and the operator log. */
+interface AbortDetails {
+  /** Human-readable error delivered with the deny event. */
+  error: string
+  /** Machine-readable denial reason delivered with the deny event. */
+  reason: string
+  /** Operator-facing message logged when the connection aborts. */
+  warning: string
+}
+
 /**
- * Aborts the pending connection because the channel is fail-closed and the
- * handshake could not deliver an encrypted transport.
+ * Aborts the pending connection attempt from the initiator's side.
  *
  * Stops the request retries, cancels the counterpart's pending response,
- * and surfaces a deny event with reason 'security-unavailable'.
+ * logs the operator-facing warning, and surfaces a deny event carrying the
+ * error and the machine-readable reason.
  *
  * @param context - Routing context with state, registry, actions, and logger
  * @param channel - Channel whose connection attempt is aborted
  * @param processId - Process id of the aborted connection attempt
  * @param origin - Origin of the counterpart's ACCEPT event
+ * @param details - The deny error, deny reason, and logged warning
  */
-function abortSecurityUnavailable(context: RoutingContext, channel: ChannelHandle, processId: string, origin: string): void {
+function abortConnection(context: RoutingContext, channel: ChannelHandle, processId: string, origin: string, details: AbortDetails): void {
   const { state, logger } = context
 
   channel.abandonRequest()
@@ -32,12 +43,25 @@ function abortSecurityUnavailable(context: RoutingContext, channel: ChannelHandl
     senderId: state.id,
   })
 
-  logger.warn(`${state.name} aborted the ${channel.getName()} connection: security is required but unavailable.`)
+  logger.warn(details.warning)
 
-  channel.notifyEvent('deny', {
+  channel.notifyEvent('deny', { error: details.error, reason: details.reason, origin })
+}
+
+/**
+ * Aborts the pending connection because the channel is fail-closed and the
+ * handshake could not deliver an encrypted transport.
+ *
+ * @param context - Routing context with state, registry, actions, and logger
+ * @param channel - Channel whose connection attempt is aborted
+ * @param processId - Process id of the aborted connection attempt
+ * @param origin - Origin of the counterpart's ACCEPT event
+ */
+function abortSecurityUnavailable(context: RoutingContext, channel: ChannelHandle, processId: string, origin: string): void {
+  abortConnection(context, channel, processId, origin, {
     error: 'Security is required for this channel but the counterpart cannot provide an encrypted protocol.',
     reason: 'security-unavailable',
-    origin,
+    warning: `${context.state.name} aborted the ${channel.getName()} connection: security is required but unavailable.`,
   })
 }
 
@@ -54,6 +78,8 @@ function abortSecurityUnavailable(context: RoutingContext, channel: ChannelHandl
  *   ACCEPTs from the connected counterpart
  * - Drops ACCEPTs whose origin does not match an already pinned origin
  * - Cancels the connection on invalid or incompatible responder contracts
+ * - Cancels and fires 'deny' with reason 'incompatible-contract' when the
+ *   channel's contract-compatibility rule rejects the responder's contract
  * - Attaches the security transport for the negotiated protocol before the
  *   queue flushes, so queued product traffic leaves encrypted
  * - Aborts with reason 'security-unavailable' when the channel is
@@ -141,6 +167,19 @@ export function handleAccept(context: RoutingContext, message: MessageEvent<IAct
       senderId: state.id,
     })
     return
+  }
+
+  const contractCompat = channel.getContractCompat()
+  if (contractCompat) {
+    const compatibility = contractCompat(state.contract, contract)
+    if (compatibility.compatible === false) {
+      abortConnection(context, channel, processId, message.origin, {
+        error: compatibility.reason,
+        reason: 'incompatible-contract',
+        warning: `${state.name} aborted the ${channel.getName()} connection: ${compatibility.reason}`,
+      })
+      return
+    }
   }
 
   const securitySettings = channel.getSecuritySettings()

@@ -25,6 +25,8 @@ import { applyPolicy } from '../security/apply-policy'
  * - Tears down and re-handshakes when the counterpart window reloaded
  * - Resolves simultaneous requests (glare) via a broker-id tie-break
  * - Denies invalid or incompatible contracts and policy-rejected requests
+ * - Denies with reason 'incompatible-contract' when the channel's
+ *   contract-compatibility rule rejects the counterpart's contract
  * - Negotiates the security protocol against the broker's protocol registry
  * - Denies with reason 'security-unavailable' when the channel is
  *   fail-closed and the negotiation outcome is plaintext
@@ -115,6 +117,21 @@ export function handleRequest(context: RoutingContext, message: MessageEvent<IAc
       error: `Incompatible contract: missing required actions ${missingRequired.join(', ')}.`,
     })
     return
+  }
+
+  const contractCompat = channel.getContractCompat()
+  if (contractCompat) {
+    const compatibility = contractCompat(state.contract, contract)
+    if (compatibility.compatible === false) {
+      channel.sendAction({
+        type: '[nexus] connection-request-denied',
+        processId,
+        senderId: state.id,
+        error: compatibility.reason,
+        reason: 'incompatible-contract',
+      })
+      return
+    }
   }
 
   if (state.settings.securityPolicy) {

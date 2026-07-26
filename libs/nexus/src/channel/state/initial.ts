@@ -45,6 +45,7 @@ export function createInitialState(name: string, target: Window, settings: Parti
     logger: settings.logger ?? null,
     brokerManaged: <boolean>(<Record<string, unknown>>settings)['brokerManaged'] ?? false,
     security: settings.security ?? null,
+    contractCompat: settings.contractCompat ?? null,
     readyToConnect: false,
     negotiatedProtocol: null,
     securityReady: false,

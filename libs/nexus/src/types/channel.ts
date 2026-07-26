@@ -1,6 +1,6 @@
 import type { Logger, LogLevel } from '@hyperfrontend/logging'
 import type { IAction } from './action'
-import type { IChannelContract } from './contract'
+import type { ContractCompat, IChannelContract } from './contract'
 import type { ChannelEvent, EventCallbackMap } from './events'
 import type { IMessage } from './message'
 import type {
@@ -41,6 +41,8 @@ export interface IChannelSettings {
   brokerManaged?: boolean
   /** Security settings for protocol negotiation and encryption */
   security?: ChannelSecuritySettings
+  /** Rule deciding whether the local and counterpart contracts may interoperate; an incompatible pair is denied during the handshake */
+  contractCompat?: ContractCompat
   /** Milliseconds a connection attempt may remain unanswered before firing 'connect-timeout' (default: 10000) */
   connectTimeoutMs?: number
   /** Milliseconds between handshake re-sends while a connection attempt is pending (default: 500) */
@@ -126,6 +128,8 @@ export interface ChannelState {
   readonly brokerManaged: boolean
   /** Security settings configured for this channel (null when none were provided) */
   readonly security: ChannelSecuritySettings | null
+  /** Contract-compatibility rule applied during the handshake (null when none was provided) */
+  readonly contractCompat: ContractCompat | null
   /** Whether connect() has been called (ready to accept connections) */
   readonly readyToConnect: boolean
   /** Negotiated security protocol (null before negotiation) */
@@ -286,6 +290,12 @@ export interface ChannelHandle {
    * call is a no-op when the channel has security settings.
    */
   applySecuritySettings(settings: ChannelSecuritySettings): void
+
+  /**
+   * Gets the contract-compatibility rule configured for this channel
+   * (null when none was provided).
+   */
+  getContractCompat(): ContractCompat | null
 
   /**
    * Schedules activation for later when connect() is called.

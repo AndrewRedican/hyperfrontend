@@ -311,6 +311,72 @@ describe('handleAccept', () => {
     expect(mockLogger.info).toHaveBeenCalledWith(expect.stringContaining('accepted security protocol: v1'))
   })
 
+  describe('contract compatibility gate', () => {
+    function addRequestingChannelWith(settings: Record<string, unknown>) {
+      const channel = addChannel(mockBrokerState, registry, processManager, actions, 'test-channel', mockWindow, settings)
+      channel.connect()
+      const processId = channel.getPendingProcessId()
+      if (processId === null) throw new Error('connect() did not record a pending process')
+      ;(<jest.Mock>mockWindow.postMessage).mockClear()
+      return { channel, processId }
+    }
+
+    it('cancels the connection and stays inactive when the rule rejects', () => {
+      const { channel, processId } = addRequestingChannelWith({
+        contractCompat: () => ({ compatible: false, reason: 'own 1.0.0 does not match peer 2.0.0' }),
+      })
+
+      handleAccept(routingContext, acceptEvent(processId))
+
+      expect({ active: channel.isActive(), cancel: (<jest.Mock>mockWindow.postMessage).mock.calls[0][0] }).toEqual({
+        active: false,
+        cancel: expect.objectContaining({ type: '[nexus] connection-request-cancelled', processId }),
+      })
+    })
+
+    it('fires deny carrying the rule reason and reason incompatible-contract', () => {
+      const { channel, processId } = addRequestingChannelWith({
+        contractCompat: () => ({ compatible: false, reason: 'own 1.0.0 does not match peer 2.0.0' }),
+      })
+      const denyHandler = jest.fn()
+      channel.on('deny', denyHandler)
+
+      handleAccept(routingContext, acceptEvent(processId))
+
+      expect(denyHandler).toHaveBeenCalledWith(
+        { error: 'own 1.0.0 does not match peer 2.0.0', reason: 'incompatible-contract', origin: 'http://remote.example' },
+        expect.anything()
+      )
+    })
+
+    it('logs a warning naming the channel and the rule reason when the rule rejects', () => {
+      const { processId } = addRequestingChannelWith({
+        contractCompat: () => ({ compatible: false, reason: 'own 1.0.0 does not match peer 2.0.0' }),
+      })
+
+      handleAccept(routingContext, acceptEvent(processId))
+
+      expect(mockLogger.warn).toHaveBeenCalledWith('test-broker aborted the test-channel connection: own 1.0.0 does not match peer 2.0.0')
+    })
+
+    it('completes the handshake when the rule reports compatible', () => {
+      const { channel, processId } = addRequestingChannelWith({ contractCompat: () => ({ compatible: true }) })
+
+      handleAccept(routingContext, acceptEvent(processId))
+
+      expect(channel.isActive()).toBe(true)
+    })
+
+    it('hands the rule the own contract and the responder contract', () => {
+      const contractCompat = jest.fn(() => <const>{ compatible: true })
+      const { processId } = addRequestingChannelWith({ contractCompat })
+
+      handleAccept(routingContext, acceptEvent(processId))
+
+      expect(contractCompat).toHaveBeenCalledWith(ownContract, peerContract)
+    })
+  })
+
   describe('security transport attachment', () => {
     it('attaches the transport for the negotiated protocol', () => {
       const { channel, processId } = addRequestingChannel()
@@ -434,6 +500,14 @@ describe('handleAccept', () => {
         active: false,
         deny: expect.objectContaining({ reason: 'security-unavailable' }),
       })
+    })
+
+    it('logs a warning naming the channel when the security abort happens', () => {
+      const { processId } = addFailClosedChannel()
+
+      handleAccept(routingContext, acceptEvent(processId, { security: { negotiated: 'none' } }))
+
+      expect(mockLogger.warn).toHaveBeenCalledWith('test-broker aborted the test-channel connection: security is required but unavailable.')
     })
 
     it('stops retrying after the abort', () => {

@@ -460,6 +460,19 @@ describe('channel/factory', () => {
 
       expect(channel.getSecuritySettings()).toEqual({ protocol: 'v2' })
     })
+
+    it('getContractCompat returns null when no compatibility rule was provided', () => {
+      const channel = createChannel(config, deps)
+
+      expect(channel.getContractCompat()).toBeNull()
+    })
+
+    it('getContractCompat returns the configured compatibility rule', () => {
+      const contractCompat = () => <const>{ compatible: true }
+      const channel = createChannel({ ...config, settings: { contractCompat } }, deps)
+
+      expect(channel.getContractCompat()).toBe(contractCompat)
+    })
   })
 
   describe('queue-while-transport-not-ready', () => {

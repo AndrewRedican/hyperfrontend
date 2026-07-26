@@ -10,7 +10,14 @@ export type { MessageFilter } from './filters/messages/compose'
 export type { MessageHandler, MessagePredicate } from './filters/messages/create'
 export type { IAction, ActionType } from './types/action'
 export type { ChannelHandle, ChannelJSON, IChannelSettings, IChannelConfig } from './types/channel'
-export type { IChannelContract, IActionDescription } from './types/contract'
+export type {
+  IChannelContract,
+  IActionDescription,
+  ContractCompat,
+  ContractCompatibility,
+  ContractCompatible,
+  ContractIncompatible,
+} from './types/contract'
 export type {
   ChannelEvent,
   EventData,

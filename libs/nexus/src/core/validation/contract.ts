@@ -26,6 +26,11 @@ export function validateContract(contract: unknown): void {
   }
 
   const c = <Record<string, unknown>>contract
+
+  if (c['version'] !== undefined && typeof c['version'] !== 'string') {
+    throw createError('Contract version must be a string')
+  }
+
   const emittedCount = isArray(c['emitted']) ? (<Record<string, unknown>[]>c['emitted']).length : 0
   const acceptedCount = isArray(c['accepted']) ? (<Record<string, unknown>[]>c['accepted']).length : 0
 

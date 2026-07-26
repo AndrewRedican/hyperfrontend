@@ -389,6 +389,43 @@ describe('handleRequest', () => {
     })
   })
 
+  describe('contract compatibility gate', () => {
+    it('denies with the rule reason and reason incompatible-contract when the rule rejects', () => {
+      addReadyChannel({ contractCompat: () => ({ compatible: false, reason: 'own 1.0.0 does not match peer 2.0.0' }) })
+
+      handleRequest(routingContext, requestEvent())
+
+      expect(mockWindow.postMessage).toHaveBeenCalledWith(
+        expect.objectContaining({
+          type: '[nexus] connection-request-denied',
+          error: 'own 1.0.0 does not match peer 2.0.0',
+          reason: 'incompatible-contract',
+        }),
+        expect.any(String)
+      )
+    })
+
+    it('accepts when the rule reports compatible', () => {
+      addReadyChannel({ contractCompat: () => ({ compatible: true }) })
+
+      handleRequest(routingContext, requestEvent())
+
+      expect(mockWindow.postMessage).toHaveBeenCalledWith(
+        expect.objectContaining({ type: '[nexus] connection-request-accepted' }),
+        expect.any(String)
+      )
+    })
+
+    it('hands the rule the own contract and the requested peer contract', () => {
+      const contractCompat = jest.fn(() => <const>{ compatible: true })
+      addReadyChannel({ contractCompat })
+
+      handleRequest(routingContext, requestEvent())
+
+      expect(contractCompat).toHaveBeenCalledWith(ownContract, peerContract)
+    })
+  })
+
   describe('fail-closed responder', () => {
     const failClosedSettings = { security: { protocol: 'v2', mode: 'fail-closed' } }
 

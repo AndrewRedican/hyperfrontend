@@ -84,6 +84,24 @@ describe('Validation Functions', () => {
       expect(() => validateContract(contract)).toThrow('Contract must contain at least one accepted or emitted action')
     })
 
+    it('accepts a string version announcement', () => {
+      const contract = {
+        emitted: [{ type: 'action1' }],
+        accepted: [],
+        version: '1.2.3',
+      }
+      expect(() => validateContract(contract)).not.toThrow()
+    })
+
+    it('rejects a non-string version announcement', () => {
+      const contract = {
+        emitted: [{ type: 'action1' }],
+        accepted: [],
+        version: 2,
+      }
+      expect(() => validateContract(contract)).toThrow('Contract version must be a string')
+    })
+
     it('handles contracts with missing emitted', () => {
       const contract = {
         accepted: [{ type: 'action1' }],

@@ -168,6 +168,10 @@ export function createChannel(config: IChannelConfig, deps: ChannelDependencies)
       }
     },
 
+    getContractCompat: () => {
+      return state.contractCompat
+    },
+
     scheduleActivation: (
       senderId: string,
       origin: string,
