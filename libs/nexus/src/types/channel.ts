@@ -47,6 +47,8 @@ export interface IChannelSettings {
   connectTimeoutMs?: number
   /** Milliseconds between handshake re-sends while a connection attempt is pending (default: 500) */
   requestRetryMs?: number
+  /** Milliseconds a polite close waits for the counterpart's acknowledgement before closing anyway (default: 2000) */
+  closeTimeoutMs?: number
 }
 
 /**
@@ -120,6 +122,12 @@ export interface ChannelState {
   readonly connectTimeoutMs: number
   /** Milliseconds between handshake re-sends while a connection attempt is pending */
   readonly requestRetryMs: number
+  /** Process id of our own outstanding polite close (null when not closing) */
+  readonly closingProcessId: string | null
+  /** Timeout handle bounding the wait for the close acknowledgement (null when idle) */
+  readonly closeTimer: ReturnType<typeof setTimeout> | null
+  /** Milliseconds a polite close waits for the counterpart's acknowledgement before closing anyway */
+  readonly closeTimeoutMs: number
   /** Whether to queue messages when channel is closed */
   readonly queueMessages: boolean
   /** Logger instance for this channel (null if not configured) */
@@ -189,6 +197,8 @@ export interface ChannelHandle {
   getTarget(): Window
   /** Check if channel is active */
   isActive(): boolean
+  /** Check if a polite close is in flight (CLOSE sent, acknowledgement pending) */
+  isClosing(): boolean
   /** Get the currently pinned origin ('*' or null when unpinned) */
   getOrigin(): string | null
   /** Get the broker id of the connected counterpart (null before handshake completes) */

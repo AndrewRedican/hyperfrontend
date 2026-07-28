@@ -34,6 +34,9 @@ describe('channel/lifecycle/cancel', () => {
       securityReady: false,
       securityTransport: null,
       pendingSecurityRequest: null,
+      closingProcessId: null,
+      closeTimer: null,
+      closeTimeoutMs: 2000,
     }
 
     mockChannel = {
@@ -111,7 +114,9 @@ describe('channel/lifecycle/cancel', () => {
 
     cancel(mockChannel)
 
-    expect(state.active).toBe(false)
+    // note: A polite close stays active until the counterpart acknowledges (or the deadline expires).
+    expect(state.active).toBe(true)
+    expect(state.closingProcessId).toBe('process-456')
     expect(mockChannel.actions.closeConnection).toHaveBeenCalled()
     expect(mockChannel.actions.cancelConnection).not.toHaveBeenCalled()
     expect(sentActions).toHaveLength(1)

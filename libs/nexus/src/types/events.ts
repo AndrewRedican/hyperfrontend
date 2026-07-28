@@ -8,6 +8,7 @@ import type { SecurityProtocolVersion } from './security'
  */
 export type ChannelEvent =
   | 'open'
+  | 'closing'
   | 'close'
   | 'cancel'
   | 'deny'
@@ -25,6 +26,14 @@ export interface OpenEventData {
   origin: string
   /** Negotiated channel contract */
   contract: IChannelContract
+}
+
+/**
+ * Data payload for CLOSING event
+ */
+export interface ClosingEventData {
+  /** Whether this side initiated the polite close (`false` when the counterpart proposed it) */
+  initiatedLocally: boolean
 }
 
 /**
@@ -124,6 +133,7 @@ type EventEnvelope<TEvent extends string, TData> = {
  */
 export type EventData =
   | EventEnvelope<'open', OpenEventData>
+  | EventEnvelope<'closing', ClosingEventData>
   | EventEnvelope<'close', CloseEventData>
   | EventEnvelope<'cancel', CancelEventData>
   | EventEnvelope<'deny', DenyEventData>
@@ -137,6 +147,11 @@ export type EventData =
  * Type-safe event handler for OPEN events
  */
 export type OpenEventHandler = (event: 'open', data: OpenEventData, channel: ChannelJSON) => void
+
+/**
+ * Type-safe event handler for CLOSING events
+ */
+export type ClosingEventHandler = (event: 'closing', data: ClosingEventData, channel: ChannelJSON) => void
 
 /**
  * Type-safe event handler for CLOSE events
@@ -183,6 +198,7 @@ export type SecurityErrorEventHandler = (event: 'security-error', data: Security
  */
 export type TypedEventHandler =
   | OpenEventHandler
+  | ClosingEventHandler
   | CloseEventHandler
   | CancelEventHandler
   | DenyEventHandler
@@ -196,6 +212,11 @@ export type TypedEventHandler =
  * Simplified callback for OPEN events (event name omitted)
  */
 export type OpenCallback = (data: OpenEventData, channel: ChannelJSON) => void
+
+/**
+ * Simplified callback for CLOSING events (event name omitted)
+ */
+export type ClosingCallback = (data: ClosingEventData, channel: ChannelJSON) => void
 
 /**
  * Simplified callback for CLOSE events (event name omitted)
@@ -244,6 +265,8 @@ export type SecurityErrorCallback = (data: SecurityErrorEventData, channel: Chan
 export interface EventCallbackMap {
   /** Callback for open events */
   open: OpenCallback
+  /** Callback for closing events */
+  closing: ClosingCallback
   /** Callback for close events */
   close: CloseCallback
   /** Callback for cancel events */

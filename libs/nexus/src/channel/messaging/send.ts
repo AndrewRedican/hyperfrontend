@@ -39,7 +39,8 @@ export function send(channel: ChannelInternals, message: IMessage): void {
     )
   }
 
-  if (!state.active) {
+  // why: Once this side proposed a close, the counterpart may deactivate at any moment; new sends queue for the next connection instead of racing the CLOSE.
+  if (!state.active || typeof state.closingProcessId === 'string') {
     if (state.queueMessages) {
       queue(channel, message)
       return

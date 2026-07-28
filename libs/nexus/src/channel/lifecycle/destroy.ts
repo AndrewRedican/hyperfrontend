@@ -1,4 +1,5 @@
 import type { ChannelInternals } from '../types'
+import { clearCloseTimer } from './disconnect'
 import { clearHandshakeTimers } from './handshake-timers'
 
 /**
@@ -21,7 +22,8 @@ import { clearHandshakeTimers } from './handshake-timers'
  */
 export function destroy(channel: ChannelInternals, notify = true): void {
   clearHandshakeTimers(channel)
-  channel.updateState({ active: false, pendingProcessId: null, pendingAccept: null, scheduledActivation: null })
+  clearCloseTimer(channel)
+  channel.updateState({ active: false, pendingProcessId: null, pendingAccept: null, scheduledActivation: null, closingProcessId: null })
 
   if (notify) {
     const destroyAction = channel.actions.destroyConnection()

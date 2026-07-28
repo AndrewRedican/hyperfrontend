@@ -95,6 +95,7 @@ export function createChannel(config: IChannelConfig, deps: ChannelDependencies)
     getName: () => state.name,
     getTarget: () => state.target,
     isActive: () => state.active,
+    isClosing: () => typeof state.closingProcessId === 'string',
     getOrigin: () => state.origin,
     getPeerId: () => state.peerId,
     getPeerContract: () => state.peerContract,

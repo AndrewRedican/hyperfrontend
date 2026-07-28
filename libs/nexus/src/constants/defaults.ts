@@ -37,6 +37,12 @@ export const DEFAULT_CONNECT_TIMEOUT_MS = 10_000
 export const DEFAULT_REQUEST_RETRY_MS = 500
 
 /**
+ * Default close-acknowledgement deadline in milliseconds.
+ * A polite close left unacknowledged this long completes locally anyway.
+ */
+export const DEFAULT_CLOSE_TIMEOUT_MS = 2_000
+
+/**
  * Default channel settings.
  * Accept any origin, queue messages, inherit contract from broker.
  */

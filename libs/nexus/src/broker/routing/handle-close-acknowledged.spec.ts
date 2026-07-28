@@ -1,5 +1,6 @@
 import type { Logger } from '@hyperfrontend/logging'
 import type { IAction } from '../../types/action'
+import type { ChannelHandle } from '../../types/channel'
 import type { IChannelContract } from '../../types/contract'
 import type { BrokerState } from '../types'
 import type { RoutingContext } from './types'
@@ -25,6 +26,7 @@ describe('handleCloseAcknowledged', () => {
   let routingContext: RoutingContext
 
   beforeEach(() => {
+    jest.useFakeTimers()
     mockLogger = {
       error: jest.fn(),
       warn: jest.fn(),
@@ -68,105 +70,88 @@ describe('handleCloseAcknowledged', () => {
     }
   })
 
-  it('process close acknowledgement for existing channel', () => {
+  afterEach(() => {
+    jest.useRealTimers()
+  })
+
+  const startPoliteClose = (channel: ChannelHandle, target: Window): string => {
+    channel.activate('https://example.com', validContract)
+    channel.disconnect()
+    const posted = (<jest.Mock>target.postMessage).mock.calls.map(([action]) => <IAction>action)
+    const closeAction = posted.find((action) => action.type === '[nexus] connection-closed')
+    return <string>(<Record<string, unknown>>(<unknown>closeAction))['processId']
+  }
+
+  const acknowledgement = (processId: string, source: Window, senderId = 'remote-broker-1'): MessageEvent<IAction> =>
+    <MessageEvent<IAction>>{
+      data: { type: '[nexus] connection-closed-acknowledged', processId, senderId },
+      source,
+    }
+
+  it('completes the close for a channel awaiting acknowledgement', () => {
     const channel = addChannel(mockBrokerState, registry, processManager, actions, 'test-channel', mockWindow)
-    const processId = processManager.create(channel)
+    const processId = startPoliteClose(channel, mockWindow)
 
-    const action: IAction = {
-      type: '[nexus] connection-closed-acknowledged',
-      processId,
-      senderId: 'remote-broker-1',
-    }
-
-    const message = <MessageEvent<IAction>>{
-      data: action,
-      source: mockWindow,
-    }
+    expect(channel.isActive()).toBe(true)
+    expect(channel.isClosing()).toBe(true)
 
     expect(() => {
-      handleCloseAcknowledged(routingContext, message)
+      handleCloseAcknowledged(routingContext, acknowledgement(processId, mockWindow))
     }).not.toThrow()
 
+    expect(channel.isActive()).toBe(false)
+    expect(channel.isClosing()).toBe(false)
     expect(processManager.get(processId)).toBeUndefined()
   })
 
+  it('fires a single close event on the initiator once acknowledged', () => {
+    const channel = addChannel(mockBrokerState, registry, processManager, actions, 'test-channel', mockWindow)
+    const events: Array<[string, unknown]> = []
+    channel.on((event, data) => {
+      events.push([event, data])
+    })
+    const processId = startPoliteClose(channel, mockWindow)
+
+    handleCloseAcknowledged(routingContext, acknowledgement(processId, mockWindow))
+
+    expect(events.filter(([event]) => event === 'closing')).toEqual([['closing', { initiatedLocally: true }]])
+    expect(events.filter(([event]) => event === 'close')).toEqual([['close', { notify: true }]])
+  })
+
   it('ignore if channel not found', () => {
-    const action: IAction = {
-      type: '[nexus] connection-closed-acknowledged',
-      processId: 'non-existent-process',
-      senderId: 'remote-broker-1',
-    }
-
-    const message = <MessageEvent<IAction>>{
-      data: action,
-      source: mockWindow,
-    }
-
     expect(() => {
-      handleCloseAcknowledged(routingContext, message)
+      handleCloseAcknowledged(routingContext, acknowledgement('non-existent-process', mockWindow))
     }).not.toThrow()
   })
 
-  it('calls notifyEvent when channel has the method', () => {
+  it('ignores an acknowledgement whose channel never proposed a close', () => {
     const channel = addChannel(mockBrokerState, registry, processManager, actions, 'test-channel', mockWindow)
+    channel.activate('https://example.com', validContract)
     const processId = processManager.create(channel)
 
-    const notifyEventMock = jest.fn()
-    Object.defineProperty(channel, 'notifyEvent', {
-      value: notifyEventMock,
-      writable: true,
-    })
+    handleCloseAcknowledged(routingContext, acknowledgement(processId, mockWindow))
 
-    const action: IAction = {
-      type: '[nexus] connection-closed-acknowledged',
-      processId,
-      senderId: 'remote-broker-1',
-    }
-
-    const message = <MessageEvent<IAction>>{
-      data: action,
-      source: mockWindow,
-    }
-
-    handleCloseAcknowledged(routingContext, message)
-
-    expect(notifyEventMock).toHaveBeenCalledWith('close', { notify: false })
+    expect(channel.isActive()).toBe(true)
+    expect(processManager.get(processId)).toBe(channel)
   })
 
   it('handles multiple close acknowledgements for different channels', () => {
     const channel1 = addChannel(mockBrokerState, registry, processManager, actions, 'channel-1', mockWindow)
-    const processId1 = processManager.create(channel1)
+    const processId1 = startPoliteClose(channel1, mockWindow)
 
     const window2 = <Window>(<unknown>{
       postMessage: jest.fn(),
       _uniqueId: 'window-2',
     })
     const channel2 = addChannel(mockBrokerState, registry, processManager, actions, 'channel-2', window2)
-    const processId2 = processManager.create(channel2)
+    const processId2 = startPoliteClose(channel2, window2)
 
-    const action1: IAction = {
-      type: '[nexus] connection-closed-acknowledged',
-      processId: processId1,
-      senderId: 'remote-1',
-    }
-
-    const action2: IAction = {
-      type: '[nexus] connection-closed-acknowledged',
-      processId: processId2,
-      senderId: 'remote-2',
-    }
-
-    handleCloseAcknowledged(routingContext, <MessageEvent<IAction>>{
-      data: action1,
-      source: mockWindow,
-    })
-
-    handleCloseAcknowledged(routingContext, <MessageEvent<IAction>>{
-      data: action2,
-      source: window2,
-    })
+    handleCloseAcknowledged(routingContext, acknowledgement(processId1, mockWindow, 'remote-1'))
+    handleCloseAcknowledged(routingContext, acknowledgement(processId2, window2, 'remote-2'))
 
     expect(processManager.get(processId1)).toBeUndefined()
     expect(processManager.get(processId2)).toBeUndefined()
+    expect(channel1.isActive()).toBe(false)
+    expect(channel2.isActive()).toBe(false)
   })
 })

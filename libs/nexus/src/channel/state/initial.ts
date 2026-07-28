@@ -1,7 +1,7 @@
 import type { ChannelState, IChannelSettings } from '../../types/channel'
 import { freeze } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
 import { uuidV4 } from '@hyperfrontend/random-generator-utils'
-import { DEFAULT_CONNECT_TIMEOUT_MS, DEFAULT_REQUEST_RETRY_MS } from '../../constants/defaults'
+import { DEFAULT_CLOSE_TIMEOUT_MS, DEFAULT_CONNECT_TIMEOUT_MS, DEFAULT_REQUEST_RETRY_MS } from '../../constants/defaults'
 
 /**
  * Creates the initial state for a new channel.
@@ -41,6 +41,9 @@ export function createInitialState(name: string, target: Window, settings: Parti
     deadlineTimer: null,
     connectTimeoutMs: settings.connectTimeoutMs ?? DEFAULT_CONNECT_TIMEOUT_MS,
     requestRetryMs: settings.requestRetryMs ?? DEFAULT_REQUEST_RETRY_MS,
+    closingProcessId: null,
+    closeTimer: null,
+    closeTimeoutMs: settings.closeTimeoutMs ?? DEFAULT_CLOSE_TIMEOUT_MS,
     queueMessages: settings.queueMessages ?? true,
     logger: settings.logger ?? null,
     brokerManaged: <boolean>(<Record<string, unknown>>settings)['brokerManaged'] ?? false,
