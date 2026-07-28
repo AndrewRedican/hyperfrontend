@@ -8,6 +8,8 @@ export type {
   ActionDescription,
   EmbedSizing,
   FeatureContract,
+  FeaturePermission,
+  SandboxOptions,
   SecurityProtocol,
   ShellOptions,
   UnresponsiveInfo,

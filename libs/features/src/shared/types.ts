@@ -35,6 +35,70 @@ export type SecurityProtocol = 'none' | 'v1' | 'v2'
 export type EmbedSizing = 'fill' | 'content'
 
 /**
+ * A Permissions-Policy feature name the host can delegate to the feature frame.
+ *
+ * Browsers deny powerful features (camera, fullscreen, clipboard, …) to
+ * cross-origin frames by default, so a feature that needs one only works when
+ * the host delegates it. The union lists the common names for editor
+ * completion; any string the browser understands is accepted.
+ */
+export type FeaturePermission =
+  | 'accelerometer'
+  | 'autoplay'
+  | 'camera'
+  | 'clipboard-read'
+  | 'clipboard-write'
+  | 'display-capture'
+  | 'encrypted-media'
+  | 'fullscreen'
+  | 'gamepad'
+  | 'geolocation'
+  | 'gyroscope'
+  | 'magnetometer'
+  | 'microphone'
+  | 'midi'
+  | 'payment'
+  | 'picture-in-picture'
+  | 'publickey-credentials-get'
+  | 'screen-wake-lock'
+  | 'usb'
+  | 'web-share'
+  | 'xr-spatial-tracking'
+  | (string & {})
+
+/**
+ * Containment opt-ins for a sandboxed feature frame.
+ *
+ * Enabling {@link ShellOptions.sandbox} starts the frame from the browser's
+ * deny-all sandbox and returns capabilities selectively. Two tokens are managed
+ * by the SDK and are not configurable: `allow-scripts` is always present (the
+ * feature runtime is JavaScript, so a script-less frame can never connect), and
+ * `allow-same-origin` is granted only when the feature URL resolves to a
+ * different origin than the host page — a same-origin frame holding both
+ * tokens could remove its own sandbox, so that pairing cannot be expressed.
+ * A sandboxed same-origin feature therefore runs with an opaque origin (no
+ * cookies or storage); the messaging protocol still connects. Every opt-in
+ * below defaults to `false` (denied).
+ */
+export interface SandboxOptions {
+  /** Allow the feature to submit forms; defaults to `false`. */
+  forms?: boolean
+  /** Allow the feature to open popup windows; defaults to `false`. */
+  popups?: boolean
+  /** Allow the feature to open modal dialogs (`alert`, `confirm`, `print`); defaults to `false`. */
+  modals?: boolean
+  /** Allow the feature to trigger file downloads; defaults to `false`. */
+  downloads?: boolean
+  /**
+   * Allow the feature to navigate the top-level page in response to a user
+   * activation (e.g. a clicked link targeting `_top`); defaults to `false`.
+   * Unrestricted top-level navigation is deliberately not offered — it enables
+   * an entire class of takeover incidents that user-activation gating avoids.
+   */
+  topNavigationByUserActivation?: boolean
+}
+
+/**
  * Context passed to an {@link UnresponsivePolicy} callback when a feature stops beating.
  */
 export interface UnresponsiveInfo {
@@ -191,6 +255,26 @@ export interface ShellOptions {
   url?: string
   /** How an embedded feature is sized; defaults to `fill` (the iframe fills its container). */
   embedSizing?: EmbedSizing
+  /**
+   * Permissions-Policy features delegated to the feature frame, applied as the
+   * iframe `allow` attribute scoped to the frame's own origin. Connector
+   * builds bake the feature's declared needs here; a host-supplied list
+   * replaces the baked one entirely. Only the iframe modes (`embedded`,
+   * `dialog`) apply it — `popup` and `standalone` open top-level windows,
+   * which request these permissions from the user directly.
+   */
+  permissions?: readonly FeaturePermission[]
+  /**
+   * Containment posture for the feature frame. `true` (or an opt-in object)
+   * starts the frame from the browser's deny-all sandbox; the SDK always
+   * returns `allow-scripts`, grants `allow-same-origin` only to cross-origin
+   * feature URLs, and denies everything else unless opted in — see
+   * {@link SandboxOptions} for the managed tokens and why. Host-decreed and
+   * never baked by a connector build. Only meaningful for the iframe modes:
+   * opening `popup` or `standalone` with a sandbox set throws, because no
+   * containment can apply to a top-level window.
+   */
+  sandbox?: boolean | SandboxOptions
   /** How the host reacts when the feature stops responding; defaults to `emit`. */
   onUnresponsive?: UnresponsivePolicy
   /** Whether pressing Escape closes the shell; defaults to `true`. */
@@ -287,6 +371,8 @@ export interface ResolvedFeatureConfig extends FeatureConfig {
   url: string
   /** Default display options baked into the connector as the feature's defaults. */
   display?: DisplayDefaults
+  /** Permissions-Policy features the feature declared it needs; baked into the connector as its default `permissions`. */
+  permissions?: FeaturePermission[]
   /** Security envelope the build resolved; baked into the generated connector as its default. */
   protocol?: SecurityProtocol
 }
@@ -296,7 +382,8 @@ export interface ResolvedFeatureConfig extends FeatureConfig {
  *
  * Describes the feature so humans and registries can inspect it without
  * unpacking the bundle: identity, canonical version, feature URL, the full
- * contract, the baked security protocol, and the toolchain that produced it.
+ * contract, the baked security protocol, the declared browser permissions,
+ * and the toolchain that produced it.
  */
 export interface FeatureDescriptor {
   /** Published feature name. */
@@ -309,6 +396,8 @@ export interface FeatureDescriptor {
   contract: FeatureContract
   /** Security envelope baked into the connector, when one was resolved. */
   protocol?: SecurityProtocol
+  /** Permissions-Policy features the feature declared it needs, when any; reviewable without unpacking the bundle. */
+  permissions?: FeaturePermission[]
   /** Package name of the toolchain that generated the connector. */
   generatedBy: string
   /** Version of the `@hyperfrontend/features` SDK that generated the connector. */

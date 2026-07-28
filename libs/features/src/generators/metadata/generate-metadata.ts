@@ -11,9 +11,10 @@ const METADATA_PATH = 'metadata.json'
  * Stages the connector's `metadata.json` describing the feature and its contract.
  *
  * Stamps a canonical version string via `@hyperfrontend/versioning` and embeds
- * the contract, the baked security protocol, and the version of the SDK that
- * ran the build, so humans and the registry can inspect the feature without
- * unpacking the bundle. The staged file matches {@link FeatureDescriptor}.
+ * the contract, the baked security protocol, any declared browser permissions,
+ * and the version of the SDK that ran the build, so humans and the registry
+ * can inspect the feature without unpacking the bundle. The staged file
+ * matches {@link FeatureDescriptor}.
  *
  * @param config - The resolved feature config supplying name, version, URL, and protocol.
  * @param contract - The validated contract embedded for inspection.
@@ -31,6 +32,7 @@ export function generateMetadata(config: ResolvedFeatureConfig, contract: Featur
     url: config.url,
     contract,
     ...(config.protocol !== undefined && { protocol: config.protocol }),
+    ...(config.permissions !== undefined && { permissions: config.permissions }),
     generatedBy: '@hyperfrontend/features',
     sdk: resolveSdkVersion(),
   }

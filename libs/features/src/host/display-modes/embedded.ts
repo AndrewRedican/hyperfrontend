@@ -15,7 +15,7 @@ import { createFeatureIframe, resolveContainer } from '../iframe'
  */
 export const mountEmbedded: DisplayModeMount = ({ options }) => {
   const container = resolveContainer(options.container)
-  const iframe = createFeatureIframe(options.url ?? '')
+  const iframe = createFeatureIframe(options.url ?? '', options)
   container.appendChild(iframe)
   return {
     target: iframe.contentWindow,

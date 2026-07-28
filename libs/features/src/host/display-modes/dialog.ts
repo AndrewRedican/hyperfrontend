@@ -45,7 +45,7 @@ export const mountDialog: DisplayModeMount = ({ options, requestClose }) => {
   closeButton.ref.setAttribute('aria-label', 'Close')
   closeButton.ref.addEventListener('click', () => requestClose())
 
-  const iframe = createFeatureIframe(options.url ?? '')
+  const iframe = createFeatureIframe(options.url ?? '', options)
   dialog.addChild(closeButton)
   dialog.addChild(iframe)
   container.addChild(dialog)

@@ -1,6 +1,6 @@
 import type { DisplayModeMount } from '../types'
 import { dialogDefaults } from './defaults'
-import { openExternalWindow } from './external-window'
+import { assertNoSandbox, openExternalWindow } from './external-window'
 
 /**
  * Mounts a feature in a separate, dialog-sized browser popup window.
@@ -15,6 +15,7 @@ import { openExternalWindow } from './external-window'
  * ```
  */
 export const mountPopup: DisplayModeMount = ({ options }) => {
+  assertNoSandbox(options.sandbox, 'popup')
   const width = options.dialogWidth ?? dialogDefaults.width
   const height = options.dialogHeight ?? dialogDefaults.height
   return openExternalWindow(options.url ?? '', `width=${width},height=${height},scrollbars=no`)

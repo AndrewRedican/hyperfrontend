@@ -28,6 +28,18 @@ describe('generateMetadata', () => {
     expect(parse(tree.read('metadata.json', 'utf-8') ?? '')).not.toHaveProperty('protocol')
   })
 
+  it('stamps the declared permissions when the config carries them', () => {
+    const tree = createTree(__dirname)
+    generateMetadata({ ...config, permissions: ['camera', 'fullscreen'] }, contract, tree)
+    expect(parse(tree.read('metadata.json', 'utf-8') ?? '')).toEqual(expect.objectContaining({ permissions: ['camera', 'fullscreen'] }))
+  })
+
+  it('omits the permissions field when the config declares none', () => {
+    const tree = createTree(__dirname)
+    generateMetadata(config, contract, tree)
+    expect(parse(tree.read('metadata.json', 'utf-8') ?? '')).not.toHaveProperty('permissions')
+  })
+
   it('canonicalizes the stamped feature version', () => {
     const tree = createTree(__dirname)
     generateMetadata({ ...config, version: 'v1.2.3' }, contract, tree)

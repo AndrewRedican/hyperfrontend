@@ -13,13 +13,14 @@ const README_PATH = 'README.md'
 /**
  * Builds the baked-in default shell options from the resolved config.
  *
- * @param config - The resolved feature config supplying the URL, protocol, and display defaults.
+ * @param config - The resolved feature config supplying the URL, protocol, permissions, and display defaults.
  * @returns A record of options the connector merges under host-supplied overrides.
  */
 function buildDefaults(config: ResolvedFeatureConfig): Record<string, unknown> {
   return {
     url: config.url,
     ...(config.protocol !== undefined && { protocol: config.protocol }),
+    ...(config.permissions !== undefined && { permissions: config.permissions }),
     ...(config.display ?? {}),
   }
 }
@@ -128,6 +129,22 @@ function buildReadmeOptions(config: ResolvedFeatureConfig): string {
 }
 
 /**
+ * Builds the README paragraph disclosing the feature's baked permission grants.
+ *
+ * @param config - The resolved feature config carrying any declared permissions.
+ * @returns The permissions paragraph, or an empty string when none are declared.
+ */
+function buildReadmePermissions(config: ResolvedFeatureConfig): string {
+  if (config.permissions === undefined || config.permissions.length === 0) {
+    return ''
+  }
+  const list = config.permissions.map((permission) => `\`${permission}\``).join(', ')
+  return `This feature declares it needs the following browser permissions, delegated to its frame automatically: ${list}. Pass your own \`permissions\` array to replace the grant list entirely, or review the declaration in \`metadata.json\`.
+
+`
+}
+
+/**
  * Builds the typed messaging example lines from the contract's first actions.
  *
  * @param contract - The validated feature contract.
@@ -173,7 +190,7 @@ shell.close()              // disconnect gracefully
 shell.destroy()            // disconnect and release all resources
 \`\`\`
 
-${buildReadmeSecurity(config)}
+${buildReadmePermissions(config)}${buildReadmeSecurity(config)}
 
 > Regenerated from scratch on every build; do not edit by hand.
 `

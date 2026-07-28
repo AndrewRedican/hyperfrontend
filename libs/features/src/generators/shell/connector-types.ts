@@ -9,6 +9,28 @@ export type FeatureDisplayMode = 'embedded' | 'dialog' | 'popup' | 'standalone'
 /** Security envelope selector negotiated between host and feature. */
 export type FeatureSecurityProtocol = 'none' | 'v1' | 'v2'
 
+/**
+ * Containment opt-ins for a sandboxed feature frame.
+ *
+ * Enabling \`sandbox\` starts the frame from the browser's deny-all sandbox.
+ * The SDK always returns \`allow-scripts\` (the feature runtime is JavaScript)
+ * and grants \`allow-same-origin\` only to cross-origin feature URLs — a
+ * same-origin frame holding both tokens could remove its own sandbox, so that
+ * pairing cannot be expressed. Every opt-in defaults to \`false\` (denied).
+ */
+export interface FeatureSandboxOptions {
+  /** Allow the feature to submit forms; defaults to \`false\`. */
+  forms?: boolean
+  /** Allow the feature to open popup windows; defaults to \`false\`. */
+  popups?: boolean
+  /** Allow the feature to open modal dialogs (\`alert\`, \`confirm\`, \`print\`); defaults to \`false\`. */
+  modals?: boolean
+  /** Allow the feature to trigger file downloads; defaults to \`false\`. */
+  downloads?: boolean
+  /** Allow user-activated top-level navigation; unrestricted top navigation is deliberately not offered. */
+  topNavigationByUserActivation?: boolean
+}
+
 /** Context handed to an experience plugin around the feature's mount lifecycle. */
 export interface FeaturePluginContext {
   /** In-document root the display mode mounted, or \`null\` for windowed modes. */
@@ -66,6 +88,20 @@ export interface FeatureShellOptions {
   url?: string
   /** How an embedded feature is sized; defaults to \`fill\` (the iframe fills its container). */
   embedSizing?: 'fill' | 'content'
+  /**
+   * Permissions-Policy features delegated to the feature frame (the iframe
+   * \`allow\` attribute). Defaults to the needs the feature declared at build
+   * time; a host-supplied list replaces the baked one entirely. Only the
+   * iframe modes (\`embedded\`, \`dialog\`) apply it.
+   */
+  permissions?: readonly string[]
+  /**
+   * Containment posture for the feature frame; \`true\` (or an opt-in object)
+   * starts from the browser's deny-all sandbox. Host-decreed, never baked.
+   * Opening \`popup\` or \`standalone\` with a sandbox set throws, because no
+   * containment can apply to a top-level window.
+   */
+  sandbox?: boolean | FeatureSandboxOptions
   /** How the host reacts when the feature stops responding; defaults to \`emit\`. */
   onUnresponsive?: 'emit' | 'unmount' | ((info: FeatureUnresponsiveInfo) => void)
   /** Whether pressing Escape closes the shell; defaults to \`true\`. */

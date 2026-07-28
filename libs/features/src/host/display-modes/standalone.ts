@@ -1,5 +1,5 @@
 import type { DisplayModeMount } from '../types'
-import { openExternalWindow } from './external-window'
+import { assertNoSandbox, openExternalWindow } from './external-window'
 
 /**
  * Mounts a feature in a full standalone browser tab/window.
@@ -14,5 +14,6 @@ import { openExternalWindow } from './external-window'
  * ```
  */
 export const mountStandalone: DisplayModeMount = ({ options }) => {
+  assertNoSandbox(options.sandbox, 'standalone')
   return openExternalWindow(options.url ?? '')
 }

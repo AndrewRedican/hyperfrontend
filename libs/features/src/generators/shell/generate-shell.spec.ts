@@ -52,6 +52,26 @@ describe('generateShell', () => {
     expect(stage().read('src/index.ts', 'utf-8')).toContain('dialogWidth: 530')
   })
 
+  it('bakes the declared permissions into the entry defaults', () => {
+    expect(stage({ permissions: ['fullscreen', 'camera'] }).read('src/index.ts', 'utf-8')).toContain(
+      "permissions: [\n    'fullscreen',\n    'camera',\n  ]"
+    )
+  })
+
+  it('leaves permissions out of the defaults when the feature declares none', () => {
+    expect(stage().read('src/index.ts', 'utf-8')).not.toContain('permissions: [')
+  })
+
+  it('discloses the baked permission grants in the readme', () => {
+    expect(stage({ permissions: ['fullscreen'] }).read('README.md', 'utf-8')).toContain(
+      'delegated to its frame automatically: `fullscreen`'
+    )
+  })
+
+  it('omits the permissions paragraph from the readme when none are declared', () => {
+    expect(stage().read('README.md', 'utf-8')).not.toContain('delegated to its frame automatically')
+  })
+
   it('stamps the contract version into the inlined contract literal', () => {
     expect(stage().read('src/index.ts', 'utf-8')).toContain("version: '1.0.0'")
   })

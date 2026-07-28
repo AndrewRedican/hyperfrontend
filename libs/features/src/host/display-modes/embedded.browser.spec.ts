@@ -36,4 +36,17 @@ describe('mountEmbedded', () => {
     result.cleanup()
     expect(container.querySelector('iframe')).toBeNull()
   })
+
+  it('delegates the configured permissions to the iframe', () => {
+    expect(
+      mount({ permissions: ['fullscreen'] })
+        .container.querySelector('iframe')
+        ?.getAttribute('allow')
+    ).toBe('fullscreen')
+  })
+
+  it('sandboxes the iframe when a sandbox is configured', () => {
+    const { container } = mount({ url: 'https://feature.example/', sandbox: true })
+    expect(container.querySelector('iframe')?.getAttribute('sandbox')).toBe('allow-scripts allow-same-origin')
+  })
 })

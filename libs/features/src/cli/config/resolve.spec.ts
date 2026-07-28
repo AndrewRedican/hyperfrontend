@@ -126,6 +126,34 @@ describe('resolveBuildConfig', () => {
     )
   })
 
+  it('reads the declared permissions from the config file', async () => {
+    writeConfig('{ "name": "clock", "version": "1.0.0", "contract": "./clock.contract.json", "permissions": ["fullscreen", "camera"] }')
+    await expect(resolveBuildConfig({ cwd: dir, flags: baseFlags })).resolves.toEqual(
+      expect.objectContaining({ config: expect.objectContaining({ permissions: ['fullscreen', 'camera'] }) })
+    )
+  })
+
+  it('omits permissions from the resolved config when the config declares none', async () => {
+    writeConfig('{ "name": "clock", "version": "1.0.0", "contract": "./clock.contract.json" }')
+    await expect(resolveBuildConfig({ cwd: dir, flags: baseFlags })).resolves.toEqual(
+      expect.objectContaining({ config: expect.not.objectContaining({ permissions: expect.anything() }) })
+    )
+  })
+
+  it('rejects a permissions value that is not an array', async () => {
+    writeConfig('{ "name": "clock", "version": "1.0.0", "contract": "./clock.contract.json", "permissions": "fullscreen" }')
+    await expect(resolveBuildConfig({ cwd: dir, flags: baseFlags })).rejects.toThrow(
+      '"permissions" must be an array of Permissions-Policy feature names'
+    )
+  })
+
+  it('rejects a permissions entry that is not a non-empty string', async () => {
+    writeConfig('{ "name": "clock", "version": "1.0.0", "contract": "./clock.contract.json", "permissions": ["fullscreen", ""] }')
+    await expect(resolveBuildConfig({ cwd: dir, flags: baseFlags })).rejects.toThrow(
+      '"permissions" must be an array of Permissions-Policy feature names'
+    )
+  })
+
   it('rejects a config that does not resolve to an object', async () => {
     writeConfig('[]')
     await expect(resolveBuildConfig({ cwd: dir, flags: baseFlags })).rejects.toThrow('must resolve to an object')

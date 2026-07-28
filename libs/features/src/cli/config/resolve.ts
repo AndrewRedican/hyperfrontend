@@ -1,4 +1,4 @@
-import type { DisplayDefaults, FeatureContract, ResolvedFeatureConfig, SecurityProtocol } from '../../shared/types'
+import type { DisplayDefaults, FeatureContract, FeaturePermission, ResolvedFeatureConfig, SecurityProtocol } from '../../shared/types'
 import type { CliFlags } from '../args'
 import { dirname, isAbsolute, resolve } from 'node:path'
 import { isArray } from '@hyperfrontend/immutable-api-utils/built-in-copy/array'
@@ -52,6 +52,23 @@ function isRecord(value: unknown): value is Record<string, unknown> {
  */
 function toAbsolute(base: string, path: string): string {
   return isAbsolute(path) ? path : resolve(base, path)
+}
+
+/**
+ * Validates the config's optional `permissions` list of Permissions-Policy feature names.
+ *
+ * @param value - The raw `permissions` value from the loaded config.
+ * @returns The validated list, or `undefined` when the config declares none.
+ * @throws {Error} When the value is not an array of non-empty strings.
+ */
+function parsePermissions(value: unknown): FeaturePermission[] | undefined {
+  if (value === undefined) {
+    return undefined
+  }
+  if (!isArray(value) || value.some((entry) => typeof entry !== 'string' || entry.length === 0)) {
+    throw createError('Invalid config: "permissions" must be an array of Permissions-Policy feature names (e.g. ["fullscreen", "camera"]).')
+  }
+  return <FeaturePermission[]>value
 }
 
 /**
@@ -114,11 +131,13 @@ export async function resolveBuildConfig(options: ResolveBuildConfigOptions): Pr
     )
   }
   const display = isRecord(loaded['display']) ? <DisplayDefaults>loaded['display'] : undefined
+  const permissions = parsePermissions(loaded['permissions'])
 
   const resolved: ResolvedFeatureConfig = {
     ...config,
     url: flags.url ?? (typeof loaded['url'] === 'string' ? loaded['url'] : '/'),
     ...(display !== undefined && { display }),
+    ...(permissions !== undefined && { permissions }),
     protocol: <SecurityProtocol>protocol,
   }
   return {

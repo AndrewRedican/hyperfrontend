@@ -19,6 +19,18 @@ describe('mountDialog', () => {
     expect(mount({}).container.children).toHaveLength(2)
   })
 
+  it('delegates the configured permissions to the dialog iframe', () => {
+    expect(
+      mount({ permissions: ['clipboard-write'] })
+        .container.querySelector('iframe')
+        ?.getAttribute('allow')
+    ).toBe('clipboard-write')
+  })
+
+  it('sandboxes the dialog iframe when a sandbox is configured', () => {
+    expect(mount({ sandbox: true }).container.querySelector('iframe')?.getAttribute('sandbox')).toBe('allow-scripts allow-same-origin')
+  })
+
   it('omits the backdrop when the overlay is disabled', () => {
     expect(mount({ dialogOverlay: false }).container.children).toHaveLength(1)
   })

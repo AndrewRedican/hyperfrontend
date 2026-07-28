@@ -35,4 +35,16 @@ describe('mountPopup', () => {
     mountPopup({ options: <ShellOptions>{ container: '#x' }, requestClose: jest.fn() })
     expect(open).toHaveBeenCalledWith('', '_blank', `width=${dialogDefaults.width},height=${dialogDefaults.height},scrollbars=no`)
   })
+
+  it('throws when a sandbox is requested for a popup window', () => {
+    expect(() => mountPopup({ options: <ShellOptions>{ container: '#x', sandbox: true }, requestClose: jest.fn() })).toThrow(
+      'cannot be sandboxed'
+    )
+  })
+
+  it('accepts an explicitly disabled sandbox', () => {
+    const open = spyOpen()
+    mountPopup({ options: <ShellOptions>{ container: '#x', sandbox: false }, requestClose: jest.fn() })
+    expect(open).toHaveBeenCalledTimes(1)
+  })
 })
