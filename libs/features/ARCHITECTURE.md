@@ -75,7 +75,15 @@ The host never needs `@hyperfrontend/features` as a direct dependency: it instal
    // ⚠️ 'none' is a local-only default
    ```
 
-6. **Pure generators, I/O at the edges.** Generators are pure `(config, contract, tree) => void` functions that write to a `@hyperfrontend/project-scope` VFS tree; all filesystem I/O, prompting, and commits live in the CLI — never in the generators or the SDK.
+6. **Capability flows from the host, correct by construction.** The feature declares the Permissions-Policy features it needs (`permissions` in `feature.config.*`, baked into the connector and disclosed in `metadata.json`); the host applies them as the frame's `allow` attribute and can replace the list. Containment (`sandbox`) is host-decreed, never baked, and the two hazardous tokens are managed rather than configurable: `allow-scripts` is always granted (the feature runtime is JavaScript) and `allow-same-origin` only to cross-origin feature URLs — so a script-less frame and a sandbox-shedding same-origin frame cannot be expressed.
+
+   ```typescript
+   // ✅ delegation is reviewable, containment is the host's call
+   shell.open({ permissions: ['fullscreen'], sandbox: { downloads: true } })
+   // ❌ no raw token strings — the SDK owns the hazardous tokens
+   ```
+
+7. **Pure generators, I/O at the edges.** Generators are pure `(config, contract, tree) => void` functions that write to a `@hyperfrontend/project-scope` VFS tree; all filesystem I/O, prompting, and commits live in the CLI — never in the generators or the SDK.
 
 ---
 
