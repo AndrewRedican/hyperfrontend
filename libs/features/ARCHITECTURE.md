@@ -121,12 +121,18 @@ sequenceDiagram
     F-->>H: "open" event · ready() resolves
     H->>F: send(action, data)  ·  validated against contract
     F->>H: send(action, data)  ·  validated against contract
-    F-->>H: heartbeat beats
-    Note over H: missed beats → UnresponsivePolicy<br/>(emit / unmount / callback)
-    H->>F: close() / destroy() → channel disconnect + teardown
+    F-->>H: heartbeat beats · visibility reports
+    Note over H: four liveness states<br/>(healthy / unobservable / suspect / gone)<br/>suspect → UnresponsivePolicy (emit / unmount / callback)
+    H->>F: close() → "closing" notice (flush window)
+    F-->>H: final sends, then acknowledgement
+    Note over H,F: each side fires a single "close"
 ```
 
 Opening is asynchronous and deadline-bounded: the channel activates only when the Nexus wire handshake completes, and sends issued before then queue and flush on open. If the counterpart never completes the handshake within the deadline (`openTimeoutMs` / `readyTimeoutMs`, default 10 s), the shell tears the mount down and emits `error` with `reason: 'open-timeout'`, and the feature's `ready()` rejects after emitting `error` with `reason: 'ready-timeout'`.
+
+Liveness is judged in four states, not a boolean. The feature pulses a hidden beat and reports its page visibility; the host watchdog counts misses only while both pages are visible (`healthy`), pauses while either is hidden (`unobservable` — throttled timers make silence weak evidence), runs the `UnresponsivePolicy` once per `suspect` episode (a recovering beat returns to `healthy` and re-arms it), and reports `gone` once the session closes. Transitions surface as the shell's `status` event.
+
+Teardown is polite by default: `close()` on either side proposes the close, the counterpart receives a `closing` event while the channel still delivers — its flush window for unsaved work — then acknowledges, and each side fires a single `close` (an unacknowledged close completes at a deadline). The feature can declare unsaved work with `setDirty(true)`; the host sees it as the `dirty-state` event and the `isDirty` flag and can take it into account before proposing a close. `destroy()` remains the impolite immediate teardown.
 
 ---
 
@@ -143,6 +149,7 @@ interface ShellHandle {
   send(type: string, data?: unknown): void
   on(event: string, handler: (payload: unknown) => void): () => void
   readonly isOpen: boolean
+  readonly isDirty: boolean
 }
 
 // Hostee: connect a feature app to whatever host embeds it.
@@ -151,6 +158,7 @@ function createFeature(options: FeatureOptions): FeatureHandle
 interface FeatureHandle {
   send(type: string, data?: unknown): void
   on(event: string, handler: (payload: unknown) => void): () => void
+  setDirty(isDirty: boolean): void
   ready(): Promise<void>
   close(): void
 }
