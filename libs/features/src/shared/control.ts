@@ -16,6 +16,10 @@ export const ControlType = freeze(<const>{
   Request: '__hf:request',
   /** Correlated response envelope answering a request. */
   Response: '__hf:response',
+  /** Hostee-to-host page-visibility report, so silence while hidden is not read as failure. */
+  Visibility: '__hf:visibility',
+  /** Hostee-to-host declaration that it holds (or no longer holds) unsaved work. */
+  Dirty: '__hf:dirty',
 })
 
 /**
@@ -57,6 +61,8 @@ export function withControlContract(contract: FeatureContract): FeatureContract 
     { type: ControlType.Size },
     { type: ControlType.Request },
     { type: ControlType.Response },
+    { type: ControlType.Visibility },
+    { type: ControlType.Dirty },
   ]
   return {
     emitted: [...contract.emitted, ...controlActions()],

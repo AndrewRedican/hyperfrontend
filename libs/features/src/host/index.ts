@@ -13,6 +13,7 @@ export type {
   UnresponsiveInfo,
   UnresponsivePolicy,
 } from '../shared/types'
+export type { HeartbeatState, HeartbeatStatus } from './heartbeat'
 export type { ExperiencePlugin, ExperiencePluginContext } from './plugins'
 export type { ShellHandle } from './types'
 export { DisplayMode } from '../shared/types'

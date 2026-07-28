@@ -2,7 +2,7 @@ import type { BrokerHandle, ChannelHandle, IMessage } from '@hyperfrontend/nexus
 import type { EventEmitter } from '../shared/event-emitter'
 import type { RequestOptions } from '../shared/request'
 import type { ExperiencePlugin, ExperiencePluginContext, FeatureContract, SecurityProtocol, ShellOptions } from '../shared/types'
-import type { HeartbeatMonitor } from './heartbeat'
+import type { HeartbeatMonitor, HeartbeatStatus } from './heartbeat'
 import type { DisplayModeMount, ShellHandle } from './types'
 import { createError } from '@hyperfrontend/immutable-api-utils/built-in-copy/error'
 import { freeze } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
@@ -72,10 +72,32 @@ export interface ShellWiring {
   /**
    * Builds the heartbeat watchdog that detects an unresponsive feature.
    *
-   * @param onUnresponsive - Invoked with the missed-beat count and last beat timestamp.
+   * @param onUnresponsive - Invoked with the missed-beat count and last beat timestamp on each entry into `suspect`.
+   * @param onStateChange - Invoked with a status snapshot on every liveness-state transition.
    * @returns The heartbeat monitor.
    */
-  createHeartbeatMonitor(onUnresponsive: (missedBeats: number, lastBeatAt: number | null) => void): HeartbeatMonitor
+  createHeartbeatMonitor(
+    onUnresponsive: (missedBeats: number, lastBeatAt: number | null) => void,
+    onStateChange?: (status: HeartbeatStatus) => void
+  ): HeartbeatMonitor
+  /**
+   * Observes the host page's visibility for the heartbeat watchdog.
+   *
+   * @param onChange - Receives `true` while the host page is hidden.
+   * @returns A function that stops observing.
+   */
+  observeVisibility(onChange: (hidden: boolean) => void): () => void
+}
+
+/**
+ * Loosely-typed payload of a boolean-flag control message (visibility and
+ * dirty reports); the flag only counts when it is literally `true`.
+ */
+interface ControlFlagPayload {
+  /** Hostee-reported hidden flag on a visibility report. */
+  hidden?: unknown
+  /** Hostee-declared unsaved-work flag on a dirty report. */
+  dirty?: unknown
 }
 
 /**
@@ -116,6 +138,8 @@ export function createShellHandle(
   let opened = false
   let openCount = 0
   let monitor: HeartbeatMonitor | null = null
+  let visibilityTeardown: (() => void) | null = null
+  let dirty = false
   let plugins: ActivePlugins | null = null
   let pendingUnmount: Promise<void> | null = null
   let queuedOpen: (() => void) | null = null
@@ -134,6 +158,10 @@ export function createShellHandle(
   }
 
   const stopMonitor = () => {
+    if (visibilityTeardown) {
+      visibilityTeardown()
+      visibilityTeardown = null
+    }
     if (monitor) {
       monitor.stop()
       monitor = null
@@ -248,15 +276,29 @@ export function createShellHandle(
       ...(options.openTimeoutMs !== undefined ? { connectTimeoutMs: options.openTimeoutMs } : {}),
     })
     const sizeFrame = options.embedSizing === 'content' ? result.frame : undefined
-    const activeMonitor = wiring.createHeartbeatMonitor((missedBeats, lastBeatAt) => applyUnresponsive(options, missedBeats, lastBeatAt))
+    const activeMonitor = wiring.createHeartbeatMonitor(
+      (missedBeats, lastBeatAt) => applyUnresponsive(options, missedBeats, lastBeatAt),
+      (status) => emitter.emit('status', status)
+    )
     monitor = activeMonitor
+    dirty = false
+    // why: Either page being hidden throttles its timers, so the watchdog must treat silence as unobservable rather than as a dead feature.
+    let selfHidden = false
+    let peerHidden = false
+    const applyObservability = () => activeMonitor.setObservable(!selfHidden && !peerHidden)
+    visibilityTeardown = wiring.observeVisibility((hidden) => {
+      selfHidden = hidden
+      applyObservability()
+    })
     channel.on('open', () => {
       opened = true
       emitter.emit('open')
       activeMonitor.start()
     })
+    channel.on('closing', (data) => emitter.emit('closing', data))
     channel.on('close', () => {
       opened = false
+      dirty = false
       emitter.emit('close')
       stopMonitor()
       requests.rejectAll('The feature channel closed before the feature responded.')
@@ -283,6 +325,12 @@ export function createShellHandle(
           activeMonitor.beat()
         } else if (message.type === ControlType.Size && sizeFrame) {
           applyContentSize(sizeFrame, message.data)
+        } else if (message.type === ControlType.Visibility) {
+          peerHidden = (<ControlFlagPayload | undefined>message.data)?.hidden === true
+          applyObservability()
+        } else if (message.type === ControlType.Dirty) {
+          dirty = (<ControlFlagPayload | undefined>message.data)?.dirty === true
+          emitter.emit('dirty-state', { dirty })
         } else {
           requests.dispatch(message.type, message.data)
         }
@@ -314,6 +362,9 @@ export function createShellHandle(
     on: emitter.on,
     get isOpen() {
       return opened
+    },
+    get isDirty() {
+      return dirty
     },
   })
 }

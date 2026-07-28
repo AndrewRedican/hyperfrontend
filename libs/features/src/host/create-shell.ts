@@ -8,6 +8,7 @@ import { selectMount } from './display-modes/registry'
 import { createHeartbeatMonitor } from './heartbeat'
 import { createShellHandle } from './lifecycle'
 import { registerSecurity } from './security'
+import { observePageVisibility } from './visibility'
 
 // note: One broker per shell, each caching its own channels.
 let shellCount = 0
@@ -123,5 +124,11 @@ export function createShell(options: ShellOptions): ShellHandle {
   // how: A feature-authored contract is inverted into the host's perspective; the generic default contract is already channel-oriented and is used as-is.
   const contract = withControlContract(options.contract ? invertFeatureContract(options.contract) : <FeatureContract>DEFAULT_CONTRACT)
   const broker = createBroker({ name: deriveShellName(options, (shellCount += 1)), contract })
-  return createShellHandle(broker, options, emitter, { contract, selectMount, registerSecurity, createHeartbeatMonitor })
+  return createShellHandle(broker, options, emitter, {
+    contract,
+    selectMount,
+    registerSecurity,
+    createHeartbeatMonitor,
+    observeVisibility: observePageVisibility,
+  })
 }

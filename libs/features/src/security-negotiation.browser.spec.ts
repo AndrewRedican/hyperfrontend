@@ -136,6 +136,7 @@ describe('Integration: host and hostee across the hardened handshake', () => {
         selectMount: () => () => ({ target: <Window>(<unknown>featureWindow), cleanup: () => undefined }),
         registerSecurity,
         createHeartbeatMonitor,
+        observeVisibility: () => () => undefined,
       }
     )
     shell = handle

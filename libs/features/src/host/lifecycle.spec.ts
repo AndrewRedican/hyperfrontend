@@ -49,7 +49,6 @@ function createMockChannel(): MockChannel {
 }
 
 const TARGET = <Window>(<unknown>{ name: 'target' })
-
 function createDeferred() {
   const settle: { resolve(): void; reject(reason: unknown): void } = { resolve: () => undefined, reject: () => undefined }
   const promise = createPromise<void>((resolve, reject) => {
@@ -77,7 +76,7 @@ function setup(config: { target?: Window | null; settings?: Record<string, unkno
   })
   const selectMount = jest.fn(() => mount)
   const registerSecurity = jest.fn(() => config.settings)
-  const monitor = { beat: jest.fn(), start: jest.fn(), stop: jest.fn() }
+  const monitor = { beat: jest.fn(), start: jest.fn(), stop: jest.fn(), setObservable: jest.fn(), getStatus: jest.fn() }
   let unresponsive: ((missedBeats: number, lastBeatAt: number | null) => void) | undefined
   const createHeartbeatMonitor = jest.fn((onUnresponsive: (m: number, l: number | null) => void) => {
     unresponsive = onUnresponsive
@@ -85,12 +84,13 @@ function setup(config: { target?: Window | null; settings?: Record<string, unkno
   })
   const emitter = createEventEmitter()
   const base = <ShellOptions>{ container: '#shell' }
-  // note: A schema-free contract keeps payload validation inert here; that path is covered by lifecycle.validation.spec.ts.
+  // note: A schema-free contract keeps payload validation inert here; that path is covered by lifecycle.validation.spec.ts. Liveness, visibility, closing, and dirty-state wiring are covered by lifecycle.liveness.spec.ts.
   const handle = createShellHandle(broker, base, emitter, {
     contract: { emitted: [], accepted: [] },
     selectMount,
     registerSecurity,
     createHeartbeatMonitor,
+    observeVisibility: jest.fn(() => () => undefined),
   })
   return {
     handle,

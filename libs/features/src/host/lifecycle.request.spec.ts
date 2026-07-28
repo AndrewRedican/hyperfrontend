@@ -66,7 +66,14 @@ function setup() {
     },
     selectMount: jest.fn(() => mount),
     registerSecurity: jest.fn(() => undefined),
-    createHeartbeatMonitor: jest.fn(() => ({ beat: jest.fn(), start: jest.fn(), stop: jest.fn() })),
+    createHeartbeatMonitor: jest.fn(() => ({
+      beat: jest.fn(),
+      start: jest.fn(),
+      stop: jest.fn(),
+      setObservable: jest.fn(),
+      getStatus: jest.fn(),
+    })),
+    observeVisibility: jest.fn(() => () => undefined),
   })
   return { handle, mock }
 }

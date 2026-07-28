@@ -18,6 +18,8 @@ describe('withControlContract', () => {
       { type: ControlType.Size },
       { type: ControlType.Request },
       { type: ControlType.Response },
+      { type: ControlType.Visibility },
+      { type: ControlType.Dirty },
     ])
   })
 
@@ -28,6 +30,8 @@ describe('withControlContract', () => {
       { type: ControlType.Size },
       { type: ControlType.Request },
       { type: ControlType.Response },
+      { type: ControlType.Visibility },
+      { type: ControlType.Dirty },
     ])
   })
 

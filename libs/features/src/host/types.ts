@@ -17,6 +17,11 @@ export interface ShellHandle {
   open(options?: Partial<ShellOptions>): void
   /**
    * Closes the feature gracefully, disconnecting the messaging channel.
+   *
+   * The close is a polite exchange: the feature receives a `closing` notice
+   * and may flush final messages before the channel completes the close (or
+   * its deadline expires). Check `isDirty` first to take unsaved work into
+   * account before starting the teardown.
    */
   close(): void
   /**
@@ -74,7 +79,13 @@ export interface ShellHandle {
    */
   handle(type: string, handler: RequestHandler): () => void
   /**
-   * Subscribes to feature messages or lifecycle events (`open`, `close`, `error`).
+   * Subscribes to feature messages or lifecycle events (`open`, `closing`,
+   * `close`, `error`, `status`, `dirty-state`).
+   *
+   * `status` fires on every liveness transition with a heartbeat snapshot
+   * (`healthy`, `unobservable`, `suspect`, or `gone`). `dirty-state` fires
+   * when the feature declares or clears unsaved work. `closing` announces a
+   * polite teardown while the channel still delivers.
    *
    * @param event - Message action type or lifecycle event name.
    * @param handler - Callback invoked with the event payload.
@@ -85,6 +96,11 @@ export interface ShellHandle {
    * Whether the feature channel is currently open (`true` while connected).
    */
   readonly isOpen: boolean
+  /**
+   * Whether the feature has declared unsaved work (`true` between
+   * `setDirty(true)` and `setDirty(false)`; resets when the channel closes).
+   */
+  readonly isDirty: boolean
 }
 
 /**

@@ -314,6 +314,13 @@ describe('createFeatureHandle', () => {
     expect(() => handle.close()).not.toThrow()
   })
 
+  it('treats setDirty as a no-op when unembedded', () => {
+    const handle = createFeatureHandle(createMockBroker(createMockChannel().channel).broker, null, createEventEmitter(), {
+      contract: emptyContract,
+    })
+    expect(() => handle.setDirty(true)).not.toThrow()
+  })
+
   it('starts the heartbeat when the host channel opens', () => {
     const mock = createMockChannel()
     createFeatureHandle(createMockBroker(mock.channel).broker, hostWindow, createEventEmitter(), { contract: emptyContract })
@@ -341,6 +348,42 @@ describe('createFeatureHandle', () => {
     createFeatureHandle(createMockBroker(mock.channel).broker, hostWindow, createEventEmitter(), { contract: emptyContract })
     mock.trigger('open')
     expect(mock.send).toHaveBeenCalledWith(ControlType.Size, expect.objectContaining({ height: expect.any(Number) }))
+  })
+
+  it('reports its page visibility when the host channel opens', () => {
+    const mock = createMockChannel()
+    createFeatureHandle(createMockBroker(mock.channel).broker, hostWindow, createEventEmitter(), { contract: emptyContract })
+    mock.trigger('open')
+    expect(mock.send).toHaveBeenCalledWith(ControlType.Visibility, { hidden: false })
+  })
+
+  it('stops reporting visibility when the host channel closes', () => {
+    const mock = createMockChannel()
+    createFeatureHandle(createMockBroker(mock.channel).broker, hostWindow, createEventEmitter(), { contract: emptyContract })
+    mock.trigger('open')
+    mock.trigger('close')
+    mock.send.mockClear()
+    document.dispatchEvent(new Event('visibilitychange'))
+    expect(mock.send).not.toHaveBeenCalledWith(ControlType.Visibility, expect.anything())
+  })
+
+  it('re-emits the closing notice so the app can flush before the close completes', () => {
+    const mock = createMockChannel()
+    const emitter = createEventEmitter()
+    const closings: unknown[] = []
+    emitter.on('closing', (data) => closings.push(data))
+    createFeatureHandle(createMockBroker(mock.channel).broker, hostWindow, emitter, { contract: emptyContract })
+    mock.trigger('closing', { initiatedLocally: false })
+    expect(closings).toEqual([{ initiatedLocally: false }])
+  })
+
+  it('sends the dirty declaration through the control plane', () => {
+    const mock = createMockChannel()
+    const handle = createFeatureHandle(createMockBroker(mock.channel).broker, hostWindow, createEventEmitter(), { contract: emptyContract })
+    handle.setDirty(true)
+    expect(mock.send).toHaveBeenCalledWith(ControlType.Dirty, { dirty: true })
+    handle.setDirty(false)
+    expect(mock.send).toHaveBeenCalledWith(ControlType.Dirty, { dirty: false })
   })
 
   describe('payload validation', () => {

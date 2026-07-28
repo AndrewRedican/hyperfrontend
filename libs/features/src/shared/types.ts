@@ -51,10 +51,14 @@ export interface UnresponsiveInfo {
 }
 
 /**
- * What the host does when a feature misses too many heartbeats.
+ * What the host does when a feature misses too many heartbeats while visible.
  *
  * `emit` (the default) emits an `error`; `unmount` also tears the feature down;
  * a callback takes over handling entirely with the {@link UnresponsiveInfo}.
+ * The policy runs once per `suspect` episode: a recovering beat returns the
+ * feature to `healthy` and re-arms it. While either page is hidden the
+ * watchdog pauses instead (`unobservable`) — throttled timers make silence
+ * weak evidence.
  */
 export type UnresponsivePolicy = 'emit' | 'unmount' | ((info: UnresponsiveInfo) => void)
 
