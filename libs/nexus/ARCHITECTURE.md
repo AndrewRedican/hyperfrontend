@@ -335,10 +335,25 @@ sequenceDiagram
     Note over HostA: [CHANNEL OPEN]
     Note over HostB: [CHANNEL OPEN]
     HostA->>HostB: 1. CLOSE_CONNECTION
+    Note over HostA: Event: 'closing'<br/>[still active, awaiting ACK]
+    Note over HostB: Event: 'closing'<br/>[flush window - channel still delivers]
+    HostB-->>HostA: (final flush sends, if any)
     HostB->>HostA: 2. CLOSE_CONNECTION_ACKNOWLEDGED
-    Note over HostA: Event: 'close'<br/>[CHANNEL CLOSED]
     Note over HostB: Event: 'close'<br/>[CHANNEL CLOSED]
+    Note over HostA: Event: 'close'<br/>[CHANNEL CLOSED]
 ```
+
+The polite close is a flush-then-confirm exchange. The disconnector posts CLOSE, fires
+`closing` (`{ initiatedLocally: true }`), and stays active so the partner's final sends
+still deliver; its single `close` fires only when the acknowledgement arrives — or when
+`closeTimeoutMs` (default 2 s) expires, so an unresponsive partner cannot hold the channel
+open. The partner fires `closing` (`{ initiatedLocally: false }`) while the channel still
+delivers — subscribers may synchronously send final messages, which arrive before the
+acknowledgement — then acknowledges, deactivates, and fires its single `close`. New sends
+issued after a close was proposed queue for the next connection instead of racing the CLOSE.
+Simultaneous polite closes (close glare) acknowledge each other and still fire exactly one
+`closing` and one `close` per side. `destroy()` remains the immediate, unacknowledged
+teardown.
 
 ### State Transitions
 
@@ -355,7 +370,9 @@ stateDiagram-v2
     CONNECTING --> DENIED: DENY
     CONNECTING --> INITIAL: deadline expiry ('connect-timeout')
     CONNECTING --> ACTIVE: ACCEPT + OPEN
-    ACTIVE --> CLOSED: disconnect()
+    ACTIVE --> CLOSING: disconnect()
+    CLOSING --> CLOSED: ACK or closeTimeoutMs
+    ACTIVE --> CLOSED: peer CLOSE (after flush window)
     DENIED --> [*]
     CLOSED --> [*]
 ```
@@ -374,8 +391,8 @@ Each protocol action is processed by a dedicated handler. All handlers receive t
 | `handleDeny`               | Abandon the pending request (stop retrying), terminate process, notify 'deny' with error context                                                                                                                                                                                                                                   |
 | `handleCancel`             | Cancel channel, send CANCEL_ACK, notify 'cancel'                                                                                                                                                                                                                                                                                   |
 | `handleCancelAcknowledged` | Terminate process, notify 'cancel' (initiator side)                                                                                                                                                                                                                                                                                |
-| `handleClose`              | Disconnect channel, send CLOSE_ACK, notify 'close'                                                                                                                                                                                                                                                                                 |
-| `handleCloseAcknowledged`  | Terminate process, notify 'close' (initiator side)                                                                                                                                                                                                                                                                                 |
+| `handleClose`              | Notify 'closing' (flush window, channel still active), send CLOSE_ACK, then deactivate and notify a single 'close'                                                                                                                                                                                                                 |
+| `handleCloseAcknowledged`  | Complete the initiator's polite close: deactivate, terminate process, notify its single 'close' (ignores stray acks for channels not closing)                                                                                                                                                                                      |
 | `handleMessage`            | Validate payload, forward to subscribers via `notifyMessage()`                                                                                                                                                                                                                                                                     |
 | `handleDestroy`            | Force-destroy connection, clean up resources                                                                                                                                                                                                                                                                                       |
 | `handleInvalid`            | Log invalid requests, optionally notify sender — see [handle-invalid.ts](https://github.com/AndrewRedican/hyperfrontend/blob/main/libs/nexus/src/broker/routing/handle-invalid.ts)                                                                                                                                                 |
@@ -388,14 +405,15 @@ Channels emit lifecycle events to subscribers. Each event has a specific trigger
 
 ### Lifecycle Events
 
-| Event               | Trigger                                           | Payload                       |
-| ------------------- | ------------------------------------------------- | ----------------------------- |
-| `'open'`            | Connection successfully established               | `{ origin, contract }`        |
-| `'close'`           | Connection gracefully closed                      | `{ notify: boolean }`         |
-| `'cancel'`          | Pending connection cancelled                      | `{ notify: boolean }`         |
-| `'deny'`            | Connection request rejected (either side's gates) | `{ error?, reason?, origin?}` |
-| `'invalid'`         | Protocol violation or unexpected-origin drop      | `{ error, action? }`          |
-| `'connect-timeout'` | Handshake deadline expired with no answer         | `{ elapsedMs }`               |
+| Event               | Trigger                                           | Payload                         |
+| ------------------- | ------------------------------------------------- | ------------------------------- |
+| `'open'`            | Connection successfully established               | `{ origin, contract }`          |
+| `'closing'`         | Polite close proposed; channel still delivers     | `{ initiatedLocally: boolean }` |
+| `'close'`           | Close completed (fires once per side)             | `{ notify: boolean }`           |
+| `'cancel'`          | Pending connection cancelled                      | `{ notify: boolean }`           |
+| `'deny'`            | Connection request rejected (either side's gates) | `{ error?, reason?, origin?}`   |
+| `'invalid'`         | Protocol violation or unexpected-origin drop      | `{ error, action? }`            |
+| `'connect-timeout'` | Handshake deadline expired with no answer         | `{ elapsedMs }`                 |
 
 The `deny` payload's optional `reason` is machine-readable: `'incompatible-contract'` (a `contractCompat` rule rejected the pair) or `'security-unavailable'` (a fail-closed channel could not obtain an encrypted transport). The `invalid` event fires with `{ error, action? }` for unexpected-origin drops, and with `{ reason, origin }` when the counterpart reports an INVALID_REQUEST frame.
 
