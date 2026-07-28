@@ -42,7 +42,7 @@ The architecture is composed of specialized libraries that layer on top of each 
 
 | Layer             | Package                           | Responsibility                                     |
 | ----------------- | --------------------------------- | -------------------------------------------------- |
-| **Tooling**       | `@hyperfrontend/features`         | Nx plugin for shell generation and automation      |
+| **SDK**           | `@hyperfrontend/features`         | Host/hostee runtime SDK, shell generation, CLI     |
 | **Communication** | `@hyperfrontend/nexus`            | Broker-channel messaging with contracts            |
 | **Security**      | `@hyperfrontend/network-protocol` | Encryption pipelines and obfuscation               |
 | **Crypto**        | `@hyperfrontend/cryptography`     | AES-GCM encryption, PBKDF2 key derivation, hashing |
@@ -55,7 +55,16 @@ The architecture is composed of specialized libraries that layer on top of each 
 
 ## Communication Layer: Nexus
 
-`@hyperfrontend/nexus` implements a TCP-like protocol over the browser's `postMessage` API. It provides secure, contract-validated messaging between browser contexts (iframes, windows, tabs, web workers).
+`@hyperfrontend/nexus` implements a session protocol over the browser's `postMessage` API. It provides secure, contract-validated messaging between browser contexts (iframes, windows, tabs).
+
+> **Canonical protocol story.** The session model described here — wire handshake, pinned
+> origins, versioned contracts, the four-state heartbeat, and polite teardown — is the
+> canonical description of the shipped runtime. The article
+> [Microfrontends from first principles](apps/docs-site/content/articles/microfrontends-from-first-principles.md)
+> derives the same model from scratch and is the canonical rationale; the per-library
+> architecture guides ([nexus](libs/nexus/ARCHITECTURE.md),
+> [features](libs/features/ARCHITECTURE.md)) document the same protocol in implementation
+> depth. Where an older document disagrees with these, this model wins.
 
 ### Broker-Channel Model
 
@@ -105,7 +114,8 @@ flowchart TB
 
 ### Connection Protocol
 
-Channels establish connections using a three-way handshake inspired by TCP:
+Channels establish sessions through a wire handshake — REQUEST, ACCEPT, OPEN — and nothing
+opens without it:
 
 ```mermaid
 ---
@@ -118,14 +128,55 @@ sequenceDiagram
     participant Host as HOST
     participant Feature as FEATURE
 
-    Host->>Feature: SYN (pid, contract)
-    Feature->>Host: SYN-ACK (pid, ack)
-    Host->>Feature: ACK (pid)
+    Host->>Feature: REQUEST (pid, contract, security offer)
+    Feature->>Host: ACCEPT (pid, contract, security answer)
+    Host->>Feature: OPEN (pid)
 
-    Note over Host,Feature: CONNECTION ACTIVE
+    Note over Host,Feature: SESSION OPEN — queued messages flush
 ```
 
-Each connection attempt is tracked by a Process ID (UUID), enabling multiple concurrent connection attempts and clean lifecycle management.
+- **Symmetric initiation.** Either side may connect first; simultaneous requests (glare)
+  resolve deterministically by a broker-id tie-break, and handshake replays are idempotent.
+- **Deadlines and retries.** Pending REQUEST/ACCEPT messages re-send on a retry cadence, and
+  every wait has a deadline: an unanswered attempt fires `connect-timeout` instead of hanging.
+- **Origins are learned, then pinned.** Each side pins the counterpart's origin at the
+  handshake and drops anything that does not match; receive-side routing resolves by the
+  sending window, never by claimed identity.
+- **Contracts gate the session.** Required actions must appear in the counterpart's contract,
+  and contracts carry an optional semver version checked by a compatibility rule at the
+  handshake gate. An incompatible pair is denied (`deny` with a reason) before anything opens.
+- **Payloads validate twice.** Send validates against the sender's own emitted schemas and
+  throws in the sender's frame; receive validates against the receiver's own accepted schemas
+  and drops invalid payloads with a diagnosable error event.
+
+Each connection attempt is tracked by a Process ID (UUID), enabling multiple concurrent
+connection attempts and clean lifecycle management.
+
+### Session Lifecycle: Heartbeat and Teardown
+
+A session that is open is not necessarily alive, so the runtime judges liveness with four
+states rather than a boolean:
+
+| State            | Meaning                                                                                                                             |
+| ---------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
+| **healthy**      | Beats are arriving within the expected budget.                                                                                      |
+| **unobservable** | The host page or the feature page is hidden — browsers throttle hidden timers, so silence is weak evidence and the watchdog pauses. |
+| **suspect**      | The pages are visible and the miss budget is exhausted; the feature is probably unhealthy.                                          |
+| **gone**         | The session is closed or destroyed.                                                                                                 |
+
+The feature pulses a hidden beat; the host watchdog counts misses only while both pages are
+visible (each side reports its own visibility). Entering `suspect` runs the host's
+unresponsive policy once per episode, and a recovering beat returns the session to `healthy`
+and re-arms it. Transitions surface as the shell's `status` event.
+
+Teardown is a protocol, not an event. The polite form is a short exchange: one side proposes
+closing (CLOSE), the other receives a `closing` notice while the channel still delivers — its
+flush window for unsaved work — then confirms (ACK), and only then does each side fire its
+single `close`. An unacknowledged close completes at a deadline, so an unresponsive
+counterpart cannot hold the channel open, and the impolite forms (crash, tab close) remain
+covered by the heartbeat. Dirty state is a contract event: the feature declares unsaved work
+(`setDirty`), and the host can take it into account (`isDirty`, `dirty-state`) before
+starting a polite teardown.
 
 ### Contract System
 
@@ -295,9 +346,9 @@ flowchart TB
         step1["1. HOST INITIALIZATION<br/><code>const broker = createBroker({ name: 'host', contracts, policies })</code>"]
         step2["2. SHELL MOUNT<br/><code>&lt;FeatureShell /&gt; → Creates iframe → Loads feature URL</code>"]
         step3["3. CHANNEL CREATION<br/><code>const channel = broker.addChannel('feature-a', iframe.contentWindow)</code>"]
-        step4["4. CONNECTION HANDSHAKE<br/><code>channel.connect() → SYN → SYN-ACK → ACK → ACTIVE</code>"]
+        step4["4. CONNECTION HANDSHAKE<br/><code>channel.connect() → REQUEST → ACCEPT → OPEN</code>"]
         step5["5. MESSAGE EXCHANGE<br/><code>channel.send('CONFIG', { theme: 'dark' })</code><br/><code>channel.onMessage((msg) => { ... })</code>"]
-        step6["6. LIFECYCLE EVENTS<br/><code>channel.on('open', ...)</code> Connection established<br/><code>channel.on('close', ...)</code> Graceful disconnect<br/><code>channel.on('deny', ...)</code> Connection refused"]
+        step6["6. LIFECYCLE EVENTS<br/><code>channel.on('open', ...)</code> Session open<br/><code>channel.on('closing', ...)</code> Polite close proposed — flush window<br/><code>channel.on('close', ...)</code> Close completed<br/><code>channel.on('deny', ...)</code> Connection refused"]
 
         step1 --> step2 --> step3 --> step4 --> step5 --> step6
     end
@@ -360,6 +411,7 @@ This enables server-side features (SSR, API routes) to use the same security pro
 
 Each package contains its own architecture documentation with implementation details:
 
+- [Features Architecture](libs/features/ARCHITECTURE.md) — Host/hostee SDK, control plane, shell generation
 - [Nexus Architecture](libs/nexus/ARCHITECTURE.md) — Protocol design, handler reference, event system
 - [Network Protocol Architecture](libs/network-protocol/ARCHITECTURE.md) — Queue composition, security suite, end-to-end flow
 - [State Machine Architecture](libs/state-machine/ARCHITECTURE.md) — State patterns, transitions, reducers
