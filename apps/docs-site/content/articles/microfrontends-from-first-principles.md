@@ -1057,41 +1057,48 @@ That last signal remains a judgement, not an oracle. The lifecycle has to preser
 
 ### Content-driven sizing
 
-This is the familiar resize dance, but a shared protocol lets you implement it once rather than once per feature.
+This is the familiar resize dance, and a shared protocol lets you implement it once rather than once per feature.
 
-In schematic form, the hostee observes layout changes and reports its current document height:
+The tempting shape is the one most hand-rolled integrations reach for: the embedded document announces its own height, and the host applies it. It works, until you ask who is in charge. The host is now applying whatever number arrives, unbounded, to its own page. Geometry authority has quietly moved to the wrong side of the wall.
+
+So the agreement runs the other way. The host owns the page, so the host owns the measurement. It observes the container it mounted the frame into and reports that box’s dimensions across the boundary whenever they change:
 
 ```js
-const root = document.documentElement
-const body = document.body
-const reportHeight = () => {
-  const height = Math.max(root.scrollHeight, root.offsetHeight, body.scrollHeight, body.offsetHeight)
-  send({
-    type: '@shell/size',
-    payload: { height },
-  })
-}
-const observer = new ResizeObserver(reportHeight)
-observer.observe(root)
-observer.observe(body)
-reportHeight()
+const observer = new ResizeObserver((entries) => {
+  for (const entry of entries) {
+    const { width, height } = entry.contentRect
+    send({
+      type: '@shell/viewport',
+      payload: { width, height },
+    })
+  }
+})
+observer.observe(container)
 ```
 
-A production-ready implementation may also need deduplication, width-driven reflow handling, margins, absolutely positioned overflow, and loop prevention. That detail goes beyond the scope of this article.
+A production-ready implementation also needs the box model handled deliberately, deduplication, and fallback dimensions for a container that has not been laid out yet. That detail goes beyond the scope of this article.
 
-The host validates and bounds the requested height before applying it.
+The hostee sizes its document to the reported numbers. Every dimension that crosses the wall is a resolved pixel value; no relative unit means anything on the other side of a document boundary.
 
-`@shell/size` receives no special treatment. It uses the same channel, schema validation, session identity, and pinned counterpart as everything else.
+A feature with intrinsic dimensions declares them in the contract instead, and its frame receives them exactly. Placing it somewhere it fits is the host’s job.
+
+The embed-grows-with-content behaviour is still available, as an ordinary contract message: the feature reports its content height as product data, and the host, which owns the container, decides whether the container grows. The dance is the same. The authority is not.
+
+`@shell/viewport` receives no special treatment. It uses the same channel, schema validation, session identity, and pinned counterpart as everything else.
 
 ### Overlays
 
 The child’s modal cannot escape its document, and it never will.
 
-So the document does not escape. The box moves.
+So the document does not escape. The wall opens a bigger pane.
 
-The hostee requests a display mode such as inline, overlay, or full-viewport as an ordinary contract message. The host owns the page and decides whether to reposition or resize the frame.
+For a dialog, the host lays a second frame over its own page — full-viewport, transparent — and the feature draws its dialog box inside it. Everything around the box is backdrop, and the host page shows through wherever the feature paints nothing.
 
-The content asks the wall to move. The wall may say no.
+Only the feature can hear a click on that backdrop, or an Escape pressed in its document; focus lives inside the frame. So it reports both across the boundary as a dismiss signal. Whether the signal closes the dialog, surfaces as an event, or is ignored is agreed in the contract and enforced by the host.
+
+Which presentations a feature supports is declared in its contract. Which one it gets is the host’s call.
+
+The wall does not move. It was always allowed to have more than one opening.
 
 ### Observability
 
@@ -1205,7 +1212,7 @@ That somebody already has.
 The wrapper list from “Earning cohesion back” returns one final time, each item now attached to an answer.
 
 - A message protocol: the contract.
-- A resize agreement: `@shell/size`.
+- A resize agreement: `@shell/viewport`.
 - Loading and failure states: the handshake, deadlines, and health model.
 - Permission rules: `sandbox` and Permissions Policy.
 - Security checks: origin, source, authorisation, and validation.
