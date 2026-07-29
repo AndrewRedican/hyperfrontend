@@ -3,9 +3,10 @@
 Host-side SDK for embedding hyperfrontend features — shell factory, display modes, iframe utilities, and lifecycle.
 
 ```ts
-import { createShell, DisplayMode } from '@hyperfrontend/features/host'
+import { builtInDisplayModes, createShell, DisplayMode } from '@hyperfrontend/features/host'
 
 const shell = createShell({
+  modes: builtInDisplayModes,
   url: 'https://features.example.com/clock',
   container: '#clock-slot',
   displayMode: DisplayMode.Embedded,
@@ -20,17 +21,46 @@ shell.send('set-timezone', { tz: 'UTC' })
 
 ## API
 
-| Export             | Purpose                                                                          |
-| ------------------ | -------------------------------------------------------------------------------- |
-| `createShell`      | Build a shell handle for a feature; returns `open`/`close`/`send`/`on`/`isOpen`. |
-| `DisplayMode`      | The four built-in modes: `Embedded`, `Dialog`, `Popup`, `Standalone`.            |
-| `ShellHandle`      | Type of the handle returned by `createShell`.                                    |
-| `ShellOptions`     | Options accepted by `createShell` and per-`open` overrides.                      |
-| `ExperiencePlugin` | Opt-in extension point for layering transitions/animations onto display modes.   |
+| Export                | Purpose                                                                                                         |
+| --------------------- | --------------------------------------------------------------------------------------------------------------- |
+| `createShell`         | Build a shell handle from an explicit `modes` map — only the mounts you pass ship.                              |
+| `builtInDisplayModes` | The all-modes map, for hosts that want every mode available.                                                    |
+| `mountEmbedded` …     | The four mount functions (`mountEmbedded`, `mountDialog`, `mountPopup`, `mountStandalone`) for the `modes` map. |
+| `DisplayMode`         | The four built-in modes: `Embedded`, `Dialog`, `Popup`, `Standalone`.                                           |
+| `ShellHandle`         | Type of the handle returned by `createShell`.                                                                   |
+| `CreateShellOptions`  | Options accepted by `createShell` (`ShellOptions` plus the `modes` map).                                        |
+| `ExperiencePlugin`    | Opt-in extension point for layering transitions/animations onto display modes.                                  |
 
-The shell wraps a `@hyperfrontend/nexus` broker: `send` emits a contract action to the feature, and `on` subscribes to feature messages and the `open`/`closing`/`close`/`error`/`status`/`dirty-state` lifecycle events. `close` disconnects the channel politely (the feature gets a `closing` flush window, and `isDirty` reports declared unsaved work first); `destroy` also releases the DOM.
+The `modes` map is how unused mode code stays out of bundles: a generated shell passes exactly the modes its feature declared, and a hand-written host that only ever embeds can pass `{ embedded: mountEmbedded }` and ship one mode. Opening a mode outside the map throws, naming the supported set.
+
+The shell wraps a `@hyperfrontend/nexus` broker: `send` emits a contract action to the feature, and `on` subscribes to feature messages and the `open`/`closing`/`close`/`error`/`status`/`dirty-state`/`dismiss` lifecycle events. `close` disconnects the channel politely (the feature gets a `closing` flush window, and `isDirty` reports declared unsaved work first); `destroy` also releases the DOM.
 
 Opening is asynchronous: `isOpen` stays `false` and sends queue until the wire handshake with the feature completes, flushing on the `open` event. If the feature never completes the handshake within `openTimeoutMs` (default 10 s), the shell tears the mount down and emits `error` with `reason: 'open-timeout'`.
+
+## Display modes and sizing
+
+The host owns presentation. It picks the display mode (from the set the feature's contract declares), announces it to the feature once per mount — the announcement already carries the frame's initial dimensions, so the feature lays itself out without waiting for a second message — and is the single authority on frame geometry: every dimension crosses the boundary as an exact pixel value, host to feature, never the other way.
+
+Mounted is not displayed: the frame mounts hidden and is revealed only once the session opens, so the user never sees (or clicks into) a frame whose feature is not ready. A dialog pane cannot intercept the page while it is still connecting; an embedded frame reserves its box without painting.
+
+**Embedded** mounts the frame inline in your `container` and the frame fills the container's content box — measured before the frame is inserted, then observed with a `ResizeObserver`; every later change is reported to the feature. While the container has no measurable size (hidden, not yet laid out, or nothing gives it a height), the SDK applies a dynamic viewport-derived fallback so the embed is never invisible by accident; the fallback retires as soon as your layout takes over. A feature with intrinsic dimensions can bake fixed `embedWidth`/`embedHeight` instead (or you can pass them) — then the frame gets exactly those pixels and you place the container somewhere they fit; the SDK never distorts a fixed agreement.
+
+**Dialog** is a full-viewport transparent pane layered above your page. The feature draws its dialog box (and any backdrop paint) inside the pane; `dialogWidth`/`dialogHeight` set the inner box (viewport-derived when unset) and `dialogPosition` places it — `center` by default, or any edge/corner (`top-left` … `bottom-right`). The feature detects backdrop clicks and in-frame Escape presses and reports them as a dismiss signal; `dialogBackdrop` decides what the shell does — `close` (default) starts the polite teardown, `event` emits a `dismiss` event for you to handle, `none` ignores it. `closeOnEscape` covers Escape from both documents.
+
+```ts
+shell.open({ displayMode: DisplayMode.Dialog, dialogWidth: 480, dialogPosition: 'top-center', dialogBackdrop: 'event' })
+shell.on('dismiss', ({ source }) => console.log('backdrop interaction', source))
+```
+
+**Popup** opens a separate window at `popupWidth`/`popupHeight` (viewport-derived when unset), placed on the screen per `popupPosition` (`center` by default, or any edge/corner). After that the window belongs to the browser and the user: they move and resize it freely, and no frame geometry crosses the boundary. The window's title and chrome are not the host's to set — the title comes from the loaded document (the feature sets its own `document.title`), and browsers ignore chrome flags like resizability for `window.open`. **Standalone** is a plain new tab — the simplest mode, deliberately free of presentation coordination.
+
+Transparency is on by default in both iframe modes (`allowtransparency` plus a matched `color-scheme` pin on both sides — a mismatch would force an opaque canvas), so features can render non-rectangular designs, blend with your UI, and paint dialog backdrops. Want an opaque embed? Give your container a background.
+
+### What the SDK deliberately does not do
+
+- **Content-driven growth** (the embed grows with its content) is not built in — it would hand geometry authority to the feature, which is the inversion this design exists to avoid. The recipe is one contract action: have the feature emit its content height as product data, and set it on the container you own (`shell.on('contentHeight', (px) => setContainerHeight(px))`); the SDK's container observation propagates the change back down.
+- **Clipping and scrolling** are not managed. The feature owns its document's overflow behaviour; the host owns the container's. Neither needs a protocol.
+- **Draggable/resizable dialog boxes** are not built in — but the full-viewport pane makes them a pure feature-side concern: the pane never moves, so the feature can drag or resize its inner box with ordinary CSS/pointer code and nothing needs to cross the boundary. If your host UI needs to know, carry position as an ordinary contract action.
 
 ## Browser capabilities
 

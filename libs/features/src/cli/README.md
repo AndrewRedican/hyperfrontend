@@ -28,3 +28,18 @@ const code = await runFeaturesCli({
 Every config key has a matching flag (`--name`, `--version`, `--protocol`, `--out`, `--url`), objects are
 passed as path strings (`--contract`, `--config`), precedence is `defaults < config file < flags`, and
 `--ci`/`--yes` run headlessly (erroring on any unresolved required key).
+
+The optional `display` key declares the feature's presentation agreement — the display modes it
+supports (first entry = default mode) and per-mode defaults — validated at build time and baked
+into the generated shell, which composes only the declared modes:
+
+```jsonc
+{
+  "display": {
+    "modes": ["embedded", "dialog"],
+    "embedded": { "width": 320, "height": 240 }, // optional fixed footprint; omit to fill the container
+    "dialog": { "width": 480, "height": 360, "position": "center", "backdrop": "close" },
+    "closeOnEscape": true,
+  },
+}
+```

@@ -4,12 +4,12 @@ Pure code generators that turn a resolved feature config and parsed contract int
 
 ## API
 
-| Export                  | Purpose                                                                                     |
-| ----------------------- | ------------------------------------------------------------------------------------------- |
-| `generateShell`         | Stages the self-contained host connector package (entry, `package.json`, README, metadata). |
-| `generateMetadata`      | Stages the connector's `metadata.json` with a version-stamped, embedded contract.           |
-| `generateFeatureModule` | Stages the write-once feature integration module (`src/hyperfrontend.feature.ts`).          |
-| `generateContractTypes` | Bridges a `.json` contract to a sibling `.d.ts` of literal-type unions.                     |
+| Export                  | Purpose                                                                                                                                                                                 |
+| ----------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `generateShell`         | Stages the self-contained host connector package (entry, `package.json`, README, metadata); composes only the feature's declared display modes and narrows the generated types to them. |
+| `generateMetadata`      | Stages the connector's `metadata.json` with a version-stamped, embedded contract and the declared display modes.                                                                        |
+| `generateFeatureModule` | Stages the write-once feature integration module (`src/hyperfrontend.feature.ts`).                                                                                                      |
+| `generateContractTypes` | Bridges a `.json` contract to a sibling `.d.ts` of literal-type unions.                                                                                                                 |
 
 ## Usage
 

@@ -85,9 +85,10 @@ setInterval(() => feature.send('tick', Date.now()), 1000)
 **In a host app**, build a shell and surface the feature in any display mode:
 
 ```typescript
-import { createShell, DisplayMode } from '@hyperfrontend/features/host'
+import { builtInDisplayModes, createShell, DisplayMode } from '@hyperfrontend/features/host'
 
 const shell = createShell({
+  modes: builtInDisplayModes,
   url: 'https://features.example.com/clock',
   container: '#clock-slot',
   displayMode: DisplayMode.Embedded,
@@ -97,6 +98,8 @@ shell.on('tick', (time) => console.log('feature said', time))
 shell.open()
 shell.send('set-timezone', { tz: 'UTC' })
 ```
+
+Presentation is host-controlled and contract-preconfigured: a feature declares the display modes it supports (`display.modes` in `feature.config.*`, plus per-mode defaults like fixed embedded dimensions or the dialog box footprint and position), the generated shell builds in exactly those modes, and the host picks one per open. The SDK measures the host-side space and reports it to the feature as exact pixels — the initial size travels with the mode announcement itself — and frames stay hidden until the session opens. In dialog mode the feature draws its own dialog box inside a transparent full-viewport pane and backdrop/Escape dismissal is coordinated for you. See [`src/host/README.md`](./src/host/README.md) for the mode-by-mode details.
 
 Contract actions may carry a `required: true` flag on `accepted` entries — the connection is denied unless the counterpart emits that type. Unflagged actions never gate the connection, so adding actions to a contract stays backward compatible.
 

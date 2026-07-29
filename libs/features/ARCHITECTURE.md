@@ -83,21 +83,29 @@ The host never needs `@hyperfrontend/features` as a direct dependency: it instal
    // ❌ no raw token strings — the SDK owns the hazardous tokens
    ```
 
-7. **Pure generators, I/O at the edges.** Generators are pure `(config, contract, tree) => void` functions that write to a `@hyperfrontend/project-scope` VFS tree; all filesystem I/O, prompting, and commits live in the CLI — never in the generators or the SDK.
+7. **Presentation is coordinated control — host-owned, contract-preconfigured.** The feature declares which display modes it supports and their per-mode defaults (`display` in `feature.config.*`); the build bakes the declaration into the generated shell, which is built from only the declared mounts (`createShell`'s explicit `modes` map) and narrows the generated types to the declared union — an undeclared mode is a compile error, a runtime throw, and absent from the bundle. At runtime the host picks the mode and is the single geometry authority: it announces the mode with the frame's initial dimensions over `__hf:present`, keeps the frame hidden until the session opens, and reports later size changes as exact pixels over `__hf:viewport`; the hostee SDK sizes its document to match and never announces geometry of its own. Dialog mode inverts the visuals, not the control: the host provides a full-viewport transparent pane, the feature draws the inner box (sized and positioned per the agreement) and backdrop, and dismiss interactions cross as `__hf:dismiss` for the host to apply its configured policy.
+
+   ```typescript
+   // ✅ a shell is built from exactly the declared modes
+   createShell({ modes: { embedded: mountEmbedded, dialog: mountDialog }, ...options })
+   // ❌ no hostee mode requests, no hostee-driven frame sizing
+   ```
+
+8. **Pure generators, I/O at the edges.** Generators are pure `(config, contract, tree) => void` functions that write to a `@hyperfrontend/project-scope` VFS tree; all filesystem I/O, prompting, and commits live in the CLI — never in the generators or the SDK.
 
 ---
 
 ## Module Composition
 
-| Module       | Subpath       | Responsibility                                                                                                                                                                |
-| ------------ | ------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `shared`     | `.`           | Contract types, contract/config/payload validation, `DisplayMode`, `SecurityProtocol`, control messages, the event emitter, and the `defineConfig`/`defineDevConfig` helpers. |
-| `host`       | `/host`       | `createShell` factory, the four display modes, iframe/sizing utilities, heartbeat watchdog, and the experience-plugin seam.                                                   |
-| `hostee`     | `/hostee`     | `createFeature` factory, host-window resolution, feature lifecycle, and heartbeat emission.                                                                                   |
-| `cli`        | `/cli`        | `init`/`build`/`dev` command runners, the tiered `feature.config.*` / `hf-dev.config.*` loader, and CLI/flag parity; backs the `hf` bin.                                      |
-| `generators` | `/generators` | Pure generators for the shell package, `metadata.json`, the write-once feature module, and contract `.d.ts` types.                                                            |
-| `server`     | `/server`     | Static per-app hosting and the in-browser debug UI (display-mode, resize, message-log, security controls).                                                                    |
-| `nx`         | `/nx/*`       | Optional Nx adapter — a `feature` generator and `build`/`serve` executors that delegate to the SDK. Zero `@nx/devkit` dependency.                                             |
+| Module       | Subpath       | Responsibility                                                                                                                                                                                                               |
+| ------------ | ------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `shared`     | `.`           | Contract types, contract/config/display/payload validation, `DisplayMode`, `SecurityProtocol`, control messages, presentation payloads + size formulas, the event emitter, and the `defineConfig`/`defineDevConfig` helpers. |
+| `host`       | `/host`       | `createShell` factory (explicit `modes` map), the four display-mode mounts, iframe utilities, container measurement + viewport reporting, heartbeat watchdog, and the experience-plugin seam.                                |
+| `hostee`     | `/hostee`     | `createFeature` factory, host-window resolution, presentation application (canvas sync, dialog layout, dismiss detection), feature lifecycle, and heartbeat emission.                                                        |
+| `cli`        | `/cli`        | `init`/`build`/`dev` command runners, the tiered `feature.config.*` / `hf-dev.config.*` loader, and CLI/flag parity; backs the `hf` bin.                                                                                     |
+| `generators` | `/generators` | Pure generators for the shell package, `metadata.json`, the write-once feature module, and contract `.d.ts` types.                                                                                                           |
+| `server`     | `/server`     | Static per-app hosting and the in-browser debug UI (display-mode, resize, message-log, security controls).                                                                                                                   |
+| `nx`         | `/nx/*`       | Optional Nx adapter — a `feature` generator and `build`/`serve` executors that delegate to the SDK. Zero `@nx/devkit` dependency.                                                                                            |
 
 ---
 
@@ -127,9 +135,14 @@ sequenceDiagram
     N-->>F: channel open
     N-->>H: channel open
     F-->>H: "open" event · ready() resolves
+    Note over H: frame revealed — hidden until now
+    H->>F: __hf:present — display mode + initial size + dialog box geometry
+    H->>F: __hf:viewport — size changes in exact px
+    Note over F: SDK sizes html/body to match<br/>app author handles "resize"
     H->>F: send(action, data)  ·  validated against contract
     F->>H: send(action, data)  ·  validated against contract
     F-->>H: heartbeat beats · visibility reports
+    F-->>H: __hf:dismiss (dialog) → close / "dismiss" event / ignored per policy
     Note over H: four liveness states<br/>(healthy / unobservable / suspect / gone)<br/>suspect → UnresponsivePolicy (emit / unmount / callback)
     H->>F: close() → "closing" notice (flush window)
     F-->>H: final sends, then acknowledgement
@@ -169,6 +182,7 @@ interface FeatureHandle {
   setDirty(isDirty: boolean): void
   ready(): Promise<void>
   close(): void
+  readonly displayMode: DisplayMode | null
 }
 
 // The only coupling between the two sides.
