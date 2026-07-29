@@ -1,7 +1,9 @@
 import type { BrokerHandle, ChannelHandle, IMessage } from '@hyperfrontend/nexus'
 import type { EventEmitter } from '../shared/event-emitter'
+import type { PresentPayload, ViewportPayload } from '../shared/presentation'
 import type { RequestOptions } from '../shared/request'
 import type { FeatureContract, SecurityProtocol } from '../shared/types'
+import type { PresentationApplier } from './sizing'
 import type { FeatureHandle } from './types'
 import { createError } from '@hyperfrontend/immutable-api-utils/built-in-copy/error'
 import { freeze } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
@@ -10,9 +12,10 @@ import { ControlType, isControlType } from '../shared/control'
 import { assertSendPayload, buildActionIndex, checkReceivePayload } from '../shared/payload-validation'
 import { createRequestPeer } from '../shared/request'
 import { registerSecurity } from '../shared/security'
+import { DisplayMode } from '../shared/types'
 import { createContractCompat } from '../shared/version-compat'
 import { createHeartbeatEmitter } from './heartbeat'
-import { createSizeAnnouncer } from './sizing'
+import { createPresentationApplier, watchWindowSize } from './sizing'
 import { createVisibilityReporter } from './visibility'
 
 // note: The host connects from a parent window (embedded iframe) or an opener window (popup/standalone); a top-level document has neither.
@@ -48,6 +51,8 @@ export interface FeatureHandleSettings {
   protocol?: SecurityProtocol
   /** Pre-shared key used by the `v2` protocol. */
   sharedKey?: string
+  /** The feature's root layout element (or CSS selector), sized as the inner dialog box in dialog mode. */
+  root?: string | HTMLElement
   /**
    * The feature's own combined contract. Its `emitted` schemas validate every
    * outgoing payload (an invalid send throws in the feature's frame) and its
@@ -85,6 +90,9 @@ export function createFeatureHandle(
   // why: Indexed once per handle so every send/receive validates with a map lookup instead of rescanning the contract.
   const actions = buildActionIndex(settings.contract)
 
+  let applier: PresentationApplier | null = null
+  let stopWindowWatch: (() => void) | null = null
+
   if (hostWindow) {
     const activeChannel = broker.addChannel('host', hostWindow, {
       contractCompat: createContractCompat(),
@@ -93,15 +101,32 @@ export function createFeatureHandle(
     })
     channel = activeChannel
     const heartbeat = createHeartbeatEmitter((type) => activeChannel.send(type))
-    const announcer = createSizeAnnouncer((type, data) => activeChannel.send(type, data))
     const visibility = createVisibilityReporter((type, data) => activeChannel.send(type, data))
+    const activeApplier = createPresentationApplier(settings.root, (payload) => activeChannel.send(ControlType.Dismiss, payload))
+    applier = activeApplier
+
+    const applyPresent = (payload: PresentPayload) => {
+      activeApplier.applyPresent(payload)
+      emitter.emit('presentation', { mode: payload.mode })
+      if (payload.viewport) {
+        emitter.emit('resize', payload.viewport)
+      }
+      // why: In the windowed modes the browser window is the feature's viewport and no host reports arrive, so the feature's own resize events feed the same consumer-facing surface.
+      if (payload.mode === DisplayMode.Popup || payload.mode === DisplayMode.Standalone) {
+        stopWindowWatch ??= watchWindowSize((size) => emitter.emit('resize', size))
+      }
+    }
+    const applyViewport = (payload: ViewportPayload) => {
+      activeApplier.applyViewport(payload)
+      emitter.emit('resize', payload)
+    }
+
     activeChannel.on('open', () => {
       opened = true
       // why: Settled ready() promises hold dead reject refs once open fires.
       readyRejects.splice(0)
       emitter.emit('open')
       heartbeat.start()
-      announcer.start()
       visibility.start()
     })
     // why: The closing notice arrives while the channel still delivers, giving the app its flush window for unsaved work before the close completes.
@@ -110,8 +135,12 @@ export function createFeatureHandle(
       opened = false
       emitter.emit('close')
       heartbeat.stop()
-      announcer.stop()
       visibility.stop()
+      activeApplier.stop()
+      if (stopWindowWatch) {
+        stopWindowWatch()
+        stopWindowWatch = null
+      }
       requests.rejectAll('The host channel closed before the host responded.')
     })
     activeChannel.on('deny', (data) => emitter.emit('error', data))
@@ -124,9 +153,15 @@ export function createFeatureHandle(
       }
     })
     activeChannel.onMessage((message: IMessage) => {
-      // why: Control traffic (heartbeat/size echoes, request/response envelopes) is SDK-internal; forwarding it would leak reserved __hf: types into consumer handlers.
+      // why: Control traffic (presentation, request/response envelopes) is SDK-internal; forwarding it would leak reserved __hf: types into consumer handlers.
       if (isControlType(message.type)) {
-        requests.dispatch(message.type, message.data)
+        if (message.type === ControlType.Present) {
+          applyPresent(<PresentPayload>message.data)
+        } else if (message.type === ControlType.Viewport) {
+          applyViewport(<ViewportPayload>message.data)
+        } else {
+          requests.dispatch(message.type, message.data)
+        }
         return
       }
       // why: Invalid payloads are dropped before consumer handlers run; the error event carries the schema errors so the feature can diagnose the misbehaving host.
@@ -154,6 +189,9 @@ export function createFeatureHandle(
     on: emitter.on,
     setDirty: (isDirty: boolean) => {
       channel?.send(ControlType.Dirty, { dirty: isDirty === true })
+    },
+    get displayMode() {
+      return applier?.mode() ?? null
     },
     ready: () =>
       createPromise<void>((resolve, reject) => {

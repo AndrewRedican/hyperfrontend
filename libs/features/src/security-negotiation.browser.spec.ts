@@ -133,7 +133,7 @@ describe('Integration: host and hostee across the hardened handshake', () => {
       emitter,
       {
         contract,
-        selectMount: () => () => ({ target: <Window>(<unknown>featureWindow), cleanup: () => undefined }),
+        selectMount: () => () => ({ target: <Window>(<unknown>featureWindow), present: { mode: 'embedded' }, cleanup: () => undefined }),
         registerSecurity,
         createHeartbeatMonitor,
         observeVisibility: () => () => undefined,

@@ -40,7 +40,7 @@ function setup() {
   const addChannel = jest.fn(() => mock.channel)
   const broker = <BrokerHandle>(<unknown>{ addChannel })
   const cleanup = jest.fn()
-  const mount = jest.fn((_ctx: MountContext): MountResult => ({ target: TARGET, cleanup }))
+  const mount = jest.fn((_ctx: MountContext): MountResult => ({ target: TARGET, present: { mode: 'embedded' }, cleanup }))
   const emitter = createEventEmitter()
   const handle = createShellHandle(broker, <ShellOptions>{ container: '#shell' }, emitter, {
     contract: { emitted: [], accepted: [] },

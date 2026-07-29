@@ -1,23 +1,23 @@
 import { mountDialog } from './dialog'
 import { mountEmbedded } from './embedded'
 import { mountPopup } from './popup'
-import { selectMount } from './registry'
+import { builtInDisplayModes } from './registry'
 import { mountStandalone } from './standalone'
 
-describe('selectMount', () => {
-  it('resolves the embedded mount', () => {
-    expect(selectMount('embedded')).toBe(mountEmbedded)
+// why: The suite-wide freeze passthrough (jest.setup.ts) would make the frozen assertion meaningless; this suite needs the real freeze.
+jest.unmock('@hyperfrontend/immutable-api-utils/built-in-copy/object')
+
+describe('builtInDisplayModes', () => {
+  it('maps every mode to its mount function', () => {
+    expect(builtInDisplayModes).toEqual({
+      embedded: mountEmbedded,
+      dialog: mountDialog,
+      popup: mountPopup,
+      standalone: mountStandalone,
+    })
   })
 
-  it('resolves the dialog mount', () => {
-    expect(selectMount('dialog')).toBe(mountDialog)
-  })
-
-  it('resolves the popup mount', () => {
-    expect(selectMount('popup')).toBe(mountPopup)
-  })
-
-  it('resolves the standalone mount', () => {
-    expect(selectMount('standalone')).toBe(mountStandalone)
+  it('is frozen', () => {
+    expect(Object.isFrozen(builtInDisplayModes)).toBe(true)
   })
 })

@@ -17,7 +17,7 @@ import { applyBodyReset } from './sizing'
  * the contract cut this feature holds (overriding any `contract.version`), so
  * the handshake can deny hosts built against an incompatible cut.
  *
- * @param options - Feature name, contract, and optional version and security settings.
+ * @param options - Feature name, contract, and optional version, root-element, and security settings.
  * @returns A handle exposing `send`, `on`, `ready`, and `close`.
  *
  * @example Initializing a clock feature
@@ -40,6 +40,7 @@ export function createFeature(options: FeatureOptions): FeatureHandle {
     readyTimeoutMs: options.readyTimeoutMs,
     protocol: options.protocol,
     sharedKey: options.sharedKey,
+    root: options.root,
     contract,
   })
 }

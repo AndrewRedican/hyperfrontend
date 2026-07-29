@@ -8,7 +8,7 @@ const config: ResolvedFeatureConfig = {
   version: '1.0.0',
   contract: './clock.contract.json',
   url: '/clock',
-  display: { dialogWidth: 530 },
+  display: { dialog: { width: 530 } },
   protocol: 'v2',
 }
 const contract: FeatureContract = {
@@ -32,8 +32,40 @@ const stage = (over: Partial<ResolvedFeatureConfig> = {}): ReturnType<typeof cre
 }
 
 describe('generateShell', () => {
-  it('stages an entry that wraps createShell from the host SDK', () => {
-    expect(stage().read('src/index.ts', 'utf-8')).toContain("import { createShell } from '@hyperfrontend/features/host'")
+  it('stages an entry that composes the shell from the host SDK', () => {
+    expect(stage().read('src/index.ts', 'utf-8')).toContain(
+      "import { createShell, mountDialog, mountEmbedded, mountPopup, mountStandalone } from '@hyperfrontend/features/host'"
+    )
+  })
+
+  it('imports only the declared mode mounts', () => {
+    const entry = stage({ display: { modes: ['embedded'] } }).read('src/index.ts', 'utf-8')
+    expect(entry).toContain("import { createShell, mountEmbedded } from '@hyperfrontend/features/host'")
+    expect(entry).not.toContain('mountDialog')
+    expect(entry).not.toContain('mountPopup')
+    expect(entry).not.toContain('mountStandalone')
+  })
+
+  it('composes exactly the declared modes in declaration order', () => {
+    expect(stage({ display: { modes: ['embedded'] } }).read('src/index.ts', 'utf-8')).toContain('const modes = { embedded: mountEmbedded }')
+  })
+
+  it('composes all four modes when the config declares no display', () => {
+    expect(stage({ display: undefined, protocol: undefined }).read('src/index.ts', 'utf-8')).toContain(
+      'const modes = { embedded: mountEmbedded, dialog: mountDialog, popup: mountPopup, standalone: mountStandalone }'
+    )
+  })
+
+  it('returns the created shell passing the modes inside the options', () => {
+    expect(stage().read('src/index.ts', 'utf-8')).toContain(
+      'return <FeatureShellHandle>createShell({ ...defaults, ...options, contract, modes })'
+    )
+  })
+
+  it('narrows the generated display-mode union to the declared modes', () => {
+    expect(stage({ display: { modes: ['dialog', 'popup'] } }).read('src/index.ts', 'utf-8')).toContain(
+      "export type FeatureDisplayMode = 'dialog' | 'popup'"
+    )
   })
 
   it('inlines the contract action types into the entry', () => {
@@ -50,6 +82,53 @@ describe('generateShell', () => {
 
   it('bakes the resolved display defaults into the entry', () => {
     expect(stage().read('src/index.ts', 'utf-8')).toContain('dialogWidth: 530')
+  })
+
+  it('bakes the first declared mode as the default displayMode', () => {
+    expect(stage({ display: { modes: ['dialog', 'embedded'] } }).read('src/index.ts', 'utf-8')).toContain("displayMode: 'dialog'")
+  })
+
+  it('flattens the fixed embedded size into the embed defaults', () => {
+    const entry = stage({ display: { modes: ['embedded'], embedded: { width: 320, height: 240 } } }).read('src/index.ts', 'utf-8')
+    expect(entry).toContain('embedWidth: 320')
+    expect(entry).toContain('embedHeight: 240')
+  })
+
+  it('bakes the dialog box and escape defaults', () => {
+    const entry = stage({
+      display: { modes: ['dialog'], dialog: { width: 480, height: 360, backdrop: 'none' }, closeOnEscape: false },
+    }).read('src/index.ts', 'utf-8')
+    expect(entry).toContain('dialogWidth: 480')
+    expect(entry).toContain('dialogHeight: 360')
+    expect(entry).toContain("dialogBackdrop: 'none'")
+    expect(entry).toContain('closeOnEscape: false')
+  })
+
+  it('bakes the popup window defaults', () => {
+    const entry = stage({ display: { modes: ['popup'], popup: { width: 500, height: 400 } } }).read('src/index.ts', 'utf-8')
+    expect(entry).toContain('popupWidth: 500')
+    expect(entry).toContain('popupHeight: 400')
+  })
+
+  it('bakes the configured dialog position into the defaults', () => {
+    expect(stage({ display: { modes: ['dialog'], dialog: { position: 'top-right' } } }).read('src/index.ts', 'utf-8')).toContain(
+      "dialogPosition: 'top-right'"
+    )
+  })
+
+  it('bakes the configured popup position into the defaults', () => {
+    expect(stage({ display: { modes: ['popup'], popup: { position: 'bottom-center' } } }).read('src/index.ts', 'utf-8')).toContain(
+      "popupPosition: 'bottom-center'"
+    )
+  })
+
+  it('leaves the position defaults out when the config declares none', () => {
+    const entry = stage({ display: { modes: ['dialog', 'popup'], dialog: { width: 480 }, popup: { width: 500 } } }).read(
+      'src/index.ts',
+      'utf-8'
+    )
+    expect(entry).not.toContain('dialogPosition:')
+    expect(entry).not.toContain('popupPosition:')
   })
 
   it('bakes the declared permissions into the entry defaults', () => {
@@ -84,9 +163,9 @@ describe('generateShell', () => {
     expect(stage().read('src/index.ts', 'utf-8')).toContain("protocol: 'v2'")
   })
 
-  it('bakes only the url when no display defaults or protocol are configured', () => {
+  it('bakes only the url and default display mode when nothing else is configured', () => {
     expect(stage({ display: undefined, protocol: undefined }).read('src/index.ts', 'utf-8')).toContain(
-      "const defaults = <const>{\n  url: '/clock',\n}"
+      "const defaults = <const>{\n  url: '/clock',\n  displayMode: 'embedded',\n}"
     )
   })
 
@@ -120,6 +199,38 @@ describe('generateShell', () => {
 
   it('stages a README headed with the connector name', () => {
     expect(stage().read('README.md', 'utf-8')).toContain('# clock-shell')
+  })
+
+  it('documents the declared display modes in the README', () => {
+    const readme = stage({ display: { modes: ['dialog', 'popup'] } }).read('README.md', 'utf-8')
+    expect(readme).toContain('## Display modes')
+    expect(readme).toContain('This feature supports `dialog`, `popup`; `open()` defaults to `dialog`.')
+  })
+
+  it('lists all four modes in the README when the config declares no display', () => {
+    expect(stage({ display: undefined }).read('README.md', 'utf-8')).toContain(
+      'This feature supports `embedded`, `dialog`, `popup`, `standalone`; `open()` defaults to `embedded`.'
+    )
+  })
+
+  it('shows an explicit displayMode example for a multi-mode feature', () => {
+    expect(stage().read('README.md', 'utf-8')).toContain("shell.open({ displayMode: 'standalone' })")
+  })
+
+  it('omits the explicit displayMode example for a single-mode feature', () => {
+    expect(stage({ display: { modes: ['dialog'] } }).read('README.md', 'utf-8')).not.toContain('shell.open({ displayMode:')
+  })
+
+  it('notes in the README that undeclared modes are excluded from types and bundle', () => {
+    expect(stage().read('README.md', 'utf-8')).toContain('Undeclared modes are excluded from both the generated types and the bundled code')
+  })
+
+  it('shows the container option in the quick start for an embedded-capable feature', () => {
+    expect(stage().read('README.md', 'utf-8')).toContain("container: '#clock',")
+  })
+
+  it('omits the container line from the quick start for a non-embedded feature', () => {
+    expect(stage({ display: { modes: ['popup'] } }).read('README.md', 'utf-8')).not.toContain('container:')
   })
 
   it('stops instructing consumers to pass the protocol manually', () => {

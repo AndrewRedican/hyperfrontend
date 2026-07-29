@@ -15,13 +15,17 @@ export type FrameCapabilities = Pick<ShellOptions, 'permissions' | 'sandbox'>
  *
  * @param container - A CSS selector string or an element reference.
  * @returns The resolved host element.
+ * @throws {Error} When no container was supplied or the selector matches nothing.
  *
  * @example Resolving a selector
  * ```typescript
  * const host = resolveContainer('#clock-container')
  * ```
  */
-export function resolveContainer(container: string | HTMLElement): HTMLElement {
+export function resolveContainer(container: string | HTMLElement | undefined): HTMLElement {
+  if (container === undefined) {
+    throw createError('The embedded display mode needs a "container" element or selector to mount into.')
+  }
   if (typeof container !== 'string') {
     return container
   }
@@ -105,8 +109,10 @@ function buildSandboxTokens(url: string, sandbox: true | SandboxOptions): string
  * ```
  */
 export function createFeatureIframe(url: string, capabilities?: FrameCapabilities): HTMLIFrameElement {
+  // why: Browsers force an opaque canvas onto a frame whose used color-scheme differs from its embedder's; pinning the element to `normal` (paired with the same pin in the hostee's body reset) keeps the two sides matched so transparency survives end to end.
+  // why: Hidden until the shell reveals it on session open — mounted is not displayed, so a connecting frame never paints or intercepts input.
   const iframe = createElement<HTMLIFrameElement>('iframe', {
-    inlineStyle: { border: 'none', width: '100%', height: '100%' },
+    inlineStyle: { border: 'none', display: 'block', width: '100%', height: '100%', colorScheme: 'normal', visibility: 'hidden' },
   }).ref
   const permissions = capabilities?.permissions
   if (permissions !== undefined && permissions.length > 0) {

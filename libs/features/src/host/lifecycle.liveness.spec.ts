@@ -39,7 +39,7 @@ const TARGET = <Window>(<unknown>{ name: 'target' })
 function setup() {
   const mock = createMockChannel()
   const broker = <BrokerHandle>(<unknown>{ addChannel: jest.fn(() => mock.channel) })
-  const mount = jest.fn((_ctx: MountContext): MountResult => ({ target: TARGET, cleanup: jest.fn() }))
+  const mount = jest.fn((_ctx: MountContext): MountResult => ({ target: TARGET, present: { mode: 'embedded' }, cleanup: jest.fn() }))
   const monitor = { beat: jest.fn(), start: jest.fn(), stop: jest.fn(), setObservable: jest.fn(), getStatus: jest.fn() }
   let stateChange: ((status: unknown) => void) | undefined
   const createHeartbeatMonitor = jest.fn(

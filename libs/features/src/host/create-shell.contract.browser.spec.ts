@@ -1,11 +1,17 @@
 import type { FeatureContract } from '../shared/types'
+import { installResizeObserverStub } from '../testing/resize-observer-stub'
 import { createShell } from './create-shell'
+import { mountEmbedded } from './display-modes/embedded'
 
 // note: '[nexus] new-message' is the wire action type a feature-side broker sends for a user message; dispatching it on the host window drives the real inbound routing path.
 const NEW_MESSAGE = '[nexus] new-message'
 const REQUEST_CONNECTION = '[nexus] connection-request'
 const ACCEPT_CONNECTION = '[nexus] connection-request-accepted'
 const FEATURE_ORIGIN = 'https://feature.example'
+
+beforeEach(() => {
+  installResizeObserverStub()
+})
 
 // note: Schemas mirror the generator spec fixture, so the exact shapes a built connector inlines are exercised end-to-end through createShell.
 const contract: FeatureContract = {
@@ -21,7 +27,7 @@ const mountFeature = (): {
   const container = document.createElement('div')
   container.id = 'shell'
   document.body.appendChild(container)
-  const shell = createShell({ container: '#shell', url: `${FEATURE_ORIGIN}/`, contract })
+  const shell = createShell({ modes: { embedded: mountEmbedded }, container: '#shell', url: `${FEATURE_ORIGIN}/`, contract })
   shell.open()
   const frame = <HTMLIFrameElement>container.querySelector('iframe')
   return { send: shell.send, on: shell.on, frame }
@@ -168,7 +174,7 @@ describe('createShell contract orientation', () => {
     const container = document.createElement('div')
     container.id = 'shell'
     document.body.appendChild(container)
-    const shell = createShell({ container: '#shell', url: `${FEATURE_ORIGIN}/` })
+    const shell = createShell({ modes: { embedded: mountEmbedded }, container: '#shell', url: `${FEATURE_ORIGIN}/` })
     shell.open()
     expect(() => shell.send('MESSAGE', {})).not.toThrow()
   })

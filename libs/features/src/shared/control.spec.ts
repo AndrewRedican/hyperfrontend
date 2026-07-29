@@ -15,7 +15,9 @@ describe('withControlContract', () => {
     expect(withControlContract({ emitted: [{ type: 'a' }], accepted: [] }).emitted).toEqual([
       { type: 'a' },
       { type: ControlType.Beat },
-      { type: ControlType.Size },
+      { type: ControlType.Present },
+      { type: ControlType.Viewport },
+      { type: ControlType.Dismiss },
       { type: ControlType.Request },
       { type: ControlType.Response },
       { type: ControlType.Visibility },
@@ -27,7 +29,9 @@ describe('withControlContract', () => {
     expect(withControlContract({ emitted: [], accepted: [{ type: 'b' }] }).accepted).toEqual([
       { type: 'b' },
       { type: ControlType.Beat },
-      { type: ControlType.Size },
+      { type: ControlType.Present },
+      { type: ControlType.Viewport },
+      { type: ControlType.Dismiss },
       { type: ControlType.Request },
       { type: ControlType.Response },
       { type: ControlType.Visibility },

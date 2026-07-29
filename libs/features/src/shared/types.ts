@@ -3,14 +3,16 @@ import { freeze } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
 /**
  * Supported ways a host can surface an embedded feature.
  *
- * All four modes are built into the SDK.
+ * The host selects the mode; a feature declares which modes it supports in its
+ * `feature.config.*` `display.modes`, and the generated shell composes exactly
+ * those.
  */
 export const DisplayMode = freeze(<const>{
-  /** Inline inside a host-provided container element. */
+  /** Inline inside a host-provided container element; the iframe fills the container. */
   Embedded: 'embedded',
-  /** Centered modal with an overlay and close button. */
+  /** Full-viewport transparent overlay pane; the feature draws its dialog box (and backdrop) inside it. */
   Dialog: 'dialog',
-  /** Separate browser popup window sized like a dialog. */
+  /** Separate sized browser popup window. */
   Popup: 'popup',
   /** Full browser tab/window opened via `_blank`. */
   Standalone: 'standalone',
@@ -22,17 +24,46 @@ export const DisplayMode = freeze(<const>{
 export type DisplayMode = (typeof DisplayMode)[keyof typeof DisplayMode]
 
 /**
+ * How the host reacts when the feature reports a pointer interaction on the
+ * dialog backdrop (the transparent area outside the feature's dialog box).
+ *
+ * `close` (the default) treats the interaction as a close request and starts
+ * the polite teardown; `event` surfaces it as a `dismiss` event for the host
+ * consumer to handle; `none` ignores it.
+ */
+export type BackdropBehavior = 'close' | 'event' | 'none'
+
+/**
+ * Where a hostee dismiss signal originated: a pointer interaction on the
+ * dialog backdrop, or the Escape key pressed inside the feature's document.
+ */
+export type DismissSource = 'backdrop' | 'escape'
+
+/**
+ * Where a positioned box sits inside its available area: the dialog inner box
+ * within the full-viewport pane, or the popup window on the screen.
+ *
+ * `center` (the default) centers on both axes; the compound values anchor to
+ * an edge or corner of the area.
+ */
+export type BoxPosition =
+  | 'center'
+  | 'top-left'
+  | 'top-center'
+  | 'top-right'
+  | 'center-left'
+  | 'center-right'
+  | 'bottom-left'
+  | 'bottom-center'
+  | 'bottom-right'
+
+/**
  * Union of the supported security envelope selectors.
  *
  * `none` is the local default (opt-in security); production builds must pick
  * `v1` or `v2`.
  */
 export type SecurityProtocol = 'none' | 'v1' | 'v2'
-
-/**
- * How the feature is laid out when the host surfaces it.
- */
-export type EmbedSizing = 'fill' | 'content'
 
 /**
  * A Permissions-Policy feature name the host can delegate to the feature frame.
@@ -238,8 +269,8 @@ export interface ExperiencePlugin {
  * creating or opening a shell.
  */
 export interface ShellOptions {
-  /** Target element (or CSS selector) the embedded feature mounts into. */
-  container: string | HTMLElement
+  /** Anchor element (or CSS selector) the embedded feature mounts into; required by (and only meaningful for) embedded mode. */
+  container?: string | HTMLElement
   /** Stable identifier for the feature; seeds the broker name surfaced in debug logs. */
   name?: string
   /**
@@ -253,8 +284,16 @@ export interface ShellOptions {
   displayMode?: DisplayMode
   /** URL of the feature app to load. */
   url?: string
-  /** How an embedded feature is sized; defaults to `fill` (the iframe fills its container). */
-  embedSizing?: EmbedSizing
+  /**
+   * Fixed embedded width in pixels. When both `embedWidth` and `embedHeight`
+   * are set, the embedded iframe receives exactly those dimensions instead of
+   * filling its container, and the host application is responsible for placing
+   * the container somewhere the feature fits — the SDK never distorts or
+   * reinterprets fixed dimensions. Setting only one of the pair throws.
+   */
+  embedWidth?: number
+  /** Fixed embedded height in pixels; see {@link ShellOptions.embedWidth}. */
+  embedHeight?: number
   /**
    * Permissions-Policy features delegated to the feature frame, applied as the
    * iframe `allow` attribute scoped to the frame's own origin. Connector
@@ -277,14 +316,36 @@ export interface ShellOptions {
   sandbox?: boolean | SandboxOptions
   /** How the host reacts when the feature stops responding; defaults to `emit`. */
   onUnresponsive?: UnresponsivePolicy
-  /** Whether pressing Escape closes the shell; defaults to `true`. */
+  /**
+   * Whether Escape closes the dialog; defaults to `true`. Enforced on both
+   * sides of the boundary: the host listens in its own document, and the
+   * feature reports an Escape pressed inside its frame as a dismiss signal the
+   * host acts on (dialog mode only).
+   */
   closeOnEscape?: boolean
-  /** Dialog width in pixels (dialog mode only). */
+  /**
+   * Width in pixels of the feature's inner dialog box (dialog mode only).
+   * Crosses the boundary at open and is applied by the hostee SDK inside the
+   * full-viewport dialog pane; when absent, the hostee derives a size from the
+   * viewport and its aspect ratio.
+   */
   dialogWidth?: number
-  /** Dialog height in pixels (dialog mode only). */
+  /** Height in pixels of the feature's inner dialog box; see {@link ShellOptions.dialogWidth}. */
   dialogHeight?: number
-  /** Whether the dialog renders a dimmed backdrop; defaults to `true`. */
-  dialogOverlay?: boolean
+  /** Where the inner dialog box sits inside the pane (dialog mode only); defaults to `center`. */
+  dialogPosition?: BoxPosition
+  /**
+   * How the host reacts to a pointer interaction on the dialog backdrop —
+   * the transparent area around the feature's dialog box; defaults to
+   * `close`. See {@link BackdropBehavior}.
+   */
+  dialogBackdrop?: BackdropBehavior
+  /** Popup window width in pixels (popup mode only); when absent, derived from the viewport. */
+  popupWidth?: number
+  /** Popup window height in pixels (popup mode only); when absent, derived from the viewport. */
+  popupHeight?: number
+  /** Where the popup window sits on the screen (popup mode only); defaults to `center`. */
+  popupPosition?: BoxPosition
   /** Security envelope to negotiate; defaults to `none`. */
   protocol?: SecurityProtocol
   /** Pre-shared key used by the `v2` protocol. */
@@ -315,6 +376,13 @@ export interface FeatureOptions {
   version?: string
   /** Whether to neutralize the feature page's body margins/padding; defaults to `true`. */
   resetBody?: boolean
+  /**
+   * The feature's root layout element (or a CSS selector for it); defaults to
+   * the body's first element child. In dialog mode the hostee SDK centers this
+   * element inside the full-viewport pane and applies the agreed inner dialog
+   * box dimensions to it; the area around it is the backdrop.
+   */
+  root?: string | HTMLElement
   /** Security envelope to negotiate with the host; defaults to `none`. */
   protocol?: SecurityProtocol
   /** Pre-shared key used by the `v2` protocol. */
@@ -343,20 +411,67 @@ export interface FeatureConfig {
 }
 
 /**
- * Display defaults baked into a generated connector as the feature's default
- * {@link ShellOptions}. The host still overrides these at runtime.
+ * Fixed embedded footprint a feature declares in its config: the iframe
+ * receives exactly these dimensions and the host application places the
+ * feature somewhere it fits.
  */
-export interface DisplayDefaults {
-  /** Dialog width in pixels (dialog mode only). */
-  dialogWidth?: number
-  /** Dialog height in pixels (dialog mode only). */
-  dialogHeight?: number
-  /** Whether the dialog renders a dimmed backdrop; defaults to `true`. */
-  dialogOverlay?: boolean
-  /** Whether pressing Escape closes the shell; defaults to `true`. */
+export interface FixedEmbedSize {
+  /** Exact iframe width in pixels. */
+  width: number
+  /** Exact iframe height in pixels. */
+  height: number
+}
+
+/**
+ * Inner dialog box configuration a feature declares for dialog mode.
+ */
+export interface DialogBoxConfig {
+  /** Inner dialog box width in pixels; when absent, derived from the viewport. */
+  width?: number
+  /** Inner dialog box height in pixels; when absent, derived from the viewport. */
+  height?: number
+  /** Where the inner box sits inside the pane; defaults to `center`. */
+  position?: BoxPosition
+  /** How the host reacts to a backdrop interaction; defaults to `close`. */
+  backdrop?: BackdropBehavior
+}
+
+/**
+ * Popup window footprint a feature declares for popup mode.
+ */
+export interface PopupWindowConfig {
+  /** Popup window width in pixels; when absent, derived from the viewport. */
+  width?: number
+  /** Popup window height in pixels; when absent, derived from the viewport. */
+  height?: number
+  /** Where the window sits on the screen; defaults to `center`. */
+  position?: BoxPosition
+}
+
+/**
+ * Presentation agreement a feature declares in its `feature.config.*` `display`
+ * key: the display modes it supports and the per-mode defaults.
+ *
+ * Builds bake this into the generated shell — the shell composes exactly the
+ * declared modes (undeclared modes ship no code and are excluded from the
+ * generated types) and merges the per-mode defaults under host-supplied
+ * options, so the host still controls presentation within the declared set.
+ */
+export interface DisplayConfig {
+  /**
+   * Display modes the feature supports; defaults to all four. The first
+   * declared mode is the feature's default presentation — the one an `open()`
+   * call without an explicit `displayMode` uses.
+   */
+  modes?: DisplayMode[]
+  /** Fixed embedded dimensions; when absent, the embedded iframe fills its container. */
+  embedded?: FixedEmbedSize
+  /** Inner dialog box defaults for dialog mode. */
+  dialog?: DialogBoxConfig
+  /** Popup window defaults for popup mode. */
+  popup?: PopupWindowConfig
+  /** Whether Escape closes the dialog; defaults to `true`. */
   closeOnEscape?: boolean
-  /** How an embedded feature is sized; defaults to `fill`. */
-  embedSizing?: EmbedSizing
 }
 
 /**
@@ -369,8 +484,8 @@ export interface DisplayDefaults {
 export interface ResolvedFeatureConfig extends FeatureConfig {
   /** URL of the feature app the generated connector loads. */
   url: string
-  /** Default display options baked into the connector as the feature's defaults. */
-  display?: DisplayDefaults
+  /** Declared display modes and per-mode defaults baked into the generated shell. */
+  display?: DisplayConfig
   /** Permissions-Policy features the feature declared it needs; baked into the connector as its default `permissions`. */
   permissions?: FeaturePermission[]
   /** Security envelope the build resolved; baked into the generated connector as its default. */
@@ -394,6 +509,8 @@ export interface FeatureDescriptor {
   url: string
   /** The feature's contract exactly as the feature authored it. */
   contract: FeatureContract
+  /** Display modes the generated shell composes; reviewable without unpacking the bundle. */
+  modes: DisplayMode[]
   /** Security envelope baked into the connector, when one was resolved. */
   protocol?: SecurityProtocol
   /** Permissions-Policy features the feature declared it needs, when any; reviewable without unpacking the bundle. */

@@ -1,9 +1,24 @@
 import type { Schema, ValidationResult } from '@hyperfrontend/json-utils'
-import type { ActionDescription, FeatureConfig, FeatureContract } from './types'
+import type { ActionDescription, DisplayConfig, FeatureConfig, FeatureContract } from './types'
 import { isArray } from '@hyperfrontend/immutable-api-utils/built-in-copy/array'
 import { createError } from '@hyperfrontend/immutable-api-utils/built-in-copy/error'
+import { values } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
 import { validate } from '@hyperfrontend/json-utils'
 import { parseVersion } from '@hyperfrontend/versioning/semver/parse'
+import { DisplayMode } from './types'
+
+// note: Mirrors the BoxPosition union; validation reports the allowed values by listing this.
+const BOX_POSITIONS: readonly string[] = [
+  'center',
+  'top-left',
+  'top-center',
+  'top-right',
+  'center-left',
+  'center-right',
+  'bottom-left',
+  'bottom-center',
+  'bottom-right',
+]
 
 // note: Runtime validation shared by the host/hostee factories and the config loader.
 
@@ -176,6 +191,124 @@ export function validateFeatureConfig(config: unknown): FeatureConfig {
     }
   })
   return <FeatureConfig>(<unknown>config)
+}
+
+/**
+ * Collects any problem with a per-mode dimension pair (`width`/`height`).
+ *
+ * @param section - The candidate per-mode record.
+ * @param field - The config path of `section`, used to locate problems in messages.
+ * @param bothRequired - Whether the pair must be complete (fixed embedded sizing).
+ * @param issues - The running list of human-readable problems, appended to in place.
+ */
+function collectDimensionIssues(section: Record<string, unknown>, field: string, bothRequired: boolean, issues: string[]): void {
+  const axes = <const>['width', 'height']
+  if (bothRequired && axes.some((axis) => section[axis] === undefined)) {
+    issues.push(`"${field}" must declare both "width" and "height" — fixed dimensions are exact, so a partial pair is meaningless.`)
+  }
+  axes.forEach((axis) => {
+    const value = section[axis]
+    if (value === undefined) {
+      return
+    }
+    if (typeof value !== 'number' || !(value > 0) || value === Infinity) {
+      issues.push(`"${field}.${axis}" must be a positive number of pixels.`)
+    }
+  })
+}
+
+/**
+ * Collects any problem with the config's `display.modes` list.
+ *
+ * @param modes - The candidate modes value.
+ * @param issues - The running list of human-readable problems, appended to in place.
+ * @returns The validated modes list, or `undefined` when absent or invalid.
+ */
+function collectModesIssues(modes: unknown, issues: string[]): DisplayMode[] | undefined {
+  if (modes === undefined) {
+    return undefined
+  }
+  const known = values(DisplayMode)
+  if (!isArray(modes) || modes.length === 0) {
+    issues.push(`"display.modes" must be a non-empty array of display modes (${known.join(', ')}).`)
+    return undefined
+  }
+  const unknown = modes.filter((mode) => !known.includes(<DisplayMode>mode))
+  if (unknown.length > 0) {
+    issues.push(
+      `"display.modes" contains unknown modes: ${unknown.map((mode) => `"${String(mode)}"`).join(', ')} (expected ${known.join(', ')}).`
+    )
+    return undefined
+  }
+  if (modes.some((mode, index) => modes.indexOf(mode) !== index)) {
+    issues.push('"display.modes" must not repeat a mode.')
+    return undefined
+  }
+  return <DisplayMode[]>modes
+}
+
+/**
+ * Validates an unknown value as a {@link DisplayConfig}.
+ *
+ * Enforces the presentation agreement a feature declares: a well-formed
+ * (deduplicated, known) `modes` list, complete positive fixed embedded
+ * dimensions, positive dialog/popup dimensions, a known backdrop behavior, and
+ * per-mode sections that only configure declared modes. Reports every problem
+ * at once.
+ *
+ * @param display - The candidate `display` value from a feature config.
+ * @returns The validated display config, typed.
+ * @throws {Error} When any part of the display config is malformed.
+ *
+ * @example Validating a display declaration
+ * ```typescript
+ * const display = validateDisplayConfig({ modes: ['embedded', 'dialog'], dialog: { width: 480, backdrop: 'event' } })
+ * ```
+ */
+export function validateDisplayConfig(display: unknown): DisplayConfig {
+  if (!isRecord(display)) {
+    throw createError(`Invalid config: "display" must be an object, but got ${describeType(display)}.`)
+  }
+  const issues: string[] = []
+  const modes = collectModesIssues(display['modes'], issues)
+  const sections = <const>['embedded', 'dialog', 'popup']
+  sections.forEach((section) => {
+    const value = display[section]
+    if (value === undefined) {
+      return
+    }
+    if (!isRecord(value)) {
+      issues.push(`"display.${section}" must be an object, but got ${describeType(value)}.`)
+      return
+    }
+    if (modes !== undefined && !modes.includes(section)) {
+      issues.push(
+        `"display.${section}" is configured, but "${section}" is not in "display.modes" — declare the mode or drop its configuration.`
+      )
+    }
+    collectDimensionIssues(value, `display.${section}`, section === 'embedded', issues)
+    const position = value['position']
+    if (section !== 'embedded' && position !== undefined && !(typeof position === 'string' && BOX_POSITIONS.includes(position))) {
+      issues.push(
+        `"display.${section}.position" must be one of ${BOX_POSITIONS.join(', ')}, but got ${typeof position === 'string' ? `"${position}"` : describeType(position)}.`
+      )
+    }
+    if (section === 'dialog') {
+      const backdrop = value['backdrop']
+      if (backdrop !== undefined && backdrop !== 'close' && backdrop !== 'event' && backdrop !== 'none') {
+        issues.push(
+          `"display.dialog.backdrop" must be "close", "event", or "none", but got ${typeof backdrop === 'string' ? `"${backdrop}"` : describeType(backdrop)}.`
+        )
+      }
+    }
+  })
+  if (display['closeOnEscape'] !== undefined && typeof display['closeOnEscape'] !== 'boolean') {
+    issues.push(`"display.closeOnEscape" must be a boolean, but got ${describeType(display['closeOnEscape'])}.`)
+  }
+  if (issues.length > 0) {
+    throw createError(`Invalid config:\n${issues.map((issue) => `  - ${issue}`).join('\n')}`)
+  }
+  return <DisplayConfig>display
 }
 
 /**

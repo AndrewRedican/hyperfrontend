@@ -1,53 +1,137 @@
 import type { ShellOptions } from '../../shared/types'
-import { dialogDefaults } from './defaults'
+import type { ResizeObserverStubController } from '../../testing/resize-observer-stub'
+import { installResizeObserverStub } from '../../testing/resize-observer-stub'
 import { mountDialog } from './dialog'
 
-function mount(options: Partial<ShellOptions>) {
+let observers: ResizeObserverStubController
+
+beforeEach(() => {
+  observers = installResizeObserverStub()
+})
+
+function mount(options: Partial<ShellOptions> = {}) {
   const requestClose = jest.fn()
-  const result = mountDialog({ options: <ShellOptions>{ container: '#unused', url: 'https://feature.example/', ...options }, requestClose })
-  const container = <HTMLElement>document.body.lastElementChild
-  const dialog = <HTMLElement>container.querySelector('iframe')?.parentElement
-  return { result, container, dialog, requestClose }
+  const result = mountDialog({ options: <ShellOptions>{ url: 'https://feature.example/', ...options }, requestClose })
+  const iframe = <HTMLIFrameElement>document.body.querySelector('iframe')
+  return { result, iframe, requestClose }
 }
+
+const paneViewport = () => ({ width: window.innerWidth, height: window.innerHeight })
 
 describe('mountDialog', () => {
   afterEach(() => {
     document.body.innerHTML = ''
   })
 
-  it('renders a backdrop overlay by default', () => {
-    expect(mount({}).container.children).toHaveLength(2)
+  it('appends a single pane iframe to the body', () => {
+    mount({})
+    expect(Array.from(document.body.children).map((child) => child.tagName)).toEqual(['IFRAME'])
   })
 
-  it('delegates the configured permissions to the dialog iframe', () => {
-    expect(
-      mount({ permissions: ['clipboard-write'] })
-        .container.querySelector('iframe')
-        ?.getAttribute('allow')
-    ).toBe('clipboard-write')
+  it('renders no backdrop or close button', () => {
+    mount({})
+    expect({ divs: document.querySelector('div'), buttons: document.querySelector('button') }).toEqual({ divs: null, buttons: null })
   })
 
-  it('sandboxes the dialog iframe when a sandbox is configured', () => {
-    expect(mount({ sandbox: true }).container.querySelector('iframe')?.getAttribute('sandbox')).toBe('allow-scripts allow-same-origin')
+  it('fixes the pane across the full viewport', () => {
+    const { iframe } = mount({})
+    expect({ position: iframe.style.position, inset: iframe.style.inset }).toEqual({ position: 'fixed', inset: '0' })
   })
 
-  it('omits the backdrop when the overlay is disabled', () => {
-    expect(mount({ dialogOverlay: false }).container.children).toHaveLength(1)
+  it('layers the pane above the host UI', () => {
+    expect(mount({}).iframe.style.zIndex).toBe('2147483647')
   })
 
-  it('requests close when the backdrop is clicked', () => {
-    const { container, requestClose } = mount({})
-    ;(<HTMLElement>container.firstElementChild).click()
-    expect(requestClose).toHaveBeenCalledTimes(1)
+  it('keeps the pane transparent so the host page shows through', () => {
+    expect(mount({}).iframe.getAttribute('allowtransparency')).toBe('true')
   })
 
-  it('requests close when the close button is clicked', () => {
-    const { container, requestClose } = mount({})
-    container.querySelector('button')?.click()
-    expect(requestClose).toHaveBeenCalledTimes(1)
+  it('mounts the pane hidden', () => {
+    expect(mount({}).iframe.style.visibility).toBe('hidden')
   })
 
-  it('requests close when Escape is pressed', () => {
+  it('reveals the pane when the shell asks', () => {
+    const { result, iframe } = mount({})
+    result.reveal?.()
+    expect(iframe.style.visibility).toBe('visible')
+  })
+
+  it('loads the provided url into the pane iframe', () => {
+    expect(mount({}).iframe.src).toBe('https://feature.example/')
+  })
+
+  it('defaults the iframe url to empty when omitted', () => {
+    expect(mount({ url: undefined }).iframe.getAttribute('src')).toBe('')
+  })
+
+  it('delegates the configured permissions to the pane iframe', () => {
+    expect(mount({ permissions: ['clipboard-write'] }).iframe.getAttribute('allow')).toBe('clipboard-write')
+  })
+
+  it('sandboxes the pane iframe when a sandbox is configured', () => {
+    expect(mount({ sandbox: true }).iframe.getAttribute('sandbox')).toBe('allow-scripts allow-same-origin')
+  })
+
+  it('targets the pane iframe content window', () => {
+    const { result, iframe } = mount({})
+    expect(result.target).toBe(iframe.contentWindow)
+  })
+
+  it('exposes the pane iframe as the mounted element', () => {
+    const { result, iframe } = mount({})
+    expect(result.element).toBe(iframe)
+  })
+
+  it('announces the window inner size as the pane viewport by default', () => {
+    const { result } = mount({})
+    expect(result.present).toEqual({ mode: 'dialog', viewport: paneViewport() })
+    expect(result.present).not.toHaveProperty('dialog')
+  })
+
+  it('announces agreed inner dialog box dimensions', () => {
+    expect(mount({ dialogWidth: 800, dialogHeight: 600 }).result.present).toEqual({
+      mode: 'dialog',
+      viewport: paneViewport(),
+      dialog: { width: 800, height: 600 },
+    })
+  })
+
+  it('announces a width-only dialog box agreement', () => {
+    const { result } = mount({ dialogWidth: 800 })
+    expect(result.present).toEqual({ mode: 'dialog', viewport: paneViewport(), dialog: { width: 800 } })
+    expect(result.present.dialog).not.toHaveProperty('height')
+  })
+
+  it('announces a height-only dialog box agreement', () => {
+    const { result } = mount({ dialogHeight: 600 })
+    expect(result.present).toEqual({ mode: 'dialog', viewport: paneViewport(), dialog: { height: 600 } })
+    expect(result.present.dialog).not.toHaveProperty('width')
+  })
+
+  it('announces a position-only dialog box agreement', () => {
+    const { result } = mount({ dialogPosition: 'top-left' })
+    expect(result.present).toEqual({ mode: 'dialog', viewport: paneViewport(), dialog: { position: 'top-left' } })
+  })
+
+  it('seeds the viewport reporter with the window inner size', () => {
+    expect(mount({}).result.viewport?.current()).toEqual(paneViewport())
+  })
+
+  it('does not re-send the announced pane size when the reporter starts', () => {
+    const report = jest.fn()
+    mount({}).result.viewport?.start(report)
+    expect(report).not.toHaveBeenCalled()
+  })
+
+  it('reports pane size changes through the viewport reporter', () => {
+    const report = jest.fn()
+    const { result, iframe } = mount({})
+    result.viewport?.start(report)
+    observers.resize(iframe, { width: 800, height: 600 })
+    expect(report).toHaveBeenCalledWith({ width: 800, height: 600 })
+  })
+
+  it('requests close when Escape is pressed in the host document', () => {
     const { requestClose } = mount({})
     document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }))
     expect(requestClose).toHaveBeenCalledTimes(1)
@@ -65,41 +149,16 @@ describe('mountDialog', () => {
     expect(requestClose).not.toHaveBeenCalled()
   })
 
-  it('applies the dynamic default footprint when no size is given', () => {
-    const { dialog } = mount({})
-    expect({ width: dialog.style.width, height: dialog.style.height }).toEqual({
-      width: `${dialogDefaults.width}px`,
-      height: `${dialogDefaults.height}px`,
-    })
-  })
-
-  it('applies a custom dialog footprint', () => {
-    const { dialog } = mount({ dialogWidth: 800, dialogHeight: 600 })
-    expect({ width: dialog.style.width, height: dialog.style.height }).toEqual({ width: '800px', height: '600px' })
-  })
-
-  it('loads the provided url into the dialog iframe', () => {
-    expect(mount({}).container.querySelector('iframe')?.src).toBe('https://feature.example/')
-  })
-
-  it('defaults the iframe url to empty when omitted', () => {
-    expect(mount({ url: undefined }).container.querySelector('iframe')?.getAttribute('src')).toBe('')
-  })
-
-  it('targets the dialog iframe content window', () => {
-    const { result, container } = mount({})
-    expect(result.target).toBe(container.querySelector('iframe')?.contentWindow)
-  })
-
-  it('exposes the dialog container as the mounted element', () => {
-    const { result, container } = mount({})
-    expect(result.element).toBe(container)
-  })
-
-  it('removes the dialog container on cleanup', () => {
-    const { result, container } = mount({})
+  it('removes the pane iframe on cleanup', () => {
+    const { result } = mount({})
     result.cleanup()
-    expect(container.isConnected).toBe(false)
+    expect(document.body.querySelector('iframe')).toBeNull()
+  })
+
+  it('stops observing the pane on cleanup', () => {
+    const { result, iframe } = mount({})
+    result.cleanup()
+    expect(observers.isObserved(iframe)).toBe(false)
   })
 
   it('detaches the Escape listener on cleanup', () => {

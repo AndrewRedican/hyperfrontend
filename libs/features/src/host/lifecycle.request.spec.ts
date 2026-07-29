@@ -50,7 +50,7 @@ function flush() {
 function setup() {
   const mock = createMockChannel()
   const broker = <BrokerHandle>(<unknown>{ addChannel: jest.fn(() => mock.channel) })
-  const mount = jest.fn((): MountResult => ({ target: TARGET, cleanup: jest.fn() }))
+  const mount = jest.fn((): MountResult => ({ target: TARGET, present: { mode: 'embedded' }, cleanup: jest.fn() }))
   const handle = createShellHandle(broker, <ShellOptions>{ container: '#shell' }, createEventEmitter(), {
     // why: The '__hf:' envelope types carry schemas no envelope object satisfies, so every flow below fails if request/response traffic is ever routed through send or receive payload validation.
     contract: {
@@ -79,7 +79,8 @@ function setup() {
 }
 
 function sentEnvelope(send: jest.Mock, index = 0): Record<string, unknown> {
-  const call = send.mock.calls[index]
+  // note: Every open leads with the presentation announcement, which is control traffic rather than an envelope.
+  const call = send.mock.calls.filter((entry) => entry[0] !== '__hf:present')[index]
   if (!call) {
     throw createError(`expected a sent envelope at index ${index}`)
   }
@@ -217,7 +218,7 @@ describe('createShellHandle request/response', () => {
     const envelope = sentEnvelope(ctx.mock.send)
     ctx.mock.triggerMessage('__hf:request', envelope)
     await flush()
-    expect(ctx.mock.send).toHaveBeenCalledTimes(1)
+    expect(ctx.mock.send.mock.calls.filter((entry) => entry[0] === '__hf:response')).toEqual([])
     ctx.mock.triggerMessage('__hf:response', { correlationId: envelope['correlationId'], from: 'feature', ok: true })
     await pending
   })

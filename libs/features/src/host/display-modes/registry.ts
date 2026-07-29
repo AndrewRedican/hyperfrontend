@@ -8,24 +8,16 @@ import { mountStandalone } from './standalone'
 
 // note: Replaces a display-modes/index.ts barrel, which no-unwanted-barrel-files forbids outside declared package entry points.
 
-const MOUNTS = freeze(<Record<DisplayMode, DisplayModeMount>>{
+/**
+ * Every built-in display mode, mode name to mount function.
+ *
+ * `createShell` composes a shell from this full map; generated shells import
+ * the individual mounts and compose only the modes their feature declared, so
+ * this map (and the modes it would drag in) stays out of their bundles.
+ */
+export const builtInDisplayModes: Readonly<Record<DisplayMode, DisplayModeMount>> = freeze(<Record<DisplayMode, DisplayModeMount>>{
   embedded: mountEmbedded,
   dialog: mountDialog,
   popup: mountPopup,
   standalone: mountStandalone,
 })
-
-/**
- * Selects the mount function for a display mode.
- *
- * @param mode - The display mode to resolve.
- * @returns The matching {@link DisplayModeMount}.
- *
- * @example Resolving the dialog mount
- * ```typescript
- * const mount = selectMount('dialog')
- * ```
- */
-export function selectMount(mode: DisplayMode): DisplayModeMount {
-  return MOUNTS[mode]
-}

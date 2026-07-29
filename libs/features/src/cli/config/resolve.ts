@@ -1,10 +1,10 @@
-import type { DisplayDefaults, FeatureContract, FeaturePermission, ResolvedFeatureConfig, SecurityProtocol } from '../../shared/types'
+import type { FeatureContract, FeaturePermission, ResolvedFeatureConfig, SecurityProtocol } from '../../shared/types'
 import type { CliFlags } from '../args'
 import { dirname, isAbsolute, resolve } from 'node:path'
 import { isArray } from '@hyperfrontend/immutable-api-utils/built-in-copy/array'
 import { createError } from '@hyperfrontend/immutable-api-utils/built-in-copy/error'
 import { canonicalVersion } from '../../generators/shared/canonical-version'
-import { validateContract, validateFeatureConfig } from '../../shared/contract'
+import { validateContract, validateDisplayConfig, validateFeatureConfig } from '../../shared/contract'
 import { discoverConfigFile, FEATURE_CONFIG_BASENAME } from './discover'
 import { loadModuleFile } from './load-module'
 
@@ -130,7 +130,7 @@ export async function resolveBuildConfig(options: ResolveBuildConfigOptions): Pr
       `Contract version "${contract.version}" does not match the feature version "${config.version}". Align the contract's "version" with the config, or remove it to inherit the config version.`
     )
   }
-  const display = isRecord(loaded['display']) ? <DisplayDefaults>loaded['display'] : undefined
+  const display = loaded['display'] === undefined ? undefined : validateDisplayConfig(loaded['display'])
   const permissions = parsePermissions(loaded['permissions'])
 
   const resolved: ResolvedFeatureConfig = {

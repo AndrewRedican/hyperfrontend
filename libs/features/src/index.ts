@@ -6,9 +6,11 @@
 export type { RequestHandler, RequestOptions } from './shared/request'
 export type {
   ActionDescription,
+  BackdropBehavior,
   DevConfig,
-  DisplayDefaults,
-  EmbedSizing,
+  DialogBoxConfig,
+  DismissSource,
+  DisplayConfig,
   ExperiencePlugin,
   ExperiencePluginContext,
   FeatureConfig,
@@ -16,6 +18,8 @@ export type {
   FeatureDescriptor,
   FeatureOptions,
   FeaturePermission,
+  FixedEmbedSize,
+  PopupWindowConfig,
   ResolvedFeatureConfig,
   SandboxOptions,
   SecurityProtocol,

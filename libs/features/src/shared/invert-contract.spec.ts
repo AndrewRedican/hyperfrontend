@@ -48,8 +48,8 @@ describe('invertFeatureContract', () => {
       emitted: composed.emitted.map((action) => action.type),
       accepted: composed.accepted.map((action) => action.type),
     }).toEqual({
-      emitted: expect.arrayContaining(['setTimezone', '__hf:beat', '__hf:size']),
-      accepted: expect.arrayContaining(['timeUpdated', '__hf:beat', '__hf:size']),
+      emitted: expect.arrayContaining(['setTimezone', '__hf:beat', '__hf:present', '__hf:viewport', '__hf:dismiss']),
+      accepted: expect.arrayContaining(['timeUpdated', '__hf:beat', '__hf:present', '__hf:viewport', '__hf:dismiss']),
     })
   })
 })

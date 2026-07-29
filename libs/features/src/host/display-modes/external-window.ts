@@ -32,14 +32,14 @@ export function assertNoSandbox(sandbox: ShellOptions['sandbox'], mode: string):
  *
  * @param url - The feature app URL to load.
  * @param features - Optional `window.open` feature string (sizing for popups).
- * @returns A mount result whose `target` is `null` if the browser blocked it.
+ * @returns A mount result (minus the mode-specific presentation announcement the caller adds) whose `target` is `null` if the browser blocked it.
  *
  * @example Opening a sized popup
  * ```typescript
  * const { target, cleanup } = openExternalWindow('https://clock.example.com', 'width=530,height=550')
  * ```
  */
-export function openExternalWindow(url: string, features?: string): MountResult {
+export function openExternalWindow(url: string, features?: string): Omit<MountResult, 'present'> {
   const opened = window.open(url, '_blank', features)
   return {
     target: opened,

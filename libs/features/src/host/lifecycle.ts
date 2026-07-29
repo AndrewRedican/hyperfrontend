@@ -1,5 +1,6 @@
 import type { BrokerHandle, ChannelHandle, IMessage } from '@hyperfrontend/nexus'
 import type { EventEmitter } from '../shared/event-emitter'
+import type { DismissPayload } from '../shared/presentation'
 import type { RequestOptions } from '../shared/request'
 import type { ExperiencePlugin, ExperiencePluginContext, FeatureContract, SecurityProtocol, ShellOptions } from '../shared/types'
 import type { HeartbeatMonitor, HeartbeatStatus } from './heartbeat'
@@ -13,7 +14,6 @@ import { assertSendPayload, buildActionIndex, checkReceivePayload } from '../sha
 import { createRequestPeer } from '../shared/request'
 import { DisplayMode } from '../shared/types'
 import { createContractCompat } from '../shared/version-compat'
-import { applyContentSize } from './sizing'
 
 // note: All DOM/window work lives in the injected mount functions, so this wiring stays DOM-free and exercisable with mock collaborators.
 
@@ -250,6 +250,28 @@ export function createShellHandle(
     }
   }
 
+  const applyDismiss = (options: ShellOptions, data: unknown) => {
+    // why: Dismiss signals only exist in dialog mode; anything a feature sends outside it is ignored — the host stays in control of its own lifecycle.
+    if ((options.displayMode ?? DisplayMode.Embedded) !== DisplayMode.Dialog) {
+      return
+    }
+    const source = (<DismissPayload | undefined>data)?.source
+    if (source === 'escape') {
+      if (options.closeOnEscape !== false) {
+        close()
+      }
+      return
+    }
+    if (source === 'backdrop') {
+      const behavior = options.dialogBackdrop ?? 'close'
+      if (behavior === 'close') {
+        close()
+      } else if (behavior === 'event') {
+        emitter.emit('dismiss', { source })
+      }
+    }
+  }
+
   const open = (overrides?: Partial<ShellOptions>) => {
     destroy()
     if (pendingUnmount) {
@@ -269,13 +291,15 @@ export function createShellHandle(
     }
     const featureOrigin = deriveFeatureOrigin(options.url)
     // why: The origin pin restricts every send to the feature's origin before the first frame leaves; the timeout bounds the wire handshake.
-    channel = broker.addChannel(`feature-${(openCount += 1)}`, result.target, {
+    const activeChannel = broker.addChannel(`feature-${(openCount += 1)}`, result.target, {
       contractCompat: createContractCompat(),
       ...wiring.registerSecurity(broker, options.protocol, options.sharedKey),
       ...(featureOrigin ? { origin: featureOrigin } : {}),
       ...(options.openTimeoutMs !== undefined ? { connectTimeoutMs: options.openTimeoutMs } : {}),
     })
-    const sizeFrame = options.embedSizing === 'content' ? result.frame : undefined
+    channel = activeChannel
+    // why: Queued before connect so the presentation announcement is the first message the feature receives after open — ahead of any consumer send issued in the meantime.
+    activeChannel.send(ControlType.Present, result.present)
     const activeMonitor = wiring.createHeartbeatMonitor(
       (missedBeats, lastBeatAt) => applyUnresponsive(options, missedBeats, lastBeatAt),
       (status) => emitter.emit('status', status)
@@ -294,6 +318,10 @@ export function createShellHandle(
       opened = true
       emitter.emit('open')
       activeMonitor.start()
+      // why: A mounted frame is not a displayed one — it stays hidden until the session opens, so the user never sees (or clicks into) a frame whose feature is not ready.
+      result.reveal?.()
+      // why: The presentation announcement already carried the initial size, so the reporter forwards only changes from here on.
+      result.viewport?.start((size) => activeChannel.send(ControlType.Viewport, size))
     })
     channel.on('closing', (data) => emitter.emit('closing', data))
     channel.on('close', () => {
@@ -323,8 +351,8 @@ export function createShellHandle(
       if (isControlType(message.type)) {
         if (message.type === ControlType.Beat) {
           activeMonitor.beat()
-        } else if (message.type === ControlType.Size && sizeFrame) {
-          applyContentSize(sizeFrame, message.data)
+        } else if (message.type === ControlType.Dismiss) {
+          applyDismiss(options, message.data)
         } else if (message.type === ControlType.Visibility) {
           peerHidden = (<ControlFlagPayload | undefined>message.data)?.hidden === true
           applyObservability()

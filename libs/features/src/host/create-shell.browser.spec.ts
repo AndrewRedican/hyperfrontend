@@ -1,4 +1,13 @@
+import type { CreateShellOptions } from './create-shell'
+import type { MountResult } from './types'
+import { installResizeObserverStub } from '../testing/resize-observer-stub'
 import { createShell, deriveShellName } from './create-shell'
+import { mountEmbedded } from './display-modes/embedded'
+import { builtInDisplayModes } from './display-modes/registry'
+
+beforeEach(() => {
+  installResizeObserverStub()
+})
 
 describe('deriveShellName', () => {
   it('prefers an explicit name over url and container', () => {
@@ -21,6 +30,10 @@ describe('deriveShellName', () => {
     expect(deriveShellName({ container: '###', url: '' }, 4)).toBe('shell-4')
   })
 
+  it('strips an uppercase scheme prefix from the slug', () => {
+    expect(deriveShellName({ url: 'HTTPS://App.Example.com' }, 5)).toBe('shell-app-example-com-5')
+  })
+
   it('keeps a non-alphabetic scheme prefix in the slug', () => {
     expect(deriveShellName({ url: 'view-source://app.example.com' }, 7)).toBe('shell-view-source-app-example-com-7')
   })
@@ -31,8 +44,20 @@ describe('createShell', () => {
     document.body.innerHTML = ''
   })
 
+  it('throws when no modes option is given', () => {
+    expect(() => createShell(<CreateShellOptions>(<unknown>{ container: '#shell' }))).toThrow(
+      'createShell needs at least one display mode: pass modes (e.g. { embedded: mountEmbedded }) or builtInDisplayModes.'
+    )
+  })
+
+  it('throws when the modes map is empty', () => {
+    expect(() => createShell({ modes: {}, container: '#shell' })).toThrow(
+      'createShell needs at least one display mode: pass modes (e.g. { embedded: mountEmbedded }) or builtInDisplayModes.'
+    )
+  })
+
   it('returns a shell handle exposing the public surface', () => {
-    expect(createShell({ container: '#shell' })).toEqual(
+    expect(createShell({ modes: builtInDisplayModes, container: '#shell' })).toEqual(
       expect.objectContaining({
         open: expect.any(Function),
         close: expect.any(Function),
@@ -43,15 +68,45 @@ describe('createShell', () => {
     )
   })
 
+  it('creates a shell without a container', () => {
+    expect(createShell({ modes: builtInDisplayModes }).isOpen).toBe(false)
+  })
+
   it('reports closed before the first open', () => {
-    expect(createShell({ container: '#shell' }).isOpen).toBe(false)
+    expect(createShell({ modes: builtInDisplayModes, container: '#shell' }).isOpen).toBe(false)
   })
 
   it('mounts an embedded feature into the container on open', () => {
     const container = document.createElement('div')
     container.id = 'shell'
     document.body.appendChild(container)
-    createShell({ container: '#shell', url: 'https://feature.example/' }).open()
+    createShell({ modes: builtInDisplayModes, container: '#shell', url: 'https://feature.example/' }).open()
+    expect(container.querySelector('iframe')).not.toBeNull()
+  })
+
+  it('mounts a dialog pane on open with the dialog display mode', () => {
+    createShell({ modes: builtInDisplayModes, url: 'https://feature.example/' }).open({ displayMode: 'dialog' })
+    expect((<HTMLIFrameElement>document.body.querySelector('iframe')).style.position).toBe('fixed')
+  })
+
+  it('rejects opening a display mode outside the modes map', () => {
+    const shell = createShell({ modes: { embedded: mountEmbedded }, container: '#shell' })
+    expect(() => shell.open({ displayMode: 'popup' })).toThrow(
+      'This feature does not support the "popup" display mode; supported modes: embedded.'
+    )
+  })
+
+  it('opens through a custom mount map', () => {
+    const mount = jest.fn(() => <MountResult>{ target: null, present: { mode: 'embedded' }, cleanup: jest.fn() })
+    createShell({ modes: { embedded: mount } }).open()
+    expect(mount).toHaveBeenCalledTimes(1)
+  })
+
+  it('defaults a plain open to the embedded mode, so an embedded-only map works', () => {
+    const container = document.createElement('div')
+    container.id = 'shell'
+    document.body.appendChild(container)
+    createShell({ modes: { embedded: mountEmbedded }, container: '#shell', url: 'https://feature.example/' }).open()
     expect(container.querySelector('iframe')).not.toBeNull()
   })
 })

@@ -13,6 +13,8 @@ export default <Config>{
     '!**/jest.setup*.ts',
     // why: Bin entry is a thin re-export wired to the builder bootstrap; the runner it exposes is covered by bin.spec.ts.
     '!**/bin/**',
+    // why: Spec-only helpers (the shared ResizeObserver stub) exist to exercise other files, not to be shipped or coverage-gated themselves.
+    '!**/testing/**',
     // why: The tiered loader's native `await import()` compiles to __importStar/__awaiter helper branches ts-jest cannot exercise; behaviour is covered by load-module.spec.ts.
     '!**/cli/config/load-module.ts',
     // why: Module self-location reads `import.meta.url` on its ESM branch, which the CommonJS test runtime cannot parse; jest maps the module to the `__dirname` stub, so both files sit outside coverage while dev-server.spec.ts covers the locating behaviour.

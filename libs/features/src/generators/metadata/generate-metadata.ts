@@ -2,6 +2,7 @@ import type { Tree } from '@hyperfrontend/project-scope/vfs'
 import type { FeatureContract, FeatureDescriptor, ResolvedFeatureConfig } from '../../shared/types'
 import { stringify } from '@hyperfrontend/immutable-api-utils/built-in-copy/json'
 import { canonicalVersion } from '../shared/canonical-version'
+import { resolveDeclaredModes } from '../shared/declared-modes'
 import { resolveSdkVersion } from './sdk-version'
 
 // note: Human- and registry-facing sidecar; the bundled connector inlines its own copy of the contract.
@@ -31,6 +32,7 @@ export function generateMetadata(config: ResolvedFeatureConfig, contract: Featur
     version: canonicalVersion(config.version),
     url: config.url,
     contract,
+    modes: resolveDeclaredModes(config),
     ...(config.protocol !== undefined && { protocol: config.protocol }),
     ...(config.permissions !== undefined && { permissions: config.permissions }),
     generatedBy: '@hyperfrontend/features',

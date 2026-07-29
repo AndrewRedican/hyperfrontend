@@ -5,6 +5,7 @@ import { createPromise } from '@hyperfrontend/immutable-api-utils/built-in-copy/
 import { clearInterval, setInterval } from '@hyperfrontend/immutable-api-utils/built-in-copy/timers'
 import { ControlType } from '../shared/control'
 import { createEventEmitter } from '../shared/event-emitter'
+import { installResizeObserverStub } from '../testing/resize-observer-stub'
 import { createFeatureHandle, resolveHostWindow } from './lifecycle'
 
 jest.mock('@hyperfrontend/immutable-api-utils/built-in-copy/timers', () => ({
@@ -21,21 +22,9 @@ jest.mock('@hyperfrontend/immutable-api-utils/built-in-copy/timers', () => ({
 jest.mock('@hyperfrontend/network-protocol/browser/v1', () => ({ createProtocol: jest.fn(() => 'v1-provider') }))
 jest.mock('@hyperfrontend/network-protocol/browser/v2', () => ({ createProtocol: jest.fn(() => 'v2-provider') }))
 
-class ResizeObserverStub {
-  observe() {
-    return undefined
-  }
-  unobserve() {
-    return undefined
-  }
-  disconnect() {
-    return undefined
-  }
-}
-
 beforeEach(() => {
   jest.clearAllMocks()
-  Object.defineProperty(globalThis, 'ResizeObserver', { value: ResizeObserverStub, configurable: true, writable: true })
+  installResizeObserverStub()
 })
 
 interface MockChannel {
@@ -341,13 +330,6 @@ describe('createFeatureHandle', () => {
     createFeatureHandle(createMockBroker(mock.channel).broker, hostWindow, createEventEmitter(), { contract: emptyContract })
     mock.trigger('open')
     expect(mock.send).toHaveBeenCalledWith(ControlType.Beat)
-  })
-
-  it('announces its content size when the host channel opens', () => {
-    const mock = createMockChannel()
-    createFeatureHandle(createMockBroker(mock.channel).broker, hostWindow, createEventEmitter(), { contract: emptyContract })
-    mock.trigger('open')
-    expect(mock.send).toHaveBeenCalledWith(ControlType.Size, expect.objectContaining({ height: expect.any(Number) }))
   })
 
   it('reports its page visibility when the host channel opens', () => {

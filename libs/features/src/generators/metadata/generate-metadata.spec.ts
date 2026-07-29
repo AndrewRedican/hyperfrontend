@@ -16,6 +16,20 @@ describe('generateMetadata', () => {
     )
   })
 
+  it('stamps every built-in mode when the config declares no display', () => {
+    const tree = createTree(__dirname)
+    generateMetadata(config, contract, tree)
+    expect(parse(tree.read('metadata.json', 'utf-8') ?? '')).toEqual(
+      expect.objectContaining({ modes: ['embedded', 'dialog', 'popup', 'standalone'] })
+    )
+  })
+
+  it('passes the declared modes through in declaration order', () => {
+    const tree = createTree(__dirname)
+    generateMetadata({ ...config, display: { modes: ['popup', 'dialog'] } }, contract, tree)
+    expect(parse(tree.read('metadata.json', 'utf-8') ?? '')).toEqual(expect.objectContaining({ modes: ['popup', 'dialog'] }))
+  })
+
   it('stamps the baked security protocol when the config carries one', () => {
     const tree = createTree(__dirname)
     generateMetadata({ ...config, protocol: 'v2' }, contract, tree)

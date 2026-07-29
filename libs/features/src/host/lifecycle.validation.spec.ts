@@ -48,7 +48,7 @@ const TARGET = <Window>(<unknown>{ name: 'target' })
 function setup() {
   const mock = createMockChannel()
   const broker = <BrokerHandle>(<unknown>{ addChannel: jest.fn(() => mock.channel) })
-  const mount = jest.fn((): MountResult => ({ target: TARGET, cleanup: jest.fn() }))
+  const mount = jest.fn((): MountResult => ({ target: TARGET, present: { mode: 'embedded' }, cleanup: jest.fn() }))
   const emitter = createEventEmitter()
   const handle = createShellHandle(broker, <ShellOptions>{ container: '#shell' }, emitter, {
     contract: HOST_CONTRACT,
@@ -76,6 +76,7 @@ describe('createShellHandle payload validation', () => {
   it('keeps a schema-violating payload off the channel', () => {
     const ctx = setup()
     ctx.handle.open()
+    ctx.mock.send.mockClear()
     expect(() => ctx.handle.send('setTimezone', {})).toThrow()
     expect(ctx.mock.send).not.toHaveBeenCalled()
   })
@@ -130,6 +131,7 @@ describe('createShellHandle payload validation', () => {
     const handler = jest.fn()
     ctx.handle.on('error', handler)
     ctx.handle.open()
+    ctx.mock.send.mockClear()
     ctx.handle.handle('getHostInfo', () => 'ready')
     ctx.mock.triggerMessage('__hf:request', { correlationId: 'feature-1', from: 'feature', innerType: 'getHostInfo' })
     await createPromise<void>((resolve) => {

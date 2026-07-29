@@ -5,6 +5,10 @@ describe('resolveContainer', () => {
     document.body.innerHTML = ''
   })
 
+  it('throws when no container was supplied', () => {
+    expect(() => resolveContainer(undefined)).toThrow('The embedded display mode needs a "container" element or selector to mount into.')
+  })
+
   it('returns the element when given one directly', () => {
     const element = document.createElement('div')
     expect(resolveContainer(element)).toBe(element)
@@ -33,6 +37,18 @@ describe('createFeatureIframe', () => {
 
   it('keeps the frame transparent so the feature blends into the host page', () => {
     expect(createFeatureIframe('https://feature.example/').getAttribute('allowtransparency')).toBe('true')
+  })
+
+  it('pins the frame color scheme to normal so transparency survives a theme mismatch', () => {
+    expect(createFeatureIframe('https://feature.example/').style.colorScheme).toBe('normal')
+  })
+
+  it('lays the frame out as a block so no inline baseline gap appears', () => {
+    expect(createFeatureIframe('https://feature.example/').style.display).toBe('block')
+  })
+
+  it('creates the frame hidden so it stays invisible until the shell reveals it', () => {
+    expect(createFeatureIframe('https://feature.example/').style.visibility).toBe('hidden')
   })
 
   it('applies delegated permissions as the allow attribute', () => {
