@@ -4,6 +4,7 @@ import type { IMessage } from '../../types/message'
 import type { RoutingContext } from './types'
 import { validateMessage } from '../../schema/validate/message'
 import { isActionWithData } from '../../types/action'
+import { isPeerInstance } from './peer-instance'
 import { resolveChannel } from './resolve-channel'
 
 /**
@@ -15,6 +16,9 @@ import { resolveChannel } from './resolve-channel'
  *
  * @remarks
  * Side Effects:
+ * - Drops and logs messages from an instance other than the connected
+ *   counterpart, so traffic left over from a reloaded document cannot enter
+ *   the session that replaced it
  * - Validates the message shape against the message schema
  * - Drops and logs messages whose type is not accepted by the channel contract
  * - Invokes channel message handlers if validation passes
@@ -39,6 +43,11 @@ export function handleMessage(context: RoutingContext, message: MessageEvent<IAc
   const channel = <ChannelHandle | undefined>resolveChannel(registry, message)
 
   if (!channel || !channel.isActive()) {
+    return
+  }
+
+  if (!isPeerInstance(channel, action)) {
+    logger.info(`${state.name} dropped a message from an instance other than the ${channel.getName()} channel's counterpart`)
     return
   }
 

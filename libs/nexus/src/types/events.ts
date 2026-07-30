@@ -37,11 +37,24 @@ export interface ClosingEventData {
 }
 
 /**
+ * Why a session ended, when the cause is something other than either side
+ * asking for it.
+ *
+ * - `peer-reload` — the counterpart window now hosts a different instance
+ *   (a reload or in-frame navigation), so the session it belonged to is over.
+ *   The channel stays reconnectable and the new instance's handshake is
+ *   already in flight.
+ */
+export type CloseReason = 'peer-reload'
+
+/**
  * Data payload for CLOSE event
  */
 export interface CloseEventData {
   /** Whether remote end was notified */
   notify: boolean
+  /** Why the session ended, when neither side asked for the close */
+  reason?: CloseReason
 }
 
 /**

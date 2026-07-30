@@ -186,6 +186,20 @@ describe('channel/lifecycle/disconnect', () => {
     expect(state.negotiatedProtocol).toBeNull()
   })
 
+  it('carries the reason on the close event when neither side asked for it', () => {
+    disconnect(mockChannel, false, 'peer-reload')
+
+    expect(mockChannel.notifyEvent).toHaveBeenCalledWith('close', { notify: false, reason: 'peer-reload' })
+  })
+
+  it('carries the reason when a silent close completes a polite one already in flight', () => {
+    state.closingProcessId = 'process-456'
+
+    disconnect(mockChannel, false, 'peer-reload')
+
+    expect(mockChannel.notifyEvent).toHaveBeenCalledWith('close', { notify: true, reason: 'peer-reload' })
+  })
+
   describe('finalizeClose', () => {
     it('does nothing when the channel is already inactive', () => {
       state.active = false

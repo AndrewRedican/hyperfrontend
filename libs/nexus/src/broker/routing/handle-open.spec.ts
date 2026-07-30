@@ -193,6 +193,19 @@ describe('handleOpen', () => {
     }).not.toThrow()
   })
 
+  it('ignores an OPEN from another instance and keeps the process the answered one needs', () => {
+    const channel = addRespondingChannel()
+    const foreign = <MessageEvent<IAction>>{
+      ...openEvent(),
+      data: <IAction>{ type: '[nexus] connection-opened', processId: 'process-1', senderId: 'remote-broker-2' },
+    }
+
+    handleOpen(routingContext, foreign)
+    handleOpen(routingContext, openEvent())
+
+    expect({ active: channel.isActive(), peerId: channel.getPeerId() }).toEqual({ active: true, peerId: 'remote-broker-1' })
+  })
+
   it('ignores OPEN when no accept is pending', () => {
     const channel = addChannel(mockBrokerState, registry, processManager, actions, 'test-channel', mockWindow)
     processManager.track('process-1', channel)

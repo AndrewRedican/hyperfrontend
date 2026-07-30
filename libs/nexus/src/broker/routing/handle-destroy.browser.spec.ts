@@ -217,4 +217,20 @@ describe('handleDestroy', () => {
     expect(destroySpy).toHaveBeenCalledWith(false)
     expect(destroySpy).not.toHaveBeenCalledWith(true)
   })
+
+  it('ignores a destroy from an instance other than the connected counterpart', () => {
+    const channel = addChannel(mockBrokerState, registry, processManager, actions, 'test-channel', mockWindow)
+    channel.activate('*', validContract, 'remote-broker-1')
+    const destroySpy = jest.spyOn(channel, 'destroy')
+
+    handleDestroy(routingContext, <MessageEvent<IAction>>{
+      data: <IAction>{
+        type: ACTION_TYPES.DESTROY_CONNECTION,
+        senderId: 'remote-broker-2',
+      },
+      source: mockWindow,
+    })
+
+    expect({ destroyed: destroySpy.mock.calls, registered: registry.getAll().length }).toEqual({ destroyed: [], registered: 1 })
+  })
 })

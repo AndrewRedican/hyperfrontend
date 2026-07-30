@@ -22,7 +22,9 @@ import { applyPolicy } from '../security/apply-policy'
  * - Creates a new channel when the source window is unknown
  * - Drops requests whose origin does not match an already pinned origin
  * - Replays ACCEPT for duplicate requests from the connected counterpart
- * - Tears down and re-handshakes when the counterpart window reloaded
+ * - Ends the session and re-handshakes on the same channel when the request
+ *   comes from a different instance in the connected window (a reload or
+ *   in-frame navigation), firing 'close' with `reason: 'peer-reload'`
  * - Resolves simultaneous requests (glare) via a broker-id tie-break
  * - Denies invalid or incompatible contracts and policy-rejected requests
  * - Denies with reason 'incompatible-contract' when the channel's
@@ -62,7 +64,8 @@ export function handleRequest(context: RoutingContext, message: MessageEvent<IAc
 
   let channel = <ChannelHandle | undefined>(message.source ? registry.getByWindow(<Window>message.source) : undefined)
   if (!channel) {
-    channel = addChannel(state, registry, processManager, actions, senderId, <Window>message.source, {})
+    // why: Named from the requester's origin, not its broker id — the id identifies one incarnation of the counterpart, while the channel outlives every incarnation the window loads.
+    channel = addChannel(state, registry, processManager, actions, `inbound-${message.origin}`, <Window>message.source, {})
   }
 
   const pinnedOrigin = channel.getOrigin()
@@ -87,9 +90,9 @@ export function handleRequest(context: RoutingContext, message: MessageEvent<IAc
       return
     }
 
-    // why: A different sender id from the same window means the counterpart reloaded; tear down silently and fall through to a fresh handshake.
+    // why: A different sender id from the same window means the window now hosts a different instance; end the session it belonged to and fall through to a fresh handshake on the same channel.
     logger.info(`${state.name} detected channel [${channel.getName()}] reloaded.`)
-    channel.disconnect(false)
+    channel.endStaleSession()
   }
 
   if (channel.getPendingProcessId()) {

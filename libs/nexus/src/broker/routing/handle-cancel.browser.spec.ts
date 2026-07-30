@@ -202,4 +202,25 @@ describe('handleCancel', () => {
     expect(mockWindow.postMessage).toHaveBeenCalled()
     expect(window2.postMessage).toHaveBeenCalled()
   })
+
+  it('ignores a cancel from an instance other than the counterpart the channel answered', () => {
+    const channel = addChannel(mockBrokerState, registry, processManager, actions, 'test-channel', mockWindow)
+    channel.activate('*', validContract, 'remote-broker-1')
+    const processId = processManager.create(channel)
+    const cancelSpy = jest.spyOn(channel, 'cancel')
+
+    handleCancel(routingContext, <MessageEvent<IAction>>{
+      data: <IAction>{
+        type: '[nexus] connection-request-cancelled',
+        processId,
+        senderId: 'remote-broker-2',
+      },
+      source: mockWindow,
+    })
+
+    expect({ cancelled: cancelSpy.mock.calls, acknowledged: (<jest.Mock>mockWindow.postMessage).mock.calls }).toEqual({
+      cancelled: [],
+      acknowledged: [],
+    })
+  })
 })

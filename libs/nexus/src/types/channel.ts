@@ -216,6 +216,15 @@ export interface ChannelHandle {
   connect(): void
   /** Gracefully disconnect channel */
   disconnect(notify?: boolean): void
+  /**
+   * Ends the active session because the target window now hosts a different
+   * instance of the counterpart (a reload or in-frame navigation): closes
+   * silently — the instance the session belonged to is already gone — and
+   * fires 'close' with `reason: 'peer-reload'` so subscribers can drop
+   * session-scoped state before the new instance's handshake completes.
+   * The channel stays registered and reconnectable.
+   */
+  endStaleSession(): void
   /** Cancel pending connection */
   cancel(notify?: boolean): void
   /** Immediately destroy channel */

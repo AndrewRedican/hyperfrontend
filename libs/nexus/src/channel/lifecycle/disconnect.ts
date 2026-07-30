@@ -1,3 +1,4 @@
+import type { CloseReason } from '../../types/events'
 import type { ChannelInternals } from '../types'
 import { clearHandshakeTimers } from './handshake-timers'
 
@@ -10,13 +11,14 @@ import { clearHandshakeTimers } from './handshake-timers'
  * nothing when the channel is already inactive.
  *
  * @param channel - Channel internals with state and dependencies
+ * @param reason - Why the session ended, when neither side asked for the close
  *
  * @example Completing a close once the counterpart acknowledges
  * ```typescript
  * finalizeClose(channel)
  * ```
  */
-export function finalizeClose(channel: ChannelInternals): void {
+export function finalizeClose(channel: ChannelInternals, reason?: CloseReason): void {
   const state = channel.getState()
 
   if (!state.active) {
@@ -44,7 +46,7 @@ export function finalizeClose(channel: ChannelInternals): void {
     pendingSecurityRequest: null,
   })
 
-  channel.notifyEvent('close', { notify: notified })
+  channel.notifyEvent('close', { notify: notified, ...(reason && { reason }) })
 }
 
 /**
@@ -84,6 +86,7 @@ export function clearCloseTimer(channel: ChannelInternals): void {
  *
  * @param channel - Channel internals with state and dependencies
  * @param notify - Whether to notify target window (default: true)
+ * @param reason - Why the session ended, when neither side asked for the close
  *
  * @example Gracefully closing a connection
  * ```typescript
@@ -91,7 +94,7 @@ export function clearCloseTimer(channel: ChannelInternals): void {
  * disconnect(channel, false) // Close silently and immediately
  * ```
  */
-export function disconnect(channel: ChannelInternals, notify = true): void {
+export function disconnect(channel: ChannelInternals, notify = true, reason?: CloseReason): void {
   const state = channel.getState()
 
   if (!state.active) {
@@ -101,13 +104,13 @@ export function disconnect(channel: ChannelInternals, notify = true): void {
   if (typeof state.closingProcessId === 'string') {
     // why: A repeated polite close while one is in flight must not send a second CLOSE; a silent close during the wait completes it now (acknowledgement or forced teardown).
     if (!notify) {
-      finalizeClose(channel)
+      finalizeClose(channel, reason)
     }
     return
   }
 
   if (!notify) {
-    finalizeClose(channel)
+    finalizeClose(channel, reason)
     return
   }
 

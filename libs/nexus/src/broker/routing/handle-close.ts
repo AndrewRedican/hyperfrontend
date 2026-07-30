@@ -1,6 +1,7 @@
 import type { IAction } from '../../types/action'
 import type { ChannelHandle } from '../../types/channel'
 import type { RoutingContext } from './types'
+import { isPeerInstance } from './peer-instance'
 import { resolveChannel } from './resolve-channel'
 
 /**
@@ -12,6 +13,9 @@ import { resolveChannel } from './resolve-channel'
  *
  * @remarks
  * Side Effects:
+ * - Ignores a CLOSE from an instance other than the connected counterpart, so
+ *   a frame left over from a reloaded document cannot tear down the session
+ *   that replaced it
  * - Fires 'closing' while the channel is still active, so subscribers may
  *   flush final messages that deliver before the acknowledgement
  * - Sends CLOSE_CONNECTION_ACKNOWLEDGED response
@@ -36,7 +40,7 @@ export function handleClose(context: RoutingContext, message: MessageEvent<IActi
 
   const channel = <ChannelHandle | undefined>resolveChannel(registry, message)
 
-  if (!channel || !channel.isActive()) {
+  if (!channel || !channel.isActive() || !isPeerInstance(channel, action)) {
     return
   }
 

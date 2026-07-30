@@ -115,6 +115,7 @@ export function createChannel(config: IChannelConfig, deps: ChannelDependencies)
 
     connect: () => connect(internals),
     disconnect: (notify) => disconnect(internals, notify),
+    endStaleSession: () => disconnect(internals, false, 'peer-reload'),
     cancel: (notify) => cancel(internals, notify),
     destroy: (notify) => destroy(internals, notify),
 

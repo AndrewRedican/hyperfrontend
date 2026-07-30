@@ -268,6 +268,35 @@ sequenceDiagram
     Note over HostB: [handleOpen]<br/>[confirm security + attach transport]<br/>[activate + flush]<br/>[terminateProcess]<br/>[notifyEvent('open')]<br/>[ACTIVE]
 ```
 
+### Instance Identity
+
+Every broker mints a UUID when it boots and stamps it on every action it sends (`senderId`).
+It is a machine identity, not a label — the broker's `name` is the readable one — and it does
+three jobs a name cannot: it is the endpoint identifier the encrypted wire format requires
+(each packet carries the sender's and the target's id, both validated as UUID v4), the ordinal
+that settles glare without an extra round trip, and the identity of one **incarnation** of the
+counterpart.
+
+That last job matters because a window outlives the documents loaded into it. Routing resolves
+an inbound frame by its source window, which identifies the window, not what is running inside
+it. So the channel records the counterpart's id at handshake time (`peerId`, exposed on
+`ChannelJSON`) and, while a session is open, ignores frames stamped with any other id: product
+messages, CLOSE, CANCEL, DESTROY, and the OPEN that completes a handshake. Traffic left over
+from a document that has been replaced is dropped instead of entering the session that
+replaced it.
+
+REQUEST is the exception, because it is how a new incarnation announces itself. A REQUEST
+carrying a different id on a connected channel means the window reloaded (or navigated
+in-frame): the session it belonged to ends silently — `close` fires with
+`reason: 'peer-reload'` so subscribers can drop session-scoped state — and the same channel
+re-handshakes with the new instance. The channel is never removed, and security and contract
+compatibility are renegotiated from scratch; only the origin pin carries over.
+
+The id is cooperative, not a credential: any script that can post to the window can claim one,
+so the check is a correctness mechanism (and a hurdle for a co-resident script that has never
+observed the id), while origin pinning stays the boundary. Inside an encrypted envelope it is
+authenticated, because producing a frame at all requires the negotiated key.
+
 ### Contract Compatibility
 
 Both sides exchange contracts during the handshake. Vocabulary differences never gate the connection — only `accepted` entries flagged `required: true` do, and each must appear in the counterpart's `emitted` list or the connection is denied with `Incompatible contract: missing required actions …`. This keeps additive contract evolution non-breaking in both directions:
@@ -373,6 +402,7 @@ stateDiagram-v2
     ACTIVE --> CLOSING: disconnect()
     CLOSING --> CLOSED: ACK or closeTimeoutMs
     ACTIVE --> CLOSED: peer CLOSE (after flush window)
+    ACTIVE --> CONNECTING: peer reload (new instance in the window)
     DENIED --> [*]
     CLOSED --> [*]
 ```
@@ -383,19 +413,19 @@ stateDiagram-v2
 
 Each protocol action is processed by a dedicated handler. All handlers receive the broker state, channel registry, process manager, and incoming message.
 
-| Handler                    | Responsibilities                                                                                                                                                                                                                                                                                                                   |
-| -------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `handleRequest`            | Enforce origin pin, resolve glare/reload, validate contract + requirements + compat rule, apply policy, negotiate security against the protocol registry (deny fail-closed plaintext outcomes, firing the local 'deny' once per process), track process, pin origin, send ACCEPT with retry/deadline (or schedule until connect()) |
-| `handleAccept`             | Resolve by process or source window, enforce origin pin, validate contract + requirements + compat rule, apply policy, attach the security transport before the queue flushes (abort fail-closed plaintext outcomes via CANCEL + local 'deny'), activate + flush, send OPEN confirming the security outcome, notify 'open'         |
-| `handleOpen`               | Apply the initiator's security confirmation (attach transport before flush, refuse fail-closed plaintext outcomes), activate from the pending accept, flush queue, terminate process, notify 'open' (responder side)                                                                                                               |
-| `handleDeny`               | Abandon the pending request (stop retrying), terminate process, notify 'deny' with error context                                                                                                                                                                                                                                   |
-| `handleCancel`             | Cancel channel, send CANCEL_ACK, notify 'cancel'                                                                                                                                                                                                                                                                                   |
-| `handleCancelAcknowledged` | Terminate process, notify 'cancel' (initiator side)                                                                                                                                                                                                                                                                                |
-| `handleClose`              | Notify 'closing' (flush window, channel still active), send CLOSE_ACK, then deactivate and notify a single 'close'                                                                                                                                                                                                                 |
-| `handleCloseAcknowledged`  | Complete the initiator's polite close: deactivate, terminate process, notify its single 'close' (ignores stray acks for channels not closing)                                                                                                                                                                                      |
-| `handleMessage`            | Validate payload, forward to subscribers via `notifyMessage()`                                                                                                                                                                                                                                                                     |
-| `handleDestroy`            | Force-destroy connection, clean up resources                                                                                                                                                                                                                                                                                       |
-| `handleInvalid`            | Log invalid requests, optionally notify sender — see [handle-invalid.ts](https://github.com/AndrewRedican/hyperfrontend/blob/main/libs/nexus/src/broker/routing/handle-invalid.ts)                                                                                                                                                 |
+| Handler                    | Responsibilities                                                                                                                                                                                                                                                                                                                                                                                                      |
+| -------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `handleRequest`            | Enforce origin pin, resolve glare/reload (a new instance in the window ends the stale session with `reason: 'peer-reload'`), validate contract + requirements + compat rule, apply policy, negotiate security against the protocol registry (deny fail-closed plaintext outcomes, firing the local 'deny' once per process), track process, pin origin, send ACCEPT with retry/deadline (or schedule until connect()) |
+| `handleAccept`             | Resolve by process or source window, enforce origin pin, validate contract + requirements + compat rule, apply policy, attach the security transport before the queue flushes (abort fail-closed plaintext outcomes via CANCEL + local 'deny'), activate + flush, send OPEN confirming the security outcome, notify 'open'                                                                                            |
+| `handleOpen`               | Ignore an OPEN from another instance (leaving the process intact), apply the initiator's security confirmation (attach transport before flush, refuse fail-closed plaintext outcomes), activate from the pending accept, flush queue, terminate process, notify 'open' (responder side)                                                                                                                               |
+| `handleDeny`               | Abandon the pending request (stop retrying), terminate process, notify 'deny' with error context                                                                                                                                                                                                                                                                                                                      |
+| `handleCancel`             | Ignore a CANCEL from another instance, else cancel channel, send CANCEL_ACK, notify 'cancel'                                                                                                                                                                                                                                                                                                                          |
+| `handleCancelAcknowledged` | Terminate process, notify 'cancel' (initiator side)                                                                                                                                                                                                                                                                                                                                                                   |
+| `handleClose`              | Ignore a CLOSE from another instance, else notify 'closing' (flush window, channel still active), send CLOSE_ACK, then deactivate and notify a single 'close'                                                                                                                                                                                                                                                         |
+| `handleCloseAcknowledged`  | Complete the initiator's polite close: deactivate, terminate process, notify its single 'close' (ignores stray acks for channels not closing)                                                                                                                                                                                                                                                                         |
+| `handleMessage`            | Drop and log messages from another instance, validate payload, forward to subscribers via `notifyMessage()`                                                                                                                                                                                                                                                                                                           |
+| `handleDestroy`            | Ignore a DESTROY from another instance, else force-destroy connection, clean up resources                                                                                                                                                                                                                                                                                                                             |
+| `handleInvalid`            | Log invalid requests, optionally notify sender — see [handle-invalid.ts](https://github.com/AndrewRedican/hyperfrontend/blob/main/libs/nexus/src/broker/routing/handle-invalid.ts)                                                                                                                                                                                                                                    |
 
 ---
 
@@ -409,13 +439,13 @@ Channels emit lifecycle events to subscribers. Each event has a specific trigger
 | ------------------- | ------------------------------------------------- | ------------------------------- |
 | `'open'`            | Connection successfully established               | `{ origin, contract }`          |
 | `'closing'`         | Polite close proposed; channel still delivers     | `{ initiatedLocally: boolean }` |
-| `'close'`           | Close completed (fires once per side)             | `{ notify: boolean }`           |
+| `'close'`           | Close completed (fires once per side)             | `{ notify: boolean, reason? }`  |
 | `'cancel'`          | Pending connection cancelled                      | `{ notify: boolean }`           |
 | `'deny'`            | Connection request rejected (either side's gates) | `{ error?, reason?, origin?}`   |
 | `'invalid'`         | Protocol violation or unexpected-origin drop      | `{ error, action? }`            |
 | `'connect-timeout'` | Handshake deadline expired with no answer         | `{ elapsedMs }`                 |
 
-The `deny` payload's optional `reason` is machine-readable: `'incompatible-contract'` (a `contractCompat` rule rejected the pair) or `'security-unavailable'` (a fail-closed channel could not obtain an encrypted transport). The `invalid` event fires with `{ error, action? }` for unexpected-origin drops, and with `{ reason, origin }` when the counterpart reports an INVALID_REQUEST frame.
+The `close` payload's optional `reason` is `'peer-reload'`, set when the session ended because the target window now hosts a different instance — see [Instance Identity](#instance-identity). The `deny` payload's optional `reason` is machine-readable: `'incompatible-contract'` (a `contractCompat` rule rejected the pair) or `'security-unavailable'` (a fail-closed channel could not obtain an encrypted transport). The `invalid` event fires with `{ error, action? }` for unexpected-origin drops, and with `{ reason, origin }` when the counterpart reports an INVALID_REQUEST frame.
 
 ### Connection Outcomes
 

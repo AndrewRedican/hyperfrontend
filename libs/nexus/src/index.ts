@@ -23,6 +23,7 @@ export type {
   EventData,
   OpenEventData,
   CloseEventData,
+  CloseReason,
   CancelEventData,
   DenyEventData,
   InvalidEventData,

@@ -377,7 +377,7 @@ describe('Connection Flow Integration', () => {
 
     it('delivers inbound messages from the pinned origin', () => {
       const { contractA, contractB } = createContractPair(['PING'], ['PONG'])
-      const { channelA, channelB } = setupPair(contractA, contractB)
+      const { brokerA, channelA, channelB } = setupPair(contractA, contractB)
 
       channelA.connect()
       channelB.connect()
@@ -387,7 +387,7 @@ describe('Connection Flow Integration', () => {
 
       simulateMessage(
         windowB,
-        { type: ACTION_TYPES.NEW_MESSAGE, senderId: channelA.getId(), data: { type: 'PING', data: {} } },
+        { type: ACTION_TYPES.NEW_MESSAGE, senderId: brokerA.id, data: { type: 'PING', data: {} } },
         'http://host-a.com',
         windowA
       )
@@ -598,6 +598,49 @@ describe('Connection Flow Integration', () => {
       channelA2.connect()
 
       expect([channelA2.isActive(), channelB.isActive()]).toEqual([true, true])
+    })
+
+    it('ends the session with a reload reason, then opens again for the fresh instance', () => {
+      const { contractA, contractB } = createContractPair(['MSG'], ['ACK'])
+      const { channelA, channelB } = setupPair(contractA, contractB)
+
+      channelA.connect()
+      channelB.connect()
+
+      const events: unknown[] = []
+      channelB.on('close', (data) => events.push({ close: data }))
+      channelB.on('open', () => events.push({ open: true }))
+
+      const brokerA2 = createBroker({ name: 'broker-a-reloaded', contract: contractA, window: <Window>(<unknown>windowA) })
+      brokerA2.addChannel('to-b', <Window>(<unknown>windowB)).connect()
+
+      expect({ events, peerId: channelB.getPeerId() }).toEqual({
+        events: [{ close: { notify: false, reason: 'peer-reload' } }, { open: true }],
+        peerId: brokerA2.id,
+      })
+    })
+
+    it('drops product messages left over from the instance that reloaded', () => {
+      const { contractA, contractB } = createContractPair(['MSG'], ['ACK'])
+      const { brokerA, channelA, channelB } = setupPair(contractA, contractB)
+
+      channelA.connect()
+      channelB.connect()
+
+      const brokerA2 = createBroker({ name: 'broker-a-reloaded', contract: contractA, window: <Window>(<unknown>windowA) })
+      brokerA2.addChannel('to-b', <Window>(<unknown>windowB)).connect()
+
+      const messagesB: unknown[] = []
+      channelB.onMessage((msg) => messagesB.push(msg))
+
+      simulateMessage(
+        windowB,
+        { type: ACTION_TYPES.NEW_MESSAGE, senderId: brokerA.id, data: { type: 'MSG', data: {} } },
+        'http://host-a.com',
+        windowA
+      )
+
+      expect(messagesB).toEqual([])
     })
   })
 })

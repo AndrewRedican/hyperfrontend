@@ -231,6 +231,22 @@ describe('handleMessage', () => {
     expect(notifySpy).not.toHaveBeenCalled()
   })
 
+  it('drops and logs a message from an instance other than the connected counterpart', () => {
+    const channel = addConnectedChannel('test-channel', mockWindow)
+    const notifySpy = jest.spyOn(channel, 'notifyMessage')
+
+    handleMessage(routingContext, <MessageEvent<IAction>>{
+      data: <IAction>{
+        type: '[nexus] new-message',
+        senderId: 'remote-broker-2',
+        data: { type: 'test-message', data: 'from the previous incarnation' },
+      },
+      source: mockWindow,
+    })
+
+    expect({ notified: notifySpy.mock.calls, logged: (<jest.Mock>mockLogger.info).mock.calls.length }).toEqual({ notified: [], logged: 1 })
+  })
+
   it('logs the dropped message type when it is not accepted by the channel contract', () => {
     addConnectedChannel('test-channel', mockWindow)
 
@@ -284,7 +300,7 @@ describe('handleMessage', () => {
     handleMessage(routingContext, <MessageEvent<IAction>>{
       data: <IAction>{
         type: '[nexus] new-message',
-        senderId: 'remote-2',
+        senderId: 'remote-broker-1',
         data: { type: 'test-message', data: 'for channel 2' },
       },
       source: window2,

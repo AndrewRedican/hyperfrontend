@@ -112,15 +112,21 @@ describe('handleRequest', () => {
     return channel
   }
 
-  it('creates new channel for new connection request', () => {
+  it('creates a channel named from the requester origin, not its instance id', () => {
     handleRequest(routingContext, requestEvent())
 
-    expect(registry.getByName('remote-broker-1')).toBeDefined()
+    expect({
+      byOrigin: registry.getByName('inbound-https://example.com')?.name,
+      byInstance: registry.getByName('remote-broker-1'),
+    }).toEqual({
+      byOrigin: 'inbound-https://example.com',
+      byInstance: undefined,
+    })
   })
 
   it('reuses the channel registered for the source window', () => {
     handleRequest(routingContext, requestEvent())
-    const firstChannel = registry.getByName('remote-broker-1')
+    const firstChannel = registry.getByName('inbound-https://example.com')
 
     handleRequest(routingContext, requestEvent())
 
@@ -130,7 +136,7 @@ describe('handleRequest', () => {
   it('schedules activation and tracks the process when the local side is not ready', () => {
     handleRequest(routingContext, requestEvent())
 
-    const channel = registry.getByName('remote-broker-1')
+    const channel = registry.getByName('inbound-https://example.com')
     expect({ tracked: processManager.get('process-1'), accepted: (<jest.Mock>mockWindow.postMessage).mock.calls }).toEqual({
       tracked: channel,
       accepted: [],
@@ -598,13 +604,20 @@ describe('handleRequest', () => {
       expect(sent.security).toBeUndefined()
     })
 
-    it('tears down and re-handshakes when the counterpart reloaded with a new id', () => {
+    it('ends the stale session with a reload reason and re-handshakes with the new instance', () => {
       const channel = addActiveChannel()
+      const close = jest.fn()
+      channel.on('close', close)
 
       handleRequest(routingContext, requestEvent({ senderId: 'remote-broker-2', processId: 'process-2' }))
 
-      expect({ peerId: channel.getPeerId(), accepted: (<jest.Mock>mockWindow.postMessage).mock.calls[0][0] }).toEqual({
+      expect({
+        peerId: channel.getPeerId(),
+        closed: close.mock.calls[0]?.[0],
+        accepted: (<jest.Mock>mockWindow.postMessage).mock.calls[0][0],
+      }).toEqual({
         peerId: 'remote-broker-2',
+        closed: { notify: false, reason: 'peer-reload' },
         accepted: expect.objectContaining({ type: '[nexus] connection-request-accepted', processId: 'process-2' }),
       })
     })

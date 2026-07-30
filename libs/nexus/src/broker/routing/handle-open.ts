@@ -4,6 +4,7 @@ import type { SecurityConfirmation } from '../../types/security'
 import type { RoutingContext } from './types'
 import { requestsSecurity, requiresSecurity } from '../../security/settings'
 import { attachSecurityTransport } from './attach-security-transport'
+import { isPeerInstance } from './peer-instance'
 
 /**
  * Refuses to activate the channel because it is fail-closed and the
@@ -46,6 +47,9 @@ function refuseSecurityUnavailable(context: RoutingContext, channel: ChannelHand
  *
  * @remarks
  * Side Effects:
+ * - Ignores an OPEN from an instance other than the one this side answered,
+ *   leaving the tracked process intact so the awaited confirmation can still
+ *   complete the handshake
  * - Terminates the connection process (duplicate OPENs no-op on the bail)
  * - Stores the security outcome the initiator confirmed, downgrading the
  *   recorded protocol to plaintext when the confirmation is inactive or the
@@ -77,6 +81,11 @@ export function handleOpen(context: RoutingContext, message: MessageEvent<IActio
   const channel = <ChannelHandle | undefined>processManager.get(processId)
 
   if (!channel) {
+    return
+  }
+
+  // why: Checked before the process is consumed, so a frame from another instance cannot burn the process id the answered instance still needs.
+  if (!isPeerInstance(channel, action)) {
     return
   }
 
