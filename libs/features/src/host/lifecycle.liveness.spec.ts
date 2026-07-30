@@ -112,6 +112,23 @@ describe('createShellHandle liveness states and observability', () => {
     expect(ctx.monitor.setObservable).toHaveBeenLastCalledWith(false)
   })
 
+  it('clears the feature-reported hidden state when the feature reloads', () => {
+    const ctx = setup()
+    ctx.handle.open()
+    ctx.mock.trigger('open')
+    ctx.mock.triggerMessage('__hf:visibility', { hidden: true })
+    ctx.mock.trigger('close', { notify: false, reason: 'peer-reload' })
+    expect(ctx.monitor.setObservable).toHaveBeenLastCalledWith(true)
+  })
+
+  it('keeps observing the host page across a feature reload', () => {
+    const ctx = setup()
+    ctx.handle.open()
+    ctx.mock.trigger('open')
+    ctx.mock.trigger('close', { notify: false, reason: 'peer-reload' })
+    expect(ctx.visibilityStop).not.toHaveBeenCalled()
+  })
+
   it('tears the visibility observer down with the monitor', () => {
     const ctx = setup()
     ctx.handle.open()
@@ -157,7 +174,7 @@ describe('createShellHandle teardown and dirty state', () => {
     ctx.handle.open()
     ctx.mock.trigger('open')
     ctx.mock.triggerMessage('__hf:dirty', { dirty: true })
-    ctx.mock.trigger('close')
+    ctx.mock.trigger('close', { notify: false })
     expect(ctx.handle.isDirty).toBe(false)
   })
 })

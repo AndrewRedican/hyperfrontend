@@ -298,8 +298,11 @@ export function createShellHandle(
       ...(options.openTimeoutMs !== undefined ? { connectTimeoutMs: options.openTimeoutMs } : {}),
     })
     channel = activeChannel
+    // why: Re-measured on every announcement so a feature that reloads mid-session is told the space it occupies now, not the space measured at mount.
+    const announcePresent = () =>
+      activeChannel.send(ControlType.Present, result.viewport ? { ...result.present, viewport: result.viewport.current() } : result.present)
     // why: Queued before connect so the presentation announcement is the first message the feature receives after open — ahead of any consumer send issued in the meantime.
-    activeChannel.send(ControlType.Present, result.present)
+    announcePresent()
     const activeMonitor = wiring.createHeartbeatMonitor(
       (missedBeats, lastBeatAt) => applyUnresponsive(options, missedBeats, lastBeatAt),
       (status) => emitter.emit('status', status)
@@ -324,12 +327,22 @@ export function createShellHandle(
       result.viewport?.start((size) => activeChannel.send(ControlType.Viewport, size))
     })
     channel.on('closing', (data) => emitter.emit('closing', data))
-    channel.on('close', () => {
+    channel.on('close', (data) => {
       opened = false
       dirty = false
+      requests.rejectAll('The feature channel closed before the feature responded.')
+      if (data.reason === 'peer-reload') {
+        // why: The frame reloaded itself and its new instance is already handshaking on this mount — the DOM, the observers and the subscriptions outlive the session, so only session-scoped state resets.
+        activeMonitor.stop()
+        peerHidden = false
+        applyObservability()
+        emitter.emit('close', { reason: data.reason })
+        // why: The new document has seen no announcement at all; queued now, it is the first message it receives when the fresh handshake opens.
+        announcePresent()
+        return
+      }
       emitter.emit('close')
       stopMonitor()
-      requests.rejectAll('The feature channel closed before the feature responded.')
       if (pendingUnmount) {
         return
       }

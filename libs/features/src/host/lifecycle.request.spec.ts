@@ -147,7 +147,7 @@ describe('createShellHandle request/response', () => {
     const ctx = setup()
     ctx.handle.open()
     const pending = ctx.handle.request('getTime')
-    ctx.mock.trigger('close')
+    ctx.mock.trigger('close', { notify: false })
     await expect(pending).rejects.toThrow('The feature channel closed before the feature responded.')
   })
 

@@ -344,21 +344,21 @@ describe('createShellHandle', () => {
       const ctx = setup()
       const onUnmount = jest.fn()
       ctx.handle.open({ plugins: [{ name: 'exit', onUnmount }] })
-      ctx.mock.trigger('close')
+      ctx.mock.trigger('close', { notify: false })
       await flush()
       expect(onUnmount).toHaveBeenCalledTimes(1)
     })
 
     it('defers close-path cleanup until plugin onUnmount resolves', async () => {
       const { ctx } = openWithDeferredUnmount()
-      ctx.mock.trigger('close')
+      ctx.mock.trigger('close', { notify: false })
       await flush()
       expect(ctx.cleanup).not.toHaveBeenCalled()
     })
 
     it('runs mount cleanup after the close-path teardown resolves', async () => {
       const { ctx, deferred } = openWithDeferredUnmount()
-      ctx.mock.trigger('close')
+      ctx.mock.trigger('close', { notify: false })
       deferred.resolve()
       await flush()
       expect(ctx.cleanup).toHaveBeenCalledTimes(1)
@@ -367,7 +367,7 @@ describe('createShellHandle', () => {
     it('does not run cleanup twice when the channel closes during a destroy teardown', async () => {
       const { ctx, deferred } = openWithDeferredUnmount()
       ctx.handle.destroy()
-      ctx.mock.trigger('close')
+      ctx.mock.trigger('close', { notify: false })
       deferred.resolve()
       await flush()
       expect(ctx.cleanup).toHaveBeenCalledTimes(1)

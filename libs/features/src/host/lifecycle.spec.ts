@@ -172,14 +172,14 @@ describe('createShellHandle', () => {
     const handler = jest.fn()
     ctx.handle.on('close', handler)
     ctx.handle.open()
-    ctx.mock.trigger('close')
+    ctx.mock.trigger('close', { notify: false })
     expect(handler).toHaveBeenCalledTimes(1)
   })
 
   it('runs mount cleanup when the channel closes', () => {
     const ctx = setup()
     ctx.handle.open()
-    ctx.mock.trigger('close')
+    ctx.mock.trigger('close', { notify: false })
     expect(ctx.cleanup).toHaveBeenCalledTimes(1)
   })
 
@@ -187,7 +187,7 @@ describe('createShellHandle', () => {
     const ctx = setup()
     ctx.handle.open()
     ctx.mock.trigger('open')
-    ctx.mock.trigger('close')
+    ctx.mock.trigger('close', { notify: false })
     expect(ctx.handle.isOpen).toBe(false)
   })
 
@@ -366,6 +366,78 @@ describe('createShellHandle', () => {
     })
   })
 
+  describe('feature reload', () => {
+    const reload = { notify: false, reason: 'peer-reload' }
+
+    it('keeps the mount so the reloading frame survives its own refresh', () => {
+      const ctx = setup()
+      ctx.handle.open()
+      ctx.mock.trigger('open')
+      ctx.mock.trigger('close', reload)
+      expect(ctx.cleanup).not.toHaveBeenCalled()
+    })
+
+    it('reports the ended session with its reason', () => {
+      const ctx = setup()
+      const events: unknown[] = []
+      ctx.handle.on('close', (data) => events.push(data))
+      ctx.handle.open()
+      ctx.mock.trigger('open')
+      ctx.mock.trigger('close', reload)
+      expect({ events, isOpen: ctx.handle.isOpen }).toEqual({ events: [{ reason: 'peer-reload' }], isOpen: false })
+    })
+
+    it('re-announces the presentation the new document has not seen', () => {
+      const ctx = setup({ present: { mode: 'embedded', viewport: { width: 320, height: 240 } } })
+      ctx.handle.open()
+      ctx.mock.trigger('open')
+      ctx.mock.send.mockClear()
+      ctx.mock.trigger('close', reload)
+      expect(ctx.mock.send).toHaveBeenCalledWith('__hf:present', { mode: 'embedded', viewport: { width: 320, height: 240 } })
+    })
+
+    it('re-measures the frame for the re-announcement', () => {
+      const viewport: ViewportReporter = { current: jest.fn(() => ({ width: 640, height: 480 })), start: jest.fn(), stop: jest.fn() }
+      const ctx = setup({ present: { mode: 'embedded', viewport: { width: 320, height: 240 } }, viewport })
+      ctx.handle.open()
+      ctx.mock.trigger('open')
+      ctx.mock.send.mockClear()
+      ctx.mock.trigger('close', reload)
+      expect(ctx.mock.send).toHaveBeenCalledWith('__hf:present', { mode: 'embedded', viewport: { width: 640, height: 480 } })
+    })
+
+    it('keeps the viewport reporter observing across the reload', () => {
+      const viewport: ViewportReporter = { current: jest.fn(() => ({ width: 0, height: 0 })), start: jest.fn(), stop: jest.fn() }
+      const ctx = setup({ viewport })
+      ctx.handle.open()
+      ctx.mock.trigger('open')
+      ctx.mock.trigger('close', reload)
+      expect(viewport.stop).not.toHaveBeenCalled()
+    })
+
+    it('gives the next session a fresh watchdog budget', () => {
+      const ctx = setup()
+      ctx.handle.open()
+      ctx.mock.trigger('open')
+      ctx.mock.trigger('close', reload)
+      ctx.mock.trigger('open')
+      expect({ stopped: ctx.monitor.stop.mock.calls.length, started: ctx.monitor.start.mock.calls.length }).toEqual({
+        stopped: 1,
+        started: 2,
+      })
+    })
+
+    it('still tears the mount down when the shell itself closes afterwards', () => {
+      const ctx = setup()
+      ctx.handle.open()
+      ctx.mock.trigger('open')
+      ctx.mock.trigger('close', reload)
+      ctx.mock.trigger('open')
+      ctx.mock.trigger('close', { notify: true })
+      expect(ctx.cleanup).toHaveBeenCalledTimes(1)
+    })
+  })
+
   describe('reveal on session open', () => {
     it('does not reveal the mounted frame before the channel opens', () => {
       const reveal = jest.fn()
@@ -525,7 +597,7 @@ describe('createShellHandle', () => {
   it('stops the monitor when the channel closes', () => {
     const ctx = setup()
     ctx.handle.open()
-    ctx.mock.trigger('close')
+    ctx.mock.trigger('close', { notify: false })
     expect(ctx.monitor.stop).toHaveBeenCalledTimes(1)
   })
 

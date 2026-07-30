@@ -37,6 +37,8 @@ The shell wraps a `@hyperfrontend/nexus` broker: `send` emits a contract action 
 
 Opening is asynchronous: `isOpen` stays `false` and sends queue until the wire handshake with the feature completes, flushing on the `open` event. If the feature never completes the handshake within `openTimeoutMs` (default 10 s), the shell tears the mount down and emits `error` with `reason: 'open-timeout'`.
 
+A feature that reloads itself (a refresh, an in-frame navigation, a dev-server rebuild) ends its session but keeps its mount: `close` fires with `{ reason: 'peer-reload' }`, then `open` fires again once the new document completes its own handshake, and the shell re-announces the presentation to it. Treat the pair as a session boundary — pending requests reject, `isDirty` resets, and anything you sent the previous document needs sending again. To refuse the reload instead, `destroy()` on that reason.
+
 ## Display modes and sizing
 
 The host owns presentation. It picks the display mode (from the set the feature's contract declares), announces it to the feature once per mount — the announcement already carries the frame's initial dimensions, so the feature lays itself out without waiting for a second message — and is the single authority on frame geometry: every dimension crosses the boundary as an exact pixel value, host to feature, never the other way.

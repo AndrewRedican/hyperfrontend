@@ -155,6 +155,8 @@ Liveness is judged in four states, not a boolean. The feature pulses a hidden be
 
 Teardown is polite by default: `close()` on either side proposes the close, the counterpart receives a `closing` event while the channel still delivers — its flush window for unsaved work — then acknowledges, and each side fires a single `close` (an unacknowledged close completes at a deadline). The feature can declare unsaved work with `setDirty(true)`; the host sees it as the `dirty-state` event and the `isDirty` flag and can take it into account before proposing a close. `destroy()` remains the impolite immediate teardown.
 
+A feature that reloads itself ends its session without either side proposing it. The mount survives: the shell keeps the frame, its observers and its subscriptions, and re-announces `__hf:present` (re-measured) to the new document, which handshakes on the same channel. The consumer sees the session boundary as `close` with `{ reason: 'peer-reload' }` followed by a fresh `open` — pending requests reject, `isDirty` resets, and anything session-scoped has to be sent again.
+
 ---
 
 ## Core Interfaces
