@@ -142,6 +142,10 @@ sequenceDiagram
 - **Origins are learned, then pinned.** Each side pins the counterpart's origin at the
   handshake and drops anything that does not match; receive-side routing resolves by the
   sending window, never by claimed identity.
+- **Instances are distinguished from windows.** A window outlives the documents loaded into
+  it, so each side also records which incarnation of the counterpart it is talking to and
+  ignores frames from any other — traffic left over from a reloaded document cannot enter the
+  session that replaced it.
 - **Contracts gate the session.** Required actions must appear in the counterpart's contract,
   and contracts carry an optional semver version checked by a compatibility rule at the
   handshake gate. An incompatible pair is denied (`deny` with a reason) before anything opens.
@@ -177,6 +181,11 @@ counterpart cannot hold the channel open, and the impolite forms (crash, tab clo
 covered by the heartbeat. Dirty state is a contract event: the feature declares unsaved work
 (`setDirty`), and the host can take it into account (`isDirty`, `dirty-state`) before
 starting a polite teardown.
+
+A reload is a third form: the feature's document is replaced, so the session ends without
+either side asking. The host is told which one it was (`close` carries
+`reason: 'peer-reload'`) and keeps the mount — the new document handshakes on the same frame
+and is re-announced its presentation — so a refresh costs a session, not the feature.
 
 ### Contract System
 
