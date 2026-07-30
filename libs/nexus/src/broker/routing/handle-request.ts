@@ -1,5 +1,6 @@
 import type { IAction, IActionWithContractAndSecurity } from '../../types/action'
 import type { ChannelHandle } from '../../types/channel'
+import type { DenyReason } from '../../types/events'
 import type { SecurityNegotiationRequest, SecurityNegotiationResponse } from '../../types/security'
 import type { RoutingContext } from './types'
 import { validateContract as validateContractFn } from '../../core/validation/contract'
@@ -9,6 +10,44 @@ import { isActionWithContract } from '../../types/action'
 import { findMissingRequiredActions } from '../../utils/validation/find-missing-required-actions'
 import { addChannel } from '../channels/add'
 import { applyPolicy } from '../security/apply-policy'
+
+/** Why a connection request is refused, as told to the counterpart and to this side's consumer. */
+interface DenyDetails {
+  /** Human-readable error surfaced on the local deny event, and on the DENY frame unless `opaqueError` replaces it. */
+  error: string
+  /** Machine-readable denial reason surfaced on the local deny event, and on the DENY frame unless `opaqueError` replaces it. */
+  reason: DenyReason
+  /** Error sent to the counterpart in place of `error`, withholding the reason, when the requester must not learn how it was judged. */
+  opaqueError?: string
+}
+
+/**
+ * Refuses a connection request as the responder side of the handshake.
+ *
+ * Sends the DENY frame to the counterpart and fires the same denial locally
+ * as a 'deny' event, once per handshake process.
+ *
+ * @param context - Routing context with state, registry, actions, and logger
+ * @param channel - Channel the refused request arrived on
+ * @param processId - Process id of the refused handshake
+ * @param origin - Origin of the counterpart that made the request
+ * @param details - The local deny payload and the counterpart-facing error
+ */
+function denyRequest(context: RoutingContext, channel: ChannelHandle, processId: string, origin: string, details: DenyDetails): void {
+  channel.sendAction({
+    type: '[nexus] connection-request-denied',
+    processId,
+    senderId: context.state.id,
+    error: details.opaqueError ?? details.error,
+    ...(details.opaqueError === undefined && { reason: details.reason }),
+  })
+
+  // why: The DENY frame informs only the counterpart; the local deny event tells this side's consumer the pair cannot open.
+  // why: The counterpart retries REQUEST with the same process id, so the local event is fired once per handshake process.
+  if (channel.markDenyNotified(processId)) {
+    channel.notifyEvent('deny', { error: details.error, reason: details.reason, origin })
+  }
+}
 
 /**
  * Handles REQUEST_CONNECTION action.
@@ -26,14 +65,17 @@ import { applyPolicy } from '../security/apply-policy'
  *   comes from a different instance in the connected window (a reload or
  *   in-frame navigation), firing 'close' with `reason: 'peer-reload'`
  * - Resolves simultaneous requests (glare) via a broker-id tie-break
- * - Denies invalid or incompatible contracts and policy-rejected requests
- * - Denies with reason 'incompatible-contract' when the channel's
- *   contract-compatibility rule rejects the counterpart's contract, firing
- *   the same denial locally as a 'deny' event
+ * - Denies with reason 'invalid-contract' when the counterpart's contract
+ *   fails structural validation, 'missing-required-actions' when it omits an
+ *   action this side requires, 'policy-rejected' when the broker's security
+ *   policy refuses the request, 'incompatible-contract' when the channel's
+ *   contract-compatibility rule rejects the pair, and 'security-unavailable'
+ *   when the channel is fail-closed and the negotiation outcome is plaintext
+ * - Fires every denial locally as a 'deny' event carrying its reason, so the
+ *   denying side's consumer is never left waiting on a channel it refused
+ * - Withholds the reason from the DENY frame for a policy rejection: the
+ *   refused requester is told only that it was not accepted
  * - Negotiates the security protocol against the broker's protocol registry
- * - Denies with reason 'security-unavailable' when the channel is
- *   fail-closed and the negotiation outcome is plaintext, firing the same
- *   denial locally as a 'deny' event
  * - Fires each local 'deny' event once per handshake process: a retried
  *   REQUEST re-using the process id is answered with another DENY frame
  *   but does not notify local subscribers again
@@ -106,23 +148,20 @@ export function handleRequest(context: RoutingContext, message: MessageEvent<IAc
 
   try {
     validateContractFn(contract)
-  } catch {
-    channel.sendAction({
-      type: '[nexus] connection-request-denied',
-      processId,
-      senderId: state.id,
-      error: 'Invalid contract.',
+  } catch (error) {
+    denyRequest(context, channel, processId, message.origin, {
+      // why: The validator's verdict is about the requester's own contract, so naming the offending part discloses nothing and is the only actionable detail either side has.
+      error: `Invalid contract: ${(<Error>error).message}.`,
+      reason: 'invalid-contract',
     })
     return
   }
 
   const missingRequired = findMissingRequiredActions(state.contract, contract)
   if (missingRequired.length > 0) {
-    channel.sendAction({
-      type: '[nexus] connection-request-denied',
-      processId,
-      senderId: state.id,
+    denyRequest(context, channel, processId, message.origin, {
       error: `Incompatible contract: missing required actions ${missingRequired.join(', ')}.`,
+      reason: 'missing-required-actions',
     })
     return
   }
@@ -131,33 +170,19 @@ export function handleRequest(context: RoutingContext, message: MessageEvent<IAc
   if (contractCompat) {
     const compatibility = contractCompat(state.contract, contract)
     if (compatibility.compatible === false) {
-      channel.sendAction({
-        type: '[nexus] connection-request-denied',
-        processId,
-        senderId: state.id,
-        error: compatibility.reason,
-        reason: 'incompatible-contract',
-      })
-      // why: The DENY frame informs only the counterpart; the local deny event tells this side's consumer the pair cannot open.
-      // why: The counterpart retries REQUEST with the same process id, so the local event is fired once per handshake process.
-      if (channel.markDenyNotified(processId)) {
-        channel.notifyEvent('deny', { error: compatibility.reason, reason: 'incompatible-contract', origin: message.origin })
-      }
+      denyRequest(context, channel, processId, message.origin, { error: compatibility.reason, reason: 'incompatible-contract' })
       return
     }
   }
 
-  if (state.settings.securityPolicy) {
-    const allowed = applyPolicy(state.settings.securityPolicy, message, logger)
-    if (!allowed) {
-      channel.sendAction({
-        type: '[nexus] connection-request-denied',
-        processId,
-        senderId: state.id,
-        error: 'Not accepted.',
-      })
-      return
-    }
+  if (state.settings.securityPolicy && !applyPolicy(state.settings.securityPolicy, message, logger)) {
+    denyRequest(context, channel, processId, message.origin, {
+      error: `Connection request from '${message.origin}' was rejected by the channel security policy.`,
+      reason: 'policy-rejected',
+      // why: Naming the gate would tell a requester the policy just refused how this side judges connections; it learns only that it was not accepted.
+      opaqueError: 'Not accepted.',
+    })
+    return
   }
 
   let securityResponse: SecurityNegotiationResponse | undefined = undefined
@@ -174,19 +199,10 @@ export function handleRequest(context: RoutingContext, message: MessageEvent<IAc
   if ((securityResponse?.negotiated ?? 'none') === 'none') {
     const securitySettings = channel.getSecuritySettings()
     if (requiresSecurity(securitySettings)) {
-      const error = 'Security is required for this channel but the counterpart cannot negotiate an encrypted protocol.'
-      channel.sendAction({
-        type: '[nexus] connection-request-denied',
-        processId,
-        senderId: state.id,
-        error,
+      denyRequest(context, channel, processId, message.origin, {
+        error: 'Security is required for this channel but the counterpart cannot negotiate an encrypted protocol.',
         reason: 'security-unavailable',
       })
-      // why: The DENY frame informs only the counterpart; the local deny event tells this side's consumer the pair cannot open.
-      // why: The counterpart retries REQUEST with the same process id, so the local event is fired once per handshake process.
-      if (channel.markDenyNotified(processId)) {
-        channel.notifyEvent('deny', { error, reason: 'security-unavailable', origin: message.origin })
-      }
       return
     }
     if (requestsSecurity(securitySettings)) {

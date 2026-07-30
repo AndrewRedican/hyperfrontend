@@ -1,5 +1,6 @@
 import type { IAction, IActionBase } from '../../types/action'
 import type { ChannelHandle } from '../../types/channel'
+import type { DenyReason } from '../../types/events'
 import type { SecurityNegotiationResponse, SecurityConfirmation } from '../../types/security'
 import type { RoutingContext } from './types'
 import { validateContract } from '../../core/validation/contract'
@@ -15,7 +16,7 @@ interface AbortDetails {
   /** Human-readable error delivered with the deny event. */
   error: string
   /** Machine-readable denial reason delivered with the deny event. */
-  reason: string
+  reason: DenyReason
   /** Operator-facing message logged when the connection aborts. */
   warning: string
 }
@@ -25,7 +26,7 @@ interface AbortDetails {
  *
  * Stops the request retries, cancels the counterpart's pending response,
  * logs the operator-facing warning, and surfaces a deny event carrying the
- * error and the machine-readable reason.
+ * error and the machine-readable reason, once per handshake process.
  *
  * @param context - Routing context with state, registry, actions, and logger
  * @param channel - Channel whose connection attempt is aborted
@@ -45,7 +46,10 @@ function abortConnection(context: RoutingContext, channel: ChannelHandle, proces
 
   logger.warn(details.warning)
 
-  channel.notifyEvent('deny', { error: details.error, reason: details.reason, origin })
+  // why: A replayed ACCEPT that raced the CANCEL re-runs the gates, so the local event is fired once per handshake process.
+  if (channel.markDenyNotified(processId)) {
+    channel.notifyEvent('deny', { error: details.error, reason: details.reason, origin })
+  }
 }
 
 /**
@@ -77,9 +81,13 @@ function abortSecurityUnavailable(context: RoutingContext, channel: ChannelHandl
  * - Replays OPEN (repeating the security confirmation) for duplicate
  *   ACCEPTs from the connected counterpart
  * - Drops ACCEPTs whose origin does not match an already pinned origin
- * - Cancels the connection on invalid or incompatible responder contracts
- * - Cancels and fires 'deny' with reason 'incompatible-contract' when the
- *   channel's contract-compatibility rule rejects the responder's contract
+ * - Cancels and fires 'deny' with reason 'invalid-contract',
+ *   'missing-required-actions', 'policy-rejected', or
+ *   'incompatible-contract' when the corresponding gate rejects the
+ *   responder's contract or the acceptance itself, so the aborting side's
+ *   consumer is never left waiting on a handshake it gave up on
+ * - Fires each local 'deny' event once per handshake process, so a replayed
+ *   ACCEPT that raced the CANCEL does not notify local subscribers again
  * - Attaches the security transport for the negotiated protocol before the
  *   queue flushes, so queued product traffic leaves encrypted
  * - Aborts with reason 'security-unavailable' when the channel is
@@ -136,35 +144,30 @@ export function handleAccept(context: RoutingContext, message: MessageEvent<IAct
 
   try {
     validateContract(contract)
-  } catch {
-    channel.abandonRequest()
-    channel.sendAction({
-      type: '[nexus] connection-request-cancelled',
-      processId,
-      senderId: state.id,
+  } catch (error) {
+    abortConnection(context, channel, processId, message.origin, {
+      error: `Invalid contract: ${(<Error>error).message}.`,
+      reason: 'invalid-contract',
+      warning: `${state.name} aborted the ${channel.getName()} connection: the counterpart accepted with an invalid contract.`,
     })
     return
   }
 
-  if (state.settings.securityPolicy) {
-    const allowed = applyPolicy(state.settings.securityPolicy, message, logger)
-    if (!allowed) {
-      channel.abandonRequest()
-      channel.sendAction({
-        type: '[nexus] connection-request-cancelled',
-        processId,
-        senderId: state.id,
-      })
-      return
-    }
+  if (state.settings.securityPolicy && !applyPolicy(state.settings.securityPolicy, message, logger)) {
+    abortConnection(context, channel, processId, message.origin, {
+      error: `Connection acceptance from '${message.origin}' was rejected by the channel security policy.`,
+      reason: 'policy-rejected',
+      warning: `${state.name} aborted the ${channel.getName()} connection: the channel security policy rejected the acceptance.`,
+    })
+    return
   }
 
-  if (findMissingRequiredActions(state.contract, contract).length > 0) {
-    channel.abandonRequest()
-    channel.sendAction({
-      type: '[nexus] connection-request-cancelled',
-      processId,
-      senderId: state.id,
+  const missingRequired = findMissingRequiredActions(state.contract, contract)
+  if (missingRequired.length > 0) {
+    abortConnection(context, channel, processId, message.origin, {
+      error: `Incompatible contract: missing required actions ${missingRequired.join(', ')}.`,
+      reason: 'missing-required-actions',
+      warning: `${state.name} aborted the ${channel.getName()} connection: missing required actions ${missingRequired.join(', ')}.`,
     })
     return
   }

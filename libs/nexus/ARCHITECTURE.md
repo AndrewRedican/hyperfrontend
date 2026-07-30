@@ -338,15 +338,17 @@ sequenceDiagram
     HostA->>HostB: [send REQUEST_CONNECTION]
     Note over HostB: [handleRequest]<br/>[validateContract FAILS]<br/>— or —<br/>[required action missing]<br/>— or —<br/>[contract-compat rule REJECTS]<br/>— or —<br/>[securityPolicy REJECTS]<br/>— or —<br/>[fail-closed, plaintext outcome]
     HostB->>HostA: [send DENY_CONNECTION]
-    Note over HostB: [notifyEvent('deny') for<br/>compat/security denials]
+    Note over HostB: [notifyEvent('deny')<br/>for every deny cause]
     Note over HostA: [handleDeny]<br/>[stop retries, terminateProcess]<br/>[notifyEvent('deny')]<br/>[CLOSED - never connected]
 ```
 
-The DENY frame carries a human-readable `error` and, for the contract-compatibility and fail-closed security gates, a machine-readable `reason` (`'incompatible-contract'` or `'security-unavailable'`). Those two gates also fire the denial locally on the responder as a `deny` event — once per handshake process: the initiator retries REQUEST while pending, and each retry is answered with another DENY frame without re-notifying the responder's subscribers. On the initiator, `handleDeny` stops the request retries and removes the tracked process, so duplicate DENY frames are no-ops and the `deny` event fires once.
+Every gate carries a machine-readable `reason` — `'invalid-contract'`, `'missing-required-actions'`, `'policy-rejected'`, `'incompatible-contract'`, or `'security-unavailable'` — alongside the human-readable `error`, and every gate fires the denial locally on the responder as a `deny` event. A denying side is never left waiting on a channel it refused: without the local event, a responder that yielded the glare tie-break has already cleared its handshake timers and would see neither `deny` nor `connect-timeout`. The local event fires once per handshake process: the initiator retries REQUEST while pending, and each retry is answered with another DENY frame without re-notifying the responder's subscribers. On the initiator, `handleDeny` stops the request retries and removes the tracked process, so duplicate DENY frames are no-ops and the `deny` event fires once.
+
+The DENY frame discloses less than the local event for one gate. A policy rejection tells the refused requester only `error: 'Not accepted.'` with no `reason`, because naming the gate would tell an origin the policy just refused how this side judges connections; the local event names the rejected origin and carries `reason: 'policy-rejected'`. The other gates disclose the same `error` and `reason` both ways — an invalid or under-specified contract is the requester's own artifact, so the detail is actionable on both ends.
 
 ### Cancellation Flow
 
-Either party can cancel before the connection completes: CANCEL_CONNECTION is answered with CANCEL_CONNECTION_ACKNOWLEDGED, and both sides fire the `cancel` event. The initiator-side gates that run at ACCEPT time (invalid contract, missing required actions, security policy, contract compatibility, fail-closed security) also abort through this verb — the aborting initiator sends CANCEL to the counterpart, and only the compat and fail-closed security gates additionally fire a local `deny` with their reasons.
+Either party can cancel before the connection completes: CANCEL_CONNECTION is answered with CANCEL_CONNECTION_ACKNOWLEDGED, and both sides fire the `cancel` event. The initiator-side gates that run at ACCEPT time (invalid contract, missing required actions, security policy, contract compatibility, fail-closed security) also abort through this verb — the aborting initiator sends CANCEL to the counterpart, logs an operator warning naming the channel, and fires a local `deny` with the gate's reason, once per handshake process, so a replayed ACCEPT that raced the CANCEL does not notify twice. The counterpart observes a `cancel`, not a `deny`: an aborted acceptance is indistinguishable on the wire from any other cancellation.
 
 ### Graceful Disconnection
 
@@ -445,7 +447,7 @@ Channels emit lifecycle events to subscribers. Each event has a specific trigger
 | `'invalid'`         | Protocol violation or unexpected-origin drop      | `{ error, action? }`            |
 | `'connect-timeout'` | Handshake deadline expired with no answer         | `{ elapsedMs }`                 |
 
-The `close` payload's optional `reason` is `'peer-reload'`, set when the session ended because the target window now hosts a different instance — see [Instance Identity](#instance-identity). The `deny` payload's optional `reason` is machine-readable: `'incompatible-contract'` (a `contractCompat` rule rejected the pair) or `'security-unavailable'` (a fail-closed channel could not obtain an encrypted transport). The `invalid` event fires with `{ error, action? }` for unexpected-origin drops, and with `{ reason, origin }` when the counterpart reports an INVALID_REQUEST frame.
+The `close` payload's optional `reason` is `'peer-reload'`, set when the session ended because the target window now hosts a different instance — see [Instance Identity](#instance-identity). The `deny` payload's `reason` is machine-readable and typed as `DenyReason`: `'invalid-contract'` (the counterpart's contract failed structural validation), `'missing-required-actions'` (it does not emit an action this side accepts as `required: true`), `'policy-rejected'` (the broker's `securityPolicy` refused the exchange), `'incompatible-contract'` (a `contractCompat` rule rejected the pair), or `'security-unavailable'` (a fail-closed channel could not obtain an encrypted transport). The union stays open, so a counterpart running a newer protocol can report a reason this build does not know yet. The `invalid` event fires with `{ error, action? }` for unexpected-origin drops, and with `{ reason, origin }` when the counterpart reports an INVALID_REQUEST frame.
 
 ### Connection Outcomes
 

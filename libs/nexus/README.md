@@ -296,13 +296,20 @@ Events delivered to `channel.on(...)` subscribers:
 
 ### Deny Reasons
 
-The `deny` payload's optional machine-readable `reason`:
+The `deny` payload's machine-readable `reason` (`DenyReason` — an open union, so a counterpart on a
+newer protocol can report a reason this build does not know yet):
 
-| Reason                    | Meaning                                                                                        |
-| ------------------------- | ---------------------------------------------------------------------------------------------- |
-| `'incompatible-contract'` | A `contractCompat` rule rejected the contract pair                                             |
-| `'security-unavailable'`  | A fail-closed channel could not obtain an encrypted transport                                  |
-| _(absent)_                | The request failed a base gate: invalid contract, missing required actions, or security policy |
+| Reason                       | Meaning                                                                       |
+| ---------------------------- | ----------------------------------------------------------------------------- |
+| `'invalid-contract'`         | The counterpart's contract failed structural validation                       |
+| `'missing-required-actions'` | The counterpart does not emit an action this side accepts as `required: true` |
+| `'policy-rejected'`          | The broker's `securityPolicy` refused the exchange                            |
+| `'incompatible-contract'`    | A `contractCompat` rule rejected the contract pair                            |
+| `'security-unavailable'`     | A fail-closed channel could not obtain an encrypted transport                 |
+
+Every gate fires `deny` on the side that decided, so a denying host is never left waiting on a
+channel it refused. The DENY frame the counterpart receives carries the same `error` and `reason`,
+except for a policy rejection: the refused requester is told only `'Not accepted.'`, with no reason.
 
 ### Filter Utilities
 
@@ -322,6 +329,7 @@ The `deny` payload's optional machine-readable `reason`:
 | `BrokerHandle`       | Broker instance interface                                               |
 | `ChannelHandle`      | Channel instance interface                                              |
 | `ChannelEvent`       | Lifecycle and security event types (see Lifecycle Events above)         |
+| `DenyReason`         | Machine-readable denial reason on the `deny` payload (open union)       |
 | `IMessage`           | User message with type and optional data                                |
 | `SecurityProvider`   | Security implementation a broker registers for negotiation              |
 | `SecurityTransport`  | Per-channel encrypted transport attached after negotiation              |

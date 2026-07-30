@@ -66,13 +66,39 @@ export interface CancelEventData {
 }
 
 /**
+ * Why a handshake gate refused the connection.
+ *
+ * - `invalid-contract` — the counterpart's contract failed structural
+ *   validation, so there is nothing to negotiate against.
+ * - `missing-required-actions` — the counterpart's contract does not emit an
+ *   action this side accepts as `required: true`.
+ * - `policy-rejected` — the broker's `securityPolicy` refused the request.
+ *   The refused counterpart is told only that it was not accepted, so this
+ *   reason reaches the deciding side alone.
+ * - `incompatible-contract` — a `contractCompat` rule rejected the contract
+ *   pair.
+ * - `security-unavailable` — a fail-closed channel could not obtain an
+ *   encrypted transport.
+ *
+ * Any other string is accepted so a counterpart running a newer protocol can
+ * report a reason this build does not know yet.
+ */
+export type DenyReason =
+  | 'invalid-contract'
+  | 'missing-required-actions'
+  | 'policy-rejected'
+  | 'incompatible-contract'
+  | 'security-unavailable'
+  | (string & {})
+
+/**
  * Data payload for DENY event
  */
 export interface DenyEventData {
   /** Human-readable error explaining the denial */
   error?: string
-  /** Machine-readable denial reason (e.g. 'security-unavailable' when a fail-closed channel could not negotiate encryption) */
-  reason?: string
+  /** Machine-readable denial reason */
+  reason?: DenyReason
   /** Origin of the counterpart that denied the connection */
   origin?: string
 }

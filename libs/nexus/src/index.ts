@@ -26,6 +26,7 @@ export type {
   CloseReason,
   CancelEventData,
   DenyEventData,
+  DenyReason,
   InvalidEventData,
   OpenEventHandler,
   CloseEventHandler,
