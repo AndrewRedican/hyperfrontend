@@ -1,19 +1,16 @@
-import type { BrokerHandle, ChannelHandle, IMessage } from '@hyperfrontend/nexus'
+import type { BrokerHandle, ChannelHandle } from '@hyperfrontend/nexus'
 import type { EventEmitter } from '../shared/event-emitter'
 import type { DismissPayload } from '../shared/presentation'
-import type { RequestOptions } from '../shared/request'
 import type { ExperiencePlugin, ExperiencePluginContext, FeatureContract, SecurityProtocol, ShellOptions } from '../shared/types'
 import type { HeartbeatMonitor, HeartbeatStatus } from './heartbeat'
 import type { DisplayModeMount, ShellHandle } from './types'
 import { createError } from '@hyperfrontend/immutable-api-utils/built-in-copy/error'
 import { freeze } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
-import { promiseReject, promiseResolve } from '@hyperfrontend/immutable-api-utils/built-in-copy/promise'
+import { promiseResolve } from '@hyperfrontend/immutable-api-utils/built-in-copy/promise'
 import { createURL } from '@hyperfrontend/immutable-api-utils/built-in-copy/url'
-import { ControlType, isControlType } from '../shared/control'
-import { assertSendPayload, buildActionIndex, checkReceivePayload } from '../shared/payload-validation'
-import { createRequestPeer } from '../shared/request'
+import { buildChannelSettings, createMessagingCore, wireChannelEvents } from '../shared/channel-wiring'
+import { ControlType } from '../shared/control'
 import { DisplayMode } from '../shared/types'
-import { createContractCompat } from '../shared/version-compat'
 
 // note: All DOM/window work lives in the injected mount functions, so this wiring stays DOM-free and exercisable with mock collaborators.
 
@@ -143,10 +140,14 @@ export function createShellHandle(
   let plugins: ActivePlugins | null = null
   let pendingUnmount: Promise<void> | null = null
   let queuedOpen: (() => void) | null = null
-  // why: One peer outlives every open/close cycle so handlers registered before the first open (or across reopens) keep answering feature requests.
-  const requests = createRequestPeer('host', (type, data) => channel?.send(type, data))
-  // why: Indexed once per handle so every send/receive validates with a map lookup instead of rescanning the contract.
-  const actions = buildActionIndex(wiring.contract)
+  // why: One messaging core outlives every open/close cycle so handlers registered before the first open (or across reopens) keep answering feature requests.
+  const messaging = createMessagingCore({
+    origin: 'host',
+    contract: wiring.contract,
+    emitter,
+    disconnectedReason: 'the shell is not open',
+    channel: () => channel,
+  })
 
   const emitError = (error: unknown) => emitter.emit('error', error)
 
@@ -216,7 +217,7 @@ export function createShellHandle(
   }
 
   const destroy = () => {
-    requests.rejectAll('The shell was destroyed before the feature responded.')
+    messaging.requests.rejectAll('The shell was destroyed before the feature responded.')
     queuedOpen = null
     if (pendingUnmount) {
       return
@@ -289,14 +290,16 @@ export function createShellHandle(
     if (options.plugins && options.plugins.length > 0) {
       mountPlugins(options.plugins, result.element ?? null, displayMode)
     }
-    const featureOrigin = deriveFeatureOrigin(options.url)
     // why: The origin pin restricts every send to the feature's origin before the first frame leaves; the timeout bounds the wire handshake.
-    const activeChannel = broker.addChannel(`feature-${(openCount += 1)}`, result.target, {
-      contractCompat: createContractCompat(),
-      ...wiring.registerSecurity(broker, options.protocol, options.sharedKey),
-      ...(featureOrigin ? { origin: featureOrigin } : {}),
-      ...(options.openTimeoutMs !== undefined ? { connectTimeoutMs: options.openTimeoutMs } : {}),
-    })
+    const activeChannel = broker.addChannel(
+      `feature-${(openCount += 1)}`,
+      result.target,
+      buildChannelSettings({
+        security: wiring.registerSecurity(broker, options.protocol, options.sharedKey),
+        connectTimeoutMs: options.openTimeoutMs,
+        origin: deriveFeatureOrigin(options.url),
+      })
+    )
     channel = activeChannel
     // why: Re-measured on every announcement so a feature that reloads mid-session is told the space it occupies now, not the space measured at mount.
     const announcePresent = () =>
@@ -326,11 +329,11 @@ export function createShellHandle(
       // why: The presentation announcement already carried the initial size, so the reporter forwards only changes from here on.
       result.viewport?.start((size) => activeChannel.send(ControlType.Viewport, size))
     })
-    channel.on('closing', (data) => emitter.emit('closing', data))
-    channel.on('close', (data) => {
+    wireChannelEvents(activeChannel, emitter)
+    activeChannel.on('close', (data) => {
       opened = false
       dirty = false
-      requests.rejectAll('The feature channel closed before the feature responded.')
+      messaging.requests.rejectAll('The feature channel closed before the feature responded.')
       if (data.reason === 'peer-reload') {
         // why: The frame reloaded itself and its new instance is already handshaking on this mount — the DOM, the observers and the subscriptions outlive the session, so only session-scoped state resets.
         activeMonitor.stop()
@@ -353,53 +356,44 @@ export function createShellHandle(
       }
       runCleanup()
     })
-    channel.on('deny', (data) => emitter.emit('error', data))
-    channel.on('invalid', (data) => emitter.emit('error', data))
-    channel.on('connect-timeout', (data) => {
+    activeChannel.on('connect-timeout', (data) => {
       // why: The feature never completed the handshake — tear the mount down and surface a distinguishable payload for fallback/retry UI.
       destroy()
       emitter.emit('error', { reason: 'open-timeout', elapsedMs: data.elapsedMs, displayMode })
     })
-    channel.onMessage((message: IMessage) => {
-      if (isControlType(message.type)) {
-        if (message.type === ControlType.Beat) {
+    activeChannel.onMessage(
+      messaging.createRouter((type, data) => {
+        if (type === ControlType.Beat) {
           activeMonitor.beat()
-        } else if (message.type === ControlType.Dismiss) {
-          applyDismiss(options, message.data)
-        } else if (message.type === ControlType.Visibility) {
-          peerHidden = (<ControlFlagPayload | undefined>message.data)?.hidden === true
-          applyObservability()
-        } else if (message.type === ControlType.Dirty) {
-          dirty = (<ControlFlagPayload | undefined>message.data)?.dirty === true
-          emitter.emit('dirty-state', { dirty })
-        } else {
-          requests.dispatch(message.type, message.data)
+          return true
         }
-        return
-      }
-      // why: Invalid payloads are dropped before consumer handlers run; the error event carries the schema errors so the host can diagnose the misbehaving feature.
-      const result = checkReceivePayload(actions, message.type, message.data)
-      if (!result.valid) {
-        emitter.emit('error', { reason: 'invalid-payload', type: message.type, errors: result.errors })
-        return
-      }
-      emitter.emit(message.type, message.data)
-    })
-    channel.connect()
+        if (type === ControlType.Dismiss) {
+          applyDismiss(options, data)
+          return true
+        }
+        if (type === ControlType.Visibility) {
+          peerHidden = (<ControlFlagPayload | undefined>data)?.hidden === true
+          applyObservability()
+          return true
+        }
+        if (type === ControlType.Dirty) {
+          dirty = (<ControlFlagPayload | undefined>data)?.dirty === true
+          emitter.emit('dirty-state', { dirty })
+          return true
+        }
+        return false
+      })
+    )
+    activeChannel.connect()
   }
 
   return freeze(<ShellHandle>{
     open,
     close,
     destroy,
-    send: (type: string, data?: unknown) => {
-      // why: Validated before the channel touches it so a schema violation throws in the sender's frame instead of surfacing on the feature side.
-      assertSendPayload(actions, type, data)
-      channel?.send(type, data)
-    },
-    request: (type: string, data?: unknown, options?: RequestOptions) =>
-      channel ? requests.request(type, data, options) : promiseReject(createError(`Cannot send request '${type}': the shell is not open.`)),
-    handle: requests.handle,
+    send: messaging.send,
+    request: messaging.request,
+    handle: messaging.requests.handle,
     on: emitter.on,
     get isOpen() {
       return opened

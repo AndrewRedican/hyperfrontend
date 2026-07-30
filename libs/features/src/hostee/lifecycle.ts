@@ -1,19 +1,16 @@
-import type { BrokerHandle, ChannelHandle, IMessage } from '@hyperfrontend/nexus'
+import type { BrokerHandle, ChannelHandle } from '@hyperfrontend/nexus'
 import type { EventEmitter } from '../shared/event-emitter'
 import type { PresentPayload, ViewportPayload } from '../shared/presentation'
-import type { RequestOptions } from '../shared/request'
 import type { FeatureContract, SecurityProtocol } from '../shared/types'
 import type { PresentationApplier } from './sizing'
 import type { FeatureHandle } from './types'
 import { createError } from '@hyperfrontend/immutable-api-utils/built-in-copy/error'
 import { freeze } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
-import { createPromise, promiseReject } from '@hyperfrontend/immutable-api-utils/built-in-copy/promise'
-import { ControlType, isControlType } from '../shared/control'
-import { assertSendPayload, buildActionIndex, checkReceivePayload } from '../shared/payload-validation'
-import { createRequestPeer } from '../shared/request'
+import { createPromise } from '@hyperfrontend/immutable-api-utils/built-in-copy/promise'
+import { buildChannelSettings, createMessagingCore, wireChannelEvents } from '../shared/channel-wiring'
+import { ControlType } from '../shared/control'
 import { registerSecurity } from '../shared/security'
 import { DisplayMode } from '../shared/types'
-import { createContractCompat } from '../shared/version-compat'
 import { createHeartbeatEmitter } from './heartbeat'
 import { createPresentationApplier, watchWindowSize } from './sizing'
 import { createVisibilityReporter } from './visibility'
@@ -86,19 +83,26 @@ export function createFeatureHandle(
   let channel: ChannelHandle | null = null
   let opened = false
   const readyRejects: Array<(error: Error) => void> = []
-  const requests = createRequestPeer('feature', (type, data) => channel?.send(type, data))
-  // why: Indexed once per handle so every send/receive validates with a map lookup instead of rescanning the contract.
-  const actions = buildActionIndex(settings.contract)
+  const messaging = createMessagingCore({
+    origin: 'feature',
+    contract: settings.contract,
+    emitter,
+    disconnectedReason: 'the feature is not connected to a host',
+    channel: () => channel,
+  })
 
   let applier: PresentationApplier | null = null
   let stopWindowWatch: (() => void) | null = null
 
   if (hostWindow) {
-    const activeChannel = broker.addChannel('host', hostWindow, {
-      contractCompat: createContractCompat(),
-      ...registerSecurity(broker, settings.protocol, settings.sharedKey),
-      ...(settings.readyTimeoutMs !== undefined ? { connectTimeoutMs: settings.readyTimeoutMs } : {}),
-    })
+    const activeChannel = broker.addChannel(
+      'host',
+      hostWindow,
+      buildChannelSettings({
+        security: registerSecurity(broker, settings.protocol, settings.sharedKey),
+        connectTimeoutMs: settings.readyTimeoutMs,
+      })
+    )
     channel = activeChannel
     const heartbeat = createHeartbeatEmitter((type) => activeChannel.send(type))
     const visibility = createVisibilityReporter((type, data) => activeChannel.send(type, data))
@@ -129,8 +133,7 @@ export function createFeatureHandle(
       heartbeat.start()
       visibility.start()
     })
-    // why: The closing notice arrives while the channel still delivers, giving the app its flush window for unsaved work before the close completes.
-    activeChannel.on('closing', (data) => emitter.emit('closing', data))
+    wireChannelEvents(activeChannel, emitter)
     activeChannel.on('close', () => {
       opened = false
       emitter.emit('close')
@@ -141,10 +144,8 @@ export function createFeatureHandle(
         stopWindowWatch()
         stopWindowWatch = null
       }
-      requests.rejectAll('The host channel closed before the host responded.')
+      messaging.requests.rejectAll('The host channel closed before the host responded.')
     })
-    activeChannel.on('deny', (data) => emitter.emit('error', data))
-    activeChannel.on('invalid', (data) => emitter.emit('error', data))
     activeChannel.on('connect-timeout', (data) => {
       emitter.emit('error', { reason: 'ready-timeout', elapsedMs: data.elapsedMs })
       const error = createError(`The host did not open the connection within ${data.elapsedMs}ms.`)
@@ -152,40 +153,26 @@ export function createFeatureHandle(
         reject(error)
       }
     })
-    activeChannel.onMessage((message: IMessage) => {
-      // why: Control traffic (presentation, request/response envelopes) is SDK-internal; forwarding it would leak reserved __hf: types into consumer handlers.
-      if (isControlType(message.type)) {
-        if (message.type === ControlType.Present) {
-          applyPresent(<PresentPayload>message.data)
-        } else if (message.type === ControlType.Viewport) {
-          applyViewport(<ViewportPayload>message.data)
-        } else {
-          requests.dispatch(message.type, message.data)
+    activeChannel.onMessage(
+      messaging.createRouter((type, data) => {
+        if (type === ControlType.Present) {
+          applyPresent(<PresentPayload>data)
+          return true
         }
-        return
-      }
-      // why: Invalid payloads are dropped before consumer handlers run; the error event carries the schema errors so the feature can diagnose the misbehaving host.
-      const result = checkReceivePayload(actions, message.type, message.data)
-      if (!result.valid) {
-        emitter.emit('error', { reason: 'invalid-payload', type: message.type, errors: result.errors })
-        return
-      }
-      emitter.emit(message.type, message.data)
-    })
+        if (type === ControlType.Viewport) {
+          applyViewport(<ViewportPayload>data)
+          return true
+        }
+        return false
+      })
+    )
     activeChannel.connect()
   }
 
   return freeze(<FeatureHandle>{
-    send: (type: string, data?: unknown) => {
-      // why: Validated before the channel touches it so a schema violation throws in the sender's frame instead of surfacing on the host side.
-      assertSendPayload(actions, type, data)
-      channel?.send(type, data)
-    },
-    request: (type: string, data?: unknown, options?: RequestOptions) =>
-      channel
-        ? requests.request(type, data, options)
-        : promiseReject(createError(`Cannot send request '${type}': the feature is not connected to a host.`)),
-    handle: requests.handle,
+    send: messaging.send,
+    request: messaging.request,
+    handle: messaging.requests.handle,
     on: emitter.on,
     setDirty: (isDirty: boolean) => {
       channel?.send(ControlType.Dirty, { dirty: isDirty === true })
