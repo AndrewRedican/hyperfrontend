@@ -2,6 +2,11 @@ import type { Cache } from './cache'
 import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals'
 import { createCache, clearAllCaches, getCacheCount, unregisterCache, memoize } from './cache'
 
+jest.mock('@hyperfrontend/immutable-api-utils/built-in-copy/date', () => ({
+  ...jest.requireActual<object>('@hyperfrontend/immutable-api-utils/built-in-copy/date'),
+  dateNow: () => Date.now(),
+}))
+
 describe('core/cache', () => {
   const testCaches: Cache<unknown, unknown>[] = []
 

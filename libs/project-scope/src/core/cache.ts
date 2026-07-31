@@ -1,3 +1,4 @@
+import { dateNow } from '@hyperfrontend/immutable-api-utils/built-in-copy/date'
 import { createMap } from '@hyperfrontend/immutable-api-utils/built-in-copy/map'
 import { defineProperty, freeze } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
 import { createSet } from '@hyperfrontend/immutable-api-utils/built-in-copy/set'
@@ -133,8 +134,7 @@ export function createCache<K, V>(options?: CacheOptions): Cache<K, V> {
    */
   function isExpired(entry: CacheEntry<V>): boolean {
     if (ttl === undefined) return false
-    // eslint-disable-next-line workspace/no-unsafe-builtin-methods -- Date.now() is needed for Jest fake timers compatibility
-    return Date.now() - entry.timestamp > ttl
+    return dateNow() - entry.timestamp > ttl
   }
 
   /**
@@ -183,8 +183,7 @@ export function createCache<K, V>(options?: CacheOptions): Cache<K, V> {
         evictIfNeeded()
       }
 
-      // eslint-disable-next-line workspace/no-unsafe-builtin-methods -- Date.now() is needed for Jest fake timers compatibility
-      store.set(key, { value, timestamp: Date.now() })
+      store.set(key, { value, timestamp: dateNow() })
       insertionOrder.push(key)
     },
 
