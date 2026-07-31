@@ -66,9 +66,11 @@ Transparency is on by default in both iframe modes (`allowtransparency` plus a m
 
 ## Browser capabilities
 
+Capability is one of the two axes in the [Security Model](https://www.hyperfrontend.dev/docs/core-concepts/security) — read it for where these options sit relative to what the browser enforces and what stays the operator's job.
+
 Two `ShellOptions` fields govern what the feature frame may do with the browser around it, both applied before the frame loads (the only moment they take effect) and both scoped to the iframe modes — `popup` and `standalone` open top-level windows, which ask the user for permissions directly.
 
-`permissions` delegates Permissions-Policy features (camera, fullscreen, clipboard, …) to the frame via the iframe `allow` attribute. Browsers deny these to cross-origin frames by default, so a feature that needs one only works when the host delegates it. A generated connector bakes the needs the feature declared at build time (also disclosed in its README and `metadata.json`); a host-supplied list replaces the baked one entirely.
+`permissions` delegates Permissions-Policy features (camera, fullscreen, clipboard, …) to the frame via the iframe `allow` attribute. Browsers deny these to cross-origin frames by default, so a feature that needs one only works when the host delegates it. A generated shell bakes the needs the feature declared at build time (also disclosed in its README and `metadata.json`); a host-supplied list replaces the baked one entirely.
 
 `sandbox` is the host's containment lever and is never baked by a build. `true` (or an opt-in object) starts the frame from the browser's deny-all sandbox; the SDK manages the two hazardous tokens itself — `allow-scripts` is always granted (the feature runtime is JavaScript), and `allow-same-origin` is granted only to cross-origin feature URLs, since a same-origin frame holding both tokens could remove its own sandbox. A sandboxed same-origin feature therefore runs with an opaque origin (no cookies or storage) while the messaging protocol still connects. Everything else — `forms`, `popups`, `modals`, `downloads`, `topNavigationByUserActivation` — is denied unless opted in. Requesting a sandbox on `popup` or `standalone` throws, because no containment can apply to a top-level window.
 

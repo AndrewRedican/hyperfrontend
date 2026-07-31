@@ -18,4 +18,4 @@ nx generate @hyperfrontend/features:feature \
 | `entry`     | yes      | Entry file the generated glue import is wired into.          |
 | `directory` | no       | Directory to scaffold into, relative to the workspace root.  |
 | `version`   | no       | Feature version string.                                      |
-| `url`       | no       | URL the generated connector loads the feature from.          |
+| `url`       | no       | URL the generated shell loads the feature from.              |

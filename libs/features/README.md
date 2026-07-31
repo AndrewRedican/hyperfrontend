@@ -103,18 +103,22 @@ Presentation is host-controlled and contract-preconfigured: a feature declares t
 
 Contract actions may carry a `required: true` flag on `accepted` entries — the connection is denied unless the counterpart emits that type. Unflagged actions never gate the connection, so adding actions to a contract stays backward compatible.
 
+The SDK's own traffic — the heartbeat, the presentation announcements, dismiss signals, dirty state, and the request/response envelopes — rides the same channel under a reserved `__hf:` prefix and is filtered out before your handlers run. Your contract must not declare action types beginning with `__hf:`; everything the plane carries is listed in [`ARCHITECTURE.md`](./ARCHITECTURE.md).
+
 Both sides can opt into an encrypted envelope: pass `protocol: 'v1'`, or `protocol: 'v2'` together with a `sharedKey`, to `createShell` and `createFeature`, and the two sides negotiate it during the connection handshake — handshake frames stay plaintext while product messages (including sends queued before the handshake) travel encrypted. The `sharedKey` belongs to `v2` alone: selecting `v2` without a non-empty key throws immediately, while `v1` takes no key.
 
 A contract may carry a semver `version`, or `createFeature` can receive a `version` option that takes precedence over `contract.version`. Each side presents its version during the handshake, and incompatible cuts — a different major, or a different minor below `1.0.0` — are denied before the channel opens, surfacing as an `error` on both handles. A side without a version always passes the check, so unversioned peers keep connecting.
 
 Contract entries with a `schema` are enforced on both ends: `send` validates the payload against the sender's own `emitted` schema and throws in the sender's frame before anything crosses the wire, while incoming messages are validated against the receiver's own `accepted` schema — an invalid payload is dropped and surfaced as an `error` event shaped `{ reason: 'invalid-payload', type, errors }`. Schema-less actions pass through unchanged.
 
+What each of these controls is actually worth — and which parts of an integration's security remain the operator's job rather than the SDK's — is stated once, in the [Security Model](https://www.hyperfrontend.dev/docs/core-concepts/security).
+
 **From the command line**, scaffold, build, and serve features with the bundled `hf` CLI:
 
 ```bash
-npx @hyperfrontend/features init   # scaffold the hostee glue into an app
-npx @hyperfrontend/features build  # generate + bundle a publishable shell package
-npx @hyperfrontend/features dev     # serve apps with the debug UI
+npx @hyperfrontend/features init                # scaffold the hostee glue into an app
+npx @hyperfrontend/features build --protocol v2 # generate + bundle a publishable shell package
+npx @hyperfrontend/features dev                 # serve apps with the debug UI
 ```
 
 ## API Overview
