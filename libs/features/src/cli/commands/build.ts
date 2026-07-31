@@ -20,9 +20,9 @@ import { EXIT_ERROR, EXIT_OK } from '../exit-codes'
 
 const DEFAULT_OUT = 'dist'
 
-/** Inputs handed to the builder for a single connector build. */
+/** Inputs handed to the builder for a single shell build. */
 export interface BuildRunnerInput {
-  /** Staging directory (inside the consumer project) holding the generated connector sources. */
+  /** Staging directory (inside the consumer project) holding the generated shell sources. */
   readonly projectRoot: string
   /** The consumer project root, supplying `node_modules` and the TypeScript toolchain. */
   readonly workspaceRoot: string
@@ -34,7 +34,7 @@ export interface BuildRunnerInput {
 export interface BuildDeps {
   /** Resolves the feature config and contract. */
   readonly resolveConfig?: typeof resolveBuildConfig
-  /** Bundles the generated connector. */
+  /** Bundles the generated shell. */
   readonly runBuilder?: (input: BuildRunnerInput) => Promise<void>
   /** Packs the built package into a tarball and returns its filename. */
   readonly packTarball?: (packageDir: string) => string
@@ -64,7 +64,7 @@ function toAbsolute(base: string, path: string): string {
 }
 
 /**
- * Production builder runner: bundles the generated connector to ESM and CJS by
+ * Production builder runner: bundles the generated shell to ESM and CJS by
  * driving `@hyperfrontend/builder` in-process.
  *
  * @param input - The resolved build inputs.
@@ -94,7 +94,7 @@ function defaultPackTarball(packageDir: string): string {
 }
 
 /**
- * Builds the connector: resolve config → generate the host connector into a
+ * Builds the shell: resolve config → generate the shell package into a
  * hidden staging dir inside the project → bundle via the builder → pack a
  * tarball into `--out`. A `v1`/`v2` security protocol is required for production
  * output; an explicit `--protocol none` builds only when paired with
@@ -126,21 +126,21 @@ export async function runBuild(options: RunBuildOptions): Promise<number> {
       }
       if (flags.allowOpen !== true) {
         stderr.write(
-          "Building with an explicit protocol 'none' produces an open connector: the channel is unauthenticated and any page can embed and message the feature. Pass --allow-open to acknowledge the risk, or pick --protocol v1 / --protocol v2.\n"
+          "Building with an explicit protocol 'none' produces an open shell: the channel is unauthenticated and any page can embed and message the feature. Pass --allow-open to acknowledge the risk, or pick --protocol v1 / --protocol v2.\n"
         )
         return EXIT_ERROR
       }
-      stderr.write("Warning: building an open connector (protocol 'none'); the channel carries no security envelope.\n")
+      stderr.write("Warning: building an open shell (protocol 'none'); the channel carries no security envelope.\n")
     }
 
-    // why: The default output nests per connector so the builder's clean step only ever empties this connector's own directory, never a shared dist/ root.
+    // why: The default output nests per shell so the builder's clean step only ever empties this shell's own directory, never a shared dist/ root.
     const out = toAbsolute(cwd, flags.out ?? join(DEFAULT_OUT, `${config.name}-shell`))
     if (flags.dryRun) {
       stdout.write(`Would build "${config.name}" → ${out} [dry run]\n`)
       return EXIT_OK
     }
 
-    // why: The staging dir lives inside the consumer project (not the OS temp dir) so module resolution can ascend into the consumer's node_modules and bundle the SDK into a self-contained connector.
+    // why: The staging dir lives inside the consumer project (not the OS temp dir) so module resolution can ascend into the consumer's node_modules and bundle the SDK into a self-contained shell.
     tempDir = join(cwd, `.hf-shell-${config.name.replace(/[^a-z0-9-]/gi, '-')}-${process.pid}`)
     createDirectory(tempDir, { recursive: true })
     const tree = createTree(tempDir)
@@ -165,7 +165,7 @@ export async function runBuild(options: RunBuildOptions): Promise<number> {
 /**
  * Copies the staged consumer-facing sidecars (`README.md`, `metadata.json`)
  * into the built package and lists the metadata file in the manifest's `files`
- * array so `npm pack` ships them with the connector.
+ * array so `npm pack` ships them with the shell.
  *
  * @param tempDir - The staging directory holding the generated sidecars.
  * @param out - The built package directory the tarball is packed from.

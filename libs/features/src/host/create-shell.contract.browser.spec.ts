@@ -13,7 +13,7 @@ beforeEach(() => {
   installResizeObserverStub()
 })
 
-// note: Schemas mirror the generator spec fixture, so the exact shapes a built connector inlines are exercised end-to-end through createShell.
+// note: Schemas mirror the generator spec fixture, so the exact shapes a built shell inlines are exercised end-to-end through createShell.
 const contract: FeatureContract = {
   emitted: [{ type: 'timeUpdated', schema: { type: 'object', properties: { iso: { type: 'string' } }, required: ['iso'] } }],
   accepted: [{ type: 'setTimezone', schema: { type: 'object', properties: { tz: { type: 'string' } }, required: ['tz'] } }],

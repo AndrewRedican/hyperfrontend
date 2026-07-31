@@ -10,7 +10,7 @@ Usage: hf <command> [options]
 
 Commands:
   init     Scaffold the feature glue module and wire it into your app
-  build    Generate the host connector, bundle it, and pack a tarball
+  build    Generate the feature's shell package, bundle it, and pack a tarball
   dev      Start the app servers and debug UI, serving until Ctrl-C
 
 Options:
@@ -18,10 +18,10 @@ Options:
   --version <version>   Feature version
   --contract <path>     Path to the *.contract.{json,ts,js} file
   --entry <path>        Entry file to wire the glue import into (init)
-  --url <url>           URL the connector loads the feature from (build)
+  --url <url>           URL the shell loads the feature from (build)
   --protocol <none|v1|v2>  Security envelope enforced at build time
-  --allow-open          Acknowledge an explicit '--protocol none' and build an open, unauthenticated connector (build)
-  --out <dir>           Output directory for the built connector (build)
+  --allow-open          Acknowledge an explicit '--protocol none' and build an open, unauthenticated shell (build)
+  --out <dir>           Output directory for the built shell (build)
   --apps <path>         Path to the dev-server apps array (dev)
   --port <number>       Port the dev-server debug UI listens on (dev)
   --config <path>       Path to the whole feature.config.* / hf-dev.config.* file

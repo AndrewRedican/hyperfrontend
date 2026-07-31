@@ -7,7 +7,7 @@ import { headlessFlags } from '../../shared/flags'
 interface BuildExecutorSchema {
   /** Path to the feature config object. */
   config?: string
-  /** Output directory for the built connector. */
+  /** Output directory for the built shell. */
   out?: string
   /** Security envelope to enforce at build time: `none`, `v1`, or `v2`. */
   protocol?: string
@@ -15,16 +15,16 @@ interface BuildExecutorSchema {
   name?: string
   /** Feature version override. */
   version?: string
-  /** URL the generated connector loads the feature from. */
+  /** URL the generated shell loads the feature from. */
   url?: string
   /** Path to the contract file. */
   contract?: string
-  /** Acknowledge an explicit `none` protocol and build an open, unauthenticated connector. */
+  /** Acknowledge an explicit `none` protocol and build an open, unauthenticated shell. */
   allowOpen?: boolean
 }
 
 /**
- * Build a hyperfrontend feature connector by delegating to the SDK's `hf build`.
+ * Build a hyperfrontend feature's shell package by delegating to the SDK's `hf build`.
  *
  * Maps the executor options to headless CLI flags and runs the build against
  * the executing project's root directory.

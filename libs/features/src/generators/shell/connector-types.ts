@@ -2,7 +2,7 @@ import type { ActionDescription, DisplayMode, FeatureContract } from '../../shar
 import { schemaToType } from './schema-type'
 import { formatKey } from './source-literal'
 
-// note: The generated declarations are structural (no type imports from the SDK), so the connector's d.ts stays fully usable for consumers who install nothing but the packed tarball. Everything mode-specific is emitted only when the feature declared the mode — undeclared modes are absent from the types just as they are absent from the bundle.
+// note: The generated declarations are structural (no type imports from the SDK), so the shell's d.ts stays fully usable for consumers who install nothing but the packed tarball. Everything mode-specific is emitted only when the feature declared the mode — undeclared modes are absent from the types just as they are absent from the bundle.
 
 const SANDBOX_TYPES = `/**
  * Containment opt-ins for a sandboxed feature frame.
@@ -169,7 +169,7 @@ function buildOptionMembers(flags: ModeFlags): string[] {
   onUnresponsive?: 'emit' | 'unmount' | ((info: FeatureUnresponsiveInfo) => void)`,
     `  /** Security envelope to negotiate; defaults to the protocol baked in from the feature's build. */
   protocol?: FeatureSecurityProtocol`,
-    `  /** Pre-shared key used by the \`v2\` protocol; always supplied by the host, never baked into the connector. */
+    `  /** Pre-shared key used by the \`v2\` protocol; always supplied by the host, never baked into the shell. */
   sharedKey?: string`,
     `  /** Experience plugins wrapped around each mount/unmount. */
   plugins?: readonly FeatureExperiencePlugin[]`,
@@ -191,7 +191,7 @@ function buildOptionMembers(flags: ModeFlags): string[] {
  * Renders the mode-dependent static type block.
  *
  * @param flags - The declared-mode flags.
- * @returns The static type declarations for the connector.
+ * @returns The static type declarations for the shell.
  */
 function buildStaticTypes(flags: ModeFlags): string {
   const lifecycleEvents = ['open', 'closing', 'close', 'error', 'status', 'dirty-state', ...(flags.dialog ? ['dismiss'] : [])]

@@ -31,7 +31,7 @@
     },
     "url": {
       "type": "string",
-      "description": "URL the generated connector loads the feature from."
+      "description": "URL the generated shell loads the feature from."
     }
   },
   "required": ["name", "contract", "entry"]

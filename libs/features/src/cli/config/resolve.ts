@@ -124,7 +124,7 @@ export async function resolveBuildConfig(options: ResolveBuildConfigOptions): Pr
 
   const baseDir = sourcePath ? dirname(sourcePath) : cwd
   const contract = validateContract(await loadModuleFile(toAbsolute(baseDir, config.contract)))
-  // why: The build stamps the canonicalized config version into the connector, so a contract authoring a different version would announce a cut the build did not produce; the mismatch fails fast naming both values.
+  // why: The build stamps the canonicalized config version into the shell, so a contract authoring a different version would announce a cut the build did not produce; the mismatch fails fast naming both values.
   if (contract.version !== undefined && canonicalVersion(contract.version) !== canonicalConfigVersion(config.version)) {
     throw createError(
       `Contract version "${contract.version}" does not match the feature version "${config.version}". Align the contract's "version" with the config, or remove it to inherit the config version.`

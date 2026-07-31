@@ -21,7 +21,7 @@ function copyActions(actions: ActionDescription[]): ActionDescription[] {
  * channel needs the mirror image — it sends what the feature accepts and
  * accepts what the feature emits — so the two lists are swapped. The contract
  * `version` is direction-free and carries through unchanged, so the host
- * announces the contract cut baked into its connector.
+ * announces the contract cut baked into its shell.
  *
  * @param contract - The contract as authored by the feature.
  * @returns A fresh contract oriented to the host side.

@@ -130,15 +130,15 @@ describe('runBuild', () => {
     expect(code).toBe(0)
   })
 
-  it('warns on stderr when building an acknowledged open connector', async () => {
+  it('warns on stderr when building an acknowledged open shell', async () => {
     const err = sink()
     await runBuild(
       deps({ flags: mkFlags({ allowOpen: true }), resolveConfig: () => Promise.resolve(bundle('none', true)), stderr: err.stream })
     )
-    expect(err.text()).toEqual(expect.stringContaining('Warning: building an open connector'))
+    expect(err.text()).toEqual(expect.stringContaining('Warning: building an open shell'))
   })
 
-  it('stages the connector in a hidden dir inside the working directory', async () => {
+  it('stages the shell in a hidden dir inside the working directory', async () => {
     const runBuilder = jest.fn()
     await runBuild(deps({ runBuilder }))
     expect(runBuilder).toHaveBeenCalledWith(
@@ -196,7 +196,7 @@ describe('runBuild', () => {
     expect(parse(readFileSync(join(out, 'package.json'), 'utf-8'))).not.toHaveProperty('files')
   })
 
-  it('defaults the output to a per-connector directory under dist', async () => {
+  it('defaults the output to a per-shell directory under dist', async () => {
     const runBuilder = jest.fn()
     await runBuild(deps({ runBuilder }))
     expect(runBuilder).toHaveBeenCalledWith(expect.objectContaining({ outputPath: join(dir, 'dist', 'clock-shell') }))

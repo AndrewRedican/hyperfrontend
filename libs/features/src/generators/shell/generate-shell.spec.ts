@@ -159,7 +159,7 @@ describe('generateShell', () => {
     expect(stage({ version: 'v1.2.0' }).read('src/index.ts', 'utf-8')).toContain("version: '1.2.0'")
   })
 
-  it('bakes the resolved protocol into the connector defaults', () => {
+  it('bakes the resolved protocol into the shell defaults', () => {
     expect(stage().read('src/index.ts', 'utf-8')).toContain("protocol: 'v2'")
   })
 
@@ -187,17 +187,17 @@ describe('generateShell', () => {
     )
   })
 
-  it('names the connector package after the feature with module type', () => {
+  it('names the shell package after the feature with module type', () => {
     expect(parse(stage().read('package.json', 'utf-8') ?? '')).toEqual(
       expect.objectContaining({ name: 'clock-shell', version: '1.0.0', type: 'module' })
     )
   })
 
-  it('declares no dependencies in the connector package', () => {
+  it('declares no dependencies in the shell package', () => {
     expect(parse(stage().read('package.json', 'utf-8') ?? '')).not.toHaveProperty('dependencies')
   })
 
-  it('stages a README headed with the connector name', () => {
+  it('stages a README headed with the shell name', () => {
     expect(stage().read('README.md', 'utf-8')).toContain('# clock-shell')
   })
 
@@ -249,12 +249,12 @@ describe('generateShell', () => {
     expect(stage({ protocol: 'v1' }).read('README.md', 'utf-8')).not.toContain('sharedKey')
   })
 
-  it('writes a labeled open-connector warning into the README for a protocol-none build', () => {
-    expect(stage({ protocol: 'none' }).read('README.md', 'utf-8')).toContain('**Warning: open connector.**')
+  it('writes a labeled open-shell warning into the README for a protocol-none build', () => {
+    expect(stage({ protocol: 'none' }).read('README.md', 'utf-8')).toContain('**Warning: open shell.**')
   })
 
-  it('omits the open-connector warning for a secured build', () => {
-    expect(stage().read('README.md', 'utf-8')).not.toContain('**Warning: open connector.**')
+  it('omits the open-shell warning for a secured build', () => {
+    expect(stage().read('README.md', 'utf-8')).not.toContain('**Warning: open shell.**')
   })
 
   it('points a protocol-none README at rebuilding with a security protocol', () => {
@@ -262,7 +262,7 @@ describe('generateShell', () => {
   })
 
   it('instructs manual protocol selection when no protocol was resolved', () => {
-    expect(stage({ protocol: undefined }).read('README.md', 'utf-8')).toContain('No security envelope is baked into this connector')
+    expect(stage({ protocol: undefined }).read('README.md', 'utf-8')).toContain('No security envelope is baked into this shell')
   })
 
   it('shows a typed send example drawn from the first accepted action', () => {
@@ -279,7 +279,7 @@ describe('generateShell', () => {
     expect(tree.read('README.md', 'utf-8')).not.toContain('shell.send(')
   })
 
-  it('delegates metadata staging so the connector includes metadata.json', () => {
+  it('delegates metadata staging so the shell includes metadata.json', () => {
     expect(stage().exists('metadata.json')).toBe(true)
   })
 

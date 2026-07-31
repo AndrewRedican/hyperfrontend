@@ -28,7 +28,7 @@ const MODE_MOUNTS = freeze(<Record<DisplayMode, string>>{
  *
  * @param config - The resolved feature config supplying the URL, protocol, permissions, and display declaration.
  * @param modes - The declared display modes, in declaration order.
- * @returns A record of options the connector merges under host-supplied overrides.
+ * @returns A record of options the shell merges under host-supplied overrides.
  */
 function buildDefaults(config: ResolvedFeatureConfig, modes: DisplayMode[]): Record<string, unknown> {
   const display = config.display
@@ -66,7 +66,7 @@ function buildConnectorEntry(config: ResolvedFeatureConfig, contract: FeatureCon
   return `import { ${imports} } from '@hyperfrontend/features/host'
 
 ${buildConnectorTypes(contract, modes)}
-/** Inlined contract describing the ${config.name} feature's actions as authored, stamped with the contract version this connector was built from. */
+/** Inlined contract describing the ${config.name} feature's actions as authored, stamped with the contract version this shell was built from. */
 const contract = ${toSourceLiteral({ ...contract, version: canonicalVersion(config.version) })}
 
 /** Default shell options baked in from the feature's build. */
@@ -112,7 +112,7 @@ function buildConnectorPackageJson(config: ResolvedFeatureConfig): string {
 }
 
 /**
- * Builds the open-connector warning block for a protocol-`none` build.
+ * Builds the open-shell warning block for a protocol-`none` build.
  *
  * @param config - The resolved feature config carrying the baked protocol.
  * @returns The warning block, or an empty string for secured builds.
@@ -121,7 +121,7 @@ function buildReadmeWarning(config: ResolvedFeatureConfig): string {
   if (config.protocol !== 'none') {
     return ''
   }
-  return `> **Warning: open connector.** This build uses protocol \`none\`: messages between host and feature travel with no security envelope, so any page that can reach the feature URL can embed and drive it. For production, rebuild the feature with \`--protocol v1\` or \`--protocol v2\`.
+  return `> **Warning: open shell.** This build uses protocol \`none\`: messages between host and feature travel with no security envelope, so any page that can reach the feature URL can embed and drive it. For production, rebuild the feature with \`--protocol v1\` or \`--protocol v2\`.
 
 `
 }
@@ -140,9 +140,9 @@ function buildReadmeSecurity(config: ResolvedFeatureConfig): string {
     return "The `v1` security envelope is baked in from the feature's build — do not pass `protocol` yourself."
   }
   if (config.protocol === 'none') {
-    return 'This connector was deliberately built open (see the warning above); harden it by rebuilding the feature with a security protocol.'
+    return 'This shell was deliberately built open (see the warning above); harden it by rebuilding the feature with a security protocol.'
   }
-  return "No security envelope is baked into this connector; pass `protocol: 'v1'` or `protocol: 'v2'` (with your own `sharedKey` for `v2`) when creating the shell."
+  return "No security envelope is baked into this shell; pass `protocol: 'v1'` or `protocol: 'v2'` (with your own `sharedKey` for `v2`) when creating the shell."
 }
 
 /**
@@ -241,7 +241,7 @@ function buildReadmeContainer(config: ResolvedFeatureConfig, modes: DisplayMode[
 function buildConnectorReadme(config: ResolvedFeatureConfig, contract: FeatureContract, modes: DisplayMode[]): string {
   return `# ${config.name}-shell
 
-Generated host connector for the **${config.name}** feature. Self-contained — install it and embed the feature with one call. \`send\` and \`on\` are typed from the feature's contract.
+Generated shell for the **${config.name}** feature. Self-contained — install it and embed the feature with one call. \`send\` and \`on\` are typed from the feature's contract.
 
 ${buildReadmeWarning(config)}\`\`\`typescript
 import { createFeatureShell } from '${config.name}-shell'
@@ -267,7 +267,7 @@ ${buildReadmeModes(modes)}${buildReadmePermissions(config)}${buildReadmeSecurity
 }
 
 /**
- * Stages the complete host connector package into the supplied VFS tree.
+ * Stages the complete shell package into the supplied VFS tree.
  *
  * Emits the entry source (with contract-projected types), source-level
  * `package.json`, `README.md`, and (via {@link generateMetadata})
@@ -275,10 +275,10 @@ ${buildReadmeModes(modes)}${buildReadmePermissions(config)}${buildReadmeSecurity
  * creation, bundling, and commit.
  *
  * @param config - The resolved feature config.
- * @param contract - The validated feature contract, inlined into the connector.
- * @param tree - The VFS tree the connector files are staged into.
+ * @param contract - The validated feature contract, inlined into the shell.
+ * @param tree - The VFS tree the shell files are staged into.
  *
- * @example Staging a connector for the clock feature
+ * @example Staging a shell for the clock feature
  * ```typescript
  * generateShell({ name: 'clock', version: '1.0.0', contract: './clock.contract.json', url: '/clock', protocol: 'v2' }, contract, tree)
  * ```

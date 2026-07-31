@@ -5,11 +5,11 @@ import { canonicalVersion } from '../shared/canonical-version'
 import { resolveDeclaredModes } from '../shared/declared-modes'
 import { resolveSdkVersion } from './sdk-version'
 
-// note: Human- and registry-facing sidecar; the bundled connector inlines its own copy of the contract.
+// note: Human- and registry-facing sidecar; the bundled shell inlines its own copy of the contract.
 const METADATA_PATH = 'metadata.json'
 
 /**
- * Stages the connector's `metadata.json` describing the feature and its contract.
+ * Stages the shell's `metadata.json` describing the feature and its contract.
  *
  * Stamps a canonical version string via `@hyperfrontend/versioning` and embeds
  * the contract, the baked security protocol, any declared browser permissions,

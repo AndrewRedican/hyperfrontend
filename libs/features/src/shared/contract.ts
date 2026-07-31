@@ -315,7 +315,7 @@ export function validateDisplayConfig(display: unknown): DisplayConfig {
  * Validates a message payload against an action's optional schema at runtime.
  *
  * This check runs on both ends of the feature channel — in the host shell (and
- * therefore in every generated connector, which bundles it) and in the hostee
+ * therefore in every generated shell, which bundles it) and in the hostee
  * feature handle — with each side judging by its own contract: an outgoing
  * payload is validated against the sender's `emitted` schemas and an invalid
  * send throws in the sender's frame before anything crosses the wire; an

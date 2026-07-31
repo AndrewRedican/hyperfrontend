@@ -194,7 +194,7 @@ export interface FeatureContract {
   accepted: ActionDescription[]
   /**
    * Optional semver version announcing the contract cut this side holds.
-   * Builds canonicalize and bake it into the connector; the two sides compare
+   * Builds canonicalize and bake it into the generated shell; the two sides compare
    * their announcements during the connection handshake and incompatible cuts
    * are denied before the channel opens. Absent on either side, the check
    * passes, so unversioned peers keep connecting.
@@ -296,8 +296,8 @@ export interface ShellOptions {
   embedHeight?: number
   /**
    * Permissions-Policy features delegated to the feature frame, applied as the
-   * iframe `allow` attribute scoped to the frame's own origin. Connector
-   * builds bake the feature's declared needs here; a host-supplied list
+   * iframe `allow` attribute scoped to the frame's own origin. Shell builds
+   * bake the feature's declared needs here; a host-supplied list
    * replaces the baked one entirely. Only the iframe modes (`embedded`,
    * `dialog`) apply it — `popup` and `standalone` open top-level windows,
    * which request these permissions from the user directly.
@@ -309,7 +309,7 @@ export interface ShellOptions {
    * returns `allow-scripts`, grants `allow-same-origin` only to cross-origin
    * feature URLs, and denies everything else unless opted in — see
    * {@link SandboxOptions} for the managed tokens and why. Host-decreed and
-   * never baked by a connector build. Only meaningful for the iframe modes:
+   * never baked by a shell build. Only meaningful for the iframe modes:
    * opening `popup` or `standalone` with a sandbox set throws, because no
    * containment can apply to a top-level window.
    */
@@ -482,18 +482,18 @@ export interface DisplayConfig {
  * it ready to use and never read it from disk.
  */
 export interface ResolvedFeatureConfig extends FeatureConfig {
-  /** URL of the feature app the generated connector loads. */
+  /** URL of the feature app the generated shell loads. */
   url: string
   /** Declared display modes and per-mode defaults baked into the generated shell. */
   display?: DisplayConfig
-  /** Permissions-Policy features the feature declared it needs; baked into the connector as its default `permissions`. */
+  /** Permissions-Policy features the feature declared it needs; baked into the generated shell as its default `permissions`. */
   permissions?: FeaturePermission[]
-  /** Security envelope the build resolved; baked into the generated connector as its default. */
+  /** Security envelope the build resolved; baked into the generated shell as its default. */
   protocol?: SecurityProtocol
 }
 
 /**
- * Shape of the `metadata.json` sidecar staged beside every built connector.
+ * Shape of the `metadata.json` sidecar staged beside every built shell.
  *
  * Describes the feature so humans and registries can inspect it without
  * unpacking the bundle: identity, canonical version, feature URL, the full
@@ -503,21 +503,21 @@ export interface ResolvedFeatureConfig extends FeatureConfig {
 export interface FeatureDescriptor {
   /** Published feature name. */
   name: string
-  /** Canonical semver version of the feature the connector was built from. */
+  /** Canonical semver version of the feature the shell was built from. */
   version: string
-  /** URL of the feature app the connector loads. */
+  /** URL of the feature app the shell loads. */
   url: string
   /** The feature's contract exactly as the feature authored it. */
   contract: FeatureContract
   /** Display modes the generated shell composes; reviewable without unpacking the bundle. */
   modes: DisplayMode[]
-  /** Security envelope baked into the connector, when one was resolved. */
+  /** Security envelope baked into the shell, when one was resolved. */
   protocol?: SecurityProtocol
   /** Permissions-Policy features the feature declared it needs, when any; reviewable without unpacking the bundle. */
   permissions?: FeaturePermission[]
-  /** Package name of the toolchain that generated the connector. */
+  /** Package name of the toolchain that generated the shell. */
   generatedBy: string
-  /** Version of the `@hyperfrontend/features` SDK that generated the connector. */
+  /** Version of the `@hyperfrontend/features` SDK that generated the shell. */
   sdk: string
 }
 

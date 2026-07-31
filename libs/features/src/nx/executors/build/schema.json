@@ -3,7 +3,7 @@
   "$id": "FeaturesNxBuild",
   "type": "object",
   "title": "Build a hyperfrontend feature",
-  "description": "Build the feature connector by delegating to the @hyperfrontend/features SDK (hf build).",
+  "description": "Build the feature's shell package by delegating to the @hyperfrontend/features SDK (hf build).",
   "properties": {
     "config": {
       "type": "string",
@@ -11,7 +11,7 @@
     },
     "out": {
       "type": "string",
-      "description": "Output directory for the built connector."
+      "description": "Output directory for the built shell."
     },
     "protocol": {
       "type": "string",
@@ -28,7 +28,7 @@
     },
     "url": {
       "type": "string",
-      "description": "URL the generated connector loads the feature from."
+      "description": "URL the generated shell loads the feature from."
     },
     "contract": {
       "type": "string",
@@ -36,7 +36,7 @@
     },
     "allowOpen": {
       "type": "boolean",
-      "description": "Acknowledge an explicit 'none' protocol and build an open, unauthenticated connector."
+      "description": "Acknowledge an explicit 'none' protocol and build an open, unauthenticated shell."
     }
   },
   "required": []
