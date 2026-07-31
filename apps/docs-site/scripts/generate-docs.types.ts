@@ -21,6 +21,16 @@ export interface TransformLinkResult {
 }
 
 /**
+ * A link URL split into the part mapping rules match on and its fragment.
+ */
+export interface AnchorSplitResult {
+  /** The URL without its trailing `#fragment` */
+  path: string
+  /** The trailing `#fragment`, or an empty string when the link carries none */
+  anchor: string
+}
+
+/**
  * Result of extracting content from a file.
  */
 export interface ContentExtractionResult {
