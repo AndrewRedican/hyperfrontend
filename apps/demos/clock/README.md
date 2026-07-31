@@ -12,7 +12,7 @@ This app is a **self-contained hyperfrontend feature**: it consumes the publishe
 | Host: docs-site    | Vercel (landing hero + demos-page carousel)                                        | **cross-site**  |
 | Host: dev host     | `hf dev` control port (`scripts/hf-dev.ts`), local                                 | cross-origin    |
 
-The docs-site consumes this feature through the **vendored shell tarball** (`@hyperfrontend/demo-clock-shell`, committed under `apps/docs-site/vendor/`) — a real install step simulating "the feature team shipped us a connector". The security envelope is deliberately **`protocol: 'none'`** and labeled as such: this demo's job is the composition path, not the envelope (that's the security demo's story).
+The docs-site consumes this feature through the **vendored shell tarball** (`@hyperfrontend/demo-clock-shell`, committed under `apps/docs-site/vendor/`) — a real install step simulating "the feature team shipped us a shell". No security envelope is configured — [feature.config.ts](feature.config.ts) declares no `protocol` and the host passes none, so the channel runs open. That is deliberate: this demo's job is the composition path, not the envelope (that's the security demo's story).
 
 ## Contract
 
@@ -59,4 +59,4 @@ npx nx run docs-site:refresh-shell # re-pack, re-vendor, and reinstall the tarba
 
 ## Known SDK limitations this demo works around
 
-Consuming `@hyperfrontend/features@0.1.0` end-to-end surfaced fourteen findings. The blockers to know about when reading this code: the CLI dev server and debug UI are unusable as published, the host SDK crashes on non-cross-origin-isolated pages without a `SharedArrayBuffer` stub, host↔feature message **delivery** is broken in both directions, and `hf build` cannot compile its own connector (worked around by the workspace `@hyperfrontend/app:pack-shell` executor, which drives the SDK's own generator from this app's `node_modules` and compiles with plain `tsc`). The feature side works fully — its tick stream, echoes, and heartbeats are all observable on the wire — but hosts cannot receive them until delivery is fixed in the SDK.
+Consuming `@hyperfrontend/features@0.1.0` end-to-end surfaced fourteen findings. The blockers to know about when reading this code: the CLI dev server and debug UI are unusable as published, the host SDK crashes on non-cross-origin-isolated pages without a `SharedArrayBuffer` stub, host↔feature message **delivery** is broken in both directions, and `hf build` cannot compile its own generated shell (worked around by the workspace `@hyperfrontend/app:pack-shell` executor, which drives the SDK's own generator from this app's `node_modules` and compiles with plain `tsc`). The feature side works fully — its tick stream, echoes, and heartbeats are all observable on the wire — but hosts cannot receive them until delivery is fixed in the SDK.
