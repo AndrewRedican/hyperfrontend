@@ -18,7 +18,7 @@
     "pack-shell": {
       "implementation": "./src/executors/pack-shell/executor",
       "schema": "./src/executors/pack-shell/schema.json",
-      "description": "Generate, compile, and pack a feature app's shell connector package."
+      "description": "Generate, compile, and pack a feature app's shell package."
     }
   }
 }

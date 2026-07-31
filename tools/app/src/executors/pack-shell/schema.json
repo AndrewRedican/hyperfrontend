@@ -2,7 +2,7 @@
   "$schema": "http://json-schema.org/schema",
   "type": "object",
   "title": "Pack-shell executor schema",
-  "description": "Generate, compile, and pack a feature app's shell connector package.",
+  "description": "Generate, compile, and pack a feature app's shell package.",
   "properties": {
     "outputPath": {
       "type": "string",
