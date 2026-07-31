@@ -1267,9 +1267,17 @@ This article assumes that scripts already executing inside the host and hostee a
 
 Threats inside either page require a different treatment: Content Security Policy, Trusted Types, Subresource Integrity and dependency provenance, server-side authorisation, and designs that isolate sensitive authority in a separate origin or execution context.
 
-As promised, Hyperfrontend includes related defence in depth facilities. These do not replace the core controls above or make a compromised page trustworthy. They provide narrower protections whose guarantees and limitations are documented separately:
+As promised, Hyperfrontend includes related defence in depth facilities. These do not replace the core controls above or make a compromised page trustworthy. They provide narrower protections whose guarantees and limitations are documented separately.
 
-- [Architecture Overview](/architecture)
-- [Network Protocol](/docs/libraries/network-protocol)
-- [Cryptography](/docs/libraries/cryptography)
-- [Immutable-Api](/docs/libraries/utils/immutable-api)
+Start with the model, which states the same threat boundary this article assumes and then names which party owns each control:
+
+- [Security Model](/docs/core-concepts/security)
+
+Then the implementations, from the two libraries that carry this article's subject down to the primitives beneath them:
+
+- [Features](/docs/libraries/features/architecture) — the host and hostee SDKs: handshake, presentation, capability, control plane
+- [Nexus](/docs/libraries/nexus/architecture) — the session protocol: origin filtering, security policy, contract validation, transport security
+- [Network Protocol](/docs/libraries/network-protocol) — the envelope the transport can carry
+- [Cryptography](/docs/libraries/cryptography) — the primitives beneath the envelope
+- [Immutable-Api](/docs/libraries/utils/immutable-api) — locked API surfaces and early-captured built-in copies
+- [Architecture Overview](/architecture) — how the layers compose

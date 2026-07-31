@@ -43,6 +43,7 @@ const coreLibraries: NavItem[] = [
     packageName: '@hyperfrontend/builder',
     href: '/docs/libraries/builder',
     children: [
+      { slug: 'architecture', href: '/docs/libraries/builder/architecture' },
       {
         slug: 'bin',
         href: '/docs/libraries/builder/bin',
@@ -104,6 +105,7 @@ const coreLibraries: NavItem[] = [
     packageName: '@hyperfrontend/features',
     href: '/docs/libraries/features',
     children: [
+      { slug: 'architecture', href: '/docs/libraries/features/architecture' },
       { slug: 'host', href: '/docs/libraries/features/host' },
       { slug: 'hostee', href: '/docs/libraries/features/hostee' },
       { slug: 'cli', href: '/docs/libraries/features/cli' },
@@ -119,6 +121,7 @@ const coreLibraries: NavItem[] = [
     packageName: '@hyperfrontend/network-protocol',
     href: '/docs/libraries/network-protocol',
     children: [
+      { slug: 'architecture', href: '/docs/libraries/network-protocol/architecture' },
       {
         slug: 'browser',
         href: '/docs/libraries/network-protocol/browser',
@@ -151,7 +154,12 @@ const coreLibraries: NavItem[] = [
       { slug: 'topic', href: '/docs/libraries/network-protocol/topic' },
     ],
   },
-  { slug: 'nexus', packageName: '@hyperfrontend/nexus', href: '/docs/libraries/nexus' },
+  {
+    slug: 'nexus',
+    packageName: '@hyperfrontend/nexus',
+    href: '/docs/libraries/nexus',
+    children: [{ slug: 'architecture', href: '/docs/libraries/nexus/architecture' }],
+  },
 ]
 
 /**
@@ -165,6 +173,7 @@ const supportingLibraries: NavItem[] = [
     packageName: '@hyperfrontend/project-scope',
     href: '/docs/libraries/project-scope',
     children: [
+      { slug: 'architecture', href: '/docs/libraries/project-scope/architecture' },
       { slug: 'cli', href: '/docs/libraries/project-scope/cli' },
       {
         slug: 'core',
@@ -222,6 +231,7 @@ const supportingLibraries: NavItem[] = [
     packageName: '@hyperfrontend/state-machine',
     href: '/docs/libraries/state-machine',
     children: [
+      { slug: 'architecture', href: '/docs/libraries/state-machine/architecture' },
       { slug: 'actions', href: '/docs/libraries/state-machine/actions' },
       { slug: 'async-operation', href: '/docs/libraries/state-machine/async-operation' },
       { slug: 'coordinated-async-operation', href: '/docs/libraries/state-machine/coordinated-async-operation' },
@@ -240,6 +250,8 @@ const supportingLibraries: NavItem[] = [
     packageName: '@hyperfrontend/versioning',
     href: '/docs/libraries/versioning',
     children: [
+      { slug: 'architecture', href: '/docs/libraries/versioning/architecture' },
+      { slug: 'bin', href: '/docs/libraries/versioning/bin' },
       {
         slug: 'changelog',
         href: '/docs/libraries/versioning/changelog',
@@ -337,7 +349,6 @@ const utilsLibraries: NavItem[] = [
     children: [
       {
         slug: 'built-in-copy',
-        href: '/docs/libraries/utils/immutable-api/built-in-copy',
         children: [
           { slug: 'array', href: '/docs/libraries/utils/immutable-api/built-in-copy/array' },
           { slug: 'console', href: '/docs/libraries/utils/immutable-api/built-in-copy/console' },
@@ -409,6 +420,7 @@ const gettingStarted: NavItem[] = [
   { slug: 'Installation', href: '/docs' },
   { slug: 'Quick Start', href: '/docs/quick-start' },
   { slug: 'Core Concepts', href: '/docs/core-concepts' },
+  { slug: 'Security Model', href: '/docs/core-concepts/security' },
 ]
 
 /**
@@ -439,6 +451,10 @@ export const docsNavigation: NavItem[] = [
   {
     slug: 'API Reference',
     href: '/docs/libraries',
+  },
+  {
+    slug: 'Articles',
+    href: '/articles',
   },
   {
     slug: 'Manifesto',
