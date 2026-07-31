@@ -104,11 +104,11 @@ broker.setSecurityPolicy((event) => {
 
 ### Hub-and-Spoke Patterns for Complex Topologies
 
-Real micro-frontend systems often have complex communication needs: a shell application coordinating multiple micro-apps, broadcast messages to all participants, or direct messaging between specific windows. Nexus's broker architecture naturally supports these patterns:
+Real micro-frontend systems often have complex communication needs: a host application coordinating multiple micro-apps, broadcast messages to all participants, or direct messaging between specific windows. Nexus's broker architecture naturally supports these patterns:
 
 ```typescript
 // Central hub managing multiple spokes
-const hub = createBroker({ name: 'shell', contract })
+const hub = createBroker({ name: 'host', contract })
 
 const spokes = [
   hub.addChannel('user-app', userFrame.contentWindow),
@@ -179,6 +179,8 @@ Channels can negotiate an encrypted envelope during the handshake: register a se
 An active channel closes gracefully through a CLOSE/CLOSE_ACKNOWLEDGED exchange, firing `close` on both sides; a pending connection can be abandoned by either party through CANCEL/CANCEL_ACKNOWLEDGED, firing `cancel`. Denials (DENY_CONNECTION) and protocol violations (INVALID_REQUEST) round out the failure verbs, and every connection attempt ends in exactly one of `open`, `close`, `cancel`, `deny`, or `connect-timeout`. See [Protocol Design](https://github.com/AndrewRedican/hyperfrontend/blob/main/libs/nexus/ARCHITECTURE.md#protocol-design).
 
 ### Security Policies
+
+What these gates are worth, and which controls sit outside the protocol entirely (`frame-ancestors`, backend authorisation, the pre-shared key), is stated in the [Security Model](https://www.hyperfrontend.dev/docs/core-concepts/security).
 
 Connection-time access control runs before a channel opens: origin `whitelist`/`blacklist` settings filter every inbound message (a non-empty whitelist takes precedence), and a custom policy function — `broker.setSecurityPolicy((event: MessageEvent) => boolean)` — vets requests during handshake handling, with rejected requests answered by DENY_CONNECTION. See [Security Model](https://github.com/AndrewRedican/hyperfrontend/blob/main/libs/nexus/ARCHITECTURE.md#security-model).
 

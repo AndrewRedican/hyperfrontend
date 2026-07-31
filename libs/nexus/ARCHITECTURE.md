@@ -10,7 +10,7 @@
 
 ### Target Use Cases
 
-1. **Micro-frontend communication** — Shell applications coordinating multiple micro-apps
+1. **Micro-frontend communication** — Host applications coordinating multiple micro-apps
 2. **Iframe integration** — Secure bidirectional messaging with embedded content
 3. **Multi-window applications** — Communication between browser windows/tabs
 4. **Plugin architectures** — Host-to-plugin communication with contract enforcement
@@ -836,5 +836,7 @@ export type { Logger, LogLevel, NexusLoggerOptions }
 
 ## Links
 
+- [Microfrontends from first principles](https://www.hyperfrontend.dev/articles/microfrontends-from-first-principles) — why this protocol exists and what each of its agreements is for. The canonical rationale.
+- [Security Model](https://www.hyperfrontend.dev/docs/core-concepts/security) — the trust model these layers operate under, and which controls are the operator's rather than the protocol's.
 - [README.md](https://github.com/AndrewRedican/hyperfrontend/blob/main/libs/nexus/README.md) — consumer-facing overview, installation, and quick start
 - [Documentation site](https://www.hyperfrontend.dev/docs/libraries/nexus/) — published guides and API reference
