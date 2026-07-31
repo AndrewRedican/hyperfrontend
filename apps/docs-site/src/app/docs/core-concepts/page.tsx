@@ -19,6 +19,52 @@ export default function CoreConceptsPage() {
         Understand the fundamental building blocks of HyperFrontend architecture.
       </p>
 
+      {/* Vocabulary */}
+      <section className="mt-12">
+        <H2 className="text-2xl font-bold text-slate-900 dark:text-white">Vocabulary</H2>
+        <p className="mt-3 text-slate-600 dark:text-slate-400">
+          Four words carry most of the weight in these docs. They name roles, not packages — one application can be a host in one place and
+          a hostee in another.
+        </p>
+        <dl className="mt-4 space-y-3 text-slate-600 dark:text-slate-400">
+          <div>
+            <dt className="font-semibold text-slate-900 dark:text-white">Host</dt>
+            <dd className="mt-1">
+              The application that provides the containing product surface. It decides where a feature appears, in which display mode, and
+              under what capabilities.
+            </dd>
+          </div>
+          <div>
+            <dt className="font-semibold text-slate-900 dark:text-white">Hostee</dt>
+            <dd className="mt-1">
+              The application loaded inside the host. Not a dictionary word — the suffix does the same job it does in <em>employee</em> or{' '}
+              <em>addressee</em>: a hostee is the one hosted.
+            </dd>
+          </div>
+          <div>
+            <dt className="font-semibold text-slate-900 dark:text-white">Feature</dt>
+            <dd className="mt-1">
+              The hostee viewed as a product unit: independently owned, deployed, and versioned, with a contract describing what it says and
+              accepts.
+            </dd>
+          </div>
+          <div>
+            <dt className="font-semibold text-slate-900 dark:text-white">Shell</dt>
+            <dd className="mt-1">
+              The installable package a feature ships so any host can embed it. The shell carries the contract and speaks the protocol; the
+              host is never the shell.
+            </dd>
+          </div>
+        </dl>
+        <p className="mt-4 text-sm text-slate-500 dark:text-slate-400">
+          Where these terms come from, and why the boundary is drawn here, is argued end to end in{' '}
+          <Link href="/articles/microfrontends-from-first-principles" className="text-primary-600 hover:underline dark:text-primary-400">
+            Microfrontends from First Principles
+          </Link>
+          .
+        </p>
+      </section>
+
       {/* Features */}
       <section className="mt-12">
         <H2 className="text-2xl font-bold text-slate-900 dark:text-white">Features</H2>
@@ -38,8 +84,9 @@ export default function CoreConceptsPage() {
       <section className="mt-12">
         <H2 className="text-2xl font-bold text-slate-900 dark:text-white">Host Applications</H2>
         <p className="mt-3 text-slate-600 dark:text-slate-400">
-          A <strong className="text-slate-900 dark:text-white">host</strong> (or shell) is the parent application that loads and
-          orchestrates features. The host manages feature lifecycle, routes messages, and provides shared context like authentication.
+          A <strong className="text-slate-900 dark:text-white">host</strong> is the parent application that loads and orchestrates features.
+          The host manages feature lifecycle, routes messages, and provides shared context like authentication. It embeds a feature by
+          installing that feature&apos;s shell — the host writes no protocol code of its own.
         </p>
         <ul className="mt-4 space-y-2 text-slate-600 dark:text-slate-400">
           <li className="flex items-start gap-2">
@@ -160,6 +207,24 @@ export default function CoreConceptsPage() {
       <section className="mt-12">
         <H2 className="text-lg font-bold text-slate-900 dark:text-white">Continue Learning</H2>
         <div className="mt-4 grid gap-4 sm:grid-cols-2">
+          <Link
+            href="/docs/core-concepts/security"
+            className="group rounded-lg border border-slate-200 bg-white p-4 transition-colors hover:border-primary-300 hover:bg-primary-50 dark:border-slate-700 dark:bg-slate-900 dark:hover:border-primary-700 dark:hover:bg-primary-950/30"
+          >
+            <h3 className="font-semibold text-slate-900 group-hover:text-primary-600 dark:text-white dark:group-hover:text-primary-400">
+              Security Model
+            </h3>
+            <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">Who the adversary is, and which party enforces each control.</p>
+          </Link>
+          <Link
+            href="/articles/microfrontends-from-first-principles"
+            className="group rounded-lg border border-slate-200 bg-white p-4 transition-colors hover:border-primary-300 hover:bg-primary-50 dark:border-slate-700 dark:bg-slate-900 dark:hover:border-primary-700 dark:hover:bg-primary-950/30"
+          >
+            <h3 className="font-semibold text-slate-900 group-hover:text-primary-600 dark:text-white dark:group-hover:text-primary-400">
+              Microfrontends from First Principles
+            </h3>
+            <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">The full argument behind every concept on this page.</p>
+          </Link>
           <Link
             href="/docs/libraries/nexus"
             className="group rounded-lg border border-slate-200 bg-white p-4 transition-colors hover:border-primary-300 hover:bg-primary-50 dark:border-slate-700 dark:bg-slate-900 dark:hover:border-primary-700 dark:hover:bg-primary-950/30"

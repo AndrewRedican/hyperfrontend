@@ -6,7 +6,7 @@ import { defineProperty } from '@hyperfrontend/immutable-api-utils/built-in-copy
 import { clearTimeout, setTimeout } from '@hyperfrontend/immutable-api-utils/built-in-copy/timers'
 import { createURL } from '@hyperfrontend/immutable-api-utils/built-in-copy/url'
 
-/** The shell handle type, inferred from the vendored connector's factory. */
+/** The shell handle type, inferred from the vendored shell's factory. */
 type ClockShell = ReturnType<typeof createFeatureShell>
 
 /** Liveness of the embedded feature. */
