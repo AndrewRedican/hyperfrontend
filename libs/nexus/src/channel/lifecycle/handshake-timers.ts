@@ -1,5 +1,6 @@
 import type { IAction } from '../../types/action'
 import type { ChannelInternals } from '../types'
+import { clearInterval, clearTimeout, setInterval, setTimeout } from '@hyperfrontend/immutable-api-utils/built-in-copy/timers'
 
 /**
  * Starts the handshake retry and deadline timers for a pending connection.
@@ -23,9 +24,7 @@ export function startHandshakeTimers(channel: ChannelInternals, replayAction: IA
 
   const state = channel.getState()
   channel.updateState({
-    // eslint-disable-next-line workspace/no-unsafe-builtin-methods -- global timers are needed for Jest fake-timers compatibility
     retryTimer: setInterval(() => channel.sendAction(replayAction), state.requestRetryMs),
-    // eslint-disable-next-line workspace/no-unsafe-builtin-methods -- global timers are needed for Jest fake-timers compatibility
     deadlineTimer: setTimeout(onDeadline, state.connectTimeoutMs),
   })
 }
@@ -46,11 +45,9 @@ export function clearHandshakeTimers(channel: ChannelInternals): void {
   const state = channel.getState()
 
   if (state.retryTimer !== null) {
-    // eslint-disable-next-line workspace/no-unsafe-builtin-methods -- global timers are needed for Jest fake-timers compatibility
     clearInterval(state.retryTimer)
   }
   if (state.deadlineTimer !== null) {
-    // eslint-disable-next-line workspace/no-unsafe-builtin-methods -- global timers are needed for Jest fake-timers compatibility
     clearTimeout(state.deadlineTimer)
   }
   if (state.retryTimer !== null || state.deadlineTimer !== null) {

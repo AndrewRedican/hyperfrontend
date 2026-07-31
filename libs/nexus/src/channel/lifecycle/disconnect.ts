@@ -1,5 +1,6 @@
 import type { CloseReason } from '../../types/events'
 import type { ChannelInternals } from '../types'
+import { clearTimeout, setTimeout } from '@hyperfrontend/immutable-api-utils/built-in-copy/timers'
 import { clearHandshakeTimers } from './handshake-timers'
 
 /**
@@ -63,7 +64,6 @@ export function clearCloseTimer(channel: ChannelInternals): void {
   const state = channel.getState()
 
   if (state.closeTimer !== null && state.closeTimer !== undefined) {
-    // eslint-disable-next-line workspace/no-unsafe-builtin-methods -- global timers are needed for Jest fake-timers compatibility
     clearTimeout(state.closeTimer)
     channel.updateState({ closeTimer: null })
   }
@@ -121,7 +121,6 @@ export function disconnect(channel: ChannelInternals, notify = true, reason?: Cl
 
   channel.updateState({
     closingProcessId: processId,
-    // eslint-disable-next-line workspace/no-unsafe-builtin-methods -- global timers are needed for Jest fake-timers compatibility
     closeTimer: setTimeout(() => finalizeClose(channel), state.closeTimeoutMs),
   })
 
