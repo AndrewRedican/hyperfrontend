@@ -2,6 +2,27 @@
 
 All notable changes to this project will be documented in this file.
 
+## [2.0.0](https://github.com/AndrewRedican/hyperfrontend/compare/74110dd15151bfc8360ef4edcdb1086cb003c909...5cd51bd3673b8e2635557ba13c7f5da231b9dfaf) - 2026-08-01
+
+### Breaking Changes
+
+- **BREAKING** open fires only after a counterpr completes the handshake; unanswered connects time out instead of opening
+
+### Features
+
+- report every handshake denial to the deciding side
+- bind each session to the instance that opened it
+- make the polite close a flush-then-confirm exchange
+- gate the handshake on a contract compatibility rule
+- activate security negotiation and transport attachment
+- rebuild the security transport on the real wire protocol and export it
+- **BREAKING** ⚠️ BREAKING: replace channel self-activation with the wire handshake, pinned origins, and connect deadline
+
+### Bug Fixes
+
+- schedule channel timers via immutable built-in copies
+- fire the deny event on the denying responder once
+
 ## [1.1.3](https://github.com/AndrewRedican/hyperfrontend/compare/5f116abb8ba6355dfb283fa03b7481e5eb029480...47a37497608ac765af3efb30f0b5e01950bae425) - 2026-07-05
 
 ### Bug Fixes

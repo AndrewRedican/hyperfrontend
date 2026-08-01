@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.2.4](https://github.com/AndrewRedican/hyperfrontend/compare/6b5a02be62850b0509b9fd71ad9232655cf5fbbf...5cd51bd3673b8e2635557ba13c7f5da231b9dfaf) - 2026-08-01
+
+### Bug Fixes
+
+- read cache timestamps via the immutable copy
+
 ## [0.2.3](https://github.com/AndrewRedican/hyperfrontend/compare/5f116abb8ba6355dfb283fa03b7481e5eb029480...7fb26b6a30c007cd0392f1fc973265c3d25e16dd) - 2026-06-28
 
 ### Bug Fixes
