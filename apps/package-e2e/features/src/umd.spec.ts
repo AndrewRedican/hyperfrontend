@@ -23,6 +23,7 @@ const featureContract = {
 
 /** Slice of the host bundle's global used by these tests. */
 interface HostGlobal {
+  builtInDisplayModes: object
   createShell(options: object): unknown
 }
 
@@ -68,7 +69,12 @@ describe('@hyperfrontend/features UMD bundles', () => {
     it('creates a shell from the host bundle at call time', () => {
       const host = <HostGlobal>executeBundleInWindow(loadBundleCode(umdBundle('host')), 'HyperfrontendFeaturesHost')
       expect(() =>
-        host.createShell({ container: document.createElement('div'), contract: featureContract, url: 'http://localhost:4300/' })
+        host.createShell({
+          modes: host.builtInDisplayModes,
+          container: document.createElement('div'),
+          contract: featureContract,
+          url: 'http://localhost:4300/',
+        })
       ).not.toThrow()
     })
 

@@ -1,7 +1,8 @@
 import type { ChannelState } from '../../types'
 import type { IAction } from '../../types/action'
+import type { SecurityTransport } from '../../types/security'
 import type { ChannelInternals } from '../types'
-import { disconnect } from './disconnect'
+import { disconnect, finalizeClose } from './disconnect'
 
 type MutableChannelState = { -readonly [K in keyof ChannelState]: ChannelState[K] }
 
@@ -11,6 +12,7 @@ describe('channel/lifecycle/disconnect', () => {
   let sentActions: IAction[]
 
   beforeEach(() => {
+    jest.useFakeTimers()
     sentActions = []
 
     state = {
@@ -34,6 +36,9 @@ describe('channel/lifecycle/disconnect', () => {
       securityReady: false,
       securityTransport: null,
       pendingSecurityRequest: null,
+      closingProcessId: null,
+      closeTimer: null,
+      closeTimeoutMs: 2000,
     }
 
     mockChannel = {
@@ -66,6 +71,10 @@ describe('channel/lifecycle/disconnect', () => {
     }
   })
 
+  afterEach(() => {
+    jest.useRealTimers()
+  })
+
   it('does nothing if channel is not active', () => {
     state.active = false
 
@@ -75,10 +84,12 @@ describe('channel/lifecycle/disconnect', () => {
     expect(mockChannel.notifyEvent).not.toHaveBeenCalled()
   })
 
-  it('sets channel to inactive', () => {
+  it('keeps the channel active while the polite close awaits acknowledgement', () => {
     disconnect(mockChannel)
 
-    expect(state.active).toBe(false)
+    expect(state.active).toBe(true)
+    expect(state.closingProcessId).toBe('process-456')
+    expect(state.closeTimer).not.toBeNull()
   })
 
   it('sends CLOSE_CONNECTION when notify is true (default)', () => {
@@ -90,11 +101,43 @@ describe('channel/lifecycle/disconnect', () => {
     expect(sentActions[0].type).toBe('[nexus] connection-closed')
   })
 
-  it('sends CLOSE_CONNECTION when notify is explicitly true', () => {
-    disconnect(mockChannel, true)
+  it('fires closing (not close) when the polite close is proposed', () => {
+    disconnect(mockChannel)
+
+    expect(mockChannel.notifyEvent).toHaveBeenCalledWith('closing', { initiatedLocally: true })
+    expect(mockChannel.notifyEvent).not.toHaveBeenCalledWith('close', expect.anything())
+  })
+
+  it('does not send a second CLOSE_CONNECTION while one is in flight', () => {
+    disconnect(mockChannel)
+    disconnect(mockChannel)
 
     expect(sentActions).toHaveLength(1)
-    expect(sentActions[0].type).toBe('[nexus] connection-closed')
+    expect(mockChannel.notifyEvent).toHaveBeenCalledTimes(1)
+  })
+
+  it('completes the close once acknowledged, firing a single close event', () => {
+    disconnect(mockChannel)
+
+    disconnect(mockChannel, false)
+
+    expect(state.active).toBe(false)
+    expect(state.closingProcessId).toBeNull()
+    expect(state.closeTimer).toBeNull()
+    expect(mockChannel.removeProcess).toHaveBeenCalledWith('process-456')
+    expect(mockChannel.notifyEvent).toHaveBeenCalledWith('close', { notify: true })
+    const closeCalls = (<jest.Mock>mockChannel.notifyEvent).mock.calls.filter(([event]) => event === 'close')
+    expect(closeCalls).toHaveLength(1)
+  })
+
+  it('completes the close when the acknowledgement deadline expires', () => {
+    disconnect(mockChannel)
+
+    jest.advanceTimersByTime(2000)
+
+    expect(state.active).toBe(false)
+    expect(state.closingProcessId).toBeNull()
+    expect(mockChannel.notifyEvent).toHaveBeenCalledWith('close', { notify: true })
   })
 
   it('does not send action when notify is false', () => {
@@ -105,15 +148,73 @@ describe('channel/lifecycle/disconnect', () => {
     expect(sentActions).toHaveLength(0)
   })
 
-  it('notifys event subscribers', () => {
-    disconnect(mockChannel)
-
-    expect(mockChannel.notifyEvent).toHaveBeenCalledWith('close')
-  })
-
-  it('notifys event subscribers even when notify is false', () => {
+  it('closes immediately with a close event when notify is false', () => {
     disconnect(mockChannel, false)
 
-    expect(mockChannel.notifyEvent).toHaveBeenCalledWith('close')
+    expect(state.active).toBe(false)
+    expect(mockChannel.notifyEvent).toHaveBeenCalledWith('close', { notify: false })
+    expect(mockChannel.notifyEvent).not.toHaveBeenCalledWith('closing', expect.anything())
+  })
+
+  it('clears the security state so a later handshake renegotiates from scratch', () => {
+    state.negotiatedProtocol = 'v2'
+    state.securityReady = true
+    state.securityTransport = <SecurityTransport>(<unknown>{ send: jest.fn(), isReady: () => true })
+    state.pendingSecurityRequest = { supported: ['v2', 'none'], preferred: 'v2' }
+
+    disconnect(mockChannel, false)
+
+    expect(state).toEqual(
+      expect.objectContaining({
+        negotiatedProtocol: null,
+        securityReady: false,
+        securityTransport: null,
+        pendingSecurityRequest: null,
+      })
+    )
+  })
+
+  it('keeps the negotiated security state until the polite close completes', () => {
+    state.negotiatedProtocol = 'v2'
+
+    disconnect(mockChannel)
+
+    expect(state.negotiatedProtocol).toBe('v2')
+
+    jest.advanceTimersByTime(2000)
+
+    expect(state.negotiatedProtocol).toBeNull()
+  })
+
+  it('carries the reason on the close event when neither side asked for it', () => {
+    disconnect(mockChannel, false, 'peer-reload')
+
+    expect(mockChannel.notifyEvent).toHaveBeenCalledWith('close', { notify: false, reason: 'peer-reload' })
+  })
+
+  it('carries the reason when a silent close completes a polite one already in flight', () => {
+    state.closingProcessId = 'process-456'
+
+    disconnect(mockChannel, false, 'peer-reload')
+
+    expect(mockChannel.notifyEvent).toHaveBeenCalledWith('close', { notify: true, reason: 'peer-reload' })
+  })
+
+  describe('finalizeClose', () => {
+    it('does nothing when the channel is already inactive', () => {
+      state.active = false
+
+      finalizeClose(mockChannel)
+
+      expect(mockChannel.notifyEvent).not.toHaveBeenCalled()
+    })
+
+    it('reports notify false when this side never sent CLOSE', () => {
+      finalizeClose(mockChannel)
+
+      expect(state.active).toBe(false)
+      expect(mockChannel.removeProcess).not.toHaveBeenCalled()
+      expect(mockChannel.notifyEvent).toHaveBeenCalledWith('close', { notify: false })
+    })
   })
 })

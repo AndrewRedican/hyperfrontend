@@ -8,10 +8,16 @@ const contract: FeatureContract = { emitted: [{ type: 'timeUpdated' }], accepted
 const MODULE_PATH = 'src/hyperfrontend.feature.ts'
 
 describe('generateFeatureModule', () => {
-  it('creates the feature with the configured name', () => {
+  it('creates the feature with the configured name and version', () => {
     const tree = createTree(__dirname)
     generateFeatureModule(config, contract, tree)
-    expect(tree.read(MODULE_PATH, 'utf-8')).toContain("createFeature({ name: 'clock', contract })")
+    expect(tree.read(MODULE_PATH, 'utf-8')).toContain("createFeature({ name: 'clock', version: '1.0.0', contract })")
+  })
+
+  it('canonicalizes the scaffolded version from the config spelling', () => {
+    const tree = createTree(__dirname)
+    generateFeatureModule({ ...config, version: 'v2.1.0' }, contract, tree)
+    expect(tree.read(MODULE_PATH, 'utf-8')).toContain("version: '2.1.0'")
   })
 
   it('scaffolds a typed on-handler stub per accepted action', () => {

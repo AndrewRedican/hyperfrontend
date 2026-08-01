@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-import type { MarkdownLinkResult, TransformLinkResult, ContentExtractionResult } from './generate-docs.types'
+import type { AnchorSplitResult, MarkdownLinkResult, TransformLinkResult, ContentExtractionResult } from './generate-docs.types'
 import { execFileSync } from 'node:child_process'
 import { existsSync, readFileSync, mkdirSync, writeFileSync } from 'node:fs'
 import { resolve, join, dirname } from 'node:path'
@@ -227,6 +227,9 @@ function ensureDir(dir: string) {
   }
 }
 
+/** Workspace-relative directory holding the published articles, which render at `/articles/<slug>`. */
+const ARTICLES_CONTENT_DIR = 'apps/docs-site/content/articles/'
+
 /**
  * Library slug mappings for link transformation
  */
@@ -262,6 +265,21 @@ function normalizeRelativePath(path: string): string {
 }
 
 /**
+ * Split a link into its path and its trailing `#anchor`, if any.
+ *
+ * Mapping rules match on the path alone, so a link that carries an anchor
+ * resolves to the same page as its anchorless twin and keeps the fragment.
+ *
+ * @param url - The original URL from the markdown link
+ * @returns The path and the anchor (empty string when the link carries none)
+ */
+function splitAnchor(url: string): AnchorSplitResult {
+  const anchorIndex = url.indexOf('#')
+  if (anchorIndex === -1) return { path: url, anchor: '' }
+  return { path: url.slice(0, anchorIndex), anchor: url.slice(anchorIndex) }
+}
+
+/**
  * Extract link text and URL from a markdown link segment.
  * Given a segment that starts after `[`, extracts the text and URL.
  *
@@ -289,10 +307,22 @@ function extractMarkdownLink(segment: string): MarkdownLinkResult | null {
  *
  * @param url - The original URL from the markdown link
  * @param sourceContext - Where this content came from ('root' | 'library')
+ * @param librarySlug - URL slug of the library the content came from, when `sourceContext` is 'library'
  * @returns Object with transformed URL (or null to remove the link entirely)
  */
-function transformLinkUrl(url: string, sourceContext: 'root' | 'library'): TransformLinkResult {
-  const normalized = normalizeRelativePath(url)
+function transformLinkUrl(url: string, sourceContext: 'root' | 'library', librarySlug?: string): TransformLinkResult {
+  const { path, anchor } = splitAnchor(url)
+  const normalized = normalizeRelativePath(path)
+
+  // why: A library's own README.md and ARCHITECTURE.md share their filenames with the workspace-root documents; without the slug they would resolve to the site's root pages instead of this library's.
+  if (sourceContext === 'library' && librarySlug) {
+    if (normalized === 'ARCHITECTURE.md') {
+      return { url: `/docs/libraries/${librarySlug}/architecture${anchor}`, keepAsText: false }
+    }
+    if (normalized === 'README.md') {
+      return { url: `/docs/libraries/${librarySlug}${anchor}`, keepAsText: false }
+    }
+  }
 
   const rootDocMappings: Record<string, string> = {
     'README.md': '/',
@@ -308,27 +338,30 @@ function transformLinkUrl(url: string, sourceContext: 'root' | 'library'): Trans
   }
 
   if (rootDocMappings[normalized]) {
-    return { url: rootDocMappings[normalized], keepAsText: false }
+    return { url: `${rootDocMappings[normalized]}${anchor}`, keepAsText: false }
   }
 
   if (normalized.startsWith('roadmap/') && normalized.endsWith('.md')) {
     return { url: `https://github.com/AndrewRedican/hyperfrontend/blob/main/${normalized}`, keepAsText: false }
   }
 
-  if (normalized.startsWith('.github/')) {
-    const path = normalized.slice(8)
-    return { url: `https://github.com/AndrewRedican/hyperfrontend/tree/main/.github/${path}`, keepAsText: false }
+  if (normalized.startsWith(ARTICLES_CONTENT_DIR) && normalized.endsWith('.md')) {
+    const slug = normalized.slice(ARTICLES_CONTENT_DIR.length, -'.md'.length)
+    return { url: `/articles/${slug}${anchor}`, keepAsText: false }
   }
 
-  if (normalized.startsWith('libs/') && normalized.includes('/ARCHITECTURE.md')) {
+  if (normalized.startsWith('.github/')) {
+    const githubPath = normalized.slice(8)
+    return { url: `https://github.com/AndrewRedican/hyperfrontend/tree/main/.github/${githubPath}`, keepAsText: false }
+  }
+
+  if (normalized.startsWith('libs/') && normalized.endsWith('/ARCHITECTURE.md')) {
     const parts = normalized.split('/')
     if (parts.length >= 3) {
       const libName = parts[1]
       const slug = LIBRARY_SLUGS[libName]
       if (slug) {
-        const anchorIndex = normalized.indexOf('#')
-        const anchor = anchorIndex !== -1 ? normalized.slice(anchorIndex) : ''
-        return { url: `/docs/libraries/${slug}${anchor}`, keepAsText: false }
+        return { url: `/docs/libraries/${slug}/architecture${anchor}`, keepAsText: false }
       }
     }
   }
@@ -346,16 +379,18 @@ function transformLinkUrl(url: string, sourceContext: 'root' | 'library'): Trans
  * Transform links in markdown content for the docs site context.
  *
  * Handles:
+ * - A library's own README.md / ARCHITECTURE.md → that library's pages
  * - Root document links (README.md, LICENSE.md, etc.) → docs site pages
- * - Library architecture links (libs/X/ARCHITECTURE.md) → library pages
+ * - Library architecture links (libs/X/ARCHITECTURE.md) → library architecture pages
  * - Internal src/ links → removes or transforms
  * - GitHub URLs → preserves as external links
  *
  * @param content - Markdown content to transform
  * @param sourceContext - Where this content came from ('root' | 'library')
+ * @param librarySlug - URL slug of the library the content came from, when `sourceContext` is 'library'
  * @returns Transformed markdown content
  */
-function transformLinks(content: string, sourceContext: 'root' | 'library'): string {
+function transformLinks(content: string, sourceContext: 'root' | 'library', librarySlug?: string): string {
   const transformed = content
     .split('\n')
     .filter((line) => !(line.includes('👉 See') && containsDocsUrl(line)))
@@ -370,7 +405,7 @@ function transformLinks(content: string, sourceContext: 'root' | 'library'): str
 
     if (linkInfo) {
       const { linkText, url, remainder } = linkInfo
-      const transformation = transformLinkUrl(url, sourceContext)
+      const transformation = transformLinkUrl(url, sourceContext, librarySlug)
 
       if (transformation.url === null && transformation.keepAsText) {
         result.push(linkText + remainder)
@@ -402,7 +437,7 @@ function extractReadme(lib: LibraryConfig): ContentExtractionResult {
   }
 
   const content = readFileSync(readmePath, 'utf-8')
-  const transformedContent = transformLinks(content, 'library')
+  const transformedContent = transformLinks(content, 'library', lib.slug)
   return { content: transformedContent, exists: true }
 }
 
@@ -420,7 +455,7 @@ function extractArchitecture(lib: LibraryConfig): ContentExtractionResult {
   }
 
   const content = readFileSync(archPath, 'utf-8')
-  const transformedContent = transformLinks(content, 'library')
+  const transformedContent = transformLinks(content, 'library', lib.slug)
   return { content: transformedContent, exists: true }
 }
 

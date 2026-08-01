@@ -62,12 +62,15 @@ describe('handleMessage', () => {
       processManager,
       actions,
       logger: mockLogger,
+      getSupportedProtocols: () => ['none'],
+      getProtocol: () => undefined,
+      routeAction: () => undefined,
     }
   })
 
   function addConnectedChannel(name: string, target: Window) {
     const channel = addChannel(mockBrokerState, registry, processManager, actions, name, target)
-    channel.connect()
+    channel.activate('*', validContract, 'remote-broker-1')
     return channel
   }
 
@@ -92,7 +95,7 @@ describe('handleMessage', () => {
     expect(notifySpy).toHaveBeenCalledWith({ type: 'test-message', data: 'Hello' })
   })
 
-  it('falls back to sender id lookup when the event has no source window', () => {
+  it('ignores messages without a source window even when the sender id matches', () => {
     const channel = addConnectedChannel('test-channel', mockWindow)
     const notifySpy = jest.spyOn(channel, 'notifyMessage')
 
@@ -110,7 +113,7 @@ describe('handleMessage', () => {
       source: null,
     })
 
-    expect(notifySpy).toHaveBeenCalledWith({ type: 'test-message', data: 'Hello' })
+    expect(notifySpy).not.toHaveBeenCalled()
   })
 
   it('ignore if channel not found', () => {
@@ -228,6 +231,22 @@ describe('handleMessage', () => {
     expect(notifySpy).not.toHaveBeenCalled()
   })
 
+  it('drops and logs a message from an instance other than the connected counterpart', () => {
+    const channel = addConnectedChannel('test-channel', mockWindow)
+    const notifySpy = jest.spyOn(channel, 'notifyMessage')
+
+    handleMessage(routingContext, <MessageEvent<IAction>>{
+      data: <IAction>{
+        type: '[nexus] new-message',
+        senderId: 'remote-broker-2',
+        data: { type: 'test-message', data: 'from the previous incarnation' },
+      },
+      source: mockWindow,
+    })
+
+    expect({ notified: notifySpy.mock.calls, logged: (<jest.Mock>mockLogger.info).mock.calls.length }).toEqual({ notified: [], logged: 1 })
+  })
+
   it('logs the dropped message type when it is not accepted by the channel contract', () => {
     addConnectedChannel('test-channel', mockWindow)
 
@@ -281,7 +300,7 @@ describe('handleMessage', () => {
     handleMessage(routingContext, <MessageEvent<IAction>>{
       data: <IAction>{
         type: '[nexus] new-message',
-        senderId: 'remote-2',
+        senderId: 'remote-broker-1',
         data: { type: 'test-message', data: 'for channel 2' },
       },
       source: window2,

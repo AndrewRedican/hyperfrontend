@@ -1,8 +1,15 @@
 import type { Logger, LogLevel } from '@hyperfrontend/logging'
-import type { IChannelContract } from './contract'
+import type { IAction } from './action'
+import type { ContractCompat, IChannelContract } from './contract'
 import type { ChannelEvent, EventCallbackMap } from './events'
 import type { IMessage } from './message'
-import type { SecurityProtocolVersion, SecurityTransport, SecurityNegotiationRequest, ChannelSecuritySettings } from './security'
+import type {
+  SecurityProtocolVersion,
+  SecurityTransport,
+  SecurityNegotiationRequest,
+  SecurityNegotiationResponse,
+  ChannelSecuritySettings,
+} from './security'
 
 /**
  * Configuration for creating a new channel
@@ -30,17 +37,33 @@ export interface IChannelSettings {
   logLevel?: LogLevel
   /** Custom logger instance to use */
   logger?: Logger
-  /** Whether the channel is managed by a broker (auto-activates on connect) */
+  /** Whether the channel is managed by a broker */
   brokerManaged?: boolean
   /** Security settings for protocol negotiation and encryption */
   security?: ChannelSecuritySettings
+  /** Rule deciding whether the local and counterpart contracts may interoperate; an incompatible pair is denied during the handshake */
+  contractCompat?: ContractCompat
+  /** Milliseconds a connection attempt may remain unanswered before firing 'connect-timeout' (default: 10000) */
+  connectTimeoutMs?: number
+  /** Milliseconds between handshake re-sends while a connection attempt is pending (default: 500) */
+  requestRetryMs?: number
+  /** Milliseconds a polite close waits for the counterpart's acknowledgement before closing anyway (default: 2000) */
+  closeTimeoutMs?: number
 }
 
 /**
  * Scheduled activation data for pending connections.
- * Tuple containing: [senderId, origin, contract, processId]
+ * Tuple containing: [senderId, origin, contract, processId, security]
+ * where `security` is the negotiated response the ACCEPT answers with
+ * (absent when the request carried no security negotiation).
  */
-export type ScheduledActivation = readonly [senderId: string, origin: string, contract: IChannelContract, processId: string]
+export type ScheduledActivation = readonly [
+  senderId: string,
+  origin: string,
+  contract: IChannelContract,
+  processId: string,
+  security?: SecurityNegotiationResponse,
+]
 
 /**
  * Event subscription callback.
@@ -83,12 +106,38 @@ export interface ChannelState {
   readonly messageSubscriptions: readonly MessageHandler[]
   /** Pending connection data (null when no connection pending) */
   readonly scheduledActivation: ScheduledActivation | null
+  /** Contract declared by the connected counterpart (null before handshake completes) */
+  readonly peerContract: IChannelContract | null
+  /** Broker id of the connected counterpart (null before handshake completes) */
+  readonly peerId: string | null
+  /** Process id of our own outstanding connection request (null when not requesting) */
+  readonly pendingProcessId: string | null
+  /** Connection data held while waiting for the counterpart's OPEN (null when not responding) */
+  readonly pendingAccept: ScheduledActivation | null
+  /** Interval handle re-sending the pending handshake message (null when idle) */
+  readonly retryTimer: ReturnType<typeof setInterval> | null
+  /** Timeout handle enforcing the connection deadline (null when idle) */
+  readonly deadlineTimer: ReturnType<typeof setTimeout> | null
+  /** Milliseconds a connection attempt may remain unanswered before firing 'connect-timeout' */
+  readonly connectTimeoutMs: number
+  /** Milliseconds between handshake re-sends while a connection attempt is pending */
+  readonly requestRetryMs: number
+  /** Process id of our own outstanding polite close (null when not closing) */
+  readonly closingProcessId: string | null
+  /** Timeout handle bounding the wait for the close acknowledgement (null when idle) */
+  readonly closeTimer: ReturnType<typeof setTimeout> | null
+  /** Milliseconds a polite close waits for the counterpart's acknowledgement before closing anyway */
+  readonly closeTimeoutMs: number
   /** Whether to queue messages when channel is closed */
   readonly queueMessages: boolean
   /** Logger instance for this channel (null if not configured) */
   readonly logger: Logger | null
-  /** Whether channel was created by broker (enables auto-activation) */
+  /** Whether channel was created by a broker */
   readonly brokerManaged: boolean
+  /** Security settings configured for this channel (null when none were provided) */
+  readonly security: ChannelSecuritySettings | null
+  /** Contract-compatibility rule applied during the handshake (null when none was provided) */
+  readonly contractCompat: ContractCompat | null
   /** Whether connect() has been called (ready to accept connections) */
   readonly readyToConnect: boolean
   /** Negotiated security protocol (null before negotiation) */
@@ -99,6 +148,8 @@ export interface ChannelState {
   readonly securityTransport: SecurityTransport | null
   /** Pending security negotiation request from initiator (for responder to use) */
   readonly pendingSecurityRequest: SecurityNegotiationRequest | null
+  /** Process id of the handshake whose denial already fired the local 'deny' event (null when none) */
+  readonly notifiedDenyProcessId: string | null
 }
 
 /**
@@ -118,6 +169,10 @@ export interface ChannelJSON {
   connectTimestamp: number | null
   /** Channel contract */
   contract: IChannelContract | null
+  /** Contract declared by the connected counterpart */
+  peerContract: IChannelContract | null
+  /** Broker id of the connected counterpart */
+  peerId: string | null
   /** Number of queued messages */
   queuedMessagesCount: number
 }
@@ -142,6 +197,16 @@ export interface ChannelHandle {
   getTarget(): Window
   /** Check if channel is active */
   isActive(): boolean
+  /** Check if a polite close is in flight (CLOSE sent, acknowledgement pending) */
+  isClosing(): boolean
+  /** Get the currently pinned origin ('*' or null when unpinned) */
+  getOrigin(): string | null
+  /** Get the broker id of the connected counterpart (null before handshake completes) */
+  getPeerId(): string | null
+  /** Get the contract declared by the connected counterpart (null before handshake completes) */
+  getPeerContract(): IChannelContract | null
+  /** Get the process id of our own outstanding connection request (null when not requesting) */
+  getPendingProcessId(): string | null
   /** Get the message types this channel accepts from its counterpart (empty before activation) */
   getAcceptedTypes(): readonly string[]
   /** Get channel as serializable JSON */
@@ -151,6 +216,15 @@ export interface ChannelHandle {
   connect(): void
   /** Gracefully disconnect channel */
   disconnect(notify?: boolean): void
+  /**
+   * Ends the active session because the target window now hosts a different
+   * instance of the counterpart (a reload or in-frame navigation): closes
+   * silently — the instance the session belonged to is already gone — and
+   * fires 'close' with `reason: 'peer-reload'` so subscribers can drop
+   * session-scoped state before the new instance's handshake completes.
+   * The channel stays registered and reconnectable.
+   */
+  endStaleSession(): void
   /** Cancel pending connection */
   cancel(notify?: boolean): void
   /** Immediately destroy channel */
@@ -182,7 +256,35 @@ export interface ChannelHandle {
    * Activates the channel with connection details.
    * Called when connection handshake completes.
    */
-  activate(origin: string, contract: IChannelContract): void
+  activate(origin: string, peerContract: IChannelContract, peerId?: string): void
+
+  /**
+   * Answers an inbound connection request: pins the origin, records the
+   * pending activation, sends ACCEPT, and re-sends it until OPEN arrives
+   * or the connection deadline expires.
+   */
+  beginResponse(senderId: string, origin: string, contract: IChannelContract, processId: string, acceptAction: IAction): void
+
+  /**
+   * Abandons our own outstanding connection request: clears the handshake
+   * timers and removes the pending process. Used when yielding a glare
+   * tie-break or when the counterpart denies the connection.
+   */
+  abandonRequest(): void
+
+  /**
+   * Completes the handshake on the initiator side: clears timers, activates
+   * with the counterpart's details, sends the reply action, and flushes the
+   * outbound queue.
+   */
+  completeConnection(origin: string, peerContract: IChannelContract, peerId: string, replyAction: IAction): void
+
+  /**
+   * Completes the handshake on the responder side from the recorded pending
+   * activation: clears timers, activates, and flushes the outbound queue.
+   * Returns false when no activation is pending (stale or duplicate OPEN).
+   */
+  completeScheduledOpen(): boolean
 
   /**
    * Checks if channel is ready to accept connections.
@@ -191,10 +293,43 @@ export interface ChannelHandle {
   isReadyToConnect(): boolean
 
   /**
+   * Checks whether the responder side sent ACCEPT and is waiting for the
+   * counterpart's OPEN to activate.
+   */
+  isAwaitingOpen(): boolean
+
+  /**
+   * Gets the security settings configured for this channel
+   * (null when none were provided).
+   */
+  getSecuritySettings(): ChannelSecuritySettings | null
+
+  /**
+   * Applies security settings to a channel that was created before they
+   * were known (e.g. auto-created by an inbound connection request).
+   * Settings already configured on the channel stay authoritative: the
+   * call is a no-op when the channel has security settings.
+   */
+  applySecuritySettings(settings: ChannelSecuritySettings): void
+
+  /**
+   * Gets the contract-compatibility rule configured for this channel
+   * (null when none was provided).
+   */
+  getContractCompat(): ContractCompat | null
+
+  /**
    * Schedules activation for later when connect() is called.
    * Used when REQUEST arrives before connect() is called.
+   * The optional security response is answered back in the ACCEPT.
    */
-  scheduleActivation(senderId: string, origin: string, contract: IChannelContract, processId: string): void
+  scheduleActivation(
+    senderId: string,
+    origin: string,
+    contract: IChannelContract,
+    processId: string,
+    security?: SecurityNegotiationResponse
+  ): void
 
   /**
    * Notifies event subscribers of a channel event.
@@ -207,6 +342,14 @@ export interface ChannelHandle {
    * Used by broker handlers to forward messages.
    */
   notifyMessage(message: IMessage): void
+
+  /**
+   * Records that the denial of the given handshake process fired the local
+   * 'deny' event. Returns false when the process is already recorded, so a
+   * retried REQUEST re-using the same process id does not fire a second
+   * local event.
+   */
+  markDenyNotified(processId: string): boolean
 
   /**
    * Stores the pending security request from the initiator.

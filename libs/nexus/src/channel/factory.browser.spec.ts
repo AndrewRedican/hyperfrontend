@@ -194,14 +194,22 @@ describe('channel/factory', () => {
       expect(channel.isReadyToConnect()).toBe(true)
     })
 
-    it('isReadyToConnect returns true for broker-managed channels', () => {
+    it('isReadyToConnect returns false for broker-managed channels before connect() is called', () => {
       const brokerManagedConfig = {
         ...config,
         settings: { brokerManaged: true },
       }
       const channel = createChannel(brokerManagedConfig, deps)
 
-      expect(channel.isReadyToConnect()).toBe(true)
+      expect(channel.isReadyToConnect()).toBe(false)
+    })
+
+    it('registers the channel handle with the process manager', () => {
+      const channel = createChannel(config, deps)
+
+      channel.connect()
+
+      expect(deps.processManager.create).toHaveBeenCalledWith(channel)
     })
 
     it('scheduleActivation stores activation data', () => {
@@ -212,8 +220,34 @@ describe('channel/factory', () => {
 
       channel.connect()
 
-      expect(deps.actions.acceptConnection).toHaveBeenCalledWith('process-123')
+      expect(deps.actions.acceptConnection).toHaveBeenCalledWith('process-123', undefined)
       expect(deps.actions.requestConnection).not.toHaveBeenCalled()
+    })
+
+    it('scheduleActivation carries the security response into the ACCEPT', () => {
+      const channel = createChannel(config, deps)
+      const contract = { accepted: [{ type: 'test' }], emitted: [] }
+
+      channel.scheduleActivation('sender-id', 'https://example.com', contract, 'process-123', { negotiated: 'v2' })
+
+      channel.connect()
+
+      expect(deps.actions.acceptConnection).toHaveBeenCalledWith('process-123', { negotiated: 'v2' })
+    })
+
+    it('isAwaitingOpen reports the window between ACCEPT and OPEN', () => {
+      const channel = createChannel(config, deps)
+      const contract = { accepted: [{ type: 'test' }], emitted: [] }
+      const awaitingBefore = channel.isAwaitingOpen()
+
+      channel.beginResponse('sender-id', 'https://example.com', contract, 'process-123', {
+        type: '[nexus] connection-request-accepted',
+        senderId: 'test-broker-id',
+      })
+      const awaitingDuring = channel.isAwaitingOpen()
+      channel.completeScheduledOpen()
+
+      expect([awaitingBefore, awaitingDuring, channel.isAwaitingOpen()]).toEqual([false, true, false])
     })
 
     it('activate updates channel state', () => {
@@ -231,11 +265,14 @@ describe('channel/factory', () => {
       expect(channel.getAcceptedTypes()).toEqual([])
     })
 
-    it('getAcceptedTypes returns the accepted types after activation', () => {
-      const channel = createChannel(config, deps)
-      const contract = { accepted: [{ type: 'msg1' }, { type: 'msg2' }], emitted: [] }
+    it('getAcceptedTypes returns the own accepted types after activation', () => {
+      const configWithContract = {
+        ...config,
+        settings: { contract: { accepted: [{ type: 'msg1' }, { type: 'msg2' }], emitted: [] } },
+      }
+      const channel = createChannel(configWithContract, deps)
 
-      channel.activate('https://example.com', contract)
+      channel.activate('https://example.com', { accepted: [{ type: 'other' }], emitted: [] }, 'peer-1')
 
       expect(channel.getAcceptedTypes()).toEqual(['msg1', 'msg2'])
     })
@@ -300,6 +337,8 @@ describe('channel/factory', () => {
         origin: null,
         connectTimestamp: null,
         contract: null,
+        peerContract: null,
+        peerId: null,
         queuedMessagesCount: 0,
       })
     })
@@ -362,7 +401,7 @@ describe('channel/factory', () => {
       const channel = createChannel(config, deps)
       const mockTransport: SecurityTransport = {
         send: jest.fn(),
-        onReceive: jest.fn(),
+        receive: jest.fn(),
         stop: jest.fn(),
         resume: jest.fn(),
         isReady: jest.fn(() => true),
@@ -392,6 +431,128 @@ describe('channel/factory', () => {
       channel.setSecurityReady(false)
 
       expect(channel.isSecurityReady()).toBe(false)
+    })
+
+    it('getSecuritySettings returns null when no security settings were provided', () => {
+      const channel = createChannel(config, deps)
+
+      expect(channel.getSecuritySettings()).toBeNull()
+    })
+
+    it('getSecuritySettings returns the configured security settings', () => {
+      const channel = createChannel({ ...config, settings: { security: { protocol: 'v2', mode: 'fail-closed' } } }, deps)
+
+      expect(channel.getSecuritySettings()).toEqual({ protocol: 'v2', mode: 'fail-closed' })
+    })
+
+    it('applySecuritySettings sets the settings on a channel created without any', () => {
+      const channel = createChannel(config, deps)
+
+      channel.applySecuritySettings({ protocol: 'v2', mode: 'fail-closed' })
+
+      expect(channel.getSecuritySettings()).toEqual({ protocol: 'v2', mode: 'fail-closed' })
+    })
+
+    it('applySecuritySettings keeps the settings the channel was created with', () => {
+      const channel = createChannel({ ...config, settings: { security: { protocol: 'v2' } } }, deps)
+
+      channel.applySecuritySettings({ protocol: 'v1' })
+
+      expect(channel.getSecuritySettings()).toEqual({ protocol: 'v2' })
+    })
+
+    it('getContractCompat returns null when no compatibility rule was provided', () => {
+      const channel = createChannel(config, deps)
+
+      expect(channel.getContractCompat()).toBeNull()
+    })
+
+    it('getContractCompat returns the configured compatibility rule', () => {
+      const contractCompat = () => <const>{ compatible: true }
+      const channel = createChannel({ ...config, settings: { contractCompat } }, deps)
+
+      expect(channel.getContractCompat()).toBe(contractCompat)
+    })
+  })
+
+  describe('queue-while-transport-not-ready', () => {
+    function createTogglingTransport(): { transport: SecurityTransport; setReady: (ready: boolean) => void; sent: unknown[] } {
+      const sent: unknown[] = []
+      let ready = false
+      return {
+        transport: {
+          send: (action) => {
+            sent.push(action)
+          },
+          receive: jest.fn(),
+          stop: jest.fn(),
+          resume: jest.fn(),
+          isReady: () => ready,
+          getProtocol: () => 'x-external',
+        },
+        setReady: (value: boolean) => {
+          ready = value
+        },
+        sent,
+      }
+    }
+
+    function createActiveSecureChannel(transport: SecurityTransport) {
+      const channel = createChannel({ ...config, settings: { contract: { accepted: [], emitted: [{ type: 'msg1' }] } } }, deps)
+      channel.activate('https://example.com', { accepted: [{ type: 'msg1' }], emitted: [] }, 'peer-1')
+      channel.setNegotiatedProtocol('x-external')
+      channel.setSecurityTransport(transport)
+      return channel
+    }
+
+    it('queues product messages while the transport reports not ready', () => {
+      const { transport, sent } = createTogglingTransport()
+      const channel = createActiveSecureChannel(transport)
+
+      channel.send('msg1', { seq: 1 })
+
+      expect({ queued: channel.toJSON().queuedMessagesCount, sent }).toEqual({ queued: 1, sent: [] })
+    })
+
+    it('flushes queued messages through the transport once readiness is signalled', () => {
+      const { transport, setReady, sent } = createTogglingTransport()
+      const channel = createActiveSecureChannel(transport)
+      channel.send('msg1', { seq: 1 })
+      channel.send('msg1', { seq: 2 })
+
+      setReady(true)
+      channel.setSecurityReady(true)
+
+      expect({ queued: channel.toJSON().queuedMessagesCount, sent }).toEqual({
+        queued: 0,
+        sent: [
+          expect.objectContaining({ type: '[nexus] new-message', data: expect.objectContaining({ data: { seq: 1 } }) }),
+          expect.objectContaining({ type: '[nexus] new-message', data: expect.objectContaining({ data: { seq: 2 } }) }),
+        ],
+      })
+    })
+
+    it('keeps messages queued when readiness is signalled but the transport still reports not ready', () => {
+      const { transport, sent } = createTogglingTransport()
+      const channel = createActiveSecureChannel(transport)
+      channel.send('msg1', { seq: 1 })
+
+      channel.setSecurityReady(true)
+
+      expect({ queued: channel.toJSON().queuedMessagesCount, sent }).toEqual({ queued: 1, sent: [] })
+    })
+
+    it('does not flush when the channel is not active', () => {
+      const { transport, setReady, sent } = createTogglingTransport()
+      const channel = createChannel({ ...config, settings: { contract: { accepted: [], emitted: [{ type: 'msg1' }] } } }, deps)
+      channel.setNegotiatedProtocol('x-external')
+      channel.setSecurityTransport(transport)
+      channel.send('msg1', { seq: 1 })
+
+      setReady(true)
+      channel.setSecurityReady(true)
+
+      expect({ queued: channel.toJSON().queuedMessagesCount, sent }).toEqual({ queued: 1, sent: [] })
     })
   })
 

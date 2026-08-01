@@ -1,18 +1,25 @@
 import type { Logger } from '@hyperfrontend/logging'
-import type { ActionCreators } from '../../core/actions/factory'
 import type { IAction } from '../../types/action'
+import type { ChannelHandle } from '../../types/channel'
 import type { IChannelContract } from '../../types/contract'
+import type { SecurityTransport } from '../../types/security'
 import type { BrokerState } from '../types'
 import type { RoutingContext } from './types'
 import { createActionCreators } from '../../core/actions/factory'
 import { createProcessManager } from '../../core/processes/factory'
 import { createRegistry } from '../../core/registry/factory'
+import { addChannel } from '../channels/add'
 import { handleRequest } from './handle-request'
 
 describe('handleRequest', () => {
-  const validContract: IChannelContract = {
-    accepted: [{ type: 'test-message', description: 'Test message' }],
+  const ownContract: IChannelContract = {
+    accepted: [{ type: 'test-message', description: 'Test message', required: true }],
     emitted: [{ type: 'response-message', description: 'Response message' }],
+  }
+
+  const peerContract: IChannelContract = {
+    accepted: [{ type: 'response-message' }],
+    emitted: [{ type: 'test-message' }],
   }
 
   let mockLogger: Logger
@@ -20,9 +27,21 @@ describe('handleRequest', () => {
 
   let registry: ReturnType<typeof createRegistry>
   let processManager: ReturnType<typeof createProcessManager>
-  let mockActions: ActionCreators
+  let mockActions: ReturnType<typeof createActionCreators>
   let mockWindow: Window
   let routingContext: RoutingContext
+
+  beforeAll(() => {
+    jest.useFakeTimers()
+  })
+
+  afterAll(() => {
+    jest.useRealTimers()
+  })
+
+  afterEach(() => {
+    jest.clearAllTimers()
+  })
 
   beforeEach(() => {
     mockLogger = {
@@ -39,9 +58,9 @@ describe('handleRequest', () => {
       id: 'broker-1',
       name: 'test-broker',
       window: <Window>global.window,
-      contract: validContract,
+      contract: ownContract,
       settings: {
-        contract: validContract,
+        contract: ownContract,
       },
       logger: mockLogger,
     }
@@ -50,7 +69,7 @@ describe('handleRequest', () => {
     processManager = createProcessManager()
     mockActions = createActionCreators({
       getBrokerId: () => 'broker-1',
-      getContract: () => validContract,
+      getContract: () => ownContract,
     })
     mockWindow = <Window>(<unknown>{
       postMessage: jest.fn(),
@@ -62,601 +81,374 @@ describe('handleRequest', () => {
       processManager,
       actions: mockActions,
       logger: mockLogger,
+      getSupportedProtocols: () => ['none'],
+      getProtocol: () => undefined,
+      routeAction: () => undefined,
     }
   })
 
-  it('creates new channel for new connection request', () => {
-    const action: IAction = {
-      type: '[nexus] connection-request',
-      senderId: 'remote-broker-1',
-      processId: 'process-1',
-      contract: validContract,
-    }
-
-    const message = <MessageEvent<IAction>>{
-      data: action,
+  function requestEvent(
+    overrides: Partial<{ senderId: string; processId: string; contract: IChannelContract; origin: string; security: unknown }> = {}
+  ) {
+    return <MessageEvent<IAction>>{
+      data: <IAction>{
+        type: '[nexus] connection-request',
+        senderId: overrides.senderId ?? 'remote-broker-1',
+        processId: overrides.processId ?? 'process-1',
+        contract: overrides.contract ?? peerContract,
+        ...(overrides.security ? { security: overrides.security } : {}),
+      },
       source: mockWindow,
+      origin: overrides.origin ?? 'https://example.com',
     }
+  }
 
-    handleRequest(routingContext, message)
+  function addReadyChannel(settings: Record<string, unknown> = {}) {
+    const channel = addChannel(mockBrokerState, registry, processManager, mockActions, 'local-channel', mockWindow, settings)
+    // how: connect() marks the channel ready; cancel(false) clears the
+    channel.connect()
+    channel.cancel(false)
+    ;(<jest.Mock>mockWindow.postMessage).mockClear()
+    return channel
+  }
 
-    const channel = registry.getByName('remote-broker-1')
-    expect(channel).toBeDefined()
-  })
+  it('creates a channel named from the requester origin, not its instance id', () => {
+    handleRequest(routingContext, requestEvent())
 
-  it('reuses existing channel if already registered', () => {
-    const action: IAction = {
-      type: '[nexus] connection-request',
-      senderId: 'remote-broker-1',
-      processId: 'process-1',
-      contract: validContract,
-    }
-
-    const message = <MessageEvent<IAction>>{
-      data: action,
-      source: mockWindow,
-    }
-
-    handleRequest(routingContext, message)
-    const firstChannel = registry.getById('remote-broker-1')
-
-    handleRequest(routingContext, message)
-    const secondChannel = registry.getById('remote-broker-1')
-
-    expect(secondChannel).toBe(firstChannel)
-  })
-
-  it('sends acceptance for already open channel with matching sender', () => {
-    const action: IAction = {
-      type: '[nexus] connection-request',
-      senderId: 'remote-broker-1',
-      processId: 'process-1',
-      contract: validContract,
-    }
-
-    const message = <MessageEvent<IAction>>{
-      data: action,
-      source: mockWindow,
-    }
-
-    handleRequest(routingContext, message)
-
-    const channel = registry.getById('remote-broker-1')
-    if (channel) {
-      Object.defineProperty(channel, 'isActive', { value: () => true, writable: true })
-      Object.defineProperty(channel, 'id', { value: 'remote-broker-1', writable: true })
-
-      registry.add(channel)
-    }
-
-    handleRequest(routingContext, message)
-
-    expect(mockWindow.postMessage).toHaveBeenCalled()
-  })
-
-  it('logs info when detecting channel reload in debug mode', () => {
-    const debugState: BrokerState = {
-      ...mockBrokerState,
-      settings: { ...mockBrokerState.settings, logLevel: 'debug' },
-    }
-
-    const debugContext: RoutingContext = {
-      ...routingContext,
-      state: debugState,
-    }
-
-    const action: IAction = {
-      type: '[nexus] connection-request',
-      senderId: 'different-sender-id',
-      processId: 'process-1',
-      contract: validContract,
-    }
-
-    const message = <MessageEvent<IAction>>{
-      data: action,
-      source: mockWindow,
-    }
-
-    handleRequest(debugContext, message)
-
-    const channel = registry.getByName('different-sender-id')
-    if (channel) {
-      Object.defineProperty(channel, 'isActive', { value: () => true, writable: true, configurable: true })
-      Object.defineProperty(channel, 'id', { value: 'original-id', writable: true, configurable: true })
-      Object.defineProperty(channel, 'name', { value: 'test-channel', writable: true, configurable: true })
-    }
-
-    handleRequest(debugContext, message)
-
-    expect(mockLogger.info).toHaveBeenCalledWith(expect.stringContaining('detected channel'))
-  })
-
-  it('denies connection for invalid contract', () => {
-    const invalidContract = <IChannelContract>(<unknown>{
-      accepted: null,
+    expect({
+      byOrigin: registry.getByName('inbound-https://example.com')?.name,
+      byInstance: registry.getByName('remote-broker-1'),
+    }).toEqual({
+      byOrigin: 'inbound-https://example.com',
+      byInstance: undefined,
     })
-
-    const action: IAction = {
-      type: '[nexus] connection-request',
-      senderId: 'remote-broker-1',
-      processId: 'process-1',
-      contract: invalidContract,
-    }
-
-    const message = <MessageEvent<IAction>>{
-      data: action,
-      source: mockWindow,
-    }
-
-    handleRequest(routingContext, message)
-
-    expect(mockWindow.postMessage).toHaveBeenCalledWith(
-      expect.objectContaining({
-        type: '[nexus] connection-request-denied',
-        error: 'Invalid contract.',
-      }),
-      expect.any(String)
-    )
   })
 
-  it('denies connection when security policy rejects', () => {
-    const stateWithPolicy: BrokerState = {
-      ...mockBrokerState,
-      settings: {
-        ...mockBrokerState.settings,
-        securityPolicy: jest.fn(() => false),
-      },
-    }
+  it('reuses the channel registered for the source window', () => {
+    handleRequest(routingContext, requestEvent())
+    const firstChannel = registry.getByName('inbound-https://example.com')
 
-    const contextWithPolicy: RoutingContext = {
-      ...routingContext,
-      state: stateWithPolicy,
-    }
+    handleRequest(routingContext, requestEvent())
 
-    const action: IAction = {
-      type: '[nexus] connection-request',
-      senderId: 'remote-broker-1',
-      processId: 'process-1',
-      contract: validContract,
-    }
-
-    const message = <MessageEvent<IAction>>{
-      data: action,
-      source: mockWindow,
-    }
-
-    handleRequest(contextWithPolicy, message)
-
-    expect(mockWindow.postMessage).toHaveBeenCalledWith(
-      expect.objectContaining({
-        type: '[nexus] connection-request-denied',
-        error: 'Not accepted.',
-      }),
-      expect.any(String)
-    )
+    expect(registry.getAll()).toEqual([firstChannel])
   })
 
-  it('accepts connection when security policy allows', () => {
-    const stateWithPolicy: BrokerState = {
-      ...mockBrokerState,
-      settings: {
-        ...mockBrokerState.settings,
-        securityPolicy: jest.fn(() => true),
-      },
-    }
+  it('schedules activation and tracks the process when the local side is not ready', () => {
+    handleRequest(routingContext, requestEvent())
 
-    const contextWithPolicy: RoutingContext = {
-      ...routingContext,
-      state: stateWithPolicy,
-    }
+    const channel = registry.getByName('inbound-https://example.com')
+    expect({ tracked: processManager.get('process-1'), accepted: (<jest.Mock>mockWindow.postMessage).mock.calls }).toEqual({
+      tracked: channel,
+      accepted: [],
+    })
+  })
 
-    const action: IAction = {
-      type: '[nexus] connection-request',
-      senderId: 'remote-broker-1',
-      processId: 'process-1',
-      contract: validContract,
-    }
+  it('logs info when scheduling activation', () => {
+    handleRequest(routingContext, requestEvent())
 
-    const message = <MessageEvent<IAction>>{
-      data: action,
-      source: mockWindow,
-    }
+    expect(mockLogger.info).toHaveBeenCalledWith(expect.stringContaining('scheduled activation'))
+  })
 
-    handleRequest(contextWithPolicy, message)
+  it('sends ACCEPT with the broker contract when the local side is ready', () => {
+    addReadyChannel()
+
+    handleRequest(routingContext, requestEvent())
 
     expect(mockWindow.postMessage).toHaveBeenCalledWith(
       expect.objectContaining({
         type: '[nexus] connection-request-accepted',
         processId: 'process-1',
+        senderId: 'broker-1',
+        contract: ownContract,
       }),
       expect.any(String)
     )
   })
 
-  it('includes broker contract in acceptance message', () => {
-    const action: IAction = {
-      type: '[nexus] connection-request',
-      senderId: 'remote-broker-1',
-      processId: 'process-1',
-      contract: validContract,
-    }
+  it('pins the origin from the request event', () => {
+    const channel = addReadyChannel()
 
-    const message = <MessageEvent<IAction>>{
-      data: action,
-      source: mockWindow,
-    }
+    handleRequest(routingContext, requestEvent({ origin: 'https://feature.example' }))
 
-    handleRequest(routingContext, message)
+    expect(channel.getOrigin()).toBe('https://feature.example')
+  })
 
-    expect(mockWindow.postMessage).toHaveBeenCalledWith(
-      expect.objectContaining({
-        contract: mockBrokerState.contract,
-        senderId: mockBrokerState.id,
-      }),
-      expect.any(String)
+  it('records the peer details while waiting for OPEN', () => {
+    const channel = addReadyChannel()
+
+    handleRequest(routingContext, requestEvent())
+
+    expect({ peerId: channel.getPeerId(), peerContract: channel.getPeerContract(), active: channel.isActive() }).toEqual({
+      peerId: 'remote-broker-1',
+      peerContract,
+      active: false,
+    })
+  })
+
+  it('re-sends ACCEPT until OPEN arrives', () => {
+    addReadyChannel()
+
+    handleRequest(routingContext, requestEvent())
+    jest.advanceTimersByTime(1000)
+
+    const acceptFrames = (<jest.Mock>mockWindow.postMessage).mock.calls.filter(
+      (call) => (<IAction>call[0]).type === '[nexus] connection-request-accepted'
     )
+    expect(acceptFrames).toHaveLength(3)
   })
 
-  it('immediately accepts broker-managed channels (isReadyToConnect returns true)', () => {
-    const action: IAction = {
-      type: '[nexus] connection-request',
-      senderId: 'remote-broker-1',
-      processId: 'process-1',
-      contract: validContract,
-    }
+  it('drops requests from an unexpected origin when one is pinned', () => {
+    const channel = addReadyChannel({ origin: 'https://pinned.example' })
+    const invalidHandler = jest.fn()
+    channel.on('invalid', invalidHandler)
 
-    const message = <MessageEvent<IAction>>{
-      data: action,
-      source: mockWindow,
-      origin: 'https://example.com',
-    }
+    handleRequest(routingContext, requestEvent({ origin: 'https://evil.example' }))
 
-    handleRequest(routingContext, message)
-
-    expect(mockWindow.postMessage).toHaveBeenCalledWith(
-      expect.objectContaining({
-        type: '[nexus] connection-request-accepted',
-      }),
-      expect.any(String)
-    )
-  })
-
-  it('schedules activation when channel not ready to connect', () => {
-    const action: IAction = {
-      type: '[nexus] connection-request',
-      senderId: 'remote-broker-1',
-      processId: 'process-1',
-      contract: validContract,
-    }
-
-    const message = <MessageEvent<IAction>>{
-      data: action,
-      source: mockWindow,
-      origin: 'https://example.com',
-    }
-
-    handleRequest(routingContext, message)
-
-    const channel = registry.getByName('remote-broker-1')
-    expect(channel).toBeDefined()
-
-    Object.defineProperty(channel, 'isReadyToConnect', { value: () => false, writable: true })
-    const scheduleActivationMock = jest.fn()
-    Object.defineProperty(channel, 'scheduleActivation', { value: scheduleActivationMock, writable: true })
-
-    const nextAction: IAction = {
-      type: '[nexus] connection-request',
-      senderId: 'new-remote-broker',
-      processId: 'process-2',
-      contract: validContract,
-    }
-
-    const window2 = <Window>(<unknown>{ postMessage: jest.fn() })
-    const nextMessage = <MessageEvent<IAction>>{
-      data: nextAction,
-      source: window2,
-      origin: 'https://other.com',
-    }
-
-    handleRequest(routingContext, nextMessage)
-  })
-
-  it('logs debug info when scheduling activation', () => {
-    const debugState: BrokerState = {
-      ...mockBrokerState,
-      settings: { ...mockBrokerState.settings, logLevel: 'debug' },
-    }
-
-    const debugContext: RoutingContext = {
-      ...routingContext,
-      state: debugState,
-    }
-
-    const action: IAction = {
-      type: '[nexus] connection-request',
-      senderId: 'remote-broker-1',
-      processId: 'process-1',
-      contract: validContract,
-    }
-
-    const message = <MessageEvent<IAction>>{
-      data: action,
-      source: mockWindow,
-      origin: 'https://example.com',
-    }
-
-    handleRequest(debugContext, message)
-
-    const channel = registry.getByName('remote-broker-1')
-    Object.defineProperty(channel, 'isReadyToConnect', { value: () => false, writable: true, configurable: true })
-    Object.defineProperty(channel, 'scheduleActivation', { value: jest.fn(), writable: true, configurable: true })
-
-    handleRequest(debugContext, message)
-
-    expect(mockLogger.info).toHaveBeenCalled()
+    expect({ posts: (<jest.Mock>mockWindow.postMessage).mock.calls, invalids: invalidHandler.mock.calls.length }).toEqual({
+      posts: [],
+      invalids: 1,
+    })
   })
 
   it('negotiates security protocol when request includes security', () => {
-    const action: IAction = {
-      type: '[nexus] connection-request',
-      senderId: 'remote-broker-1',
-      processId: 'process-1',
-      contract: validContract,
-      security: { supported: ['v1', 'v2'], preferred: 'v2' },
-    }
+    addReadyChannel()
 
-    const message = <MessageEvent<IAction>>{
-      data: action,
-      source: mockWindow,
-      origin: 'https://example.com',
-    }
-
-    handleRequest(routingContext, message)
+    handleRequest(routingContext, requestEvent({ security: { supported: ['v1', 'none'], preferred: 'v1' } }))
 
     expect(mockWindow.postMessage).toHaveBeenCalledWith(
       expect.objectContaining({
         type: '[nexus] connection-request-accepted',
-        security: expect.objectContaining({
-          negotiated: expect.any(String),
-        }),
+        security: expect.objectContaining({ negotiated: expect.any(String) }),
       }),
       expect.any(String)
     )
   })
 
-  it('stores pending security request in channel', () => {
-    const action: IAction = {
-      type: '[nexus] connection-request',
-      senderId: 'remote-broker-1',
-      processId: 'process-1',
-      contract: validContract,
-      security: { supported: ['v1'], preferred: 'v1' },
-    }
+  it('logs security negotiation', () => {
+    addReadyChannel()
 
-    const message = <MessageEvent<IAction>>{
-      data: action,
-      source: mockWindow,
-      origin: 'https://example.com',
-    }
-
-    handleRequest(routingContext, message)
-
-    const channel = registry.getByName('remote-broker-1')
-    expect(channel).toBeDefined()
-  })
-
-  it('logs security negotiation in debug mode', () => {
-    const debugState: BrokerState = {
-      ...mockBrokerState,
-      settings: { ...mockBrokerState.settings, logLevel: 'debug' },
-    }
-
-    const debugContext: RoutingContext = {
-      ...routingContext,
-      state: debugState,
-    }
-
-    const action: IAction = {
-      type: '[nexus] connection-request',
-      senderId: 'remote-broker-1',
-      processId: 'process-1',
-      contract: validContract,
-      security: { supported: ['v1', 'none'], preferred: 'v1' },
-    }
-
-    const message = <MessageEvent<IAction>>{
-      data: action,
-      source: mockWindow,
-      origin: 'https://example.com',
-    }
-
-    handleRequest(debugContext, message)
+    handleRequest(routingContext, requestEvent({ security: { supported: ['v1', 'none'], preferred: 'v1' } }))
 
     expect(mockLogger.info).toHaveBeenCalledWith(expect.stringContaining('negotiated security protocol'))
   })
 
+  it('stores the pending security request in the channel', () => {
+    const channel = addReadyChannel()
+
+    handleRequest(routingContext, requestEvent({ security: { supported: ['v1'], preferred: 'v1' } }))
+
+    expect(channel.getPendingSecurityRequest()).toEqual({ supported: ['v1'], preferred: 'v1' })
+  })
+
+  describe('registry-sourced negotiation', () => {
+    function contextSupporting(...protocols: string[]): RoutingContext {
+      return { ...routingContext, getSupportedProtocols: () => [...protocols, 'none'] }
+    }
+
+    it('negotiates the protocol offered by the broker protocol registry', () => {
+      addReadyChannel()
+
+      handleRequest(contextSupporting('v2'), requestEvent({ security: { supported: ['v2', 'none'], preferred: 'v2' } }))
+
+      expect(mockWindow.postMessage).toHaveBeenCalledWith(
+        expect.objectContaining({
+          type: '[nexus] connection-request-accepted',
+          security: { negotiated: 'v2' },
+        }),
+        expect.any(String)
+      )
+    })
+
+    it('records the negotiated protocol on the channel', () => {
+      const channel = addReadyChannel()
+
+      handleRequest(contextSupporting('v2'), requestEvent({ security: { supported: ['v2', 'none'], preferred: 'v2' } }))
+
+      expect(channel.getNegotiatedProtocol()).toBe('v2')
+    })
+
+    it('negotiates none when the registry has no protocol in common with the request', () => {
+      addReadyChannel()
+
+      handleRequest(contextSupporting('v2'), requestEvent({ security: { supported: ['v1', 'none'], preferred: 'v1' } }))
+
+      expect(mockWindow.postMessage).toHaveBeenCalledWith(expect.objectContaining({ security: { negotiated: 'none' } }), expect.any(String))
+    })
+
+    it('answers the replayed ACCEPT with a registry-sourced negotiation', () => {
+      const channel = addReadyChannel()
+      channel.activate('https://example.com', peerContract, 'remote-broker-1')
+
+      handleRequest(contextSupporting('v2'), requestEvent({ security: { supported: ['v2', 'none'], preferred: 'v2' } }))
+
+      expect(mockWindow.postMessage).toHaveBeenCalledWith(expect.objectContaining({ security: { negotiated: 'v2' } }), expect.any(String))
+    })
+
+    it('carries the negotiated response through a scheduled activation into the ACCEPT', () => {
+      const channel = addChannel(mockBrokerState, registry, processManager, mockActions, 'local-channel', mockWindow)
+
+      handleRequest(contextSupporting('v2'), requestEvent({ security: { supported: ['v2', 'none'], preferred: 'v2' } }))
+      channel.connect()
+
+      expect(mockWindow.postMessage).toHaveBeenCalledWith(
+        expect.objectContaining({
+          type: '[nexus] connection-request-accepted',
+          security: { negotiated: 'v2' },
+        }),
+        expect.any(String)
+      )
+    })
+  })
+
+  describe('fail-open responder wanting security', () => {
+    it('warns and accepts in plaintext when the request carries no security slot', () => {
+      addReadyChannel({ security: { protocol: 'v2' } })
+
+      handleRequest(routingContext, requestEvent())
+
+      expect({ accept: (<jest.Mock>mockWindow.postMessage).mock.calls[0][0], warns: (<jest.Mock>mockLogger.warn).mock.calls }).toEqual({
+        accept: expect.objectContaining({ type: '[nexus] connection-request-accepted' }),
+        warns: [[expect.stringContaining('continuing without encryption')]],
+      })
+    })
+  })
+
+  describe('active channel', () => {
+    function addActiveChannel() {
+      const channel = addReadyChannel()
+      channel.activate('https://example.com', peerContract, 'remote-broker-1')
+      return channel
+    }
+
+    it('replays ACCEPT for a duplicate request from the connected counterpart', () => {
+      addActiveChannel()
+
+      handleRequest(routingContext, requestEvent())
+
+      expect(mockWindow.postMessage).toHaveBeenCalledWith(
+        expect.objectContaining({
+          type: '[nexus] connection-request-accepted',
+          processId: 'process-1',
+        }),
+        expect.any(String)
+      )
+    })
+
+    it('includes a security response in the replayed ACCEPT when the duplicate request has security', () => {
+      addActiveChannel()
+
+      handleRequest(routingContext, requestEvent({ security: { supported: ['none'], preferred: 'none' } }))
+
+      expect(mockWindow.postMessage).toHaveBeenCalledWith(
+        expect.objectContaining({
+          type: '[nexus] connection-request-accepted',
+          security: expect.objectContaining({ negotiated: expect.any(String) }),
+        }),
+        expect.any(String)
+      )
+    })
+
+    it('omits the security response from the replayed ACCEPT when the duplicate request has none', () => {
+      addActiveChannel()
+
+      handleRequest(routingContext, requestEvent())
+
+      const sent = <IAction & { security?: unknown }>(<jest.Mock>mockWindow.postMessage).mock.calls[0][0]
+      expect(sent.security).toBeUndefined()
+    })
+
+    it('ends the stale session with a reload reason and re-handshakes with the new instance', () => {
+      const channel = addActiveChannel()
+      const close = jest.fn()
+      channel.on('close', close)
+
+      handleRequest(routingContext, requestEvent({ senderId: 'remote-broker-2', processId: 'process-2' }))
+
+      expect({
+        peerId: channel.getPeerId(),
+        closed: close.mock.calls[0]?.[0],
+        accepted: (<jest.Mock>mockWindow.postMessage).mock.calls[0][0],
+      }).toEqual({
+        peerId: 'remote-broker-2',
+        closed: { notify: false, reason: 'peer-reload' },
+        accepted: expect.objectContaining({ type: '[nexus] connection-request-accepted', processId: 'process-2' }),
+      })
+    })
+
+    it('logs the reload detection', () => {
+      addActiveChannel()
+
+      handleRequest(routingContext, requestEvent({ senderId: 'remote-broker-2', processId: 'process-2' }))
+
+      expect(mockLogger.info).toHaveBeenCalledWith(expect.stringContaining('detected channel'))
+    })
+
+    it('detaches the stale security transport when the counterpart reloaded', () => {
+      const channel = addActiveChannel()
+      channel.setNegotiatedProtocol('v2')
+      channel.setSecurityTransport(<SecurityTransport>(<unknown>{ send: jest.fn(), isReady: () => true }))
+
+      handleRequest(routingContext, requestEvent({ senderId: 'remote-broker-2', processId: 'process-2' }))
+
+      expect({ transport: channel.getSecurityTransport(), negotiated: channel.getNegotiatedProtocol() }).toEqual({
+        transport: null,
+        negotiated: null,
+      })
+    })
+  })
+
+  describe('glare', () => {
+    function addRequestingChannel() {
+      const channel = addChannel(mockBrokerState, registry, processManager, mockActions, 'local-channel', mockWindow)
+      channel.connect()
+      ;(<jest.Mock>mockWindow.postMessage).mockClear()
+      return channel
+    }
+
+    it('yields and answers as responder when the local broker id is lower', () => {
+      const channel = addRequestingChannel()
+
+      handleRequest(routingContext, requestEvent({ senderId: 'z-remote-broker' }))
+
+      expect({ pending: channel.getPendingProcessId(), reply: (<jest.Mock>mockWindow.postMessage).mock.calls[0][0] }).toEqual({
+        pending: null,
+        reply: expect.objectContaining({ type: '[nexus] connection-request-accepted', processId: 'process-1' }),
+      })
+    })
+
+    it('ignores the inbound request when the local broker id is higher', () => {
+      const channel = addRequestingChannel()
+
+      handleRequest(routingContext, requestEvent({ senderId: 'a-remote-broker' }))
+
+      expect({ pending: channel.getPendingProcessId(), posts: (<jest.Mock>mockWindow.postMessage).mock.calls }).toEqual({
+        pending: expect.any(String),
+        posts: [],
+      })
+    })
+  })
+
   it('returns early when action lacks contract property', () => {
-    const invalidAction = {
-      type: '[nexus] connection-request',
-      senderId: 'remote-broker-1',
-      processId: 'process-1',
-    }
-
     const message = <MessageEvent<IAction>>{
-      data: <IAction>invalidAction,
-      source: mockWindow,
-    }
-
-    handleRequest(routingContext, message)
-
-    const channel = registry.getByName('remote-broker-1')
-    expect(channel).toBeUndefined()
-  })
-
-  it('sends acceptance with security response when already open and request has security', () => {
-    const action: IAction = {
-      type: '[nexus] connection-request',
-      senderId: 'remote-broker-1',
-      processId: 'process-1',
-      contract: validContract,
-      security: { supported: ['v1', 'none'], preferred: 'v1' },
-    }
-
-    const message = <MessageEvent<IAction>>{
-      data: action,
-      source: mockWindow,
-      origin: 'https://example.com',
-    }
-
-    handleRequest(routingContext, message)
-
-    const channel = registry.getById('remote-broker-1')
-    if (channel) {
-      Object.defineProperty(channel, 'isActive', { value: () => true, writable: true })
-      Object.defineProperty(channel, 'id', { value: 'remote-broker-1', writable: true })
-    }
-
-    handleRequest(routingContext, message)
-
-    expect(mockWindow.postMessage).toHaveBeenCalledWith(
-      expect.objectContaining({
-        type: '[nexus] connection-request-accepted',
-        security: expect.any(Object),
-      }),
-      expect.any(String)
-    )
-  })
-
-  it('sends acceptance without security response when already open and no security in request', () => {
-    const action: IAction = {
-      type: '[nexus] connection-request',
-      senderId: 'remote-broker-1',
-      processId: 'process-1',
-      contract: validContract,
-    }
-
-    const message = <MessageEvent<IAction>>{
-      data: action,
-      source: mockWindow,
-      origin: 'https://example.com',
-    }
-
-    handleRequest(routingContext, message)
-
-    const channel = registry.getById('remote-broker-1')
-    if (channel) {
-      Object.defineProperty(channel, 'isActive', { value: () => true, writable: true })
-      Object.defineProperty(channel, 'id', { value: 'remote-broker-1', writable: true })
-    }
-
-    handleRequest(routingContext, message)
-
-    const lastCall = (<jest.Mock>mockWindow.postMessage).mock.calls[(<jest.Mock>mockWindow.postMessage).mock.calls.length - 1]
-    const sentAction = lastCall[0]
-
-    expect(sentAction.type).toBe('[nexus] connection-request-accepted')
-    expect(sentAction.security).toBeUndefined()
-  })
-
-  it('stores pending security request when channel not ready', () => {
-    const action: IAction = {
-      type: '[nexus] connection-request',
-      senderId: 'new-remote',
-      processId: 'process-1',
-      contract: validContract,
-      security: { supported: ['v1'], preferred: 'v1' },
-    }
-
-    const message = <MessageEvent<IAction>>{
-      data: action,
-      source: mockWindow,
-      origin: 'https://example.com',
-    }
-
-    handleRequest(routingContext, message)
-
-    const channel = registry.getByName('new-remote')
-    expect(channel).toBeDefined()
-  })
-
-  it('removes process when contract validation fails', () => {
-    const action: IAction = {
-      type: '[nexus] connection-request',
-      senderId: 'remote-broker-1',
-      processId: 'process-1',
-      contract: <IChannelContract>(<unknown>{ accepted: null }),
-    }
-
-    const message = <MessageEvent<IAction>>{
-      data: action,
-      source: mockWindow,
-      origin: 'https://example.com',
-    }
-
-    handleRequest(routingContext, message)
-
-    expect(mockWindow.postMessage).toHaveBeenCalledWith(
-      expect.objectContaining({
-        type: '[nexus] connection-request-denied',
-        error: 'Invalid contract.',
-      }),
-      expect.any(String)
-    )
-  })
-
-  it('removes process when security policy denies request', () => {
-    const stateWithPolicy: BrokerState = {
-      ...mockBrokerState,
-      settings: {
-        ...mockBrokerState.settings,
-        securityPolicy: jest.fn(() => false),
+      data: <IAction>{
+        type: '[nexus] connection-request',
+        senderId: 'remote-broker-1',
+        processId: 'process-1',
       },
-    }
-
-    const contextWithPolicy: RoutingContext = {
-      ...routingContext,
-      state: stateWithPolicy,
-    }
-
-    const action: IAction = {
-      type: '[nexus] connection-request',
-      senderId: 'remote-broker-1',
-      processId: 'process-1',
-      contract: validContract,
-    }
-
-    const message = <MessageEvent<IAction>>{
-      data: action,
       source: mockWindow,
       origin: 'https://example.com',
     }
 
-    handleRequest(contextWithPolicy, message)
-
-    expect(mockWindow.postMessage).toHaveBeenCalledWith(
-      expect.objectContaining({
-        type: '[nexus] connection-request-denied',
-        error: 'Not accepted.',
-      }),
-      expect.any(String)
-    )
-  })
-
-  it('returns early when action does not have contract property', () => {
-    const action: IAction = {
-      type: '[nexus] connection-request',
-      senderId: 'remote-broker-1',
-    }
-
-    const message = <MessageEvent<IAction>>{
-      data: action,
-      source: mockWindow,
-    }
-
     handleRequest(routingContext, message)
 
-    const channel = registry.getByName('remote-broker-1')
-    expect(channel).toBeFalsy()
-    expect(mockWindow.postMessage).not.toHaveBeenCalled()
+    expect(registry.getByName('remote-broker-1')).toBeUndefined()
+  })
+
+  it('tracks the process for the coming OPEN when responding', () => {
+    const channel = <ChannelHandle>(<unknown>addReadyChannel())
+
+    handleRequest(routingContext, requestEvent())
+
+    expect(processManager.get('process-1')).toBe(channel)
   })
 })

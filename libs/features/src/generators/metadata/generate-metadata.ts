@@ -1,18 +1,21 @@
 import type { Tree } from '@hyperfrontend/project-scope/vfs'
-import type { FeatureContract, ResolvedFeatureConfig } from '../../shared/types'
+import type { FeatureContract, FeatureDescriptor, ResolvedFeatureConfig } from '../../shared/types'
 import { stringify } from '@hyperfrontend/immutable-api-utils/built-in-copy/json'
-import { format } from '@hyperfrontend/versioning/semver/format'
-import { parseVersionStrict } from '@hyperfrontend/versioning/semver/parse'
+import { canonicalVersion } from '../shared/canonical-version'
+import { resolveDeclaredModes } from '../shared/declared-modes'
+import { resolveSdkVersion } from './sdk-version'
 
-// note: Human- and registry-facing sidecar; the bundled connector inlines its own copy of the contract.
+// note: Human- and registry-facing sidecar; the bundled shell inlines its own copy of the contract.
 const METADATA_PATH = 'metadata.json'
 
 /**
- * Stages the connector's `metadata.json` describing the feature and its contract.
+ * Stages the shell's `metadata.json` describing the feature and its contract.
  *
  * Stamps a canonical version string via `@hyperfrontend/versioning` and embeds
- * the contract and the baked security protocol so humans and the registry can
- * inspect the feature without unpacking the bundle.
+ * the contract, the baked security protocol, any declared browser permissions,
+ * and the version of the SDK that ran the build, so humans and the registry
+ * can inspect the feature without unpacking the bundle. The staged file
+ * matches {@link FeatureDescriptor}.
  *
  * @param config - The resolved feature config supplying name, version, URL, and protocol.
  * @param contract - The validated contract embedded for inspection.
@@ -24,13 +27,16 @@ const METADATA_PATH = 'metadata.json'
  * ```
  */
 export function generateMetadata(config: ResolvedFeatureConfig, contract: FeatureContract, tree: Tree): void {
-  const metadata = {
+  const metadata: FeatureDescriptor = {
     name: config.name,
-    version: format(parseVersionStrict(config.version)),
+    version: canonicalVersion(config.version),
     url: config.url,
     contract,
+    modes: resolveDeclaredModes(config),
     ...(config.protocol !== undefined && { protocol: config.protocol }),
+    ...(config.permissions !== undefined && { permissions: config.permissions }),
     generatedBy: '@hyperfrontend/features',
+    sdk: resolveSdkVersion(),
   }
   tree.write(METADATA_PATH, `${stringify(metadata, null, 2)}\n`)
 }

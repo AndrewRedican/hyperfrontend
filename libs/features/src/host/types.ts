@@ -1,6 +1,8 @@
 import type { EventHandler } from '../shared/event-emitter'
+import type { PresentPayload } from '../shared/presentation'
 import type { RequestHandler, RequestOptions } from '../shared/request'
 import type { ShellOptions } from '../shared/types'
+import type { ViewportReporter } from './sizing'
 
 /**
  * Public handle returned by {@link createShell}.
@@ -17,6 +19,11 @@ export interface ShellHandle {
   open(options?: Partial<ShellOptions>): void
   /**
    * Closes the feature gracefully, disconnecting the messaging channel.
+   *
+   * The close is a polite exchange: the feature receives a `closing` notice
+   * and may flush final messages before the channel completes the close (or
+   * its deadline expires). Check `isDirty` first to take unsaved work into
+   * account before starting the teardown.
    */
   close(): void
   /**
@@ -74,7 +81,15 @@ export interface ShellHandle {
    */
   handle(type: string, handler: RequestHandler): () => void
   /**
-   * Subscribes to feature messages or lifecycle events (`open`, `close`, `error`).
+   * Subscribes to feature messages or lifecycle events (`open`, `closing`,
+   * `close`, `error`, `status`, `dirty-state`, `dismiss`).
+   *
+   * `status` fires on every liveness transition with a heartbeat snapshot
+   * (`healthy`, `unobservable`, `suspect`, or `gone`). `dirty-state` fires
+   * when the feature declares or clears unsaved work. `closing` announces a
+   * polite teardown while the channel still delivers. `dismiss` fires with
+   * `{ source: 'backdrop' }` when a dialog backdrop interaction occurs and
+   * `dialogBackdrop` is set to `event`.
    *
    * @param event - Message action type or lifecycle event name.
    * @param handler - Callback invoked with the event payload.
@@ -85,6 +100,11 @@ export interface ShellHandle {
    * Whether the feature channel is currently open (`true` while connected).
    */
   readonly isOpen: boolean
+  /**
+   * Whether the feature has declared unsaved work (`true` between
+   * `setDirty(true)` and `setDirty(false)`; resets when the channel closes).
+   */
+  readonly isDirty: boolean
 }
 
 /**
@@ -93,11 +113,15 @@ export interface ShellHandle {
 export interface MountResult {
   /** Window the host messages, or `null` when a popup/standalone was blocked. */
   target: Window | null
-  /** In-document root the mode mounted (embedded iframe or dialog container); unset when the feature opens in a separate window. */
+  /** In-document root the mode mounted (the feature iframe); unset when the feature opens in a separate window. */
   element?: HTMLElement
-  /** Resizable element for content-driven sizing, when the mode embeds an iframe inline. */
-  frame?: HTMLElement
-  /** Removes any DOM or closes any window created by the mount. */
+  /** Presentation announcement the shell sends the feature once per mount: the mode, the frame's initial dimensions, and any agreed dialog box geometry. */
+  present: PresentPayload
+  /** Reporter of the frame's exact pixel space, when the mode observes an iframe; the shell forwards its change reports once the channel opens. */
+  viewport?: ViewportReporter
+  /** Makes the mounted frame visible; the shell calls it once the session opens, so a frame never appears before the feature is ready. */
+  reveal?(): void
+  /** Removes any DOM or closes any window created by the mount, stopping any observation it started. */
   cleanup(): void
 }
 

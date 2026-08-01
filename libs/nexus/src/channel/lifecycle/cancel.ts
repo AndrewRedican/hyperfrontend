@@ -1,5 +1,6 @@
 import type { ChannelInternals } from '../types'
 import { disconnect } from './disconnect'
+import { clearHandshakeTimers } from './handshake-timers'
 
 /**
  * Cancels a pending connection request.
@@ -24,6 +25,9 @@ export function cancel(channel: ChannelInternals, notify = true): void {
     disconnect(channel, notify)
     return
   }
+
+  clearHandshakeTimers(channel)
+  channel.updateState({ pendingProcessId: null, pendingAccept: null, scheduledActivation: null })
 
   if (notify) {
     const processId = channel.createProcess()

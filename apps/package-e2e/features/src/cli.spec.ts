@@ -2,7 +2,7 @@
  * Packed-tarball CLI E2E tests for the @hyperfrontend/features `hf` bin.
  * Drives the installed bin the way a consumer does: `hf --help`, a real
  * `hf dev` server held open until SIGINT, and a real `hf build` producing a
- * self-contained connector tarball.
+ * self-contained shell tarball.
  */
 
 import type { ChildProcess } from 'node:child_process'
@@ -269,7 +269,7 @@ export default contract
       expect(outFiles).toEqual(expect.arrayContaining([expect.stringMatching(/\.d\.ts$/)]))
     })
 
-    it('packs the connector into a tarball', () => {
+    it('packs the shell into a tarball', () => {
       expect(outFiles).toEqual(expect.arrayContaining([expect.stringMatching(/\.tgz$/)]))
     })
 

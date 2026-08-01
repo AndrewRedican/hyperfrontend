@@ -12,9 +12,9 @@ export interface CliFlags {
   readonly version?: string
   /** Security envelope to enforce at build time (`--protocol`): `none`, `v1`, or `v2`. */
   readonly protocol?: string
-  /** Output directory for the built connector (`--out`). */
+  /** Output directory for the built shell (`--out`). */
   readonly out?: string
-  /** URL the generated connector loads the feature from (`--url`). */
+  /** URL the generated shell loads the feature from (`--url`). */
   readonly url?: string
   /** Path to the contract file (`--contract`); an object key passed as a path. */
   readonly contract?: string
@@ -28,7 +28,7 @@ export interface CliFlags {
   readonly cwd?: string
   /** Target entry file `init` wires the glue import into (`--entry`). */
   readonly entry?: string
-  /** Acknowledge an explicit `--protocol none` build and produce an open connector (`--allow-open`). */
+  /** Acknowledge an explicit `--protocol none` build and produce an open shell (`--allow-open`). */
   readonly allowOpen?: boolean
   /** Suppress prompts and fail on any unresolved required key (`--ci`). */
   readonly ci: boolean

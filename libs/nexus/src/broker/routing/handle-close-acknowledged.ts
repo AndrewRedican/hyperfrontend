@@ -4,7 +4,9 @@ import type { RoutingContext } from './types'
 
 /**
  * Handles CLOSE_CONNECTION_ACKNOWLEDGED action.
- * Completes close on initiator's side and notifies close event.
+ * Completes the polite close on the initiator's side: the channel
+ * deactivates and fires its single 'close' event only now, after the
+ * counterpart confirmed it finished flushing.
  *
  * @param context - Routing context with state, registry, actions, and logger
  * @param message - Message event containing the CLOSE_CONNECTION_ACKNOWLEDGED action
@@ -21,11 +23,10 @@ export function handleCloseAcknowledged(context: RoutingContext, message: Messag
 
   const channel = <ChannelHandle | undefined>processManager.get(processId)
 
-  if (!channel) {
+  // why: A stray acknowledgement whose process id maps to a channel that never proposed a close must not deactivate it.
+  if (!channel || !channel.isClosing()) {
     return
   }
 
-  processManager.remove(processId)
-
-  channel.notifyEvent('close', { notify: false })
+  channel.disconnect(false)
 }

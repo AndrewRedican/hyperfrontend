@@ -117,13 +117,13 @@ For a deep dive into how the libraries compose together, see the **[Architecture
 The **[@hyperfrontend/features](https://github.com/AndrewRedican/hyperfrontend/blob/main/libs/features)** package — an SDK, CLI, and dev server — helps you:
 
 1. **Transform existing web apps** into hyperfrontend features by adding the necessary configuration
-2. **Generate shell applications** that know how to load your frontend app at runtime
+2. **Generate shell packages** that know how to load your frontend app at runtime
 3. **Consume features** in host applications with typed bindings
 
-Each feature gets an accompanying **shell application** that is:
+Each feature gets an accompanying **shell package** that is:
 
 - Self-contained with no external dependencies
-- Installable as an npm package or via `<script>` tag from a CDN
+- Installable as an npm package, in ESM or CommonJS form
 - Responsible for loading and initializing the feature at runtime
 
 This architecture enables you to compose applications from independently developed and deployed features, enabling true micro-frontend modularity.
@@ -173,7 +173,7 @@ Despite its flexibility, hyperfrontend caters to modern frontend setups:
 - Works with all modern build tools (Vite, Webpack, Rollup, etc.)
 - Compatible with SSR and static site generation
 - CLI to scaffold, build, and serve features, with optional Nx generators and executors
-- Standard npm packages or CDN distribution
+- Standard npm packages, published in ESM and CommonJS form
 
 ## Key Capabilities
 
@@ -183,8 +183,8 @@ Despite its flexibility, hyperfrontend caters to modern frontend setups:
 - Contract-based integration with JSON Schema validation
 - Broker-channel message routing with optional encryption
 - Cross-stack compatibility (React, Vue, Angular, Svelte, vanilla JS)
-- Shell applications with all dependencies bundled in
-- Multiple deployment options (npm package or CDN script tag)
+- Self-contained shell packages with all dependencies bundled in
+- Shells published as ESM and CommonJS; the libraries themselves also ship IIFE and UMD builds for CDN use
 
 ## Installation
 
@@ -195,6 +195,8 @@ npm install @hyperfrontend/features
 ```
 
 ## Quick Start
+
+Four words recur below. The **host** is the application providing the containing product surface; the **hostee** is the application loaded inside it (the one hosted, as in _employee_). A **feature** is a hostee viewed as a product unit, and its **shell** is the package it ships so a host can embed it. See [Core Concepts](https://www.hyperfrontend.dev/docs/core-concepts) for the full vocabulary.
 
 The bundled `hf` CLI drives the workflow. Run it with `npx @hyperfrontend/features <command>`.
 
@@ -213,10 +215,10 @@ This scaffolds the hostee glue module into your app and wires it into the entry 
 Generate and bundle a self-contained shell package that any host can install:
 
 ```bash
-npx @hyperfrontend/features build
+npx @hyperfrontend/features build --protocol v2
 ```
 
-The CLI generates the host connector, inlines the contract, bundles direct dependencies, and packs a publishable tarball with typed bindings.
+The CLI generates the shell package, inlines the contract, bundles every dependency into it, and packs a publishable tarball with typed bindings — the host installs one package and takes on no transitive dependencies. The security envelope is an explicit choice: pass `--protocol v1` or `--protocol v2` (or declare `protocol` in the feature config) and the build bakes it in as the shell's default.
 
 ### Testing Your Feature
 

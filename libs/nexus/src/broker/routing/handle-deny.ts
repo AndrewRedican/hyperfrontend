@@ -26,6 +26,7 @@ export function handleDeny(context: RoutingContext, message: MessageEvent<IActio
   const action = message.data
   const processId = <string>(<Record<string, unknown>>(<unknown>action))['processId']
   const error = <string | undefined>(<Record<string, unknown>>(<unknown>action))['error']
+  const reason = <string | undefined>(<Record<string, unknown>>(<unknown>action))['reason']
 
   const channel = <ChannelHandle | undefined>processManager.get(processId)
 
@@ -33,7 +34,10 @@ export function handleDeny(context: RoutingContext, message: MessageEvent<IActio
     return
   }
 
+  // why: A denied request must stop retrying, or REQUEST would be re-sent (and re-denied) until the deadline expires.
+  channel.abandonRequest()
+
   processManager.remove(processId)
 
-  channel.notifyEvent('deny', { error, origin: message.origin })
+  channel.notifyEvent('deny', { error, ...(reason && { reason }), origin: message.origin })
 }

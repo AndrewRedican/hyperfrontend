@@ -1,278 +1,246 @@
-import type { IChannelContract } from '../types/contract'
 import type { MockWindow } from './test-utils'
 import { createBroker } from '../broker/factory'
-import { createMockWindow } from './test-utils'
+import { createMockWindow, linkMockWindows, createContractPair } from './test-utils'
 
 describe('Integration: Heartbeat', () => {
-  let mockWindow: MockWindow
+  let windowA: MockWindow
+  let windowB: MockWindow
 
-  beforeEach(() => {
-    mockWindow = createMockWindow()
+  beforeAll(() => {
+    jest.useFakeTimers()
   })
 
-  const heartbeatContract: IChannelContract = {
-    emitted: [{ type: 'PING' }, { type: 'DATA' }],
-    accepted: [{ type: 'PONG' }, { type: 'ACK' }],
+  afterAll(() => {
+    jest.useRealTimers()
+  })
+
+  beforeEach(() => {
+    windowA = createMockWindow()
+    windowB = createMockWindow()
+
+    linkMockWindows(windowA, windowB, 'http://host-a.com', 'http://host-b.com')
+  })
+
+  afterEach(() => {
+    jest.clearAllTimers()
+    jest.clearAllMocks()
+  })
+
+  // note: side A emits heartbeat pings and data frames; side B answers with pongs and acks.
+  const { contractA, contractB } = createContractPair(['PING', 'DATA'], ['PONG', 'ACK'])
+
+  const setupPair = () => {
+    const brokerA = createBroker({ name: 'heartbeat-broker-a', contract: contractA, window: <Window>(<unknown>windowA) })
+    const brokerB = createBroker({ name: 'heartbeat-broker-b', contract: contractB, window: <Window>(<unknown>windowB) })
+    return {
+      channelA: brokerA.addChannel('to-b', <Window>(<unknown>windowB)),
+      channelB: brokerB.addChannel('to-a', <Window>(<unknown>windowA)),
+    }
   }
 
   describe('Ping-Pong Pattern', () => {
-    it('sends periodic ping messages', async () => {
-      const broker = createBroker({
-        name: 'heartbeat-broker',
-        contract: heartbeatContract,
-        settings: { logLevel: 'error' },
+    it('delivers periodic ping messages to the counterpart', () => {
+      const { channelA, channelB } = setupPair()
+      channelA.connect()
+      channelB.connect()
+
+      const pings: unknown[] = []
+      channelB.onMessage((message) => {
+        if (message.type === 'PING') {
+          pings.push(message)
+        }
       })
 
-      const channel = broker.addChannel('heartbeat-channel', <Window>(<unknown>mockWindow))
-      channel.connect()
+      const interval = setInterval(() => channelA.send('PING', { seq: pings.length }), 100)
+      jest.advanceTimersByTime(300)
+      clearInterval(interval)
 
-      const pings: number[] = []
-      await new Promise<void>((resolve) => {
-        const interval = setInterval(() => {
-          channel.send('PING', { timestamp: Date.now() })
-          pings.push(Date.now())
-
-          if (pings.length >= 3) {
-            clearInterval(interval)
-            resolve()
-          }
-        }, 100)
-      })
       expect(pings).toHaveLength(3)
-    }, 1000)
+    })
 
-    it('responds to ping with pong', async () => {
-      const broker = createBroker({
-        name: 'heartbeat-broker',
-        contract: heartbeatContract,
-        settings: { logLevel: 'error' },
+    it('completes a ping-pong round trip between the paired channels', () => {
+      const { channelA, channelB } = setupPair()
+      channelA.connect()
+      channelB.connect()
+
+      channelB.onMessage((message) => {
+        if (message.type === 'PING') {
+          channelB.send('PONG', { echoed: message.data })
+        }
       })
 
-      const channel = broker.addChannel('heartbeat-channel', <Window>(<unknown>mockWindow))
-      channel.connect()
-
-      const pongReceived = await new Promise<boolean>((resolve) => {
-        let received = false
-        channel.onMessage((message) => {
-          if (message.type === 'PONG') {
-            received = true
-          }
-        })
-
-        channel.send('PING', { timestamp: Date.now() })
-
-        setTimeout(() => resolve(received), 50)
+      // note: send() also notifies the sender's own subscribers, so filter to
+      const pongs: unknown[] = []
+      channelA.onMessage((message) => {
+        if (message.type === 'PONG') {
+          pongs.push(message)
+        }
       })
 
-      expect(pongReceived).toBe(false)
+      channelA.send('PING', { timestamp: 123 })
+
+      expect(pongs).toEqual([expect.objectContaining({ type: 'PONG', data: { echoed: { timestamp: 123 } } })])
     })
   })
 
   describe('Connection Health Monitoring', () => {
-    it('detects active connection', () => {
-      const broker = createBroker({
-        name: 'health-broker',
-        contract: heartbeatContract,
-        settings: { logLevel: 'error' },
+    it('reports active only after both sides complete the handshake', () => {
+      const { channelA, channelB } = setupPair()
+
+      const beforeConnect = channelA.isActive()
+      channelA.connect()
+      const afterLocalConnect = channelA.isActive()
+      channelB.connect()
+
+      expect({
+        beforeConnect,
+        afterLocalConnect,
+        afterHandshake: [channelA.isActive(), channelB.isActive()],
+      }).toEqual({
+        beforeConnect: false,
+        afterLocalConnect: false,
+        afterHandshake: [true, true],
       })
-
-      const channel = broker.addChannel('health-channel', <Window>(<unknown>mockWindow))
-      expect(channel.isActive()).toBe(false)
-
-      channel.connect()
-      expect(channel.isActive()).toBe(true)
     })
 
-    it('tracks last activity timestamp', () => {
-      const broker = createBroker({
-        name: 'health-broker',
-        contract: heartbeatContract,
-        settings: { logLevel: 'error' },
+    it('records the connect timestamp once the handshake completes', () => {
+      const { channelA, channelB } = setupPair()
+
+      const beforeConnect = channelA.toJSON().connectTimestamp
+      channelA.connect()
+      channelB.connect()
+
+      expect({ beforeConnect, afterHandshake: channelA.toJSON().connectTimestamp }).toEqual({
+        beforeConnect: null,
+        afterHandshake: expect.any(Number),
       })
-
-      const channel = broker.addChannel('health-channel', <Window>(<unknown>mockWindow))
-      const channelData = channel.toJSON()
-
-      expect(channelData.connectTimestamp).toBeNull()
-
-      channel.connect()
-      const afterConnect = channel.toJSON()
-
-      expect(afterConnect.connectTimestamp).toBeGreaterThan(0)
     })
 
-    it('handles connection timeout scenario', async () => {
-      const broker = createBroker({
-        name: 'timeout-broker',
-        contract: heartbeatContract,
-        settings: { logLevel: 'error' },
-      })
+    it('fires timeout when the counterpart never answers within the deadline', () => {
+      const { channelA } = setupPair()
 
-      const channel = broker.addChannel('timeout-channel', <Window>(<unknown>mockWindow))
-      channel.connect()
+      const timeoutHandler = jest.fn()
+      channelA.on('connect-timeout', timeoutHandler)
 
-      const timeout = 500
-      const lastPong = Date.now()
+      channelA.connect()
+      jest.advanceTimersByTime(10_000)
 
-      await new Promise<void>((resolve) => {
-        setTimeout(() => {
-          const elapsed = Date.now() - lastPong
-          expect(elapsed).toBeGreaterThan(timeout)
-          resolve()
-        }, 600)
-      })
-    }, 1000)
+      expect(timeoutHandler).toHaveBeenCalledWith({ elapsedMs: 10_000 }, expect.objectContaining({ active: false }))
+    })
   })
 
   describe('Reconnection Scenarios', () => {
-    it('allows reconnection after disconnect', () => {
-      const broker = createBroker({
-        name: 'reconnect-broker',
-        contract: heartbeatContract,
-        settings: { logLevel: 'error' },
+    it('reactivates both sides when one side reconnects after disconnect', () => {
+      const { channelA, channelB } = setupPair()
+      channelA.connect()
+      channelB.connect()
+
+      const afterHandshake = [channelA.isActive(), channelB.isActive()]
+      channelA.disconnect()
+      const afterDisconnect = [channelA.isActive(), channelB.isActive()]
+      channelA.connect()
+      const afterReconnect = [channelA.isActive(), channelB.isActive()]
+
+      expect({ afterHandshake, afterDisconnect, afterReconnect }).toEqual({
+        afterHandshake: [true, true],
+        afterDisconnect: [false, false],
+        afterReconnect: [true, true],
       })
-
-      const channel = broker.addChannel('reconnect-channel', <Window>(<unknown>mockWindow))
-
-      channel.connect()
-      expect(channel.isActive()).toBe(true)
-
-      channel.disconnect()
-      expect(channel.isActive()).toBe(false)
-
-      channel.connect()
-      expect(channel.isActive()).toBe(true)
     })
 
-    it('handles multiple reconnection attempts', () => {
-      const broker = createBroker({
-        name: 'multi-reconnect-broker',
-        contract: heartbeatContract,
-        settings: { logLevel: 'error' },
-      })
+    it('survives multiple reconnection cycles', () => {
+      const { channelA, channelB } = setupPair()
+      channelB.connect()
+      channelA.connect()
 
-      const channel = broker.addChannel('multi-reconnect-channel', <Window>(<unknown>mockWindow))
-
+      const cycles: boolean[][] = []
       for (let i = 0; i < 5; i++) {
-        channel.connect()
-        expect(channel.isActive()).toBe(true)
-
-        channel.disconnect()
-        expect(channel.isActive()).toBe(false)
+        channelA.disconnect()
+        const whileDisconnected = [channelA.isActive(), channelB.isActive()]
+        channelA.connect()
+        cycles.push([...whileDisconnected, channelA.isActive(), channelB.isActive()])
       }
+
+      expect(cycles).toEqual(new Array(5).fill([false, false, true, true]))
     })
 
     it('maintains channel identity across reconnections', () => {
-      const broker = createBroker({
-        name: 'identity-broker',
-        contract: heartbeatContract,
-        settings: { logLevel: 'error' },
-      })
+      const { channelA, channelB } = setupPair()
+      const originalId = channelA.getId()
+      const originalName = channelA.getName()
 
-      const channel = broker.addChannel('identity-channel', <Window>(<unknown>mockWindow))
-      const originalId = channel.getId()
-      const originalName = channel.getName()
+      channelA.connect()
+      channelB.connect()
+      channelA.disconnect()
+      channelA.connect()
 
-      channel.connect()
-      channel.disconnect()
-      channel.connect()
-
-      expect(channel.getId()).toBe(originalId)
-      expect(channel.getName()).toBe(originalName)
+      expect({ id: channelA.getId(), name: channelA.getName() }).toEqual({ id: originalId, name: originalName })
     })
   })
 
   describe('Message Queuing During Reconnection', () => {
     it('queues messages while disconnected', () => {
-      const broker = createBroker({
-        name: 'queue-broker',
-        contract: heartbeatContract,
-        settings: { logLevel: 'error' },
-      })
+      const { channelA, channelB } = setupPair()
+      channelA.connect()
+      channelB.connect()
+      channelA.disconnect()
 
-      const channel = broker.addChannel('queue-channel', <Window>(<unknown>mockWindow))
-      channel.connect()
-      channel.disconnect()
+      channelA.send('DATA', { message: 'queued-1' })
+      channelA.send('DATA', { message: 'queued-2' })
 
-      channel.send('DATA', { message: 'queued-1' })
-      channel.send('DATA', { message: 'queued-2' })
-
-      const channelData = channel.toJSON()
-      expect(channelData.queuedMessagesCount).toBe(2)
+      expect(channelA.toJSON().queuedMessagesCount).toBe(2)
     })
 
-    it('flushes queued messages on reconnect', () => {
-      const broker = createBroker({
-        name: 'flush-broker',
-        contract: heartbeatContract,
-        settings: { logLevel: 'error' },
-      })
+    it('flushes queued messages to the counterpart on reconnect', () => {
+      const { channelA, channelB } = setupPair()
+      channelA.connect()
+      channelB.connect()
+      channelA.disconnect()
 
-      const channel = broker.addChannel('flush-channel', <Window>(<unknown>mockWindow))
-      channel.connect()
-      channel.disconnect()
+      channelA.send('DATA', { message: 'queued-1' })
+      channelA.send('DATA', { message: 'queued-2' })
 
-      channel.send('DATA', { message: 'queued-1' })
-      channel.send('DATA', { message: 'queued-2' })
+      const received: unknown[] = []
+      channelB.onMessage((message) => received.push(message))
 
-      mockWindow.postMessage.mockClear()
+      channelA.connect()
 
-      channel.connect()
-
-      expect(mockWindow.postMessage).toHaveBeenCalled()
+      expect(received).toEqual([
+        expect.objectContaining({ type: 'DATA', data: { message: 'queued-1' } }),
+        expect.objectContaining({ type: 'DATA', data: { message: 'queued-2' } }),
+      ])
     })
   })
 
   describe('Connection State Events', () => {
-    it('emits open event on connect', async () => {
-      const broker = createBroker({
-        name: 'event-broker',
-        contract: heartbeatContract,
-        settings: { logLevel: 'error' },
-      })
+    it('fires open with the peer origin and contract when the handshake completes', () => {
+      const { channelA, channelB } = setupPair()
 
-      const channel = broker.addChannel('event-channel', <Window>(<unknown>mockWindow))
+      const openHandler = jest.fn()
+      channelA.on('open', openHandler)
 
-      const openEventReceived = await new Promise<boolean>((resolve) => {
-        channel.on((event, data) => {
-          if (event === 'open') {
-            if (data !== undefined) {
-              resolve(true)
-            }
-          }
-        })
+      channelA.connect()
+      channelB.connect()
 
-        channel.connect()
-
-        setTimeout(() => resolve(false), 100)
-      })
-
-      expect(openEventReceived).toBe(true)
+      expect(openHandler).toHaveBeenCalledWith(
+        expect.objectContaining({ origin: 'http://host-b.com', contract: contractB }),
+        expect.objectContaining({ active: true })
+      )
     })
 
-    it('emits close event on disconnect', async () => {
-      const broker = createBroker({
-        name: 'close-broker',
-        contract: heartbeatContract,
-        settings: { logLevel: 'error' },
-      })
+    it('fires close on both sides when one side disconnects', () => {
+      const { channelA, channelB } = setupPair()
 
-      const channel = broker.addChannel('close-channel', <Window>(<unknown>mockWindow))
-      channel.connect()
+      const closeHandlerA = jest.fn()
+      const closeHandlerB = jest.fn()
+      channelA.on('close', closeHandlerA)
+      channelB.on('close', closeHandlerB)
 
-      const closeEventReceived = await new Promise<boolean>((resolve) => {
-        channel.on((event) => {
-          if (event === 'close') {
-            resolve(true)
-          }
-        })
+      channelA.connect()
+      channelB.connect()
+      channelA.disconnect()
 
-        channel.disconnect()
-
-        setTimeout(() => resolve(false), 100)
-      })
-
-      expect(closeEventReceived).toBe(true)
+      expect([closeHandlerA.mock.calls.length > 0, closeHandlerB.mock.calls.length > 0]).toEqual([true, true])
     })
   })
 })

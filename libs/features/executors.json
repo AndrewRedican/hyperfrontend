@@ -4,7 +4,7 @@
     "build": {
       "implementation": "./nx/executors/build/index.cjs.js",
       "schema": "./nx/executors/build/schema.json",
-      "description": "Build a hyperfrontend feature connector via the SDK."
+      "description": "Build a hyperfrontend feature's shell package via the SDK."
     },
     "serve": {
       "implementation": "./nx/executors/serve/index.cjs.js",

@@ -46,7 +46,7 @@ interface GeneratorTree {
 
 /** The slice of the feature SDK's `/generators` entry this executor drives. */
 interface FeaturesGenerators {
-  /** Emits the host connector package sources for a feature. */
+  /** Emits the shell package sources for a feature. */
   generateShell(config: unknown, contract: unknown, tree: GeneratorTree): void
 }
 
@@ -59,15 +59,15 @@ interface PackageManifest {
 /**
  * Pack-shell executor for hyperfrontend feature application projects.
  *
- * Generates the app's host connector ("shell") from its feature config and
+ * Generates the app's shell package from its feature config and
  * contract, compiles it, and packs the publishable tarball into the workspace
  * dist tree. The SDK machinery is resolved from the target app's own
  * node_modules, so the artifact is built from the same published bits the app
  * consumes.
  *
  * The compile step is a plain `tsc` run instead of the SDK's `hf build`
- * bundling, which cannot parse its own generated TypeScript connector. The
- * result is a thin connector that declares
+ * bundling, which cannot parse its own generated TypeScript entry. The
+ * result is a thin shell that declares
  * `@hyperfrontend/features` as a dependency rather than bundling it.
  *
  * @param options - Executor options including the tarball output directory

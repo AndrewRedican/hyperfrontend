@@ -21,6 +21,8 @@ export interface MinimalChannel {
   target: Window
   /** Returns whether the channel is active */
   isActive?: () => boolean
+  /** Returns the currently pinned origin ('*' or null when unpinned) */
+  getOrigin?: () => string | null
   /** Sends an action through the channel */
   sendAction?: (action: unknown) => void
   /** Destroys the channel */

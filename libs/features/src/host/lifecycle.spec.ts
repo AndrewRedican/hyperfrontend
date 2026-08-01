@@ -1,8 +1,8 @@
 import type { BrokerHandle, ChannelHandle } from '@hyperfrontend/nexus'
+import type { PresentPayload, ViewportPayload } from '../shared/presentation'
 import type { ShellOptions } from '../shared/types'
+import type { ViewportReporter } from './sizing'
 import type { MountContext, MountResult } from './types'
-import { createError } from '@hyperfrontend/immutable-api-utils/built-in-copy/error'
-import { createPromise } from '@hyperfrontend/immutable-api-utils/built-in-copy/promise'
 import { createEventEmitter } from '../shared/event-emitter'
 import { createShellHandle } from './lifecycle'
 
@@ -50,34 +50,36 @@ function createMockChannel(): MockChannel {
 
 const TARGET = <Window>(<unknown>{ name: 'target' })
 
-function createDeferred() {
-  const settle: { resolve(): void; reject(reason: unknown): void } = { resolve: () => undefined, reject: () => undefined }
-  const promise = createPromise<void>((resolve, reject) => {
-    settle.resolve = () => resolve()
-    settle.reject = reject
-  })
-  return { promise, ...settle }
-}
-
-function flush() {
-  return createPromise<void>((resolve) => {
-    setTimeout(resolve, 0)
-  })
-}
-
-function setup(config: { target?: Window | null; settings?: Record<string, unknown>; frame?: HTMLElement; element?: HTMLElement } = {}) {
+function setup(
+  config: {
+    target?: Window | null
+    settings?: Record<string, unknown>
+    element?: HTMLElement
+    present?: PresentPayload
+    viewport?: ViewportReporter
+    reveal?: jest.Mock
+  } = {}
+) {
   const mock = createMockChannel()
   const addChannel = jest.fn(() => mock.channel)
   const broker = <BrokerHandle>(<unknown>{ addChannel })
   const cleanup = jest.fn()
   let context: MountContext | undefined
+  const present = config.present ?? { mode: 'embedded' }
   const mount = jest.fn((ctx: MountContext): MountResult => {
     context = ctx
-    return { target: 'target' in config ? <Window | null>config.target : TARGET, element: config.element, frame: config.frame, cleanup }
+    return {
+      target: 'target' in config ? <Window | null>config.target : TARGET,
+      element: config.element,
+      present,
+      viewport: config.viewport,
+      reveal: config.reveal,
+      cleanup,
+    }
   })
   const selectMount = jest.fn(() => mount)
   const registerSecurity = jest.fn(() => config.settings)
-  const monitor = { beat: jest.fn(), start: jest.fn(), stop: jest.fn() }
+  const monitor = { beat: jest.fn(), start: jest.fn(), stop: jest.fn(), setObservable: jest.fn(), getStatus: jest.fn() }
   let unresponsive: ((missedBeats: number, lastBeatAt: number | null) => void) | undefined
   const createHeartbeatMonitor = jest.fn((onUnresponsive: (m: number, l: number | null) => void) => {
     unresponsive = onUnresponsive
@@ -85,7 +87,14 @@ function setup(config: { target?: Window | null; settings?: Record<string, unkno
   })
   const emitter = createEventEmitter()
   const base = <ShellOptions>{ container: '#shell' }
-  const handle = createShellHandle(broker, base, emitter, { selectMount, registerSecurity, createHeartbeatMonitor })
+  // note: A schema-free contract keeps payload validation inert here; that path is covered by lifecycle.validation.spec.ts. Liveness, visibility, closing, and dirty-state wiring are covered by lifecycle.liveness.spec.ts; experience-plugin wiring by lifecycle.plugins.spec.ts.
+  const handle = createShellHandle(broker, base, emitter, {
+    contract: { emitted: [], accepted: [] },
+    selectMount,
+    registerSecurity,
+    createHeartbeatMonitor,
+    observeVisibility: jest.fn(() => () => undefined),
+  })
   return {
     handle,
     mock,
@@ -127,13 +136,13 @@ describe('createShellHandle', () => {
   it('adds a channel against the mounted target', () => {
     const ctx = setup()
     ctx.handle.open()
-    expect(ctx.addChannel).toHaveBeenCalledWith('feature-1', TARGET, undefined)
+    expect(ctx.addChannel).toHaveBeenCalledWith('feature-1', TARGET, { contractCompat: expect.any(Function) })
   })
 
   it('passes registered security settings to the channel', () => {
     const ctx = setup({ settings: { security: { protocol: 'v2' } } })
     ctx.handle.open({ protocol: 'v2' })
-    expect(ctx.addChannel).toHaveBeenCalledWith('feature-1', TARGET, { security: { protocol: 'v2' } })
+    expect(ctx.addChannel).toHaveBeenCalledWith('feature-1', TARGET, expect.objectContaining({ security: { protocol: 'v2' } }))
   })
 
   it('connects the channel after mounting', () => {
@@ -163,14 +172,14 @@ describe('createShellHandle', () => {
     const handler = jest.fn()
     ctx.handle.on('close', handler)
     ctx.handle.open()
-    ctx.mock.trigger('close')
+    ctx.mock.trigger('close', { notify: false })
     expect(handler).toHaveBeenCalledTimes(1)
   })
 
   it('runs mount cleanup when the channel closes', () => {
     const ctx = setup()
     ctx.handle.open()
-    ctx.mock.trigger('close')
+    ctx.mock.trigger('close', { notify: false })
     expect(ctx.cleanup).toHaveBeenCalledTimes(1)
   })
 
@@ -178,7 +187,7 @@ describe('createShellHandle', () => {
     const ctx = setup()
     ctx.handle.open()
     ctx.mock.trigger('open')
-    ctx.mock.trigger('close')
+    ctx.mock.trigger('close', { notify: false })
     expect(ctx.handle.isOpen).toBe(false)
   })
 
@@ -291,7 +300,7 @@ describe('createShellHandle', () => {
     const ctx = setup()
     ctx.handle.open()
     ctx.handle.open()
-    expect(ctx.addChannel).toHaveBeenLastCalledWith('feature-2', TARGET, undefined)
+    expect(ctx.addChannel).toHaveBeenLastCalledWith('feature-2', TARGET, { contractCompat: expect.any(Function) })
   })
 
   it('starts the heartbeat monitor when the channel opens', () => {
@@ -320,36 +329,275 @@ describe('createShellHandle', () => {
   it('swallows non-beat control messages without feeding the monitor', () => {
     const ctx = setup()
     ctx.handle.open()
-    ctx.mock.triggerMessage('__hf:size', { height: 100 })
+    ctx.mock.triggerMessage('__hf:unknown', { height: 100 })
     expect(ctx.monitor.beat).not.toHaveBeenCalled()
   })
 
-  it('applies an announced content size to the frame in content mode', () => {
-    const frame = <HTMLElement>(<unknown>{ style: {} })
-    const ctx = setup({ frame })
-    ctx.handle.open({ embedSizing: 'content' })
-    ctx.mock.triggerMessage('__hf:size', { height: 360 })
-    expect(frame.style.height).toBe('360px')
+  describe('presentation announcement', () => {
+    it('sends the mounted presentation over the control plane', () => {
+      const ctx = setup({ present: { mode: 'dialog', dialog: { width: 480, height: 320 } } })
+      ctx.handle.open({ displayMode: 'dialog' })
+      expect(ctx.mock.send).toHaveBeenCalledWith('__hf:present', { mode: 'dialog', dialog: { width: 480, height: 320 } })
+    })
+
+    it('announces the presentation as the first send of a mount', () => {
+      const ctx = setup()
+      ctx.handle.open()
+      expect(ctx.mock.send.mock.calls[0]).toEqual(['__hf:present', { mode: 'embedded' }])
+    })
+
+    it('passes a presentation carrying a viewport through verbatim', () => {
+      const ctx = setup({ present: { mode: 'embedded', viewport: { width: 320, height: 240 } } })
+      ctx.handle.open()
+      expect(ctx.mock.send).toHaveBeenCalledWith('__hf:present', { mode: 'embedded', viewport: { width: 320, height: 240 } })
+    })
+
+    it('queues the presentation announcement before connecting the channel', () => {
+      const ctx = setup()
+      ctx.handle.open()
+      expect(ctx.mock.send.mock.invocationCallOrder[0]).toBeLessThan(ctx.mock.connect.mock.invocationCallOrder[0] ?? 0)
+    })
+
+    it('re-announces the presentation on reopen', () => {
+      const ctx = setup()
+      ctx.handle.open()
+      ctx.handle.open()
+      expect(ctx.mock.send).toHaveBeenCalledTimes(2)
+    })
   })
 
-  it('ignores announced size when the mount exposes no frame', () => {
-    const ctx = setup()
-    ctx.handle.open({ embedSizing: 'content' })
-    expect(() => ctx.mock.triggerMessage('__hf:size', { height: 360 })).not.toThrow()
+  describe('feature reload', () => {
+    const reload = { notify: false, reason: 'peer-reload' }
+
+    it('keeps the mount so the reloading frame survives its own refresh', () => {
+      const ctx = setup()
+      ctx.handle.open()
+      ctx.mock.trigger('open')
+      ctx.mock.trigger('close', reload)
+      expect(ctx.cleanup).not.toHaveBeenCalled()
+    })
+
+    it('reports the ended session with its reason', () => {
+      const ctx = setup()
+      const events: unknown[] = []
+      ctx.handle.on('close', (data) => events.push(data))
+      ctx.handle.open()
+      ctx.mock.trigger('open')
+      ctx.mock.trigger('close', reload)
+      expect({ events, isOpen: ctx.handle.isOpen }).toEqual({ events: [{ reason: 'peer-reload' }], isOpen: false })
+    })
+
+    it('re-announces the presentation the new document has not seen', () => {
+      const ctx = setup({ present: { mode: 'embedded', viewport: { width: 320, height: 240 } } })
+      ctx.handle.open()
+      ctx.mock.trigger('open')
+      ctx.mock.send.mockClear()
+      ctx.mock.trigger('close', reload)
+      expect(ctx.mock.send).toHaveBeenCalledWith('__hf:present', { mode: 'embedded', viewport: { width: 320, height: 240 } })
+    })
+
+    it('re-measures the frame for the re-announcement', () => {
+      const viewport: ViewportReporter = { current: jest.fn(() => ({ width: 640, height: 480 })), start: jest.fn(), stop: jest.fn() }
+      const ctx = setup({ present: { mode: 'embedded', viewport: { width: 320, height: 240 } }, viewport })
+      ctx.handle.open()
+      ctx.mock.trigger('open')
+      ctx.mock.send.mockClear()
+      ctx.mock.trigger('close', reload)
+      expect(ctx.mock.send).toHaveBeenCalledWith('__hf:present', { mode: 'embedded', viewport: { width: 640, height: 480 } })
+    })
+
+    it('keeps the viewport reporter observing across the reload', () => {
+      const viewport: ViewportReporter = { current: jest.fn(() => ({ width: 0, height: 0 })), start: jest.fn(), stop: jest.fn() }
+      const ctx = setup({ viewport })
+      ctx.handle.open()
+      ctx.mock.trigger('open')
+      ctx.mock.trigger('close', reload)
+      expect(viewport.stop).not.toHaveBeenCalled()
+    })
+
+    it('gives the next session a fresh watchdog budget', () => {
+      const ctx = setup()
+      ctx.handle.open()
+      ctx.mock.trigger('open')
+      ctx.mock.trigger('close', reload)
+      ctx.mock.trigger('open')
+      expect({ stopped: ctx.monitor.stop.mock.calls.length, started: ctx.monitor.start.mock.calls.length }).toEqual({
+        stopped: 1,
+        started: 2,
+      })
+    })
+
+    it('still tears the mount down when the shell itself closes afterwards', () => {
+      const ctx = setup()
+      ctx.handle.open()
+      ctx.mock.trigger('open')
+      ctx.mock.trigger('close', reload)
+      ctx.mock.trigger('open')
+      ctx.mock.trigger('close', { notify: true })
+      expect(ctx.cleanup).toHaveBeenCalledTimes(1)
+    })
   })
 
-  it('ignores announced size in fill mode', () => {
-    const frame = <HTMLElement>(<unknown>{ style: {} })
-    const ctx = setup({ frame })
-    ctx.handle.open()
-    ctx.mock.triggerMessage('__hf:size', { height: 360 })
-    expect(frame.style.height).toBeUndefined()
+  describe('reveal on session open', () => {
+    it('does not reveal the mounted frame before the channel opens', () => {
+      const reveal = jest.fn()
+      const ctx = setup({ reveal })
+      ctx.handle.open()
+      expect(reveal).not.toHaveBeenCalled()
+    })
+
+    it('reveals the mounted frame when the channel opens', () => {
+      const reveal = jest.fn()
+      const ctx = setup({ reveal })
+      ctx.handle.open()
+      ctx.mock.trigger('open')
+      expect(reveal).toHaveBeenCalledTimes(1)
+    })
+
+    it('reveals the frame before starting viewport forwarding', () => {
+      const reveal = jest.fn()
+      const start = jest.fn()
+      const ctx = setup({ reveal, viewport: { current: jest.fn(() => ({ width: 0, height: 0 })), start, stop: jest.fn() } })
+      ctx.handle.open()
+      ctx.mock.trigger('open')
+      expect(reveal.mock.invocationCallOrder[0]).toBeLessThan(start.mock.invocationCallOrder[0] ?? 0)
+    })
+
+    it('opens without a reveal hook when the mount provides none', () => {
+      const ctx = setup()
+      ctx.handle.open()
+      expect(() => ctx.mock.trigger('open')).not.toThrow()
+    })
+  })
+
+  describe('viewport reporting', () => {
+    function viewportSetup() {
+      let report: ((size: ViewportPayload) => void) | undefined
+      const viewport: ViewportReporter = {
+        current: jest.fn(() => ({ width: 0, height: 0 })),
+        start: jest.fn((forward: (size: ViewportPayload) => void) => {
+          report = forward
+        }),
+        stop: jest.fn(),
+      }
+      const ctx = setup({ viewport })
+      return { ctx, viewport, report: (size: ViewportPayload) => report?.(size) }
+    }
+
+    it('does not start the viewport reporter before the channel opens', () => {
+      const { ctx, viewport } = viewportSetup()
+      ctx.handle.open()
+      expect(viewport.start).not.toHaveBeenCalled()
+    })
+
+    it('starts the viewport reporter when the channel opens', () => {
+      const { ctx, viewport } = viewportSetup()
+      ctx.handle.open()
+      ctx.mock.trigger('open')
+      expect(viewport.start).toHaveBeenCalledTimes(1)
+    })
+
+    it('forwards viewport reports as exact pixel control messages', () => {
+      const { ctx, report } = viewportSetup()
+      ctx.handle.open()
+      ctx.mock.trigger('open')
+      report({ width: 640, height: 480 })
+      expect(ctx.mock.send).toHaveBeenCalledWith('__hf:viewport', { width: 640, height: 480 })
+    })
+
+    it('forwards fractional pixel dimensions unchanged', () => {
+      const { ctx, report } = viewportSetup()
+      ctx.handle.open()
+      ctx.mock.trigger('open')
+      report({ width: 412.5, height: 733.25 })
+      expect(ctx.mock.send).toHaveBeenCalledWith('__hf:viewport', { width: 412.5, height: 733.25 })
+    })
+
+    it('forwards every report of a changing viewport', () => {
+      const { ctx, report } = viewportSetup()
+      ctx.handle.open()
+      ctx.mock.trigger('open')
+      report({ width: 640, height: 480 })
+      report({ width: 320, height: 480 })
+      expect(ctx.mock.send).toHaveBeenLastCalledWith('__hf:viewport', { width: 320, height: 480 })
+    })
+
+    it('opens without a viewport reporter when the mount provides none', () => {
+      const ctx = setup()
+      ctx.handle.open()
+      expect(() => ctx.mock.trigger('open')).not.toThrow()
+    })
+  })
+
+  describe('dismiss policy', () => {
+    it('closes on an escape dismiss in dialog mode by default', () => {
+      const ctx = setup()
+      ctx.handle.open({ displayMode: 'dialog' })
+      ctx.mock.triggerMessage('__hf:dismiss', { source: 'escape' })
+      expect(ctx.mock.disconnect).toHaveBeenCalledTimes(1)
+    })
+
+    it('ignores an escape dismiss when closeOnEscape is false', () => {
+      const ctx = setup()
+      ctx.handle.open({ displayMode: 'dialog', closeOnEscape: false })
+      ctx.mock.triggerMessage('__hf:dismiss', { source: 'escape' })
+      expect(ctx.mock.disconnect).not.toHaveBeenCalled()
+    })
+
+    it('closes on a backdrop dismiss by default', () => {
+      const ctx = setup()
+      ctx.handle.open({ displayMode: 'dialog' })
+      ctx.mock.triggerMessage('__hf:dismiss', { source: 'backdrop' })
+      expect(ctx.mock.disconnect).toHaveBeenCalledTimes(1)
+    })
+
+    it('emits dismiss instead of closing when the backdrop behavior is event', () => {
+      const ctx = setup()
+      const handler = jest.fn()
+      ctx.handle.on('dismiss', handler)
+      ctx.handle.open({ displayMode: 'dialog', dialogBackdrop: 'event' })
+      ctx.mock.triggerMessage('__hf:dismiss', { source: 'backdrop' })
+      expect({ dismissed: handler.mock.calls, disconnected: ctx.mock.disconnect.mock.calls }).toEqual({
+        dismissed: [[{ source: 'backdrop' }]],
+        disconnected: [],
+      })
+    })
+
+    it('ignores a backdrop dismiss when the backdrop behavior is none', () => {
+      const ctx = setup()
+      const handler = jest.fn()
+      ctx.handle.on('dismiss', handler)
+      ctx.handle.open({ displayMode: 'dialog', dialogBackdrop: 'none' })
+      ctx.mock.triggerMessage('__hf:dismiss', { source: 'backdrop' })
+      expect({ dismissed: handler.mock.calls, disconnected: ctx.mock.disconnect.mock.calls }).toEqual({ dismissed: [], disconnected: [] })
+    })
+
+    it('ignores dismiss signals outside dialog mode', () => {
+      const ctx = setup()
+      ctx.handle.open()
+      ctx.mock.triggerMessage('__hf:dismiss', { source: 'escape' })
+      expect(ctx.mock.disconnect).not.toHaveBeenCalled()
+    })
+
+    it('ignores a dismiss with an unrecognized source', () => {
+      const ctx = setup()
+      ctx.handle.open({ displayMode: 'dialog' })
+      ctx.mock.triggerMessage('__hf:dismiss', { source: 'telepathy' })
+      expect(ctx.mock.disconnect).not.toHaveBeenCalled()
+    })
+
+    it('ignores a dismiss with no payload', () => {
+      const ctx = setup()
+      ctx.handle.open({ displayMode: 'dialog' })
+      ctx.mock.triggerMessage('__hf:dismiss')
+      expect(ctx.mock.disconnect).not.toHaveBeenCalled()
+    })
   })
 
   it('stops the monitor when the channel closes', () => {
     const ctx = setup()
     ctx.handle.open()
-    ctx.mock.trigger('close')
+    ctx.mock.trigger('close', { notify: false })
     expect(ctx.monitor.stop).toHaveBeenCalledTimes(1)
   })
 
@@ -399,295 +647,5 @@ describe('createShellHandle', () => {
     ctx.handle.open({ onUnresponsive: jest.fn() })
     ctx.triggerUnresponsive(2, 123)
     expect(handler).not.toHaveBeenCalled()
-  })
-
-  describe('experience plugins', () => {
-    const track = (calls: string[], name: string) => () => {
-      calls.push(name)
-    }
-
-    const failingMount = () => {
-      throw createError('mount failed')
-    }
-
-    const failingTeardown = () => () => {
-      throw createError('teardown failed')
-    }
-
-    function openWithDeferredUnmount() {
-      const deferred = createDeferred()
-      const ctx = setup()
-      ctx.handle.open({ plugins: [{ name: 'exit', onUnmount: () => deferred.promise }] })
-      return { ctx, deferred }
-    }
-
-    it('invokes onMount with the mounted element and display mode', () => {
-      const element = <HTMLElement>(<unknown>{ tagName: 'IFRAME' })
-      const ctx = setup({ element })
-      const onMount = jest.fn()
-      ctx.handle.open({ plugins: [{ name: 'fade', onMount }] })
-      expect(onMount).toHaveBeenCalledWith({ element, displayMode: 'embedded' })
-    })
-
-    it('passes a null element when the mount exposes none', () => {
-      const ctx = setup()
-      const onMount = jest.fn()
-      ctx.handle.open({ plugins: [{ name: 'fade', onMount }] })
-      expect(onMount).toHaveBeenCalledWith({ element: null, displayMode: 'embedded' })
-    })
-
-    it('hands plugins the active display mode', () => {
-      const ctx = setup()
-      const onMount = jest.fn()
-      ctx.handle.open({ displayMode: 'dialog', plugins: [{ name: 'fade', onMount }] })
-      expect(onMount).toHaveBeenCalledWith(expect.objectContaining({ displayMode: 'dialog' }))
-    })
-
-    it('mounts plugins in registration order', () => {
-      const calls: string[] = []
-      const ctx = setup()
-      ctx.handle.open({
-        plugins: [
-          { name: 'a', onMount: track(calls, 'a') },
-          { name: 'b', onMount: track(calls, 'b') },
-        ],
-      })
-      expect(calls).toEqual(['a', 'b'])
-    })
-
-    it('skips plugins without an onMount hook', () => {
-      const ctx = setup()
-      const onMount = jest.fn()
-      ctx.handle.open({ plugins: [{ name: 'silent' }, { name: 'fade', onMount }] })
-      expect(onMount).toHaveBeenCalledTimes(1)
-    })
-
-    it('emits error when a plugin onMount throws', () => {
-      const ctx = setup()
-      const handler = jest.fn()
-      ctx.handle.on('error', handler)
-      ctx.handle.open({ plugins: [{ name: 'bad', onMount: failingMount }] })
-      expect(handler).toHaveBeenCalledWith(expect.any(Error))
-    })
-
-    it('mounts the remaining plugins after one onMount throws', () => {
-      const ctx = setup()
-      const onMount = jest.fn()
-      ctx.handle.open({
-        plugins: [
-          { name: 'bad', onMount: failingMount },
-          { name: 'ok', onMount },
-        ],
-      })
-      expect(onMount).toHaveBeenCalledTimes(1)
-    })
-
-    it('does not mount plugins when the feature window is blocked', () => {
-      const ctx = setup({ target: null })
-      const onMount = jest.fn()
-      ctx.handle.open({ plugins: [{ name: 'fade', onMount }] })
-      expect(onMount).not.toHaveBeenCalled()
-    })
-
-    it('keeps destroy synchronous with an empty plugin list', () => {
-      const ctx = setup()
-      ctx.handle.open({ plugins: [] })
-      ctx.handle.destroy()
-      expect(ctx.cleanup).toHaveBeenCalledTimes(1)
-    })
-
-    it('invokes onUnmount with the plugin context on destroy', async () => {
-      const element = <HTMLElement>(<unknown>{ tagName: 'IFRAME' })
-      const ctx = setup({ element })
-      const onUnmount = jest.fn()
-      ctx.handle.open({ plugins: [{ name: 'exit', onUnmount }] })
-      ctx.handle.destroy()
-      await flush()
-      expect(onUnmount).toHaveBeenCalledWith({ element, displayMode: 'embedded' })
-    })
-
-    it('invokes onUnmount hooks in reverse registration order', async () => {
-      const calls: string[] = []
-      const ctx = setup()
-      ctx.handle.open({
-        plugins: [
-          { name: 'a', onUnmount: track(calls, 'a') },
-          { name: 'b', onUnmount: track(calls, 'b') },
-        ],
-      })
-      ctx.handle.destroy()
-      await flush()
-      expect(calls).toEqual(['b', 'a'])
-    })
-
-    it('runs onMount teardowns after onUnmount settles in reverse registration order', async () => {
-      const calls: string[] = []
-      const ctx = setup()
-      ctx.handle.open({
-        plugins: [
-          { name: 'a', onMount: () => track(calls, 'a-teardown') },
-          { name: 'b', onMount: () => track(calls, 'b-teardown'), onUnmount: track(calls, 'b-unmount') },
-        ],
-      })
-      ctx.handle.destroy()
-      await flush()
-      expect(calls).toEqual(['b-unmount', 'b-teardown', 'a-teardown'])
-    })
-
-    it('defers mount cleanup until onUnmount resolves', async () => {
-      const { ctx } = openWithDeferredUnmount()
-      ctx.handle.destroy()
-      await flush()
-      expect(ctx.cleanup).not.toHaveBeenCalled()
-    })
-
-    it('runs mount cleanup after onUnmount resolves', async () => {
-      const { ctx, deferred } = openWithDeferredUnmount()
-      ctx.handle.destroy()
-      deferred.resolve()
-      await flush()
-      expect(ctx.cleanup).toHaveBeenCalledTimes(1)
-    })
-
-    it('keeps the channel alive while onUnmount is pending', async () => {
-      const { ctx } = openWithDeferredUnmount()
-      ctx.handle.destroy()
-      await flush()
-      expect(ctx.mock.destroy).not.toHaveBeenCalled()
-    })
-
-    it('destroys the channel after onUnmount resolves', async () => {
-      const { ctx, deferred } = openWithDeferredUnmount()
-      ctx.handle.destroy()
-      deferred.resolve()
-      await flush()
-      expect(ctx.mock.destroy).toHaveBeenCalledTimes(1)
-    })
-
-    it('emits error when a plugin onUnmount rejects', async () => {
-      const { ctx, deferred } = openWithDeferredUnmount()
-      const handler = jest.fn()
-      ctx.handle.on('error', handler)
-      ctx.handle.destroy()
-      deferred.reject('exit animation failed')
-      await flush()
-      expect(handler).toHaveBeenCalledWith('exit animation failed')
-    })
-
-    it('continues teardown after a rejected onUnmount', async () => {
-      const { ctx, deferred } = openWithDeferredUnmount()
-      ctx.handle.destroy()
-      deferred.reject('exit animation failed')
-      await flush()
-      expect(ctx.cleanup).toHaveBeenCalledTimes(1)
-    })
-
-    it('runs the remaining onUnmount hooks after one rejects', async () => {
-      const deferred = createDeferred()
-      const ctx = setup()
-      const onUnmount = jest.fn()
-      ctx.handle.open({
-        plugins: [
-          { name: 'a', onUnmount },
-          { name: 'b', onUnmount: () => deferred.promise },
-        ],
-      })
-      ctx.handle.destroy()
-      deferred.reject('exit animation failed')
-      await flush()
-      expect(onUnmount).toHaveBeenCalledTimes(1)
-    })
-
-    it('emits error when an onMount teardown throws', async () => {
-      const ctx = setup()
-      const handler = jest.fn()
-      ctx.handle.on('error', handler)
-      ctx.handle.open({ plugins: [{ name: 'bad', onMount: failingTeardown }] })
-      ctx.handle.destroy()
-      await flush()
-      expect(handler).toHaveBeenCalledWith(expect.any(Error))
-    })
-
-    it('finishes cleanup after an onMount teardown throws', async () => {
-      const ctx = setup()
-      ctx.handle.open({ plugins: [{ name: 'bad', onMount: failingTeardown }] })
-      ctx.handle.destroy()
-      await flush()
-      expect(ctx.cleanup).toHaveBeenCalledTimes(1)
-    })
-
-    it('defers a reopen while plugin teardown is in flight', () => {
-      const { ctx } = openWithDeferredUnmount()
-      ctx.handle.open()
-      expect(ctx.mount).toHaveBeenCalledTimes(1)
-    })
-
-    it('remounts after the in-flight plugin teardown resolves', async () => {
-      const { ctx, deferred } = openWithDeferredUnmount()
-      ctx.handle.open()
-      deferred.resolve()
-      await flush()
-      expect(ctx.mount).toHaveBeenCalledTimes(2)
-    })
-
-    it('applies only the last open queued during plugin teardown', async () => {
-      const { ctx, deferred } = openWithDeferredUnmount()
-      ctx.handle.open({ url: 'https://first.example' })
-      ctx.handle.open({ url: 'https://last.example' })
-      deferred.resolve()
-      await flush()
-      expect(ctx.getContext()?.options).toEqual(expect.objectContaining({ url: 'https://last.example' }))
-    })
-
-    it('ignores a second destroy while plugin teardown is in flight', async () => {
-      const { ctx, deferred } = openWithDeferredUnmount()
-      ctx.handle.destroy()
-      ctx.handle.destroy()
-      deferred.resolve()
-      await flush()
-      expect(ctx.cleanup).toHaveBeenCalledTimes(1)
-    })
-
-    it('cancels a queued reopen when destroy is called during teardown', async () => {
-      const { ctx, deferred } = openWithDeferredUnmount()
-      ctx.handle.open()
-      ctx.handle.destroy()
-      deferred.resolve()
-      await flush()
-      expect(ctx.mount).toHaveBeenCalledTimes(1)
-    })
-
-    it('runs plugin onUnmount when the channel closes', async () => {
-      const ctx = setup()
-      const onUnmount = jest.fn()
-      ctx.handle.open({ plugins: [{ name: 'exit', onUnmount }] })
-      ctx.mock.trigger('close')
-      await flush()
-      expect(onUnmount).toHaveBeenCalledTimes(1)
-    })
-
-    it('defers close-path cleanup until plugin onUnmount resolves', async () => {
-      const { ctx } = openWithDeferredUnmount()
-      ctx.mock.trigger('close')
-      await flush()
-      expect(ctx.cleanup).not.toHaveBeenCalled()
-    })
-
-    it('runs mount cleanup after the close-path teardown resolves', async () => {
-      const { ctx, deferred } = openWithDeferredUnmount()
-      ctx.mock.trigger('close')
-      deferred.resolve()
-      await flush()
-      expect(ctx.cleanup).toHaveBeenCalledTimes(1)
-    })
-
-    it('does not run cleanup twice when the channel closes during a destroy teardown', async () => {
-      const { ctx, deferred } = openWithDeferredUnmount()
-      ctx.handle.destroy()
-      ctx.mock.trigger('close')
-      deferred.resolve()
-      await flush()
-      expect(ctx.cleanup).toHaveBeenCalledTimes(1)
-    })
   })
 })

@@ -2,7 +2,7 @@
 
 > **Can I Use** style reference for @hyperfrontend libraries
 
-Last updated: June 22, 2026
+Last updated: July 31, 2026
 
 ---
 
@@ -24,13 +24,20 @@ Last updated: June 22, 2026
 | `@hyperfrontend/cryptography`           |   ✅    |   ✅    |     ✅     |     ✅     |
 | `@hyperfrontend/network-protocol`       |   ✅    |   ✅    |     ✅     |     ✅     |
 | `@hyperfrontend/nexus`                  |   ✅    |   ✅    |     ✅     |     ✅     |
-| `@hyperfrontend/features`               |   ✅    |   ✅    |     ✅     |     ✅     |
+| `@hyperfrontend/features`               |   ✅    |   ✅³   |    ⚠️³     |    ✅³     |
+| `@hyperfrontend/questions`              |   ❌²   |   ✅    |    ❌²     |    ❌²     |
+| `@hyperfrontend/project-scope`          |   ❌²   |   ✅    |    ❌²     |    ❌²     |
+| `@hyperfrontend/versioning`             |   ❌²   |   ✅    |    ❌²     |    ❌²     |
 | `@hyperfrontend/builder`                |   ❌²   |   ✅    |    ❌²     |    ❌²     |
 
 **Notes:**
 
 1. `ui-utils` — Some DOM utilities require browser APIs; check individual exports
-2. `builder` — Build-time Node.js toolkit (CLI + programmatic API); not intended for browser, Web Worker, or CDN runtimes
+2. Build-time or CLI-time Node.js toolkits; not intended for browser, Web Worker, or CDN runtimes
+3. `features` — Support is per entry point, not per package. `/host` and `/hostee` are browser
+   runtimes and ship IIFE/UMD bundles for CDN use; `/cli`, `/server`, and `/generators` are Node-only.
+   The root entry (types, `defineConfig`, contract validation) is DOM-free and runs anywhere,
+   including a Web Worker; `/host` and `/hostee` drive `window` directly, so neither does.
 
 ---
 
@@ -44,30 +51,6 @@ All libraries ship with multiple output formats:
 | CJS    | `.cjs.js`      | Node.js, legacy bundlers (Webpack 4, etc.)       |       ❌       |
 | IIFE   | `.iife.js`     | Browser `<script>` tags, CDN                     |       ❌       |
 | UMD    | `.umd.js`      | Universal (AMD, CommonJS, global)                |       ❌       |
-
----
-
-## Bundle Sizes (Minified)
-
-| Library                  | IIFE Min | Self-Contained |
-| ------------------------ | -------: | :------------: |
-| `function-utils`         |   < 1 KB |       ✅       |
-| `immutable-api-utils`    |   < 1 KB |       ✅       |
-| `time-utils`             |     1 KB |       ✅       |
-| `string-utils`           |     1 KB |       ✅       |
-| `list-utils`             |     1 KB |       ✅       |
-| `random-generator-utils` |     1 KB |       ✅       |
-| `logging`                |     1 KB |       ✅       |
-| `state-machine`          |   < 1 KB |       ✅       |
-| `ui-utils`               |   < 1 KB |       ✅       |
-| `cryptography`           |     3 KB |       ✅       |
-| `json-utils`             |     — KB |       ✅       |
-| `data-utils`             |    12 KB |       ✅       |
-| `nexus`                  |    21 KB |       ✅       |
-| `network-protocol` (v1)  |    66 KB |       ✅       |
-| `network-protocol` (v2)  |    65 KB |       ✅       |
-
-**Self-Contained:** All dependencies inlined — single `<script>` tag, no external requires.
 
 ---
 
@@ -118,6 +101,8 @@ All libraries ship with multiple output formats:
 | `network-protocol` (v1)  | `HyperfrontendNetworkProtocolV1` |
 | `network-protocol` (v2)  | `HyperfrontendNetworkProtocolV2` |
 | `nexus`                  | `HyperfrontendNexus`             |
+| `features` (`/host`)     | `HyperfrontendFeaturesHost`      |
+| `features` (`/hostee`)   | `HyperfrontendFeaturesHostee`    |
 
 ---
 
@@ -160,6 +145,30 @@ import { createProtocol } from '@hyperfrontend/network-protocol/node/v2'
 import type { Message } from '@hyperfrontend/network-protocol/lib/types'
 ```
 
+### `@hyperfrontend/features`
+
+Entry points split by role rather than by platform. Import only the surface you need — each is an
+independent subpath, so a feature app never pulls in the host SDK or the CLI.
+
+```typescript
+// Browser — the host embedding a feature
+import { createShell } from '@hyperfrontend/features/host'
+
+// Browser — the feature app being embedded
+import { createFeature } from '@hyperfrontend/features/hostee'
+
+// Node.js — build tooling
+import { runBuild } from '@hyperfrontend/features/cli'
+import { generateShell } from '@hyperfrontend/features/generators'
+import { startDevServer } from '@hyperfrontend/features/server'
+
+// Shared types, contract validation, defineConfig
+import { defineConfig } from '@hyperfrontend/features'
+```
+
+The package also ships an `hf` bin and an optional Nx adapter at `@hyperfrontend/features/nx/*`
+(a `feature` generator plus `build` and `serve` executors), neither of which the core imports.
+
 ---
 
 ## Dependency Graph
@@ -193,11 +202,12 @@ These libraries have no internal dependencies:
 
 ### High-Level Libraries
 
-| Library            | Key Dependencies                                                                                |
-| ------------------ | ----------------------------------------------------------------------------------------------- |
-| `network-protocol` | cryptography, logging, json-utils, list-utils, random-generator-utils, string-utils, time-utils |
-| `nexus`            | network-protocol, logging, json-utils, random-generator-utils                                   |
-| `builder`          | logging, project-scope, immutable-api-utils, versioning                                         |
+| Library            | Key Dependencies                                                                                                  |
+| ------------------ | ----------------------------------------------------------------------------------------------------------------- |
+| `network-protocol` | cryptography, logging, json-utils, list-utils, random-generator-utils, string-utils, time-utils                   |
+| `nexus`            | network-protocol, logging, json-utils, random-generator-utils                                                     |
+| `builder`          | logging, project-scope, immutable-api-utils, versioning                                                           |
+| `features`         | nexus, network-protocol, builder, project-scope, questions, versioning, json-utils, ui-utils, immutable-api-utils |
 
 ---
 
@@ -207,23 +217,27 @@ All libraries specify minimum Node.js and npm versions in their `package.json` `
 
 ### Version Requirements
 
-| Library                                 |  Node.js   |    npm    | Notes                                        |
-| --------------------------------------- | :--------: | :-------: | -------------------------------------------- |
-| `@hyperfrontend/data-utils`             | `>=18.0.0` | `>=8.0.0` | Platform-agnostic                            |
-| `@hyperfrontend/function-utils`         | `>=18.0.0` | `>=8.0.0` | Platform-agnostic                            |
-| `@hyperfrontend/time-utils`             | `>=18.0.0` | `>=8.0.0` | Platform-agnostic                            |
-| `@hyperfrontend/immutable-api-utils`    | `>=18.0.0` | `>=8.0.0` | Platform-agnostic                            |
-| `@hyperfrontend/json-utils`             | `>=18.0.0` | `>=8.0.0` | Platform-agnostic                            |
-| `@hyperfrontend/list-utils`             | `>=18.0.0` | `>=8.0.0` | Platform-agnostic                            |
-| `@hyperfrontend/random-generator-utils` | `>=18.0.0` | `>=8.0.0` | Platform-agnostic                            |
-| `@hyperfrontend/logging`                | `>=18.0.0` | `>=8.0.0` | Platform-agnostic                            |
-| `@hyperfrontend/state-machine`          | `>=18.0.0` | `>=8.0.0` | Platform-agnostic                            |
-| `@hyperfrontend/string-utils`           | `>=18.0.0` | `>=8.0.0` | Isomorphic (browser/node entries)            |
-| `@hyperfrontend/ui-utils`               | `>=18.0.0` | `>=8.0.0` | Browser runtime, Node for dev/test           |
-| `@hyperfrontend/cryptography`           | `>=18.0.0` | `>=8.0.0` | Node 19+ recommended for `/node` entry ¹     |
-| `@hyperfrontend/network-protocol`       | `>=18.0.0` | `>=8.0.0` | Node 19+ recommended for `/node/*` entries ¹ |
-| `@hyperfrontend/nexus`                  | `>=18.0.0` | `>=8.0.0` | Browser runtime, Node for dev/test           |
-| `@hyperfrontend/builder`                | `>=18.0.0` | `>=8.0.0` | Node build tool (CLI + library)              |
+| Library                                 |  Node.js   |    npm    | Notes                                             |
+| --------------------------------------- | :--------: | :-------: | ------------------------------------------------- |
+| `@hyperfrontend/data-utils`             | `>=18.0.0` | `>=8.0.0` | Platform-agnostic                                 |
+| `@hyperfrontend/function-utils`         | `>=18.0.0` | `>=8.0.0` | Platform-agnostic                                 |
+| `@hyperfrontend/time-utils`             | `>=18.0.0` | `>=8.0.0` | Platform-agnostic                                 |
+| `@hyperfrontend/immutable-api-utils`    | `>=18.0.0` | `>=8.0.0` | Platform-agnostic                                 |
+| `@hyperfrontend/json-utils`             | `>=18.0.0` | `>=8.0.0` | Platform-agnostic                                 |
+| `@hyperfrontend/list-utils`             | `>=18.0.0` | `>=8.0.0` | Platform-agnostic                                 |
+| `@hyperfrontend/random-generator-utils` | `>=18.0.0` | `>=8.0.0` | Platform-agnostic                                 |
+| `@hyperfrontend/logging`                | `>=18.0.0` | `>=8.0.0` | Platform-agnostic                                 |
+| `@hyperfrontend/state-machine`          | `>=18.0.0` | `>=8.0.0` | Platform-agnostic                                 |
+| `@hyperfrontend/string-utils`           | `>=18.0.0` | `>=8.0.0` | Isomorphic (browser/node entries)                 |
+| `@hyperfrontend/ui-utils`               | `>=18.0.0` | `>=8.0.0` | Browser runtime, Node for dev/test                |
+| `@hyperfrontend/cryptography`           | `>=18.0.0` | `>=8.0.0` | Node 19+ recommended for `/node` entry ¹          |
+| `@hyperfrontend/network-protocol`       | `>=18.0.0` | `>=8.0.0` | Node 19+ recommended for `/node/*` entries ¹      |
+| `@hyperfrontend/nexus`                  | `>=18.0.0` | `>=8.0.0` | Browser runtime, Node for dev/test                |
+| `@hyperfrontend/features`               | `>=18.0.0` | `>=8.0.0` | Browser SDK plus Node CLI, dev server, generators |
+| `@hyperfrontend/questions`              | `>=18.0.0` | `>=8.0.0` | Node CLI prompts                                  |
+| `@hyperfrontend/project-scope`          | `>=18.0.0` | `>=8.0.0` | Node project analysis + VFS                       |
+| `@hyperfrontend/versioning`             | `>=18.0.0` | `>=8.0.0` | Node release toolkit (CLI + library)              |
+| `@hyperfrontend/builder`                | `>=18.0.0` | `>=8.0.0` | Node build tool (CLI + library)                   |
 
 ¹ The `/node` entry points use `webcrypto.subtle` which was experimental in Node 18.x and became stable in Node 19.0.0. For production use with Node.js, version 19+ is recommended.
 
@@ -237,7 +251,7 @@ All libraries specify minimum Node.js and npm versions in their `package.json` `
 
 ## Web Worker Compatibility
 
-All browser bundles use `globalThis.crypto` instead of `window.crypto`, ensuring compatibility with:
+Every browser bundle except `@hyperfrontend/features` uses `globalThis.crypto` instead of `window.crypto`, so it runs unchanged in:
 
 - Dedicated Workers
 - Shared Workers
@@ -245,6 +259,8 @@ All browser bundles use `globalThis.crypto` instead of `window.crypto`, ensuring
 - Cloudflare Workers
 - Deno
 - Bun
+
+The `features` `/host` and `/hostee` bundles are the exception — they drive `window` and DOM APIs directly, so they are browser-only (see note 3 above).
 
 ### Example: Using in a Web Worker
 
@@ -298,6 +314,12 @@ All libraries ship with TypeScript declarations (`.d.ts` files) alongside JavaSc
 ## Library Dependency Diagram
 
 ```mermaid
+---
+config:
+  theme: base
+  themeVariables:
+    fontSize: 12px
+---
 flowchart TB
     subgraph ZERO["🌱 Zero Dependencies"]
         direction LR
@@ -333,6 +355,10 @@ flowchart TB
         direction LR
         network-protocol
         nexus
+    end
+
+    subgraph SDK["🧩 Feature SDK"]
+        features
     end
 
     %% Core utilities depend on immutable-api-utils
@@ -372,11 +398,23 @@ flowchart TB
     nexus --> logging
     nexus --> json-utils
     nexus --> random-generator-utils
+
+    %% Feature SDK layer
+    features --> nexus
+    features --> network-protocol
+    features --> json-utils
+    features --> ui-utils
 ```
 
 ### Platform & Format Support
 
 ```mermaid
+---
+config:
+  theme: base
+  themeVariables:
+    fontSize: 12px
+---
 flowchart LR
     subgraph PLATFORMS["🖥️ Platforms"]
         direction TB

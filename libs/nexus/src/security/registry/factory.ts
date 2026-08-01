@@ -20,7 +20,9 @@ import { freeze } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
  * the negotiated protocol version.
  *
  * The 'none' protocol is always considered supported (it requires
- * no provider) and cannot be registered or unregistered.
+ * no provider) and cannot be registered or unregistered. Any other
+ * identifier is accepted so external protocol packages can register
+ * their own providers.
  *
  * @returns A new protocol registry instance
  *
@@ -29,7 +31,7 @@ import { freeze } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
  * const registry = createProtocolRegistry()
  *
  * // Register v1 protocol
- * registry.register('v1', createProtocol(logger, 60))
+ * registry.register('v1', provider)
  *
  * // Check availability
  * registry.has('v1') // true
@@ -41,15 +43,19 @@ import { freeze } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
  * ```
  */
 export function createProtocolRegistry(): ProtocolRegistry {
-  const providers = createMap<'v1' | 'v2', unknown>()
+  const providers = createMap<string, unknown>()
 
   /**
    * Register a protocol provider.
    *
-   * @param version - The protocol version ('v1' or 'v2')
+   * @param version - The protocol version (e.g. 'v1' or 'v2')
    * @param provider - The protocol provider instance
    */
-  const register = (version: 'v1' | 'v2', provider: unknown): void => {
+  const register = (version: SecurityProtocolVersion, provider: unknown): void => {
+    if (version === 'none') {
+      throw createError(`Cannot register a provider for 'none': the plaintext protocol needs no provider`)
+    }
+
     if (!provider) {
       throw createError(`Cannot register null/undefined provider for ${version}`)
     }
@@ -62,7 +68,11 @@ export function createProtocolRegistry(): ProtocolRegistry {
    *
    * @param version - The protocol version to unregister
    */
-  const unregister = (version: 'v1' | 'v2'): void => {
+  const unregister = (version: SecurityProtocolVersion): void => {
+    if (version === 'none') {
+      throw createError(`Cannot unregister 'none': the plaintext protocol is always available`)
+    }
+
     providers.delete(version)
   }
 
@@ -102,19 +112,29 @@ export function createProtocolRegistry(): ProtocolRegistry {
    * Get all supported protocol versions.
    *
    * Returns versions that have registered providers plus 'none'.
+   * Built-in versions lead the list ('v2' before 'v1'), followed by any
+   * registered external identifiers in registration order, with 'none' last.
    *
    * @returns Array of supported protocol versions
    */
   const getSupportedVersions = (): SecurityProtocolVersion[] => {
-    const versions: SecurityProtocolVersion[] = ['none']
-
-    if (providers.has('v1')) {
-      versions.unshift('v1')
-    }
+    const versions: SecurityProtocolVersion[] = []
 
     if (providers.has('v2')) {
-      versions.unshift('v2')
+      versions.push('v2')
     }
+
+    if (providers.has('v1')) {
+      versions.push('v1')
+    }
+
+    for (const version of providers.keys()) {
+      if (version !== 'v1' && version !== 'v2') {
+        versions.push(version)
+      }
+    }
+
+    versions.push('none')
 
     return versions
   }

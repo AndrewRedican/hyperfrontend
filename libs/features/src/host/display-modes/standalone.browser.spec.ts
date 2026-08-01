@@ -21,4 +21,10 @@ describe('mountStandalone', () => {
     mountStandalone({ options: <ShellOptions>{ container: '#x' }, requestClose: jest.fn() })
     expect(open).toHaveBeenCalledWith('', '_blank', undefined)
   })
+
+  it('throws when a sandbox is requested for a standalone window', () => {
+    expect(() => mountStandalone({ options: <ShellOptions>{ container: '#x', sandbox: {} }, requestClose: jest.fn() })).toThrow(
+      'cannot be sandboxed'
+    )
+  })
 })

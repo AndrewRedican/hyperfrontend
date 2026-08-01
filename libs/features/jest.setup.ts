@@ -30,3 +30,21 @@ jest.mock('@hyperfrontend/immutable-api-utils/built-in-copy/console', () => ({
   info: (...args: unknown[]) => console.info(...args),
   debug: (...args: unknown[]) => console.debug(...args),
 }))
+
+/**
+ * Mock timer built-in copies to forward to the live global timers.
+ *
+ * The shell and channel lifecycles schedule through immutable-api-utils, which
+ * captures its timer references at module load time — before
+ * jest.useFakeTimers() installs. Forwarding on each call re-reads the global,
+ * so fake timers drive the handshake, heartbeat, and request deadlines the same
+ * way real ones do. Specs asserting on scheduling itself override this with
+ * their own module mock.
+ */
+jest.mock('@hyperfrontend/immutable-api-utils/built-in-copy/timers', () => ({
+  ...jest.requireActual('@hyperfrontend/immutable-api-utils/built-in-copy/timers'),
+  setTimeout: (callback: () => void, delay?: number) => globalThis.setTimeout(callback, delay),
+  clearTimeout: (id?: ReturnType<typeof globalThis.setTimeout>) => globalThis.clearTimeout(id),
+  setInterval: (callback: () => void, delay?: number) => globalThis.setInterval(callback, delay),
+  clearInterval: (id?: ReturnType<typeof globalThis.setInterval>) => globalThis.clearInterval(id),
+}))

@@ -1,311 +1,306 @@
-import type { IChannelContract } from '../types/contract'
 import type { MockWindow } from './test-utils'
 import { createBroker } from '../broker/factory'
-import { createMockWindow } from './test-utils'
+import { createMockWindow, createContractPair } from './test-utils'
+
+const MAIN_ORIGIN = 'http://main-host.com'
 
 describe('Integration: Multi-Channel', () => {
-  let mockWindow1: MockWindow
-  let mockWindow2: MockWindow
-  let mockWindow3: MockWindow
-
-  beforeEach(() => {
-    mockWindow1 = createMockWindow()
-    mockWindow2 = createMockWindow()
-    mockWindow3 = createMockWindow()
+  beforeAll(() => {
+    jest.useFakeTimers()
   })
 
-  const testContract: IChannelContract = {
-    emitted: [{ type: 'BROADCAST' }, { type: 'DIRECT_MESSAGE' }],
-    accepted: [{ type: 'ACK' }, { type: 'RESPONSE' }],
+  afterAll(() => {
+    jest.useRealTimers()
+  })
+
+  afterEach(() => {
+    jest.clearAllTimers()
+    jest.clearAllMocks()
+  })
+
+  // note: the main broker has ONE contract shared by all of its channels, so
+  const { contractA: mainContract, contractB: counterpartContract } = createContractPair(
+    ['BROADCAST', 'DIRECT_MESSAGE'],
+    ['ACK', 'RESPONSE']
+  )
+
+  // how: the main broker listens on one shared window while each of its
+  const wireCounterpart = (mainWindow: MockWindow, counterpartWindow: MockWindow, counterpartOrigin: string): MockWindow => {
+    const mainProxy = createMockWindow()
+    counterpartWindow.postMessage.mockImplementation((data: unknown) => {
+      counterpartWindow._dispatchMessage(
+        new MessageEvent('message', {
+          data,
+          origin: MAIN_ORIGIN,
+          source: <Window>(<unknown>mainProxy),
+        })
+      )
+    })
+    mainProxy.postMessage.mockImplementation((data: unknown) => {
+      mainWindow._dispatchMessage(
+        new MessageEvent('message', {
+          data,
+          origin: counterpartOrigin,
+          source: <Window>(<unknown>counterpartWindow),
+        })
+      )
+    })
+    return mainProxy
+  }
+
+  const buildPair = (mainWindow: MockWindow, mainBroker: ReturnType<typeof createBroker>, index: number) => {
+    const counterpartWindow = createMockWindow()
+    const mainProxy = wireCounterpart(mainWindow, counterpartWindow, `http://counterpart-${index}.com`)
+    const counterpartBroker = createBroker({
+      name: `counterpart-broker-${index}`,
+      contract: counterpartContract,
+      window: <Window>(<unknown>counterpartWindow),
+      settings: { logLevel: 'error' },
+    })
+    const counterpartChannel = counterpartBroker.addChannel('to-main', <Window>(<unknown>mainProxy))
+    const mainChannel = mainBroker.addChannel(`channel-${index}`, <Window>(<unknown>counterpartWindow))
+    return { mainChannel, counterpartChannel, counterpartWindow }
+  }
+
+  const setupMultiChannel = (channelCount: number) => {
+    const mainWindow = createMockWindow()
+    const mainBroker = createBroker({
+      name: 'multi-broker',
+      contract: mainContract,
+      window: <Window>(<unknown>mainWindow),
+      settings: { logLevel: 'error' },
+    })
+    const pairs: ReturnType<typeof buildPair>[] = []
+    for (let index = 0; index < channelCount; index++) {
+      pairs.push(buildPair(mainWindow, mainBroker, index))
+    }
+    return { mainBroker, pairs }
+  }
+
+  // how: activation requires the wire handshake between BOTH brokers; the main
+  const activatePair = (pair: ReturnType<typeof buildPair>): void => {
+    pair.mainChannel.connect()
+    pair.counterpartChannel.connect()
   }
 
   describe('Multiple Channel Management', () => {
     it('manages multiple channels independently', () => {
-      const broker = createBroker({
-        name: 'multi-broker',
-        contract: testContract,
-        settings: { logLevel: 'error' },
+      const { mainBroker, pairs } = setupMultiChannel(3)
+
+      expect({
+        names: pairs.map((pair) => pair.mainChannel.name),
+        registered: mainBroker.channels.length,
+      }).toEqual({
+        names: ['channel-0', 'channel-1', 'channel-2'],
+        registered: 3,
       })
-
-      const channel1 = broker.addChannel('channel-1', <Window>(<unknown>mockWindow1))
-      const channel2 = broker.addChannel('channel-2', <Window>(<unknown>mockWindow2))
-      const channel3 = broker.addChannel('channel-3', <Window>(<unknown>mockWindow3))
-
-      expect(channel1.name).toBe('channel-1')
-      expect(channel2.name).toBe('channel-2')
-      expect(channel3.name).toBe('channel-3')
-
-      expect(broker.channels).toHaveLength(3)
     })
 
-    it('connects/disconnects channels independently', () => {
-      const broker = createBroker({
-        name: 'multi-broker',
-        contract: testContract,
-        settings: { logLevel: 'error' },
+    it('activates and deactivates channels independently through the handshake', () => {
+      const { pairs } = setupMultiChannel(3)
+
+      activatePair(pairs[0])
+      activatePair(pairs[2])
+
+      const afterConnect = pairs.map((pair) => pair.mainChannel.isActive())
+
+      pairs[0].mainChannel.disconnect()
+
+      expect({
+        afterConnect,
+        afterDisconnect: pairs.map((pair) => pair.mainChannel.isActive()),
+      }).toEqual({
+        afterConnect: [true, false, true],
+        afterDisconnect: [false, false, true],
       })
-
-      const channel1 = broker.addChannel('channel-1', <Window>(<unknown>mockWindow1))
-      const channel2 = broker.addChannel('channel-2', <Window>(<unknown>mockWindow2))
-      const channel3 = broker.addChannel('channel-3', <Window>(<unknown>mockWindow3))
-
-      channel1.connect()
-      channel3.connect()
-
-      expect(channel1.isActive()).toBe(true)
-      expect(channel2.isActive()).toBe(false)
-      expect(channel3.isActive()).toBe(true)
-
-      channel1.disconnect()
-
-      expect(channel1.isActive()).toBe(false)
-      expect(channel2.isActive()).toBe(false)
-      expect(channel3.isActive()).toBe(true)
     })
   })
 
   describe('Message Isolation', () => {
     it('isolates messages between channels', () => {
-      const broker = createBroker({
-        name: 'multi-broker',
-        contract: testContract,
-        settings: { logLevel: 'error' },
+      const { pairs } = setupMultiChannel(2)
+
+      pairs.forEach(activatePair)
+      pairs.forEach((pair) => pair.counterpartWindow.postMessage.mockClear())
+
+      pairs[0].mainChannel.send('BROADCAST', { from: 'channel-0' })
+
+      const afterFirstSend = pairs.map((pair) => pair.counterpartWindow.postMessage.mock.calls.length)
+
+      pairs[1].mainChannel.send('BROADCAST', { from: 'channel-1' })
+
+      expect({
+        afterFirstSend,
+        afterSecondSend: pairs.map((pair) => pair.counterpartWindow.postMessage.mock.calls.length),
+      }).toEqual({
+        afterFirstSend: [1, 0],
+        afterSecondSend: [1, 1],
       })
-
-      const channel1 = broker.addChannel('channel-1', <Window>(<unknown>mockWindow1))
-      const channel2 = broker.addChannel('channel-2', <Window>(<unknown>mockWindow2))
-
-      channel1.connect()
-      channel2.connect()
-
-      mockWindow1.postMessage.mockClear()
-      mockWindow2.postMessage.mockClear()
-
-      channel1.send('BROADCAST', { from: 'channel-1' })
-
-      expect(mockWindow1.postMessage).toHaveBeenCalledTimes(1)
-      expect(mockWindow2.postMessage).not.toHaveBeenCalled()
-
-      channel2.send('BROADCAST', { from: 'channel-2' })
-
-      expect(mockWindow1.postMessage).toHaveBeenCalledTimes(1)
-      expect(mockWindow2.postMessage).toHaveBeenCalledTimes(1)
     })
 
-    it('maintains separate message queues', () => {
-      const broker = createBroker({
-        name: 'multi-broker',
-        contract: testContract,
-        settings: { logLevel: 'error' },
+    it('maintains separate message queues until each handshake completes', () => {
+      const { pairs } = setupMultiChannel(2)
+
+      const received = pairs.map(() => <unknown[]>[])
+      pairs.forEach((pair, index) => pair.counterpartChannel.onMessage((message) => received[index].push(message)))
+
+      pairs[0].mainChannel.send('BROADCAST', { id: 1 })
+      pairs[0].mainChannel.send('BROADCAST', { id: 2 })
+      pairs[1].mainChannel.send('BROADCAST', { id: 3 })
+
+      activatePair(pairs[0])
+
+      const afterFirstHandshake = received.map((messages) => messages.length)
+
+      activatePair(pairs[1])
+
+      expect({
+        afterFirstHandshake,
+        afterSecondHandshake: received.map((messages) => messages.length),
+      }).toEqual({
+        afterFirstHandshake: [2, 0],
+        afterSecondHandshake: [2, 1],
       })
-
-      const channel1 = broker.addChannel('channel-1', <Window>(<unknown>mockWindow1))
-      const channel2 = broker.addChannel('channel-2', <Window>(<unknown>mockWindow2))
-
-      channel1.send('BROADCAST', { id: 1 })
-      channel1.send('BROADCAST', { id: 2 })
-      channel2.send('BROADCAST', { id: 3 })
-
-      channel1.connect()
-
-      expect(mockWindow1.postMessage).toHaveBeenCalled()
-      expect(mockWindow2.postMessage).not.toHaveBeenCalled()
-
-      channel2.connect()
-
-      expect(mockWindow2.postMessage).toHaveBeenCalled()
     })
   })
 
   describe('Event Isolation', () => {
-    it('isolates events between channels', () => {
-      const broker = createBroker({
-        name: 'multi-broker',
-        contract: testContract,
-        settings: { logLevel: 'error' },
+    it('isolates open events between channels', () => {
+      const { pairs } = setupMultiChannel(2)
+
+      const openHandlers = pairs.map(() => jest.fn())
+      pairs.forEach((pair, index) => pair.mainChannel.on('open', openHandlers[index]))
+
+      activatePair(pairs[0])
+
+      const afterFirstHandshake = openHandlers.map((handler) => handler.mock.calls.length)
+
+      activatePair(pairs[1])
+
+      expect({
+        afterFirstHandshake,
+        afterSecondHandshake: openHandlers.map((handler) => handler.mock.calls.length),
+      }).toEqual({
+        afterFirstHandshake: [1, 0],
+        afterSecondHandshake: [1, 1],
       })
-
-      const channel1 = broker.addChannel('channel-1', <Window>(<unknown>mockWindow1))
-      const channel2 = broker.addChannel('channel-2', <Window>(<unknown>mockWindow2))
-
-      const handler1 = jest.fn()
-      const handler2 = jest.fn()
-
-      channel1.on(handler1)
-      channel2.on(handler2)
-
-      channel1.connect()
-
-      expect(handler1).toHaveBeenCalled()
-      expect(handler2).not.toHaveBeenCalled()
-
-      handler1.mockClear()
-      handler2.mockClear()
-
-      channel2.connect()
-
-      expect(handler1).not.toHaveBeenCalled()
-      expect(handler2).toHaveBeenCalled()
     })
 
-    it('handles unsubscribe for specific channels', () => {
-      const broker = createBroker({
-        name: 'multi-broker',
-        contract: testContract,
-        settings: { logLevel: 'error' },
+    it('stops delivering events after a channel-specific unsubscribe', () => {
+      const { pairs } = setupMultiChannel(2)
+
+      const unsubscribedHandler = jest.fn()
+      const retainedHandler = jest.fn()
+
+      const unsubscribe = pairs[0].mainChannel.on(unsubscribedHandler)
+      pairs[1].mainChannel.on(retainedHandler)
+
+      unsubscribe()
+
+      pairs.forEach(activatePair)
+
+      expect({
+        unsubscribedCalls: unsubscribedHandler.mock.calls.length,
+        retainedFired: retainedHandler.mock.calls.length > 0,
+      }).toEqual({
+        unsubscribedCalls: 0,
+        retainedFired: true,
       })
-
-      const channel1 = broker.addChannel('channel-1', <Window>(<unknown>mockWindow1))
-      const channel2 = broker.addChannel('channel-2', <Window>(<unknown>mockWindow2))
-
-      const handler1 = jest.fn()
-      const handler2 = jest.fn()
-
-      const unsubscribe1 = channel1.on(handler1)
-      channel2.on(handler2)
-
-      unsubscribe1()
-
-      channel1.connect()
-      channel2.connect()
-
-      expect(handler1).not.toHaveBeenCalled()
-      expect(handler2).toHaveBeenCalled()
     })
   })
 
   describe('Concurrent Operations', () => {
-    it('handles concurrent connects', () => {
-      const broker = createBroker({
-        name: 'multi-broker',
-        contract: testContract,
-        settings: { logLevel: 'error' },
-      })
+    it('activates every pair when all handshakes run back to back', () => {
+      const { pairs } = setupMultiChannel(3)
 
-      const channel1 = broker.addChannel('channel-1', <Window>(<unknown>mockWindow1))
-      const channel2 = broker.addChannel('channel-2', <Window>(<unknown>mockWindow2))
-      const channel3 = broker.addChannel('channel-3', <Window>(<unknown>mockWindow3))
+      // how: all main-side connects fire first so each counterpart holds a
+      pairs.forEach((pair) => pair.mainChannel.connect())
+      pairs.forEach((pair) => pair.counterpartChannel.connect())
 
-      channel1.connect()
-      channel2.connect()
-      channel3.connect()
-
-      expect(channel1.isActive()).toBe(true)
-      expect(channel2.isActive()).toBe(true)
-      expect(channel3.isActive()).toBe(true)
+      expect(pairs.map((pair) => [pair.mainChannel.isActive(), pair.counterpartChannel.isActive()])).toEqual([
+        [true, true],
+        [true, true],
+        [true, true],
+      ])
     })
 
-    it('handles concurrent messaging', () => {
-      const broker = createBroker({
-        name: 'multi-broker',
-        contract: testContract,
-        settings: { logLevel: 'error' },
-      })
+    it('delivers concurrent sends to each counterpart exactly once', () => {
+      const { pairs } = setupMultiChannel(3)
 
-      const channel1 = broker.addChannel('channel-1', <Window>(<unknown>mockWindow1))
-      const channel2 = broker.addChannel('channel-2', <Window>(<unknown>mockWindow2))
-      const channel3 = broker.addChannel('channel-3', <Window>(<unknown>mockWindow3))
+      pairs.forEach(activatePair)
+      pairs.forEach((pair) => pair.counterpartWindow.postMessage.mockClear())
 
-      channel1.connect()
-      channel2.connect()
-      channel3.connect()
+      pairs.forEach((pair, index) => pair.mainChannel.send('BROADCAST', { from: index }))
 
-      mockWindow1.postMessage.mockClear()
-      mockWindow2.postMessage.mockClear()
-      mockWindow3.postMessage.mockClear()
-
-      channel1.send('BROADCAST', { from: 1 })
-      channel2.send('BROADCAST', { from: 2 })
-      channel3.send('BROADCAST', { from: 3 })
-
-      expect(mockWindow1.postMessage).toHaveBeenCalledTimes(1)
-      expect(mockWindow2.postMessage).toHaveBeenCalledTimes(1)
-      expect(mockWindow3.postMessage).toHaveBeenCalledTimes(1)
+      expect(pairs.map((pair) => pair.counterpartWindow.postMessage.mock.calls.length)).toEqual([1, 1, 1])
     })
 
-    it('handles concurrent disconnects', () => {
-      const broker = createBroker({
-        name: 'multi-broker',
-        contract: testContract,
-        settings: { logLevel: 'error' },
-      })
+    it('deactivates both sides of every pair on concurrent disconnects', () => {
+      const { pairs } = setupMultiChannel(3)
 
-      const channel1 = broker.addChannel('channel-1', <Window>(<unknown>mockWindow1))
-      const channel2 = broker.addChannel('channel-2', <Window>(<unknown>mockWindow2))
-      const channel3 = broker.addChannel('channel-3', <Window>(<unknown>mockWindow3))
+      pairs.forEach(activatePair)
+      pairs.forEach((pair) => pair.mainChannel.disconnect())
 
-      channel1.connect()
-      channel2.connect()
-      channel3.connect()
-
-      channel1.disconnect()
-      channel2.disconnect()
-      channel3.disconnect()
-
-      expect(channel1.isActive()).toBe(false)
-      expect(channel2.isActive()).toBe(false)
-      expect(channel3.isActive()).toBe(false)
+      expect(pairs.map((pair) => [pair.mainChannel.isActive(), pair.counterpartChannel.isActive()])).toEqual([
+        [false, false],
+        [false, false],
+        [false, false],
+      ])
     })
   })
 
   describe('Channel Lifecycle Mix', () => {
-    it('handles mixed lifecycle states', () => {
-      const broker = createBroker({
-        name: 'multi-broker',
-        contract: testContract,
-        settings: { logLevel: 'error' },
+    it('handles mixed lifecycle states across channels', () => {
+      const { pairs } = setupMultiChannel(3)
+
+      activatePair(pairs[0])
+      activatePair(pairs[2])
+      pairs[2].mainChannel.disconnect()
+
+      const states = pairs.map((pair) => pair.mainChannel.isActive())
+
+      pairs.forEach((pair) => pair.counterpartWindow.postMessage.mockClear())
+      pairs.forEach((pair, index) => pair.mainChannel.send('BROADCAST', { id: index }))
+
+      expect({
+        states,
+        delivered: pairs.map((pair) => pair.counterpartWindow.postMessage.mock.calls.length > 0),
+      }).toEqual({
+        states: [true, false, false],
+        delivered: [true, false, false],
       })
+    })
 
-      const channel1 = broker.addChannel('channel-1', <Window>(<unknown>mockWindow1))
-      const channel2 = broker.addChannel('channel-2', <Window>(<unknown>mockWindow2))
-      const channel3 = broker.addChannel('channel-3', <Window>(<unknown>mockWindow3))
+    it('re-handshakes a disconnected channel without disturbing the others', () => {
+      const { pairs } = setupMultiChannel(2)
 
-      channel1.connect()
+      pairs.forEach(activatePair)
+      pairs[0].mainChannel.disconnect()
 
-      channel3.connect()
-      channel3.disconnect()
+      // note: after a graceful close both sides stay ready, so a single
+      pairs[0].mainChannel.connect()
 
-      expect(channel1.isActive()).toBe(true)
-      expect(channel2.isActive()).toBe(false)
-      expect(channel3.isActive()).toBe(false)
-
-      mockWindow1.postMessage.mockClear()
-      mockWindow2.postMessage.mockClear()
-      mockWindow3.postMessage.mockClear()
-
-      channel1.send('BROADCAST', { id: 1 })
-      channel2.send('BROADCAST', { id: 2 })
-      channel3.send('BROADCAST', { id: 3 })
-
-      expect(mockWindow1.postMessage).toHaveBeenCalled()
-      expect(mockWindow2.postMessage).not.toHaveBeenCalled()
-      expect(mockWindow3.postMessage).not.toHaveBeenCalled()
+      expect(pairs.map((pair) => [pair.mainChannel.isActive(), pair.counterpartChannel.isActive()])).toEqual([
+        [true, true],
+        [true, true],
+      ])
     })
   })
 
   describe('Performance', () => {
     it('handles many channels efficiently', () => {
-      const broker = createBroker({
-        name: 'multi-broker',
-        contract: testContract,
-        settings: { logLevel: 'error' },
-      })
+      // note: each channel needs a full counterpart window+broker pair for the
+      const channelCount = 20
+      const { mainBroker, pairs } = setupMultiChannel(channelCount)
 
-      const channelCount = 100
-      const channels: ReturnType<typeof broker.addChannel>[] = []
+      pairs.forEach(activatePair)
 
-      for (let i = 0; i < channelCount; i++) {
-        const mockWin = createMockWindow()
-        const channel = broker.addChannel(`channel-${i}`, <Window>(<unknown>mockWin))
-        channels.push(channel)
-      }
-
-      expect(broker.channels).toHaveLength(channelCount)
-
-      channels.forEach((ch) => ch.connect())
-
-      channels.forEach((ch) => {
-        expect(ch.isActive()).toBe(true)
+      expect({
+        registered: mainBroker.channels.length,
+        allActive: pairs.every((pair) => pair.mainChannel.isActive()),
+      }).toEqual({
+        registered: channelCount,
+        allActive: true,
       })
     })
   })

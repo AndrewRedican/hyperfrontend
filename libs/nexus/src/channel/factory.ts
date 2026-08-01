@@ -3,15 +3,20 @@ import type { IChannelConfig, ChannelHandle, ChannelJSON, EventHandler } from '.
 import type { IChannelContract } from '../types/contract'
 import type { ChannelEvent, EventCallbackMap } from '../types/events'
 import type { IMessage } from '../types/message'
-import type { SecurityProtocolVersion, SecurityTransport, SecurityNegotiationRequest } from '../types/security'
+import type { SecurityProtocolVersion, SecurityTransport, SecurityNegotiationRequest, SecurityNegotiationResponse } from '../types/security'
 import type { ChannelInternals, ChannelDependencies } from './types'
 import { freeze } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
 import { assertNoCircularRef } from '../utils/validation/assert-no-circular-ref'
 import { DEFAULT_CHANNEL_SETTINGS } from './defaults'
+import { abandonRequest } from './lifecycle/abandon-request'
+import { beginResponse } from './lifecycle/begin-response'
 import { cancel } from './lifecycle/cancel'
+import { completeConnection } from './lifecycle/complete-connection'
+import { completeScheduledOpen } from './lifecycle/complete-open'
 import { connect } from './lifecycle/connect'
 import { destroy } from './lifecycle/destroy'
 import { disconnect } from './lifecycle/disconnect'
+import { flush } from './messaging/flush'
 import { send } from './messaging/send'
 import { sendAction as sendActionImpl } from './messaging/send-action'
 import { activate as activateState } from './state/activate'
@@ -60,7 +65,8 @@ export function createChannel(config: IChannelConfig, deps: ChannelDependencies)
     },
 
     createProcess: () => {
-      return deps.processManager.create(internals)
+      // why: Routing handlers look processes up and call ChannelHandle methods on the result, so processes must map to the public handle.
+      return deps.processManager.create(handle)
     },
 
     removeProcess: (processId: string) => {
@@ -89,6 +95,11 @@ export function createChannel(config: IChannelConfig, deps: ChannelDependencies)
     getName: () => state.name,
     getTarget: () => state.target,
     isActive: () => state.active,
+    isClosing: () => typeof state.closingProcessId === 'string',
+    getOrigin: () => state.origin,
+    getPeerId: () => state.peerId,
+    getPeerContract: () => state.peerContract,
+    getPendingProcessId: () => state.pendingProcessId,
     getAcceptedTypes: () => state.acceptedActions,
     toJSON: (): ChannelJSON => ({
       id: state.id,
@@ -97,11 +108,14 @@ export function createChannel(config: IChannelConfig, deps: ChannelDependencies)
       origin: state.origin,
       connectTimestamp: state.connectTimestamp,
       contract: state.contract,
+      peerContract: state.peerContract,
+      peerId: state.peerId,
       queuedMessagesCount: state.queuedMessages.length,
     }),
 
     connect: () => connect(internals),
     disconnect: (notify) => disconnect(internals, notify),
+    endStaleSession: () => disconnect(internals, false, 'peer-reload'),
     cancel: (notify) => cancel(internals, notify),
     destroy: (notify) => destroy(internals, notify),
 
@@ -116,18 +130,59 @@ export function createChannel(config: IChannelConfig, deps: ChannelDependencies)
     },
     onMessage: (handler) => subscribeToMessages(internals, handler),
 
-    activate: (origin: string, contract: IChannelContract) => {
-      const newState = activateState(state, origin, contract)
+    activate: (origin: string, peerContract: IChannelContract, peerId?: string) => {
+      const newState = activateState(state, origin, peerContract, peerId ?? null)
       internals.updateState(newState)
     },
 
-    isReadyToConnect: () => {
-      return state.readyToConnect || state.brokerManaged
+    beginResponse: (senderId: string, origin: string, contract: IChannelContract, processId: string, acceptAction: IAction) => {
+      beginResponse(internals, <const>[senderId, origin, contract, processId], acceptAction)
     },
 
-    scheduleActivation: (senderId: string, origin: string, contract: IChannelContract, processId: string) => {
+    abandonRequest: () => {
+      abandonRequest(internals)
+    },
+
+    completeConnection: (origin: string, peerContract: IChannelContract, peerId: string, replyAction: IAction) => {
+      completeConnection(internals, origin, peerContract, peerId, replyAction)
+    },
+
+    completeScheduledOpen: () => {
+      return completeScheduledOpen(internals)
+    },
+
+    isReadyToConnect: () => {
+      return state.readyToConnect
+    },
+
+    isAwaitingOpen: () => {
+      return state.pendingAccept !== null
+    },
+
+    getSecuritySettings: () => {
+      return state.security
+    },
+
+    applySecuritySettings: (securitySettings) => {
+      // why: First write wins — settings supplied at creation (or an earlier registration) stay authoritative over later ones.
+      if (state.security === null) {
+        internals.updateState({ security: securitySettings })
+      }
+    },
+
+    getContractCompat: () => {
+      return state.contractCompat
+    },
+
+    scheduleActivation: (
+      senderId: string,
+      origin: string,
+      contract: IChannelContract,
+      processId: string,
+      security?: SecurityNegotiationResponse
+    ) => {
       internals.updateState({
-        scheduledActivation: <const>[senderId, origin, contract, processId],
+        scheduledActivation: <const>[senderId, origin, contract, processId, security],
       })
     },
 
@@ -137,6 +192,14 @@ export function createChannel(config: IChannelConfig, deps: ChannelDependencies)
 
     notifyMessage: (message: IMessage) => {
       notifyMessage(internals, message)
+    },
+
+    markDenyNotified: (processId: string) => {
+      if (state.notifiedDenyProcessId === processId) {
+        return false
+      }
+      internals.updateState({ notifiedDenyProcessId: processId })
+      return true
     },
 
     setPendingSecurityRequest: (request: SecurityNegotiationRequest | null) => {
@@ -165,6 +228,10 @@ export function createChannel(config: IChannelConfig, deps: ChannelDependencies)
 
     setSecurityReady: (ready: boolean) => {
       internals.updateState({ securityReady: ready })
+      // why: Messages queued while an external transport reported not-ready must flush through it as soon as readiness is signalled.
+      if (ready && state.active && state.queuedMessages.length > 0) {
+        flush(internals)
+      }
     },
 
     isSecurityReady: () => {

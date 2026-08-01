@@ -6,7 +6,17 @@ import type { SecurityProtocolVersion } from './security'
 /**
  * Channel lifecycle event types
  */
-export type ChannelEvent = 'open' | 'close' | 'cancel' | 'deny' | 'invalid' | 'security-negotiated' | 'security-ready' | 'security-error'
+export type ChannelEvent =
+  | 'open'
+  | 'closing'
+  | 'close'
+  | 'cancel'
+  | 'deny'
+  | 'invalid'
+  | 'connect-timeout'
+  | 'security-negotiated'
+  | 'security-ready'
+  | 'security-error'
 
 /**
  * Data payload for OPEN event
@@ -19,11 +29,32 @@ export interface OpenEventData {
 }
 
 /**
+ * Data payload for CLOSING event
+ */
+export interface ClosingEventData {
+  /** Whether this side initiated the polite close (`false` when the counterpart proposed it) */
+  initiatedLocally: boolean
+}
+
+/**
+ * Why a session ended, when the cause is something other than either side
+ * asking for it.
+ *
+ * - `peer-reload` — the counterpart window now hosts a different instance
+ *   (a reload or in-frame navigation), so the session it belonged to is over.
+ *   The channel stays reconnectable and the new instance's handshake is
+ *   already in flight.
+ */
+export type CloseReason = 'peer-reload'
+
+/**
  * Data payload for CLOSE event
  */
 export interface CloseEventData {
   /** Whether remote end was notified */
   notify: boolean
+  /** Why the session ended, when neither side asked for the close */
+  reason?: CloseReason
 }
 
 /**
@@ -35,11 +66,41 @@ export interface CancelEventData {
 }
 
 /**
+ * Why a handshake gate refused the connection.
+ *
+ * - `invalid-contract` — the counterpart's contract failed structural
+ *   validation, so there is nothing to negotiate against.
+ * - `missing-required-actions` — the counterpart's contract does not emit an
+ *   action this side accepts as `required: true`.
+ * - `policy-rejected` — the broker's `securityPolicy` refused the request.
+ *   The refused counterpart is told only that it was not accepted, so this
+ *   reason reaches the deciding side alone.
+ * - `incompatible-contract` — a `contractCompat` rule rejected the contract
+ *   pair.
+ * - `security-unavailable` — a fail-closed channel could not obtain an
+ *   encrypted transport.
+ *
+ * Any other string is accepted so a counterpart running a newer protocol can
+ * report a reason this build does not know yet.
+ */
+export type DenyReason =
+  | 'invalid-contract'
+  | 'missing-required-actions'
+  | 'policy-rejected'
+  | 'incompatible-contract'
+  | 'security-unavailable'
+  | (string & {})
+
+/**
  * Data payload for DENY event
  */
 export interface DenyEventData {
-  /** Reason for denial */
-  reason: string
+  /** Human-readable error explaining the denial */
+  error?: string
+  /** Machine-readable denial reason */
+  reason?: DenyReason
+  /** Origin of the counterpart that denied the connection */
+  origin?: string
 }
 
 /**
@@ -50,6 +111,14 @@ export interface InvalidEventData {
   error: string
   /** The invalid action that was received (if available) */
   action?: IAction
+}
+
+/**
+ * Data payload for CONNECT_TIMEOUT event
+ */
+export interface ConnectTimeoutEventData {
+  /** Milliseconds elapsed since the connection attempt started */
+  elapsedMs: number
 }
 
 /**
@@ -103,10 +172,12 @@ type EventEnvelope<TEvent extends string, TData> = {
  */
 export type EventData =
   | EventEnvelope<'open', OpenEventData>
+  | EventEnvelope<'closing', ClosingEventData>
   | EventEnvelope<'close', CloseEventData>
   | EventEnvelope<'cancel', CancelEventData>
   | EventEnvelope<'deny', DenyEventData>
   | EventEnvelope<'invalid', InvalidEventData>
+  | EventEnvelope<'connect-timeout', ConnectTimeoutEventData>
   | EventEnvelope<'security-negotiated', SecurityNegotiatedEventData>
   | EventEnvelope<'security-ready', SecurityReadyEventData>
   | EventEnvelope<'security-error', SecurityErrorEventData>
@@ -115,6 +186,11 @@ export type EventData =
  * Type-safe event handler for OPEN events
  */
 export type OpenEventHandler = (event: 'open', data: OpenEventData, channel: ChannelJSON) => void
+
+/**
+ * Type-safe event handler for CLOSING events
+ */
+export type ClosingEventHandler = (event: 'closing', data: ClosingEventData, channel: ChannelJSON) => void
 
 /**
  * Type-safe event handler for CLOSE events
@@ -137,6 +213,11 @@ export type DenyEventHandler = (event: 'deny', data: DenyEventData, channel: Cha
 export type InvalidEventHandler = (event: 'invalid', data: InvalidEventData, channel: ChannelJSON) => void
 
 /**
+ * Type-safe event handler for CONNECT_TIMEOUT events
+ */
+export type ConnectTimeoutEventHandler = (event: 'connect-timeout', data: ConnectTimeoutEventData, channel: ChannelJSON) => void
+
+/**
  * Type-safe event handler for SECURITY_NEGOTIATED events
  */
 export type SecurityNegotiatedEventHandler = (event: 'security-negotiated', data: SecurityNegotiatedEventData, channel: ChannelJSON) => void
@@ -156,10 +237,12 @@ export type SecurityErrorEventHandler = (event: 'security-error', data: Security
  */
 export type TypedEventHandler =
   | OpenEventHandler
+  | ClosingEventHandler
   | CloseEventHandler
   | CancelEventHandler
   | DenyEventHandler
   | InvalidEventHandler
+  | ConnectTimeoutEventHandler
   | SecurityNegotiatedEventHandler
   | SecurityReadyEventHandler
   | SecurityErrorEventHandler
@@ -168,6 +251,11 @@ export type TypedEventHandler =
  * Simplified callback for OPEN events (event name omitted)
  */
 export type OpenCallback = (data: OpenEventData, channel: ChannelJSON) => void
+
+/**
+ * Simplified callback for CLOSING events (event name omitted)
+ */
+export type ClosingCallback = (data: ClosingEventData, channel: ChannelJSON) => void
 
 /**
  * Simplified callback for CLOSE events (event name omitted)
@@ -188,6 +276,11 @@ export type DenyCallback = (data: DenyEventData, channel: ChannelJSON) => void
  * Simplified callback for INVALID events (event name omitted)
  */
 export type InvalidCallback = (data: InvalidEventData, channel: ChannelJSON) => void
+
+/**
+ * Simplified callback for CONNECT_TIMEOUT events (event name omitted)
+ */
+export type ConnectTimeoutCallback = (data: ConnectTimeoutEventData, channel: ChannelJSON) => void
 
 /**
  * Simplified callback for SECURITY_NEGOTIATED events (event name omitted)
@@ -211,6 +304,8 @@ export type SecurityErrorCallback = (data: SecurityErrorEventData, channel: Chan
 export interface EventCallbackMap {
   /** Callback for open events */
   open: OpenCallback
+  /** Callback for closing events */
+  closing: ClosingCallback
   /** Callback for close events */
   close: CloseCallback
   /** Callback for cancel events */
@@ -219,6 +314,8 @@ export interface EventCallbackMap {
   deny: DenyCallback
   /** Callback for invalid events */
   invalid: InvalidCallback
+  /** Callback for connect-timeout events */
+  'connect-timeout': ConnectTimeoutCallback
   /** Callback for security-negotiated events */
   'security-negotiated': SecurityNegotiatedCallback
   /** Callback for security-ready events */

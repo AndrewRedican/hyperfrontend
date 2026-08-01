@@ -17,8 +17,12 @@ import { send } from './send'
  */
 export function flush(channel: ChannelInternals): void {
   const state = channel.getState()
+  const pending = state.queuedMessages
 
-  for (const message of state.queuedMessages) {
+  // why: The queue is cleared before re-sending so messages a not-ready security transport re-queues during this pass survive for the next flush.
+  channel.updateState(clearQueue(state))
+
+  for (const message of pending) {
     try {
       send(channel, message)
     } catch (error) {
@@ -27,7 +31,4 @@ export function flush(channel: ChannelInternals): void {
       }
     }
   }
-
-  const newState = clearQueue(state)
-  channel.updateState(newState)
 }

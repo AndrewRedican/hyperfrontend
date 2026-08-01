@@ -56,6 +56,21 @@ describe('Protocol Registry', () => {
       expect(registry.get('v1')).toBe(v1Provider)
       expect(registry.get('v2')).toBe(v2Provider)
     })
+
+    it('allows registering an external protocol identifier', () => {
+      const registry = createProtocolRegistry()
+      const customProvider = { id: 'custom' }
+
+      registry.register('acme-x25519', customProvider)
+
+      expect(registry.get('acme-x25519')).toBe(customProvider)
+    })
+
+    it('throws error when registering a provider for "none"', () => {
+      const registry = createProtocolRegistry()
+
+      expect(() => registry.register('none', { id: 'none' })).toThrow("Cannot register a provider for 'none'")
+    })
   })
 
   describe('unregister', () => {
@@ -99,6 +114,12 @@ describe('Protocol Registry', () => {
 
       expect(registry.has('v1')).toBe(false)
       expect(registry.has('v2')).toBe(true)
+    })
+
+    it('throws error when unregistering "none"', () => {
+      const registry = createProtocolRegistry()
+
+      expect(() => registry.unregister('none')).toThrow("Cannot unregister 'none'")
     })
   })
 
@@ -206,6 +227,16 @@ describe('Protocol Registry', () => {
 
       expect(versions.indexOf('v2')).toBeLessThan(versions.indexOf('v1'))
       expect(versions.indexOf('v1')).toBeLessThan(versions.indexOf('none'))
+    })
+
+    it('lists external identifiers between the built-in versions and none', () => {
+      const registry = createProtocolRegistry()
+      registry.register('acme-x25519', { id: 'custom' })
+      registry.register('v2', { id: 'v2' })
+
+      const versions = registry.getSupportedVersions()
+
+      expect(versions).toEqual(['v2', 'acme-x25519', 'none'])
     })
 
     it('updates after provider is unregistered', () => {

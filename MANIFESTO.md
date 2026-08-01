@@ -48,9 +48,32 @@ I'm not interested in supporting both models. It would complicate the security s
 
 ## What's Done
 
+### Features SDK, CLI, and Shell Generation
+
+A feature app declares its contract and connects with `createFeature`; a host mounts it with
+`createShell`. The bundled `hf` CLI scaffolds the feature side, generates a self-contained shell
+package with the contract inlined and a security envelope baked in, and serves both sides locally
+with a debug UI. An optional Nx adapter ships a `feature` generator and `build`/`serve` executors.
+
+```bash
+npx @hyperfrontend/features init                # scaffold the feature glue into an app
+npx @hyperfrontend/features build --protocol v2 # generate + bundle a publishable shell package
+npx @hyperfrontend/features dev                 # serve apps with the debug UI
+```
+
+The envelope is a deliberate choice rather than a default: a build refuses to run until it is told
+which one to bake in.
+
+The session model underneath — gated handshake, pinned origins, versioned contracts, schema
+validation on both ends, four-state liveness, and flush-then-confirm teardown — is described in the
+[Architecture Guide](ARCHITECTURE.md) and derived from scratch in
+[Microfrontends from first principles](https://www.hyperfrontend.dev/articles/microfrontends-from-first-principles).
+
 ### Security Layer
 
-End-to-end encryption is integrated directly into the broker. See the [Architecture Guide](ARCHITECTURE.md#security-layer-network-protocol) for details.
+End-to-end encryption is integrated directly into the broker. See the [Architecture Guide](ARCHITECTURE.md#security-layer-network-protocol) for details, and the
+[Security Model](https://www.hyperfrontend.dev/docs/core-concepts/security) for what it is worth
+against which adversary.
 
 ```typescript
 import { createBroker } from '@hyperfrontend/nexus'
@@ -76,6 +99,11 @@ const broker = createBroker({
 ---
 
 ## What's Next
+
+> **This section is a roadmap, not an API reference.** Nothing below has shipped, and the code
+> sketches are illustrations of intent — package names, signatures, and file layouts will change as
+> each item is built. For what exists today, see the [Architecture Guide](ARCHITECTURE.md) and the
+> [documentation site](https://www.hyperfrontend.dev/docs).
 
 ### Web Worker Offloading
 
@@ -131,50 +159,19 @@ The API stays compatible with `@hyperfrontend/nexus`—it's just faster for heav
 
 ---
 
-### Features Plugin Generators
+### Host-Side Consumption Generator
 
-The `@hyperfrontend/features` Nx plugin automates the tedious parts of turning an app into a hyperfrontend feature.
-
-**`init` generator** — Transform an existing application:
-
-```bash
-npx nx g @hyperfrontend/features:init my-app
-```
-
-This analyzes your project, generates contract schemas, wraps the entry point with nexus integration, and scaffolds a companion shell project:
-
-```
-my-app/
-├── feature.config.json
-├── contracts/
-│   ├── emitted.schema.json
-│   └── accepted.schema.json
-├── src/
-│   └── nexus-bootstrap.ts
-└── ...existing files
-
-my-app-shell/
-├── package.json
-├── src/
-│   └── index.ts
-└── rollup.config.js
-```
-
-**`add` generator** — Consume a feature in a host application:
+Turning an app _into_ a feature is automated; embedding one is still hand-written. The missing
+counterpart is a generator that runs in the host and does the wiring for you — install the shell
+tarball or package, read its `metadata.json`, and scaffold a typed integration point in the
+host's own idiom:
 
 ```bash
 npx nx g @hyperfrontend/features:add --feature=my-feature --host=my-host
 ```
 
-This installs the shell package, generates typed bindings from the feature's contracts, and creates example integration code.
-
-**`shell` executor** — Build distributable shells:
-
-```bash
-npx nx shell my-app
-```
-
-Produces ESM and UMD bundles with TypeScript declarations.
+The feature side of this already exists: `hf init`, `hf build`, and the Nx `feature` generator and
+`build`/`serve` executors. What is missing is the host's half of the same convenience.
 
 ---
 

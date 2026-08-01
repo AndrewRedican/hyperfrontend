@@ -1,262 +1,265 @@
 import type { IChannelContract } from '../types/contract'
 import type { MockWindow } from './test-utils'
 import { createBroker } from '../broker/factory'
-import { createMockWindow } from './test-utils'
+import { ACTION_TYPES } from '../types/action'
+import { createMockWindow, linkMockWindows, createContractPair } from './test-utils'
 
 describe('Integration: Broker + Channel', () => {
-  let mockWindow: MockWindow
+  let windowA: MockWindow
+  let windowB: MockWindow
 
-  beforeEach(() => {
-    mockWindow = createMockWindow()
+  beforeAll(() => {
+    jest.useFakeTimers()
   })
 
-  const testContract: IChannelContract = {
-    emitted: [{ type: 'PING' }, { type: 'DATA_REQUEST' }],
-    accepted: [{ type: 'PONG' }, { type: 'DATA_RESPONSE' }],
+  afterAll(() => {
+    jest.useRealTimers()
+  })
+
+  beforeEach(() => {
+    windowA = createMockWindow()
+    windowB = createMockWindow()
+
+    linkMockWindows(windowA, windowB, 'http://host-a.com', 'http://host-b.com')
+  })
+
+  afterEach(() => {
+    jest.clearAllTimers()
+    jest.clearAllMocks()
+  })
+
+  const setupPair = (contractA: IChannelContract, contractB: IChannelContract) => {
+    const brokerA = createBroker({ name: 'broker-a', contract: contractA, window: <Window>(<unknown>windowA) })
+    const brokerB = createBroker({ name: 'broker-b', contract: contractB, window: <Window>(<unknown>windowB) })
+    return {
+      brokerA,
+      brokerB,
+      channelA: brokerA.addChannel('to-b', <Window>(<unknown>windowB)),
+      channelB: brokerB.addChannel('to-a', <Window>(<unknown>windowA)),
+    }
   }
 
+  const postedTypes = (target: MockWindow) => target.postMessage.mock.calls.map((call) => (<{ type: string }>call[0]).type)
+
   describe('Basic Communication Flow', () => {
-    it('completes full connection lifecycle', () => {
-      const broker = createBroker({
-        name: 'test-broker',
-        contract: testContract,
+    it('completes the full connection lifecycle across a paired handshake', () => {
+      const { contractA, contractB } = createContractPair(['PING'], ['PONG'])
+      const { channelA, channelB } = setupPair(contractA, contractB)
+
+      const beforeConnect = [channelA.isActive(), channelB.isActive()]
+
+      channelA.connect()
+      channelB.connect()
+      const afterHandshake = [channelA.isActive(), channelB.isActive()]
+
+      channelA.disconnect()
+      const afterDisconnect = [channelA.isActive(), channelB.isActive()]
+
+      expect({ name: channelA.name, beforeConnect, afterHandshake, afterDisconnect }).toEqual({
+        name: 'to-b',
+        beforeConnect: [false, false],
+        afterHandshake: [true, true],
+        afterDisconnect: [false, false],
       })
-
-      const channel = broker.addChannel('test-channel', <Window>(<unknown>mockWindow))
-      expect(channel).toBeDefined()
-      expect(channel.name).toBe('test-channel')
-      expect(channel.isActive()).toBe(false)
-
-      channel.connect()
-      expect(channel.isActive()).toBe(true)
-
-      channel.disconnect()
-      expect(channel.isActive()).toBe(false)
     })
 
-    it('sends messages through channel', () => {
-      const broker = createBroker({
-        name: 'test-broker',
-        contract: testContract,
-      })
+    it('sends messages to the peer window once the handshake completes', () => {
+      const { contractA, contractB } = createContractPair(['PING'], ['PONG'])
+      const { channelA, channelB } = setupPair(contractA, contractB)
 
-      const channel = broker.addChannel('test-channel', <Window>(<unknown>mockWindow))
-      channel.connect()
+      channelA.connect()
+      channelB.connect()
 
-      channel.send('PING', { timestamp: Date.now() })
+      windowB.postMessage.mockClear()
+      channelA.send('PING', { timestamp: 123 })
 
-      expect(mockWindow.postMessage).toHaveBeenCalled()
+      expect(windowB.postMessage).toHaveBeenCalledWith(expect.objectContaining({ type: ACTION_TYPES.NEW_MESSAGE }), 'http://host-b.com')
     })
 
-    it('handles message subscription', () => {
-      const broker = createBroker({
-        name: 'test-broker',
-        contract: testContract,
-      })
+    it('delivers messages to subscribers and stops after unsubscribe', () => {
+      const { contractA, contractB } = createContractPair(['PING'], ['PONG'])
+      const { channelA, channelB } = setupPair(contractA, contractB)
 
-      const channel = broker.addChannel('test-channel', <Window>(<unknown>mockWindow))
-      const messageHandler = jest.fn()
+      const received: unknown[] = []
+      const unsubscribe = channelB.onMessage((msg) => received.push(msg))
 
-      const unsubscribe = channel.onMessage(messageHandler)
+      channelA.connect()
+      channelB.connect()
 
-      channel.connect()
-
-      expect(unsubscribe).toBeInstanceOf(Function)
-
+      channelA.send('PING', { id: 1 })
       unsubscribe()
-      channel.disconnect()
+      channelA.send('PING', { id: 2 })
+
+      expect(received).toEqual([expect.objectContaining({ type: 'PING', data: { id: 1 } })])
     })
 
-    it('handles event subscription', () => {
-      const broker = createBroker({
-        name: 'test-broker',
-        contract: testContract,
-      })
+    it('fires open with the peer origin and peer contract', () => {
+      const { contractA, contractB } = createContractPair(['PING'], ['PONG'])
+      const { channelA, channelB } = setupPair(contractA, contractB)
 
-      const channel = broker.addChannel('test-channel', <Window>(<unknown>mockWindow))
       const eventHandler = jest.fn()
+      const unsubscribe = channelA.on('open', eventHandler)
 
-      const unsubscribe = channel.on(eventHandler)
-
-      channel.connect()
+      channelA.connect()
+      channelB.connect()
+      unsubscribe()
 
       expect(eventHandler).toHaveBeenCalledWith(
-        'open',
-        expect.objectContaining({
-          id: expect.any(String),
-          origin: '*',
-        }),
-        expect.any(Object)
+        expect.objectContaining({ origin: 'http://host-b.com', contract: contractB }),
+        expect.objectContaining({ active: true })
       )
-
-      unsubscribe()
     })
   })
 
   describe('Message Routing', () => {
-    it('routes messages from channel to target window', () => {
-      const broker = createBroker({
-        name: 'test-broker',
-        contract: testContract,
-      })
+    it('routes each send as a NEW_MESSAGE frame to the target window', () => {
+      const { contractA, contractB } = createContractPair(['PING', 'DATA_REQUEST'], ['PONG'])
+      const { channelA, channelB } = setupPair(contractA, contractB)
 
-      const channel = broker.addChannel('test-channel', <Window>(<unknown>mockWindow))
-      channel.connect()
+      channelA.connect()
+      channelB.connect()
 
-      mockWindow.postMessage.mockClear()
+      windowB.postMessage.mockClear()
+      channelA.send('PING', { id: 1 })
+      channelA.send('DATA_REQUEST', { query: 'test' })
 
-      channel.send('PING', { id: 1 })
-      channel.send('DATA_REQUEST', { query: 'test' })
-
-      expect(mockWindow.postMessage).toHaveBeenCalledTimes(2)
+      expect(postedTypes(windowB)).toEqual([ACTION_TYPES.NEW_MESSAGE, ACTION_TYPES.NEW_MESSAGE])
     })
 
-    it('queues messages when channel is not active', () => {
-      const broker = createBroker({
-        name: 'test-broker',
-        contract: testContract,
+    it('queues messages while inactive and flushes them after the handshake', () => {
+      const { contractA, contractB } = createContractPair(['PING'], ['PONG'])
+      const { channelA, channelB } = setupPair(contractA, contractB)
+
+      const received: unknown[] = []
+      channelB.onMessage((msg) => received.push(msg))
+
+      channelA.send('PING', { id: 1 })
+      const framesWhileInactive = windowB.postMessage.mock.calls.length
+
+      channelA.connect()
+      channelB.connect()
+
+      expect({ framesWhileInactive, received }).toEqual({
+        framesWhileInactive: 0,
+        received: [expect.objectContaining({ type: 'PING', data: { id: 1 } })],
       })
-
-      const channel = broker.addChannel('test-channel', <Window>(<unknown>mockWindow))
-
-      channel.send('PING', { id: 1 })
-
-      expect(mockWindow.postMessage).not.toHaveBeenCalled()
-
-      channel.connect()
-
-      expect(mockWindow.postMessage).toHaveBeenCalled()
     })
   })
 
   describe('State Transitions', () => {
-    it('maintains proper state through lifecycle', () => {
-      const broker = createBroker({
-        name: 'test-broker',
-        contract: testContract,
+    it('exposes peer metadata and own accepted types after activation', () => {
+      const { contractA, contractB } = createContractPair(['PING'], ['PONG'])
+      const { channelA, channelB } = setupPair(contractA, contractB)
+
+      channelA.connect()
+      channelB.connect()
+
+      expect({ json: channelA.toJSON(), acceptedTypes: channelA.getAcceptedTypes() }).toEqual({
+        json: expect.objectContaining({ active: true, peerContract: contractB, peerId: expect.any(String) }),
+        acceptedTypes: ['PONG'],
       })
-
-      const channel = broker.addChannel('test-channel', <Window>(<unknown>mockWindow))
-
-      expect(channel.isActive()).toBe(false)
-
-      channel.connect()
-      expect(channel.isActive()).toBe(true)
-
-      channel.disconnect()
-      expect(channel.isActive()).toBe(false)
     })
 
-    it('handles repeated connect/disconnect cycles', () => {
-      const broker = createBroker({
-        name: 'test-broker',
-        contract: testContract,
-      })
+    it('survives repeated connect/disconnect cycles with a ready counterpart', () => {
+      const { contractA, contractB } = createContractPair(['PING'], ['PONG'])
+      const { channelA, channelB } = setupPair(contractA, contractB)
 
-      const channel = broker.addChannel('test-channel', <Window>(<unknown>mockWindow))
+      // note: The counterpart connects once; each later cycle re-handshakes
+      // note: from a single connect() because both sides stay ready after CLOSE.
+      channelB.connect()
 
+      const cycles: boolean[][] = []
       for (let i = 0; i < 3; i++) {
-        channel.connect()
-        expect(channel.isActive()).toBe(true)
+        channelA.connect()
+        cycles.push([channelA.isActive(), channelB.isActive()])
 
-        channel.disconnect()
-        expect(channel.isActive()).toBe(false)
+        channelA.disconnect()
+        cycles.push([channelA.isActive(), channelB.isActive()])
       }
+
+      expect(cycles).toEqual([
+        [true, true],
+        [false, false],
+        [true, true],
+        [false, false],
+        [true, true],
+        [false, false],
+      ])
     })
   })
 
   describe('Broker Channel Management', () => {
-    it('retrieves channel by different references', () => {
-      const broker = createBroker({
-        name: 'test-broker',
-        contract: testContract,
-      })
+    it('retrieves the same channel by window, name, and id', () => {
+      const { contractA } = createContractPair(['PING'], ['PONG'])
+      const broker = createBroker({ name: 'broker-a', contract: contractA, window: <Window>(<unknown>windowA) })
 
-      const channel = broker.addChannel('test-channel', <Window>(<unknown>mockWindow))
+      const channel = broker.addChannel('test-channel', <Window>(<unknown>windowB))
 
-      const byWindow = broker.getChannel(<Window>(<unknown>mockWindow))
-      expect(byWindow).toBe(channel)
-
-      const byName = broker.getChannel('test-channel')
-      expect(byName).toBe(channel)
-
-      const byId = broker.getChannel(channel.id)
-      expect(byId).toBe(channel)
+      expect({
+        byWindow: broker.getChannel(<Window>(<unknown>windowB)) === channel,
+        byName: broker.getChannel('test-channel') === channel,
+        byId: broker.getChannel(channel.id) === channel,
+      }).toEqual({ byWindow: true, byName: true, byId: true })
     })
 
     it('lists all channels', () => {
-      const broker = createBroker({
-        name: 'test-broker',
-        contract: testContract,
-      })
+      const { contractA } = createContractPair(['PING'], ['PONG'])
+      const broker = createBroker({ name: 'broker-a', contract: contractA, window: <Window>(<unknown>windowA) })
 
-      const mockWindow2 = createMockWindow()
+      const windowC = createMockWindow()
 
-      broker.addChannel('channel-1', <Window>(<unknown>mockWindow))
-      broker.addChannel('channel-2', <Window>(<unknown>mockWindow2))
+      broker.addChannel('channel-1', <Window>(<unknown>windowB))
+      broker.addChannel('channel-2', <Window>(<unknown>windowC))
 
-      const channels = broker.channels
-      expect(channels).toHaveLength(2)
+      expect(broker.channels).toHaveLength(2)
     })
 
-    it('reuses existing channel for same window', () => {
-      const broker = createBroker({
-        name: 'test-broker',
-        contract: testContract,
-      })
+    it('reuses the existing channel for the same window', () => {
+      const { contractA } = createContractPair(['PING'], ['PONG'])
+      const broker = createBroker({ name: 'broker-a', contract: contractA, window: <Window>(<unknown>windowA) })
 
-      const channel1 = broker.addChannel('first', <Window>(<unknown>mockWindow))
-      const channel2 = broker.addChannel('second', <Window>(<unknown>mockWindow))
+      const channel1 = broker.addChannel('first', <Window>(<unknown>windowB))
+      const channel2 = broker.addChannel('second', <Window>(<unknown>windowB))
 
       expect(channel1).toBe(channel2)
     })
   })
 
   describe('Error Handling', () => {
-    it('handles invalid message types gracefully', () => {
-      const broker = createBroker({
-        name: 'test-broker',
-        contract: testContract,
-      })
-
-      const channel = broker.addChannel('test-channel', <Window>(<unknown>mockWindow))
-      channel.connect()
+    it('rejects message types outside the own emitted contract even while inactive', () => {
+      const { contractA, contractB } = createContractPair(['PING'], ['PONG'])
+      const { channelA } = setupPair(contractA, contractB)
 
       expect(() => {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        channel.send(<any>'INVALID_TYPE', {})
+        channelA.send(<any>'INVALID_TYPE', {})
       }).toThrow('not in the emitted actions')
     })
 
-    it('handles disconnect of inactive channel', () => {
-      const broker = createBroker({
-        name: 'test-broker',
-        contract: testContract,
-      })
-
-      const channel = broker.addChannel('test-channel', <Window>(<unknown>mockWindow))
+    it('tolerates disconnect of an inactive channel', () => {
+      const { contractA, contractB } = createContractPair(['PING'], ['PONG'])
+      const { channelA } = setupPair(contractA, contractB)
 
       expect(() => {
-        channel.disconnect()
+        channelA.disconnect()
       }).not.toThrow()
     })
   })
+
   describe('Cleanup', () => {
     it('cleans up resources on destroy', () => {
-      const broker = createBroker({
-        name: 'test-broker',
-        contract: testContract,
-      })
+      const { contractA, contractB } = createContractPair(['PING'], ['PONG'])
+      const { channelA, channelB } = setupPair(contractA, contractB)
 
-      const channel = broker.addChannel('test-channel', <Window>(<unknown>mockWindow))
-      channel.connect()
+      channelA.connect()
+      channelB.connect()
 
       const eventHandler = jest.fn()
-      channel.on(eventHandler)
+      channelA.on(eventHandler)
 
-      channel.destroy()
+      channelA.destroy()
 
-      expect(channel.isActive()).toBe(false)
+      expect(channelA.isActive()).toBe(false)
     })
   })
 })

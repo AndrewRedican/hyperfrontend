@@ -101,6 +101,17 @@ describe('channel/messaging/flush', () => {
     })
   })
 
+  it('clears the queue before re-sending so a not-ready transport can re-queue survivors', () => {
+    state = { ...state, queuedMessages: [{ type: 'MESSAGE_1', data: { id: 1 } }] }
+    mockGetState.mockReturnValue(state)
+
+    flush(mockChannel)
+
+    expect((<jest.Mock>mockChannel.updateState).mock.invocationCallOrder[0]).toBeLessThan(
+      (<jest.Mock>sendModule.send).mock.invocationCallOrder[0] ?? 0
+    )
+  })
+
   it('does nothing if queue is empty', () => {
     state = { ...state, queuedMessages: [] }
     mockGetState.mockReturnValue(state)

@@ -1,5 +1,6 @@
 import type { EventHandler } from '../shared/event-emitter'
 import type { RequestHandler, RequestOptions } from '../shared/request'
+import type { DisplayMode } from '../shared/types'
 
 /**
  * Public handle returned by the hostee-side feature factory.
@@ -52,7 +53,17 @@ export interface FeatureHandle {
    */
   handle(type: string, handler: RequestHandler): () => void
   /**
-   * Subscribes to host messages or lifecycle events (`open`, `close`, `error`).
+   * Subscribes to host messages or lifecycle events (`open`, `closing`,
+   * `close`, `error`, `presentation`, `resize`).
+   *
+   * The `closing` event announces a polite teardown while the channel still
+   * delivers: handlers may synchronously send final messages (an unsaved
+   * draft, a pending write) and they arrive before the close completes.
+   * `presentation` fires once with `{ mode }` when the host announces how the
+   * feature is surfaced. `resize` fires with the available `{ width, height }`
+   * in exact pixels — host-reported in the iframe modes, from the feature's
+   * own window in the windowed modes; the feature author owns making the
+   * layout respond to it.
    *
    * @param event - Message action type or lifecycle event name.
    * @param handler - Callback invoked with the event payload.
@@ -60,13 +71,35 @@ export interface FeatureHandle {
    */
   on(event: string, handler: EventHandler): () => void
   /**
+   * The display mode the host announced for this mount, or `null` before the
+   * announcement arrives (it is the first message after `open`) and after the
+   * channel closes.
+   */
+  readonly displayMode: DisplayMode | null
+  /**
+   * Declares whether the feature currently holds unsaved work.
+   *
+   * The host surfaces this as its `dirty-state` event and `isDirty` flag, so
+   * it can take unsaved work into account before starting a polite teardown.
+   *
+   * @param isDirty - `true` while unsaved work exists; `false` once it is flushed.
+   *
+   * @example Flagging an unsaved draft
+   * ```typescript
+   * feature.setDirty(true)
+   * saveDraft().then(() => feature.setDirty(false))
+   * ```
+   */
+  setDirty(isDirty: boolean): void
+  /**
    * Resolves once the host connection is established.
    *
    * @returns A promise that settles when the channel opens.
    */
   ready(): Promise<void>
   /**
-   * Disconnects from the host and tears the channel down.
+   * Disconnects from the host politely and tears the channel down once the
+   * host acknowledges (or the close deadline expires).
    */
   close(): void
 }

@@ -1,17 +1,49 @@
+import type { DialogBoxSize, PresentPayload } from '../../shared/presentation'
+import type { ShellOptions } from '../../shared/types'
 import type { DisplayModeMount } from '../types'
-import { button, div } from '@hyperfrontend/ui-utils/element'
+import { DisplayMode } from '../../shared/types'
 import { createFeatureIframe } from '../iframe'
-import { dialogDefaults } from './defaults'
+import { createObserverReporter } from '../sizing'
 
-// note: Overlay, close button, and Escape-to-close are on by default; all are customizable via ShellOptions.
+// note: The pane carries no host-drawn visuals — the feature draws the dialog box and backdrop inside it, so an opaque background or a host-side close button here would fight the feature's own design.
 
 /**
- * Mounts a feature as a centered modal dialog with an overlay and close button.
+ * Builds the presentation announcement for a dialog mount, carrying the
+ * pane's dimensions and any agreed inner dialog box geometry for the feature
+ * side to apply.
+ *
+ * @param options - The merged shell options.
+ * @returns The present payload.
+ */
+function buildDialogPresent(options: ShellOptions): PresentPayload {
+  const { dialogWidth, dialogHeight, dialogPosition } = options
+  const viewport = { width: window.innerWidth, height: window.innerHeight }
+  if (dialogWidth === undefined && dialogHeight === undefined && dialogPosition === undefined) {
+    return { mode: DisplayMode.Dialog, viewport }
+  }
+  const dialog: DialogBoxSize = {
+    ...(dialogWidth !== undefined && { width: dialogWidth }),
+    ...(dialogHeight !== undefined && { height: dialogHeight }),
+    ...(dialogPosition !== undefined && { position: dialogPosition }),
+  }
+  return { mode: DisplayMode.Dialog, viewport, dialog }
+}
+
+/**
+ * Mounts a feature as a full-viewport dialog pane layered above the host UI.
+ *
+ * The pane is a single transparent iframe spanning the host viewport; the
+ * feature renders its dialog box inside it and the transparent remainder is the
+ * backdrop. It mounts hidden — inert to the user and the page — and is
+ * revealed once the session opens. Backdrop and in-frame Escape interactions
+ * are detected by the feature side and cross as dismiss signals the shell acts
+ * on per `dialogBackdrop`/`closeOnEscape`; an Escape pressed while the host
+ * document holds focus is handled here directly.
  *
  * @param context - Inputs the shell passes to this display mode.
  * @param context.options - The merged shell options.
  * @param context.requestClose - Requests the shell close itself.
- * @returns The iframe content window, the dialog container as the mounted element, and a teardown that unmounts the dialog.
+ * @returns The iframe content window, the pane as the mounted element, the presentation announcement, the viewport reporter, and the reveal/teardown hooks.
  *
  * @example Mounting a dialog
  * ```typescript
@@ -19,37 +51,11 @@ import { dialogDefaults } from './defaults'
  * ```
  */
 export const mountDialog: DisplayModeMount = ({ options, requestClose }) => {
-  const container = div({ inlineStyle: { position: 'fixed', inset: '0', zIndex: '2147483647' } })
-
-  if (options.dialogOverlay ?? true) {
-    const backdrop = div({ inlineStyle: { position: 'absolute', inset: '0', background: 'rgba(0, 0, 0, 0.5)' } })
-    backdrop.ref.addEventListener('click', () => requestClose())
-    container.addChild(backdrop)
-  }
-
-  const dialog = div({
-    inlineStyle: {
-      position: 'absolute',
-      top: '50%',
-      left: '50%',
-      transform: 'translate(-50%, -50%)',
-      width: `${options.dialogWidth ?? dialogDefaults.width}px`,
-      height: `${options.dialogHeight ?? dialogDefaults.height}px`,
-      background: '#fff',
-    },
-  })
-
-  const closeButton = button()
-  closeButton.ref.type = 'button'
-  closeButton.ref.textContent = '×'
-  closeButton.ref.setAttribute('aria-label', 'Close')
-  closeButton.ref.addEventListener('click', () => requestClose())
-
-  const iframe = createFeatureIframe(options.url ?? '')
-  dialog.addChild(closeButton)
-  dialog.addChild(iframe)
-  container.addChild(dialog)
-  container.attachTo(document.body)
+  const iframe = createFeatureIframe(options.url ?? '', options)
+  iframe.style.position = 'fixed'
+  iframe.style.inset = '0'
+  iframe.style.zIndex = '2147483647'
+  document.body.appendChild(iframe)
 
   const escapeEnabled = options.closeOnEscape !== false
   const onKeydown = (event: KeyboardEvent) => {
@@ -59,12 +65,20 @@ export const mountDialog: DisplayModeMount = ({ options, requestClose }) => {
   }
   document.addEventListener('keydown', onKeydown)
 
+  const present = buildDialogPresent(options)
+  const viewport = createObserverReporter(iframe, { width: window.innerWidth, height: window.innerHeight })
   return {
     target: iframe.contentWindow,
-    element: container.ref,
+    element: iframe,
+    present,
+    viewport,
+    reveal: () => {
+      iframe.style.visibility = 'visible'
+    },
     cleanup: () => {
       document.removeEventListener('keydown', onKeydown)
-      container.ref.remove()
+      viewport.stop()
+      iframe.remove()
     },
   }
 }

@@ -63,56 +63,62 @@ describe('Channel State Management', () => {
   })
 
   describe('activate', () => {
-    it('activate channel with origin and contract', () => {
-      const initialState = createInitialState('test', window, defaultSettings)
-      const origin = 'https://example.com'
-      const contract: IChannelContract = {
-        emitted: [{ type: 'action1' }],
-        accepted: [{ type: 'action2' }, { type: 'action3' }],
-      }
+    const ownContract: IChannelContract = {
+      emitted: [{ type: 'action1' }],
+      accepted: [{ type: 'action2' }, { type: 'action3' }],
+    }
+    const peerContract: IChannelContract = {
+      emitted: [{ type: 'action2' }],
+      accepted: [{ type: 'action1' }],
+    }
 
-      const newState = activate(initialState, origin, contract)
+    it('activates the channel and stores the peer details', () => {
+      const initialState = createInitialState('test', window, { ...defaultSettings, contract: ownContract })
 
-      expect(newState.origin).toBe(origin)
-      expect(newState.active).toBe(true)
-      expect(newState.connectTimestamp).toBeGreaterThan(0)
-      expect(newState.contract).toBe(contract)
+      const newState = activate(initialState, 'https://example.com', peerContract, 'peer-1')
+
+      expect(newState).toEqual(
+        expect.objectContaining({
+          origin: 'https://example.com',
+          active: true,
+          contract: ownContract,
+          peerContract,
+          peerId: 'peer-1',
+          scheduledActivation: null,
+          pendingAccept: null,
+          pendingProcessId: null,
+        })
+      )
+    })
+
+    it('derives accepted actions from the own contract, not the peer contract', () => {
+      const initialState = createInitialState('test', window, { ...defaultSettings, contract: ownContract })
+
+      const newState = activate(initialState, 'https://example.com', peerContract, 'peer-1')
+
       expect(newState.acceptedActions).toEqual(['action2', 'action3'])
-      expect(newState.scheduledActivation).toBeNull()
     })
 
-    it('handles contract with no accepted actions', () => {
-      const initialState = createInitialState('test', window, defaultSettings)
-      const contract: IChannelContract = {
-        emitted: [{ type: 'action1' }],
-        accepted: [],
-      }
+    it('sets the connect timestamp', () => {
+      const initialState = createInitialState('test', window, { ...defaultSettings, contract: ownContract })
 
-      const newState = activate(initialState, 'https://example.com', contract)
+      const newState = activate(initialState, 'https://example.com', peerContract, 'peer-1')
 
-      expect(newState.acceptedActions).toEqual([])
+      expect(newState.connectTimestamp).toBeGreaterThan(0)
     })
 
-    it('handles contract with undefined accepted property', () => {
+    it('handles a channel without an own contract', () => {
       const initialState = createInitialState('test', window, defaultSettings)
-      const contract = <IChannelContract>{
-        emitted: [{ type: 'action1' }],
-      }
 
-      const newState = activate(initialState, 'https://example.com', contract)
+      const newState = activate(initialState, 'https://example.com', peerContract, 'peer-1')
 
       expect(newState.acceptedActions).toEqual([])
     })
 
     it('does not mutate original state', () => {
       const initialState = createInitialState('test', window, defaultSettings)
-      const origin = 'https://example.com'
-      const contract: IChannelContract = {
-        emitted: [],
-        accepted: [{ type: 'action1' }],
-      }
 
-      const newState = activate(initialState, origin, contract)
+      const newState = activate(initialState, 'https://example.com', peerContract, 'peer-1')
 
       expect(initialState.active).toBe(false)
       expect(initialState.origin).toBeNull()
@@ -122,11 +128,19 @@ describe('Channel State Management', () => {
 
   describe('deactivate', () => {
     it('marks channel as inactive', () => {
-      const initialState = createInitialState('test', window, defaultSettings)
-      const activeState = activate(initialState, 'https://example.com', {
-        emitted: [],
-        accepted: [{ type: 'action1' }],
+      const initialState = createInitialState('test', window, {
+        ...defaultSettings,
+        contract: { emitted: [], accepted: [{ type: 'action1' }] },
       })
+      const activeState = activate(
+        initialState,
+        'https://example.com',
+        {
+          emitted: [],
+          accepted: [{ type: 'action1' }],
+        },
+        'peer-1'
+      )
 
       const inactiveState = deactivate(activeState)
 

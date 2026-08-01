@@ -15,9 +15,13 @@ describe('withControlContract', () => {
     expect(withControlContract({ emitted: [{ type: 'a' }], accepted: [] }).emitted).toEqual([
       { type: 'a' },
       { type: ControlType.Beat },
-      { type: ControlType.Size },
+      { type: ControlType.Present },
+      { type: ControlType.Viewport },
+      { type: ControlType.Dismiss },
       { type: ControlType.Request },
       { type: ControlType.Response },
+      { type: ControlType.Visibility },
+      { type: ControlType.Dirty },
     ])
   })
 
@@ -25,9 +29,21 @@ describe('withControlContract', () => {
     expect(withControlContract({ emitted: [], accepted: [{ type: 'b' }] }).accepted).toEqual([
       { type: 'b' },
       { type: ControlType.Beat },
-      { type: ControlType.Size },
+      { type: ControlType.Present },
+      { type: ControlType.Viewport },
+      { type: ControlType.Dismiss },
       { type: ControlType.Request },
       { type: ControlType.Response },
+      { type: ControlType.Visibility },
+      { type: ControlType.Dirty },
     ])
+  })
+
+  it('preserves the contract version', () => {
+    expect(withControlContract({ emitted: [], accepted: [{ type: 'b' }], version: '1.2.0' }).version).toBe('1.2.0')
+  })
+
+  it('omits the version key when the contract declares none', () => {
+    expect(withControlContract({ emitted: [], accepted: [{ type: 'b' }] })).not.toHaveProperty('version')
   })
 })

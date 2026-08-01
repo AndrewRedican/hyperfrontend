@@ -1,6 +1,7 @@
 import type { IAction } from '../../types/action'
 import type { ChannelHandle } from '../../types/channel'
 import type { RoutingContext } from './types'
+import { isPeerInstance } from './peer-instance'
 import { resolveChannel } from './resolve-channel'
 
 /**
@@ -12,6 +13,9 @@ import { resolveChannel } from './resolve-channel'
  *
  * @remarks
  * Side Effects:
+ * - Ignores a CANCEL from an instance other than the counterpart this channel
+ *   answered, so a frame left over from a reloaded document cannot abort the
+ *   handshake that replaced it
  * - Cancels pending connection
  * - Sends CANCEL_CONNECTION_ACKNOWLEDGED response
  * - Terminates process
@@ -31,7 +35,7 @@ export function handleCancel(context: RoutingContext, message: MessageEvent<IAct
 
   const channel = <ChannelHandle | undefined>(resolveChannel(registry, message) || processManager.get(processId))
 
-  if (!channel) {
+  if (!channel || !isPeerInstance(channel, action)) {
     return
   }
 

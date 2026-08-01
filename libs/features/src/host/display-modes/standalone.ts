@@ -1,8 +1,13 @@
 import type { DisplayModeMount } from '../types'
-import { openExternalWindow } from './external-window'
+import { DisplayMode } from '../../shared/types'
+import { assertNoSandbox, openExternalWindow } from './external-window'
 
 /**
  * Mounts a feature in a full standalone browser tab/window.
+ *
+ * The simplest mode: the browser's normal new-tab behavior is sufficient, so
+ * no sizing or presentation coordination applies — only the ordinary session
+ * lifecycle over the opener relationship.
  *
  * @param context - Inputs the shell passes to this display mode.
  * @param context.options - The merged shell options.
@@ -14,5 +19,9 @@ import { openExternalWindow } from './external-window'
  * ```
  */
 export const mountStandalone: DisplayModeMount = ({ options }) => {
-  return openExternalWindow(options.url ?? '')
+  assertNoSandbox(options.sandbox, 'standalone')
+  return {
+    ...openExternalWindow(options.url ?? ''),
+    present: { mode: DisplayMode.Standalone },
+  }
 }

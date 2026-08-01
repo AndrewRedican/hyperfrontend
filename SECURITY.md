@@ -1,5 +1,28 @@
 # Security Policy
 
+## The Security Model
+
+Before reporting or reviewing, read the model this project is built on:
+**[Security Model](https://www.hyperfrontend.dev/docs/core-concepts/security)**. It is the canonical
+statement of what hyperfrontend defends against and what it does not, and it is the reference every
+other security claim in these docs points back to. In short:
+
+- **The named adversary is co-resident script** — an analytics snippet, tag manager, compromised
+  dependency, or unknown page that embeds a feature URL. A host that deliberately installs a feature
+  is trusting it, the way it trusts any dependency; the controls exist to bound a trusted
+  feature's bad day, not to treat its authors as hostile.
+- **Origin checks authenticate rooms, not speakers.** Once arbitrary script runs inside a page, no
+  message check distinguishes it from the application. Threats inside a page need Content Security
+  Policy, Trusted Types, dependency provenance, and server-side authorisation — a different
+  treatment, deliberately outside this model.
+- **Three parties carry the security of an integration.** The browser enforces document isolation
+  and the frame's capability attributes; the protocol enforces the relationship (pinned
+  counterparts, gated handshake, validated payloads, versioned contracts, an optional encrypted
+  envelope); and **you** decide authorisation — `frame-ancestors`, backend checks, HTTPS, the
+  envelope you choose, and the containment posture you set.
+
+A vulnerability report is most useful when it names which of those three the issue defeats.
+
 ## Reporting a Vulnerability
 
 We take the security of hyperfrontend seriously. If you discover a security vulnerability, please help us protect our users by following responsible disclosure practices.
@@ -58,14 +81,30 @@ Thank you for helping keep hyperfrontend and its users safe!
 
 ## Security Best Practices
 
-When using hyperfrontend in your applications:
+These are the decisions the SDK cannot make for you. Everything the protocol already enforces —
+origin pinning, window binding, instance identity, the gated handshake, payload validation on both
+ends — is on by default and is not something you should be re-implementing by hand.
 
-1. **Keep Dependencies Updated**: Regularly update to the latest version to receive security patches
-2. **Content Security Policy**: Implement appropriate CSP headers when embedding features
-3. **Input Validation**: Validate and sanitize all data passed between features
-4. **Origin Verification**: Always verify the origin of messages in cross-frame communication
-5. **Authentication**: Implement proper authentication and authorization for sensitive features
-6. **HTTPS**: Always serve hyperfrontend features over HTTPS in production
+1. **Restrict who may embed the feature.** Send
+   `Content-Security-Policy: frame-ancestors <hosts>` on the response that serves the feature
+   document. Origin pinning keeps a conversation consistent; only `frame-ancestors` decides whether
+   a page was ever allowed to frame you.
+2. **Authorise on the server.** A message that crossed the boundary is not an authorised operation.
+   Protected work needs credentials the feature's own backend validates.
+3. **Choose the envelope deliberately.** `v2` with a pre-shared key is the confidentiality control;
+   `v1` is time-window obfuscation and buys deterrence only. Provision and rotate the `v2` key
+   yourself — a key is never baked into a built artifact. A handshake that cannot agree on an
+   encrypted transport falls back to plaintext; where that would be unacceptable, drive
+   `@hyperfrontend/nexus` directly and set `security.mode: 'fail-closed'` on the channel so the
+   connection is denied instead.
+4. **Declare schemas and a contract version.** Actions without a schema pass unvalidated, and a side
+   without a version always passes the compatibility gate. Both are how drift is caught early.
+5. **Grant capability narrowly.** Delegate only the Permissions-Policy features the integration
+   needs, and price a `sandbox` posture against what the product actually requires.
+6. **Serve everything over HTTPS**, host and feature alike.
+7. **Keep dependencies updated** on both sides of the boundary, and pair that with the page-integrity
+   controls this model deliberately leaves to you: Content Security Policy, Trusted Types,
+   Subresource Integrity, and dependency provenance.
 
 ## Security Updates
 
@@ -73,10 +112,6 @@ Security updates will be released as patch versions and documented in the [CHANG
 
 ## Supported Versions
 
-We currently provide security updates for:
-
-| Version | Supported          |
-| ------- | ------------------ |
-| 0.0.x   | :white_check_mark: |
-
-As the project matures, we will update this table to reflect our long-term support policy.
+Security updates are provided for the latest published version of each `@hyperfrontend/*` package.
+Older releases receive no backports. A long-term support policy will replace this section once the
+packages settle on a stable release cadence.

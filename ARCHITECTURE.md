@@ -42,7 +42,7 @@ The architecture is composed of specialized libraries that layer on top of each 
 
 | Layer             | Package                           | Responsibility                                     |
 | ----------------- | --------------------------------- | -------------------------------------------------- |
-| **Tooling**       | `@hyperfrontend/features`         | Nx plugin for shell generation and automation      |
+| **SDK**           | `@hyperfrontend/features`         | Host/hostee runtime SDK, shell generation, CLI     |
 | **Communication** | `@hyperfrontend/nexus`            | Broker-channel messaging with contracts            |
 | **Security**      | `@hyperfrontend/network-protocol` | Encryption pipelines and obfuscation               |
 | **Crypto**        | `@hyperfrontend/cryptography`     | AES-GCM encryption, PBKDF2 key derivation, hashing |
@@ -55,7 +55,16 @@ The architecture is composed of specialized libraries that layer on top of each 
 
 ## Communication Layer: Nexus
 
-`@hyperfrontend/nexus` implements a TCP-like protocol over the browser's `postMessage` API. It provides secure, contract-validated messaging between browser contexts (iframes, windows, tabs, web workers).
+`@hyperfrontend/nexus` implements a session protocol over the browser's `postMessage` API. It provides secure, contract-validated messaging between browser contexts (iframes, windows, tabs).
+
+> **Canonical protocol story.** The session model described here — wire handshake, pinned
+> origins, versioned contracts, the four-state heartbeat, and polite teardown — is the
+> canonical description of the shipped runtime. The article
+> [Microfrontends from first principles](apps/docs-site/content/articles/microfrontends-from-first-principles.md)
+> derives the same model from scratch and is the canonical rationale; the per-library
+> architecture guides ([nexus](libs/nexus/ARCHITECTURE.md),
+> [features](libs/features/ARCHITECTURE.md)) document the same protocol in implementation
+> depth. Where an older document disagrees with these, this model wins.
 
 ### Broker-Channel Model
 
@@ -105,7 +114,8 @@ flowchart TB
 
 ### Connection Protocol
 
-Channels establish connections using a three-way handshake inspired by TCP:
+Channels establish sessions through a wire handshake — REQUEST, ACCEPT, OPEN — and nothing
+opens without it:
 
 ```mermaid
 ---
@@ -118,14 +128,64 @@ sequenceDiagram
     participant Host as HOST
     participant Feature as FEATURE
 
-    Host->>Feature: SYN (pid, contract)
-    Feature->>Host: SYN-ACK (pid, ack)
-    Host->>Feature: ACK (pid)
+    Host->>Feature: REQUEST (pid, contract, security offer)
+    Feature->>Host: ACCEPT (pid, contract, security answer)
+    Host->>Feature: OPEN (pid)
 
-    Note over Host,Feature: CONNECTION ACTIVE
+    Note over Host,Feature: SESSION OPEN — queued messages flush
 ```
 
-Each connection attempt is tracked by a Process ID (UUID), enabling multiple concurrent connection attempts and clean lifecycle management.
+- **Symmetric initiation.** Either side may connect first; simultaneous requests (glare)
+  resolve deterministically by a broker-id tie-break, and handshake replays are idempotent.
+- **Deadlines and retries.** Pending REQUEST/ACCEPT messages re-send on a retry cadence, and
+  every wait has a deadline: an unanswered attempt fires `connect-timeout` instead of hanging.
+- **Origins are learned, then pinned.** Each side pins the counterpart's origin at the
+  handshake and drops anything that does not match; receive-side routing resolves by the
+  sending window, never by claimed identity.
+- **Instances are distinguished from windows.** A window outlives the documents loaded into
+  it, so each side also records which incarnation of the counterpart it is talking to and
+  ignores frames from any other — traffic left over from a reloaded document cannot enter the
+  session that replaced it.
+- **Contracts gate the session.** Required actions must appear in the counterpart's contract,
+  and contracts carry an optional semver version checked by a compatibility rule at the
+  handshake gate. An incompatible pair is denied (`deny` with a reason) before anything opens.
+- **Payloads validate twice.** Send validates against the sender's own emitted schemas and
+  throws in the sender's frame; receive validates against the receiver's own accepted schemas
+  and drops invalid payloads with a diagnosable error event.
+
+Each connection attempt is tracked by a Process ID (UUID), enabling multiple concurrent
+connection attempts and clean lifecycle management.
+
+### Session Lifecycle: Heartbeat and Teardown
+
+A session that is open is not necessarily alive, so the runtime judges liveness with four
+states rather than a boolean:
+
+| State            | Meaning                                                                                                                             |
+| ---------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
+| **healthy**      | Beats are arriving within the expected budget.                                                                                      |
+| **unobservable** | The host page or the feature page is hidden — browsers throttle hidden timers, so silence is weak evidence and the watchdog pauses. |
+| **suspect**      | The pages are visible and the miss budget is exhausted; the feature is probably unhealthy.                                          |
+| **gone**         | The session is closed or destroyed.                                                                                                 |
+
+The feature pulses a hidden beat; the host watchdog counts misses only while both pages are
+visible (each side reports its own visibility). Entering `suspect` runs the host's
+unresponsive policy once per episode, and a recovering beat returns the session to `healthy`
+and re-arms it. Transitions surface as the shell's `status` event.
+
+Teardown is a protocol, not an event. The polite form is a short exchange: one side proposes
+closing (CLOSE), the other receives a `closing` notice while the channel still delivers — its
+flush window for unsaved work — then confirms (ACK), and only then does each side fire its
+single `close`. An unacknowledged close completes at a deadline, so an unresponsive
+counterpart cannot hold the channel open, and the impolite forms (crash, tab close) remain
+covered by the heartbeat. Dirty state is a contract event: the feature declares unsaved work
+(`setDirty`), and the host can take it into account (`isDirty`, `dirty-state`) before
+starting a polite teardown.
+
+A reload is a third form: the feature's document is replaced, so the session ends without
+either side asking. The host is told which one it was (`close` carries
+`reason: 'peer-reload'`) and keeps the mount — the new document handshakes on the same frame
+and is re-announced its presentation — so a refresh costs a session, not the feature.
 
 ### Contract System
 
@@ -152,6 +212,11 @@ const contract = {
 
 ## Security Layer: Network Protocol
 
+> **Read the model first.** What this layer defends against, what it does not, and which party owns
+> each control is stated once, in the
+> [Security Model](https://www.hyperfrontend.dev/docs/core-concepts/security). This section describes
+> the transport mechanics; the model tells you what they are worth.
+
 `@hyperfrontend/network-protocol` provides defense-in-depth security for message transport. It sits between the application layer and the raw `postMessage` transport.
 
 ### Protocol Versions
@@ -168,6 +233,12 @@ Messages pass through staged queues for transformation:
 **Outbound Pipeline**
 
 ```mermaid
+---
+config:
+  theme: base
+  themeVariables:
+    fontSize: 12px
+---
 flowchart LR
     A1["Plaintext Message"] --> B1["Encryption Queue"]
     B1 --> C1["Serialization Queue"]
@@ -178,6 +249,12 @@ flowchart LR
 **Inbound Pipeline**
 
 ```mermaid
+---
+config:
+  theme: base
+  themeVariables:
+    fontSize: 12px
+---
 flowchart LR
     A2["Wire Format"] --> B2["Deobfuscation Queue"]
     B2 --> C2["Deserialization Queue"]
@@ -228,80 +305,134 @@ const decrypted = await decrypt(encrypted, 'password')
 
 ## The Shell Pattern
 
-A **shell** is a self-contained package that knows how to load and communicate with a specific feature. Shells are the distribution mechanism for hyperfrontend features.
+Two applications, two SDK surfaces. A **feature app** (the _hostee_) declares a contract and connects
+through `@hyperfrontend/features/hostee`; a **host app** mounts that feature through
+`@hyperfrontend/features/host`. Neither writes protocol code.
+
+```typescript
+// In the feature app — declare the contract, connect to whatever host embeds it.
+import { createFeature } from '@hyperfrontend/features/hostee'
+
+const feature = createFeature({
+  name: 'clock',
+  contract: { emitted: [{ type: 'tick' }], accepted: [{ type: 'set-timezone' }] },
+})
+await feature.ready()
+```
+
+```typescript
+// In the host app — take the feature's contract, pick a mount, pick a mode, open.
+import { builtInDisplayModes, createShell, DisplayMode } from '@hyperfrontend/features/host'
+
+const shell = createShell({
+  modes: builtInDisplayModes,
+  contract: { emitted: [{ type: 'tick' }], accepted: [{ type: 'set-timezone' }] },
+  url: 'https://features.example.com/clock',
+  container: '#clock-slot',
+  displayMode: DisplayMode.Embedded,
+})
+shell.on('tick', (time) => console.log('feature said', time))
+shell.open()
+```
+
+The **shell** is the outward-facing package a feature ships so a host can do that without installing
+the SDK at all: `hf build` inlines the feature's contract, bakes its declared display modes, security
+protocol and permissions as defaults, bundles every dependency, and packs a tarball. The host is
+never the shell — the host is the application the shell is installed into.
 
 ### What the Shell Contains
 
 ```mermaid
+---
+config:
+  theme: base
+  themeVariables:
+    fontSize: 12px
+---
 flowchart LR
-    subgraph shell["FEATURE SHELL"]
-        direction LR
-        subgraph connection["Connection Setup"]
-            conn1["Broker config"]
-            conn2["Channel init"]
-            conn3["Contracts"]
+    subgraph shell["GENERATED SHELL PACKAGE"]
+        direction TB
+        entry["<b>createFeatureShell()</b><br/>typed from the contract"]
+        subgraph baked["Baked at build time"]
+            direction LR
+            b1["Inlined contract<br/>+ version"]
+            b2["Declared display modes"]
+            b3["Security protocol<br/>+ declared permissions"]
+            b4["Feature URL<br/>(overridable)"]
         end
-        subgraph visual["Visual Coordination"]
-            vis1["Styling"]
-            vis2["Sizing"]
-            vis3["Loading"]
+        subgraph bundled["Bundled runtime"]
+            direction LR
+            r1["host SDK"]
+            r2["nexus"]
+            r3["security envelope"]
         end
-        subgraph api["Fluent API"]
-            api1[".mount()"]
-            api2[".send()"]
-            api3[".on()"]
-        end
+        meta["metadata.json<br/>(registry-facing sidecar)"]
+        entry --- baked
+        entry --- bundled
     end
 ```
 
-> ⚠️ The shell does **not** contain the feature app code. Features load at runtime from their deployment URL.
+> ⚠️ The shell does **not** contain the feature app code. Features load at runtime from their
+> deployment URL.
 
-### Distribution Options
+### Distribution
 
-| Method          | Use Case             | Consumption                                                 |
-| --------------- | -------------------- | ----------------------------------------------------------- |
-| **npm package** | Modern build systems | `import { FeatureA } from '@org/shell-feature-a/react'`     |
-| **CDN script**  | Legacy applications  | `<script src="https://cdn.example.com/shell-feature-a.js">` |
-
-Both distribution methods produce zero-dependency bundles—all @hyperfrontend libraries are bundled into the shell.
-
-### Framework Consumption
+`hf build` emits an ESM and a CommonJS bundle with TypeScript declarations, then packs them into a
+publishable tarball:
 
 ```typescript
-// React
-import { FeatureA } from '@org/shell-feature-a/react'
-<FeatureA config={{ theme: 'dark' }} onReady={handleReady} />
-
-// Vue
-import { FeatureA } from '@org/shell-feature-a/vue'
-<FeatureA :config="{ theme: 'dark' }" @ready="handleReady" />
-
-// Vanilla JS
-const feature = new HyperfrontendFeatureA('#container', { theme: 'dark' })
-feature.on('ready', handleReady)
-feature.mount()
+import { createFeatureShell } from '@org/clock-shell'
 ```
+
+The published manifest declares no runtime dependencies—every @hyperfrontend library is bundled into
+the shell—so a host installs one package and inherits no transitive install burden.
+
+### Consumption
+
+```typescript
+// Any framework, or none — the shell exposes one factory and a handle.
+import { createFeatureShell } from '@org/clock-shell'
+
+const clock = createFeatureShell({ container: '#clock-slot' })
+clock.on('open', () => console.log('connected'))
+clock.on('tick', (time) => render(time))
+clock.open()
+clock.send('set-timezone', { tz: 'UTC' })
+```
+
+Framework bindings are deliberately out of scope (see the [Manifesto](MANIFESTO.md)): the handle is vanilla JavaScript, and a React hook or Vue composable around it is a few lines a team writes in its
+own idiom.
 
 ---
 
 ## Runtime Flow
 
-Here's how the components work together when a host application loads a feature:
+Here's the whole sequence, from the host building the shell to both sides closing the session:
 
 ```mermaid
+---
+config:
+  theme: base
+  themeVariables:
+    fontSize: 12px
+---
 flowchart TB
     subgraph runtime["RUNTIME SEQUENCE"]
         direction TB
-        step1["1. HOST INITIALIZATION<br/><code>const broker = createBroker({ name: 'host', contracts, policies })</code>"]
-        step2["2. SHELL MOUNT<br/><code>&lt;FeatureShell /&gt; → Creates iframe → Loads feature URL</code>"]
-        step3["3. CHANNEL CREATION<br/><code>const channel = broker.addChannel('feature-a', iframe.contentWindow)</code>"]
-        step4["4. CONNECTION HANDSHAKE<br/><code>channel.connect() → SYN → SYN-ACK → ACK → ACTIVE</code>"]
-        step5["5. MESSAGE EXCHANGE<br/><code>channel.send('CONFIG', { theme: 'dark' })</code><br/><code>channel.onMessage((msg) => { ... })</code>"]
-        step6["6. LIFECYCLE EVENTS<br/><code>channel.on('open', ...)</code> Connection established<br/><code>channel.on('close', ...)</code> Graceful disconnect<br/><code>channel.on('deny', ...)</code> Connection refused"]
+        step1["1. BUILD THE SHELL<br/><code>const shell = createShell({ modes, contract, url, container, displayMode })</code><br/>only the declared mounts ship"]
+        step2["2. OPEN<br/><code>shell.open()</code> → mount the frame <i>hidden</i> → load the feature URL"]
+        step3["3. HANDSHAKE<br/>REQUEST → ACCEPT → OPEN, deadline-bounded<br/>origin pinned · contract version checked · security transport attached"]
+        step4["4. SESSION OPEN<br/>frame revealed · queued sends flush · <code>shell.on('open')</code> · <code>feature.ready()</code> resolves"]
+        step5["5. PRESENTATION<br/>host announces the mode with the frame's measured pixels<br/>later container changes reported as they happen"]
+        step6["6. MESSAGE EXCHANGE<br/><code>shell.send('set-timezone', { tz })</code> · <code>shell.on('tick', handler)</code><br/>validated against each side's own contract"]
+        step7["7. LIVENESS AND TEARDOWN<br/><code>status</code> (healthy / unobservable / suspect / gone)<br/><code>closing</code> flush window → <code>close</code> on both sides"]
 
-        step1 --> step2 --> step3 --> step4 --> step5 --> step6
+        step1 --> step2 --> step3 --> step4 --> step5 --> step6 --> step7
     end
 ```
+
+Steps 3 through 7 are the session model described above, and the host writes none of it: the SDK owns
+the handshake, the pinning, the geometry, the watchdog, and the teardown exchange.
 
 ---
 
@@ -310,6 +441,12 @@ flowchart TB
 When security is enabled, the communication flow adds encryption layers:
 
 ```mermaid
+---
+config:
+  theme: base
+  themeVariables:
+    fontSize: 12px
+---
 sequenceDiagram
     box SECURE MESSAGE FLOW
     participant Host as HOST
@@ -360,9 +497,18 @@ This enables server-side features (SSR, API routes) to use the same security pro
 
 Each package contains its own architecture documentation with implementation details:
 
+- [Features Architecture](libs/features/ARCHITECTURE.md) — Host/hostee SDK, control plane, shell generation
 - [Nexus Architecture](libs/nexus/ARCHITECTURE.md) — Protocol design, handler reference, event system
 - [Network Protocol Architecture](libs/network-protocol/ARCHITECTURE.md) — Queue composition, security suite, end-to-end flow
 - [State Machine Architecture](libs/state-machine/ARCHITECTURE.md) — State patterns, transitions, reducers
+
+Two cross-cutting documents sit beside them:
+
+- [Security Model](https://www.hyperfrontend.dev/docs/core-concepts/security) — the trust model, the
+  browser/protocol/operator split, the capability model, and the status of every control.
+- [Microfrontends from first principles](apps/docs-site/content/articles/microfrontends-from-first-principles.md)
+  — why the boundary is drawn where it is, derived from scratch. The canonical rationale for
+  everything above.
 
 ---
 
@@ -373,7 +519,7 @@ Each package contains its own architecture documentation with implementation det
 | **Runtime Integration**    | Features load at runtime, not build-time. No coordination required.    |
 | **Contract-First**         | Communication interfaces are declared, validated, and type-safe.       |
 | **Framework Agnostic**     | The protocol is the common language. Any framework works.              |
-| **Zero-Dependency Shells** | All dependencies bundled. Works with CDN or npm.                       |
+| **Zero-Dependency Shells** | All dependencies bundled. A host installs one package.                 |
 | **Defense in Depth**       | Optional layered security: encryption, obfuscation, origin validation. |
 | **Functional Core**        | Pure functions with dependency injection. Side effects at boundaries.  |
 | **Isomorphic APIs**        | Same code runs in browser and Node.js.                                 |

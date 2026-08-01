@@ -1,8 +1,24 @@
 import type { Schema, ValidationResult } from '@hyperfrontend/json-utils'
-import type { ActionDescription, FeatureConfig, FeatureContract } from './types'
+import type { ActionDescription, DisplayConfig, FeatureConfig, FeatureContract } from './types'
 import { isArray } from '@hyperfrontend/immutable-api-utils/built-in-copy/array'
 import { createError } from '@hyperfrontend/immutable-api-utils/built-in-copy/error'
+import { values } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
 import { validate } from '@hyperfrontend/json-utils'
+import { parseVersion } from '@hyperfrontend/versioning/semver/parse'
+import { DisplayMode } from './types'
+
+// note: Mirrors the BoxPosition union; validation reports the allowed values by listing this.
+const BOX_POSITIONS: readonly string[] = [
+  'center',
+  'top-left',
+  'top-center',
+  'top-right',
+  'center-left',
+  'center-right',
+  'bottom-left',
+  'bottom-center',
+  'bottom-right',
+]
 
 // note: Runtime validation shared by the host/hostee factories and the config loader.
 
@@ -42,6 +58,9 @@ function collectActionListIssues(actions: unknown, field: string, issues: string
     if (action['respondsWith'] !== undefined && (typeof action['respondsWith'] !== 'string' || action['respondsWith'].length === 0)) {
       issues.push(`"${field}[${index}]" has a "respondsWith" that must be a non-empty string.`)
     }
+    if (action['required'] !== undefined && typeof action['required'] !== 'boolean') {
+      issues.push(`"${field}[${index}]" has a "required" that must be a boolean.`)
+    }
   })
 }
 
@@ -75,6 +94,25 @@ function collectRespondsWithIssues(
 }
 
 /**
+ * Collects any problem with the contract's optional `version` field.
+ *
+ * @param version - The candidate version value.
+ * @param issues - The running list of human-readable problems, appended to in place.
+ */
+function collectVersionIssues(version: unknown, issues: string[]): void {
+  if (version === undefined) {
+    return
+  }
+  if (typeof version !== 'string') {
+    issues.push(`"version" must be a semver string, but got ${describeType(version)}.`)
+    return
+  }
+  if (!parseVersion(version).success) {
+    issues.push(`"version" must be a valid semver version (e.g. "1.2.0"), but got "${version}".`)
+  }
+}
+
+/**
  * Names the kind of an unexpected value for an error message.
  *
  * @param value - The value to describe.
@@ -98,7 +136,7 @@ function describeType(value: unknown): string {
  *
  * @param contract - The candidate contract, typically parsed from disk.
  * @returns The validated contract, typed.
- * @throws {Error} When the value is not an object, any action is malformed, or a `respondsWith` names no action in the other direction.
+ * @throws {Error} When the value is not an object, any action is malformed, a `respondsWith` names no action in the other direction, or a `version` is not valid semver.
  *
  * @example Validating a parsed contract file
  * ```typescript
@@ -113,6 +151,7 @@ export function validateContract(contract: unknown): FeatureContract {
   const issues: string[] = []
   collectActionListIssues(contract['emitted'], 'emitted', issues)
   collectActionListIssues(contract['accepted'], 'accepted', issues)
+  collectVersionIssues(contract['version'], issues)
   if (issues.length === 0) {
     const emitted = <ActionDescription[]>contract['emitted']
     const accepted = <ActionDescription[]>contract['accepted']
@@ -125,6 +164,7 @@ export function validateContract(contract: unknown): FeatureContract {
   return {
     emitted: <ActionDescription[]>contract['emitted'],
     accepted: <ActionDescription[]>contract['accepted'],
+    ...(contract['version'] !== undefined && { version: <string>contract['version'] }),
   }
 }
 
@@ -154,10 +194,135 @@ export function validateFeatureConfig(config: unknown): FeatureConfig {
 }
 
 /**
+ * Collects any problem with a per-mode dimension pair (`width`/`height`).
+ *
+ * @param section - The candidate per-mode record.
+ * @param field - The config path of `section`, used to locate problems in messages.
+ * @param bothRequired - Whether the pair must be complete (fixed embedded sizing).
+ * @param issues - The running list of human-readable problems, appended to in place.
+ */
+function collectDimensionIssues(section: Record<string, unknown>, field: string, bothRequired: boolean, issues: string[]): void {
+  const axes = <const>['width', 'height']
+  if (bothRequired && axes.some((axis) => section[axis] === undefined)) {
+    issues.push(`"${field}" must declare both "width" and "height" — fixed dimensions are exact, so a partial pair is meaningless.`)
+  }
+  axes.forEach((axis) => {
+    const value = section[axis]
+    if (value === undefined) {
+      return
+    }
+    if (typeof value !== 'number' || !(value > 0) || value === Infinity) {
+      issues.push(`"${field}.${axis}" must be a positive number of pixels.`)
+    }
+  })
+}
+
+/**
+ * Collects any problem with the config's `display.modes` list.
+ *
+ * @param modes - The candidate modes value.
+ * @param issues - The running list of human-readable problems, appended to in place.
+ * @returns The validated modes list, or `undefined` when absent or invalid.
+ */
+function collectModesIssues(modes: unknown, issues: string[]): DisplayMode[] | undefined {
+  if (modes === undefined) {
+    return undefined
+  }
+  const known = values(DisplayMode)
+  if (!isArray(modes) || modes.length === 0) {
+    issues.push(`"display.modes" must be a non-empty array of display modes (${known.join(', ')}).`)
+    return undefined
+  }
+  const unknown = modes.filter((mode) => !known.includes(<DisplayMode>mode))
+  if (unknown.length > 0) {
+    issues.push(
+      `"display.modes" contains unknown modes: ${unknown.map((mode) => `"${String(mode)}"`).join(', ')} (expected ${known.join(', ')}).`
+    )
+    return undefined
+  }
+  if (modes.some((mode, index) => modes.indexOf(mode) !== index)) {
+    issues.push('"display.modes" must not repeat a mode.')
+    return undefined
+  }
+  return <DisplayMode[]>modes
+}
+
+/**
+ * Validates an unknown value as a {@link DisplayConfig}.
+ *
+ * Enforces the presentation agreement a feature declares: a well-formed
+ * (deduplicated, known) `modes` list, complete positive fixed embedded
+ * dimensions, positive dialog/popup dimensions, a known backdrop behavior, and
+ * per-mode sections that only configure declared modes. Reports every problem
+ * at once.
+ *
+ * @param display - The candidate `display` value from a feature config.
+ * @returns The validated display config, typed.
+ * @throws {Error} When any part of the display config is malformed.
+ *
+ * @example Validating a display declaration
+ * ```typescript
+ * const display = validateDisplayConfig({ modes: ['embedded', 'dialog'], dialog: { width: 480, backdrop: 'event' } })
+ * ```
+ */
+export function validateDisplayConfig(display: unknown): DisplayConfig {
+  if (!isRecord(display)) {
+    throw createError(`Invalid config: "display" must be an object, but got ${describeType(display)}.`)
+  }
+  const issues: string[] = []
+  const modes = collectModesIssues(display['modes'], issues)
+  const sections = <const>['embedded', 'dialog', 'popup']
+  sections.forEach((section) => {
+    const value = display[section]
+    if (value === undefined) {
+      return
+    }
+    if (!isRecord(value)) {
+      issues.push(`"display.${section}" must be an object, but got ${describeType(value)}.`)
+      return
+    }
+    if (modes !== undefined && !modes.includes(section)) {
+      issues.push(
+        `"display.${section}" is configured, but "${section}" is not in "display.modes" — declare the mode or drop its configuration.`
+      )
+    }
+    collectDimensionIssues(value, `display.${section}`, section === 'embedded', issues)
+    const position = value['position']
+    if (section !== 'embedded' && position !== undefined && !(typeof position === 'string' && BOX_POSITIONS.includes(position))) {
+      issues.push(
+        `"display.${section}.position" must be one of ${BOX_POSITIONS.join(', ')}, but got ${typeof position === 'string' ? `"${position}"` : describeType(position)}.`
+      )
+    }
+    if (section === 'dialog') {
+      const backdrop = value['backdrop']
+      if (backdrop !== undefined && backdrop !== 'close' && backdrop !== 'event' && backdrop !== 'none') {
+        issues.push(
+          `"display.dialog.backdrop" must be "close", "event", or "none", but got ${typeof backdrop === 'string' ? `"${backdrop}"` : describeType(backdrop)}.`
+        )
+      }
+    }
+  })
+  if (display['closeOnEscape'] !== undefined && typeof display['closeOnEscape'] !== 'boolean') {
+    issues.push(`"display.closeOnEscape" must be a boolean, but got ${describeType(display['closeOnEscape'])}.`)
+  }
+  if (issues.length > 0) {
+    throw createError(`Invalid config:\n${issues.map((issue) => `  - ${issue}`).join('\n')}`)
+  }
+  return <DisplayConfig>display
+}
+
+/**
  * Validates a message payload against an action's optional schema at runtime.
  *
- * Bundled into the generated connector and used on both the host and hostee
- * sides. Type-only actions (those without a `schema`) always pass.
+ * This check runs on both ends of the feature channel — in the host shell (and
+ * therefore in every generated shell, which bundles it) and in the hostee
+ * feature handle — with each side judging by its own contract: an outgoing
+ * payload is validated against the sender's `emitted` schemas and an invalid
+ * send throws in the sender's frame before anything crosses the wire; an
+ * incoming payload is validated against the receiver's `accepted` schemas and
+ * an invalid message is dropped and surfaced as an `error` event with reason
+ * `'invalid-payload'`. Type-only actions (those without a `schema`) always
+ * pass.
  *
  * @param action - The contract action whose schema the payload must satisfy.
  * @param payload - The candidate message payload.

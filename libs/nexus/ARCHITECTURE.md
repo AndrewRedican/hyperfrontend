@@ -10,7 +10,7 @@
 
 ### Target Use Cases
 
-1. **Micro-frontend communication** — Shell applications coordinating multiple micro-apps
+1. **Micro-frontend communication** — Host applications coordinating multiple micro-apps
 2. **Iframe integration** — Secure bidirectional messaging with embedded content
 3. **Multi-window applications** — Communication between browser windows/tabs
 4. **Plugin architectures** — Host-to-plugin communication with contract enforcement
@@ -21,7 +21,7 @@
 
 1. [Architecture Overview](#architecture-overview)
 2. [Design Philosophy](#design-philosophy)
-3. [Module Structure](#module-structure)
+3. [Module Organization](#module-organization)
 4. [Core Concepts](#core-concepts)
 5. [Protocol Design](#protocol-design)
 6. [Handler Reference](#handler-reference)
@@ -31,6 +31,7 @@
 10. [Internal Dependencies](#internal-dependencies)
 11. [Integration Points](#integration-points)
 12. [Public API Surface](#public-api-surface)
+13. [Links](#links)
 
 ---
 
@@ -123,17 +124,21 @@ interface BrokerHandle {
   readonly id: string
   readonly name: string
   readonly contract: IChannelContract
+  readonly settings: BrokerSettings
   readonly channels: ReadonlyArray<ChannelJSON>
+  readonly acceptedActionTypes: readonly string[]
+  readonly logger: Logger
 
-  addChannel(name: string, target: Window, settings?: IChannelSettings): ChannelHandle
+  addChannel(name: string, target: Window, settings?: Record<string, unknown>): ChannelHandle
   getChannel(reference: string | Window): ChannelHandle | null
   removeChannel(reference: string | Window): void
   setSecurityPolicy(policy: SecurityPolicy): BrokerHandle
   extendContract(contract: IChannelContract): BrokerHandle
+  toJSON(): Record<string, unknown>
 
   // Security protocol management
-  registerProtocol(version: 'v1' | 'v2', provider: unknown): BrokerHandle
-  unregisterProtocol(version: 'v1' | 'v2'): BrokerHandle
+  registerProtocol(version: SecurityProtocolVersion, provider: unknown): BrokerHandle
+  unregisterProtocol(version: SecurityProtocolVersion): BrokerHandle
   hasProtocol(version: SecurityProtocolVersion): boolean
   getSupportedProtocols(): SecurityProtocolVersion[]
 }
@@ -177,14 +182,18 @@ Contracts define the messaging agreement between parties:
 interface IChannelContract {
   emitted: IActionDescription[] // Message types this party sends
   accepted: IActionDescription[] // Message types this party receives
+  version?: string // Optional version announcement crossed during the handshake
 }
 
 interface IActionDescription {
   type: string // Message type identifier
   description?: string // Human-readable description
   schema?: object // Optional JSON Schema for validation
+  required?: boolean // Accepted entries only: deny the connection unless the peer emits this type
 }
 ```
+
+Contracts are exchanged during the handshake. Unknown inbound types are dropped and logged; only `accepted` entries flagged `required` gate the connection (the peer must emit them), so additive contract evolution is non-breaking in both directions. See [Contract Compatibility](#contract-compatibility) for the full gating rules, including the optional `version` announcement and the channel-supplied `contractCompat` rule.
 
 ### 4. Actions (Protocol Messages)
 
@@ -233,6 +242,8 @@ sequenceDiagram
     Note over HostB: [CHANNEL OPEN]<br/>Event: 'open'
 ```
 
+Initiation is symmetric — either side may `connect()` first, and simultaneous requests (glare) resolve by broker-id tie-break (the lower id yields and answers as responder). Pending REQUEST/ACCEPT frames are re-sent every `requestRetryMs` (default 500 ms) until answered; all three handshake messages are idempotent under replay. A handshake that stays unanswered past `connectTimeoutMs` (default 10 000 ms) fires `connect-timeout` and leaves the channel inactive, reconnectable, with queued messages retained. Each side pins the counterpart's origin during the handshake; subsequent sends target the pin and mismatched inbound origins are dropped. A channel can also be pre-pinned via the `origin` setting before the first message leaves.
+
 **Internal Sequence:**
 
 ```mermaid
@@ -247,19 +258,70 @@ sequenceDiagram
     participant HostB as Host B (Responder)
 
     Note over HostA: channel.connect()
-    Note over HostA: [createProcess]
+    Note over HostA: [createProcess]<br/>[start retry + deadline timers]
     HostA->>HostB: [send REQUEST_CONNECTION]
-    Note over HostB: [handleRequest]<br/>[addChannel if new]<br/>[trackProcess]<br/>[validateContract]<br/>[applySecurityPolicy]<br/>[activate]
+    Note over HostB: [handleRequest]<br/>[addChannel if new]<br/>[validateContract]<br/>[requirements gate]<br/>[contract-compat gate]<br/>[applySecurityPolicy]<br/>[negotiate security vs registry]<br/>[trackProcess]<br/>[pin origin]<br/>[send ACCEPT + retry/deadline]
     HostB->>HostA: [send ACCEPT_CONNECTION]
-    Note over HostA: [handleAccept]<br/>[validateContract]<br/>[applySecurityPolicy]<br/>[activate]
+    Note over HostA: [handleAccept]<br/>[validateContract]<br/>[applySecurityPolicy]<br/>[requirements gate]<br/>[contract-compat gate]<br/>[attach security transport]<br/>[pin origin]<br/>[activate + flush]
     HostA->>HostB: [send OPEN_CONNECTION]
     Note over HostA: [terminateProcess]<br/>[notifyEvent('open')]<br/>[ACTIVE]
-    Note over HostB: [handleOpen]<br/>[terminateProcess]<br/>[notifyEvent('open')]<br/>[ACTIVE]
+    Note over HostB: [handleOpen]<br/>[confirm security + attach transport]<br/>[activate + flush]<br/>[terminateProcess]<br/>[notifyEvent('open')]<br/>[ACTIVE]
 ```
+
+### Instance Identity
+
+Every broker mints a UUID when it boots and stamps it on every action it sends (`senderId`).
+It is a machine identity, not a label — the broker's `name` is the readable one — and it does
+three jobs a name cannot: it is the endpoint identifier the encrypted wire format requires
+(each packet carries the sender's and the target's id, both validated as UUID v4), the ordinal
+that settles glare without an extra round trip, and the identity of one **incarnation** of the
+counterpart.
+
+That last job matters because a window outlives the documents loaded into it. Routing resolves
+an inbound frame by its source window, which identifies the window, not what is running inside
+it. So the channel records the counterpart's id at handshake time (`peerId`, exposed on
+`ChannelJSON`) and, while a session is open, ignores frames stamped with any other id: product
+messages, CLOSE, CANCEL, DESTROY, and the OPEN that completes a handshake. Traffic left over
+from a document that has been replaced is dropped instead of entering the session that
+replaced it.
+
+REQUEST is the exception, because it is how a new incarnation announces itself. A REQUEST
+carrying a different id on a connected channel means the window reloaded (or navigated
+in-frame): the session it belonged to ends silently — `close` fires with
+`reason: 'peer-reload'` so subscribers can drop session-scoped state — and the same channel
+re-handshakes with the new instance. The channel is never removed, and security and contract
+compatibility are renegotiated from scratch; only the origin pin carries over.
+
+The id is cooperative, not a credential: any script that can post to the window can claim one,
+so the check is a correctness mechanism (and a hurdle for a co-resident script that has never
+observed the id), while origin pinning stays the boundary. Inside an encrypted envelope it is
+authenticated, because producing a frame at all requires the negotiated key.
+
+### Contract Compatibility
+
+Both sides exchange contracts during the handshake. Vocabulary differences never gate the connection — only `accepted` entries flagged `required: true` do, and each must appear in the counterpart's `emitted` list or the connection is denied with `Incompatible contract: missing required actions …`. This keeps additive contract evolution non-breaking in both directions:
+
+| Situation                               | Fatal? | Handling                                              |
+| --------------------------------------- | ------ | ----------------------------------------------------- |
+| Peer emits a type outside my vocabulary | No     | Dropped and logged at receive                         |
+| I accept a type the peer never emits    | No     | Nothing — dormant vocabulary                          |
+| I emit a type the peer does not accept  | No     | Peer drops it; the peer's own `required` flags decide |
+| I require an input the peer never emits | Yes    | Connection denied at handshake time                   |
+
+A contract may also carry an optional `version` string. Nexus attaches no semantics to it — supply a `contractCompat` rule in the channel settings to decide whether two contracts may interoperate:
+
+```typescript
+const channel = broker.addChannel('partner', partnerWindow, {
+  contractCompat: (own, peer) =>
+    own.version === peer.version ? { compatible: true } : { compatible: false, reason: `${own.version} does not match ${peer.version}` },
+})
+```
+
+The rule runs at the same handshake gate as the required-actions check, on whichever side holds it, receiving the local contract and the counterpart's. On the responder (REQUEST time) an incompatible result sends DENY with the rule's reason and `reason: 'incompatible-contract'`, so the `deny` event fires on both the denying responder and the denied initiator. On the initiator (ACCEPT time) an incompatible result aborts the handshake: the initiator fires its own `deny` event with the same reason and sends CANCEL to the counterpart, which observes a `cancel`, not a `deny`.
 
 ### Denial Flow
 
-When a connection is rejected (invalid contract or security policy failure):
+When a connection is rejected during REQUEST handling:
 
 ```mermaid
 ---
@@ -274,11 +336,19 @@ sequenceDiagram
 
     Note over HostA: channel.connect()
     HostA->>HostB: [send REQUEST_CONNECTION]
-    Note over HostB: [handleRequest]<br/>[validateContract FAILS]<br/>— or —<br/>[securityPolicy REJECTS]
+    Note over HostB: [handleRequest]<br/>[validateContract FAILS]<br/>— or —<br/>[required action missing]<br/>— or —<br/>[contract-compat rule REJECTS]<br/>— or —<br/>[securityPolicy REJECTS]<br/>— or —<br/>[fail-closed, plaintext outcome]
     HostB->>HostA: [send DENY_CONNECTION]
-    Note over HostB: [terminateProcess]
-    Note over HostA: [handleDeny]<br/>[terminateProcess]<br/>[notifyEvent('deny')]<br/>[CLOSED - never connected]
+    Note over HostB: [notifyEvent('deny')<br/>for every deny cause]
+    Note over HostA: [handleDeny]<br/>[stop retries, terminateProcess]<br/>[notifyEvent('deny')]<br/>[CLOSED - never connected]
 ```
+
+Every gate carries a machine-readable `reason` — `'invalid-contract'`, `'missing-required-actions'`, `'policy-rejected'`, `'incompatible-contract'`, or `'security-unavailable'` — alongside the human-readable `error`, and every gate fires the denial locally on the responder as a `deny` event. A denying side is never left waiting on a channel it refused: without the local event, a responder that yielded the glare tie-break has already cleared its handshake timers and would see neither `deny` nor `connect-timeout`. The local event fires once per handshake process: the initiator retries REQUEST while pending, and each retry is answered with another DENY frame without re-notifying the responder's subscribers. On the initiator, `handleDeny` stops the request retries and removes the tracked process, so duplicate DENY frames are no-ops and the `deny` event fires once.
+
+The DENY frame discloses less than the local event for one gate. A policy rejection tells the refused requester only `error: 'Not accepted.'` with no `reason`, because naming the gate would tell an origin the policy just refused how this side judges connections; the local event names the rejected origin and carries `reason: 'policy-rejected'`. The other gates disclose the same `error` and `reason` both ways — an invalid or under-specified contract is the requester's own artifact, so the detail is actionable on both ends.
+
+### Cancellation Flow
+
+Either party can cancel before the connection completes: CANCEL_CONNECTION is answered with CANCEL_CONNECTION_ACKNOWLEDGED, and both sides fire the `cancel` event. The initiator-side gates that run at ACCEPT time (invalid contract, missing required actions, security policy, contract compatibility, fail-closed security) also abort through this verb — the aborting initiator sends CANCEL to the counterpart, logs an operator warning naming the channel, and fires a local `deny` with the gate's reason, once per handshake process, so a replayed ACCEPT that raced the CANCEL does not notify twice. The counterpart observes a `cancel`, not a `deny`: an aborted acceptance is indistinguishable on the wire from any other cancellation.
 
 ### Graceful Disconnection
 
@@ -296,10 +366,25 @@ sequenceDiagram
     Note over HostA: [CHANNEL OPEN]
     Note over HostB: [CHANNEL OPEN]
     HostA->>HostB: 1. CLOSE_CONNECTION
+    Note over HostA: Event: 'closing'<br/>[still active, awaiting ACK]
+    Note over HostB: Event: 'closing'<br/>[flush window - channel still delivers]
+    HostB-->>HostA: (final flush sends, if any)
     HostB->>HostA: 2. CLOSE_CONNECTION_ACKNOWLEDGED
-    Note over HostA: Event: 'close'<br/>[CHANNEL CLOSED]
     Note over HostB: Event: 'close'<br/>[CHANNEL CLOSED]
+    Note over HostA: Event: 'close'<br/>[CHANNEL CLOSED]
 ```
+
+The polite close is a flush-then-confirm exchange. The disconnector posts CLOSE, fires
+`closing` (`{ initiatedLocally: true }`), and stays active so the partner's final sends
+still deliver; its single `close` fires only when the acknowledgement arrives — or when
+`closeTimeoutMs` (default 2 s) expires, so an unresponsive partner cannot hold the channel
+open. The partner fires `closing` (`{ initiatedLocally: false }`) while the channel still
+delivers — subscribers may synchronously send final messages, which arrive before the
+acknowledgement — then acknowledges, deactivates, and fires its single `close`. New sends
+issued after a close was proposed queue for the next connection instead of racing the CLOSE.
+Simultaneous polite closes (close glare) acknowledge each other and still fire exactly one
+`closing` and one `close` per side. `destroy()` remains the immediate, unacknowledged
+teardown.
 
 ### State Transitions
 
@@ -314,8 +399,12 @@ stateDiagram-v2
     [*] --> INITIAL
     INITIAL --> CONNECTING: connect()
     CONNECTING --> DENIED: DENY
+    CONNECTING --> INITIAL: deadline expiry ('connect-timeout')
     CONNECTING --> ACTIVE: ACCEPT + OPEN
-    ACTIVE --> CLOSED: disconnect()
+    ACTIVE --> CLOSING: disconnect()
+    CLOSING --> CLOSED: ACK or closeTimeoutMs
+    ACTIVE --> CLOSED: peer CLOSE (after flush window)
+    ACTIVE --> CONNECTING: peer reload (new instance in the window)
     DENIED --> [*]
     CLOSED --> [*]
 ```
@@ -326,19 +415,19 @@ stateDiagram-v2
 
 Each protocol action is processed by a dedicated handler. All handlers receive the broker state, channel registry, process manager, and incoming message.
 
-| Handler                    | Responsibilities                                                                                                                                                                   |
-| -------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `handleRequest`            | Validate contract, apply policy, activate channel, send ACCEPT                                                                                                                     |
-| `handleAccept`             | Validate contract, apply policy, activate, send OPEN, notify 'open'                                                                                                                |
-| `handleOpen`               | Terminate process, notify 'open' (responder side)                                                                                                                                  |
-| `handleDeny`               | Terminate process, notify 'deny' with error context                                                                                                                                |
-| `handleCancel`             | Cancel channel, send CANCEL_ACK, notify 'cancel'                                                                                                                                   |
-| `handleCancelAcknowledged` | Terminate process, notify 'cancel' (initiator side)                                                                                                                                |
-| `handleClose`              | Disconnect channel, send CLOSE_ACK, notify 'close'                                                                                                                                 |
-| `handleCloseAcknowledged`  | Terminate process, notify 'close' (initiator side)                                                                                                                                 |
-| `handleMessage`            | Validate payload, forward to subscribers via `notifyMessage()`                                                                                                                     |
-| `handleDestroy`            | Force-destroy connection, clean up resources                                                                                                                                       |
-| `handleInvalid`            | Log invalid requests, optionally notify sender — see [handle-invalid.ts](https://github.com/AndrewRedican/hyperfrontend/blob/main/libs/nexus/src/broker/routing/handle-invalid.ts) |
+| Handler                    | Responsibilities                                                                                                                                                                                                                                                                                                                                                                                                      |
+| -------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `handleRequest`            | Enforce origin pin, resolve glare/reload (a new instance in the window ends the stale session with `reason: 'peer-reload'`), validate contract + requirements + compat rule, apply policy, negotiate security against the protocol registry (deny fail-closed plaintext outcomes, firing the local 'deny' once per process), track process, pin origin, send ACCEPT with retry/deadline (or schedule until connect()) |
+| `handleAccept`             | Resolve by process or source window, enforce origin pin, validate contract + requirements + compat rule, apply policy, attach the security transport before the queue flushes (abort fail-closed plaintext outcomes via CANCEL + local 'deny'), activate + flush, send OPEN confirming the security outcome, notify 'open'                                                                                            |
+| `handleOpen`               | Ignore an OPEN from another instance (leaving the process intact), apply the initiator's security confirmation (attach transport before flush, refuse fail-closed plaintext outcomes), activate from the pending accept, flush queue, terminate process, notify 'open' (responder side)                                                                                                                               |
+| `handleDeny`               | Abandon the pending request (stop retrying), terminate process, notify 'deny' with error context                                                                                                                                                                                                                                                                                                                      |
+| `handleCancel`             | Ignore a CANCEL from another instance, else cancel channel, send CANCEL_ACK, notify 'cancel'                                                                                                                                                                                                                                                                                                                          |
+| `handleCancelAcknowledged` | Terminate process, notify 'cancel' (initiator side)                                                                                                                                                                                                                                                                                                                                                                   |
+| `handleClose`              | Ignore a CLOSE from another instance, else notify 'closing' (flush window, channel still active), send CLOSE_ACK, then deactivate and notify a single 'close'                                                                                                                                                                                                                                                         |
+| `handleCloseAcknowledged`  | Complete the initiator's polite close: deactivate, terminate process, notify its single 'close' (ignores stray acks for channels not closing)                                                                                                                                                                                                                                                                         |
+| `handleMessage`            | Drop and log messages from another instance, validate payload, forward to subscribers via `notifyMessage()`                                                                                                                                                                                                                                                                                                           |
+| `handleDestroy`            | Ignore a DESTROY from another instance, else force-destroy connection, clean up resources                                                                                                                                                                                                                                                                                                                             |
+| `handleInvalid`            | Log invalid requests, optionally notify sender — see [handle-invalid.ts](https://github.com/AndrewRedican/hyperfrontend/blob/main/libs/nexus/src/broker/routing/handle-invalid.ts)                                                                                                                                                                                                                                    |
 
 ---
 
@@ -348,21 +437,37 @@ Channels emit lifecycle events to subscribers. Each event has a specific trigger
 
 ### Lifecycle Events
 
-| Event       | Trigger                             | Payload                |
-| ----------- | ----------------------------------- | ---------------------- |
-| `'open'`    | Connection successfully established | `{ origin, contract }` |
-| `'close'`   | Connection gracefully closed        | `{ notify: boolean }`  |
-| `'cancel'`  | Pending connection cancelled        | `{ notify: boolean }`  |
-| `'deny'`    | Connection request rejected         | `{ error, origin }`    |
-| `'destroy'` | Connection force-destroyed          | `{}`                   |
+| Event               | Trigger                                           | Payload                         |
+| ------------------- | ------------------------------------------------- | ------------------------------- |
+| `'open'`            | Connection successfully established               | `{ origin, contract }`          |
+| `'closing'`         | Polite close proposed; channel still delivers     | `{ initiatedLocally: boolean }` |
+| `'close'`           | Close completed (fires once per side)             | `{ notify: boolean, reason? }`  |
+| `'cancel'`          | Pending connection cancelled                      | `{ notify: boolean }`           |
+| `'deny'`            | Connection request rejected (either side's gates) | `{ error?, reason?, origin?}`   |
+| `'invalid'`         | Protocol violation or unexpected-origin drop      | `{ error, action? }`            |
+| `'connect-timeout'` | Handshake deadline expired with no answer         | `{ elapsedMs }`                 |
+
+The `close` payload's optional `reason` is `'peer-reload'`, set when the session ended because the target window now hosts a different instance — see [Instance Identity](#instance-identity). The `deny` payload's `reason` is machine-readable and typed as `DenyReason`: `'invalid-contract'` (the counterpart's contract failed structural validation), `'missing-required-actions'` (it does not emit an action this side accepts as `required: true`), `'policy-rejected'` (the broker's `securityPolicy` refused the exchange), `'incompatible-contract'` (a `contractCompat` rule rejected the pair), or `'security-unavailable'` (a fail-closed channel could not obtain an encrypted transport). The union stays open, so a counterpart running a newer protocol can report a reason this build does not know yet. The `invalid` event fires with `{ error, action? }` for unexpected-origin drops, and with `{ reason, origin }` when the counterpart reports an INVALID_REQUEST frame.
+
+### Connection Outcomes
+
+A connection attempt ends in one of four distinct ways, each with its own event:
+
+| Event             | A session existed? | Deliberate? | Who decided           | Wire evidence of a peer | Natural reaction         |
+| ----------------- | ------------------ | ----------- | --------------------- | ----------------------- | ------------------------ |
+| `close`           | Yes                | Yes         | Either side           | Yes (CLOSE/ACK)         | Handle disconnect        |
+| `cancel`          | No                 | Yes         | Either side           | Yes (CANCEL verb)       | Accept abandonment       |
+| `deny`            | No                 | Yes         | A gate, with a reason | Yes (DENY + reason)     | Fix the integration      |
+| `connect-timeout` | No                 | No          | Nobody — silence      | None                    | Fallback UI, retry later |
 
 ### Security Events
 
-| Event                 | Payload                     | Description                    |
-| --------------------- | --------------------------- | ------------------------------ |
-| `security-negotiated` | `{ protocol, isPreferred }` | Protocol negotiation completed |
-| `security-ready`      | `{ protocol }`              | Security transport is active   |
-| `security-error`      | `{ message, code, cause? }` | Security operation failed      |
+| Event            | Payload                     | Description                                            |
+| ---------------- | --------------------------- | ------------------------------------------------------ |
+| `security-ready` | `{ protocol, active }`      | An encrypted security transport attached and confirmed |
+| `security-error` | `{ message, code, cause? }` | Security transport or pipeline operation failed        |
+
+The `ChannelEvent` union also declares `'security-negotiated'` (payload `{ protocol, isPreferred }`) for subscribers, but the current handshake does not emit it — the negotiated outcome surfaces through `security-ready` instead.
 
 ### Event Subscription
 
@@ -385,7 +490,7 @@ channel.on((event, data) => {
 })
 
 // Use filter utilities for advanced composition
-import { openFilter, closeFilter } from '@hyperfrontend/nexus/filters'
+import { openFilter, closeFilter } from '@hyperfrontend/nexus'
 
 channel.on(openFilter((data) => console.log('Opened:', data.origin)))
 channel.on(closeFilter((data) => console.log('Closed')))
@@ -430,6 +535,9 @@ interface RoutingContext {
   readonly processManager: ProcessManager // Tracks handshake processes
   readonly actions: ActionCreators // Factory functions for protocol actions
   readonly logger: Logger // Logger instance for this broker
+  readonly getSupportedProtocols: () => readonly SecurityProtocolVersion[] // Registry-sourced negotiable protocols
+  readonly getProtocol: (id: SecurityProtocolVersion) => unknown // Provider lookup for a negotiated protocol
+  readonly routeAction: (event: MessageEvent<IAction>) => void // Re-enters the handler map (decrypted actions)
 }
 ```
 
@@ -460,6 +568,30 @@ interface NexusLoggerOptions {
 const logger = createLogger({ level: 'debug', prefix: '[app]' })
 ```
 
+### Custom Logger Injection
+
+Verbosity is controlled with the `logLevel` setting; a custom logger (Winston, Pino, etc.) can be injected for production:
+
+```typescript
+const broker = createBroker({
+  name: 'production-broker',
+  contract,
+  settings: {
+    logger: {
+      error: (...args) => myLogger.error(args.join(' ')),
+      warn: (...args) => myLogger.warn(args.join(' ')),
+      log: (...args) => myLogger.info(args.join(' ')),
+      info: (...args) => myLogger.info(args.join(' ')),
+      debug: (...args) => myLogger.debug(args.join(' ')),
+      setLogLevel: () => {},
+      getLogLevel: () => 'info',
+    },
+  },
+})
+```
+
+Channels inherit the broker's logger; it is exposed via `broker.logger`.
+
 ---
 
 ## Security Model
@@ -468,7 +600,7 @@ Nexus provides a multi-layered security approach:
 
 ### Layer 1: Origin Filtering
 
-Basic origin-based access control:
+Basic origin-based access control, applied to every inbound message before routing. A non-empty `whitelist` takes precedence over the `blacklist`:
 
 ```typescript
 const broker = createBroker({
@@ -479,9 +611,11 @@ const broker = createBroker({
 })
 ```
 
+During the handshake each side additionally pins the counterpart's concrete origin; inbound frames from any other origin are dropped and surfaced as `invalid`.
+
 ### Layer 2: Security Policy
 
-Custom programmatic validation:
+Custom programmatic validation, applied while handling REQUEST and ACCEPT. A rejected request is answered with DENY_CONNECTION:
 
 ```typescript
 broker.setSecurityPolicy((event: MessageEvent) => {
@@ -491,7 +625,7 @@ broker.setSecurityPolicy((event: MessageEvent) => {
 
 ### Layer 3: Contract Validation
 
-Schema-based message validation:
+Contracts gate the handshake (structure validation, the required-actions check, and any `contractCompat` rule) and filter product traffic: inbound messages are validated for envelope shape and dropped when their type is not in the channel's `accepted` list. Per-action `schema` fields travel with the contract but nexus does not evaluate them against message payloads — payload-schema enforcement is left to the consuming layer (`@hyperfrontend/features` validates payloads against the sender's `emitted` and the receiver's `accepted` schemas on both ends):
 
 ```typescript
 const contract: IChannelContract = {
@@ -524,7 +658,7 @@ End-to-end encryption via `@hyperfrontend/network-protocol`:
 
 #### Security Negotiation Flow
 
-During connection handshake, parties negotiate the security protocol:
+Negotiation is registry-sourced: each broker holds a protocol registry, filled via `broker.registerProtocol(version, provider)` or the `settings.security.protocols` bag, and a channel opts in with `security: { protocol: ... }`. The initiator advertises its supported protocols in REQUEST_CONNECTION; the responder picks the first initiator preference its own registry supports (falling back to `'none'`), answers it in ACCEPT_CONNECTION, and the initiator confirms the final outcome in OPEN_CONNECTION:
 
 ```mermaid
 ---
@@ -538,14 +672,20 @@ sequenceDiagram
     participant HostB as HOST B (Responder)
 
     HostA->>HostB: REQUEST_CONNECTION + security
-    Note over HostA,HostB: { supported: ['v2', 'v1'] }
+    Note over HostA,HostB: { supported: ['v2', 'none'], preferred: 'v2' }
     HostB->>HostA: ACCEPT_CONNECTION + security
-    Note over HostA,HostB: { negotiated: 'v2', params }
+    Note over HostA,HostB: { negotiated: 'v2' }
     HostA->>HostB: OPEN_CONNECTION + security
     Note over HostA,HostB: { active: true, protocol: 'v2' }
     Note over HostA: [SECURE CHANNEL]
     Note over HostB: [SECURE CHANNEL]
 ```
+
+Both ends attach their security transport before the outbound queue flushes, so product traffic — including sends queued before the handshake — leaves as `Uint8Array` ciphertext while the handshake actions themselves stay plaintext. Channels fire `security-ready` once an encrypted transport attaches. A confirmed protocol with no locally registered provider degrades the outcome to plaintext with a warning.
+
+#### Fail-Open and Fail-Closed Modes
+
+Negotiation **fails open** by default: when the handshake cannot deliver an encrypted transport (the counterpart predates security, offers no common protocol, or the negotiated provider is missing), the channel falls back to plaintext with a warning. Setting `security: { protocol: ..., mode: 'fail-closed' }` refuses that outcome instead — the connection is denied before it opens, with a `deny` event carrying `reason: 'security-unavailable'` (the responder denies at REQUEST time; the initiator aborts at ACCEPT time via CANCEL plus a local `deny`; the responder refuses a plaintext OPEN confirmation the same way).
 
 #### Security Transport Architecture
 
@@ -580,16 +720,24 @@ flowchart TB
 
 #### Configuration Examples
 
-```typescript
-// Register protocol at broker level
-broker.registerProtocol('v2', createProtocol(logger, 'shared-key', 60))
+The registered provider satisfies the `SecurityProvider` shape — a per-channel wire-pipeline factory plus the protocol instance factory. `@hyperfrontend/network-protocol`'s `createChannel` and protocol factories satisfy it directly, and `createSecurityTransport` plus the `SecurityTransport`/`SecurityProvider` types keep the seam public for other implementations:
 
-// Override per-channel
+```typescript
+import { createChannel as createWireChannel } from '@hyperfrontend/network-protocol/browser/channel'
+import { createProtocol as createV2Protocol } from '@hyperfrontend/network-protocol/browser/v2'
+
+// Register a provider at broker level
+broker.registerProtocol('v2', {
+  createChannel: createWireChannel,
+  protocolProvider: createV2Protocol(broker.logger, 'pre-shared-key'),
+})
+
+// Opt a channel into negotiation
 const channel = broker.addChannel('secure', targetWindow, {
   security: {
     protocol: 'v2',
     sharedKey: 'channel-specific-key',
-    refreshRate: 30,
+    mode: 'fail-closed',
   },
 })
 
@@ -605,25 +753,15 @@ broker.unregisterProtocol('v2') // Remove provider
 
 ### Hyperfrontend Libraries
 
-```json
-{
-  "@hyperfrontend/function-utils": "0.0.0",
-  "@hyperfrontend/logging": "0.0.0",
-  "@hyperfrontend/random-generator-utils": "0.0.0"
-}
-```
-
-### External Dependencies
-
-```json
-{
-  "jsonschema": "1.5.0"
-}
-```
+- `@hyperfrontend/data-utils`
+- `@hyperfrontend/immutable-api-utils`
+- `@hyperfrontend/json-utils`
+- `@hyperfrontend/logging`
+- `@hyperfrontend/random-generator-utils`
 
 ### Optional Integration
 
-- `@hyperfrontend/network-protocol` — For transport-level security (v1/v2 protocols)
+- `@hyperfrontend/network-protocol` (optional peer dependency) — For transport-level security (v1/v2 protocols)
 
 ---
 
@@ -631,13 +769,14 @@ broker.unregisterProtocol('v2') // Remove provider
 
 ### With Other Hyperfrontend Libraries
 
-| Library                                 | Integration                            |
-| --------------------------------------- | -------------------------------------- |
-| `@hyperfrontend/network-protocol`       | Optional transport security            |
-| `@hyperfrontend/logging`                | Logging infrastructure                 |
-| `@hyperfrontend/random-generator-utils` | UUID generation                        |
-| `@hyperfrontend/function-utils`         | Utility functions                      |
-| `@hyperfrontend/state-machine`          | Potential state management enhancement |
+| Library                                 | Integration                                |
+| --------------------------------------- | ------------------------------------------ |
+| `@hyperfrontend/network-protocol`       | Optional transport security                |
+| `@hyperfrontend/logging`                | Logging infrastructure                     |
+| `@hyperfrontend/random-generator-utils` | UUID generation                            |
+| `@hyperfrontend/json-utils`             | JSON Schema validation of protocol shapes  |
+| `@hyperfrontend/immutable-api-utils`    | Immutable built-in wrappers                |
+| `@hyperfrontend/data-utils`             | Type inspection for deep-freeze and guards |
 
 ### With External Systems
 
@@ -654,10 +793,12 @@ broker.unregisterProtocol('v2') // Remove provider
 
 ```typescript
 // Core factories
-export { createBroker } from './broker'
-export { createChannel } from './channel'
-export { mergeContracts } from './setup'
-export { broker as defaultBroker, DEFAULT_CONTRACT } from './singleton'
+export { createBroker } from './broker/factory'
+export { createChannel } from './channel/factory'
+export { mergeContracts } from './setup/merge-contracts'
+export { createSecurityTransport } from './security/transport/factory'
+export { broker as defaultBroker } from './singleton'
+export { DEFAULT_CONTRACT } from './constants/default-contract'
 
 // Broker types
 export type { BrokerHandle, BrokerConfig, BrokerSettings, BrokerState, SecurityPolicy }
@@ -667,6 +808,7 @@ export type { ChannelHandle, ChannelJSON, IChannelSettings, IChannelConfig }
 
 // Contract types
 export type { IChannelContract, IActionDescription }
+export type { ContractCompat, ContractCompatibility, ContractCompatible, ContractIncompatible }
 
 // Message types
 export type { IMessage, MessageEnvelope }
@@ -677,12 +819,24 @@ export type { ChannelEvent, EventData, OpenEventData, CloseEventData, ... }
 // Action types
 export type { IAction, ActionType }
 
+// Security types
+export type { SecurityProtocolVersion, SecurityProvider, SecurityTransport, SecurityTransportConfig, ... }
+
 // Filter utilities
 export { openFilter, closeFilter, cancelFilter, denyFilter, invalidFilter, createEventFilter }
 export { byType, compose, createMessageFilter }
 export type { MessageFilter, MessagePredicate, MessageHandler, EventHandler }
 
 // Logging
-export { createLogger, logAction, logEvent } from './utils/logging'
+export { createLogger, logAction, logEvent }
 export type { Logger, LogLevel, NexusLoggerOptions }
 ```
+
+---
+
+## Links
+
+- [Microfrontends from first principles](https://www.hyperfrontend.dev/articles/microfrontends-from-first-principles) — why this protocol exists and what each of its agreements is for. The canonical rationale.
+- [Security Model](https://www.hyperfrontend.dev/docs/core-concepts/security) — the trust model these layers operate under, and which controls are the operator's rather than the protocol's.
+- [README.md](https://github.com/AndrewRedican/hyperfrontend/blob/main/libs/nexus/README.md) — consumer-facing overview, installation, and quick start
+- [Documentation site](https://www.hyperfrontend.dev/docs/libraries/nexus/) — published guides and API reference

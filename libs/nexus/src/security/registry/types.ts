@@ -12,23 +12,28 @@ import type { SecurityProtocolVersion } from '../../types/security'
  * Protocol registry for managing available protocol providers.
  *
  * The registry stores protocol providers keyed by version, allowing
- * dynamic registration and retrieval during channel setup.
+ * dynamic registration and retrieval during channel setup. Providers are
+ * expected to satisfy the `SecurityProvider` shape.
  */
 export interface ProtocolRegistry {
   /**
    * Register a protocol provider.
    *
-   * @param version - The protocol version ('v1' or 'v2')
+   * The 'none' protocol requires no provider and cannot be registered.
+   *
+   * @param version - The protocol version (e.g. 'v1' or 'v2')
    * @param provider - The protocol provider instance
    */
-  register(version: 'v1' | 'v2', provider: unknown): void
+  register(version: SecurityProtocolVersion, provider: unknown): void
 
   /**
    * Unregister a protocol provider.
    *
+   * The 'none' protocol is always available and cannot be unregistered.
+   *
    * @param version - The protocol version to unregister
    */
-  unregister(version: 'v1' | 'v2'): void
+  unregister(version: SecurityProtocolVersion): void
 
   /**
    * Get a registered protocol provider.

@@ -155,6 +155,9 @@ export function createBroker(config: CreateBrokerConfig): BrokerHandle {
     processManager,
     actions,
     logger,
+    getSupportedProtocols: () => protocolRegistry.getSupportedVersions(),
+    getProtocol: (id: SecurityProtocolVersion) => protocolRegistry.get(id),
+    routeAction: (event: MessageEvent<IAction>) => routeMessage(router, routingContext, event),
   }
 
   const onMessage = (event: MessageEvent<IAction | Uint8Array>) => {
@@ -232,12 +235,12 @@ export function createBroker(config: CreateBrokerConfig): BrokerHandle {
       }
     },
 
-    registerProtocol(version: 'v1' | 'v2', provider: unknown) {
+    registerProtocol(version: SecurityProtocolVersion, provider: unknown) {
       protocolRegistry.register(version, provider)
       return broker
     },
 
-    unregisterProtocol(version: 'v1' | 'v2') {
+    unregisterProtocol(version: SecurityProtocolVersion) {
       protocolRegistry.unregister(version)
       return broker
     },

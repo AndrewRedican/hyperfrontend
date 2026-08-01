@@ -62,6 +62,9 @@ describe('handleClose', () => {
       processManager,
       actions,
       logger: mockLogger,
+      getSupportedProtocols: () => ['none'],
+      getProtocol: () => undefined,
+      routeAction: () => undefined,
     }
   })
 
@@ -213,6 +216,26 @@ describe('handleClose', () => {
       }),
       expect.any(String)
     )
+  })
+
+  it('ignores a close from an instance other than the connected counterpart', () => {
+    const channel = addChannel(mockBrokerState, registry, processManager, actions, 'test-channel', mockWindow)
+    channel.activate('*', validContract, 'remote-broker-1')
+    const processId = processManager.create(channel)
+
+    handleClose(routingContext, <MessageEvent<IAction>>{
+      data: <IAction>{
+        type: '[nexus] connection-closed',
+        processId,
+        senderId: 'remote-broker-2',
+      },
+      source: mockWindow,
+    })
+
+    expect({ active: channel.isActive(), acknowledged: (<jest.Mock>mockWindow.postMessage).mock.calls }).toEqual({
+      active: true,
+      acknowledged: [],
+    })
   })
 
   it('returns early when action does not have processId', () => {

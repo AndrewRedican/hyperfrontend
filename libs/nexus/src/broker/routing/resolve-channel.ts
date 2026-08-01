@@ -4,14 +4,16 @@ import type { IAction } from '../../types/action'
 /**
  * Resolves the local channel an inbound action belongs to.
  *
- * The source window of the message event is the authoritative identity of
- * the counterpart, so the lookup is window-first. When the event has no
- * source (for example after the sending window was closed), the lookup
- * falls back to the sender id declared on the action.
+ * The source window of the message event is the sole identity of the
+ * counterpart — sender ids declared on the action are attacker-suppliable
+ * and are never used for lookup. When the resolved channel has a pinned
+ * origin, the event origin must match or the message is dropped before
+ * any handler runs.
  *
  * @param registry - Channel registry of the receiving broker
  * @param message - Message event carrying the inbound action
- * @returns The matching channel, or undefined when no channel is registered for the sender
+ * @returns The matching channel, or undefined when no channel is registered
+ * for the source window or the pinned origin does not match
  *
  * @example Resolving the channel for an inbound action
  * ```typescript
@@ -23,11 +25,19 @@ import type { IAction } from '../../types/action'
  */
 export function resolveChannel(registry: ChannelRegistry, message: MessageEvent<IAction>): MinimalChannel | undefined {
   const source = message.source
-  if (source) {
-    const channel = registry.getByWindow(<Window>source)
-    if (channel) {
-      return channel
-    }
+  if (!source) {
+    return undefined
   }
-  return registry.getById(message.data.senderId)
+
+  const channel = registry.getByWindow(<Window>source)
+  if (!channel) {
+    return undefined
+  }
+
+  const pinnedOrigin = channel.getOrigin?.() ?? null
+  if (pinnedOrigin !== null && pinnedOrigin !== '*' && pinnedOrigin !== message.origin) {
+    return undefined
+  }
+
+  return channel
 }

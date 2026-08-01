@@ -12,10 +12,10 @@ function createMockBroker(): { broker: BrokerHandle; registerProtocol: jest.Mock
 }
 
 describe('registerSecurity', () => {
-  it('registers the v1 provider built from the broker logger', () => {
+  it('registers the v1 provider pairing the wire pipeline with the protocol', () => {
     const { broker, registerProtocol } = createMockBroker()
     registerSecurity(broker, 'v1', undefined)
-    expect(registerProtocol).toHaveBeenCalledWith('v1', 'v1-provider')
+    expect(registerProtocol).toHaveBeenCalledWith('v1', { createChannel: expect.any(Function), protocolProvider: 'v1-provider' })
   })
 
   it('returns v1 channel settings', () => {
@@ -27,13 +27,31 @@ describe('registerSecurity', () => {
     expect(createV2Protocol).toHaveBeenCalledWith({ id: 'logger' }, 'secret')
   })
 
+  it('registers the v2 provider pairing the wire pipeline with the protocol', () => {
+    const { broker, registerProtocol } = createMockBroker()
+    registerSecurity(broker, 'v2', 'secret')
+    expect(registerProtocol).toHaveBeenCalledWith('v2', { createChannel: expect.any(Function), protocolProvider: 'v2-provider' })
+  })
+
   it('returns v2 channel settings carrying the shared key', () => {
     expect(registerSecurity(createMockBroker().broker, 'v2', 'secret')).toEqual({ security: { protocol: 'v2', sharedKey: 'secret' } })
   })
 
-  it('defaults the v2 shared key to an empty string when omitted', () => {
-    registerSecurity(createMockBroker().broker, 'v2', undefined)
-    expect(createV2Protocol).toHaveBeenCalledWith({ id: 'logger' }, '')
+  it('throws for the v2 protocol when the shared key is omitted', () => {
+    expect(() => registerSecurity(createMockBroker().broker, 'v2', undefined)).toThrow(
+      'Security protocol \'v2\' requires a pre-shared key: set the "sharedKey" option to a non-empty string.'
+    )
+  })
+
+  it('throws for the v2 protocol when the shared key is an empty string', () => {
+    expect(() => registerSecurity(createMockBroker().broker, 'v2', '')).toThrow(
+      'Security protocol \'v2\' requires a pre-shared key: set the "sharedKey" option to a non-empty string.'
+    )
+  })
+
+  it('never constructs the v2 provider from a missing key', () => {
+    expect(() => registerSecurity(createMockBroker().broker, 'v2', undefined)).toThrow()
+    expect(createV2Protocol).not.toHaveBeenCalledWith(expect.anything(), '')
   })
 
   it('passes the broker logger to the v1 provider factory', () => {

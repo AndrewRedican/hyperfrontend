@@ -16,7 +16,7 @@ interface FeatureGeneratorSchema {
   directory?: string
   /** Feature version string. */
   version?: string
-  /** URL the generated connector loads the feature from. */
+  /** URL the generated shell loads the feature from. */
   url?: string
 }
 

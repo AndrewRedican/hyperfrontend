@@ -1,124 +1,78 @@
 /**
  * Secure transport implementation.
  *
- * A transport adapter that wraps network-protocol's encryption and
- * obfuscation pipeline to provide secure message exchange.
+ * A transport adapter that drives a security wire pipeline (encryption,
+ * serialization, and obfuscation) to provide secure message exchange
+ * between two windows.
  *
  * This transport is used when the negotiated protocol is 'v1' or 'v2':
- * - v1: Obfuscation-first handshake with dynamic key exchange
- * - v2: Pre-shared key (PSK) handshake with dynamic key rotation
+ * - v1: Time-interval obfuscation; peers remain on the protocol's base key
+ * - v2: Pre-shared key (PSK) handshake; encrypted from the first message
  *
  * @module security/transport/secure-transport
  */
 
-import type { SecurityTransport, SecurityProtocolVersion } from '../../types/security'
-import type { SecureTransportConfig, ReceiveHandler, TransportState } from './types'
-import { createError } from '@hyperfrontend/immutable-api-utils/built-in-copy/error'
+import type { Schema } from '@hyperfrontend/json-utils'
+import type { SecurityTransport, SecurityProtocolVersion, SecurityPacket, SecurityPacketData } from '../../types/security'
+import type { SecureTransportConfig } from './types'
 import { freeze } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
+import { uuidV4 } from '@hyperfrontend/random-generator-utils'
 import { createSecurityErrorEventData } from '../errors'
 
-/**
- * Internal test hook exposed on the secure-transport instance.
- * Lets tests deliver a raw inbound packet without traversing postMessage.
- */
-type SecureTransportInternals = {
-  /** @internal */
-  handleReceive: (packet: Uint8Array) => void
-}
+// magic: SHA-256 hash of the serialized empty schema ('{}').
+const EMPTY_SCHEMA_HASH = '44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a'
+
+// why: Actions are schemaless at the transport layer, so every envelope carries the permissive empty schema and its hash.
+const EMPTY_SCHEMA: Schema = freeze({})
 
 /**
- * Protocol interface from network-protocol.
+ * Creates a secure transport adapter driving a security wire pipeline.
  *
- * This is a minimal subset of the network-protocol Protocol interface
- * that secure transport requires. The full Protocol type is not imported
- * to avoid a hard dependency on network-protocol.
- *
- * @internal
- */
-interface NetworkProtocol {
-  /** Sends encrypted data from origin to target */
-  send: (origin: string, target: string, data: unknown) => void
-  /** Receives and decrypts an incoming packet */
-  receive: (packet: Uint8Array) => void
-}
-
-/**
- * ProtocolProvider function signature from network-protocol.
- *
- * Creates a NetworkProtocol instance with packet send/receive handlers.
- *
- * @internal
- */
-type NetworkProtocolProvider = (
-  sendPacket: (packet: Uint8Array) => void,
-  receivePacket: (packet: DecryptedPacket) => void
-) => NetworkProtocol
-
-/**
- * Decrypted packet data structure from the network protocol.
- *
- * @internal
- */
-interface DecryptedPacket {
-  /** Sender identifier for the decrypted message */
-  origin: string
-  /** Recipient identifier for the decrypted message */
-  target: string
-  /** Decrypted action payload */
-  data: unknown
-}
-
-/**
- * Creates a secure transport adapter wrapping network-protocol.
- *
- * The secure transport encrypts outgoing actions and decrypts incoming
- * messages using the configured protocol provider. Messages are sent
- * as Uint8Array via postMessage.
+ * Outbound actions are wrapped in a data envelope and pushed through the
+ * provider's encryption pipeline; the resulting ciphertext bytes are posted
+ * to the counterpart window. Inbound wire bytes are pushed through the
+ * decryption pipeline and delivered to `onAction` as plain actions.
  *
  * @param config - Configuration for the transport
- * @param config.protocol - Security protocol version ('v1' or 'v2')
- * @param config.provider - Protocol provider from network-protocol
- * @param config.sharedKey - Pre-shared key (required for v2)
- * @param config.refreshRate - Key rotation interval in minutes
- * @param config.target - Target window for postMessage
- * @param config.origin - Allowed origin for messages (defaults to '*')
+ * @param config.protocol - Security protocol version (e.g. 'v1' or 'v2')
+ * @param config.provider - Security implementation building the wire pipeline
+ * @param config.label - Human-readable label surfaced in protocol diagnostics
+ * @param config.target - Counterpart window that receives outbound ciphertext
+ * @param config.getOrigin - Returns the origin currently pinned to the channel, or null before pinning
+ * @param config.originId - UUID identifying the local endpoint
+ * @param config.targetId - UUID identifying the counterpart endpoint
+ * @param config.onAction - Receives each decrypted action
+ * @param config.onError - Optional handler for security failures
  * @returns A security transport that encrypts/decrypts actions
  *
  * @example Using encrypted transport
  * ```typescript
+ * import { logger } from '@hyperfrontend/logging'
+ * import { createChannel } from '@hyperfrontend/network-protocol/browser/channel'
  * import { createProtocol } from '@hyperfrontend/network-protocol/browser/v2'
  *
- * const provider = createProtocol(logger, 'shared-secret', 60)
  * const transport = createSecureTransport({
  *   protocol: 'v2',
- *   provider,
- *   target: iframe.contentWindow
- * })
- *
- * transport.onReceive((action) => {
- *   console.log('Received and decrypted:', action)
+ *   provider: { createChannel, protocolProvider: createProtocol(logger, 'shared-secret') },
+ *   label: 'checkout-feature',
+ *   target: iframe.contentWindow,
+ *   getOrigin: () => 'https://feature.example.com',
+ *   originId: hostId,
+ *   targetId: featureId,
+ *   onAction: (action) => console.log('Received and decrypted:', action),
  * })
  *
  * transport.send({ type: 'test', data: 123 })
  * ```
  */
 export function createSecureTransport(config: SecureTransportConfig): SecurityTransport {
-  const { protocol, provider, target, origin = '*', onError } = config
+  const { protocol, provider, label, target, getOrigin, originId, targetId, onAction, onError } = config
 
-  if (!provider) {
-    throw createError(`SecureTransport requires a protocol provider for ${protocol}`)
-  }
-
-  const state: TransportState = {
-    ready: false,
-    stopped: false,
-  }
-
-  let receiveHandler: ReceiveHandler | null = null
-  let networkProtocol: NetworkProtocol | null = null
+  const pid = uuidV4()
+  let sequence = 0
 
   /**
-   * Notify error handler of security failures.
+   * Notify the error handler of security failures.
    *
    * @param error - The error that occurred
    */
@@ -129,141 +83,122 @@ export function createSecureTransport(config: SecureTransportConfig): SecurityTr
   }
 
   /**
-   * Send a packet to the target window.
-   * This is called by the network-protocol after encryption/obfuscation.
+   * Post fully processed ciphertext bytes to the counterpart window.
    *
-   * @param packet - The encrypted packet to send
+   * @param packet - The obfuscated ciphertext to post
    */
   const sendPacket = (packet: Uint8Array): void => {
-    if (state.stopped) {
-      return
-    }
-
-    target.postMessage(packet, origin, [packet.buffer])
+    const origin = getOrigin()
+    // why: Sends target the pinned origin once learned; '*' covers the pre-pin window and opaque ('null') origins, which postMessage cannot target.
+    target.postMessage(packet, origin === null || origin === 'null' ? '*' : origin, [packet.buffer])
   }
 
   /**
-   * Receive a decrypted packet from the network-protocol.
-   * This is called after deobfuscation/decryption completes.
+   * Deliver a decrypted inbound packet's action to the handler.
    *
-   * @param packet - The decrypted packet containing message data
+   * @param packet - The decrypted packet containing the transported action
    */
-  const receivePacket = (packet: DecryptedPacket): void => {
-    if (state.stopped || !receiveHandler) {
-      return
-    }
-
-    receiveHandler(packet.data)
+  const receivePacket = (packet: SecurityPacket): void => {
+    onAction(packet.data.message)
   }
 
+  const channel = provider.createChannel(label, sendPacket, receivePacket, provider.protocolProvider)
+
   /**
-   * Initialize the network protocol.
+   * Wrap an action in the wire data envelope.
+   *
+   * @param action - The action to transport
+   * @returns The data envelope carrying the action at `message`
    */
-  const initializeProtocol = (): void => {
-    const providerFn = <NetworkProtocolProvider>provider
-    networkProtocol = providerFn(sendPacket, receivePacket)
-    state.ready = true
+  const createEnvelope = (action: unknown): SecurityPacketData => {
+    sequence += 1
+    // why: An empty reply key keeps both peers on the protocol's base key (v2's pre-shared key; v1's obfuscated plaintext); per-message reply keys would desynchronize the peers' captured keys under bidirectional traffic.
+    return freeze({
+      pid,
+      id: uuidV4(),
+      sequence,
+      key: '',
+      message: action,
+      schema: EMPTY_SCHEMA,
+      schemaHash: EMPTY_SCHEMA_HASH,
+    })
   }
 
   /**
    * Send an action through the security pipeline.
    *
-   * The action is encrypted and obfuscated before being sent via postMessage.
+   * The action is encrypted and obfuscated before being posted to the
+   * counterpart window as a `Uint8Array`.
    *
    * @param action - The action to send
    */
   const send = (action: unknown): void => {
-    if (state.stopped) {
-      return
-    }
-
-    if (!networkProtocol) {
-      initializeProtocol()
-    }
-
-    const currentProtocol = networkProtocol
-    if (currentProtocol) {
-      try {
-        currentProtocol.send('nexus', 'channel', action)
-      } catch (error) {
-        notifyError(error)
-      }
-    }
-  }
-
-  /**
-   * Register a handler for decrypted incoming actions.
-   *
-   * @param handler - Callback invoked with decrypted actions
-   */
-  const onReceive = (handler: ReceiveHandler): void => {
-    receiveHandler = handler
-
-    if (!networkProtocol) {
-      initializeProtocol()
-    }
-  }
-
-  /**
-   * Process a received encrypted message.
-   *
-   * This method should be called by the broker's message router
-   * when an encrypted message (Uint8Array) is received.
-   * Errors during decryption are caught and forwarded to the error handler.
-   *
-   * @param packet - The encrypted packet to decrypt
-   */
-  const handleReceive = (packet: Uint8Array): void => {
-    if (state.stopped || !networkProtocol) {
-      return
-    }
-
     try {
-      networkProtocol.receive(packet)
+      channel.send(originId, targetId, createEnvelope(action))
     } catch (error) {
       notifyError(error)
     }
   }
 
   /**
+   * Feed a received wire payload into the decryption pipeline.
+   *
+   * Decrypted actions surface through the `onAction` handler; payloads that
+   * fail decryption are logged and dropped by the pipeline.
+   *
+   * @param packet - The raw wire payload to process
+   */
+  const receive = (packet: Uint8Array): void => {
+    channel.receive(packet)
+  }
+
+  /**
    * Stop processing messages (backpressure control).
+   *
+   * Actions sent while stopped are queued inside the pipeline and flushed
+   * on resume.
    */
   const stop = (): void => {
-    state.stopped = true
+    channel.stop()
   }
 
   /**
    * Resume processing messages.
    */
   const resume = (): void => {
-    state.stopped = false
+    channel.resume()
   }
 
   /**
-   * Check if the transport is ready for secure message exchange.
+   * Check if the transport can protect product traffic right now.
    *
-   * @returns True if the protocol is initialized and ready
+   * The pipeline's full protection is in force from construction: 'v2'
+   * encrypts with its pre-shared key immediately, and 'v1' obfuscates on
+   * the protocol's base key because the envelope never offers a reply key.
+   * Gating readiness on inbound traffic would deadlock two peers that
+   * both queue product messages until their transports report ready.
+   *
+   * @returns Always true; the pipeline protects traffic from construction
    */
   const isReady = (): boolean => {
-    return state.ready
+    return true
   }
 
   /**
    * Get the transport's protocol version.
    *
-   * @returns The configured protocol version ('v1' or 'v2')
+   * @returns The configured protocol version
    */
   const getProtocol = (): SecurityProtocolVersion => {
     return protocol
   }
 
-  return freeze(<SecurityTransport & SecureTransportInternals>{
+  return freeze({
     send,
-    onReceive,
+    receive,
     stop,
     resume,
     isReady,
     getProtocol,
-    handleReceive,
   })
 }

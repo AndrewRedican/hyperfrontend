@@ -32,6 +32,8 @@ export function notifyEvent(channel: ChannelInternals, event: ChannelEvent, data
     origin: state.origin,
     connectTimestamp: state.connectTimestamp,
     contract: state.contract,
+    peerContract: state.peerContract,
+    peerId: state.peerId,
     queuedMessagesCount: state.queuedMessages.length,
   }
 

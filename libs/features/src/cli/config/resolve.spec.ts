@@ -73,15 +73,50 @@ describe('resolveBuildConfig', () => {
 
   it('reads protocol and display from the config file', async () => {
     writeConfig(
-      '{ "name": "clock", "version": "1.0.0", "contract": "./clock.contract.json", "protocol": "v1", "display": { "dialogWidth": 1 }, "url": "/u" }'
+      '{ "name": "clock", "version": "1.0.0", "contract": "./clock.contract.json", "protocol": "v1", "display": { "modes": ["dialog"], "dialog": { "width": 480 } }, "url": "/u" }'
     )
     await expect(resolveBuildConfig({ cwd: dir, flags: baseFlags })).resolves.toEqual(
       expect.objectContaining({
         protocol: 'v1',
         protocolExplicit: true,
-        config: expect.objectContaining({ url: '/u', display: { dialogWidth: 1 } }),
+        config: expect.objectContaining({ url: '/u', display: { modes: ['dialog'], dialog: { width: 480 } } }),
       })
     )
+  })
+
+  it('omits display from the resolved config when the config declares none', async () => {
+    writeConfig('{ "name": "clock", "version": "1.0.0", "contract": "./clock.contract.json" }')
+    await expect(resolveBuildConfig({ cwd: dir, flags: baseFlags })).resolves.toEqual(
+      expect.objectContaining({ config: expect.not.objectContaining({ display: expect.anything() }) })
+    )
+  })
+
+  it('rejects a display that fails validation', async () => {
+    writeConfig('{ "name": "clock", "version": "1.0.0", "contract": "./clock.contract.json", "display": { "modes": ["modal"] } }')
+    await expect(resolveBuildConfig({ cwd: dir, flags: baseFlags })).rejects.toThrow('Invalid config')
+  })
+
+  it('resolves a display carrying a valid dialog position', async () => {
+    writeConfig(
+      '{ "name": "clock", "version": "1.0.0", "contract": "./clock.contract.json", "display": { "modes": ["dialog"], "dialog": { "position": "bottom-right" } } }'
+    )
+    await expect(resolveBuildConfig({ cwd: dir, flags: baseFlags })).resolves.toEqual(
+      expect.objectContaining({
+        config: expect.objectContaining({ display: { modes: ['dialog'], dialog: { position: 'bottom-right' } } }),
+      })
+    )
+  })
+
+  it('rejects a display carrying an invalid position', async () => {
+    writeConfig(
+      '{ "name": "clock", "version": "1.0.0", "contract": "./clock.contract.json", "display": { "modes": ["dialog"], "dialog": { "position": "middle" } } }'
+    )
+    await expect(resolveBuildConfig({ cwd: dir, flags: baseFlags })).rejects.toThrow('Invalid config')
+  })
+
+  it('names the unknown mode when the display declares one', async () => {
+    writeConfig('{ "name": "clock", "version": "1.0.0", "contract": "./clock.contract.json", "display": { "modes": ["modal"] } }')
+    await expect(resolveBuildConfig({ cwd: dir, flags: baseFlags })).rejects.toThrow('"display.modes" contains unknown modes: "modal"')
   })
 
   it('rejects an invalid protocol value', async () => {
@@ -92,6 +127,66 @@ describe('resolveBuildConfig', () => {
   it('rejects a non-string protocol value', async () => {
     writeConfig('{ "name": "clock", "version": "1.0.0", "contract": "./clock.contract.json", "protocol": 5 }')
     await expect(resolveBuildConfig({ cwd: dir, flags: baseFlags })).rejects.toThrow('Invalid protocol')
+  })
+
+  it('retains a contract version matching the config version', async () => {
+    writeFileSync(join(dir, 'clock.contract.json'), '{ "emitted": [], "accepted": [], "version": "1.0.0" }')
+    writeConfig('{ "name": "clock", "version": "1.0.0", "contract": "./clock.contract.json" }')
+    await expect(resolveBuildConfig({ cwd: dir, flags: baseFlags })).resolves.toEqual(
+      expect.objectContaining({ contract: expect.objectContaining({ version: '1.0.0' }) })
+    )
+  })
+
+  it('accepts a contract version that canonicalizes to the config version', async () => {
+    writeFileSync(join(dir, 'clock.contract.json'), '{ "emitted": [], "accepted": [], "version": "v1.0.0" }')
+    writeConfig('{ "name": "clock", "version": "1.0.0", "contract": "./clock.contract.json" }')
+    await expect(resolveBuildConfig({ cwd: dir, flags: baseFlags })).resolves.toEqual(
+      expect.objectContaining({ contract: expect.objectContaining({ version: 'v1.0.0' }) })
+    )
+  })
+
+  it('fails the build naming both values when the contract version differs from the config version', async () => {
+    writeFileSync(join(dir, 'clock.contract.json'), '{ "emitted": [], "accepted": [], "version": "2.0.0" }')
+    writeConfig('{ "name": "clock", "version": "1.0.0", "contract": "./clock.contract.json" }')
+    await expect(resolveBuildConfig({ cwd: dir, flags: baseFlags })).rejects.toThrow(
+      'Contract version "2.0.0" does not match the feature version "1.0.0".'
+    )
+  })
+
+  it('names the config "version" field when it is invalid semver and the contract announces a version', async () => {
+    writeFileSync(join(dir, 'clock.contract.json'), '{ "emitted": [], "accepted": [], "version": "1.0.0" }')
+    writeConfig('{ "name": "clock", "version": "1.0", "contract": "./clock.contract.json" }')
+    await expect(resolveBuildConfig({ cwd: dir, flags: baseFlags })).rejects.toThrow(
+      'Invalid config: "version" must be a valid semver version (e.g. "1.2.0"), but got "1.0".'
+    )
+  })
+
+  it('reads the declared permissions from the config file', async () => {
+    writeConfig('{ "name": "clock", "version": "1.0.0", "contract": "./clock.contract.json", "permissions": ["fullscreen", "camera"] }')
+    await expect(resolveBuildConfig({ cwd: dir, flags: baseFlags })).resolves.toEqual(
+      expect.objectContaining({ config: expect.objectContaining({ permissions: ['fullscreen', 'camera'] }) })
+    )
+  })
+
+  it('omits permissions from the resolved config when the config declares none', async () => {
+    writeConfig('{ "name": "clock", "version": "1.0.0", "contract": "./clock.contract.json" }')
+    await expect(resolveBuildConfig({ cwd: dir, flags: baseFlags })).resolves.toEqual(
+      expect.objectContaining({ config: expect.not.objectContaining({ permissions: expect.anything() }) })
+    )
+  })
+
+  it('rejects a permissions value that is not an array', async () => {
+    writeConfig('{ "name": "clock", "version": "1.0.0", "contract": "./clock.contract.json", "permissions": "fullscreen" }')
+    await expect(resolveBuildConfig({ cwd: dir, flags: baseFlags })).rejects.toThrow(
+      '"permissions" must be an array of Permissions-Policy feature names'
+    )
+  })
+
+  it('rejects a permissions entry that is not a non-empty string', async () => {
+    writeConfig('{ "name": "clock", "version": "1.0.0", "contract": "./clock.contract.json", "permissions": ["fullscreen", ""] }')
+    await expect(resolveBuildConfig({ cwd: dir, flags: baseFlags })).rejects.toThrow(
+      '"permissions" must be an array of Permissions-Policy feature names'
+    )
   })
 
   it('rejects a config that does not resolve to an object', async () => {

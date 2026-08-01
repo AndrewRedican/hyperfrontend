@@ -57,8 +57,6 @@ Everything below runs against **published npm bits** — that is the registry's 
 
 ## Deliberately not in this cut (tracked follow-ups)
 
-- **Real broker handshake for brokerManaged channels** — identity/origin exchange, contract exchange, and security negotiation over the wire. Known sub-problems documented during the fix work: glare (both sides initiate), registry re-keying on learned identity, and re-homing the queued-message flush. Until then origin stays `'*'` on the managed path and `postMessage` target-origin is unbound — required groundwork for the origin-boundary demos ([00-strategy](00-strategy.md#deployment-and-the-origin-boundary-layer)).
-- **v1/v2 protocol negotiation under brokerManaged channels** — negotiation lives in the handshake handlers the managed path skips; baked protocols work because both sides declare them, but nothing negotiates.
 - Same-class module-scope hazards left untouched (currently unreachable): `immutable-api-utils` websocket statics, `cryptography` subtle capture.
 - Code-first-only feature configs (dropping `*.json` support) — direction noted during the connector grill; typed projection landed without it.
 

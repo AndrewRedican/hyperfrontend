@@ -55,8 +55,9 @@ export default function DocsPage() {
         <CodeBlock language="bash" code="npx @hyperfrontend/features init" />
         <div className="mt-6 rounded-lg border border-blue-200 bg-blue-50 p-4 dark:border-blue-900 dark:bg-blue-950/50">
           <p className="text-sm text-blue-800 dark:text-blue-200">
-            <strong>What happens:</strong> The CLI scaffolds the hostee glue module into your app and wires it into the entry file,
-            alongside a <code>feature.config.*</code> file and a contract that defines the messages your feature can send and receive.
+            <strong>What happens:</strong> The CLI scaffolds the <em>hostee</em> glue module — the feature side of the boundary — into your
+            app and wires it into the entry file, alongside a <code>feature.config.*</code> file and a contract that defines the messages
+            your feature can send and receive.
           </p>
         </div>
       </section>
@@ -65,10 +66,12 @@ export default function DocsPage() {
       <section className="mt-12">
         <H2 className="text-2xl font-bold text-slate-900 dark:text-white">Building a Shell</H2>
         <p className="mt-3 text-slate-600 dark:text-slate-400">Generate a self-contained shell package that any host can install:</p>
-        <CodeBlock language="bash" code="npx @hyperfrontend/features build" />
+        <CodeBlock language="bash" code="npx @hyperfrontend/features build --protocol v2" />
         <p className="mt-4 text-slate-600 dark:text-slate-400">
-          The CLI generates the host connector, inlines the contract, bundles direct dependencies, and packs a publishable tarball with
-          typed bindings. The host installs one package and takes on no transitive deps.
+          The CLI generates the shell package, inlines the contract, bundles every dependency into it, and packs a publishable tarball with
+          typed bindings. The host installs one package and takes on no transitive deps. The security envelope is an explicit choice —{' '}
+          <code>--protocol v1</code> or <code>--protocol v2</code>, or a <code>protocol</code> entry in the feature config — and the build
+          bakes it in as the shell&apos;s default.
         </p>
       </section>
 
@@ -87,6 +90,26 @@ export default function DocsPage() {
       <section className="mt-12 rounded-xl border border-slate-200 bg-slate-50 p-6 dark:border-slate-700 dark:bg-slate-800/50">
         <H2 className="text-xl font-bold text-slate-900 dark:text-white">What&apos;s Next?</H2>
         <div className="mt-4 grid gap-4 sm:grid-cols-2">
+          <Link
+            href="/docs/core-concepts/security"
+            className="group rounded-lg border border-slate-200 bg-white p-4 transition-colors hover:border-primary-300 hover:bg-primary-50 dark:border-slate-700 dark:bg-slate-900 dark:hover:border-primary-700 dark:hover:bg-primary-950/30"
+          >
+            <h3 className="font-semibold text-slate-900 group-hover:text-primary-600 dark:text-white dark:group-hover:text-primary-400">
+              Security Model
+            </h3>
+            <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">
+              What the protocol enforces before you ship, and what remains yours.
+            </p>
+          </Link>
+          <Link
+            href="/articles/microfrontends-from-first-principles"
+            className="group rounded-lg border border-slate-200 bg-white p-4 transition-colors hover:border-primary-300 hover:bg-primary-50 dark:border-slate-700 dark:bg-slate-900 dark:hover:border-primary-700 dark:hover:bg-primary-950/30"
+          >
+            <h3 className="font-semibold text-slate-900 group-hover:text-primary-600 dark:text-white dark:group-hover:text-primary-400">
+              Microfrontends from First Principles
+            </h3>
+            <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">Why this boundary, argued from scratch.</p>
+          </Link>
           <Link
             href="/architecture"
             className="group rounded-lg border border-slate-200 bg-white p-4 transition-colors hover:border-primary-300 hover:bg-primary-50 dark:border-slate-700 dark:bg-slate-900 dark:hover:border-primary-700 dark:hover:bg-primary-950/30"

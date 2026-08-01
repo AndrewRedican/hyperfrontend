@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-import { existsSync, readFileSync } from 'node:fs'
+import { existsSync, readFileSync, readdirSync } from 'node:fs'
 import { resolve, join, dirname, relative } from 'node:path'
 import { glob } from 'glob'
 import { logger } from '@hyperfrontend/logging'
@@ -185,6 +185,24 @@ function resolveRelativePath(link: string, basePath: string): string {
 }
 
 /**
+ * Check whether a route path is served by a sibling dynamic segment.
+ *
+ * Next.js resolves `/articles/some-slug` through an `articles/[slug]/page.tsx`
+ * route, so a literal directory for the slug never exists on disk.
+ *
+ * @param targetPath - The absolute path the route resolved to
+ * @returns True if a bracketed sibling route can serve this path
+ */
+function hasDynamicRoute(targetPath: string): boolean {
+  const parent = dirname(targetPath)
+  if (!existsSync(parent)) {
+    return false
+  }
+
+  return readdirSync(parent).some((entry) => entry.startsWith('[') && existsSync(join(parent, entry, 'page.tsx')))
+}
+
+/**
  * Check if a path exists (files or directories)
  *
  * @param targetPath - The path to check for existence
@@ -207,7 +225,7 @@ function pathExists(targetPath: string): boolean {
     return true
   }
 
-  return false
+  return hasDynamicRoute(targetPath)
 }
 
 /**

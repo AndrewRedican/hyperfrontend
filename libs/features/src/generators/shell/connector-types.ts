@@ -1,15 +1,32 @@
-import type { ActionDescription, FeatureContract } from '../../shared/types'
+import type { ActionDescription, DisplayMode, FeatureContract } from '../../shared/types'
 import { schemaToType } from './schema-type'
 import { formatKey } from './source-literal'
 
-// note: The generated declarations are structural (no type imports from the SDK), so the connector's d.ts stays fully usable for consumers who install nothing but the packed tarball.
-const STATIC_TYPES = `/** How the feature is surfaced by the host. */
-export type FeatureDisplayMode = 'embedded' | 'dialog' | 'popup' | 'standalone'
+// note: The generated declarations are structural (no type imports from the SDK), so the shell's d.ts stays fully usable for consumers who install nothing but the packed tarball. Everything mode-specific is emitted only when the feature declared the mode — undeclared modes are absent from the types just as they are absent from the bundle.
 
-/** Security envelope selector negotiated between host and feature. */
-export type FeatureSecurityProtocol = 'none' | 'v1' | 'v2'
+const SANDBOX_TYPES = `/**
+ * Containment opt-ins for a sandboxed feature frame.
+ *
+ * Enabling \`sandbox\` starts the frame from the browser's deny-all sandbox.
+ * The SDK always returns \`allow-scripts\` (the feature runtime is JavaScript)
+ * and grants \`allow-same-origin\` only to cross-origin feature URLs — a
+ * same-origin frame holding both tokens could remove its own sandbox, so that
+ * pairing cannot be expressed. Every opt-in defaults to \`false\` (denied).
+ */
+export interface FeatureSandboxOptions {
+  /** Allow the feature to submit forms; defaults to \`false\`. */
+  forms?: boolean
+  /** Allow the feature to open popup windows; defaults to \`false\`. */
+  popups?: boolean
+  /** Allow the feature to open modal dialogs (\`alert\`, \`confirm\`, \`print\`); defaults to \`false\`. */
+  modals?: boolean
+  /** Allow the feature to trigger file downloads; defaults to \`false\`. */
+  downloads?: boolean
+  /** Allow user-activated top-level navigation; unrestricted top navigation is deliberately not offered. */
+  topNavigationByUserActivation?: boolean
+}`
 
-/** Context handed to an experience plugin around the feature's mount lifecycle. */
+const PLUGIN_TYPES = `/** Context handed to an experience plugin around the feature's mount lifecycle. */
 export interface FeaturePluginContext {
   /** In-document root the display mode mounted, or \`null\` for windowed modes. */
   element: HTMLElement | null
@@ -49,39 +66,172 @@ export interface FeatureUnresponsiveInfo {
   close(): void
   /** Closes the feature and releases all resources. */
   destroy(): void
+}`
+
+/**
+ * The set of mode-dependent facts the type builders branch on.
+ */
+interface ModeFlags {
+  /** The declared modes, in declaration order. */
+  modes: DisplayMode[]
+  /** Whether the embedded mode is declared. */
+  embedded: boolean
+  /** Whether the dialog mode is declared. */
+  dialog: boolean
+  /** Whether the popup mode is declared. */
+  popup: boolean
+  /** Whether any iframe mode (embedded or dialog) is declared. */
+  framed: boolean
 }
+
+/**
+ * Derives the {@link ModeFlags} for a declared mode list.
+ *
+ * @param modes - The declared modes.
+ * @returns The flags the builders branch on.
+ */
+function deriveModeFlags(modes: DisplayMode[]): ModeFlags {
+  const embedded = modes.includes('embedded')
+  const dialog = modes.includes('dialog')
+  return { modes, embedded, dialog, popup: modes.includes('popup'), framed: embedded || dialog }
+}
+
+/**
+ * Renders the `FeatureShellOptions` members for the declared modes.
+ *
+ * @param flags - The declared-mode flags.
+ * @returns The member lines of the options interface.
+ */
+function buildOptionMembers(flags: ModeFlags): string[] {
+  const members: string[] = []
+  if (flags.embedded) {
+    members.push(
+      `  /** Anchor element (or CSS selector) the embedded feature mounts into; required by embedded mode. */
+  container${flags.modes[0] === 'embedded' ? '' : '?'}: string | HTMLElement`,
+      `  /** Fixed embedded width in pixels; with \`embedHeight\`, the iframe receives exactly these dimensions instead of filling its container. */
+  embedWidth?: number`,
+      `  /** Fixed embedded height in pixels; see \`embedWidth\`. */
+  embedHeight?: number`
+    )
+  }
+  members.push(
+    `  /** Stable identifier for the feature; seeds the broker name surfaced in debug logs. */
+  name?: string`,
+    `  /** How the feature should be surfaced; defaults to \`${flags.modes[0]}\`. */
+  displayMode?: FeatureDisplayMode`,
+    `  /** URL of the feature app to load; defaults to the URL baked in from the feature config. */
+  url?: string`
+  )
+  if (flags.dialog) {
+    members.push(
+      `  /** Width in pixels of the feature's inner dialog box, applied by the feature inside the full-viewport dialog pane; when absent, derived from the viewport. */
+  dialogWidth?: number`,
+      `  /** Height in pixels of the feature's inner dialog box; see \`dialogWidth\`. */
+  dialogHeight?: number`,
+      `  /** Where the inner dialog box sits inside the pane; defaults to \`center\`. */
+  dialogPosition?: FeatureBoxPosition`,
+      `  /** How the shell reacts to a pointer interaction on the dialog backdrop; defaults to \`close\`. */
+  dialogBackdrop?: 'close' | 'event' | 'none'`,
+      `  /** Whether Escape closes the dialog (enforced on both sides of the boundary); defaults to \`true\`. */
+  closeOnEscape?: boolean`
+    )
+  }
+  if (flags.popup) {
+    members.push(
+      `  /** Popup window width in pixels; when absent, derived from the viewport. */
+  popupWidth?: number`,
+      `  /** Popup window height in pixels; see \`popupWidth\`. */
+  popupHeight?: number`,
+      `  /** Where the popup window sits on the screen; defaults to \`center\`. */
+  popupPosition?: FeatureBoxPosition`
+    )
+  }
+  if (flags.framed) {
+    members.push(
+      `  /**
+   * Permissions-Policy features delegated to the feature frame (the iframe
+   * \`allow\` attribute). Defaults to the needs the feature declared at build
+   * time; a host-supplied list replaces the baked one entirely. Only the
+   * iframe modes apply it.
+   */
+  permissions?: readonly string[]`,
+      `  /**
+   * Containment posture for the feature frame; \`true\` (or an opt-in object)
+   * starts from the browser's deny-all sandbox. Host-decreed, never baked.
+   * Only the iframe modes can be sandboxed — a windowed mode with a sandbox
+   * set throws.
+   */
+  sandbox?: boolean | FeatureSandboxOptions`
+    )
+  }
+  members.push(
+    `  /** How the host reacts when the feature stops responding; defaults to \`emit\`. */
+  onUnresponsive?: 'emit' | 'unmount' | ((info: FeatureUnresponsiveInfo) => void)`,
+    `  /** Security envelope to negotiate; defaults to the protocol baked in from the feature's build. */
+  protocol?: FeatureSecurityProtocol`,
+    `  /** Pre-shared key used by the \`v2\` protocol; always supplied by the host, never baked into the shell. */
+  sharedKey?: string`,
+    `  /** Experience plugins wrapped around each mount/unmount. */
+  plugins?: readonly FeatureExperiencePlugin[]`,
+    `  /**
+   * Milliseconds the shell waits for the feature to complete the connection
+   * handshake before emitting an \`error\` with \`reason: 'open-timeout'\` and
+   * tearing the mount down; defaults to 10000.
+   *
+   * Opening is asynchronous: \`isOpen\` stays \`false\` and the \`open\` event
+   * fires only once the wire handshake completes. \`send\` calls issued in
+   * between queue and flush on open.
+   */
+  openTimeoutMs?: number`
+  )
+  return members
+}
+
+/**
+ * Renders the mode-dependent static type block.
+ *
+ * @param flags - The declared-mode flags.
+ * @returns The static type declarations for the shell.
+ */
+function buildStaticTypes(flags: ModeFlags): string {
+  const lifecycleEvents = ['open', 'closing', 'close', 'error', 'status', 'dirty-state', ...(flags.dialog ? ['dismiss'] : [])]
+  const positionType = `/** Where a positioned box sits inside its available area; \`center\` is the default. */
+export type FeatureBoxPosition =
+  | 'center'
+  | 'top-left'
+  | 'top-center'
+  | 'top-right'
+  | 'center-left'
+  | 'center-right'
+  | 'bottom-left'
+  | 'bottom-center'
+  | 'bottom-right'
+
+`
+  return `/** The display modes this feature declares; other modes are excluded from the generated shell. */
+export type FeatureDisplayMode = ${flags.modes.map((mode) => `'${mode}'`).join(' | ')}
+
+/** Security envelope selector negotiated between host and feature. */
+export type FeatureSecurityProtocol = 'none' | 'v1' | 'v2'
+
+${flags.dialog || flags.popup ? positionType : ''}${flags.framed ? `${SANDBOX_TYPES}\n\n` : ''}${PLUGIN_TYPES}
 
 /**
  * Options accepted by \`createFeatureShell\`; anything omitted falls back to the
  * defaults baked in from the feature's build.
  */
 export interface FeatureShellOptions {
-  /** Target element (or CSS selector) the embedded feature mounts into. */
-  container: string | HTMLElement
-  /** Stable identifier for the feature; seeds the broker name surfaced in debug logs. */
-  name?: string
-  /** How the feature should be surfaced; defaults to \`embedded\`. */
-  displayMode?: FeatureDisplayMode
-  /** URL of the feature app to load; defaults to the URL baked in from the feature config. */
-  url?: string
-  /** How an embedded feature is sized; defaults to \`fill\` (the iframe fills its container). */
-  embedSizing?: 'fill' | 'content'
-  /** How the host reacts when the feature stops responding; defaults to \`emit\`. */
-  onUnresponsive?: 'emit' | 'unmount' | ((info: FeatureUnresponsiveInfo) => void)
-  /** Whether pressing Escape closes the shell; defaults to \`true\`. */
-  closeOnEscape?: boolean
-  /** Dialog width in pixels (dialog mode only). */
-  dialogWidth?: number
-  /** Dialog height in pixels (dialog mode only). */
-  dialogHeight?: number
-  /** Whether the dialog renders a dimmed backdrop; defaults to \`true\`. */
-  dialogOverlay?: boolean
-  /** Security envelope to negotiate; defaults to the protocol baked in from the feature's build. */
-  protocol?: FeatureSecurityProtocol
-  /** Pre-shared key used by the \`v2\` protocol; always supplied by the host, never baked into the connector. */
-  sharedKey?: string
-  /** Experience plugins wrapped around each mount/unmount. */
-  plugins?: readonly FeatureExperiencePlugin[]
+${buildOptionMembers(flags).join('\n')}
+}
+
+/** Error payload emitted when the feature never completes the connection handshake. */
+export interface FeatureOpenTimeoutError {
+  /** Discriminates the open-timeout error from other \`error\` payloads. */
+  reason: 'open-timeout'
+  /** Milliseconds the shell waited before giving up. */
+  elapsedMs: number
+  /** The display mode the feature was being surfaced in. */
+  displayMode: FeatureDisplayMode
 }
 
 /** Handle returned by \`createFeatureShell\`, narrowed to the feature's contract. */
@@ -118,11 +268,11 @@ export interface FeatureShellHandle {
    * @param handler - Callback invoked when the event fires.
    * @returns A function that removes this subscription.
    */
-  on(event: 'open' | 'close' | 'error', handler: (data?: unknown) => void): () => void
+  on(event: ${lifecycleEvents.map((event) => `'${event}'`).join(' | ')}, handler: (data?: unknown) => void): () => void
   /** Whether the feature channel is currently open (\`true\` while connected). */
   readonly isOpen: boolean
+}`
 }
-`
 
 /**
  * Escapes a contract description for safe embedding inside a JSDoc comment.
@@ -159,22 +309,26 @@ function buildPayloadInterface(name: string, doc: string, actions: ActionDescrip
 }
 
 /**
- * Builds the connector's full generated type surface for a feature contract.
+ * Builds the connector's full generated type surface for a feature contract
+ * and its declared display modes.
  *
  * Emits payload maps and literal action-name unions projected from the
- * contract, plus structural shell option and handle types, so the connector's
- * declarations resolve with no dependencies beyond the DOM lib.
+ * contract, plus structural shell option and handle types narrowed to the
+ * declared modes, so the connector's declarations resolve with no dependencies
+ * beyond the DOM lib and an undeclared mode is a type error before it is a
+ * runtime one.
  *
  * @param contract - The feature contract driving the projected types.
+ * @param modes - The display modes the feature declared, in declaration order.
  * @returns The type declaration block for the connector entry.
  *
  * @example Projecting the clock contract
  * ```typescript
- * buildConnectorTypes({ emitted: [{ type: 'timeUpdated' }], accepted: [{ type: 'setTimezone' }] })
- * // => source containing "export interface HostSendPayloads { setTimezone: unknown }"
+ * buildConnectorTypes({ emitted: [{ type: 'timeUpdated' }], accepted: [{ type: 'setTimezone' }] }, ['embedded'])
+ * // => source containing "export type FeatureDisplayMode = 'embedded'"
  * ```
  */
-export function buildConnectorTypes(contract: FeatureContract): string {
+export function buildConnectorTypes(contract: FeatureContract, modes: DisplayMode[]): string {
   return `${buildPayloadInterface('HostSendPayloads', 'Payloads for actions the host can send, keyed by action type from the feature contract.', contract.accepted)}
 
 ${buildPayloadInterface('HostEventPayloads', 'Payloads for events the feature emits to the host, keyed by event type from the feature contract.', contract.emitted)}
@@ -185,5 +339,5 @@ export type HostSendType = keyof HostSendPayloads
 /** Event types the feature emits to the host. */
 export type HostEventType = keyof HostEventPayloads
 
-${STATIC_TYPES}`
+${buildStaticTypes(deriveModeFlags(modes))}`
 }

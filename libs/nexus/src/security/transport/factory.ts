@@ -17,39 +17,45 @@ import { createSecureTransport } from './secure-transport'
  *
  * Routes to the appropriate transport implementation:
  * - `'none'`: Creates a passthrough transport (no encryption)
- * - `'v1'`/`'v2'`: Creates a secure transport with encryption
+ * - Any other protocol: Creates a secure transport driving the provider's
+ *   encryption pipeline
  *
  * @param config - Transport configuration
- * @param config.protocol - Security protocol version ('none', 'v1', or 'v2')
- * @param config.provider - Protocol provider (required for v1/v2)
- * @param config.sharedKey - Pre-shared key (required for v2)
- * @param config.refreshRate - Key rotation interval in minutes
- * @param config.target - Target window for postMessage
- * @param config.origin - Allowed origin for messages
+ * @param config.protocol - Security protocol version (e.g. 'none', 'v1', or 'v2')
+ * @param config.provider - Security implementation (required for protocols other than 'none')
+ * @param config.label - Human-readable label surfaced in protocol diagnostics
+ * @param config.target - Counterpart window that receives outbound traffic
+ * @param config.getOrigin - Returns the origin currently pinned to the channel, or null before pinning
+ * @param config.originId - UUID identifying the local endpoint
+ * @param config.targetId - UUID identifying the counterpart endpoint
+ * @param config.onAction - Receives each action delivered by the transport
+ * @param config.onError - Optional handler for security failures
  * @returns A security transport appropriate for the configured protocol
- * @throws {Error} If protocol is v1/v2 and provider is missing
+ * @throws {Error} If the protocol requires a provider and none is given
  *
  * @example Creating security transports
  * ```typescript
- * // No security
- * const plainTransport = createSecurityTransport({
- *   protocol: 'none',
- *   target: iframe.contentWindow
- * })
+ * import { logger } from '@hyperfrontend/logging'
+ * import { createChannel } from '@hyperfrontend/network-protocol/browser/channel'
+ * import { createProtocol } from '@hyperfrontend/network-protocol/browser/v2'
  *
- * // V2 security with encryption
- * const secureTransport = createSecurityTransport({
+ * const transport = createSecurityTransport({
  *   protocol: 'v2',
- *   provider: createProtocol(logger, 'shared-key', 60),
- *   target: iframe.contentWindow
+ *   provider: { createChannel, protocolProvider: createProtocol(logger, 'shared-key') },
+ *   label: 'checkout-feature',
+ *   target: iframe.contentWindow,
+ *   getOrigin: () => 'https://feature.example.com',
+ *   originId: hostId,
+ *   targetId: featureId,
+ *   onAction: (action) => handleAction(action),
  * })
  * ```
  */
 export function createSecurityTransport(config: SecurityTransportConfig): SecurityTransport {
-  const { protocol, provider, target, origin } = config
+  const { protocol, provider, label, target, getOrigin, originId, targetId, onAction, onError } = config
 
   if (protocol === 'none') {
-    return createNoneTransport({ target, origin })
+    return createNoneTransport({ target, getOrigin, onAction })
   }
 
   if (!provider) {
@@ -62,10 +68,12 @@ export function createSecurityTransport(config: SecurityTransportConfig): Securi
   return createSecureTransport({
     protocol,
     provider,
-    sharedKey: config.sharedKey,
-    refreshRate: config.refreshRate,
+    label,
     target,
-    origin,
-    onError: config.onError,
+    getOrigin,
+    originId,
+    targetId,
+    onAction,
+    onError,
   })
 }

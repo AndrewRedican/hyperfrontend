@@ -10,6 +10,18 @@ describe('channel/lifecycle/connect', () => {
   let state: MutableChannelState
   let sentActions: IAction[]
 
+  beforeAll(() => {
+    jest.useFakeTimers()
+  })
+
+  afterAll(() => {
+    jest.useRealTimers()
+  })
+
+  afterEach(() => {
+    jest.clearAllTimers()
+  })
+
   beforeEach(() => {
     sentActions = []
 
@@ -26,9 +38,18 @@ describe('channel/lifecycle/connect', () => {
       eventSubscriptions: [],
       messageSubscriptions: [],
       scheduledActivation: null,
+      peerContract: null,
+      peerId: null,
+      pendingProcessId: null,
+      pendingAccept: null,
+      retryTimer: null,
+      deadlineTimer: null,
+      connectTimeoutMs: 10_000,
+      requestRetryMs: 500,
       queueMessages: true,
 
       brokerManaged: false,
+      security: null,
       readyToConnect: false,
       negotiatedProtocol: null,
       securityReady: false,
@@ -81,14 +102,28 @@ describe('channel/lifecycle/connect', () => {
     expect(mockChannel.createProcess).not.toHaveBeenCalled()
   })
 
-  it('sets connectTimestamp if not already set', () => {
-    const beforeTimestamp = Date.now()
+  it('does nothing if a connection request is already outstanding', () => {
+    state.pendingProcessId = 'process-outstanding'
 
     connect(mockChannel)
 
-    const afterTimestamp = Date.now()
-    expect(state.connectTimestamp).toBeGreaterThanOrEqual(beforeTimestamp)
-    expect(state.connectTimestamp).toBeLessThanOrEqual(afterTimestamp)
+    expect(sentActions).toHaveLength(0)
+    expect(mockChannel.createProcess).not.toHaveBeenCalled()
+  })
+
+  it('does nothing if an accept is already pending', () => {
+    state.pendingAccept = ['sender-789', 'https://example.com', { accepted: [], emitted: [] }, 'process-999']
+
+    connect(mockChannel)
+
+    expect(sentActions).toHaveLength(0)
+    expect(mockChannel.createProcess).not.toHaveBeenCalled()
+  })
+
+  it('sets connectTimestamp if not already set', () => {
+    connect(mockChannel)
+
+    expect(state.connectTimestamp).toBeGreaterThan(0)
   })
 
   it('does not overwrite existing connectTimestamp', () => {
@@ -98,68 +133,6 @@ describe('channel/lifecycle/connect', () => {
     connect(mockChannel)
 
     expect(state.connectTimestamp).toBe(existingTimestamp)
-  })
-
-  it('sends REQUEST_CONNECTION when no scheduled activation', () => {
-    connect(mockChannel)
-
-    expect(mockChannel.createProcess).toHaveBeenCalled()
-    expect(mockChannel.actions.requestConnection).toHaveBeenCalledWith('process-456')
-    expect(sentActions).toHaveLength(1)
-    expect(sentActions[0].type).toBe('[nexus] connection-request')
-  })
-
-  it('acceptss scheduled activation when present', () => {
-    const contract = {
-      accepted: [{ type: 'msg1' }, { type: 'msg2' }],
-      emitted: [],
-    }
-
-    state.scheduledActivation = ['sender-789', 'https://example.com', contract, 'process-999']
-
-    connect(mockChannel)
-
-    expect(state.id).toBe('sender-789')
-    expect(state.origin).toBe('https://example.com')
-    expect(state.contract).toBe(contract)
-    expect(state.acceptedActions).toEqual(['msg1', 'msg2'])
-    expect(state.active).toBe(true)
-    expect(state.scheduledActivation).toBe(null)
-
-    expect(mockChannel.actions.acceptConnection).toHaveBeenCalledWith('process-999')
-    expect(sentActions).toHaveLength(1)
-    expect(sentActions[0].type).toBe('[nexus] connection-request-accepted')
-
-    expect(mockChannel.notifyEvent).toHaveBeenCalledWith('open', {
-      id: 'sender-789',
-      origin: 'https://example.com',
-    })
-  })
-
-  it('clears scheduled activation after accepting', () => {
-    const contract = {
-      accepted: [{ type: 'msg1' }],
-      emitted: [],
-    }
-
-    state.scheduledActivation = ['sender-789', 'https://example.com', contract, 'process-999']
-
-    connect(mockChannel)
-
-    expect(state.scheduledActivation).toBe(null)
-  })
-
-  it('does not create new process when accepting scheduled activation', () => {
-    const contract = {
-      accepted: [],
-      emitted: [],
-    }
-
-    state.scheduledActivation = ['sender-789', 'https://example.com', contract, 'process-999']
-
-    connect(mockChannel)
-
-    expect(mockChannel.createProcess).not.toHaveBeenCalled()
   })
 
   it('sets readyToConnect to true when not already set', () => {
@@ -176,5 +149,176 @@ describe('channel/lifecycle/connect', () => {
     connect(mockChannel)
 
     expect(state.readyToConnect).toBe(true)
+  })
+
+  describe('initiator path', () => {
+    it('sends REQUEST_CONNECTION and records the pending process', () => {
+      connect(mockChannel)
+
+      expect(mockChannel.createProcess).toHaveBeenCalled()
+      expect(mockChannel.actions.requestConnection).toHaveBeenCalledWith('process-456', undefined)
+      expect(sentActions).toEqual([expect.objectContaining({ type: '[nexus] connection-request' })])
+      expect(state.pendingProcessId).toBe('process-456')
+    })
+
+    it('advertises the configured protocol with plaintext fallback in the security request', () => {
+      state.security = { protocol: 'v2', sharedKey: 'psk' }
+
+      connect(mockChannel)
+
+      expect(mockChannel.actions.requestConnection).toHaveBeenCalledWith('process-456', {
+        supported: ['v2', 'none'],
+        preferred: 'v2',
+      })
+    })
+
+    it('sends no security request when security is disabled', () => {
+      state.security = { protocol: 'v2', disabled: true }
+
+      connect(mockChannel)
+
+      expect(mockChannel.actions.requestConnection).toHaveBeenCalledWith('process-456', undefined)
+    })
+
+    it('sends no security request when the configured protocol is none', () => {
+      state.security = { protocol: 'none' }
+
+      connect(mockChannel)
+
+      expect(mockChannel.actions.requestConnection).toHaveBeenCalledWith('process-456', undefined)
+    })
+
+    it('re-sends REQUEST_CONNECTION at the retry cadence', () => {
+      connect(mockChannel)
+
+      jest.advanceTimersByTime(1500)
+
+      expect(sentActions.map((a) => a.type)).toEqual([
+        '[nexus] connection-request',
+        '[nexus] connection-request',
+        '[nexus] connection-request',
+        '[nexus] connection-request',
+      ])
+    })
+
+    it('fires timeout and removes the process when the deadline expires', () => {
+      connect(mockChannel)
+
+      jest.advanceTimersByTime(10_000)
+
+      expect(mockChannel.removeProcess).toHaveBeenCalledWith('process-456')
+      expect(mockChannel.notifyEvent).toHaveBeenCalledWith('connect-timeout', { elapsedMs: 10_000 })
+    })
+
+    it('stays inactive and reconnectable after the deadline expires', () => {
+      connect(mockChannel)
+
+      jest.advanceTimersByTime(10_000)
+
+      expect(state).toEqual(
+        expect.objectContaining({
+          active: false,
+          pendingProcessId: null,
+          retryTimer: null,
+          deadlineTimer: null,
+        })
+      )
+    })
+
+    it('stops retrying after the deadline expires', () => {
+      connect(mockChannel)
+
+      jest.advanceTimersByTime(10_000)
+      const sentAtDeadline = sentActions.length
+      jest.advanceTimersByTime(5000)
+
+      expect(sentActions).toHaveLength(sentAtDeadline)
+    })
+
+    it('honors custom retry and deadline settings', () => {
+      state.requestRetryMs = 100
+      state.connectTimeoutMs = 250
+
+      connect(mockChannel)
+
+      jest.advanceTimersByTime(250)
+
+      expect(sentActions).toHaveLength(3)
+      expect(mockChannel.notifyEvent).toHaveBeenCalledWith('connect-timeout', { elapsedMs: 250 })
+    })
+  })
+
+  describe('responder path (scheduled activation)', () => {
+    const contract = {
+      accepted: [{ type: 'msg1' }, { type: 'msg2' }],
+      emitted: [],
+    }
+
+    beforeEach(() => {
+      state.scheduledActivation = ['sender-789', 'https://example.com', contract, 'process-999']
+    })
+
+    it('answers with ACCEPT and waits for OPEN instead of activating', () => {
+      connect(mockChannel)
+
+      expect(mockChannel.actions.acceptConnection).toHaveBeenCalledWith('process-999', undefined)
+      expect(sentActions).toEqual([expect.objectContaining({ type: '[nexus] connection-request-accepted' })])
+      expect(state.active).toBe(false)
+    })
+
+    it('answers with the negotiated security response recorded at request time', () => {
+      state.scheduledActivation = ['sender-789', 'https://example.com', contract, 'process-999', { negotiated: 'v2' }]
+
+      connect(mockChannel)
+
+      expect(mockChannel.actions.acceptConnection).toHaveBeenCalledWith('process-999', { negotiated: 'v2' })
+    })
+
+    it('records the pending accept and the peer details', () => {
+      connect(mockChannel)
+
+      expect(state).toEqual(
+        expect.objectContaining({
+          origin: 'https://example.com',
+          peerId: 'sender-789',
+          peerContract: contract,
+          pendingAccept: ['sender-789', 'https://example.com', contract, 'process-999'],
+          scheduledActivation: null,
+        })
+      )
+    })
+
+    it('keeps the local channel id instead of adopting the remote id', () => {
+      connect(mockChannel)
+
+      expect(state.id).toBe('channel-123')
+    })
+
+    it('re-sends ACCEPT at the retry cadence until OPEN arrives', () => {
+      connect(mockChannel)
+
+      jest.advanceTimersByTime(1000)
+
+      expect(sentActions.map((a) => a.type)).toEqual([
+        '[nexus] connection-request-accepted',
+        '[nexus] connection-request-accepted',
+        '[nexus] connection-request-accepted',
+      ])
+    })
+
+    it('fires timeout when OPEN never arrives within the deadline', () => {
+      connect(mockChannel)
+
+      jest.advanceTimersByTime(10_000)
+
+      expect(mockChannel.notifyEvent).toHaveBeenCalledWith('connect-timeout', { elapsedMs: 10_000 })
+      expect(state.pendingAccept).toBeNull()
+    })
+
+    it('does not create a new process when answering a scheduled activation', () => {
+      connect(mockChannel)
+
+      expect(mockChannel.createProcess).not.toHaveBeenCalled()
+    })
   })
 })

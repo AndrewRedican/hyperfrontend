@@ -13,17 +13,8 @@
  */
 
 import type { SecurityTransport, SecurityProtocolVersion } from '../../types/security'
-import type { NoneTransportConfig, ReceiveHandler, TransportState } from './types'
+import type { NoneTransportConfig, TransportState } from './types'
 import { freeze } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
-
-/**
- * Internal test hook exposed on the none-transport instance.
- * Lets tests deliver an inbound action without involving postMessage.
- */
-type NoneTransportInternals = {
-  /** Processes incoming actions (for testing) */
-  handleReceive: (action: unknown) => void
-}
 
 /**
  * Creates a passthrough (no security) transport adapter.
@@ -33,30 +24,28 @@ type NoneTransportInternals = {
  * handling in channel code regardless of security configuration.
  *
  * @param config - Configuration for the transport
- * @param config.target - Target window for postMessage
- * @param config.origin - Allowed origin for messages (defaults to '*')
+ * @param config.target - Counterpart window that receives outbound traffic
+ * @param config.getOrigin - Returns the origin currently pinned to the channel, or null before pinning
+ * @param config.onAction - Receives each action delivered by the transport
  * @returns A security transport that passes through actions unchanged
  *
  * @example Using passthrough transport
  * ```typescript
- * const transport = createNoneTransport({ target: iframe.contentWindow })
- *
- * transport.onReceive((action) => {
- *   console.log('Received:', action)
+ * const transport = createNoneTransport({
+ *   target: iframe.contentWindow,
+ *   getOrigin: () => 'https://feature.example.com',
+ *   onAction: (action) => console.log('Received:', action),
  * })
  *
  * transport.send({ type: 'test', data: 123 })
  * ```
  */
 export function createNoneTransport(config: NoneTransportConfig): SecurityTransport {
-  const { target, origin = '*' } = config
+  const { target, getOrigin, onAction } = config
 
   const state: TransportState = {
-    ready: true,
     stopped: false,
   }
-
-  let receiveHandler: ReceiveHandler | null = null
 
   /**
    * Send an action through the transport (passthrough).
@@ -70,34 +59,25 @@ export function createNoneTransport(config: NoneTransportConfig): SecurityTransp
       return
     }
 
-    target.postMessage(action, origin)
+    const origin = getOrigin()
+    // why: Sends target the pinned origin once learned; '*' covers the pre-pin window and opaque ('null') origins, which postMessage cannot target.
+    target.postMessage(action, origin === null || origin === 'null' ? '*' : origin)
   }
 
   /**
-   * Register a handler for incoming actions.
+   * Process a received payload.
    *
-   * The handler receives actions unchanged (no decryption).
+   * The payload is delivered to the `onAction` handler unchanged
+   * (no decryption).
    *
-   * @param handler - Callback invoked with received actions
+   * @param packet - The received payload
    */
-  const onReceive = (handler: ReceiveHandler): void => {
-    receiveHandler = handler
-  }
-
-  /**
-   * Process a received message.
-   *
-   * This method should be called by the broker's message router
-   * when a message is received for a channel using this transport.
-   *
-   * @param action - The received action
-   */
-  const handleReceive = (action: unknown): void => {
-    if (state.stopped || !receiveHandler) {
+  const receive = (packet: Uint8Array): void => {
+    if (state.stopped) {
       return
     }
 
-    receiveHandler(action)
+    onAction(packet)
   }
 
   /**
@@ -125,7 +105,7 @@ export function createNoneTransport(config: NoneTransportConfig): SecurityTransp
    * @returns Always returns true
    */
   const isReady = (): boolean => {
-    return state.ready
+    return true
   }
 
   /**
@@ -137,14 +117,12 @@ export function createNoneTransport(config: NoneTransportConfig): SecurityTransp
     return 'none'
   }
 
-  return freeze(<SecurityTransport & NoneTransportInternals>{
+  return freeze({
     send,
-    onReceive,
+    receive,
     stop,
     resume,
     isReady,
     getProtocol,
-    /** @internal */
-    handleReceive,
   })
 }
