@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.1.3](https://github.com/AndrewRedican/hyperfrontend/compare/74110dd15151bfc8360ef4edcdb1086cb003c909...a6d9ac8c48d1c3edbb8bf54c5a561fb3cde590da) - 2026-08-02
+
+### Bug Fixes
+
+- declare tslib and the rollup platform bindings for cold installs
+
 ## [0.1.2](https://github.com/AndrewRedican/hyperfrontend/compare/6b5a02be62850b0509b9fd71ad9232655cf5fbbf...47a37497608ac765af3efb30f0b5e01950bae425) - 2026-07-05
 
 ### Bug Fixes
