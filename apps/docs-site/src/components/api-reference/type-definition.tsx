@@ -72,7 +72,7 @@ export function TypeDefinition({ node, searchQuery = '' }: TypeDefinitionProps) 
                     <TypeLink type={property.type} />
                     {propDescription && (
                       <span className="text-slate-500 ml-2">
-                        — <DescriptionMarkdown text={propDescription} className="inline" />
+                        <DescriptionMarkdown text={propDescription} className="inline" />
                       </span>
                     )}
                   </div>

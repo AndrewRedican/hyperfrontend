@@ -106,6 +106,18 @@ export function renderTextBlocks(blocks: TextBlock[] | undefined): string {
 }
 
 /**
+ * Strip a leading dash-style name/description separator from extracted JSDoc
+ * text. TypeDoc removes only the ASCII `-` form of `@param name - description`,
+ * so em/en dash separators would otherwise leak into rendered descriptions.
+ *
+ * @param text - The extracted text to normalize
+ * @returns The text without a leading dash separator
+ */
+function stripLeadingDashSeparator(text: string): string {
+  return text.replace(/^\s*[—–]\s*/, '')
+}
+
+/**
  * Extract description from a comment
  *
  * @param comment - The comment to extract description from
@@ -113,7 +125,7 @@ export function renderTextBlocks(blocks: TextBlock[] | undefined): string {
  */
 export function getDescription(comment: Comment | undefined): string {
   if (!comment?.summary) return ''
-  return renderTextBlocks(comment.summary)
+  return stripLeadingDashSeparator(renderTextBlocks(comment.summary))
 }
 
 /**
@@ -126,7 +138,7 @@ export function getReturnsDescription(comment: Comment | undefined): string {
   if (!comment?.blockTags) return ''
   const returnsTag = comment.blockTags.find((tag) => tag.tag === '@returns')
   if (!returnsTag) return ''
-  return renderTextBlocks(returnsTag.content)
+  return stripLeadingDashSeparator(renderTextBlocks(returnsTag.content))
 }
 
 /** An example block with optional label */
@@ -163,7 +175,7 @@ export function getRemarks(comment: Comment | undefined): string {
   if (!comment?.blockTags) return ''
   const remarksTag = comment.blockTags.find((tag) => tag.tag === '@remarks')
   if (!remarksTag) return ''
-  return renderTextBlocks(remarksTag.content)
+  return stripLeadingDashSeparator(renderTextBlocks(remarksTag.content))
 }
 
 /**
@@ -180,7 +192,7 @@ export function getParamDescriptions(comment: Comment | undefined): Record<strin
     .forEach((tag) => {
       if (tag.name) {
         const raw = renderTextBlocks(tag.content).trim()
-        result[tag.name] = raw.startsWith('-') ? raw.slice(1).trim() : raw
+        result[tag.name] = raw.replace(/^[-—–]\s*/, '')
       }
     })
   return result
@@ -244,10 +256,10 @@ export function getModuleDescription(comment: Comment | undefined): string {
   if (comment.blockTags) {
     const moduleTag = comment.blockTags.find((tag) => tag.tag === '@module')
     if (moduleTag) {
-      const content = renderTextBlocks(moduleTag.content).trim()
+      const content = stripLeadingDashSeparator(renderTextBlocks(moduleTag.content).trim())
       if (content) return content
     }
   }
 
-  return renderTextBlocks(comment.summary)
+  return stripLeadingDashSeparator(renderTextBlocks(comment.summary))
 }
