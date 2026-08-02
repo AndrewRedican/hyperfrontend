@@ -13,11 +13,11 @@
       "options": {
         "esm": {
           "bundleWorkspaceDeps": true,
-          "bundleAllDeps": true
+          "bundleAllDeps": { "exclude": ["tslib"] }
         },
         "cjs": {
           "bundleWorkspaceDeps": true,
-          "bundleAllDeps": true
+          "bundleAllDeps": { "exclude": ["tslib"] }
         },
         "bin": [
           {
