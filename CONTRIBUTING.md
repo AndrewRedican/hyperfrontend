@@ -35,7 +35,7 @@ Before you begin contributing, please:
 
 ### Prerequisites
 
-- Node.js (v24.13.0 or later)
+- Node.js (v24.18.0 or later)
 - npm (v10.0.0 or later)
 - Git
 - GitHub account

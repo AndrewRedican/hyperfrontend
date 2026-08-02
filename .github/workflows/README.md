@@ -189,7 +189,7 @@ Sets up the Node.js environment, caches npm dependencies and Nx cache, and insta
 - Cache key includes `package-lock.json` hash and commit SHA
 - Fallback to previous caches for faster cold starts
 
-**Note**: Node.js version is hardcoded to 24.13.0 to match package.json engines.
+**Note**: Node.js version is hardcoded to 24.18.0 to match package.json engines.
 
 ### nx-affected
 
