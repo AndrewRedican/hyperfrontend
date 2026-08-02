@@ -25,3 +25,4 @@ docs/
 
 # CI
 .github/
+.claude/
