@@ -20,7 +20,7 @@ Each sub-domain is further organized by **framework category**, where multiple a
 2. **Framework diversity proof** — Each demo uses a different framework to prove framework-agnostic claims
 3. **Communication pattern illustrations** — Show different messaging patterns and use cases
 4. **Educational resources** — Linked from documentation to help developers learn
-5. **Live deployments** — Hosted at `hyperfrontend.dev/demo/*` for immediate exploration
+5. **Live deployments** — Hosted at `hyperfrontend.dev/demos/#{name}` for immediate exploration
 
 ---
 
@@ -572,13 +572,13 @@ Implementation order is based on complexity (simple → complex) to establish pa
 
 ### Phase 4: Deployment
 
-| Task                              | Description                             | Deliverables                         |
-| --------------------------------- | --------------------------------------- | ------------------------------------ |
-| **4.1** Configure Vercel projects | One project per demo                    | Vercel dashboard configured          |
-| **4.2** Set up CI/CD              | GitHub Actions for automatic deployment | `.github/workflows/deploy-demos.yml` |
-| **4.3** Add preview links to PRs  | PR comments with preview URLs           | Workflow integration                 |
-| **4.4** Configure production URLs | `https://hyperfrontend.dev/demo/{name}` | DNS/routing configured               |
-| **4.5** Add demo status badges    | Build/deploy status per demo            | Badges in READMEs                    |
+| Task                              | Description                                   | Deliverables                         |
+| --------------------------------- | --------------------------------------------- | ------------------------------------ |
+| **4.1** Configure Vercel projects | One project per demo                          | Vercel dashboard configured          |
+| **4.2** Set up CI/CD              | GitHub Actions for automatic deployment       | `.github/workflows/deploy-demos.yml` |
+| **4.3** Add preview links to PRs  | PR comments with preview URLs                 | Workflow integration                 |
+| **4.4** Configure production URLs | `https://www.hyperfrontend.dev/demos/#{name}` | DNS/routing configured               |
+| **4.5** Add demo status badges    | Build/deploy status per demo                  | Badges in READMEs                    |
 
 ---
 
@@ -722,7 +722,7 @@ export const clockContract: IChannelContract = {
 
 ### Deployment Requirements
 
-- [ ] Live at `hyperfrontend.dev/demo/{name}`
+- [ ] Live at `hyperfrontend.dev/demos/#{name}`
 - [ ] Links from documentation work correctly
 - [ ] CI/CD pipeline deploys on merge to main
 - [ ] Preview deployments for PRs
