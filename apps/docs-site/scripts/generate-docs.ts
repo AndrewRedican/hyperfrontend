@@ -465,6 +465,10 @@ function extractArchitecture(lib: LibraryConfig): ContentExtractionResult {
  * Entry points are automatically discovered from the library's package.json
  * exports field, ensuring documentation always matches the published API.
  *
+ * Git detection is disabled so source links are identical in every build
+ * environment: each `sources[].url` points at the file on the main branch of
+ * the GitHub repository rather than the local commit.
+ *
  * @param lib - The library configuration
  * @returns True if TypeDoc succeeded, false otherwise
  */
@@ -494,7 +498,19 @@ function generateTypeDoc(lib: LibraryConfig): boolean {
   const hasTsconfig = existsSync(tsconfigPath)
 
   try {
-    const args = ['--json', outputPath, '--excludePrivate', '--excludeInternal', '--excludeNotDocumented', 'false']
+    const args = [
+      '--json',
+      outputPath,
+      '--excludePrivate',
+      '--excludeInternal',
+      '--excludeNotDocumented',
+      'false',
+      '--disableGit',
+      '--basePath',
+      WORKSPACE_ROOT,
+      '--sourceLinkTemplate',
+      'https://github.com/AndrewRedican/hyperfrontend/blob/main/{path}#L{line}',
+    ]
 
     if (hasTsconfig) {
       args.push('--tsconfig', tsconfigPath)
