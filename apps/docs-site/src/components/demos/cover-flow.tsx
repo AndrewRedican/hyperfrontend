@@ -7,7 +7,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { abs, max, min, round } from '@hyperfrontend/immutable-api-utils/built-in-copy/math'
 import { cancelAnimationFrame, requestAnimationFrame } from '@hyperfrontend/immutable-api-utils/built-in-copy/timers'
 import { ClockEmbed } from './clock-embed'
-import { DemoFallbackCard } from './demo-fallback-card'
+import { DemoFallbackCard, getDemoTheme } from './demo-fallback-card'
 
 /** Props for {@link CoverFlow}. */
 export interface CoverFlowProps {
@@ -248,6 +248,7 @@ export function CoverFlow({ entries, onShell, onCentered }: CoverFlowProps) {
         onWheel={onWheel}
         onKeyDown={onKeyDown}
       >
+        <AmbientGlow entries={entries} position={position} />
         {/* note: round() already gives the centered index ±0.5 of hysteresis, so gating on it alone keeps the embed mounted through spring overshoot. */}
         {entries.map((entry, index) => (
           <CoverFlowCard
@@ -280,6 +281,47 @@ export function CoverFlow({ entries, onShell, onCentered }: CoverFlowProps) {
           <SourceLinks entry={current} />
         </div>
       ) : null}
+    </div>
+  )
+}
+
+/** Props for {@link AmbientGlow}. */
+interface AmbientGlowProps {
+  /** The demo albums in the deck, in order. */
+  entries: readonly DemoManifestEntry[]
+  /** The deck's fractional position, so glows crossfade mid-drag. */
+  position: number
+}
+
+/**
+ * The ambient light behind the deck: each demo's accent hue bleeds out from
+ * the stage center at a strength matching how close its card is to the center,
+ * so the backdrop crossfades between neighboring hues while the deck travels —
+ * the same effect as a video player tinting the room around the screen.
+ * @param root0
+ * @param root0.entries
+ * @param root0.position
+ */
+function AmbientGlow({ entries, position }: AmbientGlowProps) {
+  return (
+    <div aria-hidden className="pointer-events-none absolute inset-0">
+      {entries.map((entry, index) => {
+        const strength = max(0, 1 - abs(index - position))
+        if (strength === 0) {
+          return null
+        }
+        const theme = getDemoTheme(entry.slug)
+        return (
+          <div key={entry.slug} className="absolute left-1/2 top-1/2" style={{ opacity: strength }}>
+            <div
+              className={`absolute h-[24rem] w-[24rem] -translate-x-1/2 -translate-y-1/2 rounded-full blur-3xl sm:h-[28rem] sm:w-[36rem] ${theme.glowOuter}`}
+            />
+            <div
+              className={`absolute h-56 w-56 -translate-x-1/2 -translate-y-1/2 rounded-full blur-2xl sm:h-72 sm:w-72 ${theme.glowCore}`}
+            />
+          </div>
+        )
+      })}
     </div>
   )
 }
@@ -381,9 +423,13 @@ function PagerFallback({ entries, index, onSelect, onShell }: PagerFallbackProps
   }
   return (
     <div className="flex w-full flex-col items-center gap-4">
-      <div className="aspect-square w-72 sm:w-80">
+      <div className="relative aspect-square w-72 sm:w-80">
+        <div
+          aria-hidden
+          className={`pointer-events-none absolute left-1/2 top-1/2 h-[22rem] w-[22rem] -translate-x-1/2 -translate-y-1/2 rounded-full blur-3xl ${getDemoTheme(entry.slug).glowOuter}`}
+        />
         {entry.featureUrl ? (
-          <div className="h-full w-full overflow-hidden rounded-2xl border border-slate-200 dark:border-slate-700">
+          <div className="relative h-full w-full overflow-hidden rounded-2xl border border-slate-200 dark:border-slate-700">
             <ClockEmbed entry={entry} className="h-full w-full" onShell={onShell} />
           </div>
         ) : (
