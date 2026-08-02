@@ -180,13 +180,51 @@ export function CoverFlow({ entries, onShell, onCentered }: CoverFlowProps) {
   const centered = clampIndex(round(position))
   const current = entries[centered]
 
+  // why: Holds the index a #<slug> deep-link is still traveling toward, so hash writes wait until the deck arrives instead of clobbering the link.
+  const pendingHashTarget = useRef<number | null>(null)
+
+  // why: /demos/#<slug> bookmarks a spot in the strip — restore it on load and follow later hash edits so shared links land on the right card.
+  useEffect(() => {
+    const indexForHash = () => {
+      let slug = ''
+      try {
+        slug = decodeURIComponent(window.location.hash.slice(1))
+      } catch {
+        return -1
+      }
+      return slug ? entries.findIndex((entry) => entry.slug === slug) : -1
+    }
+    const initial = indexForHash()
+    if (initial >= 0) {
+      pendingHashTarget.current = initial
+      jumpTo(initial)
+    }
+    const onHashChange = () => {
+      const index = indexForHash()
+      if (index >= 0) {
+        goTo(index)
+      }
+    }
+    window.addEventListener('hashchange', onHashChange)
+    return () => window.removeEventListener('hashchange', onHashChange)
+  }, [entries, goTo, jumpTo])
+
   // why: The console and caption follow whichever demo settles into the center, in both the deck and the reduced-motion pager.
   const notifyCentered = useRef(onCentered)
   notifyCentered.current = onCentered
   useEffect(() => {
     const entry = entries[centered]
-    if (entry) {
-      notifyCentered.current?.(entry)
+    if (!entry) {
+      return
+    }
+    notifyCentered.current?.(entry)
+    if (pendingHashTarget.current !== null && pendingHashTarget.current !== centered) {
+      return
+    }
+    pendingHashTarget.current = null
+    // why: replaceState keeps the centered slug bookmarkable without stacking a history entry per swipe.
+    if (window.location.hash !== `#${entry.slug}`) {
+      window.history.replaceState(null, '', `#${entry.slug}`)
     }
   }, [centered, entries])
 
