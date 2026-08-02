@@ -30,7 +30,6 @@
     "@nx/eslint": "22.7.8",
     "@nx/eslint-plugin": "22.7.8",
     "@nx/jest": "22.7.8",
-    "@nx/js": "22.7.8",
     "@rollup/plugin-commonjs": "29.0.0",
     "@rollup/plugin-json": "6.1.0",
     "@rollup/plugin-node-resolve": "16.0.3",
@@ -81,11 +80,8 @@
     "diff": "8.0.3",
     "form-data": "4.0.6",
     "js-yaml": "4.3.1",
-    "lodash": "4.18.1",
-    "lodash-es": "4.18.1",
     "minimatch": "10.2.3",
     "picomatch": "4.0.4",
-    "qs": "6.14.2",
     "test-exclude": "7.0.1",
     "tmp": "0.2.7"
   }
