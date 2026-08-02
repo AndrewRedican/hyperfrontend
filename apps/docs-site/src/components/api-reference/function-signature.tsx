@@ -34,7 +34,7 @@ export function FunctionSignature({ node, searchQuery = '' }: FunctionSignatureP
   const signatureString = `${typeParams ? `<${typeParams}>` : ''}(${params?.join(', ') || ''}): ${returnType}`
 
   return (
-    <div className="py-4 border-b border-slate-200 dark:border-slate-800 last:border-0" id={`api-${node.name}`}>
+    <div className="pt-8 pb-4 first:pt-4 border-b border-slate-200 dark:border-slate-800 last:border-0" id={`api-${node.name}`}>
       <div className="flex items-start gap-2 group">
         <AnchorLink id={`api-${node.name}`} />
         <span className="px-2 py-0.5 text-xs font-medium rounded bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-400 shrink-0">

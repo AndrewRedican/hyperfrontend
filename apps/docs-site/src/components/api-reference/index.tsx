@@ -6,6 +6,7 @@ import { useState, useMemo, useCallback, useEffect } from 'react'
 import { values } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
 import { createSet } from '@hyperfrontend/immutable-api-utils/built-in-copy/set'
 import { useHashNavigation } from '../../hooks/use-hash-navigation'
+import { AnchorLink } from '../anchor-link'
 import { ApiSearchFilter, defaultFilters } from './api-search-filter'
 import { FunctionSignature } from './function-signature'
 import { ModuleGroupedView, hasModules } from './module-grouped-view'
@@ -325,8 +326,9 @@ type VariableItemProps = { node: TypeDocNode }
 
 function VariableItem({ node }: VariableItemProps) {
   return (
-    <div className="py-4" id={`api-${node.name}`}>
-      <div className="flex items-start gap-2">
+    <div className="pt-8 pb-4 first:pt-4" id={`api-${node.name}`}>
+      <div className="flex items-start gap-2 group">
+        <AnchorLink id={`api-${node.name}`} />
         <span className="px-2 py-0.5 text-xs font-medium rounded bg-green-100 text-green-700 dark:bg-green-900/50 dark:text-green-400">
           const
         </span>

@@ -35,10 +35,10 @@ export function ParameterList({ parameters, paramDescriptions = {}, parentName }
               const paramId = parentName ? `api-${parentName}-param-${param.name}` : undefined
 
               return (
-                <tr key={param.id} id={paramId} className="border-b border-slate-100 dark:border-slate-800 last:border-0 group/param">
+                <tr key={param.id} id={paramId} className="border-b border-slate-100 dark:border-slate-800 last:border-0">
                   <td className="py-2 pr-4 font-mono text-slate-900 dark:text-white align-top">
                     <div className="flex items-center gap-1">
-                      {paramId && <AnchorLink id={paramId} className="opacity-0 group-hover/param:opacity-100" />}
+                      {paramId && <AnchorLink id={paramId} />}
                       {isRest && <span className="text-primary-500">...</span>}
                       {param.name}
                       {isOptional && <span className="text-slate-400">?</span>}

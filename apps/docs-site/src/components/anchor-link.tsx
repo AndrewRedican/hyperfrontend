@@ -15,7 +15,8 @@ interface AnchorLinkProps {
 }
 
 /**
- * A clickable anchor link icon (§) that appears on hover.
+ * A clickable anchor link icon (§), always visible at reduced opacity and
+ * fully opaque on hover so readers can tell the entry is bookmarkable.
  * Clicking copies the anchor URL to clipboard and updates the URL hash.
  * @param root0
  * @param root0.id
@@ -76,7 +77,7 @@ export function AnchorLink({ id, className = '' }: AnchorLinkProps) {
       aria-label={copied ? 'Link copied!' : 'Copy link to this section'}
       title={copied ? 'Link copied!' : 'Copy link to this section'}
       className={`
-        opacity-0 group-hover:opacity-100
+        opacity-80 hover:opacity-100 group-hover:opacity-100
         transition-opacity duration-200
         text-slate-400 hover:text-primary-600
         dark:text-slate-500 dark:hover:text-primary-400

@@ -60,7 +60,7 @@ function getTextFromChildren(children: ReactNode): string {
 }
 
 /**
- * A heading component with an integrated anchor link that appears on hover.
+ * A heading component with an integrated, always-visible anchor link.
  * Clicking the anchor copies the URL to clipboard and updates the URL hash.
  * @param root0
  * @param root0.level
