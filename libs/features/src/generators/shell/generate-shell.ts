@@ -5,7 +5,7 @@ import { freeze } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
 import { generateMetadata } from '../metadata/generate-metadata'
 import { canonicalVersion } from '../shared/canonical-version'
 import { resolveDeclaredModes } from '../shared/declared-modes'
-import { buildConnectorTypes } from './connector-types'
+import { buildShellTypes } from './shell-types'
 import { toSourceLiteral } from './source-literal'
 
 const ENTRY_PATH = 'src/index.ts'
@@ -50,22 +50,22 @@ function buildDefaults(config: ResolvedFeatureConfig, modes: DisplayMode[]): Rec
 }
 
 /**
- * Builds the connector's TypeScript entry source with the contract inlined,
+ * Builds the shell's TypeScript entry source with the contract inlined,
  * the contract-projected types exported, and only the declared display modes
  * composed.
  *
  * @param config - The resolved feature config naming the feature and its URL.
- * @param contract - The validated contract inlined into the connector.
+ * @param contract - The validated contract inlined into the shell.
  * @param modes - The declared display modes, in declaration order.
  * @returns The entry module source as a string.
  */
-function buildConnectorEntry(config: ResolvedFeatureConfig, contract: FeatureContract, modes: DisplayMode[]): string {
+function buildShellEntry(config: ResolvedFeatureConfig, contract: FeatureContract, modes: DisplayMode[]): string {
   const mounts = modes.map((mode) => MODE_MOUNTS[mode])
   const imports = ['createShell', ...mounts].sort().join(', ')
   const modeMap = modes.map((mode) => `${mode}: ${MODE_MOUNTS[mode]}`).join(', ')
   return `import { ${imports} } from '@hyperfrontend/features/host'
 
-${buildConnectorTypes(contract, modes)}
+${buildShellTypes(contract, modes)}
 /** Inlined contract describing the ${config.name} feature's actions as authored, stamped with the contract version this shell was built from. */
 const contract = ${toSourceLiteral({ ...contract, version: canonicalVersion(config.version) })}
 
@@ -83,7 +83,7 @@ const modes = { ${modeMap} }
  * declared modes are built in (or typed).
  *
  * @param options - Host-supplied options; these override the baked defaults.
- * @returns A typed shell handle exposing \`open\`, \`close\`, \`destroy\`, \`send\`, \`on\`, and \`isOpen\`.
+ * @returns A typed shell handle exposing the session lifecycle (\`open\`, \`close\`, \`destroy\`, \`isOpen\`), contract-typed messaging (\`send\`, \`on\`, \`request\`, \`handle\`), and the feature's \`isDirty\` state.
  */
 export function createFeatureShell(options: FeatureShellOptions): FeatureShellHandle {
   return <FeatureShellHandle>createShell({ ...defaults, ...options, contract, modes })
@@ -92,12 +92,12 @@ export function createFeatureShell(options: FeatureShellOptions): FeatureShellHa
 }
 
 /**
- * Builds the connector's source-level `package.json` (zero deps; the builder finalizes it).
+ * Builds the shell's source-level `package.json` (zero deps; the builder finalizes it).
  *
  * @param config - The resolved feature config supplying name and version.
  * @returns The package manifest as a JSON string.
  */
-function buildConnectorPackageJson(config: ResolvedFeatureConfig): string {
+function buildShellPackageJson(config: ResolvedFeatureConfig): string {
   const manifest = {
     name: `${config.name}-shell`,
     version: config.version,
@@ -231,14 +231,14 @@ function buildReadmeContainer(config: ResolvedFeatureConfig, modes: DisplayMode[
 }
 
 /**
- * Builds the connector's `README.md` documenting the generated install + usage.
+ * Builds the shell's `README.md` documenting the generated install + usage.
  *
  * @param config - The resolved feature config naming the feature.
  * @param contract - The validated feature contract driving the typed examples.
  * @param modes - The declared display modes, in declaration order.
  * @returns The README contents as a string.
  */
-function buildConnectorReadme(config: ResolvedFeatureConfig, contract: FeatureContract, modes: DisplayMode[]): string {
+function buildShellReadme(config: ResolvedFeatureConfig, contract: FeatureContract, modes: DisplayMode[]): string {
   return `# ${config.name}-shell
 
 Generated shell for the **${config.name}** feature. Self-contained — install it and embed the feature with one call. \`send\` and \`on\` are typed from the feature's contract.
@@ -285,8 +285,8 @@ ${buildReadmeModes(modes)}${buildReadmePermissions(config)}${buildReadmeSecurity
  */
 export function generateShell(config: ResolvedFeatureConfig, contract: FeatureContract, tree: Tree): void {
   const modes = resolveDeclaredModes(config)
-  tree.write(ENTRY_PATH, buildConnectorEntry(config, contract, modes))
-  tree.write(PACKAGE_PATH, buildConnectorPackageJson(config))
-  tree.write(README_PATH, buildConnectorReadme(config, contract, modes))
+  tree.write(ENTRY_PATH, buildShellEntry(config, contract, modes))
+  tree.write(PACKAGE_PATH, buildShellPackageJson(config))
+  tree.write(README_PATH, buildShellReadme(config, contract, modes))
   generateMetadata(config, contract, tree)
 }
