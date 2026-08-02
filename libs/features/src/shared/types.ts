@@ -399,7 +399,9 @@ export interface FeatureOptions {
  * Type-checked authoring shape for a `feature.config.*` file.
  *
  * The tiered loader and CLI flag parity live in the CLI; the SDK only exports
- * the type and the {@link defineConfig} identity helper.
+ * the type and the {@link defineConfig} identity helper. Beyond the three
+ * identity keys, the build also reads the optional `url`, `protocol`,
+ * `display`, and `permissions` keys declared here.
  */
 export interface FeatureConfig {
   /** Published feature name. */
@@ -408,6 +410,14 @@ export interface FeatureConfig {
   version: string
   /** Path to the `*.contract.{json,ts,js}` file. */
   contract: string
+  /** URL of the feature app the generated shell loads by default; defaults to `/`. */
+  url?: string
+  /** Security envelope baked into the generated shell; `hf build` requires an explicit choice. */
+  protocol?: SecurityProtocol
+  /** Display modes and per-mode defaults baked into the generated shell. */
+  display?: DisplayConfig
+  /** Permissions-Policy features the shell delegates to the feature frame. */
+  permissions?: FeaturePermission[]
 }
 
 /**
