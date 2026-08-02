@@ -1,7 +1,11 @@
+import type { ApiLinkIndex, PackageSymbolLinks } from '@/components/api-reference/api-link-context'
 import { existsSync, readFileSync, readdirSync, statSync } from 'node:fs'
 import { resolve, join } from 'node:path'
 import { isArray } from '@hyperfrontend/immutable-api-utils/built-in-copy/array'
 import { parse } from '@hyperfrontend/immutable-api-utils/built-in-copy/json'
+import { createMap } from '@hyperfrontend/immutable-api-utils/built-in-copy/map'
+import { values } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
+import { createSet } from '@hyperfrontend/immutable-api-utils/built-in-copy/set'
 
 const GENERATED_DIR = resolve(process.cwd(), '.generated')
 const DOCS_DIR = join(GENERATED_DIR, 'docs')
@@ -414,6 +418,119 @@ export function getAllLibrarySlugs(): string[] {
   }
 
   return libs
+}
+
+/** Reflection kind number TypeDoc gives module containers. */
+const MODULE_KIND = 2
+
+/** Minimal structural view of TypeDoc JSON used to index exported symbols. */
+interface RawApiNode {
+  /** Element name */
+  name?: string
+  /** Reflection kind number */
+  kind?: number
+  /** Child declarations */
+  children?: RawApiNode[]
+}
+
+let packageLinksCache: Map<string, PackageSymbolLinks> | null = null
+
+/**
+ * Index every documented hyperfrontend package: its docs page href and the
+ * exported symbol names that get an `api-<name>` anchor on that page.
+ *
+ * @returns Map from npm package name to its docs location and symbols
+ */
+function collectPackageSymbolLinks(): Map<string, PackageSymbolLinks> {
+  if (packageLinksCache) return packageLinksCache
+
+  const links = createMap<string, PackageSymbolLinks>()
+  const manifest = getManifest()
+
+  for (const lib of manifest?.libraries ?? []) {
+    if (!lib.hasApi) continue
+    const api = <RawApiNode | null>getLibraryApi(lib.slug)
+    if (!api?.children) continue
+
+    const symbols: Record<string, true> = {}
+    for (const child of api.children) {
+      if (child.kind === MODULE_KIND) {
+        for (const moduleChild of child.children ?? []) {
+          if (moduleChild.name) symbols[moduleChild.name] = true
+        }
+      } else if (child.name) {
+        symbols[child.name] = true
+      }
+    }
+
+    const href = lib.category === 'utils' ? `/docs/libraries/utils/${lib.slug.replace('-utils', '')}/` : `/docs/libraries/${lib.slug}/`
+    links.set(lib.packageName, { href, symbols })
+  }
+
+  packageLinksCache = links
+  return links
+}
+
+/**
+ * Build the symbol-link index for one library page: every hyperfrontend
+ * package its API data references, restricted to the referenced symbols
+ * verified to exist in the target package's generated docs.
+ *
+ * @param slug - The URL slug identifier for the library
+ * @param packageName - The npm package the page documents
+ * @returns Package name mapped to docs href and linkable symbols
+ */
+export function getApiLinkIndex(slug: string, packageName: string): ApiLinkIndex {
+  const api = getLibraryApi(slug)
+  if (!api) return {}
+
+  const referenced = createMap<string, Set<string>>()
+
+  /**
+   * Recursively collects referenced package/symbol pairs from TypeDoc data.
+   *
+   * @param node - The JSON subtree to scan
+   */
+  const visit = (node: unknown): void => {
+    if (isArray(node)) {
+      node.forEach(visit)
+      return
+    }
+    if (!node || typeof node !== 'object') return
+    const record = <Record<string, unknown>>node
+    const refPackage = record['package']
+    const refName = record['name']
+    if (record['type'] === 'reference' && typeof refPackage === 'string' && typeof refName === 'string') {
+      const names = referenced.get(refPackage) ?? createSet<string>()
+      names.add(refName.replace(/^globalThis\./, ''))
+      referenced.set(refPackage, names)
+    }
+    for (const value of values(record)) visit(value)
+  }
+  visit(api)
+
+  const packages = collectPackageSymbolLinks()
+  const index: ApiLinkIndex = {}
+
+  for (const [refPackage, names] of referenced) {
+    const links = packages.get(refPackage)
+    if (!links) continue
+    const symbols: Record<string, true> = {}
+    let linkable = 0
+    for (const name of names) {
+      if (links.symbols[name]) {
+        symbols[name] = true
+        linkable++
+      }
+    }
+    if (linkable > 0) index[refPackage] = { href: links.href, symbols }
+  }
+
+  // why: References TypeDoc leaves unattributed fall back to the page's own package, so its full export map must be present.
+  const own = packages.get(packageName)
+  if (own) index[packageName] = own
+
+  return index
 }
 
 /**

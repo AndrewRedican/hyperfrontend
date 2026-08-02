@@ -11,6 +11,7 @@ import { ApiSearchFilter, defaultFilters } from './api-search-filter'
 import { FunctionSignature } from './function-signature'
 import { ModuleGroupedView, hasModules } from './module-grouped-view'
 import { TypeDefinition } from './type-definition'
+import { TypeLink } from './type-link'
 import { buildNodeLookup, resolveReference } from './type-utils'
 import { ReflectionKind } from './types'
 
@@ -336,8 +337,7 @@ function VariableItem({ node }: VariableItemProps) {
       </div>
       {node.type && (
         <div className="mt-2 ml-16 text-sm">
-          <span className="text-slate-500">Type:</span>{' '}
-          <code className="text-emerald-600 dark:text-emerald-400 font-mono">{getTypeString(node.type)}</code>
+          <span className="text-slate-500">Type:</span> <TypeLink type={node.type} />
         </div>
       )}
       {node.defaultValue && (
@@ -348,20 +348,6 @@ function VariableItem({ node }: VariableItemProps) {
       )}
     </div>
   )
-}
-
-function getTypeString(type: TypeDocNode['type']): string {
-  if (!type) return 'unknown'
-  if (type.type === 'intrinsic' || type.type === 'reference') {
-    return type.name || 'unknown'
-  }
-  if (type.type === 'literal') {
-    return String(type.value)
-  }
-  if (type.type === 'array' && type.elementType) {
-    return `${getTypeString(type.elementType)}[]`
-  }
-  return type.type
 }
 
 interface ViewModeToggleProps {
@@ -402,7 +388,9 @@ function ViewModeToggle({ mode, onModeChange }: ViewModeToggleProps) {
   )
 }
 
+export type { ApiLinkIndex, PackageSymbolLinks } from './api-link-context'
 export type { TypeDocOutput, TypeDocNode } from './types'
+export { ApiLinkProvider } from './api-link-context'
 export { ApiSearchFilter, defaultFilters } from './api-search-filter'
 export { CopyButton } from './copy-button'
 export { ExampleBlock } from './example-block'

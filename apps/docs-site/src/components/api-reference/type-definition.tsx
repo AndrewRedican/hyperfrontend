@@ -1,11 +1,13 @@
 'use client'
 
+import type { TypeSegment } from './type-utils'
 import type { TypeDocNode } from './types'
 import { AnchorLink } from '../anchor-link'
+import { useTypeLinkResolver } from './api-link-context'
 import { DescriptionMarkdown } from './description-markdown'
 import { HighlightMatch } from './highlight-match'
-import { TypeLink } from './type-link'
-import { renderType, getDescription } from './type-utils'
+import { TypeLink, TypeSegmentsText } from './type-link'
+import { renderTypeSegments, getDescription } from './type-utils'
 import { ReflectionKind } from './types'
 
 interface TypeDefinitionProps {
@@ -14,6 +16,7 @@ interface TypeDefinitionProps {
 }
 
 export function TypeDefinition({ node, searchQuery = '' }: TypeDefinitionProps) {
+  const resolve = useTypeLinkResolver()
   const description = getDescription(node.comment)
   const isInterface = node.kind === ReflectionKind.Interface
   const isTypeAlias = node.kind === ReflectionKind.TypeAlias
@@ -93,8 +96,12 @@ export function TypeDefinition({ node, searchQuery = '' }: TypeDefinitionProps) 
                 const sig = method.signatures?.[0]
                 if (!sig) return null
 
-                const params = sig.parameters?.map((p) => `${p.name}: ${renderType(p.type)}`).join(', ') || ''
-                const returnType = renderType(sig.type)
+                const paramSegments: TypeSegment[] = []
+                sig.parameters?.forEach((p, index) => {
+                  if (index > 0) paramSegments.push({ text: ', ' })
+                  paramSegments.push({ text: `${p.name}: ` }, ...renderTypeSegments(p.type, resolve))
+                })
+                const returnSegments = renderTypeSegments(sig.type, resolve)
                 const methodDescription = getDescription(sig.comment)
                 const methodId = `api-${node.name}-method-${method.name}`
 
@@ -103,7 +110,11 @@ export function TypeDefinition({ node, searchQuery = '' }: TypeDefinitionProps) 
                     <div className="flex items-start gap-2">
                       <AnchorLink id={methodId} />
                       <code className="font-mono text-slate-900 dark:text-white">
-                        {method.name}({params}): <span className="text-emerald-600 dark:text-emerald-400">{returnType}</span>
+                        {method.name}(<TypeSegmentsText segments={paramSegments} />
+                        ):{' '}
+                        <span className="text-emerald-600 dark:text-emerald-400">
+                          <TypeSegmentsText segments={returnSegments} />
+                        </span>
                       </code>
                     </div>
                     {methodDescription && <DescriptionMarkdown text={methodDescription} className="text-slate-500 ml-6 mt-1" />}

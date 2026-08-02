@@ -2,6 +2,141 @@ import type { TypeRef, TextBlock, Comment, TypeDocOutput, TypeDocNode } from './
 import { createMap } from '@hyperfrontend/immutable-api-utils/built-in-copy/map'
 import { ReflectionKind } from './types'
 
+/** One run of rendered type text, optionally carrying a link target. */
+export interface TypeSegment {
+  /** The literal text of this run */
+  text: string
+  /** Destination URL for the type name, when a resolver produced one */
+  href?: string
+  /** Whether the destination leaves the docs site */
+  external?: boolean
+}
+
+/** Link target for a referenced type name. */
+export interface TypeLinkTarget {
+  /** Destination URL — site-relative for hyperfrontend types, absolute for external references */
+  href: string
+  /** Whether the destination leaves the docs site */
+  external?: boolean
+}
+
+/** Produces the link target for a reference type, or undefined to render it as plain text. */
+export type TypeLinkResolver = (type: TypeRef) => TypeLinkTarget | undefined
+
+/**
+ * Render a TypeRef to a list of text segments, linking referenced type names
+ * through the given resolver
+ *
+ * @param type - The TypeRef to render
+ * @param resolve - Resolver mapping a reference type to a link target
+ * @returns Segments that concatenate to the human-readable type string
+ */
+export function renderTypeSegments(type: TypeRef | undefined, resolve?: TypeLinkResolver): TypeSegment[] {
+  if (!type) return [{ text: 'unknown' }]
+
+  const render = (inner: TypeRef | undefined): TypeSegment[] => renderTypeSegments(inner, resolve)
+
+  /**
+   * Joins rendered segment lists with a plain-text separator.
+   *
+   * @param parts - Segment lists to join
+   * @param separator - Literal text placed between the lists
+   * @returns The flattened, separated segment list
+   */
+  const joinSegments = (parts: TypeSegment[][], separator: string): TypeSegment[] =>
+    parts.flatMap((part, index) => (index === 0 ? part : [{ text: separator }, ...part]))
+
+  switch (type.type) {
+    case 'intrinsic':
+      return [{ text: type.name || 'unknown' }]
+
+    case 'literal':
+      if (typeof type.value === 'string') return [{ text: `"${type.value}"` }]
+      if (typeof type.value === 'number' || typeof type.value === 'boolean') return [{ text: String(type.value) }]
+      if (type.value === null) return [{ text: 'null' }]
+      return [{ text: String(type.value) }]
+
+    case 'reference': {
+      const target = type.refersToTypeParameter ? undefined : resolve?.(type)
+      const name: TypeSegment = target
+        ? { text: type.name || 'unknown', href: target.href, external: target.external }
+        : { text: type.name || 'unknown' }
+      if (type.typeArguments && type.typeArguments.length > 0) {
+        const args = joinSegments(type.typeArguments.map(render), ', ')
+        return [name, { text: '<' }, ...args, { text: '>' }]
+      }
+      return [name]
+    }
+
+    case 'array':
+      if (type.elementType) {
+        const elementType = render(type.elementType)
+        if (type.elementType.type === 'union' || type.elementType.type === 'intersection') {
+          return [{ text: '(' }, ...elementType, { text: ')[]' }]
+        }
+        return [...elementType, { text: '[]' }]
+      }
+      return [{ text: 'unknown[]' }]
+
+    case 'union':
+      if (type.types) {
+        return joinSegments(type.types.map(render), ' | ')
+      }
+      return [{ text: 'unknown' }]
+
+    case 'intersection':
+      if (type.types) {
+        return joinSegments(type.types.map(render), ' & ')
+      }
+      return [{ text: 'unknown' }]
+
+    case 'tuple':
+      if (type.elements) {
+        return [{ text: '[' }, ...joinSegments(type.elements.map(render), ', '), { text: ']' }]
+      }
+      return [{ text: '[]' }]
+
+    case 'rest':
+      if (type.elementType) {
+        return [{ text: '...' }, ...render(type.elementType)]
+      }
+      return [{ text: '...unknown' }]
+
+    case 'reflection':
+      if (type.declaration?.signatures?.[0]) {
+        const sig = type.declaration.signatures[0]
+        const params = joinSegments(
+          sig.parameters?.map((p) => [{ text: `${p.name}${p.flags?.isOptional ? '?' : ''}: ` }, ...render(p.type)]) ?? [],
+          ', '
+        )
+        return [{ text: '(' }, ...params, { text: ') => ' }, ...render(sig.type)]
+      }
+      if (type.declaration?.children) {
+        const props = joinSegments(
+          type.declaration.children.map((child) => [{ text: `${child.name}: ` }, ...render(child.type)]),
+          '; '
+        )
+        return [{ text: '{ ' }, ...props, { text: ' }' }]
+      }
+      return [{ text: '{ }' }]
+
+    case 'conditional':
+      return [{ text: 'conditional' }]
+
+    case 'mapped':
+      return [{ text: 'mapped' }]
+
+    case 'indexedAccess':
+      return [{ text: 'indexedAccess' }]
+
+    case 'templateLiteral':
+      return [{ text: 'templateLiteral' }]
+
+    default:
+      return [{ text: 'unknown' }]
+  }
+}
+
 /**
  * Render a TypeRef to a human-readable type string
  *
@@ -9,89 +144,9 @@ import { ReflectionKind } from './types'
  * @returns Human-readable type string representation
  */
 export function renderType(type: TypeRef | undefined): string {
-  if (!type) return 'unknown'
-
-  switch (type.type) {
-    case 'intrinsic':
-      return type.name || 'unknown'
-
-    case 'literal':
-      if (typeof type.value === 'string') return `"${type.value}"`
-      if (typeof type.value === 'number' || typeof type.value === 'boolean') return String(type.value)
-      if (type.value === null) return 'null'
-      return String(type.value)
-
-    case 'reference': {
-      let refName = type.name || 'unknown'
-      if (type.typeArguments && type.typeArguments.length > 0) {
-        const args = type.typeArguments.map(renderType).join(', ')
-        refName += `<${args}>`
-      }
-      return refName
-    }
-
-    case 'array':
-      if (type.elementType) {
-        const elementType = renderType(type.elementType)
-        if (type.elementType.type === 'union' || type.elementType.type === 'intersection') {
-          return `(${elementType})[]`
-        }
-        return `${elementType}[]`
-      }
-      return 'unknown[]'
-
-    case 'union':
-      if (type.types) {
-        return type.types.map(renderType).join(' | ')
-      }
-      return 'unknown'
-
-    case 'intersection':
-      if (type.types) {
-        return type.types.map(renderType).join(' & ')
-      }
-      return 'unknown'
-
-    case 'tuple':
-      if (type.elements) {
-        return `[${type.elements.map(renderType).join(', ')}]`
-      }
-      return '[]'
-
-    case 'rest':
-      if (type.elementType) {
-        return `...${renderType(type.elementType)}`
-      }
-      return '...unknown'
-
-    case 'reflection':
-      if (type.declaration?.signatures?.[0]) {
-        const sig = type.declaration.signatures[0]
-        const params = sig.parameters?.map((p) => `${p.name}${p.flags?.isOptional ? '?' : ''}: ${renderType(p.type)}`).join(', ') ?? ''
-        const returnType = renderType(sig.type)
-        return `(${params}) => ${returnType}`
-      }
-      if (type.declaration?.children) {
-        const props = type.declaration.children.map((child) => `${child.name}: ${renderType(child.type)}`).join('; ')
-        return `{ ${props} }`
-      }
-      return '{ }'
-
-    case 'conditional':
-      return 'conditional'
-
-    case 'mapped':
-      return 'mapped'
-
-    case 'indexedAccess':
-      return 'indexedAccess'
-
-    case 'templateLiteral':
-      return 'templateLiteral'
-
-    default:
-      return 'unknown'
-  }
+  return renderTypeSegments(type)
+    .map((segment) => segment.text)
+    .join('')
 }
 
 /**
