@@ -61,10 +61,13 @@
       }
     },
     "pack-shell": {
-      "executor": "@hyperfrontend/app:pack-shell",
+      "executor": "nx:run-commands",
       "dependsOn": ["install"],
       "outputs": ["{workspaceRoot}/dist/apps/demos/clock/shell"],
-      "options": {}
+      "options": {
+        "command": "npx hf build --ci --out ../../../dist/apps/demos/clock/shell",
+        "cwd": "apps/demos/clock"
+      }
     }
   }
 }

@@ -14,6 +14,10 @@ export interface FeatureLink {
   send(type: string, data?: unknown): void
   /** Registers a handler for a host command. */
   on(event: string, handler: (data: unknown) => void): unknown
+  /** Registers a responder for a correlated host request. */
+  handle(type: string, handler: (data: unknown) => unknown): unknown
+  /** Reports whether the feature holds state worth confirming before close. */
+  setDirty(dirty: boolean): void
 }
 
 /** Wiring options — injectable clock for tests. */
@@ -80,9 +84,19 @@ export function wireClockContract(feature: FeatureLink, store: ClockStore, optio
   const now = options.now ?? (() => Date.now())
   const snapshot = () => buildSnapshot(now(), store.timezone.value, store.locale.value, store.format.value)
 
-  feature.on('get-time', () => {
-    feature.send('time', snapshot())
+  // how: A correlated request gets the snapshot back directly; the `time` echo
+  // still fires so plain event listeners observe the answer too.
+  feature.handle('get-time', () => {
+    const current = snapshot()
+    feature.send('time', current)
+    return current
   })
+
+  // why: Armed alarms are the clock's unsaved state — a host proposing a close
+  // sees `dirty` until every alarm has fired or been cleared.
+  const reportAlarmDirty = () => {
+    feature.setDirty(store.alarms.value.length > 0)
+  }
 
   feature.on('set-format', (data) => {
     if (isRecord(data) && (data['format'] === 'analog' || data['format'] === 'digital')) {
@@ -111,6 +125,7 @@ export function wireClockContract(feature: FeatureLink, store: ClockStore, optio
       const label = typeof data['label'] === 'string' ? data['label'] : undefined
       const alarm = store.setAlarm(data['at'], label)
       feature.send('alarm-set', { id: alarm.id, at: alarm.at, firesAtEpochMs: alarm.firesAtEpochMs })
+      reportAlarmDirty()
     }
   })
 
@@ -119,6 +134,7 @@ export function wireClockContract(feature: FeatureLink, store: ClockStore, optio
       const alarm = store.clearAlarm(data['id'])
       if (alarm !== null) {
         feature.send('alarm-cleared', { id: alarm.id })
+        reportAlarmDirty()
       }
     }
   })
@@ -134,6 +150,7 @@ export function wireClockContract(feature: FeatureLink, store: ClockStore, optio
 
   store.onAlarmFired((alarm) => {
     feature.send('alarm-fired', { id: alarm.id, at: alarm.at, ...(alarm.label !== undefined && { label: alarm.label }) })
+    reportAlarmDirty()
   })
 
   return () => {

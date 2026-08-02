@@ -5,10 +5,12 @@ import { wireClockContract } from '../wire-contract'
 
 const NOON_UTC = Date.UTC(2026, 6, 1, 12, 0, 0)
 
-/** A fake feature handle capturing sends and exposing handler dispatch. */
+/** A fake feature handle capturing sends, dirty reports, and exposing handler dispatch. */
 function createFakeFeature() {
   const handlers = new Map<string, (data: unknown) => void>()
+  const responders = new Map<string, (data: unknown) => unknown>()
   const sent: { type: string; data: unknown }[] = []
+  const dirtyReports: boolean[] = []
   const link: FeatureLink = {
     send: (type, data) => {
       sent.push({ type, data })
@@ -17,8 +19,21 @@ function createFakeFeature() {
       handlers.set(event, handler)
       return () => {}
     },
+    handle: (type, handler) => {
+      responders.set(type, handler)
+      return () => {}
+    },
+    setDirty: (dirty) => {
+      dirtyReports.push(dirty)
+    },
   }
-  return { link, sent, dispatch: (type: string, data?: unknown) => handlers.get(type)?.(data) }
+  return {
+    link,
+    sent,
+    dirtyReports,
+    dispatch: (type: string, data?: unknown) => handlers.get(type)?.(data),
+    respond: (type: string, data?: unknown) => responders.get(type)?.(data),
+  }
 }
 
 function wire() {
@@ -40,22 +55,22 @@ afterEach(() => {
 })
 
 describe('get-time', () => {
-  it('answers with a single time snapshot', () => {
-    const { dispatch, sent } = wire()
-    dispatch('get-time')
-    expect(sent).toEqual([
-      {
-        type: 'time',
-        data: {
-          epochMs: NOON_UTC,
-          iso: '2026-07-01T12:00:00.000Z',
-          timezone: 'UTC',
-          locale: 'en-US',
-          format: 'analog',
-          formatted: expect.stringContaining('12:00'),
-        },
-      },
-    ])
+  it('answers the request with the time snapshot', () => {
+    const { respond } = wire()
+    expect(respond('get-time')).toEqual({
+      epochMs: NOON_UTC,
+      iso: '2026-07-01T12:00:00.000Z',
+      timezone: 'UTC',
+      locale: 'en-US',
+      format: 'analog',
+      formatted: expect.stringContaining('12:00'),
+    })
+  })
+
+  it('echoes the same snapshot as a time event', () => {
+    const { respond, sent } = wire()
+    respond('get-time')
+    expect(sent).toEqual([{ type: 'time', data: expect.objectContaining({ epochMs: NOON_UTC }) }])
   })
 })
 
@@ -169,6 +184,34 @@ describe('alarm-fired', () => {
     dispatch('set-alarm', { at: '12:01' })
     vi.advanceTimersByTime(60_000)
     expect(sent[sent.length - 1]).toEqual({ type: 'alarm-fired', data: { id: 'alarm-1', at: '12:01' } })
+  })
+})
+
+describe('dirty state', () => {
+  it('reports dirty when an alarm is armed', () => {
+    const { dispatch, dirtyReports } = wire()
+    dispatch('set-alarm', { at: '13:30' })
+    expect(dirtyReports).toEqual([true])
+  })
+
+  it('reports clean once the last alarm is cleared', () => {
+    const { dispatch, dirtyReports } = wire()
+    dispatch('set-alarm', { at: '13:30' })
+    dispatch('clear-alarm', { id: 'alarm-1' })
+    expect(dirtyReports).toEqual([true, false])
+  })
+
+  it('reports clean after the last alarm fires', () => {
+    const { dispatch, dirtyReports } = wire()
+    dispatch('set-alarm', { at: '12:01' })
+    vi.advanceTimersByTime(60_000)
+    expect(dirtyReports).toEqual([true, false])
+  })
+
+  it('stays silent while no alarm state changes', () => {
+    const { dispatch, dirtyReports } = wire()
+    dispatch('set-format', { format: 'digital' })
+    expect(dirtyReports).toEqual([])
   })
 })
 

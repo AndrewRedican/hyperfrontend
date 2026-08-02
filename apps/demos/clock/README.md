@@ -10,9 +10,9 @@ This app is a **self-contained hyperfrontend feature**: it consumes the publishe
 | ------------------ | ---------------------------------------------------------------------------------- | --------------- |
 | Feature app (this) | Railway static service (`*.up.railway.app`), built to `dist/apps/demos/clock/app/` | —               |
 | Host: docs-site    | Vercel (landing hero + demos-page carousel)                                        | **cross-site**  |
-| Host: dev host     | `hf dev` control port (`scripts/hf-dev.ts`), local                                 | cross-origin    |
+| Host: dev host     | `hf dev` debug UI, local                                                           | cross-origin    |
 
-The docs-site consumes this feature through the **vendored shell tarball** (`@hyperfrontend/demo-clock-shell`, committed under `apps/docs-site/vendor/`) — a real install step simulating "the feature team shipped us a shell". No security envelope is configured — [feature.config.ts](feature.config.ts) declares no `protocol` and the host passes none, so the channel runs open. That is deliberate: this demo's job is the composition path, not the envelope (that's the security demo's story).
+The docs-site consumes this feature through the **vendored shell tarball** (`@hyperfrontend/demo-clock-shell`, committed under `apps/docs-site/vendor/`) — a real install step simulating "the feature team shipped us a shell". The shell is self-contained (`hf build` bundles the SDK; zero install-time dependencies) and carries the feature's declared display modes, its contract version, and the **v1 security envelope** — [feature.config.ts](feature.config.ts) declares `protocol: 'v1'`, so product traffic crosses the boundary enveloped without a key-provisioning story (v2's pre-shared key is the security demo's territory).
 
 ## Contract
 
@@ -29,6 +29,8 @@ The feature owns all state; the host commands, the feature confirms with echo ev
 
 Timezone = IANA id, locale = BCP-47, both applied via `Intl`. Alarms are multiple, one-shot, in-memory.
 
+The contract carries `version: 0.2.0` (gated for compatibility at the handshake). `get-time` doubles as a **correlated request**: a host calling `request('get-time')` gets the snapshot back directly, while plain listeners still observe the `time` echo. Armed alarms report as **dirty state** (`setDirty`), so a host proposing a polite close can see unsaved work first. The config declares all four display modes — `embedded` (default, fills the container), `dialog` (420×420 inner box), `popup` (480×480), and `standalone`.
+
 ## Layout
 
 | File                           | Role                                                             |
@@ -41,8 +43,6 @@ Timezone = IANA id, locale = BCP-47, both applied via `Intl`. Alarms are multipl
 | `src/physics/`                 | Framework-agnostic coin physics (drag, momentum, snap, flips)    |
 | `src/time/` · `src/alarms/`    | `Intl` time math and the one-shot alarm engine                   |
 | `src/components/`              | The CSS-3D coin, analog and digital faces                        |
-| `dev-host/`                    | Hand-rolled stand-in for the debug UI SDK v0.1.0 cannot serve    |
-| `scripts/hf-dev.ts`            | Dev-server launcher keeping `hf dev` alive with local assets     |
 
 ## Working on it
 
@@ -53,10 +53,15 @@ npx nx test demo-clock           # vitest (physics, time, alarms, wiring, a11y/a
 npx nx typecheck demo-clock      # vue-tsc
 npx nx lint demo-clock           # oxlint + eslint (app-local)
 npx nx run demo-clock:build      # type-check + vite build → dist/apps/demos/clock/app/
-npx nx run demo-clock:pack-shell # shell tarball → dist/apps/demos/clock/shell/ (@hyperfrontend/app:pack-shell)
+npx nx run demo-clock:pack-shell # hf build → self-contained shell tarball in dist/apps/demos/clock/shell/
 npx nx run docs-site:refresh-shell # re-pack, re-vendor, and reinstall the tarball in the docs-site
 ```
 
+To see the full host↔hostee wiring locally before any deploy: run `npx nx run demo-clock:dev`
+(serves the built app at `http://localhost:4280/`) alongside the docs-site's `npm run dev` — the
+docs-site's committed `.env.development` points its embeds at that port, while production builds
+keep the deployed origin.
+
 ## Known SDK limitations this demo works around
 
-Consuming `@hyperfrontend/features@0.1.0` end-to-end surfaced fourteen findings. The blockers to know about when reading this code: the CLI dev server and debug UI are unusable as published, the host SDK crashes on non-cross-origin-isolated pages without a `SharedArrayBuffer` stub, host↔feature message **delivery** is broken in both directions, and `hf build` cannot compile its own generated shell (worked around by the workspace `@hyperfrontend/app:pack-shell` executor, which drives the SDK's own generator from this app's `node_modules` and compiles with plain `tsc`). The feature side works fully — its tick stream, echoes, and heartbeats are all observable on the wire — but hosts cannot receive them until delivery is fixed in the SDK.
+The demo consumes `@hyperfrontend/features@^0.3.0`; the 0.1.0-era workarounds (hand-rolled dev host, `SharedArrayBuffer` stub, dev-server launcher script, external shell compiler) are gone — `hf dev` and `hf build` are the real dev loop now. The workarounds that remain are all published-package gaps already fixed in workspace source and awaiting the next release (each filed in the showcase findings registry): the `rollup` and `tslib` devDependencies exist only so a fresh install can run `hf build` at all; the generated shell's handle type omits the runtime `request`/`handle`/`isDirty` members, so typed hosts cast for those; and [feature.config.ts](feature.config.ts) authors its extended keys against a local widened type because the published `defineConfig` rejects them — migrate it back to `defineConfig` once the fixed version ships.
