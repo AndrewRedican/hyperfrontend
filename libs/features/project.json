@@ -15,7 +15,7 @@
           {
             "exclude": ["./nx/generators/feature", "./nx/executors/build", "./nx/executors/serve", "./server/debug-ui"],
             "bundleWorkspaceDeps": true,
-            "bundleAllDeps": true
+            "bundleAllDeps": { "exclude": ["tslib"] }
           },
           {
             "entry": ["./nx/generators/feature", "./nx/executors/build", "./nx/executors/serve"],
@@ -27,7 +27,7 @@
           {
             "exclude": ["./nx/generators/feature", "./nx/executors/build", "./nx/executors/serve", "./server/debug-ui"],
             "bundleWorkspaceDeps": true,
-            "bundleAllDeps": true
+            "bundleAllDeps": { "exclude": ["tslib"] }
           },
           {
             "entry": ["./nx/generators/feature", "./nx/executors/build", "./nx/executors/serve"],
