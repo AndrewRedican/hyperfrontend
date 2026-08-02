@@ -1,72 +1,75 @@
 'use client'
 
-import type { createFeatureShell } from '@hyperfrontend/demo-clock-shell'
+import type { DemoManifestEntry } from '@/lib/demo-manifest'
 import { useEffect, useRef, useState } from 'react'
-import { defineProperty } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
+import { createFeatureShell } from '@hyperfrontend/demo-clock-shell'
 import { clearTimeout, setTimeout } from '@hyperfrontend/immutable-api-utils/built-in-copy/timers'
-import { createURL } from '@hyperfrontend/immutable-api-utils/built-in-copy/url'
+import { DemoFallbackCard } from './demo-fallback-card'
 
 /** The shell handle type, inferred from the vendored shell's factory. */
-type ClockShell = ReturnType<typeof createFeatureShell>
+export type ClockShell = ReturnType<typeof createFeatureShell>
 
 /** Liveness of the embedded feature. */
 export type EmbedStatus = 'connecting' | 'live' | 'offline'
 
-/** Milliseconds to wait for proof of life before degrading to the poster. */
+/** Milliseconds of silence tolerated before degrading to the fallback card. */
 const LIVENESS_TIMEOUT_MS = 6000
 
 /** Props for {@link ClockEmbed}. */
 export interface ClockEmbedProps {
-  /** URL the clock feature app is served from. */
-  featureUrl: string
-  /** Committed poster shown until the feature proves it is alive (and as the offline fallback). */
-  poster: string
+  /** The clock's manifest entry; must carry a `featureUrl`. */
+  entry: DemoManifestEntry
   /** Extra classes for the mount container. */
   className?: string
   /** Notified whenever the embed's liveness changes. */
   onStatus?: (status: EmbedStatus) => void
+  /** Receives the live shell handle after mount, and `null` when it is torn down. */
+  onShell?: (shell: ClockShell | null) => void
+}
+
+/**
+ * Narrows an unknown event payload to a plain record.
+ * @param value - The candidate payload.
+ * @returns `true` when the value is a non-null object.
+ */
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null
 }
 
 /**
  * Embeds the live clock feature through its vendored shell package, degrading
- * gracefully to the committed poster.
+ * gracefully to the demo's themed fallback card.
  *
- * The poster renders immediately and the feature iframe mounts invisible on top.
- * A healthy feature emits `postMessage` traffic (heartbeats, size announcements,
- * ticks) within about a second, so the first message from the feature's origin
- * is treated as proof of life and crossfades the iframe in. If nothing arrives
- * before the timeout — origin not provisioned, service down — the poster simply
- * stays, so an error page (e.g. Railway's 404) is never shown to visitors.
- *
- * The shell is imported dynamically inside an effect because the host SDK touches
- * `window` at module scope, and `SharedArrayBuffer` is stubbed
- * first because the SDK's load-time code probes it with `instanceof` on pages
- * without cross-origin isolation.
+ * The fallback card renders immediately and the feature iframe mounts
+ * invisible on top. Liveness is read straight off the shell's own session
+ * signals: the first `tick` (post-open product traffic, so the app has
+ * rendered) crossfades the iframe in, the four-state `status` watchdog demotes
+ * a suspect or gone session, and a re-arming silence deadline covers the
+ * never-connected case — an unreachable or outdated origin simply leaves the
+ * card up, so an error page is never shown to visitors. A feature reload
+ * surfaces as `close` then a fresh `tick`, passing through `connecting`
+ * truthfully along the way.
  * @param root0
- * @param root0.featureUrl
- * @param root0.poster
+ * @param root0.entry
  * @param root0.className
  * @param root0.onStatus
+ * @param root0.onShell
  */
-export function ClockEmbed({ featureUrl, poster, className, onStatus }: ClockEmbedProps) {
+export function ClockEmbed({ entry, className, onStatus, onShell }: ClockEmbedProps) {
   const container = useRef<HTMLDivElement | null>(null)
   const [status, setStatus] = useState<EmbedStatus>('connecting')
   const notify = useRef(onStatus)
   notify.current = onStatus
+  const notifyShell = useRef(onShell)
+  notifyShell.current = onShell
+  const featureUrl = entry.featureUrl ?? ''
 
   useEffect(() => {
     const element = container.current
-    if (!element) {
+    if (!element || featureUrl === '') {
       return
     }
-    let shell: ClockShell | null = null
     let disposed = false
-    let featureOrigin = ''
-    try {
-      featureOrigin = createURL(featureUrl, window.location.href).origin
-    } catch {
-      featureOrigin = ''
-    }
 
     const apply = (next: EmbedStatus) => {
       if (!disposed) {
@@ -75,47 +78,62 @@ export function ClockEmbed({ featureUrl, poster, className, onStatus }: ClockEmb
       }
     }
 
-    // how: Proof of life — any message from the feature's origin means the app
-    const onMessage = (event: MessageEvent) => {
-      if (event.origin === featureOrigin) {
+    // how: One re-arming deadline serves connect-timeout and mid-session death alike — every proof of life pushes it out, so only real silence fires it.
+    let deadline: ReturnType<typeof setTimeout> | null = null
+    const armDeadline = () => {
+      if (deadline !== null) {
+        clearTimeout(deadline)
+      }
+      deadline = setTimeout(() => apply('offline'), LIVENESS_TIMEOUT_MS)
+    }
+
+    const shell = createFeatureShell({ container: element, url: featureUrl })
+    const subscriptions = [
+      // why: The first tick is post-open product traffic — the app is rendering, so the crossfade never reveals a blank frame.
+      shell.on('tick', () => {
+        armDeadline()
         apply('live')
-      }
-    }
-    window.addEventListener('message', onMessage)
-    const deadline = setTimeout(() => apply('offline'), LIVENESS_TIMEOUT_MS)
-
-    // why: without this stub the shell module throws on load in any page that is not cross-origin isolated.
-    if (!('SharedArrayBuffer' in globalThis)) {
-      defineProperty(globalThis, 'SharedArrayBuffer', { value: class SharedArrayBuffer {}, configurable: true })
-    }
-
-    void import('@hyperfrontend/demo-clock-shell').then((module) => {
-      if (disposed) {
-        return
-      }
-      shell = module.createFeatureShell({ container: element, url: featureUrl })
-      // note: the SDK drops heartbeats and misreports the live feature as unresponsive; swallow that lifecycle error.
-      shell.on('error', () => undefined)
-      shell.open()
-    })
+      }),
+      shell.on('status', (state) => {
+        if (state === 'healthy') {
+          armDeadline()
+          apply('live')
+        } else if (state === 'suspect' || state === 'gone') {
+          apply('offline')
+        }
+      }),
+      // why: A close mid-session is usually a feature reload; the SDK re-adopts the new document, so report the honest in-between state and re-arm.
+      shell.on('close', () => {
+        apply('connecting')
+        armDeadline()
+      }),
+      shell.on('error', (data) => {
+        if (isRecord(data) && data['reason'] === 'open-timeout') {
+          apply('offline')
+        }
+      }),
+    ]
+    armDeadline()
+    shell.open()
+    notifyShell.current?.(shell)
 
     return () => {
       disposed = true
-      window.removeEventListener('message', onMessage)
-      clearTimeout(deadline)
-      shell?.destroy()
+      if (deadline !== null) {
+        clearTimeout(deadline)
+      }
+      subscriptions.forEach((unsubscribe) => unsubscribe())
+      notifyShell.current?.(null)
+      shell.destroy()
     }
   }, [featureUrl])
 
   return (
     <div className={`relative ${className ?? ''}`}>
-      {/* note: The poster stays under the invisible iframe until proof of life, so a dead origin's error page is never visible. */}
-      <img
-        src={poster}
-        alt="Clock demo preview"
-        draggable={false}
-        className={`absolute inset-0 h-full w-full select-none object-contain transition-opacity duration-700 ${status === 'live' ? 'opacity-0' : 'opacity-100'}`}
-      />
+      {/* note: The fallback card stays under the invisible iframe until proof of life, so a dead origin's error page is never visible. */}
+      <div className={`absolute inset-0 transition-opacity duration-700 ${status === 'live' ? 'opacity-0' : 'opacity-100'}`}>
+        <DemoFallbackCard entry={entry} status={status === 'offline' ? 'offline' : 'connecting'} />
+      </div>
       <div
         ref={container}
         aria-label="Live clock demo"
