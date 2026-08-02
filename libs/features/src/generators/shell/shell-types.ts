@@ -234,6 +234,12 @@ export interface FeatureOpenTimeoutError {
   displayMode: FeatureDisplayMode
 }
 
+/** Per-request settings accepted by \`request\`. */
+export interface FeatureRequestOptions {
+  /** Milliseconds to wait for the response before rejecting; defaults to 30000. */
+  timeoutMs?: number
+}
+
 /** Handle returned by \`createFeatureShell\`, narrowed to the feature's contract. */
 export interface FeatureShellHandle {
   /**
@@ -254,6 +260,23 @@ export interface FeatureShellHandle {
    */
   send<T extends HostSendType>(type: T, data?: HostSendPayloads[T]): void
   /**
+   * Sends a contract request to the feature and resolves with its response.
+   *
+   * @param type - Action type from the feature contract's accepted list.
+   * @param data - Payload matching the action's schema.
+   * @param options - Per-request settings such as \`timeoutMs\`.
+   * @returns A promise settling with the feature's response payload.
+   */
+  request<T extends HostSendType>(type: T, data?: HostSendPayloads[T], options?: FeatureRequestOptions): Promise<unknown>
+  /**
+   * Registers the handler that answers feature requests of a given type.
+   *
+   * @param type - Request type from the feature contract's emitted list.
+   * @param handler - Receives the typed request payload and returns the response value or a promise of it.
+   * @returns A function that unregisters this handler.
+   */
+  handle<T extends HostEventType>(type: T, handler: (data: HostEventPayloads[T]) => unknown): () => void
+  /**
    * Subscribes to a feature event with its contract-typed payload.
    *
    * @param event - Event type from the feature contract's emitted list.
@@ -271,6 +294,8 @@ export interface FeatureShellHandle {
   on(event: ${lifecycleEvents.map((event) => `'${event}'`).join(' | ')}, handler: (data?: unknown) => void): () => void
   /** Whether the feature channel is currently open (\`true\` while connected). */
   readonly isOpen: boolean
+  /** Whether the feature has declared unsaved work; mirrors the feature's last dirty-state report. */
+  readonly isDirty: boolean
 }`
 }
 
@@ -309,26 +334,26 @@ function buildPayloadInterface(name: string, doc: string, actions: ActionDescrip
 }
 
 /**
- * Builds the connector's full generated type surface for a feature contract
+ * Builds the shell's full generated type surface for a feature contract
  * and its declared display modes.
  *
  * Emits payload maps and literal action-name unions projected from the
  * contract, plus structural shell option and handle types narrowed to the
- * declared modes, so the connector's declarations resolve with no dependencies
+ * declared modes, so the shell's declarations resolve with no dependencies
  * beyond the DOM lib and an undeclared mode is a type error before it is a
  * runtime one.
  *
  * @param contract - The feature contract driving the projected types.
  * @param modes - The display modes the feature declared, in declaration order.
- * @returns The type declaration block for the connector entry.
+ * @returns The type declaration block for the shell entry.
  *
  * @example Projecting the clock contract
  * ```typescript
- * buildConnectorTypes({ emitted: [{ type: 'timeUpdated' }], accepted: [{ type: 'setTimezone' }] }, ['embedded'])
+ * buildShellTypes({ emitted: [{ type: 'timeUpdated' }], accepted: [{ type: 'setTimezone' }] }, ['embedded'])
  * // => source containing "export type FeatureDisplayMode = 'embedded'"
  * ```
  */
-export function buildConnectorTypes(contract: FeatureContract, modes: DisplayMode[]): string {
+export function buildShellTypes(contract: FeatureContract, modes: DisplayMode[]): string {
   return `${buildPayloadInterface('HostSendPayloads', 'Payloads for actions the host can send, keyed by action type from the feature contract.', contract.accepted)}
 
 ${buildPayloadInterface('HostEventPayloads', 'Payloads for events the feature emits to the host, keyed by event type from the feature contract.', contract.emitted)}

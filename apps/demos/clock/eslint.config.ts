@@ -15,9 +15,7 @@ export default defineConfigWithVueTs(
     files: ['**/*.{vue,ts,mts,tsx}'],
   },
 
-  // note: host-bundle.js is copied from the installed package by scripts/hf-dev.ts
-  // and carries the SDK's internal lint pragmas.
-  globalIgnores(['**/dist/**', '**/dist-ssr/**', '**/coverage/**', 'dev-host/host-bundle.js']),
+  globalIgnores(['**/dist/**', '**/dist-ssr/**', '**/coverage/**']),
 
   ...pluginVue.configs['flat/essential'],
   vueTsConfigs.recommended,

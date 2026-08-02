@@ -1,17 +1,22 @@
 'use client'
 
 import type { DemoManifestEntry } from '@/lib/demo-manifest'
-import type { EmbedStatus } from './clock-embed'
+import type { ClockShell, EmbedStatus } from './clock-embed'
 import { BOUNDARY_LABELS } from '@/lib/demo-manifest'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { abs, max, min, round } from '@hyperfrontend/immutable-api-utils/built-in-copy/math'
 import { cancelAnimationFrame, requestAnimationFrame } from '@hyperfrontend/immutable-api-utils/built-in-copy/timers'
 import { ClockEmbed } from './clock-embed'
+import { DemoFallbackCard } from './demo-fallback-card'
 
 /** Props for {@link CoverFlow}. */
 export interface CoverFlowProps {
   /** The demo albums to page through, in order. */
   entries: readonly DemoManifestEntry[]
+  /** Receives the centered live demo's shell handle, and `null` while none is mounted. */
+  onShell?: (shell: ClockShell | null) => void
+  /** Notified whenever a different demo settles into the center. */
+  onCentered?: (entry: DemoManifestEntry) => void
 }
 
 /** Pixels of drag that move the deck by one card. */
@@ -28,12 +33,15 @@ const SPRING = 0.011
  *
  * Horizontal on landscape, a vertical stack-flow on portrait; drag, wheel, and
  * arrow keys all carry momentum and snap onto a card. Only the centered card
- * mounts its live feature — neighbors render committed poster art. Under
- * reduced motion the deck flattens to a previous/next pager.
+ * mounts its live feature — every other card renders the demo's themed
+ * fallback card. Under reduced motion the deck flattens to a previous/next
+ * pager.
  * @param root0
  * @param root0.entries
+ * @param root0.onShell
+ * @param root0.onCentered
  */
-export function CoverFlow({ entries }: CoverFlowProps) {
+export function CoverFlow({ entries, onShell, onCentered }: CoverFlowProps) {
   const [position, setPosition] = useState(0)
   const [vertical, setVertical] = useState(false)
   const [reduced, setReduced] = useState(false)
@@ -172,8 +180,18 @@ export function CoverFlow({ entries }: CoverFlowProps) {
   const centered = clampIndex(round(position))
   const current = entries[centered]
 
+  // why: The console and caption follow whichever demo settles into the center, in both the deck and the reduced-motion pager.
+  const notifyCentered = useRef(onCentered)
+  notifyCentered.current = onCentered
+  useEffect(() => {
+    const entry = entries[centered]
+    if (entry) {
+      notifyCentered.current?.(entry)
+    }
+  }, [centered, entries])
+
   if (reduced) {
-    return <PagerFallback entries={entries} index={centered} onSelect={jumpTo} />
+    return <PagerFallback entries={entries} index={centered} onSelect={jumpTo} onShell={onShell} />
   }
 
   return (
@@ -192,15 +210,17 @@ export function CoverFlow({ entries }: CoverFlowProps) {
         onWheel={onWheel}
         onKeyDown={onKeyDown}
       >
+        {/* note: round() already gives the centered index ±0.5 of hysteresis, so gating on it alone keeps the embed mounted through spring overshoot. */}
         {entries.map((entry, index) => (
           <CoverFlowCard
             key={entry.slug}
             entry={entry}
             offset={index - position}
             vertical={vertical}
-            live={index === centered && abs(index - position) < 0.25}
+            live={index === centered}
             onSelect={() => goTo(index)}
             onStatus={setEmbedStatus}
+            onShell={onShell}
           />
         ))}
       </div>
@@ -215,10 +235,11 @@ export function CoverFlow({ entries }: CoverFlowProps) {
             </span>
             {current.featureUrl && embedStatus === 'offline' ? (
               <span className="rounded-full bg-amber-100 px-2.5 py-1 font-medium text-amber-700 dark:bg-amber-900/40 dark:text-amber-300">
-                warming up — poster preview
+                warming up
               </span>
             ) : null}
           </p>
+          <SourceLinks entry={current} />
         </div>
       ) : null}
     </div>
@@ -233,9 +254,10 @@ interface CoverFlowCardProps {
   live: boolean
   onSelect: () => void
   onStatus: (status: EmbedStatus) => void
+  onShell?: (shell: ClockShell | null) => void
 }
 
-function CoverFlowCard({ entry, offset, vertical, live, onSelect, onStatus }: CoverFlowCardProps) {
+function CoverFlowCard({ entry, offset, vertical, live, onSelect, onStatus, onShell }: CoverFlowCardProps) {
   const distance = abs(offset)
   const translate = offset * (vertical ? 55 : 60)
   const transform = vertical
@@ -247,19 +269,53 @@ function CoverFlowCard({ entry, offset, vertical, live, onSelect, onStatus }: Co
       style={{ transform, zIndex: 100 - round(distance * 10), opacity: max(0, 1 - distance * 0.28), transformStyle: 'preserve-3d' }}
     >
       {live && entry.featureUrl ? (
-        <ClockEmbed featureUrl={entry.featureUrl} poster={entry.poster} className="h-full w-full" onStatus={onStatus} />
+        <ClockEmbed entry={entry} className="h-full w-full" onStatus={onStatus} onShell={onShell} />
       ) : (
         <button
           type="button"
           onClick={onSelect}
-          className="h-full w-full overflow-hidden rounded-2xl border border-slate-200 bg-slate-100 shadow-xl dark:border-slate-700 dark:bg-slate-800"
+          className="h-full w-full rounded-2xl shadow-xl"
           aria-label={`Show the ${entry.title} demo`}
           tabIndex={-1}
         >
-          <img src={entry.poster} alt={`${entry.title} demo poster`} className="h-full w-full object-cover" draggable={false} />
+          <DemoFallbackCard entry={entry} status={entry.featureUrl ? 'idle' : 'planned'} />
         </button>
       )}
     </div>
+  )
+}
+
+/** Props for {@link SourceLinks}. */
+interface SourceLinksProps {
+  /** The centered demo whose source locations to link. */
+  entry: DemoManifestEntry
+}
+
+/**
+ * GitHub links into the demo's host and hostee implementations, shown for
+ * demos that have source to show.
+ * @param root0
+ * @param root0.entry
+ */
+function SourceLinks({ entry }: SourceLinksProps) {
+  if (!entry.sourceLinks || entry.sourceLinks.length === 0) {
+    return null
+  }
+  return (
+    <p className="mt-3 flex flex-wrap items-center justify-center gap-x-3 gap-y-1 text-xs">
+      <span className="text-slate-500 dark:text-slate-500">Source:</span>
+      {entry.sourceLinks.map((link) => (
+        <a
+          key={link.href}
+          href={link.href}
+          target="_blank"
+          rel="noreferrer"
+          className="font-medium text-primary-600 hover:text-primary-500 dark:text-primary-400"
+        >
+          {link.label} ↗
+        </a>
+      ))}
+    </p>
   )
 }
 
@@ -268,6 +324,7 @@ interface PagerFallbackProps {
   entries: readonly DemoManifestEntry[]
   index: number
   onSelect: (index: number) => void
+  onShell?: (shell: ClockShell | null) => void
 }
 
 /**
@@ -277,24 +334,28 @@ interface PagerFallbackProps {
  * @param root0.entries
  * @param root0.index
  * @param root0.onSelect
+ * @param root0.onShell
  */
-function PagerFallback({ entries, index, onSelect }: PagerFallbackProps) {
+function PagerFallback({ entries, index, onSelect, onShell }: PagerFallbackProps) {
   const entry = entries[index]
   if (!entry) {
     return null
   }
   return (
     <div className="flex w-full flex-col items-center gap-4">
-      <div className="aspect-square w-72 overflow-hidden rounded-2xl border border-slate-200 dark:border-slate-700 sm:w-80">
+      <div className="aspect-square w-72 sm:w-80">
         {entry.featureUrl ? (
-          <ClockEmbed featureUrl={entry.featureUrl} poster={entry.poster} className="h-full w-full" />
+          <div className="h-full w-full overflow-hidden rounded-2xl border border-slate-200 dark:border-slate-700">
+            <ClockEmbed entry={entry} className="h-full w-full" onShell={onShell} />
+          </div>
         ) : (
-          <img src={entry.poster} alt={`${entry.title} demo poster`} className="h-full w-full object-cover" />
+          <DemoFallbackCard entry={entry} />
         )}
       </div>
       <div className="max-w-xl text-center">
         <h2 className="font-display text-2xl font-bold text-slate-900 dark:text-white">{entry.title}</h2>
         <p className="mt-2 text-sm text-slate-600 dark:text-slate-400">{entry.description}</p>
+        <SourceLinks entry={entry} />
       </div>
       <div className="flex items-center gap-3">
         <button

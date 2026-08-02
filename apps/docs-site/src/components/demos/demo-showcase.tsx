@@ -6,6 +6,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { min, pow } from '@hyperfrontend/immutable-api-utils/built-in-copy/math'
 import { cancelAnimationFrame, requestAnimationFrame } from '@hyperfrontend/immutable-api-utils/built-in-copy/timers'
 import { ClockEmbed } from './clock-embed'
+import { DemoFallbackCard } from './demo-fallback-card'
 
 /** Snapshot taken when fast-forward begins so the easing can interpolate from that moment. */
 interface FastForwardStart {
@@ -30,12 +31,16 @@ export interface DemoShowcaseProps {
  * card, with a conic-gradient ring sweeping around the frame until the next
  * demo takes over.
  *
- * Live entries mount through their vendored shell embed; planned entries show
- * committed poster art. The ring and the pause/skip controls paint above the
- * content — the buttons hang half outside the frame — so nothing the embed or
- * its poster renders can ever cover them. Pausing freezes the ring and holds
- * the current demo. Under reduced motion nothing auto-advances: the ring and
- * pause disappear and the skip button becomes a plain next button.
+ * Every entry renders as an absolutely-stacked layer inside one fixed
+ * square stage — the live embed mounts once per page load and stays mounted
+ * while rotation only toggles which layer is visible and interactive, so
+ * returning to the clock is instant and the frame never changes height.
+ * Planned entries render as DOM placeholder cards. The ring and the
+ * pause/skip controls paint above the content — the buttons hang half outside
+ * the frame — so nothing a layer renders can ever cover them. Pausing freezes
+ * the ring and holds the current demo. Under reduced motion nothing
+ * auto-advances: the ring and pause disappear and the skip button becomes a
+ * plain next button.
  * @param root0
  * @param root0.entries
  * @param root0.cycleDuration
@@ -69,7 +74,6 @@ export function DemoShowcase({ entries, cycleDuration = 20000, fastForwardDurati
 
   const advance = useCallback(() => {
     setActiveIndex((index) => (index + 1) % entries.length)
-    setEmbedStatus('connecting')
     // why: a rollover from either branch must clear any mid-flight skip, or the next cycle fast-forwards itself.
     setFastForwarding(false)
     fastForwardStartRef.current = null
@@ -142,20 +146,26 @@ export function DemoShowcase({ entries, cycleDuration = 20000, fastForwardDurati
     <div className="relative flex h-full w-full items-center justify-center p-4 lg:p-8">
       <div className="relative w-full max-w-2xl">
         <div className="absolute inset-0 z-0 rounded-2xl border border-white/30 dark:border-white/20" />
-        {/* note: keyed on the slug so switching demos unmounts the previous entry's embed outright */}
-        <div
-          key={active.slug}
-          className="relative z-10 flex min-h-[400px] flex-col items-center justify-center gap-4 rounded-2xl bg-slate-900/5 p-6 backdrop-blur-sm dark:bg-white/5 lg:min-h-[500px] lg:p-8"
-        >
-          {active.featureUrl ? (
-            <>
-              <ClockEmbed
-                featureUrl={active.featureUrl}
-                poster={active.poster}
-                className="aspect-square w-full max-w-md"
-                onStatus={setEmbedStatus}
-              />
-              <p className="text-center text-xs text-slate-600 dark:text-slate-400">
+        <div className="relative z-10 flex flex-col items-center justify-center gap-4 rounded-2xl bg-slate-900/5 p-6 backdrop-blur-sm dark:bg-white/5 lg:p-8">
+          {/* note: All entries stay mounted as stacked layers — rotation only toggles visibility, so the embed's session survives every wrap. */}
+          <div className="relative aspect-square w-full max-w-md">
+            {entries.map((entry, index) => (
+              <div
+                key={entry.slug}
+                inert={index !== activeIndex}
+                className={`absolute inset-0 transition-opacity duration-500 ${index === activeIndex ? 'opacity-100' : 'pointer-events-none opacity-0'}`}
+              >
+                {entry.featureUrl ? (
+                  <ClockEmbed entry={entry} className="h-full w-full" onStatus={setEmbedStatus} />
+                ) : (
+                  <DemoFallbackCard entry={entry} />
+                )}
+              </div>
+            ))}
+          </div>
+          <div className="flex min-h-[4.5rem] w-full max-w-md flex-col items-center justify-center text-center">
+            {active.featureUrl ? (
+              <p className="text-xs text-slate-600 dark:text-slate-400">
                 {embedStatus === 'live' ? (
                   <>Live demo — {active.stack}, embedded via its generated shell. </>
                 ) : embedStatus === 'offline' ? (
@@ -165,24 +175,15 @@ export function DemoShowcase({ entries, cycleDuration = 20000, fastForwardDurati
                 )}
                 <AllDemosLink />
               </p>
-            </>
-          ) : (
-            <>
-              <img
-                src={active.poster}
-                alt={`${active.title} demo poster`}
-                draggable={false}
-                className="aspect-square w-full max-w-md rounded-2xl object-cover"
-              />
-              <div className="max-w-md text-center">
-                <h3 className="font-display text-xl font-semibold text-slate-900 dark:text-white">{active.title}</h3>
-                <p className="mt-2 text-sm text-slate-600 dark:text-slate-400">{active.description}</p>
-                <p className="mt-3 text-xs text-slate-600 dark:text-slate-400">
+            ) : (
+              <>
+                <p className="text-sm text-slate-600 dark:text-slate-400">{active.description}</p>
+                <p className="mt-2 text-xs text-slate-600 dark:text-slate-400">
                   <AllDemosLink />
                 </p>
-              </div>
-            </>
-          )}
+              </>
+            )}
+          </div>
         </div>
         {reduced ? null : <ProgressBorder progress={progress} />}
         <div className="absolute -bottom-4 left-1/2 z-30 flex -translate-x-1/2 items-center gap-2">

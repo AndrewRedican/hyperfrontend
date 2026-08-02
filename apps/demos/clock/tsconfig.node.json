@@ -8,8 +8,7 @@
     "playwright.config.*",
     "eslint.config.*",
     "feature.config.ts",
-    "hf-dev.config.ts",
-    "scripts/**/*.ts"
+    "hf-dev.config.ts"
   ],
   "compilerOptions": {
     // Most tools use transpilation instead of Node.js's native type-stripping.
@@ -22,9 +21,6 @@
 
     // Disable emitting output during `vue-tsc --build`, which is used for type-checking only.
     "noEmit": true,
-
-    // Node runs scripts/ via type-stripping, which requires explicit .ts extensions on relative imports.
-    "allowImportingTsExtensions": true,
 
     // `vue-tsc --build` produces a .tsbuildinfo file for incremental type-checking.
     // Specified here to keep it out of the root directory.

@@ -1,6 +1,6 @@
 {
   "name": "@hyperfrontend/demo-clock",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Clock demonstration — a spinnable clock coin built as a hyperfrontend feature.",
   "private": true,
   "type": "module",
@@ -15,11 +15,11 @@
     "lint:oxlint": "oxlint . --fix",
     "lint:eslint": "eslint . --fix --cache",
     "build:watch": "vite build --watch",
-    "hf:dev": "node scripts/hf-dev.ts",
+    "hf:dev": "hf dev",
     "dev:hosted": "run-p build:watch hf:dev"
   },
   "dependencies": {
-    "@hyperfrontend/features": "^0.1.0",
+    "@hyperfrontend/features": "^0.3.0",
     "vue": "^3.5.38"
   },
   "devDependencies": {
@@ -39,6 +39,8 @@
     "jsdom": "^29.1.1",
     "npm-run-all2": "^9.0.2",
     "oxlint": "~1.69.0",
+    "rollup": "4.59.0",
+    "tslib": "^2.8.1",
     "typescript": "~6.0.0",
     "vite": "^8.0.16",
     "vite-plugin-vue-devtools": "^8.1.2",

@@ -1,5 +1,5 @@
 import type { Metadata } from 'next'
-import { CoverFlow } from '@/components/demos/cover-flow'
+import { DemosGallery } from '@/components/demos/demos-gallery'
 import { Footer } from '@/components/footer'
 import { Header } from '@/components/header'
 import { DEMO_MANIFEST } from '@/lib/demo-manifest'
@@ -21,7 +21,7 @@ export default function DemosPage() {
             scroll, or use the arrow keys to browse.
           </p>
           <div className="mt-10">
-            <CoverFlow entries={DEMO_MANIFEST} />
+            <DemosGallery entries={DEMO_MANIFEST} />
           </div>
         </div>
       </main>

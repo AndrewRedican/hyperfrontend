@@ -14,11 +14,6 @@
       "implementation": "./src/executors/serve/executor",
       "schema": "./src/executors/serve/schema.json",
       "description": "Serve an application project in development mode."
-    },
-    "pack-shell": {
-      "implementation": "./src/executors/pack-shell/executor",
-      "schema": "./src/executors/pack-shell/schema.json",
-      "description": "Generate, compile, and pack a feature app's shell package."
     }
   }
 }

@@ -1,5 +1,4 @@
-// note: FeatureContract is only exported from the package root in SDK v0.1.0.
-import type { FeatureContract } from '@hyperfrontend/features'
+import type { FeatureContract } from '@hyperfrontend/features/hostee'
 
 /**
  * Contract for the clock coin feature.
@@ -10,10 +9,11 @@ import type { FeatureContract } from '@hyperfrontend/features'
  * as a physics flip.
  */
 const contract = {
+  version: '0.2.0',
   accepted: [
     {
       type: 'get-time',
-      description: 'Ask for the current time snapshot; the feature answers with a single `time` event.',
+      description: 'Ask for the current time snapshot. Answered directly when sent as a request, and always echoed as a `time` event.',
     },
     {
       type: 'set-format',

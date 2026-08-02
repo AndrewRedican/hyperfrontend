@@ -1,6 +1,14 @@
 /** Where the feature's origin sits relative to the docs-site host. */
 export type DemoBoundary = 'same-origin' | 'cross-origin-same-site' | 'cross-site'
 
+/** A link into the repository showing how a demo's integration is built. */
+export interface DemoSourceLink {
+  /** Short label naming what the link shows. */
+  label: string
+  /** Absolute GitHub URL of the file or directory. */
+  href: string
+}
+
 /** One demo album in the gallery. */
 export interface DemoManifestEntry {
   /** Stable slug, also the carousel card id. */
@@ -9,19 +17,24 @@ export interface DemoManifestEntry {
   title: string
   /** One-line description shown under the centered card. */
   description: string
-  /** Committed poster image path (public/). */
-  poster: string
   /** Origin boundary the live embed crosses, labeled in the UI. */
   boundary: DemoBoundary
   /** URL the live feature app is served from; absent while the demo is in planning. */
   featureUrl?: string
   /** Frameworks on each side of the boundary. */
   stack: string
+  /** High-value source locations for the demo's host and hostee implementations. */
+  sourceLinks?: readonly DemoSourceLink[]
 }
+
+/** Root of the repository every source link points into. */
+const REPO = 'https://github.com/AndrewRedican/hyperfrontend'
 
 /**
  * Resolves the clock feature's URL: the deployed origin by default, overridable
- * for local development via `NEXT_PUBLIC_CLOCK_FEATURE_URL`.
+ * via `NEXT_PUBLIC_CLOCK_FEATURE_URL` — which `.env.development` points at the
+ * local `hf dev` server so the full host-to-hostee wiring is testable before a
+ * deploy.
  *
  * @returns The URL the clock feature app is embedded from.
  */
@@ -36,16 +49,20 @@ export const DEMO_MANIFEST: readonly DemoManifestEntry[] = [
     title: 'Clock',
     description:
       'A luxury timepiece coin — navy sunburst dial on one face, a steel case-back LCD on the other. Spin it: the resting face is the clock’s format, and every flip is contract traffic.',
-    poster: '/demos/clock-poster.svg',
     boundary: 'cross-site',
     featureUrl: clockFeatureUrl(),
     stack: 'Vue 3 feature · React host',
+    sourceLinks: [
+      { label: 'Feature app (Vue)', href: `${REPO}/tree/main/apps/demos/clock` },
+      { label: 'Contract', href: `${REPO}/blob/main/apps/demos/clock/clock.contract.ts` },
+      { label: 'Host embed (React)', href: `${REPO}/blob/main/apps/docs-site/src/components/demos/clock-embed.tsx` },
+      { label: 'Host console', href: `${REPO}/blob/main/apps/docs-site/src/components/demos/clock-host-console.tsx` },
+    ],
   },
   {
     slug: 'chess',
     title: 'Chess',
     description: 'Two boards, one game — competing features negotiating shared state through the host.',
-    poster: '/demos/chess-poster.svg',
     boundary: 'cross-site',
     stack: 'In planning',
   },
@@ -53,7 +70,6 @@ export const DEMO_MANIFEST: readonly DemoManifestEntry[] = [
     slug: 'events',
     title: 'Events',
     description: 'A host orchestrating a swarm of event producers and consumers across origins.',
-    poster: '/demos/events-poster.svg',
     boundary: 'cross-origin-same-site',
     stack: 'In planning',
   },
@@ -61,7 +77,6 @@ export const DEMO_MANIFEST: readonly DemoManifestEntry[] = [
     slug: 'file-share',
     title: 'File Share',
     description: 'Moving real payloads across the boundary — chunking, progress, and back-pressure.',
-    poster: '/demos/file-share-poster.svg',
     boundary: 'cross-site',
     stack: 'In planning',
   },
@@ -69,7 +84,6 @@ export const DEMO_MANIFEST: readonly DemoManifestEntry[] = [
     slug: 'heartbeat',
     title: 'Heartbeat',
     description: 'Liveness, latency, and what a host should do when a feature stops answering.',
-    poster: '/demos/heartbeat-poster.svg',
     boundary: 'same-origin',
     stack: 'In planning',
   },
@@ -77,7 +91,6 @@ export const DEMO_MANIFEST: readonly DemoManifestEntry[] = [
     slug: 'views',
     title: 'Views',
     description: 'One feature, four display modes — embedded, dialog, popup, and standalone.',
-    poster: '/demos/views-poster.svg',
     boundary: 'cross-origin-same-site',
     stack: 'In planning',
   },
