@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="100%" height="100%">
+  <defs>
+    <style>
+      .sheet { fill: #334155; }
+      .fold { fill: #475569; }
+      .plan-block { fill: #64748B; }
+      .plan-node { fill: #22D3EE; }
+      .stroke-rim { stroke: #94A3B8; stroke-width: 6; stroke-linejoin: round; stroke-linecap: round; fill: none; }
+      .stroke-cyan { stroke: #22D3EE; stroke-width: 6; stroke-linejoin: round; stroke-linecap: round; fill: none; }
+    </style>
+  </defs>
+
+  <!-- Ambient Under-Glow for Dark Theme -->
+  <rect x="60" y="40" width="136" height="176" fill="#06B6D4" opacity="0.1" filter="blur(4px)" />
+
+  <!-- Blueprint Sheet with Folded Corner -->
+  <path d="M 64 44 L 156 44 L 192 80 L 192 212 L 64 212 Z" class="sheet" />
+  <path d="M 156 44 L 156 80 L 192 80 Z" class="fold" />
+  <path d="M 64 44 L 156 44 L 192 80 L 192 212 L 64 212 Z" class="stroke-rim" />
+  <path d="M 156 44 L 156 80 L 192 80" class="stroke-rim" />
+
+  <!-- Schematic Plan: Two Blocks Joined by a Glowing Routed Connector -->
+  <rect x="84" y="104" width="38" height="30" class="plan-block" />
+  <rect x="84" y="104" width="38" height="30" class="stroke-rim" />
+  <rect x="134" y="156" width="38" height="30" class="plan-node" />
+  <rect x="134" y="156" width="38" height="30" class="stroke-rim" />
+  <path d="M 122 119 L 153 119 L 153 156" class="stroke-cyan" />
+
+  <!-- Dashed Measurement Guide -->
+  <path d="M 84 196 L 122 196" class="stroke-rim" stroke-dasharray="1 8" opacity="0.6" />
+</svg>

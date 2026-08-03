@@ -2,7 +2,7 @@
   <defs>
     <style>
       .bg-parent { fill: #A855F7; }
-      .bg-child { fill: #3B82F6; fill-opacity: 0.15; }
+      .bg-child { fill: #3B82F6; fill-opacity: 0.35; }
       .bg-child-core { fill: #1D4ED8; }
       .stroke-line { stroke: #0F172A; stroke-width: 6; stroke-linecap: round; stroke-linejoin: round; fill: none; }
       .stroke-outline { stroke: #0F172A; stroke-width: 6; stroke-linejoin: round; fill: none; }
