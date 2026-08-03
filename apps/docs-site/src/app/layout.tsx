@@ -1,11 +1,13 @@
-import type { Metadata } from 'next'
+import type { Metadata, Viewport } from 'next'
 import { ThemeProvider } from '@/components/theme-provider'
 import '@/lib/dev-logger'
+import { DEFAULT_OG_IMAGE, DEFAULT_TWITTER_IMAGE } from '@/lib/metadata'
+import { SITE_URL } from '@/lib/site'
 import '@/styles/globals.css'
 import { createURL } from '@hyperfrontend/immutable-api-utils/built-in-copy/url'
 
 export const metadata: Metadata = {
-  metadataBase: createURL('https://hyperfrontend.dev'),
+  metadataBase: createURL(SITE_URL),
   title: {
     default: 'HyperFrontend - Micro-Frontend Architecture',
     template: '%s | HyperFrontend',
@@ -17,28 +19,42 @@ export const metadata: Metadata = {
   openGraph: {
     title: 'HyperFrontend',
     description: 'Compose your existing apps together securely — like Lego bricks.',
-    url: 'https://hyperfrontend.dev',
+    url: SITE_URL,
     siteName: 'HyperFrontend',
     type: 'website',
     locale: 'en_US',
+    images: [DEFAULT_OG_IMAGE],
   },
   twitter: {
     card: 'summary_large_image',
     title: 'HyperFrontend',
     description: 'Compose your existing apps together securely — like Lego bricks.',
     creator: '@andrew_redican',
+    images: [DEFAULT_TWITTER_IMAGE],
   },
   alternates: {
     canonical: './',
   },
+  verification: {
+    google: process.env['NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION'],
+  },
   icons: {
+    // why: configuring icons suppresses Next's file-convention icon links, so the src/app icon files must be referenced here explicitly
     icon: [
+      { url: '/icon.png', sizes: '192x192', type: 'image/png' },
       { url: '/hf-light.svg', media: '(prefers-color-scheme: light)', type: 'image/svg+xml' },
       { url: '/hf-dark.svg', media: '(prefers-color-scheme: dark)', type: 'image/svg+xml' },
     ],
     shortcut: '/hf-light.svg',
-    apple: '/hf-light.svg',
+    apple: [{ url: '/apple-icon.png', sizes: '180x180', type: 'image/png' }],
   },
+}
+
+export const viewport: Viewport = {
+  themeColor: [
+    { media: '(prefers-color-scheme: light)', color: '#ffffff' },
+    { media: '(prefers-color-scheme: dark)', color: '#0f172a' },
+  ],
 }
 
 type RootLayoutProps = { children: React.ReactNode }
