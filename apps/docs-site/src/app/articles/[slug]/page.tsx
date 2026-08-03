@@ -5,6 +5,7 @@ import { ReadmeContent } from '@/components/readme-content'
 import { formatArticleDate, getAllArticleSlugs, getArticle } from '@/lib/articles'
 import { markdownToHtml } from '@/lib/markdown'
 import { extractMermaidBlocks } from '@/lib/mermaid-utils'
+import { DEFAULT_OG_IMAGE, DEFAULT_TWITTER_IMAGE } from '@/lib/metadata'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 
@@ -35,23 +36,23 @@ export async function generateMetadata({ params }: ArticlePageProps): Promise<Me
     description: article.description,
     authors: [{ name: article.author }],
     alternates: {
-      canonical: `/articles/${article.slug}`,
+      canonical: `/articles/${article.slug}/`,
     },
     openGraph: {
       title: article.title,
       description: article.description,
-      url: `/articles/${article.slug}`,
+      url: `/articles/${article.slug}/`,
       siteName: 'HyperFrontend',
       type: 'article',
       publishedTime: article.date,
       authors: [article.author],
-      images: article.heroImage ? [{ url: article.heroImage }] : undefined,
+      images: article.heroImage ? [{ url: article.heroImage }] : [DEFAULT_OG_IMAGE],
     },
     twitter: {
       card: 'summary_large_image',
       title: article.title,
       description: article.description,
-      images: article.heroImage ? [article.heroImage] : undefined,
+      images: article.heroImage ? [article.heroImage] : [DEFAULT_TWITTER_IMAGE],
     },
   }
 }

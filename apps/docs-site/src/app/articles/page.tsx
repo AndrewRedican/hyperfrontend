@@ -8,7 +8,7 @@ export const metadata: Metadata = {
   title: 'Articles',
   description: 'Long-form writing on microfrontend architecture, integration boundaries, and the reasoning behind hyperfrontend.',
   alternates: {
-    canonical: '/articles',
+    canonical: '/articles/',
   },
 }
 
