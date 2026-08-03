@@ -2,6 +2,7 @@
 
 import type { DemoManifestEntry } from '@/lib/demo-manifest'
 import type { EmbedStatus } from './clock-embed'
+import { useTheme } from '@/components/theme-provider'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { min, pow } from '@hyperfrontend/immutable-api-utils/built-in-copy/math'
 import { cancelAnimationFrame, requestAnimationFrame } from '@hyperfrontend/immutable-api-utils/built-in-copy/timers'
@@ -58,6 +59,7 @@ export function DemoShowcase({ entries, cycleDuration = 20000, fastForwardDurati
   const [paused, setPaused] = useState(false)
   const [reduced, setReduced] = useState(false)
   const [embedStatus, setEmbedStatus] = useState<EmbedStatus>('connecting')
+  const { resolvedTheme } = useTheme()
   const rafRef = useRef(0)
   const startTimeRef = useRef(0)
   const progressRef = useRef(0)
@@ -157,6 +159,10 @@ export function DemoShowcase({ entries, cycleDuration = 20000, fastForwardDurati
     return null
   }
 
+  // why: the ring sweeps in a brighter shade of the staged demo's accent so it reads as part of that demo's ambience rather than a foreign chrome color.
+  const ringTriples = getDemoTheme(active.slug).ring
+  const ringRGB = resolvedTheme === 'dark' ? ringTriples.dark : ringTriples.light
+
   return (
     <div className="relative flex h-full w-full items-center justify-center p-4 lg:p-8">
       <ShowcaseAmbient entries={entries} activeIndex={activeIndex} />
@@ -201,7 +207,7 @@ export function DemoShowcase({ entries, cycleDuration = 20000, fastForwardDurati
             )}
           </div>
         </div>
-        {reduced ? null : <ProgressBorder progress={progress} />}
+        {reduced ? null : <ProgressBorder progress={progress} color={ringRGB} />}
         <div className="absolute -bottom-4 left-1/2 z-30 flex -translate-x-1/2 items-center gap-2">
           {reduced ? null : (
             <button
@@ -287,16 +293,20 @@ function AllDemosLink() {
 interface ProgressBorderProps {
   /** Cycle progress percentage, 0–100. */
   progress: number
+  /** Sweep colour as an `r, g, b` triple — a brighter shade of the staged demo's accent. */
+  color: string
 }
 
 /**
- * The conic-gradient ring sweeping around the frame. XOR-masking two stacked
- * fills leaves only the 2px border edge painted, and pointer events pass
- * straight through, so the ring sits above the content without blocking it.
+ * The conic-gradient ring sweeping around the frame in the staged demo's hue.
+ * XOR-masking two stacked fills leaves only the 2px border edge painted, and
+ * pointer events pass straight through, so the ring sits above the content
+ * without blocking it.
  * @param root0
  * @param root0.progress
+ * @param root0.color
  */
-function ProgressBorder({ progress }: ProgressBorderProps) {
+function ProgressBorder({ progress, color }: ProgressBorderProps) {
   if (progress <= 0) {
     return null
   }
@@ -305,7 +315,7 @@ function ProgressBorder({ progress }: ProgressBorderProps) {
     <div
       className="pointer-events-none absolute inset-0 z-20 rounded-2xl"
       style={{
-        background: `conic-gradient(from -90deg, #6366f1 ${angle}deg, transparent ${angle}deg)`,
+        background: `conic-gradient(from -90deg, rgb(${color}) ${angle}deg, transparent ${angle}deg)`,
         WebkitMask: 'linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)',
         WebkitMaskComposite: 'xor',
         mask: 'linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)',
