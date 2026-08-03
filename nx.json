@@ -76,6 +76,11 @@
     ],
     "sharedGlobals": ["{workspaceRoot}/patches/**"]
   },
+  "pluginsConfig": {
+    "@nx/js": {
+      "analyzeSourceFiles": true
+    }
+  },
   "plugins": [
     {
       "plugin": "@nx/eslint/plugin",
