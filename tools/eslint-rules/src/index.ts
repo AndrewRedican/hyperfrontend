@@ -3,6 +3,7 @@ import assertiveTestNames, { RULE_NAME as ASSERTIVE_TEST_NAMES } from './rules/a
 import deepestImportPath, { RULE_NAME as DEEPEST_IMPORT_PATH } from './rules/deepest-import-path'
 import docsSiteLibraries, { RULE_NAME as DOCS_SITE_LIBRARIES } from './rules/docs-site-libraries'
 import docsSiteLibraryDocs, { RULE_NAME as DOCS_SITE_LIBRARY_DOCS } from './rules/docs-site-library-docs'
+import docsSitePageMetadata, { RULE_NAME as DOCS_SITE_PAGE_METADATA } from './rules/docs-site-page-metadata'
 import docsSiteRoutes, { RULE_NAME as DOCS_SITE_ROUTES } from './rules/docs-site-routes'
 import docsSiteSecondaryEntries, { RULE_NAME as DOCS_SITE_SECONDARY_ENTRIES } from './rules/docs-site-secondary-entries'
 import exportOrder, { RULE_NAME as EXPORT_ORDER } from './rules/export-order'
@@ -67,6 +68,7 @@ export const rules: ESLint.Plugin['rules'] = {
   [DEEPEST_IMPORT_PATH]: deepestImportPath as unknown as Rule.RuleModule,
   [DOCS_SITE_LIBRARIES]: docsSiteLibraries as unknown as Rule.RuleModule,
   [DOCS_SITE_LIBRARY_DOCS]: docsSiteLibraryDocs as unknown as Rule.RuleModule,
+  [DOCS_SITE_PAGE_METADATA]: docsSitePageMetadata as unknown as Rule.RuleModule,
   [DOCS_SITE_ROUTES]: docsSiteRoutes as unknown as Rule.RuleModule,
   [DOCS_SITE_SECONDARY_ENTRIES]: docsSiteSecondaryEntries as unknown as Rule.RuleModule,
   [EXPORT_ORDER]: exportOrder as unknown as Rule.RuleModule,
