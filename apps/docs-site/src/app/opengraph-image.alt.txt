@@ -1,0 +1,1 @@
+HyperFrontend — compose your existing apps together securely, like Lego bricks.
