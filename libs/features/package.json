@@ -56,7 +56,10 @@
     "./cli": "./src/cli/index.js",
     "./server": "./src/server/index.js",
     "./generators": "./src/generators/index.js",
+    "./nx/generators": "./src/nx/generators/index.js",
     "./nx/generators/feature": "./src/nx/generators/feature/index.js",
+    "./nx/generators/init": "./src/nx/generators/init/index.js",
+    "./nx/executors": "./src/nx/executors/index.js",
     "./nx/executors/build": "./src/nx/executors/build/index.js",
     "./nx/executors/serve": "./src/nx/executors/serve/index.js",
     "./package.json": "./package.json"

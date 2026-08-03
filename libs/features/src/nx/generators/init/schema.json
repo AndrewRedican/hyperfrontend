@@ -1,0 +1,15 @@
+{
+  "$schema": "http://json-schema.org/schema",
+  "$id": "FeaturesNxInit",
+  "type": "object",
+  "title": "Initialize @hyperfrontend/features in a workspace",
+  "description": "Ensure @hyperfrontend/features is declared in the workspace root package.json; runs automatically via `nx add @hyperfrontend/features`.",
+  "properties": {
+    "keepExistingVersions": {
+      "type": "boolean",
+      "description": "Keep an existing @hyperfrontend/features declaration's range untouched instead of pinning it to the running plugin's version.",
+      "default": true
+    }
+  },
+  "required": []
+}

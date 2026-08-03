@@ -5,6 +5,11 @@
       "factory": "./nx/generators/feature/index.cjs.js",
       "schema": "./nx/generators/feature/schema.json",
       "description": "Scaffold a hyperfrontend feature via the SDK."
+    },
+    "init": {
+      "factory": "./nx/generators/init/index.cjs.js",
+      "schema": "./nx/generators/init/schema.json",
+      "description": "Ensure @hyperfrontend/features is declared in the workspace; runs via nx add."
     }
   }
 }

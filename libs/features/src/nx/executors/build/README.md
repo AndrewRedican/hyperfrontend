@@ -2,7 +2,10 @@
 
 Nx `build` executor. A thin wrapper that builds a hyperfrontend feature's shell
 package by delegating to the SDK's headless `hf build`, run against the executing
-project's root directory. Registered via the package's `executors.json`.
+project's root directory. When the build fails, it checks whether rollup's native
+binding for the current platform is installed and, when it is missing, prints the
+exact install command for the workspace's package manager on stderr. Registered
+via the package's `executors.json`.
 
 ## Usage
 

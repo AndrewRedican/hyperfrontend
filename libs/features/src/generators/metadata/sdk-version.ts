@@ -52,3 +52,51 @@ export function resolveSdkVersion(startDir: string = currentModuleDir()): string
   }
   return version
 }
+
+/**
+ * Reads a directory's `package.json` when it is the SDK's own manifest.
+ *
+ * @param dir - The directory to probe for the SDK manifest.
+ * @returns The parsed manifest object, or `undefined` when the directory holds
+ * no manifest or one belonging to a different package.
+ */
+function readSdkManifest(dir: string): Record<string, unknown> | undefined {
+  const manifest = readJsonFileIfExists<Record<string, unknown>>(join(dir, 'package.json'))
+  if (manifest !== null && manifest['name'] === sdkInfo.packageName) {
+    return manifest
+  }
+  return undefined
+}
+
+/**
+ * Resolves the whole manifest of the running `@hyperfrontend/features` SDK.
+ *
+ * Same ascent as {@link resolveSdkVersion} — climbs from the executing module
+ * until it reaches the SDK's own `package.json`, matched by package name — but
+ * returns the entire manifest object, so callers can read fields beyond
+ * `version` (for example the pinned `optionalDependencies`).
+ *
+ * @param startDir - Directory the ascent starts from; defaults to the running module's directory.
+ * @returns The SDK's parsed manifest object.
+ * @throws {Error} When no ancestor directory holds the SDK's manifest.
+ *
+ * @example Reading the SDK's pinned optional dependencies
+ * ```typescript
+ * const optional = resolveSdkManifest()['optionalDependencies']
+ * ```
+ */
+export function resolveSdkManifest(startDir: string = currentModuleDir()): Record<string, unknown> {
+  let dir = startDir
+  let parent = dirname(dir)
+  // how: probe each level then step up until the filesystem root, where parent === dir
+  let manifest = readSdkManifest(dir)
+  while (manifest === undefined && parent !== dir) {
+    dir = parent
+    parent = dirname(dir)
+    manifest = readSdkManifest(dir)
+  }
+  if (manifest === undefined) {
+    throw createError(`Could not locate the ${sdkInfo.packageName} package.json above ${startDir} to resolve the SDK manifest.`)
+  }
+  return manifest
+}

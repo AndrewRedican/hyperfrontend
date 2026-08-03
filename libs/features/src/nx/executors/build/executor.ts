@@ -2,9 +2,10 @@ import type { PromiseExecutor } from '../../model'
 import { EXIT_OK, runBuild } from '../../../cli'
 import { resolveProjectCwd } from '../../shared/context'
 import { headlessFlags } from '../../shared/flags'
+import { warnIfRollupBindingMissing } from '../../shared/rollup-binding'
 
 /** Options for the `build` executor; mirrors `schema.json`. */
-interface BuildExecutorSchema {
+export interface BuildExecutorSchema {
   /** Path to the feature config object. */
   config?: string
   /** Output directory for the built shell. */
@@ -32,8 +33,13 @@ interface BuildExecutorSchema {
  * @param options - Schema-validated build options.
  * @param context - The Nx executor context for the running target.
  * @returns A result whose `success` reflects the SDK build's exit code.
+ *
+ * @example Running the executor programmatically
+ * ```typescript
+ * const result = await runBuildExecutor({ config: './feature.config.json' }, context)
+ * ```
  */
-const runBuildExecutor: PromiseExecutor<BuildExecutorSchema> = async (options, context) => {
+export const runBuildExecutor: PromiseExecutor<BuildExecutorSchema> = async (options, context) => {
   const code = await runBuild({
     flags: headlessFlags({
       config: options.config,
@@ -49,6 +55,10 @@ const runBuildExecutor: PromiseExecutor<BuildExecutorSchema> = async (options, c
     stdout: process.stdout,
     stderr: process.stderr,
   })
+  if (code !== EXIT_OK) {
+    // why: a missing rollup platform binding is the most opaque way this build fails; explain the fix when that is the cause.
+    warnIfRollupBindingMissing(context.root)
+  }
   return { success: code === EXIT_OK }
 }
 

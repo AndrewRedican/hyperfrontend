@@ -6,7 +6,7 @@ import { resolveProjectCwd } from '../../shared/context'
 import { headlessFlags } from '../../shared/flags'
 
 /** Options for the `serve` executor; mirrors `schema.json`. */
-interface ServeExecutorSchema {
+export interface ServeExecutorSchema {
   /** Path to the dev-server config object. */
   config?: string
   /** Path to the dev-server apps array. */
@@ -71,8 +71,14 @@ async function closeHandle(handle: DevServerHandle | undefined): Promise<void> {
  * @param context - The Nx executor context for the running target.
  * @yields {ExecutorResult} The serve target's success state once the dev server is listening.
  * @returns An async iterator yielding the serve target's success state.
+ *
+ * @example Consuming the executor's startup result programmatically
+ * ```typescript
+ * const iterator = serveExecutor({ port: '4600' }, context)
+ * const startup = await iterator.next()
+ * ```
  */
-const serveExecutor: AsyncIteratorExecutor<ServeExecutorSchema> = async function* (options, context) {
+export const serveExecutor: AsyncIteratorExecutor<ServeExecutorSchema> = async function* (options, context) {
   const startup = await startServe(options, context)
   yield { success: startup.ok }
   if (startup.ok) {
