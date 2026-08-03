@@ -23,6 +23,8 @@ export const TestKey = freeze(<const>{
 export interface MockInputExtensions {
   /** Enqueues key strokes to be emitted on the `data` event asynchronously */
   enqueueKeys: (keys: readonly string[]) => void
+  /** Enqueues `text` wrapped in bracketed-paste markers as a single chunk */
+  enqueuePaste: (text: string) => void
 }
 
 /** Mock readable stream with a raw-mode flag and a key enqueue helper. */
@@ -32,6 +34,8 @@ export type MockInput = NodeJS.ReadStream & MockInputExtensions
 export interface MockOutputExtensions {
   /** Returns everything written so far as a single string */
   getWrittenData: () => string
+  /** Sets the reported column count and emits a `resize` event */
+  resize: (columns: number) => void
 }
 
 /** Mock writable stream that captures written output for assertions. */
@@ -112,6 +116,10 @@ function createMockInput(): MockInput {
     emitNext()
   }
 
+  input.enqueuePaste = (text: string): void => {
+    input.enqueueKeys([`\x1B[200~${text}\x1B[201~`])
+  }
+
   return input
 }
 
@@ -131,6 +139,11 @@ function createMockOutput(): MockOutput {
   })
 
   output.getWrittenData = (): string => writtenData
+
+  output.resize = (columns: number): void => {
+    output.columns = columns
+    output.emit('resize')
+  }
 
   return output
 }
