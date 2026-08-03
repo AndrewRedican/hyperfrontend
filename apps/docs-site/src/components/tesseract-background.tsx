@@ -67,7 +67,7 @@ type TesseractBackgroundProps = {
    * holds a static depth while still rotating gently.
    */
   dive?: boolean
-  /** When true the surfaces track the cursor for parallax and hover highlight. */
+  /** When true the cursor steers the viewing angle and hover-highlights nearby surfaces. */
   interactive?: boolean
   /** When true a subtle angled purple-rain layer falls in front of and behind the lattice. */
   rain?: boolean
@@ -111,8 +111,8 @@ export function TesseractBackground({
     const palette = isDark ? darkPalette : lightPalette
     // why: 0.85 factor lifts overall transparency ~15% so the immersive lattice stays a backdrop.
     const intensityScale = (intensity === 'subtle' ? 0.55 : 1) * 0.85
-    // why: the whole structure's centre eases toward the cursor's resting point (a fraction of the way) rather than depth-skewing every vertex around a pinned viewport origin.
-    const followStrength = interactive ? 0.6 : 0
+    // why: the cursor steers the viewing angle instead of dragging the structure — the lattice stays centred while up/down/left/right tilt our perspective around it, on top of the tesseract's own independent fold. ±0.42rad (~24°) at the canvas edges.
+    const LOOK_RANGE = 0.42
     const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
 
     let width = 0
@@ -133,11 +133,11 @@ export function TesseractBackground({
     }
     measure()
 
-    // how: smoothed centre offset that eases toward the cursor, plus the raw cursor position for hover focus.
-    let mouseX = 0
-    let mouseY = 0
-    let targetMouseX = 0
-    let targetMouseY = 0
+    // how: smoothed view angles that ease toward the cursor-set target, plus the raw cursor position for hover focus.
+    let lookYaw = 0
+    let lookPitch = 0
+    let targetLookYaw = 0
+    let targetLookPitch = 0
     let localMouseX = -9999
     let localMouseY = -9999
 
@@ -159,8 +159,11 @@ export function TesseractBackground({
     const onMouseMove = (event: MouseEvent) => {
       localMouseX = event.clientX - rectLeft
       localMouseY = event.clientY - rectTop
-      targetMouseX = (localMouseX - width / 2) * followStrength
-      targetMouseY = (localMouseY - height / 2) * followStrength
+      // how: normalised cursor offset from centre maps left/right to yaw and up/down to pitch, tilting the side under the cursor toward the viewer.
+      const nx = max(-0.5, min(0.5, localMouseX / width - 0.5))
+      const ny = max(-0.5, min(0.5, localMouseY / height - 0.5))
+      targetLookYaw = nx * 2 * LOOK_RANGE
+      targetLookPitch = ny * 2 * LOOK_RANGE
     }
 
     const edgeFade = (x: number, y: number) => {
@@ -187,6 +190,13 @@ export function TesseractBackground({
       c = cos(angleY)
       s = sin(angleY)
       ;[x, z] = [x * c - z * s, x * s + z * c]
+      // how: the cursor-driven view tilt turns the already-folded structure about its own centre — yaw about the vertical axis, then pitch about the horizontal — so perspective moves while the lattice stays put.
+      c = cos(lookYaw)
+      s = sin(lookYaw)
+      ;[x, z] = [x * c - z * s, x * s + z * c]
+      c = cos(lookPitch)
+      s = sin(lookPitch)
+      ;[y, z] = [y * c - z * s, y * s + z * c]
       return { x, y, z, w }
     }
 
@@ -496,8 +506,8 @@ export function TesseractBackground({
         const y3 = r.y * factor4D
         const z3 = r.z * factor4D
         const factor2D = 1 / (CAMERA_3D - z3)
-        const x = x3 * factor2D * finalScale + width / 2 + mouseX
-        const y = y3 * factor2D * finalScale + height / 2 + mouseY
+        const x = x3 * factor2D * finalScale + width / 2
+        const y = y3 * factor2D * finalScale + height / 2
         projected.push({ x, y, x3, y3, z3, depth: z3, fade: edgeFade(x, y) })
       }
 
@@ -541,6 +551,13 @@ export function TesseractBackground({
       c = cos(ay)
       s = sin(ay)
       ;[x, z] = [x * c - z * s, x * s + z * c]
+      // how: the same cursor-driven view tilt the 4D renderer applies, so both flavours share one perspective.
+      c = cos(lookYaw)
+      s = sin(lookYaw)
+      ;[x, z] = [x * c - z * s, x * s + z * c]
+      c = cos(lookPitch)
+      s = sin(lookPitch)
+      ;[y, z] = [y * c - z * s, y * s + z * c]
       return { x, y, z }
     }
 
@@ -554,8 +571,8 @@ export function TesseractBackground({
       const verts: Array<ProjectedVertex> = []
       for (const v of cubeVertices3D) {
         const r = rotate3D(v, twist, angleX, angleY)
-        const x = r.x * scale + width / 2 + mouseX
-        const y = r.y * scale + height / 2 + mouseY
+        const x = r.x * scale + width / 2
+        const y = r.y * scale + height / 2
         // why: a unit cube's rotated z spans ±√3; normalising keeps depth shading in the same [-1,1] band the static renderer expects.
         verts.push({ x, y, x3: r.x, y3: r.y, z3: r.z, depth: r.z / 1.7320508, fade: edgeFade(x, y) })
       }
@@ -643,9 +660,9 @@ export function TesseractBackground({
 
     let frameId = 0
     const animate = () => {
-      // how: low lerp factor makes the centre drift slowly toward the cursor's resting position.
-      mouseX += (targetMouseX - mouseX) * 0.012
-      mouseY += (targetMouseY - mouseY) * 0.012
+      // how: the view angle glides toward where the cursor points; the low lerp factor keeps the tilt languid rather than twitchy.
+      lookYaw += (targetLookYaw - lookYaw) * 0.04
+      lookPitch += (targetLookPitch - lookPitch) * 0.04
       // why: rotation eased 15% slower (×0.85) for a calmer drift; dive runs 15% faster (×1.15).
       angleX += 0.000935
       angleY += 0.001275
