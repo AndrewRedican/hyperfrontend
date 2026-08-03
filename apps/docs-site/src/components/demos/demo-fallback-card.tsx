@@ -1,3 +1,4 @@
+import type { AccentRGB } from '@/components/tesseract-background'
 import type { DemoManifestEntry } from '@/lib/demo-manifest'
 import { BOUNDARY_LABELS } from '@/lib/demo-manifest'
 
@@ -26,6 +27,8 @@ export interface DemoTheme {
   glowOuter: string
   /** Tighter, brighter ambient core behind the focused card. */
   glowCore: string
+  /** Canvas `r, g, b` triples (per theme) the hero lattice tints toward while this demo holds the stage. */
+  accent: AccentRGB
 }
 
 /** One theme per demo slug; unknown slugs fall back to slate. */
@@ -37,6 +40,7 @@ const THEMES: Record<string, DemoTheme> = {
     dot: 'bg-amber-500',
     glowOuter: 'bg-amber-400/25 dark:bg-amber-500/20',
     glowCore: 'bg-amber-300/40 dark:bg-amber-400/25',
+    accent: { light: '217, 119, 6', dark: '251, 191, 36' },
   },
   chess: {
     surface: 'border-violet-200 from-violet-50 to-violet-100 dark:border-violet-900 dark:from-violet-950 dark:to-slate-950',
@@ -45,6 +49,7 @@ const THEMES: Record<string, DemoTheme> = {
     dot: 'bg-violet-500',
     glowOuter: 'bg-violet-400/25 dark:bg-violet-500/20',
     glowCore: 'bg-violet-300/40 dark:bg-violet-400/25',
+    accent: { light: '124, 58, 237', dark: '167, 139, 250' },
   },
   events: {
     surface: 'border-sky-200 from-sky-50 to-sky-100 dark:border-sky-900 dark:from-sky-950 dark:to-slate-950',
@@ -53,6 +58,7 @@ const THEMES: Record<string, DemoTheme> = {
     dot: 'bg-sky-500',
     glowOuter: 'bg-sky-400/25 dark:bg-sky-500/20',
     glowCore: 'bg-sky-300/40 dark:bg-sky-400/25',
+    accent: { light: '2, 132, 199', dark: '56, 189, 248' },
   },
   'file-share': {
     surface: 'border-emerald-200 from-emerald-50 to-emerald-100 dark:border-emerald-900 dark:from-emerald-950 dark:to-slate-950',
@@ -61,6 +67,7 @@ const THEMES: Record<string, DemoTheme> = {
     dot: 'bg-emerald-500',
     glowOuter: 'bg-emerald-400/25 dark:bg-emerald-500/20',
     glowCore: 'bg-emerald-300/40 dark:bg-emerald-400/25',
+    accent: { light: '5, 150, 105', dark: '52, 211, 153' },
   },
   heartbeat: {
     surface: 'border-red-200 from-red-50 to-red-100 dark:border-red-900 dark:from-red-950 dark:to-slate-950',
@@ -69,6 +76,7 @@ const THEMES: Record<string, DemoTheme> = {
     dot: 'bg-red-500',
     glowOuter: 'bg-red-400/25 dark:bg-red-500/20',
     glowCore: 'bg-red-300/40 dark:bg-red-400/25',
+    accent: { light: '220, 38, 38', dark: '248, 113, 113' },
   },
   views: {
     surface: 'border-indigo-200 from-indigo-50 to-indigo-100 dark:border-indigo-900 dark:from-indigo-950 dark:to-slate-950',
@@ -77,6 +85,7 @@ const THEMES: Record<string, DemoTheme> = {
     dot: 'bg-indigo-500',
     glowOuter: 'bg-indigo-400/25 dark:bg-indigo-500/20',
     glowCore: 'bg-indigo-300/40 dark:bg-indigo-400/25',
+    accent: { light: '79, 70, 229', dark: '129, 140, 248' },
   },
 }
 
@@ -88,6 +97,7 @@ const DEFAULT_THEME: DemoTheme = {
   dot: 'bg-slate-400',
   glowOuter: 'bg-slate-400/20 dark:bg-slate-500/15',
   glowCore: 'bg-slate-300/30 dark:bg-slate-400/20',
+  accent: { light: '71, 85, 105', dark: '148, 163, 184' },
 }
 
 /**
