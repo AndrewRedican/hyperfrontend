@@ -17,7 +17,7 @@ const code = await runFeaturesCli({
 
 | Command | Purpose                                                                                                |
 | ------- | ------------------------------------------------------------------------------------------------------ |
-| `init`  | Scaffolds the hostee glue module and wires a marker-guarded import into the app entry file.            |
+| `init`  | Scaffolds the glue module, config, and contract types, then wires the entry import idempotently.       |
 | `build` | Resolves `feature.config.*`, generates the shell package, bundles it, and packs a publishable tarball. |
 | `dev`   | Resolves `hf-dev.config.*` and starts the dev server — one static server per app plus the debug UI.    |
 

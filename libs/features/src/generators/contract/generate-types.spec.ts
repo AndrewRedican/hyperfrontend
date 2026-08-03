@@ -46,4 +46,40 @@ describe('generateContractTypes', () => {
     generateContractTypes({ ...jsonConfig, contract: 'contracts/clock.contract.ts' }, contract, tree)
     expect(tree.listChanges()).toEqual([])
   })
+
+  it('reports a .ts contract as skipped', () => {
+    const tree = createTree(__dirname)
+    expect(generateContractTypes({ ...jsonConfig, contract: 'contracts/clock.contract.ts' }, contract, tree)).toBe('skipped')
+  })
+
+  it('reports a fresh declaration staging as created', () => {
+    const tree = createTree(__dirname)
+    expect(generateContractTypes(jsonConfig, contract, tree)).toBe('created')
+  })
+
+  it('reports an identical re-staging as kept', () => {
+    const tree = createTree(__dirname)
+    generateContractTypes(jsonConfig, contract, tree)
+    expect(generateContractTypes(jsonConfig, contract, tree)).toBe('kept')
+  })
+
+  it('leaves no second change entry on an identical re-staging', () => {
+    const tree = createTree(__dirname)
+    generateContractTypes(jsonConfig, contract, tree)
+    generateContractTypes(jsonConfig, contract, tree)
+    expect(tree.listChanges()).toHaveLength(1)
+  })
+
+  it('reports a stale declaration regeneration as updated', () => {
+    const tree = createTree(__dirname)
+    tree.write('contracts/clock.contract.d.ts', 'stale declarations\n')
+    expect(generateContractTypes(jsonConfig, contract, tree)).toBe('updated')
+  })
+
+  it('regenerates a stale declaration to the canonical content', () => {
+    const tree = createTree(__dirname)
+    tree.write('contracts/clock.contract.d.ts', 'stale declarations\n')
+    generateContractTypes(jsonConfig, contract, tree)
+    expect(tree.read('contracts/clock.contract.d.ts', 'utf-8')).toContain('declare const contract')
+  })
 })

@@ -68,4 +68,41 @@ describe('generateFeatureModule', () => {
     generateFeatureModule(config, contract, tree)
     expect(tree.read(MODULE_PATH, 'utf-8')).toBe('custom author edits')
   })
+
+  it('reports a fresh staging as created', () => {
+    const tree = createTree(__dirname)
+    expect(generateFeatureModule(config, contract, tree)).toBe('created')
+  })
+
+  it('reports a same-config re-run as kept', () => {
+    const tree = createTree(__dirname)
+    generateFeatureModule(config, contract, tree)
+    expect(generateFeatureModule(config, contract, tree)).toBe('kept')
+  })
+
+  it('regenerates a pristine module when the previous config still renders it', () => {
+    const tree = createTree(__dirname)
+    generateFeatureModule(config, contract, tree)
+    generateFeatureModule({ ...config, name: 'metronome' }, contract, tree, config)
+    expect(tree.read(MODULE_PATH, 'utf-8')).toContain("name: 'metronome'")
+  })
+
+  it('reports a pristine regeneration as updated', () => {
+    const tree = createTree(__dirname)
+    generateFeatureModule(config, contract, tree)
+    expect(generateFeatureModule({ ...config, name: 'metronome' }, contract, tree, config)).toBe('updated')
+  })
+
+  it('keeps an author-edited module even when a previous config is supplied', () => {
+    const tree = createTree(__dirname)
+    tree.write(MODULE_PATH, 'custom author edits')
+    generateFeatureModule({ ...config, name: 'metronome' }, contract, tree, config)
+    expect(tree.read(MODULE_PATH, 'utf-8')).toBe('custom author edits')
+  })
+
+  it('reports an author-edited module as kept', () => {
+    const tree = createTree(__dirname)
+    tree.write(MODULE_PATH, 'custom author edits')
+    expect(generateFeatureModule({ ...config, name: 'metronome' }, contract, tree, config)).toBe('kept')
+  })
 })

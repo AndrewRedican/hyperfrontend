@@ -1,11 +1,13 @@
 import type { Tree } from '@hyperfrontend/project-scope/vfs'
 import type { FeatureContract, ResolvedFeatureConfig } from '../../shared/types'
 import { dirname, isAbsolute, join, relative } from 'node:path'
-import { Mode } from '@hyperfrontend/project-scope/vfs'
 import { canonicalVersion } from '../shared/canonical-version'
 
-// note: Write-once target; re-runs never clobber handlers the author has filled in.
+// note: Machine-owned only while pristine; re-runs never clobber handlers the author has filled in.
 const MODULE_PATH = 'src/hyperfrontend.feature.ts'
+
+/** Outcome of staging the feature integration module. */
+export type FeatureModuleOutcome = 'created' | 'kept' | 'updated'
 
 /**
  * Derives the extensionless import specifier for the contract module, computed
@@ -41,8 +43,8 @@ function buildFeatureModule(config: ResolvedFeatureConfig, contract: FeatureCont
  * Host integration for the "${config.name}" feature (v${config.version}).
  *
  * Wires this app to its host: registers a handler for each action the feature
- * accepts and exposes the feature handle for sending actions. Generated once and
- * safe to edit — re-running the generator never overwrites it.
+ * accepts and exposes the feature handle for sending actions. Safe to edit —
+ * once edited, re-running the generator always keeps your version.
  *
  * @module ${config.name}.feature
  */
@@ -72,22 +74,43 @@ ${emits}
 }
 
 /**
- * Stages the feature integration module into the consumer app (write-once).
+ * Stages the feature integration module into the consumer app.
  *
  * Emits `src/hyperfrontend.feature.ts` with one `feature.on` stub per `accepted`
- * action and a commented `feature.send` example per `emitted` action. Uses
- * `Mode.SkipIfExists`, so a re-run never clobbers the author's edits. The CLI
- * owns inserting the marker-guarded import into the entry file.
+ * action and a commented `feature.send` example per `emitted` action. The module
+ * is machine-owned only while pristine: a missing module is created, a module
+ * still byte-identical to its previous machine render (reconstructed from
+ * `previousConfig` and the current contract) is regenerated, and a module the
+ * author has edited is always kept untouched. The CLI owns inserting the
+ * marker-guarded import into the entry file.
  *
  * @param config - The resolved feature config.
  * @param contract - The validated feature contract driving the scaffolded stubs.
  * @param tree - The VFS tree the integration module is staged into.
+ * @param previousConfig - Prior resolved config used to recognize a pristine module; omit to never overwrite an existing module.
+ * @returns Whether the module was staged as created, staged as updated, or kept as-is.
  *
  * @example Scaffolding the integration module for the clock feature
  * ```typescript
- * generateFeatureModule({ name: 'clock', version: '1.0.0', contract: './clock.contract.json', url: '/clock' }, contract, tree)
+ * const outcome = generateFeatureModule({ name: 'clock', version: '1.0.0', contract: './clock.contract.json', url: '/clock' }, contract, tree)
  * ```
  */
-export function generateFeatureModule(config: ResolvedFeatureConfig, contract: FeatureContract, tree: Tree): void {
-  tree.write(MODULE_PATH, buildFeatureModule(config, contract, tree.root), { mode: Mode.SkipIfExists })
+export function generateFeatureModule(
+  config: ResolvedFeatureConfig,
+  contract: FeatureContract,
+  tree: Tree,
+  previousConfig?: ResolvedFeatureConfig
+): FeatureModuleOutcome {
+  const next = buildFeatureModule(config, contract, tree.root)
+  const existing = tree.read(MODULE_PATH, 'utf-8')
+  if (existing === null) {
+    tree.write(MODULE_PATH, next)
+    return 'created'
+  }
+  if (existing === next) return 'kept'
+  if (previousConfig !== undefined && existing === buildFeatureModule(previousConfig, contract, tree.root)) {
+    tree.write(MODULE_PATH, next)
+    return 'updated'
+  }
+  return 'kept'
 }

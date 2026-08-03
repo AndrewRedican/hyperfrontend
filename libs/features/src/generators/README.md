@@ -8,7 +8,7 @@ Pure code generators that turn a resolved feature config and parsed contract int
 | ----------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | `generateShell`         | Stages the self-contained shell package (entry, `package.json`, README, metadata); composes only the feature's declared display modes and narrows the generated types to them. |
 | `generateMetadata`      | Stages the shell's `metadata.json` with a version-stamped, embedded contract and the declared display modes.                                                                   |
-| `generateFeatureModule` | Stages the write-once feature integration module (`src/hyperfrontend.feature.ts`).                                                                                             |
+| `generateFeatureModule` | Stages the feature integration module (`src/hyperfrontend.feature.ts`); regenerates it only while pristine and never clobbers author edits.                                    |
 | `generateContractTypes` | Bridges a `.json` contract to a sibling `.d.ts` of literal-type unions.                                                                                                        |
 
 ## Usage
