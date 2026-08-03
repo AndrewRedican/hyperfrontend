@@ -3,12 +3,16 @@
  *
  * @module @hyperfrontend/questions/prompts/text
  */
-import type { Terminal } from '../terminal'
+import type { ScreenFrame } from '../screen'
 import type { PromptOutcome, TextConfig } from '../types'
 import { max, min } from '@hyperfrontend/immutable-api-utils/built-in-copy/math'
 import { freeze } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
+import { displayWidth } from '../ansi-text'
+import { sanitizePasteText } from '../paste'
 import { renderMessage, renderSubmitted, renderCancelled, style } from '../render'
-import { createTerminal, Ansi, Key } from '../terminal'
+import { createScreen } from '../screen'
+import { createTerminal, Key } from '../terminal'
+import { TokenType } from '../token-parser'
 import { PromptResult } from '../types'
 
 /**
@@ -41,45 +45,68 @@ function createInitialState(config: TextConfig): TextState {
 }
 
 /**
- * Renders the text prompt to the terminal.
+ * Builds the current prompt message text.
  *
  * @internal
- * @param term - Terminal interface for output
+ * @param config - Prompt configuration
+ * @param value - Current input value
+ * @returns Message text for the current value
+ */
+function messageText(config: TextConfig, value: string): string {
+  return config.renderMessage ? config.renderMessage(value) : config.message
+}
+
+/**
+ * Builds the frame for the text prompt.
+ *
+ * @internal
  * @param config - Prompt configuration
  * @param state - Current prompt state
  * @param submitted - Whether the prompt has been submitted
- * @returns Number of lines rendered
+ * @returns Frame describing lines and cursor position
  */
-function render(term: Terminal, config: TextConfig, state: TextState, submitted: boolean): number {
+function buildFrame(config: TextConfig, state: TextState, submitted: boolean): ScreenFrame {
   const displayValue = config.format ? config.format(state.value) : state.value
-  const messageText = config.renderMessage ? config.renderMessage(state.value) : config.message
 
-  let output = renderMessage(messageText)
-  let trailingChars = 0
+  let line = renderMessage(messageText(config, state.value))
 
   if (submitted) {
-    output += renderSubmitted(displayValue || config.initial || '')
-  } else {
-    output += displayValue
-    trailingChars = displayValue.length - state.cursorPos
-    if (config.initial && !state.value) {
-      output += style.dim(config.initial)
-      trailingChars += config.initial.length
-    }
+    line += renderSubmitted(displayValue || config.initial || '')
+    return freeze({ lines: freeze([line]) })
   }
 
-  term.write(Ansi.CursorStart + Ansi.ClearLine + output)
+  line += displayValue
+  let trailingWidth = displayWidth(state.value.slice(state.cursorPos))
+  if (config.initial && !state.value) {
+    line += style.dim(config.initial)
+    trailingWidth += displayWidth(config.initial)
+  }
 
+  const cursor = freeze({ line: 0, col: displayWidth(line) - trailingWidth })
   if (state.error) {
-    term.write('\n' + style.yellow(`  ${state.error}`))
-    return 2
+    return freeze({ lines: freeze([line, style.yellow(`  ${state.error}`)]), cursor })
   }
+  return freeze({ lines: freeze([line]), cursor })
+}
 
-  if (!submitted && trailingChars > 0) {
-    term.write(Ansi.cursorLeft(trailingChars))
+/**
+ * Inserts text at the cursor position, moving the cursor past it.
+ *
+ * @internal
+ * @param insert - Text to insert (already sanitized for pastes)
+ * @param state - Current prompt state
+ * @returns Updated state after insertion
+ */
+function insertText(insert: string, state: TextState): TextState {
+  if (insert === '') return state
+  const before = state.value.slice(0, state.cursorPos)
+  const after = state.value.slice(state.cursorPos)
+  return {
+    ...state,
+    value: before + insert + after,
+    cursorPos: state.cursorPos + insert.length,
+    error: undefined,
   }
-
-  return 1
 }
 
 /**
@@ -92,14 +119,7 @@ function render(term: Terminal, config: TextConfig, state: TextState, submitted:
  */
 function processKey(key: string, state: TextState): TextState {
   if (key.length === 1 && key >= ' ' && key !== Key.Backspace) {
-    const before = state.value.slice(0, state.cursorPos)
-    const after = state.value.slice(state.cursorPos)
-    return {
-      ...state,
-      value: before + key + after,
-      cursorPos: state.cursorPos + 1,
-      error: undefined,
-    }
+    return insertText(key, state)
   }
 
   if (key === Key.Backspace || key === '\b') {
@@ -136,7 +156,11 @@ function processKey(key: string, state: TextState): TextState {
  * Prompts for text input with optional validation.
  *
  * Pure functional prompt that reads text from the user with support for
- * default values, input validation, and display formatting.
+ * default values, input validation, and display formatting. Pasted text is
+ * sanitized (newlines collapse to spaces, control characters are removed)
+ * and inserted at the cursor without ever auto-submitting. The prompt
+ * repaints on terminal resize, preserving value, cursor, and any
+ * validation error.
  *
  * @param config - Text prompt configuration
  * @returns Promise resolving to submitted value or cancellation
@@ -170,47 +194,57 @@ function processKey(key: string, state: TextState): TextState {
  */
 export async function text(config: TextConfig): Promise<PromptOutcome<string>> {
   const term = createTerminal({ input: config.input, output: config.output })
+  const screen = createScreen(term)
   let state = createInitialState(config)
-  let lineCount = 0
 
   const redraw = (submitted = false): void => {
-    if (lineCount > 0) {
-      term.clearLines(lineCount)
-    }
-    lineCount = render(term, config, state, submitted)
+    screen.render(buildFrame(config, state, submitted))
   }
 
-  redraw()
+  try {
+    redraw()
 
-  while (true) {
-    const key = await term.readKey()
+    while (true) {
+      const token = await term.readToken()
 
-    if (term.isCancelled()) {
-      redraw()
-      term.write(renderCancelled() + '\n')
-      term.close()
-      return freeze({ result: PromptResult.Cancelled, value: undefined })
-    }
-
-    if (key === Key.Enter) {
-      const value = state.value || config.initial || ''
-
-      if (config.validate) {
-        const errorMessage = config.validate(value)
-        if (errorMessage) {
-          state = { ...state, error: errorMessage }
-          redraw()
-          continue
-        }
+      if (term.isCancelled()) {
+        screen.render(freeze({ lines: freeze([renderMessage(messageText(config, state.value)) + renderCancelled()]) }))
+        term.write('\n')
+        return freeze({ result: PromptResult.Cancelled, value: undefined })
       }
 
-      redraw(true)
-      term.write('\n')
-      term.close()
-      return freeze({ result: PromptResult.Submitted, value })
-    }
+      if (token.type === TokenType.Resize) {
+        redraw()
+        continue
+      }
 
-    state = processKey(key, state)
-    redraw()
+      if (token.type === TokenType.Paste) {
+        state = insertText(sanitizePasteText(token.value), state)
+        redraw()
+        continue
+      }
+
+      if (token.value === Key.Enter) {
+        const value = state.value || config.initial || ''
+
+        if (config.validate) {
+          const errorMessage = config.validate(value)
+          if (errorMessage) {
+            state = { ...state, error: errorMessage }
+            redraw()
+            continue
+          }
+        }
+
+        redraw(true)
+        term.write('\n')
+        return freeze({ result: PromptResult.Submitted, value })
+      }
+
+      state = processKey(token.value, state)
+      redraw()
+    }
+  } finally {
+    term.close()
   }
 }

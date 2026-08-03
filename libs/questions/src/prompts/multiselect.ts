@@ -5,9 +5,13 @@
  */
 import type { Terminal } from '../terminal'
 import type { PromptOutcome, MultiselectConfig, Choice } from '../types'
+import { max, min } from '@hyperfrontend/immutable-api-utils/built-in-copy/math'
 import { freeze } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
+import { firstPasteLine } from '../paste'
 import { renderMessage, renderSubmitted, renderCancelled, style, Symbol } from '../render'
+import { createScreen } from '../screen'
 import { createTerminal, Ansi, Key } from '../terminal'
+import { TokenType } from '../token-parser'
 import { PromptResult } from '../types'
 
 /**
@@ -153,52 +157,36 @@ function renderChoice<T>(choice: Choice<T>, isSelected: boolean, isFocused: bool
 }
 
 /**
- * Renders the multiselect prompt to the terminal.
+ * Builds the frame lines for the multiselect prompt.
  *
  * @internal
- * @param term - Terminal interface
  * @param config - Prompt configuration
  * @param state - Current prompt state
- * @param submitted - Whether the prompt has been submitted
- * @returns Number of lines rendered
+ * @param maxVisible - Maximum number of visible choices
+ * @returns Logical lines describing the prompt
  */
-function render<T>(term: Terminal, config: MultiselectConfig<T>, state: MultiselectState<T>, submitted: boolean): number {
-  const maxVisible = config.maxVisible ?? 10
+function buildLines<T>(config: MultiselectConfig<T>, state: MultiselectState<T>, maxVisible: number): ReadonlyArray<string> {
   const { indices: visibleIndices, startIndex } = getVisibleChoices(state, maxVisible)
+  const lines: string[] = []
 
-  let output = Ansi.CursorStart + Ansi.ClearLine + renderMessage(config.message)
-
-  if (submitted) {
-    const selectedLabels = state.selected.map((i) => state.choices[i]?.label ?? '').join(', ')
-    output += renderSubmitted(selectedLabels || 'none')
-    term.write(output)
-    return 1
-  }
-
+  let header = renderMessage(config.message)
   if (config.searchable && state.searchQuery) {
-    output += style.cyan(state.searchQuery) + style.dim(' (type to filter)')
+    header += style.cyan(state.searchQuery) + style.dim(' (type to filter)')
   } else if (config.searchable) {
-    output += style.dim('(type to filter, space to toggle, enter to submit)')
+    header += style.dim('(type to filter, space to toggle, enter to submit)')
   } else {
-    output += style.dim('(space to toggle, enter to submit)')
+    header += style.dim('(space to toggle, enter to submit)')
   }
-  term.write(output + '\n')
-
-  let lineCount = 1
+  lines.push(header)
 
   const minMax: string[] = []
   if (config.min !== undefined) minMax.push(`min: ${config.min}`)
   if (config.max !== undefined) minMax.push(`max: ${config.max}`)
   const countHint = minMax.length > 0 ? ` (${minMax.join(', ')})` : ''
-  term.write(Ansi.ClearLine + style.dim(`  ${state.selected.length} selected${countHint}`) + '\n')
-  lineCount++
+  lines.push(style.dim(`  ${state.selected.length} selected${countHint}`))
 
-  const showScrollUp = startIndex > 0
-  const showScrollDown = startIndex + maxVisible < state.filteredIndices.length
-
-  if (showScrollUp) {
-    term.write(Ansi.ClearLine + style.dim(`  ${Symbol.Ellipsis} (${startIndex} more above)`) + '\n')
-    lineCount++
+  if (startIndex > 0) {
+    lines.push(style.dim(`  ${Symbol.Ellipsis} (${startIndex} more above)`))
   }
 
   visibleIndices.forEach((actualIndex, i) => {
@@ -206,26 +194,41 @@ function render<T>(term: Terminal, config: MultiselectConfig<T>, state: Multisel
     /* istanbul ignore if -- @preserve defensive: actualIndex always valid from filteredIndices */
     if (!choice) return
 
-    const viewIndex = startIndex + i
-    const isFocused = viewIndex === state.cursor
+    const isFocused = startIndex + i === state.cursor
     const isSelected = arrayIncludes(state.selected, actualIndex)
-    const line = renderChoice(choice, isSelected, isFocused)
-    term.write(Ansi.ClearLine + line + '\n')
-    lineCount++
+    lines.push(renderChoice(choice, isSelected, isFocused))
   })
 
-  if (showScrollDown) {
+  if (startIndex + maxVisible < state.filteredIndices.length) {
     const remaining = state.filteredIndices.length - (startIndex + maxVisible)
-    term.write(Ansi.ClearLine + style.dim(`  ${Symbol.Ellipsis} (${remaining} more below)`) + '\n')
-    lineCount++
+    lines.push(style.dim(`  ${Symbol.Ellipsis} (${remaining} more below)`))
   }
 
   if (state.filteredIndices.length === 0 && config.searchable) {
-    term.write(Ansi.ClearLine + style.dim('  No matches found') + '\n')
-    lineCount++
+    lines.push(style.dim('  No matches found'))
   }
 
-  return lineCount
+  return freeze(lines)
+}
+
+/**
+ * Appends text to the search query, re-filtering choices.
+ *
+ * @internal
+ * @param query - Text to append (a typed character or pasted line)
+ * @param state - Current prompt state
+ * @returns Updated state with the new query applied
+ */
+function appendSearch<T>(query: string, state: MultiselectState<T>): MultiselectState<T> {
+  if (query === '') return state
+  const newQuery = state.searchQuery + query
+  return freeze({
+    ...state,
+    searchQuery: newQuery,
+    filteredIndices: filterChoices(state.choices, newQuery),
+    cursor: 0,
+    scrollOffset: 0,
+  })
 }
 
 /**
@@ -235,10 +238,10 @@ function render<T>(term: Terminal, config: MultiselectConfig<T>, state: Multisel
  * @param key - The key that was pressed
  * @param state - Current prompt state
  * @param config - Prompt configuration
+ * @param maxVisible - Maximum number of visible choices
  * @returns Updated state after processing the key
  */
-function processKey<T>(key: string, state: MultiselectState<T>, config: MultiselectConfig<T>): MultiselectState<T> {
-  const maxVisible = config.maxVisible ?? 10
+function processKey<T>(key: string, state: MultiselectState<T>, config: MultiselectConfig<T>, maxVisible: number): MultiselectState<T> {
   const total = state.filteredIndices.length
   if (total === 0 && key !== Key.Backspace && key !== '\b') return state
 
@@ -311,15 +314,7 @@ function processKey<T>(key: string, state: MultiselectState<T>, config: Multisel
     }
 
     if (key.length === 1 && key >= ' ' && key !== Key.Space) {
-      const newQuery = state.searchQuery + key
-      const newFiltered = filterChoices(state.choices, newQuery)
-      return freeze({
-        ...state,
-        searchQuery: newQuery,
-        filteredIndices: newFiltered,
-        cursor: 0,
-        scrollOffset: 0,
-      })
+      return appendSearch(key, state)
     }
   }
 
@@ -345,10 +340,26 @@ function validateSelection<T>(state: MultiselectState<T>, config: MultiselectCon
 }
 
 /**
+ * Resolves the visible-window size, capped so the frame fits the terminal
+ * height (header and scroll-indicator rows reserved).
+ *
+ * @internal
+ * @param term - Terminal used for size queries
+ * @param configured - Configured maximum visible choices
+ * @returns Effective maximum visible choices (at least 1)
+ */
+function effectiveMaxVisible(term: Terminal, configured: number | undefined): number {
+  return max(1, min(configured ?? 10, term.getSize().rows - 4))
+}
+
+/**
  * Prompts for multiple selections from a list of choices.
  *
  * Pure functional prompt with arrow key navigation, space to toggle,
- * scrolling support, min/max constraints, and optional type-to-filter search.
+ * scrolling support, min/max constraints, and optional type-to-filter
+ * search. In searchable mode, pasted text appends its first line to the
+ * filter query; pasting never toggles or submits. The prompt repaints on
+ * terminal resize, preserving cursor, selection, and scroll state.
  *
  * @param config - Multiselect prompt configuration
  * @returns Promise resolving to array of selected values or cancellation
@@ -390,64 +401,67 @@ function validateSelection<T>(state: MultiselectState<T>, config: MultiselectCon
  */
 export async function multiselect<T = string>(config: MultiselectConfig<T>): Promise<PromptOutcome<ReadonlyArray<T>>> {
   const term = createTerminal({ input: config.input, output: config.output })
+  const screen = createScreen(term)
   let state = createInitialState(config)
-  let lineCount = 0
   let errorMessage: string | undefined
 
   term.write(Ansi.HideCursor)
 
-  const redraw = (submitted = false): void => {
-    if (lineCount > 0) {
-      term.write(Ansi.cursorUp(lineCount) + Ansi.CursorStart)
+  const redraw = (): void => {
+    const lines = [...buildLines(config, state, effectiveMaxVisible(term, config.maxVisible))]
+    if (errorMessage) {
+      lines.push(style.yellow(`  ${errorMessage}`))
     }
-    term.write(Ansi.ClearToEnd)
-    lineCount = render(term, config, state, submitted)
-
-    if (errorMessage && !submitted) {
-      term.write(Ansi.ClearLine + style.yellow(`  ${errorMessage}`) + '\n')
-      lineCount++
-    }
+    screen.render(freeze({ lines: freeze(lines) }))
   }
 
-  redraw()
+  try {
+    redraw()
 
-  while (true) {
-    const key = await term.readKey()
+    while (true) {
+      const token = await term.readToken()
 
-    if (term.isCancelled()) {
-      if (lineCount > 0) {
-        term.write(Ansi.cursorUp(lineCount) + Ansi.CursorStart)
+      if (term.isCancelled()) {
+        screen.render(freeze({ lines: freeze([renderMessage(config.message) + renderCancelled()]) }))
+        term.write('\n' + Ansi.ShowCursor)
+        return freeze({ result: PromptResult.Cancelled, value: undefined })
       }
-      term.write(Ansi.ClearToEnd)
-      term.write(renderMessage(config.message) + renderCancelled() + '\n')
-      term.write(Ansi.ShowCursor)
-      term.close()
-      return freeze({ result: PromptResult.Cancelled, value: undefined })
-    }
 
-    if (key === Key.Enter) {
-      const validationError = validateSelection(state, config)
-      if (validationError) {
-        errorMessage = validationError
+      if (token.type === TokenType.Resize) {
         redraw()
         continue
       }
 
-      const selectedValues = state.selected.map((i) => state.choices[i]?.value).filter((v): v is T => v !== undefined)
-
-      if (lineCount > 0) {
-        term.write(Ansi.cursorUp(lineCount) + Ansi.CursorStart)
+      if (token.type === TokenType.Paste) {
+        if (config.searchable) {
+          errorMessage = undefined
+          state = appendSearch(firstPasteLine(token.value), state)
+          redraw()
+        }
+        continue
       }
-      term.write(Ansi.ClearToEnd)
-      render(term, config, state, true)
-      term.write('\n')
-      term.write(Ansi.ShowCursor)
-      term.close()
-      return freeze({ result: PromptResult.Submitted, value: freeze(selectedValues) })
-    }
 
-    errorMessage = undefined
-    state = processKey(key, state, config)
-    redraw()
+      if (token.value === Key.Enter) {
+        const validationError = validateSelection(state, config)
+        if (validationError) {
+          errorMessage = validationError
+          redraw()
+          continue
+        }
+
+        const selectedValues = state.selected.map((i) => state.choices[i]?.value).filter((v): v is T => v !== undefined)
+        const selectedLabels = state.selected.map((i) => state.choices[i]?.label ?? '').join(', ')
+        const submittedLine = renderMessage(config.message) + renderSubmitted(selectedLabels || 'none')
+        screen.render(freeze({ lines: freeze([submittedLine]) }))
+        term.write('\n' + Ansi.ShowCursor)
+        return freeze({ result: PromptResult.Submitted, value: freeze(selectedValues) })
+      }
+
+      errorMessage = undefined
+      state = processKey(token.value, state, config, effectiveMaxVisible(term, config.maxVisible))
+      redraw()
+    }
+  } finally {
+    term.close()
   }
 }

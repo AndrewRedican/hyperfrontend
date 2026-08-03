@@ -3,10 +3,13 @@
  *
  * @module @hyperfrontend/questions/prompts/confirm
  */
+import type { KeyToken, PasteToken } from '../token-parser'
 import type { PromptOutcome, ConfirmConfig } from '../types'
 import { freeze } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
 import { renderMessage, renderSubmitted, renderCancelled, style } from '../render'
-import { createTerminal, Ansi, Key } from '../terminal'
+import { createScreen } from '../screen'
+import { createTerminal, Key } from '../terminal'
+import { TokenType } from '../token-parser'
 import { PromptResult } from '../types'
 
 /**
@@ -27,10 +30,32 @@ function renderOptions(initial: boolean | undefined): string {
 }
 
 /**
+ * Interprets a key or paste token as a yes/no answer. Keys accept `y`/`n`
+ * (any case); pastes accept a trimmed, lowercased `y`/`yes`/`n`/`no`.
+ *
+ * @internal
+ * @param token - Token to interpret
+ * @returns The boolean answer, or undefined when the token is not one
+ */
+function parseAnswer(token: KeyToken | PasteToken): boolean | undefined {
+  const normalized = token.value.trim().toLowerCase()
+  if (token.type === TokenType.Paste) {
+    if (normalized === 'y' || normalized === 'yes') return true
+    if (normalized === 'n' || normalized === 'no') return false
+    return undefined
+  }
+  if (normalized === 'y') return true
+  if (normalized === 'n') return false
+  return undefined
+}
+
+/**
  * Prompts for yes/no confirmation.
  *
  * Pure functional prompt that asks a yes/no question and returns a boolean.
- * Supports default values and responds to y/Y/n/N keys.
+ * Supports default values and responds to y/Y/n/N keys. A pasted
+ * `y`/`yes`/`n`/`no` (trimmed, case-insensitive) is accepted; any other
+ * paste is ignored. The prompt repaints on terminal resize.
  *
  * @param config - Confirm prompt configuration
  * @returns Promise resolving to boolean value or cancellation
@@ -53,46 +78,45 @@ function renderOptions(initial: boolean | undefined): string {
  */
 export async function confirm(config: ConfirmConfig): Promise<PromptOutcome<boolean>> {
   const term = createTerminal({ input: config.input, output: config.output })
+  const screen = createScreen(term)
 
-  const drawPrompt = (): void => {
-    term.write(Ansi.CursorStart + Ansi.ClearLine)
-    term.write(renderMessage(config.message) + renderOptions(config.initial) + ' ')
+  const finish = (value: boolean): PromptOutcome<boolean> => {
+    screen.render(freeze({ lines: freeze([renderMessage(config.message) + renderSubmitted(value ? 'Yes' : 'No')]) }))
+    term.write('\n')
+    return freeze({ result: PromptResult.Submitted, value })
   }
 
-  const drawResult = (value: boolean): void => {
-    term.write(Ansi.CursorStart + Ansi.ClearLine)
-    term.write(renderMessage(config.message) + renderSubmitted(value ? 'Yes' : 'No') + '\n')
+  const redraw = (): void => {
+    screen.render(freeze({ lines: freeze([renderMessage(config.message) + renderOptions(config.initial) + ' ']) }))
   }
 
-  drawPrompt()
+  try {
+    redraw()
 
-  while (true) {
-    const key = await term.readKey()
-    const lowerKey = key.toLowerCase()
+    while (true) {
+      const token = await term.readToken()
 
-    if (term.isCancelled()) {
-      term.write(Ansi.CursorStart + Ansi.ClearLine)
-      term.write(renderMessage(config.message) + renderCancelled() + '\n')
-      term.close()
-      return freeze({ result: PromptResult.Cancelled, value: undefined })
+      if (term.isCancelled()) {
+        screen.render(freeze({ lines: freeze([renderMessage(config.message) + renderCancelled()]) }))
+        term.write('\n')
+        return freeze({ result: PromptResult.Cancelled, value: undefined })
+      }
+
+      if (token.type === TokenType.Resize) {
+        redraw()
+        continue
+      }
+
+      const answer = parseAnswer(token)
+      if (answer !== undefined) {
+        return finish(answer)
+      }
+
+      if (token.value === Key.Enter && config.initial !== undefined) {
+        return finish(config.initial)
+      }
     }
-
-    if (lowerKey === 'y') {
-      drawResult(true)
-      term.close()
-      return freeze({ result: PromptResult.Submitted, value: true })
-    }
-
-    if (lowerKey === 'n') {
-      drawResult(false)
-      term.close()
-      return freeze({ result: PromptResult.Submitted, value: false })
-    }
-
-    if (key === Key.Enter && config.initial !== undefined) {
-      drawResult(config.initial)
-      term.close()
-      return freeze({ result: PromptResult.Submitted, value: config.initial })
-    }
+  } finally {
+    term.close()
   }
 }

@@ -1,6 +1,7 @@
 import type { Terminal } from './terminal'
 import { PassThrough } from 'node:stream'
 import { Key, Ansi, createTerminal } from './terminal'
+import { TokenType } from './token-parser'
 
 /**
  * Creates a mock input stream for testing.
@@ -21,8 +22,8 @@ function createMockInput(): PassThrough & { isRaw: boolean; setRawMode: (mode: b
  *
  * @returns Mock output stream that collects written data
  */
-function createMockOutput(): PassThrough & { getWrittenData: () => string } {
-  const output = new PassThrough() as PassThrough & { getWrittenData: () => string }
+function createMockOutput(): PassThrough & { getWrittenData: () => string; columns?: number; rows?: number } {
+  const output = new PassThrough() as PassThrough & { getWrittenData: () => string; columns?: number; rows?: number }
   let writtenData = ''
 
   const originalWrite = output.write.bind(output)
@@ -103,6 +104,14 @@ describe('Ansi', () => {
     expect(Ansi.cursorDown(5)).toBe('\x1B[5B')
   })
 
+  it('generates cursor left sequence', () => {
+    expect(Ansi.cursorLeft(2)).toBe('\x1B[2D')
+  })
+
+  it('generates cursor right sequence', () => {
+    expect(Ansi.cursorRight(2)).toBe('\x1B[2C')
+  })
+
   it('contains HideCursor escape code', () => {
     expect(Ansi.HideCursor).toBe('\x1B[?25l')
   })
@@ -121,6 +130,14 @@ describe('Ansi', () => {
 
   it('contains ClearToEnd escape code', () => {
     expect(Ansi.ClearToEnd).toBe('\x1B[J')
+  })
+
+  it('contains BracketedPasteOn escape code', () => {
+    expect(Ansi.BracketedPasteOn).toBe('\x1B[?2004h')
+  })
+
+  it('contains BracketedPasteOff escape code', () => {
+    expect(Ansi.BracketedPasteOff).toBe('\x1B[?2004l')
   })
 
   it('contains Bold escape code', () => {
@@ -199,15 +216,22 @@ describe('createTerminal', () => {
       expect(key).toBe('a')
     })
 
-    it('sets raw mode during read', async () => {
+    it('sets raw mode when the read session opens', () => {
       const keyPromise = terminal.readKey()
 
-      // why: raw mode is set before the data event
-      await new Promise((resolve) => setImmediate(resolve))
       expect(input.isRaw).toBe(true)
 
       input.emit('data', Buffer.from('x'))
+      return keyPromise
+    })
+
+    it('keeps raw mode enabled between keys', async () => {
+      const keyPromise = terminal.readKey()
+      input.emit('data', Buffer.from('x'))
       await keyPromise
+
+      // why: raw mode stays on for the whole session instead of per keystroke
+      expect(input.isRaw).toBe(true)
     })
 
     it('sets cancelled on Ctrl+C', async () => {
@@ -229,6 +253,130 @@ describe('createTerminal', () => {
       const key = await keyPromise
 
       expect(key).toBe(Key.Up)
+    })
+
+    it('delivers a chunk that arrives between reads', async () => {
+      const first = terminal.readKey()
+      input.emit('data', Buffer.from('a'))
+      input.emit('data', Buffer.from('b'))
+
+      expect(await first).toBe('a')
+      expect(await terminal.readKey()).toBe('b')
+    })
+
+    it('skips resize tokens', async () => {
+      const keyPromise = terminal.readKey()
+
+      output.emit('resize')
+      input.emit('data', Buffer.from('k'))
+
+      expect(await keyPromise).toBe('k')
+    })
+  })
+
+  describe('readToken', () => {
+    it('resolves a key token for a single character', async () => {
+      const tokenPromise = terminal.readToken()
+
+      input.emit('data', Buffer.from('a'))
+
+      expect(await tokenPromise).toEqual({ type: TokenType.Key, value: 'a' })
+    })
+
+    it('resolves a paste token for a multi-character chunk', async () => {
+      const tokenPromise = terminal.readToken()
+
+      input.emit('data', Buffer.from('pasted text'))
+
+      expect(await tokenPromise).toEqual({ type: TokenType.Paste, value: 'pasted text' })
+    })
+
+    it('accumulates a bracketed paste split across chunks', async () => {
+      const tokenPromise = terminal.readToken()
+
+      input.emit('data', Buffer.from('\x1B[200~he'))
+      input.emit('data', Buffer.from('llo\x1B[201~'))
+
+      expect(await tokenPromise).toEqual({ type: TokenType.Paste, value: 'hello' })
+    })
+
+    it('resolves a resize token when the output resizes', async () => {
+      const tokenPromise = terminal.readToken()
+
+      output.emit('resize')
+
+      expect(await tokenPromise).toEqual({ type: TokenType.Resize })
+    })
+
+    it('coalesces consecutive queued resize events into one token', async () => {
+      const first = terminal.readToken()
+      output.emit('resize')
+      output.emit('resize')
+      output.emit('resize')
+      input.emit('data', Buffer.from('a'))
+
+      expect(await first).toEqual({ type: TokenType.Resize })
+      // why: the second and third resize events collapse into the single queued token
+      expect(await terminal.readToken()).toEqual({ type: TokenType.Resize })
+      expect(await terminal.readToken()).toEqual({ type: TokenType.Key, value: 'a' })
+    })
+
+    it('keeps a multibyte character split across chunks intact', async () => {
+      const tokenPromise = terminal.readToken()
+      const encoded = Buffer.from('é')
+
+      input.emit('data', encoded.subarray(0, 1))
+      input.emit('data', encoded.subarray(1))
+
+      expect(await tokenPromise).toEqual({ type: TokenType.Key, value: 'é' })
+    })
+
+    it('holds a partial escape sequence until it completes', async () => {
+      const tokenPromise = terminal.readToken()
+
+      input.emit('data', Buffer.from('\x1B['))
+      input.emit('data', Buffer.from('A'))
+
+      expect(await tokenPromise).toEqual({ type: TokenType.Key, value: Key.Up })
+    })
+
+    it('does not cancel on Ctrl+C inside a bracketed paste', async () => {
+      const tokenPromise = terminal.readToken()
+
+      input.emit('data', Buffer.from('\x1B[200~a\x03b\x1B[201~'))
+
+      expect(await tokenPromise).toEqual({ type: TokenType.Paste, value: 'a\x03b' })
+      expect(terminal.isCancelled()).toBe(false)
+    })
+
+    it('cancels on Ctrl+C outside a bracketed paste', async () => {
+      const tokenPromise = terminal.readToken()
+
+      input.emit('data', Buffer.from('\x03'))
+
+      await tokenPromise
+
+      expect(terminal.isCancelled()).toBe(true)
+    })
+  })
+
+  describe('bracketed paste mode', () => {
+    it('enables bracketed paste when the read session opens', async () => {
+      const keyPromise = terminal.readKey()
+      input.emit('data', Buffer.from('x'))
+      await keyPromise
+
+      expect(output.getWrittenData()).toContain(Ansi.BracketedPasteOn)
+    })
+
+    it('disables bracketed paste on close', async () => {
+      const keyPromise = terminal.readKey()
+      input.emit('data', Buffer.from('x'))
+      await keyPromise
+
+      terminal.close()
+
+      expect(output.getWrittenData()).toContain(Ansi.BracketedPasteOff)
     })
   })
 
@@ -291,6 +439,19 @@ describe('createTerminal', () => {
     })
   })
 
+  describe('getSize', () => {
+    it('defaults to 80x24 when the output reports no size', () => {
+      expect(terminal.getSize()).toEqual({ columns: 80, rows: 24 })
+    })
+
+    it('reports the output size when available', () => {
+      output.columns = 120
+      output.rows = 40
+
+      expect(terminal.getSize()).toEqual({ columns: 120, rows: 40 })
+    })
+  })
+
   describe('close', () => {
     it('shows cursor after close', () => {
       terminal.close()
@@ -298,12 +459,23 @@ describe('createTerminal', () => {
       expect(output.getWrittenData()).toContain(Ansi.ShowCursor)
     })
 
-    it('can be called multiple times', () => {
+    it('is idempotent when called multiple times', () => {
       terminal.close()
       terminal.close()
 
-      // why: should not throw
-      expect(true).toBe(true)
+      const shows = output.getWrittenData().split(Ansi.ShowCursor).length - 1
+
+      expect(shows).toBe(1)
+    })
+
+    it('restores the original raw mode', async () => {
+      const keyPromise = terminal.readKey()
+      input.emit('data', Buffer.from('x'))
+      await keyPromise
+
+      terminal.close()
+
+      expect(input.isRaw).toBe(false)
     })
 
     it('closes readline interface when created via readLine', async () => {
@@ -377,6 +549,26 @@ describe('createTerminal', () => {
       expect(key).toBe('z')
 
       term.close()
+      simpleInput.destroy()
+      simpleOutput.destroy()
+    })
+
+    it('skips bracketed paste sequences for non-TTY input', async () => {
+      const simpleInput = new PassThrough()
+      const simpleOutput = createMockOutput()
+      const term = createTerminal({
+        input: simpleInput as unknown as NodeJS.ReadStream,
+        output: simpleOutput as unknown as NodeJS.WriteStream,
+      })
+
+      const keyPromise = term.readKey()
+      simpleInput.emit('data', Buffer.from('z'))
+      await keyPromise
+
+      term.close()
+
+      expect(simpleOutput.getWrittenData()).not.toContain('\x1B[?2004')
+
       simpleInput.destroy()
       simpleOutput.destroy()
     })

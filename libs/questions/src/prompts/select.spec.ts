@@ -54,8 +54,8 @@ function createMockInput(): PassThrough & {
  *
  * @returns Mock output stream that collects written data
  */
-function createMockOutput(): PassThrough & { getWrittenData: () => string } {
-  const output = new PassThrough() as PassThrough & { getWrittenData: () => string }
+function createMockOutput(): PassThrough & { getWrittenData: () => string; columns?: number; rows?: number } {
+  const output = new PassThrough() as PassThrough & { getWrittenData: () => string; columns?: number; rows?: number }
   let writtenData = ''
 
   const originalWrite = output.write.bind(output)
@@ -505,6 +505,60 @@ describe('select', () => {
 
       expect(result.result).toBe(PromptResult.Submitted)
       expect(result.value).toBe('opt13')
+    })
+  })
+
+  describe('paste', () => {
+    it('ignores pasted text when not searchable', async () => {
+      const config = createConfig()
+      const promise = select(config)
+
+      input.enqueueKeys(['pasted text', Key.Enter])
+
+      const result = await promise
+
+      expect(result.result).toBe(PromptResult.Submitted)
+      expect(result.value).toBe('red')
+    })
+  })
+
+  describe('resize', () => {
+    it('repaints the list preserving the cursor when the terminal resizes', async () => {
+      const config = createConfig()
+      const promise = select(config)
+
+      input.enqueueKeys([Key.Down])
+      await new Promise((resolve) => setImmediate(resolve))
+      await new Promise((resolve) => setImmediate(resolve))
+
+      const before = output.getWrittenData().length
+      output.emit('resize')
+      await new Promise((resolve) => setImmediate(resolve))
+
+      // why: the repaint after resize re-renders every choice line
+      expect(output.getWrittenData().slice(before)).toContain('Green')
+
+      input.enqueueKeys([Key.Enter])
+
+      const result = await promise
+
+      expect(result.value).toBe('green')
+    })
+
+    it('caps the visible window to the terminal height', async () => {
+      output.rows = 8
+      const manyChoices: ReadonlyArray<Choice<string>> = Array.from({ length: 6 }, (_, i) => ({
+        label: `Row ${i + 1}`,
+        value: `row${i + 1}`,
+      }))
+      const config = createConfig({ choices: manyChoices })
+      const promise = select(config)
+
+      input.enqueueKeys([Key.Enter])
+      await promise
+
+      // why: eight rows leave a four-item window, so two of six overflow
+      expect(output.getWrittenData()).toContain('(2 more below)')
     })
   })
 })

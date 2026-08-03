@@ -54,8 +54,8 @@ function createMockInput(): PassThrough & {
  *
  * @returns Mock output stream that collects written data
  */
-function createMockOutput(): PassThrough & { getWrittenData: () => string } {
-  const output = new PassThrough() as PassThrough & { getWrittenData: () => string }
+function createMockOutput(): PassThrough & { getWrittenData: () => string; columns?: number; rows?: number } {
+  const output = new PassThrough() as PassThrough & { getWrittenData: () => string; columns?: number; rows?: number }
   let writtenData = ''
 
   const originalWrite = output.write.bind(output)
@@ -293,15 +293,15 @@ describe('text', () => {
   })
 
   describe('cursor positioning', () => {
-    it('emits cursorLeft after render when caret is mid-value', async () => {
+    it('parks the caret at its column when it sits mid-value', async () => {
       const config = createConfig()
       const promise = text(config)
 
       input.enqueueKeys(['a', 'b', 'c', Key.Left, Key.Left, Key.Enter])
       await promise
 
-      // why: after 'abc', two Left presses put cursor at 1; render seeks 3-1=2 cols left
-      expect(output.getWrittenData()).toContain('\x1B[2D')
+      // why: the '? Enter value: ' prefix spans 15 columns; caret at value index 1 parks at column 16
+      expect(output.getWrittenData()).toContain('\x1B[16C')
     })
 
     it('shows the initial-value hint when the value is cleared', async () => {
@@ -311,11 +311,143 @@ describe('text', () => {
       input.enqueueKeys([Key.Backspace, Key.Backspace, Key.Backspace, Key.Enter])
       await promise
 
-      // why: clearing the value repaints the dim hint and seeks the cursor over its length
+      // why: clearing the value repaints the dim hint and parks the caret before it
       const data = output.getWrittenData()
 
       expect(data).toContain('\x1B[2m') // why: dim ANSI for the hint
-      expect(data).toContain('\x1B[3D') // why: cursorLeft(3) over the hint
+      expect(data).toContain('\x1B[15C') // why: caret parked at the end of the 15-column prefix
+    })
+  })
+
+  describe('paste', () => {
+    it('inserts a multi-character chunk as pasted text', async () => {
+      const config = createConfig()
+      const promise = text(config)
+
+      input.enqueueKeys(['hello world', Key.Enter])
+
+      const result = await promise
+
+      expect(result.result).toBe(PromptResult.Submitted)
+      expect(result.value).toBe('hello world')
+    })
+
+    it('inserts bracketed paste content accumulated across chunks', async () => {
+      const config = createConfig()
+      const promise = text(config)
+
+      input.enqueueKeys(['\x1B[200~pasted ', 'text\x1B[201~', Key.Enter])
+
+      const result = await promise
+
+      expect(result.value).toBe('pasted text')
+    })
+
+    it('collapses newline runs in pasted text into single spaces', async () => {
+      const config = createConfig()
+      const promise = text(config)
+
+      input.enqueueKeys(['\x1B[200~line1\r\nline2\nline3\x1B[201~', Key.Enter])
+
+      const result = await promise
+
+      expect(result.value).toBe('line1 line2 line3')
+    })
+
+    it('never submits from a paste containing a newline', async () => {
+      const config = createConfig()
+      const promise = text(config)
+
+      // why: the embedded carriage return must not act as Enter; only the explicit Enter afterwards submits
+      input.enqueueKeys(['first\rsecond', Key.Enter])
+
+      const result = await promise
+
+      expect(result.value).toBe('first second')
+    })
+
+    it('strips control characters from pasted text', async () => {
+      const config = createConfig()
+      const promise = text(config)
+
+      input.enqueueKeys(['\x1B[200~ab\x07cd\x1B[201~', Key.Enter])
+
+      const result = await promise
+
+      expect(result.value).toBe('abcd')
+    })
+
+    it('inserts pasted text at the cursor position', async () => {
+      const config = createConfig()
+      const promise = text(config)
+
+      input.enqueueKeys(['a', 'b', Key.Left, '\x1B[200~XY\x1B[201~', Key.Enter])
+
+      const result = await promise
+
+      expect(result.value).toBe('aXYb')
+    })
+
+    it('ignores a paste that sanitizes to nothing', async () => {
+      const config = createConfig()
+      const promise = text(config)
+
+      input.enqueueKeys(['\x1B[200~\x07\x1B[201~', 'z', Key.Enter])
+
+      const result = await promise
+
+      expect(result.value).toBe('z')
+    })
+  })
+
+  describe('resize', () => {
+    it('repaints the current value when the terminal resizes', async () => {
+      output.columns = 80
+      const config = createConfig()
+      const promise = text(config)
+
+      input.enqueueKeys(['a', 'b'])
+      await new Promise((resolve) => setImmediate(resolve))
+      await new Promise((resolve) => setImmediate(resolve))
+      await new Promise((resolve) => setImmediate(resolve))
+
+      const before = output.getWrittenData().length
+      output.columns = 40
+      output.emit('resize')
+      await new Promise((resolve) => setImmediate(resolve))
+
+      // why: the repaint after resize re-renders the preserved value
+      expect(output.getWrittenData().slice(before)).toContain('ab')
+
+      input.enqueueKeys([Key.Enter])
+
+      const result = await promise
+
+      expect(result.value).toBe('ab')
+    })
+
+    it('preserves a validation error across a resize', async () => {
+      const config = createConfig({
+        validate: (value) => (value.length < 3 ? 'Too short' : undefined),
+      })
+      const promise = text(config)
+
+      input.enqueueKeys(['a', Key.Enter])
+      await new Promise((resolve) => setImmediate(resolve))
+      await new Promise((resolve) => setImmediate(resolve))
+      await new Promise((resolve) => setImmediate(resolve))
+
+      const before = output.getWrittenData().length
+      output.emit('resize')
+      await new Promise((resolve) => setImmediate(resolve))
+
+      expect(output.getWrittenData().slice(before)).toContain('Too short')
+
+      input.enqueueKeys(['b', 'c', Key.Enter])
+
+      const result = await promise
+
+      expect(result.value).toBe('abc')
     })
   })
 
