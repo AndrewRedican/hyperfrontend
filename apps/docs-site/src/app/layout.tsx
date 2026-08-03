@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from 'next'
+import { JsonLd } from '@/components/json-ld'
 import { ThemeProvider } from '@/components/theme-provider'
 import '@/lib/dev-logger'
 import { DEFAULT_OG_IMAGE, DEFAULT_TWITTER_IMAGE } from '@/lib/metadata'
@@ -66,6 +67,19 @@ export default function RootLayout({ children }: RootLayoutProps) {
         <a href="#main-content" className="skip-link">
           Skip to content
         </a>
+        <JsonLd
+          data={{
+            '@context': 'https://schema.org',
+            '@type': 'SoftwareApplication',
+            name: 'HyperFrontend',
+            url: SITE_URL,
+            description:
+              'A hybrid micro-frontend pattern to embed live web applications with communication protocols, lifecycle, and contract standards.',
+            applicationCategory: 'DeveloperApplication',
+            operatingSystem: 'Web',
+            offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' },
+          }}
+        />
         <ThemeProvider>{children}</ThemeProvider>
       </body>
     </html>
