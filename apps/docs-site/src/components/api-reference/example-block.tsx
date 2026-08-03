@@ -10,14 +10,42 @@ interface ExampleBlockProps {
   label?: string
 }
 
+/**
+ * A syntax-highlighted example snippet with copy-to-clipboard support.
+ *
+ * Highlighting uses the same dual-theme Shiki setup as the rest of the site
+ * (github-light / github-dark selected by the `.dark` class). The highlighter
+ * is loaded lazily on the client; until it resolves, the raw code renders in a
+ * plain block with matching dimensions so there is no layout shift.
+ * @param props - Component props.
+ * @param props.code - The example source, optionally wrapped in a fenced code block.
+ * @param props.label - Optional label displayed above the snippet.
+ */
 export function ExampleBlock({ code, label }: ExampleBlockProps) {
   const [copied, setCopied] = useState(false)
+  const [highlightedHtml, setHighlightedHtml] = useState('')
 
-  const cleanCode = code
-    .trim()
+  const trimmed = code.trim()
+  const language = /^```(\w+)/.exec(trimmed)?.[1] ?? 'typescript'
+  const cleanCode = trimmed
     .replace(/^```\w*\n?/, '')
     .replace(/\n?```$/, '')
     .trim()
+
+  useEffect(() => {
+    let cancelled = false
+    import('@/lib/shiki')
+      .then(({ highlightCode }) => highlightCode(cleanCode, language))
+      .then((html) => {
+        if (!cancelled) setHighlightedHtml(html)
+      })
+      .catch(() => {
+        logger.warn('Syntax highlighting failed; showing plain code')
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [cleanCode, language])
 
   useEffect(() => {
     if (copied) {
@@ -48,9 +76,16 @@ export function ExampleBlock({ code, label }: ExampleBlockProps) {
             {copied ? 'Copied!' : 'Copy'}
           </button>
         </div>
-        <pre className="p-4 bg-slate-900 text-slate-100 rounded-lg overflow-x-auto text-sm">
-          <code>{cleanCode}</code>
-        </pre>
+        {highlightedHtml ? (
+          <div
+            className="overflow-hidden rounded-lg border border-slate-200 dark:border-slate-700"
+            dangerouslySetInnerHTML={{ __html: highlightedHtml }}
+          />
+        ) : (
+          <pre className="p-4 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200 overflow-x-auto text-sm leading-relaxed">
+            <code>{cleanCode}</code>
+          </pre>
+        )}
       </div>
     </div>
   )

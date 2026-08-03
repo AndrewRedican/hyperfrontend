@@ -1,9 +1,9 @@
 import type { TypeDocOutput } from '@/components/api-reference'
-import { CopyButton, ScopedApiReference } from '@/components/api-reference'
+import { ApiLinkProvider, CopyButton, ScopedApiReference } from '@/components/api-reference'
 import { Breadcrumb } from '@/components/breadcrumb'
 import { ReadmeContent } from '@/components/readme-content'
 import { removeBadges, transformLinks } from '@/lib/content'
-import { getLibraryApi, getSubmoduleReadme } from '@/lib/docs-loader'
+import { getLibraryApi, getSubmoduleReadme, getApiLinkIndex } from '@/lib/docs-loader'
 import { markdownToHtml } from '@/lib/markdown'
 import { extractMermaidBlocks } from '@/lib/mermaid-utils'
 import Link from 'next/link'
@@ -69,7 +69,11 @@ export async function SubmoduleDocPage({ librarySlug, packageName, submodulePath
         <p className="text-sm italic text-slate-500 dark:text-slate-400 mb-6">This submodule does not yet have a written description.</p>
       )}
 
-      {apiData && <ScopedApiReference data={apiData} packageName={packageName} subpath={submodulePath} />}
+      {apiData && (
+        <ApiLinkProvider index={getApiLinkIndex(librarySlug, packageName)} currentPackage={packageName}>
+          <ScopedApiReference data={apiData} packageName={packageName} subpath={submodulePath} />
+        </ApiLinkProvider>
+      )}
     </>
   )
 }

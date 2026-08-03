@@ -1,11 +1,13 @@
 'use client'
 
+import type { TypeSegment } from './type-utils'
 import type { TypeDocNode } from './types'
 import { AnchorLink } from '../anchor-link'
+import { useTypeLinkResolver } from './api-link-context'
 import { DescriptionMarkdown } from './description-markdown'
 import { HighlightMatch } from './highlight-match'
-import { TypeLink } from './type-link'
-import { renderType, getDescription } from './type-utils'
+import { TypeLink, TypeSegmentsText } from './type-link'
+import { renderTypeSegments, getDescription } from './type-utils'
 import { ReflectionKind } from './types'
 
 interface TypeDefinitionProps {
@@ -14,6 +16,7 @@ interface TypeDefinitionProps {
 }
 
 export function TypeDefinition({ node, searchQuery = '' }: TypeDefinitionProps) {
+  const resolve = useTypeLinkResolver()
   const description = getDescription(node.comment)
   const isInterface = node.kind === ReflectionKind.Interface
   const isTypeAlias = node.kind === ReflectionKind.TypeAlias
@@ -27,7 +30,7 @@ export function TypeDefinition({ node, searchQuery = '' }: TypeDefinitionProps) 
       : 'bg-teal-100 text-teal-700 dark:bg-teal-900/50 dark:text-teal-400'
 
   return (
-    <div className="py-4 border-b border-slate-200 dark:border-slate-800 last:border-0" id={`api-${node.name}`}>
+    <div className="pt-8 pb-4 first:pt-4 border-b border-slate-200 dark:border-slate-800 last:border-0" id={`api-${node.name}`}>
       <div className="flex items-start gap-2 group">
         <AnchorLink id={`api-${node.name}`} />
         <span className={`px-2 py-0.5 text-xs font-medium rounded ${kindColor} shrink-0`}>{kindLabel}</span>
@@ -61,8 +64,8 @@ export function TypeDefinition({ node, searchQuery = '' }: TypeDefinitionProps) 
                 const propId = `api-${node.name}-prop-${property.name}`
 
                 return (
-                  <div key={property.id} id={propId} className="flex items-start gap-2 text-sm group/prop">
-                    <AnchorLink id={propId} className="opacity-0 group-hover/prop:opacity-100" />
+                  <div key={property.id} id={propId} className="flex items-start gap-2 text-sm">
+                    <AnchorLink id={propId} />
                     <code className="font-mono text-slate-900 dark:text-white">
                       {isReadonly && <span className="text-slate-400">readonly </span>}
                       {property.name}
@@ -72,7 +75,7 @@ export function TypeDefinition({ node, searchQuery = '' }: TypeDefinitionProps) 
                     <TypeLink type={property.type} />
                     {propDescription && (
                       <span className="text-slate-500 ml-2">
-                        — <DescriptionMarkdown text={propDescription} className="inline" />
+                        <DescriptionMarkdown text={propDescription} className="inline" />
                       </span>
                     )}
                   </div>
@@ -93,17 +96,25 @@ export function TypeDefinition({ node, searchQuery = '' }: TypeDefinitionProps) 
                 const sig = method.signatures?.[0]
                 if (!sig) return null
 
-                const params = sig.parameters?.map((p) => `${p.name}: ${renderType(p.type)}`).join(', ') || ''
-                const returnType = renderType(sig.type)
+                const paramSegments: TypeSegment[] = []
+                sig.parameters?.forEach((p, index) => {
+                  if (index > 0) paramSegments.push({ text: ', ' })
+                  paramSegments.push({ text: `${p.name}: ` }, ...renderTypeSegments(p.type, resolve))
+                })
+                const returnSegments = renderTypeSegments(sig.type, resolve)
                 const methodDescription = getDescription(sig.comment)
                 const methodId = `api-${node.name}-method-${method.name}`
 
                 return (
-                  <div key={method.id} id={methodId} className="text-sm group/method">
+                  <div key={method.id} id={methodId} className="text-sm">
                     <div className="flex items-start gap-2">
-                      <AnchorLink id={methodId} className="opacity-0 group-hover/method:opacity-100" />
+                      <AnchorLink id={methodId} />
                       <code className="font-mono text-slate-900 dark:text-white">
-                        {method.name}({params}): <span className="text-emerald-600 dark:text-emerald-400">{returnType}</span>
+                        {method.name}(<TypeSegmentsText segments={paramSegments} />
+                        ):{' '}
+                        <span className="text-emerald-600 dark:text-emerald-400">
+                          <TypeSegmentsText segments={returnSegments} />
+                        </span>
                       </code>
                     </div>
                     {methodDescription && <DescriptionMarkdown text={methodDescription} className="text-slate-500 ml-6 mt-1" />}

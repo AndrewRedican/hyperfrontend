@@ -23,7 +23,7 @@ This directory contains reusable composite actions for the hyperfrontend monorep
 
 **What it does**:
 
-1. Sets up Node.js version 24.13.0 (matches package.json engines)
+1. Sets up Node.js version 24.18.0 (matches package.json engines)
 2. Caches npm dependencies using `package-lock.json` hash
 3. Installs dependencies with `npm ci`
 

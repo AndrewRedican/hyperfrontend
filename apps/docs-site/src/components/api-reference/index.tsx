@@ -6,10 +6,12 @@ import { useState, useMemo, useCallback, useEffect } from 'react'
 import { values } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
 import { createSet } from '@hyperfrontend/immutable-api-utils/built-in-copy/set'
 import { useHashNavigation } from '../../hooks/use-hash-navigation'
+import { AnchorLink } from '../anchor-link'
 import { ApiSearchFilter, defaultFilters } from './api-search-filter'
 import { FunctionSignature } from './function-signature'
 import { ModuleGroupedView, hasModules } from './module-grouped-view'
 import { TypeDefinition } from './type-definition'
+import { TypeLink } from './type-link'
 import { buildNodeLookup, resolveReference } from './type-utils'
 import { ReflectionKind } from './types'
 
@@ -325,8 +327,9 @@ type VariableItemProps = { node: TypeDocNode }
 
 function VariableItem({ node }: VariableItemProps) {
   return (
-    <div className="py-4" id={`api-${node.name}`}>
-      <div className="flex items-start gap-2">
+    <div className="pt-8 pb-4 first:pt-4" id={`api-${node.name}`}>
+      <div className="flex items-start gap-2 group">
+        <AnchorLink id={`api-${node.name}`} />
         <span className="px-2 py-0.5 text-xs font-medium rounded bg-green-100 text-green-700 dark:bg-green-900/50 dark:text-green-400">
           const
         </span>
@@ -334,8 +337,7 @@ function VariableItem({ node }: VariableItemProps) {
       </div>
       {node.type && (
         <div className="mt-2 ml-16 text-sm">
-          <span className="text-slate-500">Type:</span>{' '}
-          <code className="text-emerald-600 dark:text-emerald-400 font-mono">{getTypeString(node.type)}</code>
+          <span className="text-slate-500">Type:</span> <TypeLink type={node.type} />
         </div>
       )}
       {node.defaultValue && (
@@ -346,20 +348,6 @@ function VariableItem({ node }: VariableItemProps) {
       )}
     </div>
   )
-}
-
-function getTypeString(type: TypeDocNode['type']): string {
-  if (!type) return 'unknown'
-  if (type.type === 'intrinsic' || type.type === 'reference') {
-    return type.name || 'unknown'
-  }
-  if (type.type === 'literal') {
-    return String(type.value)
-  }
-  if (type.type === 'array' && type.elementType) {
-    return `${getTypeString(type.elementType)}[]`
-  }
-  return type.type
 }
 
 interface ViewModeToggleProps {
@@ -400,7 +388,9 @@ function ViewModeToggle({ mode, onModeChange }: ViewModeToggleProps) {
   )
 }
 
+export type { ApiLinkIndex, PackageSymbolLinks } from './api-link-context'
 export type { TypeDocOutput, TypeDocNode } from './types'
+export { ApiLinkProvider } from './api-link-context'
 export { ApiSearchFilter, defaultFilters } from './api-search-filter'
 export { CopyButton } from './copy-button'
 export { ExampleBlock } from './example-block'

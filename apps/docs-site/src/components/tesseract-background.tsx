@@ -51,6 +51,14 @@ type Intensity = 'subtle' | 'normal'
  */
 type Flavour = 'dive' | 'tunnel'
 
+/** Per-theme `r, g, b` triples for the lattice's ambient accent tint. */
+export type AccentRGB = {
+  /** Accent triple used while the light theme is resolved. */
+  light: string
+  /** Accent triple used while the dark theme is resolved. */
+  dark: string
+}
+
 /** Props for {@link TesseractBackground} */
 type TesseractBackgroundProps = {
   /** Extra classes for the positioning wrapper. Defaults to filling the parent. */
@@ -67,10 +75,17 @@ type TesseractBackgroundProps = {
    * holds a static depth while still rotating gently.
    */
   dive?: boolean
-  /** When true the surfaces track the cursor for parallax and hover highlight. */
+  /** When true the cursor steers the viewing angle and hover-highlights nearby surfaces. */
   interactive?: boolean
   /** When true a subtle angled purple-rain layer falls in front of and behind the lattice. */
   rain?: boolean
+  /**
+   * Per-theme `r, g, b` accent triples the lattice hue eases toward — pass the
+   * ambient hue of whatever the backdrop sits behind (e.g. the staged demo)
+   * and the strokes, nodes, and facets recolour to match. Omitted, the lattice
+   * holds its default cyan (dark) / blue (light) palette.
+   */
+  accent?: AccentRGB
 }
 
 /**
@@ -87,6 +102,7 @@ type TesseractBackgroundProps = {
  * @param props.dive
  * @param props.interactive
  * @param props.rain
+ * @param props.accent
  * @returns A positioned canvas element.
  */
 export function TesseractBackground({
@@ -95,11 +111,21 @@ export function TesseractBackground({
   dive = false,
   interactive = true,
   rain = true,
+  accent,
 }: TesseractBackgroundProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   // why: the active flavour lives in a ref so a theme/prop change that restarts the effect doesn't snap the backdrop back to the default renderer mid-view.
   const flavourRef = useRef<Flavour>('dive')
+  // why: the accent rides a ref so an accent change retints the running scene in place instead of restarting the effect (which would snap angles, rain, and dive depth back to zero).
+  const accentRef = useRef(accent)
+  // why: under reduced motion the loop is parked on one held frame; the accent effect calls this to repaint that frame when the hue changes.
+  const redrawRef = useRef<(() => void) | null>(null)
   const { resolvedTheme } = useTheme()
+
+  useEffect(() => {
+    accentRef.current = accent
+    redrawRef.current?.()
+  }, [accent])
 
   useEffect(() => {
     const canvas = canvasRef.current
@@ -109,10 +135,34 @@ export function TesseractBackground({
 
     const isDark = resolvedTheme === 'dark'
     const palette = isDark ? darkPalette : lightPalette
+    const parseRGB = (triple: string): [number, number, number] => {
+      const parts = triple.split(',')
+      return [Number(parts[0]), Number(parts[1]), Number(parts[2])]
+    }
+    const baseHue = parseRGB(palette.line)
+    const accentTarget = () => {
+      const active = accentRef.current
+      return active ? parseRGB(isDark ? active.dark : active.light) : baseHue
+    }
+    // how: the lattice hue starts on-target and eases toward the active accent each frame, so an accent change reads as a gradual ambient recolour rather than a snap.
+    let [hueR, hueG, hueB] = accentTarget()
+    // how: positive t lifts a channel toward white, negative sinks it toward black — highlights brighten in dark mode and deepen in light mode like the static palettes did.
+    const shadeChannel = (value: number, t: number) => (t >= 0 ? value + (255 - value) * t : value * (1 + t))
+    let lineRGB = ''
+    let lineHiRGB = ''
+    let nodeHiRGB = ''
+    const refreshStrokes = () => {
+      lineRGB = `${floor(hueR)}, ${floor(hueG)}, ${floor(hueB)}`
+      const hi = isDark ? 0.4 : -0.15
+      lineHiRGB = `${floor(shadeChannel(hueR, hi))}, ${floor(shadeChannel(hueG, hi))}, ${floor(shadeChannel(hueB, hi))}`
+      const nodeHi = isDark ? 0.62 : -0.15
+      nodeHiRGB = `${floor(shadeChannel(hueR, nodeHi))}, ${floor(shadeChannel(hueG, nodeHi))}, ${floor(shadeChannel(hueB, nodeHi))}`
+    }
+    refreshStrokes()
     // why: 0.85 factor lifts overall transparency ~15% so the immersive lattice stays a backdrop.
     const intensityScale = (intensity === 'subtle' ? 0.55 : 1) * 0.85
-    // why: the whole structure's centre eases toward the cursor's resting point (a fraction of the way) rather than depth-skewing every vertex around a pinned viewport origin.
-    const followStrength = interactive ? 0.6 : 0
+    // why: the cursor steers the viewing angle instead of dragging the structure — the lattice stays centred while up/down/left/right tilt our perspective around it, on top of the tesseract's own independent fold. ±0.42rad (~24°) at the canvas edges.
+    const LOOK_RANGE = 0.42
     const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
 
     let width = 0
@@ -133,11 +183,11 @@ export function TesseractBackground({
     }
     measure()
 
-    // how: smoothed centre offset that eases toward the cursor, plus the raw cursor position for hover focus.
-    let mouseX = 0
-    let mouseY = 0
-    let targetMouseX = 0
-    let targetMouseY = 0
+    // how: smoothed view angles that ease toward the cursor-set target, plus the raw cursor position for hover focus.
+    let lookYaw = 0
+    let lookPitch = 0
+    let targetLookYaw = 0
+    let targetLookPitch = 0
     let localMouseX = -9999
     let localMouseY = -9999
 
@@ -159,8 +209,11 @@ export function TesseractBackground({
     const onMouseMove = (event: MouseEvent) => {
       localMouseX = event.clientX - rectLeft
       localMouseY = event.clientY - rectTop
-      targetMouseX = (localMouseX - width / 2) * followStrength
-      targetMouseY = (localMouseY - height / 2) * followStrength
+      // how: normalised cursor offset from centre maps left/right to yaw and up/down to pitch, tilting the side under the cursor toward the viewer.
+      const nx = max(-0.5, min(0.5, localMouseX / width - 0.5))
+      const ny = max(-0.5, min(0.5, localMouseY / height - 0.5))
+      targetLookYaw = nx * 2 * LOOK_RANGE
+      targetLookPitch = ny * 2 * LOOK_RANGE
     }
 
     const edgeFade = (x: number, y: number) => {
@@ -187,6 +240,13 @@ export function TesseractBackground({
       c = cos(angleY)
       s = sin(angleY)
       ;[x, z] = [x * c - z * s, x * s + z * c]
+      // how: the cursor-driven view tilt turns the already-folded structure about its own centre — yaw about the vertical axis, then pitch about the horizontal — so perspective moves while the lattice stays put.
+      c = cos(lookYaw)
+      s = sin(lookYaw)
+      ;[x, z] = [x * c - z * s, x * s + z * c]
+      c = cos(lookPitch)
+      s = sin(lookPitch)
+      ;[y, z] = [y * c - z * s, y * s + z * c]
       return { x, y, z, w }
     }
 
@@ -442,11 +502,10 @@ export function TesseractBackground({
       ctx.lineTo(p2.x, p2.y)
       ctx.lineTo(p3.x, p3.y)
       ctx.closePath()
-      // how: lit facets trend toward bright cyan-white (dark) or saturated blue (light).
-      const shade = floor(light * 40)
-      ctx.fillStyle = isDark
-        ? `rgba(${shade}, ${180 + shade}, ${210 + shade}, ${alpha})`
-        : `rgba(${37 + shade}, ${99 + shade}, 235, ${alpha})`
+      // how: lit facets brighten from the current lattice hue toward white, so fills follow the ambient accent in both themes.
+      const shade = light * 45
+      const base = isDark ? 0.88 : 1
+      ctx.fillStyle = `rgba(${floor(min(255, hueR * base + shade))}, ${floor(min(255, hueG * base + shade))}, ${floor(min(255, hueB * base + shade))}, ${alpha})`
       ctx.fill()
     }
 
@@ -465,7 +524,7 @@ export function TesseractBackground({
       ctx.beginPath()
       ctx.moveTo(p1.x, p1.y)
       ctx.lineTo(p2.x, p2.y)
-      ctx.strokeStyle = highlight > 0 ? `rgba(${palette.lineHi}, ${alpha})` : `rgba(${palette.line}, ${alpha})`
+      ctx.strokeStyle = highlight > 0 ? `rgba(${lineHiRGB}, ${alpha})` : `rgba(${lineRGB}, ${alpha})`
       ctx.lineWidth = highlight > 0 ? 1.3 : 0.9
       ctx.stroke()
     }
@@ -481,7 +540,7 @@ export function TesseractBackground({
       alpha = min(1, alpha + proximity)
       ctx.beginPath()
       ctx.arc(p.x, p.y, proximity > 0 ? 1.4 : 0.9, 0, PI * 2)
-      ctx.fillStyle = proximity > 0 ? `rgba(${palette.nodeHi}, ${alpha})` : `rgba(${palette.node}, ${alpha})`
+      ctx.fillStyle = proximity > 0 ? `rgba(${nodeHiRGB}, ${alpha})` : `rgba(${lineRGB}, ${alpha})`
       ctx.fill()
     }
 
@@ -496,8 +555,8 @@ export function TesseractBackground({
         const y3 = r.y * factor4D
         const z3 = r.z * factor4D
         const factor2D = 1 / (CAMERA_3D - z3)
-        const x = x3 * factor2D * finalScale + width / 2 + mouseX
-        const y = y3 * factor2D * finalScale + height / 2 + mouseY
+        const x = x3 * factor2D * finalScale + width / 2
+        const y = y3 * factor2D * finalScale + height / 2
         projected.push({ x, y, x3, y3, z3, depth: z3, fade: edgeFade(x, y) })
       }
 
@@ -541,6 +600,13 @@ export function TesseractBackground({
       c = cos(ay)
       s = sin(ay)
       ;[x, z] = [x * c - z * s, x * s + z * c]
+      // how: the same cursor-driven view tilt the 4D renderer applies, so both flavours share one perspective.
+      c = cos(lookYaw)
+      s = sin(lookYaw)
+      ;[x, z] = [x * c - z * s, x * s + z * c]
+      c = cos(lookPitch)
+      s = sin(lookPitch)
+      ;[y, z] = [y * c - z * s, y * s + z * c]
       return { x, y, z }
     }
 
@@ -554,8 +620,8 @@ export function TesseractBackground({
       const verts: Array<ProjectedVertex> = []
       for (const v of cubeVertices3D) {
         const r = rotate3D(v, twist, angleX, angleY)
-        const x = r.x * scale + width / 2 + mouseX
-        const y = r.y * scale + height / 2 + mouseY
+        const x = r.x * scale + width / 2
+        const y = r.y * scale + height / 2
         // why: a unit cube's rotated z spans ±√3; normalising keeps depth shading in the same [-1,1] band the static renderer expects.
         verts.push({ x, y, x3: r.x, y3: r.y, z3: r.z, depth: r.z / 1.7320508, fade: edgeFade(x, y) })
       }
@@ -638,14 +704,28 @@ export function TesseractBackground({
 
     if (prefersReducedMotion) {
       renderFrame()
-      return
+      // why: with the loop parked on a single held frame, an accent change snaps the hue and repaints by hand.
+      redrawRef.current = () => {
+        ;[hueR, hueG, hueB] = accentTarget()
+        refreshStrokes()
+        renderFrame()
+      }
+      return () => {
+        redrawRef.current = null
+      }
     }
 
     let frameId = 0
     const animate = () => {
-      // how: low lerp factor makes the centre drift slowly toward the cursor's resting position.
-      mouseX += (targetMouseX - mouseX) * 0.012
-      mouseY += (targetMouseY - mouseY) * 0.012
+      // how: the view angle glides toward where the cursor points; the low lerp factor keeps the tilt languid rather than twitchy.
+      lookYaw += (targetLookYaw - lookYaw) * 0.04
+      lookPitch += (targetLookPitch - lookPitch) * 0.04
+      // how: the lattice hue eases toward the active accent slowly enough to read as ambience shifting.
+      const [targetR, targetG, targetB] = accentTarget()
+      hueR += (targetR - hueR) * 0.02
+      hueG += (targetG - hueG) * 0.02
+      hueB += (targetB - hueB) * 0.02
+      refreshStrokes()
       // why: rotation eased 15% slower (×0.85) for a calmer drift; dive runs 15% faster (×1.15).
       angleX += 0.000935
       angleY += 0.001275

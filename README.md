@@ -234,14 +234,16 @@ This starts one static server per app plus an in-browser debug UI for inspecting
 
 ## Live Demos
 
-| Demo                                                    | Description                |
-| ------------------------------------------------------- | -------------------------- |
-| [Chess](https://hyperfrontend.dev/demo/chess)           | Chess game demonstration   |
-| [Clock](https://hyperfrontend.dev/demo/clock)           | Clock demonstration        |
-| [Events](https://hyperfrontend.dev/demo/events)         | Events demonstration       |
-| [File Share](https://hyperfrontend.dev/demo/file-share) | File sharing demonstration |
-| [Heartbeat](https://hyperfrontend.dev/demo/heartbeat)   | Heartbeat demonstration    |
-| [Views](https://hyperfrontend.dev/demo/views)           | Views demonstration        |
+Browse the interactive gallery at [hyperfrontend.dev/demos](https://www.hyperfrontend.dev/demos/) — each link below opens the carousel directly on that demo.
+
+| Demo                                                          | Description                                                                                     |
+| ------------------------------------------------------------- | ----------------------------------------------------------------------------------------------- |
+| [Clock](https://www.hyperfrontend.dev/demos/#clock)           | A Vue 3 timepiece in a React host across a cross-site boundary — every flip is contract traffic |
+| [Chess](https://www.hyperfrontend.dev/demos/#chess)           | Two boards, one game — competing features negotiating shared state through the host             |
+| [Events](https://www.hyperfrontend.dev/demos/#events)         | A host orchestrating a swarm of event producers and consumers across origins                    |
+| [File Share](https://www.hyperfrontend.dev/demos/#file-share) | Moving real payloads across the boundary — chunking, progress, and back-pressure                |
+| [Heartbeat](https://www.hyperfrontend.dev/demos/#heartbeat)   | Liveness, latency, and what a host should do when a feature stops answering                     |
+| [Views](https://www.hyperfrontend.dev/demos/#views)           | One feature, four display modes — embedded, dialog, popup, and standalone                       |
 
 ## Main Packages
 

@@ -1,3 +1,4 @@
+import type { AccentRGB } from '@/components/tesseract-background'
 import type { DemoManifestEntry } from '@/lib/demo-manifest'
 import { BOUNDARY_LABELS } from '@/lib/demo-manifest'
 
@@ -13,7 +14,7 @@ export interface DemoFallbackCardProps {
 }
 
 /** The per-demo accent classes, one distinct hue per demo. */
-interface DemoTheme {
+export interface DemoTheme {
   /** Card surface gradient and border. */
   surface: string
   /** Icon chip colors. */
@@ -22,6 +23,14 @@ interface DemoTheme {
   pill: string
   /** Pulsing status-dot color. */
   dot: string
+  /** Wide, soft ambient halo projected behind the focused card. */
+  glowOuter: string
+  /** Tighter, brighter ambient core behind the focused card. */
+  glowCore: string
+  /** Canvas `r, g, b` triples (per theme) the hero lattice tints toward while this demo holds the stage. */
+  accent: AccentRGB
+  /** Progress-ring `r, g, b` triples (per theme) — a brighter shade of the accent so the sweep pops off the frame. */
+  ring: AccentRGB
 }
 
 /** One theme per demo slug; unknown slugs fall back to slate. */
@@ -31,36 +40,60 @@ const THEMES: Record<string, DemoTheme> = {
     chip: 'bg-amber-100 text-amber-600 dark:bg-amber-900/40 dark:text-amber-400',
     pill: 'bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300',
     dot: 'bg-amber-500',
+    glowOuter: 'bg-amber-400/25 dark:bg-amber-500/20',
+    glowCore: 'bg-amber-300/40 dark:bg-amber-400/25',
+    accent: { light: '217, 119, 6', dark: '251, 191, 36' },
+    ring: { light: '245, 158, 11', dark: '252, 211, 77' },
   },
   chess: {
     surface: 'border-violet-200 from-violet-50 to-violet-100 dark:border-violet-900 dark:from-violet-950 dark:to-slate-950',
     chip: 'bg-violet-100 text-violet-600 dark:bg-violet-900/40 dark:text-violet-400',
     pill: 'bg-violet-100 text-violet-700 dark:bg-violet-900/40 dark:text-violet-300',
     dot: 'bg-violet-500',
+    glowOuter: 'bg-violet-400/25 dark:bg-violet-500/20',
+    glowCore: 'bg-violet-300/40 dark:bg-violet-400/25',
+    accent: { light: '124, 58, 237', dark: '167, 139, 250' },
+    ring: { light: '139, 92, 246', dark: '196, 181, 253' },
   },
   events: {
     surface: 'border-sky-200 from-sky-50 to-sky-100 dark:border-sky-900 dark:from-sky-950 dark:to-slate-950',
     chip: 'bg-sky-100 text-sky-600 dark:bg-sky-900/40 dark:text-sky-400',
     pill: 'bg-sky-100 text-sky-700 dark:bg-sky-900/40 dark:text-sky-300',
     dot: 'bg-sky-500',
+    glowOuter: 'bg-sky-400/25 dark:bg-sky-500/20',
+    glowCore: 'bg-sky-300/40 dark:bg-sky-400/25',
+    accent: { light: '2, 132, 199', dark: '56, 189, 248' },
+    ring: { light: '14, 165, 233', dark: '125, 211, 252' },
   },
   'file-share': {
     surface: 'border-emerald-200 from-emerald-50 to-emerald-100 dark:border-emerald-900 dark:from-emerald-950 dark:to-slate-950',
     chip: 'bg-emerald-100 text-emerald-600 dark:bg-emerald-900/40 dark:text-emerald-400',
     pill: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300',
     dot: 'bg-emerald-500',
+    glowOuter: 'bg-emerald-400/25 dark:bg-emerald-500/20',
+    glowCore: 'bg-emerald-300/40 dark:bg-emerald-400/25',
+    accent: { light: '5, 150, 105', dark: '52, 211, 153' },
+    ring: { light: '16, 185, 129', dark: '110, 231, 183' },
   },
   heartbeat: {
     surface: 'border-red-200 from-red-50 to-red-100 dark:border-red-900 dark:from-red-950 dark:to-slate-950',
     chip: 'bg-red-100 text-red-600 dark:bg-red-900/40 dark:text-red-400',
     pill: 'bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300',
     dot: 'bg-red-500',
+    glowOuter: 'bg-red-400/25 dark:bg-red-500/20',
+    glowCore: 'bg-red-300/40 dark:bg-red-400/25',
+    accent: { light: '220, 38, 38', dark: '248, 113, 113' },
+    ring: { light: '239, 68, 68', dark: '252, 165, 165' },
   },
   views: {
     surface: 'border-indigo-200 from-indigo-50 to-indigo-100 dark:border-indigo-900 dark:from-indigo-950 dark:to-slate-950',
     chip: 'bg-indigo-100 text-indigo-600 dark:bg-indigo-900/40 dark:text-indigo-400',
     pill: 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/40 dark:text-indigo-300',
     dot: 'bg-indigo-500',
+    glowOuter: 'bg-indigo-400/25 dark:bg-indigo-500/20',
+    glowCore: 'bg-indigo-300/40 dark:bg-indigo-400/25',
+    accent: { light: '79, 70, 229', dark: '129, 140, 248' },
+    ring: { light: '99, 102, 241', dark: '165, 180, 252' },
   },
 }
 
@@ -70,6 +103,20 @@ const DEFAULT_THEME: DemoTheme = {
   chip: 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400',
   pill: 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300',
   dot: 'bg-slate-400',
+  glowOuter: 'bg-slate-400/20 dark:bg-slate-500/15',
+  glowCore: 'bg-slate-300/30 dark:bg-slate-400/20',
+  accent: { light: '71, 85, 105', dark: '148, 163, 184' },
+  ring: { light: '100, 116, 139', dark: '203, 213, 225' },
+}
+
+/**
+ * Resolves the accent theme for a demo slug, falling back to slate for slugs
+ * without a dedicated entry.
+ * @param slug - The demo slug to theme.
+ * @returns The demo's accent theme.
+ */
+export function getDemoTheme(slug: string): DemoTheme {
+  return THEMES[slug] ?? DEFAULT_THEME
 }
 
 /** Status-pill copy per fallback status. */
@@ -121,7 +168,7 @@ const FALLBACK_ICON_PATH =
  * @param root0.status
  */
 export function DemoFallbackCard({ entry, status = 'planned' }: DemoFallbackCardProps) {
-  const theme = THEMES[entry.slug] ?? DEFAULT_THEME
+  const theme = getDemoTheme(entry.slug)
   return (
     <div className={`relative h-full w-full overflow-hidden rounded-2xl border bg-gradient-to-br opacity-80 ${theme.surface}`}>
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_1px_1px,rgba(0,0,0,0.03)_1px,transparent_0)] bg-[length:24px_24px] dark:bg-[radial-gradient(circle_at_1px_1px,rgba(255,255,255,0.03)_1px,transparent_0)]" />

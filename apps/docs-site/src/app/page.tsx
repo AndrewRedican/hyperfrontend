@@ -1,10 +1,6 @@
-import { DemoShowcase } from '@/components/demos/demo-showcase'
 import { Footer } from '@/components/footer'
 import { Header } from '@/components/header'
-import { ScrollToExplore } from '@/components/scroll-to-explore'
-import { TesseractBackground } from '@/components/tesseract-background'
-import { ValueProposition } from '@/components/value-proposition'
-import { DEMO_MANIFEST } from '@/lib/demo-manifest'
+import { LandingHero } from '@/components/landing-hero'
 
 /**
  * Featured package tile shown on the landing page: display name, link target,
@@ -39,28 +35,7 @@ export default function HomePage() {
       <Header />
       <main id="main-content" className="flex-1">
         {/* Hero Section - 50/50 Split Layout */}
-        <section className="relative min-h-[calc(100vh-4rem)] overflow-hidden bg-gradient-to-br from-slate-50 via-white to-slate-100 dark:from-slate-900 dark:via-slate-900 dark:to-slate-800">
-          {/* Subtle background pattern */}
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_1px_1px,rgba(0,0,0,0.03)_1px,transparent_0)] bg-[length:24px_24px] dark:bg-[radial-gradient(circle_at_1px_1px,rgba(255,255,255,0.03)_1px,transparent_0)]" />
-
-          {/* Composability matrix — a 4D micro-frontend lattice diving through nested layers */}
-          <TesseractBackground dive />
-
-          <div className="relative mx-auto flex h-full max-w-8xl flex-col lg:flex-row lg:items-stretch">
-            {/* Left Side - Value Proposition */}
-            <div className="flex w-full flex-col justify-center px-6 py-12 sm:px-8 lg:w-1/2 lg:px-12 lg:py-8 xl:px-16">
-              <ValueProposition />
-            </div>
-
-            {/* Right Side - Demo Showcase */}
-            <div className="flex w-full items-center justify-center border-t border-slate-200 bg-slate-100/50 px-6 py-12 dark:border-slate-700 dark:bg-slate-800/30 sm:px-8 lg:w-1/2 lg:border-l lg:border-t-0 lg:px-12 lg:py-8">
-              <DemoShowcase entries={DEMO_MANIFEST} cycleDuration={20000} />
-            </div>
-          </div>
-
-          {/* Scroll Indicator - hidden on mobile where content is stacked */}
-          <ScrollToExplore />
-        </section>
+        <LandingHero />
 
         {/* Secondary Content - Collapsed for Landing */}
         <section id="how-it-works" className="border-t border-slate-200 bg-white py-16 dark:border-slate-800 dark:bg-slate-900 lg:py-24">

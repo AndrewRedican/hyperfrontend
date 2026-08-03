@@ -2,11 +2,12 @@
 
 import type { DemoManifestEntry } from '@/lib/demo-manifest'
 import type { EmbedStatus } from './clock-embed'
+import { useTheme } from '@/components/theme-provider'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { min, pow } from '@hyperfrontend/immutable-api-utils/built-in-copy/math'
 import { cancelAnimationFrame, requestAnimationFrame } from '@hyperfrontend/immutable-api-utils/built-in-copy/timers'
 import { ClockEmbed } from './clock-embed'
-import { DemoFallbackCard } from './demo-fallback-card'
+import { DemoFallbackCard, getDemoTheme } from './demo-fallback-card'
 
 /** Snapshot taken when fast-forward begins so the easing can interpolate from that moment. */
 interface FastForwardStart {
@@ -24,6 +25,8 @@ export interface DemoShowcaseProps {
   cycleDuration?: number
   /** Milliseconds the skip fast-forward easing takes to drain the remaining ring. */
   fastForwardDuration?: number
+  /** Notified with the staged demo on mount and whenever rotation hands the stage to another demo. */
+  onActive?: (entry: DemoManifestEntry) => void
 }
 
 /**
@@ -37,22 +40,26 @@ export interface DemoShowcaseProps {
  * returning to the clock is instant and the frame never changes height.
  * Planned entries render as DOM placeholder cards. The ring and the
  * pause/skip controls paint above the content — the buttons hang half outside
- * the frame — so nothing a layer renders can ever cover them. Pausing freezes
- * the ring and holds the current demo. Under reduced motion nothing
+ * the frame — so nothing a layer renders can ever cover them. The staged
+ * demo's accent hue glows out from behind the frame, clipped to the showcase's
+ * own container, and crossfades as rotation hands the stage over. Pausing
+ * freezes the ring and holds the current demo. Under reduced motion nothing
  * auto-advances: the ring and pause disappear and the skip button becomes a
  * plain next button.
  * @param root0
  * @param root0.entries
  * @param root0.cycleDuration
  * @param root0.fastForwardDuration
+ * @param root0.onActive
  */
-export function DemoShowcase({ entries, cycleDuration = 20000, fastForwardDuration = 2000 }: DemoShowcaseProps) {
+export function DemoShowcase({ entries, cycleDuration = 20000, fastForwardDuration = 2000, onActive }: DemoShowcaseProps) {
   const [activeIndex, setActiveIndex] = useState(0)
   const [progress, setProgress] = useState(0)
   const [fastForwarding, setFastForwarding] = useState(false)
   const [paused, setPaused] = useState(false)
   const [reduced, setReduced] = useState(false)
   const [embedStatus, setEmbedStatus] = useState<EmbedStatus>('connecting')
+  const { resolvedTheme } = useTheme()
   const rafRef = useRef(0)
   const startTimeRef = useRef(0)
   const progressRef = useRef(0)
@@ -137,13 +144,28 @@ export function DemoShowcase({ entries, cycleDuration = 20000, fastForwardDurati
     return () => cancelAnimationFrame(rafRef.current)
   }, [advance, applyProgress, cycleDuration, fastForwardDuration, fastForwarding, paused, reduced])
 
+  // why: whoever hosts the showcase may tint surrounding ambience (the hero lattice) toward the staged demo; the latest-ref keeps the notification out of the rotation effect's deps.
+  const notifyActive = useRef(onActive)
+  notifyActive.current = onActive
+  useEffect(() => {
+    const entry = entries[activeIndex]
+    if (entry) {
+      notifyActive.current?.(entry)
+    }
+  }, [activeIndex, entries])
+
   const active = entries[activeIndex]
   if (!active) {
     return null
   }
 
+  // why: the ring sweeps in a brighter shade of the staged demo's accent so it reads as part of that demo's ambience rather than a foreign chrome color.
+  const ringTriples = getDemoTheme(active.slug).ring
+  const ringRGB = resolvedTheme === 'dark' ? ringTriples.dark : ringTriples.light
+
   return (
     <div className="relative flex h-full w-full items-center justify-center p-4 lg:p-8">
+      <ShowcaseAmbient entries={entries} activeIndex={activeIndex} />
       <div className="relative w-full max-w-2xl">
         <div className="absolute inset-0 z-0 rounded-2xl border border-white/30 dark:border-white/20" />
         <div className="relative z-10 flex flex-col items-center justify-center gap-4 rounded-2xl bg-slate-900/5 p-6 backdrop-blur-sm dark:bg-white/5 lg:p-8">
@@ -185,7 +207,7 @@ export function DemoShowcase({ entries, cycleDuration = 20000, fastForwardDurati
             )}
           </div>
         </div>
-        {reduced ? null : <ProgressBorder progress={progress} />}
+        {reduced ? null : <ProgressBorder progress={progress} color={ringRGB} />}
         <div className="absolute -bottom-4 left-1/2 z-30 flex -translate-x-1/2 items-center gap-2">
           {reduced ? null : (
             <button
@@ -214,6 +236,46 @@ export function DemoShowcase({ entries, cycleDuration = 20000, fastForwardDurati
   )
 }
 
+/** Props for {@link ShowcaseAmbient}. */
+interface ShowcaseAmbientProps {
+  /** The demo albums in rotation, in order. */
+  entries: readonly DemoManifestEntry[]
+  /** Index of the demo currently holding the stage. */
+  activeIndex: number
+}
+
+/**
+ * The ambient light behind the showcase frame: each demo's accent hue glows
+ * out from the stage centre and crossfades as rotation hands the stage to the
+ * next demo — the landing-page cousin of the demos-page deck glow, clipped to
+ * the showcase's own container so it never bleeds into the rest of the hero.
+ * @param root0
+ * @param root0.entries
+ * @param root0.activeIndex
+ */
+function ShowcaseAmbient({ entries, activeIndex }: ShowcaseAmbientProps) {
+  return (
+    <div aria-hidden className="pointer-events-none absolute inset-0 overflow-hidden">
+      {entries.map((entry, index) => {
+        const theme = getDemoTheme(entry.slug)
+        return (
+          <div
+            key={entry.slug}
+            className={`absolute left-1/2 top-1/2 transition-opacity duration-1000 ${index === activeIndex ? 'opacity-100' : 'opacity-0'}`}
+          >
+            <div
+              className={`absolute h-[24rem] w-[24rem] -translate-x-1/2 -translate-y-1/2 rounded-full blur-3xl sm:h-[28rem] sm:w-[36rem] ${theme.glowOuter}`}
+            />
+            <div
+              className={`absolute h-56 w-56 -translate-x-1/2 -translate-y-1/2 rounded-full blur-2xl sm:h-72 sm:w-72 ${theme.glowCore}`}
+            />
+          </div>
+        )
+      })}
+    </div>
+  )
+}
+
 /** Shared styling for the showcase's floating control buttons. */
 const CONTROL_BUTTON_CLASSES =
   'rounded-full bg-white/10 p-2 text-slate-500 backdrop-blur-sm transition-all hover:bg-white/20 hover:text-slate-700 dark:bg-slate-800/50 dark:text-slate-400 dark:hover:bg-slate-700/50 dark:hover:text-slate-200'
@@ -231,16 +293,20 @@ function AllDemosLink() {
 interface ProgressBorderProps {
   /** Cycle progress percentage, 0–100. */
   progress: number
+  /** Sweep colour as an `r, g, b` triple — a brighter shade of the staged demo's accent. */
+  color: string
 }
 
 /**
- * The conic-gradient ring sweeping around the frame. XOR-masking two stacked
- * fills leaves only the 2px border edge painted, and pointer events pass
- * straight through, so the ring sits above the content without blocking it.
+ * The conic-gradient ring sweeping around the frame in the staged demo's hue.
+ * XOR-masking two stacked fills leaves only the 2px border edge painted, and
+ * pointer events pass straight through, so the ring sits above the content
+ * without blocking it.
  * @param root0
  * @param root0.progress
+ * @param root0.color
  */
-function ProgressBorder({ progress }: ProgressBorderProps) {
+function ProgressBorder({ progress, color }: ProgressBorderProps) {
   if (progress <= 0) {
     return null
   }
@@ -249,7 +315,7 @@ function ProgressBorder({ progress }: ProgressBorderProps) {
     <div
       className="pointer-events-none absolute inset-0 z-20 rounded-2xl"
       style={{
-        background: `conic-gradient(from -90deg, #6366f1 ${angle}deg, transparent ${angle}deg)`,
+        background: `conic-gradient(from -90deg, rgb(${color}) ${angle}deg, transparent ${angle}deg)`,
         WebkitMask: 'linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)',
         WebkitMaskComposite: 'xor',
         mask: 'linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)',

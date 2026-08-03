@@ -4,6 +4,7 @@ import type { TypeDocOutput, TypeDocNode } from './types'
 import { useState, useMemo, useEffect, useCallback, useRef } from 'react'
 import { createSet } from '@hyperfrontend/immutable-api-utils/built-in-copy/set'
 import { requestAnimationFrame, setTimeout } from '@hyperfrontend/immutable-api-utils/built-in-copy/timers'
+import { AnchorLink } from '../anchor-link'
 import { CopyButton } from './copy-button'
 import { FunctionSignature } from './function-signature'
 import { HighlightMatch } from './highlight-match'
@@ -480,16 +481,19 @@ function NamespaceSection({ node, searchQuery = '' }: NamespaceSectionProps) {
   const childCount = node.children?.length ?? 0
 
   return (
-    <div className="py-3 first:pt-0" id={`api-${node.name}`}>
-      <button onClick={() => setIsExpanded(!isExpanded)} className="w-full flex items-center justify-between text-left group">
-        <div className="flex items-center gap-2">
-          <ChevronIcon expanded={isExpanded} />
-          <code className="text-sm font-semibold text-slate-900 dark:text-white font-mono">
-            <HighlightMatch text={node.name} query={searchQuery} />
-          </code>
-          <span className="text-xs text-slate-500 dark:text-slate-400">({childCount} exports)</span>
-        </div>
-      </button>
+    <div className="pt-8 pb-3 first:pt-0" id={`api-${node.name}`}>
+      <div className="flex items-center gap-2 group">
+        <AnchorLink id={`api-${node.name}`} />
+        <button onClick={() => setIsExpanded(!isExpanded)} className="flex-1 flex items-center justify-between text-left">
+          <div className="flex items-center gap-2">
+            <ChevronIcon expanded={isExpanded} />
+            <code className="text-sm font-semibold text-slate-900 dark:text-white font-mono">
+              <HighlightMatch text={node.name} query={searchQuery} />
+            </code>
+            <span className="text-xs text-slate-500 dark:text-slate-400">({childCount} exports)</span>
+          </div>
+        </button>
+      </div>
 
       {isExpanded && node.children && (
         <div className="mt-3 ml-6 pl-4 border-l-2 border-slate-200 dark:border-slate-700">

@@ -21,7 +21,7 @@ Phased plans with complete file discovery and verification commands.
 | What         | Where                            |
 | ------------ | -------------------------------- |
 | Plans        | `roadmap/*.md`                   |
-| Coding skill | `.github/skills/coding/SKILL.md` |
+| Coding skill | `.claude/skills/coding/SKILL.md` |
 
 ---
 

@@ -1,4 +1,5 @@
 import type { TypeDocNode, TypeDocOutput } from './types'
+import { AnchorLink } from '../anchor-link'
 import { FunctionSignature } from './function-signature'
 import { TypeDefinition } from './type-definition'
 import { buildNodeLookup, resolveReference } from './type-utils'
@@ -75,9 +76,12 @@ function NamespaceListing({ node }: NamespaceListingProps) {
   if (!node.children || node.children.length === 0) return null
 
   return (
-    <div className="py-3 first:pt-0" id={`api-${node.name}`}>
-      <code className="text-sm font-semibold text-slate-900 dark:text-white font-mono">{node.name}</code>
-      <span className="ml-2 text-xs text-slate-500 dark:text-slate-400">({node.children.length} exports)</span>
+    <div className="pt-8 pb-3 first:pt-0" id={`api-${node.name}`}>
+      <div className="flex items-center gap-2 group">
+        <AnchorLink id={`api-${node.name}`} />
+        <code className="text-sm font-semibold text-slate-900 dark:text-white font-mono">{node.name}</code>
+        <span className="text-xs text-slate-500 dark:text-slate-400">({node.children.length} exports)</span>
+      </div>
       <div className="mt-3 ml-4 pl-4 border-l-2 border-slate-200 dark:border-slate-700">
         {node.children.map((child) =>
           child.kind === ReflectionKind.Function ? (

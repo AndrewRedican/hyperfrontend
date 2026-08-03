@@ -126,10 +126,8 @@ module.exports = [
             // each vendored demo shell here
             '@hyperfrontend/demo-clock-shell',
             // Third-party dependencies used by docs-site
-            'clsx',
             'mermaid',
             'next',
-            'next-themes',
             'react',
             'react-dom',
             '@tailwindcss/typography',

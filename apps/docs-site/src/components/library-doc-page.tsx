@@ -1,10 +1,10 @@
 import type { TypeDocOutput } from '@/components/api-reference'
-import { ApiReference } from '@/components/api-reference'
+import { ApiLinkProvider, ApiReference } from '@/components/api-reference'
 import { Breadcrumb } from '@/components/breadcrumb'
 import { CodeBlock } from '@/components/code-block'
 import { H2 } from '@/components/heading-with-anchor'
 import { removeBadges, transformLinks } from '@/lib/content'
-import { getLibraryReadme, getLibraryArchitecture, getLibraryApi } from '@/lib/docs-loader'
+import { getLibraryReadme, getLibraryArchitecture, getLibraryApi, getApiLinkIndex } from '@/lib/docs-loader'
 import { markdownToHtml } from '@/lib/markdown'
 import { extractMermaidBlocks } from '@/lib/mermaid-utils'
 import Link from 'next/link'
@@ -68,7 +68,9 @@ export async function LibraryDocPage({ title, packageName, slug, fallbackDescrip
             <H2 id="api-reference" className="text-2xl font-bold text-slate-900 dark:text-white mb-6">
               API Reference
             </H2>
-            <ApiReference data={apiData} />
+            <ApiLinkProvider index={getApiLinkIndex(slug, packageName)} currentPackage={packageName}>
+              <ApiReference data={apiData} />
+            </ApiLinkProvider>
           </section>
         )}
 

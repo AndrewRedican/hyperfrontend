@@ -26,26 +26,6 @@ interface ConsoleEvent {
   kind: EventKind
 }
 
-/** Per-request settings accepted by the runtime `request` member. */
-interface RuntimeRequestOptions {
-  /** Milliseconds to wait for the response before rejecting. */
-  timeoutMs?: number
-}
-
-/**
- * The runtime shell members the generated package type does not declare yet.
- *
- * `request` and `isDirty` exist on every shell handle at runtime; the vendored
- * tarball's generated `.d.ts` omits them, so the console casts through this
- * structural slice instead.
- */
-interface ShellRuntimeExtras {
-  /** Sends a correlated request and resolves with the feature's response. */
-  request(type: string, data?: unknown, options?: RuntimeRequestOptions): Promise<unknown>
-  /** Whether the feature has declared unsaved work. */
-  readonly isDirty: boolean
-}
-
 /** Session liveness as shown in the console's status pill. */
 type SessionState = 'connecting' | 'healthy' | 'unobservable' | 'suspect' | 'gone' | 'closed'
 
@@ -197,10 +177,9 @@ export function ClockHostConsole({ entry, shell }: ClockHostConsoleProps) {
     if (!shell) {
       return
     }
-    const runtime = shell as ClockShell & ShellRuntimeExtras
     const started = performance.now()
     try {
-      const answer = await runtime.request('get-time', undefined, { timeoutMs: 5000 })
+      const answer = await shell.request('get-time', undefined, { timeoutMs: 5000 })
       const elapsed = (performance.now() - started).toFixed(1)
       const formatted = isRecord(answer) && typeof answer['formatted'] === 'string' ? answer['formatted'] : '(unformatted)'
       setTimeAnswer(`${formatted} — round trip ${elapsed} ms`)
@@ -215,9 +194,8 @@ export function ClockHostConsole({ entry, shell }: ClockHostConsoleProps) {
     if (!shell) {
       return
     }
-    const runtime = shell as ClockShell & ShellRuntimeExtras
     try {
-      const answer = await runtime.request('get-time', undefined, { timeoutMs: 5000 })
+      const answer = await shell.request('get-time', undefined, { timeoutMs: 5000 })
       if (!isRecord(answer) || typeof answer['epochMs'] !== 'number' || typeof answer['timezone'] !== 'string') {
         return
       }

@@ -18,7 +18,7 @@ allowed-tools:
 
 Interview first: domain, triggers, pain points, paths, validation, done-criteria → maps directly to skill sections.
 
-**Location:** `.github/skills/<name>/SKILL.md`
+**Location:** `.claude/skills/<name>/SKILL.md`
 
 ---
 
