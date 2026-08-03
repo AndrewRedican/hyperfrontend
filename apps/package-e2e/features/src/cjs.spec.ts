@@ -12,11 +12,14 @@ const NAMED_SUBPATH_SYMBOLS: ReadonlyArray<readonly [string, string]> = [
   ['@hyperfrontend/features/cli', 'runFeaturesCli'],
   ['@hyperfrontend/features/server', 'startDevServer'],
   ['@hyperfrontend/features/generators', 'generateShell'],
+  ['@hyperfrontend/features/nx/generators', 'initGenerator'],
+  ['@hyperfrontend/features/nx/executors', 'runBuildExecutor'],
 ]
 
 // note: Default-only entries compile to `module.exports = fn` in CJS, so the required module itself is the callable.
 const DEFAULT_EXPORT_SUBPATHS: readonly string[] = [
   '@hyperfrontend/features/nx/generators/feature',
+  '@hyperfrontend/features/nx/generators/init',
   '@hyperfrontend/features/nx/executors/build',
   '@hyperfrontend/features/nx/executors/serve',
 ]
