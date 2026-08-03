@@ -1,6 +1,6 @@
 # HyperFrontend Documentation Site
 
-Next.js documentation site for the HyperFrontend framework, deployed at [hyperfrontend.dev](https://www.hyperfrontend.dev).
+Next.js documentation site for the HyperFrontend framework, deployed at [hyperfrontend.dev](https://hyperfrontend.dev).
 
 ---
 
@@ -246,6 +246,45 @@ Deployed to **Vercel** with automatic deployments on push to `main`.
 ### Build Output
 
 Static export to `out/` directory for Vercel deployment.
+
+---
+
+## Analytics & SEO
+
+### Google Analytics (GA4, Google Ads-ready)
+
+Analytics lives in [src/lib/analytics.ts](src/lib/analytics.ts) and the `<Analytics />` component mounted from the root layout. It renders **nothing** unless `NEXT_PUBLIC_GA_MEASUREMENT_ID` is set at build time — that env var is the production gate: it is configured only in the production Vercel environment, so development and preview builds ship zero analytics code.
+
+| Env var                                | Purpose                                                               |
+| -------------------------------------- | --------------------------------------------------------------------- |
+| `NEXT_PUBLIC_GA_MEASUREMENT_ID`        | GA4 measurement ID (`G-…`). Setting it enables analytics.             |
+| `NEXT_PUBLIC_GOOGLE_ADS_ID`            | Optional Google Ads account ID (`AW-…`) enabling conversion tracking. |
+| `NEXT_PUBLIC_SITE_URL`                 | Canonical origin override; defaults to `https://hyperfrontend.dev`.   |
+| `NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION` | Optional Google Search Console verification token.                    |
+
+### Cookieless by design
+
+Consent Mode v2 signals (`analytics_storage`, `ad_storage`, `ad_user_data`, `ad_personalization`) are pushed as `denied` **before** any `gtag('config')` call and are never upgraded, so Google stores no cookies or identifiers and measurement runs entirely on anonymous pings. Because nothing is stored on the visitor's device, the site needs no consent banner. The trade-off: GA4 reports are aggregate/modeled rather than user-level, and Google Ads conversions rely on conversion modeling (no remarketing).
+
+Page views are reported manually (`send_page_view: false`): a route tracker fires a `page_view` event on the initial load and on every App Router navigation, attributing every event to the page that produced it.
+
+### Recording events and conversions
+
+```ts
+import { trackConversion, trackEvent } from '@/lib/analytics'
+
+// GA4 event, attributed to the current page
+trackEvent('select_content', { content_type: 'demo', item_id: 'clock' })
+
+// Google Ads conversion — the label comes from the Ads tag setup UI
+trackConversion('AbC-D_efGhIjKlMnOp', { value: 1, currency: 'USD' })
+```
+
+Both helpers no-op when analytics is not configured, so call sites never need environment guards.
+
+### Sitemap coverage guard
+
+`npm run validate-sitemap` (part of `npm run build`) enumerates every static `src/app/**/page.tsx` route and fails the build when one is missing from `sitemap.xml`. Pages the sidebar navigation does not link must be added to the static list in [src/app/sitemap.ts](src/app/sitemap.ts); deliberate exclusions go in the commented allowlist in [scripts/validate-sitemap.ts](scripts/validate-sitemap.ts).
 
 ---
 
