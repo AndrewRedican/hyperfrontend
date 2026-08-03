@@ -62,6 +62,6 @@ To see the full host↔hostee wiring locally before any deploy: run `npx nx run 
 docs-site's committed `.env.development` points its embeds at that port, while production builds
 keep the deployed origin.
 
-## Known SDK limitations this demo works around
+## SDK workarounds: none
 
-The demo consumes `@hyperfrontend/features@^0.3.0`; the 0.1.0-era workarounds (hand-rolled dev host, `SharedArrayBuffer` stub, dev-server launcher script, external shell compiler) are gone — `hf dev` and `hf build` are the real dev loop now. The workarounds that remain are all published-package gaps already fixed in workspace source and awaiting the next release (each filed in the showcase findings registry): the `rollup` and `tslib` devDependencies exist only so a fresh install can run `hf build` at all; the generated shell's handle type omits the runtime `request`/`handle`/`isDirty` members, so typed hosts cast for those; and [feature.config.ts](feature.config.ts) authors its extended keys against a local widened type because the published `defineConfig` rejects them — migrate it back to `defineConfig` once the fixed version ships.
+The demo consumes `@hyperfrontend/features@^0.4.0` with no workarounds. The 0.1.0-era scaffolding (hand-rolled dev host, `SharedArrayBuffer` stub, dev-server launcher script, external shell compiler) is gone — `hf dev` and `hf build` are the real dev loop — and the 0.3.0-era published-package gaps shipped fixed in `features@0.4.0`/`builder@0.1.3`: `hf build` runs in a fresh install with no extra devDependencies, the generated handle types `request`/`handle`/`isDirty` so typed hosts need no casts, and [feature.config.ts](feature.config.ts) authors its extended keys through `defineConfig` directly.
