@@ -36,19 +36,19 @@ D = discovery-heavy · E = execution-heavy · ⭐ = special, prominent handling
 | 00  | [Strategy](00-strategy.md)                                               | —    | —          | North star, thesis, journeys, sequencing rationale, the two discoveries                                              |
 | 01  | [Findings capture skill](../../.claude/skills/demo-findings/SKILL.md)    | D+E  | —          | The `demo-findings` skill — file every demo friction before working around it. **Must precede Demo 1.** _Delivered._ |
 | 02  | [Demo catalog](catalog.md)                                               | D    | 01         | The curated, prioritized, mapped backlog — 50 + 17 + trio reconciled into one. _Delivered._                          |
-| 04  | ⭐ [Demo 1 — Clock (weed-clearer)](04-demo-1-clock.md)                   | D+E  | 01         | Full consumer path + blank-prototype extraction + first findings                                                     |
-| 05  | [Plugin system implementation](05-plugin-system.md)                      | E    | 04         | The phantom `ExperiencePlugin` → real; keystone for spectacle demos                                                  |
-| 06  | ⭐ [Demo 2 + Nx demo generator](06-demo-2-and-generator.md)              | D+E  | 04         | Second demo as the generator's first test case; repeatability & QoL                                                  |
+| 05  | [Plugin system implementation](05-plugin-system.md)                      | E    | —          | The phantom `ExperiencePlugin` → real; keystone for spectacle demos                                                  |
+| 06  | ⭐ [Demo 2 + Nx demo generator](06-demo-2-and-generator.md)              | D+E  | —          | Second demo as the generator's first test case; repeatability & QoL                                                  |
 | 07  | [Legacy distillation](07-legacy-distillation.md)                         | D    | 01         | Extract-then-delete the untracked `_/`; runs parallel                                                                |
 | 08  | [Breadth — boundary-respecting batch](08-breadth-boundary-respecting.md) | E    | 06         | Enterprise/gallery features (some warranting real backends)                                                          |
 | 09  | [Breadth — pattern batch](09-breadth-pattern.md)                         | E    | 06         | Russian-doll nesting, cross-framework, many:many topologies                                                          |
 | 10  | [Breadth — spectacle / plugin batch](10-breadth-spectacle-plugin.md)     | E    | 05, 06     | Koi pond, colourcopia, drag default handling, clock spectacle                                                        |
 | 11  | [Flagship composed app](11-flagship-composed-app.md)                     | E    | 08–10      | The composed centerpiece (e.g. fake desktop/OS)                                                                      |
-| 12  | [Gallery / docs-site integration](12-gallery-docs-integration.md)        | E    | 04, 08–11  | Self-hosting gallery in the docs site; live embeds, per-demo pages                                                   |
+| 12  | [Gallery / docs-site integration](12-gallery-docs-integration.md)        | E    | 08–11      | Self-hosting gallery in the docs site; live embeds, per-demo pages                                                   |
 | 13  | [v2 release](13-v2-release.md)                                           | D+E  | all        | Triage registry → v2 changes → publish → docs refresh                                                                |
-| 14  | [Clock luxury refit + showcase surfaces](14-clock-luxury-refit.md)       | E    | 04         | Haute-horlogerie clock redesign, poster/showcase reinstatement, Railway publish pattern                              |
 
 > **03 is vacant.** Deployment/CI is no longer a standalone plan — it's folded into [00-strategy.md](00-strategy.md#deployment-and-the-origin-boundary-layer) (decisions settled; only per-demo execution remains). The slot is left empty rather than renumbering 04–13.
+>
+> **04 and 14 are delivered and their plan files removed.** Demo 1 (Clock) shipped the full consumer path, the blank prototype, and the first findings loop; the luxury refit and its showcase surfaces shipped with it. Their numbers stay reserved; [blank-prototype.md](blank-prototype.md) and the [findings registry](findings/README.md) carry the surviving artifacts.
 
 **Parallelism**: 07 runs alongside 04–06; the three breadth batches (08–10) parallelize once 05 + 06 land.
 
@@ -94,20 +94,10 @@ Resolved in the initial grill session. Detail in [00-strategy.md](00-strategy.md
 
 - **Findings capture** → the [demo-findings skill](../../.claude/skills/demo-findings/SKILL.md) — template, categories, severity, and graduation rules for the friction log feeding v2.
 - **Demo backlog** → [catalog.md](catalog.md) — the curated, prioritized, mapped demo list (the demo-catalog-curation discovery; 50 + 17 + trio reconciled).
-- **Legacy distilled** → [legacy-distilled/](legacy-distilled/) — Tier-1 keepers + distilled-idea stubs salvaged from `_/` (output of plan 07).
 - **Blank prototype** → [blank-prototype.md](blank-prototype.md) — the feature-only demo skeleton extracted from Demo 1 (seed for the [06](06-demo-2-and-generator.md) generator).
 
 ---
 
 ## Relationship to existing roadmap material
 
-This family **subsumes** the demo/integration/deployment work previously scattered across the repo. As each is assimilated, the old file is removed (per the "remove the old once subsumed" intent):
-
-| Old material                                                                       | Becomes                                                                                        |
-| ---------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------- |
-| [../feature/08-demos.md](../feature/08-demos.md)                                   | [04-demo-1-clock.md](04-demo-1-clock.md) + the breadth batches                                 |
-| [../feature/09-docs-site-integration.md](../feature/09-docs-site-integration.md)   | [12-gallery-docs-integration.md](12-gallery-docs-integration.md)                               |
-| [../feature/10-deployment.md](../feature/10-deployment.md)                         | [00-strategy.md](00-strategy.md#deployment-and-the-origin-boundary-layer) (deployment section) |
-| [../demos-implementation-plan.md](../demos-implementation-plan.md) (50-item table) | [catalog.md](catalog.md) (folded into the curated backlog)                                     |
-
-The package's own history ledger ([../feature/README.md](../feature/README.md)) stays as the record of plans 01–07/11 but points here for demos onward.
+This family **subsumed** the demo/integration/deployment work previously scattered across the repo — the old feature-family demo plans, the standalone deployment plan, and the 50-item `demos-implementation-plan.md` are all assimilated and their files removed (per the "remove the old once subsumed" intent). The package's own history ledger ([../feature/README.md](../feature/README.md)) stays as the record of plans 01–07/11 but points here for demos onward.

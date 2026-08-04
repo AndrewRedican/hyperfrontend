@@ -1,6 +1,6 @@
 # Demo Catalog
 
-The curated, prioritized, mapped demo backlog — the **demo-catalog-curation** discovery (journey J5), maintained here as a living artifact rather than a numbered plan. It reconciles the **three overlapping sources** (the 50 enterprise use-cases in [../demos-implementation-plan.md](../demos-implementation-plan.md), the 17 new headlines, and the plan-08 trio) into **one** list with a locked build order, so the breadth build-out ([08](08-breadth-boundary-respecting.md)–[10](10-breadth-spectacle-plugin.md)) stops choosing between three competing inventories.
+The curated, prioritized, mapped demo backlog — the **demo-catalog-curation** discovery (journey J5), maintained here as a living artifact rather than a numbered plan. It reconciles the **three overlapping sources** (the 50 enterprise use-cases of the since-removed `demos-implementation-plan.md`, the 17 new headlines, and the plan-08 trio) into **one** list with a locked build order, so the breadth build-out ([08](08-breadth-boundary-respecting.md)–[10](10-breadth-spectacle-plugin.md)) stops choosing between three competing inventories.
 
 Read [00-strategy.md](00-strategy.md) for the thesis this serves: _independent apps, in different frameworks, coordinating **messages and visuals** so seamlessly the seams disappear._ Every row below is graded against that.
 
@@ -27,7 +27,7 @@ The cut line (open question 2). These ten, _together_, prove the whole thesis: a
 
 | #   | Demo                      | Tier               | Topology           | Frameworks                                          | Capability proven / stressed                                                                                                                                  | Real?                       | Prereq                           | Slot                        |
 | --- | ------------------------- | ------------------ | ------------------ | --------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------- | -------------------------------- | --------------------------- |
-| 1   | **Clock** (Demo 1)        | gallery-feature    | 1:1                | Vue coin feature → React host (= the docs-site)     | The whole consumer path (install → contract → dev → build → deploy → embed) at lowest feature-risk; two-way contract messaging; gallery-as-host arrives early | Mock                        | _is_ [04](04-demo-1-clock.md)    | `clock` (keep)              |
+| 1   | **Clock** (Demo 1)        | gallery-feature    | 1:1                | Vue coin feature → React host (= the docs-site)     | The whole consumer path (install → contract → dev → build → deploy → embed) at lowest feature-risk; two-way contract messaging; gallery-as-host arrives early | Mock                        | _is_ Demo 1 (delivered)          | `clock` (keep)              |
 | 2   | **Heartbeat** (Demo 2)    | gallery-feature    | 1:1                | React feature → Vanilla host                        | The **generator's** first real test; periodic messaging, connection health, reconnection                                                                      | Mock                        | [06](06-demo-2-and-generator.md) | `heartbeat` (keep)          |
 | 3   | **Stock dashboard**       | gallery-feature    | 1:many             | React host + mixed widget features                  | One host composing **many** live-data widget features; contract fan-in; subsumes ledger/portfolio/gauge widgets                                               | Mock (faux feed)            | 06                               | `stock` (new)               |
 | 4   | **Auth flow**             | gallery-feature    | 1:1                | React feature → Vanilla host + Railway backend      | The **real-boundary** proof: secure isolation where the host never sees credentials; contract across a real backend                                           | **Real**                    | deploy, 06                       | `auth` (new)                |
@@ -174,7 +174,7 @@ Source C reconciled. Most enterprise items are single widgets; each is tagged wi
 The overlaps the three sources hid, now resolved:
 
 - **Chess collapses to one.** The `chess` placeholder (React, "complex state sync"), the "Chess game" headline, and the "Framework chess" headline are **one demo — Framework chess** (§1 #7): two framework-distinct features playing each other through a host. The cross-framework angle is what makes it a _pattern_ proof rather than just a game.
-- **Clock is the same demo three times.** The "Analog and digital clock" headline, the plan-08 trio's Clock, and the [demos-implementation-plan](../demos-implementation-plan.md) Clock spec are all **Demo 1** ([04](04-demo-1-clock.md), §1 #1).
+- **Clock is the same demo three times.** The "Analog and digital clock" headline, the plan-08 trio's Clock, and the old `demos-implementation-plan.md` Clock spec are all **Demo 1** (§1 #1).
 - **Stock dashboard absorbs the finance widgets.** #1 Ledger, #2 Portfolio, #6 Currency, #8 Credit gauge (and #35 Driver chart) become **widget-features inside** the dashboard host rather than standalone demos — that's what makes it a 1:many composition instead of four 1:1 widgets.
 - **Payments ≡ Rent Payment Portal (#44)** + the "Payments" headline; one **real-backend** demo. Currency Converter (#6) rides along as a widget.
 - **Voice-to-text absorbs Meeting Minute Summarizer (#28)** — both are audio → text inside an isolated feature.
@@ -188,7 +188,7 @@ The overlaps the three sources hid, now resolved:
 
 ## 5. Placeholder slot disposition (open question 1)
 
-The six on-disk reservations are each a single `demo-<name>` app (`@hyperfrontend/demo-<name>`, no source). [04](04-demo-1-clock.md) settled the composition model: **feature-only demos are hosted by the docs-site gallery** (a slot stays a single self-contained feature app); demos whose point requires their own host grow host sub-apps under the slot directory. New slots are scaffolded by the generator ([06](06-demo-2-and-generator.md)).
+The six on-disk reservations are each a single `demo-<name>` app (`@hyperfrontend/demo-<name>`, no source). Demo 1 (plan 04 — delivered) settled the composition model: **feature-only demos are hosted by the docs-site gallery** (a slot stays a single self-contained feature app); demos whose point requires their own host grow host sub-apps under the slot directory. New slots are scaffolded by the generator ([06](06-demo-2-and-generator.md)).
 
 | Slot         | Was                      | Disposition     | Becomes                                                                      |
 | ------------ | ------------------------ | --------------- | ---------------------------------------------------------------------------- |
@@ -205,7 +205,7 @@ New slots the core/§2 introduce: `stock`, `auth`, `nested` (re-uses `events`), 
 
 ## 6. Build order (locked)
 
-1. **[04](04-demo-1-clock.md) Clock** — clears the consumer path, births the composition model + blank prototype. Nothing else starts first.
+1. **Demo 1 — Clock** _(delivered)_ — clears the consumer path, births the composition model + blank prototype. Nothing else starts first.
 2. **[05](05-plugin-system.md) plugin system** + **[06](06-demo-2-and-generator.md) Heartbeat & generator** — unblock spectacle (05) and cheap repeatable demos (06).
 3. **Breadth, parallelized:** [08](08-breadth-boundary-respecting.md) (Stock, Auth, Payments, gallery-features) ∥ [09](09-breadth-pattern.md) (Russian-doll, Framework chess, chat/whiteboard) ∥ [10](10-breadth-spectacle-plugin.md) (Koi pond, Colourcopia, Drag) — build the rest of P0, then P1, then P2 as budget allows.
 4. **[11](11-flagship-composed-app.md) Flagship** — composes the core as its windows (Omni-bar, Navbar, Footer, Terminal become its furniture).

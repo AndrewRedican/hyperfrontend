@@ -2,7 +2,7 @@
 
 The self-hosting gallery: a showcase that is itself a hyperfrontend host, mounting demos as live features. Nesting proves itself (gallery host → demo host → demo hostee).
 
-**Depends on** [04](04-demo-1-clock.md), and the breadth + flagship demos [08](08-breadth-boundary-respecting.md)–[11](11-flagship-composed-app.md) · **Type** Execution · **Status**: Pending — not yet elaborated. **Subsumes** [../feature/09-docs-site-integration.md](../feature/09-docs-site-integration.md).
+**Depends on** 04 _(delivered; plan removed)_, and the breadth + flagship demos [08](08-breadth-boundary-respecting.md)–[11](11-flagship-composed-app.md) · **Type** Execution · **Status**: Pending — not yet elaborated. **Subsumes** the old `feature/09-docs-site-integration.md` (removed).
 
 See [00-strategy.md](00-strategy.md) (journey J6) and the [index](README.md).
 

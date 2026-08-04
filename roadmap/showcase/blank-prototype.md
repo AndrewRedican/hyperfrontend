@@ -1,6 +1,6 @@
 # The blank prototype (feature-only variant)
 
-**Extracted from** Demo 1 ([04-demo-1-clock.md](04-demo-1-clock.md), Phase 7) — documented against what was **actually built**, not what was planned. This is the seed for the demo generator ([06](06-demo-2-and-generator.md)): the shape every feature-only demo starts from, with the clock-specific flesh stripped away.
+**Extracted from** Demo 1 (plan 04 — delivered, Phase 7) — documented against what was **actually built**, not what was planned. This is the seed for the demo generator ([06](06-demo-2-and-generator.md)): the shape every feature-only demo starts from, with the clock-specific flesh stripped away.
 
 ## Vital components
 
