@@ -1,6 +1,7 @@
 import type { KeyboardEvent, PointerEvent } from 'react'
 import type { RhythmEvent, RhythmState } from './rhythm/rhythm-engine'
 import { useEffect, useRef, useState } from 'react'
+import { FrameworkBadge } from './components/FrameworkBadge'
 import { Heart } from './components/Heart'
 import { playBeat } from './components/heart-animation'
 import { heartRhythm } from './state/heart-rhythm'
@@ -91,6 +92,7 @@ export default function App() {
       <p className="sr-only" role="status" aria-live="polite">
         {`Heart rhythm ${rhythm.state} at ${rhythm.bpm} beats per minute.`}
       </p>
+      <FrameworkBadge />
     </main>
   )
 }

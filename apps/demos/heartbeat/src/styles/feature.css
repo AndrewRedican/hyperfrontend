@@ -21,6 +21,37 @@ body {
   gap: 0.4rem;
   overflow: hidden;
   user-select: none;
+  position: relative;
+}
+
+/* why: Discreet framework identity in the hostee's corner — noticeable on approach, quiet otherwise, themed to the stage. */
+.framework-badge {
+  position: absolute;
+  right: 10px;
+  bottom: 10px;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: rgba(21, 13, 17, 0.55);
+  border: 1px solid rgba(224, 112, 138, 0.22);
+  color: #d9c8cc;
+  font-size: 0.85rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  opacity: 0.6;
+  transition: opacity 250ms ease;
+}
+
+.framework-badge:hover {
+  opacity: 0.95;
+}
+
+.framework-badge svg {
+  width: 16px;
+  height: 15px;
 }
 
 .heart-button {
