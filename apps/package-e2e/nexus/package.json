@@ -6,7 +6,7 @@
     "pack-install": "cd ../../../dist/libs/nexus && npm pack && cd - && npm install ../../../dist/libs/nexus/*.tgz"
   },
   "dependencies": {
-    "@hyperfrontend/nexus": "file:../../../tmp/e2e-packs/hyperfrontend-nexus-2.0.0.tgz"
+    "@hyperfrontend/nexus": "file:../../../tmp/e2e-packs/hyperfrontend-nexus-2.0.1.tgz"
   },
   "devDependencies": {
     "@types/jest": "29.5.14",
