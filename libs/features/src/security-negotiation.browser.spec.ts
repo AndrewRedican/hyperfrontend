@@ -115,7 +115,7 @@ describe('Integration: host and hostee across the hardened handshake', () => {
     errors: unknown[]
   }
 
-  function openHostShell(hostView: FeatureContract = featureContract): Party<ShellHandle> {
+  function openHostShell(hostView: FeatureContract = featureContract, protocol: 'v1' | 'v2' = 'v2'): Party<ShellHandle> {
     const contract = withControlContract(invertFeatureContract(hostView))
     const broker = createBroker({
       name: 'shell-host',
@@ -129,7 +129,7 @@ describe('Integration: host and hostee across the hardened handshake', () => {
     emitter.on('error', (data) => errors.push(data))
     const handle = createShellHandle(
       broker,
-      <ShellOptions>{ container: '#shell', url: `${FEATURE_ORIGIN}/`, protocol: 'v2', sharedKey: PSK },
+      <ShellOptions>{ container: '#shell', url: `${FEATURE_ORIGIN}/`, protocol, ...(protocol === 'v2' && { sharedKey: PSK }) },
       emitter,
       {
         contract,
@@ -145,7 +145,7 @@ describe('Integration: host and hostee across the hardened handshake', () => {
   }
 
   // why: The feature broker comes alive only here, after the host is already retrying its REQUEST — the same ordering as a real feature page loading inside the shell's iframe.
-  function connectFeature(featureView: FeatureContract = featureContract): Party<FeatureHandle> {
+  function connectFeature(featureView: FeatureContract = featureContract, protocol: 'v1' | 'v2' = 'v2'): Party<FeatureHandle> {
     const contract = withControlContract(featureView)
     const broker = createBroker({
       name: 'clock-feature',
@@ -157,7 +157,11 @@ describe('Integration: host and hostee across the hardened handshake', () => {
     const errors: unknown[] = []
     emitter.on('setTimezone', (data) => received.push(data))
     emitter.on('error', (data) => errors.push(data))
-    const handle = createFeatureHandle(broker, <Window>(<unknown>hostWindow), emitter, { contract, protocol: 'v2', sharedKey: PSK })
+    const handle = createFeatureHandle(broker, <Window>(<unknown>hostWindow), emitter, {
+      contract,
+      protocol,
+      ...(protocol === 'v2' && { sharedKey: PSK }),
+    })
     feature = handle
     return { handle, received, errors }
   }
@@ -205,6 +209,27 @@ describe('Integration: host and hostee across the hardened handshake', () => {
         delivered: [{ time: 'classified-reply' }],
         encrypted: true,
         plaintextLeaks: [],
+      })
+    }, 20_000)
+  })
+
+  describe('v1 liveness', () => {
+    // why: The SDK's payload-less beat must survive the security envelope — v1 once rejected it, so every pairing went suspect three seconds after open with the miss budget exhausted.
+    it('keeps the watchdog healthy past the miss threshold under the v1 envelope', async () => {
+      const host = openHostShell(featureContract, 'v1')
+      const states: string[] = []
+      host.handle.on('status', (data) => states.push((<{ state: string }>data).state))
+      const featureParty = connectFeature(featureContract, 'v1')
+      await featureParty.handle.ready()
+      await waitFor(() => host.handle.isOpen)
+
+      // how: Four beat intervals of real time — one past the three-tick miss budget, so a dying beat is guaranteed to have driven the watchdog suspect by now.
+      await createPromise((resolve) => setTimeout(resolve, 4200))
+
+      expect({ states, hostErrors: host.errors, featureErrors: featureParty.errors }).toEqual({
+        states: ['healthy'],
+        hostErrors: [],
+        featureErrors: [],
       })
     }, 20_000)
   })
