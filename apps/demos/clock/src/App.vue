@@ -3,6 +3,7 @@ import type { CoinFace } from './physics/coin-physics'
 import type { FormatCause } from './state/clock-store'
 import { onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import ClockCoin from './components/ClockCoin.vue'
+import FrameworkBadge from './components/FrameworkBadge.vue'
 import { useClockStore } from './state/clock-store'
 
 const store = useClockStore()
@@ -81,6 +82,7 @@ store.onAlarmFired((alarm) => {
       @settled="onSettled"
     />
     <p class="sr-only" role="status" aria-live="polite">{{ announcement }}</p>
+    <FrameworkBadge />
   </main>
 </template>
 
@@ -100,6 +102,7 @@ body,
   display: grid;
   place-items: center;
   overflow: hidden;
+  position: relative;
 }
 
 .sr-only {
