@@ -99,12 +99,13 @@ export function DemoEmbed({ entry, className, onStatus, onShell }: DemoEmbedProp
         })
       ),
       // why: The status payload is the watchdog snapshot object, not a bare state string.
+      // why: `suspect` alone never demotes — a session whose product traffic still flows is visibly alive, and demoting on it makes the embed blink out for one beat interval before the next proof event restores it.
       shell.on('status', (data) => {
         const state = isRecord(data) ? data['state'] : undefined
         if (state === 'healthy') {
           armDeadline()
           apply('live')
-        } else if (state === 'suspect' || state === 'gone') {
+        } else if (state === 'gone') {
           apply('offline')
         }
       }),
