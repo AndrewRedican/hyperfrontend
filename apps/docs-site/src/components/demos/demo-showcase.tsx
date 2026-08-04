@@ -35,9 +35,10 @@ export interface DemoShowcaseProps {
  * demo takes over.
  *
  * Every entry renders as an absolutely-stacked layer inside one fixed
- * square stage — the live embed mounts once per page load and stays mounted
- * while rotation only toggles which layer is visible and interactive, so
- * returning to the clock is instant and the frame never changes height.
+ * square stage — only the staged demo mounts its live embed, so a single
+ * feature session exists at a time; handing the stage over unmounts the
+ * previous embed, which destroys its session through the polite teardown, and
+ * the incoming demo connects fresh behind its fallback card.
  * Planned entries render as DOM placeholder cards. The ring and the
  * pause/skip controls paint above the content — the buttons hang half outside
  * the frame — so nothing a layer renders can ever cover them. The staged
@@ -169,7 +170,7 @@ export function DemoShowcase({ entries, cycleDuration = 20000, fastForwardDurati
       <div className="relative w-full max-w-2xl">
         <div className="absolute inset-0 z-0 rounded-2xl border border-white/30 dark:border-white/20" />
         <div className="relative z-10 flex flex-col items-center justify-center gap-4 rounded-2xl bg-slate-900/5 p-6 backdrop-blur-sm dark:bg-white/5 lg:p-8">
-          {/* note: All entries stay mounted as stacked layers — rotation only toggles visibility, so the embed's session survives every wrap. */}
+          {/* note: Only the staged layer mounts its live embed — losing the stage unmounts it, so its session tears down gracefully instead of running off-screen. */}
           <div className="relative aspect-square w-full max-w-md">
             {entries.map((entry, index) => (
               <div
@@ -177,7 +178,7 @@ export function DemoShowcase({ entries, cycleDuration = 20000, fastForwardDurati
                 inert={index !== activeIndex}
                 className={`absolute inset-0 transition-opacity duration-500 ${index === activeIndex ? 'opacity-100' : 'pointer-events-none opacity-0'}`}
               >
-                {entry.featureUrl ? (
+                {index === activeIndex && entry.featureUrl ? (
                   <DemoEmbed entry={entry} className="h-full w-full" onStatus={setEmbedStatus} />
                 ) : (
                   <DemoFallbackCard entry={entry} status={restingStatusFor(entry)} />
