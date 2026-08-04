@@ -3,7 +3,21 @@ import type { DemoManifestEntry } from '@/lib/demo-manifest'
 import { BOUNDARY_LABELS } from '@/lib/demo-manifest'
 
 /** Why the card is standing in for the demo's live surface. */
-export type FallbackStatus = 'planned' | 'connecting' | 'offline' | 'idle'
+export type FallbackStatus = 'planned' | 'built' | 'connecting' | 'offline' | 'idle'
+
+/**
+ * Resolves the resting fallback status for a demo without a live embed
+ * mounted: `idle` when it could go live, `built` when the implementation is
+ * merged but its origin has not deployed, `planned` otherwise.
+ * @param entry - The demo to judge.
+ * @returns The resting {@link FallbackStatus}.
+ */
+export function restingStatusFor(entry: DemoManifestEntry): FallbackStatus {
+  if (entry.featureUrl !== undefined) {
+    return 'idle'
+  }
+  return entry.built === true ? 'built' : 'planned'
+}
 
 /** Props for {@link DemoFallbackCard}. */
 export interface DemoFallbackCardProps {
@@ -122,6 +136,7 @@ export function getDemoTheme(slug: string): DemoTheme {
 /** Status-pill copy per fallback status. */
 const STATUS_LABELS: Record<FallbackStatus, string> = {
   planned: 'In planning',
+  built: 'Built — deploy pending',
   connecting: 'Connecting…',
   offline: 'Warming up on its own origin',
   idle: 'Live demo',
@@ -130,6 +145,7 @@ const STATUS_LABELS: Record<FallbackStatus, string> = {
 /** Corner-label copy per fallback status. */
 const CORNER_LABELS: Record<FallbackStatus, string> = {
   planned: 'shipping soon',
+  built: 'going live soon',
   connecting: 'live demo',
   offline: 'live demo',
   idle: 'center to activate',
@@ -184,7 +200,7 @@ export function DemoFallbackCard({ entry, status = 'planned' }: DemoFallbackCard
         <h3 className="font-display text-xl font-semibold text-slate-900 dark:text-white">{entry.title}</h3>
         <div className="flex flex-wrap items-center justify-center gap-2 text-xs">
           <span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 font-medium ${theme.pill}`}>
-            {status === 'planned' || status === 'connecting' ? (
+            {status === 'planned' || status === 'built' || status === 'connecting' ? (
               <span aria-hidden className={`h-1.5 w-1.5 rounded-full motion-safe:animate-pulse ${theme.dot}`} />
             ) : null}
             {STATUS_LABELS[status]}
