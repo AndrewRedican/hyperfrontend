@@ -1,6 +1,7 @@
 import type { IChannelConfig } from '../types/channel'
 import type { SecurityNegotiationRequest, SecurityTransport } from '../types/security'
 import type { ChannelDependencies } from './types'
+import { hasOwn } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
 import { createChannel } from './factory'
 
 describe('channel/factory', () => {
@@ -540,6 +541,17 @@ describe('channel/factory', () => {
       channel.setSecurityReady(true)
 
       expect({ queued: channel.toJSON().queuedMessagesCount, sent }).toEqual({ queued: 1, sent: [] })
+    })
+
+    it('sends a payload-less message without a data key so envelope serializability validation passes', () => {
+      const { transport, setReady, sent } = createTogglingTransport()
+      const channel = createActiveSecureChannel(transport)
+      setReady(true)
+
+      channel.send('msg1')
+
+      expect(sent).toEqual([{ type: '[nexus] new-message', senderId: 'test-broker-id', data: { type: 'msg1' } }])
+      expect(hasOwn(<object>(<{ data: unknown }>sent[0]).data, 'data')).toBe(false)
     })
 
     it('does not flush when the channel is not active', () => {

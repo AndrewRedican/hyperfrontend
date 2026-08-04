@@ -121,6 +121,12 @@ export interface MountResult {
   viewport?: ViewportReporter
   /** Makes the mounted frame visible; the shell calls it once the session opens, so a frame never appears before the feature is ready. */
   reveal?(): void
+  /**
+   * Defers the connection handshake until the mounted frame can receive it,
+   * invoking `begin` at that moment; returns a cancel hook for teardown before
+   * readiness. When unset, the shell begins the handshake immediately.
+   */
+  whenReady?(begin: () => void): () => void
   /** Removes any DOM or closes any window created by the mount, stopping any observation it started. */
   cleanup(): void
 }

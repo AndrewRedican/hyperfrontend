@@ -384,7 +384,17 @@ export function createShellHandle(
         return false
       })
     )
-    activeChannel.connect()
+    // why: The mount may hold the handshake until its frame can actually receive origin-pinned messages; a cancelled hold must never connect a torn-down channel, so the cancel joins the mount cleanup.
+    if (result.whenReady) {
+      const cancelHold = result.whenReady(() => activeChannel.connect())
+      const mountCleanup = cleanup
+      cleanup = () => {
+        cancelHold()
+        mountCleanup?.()
+      }
+    } else {
+      activeChannel.connect()
+    }
   }
 
   return freeze(<ShellHandle>{

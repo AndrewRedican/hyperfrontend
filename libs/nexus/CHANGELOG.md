@@ -2,11 +2,17 @@
 
 All notable changes to this project will be documented in this file.
 
+## [2.0.1](https://github.com/AndrewRedican/hyperfrontend/compare/d07b3add2620b9c6e9ddcf48e01571b8788a3bc7...bd296466c3f2a5e25643e7eeff8b1c4bf040e4fc) - 2026-08-04
+
+### Bug Fixes
+
+- omit the data key from payload-less sends so the security envelope accepts them
+
 ## [2.0.0](https://github.com/AndrewRedican/hyperfrontend/compare/74110dd15151bfc8360ef4edcdb1086cb003c909...a830a2c5d3a9b7c9c9955a42823b49a4aaa4b3e8) - 2026-08-01
 
 ### Breaking Changes
 
-- **BREAKING** open fires only after a counterpr completes the handshake; unanswered connects time out instead of opening
+- **BREAKING:** open fires only after a counterpr completes the handshake; unanswered connects time out instead of opening
 
 ### Features
 
@@ -16,7 +22,7 @@ All notable changes to this project will be documented in this file.
 - gate the handshake on a contract compatibility rule
 - activate security negotiation and transport attachment
 - rebuild the security transport on the real wire protocol and export it
-- **BREAKING** ⚠️ BREAKING: replace channel self-activation with the wire handshake, pinned origins, and connect deadline
+- **BREAKING** **BREAKING:** ⚠️ BREAKING: replace channel self-activation with the wire handshake, pinned origins, and connect deadline
 
 ### Bug Fixes
 

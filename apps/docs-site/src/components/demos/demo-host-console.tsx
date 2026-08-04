@@ -1,22 +1,22 @@
 'use client'
 
 import type { DemoManifestEntry } from '@/lib/demo-manifest'
-import type { ClockShell } from './clock-embed'
+import type { ComponentType } from 'react'
+import type { DemoConsoleActionsProps, EventKind, ExtraShellOptions } from './demo-console-actions'
+import type { DemoShell } from './demo-wiring'
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { createFeatureShell } from '@hyperfrontend/demo-clock-shell'
+import { ClockConsoleActions, CONSOLE_ACTION_CLASSES, HeartbeatConsoleActions } from './demo-console-actions'
+import { demoWiringFor } from './demo-wiring'
 
-/** Props for {@link ClockHostConsole}. */
-export interface ClockHostConsoleProps {
+/** Props for {@link DemoHostConsole}. */
+export interface DemoHostConsoleProps {
   /** The demo currently centered in the gallery. */
   entry: DemoManifestEntry
   /** The centered live demo's shell handle, or `null` while none is mounted. */
-  shell: ClockShell | null
+  shell: DemoShell | null
   /** `true` renders the portrait cog widget; `false` renders the landscape inline panel. */
   floating: boolean
 }
-
-/** Severity of a logged wire event, driving its color treatment. */
-type EventKind = 'info' | 'success' | 'warn' | 'error'
 
 /** One line in the console's session event log. */
 interface ConsoleEvent {
@@ -66,6 +66,20 @@ const EVENT_CAP = 30
 const SCROLLBAR_CLASSES =
   '[scrollbar-width:thin] [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-slate-300 dark:[&::-webkit-scrollbar-thumb]:bg-slate-600'
 
+/** The contract-specific action section each live demo contributes to the console. */
+const DEMO_ACTIONS: Record<string, ComponentType<DemoConsoleActionsProps> | undefined> = {
+  clock: ClockConsoleActions,
+  heartbeat: HeartbeatConsoleActions,
+}
+
+/** The one-line pitch above each live demo's controls. */
+const DEMO_BLURBS: Record<string, string> = {
+  clock:
+    'Everything below drives the centered clock’s real session — the same wire the article describes: liveness states, dirty reports, correlated requests, polite teardown, contract-declared display modes, and a handshake denial.',
+  heartbeat:
+    'Everything below drives the centered heart’s real session — cardiac beats and rhythm shifts crossing as contract events, a correlated ping with its measured round trip, host-commanded pacing, polite teardown, and the contract-declared display modes.',
+}
+
 /**
  * Narrows an unknown event payload to a plain record.
  * @param value - The candidate payload.
@@ -79,15 +93,13 @@ function isRecord(value: unknown): value is Record<string, unknown> {
  * A live host console for whichever demo is centered in the gallery: the
  * session protocol made visible and drivable.
  *
- * For the live clock, everything shown comes off the real wire — the
- * four-state liveness watchdog, the feature's dirty-state reports, a
- * correlated `get-time` request with its measured round trip, host-commanded
- * alarms, the polite close exchange, the contract-declared dialog and popup
- * display modes, and a deliberately version-mismatched pairing the handshake
- * refuses with a machine-readable denial. For a demo still in planning, the
- * console idles with no controls — there is no session to drive. Centering a
- * different demo resets the console outright, so no state, log entries, or
- * controls linger from the previous session.
+ * For a live demo, everything shown comes off the real wire — the four-state
+ * liveness watchdog, the feature's dirty-state reports, the polite close
+ * exchange, the contract-declared dialog and popup display modes, and the
+ * demo's own contract actions contributed by its action section. For a demo
+ * still in planning, the console idles with no controls — there is no session
+ * to drive. Centering a different demo resets the console outright, so no
+ * state, log entries, or controls linger from the previous session.
  *
  * The console floats beside the deck as a compact cog anchored to the
  * gallery's top-right corner — the session state stays visible as a dot on
@@ -98,20 +110,18 @@ function isRecord(value: unknown): value is Record<string, unknown> {
  * @param root0.shell
  * @param root0.floating
  */
-export function ClockHostConsole({ entry, shell, floating }: ClockHostConsoleProps) {
+export function DemoHostConsole({ entry, shell, floating }: DemoHostConsoleProps) {
   const [session, setSession] = useState<SessionState>('connecting')
   const [dirty, setDirty] = useState(false)
   const [events, setEvents] = useState<ConsoleEvent[]>([])
   const [expanded, setExpanded] = useState(false)
   const [open, setOpen] = useState(false)
-  const [timeAnswer, setTimeAnswer] = useState<string | null>(null)
-  const [denyVerdict, setDenyVerdict] = useState<string | null>(null)
-  const [denyRunning, setDenyRunning] = useState(false)
   const mountedAt = useRef(performance.now())
-  const lastAlarmId = useRef<string | null>(null)
   const extraMount = useRef<HTMLDivElement | null>(null)
-  const extraShells = useRef<ClockShell[]>([])
+  const extraShells = useRef<DemoShell[]>([])
   const featureUrl = entry.featureUrl
+  const contractLabel = demoWiringFor(entry.slug)?.contractLabel
+  const live = featureUrl !== undefined && contractLabel !== undefined
 
   const log = useCallback((label: string, kind: EventKind = 'info') => {
     const at = `t+${((performance.now() - mountedAt.current) / 1000).toFixed(1)}s`
@@ -123,10 +133,6 @@ export function ClockHostConsole({ entry, shell, floating }: ClockHostConsolePro
     setSession('connecting')
     setDirty(false)
     setEvents([])
-    setTimeAnswer(null)
-    setDenyVerdict(null)
-    setDenyRunning(false)
-    lastAlarmId.current = null
   }, [entry.slug])
 
   useEffect(() => {
@@ -171,19 +177,11 @@ export function ClockHostConsole({ entry, shell, floating }: ClockHostConsolePro
       shell.on('dirty-state', (data) => {
         const next = isRecord(data) && data['dirty'] === true
         setDirty(next)
-        log(`dirty-state — ${next ? 'unsaved alarms' : 'clean'}`, next ? 'warn' : 'info')
+        log(`dirty-state — ${next ? 'unsaved work' : 'clean'}`, next ? 'warn' : 'info')
       }),
       shell.on('error', (data) => {
         log(`error — ${isRecord(data) && typeof data['reason'] === 'string' ? String(data['reason']) : 'unspecified'}`, 'error')
       }),
-      shell.on('alarm-set', (data) => {
-        if (isRecord(data) && typeof data['id'] === 'string') {
-          lastAlarmId.current = data['id']
-          log(`alarm-set — ${String(data['id'])} at ${String(data['at'])}`, 'success')
-        }
-      }),
-      shell.on('alarm-fired', () => log('alarm-fired — the coin flips itself')),
-      shell.on('alarm-cleared', (data) => log(`alarm-cleared — ${isRecord(data) ? String(data['id']) : ''}`)),
     ]
     return () => subscriptions.forEach((unsubscribe) => unsubscribe())
   }, [shell, log])
@@ -194,60 +192,31 @@ export function ClockHostConsole({ entry, shell, floating }: ClockHostConsolePro
     return () => opened.forEach((extra) => extra.destroy())
   }, [])
 
-  const requestTime = useCallback(async () => {
-    if (!shell) {
-      return
-    }
-    const started = performance.now()
-    try {
-      const answer = await shell.request('get-time', undefined, { timeoutMs: 5000 })
-      const elapsed = (performance.now() - started).toFixed(1)
-      const formatted = isRecord(answer) && typeof answer['formatted'] === 'string' ? answer['formatted'] : '(unformatted)'
-      setTimeAnswer(`${formatted} — round trip ${elapsed} ms`)
-      log(`request get-time — answered in ${elapsed} ms`, 'success')
-    } catch {
-      setTimeAnswer('request failed')
-      log('request get-time — failed', 'error')
-    }
-  }, [log, shell])
-
-  const armAlarm = useCallback(async () => {
-    if (!shell) {
-      return
-    }
-    try {
-      const answer = await shell.request('get-time', undefined, { timeoutMs: 5000 })
-      if (!isRecord(answer) || typeof answer['epochMs'] !== 'number' || typeof answer['timezone'] !== 'string') {
-        return
+  const createExtraShell = useCallback(
+    (options: ExtraShellOptions): DemoShell | null => {
+      const mount = extraMount.current
+      const demoWiring = demoWiringFor(entry.slug)
+      if (!mount || !demoWiring || featureUrl === undefined) {
+        return null
       }
-      // how: The alarm time is authored in the clock's own timezone, two minutes out, so it visibly arms and then fires while a visitor watches.
-      const at = new Intl.DateTimeFormat('en-GB', {
-        timeZone: answer['timezone'],
-        hour: '2-digit',
-        minute: '2-digit',
-        hourCycle: 'h23',
-      }).format(answer['epochMs'] + 120_000)
-      shell.send('set-alarm', { at, label: 'console demo' })
-      log(`set-alarm — ${at} (${String(answer['timezone'])})`)
-    } catch {
-      log('set-alarm — get-time failed, alarm not armed', 'error')
-    }
-  }, [log, shell])
-
-  const clearAlarm = useCallback(() => {
-    if (!shell || lastAlarmId.current === null) {
-      return
-    }
-    shell.send('clear-alarm', { id: lastAlarmId.current })
-    lastAlarmId.current = null
-  }, [shell])
+      // note: The windowed and dialog modes never use the container; it satisfies the embedded-default options shape.
+      const extra = demoWiring.createShell({
+        container: mount,
+        url: options.url ?? featureUrl,
+        ...(options.displayMode !== undefined && { displayMode: options.displayMode }),
+      })
+      extraShells.current.push(extra)
+      return extra
+    },
+    [entry.slug, featureUrl]
+  )
 
   const toggleSession = useCallback(() => {
     if (!shell) {
       return
     }
     if (shell.isOpen) {
-      log(dirty ? 'close requested — feature reports unsaved alarms' : 'close requested', dirty ? 'warn' : 'info')
+      log(dirty ? 'close requested — feature reports unsaved work' : 'close requested', dirty ? 'warn' : 'info')
       shell.close()
     } else {
       log('open requested')
@@ -257,13 +226,10 @@ export function ClockHostConsole({ entry, shell, floating }: ClockHostConsolePro
 
   const openMode = useCallback(
     (displayMode: 'dialog' | 'popup') => {
-      const mount = extraMount.current
-      if (!mount || featureUrl === undefined) {
+      const extra = createExtraShell({ displayMode })
+      if (!extra) {
         return
       }
-      // note: The windowed and dialog modes never use the container; it satisfies the embedded-default options shape.
-      const extra = createFeatureShell({ container: mount, url: featureUrl, displayMode })
-      extraShells.current.push(extra)
       // why: The second session's lifecycle is narrated off its real events — a session is only "open" when the wire says so.
       extra.on('open', () => {
         if (displayMode === 'dialog') {
@@ -287,42 +253,11 @@ export function ClockHostConsole({ entry, shell, floating }: ClockHostConsolePro
       extra.open()
       log(`${displayMode} session requested — stays invisible until the handshake completes`)
     },
-    [featureUrl, log]
+    [createExtraShell, log]
   )
 
-  const runDenyDemo = useCallback(() => {
-    const mount = extraMount.current
-    if (!mount || denyRunning || featureUrl === undefined) {
-      return
-    }
-    setDenyRunning(true)
-    setDenyVerdict(null)
-    // how: The feature announces the overridden contract version at the handshake, so the pairing is refused before anything opens — the frame never paints.
-    const separator = featureUrl.includes('?') ? '&' : '?'
-    const mismatched = createFeatureShell({ container: mount, url: `${featureUrl}${separator}contract-version=9.9.9` })
-    extraShells.current.push(mismatched)
-    let settled = false
-    const finish = (verdict: string) => {
-      if (!settled) {
-        settled = true
-        setDenyVerdict(verdict)
-        setDenyRunning(false)
-        mismatched.destroy()
-      }
-    }
-    mismatched.on('error', (data) => {
-      if (isRecord(data) && typeof data['reason'] === 'string') {
-        finish(`refused — reason: ${String(data['reason'])}`)
-        log(`deny — ${String(data['reason'])} (contract 9.9.9 vs 0.2.0)`, 'error')
-      }
-    })
-    mismatched.open()
-  }, [denyRunning, featureUrl, log])
-
-  const actionClasses =
-    'rounded-lg border border-slate-300 px-3 py-1.5 text-xs font-medium text-slate-700 transition-colors hover:border-primary-400 hover:text-primary-600 disabled:opacity-40 dark:border-slate-600 dark:text-slate-200 dark:hover:border-primary-500 dark:hover:text-primary-400'
-
   const latest = events[0]
+  const Actions = DEMO_ACTIONS[entry.slug]
 
   const consoleBody = (
     <>
@@ -330,16 +265,16 @@ export function ClockHostConsole({ entry, shell, floating }: ClockHostConsolePro
         <h2 className={`font-display font-semibold text-slate-900 dark:text-white ${floating ? 'text-sm' : 'text-lg'}`}>
           Host console ({entry.title})
         </h2>
-        {featureUrl !== undefined ? (
+        {live ? (
           <div className="flex flex-wrap items-center gap-2 text-xs">
             <span className={`rounded-full px-2.5 py-1 font-medium ${STATE_STYLES[session]}`}>session: {session}</span>
             <span
               className={`rounded-full px-2.5 py-1 font-medium ${dirty ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300' : 'bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400'}`}
             >
-              {dirty ? 'dirty: unsaved alarms' : 'dirty: clean'}
+              {dirty ? 'dirty: unsaved work' : 'dirty: clean'}
             </span>
             <span className="rounded-full bg-slate-100 px-2.5 py-1 font-medium text-slate-500 dark:bg-slate-800 dark:text-slate-400">
-              contract 0.2.0 · protocol v1
+              {contractLabel}
             </span>
           </div>
         ) : (
@@ -348,48 +283,27 @@ export function ClockHostConsole({ entry, shell, floating }: ClockHostConsolePro
           </span>
         )}
       </div>
-      {featureUrl === undefined ? (
+      {!live ? (
         <p className="mt-2 text-xs text-slate-600 dark:text-slate-400">
           {entry.built === true
-            ? `${entry.title} is built and merged — its live origin has not deployed yet, so there is no session to drive. Center the Clock card to operate a real one.`
-            : `${entry.title} is still in planning — there is no live session to drive yet. Center the Clock card to operate a real one.`}
+            ? `${entry.title} is built and merged — its live origin has not deployed yet, so there is no session to drive. Center a live demo card to operate a real one.`
+            : `${entry.title} is still in planning — there is no live session to drive yet. Center a live demo card to operate a real one.`}
         </p>
       ) : (
         <>
-          <p className="mt-2 text-xs text-slate-600 dark:text-slate-400">
-            Everything below drives the centered clock&apos;s real session — the same wire the article describes: liveness states, dirty
-            reports, correlated requests, polite teardown, contract-declared display modes, and a handshake denial.
-          </p>
-          <div className="mt-4 flex flex-wrap gap-2">
-            <button type="button" className={actionClasses} disabled={!shell} onClick={() => void requestTime()}>
-              Request the time
-            </button>
-            <button type="button" className={actionClasses} disabled={!shell} onClick={() => void armAlarm()}>
-              Arm an alarm (+2 min)
-            </button>
-            <button type="button" className={actionClasses} disabled={!shell} onClick={clearAlarm}>
-              Clear last alarm
-            </button>
-            <button type="button" className={actionClasses} disabled={!shell} onClick={toggleSession}>
+          <p className="mt-2 text-xs text-slate-600 dark:text-slate-400">{DEMO_BLURBS[entry.slug]}</p>
+          {Actions ? <Actions shell={shell} featureUrl={featureUrl} log={log} createExtraShell={createExtraShell} /> : null}
+          <div className="mt-3 flex flex-wrap gap-2">
+            <button type="button" className={CONSOLE_ACTION_CLASSES} disabled={!shell} onClick={toggleSession}>
               {shell?.isOpen ? 'Close politely' : 'Reopen session'}
             </button>
-            <button type="button" className={actionClasses} onClick={() => openMode('dialog')}>
+            <button type="button" className={CONSOLE_ACTION_CLASSES} onClick={() => openMode('dialog')}>
               Open as dialog
             </button>
-            <button type="button" className={actionClasses} onClick={() => openMode('popup')}>
+            <button type="button" className={CONSOLE_ACTION_CLASSES} onClick={() => openMode('popup')}>
               Open as popup
             </button>
-            <button type="button" className={actionClasses} disabled={denyRunning} onClick={runDenyDemo}>
-              {denyRunning ? 'Denying…' : 'Try a version mismatch'}
-            </button>
           </div>
-          {timeAnswer !== null ? <p className="mt-3 text-xs text-slate-600 dark:text-slate-400">get-time → {timeAnswer}</p> : null}
-          {denyVerdict !== null ? (
-            <p className="mt-2 text-xs font-medium text-red-600 dark:text-red-400">
-              version 9.9.9 pairing {denyVerdict} — additive contract evolution never gates, but an incompatible cut is refused before
-              anything opens.
-            </p>
-          ) : null}
           <div className="mt-4 rounded-lg border border-slate-200 bg-white/60 font-mono text-[11px] leading-relaxed dark:border-slate-700 dark:bg-slate-950/40">
             <div className="flex items-center justify-between gap-2 px-3 py-2">
               {latest ? (
@@ -398,7 +312,7 @@ export function ClockHostConsole({ entry, shell, floating }: ClockHostConsolePro
                 </p>
               ) : (
                 <p className="text-slate-500 dark:text-slate-500">
-                  {shell ? 'session events appear here as they cross the wire…' : 'center the clock card to attach the console'}
+                  {shell ? 'session events appear here as they cross the wire…' : 'center a live demo card to attach the console'}
                 </p>
               )}
               <button
@@ -451,7 +365,7 @@ export function ClockHostConsole({ entry, shell, floating }: ClockHostConsolePro
       >
         <CogIcon className="h-5 w-5" />
         {/* note: The session state stays readable while collapsed — the dot on the cog tracks the liveness pill's color. */}
-        {featureUrl !== undefined ? (
+        {live ? (
           <span
             aria-hidden
             className={`absolute -right-0.5 -top-0.5 h-2.5 w-2.5 rounded-full ring-2 ring-white dark:ring-slate-900 ${STATE_DOTS[session]}`}

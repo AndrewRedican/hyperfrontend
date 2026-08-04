@@ -1,12 +1,13 @@
 'use client'
 
 import type { DemoManifestEntry } from '@/lib/demo-manifest'
-import type { ClockShell, EmbedStatus } from './clock-embed'
+import type { EmbedStatus } from './demo-embed'
+import type { DemoShell } from './demo-wiring'
 import { BOUNDARY_LABELS } from '@/lib/demo-manifest'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { abs, max, min, round } from '@hyperfrontend/immutable-api-utils/built-in-copy/math'
 import { cancelAnimationFrame, requestAnimationFrame } from '@hyperfrontend/immutable-api-utils/built-in-copy/timers'
-import { ClockEmbed } from './clock-embed'
+import { DemoEmbed } from './demo-embed'
 import { DemoFallbackCard, getDemoTheme, restingStatusFor } from './demo-fallback-card'
 import { RingControl } from './ring-control'
 
@@ -15,7 +16,7 @@ export interface CoverFlowProps {
   /** The demo albums to page through, in order. */
   entries: readonly DemoManifestEntry[]
   /** Receives the centered live demo's shell handle, and `null` while none is mounted. */
-  onShell?: (shell: ClockShell | null) => void
+  onShell?: (shell: DemoShell | null) => void
   /** Notified whenever a different demo settles into the center. */
   onCentered?: (entry: DemoManifestEntry) => void
 }
@@ -214,6 +215,9 @@ export function CoverFlow({ entries, onShell, onCentered }: CoverFlowProps) {
   const centered = clampIndex(round(position))
   const current = entries[centered]
 
+  // why: No embed may mount before the initial #<slug> deep-link is applied — otherwise the first card's feature opens a session only to be destroyed one frame later when the deck jumps to the linked demo.
+  const [arrived, setArrived] = useState(false)
+
   // why: Holds the index a #<slug> deep-link is still traveling toward, so hash writes wait until the deck arrives instead of clobbering the link.
   const pendingHashTarget = useRef<number | null>(null)
 
@@ -233,6 +237,7 @@ export function CoverFlow({ entries, onShell, onCentered }: CoverFlowProps) {
       pendingHashTarget.current = initial
       jumpTo(initial)
     }
+    setArrived(true)
     const onHashChange = () => {
       const index = indexForHash()
       if (index >= 0) {
@@ -263,7 +268,7 @@ export function CoverFlow({ entries, onShell, onCentered }: CoverFlowProps) {
   }, [centered, entries])
 
   if (reduced) {
-    return <PagerFallback entries={entries} index={centered} onSelect={jumpTo} onShell={onShell} />
+    return <PagerFallback entries={entries} index={centered} live={arrived} onSelect={jumpTo} onShell={onShell} />
   }
 
   return (
@@ -290,7 +295,7 @@ export function CoverFlow({ entries, onShell, onCentered }: CoverFlowProps) {
             entry={entry}
             offset={index - position}
             vertical={vertical}
-            live={index === centered}
+            live={index === centered && arrived}
             onSelect={() => goTo(index)}
             onStatus={setEmbedStatus}
             onShell={onShell}
@@ -380,7 +385,7 @@ interface CoverFlowCardProps {
   live: boolean
   onSelect: () => void
   onStatus: (status: EmbedStatus) => void
-  onShell?: (shell: ClockShell | null) => void
+  onShell?: (shell: DemoShell | null) => void
 }
 
 /**
@@ -406,7 +411,7 @@ function CoverFlowCard({ entry, offset, vertical, live, onSelect, onStatus, onSh
       style={{ transform, zIndex: 100 - round(distance * 10), opacity: max(0, 1 - distance * 0.28), transformStyle: 'preserve-3d' }}
     >
       {live && entry.featureUrl ? (
-        <ClockEmbed entry={entry} className="h-full w-full" onStatus={onStatus} onShell={onShell} />
+        <DemoEmbed entry={entry} className="h-full w-full" onStatus={onStatus} onShell={onShell} />
       ) : (
         <button
           type="button"
@@ -460,8 +465,10 @@ function SourceLinks({ entry }: SourceLinksProps) {
 interface PagerFallbackProps {
   entries: readonly DemoManifestEntry[]
   index: number
+  /** `false` while the initial deep-link is still being applied, so no embed mounts against the wrong card. */
+  live: boolean
   onSelect: (index: number) => void
-  onShell?: (shell: ClockShell | null) => void
+  onShell?: (shell: DemoShell | null) => void
 }
 
 /**
@@ -470,10 +477,11 @@ interface PagerFallbackProps {
  * @param root0
  * @param root0.entries
  * @param root0.index
+ * @param root0.live
  * @param root0.onSelect
  * @param root0.onShell
  */
-function PagerFallback({ entries, index, onSelect, onShell }: PagerFallbackProps) {
+function PagerFallback({ entries, index, live, onSelect, onShell }: PagerFallbackProps) {
   const entry = entries[index]
   if (!entry) {
     return null
@@ -485,9 +493,9 @@ function PagerFallback({ entries, index, onSelect, onShell }: PagerFallbackProps
           aria-hidden
           className={`pointer-events-none absolute left-1/2 top-1/2 h-[22rem] w-[22rem] -translate-x-1/2 -translate-y-1/2 rounded-full blur-3xl ${getDemoTheme(entry.slug).glowOuter}`}
         />
-        {entry.featureUrl ? (
+        {live && entry.featureUrl ? (
           <div className="relative h-full w-full overflow-hidden rounded-2xl border border-slate-200 dark:border-slate-700">
-            <ClockEmbed entry={entry} className="h-full w-full" onShell={onShell} />
+            <DemoEmbed entry={entry} className="h-full w-full" onShell={onShell} />
           </div>
         ) : (
           <DemoFallbackCard entry={entry} status={restingStatusFor(entry)} />
