@@ -127,6 +127,10 @@ shell.on('rhythm', (data: unknown) => {
   if (rhythm.bpm > 0) {
     // why: The flatline judgement needs the last real pacing rate — a 0 would make the silence budget infinite.
     lastKnownBpm = rhythm.bpm
+  }
+  if (rhythm.state === 'beating') {
+    // why: Only a steady rhythm reports the baseline; syncing the control from recovery-ramp values would desync it from the knob.
+    rateEl.value = String(rhythm.bpm)
     rateValueEl.textContent = String(rhythm.bpm)
   }
   log(`rhythm: ${rhythm.state} @ ${rhythm.bpm} bpm`)
@@ -150,6 +154,9 @@ shell.on('close', () => {
   log('channel closed')
   rolling.reset()
   lastBeatAt = null
+  // why: The host stops judging a rhythm it no longer observes — otherwise closing mid-flatline pins the flag and skull forever.
+  rhythmState = 'beating'
+  fx.hideSkull()
 })
 
 shell.on('error', (data: unknown) => {
