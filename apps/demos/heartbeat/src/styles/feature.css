@@ -1,0 +1,122 @@
+html,
+body,
+#root {
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  color: #d9c8cc;
+  font-family: 'BenchNine', system-ui, sans-serif;
+}
+
+.stage {
+  /* why: The hostee SDK resets html/body to transparent at runtime, so the page's paint lives on the app root — identical standalone and embedded. */
+  background: radial-gradient(circle at 50% 42%, #221419 0%, #150d11 70%);
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  overflow: hidden;
+  user-select: none;
+}
+
+.heart-button {
+  background: none;
+  border: none;
+  padding: 0.5rem;
+  cursor: pointer;
+  border-radius: 16px;
+  /* why: The hold gesture must own the pointer — without this, touch scrolling steals the press mid-hold. */
+  touch-action: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.heart-button:focus-visible {
+  outline: 2px solid #e0708a;
+  outline-offset: 6px;
+}
+
+.heart {
+  display: block;
+  width: min(52vmin, 260px);
+  transition:
+    filter 600ms ease,
+    transform 600ms ease;
+}
+
+/* why: The stage groups animate their own transforms per beat; fill-box keeps the origins on each group's geometry instead of the viewport. */
+/* magic: 43.4% is the atrioventricular clip seam (y=70) within the mass bbox (y 19.1-136.3) — anchoring both halves there keeps the seam closed while they scale apart. */
+.hb-atria,
+.hb-ventricles {
+  transform-box: fill-box;
+  transform-origin: 50% 43.4%;
+}
+
+.hb-aorta {
+  transform-box: fill-box;
+  transform-origin: 50% 95%;
+}
+
+.hb-cava {
+  transform-box: fill-box;
+  transform-origin: 60% 92%;
+}
+
+.hb-backing {
+  transform-box: fill-box;
+  transform-origin: 50% 49%;
+}
+
+.rhythm-suppressed .heart {
+  filter: saturate(0.55) brightness(0.85);
+}
+
+.rhythm-flatline .heart {
+  filter: saturate(0.25) brightness(0.7);
+  transform: translateY(8px) scale(0.97);
+}
+
+.rhythm-recovering .heart {
+  filter: saturate(0.8);
+}
+
+.readout {
+  margin: 0;
+  font-size: 1.35rem;
+  font-weight: 300;
+  letter-spacing: 0.04em;
+}
+
+.readout-bpm {
+  font-size: 1.9rem;
+  font-weight: 700;
+  color: #e0708a;
+}
+
+.hint {
+  margin: 0;
+  font-size: 0.95rem;
+  opacity: 0.55;
+  letter-spacing: 0.05em;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .heart {
+    transition: none;
+  }
+}
