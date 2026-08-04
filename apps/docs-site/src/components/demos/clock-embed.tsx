@@ -94,7 +94,9 @@ export function ClockEmbed({ entry, className, onStatus, onShell }: ClockEmbedPr
         armDeadline()
         apply('live')
       }),
-      shell.on('status', (state) => {
+      // why: The status payload is the watchdog snapshot object, not a bare state string.
+      shell.on('status', (data) => {
+        const state = isRecord(data) ? data['state'] : undefined
         if (state === 'healthy') {
           armDeadline()
           apply('live')

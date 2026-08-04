@@ -122,7 +122,9 @@ export function ClockHostConsole({ entry, shell }: ClockHostConsoleProps) {
         setSession('healthy')
         log('open — handshake complete, queued sends flushed', 'success')
       }),
-      shell.on('status', (state) => {
+      // why: The status payload is the watchdog snapshot object, not a bare state string.
+      shell.on('status', (data) => {
+        const state = isRecord(data) ? data['state'] : undefined
         if (state === 'healthy') {
           setSession(state)
           log('status — healthy', 'success')
