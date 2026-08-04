@@ -8,6 +8,10 @@ const RING_RADIUS_Y = 84
 const RING_RADIUS_X = 10
 /** Diameter (px) of the nearest dot; farther dots scale down from this. */
 const RING_DOT_SIZE = 10
+/** Diameter (px) of the minor trace dots between the main dots. */
+const RING_MINOR_DOT_SIZE = 4
+/** Opacity multiplier that keeps the minor trace dots subtler than the main dots. */
+const RING_MINOR_OPACITY = 0.45
 
 /** Props for {@link RingControl}. */
 export interface RingControlProps {
@@ -65,25 +69,33 @@ export function RingControl({ titles, position, centered, onBegin, onMove, onEnd
       onWheel={(event) => onSpin(event.deltaY)}
       onKeyDown={onKeyNav}
     >
-      {titles.map((title, index) => {
-        // how: Each dot rides a circle in the screen's YZ plane — y from sin, apparent depth from cos — squashed to a narrow x bulge so the wheel reads edge-on.
-        const angle = ((index - position) / titles.length) * 2 * PI
-        const depth = (cos(angle) + 1) / 2
-        return (
-          <span
-            key={title}
-            aria-hidden
-            className="absolute left-1/2 top-1/2 rounded-full bg-slate-900 dark:bg-white"
-            style={{
-              width: RING_DOT_SIZE,
-              height: RING_DOT_SIZE,
-              transform: `translate(-50%, -50%) translate(${cos(angle) * RING_RADIUS_X}px, ${sin(angle) * RING_RADIUS_Y}px) scale(${0.45 + 0.55 * depth})`,
-              opacity: 0.25 + 0.75 * depth,
-              zIndex: round(depth * 10),
-            }}
-          />
-        )
-      })}
+      {titles
+        .flatMap((title, index) => [
+          { key: title, value: index, minor: false },
+          // how: Two smaller in-between dots per gap trace the wheel's shape without competing with the demo dots.
+          { key: `${title}-minor-1`, value: index + 1 / 3, minor: true },
+          { key: `${title}-minor-2`, value: index + 2 / 3, minor: true },
+        ])
+        .map((dot) => {
+          // how: Each dot rides a circle in the screen's YZ plane — y from sin, apparent depth from cos — squashed to a narrow x bulge so the wheel reads edge-on.
+          const angle = ((dot.value - position) / titles.length) * 2 * PI
+          const depth = (cos(angle) + 1) / 2
+          const size = dot.minor ? RING_MINOR_DOT_SIZE : RING_DOT_SIZE
+          return (
+            <span
+              key={dot.key}
+              aria-hidden
+              className="absolute left-1/2 top-1/2 rounded-full bg-slate-900 dark:bg-white"
+              style={{
+                width: size,
+                height: size,
+                transform: `translate(-50%, -50%) translate(${cos(angle) * RING_RADIUS_X}px, ${sin(angle) * RING_RADIUS_Y}px) scale(${0.45 + 0.55 * depth})`,
+                opacity: (0.25 + 0.75 * depth) * (dot.minor ? RING_MINOR_OPACITY : 1),
+                zIndex: round(depth * 10),
+              }}
+            />
+          )
+        })}
     </div>
   )
 }
