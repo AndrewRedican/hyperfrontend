@@ -1,12 +1,12 @@
 'use client'
 
 import type { DemoManifestEntry } from '@/lib/demo-manifest'
-import type { EmbedStatus } from './clock-embed'
+import type { EmbedStatus } from './demo-embed'
 import { useTheme } from '@/components/theme-provider'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { min, pow } from '@hyperfrontend/immutable-api-utils/built-in-copy/math'
 import { cancelAnimationFrame, requestAnimationFrame } from '@hyperfrontend/immutable-api-utils/built-in-copy/timers'
-import { ClockEmbed } from './clock-embed'
+import { DemoEmbed } from './demo-embed'
 import { DemoFallbackCard, getDemoTheme, restingStatusFor } from './demo-fallback-card'
 
 /** Snapshot taken when fast-forward begins so the easing can interpolate from that moment. */
@@ -178,7 +178,7 @@ export function DemoShowcase({ entries, cycleDuration = 20000, fastForwardDurati
                 className={`absolute inset-0 transition-opacity duration-500 ${index === activeIndex ? 'opacity-100' : 'pointer-events-none opacity-0'}`}
               >
                 {entry.featureUrl ? (
-                  <ClockEmbed entry={entry} className="h-full w-full" onStatus={setEmbedStatus} />
+                  <DemoEmbed entry={entry} className="h-full w-full" onStatus={setEmbedStatus} />
                 ) : (
                   <DemoFallbackCard entry={entry} status={restingStatusFor(entry)} />
                 )}

@@ -1,30 +1,25 @@
 'use client'
 
 import type { DemoManifestEntry } from '@/lib/demo-manifest'
+import type { DemoShell } from './demo-wiring'
 import { useEffect, useRef, useState } from 'react'
-import { createFeatureShell } from '@hyperfrontend/demo-clock-shell'
 import { clearTimeout, setTimeout } from '@hyperfrontend/immutable-api-utils/built-in-copy/timers'
 import { DemoFallbackCard } from './demo-fallback-card'
-
-/** The shell handle type, inferred from the vendored shell's factory. */
-export type ClockShell = ReturnType<typeof createFeatureShell>
+import { demoWiringFor } from './demo-wiring'
 
 /** Liveness of the embedded feature. */
 export type EmbedStatus = 'connecting' | 'live' | 'offline'
 
-/** Milliseconds of silence tolerated before degrading to the fallback card. */
-const LIVENESS_TIMEOUT_MS = 6000
-
-/** Props for {@link ClockEmbed}. */
-export interface ClockEmbedProps {
-  /** The clock's manifest entry; must carry a `featureUrl`. */
+/** Props for {@link DemoEmbed}. */
+export interface DemoEmbedProps {
+  /** The demo's manifest entry; must carry a `featureUrl`. */
   entry: DemoManifestEntry
   /** Extra classes for the mount container. */
   className?: string
   /** Notified whenever the embed's liveness changes. */
   onStatus?: (status: EmbedStatus) => void
   /** Receives the live shell handle after mount, and `null` when it is torn down. */
-  onShell?: (shell: ClockShell | null) => void
+  onShell?: (shell: DemoShell | null) => void
 }
 
 /**
@@ -37,25 +32,26 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 }
 
 /**
- * Embeds the live clock feature through its vendored shell package, degrading
- * gracefully to the demo's themed fallback card.
+ * Embeds a live demo through its vendored shell package, degrading gracefully
+ * to the demo's themed fallback card.
  *
  * The fallback card renders immediately and the feature iframe mounts
  * invisible on top. Liveness is read straight off the shell's own session
- * signals: the first `tick` (post-open product traffic, so the app has
- * rendered) crossfades the iframe in, the four-state `status` watchdog demotes
- * a suspect or gone session, and a re-arming silence deadline covers the
- * never-connected case — an unreachable or outdated origin simply leaves the
- * card up, so an error page is never shown to visitors. A feature reload
- * surfaces as `close` then a fresh `tick`, passing through `connecting`
- * truthfully along the way.
+ * signals: the demo's first proof-of-life event (post-open product traffic,
+ * so the app has rendered) crossfades the iframe in, the four-state `status`
+ * watchdog demotes a suspect or gone session, and a re-arming silence
+ * deadline covers the never-connected case — an unreachable or outdated
+ * origin simply leaves the card up, so an error page is never shown to
+ * visitors. A feature reload surfaces as `close` then fresh proof of life,
+ * passing through `connecting` truthfully along the way. Unmounting destroys
+ * the session, so a demo that loses the stage tears down gracefully.
  * @param root0
  * @param root0.entry
  * @param root0.className
  * @param root0.onStatus
  * @param root0.onShell
  */
-export function ClockEmbed({ entry, className, onStatus, onShell }: ClockEmbedProps) {
+export function DemoEmbed({ entry, className, onStatus, onShell }: DemoEmbedProps) {
   const container = useRef<HTMLDivElement | null>(null)
   const [status, setStatus] = useState<EmbedStatus>('connecting')
   const notify = useRef(onStatus)
@@ -63,10 +59,12 @@ export function ClockEmbed({ entry, className, onStatus, onShell }: ClockEmbedPr
   const notifyShell = useRef(onShell)
   notifyShell.current = onShell
   const featureUrl = entry.featureUrl ?? ''
+  const slug = entry.slug
 
   useEffect(() => {
     const element = container.current
-    if (!element || featureUrl === '') {
+    const wiring = demoWiringFor(slug)
+    if (!element || !wiring || featureUrl === '') {
       return
     }
     let disposed = false
@@ -84,16 +82,21 @@ export function ClockEmbed({ entry, className, onStatus, onShell }: ClockEmbedPr
       if (deadline !== null) {
         clearTimeout(deadline)
       }
-      deadline = setTimeout(() => apply('offline'), LIVENESS_TIMEOUT_MS)
+      deadline = setTimeout(() => apply('offline'), wiring.silenceTimeoutMs)
     }
 
-    const shell = createFeatureShell({ container: element, url: featureUrl })
+    // why: A fresh mount owes its host the honest in-between state — the previous demo's liveness must not linger on the caption.
+    apply('connecting')
+
+    const shell = wiring.createShell({ container: element, url: featureUrl })
     const subscriptions = [
-      // why: The first tick is post-open product traffic — the app is rendering, so the crossfade never reveals a blank frame.
-      shell.on('tick', () => {
-        armDeadline()
-        apply('live')
-      }),
+      // why: A proof event is post-open product traffic — the app is rendering, so the crossfade never reveals a blank frame.
+      ...wiring.proofEvents.map((proof) =>
+        shell.on(proof, () => {
+          armDeadline()
+          apply('live')
+        })
+      ),
       // why: The status payload is the watchdog snapshot object, not a bare state string.
       shell.on('status', (data) => {
         const state = isRecord(data) ? data['state'] : undefined
@@ -128,7 +131,7 @@ export function ClockEmbed({ entry, className, onStatus, onShell }: ClockEmbedPr
       notifyShell.current?.(null)
       shell.destroy()
     }
-  }, [featureUrl])
+  }, [featureUrl, slug])
 
   return (
     <div className={`relative ${className ?? ''}`}>
@@ -138,7 +141,7 @@ export function ClockEmbed({ entry, className, onStatus, onShell }: ClockEmbedPr
       </div>
       <div
         ref={container}
-        aria-label="Live clock demo"
+        aria-label={`Live ${entry.title} demo`}
         className={`absolute inset-0 transition-opacity duration-700 ${status === 'live' ? 'opacity-100' : 'pointer-events-none opacity-0'}`}
       />
     </div>

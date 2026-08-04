@@ -1,12 +1,13 @@
 'use client'
 
 import type { DemoManifestEntry } from '@/lib/demo-manifest'
-import type { ClockShell, EmbedStatus } from './clock-embed'
+import type { EmbedStatus } from './demo-embed'
+import type { DemoShell } from './demo-wiring'
 import { BOUNDARY_LABELS } from '@/lib/demo-manifest'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { abs, max, min, round } from '@hyperfrontend/immutable-api-utils/built-in-copy/math'
 import { cancelAnimationFrame, requestAnimationFrame } from '@hyperfrontend/immutable-api-utils/built-in-copy/timers'
-import { ClockEmbed } from './clock-embed'
+import { DemoEmbed } from './demo-embed'
 import { DemoFallbackCard, getDemoTheme, restingStatusFor } from './demo-fallback-card'
 import { RingControl } from './ring-control'
 
@@ -15,7 +16,7 @@ export interface CoverFlowProps {
   /** The demo albums to page through, in order. */
   entries: readonly DemoManifestEntry[]
   /** Receives the centered live demo's shell handle, and `null` while none is mounted. */
-  onShell?: (shell: ClockShell | null) => void
+  onShell?: (shell: DemoShell | null) => void
   /** Notified whenever a different demo settles into the center. */
   onCentered?: (entry: DemoManifestEntry) => void
 }
@@ -380,7 +381,7 @@ interface CoverFlowCardProps {
   live: boolean
   onSelect: () => void
   onStatus: (status: EmbedStatus) => void
-  onShell?: (shell: ClockShell | null) => void
+  onShell?: (shell: DemoShell | null) => void
 }
 
 /**
@@ -406,7 +407,7 @@ function CoverFlowCard({ entry, offset, vertical, live, onSelect, onStatus, onSh
       style={{ transform, zIndex: 100 - round(distance * 10), opacity: max(0, 1 - distance * 0.28), transformStyle: 'preserve-3d' }}
     >
       {live && entry.featureUrl ? (
-        <ClockEmbed entry={entry} className="h-full w-full" onStatus={onStatus} onShell={onShell} />
+        <DemoEmbed entry={entry} className="h-full w-full" onStatus={onStatus} onShell={onShell} />
       ) : (
         <button
           type="button"
@@ -461,7 +462,7 @@ interface PagerFallbackProps {
   entries: readonly DemoManifestEntry[]
   index: number
   onSelect: (index: number) => void
-  onShell?: (shell: ClockShell | null) => void
+  onShell?: (shell: DemoShell | null) => void
 }
 
 /**
@@ -487,7 +488,7 @@ function PagerFallback({ entries, index, onSelect, onShell }: PagerFallbackProps
         />
         {entry.featureUrl ? (
           <div className="relative h-full w-full overflow-hidden rounded-2xl border border-slate-200 dark:border-slate-700">
-            <ClockEmbed entry={entry} className="h-full w-full" onShell={onShell} />
+            <DemoEmbed entry={entry} className="h-full w-full" onShell={onShell} />
           </div>
         ) : (
           <DemoFallbackCard entry={entry} status={restingStatusFor(entry)} />

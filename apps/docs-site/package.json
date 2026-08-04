@@ -11,6 +11,7 @@
   },
   "dependencies": {
     "@hyperfrontend/demo-clock-shell": "file:vendor/hyperfrontend-demo-clock-shell-0.2.0.tgz",
+    "@hyperfrontend/demo-heartbeat-shell": "file:vendor/hyperfrontend-demo-heartbeat-shell-0.1.0.tgz",
     "@hyperfrontend/function-utils": "0.0.4",
     "@hyperfrontend/immutable-api-utils": "0.1.2",
     "@hyperfrontend/logging": "0.1.0",

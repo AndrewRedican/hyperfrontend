@@ -142,6 +142,7 @@ module.exports = [
             // so dependency-checks would auto-remove them; exact names required — list
             // each vendored demo shell here
             '@hyperfrontend/demo-clock-shell',
+            '@hyperfrontend/demo-heartbeat-shell',
             // Third-party dependencies used by docs-site
             'mermaid',
             'next',
