@@ -45,6 +45,8 @@ const openViaWire = (frame: HTMLIFrameElement): void => {
   if (!featureWindow) throw new Error('The mounted iframe has no content window.')
   const post = jest.fn()
   featureWindow.postMessage = post
+  // why: The shell holds its handshake until the cross-origin frame reports load — jsdom never fires it for an unfetched URL, so the feature document's load is played explicitly.
+  frame.dispatchEvent(new Event('load'))
   jest.advanceTimersByTime(500)
   const request = <{ processId: string } | undefined>(
     post.mock.calls.map((call) => <{ type: string }>call[0]).find((action) => action.type === REQUEST_CONNECTION)

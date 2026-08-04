@@ -58,6 +58,7 @@ function setup(
     present?: PresentPayload
     viewport?: ViewportReporter
     reveal?: jest.Mock
+    whenReady?: (begin: () => void) => () => void
   } = {}
 ) {
   const mock = createMockChannel()
@@ -74,6 +75,7 @@ function setup(
       present,
       viewport: config.viewport,
       reveal: config.reveal,
+      whenReady: config.whenReady,
       cleanup,
     }
   })
@@ -149,6 +151,30 @@ describe('createShellHandle', () => {
     const ctx = setup()
     ctx.handle.open()
     expect(ctx.mock.connect).toHaveBeenCalledTimes(1)
+  })
+
+  it('holds the handshake until the mount readiness hook begins it', () => {
+    let begin: (() => void) | undefined
+    const ctx = setup({
+      whenReady: (start) => {
+        begin = start
+        return jest.fn()
+      },
+    })
+    ctx.handle.open()
+    expect(ctx.mock.connect).not.toHaveBeenCalled()
+    begin?.()
+    expect(ctx.mock.connect).toHaveBeenCalledTimes(1)
+  })
+
+  it('cancels a held handshake alongside mount cleanup when destroyed before readiness', () => {
+    const cancel = jest.fn()
+    const ctx = setup({ whenReady: () => cancel })
+    ctx.handle.open()
+    ctx.handle.destroy()
+    expect(cancel).toHaveBeenCalledTimes(1)
+    expect(ctx.cleanup).toHaveBeenCalledTimes(1)
+    expect(ctx.mock.connect).not.toHaveBeenCalled()
   })
 
   it('marks the shell open when the channel opens', () => {

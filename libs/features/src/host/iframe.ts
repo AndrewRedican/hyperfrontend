@@ -1,5 +1,6 @@
 import type { SandboxOptions, ShellOptions } from '../shared/types'
 import { createError } from '@hyperfrontend/immutable-api-utils/built-in-copy/error'
+import { clearTimeout, setTimeout } from '@hyperfrontend/immutable-api-utils/built-in-copy/timers'
 import { createURL } from '@hyperfrontend/immutable-api-utils/built-in-copy/url'
 import { createElement } from '@hyperfrontend/ui-utils/element'
 
@@ -125,4 +126,54 @@ export function createFeatureIframe(url: string, capabilities?: FrameCapabilitie
   iframe.src = url
   iframe.setAttribute('allowtransparency', 'true')
   return iframe
+}
+
+// why: A frame that never fires load (some browsers skip it for blocked or error documents) must still reach the handshake, whose own timeout then governs the failure.
+const FRAME_LOAD_GRACE_MS = 10000
+
+/** Mutable state of one handshake hold: the grace timer armed alongside the frame's load listener. */
+interface FrameLoadHold {
+  /** The armed grace timer, cleared once the frame loads or the hold is cancelled. */
+  timer?: ReturnType<typeof setTimeout>
+}
+
+/**
+ * Builds the handshake-readiness hook for a feature iframe, or `undefined`
+ * when the handshake may begin immediately.
+ *
+ * A cross-origin frame cannot receive origin-pinned messages until it has
+ * navigated — every handshake ping sent before then dies against the initial
+ * `about:blank` document with a browser-logged target-origin error. The hook
+ * holds the handshake until the frame's `load` event (with a grace fallback
+ * for frames that never report one). A same-origin frame needs no gate: the
+ * initial document already matches the pinned origin.
+ *
+ * @param iframe - The feature frame created for this mount.
+ * @param url - The feature URL the frame is navigating to.
+ * @returns A {@link MountResult.whenReady} implementation, or `undefined` for same-origin frames.
+ *
+ * @example Gating an embedded mount's handshake on frame readiness
+ * ```typescript
+ * const iframe = createFeatureIframe(url, options)
+ * return { target: iframe.contentWindow, whenReady: frameReadiness(iframe, url), ... }
+ * ```
+ */
+export function frameReadiness(iframe: HTMLIFrameElement, url: string): ((begin: () => void) => () => void) | undefined {
+  if (!isCrossOrigin(url)) {
+    return undefined
+  }
+  return (begin: () => void) => {
+    const state: FrameLoadHold = {}
+    const start = () => {
+      clearTimeout(state.timer)
+      iframe.removeEventListener('load', start)
+      begin()
+    }
+    iframe.addEventListener('load', start)
+    state.timer = setTimeout(start, FRAME_LOAD_GRACE_MS)
+    return () => {
+      clearTimeout(state.timer)
+      iframe.removeEventListener('load', start)
+    }
+  }
 }

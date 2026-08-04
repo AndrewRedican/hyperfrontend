@@ -1,4 +1,4 @@
-import { createFeatureIframe, resolveContainer } from './iframe'
+import { createFeatureIframe, frameReadiness, resolveContainer } from './iframe'
 
 describe('resolveContainer', () => {
   afterEach(() => {
@@ -99,5 +99,39 @@ describe('createFeatureIframe', () => {
       sandbox: { forms: false, popups: false, modals: false, downloads: false, topNavigationByUserActivation: false },
     })
     expect(iframe.getAttribute('sandbox')).toBe('allow-scripts allow-same-origin')
+  })
+})
+
+describe('frameReadiness', () => {
+  it('lets a same-origin frame handshake immediately', () => {
+    const iframe = createFeatureIframe('/feature/')
+    expect(frameReadiness(iframe, '/feature/')).toBeUndefined()
+  })
+
+  it('holds a cross-origin handshake until the frame fires load', () => {
+    const iframe = createFeatureIframe('https://feature.example/')
+    const begin = jest.fn()
+    frameReadiness(iframe, 'https://feature.example/')?.(begin)
+    expect(begin).not.toHaveBeenCalled()
+    iframe.dispatchEvent(new Event('load'))
+    expect(begin).toHaveBeenCalledTimes(1)
+  })
+
+  it('begins the handshake only once across repeated load events', () => {
+    const iframe = createFeatureIframe('https://feature.example/')
+    const begin = jest.fn()
+    frameReadiness(iframe, 'https://feature.example/')?.(begin)
+    iframe.dispatchEvent(new Event('load'))
+    iframe.dispatchEvent(new Event('load'))
+    expect(begin).toHaveBeenCalledTimes(1)
+  })
+
+  it('never begins a cancelled hold', () => {
+    const iframe = createFeatureIframe('https://feature.example/')
+    const begin = jest.fn()
+    const cancel = frameReadiness(iframe, 'https://feature.example/')?.(begin)
+    cancel?.()
+    iframe.dispatchEvent(new Event('load'))
+    expect(begin).not.toHaveBeenCalled()
   })
 })

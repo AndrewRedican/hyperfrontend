@@ -3,7 +3,7 @@ import type { ShellOptions } from '../../shared/types'
 import type { DisplayModeMount } from '../types'
 import { createError } from '@hyperfrontend/immutable-api-utils/built-in-copy/error'
 import { DisplayMode } from '../../shared/types'
-import { createFeatureIframe, resolveContainer } from '../iframe'
+import { createFeatureIframe, frameReadiness, resolveContainer } from '../iframe'
 import { createContainerReporter, measureContentBox } from '../sizing'
 
 /**
@@ -66,6 +66,7 @@ export const mountEmbedded: DisplayModeMount = ({ options }) => {
     element: iframe,
     present: { mode: DisplayMode.Embedded, viewport: viewport ? viewport.current() : { width: measured.width, height: measured.height } },
     viewport,
+    whenReady: frameReadiness(iframe, options.url ?? ''),
     reveal: () => {
       iframe.style.visibility = 'visible'
     },
