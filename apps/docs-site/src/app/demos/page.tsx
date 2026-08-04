@@ -9,6 +9,10 @@ export const metadata: Metadata = {
   description: 'Interactive demonstrations of hyperfrontend micro-frontend architecture across frameworks and origin boundaries.',
 }
 
+/**
+ * The demos page: the gallery deck with its floating host console.
+ * @returns The page markup.
+ */
 export default function DemosPage() {
   return (
     <>
@@ -17,8 +21,8 @@ export default function DemosPage() {
         <div className="relative mx-auto w-full max-w-5xl text-center">
           <h1 className="font-display text-4xl font-bold text-slate-900 dark:text-white">Live Demos</h1>
           <p className="mt-3 text-base text-slate-600 dark:text-slate-400">
-            Each demo is a real feature app on its own origin, embedded here through its generated shell. The centered card is live — drag,
-            scroll, or use the arrow keys to browse.
+            Each demo is a real feature app on its own origin, embedded here through its generated shell. The centered card is live — browse
+            by dragging, scrolling, the arrow keys, or the side dial on portrait screens.
           </p>
           <div className="mt-10">
             <DemosGallery entries={DEMO_MANIFEST} />
