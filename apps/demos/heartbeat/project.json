@@ -1,9 +1,73 @@
 {
   "$schema": "../../../node_modules/nx/schemas/project-schema.json",
   "name": "demo-heartbeat",
-  "description": "Heartbeat demonstration.",
-  "sourceRoot": "{projectRoot}/src",
+  "description": "Heartbeat demonstration — an anatomical heart built as a self-contained hyperfrontend feature (React), observed same-origin by a vanilla-TS ECG host page.",
+  "sourceRoot": "apps/demos/heartbeat/src",
   "projectType": "application",
-  "tags": ["type:demo", "scope:standalone"],
-  "targets": {}
+  "tags": ["type:demo", "role:feature", "scope:standalone"],
+  "metadata": {
+    "deploy": {
+      "provider": "unassigned",
+      "service": "configure-me-demo-heartbeat",
+      "origin": "https://configure-me.example.invalid",
+      "boundary": "same-origin",
+      "kind": "static",
+      "publishDir": "dist/apps/demos/heartbeat/app"
+    }
+  },
+  "targets": {
+    "install": {
+      "executor": "@hyperfrontend/app:install",
+      "options": {}
+    },
+    "dev": {
+      "executor": "@hyperfrontend/app:serve",
+      "dependsOn": ["install"],
+      "options": {
+        "command": "npm run dev:hosted"
+      }
+    },
+    "build": {
+      "executor": "@hyperfrontend/app:build",
+      "dependsOn": ["install"],
+      "cache": false,
+      "outputs": ["{workspaceRoot}/dist/apps/demos/heartbeat/app"],
+      "options": {
+        "command": "npm run build"
+      }
+    },
+    "test": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["install"],
+      "options": {
+        "command": "npm run test:unit -- --run",
+        "cwd": "apps/demos/heartbeat"
+      }
+    },
+    "lint": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["install"],
+      "options": {
+        "command": "npm run lint",
+        "cwd": "apps/demos/heartbeat"
+      }
+    },
+    "typecheck": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["install"],
+      "options": {
+        "command": "npm run type-check",
+        "cwd": "apps/demos/heartbeat"
+      }
+    },
+    "pack-shell": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["install"],
+      "outputs": ["{workspaceRoot}/dist/apps/demos/heartbeat/shell"],
+      "options": {
+        "command": "npx hf build --ci --allow-open --out ../../../dist/apps/demos/heartbeat/shell",
+        "cwd": "apps/demos/heartbeat"
+      }
+    }
+  }
 }

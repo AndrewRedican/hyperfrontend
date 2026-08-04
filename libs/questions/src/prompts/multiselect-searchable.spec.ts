@@ -266,4 +266,41 @@ describe('multiselect searchable mode', () => {
       expect(result.value).toEqual(['apple'])
     })
   })
+
+  describe('paste', () => {
+    it('appends the first pasted line to the filter and keeps Space toggling', async () => {
+      const config = createConfig({ searchable: true })
+      const promise = multiselect(config)
+
+      // why: the paste filters to Banana; Space still toggles the focused item
+      input.enqueueKeys(['\x1B[200~ban\nana\x1B[201~', Key.Space, Key.Enter])
+
+      const result = await promise
+
+      expect(result.result).toBe(PromptResult.Submitted)
+      expect(result.value).toEqual(['banana'])
+    })
+
+    it('appends a non-bracketed pasted run to the filter', async () => {
+      const config = createConfig({ searchable: true })
+      const promise = multiselect(config)
+
+      input.enqueueKeys(['che', Key.Space, Key.Enter])
+
+      const result = await promise
+
+      expect(result.value).toEqual(['cherry'])
+    })
+
+    it('ignores a paste whose first line has no printable characters', async () => {
+      const config = createConfig({ searchable: true })
+      const promise = multiselect(config)
+
+      input.enqueueKeys(['\x1B[200~\nban\x1B[201~', Key.Space, Key.Enter])
+
+      const result = await promise
+
+      expect(result.value).toEqual(['apple'])
+    })
+  })
 })

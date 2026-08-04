@@ -48,6 +48,8 @@ A terminal prompting library built on functional programming principles. Create 
 - **Type-Safe** — Full TypeScript support with discriminated unions for prompt outcomes
 - **Zero External Dependencies** — Uses only Node.js built-ins and `@hyperfrontend` utilities
 - **Searchable Multiselect** — Type-to-filter functionality for large option lists
+- **Clipboard Paste** — Bracketed paste mode on TTYs (with a multi-character-chunk fallback elsewhere); pasted text is sanitized and never auto-submits
+- **Resize-Aware Rendering** — Prompts hard-wrap to the terminal width and repaint on resize, preserving value, cursor, selection, and validation state
 
 ### Architecture Highlights
 
@@ -56,6 +58,8 @@ Each prompt follows a functional state machine pattern:
 - **Immutable State** — All prompt state is frozen; updates create new state objects
 - **Explicit Outcomes** — Prompts return either `{ result: 'submitted', value: T }` or `{ result: 'cancelled', value: undefined }`
 - **Terminal Abstraction** — Low-level I/O is encapsulated in a `Terminal` interface for testability
+- **Token Input Stream** — Raw input is tokenized into keys, pastes, and resize notifications by a persistent listener, with raw mode held for the whole prompt session and restored on close
+- **Frame Renderer** — A width-aware screen helper erases and repaints exact frames; on resize it recomputes the previous frame's height at the new width (assumes a reflowing terminal; display width is code-point based, east-asian double width out of scope)
 
 ## Why Use @hyperfrontend/questions?
 
@@ -148,11 +152,16 @@ type PromptOutcome<T> = { result: 'submitted'; value: T } | { result: 'cancelled
 
 ## Compatibility
 
-| Environment    | Supported |
-| -------------- | --------- |
-| Node.js >= 18  | ✅        |
-| TTY Terminal   | ✅        |
-| Tree Shakeable | ✅        |
+| Environment                    | Supported |
+| ------------------------------ | --------- |
+| Node.js >= 18                  | ✅        |
+| TTY Terminal                   | ✅        |
+| Bracketed paste (TTY)          | ✅        |
+| Resize redraw (SIGWINCH)       | ✅        |
+| Non-TTY streams (tests, pipes) | ✅        |
+| Tree Shakeable                 | ✅        |
+
+On TTY inputs a prompt session enables bracketed paste mode (`ESC[?2004h`) and restores it on close; terminals without bracketed paste still paste correctly because multi-character input chunks are treated as pastes. Single-line prompts collapse pasted newlines into spaces, so pasting can never submit a value.
 
 ## License
 

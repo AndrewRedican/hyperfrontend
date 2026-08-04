@@ -21,6 +21,8 @@ export interface DemoManifestEntry {
   boundary: DemoBoundary
   /** URL the live feature app is served from; absent while the demo is in planning. */
   featureUrl?: string
+  /** `true` once the demo's implementation is merged but its live origin has not deployed yet. */
+  built?: boolean
   /** Frameworks on each side of the boundary. */
   stack: string
   /** High-value source locations for the demo's host and hostee implementations. */
@@ -83,9 +85,17 @@ export const DEMO_MANIFEST: readonly DemoManifestEntry[] = [
   {
     slug: 'heartbeat',
     title: 'Heartbeat',
-    description: 'Liveness, latency, and what a host should do when a feature stops answering.',
+    description:
+      'An anatomical heart whose every contraction is contract traffic — tap for extra beats, hold to flatline, and watch the host draw the ECG, pop toasts, and materialise a skull.',
     boundary: 'same-origin',
-    stack: 'In planning',
+    built: true,
+    stack: 'React 19 feature · vanilla-TS host',
+    sourceLinks: [
+      { label: 'Feature app (React)', href: `${REPO}/tree/main/apps/demos/heartbeat` },
+      { label: 'Contract', href: `${REPO}/blob/main/apps/demos/heartbeat/heartbeat.contract.ts` },
+      { label: 'Rhythm engine', href: `${REPO}/blob/main/apps/demos/heartbeat/src/rhythm/rhythm-engine.ts` },
+      { label: 'Host page (vanilla TS)', href: `${REPO}/blob/main/apps/demos/heartbeat/src/host/main.ts` },
+    ],
   },
   {
     slug: 'views',

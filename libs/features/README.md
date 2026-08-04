@@ -131,7 +131,7 @@ npx @hyperfrontend/features dev                 # serve apps with the debug UI
 | `@hyperfrontend/features/cli`    | CLI (`init`, `build`, `dev`) and `hf` bin         |
 | `@hyperfrontend/features/server` | Dev server and debug UI                           |
 
-> Using Nx? The package also ships a `feature` generator and `build`/`serve` executors at `@hyperfrontend/features/nx/*` to streamline integration in an Nx workspace.
+> Using Nx? `nx add @hyperfrontend/features` installs the package and runs its `init` generator to declare the dependency. The package also ships `init`/`feature` generators and `build`/`serve` executors — importable from the `@hyperfrontend/features/nx/generators` and `@hyperfrontend/features/nx/executors` entry points — that use the consumer workspace's `@nx/devkit` for formatting and installs when present, falling back to built-in equivalents.
 
 ## Compatibility
 

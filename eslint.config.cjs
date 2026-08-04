@@ -25,6 +25,13 @@ module.exports = [
     },
   },
   {
+    // context: the package-e2e support helpers run inside scratch consumer workspaces where the @hyperfrontend built-in-copy replacements are not installed and no tsconfig path maps them, so the safe spellings cannot resolve.
+    files: ['apps/package-e2e/**/src/support/**/*.ts'],
+    rules: {
+      'workspace/no-unsafe-builtin-methods': 'off',
+    },
+  },
+  {
     // context: spec files in this directory were excluded from linting entirely until test-name enforcement was added.
     // todo: onboard the package-e2e specs to the remaining workspace style rules, then delete this override.
     files: ['apps/package-e2e/**/*.spec.ts'],

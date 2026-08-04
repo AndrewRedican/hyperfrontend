@@ -42,7 +42,7 @@ Versioning library with changelog parsing, conventional commits, and semver flow
 
 ### Key Features
 
-- **Interactive Commit Author (`cz`)** - `npx cz` launches a keystroke-live conventional-commit session (type, scope, subject countdown, body, breaking marker, issues, preview, commit)
+- **Interactive Commit Author (`cz`)** - `npx cz` launches a keystroke-live conventional-commit session (type, scope, subject countdown, body, breaking marker, issues, preview, commit) with clipboard-paste support and terminal-resize redraw
 - **Commit Validator (`cl`)** - `npx cl <path>` plugs into any `commit-msg` git hook to enforce your ruleset
 - **Changelog Parsing** - Parse CHANGELOG.md files into structured objects with lossless round-tripping
 - **Conventional Commits** - Parse, validate, format, and classify messages following the [Conventional Commits](https://www.conventionalcommits.org/) specification

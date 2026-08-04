@@ -54,8 +54,8 @@ function createMockInput(): PassThrough & {
  *
  * @returns Mock output stream that collects written data
  */
-function createMockOutput(): PassThrough & { getWrittenData: () => string } {
-  const output = new PassThrough() as PassThrough & { getWrittenData: () => string }
+function createMockOutput(): PassThrough & { getWrittenData: () => string; columns?: number; rows?: number } {
+  const output = new PassThrough() as PassThrough & { getWrittenData: () => string; columns?: number; rows?: number }
   let writtenData = ''
 
   const originalWrite = output.write.bind(output)
@@ -218,6 +218,74 @@ describe('confirm', () => {
 
       expect(result.result).toBe(PromptResult.Submitted)
       expect(result.value).toBe(false)
+    })
+  })
+
+  describe('paste', () => {
+    it('accepts a pasted yes', async () => {
+      const config = createConfig()
+      const promise = confirm(config)
+
+      input.enqueueKeys(['\x1B[200~yes\n\x1B[201~'])
+
+      const result = await promise
+
+      expect(result.result).toBe(PromptResult.Submitted)
+      expect(result.value).toBe(true)
+    })
+
+    it('accepts a pasted no with surrounding whitespace', async () => {
+      const config = createConfig()
+      const promise = confirm(config)
+
+      input.enqueueKeys(['\x1B[200~ NO \x1B[201~'])
+
+      const result = await promise
+
+      expect(result.value).toBe(false)
+    })
+
+    it('accepts a non-bracketed pasted answer', async () => {
+      const config = createConfig()
+      const promise = confirm(config)
+
+      // why: a multi-character chunk is a paste from a non-bracketed-paste terminal
+      input.enqueueKeys(['yes'])
+
+      const result = await promise
+
+      expect(result.value).toBe(true)
+    })
+
+    it('ignores pasted text that is not an answer', async () => {
+      const config = createConfig()
+      const promise = confirm(config)
+
+      input.enqueueKeys(['\x1B[200~maybe\x1B[201~', 'y'])
+
+      const result = await promise
+
+      expect(result.value).toBe(true)
+    })
+  })
+
+  describe('resize', () => {
+    it('repaints the prompt when the terminal resizes', async () => {
+      const config = createConfig({ message: 'Proceed?' })
+      const promise = confirm(config)
+
+      await new Promise((resolve) => setImmediate(resolve))
+      const before = output.getWrittenData().length
+      output.emit('resize')
+      await new Promise((resolve) => setImmediate(resolve))
+
+      expect(output.getWrittenData().slice(before)).toContain('Proceed?')
+
+      input.enqueueKeys(['y'])
+
+      const result = await promise
+
+      expect(result.value).toBe(true)
     })
   })
 

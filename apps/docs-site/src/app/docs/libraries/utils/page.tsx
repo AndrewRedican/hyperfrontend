@@ -1,5 +1,32 @@
+import type { Metadata } from 'next'
 import { Breadcrumb } from '@/components/breadcrumb'
+import { DEFAULT_OG_IMAGE, DEFAULT_TWITTER_IMAGE } from '@/lib/metadata'
 import Link from 'next/link'
+
+const UTILS_DESCRIPTION =
+  'A collection of focused utility libraries providing common functionality across the Hyperfrontend ecosystem. Each package is independently published.'
+
+export const metadata: Metadata = {
+  title: 'Utility Libraries',
+  description: UTILS_DESCRIPTION,
+  alternates: {
+    canonical: '/docs/libraries/utils/',
+  },
+  openGraph: {
+    title: 'Utility Libraries',
+    description: UTILS_DESCRIPTION,
+    url: '/docs/libraries/utils/',
+    siteName: 'HyperFrontend',
+    type: 'website',
+    images: [DEFAULT_OG_IMAGE],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Utility Libraries',
+    description: UTILS_DESCRIPTION,
+    images: [DEFAULT_TWITTER_IMAGE],
+  },
+}
 
 const utilPackages = [
   {

@@ -94,13 +94,13 @@ The contrast a security demo draws: `postMessage(payload, '*')` leaks across ori
 
 **Locked.** Deploy-as-you-go, per-service origin on Railway. Test both boundaries deliberately (supersedes "do not collapse to same-origin"): cross-origin stays **real** — never faked by serving everything together — and same-origin is an **explicit, labeled** scenario demonstrating the weakened warranty.
 
-**Open (mostly outside the repo).** Actual domain names (and reconciliation with anything already owned / provisioned on Railway); per-demo boundary-role assignment; Railway specifics — static-hosting approach, per-service cost at the demo count, custom-domain + TLS, API token + per-service IDs for CI; and how demos consume the **published** package in CI without workspace shortcuts (likely a real finding — see [04-demo-1-clock.md](04-demo-1-clock.md)).
+**Open (mostly outside the repo).** Actual domain names (and reconciliation with anything already owned / provisioned on Railway); per-demo boundary-role assignment; Railway specifics — static-hosting approach, per-service cost at the demo count, custom-domain + TLS, API token + per-service IDs for CI; and how demos consume the **published** package in CI without workspace shortcuts (a finding Demo 1 surfaced and resolved).
 
 ---
 
 ## Special handling
 
-- **Demo 1 (Clock)** — [04-demo-1-clock.md](04-demo-1-clock.md). Its job is to expose setup/packaging/dev-loop/deploy/gallery-embed/capture friction with the lowest possible feature-risk, so the friction is cleanly attributable. It births the blank prototype and is the first real exercise of the `demo-findings` skill. Expected to take the longest.
+- **Demo 1 (Clock)** — plan 04, delivered and removed. Its job is to expose setup/packaging/dev-loop/deploy/gallery-embed/capture friction with the lowest possible feature-risk, so the friction is cleanly attributable. It births the blank prototype and is the first real exercise of the `demo-findings` skill. Expected to take the longest.
 - **Demo 2 (+ generator)** — [06-demo-2-and-generator.md](06-demo-2-and-generator.md). Emphasis flips to repeatability: it exists to _prove the generator_ and lay down the conventions/templates/validation that make demos 08+ cheap and uniform.
 
 ---

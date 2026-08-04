@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=BenchNine:wght@300;400;700&display=swap" rel="stylesheet" />
+    <title>Heartbeat host — hyperfrontend demo</title>
+  </head>
+  <body>
+    <main class="page">
+      <header class="masthead">
+        <h1>Heartbeat host</h1>
+        <p>
+          One feature, two heartbeats: the red ECG trace over the stage draws the <em>cardiac</em> contract events the feature emits, while
+          the connection panel shows the SDK's own liveness watchdog. The feature owns the heart; everything drawn over and around it — the
+          trace, the toasts, the skull — belongs to the host.
+        </p>
+      </header>
+
+      <section class="stage-zone" aria-label="Embedded heartbeat feature">
+        <div class="stage-panel">
+          <div id="stage"></div>
+        </div>
+        <!-- note: Host-owned effects layer — the ECG trace, toast stickers, and flatline skull render over and around the feature without living inside it. -->
+        <div id="fx-layer" class="fx-layer" aria-hidden="true">
+          <canvas id="ecg" width="1048" height="360"></canvas>
+          <span id="ecg-flag" class="ecg-flag" hidden>FLATLINE</span>
+        </div>
+      </section>
+
+      <section class="vitals" aria-label="Vital signs">
+        <div class="tile">
+          <span id="bpm-value" class="tile-value">—</span>
+          <span class="tile-label">bpm (rolling)</span>
+        </div>
+        <div class="tile">
+          <span id="beats-total" class="tile-value">0</span>
+          <span class="tile-label">beats</span>
+        </div>
+        <div class="tile">
+          <span id="beats-user" class="tile-value">0</span>
+          <span class="tile-label">user beats</span>
+        </div>
+        <div class="tile">
+          <span id="latency-value" class="tile-value">—</span>
+          <span class="tile-label">ping (ms)</span>
+        </div>
+      </section>
+
+      <section class="lower">
+        <div class="panel controls-panel" aria-label="Controls">
+          <h2>Controls <span class="layer-tag">contract</span></h2>
+          <label class="rate-row" for="rate">
+            <span>rate</span>
+            <input id="rate" type="range" min="40" max="180" step="1" value="72" />
+            <output id="rate-value" for="rate">72</output>
+          </label>
+          <div class="button-row">
+            <button id="close-btn" type="button">Close</button>
+            <button id="reopen-btn" type="button">Reopen</button>
+          </div>
+        </div>
+
+        <div class="panel connection-panel" aria-label="Connection">
+          <h2>Connection <span class="layer-tag">SDK liveness</span></h2>
+          <dl class="status-grid">
+            <dt>state</dt>
+            <dd id="sdk-state">gone</dd>
+            <dt>missed beats</dt>
+            <dd id="sdk-missed">0</dd>
+            <dt>last beat</dt>
+            <dd id="sdk-last-beat">—</dd>
+          </dl>
+        </div>
+
+        <div class="panel log-panel" aria-label="Event log">
+          <h2>Events</h2>
+          <ul id="event-log"></ul>
+        </div>
+      </section>
+    </main>
+    <script type="module" src="/src/host/main.ts"></script>
+  </body>
+</html>

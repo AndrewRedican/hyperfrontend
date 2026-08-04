@@ -4,7 +4,7 @@
       .bg-parent { fill: #64748B; }
       .bg-child { fill: #475569; }
       .bg-child-glow { fill: #22D3EE; }
-      .stroke-dark { stroke: #0F172A; stroke-width: 6; stroke-linejoin: round; fill: none; }
+      .stroke-dark { stroke: #94A3B8; stroke-width: 6; stroke-linejoin: round; fill: none; }
       .stroke-cyan-line { stroke: #22D3EE; stroke-width: 6; stroke-linecap: round; stroke-linejoin: round; fill: none; }
     </style>
   </defs>

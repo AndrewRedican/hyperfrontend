@@ -12,13 +12,21 @@ export interface NavItem {
   children?: NavItem[]
 }
 
-/** Kind of icon a navigation entry shows: a published package or a submodule. */
-export type NavIconKind = 'package' | 'submodule'
+/** Kind of icon a navigation entry shows: a published package, an architecture document, or a submodule. */
+export type NavIconKind = 'package' | 'architecture' | 'submodule'
 
 /**
  * Classify a navigation entry for icon display. A node is a `package` when it
- * carries a `packageName`, a `submodule` when it lives anywhere inside a
- * package's subtree, and otherwise a grouping/section entry (no icon).
+ * carries a `packageName`, an `architecture` document when it is the reserved
+ * `architecture` entry inside a package's subtree, a `submodule` for any other
+ * node inside a package's subtree, and otherwise a grouping/section entry (no
+ * icon).
+ *
+ * The `architecture` slug is reserved: each library's ARCHITECTURE.md is
+ * published at `/docs/libraries/<lib>/architecture`, so a real entrypoint can
+ * never occupy that route. Architecture pages are prose about the design, not
+ * importable endpoints, and get a distinct icon so they are not mistaken for
+ * one.
  *
  * Depth alone is not enough: top-level entries include sections like
  * `Getting Started` and `Libraries`, and utility packages sit two levels deep.
@@ -29,6 +37,7 @@ export type NavIconKind = 'package' | 'submodule'
  */
 export function getNavIconKind(item: NavItem, insidePackage: boolean): NavIconKind | null {
   if (item.packageName) return 'package'
+  if (insidePackage && item.slug === 'architecture') return 'architecture'
   if (insidePackage) return 'submodule'
   return null
 }
@@ -111,7 +120,10 @@ const coreLibraries: NavItem[] = [
       { slug: 'cli', href: '/docs/libraries/features/cli' },
       { slug: 'server', href: '/docs/libraries/features/server' },
       { slug: 'generators', href: '/docs/libraries/features/generators' },
+      { slug: 'nx/generators', href: '/docs/libraries/features/nx/generators' },
       { slug: 'nx/generators/feature', href: '/docs/libraries/features/nx/generators/feature' },
+      { slug: 'nx/generators/init', href: '/docs/libraries/features/nx/generators/init' },
+      { slug: 'nx/executors', href: '/docs/libraries/features/nx/executors' },
       { slug: 'nx/executors/build', href: '/docs/libraries/features/nx/executors/build' },
       { slug: 'nx/executors/serve', href: '/docs/libraries/features/nx/executors/serve' },
     ],

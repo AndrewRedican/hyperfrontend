@@ -1,5 +1,7 @@
 'use client'
 
+import { JsonLd } from '@/components/json-ld'
+import { SITE_URL } from '@/lib/site'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 
@@ -39,6 +41,21 @@ export function Breadcrumb() {
 
   return (
     <nav className="mb-6 text-sm" aria-label="Breadcrumb">
+      <JsonLd
+        data={{
+          '@context': 'https://schema.org',
+          '@type': 'BreadcrumbList',
+          itemListElement: [
+            { '@type': 'ListItem', position: 1, name: 'Home', item: `${SITE_URL}/` },
+            ...breadcrumbs.map((crumb, index) => ({
+              '@type': 'ListItem',
+              position: index + 2,
+              name: crumb.label,
+              item: `${SITE_URL}${crumb.href}/`,
+            })),
+          ],
+        }}
+      />
       <ol className="flex flex-wrap items-center gap-2">
         <li>
           <Link href="/" className="text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200">

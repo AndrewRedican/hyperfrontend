@@ -54,8 +54,8 @@ function createMockInput(): PassThrough & {
  *
  * @returns Mock output stream that collects written data
  */
-function createMockOutput(): PassThrough & { getWrittenData: () => string } {
-  const output = new PassThrough() as PassThrough & { getWrittenData: () => string }
+function createMockOutput(): PassThrough & { getWrittenData: () => string; columns?: number; rows?: number } {
+  const output = new PassThrough() as PassThrough & { getWrittenData: () => string; columns?: number; rows?: number }
   let writtenData = ''
 
   const originalWrite = output.write.bind(output)
@@ -645,6 +645,47 @@ describe('multiselect', () => {
 
       expect(result.result).toBe(PromptResult.Submitted)
       expect(result.value).toHaveLength(1)
+    })
+  })
+
+  describe('paste', () => {
+    it('ignores pasted text when not searchable', async () => {
+      const config = createConfig()
+      const promise = multiselect(config)
+
+      // why: the paste must not toggle or submit; Space then selects normally
+      input.enqueueKeys(['pasted text', Key.Space, Key.Enter])
+
+      const result = await promise
+
+      expect(result.result).toBe(PromptResult.Submitted)
+      expect(result.value).toEqual(['apple'])
+    })
+  })
+
+  describe('resize', () => {
+    it('repaints the list preserving selections when the terminal resizes', async () => {
+      const config = createConfig()
+      const promise = multiselect(config)
+
+      input.enqueueKeys([Key.Space, Key.Down, Key.Space])
+      await new Promise((resolve) => setImmediate(resolve))
+      await new Promise((resolve) => setImmediate(resolve))
+      await new Promise((resolve) => setImmediate(resolve))
+      await new Promise((resolve) => setImmediate(resolve))
+
+      const before = output.getWrittenData().length
+      output.emit('resize')
+      await new Promise((resolve) => setImmediate(resolve))
+
+      // why: the repaint after resize keeps the selection counter intact
+      expect(output.getWrittenData().slice(before)).toContain('2 selected')
+
+      input.enqueueKeys([Key.Enter])
+
+      const result = await promise
+
+      expect(result.value).toEqual(['apple', 'banana'])
     })
   })
 })

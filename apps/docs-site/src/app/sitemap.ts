@@ -2,12 +2,11 @@ import type { NavItem } from '@/lib/navigation'
 import type { MetadataRoute } from 'next'
 import { getAllArticleSlugs } from '@/lib/articles'
 import { docsNavigation, mainNavLinks } from '@/lib/navigation'
+import { SITE_URL } from '@/lib/site'
 import { createDate } from '@hyperfrontend/immutable-api-utils/built-in-copy/date'
 import { createSet } from '@hyperfrontend/immutable-api-utils/built-in-copy/set'
 
 export const dynamic = 'force-static'
-
-const BASE_URL = 'https://hyperfrontend.dev'
 
 /**
  * Recursively extract all href values from navigation items.
@@ -36,7 +35,19 @@ function extractUrls(items: NavItem[]): string[] {
  * @returns Sitemap entries for all documented pages
  */
 export default function sitemap(): MetadataRoute.Sitemap {
-  const staticPages = ['/', '/architecture', '/demos']
+  const staticPages = [
+    '/',
+    '/architecture',
+    '/demos',
+    // why: these pages exist but the sidebar navigation does not link them directly; validate-sitemap fails the build if one goes missing here
+    '/docs/libraries/utils',
+    '/docs/libraries/network-protocol/channel',
+    '/docs/libraries/network-protocol/data',
+    '/docs/libraries/network-protocol/packet',
+    '/docs/libraries/network-protocol/protocol',
+    '/docs/libraries/network-protocol/receiver',
+    '/docs/libraries/network-protocol/sender',
+  ]
 
   const navUrls = extractUrls(docsNavigation)
   const mainUrls = mainNavLinks.map((link) => link.href)
@@ -45,7 +56,8 @@ export default function sitemap(): MetadataRoute.Sitemap {
   const allUrls = [...createSet([...staticPages, ...navUrls, ...mainUrls, ...articleUrls])]
 
   return allUrls.map((url) => ({
-    url: `${BASE_URL}${url}`,
+    // why: trailingSlash is enabled site-wide, so sitemap locs must match the canonical trailing-slash form
+    url: `${SITE_URL}${url.endsWith('/') ? url : `${url}/`}`,
     lastModified: createDate(),
     changeFrequency: url === '/' ? 'weekly' : 'monthly',
     priority: url === '/' ? 1.0 : url.startsWith('/docs/libraries') ? 0.8 : 0.6,

@@ -18,6 +18,8 @@ module.exports = [
           ignoredDependencies: [
             'jest',
             'typescript',
+            // why: the compile-time parity spec (src/nx/model.compat.spec.ts) type-imports @nx/devkit to pin the structural mirror in src/nx/model.ts, and the nx adapter optionally loads it at RUNTIME from the consumer workspace via createRequire; it is never a declared dependency.
+            '@nx/devkit',
             // why: the bundled TypeScript plugin resolves tslib from the consumer's node_modules at build time; it is never imported here, so the graph cannot see it.
             'tslib',
             // why: rollup platform bindings are optionalDependencies so `hf build` resolves its native binding on a cold install; they are never imported, so the graph cannot see them.

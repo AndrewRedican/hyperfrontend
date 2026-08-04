@@ -7,7 +7,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { min, pow } from '@hyperfrontend/immutable-api-utils/built-in-copy/math'
 import { cancelAnimationFrame, requestAnimationFrame } from '@hyperfrontend/immutable-api-utils/built-in-copy/timers'
 import { ClockEmbed } from './clock-embed'
-import { DemoFallbackCard, getDemoTheme } from './demo-fallback-card'
+import { DemoFallbackCard, getDemoTheme, restingStatusFor } from './demo-fallback-card'
 
 /** Snapshot taken when fast-forward begins so the easing can interpolate from that moment. */
 interface FastForwardStart {
@@ -180,7 +180,7 @@ export function DemoShowcase({ entries, cycleDuration = 20000, fastForwardDurati
                 {entry.featureUrl ? (
                   <ClockEmbed entry={entry} className="h-full w-full" onStatus={setEmbedStatus} />
                 ) : (
-                  <DemoFallbackCard entry={entry} />
+                  <DemoFallbackCard entry={entry} status={restingStatusFor(entry)} />
                 )}
               </div>
             ))}
@@ -332,6 +332,11 @@ interface SkipIconProps {
   className?: string
 }
 
+/**
+ *
+ * @param root0
+ * @param root0.className
+ */
 function SkipIcon({ className }: SkipIconProps) {
   return (
     <svg className={className} viewBox="0 0 24 24" fill="currentColor">
@@ -346,6 +351,11 @@ interface PauseIconProps {
   className?: string
 }
 
+/**
+ *
+ * @param root0
+ * @param root0.className
+ */
 function PauseIcon({ className }: PauseIconProps) {
   return (
     <svg className={className} viewBox="0 0 24 24" fill="currentColor">
@@ -360,6 +370,11 @@ interface PlayIconProps {
   className?: string
 }
 
+/**
+ *
+ * @param root0
+ * @param root0.className
+ */
 function PlayIcon({ className }: PlayIconProps) {
   return (
     <svg className={className} viewBox="0 0 24 24" fill="currentColor">

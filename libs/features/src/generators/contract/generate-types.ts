@@ -47,24 +47,30 @@ function toDeclarationPath(contractPath: string): string {
   return contractPath.replace(/\.json$/, '.d.ts')
 }
 
+/** Outcome of staging the contract declaration bridge. */
+export type ContractTypesOutcome = 'created' | 'kept' | 'skipped' | 'updated'
+
 /**
  * Stages a `.d.ts` of literal-type declarations beside a JSON contract.
  *
  * Only `.json` contracts need this bridge; `.ts as const` contracts derive types
- * via `typeof` and are skipped (no file is staged). Pure: stages only into `tree`.
+ * via `typeof` and are skipped (no file is staged). The declaration file is
+ * machine-owned: a stale one is regenerated, and an identical one is left
+ * unstaged so re-runs stay no-ops. Pure: stages only into `tree`.
  *
  * @param config - The resolved feature config naming the feature and contract path.
  * @param contract - The validated contract whose literals are preserved.
  * @param tree - The VFS tree the declaration file is staged into.
+ * @returns Whether the declaration was staged as created, staged as updated, kept as-is, or skipped for a non-JSON contract.
  *
  * @example Bridging a JSON contract to literal types
  * ```typescript
- * generateContractTypes({ name: 'clock', version: '1.0.0', contract: './clock.contract.json', url: '/clock' }, contract, tree)
+ * const outcome = generateContractTypes({ name: 'clock', version: '1.0.0', contract: './clock.contract.json', url: '/clock' }, contract, tree)
  * ```
  */
-export function generateContractTypes(config: ResolvedFeatureConfig, contract: FeatureContract, tree: Tree): void {
+export function generateContractTypes(config: ResolvedFeatureConfig, contract: FeatureContract, tree: Tree): ContractTypesOutcome {
   if (!config.contract.endsWith('.json')) {
-    return
+    return 'skipped'
   }
   const shape = { name: config.name, version: config.version, emitted: contract.emitted, accepted: contract.accepted }
   const declaration = `/**
@@ -76,5 +82,11 @@ declare const contract: ${toTypeLiteral(shape, '')}
 
 export default contract
 `
-  tree.write(toDeclarationPath(config.contract), declaration)
+  const declarationPath = toDeclarationPath(config.contract)
+  const existing = tree.read(declarationPath, 'utf-8')
+  if (existing === declaration) {
+    return 'kept'
+  }
+  tree.write(declarationPath, declaration)
+  return existing === null ? 'created' : 'updated'
 }

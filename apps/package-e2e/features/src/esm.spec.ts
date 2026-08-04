@@ -12,7 +12,10 @@ const SUBPATH_SYMBOLS: ReadonlyArray<readonly [string, string]> = [
   ['@hyperfrontend/features/cli', 'runFeaturesCli'],
   ['@hyperfrontend/features/server', 'startDevServer'],
   ['@hyperfrontend/features/generators', 'generateShell'],
+  ['@hyperfrontend/features/nx/generators', 'initGenerator'],
+  ['@hyperfrontend/features/nx/executors', 'runBuildExecutor'],
   ['@hyperfrontend/features/nx/generators/feature', 'default'],
+  ['@hyperfrontend/features/nx/generators/init', 'default'],
   ['@hyperfrontend/features/nx/executors/build', 'default'],
   ['@hyperfrontend/features/nx/executors/serve', 'default'],
 ]

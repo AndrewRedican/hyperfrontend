@@ -7,7 +7,7 @@ export interface E2eExecutorOptions {
   /** Path to E2E test project directory relative to workspace root */
   testDir?: string
   /** Output formats to test */
-  formats?: ('cjs' | 'esm' | 'iife' | 'umd' | 'browser')[]
+  formats?: ('cjs' | 'esm' | 'iife' | 'umd' | 'browser' | 'nx')[]
   /** Skip npm pack and install step */
   skipInstall?: boolean
   /** Remove tarball after installation */

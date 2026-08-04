@@ -13,8 +13,8 @@ See [00-strategy.md](00-strategy.md) (journey J4) and the [index](README.md).
 ## Scope (to elaborate)
 
 - Anchor on the existing synthesis (`_/LEGACY_PROJECTS_ANALYSIS.md`).
-- Write one **distilled-idea stub** per keeper into [legacy-distilled/](legacy-distilled/), tagged `adopt` / `adapt` / `reimagine` + which plan it feeds.
-- Commit verbatim the **Tier-1 keepers** into [legacy-distilled/](legacy-distilled/).
+- Write one **distilled-idea stub** per keeper into a committed `legacy-distilled/` home (recreated when this plan runs), tagged `adopt` / `adapt` / `reimagine` + which plan it feeds.
+- Commit verbatim the **Tier-1 keepers** into a committed `legacy-distilled/` home (recreated when this plan runs).
 - Verify nothing in `_/` is referenced by tracked code, then **delete `_/`**.
 
 ## Tier-1 keepers (from recon)

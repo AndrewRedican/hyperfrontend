@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.5.0](https://github.com/AndrewRedican/hyperfrontend/compare/208793adace114439414819cd1cd8ca9e8b121ca...7e783d3d9e6b6b3a42d226b44256b943958a5813) - 2026-08-04
+
+### Features
+
+- add devkit bridge and nx entry barrels
+
+### Bug Fixes
+
+- make hf init idempotent and partial-apply safe
+
 ## [0.4.0](https://github.com/AndrewRedican/hyperfrontend/compare/d07b3add2620b9c6e9ddcf48e01571b8788a3bc7...a6d9ac8c48d1c3edbb8bf54c5a561fb3cde590da) - 2026-08-02
 
 ### Features
@@ -17,25 +27,25 @@ All notable changes to this project will be documented in this file.
 
 ### Breaking Changes
 
-- **BREAKING:** coordinate presentation host-side with contract-declared display modes
-- **BREAKING:** throw when registering v2 security without a shared key
-- **BREAKING:** is Open stays false after open() until the handshake completes; ready() rejects when no host answers
+- **BREAKING** **BREAKING:** coordinate presentation host-side with contract-declared display modes
+- **BREAKING** **BREAKING:** throw when registering v2 security without a shared key
+- **BREAKING** **BREAKING:** is Open stays false after open() until the handshake completes; ready() rejects when no host answers
 
 ### Features
 
 - adopt a reloaded feature on its existing mount
-- **BREAKING** **BREAKING:** ⚠️ BREAKING: coordinate presentation host-side with contract-declared display modes
+- **BREAKING** **BREAKING:** **BREAKING:** ⚠️ BREAKING: coordinate presentation host-side with contract-declared display modes
 - delegate frame permissions and add host-only sandbox containment
 - add four-state liveness, closing flush window, and dirty state
 - validate action payloads on send and receive
 - announce contract versions and gate compatibility
 - add hostee security options and shared registration
 - add allow-open option to the nx build executor
-- **BREAKING** **BREAKING:** ⚠️ BREAKING: adopt asynchronous wire-gated open with origin pinning and timeout errors
+- **BREAKING** **BREAKING:** **BREAKING:** ⚠️ BREAKING: adopt asynchronous wire-gated open with origin pinning and timeout errors
 
 ### Bug Fixes
 
-- **BREAKING** **BREAKING:** ⚠️ BREAKING: throw when registering v2 security without a shared key
+- **BREAKING** **BREAKING:** **BREAKING:** ⚠️ BREAKING: throw when registering v2 security without a shared key
 
 ## [0.2.0](https://github.com/AndrewRedican/hyperfrontend/compare/6b5a02be62850b0509b9fd71ad9232655cf5fbbf...47a37497608ac765af3efb30f0b5e01950bae425) - 2026-07-05
 

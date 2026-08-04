@@ -16,7 +16,7 @@
       "type": "array",
       "items": {
         "type": "string",
-        "enum": ["cjs", "esm", "iife", "umd", "browser"]
+        "enum": ["cjs", "esm", "iife", "umd", "browser", "nx"]
       },
       "description": "Output formats to test. 'browser' runs combined IIFE/UMD tests in jsdom. Defaults to all formats with existing jest configs.",
       "default": ["cjs", "esm", "browser"]

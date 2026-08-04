@@ -1,8 +1,12 @@
 # feature
 
-Nx `feature` generator. A thin wrapper that scaffolds a hyperfrontend feature by
-delegating to the SDK's headless `hf init` (config resolution, contract loading,
-entry wiring). Registered via the package's `generators.json`.
+Nx `feature` generator. Scaffolds a hyperfrontend feature by delegating to the
+SDK's headless `hf init` (config resolution, contract loading, entry wiring),
+staging every write into the Nx tree so `--dry-run` previews without touching
+the disk. It first ensures `@hyperfrontend/features` is declared in the root
+`package.json` and returns a callback that installs — via the workspace's
+`@nx/devkit` when present, a built-in installer otherwise — only when that
+declaration was added. Registered via the package's `generators.json`.
 
 ## Usage
 

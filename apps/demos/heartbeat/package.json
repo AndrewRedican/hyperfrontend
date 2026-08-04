@@ -1,8 +1,52 @@
 {
   "name": "@hyperfrontend/demo-heartbeat",
-  "version": "0.0.0",
-  "description": "Heartbeat demonstration.",
-  "main": "./src/index.js",
+  "version": "0.1.0",
+  "description": "Heartbeat demonstration — an anatomical heart feature (React) observed by a vanilla-TS ECG host, contrasting app-level cardiac events with the SDK's liveness watchdog.",
   "private": true,
-  "dependencies": {}
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "run-p type-check \"build-only {@}\" --",
+    "preview": "vite preview",
+    "test:unit": "vitest",
+    "build-only": "vite build",
+    "type-check": "tsc --build",
+    "lint": "run-s \"lint:*\"",
+    "lint:oxlint": "oxlint . --fix",
+    "lint:eslint": "eslint . --fix --cache",
+    "build:watch": "vite build --watch",
+    "hf:dev": "hf dev",
+    "dev:hosted": "run-p build:watch hf:dev"
+  },
+  "dependencies": {
+    "@hyperfrontend/features": "^0.4.0",
+    "react": "^19.2.8",
+    "react-dom": "^19.2.8"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "@tsconfig/node24": "^24.0.4",
+    "@types/jsdom": "^28.0.3",
+    "@types/node": "^24.13.2",
+    "@types/react": "^19.2.18",
+    "@types/react-dom": "^19.2.4",
+    "@vitejs/plugin-react": "^6.0.5",
+    "@vitest/eslint-plugin": "^1.6.20",
+    "eslint": "^10.5.0",
+    "eslint-plugin-oxlint": "~1.76.0",
+    "eslint-plugin-react-hooks": "^7.1.1",
+    "eslint-plugin-react-refresh": "^0.5.3",
+    "globals": "^16.3.0",
+    "jiti": "^2.7.0",
+    "jsdom": "^29.1.1",
+    "npm-run-all2": "^9.0.2",
+    "oxlint": "~1.76.0",
+    "typescript": "~6.0.0",
+    "typescript-eslint": "^8.65.0",
+    "vite": "^8.0.16",
+    "vitest": "^4.1.9"
+  },
+  "engines": {
+    "node": "^22.18.0 || >=24.12.0"
+  }
 }

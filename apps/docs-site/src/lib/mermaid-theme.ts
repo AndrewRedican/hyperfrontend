@@ -11,8 +11,10 @@ export const lightThemeVariables = <const>{
 
   // why: Primary colors (blue-600 based) for nodes and highlights
   primaryColor: '#2563eb',
-  primaryTextColor: '#ffffff',
+  // why: mermaid's base theme cascades primaryTextColor into every node/edge label (`.label text, span`), and nodes are filled with the near-white mainBkg — so label text must be dark, not white.
+  primaryTextColor: '#1e293b',
   primaryBorderColor: '#1d4ed8',
+  nodeTextColor: '#1e293b',
 
   // why: Secondary colors (slate-100) for supporting elements
   secondaryColor: '#f1f5f9',

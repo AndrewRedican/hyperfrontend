@@ -46,7 +46,7 @@ The host never needs `@hyperfrontend/features` as a direct dependency: it instal
 
 ## Design Principles
 
-1. **Standalone core, isolated Nx adapter.** The package, CLI, and dev server have no build-tool dependency. The optional Nx generators and executors live in an isolated `/nx/*` adapter that the core never imports, so Nx integration can be added or ignored without touching the SDK.
+1. **Standalone core, isolated Nx adapter.** The package, CLI, and dev server have no build-tool dependency. The optional Nx generators and executors live in an isolated `/nx/*` adapter that the core never imports, so Nx integration can be added or ignored without touching the SDK. The adapter mirrors the subset of Nx's contracts it consumes structurally (`nx/model.ts`) — Nx constructs and passes its own tree and context at runtime — and the `init` generator stages workspace edits through that virtual tree, so `--dry-run` previews them.
 
    ```typescript
    // ✅ the core SDK
@@ -105,7 +105,7 @@ The host never needs `@hyperfrontend/features` as a direct dependency: it instal
 | `cli`        | `/cli`        | `init`/`build`/`dev` command runners, the tiered `feature.config.*` / `hf-dev.config.*` loader, and CLI/flag parity; backs the `hf` bin.                                                                                                                                                   |
 | `generators` | `/generators` | Pure generators for the shell package, `metadata.json`, the write-once feature module, and contract `.d.ts` types.                                                                                                                                                                         |
 | `server`     | `/server`     | Static per-app hosting and the in-browser debug UI (display-mode, resize, message-log, security controls).                                                                                                                                                                                 |
-| `nx`         | `/nx/*`       | Optional Nx adapter — a `feature` generator and `build`/`serve` executors that delegate to the SDK. Zero `@nx/devkit` dependency.                                                                                                                                                          |
+| `nx`         | `/nx/*`       | Optional Nx adapter — `init`/`feature` generators and `build`/`serve` executors (via the `/nx/generators` and `/nx/executors` entry points) that delegate to the SDK, using the consumer's `@nx/devkit` when present and built-in equivalents otherwise. Zero `@nx/devkit` dependency.     |
 
 ---
 

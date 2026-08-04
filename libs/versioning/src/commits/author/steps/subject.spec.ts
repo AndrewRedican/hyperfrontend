@@ -56,4 +56,59 @@ describe('subjectStep', () => {
     expect(ctx.draft.subject).toBe('x')
     term.destroy()
   })
+
+  it('accepts a subject pasted as a single multi-character chunk', async () => {
+    const term = createMockTerminal()
+    const ctx = createSessionContext(createTestConfig({ input: term.input, output: term.output }))
+    ctx.draft = { type: 'feat' }
+
+    const pending = subjectStep.run(ctx)
+    // why: one chunk with many printable characters is a paste, not keystrokes
+    term.input.enqueueKeys(['add resize support', TestKey.Enter])
+    const result = await pending
+
+    expect(result).toEqual({ status: StepStatus.Done })
+    expect(ctx.draft.subject).toBe('add resize support')
+    term.destroy()
+  })
+
+  it('collapses newlines in a bracketed paste into spaces without submitting', async () => {
+    const term = createMockTerminal()
+    const ctx = createSessionContext(createTestConfig({ input: term.input, output: term.output }))
+    ctx.draft = { type: 'fix' }
+
+    const pending = subjectStep.run(ctx)
+    term.input.enqueuePaste('handle wide\nterminals')
+    term.input.enqueueKeys([TestKey.Enter])
+    const result = await pending
+
+    expect(result).toEqual({ status: StepStatus.Done })
+    expect(ctx.draft.subject).toBe('handle wide terminals')
+    term.destroy()
+  })
+
+  it('repaints the prompt when the terminal resizes mid-prompt', async () => {
+    const term = createMockTerminal()
+    const ctx = createSessionContext(createTestConfig({ input: term.input, output: term.output }))
+    ctx.draft = { type: 'feat' }
+
+    const pending = subjectStep.run(ctx)
+    term.input.enqueueKeys(['h'])
+    await new Promise((resolve) => setImmediate(resolve))
+    await new Promise((resolve) => setImmediate(resolve))
+
+    const before = term.output.getWrittenData().length
+    term.output.resize(40)
+    await new Promise((resolve) => setImmediate(resolve))
+
+    // why: the resize repaint re-renders the label and the preserved value
+    expect(term.output.getWrittenData().slice(before)).toContain('Subject')
+
+    term.input.enqueueKeys(['i', TestKey.Enter])
+    const result = await pending
+
+    expect(result).toEqual({ status: StepStatus.Done })
+    expect(ctx.draft.subject).toBe('hi')
+    term.destroy()
+  })
 })

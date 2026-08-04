@@ -31,6 +31,23 @@ module.exports = [
     },
   },
   {
+    // Every app router page must export metadata following the src/lib/metadata.ts conventions
+    files: ['src/app/**/page.tsx'],
+    plugins: {
+      workspace: eslintRules,
+    },
+    rules: {
+      'workspace/docs-site-page-metadata': 'error',
+    },
+  },
+  {
+    // The landing page inherits the site-default metadata from the root layout by design
+    files: ['src/app/page.tsx'],
+    rules: {
+      'workspace/docs-site-page-metadata': 'off',
+    },
+  },
+  {
     // Allow @hyperfrontend/ imports from npm packages installed in this app's node_modules
     files: ['**/*.ts', '**/*.tsx', '**/*.js', '**/*.jsx'],
     rules: {

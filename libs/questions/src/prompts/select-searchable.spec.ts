@@ -338,4 +338,41 @@ describe('select searchable mode', () => {
       expect(result.value).toBe('opt1')
     })
   })
+
+  describe('paste', () => {
+    it('appends a bracketed paste first line to the filter', async () => {
+      const config = createConfig({ searchable: true })
+      const promise = select(config)
+
+      input.enqueueKeys(['\x1B[200~ban\nana\x1B[201~', Key.Enter])
+
+      const result = await promise
+
+      expect(result.result).toBe(PromptResult.Submitted)
+      expect(result.value).toBe('banana')
+    })
+
+    it('appends a non-bracketed pasted run to the filter', async () => {
+      const config = createConfig({ searchable: true })
+      const promise = select(config)
+
+      // why: a multi-character chunk is treated as a paste and filters at once
+      input.enqueueKeys(['ban', Key.Enter])
+
+      const result = await promise
+
+      expect(result.value).toBe('banana')
+    })
+
+    it('ignores a paste whose first line has no printable characters', async () => {
+      const config = createConfig({ searchable: true })
+      const promise = select(config)
+
+      input.enqueueKeys(['\x1B[200~\nban\x1B[201~', 'b', Key.Enter])
+
+      const result = await promise
+
+      expect(result.value).toBe('banana')
+    })
+  })
 })

@@ -1,10 +1,16 @@
+import type { Metadata } from 'next'
 import { Breadcrumb } from '@/components/breadcrumb'
 import { ReadmeContent } from '@/components/readme-content'
 import { getLibraryArchitecture } from '@/lib/docs-loader'
 import { markdownToHtml } from '@/lib/markdown'
 import { extractMermaidBlocks } from '@/lib/mermaid-utils'
+import { getArchitectureMetadata } from '@/lib/metadata'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
+
+export function generateMetadata(): Metadata {
+  return getArchitectureMetadata('project-scope')
+}
 
 export default async function ProjectScopeArchitecturePage() {
   const content = getLibraryArchitecture('project-scope')

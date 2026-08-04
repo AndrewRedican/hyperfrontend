@@ -3,9 +3,12 @@
  *
  * @internal
  */
+import type { InputToken } from './token-parser'
 import { createInterface } from 'node:readline'
+import { StringDecoder } from 'node:string_decoder'
 import { freeze } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
-import { createPromise } from '@hyperfrontend/immutable-api-utils/built-in-copy/promise'
+import { createPromise, promiseResolve } from '@hyperfrontend/immutable-api-utils/built-in-copy/promise'
+import { createTokenParser, TokenType } from './token-parser'
 
 /**
  * Key codes for terminal navigation.
@@ -56,6 +59,13 @@ export const Ansi = freeze(<const>{
    * @returns ANSI escape sequence string
    */
   cursorLeft: (n: number): string => `\x1B[${n}D`,
+  /**
+   * Generates ANSI escape code to move cursor right by specified columns.
+   *
+   * @param n - Number of columns to move right
+   * @returns ANSI escape sequence string
+   */
+  cursorRight: (n: number): string => `\x1B[${n}C`,
   /** Escape code to hide cursor */
   HideCursor: '\x1B[?25l',
   /** Escape code to show cursor */
@@ -66,6 +76,10 @@ export const Ansi = freeze(<const>{
   RestoreCursor: '\x1B8',
   /** Clear from cursor to end of screen */
   ClearToEnd: '\x1B[J',
+  /** Ask the terminal to wrap pasted text in ESC[200~ / ESC[201~ markers */
+  BracketedPasteOn: '\x1B[?2004h',
+  /** Stop wrapping pasted text in bracketed-paste markers */
+  BracketedPasteOff: '\x1B[?2004l',
   /** Escape code for bold text */
   Bold: '\x1B[1m',
   /** Escape code for dim text */
@@ -95,18 +109,32 @@ export interface TerminalConfig {
 }
 
 /**
+ * Current terminal dimensions.
+ */
+export interface TerminalSize {
+  /** Number of columns, defaulting to 80 when the output reports none */
+  readonly columns: number
+  /** Number of rows, defaulting to 24 when the output reports none */
+  readonly rows: number
+}
+
+/**
  * Terminal interface for interactive prompts.
  */
 export interface Terminal {
   /** Write text to output */
   readonly write: (text: string) => void
-  /** Read a single keypress */
+  /** Read the next key or paste value, skipping resize notifications */
   readonly readKey: () => Promise<string>
+  /** Read the next input token: a key, a paste, or a resize notification */
+  readonly readToken: () => Promise<InputToken>
   /** Read a line of text */
   readonly readLine: () => Promise<string>
   /** Clear N lines from current position */
   readonly clearLines: (count: number) => void
-  /** Close the terminal interface */
+  /** Current output dimensions */
+  readonly getSize: () => TerminalSize
+  /** Close the terminal interface, restoring the input's original raw mode */
   readonly close: () => void
   /** Check if cancelled (Ctrl+C pressed) */
   readonly isCancelled: () => boolean
@@ -117,6 +145,12 @@ export interface Terminal {
 /**
  * Creates a terminal interface for interactive prompts.
  *
+ * The first `readToken`/`readKey` call opens a read session: the input is
+ * switched to raw mode for the whole session (restored on `close`),
+ * bracketed paste mode is enabled on TTY inputs, and resize events from the
+ * output surface as resize tokens. Input chunks are tokenized by a
+ * persistent listener so no chunk is lost between reads.
+ *
  * @param config - Terminal configuration options
  * @returns Terminal interface with read/write methods
  *
@@ -124,7 +158,7 @@ export interface Terminal {
  * ```typescript
  * const term = createTerminal()
  * term.write('Enter name: ')
- * const name = await term.readLine()
+ * const token = await term.readToken()
  * term.close()
  * ```
  */
@@ -133,7 +167,15 @@ export function createTerminal(config: TerminalConfig = {}): Terminal {
   const output = config.output ?? process.stdout
 
   let cancelled = false
+  let closed = false
+  let sessionActive = false
+  let savedRawMode = false
   let rl: ReturnType<typeof createInterface> | undefined
+  let pendingWaiter: ((token: InputToken) => void) | undefined
+  const parser = createTokenParser()
+  // why: decoding through StringDecoder keeps multibyte characters intact when a large paste is split across stream chunks mid-code-point
+  const decoder = new StringDecoder('utf8')
+  const tokenQueue: InputToken[] = []
 
   const getReadline = (): ReturnType<typeof createInterface> => {
     if (!rl) {
@@ -146,27 +188,81 @@ export function createTerminal(config: TerminalConfig = {}): Terminal {
     output.write(text)
   }
 
-  const readKey = (): Promise<string> =>
-    createPromise((resolve) => {
-      const wasRaw = input.isRaw
-      if (input.setRawMode) {
-        input.setRawMode(true)
+  const deliver = (tokens: ReadonlyArray<InputToken>): void => {
+    for (const token of tokens) {
+      if (token.type === TokenType.Key && token.value === Key.CtrlC) {
+        cancelled = true
       }
-
-      const onData = (data: Buffer): void => {
-        input.removeListener('data', onData)
-        if (input.setRawMode) {
-          input.setRawMode(wasRaw)
-        }
-        const key = data.toString()
-        if (key === Key.CtrlC) {
-          cancelled = true
-        }
-        resolve(key)
+      // why: a resize drag fires many events; consecutive notifications collapse into one so the prompt repaints once per drained batch
+      if (token.type === TokenType.Resize && tokenQueue[tokenQueue.length - 1]?.type === TokenType.Resize) {
+        continue
       }
+      tokenQueue.push(token)
+    }
+    if (pendingWaiter !== undefined) {
+      const token = tokenQueue.shift()
+      if (token !== undefined) {
+        const waiter = pendingWaiter
+        pendingWaiter = undefined
+        waiter(token)
+      }
+    }
+  }
 
-      input.once('data', onData)
+  const onData = (data: Buffer): void => {
+    const text = decoder.write(data)
+    if (text !== '') {
+      deliver(parser.feed(text))
+    }
+  }
+
+  const onResize = (): void => {
+    deliver(freeze([freeze({ type: TokenType.Resize })]))
+  }
+
+  const openSession = (): void => {
+    if (sessionActive) return
+    sessionActive = true
+    savedRawMode = input.isRaw === true
+    if (input.setRawMode) {
+      input.setRawMode(true)
+      write(Ansi.BracketedPasteOn)
+    }
+    input.on('data', onData)
+    output.on('resize', onResize)
+    input.resume()
+  }
+
+  const closeSession = (): void => {
+    if (!sessionActive) return
+    sessionActive = false
+    input.removeListener('data', onData)
+    output.removeListener('resize', onResize)
+    if (input.setRawMode) {
+      write(Ansi.BracketedPasteOff)
+      input.setRawMode(savedRawMode)
+    }
+    input.pause()
+  }
+
+  const readToken = (): Promise<InputToken> => {
+    openSession()
+    const queued = tokenQueue.shift()
+    if (queued !== undefined) {
+      return promiseResolve(queued)
+    }
+    return createPromise((resolve) => {
+      pendingWaiter = resolve
     })
+  }
+
+  const readKey = async (): Promise<string> => {
+    let token = await readToken()
+    while (token.type === TokenType.Resize) {
+      token = await readToken()
+    }
+    return token.value
+  }
 
   const readLine = (): Promise<string> =>
     createPromise((resolve) => {
@@ -190,7 +286,16 @@ export function createTerminal(config: TerminalConfig = {}): Terminal {
     }
   }
 
+  const getSize = (): TerminalSize =>
+    freeze({
+      columns: output.columns > 0 ? output.columns : 80,
+      rows: output.rows > 0 ? output.rows : 24,
+    })
+
   const close = (): void => {
+    if (closed) return
+    closed = true
+    closeSession()
     if (rl) {
       rl.close()
       rl = undefined
@@ -201,8 +306,10 @@ export function createTerminal(config: TerminalConfig = {}): Terminal {
   return freeze({
     write,
     readKey,
+    readToken,
     readLine,
     clearLines,
+    getSize,
     close,
     isCancelled: () => cancelled,
     cancel: () => {

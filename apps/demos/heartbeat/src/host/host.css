@@ -1,0 +1,276 @@
+html,
+body {
+  margin: 0;
+  min-height: 100%;
+}
+
+body {
+  background: #10141a;
+  color: #cfd8e3;
+  font-family: 'BenchNine', system-ui, sans-serif;
+  letter-spacing: 0.02em;
+}
+
+.page {
+  max-width: 1080px;
+  margin: 0 auto;
+  padding: 1.5rem 1rem 3rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.masthead h1 {
+  margin: 0;
+  font-size: 2.4rem;
+  font-weight: 700;
+  color: #e8eef6;
+}
+
+.masthead p {
+  margin: 0.25rem 0 0;
+  max-width: 64ch;
+  opacity: 0.75;
+}
+
+.stage-zone {
+  position: relative;
+}
+
+.stage-panel {
+  border: 1px solid #232c38;
+  border-radius: 12px;
+  background: radial-gradient(circle at 50% 42%, #221419 0%, #150d11 75%);
+  overflow: hidden;
+}
+
+/* why: The effects layer is a sibling of the clipped panel, not a child — host effects may overlap the feature and drift past its boundary. */
+/* why: pointer-events none keeps taps and holds flowing through to the heart underneath. */
+.fx-layer {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  overflow: visible;
+}
+
+.fx-layer canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.fx-toast {
+  position: absolute;
+  left: 50%;
+  top: 42%;
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: url('/toast-heart.png') center / cover;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.5);
+  opacity: 0;
+}
+
+.fx-skull {
+  position: absolute;
+  left: 50%;
+  top: 42%;
+  width: 190px;
+  transform: translate(-50%, -50%);
+  opacity: 0;
+}
+
+#stage {
+  height: 360px;
+}
+
+#stage iframe {
+  display: block;
+}
+
+.vitals {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 0.75rem;
+}
+
+.tile {
+  border: 1px solid #232c38;
+  border-radius: 12px;
+  background: #151b23;
+  padding: 0.6rem 1rem;
+  display: flex;
+  flex-direction: column;
+}
+
+.tile-value {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #3fd67d;
+  line-height: 1.1;
+}
+
+.tile-label {
+  font-size: 0.95rem;
+  opacity: 0.6;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+}
+
+.ecg-flag {
+  position: absolute;
+  top: 0.9rem;
+  right: 1.1rem;
+  font-weight: 700;
+  font-size: 1.1rem;
+  letter-spacing: 0.2em;
+  padding: 0.1rem 0.6rem;
+  border-radius: 6px;
+  animation: flag-blink 1s step-end infinite;
+}
+
+.ecg-flag[data-kind='flatline'] {
+  color: #ff5d5d;
+  border: 1px solid #ff5d5d;
+}
+
+.ecg-flag[data-kind='recovering'] {
+  color: #e8b24a;
+  border: 1px solid #e8b24a;
+  animation: none;
+}
+
+@keyframes flag-blink {
+  50% {
+    opacity: 0.25;
+  }
+}
+
+.lower {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 0.75rem;
+  align-items: start;
+}
+
+.panel {
+  border: 1px solid #232c38;
+  border-radius: 12px;
+  background: #151b23;
+  padding: 0.75rem 1rem 1rem;
+}
+
+.panel h2 {
+  margin: 0 0 0.6rem;
+  font-size: 1.25rem;
+  font-weight: 400;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.layer-tag {
+  font-size: 0.8rem;
+  letter-spacing: 0.1em;
+  padding: 0.05rem 0.5rem;
+  border-radius: 999px;
+  border: 1px solid #33404f;
+  opacity: 0.8;
+  text-transform: lowercase;
+}
+
+.rate-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.rate-row input[type='range'] {
+  flex: 1;
+  accent-color: #e0708a;
+}
+
+.rate-row output {
+  min-width: 2.5ch;
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: #e0708a;
+}
+
+.button-row {
+  display: flex;
+  gap: 0.6rem;
+  margin-top: 0.8rem;
+}
+
+.button-row button {
+  font: inherit;
+  font-size: 1.05rem;
+  letter-spacing: 0.08em;
+  color: #cfd8e3;
+  background: #1d2632;
+  border: 1px solid #33404f;
+  border-radius: 8px;
+  padding: 0.35rem 1.1rem;
+  cursor: pointer;
+}
+
+.button-row button:hover {
+  background: #263243;
+}
+
+.status-grid {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 0.25rem 1rem;
+  margin: 0;
+}
+
+.status-grid dt {
+  opacity: 0.6;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  font-size: 0.9rem;
+}
+
+.status-grid dd {
+  margin: 0;
+  font-weight: 700;
+}
+
+#sdk-state[data-state='healthy'] {
+  color: #3fd67d;
+}
+
+#sdk-state[data-state='unobservable'] {
+  color: #e8b24a;
+}
+
+#sdk-state[data-state='suspect'] {
+  color: #ff5d5d;
+}
+
+#sdk-state[data-state='gone'] {
+  color: #7d8794;
+}
+
+#event-log {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  font-size: 0.95rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  opacity: 0.85;
+}
+
+@media (max-width: 640px) {
+  #stage {
+    height: 300px;
+  }
+}

@@ -5,9 +5,13 @@
  */
 import type { Terminal } from '../terminal'
 import type { PromptOutcome, SelectConfig, Choice } from '../types'
+import { max, min } from '@hyperfrontend/immutable-api-utils/built-in-copy/math'
 import { freeze } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
+import { firstPasteLine } from '../paste'
 import { renderMessage, renderSubmitted, renderCancelled, style, Symbol } from '../render'
+import { createScreen } from '../screen'
 import { createTerminal, Ansi, Key } from '../terminal'
+import { TokenType } from '../token-parser'
 import { PromptResult } from '../types'
 
 /**
@@ -131,46 +135,30 @@ function renderChoice<T>(choice: Choice<T>, isFocused: boolean): string {
 }
 
 /**
- * Renders the select prompt to the terminal.
+ * Builds the frame lines for the select prompt.
  *
  * @internal
- * @param term - Terminal interface
  * @param config - Prompt configuration
  * @param state - Current prompt state
- * @param submitted - Whether the prompt has been submitted
- * @returns Number of lines rendered
+ * @param maxVisible - Maximum number of visible choices
+ * @returns Logical lines describing the prompt
  */
-function render<T>(term: Terminal, config: SelectConfig<T>, state: SelectState<T>, submitted: boolean): number {
-  const maxVisible = config.maxVisible ?? 10
+function buildLines<T>(config: SelectConfig<T>, state: SelectState<T>, maxVisible: number): ReadonlyArray<string> {
   const { indices: visibleIndices, startIndex } = getVisibleChoices(state, maxVisible)
+  const lines: string[] = []
 
-  let output = Ansi.CursorStart + Ansi.ClearLine + renderMessage(config.message)
-
-  if (submitted) {
-    const actualIndex = state.filteredIndices[state.cursor]
-    const selectedChoice = actualIndex !== undefined ? state.choices[actualIndex] : undefined
-    /* istanbul ignore next -- @preserve defensive: cursor always within bounds */
-    output += renderSubmitted(selectedChoice?.label ?? '')
-    term.write(output)
-    return 1
-  }
-
+  let header = renderMessage(config.message)
   if (config.searchable && state.searchQuery) {
-    output += style.cyan(state.searchQuery) + style.dim(' (type to filter)')
+    header += style.cyan(state.searchQuery) + style.dim(' (type to filter)')
   } else if (config.searchable) {
-    output += style.dim('(type to filter, enter to select)')
+    header += style.dim('(type to filter, enter to select)')
   } else {
-    output += style.dim('(use arrows, enter to select)')
+    header += style.dim('(use arrows, enter to select)')
   }
-  term.write(output + '\n')
+  lines.push(header)
 
-  let lineCount = 1
-  const showScrollUp = startIndex > 0
-  const showScrollDown = startIndex + maxVisible < state.filteredIndices.length
-
-  if (showScrollUp) {
-    term.write(Ansi.ClearLine + style.dim(`  ${Symbol.Ellipsis} (${startIndex} more above)`) + '\n')
-    lineCount++
+  if (startIndex > 0) {
+    lines.push(style.dim(`  ${Symbol.Ellipsis} (${startIndex} more above)`))
   }
 
   visibleIndices.forEach((actualIndex, i) => {
@@ -178,25 +166,39 @@ function render<T>(term: Terminal, config: SelectConfig<T>, state: SelectState<T
     /* istanbul ignore if -- @preserve defensive: actualIndex always valid from filteredIndices */
     if (!choice) return
 
-    const viewIndex = startIndex + i
-    const isFocused = viewIndex === state.cursor
-    const line = renderChoice(choice, isFocused)
-    term.write(Ansi.ClearLine + line + '\n')
-    lineCount++
+    lines.push(renderChoice(choice, startIndex + i === state.cursor))
   })
 
-  if (showScrollDown) {
+  if (startIndex + maxVisible < state.filteredIndices.length) {
     const remaining = state.filteredIndices.length - (startIndex + maxVisible)
-    term.write(Ansi.ClearLine + style.dim(`  ${Symbol.Ellipsis} (${remaining} more below)`) + '\n')
-    lineCount++
+    lines.push(style.dim(`  ${Symbol.Ellipsis} (${remaining} more below)`))
   }
 
   if (state.filteredIndices.length === 0 && config.searchable) {
-    term.write(Ansi.ClearLine + style.dim('  No matches found') + '\n')
-    lineCount++
+    lines.push(style.dim('  No matches found'))
   }
 
-  return lineCount
+  return freeze(lines)
+}
+
+/**
+ * Appends text to the search query, re-filtering choices.
+ *
+ * @internal
+ * @param query - Text to append (a typed character or pasted line)
+ * @param state - Current prompt state
+ * @returns Updated state with the new query applied
+ */
+function appendSearch<T>(query: string, state: SelectState<T>): SelectState<T> {
+  if (query === '') return state
+  const newQuery = state.searchQuery + query
+  return freeze({
+    ...state,
+    searchQuery: newQuery,
+    filteredIndices: filterChoices(state.choices, newQuery),
+    cursor: 0,
+    scrollOffset: 0,
+  })
 }
 
 /**
@@ -206,10 +208,10 @@ function render<T>(term: Terminal, config: SelectConfig<T>, state: SelectState<T
  * @param key - The key that was pressed
  * @param state - Current prompt state
  * @param config - Prompt configuration
+ * @param maxVisible - Maximum number of visible choices
  * @returns Updated state after processing the key
  */
-function processKey<T>(key: string, state: SelectState<T>, config: SelectConfig<T>): SelectState<T> {
-  const maxVisible = config.maxVisible ?? 10
+function processKey<T>(key: string, state: SelectState<T>, config: SelectConfig<T>, maxVisible: number): SelectState<T> {
   const total = state.filteredIndices.length
   if (total === 0 && key !== Key.Backspace && key !== '\b') return state
 
@@ -260,15 +262,7 @@ function processKey<T>(key: string, state: SelectState<T>, config: SelectConfig<
     }
 
     if (key.length === 1 && key >= ' ') {
-      const newQuery = state.searchQuery + key
-      const newFiltered = filterChoices(state.choices, newQuery)
-      return freeze({
-        ...state,
-        searchQuery: newQuery,
-        filteredIndices: newFiltered,
-        cursor: 0,
-        scrollOffset: 0,
-      })
+      return appendSearch(key, state)
     }
   }
 
@@ -279,7 +273,10 @@ function processKey<T>(key: string, state: SelectState<T>, config: SelectConfig<
  * Prompts for single selection from a list of choices.
  *
  * Pure functional prompt with arrow key navigation, scrolling support,
- * optional disabled choices, and optional type-to-filter search.
+ * optional disabled choices, and optional type-to-filter search. In
+ * searchable mode, pasted text appends its first line to the filter query.
+ * The prompt repaints on terminal resize, preserving cursor and scroll
+ * state.
  *
  * @param config - Select prompt configuration
  * @returns Promise resolving to selected value or cancellation
@@ -323,57 +320,73 @@ function processKey<T>(key: string, state: SelectState<T>, config: SelectConfig<
  */
 export async function select<T = string>(config: SelectConfig<T>): Promise<PromptOutcome<T>> {
   const term = createTerminal({ input: config.input, output: config.output })
+  const screen = createScreen(term)
   let state = createInitialState(config)
-  let lineCount = 0
 
   term.write(Ansi.HideCursor)
 
-  const redraw = (submitted = false): void => {
-    if (lineCount > 0) {
-      term.write(Ansi.cursorUp(lineCount) + Ansi.CursorStart)
-    }
-    term.write(Ansi.ClearToEnd)
-    lineCount = render(term, config, state, submitted)
+  const redraw = (): void => {
+    screen.render(freeze({ lines: buildLines(config, state, effectiveMaxVisible(term, config.maxVisible)) }))
   }
 
-  redraw()
-
-  while (true) {
-    const key = await term.readKey()
-
-    if (term.isCancelled()) {
-      if (lineCount > 0) {
-        term.write(Ansi.cursorUp(lineCount) + Ansi.CursorStart)
-      }
-      term.write(Ansi.ClearToEnd)
-      term.write(renderMessage(config.message) + renderCancelled() + '\n')
-      term.write(Ansi.ShowCursor)
-      term.close()
-      return freeze({ result: PromptResult.Cancelled, value: undefined })
-    }
-
-    if (key === Key.Enter) {
-      const actualIndex = state.filteredIndices[state.cursor]
-      if (actualIndex === undefined) {
-        continue
-      }
-      const selectedChoice = state.choices[actualIndex]
-      if (!selectedChoice || selectedChoice.disabled) {
-        continue
-      }
-
-      if (lineCount > 0) {
-        term.write(Ansi.cursorUp(lineCount) + Ansi.CursorStart)
-      }
-      term.write(Ansi.ClearToEnd)
-      render(term, config, state, true)
-      term.write('\n')
-      term.write(Ansi.ShowCursor)
-      term.close()
-      return freeze({ result: PromptResult.Submitted, value: selectedChoice.value })
-    }
-
-    state = processKey(key, state, config)
+  try {
     redraw()
+
+    while (true) {
+      const token = await term.readToken()
+
+      if (term.isCancelled()) {
+        screen.render(freeze({ lines: freeze([renderMessage(config.message) + renderCancelled()]) }))
+        term.write('\n' + Ansi.ShowCursor)
+        return freeze({ result: PromptResult.Cancelled, value: undefined })
+      }
+
+      if (token.type === TokenType.Resize) {
+        redraw()
+        continue
+      }
+
+      if (token.type === TokenType.Paste) {
+        if (config.searchable) {
+          state = appendSearch(firstPasteLine(token.value), state)
+          redraw()
+        }
+        continue
+      }
+
+      if (token.value === Key.Enter) {
+        const actualIndex = state.filteredIndices[state.cursor]
+        if (actualIndex === undefined) {
+          continue
+        }
+        const selectedChoice = state.choices[actualIndex]
+        if (!selectedChoice || selectedChoice.disabled) {
+          continue
+        }
+
+        const submittedLine = renderMessage(config.message) + renderSubmitted(selectedChoice.label)
+        screen.render(freeze({ lines: freeze([submittedLine]) }))
+        term.write('\n' + Ansi.ShowCursor)
+        return freeze({ result: PromptResult.Submitted, value: selectedChoice.value })
+      }
+
+      state = processKey(token.value, state, config, effectiveMaxVisible(term, config.maxVisible))
+      redraw()
+    }
+  } finally {
+    term.close()
   }
+}
+
+/**
+ * Resolves the visible-window size, capped so the frame fits the terminal
+ * height (header and scroll-indicator rows reserved).
+ *
+ * @internal
+ * @param term - Terminal used for size queries
+ * @param configured - Configured maximum visible choices
+ * @returns Effective maximum visible choices (at least 1)
+ */
+function effectiveMaxVisible(term: Terminal, configured: number | undefined): number {
+  return max(1, min(configured ?? 10, term.getSize().rows - 4))
 }

@@ -7,7 +7,8 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { abs, max, min, round } from '@hyperfrontend/immutable-api-utils/built-in-copy/math'
 import { cancelAnimationFrame, requestAnimationFrame } from '@hyperfrontend/immutable-api-utils/built-in-copy/timers'
 import { ClockEmbed } from './clock-embed'
-import { DemoFallbackCard, getDemoTheme } from './demo-fallback-card'
+import { DemoFallbackCard, getDemoTheme, restingStatusFor } from './demo-fallback-card'
+import { RingControl } from './ring-control'
 
 /** Props for {@link CoverFlow}. */
 export interface CoverFlowProps {
@@ -21,6 +22,9 @@ export interface CoverFlowProps {
 
 /** Pixels of drag that move the deck by one card. */
 const DRAG_PIXELS_PER_CARD = 260
+
+/** Pixels of drag on the side dial that move the deck by one card. */
+const RING_DRAG_PIXELS_PER_CARD = 56
 
 /** Exponential friction rate (1/ms) for thrown decks. */
 const FRICTION = 0.004
@@ -127,23 +131,25 @@ export function CoverFlow({ entries, onShell, onCentered }: CoverFlowProps) {
     [clampIndex]
   )
 
-  const onPointerDown = (event: React.PointerEvent<HTMLDivElement>) => {
-    const state = physics.current
-    state.dragging = true
-    state.velocity = 0
-    state.lastPointer = vertical ? event.clientY : event.clientX
-    state.lastTime = performance.now()
-    event.currentTarget.setPointerCapture(event.pointerId)
-    wake()
-  }
+  const dragBegin = useCallback(
+    (event: React.PointerEvent<HTMLElement>, pointer: number) => {
+      const state = physics.current
+      state.dragging = true
+      state.velocity = 0
+      state.lastPointer = pointer
+      state.lastTime = performance.now()
+      event.currentTarget.setPointerCapture(event.pointerId)
+      wake()
+    },
+    [wake]
+  )
 
-  const onPointerMove = (event: React.PointerEvent<HTMLDivElement>) => {
+  const dragMove = useCallback((pointer: number, pixelsPerCard: number) => {
     const state = physics.current
     if (!state.dragging) {
       return
     }
-    const pointer = vertical ? event.clientY : event.clientX
-    const delta = (state.lastPointer - pointer) / DRAG_PIXELS_PER_CARD
+    const delta = (state.lastPointer - pointer) / pixelsPerCard
     const now = performance.now()
     const dt = now - state.lastTime
     state.position += delta
@@ -153,18 +159,46 @@ export function CoverFlow({ entries, onShell, onCentered }: CoverFlowProps) {
     state.lastPointer = pointer
     state.lastTime = now
     setPosition(state.position)
+  }, [])
+
+  const dragEnd = useCallback(() => {
+    physics.current.dragging = false
+    wake()
+  }, [wake])
+
+  const spin = useCallback(
+    (delta: number, pixelsPerCard: number) => {
+      const state = physics.current
+      state.position += delta / (pixelsPerCard * 4)
+      state.velocity = 0
+      wake()
+    },
+    [wake]
+  )
+
+  // why: On portrait the deck itself must not capture drags or wheel — those belong to normal page scrolling; the side dial navigates instead.
+  const onPointerDown = (event: React.PointerEvent<HTMLDivElement>) => {
+    if (!vertical) {
+      dragBegin(event, event.clientX)
+    }
+  }
+
+  const onPointerMove = (event: React.PointerEvent<HTMLDivElement>) => {
+    if (!vertical) {
+      dragMove(event.clientX, DRAG_PIXELS_PER_CARD)
+    }
   }
 
   const onPointerUp = () => {
-    physics.current.dragging = false
-    wake()
+    if (!vertical) {
+      dragEnd()
+    }
   }
 
   const onWheel = (event: React.WheelEvent<HTMLDivElement>) => {
-    const state = physics.current
-    state.position += (event.deltaY + event.deltaX) / (DRAG_PIXELS_PER_CARD * 4)
-    state.velocity = 0
-    wake()
+    if (!vertical) {
+      spin(event.deltaY + event.deltaX, DRAG_PIXELS_PER_CARD)
+    }
   }
 
   const onKeyDown = (event: React.KeyboardEvent<HTMLDivElement>) => {
@@ -239,7 +273,7 @@ export function CoverFlow({ entries, onShell, onCentered }: CoverFlowProps) {
         aria-roledescription="carousel"
         aria-label="Demo gallery"
         tabIndex={0}
-        className={`relative w-full touch-none select-none outline-none focus-visible:ring-2 focus-visible:ring-primary-500 ${vertical ? 'h-[30rem]' : 'h-96'}`}
+        className={`relative w-full select-none outline-none focus-visible:ring-2 focus-visible:ring-primary-500 ${vertical ? 'h-[30rem]' : 'h-96 touch-none'}`}
         style={{ perspective: '1200px' }}
         onPointerDown={onPointerDown}
         onPointerMove={onPointerMove}
@@ -262,6 +296,18 @@ export function CoverFlow({ entries, onShell, onCentered }: CoverFlowProps) {
             onShell={onShell}
           />
         ))}
+        {vertical ? (
+          <RingControl
+            titles={entries.map((entry) => entry.title)}
+            position={position}
+            centered={centered}
+            onBegin={(event) => dragBegin(event, event.clientY)}
+            onMove={(event) => dragMove(event.clientY, RING_DRAG_PIXELS_PER_CARD)}
+            onEnd={dragEnd}
+            onSpin={(delta) => spin(delta, RING_DRAG_PIXELS_PER_CARD)}
+            onKeyNav={onKeyDown}
+          />
+        ) : null}
       </div>
       {current ? (
         <div className="max-w-xl text-center">
@@ -337,6 +383,17 @@ interface CoverFlowCardProps {
   onShell?: (shell: ClockShell | null) => void
 }
 
+/**
+ *
+ * @param root0
+ * @param root0.entry
+ * @param root0.offset
+ * @param root0.vertical
+ * @param root0.live
+ * @param root0.onSelect
+ * @param root0.onStatus
+ * @param root0.onShell
+ */
 function CoverFlowCard({ entry, offset, vertical, live, onSelect, onStatus, onShell }: CoverFlowCardProps) {
   const distance = abs(offset)
   const translate = offset * (vertical ? 55 : 60)
@@ -358,7 +415,7 @@ function CoverFlowCard({ entry, offset, vertical, live, onSelect, onStatus, onSh
           aria-label={`Show the ${entry.title} demo`}
           tabIndex={-1}
         >
-          <DemoFallbackCard entry={entry} status={entry.featureUrl ? 'idle' : 'planned'} />
+          <DemoFallbackCard entry={entry} status={restingStatusFor(entry)} />
         </button>
       )}
     </div>
@@ -433,7 +490,7 @@ function PagerFallback({ entries, index, onSelect, onShell }: PagerFallbackProps
             <ClockEmbed entry={entry} className="h-full w-full" onShell={onShell} />
           </div>
         ) : (
-          <DemoFallbackCard entry={entry} />
+          <DemoFallbackCard entry={entry} status={restingStatusFor(entry)} />
         )}
       </div>
       <div className="max-w-xl text-center">
