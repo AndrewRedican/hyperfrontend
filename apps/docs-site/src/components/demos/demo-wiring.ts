@@ -52,6 +52,90 @@ export interface DemoWiring {
   proofEvents: readonly string[]
   /** Milliseconds of product-event silence tolerated before the embed degrades to the fallback card. */
   silenceTimeoutMs: number
+  /** Host-owned stage effects reacting to the demo's contract events, drawn on the embed's overlay layer; returns the teardown. */
+  attachEffects?(shell: DemoShell, layer: HTMLElement): () => void
+}
+
+/**
+ * Narrows an unknown event payload to a plain record.
+ *
+ * @param value - The candidate payload.
+ * @returns `true` when the value is a non-null object.
+ */
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null
+}
+
+/** Horizontal drop positions the heart sprites cycle through, as percentages of the stage width. */
+const HEART_SPRITE_LANES = [32, 56, 44, 66, 24]
+
+/**
+ * The heartbeat demo's host-side stage effects: every visitor-triggered beat
+ * floats a heart sprite up the stage, and a flatline materialises a skull that
+ * any returning beat dispels — the host reacting to the hostee's contract
+ * events, exactly as the demo's own host page does.
+ *
+ * @param shell - The heartbeat demo's live shell handle.
+ * @param layer - The overlay element the sprites are drawn on.
+ * @returns The teardown removing subscriptions and any lingering sprite.
+ */
+function attachHeartbeatEffects(shell: DemoShell, layer: HTMLElement): () => void {
+  let lane = 0
+  let skull: HTMLSpanElement | null = null
+  const hideSkull = () => {
+    skull?.remove()
+    skull = null
+  }
+  const showSkull = () => {
+    if (skull) {
+      return
+    }
+    skull = document.createElement('span')
+    skull.textContent = '💀'
+    skull.style.cssText = 'position:absolute;left:50%;top:42%;font-size:72px;line-height:1;'
+    layer.append(skull)
+    skull.animate(
+      [
+        { transform: 'translate(-50%, -50%) scale(0.4)', opacity: 0 },
+        { transform: 'translate(-50%, -50%) scale(1.1)', opacity: 0.9 },
+      ],
+      { duration: 900, easing: 'ease-out', fill: 'forwards' }
+    )
+  }
+  const spawnHeart = () => {
+    const sprite = document.createElement('span')
+    sprite.textContent = '❤️'
+    sprite.style.cssText = `position:absolute;bottom:34%;font-size:26px;line-height:1;left:${HEART_SPRITE_LANES[(lane += 1) % HEART_SPRITE_LANES.length]}%;`
+    layer.append(sprite)
+    const float = sprite.animate(
+      [
+        { transform: 'translateY(0) scale(0.6)', opacity: 1 },
+        { transform: 'translateY(-130px) scale(1.35)', opacity: 0 },
+      ],
+      { duration: 1100, easing: 'ease-out' }
+    )
+    float.onfinish = () => sprite.remove()
+  }
+  const subscriptions = [
+    shell.on('beat', (data) => {
+      // why: A beat of any source is life — it dispels the skull; only visitor-triggered extras earn a sprite.
+      hideSkull()
+      if (isRecord(data) && data['source'] === 'user') {
+        spawnHeart()
+      }
+    }),
+    shell.on('rhythm', (data) => {
+      if (isRecord(data) && data['state'] === 'flatline') {
+        showSkull()
+      } else if (isRecord(data) && (data['state'] === 'beating' || data['state'] === 'recovering')) {
+        hideSkull()
+      }
+    }),
+  ]
+  return () => {
+    subscriptions.forEach((unsubscribe) => unsubscribe())
+    hideSkull()
+  }
 }
 
 /** One wiring per live demo slug — a manifest entry gains a live embed by landing its vendored shell here. */
@@ -70,6 +154,7 @@ const WIRINGS: Record<string, DemoWiring | undefined> = {
     proofEvents: ['beat', 'rhythm'],
     // why: A visitor holding the heart to flatline silences product traffic on purpose; the budget must outlast any plausible hold.
     silenceTimeoutMs: 20000,
+    attachEffects: attachHeartbeatEffects,
   },
 }
 

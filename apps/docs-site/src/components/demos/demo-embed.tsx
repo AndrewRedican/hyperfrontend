@@ -53,6 +53,7 @@ function isRecord(value: unknown): value is Record<string, unknown> {
  */
 export function DemoEmbed({ entry, className, onStatus, onShell }: DemoEmbedProps) {
   const container = useRef<HTMLDivElement | null>(null)
+  const effectsLayer = useRef<HTMLDivElement | null>(null)
   const [status, setStatus] = useState<EmbedStatus>('connecting')
   const notify = useRef(onStatus)
   notify.current = onStatus
@@ -121,12 +122,15 @@ export function DemoEmbed({ entry, className, onStatus, onShell }: DemoEmbedProp
     armDeadline()
     shell.open()
     notifyShell.current?.(shell)
+    const overlay = effectsLayer.current
+    const detachEffects = overlay ? wiring.attachEffects?.(shell, overlay) : undefined
 
     return () => {
       disposed = true
       if (deadline !== null) {
         clearTimeout(deadline)
       }
+      detachEffects?.()
       subscriptions.forEach((unsubscribe) => unsubscribe())
       notifyShell.current?.(null)
       shell.destroy()
@@ -139,10 +143,17 @@ export function DemoEmbed({ entry, className, onStatus, onShell }: DemoEmbedProp
       <div className={`absolute inset-0 transition-opacity duration-700 ${status === 'live' ? 'opacity-0' : 'opacity-100'}`}>
         <DemoFallbackCard entry={entry} status={status === 'offline' ? 'offline' : 'connecting'} />
       </div>
+      {/* note: overflow-hidden + the card radius clip the feature frame to the same corner contours as every fallback card. */}
       <div
         ref={container}
         aria-label={`Live ${entry.title} demo`}
-        className={`absolute inset-0 transition-opacity duration-700 ${status === 'live' ? 'opacity-100' : 'pointer-events-none opacity-0'}`}
+        className={`absolute inset-0 overflow-hidden rounded-2xl transition-opacity duration-700 ${status === 'live' ? 'opacity-100' : 'pointer-events-none opacity-0'}`}
+      />
+      {/* note: Host-owned stage effects paint above the frame without intercepting the visitor's presses on it. */}
+      <div
+        ref={effectsLayer}
+        aria-hidden
+        className={`pointer-events-none absolute inset-0 overflow-hidden rounded-2xl transition-opacity duration-700 ${status === 'live' ? 'opacity-100' : 'opacity-0'}`}
       />
     </div>
   )
