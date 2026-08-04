@@ -119,7 +119,8 @@ export function createChannel(config: IChannelConfig, deps: ChannelDependencies)
     cancel: (notify) => cancel(internals, notify),
     destroy: (notify) => destroy(internals, notify),
 
-    send: (type, data) => send(internals, { type, data }),
+    // why: A payload-less send must omit the data key entirely — an explicit `data: undefined` fails the security envelope's serializability validation, which rejects undefined anywhere in the message.
+    send: (type, data) => send(internals, data === undefined ? { type } : { type, data }),
     sendAction: (action: unknown) => sendActionImpl(internals, <IAction>action),
 
     on: <E extends ChannelEvent>(eventOrHandler: E | EventHandler, handler?: EventCallbackMap[E]) => {
