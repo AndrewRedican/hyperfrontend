@@ -11,6 +11,8 @@ export interface ClockHostConsoleProps {
   entry: DemoManifestEntry
   /** The centered live demo's shell handle, or `null` while none is mounted. */
   shell: ClockShell | null
+  /** `true` renders the portrait cog widget; `false` renders the landscape inline panel. */
+  floating: boolean
 }
 
 /** Severity of a logged wire event, driving its color treatment. */
@@ -94,8 +96,9 @@ function isRecord(value: unknown): value is Record<string, unknown> {
  * @param root0
  * @param root0.entry
  * @param root0.shell
+ * @param root0.floating
  */
-export function ClockHostConsole({ entry, shell }: ClockHostConsoleProps) {
+export function ClockHostConsole({ entry, shell, floating }: ClockHostConsoleProps) {
   const [session, setSession] = useState<SessionState>('connecting')
   const [dirty, setDirty] = useState(false)
   const [events, setEvents] = useState<ConsoleEvent[]>([])
@@ -321,6 +324,121 @@ export function ClockHostConsole({ entry, shell }: ClockHostConsoleProps) {
 
   const latest = events[0]
 
+  const consoleBody = (
+    <>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <h2 className={`font-display font-semibold text-slate-900 dark:text-white ${floating ? 'text-sm' : 'text-lg'}`}>
+          Host console ({entry.title})
+        </h2>
+        {featureUrl !== undefined ? (
+          <div className="flex flex-wrap items-center gap-2 text-xs">
+            <span className={`rounded-full px-2.5 py-1 font-medium ${STATE_STYLES[session]}`}>session: {session}</span>
+            <span
+              className={`rounded-full px-2.5 py-1 font-medium ${dirty ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300' : 'bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400'}`}
+            >
+              {dirty ? 'dirty: unsaved alarms' : 'dirty: clean'}
+            </span>
+            <span className="rounded-full bg-slate-100 px-2.5 py-1 font-medium text-slate-500 dark:bg-slate-800 dark:text-slate-400">
+              contract 0.2.0 · protocol v1
+            </span>
+          </div>
+        ) : (
+          <span className="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-500 dark:bg-slate-800 dark:text-slate-400">
+            {entry.built === true ? 'no session — deploy pending' : 'no session — in planning'}
+          </span>
+        )}
+      </div>
+      {featureUrl === undefined ? (
+        <p className="mt-2 text-xs text-slate-600 dark:text-slate-400">
+          {entry.built === true
+            ? `${entry.title} is built and merged — its live origin has not deployed yet, so there is no session to drive. Center the Clock card to operate a real one.`
+            : `${entry.title} is still in planning — there is no live session to drive yet. Center the Clock card to operate a real one.`}
+        </p>
+      ) : (
+        <>
+          <p className="mt-2 text-xs text-slate-600 dark:text-slate-400">
+            Everything below drives the centered clock&apos;s real session — the same wire the article describes: liveness states, dirty
+            reports, correlated requests, polite teardown, contract-declared display modes, and a handshake denial.
+          </p>
+          <div className="mt-4 flex flex-wrap gap-2">
+            <button type="button" className={actionClasses} disabled={!shell} onClick={() => void requestTime()}>
+              Request the time
+            </button>
+            <button type="button" className={actionClasses} disabled={!shell} onClick={() => void armAlarm()}>
+              Arm an alarm (+2 min)
+            </button>
+            <button type="button" className={actionClasses} disabled={!shell} onClick={clearAlarm}>
+              Clear last alarm
+            </button>
+            <button type="button" className={actionClasses} disabled={!shell} onClick={toggleSession}>
+              {shell?.isOpen ? 'Close politely' : 'Reopen session'}
+            </button>
+            <button type="button" className={actionClasses} onClick={() => openMode('dialog')}>
+              Open as dialog
+            </button>
+            <button type="button" className={actionClasses} onClick={() => openMode('popup')}>
+              Open as popup
+            </button>
+            <button type="button" className={actionClasses} disabled={denyRunning} onClick={runDenyDemo}>
+              {denyRunning ? 'Denying…' : 'Try a version mismatch'}
+            </button>
+          </div>
+          {timeAnswer !== null ? <p className="mt-3 text-xs text-slate-600 dark:text-slate-400">get-time → {timeAnswer}</p> : null}
+          {denyVerdict !== null ? (
+            <p className="mt-2 text-xs font-medium text-red-600 dark:text-red-400">
+              version 9.9.9 pairing {denyVerdict} — additive contract evolution never gates, but an incompatible cut is refused before
+              anything opens.
+            </p>
+          ) : null}
+          <div className="mt-4 rounded-lg border border-slate-200 bg-white/60 font-mono text-[11px] leading-relaxed dark:border-slate-700 dark:bg-slate-950/40">
+            <div className="flex items-center justify-between gap-2 px-3 py-2">
+              {latest ? (
+                <p className={`truncate ${EVENT_STYLES[latest.kind]}`}>
+                  <span className="text-slate-400 dark:text-slate-600">{latest.at}</span> {latest.label}
+                </p>
+              ) : (
+                <p className="text-slate-500 dark:text-slate-500">
+                  {shell ? 'session events appear here as they cross the wire…' : 'center the clock card to attach the console'}
+                </p>
+              )}
+              <button
+                type="button"
+                onClick={() => setExpanded((value) => !value)}
+                aria-expanded={expanded}
+                className="shrink-0 font-sans text-[11px] font-medium text-slate-500 hover:text-primary-600 dark:text-slate-400 dark:hover:text-primary-400"
+              >
+                {expanded ? 'Collapse ▲' : `History (${events.length}) ▼`}
+              </button>
+            </div>
+            {expanded ? (
+              <div className={`max-h-40 overflow-y-auto border-t border-slate-200 px-3 py-2 dark:border-slate-700 ${SCROLLBAR_CLASSES}`}>
+                {events.length === 0 ? (
+                  <p className="text-slate-500 dark:text-slate-500">no events yet</p>
+                ) : (
+                  events.map((event, index) => (
+                    <p key={`${event.at}-${index}`} className={EVENT_STYLES[event.kind]}>
+                      <span className="text-slate-400 dark:text-slate-600">{event.at}</span> {event.label}
+                    </p>
+                  ))
+                )}
+              </div>
+            ) : null}
+          </div>
+        </>
+      )}
+    </>
+  )
+
+  if (!floating) {
+    return (
+      <section className="mt-10 w-full max-w-3xl rounded-2xl border border-slate-200 bg-slate-50/60 p-6 text-left dark:border-slate-700 dark:bg-slate-900/40">
+        {consoleBody}
+        {/* note: Hidden mount for the extra sessions — a refused or connecting handshake never displays its frame, so nothing paints here. */}
+        <div ref={extraMount} className="hidden" aria-hidden />
+      </section>
+    )
+  }
+
   return (
     <section className="pointer-events-none absolute right-2 top-2 z-[130] flex flex-col items-end">
       <button
@@ -344,109 +462,10 @@ export function ClockHostConsole({ entry, shell }: ClockHostConsoleProps) {
         <div
           className={`pointer-events-auto mt-2 max-h-[70vh] w-[min(24rem,calc(100vw-2rem))] overflow-y-auto rounded-2xl border border-slate-200 bg-white/90 p-4 text-left shadow-xl backdrop-blur-md dark:border-slate-700 dark:bg-slate-900/90 ${SCROLLBAR_CLASSES}`}
         >
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            <h2 className="font-display text-sm font-semibold text-slate-900 dark:text-white">Host console ({entry.title})</h2>
-            {featureUrl !== undefined ? (
-              <div className="flex flex-wrap items-center gap-2 text-xs">
-                <span className={`rounded-full px-2.5 py-1 font-medium ${STATE_STYLES[session]}`}>session: {session}</span>
-                <span
-                  className={`rounded-full px-2.5 py-1 font-medium ${dirty ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300' : 'bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400'}`}
-                >
-                  {dirty ? 'dirty: unsaved alarms' : 'dirty: clean'}
-                </span>
-                <span className="rounded-full bg-slate-100 px-2.5 py-1 font-medium text-slate-500 dark:bg-slate-800 dark:text-slate-400">
-                  contract 0.2.0 · protocol v1
-                </span>
-              </div>
-            ) : (
-              <span className="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-500 dark:bg-slate-800 dark:text-slate-400">
-                {entry.built === true ? 'no session — deploy pending' : 'no session — in planning'}
-              </span>
-            )}
-          </div>
-          {featureUrl === undefined ? (
-            <p className="mt-2 text-xs text-slate-600 dark:text-slate-400">
-              {entry.built === true
-                ? `${entry.title} is built and merged — its live origin has not deployed yet, so there is no session to drive. Center the Clock card to operate a real one.`
-                : `${entry.title} is still in planning — there is no live session to drive yet. Center the Clock card to operate a real one.`}
-            </p>
-          ) : (
-            <>
-              <p className="mt-2 text-xs text-slate-600 dark:text-slate-400">
-                Everything below drives the centered clock&apos;s real session — the same wire the article describes: liveness states, dirty
-                reports, correlated requests, polite teardown, contract-declared display modes, and a handshake denial.
-              </p>
-              <div className="mt-4 flex flex-wrap gap-2">
-                <button type="button" className={actionClasses} disabled={!shell} onClick={() => void requestTime()}>
-                  Request the time
-                </button>
-                <button type="button" className={actionClasses} disabled={!shell} onClick={() => void armAlarm()}>
-                  Arm an alarm (+2 min)
-                </button>
-                <button type="button" className={actionClasses} disabled={!shell} onClick={clearAlarm}>
-                  Clear last alarm
-                </button>
-                <button type="button" className={actionClasses} disabled={!shell} onClick={toggleSession}>
-                  {shell?.isOpen ? 'Close politely' : 'Reopen session'}
-                </button>
-                <button type="button" className={actionClasses} onClick={() => openMode('dialog')}>
-                  Open as dialog
-                </button>
-                <button type="button" className={actionClasses} onClick={() => openMode('popup')}>
-                  Open as popup
-                </button>
-                <button type="button" className={actionClasses} disabled={denyRunning} onClick={runDenyDemo}>
-                  {denyRunning ? 'Denying…' : 'Try a version mismatch'}
-                </button>
-              </div>
-              {timeAnswer !== null ? <p className="mt-3 text-xs text-slate-600 dark:text-slate-400">get-time → {timeAnswer}</p> : null}
-              {denyVerdict !== null ? (
-                <p className="mt-2 text-xs font-medium text-red-600 dark:text-red-400">
-                  version 9.9.9 pairing {denyVerdict} — additive contract evolution never gates, but an incompatible cut is refused before
-                  anything opens.
-                </p>
-              ) : null}
-              <div className="mt-4 rounded-lg border border-slate-200 bg-white/60 font-mono text-[11px] leading-relaxed dark:border-slate-700 dark:bg-slate-950/40">
-                <div className="flex items-center justify-between gap-2 px-3 py-2">
-                  {latest ? (
-                    <p className={`truncate ${EVENT_STYLES[latest.kind]}`}>
-                      <span className="text-slate-400 dark:text-slate-600">{latest.at}</span> {latest.label}
-                    </p>
-                  ) : (
-                    <p className="text-slate-500 dark:text-slate-500">
-                      {shell ? 'session events appear here as they cross the wire…' : 'center the clock card to attach the console'}
-                    </p>
-                  )}
-                  <button
-                    type="button"
-                    onClick={() => setExpanded((value) => !value)}
-                    aria-expanded={expanded}
-                    className="shrink-0 font-sans text-[11px] font-medium text-slate-500 hover:text-primary-600 dark:text-slate-400 dark:hover:text-primary-400"
-                  >
-                    {expanded ? 'Collapse ▲' : `History (${events.length}) ▼`}
-                  </button>
-                </div>
-                {expanded ? (
-                  <div
-                    className={`max-h-40 overflow-y-auto border-t border-slate-200 px-3 py-2 dark:border-slate-700 ${SCROLLBAR_CLASSES}`}
-                  >
-                    {events.length === 0 ? (
-                      <p className="text-slate-500 dark:text-slate-500">no events yet</p>
-                    ) : (
-                      events.map((event, index) => (
-                        <p key={`${event.at}-${index}`} className={EVENT_STYLES[event.kind]}>
-                          <span className="text-slate-400 dark:text-slate-600">{event.at}</span> {event.label}
-                        </p>
-                      ))
-                    )}
-                  </div>
-                ) : null}
-              </div>
-            </>
-          )}
+          {consoleBody}
         </div>
       ) : null}
-      {/* note: Hidden mount for the extra sessions, kept outside the collapsible panel so dialog/popup/denial shells survive a collapse. A refused or connecting handshake never displays its frame, so nothing paints here. */}
+      {/* note: Hidden mount for the extra sessions, kept outside the collapsible panel so dialog/popup/denial shells survive a collapse. */}
       <div ref={extraMount} className="hidden" aria-hidden />
     </section>
   )
