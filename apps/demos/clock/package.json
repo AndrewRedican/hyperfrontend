@@ -1,6 +1,6 @@
 {
   "name": "@hyperfrontend/demo-clock",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "Clock demonstration — a spinnable clock coin built as a hyperfrontend feature.",
   "private": true,
   "type": "module",
@@ -19,7 +19,7 @@
     "dev:hosted": "run-p build:watch hf:dev"
   },
   "dependencies": {
-    "@hyperfrontend/features": "^0.4.0",
+    "@hyperfrontend/features": "^0.5.1",
     "vue": "^3.5.38"
   },
   "devDependencies": {
