@@ -1,10 +1,13 @@
 import type { BeatEvent, RhythmEvent } from '../rhythm-engine'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { COMPENSATORY_FACTOR, DEFAULT_BPM, FLATLINE_HOLD_MS, HOLD_SUPPRESS_MS, JITTER_FRACTION, createRhythmEngine } from '../rhythm-engine'
+import { COMPENSATORY_FACTOR, DEFAULT_BPM, FLATLINE_HOLD_MS, HOLD_SUPPRESS_MS, JITTER_SPREAD, createRhythmEngine } from '../rhythm-engine'
+
+/** A deterministic sampler pinned to the distribution's centre — the base interval, exactly. */
+const midpoint = (min: number, max: number) => (min + max) / 2
 
 /** Builds an engine at 60 bpm with midpoint jitter so the base interval is exactly 1000 ms. */
-function createHarness(options: { bpm?: number; random?: () => number } = {}) {
-  const engine = createRhythmEngine({ bpm: options.bpm ?? 60, random: options.random ?? (() => 0.5) })
+function createHarness(options: { bpm?: number; gaussian?: (min: number, max: number) => number } = {}) {
+  const engine = createRhythmEngine({ bpm: options.bpm ?? 60, gaussian: options.gaussian ?? midpoint })
   const beats: BeatEvent[] = []
   const rhythms: RhythmEvent[] = []
   engine.onBeat((beat) => beats.push(beat))
@@ -59,31 +62,55 @@ describe('cadence', () => {
   })
 
   it('defaults the baseline to the resting rate', () => {
-    const engine = createRhythmEngine({ random: () => 0.5 })
+    const engine = createRhythmEngine({ gaussian: midpoint })
     expect(engine.getBaselineBpm()).toBe(DEFAULT_BPM)
   })
 })
 
 describe('jitter bounds', () => {
-  it('holds the beat back through the top of the jitter band', () => {
-    const { engine, beats } = createHarness({ random: () => 1 })
+  it('samples the gaussian over the band around the base interval', () => {
+    const bands: Array<[number, number]> = []
+    const { engine } = createHarness({
+      gaussian: (min, max) => {
+        bands.push([min, max])
+        return (min + max) / 2
+      },
+    })
     engine.start()
-    vi.advanceTimersByTime(1000 * (1 + JITTER_FRACTION) - 1)
+    expect(bands).toEqual([[1000 * (1 - JITTER_SPREAD), 1000 * (1 + JITTER_SPREAD)]])
+  })
+
+  it('holds the beat back through the top of the jitter band', () => {
+    const { engine, beats } = createHarness({ gaussian: (_min, max) => max })
+    engine.start()
+    vi.advanceTimersByTime(1000 * (1 + JITTER_SPREAD) - 1)
     expect(beats).toHaveLength(0)
   })
 
   it('fires at the top of the jitter band', () => {
-    const { engine, beats } = createHarness({ random: () => 1 })
+    const { engine, beats } = createHarness({ gaussian: (_min, max) => max })
     engine.start()
-    vi.advanceTimersByTime(1000 * (1 + JITTER_FRACTION))
+    vi.advanceTimersByTime(1000 * (1 + JITTER_SPREAD))
     expect(beats).toHaveLength(1)
   })
 
   it('fires early at the bottom of the jitter band', () => {
-    const { engine, beats } = createHarness({ random: () => 0 })
+    const { engine, beats } = createHarness({ gaussian: (min) => min })
     engine.start()
-    vi.advanceTimersByTime(1000 * (1 - JITTER_FRACTION))
+    vi.advanceTimersByTime(1000 * (1 - JITTER_SPREAD))
     expect(beats).toHaveLength(1)
+  })
+
+  it('the default sampler never fires outside the jitter band', () => {
+    const engine = createRhythmEngine({ bpm: 60 })
+    const beats: BeatEvent[] = []
+    engine.onBeat((beat) => beats.push(beat))
+    engine.start()
+    // why: randomGaussian resamples until the draw lands inside [min, max], so the band edges are hard guarantees, not probabilities.
+    vi.advanceTimersByTime(1000 * (1 - JITTER_SPREAD) - 1)
+    const early = beats.length
+    vi.advanceTimersByTime(1000 * (JITTER_SPREAD + JITTER_SPREAD) + 1)
+    expect([early, beats.length]).toEqual([0, 1])
   })
 })
 
@@ -153,6 +180,19 @@ describe('suppression and flatline', () => {
     engine.press()
     vi.advanceTimersByTime(FLATLINE_HOLD_MS)
     expect(rhythms[rhythms.length - 1]).toEqual({ state: 'flatline', bpm: 0 })
+  })
+
+  it('the flatline threshold is exactly three seconds of hold', () => {
+    const { engine, rhythms } = createHarness()
+    engine.start()
+    engine.press()
+    vi.advanceTimersByTime(2999)
+    const beforeThreshold = rhythms[rhythms.length - 1]
+    vi.advanceTimersByTime(1)
+    expect([beforeThreshold, rhythms[rhythms.length - 1]]).toEqual([
+      { state: 'suppressed', bpm: 0 },
+      { state: 'flatline', bpm: 0 },
+    ])
   })
 
   it('a release without a press changes nothing', () => {
@@ -267,7 +307,7 @@ describe('setRate', () => {
 
 describe('unsubscribe', () => {
   it('a removed beat listener hears nothing further', () => {
-    const engine = createRhythmEngine({ bpm: 60, random: () => 0.5 })
+    const engine = createRhythmEngine({ bpm: 60, gaussian: midpoint })
     const beats: BeatEvent[] = []
     const off = engine.onBeat((beat) => beats.push(beat))
     engine.start()
@@ -277,7 +317,7 @@ describe('unsubscribe', () => {
   })
 
   it('a removed rhythm listener hears nothing further', () => {
-    const engine = createRhythmEngine({ bpm: 60, random: () => 0.5 })
+    const engine = createRhythmEngine({ bpm: 60, gaussian: midpoint })
     const rhythms: RhythmEvent[] = []
     const off = engine.onRhythm((change) => rhythms.push(change))
     off()
