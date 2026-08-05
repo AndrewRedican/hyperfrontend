@@ -146,6 +146,95 @@ body {
   text-overflow: ellipsis;
 }
 
+/* why: Dialog chrome floats over the stage's top-right corner — prominent enough to find, out of the heart's way. */
+.dialog-chrome {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  z-index: 2;
+}
+
+.dialog-esc-hint {
+  padding: 3px 8px;
+  border-radius: 6px;
+  border: 1px solid rgba(224, 112, 138, 0.28);
+  background: rgba(21, 13, 17, 0.55);
+  color: #d9c8cc;
+  font-size: 0.7rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  opacity: 0.75;
+}
+
+.dialog-close {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  border-radius: 50%;
+  border: 1px solid rgba(224, 112, 138, 0.35);
+  background: rgba(21, 13, 17, 0.65);
+  color: #e8dbde;
+  cursor: pointer;
+  transition:
+    background 200ms ease,
+    color 200ms ease,
+    border-color 200ms ease;
+}
+
+.dialog-close svg {
+  width: 12px;
+  height: 12px;
+  stroke: currentColor;
+  stroke-width: 1.7;
+  stroke-linecap: round;
+  fill: none;
+}
+
+.dialog-close:hover {
+  background: rgba(224, 112, 138, 0.25);
+  border-color: rgba(224, 112, 138, 0.6);
+  color: #ffffff;
+}
+
+.dialog-close:focus-visible {
+  outline: 2px solid #e0708a;
+  outline-offset: 3px;
+}
+
+/* why: Standalone-only sound toggle mirrors the framework badge in the opposite corner — the local enablement path when no host owns audio. */
+.sound-toggle {
+  position: absolute;
+  left: 10px;
+  bottom: 10px;
+  margin: 0;
+  padding: 4px 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(224, 112, 138, 0.22);
+  background: rgba(21, 13, 17, 0.55);
+  color: #d9c8cc;
+  font-size: 0.8rem;
+  letter-spacing: 0.08em;
+  cursor: pointer;
+  opacity: 0.6;
+  transition: opacity 250ms ease;
+}
+
+.sound-toggle:hover,
+.sound-toggle[aria-pressed='true'] {
+  opacity: 0.95;
+}
+
+.sound-toggle:focus-visible {
+  outline: 2px solid #e0708a;
+  outline-offset: 3px;
+}
+
 .sr-only {
   position: absolute;
   width: 1px;
