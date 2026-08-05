@@ -39,6 +39,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     '/',
     '/architecture',
     '/demos',
+    '/privacy',
     // why: these pages exist but the sidebar navigation does not link them directly; validate-sitemap fails the build if one goes missing here
     '/docs/libraries/utils',
     '/docs/libraries/network-protocol/channel',
