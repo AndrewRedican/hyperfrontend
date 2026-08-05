@@ -15,6 +15,8 @@ export interface EcgBeatMark {
 
 /** Total duration of one beat's spike complex. */
 export const COMPLEX_MS = 150
+/** Pixels of erased lead ahead of the sweep head — the moving gap that keeps even a flat trace visibly alive. */
+export const SWEEP_GAP_PX = 26
 /** Offset (ms) of the spike's peak within a complex. */
 export const R_PEAK_MS = 75
 /** Amplitude multiplier that makes user beats read taller. */
@@ -100,4 +102,19 @@ export function traceValue(timeMs: number, beats: readonly EcgBeatMark[]): numbe
  */
 export function baselineNoise(timeMs: number): number {
   return 0.015 * Math.sin(timeMs * 0.013) + 0.015 * Math.sin(timeMs * 0.0047 + 1.7)
+}
+
+/**
+ * Judges whether a column sits inside the sweep's erase gap — the blank lead
+ * the write head keeps just ahead of itself as it travels left to right.
+ *
+ * @param x - The column to judge.
+ * @param headX - The write head's current column.
+ * @param gapPx - Width of the erase gap in columns.
+ * @param width - Total columns on the trace (the sweep wraps around).
+ * @returns `true` when the column is inside the gap and must not draw.
+ */
+export function inSweepGap(x: number, headX: number, gapPx: number, width: number): boolean {
+  const ahead = (x - headX + width) % width
+  return ahead > 0 && ahead <= gapPx
 }

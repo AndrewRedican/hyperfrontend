@@ -11,6 +11,7 @@
 import type { HeartbeatStatus } from '@hyperfrontend/features/host'
 import { createShell, mountEmbedded } from '@hyperfrontend/features/host'
 import contract from '../../heartbeat.contract'
+import { createHeartbeatAudio } from '../audio/heartbeat-audio'
 import { createRollingBpm } from './bpm'
 import { createEcgRenderer } from './ecg-canvas'
 import { createFlatlineEdge } from './fx'
@@ -68,6 +69,8 @@ const rolling = createRollingBpm()
 const ecg = createEcgRenderer(el<HTMLCanvasElement>('#ecg'))
 const fx = createStageFx(el<HTMLElement>('#fx-layer'))
 const flatlineEdge = createFlatlineEdge()
+// why: The feature declares the autoplay capability; this host surfaces it as an explicit approval and owns the playback that follows.
+const audio = createHeartbeatAudio()
 
 let totalBeats = 0
 let userBeats = 0
@@ -97,8 +100,8 @@ const shell = createShell({
   // why: Resolved against this page, so the same markup works under `hf dev`, `vite preview`, and any static origin serving the pair.
   url: new URL('/', window.location.href).toString(),
   contract,
-  // why: Matches the feature's declared protocol — see the note in src/hyperfrontend.feature.ts for why this pairing runs unenveloped.
-  protocol: 'none',
+  // why: Matches the feature's declared protocol, so the pairing negotiates the v1 security envelope.
+  protocol: 'v1',
 })
 
 shell.on('beat', (data: unknown) => {
@@ -117,6 +120,8 @@ shell.on('beat', (data: unknown) => {
   lastBeatAt = receivedAt
   rolling.addBeat(receivedAt)
   ecg.addBeat({ at: receivedAt, source: beat.source })
+  // note: Silent until the visitor approves sound; a flatlined rhythm emits no beats, so nothing can sound while flat.
+  audio.playBeat()
   beatsTotalEl.textContent = String(totalBeats)
   beatsUserEl.textContent = String(userBeats)
 })
@@ -218,6 +223,27 @@ setInterval(() => {
 rateEl.addEventListener('input', () => {
   rateValueEl.textContent = rateEl.value
   shell.send('set-rate', { bpm: Number(rateEl.value) })
+})
+
+const soundBtn = el<HTMLButtonElement>('#sound-btn')
+soundBtn.addEventListener('click', () => {
+  if (audio.isEnabled()) {
+    audio.disable()
+    soundBtn.textContent = 'Enable heartbeat sound'
+    soundBtn.setAttribute('aria-pressed', 'false')
+    log('heartbeat sound muted')
+    return
+  }
+  // why: enable() runs inside this click so the browser's gesture requirement is satisfied; a refusal stays a logged fact, not an uncaught error.
+  void audio.enable().then((running) => {
+    if (running) {
+      soundBtn.textContent = 'Mute heartbeat sound'
+      soundBtn.setAttribute('aria-pressed', 'true')
+      log('heartbeat sound enabled — host-owned playback approved')
+    } else {
+      log('heartbeat sound unavailable — the browser refused audio playback')
+    }
+  })
 })
 
 el<HTMLButtonElement>('#close-btn').addEventListener('click', () => {
