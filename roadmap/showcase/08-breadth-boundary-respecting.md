@@ -4,7 +4,7 @@ Enterprise/gallery features where iframe isolation is _appropriate_ and contract
 
 **Depends on** [06](06-demo-2-and-generator.md) · **Type** Execution · **Status**: Pending — not yet elaborated. Parallelizable with [09](09-breadth-pattern.md).
 
-See [00-strategy.md](00-strategy.md) (journey J5) and the [index](README.md).
+See [00-strategy.md](00-strategy.md) and the [index](README.md).
 
 ## Scope (to elaborate)
 
