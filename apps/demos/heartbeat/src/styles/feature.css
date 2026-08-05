@@ -98,9 +98,10 @@ body {
   transform-origin: 60% 92%;
 }
 
-.hb-backing {
+/* why: The underlay anchors on the same seam as the mass halves, so its systole squeeze tracks the ventricles instead of poking out beneath them. */
+.hb-underlay {
   transform-box: fill-box;
-  transform-origin: 50% 49%;
+  transform-origin: 50% 43.4%;
 }
 
 .rhythm-suppressed .heart {

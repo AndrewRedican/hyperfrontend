@@ -10,7 +10,7 @@
  * Plays one multi-stage contraction across the heart's layers.
  *
  * The stages mirror the cardiac cycle: the atria band kicks first, then the
- * ventricular mass squeezes with a slight apex twist while the white backing
+ * ventricular mass squeezes with a slight apex twist while the dark underlay
  * flexes underneath, and finally the aorta and vena cava take the pulse. Under
  * reduced motion the whole cycle collapses to a gentle fade.
  *
@@ -38,8 +38,8 @@ export function playBeat(svg: SVGSVGElement): void {
       { duration: 250, delay: 90, easing: 'cubic-bezier(0.33, 0, 0.2, 1)' }
     )
   svg
-    .querySelector('.hb-backing')
-    ?.animate([{ transform: 'scale(1)' }, { transform: 'scale(0.975)', offset: 0.4 }, { transform: 'scale(1)' }], {
+    .querySelector('.hb-underlay')
+    ?.animate([{ transform: 'scale(1)' }, { transform: 'scale(0.94)', offset: 0.4 }, { transform: 'scale(1)' }], {
       duration: 250,
       delay: 90,
       easing: 'cubic-bezier(0.33, 0, 0.2, 1)',
