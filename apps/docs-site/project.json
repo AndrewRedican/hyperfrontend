@@ -15,6 +15,14 @@
         "cwd": "apps/docs-site"
       }
     },
+    "test": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["install"],
+      "options": {
+        "command": "npm run test",
+        "cwd": "apps/docs-site"
+      }
+    },
     "install": {
       "executor": "@hyperfrontend/app:install",
       "options": {}
