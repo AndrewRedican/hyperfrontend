@@ -1,4 +1,4 @@
-import Link from 'next/link'
+import { TrackedLink } from '@/components/analytics/tracked-link'
 
 export function Hero() {
   return (
@@ -14,12 +14,17 @@ export function Hero() {
             library&quot; meetings. Just plug it in and <em>it works</em>.
           </p>
           <div className="mt-10 flex flex-col items-center justify-center gap-4 sm:flex-row">
-            <Link href="/docs" className="btn-primary">
+            <TrackedLink href="/docs" event={{ kind: 'docs-cta', cta: 'hero-get-started' }} className="btn-primary">
               Get started
-            </Link>
-            <a href="https://github.com/AndrewRedican/hyperfrontend" target="_blank" rel="noopener noreferrer" className="btn-secondary">
+            </TrackedLink>
+            <TrackedLink
+              href="https://github.com/AndrewRedican/hyperfrontend"
+              event={{ kind: 'repo', location: 'hero' }}
+              external
+              className="btn-secondary"
+            >
               View on GitHub
-            </a>
+            </TrackedLink>
           </div>
           <div className="mt-8">
             <InstallSnippet />

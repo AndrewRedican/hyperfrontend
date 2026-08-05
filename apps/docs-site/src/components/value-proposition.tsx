@@ -2,10 +2,9 @@
 
 import type { ReactNode, TouchEvent as ReactTouchEvent } from 'react'
 import type { Timer } from '@hyperfrontend/time-utils'
-
+import { TrackedLink } from '@/components/analytics/tracked-link'
 import Link from 'next/link'
 import { Fragment, useCallback, useEffect, useRef, useState } from 'react'
-
 import { dateNow } from '@hyperfrontend/immutable-api-utils/built-in-copy/date'
 import { abs, min } from '@hyperfrontend/immutable-api-utils/built-in-copy/math'
 import { cancelAnimationFrame, requestAnimationFrame, setTimeout } from '@hyperfrontend/immutable-api-utils/built-in-copy/timers'
@@ -418,13 +417,18 @@ export function ValueProposition() {
 
       {/* Navigation Links */}
       <div className="flex flex-wrap gap-3">
-        <Link href="/docs" className="btn-primary">
+        <TrackedLink href="/docs" event={{ kind: 'docs-cta', cta: 'value-prop-get-started' }} className="btn-primary">
           Get Started
-        </Link>
-        <a href="https://github.com/AndrewRedican/hyperfrontend" target="_blank" rel="noopener noreferrer" className="btn-secondary">
+        </TrackedLink>
+        <TrackedLink
+          href="https://github.com/AndrewRedican/hyperfrontend"
+          event={{ kind: 'repo', location: 'value-proposition' }}
+          external
+          className="btn-secondary"
+        >
           <GitHubIcon className="mr-2 h-4 w-4" />
           GitHub
-        </a>
+        </TrackedLink>
         <Link href="/demos" className="btn-ghost">
           Demos
         </Link>
@@ -456,15 +460,15 @@ export function ValueProposition() {
 
       {/* GitHub Badges */}
       <div className="mt-4 flex flex-wrap items-center gap-3">
-        <a
+        <TrackedLink
           href="https://github.com/AndrewRedican/hyperfrontend"
-          target="_blank"
-          rel="noopener noreferrer"
+          event={{ kind: 'repo', location: 'value-proposition' }}
+          external
           className="inline-flex items-center gap-1.5 rounded-md border border-slate-200 bg-white px-2.5 py-1 text-xs font-medium text-slate-700 transition-colors hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700"
         >
           <StarIcon className="h-3.5 w-3.5 text-amber-500" />
           Star on GitHub
-        </a>
+        </TrackedLink>
         <a
           href="https://github.com/sponsors/AndrewRedican"
           target="_blank"
