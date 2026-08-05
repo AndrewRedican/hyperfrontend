@@ -65,7 +65,7 @@
       "dependsOn": ["install"],
       "outputs": ["{workspaceRoot}/dist/apps/demos/heartbeat/shell"],
       "options": {
-        "command": "npx hf build --ci --allow-open --out ../../../dist/apps/demos/heartbeat/shell",
+        "command": "npx hf build --ci --out ../../../dist/apps/demos/heartbeat/shell",
         "cwd": "apps/demos/heartbeat"
       }
     }

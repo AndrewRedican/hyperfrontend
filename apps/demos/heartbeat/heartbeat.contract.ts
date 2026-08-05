@@ -10,7 +10,7 @@ import type { FeatureContract } from '@hyperfrontend/features/hostee'
  * liveness heartbeat stays invisible infrastructure underneath them.
  */
 const contract = {
-  version: '0.1.0',
+  version: '0.2.0',
   accepted: [
     {
       type: 'ping',
@@ -75,6 +75,18 @@ const contract = {
           sentAt: { type: 'number' },
         },
         required: ['seq', 'sentAt'],
+      },
+    },
+    {
+      type: 'close-request',
+      description:
+        'The visitor activated the dialog close control inside the feature. The host owns the presentation and performs the actual close.',
+      schema: {
+        type: 'object',
+        properties: {
+          source: { type: 'string', enum: ['button'] },
+        },
+        required: ['source'],
       },
     },
   ],
