@@ -4,6 +4,7 @@ import type { DemoManifestEntry } from '@/lib/demo-manifest'
 import type { ComponentType } from 'react'
 import type { DemoConsoleActionsProps, EventKind, ExtraShellOptions } from './demo-console-actions'
 import type { DemoShell } from './demo-wiring'
+import { trackDemoOpen } from '@/lib/analytics-events'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { ClockConsoleActions, CONSOLE_ACTION_CLASSES, HeartbeatConsoleActions } from './demo-console-actions'
 import { demoWiringFor } from './demo-wiring'
@@ -77,7 +78,7 @@ const DEMO_BLURBS: Record<string, string> = {
   clock:
     'Everything below drives the centered clock’s real session — the same wire the article describes: liveness states, dirty reports, correlated requests, polite teardown, contract-declared display modes, and a handshake denial.',
   heartbeat:
-    'Everything below drives the centered heart’s real session — cardiac beats and rhythm shifts crossing as contract events, a correlated ping with its measured round trip, host-commanded pacing, polite teardown, and the contract-declared display modes.',
+    'Everything below drives the centered heart’s real session — cardiac beats and rhythm shifts crossing as contract events, a live host-drawn ECG and measured rate, a correlated ping, host-commanded pacing, an approval-gated heartbeat sound, polite teardown, and the contract-declared display modes.',
 }
 
 /**
@@ -232,12 +233,21 @@ export function DemoHostConsole({ entry, shell, floating }: DemoHostConsoleProps
       }
       // why: The second session's lifecycle is narrated off its real events — a session is only "open" when the wire says so.
       extra.on('open', () => {
+        trackDemoOpen(entry.slug, displayMode)
         if (displayMode === 'dialog') {
-          log('dialog session open — Esc or a backdrop click closes it', 'success')
+          log('dialog session open — Esc, a backdrop click, or the feature’s ✕ closes it', 'success')
         } else {
           log('popup session open — the browser window is authoritative; close it like any window', 'success')
         }
       })
+      if (displayMode === 'dialog') {
+        // why: The feature's ✕ only requests — the host owns the dialog, so the actual close happens here.
+        extra.on('close-request', (data) => {
+          const source = isRecord(data) && typeof data['source'] === 'string' ? String(data['source']) : 'unknown'
+          log(`close-request (${source}) — host closing the dialog`)
+          extra.close()
+        })
+      }
       extra.on('error', (data) => {
         const reason = isRecord(data) && typeof data['reason'] === 'string' ? String(data['reason']) : 'unspecified'
         if (reason === 'open-timeout') {
@@ -253,7 +263,7 @@ export function DemoHostConsole({ entry, shell, floating }: DemoHostConsoleProps
       extra.open()
       log(`${displayMode} session requested — stays invisible until the handshake completes`)
     },
-    [createExtraShell, log]
+    [createExtraShell, entry.slug, log]
   )
 
   const latest = events[0]
