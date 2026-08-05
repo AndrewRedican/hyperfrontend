@@ -98,7 +98,7 @@ export const DEMO_MANIFEST: readonly DemoManifestEntry[] = [
   {
     slug: 'events',
     title: 'Events',
-    description: 'A host orchestrating a swarm of event producers and consumers across origins.',
+    description: 'Russian-doll nesting — a feature that is itself a host, chained across origins.',
     boundary: 'cross-origin-same-site',
     stack: 'In planning',
   },
