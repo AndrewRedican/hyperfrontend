@@ -2,7 +2,7 @@ import { defineConfig } from '@hyperfrontend/features'
 
 export default defineConfig({
   name: '@hyperfrontend/demo-clock',
-  version: '0.2.0',
+  version: '0.3.0',
   contract: './clock.contract.ts',
   url: 'https://demo-clock-production.up.railway.app/',
   protocol: 'v1',
