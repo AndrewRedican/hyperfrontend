@@ -5,7 +5,7 @@
   "sourceRoot": "apps/docs-site/src",
   "projectType": "application",
   "tags": ["type:app", "scope:standalone"],
-  "implicitDependencies": ["demo-clock"],
+  "implicitDependencies": ["demo-clock", "demo-heartbeat"],
   "targets": {
     "typecheck": {
       "executor": "nx:run-commands",
@@ -29,9 +29,13 @@
     },
     "refresh-shell": {
       "executor": "nx:run-commands",
-      "dependsOn": ["demo-clock:pack-shell"],
+      "dependsOn": ["demo-clock:pack-shell", "demo-heartbeat:pack-shell"],
       "options": {
-        "commands": ["cp ../../dist/apps/demos/clock/shell/hyperfrontend-demo-clock-shell-*.tgz vendor/", "npm install"],
+        "commands": [
+          "cp ../../dist/apps/demos/clock/shell/hyperfrontend-demo-clock-shell-*.tgz vendor/",
+          "cp ../../dist/apps/demos/heartbeat/shell/hyperfrontend-demo-heartbeat-shell-*.tgz vendor/",
+          "npm install"
+        ],
         "cwd": "apps/docs-site",
         "parallel": false
       }
