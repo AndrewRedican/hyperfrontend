@@ -4,6 +4,7 @@
  * demo's interactions — extra beats, suppression by holding, flatline, and a
  * slow recovery ramp back to baseline.
  */
+import { randomGaussian } from '@hyperfrontend/random-generator-utils'
 
 /** Where a beat originated: the scheduled rhythm or a visitor interaction. */
 export type BeatSource = 'rhythm' | 'user'
@@ -37,12 +38,12 @@ export const MIN_BPM = 40
 export const MAX_BPM = 180
 /** Resting rate the engine starts at. */
 export const DEFAULT_BPM = 72
-/** Pseudo-random spread applied to every interval (±4%), read as heart-rate variability. */
-export const JITTER_FRACTION = 0.04
+/** Hard bound on interval variability: samples stay within ±12% of the base interval, a Gaussian centred on it (σ ≈ 4%). */
+export const JITTER_SPREAD = 0.12
 /** Hold duration that turns a press into suppression instead of a tap. */
 export const HOLD_SUPPRESS_MS = 300
 /** Total hold duration after which the suppressed rhythm flatlines. */
-export const FLATLINE_HOLD_MS = 4000
+export const FLATLINE_HOLD_MS = 3000
 /** Pause multiplier after a premature user beat (the compensatory pause). */
 export const COMPENSATORY_FACTOR = 1.5
 /** Fraction of baseline the first recovery beat paces at. */
@@ -56,8 +57,8 @@ export const RECOVERY_DONE_RATIO = 0.97
 export interface RhythmEngineOptions {
   /** Baseline rate in bpm; clamped to 40–180. Defaults to 72. */
   bpm?: number
-  /** Uniform random source in [0, 1); defaults to `Math.random`. */
-  random?: () => number
+  /** Bounded Gaussian sampler over `[min, max]`; defaults to the workspace `randomGaussian`. Inject a deterministic sampler for tests. */
+  gaussian?: (min: number, max: number) => number
   /** Clock source; defaults to `Date.now`. */
   now?: () => number
 }
@@ -127,7 +128,7 @@ function clampRate(bpm: number): number {
  * ```
  */
 export function createRhythmEngine(options: RhythmEngineOptions = {}): RhythmEngine {
-  const random = options.random ?? (() => Math.random())
+  const gaussian = options.gaussian ?? randomGaussian
   const now = options.now ?? (() => Date.now())
 
   let baseline = clampRate(options.bpm ?? DEFAULT_BPM)
@@ -166,9 +167,9 @@ export function createRhythmEngine(options: RhythmEngineOptions = {}): RhythmEng
   }
 
   const jitteredInterval = (bpm: number, factor = 1): number => {
-    // why: ±JITTER_FRACTION of pseudo-random spread makes the rhythm read as a heart with natural variability instead of a metronome.
-    const jitter = 1 + (random() * 2 - 1) * JITTER_FRACTION
-    return (60000 / bpm) * jitter * factor
+    // why: A bounded Gaussian centred on the base interval reads as a heart with natural variability instead of a metronome — and because every draw is independent and centred, the average rhythm never drifts off the configured rate.
+    const base = 60000 / bpm
+    return gaussian(base * (1 - JITTER_SPREAD), base * (1 + JITTER_SPREAD)) * factor
   }
 
   const clearBeatTimer = (): void => {

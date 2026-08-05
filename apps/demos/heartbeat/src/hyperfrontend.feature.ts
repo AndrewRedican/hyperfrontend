@@ -11,17 +11,20 @@
 import { createFeature } from '@hyperfrontend/features/hostee'
 import contract from '../heartbeat.contract'
 import { wireHeartbeatContract } from './feature/wire-contract'
+import { featureUi } from './state/feature-ui'
 import { heartRhythm } from './state/heart-rhythm'
 
 /** The @hyperfrontend/demo-heartbeat feature handle; use it to send and receive contract actions. */
 export const feature = createFeature({
   name: '@hyperfrontend/demo-heartbeat',
   contract,
-  // why: In features@0.4.0 the SDK's payload-less `__hf:beat` cannot cross the v1 envelope (the packet layer rejects empty data), which pins every host watchdog at `suspect`. This demo exists to show the watchdog working, so the same-origin pairing runs unenveloped.
-  protocol: 'none',
+  protocol: 'v1',
 })
 
 wireHeartbeatContract(feature, heartRhythm)
+
+// why: The dialog chrome and the standalone sound path both key off the host's presentation announcements — never off URLs or frame ancestry.
+featureUi.attach(feature)
 
 // why: The heart beats standalone too — the engine starts at boot, and beats emitted before a host connects simply never leave the frame.
 heartRhythm.start()

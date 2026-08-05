@@ -9,7 +9,7 @@ import type { FeatureContract } from '@hyperfrontend/features/hostee'
  * as a physics flip.
  */
 const contract = {
-  version: '0.2.0',
+  version: '0.3.0',
   accepted: [
     {
       type: 'get-time',
@@ -161,6 +161,18 @@ const contract = {
         type: 'object',
         properties: { id: { type: 'string' } },
         required: ['id'],
+      },
+    },
+    {
+      type: 'close-request',
+      description:
+        'The visitor activated the dialog close control inside the feature. The host owns the presentation and performs the actual close.',
+      schema: {
+        type: 'object',
+        properties: {
+          source: { type: 'string', enum: ['button'] },
+        },
+        required: ['source'],
       },
     },
   ],

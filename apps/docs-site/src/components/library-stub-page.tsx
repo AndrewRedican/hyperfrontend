@@ -1,3 +1,4 @@
+import { TrackedLink } from '@/components/analytics/tracked-link'
 import { Breadcrumb } from '@/components/breadcrumb'
 import Link from 'next/link'
 
@@ -24,14 +25,14 @@ export function LibraryStubPage({ title, packageName, description, features }: S
         <code className="rounded-lg bg-slate-100 px-3 py-1.5 text-sm font-medium text-slate-700 dark:bg-slate-800 dark:text-slate-300">
           {packageName}
         </code>
-        <a
+        <TrackedLink
           href={`https://www.npmjs.com/package/${packageName}`}
-          target="_blank"
-          rel="noopener noreferrer"
+          event={{ kind: 'npm', packageName }}
+          external
           className="text-sm text-primary-600 hover:underline dark:text-primary-400"
         >
           View on npm →
-        </a>
+        </TrackedLink>
       </div>
 
       {description && <p className="mt-6 text-lg text-slate-600 dark:text-slate-400">{description}</p>}

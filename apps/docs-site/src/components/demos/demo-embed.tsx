@@ -2,6 +2,7 @@
 
 import type { DemoManifestEntry } from '@/lib/demo-manifest'
 import type { DemoShell } from './demo-wiring'
+import { trackDemoOpen } from '@/lib/analytics-events'
 import { useEffect, useRef, useState } from 'react'
 import { clearTimeout, setTimeout } from '@hyperfrontend/immutable-api-utils/built-in-copy/timers'
 import { DemoFallbackCard } from './demo-fallback-card'
@@ -72,6 +73,10 @@ export function DemoEmbed({ entry, className, onStatus, onShell }: DemoEmbedProp
 
     const apply = (next: EmbedStatus) => {
       if (!disposed) {
+        if (next === 'live') {
+          // note: Deduped centrally — carousel remounts and reconnects stay one open per page life.
+          trackDemoOpen(slug, 'embedded')
+        }
         setStatus(next)
         notify.current?.(next)
       }

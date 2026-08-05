@@ -1,15 +1,21 @@
 <script setup lang="ts">
 import type { CoinFace } from './physics/coin-physics'
+import type { FeatureDisplayMode } from './runtime/feature-ui'
 import type { FormatCause } from './state/clock-store'
 import { onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import ClockCoin from './components/ClockCoin.vue'
+import DialogCloseControls from './components/DialogCloseControls.vue'
 import FrameworkBadge from './components/FrameworkBadge.vue'
 import { useClockStore } from './state/clock-store'
+import { featureUi } from './state/feature-ui'
 
 const store = useClockStore()
 const nowMs = ref(Date.now())
 const coin = ref<InstanceType<typeof ClockCoin> | null>(null)
 const announcement = ref('')
+// why: The mode is a protocol fact announced by the host; null (opened directly, or before any announcement) renders no dialog chrome.
+const displayMode = ref<FeatureDisplayMode | null>(featureUi.getMode())
+let offMode: (() => void) | null = null
 
 let raf = 0
 let fallback: ReturnType<typeof setInterval> | null = null
@@ -39,6 +45,10 @@ function applyVisibility(): void {
 onMounted(() => {
   applyVisibility()
   document.addEventListener('visibilitychange', applyVisibility)
+  displayMode.value = featureUi.getMode()
+  offMode = featureUi.subscribe(() => {
+    displayMode.value = featureUi.getMode()
+  })
 })
 
 onBeforeUnmount(() => {
@@ -47,6 +57,7 @@ onBeforeUnmount(() => {
     clearInterval(fallback)
   }
   document.removeEventListener('visibilitychange', applyVisibility)
+  offMode?.()
 })
 
 function onSettled(face: CoinFace, cause: FormatCause): void {
@@ -72,6 +83,7 @@ store.onAlarmFired((alarm) => {
 
 <template>
   <main class="stage">
+    <DialogCloseControls v-if="displayMode === 'dialog'" @close-request="featureUi.requestClose()" />
     <ClockCoin
       ref="coin"
       :epoch-ms="nowMs"

@@ -262,21 +262,23 @@ Analytics lives in [src/lib/analytics.ts](src/lib/analytics.ts) and the `<Analyt
 | `NEXT_PUBLIC_SITE_URL`                 | Canonical origin override; defaults to `https://hyperfrontend.dev`.   |
 | `NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION` | Optional Google Search Console verification token.                    |
 
-### Cookieless by design
+### Consent Mode v2, basic mode
 
-Consent Mode v2 signals (`analytics_storage`, `ad_storage`, `ad_user_data`, `ad_personalization`) are pushed as `denied` **before** any `gtag('config')` call and are never upgraded, so Google stores no cookies or identifiers and measurement runs entirely on anonymous pings. Because nothing is stored on the visitor's device, the site needs no consent banner. The trade-off: GA4 reports are aggregate/modeled rather than user-level, and Google Ads conversions rely on conversion modeling (no remarketing).
+Measurement is consent-gated end to end. The inline bootstrap queues the Consent Mode v2 signals (`analytics_storage`, `ad_storage`, `ad_user_data`, `ad_personalization`) as `denied` before anything else can run, and — the _basic-mode_ point — gtag.js itself is only added to the page after the visitor grants an optional category, so before consent there are no Google requests at all, not even cookieless pings. The provider-agnostic consent model lives in [src/lib/consent/consent.ts](src/lib/consent/consent.ts) (categories `necessary` / `analytics` / `advertising`, persisted as the single `hf-consent` localStorage key); the Google adapter mapping those categories onto the v2 signal fields is [src/lib/consent/google-consent.ts](src/lib/consent/google-consent.ts); the banner and preferences dialog are `<ConsentBanner />`, which renders only when a measurement ID is configured — a dormant integration shows no banner, and configuring an ID activates the consent experience automatically. The optional-category default is denied for every visitor worldwide: no region-resolution mechanism exists, and browser locale is not a legal jurisdiction, so the conservative default applies globally. The footer's **Privacy settings** control reopens the dialog at any time; withdrawing pushes a denied consent update and stops future optional collection. What the visitor sees is documented on [/privacy](src/app/privacy/page.tsx), which is written against this implementation.
 
-Page views are reported manually (`send_page_view: false`): a route tracker fires a `page_view` event on the initial load and on every App Router navigation, attributing every event to the page that produced it.
+Page views are reported manually (`send_page_view: false`): the route tracker fires each path's `page_view` exactly once — on load, on every App Router navigation, or the moment analytics consent arrives mid-visit — and never before the analytics grant.
 
 ### Recording events and conversions
+
+Product events are **centralized** in [src/lib/analytics-events.ts](src/lib/analytics-events.ts) — a deliberately small campaign taxonomy (`demo_open`, `docs_cta`, `repo_visit`, `npm_visit`) limited to interactions that exist today, carrying only fixed public identifiers (slugs, package names, link locations), deduped per page life for demo opens, and consent-gated through `trackEvent`. Components report through the taxonomy helpers or the `<TrackedLink>` primitive rather than calling `gtag` directly; the embedded demo apps ship no analytics of their own, so the host is the single reporter and no session double-counts.
 
 ```ts
 import { trackConversion, trackEvent } from '@/lib/analytics'
 
-// GA4 event, attributed to the current page
+// GA4 event, attributed to the current page — silently dropped until the visitor grants analytics
 trackEvent('select_content', { content_type: 'demo', item_id: 'clock' })
 
-// Google Ads conversion — the label comes from the Ads tag setup UI
+// Google Ads conversion — the label comes from the Ads tag setup UI; requires the advertising grant
 trackConversion('AbC-D_efGhIjKlMnOp', { value: 1, currency: 'USD' })
 ```
 

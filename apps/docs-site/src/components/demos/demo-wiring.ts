@@ -142,14 +142,14 @@ function attachHeartbeatEffects(shell: DemoShell, layer: HTMLElement): () => voi
 const WIRINGS: Record<string, DemoWiring | undefined> = {
   clock: {
     createShell: (options) => createClockShell(options),
-    contractLabel: 'contract 0.2.0 · protocol v1',
+    contractLabel: 'contract 0.3.0 · protocol v1',
     // why: The clock streams a tick at 1 Hz from open, so the first tick proves the app renders.
     proofEvents: ['tick'],
     silenceTimeoutMs: 6000,
   },
   heartbeat: {
     createShell: (options) => createHeartbeatShell(options),
-    contractLabel: 'contract 0.1.0 · protocol none',
+    contractLabel: 'contract 0.2.0 · protocol v1',
     // why: Every contraction crosses as a beat and every state change as a rhythm — either one proves the heart renders.
     proofEvents: ['beat', 'rhythm'],
     // why: A visitor holding the heart to flatline silences product traffic on purpose; the budget must outlast any plausible hold.

@@ -7,11 +7,12 @@
     "start": "next start --port 3000",
     "generate": "npx tsx scripts/generate-docs.ts",
     "validate-links": "npx tsx scripts/validate-links.ts",
-    "validate-sitemap": "npx tsx scripts/validate-sitemap.ts"
+    "validate-sitemap": "npx tsx scripts/validate-sitemap.ts",
+    "test": "vitest run"
   },
   "dependencies": {
-    "@hyperfrontend/demo-clock-shell": "file:vendor/hyperfrontend-demo-clock-shell-0.2.0.tgz",
-    "@hyperfrontend/demo-heartbeat-shell": "file:vendor/hyperfrontend-demo-heartbeat-shell-0.1.0.tgz",
+    "@hyperfrontend/demo-clock-shell": "file:vendor/hyperfrontend-demo-clock-shell-0.3.0.tgz",
+    "@hyperfrontend/demo-heartbeat-shell": "file:vendor/hyperfrontend-demo-heartbeat-shell-0.2.0.tgz",
     "@hyperfrontend/function-utils": "0.0.4",
     "@hyperfrontend/immutable-api-utils": "0.1.2",
     "@hyperfrontend/logging": "0.1.0",
@@ -30,6 +31,7 @@
     "@types/react-dom": "19.0.4",
     "autoprefixer": "10.4.21",
     "gray-matter": "4.0.3",
+    "jsdom": "29.1.1",
     "postcss": "8.5.25",
     "rehype-raw": "7.0.0",
     "rehype-stringify": "10.0.1",
@@ -40,7 +42,8 @@
     "tailwindcss": "3.4.17",
     "tsx": "4.22.0",
     "typedoc": "0.28.19",
-    "typescript": "5.7.3"
+    "typescript": "5.7.3",
+    "vitest": "4.1.10"
   },
   "overrides": {
     "brace-expansion": "5.0.9",

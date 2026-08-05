@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from 'next'
 import { Analytics } from '@/components/analytics/analytics'
+import { ConsentBanner } from '@/components/consent/consent-banner'
 import { JsonLd } from '@/components/json-ld'
 import { ThemeProvider } from '@/components/theme-provider'
 import '@/lib/dev-logger'
@@ -83,6 +84,7 @@ export default function RootLayout({ children }: RootLayoutProps) {
         />
         <ThemeProvider>{children}</ThemeProvider>
         <Analytics />
+        <ConsentBanner />
       </body>
     </html>
   )

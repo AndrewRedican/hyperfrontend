@@ -1,8 +1,11 @@
 'use client'
 
 import type { DemoShell } from './demo-wiring'
+import type { LubDub } from './heartbeat-monitor'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { dateNow } from '@hyperfrontend/immutable-api-utils/built-in-copy/date'
+import { clearInterval, setInterval } from '@hyperfrontend/immutable-api-utils/built-in-copy/timers'
+import { createEcgStrip, createLubDub, createObservedBpm } from './heartbeat-monitor'
 
 /** Severity of a logged wire event, driving its color treatment. */
 export type EventKind = 'info' | 'success' | 'warn' | 'error'
@@ -191,8 +194,9 @@ const PACING_PRESETS = [
 /**
  * The heartbeat's contract-specific console actions: a correlated `ping`
  * request with its measured round trip, host-commanded pacing through
- * `set-rate`, and a live readout of the latest `beat` event — every
- * contraction the heart makes crosses the boundary as contract traffic.
+ * `set-rate`, a live ECG strip and observed-rate readout driven by the real
+ * `beat` stream, and the approval that turns on host-owned heartbeat sound —
+ * every contraction the heart makes crosses the boundary as contract traffic.
  * @param root0
  * @param root0.shell
  * @param root0.log
@@ -200,31 +204,78 @@ const PACING_PRESETS = [
 export function HeartbeatConsoleActions({ shell, log }: DemoConsoleActionsProps) {
   const [latency, setLatency] = useState<string | null>(null)
   const [lastBeat, setLastBeat] = useState<string | null>(null)
+  const [observed, setObserved] = useState(0)
+  const [soundOn, setSoundOn] = useState(false)
   const pingSeq = useRef(0)
+  const canvas = useRef<HTMLCanvasElement | null>(null)
+  const vitals = useRef(createObservedBpm())
+  const chime = useRef<LubDub | null>(null)
 
-  // why: Beats arrive faster than a log should scroll, so the newest one feeds a readout; the sparser rhythm transitions narrate into the log instead.
+  // why: Beats arrive faster than a log should scroll, so they feed the strip and readouts; the sparser rhythm transitions narrate into the log instead.
   useEffect(() => {
     if (!shell) {
       setLastBeat(null)
+      setObserved(0)
+      vitals.current.reset()
       return
     }
+    const strip = canvas.current === null ? null : createEcgStrip(canvas.current)
+    strip?.start()
+    // why: The readout keeps re-sampling between beats so silence visibly decays it instead of freezing the last value.
+    const ticker = setInterval(() => {
+      setObserved(vitals.current.readingAt(dateNow()))
+    }, 500)
     const subscriptions = [
       shell.on('beat', (data) => {
+        const receivedAt = dateNow()
+        vitals.current.addBeat(receivedAt)
+        setObserved(vitals.current.readingAt(receivedAt))
+        strip?.setFlat(false)
+        strip?.addBeat({ at: receivedAt, source: isRecord(data) && data['source'] === 'user' ? 'user' : 'rhythm' })
+        // note: Silent until the visitor approves sound; a flatlined rhythm emits no beats, so nothing can sound while flat.
+        chime.current?.playBeat()
         if (isRecord(data)) {
-          setLastBeat(`#${String(data['seq'])} — ${String(data['bpm'])} bpm (${String(data['source'])})`)
+          setLastBeat(`#${String(data['seq'])} (${String(data['source'])})`)
         }
       }),
       shell.on('rhythm', (data) => {
         if (isRecord(data) && typeof data['state'] === 'string') {
           const state = data['state']
+          strip?.setFlat(state === 'flatline')
           const kind: EventKind =
             state === 'flatline' ? 'error' : state === 'suppressed' ? 'warn' : state === 'beating' ? 'success' : 'info'
-          log(`rhythm — ${state} (${String(data['bpm'])} bpm)`, kind)
+          log(`rhythm — ${state} (target ${String(data['bpm'])} bpm)`, kind)
         }
       }),
     ]
-    return () => subscriptions.forEach((unsubscribe) => unsubscribe())
+    return () => {
+      subscriptions.forEach((unsubscribe) => unsubscribe())
+      clearInterval(ticker)
+      strip?.stop()
+    }
   }, [shell, log])
+
+  const toggleSound = useCallback(() => {
+    if (chime.current?.isEnabled() === true) {
+      chime.current.disable()
+      setSoundOn(false)
+      log('heartbeat sound muted')
+      return
+    }
+    if (chime.current === null) {
+      chime.current = createLubDub()
+    }
+    // why: enable() runs inside this click so the browser's gesture requirement is satisfied; a refusal stays a logged fact, not an uncaught error.
+    void chime.current.enable().then((running) => {
+      setSoundOn(running)
+      log(
+        running
+          ? 'heartbeat sound enabled — the feature declares the autoplay capability, the host owns playback after this approval'
+          : 'heartbeat sound unavailable — the browser refused audio playback',
+        running ? 'success' : 'warn'
+      )
+    })
+  }, [log])
 
   const ping = useCallback(async () => {
     if (!shell) {
@@ -265,9 +316,23 @@ export function HeartbeatConsoleActions({ shell, log }: DemoConsoleActionsProps)
             {preset.label}
           </button>
         ))}
+        <button
+          type="button"
+          className={CONSOLE_ACTION_CLASSES}
+          disabled={!shell}
+          aria-pressed={soundOn}
+          onClick={toggleSound}
+          title="The feature declares the autoplay capability; playback is host-owned and starts only after this approval."
+        >
+          {soundOn ? 'Mute heartbeat sound' : 'Enable heartbeat sound'}
+        </button>
       </div>
-      {latency !== null ? <p className="mt-3 text-xs text-slate-600 dark:text-slate-400">ping → {latency}</p> : null}
-      {lastBeat !== null ? <p className="mt-2 text-xs text-slate-600 dark:text-slate-400">latest beat → {lastBeat}</p> : null}
+      {/* note: The strip is host-drawn from received beat events — the same authoritative stream the effects and the chime consume. */}
+      <canvas ref={canvas} width={352} height={56} aria-hidden className="mt-3 h-14 w-full rounded-md" />
+      <p className="mt-1 text-xs text-slate-600 dark:text-slate-400">
+        measured → {observed} bpm{lastBeat !== null ? ` · latest beat ${lastBeat}` : ''}
+      </p>
+      {latency !== null ? <p className="mt-2 text-xs text-slate-600 dark:text-slate-400">ping → {latency}</p> : null}
     </>
   )
 }

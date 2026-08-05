@@ -1,3 +1,4 @@
+import { TrackedLink } from '@/components/analytics/tracked-link'
 import Link from 'next/link'
 import { MobileMenu } from './mobile-menu'
 import { ThemeToggle } from './theme-toggle'
@@ -25,14 +26,15 @@ export function Header() {
           <div className="hidden md:block">
             <ThemeToggle />
           </div>
-          <a
+          <TrackedLink
             href="https://github.com/AndrewRedican/hyperfrontend"
-            target="_blank"
-            rel="noopener noreferrer"
+            event={{ kind: 'repo', location: 'header' }}
+            external
+            ariaLabel="HyperFrontend on GitHub"
             className="text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100"
           >
             <GitHubIcon className="h-6 w-6" />
-          </a>
+          </TrackedLink>
         </div>
       </div>
     </header>

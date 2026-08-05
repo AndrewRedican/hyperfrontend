@@ -1,6 +1,6 @@
 {
   "name": "@hyperfrontend/demo-heartbeat",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Heartbeat demonstration — an anatomical heart feature (React) observed by a vanilla-TS ECG host, contrasting app-level cardiac events with the SDK's liveness watchdog.",
   "private": true,
   "type": "module",
@@ -19,7 +19,8 @@
     "dev:hosted": "run-p build:watch hf:dev"
   },
   "dependencies": {
-    "@hyperfrontend/features": "^0.4.0",
+    "@hyperfrontend/features": "^0.5.1",
+    "@hyperfrontend/random-generator-utils": "^0.0.5",
     "react": "^19.2.8",
     "react-dom": "^19.2.8"
   },
