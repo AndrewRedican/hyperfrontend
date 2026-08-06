@@ -24,7 +24,13 @@ function buildDialogLayoutCss(position: ResolvedPosition): string {
 }
 
 /**
- * Neutralizes the feature page's body so the embedded UI is neither clipped nor padded.
+ * Neutralizes the feature page's body so the embedded UI is neither clipped nor
+ * padded: zeroes `html`/`body` margin and padding, forces the background
+ * transparent so the host shows through, and pins `color-scheme: normal`.
+ *
+ * The stylesheet is appended when the feature initializes, so it outranks the
+ * page's own `body` rules at equal specificity — feature backgrounds belong on
+ * the root layout element.
  *
  * @example Resetting the body when a feature initializes
  * ```typescript
