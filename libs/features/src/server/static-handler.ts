@@ -1,5 +1,5 @@
 import type { IncomingMessage, ServerResponse } from 'node:http'
-import { extname, normalize, resolve, sep } from 'node:path'
+import { extname, join, normalize, resolve, sep } from 'node:path'
 import { freeze } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
 import { isFile as isFileOnDisk, readFileBuffer } from '@hyperfrontend/project-scope/core/fs'
 
@@ -22,6 +22,9 @@ const CONTENT_TYPES: Readonly<Record<string, string>> = freeze(<const>{
 })
 
 const FALLBACK_CONTENT_TYPE = 'application/octet-stream'
+
+// note: File a directory URL resolves to, matching what Vite preview and common static hosts serve for `/` and `/sub/`.
+const DIRECTORY_INDEX = 'index.html'
 
 /** Injectable file-system boundaries for the static handler, defaulted for production. */
 export interface StaticHandlerDeps {
@@ -62,8 +65,8 @@ export function requestPath(url: string | undefined): string {
 }
 
 /**
- * Resolves a URL path to an absolute path confined to `root`, treating `/` as
- * `index.html` and rejecting any path that escapes the root via `..`.
+ * Resolves a URL path to an absolute path confined to `root`, rejecting any
+ * path that escapes the root via `..`.
  *
  * @param root - The absolute directory the path is confined to.
  * @param urlPath - The request path (with or without a query string).
@@ -71,14 +74,36 @@ export function requestPath(url: string | undefined): string {
  */
 function confinePath(root: string, urlPath: string): string | null {
   const decoded = decodeURIComponent(requestPath(urlPath))
-  const relative = decoded === '/' ? 'index.html' : decoded.replace(/^\/+/, '')
-  const candidate = resolve(root, normalize(relative))
+  const candidate = resolve(root, normalize(decoded.replace(/^\/+/, '')))
   return candidate === root || candidate.startsWith(`${root}${sep}`) ? candidate : null
+}
+
+/**
+ * Appends the directory-marking trailing slash to a request URL, keeping any
+ * query string attached to it.
+ *
+ * @param url - The raw request URL to redirect from.
+ * @returns The same URL with its path ending in a slash.
+ *
+ * @example Redirecting a directory request
+ * ```typescript
+ * withTrailingSlash('/host?debug=1') // '/host/?debug=1'
+ * ```
+ */
+function withTrailingSlash(url: string): string {
+  const queryAt = url.indexOf('?')
+  return queryAt === -1 ? `${url}/` : `${url.slice(0, queryAt)}/${url.slice(queryAt)}`
 }
 
 /**
  * Serves a single static file from `root` to the response, sending 403 on a
  * traversal attempt and 404 when the file is missing.
+ *
+ * A URL ending in `/` serves that directory's `index.html`, so `/` and
+ * `/host/` reach the pages a multi-page build emits as `index.html` and
+ * `host/index.html`. A directory URL written without the trailing slash
+ * (`/host`) answers `301` to the slashed form, keeping relative asset URLs on
+ * the page resolvable.
  *
  * @param root - The absolute directory files are served from.
  * @param urlPath - The request path (with or without a query string).
@@ -89,15 +114,29 @@ function confinePath(root: string, urlPath: string): string | null {
  * ```typescript
  * serveFile('/abs/dist', '/', res)
  * ```
+ *
+ * @example Serving a companion page from a multi-page build
+ * ```typescript
+ * serveFile('/abs/dist', '/host/', res) // sends /abs/dist/host/index.html
+ * ```
  */
 export function serveFile(root: string, urlPath: string, res: ServerResponse, deps: StaticHandlerDeps = {}): void {
   const readFile = deps.readFile ?? readFileBuffer
   const isFile = deps.isFile ?? isFileOnDisk
 
-  const filePath = confinePath(root, urlPath)
-  if (filePath === null) {
+  const confined = confinePath(root, urlPath)
+  if (confined === null) {
     res.statusCode = 403
     res.end('Forbidden')
+    return
+  }
+  const isDirectoryUrl = requestPath(urlPath).endsWith('/')
+  const filePath = isDirectoryUrl ? join(confined, DIRECTORY_INDEX) : confined
+  // why: An unslashed directory URL redirects rather than serving the index directly, so the browser resolves the page's relative asset URLs against the directory instead of its parent.
+  if (!isDirectoryUrl && !isFile(filePath) && isFile(join(filePath, DIRECTORY_INDEX))) {
+    res.statusCode = 301
+    res.setHeader('Location', withTrailingSlash(urlPath))
+    res.end()
     return
   }
   if (!isFile(filePath)) {
