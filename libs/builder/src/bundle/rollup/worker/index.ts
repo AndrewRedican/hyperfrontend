@@ -9,7 +9,7 @@
 import type { RollupBuildDescriptor } from './types'
 import { runRollupWorkerJob } from './job-runner'
 
-export type { RollupBuildDescriptor, RollupWorkerBundleOutput, RollupWorkerFormat, RollupWorkerReport } from './types'
+export type { RollupBuildDescriptor, RollupWorkerBin, RollupWorkerBundleOutput, RollupWorkerFormat, RollupWorkerReport } from './types'
 export { runRollupWorkerJob } from './job-runner'
 
 /**

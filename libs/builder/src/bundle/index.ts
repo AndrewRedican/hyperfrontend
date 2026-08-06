@@ -4,4 +4,5 @@
  *
  * @module @hyperfrontend/builder/bundle
  */
+export type { WorkerInvocation } from './worker-locator'
 export { runBundlePhase } from './run-bundle-phase'
