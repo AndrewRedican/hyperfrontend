@@ -3,10 +3,15 @@
  *
  * @module @hyperfrontend/features
  */
+export type { AsyncIteratorExecutor, GeneratorCallback, PromiseExecutor, Tree } from './nx/model'
+export type { EventHandler } from './shared/event-emitter'
+export type { PresentPayload, ViewportPayload } from './shared/presentation'
 export type { RequestHandler, RequestOptions } from './shared/request'
 export type {
   ActionDescription,
   BackdropBehavior,
+  BoxPosition,
+  DevAppConfig,
   DevConfig,
   DialogBoxConfig,
   DismissSource,

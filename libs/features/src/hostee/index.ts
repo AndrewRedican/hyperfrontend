@@ -3,6 +3,7 @@
  *
  * @module @hyperfrontend/features/hostee
  */
+export type { EventHandler } from '../shared/event-emitter'
 export type { ViewportPayload } from '../shared/presentation'
 export type { RequestHandler, RequestOptions } from '../shared/request'
 export type { ActionDescription, DisplayMode, FeatureContract, FeatureOptions, SecurityProtocol } from '../shared/types'

@@ -3,4 +3,5 @@
  *
  * @module @hyperfrontend/features/nx/executors/serve
  */
-export { default } from './executor'
+export type { ServeExecutorSchema } from './executor'
+export { default, serveExecutor } from './executor'

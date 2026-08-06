@@ -3,4 +3,5 @@
  *
  * @module @hyperfrontend/features/nx/generators/feature
  */
-export { default } from './generator'
+export type { FeatureGeneratorSchema } from './generator'
+export { default, featureGenerator } from './generator'
