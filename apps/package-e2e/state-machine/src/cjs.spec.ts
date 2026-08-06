@@ -39,7 +39,10 @@ describe('@hyperfrontend/state-machine CJS', () => {
       expect(store).toBeDefined()
     })
 
-    // Note: Store class not yet implemented in store entry
+    it('exposes the Store class', () => {
+      const { Store } = require('@hyperfrontend/state-machine/store')
+      expect(typeof Store).toBe('function')
+    })
   })
 
   describe('reducer sub-entry', () => {
