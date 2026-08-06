@@ -36,7 +36,7 @@ The koi pond: seven framework fish apps over a host pond, composited into one sc
 
 ### J-hardening — Product hardening (findings registry)
 
-The findings registry is the backlog; open findings (currently F-005, F-006, F-008) feed the next fix cut. The notional plugin material in [05-plugin-system.md](05-plugin-system.md) predicts one more: richer host introspection for a debug/inspection plugin.
+The findings registry is the backlog; open findings feed the next fix cut. The notional plugin material in [05-plugin-system.md](05-plugin-system.md) predicts one more: richer host introspection for a debug/inspection plugin.
 
 ### J-scaling — Repeatability (plan 06)
 

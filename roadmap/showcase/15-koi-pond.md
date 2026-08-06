@@ -42,7 +42,7 @@ The full behavioural/physical/rendering specification lives with the implementat
 ## Known constraints and risks (from API recon — resolve during implementation)
 
 - **Transparency at depth**: `allowtransparency` + body reset is proven for one overlay, never seven stacked over an animated canvas — establish a perf budget early (each iframe is its own compositing layer); reduce off-screen fish rendering; pause when hidden.
-- **F-008 interplay**: fish apps must paint nothing on `body`/root backgrounds — any paint blanks the pond behind that frame.
+- **Body reset interplay**: fish apps must paint nothing on `body`/root backgrounds — any paint blanks the pond behind that frame.
 - **Reveal choreography**: frames stay hidden until each session opens (staggered handshakes) — hold a host-side curtain until all seven `open` events land.
 - **Seven brokers**: each shell adds a page-level `message` listener plus 1 Hz heartbeats — keep cross-frame cadence low and payloads compact; schema-less contract actions skip validation cost where appropriate.
 - **Tarball churn**: a koi-lib bump touches 8 `package.json`s + lockfiles (integrity-hashed tarballs) — make the refresh target regenerate all consumers in one pass; each consumer with dependency-checks needs the lib's exact name in `ignoredDependencies`.
