@@ -1,0 +1,22 @@
+/* why: The hostee SDK resets html/body to transparent at runtime and this frame stacks over the pond, so anything painted here would blank the water behind it. */
+/* why: Everything the koi itself wears is scoped inside its components; only this frame-wide reset has to be global. */
+
+html,
+body,
+#app {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  background: transparent;
+}
+
+#app {
+  position: relative;
+  overflow: hidden;
+  font-family:
+    ui-sans-serif,
+    system-ui,
+    -apple-system,
+    'Segoe UI',
+    sans-serif;
+}
