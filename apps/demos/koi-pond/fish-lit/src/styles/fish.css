@@ -1,0 +1,11 @@
+/* why: The hostee SDK resets html/body to transparent at runtime and this frame stacks over the pond, so anything painted here would blank the water behind it. */
+/* why: Everything the koi actually looks like lives in the element's shadow styles; this sheet only gives it a full-frame box to swim in. */
+
+html,
+body,
+koi-fish {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  background: transparent;
+}
