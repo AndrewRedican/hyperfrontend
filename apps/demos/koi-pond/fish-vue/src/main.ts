@@ -1,5 +1,5 @@
-import { createApp } from 'vue'
-import App from './App.vue'
-import './styles/fish.css'
+// <hf:feature> — managed by @hyperfrontend/features; safe to keep
+import './hyperfrontend.feature'
+// </hf:feature>
 
-createApp(App).mount('#app')
+import './styles/fish.css'

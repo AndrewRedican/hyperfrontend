@@ -7,7 +7,9 @@
   "exclude": [],
 
   "compilerOptions": {
-    "lib": [],
+    // Keep the language built-ins at the app's ES2022 level, but drop the DOM lib —
+    // the jsdom types below describe the environment the tests actually run in.
+    "lib": ["ES2022"],
 
     // Vitest runs in a different environment than the application code.
     // Adjust types accordingly.
