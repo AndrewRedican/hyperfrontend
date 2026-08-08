@@ -1,0 +1,54 @@
+{
+  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
+  "name": "demo-koi-fish-vanilla",
+  "description": "Koi pond — the vanilla-TS koi, a standalone hostee feature rendering one fish inside a host-owned transparent full-viewport frame.",
+  "sourceRoot": "apps/demos/koi-pond/fish-vanilla/src",
+  "projectType": "application",
+  "tags": ["type:demo", "role:feature", "scope:standalone"],
+  "targets": {
+    "install": {
+      "executor": "@hyperfrontend/app:install",
+      "options": {}
+    },
+    "dev": {
+      "executor": "@hyperfrontend/app:serve",
+      "dependsOn": ["install"],
+      "options": {
+        "command": "npm run build:watch"
+      }
+    },
+    "build": {
+      "executor": "@hyperfrontend/app:build",
+      "dependsOn": ["install"],
+      "cache": false,
+      "outputs": ["{workspaceRoot}/dist/apps/demos/koi-pond/site/fish-vanilla"],
+      "options": {
+        "command": "npm run build"
+      }
+    },
+    "test": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["install"],
+      "options": {
+        "command": "npm run test:unit -- --run",
+        "cwd": "apps/demos/koi-pond/fish-vanilla"
+      }
+    },
+    "lint": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["install"],
+      "options": {
+        "command": "npm run lint",
+        "cwd": "apps/demos/koi-pond/fish-vanilla"
+      }
+    },
+    "typecheck": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["install"],
+      "options": {
+        "command": "npm run type-check",
+        "cwd": "apps/demos/koi-pond/fish-vanilla"
+      }
+    }
+  }
+}
