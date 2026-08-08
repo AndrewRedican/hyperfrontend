@@ -1,0 +1,52 @@
+{
+  "name": "@hyperfrontend/demo-koi-fish-solid",
+  "version": "0.1.0",
+  "description": "Koi pond — the SolidJS koi, a standalone hostee feature rendering one procedurally animated fish.",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "run-p type-check \"build-only {@}\" --",
+    "preview": "vite preview",
+    "test:unit": "vitest",
+    "build-only": "vite build",
+    "type-check": "tsc --build",
+    "lint": "run-s \"lint:*\"",
+    "lint:oxlint": "oxlint . --fix",
+    "lint:eslint": "eslint . --fix --cache",
+    "build:watch": "vite build --watch"
+  },
+  "dependencies": {
+    "@hyperfrontend/demo-koi-lib": "file:../vendor/hyperfrontend-demo-koi-lib-0.1.0.tgz",
+    "@hyperfrontend/features": "^0.5.1",
+    "solid-js": "^1.9.14"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "@tsconfig/node24": "^24.0.4",
+    "@types/jsdom": "^28.0.3",
+    "@types/node": "^24.13.2",
+    "@vitest/eslint-plugin": "^1.6.20",
+    "eslint": "^10.5.0",
+    "eslint-plugin-oxlint": "~1.76.0",
+    "eslint-plugin-solid": "0.14.5",
+    "globals": "^17.9.0",
+    "jiti": "^2.7.0",
+    "jsdom": "^29.1.1",
+    "npm-run-all2": "^9.0.2",
+    "oxlint": "~1.76.0",
+    "typescript": "~6.0.0",
+    "typescript-eslint": "^8.66.0",
+    "vite": "^8.0.16",
+    "vite-plugin-solid": "^2.11.14",
+    "vitest": "^4.1.9"
+  },
+  "overrides": {
+    "eslint-plugin-solid": {
+      "eslint": "$eslint"
+    }
+  },
+  "engines": {
+    "node": "^22.18.0 || >=24.12.0"
+  }
+}
