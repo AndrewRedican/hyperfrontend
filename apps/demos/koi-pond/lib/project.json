@@ -1,0 +1,65 @@
+{
+  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
+  "name": "demo-koi-lib",
+  "description": "Shared koi model, contract, and geometry consumed by the pond host and the seven fish apps as a packed tarball.",
+  "sourceRoot": "apps/demos/koi-pond/lib/src",
+  "projectType": "library",
+  "tags": ["type:demo", "role:shared", "scope:standalone"],
+  "targets": {
+    "install": {
+      "executor": "@hyperfrontend/app:install",
+      "options": {}
+    },
+    "build": {
+      "executor": "@hyperfrontend/app:build",
+      "dependsOn": ["install"],
+      "cache": false,
+      "outputs": ["{projectRoot}/dist"],
+      "options": {
+        "command": "npm run build"
+      }
+    },
+    "test": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["install"],
+      "options": {
+        "command": "npm run test:unit -- --run",
+        "cwd": "apps/demos/koi-pond/lib"
+      }
+    },
+    "lint": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["install"],
+      "options": {
+        "command": "npm run lint",
+        "cwd": "apps/demos/koi-pond/lib"
+      }
+    },
+    "typecheck": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["install"],
+      "options": {
+        "command": "npm run type-check",
+        "cwd": "apps/demos/koi-pond/lib"
+      }
+    },
+    "refresh": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["install"],
+      "cache": false,
+      "options": {
+        "command": "node ../tools/refresh-lib.mjs",
+        "cwd": "apps/demos/koi-pond/lib"
+      }
+    },
+    "verify": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["install"],
+      "cache": false,
+      "options": {
+        "command": "node ../tools/refresh-lib.mjs --check",
+        "cwd": "apps/demos/koi-pond/lib"
+      }
+    }
+  }
+}

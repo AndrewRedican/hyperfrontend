@@ -1,0 +1,2 @@
+# The shared koi-lib tarball is committed on purpose (every pond project installs it via file:)
+!vendor/*.tgz
