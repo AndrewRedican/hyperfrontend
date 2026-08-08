@@ -56,6 +56,18 @@ function heartbeatFeatureUrl(): string {
   return process.env['NEXT_PUBLIC_HEARTBEAT_FEATURE_URL'] ?? 'https://demo-heartbeat-production.up.railway.app/'
 }
 
+/**
+ * Resolves the koi pond's URL: the deployed origin by default, overridable via
+ * `NEXT_PUBLIC_KOI_POND_FEATURE_URL` — which `.env.development` points at the
+ * local `hf dev` server so the full host-to-hostee wiring is testable before a
+ * deploy.
+ *
+ * @returns The URL the koi pond app is embedded from.
+ */
+function koiPondFeatureUrl(): string {
+  return process.env['NEXT_PUBLIC_KOI_POND_FEATURE_URL'] ?? 'https://demo-koi-pond-production.up.railway.app/'
+}
+
 /** Every demo album, in carousel order — live demos first. */
 export const DEMO_MANIFEST: readonly DemoManifestEntry[] = [
   {
@@ -86,6 +98,21 @@ export const DEMO_MANIFEST: readonly DemoManifestEntry[] = [
       { label: 'Contract', href: `${REPO}/blob/main/apps/demos/heartbeat/heartbeat.contract.ts` },
       { label: 'Rhythm engine', href: `${REPO}/blob/main/apps/demos/heartbeat/src/rhythm/rhythm-engine.ts` },
       { label: 'Host page (vanilla TS)', href: `${REPO}/blob/main/apps/demos/heartbeat/src/host/main.ts` },
+    ],
+  },
+  {
+    slug: 'koi-pond',
+    title: 'Koi Pond',
+    description:
+      'Seven koi, seven separate applications, seven frameworks — swimming in one continuous scene. Disturb the water and watch the shoal scatter across the boundary; hover a fish to see which framework renders it.',
+    boundary: 'cross-site',
+    featureUrl: koiPondFeatureUrl(),
+    stack: 'Seven feature apps · vanilla-TS pond host',
+    sourceLinks: [
+      { label: 'Pond host (vanilla TS)', href: `${REPO}/tree/main/apps/demos/koi-pond/host` },
+      { label: 'Koi contract', href: `${REPO}/blob/main/apps/demos/koi-pond/lib/src/contract/koi-fish.contract.ts` },
+      { label: 'Shared koi model', href: `${REPO}/tree/main/apps/demos/koi-pond/lib` },
+      { label: 'The seven fish apps', href: `${REPO}/tree/main/apps/demos/koi-pond` },
     ],
   },
   {

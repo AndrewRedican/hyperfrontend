@@ -2,6 +2,7 @@
 
 import { createFeatureShell as createClockShell } from '@hyperfrontend/demo-clock-shell'
 import { createFeatureShell as createHeartbeatShell } from '@hyperfrontend/demo-heartbeat-shell'
+import { createFeatureShell as createKoiPondShell } from '@hyperfrontend/demo-koi-pond-shell'
 
 /** Per-request settings accepted by a demo shell request. */
 export interface DemoRequestOptions {
@@ -146,6 +147,14 @@ const WIRINGS: Record<string, DemoWiring | undefined> = {
     // why: The clock streams a tick at 1 Hz from open, so the first tick proves the app renders.
     proofEvents: ['tick'],
     silenceTimeoutMs: 6000,
+  },
+  'koi-pond': {
+    createShell: (options) => createKoiPondShell(options),
+    contractLabel: 'contract 0.1.0 · protocol v1',
+    // why: The pond reports its connected shoal as each koi lands, so the first `shoal` proves the scene is assembling behind the frame.
+    proofEvents: ['shoal'],
+    // why: An undisturbed pond is silent by design — it only speaks when the shoal changes or a scatter unwinds, so the budget must outlast a long calm.
+    silenceTimeoutMs: 30000,
   },
   heartbeat: {
     createShell: (options) => createHeartbeatShell(options),

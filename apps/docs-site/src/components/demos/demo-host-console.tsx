@@ -6,7 +6,7 @@ import type { DemoConsoleActionsProps, EventKind, ExtraShellOptions } from './de
 import type { DemoShell } from './demo-wiring'
 import { trackDemoOpen } from '@/lib/analytics-events'
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { ClockConsoleActions, CONSOLE_ACTION_CLASSES, HeartbeatConsoleActions } from './demo-console-actions'
+import { ClockConsoleActions, CONSOLE_ACTION_CLASSES, HeartbeatConsoleActions, KoiPondConsoleActions } from './demo-console-actions'
 import { demoWiringFor } from './demo-wiring'
 
 /** Props for {@link DemoHostConsole}. */
@@ -71,6 +71,7 @@ const SCROLLBAR_CLASSES =
 const DEMO_ACTIONS: Record<string, ComponentType<DemoConsoleActionsProps> | undefined> = {
   clock: ClockConsoleActions,
   heartbeat: HeartbeatConsoleActions,
+  'koi-pond': KoiPondConsoleActions,
 }
 
 /** The one-line pitch above each live demo's controls. */
@@ -79,6 +80,8 @@ const DEMO_BLURBS: Record<string, string> = {
     'Everything below drives the centered clock’s real session — the same wire the article describes: liveness states, dirty reports, correlated requests, polite teardown, contract-declared display modes, and a handshake denial.',
   heartbeat:
     'Everything below drives the centered heart’s real session — cardiac beats and rhythm shifts crossing as contract events, a live host-drawn ECG and measured rate, a correlated ping, host-commanded pacing, an approval-gated heartbeat sound, polite teardown, and the contract-declared display modes.',
+  'koi-pond':
+    'Everything below drives the centered pond’s real session — the outer, gallery-facing contract of a host that is itself a host to seven framework koi. Strike the water without a pointer, watch the connected shoal report itself, and see the pond announce when a scatter has settled — none of which reveals that seven apps compose the scene.',
 }
 
 /**
