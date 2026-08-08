@@ -10,7 +10,10 @@
     "preview": "vite preview",
     "test:unit": "vitest",
     "build-only": "vite build",
-    "type-check": "svelte-check --tsconfig ./tsconfig.app.json",
+    "type-check": "run-s \"type-check:*\"",
+    "type-check:app": "svelte-check --tsconfig ./tsconfig.app.json",
+    "type-check:test": "svelte-check --tsconfig ./tsconfig.vitest.json",
+    "type-check:node": "tsc --build tsconfig.node.json",
     "lint": "run-s \"lint:*\"",
     "lint:oxlint": "oxlint . --fix",
     "lint:eslint": "eslint . --fix --cache",
@@ -19,7 +22,8 @@
   "dependencies": {
     "@hyperfrontend/demo-koi-lib": "file:../vendor/hyperfrontend-demo-koi-lib-0.1.0.tgz",
     "@hyperfrontend/features": "^0.5.1",
-    "svelte": "^5.56.8"
+    "svelte": "^5.56.8",
+    "three": "^0.185.1"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
@@ -28,6 +32,7 @@
     "@tsconfig/svelte": "^5.0.8",
     "@types/jsdom": "^28.0.3",
     "@types/node": "^24.13.2",
+    "@types/three": "^0.185.4",
     "@vitest/eslint-plugin": "^1.6.20",
     "eslint": "^10.5.0",
     "eslint-plugin-oxlint": "~1.76.0",

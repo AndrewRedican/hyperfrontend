@@ -11,6 +11,9 @@
     // Include Node.js types and avoid accidentally including other `@types/*` packages.
     "types": ["node"],
 
+    // The eslint flat config imports the plain-JS svelte.config.js; allow it into the program so the import resolves.
+    "allowJs": true,
+
     // Disable emitting output during `tsc --build`, which is used for type-checking only.
     "noEmit": true,
 

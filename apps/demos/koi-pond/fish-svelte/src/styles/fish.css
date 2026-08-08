@@ -1,5 +1,4 @@
 /* why: The hostee SDK resets html/body to transparent at runtime and this frame stacks over the pond, so anything painted here would blank the water behind it. */
-/* why: Everything the koi itself wears is scoped inside its components; only this frame-wide reset has to be global. */
 
 html,
 body,
@@ -19,4 +18,45 @@ body,
     -apple-system,
     'Segoe UI',
     sans-serif;
+}
+
+.koi-canvas {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+/* why: Hover identity is the fish's own chrome — the host hit-tests and notifies, but every koi draws its own card in its own framework. */
+/* why: `display: grid` below outranks the UA stylesheet's `[hidden] { display: none }`, so the attribute needs honouring explicitly or the card never hides. */
+.koi-card[hidden] {
+  display: none;
+}
+
+.koi-card {
+  position: absolute;
+  top: 0;
+  left: 0;
+  display: grid;
+  gap: 0.15rem;
+  padding: 0.42rem 0.6rem;
+  border: 1px solid rgba(232, 243, 239, 0.16);
+  border-radius: 10px;
+  background: rgba(9, 24, 22, 0.86);
+  backdrop-filter: blur(6px);
+  pointer-events: none;
+  white-space: nowrap;
+}
+
+.koi-card-name {
+  font-size: 0.82rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+.koi-card-url {
+  font-size: 0.68rem;
+  color: rgba(232, 243, 239, 0.62);
+  font-family: ui-monospace, 'SFMono-Regular', monospace;
 }
