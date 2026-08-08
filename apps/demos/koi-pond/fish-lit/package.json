@@ -19,13 +19,15 @@
   "dependencies": {
     "@hyperfrontend/demo-koi-lib": "file:../vendor/hyperfrontend-demo-koi-lib-0.1.0.tgz",
     "@hyperfrontend/features": "^0.5.1",
-    "lit": "^3.3.3"
+    "lit": "^3.3.3",
+    "three": "^0.185.1"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
     "@tsconfig/node24": "^24.0.4",
     "@types/jsdom": "^28.0.3",
     "@types/node": "^24.13.2",
+    "@types/three": "^0.185.4",
     "@vitest/eslint-plugin": "^1.6.20",
     "eslint": "^10.5.0",
     "eslint-plugin-lit": "^2.3.1",
