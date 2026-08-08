@@ -12,6 +12,25 @@
  */
 export type { KoiActionDescription, KoiContract } from './contract/koi-fish.contract.js'
 export type { BodyContour } from './geometry/body.js'
+export type { KoiSection } from './koi3d/anatomy.js'
+export type {
+  KoiAppearance,
+  KoiCaudalShape,
+  KoiConfig,
+  KoiConfigInput,
+  KoiEyeShape,
+  KoiFinShape,
+  KoiHeadShape,
+  KoiMotionInput,
+  KoiPhysical,
+  KoiResolution,
+  KoiSwimTrim,
+} from './koi3d/config.js'
+export type { FinPart } from './koi3d/fin-mesh.js'
+export type { MeshBounds, MeshBuilder, MeshData } from './koi3d/mesh-data.js'
+export type { KoiPatch, KoiPatternData, KoiPatternName } from './koi3d/pattern.js'
+export type { SpinePose, SpineStation, SwimParameters } from './koi3d/spine-pose.js'
+export type { KoiSwimState } from './koi3d/swim-state.js'
 export type { Bounds } from './geometry/capsule.js'
 export type { SpineState, SpineStep } from './geometry/spine.js'
 export type { ClosestApproach, EncounterAction, EncounterResolution, EncounterSelf } from './geometry/steering.js'
@@ -102,3 +121,24 @@ export {
 export { koiLabel, koiPalette } from './model/palette.js'
 export { koiBuild, koiProfile, koiSeed, koiTraits } from './model/traits.js'
 export { KOI_FRAMEWORKS } from './model/types.js'
+
+export { sampleSection, sectionPoint } from './koi3d/anatomy.js'
+export { bodyRingCount, buildBodyMesh, eyeTheta, surfaceNormal, surfacePoint } from './koi3d/body-mesh.js'
+export {
+  CAUDAL_BLEND,
+  CAUDAL_BLEND_HEIGHT,
+  CAUDAL_ROOT,
+  DEFAULT_APPEARANCE,
+  DEFAULT_MOTION,
+  DEFAULT_PHYSICAL,
+  DEFAULT_RESOLUTION,
+  DEFAULT_TRIM,
+  PIVOT_STATION,
+  resolveKoiConfig,
+} from './koi3d/config.js'
+export { FIN_PART, buildCaudalFin, buildFinSet, buildMembraneFin } from './koi3d/fin-mesh.js'
+export { buildBarbels, buildEye, buildEyes } from './koi3d/head-mesh.js'
+export { createMeshBuilder, finishMesh, mergeMeshes, meshBounds, meshTriangleCount, pushQuad, pushVertex } from './koi3d/mesh-data.js'
+export { KOI_PATTERNS, MAX_PATCHES, buildPattern, packPatches } from './koi3d/pattern.js'
+export { SPINE_SAMPLES, STILL_SWIM, evaluateSpine, sampleSpinePose } from './koi3d/spine-pose.js'
+export { MOTION_PRESETS, createSwimState, targetSwim } from './koi3d/swim-state.js'
