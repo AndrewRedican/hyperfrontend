@@ -1,0 +1,179 @@
+/* why: The hostee SDK resets html/body to transparent at runtime, so the pond's paint lives on its own root element — identical standalone and embedded. */
+
+html,
+body,
+#pond {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family:
+    ui-sans-serif,
+    system-ui,
+    -apple-system,
+    'Segoe UI',
+    sans-serif;
+}
+
+#pond {
+  position: relative;
+  overflow: hidden;
+  background: radial-gradient(circle at 50% 46%, #20423a 0%, #16302c 55%, #0b1c1b 100%);
+  color: #e8f3ef;
+  isolation: isolate;
+}
+
+#floor {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  display: block;
+}
+
+/* why: Every koi frame must be transparent to hit-testing, or the topmost one swallows every pointer event over the whole pond. */
+.koi-layer {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  transition: opacity 420ms ease;
+}
+
+/* why: Repeated on the frame itself because the SDK writes inline styles there; a future addition must not silently re-enable hit-testing. */
+.koi-layer iframe {
+  pointer-events: none;
+  border: none;
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+/* why: The surface water is always topmost and never carries a fish — the visitor is looking through it at the shoal. */
+#surface {
+  position: absolute;
+  inset: 0;
+  z-index: 100;
+  pointer-events: none;
+  display: block;
+}
+
+/* why: Frames stay hidden until their session opens; the curtain covers the staggered reveal until every koi has landed. */
+#curtain {
+  position: absolute;
+  inset: 0;
+  z-index: 200;
+  display: grid;
+  place-items: center;
+  background: radial-gradient(circle at 50% 46%, #20423a 0%, #0b1c1b 100%);
+  transition: opacity 900ms ease;
+}
+
+#curtain[data-open='true'] {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.curtain-note {
+  font-size: 0.82rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #6f948b;
+}
+
+/* why: Hovering a moving koi inside a frame is a pointer gesture no keyboard or screen reader can make, so the same identity is published as a list they can walk. */
+.koi-roster {
+  position: absolute;
+  right: 0.9rem;
+  bottom: 0.9rem;
+  z-index: 150;
+  padding: 0.55rem 0.7rem;
+  border: 1px solid rgba(232, 243, 239, 0.12);
+  border-radius: 12px;
+  background: rgba(9, 24, 22, 0.72);
+  backdrop-filter: blur(8px);
+  font-size: 0.74rem;
+}
+
+.koi-roster-heading {
+  margin: 0 0 0.35rem;
+  font-size: 0.64rem;
+  font-weight: 600;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+  color: rgba(232, 243, 239, 0.52);
+}
+
+.koi-roster ul {
+  display: grid;
+  gap: 0.1rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.koi-roster a {
+  display: block;
+  padding: 0.14rem 0.3rem;
+  border-radius: 6px;
+  color: rgba(232, 243, 239, 0.86);
+  text-decoration: none;
+}
+
+.koi-roster a:hover,
+.koi-roster a:focus-visible,
+.koi-roster li[data-hovered='true'] a {
+  background: rgba(232, 243, 239, 0.12);
+  color: #ffffff;
+}
+
+/* why: A koi that never connected is not in the scene, so the roster shows it as absent rather than offering a dead link. */
+.koi-roster li[data-connected='false'] a {
+  opacity: 0.34;
+  pointer-events: none;
+}
+
+/* why: The pond only draws a close control when a host announces dialog mode; it requests the close and the host performs it. */
+.pond-close {
+  position: absolute;
+  top: 0.75rem;
+  right: 0.75rem;
+  z-index: 210;
+  width: 2rem;
+  height: 2rem;
+  border: 1px solid rgba(232, 243, 239, 0.18);
+  border-radius: 50%;
+  background: rgba(9, 24, 22, 0.78);
+  color: #e8f3ef;
+  font-size: 0.85rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.pond-close:hover,
+.pond-close:focus-visible {
+  background: rgba(20, 48, 44, 0.92);
+}
+
+.pond-close-hint {
+  position: absolute;
+  top: 0.95rem;
+  right: 3.1rem;
+  z-index: 210;
+  margin: 0;
+  font-size: 0.66rem;
+  letter-spacing: 0.08em;
+  color: rgba(232, 243, 239, 0.44);
+}
+
+.pond-close[hidden],
+.pond-close-hint[hidden] {
+  display: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .koi-layer,
+  #curtain {
+    transition-duration: 1ms;
+  }
+}
