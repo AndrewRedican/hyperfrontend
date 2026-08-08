@@ -117,8 +117,11 @@ export {
   renderedDepth,
   spreadDepths,
   startDepth,
+  swimDepth,
 } from './model/depth.js'
 export { koiLabel, koiPalette } from './model/palette.js'
+export type { PondViewSpec } from './model/pond-view.js'
+export { POND_VIEW, pxPerUnit } from './model/pond-view.js'
 export { koiBuild, koiProfile, koiSeed, koiTraits } from './model/traits.js'
 export { KOI_FRAMEWORKS } from './model/types.js'
 

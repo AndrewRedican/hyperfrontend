@@ -10,10 +10,12 @@
 export type { KoiDebugFlags, KoiDebugLayer } from './debug.js'
 export type { Koi, KoiCollisionChain, KoiDepthResponse, KoiMetrics } from './koi.js'
 export type { KoiUniforms } from './materials.js'
+export type { PondView, PondViewport } from './pond-view.js'
 export type { KoiCameraFraming, KoiLightingPreset } from './scene.js'
 
 export { NO_DEBUG, createKoiDebugLayer } from './debug.js'
 export { toBufferGeometry } from './geometry.js'
 export { createKoi } from './koi.js'
 export { applyAppearance, createEyeMaterial, createFinMaterial, createKoiUniforms, createSkinMaterial } from './materials.js'
+export { createPondRenderer, createPondView, sizePondRenderer } from './pond-view.js'
 export { KOI_LIGHTING_PRESETS, PRODUCTION_FRAMING, createLighting, createProductionCamera, placeCamera } from './scene.js'

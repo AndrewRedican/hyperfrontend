@@ -90,6 +90,27 @@ export function depthBlur(level: number): number {
 }
 
 /**
+ * A depth level expressed on the swimming model's axis.
+ *
+ * The 3D koi's motion input measures depth *downward* — 0 at the surface, 1 on
+ * the pond floor — the opposite direction to {@link depthFraction}. Its
+ * deepest-level shrink matches {@link depthScale} by construction, so a koi
+ * whose renderer takes this value looks exactly as large as the outline it
+ * reports on the wire.
+ *
+ * @param level - The depth level, fractional while transitioning.
+ * @returns The koi's submersion, 0 at the surface and 1 at the pond floor.
+ *
+ * @example Feeding a granted level to the 3D koi
+ * ```typescript
+ * koi.setMotion({ depth: swimDepth(level) })
+ * ```
+ */
+export function swimDepth(level: number): number {
+  return 1 - depthFraction(level)
+}
+
+/**
  * The z-index a host container takes for a depth level.
  *
  * Levels are laid between the pond floor and the surface-water layer, so a koi
