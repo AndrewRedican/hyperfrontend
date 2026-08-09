@@ -1,25 +1,83 @@
 # Koi Pond
 
-The shared koi model, and the workbench it is developed in.
+Seven koi, seven separate applications, seven frameworks — swimming in one continuous scene.
 
-A koi here is a lofted 3D mesh, not an illustration: a table of cross-sections is swept into one
-continuous shell, bent every frame by a spine the GPU carries the vertices along, and painted by
-markings that live in the animal's own coordinates rather than in a texture. One fish costs about
-7,300 triangles in three draw calls.
+A vanilla-TS **host** owns the pond: the bed, the surface water, the pointer, the depth order,
+and the seven channels. Each **fish** is an independently implemented app — React, Vue, Svelte,
+SolidJS, Preact, Lit, and vanilla TS — mounted into its own transparent full-viewport frame and
+composited into the scene by nothing more than a shared camera contract and a z-index. The pond
+host is itself a hostee the docs-site gallery mounts, which makes the running demo the live
+**gallery → host/hostee → fish** nesting chain.
 
-The pond this model swims in is not in the tree yet. What is here is the library and the tool for
-looking at it.
+Every app consumes the **published** `@hyperfrontend/features`, exactly as an external consumer
+would. The shared library below is a vocabulary — model, contracts, geometry, the renderer-free
+3D koi — never a simulation engine: each fish composes those primitives into its own swimming
+brain and its own renderer, in its own framework's idiom. That independence is what the demo
+exists to show.
 
 ## Layout
 
 | Path                                                       | Role                                                                                                 |
 | ---------------------------------------------------------- | ---------------------------------------------------------------------------------------------------- |
+| `host/`                                                    | `demo-koi-pond` — pond bed, water, pointer, depth, relay, playground controls; hostee shell          |
+| `fish-<framework>/`                                        | `demo-koi-fish-<framework>` — one koi per framework: vanilla react vue svelte solid preact lit       |
 | `lib/src/model/`, `lib/src/geometry/`, `lib/src/contract/` | the pond's vocabulary, the wire, and the maths of the water                                          |
 | `lib/src/koi3d/`                                           | the koi itself — build, anatomy, mesh generation, markings, and the spine that poses it. No renderer |
 | `lib/src/three/`                                           | the three.js adapter: materials, shaders, cameras, lighting, debug overlays                          |
-| `workbench/`                                               | `demo-koi-workbench` — the model's development environment. Never deployed                           |
+| `workbench/`                                               | `demo-koi-workbench` — the koi model's development environment. Never deployed                       |
 | `vendor/`                                                  | the committed `demo-koi-lib` tarball its consumers install by `file:`                                |
 | `tools/refresh-lib.mjs`                                    | rebuilds, repacks and reinstalls the lib into every consumer in one pass                             |
+
+## How the pond composes
+
+- **Two contracts.** The inner contract (`lib/src/contract/koi-fish.contract.ts`) runs between
+  the pond host and each koi: the host announces the world (`pond`), identity, relayed
+  neighbours, disturbances, depth grants, hover, sleep, click-to-inspect (`pause`) and the
+  playground (`tune`); the koi answers with its outline, depth and ripple requests, and a
+  settled signal. The outer contract (`host/koi-pond.contract.ts`) runs between the gallery and
+  the pond: `set-scene`/`disturb` in, `shoal`/`sequence-complete`/`close-request` out. The
+  gallery never learns there are seven apps inside.
+- **A stable virtual pond.** `PondEnvironment.width/height` is the virtual pond, snapshotted
+  once from the screen when the scene opens; `pond.view` is the window the presenting frame
+  currently shows, centred on the pond and recomputed on every resize. Simulation, spawning and
+  steering read the world; cameras, canvases, culling and the pointer read the view. A gallery
+  card, the expanded overlay, and the `hf dev` debug panel are different windows onto the same
+  water — resizing a frame never rebuilds the world underneath the fish.
+- **One camera, seven renders.** Every fish builds the same camera from the pond announcement
+  (`lib/src/model/pond-view.ts` holds the numbers, `lib/src/three/pond-view.ts` the builder):
+  ~10° tilt, agreed px-per-unit at the swim plane, `pond` lighting, ACESFilmic/1.15. Seven
+  independent transparent `WebGLRenderer`s therefore composite as one scene; the host itself
+  stays GL-free (its bed and surface are canvas-2D).
+- **Depth is z-index.** Seven logical depth levels map to the stacking order of host-owned
+  containers; passing above or below a neighbour requires a granted two-level shift with a
+  cooldown, and the surface water always paints topmost. Each koi carries its own contact
+  shadow, so the upper fish's shadow falls across whatever swims beneath it.
+- **The host owns the pointer.** Every koi frame is `pointer-events: none`; the host runs one
+  normalized stream, hit-tests against fish-reported outlines, and tells the winner. Hovering
+  reveals a fish's framework and app URL; clicking a fish holds it in place for inspection
+  (it sculls, keeps reporting, and resumes on the next click); clicking open water strikes it,
+  ripples the surface, and scatters the shoal.
+- **Coordination is relayed, never broadcast.** Fish report compact spine outlines at a low
+  cadence; the host broad-phase filters and relays each fish only its nearby neighbours,
+  dead-reckoning stale reports forward along their own headings. The seven inner channels run
+  unsecured; the single gallery ↔ pond channel keeps protocol `v1` — that is the real
+  cross-site boundary.
+- **Identity is seeded.** Every reproducible trait — behaviour, build, phenotype, swim trim,
+  markings, entry station — derives from one integer seed per framework through
+  `randomPseudo`, so the same fish appears on every reload and the host and fish agree on its
+  size without exchanging a message. Each framework wears a real nishikigoi variety whose
+  dominant marking is its brand colour; the whites, sumi blacks and oranges are the variety's
+  own and mean nothing.
+
+## Presentation
+
+In the gallery the card is a small window onto the running pond, inviting **click to expand**;
+expansion restyles the same embed into a viewport overlay — same session, same iframe, no
+teardown — with close/Escape/next-demo chrome. Expanded (and standalone), the pond paints its
+bed at ~70% opacity so the page beneath stays perceptible; in the card it paints solid. The
+host's playground panel exposes a curated set of live levers (pace, agility, wander, spacing,
+body wave, beat, wave reach, girth, body depth) that broadcast `tune` scales each fish lays
+over its own derived numbers.
 
 ## The koi model
 
@@ -36,7 +94,9 @@ generators do nothing but loft the result.
   a hard turn bends the body without squashing any section of it. The CPU writes two small uniform
   arrays a frame and never touches a vertex.
 - **Behaviour, not animation.** A consumer says `speed`, `turnRate`, `escapeIntensity`, `depth`; the
-  swim model turns those into curvature, easing every parameter on its own time constant. Tail-beat
+  swim model turns those into curvature, easing every parameter on its own time constant. Positive
+  `turnRate` turns clockwise on screen — the same direction a growing pond heading turns — so a
+  brain feeds the heading's own rate straight in and the head leads into the turn. Tail-beat
   amplitude is calibrated against measured tail sweep — about a fifth of a body length at cruise,
   which is what a carp actually does — and what rises with speed is mostly the frequency.
 - **Markings are generated.** Patches live in `(station, girth)` coordinates, so they wrap over the
@@ -72,6 +132,20 @@ pauses. The readout reports frames per second, triangles, vertices, draw calls a
 Debug overlays — spine, stations, cross-sections, normals, bounds, collision chain, heading,
 awareness cone — are off by default and add nothing to the scene until asked for.
 
+## Running the pond
+
+```bash
+npx nx run demo-koi-pond:dev-hosted    # composed pond on :4282, hf debug UI on :4290
+npx nx run-many -t build -p demo-koi-* # composed site → dist/apps/demos/koi-pond/site
+npx http-server dist/apps/demos/koi-pond/site -p 4288   # serve the built site (plain static)
+```
+
+The composed site puts the host at `/` and each fish at `/fish-<framework>/` — one origin in dev
+and in production alike. **Never serve the built site through a SPA rewrite** (`serve -s` or any
+fallback-to-index): every missing `/fish-<framework>/` request would come back as a nested copy
+of the whole pond. Deployment is one Railway service on the GitHub integration, redeploying on
+merge to `main`; the build context must include `vendor/`.
+
 ## Working on it
 
 ```bash
@@ -87,3 +161,14 @@ npx nx run-many -t=lint,typecheck -p demo-koi-*
 re-resolve a `file:` tarball whose path has not changed — with a warm cache it reports "up to date"
 and installs the previous contents. `refresh` installs by explicit path, which is the only invocation
 that re-reads the tarball; `verify` turns the silent staleness into a loud failure.
+
+A few constraints the scene depends on:
+
+- **Fish apps must paint nothing on `body` or their root** — any paint blanks the pond behind
+  that frame for every koi below it.
+- **Seven GL contexts is the budget, and it belongs to the fish.** The host stays off WebGL, and
+  each fish bundles its own copy of `three` — a shared chunk would need a shared origin and break
+  the isolation the demo exists to prove.
+- **The curtain covers the staggered reveal.** Frames stay hidden until each session opens; the
+  host lifts the curtain when the seventh koi lands, or at a deadline so an unreachable fish
+  cannot hold the pond dark.
