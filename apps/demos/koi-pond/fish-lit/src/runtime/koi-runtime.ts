@@ -15,11 +15,11 @@
  * who opens `/fish-lit/` sees one koi swimming in clear water. That is the
  * standalone story every fish app in the pond keeps.
  */
-import type { Disturbance, KoiIdentity, KoiProfile, NeighborObservation, PondEnvironment } from '@hyperfrontend/demo-koi-lib'
+import type { Disturbance, KoiIdentity, KoiProfile, KoiTune, NeighborObservation, PondEnvironment } from '@hyperfrontend/demo-koi-lib'
 import type { ReactiveController, ReactiveControllerHost } from 'lit'
 import type { KoiRuntime } from '../feature/wire-contract'
 import type { GlRenderer, KoiRenderer } from '../koi/koi-render'
-import { describePond, entryStation, koiProfile, koiSeed, mayRipple } from '@hyperfrontend/demo-koi-lib'
+import { describePond, entryStation, koiProfile, koiSeed, mayRipple, pondWindow } from '@hyperfrontend/demo-koi-lib'
 import { KoiMotion } from '../koi/koi-motion'
 import { createKoiRenderer } from '../koi/koi-render'
 
@@ -98,6 +98,12 @@ export class KoiSwimController implements ReactiveController, KoiRuntime {
   /** Whether the host asked this koi to hold still. */
   #paused = false
 
+  /** Whether the host is holding this koi in place for inspection. */
+  #inspected = false
+
+  /** The playground settings applied so far, folded together so a rebuilt renderer can take them again. */
+  #tuned: KoiTune | null = null
+
   /** Whether a host has announced a world, making its announcements authoritative. */
   #hosted = false
 
@@ -127,8 +133,14 @@ export class KoiSwimController implements ReactiveController, KoiRuntime {
    */
   constructor(host: ReactiveControllerHost, buildRenderer: KoiRendererFactory = createKoiRenderer) {
     this.#buildRenderer = buildRenderer
-    // why: Standalone the host never announces a world, so the koi measures its own frame and swims in that.
-    this.#pond = describePond(window.innerWidth, window.innerHeight, window.matchMedia('(prefers-reduced-motion: reduce)').matches)
+    // why: Standalone the host never announces a world, so the koi takes the same screen snapshot the host would — the virtual pond derives from the screen, and the frame only decides how much of it shows.
+    this.#pond = describePond(
+      window.screen.width,
+      window.screen.height,
+      window.innerWidth,
+      window.innerHeight,
+      window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    )
     const entry = entryStation(this.#pond, koiSeed(FRAMEWORK))
     this.#motion = new KoiMotion({
       profile: this.profile,
@@ -155,6 +167,10 @@ export class KoiSwimController implements ReactiveController, KoiRuntime {
   attach(canvas: HTMLCanvasElement, card: HTMLElement, createGl?: (canvas: HTMLCanvasElement) => GlRenderer): void {
     this.#parts = { canvas, card, createGl }
     this.#renderer = this.#buildRenderer(canvas, card, this.profile, this.#pond, createGl)
+    if (this.#tuned !== null) {
+      // why: A renderer rebuilt after a reconnect starts from the profile's own body, so the settings the visitor already dialled in go back on at once.
+      this.#renderer.applyTune(this.#tuned)
+    }
   }
 
   /** Starts the koi swimming and begins tracking the frame it swims in. */
@@ -248,6 +264,27 @@ export class KoiSwimController implements ReactiveController, KoiRuntime {
   }
 
   /**
+   * Holds position for inspection while sculling in place, or resumes swimming.
+   *
+   * @param inspected - Whether the host is presenting this koi to the visitor.
+   */
+  setInspected(inspected: boolean): void {
+    this.#inspected = inspected
+  }
+
+  /**
+   * Takes the visitor's playground settings onto the brain and the body.
+   *
+   * @param tune - The scales to apply over this koi's own derived behaviour and build.
+   */
+  applyTune(tune: KoiTune): void {
+    // why: Omitted fields keep their value, so what survives for a rebuilt renderer is the fold of everything dialled so far, not just the last message.
+    this.#tuned = { ...this.#tuned, ...tune }
+    this.#motion.setTune(tune)
+    this.#renderer?.applyTune(tune)
+  }
+
+  /**
    * Hands the runtime the channel it emits on.
    *
    * @param emit - The sender the contract wiring supplies.
@@ -287,9 +324,12 @@ export class KoiSwimController implements ReactiveController, KoiRuntime {
     const dt = raw > MAX_FRAME_S ? MAX_FRAME_S : raw
     const elapsedS = (timestamp - this.#startedAt) / 1000
 
-    this.#motion.advance(dt, elapsedS)
+    if (!this.#inspected) {
+      this.#motion.advance(dt, elapsedS)
+    }
     const state = this.#motion.state
-    this.#renderer?.draw(state, dt)
+    // why: An inspected koi holds its position but keeps sculling gently — a mesh frozen mid-beat reads as a rendering fault, not a fish waiting to be looked at.
+    this.#renderer?.draw(this.#inspected ? { ...state, speed: state.length * 0.08 } : state, dt)
     if (this.#hovered) {
       this.#renderer?.placeCard(state)
     }
@@ -305,7 +345,9 @@ export class KoiSwimController implements ReactiveController, KoiRuntime {
     const state = this.#motion.state
     if (timestamp - this.#lastOutlineAt >= OUTLINE_INTERVAL_MS) {
       this.#lastOutlineAt = timestamp
-      this.#emit('outline', this.#motion.outline())
+      const outline = this.#motion.outline()
+      // why: The host dead-reckons outlines forward by reported speed, so a held koi must report itself stationary or its hover target slides away from its body.
+      this.#emit('outline', this.#inspected ? { ...outline, speed: 0 } : outline)
       const requested = this.#motion.takeDepthRequest()
       if (requested !== null) {
         this.#emit('depth-request', { level: requested })
@@ -326,10 +368,11 @@ export class KoiSwimController implements ReactiveController, KoiRuntime {
 
   /** Re-measures the koi's own frame after the browser resized it. */
   readonly #measure = (): void => {
-    // why: Once a host has spoken its announcements are authoritative and arrive on every resize; a window-measured world would briefly undo a card-scaled one.
+    // why: Once a host has spoken its announcements are authoritative and arrive on every resize; a window-measured view would briefly undo the host's.
     if (this.#hosted) {
       return
     }
-    this.#adopt(describePond(window.innerWidth, window.innerHeight, this.#pond.reducedMotion))
+    // why: Only the visible window follows the frame — the virtual pond took its dimensions from the screen at startup and never moves under the fish.
+    this.#adopt({ ...this.#pond, view: pondWindow(this.#pond, window.innerWidth, window.innerHeight) })
   }
 }

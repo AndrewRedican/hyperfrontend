@@ -120,7 +120,8 @@ export class KoiFishElement extends LitElement {
   /** Adopts the page the koi is being drawn on as the identity it reveals. */
   constructor() {
     super()
-    this.appUrl = window.location.href
+    // why: The frame mounts from an explicit index.html URL, but the identity a visitor reads should be the app's clean home.
+    this.appUrl = new URL('.', window.location.href).href
   }
 
   /**

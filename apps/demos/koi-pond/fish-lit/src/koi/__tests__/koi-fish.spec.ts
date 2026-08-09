@@ -2,12 +2,12 @@ import type { Camera, Group, Scene } from 'three'
 import type { KoiFishElement } from '../koi-fish'
 import type { KoiState } from '../koi-motion'
 import type { GlRenderer, KoiRenderer } from '../koi-render'
-import { createSpine, describePond, koiProfile } from '@hyperfrontend/demo-koi-lib'
+import { createSpine, describePond, koiProfile, pondWindow } from '@hyperfrontend/demo-koi-lib'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import '../koi-fish'
 
-/** The world every spec here swims in: the frame the element measures standalone. */
-const POND = describePond(window.innerWidth, window.innerHeight, false)
+/** The world every spec here swims in: the screen snapshot the element takes standalone, windowed by its frame. */
+const POND = describePond(window.screen.width, window.screen.height, window.innerWidth, window.innerHeight, false)
 
 /** The Lit koi's unchanging profile. */
 const PROFILE = koiProfile('lit')
@@ -120,7 +120,7 @@ describe('<koi-fish>', () => {
     expect(card.hidden).toBe(true)
     expect(card.querySelector('.koi-card-name')?.textContent).toBe(PROFILE.label)
     expect(card.querySelector('.koi-card-url')?.textContent).toBe('https://pond.example/fish-lit/')
-    expect(gl.sizes.at(-1)).toEqual([POND.width, POND.height])
+    expect(gl.sizes.at(-1)).toEqual([POND.view.width, POND.view.height])
   })
 
   it('colours the card label with this koi accent', async () => {
@@ -193,11 +193,32 @@ describe('<koi-fish>', () => {
     expect(renderer.koi.swim.motion.escapeIntensity).toBeGreaterThan(0.8)
   })
 
-  it('resizes camera and canvas together on a pond re-announcement', async () => {
+  it('resizes camera and canvas to the visible window on a pond re-announcement', async () => {
     const { element } = await mountKoi()
-    const smaller = describePond(420, 300, false)
-    element.swim.setPond({ ...smaller, fishLength: smaller.fishLength * 0.72 })
+    // why: The pond itself never changes size — only the window onto it follows the presenting frame.
+    element.swim.setPond({ ...POND, view: pondWindow(POND, 420, 300) })
     expect(gl.sizes.at(-1)).toEqual([420, 300])
+  })
+
+  it('feeds a clockwise turn in as a positive turn rate, so the head bends into it', async () => {
+    const { renderer } = await mountKoi()
+    renderer.draw(cruising({ heading: 0 }), 1 / 60)
+    renderer.draw(cruising({ heading: 0.1 }), 1 / 60)
+    // why: Pond headings grow clockwise on screen and the model's positive turn bends toward the right flank — the same way. A negation here is exactly the head-opposing-the-turn defect.
+    expect(renderer.koi.swim.motion.turnRate).toBeGreaterThan(0)
+  })
+
+  it('hangs a contact shadow beneath the body', async () => {
+    const { renderer } = await mountKoi()
+    renderer.draw(cruising(), 1 / 60)
+    const koi = gl.frames.at(-1)?.scene.getObjectByName('koi') as Group
+    expect(koi.getObjectByName('koi-shadow')).toBeDefined()
+  })
+
+  it('lays the tune scales over this koi its own build', async () => {
+    const { renderer } = await mountKoi()
+    renderer.applyTune({ widthScale: 1.3 })
+    expect(renderer.koi.config.physical.width).toBeCloseTo((PROFILE.phenotype.width ?? 1) * 1.3, 5)
   })
 
   it('reveals and places the card only while hovered', async () => {

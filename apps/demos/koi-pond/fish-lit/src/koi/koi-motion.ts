@@ -16,11 +16,13 @@
  */
 import type {
   Disturbance,
+  EncounterMemory,
   EncounterResolution,
   EncounterSelf,
   KoiOutline,
   KoiPhase,
   KoiProfile,
+  KoiTune,
   NeighborObservation,
   PondEnvironment,
   SpineState,
@@ -29,10 +31,13 @@ import type {
 import {
   advanceSpine,
   boundaryPressure,
+  createEncounterMemory,
   createSpine,
   depthScale,
   givesWay,
   headingAwayFrom,
+  headingTo,
+  pondCentre,
   resolveEncounter,
   sampleSpine,
   spineGirth,
@@ -69,6 +74,9 @@ const AWARENESS_BL = { min: 2.2, max: 5.4 }
 
 /** How much reduced motion damps wandering and escape intensity. */
 const REDUCED_MOTION_DAMPING = 0.45
+
+/** How far from the pond's centre this koi drifts before it starts leaning home, as a fraction of the shorter pond axis. */
+const COMFORT_RATIO = 0.36
 
 /** How long the roll between two depth levels reads as a state of its own, in seconds. */
 const DEPTH_ROLL_S = 1.4
@@ -177,6 +185,12 @@ export class KoiMotion {
   /** The depth level it would like, until something reads the request. */
   #depthRequest: number | null = null
 
+  /** The playground scales laid over this koi's own derived behaviour. */
+  readonly #tune = { speed: 1, turn: 1, wander: 1, clearance: 1 }
+
+  /** The per-neighbour memory that keeps a chosen avoidance side committed. */
+  readonly #encounters: EncounterMemory = createEncounterMemory()
+
   /**
    * Places a koi in the pond and gives it its opening speed.
    *
@@ -220,7 +234,7 @@ export class KoiMotion {
     this.#elapsed = elapsedS
     const previousHeading = this.#heading
     const wanted = this.#desire()
-    const turnRate = lerp(this.profile.traits.turnResponsiveness, TURN_RATE) * wanted.gain
+    const turnRate = lerp(this.profile.traits.turnResponsiveness, TURN_RATE) * wanted.gain * this.#tune.turn
     this.#heading = turnToward(this.#heading, wanted.heading, turnRate * dt)
 
     const target = this.#targetSpeed()
@@ -311,6 +325,18 @@ export class KoiMotion {
   }
 
   /**
+   * Takes the visitor's playground settings; anything left out keeps its value.
+   *
+   * @param tune - The scales to apply over this koi's own derived behaviour.
+   */
+  setTune(tune: KoiTune): void {
+    this.#tune.speed = tune.speedScale ?? this.#tune.speed
+    this.#tune.turn = tune.turnScale ?? this.#tune.turn
+    this.#tune.wander = tune.wanderScale ?? this.#tune.wander
+    this.#tune.clearance = tune.clearanceScale ?? this.#tune.clearance
+  }
+
+  /**
    * The compact outline the host does its proximity work against.
    *
    * @returns The outline to report.
@@ -368,7 +394,13 @@ export class KoiMotion {
     }
 
     for (const neighbor of this.#neighbors) {
-      const resolution = this.#resolve(neighbor)
+      // why: The memory holds the side this koi first chose against each neighbour — near the crossing point the raw bearing flips sign frame to frame, and steering on it raw is what read as vibration.
+      const resolution = this.#encounters.resolve(
+        this.#encounterSelf(),
+        neighbor,
+        givesWay(this.profile.framework, neighbor.framework),
+        this.#elapsed
+      )
       if (resolution.action === 'hold') {
         continue
       }
@@ -377,14 +409,24 @@ export class KoiMotion {
         continue
       }
       if (resolution.action === 'turn') {
-        return { heading: this.#heading + resolution.turn * (Math.PI / 3), gain: 1 + resolution.urgency }
+        // why: The offset follows the urgency, so a grazing encounter asks for a lean while only a genuine collision course asks for the full break.
+        return {
+          heading: this.#heading + resolution.turn * (Math.PI / 3) * (0.4 + 0.6 * resolution.urgency),
+          gain: 1 + resolution.urgency,
+        }
       }
       // note: `slow` and `accelerate` settle an overtaking without a course change, so the koi keeps steering on whatever comes next.
     }
 
     const damping = this.#pond.reducedMotion ? REDUCED_MOTION_DAMPING : 1
-    const drift = wanderOffset(traits.awareness * 1000, this.#elapsed) * 0.55 * damping
-    return { heading: this.#heading + drift, gain: 0.35 }
+    const drift = wanderOffset(traits.awareness * 1000, this.#elapsed) * 0.55 * damping * this.#tune.wander
+    const centre = pondCentre(this.#pond)
+    const fromCentre = Math.hypot(this.#position.x - centre.x, this.#position.y - centre.y)
+    const comfort = Math.min(this.#pond.width, this.#pond.height) * COMFORT_RATIO
+    // why: A weak lean home keeps the shoal loosely orbiting the middle of the pond, so the water a small window looks into is rarely empty; inside the comfort radius the lean vanishes and the drift is all there is.
+    const overshoot = Math.min(1, Math.max(0, (fromCentre - comfort) / comfort))
+    const wandering = turnToward(this.#heading + drift, headingTo(this.#position, centre), overshoot * 0.8)
+    return { heading: wandering, gain: 0.35 + overshoot * 0.3 }
   }
 
   /**
@@ -396,9 +438,9 @@ export class KoiMotion {
     const { traits } = this.profile
     if (this.#elapsed < this.#fleeingUntilS) {
       const damping = this.#pond.reducedMotion ? REDUCED_MOTION_DAMPING : 1
-      return this.#pond.fishLength * lerp(traits.reactionIntensity, ESCAPE_BL_S) * damping
+      return this.#pond.fishLength * lerp(traits.reactionIntensity, ESCAPE_BL_S) * damping * this.#tune.speed
     }
-    let cruise = this.#pond.fishLength * lerp(traits.cruiseSpeed, CRUISE_BL_S)
+    let cruise = this.#pond.fishLength * lerp(traits.cruiseSpeed, CRUISE_BL_S) * this.#tune.speed
     for (const neighbor of this.#neighbors) {
       const resolution = this.#resolve(neighbor)
       if (resolution.action === 'slow') {
@@ -411,20 +453,30 @@ export class KoiMotion {
   }
 
   /**
-   * Works out what this koi should do about one neighbour.
+   * Works out what this koi should do about one neighbour, geometry alone.
    *
    * @param neighbor - The koi it might be about to meet.
    * @returns How the shared steering rules settle the encounter.
    */
   #resolve(neighbor: NeighborObservation): EncounterResolution {
-    const self: EncounterSelf = {
+    return resolveEncounter(this.#encounterSelf(), neighbor, givesWay(this.profile.framework, neighbor.framework))
+  }
+
+  /**
+   * How this koi presents itself to the shared encounter resolver.
+   *
+   * @returns Its position, course, and the water its body claims.
+   */
+  #encounterSelf(): EncounterSelf & { clearanceScale: number } {
+    return {
       position: this.#position,
       heading: this.#heading,
       speed: this.#speed,
       depth: this.#depth,
       length: this.#bodyLength(),
+      girth: this.#bodyLength() * this.profile.build.girthRatio,
+      clearanceScale: this.#tune.clearance,
       traits: this.profile.traits,
     }
-    return resolveEncounter(self, neighbor, givesWay(this.profile.framework, neighbor.framework))
   }
 }
