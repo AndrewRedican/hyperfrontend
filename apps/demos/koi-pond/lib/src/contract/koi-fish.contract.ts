@@ -38,7 +38,7 @@ export interface KoiContract {
 }
 
 /** The contract cut every pond project is built against. */
-export const KOI_CONTRACT_VERSION = '0.1.0'
+export const KOI_CONTRACT_VERSION = '0.2.0'
 
 /** The contract the pond host and all seven koi share. */
 export const koiFishContract: KoiContract = {
@@ -47,7 +47,7 @@ export const koiFishContract: KoiContract = {
     {
       type: 'pond',
       description:
-        'The world this koi swims in: the host-measured frame, how far pond space runs past each edge, the nominal fish length, the depth-level count, and the reduced-motion posture. Resent on every resize.',
+        'The world this koi swims in: the stable virtual pond, how far pond space runs past each edge, the nominal fish length, the visible window, the depth-level count, and the reduced-motion posture. The pond itself never changes after the first announcement; only the view follows the presenting frame, resent on every resize.',
       schema: {
         type: 'object',
         properties: {
@@ -55,10 +55,20 @@ export const koiFishContract: KoiContract = {
           height: { type: 'number' },
           margin: { type: 'number' },
           fishLength: { type: 'number' },
+          view: {
+            type: 'object',
+            properties: {
+              x: { type: 'number' },
+              y: { type: 'number' },
+              width: { type: 'number' },
+              height: { type: 'number' },
+            },
+            required: ['x', 'y', 'width', 'height'],
+          },
           depthLevels: { type: 'number' },
           reducedMotion: { type: 'boolean' },
         },
-        required: ['width', 'height', 'margin', 'fishLength', 'depthLevels', 'reducedMotion'],
+        required: ['width', 'height', 'margin', 'fishLength', 'view', 'depthLevels', 'reducedMotion'],
       },
     },
     {
@@ -121,6 +131,35 @@ export const koiFishContract: KoiContract = {
         type: 'object',
         properties: { paused: { type: 'boolean' } },
         required: ['paused'],
+      },
+    },
+    {
+      type: 'pause',
+      description:
+        'Whether this koi should hold its position for inspection. A paused koi stops travelling but keeps sculling in place, keeps reporting its outline, and keeps answering hover — a visitor clicked it to look at it, not to freeze it.',
+      schema: {
+        type: 'object',
+        properties: { paused: { type: 'boolean' } },
+        required: ['paused'],
+      },
+    },
+    {
+      type: 'tune',
+      description:
+        "The visitor's playground settings, broadcast to the whole shoal. Scales multiply this koi's own derived behaviour rather than replacing it, so individual variety survives the sliders; body settings pass straight to the 3D model. Every field is optional and omitted fields keep their current value.",
+      schema: {
+        type: 'object',
+        properties: {
+          speedScale: { type: 'number' },
+          turnScale: { type: 'number' },
+          wanderScale: { type: 'number' },
+          clearanceScale: { type: 'number' },
+          amplitudeScale: { type: 'number' },
+          frequencyScale: { type: 'number' },
+          waveReach: { type: 'number' },
+          widthScale: { type: 'number' },
+          heightScale: { type: 'number' },
+        },
       },
     },
   ],

@@ -1,17 +1,22 @@
 /**
  * The vocabulary every pond project shares.
  *
- * Positions are always in *pond space*: CSS pixels on the host's viewport axes,
- * with the origin at the viewport's top-left corner. Pond space extends past
- * every viewport edge by a margin, so a koi that has swum off screen still has
- * an honest coordinate — the viewport is a window onto the pond, not its edge.
+ * Positions are always in *pond space*: CSS pixels with the origin at the
+ * virtual pond's top-left corner. The virtual pond is sized once, when the
+ * scene first opens, and never changes for the life of the running instance;
+ * what changes is the *view* — the window of pond space a visitor can
+ * currently see through whatever frame presents the scene. Pond space
+ * additionally extends past every pond edge by a margin, so a koi that has
+ * swum out of the pond proper still has an honest coordinate.
  */
+
+import type { KoiPhysical, KoiSwimTrim } from '../koi3d/config.js'
 
 /** A point in pond space, in CSS pixels. */
 export interface Vec2 {
-  /** Horizontal position; 0 is the viewport's left edge. */
+  /** Horizontal position; 0 is the virtual pond's left edge. */
   x: number
-  /** Vertical position; 0 is the viewport's top edge. */
+  /** Vertical position; 0 is the virtual pond's top edge. */
   y: number
 }
 
@@ -36,21 +41,37 @@ export const DEPTH_LEVELS = 7
 /** The depth level whose fish alone may ask the host for a surface ripple. */
 export const SURFACE_DEPTH = DEPTH_LEVELS - 1
 
+/** The window of pond space a visitor can currently see, in CSS pixels. */
+export interface PondWindow {
+  /** Pond-space x of the window's left edge. */
+  x: number
+  /** Pond-space y of the window's top edge. */
+  y: number
+  /** Window width in CSS pixels; matches the presenting frame. */
+  width: number
+  /** Window height in CSS pixels; matches the presenting frame. */
+  height: number
+}
+
 /**
- * The world the host announces to every fish, resent on resize.
+ * The world the host announces to every fish, resent whenever the view moves.
  *
- * `width` and `height` are the host's measured frame, not `window.innerWidth` —
- * a fish embedded in a docs-site card is smaller than the tab it renders in.
+ * `width` and `height` are the *virtual pond* — sized from a screen snapshot
+ * when the scene first opens and stable from then on. Only `view` follows the
+ * presenting frame: a gallery card, an expanded overlay, and a debug panel are
+ * different windows onto the same pond, never different ponds.
  */
 export interface PondEnvironment {
-  /** Visible pond width in CSS pixels, as the host measured it. */
+  /** Virtual pond width in CSS pixels; fixed for the life of the instance. */
   width: number
-  /** Visible pond height in CSS pixels, as the host measured it. */
+  /** Virtual pond height in CSS pixels; fixed for the life of the instance. */
   height: number
-  /** How far pond space extends past each viewport edge, in CSS pixels. */
+  /** How far pond space extends past each pond edge, in CSS pixels. */
   margin: number
   /** Nose-to-tail length of a koi at depth scale 1, in CSS pixels. */
   fishLength: number
+  /** The window of the pond the presenting frame currently shows. */
+  view: PondWindow
   /** How many depth levels the pond offers; always {@link DEPTH_LEVELS} today. */
   depthLevels: number
   /** Whether the visitor asked for reduced motion; every fish damps in step. */
@@ -124,6 +145,36 @@ export interface NeighborObservation {
   depth: number
   /** Neighbour nose-to-tail length in CSS pixels. */
   length: number
+  /** Neighbour's widest half-width in CSS pixels, so clearance can respect a heavier build. */
+  girth: number
+}
+
+/**
+ * The visitor's playground settings, broadcast by the host to the whole shoal.
+ *
+ * Scales multiply each koi's own derived behaviour rather than replacing it,
+ * so the individual variety the seeds bought survives the sliders. Every
+ * field is optional; an omitted field keeps its current value.
+ */
+export interface KoiTune {
+  /** Multiplies cruise and escape speed. */
+  speedScale?: number
+  /** Multiplies turn rate. */
+  turnScale?: number
+  /** Multiplies the ambient wander drift. */
+  wanderScale?: number
+  /** Multiplies the clearance a koi claims in an encounter. */
+  clearanceScale?: number
+  /** Multiplies the body wave's amplitude. */
+  amplitudeScale?: number
+  /** Multiplies the tail-beat frequency. */
+  frequencyScale?: number
+  /** Overrides how far forward the body wave reaches; positive moves it toward the snout. */
+  waveReach?: number
+  /** Multiplies body width against each koi's own build. */
+  widthScale?: number
+  /** Multiplies body height against each koi's own build. */
+  heightScale?: number
 }
 
 /** The eight normalised behavioural traits that make each koi its own animal. */
@@ -152,24 +203,46 @@ export interface KoiBuild {
   lengthScale: number
   /** Widest half-width as a fraction of body length. */
   girthRatio: number
+  /** Body width multiplier against the sculpted anatomy; 1 is a well-conditioned koi. */
+  widthScale: number
+  /** Body height multiplier against the sculpted anatomy. */
+  heightScale: number
   /** Caudal fin span as a fraction of body length. */
   tailSpan: number
   /** Pectoral fin span as a fraction of body length. */
   finSpan: number
 }
 
-/** The colours one koi wears, derived from its framework's brand. */
+/** The colours one koi wears: its framework's brand carried on a real koi variety. */
 export interface KoiPalette {
-  /** Base body colour — the koi's ground. */
+  /**
+   * The nishikigoi pattern family the markings are drawn from.
+   *
+   * Mirrors the pattern names the 3D skin understands; the framework's brand
+   * stays the dominant marking while the variety supplies the natural white,
+   * black, and orange tones that make the animal read as a koi.
+   */
+  pattern: 'kohaku' | 'sanke' | 'showa' | 'ogon' | 'asagi' | 'karasu' | 'brand'
+  /** Ground colour the koi is written on — a natural koi tone, not a brand colour. */
   body: string
-  /** Shadowed underside, painted toward the belly. */
+  /** Secondary marking colour — sumi black, orange, or another natural koi tone; means nothing about the framework. */
   shade: string
-  /** The framework-coloured marking splashed over the back. */
+  /** The framework-coloured marking splashed over the back — the dominant identifier. */
   marking: string
   /** Translucent fin and tail tint. */
   fin: string
   /** The exact brand colour, used by hover identity chrome. */
   accent: string
+}
+
+/**
+ * The sculpted-body overrides one koi carries into the 3D model.
+ *
+ * A deeply partial {@link KoiPhysical}: only the levers a phenotype pulls are
+ * present, and everything else keeps the sculpted default.
+ */
+export type KoiPhenotype = {
+  [K in keyof KoiPhysical]?: KoiPhysical[K] extends object ? Partial<KoiPhysical[K]> : KoiPhysical[K]
 }
 
 /** Everything about one koi that never changes once the pond has opened. */
@@ -180,8 +253,12 @@ export interface KoiProfile {
   label: string
   /** Its behavioural traits. */
   traits: KoiTraits
-  /** Its physical build. */
+  /** Its physical build, as the 2D outline and the wire describe it. */
   build: KoiBuild
+  /** Its sculpted-body overrides, as the 3D model takes them. */
+  phenotype: KoiPhenotype
+  /** Its own trim on the swimming model. */
+  trim: KoiSwimTrim
   /** Its colours. */
   palette: KoiPalette
 }

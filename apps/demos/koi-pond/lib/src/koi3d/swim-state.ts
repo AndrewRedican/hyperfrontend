@@ -22,10 +22,10 @@ export const MOTION_PRESETS: Readonly<Record<string, KoiMotionInput>> = {
   Idle: { ...DEFAULT_MOTION, speed: 0.08 },
   'Relaxed swim': { ...DEFAULT_MOTION, speed: 0.55 },
   'Fast swim': { ...DEFAULT_MOTION, speed: 1.7, acceleration: 0.2 },
-  'Gentle left turn': { ...DEFAULT_MOTION, speed: 0.55, turnRate: 0.5 },
-  'Gentle right turn': { ...DEFAULT_MOTION, speed: 0.55, turnRate: -0.5 },
-  'Hard left turn': { ...DEFAULT_MOTION, speed: 1.1, turnRate: 1.9 },
-  'Hard right turn': { ...DEFAULT_MOTION, speed: 1.1, turnRate: -1.9 },
+  'Gentle left turn': { ...DEFAULT_MOTION, speed: 0.55, turnRate: -0.5 },
+  'Gentle right turn': { ...DEFAULT_MOTION, speed: 0.55, turnRate: 0.5 },
+  'Hard left turn': { ...DEFAULT_MOTION, speed: 1.1, turnRate: -1.9 },
+  'Hard right turn': { ...DEFAULT_MOTION, speed: 1.1, turnRate: 1.9 },
   Escape: { ...DEFAULT_MOTION, speed: 3.4, turnRate: 1.2, acceleration: 2.6, escapeIntensity: 1 },
 }
 

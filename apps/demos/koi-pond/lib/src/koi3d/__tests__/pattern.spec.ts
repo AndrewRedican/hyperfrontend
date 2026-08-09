@@ -10,8 +10,10 @@ describe('buildPattern', () => {
     expect(buildPattern('kohaku', 977)).not.toEqual(buildPattern('kohaku', 1954))
   })
 
-  it('leaves an ogon unmarked, because its whole point is an even ground', () => {
-    expect(buildPattern('ogon', 977).patches).toEqual([])
+  it('crowns an ogon with a single head marking on an otherwise even ground', () => {
+    const patches = buildPattern('ogon', 977).patches
+    expect(patches.length).toBe(1)
+    expect(patches[0]?.station ?? 1).toBeLessThan(0.2)
   })
 
   it('gives an ogon a metallic ground instead of markings', () => {
@@ -71,7 +73,7 @@ describe('packPatches', () => {
   })
 
   it('parks every unused slot off the koi, so an empty pattern paints nothing', () => {
-    const [shape] = packPatches(buildPattern('ogon', 977))
+    const [shape] = packPatches({ patches: [], netting: 0, metallic: 0 })
     const onBody = Array.from({ length: MAX_PATCHES }, (_unused, index) => shape[index * 4] ?? 0).filter((station) => station > -1)
     expect(onBody).toEqual([])
   })

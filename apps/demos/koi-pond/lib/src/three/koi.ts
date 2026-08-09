@@ -16,7 +16,7 @@ import type { KoiAppearance, KoiConfigInput, KoiMotionInput, KoiPhysical, KoiRes
 import type { SpinePose } from '../koi3d/spine-pose.js'
 import type { KoiSwimState } from '../koi3d/swim-state.js'
 import type { KoiUniforms } from './materials.js'
-import { Color, Group, Mesh } from 'three'
+import { Color, Group, Mesh, PlaneGeometry, ShaderMaterial } from 'three'
 import { sampleSection } from '../koi3d/anatomy.js'
 import { buildBodyMesh } from '../koi3d/body-mesh.js'
 import { CAUDAL_ROOT, resolveKoiConfig } from '../koi3d/config.js'
@@ -157,6 +157,56 @@ export interface Koi {
 /** How the koi is smaller, dimmer and bluer the deeper it swims. */
 const DEFAULT_DEPTH: KoiDepthResponse = { scale: 0.72, fade: 0.42, dim: 0.66, tint: '#2b4a55' }
 
+/** How far beneath the body the contact shadow lies, as a fraction of body length. */
+const SHADOW_DROP = 0.2
+
+/** How far down-screen the shadow slides, as a fraction of body length, so it reads as cast rather than glued. */
+const SHADOW_LEAN = 0.08
+
+/**
+ * Builds the soft contact shadow that hangs beneath the koi.
+ *
+ * The shadow is what sells the stacking when two koi cross: each fish's frame
+ * carries its own shadow, so the upper fish's shadow falls across whatever
+ * swims beneath it. A plane with an analytic radial falloff costs one draw and
+ * needs no texture, so it also runs headless in specs.
+ *
+ * @param length - The koi's nose-to-caudal-tip length in scene units.
+ * @param halfWidth - The body's widest half-width in scene units.
+ * @returns The shadow mesh, lying flat beneath the body.
+ */
+function buildShadow(length: number, halfWidth: number): Mesh<PlaneGeometry, ShaderMaterial> {
+  const material = new ShaderMaterial({
+    transparent: true,
+    depthWrite: false,
+    uniforms: { uStrength: { value: 0.22 } },
+    vertexShader: `
+      varying vec2 vUv;
+      void main() {
+        vUv = uv;
+        gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+      }
+    `,
+    fragmentShader: `
+      uniform float uStrength;
+      varying vec2 vUv;
+      void main() {
+        float d = length(vUv * 2.0 - 1.0);
+        float body = smoothstep(1.0, 0.2, d);
+        gl_FragColor = vec4(0.008, 0.02, 0.024, body * uStrength);
+      }
+    `,
+  })
+  const shadow = new Mesh(new PlaneGeometry(1, 1), material)
+  shadow.name = 'koi-shadow'
+  shadow.rotation.x = -Math.PI / 2
+  shadow.position.set(-length * 0.08, -length * SHADOW_DROP, length * SHADOW_LEAN)
+  shadow.scale.set(length * 0.92, halfWidth * 5.2, 1)
+  // why: The shadow must never paint over the body it belongs to, so it draws before everything and stays out of the depth buffer.
+  shadow.renderOrder = -1
+  return shadow
+}
+
 /**
  * Writes the koi's spine into the uniform arrays its materials read.
  *
@@ -236,11 +286,12 @@ export function createKoi(input: KoiConfigInput = {}): Koi {
   eyes.name = 'koi-eyes'
   // why: The fins are translucent and do not write depth, so they have to be drawn after everything opaque they might be seen through.
   fins.renderOrder = 1
-  object.add(skin, fins, eyes)
+  const shadow = buildShadow(config.physical.length, sampleSection(config.physical, 0.5).halfWidth * config.physical.length)
+  object.add(shadow, skin, fins, eyes)
 
   const swim = createSwimState({}, config.trim)
   let pose = evaluateSpine(config.physical.length, swim.swim, 0)
-  const metrics: KoiMetrics = { triangles: 0, vertices: 0, drawCalls: 3 }
+  const metrics: KoiMetrics = { triangles: 0, vertices: 0, drawCalls: 4 }
 
   const measure = (): void => {
     metrics.triangles = [skin, fins, eyes].reduce((total, mesh) => total + (mesh.geometry.getIndex()?.count ?? 0) / 3, 0)
@@ -269,6 +320,15 @@ export function createKoi(input: KoiConfigInput = {}): Koi {
     uniforms.uDepthFade.value = sunk * depth.fade
     uniforms.uDepthDim.value = 1 - sunk * (1 - depth.dim)
     object.scale.setScalar(1 - sunk * (1 - depth.scale))
+    // why: A koi near the surface hangs high over the floor, so its shadow spreads wide and thins; one hugging the floor casts tight and dark. That gradient is what tells two crossing koi apart at a glance.
+    const strength = shadow.material.uniforms['uStrength']
+    if (strength !== undefined) {
+      strength.value = 0.14 + sunk * 0.14
+    }
+    const spread = 1 + (1 - sunk) * 0.55
+    const length = config.physical.length
+    shadow.position.set(-length * 0.08, -length * SHADOW_DROP, length * SHADOW_LEAN)
+    shadow.scale.set(length * 0.92 * spread, sampleSection(config.physical, 0.5).halfWidth * length * 5.2 * spread, 1)
   }
 
   uniforms.uGillStation.value = config.physical.head.length * CAUDAL_ROOT
@@ -353,6 +413,8 @@ export function createKoi(input: KoiConfigInput = {}): Koi {
       for (const mesh of [skin, fins, eyes]) {
         mesh.geometry.dispose()
       }
+      shadow.geometry.dispose()
+      shadow.material.dispose()
       skinMaterial.dispose()
       finMaterial.dispose()
       eyeMaterial.dispose()

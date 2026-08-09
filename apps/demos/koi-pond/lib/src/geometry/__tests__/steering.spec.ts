@@ -5,6 +5,7 @@ import { koiTraits } from '../../model/traits.js'
 import {
   ENCOUNTER_HORIZON_S,
   closestApproach,
+  createEncounterMemory,
   givesWay,
   headingAwayFrom,
   headingTo,
@@ -27,6 +28,7 @@ function self(overrides: Partial<EncounterSelf> = {}): EncounterSelf {
     speed: 100,
     depth: 3,
     length: 120,
+    girth: 14,
     traits: { ...koiTraits(1), depthWillingness: 0 },
     ...overrides,
   }
@@ -47,6 +49,7 @@ function neighbor(overrides: Partial<NeighborObservation> = {}): NeighborObserva
     speed: 100,
     depth: 3,
     length: 120,
+    girth: 14,
     ...overrides,
   }
 }
@@ -191,6 +194,50 @@ describe('resolveEncounter', () => {
   it('holds when the neighbour is further off than the horizon reaches', () => {
     const distant = neighbor({ x: 100 * ENCOUNTER_HORIZON_S * 4, y: 100 * ENCOUNTER_HORIZON_S * 4 })
     expect(resolveEncounter(self(), distant, false).action).toBe('hold')
+  })
+})
+
+describe('resolveEncounter clearance', () => {
+  it('claims more water for a pair of broad koi than a pair of slender ones', () => {
+    // why: This crossing passes about 113 px clear — past the slender pair's clearance, inside the broad pair's.
+    const wide = resolveEncounter(self({ girth: 40 }), neighbor({ x: 100, y: 260, girth: 40 }), false)
+    const slender = resolveEncounter(self({ girth: 8 }), neighbor({ x: 100, y: 260, girth: 8 }), false)
+    expect({ wide: wide.action, slender: slender.action }).toEqual({ wide: 'turn', slender: 'hold' })
+  })
+})
+
+describe('createEncounterMemory', () => {
+  it('keeps the first chosen side while the encounter persists', () => {
+    const memory = createEncounterMemory()
+    const first = memory.resolve(self(), neighbor(), false, 0)
+    // why: A neighbour drifting across the bow flips the raw bearing sign; the memory must keep re-issuing the side it first chose.
+    const crossed = memory.resolve(self(), neighbor({ x: 100, y: -100, heading: Math.PI / 2 }), false, 0.1)
+    expect({ first: first.turn, crossed: crossed.turn }).toEqual({ first: -1, crossed: -1 })
+  })
+
+  it('would have turned the other way without the memory', () => {
+    expect(resolveEncounter(self(), neighbor({ x: 100, y: -100, heading: Math.PI / 2 }), false).turn).toBe(1)
+  })
+
+  it('releases the side once the encounter has been clear long enough', () => {
+    const memory = createEncounterMemory()
+    memory.resolve(self(), neighbor(), false, 0)
+    memory.resolve(self(), neighbor({ x: 4000, y: 4000 }), false, 1)
+    const fresh = memory.resolve(self(), neighbor({ x: 100, y: -100, heading: Math.PI / 2 }), false, 2)
+    expect(fresh.turn).toBe(1)
+  })
+
+  it('remembers each neighbour separately', () => {
+    const memory = createEncounterMemory()
+    memory.resolve(self(), neighbor(), false, 0)
+    const other = memory.resolve(self(), neighbor({ framework: 'vue', x: 100, y: -100, heading: Math.PI / 2 }), false, 0.1)
+    expect(other.turn).toBe(1)
+  })
+
+  it('passes non-turn resolutions through untouched', () => {
+    const memory = createEncounterMemory()
+    const resolution = memory.resolve(self({ speed: 200 }), neighbor({ x: 130, y: 0, heading: 0, speed: 40 }), false, 0)
+    expect(resolution.action).toBe('slow')
   })
 })
 

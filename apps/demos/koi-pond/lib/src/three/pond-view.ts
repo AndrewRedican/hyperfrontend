@@ -19,10 +19,17 @@ import { POND_VIEW, pxPerUnit } from '../model/pond-view.js'
 
 /** The slice of a pond announcement the view is built from. */
 export interface PondViewport {
-  /** Visible pond width in CSS pixels. */
-  width: number
-  /** Visible pond height in CSS pixels. */
-  height: number
+  /** The window of pond space the presenting frame currently shows. */
+  view: {
+    /** Pond-space x of the window's left edge. */
+    x: number
+    /** Pond-space y of the window's top edge. */
+    y: number
+    /** Window width in CSS pixels. */
+    width: number
+    /** Window height in CSS pixels. */
+    height: number
+  }
   /** Nose-to-tail length of a koi at depth scale 1, in CSS pixels. */
   fishLength: number
 }
@@ -75,11 +82,11 @@ export function createPondView(pond: PondViewport): PondView {
   let viewport = pond
 
   const setPond = (next: PondViewport): void => {
-    const unitsHigh = next.height / pxPerUnit(next.fishLength)
+    const unitsHigh = next.view.height / pxPerUnit(next.fishLength)
     const tilt = (POND_VIEW.tiltDeg * Math.PI) / 180
-    // why: The distance that makes the frustum span exactly the viewport's worth of swim plane is what makes one world unit project to one fish length of pixels.
+    // why: The distance that makes the frustum span exactly the window's worth of swim plane is what makes one world unit project to one fish length of pixels.
     const distance = unitsHigh / (2 * Math.tan(((POND_VIEW.fovDeg / 2) * Math.PI) / 180))
-    camera.aspect = next.width / next.height
+    camera.aspect = next.view.width / next.view.height
     camera.position.set(0, Math.cos(tilt) * distance, Math.sin(tilt) * distance)
     // why: Pond y grows down-screen and maps onto world +z, so the camera's up has to be -z for the pond's top edge to render at the top of the frame.
     camera.up.set(0, 0, -1)
@@ -96,7 +103,8 @@ export function createPondView(pond: PondViewport): PondView {
   setPond(pond)
 
   const worldFromPond = (at: Vec2, out: Vector3 = scratch): Vector3 => {
-    out.set((2 * at.x) / viewport.width - 1, 1 - (2 * at.y) / viewport.height, 0.5)
+    // why: Pond space is anchored on the virtual pond, so the point is first taken relative to the visible window this camera actually frames.
+    out.set((2 * (at.x - viewport.view.x)) / viewport.view.width - 1, 1 - (2 * (at.y - viewport.view.y)) / viewport.view.height, 0.5)
     out.unproject(camera)
     out.sub(camera.position)
     // why: A camera above the plane looking down always gives the ray a negative y, but a degenerate viewport should fail visibly at the origin rather than throw at infinity.
@@ -129,7 +137,7 @@ export function createPondView(pond: PondViewport): PondView {
  * @example Creating and sizing a fish's renderer
  * ```typescript
  * const renderer = createPondRenderer(canvas)
- * sizePondRenderer(renderer, pond.width, pond.height)
+ * sizePondRenderer(renderer, pond.view.width, pond.view.height)
  * ```
  */
 export function createPondRenderer(canvas: HTMLCanvasElement): WebGLRenderer {

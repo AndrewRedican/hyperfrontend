@@ -25,9 +25,9 @@ export interface SpineStation {
   station: number
   /** Model-space centre of the body here. */
   position: [number, number, number]
-  /** Local heading in radians; positive swings toward the left flank. */
+  /** Local heading in radians; positive swings toward the right flank. */
   yaw: number
-  /** Local bank in radians; positive rolls the left flank downward. */
+  /** Local bank in radians; positive rolls the right flank downward. */
   roll: number
   /** Local nose-up pitch in radians. */
   pitch: number
@@ -53,13 +53,13 @@ export interface SwimParameters {
   wavesPerBody: number
   /** How far the tail fin trails the peduncle, in turns of the beat. */
   caudalLag: number
-  /** Steady bend from a turn, in radians across the whole body; positive swings the head toward the left flank. */
+  /** Steady bend from a turn, in radians across the whole body; positive swings the head toward the right flank. */
   turnBend: number
   /** Where the turn's bend is centred along the koi. */
   turnCentre: number
   /** How far the turn's bend is spread along the koi. */
   turnSpread: number
-  /** Bank angle in radians; positive rolls the left flank downward. */
+  /** Bank angle in radians; positive rolls the right flank downward. */
   bank: number
   /** How much the body rolls with each tail beat, in radians. */
   rollBeat: number
@@ -139,7 +139,7 @@ export function evaluateSpine(length: number, parameters: SwimParameters, phase:
     const lag = station <= CAUDAL_ROOT ? 0 : parameters.caudalLag * Math.PI * 2 * ((station - CAUDAL_ROOT) / (1 - CAUDAL_ROOT))
     const swim =
       parameters.amplitude * waveWeight(station, parameters) * Math.sin(phase - station * parameters.wavesPerBody * Math.PI * 2 - lag)
-    // why: Yaw accumulates toward the tail, so a bend that should swing the *head* to the left has to enter the integral with the opposite sign.
+    // why: Yaw accumulates toward the tail, so a bend that should swing the *head* toward the right flank has to enter the integral with the opposite sign.
     const turn =
       turnTotal === 0
         ? 0

@@ -1,18 +1,18 @@
 /**
- * Per-framework koi colours.
+ * Per-framework koi colours and varieties.
  *
- * Every koi wears the same species colouring — a pale nishikigoi ground with a
- * shadowed belly — so the seven read as one shoal. Only the marking splashed
- * across the back and the hover-card accent carry the framework's brand, which
- * is what makes a fish identifiable without labelling it.
+ * Each koi is dressed as a real nishikigoi variety whose markings carry the
+ * framework's brand colour. The brand stays the dominant identifier — it is
+ * the only way a visitor tells the koi apart — but the ground and the second
+ * marking colour come from the varieties themselves: white, sumi black,
+ * orange, cream. Those natural tones mean nothing about the framework; they
+ * are what makes the animal read as a koi rather than a logo.
+ *
+ * The varieties are deliberately mixed across the shoal — a plain metallic
+ * ogon, simple two-colour kohaku, and fully patterned sanke/showa/asagi — so
+ * no two fish share the same colour topology.
  */
 import type { KoiFramework, KoiPalette } from './types.js'
-
-/** The pale ground every koi shares, so the shoal reads as one species. */
-const BODY = '#f4ece2'
-
-/** The shadowed underside every koi shares. */
-const SHADE = '#c9b6a4'
 
 /** Framework display names, used by hover identity and the accessible roster. */
 const LABELS: Readonly<Record<KoiFramework, string>> = {
@@ -25,7 +25,7 @@ const LABELS: Readonly<Record<KoiFramework, string>> = {
   lit: 'Lit',
 }
 
-/** Each framework's brand colour, used for the koi's marking and its hover accent. */
+/** Each framework's brand colour, worn as the dominant marking and the hover accent. */
 const BRAND: Readonly<Record<KoiFramework, string>> = {
   // magic: Brand colours as each project publishes them; the marking is the only way a visitor tells the koi apart.
   vanilla: '#3178c6',
@@ -35,6 +35,27 @@ const BRAND: Readonly<Record<KoiFramework, string>> = {
   solid: '#2c4f7c',
   preact: '#673ab8',
   lit: '#325cff',
+}
+
+/** The white nishikigoi ground most varieties are written on. */
+const WHITE_GROUND = '#f6f1e9'
+
+/** Sumi — the near-black a sanke or showa carries. */
+const SUMI = '#221e1b'
+
+/** The warm orange a koi's beni brings, used only as a natural tone. */
+const BENI_ORANGE = '#e08a3c'
+
+/** How each framework's koi is dressed: variety, ground, and second marking colour. */
+const VARIETIES: Readonly<Record<KoiFramework, { pattern: KoiPalette['pattern']; body: string; shade: string }>> = {
+  // why: The mixture is deliberate — ogon and kohaku keep some fish simple while sanke, showa and asagi carry black or orange, so the shoal shows a spread of colour topologies rather than seven of one.
+  vanilla: { pattern: 'ogon', body: '#efe3c8', shade: '#d8c49a' },
+  react: { pattern: 'asagi', body: '#eef0ee', shade: BENI_ORANGE },
+  vue: { pattern: 'kohaku', body: WHITE_GROUND, shade: SUMI },
+  svelte: { pattern: 'showa', body: WHITE_GROUND, shade: SUMI },
+  solid: { pattern: 'sanke', body: WHITE_GROUND, shade: SUMI },
+  preact: { pattern: 'kohaku', body: '#f3eee6', shade: SUMI },
+  lit: { pattern: 'brand', body: '#eff1f4', shade: BENI_ORANGE },
 }
 
 /** Fin translucency applied to the brand colour, as an alpha channel byte. */
@@ -65,9 +86,11 @@ function withAlpha(hex: string, alpha: number): string {
  */
 export function koiPalette(framework: KoiFramework): KoiPalette {
   const brand = BRAND[framework]
+  const variety = VARIETIES[framework]
   return {
-    body: BODY,
-    shade: SHADE,
+    pattern: variety.pattern,
+    body: variety.body,
+    shade: variety.shade,
     marking: brand,
     fin: withAlpha(brand, FIN_ALPHA),
     accent: brand,

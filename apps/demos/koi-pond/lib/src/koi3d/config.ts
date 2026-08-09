@@ -159,7 +159,12 @@ export interface KoiAppearance {
 export interface KoiMotionInput {
   /** Forward speed in body lengths per second. */
   speed: number
-  /** Signed turn rate in radians per second; positive turns toward the left flank. */
+  /**
+   * Signed turn rate in radians per second; positive turns toward the right flank.
+   *
+   * Matches a pond heading that grows clockwise on screen axes: feed the
+   * heading's own rate of change straight in and the body bends into the turn.
+   */
   turnRate: number
   /** Rate of change of speed in body lengths per second squared. */
   acceleration: number

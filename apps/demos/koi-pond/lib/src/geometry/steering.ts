@@ -135,7 +135,7 @@ export type EncounterAction = 'hold' | 'turn' | 'slow' | 'accelerate' | 'pass-ab
 export interface EncounterResolution {
   /** The manoeuvre to make. */
   action: EncounterAction
-  /** Which way to turn, `1` for the koi's left and `-1` for its right; `0` when the action does not turn. */
+  /** Which way to turn: `1` swings the heading clockwise on screen (toward the right flank), `-1` the other way; `0` when the action does not turn. */
   turn: -1 | 0 | 1
   /** The depth level to ask the host for, or `null` when the manoeuvre stays at this depth. */
   depth: number | null
@@ -155,6 +155,10 @@ export interface EncounterSelf {
   depth: number
   /** Its nose-to-tail length in CSS pixels. */
   length: number
+  /** Its widest half-width in CSS pixels, so a heavier build claims more water. */
+  girth: number
+  /** Multiplies the clearance this koi claims; 1 when absent. A playground lever, not an anatomy fact. */
+  clearanceScale?: number
   /** Its traits, which decide how boldly it resolves. */
   traits: KoiTraits
 }
@@ -186,7 +190,9 @@ export function resolveEncounter(self: EncounterSelf, neighbor: NeighborObservat
   const velocity = { x: Math.cos(self.heading) * self.speed, y: Math.sin(self.heading) * self.speed }
   const otherVelocity = { x: Math.cos(neighbor.heading) * neighbor.speed, y: Math.sin(neighbor.heading) * neighbor.speed }
   const approach = closestApproach(self.position, velocity, { x: neighbor.x, y: neighbor.y }, otherVelocity)
-  const clearance = Math.max(self.length, neighbor.length) * ENCOUNTER_CLEARANCE
+  // why: The girths ride on top of the length term so two broad koi claim more water than two slender ones of the same length — clearance has to follow the bodies actually in the water.
+  const clearance =
+    (Math.max(self.length, neighbor.length) * ENCOUNTER_CLEARANCE + self.girth + neighbor.girth) * (self.clearanceScale ?? 1)
 
   if (approach.timeS > ENCOUNTER_HORIZON_S || approach.distance > clearance) {
     return held
@@ -227,4 +233,67 @@ export function resolveEncounter(self: EncounterSelf, neighbor: NeighborObservat
  */
 export function givesWay(self: string, other: string): boolean {
   return self < other
+}
+
+/** Seconds an encounter's chosen side survives after the geometry stops demanding it. */
+const ENCOUNTER_HOLD_S = 0.6
+
+/**
+ * Per-neighbour memory that keeps an avoidance manoeuvre committed.
+ *
+ * {@link resolveEncounter} re-reads the geometry every frame, and near the
+ * crossing point the bearing to a neighbour can flip sides frame to frame —
+ * steered raw, that reads as a fish vibrating between two corrections. The
+ * memory latches the first turn direction chosen against each neighbour and
+ * keeps re-issuing it until the encounter has actually been clear for a
+ * moment, so a koi picks a side once and swims through on it.
+ */
+export interface EncounterMemory {
+  /**
+   * Resolves an encounter, holding any turn to the side first chosen.
+   *
+   * @param self - The koi deciding.
+   * @param neighbor - The koi it is closing on.
+   * @param tieBreak - `true` when this koi takes the give-way side of the pair.
+   * @param nowS - The koi's own clock, in seconds.
+   * @returns The manoeuvre to make, direction-stable across the crossing.
+   */
+  resolve(self: EncounterSelf, neighbor: NeighborObservation, tieBreak: boolean, nowS: number): EncounterResolution
+}
+
+/**
+ * Creates the per-neighbour encounter memory for one koi's brain.
+ *
+ * @returns The memory, empty until the first close encounter.
+ *
+ * @example Steering through a crossing without flip-flopping
+ * ```typescript
+ * const encounters = createEncounterMemory()
+ * const resolution = encounters.resolve(self, neighbor, givesWay(me, neighbor.framework), elapsedS)
+ * ```
+ */
+export function createEncounterMemory(): EncounterMemory {
+  const held = new Map<string, { turn: -1 | 1; untilS: number }>()
+
+  return {
+    resolve(self, neighbor, tieBreak, nowS) {
+      const resolution = resolveEncounter(self, neighbor, tieBreak)
+      const memory = held.get(neighbor.framework)
+
+      if (resolution.action === 'turn') {
+        if (memory !== undefined && nowS <= memory.untilS) {
+          held.set(neighbor.framework, { turn: memory.turn, untilS: nowS + ENCOUNTER_HOLD_S })
+          return { ...resolution, turn: memory.turn }
+        }
+        held.set(neighbor.framework, { turn: resolution.turn === 0 ? 1 : resolution.turn, untilS: nowS + ENCOUNTER_HOLD_S })
+        return resolution
+      }
+
+      // why: A memory outlives the geometry by a grace period rather than dying with it — the bearing flickering through 'hold' for a frame is exactly the oscillation being suppressed.
+      if (memory !== undefined && nowS > memory.untilS) {
+        held.delete(neighbor.framework)
+      }
+      return resolution
+    },
+  }
 }

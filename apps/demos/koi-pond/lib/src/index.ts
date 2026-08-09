@@ -33,7 +33,7 @@ export type { SpinePose, SpineStation, SwimParameters } from './koi3d/spine-pose
 export type { KoiSwimState } from './koi3d/swim-state.js'
 export type { Bounds } from './geometry/capsule.js'
 export type { SpineState, SpineStep } from './geometry/spine.js'
-export type { ClosestApproach, EncounterAction, EncounterResolution, EncounterSelf } from './geometry/steering.js'
+export type { ClosestApproach, EncounterAction, EncounterMemory, EncounterResolution, EncounterSelf } from './geometry/steering.js'
 export type { BoundaryPressure, PondBounds } from './geometry/virtual-pond.js'
 export type { DepthState } from './model/depth.js'
 export type {
@@ -44,10 +44,13 @@ export type {
   KoiOutline,
   KoiPalette,
   KoiPhase,
+  KoiPhenotype,
   KoiProfile,
   KoiTraits,
+  KoiTune,
   NeighborObservation,
   PondEnvironment,
+  PondWindow,
   Vec2,
 } from './model/types.js'
 
@@ -78,6 +81,7 @@ export {
   ENCOUNTER_CLEARANCE,
   ENCOUNTER_HORIZON_S,
   closestApproach,
+  createEncounterMemory,
   givesWay,
   headingAwayFrom,
   headingTo,
@@ -94,8 +98,9 @@ export {
   isVisible,
   nominalFishLength,
   pondBounds,
+  pondCentre,
   pondPoint,
-  rescalePoint,
+  pondWindow,
 } from './geometry/virtual-pond.js'
 
 export {
@@ -122,7 +127,7 @@ export {
 export { koiLabel, koiPalette } from './model/palette.js'
 export type { PondViewSpec } from './model/pond-view.js'
 export { POND_VIEW, pxPerUnit } from './model/pond-view.js'
-export { koiBuild, koiProfile, koiSeed, koiTraits } from './model/traits.js'
+export { koiBuild, koiPhenotype, koiProfile, koiSeed, koiTraits, koiTrim } from './model/traits.js'
 export { KOI_FRAMEWORKS } from './model/types.js'
 
 export { sampleSection, sectionPoint } from './koi3d/anatomy.js'

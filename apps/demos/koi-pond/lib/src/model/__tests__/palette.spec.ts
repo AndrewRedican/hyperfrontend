@@ -3,10 +3,6 @@ import { koiLabel, koiPalette } from '../palette.js'
 import { KOI_FRAMEWORKS } from '../types.js'
 
 describe('koiPalette', () => {
-  it('dresses all seven koi in one species ground', () => {
-    expect(new Set(KOI_FRAMEWORKS.map((framework) => koiPalette(framework).body)).size).toBe(1)
-  })
-
   it('gives every koi its own marking so a visitor can tell them apart', () => {
     expect(new Set(KOI_FRAMEWORKS.map((framework) => koiPalette(framework).marking)).size).toBe(KOI_FRAMEWORKS.length)
   })
@@ -19,8 +15,23 @@ describe('koiPalette', () => {
     expect(koiPalette('vue').fin).toBe('#42b88366')
   })
 
-  it('shades the belly darker than the back', () => {
-    expect(koiPalette('lit').shade).not.toBe(koiPalette('lit').body)
+  it('mixes varieties across the shoal rather than dressing seven of one', () => {
+    const patterns = new Set(KOI_FRAMEWORKS.map((framework) => koiPalette(framework).pattern))
+    expect(patterns.size).toBeGreaterThanOrEqual(4)
+  })
+
+  it('keeps some koi simple and gives others real sumi', () => {
+    const shades = KOI_FRAMEWORKS.map((framework) => koiPalette(framework).shade)
+    // why: The blend the brief asks for — at least one fish carrying near-black sumi and at least one carrying a warm natural tone instead.
+    expect(shades.some((shade) => shade === '#221e1b') && shades.some((shade) => shade === '#e08a3c')).toBe(true)
+  })
+
+  it('grounds every koi on a natural tone, never on a brand colour', () => {
+    for (const framework of KOI_FRAMEWORKS) {
+      const palette = koiPalette(framework)
+      expect(palette.body).not.toBe(palette.marking)
+      expect(palette.body).not.toBe(palette.accent)
+    }
   })
 
   it('emits colours a renderer can parse', () => {

@@ -115,10 +115,18 @@ const RECIPES: Readonly<Record<KoiPatternName, PatternRecipe>> = {
     netting: 0.12,
     metallic: 0,
   },
-  ogon: { bands: [], netting: 0.34, metallic: 0.62 },
+  ogon: {
+    // why: A pure ogon is one unbroken metallic ground; the single crown patch is a tancho-style concession so a fish wearing this variety still carries one clear marking.
+    bands: [{ layer: 0, count: 1, station: [0.09, 0.16], girth: 0.02, length: [0.06, 0.085], wrap: 1.9, softness: 0.06, warp: 0.22 }],
+    netting: 0.34,
+    metallic: 0.62,
+  },
   asagi: {
     // magic: An asagi carries no patches on its back at all — the net is the pattern — and its warmth comes up from the belly and the cheeks.
-    bands: [{ layer: 0, count: 3, station: [0.1, 0.52], girth: 0.31, length: [0.05, 0.09], wrap: 1.5, softness: 0.12, warp: 0.32 }],
+    bands: [
+      { layer: 0, count: 3, station: [0.1, 0.52], girth: 0.31, length: [0.05, 0.09], wrap: 1.5, softness: 0.12, warp: 0.32 },
+      { layer: 1, count: 3, station: [0.14, 0.6], girth: 0.33, length: [0.04, 0.075], wrap: 1.3, softness: 0.14, warp: 0.3 },
+    ],
     netting: 0.85,
     metallic: 0.12,
   },

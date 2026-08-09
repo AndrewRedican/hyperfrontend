@@ -7,7 +7,7 @@
 export type { BodyContour } from './body.js'
 export type { Bounds } from './capsule.js'
 export type { SpineState, SpineStep } from './spine.js'
-export type { ClosestApproach, EncounterAction, EncounterResolution, EncounterSelf } from './steering.js'
+export type { ClosestApproach, EncounterAction, EncounterMemory, EncounterResolution, EncounterSelf } from './steering.js'
 export type { BoundaryPressure, PondBounds } from './virtual-pond.js'
 
 export {
@@ -35,6 +35,7 @@ export {
   ENCOUNTER_CLEARANCE,
   ENCOUNTER_HORIZON_S,
   closestApproach,
+  createEncounterMemory,
   givesWay,
   headingAwayFrom,
   headingTo,
@@ -51,6 +52,7 @@ export {
   isVisible,
   nominalFishLength,
   pondBounds,
+  pondCentre,
   pondPoint,
-  rescalePoint,
+  pondWindow,
 } from './virtual-pond.js'
