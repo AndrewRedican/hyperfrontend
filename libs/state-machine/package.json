@@ -1,6 +1,6 @@
 {
   "name": "@hyperfrontend/state-machine",
-  "version": "0.1.1",
+  "version": "0.2.0",
   "description": "Lightweight, functional state management library with Redux-inspired actions/reducers, async operation orchestration, and lifecycle-aware component abstractions for predictable application state.",
   "license": "MIT",
   "sideEffects": false,

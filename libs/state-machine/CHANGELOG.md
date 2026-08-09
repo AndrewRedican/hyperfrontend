@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.2.0](https://github.com/AndrewRedican/hyperfrontend/compare/5f116abb8ba6355dfb283fa03b7481e5eb029480...da1864601d3a1509a7d5d797b86409717f3891a4) - 2026-08-09
+
+### Features
+
+- export store and listener from the store entry
+
+### Bug Fixes
+
+- export model definitions from the models entry
+
 ## [0.1.1](https://github.com/AndrewRedican/hyperfrontend/compare/a9185d9b783d7d8d51cc4ad91eb3178eba3e3930...466c0388c4cd516b9c704214140b4df1004098e6) - 2026-06-23
 
 ### Other
