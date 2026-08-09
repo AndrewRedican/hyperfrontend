@@ -23,9 +23,6 @@ import { createKoi, createLighting, createPondView, sizePondRenderer } from '@hy
 import { Scene } from 'three'
 import { onMounted, onUnmounted, ref, useTemplateRef } from 'vue'
 
-/** How the 2D build bands centre on the sculpted 3D koi's own proportions. */
-const BUILD_CENTRE = { girthRatio: 0.115, tailSpan: 0.26, finSpan: 0.18 }
-
 /** What the renderer factory mounts this component with. */
 interface Props {
   /** Everything about this koi that never changes. */
@@ -60,7 +57,7 @@ onMounted(() => {
   }
 
   const { profile, pond } = props
-  const { palette, build, traits } = profile
+  const { palette, build, phenotype, trim } = profile
 
   const gl = props.createGl(canvas)
   const view: PondView = createPondView(pond)
@@ -69,28 +66,25 @@ onMounted(() => {
 
   const koi: Koi = createKoi({
     seed: koiSeed(profile.framework),
-    physical: {
-      length: build.lengthScale,
-      // why: The 2D build bands predate the sculpted anatomy, so each ratio scales the 3D default rather than replacing it — the seeded variety survives without deforming the animal.
-      width: build.girthRatio / BUILD_CENTRE.girthRatio,
-      caudal: { span: 0.36 * (build.tailSpan / BUILD_CENTRE.tailSpan) },
-      pectoral: { span: 0.165 * (build.finSpan / BUILD_CENTRE.finSpan) },
-    },
+    // why: The phenotype is the profile's own many-levered build — width, belly, head, fins — so the seven read as related but individually recognisable animals rather than one mesh at seven scales.
+    physical: phenotype,
     appearance: {
+      pattern: palette.pattern,
       base: palette.body,
       primary: palette.marking,
       secondary: palette.shade,
       accent: palette.accent,
     },
-    trim: { responsiveness: traits.turnResponsiveness },
+    trim,
   })
   koi.mount(scene)
 
   let bodyPx = pxPerUnit(pond.fishLength) * build.lengthScale
   let lastHeading: number | null = null
   let lastSpeed = 0
+  let current = pond
 
-  sizePondRenderer(gl, pond.width, pond.height)
+  sizePondRenderer(gl, pond.view.width, pond.view.height)
 
   cleanup = () => {
     koi.dispose()
@@ -103,8 +97,8 @@ onMounted(() => {
       const seconds = dt > 0 ? dt : 1e-6
       // why: The swimming model thinks in this koi's own body lengths, while the brain and the wire think in pond pixels.
       const speed = state.speed / bodyPx
-      // why: Pond headings grow clockwise on screen and the model's turn rate is positive toward the left flank, so the sign flips.
-      const turnRate = lastHeading === null ? 0 : -wrapAngle(state.heading - lastHeading) / seconds
+      // why: Both grow clockwise on screen — the model's positive turn bends toward the right flank exactly as a growing pond heading turns — so the heading's own rate feeds straight in and the head leads into the turn.
+      const turnRate = lastHeading === null ? 0 : wrapAngle(state.heading - lastHeading) / seconds
       koi.setMotion({
         speed,
         turnRate,
@@ -121,8 +115,9 @@ onMounted(() => {
 
     setPond(next) {
       bodyPx = pxPerUnit(next.fishLength) * build.lengthScale
+      current = next
       view.setPond(next)
-      sizePondRenderer(gl, next.width, next.height)
+      sizePondRenderer(gl, next.view.width, next.view.height)
     },
 
     setHovered(next) {
@@ -134,8 +129,24 @@ onMounted(() => {
       if (head === undefined) {
         return
       }
+      // why: The card lives in the frame's own CSS space while the spine is in pond space, so the visible window's origin comes off first.
+      const x = head.x - current.view.x + state.length * 0.12
+      const y = head.y - current.view.y - state.length * 0.38
       // why: Writing the transform straight onto the element keeps the sixty-a-second card chase out of Vue's reactive re-render entirely.
-      card.style.transform = `translate(${(head.x + state.length * 0.12).toFixed(1)}px, ${(head.y - state.length * 0.38).toFixed(1)}px)`
+      card.style.transform = `translate(${x.toFixed(1)}px, ${y.toFixed(1)}px)`
+    },
+
+    applyTune(tune) {
+      // why: The scales ride on this koi's own derived numbers rather than replacing them, so the playground moves the whole shoal while each fish keeps its identity.
+      koi.setTrim({
+        amplitude: trim.amplitude * (tune.amplitudeScale ?? 1),
+        frequency: trim.frequency * (tune.frequencyScale ?? 1),
+        waveReach: tune.waveReach ?? trim.waveReach,
+      })
+      koi.setPhysical({
+        width: (phenotype.width ?? 1) * (tune.widthScale ?? 1),
+        height: (phenotype.height ?? 1) * (tune.heightScale ?? 1),
+      })
     },
   })
 })
