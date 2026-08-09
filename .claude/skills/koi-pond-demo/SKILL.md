@@ -1,6 +1,6 @@
 ---
 name: koi-pond-demo
-description: Build, run, debug, test, and deploy the koi pond showcase — a host pond that composites seven independently-implemented framework koi apps (React/Vue/Svelte/Solid/Preact/Lit/vanilla) into one 3D scene over @hyperfrontend/features. Use when working in apps/demos/koi-pond, touching the shared koi lib or its three.js renderer, migrating or debugging a fish app, changing the pond host/relay/depth/ripple logic, the pond↔fish or gallery↔pond contracts, the vendored lib/shell tarballs, the docs-site koi gallery entry, or the koi pond Railway deploy.
+description: Build, run, debug, test, and deploy the koi pond showcase — a host pond that composites seven independently-implemented framework koi apps (React/Vue/Svelte/Solid/Preact/Lit/vanilla) into one 3D scene over @hyperfrontend/features. Use when working in apps/demos/koi-pond, touching the shared koi lib or its three.js renderer, editing or debugging a fish app, changing the pond host/relay/depth/ripple logic, the pond↔fish or gallery↔pond contracts, the vendored lib/shell tarballs, the docs-site koi gallery entry, or the koi pond Railway deploy.
 ---
 
 # Koi Pond Demo
@@ -21,7 +21,7 @@ Ten Nx projects in `apps/demos/koi-pond/`. A **host** pond opens seven **fish** 
 ## How it connects
 
 - **Two contracts.** Inner `lib/src/contract/koi-fish.contract.ts` v0.2.0 (pond host ↔ each koi): host sends `pond`/`identity`/`neighbors`/`disturbance`/`depth`/`hover`/`sleep`/`pause` (click-to-inspect hold) /`tune` (playground scales); koi emits `outline`/`depth-request`/`ripple-request`/`settled`. `outline`+`neighbors` are **schema-less** (hot path). Outer `host/koi-pond.contract.ts` (gallery ↔ pond): gallery sends `set-scene` (`card` = opaque paint, `full` = ~70% translucent overlay) /`disturb`; pond emits `shoal`/`sequence-complete`/`close-request`. The gallery never learns there are seven apps.
-- **World vs view.** `PondEnvironment.width/height` is the **virtual pond**, snapshotted once from `window.screen` (clamped 800×600..3840×2400) — stable for the instance's life; `pond.view {x,y,width,height}` is the visible window, centred on the pond, recomputed from the frame on every resize. Simulation/spawn/steering read the world; camera/canvas/culling/pointer read the view. Card, expanded overlay, and debug panel are different views onto ONE pond — resize must NEVER rebuild the world. Gallery expand = the docs-site restyles the SAME embed container into a fixed overlay (session survives; destroy-then-reopen is dead).
+- **World vs view.** `PondEnvironment.width/height` is the **virtual pond**, snapshotted once from `window.screen` (clamped 800×600..3840×2400) — stable for the instance's life; `pond.view {x,y,width,height}` is the visible window, centred on the pond, recomputed from the frame on every resize. Simulation/spawn/steering read the world; camera/canvas/culling/pointer read the view. Card, expanded overlay, and debug panel are different views onto ONE pond — resize must NEVER rebuild the world. Gallery expand = the docs-site restyles the SAME embed container into a fixed overlay (same session, same iframe — never a second scene).
 - **Mounting = embedded.** Host makes one `position:absolute;inset:0` layer per koi, mounts each feature **embedded** into it. z-index **is** the depth model (`depthZIndex`), water layer always topmost.
 - **Pointer.** Every layer + iframe is `pointer-events:none`; host runs one normalized stream, hit-tests against fish-reported outlines, notifies the winner, which draws its own card.
 - **Rendering.** Each fish owns its own transparent `WebGLRenderer` (seven GL contexts); **host stays GL-free** (canvas-2D water/floor). All fish build the same camera from `POND_VIEW` (`lib/src/model/pond-view.ts`, tilt 10°/fov 26°/exposure 1.15) via `createPondView` (`lib/src/three/pond-view.ts`) so seven renders composite as one scene. The 2D steering brain (`fish-*/src/koi/koi-motion.ts`) stays authoritative for _where_ the fish is; the renderer only expresses it.
@@ -95,23 +95,23 @@ Vendored shell + touched `package.json` + `package-lock.json` land **together** 
 
 ## Key files
 
-| Concern             | File                                                                                                                            |
-| ------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
-| Camera contract     | `lib/src/model/pond-view.ts` (numbers), `lib/src/three/pond-view.ts` (builder)                                                  |
-| 3D koi surface      | `lib/src/three/koi.ts` (`createKoi`), `lib/src/koi3d/` (anatomy/mesh/spine)                                                     |
-| Depth model         | `lib/src/model/depth.ts` (`depthZIndex`/`swimDepth`/`mayRipple`)                                                                |
-| Host assembly       | `host/src/scene/pond.ts` (loop, pointer, fan-out)                                                                               |
-| Relay + dead-reckon | `host/src/scene/relay.ts` (`record`/`neighborsFor`/`pick` take `now`)                                                           |
-| Shell sessions      | `host/src/scene/koi-sessions.ts` (`createShell` per fish, no `protocol`)                                                        |
-| Fish renderer seam  | `fish-<fw>/src/koi/koi-render*` + `runtime/koi-runtime.ts` (injectable `KoiRendererFactory`)                                    |
-| Fish brain (2D)     | `fish-<fw>/src/koi/koi-motion.ts` (framework-free, survives renderer swap)                                                      |
-| Docs-site gallery   | `apps/docs-site/src/lib/demo-manifest.ts`, `.../demos/demo-wiring.ts`, `.../demo-console-actions.tsx` (`KoiPondConsoleActions`) |
+| Concern             | File                                                                                                                                                                                      |
+| ------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Camera contract     | `lib/src/model/pond-view.ts` (numbers), `lib/src/three/pond-view.ts` (builder)                                                                                                            |
+| 3D koi surface      | `lib/src/three/koi.ts` (`createKoi`), `lib/src/koi3d/` (anatomy/mesh/spine)                                                                                                               |
+| Depth model         | `lib/src/model/depth.ts` (`depthZIndex`/`swimDepth`/`mayRipple`)                                                                                                                          |
+| Host assembly       | `host/src/scene/pond.ts` (loop, pointer, fan-out)                                                                                                                                         |
+| Relay + dead-reckon | `host/src/scene/relay.ts` (`record`/`neighborsFor`/`pick` take `now`)                                                                                                                     |
+| Shell sessions      | `host/src/scene/koi-sessions.ts` (`createShell` per fish, no `protocol`)                                                                                                                  |
+| Fish renderer seam  | `fish-<fw>/src/koi/koi-render*` + `runtime/koi-runtime.ts` (injectable `KoiRendererFactory`)                                                                                              |
+| Fish brain (2D)     | `fish-<fw>/src/koi/koi-motion.ts` (framework-free, survives renderer swap)                                                                                                                |
+| Docs-site gallery   | `apps/docs-site/src/lib/demo-manifest.ts`, `apps/docs-site/src/components/demos/demo-wiring.ts` + `demo-console-actions.tsx` (`KoiPondConsoleActions`) + `cover-flow.tsx` (card ↔ expand) |
 
 Cadence/budget constants: `OUTLINE_INTERVAL_MS=100` (fish runtime), `RELAY_INTERVAL_MS=120`, `RELAY_REACH=3.4`, `HOVER_SLACK=0.14`, `DEAD_RECKON_MAX_S=0.6`, `OPEN_TIMEOUT_MS=20_000` (7 handshakes queue past the 10s default), `CURTAIN_DEADLINE_MS=5000`, `SEQUENCE_DEADLINE_MS=14_000`.
 
-## Migrate/edit a fish (mirror `fish-vanilla`)
+## Edit a fish (mirror `fish-vanilla`)
 
-Renderer is injectable so specs run headless: `createKoiRenderer(root, profile, url, pond, createGl?)` returns `{ koi, draw(state,dt), setPond, setHovered, placeCard, dispose }`; runtime takes `KoiRendererFactory`. Units shim: pond-px speed → body-lengths (`/pxPerUnit`), turn `-wrapAngle(Δheading)/dt`, `escapeIntensity` from `phase==='escape'`, depth via `swimDepth(level)`. Scene = koi group (`koi-skin`/`koi-fins`/`koi-eyes`) + `createLighting(POND_VIEW.lighting)`. Each fish declares `three ^0.185.1` + `@types/three ^0.185.4` (the lib peer is optional, not installed transitively).
+Renderer is injectable so specs run headless: `createKoiRenderer(root, profile, url, pond, createGl?)` returns `{ koi, draw(state,dt), setPond, setHovered, placeCard, applyTune, dispose }`; runtime takes `KoiRendererFactory`. Units shim: pond-px speed → body-lengths (`/pxPerUnit`), turn `+wrapAngle(Δheading)/dt` (positive `turnRate` = clockwise on screen = the fish's right flank — NEVER negate, or heads bend against their turns), `escapeIntensity` from `phase==='escape'`, depth via `swimDepth(level)`. Scene = koi group (`koi-shadow`/`koi-skin`/`koi-fins`/`koi-eyes`) + `createLighting(POND_VIEW.lighting)`. Each fish declares `three ^0.185.1` + `@types/three ^0.185.4` (the lib peer is optional, not installed transitively).
 
 ## Gotchas
 
@@ -120,9 +120,9 @@ Renderer is injectable so specs run headless: `createKoiRenderer(root, profile, 
 - **Vacuous-spec traps** (fixed, keep fixed): boundary specs mutation-proven (disable avoidance → they fail) across all seeds; hover/sleep wiring specs exercise both flag values; `?.foo()).not.toBe(null)` is banned (passes on absent nodes); every fish has a real 3D view spec + a `koi-runtime` emit-contract spec (hand-driven rAF, injected fake GL). Svelte `type-check` chains `tsconfig.vitest.json` (tests) + `tsconfig.node.json` (configs, `allowJs`) — do not revert to app-only.
 - **Devcontainer**: ten `npm install`s at `parallel:1`; full `nx lint docs-site` can SIGKILL — lint targeted file lists (`npx eslint <files>`).
 
-## Presentation model (2026-08-09)
+## Presentation & tuning
 
-Card expand is **unmask**, not destroy-then-reopen: `CoverFlowCard` restyles into `fixed inset-0` around the same live embed (the deck container drops its `perspective` while expanded — perspective is a fixed-position containing block), with ✕/Escape/next-demo chrome; `cover-flow.tsx` sends `set-scene` on live/expand changes. Fish sizing: `FISH_LENGTH_RATIO 0.36` of the world's shorter axis (clamp 130..560), margin `1.05` fishLengths. Turn sign: positive `turnRate` = clockwise on screen = toward the fish's RIGHT flank (historic doc labels said left and were wrong — the fish shims feed `+wrapAngle(Δheading)/dt`, never negate). Phenotypes: `koiPhenotype`/`koiTrim`/heft table in `lib/src/model/traits.ts`; varieties (pattern+ground+secondary per framework) in `palette.ts`. Host `controls.ts` = the playground broadcasting `tune`. Click a fish = pause/inspect (host routes via `relay.pick`), open water = strike. The generic console "Open as dialog" still opens a second session — dev tool only.
+Card expand is **unmask**: `CoverFlowCard` restyles into `fixed inset-0` around the same live embed (the deck container drops its `perspective` while expanded — perspective is a fixed-position containing block), with ✕/Escape/next-demo chrome; `cover-flow.tsx` sends `set-scene` on live/expand changes. Fish sizing: `FISH_LENGTH_RATIO 0.36` of the world's shorter axis (clamp 130..560), margin `1.05` fishLengths. Phenotypes: `koiPhenotype`/`koiTrim`/heft table in `lib/src/model/traits.ts`; varieties (pattern+ground+secondary per framework) in `palette.ts`. Host `controls.ts` = the playground broadcasting `tune`. Click a fish = pause/inspect (host routes via `relay.pick`), open water = strike. The generic console "Open as dialog" opens a second session — dev tool only, never the product expand path.
 
 ## Checklist
 
