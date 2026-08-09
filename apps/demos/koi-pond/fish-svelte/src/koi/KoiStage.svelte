@@ -12,16 +12,13 @@
    * a second — the scene, the swim, the card's placement — is driven through the
    * exported functions below, so no frame ever passes through a rune.
    */
-  import type { KoiProfile, PondEnvironment } from '@hyperfrontend/demo-koi-lib'
+  import type { KoiProfile, KoiTune, PondEnvironment } from '@hyperfrontend/demo-koi-lib'
   import type { Koi, PondView } from '@hyperfrontend/demo-koi-lib/three'
   import type { KoiState } from './koi-motion'
   import type { GlRenderer } from './koi-render'
   import { POND_VIEW, koiSeed, pxPerUnit, swimDepth, wrapAngle } from '@hyperfrontend/demo-koi-lib'
   import { createKoi, createLighting, createPondView, sizePondRenderer } from '@hyperfrontend/demo-koi-lib/three'
   import { Scene } from 'three'
-
-  /** How the 2D build bands centre on the sculpted 3D koi's own proportions. */
-  const BUILD_CENTRE = { girthRatio: 0.115, tailSpan: 0.26, finSpan: 0.18 }
 
   /** Everything the stage builds once its canvas exists, torn down as one. */
   interface Stage {
@@ -33,6 +30,8 @@
     scene: Scene
     /** The GL renderer drawing the scene. */
     gl: GlRenderer
+    /** The world as most recently announced, whose view maps pond space onto the frame. */
+    pond: PondEnvironment
     /** This koi's body length in pond pixels, re-derived on every pond announcement. */
     bodyPx: number
     /** The heading of the previous frame, from which the turn rate is measured. */
@@ -57,7 +56,7 @@
 
   const { profile, url, pond, createGl }: Props = $props()
 
-  const { palette, build, traits } = $derived(profile)
+  const { palette, build, phenotype, trim } = $derived(profile)
 
   let canvas = $state<HTMLCanvasElement>()
   let card = $state<HTMLElement>()
@@ -76,25 +75,21 @@
 
     const koi = createKoi({
       seed: koiSeed(profile.framework),
-      physical: {
-        length: build.lengthScale,
-        // why: The 2D build bands predate the sculpted anatomy, so each ratio scales the 3D default rather than replacing it — the seeded variety survives without deforming the animal.
-        width: build.girthRatio / BUILD_CENTRE.girthRatio,
-        caudal: { span: 0.36 * (build.tailSpan / BUILD_CENTRE.tailSpan) },
-        pectoral: { span: 0.165 * (build.finSpan / BUILD_CENTRE.finSpan) },
-      },
+      // why: The phenotype is the profile's own many-levered build — width, belly, head, fins — so the seven read as related but individually recognisable animals rather than one mesh at seven scales.
+      physical: phenotype,
       appearance: {
+        pattern: palette.pattern,
         base: palette.body,
         primary: palette.marking,
         secondary: palette.shade,
         accent: palette.accent,
       },
-      trim: { responsiveness: traits.turnResponsiveness },
+      trim,
     })
     koi.mount(scene)
 
-    sizePondRenderer(gl, pond.width, pond.height)
-    stage = { koi, view, scene, gl, bodyPx: pxPerUnit(pond.fishLength) * build.lengthScale, lastHeading: null, lastSpeed: 0 }
+    sizePondRenderer(gl, pond.view.width, pond.view.height)
+    stage = { koi, view, scene, gl, pond, bodyPx: pxPerUnit(pond.fishLength) * build.lengthScale, lastHeading: null, lastSpeed: 0 }
 
     return () => {
       koi.dispose()
@@ -128,8 +123,8 @@
     const seconds = dt > 0 ? dt : 1e-6
     // why: The swimming model thinks in this koi's own body lengths, while the brain and the wire think in pond pixels.
     const speed = state.speed / stage.bodyPx
-    // why: Pond headings grow clockwise on screen and the model's turn rate is positive toward the left flank, so the sign flips.
-    const turnRate = stage.lastHeading === null ? 0 : -wrapAngle(state.heading - stage.lastHeading) / seconds
+    // why: Both grow clockwise on screen — the model's positive turn bends toward the right flank exactly as a growing pond heading turns — so the heading's own rate feeds straight in and the head leads into the turn.
+    const turnRate = stage.lastHeading === null ? 0 : wrapAngle(state.heading - stage.lastHeading) / seconds
     stage.koi.setMotion({
       speed,
       turnRate,
@@ -153,9 +148,10 @@
     if (stage === null) {
       return
     }
+    stage.pond = next
     stage.bodyPx = pxPerUnit(next.fishLength) * build.lengthScale
     stage.view.setPond(next)
-    sizePondRenderer(stage.gl, next.width, next.height)
+    sizePondRenderer(stage.gl, next.view.width, next.view.height)
   }
 
   /**
@@ -176,11 +172,35 @@
    */
   export function placeCard(state: KoiState): void {
     const head = state.spine.joints[0]
-    if (card === undefined || head === undefined) {
+    if (stage === null || card === undefined || head === undefined) {
       return
     }
     // why: The card rides off the koi's shoulder rather than its nose, so it never covers the fish a visitor is pointing at.
-    card.style.transform = `translate(${(head.x + state.length * 0.12).toFixed(1)}px, ${(head.y - state.length * 0.38).toFixed(1)}px)`
+    // why: The card lives in the frame's own CSS space while the spine is in pond space, so the visible window's origin comes off first.
+    const x = head.x - stage.pond.view.x + state.length * 0.12
+    const y = head.y - stage.pond.view.y - state.length * 0.38
+    card.style.transform = `translate(${x.toFixed(1)}px, ${y.toFixed(1)}px)`
+  }
+
+  /**
+   * Takes the visitor's playground settings onto the body and the swim.
+   *
+   * @param tune - The scales to apply over this koi's own build and trim.
+   */
+  export function applyTune(tune: KoiTune): void {
+    if (stage === null) {
+      return
+    }
+    // why: The scales ride on this koi's own derived numbers rather than replacing them, so the playground moves the whole shoal while each fish keeps its identity.
+    stage.koi.setTrim({
+      amplitude: trim.amplitude * (tune.amplitudeScale ?? 1),
+      frequency: trim.frequency * (tune.frequencyScale ?? 1),
+      waveReach: tune.waveReach ?? trim.waveReach,
+    })
+    stage.koi.setPhysical({
+      width: (phenotype.width ?? 1) * (tune.widthScale ?? 1),
+      height: (phenotype.height ?? 1) * (tune.heightScale ?? 1),
+    })
   }
 </script>
 

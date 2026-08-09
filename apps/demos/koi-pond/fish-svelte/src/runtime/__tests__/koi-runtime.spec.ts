@@ -1,4 +1,5 @@
 import type { KoiState } from '../../koi/koi-motion'
+import type { KoiTune } from '@hyperfrontend/demo-koi-lib'
 import type { KoiRenderer } from '../../koi/koi-render'
 import type { KoiRendererFactory } from '../koi-runtime'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
@@ -9,6 +10,7 @@ interface FakeRenderer extends KoiRenderer {
   draws: number
   ponds: number
   hovers: boolean[]
+  tunes: KoiTune[]
   last: KoiState | null
 }
 
@@ -25,6 +27,7 @@ function fakeRenderer(): FakeRenderer {
     draws: 0,
     ponds: 0,
     hovers: [],
+    tunes: [],
     last: null,
     draw(state) {
       fake.draws += 1
@@ -37,6 +40,9 @@ function fakeRenderer(): FakeRenderer {
       fake.hovers.push(hovered)
     },
     placeCard() {},
+    applyTune(tune) {
+      fake.tunes.push(tune)
+    },
     dispose() {},
   }
   return fake
@@ -197,6 +203,36 @@ describe('createKoiRuntime', () => {
     expect(renderer.draws).toBe(1)
   })
 
+  it('holds its position for inspection while still sculling and reporting', () => {
+    const runtime = createKoiRuntime(root, build)
+    const sent = emissions(runtime)
+    raf.tick(1000)
+    raf.tick(1101)
+    const before = lastNose(sent)
+    runtime.setInspected(true)
+    for (let ts = 1116; ts <= 3200; ts += 16) {
+      raf.tick(ts)
+    }
+    const held = lastNose(sent)
+    // why: An inspected koi is stopped to be looked at — it must stay put, keep drawing its idle scull, and keep reporting so hover identity still works.
+    expect(Math.hypot(held.x - before.x, held.y - before.y)).toBeLessThan(1)
+    expect(renderer.draws).toBeGreaterThan(100)
+    const outline = sent.filter((action) => action.type === 'outline').at(-1)?.data as { speed: number }
+    expect(outline.speed).toBe(0)
+    runtime.setInspected(false)
+    for (let ts = 3216; ts <= 4300; ts += 16) {
+      raf.tick(ts)
+    }
+    const resumed = lastNose(sent)
+    expect(Math.hypot(resumed.x - held.x, resumed.y - held.y)).toBeGreaterThan(10)
+  })
+
+  it('routes the playground tune to both the brain and the renderer', () => {
+    const runtime = createKoiRuntime(root, build)
+    runtime.applyTune({ speedScale: 0.5, widthScale: 1.2 })
+    expect(renderer.tunes).toEqual([{ speedScale: 0.5, widthScale: 1.2 }])
+  })
+
   it('clamps a long stall so the koi cannot leap across the pond', () => {
     const steady = createKoiRuntime(root, build)
     const steadySent = emissions(steady)
@@ -221,7 +257,15 @@ describe('createKoiRuntime', () => {
   it('forwards an announced world to both the brain and the renderer', () => {
     const runtime = createKoiRuntime(root, build)
     const pondBefore = renderer.ponds
-    runtime.setPond({ width: 900, height: 600, margin: 100, fishLength: 120, depthLevels: 7, reducedMotion: false })
+    runtime.setPond({
+      width: 900,
+      height: 600,
+      margin: 100,
+      fishLength: 120,
+      view: { x: 0, y: 0, width: 900, height: 600 },
+      depthLevels: 7,
+      reducedMotion: false,
+    })
     raf.tick(1000)
     // why: The renderer re-derives its camera from the new world, and the brain steers by it — the frame that follows must have drawn against it.
     expect(renderer.ponds).toBe(pondBefore + 1)
@@ -230,7 +274,15 @@ describe('createKoiRuntime', () => {
 
   it('keeps a hosted pond authoritative over a window resize', () => {
     const runtime = createKoiRuntime(root, build)
-    runtime.setPond({ width: 900, height: 600, margin: 100, fishLength: 120, depthLevels: 7, reducedMotion: false })
+    runtime.setPond({
+      width: 900,
+      height: 600,
+      margin: 100,
+      fishLength: 120,
+      view: { x: 0, y: 0, width: 900, height: 600 },
+      depthLevels: 7,
+      reducedMotion: false,
+    })
     const pondsAfterHost = renderer.ponds
     window.dispatchEvent(new Event('resize'))
     // why: Once a host has announced a world its next announcement arrives with the resize; a window-measured pond re-derived here would briefly undo it.
