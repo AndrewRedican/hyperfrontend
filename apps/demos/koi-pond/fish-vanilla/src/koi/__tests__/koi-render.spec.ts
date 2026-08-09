@@ -2,12 +2,12 @@ import type { PondEnvironment } from '@hyperfrontend/demo-koi-lib'
 import type { Camera, Group, Scene } from 'three'
 import type { GlRenderer } from '../koi-render'
 import type { KoiState } from '../koi-motion'
-import { createSpine, describePond, koiProfile } from '@hyperfrontend/demo-koi-lib'
+import { createSpine, describePond, koiProfile, pondWindow } from '@hyperfrontend/demo-koi-lib'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { createKoiRenderer } from '../koi-render'
 
 /** The world every spec here swims in. */
-const POND: PondEnvironment = describePond(1280, 800, false)
+const POND: PondEnvironment = describePond(1280, 800, 1280, 800, false)
 
 /** The vanilla koi's unchanging profile. */
 const PROFILE = koiProfile('vanilla')
@@ -78,7 +78,7 @@ describe('createKoiRenderer', () => {
     expect(card?.hidden).toBe(true)
     expect(card?.querySelector('.koi-card-name')?.textContent).toBe(PROFILE.label)
     expect(card?.querySelector('.koi-card-url')?.textContent).toBe('https://pond.example/fish-vanilla/')
-    expect(gl.sizes.at(-1)).toEqual([POND.width, POND.height])
+    expect(gl.sizes.at(-1)).toEqual([POND.view.width, POND.view.height])
   })
 
   it('puts a whole koi in the scene it renders', () => {
@@ -142,11 +142,32 @@ describe('createKoiRenderer', () => {
     expect(renderer.koi.swim.motion.escapeIntensity).toBeGreaterThan(0.8)
   })
 
-  it('resizes camera and canvas together on a pond re-announcement', () => {
+  it('resizes camera and canvas to the visible window on a pond re-announcement', () => {
     const renderer = createKoiRenderer(root, PROFILE, 'url', POND, () => gl)
-    const card = describePond(420, 300, false)
-    renderer.setPond({ ...card, fishLength: card.fishLength * 0.72 })
+    // why: The pond itself never changes size — only the window onto it follows the presenting frame.
+    renderer.setPond({ ...POND, view: pondWindow(POND, 420, 300) })
     expect(gl.sizes.at(-1)).toEqual([420, 300])
+  })
+
+  it('feeds a clockwise turn in as a positive turn rate, so the head bends into it', () => {
+    const renderer = createKoiRenderer(root, PROFILE, 'url', POND, () => gl)
+    renderer.draw(cruising({ heading: 0 }), 1 / 60)
+    renderer.draw(cruising({ heading: 0.1 }), 1 / 60)
+    // why: Pond headings grow clockwise on screen and the model's positive turn bends toward the right flank — the same way. A negation here is exactly the head-opposing-the-turn defect.
+    expect(renderer.koi.swim.motion.turnRate).toBeGreaterThan(0)
+  })
+
+  it('hangs a contact shadow beneath the body', () => {
+    const renderer = createKoiRenderer(root, PROFILE, 'url', POND, () => gl)
+    renderer.draw(cruising(), 1 / 60)
+    const koi = gl.frames.at(-1)?.scene.getObjectByName('koi') as Group
+    expect(koi.getObjectByName('koi-shadow')).toBeDefined()
+  })
+
+  it('lays the tune scales over this koi its own build', () => {
+    const renderer = createKoiRenderer(root, PROFILE, 'url', POND, () => gl)
+    renderer.applyTune({ widthScale: 1.3 })
+    expect(renderer.koi.config.physical.width).toBeCloseTo((PROFILE.phenotype.width ?? 1) * 1.3, 5)
   })
 
   it('reveals and places the card only while hovered', () => {
