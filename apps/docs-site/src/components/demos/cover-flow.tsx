@@ -51,8 +51,33 @@ export function CoverFlow({ entries, onShell, onCentered }: CoverFlowProps) {
   const [vertical, setVertical] = useState(false)
   const [reduced, setReduced] = useState(false)
   const [embedStatus, setEmbedStatus] = useState<EmbedStatus>('connecting')
+  const [expanded, setExpanded] = useState(false)
 
   const physics = useRef({ position: 0, velocity: 0, dragging: false, lastPointer: 0, lastTime: 0, raf: 0, animating: false })
+
+  // why: The expand/collapse cue crosses to the running feature (a translucency hint, not a lifecycle event), so the deck keeps its own handle on the centered shell.
+  const shellRef = useRef<DemoShell | null>(null)
+  const holdShell = useCallback(
+    (shell: DemoShell | null) => {
+      shellRef.current = shell
+      onShell?.(shell)
+    },
+    [onShell]
+  )
+
+  const setScene = useCallback((scene: 'card' | 'full') => {
+    shellRef.current?.send('set-scene', { scene })
+  }, [])
+
+  const expand = useCallback(() => {
+    setExpanded(true)
+    setScene('full')
+  }, [setScene])
+
+  const collapse = useCallback(() => {
+    setExpanded(false)
+    setScene('card')
+  }, [setScene])
 
   const clampIndex = useCallback((value: number) => max(0, min(entries.length - 1, value)), [entries.length])
 
@@ -215,6 +240,36 @@ export function CoverFlow({ entries, onShell, onCentered }: CoverFlowProps) {
   const centered = clampIndex(round(position))
   const current = entries[centered]
 
+  // why: The presentation cue must survive feature reloads — every fresh proof of life re-tells the pond whether it is a masked card or the revealed overlay.
+  useEffect(() => {
+    if (embedStatus === 'live' && current?.expandable) {
+      setScene(expanded ? 'full' : 'card')
+    }
+  }, [embedStatus, expanded, current?.expandable, setScene])
+
+  useEffect(() => {
+    if (!expanded) {
+      return
+    }
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        collapse()
+      }
+    }
+    window.addEventListener('keydown', onKey)
+    const previousOverflow = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    return () => {
+      window.removeEventListener('keydown', onKey)
+      document.body.style.overflow = previousOverflow
+    }
+  }, [expanded, collapse])
+
+  // why: Handing the stage to another demo tears the expanded session down with it; the overlay must not linger over a card that no longer owns it.
+  useEffect(() => {
+    setExpanded(false)
+  }, [centered])
+
   // why: No embed may mount before the initial #<slug> deep-link is applied — otherwise the first card's feature opens a session only to be destroyed one frame later when the deck jumps to the linked demo.
   const [arrived, setArrived] = useState(false)
 
@@ -268,7 +323,7 @@ export function CoverFlow({ entries, onShell, onCentered }: CoverFlowProps) {
   }, [centered, entries])
 
   if (reduced) {
-    return <PagerFallback entries={entries} index={centered} live={arrived} onSelect={jumpTo} onShell={onShell} />
+    return <PagerFallback entries={entries} index={centered} live={arrived} onSelect={jumpTo} onShell={holdShell} />
   }
 
   return (
@@ -279,7 +334,8 @@ export function CoverFlow({ entries, onShell, onCentered }: CoverFlowProps) {
         aria-label="Demo gallery"
         tabIndex={0}
         className={`relative w-full select-none outline-none focus-visible:ring-2 focus-visible:ring-primary-500 ${vertical ? 'h-[30rem]' : 'h-96 touch-none'}`}
-        style={{ perspective: '1200px' }}
+        // why: Perspective makes this container the containing block for fixed descendants, so it has to lift while the centered card is stretched over the viewport.
+        style={expanded ? undefined : { perspective: '1200px' }}
         onPointerDown={onPointerDown}
         onPointerMove={onPointerMove}
         onPointerUp={onPointerUp}
@@ -296,9 +352,16 @@ export function CoverFlow({ entries, onShell, onCentered }: CoverFlowProps) {
             offset={index - position}
             vertical={vertical}
             live={index === centered && arrived}
+            expanded={expanded && index === centered}
+            onExpand={entry.expandable && index === centered && embedStatus === 'live' ? expand : undefined}
+            onCollapse={collapse}
+            onNeighbor={(direction) => {
+              collapse()
+              goTo(centered + direction)
+            }}
             onSelect={() => goTo(index)}
             onStatus={setEmbedStatus}
-            onShell={onShell}
+            onShell={holdShell}
           />
         ))}
         {vertical ? (
@@ -383,23 +446,49 @@ interface CoverFlowCardProps {
   offset: number
   vertical: boolean
   live: boolean
+  /** `true` while this card is stretched over the viewport as the demo's overlay. */
+  expanded: boolean
+  /** Offered when this card can expand right now; absent hides the affordance. */
+  onExpand?: () => void
+  /** Collapses the overlay back into the card. */
+  onCollapse: () => void
+  /** Collapses and hands the stage to a neighbouring demo. */
+  onNeighbor: (direction: -1 | 1) => void
   onSelect: () => void
   onStatus: (status: EmbedStatus) => void
   onShell?: (shell: DemoShell | null) => void
 }
 
 /**
- *
+ * One deck card. Expanded, the same element — same live iframe, same session —
+ * restyles into a viewport overlay: the card was only ever a window onto the
+ * running scene, and expanding it just widens the window.
  * @param root0
  * @param root0.entry
  * @param root0.offset
  * @param root0.vertical
  * @param root0.live
+ * @param root0.expanded
+ * @param root0.onExpand
+ * @param root0.onCollapse
+ * @param root0.onNeighbor
  * @param root0.onSelect
  * @param root0.onStatus
  * @param root0.onShell
  */
-function CoverFlowCard({ entry, offset, vertical, live, onSelect, onStatus, onShell }: CoverFlowCardProps) {
+function CoverFlowCard({
+  entry,
+  offset,
+  vertical,
+  live,
+  expanded,
+  onExpand,
+  onCollapse,
+  onNeighbor,
+  onSelect,
+  onStatus,
+  onShell,
+}: CoverFlowCardProps) {
   const distance = abs(offset)
   const translate = offset * (vertical ? 55 : 60)
   const transform = vertical
@@ -407,11 +496,30 @@ function CoverFlowCard({ entry, offset, vertical, live, onSelect, onStatus, onSh
     : `translate(-50%, -50%) translateX(${translate}%) rotateY(${max(-38, min(38, -offset * 32))}deg) translateZ(${-distance * 140}px)`
   return (
     <div
-      className="absolute left-1/2 top-1/2 aspect-square w-72 sm:w-80"
-      style={{ transform, zIndex: 100 - round(distance * 10), opacity: max(0, 1 - distance * 0.28), transformStyle: 'preserve-3d' }}
+      className={expanded ? 'fixed inset-0 z-[200]' : 'absolute left-1/2 top-1/2 aspect-square w-72 sm:w-80'}
+      style={
+        expanded
+          ? undefined
+          : { transform, zIndex: 100 - round(distance * 10), opacity: max(0, 1 - distance * 0.28), transformStyle: 'preserve-3d' }
+      }
     >
       {live && entry.featureUrl ? (
-        <DemoEmbed entry={entry} className="h-full w-full" onStatus={onStatus} onShell={onShell} />
+        <>
+          <DemoEmbed entry={entry} className="h-full w-full" frameless={expanded} onStatus={onStatus} onShell={onShell} />
+          {onExpand && !expanded ? (
+            <button
+              type="button"
+              onClick={onExpand}
+              // why: The deck's drag machinery pointer-captures presses on the container; without stopping propagation the capture retargets the click and the button never fires.
+              onPointerDown={(event) => event.stopPropagation()}
+              className="absolute bottom-3 left-1/2 z-20 -translate-x-1/2 rounded-full bg-slate-900/70 px-3.5 py-1.5 text-xs font-medium text-white backdrop-blur-sm transition-colors hover:bg-slate-900/90"
+              aria-label={`Expand the ${entry.title} demo over the page`}
+            >
+              Click to expand ⤢
+            </button>
+          ) : null}
+          {expanded ? <ExpandedChrome title={entry.title} onCollapse={onCollapse} onNeighbor={onNeighbor} /> : null}
+        </>
       ) : (
         <button
           type="button"
@@ -423,6 +531,61 @@ function CoverFlowCard({ entry, offset, vertical, live, onSelect, onStatus, onSh
           <DemoFallbackCard entry={entry} status={restingStatusFor(entry)} />
         </button>
       )}
+    </div>
+  )
+}
+
+/** Props for {@link ExpandedChrome}. */
+interface ExpandedChromeProps {
+  /** The expanded demo's title, for the control labels. */
+  title: string
+  /** Collapses the overlay back into its card. */
+  onCollapse: () => void
+  /** Collapses and hands the stage to a neighbouring demo. */
+  onNeighbor: (direction: -1 | 1) => void
+}
+
+/**
+ * The overlay's own controls: close, and next/previous demo — the same
+ * conventions the deck teaches, floated over the revealed scene.
+ * @param root0
+ * @param root0.title
+ * @param root0.onCollapse
+ * @param root0.onNeighbor
+ */
+function ExpandedChrome({ title, onCollapse, onNeighbor }: ExpandedChromeProps) {
+  // why: The deck's drag machinery pointer-captures presses that bubble to the container; the overlay's controls must keep their presses to themselves.
+  const keep = (event: React.PointerEvent) => event.stopPropagation()
+  return (
+    <div className="pointer-events-none absolute inset-0 z-20">
+      <button
+        type="button"
+        onClick={onCollapse}
+        onPointerDown={keep}
+        className="pointer-events-auto absolute right-4 top-4 flex h-9 w-9 items-center justify-center rounded-full bg-slate-900/70 text-white backdrop-blur-sm transition-colors hover:bg-slate-900/90"
+        aria-label={`Close the expanded ${title} demo`}
+      >
+        ✕
+      </button>
+      <span className="pointer-events-none absolute right-14 top-6 text-[0.66rem] tracking-wider text-white/50">esc</span>
+      <button
+        type="button"
+        onClick={() => onNeighbor(-1)}
+        onPointerDown={keep}
+        className="pointer-events-auto absolute left-4 top-1/2 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full bg-slate-900/70 text-white backdrop-blur-sm transition-colors hover:bg-slate-900/90"
+        aria-label="Previous demo"
+      >
+        ←
+      </button>
+      <button
+        type="button"
+        onClick={() => onNeighbor(1)}
+        onPointerDown={keep}
+        className="pointer-events-auto absolute right-4 top-1/2 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full bg-slate-900/70 text-white backdrop-blur-sm transition-colors hover:bg-slate-900/90"
+        aria-label="Next demo"
+      >
+        →
+      </button>
     </div>
   )
 }
