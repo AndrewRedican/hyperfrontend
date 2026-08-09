@@ -1,4 +1,4 @@
-import type { Disturbance, KoiIdentity, NeighborObservation, PondEnvironment } from '@hyperfrontend/demo-koi-lib'
+import type { Disturbance, KoiIdentity, KoiTune, NeighborObservation, PondEnvironment } from '@hyperfrontend/demo-koi-lib'
 import type { FeatureLink, KoiRuntime } from '../wire-contract'
 import { describe, expect, it } from 'vitest'
 import { describePond } from '@hyperfrontend/demo-koi-lib'
@@ -28,6 +28,8 @@ function createHarness() {
     observe: (neighbors: readonly NeighborObservation[]) => calls.push({ method: 'observe', value: neighbors }),
     setHovered: (hovered: boolean) => calls.push({ method: 'setHovered', value: hovered }),
     setPaused: (paused: boolean) => calls.push({ method: 'setPaused', value: paused }),
+    setInspected: (inspected: boolean) => calls.push({ method: 'setInspected', value: inspected }),
+    applyTune: (tune: KoiTune) => calls.push({ method: 'applyTune', value: tune }),
     connect: (emit: (type: string, data?: unknown) => void) => calls.push({ method: 'connect', value: emit }),
   }
 
@@ -55,7 +57,7 @@ function createHarness() {
 }
 
 /** A neighbour the relay would send. */
-const NEIGHBOR: NeighborObservation = { framework: 'lit', x: 10, y: 20, heading: 0.5, speed: 90, depth: 4, length: 120 }
+const NEIGHBOR: NeighborObservation = { framework: 'lit', x: 10, y: 20, heading: 0.5, speed: 90, depth: 4, length: 120, girth: 14 }
 
 describe('outbound wiring', () => {
   it('hands the runtime a channel to emit on', () => {
@@ -73,7 +75,7 @@ describe('outbound wiring', () => {
 describe('inbound wiring', () => {
   it('adopts an announced world', () => {
     const harness = createHarness()
-    const pond = describePond(900, 600, false)
+    const pond = describePond(900, 600, 900, 600, false)
     harness.emit('pond', pond)
     expect(harness.lastCall('setPond')).toEqual(pond)
   })
@@ -112,6 +114,20 @@ describe('inbound wiring', () => {
     harness.emit('sleep', { paused: false })
     expect(harness.lastCall('setPaused')).toBe(false)
   })
+
+  it('unwraps an inspection pause to the flag itself, either way', () => {
+    const harness = createHarness()
+    harness.emit('pause', { paused: true })
+    expect(harness.lastCall('setInspected')).toBe(true)
+    harness.emit('pause', { paused: false })
+    expect(harness.lastCall('setInspected')).toBe(false)
+  })
+
+  it('passes the playground tune through untouched', () => {
+    const harness = createHarness()
+    harness.emit('tune', { speedScale: 0.7, waveReach: 0.2 })
+    expect(harness.lastCall('applyTune')).toEqual({ speedScale: 0.7, waveReach: 0.2 })
+  })
 })
 
 describe('relayed neighbours', () => {
@@ -130,6 +146,12 @@ describe('relayed neighbours', () => {
   it('drops an entry whose position never arrived', () => {
     const harness = createHarness()
     harness.emit('neighbors', [{ ...NEIGHBOR, x: 'over there' }])
+    expect(harness.lastCall('observe')).toEqual([])
+  })
+
+  it('drops an entry whose girth never arrived', () => {
+    const harness = createHarness()
+    harness.emit('neighbors', [{ ...NEIGHBOR, girth: undefined }])
     expect(harness.lastCall('observe')).toEqual([])
   })
 

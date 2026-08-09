@@ -19,6 +19,7 @@ import type {
   KoiOutline,
   KoiPhase,
   KoiProfile,
+  KoiTune,
   NeighborObservation,
   PondEnvironment,
   SpineState,
@@ -27,10 +28,13 @@ import type {
 import {
   advanceSpine,
   boundaryPressure,
+  createEncounterMemory,
   createSpine,
   depthScale,
   givesWay,
   headingAwayFrom,
+  headingTo,
+  pondCentre,
   resolveEncounter,
   sampleSpine,
   spineGirth,
@@ -70,6 +74,9 @@ const DEPTH_ROLL_S = 1.4
 
 /** How much reduced motion damps wandering and escape intensity. */
 const REDUCED_MOTION_DAMPING = 0.45
+
+/** How far from the pond's centre this koi drifts before it starts leaning home, as a fraction of the shorter pond axis. */
+const COMFORT_RATIO = 0.36
 
 /**
  * Maps a normalised trait onto a band.
@@ -156,6 +163,12 @@ export interface KoiMotion {
   /** Whether it is still fleeing. */
   readonly isFleeing: boolean
   /**
+   * Takes the visitor's playground settings; anything left out keeps its value.
+   *
+   * @param tune - The scales to apply over this koi's own derived behaviour.
+   */
+  setTune(tune: KoiTune): void
+  /**
    * The compact outline the host does its proximity work against.
    *
    * @returns The outline to report.
@@ -199,10 +212,29 @@ export function createKoiMotion(options: KoiMotionOptions): KoiMotion {
   let threat: Vec2 | null = null
   let depthRequest: number | null = null
   let transitioningUntilS = 0
+  const tune = { speed: 1, turn: 1, wander: 1, clearance: 1 }
 
   const bodyLength = (): number => pond.fishLength * build.lengthScale * depthScale(depth)
+  const bodyGirth = (): number => bodyLength() * build.girthRatio
   let speed = pond.fishLength * lerp(traits.cruiseSpeed, CRUISE_BL_S)
   let spine = createSpine(position, heading, bodyLength())
+  const encounters = createEncounterMemory()
+
+  /**
+   * Reads this koi as the encounter resolver sees it, right now.
+   *
+   * @returns Its position, course, body, and claimed clearance.
+   */
+  const encounterSelf = () => ({
+    position,
+    heading,
+    speed,
+    depth,
+    length: bodyLength(),
+    girth: bodyGirth(),
+    clearanceScale: tune.clearance,
+    traits,
+  })
 
   /**
    * Reads how this koi would settle a crossing with one neighbour.
@@ -211,11 +243,7 @@ export function createKoiMotion(options: KoiMotionOptions): KoiMotion {
    * @returns The steering verb, its urgency, and any depth it would rather take.
    */
   const encounter = (neighbor: NeighborObservation) =>
-    resolveEncounter(
-      { position, heading, speed, depth, length: bodyLength(), traits },
-      neighbor,
-      givesWay(profile.framework, neighbor.framework)
-    )
+    resolveEncounter(encounterSelf(), neighbor, givesWay(profile.framework, neighbor.framework))
 
   /**
    * The heading this koi wants, and how hard it is committed to it.
@@ -235,7 +263,8 @@ export function createKoiMotion(options: KoiMotionOptions): KoiMotion {
     }
 
     for (const neighbor of neighbors) {
-      const resolution = encounter(neighbor)
+      // why: The memory holds the side this koi first chose against each neighbour — near the crossing point the raw bearing flips sign frame to frame, and steering on it raw is what read as vibration.
+      const resolution = encounters.resolve(encounterSelf(), neighbor, givesWay(profile.framework, neighbor.framework), elapsed)
       if (resolution.action === 'hold') {
         continue
       }
@@ -244,14 +273,21 @@ export function createKoiMotion(options: KoiMotionOptions): KoiMotion {
         continue
       }
       if (resolution.action === 'turn') {
-        return { heading: heading + resolution.turn * (Math.PI / 3), gain: 1 + resolution.urgency }
+        // why: The offset follows the urgency, so a grazing encounter asks for a lean while only a genuine collision course asks for the full break.
+        return { heading: heading + resolution.turn * (Math.PI / 3) * (0.4 + 0.6 * resolution.urgency), gain: 1 + resolution.urgency }
       }
       // note: `slow` and `accelerate` settle an overtaking without a course change, so the koi keeps steering on whatever comes next.
     }
 
     const damping = pond.reducedMotion ? REDUCED_MOTION_DAMPING : 1
-    const drift = wanderOffset(profile.traits.awareness * 1000, elapsed) * 0.55 * damping
-    return { heading: heading + drift, gain: 0.35 }
+    const drift = wanderOffset(profile.traits.awareness * 1000, elapsed) * 0.55 * damping * tune.wander
+    const centre = pondCentre(pond)
+    const fromCentre = Math.hypot(position.x - centre.x, position.y - centre.y)
+    const comfort = Math.min(pond.width, pond.height) * COMFORT_RATIO
+    // why: A weak lean home keeps the shoal loosely orbiting the middle of the pond, so the water a small window looks into is rarely empty; inside the comfort radius the lean vanishes and the drift is all there is.
+    const overshoot = Math.min(1, Math.max(0, (fromCentre - comfort) / comfort))
+    const wandering = turnToward(heading + drift, headingTo(position, centre), overshoot * 0.8)
+    return { heading: wandering, gain: 0.35 + overshoot * 0.3 }
   }
 
   /**
@@ -262,9 +298,9 @@ export function createKoiMotion(options: KoiMotionOptions): KoiMotion {
   const targetSpeed = (): number => {
     if (elapsed < fleeingUntilS) {
       const damping = pond.reducedMotion ? REDUCED_MOTION_DAMPING : 1
-      return pond.fishLength * lerp(traits.reactionIntensity, ESCAPE_BL_S) * damping
+      return pond.fishLength * lerp(traits.reactionIntensity, ESCAPE_BL_S) * damping * tune.speed
     }
-    let cruise = pond.fishLength * lerp(traits.cruiseSpeed, CRUISE_BL_S)
+    let cruise = pond.fishLength * lerp(traits.cruiseSpeed, CRUISE_BL_S) * tune.speed
     for (const neighbor of neighbors) {
       const resolution = encounter(neighbor)
       if (resolution.action === 'slow') {
@@ -281,7 +317,7 @@ export function createKoiMotion(options: KoiMotionOptions): KoiMotion {
       elapsed = elapsedS
       const previousHeading = heading
       const wanted = desire()
-      const turnRate = lerp(traits.turnResponsiveness, TURN_RATE) * wanted.gain
+      const turnRate = lerp(traits.turnResponsiveness, TURN_RATE) * wanted.gain * tune.turn
       heading = turnToward(heading, wanted.heading, turnRate * dt)
 
       const target = targetSpeed()
@@ -341,6 +377,13 @@ export function createKoiMotion(options: KoiMotionOptions): KoiMotion {
 
     observe(next) {
       neighbors = next
+    },
+
+    setTune(next) {
+      tune.speed = next.speedScale ?? tune.speed
+      tune.turn = next.turnScale ?? tune.turn
+      tune.wander = next.wanderScale ?? tune.wander
+      tune.clearance = next.clearanceScale ?? tune.clearance
     },
 
     get state() {
