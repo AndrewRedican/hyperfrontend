@@ -16,12 +16,12 @@ const NAMED_SUBPATH_SYMBOLS: ReadonlyArray<readonly [string, string]> = [
   ['@hyperfrontend/features/nx/executors', 'runBuildExecutor'],
 ]
 
-// note: Default-only entries compile to `module.exports = fn` in CJS, so the required module itself is the callable.
-const DEFAULT_EXPORT_SUBPATHS: readonly string[] = [
-  '@hyperfrontend/features/nx/generators/feature',
-  '@hyperfrontend/features/nx/generators/init',
-  '@hyperfrontend/features/nx/executors/build',
-  '@hyperfrontend/features/nx/executors/serve',
+// note: Nx plugin entries expose the callable as `default` (what Nx's factory/implementation loader consumes) and again under its own name for programmatic use.
+const DEFAULT_EXPORT_SUBPATHS: ReadonlyArray<readonly [string, string]> = [
+  ['@hyperfrontend/features/nx/generators/feature', 'featureGenerator'],
+  ['@hyperfrontend/features/nx/generators/init', 'initGenerator'],
+  ['@hyperfrontend/features/nx/executors/build', 'runBuildExecutor'],
+  ['@hyperfrontend/features/nx/executors/serve', 'serveExecutor'],
 ]
 
 describe('@hyperfrontend/features CJS', () => {
@@ -46,9 +46,10 @@ describe('@hyperfrontend/features CJS', () => {
       expect(typeof mod[symbol]).toBe('function')
     })
 
-    it.each(DEFAULT_EXPORT_SUBPATHS)('requires %s without a window and yields a callable default', (specifier) => {
-      const mod = <unknown>require(specifier)
-      expect(typeof mod).toBe('function')
+    it.each(DEFAULT_EXPORT_SUBPATHS)('requires %s without a window and yields a callable default aliased as %s', (specifier, symbol) => {
+      const mod = <Record<string, unknown>>require(specifier)
+      expect(typeof mod['default']).toBe('function')
+      expect(mod[symbol]).toBe(mod['default'])
     })
   })
 })
