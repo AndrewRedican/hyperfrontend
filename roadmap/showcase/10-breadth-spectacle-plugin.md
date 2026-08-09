@@ -1,6 +1,6 @@
 # 10 — Breadth: Spectacle Batch
 
-The remaining eye-catching demos that prove the **visual** half of the thesis — seamless coordination where the seams vanish. The consumer owns the choreography; the SDK only hands over elements and modes. (The koi pond, formerly this batch's canonical entry, graduated to its own plan: [15-koi-pond.md](15-koi-pond.md).)
+The remaining eye-catching demos that prove the **visual** half of the thesis — seamless coordination where the seams vanish. The consumer owns the choreography; the SDK only hands over elements and modes. The shipped koi pond anchors this half already; these extend it.
 
 **Depends on** [06](06-demo-2-and-generator.md) · **Type** Execution · **Status**: Pending — not yet elaborated.
 

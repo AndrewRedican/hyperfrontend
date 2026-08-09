@@ -9,8 +9,8 @@ See [00-strategy.md](00-strategy.md) and the [index](README.md).
 ## Remaining scope
 
 - **Per-demo how-to guides** — the teaching material that serves the portfolio. The deck (with GitHub source links per demo) is the final gallery surface — dedicated per-demo pages are not planned — but the how-to content is still owed, as docs content wherever it best lives.
-- **Register each new demo as it lands** (invariant #3): manifest entry, vendored shell where embedded, boundary label. The koi pond ([15](15-koi-pond.md)) arrives next with its own embed model (pond-as-hostee).
-- **Recursive nesting in the gallery** — realized first by the koi pond's gallery → pond host/hostee → fish chain; extended deliberately by the Russian-doll demo ([09](09-breadth-pattern.md)).
+- **Register each new demo as it lands** (invariant #3): manifest entry, vendored shell where embedded, boundary label.
+- **Recursive nesting in the gallery** — live today through the koi pond's gallery → pond host/hostee → fish chain; extended deliberately by the Russian-doll demo ([09](09-breadth-pattern.md)).
 
 ## Carried decisions
 

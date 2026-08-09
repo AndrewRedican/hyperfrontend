@@ -18,9 +18,9 @@ The **audience is the author's portfolio**: people evaluating capability and eco
 
 `@hyperfrontend/features` makes independent web apps — often in **different frameworks** — coordinate **messages _and_ visuals** so seamlessly the seams disappear.
 
-The message half is what the SDK does (contract-validated `send`/`on` over `@hyperfrontend/nexus`) and is proven live by the shipped demos. The visual half — independent apps composited into one shared scene — is the harder, more spectacular claim, canonically embodied by the **koi pond** ([15-koi-pond.md](15-koi-pond.md)): seven framework-distinct fish apps in layered transparent frames over a host-owned pond.
+The message half is what the SDK does (contract-validated `send`/`on` over `@hyperfrontend/nexus`) and is proven live by the shipped demos. The visual half — independent apps composited into one shared scene — is the harder, more spectacular claim, and the shipped **koi pond** (`apps/demos/koi-pond`) carries it: seven framework-distinct fish apps in layered transparent frames over a host-owned pond, reading as one animal-filled scene.
 
-A demo is a **complete composition**: at least one host and one hostee, with the _topology_ as the point — one host with many hostees, a hostee that is itself a host (Russian-doll, short but long enough to prove it), one-way or two-way, 1:1 / 1:many / many:1 / many:many. Because the gallery is itself a hyperfrontend host, **nesting proves itself**: gallery host → demo host → demo hostee. The koi pond realizes the first instance of that chain (its pond host is also a hostee the gallery mounts).
+A demo is a **complete composition**: at least one host and one hostee, with the _topology_ as the point — one host with many hostees, a hostee that is itself a host (Russian-doll, short but long enough to prove it), one-way or two-way, 1:1 / 1:many / many:1 / many:many. Because the gallery is itself a hyperfrontend host, **nesting proves itself**: gallery host → demo host → demo hostee. The koi pond runs the first live instance of that chain (its pond host is also a hostee the gallery mounts).
 
 Four of the six original demo slot reservations remain empty placeholders (`chess`, `events`, `file-share`, `views`); the composition model they grow into is settled in [catalog.md](catalog.md) §5.
 
@@ -29,10 +29,6 @@ Four of the six original demo slot reservations remain empty placeholders (`ches
 ## The remaining implementation journeys
 
 Each maps to one or more numbered plans; dependencies are explicit; discovery is distinguished from execution.
-
-### J-koi — The visual flagship (plan 15, next up)
-
-The koi pond: seven framework fish apps over a host pond, composited into one scene. Jumps the generator gate deliberately — hand-built like the two demos before it. See [15-koi-pond.md](15-koi-pond.md).
 
 ### J-hardening — Product hardening (findings registry)
 
@@ -80,7 +76,7 @@ Deployment is not a separate plan; what remains is execution inside each demo's 
 
 The contrast a security demo draws: `postMessage(payload, '*')` leaks across origins; `postMessage(payload, expectedOrigin)` plus an origin-checked listener contains it. The concrete demo is the sharpened **Security bounty hunter** ([catalog.md](catalog.md)). Cross-origin stays **real** — never faked by serving everything together — and same-origin is an **explicit, labeled** scenario demonstrating the weakened warranty. (A spectacle demo may still choose a labeled single origin where the boundary is not its point — the koi pond does.)
 
-**Open (mostly outside the repo).** Custom domain names and their reconciliation with what's provisioned on Railway (both demos currently ride `*.up.railway.app` origins); per-demo boundary-role assignment for future demos.
+**Open (mostly outside the repo).** Custom domain names and their reconciliation with what's provisioned on Railway (all three demos currently ride `*.up.railway.app` origins); per-demo boundary-role assignment for future demos.
 
 ---
 

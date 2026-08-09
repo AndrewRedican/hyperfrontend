@@ -2,7 +2,7 @@
 
 Navigation point and decision ledger for the **showcase** plan family: the demo applications, the issue-capture process, the demo generator, and the release loop that turn `@hyperfrontend/features` from "sound on paper" into **abundant, varied, polished proof in the wild**.
 
-**Status**: Active — the package is published (0.5.x) with two demos live in the gallery. Next up: the **koi pond** ([15](15-koi-pond.md)), then the generator and the breadth batches.
+**Status**: Active — the package is published (0.5.x) with three demos in the gallery: clock, heartbeat, and the koi pond (the visual-thesis flagship, seven framework fish over a host pond). Next up: the generator, then the breadth batches.
 
 This index is intentionally compact. Each linked document is a focused, independently-reasoned plan. Run focused planning sessions (`grill-me`, `implementation-plans`) against the individual files, not this index. The narrative rationale — north star, thesis, journeys, sequencing — lives in [00-strategy.md](00-strategy.md).
 
@@ -23,7 +23,7 @@ Two tiers of proof:
 
 > Independent apps, in different frameworks, coordinating **messages and visuals** seamlessly.
 
-Each demo has its own specific intent, but all serve that thesis. Boundary-_respecting_ demos (payments, auth, enterprise widgets) prove safe isolation + contract messaging; boundary-_dissolving_ demos (koi pond, colourcopia) prove the seams can vanish entirely.
+Each demo has its own specific intent, but all serve that thesis. Boundary-_respecting_ demos (payments, auth, enterprise widgets) prove safe isolation + contract messaging; boundary-_dissolving_ demos prove the seams can vanish entirely — the shipped koi pond carries that half today, and colourcopia extends it.
 
 ---
 
@@ -31,23 +31,22 @@ Each demo has its own specific intent, but all serve that thesis. Boundary-_resp
 
 D = discovery-heavy · E = execution-heavy · ⭐ = special, prominent handling
 
-| #   | Plan                                                                        | Type | Depends on | Scope                                                                                   |
-| --- | --------------------------------------------------------------------------- | ---- | ---------- | --------------------------------------------------------------------------------------- |
-| 00  | [Strategy](00-strategy.md)                                                  | —    | —          | North star, thesis, journeys, sequencing rationale                                      |
-| 05  | [Plugin system — notional remainder](05-plugin-system.md)                   | D    | —          | Plugin taxonomy + showcase-internal debug/inspection plugin (exploratory)               |
-| 06  | [Nx demo generator](06-demo-2-and-generator.md)                             | D+E  | —          | Internal generator; proven when it can reproduce the heartbeat demo's shape             |
-| 07  | [Legacy distillation](07-legacy-distillation.md)                            | D    | —          | Extract-then-delete the untracked `_/` legacy subtrees; runs parallel                   |
-| 08  | [Breadth — boundary-respecting batch](08-breadth-boundary-respecting.md)    | E    | 06         | Enterprise/gallery features (some warranting real backends)                             |
-| 09  | [Breadth — pattern batch](09-breadth-pattern.md)                            | E    | 06         | Russian-doll nesting, cross-framework, many:many topologies                             |
-| 10  | [Breadth — spectacle batch](10-breadth-spectacle-plugin.md)                 | E    | 06         | Colourcopia, drag default handling, terminal, voice                                     |
-| 11  | [Flagship composed app](11-flagship-composed-app.md)                        | E    | 08–10      | The composed centerpiece (e.g. fake desktop/OS)                                         |
-| 12  | [Gallery / docs-site integration — residue](12-gallery-docs-integration.md) | E    | 08–11      | Per-demo how-to guides; register future demos as they land                              |
-| 13  | [v2 release — residue](13-v2-release.md)                                    | E    | —          | Docs refresh; verify live embeds after the next main-merge redeploy                     |
-| 15  | ⭐ [Koi pond](15-koi-pond.md)                                               | E    | —          | Seven framework fish over a host pond — the visual-thesis flagship; built next, by hand |
+| #   | Plan                                                                        | Type | Depends on | Scope                                                                       |
+| --- | --------------------------------------------------------------------------- | ---- | ---------- | --------------------------------------------------------------------------- |
+| 00  | [Strategy](00-strategy.md)                                                  | —    | —          | North star, thesis, journeys, sequencing rationale                          |
+| 05  | [Plugin system — notional remainder](05-plugin-system.md)                   | D    | —          | Plugin taxonomy + showcase-internal debug/inspection plugin (exploratory)   |
+| 06  | [Nx demo generator](06-demo-2-and-generator.md)                             | D+E  | —          | Internal generator; proven when it can reproduce the heartbeat demo's shape |
+| 07  | [Legacy distillation](07-legacy-distillation.md)                            | D    | —          | Extract-then-delete the untracked `_/` legacy subtrees; runs parallel       |
+| 08  | [Breadth — boundary-respecting batch](08-breadth-boundary-respecting.md)    | E    | 06         | Enterprise/gallery features (some warranting real backends)                 |
+| 09  | [Breadth — pattern batch](09-breadth-pattern.md)                            | E    | 06         | Russian-doll nesting, cross-framework, many:many topologies                 |
+| 10  | [Breadth — spectacle batch](10-breadth-spectacle-plugin.md)                 | E    | 06         | Colourcopia, drag default handling, terminal, voice                         |
+| 11  | [Flagship composed app](11-flagship-composed-app.md)                        | E    | 08–10      | The composed centerpiece (e.g. fake desktop/OS)                             |
+| 12  | [Gallery / docs-site integration — residue](12-gallery-docs-integration.md) | E    | 08–11      | Per-demo how-to guides; register future demos as they land                  |
+| 13  | [v2 release — residue](13-v2-release.md)                                    | E    | —          | Docs refresh; verify live embeds after the next main-merge redeploy         |
 
-> **Numbering convention.** Plans that complete are removed and their numbers are never reused (01, 02, 04, 14 are gone this way; 03 was folded into [00-strategy.md](00-strategy.md#deployment-and-the-origin-boundary-layer)). The koi pond takes 15 and deliberately jumps the generator gate — it is hand-built like the two demos before it.
+> **Numbering convention.** Plans that complete are removed and their numbers are never reused (01, 02, 04, 14, and 15 — the koi pond — are gone this way; 03 was folded into [00-strategy.md](00-strategy.md#deployment-and-the-origin-boundary-layer)).
 
-**Parallelism**: 07 runs alongside anything; the breadth batches (08–10) parallelize once 06 lands; 15 starts immediately.
+**Parallelism**: 07 runs alongside anything; the breadth batches (08–10) parallelize once 06 lands.
 
 ---
 
@@ -66,7 +65,7 @@ Detail in [00-strategy.md](00-strategy.md).
 | Demo unit           | A **complete composition** — ≥1 host + ≥1 hostee — with varied topologies (1:1, 1:many, many:1, many:many, Russian-doll)                                                                                                              |
 | Issue capture       | **In-repo registry, house style** + a `demo-findings` skill encoding the process                                                                                                                                                      |
 | Legacy `_/`         | **Extract-then-delete** — commit keepers first (it is untracked), then delete the legacy subtrees                                                                                                                                     |
-| Frameworks          | **Broad but incremental** — React/Vue/Vanilla live; the koi pond ([15](15-koi-pond.md)) introduces Svelte, Solid, Preact, and Lit; Angular deferred                                                                                   |
+| Frameworks          | **Broad but incremental** — React, Vue, Vanilla, Svelte, Solid, Preact, and Lit are live (the last four arrived with the koi pond); Angular deferred                                                                                  |
 | Deployment          | **Railway GitHub integration** — services deploy on merge to `main` after CI passes; service configuration lives in the Railway dashboard, deliberately not in-repo. Per-service origin; registration via the static gallery manifest |
 | Generator           | **Internal** workspace-only tool in `tools/`; never leaks into the published package                                                                                                                                                  |
 
