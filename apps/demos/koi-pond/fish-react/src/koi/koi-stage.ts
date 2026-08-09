@@ -8,16 +8,13 @@
  * the frame loop. The swimming brain stays authoritative for where the fish
  * *is* — the stage only makes the koi's body express it.
  */
-import type { KoiProfile, PondEnvironment } from '@hyperfrontend/demo-koi-lib'
+import type { KoiProfile, KoiTune, PondEnvironment } from '@hyperfrontend/demo-koi-lib'
 import type { Koi, PondView } from '@hyperfrontend/demo-koi-lib/three'
 import type { WebGLRenderer } from 'three'
 import type { KoiState } from './koi-motion'
 import { POND_VIEW, koiSeed, pxPerUnit, swimDepth, wrapAngle } from '@hyperfrontend/demo-koi-lib'
 import { createKoi, createLighting, createPondView, sizePondRenderer } from '@hyperfrontend/demo-koi-lib/three'
 import { Scene } from 'three'
-
-/** How the 2D build bands centre on the sculpted 3D koi's own proportions. */
-const BUILD_CENTRE = { girthRatio: 0.115, tailSpan: 0.26, finSpan: 0.18 }
 
 /** The subset of a renderer this app drives, injectable so specs run without a GPU. */
 export type GlRenderer = Pick<WebGLRenderer, 'render' | 'setSize' | 'setPixelRatio' | 'dispose'>
@@ -39,6 +36,12 @@ export interface KoiStage {
    * @param pond - The world as the host most recently announced it.
    */
   setPond(pond: PondEnvironment): void
+  /**
+   * Takes the visitor's playground settings onto the body and the swim.
+   *
+   * @param tune - The scales to apply over this koi's own build and trim.
+   */
+  applyTune(tune: KoiTune): void
   /** Releases the GPU resources the koi holds. */
   dispose(): void
 }
@@ -64,7 +67,7 @@ export function createKoiStage(
   pond: PondEnvironment,
   createGl: (canvas: HTMLCanvasElement) => GlRenderer
 ): KoiStage {
-  const { palette, build, traits } = profile
+  const { palette, build, phenotype, trim } = profile
 
   const gl = createGl(canvas)
   const view: PondView = createPondView(pond)
@@ -73,20 +76,16 @@ export function createKoiStage(
 
   const koi: Koi = createKoi({
     seed: koiSeed(profile.framework),
-    physical: {
-      length: build.lengthScale,
-      // why: The 2D build bands predate the sculpted anatomy, so each ratio scales the 3D default rather than replacing it — the seeded variety survives without deforming the animal.
-      width: build.girthRatio / BUILD_CENTRE.girthRatio,
-      caudal: { span: 0.36 * (build.tailSpan / BUILD_CENTRE.tailSpan) },
-      pectoral: { span: 0.165 * (build.finSpan / BUILD_CENTRE.finSpan) },
-    },
+    // why: The phenotype is the profile's own many-levered build — width, belly, head, fins — so the seven read as related but individually recognisable animals rather than one mesh at seven scales.
+    physical: phenotype,
     appearance: {
+      pattern: palette.pattern,
       base: palette.body,
       primary: palette.marking,
       secondary: palette.shade,
       accent: palette.accent,
     },
-    trim: { responsiveness: traits.turnResponsiveness },
+    trim,
   })
   koi.mount(scene)
 
@@ -94,7 +93,7 @@ export function createKoiStage(
   let lastHeading: number | null = null
   let lastSpeed = 0
 
-  sizePondRenderer(gl, pond.width, pond.height)
+  sizePondRenderer(gl, pond.view.width, pond.view.height)
 
   return {
     koi,
@@ -102,8 +101,8 @@ export function createKoiStage(
       const seconds = dt > 0 ? dt : 1e-6
       // why: The swimming model thinks in this koi's own body lengths, while the brain and the wire think in pond pixels.
       const speed = state.speed / bodyPx
-      // why: Pond headings grow clockwise on screen and the model's turn rate is positive toward the left flank, so the sign flips.
-      const turnRate = lastHeading === null ? 0 : -wrapAngle(state.heading - lastHeading) / seconds
+      // why: Both grow clockwise on screen — the model's positive turn bends toward the right flank exactly as a growing pond heading turns — so the heading's own rate feeds straight in and the head leads into the turn.
+      const turnRate = lastHeading === null ? 0 : wrapAngle(state.heading - lastHeading) / seconds
       koi.setMotion({
         speed,
         turnRate,
@@ -121,7 +120,20 @@ export function createKoiStage(
     setPond(next) {
       bodyPx = pxPerUnit(next.fishLength) * build.lengthScale
       view.setPond(next)
-      sizePondRenderer(gl, next.width, next.height)
+      sizePondRenderer(gl, next.view.width, next.view.height)
+    },
+
+    applyTune(tune) {
+      // why: The scales ride on this koi's own derived numbers rather than replacing them, so the playground moves the whole shoal while each fish keeps its identity.
+      koi.setTrim({
+        amplitude: trim.amplitude * (tune.amplitudeScale ?? 1),
+        frequency: trim.frequency * (tune.frequencyScale ?? 1),
+        waveReach: tune.waveReach ?? trim.waveReach,
+      })
+      koi.setPhysical({
+        width: (phenotype.width ?? 1) * (tune.widthScale ?? 1),
+        height: (phenotype.height ?? 1) * (tune.heightScale ?? 1),
+      })
     },
 
     dispose() {

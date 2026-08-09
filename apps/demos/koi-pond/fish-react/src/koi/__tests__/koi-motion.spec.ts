@@ -5,7 +5,7 @@ import { describePond, koiProfile, pondBounds } from '@hyperfrontend/demo-koi-li
 import { createKoiMotion } from '../koi-motion'
 
 /** The pond every fixture here swims in. */
-const POND: PondEnvironment = describePond(1200, 800, false)
+const POND: PondEnvironment = describePond(1200, 800, 1200, 800, false)
 
 /**
  * Builds a koi mid-pond, heading along +x.
@@ -97,7 +97,7 @@ function sharpestTurn(motion: KoiMotion, seconds: number): number {
  * @returns The observation.
  */
 function crossing(overrides: Partial<NeighborObservation> = {}): NeighborObservation {
-  return { framework: 'lit', x: 660, y: 460, heading: -Math.PI / 2, speed: 120, depth: 3, length: 130, ...overrides }
+  return { framework: 'lit', x: 660, y: 460, heading: -Math.PI / 2, speed: 120, depth: 3, length: 130, girth: 15, ...overrides }
 }
 
 describe('createKoiMotion', () => {
@@ -274,17 +274,38 @@ describe('outline', () => {
   })
 })
 
+describe('setTune', () => {
+  it('scales the cruise without erasing this koi its own pace', () => {
+    const slowed = swimmer()
+    slowed.setTune({ speedScale: 0.4 })
+    run(slowed, 2)
+    const cruising = swimmer()
+    run(cruising, 2)
+    expect(slowed.state.speed).toBeLessThan(cruising.state.speed * 0.6)
+  })
+
+  it('keeps fields the tune left out at their current value', () => {
+    const motion = swimmer()
+    motion.setTune({ speedScale: 0.4 })
+    motion.setTune({ wanderScale: 1.2 })
+    run(motion, 2)
+    const cruising = swimmer()
+    run(cruising, 2)
+    expect(motion.state.speed).toBeLessThan(cruising.state.speed * 0.6)
+  })
+})
+
 describe('setPond', () => {
   it('adopts a resized world', () => {
     const motion = swimmer()
-    motion.setPond(describePond(2400, 1600, false))
+    motion.setPond(describePond(2400, 1600, 2400, 1600, false))
     run(motion, 0.1)
     expect(motion.state.length).toBeGreaterThan(swimmer().state.length)
   })
 
   it('damps its swimming when the visitor asks for reduced motion', () => {
     const calm = swimmer()
-    calm.setPond(describePond(1200, 800, true))
+    calm.setPond(describePond(1200, 800, 1200, 800, true))
     calm.startle({ x: 620, y: 410, intensity: 1 })
     run(calm, 0.5)
     const brisk = swimmer()
