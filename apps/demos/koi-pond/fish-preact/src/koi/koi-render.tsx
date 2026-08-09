@@ -9,7 +9,7 @@
  * back. The stage and card still travel through slots rather than closures,
  * because unmounting on dispose is what empties them again.
  */
-import type { KoiProfile, PondEnvironment } from '@hyperfrontend/demo-koi-lib'
+import type { KoiProfile, KoiTune, PondEnvironment } from '@hyperfrontend/demo-koi-lib'
 import type { Koi } from '@hyperfrontend/demo-koi-lib/three'
 import type { KoiState } from './koi-motion'
 import type { GlRenderer, KoiStage } from './koi-stage'
@@ -48,6 +48,12 @@ export interface KoiRenderer {
    * @param state - What the koi is doing right now.
    */
   placeCard(state: KoiState): void
+  /**
+   * Takes the visitor's playground settings onto the body and the swim.
+   *
+   * @param tune - The scales to apply over this koi's own build and trim.
+   */
+  applyTune(tune: KoiTune): void
   /** Releases the GPU resources the koi holds and unmounts its tree. */
   dispose(): void
 }
@@ -78,6 +84,8 @@ export function createKoiRenderer(
   // why: The stage and card arrive when Preact commits the tree and leave when it unmounts, so everything below reaches them through these slots rather than closing over them.
   let stage: KoiStage | null = null
   let card: HTMLDivElement | null = null
+  // why: The card is positioned against the visible window, so the renderer keeps the last announced world the stage is already drawing.
+  let current = pond
 
   const mount = (canvas: HTMLCanvasElement, cardNode: HTMLDivElement): (() => void) => {
     const built = createKoiStage(canvas, profile, pond, createGl)
@@ -105,6 +113,7 @@ export function createKoiRenderer(
     },
 
     setPond(next) {
+      current = next
       stage?.setPond(next)
     },
 
@@ -116,8 +125,12 @@ export function createKoiRenderer(
 
     placeCard(state) {
       if (card !== null) {
-        card.style.transform = cardTransform(cardAnchor(state))
+        card.style.transform = cardTransform(cardAnchor(state, current.view))
       }
+    },
+
+    applyTune(tune) {
+      stage?.applyTune(tune)
     },
 
     dispose() {
