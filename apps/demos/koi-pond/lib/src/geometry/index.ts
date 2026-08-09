@@ -1,26 +1,14 @@
 /**
- * Koi geometry: the pond's coordinate space, the spine, the silhouette, the
- * proximity maths, and the steering verbs.
+ * Koi geometry: the pond's coordinate space, the spine, the proximity maths,
+ * and the steering verbs.
  *
  * @module @hyperfrontend/demo-koi-lib/geometry
  */
-export type { BodyContour } from './body.js'
 export type { Bounds } from './capsule.js'
 export type { SpineState, SpineStep } from './spine.js'
 export type { ClosestApproach, EncounterAction, EncounterMemory, EncounterResolution, EncounterSelf } from './steering.js'
 export type { BoundaryPressure, PondBounds } from './virtual-pond.js'
 
-export {
-  CAUDAL_STATION,
-  DORSAL_STATION,
-  PECTORAL_STATION,
-  bodyContour,
-  caudalPath,
-  contourPath,
-  dorsalPath,
-  jointAtStation,
-  pectoralPath,
-} from './body.js'
 export {
   boundsOverlap,
   chainBounds,

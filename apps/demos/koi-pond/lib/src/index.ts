@@ -11,7 +11,6 @@
  * @module @hyperfrontend/demo-koi-lib
  */
 export type { KoiActionDescription, KoiContract } from './contract/koi-fish.contract.js'
-export type { BodyContour } from './geometry/body.js'
 export type { KoiSection } from './koi3d/anatomy.js'
 export type {
   KoiAppearance,
@@ -56,17 +55,6 @@ export type {
 
 export { KOI_CONTRACT_VERSION, koiFishContract } from './contract/koi-fish.contract.js'
 
-export {
-  CAUDAL_STATION,
-  DORSAL_STATION,
-  PECTORAL_STATION,
-  bodyContour,
-  caudalPath,
-  contourPath,
-  dorsalPath,
-  jointAtStation,
-  pectoralPath,
-} from './geometry/body.js'
 export {
   boundsOverlap,
   chainBounds,

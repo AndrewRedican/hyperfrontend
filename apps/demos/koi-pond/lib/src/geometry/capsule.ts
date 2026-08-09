@@ -6,9 +6,9 @@
  * fish, are these two about to collide, which pairs are even worth checking —
  * reduces to distances against that chain.
  *
- * Nothing here ever sees an SVG path. The rendered koi and the koi the physics
- * knows about are deliberately different objects, and the cheap one is the one
- * that crosses the frame boundary.
+ * The rendered koi and the koi the physics knows about are deliberately
+ * different objects, and the cheap one is the one that crosses the frame
+ * boundary.
  */
 import type { KoiOutline, Vec2 } from '../model/types.js'
 

@@ -104,8 +104,8 @@ export interface Disturbance {
  * One koi's occupied outline, reported to the host at low cadence.
  *
  * The outline is a spine sample chain with a half-width per sample — a capsule
- * chain, never an SVG path. Five samples describe a koi closely enough for
- * proximity work at a fraction of the payload.
+ * chain. Five samples describe a koi closely enough for proximity work at a
+ * fraction of the payload.
  */
 export interface KoiOutline {
   /** The framework slug identifying the reporter. */
