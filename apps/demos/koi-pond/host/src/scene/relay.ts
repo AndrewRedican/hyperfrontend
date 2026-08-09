@@ -163,6 +163,8 @@ export function createRelay(): Relay {
             speed: outline.speed,
             depth: outline.depth,
             length: lengthOf(outline),
+            // why: The widest half-width travels with the observation so a neighbour's clearance can respect a heavier build.
+            girth: outline.girth.reduce((widest, halfWidth) => Math.max(widest, halfWidth), 0),
           },
         })
       }

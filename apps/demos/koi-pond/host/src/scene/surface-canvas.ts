@@ -24,6 +24,8 @@ export interface SurfaceFrame {
   width: number
   /** Surface height in CSS pixels. */
   height: number
+  /** Pond-space origin of the visible window, so pond-space rings land on the right frame pixels. */
+  view: { x: number; y: number }
   /** Device pixel ratio to render at. */
   pixelRatio: number
   /** The pond's nominal fish length, which sets how far rings spread. */
@@ -102,9 +104,12 @@ export function createSurfacePainter(canvas: HTMLCanvasElement): SurfacePainter 
         if (resolved.alpha <= 0.002 || resolved.radius <= 0) {
           continue
         }
+        // why: Ripple origins live in pond space while the canvas covers only the visible window, so the window's origin comes off before painting.
+        const originX = resolved.origin.x - frame.view.x
+        const originY = resolved.origin.y - frame.view.y
         const alpha = resolved.alpha * damping
         context.beginPath()
-        context.arc(resolved.origin.x, resolved.origin.y, resolved.radius, 0, Math.PI * 2)
+        context.arc(originX, originY, resolved.radius, 0, Math.PI * 2)
         context.strokeStyle = `rgba(214, 245, 238, ${alpha * 0.75})`
         context.lineWidth = Math.max(1, frame.fishLength * 0.035 * resolved.alpha)
         context.stroke()
@@ -112,7 +117,7 @@ export function createSurfacePainter(canvas: HTMLCanvasElement): SurfacePainter 
         // why: A second ring chasing the first at a shorter radius is what makes a strike read as a splash rather than a drawn circle.
         if (resolved.radius > frame.fishLength * 0.3) {
           context.beginPath()
-          context.arc(resolved.origin.x, resolved.origin.y, resolved.radius * 0.62, 0, Math.PI * 2)
+          context.arc(originX, originY, resolved.radius * 0.62, 0, Math.PI * 2)
           context.strokeStyle = `rgba(190, 232, 226, ${alpha * 0.38})`
           context.lineWidth = Math.max(1, frame.fishLength * 0.018 * resolved.alpha)
           context.stroke()

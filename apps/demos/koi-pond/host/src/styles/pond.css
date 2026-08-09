@@ -15,6 +15,9 @@ body {
     -apple-system,
     'Segoe UI',
     sans-serif;
+
+  /* why: Standalone the translucent pond needs dark water behind it; embedded, the hostee SDK resets this to transparent so the host page shows through instead. */
+  background: #0b1c1b;
 }
 
 #pond {
@@ -23,6 +26,11 @@ body {
   background: radial-gradient(circle at 50% 46%, #20423a 0%, #16302c 55%, #0b1c1b 100%);
   color: #e8f3ef;
   isolation: isolate;
+}
+
+/* why: Presented full over a host page the pond is a layer, not a wall — the page beneath stays perceptible through its paint. */
+#pond[data-scene='full'] {
+  background: radial-gradient(circle at 50% 46%, rgba(32, 66, 58, 0.7) 0%, rgba(22, 48, 44, 0.7) 55%, rgba(11, 28, 27, 0.7) 100%);
 }
 
 #floor {
@@ -169,6 +177,74 @@ body {
 .pond-close[hidden],
 .pond-close-hint[hidden] {
   display: none;
+}
+
+/* why: The playground is the pond's own chrome, styled as the roster's sibling and kept away from it in the opposite corner. */
+.koi-controls {
+  position: absolute;
+  left: 0.9rem;
+  bottom: 0.9rem;
+  z-index: 150;
+  font-size: 0.74rem;
+}
+
+.koi-controls-toggle {
+  padding: 0.4rem 0.7rem;
+  border: 1px solid rgba(232, 243, 239, 0.18);
+  border-radius: 999px;
+  background: rgba(9, 24, 22, 0.72);
+  backdrop-filter: blur(8px);
+  color: rgba(232, 243, 239, 0.86);
+  font-size: 0.66rem;
+  font-weight: 600;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.koi-controls-toggle:hover,
+.koi-controls-toggle:focus-visible {
+  background: rgba(20, 48, 44, 0.92);
+  color: #ffffff;
+}
+
+.koi-controls-body {
+  display: none;
+  margin-top: 0.5rem;
+  padding: 0.6rem 0.75rem;
+  border: 1px solid rgba(232, 243, 239, 0.12);
+  border-radius: 12px;
+  background: rgba(9, 24, 22, 0.78);
+  backdrop-filter: blur(8px);
+}
+
+.koi-controls[data-open='true'] .koi-controls-body {
+  display: grid;
+  gap: 0.32rem;
+}
+
+.koi-control {
+  display: grid;
+  grid-template-columns: 6.2rem 8rem;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.koi-control-name {
+  color: rgba(232, 243, 239, 0.7);
+}
+
+.koi-control input[type='range'] {
+  width: 100%;
+  accent-color: #7ed6c6;
+}
+
+/* why: In a card-sized window neither panel has room — the card is an invitation to expand, not the venue; both return with the space. */
+@media (max-width: 679px) {
+  .koi-controls,
+  .koi-roster {
+    display: none;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {

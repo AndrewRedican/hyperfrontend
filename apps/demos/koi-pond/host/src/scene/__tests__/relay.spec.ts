@@ -4,7 +4,7 @@ import { describePond } from '@hyperfrontend/demo-koi-lib'
 import { createRelay } from '../relay'
 
 /** The pond every fixture here swims in. */
-const POND = describePond(1200, 800, false)
+const POND = describePond(1200, 800, 1200, 800, false)
 
 /** The clock every fixture reports and reads at, so nothing is reckoned unless a spec says so. */
 const NOW = 100_000
@@ -147,7 +147,7 @@ describe('dead reckoning', () => {
     relay.record({ ...outlineAt('svelte', 400, 400), speed: 200 }, NOW)
     // why: Half a second at 200 px/s slides the whole body 100 px along +x, so the pointer finds the koi where it plausibly is, not where it was.
     expect(relay.pick({ x: 460, y: 402 }, POND, NOW + 500)).toBe('svelte')
-    expect(relay.pick({ x: 360, y: 402 }, POND, NOW + 500)).toBeNull()
+    expect(relay.pick({ x: 330, y: 402 }, POND, NOW + 500)).toBeNull()
   })
 
   it('stops reckoning at the cap rather than launching a ghost', () => {

@@ -70,8 +70,9 @@ export function layStones(width: number, height: number): Stone[] {
  * @param width - Bed width in CSS pixels.
  * @param height - Bed height in CSS pixels.
  * @param pixelRatio - Device pixel ratio to render at.
+ * @param alpha - How opaque the bed paints, 0 to 1; below 1 the page beneath the pond stays perceptible.
  */
-export function paintFloor(canvas: HTMLCanvasElement, width: number, height: number, pixelRatio: number): void {
+export function paintFloor(canvas: HTMLCanvasElement, width: number, height: number, pixelRatio: number, alpha = 1): void {
   const context = canvas.getContext('2d')
   if (context === null || width === 0 || height === 0) {
     return
@@ -81,6 +82,7 @@ export function paintFloor(canvas: HTMLCanvasElement, width: number, height: num
   canvas.style.width = `${width}px`
   canvas.style.height = `${height}px`
   context.setTransform(pixelRatio, 0, 0, pixelRatio, 0, 0)
+  context.globalAlpha = alpha
 
   // how: A wide radial gradient reads as depth — the middle of the pond falls away, the edges shelve up toward the bank.
   const water = context.createRadialGradient(width * 0.5, height * 0.46, 0, width * 0.5, height * 0.5, Math.max(width, height) * 0.78)

@@ -7,9 +7,10 @@
  * continuous scene, and to keep the seams — the relay, the depth grants, the
  * ripple gate — on the host's side of the boundary where they belong.
  */
-import type { KoiFramework, KoiOutline } from '@hyperfrontend/demo-koi-lib'
+import type { KoiFramework, KoiOutline, Vec2 } from '@hyperfrontend/demo-koi-lib'
 import type { PondScene, SceneScale } from '../feature/wire-contract'
-import { KOI_FRAMEWORKS, describePond, mayRipple, pondPoint } from '@hyperfrontend/demo-koi-lib'
+import { KOI_FRAMEWORKS, describePond, mayRipple, pondPoint, pondWindow } from '@hyperfrontend/demo-koi-lib'
+import { createControls } from './controls'
 import { createDepthDirector } from './depth-director'
 import { createFrameLoop } from './raf-loop'
 import { createRelay } from './relay'
@@ -30,8 +31,8 @@ const POINTER_STRENGTH = 1
 /** Longest the curtain waits for the last koi before revealing the pond anyway. */
 const CURTAIN_DEADLINE_MS = 5000
 
-/** How much a card-sized presentation damps the ambient motion. */
-const CARD_SCALE = 0.72
+/** How opaque the pond's own paint is when it runs as a layer over a host page. */
+const OVERLAY_FLOOR_ALPHA = 0.7
 
 /** What the pond tells whatever mounted it. */
 export interface PondHooks {
@@ -70,12 +71,14 @@ export function createPond(root: HTMLElement, hooks: PondHooks): PondScene {
   const sequence = createSequenceTracker()
   const motionQuery = window.matchMedia('(prefers-reduced-motion: reduce)')
 
-  let pond = describePond(root.clientWidth, root.clientHeight, motionQuery.matches)
+  // why: The virtual pond derives from the screen, once — a gallery card, an expanded overlay, and a debug panel are windows onto this same water, and none of them may redefine it.
+  let pond = describePond(window.screen.width, window.screen.height, root.clientWidth, root.clientHeight, motionQuery.matches)
   let field = createRippleField()
   let hovered: KoiFramework | null = null
   let lastRelayAt = 0
   let opened = 0
   let scale: SceneScale = 'full'
+  const inspected = new Set<KoiFramework>()
 
   const sessions = openShoal(stage.layers)
 
@@ -104,20 +107,33 @@ export function createPond(root: HTMLElement, hooks: PondHooks): PondScene {
   const roster = createRoster(root, fishHomeUrl, setHover)
 
   /**
-   * Re-measures the pond, repaints the still bed, and tells every koi.
+   * Re-measures the visible window, repaints the still bed, and tells every koi.
    *
-   * The bed is deliberately not painted per frame — it is stone and still water,
-   * and repainting it would be the most expensive thing in a scene that already
-   * carries seven compositing layers.
+   * Only the view moves — the virtual pond took its dimensions from the screen
+   * when the scene opened, and a frame that grows or shrinks merely shows more
+   * or less of the same water. The bed is deliberately not painted per frame —
+   * it is stone and still water, and repainting it would be the most expensive
+   * thing in a scene that already carries seven compositing layers.
    */
   const remeasure = (): void => {
-    const measured = describePond(root.clientWidth, root.clientHeight, motionQuery.matches)
-    // why: A card-sized pond keeps a full-sized koi but a smaller world, so the shoal stays legible instead of shrinking into specks.
-    pond = scale === 'card' ? { ...measured, fishLength: measured.fishLength * CARD_SCALE } : measured
-    paintFloor(stage.floor, pond.width, pond.height, window.devicePixelRatio)
+    pond = { ...pond, view: pondWindow(pond, root.clientWidth, root.clientHeight), reducedMotion: motionQuery.matches }
+    root.dataset['scene'] = scale
+    // why: Presented full over a host page the pond is a translucent layer — the page must stay perceptible beneath it; in a card it paints solid so the small window stays legible.
+    paintFloor(stage.floor, pond.view.width, pond.view.height, window.devicePixelRatio, scale === 'full' ? OVERLAY_FLOOR_ALPHA : 1)
     for (const session of sessions) {
       session.shell.send('pond', pond)
     }
+  }
+
+  /**
+   * The pond-space point under a pointer event.
+   *
+   * @param event - The pointer event.
+   * @returns The point in pond space, view offset included.
+   */
+  const pondCoords = (event: PointerEvent): Vec2 => {
+    const bounds = root.getBoundingClientRect()
+    return { x: event.clientX - bounds.left + pond.view.x, y: event.clientY - bounds.top + pond.view.y }
   }
 
   /**
@@ -159,6 +175,7 @@ export function createPond(root: HTMLElement, hooks: PondHooks): PondScene {
     shell.on('close', () => {
       opened = Math.max(0, opened - 1)
       relay.forget(framework)
+      inspected.delete(framework)
       roster.setConnected(framework, false)
       hooks.onShoal(opened, sessions.length)
       if (hovered === framework) {
@@ -214,8 +231,7 @@ export function createPond(root: HTMLElement, hooks: PondHooks): PondScene {
 
   // why: The host owns the only pointer stream in the pond — every koi frame is pointer-events:none, so this listener sees presses over the whole scene.
   root.addEventListener('pointermove', (event: PointerEvent) => {
-    const bounds = root.getBoundingClientRect()
-    setHover(relay.pick({ x: event.clientX - bounds.left, y: event.clientY - bounds.top }, pond, Date.now()))
+    setHover(relay.pick(pondCoords(event), pond, Date.now()))
   })
 
   root.addEventListener('pointerleave', () => {
@@ -223,8 +239,24 @@ export function createPond(root: HTMLElement, hooks: PondHooks): PondScene {
   })
 
   root.addEventListener('pointerdown', (event: PointerEvent) => {
-    const bounds = root.getBoundingClientRect()
-    strike({ x: event.clientX - bounds.left, y: event.clientY - bounds.top })
+    const at = pondCoords(event)
+    const hit = relay.pick(at, pond, Date.now())
+    // why: A press lands on a fish or on the water, never both — clicking a koi holds it for inspection, clicking it again frees it, and only open water takes a strike.
+    if (hit !== null) {
+      const holding = !inspected.has(hit)
+      if (holding) {
+        inspected.add(hit)
+      } else {
+        inspected.delete(hit)
+      }
+      for (const session of sessions) {
+        if (session.framework === hit) {
+          session.shell.send('pause', { paused: holding })
+        }
+      }
+      return
+    }
+    strike(at)
   })
 
   const loop = createFrameLoop(({ dt, elapsedMs }) => {
@@ -248,8 +280,9 @@ export function createPond(root: HTMLElement, hooks: PondHooks): PondScene {
     }
 
     surface.paint({
-      width: pond.width,
-      height: pond.height,
+      width: pond.view.width,
+      height: pond.view.height,
+      view: { x: pond.view.x, y: pond.view.y },
       pixelRatio: window.devicePixelRatio,
       fishLength: pond.fishLength,
       elapsedMs,
@@ -279,6 +312,15 @@ export function createPond(root: HTMLElement, hooks: PondHooks): PondScene {
   for (const framework of KOI_FRAMEWORKS) {
     roster.setConnected(framework, false)
   }
+
+  createControls(root, {
+    onTune(tune) {
+      for (const session of sessions) {
+        session.shell.send('tune', tune)
+      }
+    },
+  })
+
   remeasure()
   loop.start()
 
