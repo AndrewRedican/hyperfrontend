@@ -137,6 +137,42 @@ describe('serveFile', () => {
     expect(out.headers['Location']).toBe('/host/?debug=1')
   })
 
+  it('redirects to the resolved directory, never to an authority the request smuggled in', () => {
+    const out = fakeRes()
+    serveFile('/srv', '//evil.example/../host', out.res, deps(hasIndexOnly))
+    expect({ status: out.statusCode, location: out.headers['Location'] }).toEqual({ status: 301, location: '/host/' })
+  })
+
+  it.each([
+    ['//host', '/host/'],
+    ['///host', '/host/'],
+    ['/\\evil.example/../host', '/host/'],
+    ['//evil.example/../host?debug=1', '/host/?debug=1'],
+  ])('resolves %s to a root-relative redirect', (urlPath, expected) => {
+    const out = fakeRes()
+    serveFile('/srv', urlPath, out.res, deps(hasIndexOnly))
+    expect(out.headers['Location']).toBe(expected)
+  })
+
+  it('never emits a protocol-relative location a browser would read as another origin', () => {
+    for (const urlPath of ['//evil.example/../host', '//host', '///host', '/host/../host', '']) {
+      const out = fakeRes()
+      serveFile('/srv', urlPath, out.res, deps(hasIndexOnly))
+      const location = out.headers['Location']
+      if (location === undefined) {
+        continue
+      }
+      // why: A location starting with two slashes (or an absolute URL) carries its own authority, so the browser leaves the origin it was served from.
+      expect(new URL(location, 'http://localhost:4280/').origin).toBe('http://localhost:4280')
+    }
+  })
+
+  it('percent-encodes a resolved segment rather than reflecting the raw request', () => {
+    const out = fakeRes()
+    serveFile('/srv', '/a b', out.res, deps(hasIndexOnly))
+    expect(out.headers['Location']).toBe('/a%20b/')
+  })
+
   it('returns 404 for a directory url with no index', () => {
     const out = fakeRes()
     serveFile(

@@ -1,5 +1,5 @@
 import type { IncomingMessage, ServerResponse } from 'node:http'
-import { extname, join, normalize, resolve, sep } from 'node:path'
+import { extname, join, normalize, relative, resolve, sep } from 'node:path'
 import { freeze } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
 import { isFile as isFileOnDisk, readFileBuffer } from '@hyperfrontend/project-scope/core/fs'
 
@@ -79,20 +79,31 @@ function confinePath(root: string, urlPath: string): string | null {
 }
 
 /**
- * Appends the directory-marking trailing slash to a request URL, keeping any
- * query string attached to it.
+ * Builds the slashed directory URL to redirect an unslashed request to.
  *
- * @param url - The raw request URL to redirect from.
- * @returns The same URL with its path ending in a slash.
+ * The location is derived from the resolved path rather than the raw request,
+ * so it is always a single-slash path relative to this server's own root: a
+ * request that writes an authority into the URL (`//example.com/../host`) is
+ * answered with the directory it actually resolved to, never with a location
+ * pointing off this origin.
+ *
+ * @param root - The absolute directory files are served from.
+ * @param confined - The resolved absolute path, already confined to `root`.
+ * @param url - The raw request URL, read only for its query string.
+ * @returns The root-relative directory URL, ending in a slash.
  *
  * @example Redirecting a directory request
  * ```typescript
- * withTrailingSlash('/host?debug=1') // '/host/?debug=1'
+ * directoryLocation('/srv', '/srv/host', '/host?debug=1') // '/host/?debug=1'
  * ```
  */
-function withTrailingSlash(url: string): string {
+function directoryLocation(root: string, confined: string, url: string): string {
   const queryAt = url.indexOf('?')
-  return queryAt === -1 ? `${url}/` : `${url.slice(0, queryAt)}/${url.slice(queryAt)}`
+  const query = queryAt === -1 ? '' : url.slice(queryAt)
+  const relativePath = relative(root, confined)
+  // why: Encoding each resolved segment keeps a directory name that contains reserved characters from writing new structure into the location.
+  const directory = relativePath === '' ? '' : `${relativePath.split(sep).map(encodeURIComponent).join('/')}/`
+  return `/${directory}${query}`
 }
 
 /**
@@ -135,7 +146,7 @@ export function serveFile(root: string, urlPath: string, res: ServerResponse, de
   // why: An unslashed directory URL redirects rather than serving the index directly, so the browser resolves the page's relative asset URLs against the directory instead of its parent.
   if (!isDirectoryUrl && !isFile(filePath) && isFile(join(filePath, DIRECTORY_INDEX))) {
     res.statusCode = 301
-    res.setHeader('Location', withTrailingSlash(urlPath))
+    res.setHeader('Location', directoryLocation(root, confined, urlPath))
     res.end()
     return
   }
