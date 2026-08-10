@@ -89,24 +89,16 @@ export interface KoiSession {
 }
 
 /**
- * The composed-deployment URL of one koi's frame.
+ * The URL of one koi's app: the identity a visitor reads, and — while the
+ * pond is deployed composed — the URL its frame mounts from.
  *
- * Resolved against wherever the pond itself is being served from — no
- * environment variable, no origin list. The directory form is the only one a
- * koi may be framed from: its assets are referenced relatively so that one
- * build serves both this sub-path and its own origin's root, and a static host
- * that rewrites `…/index.html` to an extensionless path would leave the
- * document one directory up, where every relative asset misses.
- *
- * @param framework - Which koi.
- * @returns The absolute URL of its frame under the pond's own origin.
- */
-function composedFishUrl(framework: KoiFramework): string {
-  return new URL(`fish-${framework}/`, window.location.href).toString()
-}
-
-/**
- * The URL of one koi's app as a visitor should see it.
+ * While composed it resolves against wherever the pond itself is being served
+ * from — no environment variable, no origin list. The directory form is the
+ * only one a koi may be framed from: its assets are referenced relatively so
+ * that one build serves both the composed sub-path and its own origin's root,
+ * and a static host that rewrites `…/index.html` to an extensionless path
+ * would leave the document one directory up, where every relative asset
+ * misses.
  *
  * @param framework - Which koi.
  * @returns Its absolute app URL, without any index file spelled out.
@@ -142,7 +134,7 @@ export function openShoal(layers: ReadonlyMap<KoiFramework, HTMLElement>): KoiSe
       container: layer,
       // why: Seven handshakes queue behind one another on a cold load, and the ten-second default times the last of them out.
       openTimeoutMs: OPEN_TIMEOUT_MS,
-      ...(COMPOSED_DEPLOYMENT && { url: composedFishUrl(framework) }),
+      ...(COMPOSED_DEPLOYMENT && { url: fishHomeUrl(framework) }),
     })
     sessions.push({ framework, layer, shell })
   }
