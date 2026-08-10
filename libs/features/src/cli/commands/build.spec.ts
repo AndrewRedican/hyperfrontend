@@ -247,7 +247,10 @@ describe('runBuild', () => {
       stderr: sink().stream,
       resolveConfig: () => Promise.resolve(bundle('v2')),
     })
-    expect(mockBuild).toHaveBeenCalledWith(expect.objectContaining({ esm: {}, cjs: {}, outputPath: expect.stringContaining('dist') }))
+    // why: The shell-only declaration-map opt-out is what makes repeated packs of an unchanged feature byte-identical, so it is pinned rather than left to the builder's default.
+    expect(mockBuild).toHaveBeenCalledWith(
+      expect.objectContaining({ esm: {}, cjs: {}, declarationMap: false, outputPath: expect.stringContaining('dist') })
+    )
     expect(mockExecFileSync).toHaveBeenCalledWith('npm', ['pack'], expect.objectContaining({ cwd: expect.stringContaining('dist') }))
   })
 })
