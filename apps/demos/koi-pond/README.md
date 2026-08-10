@@ -20,7 +20,9 @@ exists to show.
 | Path                                                       | Role                                                                                                 |
 | ---------------------------------------------------------- | ---------------------------------------------------------------------------------------------------- |
 | `host/`                                                    | `demo-koi-pond` — pond bed, water, pointer, depth, relay, playground controls; hostee shell          |
+| `host/vendor/`                                             | the seven committed koi shell tarballs the host installs by `file:`                                  |
 | `fish-<framework>/`                                        | `demo-koi-fish-<framework>` — one koi per framework: vanilla react vue svelte solid preact lit       |
+| `fish-<framework>/feature.config.ts`                       | each koi's shell packaging — contract, canonical origin, display modes, an explicitly open protocol  |
 | `lib/src/model/`, `lib/src/geometry/`, `lib/src/contract/` | the pond's vocabulary, the wire, and the maths of the water                                          |
 | `lib/src/koi3d/`                                           | the koi itself — build, anatomy, mesh generation, markings, and the spine that poses it. No renderer |
 | `lib/src/three/`                                           | the three.js adapter: materials, shaders, cameras, lighting, debug overlays                          |
@@ -37,6 +39,13 @@ exists to show.
   settled signal. The outer contract (`host/koi-pond.contract.ts`) runs between the gallery and
   the pond: `set-scene`/`disturb` in, `shoal`/`sequence-complete`/`close-request` out. The
   gallery never learns there are seven apps inside.
+- **Seven features, seven shells.** Each koi is packaged exactly like any other feature: its
+  `feature.config.ts` names the contract (a re-export of the shared library's), its canonical
+  origin, and its display modes, and `pack-shell` emits a typed shell package the host vendors
+  and installs. The pond opens every koi through its generated shell. While the pond deploys
+  composed on one origin, the host overrides each shell's baked URL with the `/fish-<name>/`
+  sub-path (`COMPOSED_DEPLOYMENT` in `host/src/scene/koi-sessions.ts`); provisioning the
+  per-koi services and flipping that flag is the whole migration to separate origins.
 - **A stable virtual pond.** `PondEnvironment.width/height` is the virtual pond, snapshotted
   once from the screen when the scene opens; `pond.view` is the window the presenting frame
   currently shows, centred on the pond and recomputed on every resize. Simulation, spawning and
@@ -60,8 +69,10 @@ exists to show.
 - **Coordination is relayed, never broadcast.** Fish report compact spine outlines at a low
   cadence; the host broad-phase filters and relays each fish only its nearby neighbours,
   dead-reckoning stale reports forward along their own headings. The seven inner channels run
-  unsecured; the single gallery ↔ pond channel keeps protocol `v1` — that is the real
-  cross-site boundary.
+  as explicitly **open shells** — a per-message security envelope across seven high-cadence
+  channels collapses delivery, so each koi's feature config declares `protocol: 'none'` and its
+  shell is packed with that acknowledged. The single gallery ↔ pond channel keeps protocol
+  `v1` — that is the real cross-site boundary today.
 - **Identity is seeded.** Every reproducible trait — behaviour, build, phenotype, swim trim,
   markings, entry station — derives from one integer seed per framework through
   `randomPseudo`, so the same fish appears on every reload and the host and fish agree on its
@@ -144,7 +155,10 @@ The composed site puts the host at `/` and each fish at `/fish-<framework>/` —
 and in production alike. **Never serve the built site through a SPA rewrite** (`serve -s` or any
 fallback-to-index): every missing `/fish-<framework>/` request would come back as a nested copy
 of the whole pond. Deployment is one Railway service on the GitHub integration, redeploying on
-merge to `main`; the build context must include `vendor/`.
+merge to `main`; the build context must include `vendor/`. Each fish additionally declares its
+canonical standalone service in its `project.json` `metadata.deploy` — until those services are
+provisioned and `COMPOSED_DEPLOYMENT` is flipped, the composed service serves every koi as a
+sub-path and the shells' baked origins stay dormant.
 
 ## Working on it
 
@@ -154,6 +168,7 @@ npx nx test demo-koi-lib               # the geometry, pose, pattern and configu
 npx nx run demo-koi-lib:build          # emit the published surface into lib/dist
 npx nx run demo-koi-lib:refresh        # rebuild + repack the shared lib into every consumer
 npx nx run demo-koi-lib:verify         # fail loudly when the tarball or a consumer lock has drifted
+npx nx run demo-koi-pond:refresh-fish-shells   # repack all seven koi shells + reinstall into the host
 npx nx run-many -t=lint,typecheck -p demo-koi-*
 ```
 
@@ -161,6 +176,12 @@ npx nx run-many -t=lint,typecheck -p demo-koi-*
 re-resolve a `file:` tarball whose path has not changed — with a warm cache it reports "up to date"
 and installs the previous contents. `refresh` installs by explicit path, which is the only invocation
 that re-reads the tarball; `verify` turns the silent staleness into a loud failure.
+
+**Run `demo-koi-pond:refresh-fish-shells` after changing the koi contract or any fish's
+`feature.config.ts`.** It repacks all seven shells and reinstalls them into the host by explicit
+path, for the same staleness reason. The vendored tarballs in `host/vendor/`, the host's
+`package.json`, and its `package-lock.json` always land in the same commit — a repacked tarball
+without its lockfile update fails `npm ci` with EINTEGRITY on a cold cache.
 
 A few constraints the scene depends on:
 
