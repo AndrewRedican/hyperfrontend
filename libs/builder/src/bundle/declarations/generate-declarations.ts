@@ -71,8 +71,11 @@ const runTsc = (tscPath: string, args: string[], cwd: string): Promise<GenerateD
   })
 
 /**
- * Generates `.d.ts` and `.d.ts.map` files for every entry point in the project
- * by spawning the workspace-local TypeScript compiler.
+ * Generates `.d.ts` files for every entry point in the project by spawning the
+ * workspace-local TypeScript compiler. Declaration maps are never emitted:
+ * their `sources` path points at build-machine sources a published package
+ * does not carry, and it would make the emitted bytes depend on where the
+ * build ran.
  *
  * After tsc finishes, calls `flattenDeclarationPaths` to relocate the nested
  * `dist/<lib>/libs/<lib>/src/...` structure that tsc emits with `baseUrl=workspaceRoot`
@@ -101,7 +104,9 @@ export const generateDeclarations = async (context: BuildContext): Promise<Gener
     'false',
     '--emitDeclarationOnly',
     '--declaration',
+    // why: Declaration maps are never emitted. A map's `sources` entry is a path resolved from the output directory back to sources the published package does not carry, so it can never resolve for a consumer — and because that path records where the build ran, emitting one makes the published bytes differ between machines and output directories. The value is spelled out so a project tsconfig that turns the option on cannot reinstate it.
     '--declarationMap',
+    'false',
     '--outDir',
     context.outputPath,
   ]

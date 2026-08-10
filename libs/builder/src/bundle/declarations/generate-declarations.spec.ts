@@ -87,9 +87,21 @@ describe('generateDeclarations', () => {
         '--emitDeclarationOnly',
         '--declaration',
         '--declarationMap',
+        'false',
       ]),
       expect.objectContaining({ cwd: '/abs/libs/foo', stdio: ['ignore', 'pipe', 'pipe'] })
     )
+  })
+
+  it('turns the declaration map off explicitly so a project tsconfig cannot reinstate it', async () => {
+    const child = makeFakeChild()
+    ;(<jest.Mock>spawn).mockReturnValue(child)
+    const promise = generateDeclarations(makeContext())
+    await tick()
+    child.emit('close', 0)
+    await promise
+    const args = <string[]>(<jest.Mock>spawn).mock.calls[0][1]
+    expect(args.slice(args.indexOf('--declarationMap'), args.indexOf('--declarationMap') + 2)).toEqual(['--declarationMap', 'false'])
   })
 
   it('flattens declaration paths after a successful tsc run', async () => {
