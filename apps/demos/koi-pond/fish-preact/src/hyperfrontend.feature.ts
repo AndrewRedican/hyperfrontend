@@ -19,7 +19,7 @@ export const feature = createFeature({
   name: '@hyperfrontend/demo-koi-fish-preact',
   // why: The shared lib declares the contract structurally so it stays SDK-free; this is where the eight consumers each check it against the real type.
   contract: <FeatureContract>koiFishContract,
-  // why: No security protocol on purpose - this channel is same-origin inside one deploy, so the envelope deters nothing, and its per-message key derivation collapses delivery when seven channels share one page.
+  // why: No security protocol on purpose, matching the shell this koi packs as - seven koi report outlines at high cadence on one page, and a per-message security envelope across seven channels collapses delivery. Messages still pin to the host's origin.
 })
 
 wireKoiContract(feature, koi)
