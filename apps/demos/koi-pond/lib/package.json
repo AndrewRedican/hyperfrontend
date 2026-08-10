@@ -1,0 +1,68 @@
+{
+  "name": "@hyperfrontend/demo-koi-lib",
+  "version": "0.1.0",
+  "description": "Shared koi model, contract, and geometry for the koi pond demonstration.",
+  "private": true,
+  "type": "module",
+  "sideEffects": false,
+  "files": [
+    "dist"
+  ],
+  "types": "./dist/index.d.ts",
+  "exports": {
+    "./package.json": "./package.json",
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./contract": {
+      "types": "./dist/contract/index.d.ts",
+      "import": "./dist/contract/index.js"
+    },
+    "./three": {
+      "types": "./dist/three/index.d.ts",
+      "import": "./dist/three/index.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "type-check": "run-s \"type-check:*\"",
+    "type-check:src": "tsc -p tsconfig.spec.json",
+    "type-check:node": "tsc -p tsconfig.node.json",
+    "test:unit": "vitest",
+    "lint": "run-s \"lint:*\"",
+    "lint:oxlint": "oxlint . --fix",
+    "lint:eslint": "eslint . --fix --cache"
+  },
+  "dependencies": {
+    "@hyperfrontend/random-generator-utils": "^0.0.5"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "@tsconfig/node24": "^24.0.4",
+    "@types/node": "^24.13.2",
+    "@types/three": "^0.185.4",
+    "@vitest/eslint-plugin": "^1.6.20",
+    "eslint": "^10.5.0",
+    "eslint-plugin-oxlint": "~1.76.0",
+    "globals": "^17.9.0",
+    "jiti": "^2.7.0",
+    "npm-run-all2": "^9.0.2",
+    "oxlint": "~1.76.0",
+    "three": "^0.185.1",
+    "typescript": "~6.0.0",
+    "typescript-eslint": "^8.66.0",
+    "vitest": "^4.1.9"
+  },
+  "engines": {
+    "node": "^22.18.0 || >=24.12.0"
+  },
+  "peerDependencies": {
+    "three": "^0.185.1"
+  },
+  "peerDependenciesMeta": {
+    "three": {
+      "optional": true
+    }
+  }
+}

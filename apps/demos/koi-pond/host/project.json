@@ -1,0 +1,106 @@
+{
+  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
+  "name": "demo-koi-pond",
+  "description": "Koi pond demonstration — a vanilla-TS host compositing seven independently implemented koi features into one continuous scene, and itself a hostee for the docs-site gallery.",
+  "sourceRoot": "apps/demos/koi-pond/host/src",
+  "projectType": "application",
+  "tags": ["type:demo", "role:feature", "scope:standalone"],
+  "metadata": {
+    "deploy": {
+      "provider": "railway",
+      "service": "hyperfrontend-demo-koi-pond",
+      "origin": "https://demo-koi-pond-production.up.railway.app",
+      "boundary": "same-origin",
+      "kind": "static",
+      "publishDir": "dist/apps/demos/koi-pond/site"
+    }
+  },
+  "targets": {
+    "install": {
+      "executor": "@hyperfrontend/app:install",
+      "options": {}
+    },
+    "dev": {
+      "executor": "@hyperfrontend/app:serve",
+      "dependsOn": ["install"],
+      "options": {
+        "command": "npm run dev"
+      }
+    },
+    "dev-hosted": {
+      "executor": "@hyperfrontend/app:serve",
+      "dependsOn": ["install"],
+      "options": {
+        "command": "npm run dev:hosted"
+      }
+    },
+    "build": {
+      "executor": "@hyperfrontend/app:build",
+      "dependsOn": ["install", "demo-koi-lib:verify"],
+      "cache": false,
+      "outputs": ["{workspaceRoot}/dist/apps/demos/koi-pond/site"],
+      "options": {
+        "command": "npm run build"
+      }
+    },
+    "test": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["install"],
+      "options": {
+        "command": "npm run test:unit -- --run",
+        "cwd": "apps/demos/koi-pond/host"
+      }
+    },
+    "lint": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["install"],
+      "options": {
+        "command": "npm run lint",
+        "cwd": "apps/demos/koi-pond/host"
+      }
+    },
+    "typecheck": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["install"],
+      "options": {
+        "command": "npm run type-check",
+        "cwd": "apps/demos/koi-pond/host"
+      }
+    },
+    "pack-shell": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["install"],
+      "outputs": ["{workspaceRoot}/dist/apps/demos/koi-pond/shell"],
+      "options": {
+        "command": "npx hf build --ci --out ../../../../dist/apps/demos/koi-pond/shell",
+        "cwd": "apps/demos/koi-pond/host"
+      }
+    },
+    "refresh-fish-shells": {
+      "executor": "nx:run-commands",
+      "dependsOn": [
+        "demo-koi-fish-vanilla:pack-shell",
+        "demo-koi-fish-react:pack-shell",
+        "demo-koi-fish-vue:pack-shell",
+        "demo-koi-fish-svelte:pack-shell",
+        "demo-koi-fish-solid:pack-shell",
+        "demo-koi-fish-preact:pack-shell",
+        "demo-koi-fish-lit:pack-shell"
+      ],
+      "options": {
+        "commands": [
+          "cp ../../../../dist/apps/demos/koi-pond/fish-shell/vanilla/hyperfrontend-demo-koi-fish-vanilla-shell-*.tgz vendor/",
+          "cp ../../../../dist/apps/demos/koi-pond/fish-shell/react/hyperfrontend-demo-koi-fish-react-shell-*.tgz vendor/",
+          "cp ../../../../dist/apps/demos/koi-pond/fish-shell/vue/hyperfrontend-demo-koi-fish-vue-shell-*.tgz vendor/",
+          "cp ../../../../dist/apps/demos/koi-pond/fish-shell/svelte/hyperfrontend-demo-koi-fish-svelte-shell-*.tgz vendor/",
+          "cp ../../../../dist/apps/demos/koi-pond/fish-shell/solid/hyperfrontend-demo-koi-fish-solid-shell-*.tgz vendor/",
+          "cp ../../../../dist/apps/demos/koi-pond/fish-shell/preact/hyperfrontend-demo-koi-fish-preact-shell-*.tgz vendor/",
+          "cp ../../../../dist/apps/demos/koi-pond/fish-shell/lit/hyperfrontend-demo-koi-fish-lit-shell-*.tgz vendor/",
+          "node ./scripts/install-vendored-shells.mjs"
+        ],
+        "cwd": "apps/demos/koi-pond/host",
+        "parallel": false
+      }
+    }
+  }
+}

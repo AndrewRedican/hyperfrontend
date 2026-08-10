@@ -1,0 +1,73 @@
+{
+  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
+  "name": "demo-koi-fish-react",
+  "description": "Koi pond — the React koi, a standalone hostee feature rendering one fish inside a host-owned transparent full-viewport frame.",
+  "sourceRoot": "apps/demos/koi-pond/fish-react/src",
+  "projectType": "application",
+  "tags": ["type:demo", "role:feature", "scope:standalone"],
+  "metadata": {
+    "deploy": {
+      "provider": "railway",
+      "service": "hyperfrontend-demo-koi-fish-react",
+      "origin": "https://demo-koi-fish-react-production.up.railway.app",
+      "boundary": "cross-site",
+      "kind": "static",
+      "publishDir": "dist/apps/demos/koi-pond/site/fish-react"
+    }
+  },
+  "targets": {
+    "install": {
+      "executor": "@hyperfrontend/app:install",
+      "options": {}
+    },
+    "dev": {
+      "executor": "@hyperfrontend/app:serve",
+      "dependsOn": ["install"],
+      "options": {
+        "command": "npm run build:watch"
+      }
+    },
+    "build": {
+      "executor": "@hyperfrontend/app:build",
+      "dependsOn": ["install"],
+      "cache": false,
+      "outputs": ["{workspaceRoot}/dist/apps/demos/koi-pond/site/fish-react"],
+      "options": {
+        "command": "npm run build"
+      }
+    },
+    "test": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["install"],
+      "options": {
+        "command": "npm run test:unit -- --run",
+        "cwd": "apps/demos/koi-pond/fish-react"
+      }
+    },
+    "lint": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["install"],
+      "options": {
+        "command": "npm run lint",
+        "cwd": "apps/demos/koi-pond/fish-react"
+      }
+    },
+    "typecheck": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["install"],
+      "options": {
+        "command": "npm run type-check",
+        "cwd": "apps/demos/koi-pond/fish-react"
+      }
+    },
+    "pack-shell": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["install"],
+      "outputs": ["{workspaceRoot}/dist/apps/demos/koi-pond/fish-shell/react"],
+      "options": {
+        "command": "npx hf build --ci --allow-open --out ../../../../dist/apps/demos/koi-pond/fish-shell/react",
+        "cwd": "apps/demos/koi-pond/fish-react"
+      }
+    }
+  }
+}

@@ -1,105 +1,47 @@
 # Documentation Site Action Plan
 
-Where the docs-site is heading: stronger SEO/branding, real engagement, richer
-per-package content (FAQ, tutorials, skills), deep links into the codebase, an
-interactive "oracle", and monetisation/analytics. Built on Next.js; new content
-flows through the existing generation pipeline so it ships with every build.
+Where the docs-site is heading: real engagement surfaces, richer per-package
+content (FAQ, tutorials, skills), completed deep links into the codebase, and an
+interactive "oracle". New content flows through the existing generation pipeline
+so it ships with every build.
 
-## Status quo (context, not work)
+## Baseline (context, not work)
 
-These already exist and are assumed as the baseline the work below builds on:
+The work below builds on these existing pieces:
 
 - **Docs generation pipeline** — `apps/docs-site/scripts/generate-docs.ts` ingests
   each library's `README.md` + `ARCHITECTURE.md`, runs TypeDoc over the entry
   points from `package.json` exports, rewrites markdown links to site routes, and
-  emits `.generated/{docs,api,manifest.json}`. New content layers below hook into
-  this pipeline.
-- **Breadcrumb component** — `src/components/breadcrumb.tsx`, already used across
-  library/architecture pages.
-- **Theme-aware SVG logos** — `public/hf-light.svg` / `public/hf-dark.svg`, wired
-  into `layout.tsx` icon metadata.
+  emits `.generated/{docs,api,manifest.json}`. New content layers hook into this
+  pipeline.
 - **Bug-report URL helper** — `generateBugReportUrl()` in
   `src/lib/link-suggestions.ts` (currently only surfaced on the 404 page).
+- **Tracked-link taxonomy** — outbound links route through `TrackedLink`
+  (`src/components/analytics/tracked-link.tsx`) so engagement is measured under
+  the campaign taxonomy; new outbound surfaces should join it.
+- **Source deep links** — TypeDoc emits "View source" links per symbol. Linking
+  targets the `main` branch deliberately (documented in `generate-docs.ts`:
+  git detection is disabled so links are identical in every build environment);
+  tag/commit pinning is explicitly not wanted.
 
 ---
 
-## Phase 1: Branding assets
+## Phase 1: Engagement
 
-PNG icons and social cards (the SVG logos exist; the raster/social assets do not).
-
-### 1.1 Favicon / raster icons
-
-Convert from `assets/logo/hyperfrontend.png`.
-
-**Files:**
-
-- `apps/docs-site/src/app/favicon.ico` — Create (32x32)
-- `apps/docs-site/src/app/icon.png` — Create (192x192)
-- `apps/docs-site/src/app/apple-icon.png` — Create (180x180)
-
-### 1.2 Open Graph / Twitter images
-
-Metadata text is already configured in `layout.tsx`; the images are missing.
-
-**Files:**
-
-- `apps/docs-site/src/app/opengraph-image.png` — Create (1200x630)
-- `apps/docs-site/src/app/twitter-image.png` — Create (1200x600)
-
-### Verification
-
-```bash
-npx nx build docs-site
-# Test with https://opengraph.xyz
-```
-
----
-
-## Phase 2: Structured data (JSON-LD)
-
-No JSON-LD exists yet. The breadcrumb component is built — this only adds the
-schema markup.
-
-### 2.1 SoftwareApplication schema
-
-Add JSON-LD script to root layout.
-
-**Files:**
-
-- `apps/docs-site/src/app/layout.tsx` — Edit
-
-### 2.2 BreadcrumbList schema
-
-Emit `BreadcrumbList` JSON-LD from the existing breadcrumb component.
-
-**Files:**
-
-- `apps/docs-site/src/components/breadcrumb.tsx` — Edit
-
-### Verification
-
-```bash
-npx nx build docs-site
-npx nx lint docs-site --fix
-# Test with https://search.google.com/test/rich-results
-```
-
----
-
-## Phase 3: Engagement
-
-### 3.1 Footer "Report an issue" link
+### 1.1 Footer "Report an issue" link
 
 Surface the existing `generateBugReportUrl()` helper in the footer (today it only
-appears on the 404 page).
+appears on the 404 page). The link should join the tracked-link taxonomy rather
+than render as a plain anchor.
 
 **Files:**
 
 - `apps/docs-site/src/components/footer.tsx` — Edit
 
-### 3.2 Social sharing links
+### 1.2 Social sharing links
 
-Twitter/LinkedIn share links (URL-based, no package).
+Twitter/LinkedIn share links (URL-based, no package), wired through
+`TrackedLink` so shares are measured like other outbound links.
 
 **Files:**
 
@@ -116,53 +58,24 @@ npx nx typecheck docs-site
 
 ---
 
-## Phase 4: Code-block theming
+## Phase 2: Complete source deep links
 
-Code blocks currently render through plain `<pre><code>` with no syntax colouring
-(`src/components/code-block.tsx` + `src/lib/markdown.ts` only attach a
-`data-language` attribute). Introduce real, theme-aware highlighting.
+Implementation links shipped. Remaining scope: per-symbol deep links to **tests**
+and **type/declaration** locations.
 
-- Add a highlighter (Shiki is already present transitively via TypeDoc) into the
-  markdown pipeline so fenced blocks are tokenised at build time.
-- Wire light/dark themes to the site's existing `theme-provider` so colours track
-  the active theme instead of the hardcoded `text-slate-100`.
-- Ensure copy-to-clipboard and the language label keep working post-highlight.
-
-**Files:**
-
-- `apps/docs-site/src/lib/markdown.ts` — Edit (highlight on processing)
-- `apps/docs-site/src/components/code-block.tsx` — Edit (themed rendering)
-
-### Verification
-
-```bash
-npx nx build docs-site
-# Visually confirm light/dark code colours render correctly
-```
-
----
-
-## Phase 5: Deep linking to source artifacts
-
-Make every documented symbol clickable through to the codebase. TypeDoc already
-records source positions per symbol — surface them.
-
-- For each API symbol, generate deep links to GitHub for its **implementation**,
-  **tests**, and **type/declaration** locations (pinned to the published tag/commit,
-  not a moving branch).
 - Resolve test files by the repo's co-location/`*.spec.ts` convention; degrade
   gracefully when a target doesn't exist.
-- Render the links in the API reference UI.
+- Render the additional links in the API reference UI.
 
 **Files:**
 
-- `apps/docs-site/scripts/generate-docs.ts` — Edit (extract source/test/decl paths
-  into the manifest)
+- `apps/docs-site/scripts/generate-docs.ts` — Edit (extract test/decl paths into
+  the manifest)
 - `apps/docs-site/src/components/api-reference/` — Edit (render deep links)
 
 ---
 
-## Phase 6: Per-package FAQ
+## Phase 3: Per-package FAQ
 
 Author a FAQ per package, consumed by the generation pipeline so it ships in the
 build (no manual page wiring).
@@ -180,7 +93,7 @@ build (no manual page wiring).
 
 ---
 
-## Phase 7: Per-package how-to tutorials
+## Phase 4: Per-package how-to tutorials
 
 Task-oriented "how to" guides per package, ingested the same way as FAQ.
 
@@ -196,7 +109,7 @@ Task-oriented "how to" guides per package, ingested the same way as FAQ.
 
 ---
 
-## Phase 8: Ship SKILL.md with each package
+## Phase 5: Ship SKILL.md with each package
 
 Each package carries a `SKILL.md` (settle the standard/convention for shipping it
 inside the published package), and the docs site surfaces it.
@@ -215,7 +128,7 @@ inside the published package), and the docs site surfaces it.
 
 ---
 
-## Phase 9: The Oracle
+## Phase 6: The Oracle
 
 A local model, primed with the corpus the phases above produce (FAQ, SKILL.md,
 tutorials, ARCHITECTURE, API), that docs-site visitors query: they describe a use
@@ -235,25 +148,14 @@ case and get back a tailored prompt / custom instructions.
 
 ---
 
-## Phase 10: Analytics & ads (Google)
+## Phase 7: Accessibility (WCAG AA)
 
-Wire Google Analytics and Google ads into the site.
-
-- Google Analytics (GA4) via `next/script`, gated on production + consent.
-- Google AdSense/ad slots placed so they don't degrade docs readability or CLS.
-- Add a lightweight consent/cookie notice as required.
-
-**Files:**
-
-- `apps/docs-site/src/app/layout.tsx` — Edit (GA + AdSense scripts)
-- `apps/docs-site/src/components/` — Create (ad slot + consent components)
-
----
-
-## Phase 11: Accessibility (WCAG AA)
+A skip-to-content link and initial contrast fixes have landed; the systematic
+audit has not run.
 
 - Run Lighthouse accessibility audit
-- Fix colour contrast (re-check after Phase 4 code theming and Phase 10 ad slots)
+- Fix colour contrast site-wide (code-block theming is in place, so the re-check
+  can run now)
 - Verify alt text on images
 - Test keyboard navigation and focus indicators
 

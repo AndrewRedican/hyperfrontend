@@ -374,7 +374,11 @@ export interface FeatureOptions {
   contract: FeatureContract
   /** Semver version of the contract cut this feature holds; takes precedence over `contract.version`. */
   version?: string
-  /** Whether to neutralize the feature page's body margins/padding; defaults to `true`. */
+  /**
+   * Whether to neutralize the feature page's `html`/`body`; defaults to `true`. Zeroes margin and padding, forces
+   * `background: transparent`, and pins `color-scheme: normal` — on a standalone visit too, and injected late enough to outrank the
+   * page's own `body` rules, so paint the feature's background on its root layout element instead.
+   */
   resetBody?: boolean
   /**
    * The feature's root layout element (or a CSS selector for it); defaults to

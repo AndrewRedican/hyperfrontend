@@ -4,6 +4,7 @@ import { runDtsPerEntry } from './declarations/dts-per-entry'
 import { runDtsPrePass } from './declarations/dts-pre-pass'
 import { generateDeclarations } from './declarations/generate-declarations'
 import { pruneOrphanDeclarations } from './declarations/prune-orphan-dts'
+import { verifyEntryTypeRefs } from './declarations/verify-entry-refs'
 import { resolveDefaultWorkerPath, runPrePass } from './dependencies/pre-pass'
 import { pruneDependencies } from './dependencies/prune/prune-dependencies'
 import { dispatchRollupWorker, resolveDefaultRollupWorkerPath } from './rollup/dispatch'
@@ -35,6 +36,7 @@ jest.mock('./dependencies/resolve-dep-entry', () => ({
 jest.mock('./declarations/dts-pre-pass', () => ({ runDtsPrePass: jest.fn().mockResolvedValue(undefined) }))
 jest.mock('./declarations/dts-per-entry', () => ({ runDtsPerEntry: jest.fn().mockResolvedValue(undefined) }))
 jest.mock('./declarations/prune-orphan-dts', () => ({ pruneOrphanDeclarations: jest.fn().mockReturnValue(0) }))
+jest.mock('./declarations/verify-entry-refs', () => ({ verifyEntryTypeRefs: jest.fn() }))
 jest.mock('./dependencies/prune/prune-dependencies', () => ({
   pruneDependencies: jest.fn().mockReturnValue({ orphanFilesRemoved: 0, deadExportsRemoved: 0, bytesRemoved: 0 }),
 }))
@@ -84,6 +86,7 @@ beforeEach(() => {
   ;(<jest.Mock>runDtsPrePass).mockClear()
   ;(<jest.Mock>runDtsPerEntry).mockClear()
   ;(<jest.Mock>pruneOrphanDeclarations).mockClear()
+  ;(<jest.Mock>verifyEntryTypeRefs).mockClear()
   ;(<jest.Mock>pruneDependencies).mockClear()
   ;(<jest.Mock>stripBundleCommentsPass).mockClear()
   ;(<jest.Mock>resolveDefaultWorkerPath)
@@ -234,6 +237,7 @@ describe('runBundlePhase', () => {
       'bundle:declarations:start',
       'bundle:declarations:end',
       'bundle:declarations:prune-orphans:end',
+      'bundle:declarations:verify-entry-refs:end',
       'bundle:dedupe:shared-first-party:end',
       'bundle:empty-dirs:end',
     ])
@@ -274,6 +278,7 @@ describe('runBundlePhase', () => {
       'bundle:declarations:start',
       'bundle:declarations:end',
       'bundle:declarations:prune-orphans:end',
+      'bundle:declarations:verify-entry-refs:end',
       'bundle:dedupe:shared-first-party:end',
       'bundle:empty-dirs:end',
     ])
@@ -390,6 +395,12 @@ describe('runBundlePhase', () => {
   it('always prunes orphan .d.ts files after declarations, regardless of bundleAllDeps', async () => {
     await runBundlePhase(makeContext(), <BuildConfig>{ projectRoot: '', workspaceRoot: '' })
     expect(pruneOrphanDeclarations).toHaveBeenCalledTimes(1)
+  })
+
+  it('verifies the emitted entry type references, regardless of bundleAllDeps', async () => {
+    const ctx = makeContext()
+    await runBundlePhase(ctx, <BuildConfig>{ projectRoot: '', workspaceRoot: '' })
+    expect(verifyEntryTypeRefs).toHaveBeenCalledWith(ctx)
   })
 
   it('prunes dependency orphans when bundledDeps is non-empty', async () => {

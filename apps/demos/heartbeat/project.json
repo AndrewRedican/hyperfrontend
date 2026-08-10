@@ -7,9 +7,9 @@
   "tags": ["type:demo", "role:feature", "scope:standalone"],
   "metadata": {
     "deploy": {
-      "provider": "unassigned",
-      "service": "configure-me-demo-heartbeat",
-      "origin": "https://configure-me.example.invalid",
+      "provider": "railway",
+      "service": "hyperfrontend-demo-heartbeat",
+      "origin": "https://demo-heartbeat-production.up.railway.app",
       "boundary": "same-origin",
       "kind": "static",
       "publishDir": "dist/apps/demos/heartbeat/app"

@@ -23,6 +23,8 @@ export interface DemoManifestEntry {
   featureUrl?: string
   /** `true` once the demo's implementation is merged but its live origin has not deployed yet. */
   built?: boolean
+  /** `true` when the card offers expanding the running embed over the page — the card is a window onto the same live scene, never a second session. */
+  expandable?: boolean
   /** Frameworks on each side of the boundary. */
   stack: string
   /** High-value source locations for the demo's host and hostee implementations. */
@@ -54,6 +56,18 @@ function clockFeatureUrl(): string {
  */
 function heartbeatFeatureUrl(): string {
   return process.env['NEXT_PUBLIC_HEARTBEAT_FEATURE_URL'] ?? 'https://demo-heartbeat-production.up.railway.app/'
+}
+
+/**
+ * Resolves the koi pond's URL: the deployed origin by default, overridable via
+ * `NEXT_PUBLIC_KOI_POND_FEATURE_URL` — which `.env.development` points at the
+ * local `hf dev` server so the full host-to-hostee wiring is testable before a
+ * deploy.
+ *
+ * @returns The URL the koi pond app is embedded from.
+ */
+function koiPondFeatureUrl(): string {
+  return process.env['NEXT_PUBLIC_KOI_POND_FEATURE_URL'] ?? 'https://demo-koi-pond-production.up.railway.app/'
 }
 
 /** Every demo album, in carousel order — live demos first. */
@@ -89,6 +103,22 @@ export const DEMO_MANIFEST: readonly DemoManifestEntry[] = [
     ],
   },
   {
+    slug: 'koi-pond',
+    title: 'Koi Pond',
+    description:
+      'Seven koi, seven separate applications, seven frameworks — swimming in one continuous scene. Disturb the water and watch the shoal scatter across the boundary; hover a fish to see which framework renders it.',
+    boundary: 'cross-site',
+    featureUrl: koiPondFeatureUrl(),
+    expandable: true,
+    stack: 'Seven feature apps · vanilla-TS pond host',
+    sourceLinks: [
+      { label: 'Pond host (vanilla TS)', href: `${REPO}/tree/main/apps/demos/koi-pond/host` },
+      { label: 'Koi contract', href: `${REPO}/blob/main/apps/demos/koi-pond/lib/src/contract/koi-fish.contract.ts` },
+      { label: 'Shared koi model', href: `${REPO}/tree/main/apps/demos/koi-pond/lib` },
+      { label: 'The seven fish apps', href: `${REPO}/tree/main/apps/demos/koi-pond` },
+    ],
+  },
+  {
     slug: 'chess',
     title: 'Chess',
     description: 'Two boards, one game — competing features negotiating shared state through the host.',
@@ -98,7 +128,7 @@ export const DEMO_MANIFEST: readonly DemoManifestEntry[] = [
   {
     slug: 'events',
     title: 'Events',
-    description: 'A host orchestrating a swarm of event producers and consumers across origins.',
+    description: 'Russian-doll nesting — a feature that is itself a host, chained across origins.',
     boundary: 'cross-origin-same-site',
     stack: 'In planning',
   },

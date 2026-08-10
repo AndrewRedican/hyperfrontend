@@ -1,24 +1,19 @@
-# 12 — Gallery / Docs-Site Integration
+# 12 — Gallery / Docs-Site Integration: Residue
 
-The self-hosting gallery: a showcase that is itself a hyperfrontend host, mounting demos as live features. Nesting proves itself (gallery host → demo host → demo hostee).
+The self-hosting gallery lives in `apps/docs-site` (/demos): a cover-flow deck over the static manifest, live embeds through vendored generated shells, and a host console driving dialog/popup sessions. What remains is the teaching material and keeping registration current as demos land.
 
-**Depends on** 04 _(delivered; plan removed)_, and the breadth + flagship demos [08](08-breadth-boundary-respecting.md)–[11](11-flagship-composed-app.md) · **Type** Execution · **Status**: Pending — not yet elaborated. **Subsumes** the old `feature/09-docs-site-integration.md` (removed).
+**Type** Execution · **Status**: Residue only.
 
-See [00-strategy.md](00-strategy.md) (journey J6) and the [index](README.md).
+See [00-strategy.md](00-strategy.md) and the [index](README.md).
 
-## Scope (to elaborate)
+## Remaining scope
 
-- Realize the gallery within `apps/docs-site` (or a dedicated showcase site — decide): a host that mounts deployed demos as live features across display modes.
-- Landing **carousel** with live embedded previews.
-- **Per-demo pages**: live embed + browsable source + how-to guide (the teaching material that serves the portfolio).
-- Consume the **deployed origins** from [deployment](00-strategy.md#deployment-and-the-origin-boundary-layer) via the registration mechanism (static manifest vs runtime registry).
+- **Per-demo how-to guides** — the teaching material that serves the portfolio. The deck (with GitHub source links per demo) is the final gallery surface — dedicated per-demo pages are not planned — but the how-to content is still owed, as docs content wherever it best lives.
+- **Register each new demo as it lands** (invariant #3): manifest entry, vendored shell where embedded, boundary label.
+- **Recursive nesting in the gallery** — live today through the koi pond's gallery → pond host/hostee → fish chain; extended deliberately by the Russian-doll demo ([09](09-breadth-pattern.md)).
 
 ## Carried decisions
 
-- Both tiers: this gallery is the breadth tier; the flagship ([11](11-flagship-composed-app.md)) is the centerpiece tier.
-- Proof = live; the gallery is where the proof becomes visible.
-
-## Open questions
-
-- Gallery inside the existing docs-site vs a separate showcase site.
-- How demos register their live URLs + metadata.
+- Gallery lives inside the existing docs-site (resolved) — no separate showcase site.
+- Registration via the static in-repo manifest (`src/lib/demo-manifest.ts`) with env-var origin overrides for local development (resolved) — no runtime registry.
+- Both tiers stand: this gallery is the breadth tier; the flagship ([11](11-flagship-composed-app.md)) is the centerpiece tier.

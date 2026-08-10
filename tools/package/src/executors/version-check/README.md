@@ -126,4 +126,4 @@ This ensures validation in CI matches what the version executor would produce.
 - [version executor](../version/README.md) — The executor that creates version bumps
 - [version executor ARCHITECTURE.md](../version/ARCHITECTURE.md) — Architecture including CI integration
 - [lefthook.yml](../../../../../lefthook.yml) — Git hooks that run versioning locally
-- [Versioning Strategy Migration](../../../../../roadmap/versioning-strategy-migration.md) — Full migration documentation
+- [Versioning roadmap](../../../../../roadmap/versioning/README.md) — Future considerations for the versioning library

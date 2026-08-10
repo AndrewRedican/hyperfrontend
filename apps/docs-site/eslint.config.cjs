@@ -143,6 +143,7 @@ module.exports = [
             // each vendored demo shell here
             '@hyperfrontend/demo-clock-shell',
             '@hyperfrontend/demo-heartbeat-shell',
+            '@hyperfrontend/demo-koi-pond-shell',
             // Third-party dependencies used by docs-site
             'mermaid',
             'next',

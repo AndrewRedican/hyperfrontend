@@ -1,11 +1,23 @@
 {
+  "env": {
+    "DISABLE_TELEMETRY": "1",
+    "DISABLE_ERROR_REPORTING": "1",
+    "DISABLE_BUG_COMMAND": "1"
+  },
+  "attribution": {
+    "commit": "",
+    "pr": "",
+    "sessionUrl": false
+  },
   "permissions": {
     "allow": [
       "Skill(*)",
       "WebSearch",
       "Edit(.claude/skills/**)",
-      "Read(//home/vscode/.claude/projects/**)",
+      "Read(//home/vscode/.claude/**)",
       "Read(//home/vscode/.gitconfig)",
+      "Read(//home/vscode/.npm/_cacache/**)",
+      "Read(//root/.cache/**)",
       "Read(//usr/local/share/nvm/**)",
       "Bash(cd apps/*)",
       "Bash(cd libs/*)",
@@ -15,7 +27,6 @@
       "Bash(cd coverage/*)",
       "Bash(cd tmp/*)",
       "Bash(bunx nx *)",
-      "Bash(./node_modules/.bin/nx *)",
       "Bash(NX_DAEMON=false npx nx *)",
       "Bash(npx nx *)",
       "Bash(CI=1 npx nx *)",
@@ -34,23 +45,20 @@
       "Bash(npx jest *)",
       "Bash(npx tsc *)",
       "Bash(npm view *)",
+      "Bash(npm config *)",
       "Bash(npx markdownlint-cli2 *)",
+      "Bash(npx oxlint *)",
+      "Bash(npx http-server *)",
       "Bash(npx cz *)",
       "Bash(npx cl *)",
       "Bash(npx hf *)",
-      "Bash(./node_modules/.bin/cz *)",
-      "Bash(./node_modules/.bin/cl *)",
-      "Bash(./node_modules/.bin/hf *)",
+      "Bash(nohup npx *)",
+      "Bash(./node_modules/.bin/* *)",
+      "Bash(/workspaces/hyperfrontend/*/node_modules/.bin/* *)",
       "Bash(actionlint *)",
-      "Bash(node tools/scripts/*)",
       "Bash(bash /tmp/claude-1000/*)",
-      "Bash(node /tmp/claude-1000/*)",
-      "Bash(python3 /tmp/claude-1000/*)",
-      "Bash(node -v)",
-      "Bash(node -e *)",
-      "Bash(node -p *)",
-      "Bash(python3 -c *)",
-      "Bash(python3 -)",
+      "Bash(node *)",
+      "Bash(python3 *)",
       "Bash(git status *)",
       "Bash(git log *)",
       "Bash(git diff *)",
@@ -96,8 +104,19 @@
       "Bash(unzip -l *)",
       "Bash(openssl dgst *)",
       "Bash(base64 -w0)",
-      "Bash(xmllint --noout *)"
+      "Bash(xmllint --noout *)",
+      "Bash(git -C * status *)",
+      "Bash(git -C * log *)",
+      "Bash(git -C * diff *)",
+      "Bash(git -C * show *)",
+      "Bash(git -C * ls-files *)",
+      "Bash(find *)",
+      "Bash(mkdir -p *)",
+      "Bash(cp *)",
+      "Bash(curl * http://localhost:*)",
+      "Bash(curl * http://127.0.0.1:*)"
     ],
+    "deny": ["Read(//home/vscode/.claude/.credentials.json)"],
     "ask": [
       "Bash(gh api *)",
       "Bash(git config *)",
@@ -114,19 +133,8 @@
       "Bash(git filter-branch *)",
       "Bash(sudo *)"
     ],
-    "deny": ["Read(//home/vscode/.claude/.credentials.json)"],
     "defaultMode": "dontAsk",
     "additionalDirectories": ["/tmp", "/home/vscode/.claude/projects/-workspaces-hyperfrontend", "/workspaces/hyperfrontend/.git/info"]
-  },
-  "attribution": {
-    "commit": "",
-    "pr": "",
-    "sessionUrl": false
-  },
-  "env": {
-    "DISABLE_TELEMETRY": "1",
-    "DISABLE_ERROR_REPORTING": "1",
-    "DISABLE_BUG_COMMAND": "1"
   },
   "feedbackSurveyRate": 0,
   "feedbackDrafts": "off",

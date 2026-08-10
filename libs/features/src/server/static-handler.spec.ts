@@ -1,5 +1,5 @@
 import type { IncomingMessage, ServerResponse } from 'node:http'
-import { mkdtempSync, rmSync, writeFileSync } from 'node:fs'
+import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { createStaticHandler, requestPath, serveFile } from './static-handler'
@@ -31,6 +31,9 @@ const fakeRes = (): FakeResponse => {
 }
 
 const deps = (exists: (path: string) => boolean) => ({ isFile: exists, readFile: (path: string) => Buffer.from(`bytes:${path}`) })
+
+// note: Stands in for a directory on disk — the directory path itself is not a file, the index inside it is.
+const hasIndexOnly = (path: string) => path.endsWith('index.html')
 
 describe('serveFile', () => {
   it('serves the index for the root path', () => {
@@ -103,6 +106,95 @@ describe('serveFile', () => {
     expect({ status: out.statusCode, body: out.body }).toEqual({ status: 404, body: 'Not Found' })
   })
 
+  it('serves the directory index for a nested directory url', () => {
+    const out = fakeRes()
+    serveFile(
+      '/srv',
+      '/host/',
+      out.res,
+      deps(() => true)
+    )
+    expect({ status: out.statusCode, type: out.headers['Content-Type'], body: out.body }).toEqual({
+      status: 200,
+      type: 'text/html; charset=utf-8',
+      body: 'bytes:/srv/host/index.html',
+    })
+  })
+
+  it('redirects an unslashed directory url to its slashed form', () => {
+    const out = fakeRes()
+    serveFile('/srv', '/host', out.res, deps(hasIndexOnly))
+    expect({ status: out.statusCode, location: out.headers['Location'], body: out.body }).toEqual({
+      status: 301,
+      location: '/host/',
+      body: '',
+    })
+  })
+
+  it('keeps the query string on the directory redirect', () => {
+    const out = fakeRes()
+    serveFile('/srv', '/host?debug=1', out.res, deps(hasIndexOnly))
+    expect(out.headers['Location']).toBe('/host/?debug=1')
+  })
+
+  it('redirects to the resolved directory, never to an authority the request smuggled in', () => {
+    const out = fakeRes()
+    serveFile('/srv', '//evil.example/../host', out.res, deps(hasIndexOnly))
+    expect({ status: out.statusCode, location: out.headers['Location'] }).toEqual({ status: 301, location: '/host/' })
+  })
+
+  it.each([
+    ['//host', '/host/'],
+    ['///host', '/host/'],
+    ['/\\evil.example/../host', '/host/'],
+    ['//evil.example/../host?debug=1', '/host/?debug=1'],
+  ])('resolves %s to a root-relative redirect', (urlPath, expected) => {
+    const out = fakeRes()
+    serveFile('/srv', urlPath, out.res, deps(hasIndexOnly))
+    expect(out.headers['Location']).toBe(expected)
+  })
+
+  it('never emits a protocol-relative location a browser would read as another origin', () => {
+    for (const urlPath of ['//evil.example/../host', '//host', '///host', '/host/../host', '']) {
+      const out = fakeRes()
+      serveFile('/srv', urlPath, out.res, deps(hasIndexOnly))
+      const location = out.headers['Location']
+      if (location === undefined) {
+        continue
+      }
+      // why: A location starting with two slashes (or an absolute URL) carries its own authority, so the browser leaves the origin it was served from.
+      expect(new URL(location, 'http://localhost:4280/').origin).toBe('http://localhost:4280')
+    }
+  })
+
+  it('percent-encodes a resolved segment rather than reflecting the raw request', () => {
+    const out = fakeRes()
+    serveFile('/srv', '/a b', out.res, deps(hasIndexOnly))
+    expect(out.headers['Location']).toBe('/a%20b/')
+  })
+
+  it('returns 404 for a directory url with no index', () => {
+    const out = fakeRes()
+    serveFile(
+      '/srv',
+      '/host/',
+      out.res,
+      deps(() => false)
+    )
+    expect({ status: out.statusCode, body: out.body }).toEqual({ status: 404, body: 'Not Found' })
+  })
+
+  it('returns 404 rather than redirecting when the directory has no index', () => {
+    const out = fakeRes()
+    serveFile(
+      '/srv',
+      '/host',
+      out.res,
+      deps(() => false)
+    )
+    expect({ status: out.statusCode, body: out.body }).toEqual({ status: 404, body: 'Not Found' })
+  })
+
   it('returns 403 on a traversal attempt', () => {
     const out = fakeRes()
     serveFile(
@@ -165,6 +257,22 @@ describe('default file system', () => {
     const out = fakeRes()
     serveFile(dir, '/', out.res)
     expect(out.body).toBe('DISK')
+  })
+
+  it('serves a nested directory index from disk when no overrides are given', () => {
+    mkdirSync(join(dir, 'host'))
+    writeFileSync(join(dir, 'host', 'index.html'), 'HOST')
+    const out = fakeRes()
+    createStaticHandler(dir)(<IncomingMessage>{ url: '/host/' }, out.res)
+    expect(out.body).toBe('HOST')
+  })
+
+  it('redirects an unslashed directory from disk when no overrides are given', () => {
+    mkdirSync(join(dir, 'host'))
+    writeFileSync(join(dir, 'host', 'index.html'), 'HOST')
+    const out = fakeRes()
+    createStaticHandler(dir)(<IncomingMessage>{ url: '/host' }, out.res)
+    expect({ status: out.statusCode, location: out.headers['Location'] }).toEqual({ status: 301, location: '/host/' })
   })
 
   it('reports a missing file from disk when no overrides are given', () => {

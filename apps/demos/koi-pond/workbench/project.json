@@ -1,0 +1,46 @@
+{
+  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
+  "name": "demo-koi-workbench",
+  "description": "Koi pond development workbench — renders one koi from the shared model in isolation, with live geometry, movement and appearance controls. Not part of the deployed pond.",
+  "sourceRoot": "apps/demos/koi-pond/workbench/src",
+  "projectType": "application",
+  "tags": ["type:demo", "role:tool", "scope:standalone"],
+  "targets": {
+    "install": {
+      "executor": "@hyperfrontend/app:install",
+      "options": {}
+    },
+    "dev": {
+      "executor": "@hyperfrontend/app:serve",
+      "dependsOn": ["install"],
+      "options": {
+        "command": "npm run dev"
+      }
+    },
+    "build": {
+      "executor": "@hyperfrontend/app:build",
+      "dependsOn": ["install"],
+      "cache": false,
+      "outputs": ["{workspaceRoot}/dist/apps/demos/koi-pond/workbench"],
+      "options": {
+        "command": "npm run build"
+      }
+    },
+    "lint": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["install"],
+      "options": {
+        "command": "npm run lint",
+        "cwd": "apps/demos/koi-pond/workbench"
+      }
+    },
+    "typecheck": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["install"],
+      "options": {
+        "command": "npm run type-check",
+        "cwd": "apps/demos/koi-pond/workbench"
+      }
+    }
+  }
+}

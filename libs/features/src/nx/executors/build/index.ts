@@ -3,4 +3,5 @@
  *
  * @module @hyperfrontend/features/nx/executors/build
  */
-export { default } from './executor'
+export type { BuildExecutorSchema } from './executor'
+export { default, runBuildExecutor } from './executor'

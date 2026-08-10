@@ -243,6 +243,7 @@ Browse the interactive gallery at [hyperfrontend.dev/demos](https://www.hyperfro
 | [Events](https://www.hyperfrontend.dev/demos/#events)         | A host orchestrating a swarm of event producers and consumers across origins                    |
 | [File Share](https://www.hyperfrontend.dev/demos/#file-share) | Moving real payloads across the boundary — chunking, progress, and back-pressure                |
 | [Heartbeat](https://www.hyperfrontend.dev/demos/#heartbeat)   | Liveness, latency, and what a host should do when a feature stops answering                     |
+| [Koi Pond](https://www.hyperfrontend.dev/demos/#koi-pond)     | Seven koi, seven frameworks, seven separate apps — composited into one continuous scene         |
 | [Views](https://www.hyperfrontend.dev/demos/#views)           | One feature, four display modes — embedded, dialog, popup, and standalone                       |
 
 ## Main Packages

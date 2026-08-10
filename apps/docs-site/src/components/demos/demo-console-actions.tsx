@@ -184,6 +184,67 @@ export function ClockConsoleActions({ shell, featureUrl, log, createExtraShell }
   )
 }
 
+/**
+ * The koi pond's contract-specific console actions: a `disturb` the gallery
+ * sends on the visitor's behalf to strike the water without a pointer, a live
+ * `shoal` readout of how many koi have connected behind the scene, and the
+ * `sequence-complete` the pond emits once every fish has fled and settled back
+ * into an ambient cruise — the outer, gallery-facing half of the two-contract
+ * nesting, none of which knows there are seven framework apps behind it.
+ * @param root0
+ * @param root0.shell
+ * @param root0.log
+ */
+export function KoiPondConsoleActions({ shell, log }: DemoConsoleActionsProps) {
+  const [shoal, setShoal] = useState<string | null>(null)
+  const [lastScatter, setLastScatter] = useState<string | null>(null)
+
+  // why: The shoal readout and the scatter narration hang off the pond's real emitted events, so they follow whichever session currently holds the console.
+  useEffect(() => {
+    if (!shell) {
+      setShoal(null)
+      return
+    }
+    const subscriptions = [
+      shell.on('shoal', (data) => {
+        if (isRecord(data) && typeof data['connected'] === 'number' && typeof data['expected'] === 'number') {
+          setShoal(`${String(data['connected'])} of ${String(data['expected'])} koi connected`)
+        }
+      }),
+      shell.on('sequence-complete', (data) => {
+        const fish = isRecord(data) && typeof data['fish'] === 'number' ? String(data['fish']) : 'the'
+        setLastScatter(`the shoal settled — ${fish} koi returned to cruising`)
+        log(`sequence-complete — ${fish} koi settled after the scatter`, 'success')
+      }),
+    ]
+    return () => subscriptions.forEach((unsubscribe) => unsubscribe())
+  }, [shell, log])
+
+  const disturb = useCallback(() => {
+    if (!shell) {
+      return
+    }
+    // how: The strike is a fraction across the pond, not a pixel, so the host places it wherever the scene is measured — a click at the centre without a pointer.
+    shell.send('disturb', { fx: 0.5, fy: 0.5 })
+    setLastScatter(null)
+    log('disturb — struck the water at the pond’s centre; the nearby koi scatter')
+  }, [log, shell])
+
+  return (
+    <>
+      <div className="mt-4 flex flex-wrap gap-2">
+        <button type="button" className={CONSOLE_ACTION_CLASSES} disabled={!shell} onClick={disturb}>
+          Disturb the pond
+        </button>
+      </div>
+      <p className="mt-3 text-xs text-slate-600 dark:text-slate-400">
+        {shoal !== null ? `shoal → ${shoal}` : 'shoal → waiting for the koi to connect…'}
+      </p>
+      {lastScatter !== null ? <p className="mt-2 text-xs font-medium text-primary-600 dark:text-primary-400">{lastScatter}</p> : null}
+    </>
+  )
+}
+
 /** Pacing presets for the heartbeat's `set-rate` command, clamped by the contract to 40–180 bpm. */
 const PACING_PRESETS = [
   { label: 'Pace 48 bpm', bpm: 48 },

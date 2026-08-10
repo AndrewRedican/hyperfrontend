@@ -12,6 +12,7 @@ import { runDtsPerEntry } from './declarations/dts-per-entry'
 import { runDtsPrePass } from './declarations/dts-pre-pass'
 import { generateDeclarations } from './declarations/generate-declarations'
 import { pruneOrphanDeclarations } from './declarations/prune-orphan-dts'
+import { verifyEntryTypeRefs } from './declarations/verify-entry-refs'
 import { chunkFileName } from './dedupe/attribute-modules'
 import { hoistSharedFirstParty } from './dedupe/hoist-shared'
 import { collectWorkspaceExactSpecifiers, collectWorkspacePrefixDeps } from './dependencies/collect-workspace-deps'
@@ -317,6 +318,10 @@ export const runBundlePhase = async (context: BuildContext, config: BuildConfig,
 
   pruneOrphanDeclarations(context)
   monitor?.check('bundle:declarations:prune-orphans:end')
+
+  // why: the entry declarations are final here, so a reference a sibling entry never exported is caught before the package can publish a type surface that degrades to `any` behind consumers' `skipLibCheck`.
+  verifyEntryTypeRefs(context)
+  monitor?.check('bundle:declarations:verify-entry-refs:end')
 
   if (context.bundledDeps.length > 0 || context.workspaceBundledDeps.length > 0) {
     pruneDependencies(context, monitor)

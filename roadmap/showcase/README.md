@@ -1,8 +1,8 @@
 # @hyperfrontend/features — Showcase Plan Index
 
-Navigation point and decision ledger for the **showcase** plan family: the demo applications, the issue-capture process, the demo generator, and the v2 release loop that turn `@hyperfrontend/features` from "sound on paper" into **abundant, varied, polished proof in the wild**.
+Navigation point and decision ledger for the **showcase** plan family: the demo applications, the issue-capture process, the demo generator, and the release loop that turn `@hyperfrontend/features` from "sound on paper" into **abundant, varied, polished proof in the wild**.
 
-**Status**: Active — `@hyperfrontend/features` v1 is published. This family builds the proof and feeds the v2.
+**Status**: Active — the package is published (0.5.x) with three demos in the gallery: clock, heartbeat, and the koi pond (the visual-thesis flagship, seven framework fish over a host pond). Next up: the generator, then the breadth batches.
 
 This index is intentionally compact. Each linked document is a focused, independently-reasoned plan. Run focused planning sessions (`grill-me`, `implementation-plans`) against the individual files, not this index. The narrative rationale — north star, thesis, journeys, sequencing — lives in [00-strategy.md](00-strategy.md).
 
@@ -23,56 +23,51 @@ Two tiers of proof:
 
 > Independent apps, in different frameworks, coordinating **messages and visuals** seamlessly.
 
-Each demo has its own specific intent, but all serve that thesis. Boundary-_respecting_ demos (payments, auth, enterprise widgets) prove safe isolation + contract messaging; boundary-_dissolving_ demos (koi pond, colourcopia) prove the seams can vanish entirely.
+Each demo has its own specific intent, but all serve that thesis. Boundary-_respecting_ demos (payments, auth, enterprise widgets) prove safe isolation + contract messaging; boundary-_dissolving_ demos prove the seams can vanish entirely — the shipped koi pond carries that half today, and colourcopia extends it.
 
 ---
 
-## Recommended reading / execution order
+## Outstanding plans
 
 D = discovery-heavy · E = execution-heavy · ⭐ = special, prominent handling
 
-| #   | Plan                                                                     | Type | Depends on | Scope                                                                                                                |
-| --- | ------------------------------------------------------------------------ | ---- | ---------- | -------------------------------------------------------------------------------------------------------------------- |
-| 00  | [Strategy](00-strategy.md)                                               | —    | —          | North star, thesis, journeys, sequencing rationale, the two discoveries                                              |
-| 01  | [Findings capture skill](../../.claude/skills/demo-findings/SKILL.md)    | D+E  | —          | The `demo-findings` skill — file every demo friction before working around it. **Must precede Demo 1.** _Delivered._ |
-| 02  | [Demo catalog](catalog.md)                                               | D    | 01         | The curated, prioritized, mapped backlog — 50 + 17 + trio reconciled into one. _Delivered._                          |
-| 05  | [Plugin system implementation](05-plugin-system.md)                      | E    | —          | The phantom `ExperiencePlugin` → real; keystone for spectacle demos                                                  |
-| 06  | ⭐ [Demo 2 + Nx demo generator](06-demo-2-and-generator.md)              | D+E  | —          | Second demo as the generator's first test case; repeatability & QoL                                                  |
-| 07  | [Legacy distillation](07-legacy-distillation.md)                         | D    | 01         | Extract-then-delete the untracked `_/`; runs parallel                                                                |
-| 08  | [Breadth — boundary-respecting batch](08-breadth-boundary-respecting.md) | E    | 06         | Enterprise/gallery features (some warranting real backends)                                                          |
-| 09  | [Breadth — pattern batch](09-breadth-pattern.md)                         | E    | 06         | Russian-doll nesting, cross-framework, many:many topologies                                                          |
-| 10  | [Breadth — spectacle / plugin batch](10-breadth-spectacle-plugin.md)     | E    | 05, 06     | Koi pond, colourcopia, drag default handling, clock spectacle                                                        |
-| 11  | [Flagship composed app](11-flagship-composed-app.md)                     | E    | 08–10      | The composed centerpiece (e.g. fake desktop/OS)                                                                      |
-| 12  | [Gallery / docs-site integration](12-gallery-docs-integration.md)        | E    | 08–11      | Self-hosting gallery in the docs site; live embeds, per-demo pages                                                   |
-| 13  | [v2 release](13-v2-release.md)                                           | D+E  | all        | Triage registry → v2 changes → publish → docs refresh                                                                |
+| #   | Plan                                                                        | Type | Depends on | Scope                                                                       |
+| --- | --------------------------------------------------------------------------- | ---- | ---------- | --------------------------------------------------------------------------- |
+| 00  | [Strategy](00-strategy.md)                                                  | —    | —          | North star, thesis, journeys, sequencing rationale                          |
+| 05  | [Plugin system — notional remainder](05-plugin-system.md)                   | D    | —          | Plugin taxonomy + showcase-internal debug/inspection plugin (exploratory)   |
+| 06  | [Nx demo generator](06-demo-2-and-generator.md)                             | D+E  | —          | Internal generator; proven when it can reproduce the heartbeat demo's shape |
+| 07  | [Legacy distillation](07-legacy-distillation.md)                            | D    | —          | Extract-then-delete the untracked `_/` legacy subtrees; runs parallel       |
+| 08  | [Breadth — boundary-respecting batch](08-breadth-boundary-respecting.md)    | E    | 06         | Enterprise/gallery features (some warranting real backends)                 |
+| 09  | [Breadth — pattern batch](09-breadth-pattern.md)                            | E    | 06         | Russian-doll nesting, cross-framework, many:many topologies                 |
+| 10  | [Breadth — spectacle batch](10-breadth-spectacle-plugin.md)                 | E    | 06         | Colourcopia, drag default handling, terminal, voice                         |
+| 11  | [Flagship composed app](11-flagship-composed-app.md)                        | E    | 08–10      | The composed centerpiece (e.g. fake desktop/OS)                             |
+| 12  | [Gallery / docs-site integration — residue](12-gallery-docs-integration.md) | E    | 08–11      | Per-demo how-to guides; register future demos as they land                  |
+| 13  | [v2 release — residue](13-v2-release.md)                                    | E    | —          | Docs refresh; verify live embeds after the next main-merge redeploy         |
 
-> **03 is vacant.** Deployment/CI is no longer a standalone plan — it's folded into [00-strategy.md](00-strategy.md#deployment-and-the-origin-boundary-layer) (decisions settled; only per-demo execution remains). The slot is left empty rather than renumbering 04–13.
->
-> **04 and 14 are delivered and their plan files removed.** Demo 1 (Clock) shipped the full consumer path, the blank prototype, and the first findings loop; the luxury refit and its showcase surfaces shipped with it. Their numbers stay reserved; [blank-prototype.md](blank-prototype.md) and the [findings registry](findings/README.md) carry the surviving artifacts.
+> **Numbering convention.** Plans that complete are removed and their numbers are never reused (01, 02, 04, 14, and 15 — the koi pond — are gone this way; 03 was folded into [00-strategy.md](00-strategy.md#deployment-and-the-origin-boundary-layer)).
 
-**Parallelism**: 07 runs alongside 04–06; the three breadth batches (08–10) parallelize once 05 + 06 land.
+**Parallelism**: 07 runs alongside anything; the breadth batches (08–10) parallelize once 06 lands.
 
 ---
 
 ## Locked decisions (compact ledger)
 
-Resolved in the initial grill session. Detail in [00-strategy.md](00-strategy.md).
+Detail in [00-strategy.md](00-strategy.md).
 
-| Topic               | Decision                                                                                                                                                                                                         |
-| ------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| North star          | **Proof in the wild** — visibility (deploy/embed) is load-bearing, not an afterthought                                                                                                                           |
-| Audience            | **Author's portfolio** — breadth, range, craft, the "many packages compose into something larger" story                                                                                                          |
-| Proof shape         | **Both tiers**: self-hosting gallery + flagship composed app; _all_ ideas notionally                                                                                                                             |
-| Realism             | **Mock unless it merits real** — auth / payments-class demos warrant real (small Railway backend) services                                                                                                       |
-| Thesis              | Independent apps, different frameworks, coordinating **messages AND visuals** seamlessly                                                                                                                         |
-| Visual coordination | **Formalize the plugin seam** (generalized registration) — SDK hands you the element, consumer owns choreography; broader taxonomy + showcase-internal debug plugin are **notional** ([05](05-plugin-system.md)) |
-| Demo unit           | A **complete composition** — ≥1 host + ≥1 hostee — with varied topologies (1:1, 1:many, many:1, many:many, Russian-doll)                                                                                         |
-| First demo          | **Clock**, boundary-respecting — lowest feature-risk, so it clears the _right_ weeds                                                                                                                             |
-| Issue capture       | **In-repo registry, house style** + a `demo-findings` skill encoding the process                                                                                                                                 |
-| Legacy `_/`         | **Extract-then-delete** — commit keepers first (it is untracked), then delete 162 MB                                                                                                                             |
-| Frameworks          | **Broad but incremental** — start React/Vue/Vanilla; add Svelte/Solid/Web Components just-in-time                                                                                                                |
-| Deployment          | **Deploy-as-you-go on Railway, per-service origin** — both boundaries tested deliberately (same-origin + real cross-origin + cross-site); each demo TIP ends in deploy + gallery registration                    |
-| Generator           | **Internal** workspace-only tool in `tools/`; never leaks into the published package                                                                                                                             |
+| Topic               | Decision                                                                                                                                                                                                                              |
+| ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| North star          | **Proof in the wild** — visibility (deploy/embed) is load-bearing, not an afterthought                                                                                                                                                |
+| Audience            | **Author's portfolio** — breadth, range, craft, the "many packages compose into something larger" story                                                                                                                               |
+| Proof shape         | **Both tiers**: self-hosting gallery + flagship composed app; _all_ ideas notionally                                                                                                                                                  |
+| Realism             | **Mock unless it merits real** — auth / payments-class demos warrant real (small Railway backend) services                                                                                                                            |
+| Thesis              | Independent apps, different frameworks, coordinating **messages AND visuals** seamlessly                                                                                                                                              |
+| Visual coordination | **Consumer-owned choreography** — the SDK hands over elements/modes; coordination logic lives in demo code, never in a host-side positioning API                                                                                      |
+| Demo unit           | A **complete composition** — ≥1 host + ≥1 hostee — with varied topologies (1:1, 1:many, many:1, many:many, Russian-doll)                                                                                                              |
+| Issue capture       | **In-repo registry, house style** + a `demo-findings` skill encoding the process                                                                                                                                                      |
+| Legacy `_/`         | **Extract-then-delete** — commit keepers first (it is untracked), then delete the legacy subtrees                                                                                                                                     |
+| Frameworks          | **Broad but incremental** — React, Vue, Vanilla, Svelte, Solid, Preact, and Lit are live (the last four arrived with the koi pond); Angular deferred                                                                                  |
+| Deployment          | **Railway GitHub integration** — services deploy on merge to `main` after CI passes; service configuration lives in the Railway dashboard, deliberately not in-repo. Per-service origin; registration via the static gallery manifest |
+| Generator           | **Internal** workspace-only tool in `tools/`; never leaks into the published package                                                                                                                                                  |
 
 ---
 
@@ -92,12 +87,6 @@ Resolved in the initial grill session. Detail in [00-strategy.md](00-strategy.md
 
 ## Registry & distilled material
 
-- **Findings capture** → the [demo-findings skill](../../.claude/skills/demo-findings/SKILL.md) — template, categories, severity, and graduation rules for the friction log feeding v2.
-- **Demo backlog** → [catalog.md](catalog.md) — the curated, prioritized, mapped demo list (the demo-catalog-curation discovery; 50 + 17 + trio reconciled).
-- **Blank prototype** → [blank-prototype.md](blank-prototype.md) — the feature-only demo skeleton extracted from Demo 1 (seed for the [06](06-demo-2-and-generator.md) generator).
-
----
-
-## Relationship to existing roadmap material
-
-This family **subsumed** the demo/integration/deployment work previously scattered across the repo — the old feature-family demo plans, the standalone deployment plan, and the 50-item `demos-implementation-plan.md` are all assimilated and their files removed (per the "remove the old once subsumed" intent). The package's own history ledger ([../feature/README.md](../feature/README.md)) stays as the record of plans 01–07/11 but points here for demos onward.
+- **Findings capture** → the [demo-findings skill](../../.claude/skills/demo-findings/SKILL.md) — template, categories, severity, and graduation rules for the friction log feeding the next release. Registry: [findings/README.md](findings/README.md).
+- **Demo backlog** → [catalog.md](catalog.md) — the curated, prioritized, mapped demo list.
+- **Blank prototype** → [blank-prototype.md](blank-prototype.md) — the feature-only demo skeleton (seed for the [06](06-demo-2-and-generator.md) generator).

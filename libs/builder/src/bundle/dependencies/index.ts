@@ -6,6 +6,7 @@
  */
 export type { ExternalizeBundledDepsPluginOptions, ExternalizeFormat, WorkspaceBundledDepRoute } from './externalize-plugin'
 export type { PrePassJob, PrePassJobKind, PrePassResult, RunPrePassOptions } from './pre-pass'
+export type { ChunkFormat } from './prune/used-exports'
 export type { ResolveBundledDepsOptions } from './resolve-bundled-deps'
 export type { ResolvedWorkspaceDepEntry, ResolveWorkspaceBundledDepsOptions } from './resolve-workspace-bundled-deps'
 export type { PrePassWorkerJob, PrePassWorkerReport } from './worker'

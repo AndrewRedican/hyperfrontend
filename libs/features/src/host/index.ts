@@ -3,6 +3,7 @@
  *
  * @module @hyperfrontend/features/host
  */
+export type { EventHandler } from '../shared/event-emitter'
 export type { PresentPayload, ViewportPayload } from '../shared/presentation'
 export type { RequestHandler, RequestOptions } from '../shared/request'
 export type {

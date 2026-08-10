@@ -17,6 +17,8 @@ export interface DemoEmbedProps {
   entry: DemoManifestEntry
   /** Extra classes for the mount container. */
   className?: string
+  /** `true` while the embed is presented as a viewport overlay — square corners, no card contour. */
+  frameless?: boolean
   /** Notified whenever the embed's liveness changes. */
   onStatus?: (status: EmbedStatus) => void
   /** Receives the live shell handle after mount, and `null` when it is torn down. */
@@ -49,10 +51,11 @@ function isRecord(value: unknown): value is Record<string, unknown> {
  * @param root0
  * @param root0.entry
  * @param root0.className
+ * @param root0.frameless
  * @param root0.onStatus
  * @param root0.onShell
  */
-export function DemoEmbed({ entry, className, onStatus, onShell }: DemoEmbedProps) {
+export function DemoEmbed({ entry, className, frameless, onStatus, onShell }: DemoEmbedProps) {
   const container = useRef<HTMLDivElement | null>(null)
   const effectsLayer = useRef<HTMLDivElement | null>(null)
   const [status, setStatus] = useState<EmbedStatus>('connecting')
@@ -149,17 +152,17 @@ export function DemoEmbed({ entry, className, onStatus, onShell }: DemoEmbedProp
       <div className={`absolute inset-0 transition-opacity duration-700 ${status === 'live' ? 'opacity-0' : 'opacity-100'}`}>
         <DemoFallbackCard entry={entry} status={status === 'offline' ? 'offline' : 'connecting'} />
       </div>
-      {/* note: overflow-hidden + the card radius clip the feature frame to the same corner contours as every fallback card. */}
+      {/* note: overflow-hidden + the card radius clip the feature frame to the same corner contours as every fallback card; an overlay drops the contour and lets the frame run to the edges. */}
       <div
         ref={container}
         aria-label={`Live ${entry.title} demo`}
-        className={`absolute inset-0 overflow-hidden rounded-2xl transition-opacity duration-700 ${status === 'live' ? 'opacity-100' : 'pointer-events-none opacity-0'}`}
+        className={`absolute inset-0 overflow-hidden transition-opacity duration-700 ${frameless ? '' : 'rounded-2xl'} ${status === 'live' ? 'opacity-100' : 'pointer-events-none opacity-0'}`}
       />
       {/* note: Host-owned stage effects paint above the frame without intercepting the visitor's presses on it. */}
       <div
         ref={effectsLayer}
         aria-hidden
-        className={`pointer-events-none absolute inset-0 overflow-hidden rounded-2xl transition-opacity duration-700 ${status === 'live' ? 'opacity-100' : 'opacity-0'}`}
+        className={`pointer-events-none absolute inset-0 overflow-hidden transition-opacity duration-700 ${frameless ? '' : 'rounded-2xl'} ${status === 'live' ? 'opacity-100' : 'opacity-0'}`}
       />
     </div>
   )

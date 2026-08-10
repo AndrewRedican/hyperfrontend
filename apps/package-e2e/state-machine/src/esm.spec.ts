@@ -39,7 +39,10 @@ describe('@hyperfrontend/state-machine ESM', () => {
       expect(store).toBeDefined()
     })
 
-    // Note: Store class not yet implemented in store entry
+    it('exposes the Store class', async () => {
+      const { Store } = await import('@hyperfrontend/state-machine/store')
+      expect(typeof Store).toBe('function')
+    })
   })
 
   describe('reducer sub-entry', () => {

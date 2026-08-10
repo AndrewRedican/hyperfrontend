@@ -1,0 +1,54 @@
+{
+  "name": "@hyperfrontend/demo-koi-fish-svelte",
+  "version": "0.1.0",
+  "description": "Koi pond — the Svelte koi, a standalone hostee feature rendering one procedurally animated fish.",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "run-p type-check \"build-only {@}\" --",
+    "preview": "vite preview",
+    "test:unit": "vitest",
+    "build-only": "vite build",
+    "type-check": "run-s \"type-check:*\"",
+    "type-check:app": "svelte-check --tsconfig ./tsconfig.app.json",
+    "type-check:test": "svelte-check --tsconfig ./tsconfig.vitest.json",
+    "type-check:node": "tsc --build tsconfig.node.json",
+    "lint": "run-s \"lint:*\"",
+    "lint:oxlint": "oxlint . --fix",
+    "lint:eslint": "eslint . --fix --cache",
+    "build:watch": "vite build --watch"
+  },
+  "dependencies": {
+    "@hyperfrontend/demo-koi-lib": "file:../vendor/hyperfrontend-demo-koi-lib-0.1.0.tgz",
+    "@hyperfrontend/features": "^0.5.1",
+    "svelte": "^5.56.8",
+    "three": "^0.185.1"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "@sveltejs/vite-plugin-svelte": "^7.2.0",
+    "@tsconfig/node24": "^24.0.4",
+    "@tsconfig/svelte": "^5.0.8",
+    "@types/jsdom": "^28.0.3",
+    "@types/node": "^24.13.2",
+    "@types/three": "^0.185.4",
+    "@vitest/eslint-plugin": "^1.6.20",
+    "eslint": "^10.5.0",
+    "eslint-plugin-oxlint": "~1.76.0",
+    "eslint-plugin-svelte": "^3.22.0",
+    "globals": "^17.9.0",
+    "jiti": "^2.7.0",
+    "jsdom": "^29.1.1",
+    "npm-run-all2": "^9.0.2",
+    "oxlint": "~1.76.0",
+    "svelte-check": "^4.7.4",
+    "typescript": "~6.0.0",
+    "typescript-eslint": "^8.66.0",
+    "vite": "^8.0.16",
+    "vitest": "^4.1.9"
+  },
+  "engines": {
+    "node": "^22.18.0 || >=24.12.0"
+  }
+}

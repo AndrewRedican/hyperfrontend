@@ -20,6 +20,8 @@ await handle.close()
 
 ## How it serves
 
+A URL ending in `/` serves that directory's `index.html`, so a multi-page build's `index.html` and `host/index.html` load at `/` and `/host/`; the unslashed `/host` answers `301` to `/host/`.
+
 Each configured app is served by its own static server bound to its `port`, so apps load at distinct origins — letting the host/hostee message channel and security envelope be exercised cross-origin, exactly as in production. The debug UI is hosted at `/` on a separate control server (default port `4280`), which also exposes the running-app manifest at `/__apps` and the compiled debug-UI assets under `/__debug/`.
 
 ## API

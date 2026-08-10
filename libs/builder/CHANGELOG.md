@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.2.0](https://github.com/AndrewRedican/hyperfrontend/compare/208793adace114439414819cd1cd8ca9e8b121ca...a1f6e3b4e6b9f0ad51c8908b2fb641deed0078e3) - 2026-08-10
+
+### Features
+
+- fail the build on cross-entry type references the target entry never exports
+
+### Bug Fixes
+
+- export the entry types the emitted cross-entry declarations reference
+
 ## [0.1.3](https://github.com/AndrewRedican/hyperfrontend/compare/74110dd15151bfc8360ef4edcdb1086cb003c909...a6d9ac8c48d1c3edbb8bf54c5a561fb3cde590da) - 2026-08-02
 
 ### Bug Fixes
