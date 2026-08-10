@@ -22,8 +22,8 @@ const INDEX_DTS_GLOB = '**/index.d.ts'
  * re-enables `sourcemap` — the broad {@link INDEX_GLOB} would otherwise match
  * `index.esm.js.map` and friends. Published packages carry no JS maps by policy.
  *
- * Scoped to JS (`*.js.map`); the declaration pass never emits `*.d.ts.map`, so
- * there is nothing of that kind to subtract. Must be emitted **last** in the allowlist: npm evaluates
+ * Scoped to JS (`*.js.map`), so `*.d.ts.map` (`declarationMap`) is intentionally
+ * left untouched. Must be emitted **last** in the allowlist: npm evaluates
  * `files` patterns in order and the final match wins, so the negation only
  * subtracts the maps the index glob added when it follows that glob.
  */

@@ -68,7 +68,7 @@ describe('reflectFilesAllowlist', () => {
     expect(files.at(-1)).toBe('!**/*.js.map')
   })
 
-  it('scopes the map exclusion to JS, leaving any other .map kind untouched', () => {
+  it('leaves a d.ts.map (declarationMap) untouched — JS-only exclusion does not subtract it', () => {
     writeTree(outputPath, ['index.d.ts', 'models.d.ts.map'])
     expect(reflectFilesAllowlist(outputPath)).toContain('models.d.ts.map')
   })

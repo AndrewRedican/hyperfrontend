@@ -262,6 +262,17 @@ export interface BuildConfig {
    */
   files?: string[]
   /**
+   * Emit a `.d.ts.map` beside every declaration. Defaults to `true`.
+   *
+   * Set `false` only for a package whose TypeScript sources are generated and
+   * thrown away by the build itself: the map's `sources` entry is a path
+   * resolved from the output directory back to those sources, so it resolves
+   * for nobody and records where the build ran, which makes the emitted bytes
+   * differ between machines. Packages built from committed sources should
+   * leave this alone.
+   */
+  declarationMap?: boolean
+  /**
    * Hoist first-party modules that are inlined into multiple entry bundles into
    * shared `_shared/<srcPath>/` chunks and rewrite the entries to import them,
    * removing the duplicated copies. Runs as a safe, additive post-emit pass over

@@ -125,6 +125,7 @@ export const createBuildContext = (config: BuildConfig): BuildContext => {
     projectRelativePath,
     outputPath: config.outputPath ?? join(config.workspaceRoot, 'dist', projectRelativePath),
     tsConfigPath: config.tsConfig ?? join(config.projectRoot, 'tsconfig.lib.json'),
+    ...(config.declarationMap !== undefined && { declarationMap: config.declarationMap }),
     external: config.external ?? [],
     assets: config.assets ?? [],
     isWorkspacePackage,

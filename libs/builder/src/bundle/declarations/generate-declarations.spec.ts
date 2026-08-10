@@ -87,16 +87,27 @@ describe('generateDeclarations', () => {
         '--emitDeclarationOnly',
         '--declaration',
         '--declarationMap',
-        'false',
+        'true',
       ]),
       expect.objectContaining({ cwd: '/abs/libs/foo', stdio: ['ignore', 'pipe', 'pipe'] })
     )
   })
 
-  it('turns the declaration map off explicitly so a project tsconfig cannot reinstate it', async () => {
+  it('emits declaration maps by default', async () => {
     const child = makeFakeChild()
     ;(<jest.Mock>spawn).mockReturnValue(child)
     const promise = generateDeclarations(makeContext())
+    await tick()
+    child.emit('close', 0)
+    await promise
+    const args = <string[]>(<jest.Mock>spawn).mock.calls[0][1]
+    expect(args.slice(args.indexOf('--declarationMap'), args.indexOf('--declarationMap') + 2)).toEqual(['--declarationMap', 'true'])
+  })
+
+  it('turns the declaration map off when the build opts out', async () => {
+    const child = makeFakeChild()
+    ;(<jest.Mock>spawn).mockReturnValue(child)
+    const promise = generateDeclarations({ ...makeContext(), declarationMap: false })
     await tick()
     child.emit('close', 0)
     await promise
