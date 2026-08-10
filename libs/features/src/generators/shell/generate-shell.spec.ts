@@ -58,8 +58,26 @@ describe('generateShell', () => {
 
   it('returns the created shell passing the modes inside the options', () => {
     expect(stage().read('src/index.ts', 'utf-8')).toContain(
-      'return <FeatureShellHandle>createShell({ ...defaults, ...options, contract, modes })'
+      'return <FeatureShellHandle>createShell({ ...defaults, ...rest, onUnresponsive: <UnresponsivePolicy | undefined>onUnresponsive, contract, modes })'
     )
+  })
+
+  it('widens the unresponsive policy where it crosses into the SDK', () => {
+    const entry = stage({ display: { modes: ['embedded'] } }).read('src/index.ts', 'utf-8')
+    expect(entry).toContain('const { onUnresponsive, ...rest } = options')
+    expect(entry).toContain('onUnresponsive: <UnresponsivePolicy | undefined>onUnresponsive')
+  })
+
+  it('imports the widened policy as a type-only import so the emitted runtime stays unchanged', () => {
+    expect(stage({ display: { modes: ['embedded'] } }).read('src/index.ts', 'utf-8')).toContain(
+      "import type { UnresponsivePolicy } from '@hyperfrontend/features/host'"
+    )
+  })
+
+  it('keeps the unresponsive info narrowed to the declared modes', () => {
+    const entry = stage({ display: { modes: ['embedded'] } }).read('src/index.ts', 'utf-8')
+    expect(entry).toContain("export type FeatureDisplayMode = 'embedded'")
+    expect(entry).toContain('displayMode: FeatureDisplayMode')
   })
 
   it('narrows the generated display-mode union to the declared modes', () => {
