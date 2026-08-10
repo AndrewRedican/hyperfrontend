@@ -37,3 +37,6 @@ __screenshots__/
 
 # Vite
 *.timestamp-*-*.mjs
+
+# The seven vendored koi shell tarballs are committed on purpose (the host installs them via file:)
+!vendor/*.tgz

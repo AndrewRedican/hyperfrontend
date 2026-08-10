@@ -43,7 +43,7 @@ export interface KoiRoster {
  *
  * @example Publishing hover identity to the keyboard
  * ```typescript
- * const roster = createRoster(stage.root, fishUrl, (framework) => setHover(framework))
+ * const roster = createRoster(stage.root, fishHomeUrl, (framework) => setHover(framework))
  * roster.setConnected('lit', true)
  * ```
  */
