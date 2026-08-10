@@ -92,15 +92,17 @@ export interface KoiSession {
  * The composed-deployment URL of one koi's frame.
  *
  * Resolved against wherever the pond itself is being served from — no
- * environment variable, no origin list. `index.html` is spelled out because
- * the SDK's dev server does not resolve a directory to its index; every static
- * host serves both forms, so this costs the deployed pond nothing.
+ * environment variable, no origin list. The directory form is the only one a
+ * koi may be framed from: its assets are referenced relatively so that one
+ * build serves both this sub-path and its own origin's root, and a static host
+ * that rewrites `…/index.html` to an extensionless path would leave the
+ * document one directory up, where every relative asset misses.
  *
  * @param framework - Which koi.
  * @returns The absolute URL of its frame under the pond's own origin.
  */
 function composedFishUrl(framework: KoiFramework): string {
-  return new URL(`fish-${framework}/index.html`, window.location.href).toString()
+  return new URL(`fish-${framework}/`, window.location.href).toString()
 }
 
 /**
