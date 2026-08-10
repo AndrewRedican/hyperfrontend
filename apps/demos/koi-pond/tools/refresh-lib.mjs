@@ -63,6 +63,8 @@ function integrityOf(file) {
 function packInto(dir) {
   // why: npm pack fails with ENOENT rather than creating a missing destination.
   mkdirSync(dir, { recursive: true })
+  // why: tsc leaves the output of a deleted source file behind, and npm pack ships whatever is in the directory; building from empty is what keeps a retired module out of the tarball and makes a local check match a clean checkout's.
+  rmSync(join(LIB_DIR, 'dist'), { recursive: true, force: true })
   execFileSync('npm', ['run', 'build'], { cwd: LIB_DIR, stdio: 'inherit' })
   // why: Packing outside the package directory keeps the previous tarball from being swept into the next one.
   const output = execFileSync('npm', ['pack', '--pack-destination', dir], { cwd: LIB_DIR, encoding: 'utf-8' })
