@@ -222,7 +222,8 @@ describe('@hyperfrontend/features hf CLI', () => {
       symlinkSync(join(__dirname, '..', 'node_modules'), join(scratchDir, 'node_modules'), 'dir')
       writeFileSync(
         join(scratchDir, 'feature.config.json'),
-        `${JSON.stringify({ name: 'e2e-widget', version: '0.0.1', contract: './widget.contract.ts', url: 'http://localhost:4300/' }, null, 2)}\n`
+        // why: A strict subset of the display modes is the case that used to emit a shell its own declaration pass could not compile, so the fixture declares one to keep that path exercised by a real build.
+        `${JSON.stringify({ name: 'e2e-widget', version: '0.0.1', contract: './widget.contract.ts', url: 'http://localhost:4300/', display: { modes: ['embedded', 'dialog'] } }, null, 2)}\n`
       )
       writeFileSync(
         join(scratchDir, 'widget.contract.ts'),
@@ -278,6 +279,12 @@ export default contract
         .filter((file) => file.endsWith('.js'))
         .filter((file) => readFileSync(join(outDir, file), 'utf8').includes('import type'))
       expect(withImportType).toEqual([])
+    })
+
+    it('narrows the declared display modes in the emitted declarations', () => {
+      const declaration = outFiles.find((file) => file.endsWith('.d.ts'))
+      expect(declaration).toBeDefined()
+      expect(readFileSync(join(outDir, <string>declaration), 'utf8')).toContain("export type FeatureDisplayMode = 'embedded' | 'dialog'")
     })
   })
 })
