@@ -44,8 +44,6 @@ export interface BuildContext {
   outputPath: string
   /** Resolved absolute path to the project's tsconfig. */
   tsConfigPath: string
-  /** Whether the declaration pass emits `.d.ts.map` files; absent means it does. */
-  declarationMap?: boolean
   /** Global external dependencies to exclude from every bundle. */
   external: string[]
   /** Asset specs to materialize. */

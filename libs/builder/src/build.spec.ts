@@ -68,14 +68,6 @@ describe('createBuildContext', () => {
     expect(ctx.tsConfigPath).toBe('/abs/repo/libs/foo/tsconfig.lib.json')
   })
 
-  it('leaves the declaration map unset so the declaration pass keeps emitting one', () => {
-    expect(createBuildContext(baseConfig()).declarationMap).toBeUndefined()
-  })
-
-  it('carries a declaration-map opt-out onto the context', () => {
-    expect(createBuildContext({ ...baseConfig(), declarationMap: false }).declarationMap).toBe(false)
-  })
-
   it('honors an explicit tsConfig override', () => {
     const ctx = createBuildContext({ ...baseConfig(), tsConfig: '/abs/custom/tsconfig.json' })
     expect(ctx.tsConfigPath).toBe('/abs/custom/tsconfig.json')

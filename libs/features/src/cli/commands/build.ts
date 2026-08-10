@@ -75,8 +75,6 @@ async function defaultRunBuilder(input: BuildRunnerInput): Promise<void> {
     workspaceRoot: input.workspaceRoot,
     outputPath: input.outputPath,
     tsConfig: join(input.projectRoot, 'tsconfig.lib.json'),
-    // why: A shell's TypeScript is generated into a staging directory this build deletes when it finishes, so a declaration map would record a path no consumer can resolve — and since that path is written relative to the output directory, emitting one makes every pack of an unchanged feature produce different bytes.
-    declarationMap: false,
     esm: {},
     cjs: {},
   }

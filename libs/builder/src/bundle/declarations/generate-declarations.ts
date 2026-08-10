@@ -72,8 +72,7 @@ const runTsc = (tscPath: string, args: string[], cwd: string): Promise<GenerateD
 
 /**
  * Generates `.d.ts` and `.d.ts.map` files for every entry point in the project
- * by spawning the workspace-local TypeScript compiler. A build may opt out of
- * the maps via {@link BuildContext.declarationMap}.
+ * by spawning the workspace-local TypeScript compiler.
  *
  * After tsc finishes, calls `flattenDeclarationPaths` to relocate the nested
  * `dist/<lib>/libs/<lib>/src/...` structure that tsc emits with `baseUrl=workspaceRoot`
@@ -102,9 +101,7 @@ export const generateDeclarations = async (context: BuildContext): Promise<Gener
     'false',
     '--emitDeclarationOnly',
     '--declaration',
-    // why: The value is spelled out because a bare flag would inherit whatever the project's tsconfig says; passing it explicitly keeps the resolved build option authoritative in both directions.
     '--declarationMap',
-    context.declarationMap === false ? 'false' : 'true',
     '--outDir',
     context.outputPath,
   ]
