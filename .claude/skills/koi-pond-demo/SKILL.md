@@ -25,7 +25,8 @@ Ten Nx projects in `apps/demos/koi-pond/`. A **host** pond opens seven **fish** 
 - **Mounting = embedded.** Host makes one `position:absolute;inset:0` layer per koi, mounts each feature **embedded** into it. z-index **is** the depth model (`depthZIndex`), water layer always topmost.
 - **Pointer.** Every layer + iframe is `pointer-events:none`; host runs one normalized stream, hit-tests against fish-reported outlines, notifies the winner, which draws its own card.
 - **Rendering.** Each fish owns its own transparent `WebGLRenderer` (seven GL contexts); **host stays GL-free** (canvas-2D water/floor). All fish build the same camera from `POND_VIEW` (`lib/src/model/pond-view.ts`, tilt 10°/fov 26°/exposure 1.15) via `createPondView` (`lib/src/three/pond-view.ts`) so seven renders composite as one scene. The 2D steering brain (`fish-*/src/koi/koi-motion.ts`) stays authoritative for _where_ the fish is; the renderer only expresses it.
-- **Protocol.** Seven inner channels run **unsecured** (no `protocol`) — v1's per-message PBKDF2 is the F-011 collapse and deters nothing same-origin. Outer gallery↔pond channel keeps `protocol: 'v1'`.
+- **Packaging.** Every fish is a real packaged feature: `fish-<fw>/feature.config.ts` (version tracks the contract, 0.2.0) + root `koi-fish.contract.ts` re-exporting the lib contract + `pack-shell` target (`hf build --ci --allow-open`) → seven shell tarballs vendored in `host/vendor/`, installed as `file:` deps. `koi-sessions.ts` opens each koi via its generated `createFeatureShell`; `COMPOSED_DEPLOYMENT: true` overrides each baked URL with the `/fish-<fw>/` sub-path — flip it (and provision the `metadata.deploy` Railway services) to go multi-origin. Fish configs declare ALL FOUR display modes: a subset makes `hf build` emit uncompilable code (F-014).
+- **Protocol.** Seven inner channels run as explicitly **open shells** (`protocol: 'none'` in each fish feature.config, packed with `--allow-open`) — v1's per-message PBKDF2 is the F-011 collapse; transport stays origin-pinned. Outer gallery↔pond channel keeps `protocol: 'v1'`.
 
 ## Commands (from repo root)
 
@@ -34,6 +35,9 @@ Ten Nx projects in `apps/demos/koi-pond/`. A **host** pond opens seven **fish** 
 npx nx run demo-koi-lib:refresh
 npx nx run demo-koi-lib:verify          # fail loudly when tarball/consumer lock drifted
 npx nx run demo-koi-lib:build           # tsc only; refresh does build+pack+install
+
+# fish shells: repack all seven + reinstall into host (run after inner-contract or fish feature.config changes)
+npx nx run demo-koi-pond:refresh-fish-shells
 
 # the whole family
 npx nx run-many -t test build lint type-check -p demo-koi-lib demo-koi-pond demo-koi-fish-*
@@ -102,7 +106,7 @@ Vendored shell + touched `package.json` + `package-lock.json` land **together** 
 | Depth model         | `lib/src/model/depth.ts` (`depthZIndex`/`swimDepth`/`mayRipple`)                                                                                                                          |
 | Host assembly       | `host/src/scene/pond.ts` (loop, pointer, fan-out)                                                                                                                                         |
 | Relay + dead-reckon | `host/src/scene/relay.ts` (`record`/`neighborsFor`/`pick` take `now`)                                                                                                                     |
-| Shell sessions      | `host/src/scene/koi-sessions.ts` (`createShell` per fish, no `protocol`)                                                                                                                  |
+| Shell sessions      | `host/src/scene/koi-sessions.ts` (one vendored `createFeatureShell` per fish; `COMPOSED_DEPLOYMENT` URL seam)                                                                             |
 | Fish renderer seam  | `fish-<fw>/src/koi/koi-render*` + `runtime/koi-runtime.ts` (injectable `KoiRendererFactory`)                                                                                              |
 | Fish brain (2D)     | `fish-<fw>/src/koi/koi-motion.ts` (framework-free, survives renderer swap)                                                                                                                |
 | Docs-site gallery   | `apps/docs-site/src/lib/demo-manifest.ts`, `apps/docs-site/src/components/demos/demo-wiring.ts` + `demo-console-actions.tsx` (`KoiPondConsoleActions`) + `cover-flow.tsx` (card ↔ expand) |
@@ -127,6 +131,7 @@ Card expand is **unmask**: `CoverFlowCard` restyles into `fixed inset-0` around 
 ## Checklist
 
 - [ ] Edited `lib/src`? → `demo-koi-lib:refresh` then `:verify`
+- [ ] Changed the inner contract or a fish `feature.config.ts`? → `demo-koi-pond:refresh-fish-shells` (host vendor tarballs + package.json + lock land together)
 - [ ] Scope = Nx project name; one project per commit; no version/changelog/tag files
 - [ ] Comments never cite finding IDs / roadmap docs
 - [ ] `npx nx run-many -t test build lint type-check -p demo-koi-*` green
