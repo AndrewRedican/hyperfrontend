@@ -5,6 +5,16 @@
   "sourceRoot": "apps/demos/koi-pond/fish-vue/src",
   "projectType": "application",
   "tags": ["type:demo", "role:feature", "scope:standalone"],
+  "metadata": {
+    "deploy": {
+      "provider": "railway",
+      "service": "hyperfrontend-demo-koi-fish-vue",
+      "origin": "https://demo-koi-fish-vue-production.up.railway.app",
+      "boundary": "cross-site",
+      "kind": "static",
+      "publishDir": "dist/apps/demos/koi-pond/site/fish-vue"
+    }
+  },
   "targets": {
     "install": {
       "executor": "@hyperfrontend/app:install",
@@ -47,6 +57,15 @@
       "dependsOn": ["install"],
       "options": {
         "command": "npm run type-check",
+        "cwd": "apps/demos/koi-pond/fish-vue"
+      }
+    },
+    "pack-shell": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["install"],
+      "outputs": ["{workspaceRoot}/dist/apps/demos/koi-pond/fish-shell/vue"],
+      "options": {
+        "command": "npx hf build --ci --allow-open --out ../../../../dist/apps/demos/koi-pond/fish-shell/vue",
         "cwd": "apps/demos/koi-pond/fish-vue"
       }
     }
