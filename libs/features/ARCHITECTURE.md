@@ -26,9 +26,9 @@ flowchart TB
         Core["• contract types + validation<br/>• DisplayMode / SecurityProtocol<br/>• control messages + event emitter"]
     end
     subgraph Tooling["TOOLING"]
-        Cli["CLI — /cli<br/>init · build · dev"]
+        Cli["CLI — /cli<br/>init · build · dev · serve"]
         Gen["generators<br/>shell · metadata · types"]
-        Server["dev server — /server<br/>static hosting + debug UI"]
+        Server["servers — /server<br/>dev static hosting + debug UI<br/>hf serve production pipeline"]
     end
 
     Shell <-->|"Nexus channel<br/>(postMessage + security envelope)"| Feature
@@ -102,9 +102,9 @@ The host never needs `@hyperfrontend/features` as a direct dependency: it instal
 | `shared`     | `.`           | Contract types, contract/config/display/payload validation, `DisplayMode`, `SecurityProtocol`, control messages, presentation payloads + size formulas, the event emitter, the channel-wiring core both sides connect and route through, and the `defineConfig`/`defineDevConfig` helpers. |
 | `host`       | `/host`       | `createShell` factory (explicit `modes` map), the four display-mode mounts, iframe utilities, container measurement + viewport reporting, heartbeat watchdog, and the experience-plugin seam.                                                                                              |
 | `hostee`     | `/hostee`     | `createFeature` factory, host-window resolution, presentation application (canvas sync, dialog layout, dismiss detection), feature lifecycle, and heartbeat emission.                                                                                                                      |
-| `cli`        | `/cli`        | `init`/`build`/`dev` command runners, the tiered `feature.config.*` / `hf-dev.config.*` loader, and CLI/flag parity; backs the `hf` bin.                                                                                                                                                   |
+| `cli`        | `/cli`        | `init`/`build`/`dev`/`serve` command runners, the tiered `feature.config.*` / `hf-dev.config.*` / `hf-serve.config.*` loader, and CLI/flag parity; backs the `hf` bin.                                                                                                                     |
 | `generators` | `/generators` | Pure generators for the shell package, `metadata.json`, the write-once feature module, and contract `.d.ts` types.                                                                                                                                                                         |
-| `server`     | `/server`     | Static per-app hosting and the in-browser debug UI (display-mode, resize, message-log, security controls).                                                                                                                                                                                 |
+| `server`     | `/server`     | Static per-app hosting, the in-browser debug UI (display-mode, resize, message-log, security controls), and the `hf serve` production static server (compression, conditional requests, ordered header rules, an open step pipeline).                                                      |
 | `nx`         | `/nx/*`       | Optional Nx adapter — `init`/`feature` generators and `build`/`serve` executors (via the `/nx/generators` and `/nx/executors` entry points) that delegate to the SDK, using the consumer's `@nx/devkit` when present and built-in equivalents otherwise. Zero `@nx/devkit` dependency.     |
 
 ---
