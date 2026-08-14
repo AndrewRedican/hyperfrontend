@@ -1,16 +1,19 @@
 /**
  * Packed-tarball CLI E2E tests for the @hyperfrontend/features `hf` bin.
  * Drives the installed bin the way a consumer does: `hf --help`, a real
- * `hf dev` server held open until SIGINT, and a real `hf build` producing a
- * self-contained shell tarball.
+ * `hf dev` server held open until SIGINT, a real `hf build` producing a
+ * self-contained shell tarball, and a real `hf serve` answering directory
+ * URLs, header rules, compression, and conditional teardown over HTTP.
  */
 
 import type { ChildProcess } from 'node:child_process'
+import type { IncomingHttpHeaders, OutgoingHttpHeaders } from 'node:http'
 import { execFileSync, spawn, spawnSync } from 'node:child_process'
 import { mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, symlinkSync, writeFileSync } from 'node:fs'
 import { get } from 'node:http'
 import { tmpdir } from 'node:os'
 import { dirname, join } from 'node:path'
+import { gunzipSync } from 'node:zlib'
 
 // note: 90s covers the dev-server flow (spawn, poll past 3s, SIGINT, teardown) with slack for slow CI hosts.
 const DEV_SUITE_TIMEOUT = 90000
@@ -286,5 +289,157 @@ export default contract
       expect(declaration).toBeDefined()
       expect(readFileSync(join(outDir, <string>declaration), 'utf8')).toContain("export type FeatureDisplayMode = 'embedded' | 'dialog'")
     })
+  })
+})
+
+// note: 90s covers the static-server flow (spawn, a round of probes, poll past 3s, SIGINT, teardown) with slack for slow CI hosts.
+const SERVE_SUITE_TIMEOUT = 90000
+
+// note: ~4.4KB of repeated JS keeps the asset comfortably above the server's 1KB compression threshold while staying byte-for-byte comparable after decompression.
+const BIG_JS_BODY = 'export const filler = "hf-serve-e2e-0123456789abcdef";\n'.repeat(80)
+
+/**
+ * Fetches a URL with optional request headers and resolves with the raw
+ * response: status, headers, and body bytes. Never follows redirects, so a
+ * 301 answer surfaces its status and `Location` instead of the target page.
+ *
+ * @param url - The URL to fetch.
+ * @param headers - Request headers to send.
+ * @returns The response status, headers, and raw body bytes.
+ */
+function fetchRawUrl(
+  url: string,
+  headers: OutgoingHttpHeaders = {}
+): Promise<{ status: number; headers: IncomingHttpHeaders; body: Buffer }> {
+  return new Promise((resolve, reject) => {
+    const request = get(url, { headers }, (response) => {
+      const chunks: Buffer[] = []
+      response.on('data', (chunk: Buffer) => chunks.push(chunk))
+      response.on('end', () => resolve({ status: response.statusCode ?? 0, headers: response.headers, body: Buffer.concat(chunks) }))
+    })
+    request.on('error', reject)
+  })
+}
+
+describe('hf serve', () => {
+  const hfBin = resolveHfBin()
+
+  let scratchDir: string
+  let siteDir = ''
+  let servePort = 0
+  let child: ChildProcess | undefined
+  let cliOutput = ''
+  let firstResponse: { status: number; body: string } | undefined
+  let rootHeaders: IncomingHttpHeaders | undefined
+  let widgetResponse: { status: number; body: string } | undefined
+  let unslashedWidget: { status: number; location: string | undefined } | undefined
+  let bigJsResponse: { status: number; encoding: string | undefined; body: Buffer } | undefined
+  let configResponse: { status: number; body: string } | undefined
+  let aliveAfterThreeSeconds: { running: boolean; status: number } | undefined
+  let exitCode: number | null = null
+
+  beforeAll(async () => {
+    scratchDir = mkdtempSync(join(tmpdir(), 'hf-serve-e2e-'))
+    siteDir = join(scratchDir, 'site')
+    mkdirSync(join(siteDir, 'widget'), { recursive: true })
+    writeFileSync(join(siteDir, 'index.html'), '<!doctype html><html><body>serve-root-ok</body></html>\n')
+    writeFileSync(join(siteDir, 'widget', 'index.html'), '<!doctype html><html><body>serve-widget-ok</body></html>\n')
+    writeFileSync(join(siteDir, 'big.js'), BIG_JS_BODY)
+    // why: The config sits at the SITE root (not the cwd) to pin artifact-carried discovery: `--root` alone must find and apply it.
+    writeFileSync(
+      join(siteDir, 'hf-serve.config.json'),
+      `${JSON.stringify({ headers: [{ headers: { 'X-Frame-Test': 'e2e' } }] }, null, 2)}\n`
+    )
+    // why: A randomized 32xxx port keeps parallel CI jobs from colliding while staying clear of the dev suite's 42000+ band.
+    servePort = 32000 + Math.floor(Math.random() * 10000)
+
+    // why: Spawning from the site's parent directory pins that `--root` plus the artifact-carried config works without any cwd-based config discovery.
+    child = spawn('node', [hfBin, 'serve', '--root', siteDir, '--port', String(servePort)], {
+      cwd: scratchDir,
+      detached: true,
+      stdio: ['ignore', 'pipe', 'pipe'],
+    })
+    child.stdout?.on('data', (chunk: Buffer) => {
+      cliOutput += chunk.toString('utf8')
+    })
+    child.stderr?.on('data', (chunk: Buffer) => {
+      cliOutput += chunk.toString('utf8')
+    })
+
+    await waitForOutput(
+      () => cliOutput,
+      (collected) => collected.includes('→ http://'),
+      30000
+    )
+    const match = cliOutput.match(/→ (\S+)/)
+    const serveUrl = match ? match[1] : ''
+    firstResponse = await waitForUrl(serveUrl, 10000)
+
+    rootHeaders = (await fetchRawUrl(serveUrl)).headers
+    widgetResponse = await fetchUrl(`${serveUrl}widget/`)
+    const unslashed = await fetchRawUrl(`${serveUrl}widget`)
+    unslashedWidget = { status: unslashed.status, location: <string | undefined>unslashed.headers['location'] }
+    const bigJs = await fetchRawUrl(`${serveUrl}big.js`, { 'accept-encoding': 'gzip' })
+    bigJsResponse = { status: bigJs.status, encoding: <string | undefined>bigJs.headers['content-encoding'], body: bigJs.body }
+    configResponse = await fetchUrl(`${serveUrl}hf-serve.config.json`)
+
+    // why: The regression being pinned is the serve command exiting right after startup; the server must still answer past the three-second mark.
+    await delay(3200)
+    const probe = await fetchUrl(serveUrl)
+    aliveAfterThreeSeconds = { running: child.exitCode === null, status: probe.status }
+
+    const exitPromise = waitForExit(child)
+    child.kill('SIGINT')
+    exitCode = await exitPromise
+  }, SERVE_SUITE_TIMEOUT)
+
+  afterAll(() => {
+    if (child !== undefined && child.exitCode === null) {
+      child.kill('SIGKILL')
+    }
+    rmSync(scratchDir, { recursive: true, force: true })
+  })
+
+  it('prints the serving line with the root and its URL', () => {
+    expect(cliOutput).toContain(`${siteDir} → http://localhost:${servePort}/`)
+  })
+
+  it('serves the root index over HTTP', () => {
+    expect(firstResponse).toEqual(expect.objectContaining({ status: 200, body: expect.stringContaining('serve-root-ok') }))
+  })
+
+  it('serves the sub-app from its directory URL', () => {
+    expect(widgetResponse).toEqual(expect.objectContaining({ status: 200, body: expect.stringContaining('serve-widget-ok') }))
+  })
+
+  it('redirects the unslashed sub-app path to its directory URL', () => {
+    expect(unslashedWidget).toEqual({ status: 301, location: '/widget/' })
+  })
+
+  it('applies the artifact-carried header rule to the root response', () => {
+    expect(rootHeaders).toEqual(expect.objectContaining({ 'x-frame-test': 'e2e' }))
+  })
+
+  it('gzip-compresses the large script for a client that accepts gzip', () => {
+    // note: Encoding and payload are two facets of the same compressed response, so both expectations live in this one test.
+    expect(bigJsResponse).toEqual(expect.objectContaining({ status: 200, encoding: 'gzip' }))
+    expect(gunzipSync(<Buffer>bigJsResponse?.body).toString('utf8')).toBe(BIG_JS_BODY)
+  })
+
+  it('denies the artifact-carried config file itself', () => {
+    expect(configResponse).toEqual(expect.objectContaining({ status: 404 }))
+  })
+
+  it('emits an access-log line for each request', () => {
+    // why: Two distinct request paths prove per-request logging rather than a single lucky line.
+    expect({ root: cliOutput.includes('GET / 200'), widget: cliOutput.includes('GET /widget/ 200') }).toEqual({ root: true, widget: true })
+  })
+
+  it('stays alive and keeps serving past three seconds', () => {
+    expect(aliveAfterThreeSeconds).toEqual({ running: true, status: 200 })
+  })
+
+  it('exits cleanly on SIGINT', () => {
+    expect(exitCode).toBe(0)
   })
 })
