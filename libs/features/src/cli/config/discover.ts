@@ -10,6 +10,9 @@ export const FEATURE_CONFIG_BASENAME = 'feature.config'
 /** Base name (no extension) of the dev-server config file. */
 export const DEV_CONFIG_BASENAME = 'hf-dev.config'
 
+/** Base name (no extension) of the static-server config file. */
+export const SERVE_CONFIG_BASENAME = 'hf-serve.config'
+
 /**
  * Finds the first `<baseName>.<ext>` config file directly under a directory.
  *

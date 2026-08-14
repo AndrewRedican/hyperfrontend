@@ -80,4 +80,10 @@ describe('parseCliArgs', () => {
   it('throws on a second positional argument', () => {
     expect(() => parseCliArgs(['init', 'build'])).toThrow('Unexpected argument: build')
   })
+
+  it('parses the static-server root and host flags', () => {
+    expect(parseCliArgs(['serve', '--root', 'dist/site', '--host', '127.0.0.1']).flags).toEqual(
+      expect.objectContaining({ root: 'dist/site', host: '127.0.0.1' })
+    )
+  })
 })

@@ -5,8 +5,9 @@ import { createServer as createHttpServer } from 'node:http'
 import { dirname, join } from 'node:path'
 import { createError } from '@hyperfrontend/immutable-api-utils/built-in-copy/error'
 import { stringify } from '@hyperfrontend/immutable-api-utils/built-in-copy/json'
-import { createPromise, promiseAll } from '@hyperfrontend/immutable-api-utils/built-in-copy/promise'
+import { promiseAll } from '@hyperfrontend/immutable-api-utils/built-in-copy/promise'
 import { isFile as isFileOnDisk, readFileBuffer } from '@hyperfrontend/project-scope/core/fs'
+import { closeServer, listen } from './listen'
 import { currentModuleDir } from './module-dir'
 import { createStaticHandler, requestPath, serveFile } from './static-handler'
 
@@ -122,46 +123,6 @@ function defaultAssetRoot(isFile: (path: string) => boolean): string {
     )
   }
   return located
-}
-
-/**
- * Reads the listening port from a server, throwing if the address is unexpectedly absent.
- *
- * @param server - A server whose `listen` callback has fired.
- * @returns The bound port.
- */
-function addressPort(server: Server): number {
-  const address = server.address()
-  /* istanbul ignore next -- @preserve a fired listen() callback always yields an AddressInfo for a numeric port */
-  if (address === null || typeof address === 'string') {
-    throw createError('Dev server failed to report a listening port.')
-  }
-  return address.port
-}
-
-/**
- * Starts a server listening on a port and resolves with the bound port.
- *
- * @param server - The server to start.
- * @param port - The requested port (`0` lets the OS choose, used in tests).
- * @returns A promise for the actually-bound port.
- */
-function listen(server: Server, port: number): Promise<number> {
-  return createPromise((resolve) => {
-    server.listen(port, () => resolve(addressPort(server)))
-  })
-}
-
-/**
- * Closes a server and resolves once it has stopped accepting connections.
- *
- * @param server - The server to close.
- * @returns A promise that resolves when the server is closed.
- */
-function closeServer(server: Server): Promise<void> {
-  return createPromise((resolve) => {
-    server.close(() => resolve())
-  })
 }
 
 /**
