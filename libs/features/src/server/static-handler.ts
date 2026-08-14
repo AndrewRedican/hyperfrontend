@@ -11,14 +11,21 @@ const CONTENT_TYPES: Readonly<Record<string, string>> = freeze(<const>{
   '.css': 'text/css; charset=utf-8',
   '.json': 'application/json; charset=utf-8',
   '.map': 'application/json; charset=utf-8',
+  '.txt': 'text/plain; charset=utf-8',
+  '.xml': 'application/xml; charset=utf-8',
+  '.webmanifest': 'application/manifest+json; charset=utf-8',
   '.svg': 'image/svg+xml',
   '.png': 'image/png',
   '.jpg': 'image/jpeg',
   '.jpeg': 'image/jpeg',
   '.gif': 'image/gif',
+  '.webp': 'image/webp',
   '.ico': 'image/x-icon',
+  '.wasm': 'application/wasm',
   '.woff': 'font/woff',
   '.woff2': 'font/woff2',
+  '.ttf': 'font/ttf',
+  '.otf': 'font/otf',
 })
 
 const FALLBACK_CONTENT_TYPE = 'application/octet-stream'
@@ -39,8 +46,13 @@ export interface StaticHandlerDeps {
  *
  * @param filePath - The path whose extension selects the MIME type.
  * @returns The matching content type.
+ *
+ * @example Looking up a stylesheet's type
+ * ```typescript
+ * contentTypeFor('/abs/dist/app.css') // 'text/css; charset=utf-8'
+ * ```
  */
-function contentTypeFor(filePath: string): string {
+export function contentTypeFor(filePath: string): string {
   return CONTENT_TYPES[extname(filePath).toLowerCase()] ?? FALLBACK_CONTENT_TYPE
 }
 
@@ -65,17 +77,54 @@ export function requestPath(url: string | undefined): string {
 }
 
 /**
+ * Percent-decodes a request path, treating malformed encodings as unservable
+ * rather than letting `decodeURIComponent` throw inside a request handler.
+ *
+ * @param path - The request path with the query string already stripped.
+ * @returns The decoded path, or `null` when the encoding is malformed.
+ *
+ * @example Rejecting a malformed encoding
+ * ```typescript
+ * decodeRequestPath('/%') // null
+ * ```
+ */
+export function decodeRequestPath(path: string): string | null {
+  try {
+    return decodeURIComponent(path)
+  } catch {
+    return null
+  }
+}
+
+/**
+ * Confines an already-decoded request path to an absolute path under `root`,
+ * rejecting any path that escapes the root via `..`.
+ *
+ * @param root - The absolute directory the path is confined to.
+ * @param decoded - The percent-decoded request path, query string stripped.
+ * @returns The confined absolute path, or `null` when the path escapes `root`.
+ *
+ * @example Rejecting a traversal attempt
+ * ```typescript
+ * confineDecodedPath('/abs/dist', '/../secret') // null
+ * ```
+ */
+export function confineDecodedPath(root: string, decoded: string): string | null {
+  const candidate = resolve(root, normalize(decoded.replace(/^\/+/, '')))
+  return candidate === root || candidate.startsWith(`${root}${sep}`) ? candidate : null
+}
+
+/**
  * Resolves a URL path to an absolute path confined to `root`, rejecting any
- * path that escapes the root via `..`.
+ * path that escapes the root via `..` or carries a malformed percent-encoding.
  *
  * @param root - The absolute directory the path is confined to.
  * @param urlPath - The request path (with or without a query string).
  * @returns The confined absolute path, or `null` when the path escapes `root`.
  */
 function confinePath(root: string, urlPath: string): string | null {
-  const decoded = decodeURIComponent(requestPath(urlPath))
-  const candidate = resolve(root, normalize(decoded.replace(/^\/+/, '')))
-  return candidate === root || candidate.startsWith(`${root}${sep}`) ? candidate : null
+  const decoded = decodeRequestPath(requestPath(urlPath))
+  return decoded === null ? null : confineDecodedPath(root, decoded)
 }
 
 /**
@@ -97,7 +146,7 @@ function confinePath(root: string, urlPath: string): string | null {
  * directoryLocation('/srv', '/srv/host', '/host?debug=1') // '/host/?debug=1'
  * ```
  */
-function directoryLocation(root: string, confined: string, url: string): string {
+export function directoryLocation(root: string, confined: string, url: string): string {
   const queryAt = url.indexOf('?')
   const query = queryAt === -1 ? '' : url.slice(queryAt)
   const relativePath = relative(root, confined)

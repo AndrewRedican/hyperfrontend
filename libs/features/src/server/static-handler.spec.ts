@@ -2,7 +2,7 @@ import type { IncomingMessage, ServerResponse } from 'node:http'
 import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
-import { createStaticHandler, requestPath, serveFile } from './static-handler'
+import { confineDecodedPath, createStaticHandler, decodeRequestPath, requestPath, serveFile } from './static-handler'
 
 interface FakeResponse {
   statusCode: number
@@ -205,6 +205,17 @@ describe('serveFile', () => {
     )
     expect({ status: out.statusCode, body: out.body }).toEqual({ status: 403, body: 'Forbidden' })
   })
+
+  it('returns 403 for a malformed percent-encoding', () => {
+    const out = fakeRes()
+    serveFile(
+      '/srv',
+      '/%',
+      out.res,
+      deps(() => true)
+    )
+    expect({ status: out.statusCode, body: out.body }).toEqual({ status: 403, body: 'Forbidden' })
+  })
 })
 
 describe('requestPath', () => {
@@ -279,5 +290,29 @@ describe('default file system', () => {
     const out = fakeRes()
     createStaticHandler(dir)(<IncomingMessage>{ url: '/missing.js' }, out.res)
     expect(out.statusCode).toBe(404)
+  })
+})
+
+describe('decodeRequestPath', () => {
+  it('percent-decodes an encoded path', () => {
+    expect(decodeRequestPath('/a%20b')).toBe('/a b')
+  })
+
+  it('returns null for a malformed encoding', () => {
+    expect(decodeRequestPath('/%')).toBeNull()
+  })
+})
+
+describe('confineDecodedPath', () => {
+  it('confines a path inside the root', () => {
+    expect(confineDecodedPath('/srv', '/app.js')).toBe('/srv/app.js')
+  })
+
+  it('rejects a path that escapes the root', () => {
+    expect(confineDecodedPath('/srv', '/../secret')).toBeNull()
+  })
+
+  it('allows the root itself', () => {
+    expect(confineDecodedPath('/srv', '/')).toBe('/srv')
   })
 })
