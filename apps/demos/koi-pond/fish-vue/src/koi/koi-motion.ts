@@ -9,38 +9,46 @@
  * six koi compose the same verbs differently — that independence is the whole
  * point of the pond, so nothing in here belongs in the shared lib.
  *
- * Every frame resolves one desired heading from four competing pulls, in strict
- * priority: get away from what struck the water, do not leave the pond, do not
- * hit anyone, and otherwise drift. Only the winning pull steers, which is what
- * keeps the motion legible instead of averaging into mush.
+ * Motion is event-shaped rather than noise-shaped. The koi swims legs of a
+ * seeded itinerary at a seeded pace; a change of course is a discrete turn that
+ * begins, runs its bounded arc, ends, and is followed by a cooldown before the
+ * next ordinary turn may start. Heavier pulls interrupt in strict priority —
+ * flee what struck the water, come back to the pond, settle a crossing — and
+ * each decision is anchored when it is made, never re-derived against the
+ * koi's own moving heading, which is what kept the old brain circling.
  */
 import type {
   Disturbance,
-  EncounterResolution,
   KoiOutline,
   KoiPhase,
   KoiProfile,
-  KoiTune,
   NeighborObservation,
   PondEnvironment,
   SpineState,
   Vec2,
 } from '@hyperfrontend/demo-koi-lib'
 import {
+  SHORE_ABSENT_S,
   advanceSpine,
   boundaryPressure,
   createEncounterMemory,
+  createItinerary,
+  createPaceSchedule,
   createSpine,
   depthScale,
   givesWay,
   headingAwayFrom,
   headingTo,
+  koiSeed,
+  pondBounds,
   pondCentre,
-  resolveEncounter,
   sampleSpine,
+  slipsAway,
   spineGirth,
   turnToward,
   wanderOffset,
+  wrapAcross,
+  wrapAngle,
 } from '@hyperfrontend/demo-koi-lib'
 
 /** How many spine samples travel in a reported outline. */
@@ -61,8 +69,9 @@ const ESCAPE_TURN_GAIN = 2.4
 /** Escape duration band in seconds. */
 const ESCAPE_S = { min: 1.1, max: 2.9 }
 
-/** How sharply a koi must be turning to read as `turning` rather than `relaxed`, in radians per second. */
-const TURNING_THRESHOLD = 0.42
+/** The measured turn rate that reads as `turning`, and the softer rate that releases it. */
+const TURNING_ENTER = 0.42
+const TURNING_EXIT = 0.3
 
 /** How quickly speed eases toward its target, as a fraction closed per second. */
 const SPEED_EASE = 3.2
@@ -76,8 +85,33 @@ const REDUCED_MOTION_DAMPING = 0.45
 /** How long a koi reads as rolling between two depth levels, in seconds. */
 const DEPTH_ROLL_S = 1.4
 
-/** How far from the pond's centre this koi drifts before it starts leaning home, as a fraction of the shorter pond axis. */
-const COMFORT_RATIO = 0.36
+/** How often the koi re-forms its judgement about neighbours and its itinerary, in seconds. */
+const DECISION_INTERVAL_S = 0.1
+
+/** The bearing error that schedules an ordinary turn rather than a drift, in radians. */
+const TURN_TRIGGER = 0.35
+
+/** Longest an ordinary turn may run, in seconds. */
+const TURN_MAX_S = 2.4
+
+/** The cooldown band after an ordinary turn, in seconds, drawn from the koi's seed. */
+const TURN_COOLDOWN_S = { min: 2.5, max: 6 }
+
+/** How firmly the koi corrects its course between turns — a drift, not a manoeuvre. */
+const GLIDE_GAIN = 0.12
+
+/** How much ambient waviness rides on a straight leg, in radians. */
+const WANDER_RIPPLE = 0.12
+
+/** The boundary urgency that engages a correction, and the softer one that releases it. */
+const BOUNDARY_ENGAGE = 0.12
+const BOUNDARY_RELEASE = 0.05
+
+/** The evasion arc band an encounter asks for, graded by urgency, in radians. */
+const EVASION_TURN = { min: Math.PI / 8, max: Math.PI / 3 }
+
+/** How far past the hard boundary a slipping koi swims before its absence starts, in body lengths. */
+const EXIT_CLEARANCE_BL = 0.6
 
 /**
  * Maps a normalised trait onto a band.
@@ -89,6 +123,9 @@ const COMFORT_RATIO = 0.36
 function lerp(trait: number, band: { min: number; max: number }): number {
   return band.min + trait * (band.max - band.min)
 }
+
+/** Where this koi stands with the shoreline. */
+type ShoreState = 'in' | 'leaving' | 'away' | 'returning'
 
 /** What the koi is doing right now. */
 export interface KoiState {
@@ -127,10 +164,12 @@ export interface KoiMotion {
   /**
    * Advances one frame.
    *
+   * The brain keeps its own clock by accumulating `dt`, so a stalled tab
+   * resumes mid-behaviour instead of fast-forwarding through expired events.
+   *
    * @param dt - Seconds since the previous frame.
-   * @param elapsedS - Seconds since the pond opened.
    */
-  advance(dt: number, elapsedS: number): void
+  advance(dt: number): void
   /**
    * Adopts a resized pond.
    *
@@ -163,12 +202,8 @@ export interface KoiMotion {
   readonly state: KoiState
   /** Whether it is still fleeing. */
   readonly isFleeing: boolean
-  /**
-   * Takes the visitor's playground settings; anything left out keeps its value.
-   *
-   * @param tune - The scales to apply over this koi's own derived behaviour.
-   */
-  setTune(tune: KoiTune): void
+  /** Whether it has slipped out of the pond and is waiting to return. */
+  readonly isAway: boolean
   /**
    * The compact outline the host does its proximity work against.
    *
@@ -194,13 +229,14 @@ export interface KoiMotion {
  * @example Swimming a koi
  * ```typescript
  * const motion = createKoiMotion({ profile, pond, position, heading, depth })
- * motion.advance(dt, elapsedS)
+ * motion.advance(dt)
  * feature.send('outline', motion.outline())
  * ```
  */
 export function createKoiMotion(options: KoiMotionOptions): KoiMotion {
   const { profile } = options
   const { traits, build } = profile
+  const seed = koiSeed(profile.framework)
 
   let pond = options.pond
   let position = { ...options.position }
@@ -208,18 +244,33 @@ export function createKoiMotion(options: KoiMotionOptions): KoiMotion {
   let depth = options.depth
   let phase: KoiPhase = 'relaxed'
   let neighbors: readonly NeighborObservation[] = []
-  let fleeingUntilS = 0
   let elapsed = 0
+  let fleeingUntilS = 0
   let threat: Vec2 | null = null
   let depthRequest: number | null = null
   let transitioningUntilS = 0
-  const tune = { speed: 1, turn: 1, wander: 1, clearance: 1 }
+
+  let shore: ShoreState = 'in'
+  let crossings = 0
+  let awayUntilS = 0
+  let boundaryEngaged = false
+
+  let lastDecisionS = -DECISION_INTERVAL_S
+  let course = options.heading
+  let evasionHeading: number | null = null
+  let evasionUrgency = 0
+  let paceScale = 1
+  let turnUntilS = 0
+  let cooldownUntilS = 0
+  let turnDraws = 0
 
   const bodyLength = (): number => pond.fishLength * build.lengthScale * depthScale(depth)
   const bodyGirth = (): number => bodyLength() * build.girthRatio
   let speed = pond.fishLength * lerp(traits.cruiseSpeed, CRUISE_BL_S)
   let spine = createSpine(position, heading, bodyLength())
   const encounters = createEncounterMemory()
+  const pace = createPaceSchedule(seed)
+  const itinerary = createItinerary(seed)
 
   /**
    * What the encounter resolver needs to know about this koi right now.
@@ -233,18 +284,48 @@ export function createKoiMotion(options: KoiMotionOptions): KoiMotion {
     depth,
     length: bodyLength(),
     girth: bodyGirth(),
-    clearanceScale: tune.clearance,
     traits,
   })
 
   /**
-   * Reads how this koi would settle a crossing with one neighbour.
+   * Re-forms the koi's judgement: the itinerary leg, the pace, and how every
+   * nearby crossing is settled.
    *
-   * @param neighbor - The koi it is closing with.
-   * @returns The steering verb, its urgency, and any depth it would rather take.
+   * Runs at its own low cadence rather than every frame, and anchors any
+   * evasion as an absolute heading — a target that chased the koi's own moving
+   * heading is what used to walk the shoal into circles.
    */
-  const encounter = (neighbor: NeighborObservation): EncounterResolution =>
-    resolveEncounter(encounterSelf(), neighbor, givesWay(profile.framework, neighbor.framework))
+  const decide = (): void => {
+    lastDecisionS = elapsed
+    paceScale = 1
+    evasionHeading = null
+    evasionUrgency = 0
+
+    const self = encounterSelf()
+    for (const neighbor of neighbors) {
+      const resolution = encounters.resolve(self, neighbor, givesWay(profile.framework, neighbor.framework), elapsed)
+      if (resolution.action === 'hold') {
+        continue
+      }
+      if (resolution.depth !== null) {
+        depthRequest = resolution.depth
+        continue
+      }
+      if (resolution.action === 'slow') {
+        paceScale = Math.max(0.4, paceScale * (1 - 0.45 * resolution.urgency))
+      } else if (resolution.action === 'accelerate') {
+        paceScale = Math.min(1.7, paceScale * (1 + 0.5 * resolution.urgency))
+      } else if (resolution.urgency >= evasionUrgency) {
+        // why: The arc follows the urgency, so a grazing encounter asks for a lean while only a genuine collision course asks for the full break.
+        evasionUrgency = resolution.urgency
+        evasionHeading = heading + resolution.turn * lerp(resolution.urgency, EVASION_TURN)
+      }
+    }
+
+    if (shore === 'in') {
+      course = headingTo(position, itinerary.current(pond, position, elapsed).point)
+    }
+  }
 
   /**
    * The heading this koi wants, and how hard it is committed to it.
@@ -256,39 +337,62 @@ export function createKoiMotion(options: KoiMotionOptions): KoiMotion {
       return { heading: headingAwayFrom(position, threat, heading), gain: ESCAPE_TURN_GAIN }
     }
 
+    // why: A koi that chose to slip out holds its course — the whole point of the slip is that the correction was ignored.
+    if (shore === 'leaving' || shore === 'away') {
+      return { heading, gain: GLIDE_GAIN }
+    }
+
+    if (shore === 'returning') {
+      // why: The itinerary's course predates the absence; until the koi is back inside, the only sensible pull is open water.
+      return { heading: headingTo(position, pondCentre(pond)), gain: 0.5 }
+    }
+
     const edge = boundaryPressure(pond, position, heading)
-    // why: The boundary is the one pull that can override a crossing — a koi that dodges a neighbour into open air has left the pond.
-    if (edge.urgency > 0.08) {
+    // why: Engage and release at different urgencies — a single threshold flickers the correction on and off at the margin, and that flicker is the left-right-left vibration.
+    if (!boundaryEngaged && edge.urgency > BOUNDARY_ENGAGE) {
+      boundaryEngaged = true
+      crossings += 1
+      if (slipsAway(seed, crossings)) {
+        shore = 'leaving'
+        return { heading, gain: GLIDE_GAIN }
+      }
+      // why: The itinerary must not keep pulling at the wall the koi is being pushed off — the next leg starts from open water.
+      itinerary.abandon()
+    } else if (boundaryEngaged && edge.urgency < BOUNDARY_RELEASE) {
+      boundaryEngaged = false
+    }
+    if (boundaryEngaged) {
       const caution = 0.4 + traits.directionalCaution * 0.6
+      cooldownUntilS = Math.max(cooldownUntilS, elapsed + 1)
       return { heading: Math.atan2(edge.inward.y, edge.inward.x), gain: 1 + edge.urgency * caution * 2 }
     }
 
-    for (const neighbor of neighbors) {
-      // why: The memory holds the side this koi first chose against each neighbour — near the crossing point the raw bearing flips sign frame to frame, and steering on it raw is what read as vibration.
-      const resolution = encounters.resolve(encounterSelf(), neighbor, givesWay(profile.framework, neighbor.framework), elapsed)
-      if (resolution.action === 'hold') {
-        continue
-      }
-      if (resolution.depth !== null) {
-        depthRequest = resolution.depth
-        continue
-      }
-      if (resolution.action === 'turn') {
-        // why: The offset follows the urgency, so a grazing encounter asks for a lean while only a genuine collision course asks for the full break.
-        return { heading: heading + resolution.turn * (Math.PI / 3) * (0.4 + 0.6 * resolution.urgency), gain: 1 + resolution.urgency }
-      }
-      // note: `slow` and `accelerate` settle an overtaking without a course change, so the koi keeps steering on whatever comes next.
+    if (evasionHeading !== null) {
+      cooldownUntilS = Math.max(cooldownUntilS, elapsed + 1)
+      return { heading: evasionHeading, gain: 1 + evasionUrgency }
     }
 
     const damping = pond.reducedMotion ? REDUCED_MOTION_DAMPING : 1
-    const drift = wanderOffset(profile.traits.awareness * 1000, elapsed) * 0.55 * damping * tune.wander
-    const centre = pondCentre(pond)
-    const fromCentre = Math.hypot(position.x - centre.x, position.y - centre.y)
-    const comfort = Math.min(pond.width, pond.height) * COMFORT_RATIO
-    // why: A weak lean home keeps the shoal loosely orbiting the middle of the pond, so the water a small window looks into is rarely empty; inside the comfort radius the lean vanishes and the drift is all there is.
-    const overshoot = Math.min(1, Math.max(0, (fromCentre - comfort) / comfort))
-    const wandering = turnToward(heading + drift, headingTo(position, centre), overshoot * 0.8)
-    return { heading: wandering, gain: 0.35 + overshoot * 0.3 }
+    const ripple = wanderOffset(seed, elapsed) * WANDER_RIPPLE * damping
+    const error = wrapAngle(course - heading)
+    const finish = (): void => {
+      // why: However a turn ends — course reached or clock expired — its cooldown starts, so turns come as separate events rather than a continuous correction.
+      turnUntilS = 0
+      turnDraws += 1
+      cooldownUntilS = elapsed + lerp(wanderOffset(seed + 7, turnDraws * 13) * 0.5 + 0.5, TURN_COOLDOWN_S)
+    }
+    if (turnUntilS !== 0) {
+      if (elapsed >= turnUntilS || Math.abs(error) < 0.06) {
+        finish()
+        return { heading: course + ripple, gain: GLIDE_GAIN }
+      }
+      return { heading: course, gain: 1 }
+    }
+    if (Math.abs(error) > TURN_TRIGGER && elapsed > cooldownUntilS) {
+      turnUntilS = elapsed + Math.min(TURN_MAX_S, Math.abs(error) / lerp(traits.turnResponsiveness, TURN_RATE) + 0.3)
+      return { heading: course, gain: 1 }
+    }
+    return { heading: course + ripple, gain: GLIDE_GAIN }
   }
 
   /**
@@ -297,40 +401,58 @@ export function createKoiMotion(options: KoiMotionOptions): KoiMotion {
    * @returns The target speed.
    */
   const targetSpeed = (): number => {
+    if (shore === 'away') {
+      return 0
+    }
+    const damping = pond.reducedMotion ? REDUCED_MOTION_DAMPING : 1
     if (elapsed < fleeingUntilS) {
-      const damping = pond.reducedMotion ? REDUCED_MOTION_DAMPING : 1
-      return pond.fishLength * lerp(traits.reactionIntensity, ESCAPE_BL_S) * damping * tune.speed
+      return pond.fishLength * lerp(traits.reactionIntensity, ESCAPE_BL_S) * damping
     }
-    let cruise = pond.fishLength * lerp(traits.cruiseSpeed, CRUISE_BL_S) * tune.speed
-    for (const neighbor of neighbors) {
-      const resolution = encounter(neighbor)
-      if (resolution.action === 'slow') {
-        cruise *= 1 - 0.45 * resolution.urgency
-      } else if (resolution.action === 'accelerate') {
-        cruise *= 1 + 0.5 * resolution.urgency
-      }
-    }
-    return cruise
+    // why: The trait sets this koi's own cruise; the pace schedule loafs and hurries it in bounded, exclusive events; an encounter's give-way scales ride on top.
+    return pond.fishLength * lerp(traits.cruiseSpeed, CRUISE_BL_S) * pace.multiplier(elapsed) * paceScale
   }
 
   return {
-    advance(dt, elapsedS) {
-      elapsed = elapsedS
+    advance(dt) {
+      elapsed += dt
+
+      if (shore === 'leaving') {
+        const bounds = pondBounds(pond)
+        const clearance = bodyLength() * EXIT_CLEARANCE_BL
+        const out = Math.max(bounds.left - position.x, position.x - bounds.right, bounds.top - position.y, position.y - bounds.bottom)
+        if (out > clearance) {
+          shore = 'away'
+          awayUntilS = elapsed + SHORE_ABSENT_S
+        }
+      } else if (shore === 'away' && elapsed >= awayUntilS) {
+        position = wrapAcross(pond, position)
+        shore = 'returning'
+        boundaryEngaged = false
+        itinerary.abandon()
+      } else if (shore === 'returning' && position.x > 0 && position.x < pond.width && position.y > 0 && position.y < pond.height) {
+        shore = 'in'
+      }
+
+      if (elapsed - lastDecisionS >= DECISION_INTERVAL_S) {
+        decide()
+      }
+
       const previousHeading = heading
       const wanted = desire()
-      const turnRate = lerp(traits.turnResponsiveness, TURN_RATE) * wanted.gain * tune.turn
+      const turnRate = lerp(traits.turnResponsiveness, TURN_RATE) * wanted.gain
       heading = turnToward(heading, wanted.heading, turnRate * dt)
 
-      const target = targetSpeed()
-      speed += (target - speed) * Math.min(1, SPEED_EASE * dt)
-      position = { x: position.x + Math.cos(heading) * speed * dt, y: position.y + Math.sin(heading) * speed * dt }
+      speed += (targetSpeed() - speed) * Math.min(1, SPEED_EASE * dt)
+      if (shore !== 'away') {
+        position = { x: position.x + Math.cos(heading) * speed * dt, y: position.y + Math.sin(heading) * speed * dt }
+      }
 
-      const turnedBy = Math.abs(turnToward(0, heading - previousHeading, Math.PI)) / Math.max(dt, 1e-6)
+      const turnedBy = Math.abs(wrapAngle(heading - previousHeading)) / Math.max(dt, 1e-6)
       if (elapsed < transitioningUntilS) {
         phase = 'depth-transition'
       } else if (elapsed < fleeingUntilS) {
         phase = 'escape'
-      } else if (turnedBy > TURNING_THRESHOLD) {
+      } else if (turnedBy > TURNING_ENTER || (phase === 'turning' && turnedBy > TURNING_EXIT)) {
         phase = 'turning'
       } else {
         phase = 'relaxed'
@@ -380,19 +502,16 @@ export function createKoiMotion(options: KoiMotionOptions): KoiMotion {
       neighbors = next
     },
 
-    setTune(next) {
-      tune.speed = next.speedScale ?? tune.speed
-      tune.turn = next.turnScale ?? tune.turn
-      tune.wander = next.wanderScale ?? tune.wander
-      tune.clearance = next.clearanceScale ?? tune.clearance
-    },
-
     get state() {
       return { position, heading, speed, phase, depth, length: bodyLength(), spine }
     },
 
     get isFleeing() {
       return elapsed < fleeingUntilS
+    },
+
+    get isAway() {
+      return shore === 'away'
     },
 
     outline() {

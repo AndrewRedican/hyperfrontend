@@ -1,5 +1,4 @@
 import type { KoiState } from '../../koi/koi-motion'
-import type { KoiTune } from '@hyperfrontend/demo-koi-lib'
 import type { KoiRenderer } from '../../koi/koi-render'
 import type { KoiRendererFactory } from '../koi-runtime'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
@@ -8,7 +7,7 @@ import { createKoiRuntime } from '../koi-runtime'
 /** A renderer stand-in recording what the loop asked it to draw. */
 interface FakeRenderer extends KoiRenderer {
   draws: number
-  tunes: KoiTune[]
+  disposed: number
   last: KoiState | null
 }
 
@@ -23,7 +22,7 @@ function fakeRenderer(): FakeRenderer {
       throw new Error('the runtime never reads the koi handle')
     },
     draws: 0,
-    tunes: [],
+    disposed: 0,
     last: null,
     draw(state) {
       fake.draws += 1
@@ -32,10 +31,9 @@ function fakeRenderer(): FakeRenderer {
     setPond() {},
     setHovered() {},
     placeCard() {},
-    applyTune(tune) {
-      fake.tunes.push(tune)
+    dispose() {
+      fake.disposed += 1
     },
-    dispose() {},
   }
   return fake
 }
@@ -47,6 +45,9 @@ function createRaf() {
     pending = callback
     return 1
   }
+  const cancel = (): void => {
+    pending = null
+  }
   /**
    * Runs the frame the loop is waiting on at a chosen timestamp.
    *
@@ -57,7 +58,7 @@ function createRaf() {
     pending = null
     callback?.(timestamp)
   }
-  return { request, tick }
+  return { request, cancel, tick, waiting: () => pending !== null }
 }
 
 describe('createKoiRuntime', () => {
@@ -72,7 +73,9 @@ describe('createKoiRuntime', () => {
     renderer = fakeRenderer()
     raf = createRaf()
     vi.stubGlobal('requestAnimationFrame', raf.request)
+    vi.stubGlobal('cancelAnimationFrame', raf.cancel)
     window.requestAnimationFrame = raf.request
+    window.cancelAnimationFrame = raf.cancel
     // why: jsdom ships no matchMedia, and the standalone fallback reads it once at construction to honour reduced motion.
     vi.stubGlobal('matchMedia', () => ({ matches: false }))
   })
@@ -132,9 +135,38 @@ describe('createKoiRuntime', () => {
     expect(Math.hypot(resumed.x - held.x, resumed.y - held.y)).toBeGreaterThan(10)
   })
 
-  it('routes the playground tune to both the brain and the renderer', () => {
+  it('cancels its animation frame outright while asleep', () => {
     const runtime = createKoiRuntime(root, build)
-    runtime.applyTune({ speedScale: 0.5, widthScale: 1.2 })
-    expect(renderer.tunes).toEqual([{ speedScale: 0.5, widthScale: 1.2 }])
+    raf.tick(1000)
+    runtime.setPaused(true)
+    // why: A sleeping koi must not even hold a pending callback — seven hidden frames each waking per frame is the battery cost sleep exists to remove.
+    expect(raf.waiting()).toBe(false)
+    runtime.setPaused(false)
+    expect(raf.waiting()).toBe(true)
+  })
+
+  it('resumes from sleep without a false stall', () => {
+    const runtime = createKoiRuntime(root, build)
+    const sent = emissions(runtime)
+    raf.tick(1000)
+    const before = lastNose(sent)
+    runtime.setPaused(true)
+    runtime.setPaused(false)
+    // why: The first frame back starts a fresh clock — an hour asleep must not arrive as one clamped leap of travel.
+    raf.tick(3_601_000)
+    raf.tick(3_601_016)
+    const after = lastNose(sent)
+    expect(Math.hypot(after.x - before.x, after.y - before.y)).toBeLessThan(10)
+  })
+
+  it('tears everything down on dispose', () => {
+    const runtime = createKoiRuntime(root, build)
+    raf.tick(1000)
+    runtime.dispose()
+    expect(renderer.disposed).toBe(1)
+    expect(raf.waiting()).toBe(false)
+    // why: A disposed koi stays disposed — waking it up again would leak the very loop dispose exists to stop.
+    runtime.setPaused(false)
+    expect(raf.waiting()).toBe(false)
   })
 })
