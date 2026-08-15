@@ -33,7 +33,7 @@ const TRIM_DRAWS = 24
  * A rough blend of API surface, ecosystem weight, and conceptual footprint —
  * a visual metaphor, not a measurement. A heavier framework swims as a
  * broader, deeper-bodied koi; a lighter one stays slender. The range is
- * deliberately restrained so the seven still read as one species.
+ * deliberately restrained so the shoal still reads as one species.
  */
 const HEFT: Readonly<Record<KoiFramework, number>> = {
   vanilla: 0.2,
@@ -117,6 +117,8 @@ interface KoiBody {
   tailSpan: number
   /** Caudal fork depth, 0 to 1. */
   caudalFork: number
+  /** Lateral fan of the caudal lobes as a fraction of body length. */
+  caudalSpread: number
   /** Pectoral fin span as a fraction of body length. */
   finSpan: number
   /** Head width multiplier. */
@@ -153,6 +155,8 @@ function koiBody(framework: KoiFramework, seed: number): KoiBody {
     dorsalRidge: band(draw(5), 0.08, 0.22),
     tailSpan: band(draw(6), 0.22, 0.3),
     caudalFork: band(draw(7), 0.24, 0.44),
+    // why: The pond is watched from above, where a purely vertical tail blade reads as a sliver — every koi fans its lobes a little sideways so the tail keeps its silhouette straight overhead. Draw 13 was the body band's next free slot; earlier draws must never shift.
+    caudalSpread: band(draw(13), 0.16, 0.24),
     finSpan: band(draw(8), 0.15, 0.21),
     headWidth: 0.96 + heft * 0.09 + band(draw(9), -0.02, 0.02),
     snout: band(draw(10), 0.6, 0.95),
@@ -186,7 +190,7 @@ export function koiBuild(framework: KoiFramework, seed: number): KoiBuild {
  *
  * Uses many small levers rather than one uniform scale: a heavier framework
  * is wider through the shoulders, deeper through the belly, broader-headed
- * and thicker-tailed, so the shoal reads as seven related but individually
+ * and thicker-tailed, so the shoal reads as related but individually
  * recognisable animals.
  *
  * @param framework - The framework slug, which sets the notional heft.
@@ -209,7 +213,7 @@ export function koiPhenotype(framework: KoiFramework, seed: number): KoiPhenotyp
     dorsalRidge: body.dorsalRidge,
     peduncleWidth: body.peduncle,
     head: { width: body.headWidth, snout: body.snout, forehead: body.forehead },
-    caudal: { span: body.tailSpan * 1.38, fork: body.caudalFork },
+    caudal: { span: body.tailSpan * 1.38, fork: body.caudalFork, spread: body.caudalSpread },
     pectoral: { span: body.finSpan * 0.92 },
   }
 }

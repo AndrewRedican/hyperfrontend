@@ -142,6 +142,11 @@ describe('buildCaudalFin', () => {
     const { min, max } = meshBounds(buildCaudalFin(DEFAULT_PHYSICAL, COARSE))
     expect(max[1] - min[1]).toBeCloseTo(DEFAULT_PHYSICAL.caudal.span, 2)
   })
+
+  it('fans its lobes sideways to the configured spread, so the fork reads from straight above', () => {
+    const { min, max } = meshBounds(buildCaudalFin(DEFAULT_PHYSICAL, COARSE))
+    expect(max[2] - min[2]).toBeCloseTo(DEFAULT_PHYSICAL.caudal.spread, 2)
+  })
 })
 
 /** The volume a closed mesh encloses; negative means its triangles are wound inside-out. */

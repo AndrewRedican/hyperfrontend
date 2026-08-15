@@ -223,8 +223,8 @@ export function buildCaudalFin(physical: KoiPhysical, resolution: KoiResolution)
       const rootEdge = bottomY + (topY - bottomY) * ((across + 1) * 0.5)
       const y = rootEdge + (centreY + caudal.span * 0.5 * across - rootEdge) * flare
       const x = rootX - chord * outward
-      // why: A slight cupping keeps the two lobes from being coplanar, so the tail catches a highlight even when it is momentarily straight.
-      const z = caudal.thickness * across * (1 - Math.abs(across)) * flare * 2.2
+      // why: A slight cupping keeps the two lobes from being coplanar, so the tail catches a highlight even when it is momentarily straight — and the lobes fan sideways off the blade's plane so the fork stays a fork when the pond is watched from straight above, instead of collapsing into an edge-on sliver.
+      const z = caudal.thickness * across * (1 - Math.abs(across)) * flare * 2.2 + caudal.spread * 0.5 * across * flare
       // why: The blade's span maps onto one half of the peduncle's ring — dorsal at the upper lobe, ventral at the lower — so the pattern bleeding out of the body arrives on the right lobe.
       row.push(
         pushVertex(

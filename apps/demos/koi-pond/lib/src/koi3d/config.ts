@@ -95,6 +95,9 @@ export interface KoiCaudalShape {
   sweep: number
   /** Membrane thickness at the peduncle, as a fraction of total length. */
   thickness: number
+  /** How far the two lobes fan sideways out of the blade's plane, tip to tip, as a fraction of total length. */
+  // why: A perfectly flat vertical blade vanishes edge-on when the pond is watched from straight above; the dihedral keeps the fork silhouette present at every camera angle.
+  spread: number
 }
 
 /** The physical build of one koi. */
@@ -240,7 +243,7 @@ export const DEFAULT_PHYSICAL: KoiPhysical = {
   peduncleDepth: 1,
   head: { length: 0.26, width: 1.05, height: 1, snout: 0.8, forehead: 0.45 },
   eyes: { station: 0.115, spacing: 0.94, size: 0.019, protrusion: 0.42, rise: 0.34 },
-  caudal: { span: 0.36, fork: 0.34, sweep: 0.22, thickness: 0.05 },
+  caudal: { span: 0.36, fork: 0.34, sweep: 0.22, thickness: 0.05, spread: 0.2 },
   pectoral: { station: 0.235, girth: 0.325, root: 0.05, span: 0.165, sweep: 0.6, scallop: 0.45, taper: 0.42, cup: 0.34 },
   dorsal: { station: 0.325, girth: 0, root: 0.255, span: 0.082, sweep: 0.26, scallop: 0.28, taper: 1, cup: 0.12 },
   pelvic: { station: 0.455, girth: 0.418, root: 0.042, span: 0.115, sweep: 0.66, scallop: 0.4, taper: 0.38, cup: 0.3 },
