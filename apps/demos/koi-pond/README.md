@@ -19,7 +19,7 @@ exists to show.
 
 | Path                                                       | Role                                                                                                 |
 | ---------------------------------------------------------- | ---------------------------------------------------------------------------------------------------- |
-| `host/`                                                    | `demo-koi-pond` — pond bed, water, pointer, depth, relay, playground controls; hostee shell          |
+| `host/`                                                    | `demo-koi-pond` — pond bed, water, pointer, depth, relay; hostee shell                               |
 | `host/vendor/`                                             | the seven committed koi shell tarballs the host installs by `file:`                                  |
 | `fish-<framework>/`                                        | `demo-koi-fish-<framework>` — one koi per framework: vanilla react vue svelte solid preact lit       |
 | `fish-<framework>/feature.config.ts`                       | each koi's shell packaging — contract, canonical origin, display modes, an explicitly open protocol  |
@@ -34,11 +34,12 @@ exists to show.
 
 - **Two contracts.** The inner contract (`lib/src/contract/koi-fish.contract.ts`) runs between
   the pond host and each koi: the host announces the world (`pond`), identity, relayed
-  neighbours, disturbances, depth grants, hover, sleep, click-to-inspect (`pause`) and the
-  playground (`tune`); the koi answers with its outline, depth and ripple requests, and a
-  settled signal. The outer contract (`host/koi-pond.contract.ts`) runs between the gallery and
-  the pond: `set-scene`/`disturb` in, `shoal`/`sequence-complete`/`close-request` out. The
-  gallery never learns there are seven apps inside.
+  neighbours, disturbances, depth grants, hover, sleep, and click-to-inspect (`pause`); the koi
+  answers with its outline, depth and ripple requests, and a settled signal. The outer contract
+  (`host/koi-pond.contract.ts`) runs between the gallery and the pond: `set-scene`/`disturb` in,
+  `shoal`/`sequence-complete`/`close-request` out. The pond re-emits `shoal` as a ten-second
+  roll call even when nothing changed — an embedder watching for signs of life must never read
+  a calm pond as an outage. The gallery never learns there are seven apps inside.
 - **Seven features, seven shells.** Each koi is packaged exactly like any other feature: its
   `feature.config.ts` names the contract (a re-export of the shared library's), its canonical
   origin, and its display modes, and `pack-shell` emits a typed shell package the host vendors
@@ -55,17 +56,36 @@ exists to show.
 - **One camera, seven renders.** Every fish builds the same camera from the pond announcement
   (`lib/src/model/pond-view.ts` holds the numbers, `lib/src/three/pond-view.ts` the builder):
   ~10° tilt, agreed px-per-unit at the swim plane, `pond` lighting, ACESFilmic/1.15. Seven
-  independent transparent `WebGLRenderer`s therefore composite as one scene; the host itself
-  stays GL-free (its bed and surface are canvas-2D).
+  independent transparent `WebGLRenderer`s therefore composite as one scene.
+- **Each koi renders only its own water.** A fish's canvas covers just its frame box — a square
+  around its own body — and the shared camera is narrowed onto that box (`setViewOffset`), so
+  the small canvas paints pixel-identically what a full-viewport render would have put there.
+  The canvas slides with the fish on a compositor transform; a koi outside the visible window
+  draws nothing at all. Seven viewport-sized antialiased framebuffers were the pond's real
+  memory and fill bill, and this is what replaced them.
+- **The host paints the water on one small context.** The bed is a still canvas-2D painting,
+  refreshed only on resize; the moving surface — the caustic web and the ripple crests — is one
+  fragment shader on the host's single WebGL context, rendered below device resolution because
+  water is soft, with the old canvas-2D painter kept as an automatic fallback.
 - **Depth is z-index.** Seven logical depth levels map to the stacking order of host-owned
   containers; passing above or below a neighbour requires a granted two-level shift with a
   cooldown, and the surface water always paints topmost. Each koi carries its own contact
   shadow, so the upper fish's shadow falls across whatever swims beneath it.
 - **The host owns the pointer.** Every koi frame is `pointer-events: none`; the host runs one
   normalized stream, hit-tests against fish-reported outlines, and tells the winner. Hovering
-  reveals a fish's framework and app URL; clicking a fish holds it in place for inspection
-  (it sculls, keeps reporting, and resumes on the next click); clicking open water strikes it,
-  ripples the surface, and scatters the shoal.
+  reveals a fish's framework and app URL; pressing a fish holds it in place for inspection
+  (it sculls, keeps reporting, and resumes on the next press); pressing open water strikes it,
+  ripples the surface, and scatters the shoal. A fingertip gets the same experience as a
+  cursor: taps hit-test with widened slack, a tap on a fish reveals its identity card, and the
+  card clamps itself into the visible window.
+- **A koi's life is scheduled, not noisy.** Each fish swims legs of a seeded itinerary at a
+  seeded pace — loafs, brisk stretches, and rare bursts arrive as discrete bounded events that
+  never stack; a change of course is a turn that begins, runs its arc, and ends into a cooldown.
+  Roughly one waypoint in ten deliberately crosses the visible window, so trajectories keep
+  passing through the water a visitor is actually looking at without ever fencing the fish in.
+  And roughly one boundary approach in five is ignored outright: the koi slips out past the
+  hard edge, disappears for about five seconds, and re-enters from the opposite side — the same
+  fish leaving one bank and coming back from another.
 - **Coordination is relayed, never broadcast.** Fish report compact spine outlines at a low
   cadence; the host broad-phase filters and relays each fish only its nearby neighbours,
   dead-reckoning stale reports forward along their own headings. The seven inner channels run
@@ -85,10 +105,9 @@ exists to show.
 In the gallery the card is a small window onto the running pond, inviting **click to expand**;
 expansion restyles the same embed into a viewport overlay — same session, same iframe, no
 teardown — with close/Escape/next-demo chrome. Expanded (and standalone), the pond paints its
-bed at ~70% opacity so the page beneath stays perceptible; in the card it paints solid. The
-host's playground panel exposes a curated set of live levers (pace, agility, wander, spacing,
-body wave, beat, wave reach, girth, body depth) that broadcast `tune` scales each fish lays
-over its own derived numbers.
+bed at ~70% opacity so the page beneath stays perceptible; in the card it paints solid but lets
+its outermost edges thin toward half transparency along the card's rounded corners, so the
+water sits _in_ the card rather than reading as a square image pasted onto it.
 
 ## The koi model
 
@@ -211,9 +230,10 @@ A few constraints the scene depends on:
 
 - **Fish apps must paint nothing on `body` or their root** — any paint blanks the pond behind
   that frame for every koi below it.
-- **Seven GL contexts is the budget, and it belongs to the fish.** The host stays off WebGL, and
-  each fish bundles its own copy of `three` — a shared chunk would need a shared origin and break
-  the isolation the demo exists to prove.
+- **Eight GL contexts is the budget: seven belong to the fish, one to the host's water.** Each
+  fish bundles its own copy of `three` — a shared chunk would need a shared origin and break
+  the isolation the demo exists to prove — and each renders only its own frame box, so the
+  budget is counted in fish-sized buffers, not viewports.
 - **The curtain covers the staggered reveal.** Frames stay hidden until each session opens; the
   host lifts the curtain when the seventh koi lands, or at a deadline so an unreachable fish
   cannot hold the pond dark.
