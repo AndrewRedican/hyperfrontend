@@ -20,7 +20,7 @@
  * behind this frame for every koi below it. The canvas clears to transparent;
  * only the fish itself has colour.
  */
-import type { KoiFrameBox, KoiProfile, PondEnvironment } from '@hyperfrontend/demo-koi-lib'
+import type { KoiCardLink, KoiFrameBox, KoiProfile, PondEnvironment } from '@hyperfrontend/demo-koi-lib'
 import type { Koi, PondView } from '@hyperfrontend/demo-koi-lib/three'
 import type { WebGLRenderer } from 'three'
 import type { KoiState } from './koi-motion'
@@ -63,6 +63,15 @@ export interface KoiRenderer {
    * @param state - What the koi is doing right now.
    */
   placeCard(state: KoiState): void
+  /**
+   * Where the card's URL line currently sits, in pond space.
+   *
+   * This frame is pointer-transparent, so the link text drawn here can never be
+   * clicked directly; the host lays a real anchor over the reported rectangle.
+   *
+   * @returns The rectangle, or `null` while the card is hidden.
+   */
+  cardLinkRect(): KoiCardLink | null
   /** Releases the GPU resources the koi holds. */
   dispose(): void
 }
@@ -91,6 +100,9 @@ export function createKoiRenderer(
   createGl: (canvas: HTMLCanvasElement) => GlRenderer = createPondRenderer
 ): KoiRenderer {
   const { palette, build, phenotype, trim } = profile
+
+  // why: The card's markup belongs to the element's template; the anchor is looked up once here so each outline can report where the URL text sits.
+  const cardUrl = card.querySelector<HTMLAnchorElement>('.koi-card-url')
 
   const gl = createGl(canvas)
   const view: PondView = createPondView(pond)
@@ -131,6 +143,8 @@ export function createKoiRenderer(
           canvas.style.display = 'none'
         }
         lastHeading = state.heading
+        // why: The speed memory must track through skipped frames too, or re-entering the view lands the whole offscreen speed change as a single-frame acceleration spike that convulses the body.
+        lastSpeed = state.speed / bodyPx
         return
       }
       if (!shown) {
@@ -192,6 +206,15 @@ export function createKoiRenderer(
       const clampedX = Math.min(Math.max(x, 8), Math.max(8, current.view.width - width - 8))
       const clampedY = Math.min(Math.max(y, 8), Math.max(8, current.view.height - height - 8))
       card.style.transform = `translate(${clampedX.toFixed(1)}px, ${clampedY.toFixed(1)}px)`
+    },
+
+    cardLinkRect() {
+      if (card.hidden || cardUrl === null) {
+        return null
+      }
+      // why: The frame fills the visible window exactly, so client coordinates become pond coordinates by adding the window's origin back on.
+      const rect = cardUrl.getBoundingClientRect()
+      return { x: rect.left + current.view.x, y: rect.top + current.view.y, width: rect.width, height: rect.height }
     },
 
     dispose() {

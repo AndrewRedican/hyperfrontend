@@ -15,7 +15,7 @@
  * who opens `/fish-lit/` sees one koi swimming in clear water. That is the
  * standalone story every fish app in the pond keeps.
  */
-import type { Disturbance, KoiIdentity, KoiProfile, NeighborObservation, PondEnvironment } from '@hyperfrontend/demo-koi-lib'
+import type { Disturbance, KoiIdentity, KoiProfile, NeighborObservation, PondEnvironment, Vec2 } from '@hyperfrontend/demo-koi-lib'
 import type { ReactiveController, ReactiveControllerHost } from 'lit'
 import type { KoiRuntime } from '../feature/wire-contract'
 import type { GlRenderer, KoiRenderer } from '../koi/koi-render'
@@ -268,6 +268,15 @@ export class KoiSwimController implements ReactiveController, KoiRuntime {
     this.#inspected = inspected
   }
 
+  /**
+   * Carries the held koi to a pond point while a visitor drags it.
+   *
+   * @param point - Where the koi's nose is being carried, in pond space.
+   */
+  placeAt(point: Vec2): void {
+    this.#motion.place(point)
+  }
+
   /** Stops the loop and releases everything the koi holds, once and for good. */
   dispose(): void {
     if (this.#disposed) {
@@ -357,9 +366,11 @@ export class KoiSwimController implements ReactiveController, KoiRuntime {
     const state = this.#motion.state
     if (timestamp - this.#lastOutlineAt >= OUTLINE_INTERVAL_MS) {
       this.#lastOutlineAt = timestamp
-      const outline = this.#motion.outline()
       // why: The host dead-reckons outlines forward by reported speed, so a held koi must report itself stationary or its hover target slides away from its body.
-      this.#emit('outline', this.#inspected ? { ...outline, speed: 0 } : outline)
+      const outline = this.#inspected ? { ...this.#motion.outline(), speed: 0 } : this.#motion.outline()
+      // why: This frame is pointer-transparent, so the card's link can only be opened by the host — the outline carries where the URL text sits whenever the card is showing.
+      const card = this.#renderer?.cardLinkRect() ?? null
+      this.#emit('outline', card === null ? outline : { ...outline, card })
       const requested = this.#motion.takeDepthRequest()
       if (requested !== null) {
         this.#emit('depth-request', { level: requested })

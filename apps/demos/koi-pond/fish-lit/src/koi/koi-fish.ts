@@ -96,10 +96,14 @@ export class KoiFishElement extends LitElement {
       letter-spacing: 0.02em;
     }
 
+    /* why: Styled as the link it is, but this frame never receives the pointer - the host floats a real anchor over the rectangle the outline reports. */
     .koi-card-url {
       font-size: 0.68rem;
-      color: rgba(232, 243, 239, 0.62);
+      color: rgba(124, 192, 255, 0.85);
       font-family: ui-monospace, 'SFMono-Regular', monospace;
+      text-decoration: underline;
+      text-decoration-color: rgba(124, 192, 255, 0.45);
+      text-underline-offset: 2px;
     }
   `
 
@@ -136,7 +140,8 @@ export class KoiFishElement extends LitElement {
       <canvas class="koi-canvas" aria-hidden="true"></canvas>
       <div class="koi-card" hidden>
         <span class="koi-card-name" style=${styleMap({ color: palette.accent })}>${label}</span>
-        <span class="koi-card-url">${this.appUrl}</span>
+        <!-- why: The URL is a real anchor for semantics and link styling, but this frame never receives the pointer — the host reads its rectangle off the outline report and floats the anchor that actually opens it. -->
+        <a class="koi-card-url" href=${this.appUrl} target="_blank" rel="noopener noreferrer">${this.appUrl}</a>
       </div>
     `
   }
