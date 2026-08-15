@@ -249,7 +249,7 @@ describe('boundary behaviour', () => {
 
   it('sometimes slips out, sits away a while, and returns from the opposite side', () => {
     const bounds = pondBounds(POND)
-    // why: React's own seed obeys its first correction, so the vanilla profile — whose first boundary approach rolls a slip — is what drives the full leave-wait-warp-return arc deterministically.
+    // why: The vanilla profile's first boundary approach deterministically rolls a slip, so it is what drives the full leave-wait-warp-return arc regardless of how this app's own seed answers its corrections.
     const motion = swimmer({ profile: koiProfile('vanilla'), position: { x: bounds.right - POND.fishLength * 0.5, y: 400 }, heading: 0 })
     let wentAway = false
     let cameBack = false
