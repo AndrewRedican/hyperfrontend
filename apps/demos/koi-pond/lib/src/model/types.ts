@@ -131,6 +131,38 @@ export interface KoiOutline {
    * over the links and an inert shield over the rest.
    */
   card?: KoiCardPanel
+  /**
+   * What this koi is currently steering by, for the host's interaction
+   * overlay. Omitted while the koi is held — a paused fish is not going
+   * anywhere.
+   */
+  intent?: KoiIntent
+}
+
+/**
+ * Why a koi is steering where it is steering.
+ *
+ * `travel` is ordinary progress toward its own destination, `avoid` is any
+ * collision-avoidance manoeuvre — fleeing a disturbance, turning off a
+ * boundary, or giving way to a neighbour — and `depth-change` is the decision
+ * to pass above or underneath another koi instead of turning.
+ */
+export type KoiIntentKind = 'travel' | 'avoid' | 'depth-change'
+
+/** One koi's current decision, reported alongside its outline. */
+export interface KoiIntent {
+  /** The decision family, which is also the overlay's colour. */
+  kind: KoiIntentKind
+  /**
+   * The point the koi is currently steering toward, in pond space — its own
+   * waypoint while travelling, the projected escape path while avoiding.
+   * `null` when the manoeuvre is vertical.
+   */
+  target: Vec2 | null
+  /** Which way a depth change passes the neighbour. */
+  direction?: 'above' | 'below'
+  /** How far ahead the koi is anticipating encounters right now, in pond pixels. */
+  reachPx: number
 }
 
 /** A pond-space rectangle inside one koi's identity card. */

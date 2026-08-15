@@ -43,6 +43,8 @@ export type {
   KoiCardPanel,
   KoiFramework,
   KoiIdentity,
+  KoiIntent,
+  KoiIntentKind,
   KoiOutline,
   KoiPalette,
   KoiPhase,
