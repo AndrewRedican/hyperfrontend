@@ -349,6 +349,14 @@ export function buildControlGroups(viewport: Viewport, state: WorkbenchState, on
           (value) => koi.setPhysical({ caudal: { ...physical.caudal, sweep: value } })
         ),
         slider(
+          'Tail spread',
+          0,
+          0.4,
+          0.01,
+          () => physical.caudal.spread,
+          (value) => koi.setPhysical({ caudal: { ...physical.caudal, spread: value } })
+        ),
+        slider(
           'Pectoral span',
           0.04,
           0.3,
