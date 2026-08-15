@@ -3,12 +3,13 @@
  * The Vue renderer: one 3D koi, drawn through the shared pond view.
  *
  * The template owns exactly two elements — the canvas the koi renders into and
- * the identity card the host reveals on hover — and `onMounted` is where the
- * scene behind them comes to life. The component hands an imperative handle up
- * through `onReady` so the frame loop can drive the koi directly: sixty draws a
- * second write GPU uniforms and one element transform, never reactive state.
- * Only the hover flag is a ref, because it flips a handful of times a minute
- * and the card's visibility is the one thing the template decides.
+ * the identity card a visitor opens by holding the koi — and `onMounted` is
+ * where the scene behind them comes to life. The component hands an imperative
+ * handle up through `onReady` so the frame loop can drive the koi directly:
+ * sixty draws a second write GPU uniforms and one element transform, never
+ * reactive state. Only the selection flag and the card's inspector rows are
+ * refs, because they change a handful of times a minute and the card is the
+ * one thing the template decides.
  *
  * The canvas covers only the koi's own frame box, never the whole viewport:
  * the shared camera is narrowed onto that box each frame, so the small canvas
@@ -21,16 +22,31 @@
  * else: the swimming brain stays authoritative for where the fish *is*, and
  * this component only makes the koi's body express it.
  */
-import type { KoiFrameBox, KoiProfile, PondEnvironment } from '@hyperfrontend/demo-koi-lib'
+import type { KoiCardLink, KoiCardText, KoiFrameBox, KoiProfile, PondEnvironment } from '@hyperfrontend/demo-koi-lib'
 import type { Koi, PondView } from '@hyperfrontend/demo-koi-lib/three'
 import type { GlRenderer, KoiSceneHandle } from './koi-render'
-import { POND_VIEW, koiFrameBox, koiSeed, pxPerUnit, swimDepth, wrapAngle } from '@hyperfrontend/demo-koi-lib'
+import {
+  FRAMEWORK_SITES,
+  POND_VIEW,
+  describeKoiCard,
+  koiFrameBox,
+  koiSeed,
+  pxPerUnit,
+  swimDepth,
+  wrapAngle,
+} from '@hyperfrontend/demo-koi-lib'
 import { createKoi, createLighting, createPondView, fitPondRenderer } from '@hyperfrontend/demo-koi-lib/three'
 import { Scene } from 'three'
 import { onMounted, onUnmounted, ref, useTemplateRef } from 'vue'
 
 /** How far the frame box's edge may drift from the fitted buffer before a re-fit, as a fraction. */
 const REFIT_DRIFT = 0.1
+
+/** How firmly the silhouette reads when the pointer is merely over the koi. */
+const HOVER_OUTLINE = 0.35
+
+/** How firmly the silhouette reads while a visitor holds the koi. */
+const HELD_OUTLINE = 1
 
 /** What the renderer factory mounts this component with. */
 interface Props {
@@ -51,9 +67,19 @@ const props = defineProps<Props>()
 const canvasRef = useTemplateRef<HTMLCanvasElement>('canvas')
 const cardRef = useTemplateRef<HTMLDivElement>('card')
 const cardUrlRef = useTemplateRef<HTMLAnchorElement>('cardUrl')
+const cardSiteRef = useTemplateRef<HTMLAnchorElement>('cardSite')
 
-/** Whether the host's pointer is over this koi, which is what shows its identity card. */
-const hovered = ref(false)
+/** Whether a visitor is holding this koi, which is what shows its identity card. */
+const selected = ref(false)
+
+/** The card's inspector rows, rewritten from the live facts while the koi is held. */
+const rows = ref<KoiCardText | null>(null)
+
+/** The official website of the framework driving this app, linked from the card. */
+const siteUrl = FRAMEWORK_SITES[props.profile.framework]
+
+/** Whether the host's pointer is over this koi; it only shades the silhouette, so it never touches the template. */
+let hovered = false
 
 /** What unmounting must release; nothing until the scene exists. */
 let cleanup: (() => void) | null = null
@@ -96,6 +122,23 @@ onMounted(() => {
   let fittedSize = 0
   let shown = true
   const box: KoiFrameBox = { x: 0, y: 0, size: 0, visible: false }
+
+  /** Traces the silhouette at whatever the pointer and the hold currently justify. */
+  const applyOutline = (): void => {
+    koi.setOutline(selected.value ? HELD_OUTLINE : hovered ? HOVER_OUTLINE : 0)
+  }
+
+  /**
+   * A card element's rectangle lifted into pond space.
+   *
+   * @param element - The element to measure.
+   * @returns The pond-space rectangle.
+   */
+  const rectOf = (element: HTMLElement): KoiCardLink => {
+    // why: The frame fills the visible window exactly, so client coordinates become pond coordinates by adding the window's origin back on.
+    const rect = element.getBoundingClientRect()
+    return { x: rect.left + current.view.x, y: rect.top + current.view.y, width: rect.width, height: rect.height }
+  }
 
   cleanup = () => {
     koi.dispose()
@@ -159,7 +202,18 @@ onMounted(() => {
     },
 
     setHovered(next) {
-      hovered.value = next
+      hovered = next
+      applyOutline()
+    },
+
+    setSelected(next) {
+      // why: The card belongs to the hold, not the pointer — it stays open however the pointer moves, because the visitor is about to interact with it.
+      selected.value = next
+      applyOutline()
+    },
+
+    updateCard(details) {
+      rows.value = describeKoiCard(details)
     },
 
     placeCard(state) {
@@ -179,14 +233,13 @@ onMounted(() => {
       card.style.transform = `translate(${clampedX.toFixed(1)}px, ${clampedY.toFixed(1)}px)`
     },
 
-    cardLinkRect() {
+    cardRects() {
       const cardUrl = cardUrlRef.value
-      if (!hovered.value || cardUrl === null) {
+      const cardSite = cardSiteRef.value
+      if (!selected.value || cardUrl === null || cardSite === null) {
         return null
       }
-      // why: The frame fills the visible window exactly, so client coordinates become pond coordinates by adding the window's origin back on.
-      const rect = cardUrl.getBoundingClientRect()
-      return { x: rect.left + current.view.x, y: rect.top + current.view.y, width: rect.width, height: rect.height }
+      return { frame: rectOf(card), app: rectOf(cardUrl), site: rectOf(cardSite) }
     },
   })
 })
@@ -198,9 +251,18 @@ onUnmounted(() => {
 
 <template>
   <canvas ref="canvas" class="koi-canvas" aria-hidden="true"></canvas>
-  <div ref="card" class="koi-card" :hidden="!hovered">
-    <span class="koi-card-name" :style="{ color: profile.palette.accent }">{{ profile.label }}</span>
-    <!-- why: The URL is a real anchor for semantics and link styling, but this frame never receives the pointer — the host reads its rectangle off the outline report and floats the anchor that actually opens it. -->
+  <div ref="card" class="koi-card" :hidden="!selected">
+    <span class="koi-card-name">
+      <!-- why: The variety rides beside the framework name — the pattern is the koi's own identity, and it costs one word to say this asagi is the React app. -->
+      <span class="koi-card-title" :style="{ color: profile.palette.accent }">{{ profile.label }}</span>
+      <span class="koi-card-variety">{{ profile.palette.pattern }}</span>
+    </span>
+    <span class="koi-card-line koi-card-state">{{ rows?.state }}</span>
+    <!-- why: The links are real anchors for semantics and styling, but this frame never receives the pointer — the host reads their rectangles off the outline report and floats the anchors that actually open them. -->
     <a ref="cardUrl" class="koi-card-url" :href="url" target="_blank" rel="noopener noreferrer">{{ url }}</a>
+    <span class="koi-card-line koi-card-runtime">{{ rows?.runtime }}</span>
+    <span class="koi-card-line koi-card-memory">{{ rows?.memory }}</span>
+    <span class="koi-card-line koi-card-event" :hidden="!rows || rows.event === null">{{ rows?.event }}</span>
+    <a ref="cardSite" class="koi-card-site" :href="siteUrl" target="_blank" rel="noopener noreferrer">{{ profile.label }} website ↗</a>
   </div>
 </template>

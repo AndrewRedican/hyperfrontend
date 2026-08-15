@@ -78,8 +78,11 @@ describe('createKoiRenderer', () => {
     const card = root.querySelector<HTMLElement>('.koi-card')
     expect(canvas).not.toBeNull()
     expect(card?.hidden).toBe(true)
-    expect(card?.querySelector('.koi-card-name')?.textContent).toBe(PROFILE.label)
+    expect(card?.querySelector('.koi-card-title')?.textContent).toBe(PROFILE.label)
     expect(card?.querySelector('.koi-card-url')?.textContent).toBe('https://pond.example/fish-vue/')
+    const site = card?.querySelector<HTMLAnchorElement>('.koi-card-site')
+    expect(site?.href).toContain('vuejs.org')
+    expect(site?.rel).toBe('noopener noreferrer')
   })
 
   it('sizes its buffer to the koi frame box, never the viewport', () => {
@@ -209,19 +212,78 @@ describe('createKoiRenderer', () => {
     expect(koi.getObjectByName('koi-shadow')).toBeDefined()
   })
 
-  it('reveals and places the card only while hovered', async () => {
+  it('keeps the card closed on hover — hovering only says selectable', async () => {
     const renderer = createKoiRenderer(root, PROFILE, 'url', POND, () => gl)
-    const card = root.querySelector<HTMLElement>('.koi-card')
-    expect(card).not.toBeNull()
+    const card = <HTMLElement>root.querySelector<HTMLElement>('.koi-card')
     renderer.setHovered(true)
-    // why: Hover visibility rides the card's reactive binding, so it lands on Vue's next flush rather than inside the call.
+    // why: Card visibility rides the selection ref's reactive binding, so any flip would land on Vue's next flush — the assertion has to wait for it.
     await nextTick()
-    expect(card?.hidden).toBe(false)
-    renderer.placeCard(cruising({ position: { x: 500, y: 320 } }))
-    expect(card?.style.transform).toContain('translate(')
+    expect(card.hidden).toBe(true)
+  })
+
+  it('traces the silhouette softly on hover and fully while held', () => {
+    const renderer = createKoiRenderer(root, PROFILE, 'url', POND, () => gl)
+    const outline = renderer.koi.object.getObjectByName('koi-outline-skin')
+    expect(outline?.visible).toBe(false)
+    renderer.setHovered(true)
+    expect(outline?.visible).toBe(true)
+    renderer.setHovered(false)
+    expect(outline?.visible).toBe(false)
+    renderer.setSelected(true)
+    expect(outline?.visible).toBe(true)
+  })
+
+  it('opens the card with the hold and keeps it open however the pointer moves', async () => {
+    const renderer = createKoiRenderer(root, PROFILE, 'url', POND, () => gl)
+    const card = <HTMLElement>root.querySelector<HTMLElement>('.koi-card')
+    renderer.setSelected(true)
+    // why: Card visibility rides the selection ref's reactive binding, so it lands on Vue's next flush rather than inside the call.
+    await nextTick()
+    expect(card.hidden).toBe(false)
+    // why: The visitor is about to move the pointer off the fish and into the card — losing the card to that move is exactly the regression this pins.
+    renderer.setHovered(true)
     renderer.setHovered(false)
     await nextTick()
-    expect(card?.hidden).toBe(true)
+    expect(card.hidden).toBe(false)
+    renderer.placeCard(cruising({ position: { x: 500, y: 320 } }))
+    expect(card.style.transform).toContain('translate(')
+    renderer.setSelected(false)
+    await nextTick()
+    expect(card.hidden).toBe(true)
+  })
+
+  it('rewrites the inspector rows from the live facts', async () => {
+    const renderer = createKoiRenderer(root, PROFILE, 'url', POND, () => gl)
+    renderer.updateCard({
+      held: true,
+      phase: 'relaxed',
+      speedBL: 0.4,
+      neighbours: 2,
+      hosted: true,
+      origin: 'same-origin',
+      uptimeS: 30,
+      fps: 60,
+      memoryBytes: null,
+      memoryState: 'unavailable',
+      lastEvent: { kind: 'disturbance', ageS: 1.5 },
+    })
+    // why: The rows ride reactive bindings, so the text lands on Vue's next flush rather than inside the call.
+    await nextTick()
+    expect(root.querySelector('.koi-card-state')?.textContent).toContain('Held')
+    expect(root.querySelector('.koi-card-runtime')?.textContent).toContain('same-origin')
+    expect(root.querySelector('.koi-card-memory')?.textContent).toBe('Memory · unavailable')
+    expect(root.querySelector('.koi-card-event')?.textContent).toContain('disturbance')
+  })
+
+  it('reports the card frame and both link rectangles only while held', () => {
+    const renderer = createKoiRenderer(root, PROFILE, 'url', POND, () => gl)
+    expect(renderer.cardRects()).toBeNull()
+    renderer.setSelected(true)
+    const rects = renderer.cardRects()
+    expect(rects).not.toBeNull()
+    expect(rects?.frame).toBeDefined()
+    expect(rects?.app).toBeDefined()
+    expect(rects?.site).toBeDefined()
   })
 
   it('tears the whole koi down on dispose', () => {

@@ -12,7 +12,7 @@
  * frame for every koi below it. The canvas clears to transparent; only the fish
  * itself has colour.
  */
-import type { KoiCardLink, KoiProfile, PondEnvironment } from '@hyperfrontend/demo-koi-lib'
+import type { KoiCardDetails, KoiCardPanel, KoiProfile, PondEnvironment } from '@hyperfrontend/demo-koi-lib'
 import type { Koi } from '@hyperfrontend/demo-koi-lib/three'
 import type { WebGLRenderer } from 'three'
 import type { KoiState } from './koi-motion'
@@ -41,26 +41,45 @@ export interface KoiRenderer {
    */
   setPond(pond: PondEnvironment): void
   /**
-   * Shows or hides the hover identity card.
+   * Marks whether the host's pointer is over this koi.
    *
-   * @param hovered - Whether the host's pointer is over this koi.
+   * Hover only says "this is selectable": the silhouette reads softly and
+   * nothing else changes — the identity card belongs to selection.
+   *
+   * @param hovered - Whether the pointer is over this koi.
    */
   setHovered(hovered: boolean): void
   /**
-   * Positions the hover card beside the koi, clamped into the visible window.
+   * Marks whether a visitor is holding this koi.
+   *
+   * Holding traces the full silhouette and keeps the identity card open until
+   * release, whatever the pointer does meanwhile.
+   *
+   * @param selected - Whether the koi is held.
+   */
+  setSelected(selected: boolean): void
+  /**
+   * Rewrites the card's live inspector rows.
+   *
+   * @param details - The koi's live facts.
+   */
+  updateCard(details: KoiCardDetails): void
+  /**
+   * Positions the identity card beside the koi, clamped into the visible window.
    *
    * @param state - What the koi is doing right now.
    */
   placeCard(state: KoiState): void
   /**
-   * Where the card's URL line currently sits, in pond space.
+   * Where the card and its two links currently sit, in pond space.
    *
-   * This frame is pointer-transparent, so the link text drawn here can never be
-   * clicked directly; the host lays a real anchor over the reported rectangle.
+   * This frame is pointer-transparent, so nothing drawn here can be clicked
+   * directly; the host floats real anchors over the reported rectangles and an
+   * inert shield over the frame.
    *
-   * @returns The rectangle, or `null` while the card is hidden.
+   * @returns The card's geometry, or `null` while the card is hidden.
    */
-  cardLinkRect(): KoiCardLink | null
+  cardRects(): KoiCardPanel | null
   /** Releases the GPU resources the koi holds. */
   dispose(): void
 }
@@ -115,8 +134,10 @@ export function createKoiRenderer(
     draw: scene.draw,
     setPond: scene.setPond,
     setHovered: scene.setHovered,
+    setSelected: scene.setSelected,
+    updateCard: scene.updateCard,
     placeCard: scene.placeCard,
-    cardLinkRect: scene.cardLinkRect,
+    cardRects: scene.cardRects,
     dispose() {
       // why: Unmounting is the whole teardown — the component releases the GPU in its own unmounted hook and Vue removes the canvas and card with the tree.
       app.unmount()
