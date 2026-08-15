@@ -123,17 +123,17 @@ export interface KoiOutline {
   /** The behavioural state the body is reading in. */
   phase: KoiPhase
   /**
-   * The pond-space rectangle of the identity card's URL line, while the card is
-   * showing.
+   * Where the identity card and its interactive spots sit, while a visitor
+   * holds this koi.
    *
-   * The koi's frame is pointer-transparent, so a link drawn inside it can never
-   * be clicked; reporting where the URL text sits lets the host float a real
-   * anchor over it.
+   * The koi's frame is pointer-transparent, so nothing drawn inside it can be
+   * clicked; reporting the card's geometry lets the host float real anchors
+   * over the links and an inert shield over the rest.
    */
-  card?: KoiCardLink
+  card?: KoiCardPanel
 }
 
-/** The pond-space rectangle one koi's card URL line occupies. */
+/** A pond-space rectangle inside one koi's identity card. */
 export interface KoiCardLink {
   /** Pond-space x of the rectangle's left edge. */
   x: number
@@ -143,6 +143,27 @@ export interface KoiCardLink {
   width: number
   /** Rectangle height in CSS pixels. */
   height: number
+}
+
+/** The geometry of one koi's identity card: its frame and its two links. */
+export interface KoiCardPanel {
+  /** The whole card's rectangle. */
+  frame: KoiCardLink
+  /** The rectangle of the app URL line, linking to this fish's own application. */
+  app: KoiCardLink
+  /** The rectangle of the framework line, linking to the framework's official site. */
+  site: KoiCardLink
+}
+
+/** The official website each framework's card links out to. */
+export const FRAMEWORK_SITES: Readonly<Record<KoiFramework, string>> = {
+  vanilla: 'https://www.typescriptlang.org/',
+  react: 'https://react.dev/',
+  vue: 'https://vuejs.org/',
+  svelte: 'https://svelte.dev/',
+  solid: 'https://www.solidjs.com/',
+  preact: 'https://preactjs.com/',
+  lit: 'https://lit.dev/',
 }
 
 /**

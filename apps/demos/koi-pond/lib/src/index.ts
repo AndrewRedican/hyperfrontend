@@ -40,6 +40,7 @@ export type {
   Disturbance,
   KoiBuild,
   KoiCardLink,
+  KoiCardPanel,
   KoiFramework,
   KoiIdentity,
   KoiOutline,
@@ -119,7 +120,9 @@ export { koiLabel, koiPalette } from './model/palette.js'
 export type { PondViewSpec } from './model/pond-view.js'
 export { POND_VIEW, pxPerUnit } from './model/pond-view.js'
 export { koiBuild, koiPhenotype, koiProfile, koiSeed, koiTraits, koiTrim } from './model/traits.js'
-export { KOI_FRAMEWORKS } from './model/types.js'
+export { FRAMEWORK_SITES, KOI_FRAMEWORKS } from './model/types.js'
+export type { KoiCardDetails, KoiCardText, KoiMemoryState } from './model/card.js'
+export { describeKoiCard } from './model/card.js'
 
 export { sampleSection, sectionPoint } from './koi3d/anatomy.js'
 export { bodyRingCount, buildBodyMesh, eyeTheta, surfaceNormal, surfacePoint } from './koi3d/body-mesh.js'

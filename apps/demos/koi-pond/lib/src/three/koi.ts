@@ -16,7 +16,7 @@ import type { KoiAppearance, KoiConfigInput, KoiMotionInput, KoiPhysical, KoiRes
 import type { SpinePose } from '../koi3d/spine-pose.js'
 import type { KoiSwimState } from '../koi3d/swim-state.js'
 import type { KoiUniforms } from './materials.js'
-import { Color, Group, Mesh, PlaneGeometry, ShaderMaterial } from 'three'
+import { BackSide, Color, Group, Mesh, PlaneGeometry, ShaderMaterial } from 'three'
 import { sampleSection } from '../koi3d/anatomy.js'
 import { buildBodyMesh } from '../koi3d/body-mesh.js'
 import { CAUDAL_ROOT, resolveKoiConfig } from '../koi3d/config.js'
@@ -26,6 +26,7 @@ import { mergeMeshes } from '../koi3d/mesh-data.js'
 import { buildPattern } from '../koi3d/pattern.js'
 import { SPINE_SAMPLES, evaluateSpine } from '../koi3d/spine-pose.js'
 import { createSwimState } from '../koi3d/swim-state.js'
+import { DEFORM_VERTEX_COMMON } from './deform.glsl.js'
 import { toBufferGeometry } from './geometry.js'
 import { applyAppearance, createEyeMaterial, createFinMaterial, createKoiUniforms, createSkinMaterial } from './materials.js'
 
@@ -144,6 +145,16 @@ export interface Koi {
    */
   setBeat(phase: number): void
   /**
+   * Traces the koi's silhouette, or stops tracing it.
+   *
+   * The trace is a second draw of the koi's own deforming surfaces, grown a
+   * little and painted flat, so it hugs the body and tail through every pose at
+   * the cost of two draws — and only while it is showing.
+   *
+   * @param strength - How firmly the silhouette reads, 0 (off) to 1.
+   */
+  setOutline(strength: number): void
+  /**
    * The chain of spheres the koi currently occupies.
    *
    * @param samples - How many spheres to return; at least two.
@@ -156,6 +167,66 @@ export interface Koi {
 
 /** How the koi is smaller, dimmer and bluer the deeper it swims. */
 const DEFAULT_DEPTH: KoiDepthResponse = { scale: 0.72, fade: 0.42, dim: 0.66, tint: '#2b4a55' }
+
+/** The silhouette's colour, matching the pond's selection blue. */
+const OUTLINE_COLOUR = '#68b2ff'
+
+/** How much each cross-section grows for the silhouette, as a fraction of its own offset. */
+const OUTLINE_GROW = 0.05
+
+/** How far the silhouette pushes along the rest normal, as a fraction of body length. */
+const OUTLINE_PUSH = 0.011
+
+/** How opaque the silhouette is at full strength. */
+const OUTLINE_OPACITY = 0.85
+
+/**
+ * Builds the material that draws the koi's silhouette trace.
+ *
+ * The vertex program is the same spine deformation every koi surface runs —
+ * the material shares the live uniform objects — plus a small grow, so the
+ * trace follows the animated body exactly rather than approximating it from
+ * outside. Growing the local offset is what gives the flat fin membranes an
+ * edge too; the normal push alone would slide a sheet sideways instead of
+ * widening it.
+ *
+ * @param uniforms - The koi's shared uniform block.
+ * @returns The silhouette material.
+ */
+function createOutlineMaterial(uniforms: KoiUniforms): ShaderMaterial {
+  return new ShaderMaterial({
+    transparent: true,
+    depthWrite: false,
+    // why: Only the hull's far side may draw — the body then occludes the trace's interior and just the rim around the silhouette survives; front faces would paint the whole fish flat blue.
+    side: BackSide,
+    uniforms: {
+      uSpine: uniforms.uSpine,
+      uSpineAxis: uniforms.uSpineAxis,
+      uFinFlex: uniforms.uFinFlex,
+      uKoiLength: uniforms.uKoiLength,
+      uBeat: uniforms.uBeat,
+      uOutlineColour: { value: new Color(OUTLINE_COLOUR) },
+      uOutlineOpacity: { value: OUTLINE_OPACITY },
+    },
+    vertexShader: /* glsl */ `
+      ${DEFORM_VERTEX_COMMON}
+      void main() {
+        koiRestNormal = normal;
+        koiReadSpine(aBody.x);
+        vec3 koiLocal = koiLocalOffset(position, aBody.x) + koiFinFlex(koiRestNormal);
+        vec3 grown = koiLocal * ${(1 + OUTLINE_GROW).toFixed(4)} + koiRestNormal * uKoiLength * ${OUTLINE_PUSH.toFixed(4)};
+        gl_Position = projectionMatrix * modelViewMatrix * vec4(koiCentre + koiFrame * grown, 1.0);
+      }
+    `,
+    fragmentShader: /* glsl */ `
+      uniform vec3 uOutlineColour;
+      uniform float uOutlineOpacity;
+      void main() {
+        gl_FragColor = vec4(uOutlineColour, uOutlineOpacity);
+      }
+    `,
+  })
+}
 
 /** How far beneath the body the contact shadow lies, as a fraction of body length. */
 const SHADOW_DROP = 0.2
@@ -286,8 +357,18 @@ export function createKoi(input: KoiConfigInput = {}): Koi {
   eyes.name = 'koi-eyes'
   // why: The fins are translucent and do not write depth, so they have to be drawn after everything opaque they might be seen through.
   fins.renderOrder = 1
+  // why: The trace shares the body's and fins' own geometry and live spine uniforms, so it deforms with them for free; drawn just after the shadow, the body then paints over its interior and only the rim survives.
+  const outlineMaterial = createOutlineMaterial(uniforms)
+  const outlineSkin = new Mesh(skin.geometry, outlineMaterial)
+  const outlineFins = new Mesh(fins.geometry, outlineMaterial)
+  outlineSkin.name = 'koi-outline-skin'
+  outlineFins.name = 'koi-outline-fins'
+  outlineSkin.renderOrder = -0.5
+  outlineFins.renderOrder = -0.5
+  outlineSkin.visible = false
+  outlineFins.visible = false
   const shadow = buildShadow(config.physical.length, sampleSection(config.physical, 0.5).halfWidth * config.physical.length)
-  object.add(shadow, skin, fins, eyes)
+  object.add(shadow, outlineSkin, outlineFins, skin, fins, eyes)
 
   const swim = createSwimState({}, config.trim)
   let pose = evaluateSpine(config.physical.length, swim.swim, 0)
@@ -303,6 +384,9 @@ export function createKoi(input: KoiConfigInput = {}): Koi {
     skin.geometry = toBufferGeometry(mergeMeshes([buildBodyMesh(config.physical, config.resolution), buildBarbels(config.physical)]))
     fins.geometry = toBufferGeometry(buildFinSet(config.physical, config.resolution))
     eyes.geometry = toBufferGeometry(buildEyes(config.physical, config.resolution))
+    // why: The trace borrows the live surfaces' geometry, so a rebuild must re-point it or it would keep deforming a disposed buffer.
+    outlineSkin.geometry = skin.geometry
+    outlineFins.geometry = fins.geometry
     for (const geometry of bodies) {
       geometry.dispose()
     }
@@ -391,6 +475,16 @@ export function createKoi(input: KoiConfigInput = {}): Koi {
       swim.setPhase(phase)
       repose()
     },
+    setOutline(strength) {
+      const firm = Math.min(1, Math.max(0, strength))
+      const shown = firm > 0
+      outlineSkin.visible = shown
+      outlineFins.visible = shown
+      const opacity = outlineMaterial.uniforms['uOutlineOpacity']
+      if (opacity !== undefined) {
+        opacity.value = OUTLINE_OPACITY * firm
+      }
+    },
     collisionChain(samples = 6) {
       const count = Math.max(2, samples)
       const points: [number, number, number][] = []
@@ -418,6 +512,7 @@ export function createKoi(input: KoiConfigInput = {}): Koi {
       skinMaterial.dispose()
       finMaterial.dispose()
       eyeMaterial.dispose()
+      outlineMaterial.dispose()
     },
   }
 }
