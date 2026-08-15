@@ -3,7 +3,7 @@ import { defineConfig } from '@hyperfrontend/features'
 export default defineConfig({
   name: '@hyperfrontend/demo-koi-fish-svelte',
   // note: The version tracks the shared koi contract's version; the shell build requires the two to agree.
-  version: '0.6.0',
+  version: '0.7.0',
   contract: './koi-fish.contract.ts',
   url: 'https://demo-koi-fish-svelte-production.up.railway.app/',
   // why: An open shell, acknowledged at pack time - eight koi share one page reporting outlines at high cadence, and a per-message security envelope across eight channels collapses delivery. Messages still pin to the configured origin.

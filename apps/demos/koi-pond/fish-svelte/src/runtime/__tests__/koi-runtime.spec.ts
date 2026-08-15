@@ -137,6 +137,7 @@ describe('createKoiRuntime', () => {
       frame: { x: 300, y: 180, width: 220, height: 96 },
       app: { x: 312, y: 220, width: 180, height: 14 },
       site: { x: 312, y: 250, width: 120, height: 13 },
+      source: { x: 312, y: 266, width: 96, height: 13 },
     }
     raf.tick(1101)
     expect((<{ frame: object }>lastOutline()['card']).frame).toEqual({ x: 300, y: 180, width: 220, height: 96 })

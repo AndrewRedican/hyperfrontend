@@ -81,6 +81,10 @@ describe('createKoiRenderer', () => {
     const site = card?.querySelector<HTMLAnchorElement>('.koi-card-site')
     expect(site?.href).toContain('svelte.dev')
     expect(site?.rel).toBe('noopener noreferrer')
+    const source = card?.querySelector<HTMLAnchorElement>('.koi-card-source')
+    expect(source?.href).toContain('github.com/AndrewRedican/hyperfrontend')
+    expect(source?.href).toContain('fish-svelte')
+    expect(source?.rel).toBe('noopener noreferrer')
   })
 
   it('colours the card label with this koi accent', () => {
@@ -274,7 +278,7 @@ describe('createKoiRenderer', () => {
     expect(root.querySelector('.koi-card-event')?.textContent).toContain('disturbance')
   })
 
-  it('reports the card frame and both link rectangles only while held', () => {
+  it('reports the card frame and all three link rectangles only while held', () => {
     const renderer = createKoiRenderer(root, PROFILE, 'url', POND, () => gl)
     expect(renderer.cardRects()).toBeNull()
     renderer.setSelected(true)
@@ -283,6 +287,7 @@ describe('createKoiRenderer', () => {
     expect(rects?.frame).toBeDefined()
     expect(rects?.app).toBeDefined()
     expect(rects?.site).toBeDefined()
+    expect(rects?.source).toBeDefined()
   })
 
   it('tears the whole koi down on dispose', () => {
