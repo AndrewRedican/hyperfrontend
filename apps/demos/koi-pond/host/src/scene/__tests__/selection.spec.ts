@@ -11,6 +11,7 @@ const PANEL: KoiCardPanel = {
   frame: { x: 300, y: 180, width: 220, height: 96 },
   app: { x: 312, y: 220, width: 180, height: 14 },
   site: { x: 312, y: 250, width: 120, height: 13 },
+  source: { x: 312, y: 266, width: 96, height: 13 },
 }
 
 /** Builds a root and the chrome under test. */
@@ -21,11 +22,11 @@ function harness() {
 }
 
 describe('the card chrome', () => {
-  it('raises a shield and two anchors for a held koi, hidden until the card reports', () => {
+  it('raises a shield and three anchors for a held koi, hidden until the card reports', () => {
     const { root, chrome } = harness()
     chrome.hold('lit', 'https://pond.test/fish-lit/')
     expect(root.querySelector('.koi-card-shield')?.hasAttribute('hidden')).toBe(true)
-    expect(root.querySelectorAll('.koi-card-link')).toHaveLength(2)
+    expect(root.querySelectorAll('.koi-card-link')).toHaveLength(3)
   })
 
   it('never doubles up however many times the same koi is held', () => {
@@ -35,15 +36,18 @@ describe('the card chrome', () => {
     expect(root.querySelectorAll('.koi-card-shield')).toHaveLength(1)
   })
 
-  it('links the app URL and the framework site as ordinary new-tab anchors', () => {
+  it('links the app URL, the framework site, and the app source as ordinary new-tab anchors', () => {
     const { root, chrome } = harness()
     chrome.hold('lit', 'https://pond.test/fish-lit/')
-    const [app, site] = [...root.querySelectorAll<HTMLAnchorElement>('.koi-card-link')]
+    const [app, site, source] = [...root.querySelectorAll<HTMLAnchorElement>('.koi-card-link')]
     expect(app?.href).toBe('https://pond.test/fish-lit/')
     expect(site?.href).toBe('https://lit.dev/')
+    expect(source?.href).toContain('github.com/AndrewRedican/hyperfrontend')
+    expect(source?.href).toContain('fish-lit')
     expect(app?.target).toBe('_blank')
     expect(app?.rel).toBe('noopener noreferrer')
     expect(site?.rel).toBe('noopener noreferrer')
+    expect(source?.rel).toBe('noopener noreferrer')
   })
 
   it('floats every piece over the reported card, in view coordinates', () => {
@@ -57,6 +61,17 @@ describe('the card chrome', () => {
     expect(shield?.style.transform).toContain(`${(300 - POND.view.x).toFixed(1)}px`)
     expect(app?.style.width).toBe('180px')
     expect(site?.style.transform).toContain(`${(312 - POND.view.x).toFixed(1)}px`)
+  })
+
+  it('hides only the source anchor when an older shell reports a card without one', () => {
+    const { root, chrome } = harness()
+    chrome.hold('lit', 'https://pond.test/fish-lit/')
+    const bare = <KoiCardPanel>(<unknown>{ frame: PANEL.frame, app: PANEL.app, site: PANEL.site })
+    chrome.trackCard('lit', bare, POND)
+    const [app, site, source] = [...root.querySelectorAll<HTMLAnchorElement>('.koi-card-link')]
+    expect(app?.hidden).toBe(false)
+    expect(site?.hidden).toBe(false)
+    expect(source?.hidden).toBe(true)
   })
 
   it('hides while the card has no geometry to sit on', () => {
