@@ -76,13 +76,16 @@ describe('createKoiRenderer', () => {
     const card = root.querySelector<HTMLElement>('.koi-card')
     expect(canvas).not.toBeNull()
     expect(card?.hidden).toBe(true)
-    expect(card?.querySelector('.koi-card-name')?.textContent).toBe(PROFILE.label)
+    expect(card?.querySelector('.koi-card-title')?.textContent).toBe(PROFILE.label)
     expect(card?.querySelector('.koi-card-url')?.textContent).toBe('https://pond.example/fish-svelte/')
+    const site = card?.querySelector<HTMLAnchorElement>('.koi-card-site')
+    expect(site?.href).toContain('svelte.dev')
+    expect(site?.rel).toBe('noopener noreferrer')
   })
 
   it('colours the card label with this koi accent', () => {
     createKoiRenderer(root, PROFILE, 'url', POND, () => gl)
-    const name = root.querySelector<HTMLElement>('.koi-card-name') as HTMLElement
+    const name = root.querySelector<HTMLElement>('.koi-card-title') as HTMLElement
     // how: Writing the accent through another element's style normalises the hex the same way jsdom normalised the label's, so the two strings compare exactly.
     const probe = document.createElement('span')
     probe.style.color = PROFILE.palette.accent
@@ -216,15 +219,70 @@ describe('createKoiRenderer', () => {
     expect(koi.getObjectByName('koi-shadow')).toBeDefined()
   })
 
-  it('reveals and places the card only while hovered', () => {
+  it('keeps the card closed on hover — hovering only says selectable', () => {
     const renderer = createKoiRenderer(root, PROFILE, 'url', POND, () => gl)
     const card = root.querySelector<HTMLElement>('.koi-card') as HTMLElement
     renderer.setHovered(true)
+    expect(card.hidden).toBe(true)
+  })
+
+  it('traces the silhouette softly on hover and fully while held', () => {
+    const renderer = createKoiRenderer(root, PROFILE, 'url', POND, () => gl)
+    const outline = renderer.koi.object.getObjectByName('koi-outline-skin')
+    expect(outline?.visible).toBe(false)
+    renderer.setHovered(true)
+    expect(outline?.visible).toBe(true)
+    renderer.setHovered(false)
+    expect(outline?.visible).toBe(false)
+    renderer.setSelected(true)
+    expect(outline?.visible).toBe(true)
+  })
+
+  it('opens the card with the hold and keeps it open however the pointer moves', () => {
+    const renderer = createKoiRenderer(root, PROFILE, 'url', POND, () => gl)
+    const card = root.querySelector<HTMLElement>('.koi-card') as HTMLElement
+    renderer.setSelected(true)
+    expect(card.hidden).toBe(false)
+    // why: The visitor is about to move the pointer off the fish and into the card — losing the card to that move is exactly the regression this pins.
+    renderer.setHovered(true)
+    renderer.setHovered(false)
     expect(card.hidden).toBe(false)
     renderer.placeCard(cruising({ position: { x: 500, y: 320 } }))
     expect(card.style.transform).toContain('translate(')
-    renderer.setHovered(false)
+    renderer.setSelected(false)
     expect(card.hidden).toBe(true)
+  })
+
+  it('rewrites the inspector rows from the live facts', () => {
+    const renderer = createKoiRenderer(root, PROFILE, 'url', POND, () => gl)
+    renderer.updateCard({
+      held: true,
+      phase: 'relaxed',
+      speedBL: 0.4,
+      neighbours: 2,
+      hosted: true,
+      origin: 'same-origin',
+      uptimeS: 30,
+      fps: 60,
+      memoryBytes: null,
+      memoryState: 'unavailable',
+      lastEvent: { kind: 'disturbance', ageS: 1.5 },
+    })
+    expect(root.querySelector('.koi-card-state')?.textContent).toContain('Held')
+    expect(root.querySelector('.koi-card-runtime')?.textContent).toContain('same-origin')
+    expect(root.querySelector('.koi-card-memory')?.textContent).toBe('Memory · unavailable')
+    expect(root.querySelector('.koi-card-event')?.textContent).toContain('disturbance')
+  })
+
+  it('reports the card frame and both link rectangles only while held', () => {
+    const renderer = createKoiRenderer(root, PROFILE, 'url', POND, () => gl)
+    expect(renderer.cardRects()).toBeNull()
+    renderer.setSelected(true)
+    const rects = renderer.cardRects()
+    expect(rects).not.toBeNull()
+    expect(rects?.frame).toBeDefined()
+    expect(rects?.app).toBeDefined()
+    expect(rects?.site).toBeDefined()
   })
 
   it('tears the whole koi down on dispose', () => {
