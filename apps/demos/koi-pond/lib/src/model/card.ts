@@ -1,5 +1,5 @@
 /**
- * The identity card's inspector text, derived once so seven apps agree.
+ * The identity card's inspector text, derived once so every app agrees.
  *
  * Every koi renders its own card in its own framework — that independence is
  * the demo's point — but the *story* the card tells must be identical: the same
@@ -24,8 +24,14 @@ export interface KoiCardDetails {
   neighbours: number
   /** Whether a pond host mounted this app, or it is running standalone. */
   hosted: boolean
-  /** How the app's origin relates to the page embedding it, or `null` standalone. */
-  origin: 'same-origin' | 'cross-site' | null
+  /**
+   * How this app's origin relates to the page embedding it, or `null` standalone.
+   *
+   * A composed deployment serves every fish from the pond's own origin, so
+   * `same-origin` is the honest reading there; a fish framed from its own
+   * standalone origin reads `cross-origin` instead.
+   */
+  origin: 'same-origin' | 'cross-origin' | null
   /** Seconds since this app booted. */
   uptimeS: number
   /** This app's own recent render rate in frames per second, or `null` before it settles. */
