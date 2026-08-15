@@ -204,6 +204,10 @@ export function createPond(root: HTMLElement, hooks: PondHooks): PondSceneHandle
     if (inspected.has(framework)) {
       return
     }
+    // why: One inspection at a time — picking a new koi releases whichever one was held, whether the pick came from a tap or a click. release() only deletes the entry being visited, so walking the set while freeing is safe.
+    for (const other of inspected) {
+      release(other)
+    }
     inspected.add(framework)
     chrome.hold(framework, fishHomeUrl(framework))
     sendTo(framework, 'pause', { paused: true })
