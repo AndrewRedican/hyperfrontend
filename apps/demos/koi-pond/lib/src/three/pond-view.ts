@@ -34,6 +34,16 @@ export interface PondViewport {
   fishLength: number
 }
 
+/** The sub-rect of pond space a frame call narrows the camera onto. */
+export interface PondFrameRect {
+  /** Pond-space x of the rect's left edge. */
+  x: number
+  /** Pond-space y of the rect's top edge. */
+  y: number
+  /** Rect edge length in CSS pixels. */
+  size: number
+}
+
 /** The shared view of the pond one fish renders through. */
 export interface PondView {
   /** The camera, already placed; re-placed whenever the pond changes. */
@@ -44,6 +54,16 @@ export interface PondView {
    * @param pond - The world as the host most recently announced it.
    */
   setPond(pond: PondViewport): void
+  /**
+   * Narrows the camera onto a square sub-rect of the view.
+   *
+   * The projection stays the shared pond camera's — the sub-rect renders
+   * exactly the pixels the full view would have put there — so a small canvas
+   * covering just one koi composites seamlessly with every other frame.
+   *
+   * @param rect - The sub-rect, usually a koi's own frame box.
+   */
+  frame(rect: PondFrameRect): void
   /**
    * The point on the swim plane that projects to a pond-space position.
    *
@@ -80,6 +100,8 @@ export function createPondView(pond: PondViewport): PondView {
   const scratch = new Vector3()
   const anchor = new Vector3()
   let viewport = pond
+  // why: When the camera is narrowed onto a sub-rect, unprojection must read NDC against that rect — the offset projection maps the rect, not the view, onto clip space.
+  let framed: { x: number; y: number; width: number; height: number } | null = null
 
   const setPond = (next: PondViewport): void => {
     const unitsHigh = next.view.height / pxPerUnit(next.fishLength)
@@ -98,13 +120,16 @@ export function createPondView(pond: PondViewport): PondView {
     // why: This camera lives outside any scene, so nothing else ever refreshes the world matrices that unprojection reads.
     camera.updateMatrixWorld()
     viewport = next
+    framed = null
+    camera.clearViewOffset()
   }
 
   setPond(pond)
 
   const worldFromPond = (at: Vec2, out: Vector3 = scratch): Vector3 => {
-    // why: Pond space is anchored on the virtual pond, so the point is first taken relative to the visible window this camera actually frames.
-    out.set((2 * (at.x - viewport.view.x)) / viewport.view.width - 1, 1 - (2 * (at.y - viewport.view.y)) / viewport.view.height, 0.5)
+    // why: Pond space is anchored on the virtual pond, so the point is first taken relative to the window the camera currently frames — the whole view, or a narrowed sub-rect.
+    const rect = framed ?? viewport.view
+    out.set((2 * (at.x - rect.x)) / rect.width - 1, 1 - (2 * (at.y - rect.y)) / rect.height, 0.5)
     out.unproject(camera)
     out.sub(camera.position)
     // why: A camera above the plane looking down always gives the ray a negative y, but a degenerate viewport should fail visibly at the origin rather than throw at infinity.
@@ -115,6 +140,17 @@ export function createPondView(pond: PondViewport): PondView {
   return {
     camera,
     setPond,
+    frame(rect) {
+      framed = { x: rect.x, y: rect.y, width: rect.size, height: rect.size }
+      camera.setViewOffset(
+        viewport.view.width,
+        viewport.view.height,
+        rect.x - viewport.view.x,
+        rect.y - viewport.view.y,
+        rect.size,
+        rect.size
+      )
+    },
     worldFromPond,
     place(object, at, heading) {
       object.position.copy(worldFromPond(at, anchor))
@@ -141,7 +177,8 @@ export function createPondView(pond: PondViewport): PondView {
  * ```
  */
 export function createPondRenderer(canvas: HTMLCanvasElement): WebGLRenderer {
-  const renderer = new WebGLRenderer({ canvas, antialias: true, alpha: true, powerPreference: 'high-performance' })
+  // why: The scenes are one small fish each, so the integrated GPU is always enough — asking for the high-performance one would spin up discrete silicon seven times over for no visible gain.
+  const renderer = new WebGLRenderer({ canvas, antialias: true, alpha: true, powerPreference: 'low-power' })
   renderer.setClearAlpha(0)
   renderer.toneMapping = ACESFilmicToneMapping
   renderer.toneMappingExposure = POND_VIEW.exposure
@@ -162,4 +199,23 @@ export function sizePondRenderer(renderer: Pick<WebGLRenderer, 'setPixelRatio' |
   // magic: Two device pixels per CSS pixel is where extra resolution stops being visible on a moving fish and starts costing fill rate.
   renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
   renderer.setSize(width, height, false)
+}
+
+/** Largest drawing-buffer edge a koi's canvas may allocate, in device pixels. */
+const MAX_FRAME_BUFFER_PX = 1280
+
+/**
+ * Sizes a fish's renderer to its own square frame box.
+ *
+ * The buffer edge is capped so a cinema display's koi never allocates more
+ * than a bounded framebuffer: past the cap the device-pixel ratio yields
+ * instead, which on a fish this size is invisible.
+ *
+ * @param renderer - The renderer to size.
+ * @param size - Frame box edge length in CSS pixels.
+ */
+export function fitPondRenderer(renderer: Pick<WebGLRenderer, 'setPixelRatio' | 'setSize'>, size: number): void {
+  const ratio = Math.min(window.devicePixelRatio, 2, size > 0 ? MAX_FRAME_BUFFER_PX / size : 2)
+  renderer.setPixelRatio(ratio)
+  renderer.setSize(size, size, false)
 }

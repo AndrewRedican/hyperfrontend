@@ -149,34 +149,6 @@ export interface NeighborObservation {
   girth: number
 }
 
-/**
- * The visitor's playground settings, broadcast by the host to the whole shoal.
- *
- * Scales multiply each koi's own derived behaviour rather than replacing it,
- * so the individual variety the seeds bought survives the sliders. Every
- * field is optional; an omitted field keeps its current value.
- */
-export interface KoiTune {
-  /** Multiplies cruise and escape speed. */
-  speedScale?: number
-  /** Multiplies turn rate. */
-  turnScale?: number
-  /** Multiplies the ambient wander drift. */
-  wanderScale?: number
-  /** Multiplies the clearance a koi claims in an encounter. */
-  clearanceScale?: number
-  /** Multiplies the body wave's amplitude. */
-  amplitudeScale?: number
-  /** Multiplies the tail-beat frequency. */
-  frequencyScale?: number
-  /** Overrides how far forward the body wave reaches; positive moves it toward the snout. */
-  waveReach?: number
-  /** Multiplies body width against each koi's own build. */
-  widthScale?: number
-  /** Multiplies body height against each koi's own build. */
-  heightScale?: number
-}
-
 /** The eight normalised behavioural traits that make each koi its own animal. */
 export interface KoiTraits {
   /** How briskly it cruises when nothing is happening. */

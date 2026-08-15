@@ -38,7 +38,7 @@ export interface KoiContract {
 }
 
 /** The contract cut every pond project is built against. */
-export const KOI_CONTRACT_VERSION = '0.2.0'
+export const KOI_CONTRACT_VERSION = '0.3.0'
 
 /** The contract the pond host and all seven koi share. */
 export const koiFishContract: KoiContract = {
@@ -141,25 +141,6 @@ export const koiFishContract: KoiContract = {
         type: 'object',
         properties: { paused: { type: 'boolean' } },
         required: ['paused'],
-      },
-    },
-    {
-      type: 'tune',
-      description:
-        "The visitor's playground settings, broadcast to the whole shoal. Scales multiply this koi's own derived behaviour rather than replacing it, so individual variety survives the sliders; body settings pass straight to the 3D model. Every field is optional and omitted fields keep their current value.",
-      schema: {
-        type: 'object',
-        properties: {
-          speedScale: { type: 'number' },
-          turnScale: { type: 'number' },
-          wanderScale: { type: 'number' },
-          clearanceScale: { type: 'number' },
-          amplitudeScale: { type: 'number' },
-          frequencyScale: { type: 'number' },
-          waveReach: { type: 'number' },
-          widthScale: { type: 'number' },
-          heightScale: { type: 'number' },
-        },
       },
     },
   ],

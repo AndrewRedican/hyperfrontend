@@ -5,6 +5,7 @@ import {
   describePond,
   entryStation,
   isVisible,
+  koiFrameBox,
   nominalFishLength,
   pondBounds,
   pondCentre,
@@ -229,5 +230,44 @@ describe('entryStation', () => {
     const pond = desktopPond()
     const entry = entryStation(pond, 12345)
     expect(Number.isFinite(entry.position.x) && Number.isFinite(entry.heading)).toBe(true)
+  })
+})
+
+describe('koiFrameBox', () => {
+  it('centres the box on the body, not the nose', () => {
+    const pond = desktopPond()
+    // how: Heading along +x, the body trails to the left of the nose, so the box centre sits half a length back.
+    const box = koiFrameBox({ x: 700, y: 450 }, 0, 200, pond.view)
+    expect(box.x + box.size / 2).toBeCloseTo(600)
+    expect(box.y + box.size / 2).toBeCloseTo(450)
+  })
+
+  it('claims enough water around the body for fins, sweep, and shadow', () => {
+    const pond = desktopPond()
+    const box = koiFrameBox({ x: 700, y: 450 }, 0, 200, pond.view)
+    expect(box.size).toBeGreaterThanOrEqual(200 * 1.5)
+  })
+
+  it('sees a koi in the middle of the window', () => {
+    const pond = desktopPond()
+    expect(koiFrameBox({ x: 700, y: 450 }, 0, 200, pond.view).visible).toBe(true)
+  })
+
+  it('culls a koi far outside the window', () => {
+    const pond = describePond(1440, 900, 400, 300, false)
+    expect(koiFrameBox({ x: -600, y: -600 }, 0, 200, pond.view).visible).toBe(false)
+  })
+
+  it('keeps a koi whose box merely clips a corner', () => {
+    const pond = describePond(1440, 900, 400, 300, false)
+    const view = pond.view
+    const box = koiFrameBox({ x: view.x - 60, y: view.y - 60 }, Math.PI / 4, 200, view)
+    expect(box.visible).toBe(true)
+  })
+
+  it('reuses the caller-supplied box without allocating', () => {
+    const pond = desktopPond()
+    const scratch = { x: 0, y: 0, size: 0, visible: false }
+    expect(koiFrameBox({ x: 700, y: 450 }, 0, 200, pond.view, scratch)).toBe(scratch)
   })
 })

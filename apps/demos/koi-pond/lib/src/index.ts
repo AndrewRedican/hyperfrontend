@@ -32,8 +32,9 @@ export type { SpinePose, SpineStation, SwimParameters } from './koi3d/spine-pose
 export type { KoiSwimState } from './koi3d/swim-state.js'
 export type { Bounds } from './geometry/capsule.js'
 export type { SpineState, SpineStep } from './geometry/spine.js'
+export type { Itinerary, PaceSchedule, WaypointLeg } from './geometry/behaviour.js'
 export type { ClosestApproach, EncounterAction, EncounterMemory, EncounterResolution, EncounterSelf } from './geometry/steering.js'
-export type { BoundaryPressure, PondBounds } from './geometry/virtual-pond.js'
+export type { BoundaryPressure, KoiFrameBox, PondBounds } from './geometry/virtual-pond.js'
 export type { DepthState } from './model/depth.js'
 export type {
   Disturbance,
@@ -46,7 +47,6 @@ export type {
   KoiPhenotype,
   KoiProfile,
   KoiTraits,
-  KoiTune,
   NeighborObservation,
   PondEnvironment,
   PondWindow,
@@ -64,6 +64,7 @@ export {
   pointSegmentDistance,
   signedDistanceToChain,
 } from './geometry/capsule.js'
+export { SHORE_ABSENT_S, createItinerary, createPaceSchedule, slipsAway, wrapAcross } from './geometry/behaviour.js'
 export { SPINE_JOINTS, advanceSpine, createSpine, sampleSpine, spineGirth, widthProfile } from './geometry/spine.js'
 export {
   ENCOUNTER_CLEARANCE,
@@ -84,6 +85,7 @@ export {
   describePond,
   entryStation,
   isVisible,
+  koiFrameBox,
   nominalFishLength,
   pondBounds,
   pondCentre,
