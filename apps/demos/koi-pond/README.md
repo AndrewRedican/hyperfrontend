@@ -1,10 +1,10 @@
 # Koi Pond
 
-Seven koi, seven separate applications, seven frameworks — swimming in one continuous scene.
+Eight koi, eight separate applications, eight frameworks — swimming in one continuous scene.
 
 A vanilla-TS **host** owns the pond: the bed, the surface water, the pointer, the depth order,
-and the seven channels. Each **fish** is an independently implemented app — React, Vue, Svelte,
-SolidJS, Preact, Lit, and vanilla TS — mounted into its own transparent full-viewport frame and
+and the eight channels. Each **fish** is an independently implemented app — React, Vue, Svelte,
+SolidJS, Preact, Lit, Angular, and vanilla TS — mounted into its own transparent full-viewport frame and
 composited into the scene by nothing more than a shared camera contract and a z-index. The pond
 host is itself a hostee the docs-site gallery mounts, which makes the running demo the live
 **gallery → host/hostee → fish** nesting chain.
@@ -17,18 +17,18 @@ exists to show.
 
 ## Layout
 
-| Path                                                       | Role                                                                                                 |
-| ---------------------------------------------------------- | ---------------------------------------------------------------------------------------------------- |
-| `host/`                                                    | `demo-koi-pond` — pond bed, water, pointer, depth, relay; hostee shell                               |
-| `host/vendor/`                                             | the seven committed koi shell tarballs the host installs by `file:`                                  |
-| `fish-<framework>/`                                        | `demo-koi-fish-<framework>` — one koi per framework: vanilla react vue svelte solid preact lit       |
-| `fish-<framework>/feature.config.ts`                       | each koi's shell packaging — contract, canonical origin, display modes, an explicitly open protocol  |
-| `lib/src/model/`, `lib/src/geometry/`, `lib/src/contract/` | the pond's vocabulary, the wire, and the maths of the water                                          |
-| `lib/src/koi3d/`                                           | the koi itself — build, anatomy, mesh generation, markings, and the spine that poses it. No renderer |
-| `lib/src/three/`                                           | the three.js adapter: materials, shaders, cameras, lighting, debug overlays                          |
-| `workbench/`                                               | `demo-koi-workbench` — the koi model's development environment. Never deployed                       |
-| `vendor/`                                                  | the committed `demo-koi-lib` tarball its consumers install by `file:`                                |
-| `tools/refresh-lib.mjs`                                    | rebuilds, repacks and reinstalls the lib into every consumer in one pass                             |
+| Path                                                       | Role                                                                                                   |
+| ---------------------------------------------------------- | ------------------------------------------------------------------------------------------------------ |
+| `host/`                                                    | `demo-koi-pond` — pond bed, water, pointer, depth, relay; hostee shell                                 |
+| `host/vendor/`                                             | the eight committed koi shell tarballs the host installs by `file:`                                    |
+| `fish-<framework>/`                                        | `demo-koi-fish-<framework>` — one koi per framework: vanilla react vue svelte solid preact lit angular |
+| `fish-<framework>/feature.config.ts`                       | each koi's shell packaging — contract, canonical origin, display modes, an explicitly open protocol    |
+| `lib/src/model/`, `lib/src/geometry/`, `lib/src/contract/` | the pond's vocabulary, the wire, and the maths of the water                                            |
+| `lib/src/koi3d/`                                           | the koi itself — build, anatomy, mesh generation, markings, and the spine that poses it. No renderer   |
+| `lib/src/three/`                                           | the three.js adapter: materials, shaders, cameras, lighting, debug overlays                            |
+| `workbench/`                                               | `demo-koi-workbench` — the koi model's development environment. Never deployed                         |
+| `vendor/`                                                  | the committed `demo-koi-lib` tarball its consumers install by `file:`                                  |
+| `tools/refresh-lib.mjs`                                    | rebuilds, repacks and reinstalls the lib into every consumer in one pass                               |
 
 ## How the pond composes
 
@@ -39,8 +39,8 @@ exists to show.
   (`host/koi-pond.contract.ts`) runs between the gallery and the pond: `set-scene`/`disturb` in,
   `shoal`/`sequence-complete`/`close-request` out. The pond re-emits `shoal` as a ten-second
   roll call even when nothing changed — an embedder watching for signs of life must never read
-  a calm pond as an outage. The gallery never learns there are seven apps inside.
-- **Seven features, seven shells.** Each koi is packaged exactly like any other feature: its
+  a calm pond as an outage. The gallery never learns there are eight apps inside.
+- **Eight features, eight shells.** Each koi is packaged exactly like any other feature: its
   `feature.config.ts` names the contract (a re-export of the shared library's), its canonical
   origin, and its display modes, and `pack-shell` emits a typed shell package the host vendors
   and installs. The pond opens every koi through its generated shell. While the pond deploys
@@ -53,15 +53,15 @@ exists to show.
   steering read the world; cameras, canvases, culling and the pointer read the view. A gallery
   card, the expanded overlay, and the `hf dev` debug panel are different windows onto the same
   water — resizing a frame never rebuilds the world underneath the fish.
-- **One camera, seven renders.** Every fish builds the same camera from the pond announcement
+- **One camera, eight renders.** Every fish builds the same camera from the pond announcement
   (`lib/src/model/pond-view.ts` holds the numbers, `lib/src/three/pond-view.ts` the builder):
-  ~10° tilt, agreed px-per-unit at the swim plane, `pond` lighting, ACESFilmic/1.15. Seven
+  ~10° tilt, agreed px-per-unit at the swim plane, `pond` lighting, ACESFilmic/1.15. Eight
   independent transparent `WebGLRenderer`s therefore composite as one scene.
 - **Each koi renders only its own water.** A fish's canvas covers just its frame box — a square
   around its own body — and the shared camera is narrowed onto that box (`setViewOffset`), so
   the small canvas paints pixel-identically what a full-viewport render would have put there.
   The canvas slides with the fish on a compositor transform; a koi outside the visible window
-  draws nothing at all. Seven viewport-sized antialiased framebuffers were the pond's real
+  draws nothing at all. A shoal of viewport-sized antialiased framebuffers was the pond's real
   memory and fill bill, and this is what replaced them.
 - **The host paints the water on one small context.** The bed is a still canvas-2D painting,
   refreshed only on resize; the moving surface — the caustic web and the ripple crests — is one
@@ -88,8 +88,8 @@ exists to show.
   fish leaving one bank and coming back from another.
 - **Coordination is relayed, never broadcast.** Fish report compact spine outlines at a low
   cadence; the host broad-phase filters and relays each fish only its nearby neighbours,
-  dead-reckoning stale reports forward along their own headings. The seven inner channels run
-  as explicitly **open shells** — a per-message security envelope across seven high-cadence
+  dead-reckoning stale reports forward along their own headings. The eight inner channels run
+  as explicitly **open shells** — a per-message security envelope across eight high-cadence
   channels collapses delivery, so each koi's feature config declares `protocol: 'none'` and its
   shell is packed with that acknowledged. The single gallery ↔ pond channel keeps protocol
   `v1` — that is the real cross-site boundary today.
@@ -211,7 +211,7 @@ npx nx test demo-koi-lib               # the geometry, pose, pattern and configu
 npx nx run demo-koi-lib:build          # emit the published surface into lib/dist
 npx nx run demo-koi-lib:refresh        # rebuild + repack the shared lib into every consumer
 npx nx run demo-koi-lib:verify         # fail loudly when the tarball or a consumer lock has drifted
-npx nx run demo-koi-pond:refresh-fish-shells   # repack all seven koi shells + reinstall into the host
+npx nx run demo-koi-pond:refresh-fish-shells   # repack all eight koi shells + reinstall into the host
 npx nx run-many -t=lint,typecheck -p demo-koi-*
 ```
 
@@ -221,7 +221,7 @@ and installs the previous contents. `refresh` installs by explicit path, which i
 that re-reads the tarball; `verify` turns the silent staleness into a loud failure.
 
 **Run `demo-koi-pond:refresh-fish-shells` after changing the koi contract or any fish's
-`feature.config.ts`.** It repacks all seven shells and reinstalls them into the host by explicit
+`feature.config.ts`.** It repacks all eight shells and reinstalls them into the host by explicit
 path, for the same staleness reason. The vendored tarballs in `host/vendor/`, the host's
 `package.json`, and its `package-lock.json` always land in the same commit — a repacked tarball
 without its lockfile update fails `npm ci` with EINTEGRITY on a cold cache.
@@ -230,10 +230,10 @@ A few constraints the scene depends on:
 
 - **Fish apps must paint nothing on `body` or their root** — any paint blanks the pond behind
   that frame for every koi below it.
-- **Eight GL contexts is the budget: seven belong to the fish, one to the host's water.** Each
+- **Nine GL contexts is the budget: eight belong to the fish, one to the host's water.** Each
   fish bundles its own copy of `three` — a shared chunk would need a shared origin and break
   the isolation the demo exists to prove — and each renders only its own frame box, so the
   budget is counted in fish-sized buffers, not viewports.
 - **The curtain covers the staggered reveal.** Frames stay hidden until each session opens; the
-  host lifts the curtain when the seventh koi lands, or at a deadline so an unreachable fish
+  host lifts the curtain when the eighth koi lands, or at a deadline so an unreachable fish
   cannot hold the pond dark.
