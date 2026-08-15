@@ -6,7 +6,7 @@
  * module folds those handles into the renderer shape the runtime drives, so
  * the loop never learns that Svelte exists.
  *
- * This is the one browser-facing seam in the app. The other six koi replace
+ * This is the one browser-facing seam in the app. The other seven koi replace
  * exactly this layer with their own framework's idiom, and share everything
  * else: the swimming brain stays authoritative for where the fish *is*, and
  * the renderer only makes the koi's body express it.

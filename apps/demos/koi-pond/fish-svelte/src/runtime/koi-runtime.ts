@@ -61,14 +61,14 @@ interface MemoryMeasurer {
  *
  * @returns The relation, or `null` when the app is its own top page.
  */
-function originRelation(): 'same-origin' | 'cross-site' | null {
+function originRelation(): 'same-origin' | 'cross-origin' | null {
   if (window.parent === window) {
     return null
   }
   try {
-    return new URL(document.referrer).origin === window.location.origin ? 'same-origin' : 'cross-site'
+    return new URL(document.referrer).origin === window.location.origin ? 'same-origin' : 'cross-origin'
   } catch {
-    return 'cross-site'
+    return 'cross-origin'
   }
 }
 
@@ -316,7 +316,7 @@ export function createKoiRuntime(root: HTMLElement, buildRenderer: KoiRendererFa
       renderer.setHovered(next)
     },
     setPaused(next) {
-      // why: A sleeping koi cancels its animation frame outright — seven hidden frames each still waking per frame is exactly the battery cost the host's sleep exists to remove.
+      // why: A sleeping koi cancels its animation frame outright — eight hidden frames each still waking per frame is exactly the battery cost the host's sleep exists to remove.
       paused = next
       if (paused) {
         stop()
